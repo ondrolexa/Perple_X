@@ -5,7 +5,7 @@
         | For documentation refer to:
         |         www.perplex.ethz.ch/perplex_options.html
 |----------------------------------------------------------------------
-1d_path              10 150 | exploratory and autorefine (grid parameters keyword group)
+1d_path              40 150 | exploratory and autorefine (grid parameters keyword group)
 approx_alpha           T    | use approximation exp(x)~1+x to evaluate expansivity effect on volume
 Anderson-Gruneisen     F    | Anderson-Gruneisen parameter correction for polythermal Murnaghan and Birch-Murnaghan
 auto_refine            aut  | auto, manual, or off (auto_refine keyword group)
@@ -26,7 +26,7 @@ hard_limits            off  | on or off
 increment         0.1 0.025 | 0, <1; exploratory and autorefine
 initial_resolution    0.067 | >0, <1
 interpolation on       2    | value 1: on or off; value 2, 1->99
-iteration            4 3 10 | value 1: 0->9; value 2: 3->99, value 3 is irrelevant in Perple_X 6.6.4+
+iteration            4 3 4  | value 1: 0->9; value 2: 3->99; value 3: 3->7
 linear_model           on   | on or off
 melt_is_fluid          F    | T[rue] or F[alse], default is F
 option_list_files      T    | echo run-time options to my_project_PROGRAM_options.txt
@@ -49,7 +49,7 @@ T_melt                 873. | melt solution model endmember temperature (K) cut 
 T_stop                   0. | equilibration temperature (K) cut off
 variance              1 99  | 1->99; exploratory and autorefine
 vrh_weighting          0.5  | 0->1, weighting factor for the Voigt average in the VRH averaging scheme.
-x_nodes               20 60 | exploratory and autorefine (grid parameters keyword group)
-y_nodes               20 60 | exploratory and autorefine (grid parameters keyword group)
+x_nodes               40 60 | exploratory and autorefine (grid parameters keyword group)
+y_nodes               40 60 | exploratory and autorefine (grid parameters keyword group)
 zero_mode             1e-6  | 0->1
 zero_bulk             1e-6  | 0->1

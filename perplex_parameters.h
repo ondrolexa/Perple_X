@@ -83,7 +83,7 @@
       parameter (k7=k5+1,k8=k5+2) 
       parameter (k9=30,k10=240,k12=15,k13=mdim*k1,k14=18,k15=3,k16=30)
       parameter (k17=7,k18=29*k1)
-      parameter (k19=2*k5+6,k21=500000,k20=mdim*k21,k22=mdim*k19,k23=5)
+      parameter (k19=2*k5+14,k21=500000,k20=mdim*k21,k22=mdim*k19,k23=5)
       parameter (k24=1)  
 !                                 l2 - max number of independent potential variables
 !                                 l3 - max number of variables for gridded min and graphics (l2+2)

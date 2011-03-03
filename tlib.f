@@ -18,7 +18,7 @@ c----------------------------------------------------------------------
 
       write (*,1000) 
 
-1000  format (/,'Perple_X version 6.6.5.3, compiled 2/21/2011.')
+1000  format (/,'Perple_X version 6.6.5.4, compiled 2/23/2011.')
 
       end
 
@@ -140,6 +140,11 @@ c                                 pseudocompound refinement
 c                                 number of increments used
 c                                 in refinement
       iopt(11) = 3
+c                                 max number of points to 
+c                                 be refined in addition to 
+c                                 active points
+      iopt(12) = 4
+c                                 
 c                                 quench temperature (K)
       nopt(12) = 0d0
 c                                 initial resolution for adaptive 
@@ -165,8 +170,8 @@ c                                 1 - cartesian, 2 - stretch
       iopt(13) = 0 
       valu(13)  = 'off'
 c                                 autorefine, 2 - automatic, 1 - manual, 0 - no
-      iopt(6) = 1
-      valu(6) = 'man'
+      iopt(6) = 2
+      valu(6) = 'aut'
 c                                 increase in resolution for adaptive minimization 
       nopt(17) = 3d0 
 c                                 increase in resolution for composition and mixed variable diagram calculations
@@ -308,6 +313,7 @@ c                                 zero_mode key
 c                                 max iteration key
             read (strg,*)  iopt(10)
             read (nval1,*) iopt(11)
+            read (nval2,*) iopt(12)
 
          else if (key.eq.'initial_resolution') then
 c                                 initial_resolution key 
@@ -338,8 +344,8 @@ c                                 autorefine
 
             if (val.eq.'off') then
                iopt(6) = 0
-            else if (val.eq.'aut') then
-               iopt(6) = 2
+            else if (val.eq.'man') then
+               iopt(6) = 1
             end if 
 
             if (nval1.gt.'0') then 
@@ -563,6 +569,11 @@ c                                 error traps:
          write (*,1040)
          iopt(11) = 3
       end if 
+
+      if (iopt(12).gt.7.or.iopt(12).lt.3) then 
+         write (*,1090)
+         iopt(12) = 4
+      end if 
 c                                 reach factor
       if (2d0*nopt(14).gt.dfloat(iopt(11)).or.nopt(14).le.0d0) then
          write (*,1030)
@@ -704,6 +715,9 @@ c                                 give the relaxation bounds.
 1080  format (/,'Warning: auto_refine_slop must be ',
      *         ' >=0 and <1',/,'the keyword will be',
      *         ' assigned its default value.',/)
+1090  format (/,'Warning: value3 of the iteration keyword must be ',
+     *         ' >2 and <8',/,'value3 will be',
+     *         ' assigned its default value [4].',/)
 1100  format (/,'Error: data (',a
      *       ,') follows the auto_refine keyword value '
      *       ,'most probably',/,'you are using an obsolete copy of ',
@@ -810,7 +824,7 @@ c                                 for meemum
             end if 
 c                                 adaptive optimization
             write (n,1180) nopt(9),nopt(11),iopt(10),iopt(11),
-     *                     nopt(14)
+     *                     iopt(12),nopt(14)
 c                                 gridding parameters
             if (iam.eq.1.and.icopt.eq.5.and.oned) then
 c                                 1d multilevel grid
@@ -949,6 +963,8 @@ c                                 meemum or autorefine off
      *           '>0 [4]; iteration keyword value 1',/,
      *        4x,'refinement factor      ',i2,9x,
      *           '>2*r [12]; iteration keyword value 2',/,
+     *        4x,'refinement points      ',i2,9x,
+     *           '3->7 [4]; iteration keyword value 3',/,
      *        4x,'reach_factor           ',f3.1,8x,'>0.5 [0.9]')
 1190  format (/,2x,'1D grid options:',//,
      *        4x,'y_nodes               ',i3,' /',i3,4x,'[20/40], >0, '

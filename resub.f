@@ -2013,7 +2013,7 @@ c                                 kdv
 
       end do 
 
-      if (mpt.le.3) then 
+      if (mpt.le.iopt(12)) then 
 c                                 less metastable refinement points than
 c                                 iopt(12)
             max = mpt
@@ -2023,7 +2023,7 @@ c                                 sort the metastable points to
 c                                 find the most stable iopt(12) points
          left = 1
          right = mpt
-         max = 3
+         max = iopt(12)
 
          call ffirst (dlamda,kdv,left,right,max,h8+1,ffirst)
 
