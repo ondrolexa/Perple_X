@@ -1137,7 +1137,7 @@ c            else
 c            end if 
 c                                 test file format
             read (n9,*) new
-            if (new.eq.'007'.or.new.eq.'008') exit 
+            if (new.eq.'011') exit 
             call warn (4,r,i,new)
             cycle 
 
