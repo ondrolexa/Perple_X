@@ -130,39 +130,6 @@ c                                 close "echo" file
 
       end 
 
-      subroutine echo 
-c----------------------------------------------------------------------
-c open text file for echo of mode 1 terminal output 
-c----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      integer ierr
-
-      character*100 fname, n4name
-c----------------------------------------------------------------------
-      n4name = fname 
-
-      call inblnk (n4name,'r')
-
-      write (*,1000) n4name
-
-      open (n8, file=n4name, iostat = ierr, status = 'unknown')
-
-      if (ierr.ne.0) then 
-
-         write (*,1010) n4name
-         stop
-        
-      end if 
-
-1000  format (/,'Console output will be echoed in file: ',a,/)
-1010  format (/,'**error ver210** cannot open file:',a,/,
-     *          'check that it is not being used by another program',/)
-
-      end 
-
       subroutine mode2 
 c----------------------------------------------------------------------
 c sample data on an x-y grid 

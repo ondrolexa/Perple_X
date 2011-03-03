@@ -18,7 +18,7 @@ c----------------------------------------------------------------------
 
       write (*,1000) 
 
-1000  format (/,'Perple_X version 6.6.5.1, compiled 2/15/2011.')
+1000  format (/,'Perple_X version 6.6.5.2, compiled 2/19/2011.')
 
       end
 
@@ -4099,8 +4099,6 @@ c                                 component
                icout(1) = i
                goto 70
 
-
-
             end if
          end do 
  
@@ -4175,7 +4173,7 @@ c                                 get the component stoichiometries:
      *        2x,12(a,1x))
 4040  format ('in ',a,' (in above order): ')
 4050  format ('Enter other components (< ',i2,') in ',a,' 1 per',
-     *        ' line, <cr> to finish:')
+     *        ' line, <enter> to finish:')
 
       end
 

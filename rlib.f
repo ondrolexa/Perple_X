@@ -2691,11 +2691,13 @@ c                                 write numbers to string
 
          write (*,1000) tname, (chars(i),i = 1, len)
          write (*,1020)
+         stop
 
       else if (ier.lt.0) then 
 
          write (*,1010) tname
          write (*,1020)
+         stop
 
       end if 
 
@@ -5668,7 +5670,6 @@ c                                missing endmember warnings:
          end do 
          if (first) write (*,1000) tname,(missin(i), i = 1, imiss)
       end if 
- 
 
 1000  format (/,'**warning ver114** the following endmembers',
      *          ' are missing for ',a,/,4(8(2x,a),/),/)
@@ -5716,7 +5717,6 @@ c----------------------------------------------------------------------
       common/ cst146 /nu(m15,j4),y2p(m4,m15),mdep,jdep(m15),
      *                idep(m15,j4),ndph(m15)
 c----------------------------------------------------------------------
-
 c                                check for dependent endmembers, necessary?
       if (depend) then
 
@@ -7577,6 +7577,9 @@ c---------------------------------------------------------------------
 
       double precision dinc,xsym,dzt,dx
 
+      integer ineg,kdep
+      common/ cst91 /ineg(h9),kdep(h9)
+
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp  
 
@@ -8012,6 +8015,7 @@ c                                 number of distinct identisites for entropy
 c                                 insp points to the original position 
 c                                 of endmember i in the solution model input:
          knsp(i,im) = insp(i)
+         if (kdsol(i).lt.0) kdep(im) = i
       end do 
 c                                 -------------------------------------
 c                                 kmsol points to the species on the j'th site
@@ -8044,6 +8048,7 @@ c                                 save y -> p array
          do i = 1, nstot(im)
             do j = 1, mdep
                y2pg(j,i,im) = y2p(i,j)
+               if (jsmod.eq.5.and.y2p(i,j).lt.0d0) ineg(im) = knsp(i,im)
             end do
          end do
 c                                 for reasons of stupidity, convert the z(y) 
@@ -8377,8 +8382,16 @@ c                                 look for endmembers to be killed
          end if 
 
       end do 
-
+c                                 this looks like bad news, for laar/recip
+c                                 or laar/order, but appears to be overridden
+c                                 by use of logical classification variables,
+c                                 in which case, why is it here????
       if (laar.and.ksmod(im).ne.3) ksmod(im) = 7 
+
+      if (laar.and.iterm.eq.0) then 
+          if (ksmod(im).eq.3) ksmod(im) = 2
+          laar = .false.
+      end if 
 c                                 set type flags, presently no provision for 
 c                                 bw summation
       llaar(im) = .false.
@@ -11392,6 +11405,9 @@ c                                 model type
 
       integer istg, ispg, imlt, imdg
       common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
+
+      integer ineg,kdep
+      common/ cst91 /ineg(h9),kdep(h9)
 c----------------------------------------------------------------------
 c                              eliminate end-member compositions 
       do l = 1, mstot(im)
@@ -11413,23 +11429,30 @@ c                              check for invalid compositions
             y(l) = y(l)*x
 
          end do
-c                              y is the mole fraction of endmember l
+c                                 y is the mole fraction of endmember l
          if (y(l).gt.0.9999d0.and.kdsol(l).gt.0) return
 
       end do   
-c                              move site fractions into array indexed 
-c                              only by independent disordered endmembers:
+c                                 move site fractions into array indexed 
+c                                 only by independent disordered endmembers:
       do i = 1, mstot(im)
          pa(i) = y(knsp(i,im))
       end do
 
       if (depend) then
+
+         if (ksmod(im).eq.5) then
+c                                 for stx special case, reject excess comps 
+            if (y(kdep(im)).gt.0d0.and.
+     *          y(kdep(im)).le.y(ineg(im))) return
+         end if 
 c                                 convert y's to p's
          do h = 1, lstot(im)
             do j = 1, ndep(im)
                pa(h) = pa(h) + y2pg(j,h,im) * y(knsp(lstot(im)+j,im))
             end do 
-         end do              
+         end do          
+
       end if 
 
       if (order) then 

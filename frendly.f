@@ -17,19 +17,32 @@ c------------------------------------------------------------------------
  
       include 'perplex_parameters.h'
  
-      character uname*8, y*1, rxny*1, n4name*100, opname*100
+      character uname*8, y*1, rxny*1, opname*100
 
-      integer i,j,k,idiag, idid, ier, icopt, loop,loop1,loop2,loop3
+      integer i,j,k,idiag, ier, icopt
  
       double precision pp(2),tt(2),xx(2),gg(2),ee(2),ss(2),vv(2),ccp(2),
-     *                 uu(2),aa(2),pmin,pmax,pinc,tmin,tmax,tinc,xmin,
-     *                 xmax,xinc,g,e,u,s,v,cp
+     *                 uu(2),aa(2),g,e,u,s,vol,cp
+
+      double precision props,psys,psys1
+      common/ cxt22 /props(i8,k5),psys(i8),psys1(i8)
  
       integer iff,idss,ifug,ifyn,isyn
       common/ cst10 /iff(2),idss(h5),ifug,ifyn,isyn
 
-      double precision p,t,xco2,u1,u2,tr,pr,r,ps
-      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
+      double precision v,tr,pr,r,ps
+      common/ cst5  /v(l2),tr,pr,r,ps
+
+      integer ipot,jv,iv
+      common/ cst24 /ipot,jv(l2),iv(l2)
+
+      double precision vmax,vmin,dv
+      common/ cst9  /vmax(l2),vmin(l2),dv(l2)
+
+      integer inc,jpot
+      common/ cst101 /inc(l2),jpot
+
+      save idiag
 c-----------------------------------------------------------------------
 c                                 version info
       call vrsion
@@ -40,189 +53,197 @@ c                                 read options
       call redop1 (.false.,opname,5)
  
       idiag = 0
-      idid = 0
  
-      write (*,1040)
-      read (*,1000) uname
-      write (*,1050) uname
-      read (*,1000) y
-      if (y.ne.'y'.and.y.ne.'Y') then
-         write (*,1060) uname
-         goto 99
-      end if
+c      write (*,1040)
+c      read (*,'(a)') uname
+c      write (*,1050) uname
+c      read (*,'(a)') y
+c      if (y.ne.'y'.and.y.ne.'Y') then
+c         write (*,1060) uname
+c         stop
+c      end if
+
  
-20    write (*,1030)
-      read (*,*,iostat=ier) icopt
-      call rerror (ier,*20)
+      do 
 
-      if (icopt.eq.5) goto 99
+         write (*,1030)
+         read (*,*,iostat=ier) icopt
+
+         if (ier.ne.0) then 
+            call rerr
+            cycle 
+         else if (icopt.eq.5) then 
+            exit 
+         end if 
  
-      call jnput2 (icopt,rxny,uname)
+         call jnput2 (icopt,rxny,uname)
  
-      if (icopt.eq.1) then
-c                                select variables and set up graphics
-c                                file:
-         if (idiag.eq.0) then
+         if (icopt.eq.1) then
+c                                 calculating equilibrium properties for a
+c                                 reaction:
+c                                 select variables and set up plot file:
+            if (idiag.eq.0) call setplt (.false.)
  
-            call vars (loop)
+            idiag = 1
  
-         end if
+            do 
+
+               call eqrxn 
  
-         idiag = 1
-         idid = 1
+               write (*,1070)
+               read (*,'(a)') rxny
+
+               if (rxny.ne.'y'.and.rxny.ne.'Y') exit 
+  
+               call jnput2 (icopt,rxny,uname)
+                
+            end do
  
-10       call eqrxn (loop)
- 
-         write (*,1070)
-         read (*,1000) rxny
-         if (rxny.eq.'y'.or.rxny.eq.'Y') then
-            call jnput2 (icopt,rxny,uname)
-            goto 10
-         end if
- 
-      else if (icopt.eq.2) then
+         else if (icopt.eq.2) then
+c                                 calculating properties at arbitrary conditions:
+            write (*,1180) 
+            read (*,'(a)') y
 
-         write (*,1180) 
-         read (*,1000) y
-         if (y.ne.'y'.and.y.ne.'Y') goto 6
+            if (y.eq.'y'.or.y.eq.'Y') then
+c                                 tabulated properties
+               call setplt (.true.)
 
-5001        write (*,1190)
-            read (*,*,iostat=ier) pmin, pmax, pinc
-            call rerror (ier,*5001)
-            if (pmax.eq.pmin) pinc = 1d0
+               do i = 1, inc(1)
 
-5002        write (*,1200) 
-            read (*,*,iostat=ier) tmin, tmax, tinc
-            call rerror (ier,*5002)
-            if (tmax.eq.tmin) tinc = 1d0
+                  v(iv(1)) = vmin(iv(1)) + dfloat(i-1)*dv(iv(1))
 
-            if (ifyn.eq.0) then
+                  do j = 1, inc(2)
 
-5003           write (*,1210) 
-               read (*,*,iostat=ier) xmin, xmax, xinc
-               call rerror (ier,*5003)
-               if (xmax.eq.xmin) xinc = 1d0
+                     v(iv(2)) = vmin(iv(2)) + dfloat(j-1)*dv(iv(2))
 
-               loop3 = idint ((xmax-xmin)/xinc) + 1
-            else
-               loop3 = 1
-            end if
+                     do k = 1, inc(3)
 
-            loop2 = idint ((tmax-tmin)/tinc) + 1
-            loop1 = idint ((pmax-pmin)/pinc) + 1
+                        v(iv(3)) = vmin(iv(3)) + dfloat(k-1)*dv(iv(3))
 
+                        call prop (g,e,u,s,v,cp)
 
-            n4name = ' '
-            write (*,1220) 
-            read (*,1230) n4name
-            write (*,1240)
-
-            open (n4, file=n4name)
-
-            write (n4,*) 10
-            write (n4,*) tinc, pinc, tmin, pmin
-            write (n4,*) loop2, loop1, loop3
-
-            t = tmin
-
-            do i = 1, loop2
-               p = pmin
-               do j = 1, loop1
-                  xco2 = xmin
-                  do k = 1, loop3
-                     call props (g,e,u,s,v,cp)
-                     write (n4,1250) p,t,xco2,g,e,s,v,cp,-g/r/t,
-     *                               -g/r/t/2.302585093d0
-                     xco2 = xco2 + xinc
+                        write (n4,1000) v(1),v(2),v(3),g,e,s,v,cp,
+     *                                  -g/r/v(2),
+     *                                  -g/r/v(2)/2.302585093d0 
+                     end do 
                   end do 
-                  p = p + pinc
                end do 
-               t = t + tinc
-            end do 
     
-            close (n4)
+               close (n4)
 
-            goto 20
+               cycle 
 
-6        write (*,1080) uname,uname,uname,uname
-5        write (*,1100)
-         read (*,*,iostat=ier) p,t
-         call rerror (ier,*5)
+            else 
 
-         if (p.eq.0d0) goto 20
-         if (ifyn.eq.0) then
-51          write (*,1110)
-            read (*,*,iostat=ier) xco2
-            call rerror (ier,*51)
-         end if
-c
-         call props (g,e,u,s,v,cp)
-c
-         write (*,1120) t,p,g/1d3,e/1d3,
-     *                  (g-p*v)/1d3,u/1d3,s,v,cp,
-     *                  -g/r/t,-g/r/t/2.302585093d0
-c
-         write (*,1090)
-         read (*,1000) y
-         if (y.ne.'y'.and.y.ne.'Y') goto 5
-         call change 
-c
-         goto 5
-      else if (icopt.eq.3) then
-c
-         write (*,1140)
-c
-40       do i = 1, 2
-52          write (*,1150) i,i
-            read (*,*,iostat=ier) pp(i),tt(i)
-            call rerror (ier,*52)
+               write (*,1080) uname,uname,uname,uname
 
-            p = pp(i)
-            t = tt(i)
+               do 
+c                                 interactively entered conditions
+                  write (*,1100)
+                  read (*,*,iostat=ier) v(1),v(2)
+                  if (ier.ne.0) then 
+                     call rerr
+                     cycle
+                  end if 
+
+                  if (v(1).eq.0d0) exit 
+
+                  if (ifyn.eq.0) then
+
+                     do 
+                        write (*,1110)
+                        read (*,*,iostat=ier) v(3)
+                        if (ier.eq.0) exit
+                        call rerr
+                     end do 
+
+                  end if
 c
-            if (pp(i).eq.0d0) goto 20
+                  call prop (g,e,u,s,vol,cp)
 c
-            if (ifyn.eq.0) then
-53             write (*,1160)
-               read (*,*,iostat=ier) xx(i)
-               call rerror (ier,*53)
-               xco2 = xx(i)
-            end if
+                  write (*,1120) v(2),v(1),g/1d3,e/1d3,
+     *                     (g-v(1)*vol)/1d3,u/1d3,s,vol,cp,
+     *                     -g/r/v(2),-g/r/v(2)/2.302585093d0
 c
-            call props
-     *           (gg(i),ee(i),uu(i),ss(i),vv(i),ccp(i))
+                  call dphasf (g)
+
+                  write (*,1120) v(2),v(1),g/1d3,props(2,1)/1d3,
+     *                     (g-v(1)*props(1,1))/1d3,u/1d3,props(15,1),
+     *                     props(1,1),props(12,1),
+     *                     -g/r/v(2),-g/r/v(2)/2.302585093d0
+
+
+                  write (*,1090)
+                  read (*,'(a)') y
+
+                  if (y.eq.'y'.or.y.eq.'Y') call change 
+c
+               end do 
+
+            end if 
+
+         else if (icopt.eq.3) then
+c                                 calculate change in props from an arbitrary
+c                                 condition
+            write (*,1140)
+c
+            do 
+               do i = 1, 2
+                  do 
+                     write (*,1150) i,i
+                     read (*,*,iostat=ier) pp(i),tt(i)
+                     if (ier.eq.0) exit 
+                     call rerr
+                  end do 
+
+                  v(1) = pp(i)
+                  v(2) = tt(i)
+
+                  if (v(1).eq.0d0) exit 
+
+                  if (ifyn.eq.0) then
+53                   write (*,1160)
+                     read (*,*,iostat=ier) xx(i)
+                     call rerror (ier,*53)
+                     v(3) = xx(i)
+                  end if
+c
+                  call prop
+     *              (gg(i),ee(i),uu(i),ss(i),vv(i),ccp(i))
  
-            aa(i) = gg(i)-pp(i)*vv(i)
+                  aa(i) = gg(i)-pp(i)*vv(i)
  
-         end do 
+               end do 
  
-         write (*,1170)  (gg(2)-gg(1))/1d3,(ee(2)-ee(1))/1d3,
+               if (v(1).eq.0d0) exit
+ 
+               write (*,1170)  (gg(2)-gg(1))/1d3,(ee(2)-ee(1))/1d3,
      *                   (aa(2)-aa(1))/1d3,
      *                   (uu(2)-uu(1))/1d3,
      *                   ss(2)-ss(1),
      *                   vv(2)-vv(1),ccp(2)-ccp(1)
  
-         write (*,1090)
-         read (*,1000) y
-         if (y.ne.'y'.and.y.ne.'Y') goto 40
-         call change 
-         goto 40
+               write (*,1090)
+               read (*,'(a)') y
+               if (y.eq.'y'.or.y.eq.'Y') call change 
+
+            end do 
  
-      else if (icopt.eq.4) then
+         else if (icopt.eq.4) then
+c                                 create a new data base entry
+            call nentry
  
-         call nentry
+         end if
  
-      end if
+      end do 
  
-      goto 20
+      write (*,1130) uname
  
-99    write (*,1130) uname
- 
-      if (idid.eq.1) write (n4,1010) 1,1,1,1,1,0,0,0,0,1d0,0,0
+      if (idiag.eq.1) write (n4,1010) 1,1,1,1,1,0,0,0,0,1d0,0,0
  
       stop
- 
-1000  format (a)
+
+1000  format (80(g14.7,1x))
 1010  format (9(1x,i1),/,f3.1,/,2(1x,i1))
 1030  format (/,'Choose from following options:',
      *  //,2x,'1 - calculate equilibrium coordinates for a reaction.',
@@ -236,13 +257,13 @@ c
      *     ' thermodynamic data, the modified data',/,'can then',
      *     ' be stored as a new entry in the thermodynamic data',
      *     ' file.',/)
-1040  format (/,'Hi! i am a user freindly program.',/,
-     *          'what is your name? ')
-1050  format (/,'Hi ',a,'!, i like you and i hope we have fun!',/,
-     *          'can you say "therm-o-dy-nam-ics" (y/n)? ')
+1040  format (/,'Hi! I am a user freindly program.',/,
+     *          'What is your name? ')
+1050  format (/,'Hi ',a,'!, I like you and I hope we have fun!',/,
+     *          'Can you say "therm-o-dy-nam-ics" (y/n)?')
 1060  format (/,'Weeell ', a,' why dont you go read Gibbs and try me',
-     *          ' again later.')
-1070  format ('Calculate a different equilibrium (y/n)? ')
+     *          ' again later?')
+1070  format ('Calculate a different equilibrium (y/n)?')
 1080  format (/,'now ',a,', there is one thing i want you to remember'
      *         ,' and that is that the',/,'values for G and H that i',
      *          ' calculate are "apparent" free energies and',
@@ -254,10 +275,10 @@ c
      *          ' zeroes.',//,
      *          'ok, here we go, it is fun time ',a,'!',//)
 1090  format ('Modify or output thermodynamic parameters (y/n)? ')
-1100  format ('Enter p(bars) and t(k) (zeroes to quit): ')
+1100  format ('Enter P(bars) and T(K) (zeroes to quit): ')
 1110  format ('Enter X(CO2/O) in fluid phase: ')
-1120  format (/,'At ',g13.6,'k and ',g13.6,
-     *        'bar:',/,6x,'G(kj)   =',g15.8,/,6x,'H(kj)   =',g15.8,/,
+1120  format (/,'At ',g13.6,'K and ',g13.6,'bar:',//,
+     *                 6x,'G(kj)   =',g15.8,/,6x,'H(kj)   =',g15.8,/,
      *                 6x,'A(kj)   =',g15.8,/,
      *                 6x,'U(kj)   =',g15.8,/,
      *                 6x,'S(j/k)  =',g13.6,/,6x,'V(j/bar)=',g13.6,/,
@@ -267,9 +288,9 @@ c
 1130  format (/,'Have a nice day ',a,'!',/)
 1140  format (/,'Option to calculate change in ',
      *        'thermodynamic properties from',/,
-     *        'p(1)-T(1)-X(CO2/O)(1) to p(2)-T(2)-X(CO2/O)(2)',/,
+     *        'P(1)-T(1)-X(CO2/O)(1) to P(2)-T(2)-X(CO2/O)(2)',/,
      *        'enter zeros to quit.',//)
-1150  format ('Enter p(',i1,') (bars) and T(',i1,') (K) (0 to quit):')
+1150  format ('Enter P(',i1,') (bars) and T(',i1,') (K) (0 to quit):')
 1160  format ('Enter X(CO2/O)(',i1,'): ')
 1170  format (//,6x,'delta G(kj)   =',g15.8,/,
      *           6x,'delta H(kj)   =',g15.8,/,
@@ -280,16 +301,7 @@ c
      *           6x,'delta cp(j/k) =',g13.6,/,
      *           6x,'   loge K     =',g13.6,/,
      *           6x,'   log10 K    =',g13.6,/)
-1180  format ('Write a properties table (Y/N)?',/)
-1190  format ('Enter min, max, and increment for P(bar):',/)
-1200  format ('Enter min, max, and increment for T(K):',/)
-1210  format ('Enter min, max, and increment for X(CO2/O moles):',/) 
-1220  format ('Enter file name for table (<100 characters):',/)
-1230  format (a)
-1240  format (/,'Table row entries will be:',/,
-     *        '  P, T, X(CO2/O), G(j),',
-     *        ' H(j), S(j/K), V(J/bar), Cp(j/K), ln K, log K',/)
-1250  format (10(g13.6,1x))
+1180  format ('Write a properties table (Y/N)?')
  
       end
 
@@ -317,7 +329,8 @@ c----------------------------------------------------------------------
       common/ cst24 /ipot,jv(l2),iv(l2)
  
       write (*,1020)
-      do 10 i = 1, ipot
+
+      do i = 1, ipot
          j = iv(i) 
 20       write (*,1000) vname(j),vmin(j),vmax(j)
          read (*,*,iostat=ier) vmin(j),vmax(j)
@@ -329,11 +342,12 @@ c----------------------------------------------------------------------
          end if
          v(j) = vmin(j)
          delv(j) = vmax(j) - vmin(j) 
-10       dv(j) = delv(j) / 4d1
+         dv(j) = delv(j) / 4d1
+      end do 
  
       call concrt
 
-1000  format (/,'Enter new min/max values for ',a8,' (',
+1000  format (/,'Enter new min/max values for ',a,' (',
      *           'old values were ',g12.5,',',g12.5,')',/)
 1010  format (/,'Try again.',/)
 1020  format (/,'This option does not change plot limits!'
@@ -341,13 +355,13 @@ c----------------------------------------------------------------------
      *        /,'while running PSVDRAW.',/)
       end 
  
-      subroutine eqrxn (loop)
+      subroutine eqrxn 
 c------------------------------------------------------------------------
       implicit none
  
       include 'perplex_parameters.h'
 
-      integer i,loop
+      integer i
    
       double precision v,tr,pr,r,ps
       common/ cst5  /v(l2),tr,pr,r,ps
@@ -357,19 +371,23 @@ c------------------------------------------------------------------------
 
       integer ipot,jv,iv
       common/ cst24 /ipot,jv(l2),iv(l2)
+
+      integer inc,jpot
+      common/ cst101 /inc(l2),jpot
 c------------------------------------------------------------------------
 c                                search for an equilibrium point
 c                                on the x-y coordinate frame.
-      v(iv(3)) = vmin(iv(3))
- 
-      do i = 1, loop
+      do i = 1, inc(iv(3))
+         v(iv(3)) = vmin(iv(3)) + dfloat(i-1)*dv(iv(3))
          call newhld
-         v(iv(3)) = v(iv(3)) + dv(iv(3))
       end do 
  
       end
  
-      subroutine vars (loop)
+
+      subroutine setplt (table)
+c----------------------------------------------------------------------
+c select variables for a plot or table
 c----------------------------------------------------------------------
       implicit none
  
@@ -377,10 +395,17 @@ c----------------------------------------------------------------------
  
       character y*1,n4name*100,title*100
 
-      integer loop,i,j,ier,ic,ix
+      integer i,j,ier,ic,ix, nprops
 
-      integer io3,io4,io9
-      common/ cst41 /io3,io4,io9
+      logical table
+
+      character*14 pnames(9)
+
+      integer inc,jpot
+      common/ cst101 /inc(l2),jpot
+
+      character*100 prject,tfname
+      common/ cst228 /prject,tfname
 
       double precision delv
       common/ cst63 /delv(l2)
@@ -397,137 +422,251 @@ c----------------------------------------------------------------------
       integer ipot,jv,iv
       common/ cst24 /ipot,jv(l2),iv(l2)
 
-      character*100 prject,tfname
-      common/ cst228 /prject,tfname
+      integer io3,io4,io9
+      common/ cst41 /io3,io4,io9
+
+      save pnames 
+      data pnames/'   P(bar)    ','    T(K)     ','  X(CO2/O)   ',
+     *'  g(J/mol)   ','  h(J/mol)   ','  s(J/K/mol) ','v(J/bar/mol) ',
+     *' cp(J/K/mol) ','  log10(K)   '/
 c----------------------------------------------------------------------
       ipot = 2
-      ier = 0
+      jpot = ipot
+      nprops = 9 
  
-      do i = 1, 5
+      do i = 1, l2
          iv(i) = i
          vmin(i) = 0d0
-         vmax(i) = 0d0
+         vmax(i) = vmin(i)
          dv(i) = 1d0
+         inc(i) = 1
       end do 
-c                                 components of saturated phase:
-      iv(3)=3
-      if (ifyn.eq.0) then
-         iv(3)=3
-         ipot = ipot + 1
-      end if
+c                                 saturated phase:
+      if (ifyn.eq.0) ipot = ipot + 1
  
-      write (*,1050) 'Generate a plot file (y/n)?'
-      read (*,1050) y
- 
-      io4 = 1
-      if (y.eq.'y'.or.y.eq.'Y') then
-         write (*,1180)
-c                                 readrt loads the root into prject
-         call readrt 
-         call mertxt (n4name,prject,'.plt',0)
-         open (n4,file=n4name)
-         io4 = 0
-      end if
+      do 
 c                                 select the x variable (iv(1)):
-5006  write (*,2130)
-      write (*,2140) (j,vname(iv(j)), j = 1, ipot)
-      write (*,*)
-      read (*,*,iostat=ier) ic
-      call rerror (ier,*5006)
+         write (*,2130)
+         write (*,2140) (j,vname(iv(j)), j = 1, ipot)
+         write (*,*)
+         read (*,*,iostat=ier) ic
+         if (ier.eq.0) exit
+         call rerr 
+
+      end do 
+
       ix = iv(1)
       iv(1) = iv(ic)
       iv(ic) = ix
-5007  write (*,2150) vname(iv(1))
-      read (*,*,iostat=ier) vmin(iv(1)),vmax(iv(1))
-      call rerror (ier,*5007)
-c                                 select the x variable (iv(2)):
-      if (ipot.gt.2) then
-5008     write (*,2110)
-         write (*,2140) (j,vname(iv(j)), j = 2, ipot)
-         write (*,*)
-         read (*,*,iostat=ier) ic
-         call rerror (ier,*5008)
+c                                 get x variable limits and increment
+      do 
+
+         if (table) then
+            write (*,1000) vname(iv(1))
+            read (*,*,iostat=ier) vmin(iv(1)),vmax(iv(1)),dv(iv(1)) 
+         else 
+            write (*,2150) vname(iv(1))
+            read (*,*,iostat=ier) vmin(iv(1)),vmax(iv(1))
+         end if 
+
+         if (ier.eq.0) exit
+         call rerr
+
+      end do 
+c                                 select the y variable (iv(2)):
+      if (ipot.eq.3) then
+
+         do 
+
+             write (*,2110)
+             write (*,2140) (j,vname(iv(j)), j = 2, ipot)
+             write (*,*)
+             read (*,*,iostat=ier) ic
+
+             if (ier.eq.0) exit 
+             call rerr
+
+          end do 
+
       else
-        ic=2
+
+        ic = 2
+
       end if
+
       ix = iv(2)
       iv(2) = iv(ic)
       iv(ic) = ix
  
-5009  write (*,2150) vname(iv(2))
-      read (*,*,iostat=ier) vmin(iv(2)),vmax(iv(2))
-      call rerror (ier,*5009)
-c                                 define default variable increments:
-      do i = 1, 2
-         dv(iv(i)) = (vmax(iv(i)) - vmin(iv(i))) / 4d1
+      do 
+
+         if (table) then
+            write (*,1000) vname(iv(2))
+            read (*,*,iostat=ier) vmin(iv(2)),vmax(iv(2)),dv(iv(2)) 
+         else 
+            write (*,2150) vname(iv(2))
+            read (*,*,iostat=ier) vmin(iv(2)),vmax(iv(2))
+         end if 
+
+         if (ier.eq.0) exit 
+         call rerr
+
       end do 
-c---------------------------------------------------------------------
-c                                 specify sectioning variables (iv(3)):
-      if (ipot.gt.2) then
-c                                 check if multiple sections are desired:
-      write (*,2160)
-      read (*,1050) y
+c                                 third variable?
+      if (ipot.eq.3) then 
+
+         if (table) then 
+
+            write (*,1010) vname(iv(3))
+            read (*,'(a)') y
 c
-      if (y.eq.'y'.or.y.eq.'Y') then
+            if (y.eq.'y'.or.y.eq.'Y') then
+               write (*,1000) vname(iv(3))
+               read (*,*,iostat=ier) vmin(iv(3)),vmax(iv(3)),dv(iv(3)) 
+            end if 
+
+         else 
+
+            write (*,2160) vname(iv(3))
+            read (*,'(a)') y
 c
-5010     write (*,2150) vname(iv(3))
-         read (*,*,iostat=ier) vmin(iv(3)),vmax(iv(3))
-         call rerror (ier,*5010)
-5011     write (*,1060)
-         read (*,*,iostat=ier) ic
-         call rerror (ier,*5011)
-         dv(iv(3)) = (vmax(iv(3))-vmin(iv(3)))/dfloat(ic-1)
-c                                 specify remaining sectioning constraints:
-c                                 only one section is to be calculated:
-      else
-         do j=3,ipot
-5012        write (*,2180) vname(iv(j))
-            read (*,*,iostat=ier) vmin(iv(j))
-            call rerror (ier,*5012)
-            vmax(iv(j)) = vmin(iv(j))
-            dv(iv(j)) = 1d0
+            if (y.eq.'y'.or.y.eq.'Y') then
+
+               jpot = 3
+
+               do 
+                  write (*,2150) vname(iv(3))
+                  read (*,*,iostat=ier) vmin(iv(3)),vmax(iv(3))
+                  if (ier.eq.0) exit               
+                  call rerr
+               end do
+
+               do  
+                  write (*,1060)
+                  read (*,*,iostat=ier) inc(iv(3))
+                  if (ier.eq.0) exit 
+                  call rerr
+               end do 
+
+               if (inc(iv(3)).lt.1) inc(iv(3)) = 1
+
+            end if 
+
+         end if 
+c                                 set third variable if unused:
+         if (jpot.eq.2) then 
+
+            do 
+
+               write (*,2180) vname(iv(3))
+               read (*,*,iostat=ier) vmin(iv(3))
+               if (ier.eq.0) exit 
+               call rerr
+
+            end do 
+
+            vmax(iv(3)) = vmin(iv(3))
+
+         end if 
+
+      end if 
+c                                 increments or counters:
+      if (table) then
+ 
+         do i = 1, jpot
+            inc(iv(i)) = dabs(vmax(iv(i))-vmin(iv(i)))/dv(iv(i)) + 1
          end do 
-      end if
-c
-      end if
-c---------------------------------------------------------------------
-c                             compute interval range of variables
-      do i=1,3
-         delv(i) = vmax(i)-vmin(i)
-      end do 
-c                             calculate number of sections:
-      loop = idint (delv(iv(3))/dv(iv(3))) + 1 
-c                              set convergence criteria for routine
-c                              univeq:
-      call concrt
-      goto (99),io4
-c                                 write a title card:
-      write (*,1070)
-      read (*,1050) title
-      write (n4,*) 1
-      write (n4,*) 0, 0, 0
-      write (n4,*) 0, 0, 0, 0, 0, 0
-      write (n4,1160) title,' ',' ',' '
-      write (n4,*) ipot,(iv(i),i=1,ipot),1,2
-      write (n4,1050) '0 0 0 0. 0. 0. 0. 0.'
-      write (n4,1030) (vmax(iv(i)),vmin(iv(i)),i=1,ipot)
-      write (n4,1050) (vname(iv(i)),i=1,ipot)
+
+      else 
+
+         do i = 1, jpot
+            delv(i) = vmax(i)-vmin(i) 
+            dv(i) = delv(i) / dfloat(inc(i))
+            delv(i) = vmax(i)-vmin(i)
+         end do 
+c                                 set convergence criteria for univeq:
+         call concrt
+c                                 plot file output?
+         write (*,1020) 'Generate a plot file (y/n)?'
+         read (*,'(a)') y
+
+         if (y.eq.'y'.or.y.eq.'Y') then
+            io4 = 0
+         else 
+            io4 = 1
+         end if       
+
+      end if 
+c                                 setup output files:
+   
+      if (table.or.io4.eq.0) then
+c                                 query output file name
+         write (*,1080)
+c                                 readrt loads the root into prject
+         call readrt 
+
+         if (table) then 
+            call mertxt (n4name,prject,'.tab',0)
+         else
+            call mertxt (n4name,prject,'.plt',0)
+         end if            
+
+         open (n4,file=n4name)
+c                                 query for title
+         write (*,1070)
+         read (*,'(a)') title
  
+      end if
+c                                 write file headers
+      if (table) then 
+c                                 terminal info on variables
+         write (*,1090)
+         write (*,1040) pnames
+
+         write (n4,'(a)') title
+         write (n4,*) jpot
+         write (n4,*) nprops
+
+         do i = 1, jpot
+            write (n4,*) vname(iv(i))
+            write (n4,*) vmin(iv(i))
+            write (n4,*) dv(iv(i))
+            write (n4,*) inc(iv(i))
+         end do 
+
+         write (n4,1040) pnames
+
+      else if (io4.eq.0) then 
+
+         write (n4,*) 1
+         write (n4,*) 0, 0, 0
+         write (n4,*) 0, 0, 0, 0, 0, 0
+         write (n4,'(a)') title,' ',' ',' '
+         write (n4,*) ipot,(iv(i),i=1,ipot),1,2
+         write (n4,'(a)') '0 0 0 0. 0. 0. 0. 0.'
+         write (n4,1030) (vmax(iv(i)),vmin(iv(i)),i=1,ipot)
+         write (n4,'(a)') (vname(iv(i)),i=1,ipot)
+
+      end if 
+
+1000  format ('Enter minimum, maximum, and increment for 'a,':')
+1010  format (/,'Make the table also a function of ',a,' (y/n)?')
+1020  format (/,'Generate a plot file (y/n)?')
 1030  format (6(g11.5,1x))
-1050  format (a)
-1060  format (/,'Enter number of sections (> 1): ')
-1070  format (/,'Enter calculation title:',/)
-1160  format (a,/,a,/,a,/,a)
-1180  format (/,'Enter a plot file name [without the .plt suffix]: ')
-2130  format (/,'Select the x-axis variable:',/)
+1040  format (80(a14,1x))
+1060  format (/,'Enter number of sections:')
+1070  format (/,'Enter calculation title:')
+1080  format (/,'Enter a plot/table file name [without the ',
+     *          '.plt/.tab suffix]:')
+1090  format (/,'Table row entries will be:',/)
+2130  format (/,'Select the first independent (x) variable:',/)
 2140  format (10x,i1,' - ',a)
-2150  format (/,'Enter minimum and maximum values for ',a,': ')
-2110  format (/,'Select the y-axis variable:',/)
-2180  format (/,'Specify sectioning value for: ',a)
-2160  format (/,'Calculate sections as a function of a',
-     *        ' third variable (y/n)? ')
+2150  format (/,'Enter minimum and maximum values for ',a,':')
+2110  format (/,'Select the second independent (y) variable:',/)
+2180  format (/,'Specify the value for: ',a)
+2160  format (/,'Calculate sections as a function of ',a,' (y/n)?')
  
-99    end 
+      end 
 
       subroutine newhld
 c-----------------------------------------------------------------------
@@ -1008,9 +1147,12 @@ c-----------------------------------------------------------------------
 
          if (iphct.gt.1) then 
  
-5013        write (*,1000) (i,names(i),i=1,iphct)
-            read (*,*,iostat=ier) id
-            call rerror (ier,*5013)
+            do 
+               write (*,1000) (i,names(i),i=1,iphct)
+               read (*,*,iostat=ier) id
+               if (ier.eq.0) exit 
+               call rerr
+            end do 
 
          else
             id = 1
@@ -1494,7 +1636,7 @@ c                                 normal polynomial vdp term:
      *         ,' standard state volume: ')
       end
   
-      subroutine props (g,e,u,s,v,cp)
+      subroutine prop (g,e,u,s,v,cp)
 c----------------------------------------------------------------------
 c props calculates thermodynamic properties by finite difference
 c approximations from the gibbs function.
@@ -1572,7 +1714,6 @@ c possible phases and, depending on icopt, allows users to select
 c specific phases.
 
 c icopt = 1-4 frendly
-c icopt = 9 mu_2_f
 c----------------------------------------------------------------------
       implicit none
  
@@ -1580,12 +1721,12 @@ c----------------------------------------------------------------------
  
       character*1 uname*8, y, rxny,mnames(k16*k17)*8
  
-      double precision germ(k4), cmurg6, cmurg7, cmurg8, vvv
+      double precision vvv
 
-      logical eof, first, noout, match
+      logical eof, first, match
 
       integer inames, jcmpn, i, j, k, l, icopt, jdis, jlam, ier,
-     *        isct, jj, itic, jphct, ib8
+     *        isct, jj, itic, jphct
  
       character*8 names
       common/ cst8 /names(k1)
@@ -1700,7 +1841,7 @@ c                              in the data base you must set k0 = k5.
       end if 
 c                               list database phases:
       write (*,1030)
-      read (*,5000) y
+      read (*,'(a)') y
 
       if (y.eq.'y'.or.y.eq.'Y') then 
 
@@ -1777,7 +1918,7 @@ c                               initialization for k10 endnmembers
       else if (icopt.lt.8) then
  
          write (*,4000)
-         read (*,5000) rxny
+         read (*,'(a)') rxny
  
          if (rxny.eq.'y'.or.rxny.eq.'y') then
 5007        write (*,4010)
@@ -1787,21 +1928,9 @@ c                               initialization for k10 endnmembers
             isct = 1
          end if
 
-      else if (icopt.eq.9) then 
-
-         isct = jvct
-
       end if
-c                               make the user feel important:
+c                               jj is the pointer to the reaction props
       jj = isct+1
- 
-      do k = 1, k4
-         thermo(k,jj) = 0d0
-         germ(k) = 0d0
-      end do
-c                               set flag for non-linear EoS test:
-      ib8 = 0
-      noout = .false.
 c                               get composition vectors for entities
 c                               defined by a make definition:
       do i = 1, isct
@@ -1810,16 +1939,11 @@ c                               defined by a make definition:
 
          if (rxny.ne.'y'.and.rxny.ne.'Y') then
             write (*,4020)
-         else if (icopt.eq.9) then 
-c                               mu_2_f ask for names to make conversions
-            write (*,1041) vname(jcv(i)),tname(jcv(i))
-            read (*,5000) exname(1)
-            if (exname(1).eq.' ') exname(1) = tname(jcv(i))
          else
             write (*,4030) i
          end if
  
-         read (*,5000) exname(1)
+         read (*,'(a)') exname(1)
 c                               general input data for main program
          call eohead (n2)
 c                               first look in the real data:
@@ -1869,11 +1993,16 @@ c                                 set special flag if O2
          iphct = iphct + 1
 
          if (exname(1).eq.'O2      ') io2 = iphct 
-c                                 store thermodynamic parameters:
+
          if (rxny.eq.'Y'.or.rxny.eq.'y') then
-5003        write (*,1040) exname(1)
-            read (*,*,iostat=ier) vvv
-            call rerror (ier,*5003)
+
+            do 
+               write (*,1040) exname(1)
+               read (*,*,iostat=ier) vvv
+               if (ier.eq.0) exit
+               call rerr
+            end do 
+
          else
             vvv = 1d0
          end if
@@ -1890,34 +2019,16 @@ c                                 store thermodynamic parameters:
             end if
          end if 
 c                               get activity coefficients:
-5004     write (*,4070) exname(1)
-         read (*,*,iostat=ier) act(iphct)
-         call rerror (ier,*5004)
+         do 
+            write (*,4070) exname(1)
+            read (*,*,iostat=ier) act(iphct)
+            if (ier.eq.0) exit 
+            call rerr
+         end do 
 c                               reaction coefficient:
          vnu(iphct)= vvv
-c                               sum super function:
+c                               store the data 
          call loadit (iphct,.false.)
-
-         cmurg8 = thermo(18,k10)
-c                               test for non-linear volume function:
-         if ((cmurg8.ne.0d0.or.make(iphct).ne.0).and.(.not.noout)) then
-c                               write warning and set flag:
-            ib8 = 1
-            write (*,1990) name
-            cmurg6 = thermo(16,iphct)
-            cmurg7 = thermo(17,iphct)
-            if (isct.gt.1) noout = .true.
-            if (make(iphct).ne.0) noout = .true.
-
-         end if 
-
-         do k = 1, k4
-            germ(k) = germ(k) + vvv*thermo(k,k10)
-         end do
- 
-         if (idiso.ne.0) jdis=0
-
-         if (ilam.ne.0) jlam=0
 
       end do 
 c                                load the make dependencies               
@@ -1958,51 +2069,9 @@ c                                remake pointer array for makes
 c                                 select equation of state for the
 c                                 saturated phase.
       if (ifyn.eq.0) call rfluid (1,ifug)
-c                                 output standard state parm summations:    
-c                                 this is only possible for linear volume 
-c                                 functions:
-      if (.not.noout) then 
-
-         if (ib8.eq.1) then 
-            germ(16) = cmurg6
-            germ(17) = cmurg7
-            germ(18) = cmurg8
-         end if 
-
-         write (*,2000)
-         write (*,2010) (germ(k),k=1,3)
-         write (*,2020)
-         write (*,2010) (germ(k),k=4,8)
-         write (*,2040)
-         write (*,2010) (germ(k),k=9,10)
-         write (*,2050)
-         write (*,2010) (germ(k),k=11,18)
-         write (*,*)
- 
-         if (jdis.eq.0) write (*,1051)
-
-         if (jlam.eq.0) write (*,1061)
-
-         do j = 1, k4
-            do k = 1, iphct
-               thermo(j,jj)=thermo(j,jj)+vnu(k)*thermo(j,k)
-            end do 
-         end do  
-
-         if (ib8.eq.1) then 
-            thermo(1,16) = cmurg6
-            thermo(1,17) = cmurg7
-            thermo(1,18) = cmurg8
-         end if 
-
-         write (*,2080)
-         write (*,2010) (thermo(k,jj),k=1,18)
-         write (*,*)
- 
-      end if 
 
       if (rxny.eq.'y'.or.rxny.eq.'Y') then
-
+c                                 check reaction stoichiometries
 55       do k= 1, k5
             cp(k,jj)=0d0
          end do 
@@ -2027,7 +2096,7 @@ c                                 functions:
          end do 
  
          write (*,1070)
-         read (*,5000) y
+         read (*,'(a)') y
          if (y.ne.'y'.and.y.ne.'Y') goto 99
          call stoich
          goto 55
@@ -2036,7 +2105,7 @@ c                                 functions:
 c                               position pointer to last record of
 c                               data file to allow writing:
 99    do
-         read (n2,5000,iostat=i) name
+         read (n2,'(a)',iostat=i) name
          if (i.ne.0) exit
       end do
 
@@ -2050,22 +2119,6 @@ c                               data file to allow writing:
 1061  format (/,'The phase or reaction has a transition-dependent ',
      *          'function.',/)
 1070  format (/,'Change reaction coefficients (y/n)? ')
-1990  format (/,'Warning: ', a,' has either a non-linear volumetric ',
-     *        'function (see program',/,'documentation Eq 2.3) ',
-     *        'or is a make definition.',/,
-     *        'Reaction properties cannot be output to the ',
-     *        'thermodynamic data file.'/)
-2000  format (/,'standard state properties follow:',//,
-     *          1x,'g(j/mole)     s(j/mole k)    v(j/mole bar)')
-2010  format (5(1x,g15.8))
-2020  format (/,'heat capacity (j/mole k) function:',//,
-     *          6x,' a             b*t            c/t^2         ',
-     *             '  d*t^2          e/t^(1/2)')
-2040  format (/,6x,' f/t           g/t**3')
-2050  format (/,'parameters b1-b8 for the volumetric (j/mole bar)', 
-     *             ' function (see program',/,'documentation Eqs 2.1',
-     *             '-2.3):',/)
-2080  format (/,'super function for G (j/mole):',/)
 2460  format ('Warning ** reaction does not balance by ',g13.6,
      *        ' moles of ',a5)
 3000  format (t30,'composition',/,' phase',4x,12(a5,1x))
@@ -2081,7 +2134,6 @@ c                               data file to allow writing:
 4000  format (/,'Calculate thermodynamic ',
      *        'properties for a reaction (y/n)? ')
 4010  format (/,'How many phases or species in the reaction? ')
-5000  format (a)
 
       end
 
@@ -2141,3 +2193,253 @@ c-----------------------------------------------------------------------
 1030  format (/,'Old coefficient for ',a,' was ',f8.4,
      *          ' enter new value: ')
 99    end
+
+      subroutine dphasf (g0)
+c-----------------------------------------------------------------------
+c dphasf sets the props of a phase or reaction 
+c computed by centered finite differences from the Gibbs energy
+c as stored in props(i8,1)
+
+c the difference increments are
+
+c dt0, dp0 for 1st order derivatives (entropy,volume and enthalpy)
+c dt1, dp1 for 2nd order derivatives (heat capacity, expansivity*, 
+c          compressibility*)
+c dt2, dp2 for 3rd order derivatives (gptt, gppt, gppp, gttt)
+c          used for the T derivative of the bulk modulus. 
+
+c *expansivity (alpha) as returned here is 1/v*dv/dt
+c *compressibility (beta) as returned here is -1/v*dv/dp
+
+c corrected to check for negative pressure, in which case 
+c forward differences are used. june 22, 2004, JADC.
+c-----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      double precision dt0,dt1,dt2,g0,g1a, g2a, dg, ss,alpha1,alpha2,
+     *                 dp0,dp1,dp2,e,alpha,v,gincf,beta,cp,s,gtt,
+     *                 g1,g2,g3,g4,g5,g7,gppp,gppt,gptt,gttt
+
+      double precision p,t,xco2,u1,u2,tr,pr,r,ps
+      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
+
+      double precision props,psys,psys1
+      common/ cxt22 /props(i8,k5),psys(i8),psys1(i8)
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      save dt0,dt1,dt2
+      data dt0,dt1,dt2/0.5d0,5d0,5d1/
+c----------------------------------------------------------------------
+
+      dp2 = 5d-2 * p
+      dp1 = dp2/1d1
+      dp0 = dp1/1d1
+            
+      g0 = gincf(0d0,0d0)
+c                                 straight derivatives:
+c                                 first order
+      if (p-dp0.le.0d0) then 
+
+         v = (gincf(0d0,dp0) - g0)/dp0
+         if (v.lt.0d0.or.dabs(v).gt.1d9)  
+c                                 expand increment if invalid v
+     *   v = (gincf(0d0,dp1) - g0)/dp1
+         if (v.lt.0d0.or.dabs(v).gt.1d9)  
+c                                 expand increment more if invalid v
+     *   v = (gincf(0d0,dp2) - g0)/dp2
+
+      else 
+
+         v = (gincf(0d0,dp0) - gincf(0d0,-dp0))/dp0/2d0
+         if ((v.lt.0d0.or.dabs(v).gt.1d9).and.p-dp1.gt.0d0)  
+c                                 expand increment if invalid v
+     *   v = (gincf(0d0,dp1) - gincf(0d0,-dp1))/dp1/2d0
+         if ((v.lt.0d0.or.dabs(v).gt.1d9).and.p-dp2.gt.0d0)  
+c                                 expand increment more if invalid v
+     *   v = (gincf(0d0,dp2) - gincf(0d0,-dp2))/dp2/2d0
+
+      end if 
+c                                 in case the evaluating routine fails
+c                                 on both calls to gincf 
+      if (v.eq.0d0) v = 1d0
+
+      s = (gincf(-dt0,0d0) - gincf(dt0,0d0))/dt0/2d0
+c                                 this crap is necessary because 
+c                                 optimization or my bad programming
+c                                 corrupts gincf with compaq visual fortran.
+      g1a = gincf(-dt0,0d0)
+      g2a =  gincf(dt0,0d0)
+      dg = g1a-g2a
+      ss = dg/dt0/2d0
+      s = ss
+c
+c 
+c     write (*,*) s, ss, dg, gincf(-dt0,0d0) - gincf(dt0,0d0), dt0
+
+      e = g0 + t * s
+c                                 second order
+      gtt = (gincf(dt1,0d0) + gincf(-dt1,0d0) - 2d0*g0)/dt1/dt1
+      cp = -t*gtt
+      if (cp.lt.0d0.or.dabs(cp).gt.1d9)  
+c                                 expand increment if invalid cp
+     *   cp = -t*(gincf(dt2,0d0) + gincf(-dt2,0d0) - 2d0*g0)/dt2/dt2
+      if (cp.lt.0d0.or.dabs(cp).gt.1d9)  
+c                                 shrink increment if invalid cp
+     *   cp = -t*(gincf(dt0,0d0) + gincf(-dt0,0d0) - 2d0*g0)/dt0/dt0
+   
+      if (p-dp1.le.0d0) then 
+c                                 use forward difference at small p's
+         beta = (gincf(0d0,2d0*dp1) + g0 - 2d0*gincf(0d0,dp1))
+     *          /dp1/dp1
+         if (dabs(beta).gt.v.or.beta.ge.0d0)
+c                                 expand increment if invalid beta
+     *   beta = (gincf(0d0,2d0*dp2) + g0 - 2d0*gincf(0d0,dp2))
+     *          /dp2/dp2                                 
+         if (dabs(beta).gt.v.or.beta.ge.0d0)
+c                                 shrink increment if invalid beta
+     *   beta = (gincf(0d0,2d0*dp0) + g0 - 2d0*gincf(0d0,dp0))
+     *          /dp0/dp0   
+
+         alpha = ( gincf( dt1,dp1) - gincf( dt1,0d0)
+     *            -gincf(-dt1,dp1) + gincf(-dt1,0d0))/dp1/dt1/2d0
+         if (dabs(alpha).gt.v.or.alpha.le.0d0)
+c                                 expand increment if invalid alpha
+     *   alpha = ( gincf( dt2,dp2) - gincf( dt2,0d0)
+     *            -gincf(-dt2,dp2) + gincf(-dt2,0d0))/dp2/dt2/2d0
+         if (dabs(alpha).gt.v.or.alpha.le.0d0)
+c                                 shrink increment if invalid alpha
+     *   alpha = ( gincf( dt0,dp0) - gincf( dt0,0d0)
+     *            -gincf(-dt0,dp0) + gincf(-dt0,0d0))/dp0/dt0/2d0
+
+      else 
+
+         beta = (gincf(0d0,dp1) + gincf(0d0,-dp1) - 2d0*g0)/dp1/dp1
+         if (dabs(beta).gt.v.and.p-dp2.ge.0d0.or.beta.ge.0d0)
+c                                 expand increment if invalid beta
+     *   beta = (gincf(0d0,dp2) + gincf(0d0,-dp2) - 2d0*g0)/dp2/dp2
+     
+     
+         if (dabs(beta).gt.v.or.beta.ge.0d0)
+c                                 shrink increment if invalid beta
+     *   beta = (gincf(0d0,dp0) + gincf(0d0,-dp0) - 2d0*g0)/dp0/dp0
+
+         alpha = ( gincf( dt1,dp1) - gincf( dt1,-dp1)
+     *            -gincf(-dt1,dp1) + gincf(-dt1,-dp1))/dp1/dt1/4d0
+         if (dabs(alpha).gt.v.or.alpha.le.0d0) then 
+c                                 expand increment if invalid alpha
+            alpha1 = ( gincf( dt2,dp2) - gincf( dt2,-dp2)
+     *            -gincf(-dt2,dp2) + gincf(-dt2,-dp2))/dp2/dt2/4d0
+            if (dabs(alpha1).gt.v.or.alpha1.le.0d0) then
+c                                 shrink increment if invalid alpha
+               alpha2 = ( gincf( dt0,dp0) - gincf( dt0,-dp0)
+     *            -gincf(-dt0,dp0) + gincf(-dt0,-dp0))/dp0/dt2/4d0
+               if (dabs(alpha2).lt.v.and.alpha2.ge.0d0) then 
+                  alpha = alpha2
+               end if 
+            else 
+               alpha = alpha1
+            end if 
+         end if      
+     
+      end if  
+c                                 third order derivatives, only need for
+c                                 derivatives of seismic props.
+      if (p-2d0*dp2.le.0d0) then 
+
+         g1 = gincf(-dt2,0d0)
+         g2 = gincf( dt2,2d0*dp2)
+         g3 = gincf( dt2,0d0)
+         g4 = gincf(-dt2,2d0*dp2)
+         g5 = gincf(0d0,dp2)
+         g7 = g3 - g1
+
+         gppp = ((gincf(0d0,4d0*dp2) - g0)/2d0
+     *           - gincf(0d0,3d0*dp2) + g5)/dp2**3
+         gppt = (g2 + g3 + 2d0*(gincf(-dt2, dp2)-gincf(dt2,dp2))
+     *           -g4 - g1)/dp2/dp2/dt2/2d0
+         gptt = (g2 + g4  + 2d0*(g0 - gincf(0d0,2d0*dp2))
+     *           -g3 - g1)/2d0/dp2/dt2/dt2
+
+      else 
+
+         g1 = gincf(-dt2,-dp2) - gincf( dt2,dp2)
+         g3 = gincf( dt2,-dp2)
+         g4 = gincf(-dt2,dp2)
+         g5 = gincf(0d0,dp2) - gincf(0d0,-dp2)
+         g7 = gincf(-dt2,0d0) - gincf(dt2, 0d0)
+
+         gppp = ((gincf(0d0,2d0*dp2) - gincf(0d0,-2d0*dp2))/2d0 
+     *        - g5)/dp2**3
+         gppt = (g3 - g4 + 2d0*g7 - g1)/dp2/dp2/dt2/2d0
+         gptt = (g4 - g3 - 2d0*g5 - g1)/2d0/dp2/dt2/dt2
+ 
+      end if 
+
+      gttt = ((gincf(dt2*2d0,0d0) - gincf(-dt2*2d0,0d0))/2d0 
+     *        + g7)/dt2**3
+
+      g7 = (gtt*beta-alpha**2)**2
+
+      if (g7.ne.0d0) then 
+c                                 temperature derivative of the adiabatic bulk modulus:
+         props(18,1) = (((v*gppt-alpha*beta)*gtt
+     *                   -(2d0*v*gptt-alpha**2)*alpha)*gtt
+     *                   +v*gttt*alpha**2)/g7
+c                                 pressure derivative of the adiabatic bulk modulus:
+         props(20,1) = (((v*gppp-beta**2)*gtt
+     *                   +(alpha*beta-2d0*v*gppt)*alpha)*gtt
+     *                   +v*gptt*alpha**2)/g7
+      else 
+
+         props(18,1) = nopt(7)
+         props(20,1) = nopt(7)
+
+      end if 
+c                                 -------------------------------------
+c                                 up to this point beta = d2g/dp2
+c                                 and alpha = d2g/dp2 now convert 
+c                                 to their normal forms:
+      beta = -beta/v
+      alpha = alpha/v
+c                                 
+      if (beta.gt.v.or.beta.lt.0d0) beta = nopt(7)
+c                                 aug 28, 2007, removed check on alpha to 
+c                                 accomodate -alpha's generated by landau 
+c                                 transition models. 
+      if (cp.gt.1d9.or.cp.lt.0d0) cp = nopt(7)
+
+      props(1,1) = v 
+      props(2,1) = e
+      props(12,1) = cp
+      props(13,1) = alpha
+      props(14,1) = beta
+      props(15,1) = s
+
+      end 
+
+      double precision function gincf (dt,dp)
+c-----------------------------------------------------------------------
+      implicit none
+
+      double precision dt,dp,gee
+
+      double precision p,t,xco2,u1,u2,tr,pr,r,ps
+      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
+
+      p = p + dp 
+      t = t + dt 
+
+      call grxn (gee)
+
+      p = p - dp 
+      t = t - dt
+
+      gincf = gee 
+
+      end 

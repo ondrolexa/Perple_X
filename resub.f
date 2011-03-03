@@ -347,6 +347,9 @@ c                                 max number of refinements for solution h9
       integer ncoor
       common/ cxt24 /ncoor(h9)
 
+      integer ksmod, ksite, kmsol, knsp
+      common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
+
       integer hkp,mkp
       common/ cst72 /hkp(k21),mkp(k19)
 c                                 model type
@@ -357,6 +360,9 @@ c                                 option values
       logical lopt
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      integer ineg,kdep
+      common/ cst91 /ineg(h9),kdep(h9)
 c----------------------------------------------------------------------
       
       if (iter.eq.1) then
@@ -438,7 +444,7 @@ c                                 counter for number of non 0 or 1 compositions
 c                                 the composition is out of range
                   jphct = jphct - 1
                   jcoct = kcoct - ncoor(ids)
-                  goto 10 
+                  goto 10
                end if 
                jcoct = jcoct + 1
             end do 
@@ -448,6 +454,21 @@ c                                 the composition is out of range
          end do 
 
          call xtoy (ids)
+
+         if (ksmod(ids).eq.5) then
+c                                 this is an el cheapo filter for redundant
+c                                 compositions, a better method would be to
+c                                 do the subdivision properly.
+            if (y(kdep(ids)).gt.0d0.and.
+     *          y(ineg(ids)).ge.y(kdep(ids))) then
+c                                 reject composition 
+               jphct = jphct - 1
+               jcoct = kcoct - ncoor(ids)
+               cycle 
+            end if 
+         end if 
+
+
 c                                 call gsol to get g of the solution, gsol also
 c                                 computes the p compositional coordinates
          g2(jphct) = gsol1(ids)
@@ -2737,7 +2758,7 @@ c                                 are allocated independent of ifct!
 c                                 now do solutions:
       do i = 1, isoct
 c                                 check if normal solution:
-         if (.not.llaar(i).and.(ksmod(i).eq.7.or.
+         if (.not.llaar(i).and.(ksmod(i).eq.7.or.ksmod(i).eq.5.or.
      *       ksmod(i).eq.2.or.ksmod(i).eq.24.or.ksmod(i).eq.25)) then 
 c                                 it's normal margules or ideal:
             do j = 1, jend(i,2)

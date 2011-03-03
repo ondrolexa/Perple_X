@@ -67,7 +67,6 @@ c convert lars stixrude's phase data files to vertex format.
 
       end do    
 
-1000  format (g13.7,1x,f4.0,1x,f8.4,1x,f8.0,1x,f6.3,1x,f8.3,1x,
-     *        3(f6.3,1x),9('0. '),/,f8.0,1x,f6.3,1x,7('0. '))
+1000  format (9(g14.8,1x),/,9('0. '),/,2(g14.8,1x),7('0. '))
 
       end 
