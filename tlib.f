@@ -18,7 +18,7 @@ c----------------------------------------------------------------------
 
       write (*,1000) 
 
-1000  format (/,'Perple_X version 6.6.5.2, compiled 2/19/2011.')
+1000  format (/,'Perple_X version 6.6.5.3, compiled 2/21/2011.')
 
       end
 
@@ -1551,8 +1551,9 @@ c---------------------------------------------------------------------
      *        'increase dimension k13 (',i7,')  Routine: ',a)
 41    format (/,'**error ver041** too many pseudocompounds, ',
      *        'increase dimension k1 or k21 (',i7,') Routine: ',a)
-42    format (/,'**error ver042** the possible phases of the system do'
-     *         ,' not span the specified bulk composition.',/,
+42    format (/,'**error ver042** optimization failed because the ',
+     *          'possible phases of the',/,
+     *        'system do not span the specified bulk composition.',/,
      *        'To avoid this problem add phases or modify the bulk ',
      *        'composition.',/)
 43    format (/,'**error ver043** you cannot simultaneously treat: ',
@@ -1811,6 +1812,8 @@ c---------------------------------------------------------------------
          write (*,47) int, realv
       else if (ier.eq.48) then 
          write (*,48) 
+      else if (ier.eq.49) then 
+         write (*,49) int
       else if (ier.eq.50) then
          write (*,50) char
       else if (ier.eq.51) then 
@@ -1993,8 +1996,9 @@ c---------------------------------------------------------------------
 41    format (/,'**warning ver041** icky pseudocompound names'
      *       ,' for solution model: ',a,/,'refer to pseudocompound_'
      *       ,'glossary.dat file for pseudocompound definitions.',/)
-42    format (/,'**warning ver042** the possible phases of the system',
-     *        ' do not span the specified bulk composition.',/,3x,
+42    format (/,'**warning ver042** optimization failed because the ',
+     *          'possible phases of the',/,
+     *        'system do not span the specified bulk composition.',/,
      *        'To avoid this problem add phases or modify the bulk ',
      *        'composition.',/)
 43    format (/,'**warning ver043** ',i2,' solutions referenced ',
@@ -2016,6 +2020,8 @@ c---------------------------------------------------------------------
      *        ' (PTOL= ',g12.6,' ) reset PTOL to avoid this problem.',/)
 48    format (/,'**warning ver048** fluid phase pseudocompound data ',
      *         'does not include',/,' volumetric properties (SWASH).',/)
+49    format (/,'**warning ver049** warning ',i3,' will not be repeated'
+     *         ,' for future instances of this problem',/)
 c49    format (/,'**warning ver049** some pseudocompound data has not',
 c     *          ' been output because',/' the bulk modulus pressure ',
 c     *          'derivative is not constant for all endmembers ',/,
@@ -2063,15 +2069,15 @@ c     *          ' (SWASH, see program documentation Eq 2.3)',/)
 89    format (//,'**warning ver089** BUILD you did not request',
      *        'plot file output.',/,' You will not be able to process',
      *        ' the results of the requested calculation.',//)
-90    format (/,'**warning ver090** SMPLX failed to converge. ',/,
-     *        3x,'Probable cause: the possible ',
+90    format (/,'**warning ver090** optimization failed. ',/,
+     *        'Probable cause: the possible ',
      *        'phases do not span the systems composition',/,3x,
      *        'To avoid this problem add phases or modify the bulk ',
-     *        'composition.',/,3x,'Alternatively, although less ',
+     *        'composition.',/,'Alternatively, although less ',
      *        'probably, increasing parameter L6 in perplex_',
-     *        'parameters.h',/,3x,
+     *        'parameters.h',/,
      *        'and recompiling VERTEX permit SMPLEX to converge.',/)
-91    format (/,'**warning ver091** SMPLX programming error. Change ',
+91    format (/,'**warning ver091** optimization failed. Change ',
      *        'minimnization method',/)
 92    format (/,'**warning ver092** you have requested ',i4,
      *        ' grid points. Current',/,'dimensioning is for ',

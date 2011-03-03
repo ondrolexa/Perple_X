@@ -1503,7 +1503,7 @@ c                                 expansivity
          if (props(13,i).le.0d0.and.iwarn1.lt.11) then
             write (*,1030) v(2),v(1),pname(i)
             iwarn1 = iwarn1 + 1
-            if (iwarn1.eq.11) write (*,1020) 
+            if (iwarn1.eq.11) call warn (49,r,179,'GETLOC') 
          end if
 c                                 -------------------------------------
 c                                 system properties:
@@ -1832,7 +1832,7 @@ c                                 vp/vs
             end do 
          end if 
 
-         if (iwarn.eq.11) write (*,1020) 
+         if (iwarn.eq.11) call warn (49,r,177,'GETLOC') 
                   
       end if  
 
@@ -1844,29 +1844,27 @@ c                                 vp/vs
             if (pois(i)) write (*,1040) v(2),v(1),pname(i)
          end do 
 
-         if (iwarn2.eq.11) write (*,1020) 
+         if (iwarn2.eq.11) call warn (49,r,178,'GETLOC')
 
       end if 
 
 99    if (lopt(14)) v(1) = dlog10(v(1))
 
-1000  format (/,'**WARNING** at T(K)=',g12.4,' P(bar)=',g12.4,1x,
+1000  format (/,'**warning ver177** at T(K)=',g12.4,' P(bar)=',g12.4,1x,
      *        'aggregate seismic properties',/,'cannot be ',
      *        'computed because',
      *        ' of a missing/invalid shear modulus.',/)
-1010  format (/,'**WARNING** at T(K)=',g12.4,' P(bar)=',g12.4,1x,
+1010  format (/,'**warning ver177** at T(K)=',g12.4,' P(bar)=',g12.4,1x,
      *        'aggregate seismic properties ',/,'cannot be ',
      *        'computed because of missing/invalid properties ',
      *        'for: ',a,/)
-1020  format ('This warning will not be repeated for future instances',
-     *        ' of the problem.',/)
-1030  format (/,'**WARNING** at T(K)=',g12.4,' P(bar)=',g12.4,1x,
+1030  format (/,'**warning ver179** at T(K)=',g12.4,' P(bar)=',g12.4,1x,
      *        'the effective expansivity of: ',a,/,'is negative. ',
      *        'Most probably this is because of a Landau ordering ',
      *        'model. The Gruneisen',/,'thermal parameter and seismic',
      *        ' velocities for this phase should be considered ',
      *        'with caution.',/)
-1040  format (/,'**WARNING** at T(K)=',g12.4,' P(bar)=',g12.4,1x,
+1040  format (/,'**warning ver178** at T(K)=',g12.4,' P(bar)=',g12.4,1x,
      *        'the shear modulus of: ',a,/,'is missing or invalid ',
      *        'and has been estimated from the default poisson ',
      *        'ratio ',/)

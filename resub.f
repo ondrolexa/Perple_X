@@ -626,27 +626,37 @@ c idead set to 1.
 c----------------------------------------------------------------------
       implicit none
 
-      integer idead
+      integer idead, iwarn91, iwarn42, iwarn90
 
       character*6 char     
 
       double precision c
+
+      save iwarn91, iwarn42, iwarn90
+
+      data iwarn91, iwarn42, iwarn90/0,0,0/
 c----------------------------------------------------------------------
 c                                             look for errors                                            
-      if (idead.eq.2.or.idead.gt.4) then 
+      if (idead.eq.2.or.idead.gt.4.and.iwarn91.lt.6) then 
 c                                             unbounded solution, or
 c                                             other programming error.
          call warn (91,c,idead,char) 
+         iwarn91 = iwarn91 + 1
+         if (iwarn91.eq.5) call warn (49,c,91,'LPWARN')
 
-      else if (idead.eq.3) then 
+      else if (idead.eq.3.and.iwarn42.lt.6) then 
 c                                             no feasible solution
          call warn (42,c,idead,char)
+         iwarn42 = iwarn42 + 1
+         if (iwarn42.eq.5) call warn (49,c,42,'LPWARN')
 
-      else if (idead.eq.4) then 
+      else if (idead.eq.4.and.iwarn90.lt.6) then 
 c                                             iteration count exceeded,
 c                                             probable cause no feasible
 c                                             solution.
          call warn (90,c,idead,char) 
+         iwarn90 = iwarn90 + 1
+         if (iwarn90.eq.5) call warn (49,c,90,'LPWARN')
 
       end if
 

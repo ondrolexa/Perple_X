@@ -2904,7 +2904,7 @@ c                              read dqf data:
      *          ' solution model file.',//,
      *          ' Copy the current version from:',//,
      *          ' www.perplex.ethz.ch/perplex/datafiles/',
-     *          'solut_models.dat',//)
+     *          'solution_model.dat',//)
 
       end 
 
@@ -3578,13 +3578,12 @@ c                                 helmoltz energy:
 c                                 if we get here, failed to converge
 90    if (izap.lt.10) then
          write (*,1000) t,p,names(id)
-      else if (izap.eq.100) then 
-         write (*,1010)
+         izap = izap + 1
+         if (izap.eq.10) call warn (49,r,369,'GETLOC')
       end if 
-
-      izap = izap + 1
 c                                 destabilize the phase:
       gsixtr = 1d10
+
       return 
          
 10    vq = (v/v0)**q
@@ -3607,17 +3606,17 @@ c                                 adiabatic shear modulus
      *      (emod(1,id)*(1d0 - 5d0*f) + f*emod(2,id)*3d0*k00)
      *    -  thermo(9,id)*v/v0*ethv
 
-      if (tht.gt.5d0.or.tht0.gt.5d0.and.izap1.lt.100) then
-         write (*,*) 'danger will robinson, danger, danger!!',
-     *               id,tht0,tht
+      if (tht.gt.5d0.or.tht0.gt.5d0.and.izap1.lt.10) then
+         write (*,1020) id,tht0,tht
          izap1 = izap1 + 1
+         if (izap1.eq.10) call warn (49,r,370,'GSTX')
       end if 
                    
 1000  format (/,'**warning ver369** failed to converge at T= ',f8.2,' K'
      *       ,' P=',f9.1,' bar',/,'Using Sixtrude EoS.',
      *        ' Phase ',a,' will be destabilized.',/)
-1010  format (/,'**warning ver369** will not be repeated for future ',
-     *          'instances of this problem',/)
+1020  format (/,'**warning ver370** danger will robinson, danger, ',
+     *          'danger!!',/,i6,2(1x,g13.6))
 
       end 
 
@@ -3813,14 +3812,11 @@ c                                 machine dependent
 
       if (bad) then  
 c                                 if we get here, failed to converge
-        if (izap.lt.10) then
+         if (izap.lt.10) then
             write (*,1000) t,p,names(id)
-            if (itic.gt.100) write (*,*) 'failed cause of it limit'
-         else if (izap.eq.100) then 
-            write (*,1010)
+            izap = izap + 1
+            if (izap.eq.10) call warn (49,r,369,'GSTX')
          end if 
-
-         izap = izap + 1
 c                                 destabilize the phase.
          gstxgi  = 1d10
 
@@ -3854,18 +3850,20 @@ c                                 adiabatic shear modulus
      *         emod(1,id) + f*(thermo(21,id) + thermo(22,id)*f))
      *       - etas*ethv    
      
-         if (tht.gt.5d0.or.tht0.gt.5d0.and.izap1.lt.100) then
-            write (*,*) 'danger will robinson, danger, danger!!',
-     *                  id,tht0,tht
+         if (tht.gt.5d0.or.tht0.gt.5d0.and.izap1.lt.10) then
+            write (*,1020) id,tht0,tht
             izap1 = izap1 + 1
-         end if
+            if (izap1.eq.10) call warn (49,r,370,'GSTX')
+         end if                  
+
       end if  
                    
 1000  format (/,'**warning ver369** failed to converge at T= ',f8.2,' K'
      *       ,' P=',f9.1,' bar',/,'Using Sixtrude EoS.',
      *        ' Phase ',a,' will be destabilized.',/)
-1010  format (/,'**warning ver369** will not be repeated for future ',
-     *          'instances of this problem',/)
+1020  format (/,'**warning ver370** danger will robinson, danger, ',
+     *          'danger!!',/,i6,2(1x,g13.6))
+
       end 
 
       double precision function plg (t)
@@ -3951,7 +3949,7 @@ c                                 initial guess for volume:
             if (jerk.lt.10) then 
                jerk = jerk + 1
                write (*,1000) t,p
-               if (jerk.eq.10) write (*,1010)
+               if (jerk.eq.10) call warn (49,r,369,'GGHI')
             end if 
 
             if (k*(k-2d0*p*(1d0+kprime)).gt.0d0) then 
@@ -3980,8 +3978,6 @@ c                                 checked in BM3_integration.mws
      *        'EoS, probably for Ghiorso et al. MELTS/PMELTS endmember',
      *        ' data.',/,
      *        'Volume estimated using 3rd order taylor series.',/)
-1010  format (/,'**warning ver369** will not be repeated for future ',
-     *          'instances of this problem',/)
 
       end 
 
@@ -5918,7 +5914,7 @@ c                               of ordered species:
          end do  
 c                               read the limit equations for the 
 c                               amount of the ordered endmembers
-         call readlm (tname,bad,vertex)
+         if (jsmod.ne.6.or.norder.gt.1) call readlm (tname,bad,vertex)
 
       end if 
 c                               read dependent endmembers
@@ -8985,13 +8981,13 @@ c                                 as most models are single species and
 c                                 there is so much overhead in computing
 c                                 multiple speciation, use a special routine
 c                                 for single species models:
-      if (nord(id).eq.1) then
+      if (lrecip(id).or.nord(id).gt.1) then
  
-         call speci1 (g,id,1,error) 
+         call speci2 (g,id,error)
 
       else 
 
-         call speci2 (g,id,error)
+         call speci1 (g,id,1,error) 
 
       end if 
 
@@ -10434,8 +10430,6 @@ c                               initialize limit counter
          limn(j) = 0
       end do 
 
-      if (norder.eq.1) return
-
       call readcd (n9,len,ier)
 
       write (begin,'(5a)') (chars(j),j=1, 5)
@@ -10523,8 +10517,8 @@ c                                 the constant and delta (max-min) are:
 1010  format (/,'This error may be due to an out-of-date '
      *         ,'solution model file.',/
      *         ,'The current version is: '
-     *         ,'www.perplex.ethz.ch/perplex/datafiles/solut_models.dat'
-     *         ,/)
+     *         ,'www.perplex.ethz.ch/perplex/datafiles/solution_model'
+     *         ,'.dat',/)
 
       end 
 
@@ -10638,7 +10632,7 @@ c                                 open pseudocompund list file
 c                                 format test line
       read (n9,'(a)') new
 
-      if (new.ne.'007'.and.new.ne.'008') call error (3,zt,im,new)
+      if (new.ne.'011'.and.new.ne.'008') call error (3,zt,im,new)
 
       do 
 c                                 -------------------------------------
