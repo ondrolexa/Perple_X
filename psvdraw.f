@@ -864,6 +864,8 @@ c                                 array for phase restrictions:
          call checkr (iop5,iop6,iop7,idv,k7,jvct,imatch)
 
          if (imatch.eq.1) cycle 
+
+         if (iop6.eq.1) ict(2) = ict(2) + 1
  
          if (iop1.eq.1) then
             jpr = 0
@@ -1090,6 +1092,10 @@ c psipts - subprogram to output invariant points.
       double precision xmin,xmax,ymin,ymax,dcx,dcy,xlen,ylen
       common/ wsize /xmin,xmax,ymin,ymax,dcx,dcy,xlen,ylen
 
+      integer jvar
+      double precision var,dvr,vmn,vmx
+      common/ cxt18 /var(l3),dvr(2),vmn(l3),vmx(l3),jvar
+
       data iop9/0/
 
       do i = 1, 3
@@ -1102,7 +1108,10 @@ c psipts - subprogram to output invariant points.
  
       do i = 1, ipct
  
-         read (n4,*) ipid,ipvar,(ipds(j), j=1,incts),x,y
+         read (n4,*) ipid,ipvar,(ipds(j), j=1,incts),(var(j), j=1,jvar)
+
+         x(1) = var(1)
+         y(1) = var(2)
 c                                 variance restrictions:
          if (jop4.ne.0) then 
             if (jop4.eq.1.and.ipvar.gt.iop4-1) then 
@@ -1119,6 +1128,8 @@ c                                 variance restrictions:
  
          call checkr (iop5,iop6,iop7,ipds,k8,incts,imatch)
          if (imatch.eq.1) cycle 
+
+         if (iop6.eq.1) ict(2) = ict(2) + 1 
 c                                 make radius proportional to variance 
          r = .78d0/(ipvar+1)
  
@@ -1775,11 +1786,8 @@ c                             all the phases requested:
 c                             reject fields that contain a phase:
             do j = 1, ivct
                call checki (2,id(j),itis)
-               if (itis.ge.0) then
 c                            name matches a phase in the field
-                  ict(2) = ict(2) + 1
-                  return
-               end if
+               if (itis.ge.0) return
  
             end do
 c                             no match

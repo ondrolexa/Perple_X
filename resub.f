@@ -245,9 +245,11 @@ c                                 do the optimization
          call lpnag (jphct,icp,cp2,k5,b,g2,is,x,ax,
      *               clamda,iw,liw,w,lw,idead,l6,jstart)
 c                                 warn if severe error
-         if (idead.gt.0) then 
+         if (idead.gt.0) then
+
             call lpwarn (idead,'REOPT ')
             exit
+
          end if 
 c                                 analyze solution, get refinement points
          call yclos2 (clamda,x,is,iter)

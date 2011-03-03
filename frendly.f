@@ -587,7 +587,7 @@ c                                 increments or counters:
 c                                 set convergence criteria for univeq:
          call concrt
 c                                 plot file output?
-         write (*,1020) 'Generate a plot file (y/n)?'
+         write (*,1020) 
          read (*,'(a)') y
 
          if (y.eq.'y'.or.y.eq.'Y') then

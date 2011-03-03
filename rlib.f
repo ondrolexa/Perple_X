@@ -5914,7 +5914,7 @@ c                               of ordered species:
          end do  
 c                               read the limit equations for the 
 c                               amount of the ordered endmembers
-         if (jsmod.ne.6.or.norder.gt.1) call readlm (tname,bad,vertex)
+         call readlm (tname,bad,vertex)
 
       end if 
 c                               read dependent endmembers
@@ -8735,120 +8735,6 @@ c-----------------------------------------------------------------------
 
       end 
 
-      subroutine specip (g,id)
-c----------------------------------------------------------------------
-c subroutine to solve speciation of a solution with one ordering parameter
-c and disordered composition p0a by halving. the speciated composition is returned 
-c in array pa. 
-c    id identifies the solution.
-c    g is the change in G for the stable speciation relative to a mechanical
-c      mixture of the endmembers. this version uses endmember proportions, see
-c      specis for the equivalent problem in terms of endmember fractions.
-c----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      integer i,id,jd,ind
-
-      double precision g,sign,dy,omega,gex,
-     *                 dgdp,odgdp,yt,ymax,sdgdp
-
-      double precision r,tr,pr,ps,p,t,xco2,u1,u2
-      common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
-c                                 working arrays
-      double precision z, pa, p0a, x, w, y
-      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1)
-c                                 new global arrays, 10/25/05:
-      integer ideps,icase
-      common/ cxt3i /ideps(2,j3,h9),icase(h9)
-
-      integer lstot,mstot,nstot,ndep,nord
-      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
-
-      double precision dvnu,deph,dydy
-      common/ cxt3r /dvnu(m4,j3,h9),deph(j3,h9),dydy(m4,j3,h9)
-c                                 model type
-      logical lorder, lexces, llaar, lrecip
-      common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-c----------------------------------------------------------------------
-c                                 two cases, ksmod = 6 non-reciprocal
-c                                 and ksmod = 8 reciprocal
-      jd = lstot(id) + 1 
-
-      if (.not.lrecip(id)) then 
-         do i = jd, nstot(id)
-            p0a(i) = 0d0
-         end do 
-      end if 
-c                                 find the maximum proportion of the 
-c                                 ordered species
-      ymax = 1d0
-c                                 get stoichiometric limit on 
-c                                 fraction of the ordered species
-      do i = 1, 2
-         yt = -p0a(ideps(i,1,id))/dydy(ideps(i,1,id),1,id)
-         if (yt.lt.ymax) ymax = yt
-      end do 
-c                                 no ordering possible if yt = 0
-      if (ymax-p0a(jd).lt.nopt(5)) then 
-         pa(jd) = p0a(jd)
-         goto 90
-      end if 
-
-      ymax = ymax - nopt(5)/1d3
-c                                 solve by halving
-      pa(jd) = p0a(jd) + ymax
-
-      do i = 1, 2
-         ind = ideps(i,1,id)
-         pa(ind) = p0a(ind) + dydy(ind,1,id)*ymax
-      end do 
-
-      odgdp = dgdp(id)
-c                                 if dgdp > 0 must be fully ordered
-      if (odgdp.lt.0d0) goto 90
-c                                 initialize at halfway point
-      dy = ymax/2d0
-      pa(jd) = pa(jd) - dy
-c                                 iteration loop:
-10    do i = 1, 2
-         ind = ideps(i,1,id)
-         pa(ind) = p0a(ind) + dydy(ind,1,id)*(pa(jd)-p0a(jd))
-      end do 
-
-      sdgdp = dgdp(id)
-
-      sign = odgdp*sdgdp
-
-      if (sign.gt.0d0) then 
-
-         odgdp = sdgdp
-         if ((pa(jd)-p0a(jd)).eq.nopt(5)) goto 90
-         pa(jd) = pa(jd) - dy
-         if ((pa(jd)-p0a(jd)).lt.nopt(5)) pa(jd) = p0a(jd) + nopt(5)
-         goto 10 
-
-      else if (dy.gt.nopt(5)) then 
-
-         dy = dy / 2d0
-         pa(jd) = pa(jd) + dy
-         goto 10
-
-      end if 
-c                                 sum the enthalpic + entropic  + excess contributions
-90    g = pa(jd)*deph(1,id) - t*omega(id,pa) + gex(id,pa)
-c                                 convert the ordered endmember fractions to 
-c                                 disordered fractions (stored in the p0a array).      
-c     if (lrecip(id)) call p0dord (id)
-
-      end 
-
       subroutine y2p4z (id)
 c----------------------------------------------------------------------
 c subroutine to convert site fraction expressions in terms of 
@@ -8971,17 +8857,26 @@ c----------------------------------------------------------------------
 c----------------------------------------------------------------------
       g = 0d0 
 
-      if (.not.lrecip(id)) then 
+      if (lrecip(id)) then 
+c                                 initialize limit expressions
+         call p0limt (id)
+
+      else 
+c                                 non-reciprocal, initialize p0 
+c                                 and if necessary, limits.
          do i = lstot(id)+1, nstot(id)
             p0a(i) = 0d0
             pa(i) = p0a(i)
-         end do 
+         end do
+
+         if (nord(id).gt.1) call p0limt (id)
+
       end if 
 c                                 as most models are single species and
 c                                 there is so much overhead in computing
 c                                 multiple speciation, use a special routine
 c                                 for single species models:
-      if (lrecip(id).or.nord(id).gt.1) then
+      if (nord(id).gt.1) then
  
          call speci2 (g,id,error)
 
@@ -9670,6 +9565,9 @@ c----------------------------------------------------------------------
       logical lopt
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      logical lorder, lexces, llaar, lrecip
+      common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
 c----------------------------------------------------------------------
       i1 = ideps(1,k,id)
       i2 = ideps(2,k,id)
@@ -9677,10 +9575,19 @@ c----------------------------------------------------------------------
       dy2 = dydy(i2,k,id)
       jd = lstot(id) + k 
       error = .false.
+c                                 starting point
+      if (lrecip(id)) then 
+c                                 reciprocal
+         call plimit (pmin,pmax,k,id) 
+         dpmax = pmax - pmin
+
+      else 
 c                                 find the maximum proportion of the 
 c                                 ordered species cannot be > the amount 
 c                                 of reactant initially present
-      dpmax = dmin1(-pa(i1)/dy1,-pa(i2)/dy2)
+         dpmax = dmin1(-pa(i1)/dy1,-pa(i2)/dy2)
+
+      end if 
 c                                 to avoid singularity set the initial 
 c                                 composition to the max - nopt(5), at this
 c                                 condition the first derivative < 0, 
@@ -9841,8 +9748,6 @@ c----------------------------------------------------------------------
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 c----------------------------------------------------------------------
-c                                 initialize limit expressions
-      call p0limt (id)
 c                                 get initial p values
       call pinc0 (id,lord)
 c                                 lord is the number of possible species
@@ -10060,9 +9965,33 @@ c                                 adjust the composition by the first increment
 
          end do 
 
+      else if (nord(id).eq.1) then
+c                                 only one order parameter, as currently programmed
+c                                 this will never be called. 
+         call plimit (pmn,pmx,1,id) 
+
+         if (pmn.ge.pmx) then 
+            pin(1) = .false.
+         else 
+
+            pin(1) = .true.
+            lord = 1
+            jd = lstot(id) + 1
+            i1 = ideps(1,1,id)
+            i2 = ideps(2,1,id)
+
+            dp = pmn + (pmx - pmn) * 0.9d0 - pa(jd)
+c                                 adjust the composition by the first increment
+            pa(i1) = pa(i1) + dydy(i1,1,id)*dp
+            pa(i2) = pa(i2) + dydy(i2,1,id)*dp 
+            pa(jd) = pa(jd) + dp
+
+         end if 
+
       else 
-c                                 uncorrelated,anticorrelated? 
-c       pause 
+c                                 unanticipated case?
+         call error (999,p0a(1),i,
+     *               'unanticpated correlation between ordered species')
 
       end if
 c                                 check for degenerate compositions
@@ -10424,11 +10353,17 @@ c---------------------------------------------------------------------
       integer length,iblank,icom
       character chars*1
       common/ cst51 /length,iblank,icom,chars(240)
+
+      integer jsmod
+      double precision vlaar
+      common/ cst221 /vlaar(m3,m4),jsmod
 c----------------------------------------------------------------------
 c                               initialize limit counter
       do j = 1, norder
          limn(j) = 0
       end do 
+
+      if (jsmod.eq.6.and.norder.eq.1) return
 
       call readcd (n9,len,ier)
 

@@ -18,7 +18,7 @@ c----------------------------------------------------------------------
 
       write (*,1000) 
 
-1000  format (/,'Perple_X version 6.6.5.5, compiled 3/1/2011.')
+1000  format (/,'Perple_X version 6.6.5.6, compiled 3/1/2011.')
 
       end
 
@@ -1742,6 +1742,8 @@ c---------------------------------------------------------------------
          write (*,1) 
       else if (ier.eq.2) then 
          write (*,2) realv
+      else if (ier.eq.3) then 
+         write (*,3)
       else if (ier.eq.5) then
          write (*,5) 
       else if (ier.eq.6) then
@@ -1900,6 +1902,10 @@ c---------------------------------------------------------------------
 2     format (/,'**warning ver002** the amount of a phase is < ',g12.3,
      *        '(-zero_mode) this may be',/,'indicative of numeric ',
      *        'instability',/)
+3     format (/,'**warning ver003** the solution model file is ',
+     *        'in a format that is no longer supported.',/,
+     *        'copy the current version from: ',
+     * 'www.perplex.ethz.ch/datafiles/solution_model.dat',/)
 5     format (/,'**warning ver005** fluid components are specified',
      *        ' as thermodynamic AND as either',/,'saturated phase',   
      *      ' or saturated components; almost certainly a BAD idea.',/)
