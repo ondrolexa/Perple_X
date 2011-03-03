@@ -295,12 +295,7 @@ c                                 -sdt
      *       - (thermo(6,id) + thermo(10,id) / t) / t
      *       + thermo(8,id) * dsqrt(t) + thermo(9,id)*dlog(t)
 c                                 vdp-ndu term:
-      if (thermo(18,id).eq.0d0) then 
-c                                 normal polynomial:
-          vdp =  p * (thermo(3,id) 
-     *               + (thermo(17,id) * t + thermo(12,id)) * t
-     *               + (thermo(16,id) * p + thermo(14,id)) * p)
-      else if (eos(id).eq.8) then 
+      if (eos(id).eq.8) then 
 c                                 HP Tait EoS, einstein thermal pressure
           pth = thermo(11,id)*(1d0/(dexp(thermo(15,id)/t)-1d0)
      *         -thermo(19,id))
@@ -324,6 +319,16 @@ c                                 int(vdp,p=Pr..Pf)
           vdp = ((((p*b+1d0)**c-(Pr*b+1d0)**c)/b/c+pr-p)*a-pr+p)*
 c                                 vt
      *          thermo(3,id)*dexp(thermo(11,id)*(t-tr))
+ 
+      else if (eos(id).eq.10) then 
+c                                 ideal gas EoS
+         vdp = r*t*dlog(p/pr)
+
+      else if (thermo(18,id).eq.0d0) then 
+c                                 normal polynomial:
+          vdp =  p * (thermo(3,id) 
+     *               + (thermo(17,id) * t + thermo(12,id)) * t
+     *               + (thermo(16,id) * p + thermo(14,id)) * p)
 
       else if (thermo(18,id).gt.0d0) then
 c                                 murnaghan EoS:
@@ -492,7 +497,6 @@ c                                 kill melt endmembers if T < T_melt
       end if 
 
       end
-
 
       subroutine zeroi (iarray,index,ivalue,n)
 
@@ -817,6 +821,8 @@ c                                 vt = v0*exp(b1*(T-Tr))
 c                                 tait parameters computed as f(T)
          end if 
 
+      else if (ieos.eq.10) then 
+c                                 ideal gas, could make a reference pressure correction here. 
       else 
 c                                 All remaining forms (ieos = 2, 4, >100) assume:
 c                                 1) alpha = b1 + b2*T + b3/T + b4/T^2 + b5/sqrt(T)
@@ -6204,7 +6210,10 @@ c-----------------------------------------------------------------------
 
       integer k,id,ids
 
-      double precision gph,gzero,dg
+      double precision gph,gzero,dg,x0
+
+      double precision p,t,xco2,u1,u2,tr,pr,r,ps
+      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 
       integer ipoint,imyn
       common/ cst60 /ipoint,imyn
@@ -6279,16 +6288,31 @@ c                                 add in entropy effect pseudocompound version
 
       else 
 c                              a pseudocompound without speciation:
-         if (ifp(id).ne.1) then
+         if (ifp(id).eq.1) then
+c                              get the excess and/or ideal mixing effect
+c                              and/or dqf corrections:
+            call fexces (id,gph)
+c                              excess props don't include vdp:
+            do k = 1, nstot(ids) 
+               gph = gph + gzero(jend(ids,2+k))*sxs(ixp(id)+k)
+            end do 
+
+         else if (ifp(id).ne.27) then 
 c                              get the excess and/or ideal mixing effect
 c                              and/or dqf corrections:
             if (ifp(id).eq.23) then 
+
                call toop(id,gph)
+
             else if (ifp(id).eq.26) then 
+
                call hcneos (gph,sxs(ixp(id)+1),
      *                      sxs(ixp(id)+2),sxs(ixp(id)+3))
+
             else
+
                call gexces (id,gph)
+
             end if 
 c                              compute mech mix G for 
 c                              all models except fluid 
@@ -6298,19 +6322,25 @@ c                              all models except fluid
             end do 
 
          else 
-c                              get the excess and/or ideal mixing effect
-c                              and/or dqf corrections:
-            call fexces (id,gph)
-c                              excess props don't include vdp:
+
+            gph = 0d0
+c                              ideal gas mix (ifp(id).eq.27)
             do k = 1, nstot(ids) 
-               gph = gph + gzero(jend(ids,2+k))*sxs(ixp(id)+k)
+               x0 = sxs(ixp(id)+k)
+               if (x0.le.0d0) cycle
+               call gcpd (jend(ids,2+k),dg)
+               gph = gph +  x0 *(dg + r*t*dlog(x0))
             end do 
+
          end if 
 c                              for van laar get fancier excess function         
          if (llaar(ids)) then
+
             call setw(ids) 
             call gvlaar (ikp(id),id,gph)
+
          end if 
+
       end if 
 
       end
@@ -6858,7 +6888,7 @@ c                                 evaluate margules coefficients
 c                                 evaluate dqf coefficients
          call setdqf(id)
 
-         if (ksmod(id).eq.1.or.ksmod(id).eq.2.or.ksmod(id).eq.3) then 
+         if (ksmod(id).eq.2.or.ksmod(id).eq.3) then 
 c                                 -------------------------------------
 c                                 macroscopic formulation for normal solutions.
             call gdqf (id,gg,y) 
@@ -6953,6 +6983,14 @@ c                                 andreas salt model
 
             do k = 1, 3
                gg = gg + y(k) * g(jend(id,2+k))
+            end do 
+
+         else if (ksmod(id).eq.27) then 
+c                                 ------------------------------------
+c                                 ideal gas
+            do k = 1, mstot(id)  
+               if (y(k).gt.0d0) 
+     *            gg = gg + y(k) * (g(jend(id,2+k)) + r*t*dlog(y(k)))
             end do 
 
          else if (ksmod(id).eq.0) then 
@@ -7693,7 +7731,7 @@ c                                 model type
       integer ndim,mxsp
       logical cart
       double precision scoors
-      common/ cxt86 /ndim(mdim),cart(mst,h9),mxsp,scoors(k24)
+      common/ cxt86 /scoors(k24),ndim(mdim),mxsp,cart(mst,h9)
 c----------------------------------------------------------------------
 c                                 auto_refine changes
       if (refine) then
@@ -10706,9 +10744,9 @@ c                               generate the pseudocompound:
 c                               read next solution
       end do 
 
-      if (vertex) write (*,1110) iphct - ipoint
-
       if (isoct.gt.0) then 
+
+         if (vertex) write (*,1110) iphct - ipoint
 c                               scan for "killed endmembers"
          do i = 1, ipoint
 c                               reset ikp
@@ -10716,7 +10754,7 @@ c                               reset ikp
          end do 
 c                               make general simplicial coordinates
 c                               for iterative subdivision
-         if (iopt(10).gt.0) call subdv0
+c        if (iopt(10).gt.0.and.im.gt.0) call subdv0
 
          if (io3.eq.0.and.output.and.vertex) then 
             write (n3,1020)
@@ -10894,7 +10932,7 @@ c---------------------------------------------------------------------
       integer ndim,mxsp
       logical cart
       double precision scoors
-      common/ cxt86 /ndim(mdim),cart(mst,h9),mxsp,scoors(k24)
+      common/ cxt86 /scoors(k24),ndim(mdim),mxsp,cart(mst,h9)
 
       integer iopt
       logical lopt
@@ -11010,7 +11048,7 @@ c----------------------------------------------------------------------
       integer ndim,mxsp
       logical cart
       double precision scoors
-      common/ cxt86 /ndim(mdim),cart(mst,h9),mxsp,scoors(k24)
+      common/ cxt86 /scoors(k24),ndim(mdim),mxsp,cart(mst,h9)
 
       double precision xmng, xmxg, xncg, xmno, xmxo
       common/ cxt6r /xmng(h9,mst,msp),xmxg(h9,mst,msp),xncg(h9,mst,msp),
@@ -11074,7 +11112,7 @@ c----------------------------------------------------------------------
       integer ndim,mxsp
       logical cart
       double precision scoors
-      common/ cxt86 /ndim(mdim),cart(mst,h9),mxsp,scoors(k24)
+      common/ cxt86 /scoors(k24),ndim(mdim),mxsp,cart(mst,h9)
 c---------------------------------------------------------------------
 c                                 do the first site:
       last = isp(1) - 1
@@ -11445,9 +11483,6 @@ c                               specified fluid saturation
 c                               no special treatment in computational
 c                               routines.
          ifp(iphct) = 0 
-      else if (jsmod.eq.26) then 
-c                               andreas's H2O-CO2-NaCl internal EoS
-         ifp(iphct) = 26
 c                               other special cases (internal solution
 c                               models)
       else if (jsmod.ge.2) then
@@ -11673,7 +11708,7 @@ c                              or a dependent endmember
             do j = 1, m3
                exces(j,iphct) = exces(j,iphct) + pa(index)*dqfg(j,i,im)
             end do 
-         else if (jsmod.ne.1) then
+         else 
             do j = 1, m3
                exces(j,iphct) = exces(j,iphct) + y(index)*dqfg(j,i,im)
             end do 

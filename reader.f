@@ -1268,7 +1268,8 @@ c                                 chemical potential
 
          if (icx.eq.0) then 
 c                                 a system property is  requested:
-            if (aflu.and.lflu.or.(.not.aflu)) then 
+c                                 if psys1 = 0, the system is just fluid.
+            if (aflu.and.lflu.or.(.not.aflu).or.psys1(1).eq.0d0) then 
 c                                 if lflu the property is to include 
 c                                 fluid (if present), i.e, use psys/ptot array:
                if (lop.eq.1) then 
@@ -2975,8 +2976,8 @@ c----------------------------------------------------------------
       common/ cxt18 /var(l3),dvr(2),vmn(l3),vmx(l3),jvar
 
       integer kkp, np, ncpd, ntot
-      double precision cp3, ctot3
-      common/ cxt15 /cp3(k5,k5),ctot3(k5),kkp(k5),np,ncpd,ntot
+      double precision cp3, amt
+      common/ cxt15 /cp3(k5,k5),amt(k5),kkp(k5),np,ncpd,ntot
 
       integer iprop,ivar,ind,ichem
       character*10 prname

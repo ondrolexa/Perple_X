@@ -18,7 +18,7 @@ c----------------------------------------------------------------------
 
       write (*,1000) 
 
-1000  format (/,'Perple_X version 6.6.5, compiled 1/29/2011.')
+1000  format (/,'Perple_X version 6.6.5.1, compiled 2/15/2011.')
 
       end
 
@@ -47,6 +47,8 @@ c lopt(9)  - automatic solvus tolerance -> T
 c lopt(10) - pseudocompound_glossary
 c lopt(11) - auto_refine_file
 c lopt(12) - option_list_files
+c lopt(13) - true if user set finite zero mode check
+c lopt(14) - logarithmic_p
 c nopt(5)  - speciation_tolerance
 c nopt(8)  - solvus_tolerance
 c nopt(20) - T_melt - kill melt endmembers at T < nopt(20)
@@ -104,6 +106,10 @@ c                                 auto_refine_file
       lopt(11) = .false.
 c                                 option_list_files
       lopt(12) = .false.
+c                                 user set finite zero mode
+      lopt(13) = .false.
+c                                 logarithimic P
+      lopt(14) = .false.
 c                                 minimum replicate label distance
       nopt(4) = 0.025
 c                                 speciation_tolerance
@@ -296,6 +302,8 @@ c                                 zero_bulk key
          else if (key.eq.'zero_mode') then
 c                                 zero_mode key
             read (strg,*) nopt(9)
+            if (nopt(9).gt.0d0) lopt(13) = .true.
+
          else if (key.eq.'iteration') then
 c                                 max iteration key
             read (strg,*)  iopt(10)
@@ -486,6 +494,10 @@ c                                 assume linear boundaries within a cell during 
  
             if (val.ne.'T') lopt(1) = .false. 
 
+         else if (key.eq.'logarithmic_p') then
+ 
+            if (val.eq.'T') lopt(14) = .true. 
+
          else if (key.eq.'Anderson-Gruneisen') then
 
             if (val.eq.'F') lopt(4) = .false.
@@ -638,7 +650,7 @@ c                                 compute resolution
          nopt(10) = nopt(13)
       else
          nopt(10) = 2d0*nopt(13)*nopt(14)*
-     *              (nopt(14)/dfloat(iopt(11)))**(iopt(10)-1)
+     *              (nopt(14)/dfloat(iopt(11)))**iopt(10)
       end if 
 c                                 --------------------------------------
 c                                 output
@@ -837,17 +849,22 @@ c                                 generic thermo parameters:
          if (iam.eq.1.and.icopt.ne.1) then 
 c                                 vertex output options, dependent potentials
             write (n,1013) valu(11)
-c                                 bad number
-            if (icopt.gt.3) write (n,1014) nopt(7)
+c                                 logarithmic_p, bad_number
+            if (icopt.gt.3) write (n,1014) lopt(14),nopt(7)
 
          end if 
 
       end if
 
-      if (iam.eq.3.or.iam.eq.2) then 
-c                                 WERAMI/MEEMUM output options
-         write (n,1230) nopt(7),(valu(i),i=2,5),nopt(6),valu(15),
-     *                  nopt(16),lopt(6)
+      if (iam.eq.3) then 
+c                                 WERAMI input/output options
+         write (n,1230) lopt(14),nopt(7),(valu(i),i=2,5),nopt(6),
+     *                  valu(15),nopt(16),lopt(6)
+
+      else if (iam.eq.2) then 
+c                                 MEEMUM input/output options
+         write (n,1231) lopt(14),nopt(7),(valu(i),i=2,3),nopt(6),
+     *                  valu(15),nopt(16),lopt(6)
 
       end if 
 
@@ -893,9 +910,10 @@ c                                 meemum or autorefine off
      *        4x,'approx_alpha           ',l1,10x,'[T] F',/,
      *        4x,'Anderson-Gruneisen     ',l1,10x,'[T] F',/,
      *        4x,'site_check             ',l1,10x,'[T] F')
-1013  format (/,2x,'Output options:',//,
+1013  format (/,2x,'Input/Output options:',//,
      *        4x,'dependent_potentials   ',a3,8x,'off [on]')
-1014  format (4x,'bad_number          ',f7.1,7x,'[0.0]')
+1014  format (4x,'logarithmic_p          ',l1,10x,'[F] T',/,
+     *        4x,'bad_number          ',f7.1,7x,'[0.0]')
 1015  format (/,2x,'Auto-refine options:',//,
      *        4x,'auto_refine            ',a3,8x,'off [manual] auto')
 1020  format (/,'To change these options see: ',
@@ -953,12 +971,22 @@ c                                 meemum or autorefine off
      *           '[20/150], >0, <',i4)
 1220  format (/,2x,'Composition options:',//,
      *        4x,'closed_c_space         ',l1,10x,'F [T]')
-1230  format (/,2x,'Output options:',//,
+1230  format (/,2x,'Input/Output options:',//,
+     *        4x,'logarithmic_p          ',l1,10x,'[F] T',/,
      *        4x,'bad_number          ',f7.1,7x,'[0.0]',/,
      *        4x,'compositions           ',a3,8x,'wt  [mol]',/,
      *        4x,'proportions            ',a3,8x,'wt  [vol] mol',/,
      *        4x,'interpolation          ',a3,8x,'off [on ]',/,
      *        4x,'extrapolation          ',a3,8x,'on  [off]',/,
+     *        4x,'vrh_weighting          ',f3.1,8x,'0->1 [0.5]',/,
+     *        4x,'poisson_ratio          ',a3,8x,'off [on ] all; ',
+     *        'Poisson ratio = ',f4.2,/,
+     *        4x,'melt_is_fluid          ',l1,10x,'[F] T')
+1231  format (/,2x,'Input/Output options:',//,
+     *        4x,'logarithmic_p          ',l1,10x,'[F] T',/,
+     *        4x,'bad_number          ',f7.1,7x,'[0.0]',/,
+     *        4x,'compositions           ',a3,8x,'wt  [mol]',/,
+     *        4x,'proportions            ',a3,8x,'wt  [vol] mol',/,
      *        4x,'vrh_weighting          ',f3.1,8x,'0->1 [0.5]',/,
      *        4x,'poisson_ratio          ',a3,8x,'off [on ] all; ',
      *        'Poisson ratio = ',f4.2,/,
@@ -1041,6 +1069,10 @@ c                                 this is done in case it's long text or
 c                                 several numbers on certain options. 
       strg = ' '
       strg1 = ' '
+      nval1 = '0'
+      nval2 = '0'
+      nval3 = '0'
+      
       if (iend-ibeg.gt.39) iend = ibeg+39
       write (strg,'(40a1)') (chars(i), i = ibeg, iend)
       write (strg1,'(40a1)') (chars(i), i = ibeg, ibeg+39)
@@ -1048,43 +1080,34 @@ c                                 several numbers on certain options.
       write (val,'(3a1)') (chars(i), i = ibeg, ibeg + 2)
 c                                 look for a second value
       ist = iscan (ibeg,240,' ')
-c                                 find a non blank character
+      if (ist.gt.len) return
+
       ibeg = iscnlt (ist,len,' ')
-c                                 if no blank exit
-      if (ibeg.gt.len) then 
-         nval1 = '0'
-      else 
-         iend = iscan (ibeg,len,' ')
-         if (iend-ibeg.gt.11) iend = ibeg + 11 
-         nval1 = ' '
-         write (nval1,'(12a1)') (chars(i), i = ibeg, iend)
-      end if 
+      if (ibeg.gt.len) return 
+
+      iend = iscan (ibeg,len,' ')
+      if (iend-ibeg.gt.11) iend = ibeg + 11 
+      write (nval1,'(12a1)') (chars(i), i = ibeg, iend)
 c                                 look for a third value
       ist = iscan (ibeg,240,' ')
-c                                 find a non blank character
+      if (ist.gt.len) return 
+
       ibeg = iscnlt (ist,len,' ')
-c                                 if no blank exit
-      if (ibeg.gt.len) then 
-         nval2 = '0'
-      else 
-         iend = iscan (ibeg,len,' ')
-         if (iend-ibeg.gt.11) iend = ibeg + 11 
-         nval2 = ' '
-         write (nval2,'(12a1)') (chars(i), i = ibeg, iend)
-      end if 
+      if (ibeg.gt.len) return 
+
+      iend = iscan (ibeg,len,' ')
+      if (iend-ibeg.gt.11) iend = ibeg + 11 
+      write (nval2,'(12a1)') (chars(i), i = ibeg, iend) 
 c                                 look for a fourth value
       ist = iscan (ibeg,240,' ')
-c                                 find a non blank character
+      if (ist.gt.len) return
+
       ibeg = iscnlt (ist,len,' ')
-c                                 if no blank exit
-      if (ibeg.gt.len) then 
-         nval3 = '0'
-      else 
-         iend = iscan (ibeg,len,' ')
-         if (iend-ibeg.gt.11) iend = ibeg + 11 
-         nval3 = ' '
-         write (nval3,'(12a1)') (chars(i), i = ibeg, iend)
-      end if 
+      if (ibeg.gt.len) return
+
+      iend = iscan (ibeg,len,' ')
+      if (iend-ibeg.gt.11) iend = ibeg + 11 
+      write (nval3,'(12a1)') (chars(i), i = ibeg, iend)
 
       end
 
@@ -1208,6 +1231,21 @@ c---------------------------------------------------------------------
  
 1000  format (/,' Your input is incorrect, probably you are using ',
      *        'a character where',/,' you should be using a number ',
+     *        'or vice versa, try again...',/)
+ 
+      end
+
+      subroutine rerr 
+c---------------------------------------------------------------------
+c rerror - routine to write bad input message for interactive i/o
+ 
+      implicit none
+c---------------------------------------------------------------------
+
+      write (*,1000)
+ 
+1000  format (/,'Your input is incorrect, probably you are using ',
+     *        'a character where',/,'you should be using a number ',
      *        'or vice versa, try again...',/)
  
       end
@@ -1685,6 +1723,8 @@ c---------------------------------------------------------------------
 
       if (ier.eq.1) then 
          write (*,1) 
+      else if (ier.eq.2) then 
+         write (*,2) realv
       else if (ier.eq.5) then
          write (*,5) 
       else if (ier.eq.6) then
@@ -1834,10 +1874,13 @@ c---------------------------------------------------------------------
          write (*,999) ier, char, realv, int
       end if
 
-1     format (/,'**warning ver001** the amount of a phase is < 0, this',
-     *        ' usually indicates that',/,'the specified amount of a ',
-     *        'saturated component is inadequate to saturate the system'
-     *        ,/)
+1     format (/,'**warning ver001** the amount of a saturated phase is'
+     *       ,' < 0, this indicates that',/,'the specified amount of a '
+     *       ,'saturated component is inadequate to saturate the system'
+     *       ,/)
+2     format (/,'**warning ver002** the amount of a phase is < ',g12.3,
+     *        '(-zero_mode) this may be',/,'indicative of numeric ',
+     *        'instability',/)
 5     format (/,'**warning ver005** fluid components are specified',
      *        ' as thermodynamic AND as either',/,'saturated phase',   
      *      ' or saturated components; almost certainly a BAD idea.',/)
@@ -2837,7 +2880,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer lun, ier, iscan, iscnlt, i, ibeg, iend, jlam
+      integer lun, ier, iscan, iscnlt, i, j, ibeg, iend, jlam
 
       character key*22, values*80, strg*80
 
@@ -2879,6 +2922,20 @@ c                                 flag for shear moduli
 c                                 standard thermo parameters
       do i = 1, k4
          thermo(i,k10) = 0d0
+      end do 
+c                                 shear modulus
+      do i = 1, k15
+         emodu(i) = 0d0
+      end do
+c                                 lamda transitions
+      do j = 1, m6
+         do i = 1, m7
+            tm(i,j) = 0d0
+         end do
+      end do
+c                                 t-dependent disorder
+      do i = 1, m8
+         td(i) = 0d0
       end do 
 
       do 
@@ -3976,7 +4033,7 @@ c----------------------------------------------------------------------
 
       integer i,j,iopt,ict,ier,jscan
  
-      character*5 pname*14, rname, y*1
+      character*5 pname, rname, y*1
 
       double precision sum
 
@@ -4031,7 +4088,7 @@ c                                 phase components
 c                                 ctransf, ask the user if the 
 c                                 new component will be a special 
 c                                 component
-                     write (*,1030) cmpnt(i),pname
+                     write (*,1010) cmpnt(i),pname
                      read (*,'(a)') y
                      if (y.eq.'y'.or.y.eq.'Y') cycle
                      id(j) = 0 
@@ -4099,8 +4156,8 @@ c                                 get the component stoichiometries:
       end do 
 
 1000  format ('Try again.')
-1010  format (/,a,' is a possible saturated phase component.',/,
-     *        'Is the new component ',a,' also a possible saturated ',
+1010  format (/,a,' is a possible saturated phase component. Is '
+     *        'the new component ',a,/,'also a possible saturated ',
      *        'phase component (Y/N)?')
 1030  format (/,'The current data base components are:')
 1040  format (12(1x,a))

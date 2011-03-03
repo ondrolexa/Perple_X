@@ -1,3 +1,298 @@
+      subroutine lpopt0 (idead)
+c-----------------------------------------------------------------------
+c lpopt0 - calls lp minimization after a call to initlp. lpopt0
+c does the minimization, writes error messages if necessary.
+
+c this is an utterly stupid formulation of the lp problem because i modified
+c the lp code to impose the implicit constraint that phase amounts were between
+c 0 and 1, but did not impose the constraint the sum of the amounts must be
+c be 1 (which would be unwise in any case). this requires that compositions and
+c g's must be normalized to the total number of moles (and therefore lots of 
+c extra bookkeeping). 
+c-----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer liw,lw,k,idead,inc
+
+      parameter (liw=2*k1+3,lw=2*(k5+1)**2+7*k1+5*k5)  
+
+      double precision ax(k5),x(k1),clamda(k1+k5),w(lw),oldt,oldp
+
+      integer is(k1+k5),iw(liw)
+
+      logical quit
+c                                 options from perplex_option.dat
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      integer hcp,idv
+      common/ cst52  /hcp,idv(k7)  
+
+      double precision ctot
+      common/ cst3  /ctot(k1)
+
+      double precision g
+      common/ cst2 /g(k1)
+
+      integer jphct,istart
+      common/ cst111 /jphct,istart
+
+      double precision a,b,c
+      common/ cst313 /a(k5,k1),b(k5),c(k1)
+
+      integer icomp,istct,iphct,icp
+      common/ cst6  /icomp,istct,iphct,icp  
+c                                 solution model counter
+      integer isoct
+      common/ cst79 /isoct
+
+      double precision p,t,xco2,u1,u2,tr,pr,r,ps
+      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
+
+      logical usv
+      integer pindex,tindex
+      common/ cst54 /pindex,tindex,usv
+
+      integer npt,jdv
+      logical fulrnk
+      double precision cptot,ctotal
+      common/ cst78 /cptot(k5),ctotal,jdv(k19),npt,fulrnk
+
+      save ax, x, clamda, w, is, iw
+c-----------------------------------------------------------------------
+      if (.not.usv) then 
+
+         inc = istct - 1
+
+         oldt = t
+
+         oldp = p
+c                                logarithmic_p option
+         if (lopt(14)) p = 1d1**p
+c                                t_stop option
+         if (t.lt.nopt(12)) t = nopt(12)
+
+         call gall
+
+         do k = 1, jphct
+            c(k) = g(k+inc)/ctot(k+inc)
+         end do
+
+      end if 
+c                                 idead = -1 tells lpnag to save parameters
+c                                 for subsequent warm starts
+      idead = -1
+c                                 optimize by nag
+      call lpnag (jphct,hcp,a,k5,b,c,is,x,ax,
+     *            clamda,iw,liw,w,lw,idead,l6,istart)
+
+      if (idead.gt.0) then
+c                                 look for severe errors                                            
+         call lpwarn (idead,'LPOPT ')
+c                                 on severe error do a cold start.
+c                                 necessary?
+         istart = 0
+
+      else if (hcp.eq.1.or.iopt(10).eq.0.or.isoct.eq.0.or.usv) then 
+c                                 no refinement, find the answer
+         call yclos0 (x,is,jphct) 
+c                                 final processing, .true. indicates static
+         call rebulk (.true.)
+
+      else
+c                                 find discretization points
+c                                 for refinement
+         call yclos1 (clamda,x,is,jphct,quit)
+c                                 returns quit if nothing to refine
+         if (quit) then 
+c                                 final processing, .true. indicates static
+            call rebulk (.true.)
+
+         else 
+c                                 reoptimize with refinement
+            call reopt (idead)
+c                                 final processing, .false. indicates dynamic
+            if (idead.eq.0) call rebulk (.false.) 
+
+         end if 
+         
+      end if 
+     
+      t = oldt
+      p = oldp
+
+      end 
+
+      subroutine reopt (idead)
+c-----------------------------------------------------------------------
+c reopt - given the results of an initial optimization for lpopt, reopt
+c iteratively refines the solution by generating pseudocompounds in the
+c neighborhood of the initial optimization.
+c-----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer liw, lw, iter, iref, i, j, id, idead, ids, jstart, inc
+
+      parameter (liw=2*k21+3,lw=2*(k5+1)**2+7*k21+5*k5)  
+
+      double precision  ax(k5), x(k21), clamda(k21+k5), w(lw)
+
+      integer is(k21+k5), iw(liw)
+c                                 -------------------------------------
+c                                 global variables
+c                                 adaptive coordinates
+      integer jphct
+      double precision g2, cp2
+      common/ cxt12 /g2(k21),cp2(k5,k21),jphct
+
+      integer icomp,istct,iphct,icp
+      common/ cst6  /icomp,istct,iphct,icp
+
+      double precision xa,b,xc
+      common/ cst313 /xa(k5,k1),b(k5),xc(k1)
+
+      integer ikp
+      common/ cst61 /ikp(k1)
+
+      integer hkp,mkp
+      common/ cst72 /hkp(k21),mkp(k19)
+
+      double precision g
+      common/ cst2  /g(k1)
+
+      double precision cp
+      common/ cst12 /cp(k5,k1)
+
+      double precision ctot
+      common/ cst3  /ctot(k1)
+c                                 adaptive x(i,j) coordinates
+      integer jcoct, jcoor, jkp
+      double precision zcoor
+      common/ cxt13 /zcoor(k20),jcoor(k21),jkp(k21),jcoct
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      integer lcoor,lkp
+      double precision ycoor
+      common/ cxt14 /ycoor(k22),lcoor(k19),lkp(k19)
+
+      integer ipoint,imyn
+      common/ cst60 /ipoint,imyn
+
+      integer npt,jdv
+      logical fulrnk
+      double precision cptot,ctotal
+      common/ cst78 /cptot(k5),ctotal,jdv(k19),npt,fulrnk
+c-----------------------------------------------------------------------
+c                                 the pseudocompounds to be refined
+c                                 are identified in jdv(1..npt)
+      iter = 1
+      jphct = 0
+      iref = 0 
+      jcoct = 1
+      inc = istct - 1
+c                                 --------------------------------------
+c                                 first iteration
+      do i = 1, npt
+
+         id = jdv(i) + inc
+
+         if (id.le.ipoint) then
+c                                 the point is a true compound
+            jphct = jphct + 1
+c                                 jkp indicates which phase a point is associated with
+            jkp(jphct) = -id
+c                                 hkp indicates which refinement point
+            hkp(jphct) = i
+
+            g2(jphct) = g(id)/ctot(id)
+
+            do j = 1, icp
+               cp2(j,jphct) = cp(j,id)/ctot(id)
+            end do 
+
+         else 
+c                                 the point is a pseudocompound, refine it
+            call resub (i,id,ikp(id),iref,iter)
+
+         end if
+c                                 reset jdv in case of exit
+         jdv(i) = jphct
+
+      end do 
+
+      if (iref.eq.0) return
+ 
+      do 
+c                                 iter is incremented before the operations,
+c                                 i.e., on the nth iteration, iter is n+1
+         iter = iter + 1
+c                                 cold start
+         jstart = 0 
+c                                 set idead = 0 to prevent lpnag from
+c                                 overwriting warm start parameters
+         idead = 0 
+c                                 do the optimization
+         call lpnag (jphct,icp,cp2,k5,b,g2,is,x,ax,
+     *               clamda,iw,liw,w,lw,idead,l6,jstart)
+c                                 warn if severe error
+         if (idead.gt.0) then 
+            call lpwarn (idead,'REOPT ')
+            exit
+         end if 
+c                                 analyze solution, get refinement points
+         call yclos2 (clamda,x,is,iter)
+c                                 save the id and compositions
+c                                 of the refinement points, this
+c                                 is necessary because resub rewrites
+c                                 the xcoor array.
+         call saver 
+
+         if (iter.gt.iopt(10)) exit 
+
+         jphct = 0 
+         iref = 0 
+         jcoct = 1
+c                                 generate new pseudocompounds
+         do i = 1, npt
+
+            ids = lkp(i)
+
+            if (ids.lt.0) then 
+c                                 the point is a true compound
+               jphct = jphct + 1
+               jkp(jphct) = ids
+               hkp(jphct) = mkp(i)
+               ids = -ids
+               g2(jphct) = g(ids)/ctot(ids)
+
+               do j = 1, icp
+                  cp2(j,jphct) = cp(j,ids)/ctot(ids)
+               end do 
+
+            else
+c                                 the point is a pseudocompound 
+               call resub (mkp(i),i,ids,iref,iter)
+
+            end if
+c                                 reset jdv in case of exit
+            jdv(i) = i 
+
+         end do 
+
+      end do 
+
+      end
+
       subroutine resub (jd,id,ids,iref,iter)
 c----------------------------------------------------------------------
 c subroutine to generate new pseudocompound compositions around the
@@ -111,7 +406,8 @@ c                                 conformal
          end do 
       end do 
                             
-      call subdv1 ('characters',ids) 
+c      call subdv1 ('characters',ids) 
+      call subdiv ('characters',ids)
 
       do 10 i = 1, ntot 
 
@@ -266,210 +562,33 @@ c                                  normalize the composition and free energy
          cp2(j,jphct) = cp2(j,jphct)/ctot2
       end do  
 
-      end
+      end 
 
-      subroutine reopt (idead,jdv,npt)
+      subroutine sortin 
 c-----------------------------------------------------------------------
-c reopt - given the results of an initial optimization for lpopt, reopt
-c iteratively refines the solution by generating pseudocompounds in the
-c neighborhood of the initial optimization.
+c sort the first npt values of jdv
 c-----------------------------------------------------------------------
       implicit none
 
       include 'perplex_parameters.h'
 
-      integer liw, lw, iter, iref, i, j, npt, id, idead, ids, jstart, 
-     *        inc
+      integer i, j, imin
 
-      parameter (liw=2*k21+3,lw=2*(k5+1)**2+7*k21+5*k5)  
+      integer npt,jdv
+      logical fulrnk
+      double precision cptot,ctotal
+      common/ cst78 /cptot(k5),ctotal,jdv(k19),npt,fulrnk
 
-      double precision  ax(k5), x(k21), clamda(k21+k5), w(lw)
+      do j = 1, npt-1
 
-      integer is(k21+k5), iw(liw), jdv(k19)
-c                                 -------------------------------------
-c                                 global variables
-c                                 adaptive coordinates
-      integer jphct
-      double precision g2, cp2
-      common/ cxt12 /g2(k21),cp2(k5,k21),jphct
+         imin = jdv(j)
 
-      integer icomp,istct,iphct,icp
-      common/ cst6  /icomp,istct,iphct,icp
+         do i = j+1, npt
 
-      double precision xa,b,xc
-      common/ cst313 /xa(k5,k1),b(k5),xc(k1)
-
-      integer ikp
-      common/ cst61 /ikp(k1)
-
-      integer hkp,mkp
-      common/ cst72 /hkp(k21),mkp(k19)
-
-      double precision g
-      common/ cst2  /g(k1)
-
-      double precision cp
-      common/ cst12 /cp(k5,k1)
-
-      double precision ctot
-      common/ cst3  /ctot(k1)
-c                                 adaptive x(i,j) coordinates
-      integer jcoct, jcoor, jkp
-      double precision zcoor
-      common/ cxt13 /zcoor(k20),jcoor(k21),jkp(k21),jcoct
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
-      integer lcoor,lkp
-      double precision ycoor
-      common/ cxt14 /ycoor(k22),lcoor(k19),lkp(k19)
-
-      integer ipoint,imyn
-      common/ cst60 /ipoint,imyn
-c-----------------------------------------------------------------------
-c                                 the pseudocompounds to be refined
-c                                 are identified in jdv(1..npt)
-      iter = 1
-      jphct = 0
-      iref = 0 
-      jcoct = 1
-      inc = istct - 1
-c                                 --------------------------------------
-c                                 first iteration
-      do i = 1, npt
-
-         id = jdv(i) + inc
-
-         if (id.le.ipoint) then
-c                                 the point is a true compound
-            jphct = jphct + 1
-c                                 jkp indicates which phase a point is associated with
-            jkp(jphct) = -id
-c                                 hkp indicates which refinement point
-            hkp(jphct) = i
-
-            g2(jphct) = g(id)/ctot(id)
-
-            do j = 1, icp
-               cp2(j,jphct) = cp(j,id)/ctot(id)
-            end do 
-
-         else 
-c                                 the point is a pseudocompound 
-c                                 to be refined
-            call resub (i,id,ikp(id),iref,iter)
-
-         end if
-c                                 reset jdv to point to the new
-c                                 indexing, this is only for the
-c                                 case of no iteration (i.e., resub
-c                                 increments jphct by one.
-         jdv(i) = jphct
-
-      end do 
-
-      if (iref.eq.0) goto 90
- 
-      do 
-c                                 iter is incremented before the operations,
-c                                 i.e., on the nth iteration, iter is n+1
-         iter = iter + 1
-c                                 cold start
-         jstart = 0 
-c                                 set idead = 0 to prevent lpnag from
-c                                 overwriting warm start parameters
-         idead = 0 
-c                                 do the optimization
-         call lpnag (jphct,icp,cp2,k5,b,g2,is,x,ax,
-     *               clamda,iw,liw,w,lw,idead,l6,jstart)
-c                                 warn if severe error
-         if (idead.gt.0) then 
-            call lpwarn (idead,'REOPT ')
-            goto 99
-         end if 
-c                                 analyze solution, get refinement points
-         call yclos2 (clamda,x,is,jdv,npt,iter,idead)
-
-         if (idead.gt.0) goto 99
-c                                 save the id and compositions
-c                                 of the refinement points, this
-c                                 is necessary because resub rewrites
-c                                 the xcoor array.
-         call saver (jdv,npt)
-
-         if (iter.gt.iopt(10)) exit 
-
-         jphct = 0 
-         iref = 0 
-         jcoct = 1
-c                                 generate new pseudocompounds
-         do i = 1, npt
-
-            ids = lkp(i)
-
-            if (ids.lt.0) then 
-c                                 the point is a true compound
-               jphct = jphct + 1
-               jkp(jphct) = ids
-               hkp(jphct) = mkp(i)
-               ids = -ids
-               g2(jphct) = g(ids)/ctot(ids)
-
-               do j = 1, icp
-                  cp2(j,jphct) = cp(j,ids)/ctot(ids)
-               end do 
-
-            else
-c                                 the point is a pseudocompound 
-               call resub (mkp(i),i,ids,iref,iter)
-
-            end if
-c                                 reset jdv in case we're going to exit
-            jdv(i) = i 
-
-         end do 
-
-         if (iref.eq.0) then
-c                                 has this ever happened? 
-            do i = 1, npt
-               jdv(i) = i 
-            end do  
-            exit
-
-         end if 
-
-      end do 
-
-90    if (npt.ne.icp) then 
-         idead = 1
-      else 
-c                                 get chemical potentials for output.
-         call getmus (cp2,g2,jdv,idead)       
-      end if 
-
-99    end 
-
-      subroutine sortin (ind,k,n)
-c-----------------------------------------------------------------------
-c sort the first k values of ind
-c-----------------------------------------------------------------------
-      implicit none
-
-      integer i, j, k, n, ind(n), imin
-
-      do j = 1, k-1
-
-         imin = ind(j)
-
-         do i = j+1, k
-
-            if (ind(i).lt.imin) then 
-               imin = ind(i)
-               ind(i) = ind(j)
-               ind(j) = imin
+            if (jdv(i).lt.imin) then 
+               imin = jdv(i)
+               jdv(i) = jdv(j)
+               jdv(j) = imin
             end if
  
          end do 
@@ -512,7 +631,7 @@ c                                             solution.
 
       end 
 
-      subroutine saver (jdv,npt)
+      subroutine saver 
 c----------------------------------------------------------------------
 c subroutine to save a copy of adaptive pseudocompound x(i,j) compositions
 c in the temporary array ycoor (also lcoor) used by resub to generate
@@ -523,7 +642,7 @@ c----------------------------------------------------------------------
       include 'perplex_parameters.h'
 c                                 -------------------------------------
 c                                 local variables
-      integer jdv(k19), npt, i, j, k, kcoct, id, ids, itic
+      integer i, j, k, kcoct, id, ids, itic
 c                                 -------------------------------------
 c                                 global variables:
 c                                 adaptive z coordinates
@@ -537,6 +656,11 @@ c                                 interim storage array
 c                                 x coordinate description
       integer istg, ispg, imlt, imdg
       common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
+
+      integer npt,jdv
+      logical fulrnk
+      double precision cptot,ctotal
+      common/ cst78 /cptot(k5),ctotal,jdv(k19),npt,fulrnk
 c----------------------------------------------------------------------
       kcoct = 0
 
@@ -634,7 +758,7 @@ c----------------------------------------------------------------------
 
       end 
 
-      subroutine rebulk (jdv,idead)
+      subroutine xebulk 
 c----------------------------------------------------------------------
 c rebulk computes the amounts of the stable compounds and eliminates 
 c those with zero modes (if requested).
@@ -643,7 +767,9 @@ c----------------------------------------------------------------------
  
       include 'perplex_parameters.h'
 
-      integer jdv(k19),idead,i,j,k,npt
+      integer i,j,k, mpt
+
+      double precision c(k5)
 
       integer iff,idss,ifug,ifyn,isyn
       common/ cst10  /iff(2),idss(h5),ifug,ifyn,isyn
@@ -654,10 +780,6 @@ c----------------------------------------------------------------------
       double precision cp
       common/ cst12 /cp(k5,k1)
 
-      integer ipvt
-      double precision a,b
-      common/ cst301 /a(k5,k5),b(k5),ipvt(k5)
-
       integer jbulk
       double precision cblk
       common/ cst300 /cblk(k5),jbulk
@@ -667,9 +789,9 @@ c                                 adaptive x(i,j) coordinates
       common/ cxt13 /zcoor(k20),jcoor(k21),jkp(k21),jcoct
 c                                 compositions of stable adaptive
 c                                 coordinates (and solution ids).
-      integer kkp,np,ncpd,ntot
-      double precision cp3,ctot3
-      common/ cxt15 /cp3(k5,k5),ctot3(k5),kkp(k5),np,ncpd,ntot
+      integer kkp, np, ncpd, ntot
+      double precision cp3, amt
+      common/ cxt15 /cp3(k5,k5),amt(k5),kkp(k5),np,ncpd,ntot
 c                                 options from perplex_option.dat
       integer iopt
       logical lopt
@@ -678,21 +800,49 @@ c                                 options from perplex_option.dat
 
       integer ikp
       common/ cst61 /ikp(k1)
-c----------------------------------------------------------------------
-c                                 load the transpose of the
-c                                 concentration matrix of the pseudo-
-c                                 invariant assemblage.
-      npt = icp 
 
-      do i = 1, jbulk
-         if (i.le.icp) then
-c                                 getcmp assigns kkp, so jkp is uneccesary
-c                                 from here on
-            call getcmp (i,jdv(i),jkp(jdv(i)))
-            do j = 1, jbulk
-               a(j,i) = cp3(j,i)
-            end do
-         else
+      integer npt,jdv
+      logical fulrnk
+      double precision cptot,ctotal
+      common/ cst78 /cptot(k5),ctotal,jdv(k19),npt,fulrnk
+c----------------------------------------------------------------------
+c                                 eliminate zero mode phases, this is 
+c                                 not done earlier to permit calculation
+c                                 of dependent potentials
+      mpt = 0
+
+      do i = 1, npt
+c                                 this should really be molar amount, not
+c                                 normalized amount
+         if (amt(i).le.nopt(9)) cycle
+         mpt = mpt + 1
+         jdv(mpt) = jdv(i)
+c                                 getcmp assigns cp3, cptot, ctot3 and kkp; jkp is 
+c                                 uneccesary from here on.
+         call getcmp (mpt,jdv(i),jkp(jdv(i)))         
+c                                 convert normalized amounts to molar 
+c                                 amounts
+         amt(mpt) = ctotal*amt(i)/cptot(mpt)
+
+      end do 
+
+      npt = mpt
+
+      if (jbulk.gt.icp) then  
+c                                 get the amounts of the saturated phases:
+         do i = jbulk-icp+1, jbulk
+c                                 initialize bulk                                 
+            c(i) = cblk(i)
+c                                 subtract the amount of the component in the 
+c                                 phases in the thermodynamic c-space
+            do j = 1, npt 
+               c(i) = c(i)- amt(j)*cp3(i,j)
+            end do 
+
+         end do 
+
+         do i = jbulk, jbulk-icp+1, -1
+c                                  cycle through the saturated phases
             npt = npt + 1
             k = idss(i-icp)
 c                                  set case for solution in saturated component
@@ -700,34 +850,29 @@ c                                  space, the endmember composition is not set,
 c                                  this is gonna cause problems, at least for 
 c                                  meemum
             if (ikp(k).eq.0) then 
-               kkp(i) = -k
+               kkp(npt) = -k
             else 
-               kkp(i) = ikp(k)
+               write (*,1000) 
+               stop 
             end if 
+c                                  amount of the staurated phase
+            amt(npt) = c(i)/cp(i,k)
+c                                  remove the saturated phase from 
+c                                  the bulk composition.
+            do j = icp+1, i - 1
+               c(j) = c(j) - amt(npt)*cp(j,k)
+            end do 
 
-            do j = 1, jbulk
-               a(j,i) = cp(j,k)
-            end do
-         end if
-      end do  
-c                                 factor the matrix
-      call factr1 (jbulk,idead)
-      if (idead.eq.1) goto 99 
-c                                 test for bounded compositions
-      do i = 1, jbulk
-c                                 load composition vector, the alpha
-c                                 vector is returned in the same array
-         b(i) = cblk(i)
-      end do
-c                                 solve for the alpha vector
-      call subst1 (jbulk)
-c                                 check for and eliminate zero mode
-c                                 phases
-      ntot = jbulk
+         end do
+      end if 
 
-      if (nopt(9).gt.0d0) call zmode (idead)
+      ntot = npt
 
-99    end
+1000  format (/,'**error ver901** solutions not allowed in saturated ',
+     *   'component composition space',/,'in adaptive optimization ',
+     *   'calculations, this limitation will be removed upon request.')
+
+      end
 
       logical function solvs1 (id1,id2,ids)
 c-----------------------------------------------------------------------
@@ -753,8 +898,8 @@ c-----------------------------------------------------------------------
 c                                 composition and model flags
 c                                 for final adaptive solution
       integer kkp,np,ncpd,ntot
-      double precision cp3, ctot3
-      common/ cxt15 /cp3(k5,k5),ctot3(k5),kkp(k5),np,ncpd,ntot
+      double precision cp3, amt
+      common/ cxt15 /cp3(k5,k5),amt(k5),kkp(k5),np,ncpd,ntot
 c-----------------------------------------------------------------------
       solvs1 = .false.
 
@@ -826,7 +971,7 @@ c                                 local variables
       integer idsol(k5),kdsol(k5,k5),ids,isite,xidsol,xkdsol,irep,
      *        i,j,jdsol(k5,k5),jd,k,l,nkp(k5),xjdsol(k5)
 
-      double precision bsol(k5,k5),cpnew(k5,k5),xx,ct,xb(k5), 
+      double precision bsol(k5,k5),cpnew(k5,k5),xx,xb(k5), 
      *                 bnew(k5),xnew(k21,mst,msp)
 c                                 -------------------------------------
 c                                 global variables:
@@ -839,15 +984,11 @@ c                                 x coordinate description
 
       double precision dcp,soltol
       common/ cst57 /dcp(k5,h8),soltol
-
-      integer ipvt
-      double precision a,b
-      common/ cst301 /a(k5,k5),b(k5),ipvt(k5)
 c                                 composition and model flags
 c                                 for final adaptive solution
       integer kkp, np, ncpd, ntot
-      double precision cp3, ctot3
-      common/ cxt15 /cp3(k5,k5),ctot3(k5),kkp(k5),np,ncpd,ntot
+      double precision cp3, amt
+      common/ cxt15 /cp3(k5,k5),amt(k5),kkp(k5),np,ncpd,ntot
 c                                  x-coordinates for the final solution
       double precision x3
       common/ cxt16 /x3(k21,mst,msp)
@@ -865,6 +1006,11 @@ c                                  x-coordinates for the final solution
 
       double precision z, pa, p0a, x, w, y
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1)
+
+      integer npt,jdv
+      logical fulrnk
+      double precision cptot,ctotal
+      common/ cst78 /cptot(k5),ctotal,jdv(k19),npt,fulrnk
 
       logical usv
       integer pindex,tindex
@@ -899,15 +1045,6 @@ c                                check if any solutions
 
       np = 0
       ncpd = ntot
-c                                the assemblage consists entirely 
-c                                of true compounds, nothing to do, but load
-c                                the cp3 array
-      do i = 1, ncpd
-         l = -kkp(i)
-         do j = 1, icomp
-            cp3(j,i) = cp(j,l)
-         end do 
-      end do 
 
       goto 99
 c                                figure out how many solutions
@@ -922,7 +1059,7 @@ c                                set solvus tolerance, avrger
 c                                 the pseudocompound is a true compound
             ncpd = ncpd + 1 
             idsol(ntot) = ncpd
-            bsol(ntot,ncpd) = b(i)
+            bsol(ntot,ncpd) = amt(i)
             kdsol(ntot,ncpd) = nkp(i)       
             jdsol(ntot,ncpd) = i   
          else 
@@ -935,7 +1072,7 @@ c                                 if match check for a solvus
 c                                 the pseudocompound matches a solution
 c                                 found earlier.
                      idsol(j) = idsol(j) + 1
-                     bsol(j,idsol(j)) = b(i)
+                     bsol(j,idsol(j)) = amt(i)
                      jdsol(j,idsol(j)) = i  
                      goto 30 
                   end if 
@@ -947,7 +1084,7 @@ c                                 phase.
             idsol(np) = 1
             kdsol(np,1) = nkp(i)
             jdsol(np,1) = i 
-            bsol(np,1) = b(i)
+            bsol(np,1) = amt(i)
 
          end if    
 30    continue  
@@ -1026,7 +1163,7 @@ c                                 initialize
          end do 
 
          do j = 1, idsol(i)
-            bnew(i) = bnew(i) + b(jdsol(i,j))
+            bnew(i) = bnew(i) + amt(jdsol(i,j))
          end do 
 
          do j = 1, idsol(i)
@@ -1036,7 +1173,7 @@ c                                conditional in case zero mode
 c                                is off:
             if (bnew(i).gt.0d0) then 
 
-               xx =  b(jd)/bnew(i)
+               xx =  amt(jd)/bnew(i)
 c                                save the new compositions
                do k = 1, icomp
                   cpnew(k,i) = cpnew(k,i) + xx*cp3(k,jd)
@@ -1068,18 +1205,13 @@ c
 c                                now reform the arrays kdv and b
       do i = 1, np
 
-         b(i) = bnew(i)
+         amt(i) = bnew(i)
          kkp(i) = kdsol(i,1)
          ids = kkp(i)
 
-         ct = 0d0 
-
          do j = 1, icomp
-            ct = ct + cpnew(j,i)
             cp3(j,i) = cpnew(j,i)
          end do
-
-         ctot3(i) = ct
 
          do j = 1, istg(ids)
             do k = 1, ispg(ids,j)
@@ -1101,7 +1233,7 @@ c                                 if auto_refine is on:
          do i = 1, ncpd
             k = np + i
             l = kdsol(ntot,i)
-            b(k) = bsol(ntot,i)
+            amt(k) = bsol(ntot,i)
             kkp(k) = l
 c                                for the sake of completeness load
 c                                compound composition into cp3 array
@@ -1143,10 +1275,10 @@ c                                compound composition into cp3 array
             l = idsol(i)
 
             do j = 1, ncpd
-               if (kdsol(ntot,j).eq.l) b(k) = b(k) + bsol(ntot,j)
+               if (kdsol(ntot,j).eq.l) amt(k) = amt(k) + bsol(ntot,j)
             end do 
 
-            b(k) = bsol(ntot,i)
+            amt(k) = bsol(ntot,i)
             kkp(k) = l
 c                                for the sake of completeness load
 c                                compound composition into cp3 array
@@ -1505,7 +1637,7 @@ c----------------------------------------------------------------------
 
       logical output 
 
-      double precision cpt(k5,k5),xt(k5,mst,msp),bt(k5),ct3(k5)
+      double precision cpt(k5,k5),xt(k5,mst,msp),bt(k5)
 c                                 x-coordinates for the final solution
       double precision x3
       common/ cxt16 /x3(k21,mst,msp)
@@ -1518,18 +1650,19 @@ c                                 x-coordinates for the final solution
 c                                 composition and model flags
 c                                 for final adaptive solution
       integer kkp, np, ncpd, ntot
-      double precision cp3, ctot3
-      common/ cxt15 /cp3(k5,k5),ctot3(k5),kkp(k5),np,ncpd,ntot
-
-      integer ipvt
-      double precision a,b
-      common/ cst301 /a(k5,k5),b(k5),ipvt(k5)
+      double precision cp3, amt
+      common/ cxt15 /cp3(k5,k5),amt(k5),kkp(k5),np,ncpd,ntot
 c                                 x coordinate description
       integer istg, ispg, imlt, imdg
       common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
+
+      integer npt,jdv
+      logical fulrnk
+      double precision cptot,ctotal
+      common/ cst78 /cptot(k5),ctotal,jdv(k19),npt,fulrnk
 c----------------------------------------------------------------------
 c                                 look for a match with known assemblages
       do 110 i = 1, iasct
@@ -1573,15 +1706,13 @@ c                                 occurence:
 
                if (kkp(k).eq.idasls(j,i)) then
 c                                 load temporary array
-                  bt(j) = b(k)
+                  bt(j) = amt(k)
 
                   if (kkp(k).gt.0) then 
 
                      do l = 1, icomp
                         cpt(l,j) = cp3(l,k)
                      end do
-
-                     ct3(j) = ctot3(k)
 
                      do l = 1, istg(kkp(k))
                         do m = 1, ispg(kkp(k),l)
@@ -1602,7 +1733,7 @@ c                                 this eliminates immiscible phases
 c                                 reload final arrays from temporary
          do j = 1, ntot
 
-            b(j) = bt(j)
+            amt(j) = bt(j)
             ids = idasls(j,i)
             kkp(j) = ids
 
@@ -1611,8 +1742,6 @@ c                                 reload final arrays from temporary
                do k = 1, icomp
                   cp3(k,j) = cpt(k,j)
                end do
-
-               ctot3(j) = ct3(j)
 
                do k = 1, istg(ids)
                   do l = 1, ispg(ids,k)
@@ -1662,18 +1791,14 @@ c                                 global variables
 c                                 composition and model flags
 c                                 for final adaptive solution
       integer kkp, np, ncpd, ntot
-      double precision cp3, ctot3
-      common/ cxt15 /cp3(k5,k5),ctot3(k5),kkp(k5),np,ncpd,ntot
+      double precision cp3, amt
+      common/ cxt15 /cp3(k5,k5),amt(k5),kkp(k5),np,ncpd,ntot
 c                                 x-coordinates for the final solution
       double precision x3
       common/ cxt16 /x3(k21,mst,msp)
 c                                 x coordinate description
       integer istg, ispg, imlt, imdg
       common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
-c                                 molar amounts (b)
-      integer ipvt
-      double precision a,b
-      common/ cst301 /a(k5,k5),b(k5),ipvt(k5)
 c                                 i/o
       integer io3,io4,io9
       common / cst41 /io3,io4,io9
@@ -1689,9 +1814,9 @@ c                                 i/o
 c----------------------------------------------------------------------
       if (io4.eq.1) return
 c                                graphics output  
-      write (n5,1000) ico,jco,iap(ibulk)
+      write (n5,'(10(i8,1x))') ico,jco,iap(ibulk)
 c                                phase molar amounts
-      write (n5,1010) (b(i),i=1,np+ncpd)
+      write (n5,1010) (amt(i),i=1,np+ncpd)
 c                                solution phase compositions
       do i = 1, np
          ids = kkp(i)
@@ -1700,31 +1825,32 @@ c                                solution phase compositions
 c                                dependent potentials
       if (jpot.ne.1) write (n5,1010) (mu(i),i=1,hcp)
 
-1000  format (10(i8,1x))
 1010  format (6(g16.8,1x))
 
       end 
 
-      subroutine yclos1 (clamda,x,is,jphct,jdv,npt,idead)
+      subroutine yclos1 (clamda,x,is,jphct,quit)
 c----------------------------------------------------------------------
 c subroutine to identify pseudocompounds close to the solution for 
-c subsequent refinement, for iteration 1.
+c subsequent refinement. this routine is only called as preparation
+c for iterative refinement.
 c----------------------------------------------------------------------
       implicit none
 
       include 'perplex_parameters.h'
 
-      integer jphct, jdv(k19), npt, i, j, k, is(k1+k5), imin,
-     *        idsol(k5), kdv(h8+1), nsol, mpt, iam, id, idead, is1,
-
-     *        left, right, inc, jdsol(k5,k5), kdsol(k5), max, idm(h8+1)
+      integer jphct, i, j, k, is(k1+k5), idsol(k5), kdv(h8+1), nsol, 
+     *        mpt, iam, id, is1, left, right, inc, jdsol(k5,k5), 
+     *        kdsol(k5), max, idm(h8+1)
 
       external ffirst
 
-      logical solvus
+      logical solvus, quit
 
-      double precision clamda(k1+k5), cmin, dlamda(h8+1), x(k1), 
-     *                 slam(h8+1)
+      double precision clamda(k1+k5), dlamda(h8+1), x(k1),  slam(h8+1)
+
+      integer ipoint,imyn
+      common/ cst60 /ipoint,imyn
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
@@ -1742,23 +1868,36 @@ c----------------------------------------------------------------------
 
       integer ikp
       common/ cst61 /ikp(k1)
+
+      integer kkp, np, ncpd, ntot
+      double precision cp3, amt
+      common/ cxt15 /cp3(k5,k5),amt(k5),kkp(k5),np,ncpd,ntot
+
+      integer npt,jdv
+      logical fulrnk
+      double precision cptot,ctotal
+      common/ cst78 /cptot(k5),ctotal,jdv(k19),npt,fulrnk
 c----------------------------------------------------------------------
       npt = 0 
-      nsol = 0 
-      cmin = 1d99
-      imin = 0 
+      nsol = 0
       inc = istct - 1
       is1 = isoct + 1 
+      quit = .true.
 c                                 solvus tolerance, yclos1, was 5
       soltol = 5d0*nopt(8)
 
       do i = 1, jphct
 
-         if (is(i).eq.0.or.is(i).eq.2) then 
+         if (is(i).ne.1) then 
 c                                 make a list of found phases:
             id = i + inc
+c                                 currently endmember compositions are not 
+c                                 refined (this is probably a mistake, but 
+c                                 seems to work fine), so use id > ipoint
+c                                 to identify a refineable point
+            if (id.gt.ipoint) quit = .false.
 
-            if (ikp(id).ne.0) then 
+            if (ikp(id).ne.0.and.id.gt.ipoint) then 
                do j = 1, nsol
                   if (ikp(id).eq.idsol(j)) then 
                      kdsol(j) = kdsol(j) + 1
@@ -1777,156 +1916,118 @@ c                                 new point, add to list
 10          npt = npt + 1
             jdv(npt) = i
 
-         else if (clamda(i).lt.cmin) then 
-c                                 find the nearest phase           
-            imin = i
-            cmin = clamda(i)
-
          end if 
 
       end do
 
-      if (iopt(10).gt.1) then
-c                                 not done iterating, add the metastable
-c                                 phases
-         do i = 1, is1
-            slam(i) = 1d99
-            idm(i) = 0 
-         end do 
+      do i = 1, is1
+         slam(i) = 1d99
+         idm(i) = 0 
+      end do 
 c                                 perp 6.6.3, make a list of metastable
 c                                 phases, this list includes all compounds
 c                                 and the least metastable composition of
 c                                 each solution.      
-         do 20 i = 1, jphct
+      do 20 i = 1, jphct
 
-            if (is(i).ne.1) cycle 
+         if (is(i).ne.1) cycle 
 
-            id = i + inc 
-            iam = ikp(id)
+         id = i + inc 
+         iam = ikp(id)
 
-            if (iam.ne.0) then   
+         if (iam.ne.0.and.id.gt.ipoint) then   
 
-               if (clamda(i).lt.slam(iam)) then
+            if (clamda(i).lt.slam(iam)) then
 c                                the composition is more stable
 c                                than the previous composition 
 c                                of the solution. check if it's 
 c                                one of the stable solutions                               
-                  do j = 1, nsol
-                     if (iam.eq.idsol(j)) then
+               do j = 1, nsol
+                  if (iam.eq.idsol(j)) then
 c                                it's already stable, only accept
 c                                it if its further than the solvus
 c                                tolerance from any of the stable
 c                                compositions.
-                        do k = 1, kdsol(j)
-                           if (.not.solvus(jdsol(k,j),id,iam)) goto 20
-                        end do 
-                     end if
-                  end do
+                     do k = 1, kdsol(j)
+                        if (.not.solvus(jdsol(k,j),id,iam)) goto 20
+                     end do 
+                  end if
+               end do
 c                                the composition is stable
-                  slam(iam) = clamda(i)
-                  idm(iam) = i
+               slam(iam) = clamda(i)
+               idm(iam) = i
 
-               end if
+            end if
 
-            else 
+         else 
 c                                a compound, save only one
-               if (clamda(i).lt.slam(is1)) then 
-                  slam(is1) = clamda(i)
-                  idm(is1) = i
-               end if 
- 
+            if (clamda(i).lt.slam(is1)) then 
+               slam(is1) = clamda(i)
+               idm(is1) = i
             end if 
+ 
+         end if 
 
-20       continue 
+20    continue 
 c                                 load the metastable points into
 c                                 kdv
-         mpt = 0 
+      mpt = 0 
 
-         do i = 1, is1
+      do i = 1, is1
 
-            if (idm(i).eq.0) cycle
-            mpt = mpt + 1
-            kdv(mpt) = idm(i)
-            dlamda(mpt) = clamda(idm(i))
+         if (idm(i).eq.0) cycle
+         mpt = mpt + 1
+         kdv(mpt) = idm(i)
+         dlamda(mpt) = clamda(idm(i))
 
-         end do 
+      end do 
 
-         if (mpt.eq.0) then
-c                                 no points other than active
-            goto 999
-
-         else if (mpt.le.3) then 
+      if (mpt.le.3) then 
 c                                 less metastable refinement points than
 c                                 iopt(12)
             max = mpt
 
-         else 
+      else 
 c                                 sort the metastable points to
 c                                 find the most stable iopt(12) points
-            left = 1
-            right = mpt
-            max = 3
+         left = 1
+         right = mpt
+         max = 3
 
-            call ffirst (dlamda,kdv,left,right,max,h8+1,ffirst)
+         call ffirst (dlamda,kdv,left,right,max,h8+1,ffirst)
 
-         end if 
+      end if 
  
-         do i = 1, max
+      do i = 1, max
+
+         jdv(npt+i) = kdv(i)
+c                                 a metastable solution to be refined
+         if (kdv(i)+inc.gt.ipoint) quit = .false.
+      end do
+
+      if (quit) then 
+c                                 zero mode filter and 
+c                                 save amounts for final processing
+         mpt = npt
+         npt = 0 
+
+         do i = 1, mpt
+            if (x(jdv(i)).lt.nopt(9)) cycle 
             npt = npt + 1
-            jdv(npt) = kdv(i)
-         end do
-c                                 sort the phases, why? don't know, but it's 
-c                                 necessary
-         call sortin (jdv,npt,k19) 
+            jdv(npt) = jdv(i)
+            amt(npt) = x(jdv(i)) 
+         end do 
 
       else 
-c                                 done iterating, try to correct bad results
-         if (npt.gt.icp) then 
-c                                 look through for zero phases
-            do i = 1, npt
-               if (x(jdv(i)).eq.0d0) idead = idead + 1
-            end do
 
-            if (idead.ge.npt-icp) then 
-
-               idead = npt - icp 
-               mpt = 0
-c                                 eliminate zero phase
-               do i = 1, npt 
-
-                  if (x(jdv(i)).eq.0d0) then 
-                     idead = idead - 1
-                     cycle
-                  end if 
-
-                  mpt = mpt + 1
-                  jdv(mpt) = jdv(i)
-                  if (idead.eq.0) exit
-
-               end do 
-
-               npt = mpt 
-
-            else 
-
-               idead = 1
-
-            end if 
-
-         else if (icp-npt.eq.1.and.imin.ne.0) then 
-c                                 recover by adding the closest point 
-            npt = npt + 1
-            jdv(npt) = imin
-
-         else if (npt.lt.icp) then 
-
-            idead = 1 
-
-         end if 
+         npt = npt + max
+c                                 sort the phases, why? don't know, but it's 
+c                                 necessary
+         call sortin 
 
       end if 
 
-999   end 
+      end 
 
       subroutine ffirst (a, ind, left, right, k, n, dumsub)
 c-----------------------------------------------------------------------
@@ -2413,7 +2514,7 @@ c---------------------------------------------------------------------
 
       logical bad
 
-      double precision ctotal,u,s,vol,tot 
+      double precision u,s,vol,tot 
 
       double precision ctot
       common/ cst3  /ctot(k1)
@@ -2449,6 +2550,11 @@ c                                 stuff used in lpnag
 
       integer iam,jam,tloop,ploop
       common/ cst55 /iam(k1),jam(k1),tloop,ploop
+
+      integer npt,jdv
+      logical fulrnk
+      double precision cptot,ctotal
+      common/ cst78 /cptot(k5),ctotal,jdv(k19),npt,fulrnk
 c-----------------------------------------------------------------------
       inc = istct - 1
 
@@ -2546,7 +2652,7 @@ c                                 stuff for lpnag
 
       subroutine gall 
 c-----------------------------------------------------------------------
-c subroutine gall computes molar free energies of all phases.
+c subroutine gall computes molar free energies of all static compounds.
 c-----------------------------------------------------------------------
       implicit none
  
@@ -2554,7 +2660,7 @@ c-----------------------------------------------------------------------
 
       integer i,j,k,id
 
-      double precision dg1,gval,dg,gzero,g0(k5),gex
+      double precision dg1,gval,dg,gzero,g0(k5),gex,x0
 
       integer icomp,istct,iphct,icp
       common/ cst6 /icomp,istct,iphct,icp
@@ -2583,9 +2689,6 @@ c-----------------------------------------------------------------------
       integer ids,isct,icp1,isat,io2
       common/ cst40 /ids(h5,h6),isct(h5),icp1,isat,io2
 
-      integer ifp
-      common/ cxt32 /ifp(k1)
-
       integer ixp
       double precision sxs,exces
       common/ cst304 /sxs(k13),exces(m3,k1),ixp(k1)
@@ -2601,6 +2704,12 @@ c                                 model type
 
       integer lstot,mstot,nstot,ndep,nord
       common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
+
+      double precision p,t,xco2,u1,u2,tr,pr,r,ps
+      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
+
+      integer ksmod, ksite, kmsol, knsp
+      common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
 c-----------------------------------------------------------------------
 c                                 compute the chemical potential
 c                                 of the projected components.
@@ -2628,7 +2737,8 @@ c                                 are allocated independent of ifct!
 c                                 now do solutions:
       do i = 1, isoct
 c                                 check if normal solution:
-         if (ifp(id).le.0) then 
+         if (.not.llaar(i).and.(ksmod(i).eq.7.or.
+     *       ksmod(i).eq.2.or.ksmod(i).eq.24.or.ksmod(i).eq.25)) then 
 c                                 it's normal margules or ideal:
             do j = 1, jend(i,2)
 c                                 initialize with excess energy, dqf,
@@ -2643,13 +2753,10 @@ c                                 and configurational entropy terms
 
             end do 
 
-         else if (ifp(id).eq.1) then
+         else if (ksmod(i).eq.0) then
 c                                 it's a fluid compound, the way 
 c                                 things are now it must have two
 c                                 components.
-c                                 first get the reference state 
-c                                 free energy:
-            
             do j = 1, mstot(i)
                g0(j) = gzero(jend(i,2+j))
             end do 
@@ -2740,7 +2847,7 @@ c                                 add the real excess energy
 
             end do 
 
-         else if (ifp(id).eq.23) then
+         else if (ksmod(i).eq.23) then
 c                                 toop melt:
             do j = 1, nstot(i)
                g0(j) = gzero(jend(i,2+j))
@@ -2753,7 +2860,8 @@ c                                 toop melt:
                end do 
                id = id + 1
             end do 
-         else if (ifp(id).eq.26) then
+
+         else if (ksmod(i).eq.26) then
 c                                 H2O-CO2-Salt:
             do j = 1, jend(i,2)
         
@@ -2767,7 +2875,25 @@ c                                 H2O-CO2-Salt:
                id = id + 1
 
             end do
+
+         else if (ksmod(i).eq.27) then 
+
+            do j = 1, jend(i,2)
+
+               g(id) = 0d0 
+c                                 ideal gas mix
+               do k = 1, mstot(i)
+                  x0 = sxs(ixp(id)+k)
+                  if (x0.le.0d0) cycle 
+                  g(id) = g(id) + (g(jend(i,2+k)) + r*t*dlog(x0)) * x0 
+               end do
+
+               id = id + 1
+
+            end do  
+ 
          end if 
+
       end do 
 
       end
@@ -2882,14 +3008,18 @@ c                                 create special plot output file
          if (first) write (*,1220) name
 
       else if (jbulk.ge.icp.and.io4.eq.1) then 
+
          if (first) write (*,1220) 'none requested'
+
       end if
 c                              if jtest = 3, write a list of reactions for
 c                              stefano
       if ((icopt.eq.1.or.icopt.eq.3).and.j.eq.3) then 
+
          call mertxt (name,prject,'_reaction_list.txt',0)
          open (n6,file=name)
          if (first) write (*,1250) name
+
       end if 
 
       first = .false.
@@ -2953,128 +3083,7 @@ c                                 compute free energy change of the rxn
 
       end
 
-      subroutine lpopt0 (idead)
-c-----------------------------------------------------------------------
-c lpopt0 - calls lp minimization after a call to initlp. lpopt0
-c does the minimization, writes error messages if necessary.
-
-c this is an utterly stupid formulation of the lp problem because i modified
-c the lp code to impose the implicit constraint that phase amounts were between
-c 0 and 1, but did not impose the constraint the sum of the amounts must be
-c be 1 (which would be unwise in any case). this requires that compositions and
-c g's must be normalized to the total number of moles (and therefore lots of 
-c extra bookkeeping). 
-c-----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      integer liw,lw,k,idead,npt,inc
-
-      parameter (liw=2*k1+3,lw=2*(k5+1)**2+7*k1+5*k5)  
-
-      double precision ax(k5),x(k1),clamda(k1+k5),w(lw),oldt
-
-      integer is(k1+k5),iw(liw),jdv(k19)
-c                                 options from perplex_option.dat
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
-      integer hcp,idv
-      common/ cst52  /hcp,idv(k7)  
-
-      double precision ctot
-      common/ cst3  /ctot(k1)
-
-      double precision g
-      common/ cst2 /g(k1)
-
-      integer jphct,istart
-      common/ cst111 /jphct,istart
-
-      double precision a,b,c
-      common/ cst313 /a(k5,k1),b(k5),c(k1)
-
-      integer icomp,istct,iphct,icp
-      common/ cst6  /icomp,istct,iphct,icp  
-c                                 solution model counter
-      integer isoct
-      common/ cst79 /isoct
-
-      double precision p,t,xco2,u1,u2,tr,pr,r,ps
-      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
-
-      logical usv
-      integer pindex,tindex
-      common/ cst54 /pindex,tindex,usv
-
-      save ax, x, clamda, w, is, iw
-c-----------------------------------------------------------------------
-      inc = istct - 1
-
-      if (.not.usv) then 
-
-         oldt = t
-
-         if (t.lt.nopt(12)) t = nopt(12)
-
-         call gall
-
-         do k = 1, jphct
-            c(k) = g(k+inc)/ctot(k+inc)
-         end do
-
-      end if 
-c                                 idead = -1 tells lpnag to save parameters
-c                                 for subsequent warm starts
-      idead = -1
-c                                 optimize by nag
-      call lpnag (jphct,hcp,a,k5,b,c,is,x,ax,
-     *            clamda,iw,liw,w,lw,idead,l6,istart)
-
-      if (idead.gt.0) then
-c                                 look for severe errors                                            
-         call lpwarn (idead,'LPOPT ')
-c                                 on severe error do a cold start.
-c                                 necessary?
-         istart = 0
-         return
-
-      end if 
-
-      if (hcp.eq.1.or.iopt(10).eq.0.or.isoct.eq.0.or.usv) then 
-c                                 no refinement, final processing
-c                                 with yclos0
-         call yclos0 (x,is,jphct,jdv,idead) 
-c                                 get potentials, this is just for output
-c                                 if not usv.
-         call getmus (a,c,jdv,idead)
-
-      else
-c                                 find discretization points
-c                                 for refinement
-         call yclos1 (clamda,x,is,jphct,jdv,npt,idead)
-
-         if (idead.gt.0) return 
-c                                 reoptimize with refinement
-         call reopt (idead,jdv,npt)
-c                                 coming out of reopt the stable points
-c                                 are indexed by jdv
-         if (idead.gt.0) return 
-c                                 get amounts of pseudocompounds
-         call rebulk (jdv,idead)
-
-      end if 
-c                                 test for solvi and average
-      if (idead.eq.0) call avrger       
-
-      t = oldt
-
-      end 
-
-      subroutine yclos0 (x,is,jphct,jdv,idead)
+      subroutine yclos0 (x,is,jphct)
 c----------------------------------------------------------------------
 c subroutine to save optimization results for non-iterative refinement
 c----------------------------------------------------------------------
@@ -3082,298 +3091,40 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer jdv(k19),inc,i,j,idead,jphct,mpt,npt,is(k1+k5),id
+      integer i,jphct,is(k1+k5)
 
-      double precision u,x(k1)
-
-      logical bad
-
-      integer ids,isct,icp1,isat,io2
-      common/ cst40 /ids(h5,h6),isct(h5),icp1,isat,io2
-
-      integer iff,idss,ifug,ifyn,isyn
-      common/ cst10  /iff(2),idss(h5),ifug,ifyn,isyn
-
-      integer ipvt
-      double precision a,b
-      common/ cst301 /a(k5,k5),b(k5),ipvt(k5)
-
-      double precision cp
-      common/ cst12 /cp(k5,k1)
-
-      integer hcp,idv
-      common/ cst52  /hcp,idv(k7)  
-
-      integer icomp,istct,iphct,icp
-      common/ cst6  /icomp,istct,iphct,icp
-
-      double precision ctot
-      common/ cst3  /ctot(k1)
-
-      integer jbulk
-      double precision cblk
-      common/ cst300 /cblk(k5),jbulk
+      double precision x(k1) 
 c                                 compositions of stable adaptive
 c                                 coordinates (and solution ids).
-      integer kkp,np,ncpd,ntot
-      double precision cp3,ctot3
-      common/ cxt15 /cp3(k5,k5),ctot3(k5),kkp(k5),np,ncpd,ntot
-c                                 options from perplex_option.dat
+      integer kkp, np, ncpd, ntot
+      double precision cp3, amt
+      common/ cxt15 /cp3(k5,k5),amt(k5),kkp(k5),np,ncpd,ntot
+
+      integer npt,jdv
+      logical fulrnk
+      double precision cptot,ctotal
+      common/ cst78 /cptot(k5),ctotal,jdv(k19),npt,fulrnk
+
       integer iopt
       logical lopt
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
-      integer ipoint,imyn
-      common/ cst60 /ipoint,imyn
-
-      integer ikp
-      common/ cst61 /ikp(k1)
-
-      logical usv
-      integer pindex,tindex
-      common/ cst54 /pindex,tindex,usv
-
-      integer iam,jam,tloop,ploop
-      common/ cst55 /iam(k1),jam(k1),tloop,ploop
 c----------------------------------------------------------------------
 
       npt = 0 
-      inc = istct - 1
 
       do i = 1, jphct
 
-         if (is(i).ne.0.and.is(i).ne.2) cycle  
-c                                 new point, add to list, two acceptable
-c                                 cases is = 0 inactive 
-c                                       is = 2 active at upper bound (this
-c                                            is really only possible for a 
-c                                            one component system (though
-c                                            conceivably might occur in 
-c                                            fractionation calculations).
+         if (is(i).eq.1.or.x(i).lt.nopt(9)) cycle  
+c                                 acceptable cases 0 active, between bounds
+c                                                  2 active, upper bound 
             npt = npt + 1
-
             jdv(npt) = i 
+            amt(npt) = x(i)
  
       end do
-
-      if (hcp.eq.1.and.npt.gt.1) then 
-
-         npt = 0 
-
-         do i = 1, jphct
-
-            if (is(i).ne.2) cycle 
-
-            npt = npt + 1
-            jdv(npt) = i
-
-         end do
-
-      end if 
-
-      if (npt.gt.hcp) then 
-c                                 look through for zero phases
-         do i = 1, npt
-            if (x(jdv(i)).eq.0d0) idead = idead + 1
-         end do
-
-         if (idead.ge.npt-hcp) then 
-
-            idead = npt - hcp 
-            mpt = 0
-c                                 eliminate zero phase
-            do i = 1, npt 
-
-               if (x(jdv(i)).eq.0d0.and.idead.gt.0) then 
-                  idead = idead - 1
-c                                 reset the active flag
-c                 is(jdv(i)) = 1
-                  cycle
-               end if 
-
-               mpt = mpt + 1
-               jdv(mpt) = jdv(i)
-
-            end do 
-
-            npt = mpt 
-
-         else 
-
-            idead = 1
-
-         end if 
-
-      else if (npt.lt.hcp) then 
-
-         idead = 1 
-
-      end if 
-
-      if (idead.eq.1) then 
-        call warn (88,0d0,idead,'LPOPT') 
-        goto 99
-      end if 
-c                                 the assemblage is ok, get the modes and 
-c                                 save the data, this means creating the kkp
-c                                 array, the x3 array (for output), the cp3
-c                                 array (only for meemum)
-      do i = 1, jbulk
-
-         if (i.le.hcp) then 
-c                                 normal phase
-            id = iam(jdv(i))
-         else
-c                                 saturated phase
-            id = idss(i-hcp)
-         end if 
-c                                 set identifier flag
-         if (i.le.ipoint) then
-            kkp(i) = -id
-         else  
-            kkp(i) = ikp(id)
-         end if 
-c                                 load the composition matrix
-c                                 a and b are used by getamt
-         do j = 1, jbulk
-
-            b(j) = cblk(j)
-            if (j.gt.icp.and.usv) cycle
-            a(j,i) = cp(j,id)
-            cp3(j,i) = cp(j,id)
-
-         end do
-
-         if (usv) then 
-
-            call pt4sv (jam(jdv(i)))
-
-            call getusv (u,a(icp1,i),a(jbulk,i),id,bad)
-
-            if (bad) then 
-               idead = 1
-               goto 99
-            end if 
-
-         end if 
-c                                 total component amounts
-         ctot3(i) = ctot(id)
-c                                 set the x3 array
-         if (ikp(id).ne.0) call setx3 (i,id,ikp(id))
-
-      end do 
-
-      ntot = jbulk
-c                                 factor the matrix
-      call factr1 (jbulk,idead)
-
-      if (idead.eq.1) goto 99 
-c                                 get mode, solve for the alpha vector
-      call subst1 (jbulk)
-c                                 test for zero modes
-      if (nopt(9).gt.0d0) call zmode (idead)
-
-99    end 
-
-      subroutine zmode (idead)
-c----------------------------------------------------------------------
-c rebulk computes the amounts of the stable compounds and eliminates 
-c those with zero modes (if requested).
-c----------------------------------------------------------------------
-      implicit none
- 
-      include 'perplex_parameters.h'
-
-      integer i,j,k,l,ipvt,jzero(k5), idead,tictoc
-
-      double precision a,b
-      common/ cst301 /a(k5,k5),b(k5),ipvt(k5) 
-
-      integer icomp,istct,iphct,icp
-      common/ cst6  /icomp,istct,iphct,icp
-
-      integer jbulk
-      double precision cblk
-      common/ cst300 /cblk(k5),jbulk
-c                                 compositions of stable adaptive
-c                                 coordinates (and solution ids).
-      integer kkp,np,ncpd,ntot
-      double precision cp3,ctot3
-      common/ cxt15 /cp3(k5,k5),ctot3(k5),kkp(k5),np,ncpd,ntot
-c                                 options from perplex_option.dat
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-c                                  x-coordinates for the final solution
-      double precision x3
-      common/ cxt16 /x3(k21,mst,msp)
-c                                 x coordinate description
-      integer istg, ispg, imlt, imdg
-      common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
-
-      save tictoc
-      data tictoc/0/
-c----------------------------------------------------------------------
-
-      ntot = 0
-
-      do i = 1, jbulk
-         if (b(i).lt.-nopt(9)) then
-c                                 negative mode
-            if (icp.lt.jbulk.and.tictoc.lt.5) then 
-c                                 probably because saturated component
-               call warn (1,b(1),i,'ZMODE')
-               tictoc = tictoc + 1
-
-            else 
-
-               write (*,*) ' a negative mode, serious problem?'
-               write (*,*) (kkp(j),j=1,jbulk)
-               write (*,*) (b(j),j=1,jbulk)
-c                                 this probably is serious because it will
-c                                 cause the back-calculated bulk to be incorrect.
-               idead = 1
-
-            end if 
-
-         else if (b(i).gt.nopt(9)) then 
-
-            ntot = ntot + 1
-            jzero(ntot) = i 
-
-         end if 
-
-      end do 
-
-      if (jbulk.ne.ntot) then
-
-         do i = 1, ntot
-
-            j = jzero(i)
-c                                 jkp and jdv are probably unnecessary.
-            kkp(i) = kkp(j)
-            b(i) = b(j)
-
-            do k = 1, icomp
-               cp3(k,i) = cp3(k,j)
-            end do 
-
-            ctot3(i) = ctot3(j)
-
-            if (kkp(i).gt.0) then 
-
-               do k = 1, istg(kkp(i))
-                  do l = 1, ispg(kkp(i),k)
-                     x3(i,k,l) = x3(j,k,l)
-                  end do 
-               end do 
-            end if 
-         end do 
-      end if
-
-      end
+    
+      end 
 
       subroutine setx3 (ind,id,ids)
 c----------------------------------------------------------------------
@@ -3441,81 +3192,6 @@ c                                 an endmember
          call endcp (ind,id,ids)
 
       end if
-
-      end 
-
-      subroutine getmus (a,c,jdv,idead)
-c-----------------------------------------------------------------------
-c getmus computes chemical potentials from a pseudocompound assemblage
-c-----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      integer i, j, idead,  ier, ipvt(k8), jerk, jdv(k19)
-
-      double precision  a(k5,*), c(*), comp(k8,k8)
-
-      integer hcp,idv
-      common/ cst52  /hcp,idv(k7)  
-
-      double precision mu
-      common/ cst330 /mu(k8)
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
-      integer jtest,jpot
-      common/ debug /jtest,jpot
-
-      logical usv
-      integer pindex,tindex
-      common/ cst54 /pindex,tindex,usv
-
-      save jerk 
-      data jerk/0/ 
-c-----------------------------------------------------------------------
-      if (.not.usv.and.jpot.eq.1) return
-
-      if (idead.eq.0) then 
-c                                 compute chemical potentials if requested:
-         do i = 1, hcp
-            do j = 1, hcp 
-               comp(i,j) = a(j,jdv(i))
-            end do 
-            mu(i) = c(jdv(i))
-         end do 
-c                                 compute chemical potentials if requested:
-c                                 reload last solution (no test for uniqueness)
-         call factor (comp,hcp,ipvt,ier)
-
-         if (ier.eq.1.and.jerk.lt.1) then 
-
-            jerk = jerk + 1
-            write (*,*) 'Deader than a doornail, but dont worry' 
-     
-         else 
- 
-            call subst (comp,ipvt,hcp,mu,ier)
-
-            if (ier.eq.1.and.jerk.lt.2) then 
-               jerk = jerk + 1
-               write (*,*) 'Deader than 2 doornails, but dont worry' 
-            end if 
-
-         end if 
-
-      end if 
-
-      if (idead.ne.0.or.ier.eq.1) then 
-c                                 optimization failed.
-         do i = 1, hcp
-            mu(i) = nopt(7)
-         end do
-
-      end if 
 
       end 
 
@@ -3641,7 +3317,7 @@ c----------------------------------------------------------------------
 
       end 
 
-      subroutine yclos2 (clamda,x,is,jdv,npt,iter,idead)
+      subroutine yclos2 (clamda,x,is,iter)
 c----------------------------------------------------------------------
 c subroutine to identify pseudocompounds close to the solution for 
 c subsequent refinement, for iteration > 1. 
@@ -3650,12 +3326,11 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer jdv(k19), npt, i, is(k21+k5), idead, id, gmin,
-     *        jmin(k19), mpt, jzero, iter
+      integer i, is(k21+k5), id, jmin(k19), mpt, iter, tictoc
 
       logical stable
 
-      double precision clamda(k21+k5), clam(k19), x(k21), glam
+      double precision clamda(k21+k5), clam(k19), x(k21)
 
       integer iopt
       logical lopt
@@ -3669,11 +3344,20 @@ c----------------------------------------------------------------------
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
 
-      double precision amt,cptot
-      common/ cst78 /amt(k5),cptot(k5)
+      integer npt,jdv
+      logical fulrnk
+      double precision cptot,ctotal
+      common/ cst78 /cptot(k5),ctotal,jdv(k19),npt,fulrnk
 
       integer hkp,mkp
       common/ cst72 /hkp(k21),mkp(k19)
+
+      integer kkp, np, ncpd, ntot
+      double precision cp3, amt
+      common/ cxt15 /cp3(k5,k5),amt(k5),kkp(k5),np,ncpd,ntot
+
+      save tictoc
+      data tictoc/0/
 c----------------------------------------------------------------------
 c                                 opt is the number of points refined
 c                                 from the previous cycle
@@ -3684,8 +3368,6 @@ c                                 from the previous cycle
          clam(i) = 1d99
       end do 
 
-      gmin = 0
-      glam = 1d99 
       npt = 0
 
       do i = 1, jphct
@@ -3693,7 +3375,7 @@ c                                 id indicates the original refinement
 c                                 point.
          id = hkp(i)
 c                                 check the stability of all points 
-         if (is(i).eq.0.or.is(i).eq.2) then 
+         if (is(i).ne.1.and.x(i).gt.0d0) then 
 c                                 a stable point, add to list
             npt = npt + 1
             jdv(npt) = i
@@ -3703,9 +3385,6 @@ c                                 a stable point, add to list
 c                                 find the nearest phase           
             jmin(id) = i
             clam(id) = clamda(i)
-            if (clam(id).gt.glam) cycle
-            glam = clam(id)
-            gmin = i
 
          end if 
 
@@ -3717,82 +3396,289 @@ c                                 phases
          do i = 1, mpt
             if (jmin(i).eq.0) cycle
             npt = npt + 1
-            if (npt.gt.k19) then 
-c                                 this should never happen
-               write (*,*) 'WARNING! this should never happen, too many'
-               write (*,*) 'refinement points in YCLOS2, if you see'
-               write (*,*) 'this msg please tell me, if you are not me'
-               write (*,*) npt,mpt,k19
-               npt = npt - 1
-               exit 
-            end if 
             jdv(npt) = jmin(i)
          end do
 c                                 sort the phases, this is only necessary if
 c                                 metastable phases have been added
-         call sortin (jdv,npt,k19)
+         call sortin
 c                                 make a pointer to the original refinement 
 c                                 point
          do i = 1, npt
             mkp(i) = hkp(jdv(i))
          end do 
 
-      else if (npt.ne.icp) then 
-c                                 done iterating, try to correct bad results
-         if (npt.gt.icp) then 
-c                                 look through for zero amount stable phases
-            jzero = 0
-   
-            do i = 1, npt
-               if (x(jdv(i)).eq.0d0) jzero = jzero + 1
-            end do
+      else  
+  
+         mpt = npt 
+         npt = 0 
+c                                 check zero modes the amounts
+         do i = 1, mpt
 
-            if (jzero.ge.npt-icp) then 
+            if (x(jdv(i)).ge.nopt(9)) then 
+               npt = npt + 1
+               amt(npt) = x(jdv(i))
+               jdv(npt) = jdv(i)
+            else if (lopt(13).and.x(jdv(i)).lt.-nopt(9)
+     *                             .and.tictoc.lt.5) then 
+               call warn (2,x(jdv(i)),i,'REBULK')
+               tictoc = tictoc + 1
+            end if 
 
-               jzero = npt - icp 
-               mpt = npt
-               npt = 0
-c                                 eliminate zero phase
-               do i = 1, mpt 
+         end do 
 
-                  if (x(jdv(i)).eq.0d0.and.jzero.gt.0) then 
-                     jzero = jzero - 1
-                     cycle
-                  end if 
-
-                  npt = npt + 1
-                  jdv(npt) = jdv(i)
-
-               end do 
-
-            else 
-c                                 no hope, too many non-zero amount phases     
-               idead = 1
-
-            end if
+         if (npt.ne.icp) then
  
-         else if (icp-npt.eq.1.and.gmin.ne.0) then 
-c                                 missing just one point, use gmin
-          
-            npt = icp
-            jdv(icp) = gmin
-
+            fulrnk = .false.
+         
          else 
 
-            idead = 1
+            fulrnk = .true.
 
          end if 
 
-         if (idead.eq.0) then
-c                                 sort the phases 
-            call sortin (jdv,npt,k19)
-c                                 save the amounts
-            do i = 1, npt
-               amt(i) = x(jdv(i))
+
+      end if 
+
+      end
+
+      subroutine rebulk (static)
+c----------------------------------------------------------------------
+c upon successful completion of an optimization with either static or
+c dynamic pseudocompounds rebulk:
+c     1) loads the generic arrays cp3, cptot, ctot3, kkp and x3
+c     2) computes the amounts of saturated component phases.
+c     3) computes the dependent potentials.
+c     4) checks for solvi and homogenizes miscible phases.
+c----------------------------------------------------------------------
+      implicit none
+ 
+      include 'perplex_parameters.h'
+
+      integer i,j,id,ier,tictoc,ipvt(k8)
+
+      logical static, bad
+
+      double precision c(k5),u,comp(k8,k8)
+
+      integer iff,idss,ifug,ifyn,isyn
+      common/ cst10  /iff(2),idss(h5),ifug,ifyn,isyn
+ 
+      integer icomp,istct,iphct,icp
+      common/ cst6  /icomp,istct,iphct,icp
+
+      double precision cp
+      common/ cst12 /cp(k5,k1)
+
+      integer jbulk
+      double precision cblk
+      common/ cst300 /cblk(k5),jbulk
+c                                 adaptive x(i,j) coordinates
+      integer jcoct, jcoor, jkp
+      double precision zcoor
+      common/ cxt13 /zcoor(k20),jcoor(k21),jkp(k21),jcoct
+c                                 compositions of stable adaptive
+c                                 coordinates (and solution ids).
+      integer kkp,np,ncpd,ntot
+      double precision cp3,amt
+      common/ cxt15 /cp3(k5,k5),amt(k5),kkp(k5),np,ncpd,ntot
+c                                 options from perplex_option.dat
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      integer ikp
+      common/ cst61 /ikp(k1)
+
+      integer npt,jdv
+      logical fulrnk
+      double precision cptot,ctotal
+      common/ cst78 /cptot(k5),ctotal,jdv(k19),npt,fulrnk
+
+      integer iam,jam,tloop,ploop
+      common/ cst55 /iam(k1),jam(k1),tloop,ploop
+c                                 hcp is different from icp only if usv
+      integer hcp,idv
+      common/ cst52  /hcp,idv(k7) 
+
+      double precision mu
+      common/ cst330 /mu(k8)
+
+      integer jtest,jpot
+      common/ debug /jtest,jpot
+
+      integer ids,isct,icp1,isat,io2
+      common/ cst40 /ids(h5,h6),isct(h5),icp1,isat,io2
+
+      logical usv
+      integer pindex,tindex
+      common/ cst54 /pindex,tindex,usv
+
+      double precision ctot
+      common/ cst3  /ctot(k1)
+
+      integer ipoint,imyn
+      common/ cst60 /ipoint,imyn
+
+      double precision thermo,uf,us
+      common/ cst1 /thermo(k4,k10),uf(2),us(h5)
+
+      double precision g
+      common/ cst2 /g(k1)
+
+      integer jphct
+      double precision g2, cp2
+      common/ cxt12 /g2(k21),cp2(k5,k21),jphct
+
+      save tictoc
+      data tictoc/0/
+c----------------------------------------------------------------------
+      do i = 1, npt
+
+         if (static) then 
+
+            id = iam(jdv(i))
+c                                 set identifier flag
+            if (id.le.ipoint) then
+               kkp(i) = -id
+            else  
+               kkp(i) = ikp(id)
+            end if 
+
+            cptot(i) = ctot(id)
+c                                 save g for potential calculation
+            mu(i) = g(id)
+           
+            do j = 1, icomp
+               if (j.gt.icp.and.usv) exit
+               cp3(j,i) = cp(j,id)
+            end do
+c                                 set the x3 array
+            if (ikp(id).ne.0) call setx3 (i,id,ikp(id))
+
+            if (usv) then 
+c                                 usv calculations are currently
+c                                 not set up for solutions and use
+c                                 only static optimization
+               call pt4sv (jam(jdv(i)))
+
+               call getusv (u,cp3(icp1,i),cp3(jbulk,i),id,bad)
+
+            end if 
+
+         else 
+c                                 getcmp assigns cp3, cptot, x3, and kkp
+            call getcmp (i,jdv(i),jkp(jdv(i)))
+
+         end if          
+c                                 convert normalized amounts to molar 
+c                                 amounts
+         amt(i) = ctotal*amt(i)/cptot(i)
+c                                 convert normalized g's to molar g's
+         mu(i) = g2(jdv(i))*cptot(i)
+
+      end do 
+
+      if (jbulk.gt.icp) then  
+c                                 get the amounts of the saturated phases:
+         do i = jbulk-icp+1, jbulk
+c                                 initialize bulk                                 
+            c(i) = cblk(i)
+c                                 save chemical potentials from gproj
+            mu(i) = us(i-icp)
+c                                 subtract the amount of the component in the 
+c                                 phases in the thermodynamic c-space
+            do j = 1, npt 
+               c(i) = c(i)- amt(j)*cp3(i,j)
             end do 
+
+         end do 
+
+         do i = jbulk, jbulk-icp+1, -1
+c                                  cycle through the saturated phases
+            npt = npt + 1
+            id = idss(i-icp)
+c                                  set case for solution in saturated component
+c                                  space, the endmember composition is not set,
+c                                  this is gonna cause problems, at least for 
+c                                  meemum
+            if (ikp(id).eq.0) then 
+               kkp(npt) = -id
+            else 
+               write (*,1000) 
+               stop 
+            end if 
+c                                  amount of the staurated phase
+            amt(npt) = c(i)/cp(i,id)
+c                                  warn on undersaturation
+            if (amt(npt).lt.nopt(9)) then 
+               if (amt(npt).lt.-nopt(9).and.tictoc.lt.5) 
+     *                             call warn (2,amt(npt),i,'REBULK')
+               npt = npt - 1
+               tictoc = tictoc + 1
+               exit
+            end if 
+c                                  remove the saturated phase from 
+c                                  the bulk composition.
+            do j = icp+1, i - 1
+               c(j) = c(j) - amt(npt)*cp(j,id)
+            end do 
+c                                  load the saturated phase composition 
+            do j = 1, icomp
+               cp3(j,i) = cp(j,id)
+            end do           
+
+         end do
+
+      end if 
+
+      ntot = npt
+
+      if (usv.or.jpot.eq.0) then
+c                                 compute chemical potentials
+         if (npt.ne.hcp) then 
+c                                 not full rank
+            do i = 1, hcp
+               mu(i) = nopt(7)
+            end do
+          
+         else 
+
+            do i = 1, hcp
+               do j = 1, hcp 
+                  comp(i,j) = cp3(j,i)
+               end do 
+            end do 
+
+            call factor (comp,hcp,ipvt,ier)
+
+            if (ier.eq.1) then 
+
+               do i = 1, hcp
+                  mu(i) = nopt(7)
+               end do
+     
+            else 
+ 
+               call subst (comp,ipvt,hcp,mu,ier)
+
+               if (ier.eq.1) then 
+                  do i = 1, hcp
+                     mu(i) = nopt(7)
+                  end do
+               end if 
+             
+            end if 
 
          end if 
 
       end if 
+c                                 test for solvi and average
+c                                 homogeneous phases.
+      call avrger
+      
+1000  format (/,'**error ver901** solutions not allowed in saturated ',
+     *   'component composition space',/,'in adaptive optimization ',
+     *   'calculations, this limitation can be removed upon request.')
 
       end

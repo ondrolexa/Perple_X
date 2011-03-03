@@ -211,7 +211,7 @@ c                                 evaluate dqf coefficients
 
          call setw (id) 
 
-         if (ksmod(id).eq.1.or.ksmod(id).eq.2.or.ksmod(id).eq.3) then 
+         if (ksmod(id).eq.2.or.ksmod(id).eq.3) then 
 c                                 -------------------------------------
 c                                 macroscopic formulation for normal solutions.
             call gdqf (id,g,y) 
@@ -302,6 +302,13 @@ c                                 andreas salt model
                g = g + y(k) * gproj (jend(id,2+k))
             end do 
 
+         else if (ksmod(id).eq.27) then 
+
+            do k = 1, mstot(id)
+               if (y(k).gt.0d0)   
+     *            g = g + (gproj(jend(id,2+k))+r*t*dlog(y(k)))*y(k) 
+            end do 
+
          else if (ksmod(id).eq.0) then 
 c                                 ------------------------------------
 c                                 internal fluid eos
@@ -363,8 +370,8 @@ c----------------------------------------------------------------------
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       integer kkp, np, ncpd, ntot
-      double precision cp3, ctot3
-      common/ cxt15 /cp3(k5,k5),ctot3(k5),kkp(k5),np,ncpd,ntot
+      double precision cp3, amt
+      common/ cxt15 /cp3(k5,k5),amt(k5),kkp(k5),np,ncpd,ntot
 
       integer jvar
       double precision var,dvr,vmn,vmx
@@ -642,15 +649,9 @@ c-----------------------------------------------------------------------
       data dt0,dt1,dt2/0.5d0,5d0,5d1/
 c----------------------------------------------------------------------
 
-      if (p.gt.1d3) then
-         dp0 = 5d-4 * p 
-         dp1 = 5d-3 * p
-         dp2 = 5d-2 * p
-      else 
-         dp0 = 5d-1
-         dp1 = 5d0
-         dp2 = 5d1
-	end if 
+      dp2 = 5d-2 * p
+      dp1 = dp2/1d1
+      dp0 = dp1/1d1
             
       g0 = ginc(0d0,0d0,id)
 c                                 straight derivatives:
@@ -1036,8 +1037,8 @@ c
 c                                 composition and model flags
 c                                 for final adaptive solution
       integer kkp, np, ncpd, ntot
-      double precision cp3, ctot3
-      common/ cxt15 /cp3(k5,k5),ctot3(k5),kkp(k5),np,ncpd,ntot
+      double precision cp3, amt
+      common/ cxt15 /cp3(k5,k5),amt(k5),kkp(k5),np,ncpd,ntot
 c                                 x coordinate description
       integer istg, ispg, imlt, imdg
       common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
@@ -1089,10 +1090,6 @@ c                                 bookkeeping variables
 
       double precision v,tr,pr,r,ps
       common/ cst5  /v(l2),tr,pr,r,ps
-c                                 molar amounts (b)
-      integer ipvt
-      double precision a,b
-      common/ cst301 /a(k5,k5),b(k5),ipvt(k5)
 
       double precision mus
       common/ cst48 /mus(k8,k2)
@@ -1113,6 +1110,9 @@ c                                 molar amounts (b)
       save iwarn, iwarn1, iwarn2
       data iwarn, iwarn1, iwarn2 /3*0/
 c----------------------------------------------------------------------
+c                                 logarithmic_p option
+      if (lopt(14)) v(1) = 1d1**v(1) 
+
       if (.not.meemum) then 
 
          jd = igrd(itri(1),jtri(1))
@@ -1153,6 +1153,10 @@ c                                 get the dependent potentials
 c                                 if s/v independent variables, 
 c                                 then set p and t 
          if (hcp.gt.icp) then
+            if (lopt(14)) then 
+               write (*,*) 'ERROR: logarithmic_p must be false for USV'
+               stop
+            end if 
             v(1) = -mu(pindex)
             v(2) = mu(tindex)
             if (v(1).lt.0d0.or.v(2).lt.1d2) then 
@@ -1220,7 +1224,8 @@ c                                 composition of zero phase
          end if
 c                                 molar amounts
          if (meemum) then 
-            props(16,i) = b(i)
+
+            props(16,i) = amt(i)
 c                                 convert x3 to y for calls to gsol            
             if (ids.gt.0) call x3toy (i,ids)
 
@@ -1815,7 +1820,7 @@ c                                 vp/vs
          
       end if 
 
-      if ((.not.volume.or..not.shear).and.(iwarn.lt.21)) then
+      if ((.not.volume.or..not.shear).and.(iwarn.lt.11)) then
 
          iwarn = iwarn + 1
 
@@ -1827,11 +1832,11 @@ c                                 vp/vs
             end do 
          end if 
 
-         if (iwarn.eq.21) write (*,1020) 
+         if (iwarn.eq.11) write (*,1020) 
                   
       end if  
 
-      if (ppois.and.iwarn2.lt.21) then
+      if (ppois.and.iwarn2.lt.11) then
  
          iwarn2 = iwarn2 + 1
 
@@ -1839,9 +1844,11 @@ c                                 vp/vs
             if (pois(i)) write (*,1040) v(2),v(1),pname(i)
          end do 
 
-         if (iwarn2.eq.21) write (*,1020) 
+         if (iwarn2.eq.11) write (*,1020) 
 
       end if 
+
+99    if (lopt(14)) v(1) = dlog10(v(1))
 
 1000  format (/,'**WARNING** at T(K)=',g12.4,' P(bar)=',g12.4,1x,
      *        'aggregate seismic properties',/,'cannot be ',
@@ -1863,7 +1870,8 @@ c                                 vp/vs
      *        'the shear modulus of: ',a,/,'is missing or invalid ',
      *        'and has been estimated from the default poisson ',
      *        'ratio ',/)
-99    end
+
+      end
 
       subroutine x3toy (id,ids)
 c----------------------------------------------------------------------

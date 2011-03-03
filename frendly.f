@@ -1664,6 +1664,11 @@ c----------------------------------------------------------------------
       character tname
       common/ csta10 /tname(2)
 
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
       save first, inames, mnames
       data first/.true./
 c-----------------------------------------------------------------------
@@ -1873,15 +1878,17 @@ c                                 store thermodynamic parameters:
             vvv = 1d0
          end if
  
-         if (exname(1).eq.cmpnt(idh2o)) then
-            vuf(1)=vvv
-            idf(1)=iphct
-            ifyn=0
-         else if (exname(1).eq.cmpnt(idco2)) then
-            vuf(2)=vvv
-            idf(2)=iphct
-            ifyn=0
-         end if
+         if (lopt(7)) then 
+            if (exname(1).eq.cmpnt(idh2o)) then
+               vuf(1)=vvv
+               idf(1)=iphct
+               ifyn=0
+            else if (exname(1).eq.cmpnt(idco2)) then
+               vuf(2)=vvv
+               idf(2)=iphct
+               ifyn=0
+            end if
+         end if 
 c                               get activity coefficients:
 5004     write (*,4070) exname(1)
          read (*,*,iostat=ier) act(iphct)
@@ -2061,7 +2068,7 @@ c                               data file to allow writing:
 2080  format (/,'super function for G (j/mole):',/)
 2460  format ('Warning ** reaction does not balance by ',g13.6,
      *        ' moles of ',a5)
-3000  format (t30,'composition',/,'phase',4x,12(a5,1x))
+3000  format (t30,'composition',/,' phase',4x,12(a5,1x))
 3010  format (1x,a8,1x,12(f5.2,1x))
 3020  format (/,'too many components, only first ',i2,
      *          ' will be listed.',/)

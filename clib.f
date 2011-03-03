@@ -1506,9 +1506,14 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      double precision ctotal,x0
+      double precision x0
 
       integer i,j
+
+      integer npt,jdv
+      logical fulrnk
+      double precision cptot,ctotal
+      common/ cst78 /cptot(k5),ctotal,jdv(k19),npt,fulrnk
 
       double precision a,b,c
       common/ cst313 /a(k5,k1),b(k5),c(k1)
@@ -1718,8 +1723,8 @@ c                                 single site solution coordinates:
 c                                 refined compositions and solution 
 c                                 pointer
       integer kkp,np,ncpd,ntot
-      double precision cp3,ctot3
-      common/ cxt15 /cp3(k5,k5),ctot3(k5),kkp(k5),np,ncpd,ntot
+      double precision cp3,amt
+      common/ cxt15 /cp3(k5,k5),amt(k5),kkp(k5),np,ncpd,ntot
 
       logical lorder, lexces, llaar, lrecip
       common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
@@ -1727,12 +1732,13 @@ c                                 pointer
       integer ikp
       common/ cst61 /ikp(k1)
 
-      double precision amt,cptot
-      common/ cst78 /amt(k19),cptot(k19)
+      integer npt,jdv
+      logical fulrnk
+      double precision cptot,ctotal
+      common/ cst78 /cptot(k5),ctotal,jdv(k19),npt,fulrnk
 c----------------------------------------------------------------------
 
       kkp(jd) = ids
-      ctot3(jd) = 0d0
       cptot(jd) = 0d0
 
       if (ids.lt.0) then 
@@ -1782,9 +1788,8 @@ c                                 y coordinates used to compute the composition
 
       end if 
 
-      do i = 1, icomp
-         if (i.le.icp) cptot(jd) = cptot(jd) + cp3(i,jd)
-         ctot3(jd) = ctot3(jd) + cp3(i,jd)
+      do i = 1, icp
+         cptot(jd) = cptot(jd) + cp3(i,jd)
       end do 
 
       end 

@@ -142,7 +142,7 @@ c psxypl - subroutine to output x-y plot.
       double precision dx,dy,xpmn,xpmx,cmin,cmax,dcon,ypmx,ypmn,
      *                 z0min,z0max
  
-      parameter (nx=1000,ny=1000)
+      parameter (nx=500,ny=500)
 
       integer jvar
       double precision var,dvr,vmn,vmx

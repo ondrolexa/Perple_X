@@ -244,9 +244,12 @@ c-----------------------------------------------------------------------
 
       integer i,j,idead,ier
 
-      double precision ctotal
-
       character y*1
+
+      integer npt,jdv
+      logical fulrnk
+      double precision cptot,ctotal
+      common/ cst78 /cptot(k5),ctotal,jdv(k19),npt,fulrnk
 
       character cname*5
       common/ csta4 /cname(k5)
@@ -458,10 +461,15 @@ c-----------------------------------------------------------------------
 
       integer i,j,k,idead
 
-      double precision ctotal,gblk(maxbox,k5),dz,p0
+      double precision gblk(maxbox,k5),dz,p0
 
       logical output
       character*8 happy*3
+
+      integer npt,jdv
+      logical fulrnk
+      double precision cptot,ctotal
+      common/ cst78 /cptot(k5),ctotal,jdv(k19),npt,fulrnk
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
@@ -502,7 +510,7 @@ c-----------------------------------------------------------------------
 
       logical first
 
-      save first,ctotal
+      save first
 
       data first/.true./
 c-----------------------------------------------------------------------
@@ -6373,7 +6381,7 @@ c                                 at this point the compositions of
 c                                 the np solutions are in cp3, ctot3, x3 indexed
 c                                 by np and the original indices of the 
 c                                 ncpd compounds are -kkp(np+1..ntot), and
-c                                 the molar amounts of the phases are in b.
+c                                 the molar amounts of the phases are in amt.
          call sorter (igrd(i,j),i,j,output)
 
       else 
@@ -7188,8 +7196,8 @@ c-----------------------------------------------------------------------
       common/ csta4 /cname(k5)
 
       integer kkp, np, ncpd, ntot
-      double precision cp3, ctot3
-      common/ cxt15 /cp3(k5,k5),ctot3(k5),kkp(k5),np,ncpd,ntot
+      double precision cp3, amt
+      common/ cxt15 /cp3(k5,k5),amt(k5),kkp(k5),np,ncpd,ntot
 
       integer ipvt
       double precision a,b

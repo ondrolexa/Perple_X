@@ -18,7 +18,7 @@ C----------------------------------------------------------------
       double precision rline,cmin,dcon,thick
 
       parameter (nseg=100000,npts=250000,npcs=100000,mcon=50)
-      parameter (nx=1000,ny=1000)
+      parameter (nx=500,ny=500)
 
       character kontor*80, yes*1
     
@@ -142,7 +142,7 @@ c------------------------------------------------------------------------
 
       integer nx,ny,ncon,npts,nseg,npcs
 
-      parameter (nx=1000,ny=1000)
+      parameter (nx=500,ny=500)
 
       logical iscon
   

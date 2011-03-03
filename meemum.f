@@ -12,10 +12,15 @@ c----------------------------------------------------------------------
 
       integer itri(4),jtri(4),ijpt
 
-      double precision ctot, wt(3) 
+      double precision wt(3) 
 
       integer iwt
       common/ cst209 /iwt
+
+      integer npt,jdv
+      logical fulrnk
+      double precision cptot,ctotal
+      common/ cst78 /cptot(k5),ctotal,jdv(k19),npt,fulrnk
 
       double precision atwt
       common/ cst45 /atwt(k0)
@@ -55,19 +60,23 @@ c                                 initialization, read files etc.
       call iniprp
 
       write (*,1000) 
-      read (*,1050) yes
+      read (*,'(a)') yes
+
       if (yes.eq.'y'.or.yes.eq.'Y') then 
 c                                 bulk is true, user enters composition and p-t conditions
          bulk = .true.
+
       else 
 c                                 else user enters only p-t and composition read from input file.
          bulk = .false.
+
       end if 
 
 c                                 iwt is set by input, it is only used below to determine
 c                                 whether to convert weight compositions to molar. the 
 c                                 computations are done solely in molar units. 
       amount = 'molar '
+
       if (iwt.eq.1) amount = 'weight'
 c                                 computational loop
       do 
@@ -84,27 +93,30 @@ c                                 simply as a f(P,T)
 c                                 load the composition into b, the component names are  
 c                                 in cname, if iwt = 1 the composition is in mass fractions
 c                                 otherwise in molar units. 
-10          write (*,1060) amount
-            write (*,1050) (cname(i),i=1,jbulk)
-            read (*,*,iostat=ier) (cblk(i),i=1,jbulk)
-            if (ier.ne.0) goto 10 
+            do 
+               write (*,1060) amount
+               write (*,'(12(a,1x))') (cname(i),i=1,jbulk)
+               read (*,*,iostat=ier) (cblk(i),i=1,jbulk)
+               if (ier.eq.0) exit
+            end do  
          
             if (iwt.eq.1) then 
 c                                 convert mass to molar 
                do i = 1, jbulk
                   cblk(i) = cblk(i)/atwt(i)
                end do 
+
             end if
 c                                 normalize the composition vector, this 
 c                                 is necessary for reasons of stupidity (lpopt0). 
-            ctot = 0d0
+            ctotal = 0d0
 
             do i = 1, icp
-               ctot = ctot + cblk(i)
+               ctotal = ctotal + cblk(i)
             end do 
 
             do i = 1, icp
-               b(i) = cblk(i)/ctot
+               b(i) = cblk(i)/ctotal
             end do
 
          end if 
@@ -132,7 +144,6 @@ c                                 print summary to LUN 6
      *          'If you answer no, MEEMUM uses the bulk composition',
      *         ' specified in the input file.',/)
 1060  format (/,'Enter ',a,' amounts of the components:')
-1050  format (12(a,1x))
 1070  format (/,'Enter (zeroes to quit) ',7(a,1x))
 
       end 

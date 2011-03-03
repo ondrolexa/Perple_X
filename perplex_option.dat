@@ -8,7 +8,7 @@
 1d_path              10 150 | exploratory and autorefine (grid parameters keyword group)
 approx_alpha           T    | use approximation exp(x)~1+x to evaluate expansivity effect on volume
 Anderson-Gruneisen     F    | Anderson-Gruneisen parameter correction for polythermal Murnaghan and Birch-Murnaghan
-auto_refine            auto | auto, manual, or off (auto_refine keyword group)
+auto_refine            aut  | auto, manual, or off (auto_refine keyword group)
 auto_refine_factor_I   2    | refine factor for gridded minimization and phase fractionation (auto_refine keyword group)
 auto_refine_factor_II  6    | refine factor for composition and mixed variable diagrams (auto_refine keyword group)
 auto_refine_factor_III 2    | refine factor for Schreinemakers diagrams (auto_refine keyword group)
@@ -24,7 +24,7 @@ extrapolation          off  | on or off
 grid_levels            1 4  | exploratory and autorefine (grid parameters keyword group)
 hard_limits            off  | on or off
 increment         0.1 0.025 | 0, <1; exploratory and autorefine
-initial_resolution    0.07  | >0, <1
+initial_resolution    0.067 | >0, <1
 interpolation on       2    | value 1: on or off; value 2, 1->99
 iteration            4 3 10 | value 1: 0->9; value 2: 3->99, value 3 is irrelevant in Perple_X 6.6.4+
 linear_model           on   | on or off
