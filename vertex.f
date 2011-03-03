@@ -1190,7 +1190,7 @@ c                                 call coface to delineate all the
 c                                 equilibria that are cofacial with
 c                                 the simplex defined by the vertices
 c                                 idv.
-         call coface (ivd,ivi,div,iste,irend)
+         call coface (ivd,ivi,div,iste,irend,output)
 c                                 after tracing the net attempt
 c                                 to resume testing the stability
 c                                 of the assemblage:
@@ -2444,7 +2444,7 @@ c                                 parameters:
 
 99    end
 
-      subroutine coface (iovd,iovi,odiv,iste,irend)
+      subroutine coface (iovd,iovi,odiv,iste,irend,output)
 c----------------------------------------------------------------------
 c once nohold has established that a stable equilibrium occurs on
 c the boundary of a diagram, coface traces the equilibrium condiitons
@@ -2460,7 +2460,7 @@ c-----------------------------------------------------------------------
       integer iflag,iopct,icter,irend,iovd,
      *        ivi,ivd,iovi,jflg,ier,iste,i,inpct,jer,ikwk
 
-      logical bad
+      logical bad, output
 
       double precision odiv,div
 
@@ -2533,7 +2533,7 @@ c                                 assign reaction:
          vip(4,ird) = v(4)
          vip(5,ird) = v(5)
 
-         call outrxn (0,0)
+         if (output) call outrxn (0,0)
 
          goto 9999
 
@@ -2580,7 +2580,7 @@ c                                 assign the 1st point
 c                                 follow the equilibrium
 60    ikwk = 0 
       jflg = 0
-      call sfol1 (ivd,ivi,ier,div,ikwk,irend)
+      call sfol1 (ivd,ivi,ier,div,ikwk,irend,output)
 c                                 sfol1 returns ier = 1
       if (ier.eq.1.or.ier.eq.2) goto 70
 
@@ -2607,7 +2607,7 @@ c                                 an ip was found:
       
 75    call warn (10,v(1),ier,'COFACE')
 
-      call outrxn (ipct,2)
+      if (output) call outrxn (ipct,2)
       ibug(irct) = 1
       ivi =iovi
       ivd=iovd
@@ -2621,13 +2621,13 @@ c                                 before each call to sfol2.
 c                           inpct=the total number after each call to 
 c                                 sfol2.
 10    iopct = ipct
-      call sfol2 (iovi,iovd,iopct,irend)
+      call sfol2 (iovi,iovd,iopct,irend,output)
       if (iopct.eq.ipct) goto 9999
       iopct = iopct + 1
       inpct = ipct
 c                                 loop for new invariant points
 30    do i = iopct, inpct
-         call sfol2 (iovi,iovd,i,irend)
+         call sfol2 (iovi,iovd,i,irend,output)
       end do 
       if (ipct.eq.inpct) goto 9999
       iopct = inpct + 1
@@ -2636,7 +2636,7 @@ c                                 loop for new invariant points
 c                                 error in univeq:
 9000  call warn (79,v(1),ird,'COFACE')
       ipt2 = 0
-      call outrxn (ipct,2)
+      if (output) call outrxn (ipct,2)
       ibug(irct) = 1
 
 9999  iflg1= 0 
@@ -4352,7 +4352,7 @@ c                                 next traverse.
      *         ' not be delineated:',/,7(1x,a8)) 
 99    end
 
-      subroutine sfol1 (ivd,ivi,ier,dv,ikwk,irend)
+      subroutine sfol1 (ivd,ivi,ier,dv,ikwk,irend,output)
 c----------------------------------------------------------------------
 c eliminated computed goto's introduced do loop, 1/9/09.
 c----------------------------------------------------------------------
@@ -4361,6 +4361,8 @@ c----------------------------------------------------------------------
       include 'perplex_parameters.h'
 
       integer ikwk,irend,ivd,ivi,iswtch,jswtch,ier,jer,ip
+
+      logical output
 
       integer irchk
       common/ cst801 /irchk(k2)
@@ -4508,13 +4510,13 @@ c                                 switching iv's, set iswitch flag
 c                                 output the traversed equilibrium:
 900   ier = 0
 
-      call outrxn (ip,ier)    
+      if (output) call outrxn (ip,ier)    
 c                                 save conditions of the endpoint
       call svrend (ird,irend,jer)
 
 999   end                         
 
-      subroutine sfol2 (iovi,iovd,ip,irend)
+      subroutine sfol2 (iovi,iovd,ip,irend,output)
 c----------------------------------------------------------------------
 c sfol2 generates and computes the loci of stable equilibria
 c emanating from an ip indexed by the array ipid and the
@@ -4533,7 +4535,7 @@ c----------------------------------------------------------------------
 
       character text(kd2)*1, alpha(130)*1
 
-      logical bad
+      logical bad, output
 
       integer ikwk,irend,ivd,ivi,ier,jer,ip,jchk,icp3,
      *        iovi,iovd,iend,i,j,itic,jtic,lphi,idno,icter,jend
@@ -4667,7 +4669,7 @@ c                                 set the bug flag:
 
          icter = 0
 
-60       call sfol1 (ivd,ivi,ier,div,ikwk,irend)
+60       call sfol1 (ivd,ivi,ier,div,ikwk,irend,output)
          jchk = jchk + 1
 
          if (ier.eq.0) then 
@@ -4685,7 +4687,7 @@ c                                 set the bug flag:
       
          call warn (20,v(ivi),ivi,'SFOL2 ')
 
-         call outrxn (ip,1)
+         if (output) call outrxn (ip,1)
          ivi =iovi
          ivd=iovd
       end do 

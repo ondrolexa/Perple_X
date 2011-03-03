@@ -18,7 +18,7 @@ c----------------------------------------------------------------------
 
       write (*,1000) 
 
-1000  format (/,'Perple_X version 6.6.5.6, compiled 3/1/2011.')
+1000  format (/,'Perple_X version 6.6.5.7, compiled 3/3/2011.')
 
       end
 
@@ -944,7 +944,7 @@ c                                 meemum or autorefine off
      *           'options:',//,
      *        4x,'variance               ',i2,' /',i2,5x,
      *           '[1/99], >0, maximum true variance',/,
-     *        4x,'increment            ',f5.3,'/',f5.3,3x,
+     *        4x,'increment           ',f5.3,'/',f5.3,3x,
      *           '[0.1/0.025], ',
      *           'default search/trace variable increment',/,
      *        4x,'efficiency               ',i1,8x,'[3] >0 < 6',/,      
@@ -952,7 +952,7 @@ c                                 meemum or autorefine off
      *           'full stoichiometry S+V everything',/,
      *        4x,'reaction_list          ',a3,8x,'[off] on',/,
      *        4x,'console_messages       ',a3,8x,'[on] off',/,
-     *        4x,'short_print_file       ',a3,8x,'[on] off',/)
+     *        4x,'short_print_file       ',a3,8x,'[on] off')
 1170  format (4x,'auto_refine_factor_I   ',f4.1,7x,'>=1 [3]')
 1180  format (/,2x,'Free energy minimization options:',//,
      *        4x,'zero_mode              ',e7.1,4x,
@@ -1566,7 +1566,7 @@ c---------------------------------------------------------------------
 40    format (/,'**error ver040** too many compositional coordinates, ',
      *        'increase dimension k13 (',i7,')  Routine: ',a)
 41    format (/,'**error ver041** too many pseudocompounds, ',
-     *        'increase dimension k1 or k21 (',i7,') Routine: ',a)
+     *        'increase dimension k1 (',i7,') Routine: ',a)
 42    format (/,'**error ver042** optimization failed because the ',
      *          'possible phases of the',/,
      *        'system do not span the specified bulk composition.',/,

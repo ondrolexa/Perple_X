@@ -253,7 +253,7 @@ c                                 using nodal coordinates as the x axis
 
       end
 
-      subroutine fopen (n2name,pr,pl,n9name,jbulk,icp,icopt,j)
+      subroutine fopen (n2name,pr,pl,n9name,jbulk,icp,icopt)
 c-----------------------------------------------------------------------
 c open files for subroutine input1.
 c-----------------------------------------------------------------------
@@ -261,7 +261,7 @@ c-----------------------------------------------------------------------
  
       include 'perplex_parameters.h'
 
-      integer ierr,icopt,jbulk,icp,j
+      integer ierr,icopt,jbulk,icp
  
       character*100 blank*1,n2name,pr*3,pl*3,name,n9name
 

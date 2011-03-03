@@ -2032,6 +2032,9 @@ c---------------------------------------------------------------------
 
       double precision v,tr,pr,r,ps
       common/ cst5  /v(l2),tr,pr,r,ps
+
+      double precision blim, ulim, dgr
+      common/ cxt62 /blim(l2),ulim(l2),dgr
 c---------------------------------------------------------------------
 c                                 reset intensive variables
       call reptx 
@@ -2056,9 +2059,19 @@ c
 10    if (s.lt.0d0) div = -dv(ivd)
 c                                 estimate a new value for v(ivi)
 20    v(ivi) = v(ivi)+div/s
-      call incdep (ivi) 
+c     call incdep (ivi) 
 c                                 switch variables
-      if ((v(ivi).gt.vmin(ivi)).and.(v(ivi).lt.vmax(ivi))) goto 30
+      if ((v(ivi).gt.vmin(ivi)).and.(v(ivi).lt.vmax(ivi))) then
+         goto 30
+      else if (v(ivi).lt.blim(ivi).or.v(ivi).gt.ulim(ivi)) then 
+         jer = 1
+         return
+      end if         
+c                                 call to incdep moved from above 3/2/2011
+c                                 to prevent problem with negative T in 
+c                                 subinc (calculation with fugacity). 
+      call incdep (ivi) 
+
       div = div/5d0
 
       if (dabs(div).lt.dv(ivd)/1d6) then
@@ -6783,9 +6796,11 @@ c----------------------------------------------------------------------
          end do 
 
       else 
-
+c                                 the use if istg(ids) as the site
+c                                 index is a hack for reformulated
+c                                 reciprocal solutions
          do j = 1, nstot(ids)
-            x(1,j) = sxs(ixp(id)+j) 
+            x(istg(ids),j) = sxs(ixp(id)+j) 
          end do 
 
       end if 
@@ -9539,7 +9554,7 @@ c----------------------------------------------------------------------
       logical error
 
       double precision g,pt,pmax,pmin,dy1,dy2,dp,dpmax,
-     *                 omega,gex,dg,d2g,delp
+     *                 omega,gex,dg,d2g
 
       external omega, gex
 
@@ -9659,9 +9674,9 @@ c                                 check bounds
 
          end if
 c                                 set speciation
-         delp = pa(jd) - p0a(jd)
-         pa(i1) = p0a(i1) + dy1*delp
-         pa(i2) = p0a(i2) + dy2*delp    
+         dp = pa(jd) - p0a(jd)
+         pa(i1) = p0a(i1) + dy1*dp
+         pa(i2) = p0a(i2) + dy2*dp    
 c                                 iteration counter to escape
 c                                 infinite loops
          itic = 0 
@@ -10802,7 +10817,7 @@ c                                 compositions.
 
             ntot = ntot + 1
 
-            if (ntot.gt.k1) call error (41,xy(1,1),k1,'SUBDIV_2')
+            if (ntot.gt.k1) call error (41,xy(1,1),k1,'SUBDIV')
 
             do j = 1, isp(1) - 1
                y(j,1,ntot) = y(j,1,i)
@@ -11119,7 +11134,7 @@ c                                 compositions.
 
             ntot = ntot + 1
 
-            if (ntot.gt.k1) call error (41,xy(1,1),k1,'SUBDIV_2')
+            if (ntot.gt.k1) call error (41,xy(1,1),k1,'SUBDV1')
 
             do j = 1, isp(1) - 1
                y(j,1,ntot) = y(j,1,i)
@@ -11518,15 +11533,10 @@ c                                 load xcoors if reciprocal
          icoor(iphct) = icoct 
 
          do i = 1, istg(im)
-            if (ispg(im,i).eq.1) then 
+            do j = 1, ispg(im,i)
                icoct = icoct + 1
-               xcoor(icoct) = 1d0
-            else 
-               do j = 1, ispg(im,i)
-                  icoct = icoct + 1
-                  xcoor(icoct) = z(i,j)
-               end do
-            end if  
+               xcoor(icoct) = z(i,j)
+            end do
          end do 
 
       end if 

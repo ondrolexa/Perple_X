@@ -468,6 +468,7 @@ c                                 reject composition
                jcoct = kcoct - ncoor(ids)
                cycle 
             end if 
+
          end if 
 
 
@@ -491,6 +492,7 @@ c                                 implemented).
                jcoct = jcoct - ncoor(ids)
                cycle
             end if 
+
          end if 
 c                                 use the coordinates to compute the composition 
 c                                 of the solution
@@ -1579,6 +1581,7 @@ c                                 solutions on internal limits
       end if 
 
       do i = 1, isoct
+
          if (.not.stable(i)) cycle
 
          if (.not.refine) then
@@ -2971,7 +2974,7 @@ c-----------------------------------------------------------------------
 
       end 
 
-      subroutine fopen (n2name,prt,plt,n9name,jbulk,icp,icopt,j)
+      subroutine fopen (n2name,prt,plt,n9name,jbulk,icp,icopt)
 c-----------------------------------------------------------------------
 c open files for subroutine input1.
 c-----------------------------------------------------------------------
@@ -2981,7 +2984,7 @@ c-----------------------------------------------------------------------
 
       logical first
 
-      integer ierr,icopt,jbulk,icp,j
+      integer ierr,icopt,jbulk,icp
  
       character*100 blank*1,n2name,prt*3,plt*3,name,n9name
 
@@ -2990,6 +2993,9 @@ c-----------------------------------------------------------------------
 
       character*100 prject,tfname
       common/ cst228 /prject,tfname
+
+      integer jtest,jpot
+      common/ debug /jtest,jpot
 
       save first,blank
 
@@ -3047,7 +3053,7 @@ c                                 create special plot output file
       end if
 c                              if jtest = 3, write a list of reactions for
 c                              stefano
-      if ((icopt.eq.1.or.icopt.eq.3).and.j.eq.3) then 
+      if ((icopt.eq.1.or.icopt.eq.3).and.jtest.eq.3) then 
 
          call mertxt (name,prject,'_reaction_list.txt',0)
          open (n6,file=name)

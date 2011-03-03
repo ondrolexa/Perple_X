@@ -409,9 +409,6 @@ c-----------------------------------------------------------------------
       integer jlow,jlev,loopx,loopy,jinc
       common/ cst312 /jlow,jlev,loopx,loopy,jinc
 
-      integer jtest,jpot
-      common/ debug /jtest,jpot
-
       logical oned
       common/ cst82 /oned
 
@@ -911,7 +908,7 @@ c                                 set convergence criteria for routine univeq
 
       if (icopt.ne.0) close (n1)
 c                                 open files requested in input
-      call fopen (n2name,prt,plt,n9name,jbulk,icp,icopt,jtest)
+      call fopen (n2name,prt,plt,n9name,jbulk,icp,icopt)
 c                                 read auxilliary input for 2d fractionation
       if (icopt.eq.9) call rdain
 c                                 get runtime parameters
