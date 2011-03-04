@@ -950,7 +950,7 @@ c                                 counter.
      *          'more phases ',/,'interpolation will be turned off ',
      *          'at all affected nodes.',/,'To overide this feature ',
      *          'at the risk of computing inconsistent properties',/,
-     *          'turn solvus testing off in perplex_option.dat',/)
+     *          'set solvus_tolerance = 1 and rerun VERTEX',/)
 
       end 
 

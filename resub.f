@@ -1086,7 +1086,7 @@ c                                figure out how many solutions
 c                                are present:
 10    np = 0
       ncpd = 0
-c                                set solvus tolerance, avrger
+c                                set solvus tolerance, avrger (was 1.5)
       soltol = 1.5d0*nopt(8)
 
       do 30 i = 1, ntot

@@ -9715,12 +9715,14 @@ c                                 switch the starting guess to pmin
             pa(i2) = pa(i2) + dy2*dp 
 
             if (dabs(dp).lt.nopt(5)) then 
+
                exit
+
             else 
+
                itic = itic + 1
-               if (itic.gt.20) then
-                  exit
-               end if 
+               if (itic.gt.20) exit
+
             end if 
 
          end do
