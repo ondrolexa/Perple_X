@@ -28,10 +28,18 @@ c-----------------------------------------------------------------------
       integer ic
       common/ cst42 /ic(k0)
 
+      integer iam
+      common/ cst4 /iam
+
       logical eof
            
       data blank8/' '/
-c-----------------------------------------------------------------------   
+c----------------------------------------------------------------------- 
+c                                 iam is a flag indicating the Perple_X program
+      iam = 9
+c                                 version info
+      call vrsion  
+
       write (*,1300) 
 c                                 open files
       call sopen (2)

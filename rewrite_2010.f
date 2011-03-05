@@ -24,7 +24,12 @@ c----------------------------------------------------------------------
 
       integer ic
       common/ cst42 /ic(k0)
-c----------------------------------------------------------------------
+
+      integer iam
+      common/ cst4 /iam
+c----------------------------------------------------------------------- 
+c                                 iam is a flag indicating the Perple_X program
+      iam = 10
 
       do i = 1, k5
          ic(i) = i
@@ -396,7 +401,7 @@ c----------------------------------------------------------------------
       common/ cst43 /comp(k0),tot,icout(k0),idh2o,idco2,
      *               ikind,icmpn
   
-      commo/ cst41a /n2name
+      common/ cst41a /n2name
 
       character*8 vname,xname
       common/ csta2  /xname(k5),vname(l2)

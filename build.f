@@ -44,7 +44,7 @@ c-----------------------------------------------------------------------
      *        ict, jvct, jc, ix, jst,ind, loopy, 
      *        loopx, ierr, idsol, isoct, kvct, inames
 
-      logical eof, good, vertex, satflu, mobflu, oned, findph, bad
+      logical eof, good, satflu, mobflu, oned, findph, bad, first
 
       double precision c(0:4)
 
@@ -146,6 +146,9 @@ c-----------------------------------------------------------------------
       common / cst334 /mkcoef(k16,k17),mdqf(k16,k17),mkind(k16,k17),
      *                 mknum(k16)
 
+      integer iam
+      common/ cst4 /iam
+
       integer iopt
       logical lopt
       double precision nopt
@@ -154,13 +157,15 @@ c-----------------------------------------------------------------------
       data blank,fugact/' ','chem_pot','fugacity','activity'/
 
       data dsol/'solution_model.dat'/
-c-----------------------------------------------------------------------
+c----------------------------------------------------------------------- 
+c                                 iam is a flag indicating the Perple_X program
+      iam = 4
 c                                 version info
       call vrsion
 
       write (*,7020)
 c                                 name and open computational option file (unit n1)      
-      call fopen1 (1) 
+      call fopen1 
 c                                 choose and open thermo data file (unit n2)
       call fopen2 (1,opname)
 c                                 get computational option file name
@@ -211,9 +216,9 @@ c                                 initialization:
       idco2 = k5
       satflu = .false.
       mobflu = .false.
-      vertex = .true.
+      first = .true. 
 
-      call redop1 (satflu,opname,5)
+      call redop1 (satflu,opname)
 
       do i = 0, 4
          c(i) = 0d0
@@ -1007,7 +1012,7 @@ c                                 ======================================
 c                                 now start phase data:
 c                                 get composition vectors for entities
 c                                 defined by a make definition:
-      call makecp (inames,mnames,vertex)
+      call makecp (inames,mnames,first)
 
       call eohead (n2)
 
@@ -1144,14 +1149,14 @@ c                                 test file format
          end do 
  
 c                                 read candidates:
-110      call rmodel (blah,bad,vertex)
+110      call rmodel (blah,bad)
 c                                 istot = 0 = eof
          if (.not.bad.and.istot.ne.0) then 
 c                                 don't allow fluid models if 
 c                                 the system is fluid saturated:
             if (jsmod.eq.0.and.ifyn.eq.1) goto 110
 c                                 check for endmembers:
-            call cmodel (im,idsol,blah,1,b1,b2,vertex)
+            call cmodel (im,idsol,blah,1,b1,b2,first)
             if (jstot.eq.0) goto 110
       
             ict = ict + 1

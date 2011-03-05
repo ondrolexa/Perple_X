@@ -331,7 +331,7 @@ c                                 internal fluid eos
 
       end
 
-      subroutine calpr0 (lu,meemum)
+      subroutine calpr0 (lu)
 c----------------------------------------------------------------------
 c calpr0 - output properties of an assemblage, can be called by either
 c meemum or werami. if meemum, prints chemical potentials.
@@ -341,8 +341,6 @@ c----------------------------------------------------------------------
       include 'perplex_parameters.h'
  
       character cprop*18
-
-      logical meemum
 
       integer i,j,l,lu
 
@@ -407,11 +405,14 @@ c----------------------------------------------------------------------
 
       character*8 vname,xname
       common/ csta2  /xname(k5),vname(l2)
+
+      integer iam
+      common/ cst4 /iam
 c---------------------------------------------------------------------- 
                                     
       write (lu,1000)  
 
-      if (meemum) then 
+      if (iam.eq.2) then 
          write (lu,1120) (vname(jv(i)),v(jv(i)), i = 1, ipot)
          write (lu,1120) (vname(jv(i)),v(jv(i)), i = 3, ipot)
       else 
@@ -961,7 +962,7 @@ c                                compute the sum of the component g's
 
       end
 
-      subroutine getloc (itri,jtri,ijpt,wt,nodata,meemum)
+      subroutine getloc (itri,jtri,ijpt,wt,nodata)
 c-----------------------------------------------------------------------
 c getloc computes local properties requested by either meemum or werami
 
@@ -1024,7 +1025,7 @@ c----------------------------------------------------------------------
       double precision wt(3), mols, root, vol, chi, pgeo(i8),
      *                 pgeo1(i8), chi1, cst, units, r43
 
-      logical ok, sick(i8), nodata, ssick, meemum, pois(i8), ppois
+      logical ok, sick(i8), nodata, ssick, pois(i8), ppois
 c                                 -------------------------------------
 c                                 global variables
 
@@ -1107,13 +1108,16 @@ c                                 bookkeeping variables
       integer pindex,tindex
       common/ cst54 /pindex,tindex,usv
 
+      integer iam
+      common/ cst4 /iam
+
       save iwarn, iwarn1, iwarn2
       data iwarn, iwarn1, iwarn2 /3*0/
 c----------------------------------------------------------------------
 c                                 logarithmic_p option
       if (lopt(14)) v(1) = 1d1**v(1) 
 
-      if (.not.meemum) then 
+      if (iam.ne.2) then 
 
          jd = igrd(itri(1),jtri(1))
          ias = iap(jd)
@@ -1196,7 +1200,7 @@ c                                 chi = 1 -> voigt 0 -> reuss 0.5 -> VRH
                fluid(i) = .false.
             end if
 
-            if (.not.meemum) then
+            if (iam.ne.2) then
  
                do j = 1, istg(ids)
                   do k = 1, ispg(ids,j)
@@ -1223,7 +1227,7 @@ c                                 composition of zero phase
 
          end if
 c                                 molar amounts
-         if (meemum) then 
+         if (iam.eq.2) then 
 
             props(16,i) = amt(i)
 c                                 convert x3 to y for calls to gsol            
@@ -1288,6 +1292,8 @@ c                                 convert x to y for calls to gsol
 
             end if 
          end if 
+c                                 get phase properties
+c        call getphp (ids,i,sick(i),ssick,.false.)
 c                                 get shear moduli
          if (.not.fluid(i)) then 
             call moduli (ids,props(5,i),props(19,i),props(21,i),ok)
@@ -1383,7 +1389,7 @@ c                                 molar ammounts
 
          ids = kkp(i)
 
-         if (.not.meemum) call getcmp (i,i,kkp(i))
+         if (iam.ne.2) call getcmp (i,i,kkp(i))
 c                                 get atomic weight
          props(17,i) = 0d0
 

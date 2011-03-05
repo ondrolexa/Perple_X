@@ -27,7 +27,12 @@ c Please do not distribute any part of this source.
 
       integer icopt,isoct,iphct
       common/ ln4 /icopt,isoct,iphct
-c----------------------------------------------------------------------
+
+      integer iam
+      common/ cst4 /iam
+c----------------------------------------------------------------------- 
+c                                 iam is a flag indicating the Perple_X program
+      iam = 8
 c                                 version info
       call vrsion
 c                                 default no modification prompts

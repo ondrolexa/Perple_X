@@ -6,7 +6,7 @@ c----------------------------------------------------------------------
 
       integer i,ier,idead
 
-      logical meemum, nodata, bulk
+      logical nodata, bulk
 
       character amount*6, yes*1
 
@@ -49,11 +49,12 @@ c----------------------------------------------------------------------
 
       integer io3,io4,io9
       common / cst41 /io3,io4,io9
-c                                 meemum flag used for output routines
-c                                 to distunguish meemum from werami
-      save meemum
-      data meemum/.true./
-c----------------------------------------------------------------------
+
+      integer iam
+      common/ cst4 /iam
+c----------------------------------------------------------------------- 
+c                                 iam is a flag indicating the Perple_X program
+      iam = 2
 c                                 version info
       call vrsion
 c                                 initialization, read files etc. 
@@ -130,11 +131,11 @@ c                                 the results to the print file.
 
          else 
 c                                 compute derivative properties
-            call getloc (itri,jtri,ijpt,wt,nodata,meemum)
+            call getloc (itri,jtri,ijpt,wt,nodata)
 c                                 print summary to LUN 6
-            call calpr0 (6,meemum)
+            call calpr0 (6)
 
-            if (io3.eq.0) call calpr0 (n3,meemum)
+            if (io3.eq.0) call calpr0 (n3)
 
          end if 
 
@@ -176,13 +177,13 @@ c                                 elastic modulii flag
 c                                 -------------------------------------------
 c                                 open statements for units n1-n5 and n9
 c                                 are in subroutine input1
-      call input1 (first,output,2)
+      call input1 (first,output)
 c                                 for meemum turn auto_refine OFF
       iopt(6) = 0 
 c                                 read thermodynamic data on unit n2:
       call input2 (first)
 c                                 read data for solution phases on n9:
-      call input9 (vertex,first,output)
+      call input9 (first,output)
 c                                 call initlp to initialize arrays 
 c                                 for optimization.
       call initlp     

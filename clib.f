@@ -1,4 +1,4 @@
-      subroutine setau1 (vertex,output)
+      subroutine setau1 (output)
 c----------------------------------------------------------------------
 c setau1 sets autorefine dependent parameters. vertex is true if vertex
 c is the calling program. output is set to false if autorefine mode is 
@@ -8,7 +8,7 @@ c----------------------------------------------------------------------
  
       include 'perplex_parameters.h'
 
-      logical vertex, output
+      logical output
  
       character*8 y*1
 
@@ -40,6 +40,9 @@ c                                 solution model names
 
       logical refine
       common/ cxt26 /refine
+
+      integer iam
+      common/ cst4 /iam
 c-----------------------------------------------------------------------
       refine = .false.
 c                                 only use autorefine if solutions
@@ -51,7 +54,7 @@ c                                 are present and it is requested.
 
          call mertxt (n12nam,prject,'_auto_refine_true_or_false.dat',0)
 
-         if (vertex) then
+         if (iam.eq.1) then
 
             open (n8, file = n12nam, status = 'unknown')
 c                                 user friendly text version 
@@ -151,7 +154,7 @@ c                                 that depend on refinement
 
             do j = 1, ibad1
                if (fname(i).eq.badnam(j)) then
-                  if (vertex) write (*,1070) fname(i)
+                  if (iam.eq.1) write (*,1070) fname(i)
                   goto 50
                end if 
             end do 
@@ -285,7 +288,7 @@ c                                 default search increment
 
       end 
 
-      subroutine input1 (first,output,iam)
+      subroutine input1 (first,output)
 c-----------------------------------------------------------------------
 c input1 reads data from a file on unit n1, this data controls the
 c computational options and is modified frequently.
@@ -293,7 +296,7 @@ c computational options and is modified frequently.
 c iam - indicates calling program 1 - vertex
 c                                 2 - meemum
 c                                 3 - werami
-c                                 4 - all other programs (no output)
+c                                 any other values no output
 c-----------------------------------------------------------------------
       implicit none
  
@@ -304,7 +307,7 @@ c-----------------------------------------------------------------------
       character*100 blank*1,string(3)*8,rname*5,name*8,strg*80,n2name,
      *              n9name,y*1,sname*10,prt*3,plt*3
 
-      integer idum,nstrg,i,j,ierr,icmpn,jcont,kct,iam
+      integer idum,nstrg,i,j,ierr,icmpn,jcont,kct
 
       double precision dip
 
@@ -432,7 +435,7 @@ c                             output = .false. then in 1st cycle of
 c                             autorefine.
       if (.not.output) then 
 c                                 read computational option file 
-         call fopen1 (2)
+         call fopen1 
       
       else 
 c                                 create the file name           
@@ -913,7 +916,7 @@ c                                 read auxilliary input for 2d fractionation
       if (icopt.eq.9) call rdain
 c                                 get runtime parameters
       if (first.or.(.not.first).and.(.not.output)) 
-     *   call redop1 (first,tfname,iam)
+     *   call redop1 (first,tfname)
 
       goto 999
 c                                 archaic error trap

@@ -17,7 +17,7 @@ c Please do not distribute any part of this source.
 
       integer jop0
 
-      logical vertex, output, first
+      logical output, first
 
       character yes*1
  
@@ -26,29 +26,33 @@ c Please do not distribute any part of this source.
 
       integer isec,icopt,ifull,imsg,io3p
       common/ cst103 /isec,icopt,ifull,imsg,io3p
-c----------------------------------------------------------------------
+
+      integer iam
+      common/ cst4 /iam
+c----------------------------------------------------------------------- 
+c                                 iam is a flag indicating the Perple_X program
+      iam = 7
 c                                 version info
       call vrsion
 
       iop0 = 0 
-      
-      vertex = .false.
+
       output = .false.
       first  = .false.
 c                                 read input from unit n1 (terminal/disk).
 c                                 subroutine input1 also initializes:
 c                                 equilibrium counters; units n2 and n4;
 c                                 and the limits for numerical results.
-      call input1 (vertex,output,4)
+      call input1 (first,output)
 c                                 don't allow users to do anything
 c                                 other than gridded min
       if (icopt.lt.5) call error (4,0d0,icopt,'PSVDRAW')
 c                                 read thermodynamic data on unit n2:
-      call input2 (vertex)
+      call input2 (first)
 c                                 read autorefine lists
-      call setau1 (vertex,output)
+      call setau1 (output)
 c                                 read data for solution phases on n9:
-      call input9 (vertex,first,output)
+      call input9 (first,output)
 
       call setau2 (output)
 c                                 read the plot file for grid info

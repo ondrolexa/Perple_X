@@ -61,7 +61,7 @@ c parameters are assigned in "perplex_parameter.h"
 c-----------------------------------------------------------------------
       include 'perplex_parameters.h'
 
-      logical vertex, output, first,pots  
+      logical output, first, pots  
 
       integer io3,io4,io9
       common / cst41 /io3,io4,io9
@@ -82,9 +82,14 @@ c-----------------------------------------------------------------------
       integer jtest,jpot
       common/ debug /jtest,jpot
 
-      save first,output,vertex,pots
-      data vertex,output,first/.true.,.false.,.true./
+      save first,output,pots
+      data output,first/.false.,.true./
+
+      integer iam
+      common/ cst4 /iam
 c----------------------------------------------------------------------- 
+c                                 iam is a flag indicating the Perple_X program
+      iam = 1
 c                                 version info
       call vrsion
 c                                 elastic modulii flag
@@ -100,16 +105,16 @@ c                                 read input from unit n1 (terminal/disk).
 c                                 input1 also initializes: conditions,
 c                                 equilibrium counters; units n2 n4 and n6;
 c                                 and the limits for numerical results.
-         call input1 (first,output,1)
+         call input1 (first,output)
 c                                 read thermodynamic data on unit n2:
          call input2 (first)
 c                                 read/set autorefine dependent parameters, 
 c                                 it would be logical to output context specific 
 c                                 parameter settings here instead of the generic 
 c                                 blurb dumped by redop1
-         call setau1 (vertex,output)
+         call setau1 (output)
 c                                 read data for solution phases on n9:
-         call input9 (vertex,first,output)
+         call input9 (first,output)
 
          call setau2 (output)
 c                                 initialize potentials

@@ -308,10 +308,15 @@ c-----------------------------------------------------------------------
       double precision dlnfo2,elag,gz,gy,gx
       common/ cst100 /dlnfo2,elag,gz,gy,gx,ibuf,hu,hv,hw,hx
 
-      data tentoe, fo2, fs2, specie /2.302585093d0, 0d0, 0d0,
+      integer iam
+      common/ cst4 /iam
+
+      data tentoe, fo2, fs2, specie /2.302585093d0, 0.d0, 0d0,
      *      'H2O','CO2','CO ','CH4','H2 ','H2S','O2 ',
      *      'SO2','COS','N2 ','NH3'/
-c-----------------------------------------------------------------------
+c----------------------------------------------------------------------- 
+c                                 iam is a flag indicating the Perple_X program
+      iam = 11
 c                                 version info
       call vrsion
 

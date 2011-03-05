@@ -23,7 +23,12 @@ c       n6 - special out
 
       integer isec,icopt,ifull,imsg,io3p
       common/ cst103 /isec,icopt,ifull,imsg,io3p
-c----------------------------------------------------------------------
+
+      integer iam
+      common/ cst4 /iam
+c----------------------------------------------------------------------- 
+c                                 iam is a flag indicating the Perple_X program
+      iam = 3
 c                                 version info
       call vrsion
 
@@ -35,7 +40,7 @@ c                                 read input from unit n1 (terminal/disk).
 c                                 input1 also initializes:
 c                                 equilibrium counters; units n2 n4 and n6;
 c                                 and the limits for numerical results.
-      call input1 (first,output,3)
+      call input1 (first,output)
 c                                 set ivar flag, this indicates the number
 c                                 of possible independent plotting variables, jvar
 c                                 indicates the number of thermodynamic variables
@@ -46,11 +51,11 @@ c                                 don't allow users to do anything
 c                                 other than gridded min
       if (icopt.lt.5) call error (4,1d0,icopt,'PSVDRAW')
 c                                 read thermodynamic data on unit n2:
-      call input2 (vertex)
+      call input2 (fake)
 c                                 read autorefine lists
-      call setau1 (vertex,output)
+      call setau1 (output)
 c                                 read data for solution phases on n9:
-      call input9 (vertex,fake,output)
+      call input9 (fake,output)
 
       call setau2 (output)
 c                                 read the plot file for grid info
@@ -296,20 +301,17 @@ c                                 on windows version:
 
       subroutine mode1 
 c----------------------------------------------------------------------
-c read x-y coordinates for a 2-d section from the users console. 
+c read x-y coordinates for a 2-d section from the console. 
 c----------------------------------------------------------------------
       implicit none
 
       include 'perplex_parameters.h'
 
-      logical quit, nodata, meemum
+      logical quit, nodata
 
       integer itri(4),jtri(4),ijpt
 
       double precision wt(3)
-
-      save meemum
-      data meemum/.false./
 c----------------------------------------------------------------------
       do 
 
@@ -322,14 +324,14 @@ c----------------------------------------------------------------------
          if (ijpt.eq.0) then 
             nodata = .true.
          else 
-            call getloc (itri,jtri,ijpt,wt,nodata,meemum)
+            call getloc (itri,jtri,ijpt,wt,nodata)
          end if 
 
          if (nodata) then 
             write (*,1000) 
          else 
-            call calpr0 (6,meemum)
-            call calpr0 (n8,meemum)
+            call calpr0 (6)
+            call calpr0 (n8)
          end if
 
       end do 
@@ -1051,7 +1053,7 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical nodata,meemum
+      logical nodata
 
       integer itri(4),jtri(4),ijpt,lop,icx
 
@@ -1071,9 +1073,6 @@ c-----------------------------------------------------------------------
 
       integer igrd
       common/ cst311/igrd(l7,l7)
-
-      save meemum
-      data meemum/.false./
 c----------------------------------------------------------------------
 c                                 set variables to x-y value
       call setval
@@ -1096,7 +1095,7 @@ c                                 missing data at the node
 
          else 
 c                                 compute all properties
-            call getloc (itri,jtri,ijpt,wt,nodata,meemum)
+            call getloc (itri,jtri,ijpt,wt,nodata)
 
             if (nodata) then 
 
@@ -2533,7 +2532,7 @@ c----------------------------------------------------------------
 
       integer i, j, k, id, itri(4),jtri(4),ijpt, jk
 
-      logical nodata,meemum
+      logical nodata
 
       double precision wt(3), prop, mode(k10)
 
@@ -2564,9 +2563,6 @@ c----------------------------------------------------------------
       integer iprop,ivar,ind,ichem
       character*10 prname
       common/ cst83 /prname(k10),iprop,ivar,ind,ichem
-
-      save meemum
-      data meemum/.false./
 c----------------------------------------------------------------------
 c                                 set variables to x-y value
       call setval
@@ -2584,7 +2580,7 @@ c                                 missing data at the node
             mode(i) = 0d0
          end do 
 c                                 compute all properties
-         call getloc (itri,jtri,ijpt,wt,nodata,meemum)
+         call getloc (itri,jtri,ijpt,wt,nodata)
 
          if (nodata) then 
 
@@ -2918,7 +2914,7 @@ c----------------------------------------------------------------
 
       integer i, j, icx, id, itri(4), jtri(4), ijpt, lop, ict
 
-      logical nodata,meemum
+      logical nodata
 
       double precision wt(3),p1,p2,p3,prop
 
@@ -2964,9 +2960,6 @@ c----------------------------------------------------------------
 
       integer idstab,nstab,istab,jstab
       common/ cst34 /idstab(k10),nstab(k10),istab,jstab
-
-      save meemum
-      data meemum/.false./
 c----------------------------------------------------------------------
 c                                 set variables to x-y value
       call setval
@@ -2986,7 +2979,7 @@ c                                 missing data at the node
 
       else 
 c                                 compute all properties
-         call getloc (itri,jtri,ijpt,wt,nodata,meemum)
+         call getloc (itri,jtri,ijpt,wt,nodata)
 
          if (nodata) then 
 c                                 missing data at the node

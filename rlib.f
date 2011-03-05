@@ -4319,13 +4319,13 @@ c                                 scan for blanks:
 
       end
 
-      subroutine makecp (inames,mnames,vertex)
+      subroutine makecp (inames,mnames,first)
 c----------------------------------------------------------------------
 c makecp reads the thermodynamic to compute the composition vector of 
 c made phases, called by vertex. programs without composition checking
 c use smakcp.
 
-c output to console if vertex = .true.
+c output to console if first = .true.
 c----------------------------------------------------------------------
       implicit none
 
@@ -4333,7 +4333,7 @@ c----------------------------------------------------------------------
 
       integer inames, i, j, k,ict, id, incomp(k0), jct 
 
-      logical inph(k16*k17), inmk(k16), eof, good, vertex
+      logical inph(k16*k17), inmk(k16), eof, good, first
 
       double precision mcp(k16*k17,k0)
       character name*8, mnames(k16*k17)*8
@@ -4534,7 +4534,7 @@ c                                get list of used components
 
       nmak = ict
 
-      if (nmak.gt.0.and.vertex) 
+      if (nmak.gt.0.and.first) 
      *               write (*,1010) (cmpnt(incomp(j)),j=1,jct)
 c                                remake list of phases required for 
 c                                makes:
@@ -4555,16 +4555,15 @@ c                                makes:
    
          end do
 c                                write list of valid makes:
-         if (vertex) write (*,1000) mknam(i,mknum(i)+1),
-     *                             (mcomp(i,incomp(j)),j=1,jct)
+         if (first) write (*,1000) mknam(i,mknum(i)+1),
+     *                            (mcomp(i,incomp(j)),j=1,jct)
 
       end do 
 
-      if (nmak.gt.0.and.vertex) write (*,1020)
+      if (nmak.gt.0.and.first) write (*,'(/)')
 
 1000  format (a,1x,15(f5.2,1x))
 1010  format (/,'Summary of valid make definitions:',//,10x,15(a,1x)) 
-1020  format (/)
 
       end
 
@@ -4932,7 +4931,7 @@ c                 index with species k on site j.
 c mstot(i) - istot globally
 c jgsol(i,j,k) - k species indices of endmember j in solution i (jmsol globally) 
 
-      subroutine reform (sname,im,vertex)
+      subroutine reform (sname,im,first)
 c---------------------------------------------------------------------
 c reform - counts the number of species that can be respresented for a 
 c solution given the present endmembers.
@@ -4943,7 +4942,7 @@ c---------------------------------------------------------------------
 
       character*10 sname
 
-      logical vertex
+      logical first
 
       integer kill,ikill,jkill,kill1,i,j,kosp(mst,msp),kill2,
      *        k,im,idsp,ksp(mst)
@@ -4960,7 +4959,7 @@ c---------------------------------------------------------------------
 c----------------------------------------------------------------------
       kill = 1
 
-      if (vertex.and.isite.gt.1) call warn (50,wg(1,1),isite,sname)
+      if (first.and.isite.gt.1) call warn (50,wg(1,1),isite,sname)
 
       do while (kill.lt.99) 
 
@@ -5034,7 +5033,7 @@ c                                 failed, rejected too many endmembers
             kill = 99 
 
             im = im - 1
-            if (vertex) call warn (25,wg(1,1),jstot,sname)
+            if (first) call warn (25,wg(1,1),jstot,sname)
             jstot = 0
 
          else if (istot.eq.jstot) then  
@@ -5789,7 +5788,7 @@ c                                dependent endmember is ok
 
       end 
 
-      subroutine rmodel (tname,bad,vertex)
+      subroutine rmodel (tname,bad)
 c---------------------------------------------------------------------
 c rmodel - reads solution models from LUN n9.
 c---------------------------------------------------------------------
@@ -5801,7 +5800,7 @@ c---------------------------------------------------------------------
 
       integer nreact,i,j,k,l,m,jlaar,idim
 
-      logical bad,vertex
+      logical bad
 
       double precision coeffs(k7),rnums(100),enth
 
@@ -5927,7 +5926,7 @@ c                               of ordered species:
          end do  
 c                               read the limit equations for the 
 c                               amount of the ordered endmembers
-         call readlm (tname,bad,vertex)
+         call readlm (tname,bad)
 
       end if 
 c                               read dependent endmembers
@@ -10335,7 +10334,7 @@ c----------------------------------------------------------------------
 
       end  
 
-      subroutine readlm (tname,bad,vertex)
+      subroutine readlm (tname,bad)
 c---------------------------------------------------------------------
 c readlm - reads stoichiometric limits on ordered species concentrations
 c---------------------------------------------------------------------
@@ -10347,7 +10346,7 @@ c---------------------------------------------------------------------
 
       double precision coeffs(k7)
 
-      logical bad,vertex
+      logical bad
 
       character begin*5, tag*3, tname*10
 
@@ -10374,6 +10373,9 @@ c---------------------------------------------------------------------
       integer jsmod
       double precision vlaar
       common/ cst221 /vlaar(m3,m4),jsmod
+
+      integer iam
+      common/ cst4 /iam
 c----------------------------------------------------------------------
 c                               initialize limit counter
       do j = 1, norder
@@ -10455,7 +10457,7 @@ c                                 the constant and delta (max-min) are:
       end if 
 
       if (bad) then 
-         if (vertex) then 
+         if (iam.lt.3) then 
             write (*,1000) tname,(chars(j),j=1,len)
             write (*,1010)
          end if  
@@ -10474,7 +10476,7 @@ c                                 the constant and delta (max-min) are:
 
       end 
 
-      subroutine input9 (vertex,first,output)
+      subroutine input9 (first,output)
 c-----------------------------------------------------------------------
 c given a list of solution phase names (fname(h9)) input9 searches a
 c data file (on unit n9) for the relevant data and subdivides the
@@ -10486,7 +10488,7 @@ c-----------------------------------------------------------------------
 
       integer icoct, i,j,h,im,icky,id,icpct,idsol,ixct
 
-      logical output, first, bad, vertex
+      logical output, first, bad
  
       character*10 tname, uname(2)*8, sname(h9), new*3
 
@@ -10561,6 +10563,9 @@ c-----------------------------------------------------------------------
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
+      integer iam
+      common/ cst4 /iam
+
       save uname
 
       data uname/' ',' '/
@@ -10589,7 +10594,7 @@ c                                 format test line
       do 
 c                                 -------------------------------------
 c                                 read the solution name
-         call rmodel (tname,bad,vertex)
+         call rmodel (tname,bad)
 
          if (bad) cycle 
 c                                 istot is zero, if eof: 
@@ -10597,8 +10602,9 @@ c                                 istot is zero, if eof:
 c                                 then at least one solution phase referenced
 c                                 in the input is not present in the
 c                                 solution phase data file, write warning:
-            if (vertex) call warn (43,zt,isoct-im,'INPUT9')
+            if (iam.lt.3) call warn (43,zt,isoct-im,'INPUT9')
             exit
+
          end if 
 c                                 -------------------------------------
 c                                 check the solution model:
@@ -10627,8 +10633,8 @@ c                                 number of pseudocompounds (ipcps) and
 c                                 array y, of which element y(h,i,j) is
 c                                 the site fraction of the jth species on
 c                                 the ith site of the hth pseudocompound.
-         if (vertex) then  
-c                                 only vertex needs static pseudocompounds
+         if (iam.lt.3) then  
+c                                 vertex/meemum need static pseudocompounds
             call subdiv (tname,im)       
 c                                 subdiv generates ntot compositions,
 c                                 generate the compound data for each solution:
@@ -10705,7 +10711,7 @@ c                               read next solution
 
       if (isoct.gt.0) then 
 
-         if (vertex) write (*,1110) iphct - ipoint
+         if (iam.lt.3) write (*,1110) iphct - ipoint
 c                               scan for "killed endmembers"
          do i = 1, ipoint
 c                               reset ikp
@@ -10715,7 +10721,7 @@ c                               make general simplicial coordinates
 c                               for iterative subdivision
 c        if (iopt(10).gt.0.and.im.gt.0) call subdv0
 
-         if (io3.eq.0.and.output.and.vertex) then 
+         if (io3.eq.0.and.output.and.iam.lt.3) then 
             write (n3,1020)
             write (n3,1010) (fname(i), i = 1, isoct)
             if (im.gt.0) then 

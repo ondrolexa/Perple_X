@@ -42,15 +42,20 @@ c------------------------------------------------------------------------
       integer inc,jpot
       common/ cst101 /inc(l2),jpot
 
+      integer iam
+      common/ cst4 /iam
+
       save idiag
-c-----------------------------------------------------------------------
+c----------------------------------------------------------------------- 
+c                                 iam is a flag indicating the Perple_X program
+      iam = 5
 c                                 version info
       call vrsion
 c                                 assign data files
       call fopen2 (2,opname)
 c                                 read options
       opname = 'perplex_option.dat'
-      call redop1 (.false.,opname,5)
+      call redop1 (.false.,opname)
  
       idiag = 0
  

@@ -22,7 +22,7 @@ c----------------------------------------------------------------------
 
       end
 
-      subroutine redop1 (output,opname,iam)
+      subroutine redop1 (output,opname)
 c----------------------------------------------------------------------
 c redop1 - redop1 looks for the perplex_option.dat file, if it finds
 c the option file it scans the file for keywords and sets options
@@ -31,7 +31,7 @@ c accordingly.
 c iam - indicates calling program 1 - vertex
 c                                 2 - meemum
 c                                 3 - werami
-c                                 4 - pssect/frendly/build
+c                                 all other values no output
 
 c option variables - keyword associations
 
@@ -57,7 +57,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer ier, i, loopx, loopy, iam
+      integer ier, i, loopx, loopy
 
       logical output
 
@@ -84,6 +84,9 @@ c----------------------------------------------------------------------
 
       integer isec,icopt,ifull,imsg,io3p
       common/ cst103 /isec,icopt,ifull,imsg,io3p
+
+      integer iam
+      common/ cst4 /iam
 c----------------------------------------------------------------------
 c                                 default option values:
 c                                 nopt(1) and nopt(2) are flags used by reader
@@ -667,7 +670,7 @@ c                                 --------------------------------------
 c                                 output
       if ((iam.eq.1.and.output).or.iam.eq.2.or.iam.eq.3) then
 c                                 console
-         call outopt (6,valu,iam)
+         call outopt (6,valu)
 
          if (lopt(12)) then 
 c                                 file version, create the file name 
@@ -680,7 +683,7 @@ c                                 file version, create the file name
             end if 
 
             open (n8, file = tfname)
-            call outopt (n8,valu,iam)
+            call outopt (n8,valu)
             close (n8) 
 
             write (*,1000) tfname
@@ -730,7 +733,7 @@ c                                 give the relaxation bounds.
 
       end 
 
-      subroutine outopt (n,valu,iam)
+      subroutine outopt (n,valu)
 c----------------------------------------------------------------------
 c outopt - for program IAM, outputs context specific options to LUN N,
 c called by redop1  
@@ -739,7 +742,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i, len, iam, n
+      integer i, len, n
 
       character*3 valu(i10), nval1*12, text(14)*1
 
@@ -764,6 +767,9 @@ c----------------------------------------------------------------------
 
       integer isec,icopt,ifull,imsg,io3p
       common/ cst103 /isec,icopt,ifull,imsg,io3p
+
+      integer iam
+      common/ cst4 /iam
 c----------------------------------------------------------------------
 c                                 generic blurb
       if (iam.eq.1) then 
@@ -3668,13 +3674,13 @@ c----------------------------------------------------------------------
 
       end 
 
-      subroutine fopen1 (iam)
+      subroutine fopen1 
 c-----------------------------------------------------------------------
 c fopen1 gets the project name and opens the problem definition file
 c    n1name = project_name.dat
 c iam is a flag indicating the calling program:
-c    1 - build
-c    2 - vertex,meemum
+c    4 - build
+c    else - vertex,meemum
 c------------------------------------------------------------------------
       implicit none
  
@@ -3689,10 +3695,10 @@ c------------------------------------------------------------------------
 c-----------------------------------------------------------------------
       do 
 c                                 get the root for all output files
-         if (iam.eq.1) then 
+         if (iam.eq.4) then 
 c                                 BUILD
             write (*,1040)
-         else if (iam.eq.2) then 
+         else  
 c                                 VERTEX, MEEMUM
             write (*,1030) 
          end if 
@@ -3701,7 +3707,7 @@ c                                 readrt loads the root into prject
 c                                 make the problem definition file name
          call mertxt (n1name,prject,'.dat',0)
 
-         if (iam.eq.1) then 
+         if (iam.eq.4) then 
 
             write (*,1070) n1name
 c                                  BUILD
@@ -3720,8 +3726,8 @@ c                                  try again
                end if 
             end if
          
-         else if (iam.eq.2) then
-c                                  VERTEX
+         else 
+c                                  VERTEX, MEEMUM
             open (n1,file=n1name,iostat=ierr,status='old')
 
             if (ierr.ne.0) then

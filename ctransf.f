@@ -25,7 +25,12 @@ c----------------------------------------------------------------------
 
       integer ic
       common/ cst42 /ic(k0)
-c----------------------------------------------------------------------
+
+      integer iam
+      common/ cst4 /iam
+c----------------------------------------------------------------------- 
+c                                 iam is a flag indicating the Perple_X program
+      iam = 6
 c                                 version info
       call vrsion
 
