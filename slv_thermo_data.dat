@@ -1,0 +1,185 @@
+
+ | comments are indicated by the | character.
+ | check for warnings at the end of the header section.
+
+Silicate Liquid-Vapor                                                            |<= data base title
+
+begin_standard_variables |<= name (<9 characters), reference value, tolerance
+P(bar)      1.00   0.1E-6
+T(K)     2500.00   0.1E-4
+Y(CO2)      0.00   0.1E-6
+mu(C1)      0.00   0.1E-2
+mu(C2)      0.00   0.1E-2
+end_standard_variables
+
+tolerance  -.1E-2  |<= DTOL for unconstrained minimization, energy units
+
+begin_components |<= name (<5 characters), molar weight (g)
+Mg      24.3045
+Si      28.0850
+Fe      55.8445
+O2      31.9990
+end_components
+
+begin_makes                                                                                                                                 
+fo8L = 2 foL 
+-20 0 0 
+fa8L = 2 faL 
+-20 0 0 
+q8L = 4 qL 
+-20 0 0 
+end_makes 
+
+end                                                                                                                                         
+ 
+  
+O2       EoS = 10  
+O2(1)
+S0 = 277.29 V0 = 20785  
+c1 = 38.856  
+end
+
+ 
+O        EoS = 10  
+O2(.5)
+G0 = 88012 S0 = 205.896 V0 = 20785  
+c1 = 20.851  
+end
+
+ 
+SiO2     EoS = 10  
+Si(1)O2(1)
+G0 = -282475 S0 = 347.062 V0 = 20785  
+c1 = 61.625  
+end
+
+ 
+SiO      EoS = 10  
+Si(1)O2(.5)
+G0 = -279310 S0 = 285.046 V0 = 20785  
+c1 = 37.569  
+end
+
+ 
+Si       EoS = 10  
+Si(1)
+G0 = 110924 S0 = 213.511 V0 = 20785  
+c1 = 22.444  
+end
+
+ 
+MgO      EoS = 10  
+Mg(1)O2(.5)
+G0 = 14574 S0 = 309.021 V0 = 20785  
+c1 = 42.509  
+end
+
+ 
+Mg       EoS = 10  
+Mg(1)
+S0 = 192.851 V0 = 20785  
+c1 = 20.826  
+end
+
+ 
+FeO      EoS = 10  
+Fe(1)O2(.5)
+G0 = 27019 S0 = 318.074 V0 = 20785  
+c1 = 38.877  
+end
+
+ 
+Fe       EoS = 10  
+Fe(1)
+G0 = 72043 S0 = 230.891 V0 = 20785  
+c1 = 24.669  
+end
+
+
+foL_HP      EoS = 2 | JANAF G@ 2500 + Avg HP+Ghirso Cp, S, V @2500 
+Mg(2)Si(1)O2(2)
+G0 = -963154 S0 = 521.8 V0 = 5.19487  
+c1 = 269.4  
+b1 = .145E-3 b5 = -.145E-2 b6 = 730000 b7 = -109.5 b8 = 4  
+end
+
+
+fo_JAN       EoS = 2  | JANAF @2500
+Mg(2)Si(1)O2(2)
+G0 = -952367 S0 = 452.166 V0 = 4.78008  
+c1 = 208.915  
+b1 = .613E-4 b5 = -.613E-3 b6 = 1250000 b7 = -187.5 b8 = 4  
+end
+
+
+foL      EoS = 2 | JANAF @ 2500 
+Mg(2)Si(1)O2(2)
+G0 = -963154 S0 = 484.83 V0 = 5.19487  
+c1 = 205.016  
+b1 = .145E-3 b5 = -.145E-2 b6 = 730000 b7 = -109.5 b8 = 4  
+end
+
+
+fo_HP       EoS = 2  | JANAF G@2500 + HP S,Cp,V @2500 adjusted to fit melting at 2171 K
+Mg(2)Si(1)O2(2)
+G0 = -928574 S0 = 528.9 V0 = 4.78008  
+c1 = 270.9  
+b1 = .613E-4 b5 = -.613E-3 b6 = 1250000 b7 = -187.5 b8 = 4  
+end
+
+fa_HP       EoS = 2  | HP props, G0 by fitting fa=faL at 1478 K
+Si(1)Fe(2)O2(2)
+G0 = -654289.4 S0 = 537.603 V0 = 4.9928  
+c1 = 226.068  
+b1 = .505E-4 b5 = -.505E-3 b6 = 1330000 b7 = -199.5 b8 = 4  
+end
+
+fo       EoS = 2  | JANAF G@2500 + HP S,Cp,V @2500 adjusted to fit melting at 2171 K
+Mg(2)Si(1)O2(2)
+G0 = -952367 S0 = 452.166 V0 = 4.78008  
+c1 = 208.915  
+b1 = .613E-4 b5 = -.613E-3 b6 = 1250000 b7 = -187.5 b8 = 4  
+end
+
+fa       EoS = 2  | from fo with JANAF FO + DCP and DS HP(FA-FO), melting at 1478
+Si(1)Fe(2)O2(2)
+G0 = -590341. S0 = 460.166 V0 = 4.9928  
+c1 = 164.1  
+b1 = .505E-4 b5 = -.505E-3 b6 = 1330000 b7 = -199.5 b8 = 4  
+end
+
+
+ 
+faL_HP      EoS = 2 | HP/Cp, S, V@2500, G0 by matching faL + MgO = foL + FeO from Pahlevan @2500
+Si(1)Fe(2)O2(2)
+G0 = -1106264 S0 = 612.21 V0 = 5.912  
+c1 = 239.7  
+b1 = .169E-3 b5 = -.169E-2 b6 = 410000 b7 = -61.5 b8 = 4  
+end
+
+
+faL      EoS = 2 | Cp is JANAF of Fo + (HPCpFa-HPCpFo, -22.3), G, S adjusted to give Pahlevan's DH/DS at 2500 K 
+Si(1)Fe(2)O2(2)
+G0 = -699264 S0 = 571.21 V0 = 5.912  
+c1 = 182.716  
+b1 = .169E-3 b5 = -.169E-2 b6 = 410000 b7 = -61.5 b8 = 4  
+end
+ 
+
+crst     EoS = 2  
+Si(1)O2(1)
+G0 = -452927 S0 = 184.674 V0 = 2.6427  
+c1 = 75.333  
+b1 = .81E-5 b5 = -.81E-4 b6 = 600000 b7 = -90 b8 = 4  
+end
+
+
+qL       EoS = 2  
+Si(1)O2(1)
+G0 = -456004 S0 = 191.936 V0 = 2.61957  
+c1 = 85.772  
+b1 = -.5E-5 b5 = .5E-4 b6 = 470000 b7 = -70.5 b8 = 4  
+end
+
+
+

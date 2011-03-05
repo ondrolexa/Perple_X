@@ -1,0 +1,442 @@
+008 DO NOT DELETE THIS LINE
+
+                             FOR MODEL DEFINITIONS AND REFERENCES REFER TO THE GLOSSARY AT:
+
+                             www.perplex.ethz.ch/perplex_documentation.html#SOLUTION_MODEL_GLOSSARY
+
+                             DO NOT USE TABS IN PERPLE_X DATA FILES, TAB CHARACTERS ARE NOT INTERPRETED AS BLANK SPACES 
+                             AND CAUSE FORMATTING ERRORS.
+
+                             Solution model type flags are:
+
+                             0  - internal (fluid) EoS
+                             1  - simple microscopic formulation (described in terms of bragg-williams fractions)
+                             2  - simple macroscopic formulation (described in terms of endmember fractions)
+                             6  - macroscopic formulation with speciation.
+                             7  - macroscopic formulation reciprocal solution with dependent endmembers.
+                             8  - macroscopic formulation reciprocal solution with dependent endmembers and speciation.
+
+                             Special models:
+
+                             23 - Toops-Samis melt model
+                             24 - Holland & Powell Haplogranite melt model 
+                             25 - Ghirso pMELTS/MELTS model
+                             26 - Haefner H2O-CO2-NaCl
+                             27 - Silicate vapor (ideal)
+
+                             For non-ideal solutions, microscopic models assume Margules type excess functions; 
+                             macroscopic models may be posed in terms of Margules (See model "Bio(HP)" for a commented
+                             example) or Van Laar (e.g., Holland and Powell, CMP 2003; See model Fsp(C1) for a commented 
+                             example) excess functions. The format of model type 1 is described in detail in the Perple_X 
+                             program documentation (vdoc.pdf).
+                           
+                             The format for all other model types is not yet documented, but may be deduced from the commentary
+                             within the models included herein. Character data is format free in all models except model type 1.
+
+                             comments can be placed between models provided, nothing is written in the first 10 columns. Comments 
+                             may be placed after data if it is separated from the data by a '|' marker.
+
+                             Detailed commentary is provided for the Bio(HP) model below:  
+                             
+                    --------------------------------------------------------
+begin_model 
+                                  Silicate ideal gas 
+Si-vapor
+
+27                                    model type: internal, ideal gas
+
+9                                     number of endmembers
+                                 
+                                    | ENDMEMBER NAMES:                               
+SiO2                                
+Fe
+Si
+O2
+O
+MgO
+Mg
+FeO
+SiO
+
+0 0 0 0 0 0 0 0 0                   | endmember flags.  
+
+0.0 0.1  0.1 1                      | range and resolution of X(SiO2), 0 => cartesian subdivision/1 => asymmetric subdivision   
+0.0 0.1  0.1 1                      | range and resolution of X(Fe)  
+0.0 0.2  0.1 0                      | range and resolution of X(Si)   
+0.0 0.3  0.1 0                      | range and resolution of X(O2)  
+0.0 0.6  0.1 0                      | range and resolution of X(O)   
+0.0 0.2  0.2 0                      | range and resolution of X(MgO)
+0.0 0.4  0.1 1                      | range and resolution of X(Mg)
+0.0 0.1  0.1 1                      | range and resolution of X(FeO)
+
+ideal
+
+  0                               | no configurational entropy model (internal routine hpmelt).
+
+end_of_model
+                                  --------------------------------------------------------
+begin_model                
+                                      HP '98 olivine solution
+O(HP)                                                                               
+2                                     model type: Margules, macroscopic
+
+3                                     3 endmembers
+teph     fo       fa            
+  0  0  0                           | endmember flags
+
+                                    | NOTE restricted compositional range for Mn 
+
+0.0 1.0  0.1   1                    | range and resolution for X(Mn), imod = 1 -> asymmetric transform subdivision
+0.0 1.0  0.1   0                    | range and resolution for X(Mg), imod = 0 -> cartesian subdivision
+
+begin_excess_function
+W(fo fa) 8400. 0. 0.                | corrected from 4.2 kJ Nov 15, 2004.
+end_excess_function 
+
+1                                     1 site entropy model
+
+3 2.                                  3 species, site multiplicity = 2.
+z(mg) = 1 fo
+z(fe) = 1 fa 
+
+end_of_model              
+                              --------------------------------------------------------
+begin_model                
+                                      Sack & Ghiorso (1989 CMP 102:41-68) for Fe-Mg olivine. 
+                                      [an astoundingly complex presentation]
+                                      JADC 7/03         
+
+O(SG)     
+2                                     model type margules, macroscopic                                                                         
+
+2                                     2 endmembers
+
+fo 
+fa
+
+0  0                               | endmember flags
+
+0. 1. 0.1 0                        | range and resolution of X(mg), imod = 0 -> cartesian subdivision
+
+begin_excess_function   
+w(fo fa)  20314. 0. 3e-2    
+end_excess_function
+
+1                                     1 site entropy model (m)
+2 2.                                  2 species on m2, mutiplicity = 2
+z(m,mg) = 1 fo
+
+end_of_model                       
+                              --------------------------------------------------------
+begin_model                   
+                                      Holland and Powell (2001) J.Petrol 426, 673-683 (KNCASH)
+                                      White et al (2001) JMG 19: 139-153 (FM+KNCASH). Calculations
+                                      with this model can be sped up significantly by restricting
+                                      the subdivsion ranges specified below.
+
+                                      JADC 3/03
+
+                                      Changed DQF terms to account for modifications of faL and foL 
+                                      (White et al 2007). Mark Caddick, Nov, 07.
+
+
+                                      WARNING 1: This model can only be used for hydrous systems  
+                                      if H2O is specified as a thermodynamic component or as a
+                                      staurated component, it CANNOT be used if water is specified
+                                      as a saturated phase component (i.e., if H2O is specified as a saturated 
+                                      phase component, VERTEX will reject the H2OL endmember
+                                      and the model will be applicable only to dry melts).
+
+                                      WARNING 2: DO NOT CHANGE THE ORDER OF THE FIRST 3 ENDMEMBERS
+                                      this model uses an internal routine to compute the
+                                      entropy of the melt that assumes the order entered
+                                      here, see comments with endmember names below.
+
+                                      WARNING 3: the endmembers q8L, fa8L, fo8L, and
+                                      sil8L must be "made" in the thermodynamic data
+                                      file. See the header section of hp02ver.dat for
+                                      details on the "make" structure.
+
+                                      WARNING 3.1: the (stabilizing) dqf corrections made
+                                      to the fo8L, fa8L, and sil8L enedmembers make the 
+                                      haplogranite melt model inapplicable to melts where
+                                      these endmembers are present in high concentrations,
+                                      to model such situations or to reproduce the published
+                                      fo-fa-q or sil-q melting phase relations, the dqf corrections
+                                      (below) should be set to zero. 
+
+
+                                      WARNING 4: different versions of the HP data base
+                                      may result in significant variations in the predicted
+                                      position of the wet-solidus (Powell, pers comm.).
+
+
+                                      WARNING 5: The melt model incorrectly predicts a high 
+                                      pressure-low temperature stability field for water-silica
+                                      rich melts. at 10 kb this field extends to ca 750 K and 
+                                      at 3 kb to ca 550 K. For this reason the melt model should
+                                      not be used at pressures far above 10 kb.
+
+                                      
+                                      WARNING 6: the subdivision ranges below may not
+                                      span the entire range of validity for the solution
+                                      model. Check these ranges, and adjust them as 
+                                      necessary before using this model.
+
+melt(HP)
+24                                    model type: margules, internal entropy routine
+
+8                                     number of endmembers
+                                 
+                                    | ENDMEMBER NAMES:                               
+
+h2oL                                | Because this model uses an internal routine to compute the
+                                    | entropy of the melt h2oL must be the specified as the first
+                                    | endmember (See WARNING 2 in the header of this model).
+
+                                    | fo8 and fa8 must be the 2nd and 3rd endmembers, but their
+fo8L     fa8L                       | relative order is arbitrary.
+
+abL      sil8L    anL               | The relative order of these endmembers is arbitrary.
+kspL     q8L                         
+
+ 0 0 0 0 0 0 0 0                    | endmember flags.  
+
+                                    | RESTRICTED(!) subdivision ranges and model
+                                    | the ranges must be extended if calculations
+                                    | are to be done in subsystems like fo-fa-h2o,
+                                    | Ab-H2O etc etc; these numbers seem about right
+                                    | for pelite melting.
+
+0.0 1.0  0.1 0                      | range and resolution of X(h2o), 0 => cartesian subdivision  
+0.0 1.0  0.1 0                      | range and resolution of X(fo),  1 => asymmetric subdivision   
+0.0 1.0  0.1 0                      | range and resolution of X(fa),  1 => asymmetric subdivision   
+0.0 1.0  0.1 0                      | range and resolution of X(ab),  0 => cartesian subdivision   
+0.0 1.0  0.1 0                      | range and resolution of X(sil), 1 => asymmetric subdivision  
+0.0 1.0  0.1 0                      | range and resolution of X(an),  1 => asymmetric subdivision   
+0.0 1.0  0.1 0                      | range and resolution of X(ksp), 0 => cartesian subdivision
+
+begin_excess_function 
+                                    | the excess parameters used for the haplo-
+                                    | granite melt model vary between papers (notably w(an-sil)),
+                                    | the values here are from the thermocalc
+                                    | model file 'thdmloss.txt' and appear largely
+                                    | consistent with the white et al paper.
+
+
+w(q8L   fo8L) 12d3  0. -0.4  
+w(q8L   fa8L) 14d3  0.  0.    
+w(fo8L  fa8L) 18d3 0. 0.
+
+end_excess_function 
+
+  0                                  | no configurational entropy model (internal routine hpmelt).
+
+ | dqf corrections off for SLV calculations
+
+| begin_dqf_corrections
+| dqf(fo8L)  -10d3 0 0 
+| dqf(fa8L)  -9d3 0 -1.3
+| dqf(sil8L) -10d3 0 0
+                                     | pre-white et al '07 value: dqf(fo8L)  -15d3 0 0 
+                                     | pre-white et al '07 value: dqf(fa8L)  -15d3 0 0
+                                     | pre-white et al '07 value: dqf(sil8L) -10d3 0 0
+| end_dqf_corrections
+
+end_of_model    
+                                      --------------------------------------------------------
+begin_model                          | keyword indicating beginning of a solution model
+
+                                      Ghiorso et al (2002) G3 v. 3 (n. 5) model for mantle
+                                      melting, 1-3 GPa. Read cautionary notes in Ghirso for
+                                      applications beyond this pressure range. Calculations
+                                      with this model can be sped up significantly by restricting
+                                      the subdivsion ranges specified below.
+
+                                      This is a reduced version of the pMELTS model that excludes
+                                      the Cr-, Ni-, Co-, and P-bearing melt components. The melt
+                                      endmember names have been changed from those used in the pMELTS paper.
+
+                                      This model should be applied with solid phase data 
+                                      and solution models from the MELTS program. The melt
+                                      endmember data converted to PERPLE_X format is in the 
+                                      file pMELTSver.dat. The PERPLE_X solid phase data files
+                                      b92ver.dat and hp98ver.dat also include this data and therefore
+                                      can be used with the pMELTS model, however using these files 
+                                      will almost certainly result in inconsistencies with published
+                                      pMELTS results.
+
+
+                                      JADC 7/03
+
+
+                                      WARNING 1: This model can only be used for hydrous systems  
+                                      if H2O is specified as a thermodynamic component
+                                      (i.e., if H2O is specified as a saturated 
+                                      component, VERTEX will reject the h2oG(L) endmember
+                                      and the model will be applicable only to dry melts).
+
+                                      WARNING 2: this model uses an internal routine to 
+                                      compute the entropy of the melt that assumes 
+                                      h2oG(l) is the first endmember.
+
+                                      WARNING 3: the subdivision ranges below may not
+                                      span the entire range of validity for the pMELT
+                                      model. Check these ranges, and adjust them as 
+                                      necessary before using this model.
+
+                                      ====================================================
+                                      Modified to use pure water at P and T standard
+                                      state (the H2O endmember) as opposed to the h2oGL 
+                                      endmember of Ghiorso et al. (2003), which so far 
+                                      as I understand should  be equivalent. 
+
+                                      NOTE: Use of H2O as an endmember requires the user
+                                      specify an equation of state for H2O when running
+                                      BUILD. To be strictly consistent with Ghiorso et al
+                                      the Sterner and Pitzer EoS for water should be used 
+                                      for this purpose, but it is not presently included
+                                      in perplex. Instead of the Sterner-Pitzer EoS i would
+                                      recommend using the CORK EoS, which differs negligibly
+                                      from the Sterner-Pitzer EoS.
+
+                                      JADC May 23, 2004.
+
+| endmember names changed fro SLV                                      
+
+pMELTS(G)
+25                                    model type: margules, internal entropy routine
+
+8                                     number of endmembers
+
+H2O                                 | h2o MUST be the first endmember, see WARNING 1 above.
+foL
+faL
+woGL
+kalGL
+nasGL
+coGL
+q8L            
+
+1 0 0 0 0 0 0 0                     | endmember flags  
+
+                                    | NOTE restricted compositional ranges!                 
+
+0.0 1.0   0.1  0                    | range and resolution of X(h2o), 0 => cartesian subdivision  
+0.0 1.0   0.1  0                    | range and resolution of X(fo), 0 => cartesian subdivision    
+0.0 1.0   0.1  0                    | range and resolution of X(fa), 0 => cartesian subdivision     
+0.0 1.0   0.1  0                    | range and resolution of X(wo), 0 => cartesian subdivision  
+0.0 1.0   0.1  0                    | range and resolution of X(kal), 0 => cartesian subdivision     
+0.0 1.0   0.1  0                    | range and resolution of X(nas), 0 => cartesian subdivision    
+0.0 1.0   0.1  0                    | range and resolution of X(co), 0 => cartesian subdivision  
+
+begin_excess_function 
+
+w( faL  q8L  ) -18841.4  0. 0.
+w( foL  q8L  ) -33833.5  0. 0.
+w( foL  faL ) -28736.4  0. 0.
+
+end_excess_function 
+  0                                  | no configurational entropy model (internal routine gmelt).
+end_of_model                         
+                                      --------------------------------------------------------
+begin_model                         
+                                      Ghiorso & Sack (1995) CMP 119:197-212 (the MELTS model)
+                                      Read cautionary notes in Ghirso. Calculations
+                                      with this model can be sped up significantly by restricting
+                                      the subdivsion ranges specified below.
+
+                                      This is a reduced version of the MELTS model that excludes
+                                      the Cr- and P-bearing melt components. The melt
+                                      endmember names have been changed from those used 
+                                      in the MELTS paper.
+
+                                      This model should be applied with solid phase data 
+                                      and solution models from the MELTS program. The melt
+                                      endmember data converted to PERPLE_X format is in the 
+                                      file pMELTSver.dat. The PERPLE_X solid phase data files
+                                      b92ver.dat and hp98ver.dat also include this data and therefore
+                                      can be used with the MELTS model, however using these files 
+                                      will almost certainly result in inconsistencies with published
+                                      MELTS results.
+
+
+                                      JADC 7/03
+
+
+                                      WARNING 1: This model can only be used for hydrous systems  
+                                      if H2O is specified as a thermodynamic component
+                                      (i.e., if H2O is specified as a saturated 
+                                      component, VERTEX will reject the h2oGM endmember
+                                      and the model will be applicable only to dry melts).
+
+                                      WARNING 2: this model uses an internal routine to 
+                                      compute the entropy of the melt that assumes 
+                                      h2oGM is the first endmember.
+
+                                      WARNING 3: the subdivision ranges below may not
+                                      span the entire range of validity for the MELT
+                                      model. Check these ranges, and adjust them as 
+                                      necessary before using this model.
+                                      
+
+MELTS(GS)
+25                                    model type: margules, internal entropy routine
+
+8                                     number of endmembers
+
+h2oGM
+foGM
+faGM
+woGM
+kalGM
+nasGM
+coGM
+qGM            
+
+0 0 0 0 0 0 0 0                  | endmember flags                  
+
+0.0 0.3  0.04 0  
+0.3 0.7  0.04 0 
+0.0 0.3  0.04 0  
+0.0 0.2  0.04 0
+0.0 0.4  0.04 0  
+0.0 0.2  0.04 0 
+0.0 0.3  0.04 0                   | (restricted) subdivision ranges and model
+
+begin_excess_function 
+                   
+w( coGM  qGM  ) -39120.   0. 0.
+w( faGM  qGM  ) 23661.    0. 0.
+w( foGM  qGM  ) 3421.     0. 0.
+w( woGM  qGM  ) -864.     0. 0.
+w( nasGM qGM  ) -99039.   0. 0.
+w( kalGM qGM  ) -33922.   0. 0.
+w( h2oGM qGM  ) 30967.    0. 0.
+w( faGM  coGM ) -30509.   0. 0.
+w( foGM  coGM ) -32880.   0. 0.
+w( woGM  coGM ) -57918.   0. 0.
+w( nasGM coGM ) -130785.  0. 0.
+w( kalGM coGM ) -25859.   0. 0.
+w( h2oGM coGM ) -16098.   0. 0.
+w( foGM  faGM ) -37257.   0. 0.
+w( woGM  faGM ) -12971.   0. 0.
+w( nasGM faGM ) -90534.   0. 0.
+w( kalGM faGM ) 23649.    0. 0.
+w( h2oGM faGM ) 28874.    0. 0.
+w( woGM  foGM ) -31732.   0. 0.
+w( nasGM foGM ) -41877.   0. 0.
+w( kalGM foGM ) 22323.    0. 0.
+w( h2oGM foGM ) 35634.    0. 0.
+w( nasGM woGM ) -13247.   0. 0.
+w( kalGM woGM ) 17111.    0. 0.
+w( h2oGM woGM ) 20375.    0. 0.
+w( kalGM nasGM) 6523.     0. 0.
+w( h2oGM nasGM) -96938.   0. 0.
+w( h2oGM kalGM) 10374.    0. 0.
+end_excess_function 
+
+  0                                  | no configurational entropy model (internal routine gmelt).
+
+end_of_model                         
+

@@ -120,10 +120,9 @@ c                                 tabulated properties
 
                         v(iv(3)) = vmin(iv(3)) + dfloat(k-1)*dv(iv(3))
 
-                        call prop (g,e,u,s,v,cp)
+                        call prop (g,e,u,s,vol,cp)
 
-                        write (n4,1000) v(1),v(2),v(3),g,e,s,v,cp,
-     *                                  -g/r/v(2),
+                        write (n4,1000) v(1),v(2),v(3),g,e,s,vol,cp,
      *                                  -g/r/v(2)/2.302585093d0 
                      end do 
                   end do 
