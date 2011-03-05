@@ -1,5 +1,5 @@
       PROGRAM PSCNTR 
-c xap
+
       implicit none
 
       include 'perplex_parameters.h'
