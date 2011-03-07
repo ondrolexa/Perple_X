@@ -557,10 +557,9 @@ c                                 component pointers for chkphi
 c                                 ====================================
 c                                 next problem class and variable choice
 c                                 and ranges
-5003  write (*,1490)
-      read (*,7010,iostat=ier) icopt
-      call rerror (ier,*5003)
-
+      write (*,1490)
+c                                 get choice
+      call rdnumb (c(0),0d0,icopt,2,.false.)
       if (icopt.lt.1.or.icopt.gt.5) icopt = 2
 c                                 reorder for oned flag
       if (icopt.eq.3.or.icopt.eq.5) then 
@@ -788,16 +787,13 @@ c                                  inform the user of the grid settings:
       else if (icopt.eq.1) then    
 c                                  =========================
 c                                  Normal computational mode
-6003     write (*,1500)
+         write (*,1500)
          if (ivct.gt.1) write (*,1590)
-         read (*,7010,iostat=ier) icopt
-
-         call rerror (ier,*6003)
-
-         if (icopt.gt.ivct) goto 6003
+c                                  get choice
+         call rdnumb (c(0),0d0,icopt,0,.false.)
 
          if (icopt.lt.1.or.icopt.gt.2) icopt = 0
-
+c                                  convert to internal values
          if (icopt.eq.2) then 
             icopt = 1
          else if (icopt.eq.1) then 
@@ -1539,7 +1535,6 @@ c                                 diagrams:
 5000  format (a,'_',a)
 6020  format (/,'Specify values for:',/,(10x,5(a,2x)))
 6010  format ('For calculation ',i2,', enter zeros to finish.')
-7010  format (bn,i80)
 7020  format (//,'NO is the default (blank) answer to all Y/N prompts',
      *        /)
 7040  format (/,'The solution model file contains no',

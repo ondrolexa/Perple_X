@@ -20,12 +20,12 @@ c------------------------------------------------------------------------
       character uname*8, y*1, rxny*1, opname*100
 
       integer i,j,k,idiag, ier, icopt
- 
+
       double precision pp(2),tt(2),xx(2),gg(2),ee(2),ss(2),vv(2),ccp(2),
      *                 uu(2),aa(2),g,e,u,s,vol,cp
 
-      double precision props,psys,psys1
-      common/ cxt22 /props(i8,k5),psys(i8),psys1(i8)
+      double precision props,psys,psys1,pgeo,pgeo1
+      common/ cxt22 /props(i8,k5),psys(i8),psys1(i8),pgeo(i8),pgeo1(i8)
  
       integer iff,idss,ifug,ifyn,isyn
       common/ cst10 /iff(2),idss(h5),ifug,ifyn,isyn
@@ -72,15 +72,11 @@ c      end if
       do 
 
          write (*,1030)
-         read (*,*,iostat=ier) icopt
+c                                 read icopt, default icopt = 2.
+         call rdnumb (g,0d0,icopt,2,.false.)
 
-         if (ier.ne.0) then 
-            call rerr
-            cycle 
-         else if (icopt.eq.5) then 
-            exit 
-         end if 
- 
+         if (icopt.eq.5) exit 
+
          call jnput2 (icopt,rxny,uname)
  
          if (icopt.eq.1) then
@@ -168,8 +164,10 @@ c
                   write (*,1120) v(2),v(1),g/1d3,e/1d3,
      *                     (g-v(1)*vol)/1d3,u/1d3,s,vol,cp,
      *                     -g/r/v(2),-g/r/v(2)/2.302585093d0
-c
-                  call dphasf (g)
+
+                  call calphp 
+
+                  call outphp
 
                   write (*,1120) v(2),v(1),g/1d3,props(2,1)/1d3,
      *                     (g-v(1)*props(1,1))/1d3,u/1d3,props(15,1),
@@ -250,10 +248,10 @@ c                                 create a new data base entry
 1000  format (80(g14.7,1x))
 1010  format (9(1x,i1),/,f3.1,/,2(1x,i1))
 1030  format (/,'Choose from following options:',
-     *  //,2x,'1 - calculate equilibrium coordinates for a reaction.',
-     *   /,2x,'2 - calculate thermodynamic properties for a phase or',
+     *  //,2x,'1 - equilibrium coordinates for a reaction.',
+     *   /,2x,'2 - [default] thermodynamic properties for a phase or',
      *          ' reaction relative to',/,6x,'the reference state.',
-     *   /,2x,'3 - calculate change in thermodynamic properties ',
+     *   /,2x,'3 - change in thermodynamic properties ',
      *          ' from one p-t-x',/,6x,'condition to another.',
      *   /,2x,'4 - create new thermodynamic data file entries.',
      *   /,2x,'5 - quit.',
@@ -1035,9 +1033,6 @@ c--------------------------------------------------------------------
       integer j
 
       double precision fo2,fs2,gph,gval
- 
-      integer io2
-      common/ oxy /io2
 
       integer iffr,isr
       double precision vuf,vus
@@ -1045,7 +1040,7 @@ c--------------------------------------------------------------------
 
       integer idf
       double precision act
-      common/ cst205 /act(k7),idf(2)
+      common/ cst205 /act(k7),idf(3)
 
       integer iff,idss,ifug,ifyn,isyn
       common/ cst10 /iff(2),idss(h5),ifug,ifyn,isyn
@@ -1070,14 +1065,14 @@ c                                 compute free energy change of the rxn
  
       if (ifyn.eq.0) call cfluid (fo2,fs2)
  
-      do j = 1,iphct
+      do j = 1, iphct
          call gphase (j,gph)
          gval = gval + vnu(j) * (gph + r * t * dlog(act(j)))
       end do 
  
       gval = gval + vuf(1) * fh2o*r*t + vuf(2)*fco2*r*t
 
-      if (io2.ne.0.and.ifyn.eq.0) gval = gval + vnu(io2)*r*t*fo2
+      if (idf(3).ne.0.and.ifyn.eq.0) gval = gval + vnu(idf(3))*r*t*fo2
  
       end
 
@@ -1109,7 +1104,7 @@ c---------------------------------------------------------------------
 
       integer idf
       double precision act
-      common/ cst205 /act(k7),idf(2)
+      common/ cst205 /act(k7),idf(3)
 
       integer iff,idss,ifug,ifyn,isyn
       common/ cst10 /iff(2),idss(h5),ifug,ifyn,isyn
@@ -1709,6 +1704,7 @@ c                          start new record:
 c                          reposition at new
 c                          record:
       backspace (lun)
+
       end
 
       subroutine jnput2 (icopt,rxny,uname)
@@ -1737,14 +1733,11 @@ c----------------------------------------------------------------------
 
       integer idf
       double precision act
-      common/ cst205 /act(k7),idf(2)
+      common/ cst205 /act(k7),idf(3)
 
       integer iffr,isr
       double precision vuf,vus
       common/ cst201 /vuf(2),vus(h5),iffr,isr
-
-      integer io2
-      common/ oxy /io2
 
       integer iff,idss,ifug,ifyn,isyn
       common/ cst10  /iff(2),idss(h5),ifug,ifyn,isyn
@@ -1813,6 +1806,12 @@ c----------------------------------------------------------------------
       logical lopt
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      double precision props,psys,psys1,pgeo,pgeo1
+      common/ cxt22 /props(i8,k5),psys(i8),psys1(i8),pgeo(i8),pgeo1(i8)
+
+      double precision atwt
+      common/ cst45 /atwt(k0)
 
       save first, inames, mnames
       data first/.true./
@@ -1903,7 +1902,6 @@ c                               initialization for k10 endnmembers
  
       iphct = 0
       jdis = 0 
-      io2 = 0 
       ifyn = 1
       jlam = 1
       jdis = 1
@@ -1911,6 +1909,7 @@ c                               initialization for k10 endnmembers
       vuf(2) = 0d0
       idf(1) = 0
       idf(2) = 0
+      idf(3) = 0 
  
       if (icopt.eq.1) then
  
@@ -1996,7 +1995,7 @@ c                                 no match with named phase
 c                                 set special flag if O2
          iphct = iphct + 1
 
-         if (exname(1).eq.'O2      ') io2 = iphct 
+         if (exname(1).eq.'O2      ') idf(3) = iphct 
 
          if (rxny.eq.'Y'.or.rxny.eq.'y') then
 
@@ -2013,13 +2012,13 @@ c                                 set special flag if O2
  
          if (lopt(7)) then 
             if (exname(1).eq.cmpnt(idh2o)) then
-               vuf(1)=vvv
-               idf(1)=iphct
-               ifyn=0
+               vuf(1)= vvv
+               idf(1)= iphct
+               ifyn = 0
             else if (exname(1).eq.cmpnt(idco2)) then
-               vuf(2)=vvv
-               idf(2)=iphct
-               ifyn=0
+               vuf(2) = vvv
+               idf(2) = iphct
+               ifyn = 0
             end if
          end if 
 c                               get activity coefficients:
@@ -2073,7 +2072,17 @@ c                                remake pointer array for makes
 c                                 select equation of state for the
 c                                 saturated phase.
       if (ifyn.eq.0) call rfluid (1,ifug)
-
+c                                 compute formula weights
+      do l = 1,iphct
+         props(17,l) = 0d0 
+         do k= 1, k5
+            props(17,l) =  props(17,l) + vnu(l)*cp(k,l)*atwt(k)
+         end do
+c                                 set molar amount
+         props(16,l) = vnu(l)
+ 
+      end do 
+c
       if (rxny.eq.'y'.or.rxny.eq.'Y') then
 c                                 check reaction stoichiometries
 55       do k= 1, k5
@@ -2089,7 +2098,7 @@ c                                 check reaction stoichiometries
          itic=0
          do k = 1, k5
             if (cp(k,jj).eq.0d0) cycle
-               itic=itic+1
+            itic=itic+1
          end do 
 
          if (itic.eq.0) goto 99
@@ -2153,7 +2162,7 @@ c----------------------------------------------------------------------
 
       integer idf
       double precision act
-      common/ cst205 /act(k7),idf(2)
+      common/ cst205 /act(k7),idf(3)
 
       integer idr,ivct
       double precision vnu
@@ -2198,252 +2207,111 @@ c-----------------------------------------------------------------------
      *          ' enter new value: ')
 99    end
 
-      subroutine dphasf (g0)
+      subroutine calphp 
 c-----------------------------------------------------------------------
-c dphasf sets the props of a phase or reaction 
-c computed by centered finite differences from the Gibbs energy
-c as stored in props(i8,1)
-
-c the difference increments are
-
-c dt0, dp0 for 1st order derivatives (entropy,volume and enthalpy)
-c dt1, dp1 for 2nd order derivatives (heat capacity, expansivity*, 
-c          compressibility*)
-c dt2, dp2 for 3rd order derivatives (gptt, gppt, gppp, gttt)
-c          used for the T derivative of the bulk modulus. 
-
-c *expansivity (alpha) as returned here is 1/v*dv/dt
-c *compressibility (beta) as returned here is -1/v*dv/dp
-
-c corrected to check for negative pressure, in which case 
-c forward differences are used. june 22, 2004, JADC.
-c-----------------------------------------------------------------------
+c an interface to getphp to get properties of phases or reaction
+c----------------------------------------------------------------------
       implicit none
 
       include 'perplex_parameters.h'
 
-      double precision dt0,dt1,dt2,g0,g1a, g2a, dg, ss,alpha1,alpha2,
-     *                 dp0,dp1,dp2,e,alpha,v,gincf,beta,cp,s,gtt,
-     *                 g1,g2,g3,g4,g5,g7,gppp,gppt,gptt,gttt
+      integer i
 
-      double precision p,t,xco2,u1,u2,tr,pr,r,ps
-      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
+      logical sick(i8), ssick, ppois
 
-      double precision props,psys,psys1
-      common/ cxt22 /props(i8,k5),psys(i8),psys1(i8)
+      logical gflu,aflu,fluid,shear,lflu,volume
+      common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume
 
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+      double precision props,psys,psys1,pgeo,pgeo1
+      common/ cxt22 /props(i8,k5),psys(i8),psys1(i8),pgeo(i8),pgeo1(i8)
 
-      save dt0,dt1,dt2
-      data dt0,dt1,dt2/0.5d0,5d0,5d1/
+      integer icomp,istct,iphct,icp
+      common/ cst6 /icomp,istct,iphct,icp
+
+      integer idr,ivct
+      double precision vnu
+      common/ cst25 /vnu(k7),idr(k7),ivct
+
+      double precision gtot,fbulk,gtot1,fbulk1
+      common/ cxt81 /gtot,fbulk(k5),gtot1,fbulk1(k5)
 c----------------------------------------------------------------------
+c                                 initialize
+      aflu = .false.
+      shear = .true.
+      volume = .true.
+      ssick = .false.
+      ppois = .false.
+c                                 flag for bulk bad bulk properties
 
-      dp2 = 5d-2 * p
-      dp1 = dp2/1d1
-      dp0 = dp1/1d1
-            
-      g0 = gincf(0d0,0d0)
-c                                 straight derivatives:
-c                                 first order
-      if (p-dp0.le.0d0) then 
+c                                 initialize bulk properites
+c                                 total mass
+      gtot = 0d0
+      gtot1 = 0d0
 
-         v = (gincf(0d0,dp0) - g0)/dp0
-         if (v.lt.0d0.or.dabs(v).gt.1d9)  
-c                                 expand increment if invalid v
-     *   v = (gincf(0d0,dp1) - g0)/dp1
-         if (v.lt.0d0.or.dabs(v).gt.1d9)  
-c                                 expand increment more if invalid v
-     *   v = (gincf(0d0,dp2) - g0)/dp2
+      do i = 1, i8
+         psys(i) = 0d0
+         psys1(i) = 0d0
+         pgeo(i) = 0d0 
+         pgeo1(i) = 0d0
+      end do 
 
-      else 
+      do i = 1, icomp
+c                                 total molar amounts
+         fbulk(i) = 0d0
+         fbulk1(i) = 0d0
 
-         v = (gincf(0d0,dp0) - gincf(0d0,-dp0))/dp0/2d0
-         if ((v.lt.0d0.or.dabs(v).gt.1d9).and.p-dp1.gt.0d0)  
-c                                 expand increment if invalid v
-     *   v = (gincf(0d0,dp1) - gincf(0d0,-dp1))/dp1/2d0
-         if ((v.lt.0d0.or.dabs(v).gt.1d9).and.p-dp2.gt.0d0)  
-c                                 expand increment more if invalid v
-     *   v = (gincf(0d0,dp2) - gincf(0d0,-dp2))/dp2/2d0
+      end do
 
-      end if 
-c                                 in case the evaluating routine fails
-c                                 on both calls to gincf 
-      if (v.eq.0d0) v = 1d0
+      do i = 1, iphct
+c                                 set molar amount of phase 
+         props(16,i) = vnu(i)
+c                                 getphp uses the sign of the phase
+c                                 pointer to discrimate between pure
+c                                 compounds and solutions
+         call getphp (-i,i,sick,ssick,ppois)
 
-      s = (gincf(-dt0,0d0) - gincf(dt0,0d0))/dt0/2d0
-c                                 this crap is necessary because 
-c                                 optimization or my bad programming
-c                                 corrupts gincf with compaq visual fortran.
-      g1a = gincf(-dt0,0d0)
-      g2a =  gincf(dt0,0d0)
-      dg = g1a-g2a
-      ss = dg/dt0/2d0
-      s = ss
-c
-c 
-c     write (*,*) s, ss, dg, gincf(-dt0,0d0) - gincf(dt0,0d0), dt0
-
-      e = g0 + t * s
-c                                 second order
-      gtt = (gincf(dt1,0d0) + gincf(-dt1,0d0) - 2d0*g0)/dt1/dt1
-      cp = -t*gtt
-      if (cp.lt.0d0.or.dabs(cp).gt.1d9)  
-c                                 expand increment if invalid cp
-     *   cp = -t*(gincf(dt2,0d0) + gincf(-dt2,0d0) - 2d0*g0)/dt2/dt2
-      if (cp.lt.0d0.or.dabs(cp).gt.1d9)  
-c                                 shrink increment if invalid cp
-     *   cp = -t*(gincf(dt0,0d0) + gincf(-dt0,0d0) - 2d0*g0)/dt0/dt0
-   
-      if (p-dp1.le.0d0) then 
-c                                 use forward difference at small p's
-         beta = (gincf(0d0,2d0*dp1) + g0 - 2d0*gincf(0d0,dp1))
-     *          /dp1/dp1
-         if (dabs(beta).gt.v.or.beta.ge.0d0)
-c                                 expand increment if invalid beta
-     *   beta = (gincf(0d0,2d0*dp2) + g0 - 2d0*gincf(0d0,dp2))
-     *          /dp2/dp2                                 
-         if (dabs(beta).gt.v.or.beta.ge.0d0)
-c                                 shrink increment if invalid beta
-     *   beta = (gincf(0d0,2d0*dp0) + g0 - 2d0*gincf(0d0,dp0))
-     *          /dp0/dp0   
-
-         alpha = ( gincf( dt1,dp1) - gincf( dt1,0d0)
-     *            -gincf(-dt1,dp1) + gincf(-dt1,0d0))/dp1/dt1/2d0
-         if (dabs(alpha).gt.v.or.alpha.le.0d0)
-c                                 expand increment if invalid alpha
-     *   alpha = ( gincf( dt2,dp2) - gincf( dt2,0d0)
-     *            -gincf(-dt2,dp2) + gincf(-dt2,0d0))/dp2/dt2/2d0
-         if (dabs(alpha).gt.v.or.alpha.le.0d0)
-c                                 shrink increment if invalid alpha
-     *   alpha = ( gincf( dt0,dp0) - gincf( dt0,0d0)
-     *            -gincf(-dt0,dp0) + gincf(-dt0,0d0))/dp0/dt0/2d0
-
-      else 
-
-         beta = (gincf(0d0,dp1) + gincf(0d0,-dp1) - 2d0*g0)/dp1/dp1
-         if (dabs(beta).gt.v.and.p-dp2.ge.0d0.or.beta.ge.0d0)
-c                                 expand increment if invalid beta
-     *   beta = (gincf(0d0,dp2) + gincf(0d0,-dp2) - 2d0*g0)/dp2/dp2
-     
-     
-         if (dabs(beta).gt.v.or.beta.ge.0d0)
-c                                 shrink increment if invalid beta
-     *   beta = (gincf(0d0,dp0) + gincf(0d0,-dp0) - 2d0*g0)/dp0/dp0
-
-         alpha = ( gincf( dt1,dp1) - gincf( dt1,-dp1)
-     *            -gincf(-dt1,dp1) + gincf(-dt1,-dp1))/dp1/dt1/4d0
-         if (dabs(alpha).gt.v.or.alpha.le.0d0) then 
-c                                 expand increment if invalid alpha
-            alpha1 = ( gincf( dt2,dp2) - gincf( dt2,-dp2)
-     *            -gincf(-dt2,dp2) + gincf(-dt2,-dp2))/dp2/dt2/4d0
-            if (dabs(alpha1).gt.v.or.alpha1.le.0d0) then
-c                                 shrink increment if invalid alpha
-               alpha2 = ( gincf( dt0,dp0) - gincf( dt0,-dp0)
-     *            -gincf(-dt0,dp0) + gincf(-dt0,-dp0))/dp0/dt2/4d0
-               if (dabs(alpha2).lt.v.and.alpha2.ge.0d0) then 
-                  alpha = alpha2
-               end if 
-            else 
-               alpha = alpha1
-            end if 
-         end if      
-     
-      end if  
-c                                 third order derivatives, only need for
-c                                 derivatives of seismic props.
-      if (p-2d0*dp2.le.0d0) then 
-
-         g1 = gincf(-dt2,0d0)
-         g2 = gincf( dt2,2d0*dp2)
-         g3 = gincf( dt2,0d0)
-         g4 = gincf(-dt2,2d0*dp2)
-         g5 = gincf(0d0,dp2)
-         g7 = g3 - g1
-
-         gppp = ((gincf(0d0,4d0*dp2) - g0)/2d0
-     *           - gincf(0d0,3d0*dp2) + g5)/dp2**3
-         gppt = (g2 + g3 + 2d0*(gincf(-dt2, dp2)-gincf(dt2,dp2))
-     *           -g4 - g1)/dp2/dp2/dt2/2d0
-         gptt = (g2 + g4  + 2d0*(g0 - gincf(0d0,2d0*dp2))
-     *           -g3 - g1)/2d0/dp2/dt2/dt2
-
-      else 
-
-         g1 = gincf(-dt2,-dp2) - gincf( dt2,dp2)
-         g3 = gincf( dt2,-dp2)
-         g4 = gincf(-dt2,dp2)
-         g5 = gincf(0d0,dp2) - gincf(0d0,-dp2)
-         g7 = gincf(-dt2,0d0) - gincf(dt2, 0d0)
-
-         gppp = ((gincf(0d0,2d0*dp2) - gincf(0d0,-2d0*dp2))/2d0 
-     *        - g5)/dp2**3
-         gppt = (g3 - g4 + 2d0*g7 - g1)/dp2/dp2/dt2/2d0
-         gptt = (g4 - g3 - 2d0*g5 - g1)/2d0/dp2/dt2/dt2
- 
-      end if 
-
-      gttt = ((gincf(dt2*2d0,0d0) - gincf(-dt2*2d0,0d0))/2d0 
-     *        + g7)/dt2**3
-
-      g7 = (gtt*beta-alpha**2)**2
-
-      if (g7.ne.0d0) then 
-c                                 temperature derivative of the adiabatic bulk modulus:
-         props(18,1) = (((v*gppt-alpha*beta)*gtt
-     *                   -(2d0*v*gptt-alpha**2)*alpha)*gtt
-     *                   +v*gttt*alpha**2)/g7
-c                                 pressure derivative of the adiabatic bulk modulus:
-         props(20,1) = (((v*gppp-beta**2)*gtt
-     *                   +(alpha*beta-2d0*v*gppt)*alpha)*gtt
-     *                   +v*gptt*alpha**2)/g7
-      else 
-
-         props(18,1) = nopt(7)
-         props(20,1) = nopt(7)
-
-      end if 
-c                                 -------------------------------------
-c                                 up to this point beta = d2g/dp2
-c                                 and alpha = d2g/dp2 now convert 
-c                                 to their normal forms:
-      beta = -beta/v
-      alpha = alpha/v
-c                                 
-      if (beta.gt.v.or.beta.lt.0d0) beta = nopt(7)
-c                                 aug 28, 2007, removed check on alpha to 
-c                                 accomodate -alpha's generated by landau 
-c                                 transition models. 
-      if (cp.gt.1d9.or.cp.lt.0d0) cp = nopt(7)
-
-      props(1,1) = v 
-      props(2,1) = e
-      props(12,1) = cp
-      props(13,1) = alpha
-      props(14,1) = beta
-      props(15,1) = s
+      end do 
+c                                 compute aggregate properties:
+      call gtsysp (sick,ssick)
 
       end 
 
-      double precision function gincf (dt,dp)
-c-----------------------------------------------------------------------
+      subroutine outphp 
+c----------------------------------------------------------------------
+c outphp - output properties of a phase, reaction or phase aggregat, 
+c called by frendly. if meemum, prints chemical potentials.
+c----------------------------------------------------------------------
       implicit none
 
-      double precision dt,dp,gee
+      include 'perplex_parameters.h'
 
-      double precision p,t,xco2,u1,u2,tr,pr,r,ps
-      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
+      character*14 tags(26)
 
-      p = p + dp 
-      t = t + dt 
+      integer pt2prp(26),i
 
-      call grxn (gee)
+      double precision props,psys,psys1,pgeo,pgeo1
+      common/ cxt22 /props(i8,k5),psys(i8),psys1(i8),pgeo(i8),pgeo1(i8)
 
-      p = p - dp 
-      t = t - dt
+      save tags, pt2prp
 
-      gincf = gee 
+      data tags/'  g(J/mol)   ','  h(J/mol)   ','  log10_Keq  ' ,
+     *'  s(J/mol/K) ',' cp(J/mol/K) ','v(J/mol/bar) ',' alpha(1/K)  ',
+     *' beta(1/bar) ','  N(g/mol)   ',' rho(kg/m3)  ',' Gruneisen T ',
+     *'   Ks(bar)   ',' Ks_T(bar/K) ','    Ks_P     ','   Gs(bar)   ',
+     *' Gs_T(bar/K) ','    Gs_P     ',
+     *'  v0(m/s)    ',' v0_T(m/s/K) ','v0_P(m/s/bar)',
+     *'  vp(m/s)    ',' vp_T(m/s/K) ','vp_P(m/s/bar)','  vs(m/s)    ',
+     *' vs_T(m/s/K) ','vs_P(m/s/bar)'/
+
+      data pt2prp/11, 2,27,15,12, 1,13,14,17,10, 3, 4,18,20, 5,19,21,
+     *             6,22,25, 7,23,26, 8,24,27/
+c----------------------------------------------------------------------
+      write (*,1000) (tags(i),props(pt2prp(i),1),i=1,5)
+      write (*,1000) (tags(i),props(pt2prp(i),1),i=5,26)
+
+      write (*,1000) (tags(i),psys(pt2prp(i)),i=1,5)
+      write (*,1000) (tags(i),psys(pt2prp(i)),i=5,26)
+
+1000  format (3(a14,'=',g14.6,2x))
 
       end 

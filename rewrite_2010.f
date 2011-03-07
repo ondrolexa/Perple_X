@@ -35,7 +35,7 @@ c                                 iam is a flag indicating the Perple_X program
          ic(i) = i
       end do 
 c                               assign data files
-      call sopen (3)
+      call sopen 
 c                               Read THERMODYNAMIC DATA file (N2):
 c                               read the data base header
       call otopn2 (4)

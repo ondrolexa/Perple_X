@@ -1207,8 +1207,8 @@ c----------------------------------------------------------------
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
-      double precision props,psys,psys1
-      common/ cxt22 /props(i8,k5),psys(i8),psys1(i8)
+      double precision props,psys,psys1,pgeo,pgeo1
+      common/ cxt22 /props(i8,k5),psys(i8),psys1(i8),pgeo(i8),pgeo1(i8)
 
       logical gflu,aflu,fluid,shear,lflu,volume
       common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume
@@ -1642,12 +1642,9 @@ c                                 but there is no criterion (nopt(1)=0)
             write (*,1050) (pcomp(j,jdsol(i)), j = 1, icomp)
          end do 
 
-         do 
-            write (*,1030) 
-            read (*,'(bn,i80)',iostat=ier) choice
-            if (ier.ne.0) cycle
-            exit 
-         end do 
+         write (*,1030) 
+c                                 get choice
+         call rdnumb (tcomp,0d0,choice,1,.false.)
 
          if (choice.eq.2) then
 c                                 average the compositions, turn 
@@ -1711,12 +1708,9 @@ c                                 existing criteria
                write (*,1050) (pcomp(j,kdsol(i)), j = 1, icomp)
             end do 
 
-            do 
-               write (*,1070)
-               read (*,'(bn,i80)',iostat=ier) choice
-               if (ier.ne.0) cycle 
-               exit
-            end do 
+            write (*,1070)
+c                                 get choice
+            call rdnumb (tcomp,0d0,choice,1,.false.)
 
             if (choice.eq.2) then 
 c                                 2 - average within existing criterion 
@@ -2448,8 +2442,8 @@ c-------------------------------------------------------------------
       double precision pcomp
       common/ cst324 /pcomp(k5,k5)
 
-      double precision props,psys,psys1
-      common/ cxt22 /props(i8,k5),psys(i8),psys1(i8)
+      double precision props,psys,psys1,pgeo,pgeo1
+      common/ cxt22 /props(i8,k5),psys(i8),psys1(i8),pgeo(i8),pgeo1(i8)
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
@@ -2541,8 +2535,8 @@ c----------------------------------------------------------------
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
-      double precision props,psys,psys1
-      common/ cxt22 /props(i8,k5),psys(i8),psys1(i8)
+      double precision props,psys,psys1,pgeo,pgeo1
+      common/ cxt22 /props(i8,k5),psys(i8),psys1(i8),pgeo(i8),pgeo1(i8)
 
       logical gflu,aflu,fluid,shear,lflu,volume
       common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume
@@ -2928,8 +2922,8 @@ c----------------------------------------------------------------
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
-      double precision props,psys,psys1
-      common/ cxt22 /props(i8,k5),psys(i8),psys1(i8)
+      double precision props,psys,psys1,pgeo,pgeo1
+      common/ cxt22 /props(i8,k5),psys(i8),psys1(i8),pgeo(i8),pgeo1(i8)
 
       logical gflu,aflu,fluid,shear,lflu,volume
       common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume

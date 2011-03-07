@@ -36,7 +36,7 @@ c                                 version info
 
       write (*,1000)
 c                                 assign data files
-      call sopen (1)
+      call sopen 
 c                                 Read THERMODYNAMIC DATA file (N2):
 c                                 read the data base header
       call topn2 (5)

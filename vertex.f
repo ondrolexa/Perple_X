@@ -26,13 +26,7 @@ c file structure:
  
 c i/o logical unit numbers are specified in perplex_parameters.h 
 c-----------------------------------------------------------------------
-c this version of vertex has been modified to be compatible with cdc
-c fortran 5 compilers.  memory requirements can be reduced on most
-c other compilers by changing the implicit variable type integer to
-c integer*2, on ibm compilers integer variables beginning with z must
-c be integer*4, i.e., for ibm compilers the current implicit type
-c statement 'implicit integer (h-n,z)' should be changed to 'implicit
-c integer (z), integer*2 (h-n).  the necessity for double precision real
+c the necessity for double precision real
 c variables has not been established, users interested in reducing 
 c memory requirements may wish to experiment with single precision 
 c variables.
@@ -89,6 +83,18 @@ c-----------------------------------------------------------------------
       common/ cst4 /iam
 c----------------------------------------------------------------------- 
 c                                 iam is a flag indicating the Perple_X program
+c                                    iam = 1  - vertex
+c                                    iam = 2  - meemum
+c                                    iam = 3  - werami 
+c                                    iam = 4  - build 
+c                                    iam = 5  - frendly
+c                                    iam = 6  - ctransf
+c                                    iam = 7  - pssect 
+c                                    iam = 8  - psvdraw
+c                                    iam = 9  - actcor
+c                                    iam = 10 - rewrite 
+c                                    iam = 11 - cohsrk
+c                                    iam = 12 - species
       iam = 1
 c                                 version info
       call vrsion

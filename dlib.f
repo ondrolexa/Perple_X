@@ -294,16 +294,6 @@ c                                 open assemblage file
 
       end 
 
-      subroutine grxn (gval) 
-c-----------------------------------------------------------------------
-c dummy subroutine required for linking with rlib.f
-c-----------------------------------------------------------------------
-      implicit none
-
-      double precision gval
-
-      end 
-
       subroutine plinp
 c---------------------------------------------------------------------- 
 c plinp - subroutine to read assemblage info for gridded min calculations.

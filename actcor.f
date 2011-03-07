@@ -42,7 +42,7 @@ c                                 version info
 
       write (*,1300) 
 c                                 open files
-      call sopen (2)
+      call sopen 
 c                                 read and echo file header
       call topn2 (4)
 c                                 mock pointers

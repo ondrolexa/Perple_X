@@ -18,7 +18,7 @@ c----------------------------------------------------------------------
 
       write (*,1000) 
 
-1000  format (/,'Perple_X version 6.6.5.7, compiled 3/3/2011.')
+1000  format (/,'Perple_X version 6.6.5.8, compiled 3/7/2011.')
 
       end
 
@@ -1212,6 +1212,54 @@ c                                 find the next string
       end do 
 
       end
+
+      subroutine rdnumb (numb,def,inumb,idef,reel)
+c----------------------------------------------------------------------
+c rdnumb - reads a line from terminal input for numeric input, if blank
+c assigns default (def, idef); if non numeric prompts for new value.
+c----------------------------------------------------------------------    
+      implicit none
+
+      integer inumb, idef, ier
+
+      double precision numb, def
+
+      logical defalt, reel
+
+      character card*80
+c----------------------------------------------------------------------
+      defalt = .true.
+
+      do 
+c                                 read input
+         read (*,'(a)',iostat=ier) card
+c                                 user enters a blank
+         if (ier.ne.0.or.card.eq.' ') exit
+c                                 read data from card
+         if (reel) then 
+            read (card,*,iostat=ier) numb
+         else 
+            read (card,*,iostat=ier) inumb
+         end if 
+
+         if (ier.ne.0) then 
+            call rerr 
+         else
+            defalt = .false.
+         end if 
+
+      end do 
+
+      if (defalt) then 
+         if (reel) then 
+            numb = def
+         else 
+            inumb = idef
+         end if 
+      end if 
+
+      end
+
 
       subroutine eohead (n)
 c----------------------------------------------------------------------
@@ -2704,33 +2752,31 @@ c                                 solution phases:
       
       end 
 
-      subroutine sopen (iam)
+      subroutine sopen 
 c-----------------------------------------------------------------------
 c simple file open for data echo programs (e.g., actcor, rewrit, ctransf)
-c   iam - 1 - ctransf
-c   iam - 2 - actcor
-c   iam - 3 - rewrite
 c-----------------------------------------------------------------------
       implicit none
 
       include 'perplex_parameters.h'
-
-      integer iam
  
       character*100 n2name
+
+      integer iam
+      common/ cst4 /iam
 c-----------------------------------------------------------------------
 c                                 first the thermo data file
       do 
 
          call fopen2 (2,n2name)
  
-         if (iam.eq.1) then 
+         if (iam.eq.6) then 
             write (*,1070) 'ctransf.dat'
             open (n8,file='ctransf.dat')
-         else if (iam.eq.2) then 
+         else if (iam.eq.9) then 
             write (*,1070) 'actcor.dat'
             open (n8,file='actcor.dat')
-         else if (iam.eq.3) then 
+         else if (iam.eq.10) then 
             write (*,1070) 'new_'//n2name
             open (n8,file='new_'//n2name)
          end if 
@@ -3688,19 +3734,24 @@ c------------------------------------------------------------------------
  
       character y*1,n1name*100
 
-      integer iam,ierr
+      integer ierr
 
       character*100 prject,tfname
       common/ cst228 /prject,tfname
+
+      integer iam
+      common/ cst4 /iam
 c-----------------------------------------------------------------------
       do 
 c                                 get the root for all output files
          if (iam.eq.4) then 
 c                                 BUILD
             write (*,1040)
+
          else  
 c                                 VERTEX, MEEMUM
             write (*,1030) 
+
          end if 
 c                                 readrt loads the root into prject
          call readrt 
@@ -3717,13 +3768,17 @@ c                                  BUILD
 c                                  name exists
                write (*,1050) n1name
                read (*,'(a)') y
+
                if (y.eq.'Y'.or.y.eq.'y') then 
 c                                  overwrite it
                   open (n1,file=n1name)
+
                else
 c                                  try again 
                   cycle 
+
                end if 
+
             end if
          
          else 
@@ -3852,9 +3907,9 @@ c                                 look for illegal " " character
 c-----------------------------------------------------------------------
 c fopen2 - choose and open a thermodynamic data file on unit n2, iam 
 c indicates behavior required by the calling program:
-c 0 - name passed as argument, error if not found.
-c 1 - BUILD, queries for name and writes it to N1
-c 2 - queries for name
+c  0 - name passed as argument, error if not found.
+c  1 - BUILD, queries for name and writes it to N1
+c  2 - queries for name
 c-----------------------------------------------------------------------
       implicit none
  
@@ -3893,7 +3948,7 @@ c                                 try again
 
          end if
  
-         if (iam.ne.1) exit 
+         if (iam.ne.4) exit 
 c                                 BUILD, echo name to n1: 
          call mertxt (text,name,'thermodynamic data file',5)
          write (n1,'(a)') text 
@@ -4210,7 +4265,6 @@ c                                 get the component stoichiometries:
      *        ' line, <enter> to finish:')
 
       end
-
 
       subroutine topn2 (option)
 c----------------------------------------------------------------------

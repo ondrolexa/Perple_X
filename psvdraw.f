@@ -186,11 +186,13 @@ c                                 variance restrictions for projections
       if (yes.eq.'y'.or.yes.eq.'Y') then
 c                                 get type of variance restriction (later called jop4)
          write (*,1090)
-         read (*,1010) iop4
+c                                 get choice
+         call rdnumb (fac2,0d0,iop4,1,.false.)
          if (iop4.ne.2) iop4 = 1
 c                                 get the variance threshold
          write (*,1100) 
-         read (*,1010) jop4
+c                                 get choice
+         call rdnumb (fac2,0d0,jop4,2,.false.)
          if (jop4.lt.1.or.jop4.gt.99) jop4 = 2 
 
          iop4c = jop4
@@ -305,8 +307,7 @@ c                                 look for text labels
       call pslbtx 
 
       call psblrb (4)
- 
-1010  format (bn,i80)
+
 1030  format (/,'Enter minimum fraction of the axes length that a',/
      *        ' curve must be to receive a text label (0-1): ')
 1070  format (/,'Change default labeling of curve segments (y/n)?')
