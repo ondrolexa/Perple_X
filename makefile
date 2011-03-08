@@ -57,8 +57,8 @@ cohsrk: cohsrk.o tlib.o flib.o
 ctransf: ctransf.o tlib.o 
 	$(COMP77) $(FFLAGS) $@.o tlib.o -o $@
 
-frendly: frendly.o tlib.o rlib.o flib.o 
-	$(COMP77) $(FFLAGS) $@.o rlib.o tlib.o flib.o -o $@
+frendly: frendly.o tlib.o rlib.o flib.o olib.o clib.o dlib.o
+	$(COMP77) $(FFLAGS) $@.o rlib.o tlib.o flib.o olib.o clib.o dlib.o -o $@
 
 hptover: hptover.o
 	$(COMP77) $(FFLAGS) $@.o -o $@

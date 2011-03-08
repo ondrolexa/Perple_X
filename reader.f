@@ -1372,8 +1372,13 @@ c                                 find the phase index
                call soltst (id,icx)
 
             end if 
+                                 
+            if (id.eq.0.and.lop.ne.7) then 
+c                                 the phase is absent, set 
+c                                 the property to bad_number
+               prop = nopt(7)
 
-            if (id.ne.0) then 
+            else if (id.ne.0) then 
 
                if (lop.eq.1) then
 c                                 specific enthalpy 
@@ -3259,3 +3264,12 @@ c                                 n5name already exists
 1000  format (/,'Console output will be echoed in file: ',a,/)
 
       end 
+
+      subroutine grxn (g)
+c--------------------------------------------------------------------
+c a dummy routine to allow rk to be linked with rlib.f
+c--------------------------------------------------------------------
+      implicit none
+      double precision g
+      g = g
+      end
