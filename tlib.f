@@ -18,7 +18,7 @@ c----------------------------------------------------------------------
 
       write (*,1000) 
 
-1000  format (/,'Perple_X version 6.6.5.8, compiled 3/8/2011.')
+1000  format (/,'Perple_X version 6.6.5.8, compiled 3/9/2011.')
 
       end
 

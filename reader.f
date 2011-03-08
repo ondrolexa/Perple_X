@@ -1107,7 +1107,7 @@ c                                 compute all properties
             else 
 c                                 get the specific property of
 c                                 interest
-               call getprp (prop,lop,icx)
+               call getprp (prop,lop,icx,.false.)
 
             end if 
 
@@ -1118,9 +1118,11 @@ c                                 interest
      *          g12.6,/)
       end 
 
-      subroutine getprp (prop,lop,icx)
+      subroutine getprp (prop,lop,icx,aprp)
 c----------------------------------------------------------------
 c getprp gets properties:
+
+c   aprp - true if called by allprp, false otherwise
 
 c   jd   - is the pointer to the assemblage
 c   jflu - if 1, bulk properties include fluid phase; else 0
@@ -1196,6 +1198,8 @@ c----------------------------------------------------------------
       include 'perplex_parameters.h'
 
       integer lop, icx, id
+
+      logical aprp
 
       double precision prop, r, gtcomp
 
@@ -1362,7 +1366,7 @@ c                                 (Vphi, Vp, Vs)_P
 
          else 
 
-            if (prop.eq.-999d0) then
+            if (aprp) then
 c                                 call from allprp
                id = icx
 
@@ -3004,7 +3008,7 @@ c                                 custom property choices
                write (cprop(1),'(5x,i2,5x)') ntot
 c                                 system props
                do i = 1, iprop
-                  call getprp (prop,nstab(i),0)
+                  call getprp (prop,nstab(i),0,.true.)
                   write (cprop(i),'(g12.6)') prop
                end do
 
@@ -3017,7 +3021,7 @@ c                                 phase props
 
                   do i = 1, iprop
                      prop = -999d0
-                     call getprp (prop,nstab(i),j)
+                     call getprp (prop,nstab(i),j,.true.)
                      ict = ict + 1
                      write (cprop(ict),'(g12.6)') prop
                   end do
