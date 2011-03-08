@@ -2103,3 +2103,26 @@ c                                 set the dependent variable
      *     +  c0 + c1*z0 + c2*z0**2 + c3*z0**3                       
       end 
    
+      subroutine getpp (id)
+c-----------------------------------------------------------------------
+c getpp computes the amounts of the indepdendent edmembers of a reciprocal
+c solution in terms of the disordered endmembers (i.e., the p coordinates
+c corrected for the amounts of the ordered species if present [ksmod=8]).
+c-----------------------------------------------------------------------
+      implicit none
+ 
+      include 'perplex_parameters.h'
+
+      integer id
+
+      integer lstot,mstot,nstot,ndep,nord
+      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
+c----------------------------------------------------------------------
+c                                  first convert the istot disordered
+c                                  endmember coordinates to the 
+c                                  kstot + nord p0 coordinates
+      call y2p0 (id) 
+c                                  decompose ordered species
+      if (nord(id).gt.0) call p0dord (id)
+
+      end

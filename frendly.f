@@ -21,9 +21,6 @@ c------------------------------------------------------------------------
 
       integer i,j,k,idiag, ier, icopt
 
-      double precision pp(2),tt(2),xx(2),gg(2),ee(2),ss(2),vv(2),ccp(2),
-     *                 uu(2),aa(2),g,e,u,s,vol,cp
-
       double precision props,psys,psys1,pgeo,pgeo1
       common/ cxt22 /props(i8,k5),psys(i8),psys1(i8),pgeo(i8),pgeo1(i8)
  
@@ -59,24 +56,27 @@ c                                 read options
  
       idiag = 0
  
-c      write (*,1040)
-c      read (*,'(a)') uname
-c      write (*,1050) uname
+      write (*,1040)
+      read (*,'(a)') uname
+
+      if (uname.eq.' ') uname = ' Nimrod '
+
+      write (*,1050) uname
 c      read (*,'(a)') y
 c      if (y.ne.'y'.and.y.ne.'Y') then
 c         write (*,1060) uname
 c         stop
 c      end if
 
-      if (uname.eq.' ') uname = ' Nimrod '
+
 
       do 
 
          write (*,1030)
 c                                 read icopt, default icopt = 2.
-         call rdnumb (g,0d0,icopt,2,.false.)
+         call rdnumb (r,0d0,icopt,2,.false.)
 
-         if (icopt.eq.5) exit 
+         if (icopt.eq.4) exit 
 
          call jnput2 (icopt,rxny,uname)
  
@@ -122,14 +122,9 @@ c                                 tabulated properties
 
                         v(iv(3)) = vmin(iv(3)) + dfloat(k-1)*dv(iv(3))
 
-                        call prop (g,e,u,s,vol,cp)
-
-                        write (n4,1000) v(1),v(2),v(3),g,e,s,vol,cp,
-     *                                  -g/r/v(2)/2.302585093d0 
-
                         call calphp 
 
-                        call outphp (.false.)
+                        call outphp (.true.)
 
                      end do 
 
@@ -164,12 +159,6 @@ c                                 interactively entered conditions
                      end do 
 
                   end if
-c
-                  call prop (g,e,u,s,vol,cp)
-c
-                  write (*,1120) v(2),v(1),g/1d3,e/1d3,
-     *                     (g-v(1)*vol)/1d3,u/1d3,s,vol,cp,
-     *                     -g/r/v(2),-g/r/v(2)/2.302585093d0
 
                   call calphp 
 
@@ -185,53 +174,6 @@ c
             end if 
 
          else if (icopt.eq.3) then
-c                                 calculate change in props from an arbitrary
-c                                 condition
-            write (*,1140)
-c
-            do 
-               do i = 1, 2
-                  do 
-                     write (*,1150) i,i
-                     read (*,*,iostat=ier) pp(i),tt(i)
-                     if (ier.eq.0) exit 
-                     call rerr
-                  end do 
-
-                  v(1) = pp(i)
-                  v(2) = tt(i)
-
-                  if (v(1).eq.0d0) exit 
-
-                  if (ifyn.eq.0) then
-53                   write (*,1160)
-                     read (*,*,iostat=ier) xx(i)
-                     call rerror (ier,*53)
-                     v(3) = xx(i)
-                  end if
-c
-                  call prop
-     *              (gg(i),ee(i),uu(i),ss(i),vv(i),ccp(i))
- 
-                  aa(i) = gg(i)-pp(i)*vv(i)
- 
-               end do 
- 
-               if (v(1).eq.0d0) exit
- 
-               write (*,1170)  (gg(2)-gg(1))/1d3,(ee(2)-ee(1))/1d3,
-     *                   (aa(2)-aa(1))/1d3,
-     *                   (uu(2)-uu(1))/1d3,
-     *                   ss(2)-ss(1),
-     *                   vv(2)-vv(1),ccp(2)-ccp(1)
- 
-               write (*,1090)
-               read (*,'(a)') y
-               if (y.eq.'y'.or.y.eq.'Y') call change 
-
-            end do 
- 
-         else if (icopt.eq.4) then
 c                                 create a new data base entry
             call nentry
  
@@ -242,20 +184,16 @@ c                                 create a new data base entry
       write (*,1130) uname
  
       if (idiag.eq.1) write (n4,1010) 1,1,1,1,1,0,0,0,0,1d0,0,0
- 
-      stop
 
 1000  format (80(g14.7,1x))
 1010  format (9(1x,i1),/,f3.1,/,2(1x,i1))
-1030  format (/,'Choose from following options:',
+1030  format (/,'Choose from the following options:',
      *  //,2x,'1 - equilibrium coordinates for a reaction.',
      *   /,2x,'2 - [default] thermodynamic properties for a phase or',
      *          ' reaction relative to',/,6x,'the reference state.',
-     *   /,2x,'3 - change in thermodynamic properties ',
-     *          ' from one p-t-x',/,6x,'condition to another.',
-     *   /,2x,'4 - create new thermodynamic data file entries.',
-     *   /,2x,'5 - quit.',
-     *  //,'With options 1-3 you may also modify',
+     *   /,2x,'3 - create new thermodynamic data file entries.',
+     *   /,2x,'4 - quit.',
+     *  //,'With options 1-2 you may also modify',
      *     ' thermodynamic data, the modified data',/,'can then',
      *     ' be stored as a new entry in the thermodynamic data',
      *     ' file.',/)
@@ -267,32 +205,9 @@ c                                 create a new data base entry
      *          ' again later?')
 1070  format ('Calculate a different equilibrium (y/n)?')
 1090  format ('Modify or output thermodynamic parameters (y/n)? ')
-1100  format ('Enter P(bars) and T(K) (zeroes to quit): ')
-1110  format ('Enter X(CO2/O) in fluid phase: ')
-1120  format (/,'At ',g13.6,'K and ',g13.6,'bar:',//,
-     *                 6x,'G(kj)   =',g15.8,/,6x,'H(kj)   =',g15.8,/,
-     *                 6x,'A(kj)   =',g15.8,/,
-     *                 6x,'U(kj)   =',g15.8,/,
-     *                 6x,'S(j/k)  =',g13.6,/,6x,'V(j/bar)=',g13.6,/,
-     *                 6x,'Cp(j/k) =',g13.6,/,
-     *                 6x,'loge K  =',g13.6,/,
-     *                 6x,'log10 K =',g13.6,/)
+1100  format ('Enter P(bars) and T(K) (zeroes to quit):')
+1110  format ('Enter X(CO2/O) in fluid phase:')
 1130  format (/,'Have a nice day ',a,'!',/)
-1140  format (/,'Option to calculate change in ',
-     *        'thermodynamic properties from',/,
-     *        'P(1)-T(1)-X(CO2/O)(1) to P(2)-T(2)-X(CO2/O)(2)',/,
-     *        'enter zeros to quit.',//)
-1150  format ('Enter P(',i1,') (bars) and T(',i1,') (K) (0 to quit):')
-1160  format ('Enter X(CO2/O)(',i1,'): ')
-1170  format (//,6x,'delta G(kj)   =',g15.8,/,
-     *           6x,'delta H(kj)   =',g15.8,/,
-     *           6x,'delta A(kj)   =',g15.8,/,
-     *           6x,'delta U(kj)   =',g15.8,/,
-     *           6x,'delta S(j/k)  =',g13.6,/,
-     *           6x,'delta V(j/bar)=',g13.6,/,
-     *           6x,'delta cp(j/k) =',g13.6,/,
-     *           6x,'   loge K     =',g13.6,/,
-     *           6x,'   log10 K    =',g13.6,/)
 1180  format ('Write a properties table (Y/N)?')
  
       end
@@ -323,18 +238,24 @@ c----------------------------------------------------------------------
       write (*,1020)
 
       do i = 1, ipot
+
          j = iv(i) 
+
 20       write (*,1000) vname(j),vmin(j),vmax(j)
          read (*,*,iostat=ier) vmin(j),vmax(j)
-         if (j.eq.3.and.vmin(j).lt.0d0.or.
-     *       j.eq.3.and.vmax(j).gt.1d0.or.
+
+         if (j.eq.3.and.vmin(j).lt.0d0.or.j.eq.3.and.vmax(j).gt.1d0.or.
      *       j.ne.3.and.vmin(j).ge.vmax(j).or.ier.ne.0) then
+
             write (*,1010) 
             goto 20
+
          end if
+
          v(j) = vmin(j)
          delv(j) = vmax(j) - vmin(j) 
          dv(j) = delv(j) / 4d1
+
       end do 
  
       call concrt
@@ -343,7 +264,7 @@ c----------------------------------------------------------------------
      *           'old values were ',g12.5,',',g12.5,')',/)
 1010  format (/,'Try again.',/)
 1020  format (/,'This option does not change plot limits!'
-     *         ,' To do this, modify default plot options',
+     *         ,'To do this, modify default plot options',
      *        /,'while running PSVDRAW.',/)
       end 
  
@@ -376,7 +297,6 @@ c                                on the x-y coordinate frame.
  
       end
  
-
       subroutine setplt (table)
 c----------------------------------------------------------------------
 c select variables for a plot or table
@@ -391,7 +311,7 @@ c----------------------------------------------------------------------
 
       logical table
 
-      character*14 pnames(9)
+      character*14 tags(26)
 
       integer inc,jpot
       common/ cst101 /inc(l2),jpot
@@ -417,10 +337,16 @@ c----------------------------------------------------------------------
       integer io3,io4,io9
       common/ cst41 /io3,io4,io9
 
-      save pnames 
-      data pnames/'   P(bar)    ','    T(K)     ','  X(CO2/O)   ',
-     *'  g(J/mol)   ','  h(J/mol)   ','  s(J/K/mol) ','v(J/bar/mol) ',
-     *' cp(J/K/mol) ','  log10(K)   '/
+      save tags
+
+      data tags/'  g(J/mol)   ','  h(J/mol)   ','  log10_Keq  ' ,
+     *'  s(J/mol/K) ',' cp(J/mol/K) ','v(J/mol/bar) ',' alpha(1/K)  ',
+     *' beta(1/bar) ','  N(g/mol)   ',' rho(kg/m3)  ',' Gruneisen T ',
+     *'   Ks(bar)   ',' Ks_T(bar/K) ','    Ks_P     ','   Gs(bar)   ',
+     *' Gs_T(bar/K) ','    Gs_P     ',
+     *'  v0(km/s)   ','v0_T(km/s/K) ','v0P(km/s/bar)',
+     *'  vp(km/s)   ','vp_T(km/s/K) ','vpP(km/s/bar)','  vs(km/s)   ',
+     *' vs_T(km/s/K)','vsP(km/s/bar)'/
 c----------------------------------------------------------------------
 
       nprops = 9 
@@ -432,6 +358,8 @@ c----------------------------------------------------------------------
          dv(i) = 1d0
          inc(i) = 1
       end do 
+
+      jpot = ipot
 c                                 saturated phase:
       if (ifyn.eq.0) ipot = ipot + 1
  
@@ -612,11 +540,11 @@ c                                 write file headers
       if (table) then 
 c                                 terminal info on variables
          write (*,1090)
-         write (*,1040) pnames
+         write (*,1040) (vname(iv(i)),i=1,jpot),tags
 
          write (n4,'(a)') title
          write (n4,*) jpot
-         write (n4,*) nprops
+         write (n4,*) 25+jpot
 
          do i = 1, jpot
             write (n4,*) vname(iv(i))
@@ -625,7 +553,7 @@ c                                 terminal info on variables
             write (n4,*) inc(iv(i))
          end do 
 
-         write (n4,1040) pnames
+         write (n4,1040) (vname(iv(i)),i=1,jpot),tags
 
       else if (io4.eq.0) then 
 
@@ -1623,53 +1551,6 @@ c                                 normal polynomial vdp term:
 1130  format (/,'Enter a "v" to scale b2-b7 by'
      *         ,' standard state volume: ')
       end
-  
-      subroutine prop (g,e,u,s,v,cp)
-c----------------------------------------------------------------------
-c props calculates thermodynamic properties by finite difference
-c approximations from the gibbs function.
-c-----------------------------------------------------------------------
-      implicit none
-
-      double precision g,e,u,s,v,cp,dp,dt,p0,t0,e2,s2,gtt,gp,gt
- 
-      double precision p,t,xco2,u1,u2,tr,pr,r,ps
-      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
-c                                finite difference increments:
-      dp = 1d-1
-      dt = 1d-2
-      p0 = p
-      t0 = t
- 
-      call grxn (g)
- 
-      p = p0 + dp
-      call grxn (gp)
- 
-      p = p0
-      t = t0 + dt
-      call grxn (gt)
-c                            entropy, volume, enthalpy:
-      s = -(gt - g)/dt
-      v = (gp -g)/dp
-      e = s * t0 + g
-      u = e - p0 * v
-c                            heat capacity, this should be centered
-c                            on t0, but it isn't:
-      p = p0
-      t = t0 + 2d0*dt
-      call grxn (gtt)
- 
-      s2 = -(gtt - gt) / dt
- 
-      e2 = s2 * (t0+dt) + gt
- 
-      cp = (e2 - e) / dt
- 
-      p = p0
-      t = t0
-
-      end 
 
       subroutine append (lun)
 c---------------------------------------------------------
@@ -2078,13 +1959,13 @@ c                                 saturated phase.
       if (ifyn.eq.0) call rfluid (1,ifug)
 c                                 compute formula weights
       do l = 1,iphct
+
          props(17,l) = 0d0 
+
          do k= 1, k0
-            props(17,l) =  props(17,l) + vnu(l)*cp0(k,l)*atwt(k)
+            props(17,l) =  props(17,l) + cp0(k,l)*atwt(k)
          end do
-c                                 set molar amount
-         props(16,l) = vnu(l)
- 
+
       end do 
 c
       if (rxny.eq.'y'.or.rxny.eq.'Y') then
@@ -2273,7 +2154,7 @@ c                                 total molar amounts
 
       do i = 1, iphct
 c                                 set molar amount of phase 
-         props(16,i) = vnu(i)
+         props(16,i) = 1d0
          if (vnu(i).lt.0d0) rxn = .true.
 c                                 getphp uses the sign of the phase
 c                                 pointer to discrimate between pure
@@ -2294,8 +2175,6 @@ c----------------------------------------------------------------------
       implicit none
 
       include 'perplex_parameters.h'
-
-c      character*14 tags(25)
 
       integer pt2prp(25),i
 
@@ -2321,32 +2200,13 @@ c      character*14 tags(25)
       logical gflu,aflu,fluid,shear,lflu,volume,rxn
       common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume,rxn
 
-c      save tags, pt2prp
-
-c      data tags/'  g(J/mol)   ','  h(J/mol)   ','  log10_Keq  ' ,
-c     *'  s(J/mol/K) ',' cp(J/mol/K) ','v(J/mol/bar) ',' alpha(1/K)  ',
-c     *' beta(1/bar) ','  N(g/mol)   ',' rho(kg/m3)  ',' Gruneisen T ',
-c     *'   Ks(bar)   ',' Ks_T(bar/K) ','    Ks_P     ','   Gs(bar)   ',
-c     *' Gs_T(bar/K) ','    Gs_P     ',
-c     *'  v0(km/s)   ','v0_T(km/s/K) ','v0P(km/s/bar)',
-c     *'  vp(km/s)   ','vp_T(km/s/K) ','vpP(km/s/bar)','  vs(km/s)   ',
-c     *' vs_T(km/s/K)','vsP(km/s/bar)'/
-
       save pt2prp
 
       data pt2prp/11, 2,15,12, 1,13,14,17,10, 3, 4,18,20, 5,19,21,
      *             6,22,25, 7,23,26, 8,24,27/
 c----------------------------------------------------------------------
-c      write (*,1000) (tags(i),props(pt2prp(i),1),i=1,5)
-c      write (*,1000) (tags(i),props(pt2prp(i),1),i=5,26)
-
-c      write (*,1000) (tags(i),psys(pt2prp(i)),i=1,5)
-c      write (*,1000) (tags(i),psys(pt2prp(i)),i=5,26)
 
       lgk = -(psys(11)/r/v(2))/dlog(1d1)
-
-c         write (*,1010) props(pt2prp(1),1)/1d3,props(pt2prp(2),1),lgk,
-c     *                 (props(pt2prp(i),1),i=3,25)
 
       if (table) then 
 
@@ -2370,16 +2230,16 @@ c     *                 (props(pt2prp(i),1),i=3,25)
 
 1000  format (40(g14.7,1x))
 1010  format (/,'apparent Gibbs energy (kJ/mol) = ',g14.7,
-     *        /,'apparent enthalpy (kJ/mol) = ',g14.7,
-     *        /,'log10[Keq] = ',f8.3,
-     *        /,'entropy (J/mol/K) = ',f8.3,
-     *        /,'heat capacity (J/mol/K) = ',f8.3,
-     *        /,'volume (J/mol/bar) = ',g14.7,
-     *        /,'expansivity (1/K) = ',g14.7,
-     *        /,'compressibility (1/bar) = ',g14.7)
-1020  format (  'formula weight (g/mol) = ',g14.7,
-     *        /,'density (kg/m3) = ',g14.7,
-     *        /,'Gruneisen T = ',f8.3,//,
+     *        /,'apparent enthalpy (kJ/mol) ',t32,'= ',g14.7,
+     *        /,'log10[Keq] ',t32,'= ',f8.3,/,
+     *        /,'entropy (J/mol/K) ',t32,'= ',f8.3,
+     *        /,'heat capacity (J/mol/K) ',t32,'= ',f8.3,/,
+     *        /,'volume (J/mol/bar) ',t32,'= ',g14.7,
+     *        /,'expansivity (1/K) ',t32,'= ',g14.7,
+     *        /,'compressibility (1/bar) ',t32,'= ',g14.7)
+1020  format (/,'formula weight (g/mol) ',t32,'= ',g14.7,
+     *        /,'density (kg/m3) ',t32,'= ',g14.7,/,
+     *        /,'Gruneisen T ',t32,'= ',f8.3,//,
      *        'Adiabtic elastic moduli:',/,
      *        t30,' T derivative',t45,' P derivative',/
      *        2x,'Ks(bar) = ',g14.7,t30,g14.7,t45,g14.7,/,

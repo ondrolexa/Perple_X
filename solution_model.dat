@@ -3727,7 +3727,7 @@ begin_model                | keyword indicating beginning of a solution model
                                          
 
 Gt(EWHP)                                                                                 
-7                              |  model type: Ideal or Margules
+7                              | model type: reciprocal
 2                              | 2 chemical site model
 3 2                            | 3 endmembers mix on site 1, 2 endmembers mix on site 2
 gr   alm  py   
@@ -3741,8 +3741,7 @@ FA_d = -1 gr +  1 alm + 1 andr
 0. 1. .1 0                     | range and resolution for XCa on A
 0. 1. .1 0                     | range and resolution for XFe on A
 
-0. 1. .1                       | range and resolution for XAl on B
-0                              | subdivision scheme : imod = 0 -> cartesian
+0. 1. .1 0                     | range and resolution for XAl on B, imod = 0 -> cartesian
 
 begin_excess_function 
 w(py gr) 33d3 0. 0.
@@ -3752,7 +3751,7 @@ end_excess_function
 2                                     2 site entropy model
 3 3.                                  3 species, site multiplicity of 3
 z(Ca) = 1 gr + 1 andr 
-z(Mg) = 1 py + 1 MA_d
+z(Mg) = 1 py 
 2 2.                                  2 species, site multiplicity of 2
 z(Al) = 1 gr + 1 alm + 1 py 
 end_of_model                  
