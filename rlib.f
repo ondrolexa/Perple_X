@@ -1486,6 +1486,9 @@ c---------------------------------------------------------------------
       double precision cp
       common/ cst12 /cp(k5,k1)
 
+      double precision cp0
+      common/ cst71 /cp0(k0,k5)
+
       integer icomp,istct,iphct,icp
       common/ cst6 /icomp,istct,iphct,icp
 
@@ -1524,8 +1527,8 @@ c---------------------------------------------------------------------
       integer ifp
       common/ cxt32 /ifp(k1)
 
-      logical gflu,aflu,fluid,shear,lflu,volume
-      common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume
+      logical gflu,aflu,fluid,shear,lflu,volume,rxn
+      common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume,rxn
 
       integer eos
       common/ cst303 /eos(k10)
@@ -1552,6 +1555,9 @@ c---------------------------------------------------------------------
 
       character*8 eoscmp
       common/ cst98 /eoscmp(2)
+
+      integer iam
+      common/ cst4 /iam
       
       integer iopt
       logical lopt
@@ -1634,6 +1640,12 @@ c                               load stoichiometry of components.
       do i = 1, icomp
          cp(i,id) = comp(ic(i))
       end do 
+c                               compositional array for frendly
+      if (iam.eq.5.and.id.le.k5) then 
+         do i = 1, k0
+            cp0(i,id) = comp(i)
+         end do 
+      end if 
 
       if (make) return
 c                               and just mobile components

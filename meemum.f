@@ -50,6 +50,9 @@ c----------------------------------------------------------------------
       integer io3,io4,io9
       common / cst41 /io3,io4,io9
 
+      logical gflu,aflu,fluid,shear,lflu,volume,rxn
+      common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume,rxn
+
       integer iam
       common/ cst4 /iam
 c----------------------------------------------------------------------- 
@@ -58,6 +61,7 @@ c                                 iam is a flag indicating the Perple_X program
 c                                 version info
       call vrsion
 c                                 initialization, read files etc. 
+      rxn = .false.
       call iniprp
 
       write (*,1000) 

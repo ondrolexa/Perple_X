@@ -16,8 +16,8 @@ c-----------------------------------------------------------------------
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 
-      logical gflu,aflu,fluid,shear,lflu,volume
-      common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume
+      logical gflu,aflu,fluid,shear,lflu,volume,rxn
+      common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume,rxn
 
       double precision props,psys,psys1,pgeo,pgeo1
       common/ cxt22 /props(i8,k5),psys(i8),psys1(i8),pgeo(i8),pgeo1(i8)
@@ -32,7 +32,7 @@ c-----------------------------------------------------------------------
 
       integer kkp, np, ncpd, ntot
       double precision cp3, amt
-      common/ cxt15 /cp3(k5,k5),amt(k5),kkp(k5),np,ncpd,ntot
+      common/ cxt15 /cp3(k0,k5),amt(k5),kkp(k5),np,ncpd,ntot
 
       save iwarn
       data iwarn /0/
@@ -40,6 +40,7 @@ c----------------------------------------------------------------------
 c                                 correct for proportional wt 
 c                                 on intensive properties (alpha, beta). 
       do i = 3, 21
+
          if (i.gt.5.and.i.lt.13.or.i.gt.14.and.i.lt.18) cycle 
          psys(i) = psys(i)/psys(1)
          pgeo(i) = pgeo(i)/psys(1)
@@ -47,6 +48,7 @@ c                                 on intensive properties (alpha, beta).
             psys1(i) = psys1(i)/psys1(1)
             pgeo1(i) = pgeo1(i)/psys1(1)
          end if 
+
       end do 
 c                                 weighting scheme for seismic velocity
 c                                 chi = 1 -> voigt 0 -> reuss 0.5 -> VRH
@@ -59,7 +61,7 @@ c                                 aggregate properties
 c                                 density, kg/m3
       psys(10) = psys(17)/psys(1)*1d2
 
-      if (volume) then 
+      if (volume.and..not.rxn) then 
 c                                 gruneisen
          psys(3) = psys(3) + chi1/pgeo(3)
 c                                 bulk modulus
@@ -84,7 +86,7 @@ c                                 sound velocity P derivative
 
       end if 
 
-      if (volume.and.shear) then 
+      if (volume.and.shear.and..not.rxn) then 
 c                                 aggregate seismic properties, if a 
 c                                 fluid is present the reuss mean is 
 c                                 is infinite, signaled by pgeo = 0.
@@ -104,7 +106,7 @@ c                                 fluid present
             psys(19) = psys(19)
          end if
 
-         if (pgeo(21).lt.0d0) then 
+         if (pgeo(21).gt.0d0) then 
 c                                 shear modulus T-derivative
             psys(21) = psys(21) + chi1/pgeo(21)
          else 
@@ -157,7 +159,7 @@ c                                 vp/vs
 c                                 the psys1(1) condition is for the 
 c                                 special case of a system consisting 
 c                                 only of fluid. 
-      if (aflu.and.(.not.ssick).and.psys1(1).gt.0d0) then 
+      if (aflu.and.(.not.ssick).and..not.rxn.and.psys1(1).gt.0d0) then 
 c                                 fluid absent properties:
 c                                 gruneisen T
          psys1(3) = psys1(3) + chi1/pgeo1(3)
@@ -195,7 +197,7 @@ c                                 fluid present, use arithmetic mean
                psys1(19) = psys1(19)/chi
             end if
 
-            if (pgeo1(21).lt.0d0) then 
+            if (pgeo1(21).gt.0d0) then 
 c                                 shear modulus T-derivative
                psys1(21) = psys1(21) + chi1/pgeo1(21)
             else 
@@ -277,7 +279,6 @@ c                                 vp/vs
 
       end 
 
-
       subroutine getphp (id,jd,sick,ssick,ppois)
 c-----------------------------------------------------------------------
 c gets properties of phase id and saves them in props(1:i8,i); 
@@ -341,7 +342,7 @@ c----------------------------------------------------------------------
 
       logical ok, sick(i8), ssick, pois, ppois
 
-      integer id,jd,iwarn1,iwarn2,j
+      integer id,jd,iwarn1,iwarn2,j,itemp
 
       double precision dt0,dt1,dt2,g0,g1a, g2a, dg, ss,alpha1,alpha2,
      *                 dp0,dp1,dp2,e,alpha,v,ginc,beta,cp,s,gtt,r43,
@@ -352,7 +353,7 @@ c----------------------------------------------------------------------
       common/ cxt22 /props(i8,k5),psys(i8),psys1(i8),pgeo(i8),pgeo1(i8)
 
       double precision gtot,fbulk,gtot1,fbulk1
-      common/ cxt81 /gtot,fbulk(k5),gtot1,fbulk1(k5)
+      common/ cxt81 /gtot,fbulk(k0),gtot1,fbulk1(k0)
 
       integer iopt
       logical lopt
@@ -360,13 +361,13 @@ c----------------------------------------------------------------------
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       double precision pcomp
-      common/ cst324 /pcomp(k5,k5)
+      common/ cst324 /pcomp(k0,k5)
 
       character pname*14
       common/ cxt21a /pname(k5)
 
-      logical gflu,aflu,fluid,shear,lflu,volume
-      common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume
+      logical gflu,aflu,fluid,shear,lflu,volume,rxn
+      common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume,rxn
 
       integer iam
       common/ cst4 /iam
@@ -379,7 +380,7 @@ c----------------------------------------------------------------------
 
       integer kkp, np, ncpd, ntot
       double precision cp3, amt
-      common/ cxt15 /cp3(k5,k5),amt(k5),kkp(k5),np,ncpd,ntot
+      common/ cxt15 /cp3(k0,k5),amt(k5),kkp(k5),np,ncpd,ntot
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -399,8 +400,15 @@ c                                 composition, don't call if meemum
       if (iam.ne.2) call getcmp (jd,jd,id)
 c                                 formula weight
       props(17,jd) = 0d0
+c                                 component counter for frendly is different
+c                                 than for all other programs
+      if (iam.ne.5) then 
+         itemp = icomp
+      else
+         itemp = k0
+      end if 
 
-      do j = 1, icomp
+      do j = 1, itemp
 c                                 formula weight
          props(17,jd) = props(17,jd) + cp3(j,jd) * atwt(j) 
 c                                 molar amounts of the components
@@ -421,7 +429,7 @@ c                                 molar phase composition
       if (iopt(2).eq.1) then 
 c                                 convert molar phase composition to 
 c                                 mass % composition:
-         do j = 1, icomp
+         do j = 1, itemp
             pcomp(j,jd) = pcomp(j,jd)*atwt(j)*1d2/props(17,jd)
          end do  
 
@@ -435,8 +443,6 @@ c                                 shear modulus
          props(19,jd) = 0d0    
          props(21,jd) = 0d0
       end if   
-
-
 
       dp2 = 5d-2 * p
       dp1 = dp2/1d1
@@ -614,11 +620,11 @@ c                                 to their normal forms:
       beta = -beta/v
       alpha = alpha/v
 c                                 
-      if (beta.gt.v.or.beta.lt.0d0) beta = nopt(7)
+      if (beta.gt.v*props(16,jd).or.beta.lt.0d0) beta = nopt(7)
 c                                 aug 28, 2007, removed check on alpha to 
 c                                 accomodate -alpha's generated by landau 
 c                                 transition models. 
-      if (cp.gt.1d9.or.cp.lt.0d0) cp = nopt(7)
+      if (cp*props(16,jd).gt.1d9.or.cp*props(16,jd).lt.0d0) cp = nopt(7)
 
       props(1,jd) = v 
       props(2,jd) = e
@@ -631,62 +637,62 @@ c                                 density
 c                                 tests for reasonable results:
 c                                 like this so sick could be used to
 c                                 say which property is bad
-         if (props(1,jd).le.0d0) sick(jd) = .true.
-         if (props(12,jd).le.0d0) sick(jd) = .true.
+      if (props(1,jd)*props(16,jd).le.0d0) sick(jd) = .true.
+      if (props(12,jd)*props(16,jd).le.0d0) sick(jd) = .true.
 c                                 aug 28, 2007, removed check on alpha to 
 c                                 accomodate -alpha's generated by landau 
 c                                 transition models (prop(13,jd))
-c        if (props(13,jd).eq.0d0) sick(jd) = .true.
-         if (props(14,jd).le.0d0) sick(jd) = .true.
+c     if (props(13,jd).eq.0d0) sick(jd) = .true.
+      if (props(14,jd).le.0d0) sick(jd) = .true.
 
-         if (.not.sick(jd)) then
+      if (.not.sick(jd).and..not.rxn) then
 c                                 gruneisen parameter
-            props(3,jd) = props(1,jd)/
-     *                      (props(12,jd)*props(14,jd)/props(13,jd) - 
-     *                      t*props(13,jd)*props(1,jd))
+         props(3,jd) = props(1,jd)/
+     *                   (props(12,jd)*props(14,jd)/props(13,jd) - 
+     *                   t*props(13,jd)*props(1,jd))
 c                                 aug 28, 2007, removed check on gruneisen to 
 c                                 accomodate -alpha's generated by landau 
 c                                 transition models (prop(13,jd))
 c           if (props(3,jd).le.0d0) sick(jd) = .true.
 c                                 adiabatic bulk modulus
-            props(4,jd) = (1d0 + t*props(13,jd)
-     *                           *props(3,jd))/props(14,jd)
-            if (props(4,jd).le.0d0) sick(jd) = .true.
+         props(4,jd) = (1d0 + t*props(13,jd)
+     *                         *props(3,jd))/props(14,jd)
+         if (props(4,jd).le.0d0) sick(jd) = .true.
 
-            if (.not.fluid(jd).and.iopt(16).gt.0) then 
+         if (.not.fluid(jd).and.iopt(16).gt.0) then 
 c                                 use poisson ratio estimates if iopt(16).ne.0
-               if ((iopt(16).eq.1.and..not.ok).or.iopt(16).eq.2) then
+            if ((iopt(16).eq.1.and..not.ok).or.iopt(16).eq.2) then
 
-                  if (volume) then 
-                     props(5,jd)  = nopt(16)*props(4,jd)
-                     props(19,jd) = nopt(16)*props(18,jd) 
-                     props(21,jd) = nopt(16)*props(20,jd)
-                     if (iopt(16).eq.1) then 
-                        ppois = .true.
-                        pois = .true.
-                     end if 
-                  else
-                     shear = .false.
-                     props(5,jd) = nopt(7)
-                     props(19,jd) = nopt(7)    
-                     props(21,jd) = nopt(7)
+               if (volume) then 
+                  props(5,jd)  = nopt(16)*props(4,jd)
+                  props(19,jd) = nopt(16)*props(18,jd) 
+                  props(21,jd) = nopt(16)*props(20,jd)
+                  if (iopt(16).eq.1) then 
+                     ppois = .true.
+                     pois = .true.
                   end if 
-               end if
-            end if  
-         end if 
+               else
+                  shear = .false.
+                  props(5,jd) = nopt(7)
+                  props(19,jd) = nopt(7)    
+                  props(21,jd) = nopt(7)
+               end if 
+            end if
+         end if  
+      end if 
 
-         if (sick(jd)) then
+      if (sick(jd)) then
 
-            props(3,jd) = nopt(7)
-            props(4,jd) = nopt(7)
-            volume = .false.
-            if (.not.fluid(jd).and..not.ok) shear = .false.
+         props(3,jd) = nopt(7)
+         props(4,jd) = nopt(7)
+         volume = .false.
+         if (.not.fluid(jd).and..not.ok) shear = .false.
 
-         end if 
+      end if 
 
-         if (sick(jd).and.(.not.fluid(jd))) ssick = .true.
+      if (sick(jd).and.(.not.fluid(jd))) ssick = .true.
 c                                 seismic properties
-      if (.not.sick(jd)) then 
+      if (.not.sick(jd).and..not.rxn) then 
 
          units = dsqrt(1d5)/1d3
          r43   = 4d0/3d0
@@ -723,6 +729,7 @@ c                                 p-wave velocity P derivative
             props(23,jd) = nopt(7)
             props(26,jd) = nopt(7)
             shear = .false.
+
          end if 
 
          if (.not.fluid(jd)) then 
@@ -799,6 +806,8 @@ c                                 system molar volume
       psys(1)  = psys(1)  + v
 c                                 molar enthalpy
       psys(2)  = psys(2)  + props(2,jd)*props(16,jd) 
+c                                 molar gibbs energy
+      psys(11) = psys(11) + props(11,jd)*props(16,jd) 
 c                                 molar heat capacity
       psys(12) = psys(12) + props(12,jd)*props(16,jd) 
 c                                 expansivity
@@ -812,7 +821,7 @@ c                                 moles of assemblage
 c                                 mass of assemblage 
       psys(17) = psys(17) + props(17,jd)*props(16,jd)
        
-      if (volume) then 
+      if (volume.and..not.rxn) then 
 c                                 gruneisen
          psys(3) = psys(3) + v*props(3,jd)*chi
          pgeo(3) = pgeo(3) + v/props(3,jd)
@@ -844,7 +853,7 @@ c                                 Aggregate Shear Modulus P-derivative
 
       end if
 
-      if (aflu) then 
+      if (aflu.and..not.rxn) then 
 c                                 assemblage includes fluid
          if (.not.fluid(jd)) then
 c                                 get total without fluid

@@ -1724,13 +1724,19 @@ c                                 refined compositions and solution
 c                                 pointer
       integer kkp,np,ncpd,ntot
       double precision cp3,amt
-      common/ cxt15 /cp3(k5,k5),amt(k5),kkp(k5),np,ncpd,ntot
+      common/ cxt15 /cp3(k0,k5),amt(k5),kkp(k5),np,ncpd,ntot
 
       logical lorder, lexces, llaar, lrecip
       common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
 
       integer ikp
       common/ cst61 /ikp(k1)
+
+      double precision cp0
+      common/ cst71 /cp0(k0,k5)
+
+      integer iam
+      common/ cst4 /iam
 
       integer npt,jdv
       logical fulrnk
@@ -1743,15 +1749,24 @@ c----------------------------------------------------------------------
 
       if (ids.lt.0) then 
 c                                 simple compounds
-         do i = 1, icomp
-            cp3(i,jd) = cp(i,-ids)
-         end do 
+         if (iam.ne.5) then
+c                                 all programs except frendly 
+            do i = 1, icomp
+               cp3(i,jd) = cp(i,-ids)
+            end do 
 c                                 check if it's a solution endmember
-         if (ikp(-ids).ne.0) call endcp (jd,-ids,ikp(-ids))
+            if (ikp(-ids).ne.0) call endcp (jd,-ids,ikp(-ids))
+   
+         else 
+c                                 frendly 
+            do i = 1, k0
+               cp3(i,jd) = cp0(i,-ids)
+            end do 
+
+         end if 
 
       else
-c                                 solutions 
-c                                 initialize
+c                                 solutions, initialize
          do i = 1, icomp
             cp3(i,jd) = 0d0
          end do

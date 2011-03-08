@@ -64,6 +64,8 @@ c----------------------------------------------------------------------
       character*3 key*22, val, valu(i10), nval1*12, nval2*12,
      *            nval3*12,opname*100,strg*40,strg1*40
 
+      double precision dnan
+
       integer jtest,jpot
       common/ debug /jtest,jpot
 
@@ -292,9 +294,13 @@ c                                 extrapolation key
          else if (key.eq.'vrh_weighting') then 
 c                                 vrh weighting key
             read (strg,*) nopt(6)
-         else if (key.eq.'bad_number') then 
-c                                 bad number key
-            read (strg,*) nopt(7)
+         else if (key.eq.'bad_number') then
+c                                 bad number key 
+            if (val.eq.'NaN'.or.val.eq.'nan') then
+               nopt(7) = dnan()
+            else 
+               read (strg,*) nopt(7)
+            end if 
          else if (key.eq.'solvus_tolerance') then 
             if (val.ne.'aut') then 
                lopt(9) = .false.
@@ -1246,6 +1252,7 @@ c                                 read data from card
             call rerr 
          else
             defalt = .false.
+            exit 
          end if 
 
       end do 
@@ -2811,8 +2818,8 @@ c-----------------------------------------------------------------------
       double precision thermo,uf,us
       common/ cst1  /thermo(k4,k10),uf(2),us(h5)
 
-      logical gflu,aflu,fluid,shear,lflu,volume
-      common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume
+      logical gflu,aflu,fluid,shear,lflu,volume,rxn
+      common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume,rxn
 c                                 interval limits conformal transformation
       integer intv
       double precision yint, yfrc
@@ -4543,3 +4550,46 @@ c                                 read and echo unformatted comments and make da
 
       end 
 
+      double precision function dnan()
+c----------------------------------------------------------------------
+c george helfrich's function to make a safe NaN
+c----------------------------------------------------------------------
+      implicit none 
+
+      integer i4
+
+      character c8(8)
+
+      double precision val
+
+      equivalence (c8,i4,val)
+c----------------------------------------------------------------------
+      i4 = 1
+
+      if (ichar(c8(1)).eq.1) then
+C                                 Little-endian
+         c8(8)=char(127)
+         c8(7)=char(248)
+         c8(6)=char(0)
+         c8(5)=char(0)
+         c8(4)=char(0)
+         c8(3)=char(0)
+         c8(2)=char(0)
+         c8(1)=char(0)
+
+      else
+C                                 Big-endian
+         c8(1)=char(127)
+         c8(2)=char(248)
+         c8(3)=char(0)
+         c8(4)=char(0)
+         c8(5)=char(0)
+         c8(6)=char(0)
+         c8(7)=char(0)
+         c8(8)=char(0)
+
+      endif
+
+      dnan = val
+
+      end

@@ -2468,14 +2468,15 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer iflag,iopct,icter,irend,iovd,
+      integer iopct,icter,irend,iovd,
      *        ivi,ivd,iovi,jflg,ier,iste,i,inpct,jer,ikwk
 
       logical bad, output
 
       double precision odiv,div
 
-      common/ cst7   /iflag
+      integer iflag
+      common/ cst7 /iflag
 
       integer irchk
       common/ cst801 /irchk(k2)
@@ -5722,8 +5723,8 @@ c-----------------------------------------------------------------------
       integer ids,isct,icp1,isat,io2
       common/ cst40 /ids(h5,h6),isct(h5),icp1,isat,io2
 
-      logical gflu,aflu,fluid,shear,lflu,volume
-      common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume
+      logical gflu,aflu,fluid,shear,lflu,volume,rxn
+      common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume,rxn
 c----------------------------------------------------------------------
       write (n3,1000)
 c                          title:
@@ -7210,7 +7211,7 @@ c-----------------------------------------------------------------------
 
       integer kkp, np, ncpd, ntot
       double precision cp3, amt
-      common/ cxt15 /cp3(k5,k5),amt(k5),kkp(k5),np,ncpd,ntot
+      common/ cxt15 /cp3(k0,k5),amt(k5),kkp(k5),np,ncpd,ntot
 
       integer ipvt
       double precision a,b

@@ -68,7 +68,8 @@ c         write (*,1060) uname
 c         stop
 c      end if
 
- 
+      if (uname.eq.' ') uname = ' Nimrod '
+
       do 
 
          write (*,1030)
@@ -125,8 +126,15 @@ c                                 tabulated properties
 
                         write (n4,1000) v(1),v(2),v(3),g,e,s,vol,cp,
      *                                  -g/r/v(2)/2.302585093d0 
+
+                        call calphp 
+
+                        call outphp (.false.)
+
                      end do 
+
                   end do 
+
                end do 
     
                close (n4)
@@ -134,8 +142,6 @@ c                                 tabulated properties
                cycle 
 
             else 
-
-               write (*,1080) uname,uname,uname,uname
 
                do 
 c                                 interactively entered conditions
@@ -167,13 +173,7 @@ c
 
                   call calphp 
 
-                  call outphp
-
-                  write (*,1120) v(2),v(1),g/1d3,props(2,1)/1d3,
-     *                     (g-v(1)*props(1,1))/1d3,u/1d3,props(15,1),
-     *                     props(1,1),props(12,1),
-     *                     -g/r/v(2),-g/r/v(2)/2.302585093d0
-
+                  call outphp (.false.)
 
                   write (*,1090)
                   read (*,'(a)') y
@@ -266,16 +266,6 @@ c                                 create a new data base entry
 1060  format (/,'Weeell ', a,' why dont you go read Gibbs and try me',
      *          ' again later?')
 1070  format ('Calculate a different equilibrium (y/n)?')
-1080  format (/,'now ',a,', there is one thing i want you to remember'
-     *         ,' and that is that the',/,'values for G and H that i',
-     *          ' calculate are "apparent" free energies and',
-     *         /,'enthalpies. ',a,' if you dont know what that means'
-     *         ,' read Helgeson et al. 1978.',//,a,
-     *          ' now i am going to prompt you for conditions',
-     *          ' at which i should',/,'calculate thermodynamic',
-     *          ' properties, when you want to stop just enter',
-     *          ' zeroes.',//,
-     *          'ok, here we go, it is fun time ',a,'!',//)
 1090  format ('Modify or output thermodynamic parameters (y/n)? ')
 1100  format ('Enter P(bars) and T(K) (zeroes to quit): ')
 1110  format ('Enter X(CO2/O) in fluid phase: ')
@@ -432,8 +422,7 @@ c----------------------------------------------------------------------
      *'  g(J/mol)   ','  h(J/mol)   ','  s(J/K/mol) ','v(J/bar/mol) ',
      *' cp(J/K/mol) ','  log10(K)   '/
 c----------------------------------------------------------------------
-      ipot = 2
-      jpot = ipot
+
       nprops = 9 
  
       do i = 1, l2
@@ -1116,15 +1105,15 @@ c---------------------------------------------------------------------
       double precision vnu
       common/ cst25 /vnu(k7),idr(k7),ivct
 
-      double precision cp
-      common/ cst12 /cp(k5,k1)
-
       integer iffr,isr
       double precision vuf,vus
       common/ cst201 /vuf(2),vus(h5),iffr,isr
 
       integer ltyp,lmda,idis
       common/ cst204 /ltyp(k1),lmda(k1),idis(k1)
+
+      double precision cp0
+      common/ cst71 /cp0(k0,k5)
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -1188,7 +1177,7 @@ c                                 reset data
 
       else
 
-         id = 20
+         id = k5
          idis(id) = 0
          ltyp(id) = 0
          jdis = 0
@@ -1201,8 +1190,8 @@ c                                 reset data
             thermo(i,id) = 0d0
          end do 
 
-         do i = 1, icomp
-            cp(i,id) = 0d0  
+         do i = 1, k0
+            cp0(i,id) = 0d0  
          end do 
  
          imurg = 0
@@ -1228,8 +1217,8 @@ c                                    test for Murghnahan EoS
                thermo(i,id) = thermo(i,id) + vnu(j) * thermo(i,j)
             end do 
 
-            do i = 1, icomp
-               cp(i,id) = cp(i,id) + vnu(j) * cp(i,j)
+            do i = 1, k0
+               cp0(i,id) = cp0(i,id) + vnu(j) * cp0(i,j)
             end do 
 
             if (imurg.eq.1) then 
@@ -1525,7 +1514,7 @@ c-----------------------------------------------------------------------
       write (*,1010)
       read (*,'(a)') names(k10)
  
-      do i = 1, icomp
+      do i = 1, icmpn
 5016     write (*,1030) cmpnt(i),names(k10)
          read (*,*,iostat=ier) comp(i)
          call rerror (ier,*5016)
@@ -1751,8 +1740,8 @@ c----------------------------------------------------------------------
       character*8 name
       common/ csta6 /name
 
-      double precision cp
-      common/ cst12 /cp(k5,k1)
+      double precision cp0
+      common/ cst71 /cp0(k0,k5)
 
       integer cl
       character cmpnt*5, dname*80
@@ -1763,8 +1752,8 @@ c----------------------------------------------------------------------
 
       integer idh2o,idco2,ikind,icmpn,icout,ieos
       double precision comp,tot
-      common/ cst43 /comp(k0),tot,icout(k0),idh2o,idco2,
-     *               ikind,icmpn,ieos
+      common/ cst43 /comp(k0),tot,icout(k0),idh2o,idco2,ikind,icmpn,ieos
+
       integer ilam,idiso,lamin,idsin
       double precision tm,td
       common/ cst202 /tm(m7,m6),td(m8),ilam,idiso,lamin,idsin
@@ -1813,6 +1802,9 @@ c----------------------------------------------------------------------
       double precision atwt
       common/ cst45 /atwt(k0)
 
+      integer ipot,jv,iv
+      common/ cst24 /ipot,jv(l2),iv(l2)
+
       save first, inames, mnames
       data first/.true./
 c-----------------------------------------------------------------------
@@ -1825,6 +1817,9 @@ c-----------------------------------------------------------------------
          call smakcp (inames,mnames)
          first = .false.
          call eohead (n2)
+         do i = 1, l2
+            iv(i) = i
+         end do
 
       end if 
 
@@ -1878,8 +1873,8 @@ c                               acceptable data, count the phase
 
       if (icopt.eq.4) goto 99
 c                               initialize: 
-      do k = 1, k5
-         cp(k,1) = 0d0
+      do k = 1, k0
+         cp0(k,1) = 0d0
       end do  
 c                               initialization for k10 endnmembers
       do i = 1, k10
@@ -1901,6 +1896,7 @@ c                               initialization for k10 endnmembers
       end do 
  
       iphct = 0
+      ipot = 2
       jdis = 0 
       ifyn = 1
       jlam = 1
@@ -2021,13 +2017,21 @@ c                                 set special flag if O2
                ifyn = 0
             end if
          end if 
-c                               get activity coefficients:
-         do 
+
+         if (ifyn.eq.0) ipot = ipot + 1
+c                                 get activity coefficients:
+         if (exname(1).ne.cmpnt(idh2o).and.
+     *       exname(1).ne.cmpnt(idco2))then
+
             write (*,4070) exname(1)
-            read (*,*,iostat=ier) act(iphct)
-            if (ier.eq.0) exit 
-            call rerr
-         end do 
+c                                 read icopt, default icopt = 2.
+            call rdnumb (act(iphct),1d0,icopt,0,.true.)
+
+         else
+
+            act(iphct) = 1d0
+
+         end if 
 c                               reaction coefficient:
          vnu(iphct)= vvv
 c                               store the data 
@@ -2075,8 +2079,8 @@ c                                 saturated phase.
 c                                 compute formula weights
       do l = 1,iphct
          props(17,l) = 0d0 
-         do k= 1, k5
-            props(17,l) =  props(17,l) + vnu(l)*cp(k,l)*atwt(k)
+         do k= 1, k0
+            props(17,l) =  props(17,l) + vnu(l)*cp0(k,l)*atwt(k)
          end do
 c                                 set molar amount
          props(16,l) = vnu(l)
@@ -2085,27 +2089,27 @@ c                                 set molar amount
 c
       if (rxny.eq.'y'.or.rxny.eq.'Y') then
 c                                 check reaction stoichiometries
-55       do k= 1, k5
-            cp(k,jj)=0d0
+55       do k= 1, k0
+            cp0(k,jj)=0d0
          end do 
 
          do l=1,iphct
             do k= 1, k5
-               cp(k,jj) = cp(k,jj) + vnu(l)*cp(k,l)
+               cp0(k,jj) = cp0(k,jj) + vnu(l)*cp0(k,l)
             end do 
          end do 
 
          itic=0
-         do k = 1, k5
-            if (cp(k,jj).eq.0d0) cycle
+         do k = 1, k0
+            if (cp0(k,jj).eq.0d0) cycle
             itic=itic+1
          end do 
 
          if (itic.eq.0) goto 99
  
-         do k= 1, k5
-            if (cp(k,jj).eq.0d0) cycle
-            write (*,2460) cp(k,jj),cmpnt(k)
+         do k= 1, k0
+            if (cp0(k,jj).eq.0d0) cycle
+            write (*,2460) cp0(k,jj),cmpnt(k)
          end do 
  
          write (*,1070)
@@ -2142,10 +2146,9 @@ c                               data file to allow writing:
 4030  format ('Enter phase or species number ',i2,
      *       ' in your reaction: ')
 4050  format ('Sorry ',a,', that name is invalid, try again.',/)
-4070  format ('Enter activity of: ',a,
-     *           ' (enter 1.0 for H2O or CO2): ')
-4000  format (/,'Calculate thermodynamic ',
-     *        'properties for a reaction (y/n)? ')
+4070  format ('Enter activity [default is 1] of ',a)
+4000  format (/,
+     *    'Calculate thermodynamic properties for a reaction (y/n)?')
 4010  format (/,'How many phases or species in the reaction? ')
 
       end
@@ -2219,8 +2222,8 @@ c----------------------------------------------------------------------
 
       logical sick(i8), ssick, ppois
 
-      logical gflu,aflu,fluid,shear,lflu,volume
-      common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume
+      logical gflu,aflu,fluid,shear,lflu,volume,rxn
+      common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume,rxn
 
       double precision props,psys,psys1,pgeo,pgeo1
       common/ cxt22 /props(i8,k5),psys(i8),psys1(i8),pgeo(i8),pgeo1(i8)
@@ -2233,7 +2236,11 @@ c----------------------------------------------------------------------
       common/ cst25 /vnu(k7),idr(k7),ivct
 
       double precision gtot,fbulk,gtot1,fbulk1
-      common/ cxt81 /gtot,fbulk(k5),gtot1,fbulk1(k5)
+      common/ cxt81 /gtot,fbulk(k0),gtot1,fbulk1(k0)
+
+      integer kkp, np, ncpd, ntot
+      double precision cp3, amt
+      common/ cxt15 /cp3(k0,k5),amt(k5),kkp(k5),np,ncpd,ntot
 c----------------------------------------------------------------------
 c                                 initialize
       aflu = .false.
@@ -2241,6 +2248,8 @@ c                                 initialize
       volume = .true.
       ssick = .false.
       ppois = .false.
+      rxn = .false.
+      ntot = iphct
 c                                 flag for bulk bad bulk properties
 
 c                                 initialize bulk properites
@@ -2255,7 +2264,7 @@ c                                 total mass
          pgeo1(i) = 0d0
       end do 
 
-      do i = 1, icomp
+      do i = 1, k0
 c                                 total molar amounts
          fbulk(i) = 0d0
          fbulk1(i) = 0d0
@@ -2265,6 +2274,7 @@ c                                 total molar amounts
       do i = 1, iphct
 c                                 set molar amount of phase 
          props(16,i) = vnu(i)
+         if (vnu(i).lt.0d0) rxn = .true.
 c                                 getphp uses the sign of the phase
 c                                 pointer to discrimate between pure
 c                                 compounds and solutions
@@ -2276,7 +2286,7 @@ c                                 compute aggregate properties:
 
       end 
 
-      subroutine outphp 
+      subroutine outphp (table)
 c----------------------------------------------------------------------
 c outphp - output properties of a phase, reaction or phase aggregat, 
 c called by frendly. if meemum, prints chemical potentials.
@@ -2285,33 +2295,102 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      character*14 tags(26)
+c      character*14 tags(25)
 
-      integer pt2prp(26),i
+      integer pt2prp(25),i
+
+      double precision lgk
+
+      logical table 
 
       double precision props,psys,psys1,pgeo,pgeo1
       common/ cxt22 /props(i8,k5),psys(i8),psys1(i8),pgeo(i8),pgeo1(i8)
 
-      save tags, pt2prp
+      double precision v,tr,pr,r,ps
+      common/ cst5 /v(l2),tr,pr,r,ps
 
-      data tags/'  g(J/mol)   ','  h(J/mol)   ','  log10_Keq  ' ,
-     *'  s(J/mol/K) ',' cp(J/mol/K) ','v(J/mol/bar) ',' alpha(1/K)  ',
-     *' beta(1/bar) ','  N(g/mol)   ',' rho(kg/m3)  ',' Gruneisen T ',
-     *'   Ks(bar)   ',' Ks_T(bar/K) ','    Ks_P     ','   Gs(bar)   ',
-     *' Gs_T(bar/K) ','    Gs_P     ',
-     *'  v0(m/s)    ',' v0_T(m/s/K) ','v0_P(m/s/bar)',
-     *'  vp(m/s)    ',' vp_T(m/s/K) ','vp_P(m/s/bar)','  vs(m/s)    ',
-     *' vs_T(m/s/K) ','vs_P(m/s/bar)'/
+      integer inc,jpot
+      common/ cst101 /inc(l2),jpot
 
-      data pt2prp/11, 2,27,15,12, 1,13,14,17,10, 3, 4,18,20, 5,19,21,
+      character*8 vname,xname
+      common/ csta2 /xname(k5),vname(l2)
+
+      integer ipot,jv,iv
+      common/ cst24 /ipot,jv(l2),iv(l2)
+
+      logical gflu,aflu,fluid,shear,lflu,volume,rxn
+      common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume,rxn
+
+c      save tags, pt2prp
+
+c      data tags/'  g(J/mol)   ','  h(J/mol)   ','  log10_Keq  ' ,
+c     *'  s(J/mol/K) ',' cp(J/mol/K) ','v(J/mol/bar) ',' alpha(1/K)  ',
+c     *' beta(1/bar) ','  N(g/mol)   ',' rho(kg/m3)  ',' Gruneisen T ',
+c     *'   Ks(bar)   ',' Ks_T(bar/K) ','    Ks_P     ','   Gs(bar)   ',
+c     *' Gs_T(bar/K) ','    Gs_P     ',
+c     *'  v0(km/s)   ','v0_T(km/s/K) ','v0P(km/s/bar)',
+c     *'  vp(km/s)   ','vp_T(km/s/K) ','vpP(km/s/bar)','  vs(km/s)   ',
+c     *' vs_T(km/s/K)','vsP(km/s/bar)'/
+
+      save pt2prp
+
+      data pt2prp/11, 2,15,12, 1,13,14,17,10, 3, 4,18,20, 5,19,21,
      *             6,22,25, 7,23,26, 8,24,27/
 c----------------------------------------------------------------------
-      write (*,1000) (tags(i),props(pt2prp(i),1),i=1,5)
-      write (*,1000) (tags(i),props(pt2prp(i),1),i=5,26)
+c      write (*,1000) (tags(i),props(pt2prp(i),1),i=1,5)
+c      write (*,1000) (tags(i),props(pt2prp(i),1),i=5,26)
 
-      write (*,1000) (tags(i),psys(pt2prp(i)),i=1,5)
-      write (*,1000) (tags(i),psys(pt2prp(i)),i=5,26)
+c      write (*,1000) (tags(i),psys(pt2prp(i)),i=1,5)
+c      write (*,1000) (tags(i),psys(pt2prp(i)),i=5,26)
 
-1000  format (3(a14,'=',g14.6,2x))
+      lgk = -(psys(11)/r/v(2))/dlog(1d1)
+
+c         write (*,1010) props(pt2prp(1),1)/1d3,props(pt2prp(2),1),lgk,
+c     *                 (props(pt2prp(i),1),i=3,25)
+
+      if (table) then 
+
+         write (n4,1000) (v(iv(i)), i = 1, jpot),
+     *                   psys(pt2prp(1)),psys(pt2prp(2)),lgk,
+     *                   (psys(pt2prp(i)),i=3,25)
+
+      else 
+
+         write (*,1050)
+         write (*,1030) (vname(iv(i)),v(iv(i)), i = 1, ipot)
+         write (*,1010) psys(pt2prp(1))/1d3,psys(pt2prp(2))/1d3,lgk,
+     *                  (psys(pt2prp(i)),i=3,7)
+         if (.not.rxn) then 
+            write (*,1020) (psys(pt2prp(i)),i=8,25)
+         else 
+            write (*,1040) 
+         end if
+
+      end if 
+
+1000  format (40(g14.7,1x))
+1010  format (/,'apparent Gibbs energy (kJ/mol) = ',g14.7,
+     *        /,'apparent enthalpy (kJ/mol) = ',g14.7,
+     *        /,'log10[Keq] = ',f8.3,
+     *        /,'entropy (J/mol/K) = ',f8.3,
+     *        /,'heat capacity (J/mol/K) = ',f8.3,
+     *        /,'volume (J/mol/bar) = ',g14.7,
+     *        /,'expansivity (1/K) = ',g14.7,
+     *        /,'compressibility (1/bar) = ',g14.7)
+1020  format (  'formula weight (g/mol) = ',g14.7,
+     *        /,'density (kg/m3) = ',g14.7,
+     *        /,'Gruneisen T = ',f8.3,//,
+     *        'Adiabtic elastic moduli:',/,
+     *        t30,' T derivative',t45,' P derivative',/
+     *        2x,'Ks(bar) = ',g14.7,t30,g14.7,t45,g14.7,/,
+     *        2x,'Gs(bar) = ',g14.7,t30,g14.7,t45,g14.7,//,
+     *        'Seismic velocities:',/,
+     *        t30,' T derivative',t45,' P derivative',/
+     *        2x,'v0(km/s) = ',g14.7,t30,g14.7,t45,g14.7,/,
+     *        2x,'vp(km/s) = ',g14.7,t30,g14.7,t45,g14.7,/,
+     *        2x,'vs(km/s) = ',g14.7,t30,g14.7,t45,g14.7,//,40('-'),/)
+1030  format (29x,a,' = ',g12.6)
+1040  format (/,40('-'),/)
+1050  format (/,40('-'),//,'Thermodynamic properties at:',/)
 
       end 

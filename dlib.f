@@ -532,8 +532,8 @@ c----------------------------------------------------------------
 
       character propty(kprop)*60, y*1, name*14
 
-      logical gflu,aflu,fluid,shear,lflu,volume
-      common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume
+      logical gflu,aflu,fluid,shear,lflu,volume,rxn
+      common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume,rxn
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp

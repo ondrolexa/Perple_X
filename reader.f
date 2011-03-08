@@ -8,7 +8,7 @@ c       n6 - special out
 
       include 'perplex_parameters.h'
 
-      logical vertex, first, output, fake
+      logical first, output, fake
 
       integer imode, ierr
 
@@ -24,6 +24,9 @@ c       n6 - special out
       integer isec,icopt,ifull,imsg,io3p
       common/ cst103 /isec,icopt,ifull,imsg,io3p
 
+      logical gflu,aflu,fluid,shear,lflu,volume,rxn
+      common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume,rxn
+
       integer iam
       common/ cst4 /iam
 c----------------------------------------------------------------------- 
@@ -32,10 +35,10 @@ c                                 iam is a flag indicating the Perple_X program
 c                                 version info
       call vrsion
 
-      vertex = .false.
       first = .true.
       output = .false.
       fake   = .false.
+      rxn = .false.
 c                                 read input from unit n1 (terminal/disk).
 c                                 input1 also initializes:
 c                                 equilibrium counters; units n2 n4 and n6;
@@ -1200,7 +1203,7 @@ c----------------------------------------------------------------
       common/ cst45 /atwt(k0)
 
       double precision gtot,fbulk,gtot1,fbulk1
-      common/ cxt81 /gtot,fbulk(k5),gtot1,fbulk1(k5)
+      common/ cxt81 /gtot,fbulk(k0),gtot1,fbulk1(k0)
 
       integer iopt
       logical lopt
@@ -1210,8 +1213,8 @@ c----------------------------------------------------------------
       double precision props,psys,psys1,pgeo,pgeo1
       common/ cxt22 /props(i8,k5),psys(i8),psys1(i8),pgeo(i8),pgeo1(i8)
 
-      logical gflu,aflu,fluid,shear,lflu,volume
-      common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume
+      logical gflu,aflu,fluid,shear,lflu,volume,rxn
+      common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume,rxn
 
       double precision mu
       common/ cst330 /mu(k8)
@@ -1544,7 +1547,7 @@ c ------------------------------------------------------------------
       integer jcomp, j, id 
  
       double precision pcomp
-      common/ cst324 /pcomp(k5,k5)
+      common/ cst324 /pcomp(k0,k5)
 
       double precision rcps
       integer icps, kcx, kcx1
@@ -1601,7 +1604,7 @@ c-------------------------------------------------------------------
       common/ cst75  /idasls(k5,k3),iavar(3,k3),iasct,ias
 
       double precision pcomp
-      common/ cst324 /pcomp(k5,k5)
+      common/ cst324 /pcomp(k0,k5)
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
@@ -2440,7 +2443,7 @@ c-------------------------------------------------------------------
       double precision x(k5), ntot
 
       double precision pcomp
-      common/ cst324 /pcomp(k5,k5)
+      common/ cst324 /pcomp(k0,k5)
 
       double precision props,psys,psys1,pgeo,pgeo1
       common/ cxt22 /props(i8,k5),psys(i8),psys1(i8),pgeo(i8),pgeo1(i8)
@@ -2538,8 +2541,8 @@ c----------------------------------------------------------------
       double precision props,psys,psys1,pgeo,pgeo1
       common/ cxt22 /props(i8,k5),psys(i8),psys1(i8),pgeo(i8),pgeo1(i8)
 
-      logical gflu,aflu,fluid,shear,lflu,volume
-      common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume
+      logical gflu,aflu,fluid,shear,lflu,volume,rxn
+      common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume,rxn
 
       integer idasls,iavar,iasct,ias
       common/ cst75  /idasls(k5,k3),iavar(3,k3),iasct,ias
@@ -2915,7 +2918,7 @@ c----------------------------------------------------------------
       character cprop(k10)*12
 
       double precision gtot,fbulk,gtot1,fbulk1
-      common/ cxt81 /gtot,fbulk(k5),gtot1,fbulk1(k5)
+      common/ cxt81 /gtot,fbulk(k0),gtot1,fbulk1(k0)
 
       integer iopt
       logical lopt
@@ -2925,8 +2928,8 @@ c----------------------------------------------------------------
       double precision props,psys,psys1,pgeo,pgeo1
       common/ cxt22 /props(i8,k5),psys(i8),psys1(i8),pgeo(i8),pgeo1(i8)
 
-      logical gflu,aflu,fluid,shear,lflu,volume
-      common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume
+      logical gflu,aflu,fluid,shear,lflu,volume,rxn
+      common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume,rxn
 
       integer jvar
       double precision var,dvr,vmn,vmx
@@ -2934,7 +2937,7 @@ c----------------------------------------------------------------
 
       integer kkp, np, ncpd, ntot
       double precision cp3, amt
-      common/ cxt15 /cp3(k5,k5),amt(k5),kkp(k5),np,ncpd,ntot
+      common/ cxt15 /cp3(k0,k5),amt(k5),kkp(k5),np,ncpd,ntot
 
       integer iprop,ivar,ind,ichem
       character*10 prname
@@ -2944,7 +2947,7 @@ c----------------------------------------------------------------
       common/ cst6  /icomp,istct,iphct,icp
 
       double precision pcomp
-      common/ cst324 /pcomp(k5,k5)
+      common/ cst324 /pcomp(k0,k5)
 
       double precision mu
       common/ cst330 /mu(k8)

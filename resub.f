@@ -826,7 +826,7 @@ c                                 compositions of stable adaptive
 c                                 coordinates (and solution ids).
       integer kkp, np, ncpd, ntot
       double precision cp3, amt
-      common/ cxt15 /cp3(k5,k5),amt(k5),kkp(k5),np,ncpd,ntot
+      common/ cxt15 /cp3(k0,k5),amt(k5),kkp(k5),np,ncpd,ntot
 c                                 options from perplex_option.dat
       integer iopt
       logical lopt
@@ -934,7 +934,7 @@ c                                 composition and model flags
 c                                 for final adaptive solution
       integer kkp,np,ncpd,ntot
       double precision cp3, amt
-      common/ cxt15 /cp3(k5,k5),amt(k5),kkp(k5),np,ncpd,ntot
+      common/ cxt15 /cp3(k0,k5),amt(k5),kkp(k5),np,ncpd,ntot
 c-----------------------------------------------------------------------
       solvs1 = .false.
 
@@ -1023,7 +1023,7 @@ c                                 composition and model flags
 c                                 for final adaptive solution
       integer kkp, np, ncpd, ntot
       double precision cp3, amt
-      common/ cxt15 /cp3(k5,k5),amt(k5),kkp(k5),np,ncpd,ntot
+      common/ cxt15 /cp3(k0,k5),amt(k5),kkp(k5),np,ncpd,ntot
 c                                  x-coordinates for the final solution
       double precision x3
       common/ cxt16 /x3(k21,mst,msp)
@@ -1687,7 +1687,7 @@ c                                 composition and model flags
 c                                 for final adaptive solution
       integer kkp, np, ncpd, ntot
       double precision cp3, amt
-      common/ cxt15 /cp3(k5,k5),amt(k5),kkp(k5),np,ncpd,ntot
+      common/ cxt15 /cp3(k0,k5),amt(k5),kkp(k5),np,ncpd,ntot
 c                                 x coordinate description
       integer istg, ispg, imlt, imdg
       common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
@@ -1828,7 +1828,7 @@ c                                 composition and model flags
 c                                 for final adaptive solution
       integer kkp, np, ncpd, ntot
       double precision cp3, amt
-      common/ cxt15 /cp3(k5,k5),amt(k5),kkp(k5),np,ncpd,ntot
+      common/ cxt15 /cp3(k0,k5),amt(k5),kkp(k5),np,ncpd,ntot
 c                                 x-coordinates for the final solution
       double precision x3
       common/ cxt16 /x3(k21,mst,msp)
@@ -1907,7 +1907,7 @@ c----------------------------------------------------------------------
 
       integer kkp, np, ncpd, ntot
       double precision cp3, amt
-      common/ cxt15 /cp3(k5,k5),amt(k5),kkp(k5),np,ncpd,ntot
+      common/ cxt15 /cp3(k0,k5),amt(k5),kkp(k5),np,ncpd,ntot
 
       integer npt,jdv
       logical fulrnk
@@ -3137,7 +3137,7 @@ c                                 compositions of stable adaptive
 c                                 coordinates (and solution ids).
       integer kkp, np, ncpd, ntot
       double precision cp3, amt
-      common/ cxt15 /cp3(k5,k5),amt(k5),kkp(k5),np,ncpd,ntot
+      common/ cxt15 /cp3(k0,k5),amt(k5),kkp(k5),np,ncpd,ntot
 
       integer npt,jdv
       logical fulrnk
@@ -3393,7 +3393,7 @@ c----------------------------------------------------------------------
 
       integer kkp, np, ncpd, ntot
       double precision cp3, amt
-      common/ cxt15 /cp3(k5,k5),amt(k5),kkp(k5),np,ncpd,ntot
+      common/ cxt15 /cp3(k0,k5),amt(k5),kkp(k5),np,ncpd,ntot
 
       save tictoc
       data tictoc/0/
@@ -3519,7 +3519,7 @@ c                                 compositions of stable adaptive
 c                                 coordinates (and solution ids).
       integer kkp,np,ncpd,ntot
       double precision cp3,amt
-      common/ cxt15 /cp3(k5,k5),amt(k5),kkp(k5),np,ncpd,ntot
+      common/ cxt15 /cp3(k0,k5),amt(k5),kkp(k5),np,ncpd,ntot
 c                                 options from perplex_option.dat
       integer iopt
       logical lopt

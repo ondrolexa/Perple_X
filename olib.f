@@ -21,7 +21,7 @@ c----------------------------------------------------------------------
       common/ csta4  /cname(k5) 
 
       double precision gtot,fbulk,gtot1,fbulk1
-      common/ cxt81 /gtot,fbulk(k5),gtot1,fbulk1(k5)
+      common/ cxt81 /gtot,fbulk(k0),gtot1,fbulk1(k0)
 
       double precision props,psys,psys1,pgeo,pgeo1
       common/ cxt22 /props(i8,k5),psys(i8),psys1(i8),pgeo(i8),pgeo1(i8)
@@ -33,7 +33,7 @@ c----------------------------------------------------------------------
 
       integer kkp, np, ncpd, ntot
       double precision cp3, amt
-      common/ cxt15 /cp3(k5,k5),amt(k5),kkp(k5),np,ncpd,ntot
+      common/ cxt15 /cp3(k0,k5),amt(k5),kkp(k5),np,ncpd,ntot
 
       integer jvar
       double precision var,dvr,vmn,vmx
@@ -45,8 +45,8 @@ c----------------------------------------------------------------------
       double precision atwt
       common/ cst45 /atwt(k0)
 
-      logical gflu,aflu,fluid,shear,lflu,volume
-      common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume
+      logical gflu,aflu,fluid,shear,lflu,volume,rxn
+      common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume,rxn
 
       integer jbulk
       double precision cblk
@@ -71,7 +71,7 @@ c----------------------------------------------------------------------
       common/ csta2  /xname(k5),vname(l2)
 
       double precision pcomp
-      common/ cst324 /pcomp(k5,k5)
+      common/ cst324 /pcomp(k0,k5)
 
       character pname*14
       common/ cxt21a /pname(k5)
@@ -318,7 +318,7 @@ c                                 composition and model flags
 c                                 for final adaptive solution
       integer kkp, np, ncpd, ntot
       double precision cp3, amt
-      common/ cxt15 /cp3(k5,k5),amt(k5),kkp(k5),np,ncpd,ntot
+      common/ cxt15 /cp3(k0,k5),amt(k5),kkp(k5),np,ncpd,ntot
 c                                 x coordinate description
       integer istg, ispg, imlt, imdg
       common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
@@ -339,14 +339,14 @@ c                                 bookkeeping variables
       integer ksmod, ksite, kmsol, knsp
       common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
 
-      logical gflu,aflu,fluid,shear,lflu,volume
-      common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume
+      logical gflu,aflu,fluid,shear,lflu,volume,rxn
+      common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume,rxn
 
       double precision bg
       common/ cxt19 /bg(k5,k2)
 
       double precision gtot,fbulk,gtot1,fbulk1
-      common/ cxt81 /gtot,fbulk(k5),gtot1,fbulk1(k5)
+      common/ cxt81 /gtot,fbulk(k0),gtot1,fbulk1(k0)
 
       integer iopt
       logical lopt
