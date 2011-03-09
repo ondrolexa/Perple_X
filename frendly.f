@@ -1897,28 +1897,31 @@ c                                 set special flag if O2
                idf(2) = iphct
                ifyn = 0
             end if
-         end if 
-
-         if (ifyn.eq.0) ipot = ipot + 1
+         end if     
 c                                 get activity coefficients:
-         if (exname(1).ne.cmpnt(idh2o).and.
-     *       exname(1).ne.cmpnt(idco2))then
+         if (ifyn.eq.0) then 
 
-            write (*,4070) exname(1)
-c                                 read icopt, default icopt = 2.
-            call rdnumb (act(iphct),1d0,icopt,0,.true.)
+           if (exname(1).eq.cmpnt(idh2o).or.
+     *         exname(1).eq.cmpnt(idco2)) then 
 
-         else
+              act(iphct) = 1d0
+              goto 40
 
-            act(iphct) = 1d0
+            end if 
 
          end if 
+
+         write (*,4070) exname(1)
+c                                 read icopt, default icopt = 2.
+         call rdnumb (act(iphct),1d0,icopt,0,.true.)
 c                               reaction coefficient:
-         vnu(iphct)= vvv
+40       vnu(iphct)= vvv
 c                               store the data 
          call loadit (iphct,.false.)
 
       end do 
+
+      if (ifyn.eq.0) ipot = ipot + 1
 c                                load the make dependencies               
       jphct = 21
 c                                read header
@@ -2239,7 +2242,7 @@ c----------------------------------------------------------------------
      *        /,'compressibility (1/bar) ',t32,'= ',g14.7)
 1020  format (/,'formula weight (g/mol) ',t32,'= ',g14.7,
      *        /,'density (kg/m3) ',t32,'= ',g14.7,/,
-     *        /,'Gruneisen T ',t32,'= ',f8.3,//,
+     *        /,'Gruneisen_T ',t32,'= ',f8.3,//,
      *        'Adiabtic elastic moduli:',/,
      *        t30,' T derivative',t45,' P derivative',/
      *        2x,'Ks(bar) = ',g14.7,t30,g14.7,t45,g14.7,/,
