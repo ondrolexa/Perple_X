@@ -307,7 +307,7 @@ c----------------------------------------------------------------------
  
       character y*1,n4name*100,title*100
 
-      integer i,j,ier,ic,ix, nprops
+      integer i,j,ier,ic,ix
 
       logical table
 
@@ -339,17 +339,15 @@ c----------------------------------------------------------------------
 
       save tags
 
-      data tags/'  g(J/mol)   ','  h(J/mol)   ','  log10_Keq  ' ,
-     *'  s(J/mol/K) ',' cp(J/mol/K) ','v(J/mol/bar) ',' alpha(1/K)  ',
-     *' beta(1/bar) ','  N(g/mol)   ',' rho(kg/m3)  ',' Gruneisen_T ',
-     *'   Ks(bar)   ',' Ks_T(bar/K) ','    Ks_P     ','   Gs(bar)   ',
-     *' Gs_T(bar/K) ','    Gs_P     ',
-     *'  v0(km/s)   ','v0_T(km/s/K) ','v0P(km/s/bar)',
-     *'  vp(km/s)   ','vp_T(km/s/K) ','vpP(km/s/bar)','  vs(km/s)   ',
-     *' vs_T(km/s/K)','vsP(km/s/bar)'/
+      data tags/      'g(J/mol)     ','h(J/mol)     ','log10_Keq    ',
+     *'s(J/mol/K)   ','cp(J/mol/K)  ','v(J/mol/bar) ','alpha(1/K )  ',
+     *'beta(1/bar)  ','N(g/mol)     ','rho(kg/m3)   ','Gruneisen_T  ',
+     *'Ks(bar)      ','Ks_T(bar/K)  ','Ks_P         ','Gs(bar)      ',
+     *'Gs_T(bar/K)  ','Gs_P         ',
+     *'v0(km/s)     ','v0_T(km/s/K) ','v0P(km/s/bar)',
+     *'vp(km/s)     ','vp_T(km/s/K) ','vpP(km/s/bar)','vs(km/s)     ',
+     *'vs_T(km/s/K) ','vsP(km/s/bar)'/
 c----------------------------------------------------------------------
-
-      nprops = 9 
  
       do i = 1, l2
          iv(i) = i
@@ -543,7 +541,7 @@ c                                 write file headers
       if (table) then 
 c                                 terminal info on variables
          write (*,1090)
-         write (*,1040) (vname(iv(i)),i=1,jpot),tags
+         write (*,'(80(a14,1x))') (vname(iv(i)),i=1,jpot),tags
 
          write (n4,'(a)') title
          write (n4,*) jpot
@@ -556,7 +554,7 @@ c                                 terminal info on variables
             write (n4,*) inc(iv(i))
          end do 
 
-         write (n4,1040) (vname(iv(i)),i=1,jpot),tags
+         write (n4,'(80(a14,1x))') (vname(iv(i)),i=1,jpot),tags
 
       else if (io4.eq.0) then 
 
@@ -566,7 +564,7 @@ c                                 terminal info on variables
          write (n4,'(a)') title,' ',' ',' '
          write (n4,*) ipot,(iv(i),i=1,ipot),1,2
          write (n4,'(a)') '0 0 0 0. 0. 0. 0. 0.'
-         write (n4,1030) (vmax(iv(i)),vmin(iv(i)),i=1,ipot)
+         write (n4,'(6(g11.5,1x))') (vmax(iv(i)),vmin(iv(i)),i=1,ipot)
          write (n4,'(a)') (vname(iv(i)),i=1,ipot)
 
       end if 
@@ -574,8 +572,6 @@ c                                 terminal info on variables
 1000  format ('Enter minimum, maximum, and increment for 'a,':')
 1010  format (/,'Make the table also a function of ',a,' (y/n)?')
 1020  format (/,'Generate a plot file (y/n)?')
-1030  format (6(g11.5,1x))
-1040  format (80(a14,1x))
 1060  format (/,'Enter number of sections:')
 1070  format (/,'Enter calculation title:')
 1080  format (/,'Enter a plot/table file name [without the ',

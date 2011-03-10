@@ -3240,11 +3240,14 @@ c                                 make plot file
          call mertxt (tfname,prject,num,0)
 
          if (lop.eq.25.or.lop.eq.36.or.lop.eq.38) then 
+
             call mertxt (n5name,tfname,'.tab',0)
 c                                 n6 is only opened for 1d calculations
 c                                 with lop=25.
             call mertxt (n6name,tfname,'.plt',0) 
+
          else
+
             if (dim.eq.0) then 
                call mertxt (n5name,tfname,'.txt',0)
             else if (dim.eq.1) then 
@@ -3252,6 +3255,7 @@ c                                 with lop=25.
             else
                call mertxt (n5name,tfname,'.ctr',0)
             end if 
+
          end if 
            
          open (n, file=n5name, status='new', iostat=ier)

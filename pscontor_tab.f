@@ -8,7 +8,7 @@
 
       logical ratio
  
-      character yes*1
+      character y*1
 
       character*100 prject,tfname
       common/ cst228 /prject,tfname
@@ -20,9 +20,9 @@ c                                 version info
       call vrsion
 
       write (*,1020) 
-      read (*,'(a)') yes
+      read (*,'(a)') y
 
-      if (yes.ne.'Y'.and.yes.ne.'y') then
+      if (y.ne.'Y'.and.y.ne.'y') then
 
          ratio = .false.
 c                                 simple plot 
@@ -39,9 +39,9 @@ c                                 extract the root
             if (ier.ne.0) then
        
                write (*,1010) tfname
-               read (*,'(a)') yes
+               read (*,'(a)') y
 
-               if (yes.eq.'Y'.or.yes.eq.'y') cycle 
+               if (y.eq.'Y'.or.y.eq.'y') cycle 
 
                stop
 
@@ -68,16 +68,23 @@ c                                 get input file
                read (*,'(a)') tfname
 
                if (i.eq.1) then 
+
                   open (n4,iostat=ier,file=tfname,status='old')
+
+                  call getrt
+
                else
-                  open (n4,iostat=ier,file=tfname,status='old')          
+
+                  open (n5,iostat=ier,file=tfname,status='old')
+
                end if 
+
                if (ier.ne.0) then
        
                   write (*,1010) tfname
-                  read (*,'(a)') yes
+                  read (*,'(a)') y
 
-                  if (yes.eq.'Y'.or.yes.eq.'y') cycle 
+                  if (y.eq.'Y'.or.y.eq.'y') cycle 
 
                   stop
 
@@ -97,9 +104,11 @@ c                                 open output file
       call psopen
 c                                 allow drafting options prompt
       iop0 = 0
+
       write (*,1030) 
-      read (*,'(a)') yes
-      if (yes.eq.'y'.or.yes.eq.'Y') iop0 = 1
+      read (*,'(a)') y
+
+      if (y.eq.'y'.or.y.eq.'Y') iop0 = 1
 
       call psxypl (ratio)
  
@@ -107,12 +116,12 @@ c                                 allow drafting options prompt
  
       close (n4)
  
-1000  format (/,'Enter the complete plot file name [e.g.,',
+1000  format (/,'Enter the complete plot file name [e.g., ',
      *       'my_project.tab or my_project.ctr]:')
 1010  format (/,'**warning ver191** cannot find file:',/,a,/,
-     *       'run WERAMI to generate the ',
+     *       'run WERAMI/FRENDLY to generate the ',
      *       'file or try a different name (y/n)?')
-1020  format (/,'Contour the ratio of the values in two contour plot',
+1020  format (/,'Contour the ratio of values in two contour plot ',
      *       'files (y/n)?')
 1030  format (/,'Modify the default plot (y/n)?')
 1040  format (/,'Enter the full name of the plot file name that ',
@@ -132,9 +141,9 @@ c psxypl - subroutine to output x-y plot.
 
       logical ratio
 
-      character y*1, fname*162
+      character y*1
 
-      integer i,j,iox,ioy,jmn,imn,imx,jop0,ncon,jmx,iop1,jy,jx
+      integer i,j,jmn,imn,imx,jop0,ncon,jmx,iop1,jy,jx
 
       double precision dx,dy,xpmn,xpmx,cmin,cmax,dcon,ypmx,ypmn,
      *                 z0min,z0max
@@ -159,89 +168,76 @@ c psxypl - subroutine to output x-y plot.
       double precision xmin,xmax,ymin,ymax,dcx,dcy,xlen,ylen
       common/ wsize /xmin,xmax,ymin,ymax,dcx,dcy,xlen,ylen
 c----------------------------------------------------------------------
-      read (n4,'(a)') fname
-      read (n4,*) ix,iy,xmin,ymin,dx,dy
-      read (n4,'(10a)') (vnm(i),i=1,2)
-      if (ix.gt.nx) call error (1,dx,nx,'NX, PSXYPL')
-      if (iy.gt.ny) call error (1,dx,ny,'NY, PSXYPL')
+      call redtab (n4)
 
       if (ratio) then 
-         read (n4,'(10a)') (vnm(i),i=1,2)
-         read (n5,'(a)') fname
-         read (n5,*) jx,jy,xmin,ymin,dx,dy
-         read (n5,'(10a)') (vnm(i),i=1,2)
+
+         jx = ix
+         jy = jy 
+         do i = 1, ix
+            do j = 1, iy
+               zt(i,j) = z(i,j)
+            end do
+         end do 
+
+         call redtab (n5)
+
          if (jx.ne.ix.or.jy.ne.iy) then 
             write (*,'(a)') 'the contour plots do not have the same ',
      *                      'dimensions'
             stop
          end if 
-      end if 
 
-      read (n4,*) ((z(i,j), i = 1, ix), j = 1, iy)
-
-      if (ratio) then 
-         read (n5,*) ((zt(i,j), i = 1, ix), j = 1, iy)
-         do i = 1, nx
-            do j = 1, ny
-               z(i,j) = z(i,j)/zt(i,j)
+         do i = 1, ix
+            do j = 1, iy
+               z(i,j) = zt(i,j)/z(i,j)
             end do
          end do
+
       end if 
 
       if (iop0.eq.1) then 
+
          write (*,1050) 
          read (*,'(a)') y
-         if (y.eq.'y') then 
-            do j = 1, ny
-               do i = 1, nx
+
+         if (y.eq.'y'.or.y.eq.'Y') then 
+            do j = 1, iy
+               do i = 1, ix
                   if (z(i,j).ne.0d0) z(i,j) = dlog10(dabs(z(i,j)))
                end do 
             end do  
          end if 
-      end if 
 
-      ypmn = ymin
-      xpmn = xmin
-      ypmx = ymin + (iy-1)*dy
-      xpmx = xmin + (ix-1)*dx    
-      ymax = ypmx
-      xmax = xpmx     
+      end if 
 
       write (*,1060) 
       read (*,'(a)') y
-      if (y.eq.'y') then 
-         write (*,1070) ypmx,ypmn,xpmx,xpmn
+
+      if (y.eq.'y'.or.y.eq.'Y') then 
+
+         write (*,1070) vmx(2),vmn(2),vmx(1),vmn(1)
          read (*,*) ypmx,ypmn,xpmx,xpmn
-      end if 
+           
+         imn = int(xpmn/dvr(1)) + 1
+         imx = int(xpmx/dvr(1)) + 1
+         jmn = int(ypmn/dvr(2)) + 1
+         jmx = int(ypmx/dvr(2)) + 1
 
-      iox = ix
-      ioy = iy
-
-      if (y.eq.'y') then 
-         jmn = int(ypmn/dy) + 1
-         jmx = int(ypmx/dy) + 1
-         imn = int(xpmn/dx) + 1
-         imx = int(xpmx/dx) + 1
-         iy = (jmx-jmn+1)
          ix = (imx-imn+1)
-         ymax = ypmn + (iy-1)*dy
-         ymin = ypmn 
-         xmin = xpmn
-         xmax = xpmn + (ix-1)*dx
-      end if 
+         iy = (jmx-jmn+1)
+         vmx(1) = xpmn + (ix-1)*dvr(1)
+         vmx(2) = ypmn + (iy-1)*dvr(2)
+         vmn(1) = xpmn
+         vmn(2) = ypmn 
 c                                      reload mini matrix:
-      if (y.eq.'y') then
          do i = 1, ix
             do j = 1, iy
                z(i,j) = z(i+imn-1,j+jmn-1)
             end do
          end do
-      end if 
 
-      vmn(1) = xmin
-      vmn(2) = ymin
-      vmx(1) = xmax
-      vmx(2) = ymax
+      end if 
 c                                 get some options and
 c                                 set up transformations
       call psaxop (1,jop0,iop1)
@@ -263,15 +259,19 @@ c                                      set up contour intervals
       write (*,1020) zmin, zmax, z0min, z0max 
       read (*,'(a)') y
 
-      if (y.eq.'y') then
+      if (y.eq.'y'.or.y.eq.'Y') then
+
          write (*,1030) 
          read (*,*) cmin, cmax, dcon
          ncon = int((cmax-cmin)/dcon) + 1
+
       else 
+
          dcon = (zmax-zmin)/11.
          cmax = zmax - 0.5d0 * dcon
          cmin = zmin + 0.5d0 * dcon
          ncon = 11
+
       end if 
 
       call pscontor (cmin,ncon,dcon)

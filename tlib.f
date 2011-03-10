@@ -3918,7 +3918,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
  
-      integer kscan, i, iscnlt
+      integer kscan, i
 
       character*100 prject,tfname
       common/ cst228 /prject,tfname
@@ -3929,11 +3929,12 @@ c----------------------------------------------------------------------
 c----------------------------------------------------------------------
       read (tfname,'(100a)') (chars(i),i=1,100)
 c                                 find end of name ' '
-      length = iscnlt (100,1,' ') 
+      length = kscan (1,100,' ') - 1
 c                                 look for dot character
-      icom = kscan (1,length,'.')
-      if (icom.gt.length) icom = length
-c
+      icom = kscan (length,1,'.') - 1
+
+      if (icom.le.0) icom = length
+
       write (prject,'(100a)') (chars(i),i=1,icom)
 
       end

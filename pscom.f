@@ -18,6 +18,7 @@
 c psytic - subroutine to draw y-axis ticks.
 
       y = y0 
+
       call psmove (x0,y0)
 
       if (.not.half.and..not.tenth) then 
@@ -725,11 +726,9 @@ c----------------------------------------------------------------------
 
       end 
 
-      subroutine rdhead (lun)
+      subroutine redtab (lun)
 c----------------------------------------------------------------------
-c rdhead - reads the header info from a Perple_X tab format file
-c that has been opened on logical unit number lun.
-
+c redtab - reads a Perple_X tab format file from logical unit number lun.
 c see www.perplex.ethz.ch/faq/Perple_X_6.6.6_tab_file_format.txt
 c for details of the format.
 c----------------------------------------------------------------------
@@ -755,13 +754,8 @@ c----------------------------------------------------------------------
       integer ix,iy
       double precision z,zt 
       common/ dim   /z(nx,ny),zt(nx,ny),ix,iy
-
-      double precision zmin,zmax
-      common/ stuff /zmax,zmin
 c----------------------------------------------------------------------
       ratio = .false.
-      zmax = -1d99
-      zmin = 1d99
 
       read (lun,'(1x,a)') tag
 
@@ -773,12 +767,14 @@ c                                 text title
       read (lun,'(a)') title
 c                                 number of independent variables
       read (lun,*) jvar
+
       if (jvar.ne.2) then 
          write (*,1010) jvar
          stop
       end if 
 c                                 number of dependent variables
       read (lun,*) mvar
+
       if (mvar.gt.i11) then
          write (*,1020) mvar,i11
          stop
@@ -802,8 +798,11 @@ c                                 read names of dependent properties
 c                                 read data 
       if (jvar.eq.2) then 
 
-         if (inc(1).gt.nx) call error (1,dvr(1),nx,'NX, PSXYPL')
-         if (inc(2).gt.ny) call error (1,dvr(2),ny,'NY, PSXYPL')
+         ix = inc(1)
+         iy = inc(2)
+
+         if (ix.gt.nx) call error (1,dvr(1),nx,'NX, PSXYPL')
+         if (iy.gt.ny) call error (1,dvr(2),ny,'NY, PSXYPL')
 
          if (mvar.gt.1) then
 c                                 get dependent variable choice, single 
@@ -870,22 +869,16 @@ c                                 variable or ratio
 
          end if      
 c                                 read the data 
-         do i = 1, inc(1)
+         do i = 1, ix
 
-            do j = 1, inc(2)
+            do j = 1, iy
 
-               read (*,*) (row(k),k=1,mvar)
+               read (lun,*) (row(k),k=1,mvar)
 
                if (ratio) then 
                   z(i,j) = row(dvar)/row(dvar1)
                else 
                   z(i,j) = row(dvar)
-               end if 
-
-               if (z(i,j).gt.zmax) then 
-                  zmax = z(i,j)
-               else if (z(i,j).lt.zmin) then
-                  zmin = z(i,j)
                end if 
 
             end do 
@@ -898,8 +891,7 @@ c                                 read the data
      *       ,'data file is inconsistent',/,'with this version of '
      *       ,'Perple_X, update from www.perplex.ethz.ch or modify the',
      *      /,'file format to be consistent with the description at:',/,
-     *     'www.perplex.ethz.ch/faq/Perple_X_6.6.6_tab_file_format.txt',
-     *        /)
+     *   'www.perplex.ethz.ch/faq/Perple_X_6.6.6_tab_file_format.txt',/)
 1010  format (/,'**error ver667** the data table is a function of ',i2,
      *       ' independent variables',/,'Perple_X plotting programs ',
      *       'cannot plot tables as a function of 2 variables.',/)
@@ -907,8 +899,8 @@ c                                 read the data
      *       ' increase dimension i11 (',i3,')',/,
      *       'and recompile Perple_X',/)
 1030  format (/,'Plot the ratio of two dependent variables (Y/N)?')
-1040  format (/,'Choose the ',a,' variable:')
-1050  format (2x,i2,' - ',a)
+1040  format (/,'Choose the ',a,' variable:',/)
+1050  format (10x,i2,' - ',a)
 1060  format (/,'Choose the dependent variable to be plotted:')
 
       end 
