@@ -433,7 +433,7 @@ c psaxes - subroutine to output (sloppy) axes.
 
       integer jvar
       double precision var,dvr,vmn,vmx
-      common/ cxt18 /var(l3),dvr(2),vmn(l3),vmx(l3),jvar
+      common/ cxt18 /var(l3),dvr(l3),vmn(l3),vmx(l3),jvar
 
       character vnm*8
       common/ cxt18a /vnm(l3)   
@@ -543,7 +543,7 @@ c psaxop - subroutine to make graphics transformation and get some options
 
       integer jvar
       double precision var,dvr,vmn,vmx
-      common/ cxt18 /var(l3),dvr(2),vmn(l3),vmx(l3),jvar
+      common/ cxt18 /var(l3),dvr(l3),vmn(l3),vmx(l3),jvar
 
       character vnm*8
       common/ cxt18a /vnm(l3)  
@@ -722,6 +722,194 @@ c----------------------------------------------------------------------
       end if 
 
 1010  format (/,'No such file as:',/,a,/,'Try again (y/n)?',/)
+
+      end 
+
+      subroutine rdhead (lun)
+c----------------------------------------------------------------------
+c rdhead - reads the header info from a Perple_X tab format file
+c that has been opened on logical unit number lun.
+
+c see www.perplex.ethz.ch/faq/Perple_X_6.6.6_tab_file_format.txt
+c for details of the format.
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      logical ratio 
+
+      integer i, j, k, dvar, dvar1, mvar, ier, lun, inc(l3)
+
+      character tag*5, y, title*162, dname(i11)*14
+
+      double precision row(i11)
+
+      integer jvar
+      double precision var,dvr,vmn,vmx
+      common/ cxt18 /var(l3),dvr(l3),vmn(l3),vmx(l3),jvar
+
+      character vnm*8
+      common/ cxt18a /vnm(l3)  
+
+      integer ix,iy
+      double precision z,zt 
+      common/ dim   /z(nx,ny),zt(nx,ny),ix,iy
+
+      double precision zmin,zmax
+      common/ stuff /zmax,zmin
+c----------------------------------------------------------------------
+      ratio = .false.
+      zmax = -1d99
+      zmin = 1d99
+
+      read (lun,'(1x,a)') tag
+
+      if (tag.ne.'6.6.6') then
+         write (*,1000) tag
+         stop
+      end if 
+c                                 text title
+      read (lun,'(a)') title
+c                                 number of independent variables
+      read (lun,*) jvar
+      if (jvar.ne.2) then 
+         write (*,1010) jvar
+         stop
+      end if 
+c                                 number of dependent variables
+      read (lun,*) mvar
+      if (mvar.gt.i11) then
+         write (*,1020) mvar,i11
+         stop
+      end if 
+c                                 for each independent variable
+      do i = 1, jvar
+c                                 name
+         read (lun,*) vnm(i)
+c                                 minumum value 
+         read (lun,*) vmn(i)
+c                                 increment vlaue
+         read (lun,*) dvr(i)
+c                                 number of values
+         read (lun,*) inc(i)
+
+         vmx(i) = vmn(i) + (inc(i)-1)*dvr(i)
+
+      end do 
+c                                 read names of dependent properties
+      read (lun,'(80(a14,1x))') (dname(i),i=1,mvar)
+c                                 read data 
+      if (jvar.eq.2) then 
+
+         if (inc(1).gt.nx) call error (1,dvr(1),nx,'NX, PSXYPL')
+         if (inc(2).gt.ny) call error (1,dvr(2),ny,'NY, PSXYPL')
+
+         if (mvar.gt.1) then
+c                                 get dependent variable choice, single 
+c                                 variable or ratio
+            write (*,1030) 
+            read (*,'(a)') y
+
+            if (y.eq.'Y'.or.y.eq.'y') then
+
+               ratio = .true.
+
+               do 
+
+                  write (*,1040) 'numerator'
+                  write (*,1050) (i,dname(i),i=1,mvar)
+                  read (*,*,iostat=ier) dvar 
+
+                  if (ier.ne.0.or.dvar.lt.1.or.dvar.gt.mvar) then 
+                     call rerr
+                     cycle
+                  end if 
+
+                  exit 
+
+               end do 
+              
+               do 
+
+                  write (*,1040) 'denominator'
+                  write (*,1050) (i,dname(i),i=1,mvar)
+                  read (*,*,iostat=ier) dvar1 
+
+                  if (ier.ne.0.or.dvar.lt.1.or.dvar.gt.mvar) then 
+                     call rerr
+                     cycle
+                  end if 
+
+                  exit 
+
+               end do 
+
+            else 
+
+               do 
+
+                  write (*,1060) 
+                  write (*,1050) (i,dname(i),i=1,mvar)
+                  read (*,*,iostat=ier) dvar
+ 
+                  if (ier.ne.0.or.dvar.lt.1.or.dvar.gt.mvar) then 
+                     call rerr
+                     cycle
+                  end if 
+
+                  exit 
+
+               end do 
+
+            end if 
+
+         else 
+
+            dvar = 1
+
+         end if      
+c                                 read the data 
+         do i = 1, inc(1)
+
+            do j = 1, inc(2)
+
+               read (*,*) (row(k),k=1,mvar)
+
+               if (ratio) then 
+                  z(i,j) = row(dvar)/row(dvar1)
+               else 
+                  z(i,j) = row(dvar)
+               end if 
+
+               if (z(i,j).gt.zmax) then 
+                  zmax = z(i,j)
+               else if (z(i,j).lt.zmin) then
+                  zmin = z(i,j)
+               end if 
+
+            end do 
+
+         end do 
+
+      end if      
+
+1000  format (/,'**error ver666** the version tag (',a,') in the input '
+     *       ,'data file is inconsistent',/,'with this version of '
+     *       ,'Perple_X, update from www.perplex.ethz.ch or modify the',
+     *      /,'file format to be consistent with the description at:',/,
+     *     'www.perplex.ethz.ch/faq/Perple_X_6.6.6_tab_file_format.txt',
+     *        /)
+1010  format (/,'**error ver667** the data table is a function of ',i2,
+     *       ' independent variables',/,'Perple_X plotting programs ',
+     *       'cannot plot tables as a function of 2 variables.',/)
+1020  format (/,'**error ver668** too many dependent variables ',i3,
+     *       ' increase dimension i11 (',i3,')',/,
+     *       'and recompile Perple_X',/)
+1030  format (/,'Plot the ratio of two dependent variables (Y/N)?')
+1040  format (/,'Choose the ',a,' variable:')
+1050  format (2x,i2,' - ',a)
+1060  format (/,'Choose the dependent variable to be plotted:')
 
       end 
 

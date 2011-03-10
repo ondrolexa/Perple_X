@@ -18,7 +18,7 @@ c----------------------------------------------------------------------
 
       write (*,1000) 
 
-1000  format (/,'Perple_X version 6.6.5.8, compiled 3/9/2011.')
+1000  format (/,'Perple_X version 6.6.5.8, compiled 3/10/2011.')
 
       end
 
@@ -3908,6 +3908,34 @@ c                                 look for illegal " " character
 1040  format (/,'the path specified in your project name is invalid,',
      *          ' check that all the ',/,
      *          'directories in the path exist, try again.',/)
+      end
+
+      subroutine getrt
+c----------------------------------------------------------------------
+c getrt - extracts root file name from the full file name in tfname
+c----------------------------------------------------------------------    
+      implicit none
+
+      include 'perplex_parameters.h'
+ 
+      integer kscan, i, iscnlt
+
+      character*100 prject,tfname
+      common/ cst228 /prject,tfname
+
+      integer length,iblank,icom
+      character chars*1
+      common/ cst51 /length,iblank,icom,chars(240)
+c----------------------------------------------------------------------
+      read (tfname,'(100a)') (chars(i),i=1,100)
+c                                 find end of name ' '
+      length = iscnlt (100,1,' ') 
+c                                 look for dot character
+      icom = kscan (1,length,'.')
+      if (icom.gt.length) icom = length
+c
+      write (prject,'(100a)') (chars(i),i=1,icom)
+
       end
 
       subroutine fopen2 (iam,name)

@@ -30,9 +30,9 @@ c                                 simple plot
 c                                 get input file 
             write (*,1000) 
           
-            call readrt
-
-            call mertxt (tfname,prject,'.ctr',0)
+            read (*,'(a)') tfname
+c                                 extract the root
+            call getrt
          
             open (n4,iostat=ier,file=tfname,status='old')
 
@@ -60,15 +60,13 @@ c                                 ratio plot
             do 
 c                                 get input file 
                if (i.eq.1) then 
-                  write (*,1040) 
+                  write (*,1040) 'numerator'
                else
-                  write (*,1050)          
+                  write (*,1040) 'denominator'         
                end if 
           
-               call readrt
+               read (*,'(a)') tfname
 
-               call mertxt (tfname,prject,'.ctr',0)
-         
                if (i.eq.1) then 
                   open (n4,iostat=ier,file=tfname,status='old')
                else
@@ -109,18 +107,17 @@ c                                 allow drafting options prompt
  
       close (n4)
  
-1000  format (/,'Enter the CONTOUR plot file name [',
-     *       'without the .ctr suffix]:')
+1000  format (/,'Enter the complete plot file name [e.g.,',
+     *       'my_project.tab or my_project.ctr]:')
 1010  format (/,'**warning ver191** cannot find file:',/,a,/,
      *       'run WERAMI to generate the ',
      *       'file or try a different name (y/n)?')
 1020  format (/,'Contour the ratio of the values in two contour plot',
      *       'files (y/n)?')
 1030  format (/,'Modify the default plot (y/n)?')
-1040  format (/,'Enter the numerator CONTOUR plot file name [',
-     *       'without the .ctr suffix]:')
-1050  format (/,'Enter the denominator CONTOUR plot file name [',
-     *       'without the .ctr suffix]:')
+1040  format (/,'Enter the full name of the plot file name that ',
+     *          'contains the ',a,' data',/,
+     *          '[e.g., my_project1.tab or my_project1.ctr]:')
 
       end
 
@@ -137,7 +134,7 @@ c psxypl - subroutine to output x-y plot.
 
       character y*1, fname*162
 
-      integer nx,ny,i,j,iox,ioy,jmn,imn,imx,jop0,ncon,jmx,iop1,jy,jx
+      integer i,j,iox,ioy,jmn,imn,imx,jop0,ncon,jmx,iop1,jy,jx
 
       double precision dx,dy,xpmn,xpmx,cmin,cmax,dcon,ypmx,ypmn,
      *                 z0min,z0max

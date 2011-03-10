@@ -83,7 +83,7 @@
       parameter (k9=30,k10=240,k12=15,k13=i0*k1,k14=18,k15=3,k16=30)
       parameter (k17=7,k18=29*k1)
       parameter (k19=2*k5+14,k21=1000000,k20=i0*k21,k22=i0*k19,k23=5)
-      parameter (k24=1024000)  
+      parameter (k24=1)  
 !                                 l2 - max number of independent potential variables
 !                                 l3 - max number of variables for gridded min and graphics (l2+2)
 !                                 l5 - max number of coordinates along a univariant curve                

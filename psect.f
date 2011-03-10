@@ -376,7 +376,7 @@ c----------------------------------------------------------------------
 
       integer jvar
       double precision var,dvr,vmn,vmx
-      common/ cxt18 /var(l3),dvr(2),vmn(l3),vmx(l3),jvar
+      common/ cxt18 /var(l3),dvr(l3),vmn(l3),vmx(l3),jvar
 
       integer idasls,iavar,iasct,ias
       common/ cst75  /idasls(k5,k3),iavar(3,k3),iasct,ias
@@ -925,7 +925,7 @@ c psgrd1 - subprogram draw 1d gridded minimization diagrams.
 
       integer jvar
       double precision var,dvr,vmn,vmx
-      common/ cxt18 /var(l3),dvr(2),vmn(l3),vmx(l3),jvar
+      common/ cxt18 /var(l3),dvr(l3),vmn(l3),vmx(l3),jvar
 
       integer idasls,iavar,iasct,ias
       common/ cst75  /idasls(k5,k3),iavar(3,k3),iasct,ias
@@ -1069,7 +1069,7 @@ c psax1d - subroutine to output (sloppy) 1d axes.
 
       integer jvar
       double precision var,dvr,vmn,vmx
-      common/ cxt18 /var(l3),dvr(2),vmn(l3),vmx(l3),jvar
+      common/ cxt18 /var(l3),dvr(l3),vmn(l3),vmx(l3),jvar
 
       character vnm*8
       common/ cxt18a /vnm(l3)   
@@ -1163,7 +1163,7 @@ c gety - get coordinates for 1d grid node volume
 
       integer jvar
       double precision var,dvr,vmn,vmx
-      common/ cxt18 /var(l3),dvr(2),vmn(l3),vmx(l3),jvar
+      common/ cxt18 /var(l3),dvr(l3),vmn(l3),vmx(l3),jvar
 
       integer jlow,jlev,loopx,loopy,jinc
       common/ cst312 /jlow,jlev,loopx,loopy,jinc
@@ -1210,7 +1210,7 @@ c getxy - get coordinates for grid node volume
 
       integer jvar
       double precision var,dvr,vmn,vmx
-      common/ cxt18 /var(l3),dvr(2),vmn(l3),vmx(l3),jvar
+      common/ cxt18 /var(l3),dvr(l3),vmn(l3),vmx(l3),jvar
 
       integer jlow,jlev,loopx,loopy,jinc
       common/ cst312 /jlow,jlev,loopx,loopy,jinc

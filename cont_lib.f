@@ -12,13 +12,14 @@ C          point.
 C----------------------------------------------------------------
       implicit none
 
-      integer nseg,npts,npcs,mcon,nx,ny,i,np,j,ipts,istart,k,
+      include 'perplex_parameters.h'
+
+      integer nseg,npts,npcs,mcon,i,np,j,ipts,istart,k,
      *         ncon,ipiece,iswit,iout
 
       double precision rline,cmin,dcon,thick
 
       parameter (nseg=100000,npts=250000,npcs=100000,mcon=50)
-      parameter (nx=500,ny=500)
 
       character kontor*80, yes*1
     
@@ -140,9 +141,9 @@ c       modified to use 4 data triangles, jadc 10-89
 c------------------------------------------------------------------------
       implicit none
 
-      integer nx,ny,ncon,npts,nseg,npcs
+      include 'perplex_parameters.h'
 
-      parameter (nx=500,ny=500)
+      integer ncon,npts,nseg,npcs
 
       logical iscon
   

@@ -156,7 +156,7 @@ c----------------------------------------------------------------------
 
       integer jvar
       double precision var,dvr,vmn,vmx
-      common/ cxt18 /var(l3),dvr(2),vmn(l3),vmx(l3),jvar
+      common/ cxt18 /var(l3),dvr(l3),vmn(l3),vmx(l3),jvar
 
       integer iprop,ivar,ind,ichem
       character*10 prname
@@ -361,7 +361,7 @@ c----------------------------------------------------------------------
 
       integer jvar
       double precision var,dvr,vmn,vmx
-      common/ cxt18 /var(l3),dvr(2),vmn(l3),vmx(l3),jvar
+      common/ cxt18 /var(l3),dvr(l3),vmn(l3),vmx(l3),jvar
 c----------------------------------------------------------------------
 c                                 find node associated with condition
       res = var(1)-vmn(1)
@@ -400,7 +400,7 @@ c----------------------------------------------------------------------
 
       integer jvar
       double precision var,dvr,vmn,vmx
-      common/ cxt18 /var(l3),dvr(2),vmn(l3),vmx(l3),jvar
+      common/ cxt18 /var(l3),dvr(l3),vmn(l3),vmx(l3),jvar
 c----------------------------------------------------------------------
 c                                 find node associated with condition
       res = (var(1)-vmn(1))/dvr(1) + 1d0
@@ -458,7 +458,7 @@ c---------------------------------------------------------------------
 
       integer jvar
       double precision var,dvr,vmn,vmx
-      common/ cxt18 /var(l3),dvr(2),vmn(l3),vmx(l3),jvar
+      common/ cxt18 /var(l3),dvr(l3),vmn(l3),vmx(l3),jvar
 
       integer iind, idep
       double precision c0,c1,c2,c3,c4,c5
@@ -531,7 +531,7 @@ c---------------------------------------------------------------------
 
       integer jvar
       double precision var,dvr,vmn,vmx
-      common/ cxt18 /var(l3),dvr(2),vmn(l3),vmx(l3),jvar
+      common/ cxt18 /var(l3),dvr(l3),vmn(l3),vmx(l3),jvar
 
       character vnm*8
       common/ cxt18a /vnm(l3) 
@@ -648,7 +648,7 @@ c----------------------------------------------------------------------
 
       integer jvar
       double precision var,dvr,vmn,vmx
-      common/ cxt18 /var(l3),dvr(2),vmn(l3),vmx(l3),jvar
+      common/ cxt18 /var(l3),dvr(l3),vmn(l3),vmx(l3),jvar
 
       integer iap,ibulk
       common/ cst74  /iap(k2),ibulk
@@ -980,7 +980,7 @@ c----------------------------------------------------------------------
 
       integer jvar
       double precision var,dvr,vmn,vmx
-      common/ cxt18 /var(l3),dvr(2),vmn(l3),vmx(l3),jvar
+      common/ cxt18 /var(l3),dvr(l3),vmn(l3),vmx(l3),jvar
 c----------------------------------------------------------------------
 c                                convert nodal coordinates to real
 c                                cordinates
@@ -1041,7 +1041,7 @@ c get distance from nodal point i,j to coordinate x-y
 
       integer jvar
       double precision var,dvr,vmn,vmx
-      common/ cxt18 /var(l3),dvr(2),vmn(l3),vmx(l3),jvar
+      common/ cxt18 /var(l3),dvr(l3),vmn(l3),vmx(l3),jvar
 c-----------------------------------------------------------------------
 c                                 find normalized distance 
       delx = (x - vmn(1))/dvr(1) - (i - 1)
@@ -1064,7 +1064,7 @@ c-----------------------------------------------------------------------
 
       integer jvar
       double precision var,dvr,vmn,vmx
-      common/ cxt18 /var(l3),dvr(2),vmn(l3),vmx(l3),jvar
+      common/ cxt18 /var(l3),dvr(l3),vmn(l3),vmx(l3),jvar
 
       integer iopt
       logical lopt
@@ -1793,7 +1793,7 @@ c----------------------------------------------------------------------
 
       integer jvar
       double precision var,dvr,vmn,vmx
-      common/ cxt18 /var(l3),dvr(2),vmn(l3),vmx(l3),jvar
+      common/ cxt18 /var(l3),dvr(l3),vmn(l3),vmx(l3),jvar
 
       character vnm*8
       common/ cxt18a /vnm(l3)  
@@ -2037,7 +2037,7 @@ c----------------------------------------------------------------------
 
       integer jvar
       double precision var,dvr,vmn,vmx
-      common/ cxt18 /var(l3),dvr(2),vmn(l3),vmx(l3),jvar
+      common/ cxt18 /var(l3),dvr(l3),vmn(l3),vmx(l3),jvar
 
       character vnm*8
       common/ cxt18a /vnm(l3)  
@@ -2203,7 +2203,7 @@ c----------------------------------------------------------------------
 
       integer jvar
       double precision var,dvr,vmn,vmx
-      common/ cxt18 /var(l3),dvr(2),vmn(l3),vmx(l3),jvar 
+      common/ cxt18 /var(l3),dvr(l3),vmn(l3),vmx(l3),jvar 
 
       logical oned
       common/ cst82 /oned
@@ -2564,7 +2564,7 @@ c----------------------------------------------------------------
 
       integer jvar
       double precision var,dvr,vmn,vmx
-      common/ cxt18 /var(l3),dvr(2),vmn(l3),vmx(l3),jvar
+      common/ cxt18 /var(l3),dvr(l3),vmn(l3),vmx(l3),jvar
 
       integer iprop,ivar,ind,ichem
       character*10 prname
@@ -2942,7 +2942,7 @@ c----------------------------------------------------------------
 
       integer jvar
       double precision var,dvr,vmn,vmx
-      common/ cxt18 /var(l3),dvr(2),vmn(l3),vmx(l3),jvar
+      common/ cxt18 /var(l3),dvr(l3),vmn(l3),vmx(l3),jvar
 
       integer kkp, np, ncpd, ntot
       double precision cp3, amt

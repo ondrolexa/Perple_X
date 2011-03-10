@@ -1466,7 +1466,7 @@ c---------------------------------------------------------------------
 
       integer jvar
       double precision var,dvr,vmn,vmx
-      common/ cxt18 /var(l3),dvr(2),vmn(l3),vmx(l3),jvar
+      common/ cxt18 /var(l3),dvr(l3),vmn(l3),vmx(l3),jvar
 
       integer icont
       double precision dblk,cx
@@ -1603,7 +1603,7 @@ c---------------------------------------------------------------------
 
       integer jvar
       double precision var,dvr,vmn,vmx
-      common/ cxt18 /var(l3),dvr(2),vmn(l3),vmx(l3),jvar
+      common/ cxt18 /var(l3),dvr(l3),vmn(l3),vmx(l3),jvar
 
       integer icont
       double precision dblk,cx

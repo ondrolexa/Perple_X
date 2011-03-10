@@ -110,15 +110,15 @@ c                                 calculating properties at arbitrary conditions
 c                                 tabulated properties
                call setplt (.true.)
 
-               do i = 1, inc(1)
+               do i = 1, inc(iv(1))
 
                   v(iv(1)) = vmin(iv(1)) + dfloat(i-1)*dv(iv(1))
 
-                  do j = 1, inc(2)
+                  do j = 1, inc(iv(2))
 
                      v(iv(2)) = vmin(iv(2)) + dfloat(j-1)*dv(iv(2))
 
-                     do k = 1, inc(3)
+                     do k = 1, inc(iv(3))
 
                         v(iv(3)) = vmin(iv(3)) + dfloat(k-1)*dv(iv(3))
 
@@ -341,7 +341,7 @@ c----------------------------------------------------------------------
 
       data tags/'  g(J/mol)   ','  h(J/mol)   ','  log10_Keq  ' ,
      *'  s(J/mol/K) ',' cp(J/mol/K) ','v(J/mol/bar) ',' alpha(1/K)  ',
-     *' beta(1/bar) ','  N(g/mol)   ',' rho(kg/m3)  ',' Gruneisen T ',
+     *' beta(1/bar) ','  N(g/mol)   ',' rho(kg/m3)  ',' Gruneisen_T ',
      *'   Ks(bar)   ',' Ks_T(bar/K) ','    Ks_P     ','   Gs(bar)   ',
      *' Gs_T(bar/K) ','    Gs_P     ',
      *'  v0(km/s)   ','v0_T(km/s/K) ','v0P(km/s/bar)',
@@ -359,10 +359,8 @@ c----------------------------------------------------------------------
          inc(i) = 1
       end do 
 
-      jpot = ipot
-c                                 saturated phase:
-      if (ifyn.eq.0) ipot = ipot + 1
- 
+      jpot = 2
+
       do 
 c                                 select the x variable (iv(1)):
          write (*,2130)
@@ -493,7 +491,10 @@ c                                 increments or counters:
       if (table) then
  
          do i = 1, jpot
-            inc(iv(i)) = dabs(vmax(iv(i))-vmin(iv(i)))/dv(iv(i)) + 1
+
+            inc(iv(i)) = idint(dabs(vmax(iv(i))-vmin(iv(i)))/dv(iv(i))) 
+     *                   + 1
+
          end do 
 
       else 
@@ -531,6 +532,8 @@ c                                 readrt loads the root into prject
          end if            
 
          open (n4,file=n4name)
+c                                 write version flag
+         write (n4,1100)
 c                                 query for title
          write (*,1070)
          read (*,'(a)') title
@@ -578,6 +581,7 @@ c                                 terminal info on variables
 1080  format (/,'Enter a plot/table file name [without the ',
      *          '.plt/.tab suffix]:')
 1090  format (/,'Table row entries will be:',/)
+1100  format ('|6.6.6')
 2130  format (/,'Select the first independent (x) variable:',/)
 2140  format (10x,i1,' - ',a)
 2150  format (/,'Enter minimum and maximum values for ',a,':')
@@ -1921,7 +1925,7 @@ c                               store the data
 
       end do 
 
-      if (ifyn.eq.0) ipot = ipot + 1
+      if (ifyn.eq.0) ipot = 3
 c                                load the make dependencies               
       jphct = 21
 c                                read header

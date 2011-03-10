@@ -37,7 +37,7 @@ c----------------------------------------------------------------------
 
       integer jvar
       double precision var,dvr,vmn,vmx
-      common/ cxt18 /var(l3),dvr(2),vmn(l3),vmx(l3),jvar
+      common/ cxt18 /var(l3),dvr(l3),vmn(l3),vmx(l3),jvar
 
       character vnm*8
       common/ cxt18a /vnm(l3)  
@@ -1122,8 +1122,6 @@ c                                 expand increment more if invalid v
       end if 
 c                                 in case the evaluating routine fails
 c                                 on both calls to ginc 
-      if (v.eq.0d0) v = 1d0
-
       s = (ginc(-dt0,0d0,id) - ginc(dt0,0d0,id))/dt0/2d0
 c                                 this crap is necessary because 
 c                                 optimization or my bad programming
@@ -1141,136 +1139,175 @@ c     write (*,*) s, ss, dg, ginc(-dt0,0d0,id) - ginc(dt0,0d0,id), dt0
 c                                 second order
       gtt = (ginc(dt1,0d0,id) + ginc(-dt1,0d0,id) - 2d0*g0)/dt1/dt1
       cp = -t*gtt
+
       if (cp.lt.0d0.or.dabs(cp).gt.1d9)  
 c                                 expand increment if invalid cp
      *   cp = -t*(ginc(dt2,0d0,id) + 
-     *               ginc(-dt2,0d0,id) - 2d0*g0)/dt2/dt2
+     *            ginc(-dt2,0d0,id) - 2d0*g0)/dt2/dt2
 
       if (cp.lt.0d0.or.dabs(cp).gt.1d9)  
 c                                 shrink increment if invalid cp
      *   cp = -t*(ginc(dt0,0d0,id) + 
-     *               ginc(-dt0,0d0,id) - 2d0*g0)/dt0/dt0
+     *            ginc(-dt0,0d0,id) - 2d0*g0)/dt0/dt0
+
+c                                 volumetric properties only if v is ok:
+      if (v.gt.0d0) then 
    
-      if (p-dp1.le.0d0) then 
+         if (p-dp1.le.0d0) then 
 c                                 use forward difference at small p's
-         beta = (ginc(0d0,2d0*dp1,id) + g0 - 2d0*ginc(0d0,dp1,id))
-     *          /dp1/dp1
-         if (dabs(beta).gt.v.or.beta.ge.0d0)
+            beta = (ginc(0d0,2d0*dp1,id) + g0 - 2d0*ginc(0d0,dp1,id))
+     *             /dp1/dp1
+            if (dabs(beta).gt.1d1*v/p.or.beta.ge.0d0)
 c                                 expand increment if invalid beta
-     *   beta = (ginc(0d0,2d0*dp2,id) + g0 - 2d0*ginc(0d0,dp2,id))
-     *          /dp2/dp2                                 
-         if (dabs(beta).gt.v.or.beta.ge.0d0)
+     *      beta = (ginc(0d0,2d0*dp2,id) + g0 - 2d0*ginc(0d0,dp2,id))
+     *             /dp2/dp2                                 
+            if (dabs(beta).gt.1d1*v/p.or.beta.ge.0d0)
 c                                 shrink increment if invalid beta
-     *   beta = (ginc(0d0,2d0*dp0,id) + g0 - 2d0*ginc(0d0,dp0,id))
-     *          /dp0/dp0   
+     *      beta = (ginc(0d0,2d0*dp0,id) + g0 - 2d0*ginc(0d0,dp0,id))
+     *             /dp0/dp0   
 
-         alpha = ( ginc( dt1,dp1,id) - ginc( dt1,0d0,id)
-     *            -ginc(-dt1,dp1,id) + ginc(-dt1,0d0,id))/dp1/dt1/2d0
-         if (dabs(alpha).gt.v.or.alpha.le.0d0)
+            alpha = ( ginc( dt1,dp1,id) - ginc( dt1,0d0,id)
+     *               -ginc(-dt1,dp1,id) + ginc(-dt1,0d0,id))/dp1/dt1/2d0
+            if (dabs(alpha).gt.1d1*r/p.or.alpha.le.0d0)
 c                                 expand increment if invalid alpha
-     *   alpha = ( ginc( dt2,dp2,id) - ginc( dt2,0d0,id)
-     *            -ginc(-dt2,dp2,id) + ginc(-dt2,0d0,id))/dp2/dt2/2d0
-         if (dabs(alpha).gt.v.or.alpha.le.0d0)
+     *      alpha = ( ginc( dt2,dp2,id) - ginc( dt2,0d0,id)
+     *               -ginc(-dt2,dp2,id) + ginc(-dt2,0d0,id))/dp2/dt2/2d0
+            if (dabs(alpha).gt.1d1*r/p.or.alpha.le.0d0)
 c                                 shrink increment if invalid alpha
-     *   alpha = ( ginc( dt0,dp0,id) - ginc( dt0,0d0,id)
-     *            -ginc(-dt0,dp0,id) + ginc(-dt0,0d0,id))/dp0/dt0/2d0
+     *      alpha = ( ginc( dt0,dp0,id) - ginc( dt0,0d0,id)
+     *               -ginc(-dt0,dp0,id) + ginc(-dt0,0d0,id))/dp0/dt0/2d0
 
-      else 
+         else
 
-         beta = (ginc(0d0,dp1,id) + ginc(0d0,-dp1,id) - 2d0*g0)/dp1/dp1
-         if (dabs(beta).gt.v.and.p-dp2.ge.0d0.or.beta.ge.0d0)
+            beta = (ginc(0d0,dp1,id) + ginc(0d0,-dp1,id) - 2d0*g0)
+     *             /dp1/dp1
+            if (dabs(beta).gt.1d1*v/p.and.p-dp2.ge.0d0.or.beta.ge.0d0)
 c                                 expand increment if invalid beta
-     *   beta = (ginc(0d0,dp2,id) + ginc(0d0,-dp2,id) - 2d0*g0)/dp2/dp2
+     *      beta = (ginc(0d0,dp2,id) + ginc(0d0,-dp2,id) - 2d0*g0)
+     *             /dp2/dp2
      
-     
-         if (dabs(beta).gt.v.or.beta.ge.0d0)
+            if (dabs(beta).gt.1d1*v/p.or.beta.ge.0d0)
 c                                 shrink increment if invalid beta
-     *   beta = (ginc(0d0,dp0,id) + ginc(0d0,-dp0,id) - 2d0*g0)/dp0/dp0
+     *         beta = (ginc(0d0,dp0,id) 
+     *               + ginc(0d0,-dp0,id) - 2d0*g0)/dp0/dp0
 
-         alpha = ( ginc( dt1,dp1,id) - ginc( dt1,-dp1,id)
+            alpha = ( ginc( dt1,dp1,id) - ginc( dt1,-dp1,id)
      *            -ginc(-dt1,dp1,id) + ginc(-dt1,-dp1,id))/dp1/dt1/4d0
-         if (dabs(alpha).gt.v.or.alpha.le.0d0) then 
+
+            if (dabs(alpha).gt.1d1*r/p.or.alpha.le.0d0) then 
 c                                 expand increment if invalid alpha
-            alpha1 = ( ginc( dt2,dp2,id) - ginc( dt2,-dp2,id)
-     *            -ginc(-dt2,dp2,id) + ginc(-dt2,-dp2,id))/dp2/dt2/4d0
-            if (dabs(alpha1).gt.v.or.alpha1.le.0d0) then
+               alpha1 = ( ginc( dt2,dp2,id) - ginc( dt2,-dp2,id)
+     *                  - ginc(-dt2,dp2,id) 
+     *                  + ginc(-dt2,-dp2,id))/dp2/dt2/4d0
+
+               if (dabs(alpha1).gt.1d1*r/p.or.alpha1.le.0d0) then
 c                                 shrink increment if invalid alpha
-               alpha2 = ( ginc( dt0,dp0,id) - ginc( dt0,-dp0,id)
-     *            -ginc(-dt0,dp0,id) + ginc(-dt0,-dp0,id))/dp0/dt2/4d0
-               if (dabs(alpha2).lt.v.and.alpha2.ge.0d0) then 
-                  alpha = alpha2
+                  alpha2 = ( ginc( dt0,dp0,id) - ginc( dt0,-dp0,id)
+     *                      -ginc(-dt0,dp0,id) + ginc(-dt0,-dp0,id))
+     *                     /dp0/dt2/4d0
+
+                  if (dabs(alpha2).lt.1d1*r/p.and.alpha2.ge.0d0) then 
+                     alpha = alpha2
+                  end if 
+
+               else 
+
+                  alpha = alpha1
+
                end if 
-            else 
-               alpha = alpha1
-            end if 
-         end if      
+            end if      
      
-      end if  
+         end if  
 c                                 third order derivatives, only need for
 c                                 derivatives of seismic props.
-      if (p-2d0*dp2.le.0d0) then 
+         if (p-2d0*dp2.le.0d0) then 
 
-         g1 = ginc(-dt2,0d0,id)
-         g2 = ginc( dt2,2d0*dp2,id)
-         g3 = ginc( dt2,0d0,id)
-         g4 = ginc(-dt2,2d0*dp2,id)
-         g5 = ginc(0d0,dp2,id)
-         g7 = g3 - g1
+            g1 = ginc(-dt2,0d0,id)
+            g2 = ginc( dt2,2d0*dp2,id)
+            g3 = ginc( dt2,0d0,id)
+            g4 = ginc(-dt2,2d0*dp2,id)
+            g5 = ginc(0d0,dp2,id)
+            g7 = g3 - g1
 
-         gppp = ((ginc(0d0,4d0*dp2,id) - g0)/2d0
-     *           - ginc(0d0,3d0*dp2,id) + g5)/dp2**3
-         gppt = (g2 + g3 + 2d0*(ginc(-dt2, dp2,id)-ginc(dt2,dp2,id))
-     *           -g4 - g1)/dp2/dp2/dt2/2d0
-         gptt = (g2 + g4  + 2d0*(g0 - ginc(0d0,2d0*dp2,id))
-     *           -g3 - g1)/2d0/dp2/dt2/dt2
+            gppp = ((ginc(0d0,4d0*dp2,id) - g0)/2d0
+     *              - ginc(0d0,3d0*dp2,id) + g5)/dp2**3
+            gppt = (g2 + g3 + 2d0*(ginc(-dt2, dp2,id)-ginc(dt2,dp2,id))
+     *              -g4 - g1)/dp2/dp2/dt2/2d0
+            gptt = (g2 + g4  + 2d0*(g0 - ginc(0d0,2d0*dp2,id))
+     *              -g3 - g1)/2d0/dp2/dt2/dt2
 
-      else 
+         else 
 
-         g1 = ginc(-dt2,-dp2,id) - ginc( dt2,dp2,id)
-         g3 = ginc( dt2,-dp2,id)
-         g4 = ginc(-dt2,dp2,id)
-         g5 = ginc(0d0,dp2,id) - ginc(0d0,-dp2,id)
-         g7 = ginc(-dt2,0d0,id) - ginc(dt2, 0d0,id)
-
-         gppp = ((ginc(0d0,2d0*dp2,id) - ginc(0d0,-2d0*dp2,id))/2d0 
-     *        - g5)/dp2**3
-         gppt = (g3 - g4 + 2d0*g7 - g1)/dp2/dp2/dt2/2d0
-         gptt = (g4 - g3 - 2d0*g5 - g1)/2d0/dp2/dt2/dt2
+            g1 = ginc(-dt2,-dp2,id) - ginc( dt2,dp2,id)
+            g3 = ginc( dt2,-dp2,id)
+            g4 = ginc(-dt2,dp2,id)
+            g5 = ginc(0d0,dp2,id) - ginc(0d0,-dp2,id)
+            g7 = ginc(-dt2,0d0,id) - ginc(dt2, 0d0,id)
+   
+            gppp = ((ginc(0d0,2d0*dp2,id) - ginc(0d0,-2d0*dp2,id))/2d0 
+     *           - g5)/dp2**3
+            gppt = (g3 - g4 + 2d0*g7 - g1)/dp2/dp2/dt2/2d0
+            gptt = (g4 - g3 - 2d0*g5 - g1)/2d0/dp2/dt2/dt2
  
-      end if 
+         end if 
 
-      gttt = ((ginc(dt2*2d0,0d0,id) - ginc(-dt2*2d0,0d0,id))/2d0 
-     *        + g7)/dt2**3
+         gttt = ((ginc(dt2*2d0,0d0,id) - ginc(-dt2*2d0,0d0,id))/2d0 
+     *           + g7)/dt2**3
 
-      g7 = (gtt*beta-alpha**2)**2
+         g7 = (gtt*beta-alpha**2)**2
 
-      if (g7.ne.0d0) then 
+         if (g7.ne.0d0) then 
 c                                 temperature derivative of the adiabatic bulk modulus:
-         props(18,jd) = (((v*gppt-alpha*beta)*gtt
-     *                   -(2d0*v*gptt-alpha**2)*alpha)*gtt
-     *                   +v*gttt*alpha**2)/g7
+            props(18,jd) = (((v*gppt-alpha*beta)*gtt
+     *                      -(2d0*v*gptt-alpha**2)*alpha)*gtt
+     *                      +v*gttt*alpha**2)/g7
 c                                 pressure derivative of the adiabatic bulk modulus:
-         props(20,jd) = (((v*gppp-beta**2)*gtt
+            props(20,jd) = (((v*gppp-beta**2)*gtt
      *                   +(alpha*beta-2d0*v*gppt)*alpha)*gtt
      *                   +v*gptt*alpha**2)/g7
-      else 
+         else 
 
-         props(18,jd) = nopt(7)
-         props(20,jd) = nopt(7)
+            props(18,jd) = nopt(7)
+            props(20,jd) = nopt(7)
+
+         end if 
 
       end if 
 c                                 -------------------------------------
 c                                 up to this point beta = d2g/dp2
 c                                 and alpha = d2g/dp2 now convert 
 c                                 to their normal forms:
-      beta = -beta/v
-      alpha = alpha/v
-c                                 
-      if (beta.gt.v.or.beta.lt.0d0) beta = nopt(7)
+      if (v.le.0d0) then 
+
+         sick(jd) = .true.
+         v = nopt(7)
+         beta = nopt(7)
+         alpha = nopt(7)
+      
+      else 
+
+         beta = -beta/v
+         alpha = alpha/v
+c                                 ideal gas beta = 1/p           
+         if (beta.gt.1d1/p.or.beta.lt.0d0) then
+            beta = nopt(7)
+            sick(jd) = .true.
+         end if
 c                                 aug 28, 2007, removed check on alpha to 
 c                                 accomodate -alpha's generated by landau 
 c                                 transition models. 
-      if (cp.gt.1d9.or.cp.lt.0d0) cp = nopt(7)
+c                                 ideal gas alpha = 1/t
+         if (alpha.gt.1d1/t) then 
+            alpha = nopt(7)
+            sick(jd) = .true.
+         end if 
+
+      end if  
+
+      if (cp.gt.1d9.or.cp.lt.0d0) then
+         cp = nopt(7)
+         sick(jd) = .true.
+      end if 
 
       props(1,jd) = v 
       props(2,jd) = e
@@ -1280,16 +1317,6 @@ c                                 transition models.
       props(15,jd) = s
 c                                 density 
       props(10,jd) = props(17,jd)/props(1,jd)*1d2  
-c                                 tests for reasonable results:
-c                                 like this so sick could be used to
-c                                 say which property is bad
-      if (props(1,jd).le.0d0) sick(jd) = .true.
-      if (props(12,jd).le.0d0) sick(jd) = .true.
-c                                 aug 28, 2007, removed check on alpha to 
-c                                 accomodate -alpha's generated by landau 
-c                                 transition models (prop(13,jd))
-c     if (props(13,jd).eq.0d0) sick(jd) = .true.
-      if (props(14,jd).le.0d0) sick(jd) = .true.
 
       if (.not.sick(jd).and..not.rxn) then
 c                                 gruneisen parameter
@@ -1300,16 +1327,19 @@ c                                 aug 28, 2007, removed check on gruneisen to
 c                                 accomodate -alpha's generated by landau 
 c                                 transition models (prop(13,jd))
 c           if (props(3,jd).le.0d0) sick(jd) = .true.
+
 c                                 adiabatic bulk modulus
          props(4,jd) = (1d0 + t*props(13,jd)
      *                         *props(3,jd))/props(14,jd)
+
          if (props(4,jd).le.0d0) sick(jd) = .true.
 
          if (.not.fluid(jd).and.iopt(16).gt.0) then 
 c                                 use poisson ratio estimates if iopt(16).ne.0
             if ((iopt(16).eq.1.and..not.ok).or.iopt(16).eq.2) then
 
-               if (volume) then 
+               if (volume.and..not.sick(jd)) then
+ 
                   props(5,jd)  = nopt(16)*props(4,jd)
                   props(19,jd) = nopt(16)*props(18,jd) 
                   props(21,jd) = nopt(16)*props(20,jd)
@@ -1317,26 +1347,34 @@ c                                 use poisson ratio estimates if iopt(16).ne.0
                      ppois = .true.
                      pois = .true.
                   end if 
+
                else
+
                   shear = .false.
                   props(5,jd) = nopt(7)
                   props(19,jd) = nopt(7)    
                   props(21,jd) = nopt(7)
+
                end if 
+
             end if
+
          end if  
+
       end if 
 
       if (sick(jd)) then
 
          props(3,jd) = nopt(7)
          props(4,jd) = nopt(7)
+
          volume = .false.
+
          if (.not.fluid(jd).and..not.ok) shear = .false.
 
-      end if 
+         if (.not.fluid(jd)) ssick = .true.
 
-      if (sick(jd).and.(.not.fluid(jd))) ssick = .true.
+      end if 
 c                                 seismic properties
       if (.not.sick(jd).and..not.rxn) then 
 
@@ -1421,11 +1459,14 @@ c                                 vp/vs
       end if 
 c                                 check and warn if necessary for negative
 c                                 expansivity
-      if (props(13,jd).le.0d0.and.iwarn1.lt.11) then
+      if (.not.sick(jd)) then 
 
-         write (*,1030) t,p,pname(jd)
-         iwarn1 = iwarn1 + 1
-         if (iwarn1.eq.11) call warn (49,r,179,'GETPHP') 
+         if (props(13,jd).le.0d0.and.iwarn1.lt.11) then
+
+            write (*,1030) t,p,pname(jd)
+            iwarn1 = iwarn1 + 1
+            if (iwarn1.eq.11) call warn (49,r,179,'GETPHP') 
+         end if 
 
       end if
 
