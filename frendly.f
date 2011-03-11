@@ -340,7 +340,7 @@ c----------------------------------------------------------------------
       save tags
 
       data tags/      'g(J/mol)     ','h(J/mol)     ','log10_Keq    ',
-     *'s(J/mol/K)   ','cp(J/mol/K)  ','v(J/mol/bar) ','alpha(1/K )  ',
+     *'s(J/mol/K)   ','cp(J/mol/K)  ','v(J/mol/bar) ','alpha(1/K)   ',
      *'beta(1/bar)  ','N(g/mol)     ','rho(kg/m3)   ','Gruneisen_T  ',
      *'Ks(bar)      ','Ks_T(bar/K)  ','Ks_P         ','Gs(bar)      ',
      *'Gs_T(bar/K)  ','Gs_P         ',
