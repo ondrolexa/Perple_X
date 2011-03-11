@@ -545,7 +545,7 @@ c                                 terminal info on variables
 
          write (n4,'(a)') title
          write (n4,*) jpot
-         write (n4,*) 25+jpot
+         write (n4,*) 26+jpot
 
          do i = 1, jpot
             write (n4,*) vname(iv(i))

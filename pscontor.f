@@ -72,7 +72,7 @@ c                                 get input file
                if (i.eq.1) then 
                   open (n4,iostat=ier,file=tfname,status='old')
                else
-                  open (n4,iostat=ier,file=tfname,status='old')          
+                  open (n5,iostat=ier,file=tfname,status='old')          
                end if 
                if (ier.ne.0) then
        
@@ -137,7 +137,7 @@ c psxypl - subroutine to output x-y plot.
 
       character y*1, fname*162
 
-      integer nx,ny,i,j,iox,ioy,jmn,imn,imx,jop0,ncon,jmx,iop1,jy,jx
+      integer i,j,iox,ioy,jmn,imn,imx,jop0,ncon,jmx,iop1,jy,jx
 
       double precision dx,dy,xpmn,xpmx,cmin,cmax,dcon,ypmx,ypmn,
      *                 z0min,z0max
@@ -169,7 +169,7 @@ c----------------------------------------------------------------------
       if (iy.gt.ny) call error (1,dx,ny,'NY, PSXYPL')
 
       if (ratio) then 
-         read (n4,'(10a)') (vnm(i),i=1,2)
+  
          read (n5,'(a)') fname
          read (n5,*) jx,jy,xmin,ymin,dx,dy
          read (n5,'(10a)') (vnm(i),i=1,2)
@@ -184,8 +184,8 @@ c----------------------------------------------------------------------
 
       if (ratio) then 
          read (n5,*) ((zt(i,j), i = 1, ix), j = 1, iy)
-         do i = 1, nx
-            do j = 1, ny
+         do i = 1, ix
+            do j = 1, iy
                z(i,j) = z(i,j)/zt(i,j)
             end do
          end do
@@ -195,8 +195,8 @@ c----------------------------------------------------------------------
          write (*,1050) 
          read (*,'(a)') y
          if (y.eq.'y') then 
-            do j = 1, ny
-               do i = 1, nx
+            do j = 1, iy
+               do i = 1, ix
                   if (z(i,j).ne.0d0) z(i,j) = dlog10(dabs(z(i,j)))
                end do 
             end do  
