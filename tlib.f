@@ -4622,3 +4622,54 @@ C                                 Big-endian
       dnan = val
 
       end
+
+      subroutine plblrb (typ)
+c----------------------------------------------------------------------
+c write a blurb on plotting options for the calculation
+c
+c type 1 - tab, ctr, table format
+c type 2 - plt, psvdraw format
+c type 3 - pts, pspts format
+c type 4 - phm, phemgp table format
+c----------------------------------------------------------------------
+	implicit none
+
+      integer typ
+c----------------------------------------------------------------------
+
+      if (typ.eq.1) then
+c                                 2d - tab format
+         write (*,1000) 
+         write (*,1010)
+      else if (typ.eq.2) then 
+c                                 plt format
+         write (*,1020)
+      else if (typ.eq.3) then
+c                                 pts format
+         write (*,1030)
+      else if (typ.eq.4) then 
+c                                 1d - tab format
+         write (*,1000) 
+         write (*,1040)
+      end if 
+
+1000  format (/,'The tabulated data from this calculation can be ',
+     *          'plotted with:',/)
+1010  format (5x,'psplot - a Perple_X program',
+     *     /,5x,'pywerami - petrol.natur.cuni.cz/~ondro/pywerami:home',
+     *     /,5x,'perplex_plot - a Matlab script',
+     *     /,5x,'spread-sheet programs, e.g., Excel',//,
+     *          'for details of the table format refer to:',/,
+     * 'www.perplex.ethz.ch/faq/Perple_X_6.6.6_tab_file_format.txt',/)
+1020  format (/,'The output from this calculation can be plotted with ',
+     *          'PSVDRAW',/)
+1030  format (/,'The output from this calculation can be plotted with ',
+     *          'PSPTS or converted to',/,'table/plot format with ',
+     *          'PT2CURV',/)
+1040  format (5x,'psplot - a Perple_X program',
+     *     /,5x,'perplex_plot - a Matlab script',
+     *     /,5x,'spread-sheet programs, e.g., Excel',//,
+     *          'for details of the table format refer to:',/,
+     * 'www.perplex.ethz.ch/faq/Perple_X_6.6.6_tab_file_format.txt',/)
+
+      end

@@ -134,6 +134,8 @@ c                                 tabulated properties
     
                close (n4)
 
+               write (*,1120)
+
                cycle 
 
             else 
@@ -207,6 +209,7 @@ c                                 create a new data base entry
 1090  format ('Modify or output thermodynamic parameters (y/n)? ')
 1100  format ('Enter P(bars) and T(K) (zeroes to quit):')
 1110  format ('Enter X(CO2/O) in fluid phase:')
+1120  format (/,'The table has been written',/)
 1130  format (/,'Have a nice day ',a,'!',/)
 1180  format ('Write a properties table (Y/N)?')
  
@@ -337,16 +340,19 @@ c----------------------------------------------------------------------
       integer io3,io4,io9
       common/ cst41 /io3,io4,io9
 
+      logical oned
+      common/ cst82 /oned
+
       save tags
 
-      data tags/      'g(J/mol)     ','h(J/mol)     ','log10_Keq    ',
+      data tags/      'g(J/mol)     ','h(J/mol)     ','log10[Keq]   ',
      *'s(J/mol/K)   ','cp(J/mol/K)  ','v(J/mol/bar) ','alpha(1/K)   ',
      *'beta(1/bar)  ','N(g/mol)     ','rho(kg/m3)   ','Gruneisen_T  ',
-     *'Ks(bar)      ','Ks_T(bar/K)  ','Ks_P         ','Gs(bar)      ',
-     *'Gs_T(bar/K)  ','Gs_P         ',
-     *'v0(km/s)     ','v0_T(km/s/K) ','v0P(km/s/bar)',
-     *'vp(km/s)     ','vp_T(km/s/K) ','vpP(km/s/bar)','vs(km/s)     ',
-     *'vs_T(km/s/K) ','vsP(km/s/bar)'/
+     *'Ks(bar)      ','KsT(bar/K)   ','KsP          ','Gs(bar)      ',
+     *'GsT(bar/K)   ','GsP          ',
+     *'v0(km/s)     ','v0T(km/s/K)  ','v0P(km/s/bar)',
+     *'vp(km/s)     ','vpT(km/s/K)  ','vpP(km/s/bar)','vs(km/s)     ',
+     *'vsT(km/s/K)  ','vsP(km/s/bar)'/
 c----------------------------------------------------------------------
  
       do i = 1, l2
@@ -357,11 +363,22 @@ c----------------------------------------------------------------------
          inc(i) = 1
       end do 
 
-      jpot = 2
+      oned = .false.
+c                                 query for 1d table
+      if (table) then
+         write (*,1110) 
+         read (*,'(a)') y
+         if (y.eq.'y'.or.y.eq.'Y') oned = .true.
+      end if 
 
       do 
 c                                 select the x variable (iv(1)):
-         write (*,2130)
+         if (oned) then 
+            write (*,1120)
+         else 
+            write (*,2130)
+         end if 
+
          write (*,2140) (j,vname(iv(j)), j = 1, ipot)
          write (*,*)
          read (*,*,iostat=ier) ic
@@ -388,99 +405,123 @@ c                                 get x variable limits and increment
          call rerr
 
       end do 
-c                                 select the y variable (iv(2)):
-      if (ipot.eq.3) then
 
-         do 
+      if (oned) then 
+c                                 specify the sectioning variables
+         jpot = 1
 
-             write (*,2110)
-             write (*,2140) (j,vname(iv(j)), j = 2, ipot)
-             write (*,*)
-             read (*,*,iostat=ier) ic
+          do i = 2, ipot
 
-             if (ier.eq.0) exit 
-             call rerr
+             do 
+                write (*,2180) vname(iv(i))
+                read (*,*,iostat=ier) vmin(iv(i))
+                if (ier.eq.0) exit 
+                call rerr
+             end do
+
+             inc(i) = 1
 
           end do 
 
       else
+c                                 specify the additional variables
+         jpot = 2
 
-        ic = 2
-
-      end if
-
-      ix = iv(2)
-      iv(2) = iv(ic)
-      iv(ic) = ix
- 
-      do 
-
-         if (table) then
-            write (*,1000) vname(iv(2))
-            read (*,*,iostat=ier) vmin(iv(2)),vmax(iv(2)),dv(iv(2)) 
-         else 
-            write (*,2150) vname(iv(2))
-            read (*,*,iostat=ier) vmin(iv(2)),vmax(iv(2))
-         end if 
-
-         if (ier.eq.0) exit 
-         call rerr
-
-      end do 
-c                                 third variable?
-      if (ipot.eq.3) then 
-
-         if (table) then 
-
-            write (*,1010) vname(iv(3))
-            read (*,'(a)') y
-c
-            if (y.eq.'y'.or.y.eq.'Y') then
-               write (*,1000) vname(iv(3))
-               read (*,*,iostat=ier) vmin(iv(3)),vmax(iv(3)),dv(iv(3)) 
-            end if 
-
-         else 
-
-            write (*,2160) vname(iv(3))
-            read (*,'(a)') y
-c
-            if (y.eq.'y'.or.y.eq.'Y') then
-
-               jpot = 3
-
-               do 
-                  write (*,2150) vname(iv(3))
-                  read (*,*,iostat=ier) vmin(iv(3)),vmax(iv(3))
-                  if (ier.eq.0) exit               
-                  call rerr
-               end do
-
-               do  
-                  write (*,1060)
-                  read (*,*,iostat=ier) inc(iv(3))
-                  if (ier.eq.0) exit 
-                  call rerr
-               end do 
-
-               if (inc(iv(3)).lt.1) inc(iv(3)) = 1
-
-            end if 
-
-         end if 
-c                                 set third variable if unused:
-         if (jpot.eq.2) then 
+         if (ipot.eq.3) then
 
             do 
 
-               write (*,2180) vname(iv(3))
-               read (*,*,iostat=ier) vmin(iv(3))
-               if (ier.eq.0) exit 
-               call rerr
+                write (*,2110)
+                write (*,2140) (j,vname(iv(j)), j = 2, ipot)
+                write (*,*)
+                read (*,*,iostat=ier) ic
 
-            end do 
+                if (ier.eq.0) exit 
+                call rerr
 
-            vmax(iv(3)) = vmin(iv(3))
+             end do 
+
+         else
+
+            ic = 2
+
+         end if
+
+         ix = iv(2)
+         iv(2) = iv(ic)
+         iv(ic) = ix
+ 
+         do 
+
+            if (table) then
+               write (*,1000) vname(iv(2))
+               read (*,*,iostat=ier) vmin(iv(2)),vmax(iv(2)),dv(iv(2)) 
+            else
+               write (*,2150) vname(iv(2))
+               read (*,*,iostat=ier) vmin(iv(2)),vmax(iv(2))
+            end if 
+
+            if (ier.eq.0) exit 
+            call rerr
+
+         end do 
+c                                 third variable?
+         if (ipot.eq.3) then 
+
+            if (table) then 
+
+               write (*,1010) vname(iv(3))
+               read (*,'(a)') y
+c
+               if (y.eq.'y'.or.y.eq.'Y') then
+                  write (*,1000) vname(iv(3))
+                  read (*,*,iostat=ier) vmin(iv(3)),vmax(iv(3)),
+     *                                  dv(iv(3)) 
+               end if 
+  
+            else 
+
+               write (*,2160) vname(iv(3))
+               read (*,'(a)') y
+
+               if (y.eq.'y'.or.y.eq.'Y') then
+
+                  jpot = 3
+
+                  do 
+                     write (*,2150) vname(iv(3))
+                     read (*,*,iostat=ier) vmin(iv(3)),vmax(iv(3))
+                     if (ier.eq.0) exit               
+                     call rerr
+                  end do
+
+                  do  
+                     write (*,1060)
+                     read (*,*,iostat=ier) inc(iv(3))
+                     if (ier.eq.0) exit 
+                     call rerr
+                  end do 
+
+                  if (inc(iv(3)).lt.1) inc(iv(3)) = 1
+
+               end if 
+
+            end if 
+c                                 set third variable if unused:
+            if (jpot.eq.2) then 
+
+               do 
+
+                  write (*,2180) vname(iv(3))
+                  read (*,*,iostat=ier) vmin(iv(3))
+                  if (ier.eq.0) exit 
+                  call rerr
+
+               end do 
+
+               vmax(iv(3)) = vmin(iv(3))
+
+            end if 
 
          end if 
 
@@ -527,9 +568,23 @@ c                                 readrt loads the root into prject
             call mertxt (n4name,prject,'.tab',0)
          else
             call mertxt (n4name,prject,'.plt',0)
-         end if            
+         end if   
 
-         open (n4,file=n4name)
+         open (n4,file=n4name)       
+c                                  plot blurb
+         if (oned) then 
+
+            call plblrb (4)
+
+         else if (table) then 
+
+            call plblrb (1)
+
+         else
+
+            call plblrb (2)
+
+         end if   
 c                                 write version flag
          write (n4,1100)
 c                                 query for title
@@ -540,12 +595,11 @@ c                                 query for title
 c                                 write file headers
       if (table) then 
 c                                 terminal info on variables
-         write (*,1090)
-         write (*,'(80(a14,1x))') (vname(iv(i)),i=1,jpot),tags
-
-         write (n4,'(a)') title
+c        write (*,1090)
+c        write (*,'(80(a14,1x))') (vname(iv(i)),i=1,jpot),tags
+         
+         write (n4,'(a)') title 
          write (n4,*) jpot
-         write (n4,*) 26+jpot
 
          do i = 1, jpot
             write (n4,*) vname(iv(i))
@@ -554,6 +608,7 @@ c                                 terminal info on variables
             write (n4,*) inc(iv(i))
          end do 
 
+         write (n4,*) 26+jpot
          write (n4,'(80(a14,1x))') (vname(iv(i)),i=1,jpot),tags
 
       else if (io4.eq.0) then 
@@ -570,14 +625,18 @@ c                                 terminal info on variables
       end if 
 
 1000  format ('Enter minimum, maximum, and increment for 'a,':')
-1010  format (/,'Make the table also a function of ',a,' (y/n)?')
+1010  format (/,'Make the table also a function of ',a,' (y/n)?',/,
+     *       'WARNING: the resulting 3d table cannot be plotted ',
+     *       'with current Perple_X',/,'programs or scripts',/)
 1020  format (/,'Generate a plot file (y/n)?')
 1060  format (/,'Enter number of sections:')
 1070  format (/,'Enter calculation title:')
 1080  format (/,'Enter a plot/table file name [without the ',
      *          '.plt/.tab suffix]:')
-1090  format (/,'Table row entries will be:',/)
+1090  format (/,'Table columns will be:',/)
 1100  format ('|6.6.6')
+1110  format (/,'Make a 1-dimensional (e.g., isobaric) table (y/n)?')
+1120  format (/,'Select the independent (x) variable:',/)
 2130  format (/,'Select the first independent (x) variable:',/)
 2140  format (10x,i1,' - ',a)
 2150  format (/,'Enter minimum and maximum values for ',a,':')

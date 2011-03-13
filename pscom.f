@@ -772,13 +772,6 @@ c                                 number of independent variables
          write (*,1010) jvar
          stop
       end if 
-c                                 number of dependent variables
-      read (lun,*) mvar
-
-      if (mvar.gt.i11) then
-         write (*,1020) mvar,i11
-         stop
-      end if 
 c                                 for each independent variable
       do i = 1, jvar
 c                                 name
@@ -793,6 +786,13 @@ c                                 number of values
          vmx(i) = vmn(i) + (inc(i)-1)*dvr(i)
 
       end do 
+c                                 number of dependent variables
+      read (lun,*) mvar
+
+      if (mvar.gt.i11) then
+         write (*,1020) mvar,i11
+         stop
+      end if 
 c                                 read names of dependent properties
       read (lun,'(80(a14,1x))') (dname(i),i=1,mvar)
 c                                 read data 
@@ -884,6 +884,11 @@ c                                 read the data
             end do 
 
          end do 
+
+      else
+
+         write (*,*) 'No provision for ',jvar,' dimensional tables'
+         stop
 
       end if      
 
