@@ -550,7 +550,7 @@ c----------------------------------------------------------------
       common/ debug /jtest,jpot
 
       integer iprop,ivar,ind,ichem
-      character*10 prname
+      character*14 prname
       common/ cst83 /prname(k10),iprop,ivar,ind,ichem
 
       integer idstab,nstab,istab,jstab
@@ -625,8 +625,10 @@ c                                 choose property
          read (*,*,iostat=ier) lop
 
          if (ier.ne.0.or.lop.lt.1.or.lop.gt.kprop) then 
+
             write (*,1020)
             cycle 
+
          end if
 
          if (lop.eq.7.or.lop.eq.20.or.lop.eq.37) then 
@@ -635,9 +637,11 @@ c                                 get phase name
              call rnam1 (icx)
 c                                 ask if fluid should be included:
              if (gflu) then 
+
                 write (*,1120) 
                 read (*,'(a)') y
                 if (y.eq.'y'.or.y.eq.'Y') lflu = .true.
+
              end if 
 c                                 write blurb about units
              if (lop.eq.7) then 
@@ -659,17 +663,21 @@ c                                 write blurb about units
 
              do i = 1, istab
                 do j = 1, nstab(i)
+
                    iprop = iprop + 1
                    call getnam (name,idstab(i))
                    prname(iprop) = name
+
                 end do 
              end do 
  
          else if (lop.eq.6.or.lop.eq.23) then
 c                                 warn if no potentials
             if (jpot.eq.1.and.lop.eq.23) then
+
                call warn (31,nopt(1),iopt(1),'CHSPRP')
                cycle
+
             end if 
 c                                 get component to be contoured
 5010        write (*,1000)
@@ -684,37 +692,29 @@ c                                 get component to be contoured
             call rerror (ier,*5010)   
 c                                 ask if fluids included
             if (gflu.and.lop.eq.6) then 
+
                write (*,1120) 
                read (*,'(a)') y
                if (y.eq.'y'.or.y.eq.'Y') lflu = .true. 
+
             end if 
 
          else if (lop.eq.8) then
 c                                 get solution identity
             do 
+
                call rnam1 (icx)
                if (icx.gt.0) exit  
                write (*,1140)
+
             end do 
 c                                 get user defined composition:
             call mkcomp (1)
 
-         else if (lop.ne.6.and.lop.ne.8) then
+         else if (lop.eq.36.or.lop.eq.38) then 
 
-            if (lop.eq.36) then 
-c                                 all props choice (36), ask if 
-c                                 all phases
-               write (*,1130) 
-               read (*,'(a)') y
-               if (y.eq.'y'.or.y.eq.'Y') then 
-                  icx = 999
-                  if (gflu) lflu = .true.
-               end if 
-
-            else if (lop.eq.38) then 
-
-               if (gflu) lflu = .true.
-c                                 custom list
+            if (lop.eq.38) then 
+c                                 custom property list, select properties
                do
 
                   write (*,1150)
@@ -736,14 +736,38 @@ c                                 save property choice
 
                end do 
 
-               exit 
+            end if  
+c                                 multi-prop options, get case i: 
+c                                 1 - system, 2 - phase
+c                                 3 - system + phases
+            write (*,1130)
+            call rdnumb (nopt(1),0d0,i,1,.false.)
+c                                 convert kop to the internal 
+c                                 icx flag => icx = 0 system prop,
+c                                 icx = 999 all props, else phase index
+            if (i.eq.3) then 
+
+               icx = 999 
+
+            else if (i.eq.2) then 
+c                                 get phase index
+               call rnam1 (icx)
 
             end if 
+
+            if (gflu) then 
+               write (*,1120) 
+               read (*,'(a)') y
+               if (y.eq.'y'.or.y.eq.'Y') lflu = .true. 
+            end if         
+
+         else if (lop.ne.6.and.lop.ne.8) then
                
             if (icx.eq.0) then   
 c                                 ask if bulk or phase property
                write (*,1110) 
                read (*,'(a)') y
+
                if (y.ne.'y'.and.y.ne.'Y') then 
 c                                 it's a bulk property, ask if fluid
 c                                 should be included:
@@ -788,7 +812,14 @@ c                                 get phase name
 1110  format (/,'Calculate individual phase properties (y/n)?')
 1120  format (/,'Include fluid in computation of aggregate ', 
      *          '(or modal) properties (y/n)?')
-1130  format (/,'Output all properties of all phases (y/n)?')
+1130  format (/,'In this mode you may compute:',/
+     *     /,4x,'1 - properties of the system',
+     *     /,4x,'2 - properties of a phase',   
+     *     /,4x,'3 - properties of the system and its phases',//
+     *         ,'Output for option 1 & 2 can be plotted with '
+     *         ,'PSPLOT, PYWERAMI or MatLab',/,'Output for '
+     *         ,'option 3 can only be plotted with PHEMGP',//
+     *         ,'Choose an option [default = 1]:')
 1140  format (/,'Hey cowboy, that warnt no solution, try again.',/)
 1150  format (/,'Specify a property to be computed from the ',
      *          'list above [0 to end]')
@@ -976,17 +1007,18 @@ c----------------------------------------------------------------------
 c----------------------------------------------------------------------
       iex = 0
 
-110   write (*,1040) 
-      read (*,1020) xnam
+      do 
 
-      call matchj (xnam,iex)
+         write (*,1040) 
+         read (*,'(a)') xnam
 
-      if (iex.eq.0) then
+         call matchj (xnam,iex)
+
+         if (iex.ne.0) exit 
          write (*,1100) xnam
-         goto 110
-      end if
 
-1020  format (a)
+      end do 
+
 1040  format (/,'Enter solution or compound name (left justified): ')
 1100  format (/,'No such entity as ',a,', try again: ')
 

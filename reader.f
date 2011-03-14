@@ -18,7 +18,7 @@ c       n6 - special out
       common/ cst82 /oned
 
       integer iprop,ivar,ind,ichem
-      character*10 prname
+      character*14 prname
       common/ cst83 /prname(k10),iprop,ivar,ind,ichem
 
       integer isec,icopt,ifull,imsg,io3p
@@ -83,7 +83,7 @@ c                                 read bulk composition data file:
 
          if (first.and.imode.eq.1.or.imode.eq.3) then 
 c                                 make console output echo to rpl file
-            call fopenn (n8,0,0,n5name,n6name)
+            call fopenn (n8,0,0,0,n5name,n6name)
             first = .false.
          end if 
 
@@ -159,7 +159,7 @@ c----------------------------------------------------------------------
       common/ cxt18 /var(l3),dvr(l3),vmn(l3),vmx(l3),jvar
 
       integer iprop,ivar,ind,ichem
-      character*10 prname
+      character*14 prname
       common/ cst83 /prname(k10),iprop,ivar,ind,ichem
 
       character vnm*8
@@ -206,7 +206,7 @@ c                                 number of grid points
 
          end if  
 
-         call tabhed (tmin,dx,nxy,lop,2,n5name,n6name)
+         call tabhed (tmin,dx,nxy,lop,icx,2,n5name,n6name)
 
          prmin = 1d16
          prmax = -1d16
@@ -268,12 +268,12 @@ c                                 number of grid points
       end do 
 
 1040  format (/,'Change default variable range (y/n)?')
-1060  format (/,'Current limits on ',a,' are: ',g12.6,'->',g12.6,/,
-     *        'Enter new values:')
+1060  format (/,'Current limits on ',a,' are: ',g14.7,'->',g14.7,/,
+     *          'Enter new values:')
 1080  format (/,'Enter number of nodes in the x and y directions:')
 1110  format (/,'The output data has been written to file: ',a,/)
 1230  format (/,'Evaluate additional properties (y/n)?',/)
-1280  format (/,'Range of >0 data is: ',g14.6,' -> ',g14.6,/)
+1280  format (/,'Range of >0 data is: ',g14.7,' -> ',g14.7,/)
 
       end 
 
@@ -1069,7 +1069,7 @@ c                                 initialize
 
          if (ijpt.eq.0) then 
 c                                 missing data at the node
-            write (*,1000) var(1),var(2),nopt(7)
+            write (*,1000) var(1),var(2)
 
          else 
 c                                 compute all properties
@@ -1077,7 +1077,7 @@ c                                 compute all properties
 
             if (nodata) then 
 
-               write (*,1000) var(1),var(2),nopt(7)
+               write (*,1000) var(1),var(2)
 
             else 
 c                                 get the specific property of
@@ -1089,8 +1089,8 @@ c                                 interest
          end if 
       end if 
 
-1000  format (/,'Missing data at: ',2(g12.6,1x),' assigned value: ',
-     *          g12.6,/)
+1000  format ('Missing data at: ',2(g14.7,1x))
+
       end 
 
       subroutine getprp (prop,lop,icx,aprp)
@@ -1775,7 +1775,7 @@ c----------------------------------------------------------------------
 c----------------------------------------------------------------------
       node = .false.
 
-      call fopenn (n5,lop,1,n5name,n6name)
+      call fopenn (n5,lop,icx,1,n5name,n6name)
 c                                 set up path information
       icurve = 0 
       idxy = 0 
@@ -1898,12 +1898,9 @@ c                                 loop for property computation
          jpts = 0 
 c                                 select property:
          call chsprp (lop,icx)
-
-         if (lop.eq.25.or.lop.eq.36) then
-
-             call tabhed (dxy,dxy,k,lop,1,n5name,n6name)
-
-         end if  
+c                                 file header
+         if (lop.eq.25.or.lop.eq.36.or.lop.eq.38) 
+     *       call tabhed (dxy,dxy,k,lop,icx,1,n5name,n6name)
 
          do i = 1, ipts
             var(ivi) = xyp(ivi,1) + dfloat(i-1)*d
@@ -1957,7 +1954,7 @@ c                                 ask for another property
             nprop = nprop + 1
 
             if (lop.eq.36.or.lop.eq.38) 
-     *         call fopenn (n5,lop,1,n5name,n6name)
+     *         call fopenn (n5,lop,icx,1,n5name,n6name)
 
          else 
 
@@ -2014,7 +2011,7 @@ c----------------------------------------------------------------------
       common/ cxt18a /vnm(l3)  
 
       integer iprop,ivar,ind,ichem
-      character*10 prname
+      character*14 prname
       common/ cst83 /prname(k10),iprop,ivar,ind,ichem
 c----------------------------------------------------------------------
       node = .false.
@@ -2069,11 +2066,11 @@ c                                 name and open plot file
 c                                 write header 
          if (lop.eq.25.or.lop.eq.36.or.lop.eq.38) then
 
-             call tabhed (xyp,xyp,k,lop,1,n5name,n6name)
+             call tabhed (xyp,xyp,k,lop,icx,1,n5name,n6name)
 
          else if (first) then 
 
-            call fopenn (n5,lop,1,n5name,n6name)
+            call fopenn (n5,lop,icx,1,n5name,n6name)
 
             first = .false.
 
@@ -2223,12 +2220,9 @@ c                                 ixy
 90       x = x0
 
          call chsprp (lop,icx)
-
-         if (lop.eq.25.or.lop.eq.36) then
-
-            call tabhed (r,r,k,lop,1,n5name,n6name)
-
-         end if 
+c                                 write plot file header
+         if (lop.eq.25.or.lop.eq.36.or.lop.eq.38) 
+     *      call tabhed (r,r,k,lop,icx,1,n5name,n6name)
 
          do 
 
@@ -2330,12 +2324,9 @@ c                                   points from a data file:
          do 
 
             call chsprp (lop,icx)
- 
-            if (lop.eq.25.or.lop.eq.36) then
-
-               call tabhed (r,r,k,lop,1,n5name,n6name)
-
-            end if 
+c                                 write plot file header
+            if (lop.eq.25.or.lop.eq.36.or.lop.eq.38) 
+     *         call tabhed (r,r,k,lop,icx,1,n5name,n6name)
 
             do i = 1, icoors, inc
 
@@ -2527,7 +2518,7 @@ c----------------------------------------------------------------
       common/ cxt18 /var(l3),dvr(l3),vmn(l3),vmx(l3),jvar
 
       integer iprop,ivar,ind,ichem
-      character*10 prname
+      character*14 prname
       common/ cst83 /prname(k10),iprop,ivar,ind,ichem
 c----------------------------------------------------------------------
 c                                 set variables to x-y value
@@ -2537,8 +2528,9 @@ c                                 get node(s) to extract value
 
       if (ijpt.eq.0) then 
 c                                 missing data at the node
-         write (*,1000) var(1),var(2),nopt(7)
-         write (n5,1010) (var(i),i=1,ivar), (nopt(7),i=1,jstab)
+         write (*,1000) var(1),var(2)
+         write (n5,'(200(g14.7,1x))') (var(i),i=1,ivar), 
+     *                                (nopt(7),i=1,jstab)
 
       else 
 
@@ -2550,8 +2542,9 @@ c                                 compute all properties
 
          if (nodata) then 
 
-            write (*,1000) var(1),var(2),nopt(7)
-            write (n5,1010) (var(i),i=1,ivar), (nopt(7),i=1,jstab)
+            write (*,1000) var(1),var(2)
+            write (n5,'(200(g14.7,1x))') (var(i),i=1,ivar), 
+     *                                   (nopt(7),i=1,jstab)
 
           else 
 
@@ -2617,16 +2610,17 @@ c                                 requested
                end do
             end if
 c                                 modes assigned, output to n5
-            write (*,1010) (var(i),i=1,ivar), (mode(i),i=1,jstab)
-            write (n5,1010) (var(i),i=1,ivar), (mode(i),i=1,jstab)
+
+            write (n5,'(200(g14.7,1x))') (var(i),i=1,ivar), 
+     *                                   (mode(i),i=1,jstab)
 
          end if 
 
       end if  
 
-1000  format (/,'Missing data at: ',2(g12.6,1x),' assigned value: ',
-     *          g12.6,/)
-1010  format (200(g12.6,1x))
+1000  format (/,'Missing data at: ',2(g14.7,1x),' assigned: ',
+     *          g14.7,' to all modes at this condition.',/)
+
   
       end 
 
@@ -2658,7 +2652,7 @@ c----------------------------------------------------------------
       common/ csta8 /title(4)
 
       integer iprop,ivar,ind,ichem
-      character*10 prname
+      character*14 prname
       common/ cst83 /prname(k10),iprop,ivar,ind,ichem
 
       integer iopt
@@ -2807,7 +2801,7 @@ c----------------------------------------------------------------
       common/ cxt18a /vnm(l3) 
 
       integer iprop,ivar,ind,ichem
-      character*10 prname
+      character*14 prname
       common/ cst83 /prname(k10),iprop,ivar,ind,ichem
 c----------------------------------------------------------------------
 c                                 choose plotting variable
@@ -2830,6 +2824,9 @@ c                                 choose plotting variable
       subroutine allprp (lop,icx)
 c----------------------------------------------------------------
 c output spreadsheet format properties (lop = 36 or 38).
+c   icx = 0   - output just system properties
+c   icx = 999 - system + phase properties
+c   else      - phase icx properties
 c----------------------------------------------------------------
       implicit none
 
@@ -2841,7 +2838,7 @@ c----------------------------------------------------------------
 
       double precision wt(3),p1,p2,p3,prop
 
-      character cprop(k10)*12
+      character cprop(k10)*14
 
       double precision gtot,fbulk,gtot1,fbulk1
       common/ cxt81 /gtot,fbulk(k0),gtot1,fbulk1(k0)
@@ -2866,7 +2863,7 @@ c----------------------------------------------------------------
       common/ cxt15 /cp3(k0,k5),amt(k5),kkp(k5),np,ncpd,ntot
 
       integer iprop,ivar,ind,ichem
-      character*10 prname
+      character*14 prname
       common/ cst83 /prname(k10),iprop,ivar,ind,ichem
 
       integer icomp,istct,iphct,icp
@@ -2890,43 +2887,49 @@ c                                 get node(s) to extract value
       call triang (itri,jtri,ijpt,wt)
 
       if (ijpt.eq.0) then 
-c                                 missing data at the node
-         write (*,1000) var(1),var(2),nopt(7)
 
-         if (lop.eq.38) then
-            write (n5,1040) var(1),var(2),0,(nopt(7),i=1,iprop)
-         else
-            write (n5,1010) (var(i),i=1,ivar), 
-     *                      (nopt(7),i=1,i8+3+icomp+ichem)
-         end if 
+         nodata = .true.
 
       else 
 c                                 compute all properties
          call getloc (itri,jtri,ijpt,wt,nodata)
 
-         if (nodata) then 
+      end if 
+
+      if (nodata) then 
 c                                 missing data at the node
-            write (*,1000) var(1),var(2),nopt(7)
+         write (*,1000) var(1),var(2)
 
+         if (icx.eq.999) then 
             if (lop.eq.36) then 
-               write (n5,1010) 'Missing data  ',(var(i),i=1,ivar), 
-     *                      (nopt(7),i=1,i8+3+icomp+ichem)
-            else if (lop.eq.38) then 
-               write (n5,1040) var(1),var(2),0,(nopt(7),i=1,iprop)
-            end if 
-
+               write (n5,1010) 0,'Missing data  ',(var(i),i=1,ivar), 
+     *                         (nopt(7),i=1,i8+3+icomp+ichem)
+            else 
+               write (n5,1010) 0,'Missing data  ',(var(i),i=1,ivar),
+     *                         (nopt(7),i=1,iprop)
+            end if
          else 
+            if (lop.eq.36) then 
+               write (n5,'240(g14.7,1x)') (var(i),i=1,ivar), 
+     *                                    (nopt(7),i=1,i8+3+icomp+ichem)
+            else 
+               write (n5,'240(g14.7,1x)') (var(i),i=1,ivar), 
+     *                                    (nopt(7),i=1,iprop)
+            end if 
+         end if 
+
+      else 
 
             if (lop.eq.38) then 
 c                                 custom property choices
                if ((ntot+1)*iprop-1.gt.k10) 
      *            call error (1,0d0,(ntot+1)*iprop-1,'K10   ')
 
-               write (cprop(1),'(5x,i2,5x)') ntot
+               write (cprop(1),'(7x,i2,6x)') ntot
 c                                 system props
                do i = 1, iprop
                   call getprp (prop,nstab(i),0,.true.)
-                  write (cprop(i),'(g12.6)') prop
+                  write (cprop(i),'(g14.7)') prop
                end do
 
                ict = iprop
@@ -2934,13 +2937,13 @@ c                                 phase props
                do j = 1, ntot
 
                   ict = ict + 1
-                  write (cprop(ict),'(a12)') pname(j)
+                  write (cprop(ict),'(a14)') pname(j)
 
                   do i = 1, iprop
                      prop = -999d0
                      call getprp (prop,nstab(i),j,.true.)
                      ict = ict + 1
-                     write (cprop(ict),'(g12.6)') prop
+                     write (cprop(ict),'(g14.7)') prop
                   end do
                end do               
 
@@ -3031,19 +3034,15 @@ c                                 chemical potentials
 
             end if 
 
-         end if 
-
       end if  
 
-1000  format (/,'Missing data at: ',2(g12.6,1x),' assigned value: ',
-     *          g12.6,/)
-1010  format (a,1x,200(g12.6,1x))
-1030  format (g12.6,1x,g12.6,1x,i2,1x,240(a,1x))
-1040  format (g12.6,1x,g12.6,1x,i2,1x,30(g12.6,1x))
+1000  format ('Missing data at: ',2(g14.7,1x))
+1010  format (7x,i2,6x,a14,1x,200(g14.7,1x))
+1030  format (g14.7,1x,g14.7,240(a14,1x))
   
       end 
 
-      subroutine fopenn (n,lop,dim,n5name,n6name)
+      subroutine fopenn (n,lop,icx,dim,n5name,n6name)
 c----------------------------------------------------------------------
 c decide on file name and type for werami output files, open n5name on 
 c LUN n, n6name is opened if necessary by prphed or modhed
@@ -3053,7 +3052,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i, ier, dim, lop, n
+      integer i, icx, ier, dim, lop, n
 
       character*100 n5name, n6name, num*3
 
@@ -3064,14 +3063,20 @@ c                                 make plot file
       do i = 1, 1000
 
          write (num,'(i3)') i
+
          call mertxt (tfname,prject,num,0)
 
-         if (lop.eq.25.or.lop.eq.36.or.lop.eq.38) then 
+         if (lop.eq.25.or.icx.ne.999.and.
+     *       (lop.eq.36.or.lop.eq.38)) then 
 
             call mertxt (n5name,tfname,'.tab',0)
 c                                 n6 is only opened for 1d calculations
 c                                 with lop=25.
             call mertxt (n6name,tfname,'.plt',0) 
+
+         else if (lop.eq.36.or.lop.eq.38) then 
+c                                 phemgp format
+            call mertxt (n5name,tfname,'.phm',0)
 
          else
 
@@ -3109,7 +3114,7 @@ c--------------------------------------------------------------------
       g = g
       end
 
-      subroutine tabhed (vmn,dv,nv,lop,nvar,n5name,n6name)
+      subroutine tabhed (vmn,dv,nv,lop,icx,nvar,n5name,n6name)
 c----------------------------------------------------------------------
 c  write header for plot/table output
 c     vmn - minimum values of the indendpendent variables
@@ -3122,11 +3127,11 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i, nv(2), lop, nvar, mvar, l2p(38)
+      integer i, icx, nv(2), lop, nvar, l2p(38)
 
       double precision vmn(2), dv(2)
 
-      character*100 n6name, n5name, pname(44)*10 ,mname(k5)*10
+      character*100 n6name, n5name, pname(44)*14 ,mname(k5)*14
 
       character vnm*8
       common/ cxt18a /vnm(l3)  
@@ -3138,8 +3143,11 @@ c----------------------------------------------------------------------
       common/ cst103 /isec,icopt,ifull,imsg,io3p
 
       integer iprop,ivar,ind,ichem
-      character*10 prname
+      character*14 prname
       common/ cst83 /prname(k10),iprop,ivar,ind,ichem
+
+      integer idstab,nstab,istab,jstab
+      common/ cst34 /idstab(k10),nstab(k10),istab,jstab
 
       integer jtest,jpot
       common/ debug /jtest,jpot
@@ -3171,9 +3179,9 @@ c                                 l2p points from lop to pname
 c------------------------------------------------------------------------
 c                                 generate a file name and
 c                                 open the file on n5
-      call fopenn (n5,lop,nvar,n5name,n6name)
+      call fopenn (n5,lop,icx,nvar,n5name,n6name)
 c                                 ctr file tab format header
-      write (n5,'(a)') '|6.6.6.'
+      write (n5,'(a)') '|6.6.6'
 c                                 a title
       write (n5,'(a)') n5name
 c                                 number of indepedent variables
@@ -3203,31 +3211,68 @@ c                                 all props options
 c                                 no chemical potentials
             ichem = 0 
 
-            else
+         else
 c                                 make chemical potential names
-               do i = 1, icp
-                  write (mname(i),1000) cname(i)
-               end do 
+            do i = 1, icp
+               write (mname(i),1000) cname(i)
+            end do 
 
-               if (hcp.gt.icp) then 
-                  mname(icp+1) = 'T(K)   '
-                  mname(icp+2) = '-P(bar)'
-               end if 
+            if (hcp.gt.icp) then 
+               mname(icp+1) = 'T(K)   '
+               mname(icp+2) = '-P(bar)'
+            end if 
 
-               ichem = hcp
+            ichem = hcp 
+
+            if (icx.eq.999) then 
+c                                  phemgp file
+               write (n5,*) ivar + i8 + 4 + icomp + ichem 
+               write (n5,'(100(a14,1x))') 'counter','name',
+     *                                    (vnm(i),i=1,ivar),
+     *                                    (pname(i),i=1,i8+3),
+     *                                    (cname(i), i = 1, icomp),
+     *                                    (mname(i), i = 1, ichem)
+            else 
+c                                  single phase or system tab file
+               write (n5,*) ivar + i8 + 2 + icomp + ichem 
+               write (n5,'(100(a14,1x))') (vnm(i),i=1,ivar),
+     *                                    (pname(i),i=1,i8+3),
+     *                                    (cname(i), i = 1, icomp),
+     *                                    (mname(i), i = 1, ichem)
 
             end if 
 
-            mvar = ivar + i8 + 3 + icomp
+         end if 
 
-            write (n5,*) mvar 
-            write (n5,1010) (vnm(i),i=1,ivar),(pname(i),i=1,i8+3),
-     *                                        (cname(i), i = 1, icomp),
-     *                                        (mname(i), i = 1, ichem)
+      else if (lop.eq.38) then 
+c                                 custom property list
+         if (icx.eq.999) then 
+c                                 phemgp file, this may cause problems
+c                                 from phemgp if ivar ne 2
+            write (n5,*) ivar + iprop + 1
+            write (n5,'(100(a14,1x))') 'counter','name',
+     *                                 (vnm(i),i=1,ivar),
+     *                                 (pname(l2p(nstab(i))),i=1,iprop)
+
+         else 
+c                                  normal sys or phase tab file
+            write (n5,*) ivar + iprop 
+            write (n5,'(100(a14,1x))') (vnm(i),i=1,ivar),
+     *                                 (pname(l2p(nstab(i))),i=1,iprop)
+
+         end if 
+
+      else if (nvar.eq.2) then
+c                                 2d 1-variable table
+         write (n5,*) 1
+         write (n5,'(100(a14,1x))') pname(l2p(lop))
+
+      else 
+c                                 1d, include all dependent variables
+         write (n5,*) nvar+ivar
+         write (n5,'(100(a14,1x))') (vnm(i),i=1,ivar),pname(l2p(lop))
      
-         end if
-
-      end if 
+      end if
 c                                 for all other options
 c                                 header is completed at the end of the 
 c                                 calculation.
@@ -3253,7 +3298,8 @@ c                                 plot file info messages
 
 
           write (*,3020) n5name
-          write (*,1010) (vnm(i),i=1,ivar),(pname(i),i=1,i8+3),
+          write (*,'(100(a14,1x))') 'name',
+     *               (vnm(i),i=1,ivar),(pname(i),i=1,i8+3),
      *                                 (cname(i), i = 1, icomp),
      *                                 (mname(i), i = 1, ichem)
           write (*,3030) 
@@ -3262,7 +3308,6 @@ c                                 plot file info messages
 
 1000  format (' mu_',a,' ')
 
-1010  format ('Name',10x,100(a14,1x))
 3020  format (/,'In this mode output is written in ',
      *          'tabular (spread sheet) format to file: ',a,//,
      *          'This file CANNOT be processed with Perple_X',//,
