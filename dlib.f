@@ -595,9 +595,9 @@ c----------------------------------------------------------------
      *            'S-wave velocity P derivative (km/s/bar)',
      *            'Adiabatic bulk modulus P derivative (unitless)',
      *            'Shear modulus P derivative (unitless)',
-     *            'All phase &/or system properties (spreadsheet)',
+     *            'All phase &/or system properties',
      *            'Absolute amount (Vol, Mol, or Wt) of a phase',
-     *            'Multiple property output for system and phases'/
+     *            'Multiple property output for system &/or phases'/
 c-------------------------------------------
       if (nopt(1).ne.0d0) then 
 c                                 doing a second run, with an 
@@ -723,8 +723,8 @@ c                                 custom property list, select properties
                   if (ier.ne.0.or.i.gt.kprop-1.or.i.lt.0) then
                      write (*,1020)
                      cycle
-                  else if (i.eq.8.or.i.eq.20.or.
-     *                     i.eq.23.or.i.eq.25.or.i.gt.35) then 
+                  else if (i.eq. 8.or.i.eq. 6.or.i.eq.23.or.i.eq.24.or.
+     *                     i.eq.25.or.i.eq.36.or.i.eq.38) then 
                      write (*,1100) 
                      cycle
                   else if (i.eq.0) then 
@@ -812,14 +812,14 @@ c                                 get phase name
 1110  format (/,'Calculate individual phase properties (y/n)?')
 1120  format (/,'Include fluid in computation of aggregate ', 
      *          '(or modal) properties (y/n)?')
-1130  format (/,'In this mode you may compute:',/
+1130  format (/,'In this mode you may tabulate:',
      *     /,4x,'1 - properties of the system',
      *     /,4x,'2 - properties of a phase',   
-     *     /,4x,'3 - properties of the system and its phases',//
+     *     /,4x,'3 - properties of the system and its phases',/
      *         ,'Output for option 1 & 2 can be plotted with '
-     *         ,'PSPLOT, PYWERAMI or MatLab',/,'Output for '
-     *         ,'option 3 can only be plotted with PHEMGP',//
-     *         ,'Choose an option [default = 1]:')
+     *         ,'PSPLOT, PYWERAMI or MatLab.',/,'Output for '
+     *         ,'option 3 can only be plotted with PHEMGP.',//
+     *         ,'Select an option [default = 1]:')
 1140  format (/,'Hey cowboy, that warnt no solution, try again.',/)
 1150  format (/,'Specify a property to be computed from the ',
      *          'list above [0 to end]')

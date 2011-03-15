@@ -129,9 +129,8 @@ c                                 close "echo" file
 
 1000  format (/,'Select operational mode:',/,
      *        4x,'1 - compute properties at specified conditions')
-1010  format (4x,'2 - create a property grid (plot with pscontor)')
-1020  format (4x,'3 - compute properties along a 1d path',
-     *        ' (plot with pspts/pt2curv/psvdraw)')        
+1010  format (4x,'2 - create a property grid')
+1020  format (4x,'3 - compute properties along a 1d path')        
 1025  format (4x,'4 - as in 3, but input from file')
 1026  format (4x,'0 - EXIT')
 1030  format (/,'Invalid choice for 1d grids',/)
@@ -232,9 +231,11 @@ c                                 number of grid points
 
                   call polprp (prp,lop,icx)
 
-                  if (prp.ne.0d0) then 
-                     if (prp.gt.prmax) prmax = prp
-                     if (prp.lt.prmin) prmin = prp
+                  if (.not.isnan(prp)) then 
+                     if (prp.ne.0d0) then 
+                        if (prp.gt.prmax) prmax = prp
+                        if (prp.lt.prmin) prmin = prp
+                     end if 
                   end if 
 
                   write (n5,*) prp
@@ -1037,14 +1038,10 @@ c-----------------------------------------------------------------------
 
       double precision wt(3), prop
 
-      integer jvar
-      double precision var,dvr,vmn,vmx
-      common/ cxt18 /var(l3),dvr(l3),vmn(l3),vmx(l3),jvar
-
       integer iopt
       logical lopt
       double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+      common/ opts /nopt(i10),iopt(i10),lopt(i10) 
 
       integer iap,ibulk
       common/ cst74  /iap(k2),ibulk
@@ -1069,7 +1066,7 @@ c                                 initialize
 
          if (ijpt.eq.0) then 
 c                                 missing data at the node
-            write (*,1000) var(1),var(2)
+            call badnum
 
          else 
 c                                 compute all properties
@@ -1077,7 +1074,7 @@ c                                 compute all properties
 
             if (nodata) then 
 
-               write (*,1000) var(1),var(2)
+               call badnum
 
             else 
 c                                 get the specific property of
@@ -1089,9 +1086,36 @@ c                                 interest
          end if 
       end if 
 
-1000  format ('Missing data at: ',2(g14.7,1x))
+      end 
+
+      subroutine badnum 
+c----------------------------------------------------------------
+c badnum write missing data message
+c----------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      character vnm*8
+      common/ cxt18a /vnm(l3)
+
+      integer jvar
+      double precision var,dvr,vmn,vmx
+      common/ cxt18 /var(l3),dvr(l3),vmn(l3),vmx(l3),jvar
+c----------------------------------------------------------------------
+
+      write (*,1000) vnm(1),var(1),vnm(2),var(2),nopt(7)
+
+1000  format ('Missing data at ',a,'=',g12.5,', ',a,'=',g12.5,
+     *        ' assigned ',g12.5,' to all properties')
 
       end 
+
 
       subroutine getprp (prop,lop,icx,aprp)
 c----------------------------------------------------------------
@@ -2528,99 +2552,93 @@ c                                 get node(s) to extract value
 
       if (ijpt.eq.0) then 
 c                                 missing data at the node
-         write (*,1000) var(1),var(2)
-         write (n5,'(200(g14.7,1x))') (var(i),i=1,ivar), 
-     *                                (nopt(7),i=1,jstab)
+         nodata = .true.
+
+      else 
+c                                 compute all properties
+         call getloc (itri,jtri,ijpt,wt,nodata)
+
+      end if
+
+      if (nodata) then 
+
+          call badnum
+          write (n5,'(200(g14.7,1x))') (var(i),i=1,ivar), 
+     *                                 (nopt(7),i=1,jstab)
 
       else 
 
          do i = 1, jstab
             mode(i) = 0d0
          end do 
-c                                 compute all properties
-         call getloc (itri,jtri,ijpt,wt,nodata)
 
-         if (nodata) then 
+         id = 0 
 
-            write (*,1000) var(1),var(2)
-            write (n5,'(200(g14.7,1x))') (var(i),i=1,ivar), 
-     *                                   (nopt(7),i=1,jstab)
+         do i = 1, nph(ias)
 
-          else 
+            jk = 0 
 
-            id = 0 
+            do j = 1, istab
 
-            do i = 1, nph(ias)
+               if (idstab(j).eq.idsol(i,ias)) then 
 
-               jk = 0 
+                  do k = 1, nrep(i,ias)
 
-               do j = 1, istab
-
-                  if (idstab(j).eq.idsol(i,ias)) then 
-
-                     do k = 1, nrep(i,ias)
-
-                        id = id + 1                        
+                     id = id + 1                        
 c                                 mode (%)
-                        if (aflu.and.lflu.or.(.not.aflu)) then
+                     if (aflu.and.lflu.or.(.not.aflu)) then
 c                                 total mode:
-                           if (iopt(3).eq.0) then 
+                        if (iopt(3).eq.0) then 
 c                                 volume fraction
-                              prop = props(1,id)
-     *                             * props(16,id)/psys(1)*1d2
-                           else if (iopt(3).eq.1) then   
+                           prop = props(1,id)
+     *                          * props(16,id)/psys(1)*1d2
+                        else if (iopt(3).eq.1) then   
 c                                 weight fraction 
-                              prop = props(16,id)
+                           prop = props(16,id)
      *                             * props(17,id)/psys(17)*1d2
-                           else if (iopt(3).eq.2) then 
+                        else if (iopt(3).eq.2) then 
 c                                 mol fraction
-                              prop = props(16,id)/psys(16)*1d2
-                           end if 
-                        else 
-c                                 solid only mode:
-                           if (iopt(3).eq.0) then 
-c                                 volume fraction
-                              prop = props(1,id)
-     *                             * props(16,id)/psys1(1)*1d2
-                           else if (iopt(3).eq.1) then 
-c                                 wt fraction
-                              prop = props(16,id)
-     *                             * props(17,id)/psys1(17)*1d2
-                           else if (iopt(3).eq.2) then 
-c                                 mol fraction
-                              prop = props(16,id)/psys1(16)*1d2
-                           end if 
+                           prop = props(16,id)/psys(16)*1d2
                         end if 
+                     else 
+c                                 solid only mode:
+                        if (iopt(3).eq.0) then 
+c                                 volume fraction
+                           prop = props(1,id)
+     *                          * props(16,id)/psys1(1)*1d2
+                        else if (iopt(3).eq.1) then 
+c                                 wt fraction
+                           prop = props(16,id)
+     *                             * props(17,id)/psys1(17)*1d2
+                        else if (iopt(3).eq.2) then 
+c                                 mol fraction
+                           prop = props(16,id)/psys1(16)*1d2
+                        end if 
+                     end if 
 
-                        mode(jk+k) = prop
+                     mode(jk+k) = prop
 
-                     end do 
+                  end do 
 
-                  end if
+               end if
 c                                mode column pointer
-                  jk = jk + nstab(j)
+               jk = jk + nstab(j)
  
-               end do
             end do
+         end do
 c                                 convert to cumulative modes if
 c                                 requested
-            if (lopt(2)) then
-               do j = 2, jstab
-                  mode(j) = mode(j) + mode(j-1)
-               end do
-            end if
+         if (lopt(2)) then
+            do j = 2, jstab
+               mode(j) = mode(j) + mode(j-1)
+            end do
+         end if
 c                                 modes assigned, output to n5
 
-            write (n5,'(200(g14.7,1x))') (var(i),i=1,ivar), 
-     *                                   (mode(i),i=1,jstab)
+         write (n5,'(200(g14.7,1x))') (var(i),i=1,ivar), 
+     *                                (mode(i),i=1,jstab)
 
-         end if 
-
-      end if  
-
-1000  format (/,'Missing data at: ',2(g14.7,1x),' assigned: ',
-     *          g14.7,' to all modes at this condition.',/)
-
+      end if 
   
       end 
 
@@ -2832,7 +2850,8 @@ c----------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i, j, icx, id, itri(4), jtri(4), ijpt, lop, ict
+      integer i, j, icx, id, itri(4), jtri(4), ijpt, lop, mprop, nprop, 
+     *        ist 
 
       logical nodata
 
@@ -2895,65 +2914,95 @@ c                                 compute all properties
          call getloc (itri,jtri,ijpt,wt,nodata)
 
       end if 
+c                                 property counters
+      ist = ivar + 1
 
+      if (lop.eq.36) then 
+         mprop = i8 + 3 + icomp + ichem
+      else 
+         mprop = iprop
+      end if 
+
+      nprop = mprop + ivar 
+c                                 error check
+      if (nprop.gt.k10) call error (1,0d0,nprop,'K10')
+      
       if (nodata) then 
 c                                 missing data at the node
-         write (*,1000) var(1),var(2)
+         call badnum
 
          if (icx.eq.999) then 
-            if (lop.eq.36) then 
-               write (n5,1010) 0,'Missing data  ',(var(i),i=1,ivar), 
-     *                         (nopt(7),i=1,i8+3+icomp+ichem)
-            else 
-               write (n5,1010) 0,'Missing data  ',(var(i),i=1,ivar),
-     *                         (nopt(7),i=1,iprop)
-            end if
+
+            write (n5,1010) 0,'Missing data  ',(var(i),i=1,ivar), 
+     *                                         (nopt(7),i=1,mprop)
+
          else 
-            if (lop.eq.36) then 
-               write (n5,'240(g14.7,1x)') (var(i),i=1,ivar), 
-     *                                    (nopt(7),i=1,i8+3+icomp+ichem)
-            else 
-               write (n5,'240(g14.7,1x)') (var(i),i=1,ivar), 
-     *                                    (nopt(7),i=1,iprop)
-            end if 
+
+            write (n5,'(240(g14.7,1x))') (var(i),i=1,ivar), 
+     *                                   (nopt(7),i=1,mprop)
+
          end if 
 
       else 
+c                                 text version of variable values
+         do i = 1, ivar
+            write (cprop(i),'(g14.7)') var(i)
+         end do
 
-            if (lop.eq.38) then 
+         if (lop.eq.38) then 
 c                                 custom property choices
-               if ((ntot+1)*iprop-1.gt.k10) 
-     *            call error (1,0d0,(ntot+1)*iprop-1,'K10   ')
-
-               write (cprop(1),'(7x,i2,6x)') ntot
-c                                 system props
-               do i = 1, iprop
-                  call getprp (prop,nstab(i),0,.true.)
-                  write (cprop(i),'(g14.7)') prop
-               end do
-
-               ict = iprop
-c                                 phase props
-               do j = 1, ntot
-
-                  ict = ict + 1
-                  write (cprop(ict),'(a14)') pname(j)
-
-                  do i = 1, iprop
-                     prop = -999d0
-                     call getprp (prop,nstab(i),j,.true.)
-                     ict = ict + 1
-                     write (cprop(ict),'(g14.7)') prop
+               if (icx.eq.999.or.icx.eq.0) then 
+c                                 get system props
+                  do i = ist, nprop
+                     call getprp (prop,nstab(i-ivar),0,.true.)
+                     write (cprop(i),'(g14.7)') prop
                   end do
-               end do               
+c                                 output system properties
+                  if (icx.eq.999) then 
+c                                 phemgp format
+                     write (n5,1010) ntot,'System        ',
+     *                               (cprop(i),i=1,nprop)
+                  else
+c                                 normal table format
+                     write (n5,'(200(a14,1x))') (cprop(i),i=1,nprop)
 
-               write (n5,1030) var(1),var(2),ntot,(cprop(i),i=1,ict)
+                  end if 
 
-            else if (icx.eq.0.or.icx.eq.999) then 
-c                                 a system property is  requested:
+               end if 
+
+               if (icx.eq.999) then 
+c                                 properties of all phases
+                  do j = 1, ntot
+
+                     do i = ist, nprop
+                        call getprp (prop,nstab(i-ivar),j,.true.)
+                        write (cprop(i),'(g14.7)') prop
+                     end do
+c                                 output, must be phemgp
+                     write (n5,1010) ntot,pname(j),
+     *                               (cprop(i),i=1,nprop)
+
+                  end do       
+
+               else if (icx.ne.0) then 
+c                                 properties of a single phase
+                  do i = ist, nprop
+                     call getprp (prop,nstab(i-ivar),icx,.true.)
+                     write (cprop(i),'(g14.7)') prop
+                  end do 
+c                                 must be normal table format
+                  write (n5,'(200(a14,1x))') (cprop(i),i=1,nprop)
+
+               end if
+
+         else
+c                                 "all property" option, lop.eq.36
+            if (icx.eq.0) then 
+c                                 only system properties requested:
+c                                 normal table format
                if (aflu.and.lflu.or.(.not.aflu)) then 
 c                                 include fluid:
-                  write (n5,1010) 'System        ', 
+                  write (n5,'(200(g14.7,1x))') 
 c                                 physical conditions
      *                            (var(i),i=1,ivar), 
 c                                 standard physical props
@@ -2964,7 +3013,7 @@ c                                 chemical potentials
      *                            (mu(i), i = 1, ichem)
                else
 c                                 exclude fluid:
-                  write (n5,1010) 'System        ', 
+                  write (n5,'(200(g14.7,1x))') 
 c                                 physical conditions
      *                            (var(i),i=1,ivar), 
 c                                 standard physical props
@@ -2974,28 +3023,71 @@ c                                 composition (wt or vol)
 c                                 chemical potentials
      *                            (mu(i), i = 1, ichem)
                end if 
-c                                 print phase props if requested:
-               if (icx.eq.999) then 
 
-                  do id = 1, ntot
+            if (icx.eq.999) then
+c                                 properties of all phases
+c                                 phemgp table format
 
-                     write (n5,1010) pname(id),
+c                                 first the system properties
+               if (aflu.and.lflu.or.(.not.aflu)) then 
+c                                 include fluid:
+                  write (n5,1010) ntot,'System        ', 
 c                                 physical conditions
-     *                     (var(i),i=1,ivar), 
+     *                            (var(i),i=1,ivar), 
 c                                 standard physical props
-     *                     (props(i,id),i=1,i8),
-     *                     props(17,id)*props(16,id)/psys(17)*1d2,
-     *                     props(1,id)*props(16,id)/psys(1)*1d2,
-     *                     props(16,id)/psys(16)*1d2,
+     *                            (psys(i),i=1,i8),1d2,1d2,1d2,
 c                                 composition (wt or vol)
-     *                     (pcomp(i,id), i = 1, icomp),
+     *                            (fbulk(i), i = 1, icomp),
 c                                 chemical potentials
-     *                     (mu(i), i = 1, ichem)
+     *                            (mu(i), i = 1, ichem)
+               else
+c                                 exclude fluid:
+                  write (n5,1010) ntot,'System        ', 
+c                                 physical conditions
+     *                            (var(i),i=1,ivar), 
+c                                 standard physical props
+     *                            (psys1(i),i=1,i8),1d2,1d2,1d2,
+c                                 composition (wt or vol)
+     *                            (fbulk1(i), i = 1, icomp),
+c                                 chemical potentials
+     *                            (mu(i), i = 1, ichem)
+               end if 
+c                                 now the phase properties
+               do id = 1, ntot
+
+                  if (aflu.and.lflu.or.(.not.aflu)) then 
+c                                 include fluid: weight %
+                     p1 = props(17,id)*props(16,id)/psys(17)*1d2
+c                                 vol %
+                     p2 = props(1,id)*props(16,id)/psys(1)*1d2
+c                                 mol %
+                     p3 = props(16,id)/psys(16)*1d2
+
+                  else
+c                                 exclude fluid: weight %
+                     p1 = props(17,id)*props(16,id)/psys1(17)*1d2
+c                                 vol %
+                     p2 = props(1,id)*props(16,id)/psys1(1)*1d2
+c                                 mol %
+                     p3 = props(16,id)/psys1(16)*1d2
+
+                  end if 
+
+                  write (n5,1010) ntot, pname(id),
+c                                 physical conditions
+     *                            (var(i),i=1,ivar), 
+c                                 standard physical props
+     *                            (props(i,id),i=1,i8),p1,p2,p3,
+c                                 composition (wt or vol)
+     *                            (pcomp(i,id), i = 1, icomp),
+c                                 chemical potentials
+     *                            (mu(i), i = 1, ichem)
                   end do
 
                end if 
 
             else 
+c                                 all properties of a specific phase
 c                                 find the phase index
                call soltst (id,icx)
 
@@ -3019,27 +3111,25 @@ c                                 mol %
 
                   end if 
 
-
-
-                  write (n5,1010)  pname(id),
+                  write (n5,'(200(g14.7,1x))')  
 c                                 physical conditions
-     *                   (var(i),i=1,ivar), 
+     *                            (var(i),i=1,ivar), 
 c                                 standard physical props
-     *                   (props(i,id),i=1,i8),p1,p2,p3,
+     *                            (props(i,id),i=1,i8),p1,p2,p3,
 c                                 composition (wt or vol)
-     *                   (pcomp(i,id), i = 1, icomp),
+     *                            (pcomp(i,id), i = 1, icomp),
 c                                 chemical potentials
-     *                   (mu(i), i = 1, ichem)
+     *                            (mu(i), i = 1, ichem)
                 end if 
 
-            end if 
+            end if
+ 
+         end if
 
       end if  
 
-1000  format ('Missing data at: ',2(g14.7,1x))
 1010  format (7x,i2,6x,a14,1x,200(g14.7,1x))
-1030  format (g14.7,1x,g14.7,240(a14,1x))
-  
+
       end 
 
       subroutine fopenn (n,lop,icx,dim,n5name,n6name)
@@ -3085,7 +3175,7 @@ c                                 phemgp format
             else if (dim.eq.1) then 
                call mertxt (n5name,tfname,'.pts',0)
             else
-               call mertxt (n5name,tfname,'.ctr',0)
+               call mertxt (n5name,tfname,'.tab',0)
             end if 
 
          end if 
@@ -3159,23 +3249,41 @@ c----------------------------------------------------------------------
       common/ cst6  /icomp,istct,iphct,icp
 
       save pname,l2p
-      data pname/'V,J/bar/mol','H,J/mol       ','gamma T   ',
-     *           'Ks,bar     ',
-     *           'Gs,bar     ','v0,km/s   ','vp,km/s   ','vs,km/s   ',
-     *           'vp/vs      ','rho,kg/m3 ','G,J/mol   ','cp,J/K/mol',
-     *           'alpha,1/K  ','beta,1/bar','S,J/K/mol ','n,mol     ',
-     *           'N,g        ','Ks_T,bar/K','Gs_T,bar/K','Ks_P      ',
-     *           'Gs_P       ','v0_T      ','vp_T      ','vs_T      ',
-     *           'v0_P       ','vp_P      ','vs_P      ','wt,%      ',
-     *           'vol,%      ','mol,%     ',
-     *           'h,J/m3        ','cp,J/m3       ','blk_comp      ',
+
+      data pname/'V,J/bar/mol   ','H,J/mol       ','Gruneisen_T   ',
+c                                 4-6
+     *           'Ks,bar        ','Gs,bar        ','v0,km/s       ',
+c                                 7-9
+     *           'vp,km/s       ','vs,km/s       ','vp/vs         ',
+c                                 10-12
+     *           'rho,kg/m3     ','G,J/mol       ','cp,J/K/mol    ',
+c                                 13-15
+     *           'alpha,1/K     ','beta,1/bar    ','S,J/K/mol     ',
+c                                 16-18
+     *           'n,mol         ','N,g           ','Ks_T,bar/K    ',
+c                                 19-21
+     *           'Gs_T,bar/K    ','Ks_P          ','Gs_P          ',
+c                                 22-24
+     *           'v0_T          ','vp_T          ','vs_T          ',
+c                                 25-27
+     *           'v0_P          ','vp_P          ','vs_P          ',
+c                                 28-30
+     *           'wt,%          ','vol,%         ','mol,%         ',
+     *           'h,J/m3        ','cp,J/K/m3     ','blk_comp      ',
      *           'mode          ','composition   ','s,J/K/m3      ',
      *           's,J/K/kg      ','h,J/kg        ','cp,J/K/kg     ',
+c                                 40-43
      *           'specific_mass ','poisson_ratio ','chemical_pot  ',
      *           'assemblage_i  ','extent        '/
-c                                 l2p points from lop to pname
-      data l2p/31,10,32,13,14,33,34,35,3,4,5,6,7,8,9,36,37,38,39,40,41,
-     *         42,43,0,22,23,24,18,19,25,26,27,20,21,0,44,0,0/
+c                                 l2p points from lop to pname, 
+c                                 1-10
+      data l2p/31,10,32,13,14,33,34,35, 3, 4,
+c                                 11-20                  
+     *         5 , 6, 7, 8, 9,36,37,38,39,40,
+c                                 21-30 
+     *         41, 1,42,43, 0,22,23,24,18,19,
+c                                 31-38
+     *         25,26,27,20,21, 0, 44, 0/
 c------------------------------------------------------------------------
 c                                 generate a file name and
 c                                 open the file on n5
@@ -3226,16 +3334,16 @@ c                                 make chemical potential names
 
             if (icx.eq.999) then 
 c                                  phemgp file
-               write (n5,*) ivar + i8 + 4 + icomp + ichem 
-               write (n5,'(100(a14,1x))') 'counter','name',
+               write (n5,*) ivar + i8 + 5 + icomp + ichem 
+               write (n5,'(200(a14,1x))') 'Counter','Name',
      *                                    (vnm(i),i=1,ivar),
      *                                    (pname(i),i=1,i8+3),
      *                                    (cname(i), i = 1, icomp),
      *                                    (mname(i), i = 1, ichem)
             else 
 c                                  single phase or system tab file
-               write (n5,*) ivar + i8 + 2 + icomp + ichem 
-               write (n5,'(100(a14,1x))') (vnm(i),i=1,ivar),
+               write (n5,*) ivar + i8 + 3 + icomp + ichem 
+               write (n5,'(200(a14,1x))') (vnm(i),i=1,ivar),
      *                                    (pname(i),i=1,i8+3),
      *                                    (cname(i), i = 1, icomp),
      *                                    (mname(i), i = 1, ichem)
@@ -3249,15 +3357,15 @@ c                                 custom property list
          if (icx.eq.999) then 
 c                                 phemgp file, this may cause problems
 c                                 from phemgp if ivar ne 2
-            write (n5,*) ivar + iprop + 1
-            write (n5,'(100(a14,1x))') 'counter','name',
+            write (n5,*) ivar + iprop + 2
+            write (n5,'(200(a14,1x))') 'counter','name',
      *                                 (vnm(i),i=1,ivar),
      *                                 (pname(l2p(nstab(i))),i=1,iprop)
 
          else 
 c                                  normal sys or phase tab file
             write (n5,*) ivar + iprop 
-            write (n5,'(100(a14,1x))') (vnm(i),i=1,ivar),
+            write (n5,'(200(a14,1x))') (vnm(i),i=1,ivar),
      *                                 (pname(l2p(nstab(i))),i=1,iprop)
 
          end if 
@@ -3271,7 +3379,7 @@ c                                 2d 1-variable table
 c                                 1d, include all dependent variables
          write (n5,*) nvar+ivar
          write (n5,'(100(a14,1x))') (vnm(i),i=1,ivar),pname(l2p(lop))
-     
+
       end if
 c                                 for all other options
 c                                 header is completed at the end of the 
@@ -3294,11 +3402,11 @@ c                                 plot file info messages
      *                          (vnm(i),i=1,ivar),(prname(i),i=1,iprop)
 
 
-      else if (lop.eq.36) then 
+      else if (lop.eq.36.and.icx.eq.99) then 
 
 
           write (*,3020) n5name
-          write (*,'(100(a14,1x))') 'name',
+          write (*,'(100(a14,1x))') 'Counter','Name',
      *               (vnm(i),i=1,ivar),(pname(i),i=1,i8+3),
      *                                 (cname(i), i = 1, icomp),
      *                                 (mname(i), i = 1, ichem)

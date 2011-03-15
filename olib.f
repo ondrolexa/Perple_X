@@ -128,11 +128,20 @@ c                                 N, H, V, Cp, alpha, beta, density
       write (lu,1190)
 c                                 phase/system summary, seismic:
       do i = 1, ntot
-         write (lu,1200) pname(i), (props(j,i), j = 3, 8) 
+c                                 compute poisson ratio
+         r = (props(7,i)/props(8,i))**2
+
+         write (lu,1200) pname(i), (props(j,i), j = 3, 8),
+     *                   0.5d0*(r-2d0)/(r-1d0)
       end do
 
-      write (lu,1200) 'System        ',(psys(j), j = 3, 8) 
-      if (aflu) write (lu,1200) 'System - fluid',(psys1(j), j = 3, 8) 
+      r = (psys(7)/psys(8))**2
+      write (lu,1200) 'System        ',(psys(j), j = 3, 8),
+     *                                 0.5d0*(r-2d0)/(r-1d0)
+
+      r = (psys1(7)/psys1(8))**2
+      if (aflu) write (lu,1200) 'System - fluid',(psys1(j), j = 3, 8),
+     *                                 0.5d0*(r-2d0)/(r-1d0)
 
       write (lu,1240)
 c                                 phase/system summary, seismic derivatives:
@@ -257,8 +266,9 @@ c                                 chemical potentials variance
      *         ,6x,'Alpha(1/K)',2x,'Beta(1/bar)',2x,'Density(kg/m3)')
 1170  format (1x,a,1x,f9.2,3x,13(g12.5,1x))
 1190  format (/,'Seismic Properties:'
-     *        /,17x,'Gruneisen',7x,'Ks(bar)',7x,'Mu(bar)',
-     *        4x,'V0(km/s)',5x,'Vp(km/s)',5x,'Vs(km/s)')
+     *        /,17x,'Gruneisen_T',7x,'Ks(bar)',7x,'Mu(bar)',
+     *        4x,'V0(km/s)',5x,'Vp(km/s)',5x,'Vs(km/s)',5x,
+     *        'Poisson ratio')
 1200  format (1x,a,3x,12(g12.5,1x))
 1210  format (/,'Bulk Composition:')
 1220  format (/,'Other Bulk Properties:')
