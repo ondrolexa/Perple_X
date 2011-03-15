@@ -30,9 +30,9 @@ C----------------------------------------------------------------
       integer ipieces(2,npcs),npiece(mcon),ifirst(mcon),
      *        next(nseg),ilast(mcon)
 
-      integer ix,iy
+      integer ix,iy,mvar
       double precision z,zt 
-      common/ dim   /z(nx,ny),zt(nx,ny),ix,iy
+      common/ dim   /z(nx,ny),zt(nx,ny),ix,iy,mvar
 
       double precision zmin,zmax
       common/ stuff /zmax,zmin
@@ -156,9 +156,9 @@ c------------------------------------------------------------------------
      *        ilast(ncon),i,j,k,nextg,numcon,iconlt,inow,ipiece,iseg,ic,
      *        lines,isegn,isego,icl,icf1
 
-      integer ix,iy
+      integer ix,iy,mvar
       double precision z,zt 
-      common/ dim   /z(nx,ny),zt(nx,ny),ix,iy
+      common/ dim   /z(nx,ny),zt(nx,ny),ix,iy,mvar
 
       dx = (xmax - xmin) / float(ix -1)
       dy = (ymax - ymin) / float(iy -1)

@@ -729,6 +729,7 @@ c----------------------------------------------------------------------
       subroutine redtab (lun)
 c----------------------------------------------------------------------
 c redtab - reads a Perple_X tab format file from logical unit number lun.
+c chooses variables if necessary.
 c see www.perplex.ethz.ch/faq/Perple_X_6.6.6_tab_file_format.txt
 c for details of the format.
 c----------------------------------------------------------------------
@@ -736,9 +737,9 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical ratio 
+      logical ratio, first 
 
-      integer i, j, k, dvar, dvar1, mvar, ier, lun, inc(l3)
+      integer i, j, k, dvar, dvar1, mvar, ier, lun, inc(l3), inv(i11)
 
       character tag*5, y, title*162, dname(i11)*14
 
@@ -751,9 +752,12 @@ c----------------------------------------------------------------------
       character vnm*8
       common/ cxt18a /vnm(l3)  
 
-      integer ix,iy
+      integer ix,iy,mvar
       double precision z,zt 
-      common/ dim   /z(nx,ny),zt(nx,ny),ix,iy
+      common/ dim   /z(nx,ny),zt(nx,ny),ix,iy,mvar
+
+      save first
+      data first/.true./
 c----------------------------------------------------------------------
       ratio = .false.
 
@@ -768,7 +772,7 @@ c                                 text title
 c                                 number of independent variables
       read (lun,*) jvar
 
-      if (jvar.ne.2) then 
+      if (jvar.gt.2) then 
          write (*,1010) jvar
          stop
       end if 
@@ -881,14 +885,73 @@ c                                 read the data
                   z(i,j) = row(dvar)
                end if 
 
+               if (isnan(z(i,j))) then 
+                  z(i,j) = 0d0
+                  if (first) then 
+                     call warn (4,z(i,j),i,'TABHED')
+                     first = .false.
+                  end if 
+               end if 
+
             end do 
 
          end do 
 
       else
+c                                 a 1d table, determine number of
+c                                 rows by reading to end of file
+         ix = 1
 
-         write (*,*) 'No provision for ',jvar,' dimensional tables'
-         stop
+         do
+   
+            read (lun,*,iostat=ier) (z(ix,k),k=1,mvar)
+            if (ier.ne.0) then
+               ix = ix - 1
+               exit
+            end if
+
+            ix = ix + 1
+
+         end do
+c                                 select variables
+         if (mvar.eq.2) then 
+c                                 no choices
+            inv(1) = 1 
+            inv(2) = 2
+
+         else 
+c                                 get independent variable (inv(1))
+            write (*,1070) 
+            write (*,1050) (i,dname(i),i=1,mvar)
+            call rdnumb (row(1),0d0,choice,1,.false.)
+            if (inv(1).lt.0.or.inv(1).gt.mvar) inv(1) = 1
+c                                 get dependent variables (inv(2..dvar))
+            write (*,1080)
+
+            dvar = 1
+
+            do 
+
+               read (*,*,iostat=ier) dvar1 
+
+               if (ier.ne.0.or.dvar1.gt.mvar.or.dvar1.lt.0) then 
+                  call rerr
+                  cycle
+               end if    
+               
+               if (dvar1.eq.0) exit 
+
+               dvar = dvar + 1
+               inv(dvar) = dvar1
+
+            end do 
+
+            if (dvar.eq.1) then 
+               write (*,1090) 
+               stop
+            end if 
+
+         end if 
 
       end if      
 
@@ -904,10 +967,15 @@ c                                 read the data
      *       ' increase dimension i11 (',i3,')',/,
      *       'and recompile Perple_X',/)
 1030  format (/,'Plot the ratio of two dependent variables (Y/N)?')
-1040  format (/,'Choose the ',a,' variable:',/)
+1040  format (/,'Select the ',a,' variable:',/)
 1050  format (10x,i2,' - ',a)
-1060  format (/,'Choose the dependent variable to be plotted:')
-
+1060  format (/,'Select the dependent variable to be plotted:')
+1070  format (/,'Select the variable to be plotted on the x-axis ',
+     *          '[default is variable 1]:',/)
+1080  format (/,'Select variables from the list above to be plotted ',
+     *          'on the y-axis',/,
+     *          'one per line, enter zero to finish:',/)
+1090  format (/,'You did not choose any dependent variables, I quit!',/)
       end 
 
       subroutine rdopt 

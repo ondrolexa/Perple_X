@@ -1,4 +1,4 @@
-      PROGRAM PSCNTR 
+      PROGRAM PSPLOT 
 
       implicit none
 
@@ -13,49 +13,55 @@
       character*100 prject,tfname
       common/ cst228 /prject,tfname
 
+      integer ix,iy,mvar
+      double precision z,zt 
+      common/ dim   /z(nx,ny),zt(nx,ny),ix,iy,mvar
+
+      integer jvar
+      double precision var,dvr,vmn,vmx
+      common/ cxt18 /var(l3),dvr(l3),vmn(l3),vmx(l3),jvar
+
       integer  iop0 
       common / basic /iop0
 c----------------------------------------------------------------------
 c                                 version info
       call vrsion
 
-      write (*,1020) 
-      read (*,'(a)') y
-
-      if (y.ne.'Y'.and.y.ne.'y') then
-
-         ratio = .false.
-c                                 simple plot 
-         do 
+      ratio = .false.
+c                         
+      do 
 c                                 get input file 
-            write (*,1000) 
+         write (*,1000) 
           
-            read (*,'(a)') tfname
+         read (*,'(a)') tfname
 c                                 extract the root
-            call getrt
+         call getrt
          
-            open (n4,iostat=ier,file=tfname,status='old')
+         open (n4,iostat=ier,file=tfname,status='old')
 
-            if (ier.ne.0) then
+         if (ier.ne.0) then
        
-               write (*,1010) tfname
-               read (*,'(a)') y
+            write (*,1010) tfname
+            read (*,'(a)') y
 
-               if (y.eq.'Y'.or.y.eq.'y') cycle 
+            if (y.eq.'Y'.or.y.eq.'y') cycle 
 
-               stop
+            stop
 
-            end if
+         end if
 
-            exit  
+         exit  
 
-         end do  
+      end do 
 
-      else 
+      if (jvar.eq.2) then
+c                                 for 2d query for ratio plots
+         write (*,1020) tfname
+         read (*,'(a)') y
 
-         ratio = .true.
+         if (y.eq.'Y'.or.y.eq.'y') then
 
-         do i = 1, 2 
+            ratio = .true.
 c                                 ratio plot 
             do 
 c                                 get input file 
@@ -94,7 +100,7 @@ c                                 get input file
 
             end do  
 
-         end do 
+         end if
 
       end if 
 c                                 read plot option file, set
@@ -110,7 +116,15 @@ c                                 allow drafting options prompt
 
       if (y.eq.'y'.or.y.eq.'Y') iop0 = 1
 
-      call psxypl (ratio)
+      if (jvar.eq.2) then 
+c                                 contour plotting
+         call psxypl (ratio)
+
+      else 
+c                                 x-y plotting
+         call psplt1
+
+      end if 
  
       call psclos
  
@@ -122,7 +136,10 @@ c                                 allow drafting options prompt
      *       'run WERAMI/FRENDLY to generate the ',
      *       'file or try a different name (y/n)?')
 1020  format (/,'Contour the ratio of values in two contour plot ',
-     *       'files (y/n)?')
+     *       'files (y/n)?',/,'If you answer yes the data from the',
+     *       'file just read will define',/,'the numerator of the '
+     *       'ratio and you will be prompted next for a file',/,
+     *       'containing the data for the denominator.')
 1030  format (/,'Modify the default plot (y/n)?')
 1040  format (/,'Enter the full name of the plot file name that ',
      *          'contains the ',a,' data',/,
@@ -158,9 +175,9 @@ c psxypl - subroutine to output x-y plot.
       integer  iop0 
       common / basic /iop0
 
-      integer ix,iy
+      integer ix,iy,mvar
       double precision z,zt 
-      common/ dim   /z(nx,ny),zt(nx,ny),ix,iy
+      common/ dim   /z(nx,ny),zt(nx,ny),ix,iy,mvar
 
       double precision zmin,zmax
       common/ stuff /zmax,zmin
@@ -183,7 +200,7 @@ c----------------------------------------------------------------------
          call redtab (n5)
 
          if (jx.ne.ix.or.jy.ne.iy) then 
-            write (*,'(a)') 'the contour plots do not have the same ',
+            write (*,'(a)') 'the plots do not have consistent ',
      *                      'dimensions'
             stop
          end if 
