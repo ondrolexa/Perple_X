@@ -959,9 +959,10 @@ c                                 get dependent variables (inv(2..dvar))
                stop
             end if 
 
-            vnm(1) = dname(inv(1))
-            if (mvar.eq.1) then 
-               vnm(2) = dname(inv(2))
+            read (dname(inv(1)),'(a8)') vnm(1) 
+
+            if (mvar.eq.2) then 
+               read (dname(inv(2)),'(a8)') vnm(2) 
                dname(inv(2)) = ' '
             else
                vnm(2) = ' '

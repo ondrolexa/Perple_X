@@ -207,9 +207,9 @@ c                                 create a new data base entry
      *          ' again later?')
 1070  format ('Calculate a different equilibrium (y/n)?')
 1090  format ('Modify or output thermodynamic parameters (y/n)? ')
-1100  format ('Enter P(bars) and T(K) (zeroes to quit):')
+1100  format ('Enter P(bars) and T(K) [zeroes to quit]:')
 1110  format ('Enter X(CO2/O) in fluid phase:')
-1120  format (/,'The table has been written',/)
+1120  format (/,'The table has been written.',/)
 1130  format (/,'Have a nice day ',a,'!',/)
 1180  format ('Write a properties table (Y/N)?')
  
@@ -625,13 +625,13 @@ c        write (*,'(80(a14,1x))') (vname(iv(i)),i=1,jpot),tags
       end if 
 
 1000  format ('Enter minimum, maximum, and increment for 'a,':')
-1010  format (/,'Make the table also a function of ',a,' (y/n)?',/,
+1010  format (/,'Make the table also a function of ',a,' (y/n)?',//,
      *       'WARNING: the resulting 3d table cannot be plotted ',
      *       'with current Perple_X',/,'programs or scripts',/)
 1020  format (/,'Generate a plot file (y/n)?')
 1060  format (/,'Enter number of sections:')
 1070  format (/,'Enter calculation title:')
-1080  format (/,'Enter a plot/table file name [without the ',
+1080  format (/,'Enter the output file name [without the ',
      *          '.plt/.tab suffix]:')
 1090  format (/,'Table columns will be:',/)
 1100  format ('|6.6.6')

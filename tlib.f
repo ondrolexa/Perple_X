@@ -1969,8 +1969,8 @@ c---------------------------------------------------------------------
      *        'in a format that is no longer supported.',/,
      *        'copy the current version from: ',
      *        'www.perplex.ethz.ch/datafiles/solution_model.dat',/)
-4     format (/,'**warning ver4** the input data includes NaNs, most ',
-     *       'probably because bad_number',/,'in perplex_option.dat is '
+4     format (/,'**warning ver004** the input data includes NaNs, most '
+     *      ,'probably because bad_number',/,'in perplex_option.dat is '
      *      ,'NaN, these values will be replaced by zeros. To avoid ',/,
      *       'this problem set bad_number to a numeric value or use a ',
      *       'plotting program capable',/,'of handling NaNs, e.g., ',

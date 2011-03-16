@@ -7,7 +7,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer ier, i
+      integer ier
 
       logical ratio
  
@@ -63,7 +63,7 @@ c                                 choices
 c                                 jvar is the dimension of the table (1- or 2-d)
       if (jvar.eq.2) then
 c                                 for 2d case query for ratio plots
-         write (*,1020) tfname
+         write (*,1020) 
          read (*,'(a)') y
 
          if (y.eq.'Y'.or.y.eq.'y') then
@@ -119,12 +119,12 @@ c1000  format (/,'Enter the complete plot file name [e.g., ',
 c     *       'my_project.tab or my_project.ctr]:')
 
 1000  format (/,'Enter the tab file name [without the .tab suffix]:')
-1010  format (/,'**warning ver191** cannot find file:',/,a,/,
+1010  format (/,'**warning ver191** cannot find file',/,a,/,
      *       'run WERAMI/FRENDLY to generate the ',
      *       'file or try a different name (y/n)?')
 1020  format (/,'Contour the ratio of values in two contour plot ',
-     *       'files (y/n)?',/,'If you answer yes the data from the',
-     *       'file just read will define',/,'the numerator of the '
+     *       'files (y/n)?',//,'If you answer yes the data from the ',
+     *       'file just read will define the',/,'numerator of the '
      *       'ratio and you will be prompted next for a file',/,
      *       'containing the data for the denominator.')
 1030  format (/,'Modify the default plot (y/n)?')
@@ -147,8 +147,7 @@ c---------------------------------------------------------------------
 
       integer i,j,jmn,imn,imx,jop0,ncon,jmx,iop1,jy,jx
 
-      double precision dx,dy,xpmn,xpmx,cmin,cmax,dcon,ypmx,ypmn,
-     *                 z0min,z0max
+      double precision xpmn,xpmx,cmin,cmax,dcon,ypmx,ypmn,z0min,z0max
 
       integer jvar
       double precision var,dvr,vmn,vmx
@@ -215,35 +214,35 @@ c                                 modify axes option, data limits, etc
                end do 
             end do  
          end if 
+c                                 plot limits
+         write (*,1060) 
+         read (*,'(a)') y
 
-      end if 
+         if (y.eq.'y'.or.y.eq.'Y') then 
 
-      write (*,1060) 
-      read (*,'(a)') y
-
-      if (y.eq.'y'.or.y.eq.'Y') then 
-
-         write (*,1070) vmx(2),vmn(2),vmx(1),vmn(1)
-         read (*,*) ypmx,ypmn,xpmx,xpmn
+            write (*,1070) vmx(2),vmn(2),vmx(1),vmn(1)
+            read (*,*) ypmx,ypmn,xpmx,xpmn
            
-         imn = int(xpmn/dvr(1)) + 1
-         imx = int(xpmx/dvr(1)) + 1
-         jmn = int(ypmn/dvr(2)) + 1
-         jmx = int(ypmx/dvr(2)) + 1
+            imn = int(xpmn/dvr(1)) + 1
+            imx = int(xpmx/dvr(1)) + 1
+            jmn = int(ypmn/dvr(2)) + 1
+            jmx = int(ypmx/dvr(2)) + 1
 
-         ix = (imx-imn+1)
-         iy = (jmx-jmn+1)
-         vmx(1) = xpmn + (ix-1)*dvr(1)
-         vmx(2) = ypmn + (iy-1)*dvr(2)
-         vmn(1) = xpmn
-         vmn(2) = ypmn 
+            ix = (imx-imn+1)
+            iy = (jmx-jmn+1)
+            vmx(1) = xpmn + (ix-1)*dvr(1)
+            vmx(2) = ypmn + (iy-1)*dvr(2)
+            vmn(1) = xpmn
+            vmn(2) = ypmn 
 c                                      reload mini matrix:
-         do i = 1, ix
-            do j = 1, iy
-               z(i,j) = z(i+imn-1,j+jmn-1)
+            do i = 1, ix
+               do j = 1, iy
+                  z(i,j) = z(i+imn-1,j+jmn-1)
+               end do
             end do
-         end do
 
+         end if
+ 
       end if 
 c                                 get some options and
 c                                 set up transformations
@@ -282,13 +281,13 @@ c                                      set up contour intervals
       end if 
 
       call pscontor (cmin,ncon,dcon)
-c                                 write a title
-      call pstext (xmin,ymax+1d1*dcy,title,162)
  
       call psaxes (jop0)
- 
+c                                 write a title
+      call pstext (xmin,ymax+2d1*dcy,title,162)
+
 1020  format ('Contoured variable range:',g14.6,'->',g14.6,/,
-     *        'Range excluding zero values:',g14.6,'->',g14.6,/,
+     *        'Range excluding zero values:',g14.6,'->',g14.6,//,
      *        'Modify default contour interval (y/n)?')
 1030  format ('Enter min, max and interval for contours:')
 1050  format ('Contour log10 of the z-value (y/n)?')
@@ -307,7 +306,7 @@ c---------------------------------------------------------------------
 
       character yes*1,short*10
 
-      integer i,j,k,jop0,npts,iop1,cwidth,i1,i0
+      integer i,j,k,jop0,npts,iop1,i1,i0
 
       double precision x(l5),y(l5),rline,w,x0min,x0max,y0min,y0max
 
@@ -338,7 +337,6 @@ c---------------------------------------------------------------------
       common/ ops /xfac,cscale,nscale,ascale,rlabel,width,bbox(4),ifont,
      *             spline,half,tenth,grid,fill,label
 c----------------------------------------------------------------------
-
       if (iop0.eq.1) then 
 c                                 log transformations
          write (*,1040) 
@@ -439,8 +437,8 @@ c                                 reset plot limits
       vmx(2) = ymax
       vmn(1) = xmin
       vmn(2) = ymin
+
       rline = 1d0
-      cwidth = 2
 c                                 get some options and
 c                                 set up transformations
       call psaxop (1,jop0,iop1)
@@ -469,20 +467,19 @@ c                                 filter data
          if (npts.lt.2) cycle
 c                                 draw data 
          if (spline) then
-            call psbspl (x,y,npts,rline,cwidth,0)
+            call psbspl (x,y,npts,rline,width,0)
          else 
-            call pspyln (x,y,npts,rline,cwidth,0)
+            call pspyln (x,y,npts,rline,width,0)
          end if
 c                                 label curve
-
          k = npts/2
-c         call pstext (x(k)+dcx,y(k)+dcy,dname(inv(i)),14)
+         call pstext (x(k)+dcx,y(k)+4d0*dcy,dname(inv(i)),14)
 
       end do  
 c                                 write a title
-c      call pstext (xmin,ymax+1d1*dcy,title,162)
+      call pstext (xmin,ymax+1d1*dcy,title,162)
 
-c      call psaxes (jop0)
+      call psaxes (jop0)
  
 1020  format ('Range of ',a,' is:',g14.6,'->',g14.6,/,
      *        'Range excluding zero values is:',g14.6,'->',g14.6,/)

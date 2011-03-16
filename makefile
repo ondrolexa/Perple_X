@@ -1,5 +1,5 @@
 #
-# makefile for Perple_X 07
+# makefile for Perple_X 6.6.6
 #
 # To compile the Perple_X programs with this file first edit the compiler
 # variables so that they are consistent with the fortran installation on 
@@ -8,12 +8,12 @@
 #                             make <target>
 #
 # where target can be one or more of the programs you want compiled, e.g.,
-# "make actcor build cohsrk ctransf frendly meemum pscontor pscontor_rel pspts psvdraw pssect pt2curv species vertex werami"
+# "make actcor build cohsrk ctransf frendly meemum pstable pspts psvdraw pssect pt2curv species vertex werami"
 # will make the most commonly used programs. 
 #
 #
 # NOTE: file conversion from windows to unix may result in a missing carraige
-# return/line feed at the end of Perple_X source files and some compilers may 
+# return/line feed at the end of Perple_X source files. some compilers  
 # report this as an error, in which case edit the source file and add a blank line
 # at the end of the file.
 #
@@ -30,19 +30,16 @@ COMP77 = gfortran
 # pappel: for use with gfortran
 FFLAGS = -C -O3 
 
-
 # WFM Added 2007Sep05
-# MYOBJ = actcor build cohsrk ctransf frendly hptover htog meemum pscontor pscontor_rel pspts psvdraw pssect pt2curv species vertex werami
+# MYOBJ = actcor build cohsrk ctransf frendly hptover htog meemum pstable pspts psvdraw pssect pt2curv species vertex werami
 
 # PAPPEL 2010SEPT08: for 6.6.0
-MYOBJ = actcor build cohsrk ctransf frendly hptover htog meemum pscontor  pspts psvdraw pssect pt2curv species vertex werami
-
+MYOBJ = actcor build cohsrk ctransf frendly hptover htog meemum pstable  pspts psvdraw pssect pt2curv species vertex werami
 
 all:  $(MYOBJ)
 
 clean: 
 	rm -f *.o $(MYOBJ)
-
 ###################### TARGETS FOR FORTRAN PROGRAMS #########################   
 # 
 actcor: actcor.o tlib.o 
@@ -69,12 +66,8 @@ htog: htog.o
 meemum: meemum.o tlib.o rlib.o flib.o nlib.o clib.o resub.o olib.o
 	$(COMP77) $(FFLAGS) meemum.o tlib.o rlib.o flib.o nlib.o clib.o resub.o olib.o -o $@   
 
-pscontor: pscontor.o pslib.o pscom.o  tlib.o cont_lib.o 
+pstable: pstable.o pslib.o pscom.o  tlib.o cont_lib.o 
 	$(COMP77) $(FFLAGS) $@.o pslib.o pscom.o  tlib.o cont_lib.o -o $@
-
-# changed by PAPPEL 2010Sept8 for 6.6.0
-#pscontor_rel: pscontor_rel.o pslib.o pscom.o tlib.o cont_lib.o
-#	$(COMP77) $(FFLAGS) $@.o pslib.o pscom.o tlib.o cont_lib.o -o $@
 
 pspts: pspts.o pslib.o tlib.o pscom.o 
 	$(COMP77) $(FFLAGS) $@.o pslib.o tlib.o pscom.o -o $@
@@ -138,15 +131,8 @@ pscom.o: pscom.f
 	$(COMP77) $(FFLAGS) -c pscom.f
 pspts.o: pspts.f
 	$(COMP77) $(FFLAGS) -c pspts.f
-pscontor.o: pscontor.f
-	$(COMP77) $(FFLAGS) -c pscontor.f
-	
-# changed by PAPPEL 2010Sept8 for 6.6.0:
-#pscontor_rel.o: pscontor_rel.f
-#	$(COMP77) $(FFLAGS) -c pscontor_rel.f
-
-ps_p_contor.o: ps_p_contor.f
-	$(COMP77) $(FFLAGS) -c ps_p_contor.f
+pstable.o: pstable.f
+	$(COMP77) $(FFLAGS) -c pstable.f
 
 # NEXT LINE MODIFIED BY pappel (PA@MIN.UNI-KIEL.DE) 2010SEPT08: CHANGED ptcurv.o TO pt2curv.o	
 pt2curv.o: pt2curv.f
