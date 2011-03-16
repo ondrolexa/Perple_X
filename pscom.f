@@ -739,9 +739,9 @@ c----------------------------------------------------------------------
 
       logical ratio, first 
 
-      integer i, j, k, dvar, dvar1, mvar, ier, lun, inc(l3), inv(i11)
+      integer i, j, k, dvar, dvar1, ier, lun, inc(l3)
 
-      character tag*5, y, title*162, dname(i11)*14
+      character tag*5, y
 
       double precision row(i11)
 
@@ -751,6 +751,10 @@ c----------------------------------------------------------------------
 
       character vnm*8
       common/ cxt18a /vnm(l3)  
+
+      integer inv
+      character dname*14, title*162
+      common/ cst76 /inv(i11),dname(i11),title
 
       integer ix,iy,mvar
       double precision z,zt 
@@ -805,8 +809,8 @@ c                                 read data
          ix = inc(1)
          iy = inc(2)
 
-         if (ix.gt.nx) call error (1,dvr(1),nx,'NX, PSXYPL')
-         if (iy.gt.ny) call error (1,dvr(2),ny,'NY, PSXYPL')
+         if (ix.gt.nx) call error (1,dvr(1),nx,'NX, REDTAB')
+         if (iy.gt.ny) call error (1,dvr(2),ny,'NY, REDTAB')
 
          if (mvar.gt.1) then
 c                                 get dependent variable choice, single 
@@ -872,6 +876,8 @@ c                                 variable or ratio
             dvar = 1
 
          end if      
+c
+         vnm(2) = dname(dvar)
 c                                 read the data 
          do i = 1, ix
 
@@ -900,17 +906,17 @@ c                                 read the data
       else
 c                                 a 1d table, determine number of
 c                                 rows by reading to end of file
-         ix = 1
+         iy = 1
 
          do
    
-            read (lun,*,iostat=ier) (z(ix,k),k=1,mvar)
+            read (lun,*,iostat=ier) (z(iy,k),k=1,mvar)
             if (ier.ne.0) then
-               ix = ix - 1
+               iy = iy - 1
                exit
             end if
 
-            ix = ix + 1
+            iy = iy + 1
 
          end do
 c                                 select variables
@@ -923,7 +929,7 @@ c                                 no choices
 c                                 get independent variable (inv(1))
             write (*,1070) 
             write (*,1050) (i,dname(i),i=1,mvar)
-            call rdnumb (row(1),0d0,choice,1,.false.)
+            call rdnumb (row(1),0d0,inv(1),1,.false.)
             if (inv(1).lt.0.or.inv(1).gt.mvar) inv(1) = 1
 c                                 get dependent variables (inv(2..dvar))
             write (*,1080)
@@ -946,9 +952,19 @@ c                                 get dependent variables (inv(2..dvar))
 
             end do 
 
+            mvar = dvar
+
             if (dvar.eq.1) then 
                write (*,1090) 
                stop
+            end if 
+
+            vnm(1) = dname(inv(1))
+            if (mvar.eq.1) then 
+               vnm(2) = dname(inv(2))
+               dname(inv(2)) = ' '
+            else
+               vnm(2) = ' '
             end if 
 
          end if 
@@ -968,12 +984,10 @@ c                                 get dependent variables (inv(2..dvar))
      *       'and recompile Perple_X',/)
 1030  format (/,'Plot the ratio of two dependent variables (Y/N)?')
 1040  format (/,'Select the ',a,' variable:',/)
-1050  format (10x,i2,' - ',a)
-1060  format (/,'Select the dependent variable to be plotted:')
-1070  format (/,'Select the variable to be plotted on the x-axis ',
-     *          '[default is variable 1]:',/)
-1080  format (/,'Select variables from the list above to be plotted ',
-     *          'on the y-axis',/,
+1050  format (4x,i2,' - ',a)
+1060  format (/,'Select the variable to be contoured:')
+1070  format (/,'Select x-axis variable [default variable 1]:',/)
+1080  format (/,'Select y-axis variables from the list above',/,
      *          'one per line, enter zero to finish:',/)
 1090  format (/,'You did not choose any dependent variables, I quit!',/)
       end 
@@ -1125,7 +1139,13 @@ c                                 replicate fields are labled only if they
 c                                 are further apart than the normalized distance 
 c                                 specified by this keyword.   
             read (strg,*) rlabel
-
+      
+         else if (key.eq.'page_size') then 
+c                                 perplex_pdf, do nothing
+         else if (key.eq.'new_font') then 
+c                                 perplex_pdf, do nothing
+         else if (key.eq.'plot_output_type') then 
+c                                 perplex_pdf, do nothing
          else if (key.ne.'|') then 
 
             write (*,1110) key
