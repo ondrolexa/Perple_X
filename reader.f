@@ -3,7 +3,7 @@ c       n8 - echo
 c       n7 - geotherm
 c       n5 - out
 c       n6 - special out
-
+c----------------------------------------------------------------------
       implicit none
 
       include 'perplex_parameters.h'
@@ -93,8 +93,9 @@ c                                 read bulk composition data file:
 
          if (first.and.imode.eq.1.or.imode.eq.3) then 
 c                                 make console output echo to rpl file
-            call fopenn (n8,0,0,0,n5name,n6name)
+            call fopenn (n8,0,n5name,n6name)
             first = .false.
+
          end if 
 
          if (imode.eq.1) then          
@@ -155,9 +156,9 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical first, node
+      logical node
 
-      integer i,j, nxy(2), icx, lop
+      integer i,j, nxy(2)
 
       double precision tmin(2), tmax(2), dx(2), prmin, prmax, prp
 
@@ -174,116 +175,86 @@ c----------------------------------------------------------------------
       common/ cxt18a /vnm(l3)
 c----------------------------------------------------------------------
       node = .false. 
-      first = .true.
-
-      do  
 c                                 select the property
-         call chsprp 
+      call chsprp 
 c                                 set up coordinates etc
-         if (first) then 
-
-            first = .false.
 c                                 allow restricted plot limits
-            write(*,1040)
-            read (*,'(a)') yes 
+      write(*,1040)
+      read (*,'(a)') yes 
 
-            if (yes.eq.'y'.or.yes.eq.'Y') then 
+      if (yes.eq.'y'.or.yes.eq.'Y') then 
 
-               do i = 1, 2
-30                write (*,1060) vnm(i),vmn(i),vmx(i)
-                  read (*,*,err=30) tmin(i),tmax(i)
-               end do 
-
-            else 
-
-               tmin(1) = vmn(1)
-               tmin(2) = vmn(2)
-               tmax(1) = vmx(1)
-               tmax(2) = vmx(2)
-
-            end if 
-c                                 number of grid points
-            write (*,1080) 
-            read (*,*) nxy
-         
-            do i = 1, 2
-               tmin(i) = tmin(i) + (tmax(i)-tmin(i))*1d-6
-               tmax(i) = tmax(i) - (tmax(i)-tmin(i))*1d-6
-               dx(i) = (tmax(i)-tmin(i))/dfloat(nxy(i)-1)
-            end do 
-
-         end if  
-
-         call tabhed (tmin,dx,nxy,lop,icx,2,n5name,n6name)
-
-         prmin = 1d16
-         prmax = -1d16
-
-         do j = 1, nxy(2)
-
-            var(2) = tmin(2) + dx(2)*dfloat(j-1)
-
-            do i = 1, nxy(1) 
-
-               var(1) = tmin(1) + dx(1)*dfloat(i-1)
-
-               if (lop.eq.25) then 
-
-                  call allmod 
-
-
-               else if (lop.eq.36.or.lop.eq.38) then 
-
-                  call allprp (lop,icx)
-
-               else  
-
-                  call polprp 
-
-                  if (.not.isnan(prp)) then 
-                     if (prp.ne.0d0) then 
-                        if (prp.gt.prmax) prmax = prp
-                        if (prp.lt.prmin) prmin = prp
-                     end if 
-                  end if 
-
-                  write (n5,*) prp
-
-               end if 
- 
-            end do 
+         do i = 1, 2
+30          write (*,1060) vnm(i),vmn(i),vmx(i)
+            read (*,*,err=30) tmin(i),tmax(i)
          end do 
 
-         if (lop.eq.25) then 
+      else 
 
-            call outprp (2,n5name,n6name,node)
+         tmin(1) = vmn(1)
+         tmin(2) = vmn(2)
+         tmax(1) = vmx(1)
+         tmax(2) = vmx(2)
 
-            exit 
-
-         else 
-
-            close (n5)
-
-            write (*,1110) n5name
-
-            if (lop.ne.36.and.lop.ne.38) write (*,1280) prmin, prmax
-
-            write (*,1230)
-            read (*,'(a)') yes
-
-            if (yes.ne.'y'.and.yes.ne.'Y') exit
-
-         end if 
-
+      end if 
+c                                 number of grid points
+      write (*,1080) 
+      read (*,*) nxy
+         
+      do i = 1, 2
+         tmin(i) = tmin(i) + (tmax(i)-tmin(i))*1d-6
+         tmax(i) = tmax(i) - (tmax(i)-tmin(i))*1d-6
+         dx(i) = (tmax(i)-tmin(i))/dfloat(nxy(i)-1)
       end do 
 
+      call tabhed (tmin,dx,nxy,2,n5name,n6name)
+
+      do j = 1, nxy(2)
+
+         var(2) = tmin(2) + dx(2)*dfloat(j-1)
+
+         do i = 1, nxy(1) 
+
+            var(1) = tmin(1) + dx(1)*dfloat(i-1)
+
+            if (kop(1).eq.25) then 
+
+               call allmod 
+
+            else if (kop(1).eq.36.or.kop(1).eq.38) then 
+
+               call allprp 
+
+            else  
+
+               call polprp 
+
+               call outprp (2)
+
+            end if 
+ 
+         end do
+ 
+      end do 
+c                                 wrap up the calculation
+      if (kop(1).eq.25) call outmod (2,n5name,n6name,node)
+
+      close (n5)
+c                                 write data ranges
+      write (*,1000) nopt(7)
+      write (*,'(5x,200(g14.7,1x))') (dname(i),i=1,iprop)
+      write (*,'(a2,2x,200(g14.7,1x))') 'min',(prmn(i),i=1,iprop)
+      write (*,'(a2,2x,200(g14.7,1x))') 'max',(prmx(i),i=1,iprop)      
+
+      write (*,1110) n5name
+
+1000  format (/,'Data ranges excluding values equal to the bad_number ',
+     *       'value (',g10.3,') set in perplex_option.dat:',/)
 1040  format (/,'Change default variable range (y/n)?')
 1060  format (/,'Current limits on ',a,' are: ',g14.7,'->',g14.7,/,
      *          'Enter new values:')
 1080  format (/,'Enter number of nodes in the x and y directions:')
 1110  format (/,'The output data has been written to file: ',a,/)
-1230  format (/,'Evaluate additional properties (y/n)?',/)
-1280  format (/,'Range of >0 data is: ',g14.7,' -> ',g14.7,/)
 
       end 
 
@@ -1060,8 +1031,9 @@ c-----------------------------------------------------------------------
 
       integer kop,kcx,k2c,iprop
       logical kfl
-      double precision prop
-      common/ cst77 /prop(i11),kop(i11),kcx(i11),k2c(i11),iprop,kfl(i11)
+      double precision prop,prmx,prmn
+      common/ cst77 /prop(i11),prmx(i11),prmn(i11),kop(i11),kcx(i11),
+     *               k2c(i11),iprop,kfl(i11)
 
       integer igrd
       common/ cst311/igrd(l7,l7)
@@ -1221,7 +1193,6 @@ c 13 alpha
 c 14 beta 
 c 15 entropy
 c----------------------------------------------------------------
-
       implicit none
 
       include 'perplex_parameters.h'
@@ -1842,7 +1813,7 @@ c----------------------------------------------------------------------
 
       logical node
 
-      integer i, j, icx, lop, icurve, idxy, ivi, ivd, 
+      integer i, j, icurve, idxy, ivi, ivd, 
      *        iord, ipts, nprop, jpts, ier, k(2)
 
       double precision prp, coef(0:10), dxy(2), xyp(2,2), s, d
@@ -1857,8 +1828,6 @@ c----------------------------------------------------------------------
       common/ cxt18a /vnm(l3)  
 c----------------------------------------------------------------------
       node = .false.
-
-      call fopenn (n5,lop,icx,1,n5name,n6name)
 c                                 set up path information
       icurve = 0 
       idxy = 0 
@@ -1974,80 +1943,60 @@ c                                 the independent variable
 
       write (*,1180) vnm(ivi),vnm(ivd)
 
-      nprop = 0
-c                                 loop for property computation
-      do 
+      jpts = 0 
+c                                 select properties
+      call chsprp 
+c                                 write file header
+      call tabhed (dxy,dxy,k,1,n5name,n6name)
+c                                 compute properties
+      do i = 1, ipts
 
-         jpts = 0 
-c                                 select property:
-         call chsprp 
-c                                 file header
-         call tabhed (dxy,dxy,k,lop,icx,1,n5name,n6name)
+         var(ivi) = xyp(ivi,1) + dfloat(i-1)*d
 
-         do i = 1, ipts
-            var(ivi) = xyp(ivi,1) + dfloat(i-1)*d
-            if (icurve.eq.0) then 
-               var(ivd) = xyp(ivd,1) + s*(var(ivi)-xyp(ivi,1))
-               jpts = 1
+         if (icurve.eq.0) then 
+
+            var(ivd) = xyp(ivd,1) + s*(var(ivi)-xyp(ivi,1))
+            jpts = 1
+
+         else
+ 
+            var(ivd) = 0d0
+
+            do j = 0, iord
+               var(ivd) = var(ivd) + coef(j)*var(ivi)**j
+            end do
+
+            if (var(ivd).le.vmx(ivd).and.var(ivd).ge.vmn(ivd)) then 
+               jpts = jpts + 1
             else 
-               var(ivd) = 0d0
-               do j = 0, iord
-                  var(ivd) = var(ivd) + coef(j)*var(ivi)**j
-               end do
-               if (var(ivd).le.vmx(ivd).and.var(ivd).ge.vmn(ivd)) then 
-                  jpts = jpts + 1
-               else 
-                  cycle 
-               end if 
-            end if 
-
-               if (lop.eq.25) then 
-
-                  call allmod 
-
-               else if (lop.eq.36.or.lop.eq.38) then 
-
-                  call allprp (lop,icx)
-
-               else  
-
-                  call polprp 
-
-                  write (n5,'(1x,i2,3(1x,g12.6))') 
-     *                  nprop,var(ivi),prp,var(ivd)
-
-                  write (*,'(3(1x,g12.6))') var(ivi),var(ivd),prp
-
-               end if 
-
-         end do 
-
-         if (jpts.eq.0) then 
-            write (*,1330) 
-            goto 10
+               exit  
+            end if
+ 
          end if 
 
-         if (lop.ne.25) then 
-c                                 ask for another property
-            write (*,1230)
-            read (*,'(a)') yes
+         if (lop.eq.25) then 
 
-            if (yes.ne.'y'.and.yes.ne.'Y') exit
-            nprop = nprop + 1
+            call allmod 
 
-            if (lop.eq.36.or.lop.eq.38) 
-     *         call fopenn (n5,lop,icx,1,n5name,n6name)
+         else if (lop.eq.36.or.lop.eq.38) then 
 
-         else 
+            call allprp 
 
-            call outprp (1,n5name,n6name,node)
-            exit 
+         else  
+
+            call polprp 
+
+            call outprp (1)
 
          end if 
 
       end do 
 
+      if (kop(1).eq.25) call outmod (1,n5name,n6name,node)
+
       close (n5)
+
+      if (jpts.eq.0) write (*,1330) 
 
 1010  format (/,'The plot file range for ',a,' is ',g12.4,' - ',g12.4,
      *        /,'Try again:',/)
@@ -2055,15 +2004,13 @@ c                                 ask for another property
 1140  format (/,'Enter endpoint ',i1,' (',a,'-',a,') coordinates:')
 1150  format (/,'How many points along the profile?')
 1160  format (/,'Select independent variable: ',2(/,1x,i1,' - ',a))
-1180  format (/,3x,a8,5x,a8,2x,'  Property   ',/)
 1200  format (/,'Construct a non-linear profile (y/n)?')
 1210  format (/,'Profile must be described by the function',/,a,
      *        ' = Sum ( c(i) * ',a,' ^i, i = 0..n)',/,'Enter n (<10)')
 1220  format (/,'Enter c(',i2,')')
-1230  format (/,'Evaluate additional properties (y/n)?',/)
 1320  format (/,'Change the profile (Y/N)?')
 1330  format (/,'Your polynomial does not yield conditions within',
-     *          'computational coordinate frame.',/,'Try again.',/)
+     *          'computational coordinate frame.',/)
 1340  format (/,'Your polynomial is:',/,a)
 1350  format (a,'=',5('+(',g12.6,')','*',a,'^',i1))
 
@@ -2079,9 +2026,9 @@ c----------------------------------------------------------------------
 
       logical node, first
 
-      integer i, j, icx, lop, ipts, nprop, ier, k(2)
+      integer i, j, ipts, ier, k(2)
 
-      double precision prp, dxy, xyp(2), d
+      double precision dxy, xyp(2), d
 
       character*100 n5name, n6name, yes*1
 
@@ -2096,7 +2043,6 @@ c----------------------------------------------------------------------
       common/ cst83 /ivar,ind,ichem
 c----------------------------------------------------------------------
       node = .false.
-      first = .true.
 c                                 path endpoints
 30    do i = 1, 2
 
@@ -2137,22 +2083,17 @@ c                                 set up counters, pointers:
       end do
 
       d = dxy/dfloat(ipts - 1)
+c                                 select properties:
+      call chsprp
+c                                 name and open plot file, write header 
+      call tabhed (xyp,xyp,k,1,n5name,n6name)
 
-      nprop = 0
-c                                 loop for property computation
-      do 
-c                                 select property:
-         call chsprp
-c                                 name and open plot file
-c                                 write header 
-         call tabhed (xyp,xyp,k,lop,icx,1,n5name,n6name)
+      if (lop.eq.25.and.lop.ne.36) then
 
-         if (lop.eq.25.and.lop.ne.36) then
+         write (*,1180) (vnm(j),j=1,jvar)
+         write (*,1190) 
 
-            write (*,1180) (vnm(j),j=1,jvar)
-            write (*,1190) 
-
-         end if 
+      end if 
 
          do i = 1, ipts
 
@@ -2181,7 +2122,7 @@ c                                 write header
 
          if (lop.eq.25) then 
 
-            call outprp (1,n5name,n6name,node)
+            call outmod (1,n5name,n6name,node)
             exit 
 
          else 
@@ -2214,8 +2155,6 @@ c                                 ask for another property
      *          ' the profile:')
 1150  format (/,'How many points along the profile?')
 1180  format (/,3x,a8,4x,'Property',3x,8(2x,a8,3x))
-1190  format (/)
-1230  format (/,'Evaluate additional properties (y/n)?',/)
 
       end 
 
@@ -2229,7 +2168,7 @@ c----------------------------------------------------------------------
 
       logical node
 
-      integer i, icx, lop, icoors, nprop, jmode, ixy, inc, ierr, k(2)
+      integer i, icoors, nprop, jmode, ixy, inc, ierr, k(2)
 
       double precision prp, pmin, pmax, r(2),
      *                 tmin1, tmax1,a1, b1, c1, d1, x0, x1,  
@@ -2245,8 +2184,6 @@ c----------------------------------------------------------------------
       common/ cst82 /oned
 c----------------------------------------------------------------------
       node = .false.
-
-      nprop = 0
 
       do 
 
@@ -2278,7 +2215,7 @@ c                                 diagram is determined by the flag
 c                                 ixy 
          
          read (n7,*) pmin,pmax,ixy
-110      read (n7,*,end=99) tmin1,tmax1,dt1,a1,b1,c1,d1
+         read (n7,*,end=99) tmin1,tmax1,dt1,a1,b1,c1,d1
 
          if (dt1.lt.0d0) then 
             x0 = tmax1
@@ -2288,11 +2225,11 @@ c                                 ixy
             x1 = tmax1
          end if 
 
-90       x = x0
-
+         x = x0
+c                                 select properties
          call chsprp 
 c                                 write plot file header
-         call tabhed (r,r,k,lop,icx,1,n5name,n6name)
+         call tabhed (r,r,k,1,n5name,n6name)
 
          do 
 
@@ -2316,42 +2253,28 @@ c                                 condition is in bounds
 
                   else if (lop.eq.36.or.lop.eq.38) then 
 
-                     call allprp (lop,icx)
+                     call allprp 
 
                   else
   
                      call polprp 
 
-                     write (n5,'(1x,i2,3(1x,g12.6))') nprop,x,prp,y
-                     write (*,'(3(1x,g12.6))') x,y,prp
+                     call outprp (1) 
 
                   end if 
+
                end if 
+
             end if 
 
             x = x + dt1
+
             if (x.gt.x1) exit 
 
          end do  
 
-         if (lop.eq.25) then 
-
-            call outprp (2,n5name,n6name,node) 
-
-         else 
-
-            write (*,1230)
-            read (*,'(a)') yes
-            nprop = nprop + 1
-            if (yes.eq.'y'.or.yes.eq.'Y') goto 90
-c                                 more than one geotherm may
-c                                 be entered in a file
-            write (*,1320)
-            read (*,'(a)') yes
-            if (yes.eq.'y'.or.yes.eq.'Y') goto 110  
-
-         end if 
-
+         if (lop.eq.25) call outmod (2,n5name,n6name,node) 
+ 
          close (n5)
 
       else 
@@ -2361,90 +2284,70 @@ c                                   points from a data file:
          do 
 
             if (oned) then
-               read (n7,*,end=290) xx(icoors)
+   
+               read (n7,*,iostat=ier) xx(icoors)
+               if (ier.ne.0) exit 
+
                yy(icoors) = vmn(2)
+
             else
-               read (n7,*,end=290) xx(icoors),yy(icoors)
+
+               read (n7,*,iostat=ier) xx(icoors),yy(icoors)
+               if (ier.ne.0) exit 
+
             end if 
 
             if (xx(icoors).lt.vmn(1).or.xx(icoors).gt.vmx(1)) cycle 
             if (yy(icoors).lt.vmn(2).or.yy(icoors).gt.vmx(2)) cycle 
 
             icoors = icoors + 1
-            if (icoors.gt.5*l5) then 
-               write (*,*) '**error** too many points, ',
-     *                     'increase parameter l5.'
-               goto 99
-            end if 
+
+            if (icoors.gt.5*l5) call error (69,xx(1),k,'MODE4') 
 
          end do 
                
-290      icoors = icoors - 1
+         icoors = icoors - 1
 
          close (n7)
 
          if (icoors.eq.0) then 
             write (*,*) 'file contains no points within data bounds'
-            goto 99
+            return
          end if 
 
          write (*,1310) icoors
          read (*,*) inc
-            
-         do 
-
-            call chsprp
+c                                 select properties            
+         call chsprp
 c                                 write plot file header
-            call tabhed (r,r,k,lop,icx,1,n5name,n6name)
+         call tabhed (r,r,k,1,n5name,n6name)
 
-            do i = 1, icoors, inc
+         do i = 1, icoors, inc
 
-               var(1) = xx(i)
-               var(2) = yy(i)
-
-               if (lop.eq.25) then 
-
-                  call allmod               
-
-               else  
-
-                  call polprp 
-
-                  if (node) then 
-                     write (n5,'(1x,i2,3(1x,g12.6))') nprop,i,prp,i
-                  else
-                     write (n5,'(1x,i2,3(1x,g12.6))') 
-     *                     nprop,yy(i),prp,xx(i)
-                  end if 
-
-                  write (*,'(3(1x,g12.6))') xx(i),yy(i),prp
-
-               end if 
-
-            end do  
+            var(1) = xx(i)
+            var(2) = yy(i)
 
             if (lop.eq.25) then 
 
-               call outprp (1,n5name,n6name,node)
-               exit 
+               call allmod               
 
-            else 
+            else  
 
-               write (*,1230)
-               read (*,'(a)') yes
-               nprop = nprop + 1
-               if (yes.ne.'y'.and.yes.ne.'Y') exit 
+               call polprp 
+                
+               call outprp (1)
 
-            end if
- 
-         end do
+            end if 
+
+         end do  
+
+         if (lop.eq.25) call outmod (1,n5name,n6name,node)
 
          close (n5)
  
       end if 
 
 1110  format (/,'Writing data to file: ',a,/)
-1230  format (/,'Evaluate additional properties (y/n)?',/)
 1280  format (/,'Enter the name of the file containing the path',
      *          ' ordinates:',/)
 1290  format (/,'Path will be described by:',/,
@@ -2454,9 +2357,8 @@ c                                 write plot file header
 1300  format (/,'Enter the file name:',/)
 1310  format (/,'File contains ',i5,' points',/,
      *          'every nth plot will be plotted, enter n:',/)
-1320  format (/,'Change the geotherm (Y/N)?')
 
-99    end
+      end
 
       subroutine avgcmp (isol,jdsol)  
 c-------------------------------------------------------------------
@@ -2686,7 +2588,7 @@ c                                 modes assigned, output to n5
   
       end 
 
-      subroutine outprp (dim,n5name,n6name,node)
+      subroutine outmod (dim,n5name,n6name,node)
 c----------------------------------------------------------------
 c reformat output from "all_data" requests according to the 
 c following options set in perplex_option.dat and dimension dim. 
@@ -2722,8 +2624,9 @@ c----------------------------------------------------------------
 
       integer kop,kcx,k2c,iprop
       logical kfl
-      double precision prop
-      common/ cst77 /prop(i11),kop(i11),kcx(i11),k2c(i11),iprop,kfl(i11)
+      double precision prop,prmx,prmn
+      common/ cst77 /prop(i11),prmx(i11),prmn(i11),kop(i11),kcx(i11),
+     *               k2c(i11),iprop,kfl(i11)
 
       integer iopt
       logical lopt
@@ -2756,7 +2659,7 @@ c                                 read the data to get the range
                   
             read (n5,*,iostat=ier) (x(i),i=1,ivar), (prop(i),i=1,iprop)
             ipt = ipt + 1
-            if (ipt.gt.k2) call error (999,ymn,ipt,'OUTPRP')
+            if (ipt.gt.k2) call error (999,ymn,ipt,'OUTMOD')
             if (node) then 
                vip(4,ipt) = ipt
             else 
@@ -2890,7 +2793,7 @@ c                                 choose plotting variable
  
       end 
 
-      subroutine allprp (lop,icx)
+      subroutine allprp 
 c----------------------------------------------------------------
 c output spreadsheet format properties (lop = 36 or 38).
 c   icx = 0   - output just system properties
@@ -2901,7 +2804,7 @@ c----------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i, j, icx, id, itri(4), jtri(4), ijpt, lop, mprop, nprop, 
+      integer i, j, id, itri(4), jtri(4), ijpt, mprop, nprop, 
      *        ist 
 
       logical nodata
@@ -2949,8 +2852,9 @@ c----------------------------------------------------------------
 
       integer kop,kcx,k2c,iprop
       logical kfl
-      double precision prop
-      common/ cst77 /prop(i11),kop(i11),kcx(i11),k2c(i11),iprop,kfl(i11)
+      double precision prop,prmx,prmn
+      common/ cst77 /prop(i11),prmx(i11),prmn(i11),kop(i11),kcx(i11),
+     *               k2c(i11),iprop,kfl(i11)
 
       integer idstab,nstab,istab,jstab
       common/ cst34 /idstab(k10),nstab(k10),istab,jstab
@@ -3187,7 +3091,7 @@ c                                 chemical potentials
 
       end 
 
-      subroutine fopenn (n,lop,icx,dim,n5name,n6name)
+      subroutine fopenn (n,dim,n5name,n6name)
 c----------------------------------------------------------------------
 c decide on file name and type for werami output files, open n5name on 
 c LUN n, n6name is opened if necessary by prphed or modhed
@@ -3197,9 +3101,15 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i, icx, ier, dim, lop, n
+      integer i, ier, dim, n
 
       character*100 n5name, n6name, num*3
+
+      integer kop,kcx,k2c,iprop
+      logical kfl
+      double precision prop,prmx,prmn
+      common/ cst77 /prop(i11),prmx(i11),prmn(i11),kop(i11),kcx(i11),
+     *               k2c(i11),iprop,kfl(i11)
 
       character*100 prject,tfname
       common/ cst228 /prject,tfname
@@ -3259,7 +3169,7 @@ c--------------------------------------------------------------------
       g = g
       end
 
-      subroutine tabhed (vmn,dv,nv,lop,icx,nvar,n5name,n6name)
+      subroutine tabhed (vmn,dv,nv,nvar,n5name,n6name)
 c----------------------------------------------------------------------
 c  write header for plot/table output
 c     vmn - minimum values of the indendpendent variables
@@ -3272,7 +3182,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i, icx, nv(2), lop, nvar
+      integer i, nv(2), nvar
 
       double precision vmn(2), dv(2)
 
@@ -3284,8 +3194,9 @@ c----------------------------------------------------------------------
 
       integer kop,kcx,k2c,iprop
       logical kfl
-      double precision prop
-      common/ cst77 /prop(i11),kop(i11),kcx(i11),k2c(i11),iprop,kfl(i11)
+      double precision prop,prmx,prmn
+      common/ cst77 /prop(i11),prmx(i11),prmn(i11),kop(i11),kcx(i11),
+     *               k2c(i11),iprop,kfl(i11)
 
       character vnm*8
       common/ cxt18a /vnm(l3)  
@@ -3313,7 +3224,7 @@ c----------------------------------------------------------------------
 c------------------------------------------------------------------------
 c                                 generate a file name and
 c                                 open the file on n5
-      call fopenn (n5,lop,icx,nvar,n5name,n6name)
+      call fopenn (n5,nvar,n5name,n6name)
 c                                 ctr file tab format header
       write (n5,'(a)') '|6.6.6'
 c                                 a title
@@ -3398,13 +3309,17 @@ c                                  normal sys or phase tab file
 
       else if (nvar.eq.2) then
 c                                 2d 1-variable table
-         write (n5,*) 1
-         write (n5,'(100(a14,1x))') dname(1)
+         write (n5,*) iprop
+         write (n5,'(200(a14,1x))') (dname(i) ,i = 1, iprop)
 
       else 
 c                                 1d, include all dependent variables
-         write (n5,*) nvar+ivar
-         write (n5,'(100(a14,1x))') (vnm(i),i=1,ivar),dname(1)
+            write (n5,*) ivar + iprop 
+            write (n5,'(200(a14,1x))') (vnm(i) ,i = 1, ivar),
+     *                                 (dname(i) ,i = 1, iprop)
+c                                 write props for console echo
+            write (*,'(200(a14,1x))')  (vnm(i) ,i = 1, ivar),
+     *                                 (dname(i) ,i = 1, iprop)
 
       end if
 c                                 plot file info messages  
@@ -3454,5 +3369,52 @@ c                                 plot file info messages
 2010  format (/,'In this mode output is written in ',
      *          'tabular (spread sheet) format to file: ',a,//,
      *          'The columns of the table correspond to:',/)
+
+      end 
+
+
+      subroutine outprp (dim)
+c----------------------------------------------------------------------
+c outprp outputs properties computed by chsprp for dim-dimensional 
+c tables
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer dim
+
+      integer kop,kcx,k2c,iprop
+      logical kfl
+      double precision prop,prmx,prmn
+      common/ cst77 /prop(i11),prmx(i11),prmn(i11),kop(i11),kcx(i11),
+     *               k2c(i11),iprop,kfl(i11)
+c----------------------------------------------------------------------
+      if (dim.eq.2) then 
+
+         write (n5,'(200(g14.7,1x))') (prop(i),i=1,iprop)
+c                                 get ranges
+         do i = 1, iprop
+c                                
+            if (isnan(prop(i))) cycle
+c                                 first check eliminates logical 
+c                                 comparisons with NaN's that compaq
+c                                 fortran doesn't like.
+            if (prop(i).ne.nopt(7)) cycle 
+         
+            if (prop(i).gt.prmx(i)) prmx(i) = prop(i)
+            if (prop(i).lt.prmn(i)) prmn(i) = prop(i)
+ 
+         end do
+
+      else 
+
+          write (n5,'(200(g14.7,1x))')  (var(i),i=1,ivar),
+         *                              (prop(i),i=1,iprop)
+
+          write (*,'(200(g14.7,1x))')   (var(i),i=1,ivar),
+         *                              (prop(i),i=1,iprop)
+
+      end if
 
       end 

@@ -18,7 +18,7 @@ c----------------------------------------------------------------------
 
       write (*,1000) 
 
-1000  format (/,'Perple_X version 6.6.5.8, compiled 3/11/2011.')
+1000  format (/,'Perple_X version 6.6.5.9, compiled 3/21/2011.')
 
       end
 
@@ -1472,6 +1472,8 @@ c---------------------------------------------------------------------
          write (*,67) char
       else if (ier.eq.68) then
          write (*,68) char
+      else if (ier.eq.69) then 
+         write (*,69) char
       else if (ier.eq.89) then
          write (*,89) 
       else if (ier.eq.90) then
@@ -1540,6 +1542,8 @@ c---------------------------------------------------------------------
 
 1     format (/,'**error ver001** increase parameter ',a,' to ',i7,' in'
      *       ,' perplex_parameters.h and recompile Perple_X',/)
+2     format (/,'**error ver002** too many points (',a,'), increase ',
+     *        'parameter L5',/)
 3     format (/,'**error ver003** the solution model file is',
      *        'in a format that is no longer supported.',/,
      *        'copy the current version from: ',
