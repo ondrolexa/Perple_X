@@ -91,8 +91,7 @@ c----------------------------------------------------------------------
       common/ cst4 /iam
 c----------------------------------------------------------------------
 c                                 default option values:
-c                                 nopt(1) and nopt(2) are flags used by reader
-      nopt(1) = 0d0
+
 c                                 closed or open compositional space
       lopt(1) = .true.
 c                                 Anderson-Gruneisen correction

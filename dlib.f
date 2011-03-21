@@ -473,7 +473,7 @@ c                                 coordinate file.
       end
 
 
-      subroutine chsprp (lop,icx)
+      subroutine chsprp 
 c----------------------------------------------------------------
 c chsprp asks the user to choose a property for contouring:
 c   lop  - flag indicating the property chosen
@@ -526,11 +526,11 @@ c----------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i, j, icx, kprop, ier, lop
+      integer i, j, icx, kprop, ier, lop, komp, l2p(38)
 
       parameter (kprop=38)
 
-      character propty(kprop)*60, y*1, name*14
+      character propty(kprop)*60, y*1, name*14, prname(44)*14, pname*10
 
       logical gflu,aflu,fluid,shear,lflu,volume,rxn
       common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume,rxn
@@ -549,15 +549,29 @@ c----------------------------------------------------------------
       integer jtest,jpot
       common/ debug /jtest,jpot
 
-      integer iprop,ivar,ind,ichem
-      character*14 prname
-      common/ cst83 /prname(k10),iprop,ivar,ind,ichem
+      integer ivar,ind,ichem
+      common/ cst83 /ivar,ind,ichem
+
+      integer kop,kcx,k2c,iprop
+      logical kfl
+      double precision prop
+      common/ cst77 /prop(i11),kop(i11),kcx(i11),k2c(i11),iprop,kfl(i11)
+
+      integer inv
+      character dname*14, title*162
+      common/ cst76 /inv(i11),dname(i11),title
 
       integer idstab,nstab,istab,jstab
       common/ cst34 /idstab(k10),nstab(k10),istab,jstab
 
       integer hcp,idv
       common/ cst52  /hcp,idv(k7) 
+
+      integer icps, jcx, jcx1, kds
+      logical stol, savg
+      double precision rcps
+      common/ comps /rcps(k7,2*k5),icps(k7,2*k5),jcx(2*k5),jcx1(2*k5),
+     *               kds(2*k5),stol(h9),savg(h9)
 
       save propty
 
@@ -595,46 +609,94 @@ c----------------------------------------------------------------
      *            'S-wave velocity P derivative (km/s/bar)',
      *            'Adiabatic bulk modulus P derivative (unitless)',
      *            'Shear modulus P derivative (unitless)',
-     *            'All phase &/or system properties',
+     *            'All phase &/or system properties (PHEMGP format)',
      *            'Absolute amount (Vol, Mol, or Wt) of a phase',
-     *            'Multiple property output for system &/or phases'/
-c-------------------------------------------
-      if (nopt(1).ne.0d0) then 
+     *            'Multiple property output (PHEMGP format)'/
+
+      save prname,l2p
+
+      data prname/'V,J/bar/mol   ','H,J/mol       ','Gruneisen_T   ',
+c                                 4-6
+     *            'Ks,bar        ','Gs,bar        ','v0,km/s       ',
+c                                 7-9
+     *            'vp,km/s       ','vs,km/s       ','vp/vs         ',
+c                                 10-12
+     *            'rho,kg/m3     ','G,J/mol       ','cp,J/K/mol    ',
+c                                 13-15
+     *            'alpha,1/K     ','beta,1/bar    ','S,J/K/mol     ',
+c                                 16-18
+     *            'n,mol         ','N,g           ','Ks_T,bar/K    ',
+c                                 19-21
+     *            'Gs_T,bar/K    ','Ks_P          ','Gs_P          ',
+c                                 22-24
+     *            'v0_T          ','vp_T          ','vs_T          ',
+c                                 25-27
+     *            'v0_P          ','vp_P          ','vs_P          ',
+c                                 28-30
+     *            'wt,%          ','vol,%         ','mol,%         ',
+     *            'h,J/m3        ','cp,J/K/m3     ','blk_comp      ',
+     *            'mode          ','composition   ','s,J/K/m3      ',
+     *            's,J/K/kg      ','h,J/kg        ','cp,J/K/kg     ',
+c                                 40-43
+     *            'specific_mass ','poisson_ratio ','chemical_pot  ',
+     *            'assemblage_i  ','extent        '/
+c                                 l2p points from lop to prname, 
+c                                 1-10
+      data l2p/31,10,32,13,14,33,34,35, 3, 4,
+c                                 11-20                  
+     *         5 , 6, 7, 8, 9,36,37,38,39,40,
+c                                 21-30 
+     *         41, 1,42,43, 0,22,23,24,18,19,
+c                                 31-38
+     *         25,26,27,20,21, 0, 44, 0/
+c----------------------------------------------------------------------
+      do i = 1, istab
+
+         if (stol(i)) then 
 c                                 doing a second run, with an 
 c                                 existing solvus criterion, ask
 c                                 whether to change.
-         write (*,1030)
-         read (*,'(a)') y
-         if (y.eq.'y'.or.y.eq.'Y') then 
-            nopt(1) = 0d0
-         end if 
-      end if 
+            write (*,1030)
+            read (*,'(a)') y
+            if (y.eq.'y'.or.y.eq.'Y') stol(i) = .false.
+    
+         end if
  
+      end do 
+c                                 property counter
       iprop = 0
-      icx = 0
-      lflu = .false.
+c                                 phase composition counter
+      komp = 0
 c                                 choose property
       do 
+
+         icx = 0
+         lflu = .false.
 
          write (*,1050)
 
          do i = 1, kprop
+            if (iprop.gt.0.and.i.eq.25.or.i.eq.36) cycle 
             write (*,1060) i,propty(i)
          end do 
 
          read (*,*,iostat=ier) lop
 
-         if (ier.ne.0.or.lop.lt.1.or.lop.gt.kprop) then 
+         if (ier.ne.0.or.lop.lt.0.or.lop.gt.kprop) then 
 
             write (*,1020)
             cycle 
+
+         else if (lop.eq.0) then 
+
+            exit 
 
          end if
 
          if (lop.eq.7.or.lop.eq.20.or.lop.eq.37) then 
 c                                 modes:
 c                                 get phase name
-             call rnam1 (icx)
+             call rnam1 (icx,pname)
 c                                 ask if fluid should be included:
              if (gflu) then 
 
@@ -666,7 +728,7 @@ c                                 write blurb about units
 
                    iprop = iprop + 1
                    call getnam (name,idstab(i))
-                   prname(iprop) = name
+                   dname(iprop) = name
 
                 end do 
              end do 
@@ -703,40 +765,22 @@ c                                 ask if fluids included
 c                                 get solution identity
             do 
 
-               call rnam1 (icx)
+               call rnam1 (icx,pname)
                if (icx.gt.0) exit  
                write (*,1140)
 
             end do 
 c                                 get user defined composition:
-            call mkcomp (1)
+            komp = komp + 1
 
-         else if (lop.eq.36.or.lop.eq.38) then 
+            if (komp.gt.k5) then 
+               write (*,1160) k5
+               cycle 
+            end if 
 
-            if (lop.eq.38) then 
-c                                 custom property list, select properties
-               do
+            call mkcomp (komp,icx)
 
-                  write (*,1150)
-                  read (*,*,iostat=ier) i
-
-                  if (ier.ne.0.or.i.gt.kprop-1.or.i.lt.0) then
-                     write (*,1020)
-                     cycle
-                  else if (i.eq. 8.or.i.eq. 6.or.i.eq.23.or.i.eq.24.or.
-     *                     i.eq.25.or.i.eq.36.or.i.eq.38) then 
-                     write (*,1100) 
-                     cycle
-                  else if (i.eq.0) then 
-                     exit
-                  end if 
-c                                 save property choice
-                  iprop = iprop + 1
-                  nstab(iprop) = i                     
-
-               end do 
-
-            end if  
+         else if (lop.eq.36.or.lop.eq.38) then   
 c                                 multi-prop options, get case i: 
 c                                 1 - system, 2 - phase
 c                                 3 - system + phases
@@ -751,7 +795,7 @@ c                                 icx = 999 all props, else phase index
 
             else if (i.eq.2) then 
 c                                 get phase index
-               call rnam1 (icx)
+               call rnam1 (icx,pname)
 
             end if 
 
@@ -760,6 +804,35 @@ c                                 get phase index
                read (*,'(a)') y
                if (y.eq.'y'.or.y.eq.'Y') lflu = .true. 
             end if         
+
+            if (lop.eq.36) then 
+
+               iprop = i8 + 3
+
+            else 
+c                                 custom list
+               do
+
+                  write (*,1150)
+                  read (*,*,iostat=ier) i
+
+                  if (ier.ne.0.or.i.gt.kprop-1.or.i.lt.0) then
+                     write (*,1020)
+                     cycle
+                  else if (i.eq.8.or.i.eq.6.or.i.eq.23.or.i.eq.24.or.
+     *                     i.eq.25.or.i.eq.36.or.i.eq.38) then 
+                     write (*,1100) 
+                     cycle
+                  else if (i.eq.0) then 
+                     exit
+                  end if 
+c                                 save property choice
+                  iprop = iprop + 1
+                  nstab(iprop) = i                     
+
+               end do
+
+            end if 
 
          else if (lop.ne.6.and.lop.ne.8) then
                
@@ -779,8 +852,14 @@ c                                 should be included:
 
                else if (lop.ne.24) then 
 c                                 get phase name
-                  call rnam1 (icx)
-                  if (icx.lt.1.and.lop.eq.8) write (*,1140) 
+                  do 
+                     call rnam1 (icx,pname)
+                     if (icx.lt.1.and.lop.eq.8) then
+                        write (*,1140)
+                        cycle 
+                     end if 
+                     exit 
+                  end do  
 
                end if
 
@@ -788,7 +867,96 @@ c                                 get phase name
 
          end if 
 
-         exit 
+         if (lop.eq.25.or.lop.eq.36.or.lop.eq.38) then
+c                                 multi prop options, only allowed as 
+c                                 single choices.
+            kop(1) = lop
+            kcx(1) = icx
+            kfl(1) = lflu
+c                                 assign property names
+            if (lop.eq.36) then 
+c                                 "all" prop option
+               do i = 1, iprop
+                  dname(i) = prname(i)
+               end do 
+
+            else if (lop.eq.38) then
+c                                 "custom" prop option
+               do i = 1, iprop
+                  dname(i) = prname(l2p(nstab(i)))
+               end do 
+
+            end if 
+
+            exit 
+
+         else 
+c                                 save the local choice options in the 
+c                                 global arrays
+            iprop = iprop + 1
+            kop(iprop) = lop
+            kcx(iprop) = icx
+            kfl(iprop) = lflu
+            k2c(iprop) = komp
+c                                 make property name
+            if (lop.eq.6) then
+c                                 wt% component icx
+               write (dname(iprop),'(a,a)') cname(icx),',wt%     '
+               call unblnk (dname(iprop))
+
+            else if (lop.eq.7) then
+c                                 mode of a phase
+               if (iopt(3).eq.0) then 
+c                                 vol%
+                  write (dname(iprop),'(a,a)') pname,',vol'
+
+               else if (iopt(3).eq.1) then 
+c                                 wt%
+                  write (dname(iprop),'(a,a)') pname,',wt '
+
+               else  
+c                                 mol%
+                  write (dname(iprop),'(a,a)') pname,',mol'
+
+               end if 
+
+               call unblnk(dname(iprop))  
+
+            else if (lop.eq.8) then 
+c                                 phase composition
+                write (dname(iprop),'(a,i1,a,a)') 'C',komp,pname
+                write (*,1150) dname(iprop)
+
+            else if (lop.eq.23) then 
+c                                 chemical potential of a component
+               write (dname(iprop),'(a,a,a)') 'mu_',cname(icx),',J/mol'
+               call unblnk (dname(iprop))
+
+            else if (lop.eq.37) then
+c                                 extent of a phase
+               if (iopt(3).eq.0) then 
+c                                 volume
+                  write (dname(iprop),'(a,a)') pname,',m3 '
+
+               else if (iopt(3).eq.1) then 
+c                                 mass
+                  write (dname(iprop),'(a,a)') pname,',kg '
+
+               else  
+c                                 mol
+                  write (dname(iprop),'(a,a)') pname,',mol'
+
+               end if 
+
+               call unblnk(dname(iprop))  
+
+            else 
+
+               dname(iprop) = prname(l2p(lop))
+          
+            end if     
+
+         end if 
 
       end do 
 
@@ -798,7 +966,7 @@ c                                 get phase name
 1030  format (/,'Retain the compositional criteria you defined ',
      *          'earlier (y/n)?',/,'Answer yes only if you intend ',
      *          'to extract properties for the same phase.',/)
-1050  format (/,'Select a property:')
+1050  format (/,'Select properties to be computed [enter 0 to finish]:')
 1060  format (3x,i2,' - ',a60)
 1070  format (/,'Output cumulative modes (y/n)?',/
      *         ,'(see www.perplex.ethz.ch/perplex_options.html'
@@ -821,20 +989,26 @@ c                                 get phase name
      *         ,'option 3 can only be plotted with PHEMGP.',//
      *         ,'Select an option [default = 1]:')
 1140  format (/,'Hey cowboy, that warnt no solution, try again.',/)
-1150  format (/,'Specify a property to be computed from the ',
-     *          'list above [0 to end]')
+1150  format (/,'This composition will be designated:',a,/)
+1160  format (/,'**warning ver011** only ',i2,' user defined '
+     *      'compositions permitted.',/,'do multiple runs with WERAMI',
+     *      'or redimension common block comps.',/)
   
       end
 
-      subroutine  mkcomp (jcomp)
+      subroutine  mkcomp (jcomp,ids)
 c----------------------------------------------------------------
 c mkcomp makes the jcomp'th user defined compositional variable
+c the first k5 compositions are reserved for chsprp, the remaining
+c k5 compositions are for solvus testing
 
-c   kcx  - the number of components to define the numerator of
+c the solution ids is associated with the composition.
+
+c   jcx  - the number of components to define the numerator of
 c          the composition.
-c   kcx1 - the number of components to define the denominator of
+c   jcx1 - the number of components to define the denominator of
 c          the composition.
-c   icps - the indices of the components (1..kcx,kcx+1...kcx1).
+c   icps - the indices of the components (1..jcx,jcx+1...jcx1).
 c   rcps - the cofficients on the compenents as indexed by icps.
 c----------------------------------------------------------------
       implicit none
@@ -843,7 +1017,7 @@ c----------------------------------------------------------------
 
       character*5 y*1, units*15, text*195
 
-      integer jcomp, ier, i
+      integer jcomp, ier, i, ids
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
@@ -856,9 +1030,11 @@ c----------------------------------------------------------------
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
+      integer icps, jcx, jcx1, kds
+      logical stol, savg
       double precision rcps
-      integer icps, kcx, kcx1
-      common/ comps /rcps(k7,k5),icps(k7,k5),kcx(k5),kcx1(k5)
+      common/ comps /rcps(k7,2*k5),icps(k7,2*k5),jcx(2*k5),jcx1(2*k5),
+     *               kds(2*k5),stol(h9),savg(h9)
 c----------------------------------------------------------------------
 c                                choose units for composition
       if (iopt(2).eq.0) then
@@ -872,9 +1048,9 @@ c                                get the composition to be contoured
       do 
 
          write (*,1030) 'numerator',k5+1
-         read (*,*,iostat=ier) kcx(jcomp)
+         read (*,*,iostat=ier) jcx(jcomp)
 
-         if (ier.ne.0.or.kcx(jcomp).lt.1) then
+         if (ier.ne.0.or.jcx(jcomp).lt.1) then
             write (*,1020)
             cycle 
          end if 
@@ -888,8 +1064,8 @@ c                                define the numerator
          write (*,1040) 'numerator'
          write (*,1010) (i,cname(i),i = 1, icomp)
          read (*,*,iostat=ier) (icps(i,jcomp),rcps(i,jcomp), 
-     *                                     i = 1, kcx(jcomp))
-         do i = 1, kcx(jcomp)
+     *                                     i = 1, jcx(jcomp))
+         do i = 1, jcx(jcomp)
             if (icps(i,jcomp).lt.1.or.icps(i,jcomp).gt.icomp) then
                ier = 1
                exit 
@@ -908,31 +1084,31 @@ c                                define the denominator
   
       do 
 
-         write (*,1030) 'denominator',k5+1-kcx(jcomp)
+         write (*,1030) 'denominator',k5+1-jcx(jcomp)
          write (*,1140)
-         read (*,*,iostat=ier) kcx1(jcomp)
+         read (*,*,iostat=ier) jcx1(jcomp)
 
-         if (ier.ne.0.or.kcx1(jcomp).lt.0) then
+         if (ier.ne.0.or.jcx1(jcomp).lt.0) then
             write (*,1020)
             cycle 
          end if 
  
-         kcx1(jcomp) = kcx(jcomp) + kcx1(jcomp)
+         jcx1(jcomp) = jcx(jcomp) + jcx1(jcomp)
         
          exit 
 
       end do 
 
-      if (kcx1(jcomp).gt.kcx(jcomp)) then 
+      if (jcx1(jcomp).gt.jcx(jcomp)) then 
 
          do 
 
             write (*,1040) 'denominator'
             write (*,1010) (i,cname(i),i = 1, icomp)
             read (*,*,iostat=ier) (icps(i,jcomp),rcps(i,jcomp), 
-     *                                 i = kcx(jcomp)+1, kcx1(jcomp))
+     *                                 i = jcx(jcomp)+1, jcx1(jcomp))
 
-            do i = kcx(jcomp)+1, kcx1(jcomp)
+            do i = jcx(jcomp)+1, jcx1(jcomp)
                if (icps(i,jcomp).lt.1.or.icps(i,jcomp).gt.icomp) then
                   ier = 1
                   exit 
@@ -946,13 +1122,13 @@ c                                define the denominator
 c                                show the user the composition: 
             write (*,1070)           
             write (text,1130) (rcps(i,jcomp),cname(icps(i,jcomp)), 
-     *                                      i = 1, kcx(jcomp))
+     *                                      i = 1, jcx(jcomp))
             call deblnk (text)
             write (*,1150) text 
             write (*,*) '   divided by '
 
             write (text,1130) (rcps(i,jcomp),cname(icps(i,jcomp)), 
-     *                                 i = kcx(jcomp)+1, kcx1(jcomp))
+     *                                 i = jcx(jcomp)+1, jcx1(jcomp))
             call deblnk (text)
             write (*,1150) text 
 
@@ -963,7 +1139,7 @@ c                                show the user the composition:
       else 
 
          write (text,1130) (rcps(i,jcomp),cname(icps(i,jcomp)), 
-     *                                    i = 1, kcx(jcomp))
+     *                                    i = 1, jcx(jcomp))
          call deblnk (text)
          write (*,1080) text 
 
@@ -972,6 +1148,8 @@ c                                show the user the composition:
       write (*,1090)
       read (*,'(a)') y
       if (y.eq.'y'.or.y.eq.'Y') goto 10
+
+      kds(jcomp) = ids
 
 1010  format (2x,i2,' - ',a5)
 1020  format (/,'Invalid input, try again:',/)
@@ -990,9 +1168,10 @@ c                                show the user the composition:
 1130  format (15('+',1x,f4.1,1x,a5,1x))
 1140  format ('Enter zero to use the numerator as a composition.')
 1150  format (/,a,/)  
+
       end
 
-      subroutine rnam1 (iex)
+      subroutine rnam1 (iex,xnam)
 c----------------------------------------------------------------------
 c read a solution/compound name from console, return
 c iex = -id if a compound

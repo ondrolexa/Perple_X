@@ -10,16 +10,15 @@ c       n6 - special out
 
       logical first, output, fake
 
-      integer imode, ierr
+      integer imode, ierr, i
 
       character*100 n5name,n6name
 
       logical oned
       common/ cst82 /oned
 
-      integer iprop,ivar,ind,ichem
-      character*14 prname
-      common/ cst83 /prname(k10),iprop,ivar,ind,ichem
+      integer ivar,ind,ichem
+      common/ cst83 /ivar,ind,ichem
 
       integer isec,icopt,ifull,imsg,io3p
       common/ cst103 /isec,icopt,ifull,imsg,io3p
@@ -29,16 +28,27 @@ c       n6 - special out
 
       integer iam
       common/ cst4 /iam
+
+      integer icps, jcx, jcx1, kds
+      logical stol, savg
+      double precision rcps
+      common/ comps /rcps(k7,2*k5),icps(k7,2*k5),jcx(2*k5),jcx1(2*k5),
+     *               kds(2*k5),stol(h9),savg(h9)
 c----------------------------------------------------------------------- 
 c                                 iam is a flag indicating the Perple_X program
       iam = 3
 c                                 version info
       call vrsion
-
+c                                 initialize some flags
       first = .true.
       output = .false.
       fake   = .false.
       rxn = .false.
+c                                 this could be eliminated by passing first 
+c                                 to chsprp.
+      do i = 1, h9
+         stol(i) = .false.
+      end do 
 c                                 read input from unit n1 (terminal/disk).
 c                                 input1 also initializes:
 c                                 equilibrium counters; units n2 n4 and n6;
@@ -157,9 +167,8 @@ c----------------------------------------------------------------------
       double precision var,dvr,vmn,vmx
       common/ cxt18 /var(l3),dvr(l3),vmn(l3),vmx(l3),jvar
 
-      integer iprop,ivar,ind,ichem
-      character*14 prname
-      common/ cst83 /prname(k10),iprop,ivar,ind,ichem
+      integer ivar,ind,ichem
+      common/ cst83 /ivar,ind,ichem
 
       character vnm*8
       common/ cxt18a /vnm(l3)
@@ -169,7 +178,7 @@ c----------------------------------------------------------------------
 
       do  
 c                                 select the property
-         call chsprp (lop,icx)
+         call chsprp 
 c                                 set up coordinates etc
          if (first) then 
 
@@ -229,7 +238,7 @@ c                                 number of grid points
 
                else  
 
-                  call polprp (prp,lop,icx)
+                  call polprp 
 
                   if (.not.isnan(prp)) then 
                      if (prp.ne.0d0) then 
@@ -1026,7 +1035,7 @@ c                                 find normalized distance
 
       end   
 
-      subroutine polprp (prop,lop,icx)
+      subroutine polprp 
 c-----------------------------------------------------------------------
       implicit none
 
@@ -1034,9 +1043,9 @@ c-----------------------------------------------------------------------
 
       logical nodata
 
-      integer itri(4),jtri(4),ijpt,lop,icx
+      integer itri(4),jtri(4),ijpt,lop,icx,komp,i
 
-      double precision wt(3), prop
+      double precision wt(3)
 
       integer iopt
       logical lopt
@@ -1046,23 +1055,30 @@ c-----------------------------------------------------------------------
       integer iap,ibulk
       common/ cst74  /iap(k2),ibulk
 
+      logical gflu,aflu,fluid,shear,lflu,volume,rxn
+      common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume,rxn
+
+      integer kop,kcx,k2c,iprop
+      logical kfl
+      double precision prop
+      common/ cst77 /prop(i11),kop(i11),kcx(i11),k2c(i11),iprop,kfl(i11)
+
       integer igrd
       common/ cst311/igrd(l7,l7)
 c----------------------------------------------------------------------
 c                                 set variables to x-y value
       call setval
 
-      if (lop.eq.24) then 
-c                                 no need to call triang/getlow
-         call xy2ij (itri(1),jtri(1),nodata)
+      do i = 1, iprop
 
-         prop = iap(igrd(itri(1),jtri(1)))
-
-      else 
+         lop = kop(i)
+         icx = kcx(i)
+         komp = k2c(i)
+         lflu = kfl(i)
+c                                 initialize, necessary?
+         prop(i) = nopt(7)
 c                                 get node(s) to extract value
          call triang (itri,jtri,ijpt,wt)
-c                                 initialize
-         prop = nopt(7)
 
          if (ijpt.eq.0) then 
 c                                 missing data at the node
@@ -1079,12 +1095,26 @@ c                                 compute all properties
             else 
 c                                 get the specific property of
 c                                 interest
-               call getprp (prop,lop,icx,.false.)
+               if (lop.ne.24) then 
+
+                  call getprp (prop(i),lop,icx,komp,.false.)
+
+               else 
+c                                 assemblage index request, lots
+c                                 of redundant calc, but should be 
+c                                 moved to getptp.
+c                                 no need to call triang/getlow
+                  call xy2ij (itri(1),jtri(1),nodata)
+
+                  prop(i) = iap(igrd(itri(1),jtri(1)))
+
+               end if 
 
             end if 
 
          end if 
-      end if 
+
+      end do 
 
       end 
 
@@ -1117,7 +1147,7 @@ c----------------------------------------------------------------------
       end 
 
 
-      subroutine getprp (prop,lop,icx,aprp)
+      subroutine getprp (prop,lop,icx,komp,aprp)
 c----------------------------------------------------------------
 c getprp gets properties:
 
@@ -1196,7 +1226,7 @@ c----------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer lop, icx, id
+      integer lop, icx, id, komp
 
       logical aprp
 
@@ -1428,7 +1458,7 @@ c                                 mol fraction
 
                else if (lop.eq.8) then 
 c                                 composition (external function)
-                  prop = gtcomp(id,1)
+                  prop = gtcomp(id,komp)
                else if (lop.ge.9.and.lop.le.15) then 
 c                                 gruneisen T, K, mu, Vphi, vp, vs, vp/vs
                   prop = props(lop-6,id) 
@@ -1545,6 +1575,8 @@ c-------------------------------------------------------------------
 c function comp returns icomp'th composition of phase id
 c in an assemblage whose properties have been defined in routine
 c seismo, the composition is defined in routine mkcomp. 
+
+c returns -1d99 if composition jcomp is not for phase id.
 c ------------------------------------------------------------------
       implicit none
 
@@ -1557,23 +1589,33 @@ c ------------------------------------------------------------------
       double precision pcomp
       common/ cst324 /pcomp(k0,k5)
 
+      integer icps, jcx, jcx1, kds
+      logical stol, savg
       double precision rcps
-      integer icps, kcx, kcx1
-      common/ comps /rcps(k7,k5),icps(k7,k5),kcx(k5),kcx1(k5)
+      common/ comps /rcps(k7,2*k5),icps(k7,2*k5),jcx(2*k5),jcx1(2*k5),
+     *               kds(2*k5),stol(h9),savg(h9)
 c----------------------------------------------------------------------
-      comp = 0d0 
-      totden = 0d0
+      if (id.eq.kds(jcomp)) then 
+
+         comp = 0d0 
+         totden = 0d0
 c                                 now compute the composition:
 c                                 numerator:
-      do j = 1, kcx(jcomp)
-         comp = comp + rcps(j,jcomp)*pcomp(icps(j,jcomp),id)
-      end do
+         do j = 1, jcx(jcomp)
+            comp = comp + rcps(j,jcomp)*pcomp(icps(j,jcomp),id)
+         end do
 c                                 denominator:
-      do j = kcx(jcomp)+1, kcx1(jcomp)
-         totden = totden + rcps(j,jcomp)*pcomp(icps(j,jcomp),id)
-      end do     
+         do j = jcx(jcomp)+1, jcx1(jcomp)
+            totden = totden + rcps(j,jcomp)*pcomp(icps(j,jcomp),id)
+         end do     
 c                                 numerator/denominator:        
-      if (totden.ne.0d0) comp = comp / totden
+         if (totden.ne.0d0) comp = comp / totden
+
+      else 
+
+         comp = -1d99
+ 
+      end if 
 
       gtcomp = comp
 
@@ -1592,8 +1634,8 @@ c-------------------------------------------------------------------
 
       character cprop*6
 
-      integer jdsol(k5), choice, index, kdsol(k5), isol,
-     *        i, j, icx, jsol, ier, phase
+      integer jdsol(k5), choice, index, kdsol(k5), isol, i, j, icx, 
+     *        jsol, ier, phase
 
       double precision cmin(k5) ,cmax(k5), tcomp, gtcomp
 
@@ -1617,6 +1659,12 @@ c-------------------------------------------------------------------
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
 
+      integer icps, jcx, jcx1, kds
+      logical stol, savg
+      double precision rcps
+      common/ comps /rcps(k7,2*k5),icps(k7,2*k5),jcx(2*k5),jcx1(2*k5),
+     *               kds(2*k5),stol(h9),savg(h9)
+
       save cprop, cmin, cmax
 c----------------------------------------------------------------------
       index = 0 
@@ -1636,11 +1684,11 @@ c                                 the phase doesn't occur or occurs once
       phase = idasls(index,ias)
 c                                 if here, the phase must be a solution
 
-10    if (nopt(1).eq.0d0) then
-
-         nopt(1) = 1d0
+10    if (.not.stol(phase)) then
 c                                 immisicible phases are present (isol>1)
-c                                 but there is no criterion (nopt(1)=0)
+c                                 but there is no criterion (stol = .false.)
+         stol(phase) = .true.
+
          if (iopt(2).eq.0) then 
             cprop = 'molar '
          else
@@ -1663,17 +1711,19 @@ c                                 solvus testing off
             nopt(8) = 1d0
 
          else
-c                                 nopt(2) is a flag used only by 
-c                                 werami to indicate whether the 
-c                                 user has already specified a
-c                                 criterion (0d0, otherwise 1d0).  
-            nopt(2) = 0d0
+c                                 savg is a flag used only by 
+c                                 werami to indicate whether 
+c                                 solutions should be averaged 
+c                                 within an exisiting set of solvus
+c                                 criteria, initialized here.
+  
+            savg(phase) = .false.
 
             write (*,1010) isol,isol-1
             
             do i = 1, isol-1
 
-               call mkcomp (i+1)
+               call mkcomp (i+k5,phase)
 c                                 get the range for the compositional
 c                                 variable:
 5020           write (*,1020) i
@@ -1681,7 +1731,9 @@ c                                 variable:
                call rerror (ier,*5020)
 
             end do 
+
          end if 
+
       end if 
 
       if (nopt(8).eq.1d0) then 
@@ -1701,8 +1753,12 @@ c                                 conditions:
             do j = 1, isol-1
 c                                 comp is a function that returns
 c                                 the j+1th composition 
-               tcomp = gtcomp (jdsol(i),j+1)
+               tcomp = gtcomp (jdsol(i),k5+j)
+c                                 the composition is not relevant
+               if (tcomp.eq.-1d99) cycle
+c                                 the composition is out of bounds
                if (tcomp.lt.cmin(j).or.tcomp.gt.cmax(j)) goto 20
+
             end do
 c                                 the solution past all tests
             jsol = jsol + 1
@@ -1710,7 +1766,7 @@ c                                 the solution past all tests
 
 20       continue 
 
-         if (jsol.gt.1.and.nopt(2).eq.0d0) then 
+         if (jsol.gt.1.and..not.savg(phase)) then 
 c                                 two or more phases satisfy the
 c                                 existing criteria
             write (*,1060) jsol,fname(phase)
@@ -1725,20 +1781,23 @@ c                                 get choice
 
             if (choice.eq.2) then 
 c                                 2 - average within existing criterion 
-               nopt(2) = 2d0
+               savg(phase) = .true.
+
             else if (choice.eq.3) then 
 c                                 3 - ignore and hope for the best
                call avgcmp (jsol,kdsol)
+
             else 
 c                                 not 2 or 3, redefine the criterion
-               nopt(1) = 0d0
+               stol(phase) = .false.
                goto 10             
+
             end if 
 
          end if 
 c                                 user has elected to average within
 c                                 existing criterion
-         if (jsol.gt.1.and.nopt(2).eq.2d0) call avgcmp (jsol,kdsol) 
+         if (jsol.gt.1.and.savg(phase)) call avgcmp (jsol,kdsol) 
 
          if (jsol.eq.0) then 
             index = 0 
@@ -1921,10 +1980,9 @@ c                                 loop for property computation
 
          jpts = 0 
 c                                 select property:
-         call chsprp (lop,icx)
+         call chsprp 
 c                                 file header
-         if (lop.eq.25.or.lop.eq.36.or.lop.eq.38) 
-     *       call tabhed (dxy,dxy,k,lop,icx,1,n5name,n6name)
+         call tabhed (dxy,dxy,k,lop,icx,1,n5name,n6name)
 
          do i = 1, ipts
             var(ivi) = xyp(ivi,1) + dfloat(i-1)*d
@@ -1953,7 +2011,7 @@ c                                 file header
 
                else  
 
-                  call polprp (prp,lop,icx)
+                  call polprp 
 
                   write (n5,'(1x,i2,3(1x,g12.6))') 
      *                  nprop,var(ivi),prp,var(ivd)
@@ -2034,9 +2092,8 @@ c----------------------------------------------------------------------
       character vnm*8
       common/ cxt18a /vnm(l3)  
 
-      integer iprop,ivar,ind,ichem
-      character*14 prname
-      common/ cst83 /prname(k10),iprop,ivar,ind,ichem
+      integer ivar,ind,ichem
+      common/ cst83 /ivar,ind,ichem
 c----------------------------------------------------------------------
       node = .false.
       first = .true.
@@ -2085,20 +2142,10 @@ c                                 set up counters, pointers:
 c                                 loop for property computation
       do 
 c                                 select property:
-         call chsprp (lop,icx)
+         call chsprp
 c                                 name and open plot file
 c                                 write header 
-         if (lop.eq.25.or.lop.eq.36.or.lop.eq.38) then
-
-             call tabhed (xyp,xyp,k,lop,icx,1,n5name,n6name)
-
-         else if (first) then 
-
-            call fopenn (n5,lop,icx,1,n5name,n6name)
-
-            first = .false.
-
-         end if 
+         call tabhed (xyp,xyp,k,lop,icx,1,n5name,n6name)
 
          if (lop.eq.25.and.lop.ne.36) then
 
@@ -2121,7 +2168,7 @@ c                                 write header
 
             else  
 
-               call polprp (prp,lop,icx)
+               call polprp 
  
                write (n5,'(1x,i2,10(1x,g12.6))') 
      *               nprop,var(ind),prp,(var(j),j=1,jvar)
@@ -2243,10 +2290,9 @@ c                                 ixy
 
 90       x = x0
 
-         call chsprp (lop,icx)
+         call chsprp 
 c                                 write plot file header
-         if (lop.eq.25.or.lop.eq.36.or.lop.eq.38) 
-     *      call tabhed (r,r,k,lop,icx,1,n5name,n6name)
+         call tabhed (r,r,k,lop,icx,1,n5name,n6name)
 
          do 
 
@@ -2274,7 +2320,7 @@ c                                 condition is in bounds
 
                   else
   
-                     call polprp (prp,lop,icx)
+                     call polprp 
 
                      write (n5,'(1x,i2,3(1x,g12.6))') nprop,x,prp,y
                      write (*,'(3(1x,g12.6))') x,y,prp
@@ -2347,10 +2393,9 @@ c                                   points from a data file:
             
          do 
 
-            call chsprp (lop,icx)
+            call chsprp
 c                                 write plot file header
-            if (lop.eq.25.or.lop.eq.36.or.lop.eq.38) 
-     *         call tabhed (r,r,k,lop,icx,1,n5name,n6name)
+            call tabhed (r,r,k,lop,icx,1,n5name,n6name)
 
             do i = 1, icoors, inc
 
@@ -2363,7 +2408,7 @@ c                                 write plot file header
 
                else  
 
-                  call polprp (prp,lop,icx)
+                  call polprp 
 
                   if (node) then 
                      write (n5,'(1x,i2,3(1x,g12.6))') nprop,i,prp,i
@@ -2541,9 +2586,8 @@ c----------------------------------------------------------------
       double precision var,dvr,vmn,vmx
       common/ cxt18 /var(l3),dvr(l3),vmn(l3),vmx(l3),jvar
 
-      integer iprop,ivar,ind,ichem
-      character*14 prname
-      common/ cst83 /prname(k10),iprop,ivar,ind,ichem
+      integer ivar,ind,ichem
+      common/ cst83 /ivar,ind,ichem
 c----------------------------------------------------------------------
 c                                 set variables to x-y value
       call setval
@@ -2657,7 +2701,7 @@ c----------------------------------------------------------------
 
       integer i, j, k, ipt, dim, ier
 
-      double precision prop(k10),ymx,ymn,xl(k10),yl(k10),x(3),dx,
+      double precision ymx,ymn,xl(k10),yl(k10),x(3),dx,
      *                 dy(k10),xmx,xmn
 
       character vnm*8
@@ -2669,9 +2713,17 @@ c----------------------------------------------------------------
       character*162 title
       common/ csta8 /title(4)
 
-      integer iprop,ivar,ind,ichem
-      character*14 prname
-      common/ cst83 /prname(k10),iprop,ivar,ind,ichem
+      integer ivar,ind,ichem
+      common/ cst83 /ivar,ind,ichem
+
+      integer inv
+      character dname*14, titl1*162
+      common/ cst76 /inv(i11),dname(i11),titl1
+
+      integer kop,kcx,k2c,iprop
+      logical kfl
+      double precision prop
+      common/ cst77 /prop(i11),kop(i11),kcx(i11),k2c(i11),iprop,kfl(i11)
 
       integer iopt
       logical lopt
@@ -2773,7 +2825,7 @@ c                                 reset and are not reread.
 
             end do
 c                                 output the curve
-            write (n6,1010) ipt*2,i,prname(i)
+            write (n6,1010) ipt*2,i,dname(i)
             write (n6,*) (vip(4,j),vip(5,j),j=1,ipt)
 
          end do
@@ -2787,7 +2839,7 @@ c                                 write label coordinates and text
             else
                write (n6,*) xl(i),yl(i)
             end if 
-            write (n6,'(a)') prname(i)
+            write (n6,'(a)') dname(i)
          end do 
 
       end if
@@ -2818,9 +2870,8 @@ c----------------------------------------------------------------
       character vnm*8
       common/ cxt18a /vnm(l3) 
 
-      integer iprop,ivar,ind,ichem
-      character*14 prname
-      common/ cst83 /prname(k10),iprop,ivar,ind,ichem
+      integer ivar,ind,ichem
+      common/ cst83 /ivar,ind,ichem
 c----------------------------------------------------------------------
 c                                 choose plotting variable
       write (*,1000) vnm(1)
@@ -2855,7 +2906,7 @@ c----------------------------------------------------------------
 
       logical nodata
 
-      double precision wt(3),p1,p2,p3,prop
+      double precision wt(3),p1,p2,p3
 
       character cprop(k10)*14
 
@@ -2881,9 +2932,8 @@ c----------------------------------------------------------------
       double precision cp3, amt
       common/ cxt15 /cp3(k0,k5),amt(k5),kkp(k5),np,ncpd,ntot
 
-      integer iprop,ivar,ind,ichem
-      character*14 prname
-      common/ cst83 /prname(k10),iprop,ivar,ind,ichem
+      integer ivar,ind,ichem
+      common/ cst83 /ivar,ind,ichem
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
@@ -2896,6 +2946,11 @@ c----------------------------------------------------------------
 
       character pname*14
       common/ cxt21a /pname(k5)
+
+      integer kop,kcx,k2c,iprop
+      logical kfl
+      double precision prop
+      common/ cst77 /prop(i11),kop(i11),kcx(i11),k2c(i11),iprop,kfl(i11)
 
       integer idstab,nstab,istab,jstab
       common/ cst34 /idstab(k10),nstab(k10),istab,jstab
@@ -2954,7 +3009,7 @@ c                                 custom property choices
                if (icx.eq.999.or.icx.eq.0) then 
 c                                 get system props
                   do i = ist, nprop
-                     call getprp (prop,nstab(i-ivar),0,.true.)
+                     call getprp (prop,nstab(i-ivar),0,0,.true.)
                      write (cprop(i),'(g14.7)') prop
                   end do
 c                                 output system properties
@@ -2975,7 +3030,7 @@ c                                 properties of all phases
                   do j = 1, ntot
 
                      do i = ist, nprop
-                        call getprp (prop,nstab(i-ivar),j,.true.)
+                        call getprp (prop,nstab(i-ivar),j,0,.true.)
                         write (cprop(i),'(g14.7)') prop
                      end do
 c                                 output, must be phemgp
@@ -2987,7 +3042,7 @@ c                                 output, must be phemgp
                else if (icx.ne.0) then 
 c                                 properties of a single phase
                   do i = ist, nprop
-                     call getprp (prop,nstab(i-ivar),icx,.true.)
+                     call getprp (prop,nstab(i-ivar),icx,0,.true.)
                      write (cprop(i),'(g14.7)') prop
                   end do 
 c                                 must be normal table format
@@ -3217,11 +3272,20 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i, icx, nv(2), lop, nvar, l2p(38)
+      integer i, icx, nv(2), lop, nvar
 
       double precision vmn(2), dv(2)
 
-      character*100 n6name, n5name, pname(44)*14 ,mname(k5)*14
+      character*100 n6name, n5name, mname(k5)*14
+
+      integer inv
+      character dname*14, title*162
+      common/ cst76 /inv(i11),dname(i11),title
+
+      integer kop,kcx,k2c,iprop
+      logical kfl
+      double precision prop
+      common/ cst77 /prop(i11),kop(i11),kcx(i11),k2c(i11),iprop,kfl(i11)
 
       character vnm*8
       common/ cxt18a /vnm(l3)  
@@ -3232,9 +3296,8 @@ c----------------------------------------------------------------------
       integer isec,icopt,ifull,imsg,io3p
       common/ cst103 /isec,icopt,ifull,imsg,io3p
 
-      integer iprop,ivar,ind,ichem
-      character*14 prname
-      common/ cst83 /prname(k10),iprop,ivar,ind,ichem
+      integer ivar,ind,ichem
+      common/ cst83 /ivar,ind,ichem
 
       integer idstab,nstab,istab,jstab
       common/ cst34 /idstab(k10),nstab(k10),istab,jstab
@@ -3247,43 +3310,6 @@ c----------------------------------------------------------------------
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
-
-      save pname,l2p
-
-      data pname/'V,J/bar/mol   ','H,J/mol       ','Gruneisen_T   ',
-c                                 4-6
-     *           'Ks,bar        ','Gs,bar        ','v0,km/s       ',
-c                                 7-9
-     *           'vp,km/s       ','vs,km/s       ','vp/vs         ',
-c                                 10-12
-     *           'rho,kg/m3     ','G,J/mol       ','cp,J/K/mol    ',
-c                                 13-15
-     *           'alpha,1/K     ','beta,1/bar    ','S,J/K/mol     ',
-c                                 16-18
-     *           'n,mol         ','N,g           ','Ks_T,bar/K    ',
-c                                 19-21
-     *           'Gs_T,bar/K    ','Ks_P          ','Gs_P          ',
-c                                 22-24
-     *           'v0_T          ','vp_T          ','vs_T          ',
-c                                 25-27
-     *           'v0_P          ','vp_P          ','vs_P          ',
-c                                 28-30
-     *           'wt,%          ','vol,%         ','mol,%         ',
-     *           'h,J/m3        ','cp,J/K/m3     ','blk_comp      ',
-     *           'mode          ','composition   ','s,J/K/m3      ',
-     *           's,J/K/kg      ','h,J/kg        ','cp,J/K/kg     ',
-c                                 40-43
-     *           'specific_mass ','poisson_ratio ','chemical_pot  ',
-     *           'assemblage_i  ','extent        '/
-c                                 l2p points from lop to pname, 
-c                                 1-10
-      data l2p/31,10,32,13,14,33,34,35, 3, 4,
-c                                 11-20                  
-     *         5 , 6, 7, 8, 9,36,37,38,39,40,
-c                                 21-30 
-     *         41, 1,42,43, 0,22,23,24,18,19,
-c                                 31-38
-     *         25,26,27,20,21, 0, 44, 0/
 c------------------------------------------------------------------------
 c                                 generate a file name and
 c                                 open the file on n5
@@ -3308,7 +3334,7 @@ c                                 variable names
 c                                 all modes option
          write (n5,*) ivar + iprop
          write (n5,'(100(a14,1x))') 
-     *                           (vnm(i),i=1,ivar),(prname(i),i=1,iprop)
+     *                           (vnm(i),i=1,ivar),(dname(i),i=1,iprop)
 
       else if (lop.eq.36) then
 c                                 all props options
@@ -3336,15 +3362,15 @@ c                                 make chemical potential names
 c                                  phemgp file
                write (n5,*) ivar + i8 + 5 + icomp + ichem 
                write (n5,'(200(a14,1x))') 'Counter','Name',
-     *                                    (vnm(i),i=1,ivar),
-     *                                    (pname(i),i=1,i8+3),
+     *                                    (vnm(i), i = 1, ivar),
+     *                                    (dname(i),i = 1, iprop),
      *                                    (cname(i), i = 1, icomp),
      *                                    (mname(i), i = 1, ichem)
             else 
 c                                  single phase or system tab file
                write (n5,*) ivar + i8 + 3 + icomp + ichem 
-               write (n5,'(200(a14,1x))') (vnm(i),i=1,ivar),
-     *                                    (pname(i),i=1,i8+3),
+               write (n5,'(200(a14,1x))') (vnm(i), i = 1,ivar),
+     *                                    (dname(i), i = 1,iprop),
      *                                    (cname(i), i = 1, icomp),
      *                                    (mname(i), i = 1, ichem)
 
@@ -3359,32 +3385,28 @@ c                                 phemgp file, this may cause problems
 c                                 from phemgp if ivar ne 2
             write (n5,*) ivar + iprop + 2
             write (n5,'(200(a14,1x))') 'counter','name',
-     *                                 (vnm(i),i=1,ivar),
-     *                                 (pname(l2p(nstab(i))),i=1,iprop)
+     *                                 (vnm(i), i = 1, ivar),
+     *                                 (dname(i), i = 1, iprop)
 
          else 
 c                                  normal sys or phase tab file
             write (n5,*) ivar + iprop 
-            write (n5,'(200(a14,1x))') (vnm(i),i=1,ivar),
-     *                                 (pname(l2p(nstab(i))),i=1,iprop)
+            write (n5,'(200(a14,1x))') (vnm(i) ,i = 1, ivar),
+     *                                 (dname(i) ,i = 1, iprop)
 
          end if 
 
       else if (nvar.eq.2) then
 c                                 2d 1-variable table
          write (n5,*) 1
-         write (n5,'(100(a14,1x))') pname(l2p(lop))
+         write (n5,'(100(a14,1x))') dname(1)
 
       else 
 c                                 1d, include all dependent variables
          write (n5,*) nvar+ivar
-         write (n5,'(100(a14,1x))') (vnm(i),i=1,ivar),pname(l2p(lop))
+         write (n5,'(100(a14,1x))') (vnm(i),i=1,ivar),dname(1)
 
       end if
-c                                 for all other options
-c                                 header is completed at the end of the 
-c                                 calculation.
-
 c                                 plot file info messages  
       if (lop.eq.25) then 
 
@@ -3399,7 +3421,7 @@ c                                 plot file info messages
          end if 
   
          write (*,'(100(a14,1x))') 
-     *                          (vnm(i),i=1,ivar),(prname(i),i=1,iprop)
+     *                          (vnm(i),i=1,ivar),(dname(i),i=1,iprop)
 
 
       else if (lop.eq.36.and.icx.eq.99) then 
@@ -3407,7 +3429,7 @@ c                                 plot file info messages
 
           write (*,3020) n5name
           write (*,'(100(a14,1x))') 'Counter','Name',
-     *               (vnm(i),i=1,ivar),(pname(i),i=1,i8+3),
+     *               (vnm(i),i=1,ivar),(dname(i), i = 1, iprop),
      *                                 (cname(i), i = 1, icomp),
      *                                 (mname(i), i = 1, ichem)
           write (*,3030) 
