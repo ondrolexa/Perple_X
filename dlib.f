@@ -339,8 +339,8 @@ c----------------------------------------------------------------------
       character*100 cfname
       common/ cst227 /cfname
 
-      integer idstab,nstab,istab,jstab
-      common/ cst34 /idstab(k10),nstab(k10),istab,jstab
+      integer idstab,nstab,istab
+      common/ cst34 /idstab(k10),nstab(k10),istab
 
       integer idsol,nrep,nph
       common/ cst38/idsol(k5,k3),nrep(k5,k3),nph(k3)
@@ -434,14 +434,6 @@ c                                 next compare to the existing list
 
          end do 
       end do 
-
-      jstab = 0 
-
-      do i = 1, istab
-         jstab = jstab + nstab(i)
-         if (jstab.gt.k10) call error (999,0d0,istab,'JSTAB ')
-      end do 
-
 c                                 make the "null" assemblage
       iap(k2) = k3
       iavar(1,k3) = 0
@@ -558,13 +550,12 @@ c----------------------------------------------------------------
       common/ cst77 /prop(i11),prmx(i11),prmn(i11),kop(i11),kcx(i11),
      *               k2c(i11),iprop,kfl(i11)
 
-
       integer inv
       character dname*14, title*162
       common/ cst76 /inv(i11),dname(i11),title
 
-      integer idstab,nstab,istab,jstab
-      common/ cst34 /idstab(k10),nstab(k10),istab,jstab
+      integer idstab,nstab,istab
+      common/ cst34 /idstab(k10),nstab(k10),istab
 
       integer hcp,idv
       common/ cst52  /hcp,idv(k7) 
@@ -692,7 +683,7 @@ c                                 choose property
 
          end do 
   
-         if (ier.ne.0.or.lop.lt.0.or.lop.gt.kprop) then 
+         if (lop.lt.0.or.lop.gt.kprop) then 
 
             write (*,1020)
             cycle 
@@ -723,7 +714,7 @@ c                                 write blurb about units
              end if 
              
          else if (lop.eq.25) then 
-
+c                                 all modes
              write (*,1070)
              read (*,'(a)') y
 
@@ -732,7 +723,8 @@ c                                 write blurb about units
              else
                 lopt(2) = .false.
              end if 
-
+c                                 double loop necessary because solution 
+c                                 i may occur as j coexisting phases
              do i = 1, istab
                 do j = 1, nstab(i)
 
@@ -976,8 +968,7 @@ c                                 mol
 1030  format (/,'Retain the compositional criteria you defined ',
      *          'earlier (y/n)?',/,'Answer yes only if you intend ',
      *          'to extract properties for the same phase.',/)
-1050  format (/,'Select properties to be computed [enter 0 to finish]:'
-     *       ,/)
+1050  format (/,'Select properties [enter 0 to finish]:')
 1060  format (3x,i2,' - ',a60)
 1070  format (/,'Output cumulative modes (y/n)?',/
      *         ,'(see www.perplex.ethz.ch/perplex_options.html'

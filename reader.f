@@ -137,10 +137,10 @@ c                                extract the data
 c                                 close "echo" file
       if (imode.eq.1.or.imode.eq.3) close (n8)
 
-1000  format (/,'Select operational mode:',/,
-     *        4x,'1 - compute properties at specified conditions')
-1010  format (4x,'2 - create a property grid')
-1020  format (4x,'3 - compute properties along a 1d path')        
+1000  format ('Select operational mode:',/,
+     *        4x,'1 - properties at specified conditions')
+1010  format (4x,'2 - properties on a 2d grid')
+1020  format (4x,'3 - properties along a 1d path')        
 1025  format (4x,'4 - as in 3, but input from file')
 1026  format (4x,'0 - EXIT')
 1030  format (/,'Invalid choice for 1d grids',/)
@@ -236,11 +236,7 @@ c                                 number of grid points
 
             var(1) = tmin(1) + dx(1)*dfloat(i-1)
 
-            if (kop(1).eq.25) then 
-
-               call allmod 
-
-            else if (kop(1).eq.36.or.kop(1).eq.38) then 
+            if (kop(1).eq.36.or.kop(1).eq.38) then 
 
                call allprp 
 
@@ -1082,10 +1078,15 @@ c                                 compute all properties
                call badnum
 
             else 
-c                                 get the specific property of
-c                                 interest
-               if (lop.ne.24) then 
+c                                 get the properties of interest
+               if (lop.eq.25) then 
+c                                 get all modes
+                  call allmod
 
+                  exit 
+
+               else if (lop.ne.24) then 
+c                                 general properties
                   call getprp (prop(i),lop,icx,komp,.false.)
 
                else 
@@ -1218,7 +1219,7 @@ c----------------------------------------------------------------
 
       logical aprp
 
-      double precision prop, r, gtcomp
+      double precision prop, r, gtcomp, gtmode
 
       double precision atwt
       common/ cst45 /atwt(k0)
@@ -1418,35 +1419,10 @@ c                                 compressibility
                    prop = props(14,id)
                else if (lop.eq.7) then                           
 c                                 mode (%)
-                  if (aflu.and.lflu.or.(.not.aflu)) then
-c                                 total mode:
-                     if (iopt(3).eq.0) then 
-c                                 volume fraction
-                        prop = props(1,id)*props(16,id)/psys(1)*1d2
-                     else if (iopt(3).eq.1) then   
-c                                 weight fraction 
-                        prop = props(16,id)*props(17,id)/psys(17)*1d2
-                     else if (iopt(3).eq.2) then 
-c                                 mol fraction
-                        prop = props(16,id)/psys(16)*1d2
-                     end if 
-                  else 
-c                                 solid only mode:
-                     if (iopt(3).eq.0) then 
-c                                 volume fraction
-                        prop = props(1,id)*props(16,id)/psys1(1)*1d2
-                     else if (iopt(3).eq.1) then 
-c                                 wt fraction
-                        prop = props(16,id)*props(17,id)/psys1(17)*1d2
-                     else if (iopt(3).eq.2) then 
-c                                 mol fraction
-                        prop = props(16,id)/psys1(16)*1d2
-                     end if 
-                  end if 
-
+                   prop = gtmode(id)
                else if (lop.eq.8) then 
 c                                 composition (external function)
-                  prop = gtcomp(id,komp)
+                  prop = gtcomp(icx,komp)
                else if (lop.ge.9.and.lop.le.15) then 
 c                                 gruneisen T, K, mu, Vphi, vp, vs, vp/vs
                   prop = props(lop-6,id) 
@@ -1998,11 +1974,7 @@ c                                 compute properties
  
          end if 
 
-         if (kop(1).eq.25) then 
-
-            call allmod 
-
-         else if (kop(1).eq.36.or.kop(1).eq.38) then 
+         if (kop(1).eq.36.or.kop(1).eq.38) then 
 
             call allprp 
 
@@ -2024,7 +1996,6 @@ c                                 compute properties
 
 1010  format (/,'The plot file range for ',a,' is ',g12.4,' - ',g12.4,
      *        /,'Try again:',/)
-1110  format (/,'Writing grid data to file: ',a,/)
 1140  format (/,'Enter endpoint ',i1,' (',a,'-',a,') coordinates:')
 1150  format (/,'How many points along the profile?')
 1160  format (/,'Select independent variable: ',2(/,1x,i1,' - ',a))
@@ -2118,38 +2089,31 @@ c                                 select properties:
 c                                 name and open plot file, write header 
       call tabhed (xyp,xyp,k,1,n5name,n6name)
 
+      do i = 1, ipts
 
-         do i = 1, ipts
+         var(1) = xyp(1) + dfloat(i-1)*d
 
-            var(1) = xyp(1) + dfloat(i-1)*d
+         if (kop(1).eq.36.or.kop(1).eq.38) then 
 
-            if (kop(1).eq.25) then 
+            call allprp 
 
-               call allmod 
+         else  
 
-            else if (kop(1).eq.36.or.kop(1).eq.38) then 
-
-               call allprp 
-
-            else  
-
-               call polprp 
+            call polprp 
  
-               call outprp (1)
+            call outprp (1)
 
-            end if 
+         end if 
 
-         end do 
+      end do 
 
-         if (kop(1).eq.25) call outmod (1,n5name,n6name,node)
-
+      if (kop(1).eq.25) call outmod (1,n5name,n6name,node)
 
       close (n5)
 
 1000  format (/,'The plot data is in file: ',a)
 1010  format (/,'The plot file range for ',a,' is ',g12.4,' - ',g12.4,
      *        /,'Try again:',/)
-1110  format (/,'Writing data to file: ',a,/)
 1130  format (/,'Enter the ',a,' coordinate at the beginning of',
      *          ' the profile:')
 1140  format (/,'Enter the ',a,' coordinate at the end of1',
@@ -2252,11 +2216,7 @@ c                                 condition is in bounds
                      var(2) = x 
                   end if 
 
-                  if (kop(1).eq.25) then 
-
-                     call allmod 
-
-                  else if (kop(1).eq.36.or.kop(1).eq.38) then 
+                  if (kop(1).eq.36.or.kop(1).eq.38) then 
 
                      call allprp 
 
@@ -2307,7 +2267,7 @@ c                                   points from a data file:
 
             icoors = icoors + 1
 
-            if (icoors.gt.5*l5) call error (69,xx(1),k,'MODE4') 
+            if (icoors.gt.5*l5) call error (69,xx(1),i,'MODE4') 
 
          end do 
                
@@ -2332,17 +2292,9 @@ c                                 write plot file header
             var(1) = xx(i)
             var(2) = yy(i)
 
-            if (kop(1).eq.25) then 
-
-               call allmod               
-
-            else  
-
-               call polprp 
+            call polprp 
                 
-               call outprp (1)
-
-            end if 
+            call outprp (1)
 
          end do  
 
@@ -2352,7 +2304,6 @@ c                                 write plot file header
  
       end if 
 
-1110  format (/,'Writing data to file: ',a,/)
 1280  format (/,'Enter the name of the file containing the path',
      *          ' ordinates:',/)
 1290  format (/,'Path will be described by:',/,
@@ -2457,22 +2408,87 @@ c                                 could get fancy and record up/left here
 
       subroutine allmod 
 c----------------------------------------------------------------
-
+c computes modes of all stable phases, i.e., over the entire range
+c of physical conditions. 
 c----------------------------------------------------------------
       implicit none
 
       include 'perplex_parameters.h'
 
-      integer i, j, k, id, itri(4),jtri(4),ijpt, jk
+      integer i, j, k, id, jk
 
-      logical nodata
+      double precision gtmode
 
-      double precision wt(3), prop, mode(k10)
+      integer kop,kcx,k2c,iprop
+      logical kfl
+      double precision prop,prmx,prmn
+      common/ cst77 /prop(i11),prmx(i11),prmn(i11),kop(i11),kcx(i11),
+     *               k2c(i11),iprop,kfl(i11)
 
       integer iopt
       logical lopt
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      integer idasls,iavar,iasct,ias
+      common/ cst75  /idasls(k5,k3),iavar(3,k3),iasct,ias
+
+      integer idstab,nstab,istab
+      common/ cst34 /idstab(k10),nstab(k10),istab
+
+      integer idsol,nrep,nph
+      common/ cst38/idsol(k5,k3),nrep(k5,k3),nph(k3)
+c----------------------------------------------------------------------
+      do i = 1, iprop
+         prop(i) = 0d0
+      end do 
+
+      id = 0 
+
+      do i = 1, nph(ias)
+
+         jk = 0 
+
+         do j = 1, istab
+
+            if (idstab(j).eq.idsol(i,ias)) then 
+
+               do k = 1, nrep(i,ias)
+
+                  id = id + 1
+
+                  prop(jk+k) = gtmode(id)
+
+               end do 
+
+            end if
+c                                mode column pointer
+            jk = jk + nstab(j)
+ 
+         end do
+
+      end do
+
+      if (lopt(2)) then
+c                                 convert to cumulative modes if
+c                                 requested
+         do j = 2, iprop
+            prop(j) = prop(j) + prop(j-1)
+         end do
+
+      end if
+  
+      end 
+
+      double precision function gtmode (id) 
+c----------------------------------------------------------------
+c function to extract vol/wt/mol mode (%) of phase id 
+c----------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer id
 
       double precision props,psys,psys1,pgeo,pgeo1
       common/ cxt22 /props(i8,k5),psys(i8),psys1(i8),pgeo(i8),pgeo1(i8)
@@ -2480,117 +2496,39 @@ c----------------------------------------------------------------
       logical gflu,aflu,fluid,shear,lflu,volume,rxn
       common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume,rxn
 
-      integer idasls,iavar,iasct,ias
-      common/ cst75  /idasls(k5,k3),iavar(3,k3),iasct,ias
-
-      integer idstab,nstab,istab,jstab
-      common/ cst34 /idstab(k10),nstab(k10),istab,jstab
-
-      integer idsol,nrep,nph
-      common/ cst38/idsol(k5,k3),nrep(k5,k3),nph(k3)
-
-      integer jvar
-      double precision var,dvr,vmn,vmx
-      common/ cxt18 /var(l3),dvr(l3),vmn(l3),vmx(l3),jvar
-
-      integer ivar,ind,ichem
-      common/ cst83 /ivar,ind,ichem
-c----------------------------------------------------------------------
-c                                 set variables to x-y value
-      call setval
-c                                 get node(s) to extract value
-      call triang (itri,jtri,ijpt,wt)
-
-      if (ijpt.eq.0) then 
-c                                 missing data at the node
-         nodata = .true.
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+c----------------------------------------------------------------
+      if (aflu.and.lflu.or.(.not.aflu)) then
+c                     total mode:
+         if (iopt(3).eq.0) then 
+c                     volume fraction
+            gtmode = props(1,id)*props(16,id)/psys(1)*1d2
+         else if (iopt(3).eq.1) then   
+c                     weight fraction 
+            gtmode = props(16,id)*props(17,id)/psys(17)*1d2
+         else if (iopt(3).eq.2) then 
+c                     mol fraction
+            gtmode = props(16,id)/psys(16)*1d2
+         end if 
 
       else 
-c                                 compute all properties
-         call getloc (itri,jtri,ijpt,wt,nodata)
-
-      end if
-
-      if (nodata) then 
-
-          call badnum
-          write (n5,'(200(g14.7,1x))') (var(i),i=1,ivar), 
-     *                                 (nopt(7),i=1,jstab)
-
-      else 
-
-         do i = 1, jstab
-            mode(i) = 0d0
-         end do 
-
-         id = 0 
-
-         do i = 1, nph(ias)
-
-            jk = 0 
-
-            do j = 1, istab
-
-               if (idstab(j).eq.idsol(i,ias)) then 
-
-                  do k = 1, nrep(i,ias)
-
-                     id = id + 1                        
-c                                 mode (%)
-                     if (aflu.and.lflu.or.(.not.aflu)) then
-c                                 total mode:
-                        if (iopt(3).eq.0) then 
-c                                 volume fraction
-                           prop = props(1,id)
-     *                          * props(16,id)/psys(1)*1d2
-                        else if (iopt(3).eq.1) then   
-c                                 weight fraction 
-                           prop = props(16,id)
-     *                             * props(17,id)/psys(17)*1d2
-                        else if (iopt(3).eq.2) then 
-c                                 mol fraction
-                           prop = props(16,id)/psys(16)*1d2
-                        end if 
-                     else 
-c                                 solid only mode:
-                        if (iopt(3).eq.0) then 
-c                                 volume fraction
-                           prop = props(1,id)
-     *                          * props(16,id)/psys1(1)*1d2
-                        else if (iopt(3).eq.1) then 
-c                                 wt fraction
-                           prop = props(16,id)
-     *                             * props(17,id)/psys1(17)*1d2
-                        else if (iopt(3).eq.2) then 
-c                                 mol fraction
-                           prop = props(16,id)/psys1(16)*1d2
-                        end if 
-                     end if 
-
-                     mode(jk+k) = prop
-
-                  end do 
-
-               end if
-c                                mode column pointer
-               jk = jk + nstab(j)
- 
-            end do
-         end do
-c                                 convert to cumulative modes if
-c                                 requested
-         if (lopt(2)) then
-            do j = 2, jstab
-               mode(j) = mode(j) + mode(j-1)
-            end do
-         end if
-c                                 modes assigned, output to n5
-
-         write (n5,'(200(g14.7,1x))') (var(i),i=1,ivar), 
-     *                                (mode(i),i=1,jstab)
+c                     solid only mode:
+         if (iopt(3).eq.0) then 
+c                     volume fraction
+            gtmode = props(1,id)*props(16,id)/psys1(1)*1d2
+         else if (iopt(3).eq.1) then 
+c                     wt fraction
+            gtmode = props(16,id)*props(17,id)/psys1(17)*1d2
+         else if (iopt(3).eq.2) then 
+c                     mol fraction
+            gtmode = props(16,id)/psys1(16)*1d2
+         end if 
 
       end if 
-  
+
       end 
 
       subroutine outmod (dim,n5name,n6name,node)
@@ -2781,7 +2719,7 @@ c----------------------------------------------------------------
 
       logical nodata
 
-      double precision wt(3),p1,p2,p3
+      double precision wt(3),p1,p2,p3,prp
 
       character cprop(k10)*14
 
@@ -2828,8 +2766,8 @@ c----------------------------------------------------------------
       common/ cst77 /prop(i11),prmx(i11),prmn(i11),kop(i11),kcx(i11),
      *               k2c(i11),iprop,kfl(i11)
 
-      integer idstab,nstab,istab,jstab
-      common/ cst34 /idstab(k10),nstab(k10),istab,jstab
+      integer idstab,nstab,istab
+      common/ cst34 /idstab(k10),nstab(k10),istab
 c----------------------------------------------------------------------
 c                                 set variables to x-y value
       call setval
@@ -2885,8 +2823,8 @@ c                                 custom property choices
                if (kcx(1).eq.999.or.kcx(1).eq.0) then 
 c                                 get system props
                   do i = ist, nprop
-                     call getprp (prop,nstab(i-ivar),0,0,.true.)
-                     write (cprop(i),'(g14.7)') prop
+                     call getprp (prp,nstab(i-ivar),0,0,.true.)
+                     write (cprop(i),'(g14.7)') prp
                   end do
 c                                 output system properties
                   if (kcx(1).eq.999) then 
@@ -2906,8 +2844,8 @@ c                                 properties of all phases
                   do j = 1, ntot
 
                      do i = ist, nprop
-                        call getprp (prop,nstab(i-ivar),j,0,.true.)
-                        write (cprop(i),'(g14.7)') prop
+                        call getprp (prp,nstab(i-ivar),j,0,.true.)
+                        write (cprop(i),'(g14.7)') prp
                      end do
 c                                 output, must be phemgp
                      write (n5,1010) ntot,pname(j),
@@ -2918,8 +2856,8 @@ c                                 output, must be phemgp
                else if (kcx(1).ne.0) then 
 c                                 properties of a single phase
                   do i = ist, nprop
-                     call getprp (prop,nstab(i-ivar),kcx(1),0,.true.)
-                     write (cprop(i),'(g14.7)') prop
+                     call getprp (prp,nstab(i-ivar),kcx(1),0,.true.)
+                     write (cprop(i),'(g14.7)') prp
                   end do 
 c                                 must be normal table format
                   write (n5,'(200(a14,1x))') (cprop(i),i=1,nprop)
@@ -3088,20 +3026,13 @@ c----------------------------------------------------------------------
 c----------------------------------------------------------------------
 c                                 make plot file
       do i = 1, 1000
-
+c                                 loop to find an unused name made of 
+c                                 project + "i"
          write (num,'(i3)') i
 
          call mertxt (tfname,prject,num,0)
-
-         if (kop(1).eq.25.or.kcx(1).ne.999.and.
-     *       (kop(1).eq.36.or.kop(1).eq.38)) then 
-
-            call mertxt (n5name,tfname,'.tab',0)
-c                                 n6 is only opened for 1d calculations
-c                                 with lop=25.
-            call mertxt (n6name,tfname,'.plt',0) 
-
-         else if (kop(1).eq.36.or.kop(1).eq.38) then 
+ 
+         if ((kop(1).eq.36.or.kop(1).eq.38).and.kcx(1).eq.999) then 
 c                                 phemgp format
             call mertxt (n5name,tfname,'.phm',0)
 
@@ -3114,6 +3045,8 @@ c                                 phemgp format
             else
                call mertxt (n5name,tfname,'.tab',0)
             end if 
+
+            if (kop(1).eq.25) call mertxt (n6name,tfname,'.plt',0) 
 
          end if 
            
@@ -3182,8 +3115,8 @@ c----------------------------------------------------------------------
       integer ivar,ind,ichem
       common/ cst83 /ivar,ind,ichem
 
-      integer idstab,nstab,istab,jstab
-      common/ cst34 /idstab(k10),nstab(k10),istab,jstab
+      integer idstab,nstab,istab
+      common/ cst34 /idstab(k10),nstab(k10),istab
 
       integer jtest,jpot
       common/ debug /jtest,jpot
@@ -3213,13 +3146,7 @@ c                                 value, increment & nodes
       end do 
 c                                 number of dependent variables,
 c                                 variable names
-      if (kop(1).eq.25) then
-c                                 all modes option
-         write (n5,*) ivar + iprop
-         write (n5,'(100(a14,1x))') 
-     *                           (vnm(i),i=1,ivar),(dname(i),i=1,iprop)
-
-      else if (kop(1).eq.36) then
+      if (kop(1).eq.36) then
 c                                 all props options
          ivar = 2
          if (icopt.eq.10) ivar = 3
