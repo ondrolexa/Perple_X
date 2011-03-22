@@ -14,6 +14,8 @@ c----------------------------------------------------------------------
 
       integer i,j,l,lu
 
+      double precision poiss
+
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
 
@@ -125,23 +127,19 @@ c                                 N, H, V, Cp, alpha, beta, density
       if (aflu) write (lu,1170) 'System - fluid',psys1(17),psys1(2),
      *                psys1(15),psys1(1),(psys1(j),j=12,14),psys1(10)
 
-      write (lu,1190)
+      write (lu,1190)     
 c                                 phase/system summary, seismic:
       do i = 1, ntot
-c                                 compute poisson ratio
-         r = (props(7,i)/props(8,i))**2
-
+ 
          write (lu,1200) pname(i), (props(j,i), j = 3, 8),
-     *                   0.5d0*(r-2d0)/(r-1d0)
+     *                   poiss(props(7,i),props(8,i))
       end do
 
-      r = (psys(7)/psys(8))**2
       write (lu,1200) 'System        ',(psys(j), j = 3, 8),
-     *                                 0.5d0*(r-2d0)/(r-1d0)
+     *                                 poiss(psys(7),psys(8))
 
-      r = (psys1(7)/psys1(8))**2
       if (aflu) write (lu,1200) 'System - fluid',(psys1(j), j = 3, 8),
-     *                                 0.5d0*(r-2d0)/(r-1d0)
+     *                                        poiss(psys1(7),psys1(8))
 
       write (lu,1240)
 c                                 phase/system summary, seismic derivatives:
@@ -2152,3 +2150,16 @@ c                                 than necessary.
 
       end 
 
+      double precision function poiss (vp,vs)
+ 
+      implicit none
+
+      double precision vp, vs
+
+      if (vs.eq.0d0) then 
+         poiss = 0.5d0
+      else 
+         poiss =  0.5d0*((vp/vs)**2-2d0)/((vp/vs)**2-1d0)
+      end if 
+
+      end 

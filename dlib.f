@@ -554,8 +554,10 @@ c----------------------------------------------------------------
 
       integer kop,kcx,k2c,iprop
       logical kfl
-      double precision prop
-      common/ cst77 /prop(i11),kop(i11),kcx(i11),k2c(i11),iprop,kfl(i11)
+      double precision prop,prmx,prmn
+      common/ cst77 /prop(i11),prmx(i11),prmn(i11),kop(i11),kcx(i11),
+     *               k2c(i11),iprop,kfl(i11)
+
 
       integer inv
       character dname*14, title*162
@@ -676,12 +678,20 @@ c                                 choose property
          write (*,1050)
 
          do i = 1, kprop
+
             if (iprop.gt.0.and.i.eq.25.or.i.eq.36) cycle 
             write (*,1060) i,propty(i)
+
          end do 
 
-         read (*,*,iostat=ier) lop
+         do 
 
+            call rdnumb (prop(1),0d0,lop,999,.false.)
+            if (lop.ne.999) exit
+            write (*,'(a)') 'Select a property or enter 0 to finish...'
+
+         end do 
+  
          if (ier.ne.0.or.lop.lt.0.or.lop.gt.kprop) then 
 
             write (*,1020)
@@ -966,7 +976,8 @@ c                                 mol
 1030  format (/,'Retain the compositional criteria you defined ',
      *          'earlier (y/n)?',/,'Answer yes only if you intend ',
      *          'to extract properties for the same phase.',/)
-1050  format (/,'Select properties to be computed [enter 0 to finish]:')
+1050  format (/,'Select properties to be computed [enter 0 to finish]:'
+     *       ,/)
 1060  format (3x,i2,' - ',a60)
 1070  format (/,'Output cumulative modes (y/n)?',/
      *         ,'(see www.perplex.ethz.ch/perplex_options.html'
@@ -989,7 +1000,7 @@ c                                 mol
      *         ,'option 3 can only be plotted with PHEMGP.',//
      *         ,'Select an option [default = 1]:')
 1140  format (/,'Hey cowboy, that warnt no solution, try again.',/)
-1150  format (/,'This composition will be designated:',a,/)
+1150  format (/,'This composition will be designated: ',a,/)
 1160  format (/,'**warning ver011** only ',i2,' user defined '
      *      'compositions permitted.',/,'do multiple runs with WERAMI',
      *      'or redimension common block comps.',/)

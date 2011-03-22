@@ -1542,8 +1542,6 @@ c---------------------------------------------------------------------
 
 1     format (/,'**error ver001** increase parameter ',a,' to ',i7,' in'
      *       ,' perplex_parameters.h and recompile Perple_X',/)
-2     format (/,'**error ver002** too many points (',a,'), increase ',
-     *        'parameter L5',/)
 3     format (/,'**error ver003** the solution model file is',
      *        'in a format that is no longer supported.',/,
      *        'copy the current version from: ',
@@ -1705,6 +1703,8 @@ c---------------------------------------------------------------------
      *          ' support this format.',/,'Use a more recent solution ',
      *          'model file, e.g., copy the current version from: ',
      *        'www.perplex.ethz.ch/datafiles/solution_model.dat',/)
+69    format (/,'**error ver069** too many points (',a,'), increase ',
+     *          'parameter L5',/)
 89    format (/,'**error ver089** SMPLX programming error. Change ',
      *        'minimnization method.',/)
 90    format (/,'**error ver090** SMPLX failed to converge within ', 
@@ -1750,9 +1750,9 @@ c---------------------------------------------------------------------
 169   format (/,'**error ver169** cart, imod=',i2,' is an invalid ',
      *          'request')
 180   format (/,'**error ver180** too many (pseudo-)compounds, ',
-     *           'routine: ',a,' currently:',i7)
+     *          'routine: ',a,' currently:',i7)
 181   format (/,'**error ver181** too many reactions,',
-     *           ' increase dimension k2 (',i6,')')
+     *          ' increase dimension k2 (',i6,')')
 182   format (/,'**error ver182** too many invariant points,',
      *           ' increase parameter k2 (',i6,')')
 183   format (/,'**error ver183** too many assemblages; increase ',

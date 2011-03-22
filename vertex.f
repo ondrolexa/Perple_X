@@ -7213,10 +7213,6 @@ c-----------------------------------------------------------------------
       double precision cp3, amt
       common/ cxt15 /cp3(k0,k5),amt(k5),kkp(k5),np,ncpd,ntot
 
-      integer ipvt
-      double precision a,b
-      common/ cst301 /a(k5,k5),b(k5),ipvt(k5)
-
       integer iopt
       logical lopt
       double precision nopt
@@ -7233,23 +7229,25 @@ c                                 fractionation effects:
 
          do j = 1, ntot
 
-            if (kkp(j).eq.ifr(i).and.b(j).ge.0) then 
+            if (kkp(j).eq.ifr(i).and.amt(j).ge.0d0) then 
 
                there = .true.
 c                                 the phase to be fractionated
 c                                 is present
                do k = 1, jbulk 
-                  dcomp(k) = dcomp(k) + b(j)*cp3(k,j)
+                  dcomp(k) = dcomp(k) + amt(j)*cp3(k,j)
                end do 
 c                                 write to console
                write (*,1185) vname(iv(2)),v(iv(2)),
      *                        vname(iv(1)),v(iv(1))
-               write (*,1190) b(j),gname(ifr(i)),
-     *                        (b(j)*cp3(k,j),k=1,jbulk)
+               write (*,1190) amt(j),gname(ifr(i)),
+     *                        (amt(j)*cp3(k,j),k=1,jbulk)
 c                                 write to file
-               if (output) write (n0+i,1200) v(iv(1)),b(j),
-     *                     gname(ifr(i)),(b(j)*cp3(k,j),k=1,jbulk)
+               if (output) write (n0+i,1200) v(iv(1)),amt(j),
+     *                     gname(ifr(i)),(amt(j)*cp3(k,j),k=1,jbulk)
+         
             end if
+
          end do 
 
          if (.not.there) then
@@ -7272,9 +7270,8 @@ c                                 write to file
                write (*,1000) cname(i)
             end if 
 
-            if (cblk(i).lt.nopt(11)) then 
-               cblk(i) = 0d0
-            end if 
+            if (cblk(i).lt.nopt(11)) cblk(i) = 0d0
+
          end if 
 
       end do
