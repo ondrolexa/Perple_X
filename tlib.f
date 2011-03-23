@@ -49,6 +49,7 @@ c lopt(11) - auto_refine_file
 c lopt(12) - option_list_files
 c lopt(13) - true if user set finite zero mode check
 c lopt(14) - logarithmic_p
+c lopt(15) - spreadsheet format -> T = explicit output of independent variables 
 c nopt(5)  - speciation_tolerance
 c nopt(8)  - solvus_tolerance
 c nopt(20) - T_melt - kill melt endmembers at T < nopt(20)
@@ -114,6 +115,8 @@ c                                 user set finite zero mode
       lopt(13) = .false.
 c                                 logarithimic P
       lopt(14) = .false.
+c                                 spreadsheet format
+      lopt(15) = .false.
 c                                 minimum replicate label distance
       nopt(4) = 0.025
 c                                 speciation_tolerance
@@ -512,6 +515,10 @@ c                                 assume linear boundaries within a cell during 
  
             if (val.eq.'T') lopt(14) = .true. 
 
+         else if (key.eq.'spreadsheet') then
+ 
+            if (val.eq.'T') lopt(15) = .true. 
+
          else if (key.eq.'Anderson-Gruneisen') then
 
             if (val.eq.'F') lopt(4) = .false.
@@ -883,8 +890,8 @@ c                                 logarithmic_p, bad_number
 
       if (iam.eq.3) then 
 c                                 WERAMI input/output options
-         write (n,1230) lopt(14),nopt(7),(valu(i),i=2,5),nopt(6),
-     *                  valu(15),nopt(16),lopt(6)
+         write (n,1230) lopt(15),lopt(14),nopt(7),(valu(i),i=2,5),
+     *                  nopt(6),valu(15),nopt(16),lopt(6)
 
       else if (iam.eq.2) then 
 c                                 MEEMUM input/output options
@@ -999,6 +1006,7 @@ c                                 meemum or autorefine off
 1220  format (/,2x,'Composition options:',//,
      *        4x,'closed_c_space         ',l1,10x,'F [T]')
 1230  format (/,2x,'Input/Output options:',//,
+     *        4x,'spreadsheet            ',l1,10x,'[F] T',/,
      *        4x,'logarithmic_p          ',l1,10x,'[F] T',/,
      *        4x,'bad_number          ',f7.1,7x,'[0.0]',/,
      *        4x,'compositions           ',a3,8x,'wt  [mol]',/,

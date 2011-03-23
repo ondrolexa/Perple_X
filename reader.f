@@ -61,7 +61,6 @@ c                                 set ivar flag, this indicates the number
 c                                 of possible independent plotting variables, jvar
 c                                 indicates the number of thermodynamic variables
       ivar = 2
-
       if (icopt.eq.10) ivar = 3
 c                                 don't allow users to do anything
 c                                 other than gridded min
@@ -157,7 +156,7 @@ c----------------------------------------------------------------------
 
       logical node
 
-      integer i,j, nxy(2)
+      integer i, j, nxy(2), dim
 
       double precision tmin(2), tmax(2), dx(2)
 
@@ -189,6 +188,7 @@ c----------------------------------------------------------------------
       common/ cxt18a /vnm(l3)
 c----------------------------------------------------------------------
       node = .false. 
+      dim = 2
 c                                 select the property
       call chsprp 
 
@@ -226,7 +226,7 @@ c                                 number of grid points
          dx(i) = (tmax(i)-tmin(i))/dfloat(nxy(i)-1)
       end do 
 
-      call tabhed (tmin,dx,nxy,2,n5name,n6name)
+      call tabhed (tmin,dx,nxy,dim,n5name,n6name)
 
       do j = 1, nxy(2)
 
@@ -236,25 +236,13 @@ c                                 number of grid points
 
             var(1) = tmin(1) + dx(1)*dfloat(i-1)
 
-            if (kop(1).eq.36.or.kop(1).eq.38) then 
-
-               call allprp 
-
-            else  
-
-               call polprp 
-
-               call outprp (2)
-
-            end if 
+            call polprp (dim)
  
          end do
  
       end do 
 c                                 wrap up the calculation
-      if (kop(1).eq.25) call outmod (2,n5name,n6name,node)
-
-      close (n5)
+      call finprp (dim,n5name,n6name,node) 
 c                                 write data ranges
       write (*,1000) nopt(7)
       write (*,'(5x,200(g14.7,1x))') (dname(i),i=1,iprop)
@@ -1019,7 +1007,7 @@ c                                 find normalized distance
 
       end   
 
-      subroutine polprp 
+      subroutine polprp (dim)
 c-----------------------------------------------------------------------
       implicit none
 
@@ -1027,7 +1015,7 @@ c-----------------------------------------------------------------------
 
       logical nodata
 
-      integer itri(4),jtri(4),ijpt,lop,icx,komp,i
+      integer itri(4), jtri(4), ijpt, lop, icx, komp, i, dim
 
       double precision wt(3)
 
@@ -1067,7 +1055,9 @@ c                                 get node(s) to extract value
 
          if (ijpt.eq.0) then 
 c                                 missing data at the node
-            call badnum
+            call badnum (dim)
+
+            return 
 
          else 
 c                                 compute all properties
@@ -1075,13 +1065,21 @@ c                                 compute all properties
 
             if (nodata) then 
 
-               call badnum
+               call badnum (dim)
+
+               return  
 
             else 
 c                                 get the properties of interest
                if (lop.eq.25) then 
 c                                 get all modes
                   call allmod
+
+                  exit 
+
+               else if (lop.eq.36.or.lop.eq.38) then 
+c                                 multiple property lists, PHEMGP
+                  call allprp (dim)
 
                   exit 
 
@@ -1106,33 +1104,131 @@ c                                 no need to call triang/getlow
 
       end do 
 
+      if (lop.ne.36.and.lop.ne.38) call outprp (dim)
+
       end 
 
-      subroutine badnum 
+      subroutine badnum (dim)  
 c----------------------------------------------------------------
-c badnum write missing data message
+c badnum: writes missing data message; assigns and outputs badnumber
+c data.
 c----------------------------------------------------------------
       implicit none
 
       include 'perplex_parameters.h'
+
+      integer dim, i 
+
+      character vnm*8
+      common/ cxt18a /vnm(l3)   
+
+      character*14 tname
+      integer kop,kcx,k2c,iprop
+      logical kfl
+      double precision prop,prmx,prmn
+      common/ cst77 /prop(i11),prmx(i11),prmn(i11),kop(i11),kcx(i11),
+     *               k2c(i11),iprop,kfl(i11),tname
 
       integer iopt
       logical lopt
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
-      character vnm*8
-      common/ cxt18a /vnm(l3)
+      integer jvar
+      double precision var,dvr,vmn,vmx
+      common/ cxt18 /var(l3),dvr(l3),vmn(l3),vmx(l3),jvar
+
+      integer kkp, np, ncpd, ntot
+      double precision cp3, amt
+      common/ cxt15 /cp3(k0,k5),amt(k5),kkp(k5),np,ncpd,ntot
+c----------------------------------------------------------------------
+      write (*,1000) vnm(1),var(1),vnm(2),var(2),nopt(7)
+c                                 for phemgp format:
+      ntot = 0
+      tname = 'Missing data  '
+c                                 in general
+      do i = 1, iprop
+         prop(i) = nopt(7)
+      end do 
+
+      call outprp (dim)
+
+1000  format ('Missing data at ',a,'=',g12.5,', ',a,'=',g12.5,
+     *        ' assigned ',g12.5,' to all properties')
+
+      end 
+
+
+      subroutine outprp (dim)
+c----------------------------------------------------------------------
+c outprp outputs properties computed by chsprp for dim-dimensional tables: 
+c   dim    = 1 tables include independent variables;
+c   dim    = 2, kcx(1) ne 999, tables include independent variables if lopt(15) = T;
+c   kcx(1) = 999, write phemgp format that includes a name, counter, and 
+c            independent variables. 
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer dim, i
+
+      character*14 tname
+      integer kop,kcx,k2c,iprop
+      logical kfl
+      double precision prop,prmx,prmn
+      common/ cst77 /prop(i11),prmx(i11),prmn(i11),kop(i11),kcx(i11),
+     *               k2c(i11),iprop,kfl(i11),tname
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       integer jvar
       double precision var,dvr,vmn,vmx
       common/ cxt18 /var(l3),dvr(l3),vmn(l3),vmx(l3),jvar
+
+      integer ivar,ind,ichem
+      common/ cst83 /ivar,ind,ichem
+
+      integer kkp, np, ncpd, ntot
+      double precision cp3, amt
+      common/ cxt15 /cp3(k0,k5),amt(k5),kkp(k5),np,ncpd,ntot
 c----------------------------------------------------------------------
+      if (kcx(1).eq.999) then 
+c                                 write phemgp format
+         write (n5,'(a14,1x,7x,i2,6x,200(g14.7,1x))') tname,ntot,
+     *                                               (var(i),i=1,ivar), 
+     *                                               (prop(i),i=1,iprop)  
 
-      write (*,1000) vnm(1),var(1),vnm(2),var(2),nopt(7)
+      else if (lopt(15).or.dim.eq.1) then 
+c                                 write spreadsheet tab format
+         write (n5,'(200(g14.7,1x))') (var(i),i=1,ivar), 
+     *                                (prop(i),i=1,iprop)
+      else 
+c                                 write compact tab format
+         write (n5,'(200(g14.7,1x))') (prop(i),i=1,iprop)
+      end if 
+c                                 check property ranges       
+      if (dim.eq.2) then 
 
-1000  format ('Missing data at ',a,'=',g12.5,', ',a,'=',g12.5,
-     *        ' assigned ',g12.5,' to all properties')
+         do i = 1, iprop
+c                                
+            if (isnan(prop(i))) cycle
+c                                 first check eliminates logical 
+c                                 comparisons with NaN's that compaq
+c                                 fortran doesn't like.
+            if (.not.isnan(nopt(7))) then 
+               if (prop(i).ne.nopt(7)) cycle 
+            end if 
+         
+            if (prop(i).gt.prmx(i)) prmx(i) = prop(i)
+            if (prop(i).lt.prmn(i)) prmn(i) = prop(i)
+ 
+         end do
+
+      end if
 
       end 
 
@@ -1219,7 +1315,7 @@ c----------------------------------------------------------------
 
       logical aprp
 
-      double precision prop, r, gtcomp, gtmode
+      double precision prop, r, gtcomp, mode(3)
 
       double precision atwt
       common/ cst45 /atwt(k0)
@@ -1419,7 +1515,8 @@ c                                 compressibility
                    prop = props(14,id)
                else if (lop.eq.7) then                           
 c                                 mode (%)
-                   prop = gtmode(id)
+                   call gtmode (mode,id)
+                   prop = mode(iopt(3)+1)
                else if (lop.eq.8) then 
 c                                 composition (external function)
                   prop = gtcomp(icx,komp)
@@ -1806,7 +1903,7 @@ c----------------------------------------------------------------------
 
       logical node, ok
 
-      integer i, j, icurve, ivi, ivd, iord, ipts, jpts, ier, k(2)
+      integer i, j, icurve, ivi, ivd, iord, ipts, jpts, ier, k(2), dim
 
       double precision coef(0:10), dxy(2), xyp(2,2), s, d
 
@@ -1826,6 +1923,7 @@ c----------------------------------------------------------------------
       common/ cxt18a /vnm(l3)  
 c----------------------------------------------------------------------
       node = .false.
+      dim = 1
 c                                 set up path information
       icurve = 0 
 c                                 ask if non-linear path
@@ -1947,7 +2045,7 @@ c                                 axis, choose independent variable
 c                                 select properties
       call chsprp 
 c                                 write file header
-      call tabhed (dxy,dxy,k,1,n5name,n6name)
+      call tabhed (dxy,dxy,k,dim,n5name,n6name)
 c                                 compute properties
       do i = 1, ipts
 
@@ -1974,23 +2072,11 @@ c                                 compute properties
  
          end if 
 
-         if (kop(1).eq.36.or.kop(1).eq.38) then 
-
-            call allprp 
-
-         else  
-
-            call polprp 
-
-            call outprp (1)
-
-         end if 
+         call polprp (dim)
 
       end do 
 
-      if (kop(1).eq.25) call outmod (1,n5name,n6name,node)
-
-      close (n5)
+      call finprp (dim,n5name,n6name,node) 
 
       if (jpts.eq.0) write (*,1330) 
 
@@ -2021,7 +2107,7 @@ c----------------------------------------------------------------------
 
       logical node
 
-      integer i, ipts, ier, k(2)
+      integer i, ipts, ier, k(2), dim 
 
       double precision dxy, xyp(2), d
 
@@ -2044,6 +2130,9 @@ c----------------------------------------------------------------------
       common/ cst83 /ivar,ind,ichem
 c----------------------------------------------------------------------
       node = .false.
+      dim = 1
+c                                 get the independent output variable
+      call getind
 c                                 path endpoints
 30    do i = 1, 2
 
@@ -2093,25 +2182,12 @@ c                                 name and open plot file, write header
 
          var(1) = xyp(1) + dfloat(i-1)*d
 
-         if (kop(1).eq.36.or.kop(1).eq.38) then 
-
-            call allprp 
-
-         else  
-
-            call polprp 
- 
-            call outprp (1)
-
-         end if 
+         call polprp (dim)
 
       end do 
 
-      if (kop(1).eq.25) call outmod (1,n5name,n6name,node)
+      call finprp (dim,n5name,n6name,node) 
 
-      close (n5)
-
-1000  format (/,'The plot data is in file: ',a)
 1010  format (/,'The plot file range for ',a,' is ',g12.4,' - ',g12.4,
      *        /,'Try again:',/)
 1130  format (/,'Enter the ',a,' coordinate at the beginning of',
@@ -2132,7 +2208,7 @@ c----------------------------------------------------------------------
 
       logical node
 
-      integer i, icoors, jmode, ixy, inc, ierr, k(2)
+      integer i, icoors, jmode, ixy, inc, ierr, k(2), dim
 
       double precision r(2), tmin1, tmax1,a1, b1, c1, d1, x0, x1,  
      *                 dt1, x, y, xx(5*l5), yy(5*l5), pmin, pmax
@@ -2153,6 +2229,7 @@ c----------------------------------------------------------------------
       common/ cst82 /oned
 c----------------------------------------------------------------------
       node = .false.
+      dim = 1
 
       do 
 
@@ -2198,7 +2275,7 @@ c                                 ixy
 c                                 select properties
          call chsprp 
 c                                 write plot file header
-         call tabhed (r,r,k,1,n5name,n6name)
+         call tabhed (r,r,k,dim,n5name,n6name)
 
          do 
 
@@ -2215,18 +2292,8 @@ c                                 condition is in bounds
                      var(1) = y
                      var(2) = x 
                   end if 
-
-                  if (kop(1).eq.36.or.kop(1).eq.38) then 
-
-                     call allprp 
-
-                  else
   
-                     call polprp 
-
-                     call outprp (1) 
-
-                  end if 
+                  call polprp (dim) 
 
                end if 
 
@@ -2238,9 +2305,7 @@ c                                 condition is in bounds
 
          end do  
 
-         if (kop(1).eq.25) call outmod (2,n5name,n6name,node) 
- 
-         close (n5)
+         call finprp (dim,n5name,n6name,node) 
 
       else 
 c                                   points from a data file:
@@ -2285,22 +2350,18 @@ c                                   points from a data file:
 c                                 select properties            
          call chsprp
 c                                 write plot file header
-         call tabhed (r,r,k,1,n5name,n6name)
+         call tabhed (r,r,k,dim,n5name,n6name)
 
          do i = 1, icoors, inc
 
             var(1) = xx(i)
             var(2) = yy(i)
 
-            call polprp 
-                
-            call outprp (1)
+            call polprp (dim)
 
          end do  
 
-         if (kop(1).eq.25) call outmod (1,n5name,n6name,node)
-
-         close (n5)
+         call finprp (dim,n5name,n6name,node) 
  
       end if 
 
@@ -2417,7 +2478,7 @@ c----------------------------------------------------------------
 
       integer i, j, k, id, jk
 
-      double precision gtmode
+      double precision mode(3)
 
       integer kop,kcx,k2c,iprop
       logical kfl
@@ -2434,7 +2495,7 @@ c----------------------------------------------------------------
       common/ cst75  /idasls(k5,k3),iavar(3,k3),iasct,ias
 
       integer idstab,nstab,istab
-      common/ cst34 /idstab(k10),nstab(k10),istab
+      common/ cst34 /idstab(i11),nstab(i11),istab
 
       integer idsol,nrep,nph
       common/ cst38/idsol(k5,k3),nrep(k5,k3),nph(k3)
@@ -2457,7 +2518,8 @@ c----------------------------------------------------------------------
 
                   id = id + 1
 
-                  prop(jk+k) = gtmode(id)
+                  call gtmode (mode,id)
+                  prop(jk+k) = mode(iopt(3)+1)
 
                end do 
 
@@ -2480,7 +2542,7 @@ c                                 requested
   
       end 
 
-      double precision function gtmode (id) 
+      subroutine gtmode (mode,id) 
 c----------------------------------------------------------------
 c function to extract vol/wt/mol mode (%) of phase id 
 c----------------------------------------------------------------
@@ -2490,42 +2552,31 @@ c----------------------------------------------------------------
 
       integer id
 
+      double precision mode(3)
+
       double precision props,psys,psys1,pgeo,pgeo1
       common/ cxt22 /props(i8,k5),psys(i8),psys1(i8),pgeo(i8),pgeo1(i8)
 
       logical gflu,aflu,fluid,shear,lflu,volume,rxn
       common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume,rxn
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 c----------------------------------------------------------------
       if (aflu.and.lflu.or.(.not.aflu)) then
 c                     total mode:
-         if (iopt(3).eq.0) then 
 c                     volume fraction
-            gtmode = props(1,id)*props(16,id)/psys(1)*1d2
-         else if (iopt(3).eq.1) then   
+         mode(1) = props(1,id)*props(16,id)/psys(1)*1d2
 c                     weight fraction 
-            gtmode = props(16,id)*props(17,id)/psys(17)*1d2
-         else if (iopt(3).eq.2) then 
+         mode(2) = props(16,id)*props(17,id)/psys(17)*1d2
 c                     mol fraction
-            gtmode = props(16,id)/psys(16)*1d2
-         end if 
+         mode(3) = props(16,id)/psys(16)*1d2
 
       else 
 c                     solid only mode:
-         if (iopt(3).eq.0) then 
 c                     volume fraction
-            gtmode = props(1,id)*props(16,id)/psys1(1)*1d2
-         else if (iopt(3).eq.1) then 
+         mode(1) = props(1,id)*props(16,id)/psys1(1)*1d2
 c                     wt fraction
-            gtmode = props(16,id)*props(17,id)/psys1(17)*1d2
-         else if (iopt(3).eq.2) then 
+         mode(2) = props(16,id)*props(17,id)/psys1(17)*1d2
 c                     mol fraction
-            gtmode = props(16,id)/psys1(16)*1d2
-         end if 
+         mode(3) = props(16,id)/psys1(16)*1d2
 
       end if 
 
@@ -2546,8 +2597,7 @@ c----------------------------------------------------------------
 
       integer i, j, k, ipt, dim, ier
 
-      double precision ymx,ymn,xl(k10),yl(k10),x(3),dx,
-     *                 dy(k10),xmx,xmn
+      double precision ymx,ymn,xl(i11),yl(i11),x(3),dx,dy(i11),xmx,xmn
 
       character vnm*8
       common/ cxt18a /vnm(l3) 
@@ -2565,11 +2615,12 @@ c----------------------------------------------------------------
       character dname*14, titl1*162
       common/ cst76 /inv(i11),dname(i11),titl1
 
+      character*14 tname
       integer kop,kcx,k2c,iprop
       logical kfl
       double precision prop,prmx,prmn
       common/ cst77 /prop(i11),prmx(i11),prmn(i11),kop(i11),kcx(i11),
-     *               k2c(i11),iprop,kfl(i11)
+     *               k2c(i11),iprop,kfl(i11),tname
 
       integer iopt
       logical lopt
@@ -2703,7 +2754,7 @@ c                                 write label coordinates and text
 
       end 
 
-      subroutine allprp 
+      subroutine allprp (dim)
 c----------------------------------------------------------------
 c output spreadsheet format properties (lop = 36 or 38).
 c   icx = 0   - output just system properties
@@ -2714,14 +2765,9 @@ c----------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i, j, id, itri(4), jtri(4), ijpt, mprop, nprop, 
-     *        ist 
+      integer i, j, id, dim  
 
-      logical nodata
-
-      double precision wt(3),p1,p2,p3,prp
-
-      character cprop(k10)*14
+      double precision mode(3)
 
       double precision gtot,fbulk,gtot1,fbulk1
       common/ cxt81 /gtot,fbulk(k0),gtot1,fbulk1(k0)
@@ -2760,244 +2806,149 @@ c----------------------------------------------------------------
       character pname*14
       common/ cxt21a /pname(k5)
 
+      character*14 tname
       integer kop,kcx,k2c,iprop
       logical kfl
       double precision prop,prmx,prmn
       common/ cst77 /prop(i11),prmx(i11),prmn(i11),kop(i11),kcx(i11),
-     *               k2c(i11),iprop,kfl(i11)
+     *               k2c(i11),iprop,kfl(i11),tname
 
       integer idstab,nstab,istab
-      common/ cst34 /idstab(k10),nstab(k10),istab
+      common/ cst34 /idstab(i11),nstab(i11),istab
 c----------------------------------------------------------------------
-c                                 set variables to x-y value
-      call setval
-c                                 get node(s) to extract value
-      call triang (itri,jtri,ijpt,wt)
+      if (kop(1).eq.38) then 
+c                                 custom property choices
+         if (kcx(1).eq.999.or.kcx(1).eq.0) then 
+c                                 get system props
+            do i = i, iprop
+               call getprp (prop(i),kop(i),0,0,.true.)
+            end do
 
-      if (ijpt.eq.0) then 
+            tname = 'system        '
 
-         nodata = .true.
-
-      else 
-c                                 compute all properties
-         call getloc (itri,jtri,ijpt,wt,nodata)
-
-      end if 
-c                                 property counters
-      ist = ivar + 1
-
-      if (kop(1).eq.36) then 
-         mprop = i8 + 3 + icomp + ichem
-      else 
-         mprop = iprop
-      end if 
-
-      nprop = mprop + ivar 
-c                                 error check
-      if (nprop.gt.k10) call error (1,0d0,nprop,'K10')
-      
-      if (nodata) then 
-c                                 missing data at the node
-         call badnum
-
-         if (kcx(1).eq.999) then 
-
-            write (n5,1010) 0,'Missing data  ',(var(i),i=1,ivar), 
-     *                                         (nopt(7),i=1,mprop)
-
-         else 
-
-            write (n5,'(240(g14.7,1x))') (var(i),i=1,ivar), 
-     *                                   (nopt(7),i=1,mprop)
+            call outprp (dim)
 
          end if 
 
-      else 
-c                                 text version of variable values
-         do i = 1, ivar
-            write (cprop(i),'(g14.7)') var(i)
-         end do
-
-         if (kop(1).eq.38) then 
-c                                 custom property choices
-               if (kcx(1).eq.999.or.kcx(1).eq.0) then 
-c                                 get system props
-                  do i = ist, nprop
-                     call getprp (prp,nstab(i-ivar),0,0,.true.)
-                     write (cprop(i),'(g14.7)') prp
-                  end do
-c                                 output system properties
-                  if (kcx(1).eq.999) then 
-c                                 phemgp format
-                     write (n5,1010) ntot,'System        ',
-     *                               (cprop(i),i=1,nprop)
-                  else
-c                                 normal table format
-                     write (n5,'(200(a14,1x))') (cprop(i),i=1,nprop)
-
-                  end if 
-
+         if (kcx(1).ne.0) then 
+c                                 properties of phases
+            do j = 1, ntot
+             
+               if (kcx(1).eq.999) then
+                  id = j 
+               else
+                  id = kcx(1)
                end if 
 
-               if (kcx(1).eq.999) then 
-c                                 properties of all phases
-                  do j = 1, ntot
+               do i = i, iprop
+                  call getprp (prop(i),kop(i),id,0,.true.)
+               end do
 
-                     do i = ist, nprop
-                        call getprp (prp,nstab(i-ivar),j,0,.true.)
-                        write (cprop(i),'(g14.7)') prp
-                     end do
-c                                 output, must be phemgp
-                     write (n5,1010) ntot,pname(j),
-     *                               (cprop(i),i=1,nprop)
+               tname = pname(id)
 
-                  end do       
+               call outprp (dim)
 
-               else if (kcx(1).ne.0) then 
-c                                 properties of a single phase
-                  do i = ist, nprop
-                     call getprp (prp,nstab(i-ivar),kcx(1),0,.true.)
-                     write (cprop(i),'(g14.7)') prp
-                  end do 
-c                                 must be normal table format
-                  write (n5,'(200(a14,1x))') (cprop(i),i=1,nprop)
+               if (kcx(1).ne.999) exit 
 
-               end if
+            end do       
 
-         else
+         end if  
+
+      else
 c                                 "all property" option, lop.eq.36
-            if (kcx(1).eq.0) then 
+         if (kcx(1).eq.999.or.kcx(1).eq.0) then 
 c                                 only system properties requested:
-c                                 normal table format
-               if (aflu.and.lflu.or.(.not.aflu)) then 
-c                                 include fluid:
-                  write (n5,'(200(g14.7,1x))') 
-c                                 physical conditions
-     *                            (var(i),i=1,ivar), 
-c                                 standard physical props
-     *                            (psys(i),i=1,i8),1d2,1d2,1d2,
-c                                 composition (wt or vol)
-     *                            (fbulk(i), i = 1, icomp),
+            if (aflu.and.lflu.or.(.not.aflu)) then 
+c                                 normal properties
+               do i = 1, i8
+                  prop(i) = psys(i)
+               end do 
+c                                 modes
+               do i = i8+1, i8+3
+                  prop(i) = 1d2
+               end do 
+c                                 bulk composition 
+               do i = i8+4, i8+3+icomp
+                  prop(i) = fbulk(i-i8-3)
+               end do 
 c                                 chemical potentials
-     *                            (mu(i), i = 1, ichem)
-               else
-c                                 exclude fluid:
-                  write (n5,'(200(g14.7,1x))') 
-c                                 physical conditions
-     *                            (var(i),i=1,ivar), 
-c                                 standard physical props
-     *                            (psys1(i),i=1,i8),1d2,1d2,1d2,
-c                                 composition (wt or vol)
-     *                            (fbulk1(i), i = 1, icomp),
-c                                 chemical potentials
-     *                            (mu(i), i = 1, ichem)
-               end if 
+               do i = i8+icomp+4, i8+3+icomp+ichem
+                  prop(i) = mu(i-i8-3-icomp)
+               end do
 
-            if (kcx(1).eq.999) then
+               tname = 'system        '
+
+               call outprp (dim)
+
+            else
+c                                 exclude fluid:
+c                                 normal properties
+               do i = 1, i8
+                  prop(i) = psys1(i)
+               end do 
+c                                 modes
+               do i = i8+1, i8+3
+                  prop(i) = 1d2
+               end do 
+c                                 bulk composition 
+               do i = i8+4, i8+3+icomp
+                  prop(i) = fbulk1(i-i8-3)
+               end do 
+c                                 chemical potentials
+               do i = i8+icomp+4, iprop
+                  prop(i) = mu(i-i8-3-icomp)
+               end do 
+
+               tname = 'system        '
+
+               call outprp (dim)
+
+            end if 
+
+            if (kcx(1).ne.0) then
 c                                 properties of all phases
-c                                 phemgp table format
+               do j = 1, ntot
 
-c                                 first the system properties
-               if (aflu.and.lflu.or.(.not.aflu)) then 
-c                                 include fluid:
-                  write (n5,1010) ntot,'System        ', 
-c                                 physical conditions
-     *                            (var(i),i=1,ivar), 
-c                                 standard physical props
-     *                            (psys(i),i=1,i8),1d2,1d2,1d2,
-c                                 composition (wt or vol)
-     *                            (fbulk(i), i = 1, icomp),
-c                                 chemical potentials
-     *                            (mu(i), i = 1, ichem)
-               else
-c                                 exclude fluid:
-                  write (n5,1010) ntot,'System        ', 
-c                                 physical conditions
-     *                            (var(i),i=1,ivar), 
-c                                 standard physical props
-     *                            (psys1(i),i=1,i8),1d2,1d2,1d2,
-c                                 composition (wt or vol)
-     *                            (fbulk1(i), i = 1, icomp),
-c                                 chemical potentials
-     *                            (mu(i), i = 1, ichem)
-               end if 
-c                                 now the phase properties
-               do id = 1, ntot
-
-                  if (aflu.and.lflu.or.(.not.aflu)) then 
-c                                 include fluid: weight %
-                     p1 = props(17,id)*props(16,id)/psys(17)*1d2
-c                                 vol %
-                     p2 = props(1,id)*props(16,id)/psys(1)*1d2
-c                                 mol %
-                     p3 = props(16,id)/psys(16)*1d2
-
+                  if (kcx(1).eq.999) then 
+                     id = j 
                   else
-c                                 exclude fluid: weight %
-                     p1 = props(17,id)*props(16,id)/psys1(17)*1d2
-c                                 vol %
-                     p2 = props(1,id)*props(16,id)/psys1(1)*1d2
-c                                 mol %
-                     p3 = props(16,id)/psys1(16)*1d2
-
-                  end if 
-
-                  write (n5,1010) ntot, pname(id),
-c                                 physical conditions
-     *                            (var(i),i=1,ivar), 
-c                                 standard physical props
-     *                            (props(i,id),i=1,i8),p1,p2,p3,
-c                                 composition (wt or vol)
-     *                            (pcomp(i,id), i = 1, icomp),
-c                                 chemical potentials
-     *                            (mu(i), i = 1, ichem)
-                  end do
-
-               end if 
-
-            else 
 c                                 all properties of a specific phase
 c                                 find the phase index
-               call soltst (id,kcx(1))
-
-               if (id.ne.0) then 
-
-                  if (aflu.and.lflu.or.(.not.aflu)) then 
-c                                 include fluid: weight %
-                     p1 = props(17,id)*props(16,id)/psys(17)*1d2
-c                                 vol %
-                     p2 = props(1,id)*props(16,id)/psys(1)*1d2
-c                                 mol %
-                     p3 = props(16,id)/psys(16)*1d2
-
-                  else
-c                                 exclude fluid: weight %
-                     p1 = props(17,id)*props(16,id)/psys1(17)*1d2
-c                                 vol %
-                     p2 = props(1,id)*props(16,id)/psys1(1)*1d2
-c                                 mol %
-                     p3 = props(16,id)/psys1(16)*1d2
+                     call soltst (id,kcx(1))
 
                   end if 
+c                                 normal properties
+                  do i = 1, i8
+                     prop(i) = props(i,id)
+                  end do 
+c                                 compute modes
+                  call gtmode (mode,id)
 
-                  write (n5,'(200(g14.7,1x))')  
-c                                 physical conditions
-     *                            (var(i),i=1,ivar), 
-c                                 standard physical props
-     *                            (props(i,id),i=1,i8),p1,p2,p3,
-c                                 composition (wt or vol)
-     *                            (pcomp(i,id), i = 1, icomp),
+                  do i = 1, 3
+                     prop(i8+i) = mode(i)
+                  end do 
+c                                 bulk composition 
+                  do i = i8+4, i8+3+icomp
+                     prop(i) = pcomp(i-i8-3,id)
+                  end do 
 c                                 chemical potentials
-     *                            (mu(i), i = 1, ichem)
-                end if 
+                  do i = i8+icomp+4, iprop
+                     prop(i) = mu(i-i8-3-icomp)
+                  end do 
 
-            end if
- 
-         end if
+                  tname = pname(id)
+
+                  call outprp (dim) 
+
+                  if (kcx(1).ne.999) exit 
+
+               end do
+
+            end if 
+
+         end if 
 
       end if  
-
-1010  format (7x,i2,6x,a14,1x,200(g14.7,1x))
 
       end 
 
@@ -3015,11 +2966,12 @@ c----------------------------------------------------------------------
 
       character*100 n5name, n6name, num*3
 
+      character*14 tname
       integer kop,kcx,k2c,iprop
       logical kfl
       double precision prop,prmx,prmn
       common/ cst77 /prop(i11),prmx(i11),prmn(i11),kop(i11),kcx(i11),
-     *               k2c(i11),iprop,kfl(i11)
+     *               k2c(i11),iprop,kfl(i11),tname
 
       character*100 prject,tfname
       common/ cst228 /prject,tfname
@@ -3097,11 +3049,12 @@ c----------------------------------------------------------------------
       character dname*14, title*162
       common/ cst76 /inv(i11),dname(i11),title
 
+      character*14 tname
       integer kop,kcx,k2c,iprop
       logical kfl
       double precision prop,prmx,prmn
       common/ cst77 /prop(i11),prmx(i11),prmn(i11),kop(i11),kcx(i11),
-     *               k2c(i11),iprop,kfl(i11)
+     *               k2c(i11),iprop,kfl(i11),tname
 
       character vnm*8
       common/ cxt18a /vnm(l3)  
@@ -3116,7 +3069,7 @@ c----------------------------------------------------------------------
       common/ cst83 /ivar,ind,ichem
 
       integer idstab,nstab,istab
-      common/ cst34 /idstab(k10),nstab(k10),istab
+      common/ cst34 /idstab(i11),nstab(i11),istab
 
       integer jtest,jpot
       common/ debug /jtest,jpot
@@ -3271,67 +3224,6 @@ c                                 plot file info messages
 
       end 
 
-
-      subroutine outprp (dim)
-c----------------------------------------------------------------------
-c outprp outputs properties computed by chsprp for dim-dimensional 
-c tables
-c----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      integer dim, i
-
-      integer kop,kcx,k2c,iprop
-      logical kfl
-      double precision prop,prmx,prmn
-      common/ cst77 /prop(i11),prmx(i11),prmn(i11),kop(i11),kcx(i11),
-     *               k2c(i11),iprop,kfl(i11)
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
-      integer jvar
-      double precision var,dvr,vmn,vmx
-      common/ cxt18 /var(l3),dvr(l3),vmn(l3),vmx(l3),jvar
-
-      integer ivar,ind,ichem
-      common/ cst83 /ivar,ind,ichem
-c----------------------------------------------------------------------
-      if (dim.eq.2) then 
-
-         write (n5,'(200(g14.7,1x))') (prop(i),i=1,iprop)
-c                                 get ranges
-         do i = 1, iprop
-c                                
-            if (isnan(prop(i))) cycle
-c                                 first check eliminates logical 
-c                                 comparisons with NaN's that compaq
-c                                 fortran doesn't like.
-            if (.not.isnan(nopt(7))) then 
-               if (prop(i).ne.nopt(7)) cycle 
-            end if 
-         
-            if (prop(i).gt.prmx(i)) prmx(i) = prop(i)
-            if (prop(i).lt.prmn(i)) prmn(i) = prop(i)
- 
-         end do
-
-      else 
-
-          write (n5,'(200(g14.7,1x))') (var(i),i=1,ivar),
-     *                                 (prop(i),i=1,iprop)
-
-          write (*,'(200(g14.7,1x))')  (var(i),i=1,ivar),
-     *                                 (prop(i),i=1,iprop)
-
-      end if
-
-      end 
-
       subroutine getind
 c----------------------------------------------------------------
 c get the plotting variable index (ind) for 1-d property plots
@@ -3345,9 +3237,8 @@ c----------------------------------------------------------------
       character vnm*8
       common/ cxt18a /vnm(l3) 
 
-      integer iprop,ivar,ind,ichem
-      character*10 prname
-      common/ cst83 /prname(k10),iprop,ivar,ind,ichem
+      integer ivar,ind,ichem
+      common/ cst83 /ivar,ind,ichem
 c----------------------------------------------------------------------
 c                                 choose plotting variable
       write (*,1000) vnm(1)
@@ -3365,3 +3256,605 @@ c                                 choose plotting variable
      *       4x,i1,' - ',a,' [default]',6(/,4x,i1,' - ',a))
  
       end 
+
+      subroutine chsprp 
+c----------------------------------------------------------------
+c chsprp asks the user to choose properties to be extracted, it
+c then creates a list of names for the properties (dname).
+
+c   lop/kop  - flag indicating the property chosen
+c   icx/kcx  - if lop = 6, the component chosen
+c   icx/kcx  - if lop > 6, the identity of the solution chosen,
+c              icx = -1 if a solution is not chosen.
+
+c   lflu/kfl - .true. include fluids for bulk props.
+
+c 1                 Specific enthalpy (J/m3)',
+c 2                 Density (kg/m3)',
+c 3                'Specific Heat capacity (J/K/m3)',
+c 4                'Expansivity (1/K, for volume)',
+c 5                'Compressibility (1/bar, for volume)',
+c 6                'Weight percent of a component',
+c 7                'Mode (Vol %) of a compound or solution',
+c 8                'Composition of a solution'
+c 9                 Grueneisen thermal ratio',
+c 10               'Adiabatic bulk modulus (bar)',
+c 11               'Adiabatic shear modulus (bar)'
+c 12                Sound velocity (km/s)
+c 13               'P-wave velocity (km/s)',
+c 14                S-wave velocity (km/s)',
+c 15                Vp/Vs
+c 16               'Specific Entropy (J/K/m3)'
+c 17               'Entropy (J/K/kg)'
+c 18               'Enthalpy (J/kg)'
+c 19               'Heat Capacity (J/K/kg)'
+c 20               'Specific mass (kg/m3) of a phase'
+c 21               'Poisson's Ratio'
+c 22               'Molar Volume (J/bar)'
+c 23                Dependendent potentials (J/mol)
+c 24                Assemblage index
+c 25                Modes of all phases (wt or vol%)
+c 26                Sound velocity temperature derivative (km/s/K)
+c 27                P-wave velocity temperature derivative (km/s/K)
+c 28                S-wave velocity temperature derivative (km/s/K)
+c 29                Adiabatic bulk modulus temperature derivative (bar/K)
+c 30                Shear modulus temperature derivative (bar/K)
+c 31                Sound velocity pressure derivative (km/s/bar)
+c 32                P-wave velocity pressure derivative (km/s/bar)
+c 33                S-wave velocity pressure derivative (km/s/bar)
+c 34                Adiabatic bulk modulus pressure derivative (unitless)
+c 35                Shear modulus pressure derivative (unitless)
+c 36                All properties of a phase or the system
+c 37                Absolute amounts
+c 38                Multiple property grid for system and phases
+c----------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer i, j, icx, kprop, ier, lop, komp, mprop
+
+      parameter (kprop=38)
+
+      character propty(kprop)*60, y*1, pname*10
+
+      logical gflu,aflu,fluid,shear,lflu,volume,rxn
+      common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume,rxn
+
+      integer icomp,istct,iphct,icp
+      common/ cst6  /icomp,istct,iphct,icp
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      integer jtest,jpot
+      common/ debug /jtest,jpot
+
+      integer ivar,ind,ichem
+      common/ cst83 /ivar,ind,ichem
+
+      character cname*5
+      common/ csta4  /cname(k5)
+
+      character*14 tname
+      integer kop,kcx,k2c,iprop
+      logical kfl
+      double precision prop,prmx,prmn
+      common/ cst77 /prop(i11),prmx(i11),prmn(i11),kop(i11),kcx(i11),
+     *               k2c(i11),iprop,kfl(i11),tname
+
+      integer idstab,nstab,istab
+      common/ cst34 /idstab(i11),nstab(i11),istab
+
+      integer hcp,idv
+      common/ cst52  /hcp,idv(k7) 
+
+      integer inv
+      character dname*14, title*162
+      common/ cst76 /inv(i11),dname(i11),title
+
+      integer icps, jcx, jcx1, kds
+      logical stol, savg
+      double precision rcps
+      common/ comps /rcps(k7,2*k5),icps(k7,2*k5),jcx(2*k5),jcx1(2*k5),
+     *               kds(2*k5),stol(h9),savg(h9)
+
+      save propty
+
+      data propty/'Specific Enthalpy (J/m3)',
+     *            'Density (kg/m3)',
+     *            'Specific heat capacity (J/K/m3)',
+     *            'Expansivity (1/K, for volume)',
+     *            'Compressibility (1/bar, for volume)',
+     *            'Weight (%) of a component',
+     *            'Mode (Vol, Mol, or Wt proportion) of a phase',
+     *            'Composition (Mol or Wt) of a solution',
+     *            'Grueneisen thermal ratio',
+     *            'Adiabatic bulk modulus (bar)',
+     *            'Adiabatic shear modulus (bar)',
+     *            'Sound velocity (km/s)',
+     *            'P-wave velocity (Vp, km/s)',
+     *            'S-wave velocity (Vs, km/s)',
+     *            'Vp/Vs',
+     *            'Specific entropy (J/K/m3)',
+     *            'Entropy (J/K/kg)',
+     *            'Enthalpy (J/kg)',
+     *            'Heat Capacity (J/K/kg)',
+     *            'Specific mass of a phase (kg/m3-system)',
+     *            'Poisson ratio','Molar Volume (J/bar)',
+     *            'Dependent potentials (J/mol, bar, K)',
+     *            'Assemblage Index',
+     *            'Modes of all phases',
+     *            'Sound velocity T derivative (km/s/K)',
+     *            'P-wave velocity T derivative (km/s/K)',
+     *            'S-wave velocity T derivative (km/s/K)',
+     *            'Adiabatic bulk modulus T derivative (bar/K)',
+     *            'Shear modulus T derivative (bar/K)',
+     *            'Sound velocity P derivative (km/s/bar)',
+     *            'P-wave velocity P derivative (km/s/bar)',
+     *            'S-wave velocity P derivative (km/s/bar)',
+     *            'Adiabatic bulk modulus P derivative (unitless)',
+     *            'Shear modulus P derivative (unitless)',
+     *            'All phase &/or system properties (PHEMGP format)',
+     *            'Absolute amount (Vol, Mol, or Wt) of a phase',
+     *            'Multiple property output (PHEMGP format)'/
+c----------------------------------------------------------------------
+      do i = 1, istab
+
+         if (stol(i)) then 
+c                                 doing a second run, with an 
+c                                 existing solvus criterion, ask
+c                                 whether to change.
+            write (*,1030)
+            read (*,'(a)') y
+            if (y.eq.'y'.or.y.eq.'Y') stol(i) = .false.
+    
+         end if
+ 
+      end do 
+c                                 property counter
+      iprop = 0
+c                                 phase composition counter
+      komp = 0
+c                                 choose property
+      do 
+
+         icx = 0
+         lflu = .false.
+
+         write (*,1050)
+
+         do i = 1, kprop
+
+            if (iprop.gt.0.and.i.eq.25.or.i.eq.36) cycle 
+            write (*,1060) i,propty(i)
+
+         end do 
+
+         do 
+
+            call rdnumb (prop(1),0d0,lop,999,.false.)
+            if (lop.ne.999) exit
+            write (*,'(a)') 'Select a property or enter 0 to finish...'
+
+         end do 
+  
+         if (lop.lt.0.or.lop.gt.kprop) then 
+
+            write (*,1020)
+            cycle 
+
+         else if (lop.eq.0) then 
+
+            exit 
+
+         end if
+
+         if (lop.eq.7.or.lop.eq.20.or.lop.eq.37) then 
+c                                 modes:
+c                                 get phase name
+             call rnam1 (icx,pname)
+c                                 ask if fluid should be included:
+             if (gflu) then 
+
+                write (*,1120) 
+                read (*,'(a)') y
+                if (y.eq.'y'.or.y.eq.'Y') lflu = .true.
+
+             end if 
+c                                 write blurb about units
+             if (lop.eq.7) then 
+                write (*,1080)
+             else if (lop.eq.37) then 
+                write (*,1090)
+             end if 
+             
+         else if (lop.eq.25) then 
+c                                 all modes
+             write (*,1070)
+             read (*,'(a)') y
+
+             if (y.eq.'y'.or.y.eq.'Y') then 
+                lopt(2) = .true.
+             else
+                lopt(2) = .false.
+             end if 
+c                                 double loop necessary because solution 
+c                                 i may occur as j coexisting phases
+             do i = 1, istab
+                do j = 1, nstab(i)
+
+                   iprop = iprop + 1
+                   call getnam (dname(iprop),idstab(i))
+
+                end do 
+             end do 
+ 
+         else if (lop.eq.6.or.lop.eq.23) then
+c                                 warn if no potentials
+            if (jpot.eq.1.and.lop.eq.23) then
+
+               call warn (31,nopt(1),iopt(1),'CHSPRP')
+               cycle
+
+            end if 
+c                                 get component to be contoured
+5010        write (*,1000)
+
+            if (lop.eq.23) then 
+               write (*,1010) (i, cname(i), i = 1, hcp)
+            else 
+               write (*,1010) (i, cname(i), i = 1, icomp)
+            end if 
+
+            read (*,*,iostat=ier) icx
+            call rerror (ier,*5010)   
+c                                 ask if fluids included
+            if (gflu.and.lop.eq.6) then 
+
+               write (*,1120) 
+               read (*,'(a)') y
+               if (y.eq.'y'.or.y.eq.'Y') lflu = .true. 
+
+            end if 
+
+         else if (lop.eq.8) then
+c                                 get solution identity
+            do 
+
+               call rnam1 (icx,pname)
+               if (icx.gt.0) exit  
+               write (*,1140)
+
+            end do 
+c                                 get user defined composition:
+            komp = komp + 1
+
+            if (komp.gt.k5) then 
+               write (*,1160) k5
+               cycle 
+            end if 
+
+            call mkcomp (komp,icx)
+
+         else if (lop.eq.36.or.lop.eq.38) then   
+c                                 multi-prop options, get case i: 
+c                                 1 - system, 2 - phase
+c                                 3 - system + phases
+            write (*,1130)
+            call rdnumb (nopt(1),0d0,i,1,.false.)
+c                                 convert kop to the internal 
+c                                 icx flag => icx = 0 system prop,
+c                                 icx = 999 all props, else phase index
+            if (i.eq.3) then 
+
+               icx = 999 
+
+            else if (i.eq.2) then 
+c                                 get phase index
+               call rnam1 (icx,pname)
+
+            end if 
+
+            if (gflu) then 
+               write (*,1120) 
+               read (*,'(a)') y
+               if (y.eq.'y'.or.y.eq.'Y') lflu = .true. 
+            end if         
+
+            if (lop.eq.36) then 
+
+               iprop = i8 + 3 + icomp + ichem
+               if (iprop.gt.i11) call error (1,0d0,iprop,'I11')
+
+            else 
+c                                 custom list
+               do
+
+                  write (*,1150)
+                  read (*,*,iostat=ier) i
+
+                  if (ier.ne.0.or.i.gt.kprop-1.or.i.lt.0) then
+                     write (*,1020)
+                     cycle
+                  else if (i.eq.8.or.i.eq.6.or.i.eq.23.or.i.eq.24.or.
+     *                     i.eq.25.or.i.eq.36.or.i.eq.38) then 
+                     write (*,1100) 
+                     cycle
+                  else if (i.eq.0) then 
+                     exit
+                  end if 
+c                                 save property choice
+                  iprop = iprop + 1
+                  if (iprop.gt.i11) call error (1,0d0,iprop,'I11')
+                  kop(iprop) = i                     
+
+               end do
+
+            end if 
+
+         else if (lop.ne.6.and.lop.ne.8) then
+               
+            if (icx.eq.0) then   
+c                                 ask if bulk or phase property
+               write (*,1110) 
+               read (*,'(a)') y
+
+               if (y.ne.'y'.and.y.ne.'Y') then 
+c                                 it's a bulk property, ask if fluid
+c                                 should be included:
+                  if (gflu) then 
+                     write (*,1120) 
+                     read (*,'(a)') y
+                     if (y.eq.'y'.or.y.eq.'Y') lflu = .true. 
+                  end if 
+
+               else if (lop.ne.24) then 
+c                                 get phase name
+                  do 
+                     call rnam1 (icx,pname)
+                     if (icx.lt.1.and.lop.eq.8) then
+                        write (*,1140)
+                        cycle 
+                     end if 
+                     exit 
+                  end do  
+
+               end if
+
+            end if 
+
+         end if 
+c                                 make dependent variable names:
+         if (lop.eq.25.or.lop.eq.36.or.lop.eq.38) then
+c                                 multi prop options, only allowed as 
+c                                 single choices.
+            kop(1) = lop
+            kcx(1) = icx
+            kfl(1) = lflu
+c                                 assign property names
+c                                 lop = 25 -> all mode names are assigned above
+            if (lop.eq.36.or.lop.eq.38) then 
+
+               if (lop.eq.36) then 
+c                                 "all" prop option
+                  mprop = i8 + 3
+
+               else if (lop.eq.38) then
+c                                 "custom" prop option
+                  mprop = iprop  
+
+               end if 
+
+               do i = 1, mprop
+                  call gtname (lop,icx,iprop,komp,pname)
+               end do 
+
+               if (lop.eq.36) then 
+c                                  for all prop option make the
+c                                  bulk composition and chemical 
+c                                  potential variable names
+                  do i = mprop + 1, mprop + icomp
+c                                  bulk compositions, lop = 6
+                     call gtname (6,i-mprop,i,komp,pname)
+                  end do 
+
+                  do i = mprop + icomp + 1, iprop
+c                                  chemical potentials, lop = 23
+                     call gtname (23,i-mprop-icomp,i,komp,pname)
+                  end do 
+
+               end if 
+
+            end if 
+
+            exit 
+
+         else 
+c                                 save the local choice options in the 
+c                                 global arrays
+            iprop = iprop + 1
+            kop(iprop) = lop
+            kcx(iprop) = icx
+            kfl(iprop) = lflu
+            k2c(iprop) = komp
+c                                 make the name of the property and save
+c                                 it in array dname
+            call gtname (lop,icx,iprop,komp,pname)
+
+         end if 
+
+      end do 
+
+1000  format (/,'Enter a component:')
+1010  format (2x,i2,' - ',a5)
+1020  format (/,'Invalid input, try again...',/)
+1030  format (/,'Retain the compositional criteria you defined ',
+     *          'earlier (y/n)?',/,'Answer yes only if you intend ',
+     *          'to extract properties for the same phase.',/)
+1050  format (/,'Select properties [enter 0 to finish]:')
+1060  format (3x,i2,' - ',a60)
+1070  format (/,'Output cumulative modes (y/n)?',/
+     *         ,'(see www.perplex.ethz.ch/perplex_options.html'
+     *         ,'#cumulative_modes)')
+1080  format (//,'Fractions are Wt, Vol, or Mol depending on the '
+     *         ,'perplex_option.dat proportions keyword.',//)
+1090  format (//,'Amounts are kg, m3, or Mol per unit quantity system '
+     *         ,'as specified by the',/
+     *         ,'perplex_option.dat proportions keyword.',/)
+1100  format (/,'Property not allowed for this option, try again...',/)
+1110  format (/,'Calculate individual phase properties (y/n)?')
+1120  format (/,'Include fluid in computation of aggregate ', 
+     *          '(or modal) properties (y/n)?')
+1130  format (/,'In this mode you may tabulate:',
+     *     /,4x,'1 - properties of the system',
+     *     /,4x,'2 - properties of a phase',   
+     *     /,4x,'3 - properties of the system and its phases',/
+     *         ,'Output for option 1 & 2 can be plotted with '
+     *         ,'PSPLOT, PYWERAMI or MatLab.',/,'Output for '
+     *         ,'option 3 can only be plotted with PHEMGP.',//
+     *         ,'Select an option [default = 1]:')
+1140  format (/,'Hey cowboy, that warnt no solution, try again.',/)
+1150  format (/,'Specify a property to be computed from the ',
+     *          'list above [0 to end]')
+1160  format (/,'**warning ver011** only ',i2,' user defined '
+     *      'compositions permitted.',/,'do multiple runs with WERAMI',
+     *      'or redimension common block comps.',/)
+  
+      end
+
+      subroutine gtname (lop,icx,jprop,komp,pname)
+c----------------------------------------------------------------
+c makes the name of property iprop and saves it in dname(iprop)
+c called only by chsprp, variable names as in chsprp.
+c----------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer icx, jprop, lop, komp, l2p(38)
+
+      character prname(44)*14, pname*10
+
+      logical gflu,aflu,fluid,shear,lflu,volume,rxn
+      common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume,rxn
+
+      character*14 tname
+      integer kop,kcx,k2c,iprop
+      logical kfl
+      double precision prop,prmx,prmn
+      common/ cst77 /prop(i11),prmx(i11),prmn(i11),kop(i11),kcx(i11),
+     *               k2c(i11),iprop,kfl(i11),tname
+
+      integer inv
+      character dname*14, title*162
+      common/ cst76 /inv(i11),dname(i11),title
+
+      character cname*5
+      common/ csta4  /cname(k5)
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      save prname,l2p
+
+      data prname/'V,J/bar/mol   ','H,J/mol       ','Gruneisen_T   ',
+c                                 4-6
+     *      'Ks,bar        ','Gs,bar        ','v0,km/s       ',
+c                                 7-9
+     *      'vp,km/s       ','vs,km/s       ','vp/vs         ',
+c                                 10-12
+     *      'rho,kg/m3     ','G,J/mol       ','cp,J/K/mol    ',
+c                                 13-15
+     *      'alpha,1/K     ','beta,1/bar    ','S,J/K/mol     ',
+c                                 16-18
+     *      'n,mol         ','N,g           ','Ks_T,bar/K    ',
+c                                 19-21
+     *      'Gs_T,bar/K    ','Ks_P          ','Gs_P          ',
+c                                 22-24
+     *      'v0_T          ','vp_T          ','vs_T          ',
+c                                 25-27
+     *      'v0_P          ','vp_P          ','vs_P          ',
+c                                 28-30
+     *      'wt,%          ','vol,%         ','mol,%         ',
+     *      'h,J/m3        ','cp,J/K/m3     ','blk_comp      ',
+     *      'mode          ','composition   ','s,J/K/m3      ',
+     *      's,J/K/kg      ','h,J/kg        ','cp,J/K/kg     ',
+c                                 40-43
+     *      'specific_mass ','poisson_ratio ','chemical_pot  ',
+     *      'assemblage_i  ','extent        '/
+c                                 l2p points from lop to prname, 
+c                                 1-10
+      data l2p/31,10,32,13,14,33,34,35, 3, 4,
+c                                 11-20            
+     *         5 , 6, 7, 8, 9,36,37,38,39,40,
+c                                 21-30 
+     *         41, 1,42,43, 0,22,23,24,18,19,
+c                                 31-38
+     *         25,26,27,20,21, 0, 44, 0/
+c----------------------------------------------------------------------
+c                                 make property name
+      if (lop.eq.6) then
+c                                 wt% component icx
+         write (dname(jprop),'(a,a)') cname(icx),',wt%     '
+         call unblnk (dname(jprop))
+
+      else if (lop.eq.7) then
+c                                 mode of a phase
+         if (iopt(3).eq.0) then 
+c                                 vol%
+            write (dname(jprop),'(a,a)') pname,',vo%'
+
+         else if (iopt(3).eq.1) then 
+c                                 wt%
+            write (dname(jprop),'(a,a)') pname,',wt%'
+
+         else  
+c                                 mol%
+            write (dname(jprop),'(a,a)') pname,',mo%'
+
+         end if 
+
+         call unblnk(dname(jprop))  
+
+      else if (lop.eq.8) then 
+c                                phase composition
+          write (dname(jprop),'(a,i1,a,a)') 'C',komp,pname
+          write (*,1000) dname(jprop)
+
+      else if (lop.eq.23) then 
+c                                chemical potential of a component
+         write (dname(jprop),'(a,a,a)') 'mu_',cname(icx),',J/mol'
+         call unblnk (dname(jprop))
+
+      else if (lop.eq.37) then
+c                                extent of a phase
+         if (iopt(3).eq.0) then 
+c                                volume
+            write (dname(jprop),'(a,a)') pname,',m3 '
+
+         else if (iopt(3).eq.1) then 
+c                                 mass
+            write (dname(jprop),'(a,a)') pname,',kg '
+
+         else  
+c                                 mol
+            write (dname(jprop),'(a,a)') pname,',mol'
+
+         end if 
+
+         call unblnk(dname(jprop))  
+
+      else 
+
+         dname(jprop) = prname(l2p(lop))
+          
+      end if    
+
+1000  format (/,'This composition will be designated: ',a,/)
+
+      end  
