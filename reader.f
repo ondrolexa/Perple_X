@@ -243,21 +243,11 @@ c                                 number of grid points
       end do 
 c                                 wrap up the calculation
       call finprp (dim,n5name,n6name,node) 
-c                                 write data ranges
-      write (*,1000) nopt(7)
-      write (*,'(5x,200(g14.7,1x))') (dname(i),i=1,iprop)
-      write (*,'(a3,2x,200(g14.7,1x))') 'min',(prmn(i),i=1,iprop)
-      write (*,'(a3,2x,200(g14.7,1x))') 'max',(prmx(i),i=1,iprop)      
 
-      write (*,1110) n5name
-
-1000  format (/,'Data ranges excluding values equal to the bad_number ',
-     *       'value (',g10.3,') set in perplex_option.dat:',/)
 1040  format (/,'Change default variable range (y/n)?')
 1060  format (/,'Current limits on ',a,' are: ',g14.7,'->',g14.7,/,
      *          'Enter new values:')
 1080  format (/,'Enter number of nodes in the x and y directions:')
-1110  format (/,'The output data has been written to file: ',a,/)
 
       end 
 
@@ -1158,7 +1148,6 @@ c                                 in general
 
       end 
 
-
       subroutine outprp (dim)
 c----------------------------------------------------------------------
 c outprp outputs properties computed by chsprp for dim-dimensional tables: 
@@ -1200,7 +1189,7 @@ c----------------------------------------------------------------------
 c                                 write phemgp format
          write (n5,'(a14,1x,7x,i2,6x,200(g14.7,1x))') tname,ntot,
      *                                               (var(i),i=1,ivar), 
-     *                                               (prop(i),i=1,iprop)  
+     *                                               (prop(i),i=1,iprop)
 
       else if (lopt(15).or.dim.eq.1) then 
 c                                 write spreadsheet tab format
@@ -1231,7 +1220,6 @@ c                                 fortran doesn't like.
       end if
 
       end 
-
 
       subroutine getprp (prop,lop,icx,komp,aprp)
 c----------------------------------------------------------------
@@ -2292,7 +2280,7 @@ c                                 condition is in bounds
                      var(1) = y
                      var(2) = x 
                   end if 
-  
+
                   call polprp (dim) 
 
                end if 
@@ -2362,7 +2350,7 @@ c                                 write plot file header
          end do  
 
          call finprp (dim,n5name,n6name,node) 
- 
+
       end if 
 
 1280  format (/,'Enter the name of the file containing the path',
@@ -2582,7 +2570,7 @@ c                     mol fraction
 
       end 
 
-      subroutine outmod (dim,n5name,n6name,node)
+      subroutine outmod (dim,n6name,node)
 c----------------------------------------------------------------
 c reformat output from "all_data" requests according to the 
 c following options set in perplex_option.dat and dimension dim. 
@@ -2591,7 +2579,7 @@ c----------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      character*8 ynm, n5name*100, n6name*100, rec*1
+      character*8 ynm, n6name*100, rec*1
 
       logical node
 
@@ -2741,16 +2729,11 @@ c                                 write label coordinates and text
 
       end if
 
-      write (*,1030) n5name,n6name
-
       close (n6)
-      close (n5)
 
 1000  format ('1',/,'0 0 0',/,'0 0 0 0 0 0',4(/,a162),/,'2 1 2 0 0',/,
-     *        '0 0 0 0. 0. 0. 0. 0.',/,4(g12.6,1x),/,a,/,a)
+     *        '0 0 0 0. 0. 0. 0. 0.',/,4(g14.7,1x),/,a,/,a)
 1010  format (i5,' 1 ',i3,' 1 1 1 1 1 1 ',/,'0. ',a)
-1030  format (/,'Spreadsheet format data is in file: ',a,/,
-     *        'Plot (PSVDRAW) format data is in file: ',a,/)
 
       end 
 
@@ -3028,7 +3011,7 @@ c--------------------------------------------------------------------
 
       subroutine tabhed (vmn,dv,nv,nvar,n5name,n6name)
 c----------------------------------------------------------------------
-c  write header for plot/table output
+c  write header for nvar-dimensional table output
 c     vmn - minimum values of the indendpendent variables
 c      dv - the increments
 c      nv - number of nodes
@@ -3039,11 +3022,11 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i, nv(2), nvar
+      integer i, nv(2), nvar, ivar
 
       double precision vmn(2), dv(2)
 
-      character*100 n6name, n5name, mname(k5)*14
+      character*100 n6name, n5name, vname(l3)*14
 
       integer inv
       character dname*14, title*162
@@ -3056,29 +3039,16 @@ c----------------------------------------------------------------------
       common/ cst77 /prop(i11),prmx(i11),prmn(i11),kop(i11),kcx(i11),
      *               k2c(i11),iprop,kfl(i11),tname
 
-      character vnm*8
-      common/ cxt18a /vnm(l3)  
-
-      integer hcp,idv
-      common/ cst52  /hcp,idv(k7) 
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       integer isec,icopt,ifull,imsg,io3p
       common/ cst103 /isec,icopt,ifull,imsg,io3p
 
-      integer ivar,ind,ichem
-      common/ cst83 /ivar,ind,ichem
-
-      integer idstab,nstab,istab
-      common/ cst34 /idstab(i11),nstab(i11),istab
-
-      integer jtest,jpot
-      common/ debug /jtest,jpot
-
-      character cname*5
-      common/ csta4  /cname(k5)
-
-      integer icomp,istct,iphct,icp
-      common/ cst6  /icomp,istct,iphct,icp
+      character vnm*8
+      common/ cxt18a /vnm(l3)  
 c------------------------------------------------------------------------
 c                                 generate a file name and
 c                                 open the file on n5
@@ -3097,130 +3067,38 @@ c                                 value, increment & nodes
          write (n5,*) dv(i)
          write (n5,*) nv(i)
       end do 
-c                                 number of dependent variables,
-c                                 variable names
-      if (kop(1).eq.36) then
-c                                 all props options
-         ivar = 2
-         if (icopt.eq.10) ivar = 3
-
-         if (jpot.eq.1) then 
-c                                 no chemical potentials
-            ichem = 0 
-
-         else
-c                                 make chemical potential names
-            do i = 1, icp
-               write (mname(i),1000) cname(i)
-            end do 
-
-            if (hcp.gt.icp) then 
-               mname(icp+1) = 'T(K)   '
-               mname(icp+2) = '-P(bar)'
-            end if 
-
-            ichem = hcp 
-
-            if (kcx(1).eq.999) then 
+c                                 number of pseudo-dependent variables,
+      ivar = 2
+      if (icopt.eq.10) ivar = 3
+c                                 convert a8 names to a14
+      do i = 1, ivar
+         vname(i) = vnm(i)
+         call unblnk (vname(i))
+      end do 
+c                                 output the dependent variable counter and list
+      if (kcx(1).eq.999) then 
 c                                  phemgp file
-               write (n5,*) ivar + i8 + 5 + icomp + ichem 
-               write (n5,'(200(a14,1x))') 'Counter','Name',
-     *                                    (vnm(i), i = 1, ivar),
-     *                                    (dname(i),i = 1, iprop),
-     *                                    (cname(i), i = 1, icomp),
-     *                                    (mname(i), i = 1, ichem)
-            else 
-c                                  single phase or system tab file
-               write (n5,*) ivar + i8 + 3 + icomp + ichem 
-               write (n5,'(200(a14,1x))') (vnm(i), i = 1,ivar),
-     *                                    (dname(i), i = 1,iprop),
-     *                                    (cname(i), i = 1, icomp),
-     *                                    (mname(i), i = 1, ichem)
-
-            end if 
-
-         end if 
-
-      else if (kop(1).eq.38) then 
-c                                 custom property list
-         if (kcx(1).eq.999) then 
-c                                 phemgp file, this may cause problems
-c                                 from phemgp if ivar ne 2
-            write (n5,*) ivar + iprop + 2
-            write (n5,'(200(a14,1x))') 'counter','name',
-     *                                 (vnm(i), i = 1, ivar),
-     *                                 (dname(i), i = 1, iprop)
-
-         else 
-c                                  normal sys or phase tab file
-            write (n5,*) ivar + iprop 
-            write (n5,'(200(a14,1x))') (vnm(i) ,i = 1, ivar),
-     *                                 (dname(i) ,i = 1, iprop)
-
-         end if 
-
-      else if (nvar.eq.2) then
-c                                 2d 1-variable table
-         write (n5,*) iprop
-         write (n5,'(200(a14,1x))') (dname(i) ,i = 1, iprop)
+         write (n5,*) ivar + iprop + 2
+         write (n5,'(200(a14,1x))') 'Name','Counter',
+     *                              (vname(i), i = 1, ivar),
+     *                              (dname(i),i = 1, iprop)
 
       else 
-c                                 1d, include all dependent variables
+c                                  tab file
+         if (lopt(15).or.nvar.eq.1) then
+c                                  with pseudo-dependent variables 
             write (n5,*) ivar + iprop 
-            write (n5,'(200(a14,1x))') (vnm(i) ,i = 1, ivar),
-     *                                 (dname(i) ,i = 1, iprop)
-c                                 write props for console echo
-            write (*,'(200(a14,1x))')  (vnm(i) ,i = 1, ivar),
-     *                                 (dname(i) ,i = 1, iprop)
-
-      end if
-c                                 plot file info messages  
-      if (kop(1).eq.25) then 
-
-         if (nvar.eq.1) then 
-
-            write (*,2000) n5name,n6name
+            write (n5,'(200(a14,1x))') (vname(i), i = 1,ivar),
+     *                                 (dname(i), i = 1,iprop)
 
          else 
-
-            write (*,2010) n5name
-
+c                                  terse format
+            write (n5,*) iprop 
+            write (n5,'(200(a14,1x))') (dname(i), i = 1,iprop)
+          
          end if 
-  
-         write (*,'(100(a14,1x))') 
-     *                          (vnm(i),i=1,ivar),(dname(i),i=1,iprop)
 
-
-      else if (kop(1).eq.36.and.kcx(1).eq.999) then 
-
-
-          write (*,3020) n5name
-          write (*,'(100(a14,1x))') 'Counter','Name',
-     *               (vnm(i),i=1,ivar),(dname(i), i = 1, iprop),
-     *                                 (cname(i), i = 1, icomp),
-     *                                 (mname(i), i = 1, ichem)
-          write (*,3030) 
-
-      end if 
-
-1000  format (' mu_',a,' ')
-
-3020  format (/,'In this mode output is written in ',
-     *          'tabular (spread sheet) format to file: ',a,//,
-     *          'This file CANNOT be processed with Perple_X',//,
-     *          'The columns of the table correspond to:',/)
-3030  format (/,'For details of the file format and tabulated ',
-     *          'properties see:',//,'www.perplex.ethz.ch/faq/',
-     *          'WERAMI_OUTPUT_TABLE_FORMATS',//) 
-
-
-2000  format (/,'In this mode output is written in two formats:',//,
-     *          '   1 - tabular (spread sheet) format is in file: ',a,/,
-     *          '   2 - PSVDRAW plot format is in file: ',a,//,
-     *          'The columns of the tabular form correspond to:',/)
-2010  format (/,'In this mode output is written in ',
-     *          'tabular (spread sheet) format to file: ',a,//,
-     *          'The columns of the table correspond to:',/)
+      end if
 
       end 
 
@@ -3504,9 +3382,22 @@ c                                 get component to be contoured
 5010        write (*,1000)
 
             if (lop.eq.23) then 
-               write (*,1010) (i, cname(i), i = 1, hcp)
+c                                 for usv calculations make names
+c                                 for the extra potentials (p,t)                            
+               if (hcp.gt.icp) then 
+                  ichem = hcp 
+                  cname(icp+1) = 'T(K)   '
+                  cname(icp+2) = '-P(bar)'
+               else 
+                  ichem = icp 
+               end if 
+
+               write (*,1010) (i, cname(i), i = 1, ichem)
+
             else 
+
                write (*,1010) (i, cname(i), i = 1, icomp)
+
             end if 
 
             read (*,*,iostat=ier) icx
@@ -3857,4 +3748,99 @@ c                                 mol
 
 1000  format (/,'This composition will be designated: ',a,/)
 
+      end  
+
+      subroutine finprp (dim,n5name,n6name,node)
+c----------------------------------------------------------------
+c wrap up property output, writes blurb on processing.
+c----------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer dim
+
+      logical node
+
+      character*100 n5name,n6name
+
+      character*14 tname
+      integer kop,kcx,k2c,iprop
+      logical kfl
+      double precision prop,prmx,prmn
+      common/ cst77 /prop(i11),prmx(i11),prmn(i11),kop(i11),kcx(i11),
+     *               k2c(i11),iprop,kfl(i11),tname  
+c----------------------------------------------------------------------
+c                                 write data ranges
+      write (*,1090) nopt(7)
+      write (*,'(5x,200(g14.7,1x))') (dname(i),i=1,iprop)
+      write (*,'(a3,2x,200(g14.7,1x))') 'min',(prmn(i),i=1,iprop)
+      write (*,'(a3,2x,200(g14.7,1x))') 'max',(prmx(i),i=1,iprop)      
+
+      if (kop(1).eq.25) then 
+c                                 create plt format file for "all
+c                                 modes" output option
+         call outmod (dim,n6name,node)
+
+         if (dim.eq.1) then 
+            write (*,1000) n5name, n6name
+            write (*,1010) dim,'tab'
+            write (*,1020) 
+            write (*,1030) 
+         else 
+            write (*,1040) dim,'tab',n5name
+            write (*,1010) dim,'tab'
+            write (*,1060)
+         end if
+
+      else if (kcx(1).eq.999) then 
+
+         write (*,1040) dim,'phm',n5name
+         write (*,1010) dim,'phm'
+         if (dim.eq.1) then 
+            write (*,1070)
+         else 
+            write (*,1080)
+         end if
+
+      else 
+
+         write (*,1040) dim,'tab',n5name
+         write (*,1010) dim,'tab'
+        
+         if (dim.eq.1) then 
+            write (*,1060)
+         else 
+            write (*,1020) 
+         end if 
+
+      end if 
+
+1000  format (/,'In this mode output is written in two formats:',//,
+     *       5x,'1d tab format is in file: ',a,/,
+     *       5x,'plt format is in file: ',a)
+1010  format (/,i1,'d ',a,' format files can be processed with:',/)
+1020  format (5x,'PSTABLE - a Perple_X plotting program',
+     *      /,5x,'PERPLE_X_PLOT - a Matlab plotting script',
+     *      /,5x,'spread-sheet programs, e.g., EXCEL',//,
+     *       'for details on tab format refer to:',/,5x,
+     *       'www.perplex.ethz.ch/faq/perple_x_tab_file_format.txt',/)
+1030  format (/,'plt format files can be plotted with PSVDRAW',/)
+1040  format (/,'Output has been written to the ',i1,
+     *          'd ',a,' format file: ',a)
+1060  format (5x,'PSTABLE - a Perple_X plotting program',
+     *      /,5x,'PERPLE_X_PLOT - a MATLAB plotting script',
+     *      /,5x,'PYWERAMI - petrol.natur.cuni.cz/~ondro/pywerami:home',
+     *      /,5x,'spread-sheet programs, e.g., EXCEL',//,
+     *       'for details on tab format refer to:',
+     *      /,5x,'perplex.ethz.ch/faq/perple_x_tab_file_format.txt',/)
+1070  format (5x,'spread-sheet programs, e.g., EXCEL',//,
+     *       'for details on phm format refer to:',
+     *      /,5x,'perplex.ethz.ch/faq/perple_x_phm_file_format.txt',/)
+1080  format (5x,'PHEMGP - perplex.ethz.ch/phemgp',
+     *      /,5x,'spread-sheet programs, e.g., EXCEL',//,
+     *       'for details on phm format refer to:',
+     *      /,5x,'perplex.ethz.ch/faq/perple_x_phm_file_format.txt',/)
+1090  format (/,'Data ranges excluding values equal to bad_number ',
+     *       '(',g10.3,') specified in perplex_option.dat:',/)
       end  

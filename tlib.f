@@ -18,7 +18,7 @@ c----------------------------------------------------------------------
 
       write (*,1000) 
 
-1000  format (/,'Perple_X version 6.6.5.9, compiled 3/21/2011.')
+1000  format (/,'Perple_X version 6.6.5.9, compiled 3/24/2011.')
 
       end
 
@@ -4674,21 +4674,21 @@ c                                 1d - tab format
 
 1000  format (/,'The tabulated data from this calculation can be ',
      *          'plotted with:',/)
-1010  format (5x,'psplot - a Perple_X program',
-     *     /,5x,'pywerami - petrol.natur.cuni.cz/~ondro/pywerami:home',
-     *     /,5x,'perplex_plot - a Matlab script',
-     *     /,5x,'spread-sheet programs, e.g., Excel',//,
-     *          'for details of the table format refer to:',/,
-     * 'www.perplex.ethz.ch/faq/Perple_X_6.6.6_tab_file_format.txt',/)
+1010  format (5x,'PSTABLE - a Perple_X plotting program',
+     *      /,5x,'PYWERAMI - petrol.natur.cuni.cz/~ondro/pywerami:home',
+     *      /,5x,'PERPLE_X_PLOT - a MATLAB plotting script',
+     *      /,5x,'spread-sheet programs, e.g., EXCEL',//,
+     *           'for details of the table format refer to:',/,
+     *      /,5x,'perplex.ethz.ch/faq/Perple_X_tab_file_format.txt',/)
 1020  format (/,'The output from this calculation can be plotted with ',
      *          'PSVDRAW',/)
 1030  format (/,'The output from this calculation can be plotted with ',
      *          'PSPTS or converted to',/,'table/plot format with ',
      *          'PT2CURV',/)
-1040  format (5x,'psplot - a Perple_X program',
-     *     /,5x,'perplex_plot - a Matlab script',
-     *     /,5x,'spread-sheet programs, e.g., Excel',//,
+1040  format (5x,'pstable - a Perple_X plotting program',
+     *      /,5x,'perple_x_plot - a Matlab plotting script',
+     *      /,5x,'spread-sheet programs, e.g., Excel',//,
      *          'for details of the table format refer to:',/,
-     * 'www.perplex.ethz.ch/faq/Perple_X_6.6.6_tab_file_format.txt',/)
+     *      /,5x,'perplex.ethz.ch/faq/Perple_X_tab_file_format.txt',/)
 
       end
