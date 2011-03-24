@@ -6379,8 +6379,6 @@ c----------------------------------------------------------------------
 
       double precision gex,dgex,dsconf,tphi,dtphi
 
-      external dsconf
-
       double precision r,v,tr,pr,ps
       common/ cst5   /v(l2),tr,pr,r,ps
 c                                 working arrays
@@ -6594,11 +6592,10 @@ c                                 assume holland powell form, all terms regular
 
       end 
 
-
       double precision function hpmelt (im)
 c----------------------------------------------------------------------
-c subroutine to evaluate the configurational entropy of Holland & Powell's
-c haplogranite melt model, dlnw is S/R.
+c evaluates the configurational entropy of Holland & Powell's haplogranite 
+c melt model, dlnw is S/R.
 
 c modified to use global arrays, 10/26/05.
 c----------------------------------------------------------------------
@@ -6612,7 +6609,6 @@ c----------------------------------------------------------------------
       double precision dlnw, ytot, yh2o, yfo, yfa
 c                                 global arrays:
       double precision t, p, xco2, u1, u2, tr, pr, r, ps
-
       common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
 c                                 bookkeeping variables
       integer lstot,mstot,nstot,ndep,nord
@@ -6663,8 +6659,8 @@ c                                 the fe-mg fudge factor
 
       double precision function gmelt (im)
 c----------------------------------------------------------------------
-c subroutine to evaluate the configurational entropy of Ghiorso's
-c pMELTS/MELTS model, dlnw is S.
+c evaluates the configurational entropy of Ghiorso's pMELTS/MELTS model, 
+c dlnw is S.
 c----------------------------------------------------------------------
       implicit none
 
@@ -6718,6 +6714,46 @@ c                                 the basic entropy
       gmelt = r*dlnw
 
       end  
+
+      double precision function slvmlt ()
+c----------------------------------------------------------------------
+c evaluates the configurational entropy of high T fo-fa-SiO2 melts,
+c to use this model, all species (fo, fa, sio2) must be involed in the
+c calculation, i.e., y1 is assumed to be fo, etc. 
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      double precision dlnw, yol, xmg
+c                                 global arrays:
+      double precision t, p, xco2, u1, u2, tr, pr, r, ps
+      common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
+c                                 bookkeeping variables
+      integer lstot,mstot,nstot,ndep,nord
+      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
+c                                 working arrays
+      double precision z, pa, p0a, x, w, y
+      common/ cxt7 /y(m4),x(m4),pa(m4),p0a(m4),z(mst,msp),w(m1)
+c----------------------------------------------------------------------
+      dlnw = 0d0
+c                                 fraction of olivine species
+      yol = y(1) + y(2)
+
+      if (yol.ne.0d0) then 
+         xmg = y(1)/yol
+c                                 entropy within the olivine species
+         if (xmg.ne.0d0.and.xmg.ne.1d0) dlnw = -2d0*yol*
+     *                  (xmg * dlog(xmg) + (1d0-xmg)*dlog(1d0-xmg)) 
+c                                 mixing of the olvine and sio2 species
+         if (yol.ne.0d0.and.yol.ne.1d0) dlnw = dlnw - 
+     *                  (yol * dlog(yol) + (1d0-yol)*dlog(1d0-yol))              
+
+      end if 
+
+      slvmlt = r*dlnw
+
+      end 
 
       subroutine ytox (ids)
 c----------------------------------------------------------------------
@@ -6876,9 +6912,8 @@ c-----------------------------------------------------------------------
 
       integer k,id
 
-      double precision omega, hpmelt, gmelt, gfluid, gzero, gg, dg, gex
-
-      external gex
+      double precision omega, hpmelt, slvmlt, gmelt, gfluid, gzero, gg,
+     *                 dg, gex
 
       integer jend
       common/ cxt23 /jend(h9,k12)
@@ -7014,6 +7049,18 @@ c                                 ideal gas
                if (y(k).gt.0d0) 
      *            gg = gg + y(k) * (g(jend(id,2+k)) + r*t*dlog(y(k)))
             end do 
+
+         else if (ksmod(id).eq.28) then 
+c                                 -------------------------------------
+c                                 high T fo-fa-sio2 model  
+            call gdqf (id,gg,y) 
+
+            gg = gg - t * slvmlt() + gex(id,y)
+c                                 get mechanical mixture contribution
+            do k = 1, mstot(id)  
+               gg = gg + y(k) * g(jend(id,2+k)) 
+            end do 
+
 
          else if (ksmod(id).eq.0) then 
 c                                 ------------------------------------
@@ -8326,6 +8373,7 @@ c                                 h2o absent, fo (in hp) is first endmember
 c                                 h2o and fo absent, fa (in hp) is first endmember
             ispec(im,3) = 1
          end if     
+
       else if (jsmod.eq.0) then
 c                                 fluid eos, make pointer to co2
          do i = 1, 2
@@ -8858,8 +8906,6 @@ c----------------------------------------------------------------------
       logical error
 
       double precision g, gdord, omega, gex
-
-      external omega, gex
 
       double precision z, pa, p0a, x, w, y
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1)
@@ -9567,8 +9613,6 @@ c----------------------------------------------------------------------
       double precision g,pt,pmax,pmin,dy1,dy2,dp,dpmax,
      *                 omega,gex,dg,d2g
 
-      external omega, gex
-
       double precision z, pa, p0a, x, w, y
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1)
 
@@ -9761,9 +9805,7 @@ c----------------------------------------------------------------------
 
       integer i,k,id,lord,itic
 
-      double precision g,dp(j3),tdp,omega,gex,gold,xtdp
-
-      external omega, gex
+      double precision g,dp(j3),tdp,gold,xtdp
 
       integer lstot,mstot,nstot,ndep,nord
       common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
@@ -11273,7 +11315,7 @@ c--------------------------------------------------------------------------
 
       logical bad
  
-      double precision zpr,hpmelt,gmelt,smix,esum,ctotal,omega,x
+      double precision zpr,hpmelt,slvmlt,gmelt,smix,esum,ctotal,omega,x
 
       integer jtic,id,im,h,i,j,l,m,icpct,isoct,ixct,icky,index,icoct
 
@@ -11641,6 +11683,10 @@ c                              hp melt model, use internal routine to get entrop
       else if (jsmod.eq.25) then 
 c                              ghiorso melt model, use internal routine to get entropy
          smix = -gmelt(im)
+
+      else if (jsmod.eq.28) then 
+
+         smix = -slvmlt()
 
       else if (msite(im).ne.0) then 
 

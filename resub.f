@@ -2774,7 +2774,8 @@ c                                 now do solutions:
       do i = 1, isoct
 c                                 check if normal solution:
          if (.not.llaar(i).and.(ksmod(i).eq.7.or.ksmod(i).eq.5.or.
-     *       ksmod(i).eq.2.or.ksmod(i).eq.24.or.ksmod(i).eq.25)) then 
+     *       ksmod(i).eq.2.or.ksmod(i).eq.24.or.ksmod(i).eq.25.or.
+     *       ksmod(i).eq.28)) then 
 c                                 it's normal margules or ideal:
             do j = 1, jend(i,2)
 c                                 initialize with excess energy, dqf,

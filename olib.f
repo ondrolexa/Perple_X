@@ -1681,9 +1681,7 @@ c-----------------------------------------------------------------------
       integer k,id
 
       double precision omega, gproj, hpmelt, gmelt, gfluid, gzero, g, 
-     *                 dg, gex
-
-      external gex
+     *                 dg, gex, slvmlt
 
       integer jend
       common/ cxt23 /jend(h9,k12)
@@ -1784,6 +1782,7 @@ c                                 and excess contributions
 c                                 -------------------------------------
 c                                 hp melt model         
             call gdqf (id,g,y) 
+
             g = g - t * hpmelt(id) + gex(id,y)
 c                                 get mechanical mixture contribution
             do k = 1, mstot(id)  
@@ -1815,6 +1814,17 @@ c                                 andreas salt model
             do k = 1, mstot(id)
                if (y(k).gt.0d0)   
      *            g = g + (gproj(jend(id,2+k))+r*t*dlog(y(k)))*y(k) 
+            end do 
+
+         else if (ksmod(id).eq.28) then 
+c                                 -------------------------------------
+c                                 high T fo-fa-sio2 model  
+            call gdqf (id,g,y) 
+
+            g = g - t * slvmlt() + gex(id,y)
+c                                 get mechanical mixture contribution
+            do k = 1, mstot(id)  
+               g = g + y(k) * gproj (jend(id,2+k))
             end do 
 
          else if (ksmod(id).eq.0) then 

@@ -1,6 +1,6 @@
-! for mdim = 7 k24 = 8000, i0 = 8, k5 = 12, k21 = 500000
+! i0 = 8, k5 = 12, k21 = 500000
       integer h5,h6,h8,h9
-      integer i0,i6,i7,i8,i9,i10
+      integer i0,i6,i7,i8,i9,i10,i11
       integer j3,j4,j5,j6,j9
       integer k0,k1,k2,k3,k4,k5,k7,k8,k9,k10,k12,k13,k14,k15
       integer k16,k17,k18,k19,k20,k21,k22,k23,k24,kd2
@@ -40,13 +40,14 @@
 !                                       may be read from the bulk property file. 
 !                                 i9  - max number of solution in solution model file
 !                                 i10 - max number of option values in perplex_option.dat
-      parameter (i0=9,i6=2,i7=20,i8=27,i9=200,i10=25)
+!                                 i11 - max number of dependent properties in a tab format file
+      parameter (i0=9,i6=2,i7=20,i8=27,i9=200,i10=25,i11=10)
 !                                 j3  - max number of ordered species
 !                                 j4  - max number of species in the definition of a dependent species
 !                                 j5  - max number of stoichiometric limits on an ordered species
 !                                 j6  - max number of terms in a stoichiometric limit on an ordered species
 !                                 j9  - max number of divariant assemblages
-      parameter (j3=4,j4=5,j5=6,j6=8,j9=160000)
+      parameter (j3=4,j4=5,j5=6,j6=8,j9=1)
 !                                 k0  - max number of database components
 !                                 k1  - max number of compounds
 !                                 k2  - max number of invariant and univariant compound 

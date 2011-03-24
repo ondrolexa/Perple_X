@@ -3758,11 +3758,20 @@ c----------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer dim
+      integer dim, i 
 
       logical node
 
       character*100 n5name,n6name
+
+      integer inv
+      character dname*14, titl1*162
+      common/ cst76 /inv(i11),dname(i11),titl1
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       character*14 tname
       integer kop,kcx,k2c,iprop
@@ -3816,7 +3825,7 @@ c                                 modes" output option
 
       end if 
 
-1000  format (/,'In this mode output is written in two formats:',//,
+1000  format (/,'Output has been written to two files:',//,
      *       5x,'1d tab format is in file: ',a,/,
      *       5x,'plt format is in file: ',a)
 1010  format (/,i1,'d ',a,' format files can be processed with:',/)
