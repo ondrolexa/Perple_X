@@ -18,7 +18,7 @@ c----------------------------------------------------------------------
 
       write (*,1000) 
 
-1000  format (/,'Perple_X version 6.6.5.9, compiled 3/24/2011.')
+1000  format (/,'Perple_X version 6.6.5.9, compiled 3/25/2011.')
 
       end
 
@@ -680,11 +680,13 @@ c                                 compute resolution
       end if 
 c                                 --------------------------------------
 c                                 output
-      if ((iam.eq.1.and.output).or.iam.eq.2.or.iam.eq.3) then
+      if ((iam.eq.1.and.output).or.iam.eq.2
+     *                         .or.iam.eq.3
+     *                         .or.iam.eq.5) then
 c                                 console
          call outopt (6,valu)
 
-         if (lopt(12)) then 
+         if (lopt(12).and.iam.ne.5) then 
 c                                 file version, create the file name 
             if (iam.eq.1) then           
                call mertxt (tfname,prject,'_VERTEX_options.txt',0)
@@ -789,7 +791,9 @@ c                                 generic blurb
       else if (iam.eq.2) then 
          write (n,1000) 'MEEMUM'
       else if (iam.eq.3) then 
-         write (n,1000) 'WERAMI' 
+         write (n,1000) 'WERAMI'
+      else if (iam.eq.5) then 
+         write (n,1000) 'FRENDLY' 
       end if 
 
       if (iam.le.2) then 
@@ -899,6 +903,8 @@ c                                 MEEMUM input/output options
      *                  valu(15),nopt(16),lopt(6)
 
       end if 
+c                                 FRENDLY thermo options
+      if (iam.eq.5) write (n,1012) lopt(8),lopt(4) 
 
       if (iam.le.2) then 
 c                                 info file options
@@ -930,6 +936,7 @@ c                                 meemum or autorefine off
      *        4x,'subdivision_override   ',a3,8x,'[off] lin str',/,
      *        4x,'hard_limits            ',a3,8x,'[off] on')
 1011  format (4x,'pc_perturbation        ',f6.4,5x,'[5d-3]')
+c                                 generic thermo options
 1012  format (/,2x,'Thermodynamic options:',//,
      *        4x,'solvus_tolerance       ',a7,4x,          
      *           '[aut] or 0->1; aut = automatic, 0 => ',
@@ -948,6 +955,10 @@ c                                 meemum or autorefine off
      *        4x,'bad_number          ',f7.1,7x,'[0.0]')
 1015  format (/,2x,'Auto-refine options:',//,
      *        4x,'auto_refine            ',a3,8x,'off [manual] auto')
+c                                 thermo options for frendly
+1016  format (/,2x,'Thermodynamic options:',//,
+     *        4x,'approx_alpha           ',l1,10x,'[T] F',/,
+     *        4x,'Anderson-Gruneisen     ',l1,10x,'[T] F')
 1020  format (/,'To change these options see: ',
      *        'www.perplex.ethz.ch/perplex_options.html',/)      
 1090  format (/,2x,'Worst case (Cartesian) compositional resolution: ',
@@ -3958,9 +3969,9 @@ c                                 look for dot character
 
       end
 
-      subroutine fopen2 (iam,name)
+      subroutine fopen2 (jam,name)
 c-----------------------------------------------------------------------
-c fopen2 - choose and open a thermodynamic data file on unit n2, iam 
+c fopen2 - choose and open a thermodynamic data file on unit n2, jam 
 c indicates behavior required by the calling program:
 c  0 - name passed as argument, error if not found.
 c  1 - BUILD, queries for name and writes it to N1
@@ -3972,14 +3983,14 @@ c-----------------------------------------------------------------------
  
       character*100 name, y*1, ddata*14, text*140
 
-      integer ierr, iam
+      integer ierr, jam
 
       data ddata/'hp02ver.dat   '/
 c-----------------------------------------------------------------------
 
       do 
 
-         if (iam.ne.0) then 
+         if (jam.ne.0) then 
             write (*,1000)
             read (*,'(a)') name
             if (name.eq.' ') name = ddata
@@ -3989,7 +4000,7 @@ c-----------------------------------------------------------------------
 
          if (ierr.ne.0) then
 c                                 system could not find the file
-            if (iam.eq.0) call error (120,0d0,n2,name)
+            if (jam.eq.0) call error (120,0d0,n2,name)
 c                                 if not vertex allow another try
             write (*,1010) name
             read (*,'(a)') y
@@ -4003,7 +4014,7 @@ c                                 try again
 
          end if
  
-         if (iam.ne.4) exit 
+         if (jam.ne.1) exit 
 c                                 BUILD, echo name to n1: 
          call mertxt (text,name,'thermodynamic data file',5)
          write (n1,'(a)') text 
