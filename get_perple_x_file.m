@@ -1,8 +1,10 @@
 function [x,y,a,xname,yname,zname,nvar,mvar,nrow,dnames,titl] = get_perple_x_file
 
-% MatLab script to read Perple_X tab and ctr format files.
+% MatLab script to read Perple_X tab files see:
+%    perplex.ethz.ch/faq/Perple_X_tab_format.txt
+% for format details.
 
-% JADC March 11, 2011
+% JADC March 26, 2011
 
 % if nvar = 2: a 2d table at evenly spaced increments of x & y the 
 % numbers of x-nodes and y-nodes are inc(1) and inc(2) and on return
@@ -12,8 +14,7 @@ function [x,y,a,xname,yname,zname,nvar,mvar,nrow,dnames,titl] = get_perple_x_fil
 % if nvar = 1: assumes a 1d table with nrow arbitrarily spaced rows
 % consisting of mvar (>1) properties. nrow is computed by dividing the size
 % of the data array a by mvar. This format requires reduntant information
-% if the table is regularly spaced, specifically the first independent
-% variable name should be the same as the first dependent variable name.
+% if the table is regularly spaced.
 
 % see get_perple_x_file_with_regular_1d_grid for a mode efficient data
 % format.
@@ -22,7 +23,7 @@ ok = 0;
 
 while ok == 0;
     
-    data_file=uigetfile('*.ctr;*.tab', 'Select a Perple_X ctr or tab file');
+    data_file=uigetfile('*.tab', 'Select a Perple_X tab file');
     
     fid = fopen(data_file, 'rt');
     

@@ -363,8 +363,11 @@ c                                 option values
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
-      integer ineg,kdep
-      common/ cst91 /ineg(h9),kdep(h9)
+      integer lstot,mstot,nstot,ndep,nord
+      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
+
+      integer ineg
+      common/ cst91 /ineg(h9,m15)
 c----------------------------------------------------------------------
       
       if (iter.eq.1) then
@@ -461,13 +464,23 @@ c                                 the composition is out of range
 c                                 this is an el cheapo filter for redundant
 c                                 compositions, a better method would be to
 c                                 do the subdivision properly.
-            if (y(kdep(ids)).gt.0d0.and.
-     *          y(ineg(ids)).ge.y(kdep(ids))) then
+            bad = .false.
+
+            do j = 1, ndep(ids)
+
+               if (y(knsp(lstot(ids)+j,ids)).gt.0d0.and.
+     *             y(knsp(lstot(ids)+j,ids)).le.y(ineg(ids,j))) then
 c                                 reject composition 
-               jphct = jphct - 1
-               jcoct = kcoct - ncoor(ids)
-               cycle 
-            end if 
+                  jphct = jphct - 1
+                  jcoct = kcoct - ncoor(ids)
+                  bad = .true. 
+                  exit 
+
+               end if 
+
+            end do 
+      
+            if (bad) cycle 
 
          end if 
 

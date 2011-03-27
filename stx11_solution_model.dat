@@ -267,17 +267,24 @@ z(al) = 1 cor
 end_of_model               
                       --------------------------------------------------------
 begin_model                
-                                      Garnet solution with Fe-majorite (Fe3MgSiSi3O12)                                 
+                                      Garnet solution with Fe-majorite (Fe3MgSiSi3O12) and
+                                      Ca-majorite (Ca3MgSiSi3O12), the use of these endmembers
+                                      is necessary to reproduce the calculations in Stixrude
+                                      & Lithgow-Bertelloni (2011). But these endmembers slow
+                                      calculations substantially and probably do not result in
+                                      significantly more reliable results.                                 
 
 Gt                                                                               
 5                                     model type: Margules, 1 dependent endmember
-6                                     # of endmembers
-fmaj   gr   alm  maj  py jmaj  
+7                                     # of endmembers
+cmaj fmaj   gr   alm  maj  py jmaj  
 
-1                          | 1 dependent endmember 
+2                          | dependent endmembers 
 fmaj = 1 maj + 1 alm - 1 py
+cmaj = 1 maj + 1 gr  - 1 py
         
-0  0  0  0  0  0           | endmember flags
+0  0  0  0  0  0  0        | endmember flags
+0. .4 .1   0               | X(cmaj)
 0. .4 .1   0               | X(fmaj)
 0. 1. .1   0               | range and resolution for X(gr), imod = 0 -> cartesian subdivision
 0. 1. .1   0               | range and resolution for X(alm), imod = 0 -> cartesian subdivision

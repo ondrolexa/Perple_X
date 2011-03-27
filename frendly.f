@@ -55,20 +55,18 @@ c                                 read options
       call redop1 (.false.,opname)
  
       idiag = 0
- 
+c                                 harass the user for no reason
       write (*,1040)
       read (*,'(a)') uname
 
       if (uname.eq.' ') uname = ' Nimrod '
 
       write (*,1050) uname
-c      read (*,'(a)') y
-c      if (y.ne.'y'.and.y.ne.'Y') then
-c         write (*,1060) uname
-c         stop
-c      end if
-
-
+      read (*,'(a)') y
+      if (y.ne.'y'.and.y.ne.'Y') then
+         write (*,1060) uname
+         stop
+      end if
 
       do 
 

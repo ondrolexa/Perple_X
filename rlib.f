@@ -7646,8 +7646,8 @@ c---------------------------------------------------------------------
 
       double precision dinc,xsym,dzt,dx
 
-      integer ineg,kdep
-      common/ cst91 /ineg(h9),kdep(h9)
+      integer ineg
+      common/ cst91 /ineg(h9,m15)
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp  
@@ -8084,7 +8084,7 @@ c                                 number of distinct identisites for entropy
 c                                 insp points to the original position 
 c                                 of endmember i in the solution model input:
          knsp(i,im) = insp(i)
-         if (kdsol(i).lt.0) kdep(im) = i
+
       end do 
 c                                 -------------------------------------
 c                                 kmsol points to the species on the j'th site
@@ -8114,10 +8114,14 @@ c                                 -------------------------------------
       if (depend) then 
 c                                 save y -> p array 
          ndep(im) = mdep
+
          do i = 1, nstot(im)
             do j = 1, mdep
+
                y2pg(j,i,im) = y2p(i,j)
-               if (jsmod.eq.5.and.y2p(i,j).lt.0d0) ineg(im) = knsp(i,im)
+               if (jsmod.eq.5.and.y2p(i,j).lt.0d0) 
+     *                                         ineg(im,j) = knsp(i,im)
+
             end do
          end do
 c                                 for reasons of stupidity, convert the z(y) 
@@ -11412,8 +11416,8 @@ c                                 model type
       integer istg, ispg, imlt, imdg
       common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
 
-      integer ineg,kdep
-      common/ cst91 /ineg(h9),kdep(h9)
+      integer ineg
+      common/ cst91 /ineg(h9,m15)
 c----------------------------------------------------------------------
 c                              eliminate end-member compositions 
       do l = 1, mstot(im)
@@ -11448,9 +11452,13 @@ c                                 only by independent disordered endmembers:
       if (depend) then
 
          if (ksmod(im).eq.5) then
-c                                 for stx special case, reject excess comps 
-            if (y(kdep(im)).gt.0d0.and.
-     *          y(kdep(im)).le.y(ineg(im))) return
+c                                 for stx special case, reject excess comps
+            do j = 1, ndep(im) 
+
+               if (y(knsp(lstot(im)+j,im)).gt.0d0.and.
+     *             y(knsp(lstot(im)+j,im)).le.y(ineg(im,j))) return
+
+            end do 
          end if 
 c                                 convert y's to p's
          do h = 1, lstot(im)

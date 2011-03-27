@@ -18,7 +18,7 @@ c----------------------------------------------------------------------
 
       write (*,1000) 
 
-1000  format (/,'Perple_X version 6.6.5.9, compiled 3/25/2011.')
+1000  format (/,'Perple_X version 6.6.5.9, compiled 3/27/2011.')
 
       end
 
@@ -902,9 +902,14 @@ c                                 MEEMUM input/output options
          write (n,1231) lopt(14),nopt(7),(valu(i),i=2,3),nopt(6),
      *                  valu(15),nopt(16),lopt(6)
 
+      else if (iam.eq.5) then 
+c                                 FRENDLY input/output options
+         write (n,1232) lopt(15),lopt(14),nopt(7),
+     *                  nopt(6),valu(15),nopt(16),lopt(6)
+
       end if 
 c                                 FRENDLY thermo options
-      if (iam.eq.5) write (n,1012) lopt(8),lopt(4) 
+      if (iam.eq.5) write (n,1016) lopt(8),lopt(4) 
 
       if (iam.le.2) then 
 c                                 info file options
@@ -926,7 +931,7 @@ c                                 meemum or autorefine off
 
       write (n,1020) 
 
-1000  format (/,'Perple_X run-time option settings for ',a6,':',//,
+1000  format (/,'Perple_X run-time option settings for ',a,':',//,
      *      '    Keyword:               Value:     Permitted values ',
      *          '[default]:')
 1010  format (/,2x,'Solution subdivision options:',//,
@@ -1033,6 +1038,14 @@ c                                 thermo options for frendly
      *        4x,'bad_number          ',f7.1,7x,'[0.0]',/,
      *        4x,'compositions           ',a3,8x,'wt  [mol]',/,
      *        4x,'proportions            ',a3,8x,'wt  [vol] mol',/,
+     *        4x,'vrh_weighting          ',f3.1,8x,'0->1 [0.5]',/,
+     *        4x,'poisson_ratio          ',a3,8x,'off [on ] all; ',
+     *        'Poisson ratio = ',f4.2,/,
+     *        4x,'melt_is_fluid          ',l1,10x,'[F] T')
+1232  format (/,2x,'Input/Output options:',//,
+     *        4x,'spreadsheet            ',l1,10x,'[F] T',/,
+     *        4x,'logarithmic_p          ',l1,10x,'[F] T',/,
+     *        4x,'bad_number          ',f7.1,7x,'[0.0]',/,
      *        4x,'vrh_weighting          ',f3.1,8x,'0->1 [0.5]',/,
      *        4x,'poisson_ratio          ',a3,8x,'off [on ] all; ',
      *        'Poisson ratio = ',f4.2,/,
