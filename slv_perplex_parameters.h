@@ -1,6 +1,4 @@
-
 ! special dimensions for SLV calcs
-
       integer h5,h6,h8,h9
       integer i6,i7,i8,i9,i10,i11
       integer j3,j4,j5,j6,j9
@@ -10,14 +8,11 @@
       integer m0,m1,m2,m3,m4,m6,m7,m8,m9,m10,m11,m12,m13,m14,m15
       integer msp,mst,nsp,mdim,ms1
       integer n0,n1,n2,n3,n4,n5,n6,n7,n8,n9,n10,n11,nx,ny
-
 !                                 msp - max number of species on a solution identisite
 !                                 mst - max number of distinct identisites per solution
 !                                 mdim - hard constraint on max number of dimensions
 !                                        for a solution model composition space.
-
       parameter (msp=9,mst=2,mdim=8,ms1=msp-1)
-
 !                                 n0  - starting LUN-1 for fractionation files, these files may 
 !                                       have LUNs from n0+1 up to n0+k23
 !                                 n1  - problem definition file.
@@ -31,10 +26,8 @@
 !                                 n9  - solution model file 
 !                                 n10 - autorefine file 1
 !                                 n11 - autorefine file 2
-
       parameter (n10=7,n11=8,n1=11,n2=12,n3=13,n4=14,n5=15,n6=16,n7=17)
       parameter (n8=18,n9=19,n0=30)
-
 !                                 h5 - max number of saturated components
 !                                 h6  - max number of saturated composants in any subcomposition
 !                                 h8  - max number of excluded phases
@@ -91,8 +84,8 @@
       parameter (k7=k5+1,k8=k5+2) 
       parameter (k9=30,k10=240,k12=15,k13=mdim*k1,k14=18,k15=3,k16=30)
       parameter (k17=7,k18=29*k1)
-      parameter (k19=2*k5+14,k21=1500000,k20=mdim*k21,k22=mdim*k19,k23=5)
-      parameter (k24=1)  
+      parameter (k19=2*k5+14,k21=1500000,k20=mdim*k21,k22=mdim*k19)
+      parameter (k23=5,k24=1)  
 !                                 l2 - max number of independent potential variables
 !                                 l3 - max number of variables for gridded min and graphics (l2+2)
 !                                 l5 - max number of coordinates along a univariant curve                
@@ -134,8 +127,7 @@
 !                                 nx - number of x-grid nodes in a contour data grid
 !                                 ny - number of y-grid modes in a contour data grid
       parameter (nx=500,ny=500)
-
-
+!
 ! NOTE: increasing parameter K5 requires changes to the following
 ! format statements:
 !                     1000 in routine bulkck

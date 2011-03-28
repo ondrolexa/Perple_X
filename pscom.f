@@ -730,7 +730,7 @@ c----------------------------------------------------------------------
 c----------------------------------------------------------------------
 c redtab - reads a Perple_X tab format file from logical unit number lun.
 c chooses variables if necessary.
-c see www.perplex.ethz.ch/faq/Perple_X_6.6.6_tab_file_format.txt
+c see www.perplex.ethz.ch/faq/Perple_X_tab_file_format.txt
 c for details of the format.
 c----------------------------------------------------------------------
       implicit none
@@ -911,10 +911,15 @@ c                                 rows by reading to end of file
          do
    
             read (lun,*,iostat=ier) (z(iy,k),k=1,mvar)
+
             if (ier.ne.0) then
                iy = iy - 1
                exit
             end if
+c                                 nan check
+            do k = 1, mvar
+               if (isnan(z(iy,k))) z(iy,k) = 0d0
+            end do 
 
             iy = iy + 1
 
@@ -976,7 +981,7 @@ c                                 get dependent variables (inv(2..dvar))
      *       ,'data file is inconsistent',/,'with this version of '
      *       ,'Perple_X, update from www.perplex.ethz.ch or modify the',
      *      /,'file format to be consistent with the description at:',/,
-     *   'www.perplex.ethz.ch/faq/Perple_X_6.6.6_tab_file_format.txt',/)
+     *        'www.perplex.ethz.ch/faq/Perple_X_tab_file_format.txt',/)
 1010  format (/,'**error ver667** the data table is a function of ',i2,
      *       ' independent variables',/,'Perple_X plotting programs ',
      *       'cannot plot tables as a function of 2 variables.',/)

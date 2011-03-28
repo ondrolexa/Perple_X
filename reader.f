@@ -2550,7 +2550,7 @@ c----------------------------------------------------------------
       logical gflu,aflu,fluid,shear,lflu,volume,rxn
       common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume,rxn
 c----------------------------------------------------------------
-      if (aflu.and.lflu.or.(.not.aflu)) then
+      if (aflu.and.lflu.or.(.not.aflu).or.psys1(1).eq.0d0) then
 c                     total mode:
 c                     volume fraction
          mode(1) = props(1,id)*props(16,id)/psys(1)*1d2
@@ -3794,10 +3794,10 @@ c                                 modes" output option
          call outmod (dim,n6name,node)
 
          if (dim.eq.1) then 
-            write (*,1000) n5name, n6name
+            write (*,1000) n6name, n5name
+            write (*,1030) 
             write (*,1010) dim,'tab'
             write (*,1020) 
-            write (*,1030) 
          else 
             write (*,1040) dim,'tab',n5name
             write (*,1010) dim,'tab'
@@ -3820,9 +3820,9 @@ c                                 modes" output option
          write (*,1010) dim,'tab'
         
          if (dim.eq.1) then 
-            write (*,1060)
+            write (*,1020)
          else 
-            write (*,1020) 
+            write (*,1060) 
          end if 
 
       end if 
@@ -3830,8 +3830,8 @@ c                                 modes" output option
       close (n5)
 
 1000  format (/,'Output has been written to two files:',//,
-     *       5x,'1d tab format is in file: ',a,/,
-     *       5x,'plt format is in file: ',a)
+     *       5x,'plt format is in file: ',a,/,
+     *       5x,'1d tab format is in file: ',a)
 1010  format (/,i1,'d ',a,' format files can be processed with:',/)
 1020  format (5x,'PSTABLE - a Perple_X plotting program',
      *      /,5x,'PERPLE_X_PLOT - a Matlab plotting script',
