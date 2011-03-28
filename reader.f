@@ -93,7 +93,7 @@ c                                 read bulk composition data file:
          read (*,*,iostat=ierr) imode
          if (ierr.ne.0) cycle 
 
-         if (first.and.imode.eq.1.or.imode.eq.3) then 
+         if (first.and.imode.eq.1) then 
 c                                 make console output echo to rpl file
             call fopenn (n8,0,n5name,n6name)
             first = .false.
@@ -1200,24 +1200,20 @@ c                                 write compact tab format
          write (n5,'(200(g14.7,1x))') (prop(i),i=1,iprop)
       end if 
 c                                 check property ranges       
-      if (dim.eq.2) then 
-
-         do i = 1, iprop
+      do i = 1, iprop
 c                                
-            if (isnan(prop(i))) cycle
+         if (isnan(prop(i))) cycle
 c                                 first check eliminates logical 
 c                                 comparisons with NaN's that compaq
 c                                 fortran doesn't like.
-            if (.not.isnan(nopt(7))) then 
-               if (prop(i).ne.nopt(7)) cycle 
-            end if 
+         if (.not.isnan(nopt(7))) then 
+            if (prop(i).eq.nopt(7)) cycle 
+         end if 
          
-            if (prop(i).gt.prmx(i)) prmx(i) = prop(i)
-            if (prop(i).lt.prmn(i)) prmn(i) = prop(i)
+         if (prop(i).gt.prmx(i)) prmx(i) = prop(i)
+         if (prop(i).lt.prmn(i)) prmn(i) = prop(i)
  
-         end do
-
-      end if
+      end do
 
       end 
 
@@ -1989,43 +1985,49 @@ c                                 linear path
 
             if (.not.ok) cycle
 
-            dxy(i) = xyp(i,2) - xyp(i,1)
-
             i = i + 1
 
-            if (i.eq.3.and.dxy(1).eq.0d0.and.dxy(2).eq.0d0) then
+            if (i.eq.3) then 
 
-               write (*,*) 
+               do j = 1, 2 
+                  dxy(j) = xyp(j,2) - xyp(j,1)
+               end do 
+
+               if (dxy(1).eq.0d0.and.dxy(2).eq.0d0) then
+
+                  write (*,*) 
      *               'initial and final coordinates cannot be identical'
-               i = 1
-               cycle
+                  i = 1
+                  cycle
+
+               else if (dxy(1).eq.0d0) then 
+c                                 parallel to the x-axis
+                     ivi = 2
+                     ivd = 1
+                     s = 0d0
+
+               else if (dxy(2).eq.0d0) then 
+c                                 parallel to y axis
+                  s = 0 
+
+               end if 
+
+               exit 
 
             end if 
-
-            if (i.eq.3) exit 
 
          end do 
 
       end if 
 c                                 set up counters, pointers:
       do 
+
          write (*,1150) 
          read (*,*,iostat=ier) ipts
          if (ipts.lt.2) ipts = 2
          if (ier.eq.0) exit 
+
       end do 
-
-      if (icurve.eq.0) then 
-c                                 linear profile parallel to neither
-c                                 axis, choose independent variable
-         if (dxy(ivi).eq.0) then 
-            ivi = 2
-            ivd = 1
-         end if 
-
-         s = 0d0
-
-      end if 
 
       d = dxy(ivi)/dfloat(ipts - 1)
 
@@ -2947,7 +2949,7 @@ c----------------------------------------------------------------------
 
       integer i, ier, dim, n
 
-      character*100 n5name, n6name, num*3
+      character*100 n5name, n6name, num*4
 
       character*14 tname
       integer kop,kcx,k2c,iprop
@@ -2963,7 +2965,9 @@ c                                 make plot file
       do i = 1, 1000
 c                                 loop to find an unused name made of 
 c                                 project + "i"
-         write (num,'(i3)') i
+         write (num,'(a1,i3)') '_',i
+
+         call unblnk (num) 
 
          call mertxt (tfname,prject,num,0)
  
@@ -2975,8 +2979,6 @@ c                                 phemgp format
 
             if (dim.eq.0) then 
                call mertxt (n5name,tfname,'.txt',0)
-            else if (dim.eq.1) then 
-               call mertxt (n5name,tfname,'.pts',0)
             else
                call mertxt (n5name,tfname,'.tab',0)
             end if 
@@ -3824,6 +3826,8 @@ c                                 modes" output option
          end if 
 
       end if 
+
+      close (n5)
 
 1000  format (/,'Output has been written to two files:',//,
      *       5x,'1d tab format is in file: ',a,/,

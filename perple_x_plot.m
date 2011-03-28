@@ -27,7 +27,7 @@ if nvar == 1 % two cases: 1d - table -> 2d plot
     
     for i = 1:jvar,plot(a(kvar,1:nrow),a(dvar(i),1:nrow)),end
     
-    legend(dnames(dvar),'Location','Best');axis tight;xlabel(xname);title(titl);
+    legend(dnames{1}{dvar},'Location','Best');axis tight;xlabel(xname);title(titl);
     
 elseif nvar == 2 % 2d - table -> 2/3d plot
     

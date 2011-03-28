@@ -6725,7 +6725,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      double precision dlnw, yol, xmg
+      double precision dlnw, yol, xmg, yq
 c                                 global arrays:
       double precision t, p, xco2, u1, u2, tr, pr, r, ps
       common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -6746,8 +6746,9 @@ c                                 entropy within the olivine species
          if (xmg.ne.0d0.and.xmg.ne.1d0) dlnw = -2d0*yol*
      *                  (xmg * dlog(xmg) + (1d0-xmg)*dlog(1d0-xmg)) 
 c                                 mixing of the olvine and sio2 species
-         if (yol.ne.0d0.and.yol.ne.1d0) dlnw = dlnw - 
-     *                  (yol * dlog(yol) + (1d0-yol)*dlog(1d0-yol))              
+         yq = 1d0 - yol
+         if (yq.gt.1d-15) dlnw = dlnw - 
+     *                  (yol * dlog(yol) + (yq)*dlog(yq))              
 
       end if 
 

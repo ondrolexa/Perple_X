@@ -1,13 +1,23 @@
-! i0 = 8, k5 = 12, k21 = 500000
+
+! special dimensions for SLV calcs
+
       integer h5,h6,h8,h9
-      integer i0,i6,i7,i8,i9,i10,i11
+      integer i6,i7,i8,i9,i10,i11
       integer j3,j4,j5,j6,j9
       integer k0,k1,k2,k3,k4,k5,k7,k8,k9,k10,k12,k13,k14,k15
       integer k16,k17,k18,k19,k20,k21,k22,k23,k24,kd2
       integer l2,l3,l5,l6,l7,l8
       integer m0,m1,m2,m3,m4,m6,m7,m8,m9,m10,m11,m12,m13,m14,m15
       integer msp,mst,nsp,mdim,ms1
-      integer n0,n1,n2,n3,n4,n5,n6,n7,n8,n9,n10,n11
+      integer n0,n1,n2,n3,n4,n5,n6,n7,n8,n9,n10,n11,nx,ny
+
+!                                 msp - max number of species on a solution identisite
+!                                 mst - max number of distinct identisites per solution
+!                                 mdim - hard constraint on max number of dimensions
+!                                        for a solution model composition space.
+
+      parameter (msp=9,mst=2,mdim=8,ms1=msp-1)
+
 !                                 n0  - starting LUN-1 for fractionation files, these files may 
 !                                       have LUNs from n0+1 up to n0+k23
 !                                 n1  - problem definition file.
@@ -30,8 +40,6 @@
 !                                 h8  - max number of excluded phases
 !                                 h9  - max number of solutions
       parameter (h5=5,h6=500,h8=200,h9=30)
-!                                 i0  - multiplier to guess max dimension for coordinate arrays
-!                                       theoretically must be less than m4.
 !                                 i6  - maximum number of independent chemical potentials (or 
 !                                       fugacity/activities).
 !                                 i7  - number of system props used in werami
@@ -41,7 +49,7 @@
 !                                 i9  - max number of solution in solution model file
 !                                 i10 - max number of option values in perplex_option.dat
 !                                 i11 - max number of dependent properties in a tab format file
-      parameter (i0=9,i6=2,i7=20,i8=27,i9=200,i10=25,i11=10)
+      parameter (i6=2,i7=20,i8=27,i9=200,i10=25,i11=10)
 !                                 j3  - max number of ordered species
 !                                 j4  - max number of species in the definition of a dependent species
 !                                 j5  - max number of stoichiometric limits on an ordered species
@@ -79,11 +87,11 @@
 !                                 k23 - max number of phases to be fractionated.
 !                                 k24 - max number of discretization points for the standard simplex
 !                                       in adaptive optimization.
-      parameter (k0=25,k1=1000000,k2=100000,k3=500,k4=23,k5=7)
+      parameter (k0=25,k1=750000,k2=100000,k3=500,k4=23,k5=5)
       parameter (k7=k5+1,k8=k5+2) 
-      parameter (k9=30,k10=240,k12=15,k13=i0*k1,k14=18,k15=3,k16=30)
+      parameter (k9=30,k10=240,k12=15,k13=mdim*k1,k14=18,k15=3,k16=30)
       parameter (k17=7,k18=29*k1)
-      parameter (k19=2*k5+14,k21=1000000,k20=i0*k21,k22=i0*k19,k23=5)
+      parameter (k19=2*k5+14,k21=1500000,k20=mdim*k21,k22=mdim*k19,k23=5)
       parameter (k24=1)  
 !                                 l2 - max number of independent potential variables
 !                                 l3 - max number of variables for gridded min and graphics (l2+2)
@@ -121,13 +129,11 @@
 !                                      reciprocal solution
       parameter (m0=8,m1=36,m2=8,m3=3,m4=15,m6=3,m7=12,m8=9,m9=10,m10=5)
       parameter (m11=5,m12=4,m13=8,m14=2,m15=9)
-!                                 msp - max number of species on a solution identisite
-!                                 mst - max number of distinct identisites per solution
-!                                 mdim - hard constraint on max number of dimensions
-!                                        for a solution model composition space.
-      parameter (msp=9,mst=2,mdim=8,ms1=msp-1)
 !                                 nsp - max number of species in fluid speciation routines 
       parameter (nsp=11)
+!                                 nx - number of x-grid nodes in a contour data grid
+!                                 ny - number of y-grid modes in a contour data grid
+      parameter (nx=500,ny=500)
 
 
 ! NOTE: increasing parameter K5 requires changes to the following
