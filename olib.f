@@ -1098,7 +1098,12 @@ c                                 shear modulus
       end if   
 c                                 compute g-derivatives for isostatic 
 c                                 thermodynamic properties
-      dp2 = 5d-2 * p
+      if (p.gt.1d3) then 
+         dp2 = 5d-2 * p
+      else 
+         dp2 = 5d1
+      end if 
+
       dp1 = dp2/1d1
       dp0 = dp1/1d1
             
@@ -1107,7 +1112,7 @@ c                                 g0 used only by frendly
       props(11,jd) = g0 
 c                                 straight derivatives:
 c                                 first order
-      if (p-dp0.le.0d0) then 
+      if (p-dp2.le.0d0) then 
 
          v = (ginc(0d0,dp0,id) - g0)/dp0
          if (v.lt.0d0.or.dabs(v).gt.1d9)  
@@ -1161,7 +1166,7 @@ c                                 shrink increment if invalid cp
 c                                 volumetric properties only if v is ok:
       if (v.gt.0d0) then 
    
-         if (p-dp1.le.0d0) then 
+         if (p-dp2.le.0d0) then 
 c                                 use forward difference at small p's
             beta = (ginc(0d0,2d0*dp1,id) + g0 - 2d0*ginc(0d0,dp1,id))
      *             /dp1/dp1
@@ -1235,7 +1240,7 @@ c                                 derivatives of seismic props.
             g3 = ginc( dt2,0d0,id)
             g4 = ginc(-dt2,2d0*dp2,id)
             g5 = ginc(0d0,dp2,id)
-            g7 = g3 - g1
+            g7 = g1 - g3
 
             gppp = ((ginc(0d0,4d0*dp2,id) - g0)/2d0
      *              - ginc(0d0,3d0*dp2,id) + g5)/dp2**3
