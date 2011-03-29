@@ -166,11 +166,12 @@ c----------------------------------------------------------------------
       double precision var,dvr,vmn,vmx
       common/ cxt18 /var(l3),dvr(l3),vmn(l3),vmx(l3),jvar
 
+      character*14 tname
       integer kop,kcx,k2c,iprop
       logical kfl
       double precision prop,prmx,prmn
       common/ cst77 /prop(i11),prmx(i11),prmn(i11),kop(i11),kcx(i11),
-     *               k2c(i11),iprop,kfl(i11)
+     *               k2c(i11),iprop,kfl(i11),tname
 
       integer inv
       character dname*14, title*162
@@ -1020,11 +1021,12 @@ c-----------------------------------------------------------------------
       logical gflu,aflu,fluid,shear,lflu,volume,rxn
       common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume,rxn
 
+      character*14 tname
       integer kop,kcx,k2c,iprop
       logical kfl
       double precision prop,prmx,prmn
       common/ cst77 /prop(i11),prmx(i11),prmn(i11),kop(i11),kcx(i11),
-     *               k2c(i11),iprop,kfl(i11)
+     *               k2c(i11),iprop,kfl(i11),tname
 
       integer igrd
       common/ cst311/igrd(l7,l7)
@@ -1897,11 +1899,12 @@ c----------------------------------------------------------------------
       double precision var,dvr,vmn,vmx
       common/ cxt18 /var(l3),dvr(l3),vmn(l3),vmx(l3),jvar
 
+      character*14 tname
       integer kop,kcx,k2c,iprop
       logical kfl
       double precision prop,prmx,prmn
       common/ cst77 /prop(i11),prmx(i11),prmn(i11),kop(i11),kcx(i11),
-     *               k2c(i11),iprop,kfl(i11)
+     *               k2c(i11),iprop,kfl(i11),tname
 
       character vnm*8
       common/ cxt18a /vnm(l3)  
@@ -2110,11 +2113,12 @@ c----------------------------------------------------------------------
       character vnm*8
       common/ cxt18a /vnm(l3)  
 
+      character*14 tname
       integer kop,kcx,k2c,iprop
       logical kfl
       double precision prop,prmx,prmn
       common/ cst77 /prop(i11),prmx(i11),prmn(i11),kop(i11),kcx(i11),
-     *               k2c(i11),iprop,kfl(i11)
+     *               k2c(i11),iprop,kfl(i11),tname
 
       integer ivar,ind,ichem
       common/ cst83 /ivar,ind,ichem
@@ -2209,11 +2213,12 @@ c----------------------------------------------------------------------
       double precision var,dvr,vmn,vmx
       common/ cxt18 /var(l3),dvr(l3),vmn(l3),vmx(l3),jvar 
 
+      character*14 tname
       integer kop,kcx,k2c,iprop
       logical kfl
       double precision prop,prmx,prmn
       common/ cst77 /prop(i11),prmx(i11),prmn(i11),kop(i11),kcx(i11),
-     *               k2c(i11),iprop,kfl(i11)
+     *               k2c(i11),iprop,kfl(i11),tname
 
       logical oned
       common/ cst82 /oned
@@ -2470,11 +2475,12 @@ c----------------------------------------------------------------
 
       double precision mode(3)
 
+      character*14 tname
       integer kop,kcx,k2c,iprop
       logical kfl
       double precision prop,prmx,prmn
       common/ cst77 /prop(i11),prmx(i11),prmn(i11),kop(i11),kcx(i11),
-     *               k2c(i11),iprop,kfl(i11)
+     *               k2c(i11),iprop,kfl(i11),tname
 
       integer iopt
       logical lopt
