@@ -3840,7 +3840,8 @@ c                                 modes" output option
      *      /,5x,'spread-sheet programs, e.g., EXCEL',//,
      *       'for details on tab format refer to:',/,5x,
      *       'www.perplex.ethz.ch/faq/perple_x_tab_file_format.txt',/)
-1030  format (/,'plt format files can be plotted with PSVDRAW',/)
+1030  format (/,'plt format files can be plotted with:',//,
+     *       5x,'PSVDRAW')
 1040  format (/,'Output has been written to the ',i1,
      *          'd ',a,' format file: ',a)
 1060  format (5x,'PSTABLE - a Perple_X plotting program',
