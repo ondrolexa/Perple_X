@@ -2291,15 +2291,15 @@ c----------------------------------------------------------------------
 1000  format (40(g14.7,1x))
 1010  format (/,'apparent Gibbs energy (kJ/mol) = ',g14.7,
      *        /,'apparent enthalpy (kJ/mol) ',t32,'= ',g14.7,
-     *        /,'log10[Keq] ',t32,'= ',f8.3,/,
-     *        /,'entropy (J/mol/K) ',t32,'= ',f8.3,
-     *        /,'heat capacity (J/mol/K) ',t32,'= ',f8.3,/,
+     *        /,'log10[Keq] ',t32,'= ',g14.7,/,
+     *        /,'entropy (J/mol/K) ',t32,'= ',g14.7,
+     *        /,'heat capacity (J/mol/K) ',t32,'= ',g14.7,/,
      *        /,'volume (J/mol/bar) ',t32,'= ',g14.7,
      *        /,'expansivity (1/K) ',t32,'= ',g14.7,
      *        /,'compressibility (1/bar) ',t32,'= ',g14.7)
 1020  format (/,'formula weight (g/mol) ',t32,'= ',g14.7,
      *        /,'density (kg/m3) ',t32,'= ',g14.7,/,
-     *        /,'Gruneisen_T ',t32,'= ',f8.3,//,
+     *        /,'Gruneisen_T ',t32,'= ',g14.7,//,
      *        'Adiabtic elastic moduli:',/,
      *        t30,' T derivative',t45,' P derivative',/
      *        2x,'Ks(bar) = ',g14.7,t30,g14.7,t45,g14.7,/,
