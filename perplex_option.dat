@@ -29,7 +29,7 @@ interpolation on       2    | value 1: on or off; value 2, 1->99
 iteration            4 3 4  | value 1: 0->9; value 2: 3->99; value 3: 3->7
 linear_model           on   | on or off
 melt_is_fluid          F    | T[rue] or F[alse], default is F
-option_list_files      T    | echo run-time options to my_project_PROGRAM_options.txt
+option_list_files      F    | echo run-time options to my_project_PROGRAM_options.txt
 order_check            on   | on or off
 pc_perturbation       5d-3  | perturbation to pseudo-compound compositions, for Schreinemakers and Mixed-variable calculations
 poisson_ratio on      0.35  | value 1: on, off or all; value 2: 0->0.5; poisson ratio estimates for shear moduli
@@ -43,7 +43,7 @@ short_print            on   | on or off
 site_check              T   | T[rue] or F[alse], T=> reject solution compositions with negative site fractions
 solvus_tolerance       aut  | aut[omatic] or 0->1, must be > initial_resolution/auto_refine_factor
 speciation_tolerance   1d-3 | tolerance for order-disorder speciation calculations, >0,<1 [1d-3]
-spreadsheet             T   | T[rue] or F[alse], T=> include independent variable values in werami tab output files 
+spreadsheet             F   | T[rue] or F[alse], T=> include independent variable values in werami tab output files 
 stretch_factor        0.016 | >0, <1
 subdivision_override   off  | off, linear, or stretch
 T_melt                 873. | melt solution model endmember temperature (K) cut off

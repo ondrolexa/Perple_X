@@ -2620,8 +2620,10 @@ c----------------------------------------------------------------------
       if (dim.eq.1) then 
 
          rewind (n5)
-c                                 skip header line
-         read (n5,'(a)') rec
+c                                 skip header lines
+         do i = 1, 9
+            read (n5,'(a)') rec
+         end do 
 
          open (n6,file=n6name)
 c                                 read file to get limits, this 
