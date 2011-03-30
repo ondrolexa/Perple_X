@@ -2289,6 +2289,7 @@ c                                 solution limits and stability
       common/ cst60 /ipoint,imyn
 c----------------------------------------------------------------------
       do k = 1, ntot
+
          jd = id(k)
 c                                 BUG!?! check why the ikp test doesn't stop
 c                                 the program
@@ -2301,6 +2302,7 @@ c                                 get composition
          call getolx (ids,jd)
 c                                 check x-ranges
          do i = 1, istg(ids)
+
             do j = 1, ispg(ids,i)-1
 c                                 low limit:
                if (x(i,j).lt.xlo(j,i,ids)) then
@@ -2324,8 +2326,11 @@ c                                 check if solution is at an unnatural limit
                      limit(ids) = .true.
                   end if 
                end if 
+
             end do 
+
          end do
+
       end do   
 
 1000  format (/,'WARNING: composition of solution ',a,' has reached an',

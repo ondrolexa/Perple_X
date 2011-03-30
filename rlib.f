@@ -1571,15 +1571,16 @@ c---------------------------------------------------------------------
       
 c                               load name and phase flag
       names(id) = name
-c                               shear modulus flag
-      if (thermo(3,k10).lt.0) then 
+c                               moduli flags, indicate availability of
+c                               bulk and shear modulus
+      if (ieos.eq.5.or.ieos.eq.6) then 
+c                               stixrude formulations, both available
          iemod(id) = 2
+
       else 
-c                               this is gonna be bad news
-c                               if anyone ever take the 
-c                               seimic velocity tutorial too
-c                               earnestly.
+c                               if ikind = 0, no explicit moduli                      
          iemod(id) = ikind
+
       end if 
 
       ikp(id) = 0

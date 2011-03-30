@@ -18,7 +18,7 @@ c----------------------------------------------------------------------
 
       write (*,1000) 
 
-1000  format (/,'Perple_X version 6.6.5.9, compiled 3/28/2011.')
+1000  format (/,'Perple_X version 6.6.5.9, compiled 3/30/2011.')
 
       end
 
@@ -50,6 +50,8 @@ c lopt(12) - option_list_files
 c lopt(13) - true if user set finite zero mode check
 c lopt(14) - logarithmic_p
 c lopt(15) - spreadsheet format -> T = explicit output of independent variables 
+c lopt(16) - averaging_scheme, T -> VRH averaging, F -> HS
+c lopt(17) - explicit_bulk_modulus, T-> use if available.
 c nopt(5)  - speciation_tolerance
 c nopt(8)  - solvus_tolerance
 c nopt(20) - T_melt - kill melt endmembers at T < nopt(20)
@@ -198,6 +200,11 @@ c                                 compare local and max disorder state for o-d m
 c                                 assume linear boundaries within a cell during gridded minimization
       valu(18) = 'on '
       iopt(18) = 1
+c                                 averaging scheme
+      valu(19) = 'VRH'
+      lopt(16) = .true.
+c                                 use explicit bulk modulus when available
+      lopt(17) = .false.
 c                                 -------------------------------------
 c                                 werami output options:
 
@@ -269,6 +276,7 @@ c                                 phase composition key
                iopt(2) = 0
             end if 
             valu(2) = val
+
          else if (key.eq.'proportions') then 
 c                                 phase proportion key
             if (val.eq.'wt') then
@@ -280,11 +288,13 @@ c                                 volume is default
                iopt(3) = 0
             end if 
             valu(3) = val
+
          else if (key.eq.'interpolation') then 
 c                                 interpolation key
             if (val.eq.'off') iopt(4) = 0
             valu(4) = val
             if (val.eq.'on ') read (nval1,*) iopt(4)
+
          else if (key.eq.'extrapolation') then 
 c                                 extrapolation key
             if (val.eq.'on ') then
@@ -293,9 +303,16 @@ c                                 extrapolation key
                iopt(5) = 1
             end if 
             valu(5) = val 
-         else if (key.eq.'vrh_weighting') then 
-c                                 vrh weighting key
+
+         else if (key.eq.'averaging_scheme') then 
+c                                 
+            if (val.eq.'HS'.or.val.eq.'hs')  lopt(16) = .false.
+
+         else if (key.eq.'vrh/hs_weighting'.or.
+     *            key.eq.'vrh_weighting') then 
+c                                 vrh/hs weighting key
             read (strg,*) nopt(6)
+
          else if (key.eq.'bad_number') then
 c                                 bad number key 
             if (val.eq.'NaN'.or.val.eq.'nan') then
@@ -303,14 +320,18 @@ c                                 bad number key
             else 
                read (strg,*) nopt(7)
             end if 
+
          else if (key.eq.'solvus_tolerance') then 
+
             if (val.ne.'aut') then 
                lopt(9) = .false.
                read (strg,*) nopt(8)
             end if 
+
          else if (key.eq.'speciation_tolerance') then 
 
             read (strg,*) nopt(5)
+
          else if (key.eq.'zero_bulk') then
 c                                 zero_bulk key
             read (strg,*) nopt(11)
@@ -349,6 +370,7 @@ c                                 subdivision overide key
             else 
                iopt(13) = 0 
             end if 
+
          else if (key.eq.'auto_refine') then
 c                                 autorefine
             valu(6) = val
@@ -550,6 +572,10 @@ c                                 perturbation to eliminate pseudocompound degen
          else if (key.eq.'option_list_files') then
 
             if (val.eq.'T') lopt(12) = .true.
+
+         else if (key.eq.'explicit_bulk_modulus') then 
+
+            if (val.eq.'T') lopt(17) = .true.
 
          else if (key.eq.'poisson_ratio') then 
 c                                 handle missing shear moduli
@@ -895,17 +921,18 @@ c                                 logarithmic_p, bad_number
       if (iam.eq.3) then 
 c                                 WERAMI input/output options
          write (n,1230) lopt(15),lopt(14),nopt(7),(valu(i),i=2,5),
-     *                  nopt(6),valu(15),nopt(16),lopt(6)
+     *                  valu(19),nopt(6),lopt(17),valu(15),nopt(16),
+     *                  lopt(6)
 
       else if (iam.eq.2) then 
 c                                 MEEMUM input/output options
-         write (n,1231) lopt(14),nopt(7),(valu(i),i=2,3),nopt(6),
-     *                  valu(15),nopt(16),lopt(6)
+         write (n,1231) lopt(14),nopt(7),(valu(i),i=2,3),valu(19),
+     *                  nopt(6),lopt(17),valu(15),nopt(16),lopt(6)
 
       else if (iam.eq.5) then 
 c                                 FRENDLY input/output options
-         write (n,1232) lopt(15),lopt(14),nopt(7),
-     *                  nopt(6),valu(15),nopt(16),lopt(6)
+         write (n,1232) lopt(15),lopt(14),nopt(7),valu(19),
+     *                  nopt(6),lopt(17),valu(15),nopt(16),lopt(6)
 
       end if 
 c                                 FRENDLY thermo options
@@ -1029,7 +1056,9 @@ c                                 thermo options for frendly
      *        4x,'proportions            ',a3,8x,'wt  [vol] mol',/,
      *        4x,'interpolation          ',a3,8x,'off [on ]',/,
      *        4x,'extrapolation          ',a3,8x,'on  [off]',/,
-     *        4x,'vrh_weighting          ',f3.1,8x,'0->1 [0.5]',/,
+     *        4x,'averaging_scheme       ',a3,8x,'HS  [VRH]',/,
+     *        4x,'vrh/hs_weighting       ',f3.1,8x,'0->1 [0.5]',/,
+     *        4x,'explicit_bulk_modulus  ',l1,10x,'[F] T',/,
      *        4x,'poisson_ratio          ',a3,8x,'off [on ] all; ',
      *        'Poisson ratio = ',f4.2,/,
      *        4x,'melt_is_fluid          ',l1,10x,'[F] T')
@@ -1038,7 +1067,9 @@ c                                 thermo options for frendly
      *        4x,'bad_number          ',f7.1,7x,'[0.0]',/,
      *        4x,'compositions           ',a3,8x,'wt  [mol]',/,
      *        4x,'proportions            ',a3,8x,'wt  [vol] mol',/,
-     *        4x,'vrh_weighting          ',f3.1,8x,'0->1 [0.5]',/,
+     *        4x,'averaging_scheme       ',a3,8x,'HS  [VRH]',/,
+     *        4x,'vrh/hs_weighting       ',f3.1,8x,'0->1 [0.5]',/,
+     *        4x,'explicit_bulk_modulus  ',l1,10x,'[F] T',/,
      *        4x,'poisson_ratio          ',a3,8x,'off [on ] all; ',
      *        'Poisson ratio = ',f4.2,/,
      *        4x,'melt_is_fluid          ',l1,10x,'[F] T')
@@ -1046,7 +1077,9 @@ c                                 thermo options for frendly
      *        4x,'spreadsheet            ',l1,10x,'[F] T',/,
      *        4x,'logarithmic_p          ',l1,10x,'[F] T',/,
      *        4x,'bad_number          ',f7.1,7x,'[0.0]',/,
-     *        4x,'vrh_weighting          ',f3.1,8x,'0->1 [0.5]',/,
+     *        4x,'averaging_scheme       ',a3,8x,'HS  [VRH]',/,
+     *        4x,'vrh/hs_weighting       ',f3.1,8x,'0->1 [0.5]',/,
+     *        4x,'explicit_bulk_modulus  ',l1,10x,'[F] T',/,
      *        4x,'poisson_ratio          ',a3,8x,'off [on ] all; ',
      *        'Poisson ratio = ',f4.2,/,
      *        4x,'melt_is_fluid          ',l1,10x,'[F] T')
@@ -2869,7 +2902,7 @@ c                                 interval limits conformal transformation
       common/ cst47 /yint(5,ms1,mst,h9),yfrc(4,ms1,mst,h9),intv(4)
 
       character*2 strgs, mstrg, dstrg, tstrg*3
-      common/ cst56 /strgs(18), mstrg(3), dstrg(8), tstrg(10)
+      common/ cst56 /strgs(18), mstrg(6), dstrg(8), tstrg(10)
 
       character*29 list
       common / cst206 /list(20)
@@ -2891,7 +2924,7 @@ c
 c                                 tags for thermo data i/o
       data strgs/'G0','S0','V0','c1','c2','c3','c4','c5','c6',
      *           'c7','b1','b2','b3','b4','b5','b6','b7','b8'/
-      data mstrg/'m0','m1','m2'/
+      data mstrg/'m0','m1','m2','k0','k1','k2'/
       data dstrg/'d1','d2','d3','d4','d5','d6','d7','d8'/
       data tstrg/'t1 ','t2 ','t3 ','t4 ','t5 ','t6 ','t7 ','t8 ','t9 ',
      *           't10'/
@@ -3038,7 +3071,7 @@ c----------------------------------------------------------------------
       common/ cst1 /thermo(k4,k10),uf(2),us(h5)
 
       character*2 strgs, mstrg, dstrg, tstrg*3
-      common/ cst56 /strgs(18), mstrg(3), dstrg(8), tstrg(10)
+      common/ cst56 /strgs(18), mstrg(6), dstrg(8), tstrg(10)
 c-----------------------------------------------------------------------
 c                                 initialize data
 c                                 flag for t-dependent disorder
@@ -3138,7 +3171,7 @@ c                                 simple thermo data
             if (ok) cycle
 c                                 =====================================
 c                                 shear mod data 
-            do i = 1, 3
+            do i = 1, 6
                if (key.eq.mstrg(i)) then 
 c                                 set shear mod flag
                   ikind = 1
@@ -3437,7 +3470,7 @@ c----------------------------------------------------------------------
       common/delet/com 
 
       character*2 strgs, mstrg, dstrg, tstrg*3
-      common/ cst56 /strgs(18), mstrg(3), dstrg(8), tstrg(10)
+      common/ cst56 /strgs(18), mstrg(6), dstrg(8), tstrg(10)
 c-----------------------------------------------------------------------
 c                                 =====================================
 c                                 name & EoS
@@ -3525,10 +3558,10 @@ c                                 b1->b8 of thermo data
 c                                 write b1->b8
       if (ibeg.gt.1) write (lun,'(240a1)') (chars(i), i = 1, ibeg)
 c                                 =====================================
-c                                 shear modulus
+c                                 shear/bulk modulus
       ibeg = 1
 
-      do i = 1, 3
+      do i = 1, 6
          call outthr (emod(i,id),mstrg(i),2,ibeg)
       end do
 

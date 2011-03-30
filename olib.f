@@ -981,7 +981,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical ok, sick(i8), ssick, pois, ppois
+      logical ok, sick(i8), ssick, pois, ppois, bulk
 
       integer id,jd,iwarn1,iwarn2,j,itemp
 
@@ -1083,11 +1083,17 @@ c                                 mass % composition:
          end do  
 
       end if 
+c                                 bulk modulus flag, if false use explicit form
+      bulk = .true.
 c                                 shear modulus
       if (.not.fluid(jd)) then 
 
-         call moduli (id,props(5,jd),props(19,jd),props(21,jd),ok)
+         call moduli (id,props(5,jd),props(19,jd),props(21,jd),
+     *                   props(4,jd),props(18,jd),props(20,jd),ok)
+
          if (.not.ok.and.iopt(16).eq.0) shear = .false.  
+c                                 explicit bulk modulus is present and allowed
+         if (lopt(17).and.props(4,jd).gt.0d0) bulk = .false.
 
       else
 
@@ -1269,7 +1275,7 @@ c                                 derivatives of seismic props.
 
          g7 = (gtt*beta-alpha**2)**2
 
-         if (g7.ne.0d0) then 
+         if (g7.ne.0d0.and.bulk) then 
 c                                 temperature derivative of the adiabatic bulk modulus:
             props(18,jd) = (((v*gppt-alpha*beta)*gtt
      *                      -(2d0*v*gptt-alpha**2)*alpha)*gtt
@@ -1278,7 +1284,7 @@ c                                 pressure derivative of the adiabatic bulk modu
             props(20,jd) = (((v*gppp-beta**2)*gtt
      *                   +(alpha*beta-2d0*v*gppt)*alpha)*gtt
      *                   +v*gptt*alpha**2)/g7
-         else 
+         else if (bulk) then 
 
             props(18,jd) = nopt(7)
             props(20,jd) = nopt(7)
@@ -1341,7 +1347,7 @@ c                                 transition models (prop(13,jd))
 c        if (props(3,jd).le.0d0) sick(jd) = .true.
 
 c                                 adiabatic bulk modulus
-         props(4,jd) = (1d0 + t*alpha*props(3,jd))/beta
+         if (bulk) props(4,jd) = (1d0 + t*alpha*props(3,jd))/beta
 
          if (props(4,jd).le.0d0) sick(jd) = .true.
 
@@ -1854,19 +1860,19 @@ c                                 internal fluid eos
 
       end
 
-      subroutine shearm (mu,mut,mup,id)
+      subroutine shearm (mu,mut,mup,ks,kst,ksp,id)
 c-----------------------------------------------------------------------
-c shearm returns a linear model for the adiabatic shear modulus
+c shearm returns a linear model for the adiabatic shear/bulk modulus
 c relative to the current pressure and temperature.
 
 c three cases:
 
-c make(id) = non-zero, use make definition to compute shear modulus.
+c make(id) = non-zero => use make definition to compute shear modulus.
 
-c iemod = 1, linear model is input
-
-c iemod = 2, shear modulus is known as a function of (V,T), then
+c eos = 5 or 6 => shear modulus is known as a function of (V,T), then
 c computed by centered finite differences.
+
+c iemod = 1 or 2 => linear model is input
 c-----------------------------------------------------------------------
       implicit none
 
@@ -1874,7 +1880,7 @@ c-----------------------------------------------------------------------
 
       integer id
 
-      double precision mu,mut,mup,mu2,dt,dp,g,ginc
+      double precision mu,mut,mup,mu2,ks,kst,ksp,dt,dp,g,ginc
 
       double precision smu
       common/ cst323 /smu
@@ -1890,6 +1896,9 @@ c-----------------------------------------------------------------------
       double precision emod
       common/ cst319 /emod(k15,k10),smod(h9),iemod(k10),kmod
 
+      integer eos
+      common/ cst303 /eos(k10)
+
       save dt,dp
       data dt,dp/5d0,50d0/
 c-----------------------------------------------------------------------
@@ -1898,13 +1907,7 @@ c-----------------------------------------------------------------------
 
          call makmod (id,mu,mut,mup)
 
-      else if (iemod(id).eq.1) then 
-
-         mu  = emod(1,id) + (p-pr)*emod(2,id) + (t-tr)*emod(3,id)
-         mut = emod(3,id)
-         mup = emod(2,id)
-
-      else if (iemod(id).eq.2) then 
+      else if (eos(id).eq.5.or.eos(id).eq.6) then 
 c                                 by calling ginc a call to
 c                                 stixrudes EoS for the adiabatic
 c                                 shear modulus is implicit (cst323)
@@ -1932,11 +1935,21 @@ c                                 centered pressure derivative
 
          end if 
 
+      else if (iemod(id).ne.0) then 
+
+         mu  = emod(1,id) + (p-pr)*emod(2,id) + (t-tr)*emod(3,id)
+         mut = emod(3,id)
+         mup = emod(2,id)
+
+         ks  = emod(4,id) + (p-pr)*emod(5,id) + (t-tr)*emod(6,id)
+         kst = emod(6,id)
+         ksp = emod(5,id)
+
       end if          
 
       end 
 
-      subroutine makmod (id,mu,mut,mup)
+      subroutine makmod (id,mu,mut,mup,ks,kst,ksp)
 c-----------------------------------------------------------------------
 c gmake computes and sums the component g's for a make definition.
 c the component g's may be calculated redundantly because gmake is
@@ -1949,7 +1962,8 @@ c-----------------------------------------------------------------------
 
       integer i, id, jd
 
-      double precision mu, pmu, mut, pmut, mup, pmup
+      double precision mu, pmu, mut, pmut, mup, pmup, 
+     *                 ks, pks, kst, pkst, ksp, pksp
 
       double precision mkcoef, mdqf
 
@@ -1967,20 +1981,28 @@ c-----------------------------------------------------------------------
       pmut = 0d0
       pmup = 0d0 
 
+      ks = 0d0
+      pkst = 0d0
+      pksp = 0d0 
 c                                compute the sum of the component g's
       do i = 1, mknum(jd)
 
-         call shearm (pmu,pmut,pmup,mkind(jd,i))
+         call shearm (pmu,pmut,pmup,pks,pkst,pksp,mkind(jd,i))
 
          mu = mu + mkcoef(jd,i) * pmu
          mut = mut + mkcoef(jd,i) * pmut
          mup = mup + mkcoef(jd,i) * pmup
 
+         ks = ks + mkcoef(jd,i) * pks
+         mut = kst + mkcoef(jd,i) * pkst
+         mup = ksp + mkcoef(jd,i) * pksp
+
+
       end do 
 
       end
 
-      subroutine moduli (ids,mu,mut,mup,ok) 
+      subroutine moduli (ids,mu,mut,mup,ks,kst,ksp,ok) 
 c-----------------------------------------------------------------------
 c subroutine moduli determines shear moduli (mods) for entity ids, returns
 c ok = false if moduli are unavailable.
@@ -1991,7 +2013,8 @@ c-----------------------------------------------------------------------
  
       include 'perplex_parameters.h'
 
-      double precision mu, pmu, mut, pmut, mup, pmup
+      double precision mu, pmu, mut, pmut, mup, pmup, ks, ksp, kst,
+     *                 pks, pksp, pkst
 
       integer i, ids
 
@@ -2033,7 +2056,7 @@ c-----------------------------------------------------------------------
 
          if (iemod(-ids).ne.0) then
 
-            call shearm (mu,mut,mup,-ids)
+            call shearm (mu,mut,mup,ks,kst,ksp,-ids)
 
          else
 
@@ -2052,11 +2075,16 @@ c                                 the independent disordered endmembers)
 
                do i = 1, lstot(ids)
 
-                  call shearm (pmu,pmut,pmup,jend(ids,2+i))
+                  call shearm (pmu,pmut,pmup,
+     *                         pks,pkst,pksp,jend(ids,2+i))
 
                   mu = mu + p0a(i) * pmu
                   mut = mut + p0a(i) * pmut
                   mup = mup + p0a(i) * pmup
+
+                  ks = ks + p0a(i) * pks
+                  kst = kst + p0a(i) * pkst
+                  ksp = ksp + p0a(i) * pksp
 
                end do
 
@@ -2073,11 +2101,16 @@ c                                 happen if shearm calls gsol to evaluate a
 c                                 speciation model using stixrude's EoS).
                do i = 1, mstot(ids)
 
-                  call shearm (pmu,pmut,pmup,jend(ids,2+i))
+                  call shearm (pmu,pmut,pmup,
+     *                         pks,pkst,pksp,jend(ids,2+i))
 
                   mu  = mu + y(i) * pmu
                   mut = mut + y(i) * pmut
                   mup = mup + y(i) * pmup
+
+                  ks  = ks + y(i) * pks
+                  kst = kst + y(i) * pkst
+                  ksp = ksp + y(i) * pksp
 
                end do
  

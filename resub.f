@@ -1498,6 +1498,9 @@ c                                 endmember names
       logical lopt
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      integer ksmod, ksite, kmsol, knsp
+      common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
 c----------------------------------------------------------------------
       ibad1 = 0 
       ibad2 = 0 
@@ -1609,15 +1612,17 @@ c                                 solutions on internal limits
 
          end if 
 
-         if (istg(i).eq.1) then 
+         if (istg(i).eq.1.and.ksmod(i).ne.5) then 
 c                                 single site solution
             write (*,1020) fname(i)
             if (lopt(11)) write (n11,1020) fname(i)
+
             do j = 1, ispg(i,1) - 1
                write (*,1030) names(jend(i,2+j)),xlo(j,1,i),xhi(j,1,i)
                if (lopt(11)) write (n11,1030) 
      *                        names(jend(i,2+j)),xlo(j,1,i),xhi(j,1,i)
             end do 
+
          else
 c                                 reciprocal solution
             write (*,1040) fname(i)
@@ -1629,9 +1634,12 @@ c                                 reciprocal solution
                if (lopt(11)) write (n11,1050) j
 
                if (ispg(i,j).eq.1) then 
+
                   write (*,1060)
                   if (lopt(11)) write (n11,1060) 
+
                else
+
                   do k = 1, ispg(i,j) - 1
                      write (*,1070) k,xlo(k,j,i),xhi(k,j,i)
 c    *                     ,names(jend(i,2+indx(i,j,k)))
@@ -1639,9 +1647,13 @@ c    *                     ,names(jend(i,2+indx(i,j,k)))
      *                              k,xlo(k,j,i),xhi(k,j,i)
 c    *                     ,names(jend(i,2+indx(i,j,k)))
                   end do 
+
                end if 
+
             end do
+
          end if 
+
       end do 
 
 99    close (n10)
