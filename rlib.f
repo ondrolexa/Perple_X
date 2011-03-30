@@ -1520,9 +1520,9 @@ c---------------------------------------------------------------------
       common/ cst61 /ikp(k1)
 
       integer iemod,kmod
-      logical smod
+      logical smod,pmod
       double precision emod
-      common/ cst319 /emod(k15,k10),smod(h9),iemod(k10),kmod
+      common/ cst319 /emod(k15,k10),smod(h9),pmod(k10),iemod(k10),kmod
 
       integer ifp
       common/ cxt32 /ifp(k1)
@@ -1578,7 +1578,9 @@ c                               stixrude formulations, both available
          iemod(id) = 2
 
       else 
-c                               if ikind = 0, no explicit moduli                      
+c                               if ikind = 0, no explicit moduli 
+c                                        = 1, just shear
+c                                        = 2, shear and bulk   
          iemod(id) = ikind
 
       end if 
@@ -3485,9 +3487,9 @@ c-----------------------------------------------------------------------
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 
       integer iemod,kmod
-      logical smod
+      logical smod,pmod
       double precision emod
-      common/ cst319 /emod(k15,k10),smod(h9),iemod(k10),kmod
+      common/ cst319 /emod(k15,k10),smod(h9),pmod(k10),iemod(k10),kmod
 
       save turd2, izap, izap1 
 
@@ -3697,9 +3699,9 @@ c-----------------------------------------------------------------------
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 
       integer iemod,kmod
-      logical smod
+      logical smod,pmod
       double precision emod
-      common/ cst319 /emod(k15,k10),smod(h9),iemod(k10),kmod
+      common/ cst319 /emod(k15,k10),smod(h9),pmod(k10),iemod(k10),kmod
 
       save f23,f59, izap, izap1 
 
@@ -7754,9 +7756,9 @@ c                                 dqf parameters
       common/ cxt9 /dqfg(m3,m4,h9),dq(m4),jndq(m4,h9),jdqf(h9),iq(m4)
 
       integer iemod,kmod
-      logical smod
+      logical smod,pmod
       double precision emod
-      common/ cst319 /emod(k15,k10),smod(h9),iemod(k10),kmod
+      common/ cst319 /emod(k15,k10),smod(h9),pmod(k10),iemod(k10),kmod
 
       integer iopt
       logical lopt
@@ -8410,6 +8412,7 @@ c                                 endmember order.
       if (istot+norder.gt.k12) call error (39,0d0,k12,'INPUT9')    
 
       smod(im) = .true.
+      pmod(im) = .true.
 
       do i = 1, kstot
 c                                 pointer to endmember
@@ -8434,8 +8437,9 @@ c                                 set ifp for melt endmembers
          end if 
 c
          jend(im,2+i) = id
-c                                 set shear modulus flag
+c                                 set shear/bulk moduli flags
          if (iemod(id).eq.0) smod(im) = .false.
+         if (iemod(id).lt.2) pmod(im) = .false.
 c                                 look for endmembers to be killed
          if (iend(insp(i)).ne.2) cycle
 

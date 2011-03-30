@@ -1892,9 +1892,9 @@ c-----------------------------------------------------------------------
       common / cst335 /make(k10)
 
       integer iemod,kmod
-      logical smod
+      logical smod,pmod
       double precision emod
-      common/ cst319 /emod(k15,k10),smod(h9),iemod(k10),kmod
+      common/ cst319 /emod(k15,k10),smod(h9),pmod(k10),iemod(k10),kmod
 
       integer eos
       common/ cst303 /eos(k10)
@@ -1905,7 +1905,7 @@ c-----------------------------------------------------------------------
 
       if (make(id).ne.0) then 
 
-         call makmod (id,mu,mut,mup)
+         call makmod (id,mu,mut,mup,ks,kst,ksp)
 
       else if (eos(id).eq.5.or.eos(id).eq.6) then 
 c                                 by calling ginc a call to
@@ -2033,9 +2033,9 @@ c                                 bookkeeping variables
       common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
 
       integer iemod,kmod
-      logical smod
+      logical smod,pmod
       double precision emod
-      common/ cst319 /emod(k15,k10),smod(h9),iemod(k10),kmod
+      common/ cst319 /emod(k15,k10),smod(h9),pmod(k10),iemod(k10),kmod
 
       double precision z, pa, p0a, x, w, y
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1)
@@ -2051,6 +2051,10 @@ c-----------------------------------------------------------------------
       mu = 0d0
       mut = 0d0
       mup = 0d0
+
+      ks = 0d0
+      kst = 0d0
+      ksp = 0d0
 
       if (ids.le.0) then 
 
@@ -2082,6 +2086,8 @@ c                                 the independent disordered endmembers)
                   mut = mut + p0a(i) * pmut
                   mup = mup + p0a(i) * pmup
 
+                  if (.not.pmod(ids)) cycle 
+
                   ks = ks + p0a(i) * pks
                   kst = kst + p0a(i) * pkst
                   ksp = ksp + p0a(i) * pksp
@@ -2107,6 +2113,8 @@ c                                 speciation model using stixrude's EoS).
                   mu  = mu + y(i) * pmu
                   mut = mut + y(i) * pmut
                   mup = mup + y(i) * pmup
+
+                  if (.not.pmod(ids)) cycle
 
                   ks  = ks + y(i) * pks
                   kst = kst + y(i) * pkst

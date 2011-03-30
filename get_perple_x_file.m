@@ -72,6 +72,7 @@ while ok == 0;
             
             a = reshape(a,mvar,inc(2),inc(1));
             a = reshape(a(dvar,1:inc(2),1:inc(1)),inc(2),inc(1));
+            a = rot90(a); a = flipud(a);
             
             y = v(2,1:inc(2));
             yname = vname(2,:);

@@ -3173,8 +3173,13 @@ c                                 =====================================
 c                                 shear mod data 
             do i = 1, 6
                if (key.eq.mstrg(i)) then 
-c                                 set shear mod flag
-                  ikind = 1
+c                                 set shear/bulk mod flag
+                  if (ikind.eq.0.and.i.lt.4) then
+                     ikind = 1
+                  else if (i.gt.3) then 
+                     ikind = 2
+                  end if 
+                  
                   read (values,*,iostat=ier) emodu(i)
                   if (ier.ne.0) call error (23,tot,ier,strg) 
                   ok = .true.
@@ -3439,9 +3444,9 @@ c----------------------------------------------------------------------
       common/ cst202 /tm(m7,m6),td(m8),ilam,idiso,lamin,idsin
 
       integer iemod,kmod
-      logical smod
+      logical smod,pmod
       double precision emod
-      common/ cst319 /emod(k15,k10),smod(h9),iemod(k10),kmod
+      common/ cst319 /emod(k15,k10),smod(h9),pmod(k10),iemod(k10),kmod
 
       integer cl
       character cmpnt*5, dname*80

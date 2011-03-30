@@ -169,9 +169,9 @@ c----------------------------------------------------------------------
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       integer iemod,kmod
-      logical smod
+      logical smod,pmod
       double precision emod
-      common/ cst319 /emod(k15,k10),smod(h9),iemod(k10),kmod
+      common/ cst319 /emod(k15,k10),smod(h9),pmod(k10),iemod(k10),kmod
 c----------------------------------------------------------------------- 
       first = .true.
       output = .false.

@@ -80,9 +80,9 @@ c------------------------------------------------------------------------
      *               ikind,icmpn,ieos
 
       integer iemod,kmod
-      logical smod
+      logical smod,pmod
       double precision emod
-      common/ cst319 /emod(k15,k10),smod(h9),iemod(k10),kmod
+      common/ cst319 /emod(k15,k10),smod(h9),pmod(k10),iemod(k10),kmod
 
       integer length,iblank,icom
       character chars*1
@@ -152,9 +152,9 @@ c-----------------------------------------------------------------------
      *               ikind,icmpn,ieos
 
       integer iemod,kmod
-      logical smod
+      logical smod,pmod
       double precision emod
-      common/ cst319 /emod(k15,k10),smod(h9),iemod(k10),kmod
+      common/ cst319 /emod(k15,k10),smod(h9),pmod(k10),iemod(k10),kmod
 
       integer idis,lmda,ltyp
       common/ cst204 /ltyp(k10),lmda(k10),idis(k10)
