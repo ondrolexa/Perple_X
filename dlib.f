@@ -9,7 +9,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer nco, jxco, kxco, i, j, ids
+      integer nco, jxco, kxco, i, j, ids, ier
 c                                 -------------------------------------
 c                                 global variables
 c                                 x coordinate description
@@ -43,6 +43,11 @@ c                                 global assemblage data
 
       integer hcp,idv
       common/ cst52  /hcp,idv(k7) 
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 c----------------------------------------------------------------------
 c                                 assemblage counter
       ibulk = 0
@@ -87,7 +92,18 @@ c                                phase molar amounts
 
          jxco = kxco  
 c                                 read mu's if available
-         if (jpot.ne.1) read (n5,*) (mus(i,ibulk), i = 1, hcp)
+         if (jpot.ne.1) read (n5,*,iostat=ier) 
+     *                       (mus(i,ibulk), i = 1, hcp)
+
+         if (ier.ne.0) then 
+c                                 if error on read most probably its
+c                                 because of NaN's for the chemical 
+c                                 potentials
+            do i = 1, hcp
+               mus(i,ibulk) = nopt(7)
+            end do 
+ 
+         end if 
 
       end do                 
 

@@ -1498,7 +1498,7 @@ c                                 endmember names
       logical lopt
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
+      
       integer ksmod, ksite, kmsol, knsp
       common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
 c----------------------------------------------------------------------
@@ -1612,15 +1612,26 @@ c                                 solutions on internal limits
 
          end if 
 
-         if (istg(i).eq.1.and.ksmod(i).ne.5) then 
+         if (istg(i).eq.1) then 
 c                                 single site solution
             write (*,1020) fname(i)
             if (lopt(11)) write (n11,1020) fname(i)
 
             do j = 1, ispg(i,1) - 1
-               write (*,1030) names(jend(i,2+j)),xlo(j,1,i),xhi(j,1,i)
+            
+               if (ksmod(i).eq.5) then
+               
+                  write (*,1070) j,xlo(j,1,i),xhi(j,1,i)
+                                  
+               else
+                
+                  write (*,1030) names(jend(i,2+j)),
+     *                           xlo(j,1,i),xhi(j,1,i)
+               end if
+                
                if (lopt(11)) write (n11,1030) 
-     *                        names(jend(i,2+j)),xlo(j,1,i),xhi(j,1,i)
+     *                       names(jend(i,2+j)),xlo(j,1,i),xhi(j,1,i)
+     
             end do 
 
          else

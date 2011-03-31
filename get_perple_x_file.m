@@ -1,7 +1,7 @@
 function [x,y,a,xname,yname,zname,nvar,mvar,nrow,dnames,titl] = get_perple_x_file
 
 % MatLab script to read Perple_X tab files see:
-%    perplex.ethz.ch/faq/Perple_X_tab_format.txt
+%    perplex.ethz.ch/faq/Perple_X_tab_file_format.txt
 % for format details.
 
 % JADC March 26, 2011
@@ -23,8 +23,10 @@ ok = 0;
 
 while ok == 0;
     
-    data_file=uigetfile('*.tab', 'Select a Perple_X tab file');
-    
+    [filename, pathname] = uigetfile('*.tab', 'Select a Perple_X tab file');
+
+    data_file=fullfile(pathname, filename);
+
     fid = fopen(data_file, 'rt');
     
     fmt = fgetl(fid); % read revision tag
