@@ -137,7 +137,8 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer liw, lw, iter, iref, i, j, id, idead, ids, jstart, inc
+      integer liw, lw, iter, iref, i, j, id, idead, ids, jstart, inc, 
+     *        opt
 
       parameter (liw=2*k21+3,lw=2*(k5+1)**2+7*k21+5*k5)  
 
@@ -200,6 +201,7 @@ c                                 are identified in jdv(1..npt)
       iref = 0 
       jcoct = 1
       inc = istct - 1
+      opt = npt
 c                                 --------------------------------------
 c                                 first iteration
       do i = 1, npt
@@ -252,7 +254,7 @@ c                                 warn if severe error
 
          end if 
 c                                 analyze solution, get refinement points
-         call yclos2 (clamda,x,is,iter)
+         call yclos2 (clamda,x,is,iter,opt)
 c                                 save the id and compositions
 c                                 of the refinement points, this
 c                                 is necessary because resub rewrites
@@ -417,7 +419,7 @@ c                                 conformal
          end do 
       end do 
                             
-c      call subdv1 ('characters',ids) 
+c     call subdv1 ('characters',ids) 
       call subdiv ('characters',ids)
 
       do 10 i = 1, ntot 
@@ -985,6 +987,7 @@ c                                are present:
       ncpd = 0
 c                                set solvus tolerance, avrger (was 1.5)
       soltol = 1.5d0*nopt(8)
+      if (soltol.lt.0.1d0) soltol = 0.1
 
       do 30 i = 1, ntot
          if (nkp(i).lt.0) then
@@ -1797,13 +1800,13 @@ c----------------------------------------------------------------------
 
       integer jphct, i, j, k, is(k1+k5), idsol(k5), kdv(h8+1), nsol, 
      *        mpt, iam, id, is1, left, right, inc, jdsol(k5,k5), 
-     *        kdsol(k5), max, idm(h8+1)
+     *        kdsol(k5), max
 
       external ffirst
 
       logical solvus, quit
 
-      double precision clamda(k1+k5), dlamda(h8+1), x(k1),  slam(h8+1)
+      double precision clamda(k1+k5), x(k1),  slam(h8+1)
 
       integer ipoint,imyn
       common/ cst60 /ipoint,imyn
@@ -1878,10 +1881,10 @@ c                                 new point, add to list
 
       do i = 1, is1
          slam(i) = 1d99
-         idm(i) = 0 
+         kdv(i) = 0 
       end do 
 c                                 perp 6.6.3, make a list of metastable
-c                                 phases, this list includes all compounds
+c                                 phases, this list includes one compound
 c                                 and the least metastable composition of
 c                                 each solution.      
       do 20 i = 1, jphct
@@ -1911,7 +1914,7 @@ c                                compositions.
                end do
 c                                the composition is stable
                slam(iam) = clamda(i)
-               idm(iam) = i
+               kdv(iam) = i
 
             end if
 
@@ -1919,7 +1922,7 @@ c                                the composition is stable
 c                                a compound, save only one
             if (clamda(i).lt.slam(is1)) then 
                slam(is1) = clamda(i)
-               idm(is1) = i
+               kdv(is1) = i
             end if 
  
          end if 
@@ -1931,10 +1934,10 @@ c                                 kdv
 
       do i = 1, is1
 
-         if (idm(i).eq.0) cycle
+         if (kdv(i).eq.0) cycle
          mpt = mpt + 1
-         kdv(mpt) = idm(i)
-         dlamda(mpt) = clamda(idm(i))
+         kdv(mpt) = kdv(i)
+         slam(mpt) = slam(i)
 
       end do 
 
@@ -1950,7 +1953,7 @@ c                                 find the most stable iopt(12) points
          right = mpt
          max = iopt(12)
 
-         call ffirst (dlamda,kdv,left,right,max,h8+1,ffirst)
+         call ffirst (slam,kdv,left,right,max,h8+1,ffirst)
 
       end if 
  
@@ -3277,7 +3280,7 @@ c----------------------------------------------------------------------
 
       end 
 
-      subroutine yclos2 (clamda,x,is,iter)
+      subroutine yclos2 (clamda,x,is,iter,opt)
 c----------------------------------------------------------------------
 c subroutine to identify pseudocompounds close to the solution for 
 c subsequent refinement, for iteration > 1. 
@@ -3286,9 +3289,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i, is(k21+k5), id, jmin(k19), mpt, iter, tictoc
-
-      logical stable
+      integer i, is(k21+k5), id, jmin(k19), opt, mpt, iter, tic
 
       double precision clamda(k21+k5), clam(k19), x(k21)
 
@@ -3316,11 +3317,13 @@ c----------------------------------------------------------------------
       double precision cp3, amt
       common/ cxt15 /cp3(k0,k5),amt(k5),kkp(k5),np,ncpd,ntot
 
-      save tictoc
-      data tictoc/0/
+      save tic
+      data tic/0/
 c----------------------------------------------------------------------
-c                                 opt is the number of points refined
-c                                 from the previous cycle
+c                                 mpt is the number of points refined
+c                                 from the previous cycle, opt is the
+c                                 number of points in the original 
+c                                 solution.
       mpt = npt
 
       do i = 1, npt
@@ -3339,7 +3342,6 @@ c                                 check the stability of all points
 c                                 a stable point, add to list
             npt = npt + 1
             jdv(npt) = i
-            stable = .true.
 
          else if (clamda(i).lt.clam(id)) then 
 c                                 find the nearest phase           
@@ -3353,8 +3355,8 @@ c                                 find the nearest phase
       if (iter.le.iopt(10)) then
 c                                 if not done iterating, add the metastable
 c                                 phases
-         do i = 1, mpt
-            if (jmin(i).eq.0) cycle
+         do i = 1, opt
+            if (jmin(i).eq.0) cycle 
             npt = npt + 1
             jdv(npt) = jmin(i)
          end do
@@ -3370,7 +3372,7 @@ c                                 point
       else  
   
          mpt = npt 
-         npt = 0 
+         npt = 0  
 c                                 check zero modes the amounts
          do i = 1, mpt
 
@@ -3379,9 +3381,13 @@ c                                 check zero modes the amounts
                amt(npt) = x(jdv(i))
                jdv(npt) = jdv(i)
             else if (lopt(13).and.x(jdv(i)).lt.-nopt(9)
-     *                             .and.tictoc.lt.5) then 
+     *                             .and.tic.lt.5) then 
+
                call warn (2,x(jdv(i)),i,'REBULK')
-               tictoc = tictoc + 1
+               tic = tic + 1
+
+               if (tic.eq.5) call warn (49,x(1),2,'YCLOS2')
+
             end if 
 
          end do 
@@ -3398,6 +3404,18 @@ c                                 check zero modes the amounts
 
 
       end if 
+
+c1000  format (/,'**warning ver666** the compositional resolution ',
+c     *       'specified for this problem is too',/,' high. The global ',
+c     *       'minimum may not be clearly defined. If this ambiguity ',
+c     *       'causes',
+c     *     /,'spurious results, reduce the resolution by changing any ',
+c     *       'of the following keywords ',/,'in perplex_option.dat:',//,
+c     *    5x,'increase initial_resolution',/,
+c     *    5x,'decrease auto_refine_factor_I',/,
+c     *    5x,'decrease iteration (first value)',//,
+c     *       'Typically compositional resolution <0.05 mol% causes ',
+c     *       'numerical instability',/)   
 
       end
 

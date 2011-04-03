@@ -18,7 +18,7 @@ c----------------------------------------------------------------------
 
       write (*,1000) 
 
-1000  format (/,'Perple_X version 6.6.5.9, compiled 3/31/2011.')
+1000  format (/,'Perple_X version 6.6.5.9, compiled 4/2/2011.')
 
       end
 
@@ -2180,7 +2180,7 @@ c---------------------------------------------------------------------
 48    format (/,'**warning ver048** fluid phase pseudocompound data ',
      *         'does not include',/,' volumetric properties (SWASH).',/)
 49    format (/,'**warning ver049** warning ',i3,' will not be repeated'
-     *         ,' for future instances of this problem',/)
+     *         ,' for future instances of this problem.',/)
 c49    format (/,'**warning ver049** some pseudocompound data has not',
 c     *          ' been output because',/' the bulk modulus pressure ',
 c     *          'derivative is not constant for all endmembers ',/,
