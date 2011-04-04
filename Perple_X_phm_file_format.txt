@@ -1,66 +1,90 @@
-As of the 6.6.5.9 version of Perple_X, most output files written by WERAMI, and  
-also property tables written by frendly, are written as 1- or 2-dimensional
-tables, the tables have a generic format described below and are indicated 
-by the file type suffix ".tab".
+                          PHM (PHEMGP) File Format
 
-                                2d Tables
+Under property options #36 ("all properties") and #38 ("multiple properties")
+the Perple_X program WERAMI writes 1- or 2-dimensional tables. 2-dimensional
+tables can be processed with the program PHEMGP (www.perplex.ethz.ch/phemgp/phemgp.html), 
+while both 1- and 2-dimensional tables can be processed in spreadsheet programs
+such as Excel. 
 
-In 2d tables, the columns correspond to properties tabulated as a function of 
-two independent variables at regular intervals (e.g., mineral composition as a 
-function of pressure and temperature). The columns of a 2d table can be 
-contoured or viewed as a 3d surface as a function of the independent variables
-with PSTABLE (Perple_X), PYWERAMI (petrol.natur.cuni.cz/~ondro/pywerami:home), 
-or Perple_X_plot (MatLab). Alternatively, if the header section of the tab file
-is deleted, the data can be imported into spreadsheet programs (e.g., Excel). 
-Note that if you intend to import a table into a spreadsheet program it is 
-essential that you set the keyword spreadsheet = T in perplex_option.dat. This
-option instructs WERAMI to write the independent variables in the first columns
-of the table. The MatLab script pt_2_vs changes the independent variables of 2d 
-tables, e.g., if a table has been computed as a function of pressure and 
-temperature, pt_2_vs can be used to convert the table to a table as a function 
-of volume and entropy. 
-
+The format of tables written for PHEMGP is a minor variation on the generic
+tab file format (www.perplex.ethz.ch/Perple_X_tab_file_format.txt) used by Perple_X.
+PHEMGP format tables are indicated by the file type suffix ".phm".
  
-                                1d Tables
+The distinction between generic tab format tables and phm format tables is that:
 
-In 1d tables, the columns correspond to properties tabulated as a function of 
-one independent variables (e.g., mineral composition as a function of pressure 
-and temperature along a geotherm). In contrast to 2d tables, the independent 
-variable need not vary by a regular increment. All Perple_X programs and 
-scripts assume irregular spacing of the independent variable and therefore 
-output a column(s) containing the independent variable(s) of the calculation
-as well as the dependent properties. In this case the header information is 
-largely superfluous and the number of variables is the number of columns and 
-the number of rows in the table is the number or records in the file less the
-number of records in the header (see format details below). Any two columns of 
-a 1d table can be plotted against each other with PSTABLE (Perple_X) or 
-Perple_X_plot (MatLab). Alternatively, if the header section of the tab file
-is deleted, the data can be imported into spreadsheet programs (e.g., Excel). 
+1) In tab files only one record is associated with each table entry (i.e., each value
+of the independent variables for the calculation), while in phm files there are 
+NPHI + 1 records. The first record indicates the properties of the system and the
+remaining NHPI records indicate the properties of the NPHI stable phases.
 
-                           Details on tab Format
+2) In phm files, the first two values of each record are reserved for, respectively,
+a character string that indicates whether the record is for system or phase properties.
+In the former case the string is "system", in the latter case the string is the name
+used in Perple_X for the phase. The second value
 
+
+
+                           Details on phm Format
+
+All data is space delimited.
 
 Line 1 - the tag "|6.6.6", used in case of future format changes
 Line 2 - title
-Line 3 - n - number of independent variables
+Line 3 - N - number of independent variables
 
-For independent variable j = 1 -> n
+For independent variable j = 1 -> N
 
    Line 4 + (j-1)*4 - name of jth independent variable
-   Line 5 + (j-1)*4 - v0(i) - minimum value of jth independent variable
-   Line 6 + (j-1)*4 - dv(i) - increment for jth independent variable
-   Line 7 + (j-1)*4 - inc(i) - 1 + number of increments for jth independent variable
+   Line 5 + (j-1)*4 - V0(i) - minimum value of jth independent variable
+   Line 6 + (j-1)*4 - DV(i) - increment for jth independent variable
+   Line 7 + (j-1)*4 - INC(i) - 1 + number of increments for jth independent variable
 
-Line 8 + 4n - m - number of dependent properties
-Line 9 + 4n - names of the m dependent properties
+Line 8 + 4n - M - number of dependent properties
+Line 9 + 4n - names of the M dependent properties
 
-For i=1,inc(1), j=1,inc(2), ..., l=1,inc(n) (inner index changing fastest) lines 
-consisting of the m dependent properties at v(1) = v0(1) + (i-1)*dv(1), 
-v(2) = v0(2) + (j-1)*dv(2),..., v(n) = v0(n) + (l-1)*dv(n)
+This format implies 5N+1 header lines.
 
-This format implies 5n+1 header lines and inc(1)*inc(2)...*inc(n) data lines, 
-each data line consisting of m entries.
+The system/phase identifier and the phase counder (NPHI) are the first and second
+dependent properties. 
 
-                         Reading tab Files in Matlab
 
-The MatLab function script get_perple_x_file reads Perple_X tab files into Matlab. 
+For i=1,INC(1), j=1,INC(2), ..., l=1,INC(N) (inner index changing fastest):
+ 
+Each table entry is represented by NPHI + 1 records of consisting of the M dependent
+properties at V(1) = VO(1) + (i-1)*DV(1), V(2) = V0(2) + (j-1)*DV(2),..., V(N) = 
+V0(N) + (l-1)*DV(N)
+
+The first record for each entry consists of the system properties and includes the 
+counter NPHI (second value), which may vary between entries. The header information 
+is sufficient to compute the values of the independent variables for each record, 
+however, by default the values of the independent variables are output as pseudo-
+dependent properties (the 3rd and 4th values of each record). 
+
+                          EXAMPLE (N=2, INC(1)=INC(2)=25, M=10)
+
+LINE  1: |6.6.6
+LINE  2: hzmb_225_2.phm                                                                                      
+LINE  3:            2
+LINE  4: T(K)    
+LINE  5:    500.003500000000     
+LINE  6:    145.833041666813     
+LINE  7:           25
+LINE  8: P(bar)  
+LINE  9:    2.39999900000000     
+LINE 10:    58333.1750001417     
+LINE 11:           25
+LINE 12:           10
+LINE 13:           Name        Counter T(K)           P(bar)         phase,vo%      rho,kg/m3      Ks,bar         Gs,bar         alpha,1/K      h,J/kg        
+LINE 14: system                 5        500.0035       2.399999       100.0000       3193.765       1094356.       387255.6      0.2522724E-04 -0.1325965E+08
+LINE 15: Pl                     5        500.0035       2.399999       10.86893       2757.920       833752.8       277917.6      0.1363757E-04 -0.1404016E+08
+LINE 16: Pl                     5        500.0035       2.399999       4.244981       2597.078       589706.7       196568.9      0.2832281E-04 -0.1374981E+08
+LINE 17: O                      5        500.0035       2.399999       73.54291       3338.523       1266068.       422022.8      0.2844383E-04 -0.1308451E+08
+LINE 18: Cpx                    5        500.0035       2.399999       5.524740       3272.827       1106295.       368765.1      0.2957432E-04 -0.1351639E+08
+LINE 19: q                      5        500.0035       2.399999       5.818443       2538.491       495575.4       436453.1     -0.1657513E-06 -0.1390676E+08
+LINE 20: system                 5        645.8365       2.399999       100.0000       3181.941       1077112.       380542.9      0.2722777E-04 -0.1309942E+08
+LINE 21: Pl                     5        645.8365       2.399999       10.89589       2751.221       825366.0       275122.0      0.1446568E-04 -0.1388124E+08
+LINE 22: Pl                     5        645.8365       2.399999       4.128897       2587.026       582181.1       194060.4      0.2989494E-04 -0.1358257E+08
+LINE 23: O                      5        645.8365       2.399999       73.57867       3323.706       1241738.       413912.5      0.3078158E-04 -0.1292768E+08
+...
+
+

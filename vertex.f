@@ -6018,7 +6018,11 @@ c-----------------------------------------------------------------------
       ncpd = 0 
       solvs1 = .false.
 c                                 solvus tolerance, miscib 1.2
-      soltol = 1.2d0*nopt(8)
+      if (lopt(9)) then 
+         soltol = 1.2d0*nopt(8)
+      else 
+         soltol = nopt(8)
+      end if 
 
       do 10 i = 1, ntot
          ids = ikp(id(i))

@@ -2813,8 +2813,8 @@ c----------------------------------------------------------------------
 c                                 custom property choices
          if (kcx(1).eq.999.or.kcx(1).eq.0) then 
 c                                 get system props
-            do i = i, iprop
-               call getprp (prop(i),kop(i),0,0,.true.)
+            do i = 1, iprop
+               call getprp (prop(i),kop(i+1),0,0,.true.)
             end do
 
             tname = 'system        '
@@ -2833,8 +2833,8 @@ c                                 properties of phases
                   id = kcx(1)
                end if 
 
-               do i = i, iprop
-                  call getprp (prop(i),kop(i),id,0,.true.)
+               do i = 1, iprop
+                  call getprp (prop(i),kop(i+1),id,0,.true.)
                end do
 
                tname = pname(id)
@@ -3471,6 +3471,8 @@ c                                 get phase index
                if (iprop.gt.i11) call error (1,0d0,iprop,'I11')
 
             else 
+c                                 lop.eq.38
+               kop(1) = 38
 c                                 custom list
                do
 
@@ -3490,7 +3492,7 @@ c                                 custom list
 c                                 save property choice
                   iprop = iprop + 1
                   if (iprop.gt.i11) call error (1,0d0,iprop,'I11')
-                  kop(iprop) = i                     
+                  kop(iprop+1) = i                     
 
                end do
 
@@ -3537,37 +3539,35 @@ c                                 single choices.
             kfl(1) = lflu
 c                                 assign property names
 c                                 lop = 25 -> all mode names are assigned above
-            if (lop.eq.36.or.lop.eq.38) then 
-
-               if (lop.eq.36) then 
+            if (lop.eq.36) then 
 c                                 "all" prop option
-                  mprop = i8 + 3
-
-               else if (lop.eq.38) then
-c                                 "custom" prop option
-                  mprop = iprop  
-
-               end if 
-
+               mprop = i8 + 3
+c                                 basic props
                do i = 1, mprop
-                  call gtname (lop,icx,iprop,komp,pname)
+                  call gtname (lop,icx,i,komp,pname)
+               end do 
+c                                 for all prop option make the
+c                                 bulk composition and chemical 
+c                                 potential variable names
+               do i = mprop + 1, mprop + icomp
+c                                 bulk compositions, lop = 6
+                  call gtname (6,i-mprop,i,komp,pname)
                end do 
 
-               if (lop.eq.36) then 
-c                                  for all prop option make the
-c                                  bulk composition and chemical 
-c                                  potential variable names
-                  do i = mprop + 1, mprop + icomp
-c                                  bulk compositions, lop = 6
-                     call gtname (6,i-mprop,i,komp,pname)
-                  end do 
+               do i = mprop + icomp + 1, iprop
+c                                 chemical potentials, lop = 23
+                  call gtname (23,i-mprop-icomp,i,komp,pname)
+               end do 
 
-                  do i = mprop + icomp + 1, iprop
-c                                  chemical potentials, lop = 23
-                     call gtname (23,i-mprop-icomp,i,komp,pname)
-                  end do 
+            else if (lop.eq.38) then 
+c                                 "custom" prop option, kop
+c                                 pointer is offset because 
+c                                 kop(1) = 38
+               if (icx.eq.999) pname = 'phase     '
 
-               end if 
+               do i = 1, iprop
+                  call gtname (kop(i+1),icx,i,komp,pname)
+               end do 
 
             end if 
 
@@ -3690,7 +3690,7 @@ c                                 40-43
      *      'assemblage_i  ','extent        '/
 c                                 l2p points from lop to prname, 
 c                                 1-10
-      data l2p/31,10,32,13,14,33,34,35, 3, 4,
+      data l2p/34,10,32,13,14,33,37,38, 3, 4,
 c                                 11-20            
      *         5 , 6, 7, 8, 9,36,37,38,39,40,
 c                                 21-30 
@@ -3732,6 +3732,11 @@ c                                chemical potential of a component
          write (dname(jprop),'(a,a,a)') 'mu_',cname(icx),',J/mol'
          call unblnk (dname(jprop))
 
+      else if (lop.eq.36) then 
+c                                allprp option, lop points directly
+c                                to prmame
+         dname(jprop) = prname(jprop)
+
       else if (lop.eq.37) then
 c                                extent of a phase
          if (iopt(3).eq.0) then 
@@ -3749,6 +3754,10 @@ c                                 mol
          end if 
 
          call unblnk(dname(jprop))  
+
+      else if (lop.eq.38) then 
+c                                 custom prop (phemgp)
+         dname(jprop) = prname(l2p(jprop))
 
       else 
 

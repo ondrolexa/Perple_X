@@ -852,7 +852,7 @@ c-----------------------------------------------------------------------
       logical function solvs2 (id1,id2)
 c-----------------------------------------------------------------------
 c function to test if a solvus separates two pseudocompounds of solution
-c ids, intermediate solution vales. 
+c ids, intermediate solution values. 
 c-----------------------------------------------------------------------
       implicit none
  
@@ -986,8 +986,11 @@ c                                are present:
 10    np = 0
       ncpd = 0
 c                                set solvus tolerance, avrger (was 1.5)
-      soltol = 1.5d0*nopt(8)
-      if (soltol.lt.0.1d0) soltol = 0.1
+      if (lopt(9)) then 
+         soltol = 1.5d0*nopt(8)
+      else 
+         soltol = nopt(8)
+      end if 
 
       do 30 i = 1, ntot
          if (nkp(i).lt.0) then
@@ -1843,7 +1846,13 @@ c----------------------------------------------------------------------
       is1 = isoct + 1 
       quit = .true.
 c                                 solvus tolerance, yclos1, was 5
-      soltol = 5d0*nopt(8)
+      if (lopt(9)) then
+c                                 auto 
+         soltol = 5d0*nopt(8)
+      else 
+c                                 twice initial_resolution.
+         soltol = 2d0*nopt(13)
+      end if 
 
       do i = 1, jphct
 
