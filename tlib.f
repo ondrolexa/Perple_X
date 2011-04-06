@@ -18,7 +18,7 @@ c----------------------------------------------------------------------
 
       write (*,1000) 
 
-1000  format (/,'Perple_X version 6.6.5.9, compiled 4/5/2011.')
+1000  format (/,'Perple_X version 6.6.5.9, compiled 4/7/2011.')
 
       end
 
@@ -2909,7 +2909,13 @@ c                                 interval limits conformal transformation
 
       character*80 com
       common/delet/com 
+
+      integer hs2p
+      double precision hsb
+      common/ cst84 /hsb(i8,4),hs2p(6)
 c-----------------------------------------------------------------------
+      data jbulk /4, 5, 18, 19, 20, 21/
+
       data iff/2*0/,ipt2/0/
 c
       data us, uf/ h5*0d0, 2*0d0/
