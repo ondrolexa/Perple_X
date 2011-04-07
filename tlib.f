@@ -306,7 +306,10 @@ c                                 extrapolation key
 
          else if (key.eq.'averaging_scheme') then 
 c                                 
-            if (val.eq.'HS'.or.val.eq.'hs')  lopt(16) = .false.
+            if (val.eq.'HS'.or.val.eq.'hs')  then
+              lopt(16) = .false.
+              valu(19) = 'HS '
+            end if 
 
          else if (key.eq.'vrh/hs_weighting'.or.
      *            key.eq.'vrh_weighting') then 
@@ -921,20 +924,20 @@ c                                 logarithmic_p, bad_number
       if (iam.eq.3) then 
 c                                 WERAMI input/output options
          write (n,1230) lopt(15),lopt(14),nopt(7),(valu(i),i=2,5),
-     *                  valu(19),nopt(6),lopt(17),valu(15),nopt(16),
      *                  lopt(6)
-
+        
       else if (iam.eq.2) then 
 c                                 MEEMUM input/output options
-         write (n,1231) lopt(14),nopt(7),(valu(i),i=2,3),valu(19),
-     *                  nopt(6),lopt(17),valu(15),nopt(16),lopt(6)
+         write (n,1231) lopt(14),nopt(7),(valu(i),i=2,3),lopt(6)
 
       else if (iam.eq.5) then 
 c                                 FRENDLY input/output options
-         write (n,1232) lopt(15),lopt(14),nopt(7),valu(19),
-     *                  nopt(6),lopt(17),valu(15),nopt(16),lopt(6)
+         write (n,1232) lopt(15),lopt(14),nopt(7),lopt(6)
 
       end if 
+c                                 seismic property options
+      if (iam.eq.2.or.iam.eq.3.or.iam.eq.5) write (n,1233) valu(19),
+     *                                nopt(6),lopt(17),valu(15),nopt(16)
 c                                 FRENDLY thermo options
       if (iam.eq.5) write (n,1016) lopt(8),lopt(4) 
 
@@ -1056,33 +1059,24 @@ c                                 thermo options for frendly
      *        4x,'proportions            ',a3,8x,'wt  [vol] mol',/,
      *        4x,'interpolation          ',a3,8x,'off [on ]',/,
      *        4x,'extrapolation          ',a3,8x,'on  [off]',/,
-     *        4x,'averaging_scheme       ',a3,8x,'HS  [VRH]',/,
-     *        4x,'vrh/hs_weighting       ',f3.1,8x,'0->1 [0.5]',/,
-     *        4x,'explicit_bulk_modulus  ',l1,10x,'[F] T',/,
-     *        4x,'poisson_ratio          ',a3,8x,'off [on ] all; ',
-     *        'Poisson ratio = ',f4.2,/,
      *        4x,'melt_is_fluid          ',l1,10x,'[F] T')
 1231  format (/,2x,'Input/Output options:',//,
      *        4x,'logarithmic_p          ',l1,10x,'[F] T',/,
      *        4x,'bad_number          ',f7.1,7x,'[0.0]',/,
      *        4x,'compositions           ',a3,8x,'wt  [mol]',/,
      *        4x,'proportions            ',a3,8x,'wt  [vol] mol',/,
-     *        4x,'averaging_scheme       ',a3,8x,'HS  [VRH]',/,
-     *        4x,'vrh/hs_weighting       ',f3.1,8x,'0->1 [0.5]',/,
-     *        4x,'explicit_bulk_modulus  ',l1,10x,'[F] T',/,
-     *        4x,'poisson_ratio          ',a3,8x,'off [on ] all; ',
-     *        'Poisson ratio = ',f4.2,/,
      *        4x,'melt_is_fluid          ',l1,10x,'[F] T')
 1232  format (/,2x,'Input/Output options:',//,
      *        4x,'spreadsheet            ',l1,10x,'[F] T',/,
      *        4x,'logarithmic_p          ',l1,10x,'[F] T',/,
      *        4x,'bad_number          ',f7.1,7x,'[0.0]',/,
+     *        4x,'melt_is_fluid          ',l1,10x,'[F] T')
+1233  format (/,2x,'Seismic velocity options:',//,
      *        4x,'averaging_scheme       ',a3,8x,'HS  [VRH]',/,
      *        4x,'vrh/hs_weighting       ',f3.1,8x,'0->1 [0.5]',/,
      *        4x,'explicit_bulk_modulus  ',l1,10x,'[F] T',/,
      *        4x,'poisson_ratio          ',a3,8x,'off [on ] all; ',
-     *        'Poisson ratio = ',f4.2,/,
-     *        4x,'melt_is_fluid          ',l1,10x,'[F] T')
+     *        'Poisson ratio = ',f4.2)
 1240  format (/,2x,'Information file output options:',//,
      *        4x,'option_list_files      ',l1,10x,'[F] T; ',
      *           'echo run-time options',/,
@@ -2914,7 +2908,7 @@ c                                 interval limits conformal transformation
       double precision hsb
       common/ cst84 /hsb(i8,4),hs2p(6)
 c-----------------------------------------------------------------------
-      data jbulk /4, 5, 18, 19, 20, 21/
+      data hs2p/4, 5, 18, 19, 20, 21/
 
       data iff/2*0/,ipt2/0/
 c

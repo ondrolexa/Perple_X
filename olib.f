@@ -1292,12 +1292,12 @@ c----------------------------------------------------------------------
 
       logical ok, sick(i8), ssick, pois, ppois, bulk
 
-      integer id,jd,iwarn1,iwarn2,j,itemp
+      integer id,jd,iwarn1,iwarn2,j,itemp,m
 
       double precision dt0,dt1,dt2,g0,g1a, g2a, dg, ss,alpha1,alpha2,
      *                 dp0,dp1,dp2,e,alpha,v,ginc,beta,cp,s,rho,gtt,r43,
      *                 g1,g2,g3,g4,g5,g7,gppp,gppt,gptt,gttt,mols,units,
-     *                 root,kmin,gmin
+     *                 root
 
       double precision props,psys,psys1,pgeo,pgeo1
       common/ cxt22 /props(i8,k5),psys(i8),psys1(i8),pgeo(i8),pgeo1(i8)
@@ -1427,8 +1427,6 @@ c                                 thermodynamic properties
       dp0 = dp1/1d1
             
       g0 = ginc(0d0,0d0,id)
-c                                 g0 used only by frendly
-      props(11,jd) = g0 
 c                                 straight derivatives:
 c                                 first order
       if (p-dp2.le.0d0) then 
@@ -1644,6 +1642,7 @@ c                                 transition models. ideal gas alpha = 1/t
       end if 
 
       props(2,jd) = e
+      props(11,jd) = g0 
       props(12,jd) = cp
       props(15,jd) = s
       props(1,jd) = v
@@ -1789,22 +1788,40 @@ c                                 vp/vs
 
       end if 
 c                                 get min/max moduli for hashin-strikman
-c                                 bounds: 
+c                                 bounds. also saves the corresponding 
+c                                 T and P derivatives.
       if (.not.lopt(16)) then
-         do j = 1, 6
+         do j = 1, 2
 c                                 property index 
             m = hs2p(j)
             if (isnan(props(m,jd))) cycle 
 c                                 min aggregate prop
-            if (props(m,jd).lt.hsb(j,1)) 
+            if (props(m,jd).lt.hsb(j,1)) then
+               hsb(j,1) = props(m,jd)
+               hsb(j+2,1) = props(hs2p(j+2),jd)
+               hsb(j+4,1) = props(hs2p(j+4),jd)
+            end if 
+
 c                                 max aggregate prop
-            if (props(m,jd).gt.hsb(j,2)) 
+            if (props(m,jd).gt.hsb(j,2)) then
+               hsb(j,2) = props(m,jd)
+               hsb(j+2,2) = props(hs2p(j+2),jd)
+               hsb(j+4,2) = props(hs2p(j+4),jd)
+            end if 
 
             if (fluid(jd)) cycle 
 c                                 min solid prop
-            if (props(m,jd).lt.hsb(j,1)) 
+            if (props(m,jd).lt.hsb(j,1)) then
+               hsb(j,3) = props(m,jd)
+               hsb(j+2,3) = props(hs2p(j+2),jd)
+               hsb(j+4,3) = props(hs2p(j+4),jd)
+            end if 
 c                                 max solid prop
-            if (props(m,jd).gt.hsb(j,2)) 
+            if (props(m,jd).gt.hsb(j,2)) then
+               hsb(j,4) = props(m,jd)
+               hsb(j+2,4) = props(hs2p(j+2),jd)
+               hsb(j+4,4) = props(hs2p(j+4),jd)
+            end if 
 
          end do 
       end if 
@@ -1829,6 +1846,53 @@ c                                 expansivity
          end if
  
          if (iwarn2.eq.11) call warn (49,r,178,'GETPHP')
+
+      end if 
+c                                 accumulate non-seismic totals 
+      if (iam.ne.5) then
+c                                 weighting factor for molar properties
+         mols = props(16,jd)
+
+      else 
+c                                 if frendly use reaction coefficients
+         mols = vnu(jd)
+
+      end if 
+c                                 vol of phase per mole of system
+      v = v*mols
+c                                 system molar volume
+      psys(1)  = psys(1)  + v
+c                                 molar enthalpy
+      psys(2)  = psys(2)  + e*mols
+c                                 gruneisen T
+      psys(3)  = psys(3)  + props(3,jd)*v 
+c                                 molar gibbs energy
+      psys(11) = psys(11) + g0*mols 
+c                                 molar heat capacity
+      psys(12) = psys(12) + cp*mols 
+c                                 expansivity
+      psys(13) = psys(13) + alpha*v 
+c                                 compressibility
+      psys(14) = psys(14) + beta*v
+c                                 molar entropy
+      psys(15) = psys(15) + s*mols 
+c                                 moles of assemblage
+      psys(16) = psys(16) + mols
+c                                 mass of assemblage 
+      psys(17) = psys(17) + props(17,jd)*mols
+c                                 solid only totals:
+      if (aflu.and..not.fluid(i)) then 
+
+         psys1(1)  = psys1(1)  + v
+         psys1(2)  = psys1(2)  + e*mols 
+         psys1(3)  = psys1(3)  + props(3,jd)*v 
+         psys1(11) = psys1(11) + g0*mols 
+         psys1(12) = psys1(12) + cp*mols 
+         psys1(13) = psys1(13) + alpha*v 
+         psys1(14) = psys1(14) + beta*v
+         psys1(15) = psys1(15) + s*mols 
+         psys1(16) = psys1(16) + mols
+         psys1(17) = psys1(17) + props(17,jd)*mols
 
       end if 
 
@@ -1858,9 +1922,9 @@ c-----------------------------------------------------------------------
 
       logical sick(i8), ssick, solid
 
-      integer i, iwarn
+      integer i, j, iwarn, m, count
 
-      double precision chi, chi1, units, root, r43, k, g
+      double precision chi, chi1, units, root, r43, k, g, mols, v
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -1887,6 +1951,16 @@ c-----------------------------------------------------------------------
       double precision cp3, amt
       common/ cxt15 /cp3(k0,k5),amt(k5),kkp(k5),np,ncpd,ntot
 
+      integer iam
+      common/ cst4 /iam
+
+      integer icomp,istct,iphct,icp
+      common/ cst6  /icomp,istct,iphct,icp
+
+      integer idr
+      double precision vnu
+      common/ cst25 /vnu(k7),idr(k7)
+
       save iwarn
       data iwarn/0/
 c----------------------------------------------------------------------
@@ -1903,17 +1977,23 @@ c                                 hashin-shtrikman limiting values, set
 c                                 in calphp. ony 4,5,18,19,20,21 are used
 c                                 1 - min, 2 - max, 3 - min solid, 4 - max
 c                                 solid. 
-      do m = 1, 5, 2
-         do i = 1, 4
+      if (.not.lopt(16)) then 
+         do m = 1, 5, 2
+            do i = 1, 4
 
-            k = hsb(m,i)
-            g = hsb(m+1,i)
+               k = hsb(m,i)
+               g = hsb(m+1,i)
+               hsb(m,i)   = r43*g
 
-            hsb(m,i)   = r43*g
-            hsb(m+1,i) = g*((9d0*k+8d0*g)/(k+2d0*g))/6d0
+               if (k.eq.0d0.and.g.eq.0d0) then 
+                  hsb(m+1,i) = 0d0
+               else 
+                  hsb(m+1,i) = g*((9d0*k+8d0*g)/(k+2d0*g))/6d0
+               end if 
 
+            end do 
          end do 
-      end do 
+      end if 
 
       if (iam.ne.5) then
 c                                 phase counter if not frendly
@@ -1948,40 +2028,7 @@ c                                 if frendly use reaction coefficients
             count = ntot
 
          end if 
-c                                 vol of phase per mole of system
-         v = props(1,i)*mols
-c                                 system molar volume
-         psys(1)  = psys(1)  + v
-c                                 molar enthalpy
-         psys(2)  = psys(2)  + props(2,i)*mols 
-c                                 molar gibbs energy
-         psys(11) = psys(11) + props(11,i)*mols 
-c                                 molar heat capacity
-         psys(12) = psys(12) + props(12,i)*mols 
-c                                 expansivity
-         psys(13) = psys(13) + props(13,i)*v 
-c                                 compressibility
-         psys(14) = psys(14) + props(14,i)*v
-c                                 molar entropy
-         psys(15) = psys(15) + props(15,i)*mols 
-c                                 moles of assemblage
-         psys(16) = psys(16) + mols
-c                                 mass of assemblage 
-         psys(17) = psys(17) + props(17,i)*mols
-c                                 solid only totals:
-         if (aflu.and..not.fluid(i)) then 
 
-            psys1(1)  = psys1(1)  + v
-            psys1(2)  = psys1(2)  + props(2,i)*mols 
-            psys1(11) = psys1(11) + props(11,i)*mols 
-            psys1(12) = psys1(12) + props(12,i)*mols 
-            psys1(13) = psys1(13) + props(13,i)*v 
-            psys1(14) = psys1(14) + props(14,i)*v
-            psys1(15) = psys1(15) + props(15,i)*mols 
-            psys1(16) = psys1(16) + mols
-            psys1(17) = psys1(17) + props(17,i)*mols
-
-         end if 
 c                                 for elastic properties use
 c                                 VRH if lopt(16), else HS
          if (lopt(16).and..not.rxn) then 
@@ -2126,49 +2173,45 @@ c                                 normalize volumetrically weighted alpha/beta
          psys(i) = psys(i)/psys(1)
          if (psys1(1).ne.0d0) psys1(i) = psys1(i)/psys1(1)
       end do 
+c                                 gruneisen T
+      psys(3) = psys(3)/psys(1)
+      if (psys1(3).ne.0d0) psys1(3) = psys1(3)/psys1(1)
 c                                 seismic moduli and derivatives
-      do j = 1, 2 
-         do i = 1, 3
+      do j = 1, 6
 c                                 property index
-            m = hs2p(i) + j - 1
+         m = hs2p(j)
 c                                 normalize sums
-            psys(m) = psys(m)/psys(1)
-            pgeo(m) = pgeo(m)/psys(1)
-            if (solid) then 
-               psys1(m) = psys1(m)/psys1(1)
-               pgeo1(m) = pgeo1(m)/psys1(1)
-            end id 
+         psys(m) = psys(m)/psys(1)
+         pgeo(m) = pgeo(m)/psys(1)
+         if (solid) then 
+            psys1(m) = psys1(m)/psys1(1)
+            pgeo1(m) = pgeo1(m)/psys1(1)
+         end if
 c                                 combine as VRH or HS means
-            if (lopt(16)) then 
+         if (lopt(16)) then 
 c                                 VRH
-               psys(m) = chi*psys(m)
-               if (pgeo(m).gt.0d0) psys(m) = psys(m)+chi1/pgeo(m) 
-               psys1(m) = chi*psys1(m)
-               if (pgeo1(m).gt.0d0) psys1(m) = psys1(m)+chi1/pgeo1(m) 
+            psys(m) = chi*psys(m)
+            if (pgeo(m).ne.0d0) psys(m) = psys(m)+chi1/pgeo(m) 
+            psys1(m) = chi*psys1(m)
+            if (pgeo1(m).ne.0d0) psys1(m) = psys1(m)+chi1/pgeo1(m) 
 
-            else 
+         else 
 c                                 HS 
-               if (psys(m).gt.0d0) psys(m) = 1d0/psys(m) 
-               psys(m) = chi*(psys(m) - hsb(m,2))
-               if (pgeo(m).gt.0d0) pgeo(m) = 1d0/pgeo(m)
-               psys(m) = psys(m) + chi1*(psys(m) - hsb(m,1))
-               if (psys1(m).gt.0d0) psys1(m) = 1d0/psys1(m) 
-               psys1(m) = chi*(psys1(m) - hsb(m,4))
-               if (pgeo1(m).gt.0d0) pgeo1(m) = 1d0/pgeo1(m)
-               psys1(m) = psys1(m) + chi1*(psys1(m) - hsb(m,3))
+            if (psys(m).ne.0d0) psys(m) = 1d0/psys(m) 
+            psys(m) = chi*(psys(m) - hsb(j,2))
+            if (pgeo(m).ne.0d0) pgeo(m) = 1d0/pgeo(m)
+            psys(m) = psys(m) + chi1*(psys(m) - hsb(j,1))
+            if (psys1(m).ne.0d0) psys1(m) = 1d0/psys1(m) 
+            psys1(m) = chi*(psys1(m) - hsb(j,4))
+            if (pgeo1(m).ne.0d0) pgeo1(m) = 1d0/pgeo1(m)
+            psys1(m) = psys1(m) + chi1*(psys1(m) - hsb(j,3))
 
-            end if 
-
-         end do 
+         end if 
+ 
       end do 
 c                                 ----------------------------------
 c                                 aggregate velocities, aggregate 
-c                                 grueneisen T is computed here using
-c                                 aggregate Ks, which doesn't make much
-c                                 sense, but i doubt anyone will use it.
       if (volume.and..not.rxn) then
-c                                 grueneisen T
-         psys(3) =  psys(13)*psys(4)/psys(10)/(psys(12)/psys(17)/1d3)
 c                                 sound velocity
          root = psys(4)/psys(10)
 
@@ -2261,10 +2304,6 @@ c                                 special case of a system consisting
 c                                 only of fluid. 
       if (solid.and..not.ssick) then 
 c                                 fluid absent properties:
-c                                 gruneisen T
-         psys1(3) =  psys1(13)*psys1(4)/psys1(10)/
-     *                            (psys1(12)/psys1(17)/1d3)
-c
          root = psys1(4)/psys1(10)
 
          if (root.gt.0d0) then 
@@ -2334,14 +2373,12 @@ c                                 p-wave velocity P derivative
      *                 - psys1(14) * psys1(5)) 
      *                 - psys1(4) * psys1(14)) /
      *                 dsqrt(root) / psys1(10) / 2d0 * units
-            end if 
+         end if 
 c                                 vp/vs
-            if (psys1(8).gt.0d0) then 
-               psys1(9) = psys1(7)/psys1(8)
-            else
-               psys1(9) = nopt(7)
-            end if 
-
+         if (psys1(8).gt.0d0) then 
+            psys1(9) = psys1(7)/psys1(8)
+         else
+            psys1(9) = nopt(7)
          end if 
 
       else 

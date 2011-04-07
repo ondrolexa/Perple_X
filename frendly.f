@@ -2304,7 +2304,7 @@ c----------------------------------------------------------------------
 1020  format (/,'formula weight (g/mol) ',t32,'= ',g14.7,
      *        /,'density (kg/m3) ',t32,'= ',g14.7,/,
      *        /,'Gruneisen_T ',t32,'= ',g14.7,//,
-     *        'Adiabtic elastic moduli:',/,
+     *        'Adiabatic elastic moduli:',/,
      *        t30,' T derivative',t45,' P derivative',/
      *        2x,'Ks(bar) = ',g14.7,t30,g14.7,t45,g14.7,/,
      *        2x,'Gs(bar) = ',g14.7,t30,g14.7,t45,g14.7,//,
