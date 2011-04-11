@@ -1775,7 +1775,6 @@ c                                 min aggregate prop
                hsb(j+2,1) = props(hs2p(j+2),jd)
                hsb(j+4,1) = props(hs2p(j+4),jd)
             end if 
-
 c                                 max aggregate prop
             if (props(m,jd).gt.hsb(j,2)) then
                hsb(j,2) = props(m,jd)
@@ -1785,13 +1784,13 @@ c                                 max aggregate prop
 
             if (fluid(jd)) cycle 
 c                                 min solid prop
-            if (props(m,jd).lt.hsb(j,1)) then
+            if (props(m,jd).lt.hsb(j,3)) then
                hsb(j,3) = props(m,jd)
                hsb(j+2,3) = props(hs2p(j+2),jd)
                hsb(j+4,3) = props(hs2p(j+4),jd)
             end if 
 c                                 max solid prop
-            if (props(m,jd).gt.hsb(j,2)) then
+            if (props(m,jd).gt.hsb(j,4)) then
                hsb(j,4) = props(m,jd)
                hsb(j+2,4) = props(hs2p(j+2),jd)
                hsb(j+4,4) = props(hs2p(j+4),jd)

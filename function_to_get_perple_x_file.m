@@ -1,4 +1,4 @@
-function [x,y,a,xname,yname,zname,nvar,mvar,nrow,dnames,titl] = get_perple_x_file
+function [x,y,a,xname,yname,zname,nvar,mvar,nrow,dnames,titl] = function_to_get_perple_x_file
 
 % MatLab script to read Perple_X tab files see:
 %    perplex.ethz.ch/faq/Perple_X_tab_file_format.txt
