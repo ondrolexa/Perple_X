@@ -450,34 +450,8 @@ c                                 then set p and t
          end if 
 
       end if 
-
-      aflu = .false.
-      shear = .true.
-      volume = .true.
-      nodata = .false.
-      ssick = .false.
-      ppois = .false.
-c                                 flag for bulk bad bulk properties
-
-c                                 initialize bulk properites
-c                                 total mass
-      gtot = 0d0
-      gtot1 = 0d0
-
-c                                 HS limiting moduli
-      do i = 1, 6
-         hsb(i,1) = 1d99
-         hsb(i,2) = 0d0         
-         hsb(i,3) = 1d99
-         hsb(i,4) = 0d0 
-      end do     
-
-      do i = 1, icomp
-c                                 total molar amounts
-         fbulk(i) = 0d0
-         fbulk1(i) = 0d0
-
-      end do
+c                                 initialize system props/flags
+      call insysp (ssick,ppois)
 
       do i = 1, ntot
 
@@ -1881,7 +1855,7 @@ c                                 moles of assemblage
 c                                 mass of assemblage 
       psys(17) = psys(17) + props(17,jd)*mols
 c                                 solid only totals:
-      if (aflu.and..not.fluid(i)) then 
+      if (aflu.and..not.fluid(jd)) then 
 
          psys1(1)  = psys1(1)  + v
          psys1(2)  = psys1(2)  + e*mols 
@@ -1922,9 +1896,9 @@ c-----------------------------------------------------------------------
 
       logical sick(i8), ssick, solid
 
-      integer i, j, iwarn, m, count
+      integer i, j, iwarn, m
 
-      double precision chi, chi1, units, root, r43, k, g, mols, v
+      double precision chi, chi1, units, root, r43, k, g, v, vs
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -1950,16 +1924,6 @@ c-----------------------------------------------------------------------
       integer kkp, np, ncpd, ntot
       double precision cp3, amt
       common/ cxt15 /cp3(k0,k5),amt(k5),kkp(k5),np,ncpd,ntot
-
-      integer iam
-      common/ cst4 /iam
-
-      integer icomp,istct,iphct,icp
-      common/ cst6  /icomp,istct,iphct,icp
-
-      integer idr
-      double precision vnu
-      common/ cst25 /vnu(k7),idr(k7)
 
       save iwarn
       data iwarn/0/
@@ -1994,44 +1958,40 @@ c                                 solid.
             end do 
          end do 
       end if 
-
-      if (iam.ne.5) then
-c                                 phase counter if not frendly
-         count = ntot
-
-      else 
-
-         count = iphct
-
-      end if 
-c                                 initialize sums
-      do i = 1, i8
-         psys(i) = 0d0
-         psys1(i) = 0d0
-         pgeo(i) = 0d0 
-         pgeo1(i) = 0d0
+c                                 compute aggregate props:
+c                                 density, kg/m3
+      psys(10) = psys(17)/psys(1)*1d2
+c                                 convert volumetrically weighted totals
+c                                 to arithmetic means (for aseismic properties)
+      do i = 13, 14
+c                                 normalize volumetrically weighted alpha/beta
+         psys(i) = psys(i)/psys(1)
+         if (psys1(1).ne.0d0) psys1(i) = psys1(i)/psys1(1)
       end do 
+c                                 gruneisen T
+      psys(3) = psys(3)/psys(1)
+      if (psys1(3).ne.0d0) then
+         psys1(3) = psys1(3)/psys1(1)
+         psys1(10) = psys1(17)/psys1(1)*1d2
+      end if 
+c                                 if a reaction (frendly) return
+      if (rxn) return
+c                                 if not solid, don't compute solid only
+c                                 properties
+      if (psys1(1).le.0d0.and..not.aflu) solid = .false.
 c                                 accumulate aggregate totals, some
 c                                 totals may be incomplete if volume or 
 c                                 shear is false for an individual phase
 c                                 weighting scheme for seismic velocity
-      do i = 1, count 
-
-         if (iam.ne.5) then
-c                                 weighting factor for molar properties
-            mols = props(16,i)
-            count = iphct
-
-         else 
-c                                 if frendly use reaction coefficients
-            mols = vnu(i)
-            count = ntot
-
-         end if 
-
+      do i = 1, ntot 
+c                                 total volume fraction
+         v = props(1,i)*props(16,i)/psys(1)
+c                                 solid volume fraction
+         if (.not.fluid(i).and.aflu) 
+     *                    vs = props(1,i)*props(16,i)/psys1(1)
 c                                 for elastic properties use
 c                                 VRH if lopt(16), else HS
-         if (lopt(16).and..not.rxn) then 
+         if (lopt(16)) then 
 
             if (volume) then 
 
@@ -2072,8 +2032,8 @@ c                                 totals:
 
                   if (props(m,i).eq.0d0) cycle 
 c                                 Aggregate Bulk Modulus, T-derivative, P-derivative                                
-                  psys1(m) = psys1(m) + v*props(m,i)
-                  pgeo1(m) = pgeo1(m) + v/props(m,i)
+                  psys1(m) = psys1(m) + vs*props(m,i)
+                  pgeo1(m) = pgeo1(m) + vs/props(m,i)
 
                end do 
 
@@ -2086,14 +2046,14 @@ c                                 Aggregate Bulk Modulus, T-derivative, P-deriva
                   m = hs2p(j)
                   if (props(m,i).eq.0d0) cycle 
 c                                 Aggregate shear Modulus, T-derivative, P-derivative                                
-                  psys1(m) = psys1(m) + v*props(m,i)
-                  pgeo1(m) = pgeo1(m) + v/props(m,i)
+                  psys1(m) = psys1(m) + vs*props(m,i)
+                  pgeo1(m) = pgeo1(m) + vs/props(m,i)
 
                end do 
 
             end if 
 
-         else if (.not.rxn) then 
+         else 
 c                                 HS sums: 
 c                                 psys is used for upper bound
 c                                 pgeo used for lower bound
@@ -2133,8 +2093,8 @@ c                                 Aggregate bulk modulus, T-derivative, P-deriva
                   m = hs2p(j)
 
                   if (props(m,i).eq.0d0) cycle 
-                  psys1(m) = psys1(m) + v/(props(m,i)+hsb(j,4))
-                  pgeo1(m) = pgeo1(m) + v/(props(m,i)+hsb(j,3))
+                  psys1(m) = psys1(m) + vs/(props(m,i)+hsb(j,4))
+                  pgeo1(m) = pgeo1(m) + vs/(props(m,i)+hsb(j,3))
 
                end do 
 
@@ -2148,8 +2108,8 @@ c                                 Aggregate shear modulus, T-derivative, P-deriv
                   m = hs2p(j)
 
                   if (props(m,i).eq.0d0) cycle 
-                  psys1(m) = psys1(m) + v/(props(m,i)+hsb(j,4))
-                  pgeo1(m) = pgeo1(m) + v/(props(m,i)+hsb(j,3))
+                  psys1(m) = psys1(m) + vs/(props(m,i)+hsb(j,4))
+                  pgeo1(m) = pgeo1(m) + vs/(props(m,i)+hsb(j,3))
 
                end do 
 
@@ -2158,35 +2118,10 @@ c                                 Aggregate shear modulus, T-derivative, P-deriv
          end if 
 
       end do 
-c                                 -------------------------------------
-c                                 compute aggregate props:
-c                                 density, kg/m3
-      psys(10) = psys(17)/psys(1)*1d2
-c                                 if not solid, don't compute solid only
-c                                 properties
-      if (psys1(1).le.0d0.or.rxn.or..not.aflu) solid = .false.
-
-      if (solid) psys1(10) = psys1(17)/psys1(1)*1d2
-
-      do i = 13, 14
-c                                 normalize volumetrically weighted alpha/beta
-         psys(i) = psys(i)/psys(1)
-         if (psys1(1).ne.0d0) psys1(i) = psys1(i)/psys1(1)
-      end do 
-c                                 gruneisen T
-      psys(3) = psys(3)/psys(1)
-      if (psys1(3).ne.0d0) psys1(3) = psys1(3)/psys1(1)
 c                                 seismic moduli and derivatives
       do j = 1, 6
 c                                 property index
          m = hs2p(j)
-c                                 normalize sums
-         psys(m) = psys(m)/psys(1)
-         pgeo(m) = pgeo(m)/psys(1)
-         if (solid) then 
-            psys1(m) = psys1(m)/psys1(1)
-            pgeo1(m) = pgeo1(m)/psys1(1)
-         end if
 c                                 combine as VRH or HS means
          if (lopt(16)) then 
 c                                 VRH
@@ -2199,19 +2134,22 @@ c                                 VRH
 c                                 HS 
             if (psys(m).ne.0d0) psys(m) = 1d0/psys(m) 
             psys(m) = chi*(psys(m) - hsb(j,2))
+
             if (pgeo(m).ne.0d0) pgeo(m) = 1d0/pgeo(m)
-            psys(m) = psys(m) + chi1*(psys(m) - hsb(j,1))
+            psys(m) = psys(m) + chi1*(pgeo(m) - hsb(j,1))
+
             if (psys1(m).ne.0d0) psys1(m) = 1d0/psys1(m) 
             psys1(m) = chi*(psys1(m) - hsb(j,4))
+
             if (pgeo1(m).ne.0d0) pgeo1(m) = 1d0/pgeo1(m)
-            psys1(m) = psys1(m) + chi1*(psys1(m) - hsb(j,3))
+            psys1(m) = psys1(m) + chi1*(pgeo1(m) - hsb(j,3))
 
          end if 
  
       end do 
 c                                 ----------------------------------
 c                                 aggregate velocities, aggregate 
-      if (volume.and..not.rxn) then
+      if (volume) then
 c                                 sound velocity
          root = psys(4)/psys(10)
 
@@ -2238,7 +2176,7 @@ c                                 set missing data
 
       end if 
 
-      if (shear.and..not.rxn) then 
+      if (shear) then 
 c                                 s-wave velocity
          root = psys(5)/psys(10)
 
@@ -2265,7 +2203,7 @@ c                                 set missing data
 
       end if 
 
-      if (shear.and.volume.and..not.rxn) then 
+      if (shear.and.volume) then 
 
          root = (psys(4)+r43*psys(5))/psys(10)
 
@@ -2412,5 +2350,70 @@ c                                 set missing data
 1010  format (/,'**warning ver177** at T(K)=',g12.4,' P(bar)=',g12.4,1x,
      *        'aggregate seismic properties ',/,'cannot be computed ',
      *        'because of missing/invalid properties for: ',a,/)
+
+      end 
+
+      subroutine insysp (ssick,ppois)
+c-----------------------------------------------------------------------
+c insysp initializes system properties accumulated in getphp and gtsysp
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer i
+
+      logical ssick,ppois
+
+      logical gflu,aflu,fluid,shear,lflu,volume,rxn
+      common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume,rxn
+
+      double precision props,psys,psys1,pgeo,pgeo1
+      common/ cxt22 /props(i8,k5),psys(i8),psys1(i8),pgeo(i8),pgeo1(i8)
+
+      double precision gtot,fbulk,gtot1,fbulk1
+      common/ cxt81 /gtot,fbulk(k0),gtot1,fbulk1(k0)
+
+      integer icomp,istct,iphct,icp
+      common/ cst6  /icomp,istct,iphct,icp
+
+      integer hs2p
+      double precision hsb
+      common/ cst84 /hsb(i8,4),hs2p(6)
+c----------------------------------------------------------------------
+c                                 flags
+      aflu = .false.
+      shear = .true.
+      volume = .true.
+      ssick = .false.
+      ppois = .false.
+      rxn = .false.
+c                                 initialize sums
+      do i = 1, i8
+         psys(i) = 0d0
+         psys1(i) = 0d0
+         pgeo(i) = 0d0 
+         pgeo1(i) = 0d0
+      end do 
+
+c                                 initialize bulk properites
+c                                 total mass
+      gtot = 0d0
+      gtot1 = 0d0
+
+c                                 HS limiting moduli
+      do i = 1, 6
+         hsb(i,1) = 1d99
+         hsb(i,2) = 0d0         
+         hsb(i,3) = 1d99
+         hsb(i,4) = 0d0 
+      end do     
+
+      do i = 1, icomp
+c                                 total molar amounts
+         fbulk(i) = 0d0
+         fbulk1(i) = 0d0
+
+      end do
 
       end 

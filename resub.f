@@ -1776,7 +1776,7 @@ c                                 i/o
 c----------------------------------------------------------------------
       if (io4.eq.1) return
 c                                graphics output  
-      write (n5,'(10(i8,1x))') ico,jco,iap(ibulk)
+      write (n5,'(3(i8,1x))') ico,jco,iap(ibulk)
 c                                phase molar amounts
       write (n5,1010) (amt(i),i=1,np+ncpd)
 c                                solution phase compositions
@@ -1787,7 +1787,7 @@ c                                solution phase compositions
 c                                dependent potentials
       if (jpot.ne.1) write (n5,1010) (mu(i),i=1,hcp)
 
-1010  format (6(g16.8,1x))
+1010  format (20(g16.8,1x))
 
       end 
 

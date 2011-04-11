@@ -2182,41 +2182,13 @@ c----------------------------------------------------------------------
       integer kkp, np, ncpd, ntot
       double precision cp3, amt
       common/ cxt15 /cp3(k0,k5),amt(k5),kkp(k5),np,ncpd,ntot
-
-      integer hs2p
-      double precision hsb
-      common/ cst84 /hsb(i8,4),hs2p(6)
 c----------------------------------------------------------------------
 c                                 initialize
-      aflu = .false.
-      shear = .true.
-      volume = .true.
-      ssick = .false.
-      ppois = .false.
-      rxn = .false.
       ntot = iphct
-c                                 flag for bulk bad bulk properties
+c                                 initialize system properites
+      call insysp (ssick,ppois)
 
-c                                 initialize bulk properites
-c                                 total mass
-      gtot = 0d0
-      gtot1 = 0d0
-c                                 HS limiting moduli
-      do i = 1, 6
-         hsb(i,1) = 1d99
-         hsb(i,2) = 0d0         
-         hsb(i,3) = 1d99
-         hsb(i,4) = 0d0 
-      end do            
-
-      do i = 1, k0
-c                                 total molar amounts
-         fbulk(i) = 0d0
-         fbulk1(i) = 0d0
-
-      end do
-
-      do i = 1, iphct
+      do i = 1, ntot
 c                                 set molar amount of phase 
          props(16,i) = 1d0
          if (vnu(i).lt.0d0) rxn = .true.
