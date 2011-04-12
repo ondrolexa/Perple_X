@@ -2078,7 +2078,8 @@ c                                 Aggregate shear modulus, T-derivative, P-deriv
 
                   if (props(m,i).eq.0d0) cycle 
                   psys(m) = psys(m) + v/(props(m,i)+hsb(j,2))
-                  pgeo(m) = pgeo(m) + v/(props(m,i)+hsb(j,1))
+                  if (.not.aflu) pgeo(m) 
+     *                              = pgeo(m) + v/(props(m,i)+hsb(j,1))
 
                end do 
 
