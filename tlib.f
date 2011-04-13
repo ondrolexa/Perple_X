@@ -50,7 +50,7 @@ c lopt(12) - option_list_files
 c lopt(13) - true if user set finite zero mode check
 c lopt(14) - logarithmic_p
 c lopt(15) - spreadsheet format -> T = explicit output of independent variables 
-c lopt(16) - averaging_scheme, T -> VRH averaging, F -> HS
+c lopt(16) - bounds, T -> VRH averaging, F -> HS
 c lopt(17) - explicit_bulk_modulus, T-> use if available.
 c nopt(5)  - speciation_tolerance
 c nopt(8)  - solvus_tolerance
@@ -304,7 +304,7 @@ c                                 extrapolation key
             end if 
             valu(5) = val 
 
-         else if (key.eq.'averaging_scheme') then 
+         else if (key.eq.'bounds') then 
 c                                 
             if (val.eq.'HS'.or.val.eq.'hs')  then
               lopt(16) = .false.
@@ -1072,7 +1072,7 @@ c                                 thermo options for frendly
      *        4x,'bad_number          ',f7.1,7x,'[0.0]',/,
      *        4x,'melt_is_fluid          ',l1,10x,'[F] T')
 1233  format (/,2x,'Seismic velocity options:',//,
-     *        4x,'averaging_scheme       ',a3,8x,'HS  [VRH]',/,
+     *        4x,'bounds                 ',a3,8x,'HS  [VRH]',/,
      *        4x,'vrh/hs_weighting       ',f3.1,8x,'0->1 [0.5]',/,
      *        4x,'explicit_bulk_modulus  ',l1,10x,'[F] T',/,
      *        4x,'poisson_ratio          ',a3,8x,'off [on ] all; ',
