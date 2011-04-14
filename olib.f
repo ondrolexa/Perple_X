@@ -1641,7 +1641,7 @@ c                                 adiabatic bulk modulus
 c                                 use poisson ratio estimates if iopt(16).ne.0
             if ((iopt(16).eq.1.and..not.ok).or.iopt(16).eq.2) then
 
-               if (volume) then
+               if (.not.sick(jd)) then
  
                   props(5,jd)  = nopt(16)*props(4,jd)
                   props(19,jd) = nopt(16)*props(18,jd) 
@@ -1893,7 +1893,7 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical sick(i8), ssick, solid
+      logical sick(i8), ssick, solid, bad
 
       integer i, j, iwarn, m
 
@@ -1927,6 +1927,29 @@ c-----------------------------------------------------------------------
       save iwarn
       data iwarn/0/
 c----------------------------------------------------------------------
+c                                 check if volume is there, if not assume
+c                                 things are really bad
+      if (isnan(psys(1))) then 
+     
+         bad = .true.
+ 
+      else if (psys(1).eq.0d0) then 
+
+         bad = .true.
+
+      end if
+
+      if (bad) then 
+
+         do i = 1, i8
+            psys(i) = nopt(7)
+            psys1(i) = nopt(7)
+         end do
+
+         return
+
+      end if 
+c                                 not so bad....
       units = dsqrt(1d5)/1d3
       r43   = 4d0/3d0
       solid = .true.

@@ -218,7 +218,7 @@ c                                 allow restricted plot limits
 
       end if 
 c                                 number of grid points
-      write (*,1080) 
+      write (*,1080) vnm(1),vnm(2)
       read (*,*) nxy
          
       do i = 1, 2
@@ -248,7 +248,8 @@ c                                 wrap up the calculation
 1040  format (/,'Change default variable range (y/n)?')
 1060  format (/,'Current limits on ',a,' are: ',g14.7,'->',g14.7,/,
      *          'Enter new values:')
-1080  format (/,'Enter number of nodes in the x and y directions:')
+1080  format (/,'Enter number of nodes in the ',a,' and ',a,
+     *          ' directions:')
 
       end 
 
