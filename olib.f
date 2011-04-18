@@ -1946,7 +1946,11 @@ c                                 things are really bad
 
          bad = .true.
 
-      end if
+      else 
+
+         bad = .false. 
+
+      end if 
 
       if (bad) then 
 

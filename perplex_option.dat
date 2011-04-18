@@ -15,7 +15,7 @@ auto_refine_factor_III 2    | refine factor for Schreinemakers diagrams (auto_re
 auto_refine_file       F    | echo auto-refine data to my_project_auto_refine.txt
 auto_refine_slop       0.01 | 0->1 (auto_refine keyword group)
 bad_number             NaN  | any number or NaN (not-a-number)
-bounds                 HS   | [VRH] HS; Voigt-Reuss-Hill or Hashin-Shtrikman, see vrh/hs_averaging
+bounds                 VRH   | [VRH] HS; Voigt-Reuss-Hill or Hashin-Shtrikman, see vrh/hs_averaging
 closed_c_space         T    | T[rue] or F[alse], default is T => closed composition space for gridded minimization 
 composition            mol  | mol or wt; phase compositions
 console_messages       on   | on or off
@@ -51,7 +51,7 @@ subdivision_override   off  | off, linear, or stretch
 T_melt                 873. | melt solution model endmember temperature (K) cut off
 T_stop                   0. | equilibration temperature (K) cut off
 variance              1 99  | 1->99; exploratory and autorefine
-vrh/hs_weighting       0.5  | 0->1, weighting factor for the stiff average in averaging_scheme
+vrh/hs_weighting       0.5   | 0->1, weighting factor for the stiff average in averaging_scheme
 x_nodes               40 60 | exploratory and autorefine (grid parameters keyword group)
 y_nodes               40 60 | exploratory and autorefine (grid parameters keyword group)
 zero_mode             1e-6  | 0->1
