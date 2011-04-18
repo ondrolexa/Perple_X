@@ -1193,9 +1193,18 @@ c                                 than necessary.
  
       implicit none
 
+      include 'perplex_parameters.h'
+
       double precision vp, vs
 
-      if (vs.eq.0d0) then 
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      if (isnan(vp).or.isnan(vs)) then 
+         poiss = nopt(7)
+      else if (vs.eq.0d0) then 
          poiss = 0.5d0
       else 
          poiss =  0.5d0*((vp/vs)**2-2d0)/((vp/vs)**2-1d0)
@@ -1949,6 +1958,8 @@ c                                 things are really bad
          return
 
       end if 
+
+      if (.not.volume) shear = .false.
 c                                 not so bad....
       units = dsqrt(1d5)/1d3
       r43   = 4d0/3d0
@@ -2000,7 +2011,10 @@ c                                 if a reaction (frendly) return
       if (rxn) return
 c                                 if not solid, don't compute solid only
 c                                 properties
-      if (psys1(1).le.0d0.and..not.aflu) solid = .false.
+      if (psys1(1).le.0d0.or..not.aflu) then 
+         solid = .false.
+         aflu = .false.
+      end if 
 c                                 accumulate aggregate totals, some
 c                                 totals may be incomplete if volume or 
 c                                 shear is false for an individual phase
