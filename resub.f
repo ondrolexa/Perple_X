@@ -3441,7 +3441,7 @@ c----------------------------------------------------------------------
  
       include 'perplex_parameters.h'
 
-      integer i,j,id,ier,tictoc,ipvt(k8)
+      integer i,j,k,id,ier,tictoc,ipvt(k8)
 
       logical static, bad
 
@@ -3568,15 +3568,17 @@ c                                 convert normalized g's to molar g's
 
       if (jbulk.gt.icp) then  
 c                                 get the amounts of the saturated phases:
-         do i = jbulk-icp+1, jbulk
+         do i = icp+1, jbulk
+c                                 k is the saturated component pointer
+            k = i - icp
 c                                 initialize bulk                                 
-            c(i) = cblk(i)
+            c(k) = cblk(i)
 c                                 save chemical potentials from gproj
-            mu(i) = us(i-icp)
+            mu(i) = us(k)
 c                                 subtract the amount of the component in the 
 c                                 phases in the thermodynamic c-space
             do j = 1, npt 
-               c(i) = c(i)- amt(j)*cp3(i,j)
+               c(k) = c(k)- amt(j)*cp3(i,j)
             end do 
 
          end do 
