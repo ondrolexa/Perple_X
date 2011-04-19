@@ -1506,7 +1506,7 @@ c                                 mode (%)
                    prop = mode(iopt(3)+1)
                else if (lop.eq.8) then 
 c                                 composition (external function)
-                  prop = gtcomp(icx,komp)
+                  prop = gtcomp(id,icx,komp)
                else if (lop.ge.9.and.lop.le.15) then 
 c                                 gruneisen T, K, mu, Vphi, vp, vs, vp/vs
                   prop = props(lop-6,id) 
@@ -1618,7 +1618,7 @@ c                          diagonal
 
       end 
 
-      double precision function gtcomp (id,jcomp)
+      double precision function gtcomp (id,icx,jcomp)
 c-------------------------------------------------------------------
 c function comp returns icomp'th composition of phase id
 c in an assemblage whose properties have been defined in routine
@@ -1632,7 +1632,7 @@ c ------------------------------------------------------------------
 
       double precision totden, comp
 
-      integer jcomp, j, id 
+      integer jcomp, j, id, icx
  
       double precision pcomp
       common/ cst324 /pcomp(k0,k5)
@@ -1643,7 +1643,7 @@ c ------------------------------------------------------------------
       common/ comps /rcps(k7,2*k5),icps(k7,2*k5),jcx(2*k5),jcx1(2*k5),
      *               kds(2*k5),stol(h9),savg(h9)
 c----------------------------------------------------------------------
-      if (id.eq.kds(jcomp)) then 
+      if (icx.eq.kds(jcomp)) then 
 
          comp = 0d0 
          totden = 0d0
@@ -1801,7 +1801,7 @@ c                                 conditions:
             do j = 1, isol-1
 c                                 comp is a function that returns
 c                                 the j+1th composition 
-               tcomp = gtcomp (jdsol(i),k5+j)
+               tcomp = gtcomp (i,jdsol(i),k5+j)
 c                                 the composition is not relevant
                if (tcomp.eq.-1d99) cycle
 c                                 the composition is out of bounds
