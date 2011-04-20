@@ -18,7 +18,7 @@ c----------------------------------------------------------------------
 
       write (*,1000) 
 
-1000  format (/,'Perple_X version 6.6.5.9, compiled 4/19/2011.')
+1000  format (/,'Perple_X version 6.6.5.9, compiled 4/20/2011.')
 
       end
 
@@ -1868,7 +1868,7 @@ c---------------------------------------------------------------------
       else if (ier.eq.3) then 
          write (*,3)
       else if (ier.eq.4) then 
-         write (*,4)
+         write (*,4) char
       else if (ier.eq.5) then
          write (*,5) 
       else if (ier.eq.6) then
@@ -2031,11 +2031,11 @@ c---------------------------------------------------------------------
      *        'in a format that is no longer supported.',/,
      *        'copy the current version from: ',
      *        'www.perplex.ethz.ch/datafiles/solution_model.dat',/)
-4     format (/,'**warning ver004** the input data includes NaNs, most '
-     *      ,'probably because bad_number',/,'in perplex_option.dat is '
+4     format (/,'**warning ver004** the data includes ',a,' values, '
+     *      ,'probably because bad_number',/,'in perplex_option.dat = '
      *      ,'NaN, these values will be replaced by zeros. To avoid ',/,
-     *       'this problem set bad_number to a numeric value or use a ',
-     *       'plotting program capable',/,'of handling NaNs, e.g., ',
+     *       'this behavior set bad_number to a numeric value or use a',
+     *       ' plotting program capable',/,'of handling NaNs, e.g., ',
      *       'MatLab or PYWERAMI',/)
 5     format (/,'**warning ver005** fluid components are specified',
      *        ' as thermodynamic AND as either',/,'saturated phase',   

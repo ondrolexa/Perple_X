@@ -490,8 +490,8 @@ c                                       numeric axis labels:
       call psylbl (y0, dy, tmin) 
  
       call psxlbl (x0, dx)
-c                                       x-axis name
-      call pssctr (ifont,nscale,nscale,0d0)
+c                                     x-axis name
+      call pssctr (ifont,nscale,nscale,0d0)  
 
       x = xmin + 0.5d0 * xlen - 2d0*dcx*nscale
       y = ymin - 4d0*dcy*nscale
@@ -737,11 +737,11 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical ratio, first 
+      logical ratio, warn1, eof
 
       integer i, j, k, dvar, dvar1, ier, lun, inc(l3)
 
-      character tag*5, y
+      character tag*5, y, numbs(i11)*14
 
       double precision row(i11)
 
@@ -760,8 +760,13 @@ c----------------------------------------------------------------------
       double precision z,zt 
       common/ dim   /z(nx,ny),zt(nx,ny),ix,iy,mvar
 
-      save first
-      data first/.true./
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      save warn1
+      data warn1/.true./
 c----------------------------------------------------------------------
       ratio = .false.
 
@@ -876,27 +881,36 @@ c                                 variable or ratio
             dvar = 1
 
          end if      
-c
-         vnm(2) = dname(dvar)
+c                                 make a title
+         call mertxt (title,dname(dvar),title,1)
 c                                 read the data 
-         do i = 1, ix
+         do j = 1, iy
 
-            do j = 1, iy
+            do i = 1, ix
+c                                 read data with nan-check
+               call redrow (row,lun,eof)
 
-               read (lun,*) (row(k),k=1,mvar)
+               if (ratio.and.row(dvar1).ne.0d0) then 
 
-               if (ratio) then 
                   z(i,j) = row(dvar)/row(dvar1)
-               else 
-                  z(i,j) = row(dvar)
-               end if 
 
-               if (isnan(z(i,j))) then 
-                  z(i,j) = 0d0
-                  if (first) then 
-                     call warn (4,z(i,j),i,'TABHED')
-                     first = .false.
+               else if (ratio) then 
+
+                  if (warn1) then 
+                     write (*,1100)
+                     warn1 = .false.
                   end if 
+ 
+                  if (isnan(nopt(7))) then 
+                     z(i,j) = 0d0
+                  else
+                     z(i,j) = nopt(7)
+                  end if 
+
+               else 
+
+                  z(i,j) = row(dvar)
+
                end if 
 
             end do 
@@ -909,17 +923,13 @@ c                                 rows by reading to end of file
          iy = 1
 
          do
-   
-            read (lun,*,iostat=ier) (z(iy,k),k=1,mvar)
+c                                 read data with eof and nan-check
+            call redrow (row,lun,eof)
 
-            if (ier.ne.0) then
+            if (eof) then 
                iy = iy - 1
                exit
             end if
-c                                 nan check
-            do k = 1, mvar
-               if (isnan(z(iy,k))) z(iy,k) = 0d0
-            end do 
 
             iy = iy + 1
 
@@ -996,6 +1006,10 @@ c                                 get dependent variables (inv(2..dvar))
 1080  format (/,'Select y-axis variables from the list above',/,
      *          'one per line, enter zero to finish:',/)
 1090  format (/,'You did not choose any dependent variables, I quit!',/)
+1100  format (/,'**warning ver670** the denominator of a ratio is zero,'
+     *      ,' infinite ratios will replaced',/,
+     *       'by the bad_number value if bad_number is a number, ',
+     *       'otherwise the ratio is set to 0',/)
       end 
 
       subroutine rdopt 
@@ -1215,3 +1229,56 @@ c                                 -------------------------------------
 
       end
 
+      subroutine redrow (row,lun,eof)
+c----------------------------------------------------------------------
+c redrow - reads a row of table entries and checks for bad data.
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      logical eof, warn1
+
+      integer k, ier, lun
+
+      character numbs(i11)*14
+
+      double precision row(i11)
+
+      integer ix,iy,mvar
+      double precision z,zt 
+      common/ dim   /z(nx,ny),zt(nx,ny),ix,iy,mvar
+
+      save warn1
+      data warn1/.true./
+c----------------------------------------------------------------------
+c                                 format/char read necessary for NaN check
+c                                 with compaq fortran:
+      read (lun,'(80(a14,1x))',iostat=ier) (numbs(k),k=1,mvar)
+
+      if (ier.ne.0) then 
+c                                 presumably eof
+         eof = .true.
+         return 
+      else 
+         eof = .false.
+      end if 
+c                                 convert strings to numbers:
+      do k = 1, mvar
+
+         read (numbs(k),'(g14.7)',iostat=ier) row(k)
+
+         if (ier.ne.0) then 
+    
+             if (warn1) then 
+                call warn (4,row(1),k,numbs(k))
+                warn1 = .false.
+             end if 
+
+             row(k) = 0d0
+
+          end if 
+
+      end do
+
+      end 

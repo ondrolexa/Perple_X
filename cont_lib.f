@@ -17,7 +17,7 @@ C----------------------------------------------------------------
       integer nseg,npts,npcs,mcon,i,np,j,ipts,istart,k,
      *         ncon,ipiece,iswit,iout
 
-      double precision rline,cmin,dcon,thick
+      double precision rline,cmin,dcon,thick,c
 
       parameter (nseg=100000,npts=250000,npcs=100000,mcon=50)
 
@@ -37,24 +37,45 @@ C----------------------------------------------------------------
       double precision zmin,zmax
       common/ stuff /zmax,zmin
 
+      integer inv
+      character dname*14, title*162
+      common/ cst76 /inv(i11),dname(i11),title
+
       double precision xmin,xmax,ymin,ymax,dcx,dcy,xlen,ylen
       common/ wsize /xmin,xmax,ymin,ymax,dcx,dcy,xlen,ylen
+
+      logical spline, half, tenth, grid, fill, label
+      integer ifont, bbox 
+      double precision xfac, cscale, nscale, ascale, rlabel, width      
+      common/ ops /xfac,cscale,nscale,ascale,rlabel,width,bbox(4),ifont,
+     *             spline,half,tenth,grid,fill,label
 c----------------------------------------------------------------            
 c                                  contor interval
+      j = 0
       do i = 1, ncon
-         cont(i) = cmin + (i-1) * dcon
+         c = cmin + (i-1) * dcon
+         if (c.lt.zmin.or.c.gt.zmax) cycle
+         j = j + 1
+         cont(j) = cmin + (i-1) * dcon
       end do 
+
+      ncon = j
+      cmin = cont(1)
 
       do i = 1, ix 
          do j = 1, iy 
               zt(j,i)= z(i,j)
          end do
       end do 
-
+c                                 write title info
+      call pssctr (ifont,nscale,nscale,0d0)
+      call pstext (xmin-2d0*dcx,ymax+15.5d0*dcy,title,162)
       write (kontor,1000) dcon, cmin, cont(ncon)  
-      call pssctr (7,1d0,1d0,0d0)
-      call pstext (xmin-2d0*dcx,ymax+8d0*dcy,kontor,0)
+      call pstext (xmin-2d0*dcx,ymax+12d0*dcy,kontor,0)
       write (kontor,1010) zmin, zmax
+      call pstext (xmin-2d0*dcx,ymax+8.5d0*dcy,kontor,0)
+      write (kontor,'(a)') 
+     *     'Min/Max contours => thick solid/dotted curves'
       call pstext (xmin-2d0*dcx,ymax+5d0*dcy,kontor,0)
 
       call contra (xmin,xmax,ymin,
@@ -82,7 +103,15 @@ c                                  contor interval
          end if
 
          if (k.eq.1.or.k.eq.ncon) then 
+
             thick = 2d0
+
+            if (k.eq.1) then 
+               rline = 1d0
+            else
+               rline = 9d0
+            end if 
+
          else 
             thick = 0d0
          end if 
@@ -110,8 +139,8 @@ c                                  contor interval
          end if
       end do 
 
-1000  format ('Cont Int ',g10.4,' Cont Range ',g10.4,' -> ',g10.4)
-1010  format ('Cont Variable Range ',g10.4,' -> ',g10.4)
+1000  format ('contour interval: ',g10.4,'; range: ',g10.4,' => ',g10.4)
+1010  format ('variable range: ',g10.4,' => ',g10.4)
 1020  format ('Echo contour data to file contor.dat (Y/N)?')
 
       end     

@@ -283,8 +283,6 @@ c                                      set up contour intervals
       call pscontor (cmin,ncon,dcon)
  
       call psaxes (jop0)
-c                                 write a title
-      call pstext (xmin,ymax+2d1*dcy,title,162)
 
 1020  format ('Contoured variable range:',g14.6,'->',g14.6,/,
      *        'Range excluding zero values:',g14.6,'->',g14.6,//,
