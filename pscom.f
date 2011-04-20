@@ -739,9 +739,9 @@ c----------------------------------------------------------------------
 
       logical ratio, warn1, eof
 
-      integer i, j, k, dvar, dvar1, ier, lun, inc(l3)
+      integer i, j, dvar, dvar1, ier, lun, inc(l3)
 
-      character tag*5, y, numbs(i11)*14
+      character tag*5, y
 
       double precision row(i11)
 
