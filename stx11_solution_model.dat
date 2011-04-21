@@ -7,7 +7,7 @@
 | Geophysical Journal International, 184: 1180–1213. 
 | doi: 10.1111/j.1365-246X.2010.04890.x
 
-| begin solution phase list
+| the solution model names are:
 | O
 | Pl
 | Sp
@@ -20,10 +20,10 @@
 | Opx  
 | Aki  
 | Ppv  
-| Gt
 | CF
-| end solution phase list
-           
+| Gt or Gt_maj for the distinction between these two models refer to 
+| the comments with the Gt_maj model in stx11_solution_model.dat
+     
                       --------------------------------------------------------
 begin_model                
                                       C2/c pyroxene solution

@@ -6850,8 +6850,14 @@ c----------------------------------------------------------------------
 c                                 the use if istg(ids) as the site
 c                                 index is a hack for reformulated
 c                                 reciprocal solutions
+         if (ispg(ids,1).gt.1) then 
+            i = 1
+         else 
+            i = 2
+         end if 
+
          do j = 1, nstot(ids)
-            x(istg(ids),j) = sxs(ixp(id)+j) 
+            x(i,j) = sxs(ixp(id)+j) 
          end do 
 
       end if 
@@ -10023,8 +10029,8 @@ c                                 adjust the composition by the first increment
                dpp(k) = pa(jd) - p0a(jd)
 
             end do 
-
-            if (dp.lt.1d-2) exit 
+c                                 no species possible
+            if (lord.eq.0) return
 
          end do 
 c                                 back off from maximum for final assignements
