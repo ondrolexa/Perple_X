@@ -8,14 +8,14 @@
 1d_path              40 150 | exploratory and autorefine (grid parameters keyword group)
 approx_alpha           T    | use approximation exp(x)~1+x to evaluate expansivity effect on volume
 Anderson-Gruneisen     F    | Anderson-Gruneisen parameter correction for polythermal Murnaghan and Birch-Murnaghan
-auto_refine            man  | auto, manual, or off (auto_refine keyword group)
+auto_refine            aut  | auto, manual, or off (auto_refine keyword group)
 auto_refine_factor_I   2    | refine factor for gridded minimization and phase fractionation (auto_refine keyword group)
 auto_refine_factor_II  6    | refine factor for composition and mixed variable diagrams (auto_refine keyword group)
 auto_refine_factor_III 2    | refine factor for Schreinemakers diagrams (auto_refine keyword group)
 auto_refine_file       F    | echo auto-refine data to my_project_auto_refine.txt
 auto_refine_slop       0.01 | 0->1 (auto_refine keyword group)
 bad_number             NaN  | any number or NaN (not-a-number)
-bounds                 VRH   | [VRH] HS; Voigt-Reuss-Hill or Hashin-Shtrikman, see vrh/hs_averaging
+bounds                 VRH  | [VRH] HS; Voigt-Reuss-Hill or Hashin-Shtrikman, see vrh/hs_averaging
 closed_c_space         T    | T[rue] or F[alse], default is T => closed composition space for gridded minimization 
 composition            mol  | mol or wt; phase compositions
 console_messages       on   | on or off
@@ -44,14 +44,14 @@ replicate_label      0.025  | 0->1, 0 - all replicate fields labeled, 1 - no rep
 short_print            on   | on or off
 site_check              T   | T[rue] or F[alse], T=> reject solution compositions with negative site fractions
 solvus_tolerance       aut  | aut[omatic] or 0->1, must be > initial_resolution/auto_refine_factor
-speciation_tolerance   1d-3 | tolerance for order-disorder speciation calculations, >0,<1 [1d-3]
+speciation_tolerance   1d-5 | tolerance for order-disorder speciation calculations, >0,<1 [1d-3]
 spreadsheet             T   | T[rue] or F[alse], T=> include independent variable values in werami tab output files 
 stretch_factor        0.016 | >0, <1
 subdivision_override   off  | off, linear, or stretch
 T_melt                 873. | melt solution model endmember temperature (K) cut off
 T_stop                   0. | equilibration temperature (K) cut off
 variance              1 99  | 1->99; exploratory and autorefine
-vrh/hs_weighting       0.5   | 0->1, weighting factor for the stiff average in averaging_scheme
+vrh/hs_weighting       0.5  | 0->1, weighting factor for the stiff average in VRH/HS averaging (see bounds)
 x_nodes               40 60 | exploratory and autorefine (grid parameters keyword group)
 y_nodes               40 60 | exploratory and autorefine (grid parameters keyword group)
 zero_mode             1e-6  | 0->1
