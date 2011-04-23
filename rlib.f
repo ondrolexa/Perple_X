@@ -4582,16 +4582,18 @@ c                                write list of valid makes:
 
       end
 
-      subroutine sattst (ifer)
+      subroutine sattst (ifer,good)
 c----------------------------------------------------------------------
 c sorts phases into the appropriate saturated phase list called by 
-c input2.             
+c input2. returns good if data is valid            
 c----------------------------------------------------------------------
       implicit none
  
       include 'perplex_parameters.h'
  
       integer j,ifer,idc
+
+      logical good
 
       character name*8
       common/ csta6 /name
@@ -4618,45 +4620,50 @@ c----------------------------------------------------------------------
       common/ cst40 /ids(h5,h6),isct(h5),icp1,isat,io2
 c-----------------------------------------------------------------------
 
-         if (ifyn.eq.0) then
-c                               check for fluid species data
-            if (name.eq.cmpnt(idco2)) then
-               j = 2
-               ifer = ifer + 1
-            else if (name.eq.cmpnt(idh2o)) then
-               j = 1
-               ifer = ifer + 1
-            else
-               goto 70
-            end if
- 
-            call loadit (j,.false.)
+      good = .false.
 
+      if (ifyn.eq.0) then
+c                               check for fluid species data
+         if (name.eq.cmpnt(idco2)) then
+            j = 2
+            ifer = ifer + 1
+         else if (name.eq.cmpnt(idh2o)) then
+            j = 1
+            ifer = ifer + 1
+         else
+            goto 70
          end if
  
-70       if (isyn.eq.0) then 
+         good = .true.
+         call loadit (j,.false.)
+         return
+
+      end if
+ 
+70    if (isyn.eq.0) then 
 c                               check for saturated phases:
 c                               reject the phase if it contains
 c                               a thermodynamic component:
-            do j = 1, icp
-               if (comp(ic(j)).ne.0d0) return
-            end do
+         do j = 1, icp
+            if (comp(ic(j)).ne.0d0) return
+         end do
 c                               now load the phase if it has
 c                               the saturated component idc:
-            do j = isat, 1, -1
-               idc = icp + j
-               if (comp(ic(idc)).ne.0d0) then
-                  isct(j) = isct(j) + 1 
-                  if (isct(j).gt.h6) call error (17,1d0,h6,'SATTST')
-                  iphct = iphct + 1
-                  if (iphct.gt.k1) call error (180,1d0,k1,
+         do j = isat, 1, -1
+            idc = icp + j
+            if (comp(ic(idc)).ne.0d0) then
+               isct(j) = isct(j) + 1 
+               if (isct(j).gt.h6) call error (17,1d0,h6,'SATTST')
+               iphct = iphct + 1
+               if (iphct.gt.k1) call error (180,1d0,k1,
      *                            'SATTST increase parameter k1')
-                  ids(j,isct(j)) = iphct
-                  call loadit (iphct,.false.)
-                  return
-               end if
-            end do 
-         end if 
+               ids(j,isct(j)) = iphct
+               call loadit (iphct,.false.)
+               good = .true.
+               return
+            end if
+         end do 
+      end if 
 
       end 
 

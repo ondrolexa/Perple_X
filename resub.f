@@ -1848,7 +1848,7 @@ c----------------------------------------------------------------------
 c                                 solvus tolerance, yclos1, was 5
       if (lopt(9)) then
 c                                 auto 
-         soltol = 5d0*nopt(8)
+         soltol = 4d0*nopt(8)
       else 
 c                                 twice initial_resolution.
          soltol = 2d0*nopt(13)

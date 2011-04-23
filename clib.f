@@ -1280,7 +1280,7 @@ c                                 entities:
  
          call chkphi (0,name,good)
 
-         if (good) call sattst (ifer)
+         if (good) call sattst (ifer,good)
 
       end do 
 c                                 loop to load made saturated entities
@@ -1298,11 +1298,13 @@ c                                 redundant check:
 c                               
          if (.not.good) call error (57,comp(1),iphct,name)
 
-         call sattst (ifer)
+         call sattst (ifer,good)
 
-         make(iphct) = i
+         if (good) then 
+            make(iphct) = i
 c                                 pointer used for iemod.
-         imak(i) = iphct
+            imak(i) = iphct
+         end if 
 
       end do 
 c                                 check that there is data for
