@@ -1749,7 +1749,9 @@ c                                 s-wave velocity
 
             end if 
 c                                 vp/vs
-            if (props(8,jd).ne.0d0) then 
+            if (isnan(props(8,jd))) then 
+               props(9,jd) = nopt(7) 
+            else if (props(8,jd).ne.0d0) then 
                props(9,jd) = props(7,jd)/props(8,jd)
             else
                props(9,jd) = nopt(7)
