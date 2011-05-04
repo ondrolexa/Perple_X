@@ -24,7 +24,7 @@ extrapolation          off  | on or off
 grid_levels            1 4  | exploratory and autorefine (grid parameters keyword group)
 hard_limits            off  | on or off
 increment         0.1 0.025 | 0, <1; exploratory and autorefine
-initial_resolution    0.02 | >0, <1
+initial_resolution    0.001 | >0, <1
 interpolation on       2    | value 1: on or off; value 2, 1->99
 iteration            4 3 4  | value 1: 0->9; value 2: 3->99; value 3: 3->7
 linear_model           on   | on or off

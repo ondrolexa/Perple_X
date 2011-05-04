@@ -1801,7 +1801,7 @@ c                                 conditions:
             do j = 1, isol-1
 c                                 comp is a function that returns
 c                                 the j+1th composition 
-               tcomp = gtcomp (i,jdsol(i),k5+j)
+               tcomp = gtcomp (i,idasls(jdsol(i),ias),k5+j)
 c                                 the composition is not relevant
                if (tcomp.eq.-1d99) cycle
 c                                 the composition is out of bounds
@@ -1865,19 +1865,19 @@ c                                 existing criterion
      *        ' compositional variable(s).',/)
 1020  format (/,'Enter the range (minimum, maximum) of C[',i1,'] that ',
      *        'defines the phase of interest:',/)
-1030  format (/,'Choose an option:',//,
-     *        ' 1 - specify compositional criteria to identify the',
-     *        ' phase of interest [default].',/,
-     *        ' 2 - average the compositions of immiscible phases',/)
+1030  format (/,'Choose an option:',/,3x,
+     *        '1 - specify compositional criteria to identify the',
+     *        ' phase of interest [default].',/,3x,
+     *        '2 - average the compositions of immiscible phases',/)
 1040  format (/,4x,20(a,4x))
 1050  format (3x,20(f7.3,2x))
 1060  format (/,i1,' coexisting phases of ',a,' satisfy your ',
      *        ' compositional criteria',/,'with the compositions:')
-1070  format (/,'Choose an option',/,
-     *        ' 1 - redefine the compositional criteria [default].',/,
-     *        ' 2 - average the compositions of all phases that',
-     *        ' meet the existing criterion.',/,
-     *        ' 3 - ignore this instance.',/)
+1070  format (/,'Choose an option:',/,3x,
+     *        '1 - redefine the compositional criteria [default].',/,3x,
+     *        '2 - average the compositions of all phases that',
+     *        ' meet the existing criterion.',/,3x,
+     *        '3 - ignore this instance.',/)
 99    end 
 
       subroutine mode3 
