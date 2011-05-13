@@ -2567,7 +2567,48 @@ z(Ca) = 1 an
 2 2.                       | 2 species on T-site, 2. sites per formula (al-avoidance model)
 z(Al) = 1/2 + 1/2 an
 
-end_of_model               
+end_of_model        
+                      --------------------------------------------------------
+begin_model 
+                           | ternary feldspar (Benisek et al, CMP 160:327-337, 2010)
+                           | for T > 973 K. 
+
+                           | Entered by Vratislav Hurai, May 10, 2011.
+                                            
+feldspar_B 
+2                          | model type: Margules or Ideal
+3                          | 3 endmembers
+
+abh      
+an       
+san      
+
+0 0 0                      | endmember flags = 0 if the endmember is part of the solution.
+
+0. 1. .1  0                | range and resolution for albite, cartesian subdivision
+0. 1. .1  0                | range and resolution for anorthite, cartesian subdivision
+ 
+
+begin_excess_function 
+w(abh abh san) 17711.  -10.3   .461 
+w(abh san san) 22945.  -10.3   .327 
+w(an an san) 90600.      0.0  -.257  
+w(an san san) 60300.     0.0  -.21   
+w(an an abh) 40000.    -16.4   .069  
+w(an abh abh) 14000.    -4.7  -.049  
+w(an abh san) 210078. -114.75 -.2965 
+end_excess_function 
+
+2                          | 2 site (O-site and T-site) entropy model
+
+3 1.                       | 3 species on O-site, 1 site per formula unit.
+z(Na) = 0 + 1 abh
+z(Ca) = 0 + 1 an
+
+2 2.                       | 2 species on T-site, 2. sites per formula (al-avoidance model)
+z(Al) = 1/2 + 1/2 an
+
+end_of_model        
                       --------------------------------------------------------
 begin_model               
 

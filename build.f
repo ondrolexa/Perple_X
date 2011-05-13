@@ -1443,10 +1443,13 @@ c                                 diagrams:
      *    5x,'3 - Constrained minimization on a 1d grid',/,
      *    5x,'4 - Output pseudocompound data',/,
      *    5x,'5 - Phase fractionation calculations',//,
-     *        'Unconstrained optimization should be used for the ',
-     *        'calculation of composition,',/,'mixed variable, and ',
-     *        'Schreinemakers diagrams. Gridded minimization can be ',
-     *        'used to',/,'construct phase diagram sections.',/)
+     *        'Unconstrained optimization can be used for composition,',
+     *        ' mixed-variable, and Schreinemakers diagrams.',/,
+     *        'Constrained minimization can be used for phase diagrams',
+     *        'and phase diagram sections with',/,
+     *        '<3 independent variables. Constrained minimization is ',
+     *        'preferable for the recovery of',/,'physical properties.',
+     *        /)
 1500  format (//,'Specify number of independent potential variables:',
      *         /,5x,'0 - Composition diagram [default]',/,
      *           5x,'1 - Mixed-variable diagram')

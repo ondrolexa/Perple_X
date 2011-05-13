@@ -3898,11 +3898,11 @@ c                                  quit
 1030  format (/,'Enter the project name (the name assigned ',
      *        'in BUILD) [default = my_project]:')
 1040  format (/,'Enter a name for this project (the name',
-     *        ' will be the prefix',/'for all output file names) ',
-     *        '[default = my_project]:')
+     *        ' will be used as the',/,'root for all output file names)'
+     *       ,'[default = my_project]:')
 1050  format (/,'File:',/,a,/,'exists, overwrite it (y/n)? ')
-1070  format (/,'The project definition file will be: ',a) 
-1080  format (/,'**warning ver191** no project definition file named:',/
+1070  format (/,'The problem definition file will be named: ',a) 
+1080  format (/,'**warning ver191** no problem definition file named:',/
      *      ,a,/,'Run BUILD to create the file or change project names.'
      *       ,//,'Enter a different project name (y/n)?')
       end 

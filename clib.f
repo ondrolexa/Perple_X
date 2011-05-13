@@ -49,10 +49,10 @@ c                                 only use autorefine if solutions
 c                                 are present and it is requested.
       if (isoct.ne.0) then 
 
-         call mertxt (n10nam,prject,'_auto_refine.dat',0)
+         call mertxt (n10nam,prject,'.arf',0)
          open (n10, file = n10nam, iostat = ierr, status = 'old')
 
-         call mertxt (n12nam,prject,'_auto_refine_true_or_false.dat',0)
+         call mertxt (n12nam,prject,'.tof',0)
 
          if (iam.eq.1) then
 
