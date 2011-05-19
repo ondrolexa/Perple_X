@@ -2930,48 +2930,64 @@ c-----------------------------------------------------------------------
       integer jtest,jpot
       common/ debug /jtest,jpot
 
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      integer iam
+      common/ cst4 /iam
+
       save first,blank
 
       data first,blank/.true.,' '/
 c----------------------------------------------------------------------
 c                                 open thermodynamic data file
       call fopen2 (0,n2name)
-      if (first) write (*,1170) n2name
+
+      if (first) then 
+         call mertxt (name,prject,'.dat',0)
+         write (*,1160) name
+         write (*,1170) n2name
+      end if 
+
+      if (n9name.ne.blank) then
+
+         io9 = 0 
+c                                 open solution model file
+         open (n9,file = n9name,iostat = ierr,status = 'old')
+         if (ierr.ne.0) call error (120,0d0,n9,n9name)
+
+         if (first) write (*,1210) n9name
+
+      else
+
+         io9 = 1
+         if (first) write (*,1210) 'not requested'
+
+      end if
 c                                 open print/plot files if requested
       if (prt.ne.blank.and.prt.ne.'no_') then 
          io3 = 0 
          call mertxt (name,prject,'.prn',0)
          open (n3, file = name)
-         if (first) write (*,1180) name
       else
          io3 = 1
-         if (first) write (*,1180) 'none requested'
+         name = 'none requested'
       end if
+
+      if (first) write (*,1180) name
 
       if (plt.ne.blank.and.plt.ne.'no_') then
          io4 = 0
          call mertxt (name,prject,'.plt',0)
          open (n4, file = name)
-         if (first) write (*,1190) name
       else
          io4 = 1
-         if (first) write (*,1190) 'none requested'
+         name = 'none requested'
       end if
 
-      if (n9name.ne.blank) then
-         io9 = 0 
-c                                 open solution model file
-         open (n9,file = n9name,iostat = ierr,status = 'old')
-         if (ierr.ne.0) call error (120,0d0,n9,n9name)
-         if (first) then 
-            call mertxt (name,prject,'_pseudocompound_glossary.txt',0)
-            write (*,1200) name
-            write (*,1210) n9name
-         end if 
-      else
-         io9 = 1
-         if (first) write (*,1210) 'none requested'
-       end if
+      if (first) write (*,1190) name
 
       if (jbulk.ge.icp.and.io4.ne.1) then
 c                                 create special plot output file
@@ -2984,25 +3000,16 @@ c                                 create special plot output file
          if (first) write (*,1220) 'none requested'
 
       end if
-c                              if jtest = 3, write a list of reactions for
-c                              stefano
-      if ((icopt.eq.1.or.icopt.eq.3).and.jtest.eq.3) then 
-
-         call mertxt (name,prject,'_reaction_list.txt',0)
-         open (n6,file=name)
-         if (first) write (*,1250) name
-
-      end if 
 
       first = .false.
 
-1170  format (/,'Reading thermodynamic data from file: ',a)
+1160  format (/,'Reading problem definition from file: ',a)
+1170  format ('Reading thermodynamic data from file: ',a)
 1180  format ('Writing print output to file: ',a)
 1190  format ('Writing plot output to file: ',a)
-1200  format ('Writing pseudocompound glossary to file: ',a)
 1210  format ('Reading solution models from file: ',a)
 1220  format ('Writing bulk composition plot output to file: ',a)
-1250  format ('Writing complete reaction list to file: ',a)
+
       end 
 
       subroutine grxn (gval) 

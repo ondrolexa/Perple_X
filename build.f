@@ -241,7 +241,7 @@ c                                 components of saturated phase:
 
          if (y.eq.'y'.or.y.eq.'Y') then
 c                                   write prompt
-            write (*,2031) 
+            write (*,2031) phase
             write (*,1040) uname(idh2o),uname(idco2)
             write (*,2021)
 c                                   write blurb
@@ -1171,7 +1171,7 @@ c                                 we have the list, ask user for choices
  
             write (*,2510)
             write (*,2520) (tname(i), i = 1, ict)
-            write (*,*)
+            write (*,1180) 
 
             blah = 'b'
 
@@ -1361,7 +1361,7 @@ c                                 get conditions for composition
 c                                 diagrams:
       if (icopt.eq.0) then
 
-         if (ifct.eq.1.and.ifyn.eq.1) write (*,7150) vname(3) 
+         if (ifct.eq.1.and.ifyn.eq.1) write (*,7150) phase, vname(3) 
 
          i = 0
 
@@ -1400,18 +1400,17 @@ c                                 diagrams:
      *       'other, e.g., as along a geothermal gradient (y/n)? ')
 1060  format (/,'Select dependent variable:',//,'  1 - ',a,' = f(',a,')'
      *       ,/,'  2 - ',a,' = f(',a,')',/)
-1070  format ('ok, but dont say i didnt warn you.')
-1080  format ('wise move, choose another component.')
+1070  format ('Ok, but dont say i didnt warn you.')
+1080  format ('Wise move, choose another component.')
 1090  format (/,'Enter path coordinates from a file (Y/N)?')
 1100  format (/,'In this mode VERTEX/WERAMI read path coordinates',
      *        'from a file',/,'the file must be formatted so that',
      *        ' the coordinates of each point',/,'are on a separate',
-     *        ' line, the coordinates are, in order:',
-     *        4x,5(a,2x))
+     *        ' line, the coordinates are, in order:',4x,5(a,2x))
 1110  format (/)
 1120  format (a,1x,i2,' component transformation')
 1125  format (13(f6.2,1x))
-1130  format ('Exclude ',a,' (Y/N)? ')
+1130  format ('Exclude ',a,' (Y/N)?')
 1140  format (/,'File: ',a,/,'Does not exist, you must create it',
      *        ' before running VERTEX.',/)
 1150  format (/,'huh?',/)
@@ -1420,6 +1419,9 @@ c                                 diagrams:
 1170  format (/,'Enter the computational option file name ',
      *       '[default = perplex_option.dat]:',/,
      *       'See: www.perplex.ethz.ch/perplex_options.html')
+1180  format (/,'For details on these models see:',
+     *        'www.perplex.ethz.ch/perplex_solution_model_glossary.html'
+     *      /,'or read the commentary in the solution model file.',/)
 1210  format ('Select the path variable for the calculation:',/)
 1310  format (/,5(i2,1x),2x,a,/)
 1330  format (i2,1x,i2,1x,g13.6,1x,g13.6,1x,a)
@@ -1428,7 +1430,7 @@ c                                 diagrams:
 1410  format ('for the bulk composition of interest:')
 1420  format (/,'Specify component amounts by weight (Y/N)?')
 1430  format ('Constrain component ',a,' (Y/N)?')
-1450  format (/,'In this mode all thermodynamic components must be ',
+1450  format (/,'All thermodynamic components must be ',
      *         'constrained,',/'constrain ',
      *         'saturated components also (Y/N)?')
 1460  format (/,'The next prompts are for the saturated',
@@ -1437,19 +1439,18 @@ c                                 diagrams:
      *        ' completes the set of constraints.',/)
 1470  format (5x,i1,' - Composition X(C1)* (user defined)')
 1480  format (5x,i1,' - Composition X(C2) (user defined)')
-1490  format (/,'Specify computational mode:',//,
+1490  format ('Specify computational mode:',//,
      *    5x,'1 - Unconstrained minimization',/, 
      *    5x,'2 - Constrained minimization on a 2d grid [default]',/,
      *    5x,'3 - Constrained minimization on a 1d grid',/,
      *    5x,'4 - Output pseudocompound data',/,
      *    5x,'5 - Phase fractionation calculations',//,
-     *        'Unconstrained optimization can be used for composition,',
-     *        ' mixed-variable, and Schreinemakers diagrams.',/,
-     *        'Constrained minimization can be used for phase diagrams',
-     *        'and phase diagram sections with',/,
-     *        '<3 independent variables. Constrained minimization is ',
-     *        'preferable for the recovery of',/,'physical properties.',
-     *        /)
+     *        'Use unconstrained minimization for Schreinemakers ',
+     *        'projections or phase diagrams',/,
+     *        'with > 2 independent variables. ',
+     *        'Use constrained minimization for phase diagrams',/,
+     *        'or phase diagram sections ',
+     *        'with < 3 independent variables.')
 1500  format (//,'Specify number of independent potential variables:',
      *         /,5x,'0 - Composition diagram [default]',/,
      *           5x,'1 - Mixed-variable diagram')
@@ -1467,21 +1468,18 @@ c                                 diagrams:
 1560  format (5(g12.6,1x),'Geothermal gradient polynomial coeffs.')
 1570  format (/,'*X(C1) can not be selected as the y-axis variable',/)
 1590  format (5x,'2 - Sections and Schreinemakers-type diagrams')
-2000  format (/,'Generate print file output (Y/N)?')
+2000  format (/,'Output a print file (Y/N)?')
 2010  format ('Enter the ',a,' file name [default = ',a,']:')
-2021  format ('Enter names, 1 per line,',
-     *        ' enter a blank line to finish:')
-2030  format (/,'Calculations with a saturated phase',
-     *        ' (Y/N)?',/,'The phase is: ',a,/,
-     *        'Its compositional variable is: Y(CO2), X(O), etc.')
-2031  format (/,'Select the independent saturated phase components:')
+2021  format ('Enter names, 1 per line, press <enter> to finish:')
+2030  format (/,'Calculations with a saturated ',a,' (Y/N)?')
+2031  format (/,'Select the independent saturated ',a,' components:')
 2032  format (/,'Select < ',i1,' saturated components from the set:')
 2034  format ('Do you want to be prompted for phases (Y/N)?')
 2040  format (/,'Use chemical potentials, activities or fugacities as',
      *        ' independent',/,'variables (Y/N)?')
 2050  format (/,'Specify a component whose chemical potential, activi',
      *       'ty or fugacity is',/,'to be independent, ',
-     *       'enter a blank to finish:')
+     *       'press <enter> to finish:')
 2060  format (/,'Component ',a,' is to be characterized by:',//,
      *       5x,'1 - chemical potential [default]',/,
      *       5x,'2 - log10(fugacity)',/,
@@ -1496,7 +1494,7 @@ c                                 diagrams:
 2065  format (/,'The log10(',a,' ',a,') variable is named: ',a,/)
 2066  format (/,'The chemical potential of ',a,' is named: ',a,/)
 2070  format (/,'Select thermodynamic components from the set:')
-2080  format (/,'Exclude phases (Y/N)?')
+2080  format (/,'Exclude endmember phases (Y/N)?')
 2110  format (/,'Calculations with saturated components (Y/N)?')
 2111  format (/,'Select x-axis variable:')
 2130  format (/,'Select y-axis variable:')
@@ -1504,13 +1502,12 @@ c                                 diagrams:
 2210  format (/,'Select vertical axis variable:')
 2310  format (/,a,' is invalid. Check spelling, upper/lower case match',
      *        ', and do not use leading blanks. Try again:',/)
-2500  format (/,'Do you want to treat solution phases (Y/N)? ')
+2500  format (/,'Include solution phases (Y/N)?')
 2510  format (/,'Select phases from the following list, enter',
-     *        ' 1 per line,',/,'enter a blank line',
-     *        ' to finish',/)
+     *        ' 1 per line, press <enter> to finish',/)
 2520  format (6(2x,a))
 3000  format (a,1x,i1,1x,3(g12.6,1x),a,' amount')
-3010  format ('Enter solution model file name [default = ',
+3010  format ('Enter the solution model file name [default = ',
      *        'solution_model.dat]: ')
 3020  format (/,'**error ver191** FOPEN cannot find file:',/,a,/)
 3050  format ('end ',a,/)
@@ -1540,15 +1537,13 @@ c                                 diagrams:
 6010  format ('For calculation ',i2,', enter zeros to finish.')
 7020  format (//,'NO is the default (blank) answer to all Y/N prompts',
      *        /)
-7040  format (/,'The solution model file contains no',
-     *               ' models valid for your problem.',/)
-7050  format ('Try again (Y/N)? ')
-7070  format (/,'Enter calculation title: ')
-7150  format (/,'*Although only 1 component is specified for the ',
-     *       'saturated fluid phase, the',/,' equation of state ',
-     *       'permits fluid composition to vary through the variable ',
-     *       a,'.',/,' For pure fluids, specify the appropriate ',
-     *       'composition as a sectioning constraint.',/) 
+7040  format (/,'The solution model file contains no relevant models.',/
+     *       )
+7050  format ('Try again (Y/N)?')
+7070  format (/,'Enter calculation title:')
+7150  format (/,'*Although only one component is specified for the ',a,
+     *       ' phase, its equation of state ',/,
+     *       'permits use of its compositional variable: ',a,'.',/) 
       end
  
       subroutine grxn (g)

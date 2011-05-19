@@ -18,7 +18,7 @@ c----------------------------------------------------------------------
 
       write (*,1000) 
 
-1000  format (/,'Perple_X version 6.6.5.9, compiled 5/8/2011.')
+1000  format (/,'Perple_X version 6.6.5.9, compiled 5/19/2011.')
 
       end
 
@@ -60,7 +60,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer ier, i, loopx, loopy
+      integer ier, jer, i, loopx, loopy
 
       logical output
 
@@ -89,6 +89,9 @@ c----------------------------------------------------------------------
 
       integer isec,icopt,ifull,imsg,io3p
       common/ cst103 /isec,icopt,ifull,imsg,io3p
+
+      integer io3,io4,io9
+      common / cst41 /io3,io4,io9
 
       integer iam
       common/ cst4 /iam
@@ -252,13 +255,9 @@ c                                 print dependent potentials
       valu(11) = 'off'
 c                                 -------------------------------------
 c                                 look for file
-      open (n8, file = opname, iostat = ier, status = 'old')
-c                                 no option file, set defaults
-      if (ier.ne.0) then 
-         write (*,1120) opname
-      else 
-         write (*,1130) opname
-      end if
+      open (n8, file = opname, iostat = jer, status = 'old')
+c                                 if no option file (jer.ne.0) use defaults
+      ier = jer
 c                                 read cards to end of 
 c                                 option file
       do while (ier.eq.0) 
@@ -603,6 +602,71 @@ c                                 handle missing shear moduli
     
       close (n8)
 c                                 -------------------------------------
+c                                 write and optional file choices
+      if (jer.ne.0) then 
+         write (*,1120) opname
+      else 
+         write (*,1130) opname
+      end if
+
+      if (iam.eq.1) then 
+c                                 vertex only files:
+         if (icopt.eq.1.or.icopt.eq.3) then 
+
+            if (jtest.eq.3) then 
+               call mertxt (tfname,prject,'_reaction_list.txt',0)
+               open (n6,file=tfname)
+            else 
+               tfname = 'not requested'
+            end if 
+
+            write (*,1170) tfname
+
+         end if 
+c                                 auto refine summary
+         if (iopt(6).ne.0.and.io9.eq.0) then
+ 
+            if (lopt(11)) then 
+               call mertxt (tfname,prject,'_auto_refine.txt',0)
+            else 
+               tfname = 'not requested'
+            end if 
+
+            write (*,1150) tfname
+
+         end if 
+ 
+      end if 
+
+c                                 pseudocompound glossary
+      if (io9.eq.0.and.iam.lt.3) then
+ 
+         if (lopt(10)) then 
+            call mertxt (tfname,prject,'_pseudocompound_glossary.txt',0)
+         else 
+            tfname = 'not requested'
+         end if 
+
+         write (*,1140) tfname
+
+      end if 
+c                                 computational options this is redundant
+      if (iam.lt.4) then 
+         if (lopt(12)) then 
+            if (iam.eq.1) then           
+               call mertxt (tfname,prject,'_VERTEX_options.txt',0)
+            else if (iam.eq.2) then 
+               call mertxt (tfname,prject,'_MEEMUM_options.txt',0)
+            else if (iam.eq.3) then 
+               call mertxt (tfname,prject,'_WERAMI_options.txt',0)
+            end if 
+         else 
+            tfname = 'not requested'
+         end if 
+ 
+         write (*,1160) tfname
+      end if 
+c                                 -------------------------------------
 c                                 error traps:
       if (iopt(10).gt.0) then 
          iopt(5) = 0
@@ -773,7 +837,10 @@ c                                 give the relaxation bounds.
 1120  format (/,'Warning: the Perple_X option file: ',a,/,
      *       'was not found, default option values will be used.',/) 
 1130  format (/,'Reading computational options from: ',a)
-
+1140  format ('Writing pseudocompound glossary to file: ',a)
+1150  format ('Writing auto refine summary to file: ',a)
+1160  format ('Writing computational option summary to file: ',a)
+1170  format ('Writing complete reaction list to file: ',a)
       end 
 
       subroutine outopt (n,valu)
@@ -925,7 +992,11 @@ c                                 logarithmic_p, bad_number
 c                                 WERAMI input/output options
          write (n,1230) lopt(15),lopt(14),nopt(7),(valu(i),i=2,5),
      *                  lopt(6)
-        
+c                                 WERAMI info file options
+         write (n,1241) lopt(12)       
+c                                 WERAMI thermodynamic options
+         write (n,1016) lopt(8),lopt(4)
+
       else if (iam.eq.2) then 
 c                                 MEEMUM input/output options
          write (n,1231) lopt(14),nopt(7),(valu(i),i=2,3),lopt(6)
@@ -961,7 +1032,7 @@ c                                 meemum or autorefine off
 
       write (n,1020) 
 
-1000  format (/,'Perple_X run-time option settings for ',a,':',//,
+1000  format (/,'Perple_X computational option settings for ',a,':',//,
      *      '    Keyword:               Value:     Permitted values ',
      *          '[default]:')
 1010  format (/,2x,'Solution subdivision options:',//,
@@ -1079,9 +1150,12 @@ c                                 thermo options for frendly
      *        'Poisson ratio = ',f4.2)
 1240  format (/,2x,'Information file output options:',//,
      *        4x,'option_list_files      ',l1,10x,'[F] T; ',
-     *           'echo run-time options',/,
+     *           'echo computational options',/,
      *        4x,'pseudocompound_file    ',l1,10x,'[F] T; ',
      *           'echo static pseudocompound compositions')
+1241  format (/,2x,'Information file output options:',//,
+     *        4x,'option_list_files      ',l1,10x,'[F] T; ',
+     *           'echo computational options')
 1250  format (4x,'auto_refine_file       ',l1,10x,'[F] T; ',
      *           'echo auto-refine compositions')
 1260  format (4x,'auto_refine_slop       ',f5.3,6x,'[0.01]')
@@ -2085,7 +2159,7 @@ c---------------------------------------------------------------------
      *         'determination of the invariant condition',/,
      *         'and will be reset. This may cause the curve to ',
      *         'look kinked near the invariant point',/)
-19    format (/,'**warning ver019** you must specify at least ',
+19    format ('**warning ver019** you must specify at least ',
      *        'one thermodynamic component, try again',/)
 20    format ('**warning ver020** sfol2')
 21    format ('**warning ver021** xmax (',g12.6,') > 1 for '
@@ -3899,11 +3973,11 @@ c                                  quit
      *        'in BUILD) [default = my_project]:')
 1040  format (/,'Enter a name for this project (the name',
      *        ' will be used as the',/,'root for all output file names)'
-     *       ,'[default = my_project]:')
-1050  format (/,'File:',/,a,/,'exists, overwrite it (y/n)? ')
+     *       ,' [default = my_project]:')
+1050  format (/,'The file: ',a,/,'exists, overwrite it (y/n)?')
 1070  format (/,'The problem definition file will be named: ',a) 
-1080  format (/,'**warning ver191** no problem definition file named:',/
-     *      ,a,/,'Run BUILD to create the file or change project names.'
+1080  format (/,'**warning ver191** no problem definition file named: ',
+     *       a,/,'Run BUILD to create the file or change project names.'
      *       ,//,'Enter a different project name (y/n)?')
       end 
 
