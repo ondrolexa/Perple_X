@@ -1865,7 +1865,7 @@ c                                 moles of assemblage
 c                                 mass of assemblage 
       psys(17) = psys(17) + props(17,jd)*mols
 c                                 solid only totals:
-      if (aflu.and..not.fluid(jd)) then 
+      if (.not.fluid(jd)) then 
 
          psys1(1)  = psys1(1)  + v
          psys1(2)  = psys1(2)  + e*mols 
