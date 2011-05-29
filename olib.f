@@ -2009,9 +2009,12 @@ c                                 normalize volumetrically weighted alpha/beta
       end do 
 c                                 gruneisen T
       psys(3) = psys(3)/psys(1)
-      if (psys1(3).ne.0d0) then
-         psys1(3) = psys1(3)/psys1(1)
-         psys1(10) = psys1(17)/psys1(1)*1d2
+
+      if (.not.isnan(psys1(3))) then 
+         if (psys1(1).gt.0d0) then
+            psys1(3) = psys1(3)/psys1(1)
+            psys1(10) = psys1(17)/psys1(1)*1d2
+         end if 
       end if 
 c                                 if a reaction (frendly) return
       if (rxn) return
