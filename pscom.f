@@ -931,6 +931,10 @@ c                                 read data with eof and nan-check
                exit
             end if
 
+            do i = 1, mvar
+               z(iy,i) = row(i)
+            end do 
+
             iy = iy + 1
 
          end do
@@ -1001,7 +1005,7 @@ c                                 get dependent variables (inv(2..dvar))
 1030  format (/,'Plot the ratio of two dependent variables (Y/N)?')
 1040  format (/,'Select the ',a,' variable:',/)
 1050  format (4x,i2,' - ',a)
-1060  format (/,'Select the variable to be contoured:')
+1060  format (/,'Select the dependent variable to be contoured:')
 1070  format (/,'Select x-axis variable [default variable 1]:',/)
 1080  format (/,'Select y-axis variables from the list above',/,
      *          'one per line, enter zero to finish:',/)

@@ -288,7 +288,7 @@ c                                      set up contour intervals
      *        'Range excluding zero values:',g14.6,'->',g14.6,//,
      *        'Modify default contour interval (y/n)?')
 1030  format ('Enter min, max and interval for contours:')
-1050  format ('Contour log10 of the z-value (y/n)?')
+1050  format ('Contour the log10 of the dependent variable (y/n)?')
 1060  format (/,'Reset plot limits (y/n)?')
 1070  format (/,'Old values were: ',4(g12.4),/,'Enter new values:')
 

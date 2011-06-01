@@ -1909,6 +1909,9 @@ c----------------------------------------------------------------------
 
       character vnm*8
       common/ cxt18a /vnm(l3)  
+
+      integer ivar,ind,ichem
+      common/ cst83 /ivar,ind,ichem
 c----------------------------------------------------------------------
       node = .false.
       dim = 1
@@ -2034,6 +2037,8 @@ c                                 set up counters, pointers:
       end do 
 
       d = dxy(ivi)/dfloat(ipts - 1)
+c                                 ind could be set by getind              
+      ind = ivi
 
       jpts = 0 
 c                                 select properties
@@ -2093,7 +2098,7 @@ c                                 compute properties
 
       subroutine mode31
 c----------------------------------------------------------------------
-c sample data on an x-y path defined by interactive user input 
+c sample data in a 1d section 
 c----------------------------------------------------------------------
       implicit none
 
@@ -2568,12 +2573,18 @@ c                     mol fraction
 
       else 
 c                     solid only mode:
+         if (fluid(id)) then 
+            mode(1) = 0d0
+            mode(2) = 0d0
+            mode(3) = 0d0
+         else 
 c                     volume fraction
-         mode(1) = props(1,id)*props(16,id)/psys1(1)*1d2
+            mode(1) = props(1,id)*props(16,id)/psys1(1)*1d2
 c                     wt fraction
-         mode(2) = props(16,id)*props(17,id)/psys1(17)*1d2
+            mode(2) = props(16,id)*props(17,id)/psys1(17)*1d2
 c                     mol fraction
-         mode(3) = props(16,id)/psys1(16)*1d2
+            mode(3) = props(16,id)/psys1(16)*1d2
+         end if 
 
       end if 
 
@@ -2651,13 +2662,16 @@ c                                 read the data to get the range
          do           
                   
             read (n5,*,iostat=ier) (x(i),i=1,ivar), (prop(i),i=1,iprop)
+
             ipt = ipt + 1
             if (ipt.gt.k2) call error (999,ymn,ipt,'OUTMOD')
+
             if (node) then 
                vip(4,ipt) = ipt
             else 
                vip(4,ipt) = x(ind)
             end if 
+
             if (ier.ne.0) exit 
 
             do i = 1, iprop
@@ -3369,6 +3383,14 @@ c                                 all modes
                 lopt(2) = .true.
              else
                 lopt(2) = .false.
+             end if 
+c                                 ask if fluid should be included:
+             if (gflu) then 
+
+                write (*,1120) 
+                read (*,'(a)') y
+                if (y.eq.'y'.or.y.eq.'Y') lflu = .true.
+
              end if 
 c                                 double loop necessary because solution 
 c                                 i may occur as j coexisting phases
