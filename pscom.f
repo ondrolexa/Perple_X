@@ -890,21 +890,23 @@ c                                 read the data
 c                                 read data with nan-check
                call redrow (row,lun,eof)
 
-               if (ratio.and.row(dvar1).ne.0d0) then 
+               if (ratio) then 
 
-                  z(i,j) = row(dvar)/row(dvar1)
+                  if (row(dvar1).ne.0) then
+                     z(i,j) = row(dvar)/row(dvar1)
+                  else 
 
-               else if (ratio) then 
-
-                  if (warn1) then 
-                     write (*,1100)
-                     warn1 = .false.
-                  end if 
+                     if (warn1) then 
+                        write (*,1100)
+                        warn1 = .false.
+                     end if 
  
-                  if (isnan(nopt(7))) then 
-                     z(i,j) = 0d0
-                  else
-                     z(i,j) = nopt(7)
+                     if (isnan(nopt(7))) then 
+                        z(i,j) = 0d0
+                     else
+                        z(i,j) = nopt(7)
+                     end if 
+
                   end if 
 
                else 
