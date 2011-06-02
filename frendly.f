@@ -108,17 +108,17 @@ c                                 calculating properties at arbitrary conditions
 c                                 tabulated properties
                call setplt (.true.)
 
-               do i = 1, inc(iv(1))
+               do k = 1, inc(iv(3))
 
-                  v(iv(1)) = vmin(iv(1)) + dfloat(i-1)*dv(iv(1))
+                  v(iv(3)) = vmin(iv(3)) + dfloat(k-1)*dv(iv(3))
 
                   do j = 1, inc(iv(2))
 
                      v(iv(2)) = vmin(iv(2)) + dfloat(j-1)*dv(iv(2))
 
-                     do k = 1, inc(iv(3))
+                     do i = 1, inc(iv(1))
 
-                        v(iv(3)) = vmin(iv(3)) + dfloat(k-1)*dv(iv(3))
+                        v(iv(1)) = vmin(iv(1)) + dfloat(i-1)*dv(iv(1))
 
                         call calphp 
 
