@@ -463,17 +463,26 @@ c                                  increment pressure for
 c                                  finite difference estimate of
 c                                  volume:
          p = p + 1d0
+
          call cfluid (fo2, fs2)
          write (*,1300) 83.14d0*t*((1d0-xo)*(fh2o-xfh)+xo*(fco2-xfc))
+
       else if (ifug.eq.4) then
+
          write (*,1140) fco2
          write (*,1300) vol
+
       else if (ifug.eq.9) then
+
          write (*,1150) fh2o, fco2, fo2
+
       else if (ifug.eq.13.or.ifug.eq.15) then
+
          write (*,1160) fh2o,fco2,fo2
          write (*,1300) vol
+
       else 
+
          if (ifug.eq.16.or.ifug.eq.17) then
             ag = 0d0
          else if (ifug.eq.19.or.ifug.eq.20) then
@@ -485,16 +494,19 @@ c                                  routine cfluid returns ln(fs2)/2
          write (*,1170) fo2, 2d0*fs2/tentoe, ag
 c                                  output speciation:
          write (*,1230)
-         do 20 j = 1, isp, 4
+
+         do j = 1, isp, 4
             kmax = j + 3
             if (kmax.gt.isp) kmax = isp
             write (*,1180) (specie(ins(k)), k = j, kmax)
             write (*,1190) (xs(ins(k)), k = j, kmax)
-20          write (*,1200) (g(ins(k))*p*xs(ins(k)), k = j, kmax)
+            write (*,1200) (g(ins(k))*p*xs(ins(k)), k = j, kmax)
+         end do 
 c                                  total species fractions:
          totx = 0d0
-         do 21 k = 1, isp
-21          totx = totx + xs(ins(k))
+         do k = 1, isp
+            totx = totx + xs(ins(k))
+         end do 
 
          write (*,1370) totx
          if (totx.gt.1.001d0.or.totx.lt.0.999d0) write (*,1380)

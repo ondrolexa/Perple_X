@@ -463,8 +463,8 @@ c----------------------------------------------------------------------
 
       if (jop0.eq.1) then
 
-         write (*,1010) 
-         read (*,1020) yes
+         write (*,'(/,a)') 'Modify default axes numbering (y/n)?'
+         read (*,'(a)') yes
 
          if (yes.eq.'y'.or.yes.eq.'Y') then
             write (*,1030) 'X', x0, dx
@@ -521,8 +521,6 @@ c                                       sectioning constraints
       end if
  
 1000  format (a,'=',g9.3)
-1010  format (/,'Modify default axes (y/n)?')
-1020  format (a)
 1030  format (/,'Enter the starting value and interval for',
      *          ' major tick marks on',/,'the ',a,'-axis (',
      *          ' current values are:',2(1x,g9.3),')',/, 
@@ -566,16 +564,17 @@ c----------------------------------------------------------------------
 
       jop0 = 0
 
-      if (icopt.ne.3.and.iop0.eq.1) then
-c                                     modify default drafting
-c                                     options?          
+      
+      if (icopt.eq.3) then 
+c                                     Should just prompt for axis
+c                                     numeration.
+         jop0 = iop0
+
+      else if (iop0.eq.1) then
+
          write (*,1090) 
          read (*,1030) yes
          if (yes.eq.'y'.or.yes.eq.'Y') jop0 = 1
-
-      else if (icopt.eq.3) then
-
-         jop0 = iop0
 
       end if 
 

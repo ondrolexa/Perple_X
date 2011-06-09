@@ -1179,7 +1179,7 @@ c                                 than necessary.
          
          else if (id.eq.idf(2)) then 
         
-            gee = gee + r*t*fh2o
+            gee = gee + r*t*fco2
 
          end if
  

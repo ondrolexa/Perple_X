@@ -44,9 +44,10 @@ elseif nvar == 2 % 2d - table -> 2/3d plot
             da = (amax-amin)/11;
             def = {num2str(amin+da/2),num2str(amax-da/2),num2str(da)};
             c = inputdlg(prompt,dlg,num_lines,def);
+            helpdlg('Carefully select contours for labeling. When done, press RETURN while the Graph window is the active window.');
             contours = [str2num(c{1}):str2num(c{3}):str2num(c{2})];
             [C,h]= contour(x,y,a,contours);clabel(C,h,'manual'); d2 = 1;
-            
+ 
     end
     
     if d2 == 1,
@@ -57,7 +58,7 @@ elseif nvar == 2 % 2d - table -> 2/3d plot
         end
     end
     
-    light;shading interp;lighting phong;axis tight;xlabel(xname);ylabel(yname);zlabel(zname);title(titl);
+    light;shading interp;lighting gouraud;axis tight;xlabel(xname);ylabel(yname);zlabel(zname);title(titl);
     
     %colorbar; %uncomment for colorbar
     

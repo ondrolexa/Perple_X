@@ -5651,7 +5651,7 @@ c                                 CORK volume guess and backup fugacity
 
       end if 
 c                                CORK volumes are J/bar/mol, convert to
-c                                cm3/mol 
+c                                cm3/mol for PSEOS
       v = 10d0*v
 
       c12 = 12d0*c5

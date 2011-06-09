@@ -37,7 +37,9 @@ c                                 default transformation
 c                         
       do 
 c                                 get input file 
-         write (*,1000) 
+         write (*,'(/,a)') 
+     *         'Enter the tab file name [without the .tab suffix]:'
+
          call readrt
          call mertxt (tfname,prject,'.tab',0)
           
@@ -96,7 +98,7 @@ c                                 open output file
 c                                 allow drafting options prompt
       iop0 = 0
 
-      write (*,1030) 
+      write (*,'(/,a)') 'Modify the default plot (y/n)?'
       read (*,'(a)') y
 
       if (y.eq.'y'.or.y.eq.'Y') iop0 = 1
@@ -118,7 +120,7 @@ c                                 x-y plotting
 c1000  format (/,'Enter the complete plot file name [e.g., ',
 c     *       'my_project.tab or my_project.ctr]:')
 
-1000  format (/,'Enter the tab file name [without the .tab suffix]:')
+
 1010  format (/,'**warning ver191** cannot find file',/,a,/,
      *       'run WERAMI/FRENDLY to generate the ',
      *       'file or try a different name (y/n)?')
@@ -127,7 +129,6 @@ c     *       'my_project.tab or my_project.ctr]:')
      *       'file just read will define the',/,'numerator of the '
      *       'ratio and you will be prompted next for a file',/,
      *       'containing the data for the denominator.')
-1030  format (/,'Modify the default plot (y/n)?')
 1040  format (/,'Enter the name of the tab file that ',
      *          'contains the denominator data:')
 
@@ -204,7 +205,8 @@ c                                 zt.
 
       if (iop0.eq.1) then 
 c                                 modify axes option, data limits, etc
-         write (*,1050) 
+         write (*,'(a)') 
+     *         'Contour the log10 of the dependent variable (y/n)?'
          read (*,'(a)') y
 
          if (y.eq.'y'.or.y.eq.'Y') then 
@@ -215,7 +217,7 @@ c                                 modify axes option, data limits, etc
             end do  
          end if 
 c                                 plot limits
-         write (*,1060) 
+         write (*,'(/,a)') 'Reset plot limits (y/n)?' 
          read (*,'(a)') y
 
          if (y.eq.'y'.or.y.eq.'Y') then 
@@ -246,7 +248,7 @@ c                                      reload mini matrix:
       end if 
 c                                 get some options and
 c                                 set up transformations
-      call psaxop (1,jop0,iop1)
+      call psaxop (3,jop0,iop1)
         
       zmin = 1d9
       zmax = -1d9
@@ -267,7 +269,7 @@ c                                      set up contour intervals
 
       if (y.eq.'y'.or.y.eq.'Y') then
 
-         write (*,1030) 
+         write (*,'(a)') 'Enter min, max and interval for contours:'
          read (*,*) cmin, cmax, dcon
          ncon = int((cmax-cmin)/dcon) + 1
 
@@ -287,9 +289,6 @@ c                                      set up contour intervals
 1020  format ('Contoured variable range:',g14.6,'->',g14.6,/,
      *        'Range excluding zero values:',g14.6,'->',g14.6,//,
      *        'Modify default contour interval (y/n)?')
-1030  format ('Enter min, max and interval for contours:')
-1050  format ('Contour the log10 of the dependent variable (y/n)?')
-1060  format (/,'Reset plot limits (y/n)?')
 1070  format (/,'Old values were: ',4(g12.4),/,'Enter new values:')
 
       end
@@ -439,7 +438,7 @@ c                                 reset plot limits
       rline = 1d0
 c                                 get some options and
 c                                 set up transformations
-      call psaxop (1,jop0,iop1)
+      call psaxop (3,jop0,iop1)
 c                                 set character transformation? 
       call pssctr (ifont,nscale,nscale,0d0)
 c                                 plot loop: 
