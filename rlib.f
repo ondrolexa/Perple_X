@@ -218,7 +218,7 @@ c---------------------------------------------------------------------
 
       double precision ialpha, vt, trv, pth, vdp, ndu, vdpbm3, gsixtr, 
      *                 gstxgi, fs2, fo2, dg, kt, gval, gmake, gkomab,
-     *                 a, b, c
+     *                 a, b, c, gstxlq
  
       double precision f
       common/ cst11 /f(2)
@@ -269,20 +269,21 @@ c                                 and sum the component g's.
 
          goto 999
 
-      else if (thermo(3,id).lt.0d0) then
-c                                 identify sixtrude's EoS by negative
-c                                 entropy term and 
-c                                 identify the version of stxrude's
-c                                 EoS by sign on number of atoms
-         if (thermo(2,id).gt.0) then 
-c                                 use this call to evalute the 
-c                                 debye T as in stixrude JGR '05
-            gval = gsixtr (id)
-         else 
-c                                 and this call to evalute the 
-c                                 debye T as in stixrude JGI '05
-            gval = gstxgi (id) 
-         end if 
+      else if (eos(id).eq.5) then
+c                                 sixtrude 05 JGR EoS 
+         gval = gsixtr (id)
+         
+         return
+
+      else if (eos(id).eq.6) then
+c                                 stixrude JGI '05 Eos
+         gval = gstxgi (id) 
+
+         return
+         
+      else if (eos(id).eq.11) then
+c                                 stixrude EPSL '09 Liquid Eos
+         gval = gstxlq (id) 
 
          goto 999
 
@@ -428,16 +429,21 @@ c                                 or thermodynamic composition space
       if (eos(id).gt.100) then 
 
          if (eos(id).eq.101) then 
+         
             xco2 = 0d0 
             call cfluid (fo2,fs2)
             gval = gval + r*t*f(1)
-         else if (eos(id).eq.102) then 
+            
+         else if (eos(id).eq.102) then
+          
             xco2 = 1d0
             call cfluid (fo2,fs2)
             gval = gval + r*t*f(2)
+            
          else if (eos(id).ge.600.and.eos(id).le.603) then
 c                                 komabayashi & fei (2010) EoS for Fe
-            gval = gkomab (eos(id),id,vdp)  
+            gval = gkomab (eos(id),id,vdp)
+              
          end if          
 
       end if
@@ -464,8 +470,11 @@ c                                 supcrt q/coe lambda transition
             if (eos(id).ne.8.and.eos(id).ne.9) then 
 c                                 putnis landau model as implemented in hp98 
                call lamla0 (dg,vdp,lmda(id))
-            else 
+               
+            else
+             
                call lamla1 (dg,vdp,lmda(id))
+               
             end if 
 
             gval = gval + dg 
@@ -486,8 +495,10 @@ c                                 holland and powell bragg-williams model
 c                                 check for temperature dependent
 c                                 order/disorder:
       if (idis(id).ne.0) then
+      
          call disord (dg,idis(id))
          gval = gval + dg
+         
       end if
  
 999   if (ifp(id).lt.0) then 
@@ -656,54 +667,6 @@ c---------------------------------------------------------------------
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 c----------------------------------------------------------------------
-      if (ieos.eq.5.or.ieos.eq.6) then 
-c                              Mie-Gruneisen Models:
-         if (ieos.eq.5) then
-c                              stixrude & bukowinski JGR '93 +
-c                              stixrude & lithgow-bertelloni 2005a (JGR)
-            n = s
-
-         else
-c                              stixrude & lithgow-bertelloni GJI '05
-            n = -s
-
-         end if 
-
-         v0     = -v 
-         k00    = a
-         k0p    = b
-         gamma0 = d
-         q0     = e
-         etas0  = f
-         g0     =  emodu(1)
-         g0p    =  emodu(2)            
-c                                 nr9
-         b1 = 9d0*n*r
-c                                 c1
-         b2 = 9d0*k00*v0
-c                                 c2
-         b3 = k0p/2d0-2d0
-c                                 c3
-         b4 = 3d0*b2*b3
-c                                 aii
-         b5 = 6d0*gamma0
-c                                 aiikk
-         b6 = -12d0*gamma0 + 36d0*gamma0**2 - 18d0*q0*gamma0
-c                                 as 
-         b7 = -(gamma0 + etas0)
-c                                 aiikk2 
-         b8 = b6/2d0
-c                                 aii2   
-         b9 = b5/2d0
-c                                 nr9t0  
-         b10 = b1*tr
-         b11 = (3d0*k00*g0p-5d0*g0)
-         b12 = ((6d0*g0p-24d0+4.5d0*k0p)*k00-14d0*g0)
-
-         return
-
-      end if
-
       if (ieos.eq.1) then 
 c                                G(P,T) polynomial forms, e.g., Helgeson et al 1978 (AJS)
 c                                Berman 1988 (J Pet).
@@ -762,9 +725,63 @@ c        b7 = b7
 
          return
 
-      end if 
+      else if (ieos.eq.5.or.ieos.eq.6) then 
+c                              Mie-Gruneisen Solid Models:
+         if (ieos.eq.5) then
+c                              stixrude & bukowinski JGR '93 +
+c                              stixrude & lithgow-bertelloni 2005a (JGR)
+            n = s
+
+         else
+c                              stixrude & lithgow-bertelloni GJI '05
+            n = -s
+
+         end if 
+
+         v0     = -v 
+         k00    = a
+         k0p    = b
+         gamma0 = d
+         q0     = e
+         etas0  = f
+         g0     =  emodu(1)
+         g0p    =  emodu(2)            
+c                                 nr9
+         b1 = 9d0*n*r
+c                                 c1
+         b2 = 9d0*k00*v0
+c                                 c2
+         b3 = k0p/2d0-2d0
+c                                 c3
+         b4 = 3d0*b2*b3
+c                                 aii
+         b5 = 6d0*gamma0
+c                                 aiikk
+         b6 = -12d0*gamma0 + 36d0*gamma0**2 - 18d0*q0*gamma0
+c                                 as 
+         b7 = -(gamma0 + etas0)
+c                                 aiikk2 
+         b8 = b6/2d0
+c                                 aii2   
+         b9 = b5/2d0
+c                                 nr9t0  
+         b10 = b1*tr
+         b11 = (3d0*k00*g0p-5d0*g0)
+         b12 = ((6d0*g0p-24d0+4.5d0*k0p)*k00-14d0*g0)
+
+         return
+         
+      else if (ieos.eq.11) then 
+c                                Mie-Gruneisen Stixrude liquid Model:
+         s = s - a
+c                                b is originally k0
+         b = 4.5d0*b*v
+c                                c is originally k0'
+         c = b*(c-4d0)
+
+         return
 c                                remaining standard forms have caloric polynomial
-      if (ieos.lt.103) then
+      else if (ieos.lt.103) then
 c                                G(Pr,T) polynomial 
          g  = g
      *       + s * tr - a * tr - b * tr * tr / 2d0 + c / tr
@@ -3647,6 +3664,117 @@ c                                 adiabatic shear modulus
      *          'danger!!',/,i6,2(1x,g13.6))
 
       end 
+      
+      double precision function gstxlq (id)
+c-----------------------------------------------------------------------
+c gstxlq computes G from the liquid EoS formulated by Sixtrude et al 2009
+
+c Stxrude parameters:
+
+c    F0  S0-Cv  V0   Cv  4.5d0*K0*V0  4.5d0*K0*V0*(K'-4)    y0   y'    T0
+
+c Perple_X parameters (1st index in array thermo):
+
+c    1     2    3     4       5              6               7    8    9   
+c-----------------------------------------------------------------------
+      implicit none
+ 
+      include 'perplex_parameters.h'
+
+      integer id, itic, izap
+
+      logical bad
+
+      double precision a5, a6, a7, a8, a9, a10, a11, v0, v, v2, df, f, 
+     *                 d2a, f23, v23, tol, f59, d2f, df2, da, a1
+ 
+      double precision thermo, uf, us
+      common/ cst1 /thermo(k4,k10),uf(2),us(h5)
+
+      character*8 names 
+      common/ cst8   /names(k1)
+
+      double precision p,t,xco2,u1,u2,tr,pr,r,ps
+      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
+
+      save f23, f59, izap
+
+      data f23, f59, izap /0.66666666666666666667d0,
+     *                     0.55555555555555555556d0,0/
+c----------------------------------------------------------------------
+c                                 assign local variables:
+      v0 = thermo(3,id)
+
+      a10 = thermo(4,id)*(thermo(9,id)-t)*(thermo(7,id)-thermo(8,id))
+      a7  = thermo(2,id)*(thermo(9,id)-t) - thermo(4,id)*
+     *      (t*dlog(t/thermo(9,id))-(thermo(9,id)-t)*thermo(7,id)) 
+     *      - a10*dlog(v0) 
+      a8  = thermo(5,id)
+      a9  = thermo(6,id)
+      a11 = thermo(4,id)*(thermo(9,id)-t)*thermo(8,id)/v0
+      a6  = 3d0*a9
+      a5  = 2d0*a8
+c                                 initial guess for volume, taylor(diff(a,v),v=v0,3)
+      a1 = (p+a11)*v0
+      v = v0 + (9d0*(3d0*a8+a9)/(a5+a1*9d0)**2*(a1+a10) - 1d0)
+     *         *9d0*v0*(a10+a1)/(a5+a1*9d0) 
+
+      if (v.lt.v0/2d0.or.v.gt.v0*2d0) v = v0
+
+      itic = 0 
+      tol = 1d-6*p
+
+      do 
+
+         itic = itic + 1
+c                                 f, and derivatives
+         v23 = (v0/v)**f23
+         v2  = v**2
+         f   = 0.5d0*v23 - 0.5d0
+         df  = -v23/v/3d0
+         df2 = df*df
+         d2f = f59*v23/v2
+c                                 a 1st and 2nd derivatives
+c                                 da is actually diff(a,v) + p
+         da  = (a5 + a6*f)*f*df + a10/v + a11 + p
+         d2a = (df2 + f*d2f)*a5 + (2d0*df2 + f*d2f)*a6*f - a10/v2
+
+         v = v - da/d2a
+
+         if (v.le.0d0.or.itic.gt.100.or.dabs(da).gt.1d40) then 
+            bad = .true.
+            exit 
+         else if (dabs(da).lt.tol) then
+            bad = .false.
+            exit 
+         end if 
+ 
+      end do
+
+      if (bad) then  
+c                                 if we get here, failed to converge
+         if (izap.lt.10) then
+            write (*,1000) t,p,names(id)
+            izap = izap + 1
+            if (izap.eq.10) call warn (49,r,369,'GSTXLQ')
+         end if 
+c                                 destabilize the phase.
+         gstxlq  = 1d10
+
+      else 
+c                                 everything ok, final f:
+         f = 0.5d0*(v0/v)**f23 - 0.5d0 
+c                                 g = helmholtz enery + pv
+         gstxlq  = (a8 + a9*f)*f**2 + a7 + a10*dlog(v) + a10 + a11*v 
+     *             + p*v + thermo(1,id)
+
+      end if  
+                   
+1000  format (/,'**warning ver369** failed to converge at T= ',f8.2,' K'
+     *       ,' P=',f9.1,' bar',/,'Using Sixtrude Liq EoS.',
+     *        ' Phase ',a,' will be destabilized.',/)
+
+      end 
 
       double precision function gstxgi (id)
 c-----------------------------------------------------------------------
@@ -3826,8 +3954,7 @@ c                                 thermal part derivatives:
          if (dabs(dv).gt.1d-2) dv = 1d-2*dv/dabs(dv)
 
          v = v - dv
-c                                 the limit on f1 should be 
-c                                 machine dependent
+
          if (v.le.0d0.or.itic.gt.100.or.dabs(f1).gt.1d40) then 
             bad = .true.
             exit 
