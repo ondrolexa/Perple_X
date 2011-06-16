@@ -773,11 +773,28 @@ c                                 nr9t0
          
       else if (ieos.eq.11) then 
 c                                Mie-Gruneisen Stixrude liquid Model:
+c                                G0 = F0 
+c                                S0 = S0 => S0 - Cv  
+c                                V0 = V0   
+c                                a  = Cv  
+c                                b  = K0 => 4.5d0*K0*V0  
+c                                c  = K0' => 4.5d0*K0*V0*(K'-4)    
+c                                d  = y0 => y0 - y'   
+c                                e  = y'    
+c                                f  = T0
+c                                --- dependent ---
+c                                gg = (S0-Cv-Cv*y0)*T0
+c                                b1 = Cv*(y0+ln(T0))-S0+Cv
+c                                b2 = ln(v0)
+         
+         gg = (s - a - a*d)*f
+         b1 = a*(d+dlog(f)) - s + a
+         b2 = dlog(v)
+
          s = s - a
-c                                b is originally k0
          b = 4.5d0*b*v
-c                                c is originally k0'
          c = b*(c-4d0)
+         d = d - e
 
          return
 c                                remaining standard forms have caloric polynomial
@@ -3671,11 +3688,20 @@ c gstxlq computes G from the liquid EoS formulated by Sixtrude et al 2009
 
 c Stxrude parameters:
 
-c    F0  S0-Cv  V0   Cv  4.5d0*K0*V0  4.5d0*K0*V0*(K'-4)    y0   y'    T0
-
-c Perple_X parameters (1st index in array thermo):
-
-c    1     2    3     4       5              6               7    8    9   
+c   thermo(1)  = F0 
+c   thermo(2)  = S0 - Cv  
+c   thermo(3)  = V0   
+c   thermo(4)  = Cv  
+c   thermo(5)  = 4.5d0*K0*V0  
+c   thermo(6)  = 4.5d0*K0*V0*(K'-4)    
+c   thermo(7)  = y0 - y'   
+c   thermo(8)  = y'    
+c   thermo(9)  = T0
+c   --- dependent ---
+c   thermo(10) = (S0-Cv-Cv*y0)*T0
+c   thermo(11) = Cv*(y0+ln(T0))-S0+Cv
+c   thermo(12) = ln(v0)
+  
 c-----------------------------------------------------------------------
       implicit none
  
@@ -3705,10 +3731,9 @@ c----------------------------------------------------------------------
 c                                 assign local variables:
       v0 = thermo(3,id)
 
-      a10 = thermo(4,id)*(thermo(9,id)-t)*(thermo(7,id)-thermo(8,id))
-      a7  = thermo(2,id)*(thermo(9,id)-t) - thermo(4,id)*
-     *      (t*dlog(t/thermo(9,id))-(thermo(9,id)-t)*thermo(7,id)) 
-     *      - a10*dlog(v0) 
+      a10 = thermo(4,id)*(thermo(9,id)-t)*thermo(7,id)
+      a7  = (thermo(11,id)-thermo(4,id)*dlog(t))*t+thermo(10,id) 
+     *      - a10*thermo(12,id)
       a8  = thermo(5,id)
       a9  = thermo(6,id)
       a11 = thermo(4,id)*(thermo(9,id)-t)*thermo(8,id)/v0
