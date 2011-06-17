@@ -320,227 +320,294 @@ c                                 iam is a flag indicating the Perple_X program
 c                                 version info
       call vrsion
 
-50    igo = 0
-      fs2 = -9999d0*tentoe/2d0
-      elag = 0d0
-c                                  initialize species fractions/volumes
-      do i = 1, nsp
-         xs(i) = 0d0
-      end do 
+      do 
+c                                 configure EoS
+         igo = 0
+         fs2 = -9999d0*tentoe/2d0
+         elag = 0d0
 
-      vname = ' X(CO2) '
-c                                  get the users choice of EoS:   
-      call rfluid (1, ifug)
-c                                  for multispecies fluids set
-c                                  up species indices:
-      if (ifug.gt.6.and.ifug.lt.13.or.
-     *    ifug.eq.19.or.ifug.eq.20.or.ifug.eq.24) then
-         vname = '  X(O)  '
-         if (ifug.eq.7.or.ifug.eq.8.or.ifug.eq.24) vname = 'log(fo2)'
-         isp = 5
+         vname = ' X(CO2) '
+c                                 get the users choice of EoS:   
+         call rfluid (1, ifug)
+c                                 for multispecies fluids set
+c                                 up species indices:
+         if (ifug.gt.6.and.ifug.lt.13.or.
+     *       ifug.eq.19.or.ifug.eq.20.or.ifug.eq.24) then
+            vname = '  X(O)  '
+            if (ifug.eq.7.or.ifug.eq.8.or.ifug.eq.24) vname = 'log(fo2)'
+            isp = 5
 
-         do i = 1, 6
-            ins(i) = i
-         end do
+            do i = 1, 6
+               ins(i) = i
+            end do
  
-         if (ifug.eq.19.or.ifug.eq.20) then
-            isp = 8
-            ins(7) = 8
-            ins(8) = 9
-         else if (ifug.ge.12.and.ifug.lt.19) then
-            isp = 9
-            ins(7) = 7
-            ins(8) = 8
-            ins(9) = 9
-         else if (ifug.eq.24) then
-            isp = 7
-            ins(6) = 10
-            ins(7) = 11
-         end if
+            if (ifug.eq.19.or.ifug.eq.20) then
+               isp = 8
+               ins(7) = 8
+               ins(8) = 9
+            else if (ifug.ge.12.and.ifug.lt.19) then
+               isp = 9
+               ins(7) = 7
+               ins(8) = 8
+               ins(9) = 9
+            else if (ifug.eq.24) then
+               isp = 7
+               ins(6) = 10
+               ins(7) = 11
+            end if
 
-      else if (ifug.eq.16) then
-         vname = '  X(O)  '
-         isp = 3
-         ins(1) = 1
-         ins(2) = 5
-         ins(3) = 7
-      else if (ifug.eq.17) then
-         vname = '  X(O)  '
-         isp = 4
-         ins(1) = 1
-         ins(2) = 5
-         ins(3) = 6
-         ins(4) = 8
-      else if (ifug.eq.13.or.ifug.eq.15) then 
-         vname = ' X(H2)  '
-      end if 
+         else if (ifug.eq.16) then
+            vname = '  X(O)  '
+            isp = 3
+            ins(1) = 1
+            ins(2) = 5
+            ins(3) = 7
+         else if (ifug.eq.17) then
+            vname = '  X(O)  '
+            isp = 4
+            ins(1) = 1
+            ins(2) = 5
+            ins(3) = 6
+            ins(4) = 8
+         else if (ifug.eq.13.or.ifug.eq.15) then 
+            vname = ' X(H2)  '
+         end if 
 
-      write (*,1120)
 
-10    if ((igo.eq.0.and.(ifug.eq.7.or.ifug.eq.8)).or.
-     *    (ibuf.ne.3.and.(ifug.eq.7.or.ifug.eq.8)).or.
-     *    ifug.eq.4.or.ifug.eq.9) then 
-c                                  get P-T conditions:
-         write (*,1010) 
-         xo = 1d0
-         igo = 1
-         read (*,*,iostat=ier) p, t
-         call rerror (ier, *10)
+         write (*,'(/,a)') 'Tabulate properties (y/n)?'
+         read (*,'(a)') y
+
+         if (y.eq.'y'.or.y.eq.'Y') then 
+c                                 tabulated properties
+
+         else  
+c                                 properties at arbitrary conditions        
+            write (*,'(/,a,/)') 'Enter a zero for pressure to quit.'
+
+            do 
+c                                 initialize species fractions in case
+c                                 of a change in EoS
+               do i = 1, nsp
+                  xs(i) = 0d0
+               end do 
+
+               if ((igo.eq.0.and.(ifug.eq.7.or.ifug.eq.8)).or.
+     *             (ibuf.ne.3.and.(ifug.eq.7.or.ifug.eq.8)).or.
+     *             ifug.eq.4.or.ifug.eq.9) then 
+c                                 get P-T conditions:
+                  write (*,1010) 
+                  xo = 1d0
+                  igo = 1
+
+                  do 
+                     read (*,*,iostat=ier) p, t
+                     if (ier.eq.0) exit
+                     call rerr
+                  end do
+                     
       
-      else if (ifug.eq.19) then
+               else if (ifug.eq.19) then
 
-         write (*,1340)
-         read (*,*,iostat=ier) p, t, xo, elag
-         call rerror (ier, *10)
+                  write (*,1340)
 
-      else if (ifug.eq.20) then
+                  do 
+                     read (*,*,iostat=ier) p, t, xo, elag
+                     if (ier.eq.0) exit
+                     call rerr
+                  end do
 
-         write (*,1360)
-         read (*,*,iostat=ier) p, t, xo, elag
-         call rerror (ier, *10)
+               else if (ifug.eq.20) then
 
-      else if (ifug.eq.24) then 
+                  write (*,1360)
+
+                  do 
+                     read (*,*,iostat=ier) p, t, xo, elag
+                     if (ier.eq.0) exit
+                     call rerr
+                  end do
+
+               else if (ifug.eq.24) then 
          
-         if (ibuf.ne.3) then 
-            write (*,1390)
-            read (*,*,iostat=ier) p, t, gz
-            call rerror (ier, *10)
-         else 
-            write (*,1410)
-            read (*,*,iostat=ier) p, t, dlnfo2, gz
-            call rerror (ier, *10)
-            dlnfo2 = tentoe*dlnfo2
-         end if 
+                  if (ibuf.ne.3) then
+ 
+                     write (*,1390)
 
-         if (igo.eq.0) then 
-            igo = 1
-            write (*,1430) 
-            read (*,*,iostat=ier) elag
-            call rerror (ier, *10)
-         end if 
+                     do 
+                        read (*,*,iostat=ier) p, t, gz
+                        if (ier.eq.0) exit
+                        call rerr
+                     end do
 
-      else 
+                  else 
+
+                     write (*,1410)
+
+                     do 
+                        read (*,*,iostat=ier) p, t, dlnfo2, gz
+                        if (ier.eq.0) exit
+                        call rerr
+                     end do
+
+                     dlnfo2 = tentoe*dlnfo2
+
+                  end if 
+
+                  if (igo.eq.0) then 
+                     igo = 1
+                     write (*,1430) 
+
+                     do 
+                        read (*,*,iostat=ier) elag
+                        if (ier.eq.0) exit
+                        call rerr
+                     end do
+
+                  end if 
+
+               else 
 c                                  or get P-T-X/f conditions:
-         write (*,1000) vname
-         read (*,*,iostat=ier) p, t, xo
-         call rerror (ier, *10)
-         if (ifug.eq.7.or.ifug.eq.8.or.ifug.eq.24) dlnfo2 = tentoe * xo
+                  write (*,1000) vname
 
-      end if 
+                  do 
+                     read (*,*,iostat=ier) p, t, xo
+                     if (ier.eq.0) exit
+                     call rerr
+                  end do
+
+                  if (ifug.eq.7.or.ifug.eq.8.or.ifug.eq.24) 
+     *               dlnfo2 = tentoe * xo
+
+               end if 
 c                                  quit if p = 0
-      if (p.eq.0d0) goto 99
+               if (p.eq.0d0) exit
 c                                  if sulfur dependent, get
 c                                  fs2 if user hasn't opted for
 c                                  a buffer:
-      if ( (ifug.eq.12.and.ibuf.eq.3.and.igo.ne.0).or.
-     *     (ifug.eq.17.and.ibuf.eq.3.and.igo.ne.0).or.
-     *     (ifug.eq.19.and.ibuf.eq.3.and.igo.ne.0).or.
-     *     (ifug.eq.20.and.ibuf.eq.3.and.igo.ne.0) ) then 
+               if ( (ifug.eq.12.and.ibuf.eq.3.and.igo.ne.0).or.
+     *              (ifug.eq.17.and.ibuf.eq.3.and.igo.ne.0).or.
+     *              (ifug.eq.19.and.ibuf.eq.3.and.igo.ne.0).or.
+     *              (ifug.eq.20.and.ibuf.eq.3.and.igo.ne.0) ) then 
 
-30       write (*,1110)
-         read (*,*,iostat=ier) dlnfo2
-         call rerror (ier,*30)
-         dlnfo2 = tentoe * dlnfo2
-      end if 
+                  write (*,1110)
+
+                  do 
+                     read (*,*,iostat=ier) dlnfo2
+                     call rerr
+                  end do 
+
+                  dlnfo2 = tentoe * dlnfo2
+
+               end if 
 c                                  call fluid routine:
-      call cfluid (fo2, fs2)
-      write (*,*) ' '
-      call rfluid (3, ifug)
-      write (*,1280) p,t
+               call cfluid (fo2, fs2)
+               write (*,*) ' '
+               call rfluid (3, ifug)
+               write (*,1280) p,t
 c                                  output results:
-      igo = 1
-      xfh = fh2o
-      xfc = fco2
-      fh2o = dexp(fh2o) 
-      fco2 = dexp(fco2) 
-      fo2 = fo2 / tentoe
+               igo = 1
+               xfh = fh2o
+               xfc = fco2
+               fh2o = dexp(fh2o) 
+               fco2 = dexp(fco2) 
+               fo2 = fo2 / tentoe
 
-      if (ifug.lt.4.or.ifug.eq.5.or.ifug.eq.6.or.ifug.eq.18.or.
-     *    ifug.eq.14.or.ifug.gt.20.and.ifug.lt.24) then
+               if (ifug.lt.4.or.ifug.eq.5.or.ifug.eq.6.or.ifug.eq.18.or.
+     *             ifug.eq.14.or.ifug.gt.20.and.ifug.lt.24) then
 
-         write (*,1130) fh2o, fco2
+                  write (*,1130) fh2o, fco2
 c                                  increment pressure for
 c                                  finite difference estimate of
 c                                  volume:
-         p = p + 1d0
+                  p = p + 1d0
 
-         call cfluid (fo2, fs2)
-         write (*,1300) 83.14d0*t*((1d0-xo)*(fh2o-xfh)+xo*(fco2-xfc))
+                  call cfluid (fo2, fs2)
+                  write (*,1300) 83.14d0*t*((1d0-xo)*(fh2o-xfh) 
+     *                                     + xo*(fco2-xfc))
 
-      else if (ifug.eq.4) then
+               else if (ifug.eq.4) then
 
-         write (*,1140) fco2
-         write (*,1300) vol
+                  write (*,1140) fco2
+                  write (*,1300) vol
 
-      else if (ifug.eq.9) then
+               else if (ifug.eq.9) then
 
-         write (*,1150) fh2o, fco2, fo2
+                  write (*,1150) fh2o, fco2, fo2
 
-      else if (ifug.eq.13.or.ifug.eq.15) then
+               else if (ifug.eq.13.or.ifug.eq.15) then
 
-         write (*,1160) fh2o,fco2,fo2
-         write (*,1300) vol
+                  write (*,1160) fh2o,fco2,fo2
+                  write (*,1300) vol
 
-      else 
+               else 
 
-         if (ifug.eq.16.or.ifug.eq.17) then
-            ag = 0d0
-         else if (ifug.eq.19.or.ifug.eq.20) then
-            ag = dexp (gz)
-         else
-            ag = dexp (elag)
-         end if 
+                  if (ifug.eq.16.or.ifug.eq.17) then
+                     ag = 0d0
+                  else if (ifug.eq.19.or.ifug.eq.20) then
+                     ag = dexp (gz)
+                  else
+                     ag = dexp (elag)
+                  end if 
 c                                  routine cfluid returns ln(fs2)/2
-         write (*,1170) fo2, 2d0*fs2/tentoe, ag
+                  write (*,1170) fo2, 2d0*fs2/tentoe, ag
 c                                  output speciation:
-         write (*,1230)
+                  write (*,1230)
 
-         do j = 1, isp, 4
-            kmax = j + 3
-            if (kmax.gt.isp) kmax = isp
-            write (*,1180) (specie(ins(k)), k = j, kmax)
-            write (*,1190) (xs(ins(k)), k = j, kmax)
-            write (*,1200) (g(ins(k))*p*xs(ins(k)), k = j, kmax)
-         end do 
+                  do j = 1, isp, 4
+                     kmax = j + 3
+                     if (kmax.gt.isp) kmax = isp
+                     write (*,1180) (specie(ins(k)), k = j, kmax)
+                     write (*,1190) (xs(ins(k)), k = j, kmax)
+                     write (*,1200) (g(ins(k))*p*xs(ins(k)), k = j,kmax)
+                  end do 
 c                                  total species fractions:
-         totx = 0d0
-         do k = 1, isp
-            totx = totx + xs(ins(k))
-         end do 
+                  totx = 0d0
+                  do k = 1, isp
+                     totx = totx + xs(ins(k))
+                  end do 
 
-         write (*,1370) totx
-         if (totx.gt.1.001d0.or.totx.lt.0.999d0) write (*,1380)
+                  write (*,1370) totx
+                  if (totx.gt.1.001d0.or.totx.lt.0.999d0) write (*,1380)
 
 c                                  output bulk properties and V:
-         write (*,1240)
+                  write (*,1240)
 
-         ns = xs(6) + xs(8) + xs(9) 
-         no = xs(1) + xs(2)*2d0 + xs(3) + xs(7)*2d0 
-     *               + xs(8)*2d0 + xs(9) 
-         nc = xs(2) + xs(3) + xs(4) + xs(9)
-         nh = (xs(1) + xs(5) + xs(6))*2d0 + xs(4)*4d0 + xs(11)*3d0 
-         nn = 2d0*xs(10) + xs(11)
+                  ns = xs(6) + xs(8) + xs(9) 
+                  no = xs(1) + xs(2)*2d0 + xs(3) + xs(7)*2d0 
+     *                        + xs(8)*2d0 + xs(9) 
+                  nc = xs(2) + xs(3) + xs(4) + xs(9)
+                  nh = (xs(1) + xs(5) + xs(6))*2d0 + xs(4)*4d0 
+     *                                             + xs(11)*3d0 
+                  nn = 2d0*xs(10) + xs(11)
 
-         tot = ns + no + nh + nc + nn     
+                  tot = ns + no + nh + nc + nn     
 
-         write (*,1250) nc/tot, nh/tot, no/tot, ns/tot, nn/tot
-         write (*,1270) no/(no+nh)
-         if (ns.ne.0d0) write (*,1310) ns/(ns+nc)
-         write (*,1350) nc/(nc+no+nh+ns)
-         if (ifug.eq.24) write (*,1400) nn/nc
-         if (nh.ne.0d0.and.ns.ne.0d0) write (*,1290) ns/nh
-         if (ifug.eq.19.or.ifug.eq.20.and.ag.gt.1d0) write (*,1330)
+                  write (*,1250) nc/tot, nh/tot, no/tot, ns/tot, nn/tot
+                  write (*,1270) no/(no+nh)
+                  if (ns.ne.0d0) write (*,1310) ns/(ns+nc)
+                  write (*,1350) nc/(nc+no+nh+ns)
+                  if (ifug.eq.24) write (*,1400) nn/nc
+                  if (nh.ne.0d0.and.ns.ne.0d0) write (*,1290) ns/nh
+                  if (ifug.eq.19.or.ifug.eq.20.and.ag.gt.1d0) 
+     *               write (*,1330)
 
-         write (*,1420) vol
+                  write (*,1420) vol
 
-      end if 
+               end if 
 
-      goto 10 
+            end do 
+
+         end if 
+
+         write (*,'(/,a)') 'More calculations (y/n)?'
+         read (*,'(a)') y
+         if (y.ne.'y'.and.y.ne.'Y') exit
+
+      end do 
+
 
 1000  format (/,'Enter p(bar), T(K), ',a,': ')
 1010  format (/,'Enter p(bar), T(K): ')
 1110  format (/,'Enter the log10[f(S2)]:',/)
-1120  format (/,'Enter a zero for pressure to quit.',/)
 1130  format (/,10x,'f(H2O) = ',g12.5,/,10x,'f(CO2) = ',g12.5,/)
 1140  format (/,10x,'f(CO2) = ',g12.5,/)
 1150  format (/,10x,'f(H2O)     = ',g12.5,/
@@ -578,9 +645,5 @@ c                                  output bulk properties and V:
 1410  format (/,'Enter p(bar), T(K), log10[f(O2)], molar N/C:')
 1420  format (/,5x,'Molar Volume (cm3/mol) = ',g12.5,/)
 1430  format (/,'Enter log10[a(gph/dia)]:')
-
-99    write (*,1210) 
-      read (*,1220) y
-      if (y.eq.'y'.or.y.eq.'Y') goto 50
 
       end 

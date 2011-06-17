@@ -398,6 +398,7 @@ c                                 each phase in the assemblage
          nph(i) = 0
          do j = 1, k5
             idsol(j,i) = 0
+            nrep(j,i) = 0
          end do 
 
          do j = 1, iavar(3,i) 
@@ -422,7 +423,7 @@ c                                 each phase in the assemblage
                nrep(nph(i),i) = 1
             end if
 
-         end do 
+         end do  
 c                                 make an array in which each id 
 c                                 occurs only once
          
@@ -434,7 +435,7 @@ c                                 next compare to the existing list
             do j = 1, istab
 
                if (idsol(k,i).eq.idstab(j)) then 
-                  if (nrep(k,i).gt.nstab(j)) nstab(k) = nrep(k,i)
+                  if (nrep(k,i).gt.nstab(j)) nstab(j) = nrep(k,i)
                   count = .false.
                   exit
                end if 
@@ -449,6 +450,7 @@ c                                 next compare to the existing list
             end if 
 
          end do 
+
       end do 
 c                                 make the "null" assemblage
       iap(k2) = k3

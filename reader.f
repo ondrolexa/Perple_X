@@ -2592,8 +2592,8 @@ c                     mol fraction
 
       subroutine outmod (dim,n6name,node)
 c----------------------------------------------------------------
-c reformat output from "all_data" requests according to the 
-c following options set in perplex_option.dat and dimension dim. 
+c reformat output from "all_modes" requests according to the 
+c options set in perplex_option.dat and dimension dim. 
 c----------------------------------------------------------------
       implicit none
 
@@ -2725,7 +2725,10 @@ c                                 reset and are not reread.
          do i = 1, iprop
 
             rewind (n5)
-            read (n5,'(a)') rec
+c                                 skip header lines
+            do j = 1, 9
+               read (n5,'(a)') rec
+            end do 
 
             do j = 1, ipt       
                    
