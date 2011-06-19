@@ -584,9 +584,9 @@ c                                  plot blurb
 
          end if   
 c                                 write version flag
-         write (n4,1100)
+         write (n4,'(a)') '|6.6.6'
 c                                 query for title
-         write (*,1070)
+         write (*,'(/,a)') 'Enter calculation title:'
          read (*,'(a)') title
  
       end if
@@ -628,11 +628,9 @@ c        write (*,'(80(a14,1x))') (vname(iv(i)),i=1,jpot),tags
      *       'with current Perple_X',/,'programs or scripts',/)
 1020  format (/,'Generate a plot file (y/n)?')
 1060  format (/,'Enter number of sections:')
-1070  format (/,'Enter calculation title:')
 1080  format (/,'Enter the output file name [without the ',
      *          '.plt/.tab suffix]:')
 1090  format (/,'Table columns will be:',/)
-1100  format ('|6.6.6')
 1110  format (/,'Make a 1-dimensional (e.g., isobaric) table (y/n)?')
 1120  format (/,'Select the independent (x) variable:',/)
 2130  format (/,'Select the first independent (x) variable:',/)

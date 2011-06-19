@@ -16,9 +16,8 @@ c a version stamp for each executable
 c----------------------------------------------------------------------
 	implicit none
 
-      write (*,1000) 
-
-1000  format (/,'Perple_X version 6.6.5.9, compiled 6/17/2011.')
+      write (*,'(/,a)') 
+     *      'Perple_X version 6.6.5.9, compiled 6/20/2011.'
 
       end
 

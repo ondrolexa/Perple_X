@@ -282,15 +282,32 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      character specie(nsp)*3, vname*8, y*1
+      logical log
 
-      integer ier, igo, ins(nsp), i, isp, j, k, kmax
+      character specie(nsp)*3, y*1, n4name*100, title*100, tags(26)*14
+
+      integer ier, igo, ins(nsp), i, isp, j, k, kmax, count
 
       double precision nc, nh, no, ns, nn, tentoe, fo2, fs2, xfh, 
-     *                 xfc, ag, tot, totx
+     *                 xfc, ag, tot, totx, var(l2), f, prop(40)
 
       double precision fh2o,fco2
       common / cst11 /fh2o,fco2
+
+      character*8 vname,xname
+      common/ csta2  /xname(k5),vname(l2)
+
+      double precision vmax,vmin,dv
+      common/ cst9  /vmax(l2),vmin(l2),dv(l2)
+
+      character*100 prject,tfname
+      common/ cst228 /prject,tfname
+
+      integer inc,jpot
+      common/ cst101 /inc(l2),jpot
+
+      integer ipot,jv,iv
+      common/ cst24 /ipot,jv(l2),iv(l2)
 
       double precision p,t,xo,u
       common/ cst5 /p,t,xo,u(6)
@@ -311,14 +328,25 @@ c-----------------------------------------------------------------------
       integer iam
       common/ cst4 /iam
 
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
       data tentoe, fo2, fs2, specie /2.302585093d0, 0d0, 0d0,
      *      'H2O','CO2','CO ','CH4','H2 ','H2S','O2 ',
      *      'SO2','COS','N2 ','NH3'/
 c----------------------------------------------------------------------- 
 c                                 iam is a flag indicating the Perple_X program
       iam = 11
+      vname(1) = 'P(bar)'
+      vname(2) = 'T(K)'
+      ipot = 2
 c                                 version info
       call vrsion
+c                                 read options
+      n4name = 'perplex_option.dat'
+      call redop1 (.false.,n4name)
 
       do 
 c                                 configure EoS
@@ -326,15 +354,20 @@ c                                 configure EoS
          fs2 = -9999d0*tentoe/2d0
          elag = 0d0
 
-         vname = ' X(CO2) '
+         vname(3) = 'X(CO2)  '
 c                                 get the users choice of EoS:   
          call rfluid (1, ifug)
 c                                 for multispecies fluids set
 c                                 up species indices:
-         if (ifug.gt.6.and.ifug.lt.13.or.
-     *       ifug.eq.19.or.ifug.eq.20.or.ifug.eq.24) then
-            vname = '  X(O)  '
-            if (ifug.eq.7.or.ifug.eq.8.or.ifug.eq.24) vname = 'log(fo2)'
+         if (ifug.gt.6.and.ifug.lt.13.or.ifug.eq.19.or.ifug.eq.20.or.
+     *       ifug.eq.24) then
+
+            if (ifug.eq.7.or.ifug.eq.8.or.ifug.eq.24) then
+               vname(3) = 'log(fO2)'
+            else 
+               vname(3) = 'X(O)    '
+            end if 
+
             isp = 5
 
             do i = 1, 6
@@ -357,28 +390,467 @@ c                                 up species indices:
             end if
 
          else if (ifug.eq.16) then
-            vname = '  X(O)  '
+            vname(3) = 'X(O)    '
             isp = 3
             ins(1) = 1
             ins(2) = 5
             ins(3) = 7
          else if (ifug.eq.17) then
-            vname = '  X(O)  '
+            vname(3) = 'X(O)    '
             isp = 4
             ins(1) = 1
             ins(2) = 5
             ins(3) = 6
             ins(4) = 8
          else if (ifug.eq.13.or.ifug.eq.15) then 
-            vname = ' X(H2)  '
+            vname(3) = 'X(H2)   '
          end if 
-
 
          write (*,'(/,a)') 'Tabulate properties (y/n)?'
          read (*,'(a)') y
 
          if (y.eq.'y'.or.y.eq.'Y') then 
 c                                 tabulated properties
+            if (ifug.eq.4.or.ifug.eq.9.or.ifug.eq.23) then
+
+               write (*,'(a)') 'Use frendly.'
+               stop
+
+            else if (ifug.le.6.or.ifug.eq.14.or.ifug.eq.17.or.
+     *               ifug.eq.21.or.ifug.eq.22.or.ifug.eq.25) then 
+c                                 xco2 EoS's
+               ipot = 3
+
+            else if (ifug.lt.9) then
+c                                 fo2 EoS's
+               if (ibuf.eq.3) then
+                  ipot = 4
+                  vname(4) = 'log(aC)'
+               else 
+                  ipot = 3    
+                  vname(3) = 'log(aC)'
+               end if
+               
+            else if (ifug.le.11) then
+c                                 X(O)-a(C) EoS
+               ipot = 4
+               vname(4) = 'log(aC)'
+
+            else if (ifug.eq.12) then 
+c                                 X(O)-a(C)-f(S2) EoS
+               ipot = 4
+               vname(4) = 'log(aC)'
+
+               if (ibuf.eq.3) then 
+                  ipot = 5
+                  vname(5) = 'log(fS2)'
+               end if 
+
+            else if (ifug.eq.15) then 
+c                                X(H2)
+               ipot = 3
+
+            else if (ifug.eq.16) then 
+c                                X(O) HO
+               ipot = 3
+
+            else if (ifug.eq.17) then 
+c                                X(O)-fs2 HOS 
+               ipot = 3
+
+               if (ibuf.eq.3) then 
+                  ipot = 4
+                  vname(4) = 'log(fS2)'
+               end if                   
+
+            else if (ifug.eq.19) then 
+c                                X(O)-X(S) COHS
+               ipot = 4    
+               vname(4) = 'X(S)    '
+
+            else if (ifug.eq.20) then 
+c                                X(O)-X(C) COH
+               ipot = 4
+               vname(4) = 'X(C)    '
+
+            else if (ifug.eq.24) then 
+c                                fo2-aC-N/C COHN
+               vname(3) = 'log(aC) '
+               if (ibuf.eq.3) then
+                  ipot = 5 
+                  vname(4) = 'log(fO2)'
+                  vname(5) = 'N/C     '          
+               else 
+                  ipot = 4 
+                  vname(4) = 'N/C     '
+               end if 
+
+            end if 
+
+            do 
+
+               write (*,'(/,a)') 
+     *               'How many independent variables, 1 or 2?'
+               call rdnumb (p,0d0,jpot,1,.false.)
+               if (jpot.gt.0.and.jpot.lt.3) exit
+
+            end do 
+            
+            if (jpot.eq.1) then 
+               write (*,'(/,a)') 'Select the independent variable:'
+            else 
+               write (*,'(/,a)') 
+     *               'Select the primary independent variable:'
+            end if 
+
+            do i = 1, ipot
+               write (*,'(3x,i1,a,a)') i,' - ',vname(i)
+            end do 
+
+            do 
+               read (*,*,iostat=ier) iv(1)
+               if (ier.eq.0.and.iv(1).gt.0.and.iv(1).le.ipot) exit
+               call rerr
+            end do 
+
+            if (jpot.eq.2) then 
+
+               write (*,'(/,a)') 
+     *               'Select the secondary independent variable:'
+               do i = 1, ipot
+                  if (i.eq.iv(1)) cycle 
+                  write (*,'(3x,i1,a,a)') i,'-',vname(i)
+               end do 
+
+               do 
+                  read (*,*,iostat=ier) iv(2)
+                  if (ier.ne.0.and.iv(2).ne.iv(1).and.
+     *                (iv(2).gt.0.or.iv(2).le.ipot)) exit
+                  call rerr
+               end do 
+            end if 
+c                                 get independent variable range and increments
+            do i = 1, jpot
+
+               write (*,'(a,a)') 
+     *               'Enter minimum, maximum and increment for: ', 
+     *               vname(iv(i))
+               read (*,*,iostat=ier) vmin(iv(i)),vmax(iv(i)),dv(iv(i))
+
+               var(iv(i)) = vmin(iv(i))
+
+            end do 
+c                                 get sectioning values for the remainder
+            j = jpot
+
+            do i = 1, ipot
+
+               if (jpot.eq.1.and.iv(1).eq.i) then
+                  cycle 
+               else if (iv(1).eq.i.or.iv(2).eq.i) then 
+                  cycle
+               end if 
+
+               j = j + 1
+               iv(j) = i
+
+               do 
+
+                  write (*,'(a,a)') 'Enter the value for: ',
+     *                               vname(i)
+                  read (*,*,iostat=ier) var(i)
+                  vmin(i) = var(i)
+                  if (ier.eq.0) exit 
+                  call rerr
+
+               end do 
+                              
+            end do
+
+            do i = 1, jpot
+               inc(iv(i)) = 
+     *            idint(dabs(vmax(iv(i))-vmin(iv(i)))/dv(iv(i))) + 1
+            end do 
+
+            do i = jpot+1, ipot
+               inc(iv(i)) = 1
+               dv(iv(i)) = 1
+            end do 
+c                                 query output file name
+            write (*,'(/,a,a)') 'Enter a name for the output file ',
+     *                          '[without the .tab suffix]:'
+c                                 readrt loads the root into prject
+            call readrt 
+            call mertxt (n4name,prject,'.tab',0)
+            open (n4,file=n4name)
+c                                 query for title
+            write (*,'(/,a)') 'Enter calculation title:'
+            read (*,'(a)') title
+
+            write (*,'(/,a,a)') 'Output logarithmic values for ',
+     *           'species fractions and fugacities (y/n)?'
+            read (*,'(a)') y
+
+            if (y.eq.'y'.or.y.eq.'Y') then 
+               log = .true.
+            else 
+               log = .false.
+            end if 
+c                                 write header
+c                                 write version flag
+            write (n4,'(a)') '|6.6.6'
+            write (n4,'(a)') title 
+            write (n4,*) jpot
+
+            do i = 1, jpot
+               write (n4,*) vname(iv(i))
+               write (n4,*) vmin(iv(i))
+               write (n4,*) dv(iv(i))
+               write (n4,*) inc(iv(i))
+            end do 
+c                                 write column tags
+            do i = 1, ipot
+               tags(i) = vname(iv(i))
+            end do 
+c                                 species fractions
+            j = 0
+            do i = ipot+1, ipot+isp
+               j = j + 1
+               if (log) then 
+                  write (tags(i),'(a,a,a)') 'log[y(',specie(ins(j)),')]'
+               else 
+                  write (tags(i),'(a,a,a)') 'y(',specie(ins(j)),')'
+               end if 
+               call unblnk (tags(i))
+            end do
+c                                 atomic fractions
+            tags(ipot+isp+1) = 'Y_C'
+            tags(ipot+isp+2) = 'Y_O'
+            tags(ipot+isp+3) = 'Y_H'
+            tags(ipot+isp+4) = 'Y_N'
+            tags(ipot+isp+5) = 'Y_S'
+
+            count = ipot+isp+6
+c                                  species fugacities
+            j = 0
+            do i = count, count+isp
+               j = j + 1 
+               if (log) then 
+                  write (tags(i),'(a,a,a)') 'log[f(',specie(ins(j)),')]'
+               else 
+                  write (tags(i),'(a,a,a)') 'f(',specie(ins(j)),')'
+               end if 
+               call unblnk (tags(i))
+            end do
+
+            count = count + isp + 2
+            tags(count-1) = 'log[f(O2)]'
+            tags(count)   = 'log[f(S2)]'
+
+            write (*,'(40(a14,1x))') (tags(i),i=1,count)
+c                                 terminal info on variables
+            write (*,'(/,a,/)') 'Table columns will be:'
+            write (*,'(5(a14,1x))') (tags(i),i=1,count)
+         
+            if (jpot.eq.1) then 
+               call plblrb (4)
+            else
+               call plblrb (1)
+            end if 
+c                                 computational loop, initialize p,t to be safe
+            p = var(1)
+            t = var(2) 
+
+            if (ifug.le.6 .or.ifug.eq.14.or.ifug.eq.17.or.
+     *          ifug.eq.21.or.ifug.eq.22.or.ifug.eq.25.or.
+     *          ifug.eq.15.or.ifug.eq.16) then 
+c                                 xco2, xo, xh2 EoS's
+                xo = var(3)
+
+            else if (ifug.lt.9) then
+c                                 fo2 EoS's
+               if (ibuf.eq.3) then
+                  dlnfo2 = var(3) * tentoe
+                  elag = var(4) * tentoe
+               else 
+                  elag = var(3) * tentoe
+               end if
+               
+            else if (ifug.le.11) then
+c                                 X(O)-a(C) EoS
+               xo = var(3)
+               elag = var(4) * tentoe
+
+            else if (ifug.eq.12) then 
+c                                 X(O)-a(C)-f(S2) EoS
+               xo = var(3)
+               elag = var(4) * tentoe
+               if (ibuf.eq.3) dlnfo2 = var(5) * tentoe
+
+            else if (ifug.eq.17) then 
+c                                X(O)-fs2 HOS 
+               xo = var(3)
+               if (ibuf.eq.3) dlnfo2 = var(4) * tentoe               
+
+            else if (ifug.eq.19) then 
+c                                X(O)-X(S) COHS
+               xo = var(3)
+               gz = var(4)  
+
+            else if (ifug.eq.20) then 
+c                                X(O)-X(C) COH
+               xo = var(3)
+               gz = var(4)  
+
+            else if (ifug.eq.24) then 
+c                                fo2-aC-N/C COHN
+               elag = var(3) * tentoe
+               if (ibuf.eq.3) then
+                  dlnfo2 = var(4) * tentoe
+                  gz = var(5)            
+               else 
+                  gz = var(4) 
+               end if 
+
+            end if 
+
+            do j = 1, inc(iv(2))
+
+               var(iv(2)) = vmin(iv(2)) + dfloat(j-1)*dv(iv(2))
+
+               do i = 1, inc(iv(1))
+
+                  var(iv(1)) = vmin(iv(1)) + dfloat(i-1)*dv(iv(1))
+
+                  do k = 1, jpot
+c                                 assign values to local variables
+                     if (iv(k).eq.1) then 
+                        p = var(iv(k))
+                     else if (iv(k).eq.2) then 
+                        t = var(iv(k))
+                     else if (iv(k).eq.3) then 
+
+                        if (ifug.eq.7.or.ifug.eq.8) then
+
+                           if (ibuf.eq.3) then
+                              dlnfo2 = var(iv(k)) * tentoe
+                           else 
+                              elag = var(iv(k)) * tentoe
+                           end if
+
+                        else if (ifug.eq.24) then 
+
+                           elag = var(iv(k)) * tentoe
+
+                        else 
+
+                           xo = var(iv(k))
+
+                        end if 
+
+                     else if (iv(k).eq.4) then 
+
+                        if (ifug.eq.7.or.ifug.eq.8) then
+ 
+                           if (ibuf.eq.3) elag = var(iv(k)) * tentoe
+               
+                        else if (ifug.eq.10.or.ifug.eq.11.or.
+     *                          ifug.eq.12.) then
+
+                           elag = var(iv(k)) * tentoe
+
+                        else if (ifug.eq.17) then 
+
+                           if (ibuf.eq.3) dlnfo2 = var(iv(k)) * tentoe
+
+                        else if (ifug.eq.19.or.ifug.eq.20) then 
+
+                           gz = var(iv(k))  
+
+                        else if (ifug.eq.24) then 
+
+                           if (ibuf.eq.3) then
+                              dlnfo2 = var(iv(k)) * tentoe        
+                           else 
+                              gz = var(iv(k)) 
+                           end if 
+
+                        else 
+
+                           write (*,*) 'fugga wugga!'
+                           stop
+
+                        end if 
+
+                     else if (iv(k).eq.5) then 
+
+                        if (ifug.eq.12.and.ibuf.eq.3) then 
+
+                           dlnfo2 = var(iv(k)) * tentoe
+
+                        else if (ifug.eq.24.and.ibuf.eq.3) then 
+
+                           gz = var(iv(k))             
+
+                        else 
+
+                           write (*,*) 'fugga wugga!'
+                           stop
+
+                        end if
+ 
+                     end if 
+
+                  end do 
+  
+                  call cfluid (fo2, fs2)    
+c                                 variables
+                  do k = 1, ipot
+                     prop(k) = var(iv(k))
+                  end do 
+c                                 species fractions/fugacities
+                  do k = 1, isp
+                     f = g(ins(k))*p*xs(ins(k))
+                     if (log.and.f.le.0d0) then  
+                        prop(ipot+k) = nopt(7)
+                        prop(ipot+isp+5+k) = nopt(7)
+                     else if (log) then 
+                        prop(ipot+k) = dlog10(xs(ins(k)))
+                        prop(ipot+isp+5+k) = dlog10(f)
+                     else 
+                        prop(ipot+k) = xs(ins(k))
+                        prop(ipot+isp+5+k) = f
+                     end if
+                  end do
+c                                 atomic fractions 
+                  ns = xs(6) + xs(8) + xs(9) 
+                  no = xs(1) + xs(2)*2d0 + xs(3) + xs(7)*2d0 
+     *                       + xs(8)*2d0 + xs(9) 
+                  nc = xs(2) + xs(3) + xs(4) + xs(9)
+                  nh = (xs(1) + xs(5) + xs(6))*2d0 + xs(4)*4d0 
+     *                                             + xs(11)*3d0 
+                  nn = 2d0*xs(10) + xs(11)
+
+                  tot = ns + no + nh + nc + nn     
+
+                  prop(ipot+isp+1) = nc/tot
+                  prop(ipot+isp+2) = no/tot
+                  prop(ipot+isp+3) = nh/tot
+                  prop(ipot+isp+4) = nn/tot
+                  prop(ipot+isp+5) = ns/tot
+
+                  prop(count-1) = fo2/tentoe
+                  prop(count)   = fs2/tentoe
+
+                  write (n4,'(40(g14.7,1x))') (prop(k),k=1,count)
+     
+               end do 
+
+            end do 
+    
+            write (*,'(a,a)') 'The table has been written to file: ',
+     *                        n4name
+            close (n4)
 
          else  
 c                                 properties at arbitrary conditions        
@@ -392,10 +864,11 @@ c                                 of a change in EoS
                end do 
 
                if ((igo.eq.0.and.(ifug.eq.7.or.ifug.eq.8)).or.
-     *             (ibuf.ne.3.and.(ifug.eq.7.or.ifug.eq.8)).or.
+     *              (ibuf.ne.3.and.(ifug.eq.7.or.ifug.eq.8)).or.
      *             ifug.eq.4.or.ifug.eq.9) then 
 c                                 get P-T conditions:
-                  write (*,1010) 
+                  write (*,'(/,a)') 'Enter p(bar), T(K): '
+
                   xo = 1d0
                   igo = 1
 
@@ -404,11 +877,10 @@ c                                 get P-T conditions:
                      if (ier.eq.0) exit
                      call rerr
                   end do
-                     
-      
+        
                else if (ifug.eq.19) then
 
-                  write (*,1340)
+                  write (*,'(/,a)') 'Enter p(bar), T(K), X(O), X(S):'
 
                   do 
                      read (*,*,iostat=ier) p, t, xo, elag
@@ -418,8 +890,7 @@ c                                 get P-T conditions:
 
                else if (ifug.eq.20) then
 
-                  write (*,1360)
-
+                  write (*,'(/,a)') 'Enter p(bar), T(K), X(O), X(C):'
                   do 
                      read (*,*,iostat=ier) p, t, xo, elag
                      if (ier.eq.0) exit
@@ -430,7 +901,7 @@ c                                 get P-T conditions:
          
                   if (ibuf.ne.3) then
  
-                     write (*,1390)
+                     write (*,'(/,a)') 'Enter p(bar), T(K), molar N/C:'
 
                      do 
                         read (*,*,iostat=ier) p, t, gz
@@ -440,7 +911,8 @@ c                                 get P-T conditions:
 
                   else 
 
-                     write (*,1410)
+                     write (*,'(/,a)') 
+     *                    'Enter p(bar), T(K), log10[f(O2)], molar N/C:'
 
                      do 
                         read (*,*,iostat=ier) p, t, dlnfo2, gz
@@ -453,8 +925,10 @@ c                                 get P-T conditions:
                   end if 
 
                   if (igo.eq.0) then 
+
                      igo = 1
-                     write (*,1430) 
+ 
+                     write (*,'(/,a)') 'Enter log10[a(gph/dia)]:'
 
                      do 
                         read (*,*,iostat=ier) elag
@@ -466,7 +940,8 @@ c                                 get P-T conditions:
 
                else 
 c                                  or get P-T-X/f conditions:
-                  write (*,1000) vname
+                  write (*,'(/,a,a,a)') 
+     *                   'Enter p(bar), T(K), ',vname(3),':'
 
                   do 
                      read (*,*,iostat=ier) p, t, xo
@@ -483,12 +958,10 @@ c                                  quit if p = 0
 c                                  if sulfur dependent, get
 c                                  fs2 if user hasn't opted for
 c                                  a buffer:
-               if ( (ifug.eq.12.and.ibuf.eq.3.and.igo.ne.0).or.
-     *              (ifug.eq.17.and.ibuf.eq.3.and.igo.ne.0).or.
-     *              (ifug.eq.19.and.ibuf.eq.3.and.igo.ne.0).or.
-     *              (ifug.eq.20.and.ibuf.eq.3.and.igo.ne.0) ) then 
+               if (ibuf.eq.3.and.igo.ne.0.and.(ifug.eq.12.or.ifug.eq.17
+     *             .or.ifug.eq.19.or.ifug.eq.20)) then 
 
-                  write (*,1110)
+                  write (*,'(/,a)') 'Enter log10[f(S2)]:'
 
                   do 
                      read (*,*,iostat=ier) dlnfo2
@@ -511,8 +984,8 @@ c                                  output results:
                fco2 = dexp(fco2) 
                fo2 = fo2 / tentoe
 
-               if (ifug.lt.4.or.ifug.eq.5.or.ifug.eq.6.or.ifug.eq.18.or.
-     *             ifug.eq.14.or.ifug.gt.20.and.ifug.lt.24) then
+               if (ifug.lt.4.or.ifug.eq.5.or.ifug.eq.6.or.ifug.eq.18.or
+     *            .ifug.eq.14.or.ifug.gt.20.and.ifug.lt.24) then
 
                   write (*,1130) fh2o, fco2
 c                                  increment pressure for
@@ -567,13 +1040,12 @@ c                                  total species fractions:
 
                   write (*,1370) totx
                   if (totx.gt.1.001d0.or.totx.lt.0.999d0) write (*,1380)
-
 c                                  output bulk properties and V:
                   write (*,1240)
 
                   ns = xs(6) + xs(8) + xs(9) 
                   no = xs(1) + xs(2)*2d0 + xs(3) + xs(7)*2d0 
-     *                        + xs(8)*2d0 + xs(9) 
+     *                       + xs(8)*2d0 + xs(9) 
                   nc = xs(2) + xs(3) + xs(4) + xs(9)
                   nh = (xs(1) + xs(5) + xs(6))*2d0 + xs(4)*4d0 
      *                                             + xs(11)*3d0 
@@ -604,10 +1076,6 @@ c                                  output bulk properties and V:
 
       end do 
 
-
-1000  format (/,'Enter p(bar), T(K), ',a,': ')
-1010  format (/,'Enter p(bar), T(K): ')
-1110  format (/,'Enter the log10[f(S2)]:',/)
 1130  format (/,10x,'f(H2O) = ',g12.5,/,10x,'f(CO2) = ',g12.5,/)
 1140  format (/,10x,'f(CO2) = ',g12.5,/)
 1150  format (/,10x,'f(H2O)     = ',g12.5,/
@@ -622,8 +1090,6 @@ c                                  output bulk properties and V:
 1180  format (10x,4(5x,a3,5x))
 1190  format (5x,'x',4x,4(g12.5,1x))
 1200  format (5x,'f',4x,4(g12.5,1x),/)
-1210  format (/,'Change EoS, buffer, or graphite activity (y/n)?',/)
-1220  format (a1)
 1230  format (22x,'Speciation/Fugacities',/)
 1240  format (/,22x,'Atomic Proportions',//,
      *        10x,'C',12x,'H',12x,'O',12x,'S',12x,'N')
@@ -635,15 +1101,10 @@ c                                  output bulk properties and V:
 1310  format (5x,'Back-calculated X(S) = ',g16.9)
 1330  format (/,5x,'COMPOSITION IS SUPERSATURATED WITH ',
      *           'RESPECT TO CARBON!!',/)
-1340  format (/,'Enter p(bar), T(K), X(O), X(S): ')
 1350  format (5x,'Back-calculated X(C) = ',g16.9)
-1360  format (/,'Enter p(bar), T(K), X(C):')
 1370  format (/,5x,'Sum of species fractions: ',f14.9,/)
-1380  format (/,5x,'INVALID SPECIIATION!!',/)
-1390  format (/,'Enter p(bar), T(K), molar N/C:')
+1380  format (/,5x,'INVALID SPECIATION!!',/)
 1400  format (5x,'Back-calculated N/C  = ',g16.9)
-1410  format (/,'Enter p(bar), T(K), log10[f(O2)], molar N/C:')
 1420  format (/,5x,'Molar Volume (cm3/mol) = ',g12.5,/)
-1430  format (/,'Enter log10[a(gph/dia)]:')
 
       end 

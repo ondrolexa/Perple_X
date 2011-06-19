@@ -148,8 +148,9 @@ c---------------------------------------------------------------------
      *  'X(O)-f(S2) GCOHS-fluid hybrid-EoS Connolly & Cesare 1993',
      *  'X(H2) H2-H2O hybrid-EoS',
      *  'X(CO2) Pitzer & Sterner 1994; Holland & Powell mixing 2003',
-     *  'X(H2) low T H2-H2O hybrid-EoS','X(O) H-O HSMRK/MRK hybrid-EoS',
-     *  'X(O) H-O-S HSMRK/MRK hybrid-EoS',
+     *  'X(H2) low T H2-H2O hybrid-EoS',
+     *   'X(O) H-O HSMRK/MRK hybrid-EoS',
+     *  'X(O)-f(S2) H-O-S HSMRK/MRK hybrid-EoS',
      *  'X(CO2) Delany/HSMRK/MRK hybrid-EoS, for P > 10 kb',
      *  'X(O)-X(S) COHS hybrid-EoS Connolly & Cesare 1993',
      *  'X(O)-X(C) COHS hybrid-EoS Connolly & Cesare 1993',
@@ -181,7 +182,7 @@ c---------------------------------------------------------------------
       if (ifug.gt.nrk) ier = 1
       call rerror (ier,*10)
 
-      if (ifug.eq.12.or.ifug.eq.17.or.ifug.eq.19.or.ifug.eq.20) then
+      if (ifug.eq.12.or.ifug.eq.17) then
 c                                 COHS & HOS equations of state
 c                                 get sulfur fugacity constraint:
          vname(3) = 'X(O)'
