@@ -8,7 +8,7 @@
 #                             make <target>
 #
 # where target can be one or more of the programs you want compiled, e.g.,
-# "make actcor build cohsrk ctransf frendly meemum pstable pspts psvdraw pssect pt2curv species vertex werami"
+# "make actcor build fluids ctransf frendly meemum pstable pspts psvdraw pssect pt2curvvertex werami"
 # will make the most commonly used programs. 
 #
 #
@@ -31,10 +31,10 @@ COMP77 = gfortran
 FFLAGS = -C -O3 
 
 # WFM Added 2007Sep05
-# MYOBJ = actcor build cohsrk ctransf frendly hptover htog meemum pstable pspts psvdraw pssect pt2curv species vertex werami
+# MYOBJ = actcor build fluids ctransf frendly hptover htog meemum pstable pspts psvdraw pssect pt2curv vertex werami
 
 # PAPPEL 2010SEPT08: for 6.6.0
-MYOBJ = actcor build cohsrk ctransf frendly hptover htog meemum pstable  pspts psvdraw pssect pt2curv species vertex werami
+MYOBJ = actcor build fluids ctransf frendly hptover htog meemum pstable  pspts psvdraw pssect pt2curv  vertex werami
 
 all:  $(MYOBJ)
 
@@ -48,7 +48,7 @@ actcor: actcor.o tlib.o
 build: build.o tlib.o rlib.o flib.o 
 	$(COMP77) $(FFLAGS) build.o tlib.o rlib.o flib.o -o $@ 
 
-cohsrk: cohsrk.o tlib.o flib.o 
+fluids: fluids.o tlib.o flib.o 
 	$(COMP77) $(FFLAGS) $@.o tlib.o flib.o -o $@
 
 ctransf: ctransf.o tlib.o 
@@ -81,9 +81,6 @@ pssect: psect.o pscom.o pslib.o tlib.o rlib.o flib.o clib.o  dlib.o
 pt2curv: pt2curv.o tlib.o
 	$(COMP77) $(FFLAGS) $@.o tlib.o -o $@
 
-species: species.o flib.o tlib.o
-	$(COMP77) $(FFLAGS) $@.o flib.o tlib.o -o $@
-         
 vertex: vertex.o tlib.o rlib.o flib.o nlib.o clib.o resub.o
 	$(COMP77) $(FFLAGS) vertex.o tlib.o rlib.o flib.o nlib.o clib.o resub.o -o $@
 
@@ -109,8 +106,8 @@ actcor.o: actcor.f
 	$(COMP77) $(FFLAGS) -c actcor.f
 build.o: build.f
 	$(COMP77) $(FFLAGS) -c build.f
-cohsrk.o: cohsrk.f
-	$(COMP77) $(FFLAGS) -c cohsrk.f
+fluids.o: fluids.f
+	$(COMP77) $(FFLAGS) -c fluids.f
 cont_lib.o: cont_lib.f
 	$(COMP77) $(FFLAGS) -c cont_lib.f
 ctransf.o: ctransf.f
@@ -137,10 +134,6 @@ pstable.o: pstable.f
 # NEXT LINE MODIFIED BY pappel (PA@MIN.UNI-KIEL.DE) 2010SEPT08: CHANGED ptcurv.o TO pt2curv.o	
 pt2curv.o: pt2curv.f
 	$(COMP77) $(FFLAGS) -c pt2curv.f
-satsurf.o: satsurf.f
-	$(COMP77) $(FFLAGS) -c satsurf.f
-species.o: species.f
-	$(COMP77) $(FFLAGS) -c species.f
 rk.o: rk.f
 	$(COMP77) $(FFLAGS) -c rk.f
 resub.o: resub.f

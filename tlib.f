@@ -4827,3 +4827,110 @@ c                                 1d - tab format
      *      /,5x,'perplex.ethz.ch/faq/Perple_X_tab_file_format.txt',/)
 
       end
+
+c-------------------------------------------------------------------
+c text manipulation routines
+c
+c evntually all such rountines will be in one block or file, this is
+c not the case now. 6/20/2011. 
+c-------------------------------------------------------------------
+
+      subroutine unblnk (text)
+c------------------------------------------------------------------- 
+c unblnk - subroutine to remove blanks from text
+ 
+c     text - character string 
+c     jchar - length of unblanked character string, 0 on input 
+c             if unknown.
+c-------------------------------------------------------------------
+      implicit none
+
+      integer i,ict,nchar
+
+      character text*(*), bitsy(400)*1 
+
+      nchar = len(text)
+ 
+      read (text,'(400a)') (bitsy(i), i = 1, nchar)
+c                                 scan for blanks:
+      ict = 0
+
+      do i = 1, nchar
+         if (bitsy(i).eq.' ') cycle 
+         ict = ict + 1
+         bitsy(ict) = bitsy(i)
+      end do 
+
+      write (text,'(400a)') (bitsy(i), i = 1, ict)
+
+      end
+
+      subroutine enblnk (text)
+c---------------------------------------------------------------------- 
+c enblnk - scan text to first blank and cut remaining text.
+ 
+c     text - character string 
+c     jchar - length of unblanked character string, 0 on input 
+c             if unknown.
+c----------------------------------------------------------------------
+      implicit none
+
+      integer i,ict,nchar
+ 
+      character text*(*), bitsy(400)*1 
+
+      nchar = len(text) 
+      read (text,'(400a)') (bitsy(i), i = 1, nchar)
+c                                 scan for blanks:
+      ict = 0
+
+      do i = 1, nchar
+         if (bitsy(i).eq.' ') exit
+         ict = ict + 1
+      end do 
+
+      text = ' '
+      write (text,'(400a)') (bitsy(i), i = 1, ict)
+
+      end
+
+      subroutine reblnk (text)
+c------------------------------------------------------------------- 
+c reblnk - subroutine to replace blanks followed by a character
+c          with an underscore.
+ 
+c     text - character string 
+c     jchar - length of unblanked character string, 0 on input 
+c             if unknown.
+c----------------------------------------------------------------------
+      implicit none 
+
+      integer i,ict
+ 
+      character*8 text, bitsy(8)*1 
+ 
+      read (text,'(400a)') bitsy
+c                                 scan for blanks:
+      ict = 0
+
+      do i = 1, 7
+
+         if (i.eq.1.and.bitsy(i).eq.' ') cycle
+
+         if (bitsy(i).eq.' '.and.bitsy(i+1).ne.' ') then
+            ict = ict + 1
+            bitsy(ict) = '_'
+         else if (bitsy(i).eq.' ') then 
+            cycle
+         else
+            ict = ict + 1
+            bitsy(ict) = bitsy(i)
+         end if
+
+      end do 
+ 
+      bitsy(ict+1) = bitsy(8)
+
+      write (text,'(400a)') (bitsy(i), i = 1, ict + 1)
+
+      end

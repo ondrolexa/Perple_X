@@ -519,16 +519,19 @@ c                                fo2-aC-N/C COHN
      *               'Select the secondary independent variable:'
                do i = 1, ipot
                   if (i.eq.iv(1)) cycle 
-                  write (*,'(3x,i1,a,a)') i,'-',vname(i)
+                  write (*,'(3x,i1,a,a)') i,' - ',vname(i)
                end do 
 
                do 
                   read (*,*,iostat=ier) iv(2)
-                  if (ier.ne.0.and.iv(2).ne.iv(1).and.
-     *                (iv(2).gt.0.or.iv(2).le.ipot)) exit
+                  if (ier.eq.0.and.iv(2).ne.iv(1).and.
+     *                iv(2).gt.0.and.iv(2).le.ipot) exit
                   call rerr
                end do 
+
             end if 
+
+            write (*,'(/)')
 c                                 get independent variable range and increments
             do i = 1, jpot
 
@@ -608,13 +611,14 @@ c                                 write version flag
                write (n4,*) dv(iv(i))
                write (n4,*) inc(iv(i))
             end do 
-c                                 write column tags
+c                                 create column tags
             do i = 1, ipot
                tags(i) = vname(iv(i))
             end do 
 c                                 species fractions
             j = 0
             do i = ipot+1, ipot+isp
+
                j = j + 1
                if (log) then 
                   write (tags(i),'(a,a,a)') 'log[y(',specie(ins(j)),')]'
@@ -622,6 +626,7 @@ c                                 species fractions
                   write (tags(i),'(a,a,a)') 'y(',specie(ins(j)),')'
                end if 
                call unblnk (tags(i))
+
             end do
 c                                 atomic fractions
             tags(ipot+isp+1) = 'Y_C'
@@ -647,7 +652,9 @@ c                                  species fugacities
             tags(count-1) = 'log[f(O2)]'
             tags(count)   = 'log[f(S2)]'
 
-            write (*,'(40(a14,1x))') (tags(i),i=1,count)
+
+            write (n4,*) count 
+            write (n4,'(40(a14,1x))') (tags(i),i=1,count)
 c                                 terminal info on variables
             write (*,'(/,a,/)') 'Table columns will be:'
             write (*,'(5(a14,1x))') (tags(i),i=1,count)

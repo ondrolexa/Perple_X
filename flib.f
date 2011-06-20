@@ -149,7 +149,7 @@ c---------------------------------------------------------------------
      *  'X(H2) H2-H2O hybrid-EoS',
      *  'X(CO2) Pitzer & Sterner 1994; Holland & Powell mixing 2003',
      *  'X(H2) low T H2-H2O hybrid-EoS',
-     *   'X(O) H-O HSMRK/MRK hybrid-EoS',
+     *  'X(O) H-O HSMRK/MRK hybrid-EoS',
      *  'X(O)-f(S2) H-O-S HSMRK/MRK hybrid-EoS',
      *  'X(CO2) Delany/HSMRK/MRK hybrid-EoS, for P > 10 kb',
      *  'X(O)-X(S) COHS hybrid-EoS Connolly & Cesare 1993',
