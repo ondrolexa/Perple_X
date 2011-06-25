@@ -38,8 +38,9 @@
 | C2/c 
 | Wus  
 | Aki 
-| Gt or Gt_maj for the distinction between these two models refer to 
-| the comments with the Gt_maj model in stx11_solution_model.dat
+| Gt   - or Gt_maj for the distinction between these two models refer to 
+|        the comments with the Gt_maj model in stx11_solution_model.dat
+| Melt - for an MgO-MgSiO3 melt with stx11ver_melt.dat.
  
 | JADC 2/20/11.
 
@@ -451,7 +452,7 @@ m0 = 590000 m1 = 1.44673
 end
 
 
-MgO_L    EoS = 11 | MgO liquid from deKoker & Stixrude GJI 2009 / Erratum 2011                                                                     
+MgO_L       EoS = 11 | MgO liquid from deKoker & Stixrude GJI 2009 / Erratum 2011                                                                     
 MGO(1)
 G0 = -844000 S0 = 183.4 V0 = 1.646  
 c1 = 49.8 c2 = 31.4d4 c3 = 5.01 c4 = 1.13 c5 = -0.5 c6 = 3000 
@@ -465,7 +466,7 @@ c1 = 177 c2 = 19.76d4 c3 = 6.88 c4 = 0.51 c5 = -1.1 c6 = 1773
 end
 
 
-Mg2SiO4_L    EoS = 11 | Mg2SiO4 liquid from deKoker & Stixrude GJI 2009 / Erratum 2011                                                               
+Mg2SiO4L    EoS = 11 | Mg2SiO4 liquid from deKoker & Stixrude GJI 2009 / Erratum 2011                                                               
 MGO(2)SIO2(1)
 G0 = -2425000 S0 = 436.5 V0 = 5.143  
 c1 = 256.1 c2 = 32.1d4 c3 = 5.48 c4 = 0.63 c5 = -1.2 c6 = 1773 

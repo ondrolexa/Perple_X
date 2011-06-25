@@ -2192,7 +2192,7 @@ c                                 name and open plot file, write header
      *        /,'Try again:',/)
 1130  format (/,'Enter the ',a,' coordinate at the beginning of',
      *          ' the profile:')
-1140  format (/,'Enter the ',a,' coordinate at the end of1',
+1140  format (/,'Enter the ',a,' coordinate at the end of',
      *          ' the profile:')
 1150  format (/,'How many points along the profile?')
 

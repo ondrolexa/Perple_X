@@ -27,9 +27,9 @@ if nvar == 1 % two cases: 1d - table -> 2d plot
     
 elseif nvar == 2 % 2d - table -> 2/3d plot
     
-    amin = min(a(:)); amax = max(a(:)); disp(['Grid data range is ',num2str(amin),' - >',num2str(amax)])
+    amin = min(a(:)); amax = max(a(:));
     
-    choice = questdlg('Select plot style','Plot Style','3D Surface','Auto-Contour','Contour','3D Surface');
+    choice = questdlg([zname,'range is ',num2str(amin),'->',num2str(amax) '. Select plot style:'],'Plot Style','3D Surface','Auto-Contour','Contour','3D Surface');
     
     switch choice;
         
@@ -54,7 +54,7 @@ elseif nvar == 2 % 2d - table -> 2/3d plot
         if strcmp(titl,' ')
             titl = zname;
         else
-            titl = [titl ', ' zname];
+            titl = [deblank(titl) ', ' zname];
         end
     end
     

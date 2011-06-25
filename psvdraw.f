@@ -105,7 +105,7 @@ c                                 open output file
 1010  format (/,'**warning ver191** cannot find file:',/,a,/,
      *       'run VERTEX, FRENDLY, SPECIES or PT2CURV to generate the ',
      *       'file or try a different name (y/n)?')
-1020  format ('Modify the default plot (y/n)?')
+1020  format (/,'Modify the default plot (y/n)?')
 
       end
 c---------------------------------------------------------------------

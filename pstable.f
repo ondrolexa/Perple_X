@@ -124,7 +124,7 @@ c     *       'my_project.tab or my_project.ctr]:')
 1010  format (/,'**warning ver191** cannot find file',/,a,/,
      *       'run WERAMI/FRENDLY to generate the ',
      *       'file or try a different name (y/n)?')
-1020  format (/,'Contour the ratio of values in two contour plot ',
+1020  format (/,'Contour the ratio of values in separate tab ',
      *       'files (y/n)?',//,'If you answer yes the data from the ',
      *       'file just read will define the',/,'numerator of the '
      *       'ratio and you will be prompted next for a file',/,
