@@ -126,7 +126,7 @@ c                                extract the data
 
             call mode4 
 
-         else 
+         else if (imode.eq.0) then 
 
             exit 
 

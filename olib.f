@@ -393,6 +393,8 @@ c----------------------------------------------------------------------
 c                                 logarithmic_p option
       if (lopt(14)) p = 1d1**p 
 
+      nodata = .false. 
+
       if (iam.ne.2) then 
 
          jd = igrd(itri(1),jtri(1))
