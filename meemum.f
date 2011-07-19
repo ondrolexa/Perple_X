@@ -186,6 +186,8 @@ c                                 for meemum turn auto_refine OFF
       iopt(6) = 0 
 c                                 read thermodynamic data on unit n2:
       call input2 (first)
+c                                 allow reading of auto-refine data 
+      call setau1 (output)
 c                                 read data for solution phases on n9:
       call input9 (first,output)
 c                                 call initlp to initialize arrays 

@@ -1,8 +1,10 @@
       subroutine setau1 (output)
 c----------------------------------------------------------------------
-c setau1 sets autorefine dependent parameters. vertex is true if vertex
-c is the calling program. output is set to false if autorefine mode is 
-c not auto (i.e., iopt(6) = 2) or it is auto and in the second cycle.
+c setau1 sets autorefine dependent parameters. called by vertex, werami,
+c pssect and meemum.
+
+c output is set to false if autorefine mode is not auto (i.e., iopt(6) = 2) 
+c or it is auto and in the second cycle.
 c----------------------------------------------------------------------
       implicit none
  
@@ -54,24 +56,28 @@ c                                 are present and it is requested.
 
          call mertxt (n12nam,prject,'.tof',0)
 
-         if (iam.eq.1) then
+         if (iam.eq.1.or.iam.eq.2) then
+c                                 VERTEX or MEEMUM:
+            if (iam.eq.1) then 
 
-            open (n8, file = n12nam, status = 'unknown')
+               open (n8, file = n12nam, status = 'unknown')
 c                                 user friendly text version 
-            if (lopt(11)) then 
-               call mertxt (n11nam,prject,'_auto_refine.txt',0)
-               open (n11, file = n11nam, status = 'unknown')
+               if (lopt(11)) then 
+                  call mertxt (n11nam,prject,'_auto_refine.txt',0)
+                  open (n11, file = n11nam, status = 'unknown')
+               end if 
+
             end if 
 
             ibad1 = 0 
             igood = 0 
 
-            if (ierr.ne.0) then 
+            if (ierr.ne.0.and.iam.eq.1) then 
 c                                 no auto_refine data
                write (*,1020) n10nam
                open (n10, file = n10nam, status = 'unknown')
 
-            else 
+            else if (ierr.eq.0.and.iam.eq.1) then 
                    
                read (n10,*,iostat=ierr) ibad1, ibad2, igood
                if (ibad1.gt.0) read (n10,'(a)') (badnam(i),i=1,ibad1)
@@ -104,6 +110,29 @@ c                                 second cycle of automated mode
                end if  
 
                write (n8,*) refine
+          
+            else if (ierr.eq.0.and.iam.eq.2) then 
+c                                 MEEMUM, ask the user if he wants
+c                                 to use the data 
+               write (*,'(/,a,a,/,a)') 'Auto-refine data exists from a',
+     *                  ' VERTEX calculation',
+     *                   'Do you want MEEMUM to use this data (y/n)?'
+               read (*,'(a)') y
+
+               if (y.ne.'y'.and.y.ne.'Y') then
+
+                  iopt(6) = 0
+                  igood = 0
+
+               else 
+
+                  refine = .true.  
+                  read (n10,*,iostat=ierr) ibad1, ibad2, igood
+                  if (ibad1.gt.0) read (n10,'(a)') (badnam(i),i=1,ibad1)
+                  iopt(6) = 1
+                  write (*,1030) n10nam
+
+               end if
 
             end if 
 c                                 set cycle dependent parameters
