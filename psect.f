@@ -110,12 +110,6 @@ c psdplt - subroutine to plot bulk compositions
 
       logical oned
       common/ cst82 /oned
-
-      logical spline, half, tenth, grid, fill, label
-      integer ifont, bbox 
-      double precision xfac, cscale, nscale, ascale, rlabel, width      
-      common/ ops /xfac,cscale,nscale,ascale,rlabel,width,bbox(4),ifont,
-     *             spline,half,tenth,grid,fill,label
 c---------------------------------------------------------------
       iop5 = 0
       iop6 = 0
@@ -1076,9 +1070,6 @@ c psax1d - subroutine to output (sloppy) 1d axes.
 
       double precision xmin,xmax,ymin,ymax,dcx,dcy,xlen,ylen
       common/ wsize /xmin,xmax,ymin,ymax,dcx,dcy,xlen,ylen
-
-      integer  iop0 
-      common / basic /iop0
 
       logical spline, half, tenth, grid, fill, label
       integer ifont, bbox 

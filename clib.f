@@ -115,7 +115,7 @@ c                                 second cycle of automated mode
 c                                 MEEMUM, ask the user if he wants
 c                                 to use the data 
                write (*,'(/,a,a,/,a)') 'Auto-refine data exists from a',
-     *                  ' VERTEX calculation',
+     *                  ' previous calculation with VERTEX.',
      *                   'Do you want MEEMUM to use this data (y/n)?'
                read (*,'(a)') y
 

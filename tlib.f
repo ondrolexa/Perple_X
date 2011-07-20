@@ -1059,7 +1059,7 @@ c                                 generic thermo options
 1014  format (4x,'logarithmic_p          ',l1,10x,'[F] T',/,
      *        4x,'bad_number          ',f7.1,7x,'[0.0]')
 1015  format (/,2x,'Auto-refine options:',//,
-     *        4x,'auto_refine            ',a3,8x,'off [manual] auto')
+     *        4x,'auto_refine            ',a3,8x,'off manual [auto]')
 c                                 thermo options for frendly
 1016  format (/,2x,'Thermodynamic options:',//,
      *        4x,'approx_alpha           ',l1,10x,'[T] F',/,
