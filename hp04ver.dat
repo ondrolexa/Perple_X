@@ -91,8 +91,7 @@ begin_makes
                                 | Ti phengite endmember for Auzanneau et al. (CMP 159:1-24, 2010) mica model
                                 | Gdqf corrected from -482876. to -13469.8 J/mol, D. Dolejs, Mar 6, 2010.
  | tip = 1 fcel + 1 geik - 1/2 fs
- | -482876.  -14.694 .84
-
+ | -13469.8  -14.694 .84
                                                                                                                            
 
 mthm = 6 hem - 4 mt             | mthm O2 buffer

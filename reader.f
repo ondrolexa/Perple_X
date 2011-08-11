@@ -3334,7 +3334,7 @@ c                                 choose property
 
          do i = 1, kprop
 
-            if (iprop.gt.0.and.i.eq.25.or.i.eq.36) cycle 
+            if (iprop.gt.0.and.i.eq.25) cycle 
             write (*,1060) i,propty(i)
 
          end do 
