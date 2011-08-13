@@ -3324,6 +3324,17 @@ c                                 property counter
       iprop = 0
 c                                 phase composition counter
       komp = 0
+c                                 counter for dependent potentials, this
+c                                 this should be someplace else:
+c                                 for usv calculations make names
+c                                 for the extra potentials (p,t)                            
+      if (hcp.gt.icp) then 
+         ichem = hcp 
+         cname(icp+1) = 'T(K)   '
+         cname(icp+2) = '-P(bar)'
+      else 
+         ichem = icp 
+      end if 
 c                                 choose property
       do 
 
@@ -3334,7 +3345,7 @@ c                                 choose property
 
          do i = 1, kprop
 
-            if (iprop.gt.0.and.i.eq.25) cycle 
+            if (iprop.gt.0) cycle 
             write (*,1060) i,propty(i)
 
          end do 
@@ -3418,15 +3429,6 @@ c                                 get component to be contoured
 5010        write (*,1000)
 
             if (lop.eq.23) then 
-c                                 for usv calculations make names
-c                                 for the extra potentials (p,t)                            
-               if (hcp.gt.icp) then 
-                  ichem = hcp 
-                  cname(icp+1) = 'T(K)   '
-                  cname(icp+2) = '-P(bar)'
-               else 
-                  ichem = icp 
-               end if 
 
                write (*,1010) (i, cname(i), i = 1, ichem)
 
