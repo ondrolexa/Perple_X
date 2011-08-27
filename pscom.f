@@ -891,8 +891,10 @@ c                                 read data with nan-check
 
                if (ratio) then 
 
-                  if (row(dvar1).ne.0) then
+                  if (row(dvar1).ne.0d0) then
+
                      z(i,j) = row(dvar)/row(dvar1)
+
                   else 
 
                      if (warn1) then 
@@ -1265,15 +1267,18 @@ c                                 with compaq fortran:
 c                                 presumably eof
          eof = .true.
          return 
+
       else 
+
          eof = .false.
+
       end if 
 c                                 convert strings to numbers:
       do k = 1, mvar
 
          read (numbs(k),'(g14.7)',iostat=ier) row(k)
 
-         if (ier.ne.0) then 
+         if (ier.ne.0.or.isnan(row(k))) then 
     
              if (warn1) then 
                 call warn (4,row(1),k,numbs(k))
