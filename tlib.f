@@ -17,7 +17,7 @@ c----------------------------------------------------------------------
 	implicit none
 
       write (*,'(/,a)') 
-     *      'Perple_X version 6.6.6, source updated 8/26/2011.'
+     *      'Perple_X version 6.6.6, source updated 9/28/2011.'
 
       end
 
@@ -1800,7 +1800,9 @@ c---------------------------------------------------------------------
      *          'cause is incorrect ordering of',/,'endmembers in the',
      *          ' solution model, which leads to inconsistent site ',
      *          'occupancies',/)
-55    format (/,'**error ver055** too many make definitions,'
+55    format (/,'**error ver055** too many make definitions, delete '
+     *         ,'unused definitions from the',/
+     *         ,'thermodynamic data file or '
      *         ,'increase parameter K16 (',i2,') and recompile.',/)
 56    format (/,'**error ver056** too many phases in a make definition'
      *         ,', increase parameter K17 (',i2,') and recompile.',/)

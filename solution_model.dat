@@ -6399,3 +6399,318 @@ z(m2,vac) = 1/2 tbi
 z(t1,al) = 1/2  + 1/2 east 
 
 end_of_model        
+               
+                      --------------------------------------------------------
+begin_model                
+                             Mica(SGH): Non-reciprocal version of white mica model Mica(SGH1) after:
+
+                                Smye et al (JMG, 2011, 28:753-768)
+
+                             This model requires the make definition:
+
+                                fmu = 1 mu + 1/2 hem - 1/2 cor
+                                  -30d3 0 0 
+                                ma_dqf = 1 ma
+                                    3d3 0 0
+
+                             in the thermodynamic data file (e.g., hp02ver.dat), additionally the 
+                             endmember "ma" must be exlcuded from any calculations that employ this
+                             model.
+
+                             WARNING! The computed phase relations in Fig 1 of Smye et al (2011) were 
+                             computed by imposing the tetrahedral silica content. Thus it is unlikely 
+                             that the model accurately predicts silica content.
+
+                             JADC, 19/09/11
+
+                                                           
+                                                      A       M2a    M2b    T1     M1
+                                                     ___________________________________
+
+                                      Mutliplicity    1       1       1      2      1
+                                                     ___________________________________
+
+                                      1 mu            K       Al      Al    AlSi    _
+                                      2 pa            Na      Al      Al    AlSi    _      
+                                      3 ma_dqf        Ca      Al      Al    AlAl    _
+                                      4 cel           K       Mg      Al    SiSi    _                                      
+                                      5 fcel          K       Fe      Al    SiSi    _
+                                      6 fmu           K       Al      Fe3+  AlSi    _
+
+
+Mica(SGH)                    
+2                            | model type: macroscopic.
+
+6                            | 6 endmembers
+
+mu pa ma_dqf cel fmu fcel        
+
+0 0 0 0 0 0 0 0              | endmember flags
+                   
+                             | subdivision model
+0. 1.   .1 0                 | range and resolution of X(mu),      imod = 0 -> cartesian subdivision
+0. 1.   .1 0                 | range and resolution of X(pa),      imod = 0 -> cartesian subdivision
+0. 1.   .1 0                 | range and resolution of X(ma_dqf),  imod = 0 -> cartesian subdivision
+0. 1.   .1 0                 | range and resolution of X(cel),     imod = 0 -> cartesian subdivision
+0. 0.3  .1 1                 | range and resolution of X(fmu),     imod = 1 -> asymmetric transform subdivision
+
+begin_excess_function
+
+W(mu pa)         10120. 3.4 0.353  
+W(mu ma_dqf)     35000. 0. 0. 
+W(mu cel)        0. 0. 0.2
+W(mu fcel)       0. 0. 0.2
+
+W(pa cel)        45000. 0. 0.25
+W(ma_dqf cel)    40000. 0. 0.
+ 
+W(pa fcel)       45000. 0. 0.25 
+W(ma_dqf fcel)   40000. 0. 0.
+
+W(pa ma_dqf)     15000. 0. 0. 
+W(pa fmu)        30000. 0. 0. 
+
+W(ma_dqf fmu)    35000. 0. 0. 
+
+end_excess function
+
+4                           | Configurational entropy: 4 sites, A, M2a, M2b, T1.
+
+3 1.                        | 3 species on A, 1 site per formula unit.
+
+z(a,k) = 1 mu  + 1 cel + 1 fcel + 1 fmu  
+z(a,na) = 1 pa 
+
+3 1.                        | 3 species on M2a, 1 site per formula unit.
+
+z(m2a,al) = 1 mu + 1 pa + 1 ma_dqf + 1 fmu
+z(m2a,mg) = 1 cel
+
+2 1.                        | 2 species on M2b, 1 site per formula unit.
+z(m2b,fe) = 1 fmu
+
+2 2.                        | 2 species on T1, 2 sites per formula unit.
+z(t,al) = 1/2 mu + 1/2 pa + 1/2 fmu + 1 ma_dqf 
+
+begin_van_laar_sizes                        
+alpha(mu)     0.63 0. 0.                        
+alpha(pa)     0.37 0. 0.                     
+alpha(ma_dqf) 0.63 0. 0.    
+alpha(cel)    0.63 0. 0.
+alpha(fmu)    0.63 0. 0.
+alpha(fcel)   0.63 0. 0.
+
+end_van_laar_sizes
+
+end_of_model                  
+                                  --------------------------------------------------------
+begin_model               
+       
+                                    Mn-Fe-Mg-Fe3+ Chloritoid after:
+
+                                       Smye et al (JMG, 2011, 28:753-768)
+
+                                    This model requires the make definition:
+
+                                       octd = 1 fctd + 1/4 hem - 1/4 cor
+                                         125d2 0 0 
+
+                                    in the thermodynamic data file (e.g., hp02ver.dat).
+
+                                    NOTE: this version is formulated with 5 Oxygen formula unit, NOT the 
+                                    10 oxygen formula unit used by Smye et al (2011).
+                                    JADC, 19/09/11
+                                                           
+                                                      M1a     M1b    
+                                                     _______________
+
+                                      Mutliplicity    1/2      1     
+                                                     _______________
+
+                                          mctd         Al     Mg
+                                          fctd         Al     Fe
+                                          mnctd        Al     Mn
+                                          octd         Fe3+   Fe
+
+Ctd(SGH)                                                                                
+
+2                          | model type 
+
+4                          | endmembers 
+
+octd 
+mnctd    
+fctd
+mctd 
+                
+0  0  0  0                 | endmember flags
+
+0. 1. 0.1 0                | range and resolution for X(Fe3+), imod = 0 -> cartesian subdivision              
+0. 1. 0.1 0                | range and resolution for X(Mn),   imod = 0 -> cartesian subdivision
+0. 1. 0.1 0                | range and resolution for X(Fe),   imod = 0 -> cartesian subdivision
+
+begin_excess_function 
+w(mctd fctd ) 500. 0. 0. 
+w(mctd mnctd) 500. 0. 0. 
+w(fctd mnctd) 500. 0. 0. 
+end_excess_function 
+
+2                                     2 site entropy model
+
+2 .5                                  2 species on M1a, site multiplicity = 1/2
+z(Fe) = 1 octd
+
+3 1.                                  3 species on M1b, site multiplicity = 1
+z(Mn) = 1 mnctd
+z(Mg) = 1 mctd
+
+end_of_model               
+                                  -------------------------------------------------------- 
+begin_model                
+       
+                                    Mn-Fe-Mg-Fe3+ Carpholite after:
+
+                                       Smye et al (JMG, 2011, 28:753-768)
+
+                                    This model requires the make definitions:
+
+                                       ocar  = 1 fcar + 1/2 hem - 1/2 cor
+                                         45d3 0 0 
+                                       mncar = 1 mcar + 1 mang - 1/2 cor
+                                         30d3 0 0 
+
+                                    in the thermodynamic data file (e.g., hp02ver.dat).
+
+                                    NOTE: this version is formulated with 5 Oxygen formula unit, NOT the 
+                                    10 oxygen formula unit used by Smye et al (2011).
+                                    JADC, 19/09/11
+                                                           
+                                                      M2      M1     
+                                                     _______________
+
+                                      Mutliplicity     1       1     
+                                                     _______________
+
+                                          mcar         Al     Mg
+                                          fcar         Al     Fe
+                                          mncar        Al     Mn
+                                          ocar         Fe3+   Fe
+
+
+Carp(SGH)
+
+2                          | model type
+
+4                          | endmembers 
+
+mncar    
+ocar 
+fcar
+mcar
+
+0 0 0 0                    | endmember flags
+
+0.     1.      0.1     0   | imod = 0 -> cartesian subdivision
+0.     1.      0.1     0   | imod = 0 -> cartesian subdivision
+0.     1.      0.1     0   | imod = 0 -> cartesian subdivision
+
+begin_excess_function 
+w(mcar fcar )  1d3 0. 0. 
+w(mcar mncar)  1d3 0. 0. 
+w(fcar mncar)  1d3 0. 0. 
+end_excess_function 
+
+2                                     2 site entropy model
+
+2 .5                                  2 species on M2, site multiplicity = 1
+z(Fe) = 1 ocar
+
+3 1.                                  3 species on M1, site multiplicity = 1
+z(Mn) = 1 mncar
+z(Mg) = 1 mcar
+
+end_of_model               
+                                  --------------------------------------------------------
+begin_model 
+
+
+                                  Ca-Fe2+-Mg-Al-Fe3+ Garnet model after White, Pomroy, Powell & Holland (JMG, 2005)
+
+                                  Deleted kho_i interaction term, JADC, Nov 07.
+
+                                  alphas and w's updated to current TC values, Lucie Tajcamanova, April 14, 2010. 
+
+
+
+                                                      1       2      
+                                                      X       Y 
+                                                     _____________
+
+                                      Mutliplicity    3       2     
+                                                     _____________
+
+                          Dependent:   fkho_i        Fe      Fe3+      
+                          Dependent:   kho_i         Mg      Fe3+
+                          Dependent:   fmn_i         Mn      Fe3+
+                                       andr          Ca      Fe3+
+   
+                                       spss          Mn      Al
+                                       alm           Fe      Al     
+                                       py            Mg      Al     
+                                       gr            Ca      Al          
+                                                      ____________             
+                                      
+
+Gt(WPPH) 
+    
+7                            | model type: Margules with dependent endmembers .
+
+2                            | the number of independent subcompositions, reciprocal solution if > 1.
+
+4  2                         | 4 species on site 1, 2 species on site 2. 
+                             | M2 and M1 can be identified as sites 1 and 2, respectively. the
+                             | species that mix on site 1 are Mn-Mg-Fe-Ca and the species that mix on 
+                             | site 2 are Al-Fe3+.                                                                          
+
+          
+spss   alm      py     gr    | endmember names 
+fmn_i  fkho_i   kho_i  andr
+
+
+3                                 | number of dependent endmembers 
+
+fmn_i  = 1 andr + 1 spss -1 gr
+fkho_i = 1 andr + 1 alm -1 gr    
+kho_i  = 1 andr + 1 py -1 gr  
+
+
+0  0  0  0  0  0  0  0            | endmember flags
+
+0. .2   0.1 1                     | imod = 0 -> cartesian subdivision (xmn) on X
+0. 1.   0.1 0                     | imod = 0 -> cartesian subdivision (xfe) on X
+0. 1.   0.1 0                     | imod = 0 -> cartesian subdivision (xmg) on X
+
+
+0. 1.   0.1 0                     | imod = 0 -> cartesian subdivision x(fe3+) on Y
+
+                            
+begin_excess_function
+w(alm py)    2.5d3 0. 0.
+w(alm andr)  22.5d3 0. 0.
+w(py gr)     33d3 0. 0.
+w(gr andr)   -7d3 0. 0. 
+w(spss andr) 20d3 0. 0. 
+end_excess_function  
+
+2                                     |2 site entropy model
+
+4 3.                                  |4 species, site multiplicity 3
+z(x,mn) = 1 spss 
+z(x,fe) = 1 alm 
+z(x,Mg) = 1 py 
+
+2 2.                                  |2 species, site multiplicity 2
+z(y,al) = 1 spss + 1 alm + 1 py + 1 gr
+
+end_of_model      
+                      --------------------------------------------------------
