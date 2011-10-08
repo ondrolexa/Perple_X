@@ -591,7 +591,7 @@ c----------------------------------------------------------------------
      *        itri(4), jtri(4), ijpt, iam, jam, kinc, jmin, 
      *        imin, imax, ktri(4), ltri(4), ibest
 
-      logical rinsid, in, isok, jn, warned, left
+      logical rinsid, in, isok, jn, warned, left, solvs3
 
       integer pi(4,4)
 
@@ -637,42 +637,33 @@ c                                 the iap(jd) check works if k2 is inconsistent
 c                                 between vertex and werami. the question is then
 c                                 whether there's any point in checking jd?           
       if (jd.eq.k2.or.iap(jd).eq.0) then
-c     if (jd.eq.k2) then 
 c                                 no data at point, set ijpt = 0 and return
          ijpt = 0 
          goto 99 
       end if 
-
+c                                 duplicate assignment because ias is in common
       ias = iap(jd)
+      iam = ias
+
       np = iavar(1,ias)
       ijpt = 1
       itri(1) = iloc
       jtri(1) = jloc 
 c                                 exit if interpolation is off
       if (iopt(4).eq.0) goto 99   
-c                                 check for solvus if nopt(8) < 1, 
-c                                 i, e., solvus testing is on
-      if (nopt(8).lt.1d0) then  
-
-         do i = 1, np-1
-            do j = i+1, np
-               if (idasls(i,ias).eq.idasls(j,ias)) then
+c                                 check for solvus
+      if (solvs3(iam,np)) then 
 c                                 a solvus, turn interpolation off, warn and return
-                  if (.not.warned) then 
-                     warned = .true.
-                     write (*,1000) 
-                  end if
+         if (.not.warned) then 
+            warned = .true.
+            write (*,1000) 
+         end if
 
-                  goto 99
+         goto 99
 
-               end if 
-            end do 
-         end do 
       end if 
 
       ijpt = 0
-
-      iam = iap(igrd(iloc,jloc))
 c                                 interpolation for 1d grids                             
       if (oned) then 
 c                                 set jloc to the real node
@@ -795,11 +786,11 @@ c                                 skip interior points (this is sloppy)
                if (j.ne.jmin.and.j.ne.jmax.and.
      *             i.ne.imin.and.i.ne.imax) cycle 
 c                                 is the point the same assemblage?
-               if (iap(igrd(i,j)).ne.iam) cycle
+               if (iap(igrd(i,j)).ne.ias) cycle
 c                                 pointer to reference node
                jam = igrd(i,j)
 c                                 if so, is the point real?
-               if (icog(jam).ne.i.or.jcog(jam).ne.j) cycle
+               if (icog(jam).ne.i.or.jcog(jam).ne.j) cycle 
 c                                 if here the point is valid, now
 c                                 check if it's geometrically feasible
                if (ijpt.lt.2) then 
@@ -1801,7 +1792,7 @@ c                                 conditions:
             do j = 1, isol-1
 c                                 comp is a function that returns
 c                                 the j+1th composition 
-               tcomp = gtcomp (i,idasls(jdsol(i),ias),k5+j)
+               tcomp = gtcomp (jdsol(i),idasls(jdsol(i),ias),k5+j)
 c                                 the composition is not relevant
                if (tcomp.eq.-1d99) cycle
 c                                 the composition is out of bounds
@@ -3315,7 +3306,7 @@ c                                 existing solvus criterion, ask
 c                                 whether to change.
             write (*,1030)
             read (*,'(a)') y
-            if (y.eq.'y'.or.y.eq.'Y') stol(i) = .false.
+            if (y.ne.'y'.and.y.ne.'Y') stol(i) = .false.
     
          end if
  
@@ -3903,3 +3894,39 @@ c                                 modes" output option
 1090  format (/,'Data ranges excluding values equal to bad_number ',
      *       '(',g10.3,') specified in perplex_option.dat:',/)
       end  
+
+      logical function solvs3 (iam,np)
+c-----------------------------------------------------------------------
+c function to check if an assemblage contains immiscible phases from 
+c phase id's.
+c-----------------------------------------------------------------------
+      implicit none
+ 
+      include 'perplex_parameters.h'
+
+      integer i, j, np, iam
+
+      integer idasls,iavar,iasct,ias
+      common/ cst75  /idasls(k5,k3),iavar(3,k3),iasct,ias
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+c-----------------------------------------------------------------------
+      solvs3 = .false.
+
+      if (nopt(8).lt.1d0) then  
+
+         do i = 1, np-1
+            do j = i+1, np
+               if (idasls(i,iam).eq.idasls(j,iam)) then
+                  solvs3 = .true.
+                  return
+               end if 
+            end do 
+         end do 
+
+      end if 
+
+      end

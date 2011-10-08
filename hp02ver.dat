@@ -77,24 +77,24 @@ begin_makes
                                 | will function, but qL will not be considered as a possible phase in 
                                 | the vertex calculation. 
  
-|                                kyco silica buffer
-| kyco = 1 ky - 1 cor
-| 0 0 0 
+ |                                kyco silica buffer
+ | kyco = 1 ky - 1 cor
+ | 0 0 0 
 
-|                                sphene + cc + ru + q CO2 buffer
-| tcrq = 1 cc + 1 ru + 1 q - 1 sph
-| 0. 0. 0. 
+ |                                sphene + cc + ru + q CO2 buffer
+ | tcrq = 1 cc + 1 ru + 1 q - 1 sph
+ | 0. 0. 0. 
 
                                 | Ti phengite endmember for Auzanneau et al. (CMP 159:1-24, 2010) mica model
                                 | Gdqf corrected from -482876. to -13469.8 J/mol, D. Dolejs, Mar 6, 2010.
  | tip = 1 fcel + 1 geik - 1/2 fs
  | -13469.8  -14.694 .84
                                                 
-mthm = 6 hem - 4 mt             | mthm O2 buffer
-0 0 0                        
+ | mthm = 6 hem - 4 mt             | mthm O2 buffer
+ | 0 0 0                        
 
-qfm = 2 mt + 3 q  -3 fa         | qfm O2 buffer
-0 0 0                        
+ | qfm = 2 mt + 3 q  -3 fa         | qfm O2 buffer
+ | 0 0 0                        
 
  |emog = -1 fo - 2 gph + 1 mag + 1/2 en | EMOG O2 buffer
  |0 0 0 
@@ -183,8 +183,8 @@ omrb_dqf = 1 gl -2 jd +2 acm    | ortho-magnesio riebekite (mrb dqf + 25000 J/mo
 coma = 3 ab + 1 cc
 25000. 0. 0. 
                                 | titano-clinohumite to fit weiss experiments. JADC, 2/08.
-|tichum = 4 fo + 1/2 br + 1/2 ru
-|-33581. 32. 0.
+ | tichum = 4 fo + 1/2 br + 1/2 ru
+ | -33581. 32. 0.
 
 tbit = 1 phl - 1 br + 1 ru     |Ti-Fe3+ Biotite after Tajcmanova et al. (2009)
 84e3 -11.5 0                   |Model entered by Lucie Tajcmanova, September, 2008.
