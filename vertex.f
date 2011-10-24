@@ -283,6 +283,9 @@ c-----------------------------------------------------------------------
       integer io3,io4,io9
       common / cst41 /io3,io4,io9
 
+      logical fileio
+      common/ cst226 /fileio
+
       double precision dcomp
       common/ frct2 /dcomp(k5)
 
@@ -325,7 +328,7 @@ c                                 for optimization.
 c                                 two cases icopt = 10, input from
 c                                 file, else analytical path function
 c                                 (icopt = 7)
-      if (icopt.eq.10) then 
+      if (fileio) then 
 
          open (n8,file=cfname,status='old',iostat=ier)
 
@@ -460,7 +463,8 @@ c-----------------------------------------------------------------------
 c a subprogram template to illustrate how to do 2-d (space-time) 
 c fractionation. 
 
-c modified oct 15 for more rational input and variable gradients.
+c modified oct 15, 2005 for more rational input and variable gradients.
+c modified oct 19, 2011 for file input
 c-----------------------------------------------------------------------
       implicit none
 
@@ -470,12 +474,18 @@ c-----------------------------------------------------------------------
 
       parameter (maxbox=1760,maxlay=6) 
 
-      integer i,j,k,idead
+      integer i,j,k,idead,ier
 
       double precision gblk(maxbox,k5),dz,p0
 
       logical output
       character*8 happy*3
+
+      logical fileio
+      common/ cst226 /fileio
+
+      character*100 cfname
+      common/ cst227 /cfname
 
       integer npt,jdv
       logical fulrnk
@@ -580,6 +590,24 @@ c                                 initialize compositional array gblk:
 c                                 call initlp to initialize arrays 
 c                                 for optimization.
       call initlp 
+c                                 two cases, file input or analytical
+      if (fileio) then 
+c                                 file input of nodal p-t coordinates
+         open (n8,file=cfname,status='old',iostat=ier)
+c                                 read header info
+         read (n8,*) i, j
+
+         if (i.ne.loopx) then 
+            write (*,'(2(/,a,i4,a))') 
+     *     '** error ** the number of nodes in a column (',i,
+     *     ') must equal the',
+     *     'number of lithological nodes (',loopx,
+     *     ')specified in the aux file.'
+         else if (j.ne.loopy) then 
+
+
+         end if 
+      end if 
 c                                 initialize path variables
       call setvar 
 

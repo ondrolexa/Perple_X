@@ -404,6 +404,22 @@ c                                 up species indices:
             ins(4) = 8
          else if (ifug.eq.13.or.ifug.eq.15) then 
             vname(3) = 'X(H2)   '
+
+         else if (ifug.le.6.or.ifug.eq.14.or.
+     *            ifug.eq.21.or.ifug.eq.22.or.ifug.eq.25) then 
+c                                 xco2 EoS's
+            vname(3) = 'X(CO2)  '
+            isp = 2
+            ins(1) = 1
+            ins(2) = 2
+
+         else 
+
+             write (*,'(/a,i2)') 
+     *             '**error** not initialized for ifug = ',
+     *             ifug
+
+
          end if 
 
          write (*,'(/,a)') 'Tabulate properties (y/n)?'
@@ -638,7 +654,7 @@ c                                 atomic fractions
             count = ipot+isp+6
 c                                  species fugacities
             j = 0
-            do i = count, count+isp
+            do i = count, count+isp-1
                j = j + 1 
                if (log) then 
                   write (tags(i),'(a,a,a)') 'log[f(',specie(ins(j)),')]'
@@ -648,7 +664,7 @@ c                                  species fugacities
                call unblnk (tags(i))
             end do
 
-            count = count + isp + 2
+            count = count + isp + 1
             tags(count-1) = 'log[f(O2)]'
             tags(count)   = 'log[f(S2)]'
 

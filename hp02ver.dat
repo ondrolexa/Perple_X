@@ -164,10 +164,10 @@ mrb = 1 gl - 2 jd +2 acm        | magnesio riebekite, stoichiometry corrected 3/
 8d3 0. 0. 
 ts_dqf = 1 ts                   | tschermakite
 10000. 0. 0.  
-parg_dqf = 1 parg               | pargasite
-10000. 0. 0.
-gl_dqf = 1 gl                   | glaucophane
+parg_dqf = 1 parg               | pargasite, Corrected from 10 kJ, 10/14/11, JADC
 15000. 0. 0.
+gl_dqf = 1 gl                   | glaucophane, Corrected from 15 kJ, 10/14/11, MJC
+3000. 0. 0.
 mpa = 1 parg -1 tr +1 anth      | ortho-pargasite, stoichiometry corrected 3/30/08 JADC
 27d3 0. 0.
 ged_dqf = 1 ged                 | gedrite 
@@ -195,17 +195,19 @@ fbit = 1 east - 1/2 cor + 1/2 hem  |Ti-Fe3+ Biotite after Tajcmanova et al. (200
                                | Make definitions for the Smye et al (JMG, 2011, 28:753-768)
                                | models for Mica, Carpholite and Chloritoid, to use these 
                                | make definitions delete the leading "|" comment characters:
-
 ocar  = 1 fcar + 1/2 hem - 1/2 cor
       45d3 0 0 
-mncar = 1 mcar + 1 mang - 1/2 cor
+mncar = 1 mcar + 1 mang - 1 per | corrected from 1 mcar + 1 mang - 1/2 cor, G Hoschek, 10/24/11.
       30d3 0 0 
 octd = 1 fctd + 1/4 hem - 1/4 cor
       125d2 0 0 
 fmu = 1 mu + 1/2 hem - 1/2 cor
-      -30d3 0 0 
+      30d3 0 0                  | corrected from -30 kJ/mol, G Hoschek, 10/24/11.
 ma_dqf = 1 ma
       3d3 0 0
+                                | Make definition for the White et al (JMG, 2005) garnet, Gt(WPPH), JADC, 10/24/11.
+kho = 1 py - 1 gr + 1 andr
+      40d3 0 0  
 
 end_makes 
                                                                                                                                             

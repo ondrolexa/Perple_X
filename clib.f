@@ -340,6 +340,9 @@ c-----------------------------------------------------------------------
 
       double precision dip
 
+      logical fileio
+      common/ cst226 /fileio
+
       character*100 cfname
       common/ cst227 /cfname
 
@@ -510,9 +513,20 @@ c                                 new version, read icopt
       end if 
 c                                 if fractionation path from data 
 c                                 file, get name:
-      if (icopt.eq.10) then 
+      fileio = .false.
+
+      if (icopt.eq.10.or.icopt.eq.11) then 
+
+         fileio = .true.
+
          read (n1,'(a)') cfname
          call enblnk (cfname)
+         if (icopt.eq.10) then 
+            icopt = 7
+         else 
+            icopt = 9
+         end if 
+
       end if 
 c                                 dummy variable place holders
       read (n1,*,err=998) idum

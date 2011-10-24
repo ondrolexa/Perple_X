@@ -1494,7 +1494,7 @@ c                                 diagrams:
 2065  format (/,'The log10(',a,' ',a,') variable is named: ',a,/)
 2066  format (/,'The chemical potential of ',a,' is named: ',a,/)
 2070  format (/,'Select thermodynamic components from the set:')
-2080  format (/,'Exclude endmember phases (Y/N)?')
+2080  format (/,'Exclude pure and/or endmember phases (Y/N)?')
 2110  format (/,'Calculations with saturated components (Y/N)?')
 2111  format (/,'Select x-axis variable:')
 2130  format (/,'Select y-axis variable:')

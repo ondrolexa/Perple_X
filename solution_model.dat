@@ -790,7 +790,7 @@ begin_model
                       definitions in the thermodynamic data file
 
                           ts_dqf   = dqf(ts)   10000. 0. 0.  
-                          parg_dqf = dqf(parg) 10000. 0. 0.
+                          parg_dqf = dqf(parg) 15000. 0. 0.
                           gl_dqf   = dqf(gl)    3000. 0. 0.
 
                        additionally the following endmembers should be excluded in the 
@@ -849,7 +849,7 @@ mrb        frb
 
 2                            | 2 ordered species:
 
-cammo1 = 3/7 cumm + 4/7 grun   enthalpy_of_formation = -9.5d3
+cammo1 = 3/7 cumm + 4/7 grun   enthalpy_of_formation = -9.5d3   | these differ from the TC values because they include the DQFs for cumm and grun
 cammo2 = 2/7 cumm + 5/7 grun   enthalpy_of_formation = -11.7d3
 
 begin_limits
@@ -3772,7 +3772,7 @@ begin_model
 
                                   Ca-Fe2+-Mg-Al-Fe3+ Garnet model after White, Powell & Holland (JMG, 2000)
 
-                                  Model entered by Lucie Tajcamanova, May 11, 2007. . 
+                                  Model entered by Lucie Tajcamanova, May 11, 2007.
 
                                   w(alm py) value and reference corrected, Thomas Wagner, June 22, 2007.
 
@@ -3782,6 +3782,9 @@ begin_model
                                   Deleted kho_i interaction term, JADC, Nov 07.
 
                                   alphas and w's updated to current TC values, Lucie Tajcamanova, April 14, 2010. 
+
+                                  This model presumably came from some thermocalc file, but it definitively is 
+                                  NOT the model given in the White et al., 2001 paper. JADC, 10/24/2011.
 
 
 
@@ -6633,12 +6636,17 @@ end_of_model
                                   --------------------------------------------------------
 begin_model 
 
-
                                   Ca-Fe2+-Mg-Al-Fe3+ Garnet model after White, Pomroy, Powell & Holland (JMG, 2005)
 
-                                  Deleted kho_i interaction term, JADC, Nov 07.
+                                  When originally entered 9/20/11, this model was formulated (incorrectly) in terms of 
+                                  andradite, it was corrected to use the khoharite endmember 10/24/11. JADC
 
-                                  alphas and w's updated to current TC values, Lucie Tajcamanova, April 14, 2010. 
+                                  In calculations that use this model, the andradite endmember ("andr") in the Holland
+                                  and Powell data base must be excluded. This model also requires the following make
+                                  definition for khoharite in the thermodynamic data file:
+
+
+
 
 
 
@@ -6650,9 +6658,9 @@ begin_model
                                                      _____________
 
                           Dependent:   fkho_i        Fe      Fe3+      
-                          Dependent:   kho_i         Mg      Fe3+
+                          Dependent:   kho           Mg      Fe3+
                           Dependent:   fmn_i         Mn      Fe3+
-                                       andr          Ca      Fe3+
+                                       andr_i        Ca      Fe3+
    
                                        spss          Mn      Al
                                        alm           Fe      Al     
@@ -6674,15 +6682,14 @@ Gt(WPPH)
 
           
 spss   alm      py     gr    | endmember names 
-fmn_i  fkho_i   kho_i  andr
+fmn_i  fkho_i   kho    andr_i
 
 
 3                                 | number of dependent endmembers 
 
-fmn_i  = 1 andr + 1 spss -1 gr
-fkho_i = 1 andr + 1 alm -1 gr    
-kho_i  = 1 andr + 1 py -1 gr  
-
+andr_i = 1 kho  + 1 py   -1 gr  
+fkho_i = 1 kho  + 1 alm  -1 py  
+fmn_i  = 1 kho  + 1 spss -1 py 
 
 0  0  0  0  0  0  0  0            | endmember flags
 
@@ -6696,10 +6703,10 @@ kho_i  = 1 andr + 1 py -1 gr
                             
 begin_excess_function
 w(alm py)    2.5d3 0. 0.
-w(alm andr)  22.5d3 0. 0.
+w(alm kho)  22.5d3 0. 0.
 w(py gr)     33d3 0. 0.
-w(gr andr)   -7d3 0. 0. 
-w(spss andr) 20d3 0. 0. 
+w(gr kho)   -7d3 0. 0. 
+w(spss kho) 20d3 0. 0. 
 end_excess_function  
 
 2                                     |2 site entropy model
@@ -6707,7 +6714,7 @@ end_excess_function
 4 3.                                  |4 species, site multiplicity 3
 z(x,mn) = 1 spss 
 z(x,fe) = 1 alm 
-z(x,Mg) = 1 py 
+z(x,ca) = 1 gr
 
 2 2.                                  |2 species, site multiplicity 2
 z(y,al) = 1 spss + 1 alm + 1 py + 1 gr
