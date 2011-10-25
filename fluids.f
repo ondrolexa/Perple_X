@@ -239,8 +239,8 @@ c xo     - X(O) for multispecies routines, and X(CO2) or X(H2) for
 c          binary routines.
 c vol    - molar volume for all multispecies routines, and binary
 c          routines 0, 1, 13, 15.
-c fh2o   - natural log (f(H2O)) for all routines.
-c fco2   - natural log of the species other than H2O (i.e., CO2 or H2)
+c fhc(1) - natural log (f(H2O)) for all routines.
+c fhc(2)   - natural log of the species other than H2O (i.e., CO2 or H2)
 c          in all binary routines.
 c fo2    - natural log (f(O2)).
 c fs2    - 1/2 natural log (f(S2)).
@@ -291,8 +291,8 @@ c-----------------------------------------------------------------------
       double precision nc, nh, no, ns, nn, tentoe, fo2, fs2, xfh, 
      *                 xfc, ag, tot, totx, var(l2), f, prop(40)
 
-      double precision fh2o,fco2
-      common / cst11 /fh2o,fco2
+      double precision fhc
+      common / cst11 /fhc(2)
 
       character*8 vname,xname
       common/ csta2  /xname(k5),vname(l2)
@@ -832,19 +832,46 @@ c                                 variables
                      prop(k) = var(iv(k))
                   end do 
 c                                 species fractions/fugacities
-                  do k = 1, isp
-                     f = g(ins(k))*p*xs(ins(k))
-                     if (log.and.f.le.0d0) then  
-                        prop(ipot+k) = nopt(7)
-                        prop(ipot+isp+5+k) = nopt(7)
-                     else if (log) then 
-                        prop(ipot+k) = dlog10(xs(ins(k)))
-                        prop(ipot+isp+5+k) = dlog10(f)
-                     else 
-                        prop(ipot+k) = xs(ins(k))
-                        prop(ipot+isp+5+k) = f
-                     end if
-                  end do
+                  if (ifug.le.6 .or.ifug.eq.14.or.ifug.eq.21.or.
+     *                ifug.eq.22.or.ifug.eq.25) then 
+c                                 xco2 EoS's 
+                     xs(ins(1)) = 1d0 - xo
+                     xs(ins(2)) = xo
+
+                     do k = 1, 2
+
+                        f = dexp(fhc(k))
+
+                        if (log) then 
+                           prop(ipot+k) = dlog10(xs(ins(k)))
+                           prop(ipot+isp+5+k) = dlog10(f)
+                        else 
+                           prop(ipot+k) = xs(k)
+                           prop(ipot+isp+5+k) = f
+                        end if
+
+                     end do
+
+                  else 
+c                                 assume multispecies fluids                
+                     do k = 1, isp
+
+                        f = g(ins(k))*p*xs(ins(k))
+
+                        if (log.and.f.le.0d0) then  
+                           prop(ipot+k) = nopt(7)
+                           prop(ipot+isp+5+k) = nopt(7)
+                        else if (log) then 
+                           prop(ipot+k) = dlog10(xs(ins(k)))
+                           prop(ipot+isp+5+k) = dlog10(f)
+                        else 
+                           prop(ipot+k) = xs(ins(k))
+                           prop(ipot+isp+5+k) = f
+                        end if
+
+                     end do
+
+                  end if 
 c                                 atomic fractions 
                   ns = xs(6) + xs(8) + xs(9) 
                   no = xs(1) + xs(2)*2d0 + xs(3) + xs(7)*2d0 
@@ -1001,37 +1028,37 @@ c                                  call fluid routine:
                write (*,1280) p,t
 c                                  output results:
                igo = 1
-               xfh = fh2o
-               xfc = fco2
-               fh2o = dexp(fh2o) 
-               fco2 = dexp(fco2) 
+               xfh = fhc(1)
+               xfc = fhc(2)
+               fhc(1) = dexp(fhc(1)) 
+               fhc(2) = dexp(fhc(2)) 
                fo2 = fo2 / tentoe
 
                if (ifug.lt.4.or.ifug.eq.5.or.ifug.eq.6.or.ifug.eq.18.or
      *            .ifug.eq.14.or.ifug.gt.20.and.ifug.lt.24) then
 
-                  write (*,1130) fh2o, fco2
+                  write (*,1130) fhc(1), fhc(2)
 c                                  increment pressure for
 c                                  finite difference estimate of
 c                                  volume:
                   p = p + 1d0
 
                   call cfluid (fo2, fs2)
-                  write (*,1300) 83.14d0*t*((1d0-xo)*(fh2o-xfh) 
-     *                                     + xo*(fco2-xfc))
+                  write (*,1300) 83.14d0*t*((1d0-xo)*(fhc(1)-xfh) 
+     *                                     + xo*(fhc(2)-xfc))
 
                else if (ifug.eq.4) then
 
-                  write (*,1140) fco2
+                  write (*,1140) fhc(2)
                   write (*,1300) vol
 
                else if (ifug.eq.9) then
 
-                  write (*,1150) fh2o, fco2, fo2
+                  write (*,1150) fhc(1), fhc(2), fo2
 
                else if (ifug.eq.13.or.ifug.eq.15) then
 
-                  write (*,1160) fh2o,fco2,fo2
+                  write (*,1160) fhc(1),fhc(2),fo2
                   write (*,1300) vol
 
                else 
