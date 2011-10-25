@@ -6645,10 +6645,8 @@ begin_model
                                   and Powell data base must be excluded. This model also requires the following make
                                   definition for khoharite in the thermodynamic data file:
 
-
-
-
-
+                                      kho = 1 py - 1 gr + 1 andr
+                                      40d3 0 0  
 
                                                       1       2      
                                                       X       Y 

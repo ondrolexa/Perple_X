@@ -474,18 +474,11 @@ c-----------------------------------------------------------------------
 
       parameter (maxbox=1760,maxlay=6) 
 
-      integer i,j,k,idead,ier
+      integer i,j,k,idead
 
       double precision gblk(maxbox,k5),dz,p0
 
       logical output
-      character*8 happy*3
-
-      logical fileio
-      common/ cst226 /fileio
-
-      character*100 cfname
-      common/ cst227 /cfname
 
       integer npt,jdv
       logical fulrnk
@@ -529,6 +522,8 @@ c-----------------------------------------------------------------------
       common/ cst66 /a0,a1,a2,a3,b0,b1,b2,b3,c0,c1,c2,c3,dv1dz,
      *               zbox,iblk(maxlay,k5),gloopy,ilay,irep(maxlay)
 
+
+
       logical first
 
       save first
@@ -538,8 +533,6 @@ c-----------------------------------------------------------------------
 c                                 initialize
       iasct = 0 
       ibulk = 0 
-c                                 jlow is set from 1dpath in perplex_option.dat
-      loopy = jlow
 c                                 set the number of independent variables
 c                                 to 1 (the independent path variable must
 c                                 be variable jv(1), and the dependent path
@@ -555,19 +548,10 @@ c                                 get the phase to be fractionated
          call frname 
 
       end if 
-c                                 initialize compositional array gblk:
-      loopx = 0 
 
       do i = 1, ilay
 
          do j = 1, irep(i)
-
-            loopx = loopx + 1
-
-            if (loopx.gt.maxbox) then
-               write (*,*) 'increase maxbox in routine DUMMY1'
-               stop
-            end if 
 
             do k = 1, icp 
                gblk(loopx,k) = iblk(i,k)
@@ -576,38 +560,9 @@ c                                 initialize compositional array gblk:
          end do
 
       end do
-
-      if (loopx*loopy.gt.k2) then
-         write (*,*) ' parameter k2 must be >= loopx*loopy'
-         write (*,*) ' increase parameter k2 for routine DUMMY1'
-         write (*,*) ' or increase box size (zbox) or decrease'
-         write (*,*) ' number of path increments (loopy) or try'
-         write (*,*) ' the large parameter version of VERTEX'
-         write (*,*) ' k2 = ',k2 
-         write (*,*) ' loopx * loopy = ',loopx*loopy
-         stop
-      end if 
 c                                 call initlp to initialize arrays 
 c                                 for optimization.
       call initlp 
-c                                 two cases, file input or analytical
-      if (fileio) then 
-c                                 file input of nodal p-t coordinates
-         open (n8,file=cfname,status='old',iostat=ier)
-c                                 read header info
-         read (n8,*) i, j
-
-         if (i.ne.loopx) then 
-            write (*,'(2(/,a,i4,a))') 
-     *     '** error ** the number of nodes in a column (',i,
-     *     ') must equal the',
-     *     'number of lithological nodes (',loopx,
-     *     ')specified in the aux file.'
-         else if (j.ne.loopy) then 
-
-
-         end if 
-      end if 
 c                                 initialize path variables
       call setvar 
 
@@ -615,27 +570,20 @@ c                                 initialize path variables
 c                                 loopy is the number of steps along the subduction
 c                                 path:
       do j = 1, loopy
-
-         happy = 'no'
 c                                 j loop varies the pressure at the top of the 
 c                                 column (p0), set p0:
          p0 = vmin(1) + (j-1)*dv(1)
-c                                 happy is set to yes when we've finally finished 
-c                                 equilibrating at point j on the path
-         do while (happy.eq.'no') 
-
-            happy = 'yes'
 c                                 for each box in our column compute phase 
 c                                 relations
-            do k = 1, loopx
+         do k = 1, loopx
 c                                 k-loop varies depth within the column (dz)
-               dz = (loopx - k) * zbox  
+            dz = (loopx - k) * zbox  
 c                                 set the p-t conditions
-               call fr2dpt (p0,dz)
+            call fr2dpt (p0,dz)
 c                                 now put the bulk composition from the global
 c                                 array into the local array and get the total
 c                                 number of moles (ctotal)
-               ctotal = 0d0
+            ctotal = 0d0
 c                                 get total moles to compute mole fractions             
                do i = 1, icp
                   dcomp(i) = 0 
@@ -682,8 +630,6 @@ c                                 reset initialize top layer if gloopy = 999
                end if 
 c                                 end of the k index loop
             end do 
-c                                 end of the happy loop. 
-         end do 
 c                                 end of j index loop
       end do 
 

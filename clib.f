@@ -2009,11 +2009,10 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer maxlay
+      integer maxbox,maxlay
+      parameter (maxbox=1760,maxlay=6) 
 
-      parameter (maxlay=6) 
-
-      integer i,ierr
+      integer i,j,k,ier
 
       double precision zlayer
 
@@ -2031,18 +2030,31 @@ c-----------------------------------------------------------------------
       double precision vmax,vmin,dv
       common/ cst9  /vmax(l2),vmin(l2),dv(l2)
 
+      integer irct,ird
+      double precision vn
+      common/ cst31 /vn(k2,k7),irct,ird
+
+      integer jlow,jlev,loopx,loopy,jinc
+      common/ cst312 /jlow,jlev,loopx,loopy,jinc 
+
       integer gloopy,ilay,irep
       double precision a0,a1,a2,a3,b0,b1,b2,b3,c0,c1,c2,c3,dv1dz,
      *               zbox,iblk
       common/ cst66 /a0,a1,a2,a3,b0,b1,b2,b3,c0,c1,c2,c3,dv1dz,
      *               zbox,iblk(maxlay,k5),gloopy,ilay,irep(maxlay)
+
+      logical fileio
+      common/ cst226 /fileio
+
+      character*100 cfname
+      common/ cst227 /cfname
 c-----------------------------------------------------------------------
 c                                 look for input data from a file 
 c                                 of type aux
       call mertxt (name,prject,'.aux',0)
-      open (n8,file=name,status='old',iostat=ierr)
+      open (n8,file=name,status='old',iostat=ier)
 
-      if (ierr.ne.0) call error (51,zbox,gloopy,name) 
+      if (ier.ne.0) call error (51,zbox,gloopy,name) 
 c                                 set the number of independent variables
 c                                 to 1 (the independent path variable must
 c                                 be variable jv(1), and the dependent path
@@ -2085,6 +2097,7 @@ c                                 statement assumes that H2O an CO2 (if
 c                                 thermodynamic components) are the 1st and
 c                                 2nd components (if present). 
       ilay = 0
+      loopx = 0
       vmax(2) = 0d0
       vmin(2) = 0d0
 c                                 number of nodes with appended composition
@@ -2105,12 +2118,68 @@ c                                 end of data indicated by zero
          read (n8,*) (iblk(ilay,i),i=1,icp)
 
          irep(ilay) = idint(zlayer/zbox)
+
+         loopx = loopx + irep(ilay)
+
+         if (loopx.gt.maxbox) then
+            write (*,*) 'increase maxbox in routine DUMMY1'
+            stop
+         end if 
 c                                 set the y coodinate to depth below top
          vmin(2) = vmin(2) - irep(ilay)*zbox
 
       end do 
 
       close (n8)
+c                                 jlow is set from 1dpath in perplex_option.dat
+      loopy = jlow
+
+      if (loopx*loopy.gt.k2) then
+         write (*,*) ' parameter k2 must be >= loopx*loopy'
+         write (*,*) ' increase parameter k2 for routine DUMMY1'
+         write (*,*) ' or increase box size (zbox) or decrease'
+         write (*,*) ' number of path increments (loopy) or try'
+         write (*,*) ' the large parameter version of VERTEX'
+         write (*,*) ' k2 = ',k2 
+         write (*,*) ' loopx * loopy = ',loopx*loopy
+         stop
+      end if 
+c                                 two cases, file input or analytical
+      if (fileio) then 
+c                                 file input of nodal p-t coordinates
+         open (n8,file=cfname,status='old',iostat=ier)
+c                                 read header info
+         read (n8,*) i, j
+
+         if (i*j.gt.k2) then 
+            write (*,'(/,a,i6,a,i6,a)') 
+     *     '**error ** too many coordinates, nodes*columns>k2',i*j,
+     *     'increase k2 (',k2,')'
+         else if (i.ne.loopx) then 
+            write (*,'(/,a,i4,a,a,/,a,i4,a)') 
+     *     '** error ** the number of nodes in a column (',i,
+     *     ') specified in: ',cfname,'must equal the',
+     *     'number of lithological nodes (',loopx,
+     *     ')specified in the aux file.'
+         else if (j.ne.loopy) then 
+            write (*,'(2(/,a,i4,a,a))') 
+     *     '** error ** the number of columns (',j,
+     *     ') specified in: ',cfname,'must equal the',
+     *     'number of z increments (',loopy,
+     *     ')specified in the aux file.'
+         end if 
+
+         do i = 1, loopy
+
+            k = (i-1) * loopx
+
+            do j = 1, loopx
+               read (*,*) vn(k+j,1),vn(k+j,2)
+            end do 
+
+         end do
+
+      end if 
 
       end 
 
@@ -2123,7 +2192,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer maxlay
+      integer maxlay,i,j
 
       parameter (maxlay=6) 
 
@@ -2135,17 +2204,42 @@ c----------------------------------------------------------------------
       common/ cst66 /a0,a1,a2,a3,b0,b1,b2,b3,c0,c1,c2,c3,dv1dz,
      *               zbox,iblk(maxlay,k5),gloopy,ilay,irep(maxlay)
 
+      integer irct,ird
+      double precision vn
+      common/ cst31 /vn(k2,k7),irct,ird
+
+      logical fileio
+      common/ cst226 /fileio
+
+      integer jlow,jlev,loopx,loopy,jinc
+      common/ cst312 /jlow,jlev,loopx,loopy,jinc 
+
+      double precision vmax,vmin,dv
+      common/ cst9  /vmax(l2),vmin(l2),dv(l2)  
+
       double precision v,tr,pr,r,ps
       common/ cst5  /v(l2),tr,pr,r,ps
 c----------------------------------------------------------------------
+      if (fileio) then 
+c                                convert p0-dz coordinate to nodal 
+c                                values
+         i = (p0 - vmin(1))/dv(1) + 1
+         j = loopx - dz/zbox
+
+         v(1) = vn((i-1)*loopx + j, 1)
+         v(2) = vn((i-1)*loopx + j, 2)
+
+      else 
 c                                 convert to depth at top of column
-      z0 = p0/dv1dz
+         z0 = p0/dv1dz
 c                                 set the independent variable
-      v(1) = p0 + dz * dv1dz   
+         v(1) = p0 + dz * dv1dz   
 c                                 set the dependent variable
-      v(2) = (a0 + a1*z0 + a2*z0**2 + a3*z0**3)*dz**2 
-     *     + (b0 + b1*z0 + b2*z0**2 + b3*z0**3)*dz 
-     *     +  c0 + c1*z0 + c2*z0**2 + c3*z0**3                       
+         v(2) = (a0 + a1*z0 + a2*z0**2 + a3*z0**3)*dz**2 
+     *        + (b0 + b1*z0 + b2*z0**2 + b3*z0**3)*dz 
+     *        +  c0 + c1*z0 + c2*z0**2 + c3*z0**3
+      end if 
+                       
       end 
    
       subroutine getpp (id)
