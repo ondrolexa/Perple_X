@@ -2133,17 +2133,6 @@ c                                 set the y coodinate to depth below top
       close (n8)
 c                                 jlow is set from 1dpath in perplex_option.dat
       loopy = jlow
-
-      if (loopx*loopy.gt.k2) then
-         write (*,*) ' parameter k2 must be >= loopx*loopy'
-         write (*,*) ' increase parameter k2 for routine DUMMY1'
-         write (*,*) ' or increase box size (zbox) or decrease'
-         write (*,*) ' number of path increments (loopy) or try'
-         write (*,*) ' the large parameter version of VERTEX'
-         write (*,*) ' k2 = ',k2 
-         write (*,*) ' loopx * loopy = ',loopx*loopy
-         stop
-      end if 
 c                                 two cases, file input or analytical
       if (fileio) then 
 c                                 file input of nodal p-t coordinates

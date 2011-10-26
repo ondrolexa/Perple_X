@@ -522,7 +522,8 @@ c-----------------------------------------------------------------------
       common/ cst66 /a0,a1,a2,a3,b0,b1,b2,b3,c0,c1,c2,c3,dv1dz,
      *               zbox,iblk(maxlay,k5),gloopy,ilay,irep(maxlay)
 
-
+      logical fileio
+      common/ cst226 /fileio
 
       logical first
 
@@ -530,7 +531,7 @@ c-----------------------------------------------------------------------
 
       data first/.true./
 c-----------------------------------------------------------------------
-c                                 initialize
+c                                 initialization
       iasct = 0 
       ibulk = 0 
 c                                 set the number of independent variables
@@ -546,12 +547,33 @@ c                                 input in auto_refine
          first = .false.
 c                                 get the phase to be fractionated
          call frname 
+c                                 jlow set by 1dpath keyword in perplex_option.dat
+         loopy = jlow
 
+      else 
+c                                 NOTE if not fileio, then jlow must not change
+         if (.not.fileio)  loopy = jlow
+
+      end if        
+c                                 check resolution dependent dimensions
+      if (loopx*loopy.gt.k2) then
+         write (*,*) ' parameter k2 must be >= loopx*loopy'
+         write (*,*) ' increase parameter k2 for routine DUMMY1'
+         write (*,*) ' or increase box size (zbox) or decrease'
+         write (*,*) ' number of path increments (loopy) or try'
+         write (*,*) ' the large parameter version of VERTEX'
+         write (*,*) ' k2 = ',k2 
+         write (*,*) ' loopx * loopy = ',loopx*loopy
+         stop
       end if 
+
+      loopx = 0 
 
       do i = 1, ilay
 
          do j = 1, irep(i)
+
+            loopx = loopx + 1
 
             do k = 1, icp 
                gblk(loopx,k) = iblk(i,k)
@@ -585,51 +607,51 @@ c                                 array into the local array and get the total
 c                                 number of moles (ctotal)
             ctotal = 0d0
 c                                 get total moles to compute mole fractions             
-               do i = 1, icp
-                  dcomp(i) = 0 
-                  cblk(i) = gblk(k,i)
-                  ctotal = ctotal + cblk(i)
-               end do
+            do i = 1, icp
+               dcomp(i) = 0 
+               cblk(i) = gblk(k,i)
+               ctotal = ctotal + cblk(i)
+            end do
 
-               do i = 1, icp 
-                  b(i) = cblk(i)/ctotal
-               end do
+            do i = 1, icp 
+               b(i) = cblk(i)/ctotal
+            end do
 c                                 lpopt does the minimization and outputs
 c                                 the results to the print file.
-               if (io3.eq.0) write (n3,*) 'step ',j,' on path, box ',k
+            if (io3.eq.0) write (n3,*) 'step ',j,' on path, box ',k
 
-               call lpopt (j,k,idead,output)
+            call lpopt (j,k,idead,output)
 
-               call fractr (output)
+            call fractr (output)
 c                                 at this point we've computed the stable
 c                                 assemblage at each point in our column
 c                                 and could do mass transfer, etc etc 
 c                                 here we'll simply fractionate the fluid 
 c                                 phase 
-               do i = 1, icp 
+            do i = 1, icp 
 c                                 subtract the fluid from the current composition
-                  gblk(k,i) = gblk(k,i) - dcomp(i) 
-                  if (gblk(k,i).lt.0d0) then
-                     write (*,*) 'negative - bulk at k,i',k,i,gblk(k,i)
-                      gblk(k,i) = 0d0
-                  end if 
-c                                 and add it to the overlying composition
-                  if (k.lt.loopx) then
-                      gblk(k+1,i) = gblk(k+1,i) + dcomp(i) 
-                      if (gblk(k,i).lt.0d0) then
-                         write (*,*) 'bulk < 0, at k,i',k,i,gblk(k,i)
-                         gblk(k,i) = 0d0
-                      end if 
-                  end if 
-               end do
-c                                 reset initialize top layer if gloopy = 999
-               if (gloopy.eq.999.and.k.gt.loopx-irep(ilay)) then 
-                  do i = 1, icp
-                     gblk(k,i) = iblk(ilay,i)
-                  end do 
+               gblk(k,i) = gblk(k,i) - dcomp(i) 
+               if (gblk(k,i).lt.0d0) then
+                  write (*,*) 'negative - bulk at k,i',k,i,gblk(k,i)
+                   gblk(k,i) = 0d0
                end if 
+c                                 and add it to the overlying composition
+               if (k.lt.loopx) then
+                   gblk(k+1,i) = gblk(k+1,i) + dcomp(i) 
+                   if (gblk(k,i).lt.0d0) then
+                      write (*,*) 'bulk < 0, at k,i',k,i,gblk(k,i)
+                      gblk(k,i) = 0d0
+                   end if 
+               end if 
+            end do
+c                                 reset initialize top layer if gloopy = 999
+            if (gloopy.eq.999.and.k.gt.loopx-irep(ilay)) then 
+               do i = 1, icp
+                  gblk(k,i) = iblk(ilay,i)
+               end do 
+            end if 
 c                                 end of the k index loop
-            end do 
+         end do 
 c                                 end of j index loop
       end do 
 

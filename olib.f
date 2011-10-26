@@ -1594,12 +1594,23 @@ c                                 and alpha = d2g/dp2 now convert
 c                                 to their normal forms:
       if (v.le.0d0) then 
 
-         sick(jd) = .true.
-         v = nopt(7)
-         beta = nopt(7)
-         alpha = nopt(7)
-         rho = nopt(7)
+         if (v.lt.0d0.or.(v.eq.0d0.and.iam.ne.5)) then 
+c                                 allow zero volume for 1 bar gas reference state 
+c                                 in frendly
+            sick(jd) = .true.
+            v = nopt(7)
+            beta = nopt(7)
+            alpha = nopt(7)
+            rho = nopt(7)
+         
+         else 
+
+            beta = 0d0
+            alpha = 0d0
+            rho = 0d0 
       
+         end if 
+
       else 
 
          beta = -beta/v
@@ -1635,7 +1646,7 @@ c                                 transition models. ideal gas alpha = 1/t
       props(14,jd) = beta 
       props(10,jd) = rho  
 
-      if (.not.sick(jd).and..not.rxn) then
+      if (.not.sick(jd).and..not.rxn.and.v.gt.0d0) then
 c                                 gruneisen parameter
          props(3,jd) = v/(cp*beta/alpha - t*alpha*v)
 c                                 aug 28, 2007, removed check on gruneisen to 
@@ -1691,7 +1702,7 @@ c                                 use poisson ratio estimates if iopt(16).ne.0
 
       end if 
 c                                 seismic properties
-      if (.not.sick(jd).and..not.rxn) then 
+      if (.not.sick(jd).and..not.rxn.and.v.gt.0d0) then 
 
          units = dsqrt(1d5)/1d3
          r43   = 4d0/3d0
@@ -1731,7 +1742,7 @@ c                                 p-wave velocity P derivative
 
          end if 
 
-         if (.not.fluid(jd)) then 
+         if (.not.fluid(jd).and.v.gt.0d0) then 
 c                                 s-wave velocity
             root = props(5,jd)/rho
 
@@ -1778,6 +1789,7 @@ c                                 get min/max moduli for hashin-strikman
 c                                 bounds. also saves the corresponding 
 c                                 T and P derivatives.
       if (.not.lopt(16)) then
+
          do j = 1, 2
 c                                 property index 
             m = hs2p(j)
@@ -1810,16 +1822,18 @@ c                                 max solid prop
             end if 
 
          end do 
+
       end if 
 c                                 check and warn if necessary for negative
 c                                 expansivity
-      if (.not.sick(jd)) then 
+      if (.not.sick(jd).and.v.gt.0d0) then 
 
          if (alpha.le.0d0.and.iwarn1.lt.11) then
 
             write (*,1030) t,p,pname(jd)
             iwarn1 = iwarn1 + 1
             if (iwarn1.eq.11) call warn (49,r,179,'GETPHP') 
+
          end if 
 
       end if
@@ -1827,8 +1841,10 @@ c                                 expansivity
       if (ppois.and.iwarn2.lt.11) then
 
          if (pois) then 
+
             iwarn2 = iwarn2 + 1
             write (*,1040) t,p,pname(jd)
+
          end if
  
          if (iwarn2.eq.11) call warn (49,r,178,'GETPHP')
@@ -1937,16 +1953,31 @@ c-----------------------------------------------------------------------
       double precision cp3, amt
       common/ cxt15 /cp3(k0,k5),amt(k5),kkp(k5),np,ncpd,ntot
 
+      integer iam
+      common/ cst4 /iam
+
       save iwarn
       data iwarn/0/
 c----------------------------------------------------------------------
 c                                 check if volume is there, if not assume
 c                                 things are really bad
-      if (isnan(psys(1))) then 
+      if (rxn) then 
+c                                 frendly return if a reaction
+         bad = .false.
+         shear = .false.
+         return 
+
+      else if (isnan(psys(1))) then 
      
          bad = .true.
+    
+      else if (iam.eq.5.and.psys(1).eq.0d0) then 
+c                                 frendly but not a reaction
+         bad = .false.
+         shear = .false.
+         return         
  
-      else if (psys(1).eq.0d0) then 
+      else if (psys(1).lt.0d0) then 
 
          bad = .true.
 

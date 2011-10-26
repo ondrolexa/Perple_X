@@ -2187,9 +2187,14 @@ c                                 initialize system properites
       call insysp (ssick,ppois)
 
       do i = 1, ntot
+c                                 check for reactions
+         if (vnu(i).lt.0d0) rxn = .true.
+
+      end do 
+
+      do i = 1, ntot
 c                                 set molar amount of phase 
          props(16,i) = 1d0
-         if (vnu(i).lt.0d0) rxn = .true.
 c                                 getphp uses the sign of the phase
 c                                 pointer to discrimate between pure
 c                                 compounds and solutions
