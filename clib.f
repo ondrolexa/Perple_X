@@ -2131,31 +2131,29 @@ c                                 set the y coodinate to depth below top
       end do 
 
       close (n8)
-c                                 jlow is set from 1dpath in perplex_option.dat
-      loopy = jlow
 c                                 two cases, file input or analytical
       if (fileio) then 
 c                                 file input of nodal p-t coordinates
          open (n8,file=cfname,status='old',iostat=ier)
 c                                 read header info
-         read (n8,*) i, j
+         read (n8,*) i, loopy
 
-         if (i*j.gt.k2) then 
+         if (loopx*loopy.gt.k2) then 
             write (*,'(/,a,i6,a,i6,a)') 
      *     '**error ** too many coordinates, nodes*columns>k2',i*j,
      *     'increase k2 (',k2,')'
+
+            stop 
+
          else if (i.ne.loopx) then 
             write (*,'(/,a,i4,a,a,/,a,i4,a)') 
      *     '** error ** the number of nodes in a column (',i,
      *     ') specified in: ',cfname,'must equal the',
      *     'number of lithological nodes (',loopx,
      *     ')specified in the aux file.'
-         else if (j.ne.loopy) then 
-            write (*,'(2(/,a,i4,a,a))') 
-     *     '** error ** the number of columns (',j,
-     *     ') specified in: ',cfname,'must equal the',
-     *     'number of z increments (',loopy,
-     *     ')specified in the aux file.'
+
+           stop 
+
          end if 
 
          do i = 1, loopy
@@ -2163,12 +2161,14 @@ c                                 read header info
             k = (i-1) * loopx
 
             do j = 1, loopx
-               read (*,*) vn(k+j,1),vn(k+j,2)
+               read (n8,*) vn(k+j,1),vn(k+j,2)
             end do 
 
          end do
 
       end if 
+
+      close (n8)
 
       end 
 

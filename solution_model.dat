@@ -3770,7 +3770,7 @@ end_of_model
 begin_model 
 
 
-                                  Ca-Fe2+-Mg-Al-Fe3+ Garnet model after White, Powell & Holland (JMG, 2000)
+                                  Ca-Fe2+-Mg-Al-Fe3+ Garnet model after White, Powell & Holland (JMG, 2007, 25:511-527)
 
                                   Model entered by Lucie Tajcamanova, May 11, 2007.
 
@@ -3779,12 +3779,12 @@ begin_model
                                   Interaction parameters (W terms) updated to the current THERMOCALC "preferred"
                                   values, Van Laar size parameters, added spessartine, Mark Caddick, Nov, 07.
 
-                                  Deleted kho_i interaction term, JADC, Nov 07.
+                                  Deleted the unused kho_i interaction term, JADC, Nov 07.
 
                                   alphas and w's updated to current TC values, Lucie Tajcamanova, April 14, 2010. 
 
-                                  This model presumably came from some thermocalc file, but it definitively is 
-                                  NOT the model given in the White et al., 2001 paper. JADC, 10/24/2011.
+                                  NOTE: the more recent Smye et al. (2011) models [Mica(SGH),  Carp(SGH), and 
+                                  Ctd(SGH)]are calibrated in terms of the Gt(WPPH) model for garnet. JADC, Oct 27, 2011.
 
 
 
@@ -3841,12 +3841,12 @@ kho_i = 1 andr + 1 py -1 gr
 
                             
 begin_excess_function
-                                  | previous values commented:
-w(alm gr) 10000. 0. 0.
-w(py gr) 45000. 0. 0.             | w(py gr) 33000. 0. 0.   
-w(alm py)  2500.  0. 0.           | w(alm py)  0. 0. 0.       
-w(py andr) 90000.  0. 0.          | w(py andr) 73000.  0. 0. 
-w(alm andr)  75000.  0. 0.        | w(alm andr)  60000.  0. 0.   
+                                  | commented values are from White et al. (2007):
+w(alm gr) 10000. 0. 0.            | w(alm gr)    15000.  0. 0.
+w(py gr) 45000. 0. 0.             | w(py gr)     33000.  0. 0.   
+w(alm py)  2500.  0. 0.           | w(alm py)     2500.  0. 0.       
+w(py andr) 90000.  0. 0.          | w(py andr)  160000.  0. 0. 
+w(alm andr)  75000.  0. 0.        | w(alm andr) 135000.  0. 0.   
 end_excess_function  
 
 2                                     |2 site entropy model
@@ -3860,12 +3860,13 @@ z(x,Mg) = 1 py
 z(y,al) = 1 spss + 1 alm + 1 py + 1 gr
 
 
-begin_van_laar_sizes             
+begin_van_laar_sizes     
+                                  | commented values are from White et al. (2007):        
 alpha(py)     1    0.0    0.0                      
 alpha(alm)    1    0.0    0.0                      
 alpha(spss)   1    0.0    0.0
-alpha(gr)     3    0.0    0.0
-alpha(andr)   3    0.0    0.0
+alpha(gr)     3    0.0    0.0 | 9
+alpha(andr)   3    0.0    0.0 | 9
 end_van_laar_sizes
 
 end_of_model      

@@ -547,8 +547,25 @@ c                                 input in auto_refine
          first = .false.
 c                                 get the phase to be fractionated
          call frname 
+c                                 check for consistent input if fileio
+         if (fileio) then 
+
+            if (jlow.ne.loopy) then 
+               write (*,'(2(/,a,i4,a,a))') 
+     *         '** error ** the number of columns (',loopy,
+     *         ') specified in the coordinate file must equal the',
+     *         'number of z increments (',jlow,
+     *        ')specified in the aux file.'
+              
+              stop 
+      
+            end if 
+
+         else 
 c                                 jlow set by 1dpath keyword in perplex_option.dat
-         loopy = jlow
+            loopy = jlow
+
+         end if 
 
       else 
 c                                 NOTE if not fileio, then jlow must not change
