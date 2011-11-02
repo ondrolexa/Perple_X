@@ -178,6 +178,12 @@ fanth_dq = 1 fanth              | ferro-anthophyllite
 7000. 0. 0.
 omrb_dqf = 1 gl -2 jd +2 acm    | ortho-magnesio riebekite (mrb dqf + 25000 J/mol), stoichiometry corrected 3/30/08 JADC
 33000. 0. 0. 
+                                | Make definitions for the revised (Diener et al, JMG 2011 25:631-656)
+                                | ortho-amphibole model.   Oct 31, 2011.
+mpa2      = 1 parg - 1 tr +1 anth 
+25d3 0. 0.
+ged_dqf2  = 1 ged
+20000. 0. 0.                            
                                 | make definition for coma of the unpublished
                                 | thermocalc scapolite model
 coma = 3 ab + 1 cc
@@ -208,7 +214,13 @@ ma_dqf = 1 ma
                                 | Make definition for the White et al (JMG, 2005) garnet, Gt(WPPH), JADC, 10/24/11.
 kho = 1 py - 1 gr + 1 andr
       40d3 0 0  
-
+                                | Make definitions for the White et al (JMG, 2000) ilmenite, Ilm(WHP), JADC, 10/29/11.
+oilm = 1 ilm_nol 
+      -13608 9.426 0 
+                                  
+dilm = 1 ilm_nol  
+        1993  -2.1 0 
+                                  
 end_makes 
                                                                                                                                             
 th pdata produced at 16.35 on Wed 13 Feb,2002 (with sigma fit =  1.089)                                                                     
@@ -1622,6 +1634,13 @@ m0 = 910000 m1 = 1.7 m2 = -170
 transition = 1 type = 4 t1  = 1900 t2  = 11 t3  = .2E-1  
 end
 
+ilm_nol  EoS = 2 | created from ilm for Ilm(WPH) by suppressing the Landau model                                                                
+TIO2(1)FEO(1)
+G0 = -1154702 S0 = 108.9 V0 = 3.169  
+c1 = 138.9 c2 = .5081E-2 c3 = -1288800 c5 = -463.7  
+b1 = .495E-4 b5 = -.495E-3 b6 = 1770000. b7 = -265.5 b8 = 4  
+m0 = 910000 m1 = 1.7 m2 = -170  
+end
  
 bdy      EoS = 2 | H= -1101310.                                                                   
 ZRO2(1)

@@ -284,7 +284,8 @@ c-----------------------------------------------------------------------
       common / cst41 /io3,io4,io9
 
       logical fileio
-      common/ cst226 /fileio
+      integer ncol, nrow
+      common/ cst226 /ncol,nrow,fileio
 
       double precision dcomp
       common/ frct2 /dcomp(k5)
@@ -523,7 +524,8 @@ c-----------------------------------------------------------------------
      *               zbox,iblk(maxlay,k5),gloopy,ilay,irep(maxlay)
 
       logical fileio
-      common/ cst226 /fileio
+      integer ncol, nrow
+      common/ cst226 /ncol,nrow,fileio
 
       logical first
 
@@ -550,9 +552,9 @@ c                                 get the phase to be fractionated
 c                                 check for consistent input if fileio
          if (fileio) then 
 
-            if (jlow.ne.loopy) then 
+            if (jlow.ne.nrow) then 
                write (*,'(2(/,a,i4,a,a))') 
-     *         '** error ** the number of columns (',loopy,
+     *         '** error ** the number of columns (',nrow,
      *         ') specified in the coordinate file must equal the',
      *         'number of z increments (',jlow,
      *        ')specified in the aux file.'
@@ -563,37 +565,37 @@ c                                 check for consistent input if fileio
 
          else 
 c                                 jlow set by 1dpath keyword in perplex_option.dat
-            loopy = jlow
+            nrow = jlow
 
          end if 
 
       else 
 c                                 NOTE if not fileio, then jlow must not change
-         if (.not.fileio)  loopy = jlow
+         if (.not.fileio)  nrow = jlow
 
       end if        
 c                                 check resolution dependent dimensions
-      if (loopx*loopy.gt.k2) then
-         write (*,*) ' parameter k2 must be >= loopx*loopy'
+      if (nrow*ncol.gt.k2) then
+         write (*,*) ' parameter k2 must be >= ncol*nrow'
          write (*,*) ' increase parameter k2 for routine DUMMY1'
          write (*,*) ' or increase box size (zbox) or decrease'
-         write (*,*) ' number of path increments (loopy) or try'
+         write (*,*) ' number of path increments (nrow) or try'
          write (*,*) ' the large parameter version of VERTEX'
          write (*,*) ' k2 = ',k2 
-         write (*,*) ' loopx * loopy = ',loopx*loopy
+         write (*,*) ' ncol * nrow = ',ncol*nrow
          stop
       end if 
 
-      loopx = 0 
+      ncol = 0 
 
       do i = 1, ilay
 
          do j = 1, irep(i)
 
-            loopx = loopx + 1
+            ncol = ncol + 1
 
             do k = 1, icp 
-               gblk(loopx,k) = iblk(i,k)
+               gblk(ncol,k) = iblk(i,k)
             end do 
 
          end do
@@ -605,18 +607,18 @@ c                                 for optimization.
 c                                 initialize path variables
       call setvar 
 
-      dv(jv(1)) = (vmax(jv(1)) - vmin(jv(1)))/(loopy-1)
-c                                 loopy is the number of steps along the subduction
+      dv(jv(1)) = (vmax(jv(1)) - vmin(jv(1)))/(nrow-1)
+c                                 nrow is the number of steps along the subduction
 c                                 path:
-      do j = 1, loopy
+      do j = 1, nrow
 c                                 j loop varies the pressure at the top of the 
 c                                 column (p0), set p0:
          p0 = vmin(1) + (j-1)*dv(1)
 c                                 for each box in our column compute phase 
 c                                 relations
-         do k = 1, loopx
+         do k = 1, ncol
 c                                 k-loop varies depth within the column (dz)
-            dz = (loopx - k) * zbox  
+            dz = (ncol - k) * zbox  
 c                                 set the p-t conditions
             call fr2dpt (p0,dz)
 c                                 now put the bulk composition from the global
@@ -653,7 +655,7 @@ c                                 subtract the fluid from the current compositio
                    gblk(k,i) = 0d0
                end if 
 c                                 and add it to the overlying composition
-               if (k.lt.loopx) then
+               if (k.lt.ncol) then
                    gblk(k+1,i) = gblk(k+1,i) + dcomp(i) 
                    if (gblk(k,i).lt.0d0) then
                       write (*,*) 'bulk < 0, at k,i',k,i,gblk(k,i)
@@ -662,7 +664,7 @@ c                                 and add it to the overlying composition
                end if 
             end do
 c                                 reset initialize top layer if gloopy = 999
-            if (gloopy.eq.999.and.k.gt.loopx-irep(ilay)) then 
+            if (gloopy.eq.999.and.k.gt.ncol-irep(ilay)) then 
                do i = 1, icp
                   gblk(k,i) = iblk(ilay,i)
                end do 
@@ -672,7 +674,7 @@ c                                 end of the k index loop
 c                                 end of j index loop
       end do 
 
-      if (output.and.io4.eq.0) call outgrd (loopy,loopx,1) 
+      if (output.and.io4.eq.0) call outgrd (nrow,ncol,1) 
 
       end 
 

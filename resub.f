@@ -2907,7 +2907,7 @@ c-----------------------------------------------------------------------
 
       end 
 
-      subroutine fopen (n2name,prt,plt,n9name,jbulk,icp,icopt)
+      subroutine fopen (n2name,prt,plt,n9name,jbulk,icp)
 c-----------------------------------------------------------------------
 c open files for subroutine input1.
 c-----------------------------------------------------------------------
@@ -2917,7 +2917,7 @@ c-----------------------------------------------------------------------
 
       logical first
 
-      integer ierr,icopt,jbulk,icp
+      integer ierr,jbulk,icp
  
       character*100 blank*1,n2name,prt*3,plt*3,name,n9name
 

@@ -235,8 +235,8 @@ c                                 make a fake y-axis for 1-d plots
       else if (icopt.eq.9) then 
 c                                 2d fractionation
          vnm(1) = 'P0(bar)   '
-         vnm(2) = 'DZ(m)     '            
-
+         vnm(2) = 'DZ(m)     '    
+c                                 switch loopx and loopy     
          do i = 1, 2
             vmx(i) = vmax(jv(i))
             vmn(i) = vmin(jv(i))
@@ -269,7 +269,7 @@ c                                 using nodal coordinates as the x axis
 
       end
 
-      subroutine fopen (n2name,pr,pl,n9name,jbulk,icp,icopt)
+      subroutine fopen (n2name,pr,pl,n9name,jbulk,icp)
 c-----------------------------------------------------------------------
 c open files for subroutine input1.
 c-----------------------------------------------------------------------
@@ -277,7 +277,7 @@ c-----------------------------------------------------------------------
  
       include 'perplex_parameters.h'
 
-      integer ierr,icopt,jbulk,icp
+      integer ierr,jbulk,icp
  
       character*100 blank*1,n2name,pr*3,pl*3,name,n9name
 

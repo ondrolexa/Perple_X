@@ -341,7 +341,8 @@ c-----------------------------------------------------------------------
       double precision dip
 
       logical fileio
-      common/ cst226 /fileio
+      integer ncol, nrow
+      common/ cst226 /ncol,nrow,fileio
 
       character*100 cfname
       common/ cst227 /cfname
@@ -954,7 +955,7 @@ c                                 set convergence criteria for routine univeq
 
       if (icopt.ne.0) close (n1)
 c                                 open files requested in input
-      call fopen (n2name,prt,plt,n9name,jbulk,icp,icopt)
+      call fopen (n2name,prt,plt,n9name,jbulk,icp)
 c                                 read auxilliary input for 2d fractionation
       if (icopt.eq.9) call rdain
 c                                 get runtime parameters
@@ -2044,7 +2045,8 @@ c-----------------------------------------------------------------------
      *               zbox,iblk(maxlay,k5),gloopy,ilay,irep(maxlay)
 
       logical fileio
-      common/ cst226 /fileio
+      integer ncol, nrow
+      common/ cst226 /ncol,nrow,fileio
 
       character*100 cfname
       common/ cst227 /cfname
@@ -2097,7 +2099,7 @@ c                                 statement assumes that H2O an CO2 (if
 c                                 thermodynamic components) are the 1st and
 c                                 2nd components (if present). 
       ilay = 0
-      loopx = 0
+      ncol = 0
       vmax(2) = 0d0
       vmin(2) = 0d0
 c                                 number of nodes with appended composition
@@ -2119,9 +2121,9 @@ c                                 end of data indicated by zero
 
          irep(ilay) = idint(zlayer/zbox)
 
-         loopx = loopx + irep(ilay)
+         ncol = ncol + irep(ilay)
 
-         if (loopx.gt.maxbox) then
+         if (ncol.gt.maxbox) then
             write (*,*) 'increase maxbox in routine DUMMY1'
             stop
          end if 
@@ -2136,31 +2138,31 @@ c                                 two cases, file input or analytical
 c                                 file input of nodal p-t coordinates
          open (n8,file=cfname,status='old',iostat=ier)
 c                                 read header info
-         read (n8,*) i, loopy
+         read (n8,*) i, nrow
 
-         if (loopx*loopy.gt.k2) then 
+         if (ncol*nrow.gt.k2) then 
             write (*,'(/,a,i6,a,i6,a)') 
      *     '**error ** too many coordinates, nodes*columns>k2',i*j,
      *     'increase k2 (',k2,')'
 
             stop 
 
-         else if (i.ne.loopx) then 
+         else if (i.ne.ncol) then 
             write (*,'(/,a,i4,a,a,/,a,i4,a)') 
      *     '** error ** the number of nodes in a column (',i,
      *     ') specified in: ',cfname,'must equal the',
-     *     'number of lithological nodes (',loopx,
+     *     'number of lithological nodes (',ncol,
      *     ')specified in the aux file.'
 
            stop 
 
          end if 
 
-         do i = 1, loopy
+         do i = 1, nrow
 
-            k = (i-1) * loopx
+            k = (i-1) * ncol
 
-            do j = 1, loopx
+            do j = 1, ncol
                read (n8,*) vn(k+j,1),vn(k+j,2)
             end do 
 
@@ -2198,10 +2200,8 @@ c----------------------------------------------------------------------
       common/ cst31 /vn(k2,k7),irct,ird
 
       logical fileio
-      common/ cst226 /fileio
-
-      integer jlow,jlev,loopx,loopy,jinc
-      common/ cst312 /jlow,jlev,loopx,loopy,jinc 
+      integer ncol, nrow
+      common/ cst226 /ncol,nrow,fileio 
 
       double precision vmax,vmin,dv
       common/ cst9  /vmax(l2),vmin(l2),dv(l2)  
@@ -2213,10 +2213,10 @@ c----------------------------------------------------------------------
 c                                convert p0-dz coordinate to nodal 
 c                                values
          i = (p0 - vmin(1))/dv(1) + 1
-         j = loopx - dz/zbox
+         j = ncol - int(dz/zbox)
 
-         v(1) = vn((i-1)*loopx + j, 1)
-         v(2) = vn((i-1)*loopx + j, 2)
+         v(1) = vn((i-1)*ncol + j, 1)
+         v(2) = vn((i-1)*ncol + j, 2)
 
       else 
 c                                 convert to depth at top of column
