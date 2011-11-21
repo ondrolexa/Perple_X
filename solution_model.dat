@@ -995,7 +995,7 @@ begin_model
                              * This model will only function for the FASH subsystem
                                if MGO is also used as a component in VERTEX.
                                            
-                             * This model was tested with the maple script compete_chl.mws
+                             * This model was tested with the maple script complete_chl.mws
 
                              * For normal aluminous chlorites there is little to be gained
                                by considering the afchl endmember becuase the 
@@ -1078,11 +1078,11 @@ mafchl_i = 1 afchl  + 6/5 mnchl - 6/5 clin
 
 begin_excess_function
 
-w(clin ames) 18000. 0. 0. 
+w(clin ames)  18000. 0. 0. 
 w(clin afchl) 18000. 0. 0. 
 w(ames afchl) 20000. 0. 0. 
-w(clin daph) 2500. 0. 0.  
-w(daph ames) 13500. 0. 0. 
+w(clin daph)   2500. 0. 0.  
+w(daph ames)  13500. 0. 0. 
 w(daph afchl) 14500. 0. 0. 
 
 end_excess_function
@@ -1092,17 +1092,17 @@ end_excess_function
 4 1.                            |4 species on 1 M1 site
 
 z(al,M1) = 1 ames 
-z(mg,M1) = 1 clin + 1 afchl
+z(mn,M1) = 1 mnchl
 z(fe,M1) = 1 daph 
 
 
 3 4.                            |3 species on 4 M2+M3 sites
 
-z(mg,m2+m3)= 1 clin + 1 ames + 1 afchl
+z(mn,m2+m3)= 1 mnchl
 z(fe,m2+m3)= 1 daph 
 
 
-2 1.                            |2 species on 1 M4 site
+2 1.                            |3 species on 1 M4 site
 
 z(mg,m4) = 1 afchl
 
@@ -6606,8 +6606,6 @@ begin_model
 
                                     in the thermodynamic data file (e.g., hp02ver.dat).
 
-                                    NOTE: this version is formulated with 5 Oxygen formula unit, NOT the 
-                                    10 oxygen formula unit used by Smye et al (2011).
                                     JADC, 19/09/11
                                                            
                                                       M2      M1     

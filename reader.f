@@ -2907,6 +2907,8 @@ c                                 chemical potentials
 
             end if 
 
+         end if 
+
             if (kcx(1).ne.0) then
 c                                 properties of all phases
                do j = 1, ntot
@@ -2917,6 +2919,20 @@ c                                 properties of all phases
 c                                 all properties of a specific phase
 c                                 find the phase index
                      call soltst (id,kcx(1))
+
+                     if (id.eq.0) then 
+c                                 the phase is not present
+                        do i = 1, iprop
+                           prop(i) = nopt(7)
+                        end do 
+                      
+                        tname = 'not stable'
+
+                        call outprp (dim) 
+
+                        goto 99 
+
+                     end if 
 
                   end if 
 c                                 normal properties
@@ -2949,10 +2965,9 @@ c                                 chemical potentials
             end if 
 
          end if 
+  
 
-      end if  
-
-      end 
+99    end 
 
       subroutine fopenn (n,dim,n5name,n6name)
 c----------------------------------------------------------------------
@@ -3294,9 +3309,9 @@ c----------------------------------------------------------------
      *            'S-wave velocity P derivative (km/s/bar)',
      *            'Adiabatic bulk modulus P derivative (unitless)',
      *            'Shear modulus P derivative (unitless)',
-     *            'All phase &/or system properties (PHEMGP format)',
+     *            'All phase &/or system properties',
      *            'Absolute amount (Vol, Mol, or Wt) of a phase',
-     *            'Multiple property output (PHEMGP format)'/
+     *            'Multiple property output'/
 c----------------------------------------------------------------------
       do i = 1, istab
 
