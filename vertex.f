@@ -178,7 +178,7 @@ c                                 generate pseudo-compound file
 c                                 optimization on a 2-d grid.
             call wav2d1 (output)
 
-         else if (icopt.eq.7.or.icopt.eq.10) then 
+         else if (icopt.eq.7) then 
 c                                 fractionation on a 1-d path.
             call frac1d (output)
 
@@ -312,9 +312,6 @@ c-----------------------------------------------------------------------
       integer ifrct,ifr
       logical gone
       common/ frct1 /ifrct,ifr(k23),gone(k5)
-
-      integer isec,icopt,ifull,imsg,io3p
-      common/ cst103 /isec,icopt,ifull,imsg,io3p
 c-----------------------------------------------------------------------
 
       iasct = 0
@@ -326,9 +323,8 @@ c                                 get phases to be fractionated
 c                                 call initlp to initialize arrays 
 c                                 for optimization.
       call initlp 
-c                                 two cases icopt = 10, input from
+c                                 two cases fileio: input from
 c                                 file, else analytical path function
-c                                 (icopt = 7)
       if (fileio) then 
 
          open (n8,file=cfname,status='old',iostat=ier)

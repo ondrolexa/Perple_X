@@ -17,7 +17,7 @@ auto_refine_slop       0.01 | 0->1 (auto_refine keyword group)
 bad_number             NaN  | any number or NaN (not-a-number)
 bounds                 VRH  | [VRH] HS; Voigt-Reuss-Hill or Hashin-Shtrikman, see vrh/hs_averaging
 closed_c_space         T    | T[rue] or F[alse], default is T => closed composition space for gridded minimization 
-composition            mol  | mol or wt; phase compositions
+composition             wt  | mol or wt; phase compositions
 console_messages       on   | on or off
 dependent_potentials   on   | on or off
 efficiency             3    | 1->5

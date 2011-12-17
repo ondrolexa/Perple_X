@@ -522,6 +522,7 @@ c                                 file, get name:
 
          read (n1,'(a)') cfname
          call enblnk (cfname)
+
          if (icopt.eq.10) then 
             icopt = 7
          else 
@@ -1657,6 +1658,10 @@ c---------------------------------------------------------------------
 
       integer isec,icopt,ifull,imsg,io3p
       common/ cst103 /isec,icopt,ifull,imsg,io3p
+
+      logical fileio
+      integer ncol, nrow
+      common/ cst226 /ncol,nrow,fileio
 c----------------------------------------------------------------------
 
       rloopy = dfloat(loopy-1)
@@ -1670,7 +1675,7 @@ c                                 for 1d calculations
 
       call incdp0
 
-      if (icopt.eq.10) then 
+      if (icopt.eq.7.and.fileio) then 
 c                                using nodal coordinate system
          dvr(1) = 1
 

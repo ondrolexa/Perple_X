@@ -313,7 +313,7 @@ c                                 open assemblage file
       subroutine plinp
 c---------------------------------------------------------------------- 
 c plinp - subroutine to read assemblage info for gridded min calculations.
-c if icopt = 10 also reads nodal coordinates.
+c if icopt = 7 and fileio also reads nodal coordinates.
 c----------------------------------------------------------------------
       implicit none
 
@@ -354,6 +354,10 @@ c----------------------------------------------------------------------
 
       character*100 cfname
       common/ cst227 /cfname
+
+      logical fileio
+      integer ncol, nrow
+      common/ cst226 /ncol,nrow,fileio
 
       integer idstab,nstab,istab
       common/ cst34 /idstab(i11),nstab(i11),istab
@@ -458,7 +462,7 @@ c                                 make the "null" assemblage
       iavar(2,k3) = 0 
       iavar(3,k3) = 0 
 
-      if (icopt.eq.10) then 
+      if (icopt.eq.7.and.fileio) then 
 c                                 if coodinates from a file, read
 c                                 coordinate file.
          open (n8,file=cfname,status='old',iostat=ier)

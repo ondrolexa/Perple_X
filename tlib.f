@@ -17,7 +17,7 @@ c----------------------------------------------------------------------
 	implicit none
 
       write (*,'(/,a)') 
-     *      'Perple_X version 6.6.6, source updated 11/21/2011.'
+     *      'Perple_X version 6.6.6, source updated 11/02/2011.'
 
       end
 
@@ -960,7 +960,7 @@ c                                 2d multilevel grid
      *                  (grid(2,2)-1) * 2**(grid(3,2)-1) + 1,
      *                  grid(3,1),grid(3,2),l8,valu(18)
 
-            else if (iam.eq.1.and.(icopt.eq.7.or.icopt.eq.10)) then 
+            else if (iam.eq.1.and.icopt.eq.7) then 
 c                                 1d fractionation grid
                 write (n,1210) grid(4,1),grid(4,2),l7
 
