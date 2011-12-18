@@ -18,7 +18,7 @@ c   this subroutine reads part of the H&P data
       character     text(132)*1, name*8, cnum*80, gnum*80, twod*80 
       character     snum*80, vnum*80
       double precision rnum, comp(19), rgib, g, reas, s, reav,sfe,
-     *                 kt,tr,b1,b5,b6,b7,b8,dsf,atoms,l4,l5,l6,
+     *                 tr,b1,b5,b6,b7,b8,dsf,atoms,l4,l5,l6,
      *                 catoms(19),patoms,lam,kp,kpp,dkdt
       double precision v, a, b, c, e, newa, k298, l1, l2, l3,szr,smn
       double precision ctoj,sk,sna,sca,sc,sti,sal,ssi,smg,so,sh,scl,sni

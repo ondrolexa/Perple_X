@@ -1,3 +1,5 @@
+c routines only called by vertex/meemum, could be combined with nlib.f
+
       subroutine lpopt0 (idead)
 c-----------------------------------------------------------------------
 c lpopt0 - calls lp minimization after a call to initlp. lpopt0
@@ -1771,8 +1773,9 @@ c                                 i/o
       integer jtest,jpot
       common/ debug /jtest,jpot
 
-      integer hcp,idv
-      common/ cst52  /hcp,idv(k7) 
+      integer jbulk
+      double precision cblk
+      common/ cst300 /cblk(k5),jbulk
 c----------------------------------------------------------------------
       if (io4.eq.1) return
 c                                graphics output  
@@ -1785,7 +1788,7 @@ c                                solution phase compositions
          write (n5,1010) ((x3(i,j,k),k=1,ispg(ids,j)),j=1,istg(ids))
       end do 
 c                                dependent potentials
-      if (jpot.ne.1) write (n5,1010) (mu(i),i=1,hcp)
+      if (jpot.ne.1) write (n5,1010) (mu(i),i=1,jbulk)
 
 1010  format (20(g16.8,1x))
 
@@ -2907,111 +2910,6 @@ c-----------------------------------------------------------------------
 
       end 
 
-      subroutine fopen (n2name,prt,plt,n9name,jbulk,icp)
-c-----------------------------------------------------------------------
-c open files for subroutine input1.
-c-----------------------------------------------------------------------
-      implicit none
- 
-      include 'perplex_parameters.h'
-
-      logical first
-
-      integer ierr,jbulk,icp
- 
-      character*100 blank*1,n2name,prt*3,plt*3,name,n9name
-
-      integer io3,io4,io9
-      common / cst41 /io3,io4,io9
-
-      character*100 prject,tfname
-      common/ cst228 /prject,tfname
-
-      integer jtest,jpot
-      common/ debug /jtest,jpot
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
-      integer iam
-      common/ cst4 /iam
-
-      save first,blank
-
-      data first,blank/.true.,' '/
-c----------------------------------------------------------------------
-c                                 open thermodynamic data file
-      call fopen2 (0,n2name)
-
-      if (first) then 
-         call mertxt (name,prject,'.dat',0)
-         write (*,1160) name
-         write (*,1170) n2name
-      end if 
-
-      if (n9name.ne.blank) then
-
-         io9 = 0 
-c                                 open solution model file
-         open (n9,file = n9name,iostat = ierr,status = 'old')
-         if (ierr.ne.0) call error (120,0d0,n9,n9name)
-
-         if (first) write (*,1210) n9name
-
-      else
-
-         io9 = 1
-         if (first) write (*,1210) 'not requested'
-
-      end if
-c                                 open print/plot files if requested
-      if (prt.ne.blank.and.prt.ne.'no_') then 
-         io3 = 0 
-         call mertxt (name,prject,'.prn',0)
-         open (n3, file = name)
-      else
-         io3 = 1
-         name = 'none requested'
-      end if
-
-      if (first) write (*,1180) name
-
-      if (plt.ne.blank.and.plt.ne.'no_') then
-         io4 = 0
-         call mertxt (name,prject,'.plt',0)
-         open (n4, file = name)
-      else
-         io4 = 1
-         name = 'none requested'
-      end if
-
-      if (first) write (*,1190) name
-
-      if (jbulk.ge.icp.and.io4.ne.1) then
-c                                 create special plot output file
-         call mertxt (name,prject,'.blk',0)
-         open (n5, file = name)
-         if (first) write (*,1220) name
-
-      else if (jbulk.ge.icp.and.io4.eq.1) then 
-
-         if (first) write (*,1220) 'none requested'
-
-      end if
-
-      first = .false.
-
-1160  format (/,'Reading problem definition from file: ',a)
-1170  format ('Reading thermodynamic data from file: ',a)
-1180  format ('Writing print output to file: ',a)
-1190  format ('Writing plot output to file: ',a)
-1210  format ('Reading solution models from file: ',a)
-1220  format ('Writing bulk composition plot output to file: ',a)
-
-      end 
-
       subroutine grxn (gval) 
 c-----------------------------------------------------------------------
 c grxn computes the free energy of univariant equilibria
@@ -3590,7 +3488,7 @@ c                                 phases in the thermodynamic c-space
 
          end do 
 
-         do i = jbulk, jbulk-icp+1, -1
+         do i = jbulk, icp+1, -1
 c                                  cycle through the saturated phases
             npt = npt + 1
             id = idss(i-icp)
@@ -3605,7 +3503,7 @@ c                                  meemum
                stop 
             end if 
 c                                  amount of the staurated phase
-            amt(npt) = c(i)/cp(i,id)
+            amt(npt) = c(i-icp)/cp(i,id)
 c                                  warn on undersaturation
             if (amt(npt).lt.nopt(9)) then 
                if (amt(npt).lt.-nopt(9).and.tictoc.lt.5) 
@@ -3632,7 +3530,7 @@ c                                  load the saturated phase composition
 
       if (usv.or.jpot.eq.0) then
 c                                 compute chemical potentials
-         if (npt.ne.hcp) then 
+         if (npt-(jbulk-icp).ne.hcp) then 
 c                                 not full rank
             do i = 1, hcp
                mu(i) = nopt(7)

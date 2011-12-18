@@ -225,8 +225,8 @@ c                                 cp, specific cp
       end if 
 c                                 chemical potentials variance
       if (jpot.ne.1) then 
-         write (lu,1130) (cname(i), i = 1, hcp)
-         write (lu,1140) (mu(i), i = 1, hcp)
+         write (lu,1130) (cname(i), i = 1, jbulk)
+         write (lu,1140) (mu(i), i = 1, jbulk)
          write (lu,1071) 2, jbulk - ntot + 2 
       else 
          write (lu,1070) 2, jbulk - ntot + 2 
@@ -373,8 +373,9 @@ c                                 bookkeeping variables
       integer jtest,jpot
       common/ debug /jtest,jpot
 
-      integer hcp,idv
-      common/ cst52  /hcp,idv(k7) 
+      integer jbulk
+      double precision cblk
+      common/ cst300 /cblk(k5),jbulk
 
       logical usv
       integer pindex,tindex
@@ -385,6 +386,9 @@ c                                 bookkeeping variables
 
       integer iam
       common/ cst4 /iam
+
+      integer hcp,idv
+      common/ cst52  /hcp,idv(k7) 
 
       integer hs2p
       double precision hsb
@@ -417,7 +421,7 @@ c                                 no data test
 c                                 get the dependent potentials
          if (jpot.ne.1) then
  
-            do i = 1, hcp
+            do i = 1, jbulk
                mu(i) = 0d0
             end do 
 
@@ -425,7 +429,7 @@ c                                 get the dependent potentials
 
                kd = igrd(itri(i),jtri(i))
 
-               do j = 1, hcp
+               do j = 1, jbulk
                   mu(j) = mu(j) + wt(i) * mus(j,kd)
                end do 
 

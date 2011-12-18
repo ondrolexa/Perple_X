@@ -252,6 +252,102 @@ end_of_model
 begin_model                
 
                              Orthopyroxene with compound formation, PH '99 Am Min. 
+                             JADC 3/03. 
+                             
+                             Site populations modified for HP 2011. JADC 8/10.
+                             
+                             NOTES:  
+                             
+                             * This is not an equipartition model.
+
+                             * This model will only function for the FASH subsystem
+                               if MGO is present as a component in VERTEX.
+
+
+                                                      1       2             
+                                                      M1      M2     T  
+                                                     ____________________
+
+                                      Mutliplicity    1       1     1/2*
+                                                     ____________________
+
+                                      1 en            Mg      Mg    SiSi  
+                            Species:  2 fs            Fe      Fe    SiSi
+                                      3 mgts          Al      Mg    AlSi     
+                                      4 fets          Al      Fe    AlSi
+                                                      ____________________
+
+                           Internal:  5 opx           Mg      Fe    SiSi
+                           
+                           *An HP pseudo-multiplicity.
+
+
+                           Dependent: fets = mgts + opx - en
+
+
+Opx(HP11)                  | solution name.
+
+8                          | model type: Reciprocal with speciation
+
+2                          | 2 independent mixing sitea
+2 2                        | 2 dimensions on first site, 2 on second
+                           | endmember names 
+mgts     fets_d   
+en       fs 
+ 
+
+1                          | ordered species definition
+
+opx = 1/2 en + 1/2  fs  Delta(enthalpy) = -6.95d3   
+
+begin_limits
+opx =     - 2 fs - 1 opx                delta = 2 z(M2,Fe)       
+opx =  -2 + 2 fs + 1 opx                delta = 2 z(M1,Fe)
+opx =     - 2 en - 1 opx                delta = 2 z(M1,Mg)
+end_limits                     
+
+1                          | 1 dependent endmember
+
+fets_d = 1 mgts + 1 opx - 1 en
+
+
+0 0 0 0                    | endmember flags, indicate if endmember is part of the solution.
+
+                           | subdivision model for (binary) site 1 (M2):
+0. 1. .1                   | range and resolution of X(Mg)
+0                          | subdivision scheme for site 1: imod = 0 -> cartesian 
+
+                           | subdivision model for (ternary) site 2 
+0. 1. .1                   | range and resolution of X(Ts)  
+0                          | subdivision scheme for site 2: imod = 0 -> cartesian  
+
+
+
+
+begin_excess_function     
+w(en mgts)   13d3 0. -0.15 | this is the only interaction term specified by H&P 2010           
+w(en fs)     68d2 0. 0.  
+w(fs mgts)   -1d3 0. 0.  
+w(en opx)    45d2 0. 0. 
+w(fs opx)    45d2 0. 0. 
+w(mgts opx)  12d2 0. 0.   
+end_excess_function 
+
+2                          | 2 site (M1, M2) configurational entropy model
+
+3 1.                       | 3 species on M1, 1 site per formula unit.
+
+z(m1,fe) = 1 fs 
+z(m1,al) = 1 mgts + 1 fets_d  
+
+2 1.                       | 2 species on M2, 1 site per formula unit.
+z(m2,mg) = 1 en + 1 mgts 
+
+end_of_model
+                  --------------------------------------------------------
+begin_model                
+
+                             Orthopyroxene with compound formation, PH '99 Am Min. 
                              JADC 3/03
 
                              Modified for ideal Cr, additionally a temperature 

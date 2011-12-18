@@ -1,3 +1,6 @@
+c routines common to all programs? could be in tlib.f?
+
+
       subroutine setau1 (output)
 c----------------------------------------------------------------------
 c setau1 sets autorefine dependent parameters. called by vertex, werami,
@@ -2259,3 +2262,133 @@ c                                  decompose ordered species
       if (nord(id).gt.0) call p0dord (id)
 
       end
+
+      subroutine fopen (n2name,prt,plt,n9name,jbulk,icp)
+c-----------------------------------------------------------------------
+c open files for subroutine input1.
+c-----------------------------------------------------------------------
+      implicit none
+ 
+      include 'perplex_parameters.h'
+
+      logical first
+
+      integer ierr,jbulk,icp
+ 
+      character*100 blank*1,n2name,prt*3,plt*3,name,n9name
+
+      integer io3,io4,io9
+      common / cst41 /io3,io4,io9
+
+      character*100 prject,tfname
+      common/ cst228 /prject,tfname
+
+      integer jtest,jpot
+      common/ debug /jtest,jpot
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      integer iam
+      common/ cst4 /iam
+
+      save first,blank
+
+      data first,blank/.true.,' '/
+c----------------------------------------------------------------------
+c                                 open thermodynamic data file
+      call fopen2 (0,n2name) 
+
+      if (iam.gt.2) then 
+c                                 perplex programs other than
+c                                 meemum and vertex only open
+c                                 exisiting files:
+c                                 open the plot file
+         call mertxt (name,prject,'.plt',0)
+         open (n4, file = name, iostat = ierr, status = 'old')
+         if (ierr.ne.0) call error (122,0d0,n4,name)
+c                                 open solution model file
+         if (n9name.ne.blank) then
+            io9 = 0 
+            open (n9,file = n9name,iostat = ierr,status = 'old')
+            if (ierr.ne.0) call error (120,0d0,n9,n9name)
+         else
+            io9 = 1
+         end if
+c                                 open assemblage file
+         call mertxt (name,prject,'.blk',0)
+         open (n5, file = name, iostat = ierr, status = 'old')
+         if (ierr.ne.0) call error (122,0d0,n4,name)
+
+         return
+
+      end if 
+
+      if (first) then 
+         call mertxt (name,prject,'.dat',0)
+         write (*,1160) name
+         write (*,1170) n2name
+      end if 
+
+      if (n9name.ne.blank) then
+
+         io9 = 0 
+c                                 open solution model file
+         open (n9,file = n9name,iostat = ierr,status = 'old')
+         if (ierr.ne.0) call error (120,0d0,n9,n9name)
+
+         if (first) write (*,1210) n9name
+
+      else
+
+         io9 = 1
+         if (first) write (*,1210) 'not requested'
+
+      end if
+c                                 open print/plot files if requested
+      if (prt.ne.blank.and.prt.ne.'no_') then 
+         io3 = 0 
+         call mertxt (name,prject,'.prn',0)
+         open (n3, file = name)
+      else
+         io3 = 1
+         name = 'none requested'
+      end if
+
+      if (first) write (*,1180) name
+
+      if (plt.ne.blank.and.plt.ne.'no_') then
+         io4 = 0
+         call mertxt (name,prject,'.plt',0)
+         open (n4, file = name)
+      else
+         io4 = 1
+         name = 'none requested'
+      end if
+
+      if (first) write (*,1190) name
+
+      if (jbulk.ge.icp.and.io4.ne.1) then
+c                                 create special plot output file
+         call mertxt (name,prject,'.blk',0)
+         open (n5, file = name)
+         if (first) write (*,1220) name
+
+      else if (jbulk.ge.icp.and.io4.eq.1) then 
+
+         if (first) write (*,1220) 'none requested'
+
+      end if
+
+      first = .false.
+
+1160  format (/,'Reading problem definition from file: ',a)
+1170  format ('Reading thermodynamic data from file: ',a)
+1180  format ('Writing print output to file: ',a)
+1190  format ('Writing plot output to file: ',a)
+1210  format ('Reading solution models from file: ',a)
+1220  format ('Writing bulk composition plot output to file: ',a)
+
+      end 

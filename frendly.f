@@ -1138,7 +1138,7 @@ c-----------------------------------------------------------------------
      *           (thermo(1,id),thermo(2,id),thermo(3,id),thermo(4,id),
      *            thermo(5,id),thermo(6,id),thermo(7,id),thermo(8,id),
      *            thermo(9,id),thermo(10,id),thermo(11,id),
-     *            thermo(12,id),thermo(13,id),thermo(14,id),
+     *            thermo(12,id),thermo(14,id),
      *            thermo(15,id),thermo(16,id),thermo(17,id),
      *            thermo(18,id),tr,pr)
 c                                get lamda and dis codes
@@ -1274,7 +1274,7 @@ c                                    test for Murghnahan EoS
      *           (thermo(1,id),thermo(2,id),thermo(3,id),thermo(4,id),
      *            thermo(5,id),thermo(6,id),thermo(7,id),thermo(8,id),
      *            thermo(9,id),thermo(10,id),thermo(11,id),
-     *            thermo(12,id),thermo(13,id),thermo(14,id),
+     *            thermo(12,id),thermo(14,id),
      *            thermo(15,id),thermo(16,id),thermo(17,id),
      *            thermo(18,id),tr,pr)
 c                                 add in activity correction
@@ -1352,7 +1352,7 @@ c
      *           (thermo(1,id),thermo(2,id),thermo(3,id),thermo(4,id),
      *            thermo(5,id),thermo(6,id),thermo(7,id),thermo(8,id),
      *            thermo(9,id),thermo(10,id),thermo(11,id),
-     *            thermo(12,id),thermo(13,id),thermo(14,id),
+     *            thermo(12,id),thermo(14,id),
      *            thermo(15,id),thermo(16,id),thermo(17,id),
      *            thermo(18,id),tr,pr)
 

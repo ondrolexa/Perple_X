@@ -1,4 +1,4 @@
-c routines common to psect and reader
+c routines common to psect and reader and NOT called by vertex/meemum
 
       subroutine bplinp
 c-----------------------------------------------------------------------
@@ -41,8 +41,9 @@ c                                 global assemblage data
       double precision mus
       common/ cst48 /mus(k8,k2)
 
-      integer hcp,idv
-      common/ cst52  /hcp,idv(k7) 
+      integer jbulk
+      double precision cblk
+      common/ cst300 /cblk(k5),jbulk
 
       integer iopt
       logical lopt
@@ -93,13 +94,13 @@ c                                phase molar amounts
          jxco = kxco  
 c                                 read mu's if available
          if (jpot.ne.1) read (n5,*,iostat=ier) 
-     *                       (mus(i,ibulk), i = 1, hcp)
+     *                       (mus(i,ibulk), i = 1, jbulk)
 
          if (ier.ne.0) then 
 c                                 if error on read most probably its
 c                                 because of NaN's for the chemical 
 c                                 potentials
-            do i = 1, hcp
+            do i = 1, jbulk
                mus(i,ibulk) = nopt(7)
             end do 
  
@@ -268,47 +269,6 @@ c                                 using nodal coordinates as the x axis
       end if 
 
       end
-
-      subroutine fopen (n2name,pr,pl,n9name,jbulk,icp)
-c-----------------------------------------------------------------------
-c open files for subroutine input1.
-c-----------------------------------------------------------------------
-      implicit none
- 
-      include 'perplex_parameters.h'
-
-      integer ierr,jbulk,icp
- 
-      character*100 blank*1,n2name,pr*3,pl*3,name,n9name
-
-      integer io3,io4,io9
-      common / cst41 /io3,io4,io9
-
-      character*100 prject,tfname
-      common/ cst228 /prject,tfname
-
-      data blank/' '/
-c----------------------------------------------------------------------
-c                                 open thermodynamic data file
-      call fopen2 (0,n2name) 
-c                                 open the plot file
-      call mertxt (name,prject,'.plt',0)
-      open (n4, file = name, iostat = ierr, status = 'old')
-      if (ierr.ne.0) call error (122,0d0,n4,name)
-c                                 open solution model file
-      if (n9name.ne.blank) then
-         io9 = 0 
-         open (n9,file = n9name,iostat = ierr,status = 'old')
-         if (ierr.ne.0) call error (120,0d0,n9,n9name)
-      else
-         io9 = 1
-      end if
-c                                 open assemblage file
-      call mertxt (name,prject,'.blk',0)
-      open (n5, file = name, iostat = ierr, status = 'old')
-      if (ierr.ne.0) call error (122,0d0,n4,name)
-
-      end 
 
       subroutine plinp
 c---------------------------------------------------------------------- 
@@ -697,6 +657,8 @@ c----------------------------------------------------------------------
 c----------------------------------------------------------------------
 c subroutine to recover geometric reciprocal solution compositions (x(i,j))
 c from the x3 array (post vertex) or zcoor array (in vertex). 
+
+c getxz is duplicated in resub.f, and consequently requires argument ID
 c----------------------------------------------------------------------
       implicit none
 

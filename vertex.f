@@ -1526,7 +1526,7 @@ c                                 test for mughnahan EoS
      *               thermo(4,k10),thermo(5,k10),thermo(6,k10),
      *               thermo(7,k10),thermo(8,k10),
      *               thermo(9,k10),thermo(10,k10),thermo(11,k10),
-     *               thermo(12,k10),thermo(13,k10),thermo(14,k10),
+     *               thermo(12,k10),thermo(14,k10),
      *               thermo(15,k10),thermo(16,k10),thermo(17,k10),
      *               thermo(18,k10),tr,pr)
 c                                 output the data

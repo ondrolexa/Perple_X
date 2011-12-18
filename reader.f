@@ -29,6 +29,10 @@ c----------------------------------------------------------------------
       integer iam
       common/ cst4 /iam
 
+      logical fileio
+      integer ncol, nrow
+      common/ cst226 /ncol,nrow,fileio
+
       integer icps, jcx, jcx1, kds
       logical stol, savg
       double precision rcps
@@ -61,7 +65,7 @@ c                                 set ivar flag, this indicates the number
 c                                 of possible independent plotting variables, jvar
 c                                 indicates the number of thermodynamic variables
       ivar = 2
-      if (icopt.eq.10) ivar = 3
+      if (icopt.eq.7.and.fileio) ivar = 3
 c                                 don't allow users to do anything
 c                                 other than gridded min
       if (icopt.lt.5) call error (4,1d0,icopt,'PSVDRAW')
@@ -417,10 +421,14 @@ c---------------------------------------------------------------------
       double precision vip
       common/ cst28 /vip(l2,k2)
 
+      logical fileio
+      integer ncol, nrow
+      common/ cst226 /ncol,nrow,fileio
+
       integer isec,icopt,ifull,imsg,io3p
       common/ cst103 /isec,icopt,ifull,imsg,io3p
 c----------------------------------------------------------------------
-      if (icopt.eq.10) then
+      if (icopt.eq.7.and.fileio) then
 
           ind = idint(var(1))
           wt = var(1) - dfloat(ind)
@@ -1966,14 +1974,14 @@ c                                 linear path
 
                if (vmn(j).lt.vmx(j)) then 
 
-                  if (xyp(j,i).gt.vmn(j).and.xyp(j,i).lt.vmx(j)) cycle 
+                  if (xyp(j,i).ge.vmn(j).and.xyp(j,i).le.vmx(j)) cycle 
  
                   write (*,1010) vnm(j),vmn(j),vmx(j)
                   ok = .false. 
 
                else
 
-                  if (xyp(j,i).gt.vmx(j).and.xyp(j,i).lt.vmn(j)) cycle  
+                  if (xyp(j,i).ge.vmx(j).and.xyp(j,i).le.vmn(j)) cycle  
                   write (*,1010) vnm(j),vmn(j),vmx(j)
                   ok = .false.
 
@@ -2006,7 +2014,11 @@ c                                 parallel to the x-axis
 
                else if (dxy(2).eq.0d0) then 
 c                                 parallel to y axis
-                  s = 0 
+                  s = 0d0 
+
+               else 
+c                                 compute slope
+                  s = dxy(ivd)/dxy(ivi)
 
                end if 
 
@@ -2909,63 +2921,65 @@ c                                 chemical potentials
 
          end if 
 
-            if (kcx(1).ne.0) then
+         if (kcx(1).ne.0) then
+c                                 phase properties requested,
+c                                 if kcx(1) = 999 then all phases
+c                                 otherwise kcx(1) is the phase 
+c                                 pointer
+            do j = 1, ntot
 c                                 properties of all phases
-               do j = 1, ntot
-
-                  if (kcx(1).eq.999) then 
-                     id = j 
-                  else
+               if (kcx(1).eq.999) then 
+                  id = j 
+               else
 c                                 all properties of a specific phase
 c                                 find the phase index
-                     call soltst (id,kcx(1))
+                  call soltst (id,kcx(1))
 
-                     if (id.eq.0) then 
+                  if (id.eq.0) then 
 c                                 the phase is not present
-                        do i = 1, iprop
-                           prop(i) = nopt(7)
-                        end do 
+                     do i = 1, iprop
+                        prop(i) = nopt(7)
+                     end do 
                       
-                        tname = 'not stable'
+                     tname = 'not stable'
 
-                        call outprp (dim) 
+                     call outprp (dim) 
 
-                        goto 99 
-
-                     end if 
+                     goto 99 
 
                   end if 
+
+               end if 
 c                                 normal properties
-                  do i = 1, i8
-                     prop(i) = props(i,id)
-                  end do 
+               do i = 1, i8
+                  prop(i) = props(i,id)
+               end do 
 c                                 compute modes
-                  call gtmode (mode,id)
+               call gtmode (mode,id)
 
-                  do i = 1, 3
-                     prop(i8+i) = mode(i)
-                  end do 
+               do i = 1, 3
+                  prop(i8+i) = mode(i)
+               end do 
 c                                 bulk composition 
-                  do i = i8+4, i8+3+icomp
-                     prop(i) = pcomp(i-i8-3,id)
-                  end do 
+               do i = i8+4, i8+3+icomp
+                  prop(i) = pcomp(i-i8-3,id)
+               end do 
 c                                 chemical potentials
-                  do i = i8+icomp+4, iprop
-                     prop(i) = mu(i-i8-3-icomp)
-                  end do 
+               do i = i8+icomp+4, iprop
+                  prop(i) = mu(i-i8-3-icomp)
+               end do 
 
-                  tname = pname(id)
+               tname = pname(id)
 
-                  call outprp (dim) 
+               call outprp (dim) 
 
-                  if (kcx(1).ne.999) exit 
+               if (kcx(1).ne.999) exit 
 
-               end do
-
-            end if 
+            end do
 
          end if 
-  
+
+      end if 
 
 99    end 
 
@@ -3083,6 +3097,10 @@ c----------------------------------------------------------------------
 
       character vnm*8
       common/ cxt18a /vnm(l3)  
+
+      logical fileio
+      integer ncol, nrow
+      common/ cst226 /ncol,nrow,fileio
 c------------------------------------------------------------------------
 c                                 generate a file name and
 c                                 open the file on n5
@@ -3103,7 +3121,7 @@ c                                 value, increment & nodes
       end do 
 c                                 number of pseudo-dependent variables,
       ivar = 2
-      if (icopt.eq.10) ivar = 3
+      if (icopt.eq.7.and.fileio) ivar = 3
 c                                 convert a8 names to a14
       do i = 1, ivar
          vname(i) = vnm(i)

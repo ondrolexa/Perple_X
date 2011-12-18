@@ -1943,7 +1943,7 @@ c                                 range, refine iv increment.
       end
 
       subroutine unver (g,s,v,a,b,c,d,e,f,gg,
-     *                  b1,b2,b3,b4,b5,b6,b7,b8,tr,pr)
+     *                  b1,b2,b4,b5,b6,b7,b8,tr,pr)
 c----------------------------------------------------------------------
 c convert thermodynamic equation of state from a 0-0 reference state
 c to a pr-tr reference state.
@@ -2307,7 +2307,7 @@ c    c                         -s at trt:
             end do 
 
             call unver (g0,s0,z(1),tm(4,i),tm(5,i),tm(6,i),tm(7,i),
-     *                  tm(8,i),tm(9,i),tm(10,i),z(2),z(3),z(4),z(5),
+     *                  tm(8,i),tm(9,i),tm(10,i),z(2),z(3),z(5),
      *                  z(6),z(7),z(8),z(9),tm(1,i),pr) 
 
             tm(3,i) = s0 + tm(3,i)
