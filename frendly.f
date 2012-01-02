@@ -42,6 +42,11 @@ c------------------------------------------------------------------------
       integer iam
       common/ cst4 /iam
 
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
       save idiag
 c----------------------------------------------------------------------- 
 c                                 iam is a flag indicating the Perple_X program
@@ -53,6 +58,8 @@ c                                 assign data files
 c                                 read options
       opname = 'perplex_option.dat'
       call redop1 (.false.,opname)
+c                                 override T_melt option
+      nopt(20) = 0d0
  
       idiag = 0
 c                                 harass the user for no reason

@@ -1953,10 +1953,7 @@ c June 16, 2004.
 c----------------------------------------------------------------------
       implicit none
 
-      include 'perplex_parameters.h'
-
-      double precision v,gg,a,b,c,d,e,f,g,b1,b2,b3,b4,b5,b6,b7,b8,pr,
-     *                 tr,s
+      double precision v,gg,a,b,c,d,e,f,g,b1,b2,b4,b5,b6,b7,b8,pr,tr,s
 c----------------------------------------------------------------------
 c                               Stixrude's EoS, exit without
 c                               doing anything
