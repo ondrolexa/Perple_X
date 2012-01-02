@@ -984,8 +984,7 @@ c     jchar - length of character string, 0 if unknown.
  
       character*(*) text
  
-      character*1 itsy(400),fonts(13)*33,ifonts(13)*33,
-     *            bitsy(400)
+      character*1 itsy(400),ifonts(13)*33,bitsy(400)
  
       character font*40
       common/ myfont /font
@@ -1001,21 +1000,21 @@ c     jchar - length of character string, 0 if unknown.
       double precision xscale,yscale,xmn,ymn
       common/ scales /xscale,yscale,xmn,ymn,nps
  
-      save fonts, ifonts
+      save ifonts
  
-      data fonts/'/Times-Italic 14 SetF',
-     *           '/Times-Bold 14 SetF',
-     *           '/Times-Roman 14 SetF',
-     *           '/Times-Roman 12 SetF',
-     *           '/Helvetica-Oblique 14 SetF',
-     *           '/Helvetica-Bold 14 SetF',
-     *           '/Helvetica 14 SetF',
-     *           '/Helvetica 12 SetF',
-     *           '/Courier-Bold 12 SetF',
-     *           '/Courier 10 SetF',
-     *           '/Courier 8 SetF',
-     *           '/Symbol 12 SetF',
-     *           '/Symbol 14 SetF'/
+c      data fonts/'/Times-Italic 14 SetF',
+c     *           '/Times-Bold 14 SetF',
+c     *           '/Times-Roman 14 SetF',
+c     *           '/Times-Roman 12 SetF',
+c     *           '/Helvetica-Oblique 14 SetF',
+c     *           '/Helvetica-Bold 14 SetF',
+c     *           '/Helvetica 14 SetF',
+c     *           '/Helvetica 12 SetF',
+c     *           '/Courier-Bold 12 SetF',
+c     *           '/Courier 10 SetF',
+c     *           '/Courier 8 SetF',
+c     *           '/Symbol 12 SetF',
+c     *           '/Symbol 14 SetF'/
  
       data ifonts/'%I f *-times-medium-i-*-140-*',
      *            '%I f *-times-bold-r-*-140-*',

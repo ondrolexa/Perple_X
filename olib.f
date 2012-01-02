@@ -1967,7 +1967,6 @@ c                                 check if volume is there, if not assume
 c                                 things are really bad
       if (rxn) then 
 c                                 frendly return if a reaction
-         bad = .false.
          shear = .false.
          return 
 
@@ -1977,7 +1976,6 @@ c                                 frendly return if a reaction
     
       else if (iam.eq.5.and.psys(1).eq.0d0) then 
 c                                 frendly but not a reaction
-         bad = .false.
          shear = .false.
          return         
  

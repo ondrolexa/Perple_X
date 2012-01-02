@@ -150,7 +150,6 @@ c     move x onto the constraints in the working set.
 
       if (rowerr) then
          msg = 'infeas'
-         numinf = 1
          obj = errmax
          go to 60
       end if
@@ -287,9 +286,8 @@ c     constraint j may be violated by as much as featol(j).
      *                  x(n)
       integer           istate(n+nclin), kactiv(n), kx(n)
 
-      double precision  alfa, asize,
-     *                  dtmax, dtmin,trulam
-      integer           isdel, jadd, jdel,ldq, ldt, itmax
+      double precision  alfa, asize,dtmax, dtmin
+      integer           jadd, jdel,ldq, ldt, itmax
 
       double precision  wmach(9)
       integer           loclc
@@ -310,10 +308,9 @@ c     constraint j may be violated by as much as featol(j).
       common            /ae04mf/loclc(15)
       common            /ax02za/wmach
       common            /be04nb/ldt,ldq
-      common            /de04mf/alfa, trulam, isdel, jdel, jadd
       common            /de04nb/asize, dtmax, dtmin
 
-      save              firstv
+      save              firstv, alfa, jdel, jadd
 
 c     specify the machine-dependent parameters.
 
@@ -338,7 +335,6 @@ c     use the multiplier array.
       if (iter.eq.0) then
          jadd = 0
          jdel = 0
-         isdel = 0
          firstv = .false.
          alfa = zero
       end if
@@ -422,7 +418,6 @@ c              delete a constraint.
 
 c              e04mfm  or  e04mfl  found a non-optimal multiplier.
 
-               trulam = trusml
                jdel = jsmlst
 
                if (jsmlst.gt.0) then
@@ -430,7 +425,6 @@ c              e04mfm  or  e04mfl  found a non-optimal multiplier.
 c                 regular constraint.
 
                   kdel = ksmlst
-                  isdel = istate(jdel)
                   istate(jdel) = 0
                end if
             else
@@ -443,11 +437,9 @@ c                 than 1.
 
                   jdel = jbigst
                   kdel = kbigst
-                  isdel = istate(jdel)
                   if (trubig.le.zero) is = -1
                   if (trubig.gt.zero) is = -2
                   istate(jdel) = is
-                  trulam = trubig
                   firstv = .true.
                   numinf = numinf + 1
                end if
@@ -912,8 +904,6 @@ c           first general constraint added.  set  q = i.
          iadd = kactiv(k)
          jadd = n + iadd
          if (nactiv.lt.nfree) then
-
-            overfl = .false.
 
 c           transform the incoming row of  a  by  q'.
 
@@ -1503,7 +1493,7 @@ c              this constraint appears to be constant along p.  it is
 c              not used to compute the step.  give the residual a value
 c              that can be spotted in the debug output.
 
-               res = -one
+c              res = -one
 
             else if (atp.le.zero .and. js.ne.-2) then
 
@@ -1585,7 +1575,7 @@ c              this constraint appears to be constant along p.  it is
 c              not used to compute the step.  give the residual a value
 c              that can be spotted in the debug output.
 
-               res = -one
+c              res = -one
 
             else if (atp.le.zero .and. js.ne.-2) then
 
@@ -3184,18 +3174,10 @@ c**** clean-up loop ****************************************************
 
       subroutine dtrsv ( trans, n, a, lda, x)
       implicit none 
-      integer lda, n,  i, info, j
+      integer lda, n,  i, j
       character*1 trans
       double precision  a(lda,*), x(*), zero, temp
       parameter ( zero = 1d-99)   
-
-      info = 0
-
-      if( n.lt.0 )then
-         info = 4
-      else if( lda.lt.max( 1, n ) )then
-         info = 6
-      end if
 
       if( n.eq.0 ) return
 
@@ -3227,20 +3209,10 @@ c**** clean-up loop ****************************************************
 
       subroutine dger ( m, n, x, y, a, lda )
       implicit none 
-      integer lda, m, n, i, info, j, jy
+      integer lda, m, n, i, j, jy
       double precision a(lda,*), x(*), y(*), alpha, zero, temp
       parameter (zero = 1d-99)
           
-      info = 0
-
-      if ( m.lt.0 )then
-         info = 1
-      else if( n.lt.0 )then
-         info = 2
-      else if( lda.lt.max( 1, m ) )then
-         info = 9
-      end if
-
 c     quick return if possible.
 
       if( m.eq.0 .or. n.eq.0  ) return

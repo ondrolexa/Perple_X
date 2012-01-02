@@ -70,11 +70,11 @@ c-----------------------------------------------------------------------
          call hh2ork (fo2)
       else if (ifug.eq.14) then 
          call pshp 
-      else if (ifug.eq.1) then 
+      else if (ifug.eq.15) then 
          call lohork (fo2)
-      else if (ifug.eq.1) then 
+      else if (ifug.eq.16) then 
          call homrk (fo2)
-      else if (ifug.eq.1) then 
+      else if (ifug.eq.17) then 
          call hosmrk (fo2,fs2)
       else if (ifug.eq.18) then 
          call dhhsrk
@@ -231,9 +231,11 @@ c                                 change default buffer
          ibuf = 2
          dlnfo2 = 0d0
          if (y.eq.'y'.or.y.eq.'Y') then 
+
             write (*,1010) 
             read (*,*,iostat=ier) ibuf
             call rerror (ier,*20)
+
             if (ibuf.gt.5.or.ibuf.lt.1) then
                call warn (173,dlnfo2,ifug,'RFLUID')
                goto 20
@@ -2628,8 +2630,8 @@ c         dp*[{.3252201107/t-.9564950686d-4}*dp
 c             + {.1967099672d-2 - 14.28899046/t}*dsqrt(dp)]
 c 
 c                        cork classic:
-          c = -0.5015593595d0 + 0.1149824621d-3*t
-          d = .3870914337d-1 - 0.1539157688d-4*t
+c         c = -0.5015593595d0 + 0.1149824621d-3*t
+c         d = .3870914337d-1 - 0.1539157688d-4*t
 c                        new parms:
 
           d = 5.40776d-3 - 1.59046d-6*t
@@ -3045,7 +3047,7 @@ c                                 get first guess:
 
       if (xo.lt.turd) then 
          xl = 2d0 *  xo/(1d0-xo)
-      else if (xo.gt.turd) then
+      else if (xo.ge.turd) then
          xl = 2d0 * (1d0-xo)/xop
       end if
 c                                 outer iteration loop:
@@ -3086,7 +3088,6 @@ c                                 inner iteration loop:
          call mrkmix (ins, 4)
          gh2o = gh2o * ghh2o
          xl = xh2o
-         xi = xh2o 
 
       end do 
 
@@ -3188,7 +3189,7 @@ c                                 get first guess:
       if (xo.lt.turd) then 
          if (xo.gt.0.3333333333333333d0) xo = 0.3333333333333333d0
          xl = 2d0 *  xo/(1d0-xo)
-      else if (xo.gt.turd) then
+      else if (xo.ge.turd) then
          if (xo.lt.0.3333334d0) xo = 0.3333334d0
          xl = 2d0 * (1d0-xo)/(1d0 + xo)
       end if
@@ -3230,8 +3231,7 @@ c                                 inner iteration loop:
 
          call mrkmix (ins, 5)
          gh2o = gh2o * ghh2o
-         xl = xh2o
-         xi = xh2o 
+         xl = xh2o 
 30    continue
       call warn (176,xh2o,nit,'HOSRK5')
       stop 
@@ -3353,7 +3353,6 @@ c                                 inner iteration loop:
          call mrkmix (ins, 3)
          gh2o = gh2o * ghh2o
          xl = xh2o
-         xi = xh2o 
 30    continue
 
       call warn (176,xh2o,nit,'HOMRK')
@@ -3787,7 +3786,6 @@ c-----------------------------------------------------------------------
             x = x + del
          end do 
          s = (s+(b-a)*sum/tnm)/2d0
-         it = it * 2
       end if
  
       end
@@ -4067,7 +4065,6 @@ c-----------------------------------------------------------------------
          goto 99
       end if
  
-      xw = 1d0 - xc
       p = pbar
       t15 = dsqrt(t**3)
       t12 = dsqrt(t)
@@ -5185,8 +5182,6 @@ c----------------------------------------------------------------------
       t3 = t2 * t
       x = gz
       isp = 7 
- 
-      nit = 0
 
       call fo2buf (fo2)
 c                                evaluate lnk's and correct for pressure, carbon 
@@ -5243,7 +5238,6 @@ c                                high f(O2).
 c                                guess xh2o, this might not be a bad guess for
 c                                oxidixed fluids, but for reduced?
          xh2o = 1d0 - xco - xco2 
-         dxh2o = 1d0 
          nit = 0 
 
          do 

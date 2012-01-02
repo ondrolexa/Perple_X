@@ -276,7 +276,6 @@ c                                      set up contour intervals
       else 
 
          dcon = (zmax-zmin)/11.
-         cmax = zmax - 0.5d0 * dcon
          cmin = zmin + 0.5d0 * dcon
          ncon = 11
 

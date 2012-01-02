@@ -93,17 +93,19 @@ c                                phase molar amounts
 
          jxco = kxco  
 c                                 read mu's if available
-         if (jpot.ne.1) read (n5,*,iostat=ier) 
-     *                       (mus(i,ibulk), i = 1, jbulk)
+         if (jpot.ne.1) then
+ 
+            read (n5,*,iostat=ier) (mus(i,ibulk), i = 1, jbulk)
 
-         if (ier.ne.0) then 
+            if (ier.ne.0) then 
 c                                 if error on read most probably its
 c                                 because of NaN's for the chemical 
 c                                 potentials
-            do i = 1, jbulk
-               mus(i,ibulk) = nopt(7)
-            end do 
+               do i = 1, jbulk
+                  mus(i,ibulk) = nopt(7)
+               end do 
  
+            end if 
          end if 
 
       end do                 

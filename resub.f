@@ -3234,12 +3234,10 @@ c----------------------------------------------------------------------
       save tic
       data tic/0/
 c----------------------------------------------------------------------
-c                                 mpt is the number of points refined
+c                                 npt is the number of points refined
 c                                 from the previous cycle, opt is the
 c                                 number of points in the original 
 c                                 solution.
-      mpt = npt
-
       do i = 1, npt
          jmin(i) = 0 
          clam(i) = 1d99

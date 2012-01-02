@@ -1924,7 +1924,7 @@ c---------------------------------------------------------------------
 
       subroutine warn (ier,realv,int,char)
 c---------------------------------------------------------------------
-c write warning messages and terminate execution
+c write warning message and continue execution
 c---------------------------------------------------------------------
       implicit none
 
@@ -2430,7 +2430,6 @@ c----------------------------------------------------------------------
 c                                 echo data for ctransf/actcor
       if (iopt.gt.3) write (n8,'(240a1)') (chars(i),i=1,len)
 
-      iend = len
       nmak = 0 
 
       write (rec,'(240a1)') chars
@@ -2516,6 +2515,15 @@ c                                 reject excluded makes
 c----------------------------------------------------------------------
 c readnm looks for the first word in a record chars, ibeg is the index
 c of the 1st letter, iend is the index of the last letter.
+
+c input 
+c         ibeg - starting index for search
+c         len  - end index for search
+c output
+c         ibeg - starting index of word
+c         iend - end index of word
+c         ier  - error code
+c         name - word
 c-----------------------------------------------------------------------
       implicit none
 

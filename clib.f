@@ -73,7 +73,6 @@ c                                 user friendly text version
             end if 
 
             ibad1 = 0 
-            igood = 0 
 
             if (ierr.ne.0.and.iam.eq.1) then 
 c                                 no auto_refine data
@@ -96,7 +95,6 @@ c                                 or suppression.
                   if (y.eq.'y'.or.y.eq.'Y') then
 
                      iopt(6) = 0
-                     igood = 0
 
                   else 
 
@@ -125,7 +123,6 @@ c                                 to use the data
                if (y.ne.'y'.and.y.ne.'Y') then
 
                   iopt(6) = 0
-                  igood = 0
 
                else 
 
@@ -1159,7 +1156,6 @@ c                               if i = 2, already in second position exit
                end do 
 
                cname(ict+1) = cmpnt(idco2)
-               ict = 1
 c                              used to re-execute loop? changed to exit 10/06
                exit            
             end if 
@@ -2150,7 +2146,7 @@ c                                 read header info
 
          if (ncol*nrow.gt.k2) then 
             write (*,'(/,a,i6,a,i6,a)') 
-     *     '**error ** too many coordinates, nodes*columns>k2',i*j,
+     *     '**error ** too many coordinates, nodes*columns>k2',i*nrow,
      *     'increase k2 (',k2,')'
 
             stop 

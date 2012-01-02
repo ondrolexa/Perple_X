@@ -349,8 +349,6 @@ c----------------------------------------------------------------------
 
       integer i, j
 
-      logical left, down
-
       double precision res
 
       integer jvar
@@ -361,22 +359,12 @@ c                                 find node associated with condition
       res = (var(1)-vmn(1))/dvr(1) + 1d0
       i = int(res) 
 
-      if (res-dfloat(i).gt.0.5d0) then 
-         i = i + 1
-         left = .true.
-      else 
-         left = .false.
-      end if 
+      if (res-dfloat(i).gt.0.5d0) i = i + 1
 
       res = (var(2)-vmn(2))/dvr(2) + 1d0
       j = int(res)
 
-      if (res-dfloat(j).gt.0.5d0) then 
-         j = j + 1
-         down = .true.
-      else 
-         down = .false.
-      end if 
+      if (res-dfloat(j).gt.0.5d0) j = j + 1
 
       end 
 

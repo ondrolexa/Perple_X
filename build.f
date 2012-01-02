@@ -192,13 +192,11 @@ c                                 initialization:
       nc(3) = 'C2'
  
       iv(5) = 3
-      idum = 0 
-      iind = 0 
+      idum = 0  
       ifyn = 0
       iexyn = 0
       ixct = 0
       ifugy = 0
-      im = 0
       isat=0
       jmct = 0
       ifct = 0
@@ -211,7 +209,6 @@ c                                 initialization:
       isoct = 0 
       iwt = 0
       jcth = 0 
-      icth = 0 
       idh2o = k5
       idco2 = k5
       satflu = .false.
@@ -594,7 +591,6 @@ c                                 ask if p = f(T) or vice versa for all
 c                                 phase diagram calculations:
 c                                
 5102  idep = 0
-      kvct = ivct 
 
       if (icopt.ne.3.and.icopt.ne.10) then 
 
@@ -626,7 +622,6 @@ c                                 kvct is the number of independent potentials
 
       if (oned) then 
 
-         jvct = 1
          icont = 1
 c                                 ======================================
 c                                 for 1d calculations get the independent

@@ -1953,6 +1953,8 @@ c June 16, 2004.
 c----------------------------------------------------------------------
       implicit none
 
+      include 'perplex_parameters.h'
+
       double precision v,gg,a,b,c,d,e,f,g,b1,b2,b4,b5,b6,b7,b8,pr,tr,s
 c----------------------------------------------------------------------
 c                               Stixrude's EoS, exit without
@@ -2563,7 +2565,6 @@ c----------------------------------------------------------------------
       if (ier.ne.0) goto 90
 
       ibeg = 1
-      iend = len
       ict = 0  
 
       do while (ict.lt.idim) 
@@ -2618,6 +2619,8 @@ c                                 card:
       kdim = 1
       jdim = 0
       isnum = 0 
+      len = 0
+      ier = 1
 
       do while (jdim.lt.idim)
 
@@ -2739,8 +2742,6 @@ c                                 data found
 
          do while (ibeg.lt.imax)
 
-            jend = imax
-
             call readnm (ibeg,jend,imax,ier,name)
             if (ier.ne.0) goto 90
 
@@ -2756,7 +2757,6 @@ c                                 data found
          if (lord.gt.iord) iord = lord
 
          ibeg = imax + 2
-         jend = len
 
          do i = 1, 3
 
@@ -2911,8 +2911,6 @@ c                                 find brackets
 c                                 data found
          ict = ict + 1
          if (ict.gt.m4) goto 91
- 
-         jend = imax
 
          call readnm (ibeg,jend,imax,ier,name)
          if (ier.ne.0) goto 90
@@ -2922,7 +2920,6 @@ c                                 data found
          if (ier.ne.0) goto 90         
 
          ibeg = imax + 2
-         jend = len
 
          do i = 1, m3
 
@@ -3008,8 +3005,6 @@ c                                 find brackets
 c                                 data found
          idqf = idqf + 1
  
-         jend = imax
-
          call readnm (ibeg,jend,imax,ier,name)
          if (ier.ne.0) goto 90
 
@@ -3018,7 +3013,6 @@ c                                 data found
          if (ier.ne.0) goto 90         
 
          ibeg = imax + 2
-         jend = len
 
          do i = 1, m3
 
@@ -3081,7 +3075,6 @@ c----------------------------------------------------------------------
       if (ier.ne.0) goto 90
 
       ibeg = 1
-      iend = len
 c                                 first name
       call readnm (ibeg,iend,len,ier,name)
 
@@ -3102,17 +3095,15 @@ c                                 reciprocal sol, get index
 c                                 find marker '='
       ibeg = iscan (1,len,'=') + 1
 
-      iend = len
-
       i = 2
 
       do 
 c                                 find a stoichiometric coeff
          call readfr (rnum,ibeg,iend,len,ier)
 
-         coeffs(i) = rnum
-
          if (ier.ne.0) exit 
+
+         coeffs(i) = rnum
 c                                 find the name
          call readnm (ibeg,iend,len,ier,name)
 
@@ -3399,7 +3390,7 @@ c-----------------------------------------------------------------------
 
       double precision turd2, a0, v0, v, df, f, dv, root, nr9t0, nr9t,
      *                 gamma0, k00, plg, c1, c2, c3, f1, gvq, 
-     *                 n, q, vq, v23, theta0, tol, k0p, a, ethv
+     *                 q, vq, v23, theta0, tol, k0p, a, ethv
 
       double precision nr9, qm1, d2f, tht, tht0, etht, etht0, ltht, df1,
      *                 ltht0, dtht, dtht0, d2tht, d2tht0, g, g0, dg, 
@@ -3428,10 +3419,8 @@ c-----------------------------------------------------------------------
 c----------------------------------------------------------------------
 c                                 assign local variables:
       a0     =  thermo(1,id)
-      n      =  thermo(2,id)
       v0     = -thermo(3,id)
-      k00    =  thermo(4,id)
-      k0p    =  thermo(5,id)
+
       theta0 =  thermo(6,id)
       gamma0 =  thermo(7,id)
       q      =  thermo(8,id)
@@ -4449,8 +4438,6 @@ c                                 array to find valid makes:
       end do 
 c                                 now get the composition vectors for 
 c                                 the mnames phases:
-      eof = .false.
-
       do 
 
          call getphi (name,eof)
@@ -4496,8 +4483,6 @@ c                                 find valid makes:
 c                                 compute the composition for each 
 c                                 made entitity and check if it's 
 c                                 valid
-      ict = 0 
-
       do i = 1, nmak
 
          if (inmk(i)) then
@@ -4823,8 +4808,6 @@ c                                 array to find valid makes:
       end do 
 c                                 now get the composition vectors for 
 c                                 the mnames phases:
-      eof = .false.
-
       do 
 
          call getphi (name,eof)
@@ -4870,8 +4853,6 @@ c                                 find valid makes:
 c                                 compute the composition for each 
 c                                 made entitity and check if it's 
 c                                 valid
-      ict = 0 
-
       do i = 1, nmak
 
          if (inmk(i)) then
@@ -5311,7 +5292,6 @@ c                                 value of the dependent endmember counter
  
       itic = 0 
       jtic = 0
-      ktic = 0
       kill = 0 
       
       do i = 1, istot + norder 
@@ -6038,9 +6018,6 @@ c                               number of ranges to be read
          m = m + isp(i) - 1
       end do 
 c                               get the numbers
-
-      l = 1
-
       do i = 1, isite
          
          do j = 1, isp(i) - 1
@@ -6748,10 +6725,7 @@ c----------------------------------------------------------------------
 c                                 the quadratic water term, cf hp model. 
          if (yh2o.ne.0d0) dlnw = -(yh2o * dlog(yh2o) 
      *                             + (1d0-yh2o)*dlog(1d0-yh2o))
-      else 
-
-         yh2o = 0d0  
-       
+      
       end if 
 c                                 i wouldn't expect to count water here yet again, but that
 c                                 is what eqs 1 & 2 of Ghiorso et al. (2002) imply
@@ -7549,10 +7523,6 @@ c                                 speciation
 c                                 for both laar and regular need
 c                                 the d(gex)/dy(k)/dy(l)
          do i = 1, jterm(id)
-
-            i1 = jsub(1,i,id)
-            i2 = jsub(2,i,id)
-
             do k = 1, nord(id) 
                do l = 1, nord(id)
                   d2gx(l,k) = d2gx(l,k) + w(i) * dppp(l,k,i,id)
@@ -8475,6 +8445,7 @@ c                                 endmember order.
 
       smod(im) = .true.
       pmod(im) = .true.
+      killct = 0 
 
       do i = 1, kstot
 c                                 pointer to endmember
@@ -8739,12 +8710,15 @@ c                            initialize ipvt,d
       do i = 1, n
          ipvt(i) = i
          rmax = 0d0
+
          do j = 1, n
             rmax = dmax1(rmax,dabs(a(i,j)))
          end do 
 c                            ax = b is singular if rmax = 0
          if (dabs(rmax).lt.1d-5) goto 9000
+
          d(i) = rmax
+
       end do 
 c                            begin decomposition: 
       nm1 = n-1

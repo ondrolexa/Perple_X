@@ -2637,8 +2637,6 @@ c                                 an ip was found:
 
       if (output) call outrxn (ipct,2)
       ibug(irct) = 1
-      ivi =iovi
-      ivd=iovd
 c                                 return on error
       goto 9999                
 c                                 a new invariant point has been
@@ -5073,7 +5071,6 @@ c                                 independent variables
             ivi = ivd
             ivd = iv
             jswit = 1
-            jfail = 0
 
             goto 190
 
@@ -6728,7 +6725,6 @@ c                              set new hot cell counter
 c                              now working on new level
          kinc = jinc(k)
          kinc2 = kinc/2
-         kinc21 = kinc2 + 1
 c
          write (*,1060) ihot,k
 c                              compute assemblages at refinement
@@ -6743,7 +6739,7 @@ c                              the hot cell
             jcent = jjc + kinc
             if (igrd(icent,jcent).eq.0) then 
                call setvr0 (icent,jcent)
-               call lpopt (icent,jcent,idead,output)                       
+               call lpopt (icent,jcent,idead,output)
                jtic = jtic + 1
                htic = htic + 1
             end if 
@@ -6910,10 +6906,7 @@ c                                 fill in grid
 
             if (igrd(i,j).eq.0.or.igrd(i,j).eq.kd) then
                ltic = ltic + 1
-               if (j.eq.loopy) then 
-                  write (n4,*) ltic,kd
-                  kst = 1
-               end if 
+               if (j.eq.loopy) write (n4,*) ltic,kd
             else 
                write (n4,*) ltic,kd
                kst = j

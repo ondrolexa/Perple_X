@@ -1390,7 +1390,6 @@ c                              eutectoid, else peritectoid.
                i2 = idr(2)
                i00 = idr(3)
 c                              find indices of old phases:
-               it = 0
                do i = 1, ib
                   if (iphi(i).eq.i1) id1 = i
                   if (iphi(i).eq.i2) id2 = i 

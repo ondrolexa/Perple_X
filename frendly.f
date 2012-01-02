@@ -49,7 +49,7 @@ c------------------------------------------------------------------------
 
       save idiag
 c----------------------------------------------------------------------- 
-c                                 iam is a flag indicating the Perple_X program
+c                                 iam flag indicates the Perple_X program
       iam = 5
 c                                 version info
       call vrsion
@@ -60,7 +60,7 @@ c                                 read options
       call redop1 (.false.,opname)
 c                                 override T_melt option
       nopt(20) = 0d0
- 
+c                                 flag to indicate whether a plot file is open
       idiag = 0
 c                                 harass the user for no reason
       write (*,1040)
@@ -809,7 +809,6 @@ c
 120   if (v(ivd).lt.vmin(ivd)) then
         v(ivd)=vmin(ivd)
       else if (i.eq.1) then
-        if (v(ivd).lt.vmin(ivd)) goto 130
         ddv=-dabs(ddv)/2.d0
         v(ivd)= vmin(ivd)
         iflg1=0
@@ -1110,7 +1109,6 @@ c---------------------------------------------------------------------
 c-----------------------------------------------------------------------
       write (*,1110)
       read (*,1050) y
-      ier = 0
  
       if (y.ne.'y'.and.y.ne.'Y') goto 20
          
@@ -1171,7 +1169,6 @@ c                                 reset data
          idis(id) = 0
          ltyp(id) = 0
          jdis = 0
-         klam = 0
 
          write (*,1130)
          read (*,1050) names(id)
@@ -1657,7 +1654,7 @@ c----------------------------------------------------------------------
 
       logical eof, first, match
 
-      integer inames, jcmpn, i, j, k, l, icopt, jdis, jlam, ier,
+      integer inames, jcmpn, i, j, k, l, icopt, ier,
      *        isct, jj, itic, jphct
  
       character*8 names
@@ -1840,10 +1837,7 @@ c                               initialization for k10 endnmembers
  
       iphct = 0
       ipot = 2
-      jdis = 0 
       ifyn = 1
-      jlam = 1
-      jdis = 1
       vuf(1) = 0d0
       vuf(2) = 0d0
       idf(1) = 0
