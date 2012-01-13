@@ -3453,7 +3453,7 @@ c                                 taylor(diff(FC,v),v=v0,3)
 
       if (root.gt.0d0) then 
          v = ((2d0+k0p)-dsqrt(root)/k00)*v0/(1d0+k0p)
-         if (v.lt.v0/2d0.or.v.gt.v0*2d0) v = v0
+         if (v.lt.v0/1d1.or.v.gt.v0*1d1) v = v0
       else 
          v = v0
       end if 
@@ -3630,7 +3630,7 @@ c                                 initial guess for volume, taylor(diff(a,v),v=v
       v = v0 + (9d0*(3d0*a8+a9)/(a5+a1*9d0)**2*(a1+a10) - 1d0)
      *         *9d0*v0*(a10+a1)/(a5+a1*9d0) 
 
-      if (v.lt.v0/2d0.or.v.gt.v0*2d0) v = v0
+      if (v.lt.v0/1d1.or.v.gt.v0*1d1) v = v0
 
       itic = 0 
       tol = 1d-6*p
@@ -3784,7 +3784,7 @@ c                                 taylor(diff(FC,v),v=v0,3)
 
       if (root.gt.0d0) then 
          v = ((2d0+k0p)-dsqrt(root)/k00)*v0/(1d0+k0p)
-         if (v.lt.v0/2d0.or.v.gt.v0*2d0) v = v0
+         if (v.lt.v0/1d1.or.v.gt.v0*1d1) v = v0
       else 
          v = v0
       end if 
@@ -3925,7 +3925,7 @@ c                                 adiabatic shear modulus
       end if  
                    
 1000  format (/,'**warning ver369** failed to converge at T= ',f8.2,' K'
-     *       ,' P=',f9.1,' bar',/,'Using Sixtrude EoS.',
+     *       ,' P=',f9.1,' bar',/,'Using Sixtrude GI EoS.',
      *        ' Phase ',a,' will be destabilized.',/)
 1020  format (/,'**warning ver370** danger will robinson, danger, ',
      *          'danger!!',/,i6,2(1x,g13.6))
@@ -5344,7 +5344,9 @@ c                                 macroscopic formulation
 c                                 check if subscript points to a killed 
 c                                 endmember
             do k = 1, iord
-               if (isub(i,k,1).eq.ijkill(j)) then
+               if (isub(i,k,1).eq.0) then
+                  cycle 
+               else if (isub(i,k,1).eq.ijkill(j)) then
                   skip = .true.
                   exit 
                end if 
@@ -5361,7 +5363,11 @@ c                               the term is acceptable
          mord = iord
 
          do j = 1, iord
-            isub(itic,j,1) = i2ni(isub(i,j,1))
+            if (isub(i,j,1).eq.0) then
+               isub(itic,j,1) = 0 
+            else 
+               isub(itic,j,1) = i2ni(isub(i,j,1))
+            end if 
          end do 
 c                                save the coefficient
          do j = 1, m3

@@ -1110,245 +1110,32 @@ c-----------------------------------------------------------------------
       write (*,1110)
       read (*,1050) y
  
-      if (y.ne.'y'.and.y.ne.'Y') goto 20
+      if (y.eq.'y'.or.y.eq.'Y') then 
          
-      if (iphct.gt.1.or.vnu(1).ne.1d0) then
-         write (*,1120)
-         read (*,1050) y
-      else 
-         y = 'n'
-      end if 
- 
-      if (y.ne.'y'.and.y.ne.'Y') then
-
-         if (iphct.gt.1) then 
- 
-            do 
-               write (*,1000) (i,names(i),i=1,iphct)
-               read (*,*,iostat=ier) id
-               if (ier.eq.0) exit 
-               call rerr
-            end do 
-
-         else
-            id = 1
+         if (iphct.gt.1.or.vnu(1).ne.1d0) then
+            write (*,1120)
+            read (*,1050) y
+         else 
+            y = 'n'
          end if 
-
-         write (*,1040) names(id)
-         read (*,1050) names(id)
-
-         call unlam (tm,id,lct)
-
-         call unver
-     *           (thermo(1,id),thermo(2,id),thermo(3,id),thermo(4,id),
-     *            thermo(5,id),thermo(6,id),thermo(7,id),thermo(8,id),
-     *            thermo(9,id),thermo(10,id),thermo(11,id),
-     *            thermo(12,id),thermo(14,id),
-     *            thermo(15,id),thermo(16,id),thermo(17,id),
-     *            thermo(18,id),tr,pr)
-c                                get lamda and dis codes
-         if (ltyp(id).gt.7.and.ltyp(id).lt.10) goto 91
-c                                 add in activity correction
-         thermo(1,k10) = thermo(1,id)
-         thermo(2,k10) = thermo(2,id)
-         thermo(1,id) = thermo(1,id) + tr * r * dlog (act(id))
-         thermo(2,id) = thermo(2,id) - r * dlog (act(id))
  
-         call append (n2)
-         call outdat (n2,id,1)
-c                                 reset data
-         thermo(1,id) = thermo(1,k10) 
-         thermo(2,id) = thermo(2,k10) 
+         if (y.ne.'y'.and.y.ne.'Y') then
 
-
-         goto 99
-
-      else
-
-         id = k5
-         idis(id) = 0
-         ltyp(id) = 0
-         jdis = 0
-
-         write (*,1130)
-         read (*,1050) names(id)
+            if (iphct.gt.1) then 
  
-         do i = 1, k4
-            thermo(i,id) = 0d0
-         end do 
+               do 
+                  write (*,1000) (i,names(i),i=1,iphct)
+                  read (*,*,iostat=ier) id
+                  if (ier.eq.0) exit 
+                  call rerr
+               end do 
 
-         do i = 1, k0
-            cp0(i,id) = 0d0  
-         end do 
- 
-         imurg = 0
-         klam = 0 
-
-         do j = 1, iphct
-
-            cmurg8 = thermo(18,j)
-
-            if (cmurg8.ne.0d0.and.iphct.gt.1) then
-c                                    test for Gottschalk
-               call warn (45,cmurg8,iphct,names(id)) 
-               goto 99
-            else if (cmurg8.ne.0d0) then
-c                                    test for Murghnahan EoS
-               imurg = 1
-               cmurg6 = thermo(16,j)
-               cmurg7 = thermo(17,j)
-
-            end if             
-
-            do i = 1, k4
-               thermo(i,id) = thermo(i,id) + vnu(j) * thermo(i,j)
-            end do 
-
-            do i = 1, k0
-               cp0(i,id) = cp0(i,id) + vnu(j) * cp0(i,j)
-            end do 
-
-            if (imurg.eq.1) then 
-               thermo(16,id) = cmurg6
-               thermo(17,id) = cmurg7
-               thermo(18,id) = cmurg8
+            else
+               id = 1
             end if 
 
-
-            if (idis(j).ne.0) then
-
-               idis(id) = m9
-               jdis = jdis + 1
-               jd = idis(j) 
-               if (jdis.gt.1) goto 91
-               do i = 1, 7      
-                  therdi(i,m9) = vnu(j) * therdi(i,jd)
-               end do 
-               therdi(8,m9) = therdi(8,jd)
-               therdi(9,m9) = therdi(9,jd)
-
-            end if
-
-            if (ltyp(j).ne.0) then
-
-               ltyp(id) = ltyp(j)
-               kd = iphct + 1
-               lmda(id) = kd
-               jd = lmda(j)
-               klam = klam + 1
-
-               if (ltyp(j).eq.10) then
-                  if (klam.gt.3) goto 91
-                  ltyp(id) = 9 + klam
-                  therlm(1,klam,kd) = therlm(1,1,jd)
-                  therlm(2,klam,kd) = vnu(j) * therlm(2,1,jd)
-                  therlm(3,klam,kd) = vnu(j) * therlm(3,1,jd)
-               else if (ltyp(j).lt.4) then
-                  if (klam.gt.1) goto 91
-                  do i = 1, ltyp(j)
-                     therlm(1,i,kd) = vnu(j) * therlm(1,i,jd)
-                     therlm(2,i,kd) = vnu(j) * therlm(2,i,jd)
-                     therlm(5,i,kd) = vnu(j) * therlm(5,i,jd)
-                     therlm(6,i,kd) = vnu(j) * therlm(6,i,jd)
-                     therlm(3,i,kd) = therlm(3,i,jd)
-                     therlm(4,i,kd) = therlm(4,i,jd)
-                     therlm(7,i,kd) = therlm(7,i,jd)
-                     therlm(8,i,kd) = therlm(8,i,jd)
-                  end do
-               else if (ltyp(j).lt.8) then
-
-                  if (klam.gt.1) goto 91
-
-                  do k = 1, ltyp(j) - 3
-
-                     therlm(1,k,kd) = therlm(1,k,jd)
-                     therlm(2,k,kd) = therlm(2,k,jd)
-
-                     do h = 3, 12
-                        therlm(h,k,kd) = therlm(h,k,jd)*vnu(j)
-                     end do
-                  end do 
-               end if
-            end if
-         end do
-
-         call unlam (tm,id,lct)
-
-         call unver
-     *           (thermo(1,id),thermo(2,id),thermo(3,id),thermo(4,id),
-     *            thermo(5,id),thermo(6,id),thermo(7,id),thermo(8,id),
-     *            thermo(9,id),thermo(10,id),thermo(11,id),
-     *            thermo(12,id),thermo(14,id),
-     *            thermo(15,id),thermo(16,id),thermo(17,id),
-     *            thermo(18,id),tr,pr)
-c                                 add in activity correction
-         thermo(1,k10) = thermo(1,id)
-         thermo(2,k10) = thermo(2,id)
-
-         do i = 1, iphct
-            thermo(1,id) = thermo(1,id) + vnu(i) * tr * r * dlog(act(i))
-            thermo(2,id) = thermo(2,id) - vnu(i) * r * dlog(act(i))
-         end do 
-c                                 output the data 
-         call append (n2)
-         call outdat (n2,id,1)
-c                                 reset data
-         thermo(1,id) = thermo(1,k10) 
-         thermo(2,id) = thermo(2,k10) 
-
-         goto 99
-
-      end if
- 
-20    if (iphct.gt.1) then
-         write (*,1000) (i,names(i),i=1,iphct)
-         read (*,*,iostat=ier) id
-         call rerror (ier,*20)
-      else
-         id = 1
-      end if 
-
-      ichk = 0
-
-      write (*,1010)
-
-10    write (*,1020) (i,list(i),i=1,20)
-      read (*,*,iostat=ier) kv
-      call rerror (ier,*10)
-      if (kv.eq.0) then
-         if (ichk.eq.0) goto 30
-c                                 write entry to permanant file:
-         write (*,1070) names(id)
-         read (*,1050) y
-c
-         if (y.eq.'y'.or.y.eq.'Y') then
-c                                 add in activity correction
-            thermo(1,k10) = thermo(1,id)
-            thermo(2,k10) = thermo(2,id)
-            thermo(1,id) = thermo(1,id) + tr * r * dlog (act(id))
-            thermo(2,id) = thermo(2,id) - r * dlog (act(id))
- 
-            call append (n2)
-            call outdat (n2,id,1)
-
-            thermo(1,id) = thermo(1,k10) 
-            thermo(2,id) = thermo(2,k10) 
-
-
-         end if
-c
-         call conver
-     *        (thermo(1,id), thermo(2,id), thermo(3,id),thermo(4,id),
-     *         thermo(5,id), thermo(6,id), thermo(7,id),thermo(8,id),
-     *         thermo(9,id), thermo(10,id),thermo(11,id),
-     *         thermo(12,id),thermo(13,id),thermo(14,id),
-     *         thermo(15,id),thermo(16,id),thermo(17,id),
-     *         thermo(18,id),thermo(19,id),thermo(20,id),
-     *         thermo(21,id),thermo(22,id),thermo(23,id),tr,pr,r,0)
-         goto 30
-      end if
-c
-         if (ichk.eq.0) then
+            write (*,1040) names(id)
+            read (*,1050) names(id)
 
             call unlam (tm,id,lct)
 
@@ -1359,45 +1146,319 @@ c
      *            thermo(12,id),thermo(14,id),
      *            thermo(15,id),thermo(16,id),thermo(17,id),
      *            thermo(18,id),tr,pr)
+c                                get lamda and dis codes
+            if (ltyp(id).gt.7.and.ltyp(id).lt.10) goto 91
+c                                 add in activity correction
+            thermo(1,k10) = thermo(1,id)
+            thermo(2,k10) = thermo(2,id)
+            thermo(1,id) = thermo(1,id) + tr * r * dlog (act(id))
+            thermo(2,id) = thermo(2,id) - r * dlog (act(id))
+ 
+            call append (n2)
+            call outdat (n2,id,1)
+c                                 reset data
+            thermo(1,id) = thermo(1,k10) 
+            thermo(2,id) = thermo(2,k10) 
 
-            write (*,1040) names(id)
+         else
+
+            id = k5
+            idis(id) = 0
+            ltyp(id) = 0
+            jdis = 0
+
+            write (*,1130)
             read (*,1050) names(id)
-            ichk = 1
+ 
+            do i = 1, k4
+               thermo(i,id) = 0d0
+            end do 
+
+            do i = 1, k0
+               cp0(i,id) = 0d0     
+            end do 
+ 
+            imurg = 0
+            klam = 0 
+
+            do j = 1, iphct
+
+               cmurg8 = thermo(18,j)
+
+               if (cmurg8.ne.0d0.and.iphct.gt.1) then
+c                                    test for Gottschalk
+                  call warn (45,cmurg8,iphct,names(id)) 
+                  return
+
+               else if (cmurg8.ne.0d0) then
+c                                    test for Murghnahan EoS
+                  imurg = 1
+                  cmurg6 = thermo(16,j)
+                  cmurg7 = thermo(17,j)
+
+               end if             
+
+               do i = 1, k4
+                  thermo(i,id) = thermo(i,id) + vnu(j) * thermo(i,j)
+               end do 
+
+               do i = 1, k0
+                  cp0(i,id) = cp0(i,id) + vnu(j) * cp0(i,j)
+               end do 
+
+               if (imurg.eq.1) then 
+                  thermo(16,id) = cmurg6
+                  thermo(17,id) = cmurg7
+                  thermo(18,id) = cmurg8
+               end if 
+
+               if (idis(j).ne.0) then
+
+                  idis(id) = m9
+                  jdis = jdis + 1
+                  jd = idis(j) 
+                  if (jdis.gt.1) goto 91
+
+                  do i = 1, 7      
+                     therdi(i,m9) = vnu(j) * therdi(i,jd)
+                  end do 
+
+                  therdi(8,m9) = therdi(8,jd)
+                  therdi(9,m9) = therdi(9,jd)
+
+               end if
+
+               if (ltyp(j).ne.0) then
+
+                  ltyp(id) = ltyp(j)
+                  kd = iphct + 1
+                  lmda(id) = kd
+                  jd = lmda(j)
+                  klam = klam + 1
+
+                  if (ltyp(j).eq.10) then
+
+                     if (klam.gt.3) goto 91
+                     ltyp(id) = 9 + klam
+
+                     therlm(1,klam,kd) = therlm(1,1,jd)
+                     therlm(2,klam,kd) = vnu(j) * therlm(2,1,jd)
+                     therlm(3,klam,kd) = vnu(j) * therlm(3,1,jd)
+
+                  else if (ltyp(j).lt.4) then
+
+                     if (klam.gt.1) goto 91
+
+                     do i = 1, ltyp(j)
+                        therlm(1,i,kd) = vnu(j) * therlm(1,i,jd)
+                        therlm(2,i,kd) = vnu(j) * therlm(2,i,jd)
+                        therlm(5,i,kd) = vnu(j) * therlm(5,i,jd)
+                        therlm(6,i,kd) = vnu(j) * therlm(6,i,jd)
+                        therlm(3,i,kd) = therlm(3,i,jd)
+                        therlm(4,i,kd) = therlm(4,i,jd)
+                        therlm(7,i,kd) = therlm(7,i,jd)
+                        therlm(8,i,kd) = therlm(8,i,jd)
+                     end do
+
+                  else if (ltyp(j).lt.8) then
+
+                     if (klam.gt.1) goto 91
+
+                     do k = 1, ltyp(j) - 3
+
+                        therlm(1,k,kd) = therlm(1,k,jd)
+                        therlm(2,k,kd) = therlm(2,k,jd)
+
+                        do h = 3, 12
+                           therlm(h,k,kd) = therlm(h,k,jd)*vnu(j)
+                        end do
+
+                     end do 
+
+                  end if
+
+               end if
+
+            end do
+
+            call unlam (tm,id,lct)
+
+            call unver
+     *           (thermo(1,id),thermo(2,id),thermo(3,id),thermo(4,id),
+     *            thermo(5,id),thermo(6,id),thermo(7,id),thermo(8,id),
+     *            thermo(9,id),thermo(10,id),thermo(11,id),
+     *            thermo(12,id),thermo(14,id),
+     *            thermo(15,id),thermo(16,id),thermo(17,id),
+     *            thermo(18,id),tr,pr)
+c                                 add in activity correction
+            thermo(1,k10) = thermo(1,id)
+            thermo(2,k10) = thermo(2,id)
+
+            do i = 1, iphct
+
+               thermo(1,id) = thermo(1,id) 
+     *                      + vnu(i) * tr * r * dlog(act(i))
+               thermo(2,id) = thermo(2,id) 
+     *                      - vnu(i) * r * dlog(act(i))
+
+            end do 
+c                                 output the data 
+            call append (n2)
+            call outdat (n2,id,1)
+c                                 reset data
+            thermo(1,id) = thermo(1,k10) 
+            thermo(2,id) = thermo(2,k10)  
+
          end if
-         if (kv.eq.19) goto 50
-         if (kv.eq.20) goto 60
-5014        write (*,1030) list(kv),names(id),thermo(kv,id)
-            read (*,*,iostat=ier) thermo(kv,id)
-            call rerror (ier,*5014)
-            goto 10
-50       write (*,1030) list(kv),names(id),act(id)
-         read (*,*,iostat=ier) act(id)
-         call rerror (ier,*50)
-         goto 10
+
+         return 
+
+      else 
+ 
+         do 
+c                                 phase loop
+            if (iphct.gt.1) then
+
+            do 
+               write (*,1000) (i,names(i),i=1,iphct)
+               read (*,*,iostat=ier) id
+               if (ier.eq.0) exit 
+               call rerr
+            end do 
+
+            else
+
+               id = 1
+
+            end if 
+
+            ichk = 0
+
+            write (*,1010)
+
+            do
+c                                 property loop 
+               do 
+                  write (*,1020) (i,list(i),i=1,20)
+                  read (*,*,iostat=ier) kv
+                  if (ier.eq.0) exit 
+                  call rerr
+               end do 
+
+               if (kv.eq.0) then
+
+                  if (ichk.eq.0) exit
+c                                 write entry to permanant file:
+                  write (*,1070) names(id)
+                  read (*,1050) y
 c
-60       write (*,1030) list(kv),names(id),vnu(id)
-         read (*,*,iostat=ier) vnu(id)
-         call rerror (ier,*60)
+                  if (y.eq.'y'.or.y.eq.'Y') then
+c                                 add in activity correction
+                     thermo(1,k10) = thermo(1,id)
+                     thermo(2,k10) = thermo(2,id)
+                     thermo(1,id) = thermo(1,id) 
+     *                            + tr * r * dlog (act(id))
+                     thermo(2,id) = thermo(2,id) 
+     *                            - r * dlog (act(id))
  
-         if (id.eq.idf(1)) then
-            vuf(1) = vnu(id)
-         else if (id.eq.idf(2)) then
-            vuf(2) = vnu(id)
-         end if
+                     call append (n2)
+                     call outdat (n2,id,1)
+
+                     thermo(1,id) = thermo(1,k10) 
+                     thermo(2,id) = thermo(2,k10) 
+
+                  end if
+c
+                  call conver
+     *           (thermo(1,id), thermo(2,id), thermo(3,id),thermo(4,id),
+     *            thermo(5,id), thermo(6,id), thermo(7,id),thermo(8,id),
+     *            thermo(9,id), thermo(10,id),thermo(11,id),
+     *            thermo(12,id),thermo(13,id),thermo(14,id),
+     *            thermo(15,id),thermo(16,id),thermo(17,id),
+     *            thermo(18,id),thermo(19,id),thermo(20,id),
+     *            thermo(21,id),thermo(22,id),thermo(23,id),tr,pr,r,0)
+
+                  exit 
+
+               end if
+c
+               if (ichk.eq.0) then
+
+                  call unlam (tm,id,lct)
+
+                  call unver
+     *           (thermo(1,id),thermo(2,id),thermo(3,id),thermo(4,id),
+     *            thermo(5,id),thermo(6,id),thermo(7,id),thermo(8,id),
+     *            thermo(9,id),thermo(10,id),thermo(11,id),
+     *            thermo(12,id),thermo(14,id),
+     *            thermo(15,id),thermo(16,id),thermo(17,id),
+     *            thermo(18,id),tr,pr)
+
+                  write (*,1040) names(id)
+                  read (*,1050) names(id)
+                  ichk = 1
+
+               end if
+
+               if (kv.eq.19) then 
+
+                  do 
+                     write (*,1030) list(kv),names(id),act(id)
+                     read (*,*,iostat=ier) act(id)
+                     if (ier.eq.0) exit 
+                     call rerr
+                  end do 
+
+               else if (kv.eq.20) then 
+
+                  do 
+                     write (*,1030) list(kv),names(id),vnu(id)
+                     read (*,*,iostat=ier) vnu(id)
+                     if (ier.eq.0) exit 
+                     call rerr
+                  end do 
  
-         goto 10
+                  if (id.eq.idf(1)) then
+                     vuf(1) = vnu(id)
+                  else if (id.eq.idf(2)) then
+                     vuf(2) = vnu(id)
+                  end if
+
+               else 
+
+                  do 
+                     write (*,1030) list(kv),names(id),thermo(kv,id)
+                     read (*,*,iostat=ier) thermo(kv,id)
+                     if (ier.eq.0) exit 
+                     call rerr
+                  end do 
+         
+               end if
+
+               cycle
+c                                 end property loop
+            end do 
+
+            if (iphct.eq.1) exit
+
+            write (*,1150)
+            read (*,1050) y
+
+            if (y.ne.'y'.and.y.ne.'Y') exit 
+c                                end of phase loop
+         end do 
  
-30    write (*,1150)
-      read (*,1050) y
-      if (y.eq.'y'.or.y.eq.'Y') goto 20
- 
-      goto (99),ifyn
+      end if 
+
+      if (ifyn.eq.1) return 
+
       write (*,1160)
       read (*,1050) y
-      if (y.ne.'y'.and.y.ne.'Y') goto 99
+      if (y.ne.'y'.and.y.ne.'Y') return 
 
       call rfluid (1,ifug) 
-      goto 99
+
+      return 
 
 91    call warn (9,t,ifyn,names(id))
 
