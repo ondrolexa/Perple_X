@@ -10,7 +10,6 @@ c SWITZERLAND. All rights reserved.
 c Please do not distribute this source.
 
 c-----------------------------------------------------------------------
-
       character*10 function gname (id)
 c-----------------------------------------------------------------------
       implicit none
@@ -1750,6 +1749,7 @@ c                                 f
          else if (ilam.eq.10) then
 c                                 holland and powell, landau model:
             lct = ilam - 9
+
             do j = 1, lct       
 
                smax = tm(2,j)
@@ -2238,10 +2238,12 @@ c---------------------------------------------------------------------
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 c-----------------------------------------------------------------------
-                                 
       ilam = ltyp(id)
-      jd = lmda(id)
       lct = 0 
+
+      if (ilam.eq.0) return
+
+      jd = lmda(id)
 
       do i = 1, m7
          do j = 1, m6
@@ -2249,39 +2251,58 @@ c-----------------------------------------------------------------------
          end do 
       end do 
 
-      if (ilam.ne.0.and.(ilam.lt.4.or.ilam.gt.7)) then
-   
+      if (ilam.eq.13) then 
+c                                 Bragg-Williams model:
+          do j = 1, 6
+             tm(j,1) = therlm(j,1,jd)
+          end do 
+        
+          tm(1,1) = tm(1,1) + pr*tm(2,1)      
+
+          lct = 1
+
+      else if (ilam.ge.10) then
+c                                 Landau model        
+c                                 HP Landau model
+         lct = ilam - 9
+
+         do j = 1, lct
+            tm(1,j) = therlm(1,j,jd)
+            tm(2,j) = therlm(2,j,jd)*1.5d0
+            tm(3,j) = therlm(3,j,jd) *tm(2,j) 
+         end do 
+
+      else if (ilam.le.3.or.ilam.ge.7) then
+c                                 UBC amd Helgeson Q/Coe 
          ilam = ltyp(id)
          jd = lmda(id)
+
          if (ilam.le.3) then
+
             lct = ilam
+
             do j = 1, ilam
                tm(1,j) = dsqrt (therlm(1,j,jd))
                tm(2,j) = dsqrt (therlm(2,j,jd)) 
             end do         
-         else if (ilam.gt.9.and.ilam.lt.13) then
-            lct = ilam - 9
-            do j = 1, ilam - 9
-               tm(1,j) = therlm(1,j,jd)
-               tm(2,j) = therlm(2,j,jd)
-               tm(3,j) = therlm(3,j,jd) *therlm(2,j,jd) 
-            end do 
+
          end if
-      end if
 
-      if (ilam.gt.3.and.ilam.lt.7) then
-
+       else if (ilam.ge.4) then
+c                                 Helgeson generic
          lct = ilam - 3
          p = pr
+
          do i = lct, 1 , -1
-c                              get s transition:
-c                              load into therlm:
+c                                 get s transition:
+c                                 load into therlm:
             tm(1,i) = therlm(1,i,jd) 
             tm(2,i) = therlm(2,i,jd) 
 
             do j = 5, 11
                tm(j-1,i) = therlm(j,i,jd)  
             end do 
+
             t = tm(1,i)
 
             if (i.eq.1) then
@@ -2301,6 +2322,7 @@ c    c                         -s at trt:
 
             g0 = therlm(12,i,jd)
             s0 = therlm(3,i,jd)
+
             do k = 1, 9
                z(k) = 0d0
             end do 
@@ -2310,6 +2332,7 @@ c    c                         -s at trt:
      *                  z(6),z(7),z(8),z(9),tm(1,i),pr) 
 
             tm(3,i) = s0 + tm(3,i)
+
          end do 
 
          ltyp(id) = ilam

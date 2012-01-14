@@ -1419,7 +1419,6 @@ c-----------------------------------------------------------------------
       integer jend
       common/ cxt23 /jend(h9,k12)
 c----------------------------------------------------------------------
-
       open (n2,file='swash.dat')
 
       iwarn9 = 0
@@ -1470,10 +1469,13 @@ c                                 test for mughnahan EoS
                idis(k1) = m9
                jdis = jdis + 1
                ld = idis(kd) 
+
                if (jdis.gt.1) goto 91
+
                do i = 1, 7      
                   therdi(i,m9) = xkd * therdi(i,ld)
                end do 
+
                therdi(8,m9) = therdi(8,ld)
                therdi(9,m9) = therdi(9,ld)
 
@@ -1487,12 +1489,16 @@ c                                 test for mughnahan EoS
                klam = klam + 1
 
                if (ltyp(kd).eq.10) then
+
                   if (klam.gt.3) goto 91
                   ltyp(k1) = 9 + klam
                   therlm(1,klam,k9) = therlm(1,1,ld)
                   therlm(2,klam,k9) = xkd * therlm(2,1,ld)
+
                else if (ltyp(kd).lt.4) then
+
                   if (klam.gt.1) goto 91
+
                   do i = 1, ltyp(kd)
                      therlm(1,i,k9) = xkd * therlm(1,i,ld)
                      therlm(2,i,k9) = xkd * therlm(2,i,ld)
@@ -1503,6 +1509,7 @@ c                                 test for mughnahan EoS
                      therlm(7,i,k9) = therlm(7,i,ld)
                      therlm(8,i,k9) = therlm(8,i,ld)
                   end do
+
                else if (ltyp(kd).lt.8) then
 
                   if (klam.gt.1) goto 91

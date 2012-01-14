@@ -194,7 +194,7 @@ Opx(HP)                    | solution name.
 
 8                          | model type: Reciprocal with speciation
 
-2                          | 2 independent mixing sitea
+2                          | 2 independent mixing sites
 2 2                        | 2 dimensions on first site, 2 on second
                            | endmember names 
 mgts     fets_d   
@@ -230,6 +230,102 @@ fets_d = 1 mgts + 1 opx - 1 en
 
 
 begin_excess_function                
+w(en fs)     68d2 0. 0.  
+w(fs mgts)   -1d3 0. 0.  
+w(en opx)    45d2 0. 0. 
+w(fs opx)    45d2 0. 0. 
+w(mgts opx)  12d2 0. 0.   
+end_excess_function 
+
+2                          | 2 site (M1, M2) configurational entropy model
+
+3 1.                       | 3 species on M1, 1 site per formula unit.
+
+z(m1,fe) = 1 fs 
+z(m1,al) = 1 mgts + 1 fets_d  
+
+2 1.                       | 2 species on M2, 1 site per formula unit.
+z(m2,mg) = 1 en + 1 mgts 
+
+end_of_model
+                  --------------------------------------------------------
+begin_model                
+
+                             Orthopyroxene with compound formation, PH '99 Am Min. 
+                             JADC 3/03. 
+                             
+                             Site populations modified for HP 2011. JADC 8/10.
+                             
+                             NOTES:  
+                             
+                             * This is not an equipartition model.
+
+                             * This model will only function for the FASH subsystem
+                               if MGO is present as a component in VERTEX.
+
+
+                                                      1       2             
+                                                      M1      M2     T  
+                                                     ____________________
+
+                                      Mutliplicity    1       1     1/2*
+                                                     ____________________
+
+                                      1 en            Mg      Mg    SiSi  
+                            Species:  2 fs            Fe      Fe    SiSi
+                                      3 mgts          Al      Mg    AlSi     
+                                      4 fets          Al      Fe    AlSi
+                                                      ____________________
+
+                           Internal:  5 opx           Mg      Fe    SiSi
+                           
+                           *An HP pseudo-multiplicity.
+
+
+                           Dependent: fets = mgts + opx - en
+
+
+Opx(HP11)                  | solution name.
+
+8                          | model type: Reciprocal with speciation
+
+2                          | 2 independent mixing sitea
+2 2                        | 2 dimensions on first site, 2 on second
+                           | endmember names 
+mgts     fets_d   
+en       fs 
+ 
+
+1                          | ordered species definition
+
+opx = 1/2 en + 1/2  fs  Delta(enthalpy) = -6.95d3   
+
+begin_limits
+opx =     - 2 fs - 1 opx                delta = 2 z(M2,Fe)       
+opx =  -2 + 2 fs + 1 opx                delta = 2 z(M1,Fe)
+opx =     - 2 en - 1 opx                delta = 2 z(M1,Mg)
+end_limits                     
+
+1                          | 1 dependent endmember
+
+fets_d = 1 mgts + 1 opx - 1 en
+
+
+0 0 0 0                    | endmember flags, indicate if endmember is part of the solution.
+
+                           | subdivision model for (binary) site 1 (M2):
+0. 1. .1                   | range and resolution of X(Mg)
+0                          | subdivision scheme for site 1: imod = 0 -> cartesian 
+
+                           | subdivision model for (ternary) site 2 
+0. 1. .1                   | range and resolution of X(Ts)  
+0                          | subdivision scheme for site 2: imod = 0 -> cartesian  
+
+
+
+
+begin_excess_function     
+w(en mgts)   13d3 0. -0.15 | this is the only interaction term specified by H&P 2010           
 w(en fs)     68d2 0. 0.  
 w(fs mgts)   -1d3 0. 0.  
 w(en opx)    45d2 0. 0. 
@@ -995,7 +1091,7 @@ begin_model
                              * This model will only function for the FASH subsystem
                                if MGO is also used as a component in VERTEX.
                                            
-                             * This model was tested with the maple script compete_chl.mws
+                             * This model was tested with the maple script complete_chl.mws
 
                              * For normal aluminous chlorites there is little to be gained
                                by considering the afchl endmember becuase the 
@@ -1078,11 +1174,11 @@ mafchl_i = 1 afchl  + 6/5 mnchl - 6/5 clin
 
 begin_excess_function
 
-w(clin ames) 18000. 0. 0. 
+w(clin ames)  18000. 0. 0. 
 w(clin afchl) 18000. 0. 0. 
 w(ames afchl) 20000. 0. 0. 
-w(clin daph) 2500. 0. 0.  
-w(daph ames) 13500. 0. 0. 
+w(clin daph)   2500. 0. 0.  
+w(daph ames)  13500. 0. 0. 
 w(daph afchl) 14500. 0. 0. 
 
 end_excess_function
@@ -1092,17 +1188,17 @@ end_excess_function
 4 1.                            |4 species on 1 M1 site
 
 z(al,M1) = 1 ames 
-z(mg,M1) = 1 clin + 1 afchl
+z(mn,M1) = 1 mnchl
 z(fe,M1) = 1 daph 
 
 
 3 4.                            |3 species on 4 M2+M3 sites
 
-z(mg,m2+m3)= 1 clin + 1 ames + 1 afchl
+z(mn,m2+m3)= 1 mnchl
 z(fe,m2+m3)= 1 daph 
 
 
-2 1.                            |2 species on 1 M4 site
+2 1.                            |3 species on 1 M4 site
 
 z(mg,m4) = 1 afchl
 
@@ -6606,8 +6702,6 @@ begin_model
 
                                     in the thermodynamic data file (e.g., hp02ver.dat).
 
-                                    NOTE: this version is formulated with 5 Oxygen formula unit, NOT the 
-                                    10 oxygen formula unit used by Smye et al (2011).
                                     JADC, 19/09/11
                                                            
                                                       M2      M1     
@@ -6758,7 +6852,7 @@ begin_model
                        computational option file:
 
                           ts
-                          parg_dqf
+                          parg
                           gl
 
                                              A         M1      M2     M4      T1

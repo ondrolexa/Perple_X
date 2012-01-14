@@ -17,7 +17,7 @@ c----------------------------------------------------------------------
 	implicit none
 
       write (*,'(/,a)') 
-     *      'Perple_X version 6.6.6, source updated 12/18/2011.'
+     *      'Perple_X version 6.6.6, source updated January 14, 2012.'
 
       end
 
@@ -2981,9 +2981,6 @@ c                                 interval limits conformal transformation
       character*2 strgs, mstrg, dstrg, tstrg*3
       common/ cst56 /strgs(18), mstrg(6), dstrg(8), tstrg(10)
 
-      character*29 list
-      common / cst206 /list(20)
-
       character*80 com
       common/delet/com 
 
@@ -3013,27 +3010,6 @@ c                                 tags for thermo data i/o
      *           't10'/
 c     data estrg/'eG0','eS0','eV0','ec1','ec2','ec3','ec4','ec5','ec6',
 c    *           'ec7','eb1','eb2','eb3','eb4','eb5','eb6','eb7','eb8'/
-
-      data list /'standard free energy g (j)   ',
-     *           'standard entropy s (j/k)     ',
-     *           'standard volume v (j/bar)    ',
-     *           'heat capacity coefficient c1 ',
-     *           'heat capacity coefficient c2 ',
-     *           'heat capacity coefficient c3 ',
-     *           'heat capacity coefficient c4 ',
-     *           'heat capacity coefficient c5 ',
-     *           'heat capacity coefficient c6 ',
-     *           'heat capacity coefficient c7 ',
-     *           'volumetric coefficient b1    ',
-     *           'volumetric coefficient b2    ',
-     *           'volumetric coefficient b3    ',
-     *           'volumetric coefficient b4    ',
-     *           'volumetric coefficient b5    ',
-     *           'volumetric coefficient b6    ',
-     *           'volumetric coefficient b7    ',
-     *           'volumetric coefficient b8    ',
-     *           'activity                     ',
-     *           'reaction coefficient         '/
 
       end
 

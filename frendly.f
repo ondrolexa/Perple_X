@@ -10,7 +10,14 @@ c------------------------------------------------------------------------
 c FRENDLY - a thermodynamic calculator for petrologic problems.
  
 c------------------------------------------------------------------------
- 
+
+c      include 'clib.f'
+c      include 'dlib.f'
+c      include 'olib.f'
+c      include 'rlib.f'
+c      include 'tlib.f'
+c      include 'flib.f' 
+
       program FRNDLY
  
       implicit none
@@ -1066,16 +1073,15 @@ c---------------------------------------------------------------------
  
       character y*1
 
-      double precision tm(m7,m6)
+      integer ilam,idiso,lamin,idsin
+      double precision tm,td
+      common/ cst202 /tm(m7,m6),td(m8),ilam,idiso,lamin,idsin
  
       double precision thermo,uf,us
       common/ cst1 /thermo(k4,k10),uf(2),us(h5)
 
       character*8 names
       common/ cst8 /names(k1)
-
-      character*29 list
-      common / cst206 /list(20)
 
       double precision therdi,therlm
       common/ cst203 /therdi(m8,m9),therlm(m7,m6,k9)
@@ -1106,6 +1112,9 @@ c---------------------------------------------------------------------
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
+
+      character*2 strgs, mstrg, dstrg, tstrg*3
+      common/ cst56 /strgs(18), mstrg(6), dstrg(8), tstrg(10)
 c-----------------------------------------------------------------------
       write (*,1110)
       read (*,1050) y
@@ -1339,7 +1348,7 @@ c                                 phase loop
             do
 c                                 property loop 
                do 
-                  write (*,1020) (i,list(i),i=1,20)
+                  write (*,1020) (i,strgs(i),i=1,18)
                   read (*,*,iostat=ier) kv
                   if (ier.eq.0) exit 
                   call rerr
@@ -1403,7 +1412,8 @@ c
                if (kv.eq.19) then 
 
                   do 
-                     write (*,1030) list(kv),names(id),act(id)
+                     write (*,1030) 'thermodynamic activity',
+     *                              names(id),act(id)
                      read (*,*,iostat=ier) act(id)
                      if (ier.eq.0) exit 
                      call rerr
@@ -1412,7 +1422,8 @@ c
                else if (kv.eq.20) then 
 
                   do 
-                     write (*,1030) list(kv),names(id),vnu(id)
+                     write (*,1030) 'stoichiometric coefficient',
+     *                              names(id),vnu(id)
                      read (*,*,iostat=ier) vnu(id)
                      if (ier.eq.0) exit 
                      call rerr
@@ -1427,7 +1438,7 @@ c
                else 
 
                   do 
-                     write (*,1030) list(kv),names(id),thermo(kv,id)
+                     write (*,1030) strgs(kv),names(id),thermo(kv,id)
                      read (*,*,iostat=ier) thermo(kv,id)
                      if (ier.eq.0) exit 
                      call rerr
@@ -1462,26 +1473,14 @@ c                                end of phase loop
 
 91    call warn (9,t,ifyn,names(id))
 
-1000  format (/,'Select phase to modify',
-     *          ' or output:',9(/,6x,i2,') ',a))
-1010  format ('Thermodynamic properties are calculated from the ',
-     *        'reference state constants'/,'G, S, V, and an ',
-     *        'activity coefficient together ',
-     *        'with the isobaric heat',/,'capacity function:',//,6x,
-     *        'cp(pr,t) = a + b*t + c/t^2 + d*t^2 + e/t^(1/2) + f/t ',
-     *        '+ g/t^3',//,
-     *        ' and the volumetric function:',//,
-     *        ' if b8 = 0 (Eq 2.1):',/,6x,
-     *        'v(p,t) = v(pr,tr) + b2(t-tr) + b4(p-pr)',
-     *        ' + b6(p-pr)^2 + b7(t-tr)^2',/,
-     *        ' if b8 < 0 (Eq 2.2):',/,6x, 
-     *        'v(p,t) = v(pr,tr) exp [b3*(t-tr) + b8*(p-pr)]',/,
-     *        ' if b8 > 0 (Eq 2.3):',/,6x, 
-     *        'v(p,t) = v(pr,t)[1 + b8*p/(Kt + b8*p)]^(1/b8)',/,6x,
-     *        'alpha = b1 + b2*t + b3/t + b4/t^2 + b5/t^(1/2)',/,6x,
-     *        'Kt = b6 + b7*t')
-1020  format (/,'Enter the number of the parameter to be modified:'
-     *      ,//,10(1x,i2,') ',a28,3x,i2,') ',a,/),/,
+1000  format (/,'Select phase to modify or output:',9(/,6x,i2,') ',a))
+1010  format (/,'For definitions of the EoS parameters refer to:',/
+     *        /,'  www.perplex.ethz.ch/perplex_thermodynamic_data_file',
+     *          '.html',//,'Units: J, bar, K, mole')
+1020  format (/,'Enter the index of the parameter to be modified:',//,
+     *          9(2(1x,i2,') - ',a,18x),/),
+     *         ' 19) - thermodynamic activity',8x,
+     *         ' 20) - reaction coefficient',//,
      *         'Enter zero when you are finished: ')
 1030  format (/,'Old value for ',a,' of ',a,' was ',g15.8,/,
      *          'Enter new value: ')
@@ -1507,8 +1506,6 @@ c----------------------------------------------------------------------
       include 'perplex_parameters.h'
 
       integer i,ier,isv
-
-      double precision fac
  
       character y*1
  
@@ -1522,9 +1519,6 @@ c----------------------------------------------------------------------
       character cmpnt*5, dname*80
       common/ csta5 /cl(k0),cmpnt(k0),dname
 
-      character*29 list
-      common / cst206 /list(20)
-
       integer icomp,istct,iphct,icp
       common/ cst6 /icomp,istct,iphct,icp
 
@@ -1536,66 +1530,34 @@ c----------------------------------------------------------------------
       double precision thermo,uf,us
       common/ cst1 /thermo(k4,k10),uf(2),us(h5)    
 
+      character*2 strgs, mstrg, dstrg, tstrg*3
+      common/ cst56 /strgs(18), mstrg(6), dstrg(8), tstrg(10)
+
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 c-----------------------------------------------------------------------
       ier = 0
-      write (*,1000) dname,tr,pr
- 
-      write (*,1120)
-      read (*,'(a)') y
- 
-      if (y.eq.'c') then
-         fac = 4.184d0
-      else
-         fac = 1d0
-      end if
- 
-      write (*,1130)
-      read (*,'(a)') y
- 
-      isv = 0
-      if (y.eq.'v') isv = 1
+
+      write (*,1000) tr,pr
  
       do 
   
-      write (*,1010)
-      read (*,'(a)') names(k10)
- 
-      do i = 1, icmpn
-5016     write (*,1030) cmpnt(i),names(k10)
-         read (*,*,iostat=ier) comp(i)
-         call rerror (ier,*5016)
-      end do 
- 
-      do i = 1, 2
-5020     write (*,1040) list(i),names(k10)
-         read (*,*,iostat=ier) thermo(i,k10)
-         call rerror (ier,*5020)
-         thermo(i,k10) = fac * thermo(i,k10)
-      end do 
- 
-5017  write (*,1040) list(3),names(k10)
-      read (*,*,iostat=ier) thermo(3,k10)
-      call rerror (ier,*5017)
- 
-      write (*,1050)
-      do i = 4, 10
-5018     write (*,1040) list(i),names(k10)
-         read (*,*,iostat=ier) thermo(i,k10)
-         call rerror (ier,*5018)
-         thermo(i,k10) = fac * thermo(i,k10)
-      end do 
- 
-      write (*,1060)
-      write (*,1070)
+         write (*,1010)
+         read (*,'(a)') names(k10)
+c                                 composition:
+         write (*,1020) names(k10), (cmpnt(i),i=1,icmpn)
+         write (*,1030) 
+c                                 read the text string:
+         call formul (5)
 
-      do i = 11, 18
-5019     write (*,1040) list(i),names(k10)
-         read (*,*,iostat=ier) thermo(i,k10)
-         call rerror (ier,*5019)
-         if (isv.eq.1) thermo(i,k10) = thermo(3,k10) * thermo(i,k10)
-      end do 
+         write (*,1050)
+
+         do i = 1, 18
+5019        write (*,1040) strgs(i),names(k10)
+            read (*,*,iostat=ier) thermo(i,k10)
+            call rerror (ier,*5019)
+         end do 
+
 c                                 classify eos:
          if (thermo(3,k10).lt.0d0) then 
 c                                 negative "volume" signals one of the 
@@ -1639,37 +1601,23 @@ c                                 normal polynomial vdp term:
 
       end do 
  
-1000  format (/,'Your entry will be formatted for the ',a,/,
-     *      'data base with a t=',g13.6,'(k) p=',g13.6,'(bar)',/,
-     *      'reference state (all energy terms must be in joules).',/)
+1000  format (/,'This entry will be for a T = ',g13.6,'(K) P=',
+     *        g13.6,'(bar)',/,'reference state (Units: J, bar, K).',/)
 1010  format ('Enter name for your entry, <8 characters, left',
      *        ' justified.',/,'WARNING: this name must not duplicate',
      *        ' an entry already',/,'in the data file!')
-1030  format ('Enter number of moles of ',a,' in ',a,': ')
-1040  format ('Enter ',a,' for ',a,': ')
-1050  format (/,'Thermodynamic properties usually calculated from',
-     *         ' heat capacity function (J/K):',/,6x,
-     *         'cp(pr,t) = c1 + c2*t + c3/t^2 + c4*t^2 + c5/t^(1/2) ',
-     *         '+ c6/t + c7/t^3')
-1060  format (/,'Thermodynamic properties usually calculated from the',
-     *        ' volumetric functions (J/bar):',/,
-     *        ' if b8 = 0 (Eq 2.1):',/,6x,
-     *        'v(p,t) = v(pr,tr) + b2(t-tr) + b4(p-pr)',
-     *        ' + b6(p-pr)^2 + b7(t-tr)^2',/,
-     *        ' if b8 < 0 (Eq 2.2):',/,6x, 
-     *        'v(p,t) = v(pr,tr) exp [b3*(t-tr) + b8*(p-pr)]',/,
-     *        ' if b8 > 0 (Eq 2.3):',/,6x, 
-     *        'v(p,t) = v(pr,t)[1 + b8*p/(Kt + b8*p)]^(1/b8)',/,6x,
-     *        'alpha = b1 + b2*t + b3/t + b4/t^2 + b5/t^(1/2)',/,6x,
-     *        'Kt = b6 + b7*t')
-1070  format (/,'For a more exhaustive listing of Perple_X equations-',
-     *          'of-state refer to:',/,
-     *          'www.perplex.ethz.ch/perplex_thermodynamic_data_file',
+1020  format (/,'Enter the molar formula of ',a,' in terms of the ',
+     *          'following components:',(12(1x,a)))
+1030  format (/,'Indicate the component stoichiometry by an number ',
+     *          'enclosed in parentheses',/,'following the CASE ',
+     *          'SENSITIVE component name, no blanks, e.g.:',/,20x,
+     *          'CAO(1)AL2O3(1)SIO2(2)',/)
+1040  format ('Enter parameter ',a,' for ',a,':')
+1050  format (/,'For definitions of the following parameters refer to:',
+     *       //,'  www.perplex.ethz.ch/perplex_thermodynamic_data_file',
      *          '.html',/)
-1110  format (/,'Make another entry (y/n)? ')
-1120  format (/,'Enter a "c" to enter G, S, V, and a-g in calories: ')
-1130  format (/,'Enter a "v" to scale b2-b7 by'
-     *         ,' standard state volume: ')
+1110  format (/,'Make another entry (y/n)?')
+
       end
 
       subroutine append (lun)
@@ -1833,6 +1781,11 @@ c                              want as many components in frendly as
 c                              in the data base you must set k0 = k5.
       jcmpn = icmpn
       icomp = icmpn
+c                                 component pointers
+      do i = 1, icmpn
+         ic(i) = i
+      end do
+
       if (icmpn.gt.k5) then
          icomp = k5
          jcmpn = k5
@@ -1868,11 +1821,7 @@ c                               acceptable data, count the phase
 
       end if 
 
-      do i = 1, k5
-         ic(i) = i
-      end do
-
-      if (icopt.eq.4) goto 99
+      if (icopt.eq.3) goto 99
 c                               initialize: 
       do k = 1, k0
          cp0(k,1) = 0d0
@@ -2355,4 +2304,3 @@ c----------------------------------------------------------------------
 1050  format (/,40('-'),//,'Thermodynamic properties at:',/)
 
       end 
-
