@@ -2485,7 +2485,7 @@ c---------------------------------------------------------------------
 
       logical bad
 
-      double precision u,s,vol,tot 
+      double precision u,s,vol,tot,r1,r2
 
       double precision ctot
       common/ cst3  /ctot(k1)
@@ -2610,14 +2610,24 @@ c
 c                                 cold start istart = 0
       istart = 0
 c                                 stuff for lpnag
-      wmach(3) = 1.11022302462516d-16
-      wmach(4) = dsqrt(wmach(3))
-      wmach(5) = 2.22507385850721d-308
-      wmach(7) = 1d0/wmach(5)
-      wmach(8) = dsqrt(wmach(7))
+
+c                                 loop to find machine precision
+      r1 = 1d-12
+
+      do
+         if (1d0+r1.eq.1d0) exit
+         r2 = r1 
+         r1 = r1/2d0
+      end do 
+
+      wmach(3) = r2
+      wmach(2) = r2**0.8d0
+      wmach(1) = r2**0.9d0
+      wmach(4) = dsqrt(r2)
       wmach(9) = max(1d0/wmach(4),1d2)
-      wmach(2) = wmach(3)**0.8d0
-      wmach(1) = wmach(3)**0.9d0
+c                                 largest number
+      wmach(7) = huge(0d0)
+      wmach(8) = dsqrt(wmach(7))
 
       end 
 
@@ -2970,7 +2980,7 @@ c----------------------------------------------------------------------
 
       integer i,jphct,is(k1+k5)
 
-      double precision x(k1) 
+      double precision x(k1)
 c                                 compositions of stable adaptive
 c                                 coordinates (and solution ids).
       integer kkp, np, ncpd, ntot
@@ -3468,6 +3478,15 @@ c                                 convert normalized g's to molar g's
          mu(i) = g2(jdv(i))*cptot(i)
 
       end do 
+
+      do i = 163, 1830
+         if (cp(4,i).gt.0.005) cycle
+         if (cp(6,i).lt.0.5) cycle
+      
+         write (*,3000) i, cp(4,i),cp(6,i),cp(7,i),cp(6,i)+2d0*cp(7,i)
+      end do
+
+3000  format (i4,5(f8.3,2x))
 
       if (jbulk.gt.icp) then  
 c                                 get the amounts of the saturated phases:

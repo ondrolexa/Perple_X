@@ -17,7 +17,7 @@ c----------------------------------------------------------------------
 	implicit none
 
       write (*,'(/,a)') 
-     *      'Perple_X version 6.6.6, source updated January 14, 2012.'
+     *      'Perple_X version 6.6.6, source updated January 15, 2012.'
 
       end
 
@@ -207,6 +207,9 @@ c                                 averaging scheme
       lopt(16) = .true.
 c                                 use explicit bulk modulus when available
       lopt(17) = .false.
+c                                 seismic data output for WERAMI/MEEMUM, 0 - none, 1 - some, 2 - all
+      iopt(14) = 1
+      valu(14) = 'som'
 c                                 -------------------------------------
 c                                 werami output options:
 
@@ -355,6 +358,18 @@ c                                 initial_resolution key
          else if (key.eq.'reach_factor') then 
 c                                 reach_factor key
             read (strg,*) nopt(14)
+
+         else if (key.eq.'seismic_output') then 
+c                                 seismic data output WERAMI/MEEMUM/FRENDLY
+             valu(14) = val
+
+             if (val.eq.'non') then 
+                iopt(14) = 0
+             else if (val.eq.'all') then
+                iopt(14) = 2
+             else
+                valu(14) = 'som'
+             end if 
 
          else if (key.eq.'stretch_factor') then
 c                                 stretch_factor key = b - 1       
@@ -990,7 +1005,7 @@ c                                 logarithmic_p, bad_number
       if (iam.eq.3) then 
 c                                 WERAMI input/output options
          write (n,1230) lopt(15),lopt(14),nopt(7),(valu(i),i=2,5),
-     *                  lopt(6)
+     *                  lopt(6),valu(14)
 c                                 WERAMI info file options
          write (n,1241) lopt(12)       
 c                                 WERAMI thermodynamic options
@@ -998,11 +1013,12 @@ c                                 WERAMI thermodynamic options
 
       else if (iam.eq.2) then 
 c                                 MEEMUM input/output options
-         write (n,1231) lopt(14),nopt(7),(valu(i),i=2,3),lopt(6)
+         write (n,1231) lopt(14),nopt(7),(valu(i),i=2,3),lopt(6),
+     *                  valu(14)
 
       else if (iam.eq.5) then 
 c                                 FRENDLY input/output options
-         write (n,1232) lopt(15),lopt(14),nopt(7),lopt(6)
+         write (n,1232) lopt(15),lopt(14),nopt(7),lopt(6),valu(14)
 
       end if 
 c                                 seismic property options
@@ -1129,18 +1145,21 @@ c                                 thermo options for frendly
      *        4x,'proportions            ',a3,8x,'wt  [vol] mol',/,
      *        4x,'interpolation          ',a3,8x,'off [on ]',/,
      *        4x,'extrapolation          ',a3,8x,'on  [off]',/,
-     *        4x,'melt_is_fluid          ',l1,10x,'[F] T')
+     *        4x,'melt_is_fluid          ',l1,10x,'[F] T',/,
+     *        4x,'seismic_output         ',a3,8x,'none [some] all')
 1231  format (/,2x,'Input/Output options:',//,
      *        4x,'logarithmic_p          ',l1,10x,'[F] T',/,
      *        4x,'bad_number          ',f7.1,7x,'[0.0]',/,
      *        4x,'compositions           ',a3,8x,'wt  [mol]',/,
      *        4x,'proportions            ',a3,8x,'wt  [vol] mol',/,
-     *        4x,'melt_is_fluid          ',l1,10x,'[F] T')
+     *        4x,'melt_is_fluid          ',l1,10x,'[F] T',/,
+     *        4x,'seismic_output         ',a3,8x,'none [some] all')
 1232  format (/,2x,'Input/Output options:',//,
      *        4x,'spreadsheet            ',l1,10x,'[F] T',/,
      *        4x,'logarithmic_p          ',l1,10x,'[F] T',/,
      *        4x,'bad_number          ',f7.1,7x,'[0.0]',/,
-     *        4x,'melt_is_fluid          ',l1,10x,'[F] T')
+     *        4x,'melt_is_fluid          ',l1,10x,'[F] T',/,
+     *        4x,'seismic_output         ',a3,8x,'none [some] all')
 1233  format (/,2x,'Seismic velocity options:',//,
      *        4x,'bounds                 ',a3,8x,'HS  [VRH]',/,
      *        4x,'vrh/hs_weighting       ',f3.1,8x,'0->1 [0.5]',/,

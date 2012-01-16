@@ -1141,6 +1141,7 @@ c        variables exactly on their bounds.
       save              tolz
 
       nmoved = 0
+
       if (job.eq.'i') then
 
 c        job = 'initialize'.
@@ -1158,9 +1159,10 @@ c        they are not changed.
          tolx0 = 0.5d+0
          tolz = epsmch**point6
 
-         do 20 j = 1, n + nclin
+         do j = 1, n + nclin
             featol(j) = tolx0*featlu(j)
-   20    continue
+         end do 
+
       else
 
 c        job = 'end of cycle' or 'optimal'.

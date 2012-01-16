@@ -256,16 +256,21 @@ c----------------------------------------------------------------------
 
          j = iv(i) 
 
-20       write (*,1000) vname(j),vmin(j),vmax(j)
-         read (*,*,iostat=ier) vmin(j),vmax(j)
+         do 
+            write (*,1000) vname(j),vmin(j),vmax(j)
+            read (*,*,iostat=ier) vmin(j),vmax(j)
 
-         if (j.eq.3.and.vmin(j).lt.0d0.or.j.eq.3.and.vmax(j).gt.1d0.or.
-     *       j.ne.3.and.vmin(j).ge.vmax(j).or.ier.ne.0) then
+            if (j.eq.3.and.vmin(j).lt.0d0.or.j.eq.3.and.vmax(j).gt.1d0
+     *          .or.j.ne.3.and.vmin(j).ge.vmax(j).or.ier.ne.0) then
 
-            write (*,1010) 
-            goto 20
+               write (*,1010) 
+               cycle
 
-         end if
+            end if
+
+            exit 
+
+         end do
 
          v(j) = vmin(j)
          delv(j) = vmax(j) - vmin(j) 
@@ -306,8 +311,10 @@ c------------------------------------------------------------------------
 c                                search for an equilibrium point
 c                                on the x-y coordinate frame.
       do i = 1, inc(iv(3))
+
          v(iv(3)) = vmin(iv(3)) + dfloat(i-1)*dv(iv(3))
          call newhld
+
       end do 
  
       end
@@ -682,17 +689,18 @@ c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
 c                                  initialization:
 c       ifuk = 0
-10     write (*,1160)
-       write (*,1170) vname(iv1),vname(iv2)
+10    write (*,1160)
+      write (*,1170) vname(iv1),vname(iv2)
 c                                  write potential variable sectioning
 c                                  constraints:
-       if (ipot.gt.2) write (*,1180) vname(iv3), v(iv3)
+      if (ipot.gt.2) write (*,1180) vname(iv3), v(iv3)
 c                                  set starting values for search
       v(iv1)=vmin(iv1)
       v(iv2)=vmin(iv2)
 c                                  test stability along an edge of the
 c                                  diagrams coordinate frame:
       call search (ivi,ivd,div,ier)
+
       if (ier.eq.1) then
          write (*,1010)
          goto 20
@@ -717,7 +725,7 @@ c      end if
       end if 
       write (*,1020)
       read (*,1000) y
-      if (y.ne.'y'.and.y.ne.'Y') goto 99
+      if (y.ne.'y'.and.y.ne.'Y') return
       call change 
       goto 10
  
@@ -761,82 +769,83 @@ c-----------------------------------------------------------------------
       common/ cst5  /v(l2),tr,pr,r,ps
 c-----------------------------------------------------------------------
 c                                 initialization
-      ier=0
+      ier = 0
+
       v(iv1) = vmin(iv1)
       v(iv2) = vmin(iv2)
+
       call grxn (gst)
  
-      do 60 i = 1, 4
+      do i = 1, 4
 c                                 set default dependent and independent
 c                                 variables and increments for each edge
 c                                 to be searched.
-      goto (10,20,30,40),i
+         if (i.eq.1) then 
 c                                 traverse 1.
-10    ivi=iv2
-      ivd=iv1
-      ddv=dv(ivd)
-      div=dv(ivi)
-      v(ivi)=vmin(ivi)
-      goto 80
+            ivi = iv2
+            ivd = iv1
+            ddv = dv(ivd)
+            div = dv(ivi)
+            v(ivi) = vmin(ivi)
+
+         else if (i.eq.2) then 
 c                                 traverse 2.
-20    ivi=iv1
-      ivd=iv2
-      ddv=dv(ivd)
-      div=-dv(ivi)
-      v(ivi)=vmax(ivi)
-      goto 80
+            ivi = iv1
+            ivd = iv2
+            ddv = dv(ivd)
+            div = -dv(ivi)
+            v(ivi) = vmax(ivi)
+
+         else if (i.eq.3) then 
 c                                 traverse 3.
-30    ivi=iv2
-      ivd=iv1
-      ddv=-dv(ivd)
-      div=-dv(ivi)
-      v(ivi)=vmax(ivi)
-      goto 80
+            ivi = iv2
+            ivd = iv1
+            ddv = -dv(ivd)
+            div = -dv(ivi)
+            v(ivi) = vmax(ivi)
+
+         else if (i.eq.4) then 
 c                                 traverse 4.
-40    ivi=iv1
-      ivd=iv2
-      ddv=-dv(ivd)
-      div=dv(ivi)
-      v(ivi)=vmin(ivi)
+            ivi = iv1
+            ivd = iv2
+            ddv = -dv(ivd)
+            div = dv(ivi)
+            v(ivi) = vmin(ivi)
+
+         end if 
+
+         do 
 c                                 begin search:
-80    v(ivd)=v(ivd)+ddv
+            v(ivd) = v(ivd) + ddv
 c                                 out of range?:
-      goto (110,110,120,120),i
-110   if (v(ivd).gt.vmax(ivd)) then
-        v(ivd)=vmax(ivd)
-      else if (i.eq.1) then
-        if (v(ivd).gt.vmin(ivd)) goto 130
-        ddv=dabs(ddv)/2.d0
-        v(ivd)=vmin(ivd)
-        iflg1=0
-        goto 80
-      end if
-      goto 130
-c
-120   if (v(ivd).lt.vmin(ivd)) then
-        v(ivd)=vmin(ivd)
-      else if (i.eq.1) then
-        ddv=-dabs(ddv)/2.d0
-        v(ivd)= vmin(ivd)
-        iflg1=0
-        goto 80
-      end if
+            if (i.le.2) then 
+
+               if (v(ivd).gt.vmax(ivd)) v(ivd) = vmax(ivd)
+
+            else 
+
+               if (v(ivd).lt.vmin(ivd)) v(ivd) = vmin(ivd)
+
+            end if 
 c                                 calculate phase energies:
-130   call grxn (gval)
-      if (gval*gst.lt.0d0) goto 99
+            call grxn (gval)
+
+            if (gval*gst.lt.0d0) return
 c                                 check if search is in range:
-      goto (140,140,150,150),i
-140   if (v(ivd).ge.vmax(ivd)) goto 60
-      goto 80
-150   if (v(ivd).le.vmin(ivd)) goto 60
-      goto 80
+            if (i.le.2) then 
+               if (v(ivd).ge.vmax(ivd)) exit 
+            else 
+               if (v(ivd).le.vmin(ivd)) exit 
+            end if 
+
+         end do  
 c                                 next traverse.
-60    continue
+      end do 
 c                                 set this ier flag to indicate
 c                                 the reaction wasn't found
       ier=1
 c                                 done:
-99    end
+      end
  
       subroutine trace (iovd,iovi,odiv,igo)
 c----------------------------------------------------------------------
@@ -858,6 +867,7 @@ c-----------------------------------------------------------------------
       ivi = iovi
       ivd = iovd
       igo = 0
+
 50    call univeq (ivd,ier)
 c                                 if univeq fails on a bounding edge
 c                                 write error message and return:
@@ -919,46 +929,60 @@ c-----------------------------------------------------------------------
       double precision ptx
       common/ cst32 /ptx(l5),ipt2
 c-----------------------------------------------------------------------
+      do 
 c                                 begin traverse:
-10    v(ivi)=v(ivi)+dv
+         v(ivi)=v(ivi)+dv
 c                                 is search in range?
-      if (v(ivi).gt.vmax(ivi)) then
-        v(ivi)=vmax(ivi)
-      else if (v(ivi).lt.vmin(ivi)) then
-        v(ivi)=vmin(ivi)
-      end if
+         if (v(ivi).gt.vmax(ivi)) then
+            v(ivi)=vmax(ivi)
+         else if (v(ivi).lt.vmin(ivi)) then
+            v(ivi)=vmin(ivi)
+         end if
 c                                 solve for the equilibrium conditions:
-      call univeq (ivd,ier)
+         call univeq (ivd,ier)
 c                                 on error return:
 c                                 calling routine will switch variables.
-      goto (9999,9999),ier
-c                                 iflag=0:
-      if (ipt2.gt.449) goto 9000
+         if (ier.ne.0) return 
+
+         if (ipt2.gt.449) goto 9000
 c                                 dependent v in range? if
 c                                 greater than the maximum value for v
 c                                 or less than the minimum value for v
 c                                 reset conditions, and
 c                                 switch independent/dependent variables
-      if (v(ivd).gt.vmax(ivd)) then
-          v(ivd)=vmax(ivd)
-        else if (v(ivd).lt.vmin(ivd)) then
-          v(ivd)=vmin(ivd)
-        else
-          call assptx
-          if ((v(ivi).eq.vmax(ivi)).or.(v(ivi).eq.vmin(ivi)))
-     *       goto 9000
-          goto 10
-      end if
+         if (v(ivd).gt.vmax(ivd)) then
+
+            v(ivd)=vmax(ivd)
+
+         else if (v(ivd).lt.vmin(ivd)) then
+
+            v(ivd)=vmin(ivd)
+
+         else
+
+            call assptx
+
+            if ((v(ivi).eq.vmax(ivi)).or.(v(ivi).eq.vmin(ivi)))
+     *         goto 9000
+            
+            cycle 
+
+         end if
+
+         exit 
+
+      end do 
 c                                 solve for the equilibrium with
 c                                 the switched variables:
       call univeq (ivi,ier)
-      goto (9000,9000),ier
 c                                 assign final value
-      call assptx
+      if (ier.eq.0) call assptx
 c                                 output the traversed equilibrium:
 9000  call outrxn
-      ier=0
-9999  end
+
+      ier = 0
+
+      end
  
       subroutine outrxn
 c-----------------------------------------------------------------------
@@ -1497,7 +1521,7 @@ c                                end of phase loop
 1150  format (/,'Modify properties of another phase (y/n)? ')
 1160  format (/,'Change fluid equation of state (y/n)? ')
 
-99    end
+      end
  
       subroutine nentry
 c----------------------------------------------------------------------

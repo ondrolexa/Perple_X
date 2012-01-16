@@ -127,34 +127,45 @@ c                                 N, H, V, Cp, alpha, beta, density
       if (aflu) write (lu,1170) 'System - fluid',psys1(17),psys1(2),
      *                psys1(15),psys1(1),(psys1(j),j=12,14),psys1(10)
 
-      write (lu,1190)     
+
+      if (iopt(14).gt.0) then 
 c                                 phase/system summary, seismic:
-      do i = 1, ntot
+         write (lu,1190)     
+
+         do i = 1, ntot
  
-         write (lu,1200) pname(i), (props(j,i), j = 3, 8),
-     *                   poiss(props(7,i),props(8,i))
-      end do
+            write (lu,1200) pname(i), (props(j,i), j = 3, 8),
+     *                      poiss(props(7,i),props(8,i))
+         end do
 
-      write (lu,1200) 'System        ',(psys(j), j = 3, 8),
-     *                                 poiss(psys(7),psys(8))
+         write (lu,1200) 'System        ',(psys(j), j = 3, 8),
+     *                                    poiss(psys(7),psys(8))
 
-      if (aflu) write (lu,1200) 'System - fluid',(psys1(j), j = 3, 8),
-     *                                        poiss(psys1(7),psys1(8))
+         if (aflu) write (lu,1200) 'System - fluid',(psys1(j), j = 3, 8)
+     *                             ,poiss(psys1(7),psys1(8))
 
-      write (lu,1240)
+         if (iopt(14).eq.2) then 
 c                                 phase/system summary, seismic derivatives:
-      do i = 1, ntot
-         write (lu,1250) pname(i),props(18,i),props(20,i),props(19,i),
-     *                  props(21,i),props(22,i),props(25,i),
-     *                  props(23,i),props(26,i),props(24,i),props(27,i)
-      end do
+            write (lu,1240)
 
-      write (lu,1250) 'System        ',psys(18),psys(20),psys(19),
-     *                psys(21),psys(22),psys(25),psys(23),psys(26),
-     *                psys(24),psys(27)
-      if (aflu) write (lu,1250) 'System - fluid',psys1(18),psys1(20),
-     *                psys1(19),psys1(21),psys1(22),psys1(25),psys1(23),
-     *                psys1(26),psys1(24),psys1(27)
+            do i = 1, ntot
+               write (lu,1250) pname(i),props(18,i),props(20,i),
+     *                         props(19,i),props(21,i),props(22,i),
+     *                         props(25,i),props(23,i),props(26,i),
+     *                         props(24,i),props(27,i)
+            end do
+
+            write (lu,1250) 'System        ',psys(18),psys(20),psys(19),
+     *                     psys(21),psys(22),psys(25),psys(23),psys(26),
+     *                     psys(24),psys(27)
+
+            if (aflu) write (lu,1250) 'System - fluid',psys1(18),
+     *                psys1(20),psys1(19),psys1(21),psys1(22),psys1(25),
+     *                psys1(23),psys1(26),psys1(24),psys1(27)
+
+          end if 
+
+      end if 
 
       if (.not.aflu.or.(aflu.and.psys1(1).eq.0)) then 
 c                                 no fluid is present, or the system consists
