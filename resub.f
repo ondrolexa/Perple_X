@@ -400,7 +400,7 @@ c                                temporary limit arrays:
 
             imd(j,i) = imdg(j,i,ids)
 
-            xxnc = nopt(14)*xncg(ids,i,j)/iopt(11)**(iter-1)
+            xxnc = xncg(ids,i,j)*iopt(11)**(2d0-iter)/2
 
             if (imd(j,i).eq.0) then 
 c                                 cartesian
@@ -414,7 +414,8 @@ c                                 conformal
 
             end if 
 
-            xnc(i,j) = 2d0*nopt(14)*xncg(ids,i,j)/iopt(11)**iter
+            xnc(i,j) = xxnc/iopt(11)
+
             if (xmn(i,j).lt.xmng(ids,i,j)) xmn(i,j) = xmng(ids,i,j)
             if (xmx(i,j).gt.xmxg(ids,i,j)) xmx(i,j) = xmxg(ids,i,j)
 
@@ -1924,7 +1925,7 @@ c                                compositions.
                      end do 
                   end if
                end do
-c                                the composition is stable
+c                                the composition is acceptable
                slam(iam) = clamda(i)
                kdv(iam) = i
 
@@ -3478,15 +3479,6 @@ c                                 convert normalized g's to molar g's
          mu(i) = g2(jdv(i))*cptot(i)
 
       end do 
-
-      do i = 163, 1830
-         if (cp(4,i).gt.0.005) cycle
-         if (cp(6,i).lt.0.5) cycle
-      
-         write (*,3000) i, cp(4,i),cp(6,i),cp(7,i),cp(6,i)+2d0*cp(7,i)
-      end do
-
-3000  format (i4,5(f8.3,2x))
 
       if (jbulk.gt.icp) then  
 c                                 get the amounts of the saturated phases:

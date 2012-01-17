@@ -163,8 +163,6 @@ c                                 refinement
       nopt(13) = 0.1d0
 c                                 solvus_tolerance keyword
       nopt(8) = nopt(13)
-c                                 reach for adaptive refinement
-      nopt(14) = 0.9d0
 c                                 perturbation to eliminate pseudocompound
 c                                 degeneracies
       nopt(15) = 5d-3
@@ -354,10 +352,6 @@ c                                 max iteration key
          else if (key.eq.'initial_resolution') then
 c                                 initial_resolution key 
             read (strg,*) nopt(13)
-
-         else if (key.eq.'reach_factor') then 
-c                                 reach_factor key
-            read (strg,*) nopt(14)
 
          else if (key.eq.'seismic_output') then 
 c                                 seismic data output WERAMI/MEEMUM/FRENDLY
@@ -687,19 +681,14 @@ c                                 error traps:
          valu(5) = 'off'
       end if 
 
-      if (iopt(11).lt.3) then 
+      if (iopt(11).lt.2) then 
          write (*,1040)
-         iopt(11) = 3
+         iopt(11) = 2
       end if 
 
-      if (iopt(12).gt.7.or.iopt(12).lt.3) then 
+      if (iopt(12).gt.7.or.iopt(12).lt.1) then 
          write (*,1090)
          iopt(12) = 4
-      end if 
-c                                 reach factor
-      if (2d0*nopt(14).gt.dfloat(iopt(11)).or.nopt(14).le.0d0) then
-         write (*,1030)
-         nopt(14) = 0.9d0 
       end if 
 c                                 initial resolution
       if (nopt(13).ge.1d0.or.nopt(13).lt.0d0) then 
@@ -782,8 +771,7 @@ c                                 compute resolution
       if (iam.eq.1.and.icopt.le.3) then 
          nopt(10) = nopt(13)
       else
-         nopt(10) = 2d0*nopt(13)*nopt(14)*
-     *              (nopt(14)/dfloat(iopt(11)))**iopt(10)
+         nopt(10) = nopt(13)*dfloat(iopt(11))**(1-iopt(10))
       end if 
 c                                 --------------------------------------
 c                                 output
@@ -822,11 +810,9 @@ c                                 give the relaxation bounds.
       if (nopt(10).gt.nopt(13)) nopt(10) = nopt(13)
 
 1000  format ('Context specific options are echoed in: ',a,/)
-1030  format (/,'Warning: the reach_factor cannot exceed value2 of the',
-     *         ' iteration keyword.',/,'the keyword will be',
-     *         ' assigned its default value.',/)
+
 1040  format (/,'Warning: value2 of the iteration keyword must be ',
-     *         ' >= 3',/,'value2 will be',
+     *         ' >= 2',/,'value2 will be',
      *         ' assigned its default value.',/)
 1050  format (/,'Warning: initial_resolution keyword must be ',
      *         '< 1',/,'the keyword will be',
@@ -956,7 +942,7 @@ c                                 for meemum
             end if 
 c                                 adaptive optimization
             write (n,1180) nopt(9),nopt(11),iopt(10),iopt(11),
-     *                     iopt(12),nopt(14)
+     *                     iopt(12)
 c                                 gridding parameters
             if (iam.eq.1.and.icopt.eq.5.and.oned) then
 c                                 1d multilevel grid
@@ -1114,8 +1100,7 @@ c                                 thermo options for frendly
      *        4x,'refinement factor      ',i2,9x,
      *           '>2*r [12]; iteration keyword value 2',/,
      *        4x,'refinement points      ',i2,9x,
-     *           '3->7 [4]; iteration keyword value 3',/,
-     *        4x,'reach_factor           ',f3.1,8x,'>0.5 [0.9]')
+     *           '3->7 [4]; iteration keyword value 3')
 1190  format (/,2x,'1D grid options:',//,
      *        4x,'y_nodes               ',i3,' /',i3,4x,'[20/40], >0, '
      *          ,'<',i4,'; effective y-resolution ',i4,' /',i4,
