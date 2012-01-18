@@ -887,6 +887,7 @@ c                                 read the data
 
             do i = 1, ix
 c                                 read data with nan-check
+
                call redrow (row,lun,eof)
 
                if (ratio) then 
@@ -1250,7 +1251,7 @@ c----------------------------------------------------------------------
 
       character numbs(i11)*14
 
-      double precision row(i11)
+      double precision row(*)
 
       integer ix,iy,mvar
       double precision z,zt 

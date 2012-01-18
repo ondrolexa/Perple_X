@@ -151,6 +151,7 @@ c                                 pseudocompound refinement
 c                                 number of increments used
 c                                 in refinement
       iopt(11) = 3
+      nopt(21) = dfloat(iopt(11))
 c                                 max number of points to 
 c                                 be refined in addition to 
 c                                 active points
@@ -346,6 +347,7 @@ c                                 zero_mode key
          else if (key.eq.'iteration') then
 c                                 max iteration key
             read (strg,*)  iopt(10)
+            read (nval1,*) nopt(21)
             read (nval1,*) iopt(11)
             read (nval2,*) iopt(12)
 
@@ -771,7 +773,7 @@ c                                 compute resolution
       if (iam.eq.1.and.icopt.le.3) then 
          nopt(10) = nopt(13)
       else
-         nopt(10) = nopt(13)*dfloat(iopt(11))**(1-iopt(10))
+         nopt(10) = nopt(13)*2d0**(1-iopt(10))
       end if 
 c                                 --------------------------------------
 c                                 output

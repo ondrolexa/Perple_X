@@ -400,7 +400,7 @@ c                                temporary limit arrays:
 
             imd(j,i) = imdg(j,i,ids)
 
-            xxnc = xncg(ids,i,j)*iopt(11)**(2d0-iter)/2
+            xxnc = xncg(ids,i,j)*nopt(21)/2**iter
 
             if (imd(j,i).eq.0) then 
 c                                 cartesian
@@ -414,7 +414,7 @@ c                                 conformal
 
             end if 
 
-            xnc(i,j) = xxnc/iopt(11)
+            xnc(i,j) = xxnc/nopt(21)
 
             if (xmn(i,j).lt.xmng(ids,i,j)) xmn(i,j) = xmng(ids,i,j)
             if (xmx(i,j).gt.xmxg(ids,i,j)) xmx(i,j) = xmxg(ids,i,j)
