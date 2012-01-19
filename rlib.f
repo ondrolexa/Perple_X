@@ -1063,8 +1063,11 @@ c                                 interaction energy
       subroutine lamla0 (dg,intvdp,ld)
 c---------------------------------------------------------------------
 c     calculate the extra energy of a lamdba transition using  the
-c     Landau model (Holland and Powell '98). 
- 
+c     Landau model as implemented INCORRECTLY in thermocalc pre-2011. 
+
+c     The correct implementation of the HP98 Landau model is given
+c     by function lamla1.
+
 c     input variables
  
 c                        t = temperature in k
@@ -1073,6 +1076,7 @@ c                        ld = pointer to phase in therlm
 c                        intvdp = the vdp integral of the phase
  
 c     returned - dg - difference in free energy due to the transition
+
 c---------------------------------------------------------------------
       implicit none
  
@@ -1097,6 +1101,7 @@ c                                 partially disordered:
 c        q2 = dsqrt((tc-t)/tc0)
 c                                 the hp98 form is 
          q2 = dsqrt(1d0-t/tc)
+
       else 
 
          q2 = 0d0
@@ -1157,7 +1162,7 @@ c                                 partially disordered:
 
       end if 
 c                                 modified from TC code Aug 2010,
-c                                 this differs from the HP98 text. 
+c                                 this should be the hp98 text.
       dg = therlm(2,1,ld)*q2*(t-tc) - therlm(4,1,ld)*t + therlm(5,1,ld)
 c                                 + int(vt,p)
      *     + therlm(6,1,ld)*intvdp

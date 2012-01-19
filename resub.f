@@ -1805,7 +1805,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer jphct, i, j, k, is(k1+k5), idsol(k5), kdv(h8+1), nsol, 
+      integer jphct, i, j, k, is(*), idsol(k5), kdv(h8+1), nsol, 
      *        mpt, iam, id, is1, left, right, inc, jdsol(k5,k5), 
      *        kdsol(k5), max
 
@@ -1813,7 +1813,7 @@ c----------------------------------------------------------------------
 
       logical solvus, quit
 
-      double precision clamda(k1+k5), x(k1),  slam(h8+1)
+      double precision clamda(*), x(*),  slam(h8+1)
 
       integer ipoint,imyn
       common/ cst60 /ipoint,imyn
@@ -2979,9 +2979,9 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i,jphct,is(k1+k5)
+      integer i,jphct,is(*)
 
-      double precision x(k1)
+      double precision x(*)
 c                                 compositions of stable adaptive
 c                                 coordinates (and solution ids).
       integer kkp, np, ncpd, ntot
@@ -3214,9 +3214,9 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i, is(k21+k5), id, jmin(k19), opt, mpt, iter, tic
+      integer i, is(*), id, jmin(k19), opt, mpt, iter, tic
 
-      double precision clamda(k21+k5), clam(k19), x(k21)
+      double precision clamda(*), clam(k19), x(*)
 
       integer iopt
       logical lopt
