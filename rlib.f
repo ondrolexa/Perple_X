@@ -1063,7 +1063,7 @@ c                                 interaction energy
       subroutine lamla0 (dg,intvdp,ld)
 c---------------------------------------------------------------------
 c     calculate the extra energy of a lamdba transition using  the
-c     Landau model as implemented INCORRECTLY in thermocalc pre-2011. 
+c     Landau model as implemented INCORRECTLY in thermocalc pre-ds6. 
 
 c     The correct implementation of the HP98 Landau model is given
 c     by function lamla1.
@@ -1084,7 +1084,7 @@ c---------------------------------------------------------------------
 
       integer ld
 
-      double precision dg,tc,tc0,q2,intvdp
+      double precision dg,tc,q2,intvdp
  
       double precision therdi,therlm
       common/ cst203 /therdi(m8,m9),therlm(m7,m6,k9)
@@ -1092,13 +1092,9 @@ c---------------------------------------------------------------------
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 c----------------------------------------------------------------------
-
-      tc0 =  therlm(1,1,ld)
-      tc = tc0 + therlm(3,1,ld)*(p-pr)
+      tc = therlm(1,1,ld) + therlm(3,1,ld)*(p-pr)
 
       if (t.lt.tc) then
-c                                 partially disordered:
-c        q2 = dsqrt((tc-t)/tc0)
 c                                 the hp98 form is 
          q2 = dsqrt(1d0-t/tc)
 
@@ -1107,13 +1103,11 @@ c                                 the hp98 form is
          q2 = 0d0
 
       end if 
-c                                 modified from TC code Aug 2010,
-c                                 this differs from the HP98 text. 
-c     dg = therlm(2,1,ld)*q2*(t-tc) - therlm(4,1,ld)*t + therlm(5,1,ld)
-c                                 perp 6.5 version
-      dg = therlm(2,1,ld)*(q2*(t-tc) + therlm(8,1,ld)*t) 
-     *                               + therlm(7,1,ld)
-
+c                                 This is the ds5 TC version
+c                                 See landau_d55.mws
+c                                                JADC Jan 26, 2012.
+      dg = therlm(2,1,ld) * 
+     *    ( ((q2-q2**3/3d0)*tc - therlm(7,1,ld))*tc + therlm(7,1,ld) )
 c                                 + int(vt,p)
      *     + therlm(6,1,ld)*intvdp
  
@@ -1161,9 +1155,18 @@ c                                 partially disordered:
          q2 = 0d0
 
       end if 
-c                                 modified from TC code Aug 2010,
-c                                 this should be the hp98 text.
-      dg = therlm(2,1,ld)*q2*(t-tc) - therlm(4,1,ld)*t + therlm(5,1,ld)
+c                                 This is the hp98 version, differs
+c                                 from what's in the TC code such that
+c                                 dGPX - dGTC = (tc0-tc)*q2^3/3.
+c                                 See landau_d60.mws
+c                                                JADC Jan 26, 2012.
+c      dg = therlm(2,1,ld) * 
+c     *   (therlm(7,1,ld) + t*(q2 - therlm(8,1,ld)) + tc*(q2**3/3d0 - q2))
+c        + vdp...
+c                                 TC version:
+      dg = therlm(2,1,ld) * 
+     *   (therlm(7,1,ld) + t*(q2 - therlm(8,1,ld)) 
+     *                   - tc*q2 + tc0*q2**3/3d0)
 c                                 + int(vt,p)
      *     + therlm(6,1,ld)*intvdp
  
@@ -1760,22 +1763,15 @@ c                                 holland and powell, landau model:
                smax = tm(2,j)
                t0 = tm(1,j)
                vmax = tm(3,j)
+               qr2 = dsqrt (1d0 - tr/t0)
 
                therlm(1,j,lamin) = t0
-               therlm(2,j,lamin) = smax*2d0/3d0
+               therlm(2,j,lamin) = smax
 c                                 this makes therlm(3) dt/dp
                therlm(3,j,lamin) = vmax/smax
-c                                 qr2
-               qr2 = dsqrt (1d0 - tr/t0)
-c                                 constant term from ht - T*st + Glandau
-               therlm(4,j,lamin) = qr2*smax
-               therlm(5,j,lamin) = (2d0*t0+tr)*qr2/3d0*smax
-c                                 reference volume/normalized by true volume
-c                                 so that int(vt,P) is vt/v0*vdp
                therlm(6,j,lamin) = vmax*qr2/thermo(3,k10)
-c                                 old version
-               therlm(7,j,lamin) = smax*2d0/3d0*(t0+tr/2d0)*qr2
-               therlm(8,j,lamin) = -1.5*qr2
+               therlm(7,j,lamin) = t0*(qr2 - qr2**3/3d0)
+               therlm(8,j,lamin) = qr2
 
             end do 
 
@@ -2273,8 +2269,8 @@ c                                 HP Landau model
 
          do j = 1, lct
             tm(1,j) = therlm(1,j,jd)
-            tm(2,j) = therlm(2,j,jd)*1.5d0
-            tm(3,j) = therlm(3,j,jd) *tm(2,j) 
+            tm(2,j) = therlm(2,j,jd)
+            tm(3,j) = therlm(3,j,jd) * tm(2,j) 
          end do 
 
       else if (ilam.le.3.or.ilam.ge.7) then

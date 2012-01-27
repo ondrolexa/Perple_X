@@ -17,7 +17,7 @@ c----------------------------------------------------------------------
 	implicit none
 
       write (*,'(/,a)') 
-     *      'Perple_X version 6.6.6, source updated January 15, 2012.'
+     *      'Perple_X version 6.6.6, source updated January 27, 2012.'
 
       end
 
@@ -1770,11 +1770,13 @@ c---------------------------------------------------------------------
      *        'increase dimension k13 (',i7,')  Routine: ',a)
 41    format (/,'**error ver041** too many pseudocompounds, ',
      *        'increase dimension k1 (',i7,') Routine: ',a)
-42    format (/,'**error ver042** optimization failed because the ',
-     *          'possible phases of the',/,
-     *        'system do not span the specified bulk composition.',/,
-     *        'To avoid this problem add phases or modify the bulk ',
-     *        'composition.',/)
+42    format (/,'**error ver042** optimization failed most probably ',
+     *          'because the requested',/,'compositional resolution ',
+     *          'is too high, or possibly because the phases of the',/,
+     *          'system do not span the specified bulk composition.',/,
+     *          'In the 1st case, reduce the requested resolution,',
+     *          'e.g. via the iteration keyword.',/,'In the 2nd case, ',
+     *          'change the bulk composition or add phases.',/)
 43    format (/,'**error ver043** you cannot simultaneously treat: ',
      *          a,/,'as a thermodynamic solution and as a saturated',
      *          ' phase.',/)
@@ -2233,11 +2235,13 @@ c---------------------------------------------------------------------
 41    format (/,'**warning ver041** icky pseudocompound names'
      *       ,' for solution model: ',a,/,'refer to pseudocompound_'
      *       ,'glossary.dat file for pseudocompound definitions.',/)
-42    format (/,'**warning ver042** optimization failed because the ',
-     *          'possible phases of the',/,
-     *        'system do not span the specified bulk composition.',/,
-     *        'To avoid this problem add phases or modify the bulk ',
-     *        'composition.',/)
+42    format (/,'**warning ver042** optimization failed most probably ',
+     *          'because the requested',/,'compositional resolution ',
+     *          'is too high, or possibly because the phases of the',/,
+     *          'system do not span the specified bulk composition.',/,
+     *          'In the 1st case, reduce the requested resolution,',
+     *          'e.g. via the iteration keyword.',/,'In the 2nd case, ',
+     *          'change the bulk composition or add phases.',/)
 43    format (/,'**warning ver043** ',i2,' solutions referenced ',
      *          'in your input',/,'were not found in the solution ',
      *          'model file, routine:',a,/)

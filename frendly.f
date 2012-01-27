@@ -1502,9 +1502,9 @@ c                                end of phase loop
      *        /,'  www.perplex.ethz.ch/perplex_thermodynamic_data_file',
      *          '.html',//,'Units: J, bar, K, mole')
 1020  format (/,'Enter the index of the parameter to be modified:',//,
-     *          9(2(1x,i2,') - ',a,18x),/),
-     *         ' 19) - thermodynamic activity',8x,
-     *         ' 20) - reaction coefficient',//,
+     *          9(2(1x,i2,') ',a,23x),/),
+     *         ' 19) thermodynamic activity',3x,
+     *         ' 20) reaction coefficient',//,
      *         'Enter zero when you are finished: ')
 1030  format (/,'Old value for ',a,' of ',a,' was ',g15.8,/,
      *          'Enter new value: ')
