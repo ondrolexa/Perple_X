@@ -7357,5 +7357,25 @@ dqf(acm)     -4000 0. 0.
 end_dqf_corrections
 
 end_of_model        
+                      --------------------------------------------------------
+begin_model                
+                           | preliminary BCC iron solution model
+FeSi(BCC)                  
+2                          | model type: Margules.
+2                          | 2 endmembers 
+iron     Si    
+  0  0                     | endmember flags
 
+0.     1.      0.1     0   | imod = 0 -> cartesian subdivision
 
+begin_excess_function   
+W(iron Si)       -100d3  0  0
+end_excess_function 
+
+1                                     1 site entropy model
+
+2 1.                                  2 species, site multiplicity = 1.
+z(Fe) = 1 iron
+
+end_of_model               
+                      --------------------------------------------------------

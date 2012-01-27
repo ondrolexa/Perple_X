@@ -476,7 +476,7 @@ c                                 echo formatted header data for ctransf/actcor:
          write (n8,'(a,a)') 'begin_standard_variables |<= name (<9 ',
      *                      'characters), reference value, tolerance'
          do i = 1, l2 
-            write (n8,'(a8,1x,f7.2,3x,g6.1E1))') vname(i),v(i),delt(i)
+            write (n8,'(a8,1x,f7.2,3x,g6.1E1)') vname(i),v(i),delt(i)
          end do 
          write (n8,'(a,/)') 'end_standard_variables'
          write (n8,'(a,g6.1E1,a,/)') 'tolerance  ',dtol,

@@ -1529,7 +1529,7 @@ c----------------------------------------------------------------------
  
       include 'perplex_parameters.h'
 
-      integer i,ier,isv
+      integer i, ier 
  
       character y*1
  

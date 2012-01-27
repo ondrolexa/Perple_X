@@ -3705,7 +3705,7 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      character*8 text(kd2)*1,alpha(130)*1,string*(kd2)
+      character*8 text(*)*1,alpha(*)*1,string*(kd2)
 
       integer iplus(k5),iminus(k5),jplus(k5),jminus(k5),ip,im,i,j,ist,
      *        ione(k7),jone(k7),iend,jst,is,jend,id

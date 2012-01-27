@@ -11012,7 +11012,7 @@ c                                 site 2 compositions.
       subroutine subdv0 
 c---------------------------------------------------------------------
 c subdv0 - subdivides simplices of dimension 1 to ksp on a cartesian
-c grid with iopt(11)+1 points along each axis.
+c grid with iopt(11) points along each axis.
 c---------------------------------------------------------------------
       implicit none
  
@@ -11039,7 +11039,7 @@ c---------------------------------------------------------------------
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 c----------------------------------------------------------------------
 
-      ync = 1d0/dfloat(iopt(11))
+      ync = 1d0/dfloat(iopt(11)-1)
       lsp = mxsp - 1
       nsim = 0
 

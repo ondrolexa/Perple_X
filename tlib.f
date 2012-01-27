@@ -148,14 +148,16 @@ c                                 be zero during fractionation
 c                                 number of iterations for
 c                                 pseudocompound refinement
       iopt(10) = 4
+c                                 twice reach multiple for 
+c                                 iterative refinement
+      nopt(21) = 2d0
 c                                 number of increments used
 c                                 in refinement
-      iopt(11) = 3
-      nopt(21) = dfloat(iopt(11))
+      iopt(11) = int(2d0*nopt(21)) + 1
 c                                 max number of points to 
 c                                 be refined in addition to 
 c                                 active points
-      iopt(12) = 4
+      iopt(12) = 3
 c                                 
 c                                 quench temperature (K)
       nopt(12) = 0d0
@@ -348,8 +350,8 @@ c                                 zero_mode key
 c                                 max iteration key
             read (strg,*)  iopt(10)
             read (nval1,*) nopt(21)
-            read (nval1,*) iopt(11)
             read (nval2,*) iopt(12)
+            iopt(11) = int(nopt(21)) + 1
 
          else if (key.eq.'initial_resolution') then
 c                                 initial_resolution key 
@@ -683,9 +685,10 @@ c                                 error traps:
          valu(5) = 'off'
       end if 
 
-      if (iopt(11).lt.2) then 
+      if (nopt(21).lt.0.5d0) then 
          write (*,1040)
-         iopt(11) = 2
+         nopt(21) = 2d0
+         iopt(11) = int(nopt(21)) + 1
       end if 
 
       if (iopt(12).gt.7.or.iopt(12).lt.1) then 
@@ -814,7 +817,7 @@ c                                 give the relaxation bounds.
 1000  format ('Context specific options are echoed in: ',a,/)
 
 1040  format (/,'Warning: value2 of the iteration keyword must be ',
-     *         ' >= 2',/,'value2 will be',
+     *         ' >= 1/2',/,'value2 will be',
      *         ' assigned its default value.',/)
 1050  format (/,'Warning: initial_resolution keyword must be ',
      *         '< 1',/,'the keyword will be',
@@ -943,7 +946,7 @@ c                                 for meemum
                write (n,1260) nopt(3)
             end if 
 c                                 adaptive optimization
-            write (n,1180) nopt(9),nopt(11),iopt(10),iopt(11),
+            write (n,1180) nopt(9),nopt(11),iopt(10),nopt(21),
      *                     iopt(12)
 c                                 gridding parameters
             if (iam.eq.1.and.icopt.eq.5.and.oned) then
@@ -1099,8 +1102,8 @@ c                                 thermo options for frendly
      *           '0->1 [1e-6]; < 0 => off'/,
      *        4x,'iteration limit        ',i2,9x,
      *           '>0 [4]; iteration keyword value 1',/,
-     *        4x,'refinement factor      ',i2,9x,
-     *           '>2*r [12]; iteration keyword value 2',/,
+     *        4x,'reach factor           ',f3.1,8x,
+     *           '>1/2 [2]; iteration keyword value 2',/,
      *        4x,'refinement points      ',i2,9x,
      *           '3->7 [4]; iteration keyword value 3')
 1190  format (/,2x,'1D grid options:',//,
@@ -3861,7 +3864,7 @@ c jscan finds the first occurence of char in chars(ibeg..iend)
 c----------------------------------------------------------------------
       implicit none
 
-      character char*1, chars(14)*1
+      character char*1, chars(*)*1
 
       integer ibeg, iend
 c----------------------------------------------------------------------
