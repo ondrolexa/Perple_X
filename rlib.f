@@ -1084,7 +1084,7 @@ c---------------------------------------------------------------------
 
       integer ld
 
-      double precision dg,tc,q2,intvdp
+      double precision dg,tc,tc0,q2,intvdp
  
       double precision therdi,therlm
       common/ cst203 /therdi(m8,m9),therlm(m7,m6,k9)
@@ -1092,7 +1092,8 @@ c---------------------------------------------------------------------
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 c----------------------------------------------------------------------
-      tc = therlm(1,1,ld) + therlm(3,1,ld)*(p-pr)
+      tc0 = therlm(1,1,ld)
+      tc = tc0 + therlm(3,1,ld)*(p-pr)
 
       if (t.lt.tc) then
 c                                 the hp98 form is 
@@ -1103,11 +1104,13 @@ c                                 the hp98 form is
          q2 = 0d0
 
       end if 
-c                                 This is the ds5 TC version
 c                                 See landau_d55.mws
 c                                                JADC Jan 26, 2012.
       dg = therlm(2,1,ld) * 
-     *    ( ((q2-q2**3/3d0)*tc - therlm(7,1,ld))*tc + therlm(7,1,ld) )
+c                                 This is the ds5 PX version
+     *   ( (t-tc)*q2*0.6666667d0 - therlm(8,1,ld)*t + therlm(4,1,ld) )
+c                                 This is the ds5 TC version
+c    * ((tc0/3d0*q2**2 + (t-tc))*q2 + therlm(7,1,ld) - t*therlm(8,1,ld))
 c                                 + int(vt,p)
      *     + therlm(6,1,ld)*intvdp
  
@@ -1160,13 +1163,13 @@ c                                 from what's in the TC code such that
 c                                 dGPX - dGTC = (tc0-tc)*q2^3/3.
 c                                 See landau_d60.mws
 c                                                JADC Jan 26, 2012.
-c      dg = therlm(2,1,ld) * 
-c     *   (therlm(7,1,ld) + t*(q2 - therlm(8,1,ld)) + tc*(q2**3/3d0 - q2))
+      dg = therlm(2,1,ld) * 
+     *  (therlm(7,1,ld) + t*(q2 - therlm(8,1,ld)) + tc*(q2**3/3d0 - q2))
 c        + vdp...
 c                                 TC version:
-      dg = therlm(2,1,ld) * 
-     *   (therlm(7,1,ld) + t*(q2 - therlm(8,1,ld)) 
-     *                   - tc*q2 + tc0*q2**3/3d0)
+c      dg = therlm(2,1,ld) * 
+c     *   (therlm(7,1,ld) + t*(q2 - therlm(8,1,ld)) 
+c     *                   - tc*q2 + tc0*q2**3/3d0)
 c                                 + int(vt,p)
      *     + therlm(6,1,ld)*intvdp
  
@@ -1769,9 +1772,13 @@ c                                 holland and powell, landau model:
                therlm(2,j,lamin) = smax
 c                                 this makes therlm(3) dt/dp
                therlm(3,j,lamin) = vmax/smax
-               therlm(6,j,lamin) = vmax*qr2/thermo(3,k10)
+c                                 PX ds5 landau
+               therlm(4,j,lamin) = (2d0*t0 + tr)*qr2/3d0
+c                                 TC ds6 landau
                therlm(7,j,lamin) = t0*(qr2 - qr2**3/3d0)
                therlm(8,j,lamin) = qr2
+c                                 Vdp coefficient
+               therlm(6,j,lamin) = vmax*qr2/thermo(3,k10)
 
             end do 
 
