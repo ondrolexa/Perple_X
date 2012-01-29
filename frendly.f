@@ -1188,7 +1188,7 @@ c                                 add in activity correction
             thermo(2,id) = thermo(2,id) - r * dlog (act(id))
  
             call append (n2)
-            call outdat (n2,id,1)
+            call outdat (n2,id,2)
 c                                 reset data
             thermo(1,id) = thermo(1,k10) 
             thermo(2,id) = thermo(2,k10) 
@@ -1337,7 +1337,7 @@ c                                 add in activity correction
             end do 
 c                                 output the data 
             call append (n2)
-            call outdat (n2,id,1)
+            call outdat (n2,id,2)
 c                                 reset data
             thermo(1,id) = thermo(1,k10) 
             thermo(2,id) = thermo(2,k10)  
@@ -1395,7 +1395,7 @@ c                                 add in activity correction
      *                            - r * dlog (act(id))
  
                      call append (n2)
-                     call outdat (n2,id,1)
+                     call outdat (n2,id,2)
 
                      thermo(1,id) = thermo(1,k10) 
                      thermo(2,id) = thermo(2,k10) 

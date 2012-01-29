@@ -17,7 +17,7 @@ c----------------------------------------------------------------------
 	implicit none
 
       write (*,'(/,a)') 
-     *      'Perple_X version 6.6.6, source updated January 27, 2012.'
+     *      'Perple_X version 6.6.7, source updated January 28, 2012.'
 
       end
 
@@ -3482,10 +3482,12 @@ c requires unver and unlam to recover original data; unlam puts the
 c transition data into the local array tm; other data is the primary 
 c arrays (cp or comp[see option below], thermo, therdi)
 
-c if option = 1 then formula for entity id created from the 
-c    composition array cp and name array cmpnt via pointer ic
-c if option = 0  then formula for entity id created from the 
+c if option = 0  then formula for entity id is created from the 
 c    composition array comp and name array cmpnt.
+c if option = 1 then formula for entity id created from the 
+c    composition array cp and name array cmpnt via pointer ic.
+c if option = 2  then formula for entity id created from the 
+c    composition array cp0 and name array cmpnt.
 c----------------------------------------------------------------------
       implicit none
 
@@ -3499,6 +3501,9 @@ c----------------------------------------------------------------------
 
       double precision cp
       common/ cst12 /cp(k5,k1)
+
+      double precision cp0
+      common/ cst71 /cp0(k0,k5)
 
       integer ic
       common/ cst42 /ic(k0)
@@ -3569,18 +3574,20 @@ c                                 formula
       ibeg = 1
       iend = 0
 
-      if (option.eq.0) then
-         jcomp = icmpn
-      else 
+      if (option.eq.1) then 
          jcomp = icomp
+      else 
+          jcomp = icmpn
       end if 
       
       do i = 1, jcomp
 
          if (option.eq.0) then
             var = comp(i)
-         else 
+         else if (option.eq.1) then 
             var = cp(i,id)
+         else if (option.eq.2) then 
+            var = cp0(i,id)
          end if 
 
          if (var.ne.0) then 

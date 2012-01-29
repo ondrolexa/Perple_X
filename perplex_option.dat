@@ -15,7 +15,7 @@ auto_refine_factor_III 2    | refine factor for Schreinemakers diagrams (auto_re
 auto_refine_file       F    | echo auto-refine data to my_project_auto_refine.txt
 auto_refine_slop       0.01 | 0->1 (auto_refine keyword group)
 bad_number             NaN  | any number or NaN (not-a-number)
-bounds                 VRH  | [VRH] HS; Voigt-Reuss-Hill or Hashin-Shtrikman, see vrh/hs_averaging
+bounds                 HS   | [VRH] HS; Voigt-Reuss-Hill or Hashin-Shtrikman, see vrh/hs_averaging
 closed_c_space         T    | T[rue] or F[alse], default is T => closed composition space for gridded minimization 
 composition            mol  | mol or wt; phase compositions
 console_messages       on   | on or off
@@ -26,9 +26,9 @@ extrapolation          off  | on or off
 grid_levels            1 4  | exploratory and autorefine (grid parameters keyword group)
 hard_limits            off  | on or off
 increment         0.1 0.025 | 0, <1; exploratory and autorefine
-initial_resolution    0.05  | >0, <1
+initial_resolution    0.1   | >0, <1
 interpolation on       2    | value 1: on or off; value 2, 1->99
-iteration            6  6  4 | value 1: 0->9; value 2: 3->99; value 3: 3->7
+iteration            6 2  3 | value 1: 0->9; value 2: 3->99; value 3: 3->7
 linear_model           on   | on or off
 melt_is_fluid          F    | T[rue] or F[alse], default is F
 option_list_files      F    | echo run-time options to my_project_PROGRAM_options.txt
@@ -40,7 +40,7 @@ pseudocompound_file    F    | echo static pseudocompound compositions to my_proj
 reaction_format    minimum  | minimum, full, stoich, S+V, or everything
 reaction_list         off   | on or off
 replicate_label      0.025  | 0->1, 0 - all replicate fields labeled, 1 - no replicate field labels
-seismic_output        none
+seismic_output        some  | some, none, all
 short_print            on   | on or off
 site_check              T   | T[rue] or F[alse], T=> reject solution compositions with negative site fractions
 solvus_tolerance       aut  | aut[omatic] or 0->1, must be > initial_resolution/auto_refine_factor
