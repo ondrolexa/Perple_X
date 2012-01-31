@@ -351,7 +351,7 @@ c                                 max iteration key
             read (strg,*)  iopt(10)
             read (nval1,*) nopt(21)
             read (nval2,*) iopt(12)
-            iopt(11) = int(nopt(21)) + 1
+            iopt(11) = int(nopt(21)) 
 
          else if (key.eq.'initial_resolution') then
 c                                 initial_resolution key 
@@ -685,10 +685,10 @@ c                                 error traps:
          valu(5) = 'off'
       end if 
 
-      if (nopt(21).lt.0.5d0) then 
+      if (nopt(21).lt.2d0) then 
          write (*,1040)
          nopt(21) = 2d0
-         iopt(11) = int(nopt(21)) + 1
+         iopt(11) = int(nopt(21))
       end if 
 
       if (iopt(12).gt.7.or.iopt(12).lt.1) then 
@@ -1232,6 +1232,8 @@ c                                 now locate the value:
       ibeg = iscnlt (iend,len,' ')
 c                                 now find trailing blank
       iend = iscan (ibeg,240,' ') 
+c                                 return if just a keyword
+      if (iend.gt.240) return
 c                                 save longer versions (only on first value)
 c                                 this is done in case it's long text or 
 c                                 several numbers on certain options. 
@@ -4940,3 +4942,4 @@ c                                 scan for blanks:
       write (text,'(400a)') (bitsy(i), i = 1, ict + 1)
 
       end
+ 

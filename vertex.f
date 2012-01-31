@@ -2288,9 +2288,9 @@ c                                 working arrays
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1)
 c                                 x coordinate description
       integer istg, ispg, imlt, imdg
-      double precision xmng, xmxg, xncg, xmno, xmxo
+      double precision xmng, xmxg, xncg, xmno, xmxo, reachg
       common/ cxt6r /xmng(h9,mst,msp),xmxg(h9,mst,msp),xncg(h9,mst,msp),
-     *               xmno(h9,mst,msp),xmxo(h9,mst,msp)
+     *               xmno(h9,mst,msp),xmxo(h9,mst,msp),reachg(h9)
       common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
 c                                 solution limits and stability
       logical stable,limit

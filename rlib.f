@@ -2723,9 +2723,9 @@ c----------------------------------------------------------------------
 
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
      *        kstot
-      double precision wg,xmn,xmx,xnc
+      double precision wg,xmn,xmx,xnc,reach
       common/ cst108 /wg(m1,m3),xmn(mst,msp),xmx(mst,msp),xnc(mst,msp),
-     *      iend(m4),isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),
+     *      reach,iend(m4),isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),
      *      isp(mst),isite,iterm,iord,istot,jstot,kstot
 
       integer length,iblank,icom
@@ -2811,29 +2811,33 @@ c                                 data found
 
       end 
 
-      subroutine readop (idim,jlaar,kstot,tname)
+      subroutine readop (idim,jlaar,kstot,reach,tname)
 c----------------------------------------------------------------------
-c readop - tail of solution model to find optional dqf and
-c          van laar size parameters
+c readop - tail of solution model to find optional dqf,
+c          van laar size parameters, or reach_factor
 
 c readop - reads data until it finds an     "end_of_model" record
 
 c          van laar data is identified by a "begin_van_la" record
 c          dqf data is identified by a      "begin_dqf_co" record
-c          or the iteration limit is        "max_iteratio" record
+c          or the reach factor is           "reach_factor" record
 
 c readop returns:
 
 c          jlaar = 1 if van laar data found (else 0).
-c          idqf  > 0 if dqf data found (else 0)
+c          idqf  > 0 if dqf data found (else 0).
+c          reach, set = 1 if no reach factor found. 
 c----------------------------------------------------------------------
       implicit none
 
       include 'perplex_parameters.h'
 
-      integer len, ier, idim, jlaar
+      double precision reach 
 
-      character begin*12, tname*10
+      integer ier, idim, jlaar
+
+      character tname*(*), key*22, val*3, nval1*12, nval2*12, nval3*12, 
+     *          strg*40, strg1*40
 
       integer length,iblank,icom
       character chars*1
@@ -2846,37 +2850,40 @@ c----------------------------------------------------------------------
 
       jlaar = 0 
       idqf = 0 
+      reach = 1d0 
 
       do 
 
-         call readcd (n9,len,ier)
+         call redcd1 (n9,ier,key,val,nval1,nval2,nval3,strg,strg1)
 
-         write (begin,'(12a)') (chars(i),i=1,12)
-
-         if (begin.eq.     'end_of_model') then 
+         if (key.eq.     'end_of_model') then 
             
             exit
 
-         else if (begin.eq.'begin_model ') then
+         else if (key.eq.'begin_model ') then
 c                              found new model, current
 c                              model does not of end_of_model keyword
-            write (*,1000) tname,(chars(i),i=1,len)
+            write (*,1000) tname,(chars(i),i=1,length)
             stop
 
-         else if (begin.eq.'begin_van_la') then 
+         else if (key.eq.'begin_van_laar_sizes') then 
 c                              read van laar data: 
             jlaar = 1
             call readvl (idim,kstot,tname)
             cycle 
 
-         else if (begin.eq.'begin_dqf_co') then 
+         else if (key.eq.'begin_dqf_corrections') then 
 c                              read dqf data:
             call readdq (idim,tname)
             cycle
 
+         else if (key.eq.'reach_factor') then 
+
+            read (nval1,*) reach
+
          else 
 
-            write (*,1010) tname,(chars(i),i=1,len)
+            write (*,1010) tname,(chars(i),i=1,length)
             write (*,1020)
             stop
 
@@ -3348,9 +3355,9 @@ c-----------------------------------------------------------------
 
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
      *        kstot
-      double precision wg,xmn,xmx,xnc
+      double precision wg,xmn,xmx,xnc,reach
       common/ cst108 /wg(m1,m3),xmn(mst,msp),xmx(mst,msp),xnc(mst,msp),
-     *      iend(m4),isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),
+     *      reach,iend(m4),isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),
      *      isp(mst),isite,iterm,iord,istot,jstot,kstot
 c-----------------------------------------------------------------
 
@@ -4107,9 +4114,9 @@ c---------------------------------------------------------------------
 
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
      *        kstot
-      double precision wg,xmn,xmx,xnc
+      double precision wg,xmn,xmx,xnc,reach
       common/ cst108 /wg(m1,m3),xmn(mst,msp),xmx(mst,msp),xnc(mst,msp),
-     *      iend(m4),isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),
+     *      reach,iend(m4),isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),
      *      isp(mst),isite,iterm,iord,istot,jstot,kstot
 c                                 interval limits conformal transformation
       integer intv
@@ -5035,9 +5042,9 @@ c---------------------------------------------------------------------
 
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
      *        kstot
-      double precision wg,xmn,xmx,xnc
+      double precision wg,xmn,xmx,xnc,reach
       common/ cst108 /wg(m1,m3),xmn(mst,msp),xmx(mst,msp),xnc(mst,msp),
-     *      iend(m4),isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),
+     *      reach,iend(m4),isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),
      *      isp(mst),isite,iterm,iord,istot,jstot,kstot
 c----------------------------------------------------------------------
       kill = 1
@@ -5177,9 +5184,9 @@ c                                 local input variables
 
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
      *        kstot
-      double precision wg,xmn,xmx,xnc
+      double precision wg,xmn,xmx,xnc,reach
       common/ cst108 /wg(m1,m3),xmn(mst,msp),xmx(mst,msp),xnc(mst,msp),
-     *      iend(m4),isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),
+     *      reach,iend(m4),isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),
      *      isp(mst),isite,iterm,iord,istot,jstot,kstot
 
       integer iorig,jnsp,iy2p
@@ -5672,9 +5679,9 @@ c---------------------------------------------------------------------
 
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
      *        kstot
-      double precision wg,xmn,xmx,xnc
+      double precision wg,xmn,xmx,xnc,reach
       common/ cst108 /wg(m1,m3),xmn(mst,msp),xmx(mst,msp),xnc(mst,msp),
-     *      iend(m4),isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),
+     *      reach,iend(m4),isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),
      *      isp(mst),isite,iterm,iord,istot,jstot,kstot
 
       integer mdep,idep,jdep,ndph
@@ -5799,9 +5806,9 @@ c----------------------------------------------------------------------
 
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
      *        kstot
-      double precision wg,xmn,xmx,xnc
+      double precision wg,xmn,xmx,xnc,reach
       common/ cst108 /wg(m1,m3),xmn(mst,msp),xmx(mst,msp),xnc(mst,msp),
-     *      iend(m4),isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),
+     *      reach,iend(m4),isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),
      *      isp(mst),isite,iterm,iord,istot,jstot,kstot
 
       integer iddeps,norder 
@@ -5909,9 +5916,9 @@ c---------------------------------------------------------------------
 
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
      *        kstot
-      double precision wg,xmn,xmx,xnc
+      double precision wg,xmn,xmx,xnc,reach
       common/ cst108 /wg(m1,m3),xmn(mst,msp),xmx(mst,msp),xnc(mst,msp),
-     *      iend(m4),isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),
+     *      reach,iend(m4),isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),
      *      isp(mst),isite,iterm,iord,istot,jstot,kstot
 
       logical depend,laar,order,fluid,macro,specil,recip
@@ -6169,7 +6176,7 @@ c                                 old versions:
       end do 
 c                              look for van laar and/or dqf parameters
 c                              or the end of model marker
-      call readop (idim,jlaar,istot-mdep,tname)
+      call readop (idim,jlaar,istot-mdep,reach,tname)
 
       if (jlaar.ne.0) then
 
@@ -6206,9 +6213,9 @@ c---------------------------------------------------------------------
 
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
      *        kstot
-      double precision wg,xmn,xmx,xnc
+      double precision wg,xmn,xmx,xnc,reach
       common/ cst108 /wg(m1,m3),xmn(mst,msp),xmx(mst,msp),xnc(mst,msp),
-     *      iend(m4),isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),
+     *      reach,iend(m4),isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),
      *      isp(mst),isite,iterm,iord,istot,jstot,kstot
 
       integer jmsol,kdsol
@@ -7743,9 +7750,9 @@ c---------------------------------------------------------------------
 
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
      *        kstot
-      double precision wg,xmn,xmx,xnc
+      double precision wg,xmn,xmx,xnc,reach
       common/ cst108 /wg(m1,m3),xmn(mst,msp),xmx(mst,msp),xnc(mst,msp),
-     *      iend(m4),isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),
+     *      reach,iend(m4),isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),
      *      isp(mst),isite,iterm,iord,istot,jstot,kstot
 
       integer iddeps,norder 
@@ -7805,9 +7812,9 @@ c                                 endmember pointers
       common/ cxt23 /jend(h9,k12)
 c                                 x coordinate description
       integer istg, ispg, imlt, imdg
-      double precision xmng, xmxg, xncg, xmno, xmxo
+      double precision xmng, xmxg, xncg, xmno, xmxo, reachg
       common/ cxt6r /xmng(h9,mst,msp),xmxg(h9,mst,msp),xncg(h9,mst,msp),
-     *               xmno(h9,mst,msp),xmxo(h9,mst,msp)
+     *               xmno(h9,mst,msp),xmxo(h9,mst,msp),reachg(h9)
       common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
 c                                 special model endmember indexing
       integer ispec
@@ -7952,6 +7959,7 @@ c                                 compositional degeneracies.
 c                                 save solution model values as hard limits for 
             xmno(im,i,j) = xmn(i,j)
             xmxo(im,i,j) = xmx(i,j)
+            reachg(im) = reach 
 c                                 ------------------------------------
 c                                 auto_refine segment
             if (refine) then 
@@ -10492,11 +10500,11 @@ c---------------------------------------------------------------------
       common/ cxt30 /limc(j6+2,j5,j3),limid(m0,j5,j3),jimid(j3,j5,j3),
      *               limn(j3),limt(j5,j3),jimc(j3,j5,j3),jimt(j5,j3)
 
-      double precision wg,xmn,xmx,xnc
+      double precision wg,xmn,xmx,xnc,reach
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
      *        kstot
       common/ cst108 /wg(m1,m3),xmn(mst,msp),xmx(mst,msp),xnc(mst,msp),
-     *      iend(m4),isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),
+     *      reach,iend(m4),isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),
      *      isp(mst),isite,iterm,iord,istot,jstot,kstot
 
       integer iddeps,norder 
@@ -10650,11 +10658,11 @@ c-----------------------------------------------------------------------
       character fname*10
       common/ csta7 /fname(h9)
 
-      double precision wg,xmn,xmx,xnc
+      double precision wg,xmn,xmx,xnc,reach
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
      *        kstot
       common/ cst108 /wg(m1,m3),xmn(mst,msp),xmx(mst,msp),xnc(mst,msp),
-     *      iend(m4),isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),
+     *      reach,iend(m4),isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),
      *      isp(mst),isite,iterm,iord,istot,jstot,kstot
 
       character mname*8
@@ -10913,11 +10921,11 @@ c---------------------------------------------------------------------
       double precision y,xy
       common/ cst86 /xy(mdim,k1),y(ms1,mst,k1),ntot,npairs
 
-      double precision wg,xmn,xmx,xnc
+      double precision wg,xmn,xmx,xnc,reach
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
      *        kstot
       common/ cst108 /wg(m1,m3),xmn(mst,msp),xmx(mst,msp),xnc(mst,msp),
-     *      iend(m4),isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),
+     *      reach,iend(m4),isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),
      *      isp(mst),isite,iterm,iord,istot,jstot,kstot
 c---------------------------------------------------------------------
 c                                 do the first site:
@@ -11042,7 +11050,7 @@ c---------------------------------------------------------------------
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 c----------------------------------------------------------------------
 
-      ync = 1d0/dfloat(iopt(11)-1)
+      ync = 1d0/dfloat(iopt(11))
       lsp = mxsp - 1
       nsim = 0
 
@@ -11140,11 +11148,11 @@ c----------------------------------------------------------------------
       double precision y,xy
       common/ cst86 /xy(mdim,k1),y(ms1,mst,k1),ntot,npairs
 
-      double precision wg,xmn,xmx,xnc
+      double precision wg,xmn,xmx,xnc,reach
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
      *        kstot
       common/ cst108 /wg(m1,m3),xmn(mst,msp),xmx(mst,msp),xnc(mst,msp),
-     *      iend(m4),isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),
+     *      reach,iend(m4),isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),
      *      isp(mst),isite,iterm,iord,istot,jstot,kstot
 
       integer ndim,mxsp
@@ -11152,9 +11160,9 @@ c----------------------------------------------------------------------
       double precision scoors
       common/ cxt86 /scoors(k24),ndim(mdim),mxsp,cart(mst,h9)
 
-      double precision xmng, xmxg, xncg, xmno, xmxo
+      double precision xmng, xmxg, xncg, xmno, xmxo, reachg
       common/ cxt6r /xmng(h9,mst,msp),xmxg(h9,mst,msp),xncg(h9,mst,msp),
-     *               xmno(h9,mst,msp),xmxo(h9,mst,msp)
+     *               xmno(h9,mst,msp),xmxo(h9,mst,msp),reachg(h9)
 c---------------------------------------------------------------------
 c                                 use rescaled coordinates (scoors) of 
 c                                 a general cube generated by subdv0 
@@ -11204,11 +11212,11 @@ c----------------------------------------------------------------------
       double precision y,xy
       common/ cst86 /xy(mdim,k1),y(ms1,mst,k1),ntot,npairs
 
-      double precision wg,xmn,xmx,xnc
+      double precision wg,xmn,xmx,xnc,reach
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
      *        kstot
       common/ cst108 /wg(m1,m3),xmn(mst,msp),xmx(mst,msp),xnc(mst,msp),
-     *      iend(m4),isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),
+     *      reach,iend(m4),isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),
      *      isp(mst),isite,iterm,iord,istot,jstot,kstot
 
       integer ndim,mxsp

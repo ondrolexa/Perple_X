@@ -313,9 +313,9 @@ c                                 -------------------------------------
 c                                 local variables
       logical bad
 
-      double precision xxnc, ysum
+      double precision xxnc, ysum, res0
 
-      integer i, j, k, ids, id, jd, iter, kcoct, iref
+      integer i, j, k, ids, id, jd, iter, kcoct, iref, npts
 c                                 -------------------------------------
 c                                 functions
       double precision gsol1, ydinc
@@ -334,16 +334,16 @@ c                                 working arrays
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1)
 c                                 x coordinate description
       integer istg, ispg, imlt, imdg
-      double precision xmng, xmxg, xncg, xmno, xmxo
+      double precision xmng, xmxg, xncg, xmno, xmxo, reachg
       common/ cxt6r /xmng(h9,mst,msp),xmxg(h9,mst,msp),xncg(h9,mst,msp),
-     *               xmno(h9,mst,msp),xmxo(h9,mst,msp)
+     *               xmno(h9,mst,msp),xmxo(h9,mst,msp),reachg(h9)
       common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
 c                                 temporary subdivision limits:
-      double precision wg,xmn,xmx,xnc
+      double precision wg,xmn,xmx,xnc,reach
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,
      *        jstot,kstot
       common/ cst108 /wg(m1,m3),xmn(mst,msp),xmx(mst,msp),xnc(mst,msp),
-     *      iend(m4),isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),
+     *      reach,iend(m4),isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),
      *      isp(mst),isite,iterm,iord,istot,jstot,kstot
 c                                 coordinates output by subdiv
       double precision xy,yy
@@ -391,6 +391,10 @@ c                                below.
 c                                load the subdivision limits into
 c                                temporary limit arrays:
       isite = istg(ids)
+
+      npts = int(reachg(ids)*(iopt(11)+1))
+      res0 = 2d0/(dfloat(iopt(11))+1d0)
+      reach = dfloat(npts-1)/2d0*res0
       
       do i = 1, isite
 
@@ -400,7 +404,7 @@ c                                temporary limit arrays:
 
             imd(j,i) = imdg(j,i,ids)
 
-            xxnc = xncg(ids,i,j)*nopt(21)/2**iter
+            xxnc = xncg(ids,i,j)*reach*nopt(21)**(1-iter)
 
             if (imd(j,i).eq.0) then 
 c                                 cartesian
@@ -414,7 +418,7 @@ c                                 conformal
 
             end if 
 
-            xnc(i,j) = xxnc/nopt(21)
+            xnc(i,j) = 2d0*xxnc/nopt(21)
 
             if (xmn(i,j).lt.xmng(ids,i,j)) xmn(i,j) = xmng(ids,i,j)
             if (xmx(i,j).gt.xmxg(ids,i,j)) xmx(i,j) = xmxg(ids,i,j)
@@ -1251,9 +1255,9 @@ c----------------------------------------------------------------------
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1)
 c                                 x coordinate description
       integer istg, ispg, imlt, imdg
-      double precision xmng, xmxg, xncg, xmno, xmxo
+      double precision xmng, xmxg, xncg, xmno, xmxo, reachg
       common/ cxt6r /xmng(h9,mst,msp),xmxg(h9,mst,msp),xncg(h9,mst,msp),
-     *               xmno(h9,mst,msp),xmxo(h9,mst,msp)
+     *               xmno(h9,mst,msp),xmxo(h9,mst,msp),reachg(h9)
       common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
 c                                 solution limits and stability
       logical stable,limit,relax
