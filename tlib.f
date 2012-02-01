@@ -17,7 +17,7 @@ c----------------------------------------------------------------------
 	implicit none
 
       write (*,'(/,a)') 
-     *      'Perple_X version 6.6.7, source updated January 28, 2012.'
+     *      'Perple_X version 6.6.7, source updated February 1, 2012.'
 
       end
 
@@ -66,7 +66,7 @@ c----------------------------------------------------------------------
       character*3 key*22, val, valu(i10), nval1*12, nval2*12,
      *            nval3*12,opname*100,strg*40,strg1*40
 
-      double precision dnan
+      double precision dnan, res0
 
       integer jtest,jpot
       common/ debug /jtest,jpot
@@ -145,19 +145,17 @@ c                                 zero_mode (<0 off)
 c                                 tolerance below which a component is considered to 
 c                                 be zero during fractionation
       nopt(11) = 1d-6
-c                                 number of iterations for
-c                                 pseudocompound refinement
-      iopt(10) = 4
-c                                 twice reach multiple for 
-c                                 iterative refinement
+c                                 iteration keyword 1
       nopt(21) = 2d0
-c                                 number of increments used
-c                                 in refinement
-      iopt(11) = int(2d0*nopt(21)) + 1
+c                                 iteration keyword 2
 c                                 max number of points to 
 c                                 be refined in addition to 
 c                                 active points
-      iopt(12) = 3
+      iopt(12) = 4
+c                                 final resolution 
+      nopt(22) = 1d-3
+c                                 global reach factor
+      nopt(23) = 0d0                             
 c                                 
 c                                 quench temperature (K)
       nopt(12) = 0d0
@@ -192,8 +190,6 @@ c                                 increase in resolution for Schreinemakers diag
       nopt(19) = 3d0 
 c                                 T_melt cutoff 
       nopt(20) = 873d0
-c                                 fractional slop on autorefine limit
-      nopt(3) = 1d-2
 c                                 hard_limits for solution model refinement
       valu(16) = 'off'
       lopt(3) = .false.
@@ -348,14 +344,22 @@ c                                 zero_mode key
 
          else if (key.eq.'iteration') then
 c                                 max iteration key
-            read (strg,*)  iopt(10)
-            read (nval1,*) nopt(21)
-            read (nval2,*) iopt(12)
-            iopt(11) = int(nopt(21)) 
+            read (val,*) i
+            nopt(21) = dfloat(i)
+            read (nval1,*) iopt(12)
 
          else if (key.eq.'initial_resolution') then
 c                                 initial_resolution key 
             read (strg,*) nopt(13)
+
+         else if (key.eq.'final_resolution') then
+c                                 initial_resolution key 
+            read (strg,*) nopt(22)
+
+         else if (key.eq.'global_reach_increment') then
+          
+            read (strg,*) i
+            nopt(23) = dfloat(i)
 
          else if (key.eq.'seismic_output') then 
 c                                 seismic data output WERAMI/MEEMUM/FRENDLY
@@ -414,8 +418,6 @@ c
 
          else if (key.eq.'auto_refine_slop') then
 c   
-            read (strg,*)  nopt(3)
-
          else if (key.eq.'x_nodes') then
 c                                 number of x nodes at level 1 before autorefine
             read (strg,*) grid(1,1)
@@ -505,13 +507,6 @@ c                                 default autorefine relative increment
                jpot = 0
                valu(11) = 'on '
             end if
-
-         else if (key.eq.'replicate_label') then 
-c                                 replicate lable tolerance for PSSECT
-c                                 replicate fields are labled only if they
-c                                 are further apart than the normalized distance 
-c                                 specified by this keyword.   
-            read (strg,*) nopt(4)
 
          else if (key.eq.'hard_limits') then 
 
@@ -688,7 +683,6 @@ c                                 error traps:
       if (nopt(21).lt.2d0) then 
          write (*,1040)
          nopt(21) = 2d0
-         iopt(11) = int(nopt(21))
       end if 
 
       if (iopt(12).gt.7.or.iopt(12).lt.1) then 
@@ -717,11 +711,6 @@ c                                 auto-refine factor III
 c                                 auto-refine factor I
          nopt(17) = 3d0
          write (*,1070) nopt(17)
-      end if 
-c                                 auto-refine slop
-      if (nopt(3).lt.0d0.or.nopt(3).gt.1d0) then 
-         nopt(3) = 0.01d0
-         write (*,1080)
       end if 
 c                                 solvus tolerance
       if (lopt(9)) nopt(8) = nopt(13)     
@@ -774,9 +763,36 @@ c                                 set autorefine factor
       end if 
 c                                 compute resolution 
       if (iam.eq.1.and.icopt.le.3) then 
+
          nopt(10) = nopt(13)
+
       else
-         nopt(10) = nopt(13)*2d0**(1-iopt(10))
+
+         if (nopt(22).gt.nopt(13)) then
+          
+            nopt(10) = nopt(13)
+            iopt(10) = 0 
+
+         else
+          
+            iopt(10) = 1
+
+            do 
+
+               res0 = nopt(13)/nopt(17)
+     *                *2d0*nopt(21)**(1-iopt(10))/(nopt(21)+1d0)
+
+               if (res0.lt.nopt(22)) then 
+                  nopt(10) = res0*nopt(17)
+                  exit
+               end if
+
+               iopt(10) = iopt(10) + 1
+
+            end do 
+
+         end if 
+
       end if 
 c                                 --------------------------------------
 c                                 output
@@ -809,13 +825,10 @@ c                                 -------------------------------------
 c                                 recalculate parameters:
 c                                 proportionality constant for shear modulus
       nopt(16) = 1.5d0*(1d0-2d0*nopt(16))/(1d0+nopt(16))
-c                                 the value of nopt(10) is multiplied to 
-c                                 give the relaxation bounds.
-      nopt(10) = 1d1*nopt(10)
+c                                 nopt(10) is used to relax bounds.
       if (nopt(10).gt.nopt(13)) nopt(10) = nopt(13)
 
 1000  format ('Context specific options are echoed in: ',a,/)
-
 1040  format (/,'Warning: value2 of the iteration keyword must be ',
      *         ' >= 1/2',/,'value2 will be',
      *         ' assigned its default value.',/)
@@ -830,8 +843,8 @@ c                                 give the relaxation bounds.
 1080  format (/,'Warning: auto_refine_slop must be ',
      *         ' >=0 and <1',/,'the keyword will be',
      *         ' assigned its default value.',/)
-1090  format (/,'Warning: value3 of the iteration keyword must be ',
-     *         ' >2 and <8',/,'value3 will be',
+1090  format (/,'Warning: value2 of the iteration keyword must be ',
+     *         ' >1 and <8',/,'value2 will be',
      *         ' assigned its default value [4].',/)
 1100  format (/,'Error: data (',a
      *       ,') follows the auto_refine keyword value '
@@ -926,8 +939,6 @@ c                                 composition and mixed variable
                   write (n,1150) nopt(17)
 
                end if
-c                                 auto-refine slop
-               write (n,1260) nopt(3)
 
             end if   
 c                                 reaction format and lists
@@ -941,13 +952,10 @@ c                                 reaction format and lists
          else 
 c                                 iopt(6) is automatically off
 c                                 for meemum             
-            if (iopt(6).ne.0) then 
-               write (n,1170) nopt(17)
-               write (n,1260) nopt(3)
-            end if 
+            if (iopt(6).ne.0) write (n,1170) nopt(17)
 c                                 adaptive optimization
-            write (n,1180) nopt(9),nopt(11),iopt(10),nopt(21),
-     *                     iopt(12)
+            write (n,1180) nopt(22),int(nopt(21)),
+     *                     iopt(12),int(nopt(23)),nopt(9),nopt(11)
 c                                 gridding parameters
             if (iam.eq.1.and.icopt.eq.5.and.oned) then
 c                                 1d multilevel grid
@@ -1029,10 +1037,12 @@ c                                 resolution blurb
 
          if (iam.eq.2.or.iopt(6).eq.0) then
 c                                 meemum or autorefine off
-            write (n,1090) nopt(10)*1d2
+            write (n,1090) nopt(10)
          else 
-            write (n,1095) nopt(10)*1d2,nopt(10)*1d2/nopt(17)
+            write (n,1095) nopt(10),nopt(10)/nopt(17)
          end if 
+
+         write (n,1100) iopt(10)
 
       end if 
 
@@ -1074,11 +1084,13 @@ c                                 thermo options for frendly
 1020  format (/,'To change these options see: ',
      *        'www.perplex.ethz.ch/perplex_options.html',/)      
 1090  format (/,2x,'Worst case (Cartesian) compositional resolution: ',
-     *        f7.3,' mol %')
+     *        g12.3,' mol')
 1095  format (/,2x,
-     *        'Worst case (Cartesian) compositional resolution (mol %)',
-     *        ': ',//,4x,'Exploratory stage: ',f7.3,/,
-     *                4x,'Auto-refine stage: ',f7.3)
+     *        'Worst case (Cartesian) compositional resolution (mol)',
+     *        ': ',//,4x,'Exploratory stage: ',g12.3,/,
+     *                4x,'Auto-refine stage: ',g12.3)
+1100  format (/,2x,'Adapative minimization will be done with ',i2,
+     *        ' iterations.')
 1140  format (4x,'auto_refine_factor_III ',f4.1,7x,'>=1 [3]')
 1150  format (4x,'auto_refine_factor_II  ',f4.1,8x,'>=1 [10]')
 1160  format (/,2x,'Schreinemakers and Mixed-variable diagram ',
@@ -1096,16 +1108,17 @@ c                                 thermo options for frendly
      *        4x,'short_print_file       ',a3,8x,'[on] off')
 1170  format (4x,'auto_refine_factor_I   ',f4.1,7x,'>=1 [3]')
 1180  format (/,2x,'Free energy minimization options:',//,
+     *        4x,'final_resolution       ',e7.1,4x,
+     *           '[1e-3], requested value, see actual values below',/,
+     *        4x,'resolution factor      ',i2,9x,
+     *           '>2 [2]; iteration keyword value 1',/,
+     *        4x,'refinement points      ',i2,9x,
+     *           '1->7 [4]; iteration keyword value 2',/,
+     *        4x,'global_reach_increment ',i2,9x,'>= 0 [0]',/,
      *        4x,'zero_mode              ',e7.1,4x,
      *           '0->1 [1e-6]; < 0 => off',/,
      *        4x,'zero_bulk              ',e7.1,4x,
-     *           '0->1 [1e-6]; < 0 => off'/,
-     *        4x,'iteration limit        ',i2,9x,
-     *           '>0 [4]; iteration keyword value 1',/,
-     *        4x,'reach factor           ',f3.1,8x,
-     *           '>1/2 [2]; iteration keyword value 2',/,
-     *        4x,'refinement points      ',i2,9x,
-     *           '3->7 [4]; iteration keyword value 3')
+     *           '0->1 [1e-6]; < 0 => off')
 1190  format (/,2x,'1D grid options:',//,
      *        4x,'y_nodes               ',i3,' /',i3,4x,'[20/40], >0, '
      *          ,'<',i4,'; effective y-resolution ',i4,' /',i4,
@@ -1166,7 +1179,6 @@ c                                 thermo options for frendly
      *           'echo computational options')
 1250  format (4x,'auto_refine_file       ',l1,10x,'[F] T; ',
      *           'echo auto-refine compositions')
-1260  format (4x,'auto_refine_slop       ',f5.3,6x,'[0.01]')
 
       end
 
@@ -1776,8 +1788,10 @@ c---------------------------------------------------------------------
      *          'because the requested',/,'compositional resolution ',
      *          'is too high, or possibly because the phases of the',/,
      *          'system do not span the specified bulk composition.',/,
-     *          'In the 1st case, reduce the requested resolution,',
-     *          'e.g. via the iteration keyword.',/,'In the 2nd case, ',
+     *          'In the 1st case: reduce the requested resolution,',
+     *          'e.g. via the final_resolution',/,'initial_resolution ',
+     *          'and auto_refine_factor_I  keywords.',/,
+     *          'In the 2nd case:rm  ',
      *          'change the bulk composition or add phases.',/)
 43    format (/,'**error ver043** you cannot simultaneously treat: ',
      *          a,/,'as a thermodynamic solution and as a saturated',

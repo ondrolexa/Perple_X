@@ -315,7 +315,7 @@ c                                 local variables
 
       double precision xxnc, ysum, res0
 
-      integer i, j, k, ids, id, jd, iter, kcoct, iref, npts
+      integer i, j, k, ids, id, jd, iter, kcoct, iref
 c                                 -------------------------------------
 c                                 functions
       double precision gsol1, ydinc
@@ -392,9 +392,7 @@ c                                load the subdivision limits into
 c                                temporary limit arrays:
       isite = istg(ids)
 
-      npts = int(reachg(ids)*(iopt(11)+1))
-      res0 = 2d0/(dfloat(iopt(11))+1d0)
-      reach = dfloat(npts-1)/2d0*res0
+      res0 = 2d0/(nopt(21)+1d0)*nopt(21)**(1-iter)
       
       do i = 1, isite
 
@@ -404,7 +402,8 @@ c                                temporary limit arrays:
 
             imd(j,i) = imdg(j,i,ids)
 
-            xxnc = xncg(ids,i,j)*reach*nopt(21)**(1-iter)
+            xnc(i,j) = xncg(ids,i,j)*res0
+            xxnc = xnc(i,j)*(nopt(21)+reachg(ids))/2d0
 
             if (imd(j,i).eq.0) then 
 c                                 cartesian
@@ -417,8 +416,6 @@ c                                 conformal
                xmx(i,j) = ydinc (x(i,j),xxnc,imd(j,i),j,i,ids)
 
             end if 
-
-            xnc(i,j) = 2d0*xxnc/nopt(21)
 
             if (xmn(i,j).lt.xmng(ids,i,j)) xmn(i,j) = xmng(ids,i,j)
             if (xmx(i,j).gt.xmxg(ids,i,j)) xmx(i,j) = xmxg(ids,i,j)

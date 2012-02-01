@@ -2814,19 +2814,19 @@ c                                 data found
       subroutine readop (idim,jlaar,kstot,reach,tname)
 c----------------------------------------------------------------------
 c readop - tail of solution model to find optional dqf,
-c          van laar size parameters, or reach_factor
+c          van laar size parameters, or reach_increment
 
 c readop - reads data until it finds an     "end_of_model" record
 
 c          van laar data is identified by a "begin_van_la" record
 c          dqf data is identified by a      "begin_dqf_co" record
-c          or the reach factor is           "reach_factor" record
+c          or the reach factor is           "reach_increm" record
 
 c readop returns:
 
 c          jlaar = 1 if van laar data found (else 0).
 c          idqf  > 0 if dqf data found (else 0).
-c          reach, set = 1 if no reach factor found. 
+c          reach, set = 0 if no reach factor found. 
 c----------------------------------------------------------------------
       implicit none
 
@@ -2850,7 +2850,7 @@ c----------------------------------------------------------------------
 
       jlaar = 0 
       idqf = 0 
-      reach = 1d0 
+      reach = 0d0 
 
       do 
 
@@ -2877,9 +2877,10 @@ c                              read dqf data:
             call readdq (idim,tname)
             cycle
 
-         else if (key.eq.'reach_factor') then 
+         else if (key.eq.'reach_increment') then 
 
-            read (nval1,*) reach
+            read (val,*) i
+            reach = dfloat(i)
 
          else 
 
@@ -7959,7 +7960,14 @@ c                                 compositional degeneracies.
 c                                 save solution model values as hard limits for 
             xmno(im,i,j) = xmn(i,j)
             xmxo(im,i,j) = xmx(i,j)
-            reachg(im) = reach 
+c                                 set reach factors
+            if (reach.le.nopt(23)) then 
+               reachg(im) = nopt(23)
+            else 
+               reachg(im) = reach 
+            end if 
+c                                 set initial resolution
+            
 c                                 ------------------------------------
 c                                 auto_refine segment
             if (refine) then 
@@ -7979,10 +7987,9 @@ c                                 non-adaptive use refine factor II
                   end if 
 
                else 
-c                                 use fractional slop, with a minimum 
-c                                 corresponding to the initial compositional
+c                                 set slop to the initial compositional
 c                                 resolution
-                  dinc = nopt(10)/1d1 + (xmx(i,j) - xmn(i,j)) * nopt(3)
+                  dinc = nopt(10)  
 c                                 adaptive use refine factor I
                   xnc(i,j) = xnc(i,j)/nopt(17) 
 

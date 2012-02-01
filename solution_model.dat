@@ -2663,6 +2663,8 @@ z(Ca) = 1 an
 2 2.                       | 2 species on T-site, 2. sites per formula (al-avoidance model)
 z(Al) = 1/2 + 1/2 an
 
+reach_increment 2            
+
 end_of_model        
                       --------------------------------------------------------
 begin_model 
@@ -7376,6 +7378,8 @@ end_excess_function
 
 2 1.                                  2 species, site multiplicity = 1.
 z(Fe) = 1 iron
+
+reach_increment  0
 
 end_of_model               
                       --------------------------------------------------------
