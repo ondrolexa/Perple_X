@@ -403,7 +403,7 @@ c                                temporary limit arrays:
             imd(j,i) = imdg(j,i,ids)
 
             xnc(i,j) = xncg(ids,i,j)*res0
-            xxnc = xnc(i,j)*(nopt(21)+reachg(ids))/2d0
+            xxnc = xnc(i,j)*nopt(21)*(2d0+reachg(ids))/4d0
 
             if (imd(j,i).eq.0) then 
 c                                 cartesian
