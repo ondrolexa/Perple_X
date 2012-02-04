@@ -392,7 +392,7 @@ c                                load the subdivision limits into
 c                                temporary limit arrays:
       isite = istg(ids)
 
-      res0 = dfloat(2**(2-iter))/nopt(24)
+      res0 = 2d0**(2-iter)/nopt(24)
       
       do i = 1, isite
 
@@ -403,7 +403,7 @@ c                                temporary limit arrays:
             imd(j,i) = imdg(j,i,ids)
 
             xnc(i,j) = xncg(ids,i,j)*res0
-            xxnc = xnc(i,j)*res0*reachg(ids)
+            xxnc = xnc(i,j)*reachg(ids)
 
             if (imd(j,i).eq.0) then 
 c                                 cartesian

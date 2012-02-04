@@ -785,7 +785,7 @@ c                                 compute resolution
 
             do 
 
-               res0 = nopt(13)/nopt(17)*dfloat(2**(2-iopt(10)))/nopt(24)
+               res0 = nopt(13)/nopt(17)*2d0**(2-iopt(10))/nopt(24)
 
                if (res0.lt.nopt(22)) then 
 c                                 real final resolution is res0
