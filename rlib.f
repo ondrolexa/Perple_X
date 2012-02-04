@@ -7962,9 +7962,9 @@ c                                 save solution model values as hard limits for
             xmxo(im,i,j) = xmx(i,j)
 c                                 set reach factors
             if (reach.le.nopt(23)) then 
-               reachg(im) = (nopt(21) + nopt(23))/2d0
+               reachg(im) = nopt(21)*(2d0 + nopt(23))/4d0
             else 
-               reachg(im) = (nopt(21) + reach)/2d0
+               reachg(im) = nopt(21)*(2d0 + reach)/4d0
             end if 
 c                                 set initial resolution
             
