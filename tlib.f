@@ -644,7 +644,6 @@ c                                 auto refine summary
          end if 
  
       end if 
-
 c                                 pseudocompound glossary
       if (io9.eq.0.and.iam.lt.3) then
  
@@ -672,9 +671,10 @@ c                                 computational options this is redundant
          end if 
  
          write (*,1160) tfname
+
       end if 
 c                                 -------------------------------------
-c                                 error traps:
+c                                 dependent parameters and error traps:
       if (iopt(10).gt.0) then 
          iopt(5) = 0
          valu(5) = 'off'
@@ -704,13 +704,17 @@ c                                 auto-refine factor II
 c                                 auto-refine factor III
          nopt(19) = 3d0
          write (*,1070) nopt(19)
+
       else if (icopt.le.3.and.nopt(18).lt.1d0) then 
+
          nopt(18) = 1d1
          write (*,1070) nopt(18)
+
       else if (nopt(17).lt.1d0) then 
 c                                 auto-refine factor I
-         nopt(17) = 3d0
+         nopt(17) = 2d0
          write (*,1070) nopt(17)
+
       end if 
 c                                 solvus tolerance
       if (lopt(9)) nopt(8) = nopt(13)     
@@ -762,6 +766,8 @@ c                                 set autorefine factor
          nopt(17) = nopt(18)
       end if 
 c                                 compute resolution 
+      nopt(24) = 1d0 + nopt(21)
+
       if (iam.eq.1.and.icopt.le.3) then 
 
          nopt(10) = nopt(13)
@@ -779,8 +785,7 @@ c                                 compute resolution
 
             do 
 
-               res0 = nopt(13)/nopt(17)
-     *                *2d0*nopt(21)**(1-iopt(10))/(nopt(21)+1d0)
+               res0 = nopt(13)/nopt(17)*dfloat(2**(2-iopt(10)))/nopt(24)
 
                if (res0.lt.nopt(22)) then 
 c                                 real final resolution is res0
