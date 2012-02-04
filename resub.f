@@ -392,7 +392,7 @@ c                                load the subdivision limits into
 c                                temporary limit arrays:
       isite = istg(ids)
 
-      res0 = 2d0**(2-iter)/nopt(24)
+      res0 = nopt(24)/nopt(21)**iter
       
       do i = 1, isite
 

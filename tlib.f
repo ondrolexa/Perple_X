@@ -766,7 +766,7 @@ c                                 set autorefine factor
          nopt(17) = nopt(18)
       end if 
 c                                 compute resolution 
-      nopt(24) = 1d0 + nopt(21)
+      nopt(24) = 2d0*nopt(21)/(1d0 + nopt(21))
 
       if (iam.eq.1.and.icopt.le.3) then 
 
@@ -785,7 +785,7 @@ c                                 compute resolution
 
             do 
 
-               res0 = nopt(13)/nopt(17)*2d0**(2-iopt(10))/nopt(24)
+               res0 = nopt(13)/nopt(17)*nopt(24)/nopt(21)**iopt(10)
 
                if (res0.lt.nopt(22)) then 
 c                                 real final resolution is res0
