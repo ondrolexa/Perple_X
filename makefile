@@ -81,8 +81,8 @@ pssect: psect.o pscom.o pslib.o tlib.o rlib.o flib.o clib.o  dlib.o
 pt2curv: pt2curv.o tlib.o
 	$(COMP77) $(FFLAGS) $@.o tlib.o -o $@
 
-vertex: vertex.o tlib.o rlib.o flib.o nlib.o clib.o resub.o
-	$(COMP77) $(FFLAGS) vertex.o tlib.o rlib.o flib.o nlib.o clib.o resub.o -o $@
+vertex: vertex.o 
+	$(COMP77) $(FFLAGS) vertex.o -o $@
 
 werami: reader.o  tlib.o rlib.o flib.o clib.o  dlib.o olib.o 
 	$(COMP77) $(FFLAGS) reader.o tlib.o rlib.o flib.o clib.o dlib.o olib.o -o $@

@@ -1289,12 +1289,12 @@ c                                 check if solution is at an unnatural limit
 c                                 relax limits according to subdivsion model
                   if (imdg(j,i,ids).eq.0) then 
 c                                 cartesian
-                     xmng(ids,i,j) = xmng(ids,i,j) - nopt(10)
+                     xmng(ids,i,j) = xmng(ids,i,j) - 1d1*nopt(10)
                      if (xmng(ids,i,j).lt.0d0) xmng(ids,i,j) = 0d0
 
                   else if (imdg(j,i,ids).eq.1.or.imdg(j,i,ids).eq.4)then 
 c                                 assymmetric stretching towards xmin
-                     yint(1,j,i,ids) = yint(1,j,i,ids) - nopt(10)
+                     yint(1,j,i,ids) = yint(1,j,i,ids) - 1d1*nopt(10)
                      if (yint(1,j,i,ids).lt.0d0) yint(1,j,i,ids) = 0d0
                      xmng(ids,i,j) =  yint(1,j,i,ids)
 
@@ -1319,12 +1319,12 @@ c                                 check if solution is at an unnatural limit
 c                                 relax limits according to subdivsion model
                   if (imdg(j,i,ids).eq.0) then 
 c                                 cartesian
-                     xmxg(ids,i,j) = xmxg(ids,i,j) + nopt(10)
+                     xmxg(ids,i,j) = xmxg(ids,i,j) + 1d1*nopt(10)
                      if (xmxg(ids,i,j).gt.1d0) xmxg(ids,i,j) = 1d0
 
                   else if (imdg(j,i,ids).eq.1.or.imdg(j,i,ids).eq.4)then 
 c                                 assymmetric stretching
-                     yint(2,j,i,ids) = yint(2,j,i,ids) + nopt(10)
+                     yint(2,j,i,ids) = yint(2,j,i,ids) + 1d1*nopt(10)
                      if (yint(2,j,i,ids).gt.1d0) yint(2,j,i,ids) = 1d0
                      xmxg(ids,i,j) = yint(2,j,i,ids)
 

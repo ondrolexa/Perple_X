@@ -17,7 +17,7 @@ c----------------------------------------------------------------------
 	implicit none
 
       write (*,'(/,a)') 
-     *      'Perple_X version 6.6.7, source updated February 1, 2012.'
+     *      'Perple_X version 6.6.7, source updated February 3, 2012.'
 
       end
 
@@ -783,8 +783,15 @@ c                                 compute resolution
      *                *2d0*nopt(21)**(1-iopt(10))/(nopt(21)+1d0)
 
                if (res0.lt.nopt(22)) then 
+c                                 real final resolution is res0
+c                                 reset speciation tolerance if < res0
+                  if (nopt(5).gt.res0) nopt(5) = res0
+c                                 final resolution of exploratory stage
+c                                 this is used to relax limits
                   nopt(10) = res0*nopt(17)
+
                   exit
+
                end if
 
                iopt(10) = iopt(10) + 1

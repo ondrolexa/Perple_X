@@ -9,11 +9,10 @@
 approx_alpha           T    | use approximation exp(x)~1+x to evaluate expansivity effect on volume
 Anderson-Gruneisen     F    | Anderson-Gruneisen parameter correction for polythermal Murnaghan and Birch-Murnaghan
 auto_refine            aut  | auto, manual, or off (auto_refine keyword group)
-auto_refine_factor_I   4    | refine factor for gridded minimization and phase fractionation (auto_refine keyword group)
+auto_refine_factor_I   2    | refine factor for gridded minimization and phase fractionation (auto_refine keyword group)
 auto_refine_factor_II  6    | refine factor for composition and mixed variable diagrams (auto_refine keyword group)
 auto_refine_factor_III 2    | refine factor for Schreinemakers diagrams (auto_refine keyword group)
 auto_refine_file       F    | echo auto-refine data to my_project_auto_refine.txt
-auto_refine_slop       0.01 | 0->1 (auto_refine keyword group)
 bad_number             NaN  | any number or NaN (not-a-number)
 bounds                 VRH  | [VRH] HS; Voigt-Reuss-Hill or Hashin-Shtrikman, see vrh/hs_averaging
 closed_c_space         T    | T[rue] or F[alse], default is T => closed composition space for gridded minimization 
@@ -23,12 +22,12 @@ dependent_potentials   on   | on or off
 efficiency             3    | 1->5
 explicit_bulk_modulus  T    | T[rue] or F[alse], default is F; T -> use explicit function for K if available
 extrapolation          off  | on or off
-final_resolution       1e-3 | >0, <1, default 1e-3
+final_resolution       1e-4 | >0, <1, default 1e-3
 global_reach_increment  0   | >= 0; overridden by reach_factor specified in solution model file
-grid_levels            1 3  | exploratory and autorefine (grid parameters keyword group)
+grid_levels            1 4  | exploratory and autorefine (grid parameters keyword group)
 hard_limits            off  | on or off
 increment         0.1 0.025 | 0, <1; exploratory and autorefine
-initial_resolution    0.05  | >0, <1, default 1e-2
+initial_resolution    0.1   | >0, <1, default 1e-2
 interpolation on       2    | value 1: on or off; value 2, 1->99
 iteration              2  4 | value 2: 2->99; value 3: 1->7
 linear_model           on   | on or off

@@ -5,6 +5,13 @@ c Copyright (c) 1998 by James A. D. Connolly, Institute for Mineralogy
 c & Petrography, Swiss Federal Insitute of Technology, CH-8092 Zurich,
 c SWITZERLAND. All rights reserved.
 
+      include 'nlib.f'
+      include 'clib.f'
+      include 'resub.f'
+      include 'rlib.f'
+      include 'tlib.f'
+      include 'flib.f'
+
       program vertx        
 c----------------------------------------------------------------------
 c                       ************************
