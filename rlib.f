@@ -2834,7 +2834,7 @@ c----------------------------------------------------------------------
 
       double precision reach 
 
-      integer ier, idim, jlaar
+      integer ier, idim, jlaar, kstot, i
 
       character tname*(*), key*22, val*3, nval1*12, nval2*12, nval3*12, 
      *          strg*40, strg1*40
@@ -2843,7 +2843,7 @@ c----------------------------------------------------------------------
       character chars*1
       common/ cst51 /length,iblank,icom,chars(240)
 
-      integer kstot,i,indq,idqf
+      integer indq,idqf
       double precision dqf
       common/ cst222 /dqf(m3,m4),indq(m4),idqf
 c----------------------------------------------------------------------
@@ -7960,14 +7960,7 @@ c                                 compositional degeneracies.
 c                                 save solution model values as hard limits for 
             xmno(im,i,j) = xmn(i,j)
             xmxo(im,i,j) = xmx(i,j)
-c                                 set reach factors
-            if (reach.le.nopt(23)) then 
-               reachg(im) = nopt(21)*(2d0 + nopt(23))/4d0
-            else 
-               reachg(im) = nopt(21)*(2d0 + reach)/4d0
-            end if 
 c                                 set initial resolution
-            
 c                                 ------------------------------------
 c                                 auto_refine segment
             if (refine) then 
@@ -8107,6 +8100,12 @@ c                                 if pure cartesian, save maximum dimension
          if (cart(i,im).and.isp(i)-1.gt.mxsp) mxsp = isp(i) - 1
 
       end do 
+c                                 set reach factors
+      if (reach.le.nopt(23)) then 
+         reachg(im) = nopt(21)*(1d0 + nopt(23))/2d0
+      else 
+         reachg(im) = nopt(21)*(1d0 + reach)/2d0
+      end if 
 c                                 -------------------------------------
 c                                 classify the model
       ksmod(im) = jsmod
@@ -10710,6 +10709,10 @@ c-----------------------------------------------------------------------
       integer lstot,mstot,nstot,ndep,nord
       common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
 
+      double precision xmng, xmxg, xncg, xmno, xmxo, reachg
+      common/ cxt6r /xmng(h9,mst,msp),xmxg(h9,mst,msp),xncg(h9,mst,msp),
+     *               xmno(h9,mst,msp),xmxo(h9,mst,msp),reachg(h9)
+
       integer iopt
       logical lopt
       double precision nopt
@@ -10814,14 +10817,17 @@ c                                 a the site fraction array:
                   end do 
                   z(i,isp(i)) = 1d0 - zt
                end do 
-c                               generate the pseudocompound:
+c                                 generate the pseudocompound:
                call soload (im,icoct,icpct,ixct,tname,icky,im)
 
             end do 
 
             if (icpct.gt.0) then 
- 
+c                                 write pseudocompound count
                write (*,1100) icpct, tname
+c                                 write reach_increment
+               if (int(reachg(im)*2d0/nopt(21)-1d0).gt.0) 
+     *            write (*,1030) int(reachg(im)*2d0/nopt(21)-1d0), tname
 
                if (output.and.lopt(10)) then
 
@@ -10900,6 +10906,7 @@ c                              close solution model file
 1000  format (/,'the following solution models will be considered:',/)
 1010  format (7(2x,a10))
 1020  format (/,'Of the requested solution models:',/)
+1030  format (9x,'a reach_increment of ',i2,' is specified for ',a,/)
 1040  format (/,'no models will be considered.',/)
 1060  format (/,'Solution: ',a,/,12x,'Endmember fractions:',
      *        /,12x,20(a,1x))

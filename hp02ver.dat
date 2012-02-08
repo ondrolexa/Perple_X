@@ -220,6 +220,16 @@ oilm = 1 ilm_nol
                                   
 dilm = 1 ilm_nol  
         1993  -2.1 0 
+
+                                | Make definitions for Kelsey & Powell (JMG, 2011) Zr melting relations. JADC, 2/6/12
+zr8L = 2 zrc                    | Zr-melt endmember
+       69e3 0 0 
+
+zrg  = 1 gr + 3 zrc - 6 q       | Zr garnet endmember
+       96e3 0.165e3 2.7
+
+zrru = 1 bdy                    | Zr rutile endmember
+       52.84e3 -0.01829e3 -0.074
                                   
 end_makes 
                                                                                                                                             
@@ -257,7 +267,8 @@ WARNINGS: 1) The Holland & Powell thermodynamic data herein has been augmented
                woGL    Ca2Si2O6                                                                                                             
                nasGL   NaSi1/2O3/2                                                                                                          
                kalGL   KAlSiO4                                                                                                              
-               h2oGL   H2O                                                                                                                  
+               h2oGL   H2O  
+               tiGl    TiO2                                                                                                                
                                                                                                                                             
 Notation (not alphabetical!)                                                                                                                
                                                                                                                                             
@@ -2050,7 +2061,6 @@ c1 = 340.6
 b1 = .524E-3 b2 = -.452E-4 b3 = .54E-7 b8 = -5  
 m0 = .1E-15  
 end
-
  
 faGL     EoS = 3 | PMELT liquid endmember (Ghiorso et al, G3, 2002)  -1.465621e6                  
 SIO2(1)FEO(2)
@@ -2239,3 +2249,11 @@ c1 = 870.4 c2 = -.14476 c3 = -400450 c4 = .43207E-4 c5 = -8652.6
 b1 = .2336E-4 b2 = .70286E-8 b4 = -.295 b6 = 1574000 b8 = 6.7  
 end
  
+tiGL    EoS = 3   | PMELT liquid endmember, G/S adjusted to match 1840 K 1 bar fusion for H&P rutile
+TIO2(1)
+G0 = -867802 S0 = 13.0582 V0 = 2.316  
+c1 = 109.2  
+b1 = .7246E-3 b2 = -.231E-4 b8 = -5  
+m0 = .1E-15  
+end
+

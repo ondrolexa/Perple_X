@@ -416,9 +416,10 @@ c                                 conformal
                xmx(i,j) = ydinc (x(i,j),xxnc,imd(j,i),j,i,ids)
 
             end if 
-
-            if (xmn(i,j).lt.xmng(ids,i,j)) xmn(i,j) = xmng(ids,i,j)
-            if (xmx(i,j).gt.xmxg(ids,i,j)) xmx(i,j) = xmxg(ids,i,j)
+c                                 changed feb 6, 2012 from xmng/xmxg
+c                                 to allow hardlimits. JADC
+            if (xmn(i,j).lt.xmno(ids,i,j)) xmn(i,j) = xmno(ids,i,j)
+            if (xmx(i,j).gt.xmxo(ids,i,j)) xmx(i,j) = xmxo(ids,i,j)
 
          end do 
       end do 
@@ -1322,7 +1323,7 @@ c                                 cartesian
                      xmxg(ids,i,j) = xmxg(ids,i,j) + 1d1*nopt(10)
                      if (xmxg(ids,i,j).gt.1d0) xmxg(ids,i,j) = 1d0
 
-                  else if (imdg(j,i,ids).eq.1.or.imdg(j,i,ids).eq.4)then 
+                  else if (imdg(j,i,ids).eq.1.or.imdg(j,i,ids).eq.4)then
 c                                 assymmetric stretching
                      yint(2,j,i,ids) = yint(2,j,i,ids) + 1d1*nopt(10)
                      if (yint(2,j,i,ids).gt.1d0) yint(2,j,i,ids) = 1d0
@@ -1355,9 +1356,9 @@ c----------------------------------------------------------------------
       include 'perplex_parameters.h'
 c                                 -------------------------------------
 c                                 local variables:
-      integer i,j,k,ibad1,ibad2,ibad3,igood
+      integer i, j, k, ibad1, ibad2, ibad3, igood
 
-      logical bad1,bad2,good
+      logical bad1, bad2, good, reach
 c                                 -------------------------------------
 c                                 global variables:
 c                                 working arrays
@@ -1395,6 +1396,10 @@ c                                 endmember names
       
       integer ksmod, ksite, kmsol, knsp
       common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
+
+      double precision xmng, xmxg, xncg, xmno, xmxo, reachg
+      common/ cxt6r /xmng(h9,mst,msp),xmxg(h9,mst,msp),xncg(h9,mst,msp),
+     *               xmno(h9,mst,msp),xmxo(h9,mst,msp),reachg(h9)
 c----------------------------------------------------------------------
       ibad1 = 0 
       ibad2 = 0 
@@ -1490,7 +1495,11 @@ c                                 solutions on internal limits
 
       end if 
 
+      reach = .false.
+
       do i = 1, isoct
+
+         if (int(reachg(i)*2d0/nopt(21)-1d0).gt.0) reach = .true.
 
          if (.not.stable(i)) cycle
 
@@ -1561,6 +1570,17 @@ c    *                     ,names(jend(i,2+indx(i,j,k)))
 
       end do 
 
+      if (reach) then 
+
+         write (*,1100)
+
+         do i = 1, isoct
+            if (int(reachg(i)*2d0/nopt(21)-1d0).eq.0) cycle
+            write (*,1110) fname(i), int(reachg(i)*2d0/nopt(21)-1d0)
+         end do 
+
+      end if 
+
 99    close (n10)
       if (lopt(11)) close (n11)
 
@@ -1587,7 +1607,9 @@ c     *          'Endmember with this species')
      *        'automatically relaxed. To avoid this problem change',/,
      *        'the subdivision mode for ',
      *        'the solutions or increase auto_refine_slop.',/)
-
+1100  format (/,'The following solution models have non-zero reach_',
+     *          'increment:',//,t30,'reach_increment')
+1110  format (4x,a,t35,i2)
       end 
 
       subroutine sorter (kdbulk,ico,jco,output)

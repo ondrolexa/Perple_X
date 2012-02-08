@@ -1246,6 +1246,8 @@ begin_model
                                       Changed DQF terms to account for modifications of faL and foL 
                                       (White et al 2007). Mark Caddick, Nov, 07.
 
+                                      Zr8L added. Jeff Marsh, Jan 10, 2012.
+
 
                                       WARNING 1: This model can only be used for hydrous systems  
                                       if H2O is specified as a thermodynamic component or as a
@@ -1293,7 +1295,7 @@ begin_model
 melt(HP)
 24                                    model type: margules, internal entropy routine
 
-8                                     number of endmembers
+9                                     number of endmembers
                                  
                                     | ENDMEMBER NAMES:                               
 
@@ -1305,9 +1307,9 @@ h2oL                                | Because this model uses an internal routin
 fo8L     fa8L                       | relative order is arbitrary.
 
 abL      sil8L    anL               | The relative order of these endmembers is arbitrary.
-kspL     q8L                         
+kspL     zr8L     q8L                         
 
- 0 0 0 0 0 0 0 0                    | endmember flags.  
+ 0 0 0 0 0 0 0 0 0                  | endmember flags.  
 
                                     | RESTRICTED(!) subdivision ranges and model
                                     | the ranges must be extended if calculations
@@ -1322,6 +1324,7 @@ kspL     q8L
 0.0 0.2  0.1 1                      | range and resolution of X(sil), 1 => asymmetric subdivision  
 0.0 0.1  0.1 1                      | range and resolution of X(an),  1 => asymmetric subdivision   
 0.0 0.4  0.1 0                      | range and resolution of X(ksp), 0 => cartesian subdivision
+0.0 0.2  0.1 0                      | range and resolution of X(zr),  0 => cartesian subdivision
 
 begin_excess_function 
                                     | the excess parameters used for the haplo-
@@ -1360,6 +1363,13 @@ w(sil8L h2oL) 16d3 0. 0.
 w(fo8L  fa8L) 18d3 0. 0.
 w(fo8L  h2oL) 11d3 0. -0.5
 w(fa8L  h2oL) 12d3 0. 0. 
+
+w(q8L   zr8L) 14d3  0.  0. 
+w(abL   zr8L) 12d3  0.  0.  
+w(kspL  zr8L) 12d3  0.  0.
+w(zr8L  fo8L) 12d3  0.  0.
+w(zr8L  fa8L) 12d3  0.  0. 
+w(zr8L  h2oL) 25d3  0.  0.     
 
 end_excess_function 
 
@@ -1433,11 +1443,13 @@ begin_model                          | keyword indicating beginning of a solutio
 
                                       JADC May 23, 2004.
                                       
+                                      Added TiO2 endmember. JADC Feb 7, 2012. 
+
 
 pMELTS(G)
 25                                    model type: margules, internal entropy routine
 
-8                                     number of endmembers
+9                                     number of endmembers
 
 H2O                                 | h2o MUST be the first endmember, see WARNING 1 above.
 foGL
@@ -1446,9 +1458,10 @@ woGL
 kalGL
 nasGL
 coGL
+tiGL
 qGL            
 
-1 0 0 0 0 0 0 0                     | endmember flags  
+1 0 0 0 0 0 0 0 0                   | endmember flags  
 
                                     | NOTE restricted compositional ranges!                 
 
@@ -1459,6 +1472,7 @@ qGL
 0.0 0.6   0.1  0                    | range and resolution of X(kal), 0 => cartesian subdivision     
 0.0 0.6   0.1  0                    | range and resolution of X(nas), 0 => cartesian subdivision    
 0.0 0.2   0.1  0                    | range and resolution of X(co), 0 => cartesian subdivision  
+0.0 0.2   0.1  0                    | range and resolution of X(Ti), 0 => cartesian subdivision 
 
 begin_excess_function 
 w( coGL  qGL  ) -296975.2 0. 0.
@@ -1489,6 +1503,14 @@ w( H2O   woGL ) -1583.7   0. 0.
 w( kalGL nasGL) -1102.3   0. 0.
 w( H2O   nasGL) 13043.1   0. 0.
 w( H2O   kalGL) 35572.8   0. 0.
+
+w(coGL  tiGL) 144804.9   0. 0.
+w(faGL  tiGL) 9324.2     0. 0.
+w(foGL  tiGL) 16355.6    0. 0.
+w(woGL  tiGL) 9471.5     0. 0.
+w(nasGL tiGL) 22194.2    0. 0.
+w(kalGL tiGL) 3744.0     0. 0.
+
 end_excess_function 
   0                                  | no configurational entropy model (internal routine gmelt).
 end_of_model                         
@@ -2661,9 +2683,9 @@ z(Na) = 1 abh
 z(Ca) = 1 an
 
 2 2.                       | 2 species on T-site, 2. sites per formula (al-avoidance model)
-z(Al) = 1/2 + 1/2 an
+z(Al) = 1/2 + 1/2 an 
 
-reach_increment 2            
+reach_increment 0         
 
 end_of_model        
                       --------------------------------------------------------
@@ -2706,6 +2728,8 @@ z(Ca) = 0 + 1 an
 2 2.                       | 2 species on T-site, 2. sites per formula (al-avoidance model)
 z(Al) = 1/2 + 1/2 an
 
+reach_increment 3 
+
 end_of_model        
                       --------------------------------------------------------
 begin_model               
@@ -2727,6 +2751,8 @@ z(Na) = 1 abh
 
 2 2.                       | 2 species on T, mutiplicity = 2.
 z(Al) = 1/2 + 1/2 an
+
+reach_increment 3  
 
 end_of_model               
                       --------------------------------------------------------
@@ -2752,6 +2778,8 @@ end_excess_function
 2 1.                       | 2 species on O-site, 1 site per formula unit.
 z(Na) = 1 ab
 
+reach_increment 3 
+
 end_of_model              
                       --------------------------------------------------------
 begin_model                
@@ -2773,6 +2801,8 @@ end_excess_function
   1                        | 1 site mixing model
 2 1.                       | 2 species on O-site, 1 site per formula unit.
 z(Na) = 1 abh
+
+reach_increment 3 
 
 end_of_model    
                       --------------------------------------------------------
@@ -2796,6 +2826,8 @@ end_excess_function
 2 1.                       | 2 species on O-site, 1 site per formula unit.
 z(Na) = 1 abh
 
+reach_increment 3 
+
 end_of_model             
                       --------------------------------------------------------
 begin_model                
@@ -2812,6 +2844,8 @@ O2       H2
 
 ideal
 0
+
+reach_increment 3 
 
 end_of_model               
                       --------------------------------------------------------
@@ -2838,6 +2872,8 @@ end_excess_function
   1                        | 1 site mixing model
 2 1.                       | 2 species on O-site, 1 site per formula unit.
 z(Na) = 1 pa
+
+reach_increment 3 
 
 end_of_model              
                       --------------------------------------------------------
@@ -2891,6 +2927,8 @@ z(t,al) = 1/2 mu + 1/2 pa
 
 2 1.                       | 2 species on A, 1 site per formula unit.
 z(a,k) = 1 mu + 1 cel + 1 fcel
+
+reach_increment 3 
 
 end_of_model               
                       --------------------------------------------------------
@@ -3697,6 +3735,8 @@ end_excess_function
 2 1.                       | 2 species, 1 sites per formula unit.
 z(na) = 1 ne
 
+reach_increment 3 
+
 end_of_model               
                       --------------------------------------------------------
 begin_model                
@@ -3797,6 +3837,7 @@ end_of_model
                       --------------------------------------------------------
 begin_model                
                                       hp '98 quaternary garnet model
+                                    
 
 Gt(HP) 
 2                                     model type: Margules, endmember fractions.                                                                               
@@ -7379,7 +7420,61 @@ end_excess_function
 2 1.                                  2 species, site multiplicity = 1.
 z(Fe) = 1 iron
 
-reach_increment  0
+reach_increment 3
 
 end_of_model               
-                      --------------------------------------------------------
+                            --------------------------------------------------------
+begin_model
+                            | Entered by Jeff Marsh, Jan 10, 2012. 
+
+ZrRu                        | zr in rutile after Tomkins et al., 07
+2                           | model type 2
+2                           | number of endmembers
+zrru  ru
+
+0 0                         | endmember flags
+
+0 0.4 0.1 0                 | range and resolution of ru
+
+begin_excess_function
+w(ru zrru)   10000  0  0
+end_excess_function 
+
+1                            | 1 site configurational entropy model
+2 1.                         | 2 species, site multiplicity = 1.
+z(Ti) = 1 ru
+
+end_of_model
+                      --------------------------------------------------------  
+begin_model
+                             | Entered by Jeff Marsh, Jan 10, 2012. 
+ZrGt(KP)                     | addition of Ca3Al2[Si2Zr]O12 end-mem after Kelsey & Powell ‘11
+2                            | model type: Margules, endmember fractions.   
+                                                                            
+4                            | number of endmembers 
+
+zrg     alm      py     gr   | endmember names 
+
+  0  0  0  0                 | endmember flags 
+
+0. 0.1  0.1 1                | imod = 0 -> cartesian subdivision
+0. 1.   0.1 0                | imod = 0 -> cartesian subdivision
+0. 1.   0.1 0                | imod = 0 -> cartesian subdivision
+
+
+begin_excess_function
+w(py gr)  45000. 0. 0.  
+w(alm py)  2500.  0. 0.              
+w(alm gr)  10000. 0. 0.
+end_excess_function  
+
+2                                     2 site entropy model
+3 3.                                  3 species, site multiplicity 3
+z(Fe) = 1 alm
+z(Mg) = 1 py
+
+2 2.                                  |2 species, site multiplicity 2
+z(Zr) = 1 zrg
+
+end_of_model     
+                      --------------------------------------------------------  

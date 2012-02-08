@@ -125,7 +125,7 @@ c-----------------------------------------------------------------------
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,
      *        jstot,kstot
       common/ cst108 /wg(m1,m3),xmn(mst,msp),xmx(mst,msp),xnc(mst,msp),
-     *      iend(m4),isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),
+     *      reach,iend(m4),isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),
      *      isp(mst),isite,iterm,iord,istot,jstot,kstot
 
       integer jsmod
@@ -1138,25 +1138,25 @@ c                                 test file format
             cycle 
 
          end do 
- 
+
+         do 
 c                                 read candidates:
-110      call rmodel (blah,bad)
+            call rmodel (blah,bad)
 c                                 istot = 0 = eof
-         if (.not.bad.and.istot.ne.0) then 
+            if (bad.or.istot.eq.0) exit 
 c                                 don't allow fluid models if 
 c                                 the system is fluid saturated:
-            if (jsmod.eq.0.and.ifyn.eq.1) goto 110
+            if (jsmod.eq.0.and.ifyn.eq.1) cycle
 c                                 check for endmembers:
             call cmodel (im,idsol,blah,1,b1,b2,first)
-            if (jstot.eq.0) goto 110
+            if (jstot.eq.0) cycle
       
             ict = ict + 1
             if (ict.gt.i9) call error (24,r,i9,'build')
 
             tname(ict) = blah 
 
-            goto 110
-         end if 
+         end do 
 c                                 we have the list, ask user for choices
          if (ict.eq.0) then
  

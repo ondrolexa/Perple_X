@@ -214,11 +214,20 @@ ma_dqf = 1 ma
 kho = 1 py - 1 gr + 1 andr
       40d3 0 0  
                                 | Make definitions for the White et al (JMG, 2000) ilmenite, Ilm(WHP), JADC, 10/29/11.
-| oilm = 1 ilm_nol 
-|      -13608 9.426 0 
+oilm = 1 ilm_nol 
+      -13608 9.426 0 
                                   
-| dilm = 1 ilm_nol  
-|        1993  -2.1 0
+dilm = 1 ilm_nol  
+         1993  -2.1 0
+                                | Make definitions for Kelsey & Powell (JMG, 2011) Zr melting relations. JADC, 2/6/12
+zr8L = 2 zrc                    | Zr-melt endmember
+       69e3 0 0 
+
+zrg  = 1 gr + 3 zrc - 6 q       | Zr garnet endmember
+       96e3 0.165e3 2.7
+
+zrru = 1 bdy                    | Zr rutile endmember
+       52.84e3 -0.01829e3 -0.074
          
 end_makes 
                                                                                                                                             

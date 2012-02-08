@@ -17,7 +17,7 @@ c----------------------------------------------------------------------
 	implicit none
 
       write (*,'(/,a)') 
-     *      'Perple_X version 6.6.7, source updated February 3, 2012.'
+     *      'Perple_X version 6.6.7, source updated February 8, 2012.'
 
       end
 
@@ -1585,8 +1585,6 @@ c---------------------------------------------------------------------
          write (*,40) int, char
       else if (ier.eq.41) then
          write (*,41) int, char
-      else if (ier.eq.42) then
-         write (*,42)
       else if (ier.eq.43) then
          write (*,43) char
       else if (ier.eq.44) then 
@@ -1796,15 +1794,6 @@ c---------------------------------------------------------------------
      *        'increase dimension k13 (',i7,')  Routine: ',a)
 41    format (/,'**error ver041** too many pseudocompounds, ',
      *        'increase dimension k1 (',i7,') Routine: ',a)
-42    format (/,'**error ver042** optimization failed most probably ',
-     *          'because the requested',/,'compositional resolution ',
-     *          'is too high, or possibly because the phases of the',/,
-     *          'system do not span the specified bulk composition.',/,
-     *          'In the 1st case: reduce the requested resolution,',
-     *          'e.g. via the final_resolution',/,'initial_resolution ',
-     *          'and auto_refine_factor_I  keywords.',/,
-     *          'In the 2nd case:rm  ',
-     *          'change the bulk composition or add phases.',/)
 43    format (/,'**error ver043** you cannot simultaneously treat: ',
      *          a,/,'as a thermodynamic solution and as a saturated',
      *          ' phase.',/)
@@ -2263,12 +2252,12 @@ c---------------------------------------------------------------------
 41    format (/,'**warning ver041** icky pseudocompound names'
      *       ,' for solution model: ',a,/,'refer to pseudocompound_'
      *       ,'glossary.dat file for pseudocompound definitions.',/)
-42    format (/,'**warning ver042** optimization failed most probably ',
+42    format (/,'**warning ver042** an optimization failed, probably ',
      *          'because the requested',/,'compositional resolution ',
      *          'is too high, or possibly because the phases of the',/,
-     *          'system do not span the specified bulk composition.',/,
-     *          'In the 1st case, reduce the requested resolution,',
-     *          'e.g. via the iteration keyword.',/,'In the 2nd case, ',
+     *          'system do not span the specified bulk composition.',//,
+     *          4x,'In the 1st case: increase final_resolution ',
+     *          'in perplex_option.dat.',/,4x,'In the 2nd case: ',
      *          'change the bulk composition or add phases.',/)
 43    format (/,'**warning ver043** ',i2,' solutions referenced ',
      *          'in your input',/,'were not found in the solution ',

@@ -2085,7 +2085,7 @@ c              expand  q  by adding a unit row and column.
 
                   if (nfree.gt.ldq) then 
 c                                 dec 07 bug? JADC
-                     call warn (999,zero,nfree,'NLIB')
+c                    call warn (999,zero,nfree,'NLIB')
                      fail = .true.
                      return
                   end if 
