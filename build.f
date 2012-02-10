@@ -121,7 +121,7 @@ c-----------------------------------------------------------------------
       character cmpnt*5, dname*80
       common/ csta5 /cl(k0),cmpnt(k0),dname
 
-      double precision wg,xmn,xmx,xnc
+      double precision wg,xmn,xmx,xnc,reach
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,
      *        jstot,kstot
       common/ cst108 /wg(m1,m3),xmn(mst,msp),xmx(mst,msp),xnc(mst,msp),

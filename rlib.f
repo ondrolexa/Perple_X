@@ -10906,7 +10906,7 @@ c                              close solution model file
 1000  format (/,'the following solution models will be considered:',/)
 1010  format (7(2x,a10))
 1020  format (/,'Of the requested solution models:',/)
-1030  format (9x,'a reach_increment of ',i2,' is specified for ',a,/)
+1030  format (9x,'a reach_increment of ',i2,' is specified for ',a)
 1040  format (/,'no models will be considered.',/)
 1060  format (/,'Solution: ',a,/,12x,'Endmember fractions:',
      *        /,12x,20(a,1x))

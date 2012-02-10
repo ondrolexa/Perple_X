@@ -138,11 +138,11 @@ c                                 to use the data
 c                                 set cycle dependent parameters
             if (refine.and.lopt(9)) then 
 c                                 solvus tolerance 
-               nopt(8) = nopt(13)/nopt(17)
+               nopt(8) = 1.5d0*nopt(13)/nopt(17)
 
             else if (lopt(9)) then 
 
-               nopt(8) = nopt(13)
+               nopt(8) = 1.5d0*nopt(13)
 
             end if
 

@@ -990,12 +990,8 @@ c                                figure out how many solutions
 c                                are present:
 10    np = 0
       ncpd = 0
-c                                set solvus tolerance, avrger (was 1.5)
-      if (lopt(9)) then 
-         soltol = 1.5d0*nopt(8)
-      else 
-         soltol = nopt(8)
-      end if 
+c                                solvus_tolerance
+      soltol = nopt(8)
 
       do 30 i = 1, ntot
          if (nkp(i).lt.0) then
@@ -1872,14 +1868,8 @@ c----------------------------------------------------------------------
       inc = istct - 1
       is1 = isoct + 1 
       quit = .true.
-c                                 solvus tolerance, yclos1, was 5
-      if (lopt(9)) then
-c                                 auto 
-         soltol = 4d0*nopt(8)
-      else 
-c                                 twice initial_resolution.
-         soltol = 2d0*nopt(13)
-      end if 
+c                                 solvus_tolerance_II, 0.25
+      soltol = nopt(25)
 
       do i = 1, jphct
 

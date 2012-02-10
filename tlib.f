@@ -17,7 +17,7 @@ c----------------------------------------------------------------------
 	implicit none
 
       write (*,'(/,a)') 
-     *      'Perple_X version 6.6.7, source updated February 8, 2012.'
+     *      'Perple_X version 6.6.7, source updated February 10, 2012.'
 
       end
 
@@ -146,24 +146,24 @@ c                                 tolerance below which a component is considere
 c                                 be zero during fractionation
       nopt(11) = 1d-6
 c                                 iteration keyword 1
-      nopt(21) = 2d0
+      nopt(21) = 3d0
 c                                 iteration keyword 2
 c                                 max number of points to 
 c                                 be refined in addition to 
 c                                 active points
       iopt(12) = 4
 c                                 final resolution 
-      nopt(22) = 1d-3
+      nopt(22) = 2.5d-4
 c                                 global reach factor
-      nopt(23) = 0d0                             
+      nopt(23) = 0d0
+c                                 solvus_tolerance_II
+      nopt(25) = 0.25d0                             
 c                                 
 c                                 quench temperature (K)
       nopt(12) = 0d0
 c                                 initial resolution for adaptive 
 c                                 refinement
-      nopt(13) = 0.1d0
-c                                 solvus_tolerance keyword
-      nopt(8) = nopt(13)
+      nopt(13) = 0.067d0
 c                                 perturbation to eliminate pseudocompound
 c                                 degeneracies
       nopt(15) = 5d-3
@@ -328,6 +328,10 @@ c                                 bad number key
                lopt(9) = .false.
                read (strg,*) nopt(8)
             end if 
+
+         else if (key.eq.'solvus_tolerance_II') then 
+
+            read (strg,*) nopt(25)
 
          else if (key.eq.'speciation_tolerance') then 
 
@@ -715,9 +719,7 @@ c                                 auto-refine factor I
          nopt(17) = 2d0
          write (*,1070) nopt(17)
 
-      end if 
-c                                 solvus tolerance
-      if (lopt(9)) nopt(8) = nopt(13)     
+      end if   
 c                                 grid parameters
       do i = 1, 2
 
@@ -966,8 +968,8 @@ c                                 iopt(6) is automatically off
 c                                 for meemum             
             if (iopt(6).ne.0) write (n,1170) nopt(17)
 c                                 adaptive optimization
-            write (n,1180) nopt(22),int(nopt(21)),
-     *                     iopt(12),int(nopt(23)),nopt(9),nopt(11)
+            write (n,1180) nopt(22),int(nopt(21)),iopt(12),
+     *                     nopt(25),int(nopt(23)),nopt(9),nopt(11)
 c                                 gridding parameters
             if (iam.eq.1.and.icopt.eq.5.and.oned) then
 c                                 1d multilevel grid
@@ -1120,12 +1122,13 @@ c                                 thermo options for frendly
      *        4x,'short_print_file       ',a3,8x,'[on] off')
 1170  format (4x,'auto_refine_factor_I   ',f4.1,7x,'>=1 [3]')
 1180  format (/,2x,'Free energy minimization options:',//,
-     *        4x,'final_resolution       ',e7.1,4x,
-     *           '[1e-3], requested value, see actual values below',/,
+     *        4x,'final_resolution       ',g8.2,3x,
+     *           '[2.5e-4], requested value, see actual values below',/,
      *        4x,'resolution factor      ',i2,9x,
-     *           '>2 [2]; iteration keyword value 1',/,
+     *           '>2 [3]; iteration keyword value 1',/,
      *        4x,'refinement points      ',i2,9x,
      *           '1->7 [4]; iteration keyword value 2',/,
+     *        4x,'solvus_tolerance_II    ',f4.2,7x,'0->1 [0.25]',/,
      *        4x,'global_reach_increment ',i2,9x,'>= 0 [0]',/,
      *        4x,'zero_mode              ',e7.1,4x,
      *           '0->1 [1e-6]; < 0 => off',/,
