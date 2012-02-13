@@ -2010,7 +2010,7 @@ c                                 murnaghan or bm3:
 c                                 convert b6 back to K(Tr)
             b6 = b6 - b7*tr
  
-         else if (b8.le.-3d0.and.b6.ne.0d0) then 
+         else if (b8.le.-3d0.and.b6.eq.0d0) then 
 c                                 ghirso, do nothing.
 
          else 

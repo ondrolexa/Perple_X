@@ -1066,8 +1066,8 @@ c                                 meemum or autorefine off
      *      '    Keyword:               Value:     Permitted values ',
      *          '[default]:')
 1010  format (/,2x,'Solution subdivision options:',//,
-     *        4x,'initial_resolution     ',f4.2,7x,
-     *           '0->1 [0.1], 0 => off',/,
+     *        4x,'initial_resolution     ',f5.3,6x,
+     *           '0->1 [0.067], 0 => off',/,
      *        4x,'stretch_factor         ',f5.3,6x,'>0 [0.0164]',/,
      *        4x,'subdivision_override   ',a3,8x,'[off] lin str',/,
      *        4x,'hard_limits            ',a3,8x,'[off] on')
