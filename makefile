@@ -1,5 +1,5 @@
 #
-# makefile for Perple_X 6.6.6
+# makefile for Perple_X 6.6.7
 #
 # To compile the Perple_X programs with this file first edit the compiler
 # variables so that they are consistent with the fortran installation on 
@@ -8,7 +8,7 @@
 #                             make <target>
 #
 # where target can be one or more of the programs you want compiled, e.g.,
-# "make actcor build fluids ctransf frendly meemum pstable pspts psvdraw pssect pt2curvvertex werami"
+# "make actcor build fluids ctransf frendly meemum pstable pspts psvdraw pssect pt2curv vertex werami"
 # will make the most commonly used programs. 
 #
 #
@@ -17,7 +17,7 @@
 # report this as an error, in which case edit the source file and add a blank line
 # at the end of the file.
 #
-# JADC, Jan 19, 2008    
+# JADC, Feb 18, 2012    
 # 
 ##################### COMPILER VARIABLES ####################################  
 #                   
@@ -63,8 +63,8 @@ hptover: hptover.o
 htog: htog.o
 	$(COMP77) $(FFLAGS) $@.o -o $@
 
-meemum: meemum.o tlib.o rlib.o flib.o nlib.o clib.o resub.o olib.o
-	$(COMP77) $(FFLAGS) meemum.o tlib.o rlib.o flib.o nlib.o clib.o resub.o olib.o -o $@   
+meemum: meemum.o 
+	$(COMP77) $(FFLAGS) meemum.o -o $@   
 
 pstable: pstable.o pslib.o pscom.o  tlib.o cont_lib.o 
 	$(COMP77) $(FFLAGS) $@.o pslib.o pscom.o  tlib.o cont_lib.o -o $@
@@ -84,8 +84,8 @@ pt2curv: pt2curv.o tlib.o
 vertex: vertex.o 
 	$(COMP77) $(FFLAGS) vertex.o -o $@
 
-werami: reader.o  tlib.o rlib.o flib.o clib.o  dlib.o olib.o 
-	$(COMP77) $(FFLAGS) reader.o tlib.o rlib.o flib.o clib.o dlib.o olib.o -o $@
+werami: werami.o 
+	$(COMP77) $(FFLAGS) werami.o -o $@
 
 # targets missing from '07:
 #rk: rk.o flib.o tlib.o
@@ -132,16 +132,17 @@ pstable.o: pstable.f
 	$(COMP77) $(FFLAGS) -c pstable.f
 
 # NEXT LINE MODIFIED BY pappel (PA@MIN.UNI-KIEL.DE) 2010SEPT08: CHANGED ptcurv.o TO pt2curv.o	
+
 pt2curv.o: pt2curv.f
 	$(COMP77) $(FFLAGS) -c pt2curv.f
 rk.o: rk.f
 	$(COMP77) $(FFLAGS) -c rk.f
-resub.o: resub.f
-	$(COMP77) $(FFLAGS) -c resub.f
 meemum.o: meemum.f
 	$(COMP77) $(FFLAGS) -c meemum.f
 vertex.o: vertex.f
 	$(COMP77) $(FFLAGS) -c vertex.f
+werami.o: werami.f
+	$(COMP77) $(FFLAGS) -c werami.f
 clib.o: clib.f
 	$(COMP77) $(FFLAGS) -c clib.f
 dlib.o: dlib.f
@@ -158,11 +159,6 @@ tlib.o: tlib.f
 	$(COMP77) $(FFLAGS) -c tlib.f
 olib.o: olib.f
 	$(COMP77) $(FFLAGS) -c olib.f
-
-# added by PAPPEL 2010Sept8
-reader.o: reader.f
-	$(COMP77) $(FFLAGS) -c reader.f
-
 
 # WFM 2007Sep05
 .c.o:

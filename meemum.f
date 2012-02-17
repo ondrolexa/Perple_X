@@ -1,3 +1,11 @@
+      include 'nlib.f'
+      include 'olib.f'
+      include 'clib.f'
+      include 'resub.f'
+      include 'rlib.f'
+      include 'tlib.f'
+      include 'flib.f'
+
       program meemm       
 c----------------------------------------------------------------------
       implicit none
