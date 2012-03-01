@@ -17,8 +17,8 @@ c----------------------------------------------------------------------
       common/ cst228 /prject,tfname
 
       integer ix,iy,mvar
-      double precision z,zt 
-      common/ dim   /z(nx,ny),zt(nx,ny),ix,iy,mvar
+      double precision z
+      common/ dim   /z(nx,ny),ix,iy,mvar
 
       integer jvar
       double precision var,dvr,vmn,vmx
@@ -162,7 +162,8 @@ c---------------------------------------------------------------------
 
       integer ix,iy,mvar
       double precision z,zt 
-      common/ dim   /z(nx,ny),zt(nx,ny),ix,iy,mvar
+      common/ dim   /z(nx,ny),ix,iy,mvar
+      common/ dim1  /zt(nx,ny)
 
       integer inv
       character dname*14, title*162

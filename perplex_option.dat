@@ -40,7 +40,7 @@ proportions           vol   | vol or wt; phase proportions
 pseudocompound_file    F    | echo static pseudocompound compositions to my_project_pseudocompound_list.txt
 reaction_format    minimum  | minimum, full, stoich, S+V, or everything
 reaction_list         off   | on or off
-seismic_output        some  | all, some, none
+seismic_output        all  | all, some, none
 short_print            on   | on or off
 site_check              T   | T[rue] or F[alse], T=> reject solution compositions with negative site fractions
 solvus_tolerance      auto  | auto or 0->1 [0.05] should be > initial_resolution/auto_refine_factor

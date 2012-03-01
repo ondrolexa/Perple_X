@@ -163,13 +163,13 @@ c                                 print summary to LUN 6
     
       subroutine iniprp
 c----------------------------------------------------------------------
-c iniprp - read data files and initialization for mingee
+c iniprp - read data files and initialization for meemum
 c----------------------------------------------------------------------
       implicit none
 
       include 'perplex_parameters.h'
 
-      logical first, output, vertex 
+      logical first, output 
 
       integer iopt
       logical lopt
@@ -183,7 +183,6 @@ c----------------------------------------------------------------------
 c----------------------------------------------------------------------- 
       first = .true.
       output = .false.
-      vertex = .true.
 c                                 elastic modulii flag
       kmod = 0 
 c                                 -------------------------------------------

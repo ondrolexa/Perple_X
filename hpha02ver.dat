@@ -76,25 +76,30 @@ begin_makes
                                 | q8L = 4 qL 
                                 | will function, but qL will not be considered as a possible phase in 
                                 | the vertex calculation. 
- 
- |                                kyco silica buffer
- | kyco = 1 ky - 1 cor
- | 0 0 0 
 
- |                                sphene + cc + ru + q CO2 buffer
- | tcrq = 1 cc + 1 ru + 1 q - 1 sph
- | 0. 0. 0. 
+ 
+
+|                                kyco silica buffer
+| kyco = 1 ky - 1 cor
+| 0 0 0 
+
+|                                sphene + cc + ru + q CO2 buffer
+| tcrq = 1 cc + 1 ru + 1 q - 1 sph
+| 0. 0. 0. 
+
 
                                 | Ti phengite endmember for Auzanneau et al. (CMP 159:1-24, 2010) mica model
                                 | Gdqf corrected from -482876. to -13469.8 J/mol, D. Dolejs, Mar 6, 2010.
  | tip = 1 fcel + 1 geik - 1/2 fs
- | -13469.8  -14.694 .84
-                                                
- | mthm = 6 hem - 4 mt             | mthm O2 buffer
- | 0 0 0                        
+ | -482876.  -14.694 .84
 
- | qfm = 2 mt + 3 q  -3 fa         | qfm O2 buffer
- | 0 0 0                        
+                                                                                                                           
+
+mthm = 6 hem - 4 mt             | mthm O2 buffer
+0 0 0                        
+
+qfm = 2 mt + 3 q  -3 fa         | qfm O2 buffer
+0 0 0                        
 
  |emog = -1 fo - 2 gph + 1 mag + 1/2 en | EMOG O2 buffer
  |0 0 0 
@@ -105,17 +110,19 @@ begin_makes
  |fff = 2 fa - 2 iron - 1 fs         | iron fa fs O2 buffer
  |0 0 0 
 
-tbi = 1 phl - 1 fo + 1 ru - 1 q | Ti-biotite endmember for TiBio(HP) model
- 45e3 0 0 
 
- | tbi1 = 1 phl - 1 br + 1 ru      | Ti-biotite endmember for TiBio(WPH) model
- | 78e3 0 0                        | L Tajcamanova, 5/11/2006.
+
+ |tbi = 1 phl - 1 fo + 1 ru - 1 q | Ti-biotite endmember for TiBio(HP) model
+ |45e3 0 0 
+
+tbi1 = 1 phl - 1 br + 1 ru      | Ti-biotite endmember for TiBio(WPH) model
+78e3 0 0                        | L Tajcamanova, 5/11/2006.
                                 
 
 
- | fbi = 1 east - 1/2 cor + 1/2 hem  | Fe3+-biotite endmember for TiBio(WPH) model, definition corrected for
- |                                   | presumed typo in the WPH (JMG, 2007) paper by L Tajcamanova, 5/11/2007.
- | 13.45e3 0 0                       | fbi = 1 east - 1/2 cor + 1 hem, 8/10/2007, L Tajcamanova                     
+fbi = 1 east - 1/2 cor + 1/2 hem  | Fe3+-biotite endmember for TiBio(WPH) model, definition corrected for
+                                  | presumed typo in the WPH (JMG, 2007) paper by L Tajcamanova, 5/11/2007.
+13.45e3 0 0                       | fbi = 1 east - 1/2 cor + 1 hem, 8/10/2007, L Tajcamanova                     
 
 
                                 | Fe endmembers for ultramafic mineral solution
@@ -164,10 +171,10 @@ mrb = 1 gl - 2 jd +2 acm        | magnesio riebekite, stoichiometry corrected 3/
 8d3 0. 0. 
 ts_dqf = 1 ts                   | tschermakite
 10000. 0. 0.  
-parg_dqf = 1 parg               | pargasite, Corrected from 10 kJ, 10/14/11, JADC
+parg_dqf = 1 parg               | pargasite
+10000. 0. 0.
+gl_dqf = 1 gl                   | glaucophane
 15000. 0. 0.
-gl_dqf = 1 gl                   | glaucophane, Corrected from 15 kJ, 10/14/11, MJC
-3000. 0. 0.
 mpa = 1 parg -1 tr +1 anth      | ortho-pargasite, stoichiometry corrected 3/30/08 JADC
 27d3 0. 0.
 ged_dqf = 1 ged                 | gedrite 
@@ -178,49 +185,20 @@ fanth_dq = 1 fanth              | ferro-anthophyllite
 7000. 0. 0.
 omrb_dqf = 1 gl -2 jd +2 acm    | ortho-magnesio riebekite (mrb dqf + 25000 J/mol), stoichiometry corrected 3/30/08 JADC
 33000. 0. 0. 
-                                | Make definitions for the revised (Diener et al, JMG 2011 25:631-656)
-                                | ortho-amphibole model.   Oct 31, 2011.
-mpa2      = 1 parg - 1 tr +1 anth 
-25d3 0. 0.
-ged_dqf2  = 1 ged
-20000. 0. 0.                            
                                 | make definition for coma of the unpublished
                                 | thermocalc scapolite model
 coma = 3 ab + 1 cc
 25000. 0. 0. 
                                 | titano-clinohumite to fit weiss experiments. JADC, 2/08.
- | tichum = 4 fo + 1/2 br + 1/2 ru
- | -33581. 32. 0.
+tichum = 4 fo + 1/2 br + 1/2 ru
+-33581. 32. 0.
 
-tbit = 1 phl - 1 br + 1 ru     |Ti-Fe3+ Biotite after Tajcmanova et al. (2009)
+tbit = 1 phl - 1 br + 1 ru     |Ti-Fe3+ Biotite after Tajcmanova et al. (in review)
 84e3 -11.5 0                   |Model entered by Lucie Tajcmanova, September, 2008.
 
-fbit = 1 east - 1/2 cor + 1/2 hem  |Ti-Fe3+ Biotite after Tajcmanova et al. (2009)
+fbit = 1 east - 1/2 cor + 1/2 hem  |Ti-Fe3+ Biotite after Tajcmanova et al. (in review)
 6e3 0 0     
        
-                               | Make definitions for the Smye et al (JMG, 2011, 28:753-768)
-                               | models for Mica, Carpholite and Chloritoid, to use these 
-                               | make definitions delete the leading "|" comment characters:
-ocar  = 1 fcar + 1/2 hem - 1/2 cor
-      45d3 0 0 
-mncar = 1 mcar + 1 mang - 1 per | corrected from 1 mcar + 1 mang - 1/2 cor, G Hoschek, 10/24/11.
-      30d3 0 0 
-octd = 1 fctd + 1/4 hem - 1/4 cor
-      125d2 0 0 
-fmu = 1 mu + 1/2 hem - 1/2 cor
-      30d3 0 0                  | corrected from -30 kJ/mol, G Hoschek, 10/24/11.
-ma_dqf = 1 ma
-      3d3 0 0
-                                | Make definition for the White et al (JMG, 2005) garnet, Gt(WPPH), JADC, 10/24/11.
-kho = 1 py - 1 gr + 1 andr
-      40d3 0 0  
-                                | Make definitions for the White et al (JMG, 2000) ilmenite, Ilm(WHP), JADC, 10/29/11.
-oilm = 1 ilm_nol 
-      -13608 9.426 0 
-                                  
-dilm = 1 ilm_nol  
-        1993  -2.1 0 
-                                  
 end_makes 
                                                                                                                                             
 th pdata produced at 16.35 on Wed 13 Feb,2002 (with sigma fit =  1.089)                                                                     
@@ -1412,16 +1390,27 @@ transition = 1 type = 4 t1  = 2300 t2  = 11 t3  = .5E-1
 end
 
  
-q        EoS = 2 | H= -910840.                                                                    
+qalpha        EoS = 2 | H= -910840.                                                                    
 SIO2(1)
 G0 = -856424.6 S0 = 41.5 V0 = 2.2688  
 c1 = 110.7 c2 = -.5189E-2 c5 = -1128.3  
 b1 = .65E-5 b5 = -.65E-4 b6 = 750000 b7 = -112.5 b8 = 4  
-m0= 448538.0025 m1= 1.645295858 m2= 3.107635949 k0= 388654.6662 k1= 8.16916871 k2= 404.1642852 | qz
+m0= 448538.0025 m1= 1.645295858 m2= -17.5543599 k0= 388654.6662 k1= 8.16916871 k2= -140.8008372 | qz
 transition = 1 type = 4 t1  = 847 t2  = 4.95 t3  = .1188  
 end
 
  
+
+qbeta        EoS = 2 | H= -910840.   | faked beta quartz, same properties as quartz except for the seismic velocities.
+SIO2(1)
+G0 = -856324.6 S0 = 41.681 V0 = 2.2733
+c1 = 110.7 c2 = -.5189E-2 c5 = -1128.3
+b1 = .65E-5 b5 = -.65E-4 b6 = 750000 b7 = -112.5 b8 = 4
+m0= 361913 m1= 1.6 m2= 91.2 k0= 114564 k1= 3.64 k2= 854 | qz
+transition = 1 type = 4 t1  = 847 t2  = 4.95 t3  = .1188
+end
+
+
 trd      EoS = 2 | H= -906690.                                                                    
 SIO2(1)
 G0 = -853646.1 S0 = 46.1 V0 = 2.7  

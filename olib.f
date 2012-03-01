@@ -913,6 +913,9 @@ c                                 stixrudes EoS for the adiabatic
 c                                 shear modulus is implicit (cst323)
          g = ginc(0d0,0d0,-id)
          mu = smu
+c                                 set ks = 0 in case implicit 
+c                                 bulk modulus is T.
+         ks = 0d0
 c                                 temperature derivative
          g = ginc(dt,0d0,-id)
          mu2 = smu

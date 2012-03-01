@@ -32,7 +32,8 @@ C----------------------------------------------------------------
 
       integer ix,iy,mvar
       double precision z,zt 
-      common/ dim   /z(nx,ny),zt(nx,ny),ix,iy,mvar
+      common/ dim   /z(nx,ny),ix,iy,mvar
+      common/ dim1  /zt(nx,ny)
 
       double precision zmin,zmax
       common/ stuff /zmax,zmin
@@ -187,7 +188,9 @@ c------------------------------------------------------------------------
 
       integer ix,iy,mvar
       double precision z,zt 
-      common/ dim   /z(nx,ny),zt(nx,ny),ix,iy,mvar
+      common/ dim   /z(nx,ny),ix,iy,mvar
+      common/ dim1  /zt(nx,ny)
+
 
       dx = (xmax - xmin) / float(ix -1)
       dy = (ymax - ymin) / float(iy -1)

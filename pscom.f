@@ -756,8 +756,8 @@ c----------------------------------------------------------------------
       common/ cst76 /inv(i11),dname(i11),title
 
       integer ix,iy,mvar
-      double precision z,zt 
-      common/ dim   /z(nx,ny),zt(nx,ny),ix,iy,mvar
+      double precision z
+      common/ dim   /z(nx,ny),ix,iy,mvar
 
       integer iopt
       logical lopt
@@ -1254,8 +1254,8 @@ c----------------------------------------------------------------------
       double precision row(*)
 
       integer ix,iy,mvar
-      double precision z,zt 
-      common/ dim   /z(nx,ny),zt(nx,ny),ix,iy,mvar
+      double precision z
+      common/ dim   /z(nx,ny),ix,iy,mvar
 
       save warn1
       data warn1/.true./
