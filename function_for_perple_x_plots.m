@@ -1,6 +1,12 @@
 function [] = function_for_perple_x_plots (x,y,a,xname,yname,zname,nvar,mvar,nrow,dnames,titl)
-%Generic function to make 2- and 3-d plots from Perple_X tab format files
+% Generic function to make 2- and 3-d plots from Perple_X tab format files.
+%                                               JADC, 5/2011.
+%                                                                
+% Modifications:
 %
+%   3-d surface options moved to allow vector export of contour plots. square
+%   axes applied to all plots. 
+%                                               Philippe Goncalves, 2/2012. 
 
 figure(1);
 
@@ -23,18 +29,19 @@ if nvar == 1 % two cases: 1d - table -> 2d plot
     
     for i = 1:jvar,plot(a(kvar,1:nrow),a(dvar(i),1:nrow)),end
     
-    legend(dnames{1}{dvar},'Location','Best');axis tight;xlabel(xname);title(titl);
+    legend(dnames{1}{dvar},'Location','Best'); axis square; axis tight; xlabel(xname); title(titl);
     
 elseif nvar == 2 % 2d - table -> 2/3d plot
     
-    amin = min(a(:)); amax = max(a(:));
+    amin = min(a(:)); amax = max(a(:)); disp(['Grid data range is ',num2str(amin),' - >',num2str(amax)])
     
-    choice = questdlg([zname,'range is ',num2str(amin),'->',num2str(amax) '. Select plot style:'],'Plot Style','3D Surface','Auto-Contour','Contour','3D Surface');
+    choice = questdlg('Select plot style','Plot Style','3D Surface','Auto-Contour','Contour','3D Surface');
     
     switch choice;
         
         case '3D Surface';
-            surf(x,y,a); d2 = 0;
+            surf(x,y,a); d2 = 0; light; shading interp; lighting gouraud; zlabel(zname); 
+            %colorbar; %uncomment for colorbar
         case 'Auto-Contour';
             [C,h]=contour(x,y,a); clabel(C,h); d2 = 1;
         case 'Contour';
@@ -54,13 +61,11 @@ elseif nvar == 2 % 2d - table -> 2/3d plot
         if strcmp(titl,' ')
             titl = zname;
         else
-            titl = [deblank(titl) ', ' zname];
+            titl = [titl ', ' zname];
         end
     end
     
-    light;shading interp;lighting gouraud;axis tight;xlabel(xname);ylabel(yname);zlabel(zname);title(titl);
-    
-    %colorbar; %uncomment for colorbar
+    axis square; axis tight; xlabel(xname); ylabel(yname); title(titl);
     
 end
 

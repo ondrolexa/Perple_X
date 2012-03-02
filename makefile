@@ -31,10 +31,10 @@ COMP77 = gfortran
 FFLAGS = -C -O3 
 
 # WFM Added 2007Sep05
-# MYOBJ = actcor build fluids ctransf frendly hptover htog meemum pstable pspts psvdraw pssect pt2curv vertex werami
+# MYOBJ = actcor build fluids ctransf frendly htog meemum pstable pspts psvdraw pssect pt2curv vertex werami
 
 # PAPPEL 2010SEPT08: for 6.6.0
-MYOBJ = actcor build fluids ctransf frendly hptover htog meemum pstable  pspts psvdraw pssect pt2curv  vertex werami
+MYOBJ = actcor build fluids ctransf frendly htog meemum pstable pspts psvdraw pssect pt2curv vertex werami
 
 all:  $(MYOBJ)
 
@@ -57,8 +57,8 @@ ctransf: ctransf.o tlib.o
 frendly: frendly.o tlib.o rlib.o flib.o olib.o clib.o dlib.o
 	$(COMP77) $(FFLAGS) $@.o rlib.o tlib.o flib.o olib.o clib.o dlib.o -o $@
 
-hptover: hptover.o
-	$(COMP77) $(FFLAGS) $@.o -o $@
+#hptover: hptover.o
+#	$(COMP77) $(FFLAGS) $@.o -o $@
 
 htog: htog.o
 	$(COMP77) $(FFLAGS) $@.o -o $@
@@ -116,8 +116,8 @@ frendly.o: frendly.f
 	$(COMP77) $(FFLAGS) -c frendly.f
 ge0pt.o: ge0pt.f
 	$(COMP77) $(FFLAGS) -c ge0pt.f
-hptover.o: hptover.f
-	$(COMP77) $(FFLAGS) -c hptover.f
+#hptover.o: hptover.f
+#	$(COMP77) $(FFLAGS) -c hptover.f
 htog.o: htog.f
 	$(COMP77) $(FFLAGS) -c htog.f
 psect.o: psect.f
