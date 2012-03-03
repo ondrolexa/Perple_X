@@ -1,3 +1,12 @@
+
+      include 'olib.f'
+      include 'clib.f'
+      include 'dlib.f'
+      include 'rlib.f'
+      include 'tlib.f'
+      include 'flib.f'
+
+      program werami
 c       lun restrictions
 c       n8 - echo 
 c       n7 - geotherm
