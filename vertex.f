@@ -1391,7 +1391,7 @@ c-----------------------------------------------------------------------
       common/ cst203 /therdi(m8,m9),therlm(m7,m6,k9)
 
       integer ltyp,lmda,idis
-      common/ cst204 /ltyp(k1),lmda(k1),idis(k1)
+      common/ cst204 /ltyp(k10),lmda(k10),idis(k10)
 
       character*8 names
       common/ cst8 /names(k1)

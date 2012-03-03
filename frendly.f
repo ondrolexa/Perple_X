@@ -1129,7 +1129,7 @@ c---------------------------------------------------------------------
       common/ cst201 /vuf(2),vus(h5),iffr,isr
 
       integer ltyp,lmda,idis
-      common/ cst204 /ltyp(k1),lmda(k1),idis(k1)
+      common/ cst204 /ltyp(k10),lmda(k10),idis(k10)
 
       double precision cp0
       common/ cst71 /cp0(k0,k5)
@@ -1732,7 +1732,7 @@ c----------------------------------------------------------------------
       common/ cst202 /tm(m7,m6),td(m8),ilam,idiso,lamin,idsin
 
       integer ltyp,lmda,idis
-      common/ cst204 /ltyp(k1),lmda(k1),idis(k1)
+      common/ cst204 /ltyp(k10),lmda(k10),idis(k10)
 
       integer idr,ivct
       double precision vnu
