@@ -321,8 +321,8 @@ c---------------------------------------------------------------------
       common / basic /iop0
 
       integer ix,iy,mvar
-      double precision z,zt 
-      common/ dim   /z(nx,ny),zt(nx,ny),ix,iy,mvar
+      double precision z
+      common/ dim   /z(nx,ny),ix,iy,mvar
 
       integer inv
       character dname*14, title*162
