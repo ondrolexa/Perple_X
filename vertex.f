@@ -1437,12 +1437,12 @@ c                              skip fluid cpds
          if (ifp(jd).eq.1) iwrn48 = 1
 c                              create mock-entry iphct + 1 for output
 c                              initialize paramaters
-         id = k1
-         idis(k1) = 0
-         ltyp(k1) = 0
+         id = k10
+         idis(k10) = 0
+         ltyp(k10) = 0
          jdis = 0
          klam = 0
-         names(k1) = names(jd)  
+         names(k10) = names(jd)  
  
          do i = 1, k4
             thermo(i,k10) = 0d0
@@ -1473,7 +1473,7 @@ c                                 test for mughnahan EoS
 
             if (idis(kd).ne.0) then
 
-               idis(k1) = m9
+               idis(k10) = m9
                jdis = jdis + 1
                ld = idis(kd) 
 
@@ -1488,17 +1488,17 @@ c                                 test for mughnahan EoS
 
             end if
 
-            if (ltyp(k1).ne.0) then
+            if (ltyp(k10).ne.0) then
 
-               ltyp(k1) = ltyp(kd)
-               lmda(k1) = k9
+               ltyp(k10) = ltyp(kd)
+               lmda(k10) = k9
                ld = lmda(kd)
                klam = klam + 1
 
                if (ltyp(kd).eq.10) then
 
                   if (klam.gt.3) goto 91
-                  ltyp(k1) = 9 + klam
+                  ltyp(k10) = 9 + klam
                   therlm(1,klam,k9) = therlm(1,1,ld)
                   therlm(2,klam,k9) = xkd * therlm(2,1,ld)
 
