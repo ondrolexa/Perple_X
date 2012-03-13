@@ -20,10 +20,9 @@ c-----------------------------------------------------------------------
                                                          
       character*8 blank8, name, y*1, test
 
-      integer idh2o,idco2,ikind,icmpn,icout,ieos
+      integer ikind,icmpn,icout,ieos
       double precision comp,tot
-      common/ cst43 /comp(k0),tot,icout(k0),idh2o,idco2,
-     *               ikind,icmpn,ieos
+      common/ cst43 /comp(k0),tot,icout(k0),ikind,icmpn,ieos
 
       integer ic
       common/ cst42 /ic(k0)
@@ -147,10 +146,9 @@ c----------------------------------------------------------------------
       double precision ctrans
       common/ cst207 /ctrans(k0,k5),ictr(k5),itrans
 
-      integer idh2o,idco2,ikind,icmpn,icout,ieos
+      integer ikind,icmpn,icout,ieos
       double precision comp,tot
-      common/ cst43 /comp(k0),tot,icout(k0),idh2o,idco2,
-     *               ikind,icmpn,ieos
+      common/ cst43 /comp(k0),tot,icout(k0),ikind,icmpn,ieos
 
       double precision thermo,uf,us
       common/ cst1 /thermo(k4,k10),uf(2),us(h5)    

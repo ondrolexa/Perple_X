@@ -1546,10 +1546,9 @@ c----------------------------------------------------------------------
       integer icomp,istct,iphct,icp
       common/ cst6 /icomp,istct,iphct,icp
 
-      integer idh2o,idco2,ikind,icmpn,icout,ieos
+      integer ikind,icmpn,icout,ieos
       double precision comp,tot
-      common/ cst43 /comp(k0),tot,icout(k0),idh2o,idco2,
-     *               ikind,icmpn,ieos
+      common/ cst43 /comp(k0),tot,icout(k0),ikind,icmpn,ieos
 
       double precision thermo,uf,us
       common/ cst1 /thermo(k4,k10),uf(2),us(h5)    
@@ -1723,9 +1722,9 @@ c----------------------------------------------------------------------
       integer ic
       common/ cst42 /ic(k0)
 
-      integer idh2o,idco2,ikind,icmpn,icout,ieos
+      integer ikind,icmpn,icout,ieos
       double precision comp,tot
-      common/ cst43 /comp(k0),tot,icout(k0),idh2o,idco2,ikind,icmpn,ieos
+      common/ cst43 /comp(k0),tot,icout(k0),ikind,icmpn,ieos
 
       integer ilam,idiso,lamin,idsin
       double precision tm,td
@@ -1777,6 +1776,9 @@ c----------------------------------------------------------------------
 
       integer ipot,jv,iv
       common/ cst24 /ipot,jv(l2),iv(l2)
+
+      integer idspe,ispec
+      common/ cst19 /idspe(2),ispec
 
       save first, inames, mnames
       data first/.true./
@@ -1978,26 +1980,22 @@ c                                 set special flag if O2
          end if
  
          if (lopt(7)) then 
-            if (exname(1).eq.cmpnt(idh2o)) then
-               vuf(1)= vvv
-               idf(1)= iphct
+            do k = 1, ispec
+               if (exname(1).ne.cmpnt(idspe(k))) cycle 
+               vuf(k) = vvv
+               idf(k) = iphct
                ifyn = 0
-            else if (exname(1).eq.cmpnt(idco2)) then
-               vuf(2) = vvv
-               idf(2) = iphct
-               ifyn = 0
-            end if
+               exit 
+            end do 
          end if     
-c                                 get activity coefficients:
+c                                 get activity:
          if (ifyn.eq.0) then 
 
-           if (exname(1).eq.cmpnt(idh2o).or.
-     *         exname(1).eq.cmpnt(idco2)) then 
-
-              act(iphct) = 1d0
-              goto 40
-
-            end if 
+            do k = 1, ispec
+               if (exname(1).ne.cmpnt(idspe(k))) cycle 
+               act(iphct) = 1d0
+               goto 40
+            end do 
 
          end if 
 
@@ -2063,25 +2061,25 @@ c                                 compute formula weights
 c
       if (rxny.eq.'y'.or.rxny.eq.'Y') then
 c                                 check reaction stoichiometries
-55       do k= 1, k0
-            cp0(k,jj)=0d0
+55       do k = 1, k0
+            cp0(k,jj) = 0d0
          end do 
 
-         do l=1,iphct
-            do k= 1, k5
+         do l = 1,iphct
+            do k = 1, k5
                cp0(k,jj) = cp0(k,jj) + vnu(l)*cp0(k,l)
             end do 
          end do 
 
-         itic=0
+         itic = 0
          do k = 1, k0
             if (cp0(k,jj).eq.0d0) cycle
-            itic=itic+1
+            itic = itic+1
          end do 
 
          if (itic.eq.0) goto 99
  
-         do k= 1, k0
+         do k = 1, k0
             if (cp0(k,jj).eq.0d0) cycle
             write (*,2460) cp0(k,jj),cmpnt(k)
          end do 

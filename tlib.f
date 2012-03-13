@@ -17,7 +17,7 @@ c----------------------------------------------------------------------
 	implicit none
 
       write (*,'(/,a)') 
-     *      'Perple_X version 6.6.7, source updated March 7, 2012.'
+     *      'Perple_X version 6.6.7, source updated March 12, 2012.'
 
       end
 
@@ -3068,10 +3068,12 @@ c----------------------------------------------------------------------
       double precision ctrans
       common/ cst207 /ctrans(k0,k5),ictr(k5),itrans
 
-      integer idh2o,idco2,ikind,icmpn,icout,ieos
+      integer idspe,ispec
+      common/ cst19 /idspe(2),ispec
+
+      integer ikind,icmpn,icout,ieos
       double precision comp,tot
-      common/ cst43 /comp(k0),tot,icout(k0),idh2o,idco2,
-     *               ikind,icmpn,ieos
+      common/ cst43 /comp(k0),tot,icout(k0),ikind,icmpn,ieos
 c----------------------------------------------------------------------
       eof = .false.
 
@@ -3143,10 +3145,9 @@ c----------------------------------------------------------------------
 
       logical ok
 
-      integer idh2o,idco2,ikind,icmpn,icout,ieos
+      integer ikind,icmpn,icout,ieos
       double precision comp,tot
-      common/ cst43 /comp(k0),tot,icout(k0),idh2o,idco2,
-     *               ikind,icmpn,ieos
+      common/ cst43 /comp(k0),tot,icout(k0),ikind,icmpn,ieos
 
       integer ilam,idiso,lamin,idsin
       double precision tm,td
@@ -3440,10 +3441,9 @@ c----------------------------------------------------------------------
 
       logical ok
 
-      integer idh2o,idco2,ikind,icmpn,icout,ieos
+      integer ikind,icmpn,icout,ieos
       double precision comp,tot
-      common/ cst43 /comp(k0),tot,icout(k0),idh2o,idco2,
-     *               ikind,icmpn,ieos
+      common/ cst43 /comp(k0),tot,icout(k0),ikind,icmpn,ieos
 
       integer length,iblank,icom
       character chars*1
@@ -3531,10 +3531,9 @@ c----------------------------------------------------------------------
       integer icomp,istct,iphct,icp
       common/ cst6 /icomp,istct,iphct,icp
 
-      integer idh2o,idco2,ikind,icmpn,icout,ieos
+      integer ikind,icmpn,icout,ieos
       double precision comp,tot
-      common/ cst43 /comp(k0),tot,icout(k0),idh2o,idco2,
-     *               ikind,icmpn,ieos
+      common/ cst43 /comp(k0),tot,icout(k0),ikind,icmpn,ieos
 
       integer ilam,idiso,lamin,idsin
       double precision tm,td
@@ -4356,9 +4355,12 @@ c----------------------------------------------------------------------
       double precision atwt
       common/ cst45 /atwt(k0)
 
-      integer id,ikind,icmpn,icout,ieos
+      integer ikind,icmpn,icout,ieos
       double precision comp,tot
-      common/ cst43 /comp(k0),tot,icout(k0),id(2),ikind,icmpn,ieos
+      common/ cst43 /comp(k0),tot,icout(k0),ikind,icmpn,ieos
+
+      integer idspe,ispec
+      common/ cst19 /idspe(2),ispec
 c-----------------------------------------------------------------------
 c                                 recombine components:
       do 
@@ -4380,8 +4382,9 @@ c                                 to be replaced.
             if (rname.eq.cmpnt(i)) then
 c                                 matches a name, check if it's a 
 c                                 special component
-               do j = 1, 2
-                  if (i.ne.id(j)) cycle 
+               do j = 1, ispec
+
+                  if (i.ne.idspe(j)) cycle 
 c                                 matches special component id(j) 
                   if (iopt.eq.3) then
 c                                 don't allow build users 
@@ -4396,7 +4399,7 @@ c                                 component
                      write (*,1010) cmpnt(i),pname
                      read (*,'(a)') y
                      if (y.eq.'y'.or.y.eq.'Y') cycle
-                     id(j) = 0 
+                     idspe(j) = 0 
 
                   end if 
                end do 
@@ -4523,10 +4526,9 @@ c----------------------------------------------------------------------
       integer iff,idss,ifug,ifyn,isyn
       common/ cst10 /iff(2),idss(h5),ifug,ifyn,isyn
 
-      integer id,ikind,icmpn,icout,ieos
+      integer ikind,icmpn,icout,ieos
       double precision comp,tot
-      common/ cst43 /comp(k0),tot,icout(k0),id(2),
-     *               ikind,icmpn,ieos
+      common/ cst43 /comp(k0),tot,icout(k0),ikind,icmpn,ieos
   
       character vname*8, xname*8
       common/ csta2 /xname(k5),vname(l2)
@@ -4544,6 +4546,9 @@ c----------------------------------------------------------------------
       integer length,iblank,icom
       character chars*1
       common/ cst51 /length,iblank,icom,chars(240)
+
+      integer idspe,ispec
+      common/ cst19 /idspe(2),ispec
 c-----------------------------------------------------------------------
       rewind n2
 c                                 frendly or actcor is reading
@@ -4638,7 +4643,7 @@ c                                 read special components.
 
       if (key.eq.'begin_special_componen') then
 
-         ikind = 0 
+         ispec = 0 
 
          do 
  
@@ -4648,8 +4653,8 @@ c                                 read special components.
 
             do j = 1, icmpn
                if (key.eq.cmpnt(j)) then 
-                  ikind = ikind + 1
-                  id(ikind) = j
+                  ispec = ispec + 1
+                  idspe(ispec) = j
                   lopt(7) = .true.
                   exit
                end if 
@@ -4670,14 +4675,14 @@ c                                 get transformations if build or ctransf
 c                                 check special components
          if (lopt(7)) then 
             j = 0
-            do i = 1, ikind
-               if (id(i).ne.0) then
+            do i = 1, ispec
+               if (idspe(i).ne.0) then
                   j = j + 1
-                  id(j) = id(i)
+                  idspe(j) = idspe(i)
                end if
             end do 
-            ikind = j
-            if (ikind.eq.0) lopt(7) = .false.
+            ispec = j
+            if (ispec.eq.0) lopt(7) = .false.
          end if 
 
       else if (option.ne.2) then 
@@ -4721,8 +4726,8 @@ c                                 echo formatted header data for ctransf/actcor:
 
          if (lopt(7)) then 
             write (n8,'(a)') 'begin_special_components'
-            do i = 1, ikind
-               write (n8,'(a)') cmpnt(id(i))
+            do i = 1, ispec
+               write (n8,'(a)') cmpnt(idspe(i))
             end do 
             write (n8,'(a,/)') 'end_special_components'
          end if  

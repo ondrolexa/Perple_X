@@ -7,13 +7,13 @@ c----------------------------------------------------------------------
  
       include 'perplex_parameters.h'
 
+      integer i,j 
 
       character text(5)*1
 
-      integer idh2o,idco2,ikind,icmpn,icout,ieos,i,j
+      integer ikind,icmpn,icout,ieos
       double precision comp,tot
-      common/ cst43 /comp(k0),tot,icout(k0),idh2o,idco2,
-     *               ikind,icmpn,ieos
+      common/ cst43 /comp(k0),tot,icout(k0),ikind,icmpn,ieos
 
       integer icomp,istct,iphct,icp
       common/ cst6 /icomp,istct,iphct,icp
@@ -74,10 +74,9 @@ c------------------------------------------------------------------------
       double precision tm,td
       common/ cst202 /tm(m7,m6),td(m8),ilam,idiso,lamin,idsin
 
-      integer idh2o,idco2,ikind,icmpn,icout,ieos
+      integer ikind,icmpn,icout,ieos
       double precision comp,tot
-      common/ cst43 /comp(k0),tot,icout(k0),idh2o,idco2,
-     *               ikind,icmpn,ieos
+      common/ cst43 /comp(k0),tot,icout(k0),ikind,icmpn,ieos
 
       integer iemod,kmod
       logical smod,pmod
@@ -146,10 +145,9 @@ c-----------------------------------------------------------------------
       double precision ctrans
       common/ cst207 /ctrans(k0,k5),ictr(k5),itrans
 
-      integer idh2o,idco2,ikind,icmpn,icout,ieos
+      integer ikind,icmpn,icout,ieos
       double precision comp,tot
-      common/ cst43 /comp(k0),tot,icout(k0),idh2o,idco2,
-     *               ikind,icmpn,ieos
+      common/ cst43 /comp(k0),tot,icout(k0),ikind,icmpn,ieos
 
       integer iemod,kmod
       logical smod,pmod
@@ -396,10 +394,9 @@ c----------------------------------------------------------------------
       integer iff,idss,ifug,ifyn,isyn
       common/ cst10 /iff(2),idss(h5),ifug,ifyn,isyn
 
-      integer idh2o,idco2,ikind,icmpn,icout
+      integer ikind,icmpn,icout,ieos
       double precision comp,tot
-      common/ cst43 /comp(k0),tot,icout(k0),idh2o,idco2,
-     *               ikind,icmpn
+      common/ cst43 /comp(k0),tot,icout(k0),ikind,icmpn,ieos
   
       common/ cst41a /n2name
 
@@ -456,7 +453,7 @@ c                               read pointers for water and co2 cmpnt.
 c                               if data file doesn't contain water
 c                               or co2 dummy values
 c                               must be included in the file (ne. 0).
-      read (n2,*,end=90) idh2o, idco2
+      read (n2,*,end=90) idspe(1), idspe(2)
 
       v(1) = pr
       v(2) = tr

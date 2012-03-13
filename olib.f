@@ -712,8 +712,8 @@ c                                 model type
       logical lorder, lexces, llaar, lrecip
       common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
 
-      integer ispec
-      common/ cxt8 /ispec(h9,m4)
+      integer jspec
+      common/ cxt8 /jspec(h9,m4)
 c----------------------------------------------------------------------
       if (id.lt.0) then 
 
@@ -845,7 +845,7 @@ c                                 internal fluid eos
                g = g + gzero(jend(id,2+k))*y(k)
             end do 
 
-            g = g + gfluid(y(ispec(id,1)))
+            g = g + gfluid(y(jspec(id,1)))
 
          else 
 

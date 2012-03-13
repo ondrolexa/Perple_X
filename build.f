@@ -105,10 +105,9 @@ c-----------------------------------------------------------------------
       character*8 exname,afname
       common/ cst36 /exname(h8),afname(2)
 
-      integer idh2o,idco2,ikind,icmpn,icout,ieos
+      integer ikind,icmpn,icout,ieos
       double precision comp,tot
-      common/ cst43 /comp(k0),tot,icout(k0),idh2o,idco2,
-     *               ikind,icmpn,ieos
+      common/ cst43 /comp(k0),tot,icout(k0),ikind,icmpn,ieos
 
       integer ic
       common/ cst42 /ic(k0)
@@ -153,6 +152,9 @@ c-----------------------------------------------------------------------
       logical lopt
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      integer idspe,ispec
+      common/ cst19 /idspe(2),ispec
 
       data blank,fugact/' ','chem_pot','fugacity','activity'/
 
@@ -209,8 +211,6 @@ c                                 initialization:
       isoct = 0 
       iwt = 0
       jcth = 0 
-      idh2o = k5
-      idco2 = k5
       satflu = .false.
       mobflu = .false.
       first = .true. 
@@ -239,7 +239,7 @@ c                                 components of saturated phase:
          if (y.eq.'y'.or.y.eq.'Y') then
 c                                   write prompt
             write (*,2031) phase
-            write (*,1040) uname(idh2o),uname(idco2)
+            write (*,1040) (uname(idspe(i)), i = 1, ispec)
             write (*,2021)
 c                                   write blurb
             write (*,1030)
@@ -261,11 +261,13 @@ c                                 count component
                      write (*,*)
                      exit 
                   end if   
+
                else
 c                                 blank input 
                    exit 
 
                end if 
+
             end do 
 
             if (ifct.ne.0) then 
@@ -275,6 +277,7 @@ c                                 blank input
             end if 
 
          end if
+
       end if 
 c                                 saturated components
       write (*,2110)
@@ -294,7 +297,15 @@ c                                 saturated components
 
             if (char5.ne.blank) then
 c                                 check if it's a saturated phase component:
-               if (char5.eq.uname(idh2o).or.char5.eq.uname(idco2)) then 
+               good = .false.
+
+               do i = 1, ispec
+                  if (char5.ne.uname(idspe(i))) cycle
+                  good = .true.
+               end do 
+
+               if (good) then 
+
                   if (ifct.gt.0) then 
                      call warn (7,r,i,'BUILD')
                      write (*,1000) 
@@ -309,6 +320,7 @@ c                                 check if it's a saturated phase component:
                   else 
                      satflu = .true.
                   end if  
+
                end if 
 
                call chknam (igood,jcmpn,1,good,char5,qname,uname)
@@ -342,7 +354,15 @@ c                                 write prompt
             if (char5.eq.blank) exit 
 c                                 check if it's a saturated phase component,
 c                                 or a saturated component:
-            if (char5.eq.uname(idh2o).or.char5.eq.uname(idco2)) then
+            good = .false.
+
+            do i = 1, ispec
+               if (char5.ne.uname(idspe(i))) cycle
+               good = .true.
+            end do 
+
+            if (good) then
+
                if (ifct.gt.0.or.satflu) then  
                   call warn (5,r,i,'BUILD')
                   write (*,1000) 
@@ -357,6 +377,7 @@ c                                 or a saturated component:
                else
                   mobflu = .true.
                end if 
+
             end if 
 
             call chknam (igood,jcmpn,1,good,char5,qname,uname)
@@ -435,8 +456,10 @@ c                                 now make the variable name
                write (*,2065) char5,fugact(ima),vname(3+jmct)
 c                                 if name is a special phase component 
 c                                 set flag for eos request
-               if (names(icp).eq.uname(idh2o).or.
-     *             names(icp).eq.uname(idco2)) ifugy = ifugy + 1
+               do i = 1, ispec
+                  if (names(icp).ne.uname(idspe(i))) cycle
+                  ifugy = ifugy + 1
+               end do 
 
             else 
 
@@ -444,8 +467,10 @@ c                                 set flag for eos request
                write (*,2066) char5,vname(3+jmct)
 c                                 if component is a special phase component 
 c                                 set flag for eos request
-               if (char5.eq.uname(idh2o).or.
-     *             char5.eq.uname(idco2)) ifugy = ifugy + 1
+               do i = 1, ispec
+                  if (char5.ne.uname(idspe(i))) cycle
+                  ifugy = ifugy + 1
+               end do 
 
             end if 
                 
@@ -486,17 +511,29 @@ c                                 Thermodynamic components:
          if (char5.ne.blank) then 
 c                                 check if it's a saturated phase component,
 c                                 mobile or a saturated component:
-            if ((ifct.gt.0.or.satflu.or.mobflu).and.
-     *          (char5.eq.uname(idh2o).or.char5.eq.uname(idco2))) then 
-               call warn (5,r,i,'BUILD')
-               write (*,1000) 
-               read (*,'(a)') y
-               if (y.eq.'y'.or.y.eq.'Y') then
-                  write (*,1070)
-               else 
-                  write (*,1080) 
-                  cycle
+            if (ifct.gt.0.or.satflu.or.mobflu) then 
+
+               good = .false.
+
+               do i = 1, ispec
+                  if (char5.ne.uname(idspe(i))) cycle
+                  good = .true.
+               end do 
+               
+               if (good) then 
+ 
+                  call warn (5,r,i,'BUILD')
+                  write (*,1000) 
+                  read (*,'(a)') y
+                  if (y.eq.'y'.or.y.eq.'Y') then
+                     write (*,1070)
+                  else 
+                     write (*,1080) 
+                     cycle
+                  end if
+ 
                end if 
+
             end if 
 
             call chknam (igood,jcmpn,1,good,char5,qname,uname)
@@ -522,13 +559,14 @@ c                                 blank input, check counter
 c                                 check for fluid components 
 c                                 in thermodynamic composition space.    
       do i = 1, icp
-         if (lname(i).eq.uname(idh2o).or.
-     *       lname(i).eq.uname(idco2)) then
-             call warn (16,r,i,lname(i))
-             ifugy = ifugy + 1
-         end if
-      end do
-c                                 
+
+         do j = 1, ispec
+            if (lname(i).ne.uname(idspe(j))) cycle
+            call warn (16,r,i,lname(i))
+            ifugy = ifugy + 1
+         end do              
+
+      end do     
 c                                 get fluid equation of state
       if (ifyn.ne.0.or.ifugy.ne.0.or.satflu) call rfluid (1,ifug)
 c                                 eliminate composition variable
@@ -1119,18 +1157,12 @@ c                                 try again
  
             ict = 0
             ipoint = iphct
-
-c            if (ifugy.eq.0) then
 c                                 this was here to prevent users
 c                                 from making h2o and/or co2 mobile
 c                                 but using the components in a fluid.
 c                                 changed as of 5/31/04, JADC.
-c               b1 = uname(idh2o)
-c               b2 = uname(idco2)
-c            else
             b1 = ' '
             b2 = ' '
-c            end if 
 c                                 test file format
             read (n9,*) new
             if (new.eq.'011') exit 
@@ -1775,25 +1807,35 @@ c----------------------------------------------------------------------
 
       character*5 qname(k0), uname(k0), char5
 
-      logical good
+      logical good, go
 
       integer igood, jcmpn, iflu, i, j
 
-      integer idh2o,idco2,ikind,icmpn,icout,ieos
+      integer idspe,ispec
+      common/ cst19 /idspe(2),ispec
+
+      integer ikind,icmpn,icout,ieos
       double precision comp,tot
-      common/ cst43 /comp(k0),tot,icout(k0),idh2o,idco2,
-     *               ikind,icmpn,ieos
+      common/ cst43 /comp(k0),tot,icout(k0),ikind,icmpn,ieos
 c----------------------------------------------------------------------
 
       good = .false.
 
-      if (iflu.eq.0.and.
-     *    char5.ne.uname(idh2o).and.
-     *    char5.ne.uname(idco2)) then
+      if (iflu.eq.0) then
+
+         go = .true.
+
+         do i = 1, ispec
+             if (char5.ne.uname(idspe(i))) cycle
+             go = .false.
+         end do 
 c                                 special check for saturated phase
 c                                 components. 
-         write (*,1000) char5
-         return
+         if (go) then 
+            write (*,1000) char5
+            return
+         end if
+
       end if 
 
       do i = 1, jcmpn

@@ -926,10 +926,9 @@ c-----------------------------------------------------------------------
       character*8 exname,afname
       common/ cst36 /exname(h8),afname(2)
 
-      integer idh2o,idco2,ikind,icmpn,icout,ieos
+      integer ikind,icmpn,icout,ieos
       double precision comp,tot
-      common/ cst43 /comp(k0),tot,icout(k0),idh2o,idco2,
-     *               ikind,icmpn,ieos
+      common/ cst43 /comp(k0),tot,icout(k0),ikind,icmpn,ieos
 c-----------------------------------------------------------------------
       good = .true.
 c                               reject the data if excluded in input:
@@ -1003,10 +1002,9 @@ c-----------------------------------------------------------------------
  
       integer igood, i
 
-      integer idh2o,idco2,ikind,icmpn,icout,ieos
+      integer ikind,icmpn,icout,ieos
       double precision comp,tot
-      common/ cst43 /comp(k0),tot,icout(k0),idh2o,idco2,
-     *               ikind,icmpn,ieos
+      common/ cst43 /comp(k0),tot,icout(k0),ikind,icmpn,ieos
 c-----------------------------------------------------------------------
 
       if (comp(igood).ne.0d0) then 
@@ -1555,10 +1553,9 @@ c---------------------------------------------------------------------
       double precision tm,td
       common/ cst202 /tm(m7,m6),td(m8),ilam,idiso,lamin,idsin
 
-      integer idh2o,idco2,ikind,icmpn,icout,ieos
+      integer ikind,icmpn,icout,ieos
       double precision comp,tot
-      common/ cst43 /comp(k0),tot,icout(k0),idh2o,idco2,
-     *               ikind,icmpn,ieos
+      common/ cst43 /comp(k0),tot,icout(k0),ikind,icmpn,ieos
 
       integer ikp
       common/ cst61 /ikp(k1)
@@ -1602,6 +1599,9 @@ c---------------------------------------------------------------------
 
       integer iam
       common/ cst4 /iam
+
+      integer idspe,ispec
+      common/ cst19 /idspe(2),ispec
       
       integer iopt
       logical lopt
@@ -1640,18 +1640,20 @@ c                                 in ifp array, this is only used by gcpd.
       if (ieos.eq.3.or.ieos.eq.9) ifp(id) = -1
 
       if (lopt(7)) then
-       
-         if (name.eq.cmpnt(idh2o).or.name.eq.eoscmp(1)) then 
-c                                 set fluid flag for gcpd, this flag
-c                                 is used to indicate the endmember is
-c                                 a fluid and the id of the fluid component.
+
+         do k = 1, ispec
+
+            if (name.ne.cmpnt(idspe(k)).and.name.ne.eoscmp(k)) cycle 
+
             if (ifyn.ne.0) then 
 c                                 no saturated phase
-               eos(id) = 101
+               eos(id) = 100 + k 
 
-            else if (idfl.ne.2) then 
-c                                 saturated phase, and it's not CO2, ergo
-c                                 will be computed by ufluid.
+            else if (k.eq.1.and.idfl.ne.2.or. 
+     *               k.eq.2.and.idfl.ne.1) then 
+c                                 saturated phase, and it's not component(k), ergo
+c                                 will be computed by ufluid. this only will work
+c                                 for ispec < 3.
                eos(id) = ieos 
 
             end if
@@ -1663,24 +1665,9 @@ c                                 gflu used to indicate whether a fluid is
 c                                 in the calculation.  
             if (ifyn.eq.1) gflu = .true. 
 
-         else if (name.eq.cmpnt(idco2).or.name.eq.eoscmp(2)) then 
+            exit 
 
-            if (ifyn.ne.0) then 
-c                                 no saturated phase
-               eos(id) = 102
-
-            else if (idfl.ne.1) then 
-c                                 saturated phase, and it's not H2O, ergo
-c                                 will be computed by ufluid.
-               eos(id) = ieos 
-
-            end if
-
-            ifp(id) = 1 
-   
-            if (ifyn.eq.1) gflu = .true. 
-
-         end if
+         end do 
           
       end if 
 c                               load stoichiometry of components.
@@ -4445,10 +4432,9 @@ c----------------------------------------------------------------------
       common / cst334 /mkcoef(k16,k17),mdqf(k16,k17),mkind(k16,k17),
      *                 mknum(k16)
 
-      integer idh2o,idco2,ikind,icmpn,icout,ieos
+      integer ikind,icmpn,icout,ieos
       double precision comp,tot
-      common/ cst43 /comp(k0),tot,icout(k0),idh2o,idco2,
-     *               ikind,icmpn,ieos
+      common/ cst43 /comp(k0),tot,icout(k0),ikind,icmpn,ieos
 c----------------------------------------------------------------------
 c                                 make a list of all definition names:
       inames = 0 
@@ -4684,36 +4670,34 @@ c----------------------------------------------------------------------
       character cmpnt*5, dname*80
       common/ csta5 /cl(k0),cmpnt(k0),dname
 
-      integer idh2o,idco2,ikind,icmpn,icout,ieos
+      integer ikind,icmpn,icout,ieos
       double precision comp,tot
-      common/ cst43 /comp(k0),tot,icout(k0),idh2o,idco2,
-     *               ikind,icmpn,ieos
+      common/ cst43 /comp(k0),tot,icout(k0),ikind,icmpn,ieos
 
       integer ids,isct,icp1,isat,io2
       common/ cst40 /ids(h5,h6),isct(h5),icp1,isat,io2
+
+      integer idspe,ispec
+      common/ cst19 /idspe(2),ispec
 c-----------------------------------------------------------------------
 
       good = .false.
 
       if (ifyn.eq.0) then
 c                               check for fluid species data
-         if (name.eq.cmpnt(idco2)) then
-            j = 2
+         do j = 1, ispec
+
+            if (name.ne.cmpnt(idspe(j))) cycle 
             ifer = ifer + 1
-         else if (name.eq.cmpnt(idh2o)) then
-            j = 1
-            ifer = ifer + 1
-         else
-            goto 70
-         end if
- 
-         good = .true.
-         call loadit (j,.false.)
-         return
+            good = .true.
+            call loadit (j,.false.)
+            return
+
+         end do 
 
       end if
  
-70    if (isyn.eq.0) then 
+      if (isyn.eq.0) then 
 c                               check for saturated phases:
 c                               reject the phase if it contains
 c                               a thermodynamic component:
@@ -4736,6 +4720,7 @@ c                               the saturated component idc:
                return
             end if
          end do 
+
       end if 
 
       end 
@@ -4815,10 +4800,9 @@ c----------------------------------------------------------------------
       common / cst334 /mkcoef(k16,k17),mdqf(k16,k17),mkind(k16,k17),
      *                 mknum(k16)
 
-      integer idh2o,idco2,ikind,icmpn,icout,ieos
+      integer ikind,icmpn,icout,ieos
       double precision comp,tot
-      common/ cst43 /comp(k0),tot,icout(k0),idh2o,idco2,
-     *               ikind,icmpn,ieos
+      common/ cst43 /comp(k0),tot,icout(k0),ikind,icmpn,ieos
 c----------------------------------------------------------------------
 c                                 make a list of all definition names:
       inames = 0 
@@ -6695,16 +6679,15 @@ c                                 bookkeeping variables
       integer lstot,mstot,nstot,ndep,nord
       common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
 c                                 special model endmember indexing
-      integer ispec
-
-      common/ cxt8 /ispec(h9,m4)
+      integer jspec
+      common/ cxt8 /jspec(h9,m4)
 c                                 working arrays
       double precision z, pa, p0a, x, w, y
       common/ cxt7 /y(m4),x(m4),pa(m4),p0a(m4),z(mst,msp),w(m1)
 c----------------------------------------------------------------------  
       dlnw = 0d0
 
-      if (ispec(im,1).eq.1) then
+      if (jspec(im,1).eq.1) then
 
          yh2o = y(1)
 c                                 the quadratic water term
@@ -6716,7 +6699,7 @@ c                                 the quadratic water term
 
       end if 
 c                                 the basic entropy
-      do i = ispec(im,4), mstot(im)
+      do i = jspec(im,4), mstot(im)
 
          if (y(i).le.0d0) cycle
          dlnw = dlnw - y(i) * dlog(y(i)*(1d0-yh2o))
@@ -6725,8 +6708,8 @@ c                                 the basic entropy
 c                                 the fe-mg fudge factor
       yfo = 0d0
       yfa = 0d0
-      if (ispec(im,2).ne.0) yfo = y(ispec(im,2))   
-      if (ispec(im,3).ne.0) yfa = y(ispec(im,3))
+      if (jspec(im,2).ne.0) yfo = y(jspec(im,2))   
+      if (jspec(im,3).ne.0) yfa = y(jspec(im,3))
       ytot = yfo + yfa
 
       if (ytot.ne.0d0) then 
@@ -6756,15 +6739,15 @@ c                                 bookkeeping variables
       integer lstot,mstot,nstot,ndep,nord
       common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
 c                                 special model endmember indexing
-      integer ispec
-      common/ cxt8 /ispec(h9,m4)
+      integer jspec
+      common/ cxt8 /jspec(h9,m4)
 c                                 working arrays
       double precision z, pa, p0a, x, w, y
       common/ cxt7 /y(m4),x(m4),pa(m4),p0a(m4),z(mst,msp),w(m1)
 c----------------------------------------------------------------------
       dlnw = 0d0
 
-      if (ispec(im,1).eq.1) then
+      if (jspec(im,1).eq.1) then
 
          yh2o = y(1)
 c                                 the quadratic water term, cf hp model. 
@@ -7021,8 +7004,8 @@ c                                 model type
       logical lorder, lexces, llaar, lrecip
       common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
 
-      integer ispec
-      common/ cxt8 /ispec(h9,m4)
+      integer jspec
+      common/ cxt8 /jspec(h9,m4)
 c----------------------------------------------------------------------
          gg = 0d0
 c                                 evaluate margules coefficients
@@ -7150,7 +7133,7 @@ c                                 get mechanical mixture contribution
          else if (ksmod(id).eq.0) then 
 c                                 ------------------------------------
 c                                 internal fluid eos
-            gg = gfluid(y(ispec(id,1)))
+            gg = gfluid(y(jspec(id,1)))
             
             do k = 1, 2
                gg = gg + gzero(jend(id,2+k))*y(k)
@@ -7818,8 +7801,8 @@ c                                 x coordinate description
      *               xmno(h9,mst,msp),xmxo(h9,mst,msp),reachg(h9)
       common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
 c                                 special model endmember indexing
-      integer ispec
-      common/ cxt8 /ispec(h9,m4)
+      integer jspec
+      common/ cxt8 /jspec(h9,m4)
 
       double precision cp
       common/ cst12 /cp(k5,k1)
@@ -8440,29 +8423,29 @@ c                                 models with special endmember indexing:
       if (jsmod.eq.24.or.jsmod.eq.25) then 
 c                                 hp & ghiroso models:
          do i = 1, 3
-            ispec(im,i) = 0 
+            jspec(im,i) = 0 
          end do 
 c                                 set start index assuming no water:
-         ispec(im,4) = 1  
+         jspec(im,4) = 1  
 
          if (iorig(1).eq.1) then 
 c                                 h2o is present:
-            ispec(im,1) = 1
+            jspec(im,1) = 1
 c                                 set start index to avoid h2o:
-            ispec(im,4) = 2
+            jspec(im,4) = 2
             if (iorig(2).eq.2) then
-               ispec(im,2) = 2
-               if (iorig(3).eq.3) ispec(im,3) = 3
+               jspec(im,2) = 2
+               if (iorig(3).eq.3) jspec(im,3) = 3
             else if (iorig(2).eq.3) then 
-               ispec(im,3) = 2
+               jspec(im,3) = 2
             end if 
          else if (iorig(1).eq.2) then
 c                                 h2o absent, fo (in hp) is first endmember
-            ispec(im,2) = 1
-            if (iorig(2).eq.3) ispec(im,3) = 2
+            jspec(im,2) = 1
+            if (iorig(2).eq.3) jspec(im,3) = 2
          else if (iorig(1).eq.3) then 
 c                                 h2o and fo absent, fa (in hp) is first endmember
-            ispec(im,3) = 1
+            jspec(im,3) = 1
          end if     
 
       else if (jsmod.eq.0) then
@@ -8470,7 +8453,7 @@ c                                 fluid eos, make pointer to co2
          do i = 1, 2
             id = kdsol(insp(i))
             if (cp(2,id).ne.0d0) then
-               ispec(im,1) = i
+               jspec(im,1) = i
                exit
             end if 
          end do 

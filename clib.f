@@ -1,6 +1,5 @@
 c routines common to all programs? could be in tlib.f?
 
-
       subroutine setau1 (output)
 c----------------------------------------------------------------------
 c setau1 sets autorefine dependent parameters. called by vertex, werami,
@@ -983,7 +982,7 @@ c----------------------------------------------------------------------
 
       double precision twt(k5),cst
  
-      integer i,j,ict,im,k,ifer,inames, jphct, imak(k16)
+      integer i,j,im, ict, k, ifer,inames, jphct, imak(k16)
  
       logical eof, good, first
 
@@ -1021,10 +1020,9 @@ c----------------------------------------------------------------------
       integer ic
       common/ cst42 /ic(k0)
 
-      integer idh2o,idco2,ikind,icmpn,icout,ieos
+      integer ikind,icmpn,icout,ieos
       double precision comp,tot
-      common/ cst43 /comp(k0),tot,icout(k0),idh2o,idco2,
-     *               ikind,icmpn,ieos
+      common/ cst43 /comp(k0),tot,icout(k0),ikind,icmpn,ieos
 
       integer cl
       character cmpnt*5, dname*80
@@ -1094,6 +1092,9 @@ c----------------------------------------------------------------------
       logical lopt
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      integer idspe,ispec
+      common/ cst19 /idspe(2),ispec
 c-----------------------------------------------------------------------
 c                               initialization for each data set
 c                               for k10 endmembers
@@ -1121,45 +1122,34 @@ c                               general input data for main program
 c                               reorder thermodynamic components
 c                               if the saturated phase components are 
 c                               present
-      ict = 0 
+      if (lopt(7)) then
 
-      if (lopt(7)) then 
-c                               first component 1st
-         do i = 1, icp
-            if (cname(i).eq.cmpnt(idh2o)) then 
-               ict = 1
-               if (i.eq.1) exit 
-               cname(i) = cname(1)
+         do k = 1, ispec 
+                             
+            do i = 1, icp
 
-               do j = 1, 3
-                  cst = dblk(j,i)
-                  dblk(j,i) = dblk(j,1) 
-                  dblk(j,1) = cst
-               end do 
+               if (cname(i).eq.cmpnt(idspe(k))) then 
 
-               cname(1) = cmpnt(idh2o)
-               ict = 1
-               exit            
-            end if 
+                  if (i.eq.k) exit 
+
+                  cname(i) = cname(k)
+
+                  do j = 1, 3
+                     cst = dblk(j,i)
+                     dblk(j,i) = dblk(j,k) 
+                     dblk(j,1) = cst
+                  end do 
+
+                  cname(k) = cmpnt(idspe(k))
+
+                  exit            
+
+               end if 
+
+            end do 
+
          end do 
-c                               now check second component
-         do i = 1, icp
-            if (cname(i).eq.cmpnt(idco2)) then 
-c                               if i = 2, already in second position exit
-               if (i.eq.ict+1) exit
-               cname(i) = cname(ict+1)
 
-               do j = 1, 3
-                  cst = dblk(j,i)
-                  dblk(j,i) = dblk(j,ict+1) 
-                  dblk(j,ict+1) = cst
-               end do 
-
-               cname(ict+1) = cmpnt(idco2)
-c                              used to re-execute loop? changed to exit 10/06
-               exit            
-            end if 
-         end do
       end if  
 c                              load the old cbulk array
       if (ifyn.ne.1) iphct = 2
@@ -1176,17 +1166,18 @@ c                               initialize icout(i) = 0
                twt(i) = atwt(j)
                ic(i) = j
                icout(j) = 1
-               if (lopt(7)) then 
-                  if (j.eq.idh2o) then
-                     iff(1) = i
+
+               do k = 1, ispec
+                  if (j.eq.idspe(k)) then 
+                     iff(k) = i
                      idfl = idfl + 1
-                  else if (j.eq.idco2) then
-                     iff(2) = i
-                     idfl = idfl + 1
-                  end if
-               end if  
+                  end if 
+               end do 
+ 
                im = 1
+
             end if 
+
          end do 
 c                               write error message if a component
 c                               was not found:
@@ -1204,11 +1195,13 @@ c                                 if there is also a saturated phase
 c                                 component idfl is the identity of the
 c                                 mobile component otherwise idfl = 0.
       if (ifct.eq.1.and.idfl.eq.2) then
-         if (zname.eq.cmpnt(idh2o)) then
-            idfl = 1
-         else if (zname.eq.cmpnt(idco2)) then
-            idfl = 2
-         end if
+
+         do i = 1, ispec
+            if (zname.ne.cmpnt(idspe(i))) cycle 
+            idfl = i
+            exit 
+         end do 
+
       else 
          idfl = 0
       end if
@@ -1281,11 +1274,11 @@ c                                 gphase from calling the EoS.
 c                                 check for special component names
 c                                 this is necessary because loadit 
 c                                 will not set isfp if ifyn = 0.
-                     if (name.eq.cmpnt(idh2o)) then 
-                        eos(iphct) = 101
-                     else if (name.eq.cmpnt(idco2)) then
-                        eos(iphct) = 102 
-                     end if
+                     do k = 1, ispec
+                        if (name.ne.cmpnt(idspe(k))) cycle
+                        eos(iphct) = 100 + k 
+                        exit 
+                     end do 
  
                   end if 
 c                                 blank the name, this has two purposes,

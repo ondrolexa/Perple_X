@@ -18,7 +18,7 @@ c-----------------------------------------------------------------------
  
       include 'perplex_parameters.h'
 
-      integer i
+      integer i,ins(nsp)
  
       double precision x(2),fo2,fs2
  
@@ -88,6 +88,8 @@ c-----------------------------------------------------------------------
          call cohngr (fo2)
       else if (ifug.eq.25) then 
          call waddah
+      else if (ifug.eq.26) then 
+         call mrksil (ins, 1)
       else 
          call error (11,xco2,ifug,'EoS (routine CFLUID)') 
       end if 
@@ -111,7 +113,7 @@ c---------------------------------------------------------------------
 
       integer nrk,i,irk,ifug,ier
 
-      parameter (nrk=25)
+      parameter (nrk=26)
    
       character rkname(0:nrk)*60, y*1
 
@@ -158,7 +160,8 @@ c---------------------------------------------------------------------
      *  'X(CO2) DHCORK, hybrid-Eos',
      *  'Toop-Samis Silicate Melt',
      *  'f(O2/CO2)-N/C Graphite saturated COHN MRK fluid',
-     *  'H2O-CO2-NaCl Aranovich et al. 2010'/
+     *  'H2O-CO2-NaCl Aranovich et al. 2010',
+     *  'Silicate vapor RK EoS'/
 
       if (irk.eq.2) then
          write (n3,1060) rkname(ifug)
@@ -5763,4 +5766,109 @@ c                                 ln(gamma) = w*v*x^2
  
       end if
 
+      end
+
+      subroutine mrksil (ins, isp)
+c-----------------------------------------------------------------------
+c subroutine to calculate the log fugacities and volume of silicate
+c fluids RK/MRK EoS. 
+
+c input:
+
+c        ins(i) -  pointers indicating the species are to be calculated.
+c        isp     - the number of species to be calculated.
+c        p,t     - input from cst5, p(bars), t(K)
+c        r       - gas constant, J/bar
+
+c output (to common cstcoh):
+
+c        g(i)    - fugacity coefficient of ith species
+c        v(i)    - volume of the ith species
+
+c species indices:
+
+c         1 = SIO2 {Tc = 6593.427446, pc = 2135.298674}
+c-----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer ins(nsp),i,j,k,l,iroots,isp
+ 
+      double precision b(nsp),a(nsp),f(nsp),aj2(nsp),ev(3),r,c1,c2,t2,
+     *                 c3,vmin,vmax,d1,d2,d3,d4,d5,d6,rt,t3,t4,dsqrtt,
+     *                 bx,aij
+ 
+      double precision p,t,xco2,u1,u2,tr,pr,rcal,ps
+      common/ cst5 /p,t,xco2,u1,u2,tr,pr,rcal,ps
+
+      double precision fg
+      common/ cst11 /fg(2) 
+
+      double precision x,g,v
+      common/ cstcoh /x(nsp),g(nsp),v(nsp)
+
+      double precision vol
+      common/ cst26 /vol
+ 
+      save a, b
+c                                 r = cm3*bar/k
+      data a /48851241.79, 0d0, 16.98d6, 32.154811d6, 2.821d5, 89d6,
+     *        17.4d6,133.1d6, 130d6, 136d5 , 631d5 /,
+     *     b /2.2242370205005, 29.7, 27.38, 29.681, 15.7699, 29.94,
+     *        22.1, 37.4, 43d0, 23.42, 18.84 /
+ 
+      t2 = t*t
+      t3 = t2*t
+      t4 = t3*t
+      dsqrtt = dsqrt(t)
+      rt = r*t
+
+      ins(1) = 1
+      x(1) = 1d0
+c                             composition dependent mrk-terms
+      bx = 0d0
+      aij = 0d0
+
+      do k = 1, isp
+         i = ins(k)
+         aj2(i) = 0d0
+         bx = bx + b(i)*x(i)
+      end do 
+ 
+      do k = 1, isp
+         i = ins(k)
+         do l = 1, isp
+            j = ins(l)
+            aij = aij + x(i)*x(j)*dsqrt(a(i)*a(j))
+            aj2(i) = aj2(i) + 2d0*x(j)*dsqrt(a(i)*a(j))
+         end do 
+      end do 
+c                                 solve for molar volume of the mix
+      c1 = -rt/p
+      c3 = -aij*bx/p/dsqrtt
+      c2 = c1*bx + aij/dsqrtt/p - bx*bx
+
+      call roots3 (c1,c2,c3,ev,vmin,vmax,iroots)
+
+      if (iroots.eq.3) then
+         vol = vmax
+      else
+         vol = ev(1)
+      end if
+c                                 segment to compute the
+c                                 fugacities.
+      d2 = dlog((vol+bx)/vol)
+      d1 = rt*dsqrtt*bx
+      d3 = d2 -bx/(bx+vol)
+      d4 = vol -bx
+      d5 = aij*d3/d1/bx
+      d6 = dlog(rt/d4)
+ 
+      do i = 1, isp
+         f(i) = dlog(x(i))+b(i)/d4-aj2(i)/d1*d2+b(i)*d5+d6
+         g(i) = dexp(f(i))/p/x(i)
+         fg(i) = f(i)
+      end do  
+  
       end

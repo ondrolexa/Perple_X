@@ -18,10 +18,9 @@ c----------------------------------------------------------------------
       integer eos
       common/ cst303 /eos(k10)
 
-      integer idh2o,idco2,ikind,icmpn,icout,ieos
+      integer ikind,icmpn,icout,ieos
       double precision comp,tot
-      common/ cst43 /comp(k0),tot,icout(k0),idh2o,idco2,
-     *               ikind,icmpn,ieos
+      common/ cst43 /comp(k0),tot,icout(k0),ikind,icmpn,ieos
 
       integer ic
       common/ cst42 /ic(k0)
