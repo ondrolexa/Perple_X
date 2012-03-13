@@ -412,6 +412,9 @@ c----------------------------------------------------------------------
 
       double precision atwt
       common/ cst45 /atwt(k0)
+
+      integer idspe,ispec
+      common/ cst19 /idspe(2),ispec
 c-----------------------------------------------------------------------
       rewind n2
 c                               read the number of data bases
