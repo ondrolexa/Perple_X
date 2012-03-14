@@ -1137,7 +1137,7 @@ c                               present
                   do j = 1, 3
                      cst = dblk(j,i)
                      dblk(j,i) = dblk(j,k) 
-                     dblk(j,1) = cst
+                     dblk(j,k) = cst
                   end do 
 
                   cname(k) = cmpnt(idspe(k))
