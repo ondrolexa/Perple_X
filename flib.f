@@ -5795,12 +5795,12 @@ c-----------------------------------------------------------------------
 
       integer ins(nsp),i,j,k,l,iroots,isp
  
-      double precision b(nsp),a(nsp),f(nsp),aj2(nsp),ev(3),r,c1,c2,t2,
+      double precision b(nsp),a(nsp),f(nsp),aj2(nsp),ev(3),c1,c2,t2,
      *                 c3,vmin,vmax,d1,d2,d3,d4,d5,d6,rt,t3,t4,dsqrtt,
      *                 bx,aij
  
-      double precision p,t,xco2,u1,u2,tr,pr,rcal,ps
-      common/ cst5 /p,t,xco2,u1,u2,tr,pr,rcal,ps
+      double precision p,t,xco2,u1,u2,tr,pr,r,ps
+      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 
       double precision fg
       common/ cst11 /fg(2) 

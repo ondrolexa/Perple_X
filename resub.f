@@ -71,7 +71,6 @@ c-----------------------------------------------------------------------
          inc = istct - 1
 
          oldt = t
-
          oldp = p
 c                                logarithmic_p option
          if (lopt(14)) p = 1d1**p
@@ -124,8 +123,10 @@ c                                 final processing, .false. indicates dynamic
          
       end if 
      
-      t = oldt
-      p = oldp
+      if (.not.usv) then 
+         t = oldt
+         p = oldp
+      end if 
 
       end 
 
@@ -2543,8 +2544,8 @@ c                                 stuff used in lpnag
 c-----------------------------------------------------------------------
       inc = istct - 1
 
-      tloop = 400
-      ploop = 400
+      tloop = 40
+      ploop = 40
       dv(1) = (vmax(1)-vmin(1))/(ploop-1)
       dv(2) = (vmax(2)-vmin(2))/(tloop-1)
 c                                 load arrays for lp solution
@@ -3493,7 +3494,7 @@ c                                 convert normalized g's to molar g's
 
       end do 
 
-      if (jbulk.gt.icp) then  
+      if (jbulk.gt.icp.and.(.not.usv)) then  
 c                                 get the amounts of the saturated phases:
          do i = icp+1, jbulk
 c                                 k is the saturated component pointer
