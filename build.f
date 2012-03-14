@@ -62,7 +62,7 @@ c-----------------------------------------------------------------------
 
       integer grid
       double precision rid 
-      common/ cst327 /grid(5,2),rid(2)
+      common/ cst327 /grid(6,2),rid(4,2)
  
       integer ictr, itrans
       double precision ctrans

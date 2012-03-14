@@ -7864,6 +7864,10 @@ c                                 model type
       integer ifp
       common/ cxt32 /ifp(k1)
 
+      integer grid
+      double precision rid 
+      common/ cst327 /grid(6,2),rid(4,2)
+
       integer ndim,mxsp
       logical cart
       double precision scoors
@@ -7954,18 +7958,13 @@ c                                 new values from autorefine file
 c                                 set slop to the initial spacing
                   dinc = xnc(i,j)
                 
-                  if (icopt.eq.1) then
-c                                 Schreinemakers use refine factor III
-                     xnc(i,j) = xnc(i,j)/nopt(17)
-                  else  
-c                                 non-adaptive use refine factor II
-                     xnc(i,j) = xnc(i,j)/nopt(17)
-                  end if 
+                  xnc(i,j) = xnc(i,j)/nopt(17)
 
                else 
-c                                 set slop to the initial compositional
-c                                 resolution
-                  dinc = nopt(10)  
+c                                 adaptive minimization:
+c                                 set slop to the final compositional
+c                                 resolution of the exploratory stage
+                  dinc = rid(4,1)  
 c                                 adaptive use refine factor I
                   xnc(i,j) = xnc(i,j)/nopt(17) 
 

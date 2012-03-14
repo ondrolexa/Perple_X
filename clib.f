@@ -45,6 +45,10 @@ c                                 solution model names
       logical refine
       common/ cxt26 /refine
 
+      integer grid
+      double precision rid 
+      common/ cst327 /grid(6,2),rid(4,2)
+
       integer iam
       common/ cst4 /iam
 c-----------------------------------------------------------------------
@@ -135,15 +139,29 @@ c                                 to use the data
 
             end if 
 c                                 set cycle dependent parameters
-            if (refine.and.lopt(9)) then 
-c                                 solvus tolerance 
-               nopt(8) = 1.5d0*nopt(13)/nopt(17)
+            if (refine) then 
 
-            else if (lopt(9)) then 
+               i = 2 
 
-               nopt(8) = 1.5d0*nopt(13)
+            else 
+
+               i = 1
 
             end if
+c                                 solvus tolerance 
+            if (lopt(9)) nopt(8) = 1.5d0*rid(3,i)
+c                                 number of iterations
+            iopt(10) = grid(6,i)
+c                                 bound relaxation rate
+            if (i.eq.1) then 
+c                                 the initial resolution of the exploratory stage
+               nopt(10) = rid(3,1)
+           
+            else 
+c                                 the final resolution of the exploratory stage   
+               nopt(10) = rid(4,1)  
+
+            end if 
 
          else 
 c                                 werami/pssect if refine, get the 
@@ -241,7 +259,7 @@ c                                 solution model counter
 
       integer grid
       double precision rid 
-      common/ cst327 /grid(5,2),rid(2)
+      common/ cst327 /grid(6,2),rid(4,2)
 
       integer ipot,jv,iv
       common/ cst24 /ipot,jv(l2),iv(l2)
@@ -301,7 +319,7 @@ c                                 max variance of curves to be traced
           isudo = grid(5,index)
 c                                 default variable tracing increment
           do i = 1, 2
-             dv(iv(i)) = (vmax(iv(i)) - vmin(iv(i)))*rid(index)
+             dv(iv(i)) = (vmax(iv(i)) - vmin(iv(i)))*rid(1,index)
           end do 
 
       else if (icopt.eq.3) then 
@@ -310,7 +328,7 @@ c                                 mixed variable diagrams
 c                                 no variance restriction
           isudo = 99
 c                                 default search increment
-          dv(iv(1)) = (vmax(iv(1)) - vmin(iv(1)))*rid(index)
+          dv(iv(1)) = (vmax(iv(1)) - vmin(iv(1)))*rid(1,index)
 
       end if 
 

@@ -17,7 +17,7 @@ c----------------------------------------------------------------------
 	implicit none
 
       write (*,'(/,a)') 
-     *      'Perple_X version 6.6.7, source updated March 12, 2012.'
+     *      'Perple_X version 6.6.7, source updated March 14, 2012.'
 
       end
 
@@ -84,7 +84,7 @@ c----------------------------------------------------------------------
 
       integer grid
       double precision rid 
-      common/ cst327 /grid(5,2),rid(2)
+      common/ cst327 /grid(6,2),rid(4,2)
 
       integer isec,icopt,ifull,imsg,io3p
       common/ cst103 /isec,icopt,ifull,imsg,io3p
@@ -152,8 +152,10 @@ c                                 max number of points to
 c                                 be refined in addition to 
 c                                 active points
       iopt(12) = 4
-c                                 final resolution 
-      nopt(22) = 2.5d-4
+c                                 final resolution, auto-refine stage
+      rid(2,2) = 2.5d-4
+c                                 final resolution, exploratory stage
+      rid(2,1) = 1d-2
 c                                 global reach factor
       nopt(23) = 0d0
 c                                 solvus_tolerance_II
@@ -233,8 +235,8 @@ c                                 max variance
       grid(5,1) = 1
       grid(5,2) = 99
 c                                 default increment (relative)
-      rid(1) = 0.1d0
-      rid(2) = 0.025d0
+      rid(1,1) = 0.1d0
+      rid(1,2) = 0.025d0
 c                                 reaction format
       ifull = 0 
       valu(7) = 'min'
@@ -357,8 +359,14 @@ c                                 initial_resolution key
             read (strg,*) nopt(13)
 
          else if (key.eq.'final_resolution') then
-c                                 initial_resolution key 
-            read (strg,*) nopt(22)
+c                                 final_resolution keys 
+            read (strg,*) rid(2,1)
+            read (nval1,*,iostat=ier) rid(2,2)
+c                                 ier check for the 666/667 transition             
+            if (ier.ne.0.or.rid(2,2).eq.0d0) then 
+               rid(2,1) = 2d-2
+               read (strg,*) rid(2,2)
+            end if 
 
          else if (key.eq.'global_reach_increment') then
           
@@ -454,9 +462,9 @@ c                                 max variance of traced equilibria for autorefi
 
          else if (key.eq.'increment') then 
 c                                 default exploratory relative increment    
-            read (strg,*) rid(1)  
+            read (strg,*) rid(1,1)  
 c                                 default autorefine relative increment
-            read (nval1,*) rid(2)
+            read (nval1,*) rid(1,2)
 
          else if (key.eq.'reaction_format') then 
 
@@ -744,12 +752,12 @@ c                                 grid parameters
          end if  
 
          if (grid(5,i).lt.1) then 
-            call warn (113,rid(i),grid(5,i),'VARIAN')
+            call warn (113,rid(1,i),grid(5,i),'VARIAN')
             grid(5,i) = 1
          end if 
 
-         if (rid(i).lt.1d-2) then 
-            call warn (114,rid(i),i,'INPUT1')
+         if (rid(1,i).lt.1d-2) then 
+            call warn (114,rid(1,i),i,'INPUT1')
          end if 
 
       end do
@@ -759,7 +767,8 @@ c                                 stretching
       lbpm = dlog(bpm)
 c                                 --------------------------------------
 c                                 program/computation specific settings
-c                                 meemum, turn autorefine off.
+c                                 meemum, turn autorefine off. it can
+c                                 be turned to manual (1) in setau1.
       if (iam.eq.2) iopt(6) = 0 
 c                                 set autorefine factor
       if (icopt.eq.1) then
@@ -767,47 +776,51 @@ c                                 set autorefine factor
       else if (icopt.le.3) then 
          nopt(17) = nopt(18)
       end if 
-c                                 compute resolution 
+c                                 compute resolution/number of iterations 
       nopt(24) = 2d0*nopt(21)/(1d0 + nopt(21))
+c                                 effective initial resolution
+      if (nopt(13).eq.0d0) then 
+c                                 user wants to use solution model values, set
+c                                 initial resolution to a representative value
+          rid(3,1) = 0.1d0
+      else 
+          rid(3,1) = nopt(13)
+      end if 
 
-      if (iam.eq.1.and.icopt.le.3) then 
+      rid(3,2) = rid(3,1)/nopt(17)
 
-         nopt(10) = nopt(13)
+      do i = 1, 2
 
-      else
+         if (rid(2,i).gt.rid(3,i)) then
 
-         if (nopt(22).gt.nopt(13)) then
-          
-            nopt(10) = nopt(13)
-            iopt(10) = 0 
+            grid(6,i) = 0 
 
          else
           
-            iopt(10) = 1
+            grid(6,i) = 1
 
             do 
 
-               res0 = nopt(13)/nopt(17)*nopt(24)/nopt(21)**iopt(10)
+               res0 = rid(3,i)*nopt(24)/nopt(21)**grid(6,i)
+c                                 actual final resolution
+               rid(4,i) = res0
 
-               if (res0.lt.nopt(22)) then 
+               if (res0.lt.rid(2,i)) then 
 c                                 real final resolution is res0
 c                                 reset speciation tolerance if < res0
                   if (nopt(5).gt.res0) nopt(5) = res0
-c                                 final resolution of exploratory stage
-c                                 this is used to relax limits
-                  nopt(10) = res0*nopt(17)
 
                   exit
 
                end if
 
-               iopt(10) = iopt(10) + 1
+               grid(6,i) = grid(6,i) + 1
 
             end do 
 
          end if 
 
-      end if 
+      end do 
 c                                 --------------------------------------
 c                                 output
       if ((iam.eq.1.and.output).or.iam.eq.2
@@ -839,8 +852,6 @@ c                                 -------------------------------------
 c                                 recalculate parameters:
 c                                 proportionality constant for shear modulus
       nopt(16) = 1.5d0*(1d0-2d0*nopt(16))/(1d0+nopt(16))
-c                                 nopt(10) is used to relax bounds.
-      if (nopt(10).gt.nopt(13)) nopt(10) = nopt(13)
 
 1000  format ('Context specific options are echoed in: ',a,/)
 1040  format (/,'Warning: value2 of the iteration keyword must be ',
@@ -898,7 +909,7 @@ c----------------------------------------------------------------------
 
       integer grid
       double precision rid 
-      common/ cst327 /grid(5,2),rid(2)
+      common/ cst327 /grid(6,2),rid(4,2)
 
       logical oned
       common/ cst82 /oned
@@ -958,7 +969,7 @@ c                                 composition and mixed variable
 c                                 reaction format and lists
             if (icopt.gt.0) then
 
-               write (n,1160) grid(5,1),grid(5,2),rid(1),rid(2), 
+               write (n,1160) grid(5,1),grid(5,2),rid(1,1),rid(1,2), 
      *                        isec,valu(7),valu(9),valu(8),valu(10)
 
             end if                     
@@ -968,7 +979,7 @@ c                                 iopt(6) is automatically off
 c                                 for meemum             
             if (iopt(6).ne.0) write (n,1170) nopt(17)
 c                                 adaptive optimization
-            write (n,1180) nopt(22),int(nopt(21)),iopt(12),
+            write (n,1180) rid(2,1),rid(2,2),int(nopt(21)),iopt(12),
      *                     nopt(25),int(nopt(23)),nopt(9),nopt(11)
 c                                 gridding parameters
             if (iam.eq.1.and.icopt.eq.5.and.oned) then
@@ -1049,14 +1060,8 @@ c                                 info file options
 c                                 resolution blurb
       if (iam.le.2.and.nopt(13).gt.0d0) then
 
-         if (iam.eq.2.or.iopt(6).eq.0) then
-c                                 meemum or autorefine off
-            write (n,1090) nopt(10)
-         else 
-            write (n,1095) nopt(10),nopt(10)/nopt(17)
-         end if 
-
-         write (n,1100) iopt(10)
+         write (n,1090) rid(4,1),rid(4,2)
+         write (n,1100) grid(6,1),grid(6,2)
 
       end if 
 
@@ -1097,14 +1102,13 @@ c                                 thermo options for frendly
      *        4x,'Anderson-Gruneisen     ',l1,10x,'[T] F')
 1020  format (/,'To change these options see: ',
      *        'www.perplex.ethz.ch/perplex_options.html',/)      
-1090  format (/,2x,'Worst case (Cartesian) compositional resolution: ',
-     *        g12.3,' mol')
-1095  format (/,2x,
+1090  format (/,2x,
      *        'Worst case (Cartesian) compositional resolution (mol)',
      *        ': ',//,4x,'Exploratory stage: ',g12.3,/,
      *                4x,'Auto-refine stage: ',g12.3)
-1100  format (/,2x,'Adapative minimization will be done with ',i2,
-     *        ' iterations.')
+1100  format (/,2x,'Adapative minimization will be done with: ',
+     *        //,3x,i2,' iterations in the exploratory stage',/,
+     *           3x,i2,' iterations in the auto-refine stage')
 1140  format (4x,'auto_refine_factor_III ',f4.1,7x,'>=1 [3]')
 1150  format (4x,'auto_refine_factor_II  ',f4.1,8x,'>=1 [10]')
 1160  format (/,2x,'Schreinemakers and Mixed-variable diagram ',
@@ -1122,8 +1126,11 @@ c                                 thermo options for frendly
      *        4x,'short_print_file       ',a3,8x,'[on] off')
 1170  format (4x,'auto_refine_factor_I   ',f4.1,7x,'>=1 [3]')
 1180  format (/,2x,'Free energy minimization options:',//,
-     *        4x,'final_resolution       ',g8.2,3x,
-     *           '[2.5e-4], requested value, see actual values below',/,
+     *        4x,'final_resolution:      ',/,
+     *        4x,'  exploratory stage    ',g8.2,3x,
+     *           '[1e-2], target value, see actual values below',/,
+     *        4x,'  auto-refine stage    ',g8.2,3x,
+     *           '[2.5e-4], target value, see actual values below',/,
      *        4x,'resolution factor      ',i2,9x,
      *           '>2 [3]; iteration keyword value 1',/,
      *        4x,'refinement points      ',i2,9x,
@@ -3046,6 +3053,7 @@ c    *           'ec7','eb1','eb2','eb3','eb4','eb5','eb6','eb7','eb8'/
 
       end
 
+ 
       subroutine getphi (name,eof)
 c----------------------------------------------------------------------
 c read phase data from the thermodynamic data file from lun N2, assumes
@@ -4965,4 +4973,3 @@ c                                 scan for blanks:
       write (text,'(400a)') (bitsy(i), i = 1, ict + 1)
 
       end
- 
