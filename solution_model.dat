@@ -877,6 +877,8 @@ z(m1a,mg)   = 1 di + 1 cfm
 z(m1a,fe2+) = 1 hed 
 z(m1a,fe3+) = 1 acm + 1 jac 
 
+reach_increment 6
+
 end_of_model                     
                     --------------------------------------------------------  
 begin_model               

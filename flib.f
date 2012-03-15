@@ -5852,7 +5852,7 @@ c                                 solve for molar volume of the mix
       call roots3 (c1,c2,c3,ev,vmin,vmax,iroots)
 
       if (iroots.eq.3) then
-         vol = vmax
+         vol = vmin
       else
          vol = ev(1)
       end if
