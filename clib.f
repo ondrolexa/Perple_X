@@ -2183,9 +2183,9 @@ c                                 read header info
 
          end do
 
-      end if 
+         close (n8)
 
-      close (n8)
+      end if 
 
       end 
 

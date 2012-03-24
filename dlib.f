@@ -165,6 +165,10 @@ c---------------------------------------------------------------------
       logical oned
       common/ cst82 /oned
 
+      logical fileio
+      integer ncol, nrow
+      common/ cst226 /ncol,nrow,fileio
+
       integer iind, idep
       double precision c0,c1,c2,c3,c4,c5
       common/ cst316 /c0,c1,c2,c3,c4,c5,iind,idep
@@ -173,7 +177,23 @@ c---------------------------------------------------------------------
       common/ cst312 /jlow,jlev,loopx,loopy,jinc
 c----------------------------------------------------------------------
 
-      if (icopt.lt.9) then 
+      if (icopt.eq.7.and.fileio) then 
+c                                 1d-fractionation with file input,
+c                                 use nodal coordinates:
+         vnm(1) = 'node #'
+         vmn(1) = 1
+         vmx(2) = 1d0
+         vmn(2) = 0d0 
+         vmx(1) = loopy 
+         oned = .true.
+         
+         jvar = ipot + 1
+
+         do i = 2, jvar
+            vnm(i) = vname(jv(i-1))
+         end do  
+
+      else if (icopt.lt.9) then 
 
          jvar = ipot
 
@@ -236,7 +256,8 @@ c                                 make a fake y-axis for 1-d plots
          end if
 
       else if (icopt.eq.9) then 
-c                                 2d fractionation
+c                                 2d fractionation, this is not gonna 
+c                                 work if fileio, oder?
          vnm(1) = 'P0(bar)   '
          vnm(2) = 'DZ(m)     '    
 c                                 switch loopx and loopy     
@@ -250,23 +271,7 @@ c                                 switch loopx and loopy
 
          do i = 3, 4
             vnm(i) = vname(jv(i-2))
-         end do 
-
-      else 
-c                                 icopt = 10:
-c                                 using nodal coordinates as the x axis
-         vnm(1) = 'node #'
-         vmn(1) = 1
-         vmx(2) = 1d0
-         vmn(2) = 0d0 
-         vmx(1) = loopy 
-         oned = .true.
-         
-         jvar = ipot + 1
-
-         do i = 2, jvar
-            vnm(i) = vname(jv(i-1))
-         end do   
+         end do  
 
       end if 
 
@@ -345,6 +350,8 @@ c                                 decompress the grid data
             if (kd.eq.0) write (*,*) 'bad un at i, j',i,j
             jend = jst + irep 
             do j = jst, jend
+               if (j.gt.l7) call error (2,nopt(1),j,
+     *                      'coordinates (routine PLINP), increase L7')
                igrd(i,j) = kd
             end do 
             jst = jend + 1
