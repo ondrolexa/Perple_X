@@ -877,8 +877,6 @@ z(m1a,mg)   = 1 di + 1 cfm
 z(m1a,fe2+) = 1 hed 
 z(m1a,fe3+) = 1 acm + 1 jac 
 
-reach_increment 6
-
 end_of_model                     
                     --------------------------------------------------------  
 begin_model               
@@ -7479,4 +7477,60 @@ z(Mg) = 1 py
 z(Zr) = 1 zrg
 
 end_of_model     
-                      --------------------------------------------------------  
+                      --------------------------------------------------------
+begin_model                
+                                      |Calcite-Magnesite with Dolomite/Ankerite compound formation.
+                                      |Franzolin, Schmidt and Poli (2011) CMP 161:213-227, DOI: 10.1007/s00410-010-0527-x
+
+                                      | WARNINGS:
+
+                                      | This model requires make definitions in the thermodynamic data file for the 
+                                      | odo_ef and oank endmembers.  JADC, 3/26/2012. 
+odCcMS(EF)
+2                                     |model type van laar.                                                                         
+
+5                                     |number of endmembers
+mag      cc   odo_ef   sid   oank    
+0  0  0   0   0                       |endmember flags
+0. 1. 0.1  0                          |range and increments on X(cc)
+0. 1. 0.1  0
+0. 1. 0.1  0
+0. 1. 0.1  0                          |range and increments on X(mag)
+
+begin_excess_function             
+w(mag cc)  28000 0 0
+w(cc odo) 11200 0 0.0 
+w(mag odo)  14000 0 0
+W(cc sid)  20503 0 0
+w(oank sid) 73650 -50 0
+w(oank cc) 12730 -10 0
+w(mag sid) 10000 0 0
+w(sid odo) 51190 -30 0
+w(oank odo) -5000 0 0
+w(oank mag) 30000 0 0 
+end_excess_function  
+
+3                                     |3 site (m1  m2a  m2b) entropy model 
+
+3 0.5                                 |3 species on m1, mutiplicity = 1/2
+z(m1,ca) =   1 cc + 1 odo + 1 oank
+z(m1,mg) =   1 mag 
+
+3 0.25                                 |3 species on m2a, mult. = 1/4
+z(m2a,ca) =  1 cc  
+z(m2a,mg) =  1 mag + 1 odo 
+
+3 0.25                                 |3 species on m2b, mult. = 1/4
+z(m2b,ca) =  1 cc  
+z(m2b,mg) =  1 mag + 1 odo + 1 oank
+               
+
+begin_van_laar_sizes                        
+alpha(cc)     0.25 0.000929 0                      
+alpha(mag)    1 0. 0.0                     
+alpha(odo)    0.95 0.0 0 
+alpha(sid)    0.01 0.000666 0
+alpha(oank)   0.929 0 0
+end_van_laar_sizes
+
+end_of_model              
