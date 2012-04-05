@@ -9,7 +9,7 @@
 approx_alpha           T    | use approximation exp(x)~1+x to evaluate expansivity effect on volume
 Anderson-Gruneisen     F    | Anderson-Gruneisen parameter correction for polythermal Murnaghan and Birch-Murnaghan
 auto_refine            aut  | auto, manual, or off (auto_refine keyword group)
-auto_refine_factor_I   8    | refine factor for gridded minimization and phase fractionation (auto_refine keyword group)
+auto_refine_factor_I   2    | refine factor for gridded minimization and phase fractionation (auto_refine keyword group)
 auto_refine_factor_II  6    | refine factor for composition and mixed variable diagrams (auto_refine keyword group)
 auto_refine_factor_III 2    | refine factor for Schreinemakers diagrams (auto_refine keyword group)
 auto_refine_file       F    | echo auto-refine data to my_project_auto_refine.txt
@@ -22,7 +22,7 @@ dependent_potentials   on   | on or off
 efficiency             3    | 1->5
 explicit_bulk_modulus  T    | T[rue] or F[alse], default is F; T -> use explicit function for K if available
 extrapolation          off  | on or off
-final_resolution   2e-2  1.5e-4 | >0, <1, default 1e-3
+final_resolution     2.5e-4 | >0, <1, default 1e-3
 global_reach_increment  0   | >= 0; overridden by reach_factor specified in solution model file
 grid_levels            1 4  | exploratory and autorefine (grid parameters keyword group)
 hard_limits            off  | on or off
@@ -40,7 +40,7 @@ proportions           vol   | vol or wt; phase proportions
 pseudocompound_file    F    | echo static pseudocompound compositions to my_project_pseudocompound_list.txt
 reaction_format    minimum  | minimum, full, stoich, S+V, or everything
 reaction_list         off   | on or off
-seismic_output        all  | all, some, none
+seismic_output        some  | all, some, none
 short_print            on   | on or off
 site_check              T   | T[rue] or F[alse], T=> reject solution compositions with negative site fractions
 solvus_tolerance      auto  | auto or 0->1 [0.05] should be > initial_resolution/auto_refine_factor

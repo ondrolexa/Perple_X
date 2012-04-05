@@ -692,7 +692,7 @@ c-----------------------------------------------------------------------
       integer k,id
 
       double precision omega, gproj, hpmelt, gmelt, gfluid, gzero, g, 
-     *                 dg, gex, slvmlt
+     *                 dg, gex, slvmlt, gfesi
 
       integer jend
       common/ cxt23 /jend(h9,k12)
@@ -837,6 +837,11 @@ c                                 get mechanical mixture contribution
             do k = 1, mstot(id)  
                g = g + y(k) * gproj (jend(id,2+k))
             end do 
+
+         else if (ksmod(id).eq.29) then 
+c                                 -------------------------------------
+c                                 BCC Fe-Si Lacaze and Sundman
+            g = gfesi(y(1),gproj(jend(id,3)),gproj(jend(id,4)))
 
          else if (ksmod(id).eq.0) then 
 c                                 ------------------------------------

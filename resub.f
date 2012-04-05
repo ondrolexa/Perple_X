@@ -2656,7 +2656,7 @@ c-----------------------------------------------------------------------
 
       integer i,j,k,id
 
-      double precision dg1,gval,dg,gzero,g0(k5),gex,x0
+      double precision dg1,gval,dg,gzero,g0(k5),gex,x0,gfesi
 
       integer icomp,istct,iphct,icp
       common/ cst6 /icomp,istct,iphct,icp
@@ -2888,7 +2888,17 @@ c                                 ideal gas mix
                id = id + 1
 
             end do  
+
+         else if (ksmod(i).eq.29) then 
  
+            do j = 1, jend(i,2)
+c                                 BCC Fe-Si Lacaze and Sundman
+               g(id) = gfesi(sxs(ixp(id)+1),g(jend(i,3)),g(jend(i,4)))
+  
+               id = id + 1
+
+            end do 
+
          end if 
 
       end do 

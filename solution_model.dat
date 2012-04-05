@@ -24,6 +24,8 @@
                              25 - Ghirso pMELTS/MELTS model
                              26 - Haefner H2O-CO2-NaCl
                              27 - Silicate vapor (ideal)
+                             28 - High T silicate melt
+                             29 - BCC Fe-Si alloy, Lacaze & Sundman 1990.
 
                              For non-ideal solutions, microscopic models assume Margules type excess functions; 
                              macroscopic models may be posed in terms of Margules (See model "Bio(HP)" for a commented
@@ -5238,10 +5240,14 @@ z(b,cr) = 1 fcrm_d + 1 mcrm
 
 end_of_model 
                   --------------------------------------------------------
-begin_model                | keyword indicating beginning of a solution model 
+begin_model               
+                               Eskolaite from Chaterjee et al '82 Am Min.
+                               added at PGP Workshop on 4/12/06
+                               (folk.uio.no/ninasim/Cr_results.html).
 
-                               Eskolaite, PGP Workshop 4/12/06.
-                               (folk.uio.no/ninasim/Cr_results.html)
+                               notes:
+
+                               w(esk cor cor) corrected to w(esk esk cor). J. A. Padron-Navarta, 3/30/12.
 
 Eskol(C)                                                                         
 2                                     model type: Margules, endmember fractions.                                                                               
@@ -7424,6 +7430,65 @@ reach_increment 3
 
 end_of_model               
                             --------------------------------------------------------
+begin_model 
+                           | BCC Fe-Si alloy after Lacaze and Sundman (1990) Metal. Trans 22A:1991-2211
+                           | because the order/disorder formulation implemented in this model is thermodynamically
+                           | inconsistent, the model is implemented internally in Perple_X (function gbccfesi).
+                           | The information provided below is a stub for the internal implementation and should
+                           | not be modified (the compositional limits and subdivision scheme are an exception in 
+                           | this regard). 
+oFeSi(bcc)
+
+29
+
+2
+
+Fe-BCC
+Si-BCC
+
+0 0
+
+0.   1.   0.1 0            | compositional limits and subdivision scheme
+
+ideal
+
+0
+
+end_of_model 
+                            --------------------------------------------------------
+begin_model 
+
+FeSi_liq
+
+2
+
+2
+Fe_LIQ 
+Si_LIQ
+0 0 
+
+0. 1. 0.1 0
+
+begin_excess_function
+w(Fe_LIQ Si_LIQ)                      -164434.600  41.9773 0.
+w(Fe_LIQ Fe_LIQ Si_LIQ)                   0.000  -21.523 0.
+w(Fe_LIQ Si_LIQ Si_LIQ)                   0.000   21.523 0.
+w(Fe_LIQ Fe_LIQ Fe_LIQ Si_LIQ)         -18821.542   22.070 0.
+w(Fe_LIQ Fe_LIQ Si_LIQ Si_LIQ)          37643.080  -44.14  0. 
+w(Fe_LIQ Si_LIQ Si_LIQ Si_LIQ)         -18821.542   22.07 0.
+w(Fe_LIQ Fe_LIQ Fe_LIQ Fe_LIQ Si_LIQ)   9695.8    0.    0.   | 9695.8
+w(Fe_LIQ Fe_LIQ Fe_LIQ Si_LIQ Si_LIQ)   -29087.4 0.    0.
+w(Fe_LIQ Fe_LIQ Si_LIQ Si_LIQ Si_LIQ)   29087.4  0.   0.
+w(Fe_LIQ Si_LIQ Si_LIQ Si_LIQ Si_LIQ)   -9695.8  0.   0. | 9695.8
+end_excess_function
+
+1
+2 1.
+z(Fe) = 1 Fe_LIQ
+
+
+end_of_model
+                            --------------------------------------------------------
 begin_model
                             | Entered by Jeff Marsh, Jan 10, 2012. 
 
@@ -7498,39 +7563,56 @@ mag      cc   odo_ef   sid   oank
 0. 1. 0.1  0                          |range and increments on X(mag)
 
 begin_excess_function             
-w(mag cc)  28000 0 0
-w(cc odo) 11200 0 0.0 
-w(mag odo)  14000 0 0
+w(mag cc)  28000. 0. 0. 
+w(cc  odo_ef)  11200. 0. 0. 
+w(mag  odo_ef)  14000 0 0
 W(cc sid)  20503 0 0
 w(oank sid) 73650 -50 0
 w(oank cc) 12730 -10 0
 w(mag sid) 10000 0 0
-w(sid odo) 51190 -30 0
-w(oank odo) -5000 0 0
+w(sid  odo_ef) 51190 -30 0
+w(oank  odo_ef) -5000 0 0
 w(oank mag) 30000 0 0 
 end_excess_function  
 
 3                                     |3 site (m1  m2a  m2b) entropy model 
 
 3 0.5                                 |3 species on m1, mutiplicity = 1/2
-z(m1,ca) =   1 cc + 1 odo + 1 oank
+z(m1,ca) =   1 cc + 1  odo_ef + 1 oank
 z(m1,mg) =   1 mag 
 
 3 0.25                                 |3 species on m2a, mult. = 1/4
 z(m2a,ca) =  1 cc  
-z(m2a,mg) =  1 mag + 1 odo 
+z(m2a,mg) =  1 mag + 1  odo_ef 
 
 3 0.25                                 |3 species on m2b, mult. = 1/4
 z(m2b,ca) =  1 cc  
-z(m2b,mg) =  1 mag + 1 odo + 1 oank
+z(m2b,mg) =  1 mag + 1  odo_ef + 1 oank
                
 
 begin_van_laar_sizes                        
 alpha(cc)     0.25 0.000929 0                      
 alpha(mag)    1 0. 0.0                     
-alpha(odo)    0.95 0.0 0 
+alpha(odo_ef)    0.95 0.0 0 
 alpha(sid)    0.01 0.000666 0
 alpha(oank)   0.929 0 0
 end_van_laar_sizes
 
+end_of_model        
+                      --------------------------------------------------------
+begin_model                
+                                      Silica Fluid                                  
+Si-Fluid   
+0                          | model type: Internal EoS
+2                                  
+O        SIO     
+  0  0                                endmember flags
+0.0 1.0 0.1       0        | subdivision ranges, imod = 0 -> cartesian subdivision
+
+ideal
+0
+
+reach_increment 3 
+
 end_of_model              
+                      -------------------------------------------------------      

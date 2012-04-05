@@ -217,7 +217,7 @@ c---------------------------------------------------------------------
 
       double precision ialpha, vt, trv, pth, vdp, ndu, vdpbm3, gsixtr, 
      *                 gstxgi, fs2, fo2, dg, kt, gval, gmake, gkomab,
-     *                 a, b, c, gstxlq
+     *                 a, b, c, gstxlq, glacaz
  
       double precision f
       common/ cst11 /f(2)
@@ -441,7 +441,12 @@ c                                 or thermodynamic composition space
             
          else if (eos(id).ge.600.and.eos(id).le.603) then
 c                                 komabayashi & fei (2010) EoS for Fe
-            gval = gkomab (eos(id),id,vdp)
+            gval = gkomab(eos(id),id,vdp)
+
+         else if (eos(id).ge.610.and.eos(id).le.620) then
+c                                 lacaze & Sundman (1990) EoS for Fe-Si-C alloys and compounds
+            vdp = 0d0 
+            gval = glacaz(eos(id))    
               
          end if          
 
@@ -6981,7 +6986,7 @@ c-----------------------------------------------------------------------
       integer k,id
 
       double precision omega, hpmelt, slvmlt, gmelt, gfluid, gzero, gg,
-     *                 dg, gex
+     *                 dg, gex, gfesi
 
       integer jend
       common/ cxt23 /jend(h9,k12)
@@ -7129,6 +7134,10 @@ c                                 get mechanical mixture contribution
                gg = gg + y(k) * g(jend(id,2+k)) 
             end do 
 
+         else if (ksmod(id).eq.29) then 
+c                                 -------------------------------------
+c                                 BCC Fe-Si Lacaze and Sundman
+            gg =  gfesi(y(1),g(jend(id,3)),g(jend(id,4)))
 
          else if (ksmod(id).eq.0) then 
 c                                 ------------------------------------
@@ -9581,7 +9590,7 @@ c                                 as above.
 
       subroutine speci0 (g,h,w,n,fac,c0,f)
 c----------------------------------------------------------------------
-c subroutine to solve speciation of 0-d speciation with 1 ordering parameter
+c subroutine to solve speciation of a 0-d solution with 1 ordering parameter
 c by halving. assumes an ordered species in which A is on 1 site and B is on 
 c n sites, and a disordered state in which A and B are distributed over all 
 c n+1 sites. 
@@ -9614,6 +9623,8 @@ c                                 check ordered state
 
       odg = dgdy(h,w,n,f,y,rt)
 c                                 if dgdy > 0 must be fully ordered
+c                                 (not really, non-zero w could make
+c                                 a zero at intermediate y).
       if (odg.lt.0d0) then 
 
          g = -h
@@ -9689,7 +9700,7 @@ c----------------------------------------------------------------------
 
       logical error
 
-      double precision g,pt,pmax,pmin,dy1,dy2,dp,dpmax,
+      double precision g,pmax,pmin,dy1,dy2,dp,dpmax,
      *                 omega,gex,dg,d2g
 
       double precision z, pa, p0a, x, w, y
@@ -9791,22 +9802,8 @@ c                                 full disordered
 
             end if 
          end if 
-
-         pt = pa(jd) + dp
-c                                 check bounds 
-         if (pt.lt.pmin) then
-                             
-            pa(jd) = pa(jd) + (pmin - pa(jd))/2d0
-
-         else if (pt.gt.pmax) then
- 
-            pa(jd) = pa(jd) + (pmax - pa(jd))/2d0
-          
-         else 
-
-            pa(jd) = pt         
-
-         end if
+c                                 increment and check p
+         call pcheck (pa(jd),pmin,pmax,dp,error)
 c                                 set speciation
          dp = pa(jd) - p0a(jd)
          pa(i1) = p0a(i1) + dy1*dp
@@ -9821,29 +9818,9 @@ c                                 newton raphson iteration
 
             dp = -dg/d2g 
 
-            pt = pa(jd) + dp 
-
-            if (pt.lt.pmin) then
-c                                 increment would make p < pmin
-c                                 switch the starting guess to pmax 
-               dp = (pmin - pa(jd))/2d0
-               pa(jd) = pa(jd) + dp
-
-            else if (pt.gt.pmax) then
-c                                 increment would make p > pmax
-c                                 switch the starting guess to pmin 
-               dp = (pmax - pa(jd))/2d0
-               pa(jd) = pa(jd) + dp 
-
-            else if (pt.eq.pmin.or.pt.eq.pmax) then 
-
-               exit 
-
-            else 
-
-               pa(jd) = pt         
-
-            end if
+            call pcheck (pa(jd),pmin,pmax,dp,error)
+c                                 error is just a flag to quit           
+            if (error) exit 
 
             pa(i1) = pa(i1) + dy1*dp
             pa(i2) = pa(i2) + dy2*dp 
@@ -9860,7 +9837,6 @@ c                                 switch the starting guess to pmin
             end if 
 
          end do
-
 
       end if  
 
@@ -10171,6 +10147,46 @@ c                                 check that the ordered species are in the subc
             end do 
          end if 
       end if  
+
+      end 
+
+      subroutine pcheck (x,xmin,xmax,dx,quit)
+c-----------------------------------------------------------------------
+c subroutine to increment x for a 1-d root search between xmin and xmax
+c-----------------------------------------------------------------------
+      implicit none
+
+      logical quit 
+
+      double precision x, xmin, xmax, dx, xt
+c-----------------------------------------------------------------------
+      quit = .false.
+
+      xt = x + dx 
+
+      if (xt.lt.xmin) then
+c                                 increment would make x < xmin
+c                                 revise the increment
+         dx = (xmin - x)/2d0
+         x = x + dx
+
+      else if (xt.gt.xmax) then
+c                                 increment would make x > xmax
+c                                 revise the increment 
+         dx = (xmax - x)/2d0
+         x = x + dx 
+
+      else if (xt.eq.xmin.or.xt.eq.xmax) then 
+c                                 hit the limit, don't set x to 
+c                                 the limit to save revaluating x
+c                                 dependent variables. 
+         quit = .true.
+
+      else 
+
+         x = xt         
+
+      end if
 
       end 
 
@@ -11891,5 +11907,403 @@ c                                 liquid iron, destabilize at T < 1811
       end if 
 
       gkomab = g + vdp
+
+      end 
+
+      double precision function hserfe (t)
+c-----------------------------------------------------------------------
+c hserfe returns the hser(fe) function of Lacaze & Sundman 1990.
+c-----------------------------------------------------------------------
+      implicit none
+
+      double precision t
+c----------------------------------------------------------------------
+
+      if (t.lt.1811d0) then 
+         hserfe  = 1224.83d0 + (124.134d0 -23.514d0*dlog(t)
+     *                  + (-.439752d-2-.5892691d-7*t)*t)*t + 77358.5d0/t
+      else 
+         hserfe = -25384.451d0 + (299.31255d0 - 46d0*dlog(t))*t 
+     *          + 2.2960305e31/t**9
+      end if  
+
+      end 
+
+      double precision function hsersi (t)
+c-----------------------------------------------------------------------
+c hserfe returns the hser(si) function of Lacaze & Sundman 1990.
+c-----------------------------------------------------------------------
+      implicit none
+
+      double precision t
+c----------------------------------------------------------------------
+
+      if (t.lt.1687d0) then 
+         hsersi = -8162.61d0 + ((137.227d0-22.8318d0*dlog(t)) + 
+     *                     (-.191129d-2-.355178d-8*t)*t)*t+176667d0/t
+      else 
+         hsersi = -9457.64d0 + t*(167.272d0 - 27.196d0*dlog(t)) 
+     *        - .420369e31/t**9
+      end if 
+
+      end 
+
+      double precision function glacaz (id)
+c---------------------------------------------------------------------
+c evaluate g for iron-Si alloys and compounds according to the EoS of
+c Lacaze & Sundman (1990)
+c id points to the phase
+c---------------------------------------------------------------------
+      implicit none
+ 
+      include 'perplex_parameters.h'
+
+      integer id
+
+      double precision hserfe, hsersi, gmag
+
+      double precision p,t,xco2,u1,u2,tr,pr,r,ps
+      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
+c---------------------------------------------------------------------
+      if (id.eq.610) then
+
+         glacaz = gmag(1d0) 
+c                                 Fe-bcc
+         glacaz = hserfe(t) 
+
+      else if (id.eq.611) then
+c                                 Si-bcc 
+         glacaz = 0.47D5 - 0.225D2*t + hsersi(t) 
+     
+      else if (id.eq.612) then
+c                                 Fe-fcc
+         if (t.lt.1811d0) then
+            glacaz = -0.14624D4 + 0.8282D1*t - 0.115D1*t*dlog(t) 
+     *             + 0.64D-3*t**2 + hserfe(t)
+         else
+            glacaz = -0.27098266D5 + 0.30025256D3*t - 0.46D2*t*dlog(t) 
+     *             + 0.27885D32/t**9         
+         end if
+
+      else if (id.eq.613) then
+c                                 Si-fcc
+         glacaz = 0.51d5 - 0.218D2*t + hsersi(t) 
+
+      else if (id.eq.614) then
+c                                 Fe-liq
+         if (t.lt.1811d0) then
+            glacaz = 0.1204d5 - 0.656D1*t - 0.3675d-20*t**7 + hserfe(t)
+         else
+            glacaz = -0.1084d5 + 291d0*t - 0.46D2*t*dlog(t) + hserfe(t)
+         end if
+
+      else if (id.eq.615) then
+c                                 Si-liq
+         if (t.lt.1687d0) then
+            glacaz = 0.506964D5 - 0.300994D2*t + 0.209307d-20*t**7 
+     *             + hsersi(t) 
+         else
+            glacaz = 0.49828D5 - 0.2956D2*t + 0.42d31/t**9 + hsersi(t)
+         end if 
+
+      else if (id.eq.616) then
+c                                 Fe2Si 
+         glacaz = -0.237522D5 - 0.354D1*t + 0.67D0*hserfe(t) 
+     *          + 0.33D0 * hsersi(t)
+
+      else if (id.eq.617) then
+c                                 Fe5si3
+         glacaz = -0.30143D5 + 0.27D0*t + 0.625D0*hserfe(t) 
+     *          + 0.375D0 * hsersi(t)
+
+      else if (id.eq.618) then
+c                                 FeSi
+         glacaz = -0.363806D5 + 0.222D1*t + hserfe(t)/2D0 
+     *          + hsersi(t)/2D0
+
+      else if (id.eq.619) then
+c                                 FeSi2 
+         glacaz = -0.27383D5 + 0.348D1*t + 0.33D0*hserfe(t) 
+     *          + 0.67D0*hsersi(t)
+
+      else if (id.eq.620) then
+c                                 Fe3Si7
+         glacaz = -0.19649D5 - 0.92D0*t + 0.3D0 * hserfe(t) 
+     *          + 0.7D0 * hsersi(t)
+
+      end if
+
+      end 
+
+      double precision function gmag (x)
+c-----------------------------------------------------------------------
+c gmag returns the magnetic contribution to G for BCC Fe in FeSi alloy.
+c after Lacaze & Sundman 1990.
+c     x - bulk mole fraction of Ge 
+c-----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      double precision b,t0,tc,f,x 
+
+      double precision p,t,xco2,u1,u2,tr,pr,r,ps
+      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
+
+      if (x.eq.0d0) then 
+         gmag = 0d0
+         return
+      end if 
+
+      tc = ((-0.1008D4 * x + 0.1512D4) * x + 0.539D3) * x
+
+      t0 = t/tc
+
+      if (t0.lt.1d0) then 
+
+         f = 0.1D1 - 0.905299383D0 / t0 - (0.153008346D0 
+     *       + (0.680037095D-2 + 0.153008346D-2 * t0**6) * t0**6)
+     *       * t0**3
+
+      else 
+
+         f = -(0.641731208D-1 + (0.203724193D-2 + 0.42782080051D-3 / 
+     *        t0**10) / t0**10) / t0**5
+
+      end if 
+
+      b = 2.22d0 * x
+
+      gmag = r*t*f*dlog(b+1)
+
+      end 
+
+      double precision function gfesi (y,g1,g2)
+c-----------------------------------------------------------------------
+c gfesi returns the the ordering + magnetic free energy change relative to a
+c mechanical mixture of the disordered endmembers for BCC FeSi alloy after 
+c Lacaze & Sundman 1990. See FeSiBCC.mws.
+
+c    y   - the bulk Fe mole fraction
+c    g01 - free energy of Bcc Fe, without Gmag
+c    g02 - free energy of Bcc Si
+c-----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      logical done
+
+      integer itic 
+
+      double precision g1, g2, y, x, w0, w1, w2, rt, dg, xmin, 
+     *                 d2g, gord, xmax, dx, gfesi0, g0, g12, gmag
+
+      double precision p,t,xco2,u1,u2,tr,pr,r,ps
+      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      save w1, w2, gord
+      data w1, w2, gord/-11544d0, 3890d0, -10475.64d0/
+c----------------------------------------------------------------------
+      if (y.le.nopt(5).or.y.ge.1d0-nopt(5)) then 
+c                                 endmember compositions, no order possible
+         gfesi = y*g1 + (1d0-y)*g2 + gmag(y)
+         return
+      end if 
+
+      w0  = -27809d0 + 11.62d0 * t
+      gord = -10475.64d0 
+      rt  = r*t
+      g12 = 2d0*(gord - w0) - g1 - g2
+c                                 max concentration of ordered species
+      if (y.gt.0.5d0) then 
+         xmax = 1d0
+c                                 the true xmin (commented) allows for
+c                                 anti-ordering, but because the model 
+c                                 is symmetric, i up xmin to y
+c        xmin = 2d0*(y-.5d0)
+      else
+         xmax = 2d0*y
+c        xmin = 0d0
+      end if 
+
+      xmax = xmax - nopt(5)
+      xmin = y + nopt(5)
+      x = xmax      
+c                                 get 1st and 2nd derivatives
+      call dgfesi (dg,d2g,y,x,g12,rt)
+
+      done = .false.
+c                                 find starting point for newton-raphson
+c                                 search
+      if (dg.gt.0d0.and.d2g.gt.0d0) then 
+c                                 the max order concentration is a
+c                                 good starting point
+         dx = -dg/d2g
+
+      else if (dg.lt.0d0) then
+c                                 the max order is a minimum
+         x = y
+         done = .true.
+
+      else 
+c                                 try the max disordered concentration
+         x = xmin
+
+         call dgfesi (dg,d2g,y,x,g12,rt)         
+
+         if (dg.lt.0d0.and.d2g.gt.0d0) then 
+c                                 ok
+            dx = -dg/d2g
+            
+         else                
+c                                 full disordered
+            done = .true.            
+
+         end if
+
+      end if 
+c                                 iteration loop
+      if (.not.done) then                   
+c                                 increment and check bounds 
+         call pcheck (x,xmin,xmax,dx,done)
+c                                 iteration counter 
+         itic = 0
+
+         do
+
+            call dgfesi (dg,d2g,y,x,g12,rt)            
+
+            dx = -dg/d2g 
+
+            call pcheck (x,xmin,xmax,dx,done)  
+
+            if (done) then 
+
+               exit    
+
+            else if (dabs(dx).lt.nopt(5)) then 
+
+               exit
+
+            else 
+
+               itic = itic + 1
+               if (itic.gt.20) exit
+
+            end if        
+
+         end do 
+
+      end if 
+
+      gfesi = gfesi0 (y,x,gord,g2,g12,w0,w1,w2,rt)
+
+      if (iopt(17).ne.0) then 
+c                                 order check, compare to the 
+c                                 max order g
+         g0 = gfesi0 (y,x,gord,g2,g12,w0,w1,w2,rt)
+         if (gfesi.gt.g0) gfesi = g0 
+c                                 min order g
+         g0 = gfesi0 (y,x,gord,g2,g12,w0,w1,w2,rt)
+         if (gfesi.gt.g0) gfesi = g0 
+
+      end if 
+c                                 add magnetic component
+      gfesi = gfesi + gmag(y) 
+
+      end 
+
+      double precision function gfesi0 (y,x,gord,g2,g12,w0,w1,w2,rt)
+c-----------------------------------------------------------------------
+c gfesi0 computes the G for BCC FeSi alloy once the speciation has been
+c computed if function gfesi. See FeSiBCC.mws.
+
+c    y  - the bulk Fe mole fraction
+c    g1 - free energy of Bcc Fe, without Gmag
+c    g2 - free energy of Bcc Si
+c-----------------------------------------------------------------------
+      implicit none 
+
+      double precision g2, g12, y, x, w0, w1, w2, xy, yx, x1, rt, 
+     *                 gord
+c-----------------------------------------------------------------------
+      yx  = 2d0*y - x
+      x1  = 1d0 - x
+      xy  = 1d0 - 2d0*y + x
+
+      gfesi0  = ( dlog(x/x1*xy/yx)*x/2d0 
+     *          + dlog(yx/xy)*y 
+     *          + dlog(xy*x1)/2d0)*rt 
+     *      - g12*yx*x 
+     *      - 64d0*w2*y**4
+     *      + 16d0*(8d0*w2 - w1)*y**3 
+     *      + 4d0 *(6d0*w1 - 20d0*w2 - w0)*y**2 
+     *      + 2d0 *(8d0*w2 + gord + w0 - 4d0*w1 - g2)*y + g2
+
+      end 
+
+      double precision function gfesi1 (y,x,w0,w1,w2,rt)
+c-----------------------------------------------------------------------
+c gfesi0 computes the G - Gmech for BCC FeSi alloy once the speciation has been
+c computed if function gfesi. See FeSiBCC.mws.
+
+c    y  - the bulk Fe mole fraction
+c    g1 - free energy of Bcc Fe, without Gmag
+c    g2 - free energy of Bcc Si
+c-----------------------------------------------------------------------
+      implicit none 
+
+      double precision y, x, w0, w1, w2, xy, yx, x1, rt, gcon, gex
+c-----------------------------------------------------------------------
+      yx  = 2d0*y - x
+      x1  = 1d0 - x
+      xy  = 1d0 - 2d0*y + x
+
+      gfesi1  = ( dlog(x/x1*xy/yx)*x/2d0 
+     *          + dlog(yx/xy)*y 
+     *          + dlog(xy*x1)/2d0)*rt 
+     *          + (((-64d0*w2*y + 128d0*w2 - 16d0*w1)*y 
+     *              + 24d0*w1 - 80d0*w2 - 4d0*w0)*Y + 4d0*x*w0 + 2d0*w0 
+     *              + 16d0*w2 - 8d0*w1)*y - 2d0*x**2*w0
+
+
+      gcon = ( dlog(x/x1*xy/yx)*x/2d0 
+     *          + dlog(yx/xy)*y 
+     *          + dlog(xy*x1)/2d0)*rt 
+
+
+      gex  = 
+     *          + (((-64d0*w2*y + 128d0*w2 - 16d0*w1)*y 
+     *              + 24d0*w1 - 80d0*w2 - 4d0*w0)*Y + 4d0*x*w0 + 2d0*w0 
+     *              + 16d0*w2 - 8d0*w1)*y - 2d0*x**2*w0
+
+
+      end 
+
+      subroutine dgfesi (dg,d2g,y,x,g12,rt)
+c-----------------------------------------------------------------------
+c dgfesi first and second derivatives of gfesi with respect to the ordered
+c species concentration (x). After Lacaze & Sundman 1990, see FeSiBCC.mws.
+
+c    y  - the bulk Fe mole fraction
+c-----------------------------------------------------------------------
+      implicit none
+
+      double precision y, x, xy, yx, x1, rt, dg, d2g, g12
+c-----------------------------------------------------------------------
+      yx  = 2d0*y - x
+      x1  = 1d0 - x
+      xy  = 1d0 - 2d0*y + x
+
+      dg  = -2d0*(y - x)*g12 + dlog(x*xy/x1/yx)*rt/2d0
+
+      d2g =  2d0*g12 + (xy/x1/yx + x/x1/yx + x*xy/x1**2/yx 
+     *               + x*xy/x1/yx**2)/x/xy*x1*yx*rt/2d0
 
       end 

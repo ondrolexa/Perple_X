@@ -217,16 +217,16 @@ c programs, or if you have any problems with this program, please
 c contact me at:
 
 c                     James Connolly
-c                     IMP-ETHZ
+c                     IGP-ETHZ
 c                     CH-8092 Zuerich
 
 c by e-mail at:
 
-c                     jamie@erdw.ethz.ch
+c                     james.connolly@erdw.ethz.ch
 
 c or by telephone/fax at:
 
-c                     0041-1-632-7804/0041-1-632-1088
+c                     0041-44-632-7804/0041-44-632-1088
 
 c-----------------------------------------------------------------------
 c I/O: most input and output is done through the common blocks below,
@@ -274,6 +274,9 @@ c         8 = SO2
 c         9 = COS
 c        10 = N2
 c        11 = NH3
+c        12 = O
+c        13 = SiO
+c        14 = SiO2
 
 c O2 should be replaced by SO3, and ethane should be added.
 c-----------------------------------------------------------------------
@@ -284,11 +287,11 @@ c-----------------------------------------------------------------------
 
       logical log
 
-      character specie(nsp)*3, y*1, n4name*100, title*100, tags(26)*14
+      character specie(nsp)*4, y*1, n4name*100, title*100, tags(26)*14
 
       integer ier, igo, ins(nsp), i, isp, j, k, kmax, count
 
-      double precision nc, nh, no, ns, nn, tentoe, fo2, fs2, xfh, 
+      double precision nc, nh, no, ns, nn, nsi, tentoe, fo2, fs2, xfh, 
      *                 xfc, ag, tot, totx, var(l2), f, prop(40)
 
       double precision fhc
@@ -334,8 +337,8 @@ c-----------------------------------------------------------------------
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       data tentoe, fo2, fs2, specie /2.302585093d0, 0d0, 0d0,
-     *      'H2O','CO2','CO ','CH4','H2 ','H2S','O2 ',
-     *      'SO2','COS','N2 ','NH3'/
+     *      'H2O ','CO2 ','CO  ','CH4 ','H2  ','H2S ','O2  ',
+     *      'SO2 ','COS ','N2  ','NH3 ','O   ','SiO ','SiO2'/
 c----------------------------------------------------------------------- 
 c                                 iam is a flag indicating the Perple_X program
       iam = 11
@@ -412,6 +415,15 @@ c                                 xco2 EoS's
             isp = 2
             ins(1) = 1
             ins(2) = 2
+
+         else if (ifug.eq.26) then
+c                                 silica vapor 
+            vname(3) = 'X(SiO)  '
+            isp = 4
+            ins(1) = 14
+            ins(2) = 13
+            ins(3) = 12
+            ins(4) = 7
 
          else 
 
@@ -500,6 +512,10 @@ c                                fo2-aC-N/C COHN
                   ipot = 4 
                   vname(4) = 'N/C     '
                end if 
+
+            else if (ifug.eq.26) then 
+
+               ipot = 3
 
             end if 
 
@@ -686,7 +702,7 @@ c                                 computational loop, initialize p,t to be safe
 
             if (ifug.le.6 .or.ifug.eq.14.or.ifug.eq.17.or.
      *          ifug.eq.21.or.ifug.eq.22.or.ifug.eq.25.or.
-     *          ifug.eq.15.or.ifug.eq.16) then 
+     *          ifug.eq.15.or.ifug.eq.16.or.ifug.eq.26) then 
 c                                 xco2, xo, xh2 EoS's
                 xo = var(3)
 
@@ -1067,11 +1083,11 @@ c                                  volume:
                      ag = 0d0
                   else if (ifug.eq.19.or.ifug.eq.20) then
                      ag = dexp (gz)
-                  else
+                  else if (ifug.ne.26) then 
                      ag = dexp (elag)
                   end if 
 c                                  routine cfluid returns ln(fs2)/2
-                  write (*,1170) fo2, 2d0*fs2/tentoe, ag
+                  if (ifug.ne.26) write (*,1170) fo2, 2d0*fs2/tentoe, ag
 c                                  output speciation:
                   write (*,1230)
 
@@ -1094,16 +1110,18 @@ c                                  output bulk properties and V:
                   write (*,1240)
 
                   ns = xs(6) + xs(8) + xs(9) 
-                  no = xs(1) + xs(2)*2d0 + xs(3) + xs(7)*2d0 
-     *                       + xs(8)*2d0 + xs(9) 
+                  no = xs(1) + xs(2)*2d0 + xs(3) + xs(7)*2d0 + xs(12)
+     *                       + xs(8)*2d0 + xs(9) + xs(14)*2d0 + xs(13)
                   nc = xs(2) + xs(3) + xs(4) + xs(9)
                   nh = (xs(1) + xs(5) + xs(6))*2d0 + xs(4)*4d0 
      *                                             + xs(11)*3d0 
                   nn = 2d0*xs(10) + xs(11)
+                  nsi = xs(13) + xs(14)
 
-                  tot = ns + no + nh + nc + nn     
+                  tot = ns + no + nh + nc + nn + nsi    
 
-                  write (*,1250) nc/tot, nh/tot, no/tot, ns/tot, nn/tot
+                  write (*,1250) nc/tot, nh/tot, no/tot, ns/tot, nn/tot,
+     *                           nsi/tot
                   write (*,1270) no/(no+nh)
                   if (ns.ne.0d0) write (*,1310) ns/(ns+nc)
                   write (*,1350) nc/(nc+no+nh+ns)
@@ -1137,13 +1155,13 @@ c                                  output bulk properties and V:
 1170  format (/,10x,'log[f(O2)] = ',g12.5,
      *        /,10x,'log[f(S2)] = ',g12.5,
      *        /,10x,'a(gph/dia) = ',g12.5,/)
-1180  format (10x,4(5x,a3,5x))
+1180  format (10x,4(4x,a,5x))
 1190  format (5x,'x',4x,4(g12.5,1x))
 1200  format (5x,'f',4x,4(g12.5,1x),/)
-1230  format (22x,'Speciation/Fugacities',/)
+1230  format (/,22x,'Speciation/Fugacities',/)
 1240  format (/,22x,'Atomic Proportions',//,
-     *        10x,'C',12x,'H',12x,'O',12x,'S',12x,'N')
-1250  format (4x,5(g12.5,1x),/)
+     *        10x,'C',12x,'H',12x,'O',12x,'S',12x,'N',12x,'Si')
+1250  format (4x,6(g12.5,1x),/)
 1270  format (5x,'Back-calculated X(O) = ',g16.9)
 1280  format (/,10x,'p(bar)     = ',g12.5,/,10x,'T(K)       = ',g12.5)
 1290  format (5x,'S/H = ',g12.5,/)
