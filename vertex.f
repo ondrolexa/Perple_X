@@ -7422,7 +7422,7 @@ c                                 open fractionation files
 
          write (*,1010) phase(i), fname
 
-         open (n0+ifrct,file=fname,status='unknown')
+         open (n0+i,file=fname,status='unknown')
 
       end do 
 
