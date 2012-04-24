@@ -31,6 +31,7 @@ initial_resolution    0.067 | >0, <1, default 1e-2
 interpolation on       2    | value 1: on or off; value 2, 1->99
 iteration              3  4 | value 2: 2->99; value 3: 1->7
 linear_model           on   | on or off
+logarithmic_p          F 
 melt_is_fluid          F    | T[rue] or F[alse], default is F
 option_list_files      F    | echo run-time options to my_project_PROGRAM_options.txt
 order_check            on   | on or off

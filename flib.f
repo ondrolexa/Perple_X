@@ -5939,7 +5939,7 @@ c                                iterate for non-ideality
             y(i3) = (a1-g(i4))/a0
             if (y(i3).gt.1d0.or.y(i3).lt.0d0) y(i3) = -(a1+g(i4))/a0
             y(i4) = 1d0 - y(i3)
-            if ( dabs((oldy-y(i3))/y(i3)).lt.1d-3) exit  
+            if ( dabs((oldy-y(i3))/y(i3)).lt.1d-6) exit  
 c                                 get new gamma's
             call mrkmix (ins, isp)
 
@@ -5998,7 +5998,7 @@ c                                 get new gamma's
 
             nit = nit + 1
 
-            if (nit.lt.100) cycle 
+            if (nit.lt.1000) cycle 
             write (*,*) 'ugga wugga not converging'
             stop
 

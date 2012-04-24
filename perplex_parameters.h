@@ -39,10 +39,14 @@
 !                                 i8  - number of properties saved for each phase and
 !                                       for the bulk composite, less than i8 properties
 !                                       may be read from the bulk property file. 
+!                                       if i8 is changed then adjust:
+!                                          pt2prp - frendly.f
+!                                          l2p    - werami.f
+!                                          prname - werami.f
 !                                 i9  - max number of solutions in solution model file
 !                                 i10 - max number of option values in perplex_option.dat
 !                                 i11 - max number of dependent properties in a tab format file
-      parameter (i6=2,i7=20,i8=27,i9=200,i10=25,i11=80)
+      parameter (i6=2,i7=20,i8=28,i9=200,i10=30,i11=80)
 !                                 j3  - max number of ordered species
 !                                 j4  - max number of species in the definition of a dependent species
 !                                 j5  - max number of stoichiometric limits on an ordered species

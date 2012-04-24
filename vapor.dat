@@ -31,12 +31,16 @@ end_special_components
                                                           
 end                                                                                                                                         
 
-SIO      EoS = 1 | @1200 K cp = 59.441 S = 302.222, JANAF cp from 1100 to 6000 K  melt 1996 boil 3223199                                                       
+SIO      EoS = 1 | HSC Hf apparent G value adjusted to give 800 K value, cp valid 1500-6000 K 
 SIO(1) 
+G0 = -165804.2 S0 = 214.2696  
+c1 = 37.0298 c2 = .29472E-3 c3 = -1550846 c4 = .1456E-7
 end
 
-O        EoS = 1 | @1200 K cp = 59.441 S = 302.222, JANAF cp from 1100 to 6000 K  melt 1996 boil 3223199                                                       
+O        EoS = 1 | HSC Hf apparent G value adjusted to give 1500 K value, cp valid 1500-6000 K 
 O(1) 
+G0 = 200473.4 S0 = 156.6792  
+c1 = 20.07968 c2 = .13599E-3 c3 = 1089287 c4 = .3825E-7  
 end
 
 SIO2     EoS = 1 | @1200 K cp = 59.441 S = 302.222, JANAF cp from 1100 to 6000 K  melt 1996 boil 3223199                                                       
@@ -98,3 +102,5 @@ c1 = 68.1 c2 = .601E-2 c3 = -1978200 c5 = -82.1
 b1 = .25E-4 b5 = -.25E-3 b6 = 3160000. b7 = -474 b8 = 4  
 m0 = 2170000 m1 = 1.8 m2 = -180  
 end
+
+

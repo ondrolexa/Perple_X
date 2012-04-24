@@ -3234,6 +3234,7 @@ c 35                Shear modulus pressure derivative (unitless)
 c 36                All properties of a phase or the system
 c 37                Absolute amounts
 c 38                Multiple property grid for system and phases
+c 39                heat capacity ratio (cp/cv)
 c----------------------------------------------------------------
       implicit none
 
@@ -3241,7 +3242,7 @@ c----------------------------------------------------------------
 
       integer i, j, icx, kprop, ier, lop, komp, mprop
 
-      parameter (kprop=38)
+      parameter (kprop=39)
 
       character propty(kprop)*60, y*1, pname*10
 
@@ -3326,7 +3327,8 @@ c----------------------------------------------------------------
      *            'Shear modulus P derivative (unitless)',
      *            'All phase &/or system properties',
      *            'Absolute amount (Vol, Mol, or Wt) of a phase',
-     *            'Multiple property output'/
+     *            'Multiple property output',
+     *            'Heat capacity ratio (Cp/Cv)'/
 c----------------------------------------------------------------------
       do i = 1, istab
 
@@ -3686,7 +3688,7 @@ c----------------------------------------------------------------
 
       integer icx, jprop, lop, komp, l2p(38)
 
-      character prname(44)*14, pname*10
+      character prname(45)*14, pname*10
 
       logical gflu,aflu,fluid,shear,lflu,volume,rxn
       common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume,rxn
@@ -3734,9 +3736,9 @@ c                                 28-30
      *      'h,J/m3        ','cp,J/K/m3     ','blk_comp      ',
      *      'mode          ','composition   ','s,J/K/m3      ',
      *      's,J/K/kg      ','h,J/kg        ','cp,J/K/kg     ',
-c                                 40-43
+c                                 40-44
      *      'specific_mass ','poisson_ratio ','chemical_pot  ',
-     *      'assemblage_i  ','extent        '/
+     *      'assemblage_i  ','extent        ','cp/cv         '/
 c                                 l2p points from lop to prname, 
 c                                 1-10
       data l2p/34,10,32,13,14,33,37,38, 3, 4,

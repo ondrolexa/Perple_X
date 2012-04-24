@@ -333,7 +333,7 @@ c----------------------------------------------------------------------
 
       logical table
 
-      character*14 tags(26)
+      character*14 tags(27)
 
       integer inc,jpot
       common/ cst101 /inc(l2),jpot
@@ -371,7 +371,7 @@ c----------------------------------------------------------------------
      *'GsT(bar/K)   ','GsP          ',
      *'v0(km/s)     ','v0T(km/s/K)  ','v0P(km/s/bar)',
      *'vp(km/s)     ','vpT(km/s/K)  ','vpP(km/s/bar)','vs(km/s)     ',
-     *'vsT(km/s/K)  ','vsP(km/s/bar)'/
+     *'vsT(km/s/K)  ','vsP(km/s/bar)','cp/cv        '/
 c----------------------------------------------------------------------
  
       do i = 1, l2
@@ -627,7 +627,7 @@ c        write (*,'(80(a14,1x))') (vname(iv(i)),i=1,jpot),tags
             write (n4,*) inc(iv(i))
          end do 
 
-         write (n4,*) 26+jpot
+         write (n4,*) 27+jpot
          write (n4,'(80(a14,1x))') (vname(iv(i)),i=1,jpot),tags
 
       else if (io4.eq.0) then 
@@ -2248,7 +2248,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer pt2prp(25),i
+      integer pt2prp(26),i
 
       double precision lgk
 
@@ -2275,7 +2275,7 @@ c----------------------------------------------------------------------
       save pt2prp
 
       data pt2prp/11, 2,15,12, 1,13,14,17,10, 3, 4,18,20, 5,19,21,
-     *             6,22,25, 7,23,26, 8,24,27/
+     *             6,22,25, 7,23,26, 8,24,27, 28/
 c----------------------------------------------------------------------
 
       lgk = -(psys(11)/r/v(2))/dlog(1d1)
@@ -2284,14 +2284,15 @@ c----------------------------------------------------------------------
 
          write (n4,1000) (v(iv(i)), i = 1, jpot),
      *                   psys(pt2prp(1)),psys(pt2prp(2)),lgk,
-     *                   (psys(pt2prp(i)),i=3,25)
+     *                   (psys(pt2prp(i)),i=3,26)
 
       else 
 
          write (*,1050)
          write (*,1030) (vname(iv(i)),v(iv(i)), i = 1, ipot)
          write (*,1010) psys(pt2prp(1))/1d3,psys(pt2prp(2))/1d3,lgk,
-     *                  (psys(pt2prp(i)),i=3,7)
+     *                  (psys(pt2prp(i)),i=3,7),psys(pt2prp(26))
+
          if (.not.rxn) then 
             write (*,1020) (psys(pt2prp(i)),i=8,25)
          else 
@@ -2308,7 +2309,8 @@ c----------------------------------------------------------------------
      *        /,'heat capacity (J/mol/K) ',t32,'= ',g14.7,/,
      *        /,'volume (J/mol/bar) ',t32,'= ',g14.7,
      *        /,'expansivity (1/K) ',t32,'= ',g14.7,
-     *        /,'compressibility (1/bar) ',t32,'= ',g14.7)
+     *        /,'compressibility (1/bar) ',t32,'= ',g14.7,
+     *        /,'heat capacity ratio (cp/cv)',t32,'= ',g14.7)
 1020  format (/,'formula weight (g/mol) ',t32,'= ',g14.7,
      *        /,'density (kg/m3) ',t32,'= ',g14.7,/,
      *        /,'Gruneisen_T ',t32,'= ',g14.7,//,

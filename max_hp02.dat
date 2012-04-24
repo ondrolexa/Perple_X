@@ -1886,3 +1886,7 @@ end
 fe3si7   EoS = 620 | Lacaze & Sundman 1990 Special EoS                                        
 Fe(0.3)Si(0.7)
 end
+
+Si-diam  EoS = 621 | Lacaze & Sundman 1990 Special EoS                                        
+Si(1)
+end

@@ -443,7 +443,7 @@ c                                 or thermodynamic composition space
 c                                 komabayashi & fei (2010) EoS for Fe
             gval = gkomab(eos(id),id,vdp)
 
-         else if (eos(id).ge.610.and.eos(id).le.620) then
+         else if (eos(id).ge.610.and.eos(id).le.621) then
 c                                 lacaze & Sundman (1990) EoS for Fe-Si-C alloys and compounds
             vdp = 0d0 
             gval = glacaz(eos(id))    
@@ -11960,14 +11960,12 @@ c---------------------------------------------------------------------
 
       integer id
 
-      double precision hserfe, hsersi, gmag
+      double precision hserfe, hsersi
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 c---------------------------------------------------------------------
       if (id.eq.610) then
-
-         glacaz = gmag(1d0) 
 c                                 Fe-bcc
          glacaz = hserfe(t) 
 
@@ -12030,6 +12028,10 @@ c                                 FeSi2
 c                                 Fe3Si7
          glacaz = -0.19649D5 - 0.92D0*t + 0.3D0 * hserfe(t) 
      *          + 0.7D0 * hsersi(t)
+
+      else if (id.eq.621) then
+c                                 Si-diamond
+         glacaz = hsersi(t) 
 
       end if
 
@@ -12116,8 +12118,12 @@ c                                 endmember compositions, no order possible
          return
       end if 
 
+c!!!!!!!!!!!!!!!!!!!!!!!!!!!
+c
+c!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
       w0  = -27809d0 + 11.62d0 * t
-      gord = -10475.64d0 
+      gord = -10475.64d0*2 + ( (g1 + g2)/2d0 + w0)
       rt  = r*t
       g12 = 2d0*(gord - w0) - g1 - g2
 c                                 max concentration of ordered species
