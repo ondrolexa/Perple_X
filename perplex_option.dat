@@ -43,7 +43,7 @@ reaction_format    minimum  | minimum, full, stoich, S+V, or everything
 reaction_list         off   | on or off
 seismic_output        some  | all, some, none
 short_print            on   | on or off
-site_check              T   | T[rue] or F[alse], T=> reject solution compositions with negative site fractions
+site_check              F   | T[rue] or F[alse], T=> reject solution compositions with negative site fractions
 solvus_tolerance      auto  | auto or 0->1 [0.05] should be > initial_resolution/auto_refine_factor
 solvus_tolerance_II    0.25 | 0->1 [0.25]
 speciation_tolerance   1d-3 | tolerance for order-disorder speciation calculations, >0,<1 [1d-3]

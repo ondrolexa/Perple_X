@@ -1890,3 +1890,11 @@ end
 Si-diam  EoS = 621 | Lacaze & Sundman 1990 Special EoS                                        
 Si(1)
 end
+
+FeC      EoS = 622 | Lacaze & Sundman 1990 Special EoS                                        
+Fe(1)C(1)
+end
+
+SiC      EoS = 623 | Lacaze & Sundman 1990 Special EoS                                        
+Si(1)C(1)
+end

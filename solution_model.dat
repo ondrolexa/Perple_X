@@ -1211,6 +1211,91 @@ z(al,T2)= 1 ames + 1/2 clin + 1/2 daph + 1/2 mnchl
 end_of_model  
                               --------------------------------------------------------
 begin_model                
+                           | CHLORITE: extended from Holland et al. (1998) for sud substitution
+                           | Entered by Thomas Wagner, 5/12.
+                              
+                             LWV 7/12
+
+                           | the model is formulated here explicitly
+                           | in terms of the dependent endmembers with the
+                           | site occupancy table:
+
+
+                                                      1         2         3        4
+                                                      M1      M2+M3       M4       T2
+                                                     ________________________________
+
+                                      Mutliplicity    1         4         1        2 
+                                                     ________________________________
+  
+                                      1 fames         Al        Fe        Al       Al_Al   dependent
+                                      2 ames          Al        Mg        Al       Al_Al
+                                      3 clin          Mg        Mg        Al       Al_Si
+                                      4 daph          Fe        Fe        Al       Al_Si
+                                      5 fsud          Va        Al2_Fe2   Al       Al_Si   dependent
+                                      6 sud           Va        Al2_Mg2   Al       Al_Si
+                                       
+                                          Dependent endmembers:
+
+                                          fames = ames + 4/5 * (daph - clin)
+                                          fsud = sud + 2/5 * (daph - clin)
+                                          
+
+
+Chl(LWV)     
+                       
+7                               | model type reciprocal, macroscopic formulation
+2 
+3 2 
+fames_i   fsud_i     daph
+ames      sud_dqf    clin
+
+2                               | 2 dependent endmembers
+
+fames_i  = 1 ames   + 4/5 daph  - 4/5 clin
+fsud_i   = 1 sud_dqf   + 2/5 daph  - 2/5 clin
+
+0 0 0 0 0 0                  |endmember flags
+
+                             | subdivision model for (ternary) site 1 (T2):
+0. 1. .1 0                   | range and resolution of X(Al_Si), imod = 0 -> cartesian subdivision
+0. 1. .1 0                   | range and resolution of X(Al_Al), imod = 0 -> cartesian subdivision
+                             
+                             | subdivision model for (ternary) site 2 (M2)
+0. 1.  .1 0                  | range and resolution of X(Fe), imod = 0 -> cartesian subdivision 
+
+begin_excess_function
+
+w(clin ames)      18000. 0. 0. 
+w(clin daph)      2500. 0. 0.
+w(clin sud_dqf)   49100. 0. 0.
+w(daph ames)      13500. 0. 0.
+w(daph sud_dqf)   43400. 0. 0.
+w(ames sud_dqf)   43300. 0. 0.
+
+end_excess_function
+
+3                               |3 site configurational entropy model:
+
+4 1.                            |4 species on 1 M1 site
+
+z(al,M1) = 1 ames
+z(mg,M1) = 1 clin
+z(fe,M1) = 1 daph 
+
+
+3 4.                            |3 species on 4 M2+M3 sites
+
+z(fe,m2+m3) = 1 daph
+z(mg,m2+m3) = 1 clin + 1 ames + 1/2 sud_dqf
+
+2 2.                            |2 species on 2 T2 sites
+
+z(al,T2) = 1 ames + 1/2 clin + 1/2 daph + 1/2 sud_dqf
+
+end_of_model  
+                              --------------------------------------------------------
+begin_model                
                                       Sack & Ghiorso (1989 CMP 102:41-68) for Fe-Mg olivine. 
                                       [an astoundingly complex presentation]
                                       JADC 7/03         
@@ -7428,7 +7513,36 @@ z(Fe) = 1 iron
 
 reach_increment 3
 
-end_of_model               
+end_of_model          
+                      --------------------------------------------------------
+begin_model                
+                           | FCC Fe-Si alloy after Lacaze and Sundman (1990) Metal. Trans 22A:1991-2211
+FeSi(fcc)                  
+2                          | model type: Margules.
+2                          | 2 endmembers 
+Fe-FCC
+Si-FCC
+  0  0                     | endmember flags
+
+0.     1.      0.1     0   | imod = 0 -> cartesian subdivision
+
+begin_excess_function   
+W(Fe-FCC Si-FCC)               -125247.7 41.116 0d0 
+W(Fe-FCC Fe-FCC Si-FCC)        -142707.6 0d0 0d0 
+W(Fe-FCC Si-FCC Si-FCC)         142707.6 0d0 0d0 
+W(Fe-FCC Fe-FCC Fe-FCC Si-FCC)   89907.3 0d0 0d0
+W(Fe-FCC Fe-FCC Si-FCC Si-FCC) -179814.6 0d0 0d0
+W(Fe-FCC Si-FCC Si-FCC Si-FCC)   89907.3 0d0 0d0
+end_excess_function 
+
+1                                     1 site entropy model
+
+2 1.                                  2 species, site multiplicity = 1.
+z(Fe) = 1 Fe-FCC
+
+reach_increment 3
+
+end_of_model          
                             --------------------------------------------------------
 begin_model 
                            | BCC Fe-Si alloy after Lacaze and Sundman (1990) Metal. Trans 22A:1991-2211

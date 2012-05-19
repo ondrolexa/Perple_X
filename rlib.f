@@ -443,7 +443,7 @@ c                                 or thermodynamic composition space
 c                                 komabayashi & fei (2010) EoS for Fe
             gval = gkomab(eos(id),id,vdp)
 
-         else if (eos(id).ge.610.and.eos(id).le.621) then
+         else if (eos(id).ge.610.and.eos(id).le.623) then
 c                                 lacaze & Sundman (1990) EoS for Fe-Si-C alloys and compounds
             vdp = 0d0 
             gval = glacaz(eos(id))    
@@ -7881,6 +7881,9 @@ c                                 model type
       logical cart
       double precision scoors
       common/ cxt86 /scoors(k24),ndim(mdim),mxsp,cart(mst,h9)
+
+      integer iam
+      common/ cst4 /iam
 c----------------------------------------------------------------------
 c                                 auto_refine changes
       if (refine) then
@@ -8092,10 +8095,19 @@ c                                 if pure cartesian, save maximum dimension
 
       end do 
 c                                 set reach factors
-      if (reach.le.nopt(23)) then 
+      if (.not.refine.and.iam.eq.1) then
+c                                 if vertex and not in the refine stage
+c                                 shut of reach increments
+          reachg(im) = nopt(21)/2d0    
+
+      else if (reach.le.nopt(23)) then 
+
          reachg(im) = nopt(21)*(1d0 + nopt(23))/2d0
+
       else 
+
          reachg(im) = nopt(21)*(1d0 + reach)/2d0
+
       end if 
 c                                 -------------------------------------
 c                                 classify the model
@@ -12033,6 +12045,14 @@ c                                 Fe3Si7
 c                                 Si-diamond
          glacaz = hsersi(t) 
 
+      else if (id.eq.622) then
+c                                 FeC
+         glacaz = 0. 
+
+      else if (id.eq.623) then
+c                                 SiC
+         glacaz = 0.
+
       end if
 
       end 
@@ -12041,7 +12061,7 @@ c                                 Si-diamond
 c-----------------------------------------------------------------------
 c gmag returns the magnetic contribution to G for BCC Fe in FeSi alloy.
 c after Lacaze & Sundman 1990.
-c     x - bulk mole fraction of Ge 
+c     x - bulk mole fraction of Fe 
 c-----------------------------------------------------------------------
       implicit none
 
@@ -12112,6 +12132,9 @@ c-----------------------------------------------------------------------
       save w1, w2, gord
       data w1, w2, gord/-11544d0, 3890d0, -10475.64d0/
 c----------------------------------------------------------------------
+
+c      g1 = g1p - gmag(1d0)
+
       if (y.le.nopt(5).or.y.ge.1d0-nopt(5)) then 
 c                                 endmember compositions, no order possible
          gfesi = y*g1 + (1d0-y)*g2 + gmag(y)
