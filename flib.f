@@ -2148,9 +2148,8 @@ c---------------------------------------------------------------------
       common/ cst11 /f(2)
 
       save bm
-
       data bm /6d1/
-
+c----------------------------------------------------------------------
       t = tk
       p = pbar
       t15 = dsqrt(t**3)
@@ -2291,11 +2290,11 @@ c-----------------------------------------------------------------------
       integer ins(*),i,j,k,l,iroots,isp,ineg,ipos
  
       double precision b(nsp),a(nsp),f(nsp),aj2(nsp),ev(3),c1,c2,t2,
-     *                 c3,vmin,vmax,d1,d2,d5,d6,rt,t3,t4,dsqrtt,
+     *                 c3,vmin,vmax,d1,d2,d3,d6,rt,t3,t4,dsqrtt,r,
      *                 ch,bx,aij,pdv
  
-      double precision p,t,xco2,u1,u2,tr,pr,r,ps
-      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
+      double precision p,t,xco2,u1,u2,tr,pr,rbar,ps
+      common/ cst5 /p,t,xco2,u1,u2,tr,pr,rbar,ps
 
       double precision fg
       common/ cst11 /fg(2) 
@@ -2306,19 +2305,19 @@ c-----------------------------------------------------------------------
       double precision vol
       common/ cst26 /vol
  
-      save a, b
+      save a, b, r
                              
-      data 
-     *     a /0d0, 0d0, 16.98d4, 32.154811d4, 2.821d3, 89d4,
-     *        174025.8831,133.1d4, 130d4, 136d3 , 631d3,
+      data r /83.1441/,
+     *     a /0d0, 0d0, 16.98d6, 32.154811d6, 2.821d5, 89d6,
+     *        174025.8831d2,133.1d6, 130d6, 136d5 , 631d5,
 c             O, SiO, SiO2
-     *        0d0, 0d0,  38706461.881/,
-     *     b /1.46,  2.97,  2.738, 2.9681, 1.57699, 2.994,
-     *        2.206956396,  3.74,  4.3d0,  2.342,   1.884, 
+     *        0d0, 0d0,  38706461.881d2/,
+     *     b /14.6,  29.7,  27.38, 29.681, 15.7699, 29.94,
+     *        22.06956396,  37.4,  43d0,  23.42,   18.84, 
 c             O, SiO, SiO2:
 c                bsio = bco/bco2*bsio2 => 0.919
 c                bo   ~ bo2
-     *         2.207, 2.139, 2.327/
+     *         22.07, 21.39, 23.27/
 c---------------------------------------------------------------------- 
       t2 = t*t
       t3 = t2*t
@@ -2335,16 +2334,16 @@ c----------------------------------------------------------------------
 
          if (i.eq.1) then 
 c                             MRK dispersion term for h2o
-            a(1) =      .1452535403d6 + 306893.3587d-2*t 
-     *             -307.9995871d-2*t2 + .09226256008d-2*t3 
-     *             -.2930106337d-7*t4
+            a(1) =      .1452535403d8 + 306893.3587d0*t 
+     *             -307.9995871d0*t2 + .09226256008d0*t3 
+     *             -.2930106337d-5*t4
 
          else if (i.eq.2) then 
 c                             MRK dispersion term for co2
-            a(2) =  92935540d2 - 82130.73d2*t + 21.29d2*t2
+            a(2) =  92935540d0 - 82130.73d0*t + 21.29d0*t2
 c                             and MRK H2O-CO2 cross term 
             ch = dexp(-11.218d0 + 6032d0/t - 2782000d0/t2 + 4.708d8/t3) 
-     *           * 6912.824964d-2 * t2 * dsqrtt + 79267647d-2
+     *           * 6912.824964d0 * t2 * dsqrtt + 79267647d0
          end if 
 
          aj2(i) = 0d0
@@ -2399,7 +2398,7 @@ c                                by evaluating p*delta(v) - int(pdv)
 c                                 compute fugacities:
       d1 = rt*dsqrtt*bx
       d2 = dlog((vol + bx)/vol)/d1
-      d5 = 1d0/(vol - bx) + aij*(d2/bx - 1d0/(bx + vol)/d1)
+      d3 = aij * (d2/bx - 1d0/(bx + vol)/d1) + 1d0/(vol - bx) 
       d6 = dlog(rt/(vol - bx))
  
       do i = 1, isp
@@ -2407,7 +2406,7 @@ c                                 compute fugacities:
          l = ins(i)
           
          if (x(l).gt.0d0) then
-            f(l) = dlog(x(l)) + b(l)*d5 - aj2(l)*d2 + d6
+            f(l) = dlog(x(l)) + b(l)*d3 - aj2(l)*d2 + d6
             g(l) = dexp(f(l))/p/x(l)
          else 
             g(l) = 1d0
@@ -2788,10 +2787,10 @@ c-----------------------------------------------------------------------
  
       double precision b(nsp),a(nsp),f(nsp),aj2(nsp),ev(3),t2,rt,d2,
      *                 dsqrtt,ch,bx,aij,c1,c2,c3,aij12,vmin,vmax,vol,
-     *                 d1,d3,d4,d5,d6
+     *                 d1,d3,d4,d5,d6,r
 
-      double precision p,t,xco2,u1,u2,tr,pr,r,ps
-      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
+      double precision p,t,xco2,u1,u2,tr,pr,rbar,ps
+      common/ cst5 /p,t,xco2,u1,u2,tr,pr,rbar,ps
 
       double precision fg
       common/ cst11 /fg(2) 
@@ -2799,19 +2798,19 @@ c-----------------------------------------------------------------------
       double precision x,g,v
       common/ cstcoh /x(nsp),g(nsp),v(nsp)
 
-      save a, b
+      save a, b, r 
 
-      data 
-     *     a /0d0, 0d0, 16.98d4, 32.154811d4, 2.821d3, 89d4,
-     *        174025.8831,133.1d4, 130d4, 136d3 , 631d3,
+      data r /83.1441/,
+     *     a /0d0, 0d0, 16.98d6, 32.154811d6, 2.821d5, 89d6,
+     *        174025.8831d2,133.1d6, 130d6, 136d5 , 631d5,
 c             O, SiO, SiO2
-     *        0d0, 0d0,  38706461.8810d8/,
-     *     b /1.46,  2.97,  2.738, 2.9681, 1.57699, 2.994,
-     *        2.206956396,  3.74,  4.3d0,  2.342,   1.884, 
+     *        0d0, 0d0,  38706461.881d2/,
+     *     b /14.6,  29.7,  27.38, 29.681, 15.7699, 29.94,
+     *        22.06956396,  37.4,  43d0,  23.42,   18.84, 
 c             O, SiO, SiO2:
 c                bsio = bco/bco2*bsio2 => 0.919
 c                bo   ~ bo2
-     *         2.207, 2.139, 2.327/
+     *         22.07, 21.39, 23.27/
 c----------------------------------------------------------------------
       t2 = t*t
       dsqrtt = dsqrt(t)
@@ -2821,13 +2820,13 @@ c                             was derived using b=15, then b
 c                             was adjusted to lower the H2-H2O
 c                             critical T, however the fugacities
 c                             seem reasonable so who knows?
-      a(1) =  .3930568949d7 - .1273025840d5 * t + 20.49978752 * t2
-     *       -1.122350458d-2 * t2 * t
+      a(1) =  .3930568949d9 - .1273025840d7 * t + 2049.978752 * t2
+     *       -1.122350458 * t2 * t
 c                             compute dispersion term for co2
-      a(2) =  0.9293554d6 - 0.8213073d3*t + 0.2129d0*t2
+      a(2) =  0.9293554d8 - 0.8213073d5*t + 0.2129d2*t2
  
       ch = dexp(-11.218d0 + 6032d0/t - 2782d3/t2 + 4.708d8/t2/t) * 
-     *          6912.824964d-2 * t2 * dsqrtt + 79267647d-2
+     *          6912.824964d0 * t2 * dsqrtt + 79267647d0
 c                             composition dependent mrk-terms
       bx = 0d0
       aij = 0d0
@@ -2924,12 +2923,12 @@ c-----------------------------------------------------------------------
       include 'perplex_parameters.h'
  
       double precision b(nsp),a(nsp),f(nsp),ev(3),t2,t3,t4,dsqrtt,rt,
-     *                 d1,d2,d4,bx,v1,v2,aij,c1,c2,c3,pdv
+     *                 d1,d2,d4,bx,v1,v2,aij,c1,c2,c3,pdv,r
 
       integer ins(*), isp, k, iroots, i, ineg, ipos 
  
-      double precision p,t,xco2,u1,u2,tr,pr,r,ps
-      common/ cst5  /p,t,xco2,u1,u2,tr,pr,r,ps
+      double precision p,t,xco2,u1,u2,tr,pr,rbar,ps
+      common/ cst5  /p,t,xco2,u1,u2,tr,pr,rbar,ps
 
       double precision fg
       common/ cst11 /fg(2) 
@@ -2940,19 +2939,19 @@ c-----------------------------------------------------------------------
       double precision vol
       common/ cst26 /vol
  
-      save a, b
- 
-      data 
-     *     a /0d0, 0d0, 16.98d4, 32.154811d4, 2.821d3, 89d4,
-     *        174025.8831,133.1d4, 130d4, 136d3 , 631d3,
+      save a, b, r
+                             
+      data r /83.1441/,
+     *     a /0d0, 0d0, 16.98d6, 32.154811d6, 2.821d5, 89d6,
+     *        174025.8831d2,133.1d6, 130d6, 136d5 , 631d5,
 c             O, SiO, SiO2
-     *        0d0, 0d0,  38706461.881/,
-     *     b /1.46,  2.97,  2.738, 2.9681, 1.57699, 2.994,
-     *        2.206956396,  3.74,  4.3d0,  2.342,   1.884, 
+     *        0d0, 0d0,  38706461.881d2/,
+     *     b /14.6,  29.7,  27.38, 29.681, 15.7699, 29.94,
+     *        22.06956396,  37.4,  43d0,  23.42,   18.84, 
 c             O, SiO, SiO2:
 c                bsio = bco/bco2*bsio2 => 0.919
 c                bo   ~ bo2
-     *         2.207, 2.139, 2.327/
+     *         22.07, 21.39, 23.27/
 c----------------------------------------------------------------------
       t2 = t*t
       t3 = t2*t
@@ -2966,11 +2965,11 @@ c----------------------------------------------------------------------
 
          if (i.eq.1) then 
 c                             MRK dispersion term for H2O
-            a(1) = .1452535403d6 +306893.3587d-2*t -307.9995871d-2*t2
-     *              +.09226256008d-2*t3-.2930106337d-7*t4
+            a(1) = .1452535403d8 +306893.3587d0*t -307.9995871d0*t2
+     *              +.09226256008d0*t3-.2930106337d-5*t4
          else if (i.eq.2) then 
 c                             MRK dispersion term for CO2
-            a(2) =  92935540d-2 - 82130.73d-2*t + 21.29d-2*t2
+            a(2) =  92935540d0 - 82130.73d0*t + 21.29d0*t2
  
          end if
 
@@ -5979,7 +5978,7 @@ c                                 solve (yo^3 + a1*yo^2 + a2*yo + a3) for yo
             end if 
 
             if (y(i3).gt.1d0) then
-               write (*,*) 'wahaa fuck it',y(i3)
+               write (*,*) 'wahaa f it',y(i3)
                y(i3) = 0.99999d0
             end if 
 c                                 back calculate remaining fractions:
