@@ -17,7 +17,7 @@ c----------------------------------------------------------------------
 	implicit none
 
       write (*,'(/,a)') 
-     *      'Perple_X version 6.6.7, source updated May 21, 2012.'
+     *      'Perple_X version 6.6.7, source updated May 31, 2012.'
 
       end
 
@@ -215,6 +215,9 @@ c                                 use explicit bulk modulus when available
 c                                 seismic data output for WERAMI/MEEMUM, 0 - none, 1 - some, 2 - all
       iopt(14) = 1
       valu(14) = 'som'
+c                                 reach_increment_switch 0 - off, 1 - on (for auto-refine), 2 - all
+      iopt(20) = 1 
+      valu(20) = 'on'
 c                                 -------------------------------------
 c                                 werami output options:
 
@@ -394,6 +397,18 @@ c                                 seismic data output WERAMI/MEEMUM/FRENDLY
                 iopt(14) = 2
              else
                 valu(14) = 'som'
+             end if 
+
+         else if (key.eq.'reach_increment_switch') then 
+c                                 reach_increment_switch
+             valu(20) = val
+
+             if (val.eq.'off') then 
+                iopt(20) = 0
+             else if (val.eq.'on ') then
+                iopt(20) = 1
+             else if (val.eq.'all') then 
+                iopt(20) = 2
              end if 
 
          else if (key.eq.'stretch_factor') then
@@ -991,7 +1006,8 @@ c                                 for meemum
             if (iopt(6).ne.0) write (n,1170) nopt(17)
 c                                 adaptive optimization
             write (n,1180) rid(2,1),rid(2,2),int(nopt(21)),iopt(12),
-     *                     nopt(25),int(nopt(23)),nopt(9),nopt(11)
+     *                     nopt(25),int(nopt(23)),valu(20),
+     *                     nopt(9),nopt(11)
 c                                 gridding parameters
             if (iam.eq.1.and.icopt.eq.5.and.oned) then
 c                                 1d multilevel grid
@@ -1148,6 +1164,7 @@ c                                 thermo options for frendly
      *           '1->7 [4]; iteration keyword value 2',/,
      *        4x,'solvus_tolerance_II    ',f4.2,7x,'0->1 [0.25]',/,
      *        4x,'global_reach_increment ',i2,9x,'>= 0 [0]',/,
+     *        4x,'reach_increment_switch ',a3,8x,'[on] off all',/,
      *        4x,'zero_mode              ',e7.1,4x,
      *           '0->1 [1e-6]; < 0 => off',/,
      *        4x,'zero_bulk              ',e7.1,4x,

@@ -8095,7 +8095,7 @@ c                                 if pure cartesian, save maximum dimension
 
       end do 
 c                                 set reach factors
-      if (.not.refine.and.iam.eq.1) then
+      if (.not.refine.and.iam.eq.1.and.iopt(20).ne.2) then
 c                                 if vertex and not in the refine stage
 c                                 shut of reach increments
           reachg(im) = nopt(21)/2d0    

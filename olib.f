@@ -1562,8 +1562,8 @@ c                                 shrink increment if invalid alpha
                   gpt = gpt1
 
                end if 
-            end if      
-     
+            end if  
+
          end if  
 c                                 third order derivatives, only need for
 c                                 derivatives of seismic props.
@@ -1595,7 +1595,7 @@ c                                 derivatives of seismic props.
      *           - g5)/dp2**3
             gppt = (g3 - g4 + 2d0*g7 - g1)/dp2/dp2/dt2/2d0
             gptt = (g4 - g3 - 2d0*g5 - g1)/2d0/dp2/dt2/dt2
- 
+
          end if 
 
          gttt = ((ginc(dt2*2d0,0d0,id) - ginc(-dt2*2d0,0d0,id))/2d0 
@@ -1619,6 +1619,11 @@ c                                 pressure derivative of the adiabatic bulk modu
 
          end if 
 
+      else 
+c                                 no volume, zero second derivatives
+            gpp = 0d0
+            gpt = 0d0    
+      
       end if 
 
       if (v.le.0d0) then 
