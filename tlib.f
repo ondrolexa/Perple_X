@@ -2110,6 +2110,8 @@ c---------------------------------------------------------------------
          write (*,60) char
       else if (ier.eq.63) then
          write (*,63)
+      else if (ier.eq.68) then
+         write (*,68)
       else if (ier.eq.73) then
          write (*,73) char, realv, int
       else if (ier.eq.74) then
@@ -2339,6 +2341,9 @@ c     *          ' (SWASH, see program documentation Eq 2.3)',/)
      *          'routine:',a,/)
 63    format (/,'**warning ver063** wway, invariant point on an edge?',
      *        /)
+68    format (/,'**warning ver068** degenerate initial assemblage in ',
+     *          'COFACE, this should never occur',/,'if you see this ',
+     *          'message more than once, please report the problem',/)
 73    format (/,'**warning ver073** an invariant point has been',
      *          ' skipped, routine:',a,/,' This problem typically',
      *          ' occurs because two phases in the thermodynamic data',

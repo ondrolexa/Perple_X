@@ -2473,7 +2473,7 @@ c                                 activity
       end do 
 c                                 this line is here to prevent an optimization 
 c                                 bug with compaq visual fortran. 
-      xp = xp * xp
+c     xp = xp * xp
 
       end 
 
@@ -8095,10 +8095,11 @@ c                                 if pure cartesian, save maximum dimension
 
       end do 
 c                                 set reach factors
-      if (.not.refine.and.iam.eq.1.and.iopt(20).ne.2) then
+      if (.not.refine.and.iam.eq.1.and.iopt(20).ne.2.or.
+     *                                 iopt(20).eq.0) then
 c                                 if vertex and not in the refine stage
 c                                 shut of reach increments
-          reachg(im) = nopt(21)/2d0    
+          reachg(im) = nopt(21)/2d0          
 
       else if (reach.le.nopt(23)) then 
 

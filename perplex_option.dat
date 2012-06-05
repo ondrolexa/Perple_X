@@ -22,9 +22,9 @@ dependent_potentials   on   | on or off
 efficiency             3    | 1->5
 explicit_bulk_modulus  T    | T[rue] or F[alse], default is F; T -> use explicit function for K if available
 extrapolation          off  | on or off
-final_resolution     2.5e-4 | >0, <1, default 1e-3
+final_resoluti  2e-2 2.5e-4 | >0, <1, default 1e-3
 global_reach_increment  0   | >= 0; overridden by reach_factor specified in solution model file
-grid_levels            1 4  | exploratory and autorefine (grid parameters keyword group)
+grid_levels            1 3  | exploratory and autorefine (grid parameters keyword group)
 hard_limits            off  | on or off
 increment         0.1 0.025 | 0, <1; exploratory and autorefine
 initial_resolution    0.067 | >0, <1, default 1e-2
@@ -54,7 +54,7 @@ T_melt                 873. | melt solution model endmember temperature (K) cut 
 T_stop                   0. | equilibration temperature (K) cut off
 variance              1 99  | 1->99; exploratory and autorefine
 vrh/hs_weighting       0.5  | 0->1, weighting factor for the stiff average in VRH/HS averaging (see bounds)
-x_nodes               40 60 | exploratory and autorefine (grid parameters keyword group)
-y_nodes               40 60 | exploratory and autorefine (grid parameters keyword group)
+x_nodes               40 40 | exploratory and autorefine (grid parameters keyword group)
+y_nodes               40 40 | exploratory and autorefine (grid parameters keyword group)
 zero_mode             1e-6  | 0->1
 zero_bulk             1e-6  | 0->1
