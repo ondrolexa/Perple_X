@@ -5952,9 +5952,9 @@ c                               set logical variables
       end do 
 
       call readda (rnums,1,tname)
-c                               model type flag
+c                                 model type flag
       jsmod = idint(rnums(1))   
-c                               correct jsmod for old versions    
+c                                 correct jsmod for old versions    
       if (jsmod.eq.3) jsmod = 2  
       if (jsmod.eq.0) fluid = .true.
       if (jsmod.eq.1) call error (68,enth,jsmod,tname)
@@ -5962,7 +5962,10 @@ c                               correct jsmod for old versions
       if (jsmod.eq.5.or.jsmod.eq.7.or.jsmod.eq.8) depend = .true. 
       if (jsmod.eq.7.or.jsmod.eq.8) recip = .true. 
       if (jsmod.gt.20) specil = .true.  
-c                               read number of independent sites:
+c                                 assign non-default props to 
+c                                 special models:
+      if (jsmod.eq.30) recip = .true.
+c                                 read number of independent sites:
       if (recip) then 
          call readda (rnums,1,tname)    
          isite = idint(rnums(1)) 
@@ -6266,6 +6269,10 @@ c                                 in the p array (1..kstot+norder)
             jnsp(i) = i 
             iy2p(i) = i 
          end do 
+c                                added for reformulated reciprocal
+c                                solutions with no dependent endmembers
+c                                June 12, 2012, JADC.
+         if (recip) kstot = istot
 
       end if 
 
@@ -6986,7 +6993,7 @@ c-----------------------------------------------------------------------
       integer k,id
 
       double precision omega, hpmelt, slvmlt, gmelt, gfluid, gzero, gg,
-     *                 dg, gex, gfesi
+     *                 dg, gex, gfesi, gfesic
 
       integer jend
       common/ cxt23 /jend(h9,k12)
@@ -7138,6 +7145,13 @@ c                                 get mechanical mixture contribution
 c                                 -------------------------------------
 c                                 BCC Fe-Si Lacaze and Sundman
             gg =  gfesi(y(1),g(jend(id,3)),g(jend(id,4)))
+
+         else if (ksmod(id).eq.30) then 
+c                                 -------------------------------------
+c                                 Nastia's version of BCC Fe-Si-C Lacaze and Sundman
+            gg =  gfesic(y(1),y(2),y(3),y(4),
+     *                   g(jend(id,3)),g(jend(id,4)),
+     *                   g(jend(id,5)),g(jend(id,6)))
 
          else if (ksmod(id).eq.0) then 
 c                                 ------------------------------------
@@ -12103,8 +12117,7 @@ c-----------------------------------------------------------------------
 
       double precision function gfesi (y,g1,g2)
 c-----------------------------------------------------------------------
-c gfesi returns the the ordering + magnetic free energy change relative to a
-c mechanical mixture of the disordered endmembers for BCC FeSi alloy after 
+c gfesi returns the Gibbs free energy for BCC FeSi alloy after 
 c Lacaze & Sundman 1990. See FeSiBCC.mws.
 
 c    y   - the bulk Fe mole fraction
@@ -12336,4 +12349,21 @@ c-----------------------------------------------------------------------
       d2g =  2d0*g12 + (xy/x1/yx + x/x1/yx + x*xy/x1**2/yx 
      *               + x*xy/x1/yx**2)/x/xy*x1*yx*rt/2d0
 
+      end 
+
+      double precision function gfesic (y1,y2,y3,y4,g1,g2,g3,g4)
+c-----------------------------------------------------------------------
+c gfesic returns the free energy change for BCC Fe-Si-C alloy after 
+c Lacaze & Sundman 1990. 
+
+c    y1..y4 - mole fractions of Fe, Si, FeC and SiC, respectively
+c    g1..g4 - free energues of Fe, Si, FeC and SiC, respectively
+c-----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      double precision g1, g2, g3, g4, y1, y2, y3, y4
+c----------------------------------------------------------------------
+      gfesic = 0d0
       end 

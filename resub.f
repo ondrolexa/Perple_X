@@ -2654,9 +2654,10 @@ c-----------------------------------------------------------------------
  
       include 'perplex_parameters.h'
 
-      integer i,j,k,id
+      integer i, j, k, id
 
-      double precision dg1,gval,dg,gzero,g0(k5),gex,x0,gfesi
+      double precision dg1, gval, dg, gzero, g0(k5), gex, x0, gfesi,
+     *                 gfesic
 
       integer icomp,istct,iphct,icp
       common/ cst6 /icomp,istct,iphct,icp
@@ -2894,6 +2895,20 @@ c                                 ideal gas mix
             do j = 1, jend(i,2)
 c                                 BCC Fe-Si Lacaze and Sundman
                g(id) = gfesi(sxs(ixp(id)+1),g(jend(i,3)),g(jend(i,4)))
+  
+               id = id + 1
+
+            end do 
+
+         else if (ksmod(i).eq.30) then 
+c                                 call nastia's BCC model
+            do j = 1, jend(i,2)
+c                                 BCC Fe-Si-C Lacaze and Sundman
+               g(id) = gfesic(
+     *                    sxs(ixp(id)+1),sxs(ixp(id)+2),
+     *                    sxs(ixp(id)+3),sxs(ixp(id)+4),
+     *                    g(jend(i,3)),g(jend(i,4)),
+     *                    g(jend(i,5)),g(jend(i,6)))
   
                id = id + 1
 
