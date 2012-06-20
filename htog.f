@@ -15,12 +15,14 @@
  10       write (*,*)
      *     'enter nal, nsi, nca, nmg, nfe, nk, nna, no2, nh2, nc'
           read (*,*) nal, nsi, nca, nmg, nfe, nk, nna, no2,nh2, nc
-          write (*,*) 'enter h and s for the phase:'
+          write (*,*) 'enter h (or g) and s for the phase:'
           read (*,*) h,s
           dsf = s - 
      *    (nal*al + nsi*si + nmg*mg + nfe*fe + nk*k + nca*ca +
      *     nna*na + no2*o2 + nh2*h2 + nc * c)
           gf = h - tr * dsf
-          write (*,*) 'gf=',gf
+          hf = h + tr * dsf
+          write (*,*) 'gf (if hf entered) =',gf
+          write (*,*) 'hf (if gf entered) =',hf
           goto 10  
           end 

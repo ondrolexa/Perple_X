@@ -1,0 +1,92 @@
+
+ | for domcumentation of Perple_X thermodynamic data file structure and content refer to:
+
+ | www.perplex.ethz.ch/perplex_thermodynamic_data_file.html
+
+ | comments are indicated by the | character.
+ | check for warnings at the end of the header section.
+
+Holland & Powell '02 + Connolly & Kerrick '02 shear moduli   |<= data base title
+
+begin_standard_variables |<= name (<9 characters), reference value, tolerance
+P(bar)      1.00   0.1E-3
+T(K)      298.15   0.1E-4
+X(SiO)      0.00   0.1E-6
+mu(C1)      0.00   0.1E-2
+mu(C2)      0.00   0.1E-2
+end_standard_variables
+
+tolerance  -.1E-2  |<= DTOL for unconstrained minimization, energy units
+
+begin_components |<= name (<5 characters), molar weight (g)
+SIO2    60.0840
+JUNK    1
+end_components
+
+begin_special_components
+SIO2    
+end_special_components
+                                                          
+end                                                                                                                                         
+
+SIO2     EoS = 1 | @1200 K cp = 59.441 S = 302.222, JANAF cp from 1100 to 6000 K  melt 1996 boil 3223199                                                       
+SIO2(1)
+G0 = -411118.4 S0 = 237.3281 
+c1 = 62.321  c3 = -41.472e5   
+end
+
+qL       EoS = 2 | H= -920860.                                                                    
+SIO2(1)JUNK(1)
+G0 = -858990.9 S0 = 16.5 V0 = 2.64  
+c1 = 82.5  
+b1 = -.5E-5 b5 = .5E-4 b6 = 470000 b7 = -70.5 b8 = 4  
+m0 = .1E-15  
+end
+ 
+q        EoS = 2 | H= -910840.                                                                    
+SIO2(1)JUNK(1)
+G0 = -856424.6 S0 = 41.5 V0 = 2.2688  
+c1 = 110.7 c2 = -.5189E-2 c5 = -1128.3  
+b1 = .65E-5 b5 = -.65E-4 b6 = 750000 b7 = -112.5 b8 = 4  
+m0 = 431250 m1 = .46 m2 = -14  
+transition = 1 type = 4 t1  = 847 t2  = 4.95 t3  = .1188  
+end
+
+ 
+trd      EoS = 2 | H= -906690.                                                                    
+SIO2(1)JUNK(1)
+G0 = -853646.1 S0 = 46.1 V0 = 2.7  
+c1 = 97.9 c2 = -.335E-2 c3 = -636200 c5 = -774  
+b1 = .5E-5 b5 = -.5E-4 b6 = 750000 b7 = -112.5 b8 = 4  
+m0 = 431250 m1 = .46 m2 = -14  
+end
+
+ 
+crst     EoS = 2 | H= -906000.                                                                    
+SIO2(1)JUNK(1)
+G0 = -853075.4 S0 = 46.5 V0 = 2.61  
+c1 = 97.9 c2 = -.335E-2 c3 = -636200 c5 = -774  
+b1 = .81E-5 b5 = -.81E-4 b6 = 600000 b7 = -90 b8 = 4  
+m0 = 431250 m1 = .46 m2 = -14  
+end
+
+ 
+coe      EoS = 2 | H= -905490.                                                                    
+SIO2(1)JUNK(1)
+G0 = -850865.9 S0 = 40.8 V0 = 2.064  
+c1 = 96.5 c2 = -.577E-3 c3 = -444800 c5 = -798.2  
+b1 = .18E-4 b5 = -.18E-3 b6 = 999999.5 b7 = -150 b8 = 4  
+m0 = 620000 m1 = 1.5 m2 = -150  
+end
+
+     |      0.59d6  1.40097 -24. 0. 0. 0. 0. 0. 0. 0. helffrich www1.gly.bris.ac.uk/~ge
+ 
+stv      EoS = 2 | H= -875670.                                                                    
+SIO2(1)JUNK(1)
+G0 = -816186.1 S0 = 24.5 V0 = 1.4014  
+c1 = 68.1 c2 = .601E-2 c3 = -1978200 c5 = -82.1  
+b1 = .25E-4 b5 = -.25E-3 b6 = 3160000. b7 = -474 b8 = 4  
+m0 = 2170000 m1 = 1.8 m2 = -180  
+end
+
+

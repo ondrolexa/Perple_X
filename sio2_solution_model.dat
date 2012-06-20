@@ -2840,12 +2840,12 @@ SIO2F
 2                                  
 O        SIO     
   0  0                                endmember flags
-0.0 1.0 0.1       0        | subdivision ranges, imod = 0 -> cartesian subdivision
+0.5 0.5 0.1       0        | subdivision ranges, imod = 0 -> cartesian subdivision
 
 ideal
 0
 
-reach_increment 3 
+reach_increment 8 
 
 end_of_model              
                       --------------------------------------------------------

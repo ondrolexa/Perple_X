@@ -2310,18 +2310,14 @@ c-----------------------------------------------------------------------
       data r /83.1441/,
      *     a /0d0, 0d0, 16.98d6, 32.154811d6, 2.821d5, 89d6,
      *        174025.8831d2,133.1d6, 130d6, 136d5 , 631d5,
-c             O, SiO, SiO2 1 bar values
-c     *        0d0, 0d0,  38706461.881d2/,
-c             O, SiO, SiO2 0.1 bar values
-     *        0d0, 0d0,  5206976861./,
+c             O, SiO, SiO2 
+     *        0d0, 0d0,  7097770957./,
      *     b /14.6,  29.7,  27.38, 29.681, 15.7699, 29.94,
      *        22.06956396,  37.4,  43d0,  23.42,   18.84, 
 c             O, SiO, SiO2:
-c                bsio = bco/bco2*bsio2 => 0.919
-c                bo   ~ bo2
-c     *         22.07, 21.39, 23.27/
-c             O, SiO, SiO2 0.1 bar values
-     *         22.07, 21.39, 24.05/
+c             bsio = bco/bco2*bsio2 => 0.919
+c             bo   ~ bo2
+     *        22.07, 19.14, 24.85506770/
 c---------------------------------------------------------------------- 
       t2 = t*t
       t3 = t2*t
@@ -2807,18 +2803,14 @@ c-----------------------------------------------------------------------
       data r /83.1441/,
      *     a /0d0, 0d0, 16.98d6, 32.154811d6, 2.821d5, 89d6,
      *        174025.8831d2,133.1d6, 130d6, 136d5 , 631d5,
-c             O, SiO, SiO2 1 bar values
-c     *        0d0, 0d0,  38706461.881d2/,
-c             O, SiO, SiO2 0.1 bar values
-     *        0d0, 0d0,  5206976861./,
+c             O, SiO, SiO2 
+     *        0d0, 0d0,  7097770957./,
      *     b /14.6,  29.7,  27.38, 29.681, 15.7699, 29.94,
      *        22.06956396,  37.4,  43d0,  23.42,   18.84, 
 c             O, SiO, SiO2:
-c                bsio = bco/bco2*bsio2 => 0.919
-c                bo   ~ bo2
-c     *         22.07, 21.39, 23.27/
-c             O, SiO, SiO2 0.1 bar values
-     *         22.07, 21.39, 24.05/
+c             bsio = bco/bco2*bsio2 => 0.919
+c             bo   ~ bo2
+     *        22.07, 19.14, 24.85506770/
 c----------------------------------------------------------------------
       t2 = t*t
       dsqrtt = dsqrt(t)
@@ -2952,18 +2944,14 @@ c-----------------------------------------------------------------------
       data r /83.1441/,
      *     a /0d0, 0d0, 16.98d6, 32.154811d6, 2.821d5, 89d6,
      *        174025.8831d2,133.1d6, 130d6, 136d5 , 631d5,
-c             O, SiO, SiO2 1 bar values
-c     *        0d0, 0d0,  38706461.881d2/,
-c             O, SiO, SiO2 0.1 bar values
-     *        0d0, 0d0,  5206976861./,
+c             O, SiO, SiO2 
+     *        0d0, 0d0,  7097770957./,
      *     b /14.6,  29.7,  27.38, 29.681, 15.7699, 29.94,
      *        22.06956396,  37.4,  43d0,  23.42,   18.84, 
 c             O, SiO, SiO2:
-c                bsio = bco/bco2*bsio2 => 0.919
-c                bo   ~ bo2
-c     *         22.07, 21.39, 23.27/
-c             O, SiO, SiO2 0.1 bar values
-     *         22.07, 21.39, 24.05/
+c             bsio = bco/bco2*bsio2 => 0.919
+c             bo   ~ bo2
+     *        22.07, 19.14, 24.85506770/
 c----------------------------------------------------------------------
       t2 = t*t
       t3 = t2*t
@@ -5895,10 +5883,12 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer ins(4), isp, nit, i1, i2, i3, i4, iroots, ineg, ipos
+      integer ins(4), isp, nit, i1, i2, i3, i4, iroots, ineg, ipos, i
+
+      logical bad
 
       double precision c1,c2,rat,rp1,rm1,rc1,r21,oldy,a0,a1,a2,
-     *                 a3,vmin,vmax,x(3)
+     *                 a3,vmin,vmax,x(3),lnk2
 
       double precision y,g,v
       common / cstcoh /y(nsp),g(nsp),v(nsp)
@@ -5909,17 +5899,24 @@ c----------------------------------------------------------------------
       double precision p,t,xc,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xc,u1,u2,tr,pr,r,ps
 
+      integer iam
+      common/ cst4 /iam
+
       save ins, isp 
       data isp, ins, i1, i2, i3, i4/4, 14, 13, 12, 7, 
      *                                 14, 13, 12, 7/
 c----------------------------------------------------------------------
+      if (iam.le.4) xc = 0.5
 c                                 rat = nsio/no = xc/(1-xc) 
       rat = xc/(1d0-xc)
 c                                 evaluate K's and correct for pressure
-c                                 c1 = exp(K_1)*p => 2 O = O2
+c                                 c1 = exp(lnK_1)*p => 2 O = O2, HSC K
       c1 = dexp((-0.9214495D6/t + 0.6234471D5)/t - 0.1631235D2) * p
-c                                 c2 = exp(K_2)/p => SiO2 = SiO + O 
-      c2 = dexp((-0.1133204D7/t - 0.5491882D5)/t + 0.1710990D2) / p
+c                                 c2 = exp(lnK_2)/p => SiO2 = SiO + O, HSC K 
+c     c2 = dexp((-0.1133204D7/t - 0.5491882D5)/t + 0.1710990D2) / p
+c                                  k_2 from shornikov enthalpy
+      lnk2 = (-1.133204d+06/t - 5.491882d+04)/t + 1.710990d+01
+      c2 = dexp(lnk2)/p
 c                                 some inner loop constants
       rp1 = rat + 1d0
       rm1 = rat - 1d0
@@ -5929,7 +5926,7 @@ c                                 get pure species fugacities
       call mrkpur (ins, isp)
 
       nit = 0 
-      oldy = 1d0
+      oldy = 0d0
 c                                 degenerate compositions:
       if (xc.gt.0.9999d0) then 
 c                                 pure SiO
@@ -5974,37 +5971,50 @@ c                                 solve (yo^3 + a1*yo^2 + a2*yo + a3) for yo
 
             call roots3 (a1,a2,a3,x,vmin,vmax,iroots,ineg,ipos)
 
-            if (iroots.eq.1) then
+            bad = .true.
 
-               y(i3) = x(1)
-
-            else if (ineg.eq.2) then 
-
-               y(i3) = x(ipos)
-
-            else if (ineg.eq.3) then 
-
-               write (*,*) 'ugga wugga 3 neg roots!'
-               y(i3) = dabs(vmax)
-
-            else 
-
-               write (*,*) 'ugga wugga >1 pos root!'
-               stop
-
-            end if 
-
-            if (y(i3).gt.1d0) then
-               write (*,*) 'wahaa f it',y(i3)
-               y(i3) = 0.99999d0
-            end if 
+            do i = 1, 3
+c                                 find an acceptable root, if any... 
+               if (isnan(x(i)).or.x(i).lt.0d0.or.x(i).gt.1d0) cycle  
+                  
+               y(i3) = x(i)
 c                                 back calculate remaining fractions:
 c                                 K1 => o2: 
-            y(i4) = c1/g(i4)*(y(i3)*g(i3))**2
+               y(i4) = c1/g(i4)*(y(i3)*g(i3))**2
 c                                 mass balance => sio2:
-            y(i1) = -2d0*y(i4) - y(i3) + (1d0 - y(i3) - y(i4))/rat
+               y(i1) = -2d0*y(i4) - y(i3) + (1d0 - y(i3) - y(i4))/rat
+c                                 if fraction of sio2 drops below some tolerance
+c                                 assume fluid is binary SiO-O mixture
+               if (y(i1).lt.1d-6) then
+ 
+                  y(i3) = xc
+                  y(i2) = 1d0 - xc
+                  y(i4) = 0d0
+                  y(i1) = 0d0
+                  g(i4) = 1d0
+                  g(i1) = 1d0
+
+                  call mrkmix (ins, isp)
+
+                  fh2o = dlog(p**2*g(i3)*y(i3)*g(i2)*y(i2)) - lnk2
+
+                  bad = .false.
+
+                  return
+
+               end if 
+
+               if (isnan(y(i1)).or.y(i1).lt.0d0.or.y(i1).gt.1d0) cycle  
 c                                 closure => sio: 
-            y(i2) = 1d0 - y(i1) - y(i3) - y(i4)
+               y(i2) = 1d0 - y(i1) - y(i3) - y(i4)
+
+               if (isnan(y(i2)).or.y(i2).lt.0d0.or.y(i2).gt.1d0) cycle  
+
+               bad = .false.
+
+               exit 
+
+            end do 
 
             if ( dabs((oldy-y(i1))/y(i1)).lt.1d-3) exit  
 c                                 get new gamma's
@@ -6014,15 +6024,39 @@ c                                 get new gamma's
 
             nit = nit + 1
 
-            if (nit.lt.1000) cycle 
-            write (*,*) 'ugga wugga not converging'
-            stop
+            if (nit.lt.1000) cycle
+ 
+            bad = .true.
+            exit 
 
          end do
 
       end if  
 
-      if (y(i3).gt.0d0) fh2o = dlog(p*g(i3)*y(i3))
-      if (y(i2).gt.0d0) fco2 = dlog(p*g(i2)*y(i2))
+      if (bad) then 
+
+          if (nit.gt.1000) then
+
+             write (*,'(a,2(g12.6,1x))') 
+     *            'ugga wugga not converging T,P:',t,p
+
+          else 
+
+             write (*,'(a,5(g12.6,1x))') 
+     *            'ugga wugga not valid solution T,P:',t,p,x
+
+          end if 
+
+         fh2o = 1d99
+         fco2 = 1d99
+
+      else 
+
+         fh2o = dlog(p*g(i3)*y(i3))
+         fco2 = dlog(p*g(i2)*y(i2))
+
+         fh2o = dlog(p*g(i1))
+
+      end if 
 
       end
