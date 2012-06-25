@@ -398,11 +398,13 @@ c----------------------------------------------------------------------
       common/ cstchx /gmh2o,gmco2,gmch4,vm(3)
 
       double precision xh2o,xco2,xco,xch4,xh2,xh2s,xo2,xso2,xcos,xn2,
-     *                 xnh3,xot,xsio,xsio2,gh2o,gco2,gco,gch4,gh2,gh2s,
-     *                 go2,gso2,gcos,gn2,gnh3,go,gsio,gsio2,v
+     *                 xnh3,xot,xsio,xsio2,xsi,xunk,
+     *                 gh2o,gco2,gco,gch4,gh2,gh2s,go2,gso2,gcos,gn2,
+     *                 gnh3,go,gsio,gsio2,gsi,gunk,v
       common / cstcoh /xh2o,xco2,xco,xch4,xh2,xh2s,xo2,xso2,xcos,xn2,
-     *                 xnh3,xot,xsio,xsio2,gh2o,gco2,gco,gch4,gh2,gh2s,
-     *                 go2,gso2,gcos,gn2,gnh3,go,gsio,gsio2,v(nsp)
+     *                 xnh3,xot,xsio,xsio2,xsi,xunk,
+     *                 gh2o,gco2,gco,gch4,gh2,gh2s,go2,gso2,gcos,gn2,
+     *                 gnh3,go,gsio,gsio2,gsi,gunk,v(nsp)
 
       double precision p,t,xo,u1,u2,tr,pr,r,ps
       common / cst5 /p,t,xo,u1,u2,tr,pr,r,ps
@@ -412,7 +414,7 @@ c----------------------------------------------------------------------
 
       save tol, ins
 
-      data tol, ins/ .0001d0, 1,2,3,4,5,6,7,8,9,5*0/
+      data tol, ins/ .0001d0, 1,2,3,4,5,6,7,8,9,7*0/
 
       nit = 0
       oh2o = 2d0
@@ -572,18 +574,20 @@ c----------------------------------------------------------------------
       common/ cstchx /gmh2o,gmco2,gmch4,vm(3)
 
       double precision xh2o,xco2,xco,xch4,xh2,xh2s,xo2,xso2,xcos,xn2,
-     *                 xnh3,xot,xsio,xsio2,gh2o,gco2,gco,gch4,gh2,gh2s,
-     *                 go2,gso2,gcos,gn2,gnh3,go,gsio,gsio2,v
+     *                 xnh3,xot,xsio,xsio2,xsi,xunk,
+     *                 gh2o,gco2,gco,gch4,gh2,gh2s,go2,gso2,gcos,gn2,
+     *                 gnh3,go,gsio,gsio2,gsi,gunk,v
       common / cstcoh /xh2o,xco2,xco,xch4,xh2,xh2s,xo2,xso2,xcos,xn2,
-     *                 xnh3,xot,xsio,xsio2,gh2o,gco2,gco,gch4,gh2,gh2s,
-     *                 go2,gso2,gcos,gn2,gnh3,go,gsio,gsio2,v(nsp)
+     *                 xnh3,xot,xsio,xsio2,xsi,xunk,
+     *                 gh2o,gco2,gco,gch4,gh2,gh2s,go2,gso2,gcos,gn2,
+     *                 gnh3,go,gsio,gsio2,gsi,gunk,v(nsp)
 
       double precision p,t,xo,u1,u2,tr,pr,r,ps
       common / cst5 /p,t,xo,u1,u2,tr,pr,r,ps
 
       save jns, ins
 
-      data ins, jns/ 1,2,3,4,5,6,7,8,9,5*0,1,2,3/
+      data ins, jns/ 1,2,3,4,5,6,7,8,9,7*0,1,2,3/
 
       t2 = t * t
       t3 = t2 * t
@@ -650,11 +654,13 @@ c----------------------------------------------------------------------
       common/ cstchx /gmh2o,gmco2,gmch4,vm(3)
 
       double precision xh2o,xco2,xco,xch4,xh2,xh2s,xo2,xso2,xcos,xn2,
-     *                 xnh3,xot,xsio,xsio2,gh2o,gco2,gco,gch4,gh2,gh2s,
-     *                 go2,gso2,gcos,gn2,gnh3,go,gsio,gsio2,v
+     *                 xnh3,xot,xsio,xsio2,xsi,xunk,
+     *                 gh2o,gco2,gco,gch4,gh2,gh2s,go2,gso2,gcos,gn2,
+     *                 gnh3,go,gsio,gsio2,gsi,gunk,v
       common / cstcoh /xh2o,xco2,xco,xch4,xh2,xh2s,xo2,xso2,xcos,xn2,
-     *                 xnh3,xot,xsio,xsio2,gh2o,gco2,gco,gch4,gh2,gh2s,
-     *                 go2,gso2,gcos,gn2,gnh3,go,gsio,gsio2,v(nsp)
+     *                 xnh3,xot,xsio,xsio2,xsi,xunk,
+     *                 gh2o,gco2,gco,gch4,gh2,gh2s,go2,gso2,gcos,gn2,
+     *                 gnh3,go,gsio,gsio2,gsi,gunk,v(nsp)
 
       double precision p,t,xo,u1,u2,tr,pr,r,ps
       common / cst5 /p,t,xo,u1,u2,tr,pr,r,ps
@@ -667,8 +673,8 @@ c----------------------------------------------------------------------
 
       save tol, ins
 
-      data tol, ins/ .0001d0, 1,2,3,4,5,6,8,9,6*0/
-
+      data tol, ins/ .0001d0, 1,2,3,4,5,6,8,9,8*0/
+c----------------------------------------------------------------------
       nit = 0
       oh2o = 2d0
       xh2 = 0.00001d0
@@ -1162,15 +1168,17 @@ c----------------------------------------------------------------------
       common/ cstchx /gmh2o,gmco2,gmch4,vm(3)
 
       double precision xh2o,xco2,xco,xch4,xh2,xh2s,xo2,xso2,xcos,xn2,
-     *                 xnh3,xo,xsio,xsio2,gh2o,gco2,gco,gch4,gh2,gh2s,
-     *                 go2,gso2,gcos,gn2,gnh3,go,gsio,gsio2,v
+     *                 xnh3,xot,xsio,xsio2,xsi,xunk,
+     *                 gh2o,gco2,gco,gch4,gh2,gh2s,go2,gso2,gcos,gn2,
+     *                 gnh3,go,gsio,gsio2,gsi,gunk,v
       common / cstcoh /xh2o,xco2,xco,xch4,xh2,xh2s,xo2,xso2,xcos,xn2,
-     *                 xnh3,xo,xsio,xsio2,gh2o,gco2,gco,gch4,gh2,gh2s,
-     *                 go2,gso2,gcos,gn2,gnh3,go,gsio,gsio2,v(nsp)
+     *                 xnh3,xot,xsio,xsio2,xsi,xunk,
+     *                 gh2o,gco2,gco,gch4,gh2,gh2s,go2,gso2,gcos,gn2,
+     *                 gnh3,go,gsio,gsio2,gsi,gunk,v(nsp)
 
       save ins, jns
 
-      data ins, jns/1, 5, 12*0, 1, 2*0/
+      data ins, jns/1, 5, 14*0, 1, 2*0/
 c----------------------------------------------------------------------
       xh2 = xv
       xh2o = 1d0 - xh2
@@ -1309,11 +1317,13 @@ c----------------------------------------------------------------------
       common/ cstchx /gmh2o,gmco2,gmch4,vm(3)
 
       double precision xh2o,xco2,xco,xch4,xh2,xh2s,xo2,xso2,xcos,xn2,
-     *                 xnh3,xot,xsio,xsio2,gh2o,gco2,gco,gch4,gh2,gh2s,
-     *                 go2,gso2,gcos,gn2,gnh3,go,gsio,gsio2,v
+     *                 xnh3,xot,xsio,xsio2,xsi,xunk,
+     *                 gh2o,gco2,gco,gch4,gh2,gh2s,go2,gso2,gcos,gn2,
+     *                 gnh3,go,gsio,gsio2,gsi,gunk,v
       common / cstcoh /xh2o,xco2,xco,xch4,xh2,xh2s,xo2,xso2,xcos,xn2,
-     *                 xnh3,xot,xsio,xsio2,gh2o,gco2,gco,gch4,gh2,gh2s,
-     *                 go2,gso2,gcos,gn2,gnh3,go,gsio,gsio2,v(nsp)
+     *                 xnh3,xot,xsio,xsio2,xsi,xunk,
+     *                 gh2o,gco2,gco,gch4,gh2,gh2s,go2,gso2,gcos,gn2,
+     *                 gnh3,go,gsio,gsio2,gsi,gunk,v(nsp)
 
       double precision fh2o,fco2
       common/ cst11 /fh2o,fco2
@@ -1324,7 +1334,7 @@ c----------------------------------------------------------------------
 
       save tol, ins
 
-      data tol, ins/ .0001d0, 1,2,3,4,5,9*0/
+      data tol, ins/ .0001d0, 1,2,3,4,5,11*0/
  
       nit = 0
       oh2o = 2d0
@@ -1407,11 +1417,13 @@ c----------------------------------------------------------------------
       common/ cstchx /gmh2o,gmco2,gmch4,vm(3)
 
       double precision xh2o,xco2,xco,xch4,xh2,xh2s,xo2,xso2,xcos,xn2,
-     *                 xnh3,xot,xsio,xsio2,gh2o,gco2,gco,gch4,gh2,gh2s,
-     *                 go2,gso2,gcos,gn2,gnh3,go,gsio,gsio2,v
+     *                 xnh3,xot,xsio,xsio2,xsi,xunk,
+     *                 gh2o,gco2,gco,gch4,gh2,gh2s,go2,gso2,gcos,gn2,
+     *                 gnh3,go,gsio,gsio2,gsi,gunk,v
       common / cstcoh /xh2o,xco2,xco,xch4,xh2,xh2s,xo2,xso2,xcos,xn2,
-     *                 xnh3,xot,xsio,xsio2,gh2o,gco2,gco,gch4,gh2,gh2s,
-     *                 go2,gso2,gcos,gn2,gnh3,go,gsio,gsio2,v(nsp)
+     *                 xnh3,xot,xsio,xsio2,xsi,xunk,
+     *                 gh2o,gco2,gco,gch4,gh2,gh2s,go2,gso2,gcos,gn2,
+     *                 gnh3,go,gsio,gsio2,gsi,gunk,v(nsp)
 
       double precision fh2o,fco2
       common/ cst11 /fh2o,fco2
@@ -1422,7 +1434,7 @@ c----------------------------------------------------------------------
 
       save ins
 
-      data ins/ 1,2,3,4,5,9*0/
+      data ins/ 1,2,3,4,5,11*0/
  
       call setup (ghh2o,ghco2,ghch4,kh2o,kco2,kco,kch4)
 
@@ -1469,11 +1481,13 @@ c----------------------------------------------------------------------
       common / cst5 /p,t,xo,u1,u2,tr,pr,r,ps
 
       double precision xh2o,xco2,xco,xch4,xh2,xh2s,xo2,xso2,xcos,xn2,
-     *                 xnh3,xot,xsio,xsio2,gh2o,gco2,gco,gch4,gh2,gh2s,
-     *                 go2,gso2,gcos,gn2,gnh3,go,gsio,gsio2,v
+     *                 xnh3,xot,xsio,xsio2,xsi,xunk,
+     *                 gh2o,gco2,gco,gch4,gh2,gh2s,go2,gso2,gcos,gn2,
+     *                 gnh3,go,gsio,gsio2,gsi,gunk,v
       common / cstcoh /xh2o,xco2,xco,xch4,xh2,xh2s,xo2,xso2,xcos,xn2,
-     *                 xnh3,xot,xsio,xsio2,gh2o,gco2,gco,gch4,gh2,gh2s,
-     *                 go2,gso2,gcos,gn2,gnh3,go,gsio,gsio2,v(nsp)
+     *                 xnh3,xot,xsio,xsio2,xsi,xunk,
+     *                 gh2o,gco2,gco,gch4,gh2,gh2s,go2,gso2,gcos,gn2,
+     *                 gnh3,go,gsio,gsio2,gsi,gunk,v(nsp)
 
       double precision fh2o,fco2
       common/ cst11 /fh2o,fco2
@@ -1484,7 +1498,7 @@ c----------------------------------------------------------------------
 
       save tol, ins
 
-      data tol, ins/0.0001d0, 1, 2, 3, 4, 5, 9*0/
+      data tol, ins/0.0001d0, 1, 2, 3, 4, 5, 11*0/
 
       t2 = t*t
       t3 = t2 * t
@@ -1805,11 +1819,13 @@ c----------------------------------------------------------------------
       common/ cst5 /p,t,xc,u1,u2,tr,pr,r,ps
 
       double precision xh2o,xco2,xco,xch4,xh2,xh2s,xo2,xso2,xcos,xn2,
-     *                 xnh3,xo,xsio,xsio2,gh2o,gco2,gco,gch4,gh2,gh2s,
-     *                 go2,gso2,gcos,gn2,gnh3,go,gsio,gsio2,v
+     *                 xnh3,xot,xsio,xsio2,xsi,xunk,
+     *                 gh2o,gco2,gco,gch4,gh2,gh2s,go2,gso2,gcos,gn2,
+     *                 gnh3,go,gsio,gsio2,gsi,gunk,v
       common / cstcoh /xh2o,xco2,xco,xch4,xh2,xh2s,xo2,xso2,xcos,xn2,
-     *                 xnh3,xo,xsio,xsio2,gh2o,gco2,gco,gch4,gh2,gh2s,
-     *                 go2,gso2,gcos,gn2,gnh3,go,gsio,gsio2,v(nsp)
+     *                 xnh3,xot,xsio,xsio2,xsi,xunk,
+     *                 gh2o,gco2,gco,gch4,gh2,gh2s,go2,gso2,gcos,gn2,
+     *                 gnh3,go,gsio,gsio2,gsi,gunk,v(nsp)
 
       double precision fh2o,fco2
       common/ cst11 /fh2o,fco2
@@ -1820,7 +1836,7 @@ c----------------------------------------------------------------------
 
       save tol,ins
 
-      data tol,ins/.001d0, 1,2,3,4,5,9*0/
+      data tol,ins/.001d0, 1,2,3,4,5,11*0/
 
       t2 = t * t
       t3 = t2 * t
@@ -1932,11 +1948,13 @@ c----------------------------------------------------------------------
       common/ cstchx /gmh2o,gmco2,gmch4,vm(3)
 
       double precision xh2o,xco2,xco,xch4,xh2,xh2s,xo2,xso2,xcos,xn2,
-     *                 xnh3,xo,xsio,xsio2,gh2o,gco2,gco,gch4,gh2,gh2s,
-     *                 go2,gso2,gcos,gn2,gnh3,go,gsio,gsio2,v
+     *                 xnh3,xot,xsio,xsio2,xsi,xunk,
+     *                 gh2o,gco2,gco,gch4,gh2,gh2s,go2,gso2,gcos,gn2,
+     *                 gnh3,go,gsio,gsio2,gsi,gunk,v
       common / cstcoh /xh2o,xco2,xco,xch4,xh2,xh2s,xo2,xso2,xcos,xn2,
-     *                 xnh3,xo,xsio,xsio2,gh2o,gco2,gco,gch4,gh2,gh2s,
-     *                 go2,gso2,gcos,gn2,gnh3,go,gsio,gsio2,v(nsp)
+     *                 xnh3,xot,xsio,xsio2,xsi,xunk,
+     *                 gh2o,gco2,gco,gch4,gh2,gh2s,go2,gso2,gcos,gn2,
+     *                 gnh3,go,gsio,gsio2,gsi,gunk,v(nsp)
 
       double precision fh2o,fco2
       common/ cst11 /fh2o,fco2
@@ -1947,8 +1965,8 @@ c----------------------------------------------------------------------
 
       save tol,ins
 
-      data tol,ins/.001d0, 1,2,3,4,5,9*0/
-
+      data tol,ins/.001d0, 1,2,3,4,5,11*0/
+c----------------------------------------------------------------------
       nit = 0
 
       call fo2buf (fo2)
@@ -2289,8 +2307,8 @@ c-----------------------------------------------------------------------
 
       integer ins(*),i,j,k,l,iroots,isp,ineg,ipos
  
-      double precision b(nsp),a(nsp),f(nsp),aj2(nsp),ev(3),c1,c2,t2,
-     *                 c3,vmin,vmax,d1,d2,d3,d6,rt,t3,t4,dsqrtt,r,
+      double precision b(nsp),a(nsp),f(nsp),aj2(nsp),ev(3),c1,c2,
+     *                 c3,vmin,vmax,d1,d2,d3,d6,rt,dsqrtt,r,
      *                 ch,bx,aij,pdv
  
       double precision p,t,xco2,u1,u2,tr,pr,rbar,ps
@@ -2305,25 +2323,14 @@ c-----------------------------------------------------------------------
       double precision vol
       common/ cst26 /vol
  
-      save a, b, r
+      save r
                              
-      data r /83.1441/,
-     *     a /0d0, 0d0, 16.98d6, 32.154811d6, 2.821d5, 89d6,
-     *        174025.8831d2,133.1d6, 130d6, 136d5 , 631d5,
-c             O, SiO, SiO2 
-     *        0d0, 0d0,  7097770957./,
-     *     b /14.6,  29.7,  27.38, 29.681, 15.7699, 29.94,
-     *        22.06956396,  37.4,  43d0,  23.42,   18.84, 
-c             O, SiO, SiO2:
-c             bsio = bco/bco2*bsio2 => 0.919
-c             bo   ~ bo2
-     *        22.07, 19.14, 24.85506770/
+      data r /83.1441/
 c---------------------------------------------------------------------- 
-      t2 = t*t
-      t3 = t2*t
-      t4 = t3*t
       dsqrtt = dsqrt(t)
       rt = r*t
+
+      call rkparm (a,b,ins,isp)
 
       bx = 0d0
       aij = 0d0
@@ -2331,20 +2338,6 @@ c----------------------------------------------------------------------
       do k = 1, isp
 
          i = ins(k)
-
-         if (i.eq.1) then 
-c                             MRK dispersion term for h2o
-            a(1) =      .1452535403d8 + 306893.3587d0*t 
-     *             -307.9995871d0*t2 + .09226256008d0*t3 
-     *             -.2930106337d-5*t4
-
-         else if (i.eq.2) then 
-c                             MRK dispersion term for co2
-            a(2) =  92935540d0 - 82130.73d0*t + 21.29d0*t2
-c                             and MRK H2O-CO2 cross term 
-            ch = dexp(-11.218d0 + 6032d0/t - 2782000d0/t2 + 4.708d8/t3) 
-     *           * 6912.824964d0 * t2 * dsqrtt + 79267647d0
-         end if 
 
          aj2(i) = 0d0
          bx = bx + b(i)*x(i)
@@ -2798,23 +2791,15 @@ c-----------------------------------------------------------------------
       double precision x,g,v
       common/ cstcoh /x(nsp),g(nsp),v(nsp)
 
-      save a, b, r 
+      save r 
 
-      data r /83.1441/,
-     *     a /0d0, 0d0, 16.98d6, 32.154811d6, 2.821d5, 89d6,
-     *        174025.8831d2,133.1d6, 130d6, 136d5 , 631d5,
-c             O, SiO, SiO2 
-     *        0d0, 0d0,  7097770957./,
-     *     b /14.6,  29.7,  27.38, 29.681, 15.7699, 29.94,
-     *        22.06956396,  37.4,  43d0,  23.42,   18.84, 
-c             O, SiO, SiO2:
-c             bsio = bco/bco2*bsio2 => 0.919
-c             bo   ~ bo2
-     *        22.07, 19.14, 24.85506770/
+      data r /83.1441/
 c----------------------------------------------------------------------
       t2 = t*t
       dsqrtt = dsqrt(t)
       rt = r*t
+c
+      call rkparm (a,b,ins,isp)
 c                             this is a cheap trick the a-fit 
 c                             was derived using b=15, then b
 c                             was adjusted to lower the H2-H2O
@@ -2917,12 +2902,16 @@ c         8 = SO2
 c         9 = COS
 c        10 = N2
 c        11 = NH3
+c        12 = O
+c        13 = SiO
+c        14 = SiO2
+c        15 = Si  
 c-----------------------------------------------------------------------
       implicit none
 
       include 'perplex_parameters.h'
  
-      double precision b(nsp),a(nsp),f(nsp),ev(3),t2,t3,t4,dsqrtt,rt,
+      double precision b(nsp),a(nsp),f(nsp),ev(3),dsqrtt,rt,
      *                 d1,d2,d4,bx,v1,v2,aij,c1,c2,c3,pdv,r
 
       integer ins(*), isp, k, iroots, i, ineg, ipos 
@@ -2939,39 +2928,18 @@ c-----------------------------------------------------------------------
       double precision vol
       common/ cst26 /vol
  
-      save a, b, r
+      save r
                              
-      data r /83.1441/,
-     *     a /0d0, 0d0, 16.98d6, 32.154811d6, 2.821d5, 89d6,
-     *        174025.8831d2,133.1d6, 130d6, 136d5 , 631d5,
-c             O, SiO, SiO2 
-     *        0d0, 0d0,  7097770957./,
-     *     b /14.6,  29.7,  27.38, 29.681, 15.7699, 29.94,
-     *        22.06956396,  37.4,  43d0,  23.42,   18.84, 
-c             O, SiO, SiO2:
-c             bsio = bco/bco2*bsio2 => 0.919
-c             bo   ~ bo2
-     *        22.07, 19.14, 24.85506770/
+      data r /83.1441/
 c----------------------------------------------------------------------
-      t2 = t*t
-      t3 = t2*t
-      t4 = t3*t
       dsqrtt = dsqrt(t)
       rt = r*t
+
+      call rkparm (a,b,ins,isp)
 
       do k = 1, isp
 
          i = ins(k)
-
-         if (i.eq.1) then 
-c                             MRK dispersion term for H2O
-            a(1) = .1452535403d8 +306893.3587d0*t -307.9995871d0*t2
-     *              +.09226256008d0*t3-.2930106337d-5*t4
-         else if (i.eq.2) then 
-c                             MRK dispersion term for CO2
-            a(2) =  92935540d0 - 82130.73d0*t + 21.29d0*t2
- 
-         end if
 
          aij = a(i)
          bx = b(i)
@@ -3084,11 +3052,13 @@ c-----------------------------------------------------------------------
       common/ cst26 /vol
 
       double precision xh2o,xco2,xco,xch4,xh2,xh2s,xo2,xso2,xcos,xn2,
-     *                 xnh3,xot,xsio,xsio2,gh2o,gco2,gco,gch4,gh2,gh2s,
-     *                 go2,gso2,gcos,gn2,gnh3,go,gsio,gsio2,v
+     *                 xnh3,xot,xsio,xsio2,xsi,xunk,
+     *                 gh2o,gco2,gco,gch4,gh2,gh2s,go2,gso2,gcos,gn2,
+     *                 gnh3,go,gsio,gsio2,gsi,gunk,v
       common / cstcoh /xh2o,xco2,xco,xch4,xh2,xh2s,xo2,xso2,xcos,xn2,
-     *                 xnh3,xot,xsio,xsio2,gh2o,gco2,gco,gch4,gh2,gh2s,
-     *                 go2,gso2,gcos,gn2,gnh3,go,gsio,gsio2,v(nsp)
+     *                 xnh3,xot,xsio,xsio2,xsi,xunk,
+     *                 gh2o,gco2,gco,gch4,gh2,gh2s,go2,gso2,gcos,gn2,
+     *                 gnh3,go,gsio,gsio2,gsi,gunk,v(nsp)
 
       double precision p,t,xo,u1,u2,tr,pr,r,ps
       common / cst5 /p,t,xo,u1,u2,tr,pr,r,ps
@@ -3096,9 +3066,9 @@ c-----------------------------------------------------------------------
       double precision fh2o,fco2
       common/ cst11 /fh2o,fco2
 
-      save ins,jns
+      save ins, jns
 
-      data ins, jns/ 1,5,6,8,10*0,1,2*0/   
+      data ins, jns/ 1,5,6,8,12*0,1,2*0/   
 c                                check if xo is <1, >0,
 c                                reset if necessary
       if (xo.gt.0.9999999999d0) then
@@ -3222,11 +3192,13 @@ c-----------------------------------------------------------------------
       common/ cst26 /vol
 
       double precision xh2o,xco2,xco,xch4,xh2,xh2s,xo2,xso2,xcos,xn2,
-     *                 xnh3,xot,xsio,xsio2,gh2o,gco2,gco,gch4,gh2,gh2s,
-     *                 go2,gso2,gcos,gn2,gnh3,go,gsio,gsio2,v
+     *                 xnh3,xot,xsio,xsio2,xsi,xunk,
+     *                 gh2o,gco2,gco,gch4,gh2,gh2s,go2,gso2,gcos,gn2,
+     *                 gnh3,go,gsio,gsio2,gsi,gunk,v
       common / cstcoh /xh2o,xco2,xco,xch4,xh2,xh2s,xo2,xso2,xcos,xn2,
-     *                 xnh3,xot,xsio,xsio2,gh2o,gco2,gco,gch4,gh2,gh2s,
-     *                 go2,gso2,gcos,gn2,gnh3,go,gsio,gsio2,v(nsp)
+     *                 xnh3,xot,xsio,xsio2,xsi,xunk,
+     *                 gh2o,gco2,gco,gch4,gh2,gh2s,go2,gso2,gcos,gn2,
+     *                 gnh3,go,gsio,gsio2,gsi,gunk,v(nsp)
 
       double precision p,t,xo,u1,u2,tr,pr,r,ps
       common / cst5 /p,t,xo,u1,u2,tr,pr,r,ps
@@ -3234,9 +3206,10 @@ c-----------------------------------------------------------------------
       double precision fh2o,fco2
       common/ cst11 /fh2o,fco2
 
-      save ins,jns
+      save ins, jns
 
-      data ins, jns/ 1,5,6,7,8,9*0,1,2*0/
+      data ins, jns/ 1,5,6,7,8,11*0,1,2*0/
+c----------------------------------------------------------------------
 c                                check if xo is <1, >0,
 c                                reset if necessary
       if (xo.gt.0.9999999999d0) then
@@ -3351,11 +3324,13 @@ c-----------------------------------------------------------------------
       common/ cstchx /gmh2o,vm(5)
 
       double precision xh2o,xco2,xco,xch4,xh2,xh2s,xo2,xso2,xcos,xn2,
-     *                 xnh3,xot,xsio,xsio2,gh2o,gco2,gco,gch4,gh2,gh2s,
-     *                 go2,gso2,gcos,gn2,gnh3,go,gsio,gsio2,v
+     *                 xnh3,xot,xsio,xsio2,xsi,xunk,
+     *                 gh2o,gco2,gco,gch4,gh2,gh2s,go2,gso2,gcos,gn2,
+     *                 gnh3,go,gsio,gsio2,gsi,gunk,v
       common / cstcoh /xh2o,xco2,xco,xch4,xh2,xh2s,xo2,xso2,xcos,xn2,
-     *                 xnh3,xot,xsio,xsio2,gh2o,gco2,gco,gch4,gh2,gh2s,
-     *                 go2,gso2,gcos,gn2,gnh3,go,gsio,gsio2,v(nsp)
+     *                 xnh3,xot,xsio,xsio2,xsi,xunk,
+     *                 gh2o,gco2,gco,gch4,gh2,gh2s,go2,gso2,gcos,gn2,
+     *                 gnh3,go,gsio,gsio2,gsi,gunk,v(nsp)
 
       double precision vol
       common/ cst26 /vol
@@ -3368,7 +3343,8 @@ c-----------------------------------------------------------------------
 
       save ins,jns
 
-      data ins, jns/ 1,5,7,11*0,1,2*0/
+      data ins, jns/ 1,5,7,13*0,1,2*0/
+c----------------------------------------------------------------------
 c                                check if xo is <1, >0,
 c                                reset if necessary
       if (xo.gt.0.9999999999d0) then
@@ -3609,7 +3585,7 @@ c-----------------------------------------------------------------------
       save rbar, dv, a1, a2, a3, ins
  
       data rbar,dv/83.143d0,0.001d0/,a1,a2,a3/6.566d7,7.276d7,37.3d0/,
-     *     ins/2,13*0/
+     *     ins/2,15*0/
 c---------------------------------------------------------------------
 c                                 get initial v estimate.
       call mrkpur (ins, 1)
@@ -3956,8 +3932,8 @@ c---------------------------------------------------------------------
  
       save jns 
  
-      data jns/ 1, 2, 12*0/
- 
+      data jns/ 1, 2, 14*0/
+c----------------------------------------------------------------------
       if (xc.eq.1d0) then
          ins(1) = 2
          call mrkpur (ins, 1)
@@ -4504,7 +4480,7 @@ c-----------------------------------------------------------------------
       common/ cst5  /p,t,xc,vv(6)
 
       save ins
-      data ins/ 1, 2, 12*0/
+      data ins/ 1, 2, 14*0/
 c----------------------------------------------------------------------- 
       if (xc.le.0d0) then
 c                                 for pure h2o:
@@ -4621,7 +4597,7 @@ c----------------------------------------------------------------------
       common/ cst5  /p,t,xc,vv(6)
 
       save ins
-      data ins/ 1, 2, 12*0/
+      data ins/ 1, 2, 14*0/
 c----------------------------------------------------------------------
       if (xc.le.0d0) then
 c                                 for pure h2o:
@@ -4681,7 +4657,7 @@ c-----------------------------------------------------------------------
       double precision p,t,xc,vv
       common/ cst5  /p,t,xc,vv(6)
 
-      data ins/ 1, 2, 12*0/
+      data ins/ 1, 2, 14*0/
  
       if (xc.le.0d0) then
 c                                 for pure h2o:
@@ -4741,11 +4717,13 @@ c           mixtures.
       common/ cst5 /p,t,xv,u1,u2,tr,pr,r,ps
 
       double precision xh2o,xco2,xco,xch4,xh2,xh2s,xo2,xso2,xcos,xn2,
-     *                 xnh3,xo,xsio,xsio2,gh2o,gco2,gco,gch4,gh2,gh2s,
-     *                 go2,gso2,gcos,gn2,gnh3,go,gsio,gsio2,v
+     *                 xnh3,xot,xsio,xsio2,xsi,xunk,
+     *                 gh2o,gco2,gco,gch4,gh2,gh2s,go2,gso2,gcos,gn2,
+     *                 gnh3,go,gsio,gsio2,gsi,gunk,v
       common / cstcoh /xh2o,xco2,xco,xch4,xh2,xh2s,xo2,xso2,xcos,xn2,
-     *                 xnh3,xo,xsio,xsio2,gh2o,gco2,gco,gch4,gh2,gh2s,
-     *                 go2,gso2,gcos,gn2,gnh3,go,gsio,gsio2,v(nsp)
+     *                 xnh3,xot,xsio,xsio2,xsi,xunk,
+     *                 gh2o,gco2,gco,gch4,gh2,gh2s,go2,gso2,gcos,gn2,
+     *                 gnh3,go,gsio,gsio2,gsi,gunk,v(nsp)
 
       double precision vol
       common/ cst26 /vol
@@ -4755,7 +4733,7 @@ c           mixtures.
 
       save ins
 
-      data ins, jns / 1, 5, 12*0, 1, 2*0/
+      data ins, jns / 1, 5, 14*0, 1, 2*0/
 
       xh2 = xv
       xh2o = 1d0 - xh2
@@ -4933,7 +4911,7 @@ c-----------------------------------------------------------------------
 
       save ins
 
-      data ins/ 1, 2, 12*0/
+      data ins/ 1, 2, 14*0/
 c-----------------------------------------------------------------------
       if (xc.le.0d0) then
 c                                 for pure h2o:
@@ -5104,7 +5082,7 @@ c----------------------------------------------------------------------
 
       save ins
 
-      data ins/ 1, 2, 12*0/
+      data ins/ 1, 2, 14*0/
 c----------------------------------------------------------------------
       if (xc.le.0d0) then
 c                                 for pure h2o:
@@ -5259,11 +5237,13 @@ c----------------------------------------------------------------------
      *                 rad,eq9,dxnh3,deq9,dxh2o,sign,c1,c2,c3,c4,c5
 
       double precision xh2o,xco2,xco,xch4,xh2,xh2s,xo2,xso2,xcos,xn2,
-     *                 xnh3,xo,xsio,xsio2,gh2o,gco2,gco,gch4,gh2,gh2s,
-     *                 go2,gso2,gcos,gn2,gnh3,go,gsio,gsio2,v
+     *                 xnh3,xot,xsio,xsio2,xsi,xunk,
+     *                 gh2o,gco2,gco,gch4,gh2,gh2s,go2,gso2,gcos,gn2,
+     *                 gnh3,go,gsio,gsio2,gsi,gunk,v
       common / cstcoh /xh2o,xco2,xco,xch4,xh2,xh2s,xo2,xso2,xcos,xn2,
-     *                 xnh3,xo,xsio,xsio2,gh2o,gco2,gco,gch4,gh2,gh2s,
-     *                 go2,gso2,gcos,gn2,gnh3,go,gsio,gsio2,v(nsp)
+     *                 xnh3,xot,xsio,xsio2,xsi,xunk,
+     *                 gh2o,gco2,gco,gch4,gh2,gh2s,go2,gso2,gcos,gn2,
+     *                 gnh3,go,gsio,gsio2,gsi,gunk,v(nsp)
 
       double precision fh2o,fco2
       common/ cst11 /fh2o,fco2
@@ -5277,8 +5257,8 @@ c----------------------------------------------------------------------
 
       save tol, ins
 
-      data tol, ins/1d-6, 1,2,3,4,5,10,11,7*0/
-
+      data tol, ins/1d-6, 1,2,3,4,5,10,11,9*0/
+c----------------------------------------------------------------------
       t2 = t * t
       t3 = t2 * t
       x = gz
@@ -5883,7 +5863,8 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer ins(4), isp, nit, i1, i2, i3, i4, iroots, ineg, ipos, i
+      integer ins(5), isp, nit, i1, i2, i3, i4, i5, iroots, ineg, ipos, 
+     *        i
 
       logical bad
 
@@ -5903,8 +5884,8 @@ c----------------------------------------------------------------------
       common/ cst4 /iam
 
       save ins, isp 
-      data isp, ins, i1, i2, i3, i4/4, 14, 13, 12, 7, 
-     *                                 14, 13, 12, 7/
+      data isp, ins, i1, i2, i3, i4, i5/5, 14, 13, 12, 7, 15, 
+     *                                     14, 13, 12, 7, 15/
 c----------------------------------------------------------------------
       if (iam.le.4) xc = 0.5
 c                                 rat = nsio/no = xc/(1-xc) 
@@ -5924,6 +5905,8 @@ c                                 some inner loop constants
       rc1 = c1*rp1
 c                                 get pure species fugacities
       call mrkpur (ins, isp)
+
+      write (*,'(a,g12.6)') 'v(Si) = ',v(i5)
 
       nit = 0 
       oldy = 0d0
@@ -6060,3 +6043,87 @@ c                                 get new gamma's
       end if 
 
       end
+
+      subroutine rkparm (a, b, ins, isp)
+c-----------------------------------------------------------------------
+c subroutine to return standard rk a and b terms. 
+
+c input:
+
+c        ins(i) -  pointers indicating the species are to be calculated.
+c        isp     - the number of species to be calculated.
+c        t       - input from cst5, p(bars), t(K)
+
+c species indices:
+
+c         1 = H2O
+c         2 = CO2
+c         3 = CO
+c         4 = CH4 
+c         5 = H2
+c         6 = H2S
+c         7 = O2
+c         8 = SO2
+c         9 = COS
+c        10 = N2
+c        11 = NH3
+c        12 = O
+c        13 = SiO
+c        14 = SiO2
+c        15 = Si  
+c-----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+ 
+      double precision b(*), a(*), brk(nsp), ark(nsp), ta 
+
+      integer ins(*), isp, i, k
+ 
+      double precision p,t,xco2,u1,u2,tr,pr,r,ps
+      common/ cst5  /p,t,xco2,u1,u2,tr,pr,r,ps
+
+      save ark, brk
+                             
+      data 
+     *     ark /0d0, 0d0, 16.98d6, 32.154811d6, 2.821d5, 89d6,
+     *          174025.8831d2,133.1d6, 130d6, 136d5 , 631d5,
+c             O, SiO, SiO2, Si:
+c             asio = aco/aco2 * asio2 => 1/16.722
+     *          0d0, 424441664.6d0,  7097770957d0, 0d0, 0d0/,
+     *     brk /14.6,  29.7,  27.38, 29.681, 15.7699, 29.94,
+     *          22.06956396,  37.4,  43d0,  23.42,   18.84, 
+c             O, SiO, SiO2, Si:
+c             bsio = bco/bco2*bsio2 => 1/4.83
+c             bo  ~ bo2
+     *          22.07, 5.148732998d0, 24.85506770, 10.35765058, 0d0/
+c----------------------------------------------------------------------
+      do k = 1, isp
+
+         i = ins(k)
+         b(i) = brk(i)
+
+         if (i.eq.1) then 
+c                                 MRK dispersion term for H2O
+            a(1) = .1452535403d8 + t*(306893.3587d0 + t*(-307.9995871d0
+     *                          + t*(.09226256008d0 -.2930106337d-5*t)))
+         else if (i.eq.2) then 
+c                                 MRK dispersion term for CO2
+            a(2) =  92935540d0 + t*(-82130.73d0 + 21.29d0*t)
+
+         else if (i.eq.15) then 
+c                                 MRK dispersion term for Si 
+            ta = t
+            if (t.gt.6341.1d0) ta = 6341.1d0
+          
+            a(15) = (-.6542687d2*ta + 8297.575d2)*ta + .1137043e10
+
+         else 
+
+            a(i) = ark(i)
+ 
+         end if
+
+      end do 
+
+      end 

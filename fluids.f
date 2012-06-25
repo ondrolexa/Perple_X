@@ -277,6 +277,7 @@ c        11 = NH3
 c        12 = O
 c        13 = SiO
 c        14 = SiO2
+c        15 = S6
 
 c O2 should be replaced by SO3, and ethane should be added.
 c-----------------------------------------------------------------------
@@ -338,7 +339,8 @@ c-----------------------------------------------------------------------
 
       data tentoe, fo2, fs2, specie /2.302585093d0, 0d0, 0d0,
      *      'H2O ','CO2 ','CO  ','CH4 ','H2  ','H2S ','O2  ',
-     *      'SO2 ','COS ','N2  ','NH3 ','O   ','SiO ','SiO2'/
+     *      'SO2 ','COS ','N2  ','NH3 ','O   ','SiO ','SiO2',
+     *      'Si  ','UNK '/
 c----------------------------------------------------------------------- 
 c                                 iam is a flag indicating the Perple_X program
       iam = 11
