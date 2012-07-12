@@ -375,6 +375,23 @@ c psoclr - subroutine to output color choice.
  
       end
 c----------------------------------------------------------------
+      subroutine psored
+ 
+c psoclr - subroutine to output red color.
+ 
+      implicit none
+
+      integer nps
+      double precision xscale,yscale,xmn,ymn
+      common/ scales /xscale,yscale,xmn,ymn,nps
+ 
+      write (nps,1000)
+ 
+1000  format ('%I cfg Red',/,'1 0 0 SetCFg',/,'%I cbg Red',/,
+     *        '1 0 0 SetCBg')
+ 
+      end
+c----------------------------------------------------------------
       subroutine psolin (rline,width)
  
 c psolin - subroutine to ouput line header.
@@ -825,6 +842,42 @@ c psrecr - subroutine to output a rectangle, with real fill
  
       call pspygr (x,y,4,rline,width,rfill)
  
+      end
+c----------------------------------------------------------------
+      subroutine psrecb (x1,x2,y1,y2,rline,width)
+ 
+c psrecb - subroutine to output a red rectangle for bad results in PSSECT
+
+      implicit none
+
+      double precision x1,x2,y1,y2,rline,x(4),y(4),width
+
+      integer nps
+      double precision xscale,yscale,xmn,ymn
+      common/ scales /xscale,yscale,xmn,ymn,nps
+ 
+      x(1) = x1
+      x(2) = x1
+      x(3) = x2
+      x(4) = x2
+      y(1) = y1
+      y(2) = y2
+      y(3) = y2
+      y(4) = y1
+
+      write (nps,1030)
+ 
+      call psolin (rline,width)
+      call psored
+      call psofil (1)
+      call psotrn
+      call psopts (x,y,4)
+ 
+      write (nps,1020) 4
+ 
+1020  format (i5,' Poly',/,'End',/)
+1030  format (/,'Begin %I Poly')
+
       end
 c------------------------------------------------------------------
       subroutine psline (x1,y1,x2,y2,rline,width)

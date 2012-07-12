@@ -420,12 +420,13 @@ c                                 xco2 EoS's
 
          else if (ifug.eq.26) then
 c                                 silica vapor 
-            vname(3) = 'X(SiO)  '
-            isp = 4
+            vname(3) = 'X(Si)   '
+            isp = 5
             ins(1) = 14
             ins(2) = 13
             ins(3) = 12
             ins(4) = 7
+            ins(5) = 15
 
          else 
 
@@ -539,6 +540,7 @@ c                                fo2-aC-N/C COHN
 
             do i = 1, ipot
                write (*,'(3x,i1,a,a)') i,' - ',vname(i)
+               iv(i) = 0
             end do 
 
             do 
@@ -649,9 +651,11 @@ c                                 create column tags
             do i = 1, ipot
                tags(i) = vname(iv(i))
             end do 
+
+            tags(ipot+1) = 'vol[cm3/mol]'
 c                                 species fractions
             j = 0
-            do i = ipot+1, ipot+isp
+            do i = ipot+2, ipot+isp+1
 
                j = j + 1
                if (log) then 
@@ -663,13 +667,13 @@ c                                 species fractions
 
             end do
 c                                 atomic fractions
-            tags(ipot+isp+1) = 'Y_C'
-            tags(ipot+isp+2) = 'Y_O'
-            tags(ipot+isp+3) = 'Y_H'
-            tags(ipot+isp+4) = 'Y_N'
-            tags(ipot+isp+5) = 'Y_S'
+            tags(ipot+isp+2) = 'Y_C'
+            tags(ipot+isp+3) = 'Y_O'
+            tags(ipot+isp+4) = 'Y_H'
+            tags(ipot+isp+5) = 'Y_N'
+            tags(ipot+isp+6) = 'Y_S'
 
-            count = ipot+isp+6
+            count = ipot+isp+7
 c                                  species fugacities
             j = 0
             do i = count, count+isp-1
@@ -846,9 +850,11 @@ c                                 assign values to local variables
   
                   call cfluid (fo2, fs2)    
 c                                 variables
-                  do k = 1, ipot
+                  do k = 1, ipot 
                      prop(k) = var(iv(k))
                   end do 
+c
+                  prop(ipot+1) = vol
 c                                 species fractions/fugacities
                   if (ifug.le.6 .or.ifug.eq.14.or.ifug.eq.21.or.
      *                ifug.eq.22.or.ifug.eq.25) then 
@@ -861,11 +867,11 @@ c                                 xco2 EoS's
                         f = dexp(fhc(k))
 
                         if (log) then 
-                           prop(ipot+k) = dlog10(xs(ins(k)))
-                           prop(ipot+isp+5+k) = dlog10(f)
+                           prop(ipot+1+k) = dlog10(xs(ins(k)))
+                           prop(ipot+isp+6+k) = dlog10(f)
                         else 
-                           prop(ipot+k) = xs(k)
-                           prop(ipot+isp+5+k) = f
+                           prop(ipot+1+k) = xs(k)
+                           prop(ipot+isp+6+k) = f
                         end if
 
                      end do
@@ -877,14 +883,14 @@ c                                 assume multispecies fluids
                         f = g(ins(k))*p*xs(ins(k))
 
                         if (log.and.f.le.0d0) then  
-                           prop(ipot+k) = nopt(7)
-                           prop(ipot+isp+5+k) = nopt(7)
+                           prop(ipot+1+k) = nopt(7)
+                           prop(ipot+isp+6+k) = nopt(7)
                         else if (log) then 
-                           prop(ipot+k) = dlog10(xs(ins(k)))
-                           prop(ipot+isp+5+k) = dlog10(f)
+                           prop(ipot+1+k) = dlog10(xs(ins(k)))
+                           prop(ipot+isp+6+k) = dlog10(f)
                         else 
-                           prop(ipot+k) = xs(ins(k))
-                           prop(ipot+isp+5+k) = f
+                           prop(ipot+1+k) = xs(ins(k))
+                           prop(ipot+isp+6+k) = f
                         end if
 
                      end do
@@ -901,11 +907,11 @@ c                                 atomic fractions
 
                   tot = ns + no + nh + nc + nn     
 
-                  prop(ipot+isp+1) = nc/tot
-                  prop(ipot+isp+2) = no/tot
-                  prop(ipot+isp+3) = nh/tot
-                  prop(ipot+isp+4) = nn/tot
-                  prop(ipot+isp+5) = ns/tot
+                  prop(ipot+isp+2) = nc/tot
+                  prop(ipot+isp+3) = no/tot
+                  prop(ipot+isp+4) = nh/tot
+                  prop(ipot+isp+5) = nn/tot
+                  prop(ipot+isp+6) = ns/tot
 
                   prop(count-1) = fo2/tentoe
                   prop(count)   = fs2/tentoe
@@ -1118,7 +1124,7 @@ c                                  output bulk properties and V:
                   nh = (xs(1) + xs(5) + xs(6))*2d0 + xs(4)*4d0 
      *                                             + xs(11)*3d0 
                   nn = 2d0*xs(10) + xs(11)
-                  nsi = xs(13) + xs(14)
+                  nsi = xs(13) + xs(14) + xs(15)
 
                   tot = ns + no + nh + nc + nn + nsi    
 

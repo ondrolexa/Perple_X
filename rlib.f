@@ -130,7 +130,9 @@ c----------------------------------------------------------------------
  
       include 'perplex_parameters.h'
 
-      integer id,j
+      integer id, j
+
+      double precision g, ndu, vdp
 
       double precision thermo,uf,us
       common/ cst1 /thermo(k4,k10),uf(2),us(h5)
@@ -146,9 +148,12 @@ c----------------------------------------------------------------------
 
       double precision vnumu
       common/ cst44 /vnumu(i6,k10)
+
+      integer ltyp,lmda,idis
+      common/ cst204 /ltyp(k10),lmda(k10),idis(k10)
 c----------------------------------------------------------------------
  
-      gzero = thermo(1,id)
+      g = thermo(1,id)
 c                                 -sdt
      *      + t * (thermo(2,id) - thermo(4,id) * dlog(t)
      *      - t * (thermo(5,id) + thermo(7,id) * t))
@@ -157,8 +162,14 @@ c                                 -sdt
  
       do j = 1, jmct      
 c                                 -ndu   
-         gzero = gzero - vnumu(j,id) * mu(j)
+         g = g - vnumu(j,id) * mu(j)
       end do
+c                                 transitions
+      vdp = 0d0
+      ndu = 0d0 
+      if (ltyp(id).ne.0) call mtrans (g,vdp,ndu,id)
+
+      gzero = g
 
       end 
 
@@ -213,7 +224,7 @@ c---------------------------------------------------------------------
  
       include 'perplex_parameters.h'
 
-      integer id,j
+      integer id,j,ins(1)
 
       double precision ialpha, vt, trv, pth, vdp, ndu, vdpbm3, gsixtr, 
      *                 gstxgi, fs2, fo2, dg, kt, gval, gmake, gkomab,
@@ -224,9 +235,6 @@ c---------------------------------------------------------------------
 
       integer jfct,jmct,jprct
       common/ cst307 /jfct,jmct,jprct
-
-      double precision therdi,therlm
-      common/ cst203 /therdi(m8,m9),therlm(m7,m6,k9)
 
       integer idis,lmda,ltyp
       common/ cst204 /ltyp(k10),lmda(k10),idis(k10)
@@ -257,8 +265,11 @@ c---------------------------------------------------------------------
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
-      save kt,trv 
-      data kt,trv/0d0,1673.15d0/
+      double precision y,g,v
+      common / cstcoh /y(nsp),g(nsp),v(nsp)
+
+      save kt,trv,ins 
+      data kt,trv,ins/0d0,1673.15d0,14/
 c---------------------------------------------------------------------
 
       if (make(id).ne.0) then 
@@ -423,6 +434,13 @@ c                                 -ndu term
       do j = 1, jmct      
          ndu = ndu - vnumu(j,id) * mu(j)
       end do
+
+      gval = gval + vdp + ndu 
+c                                 check for transitions:
+      if (ltyp(id).ne.0) call mtrans (gval,vdp,ndu,id)
+c                                 check for temperature dependent
+c                                 order/disorder:
+      if (idis(id).ne.0) call disord (gval,idis(id))
 c                                 fluids in the saturated
 c                                 or thermodynamic composition space
       if (eos(id).gt.100) then 
@@ -443,6 +461,17 @@ c                                 or thermodynamic composition space
 c                                 komabayashi & fei (2010) EoS for Fe
             gval = gkomab(eos(id),id,vdp)
 
+         else if (eos(id).eq.604) then 
+c                                 Stoichiometic SiO2 rk fluid 
+            call mrkpur (ins,1)
+            gval = gval + r*t*dlog(p*g(14))
+
+         else if (eos(id).eq.605) then 
+c                                 ideal monatomic O from Si and SiO2
+            gval = gval + 
+c                                 this is -RT(lnk2+lnk3)/2 (rksi5 k's)
+     *         -0.3213822427D7 / t + 0.6464888248D6 - 0.1403012026D3*t
+
          else if (eos(id).ge.610.and.eos(id).le.623) then
 c                                 lacaze & Sundman (1990) EoS for Fe-Si-C alloys and compounds
             vdp = 0d0 
@@ -451,65 +480,8 @@ c                                 lacaze & Sundman (1990) EoS for Fe-Si-C alloys
          end if          
 
       end if
-
-      gval = gval + vdp + ndu 
-c                                 check for lambda transitions:
-      if (ltyp(id).ne.0) then
- 
-         if (ltyp(id).lt.4) then
-c                                 ubc-type transitions
-            call lamubc (p,t,dg,lmda(id),ltyp(id))
-            gval = gval + dg
- 
-         else if (ltyp(id).lt.7) then
-c                                 standard transitions
-            call lamhel (p,t,gval,vdp,lmda(id),ltyp(id))
- 
-         else if (ltyp(id).lt.10) then
-c                                 supcrt q/coe lambda transition
-            call lamqtz (p,t,gval,ndu,lmda(id),id)
- 
-         else if (ltyp(id).eq.10) then
-
-            if (eos(id).ne.8.and.eos(id).ne.9) then 
-c                                 putnis landau model as implemented in hp98 
-               call lamla0 (dg,vdp,lmda(id))
-               
-            else
-             
-               call lamla1 (dg,vdp,lmda(id))
-               
-            end if 
-
-            gval = gval + dg 
-
-         else if (ltyp(id).eq.13) then
-c                                 holland and powell bragg-williams model
-            call lambw (dg,lmda(id))
-            gval = gval + dg
-
-         else 
-
-            write (*,*) 'no such transition model'
-            stop
- 
-         end if
-
-      end if
-c                                 check for temperature dependent
-c                                 order/disorder:
-      if (idis(id).ne.0) then
-      
-         call disord (dg,idis(id))
-         gval = gval + dg
-         
-      end if
- 
-999   if (ifp(id).lt.0) then 
-c                                 kill melt endmembers if T < T_melt
-         if (t.lt.nopt(20)) gval = gval + 1d8
-
-      end if 
+c                                 kill melt endmembers if T < T_melt 
+999   if (ifp(id).lt.0.and.t.lt.nopt(20)) gval = gval + 1d8
 
       end
 
@@ -802,7 +774,7 @@ c                                b2 = ln(v0)
 
          return
 c                                remaining standard forms have caloric polynomial
-      else if (ieos.lt.103) then
+      else if (ieos.lt.103.or.ieos.eq.604.or.ieos.eq.605) then
 c                                G(Pr,T) polynomial 
          g  = g
      *       + s * tr - a * tr - b * tr * tr / 2d0 + c / tr
@@ -861,7 +833,7 @@ c                                 tait parameters computed as f(T)
 
       else if (ieos.eq.10) then 
 c                                 ideal gas, could make a reference pressure correction here. 
-      else 
+      else if (b8.ne.0d0) then 
 c                                 All remaining forms (ieos = 2, 4, >100) assume:
 c                                 1) alpha = b1 + b2*T + b3/T + b4/T^2 + b5/sqrt(T)
 c                                    which is reformulated here to 
@@ -1448,7 +1420,7 @@ c---------------------------------------------------------------------
 
       end
 
-      subroutine disord (g,id)
+      subroutine disord (gval,id)
 c----------------------------------------------------------------------
 c compute t-dependent disorder contribution, g is the
 c gibbs energy of disordering, therdi(8,id) is the t of onset of
@@ -1460,15 +1432,13 @@ c---------------------------------------------------------------------
 
       integer id
 
-      double precision g,dh,tt,ds,trr
+      double precision gval,dh,tt,ds,trr
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 
       double precision therdi,therlm
       common/ cst203 /therdi(m8,m9),therlm(m7,m6,k9)
- 
-      g = 0d0
 
       trr = therdi(8,id)
       if (t .lt. trr) return
@@ -1490,9 +1460,9 @@ c---------------------------------------------------------------------
      *     + therdi(6,id) * (tt - trr)
      *     + therdi(7,id) * (tt*tt - trr*trr) / 2d0
  
-      g = dh - (t * ds)
+      gval = gval + dh - (t * ds)
 
-      if (therdi(4,id).ne.0d0) g = g + dh/therdi(4,id) * (p - pr)
+      if (therdi(4,id).ne.0d0) gval = gval + dh/therdi(4,id) * (p - pr)
 
       end
  
@@ -1513,7 +1483,10 @@ c---------------------------------------------------------------------
 
       logical make 
 
-      double precision z(14),smax,t0,qr2,vmax,gph
+      double precision gzero
+      external gzero
+
+      double precision z(14),smax,t0,qr2,vmax,dt,g1,g2
  
       character*8 names
       common/ cst8   /names(k1)
@@ -1805,21 +1778,30 @@ c                              load into therlm:
 c                              set transition type to null
 c                              for call to gphase
                   lmda(id) = 0
+                  ltyp(id) = 0 
                else 
                   lmda(id) = lamin
                   ltyp(id) = 2 + k
                end if
 c                              g at trt:
-               call gphase (id,gph)
-               therlm(12,k,lamin) = gph
+               therlm(12,k,lamin) = gzero(id)
 c                              delta v trans:
                therlm(4,k,lamin) = 0d0
                if (tm(2,k).ne.0d0) therlm(4,k,lamin) = tm(3,k)/tm(2,k)
 c                              s + st at trt:
-               t = t + 1d-3
-               call gphase (id,gph)
-               therlm(3,k,lamin) = tm(3,k) -
-     *                             (gph - therlm(12,k,lamin))/1d-3
+               if (t*1d-3.lt.1d0) then 
+                  dt = 1d0
+               else
+                  dt = 1d-3*t
+               end if 
+
+               t = tm(1,k) + dt 
+               g1 = gzero(id)
+
+               t = tm(1,k) - dt 
+               g2 = gzero(id) 
+
+               therlm(3,k,lamin) = tm(3,k) - (g1 - g2)/2d0/dt
 c                              streamline the eos:
                do j = 1, 13
                   z(j) = 0d0 
@@ -1831,6 +1813,7 @@ c                              streamline the eos:
      *          therlm(10,k,lamin),therlm(11,k,lamin),
      *          z(2),z(3),z(4),z(5),z(6),z(7),z(8),
      *          z(9),z(10),z(11),z(12),z(13),z(14),tm(1,k),pr,r,0)
+
             end do 
 
          else 
@@ -4373,7 +4356,7 @@ c                                 must have just hit on the last increment
 1000  format (/,'Warning: a composition of solution ',a,' has been ',
      *          'refined to a level that',/,'may destabilize ',
      *          'calculations. If excessive failure occurs, use less ',
-     *        /,'extreme iteration parameters.',/)
+     *          'extreme',/,'iteration parameters.',/)
 1010  format (/,'Warning: a composition of solution ',a,' has been ',
      *          'refined to a level that',/,'may destabilize ',
      *          'calculations. If excessive failure occurs use less ',
@@ -10826,8 +10809,7 @@ c                                 global pseudo-cpd counter for sxs
             do i = 1, kstot
 
                id = kdsol(knsp(i,im))
-c                                 what if id = 0? shouldn't be possible.
-               if (ikp(id).ne.-1) ikp(id) = im
+               if (iend(knsp(i,im)).eq.0) ikp(id) = im
 
             end do             
       
@@ -12112,6 +12094,71 @@ c-----------------------------------------------------------------------
       b = 2.22d0 * x
 
       gmag = r*t*f*dlog(b+1)
+
+      end 
+
+      subroutine mtrans (gval,vdp,ndu,id)
+c----------------------------------------------------------------------
+c mtrans sorts through and evaluates transition functions
+c----------------------------------------------------------------------
+      implicit none
+ 
+      include 'perplex_parameters.h'
+
+      integer id
+
+      double precision gval, dg, vdp, ndu
+
+      integer eos
+      common/ cst303 /eos(k10)
+
+      double precision therdi,therlm
+      common/ cst203 /therdi(m8,m9),therlm(m7,m6,k9)
+
+      integer idis,lmda,ltyp
+      common/ cst204 /ltyp(k10),lmda(k10),idis(k10)
+
+      double precision p,t,xco2,u1,u2,tr,pr,r,ps
+      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
+c---------------------------------------------------------------------- 
+         if (ltyp(id).lt.4) then
+c                                 ubc-type transitions
+            call lamubc (p,t,dg,lmda(id),ltyp(id))
+            gval = gval + dg
+ 
+         else if (ltyp(id).lt.7) then
+c                                 standard transitions
+            call lamhel (p,t,gval,vdp,lmda(id),ltyp(id))
+ 
+         else if (ltyp(id).lt.10) then
+c                                 supcrt q/coe lambda transition
+            call lamqtz (p,t,gval,ndu,lmda(id),id)
+ 
+         else if (ltyp(id).eq.10) then
+
+            if (eos(id).ne.8.and.eos(id).ne.9) then 
+c                                 putnis landau model as implemented in hp98 
+               call lamla0 (dg,vdp,lmda(id))
+               
+            else
+             
+               call lamla1 (dg,vdp,lmda(id))
+               
+            end if 
+
+            gval = gval + dg 
+
+         else if (ltyp(id).eq.13) then
+c                                 holland and powell bragg-williams model
+            call lambw (dg,lmda(id))
+            gval = gval + dg
+
+         else 
+
+            write (*,*) 'no such transition model'
+            stop
+ 
+         end if
 
       end 
 

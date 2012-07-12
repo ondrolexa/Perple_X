@@ -1178,9 +1178,13 @@ c                               initialize icout(i) = 0
       end do
 
       do i = 1, icomp
+
          im = 0
+
          do j = 1, icmpn
+
             if (cname(i).eq.cmpnt(j)) then 
+
                twt(i) = atwt(j)
                ic(i) = j
                icout(j) = 1

@@ -6500,9 +6500,9 @@ c----------------------------------------------------------------------------
       end 
 
       subroutine amihot (i,j,jhot,jinc)
-c--------------------------------------------------------------------
+c----------------------------------------------------------------------
 c check if cell with lower left corner at node ij is homogeneous
-c---------------------------------------------------------------------
+c----------------------------------------------------------------------
       implicit none
 
       include 'perplex_parameters.h'
@@ -6515,11 +6515,18 @@ c---------------------------------------------------------------------
       integer igrd
       common/ cst311 /igrd(l7,l7)
 
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+c----------------------------------------------------------------------
       jhot = 1
 
       if (iap(igrd(i,j)).eq.iap(igrd(i,j+jinc)).and.
      *    iap(igrd(i,j)).eq.iap(igrd(i+jinc,j+jinc)).and.
      *    iap(igrd(i,j)).eq.iap(igrd(i+jinc,j))) jhot = 0
+
+      if (lopt(18).and.iap(igrd(i,j)).eq.k3) jhot = 1
      
       end  
 
@@ -6538,19 +6545,28 @@ c---------------------------------------------------------------------
       integer igrd
       common/ cst311 /igrd(l7,l7)
 
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+c----------------------------------------------------------------------
       if (kinc.eq.1) return 
 
       if (igrd(i,j).eq.igrd(i+kinc,j+kinc)) then
 c                                right diagonal
+         if (igrd(i,j).ne.k2.or.(.not.lopt(18))) then 
          do k = 1, kinc-1
 c                                the conditional prevents 
 c                                overwriting of identities if 
 c                                compression is off and searching
 c                                for true boundaries.
             if (igrd(i+k,j+k).eq.0) igrd(i+k,j+k) = igrd(i,j)
-         end do 
+         end do
+         end if  
+
       else if (igrd(i+kinc,j).eq.igrd(i,j+kinc)) then
 c                                left diagonal
+         if (igrd(i+kinc,j).ne.k2.or.(.not.lopt(18))) then 
          do k = 1, kinc-1
 c                                the conditional prevents 
 c                                overwriting of identities if 
@@ -6559,13 +6575,15 @@ c                                for true boundaries.
             if (igrd(i+k,j+kinc-k).eq.0) 
      *          igrd(i+k,j+kinc-k) = igrd(i,j+kinc)
          end do 
-
+         end if 
 c        write (*,*) 'left diagonal'
 
       end if
 c                                bottom and top edge
       do jj = j, j+kinc, kinc
-         if (igrd(i,jj).eq.igrd(i+kinc,jj)) then 
+         if (lopt(18).and.igrd(i,jj).eq.k2) then 
+            cycle 
+         else if (igrd(i,jj).eq.igrd(i+kinc,jj)) then 
             do k = 1, kinc-1
 c                                the conditional prevents 
 c                                overwriting of identities if 

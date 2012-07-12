@@ -466,6 +466,10 @@ c                                 at top of strip, draw it variance based fill
 c                                 divariant, no fill
                   call psrect (x1,x2,y1,y2,rline,cwidth,0)
 
+               else if (ntot.eq.0) then 
+c                                  failed minimization
+                  call psrecb (x1,x2,y1,y2,rline,cwidth) 
+
                else if (ivar.le.7) then 
 c                                 for di-septa-variant use gray-scale
                   rfill = 1d0- dfloat (ivar-2) * 2d-1

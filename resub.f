@@ -1283,14 +1283,14 @@ c                                 low limit:
                xlo(j,i,ids) = x(i,j)
 c                                 check if solution is at an unnatural limit
                if (x(i,j).gt.xmno(ids,i,j).and.
-     *             x(i,j).le.xmng(ids,i,j)) then
+     *            (x(i,j).le.xmng(ids,i,j).and..not.lopt(3))) then
 c                                 relax limits according to subdivsion model
                   if (imdg(j,i,ids).eq.0) then 
 c                                 cartesian
                      xmng(ids,i,j) = xmng(ids,i,j) - nopt(10)
                      if (xmng(ids,i,j).lt.0d0) xmng(ids,i,j) = 0d0
 
-                  else if (imdg(j,i,ids).eq.1.or.imdg(j,i,ids).eq.4)then 
+                  else if (imdg(j,i,ids).eq.1.or.imdg(j,i,ids).eq.4)then
 c                                 assymmetric stretching towards xmin
                      yint(1,j,i,ids) = yint(1,j,i,ids) - nopt(10)
                      if (yint(1,j,i,ids).lt.0d0) yint(1,j,i,ids) = 0d0
@@ -1313,7 +1313,7 @@ c                                 high limit:
                xhi(j,i,ids) = x(i,j)
 c                                 check if solution is at an unnatural limit
                if (x(i,j).lt.xmxo(ids,i,j).and.
-     *             x(i,j).ge.xmxg(ids,i,j)) then
+     *            (x(i,j).ge.xmxg(ids,i,j).and..not.lopt(3))) then
 c                                 relax limits according to subdivsion model
                   if (imdg(j,i,ids).eq.0) then 
 c                                 cartesian

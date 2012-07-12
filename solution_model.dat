@@ -7743,10 +7743,10 @@ FeC    SiC
 
 0                                 | number of dependent endmembers 
 
-0  0  0  0                        | endmember flags
+0  1 1 1                         | endmember flags
 
-0. 1.   0.1  0                    | imod = 0 -> Fe fraction on site 1
-0. 1.   0.1  0                    | imod = 0 -> vacancy fraction on site 2
+0.9 1.   0.1  0                    | imod = 0 -> Fe fraction on site 1
+0.98 1.   0.1  0                    | imod = 0 -> vacancy fraction on site 2
                             
 ideal                             | internal excess model
 

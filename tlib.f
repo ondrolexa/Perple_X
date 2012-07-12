@@ -51,6 +51,7 @@ c lopt(14) - logarithmic_p
 c lopt(15) - spreadsheet format -> T = explicit output of independent variables 
 c lopt(16) - bounds, T -> VRH averaging, F -> HS
 c lopt(17) - explicit_bulk_modulus, T-> use if available.
+c lopt(18) - refine_bad_nodes
 c nopt(5)  - speciation_tolerance
 c nopt(8)  - solvus_tolerance
 c nopt(20) - T_melt - kill melt endmembers at T < nopt(20)
@@ -121,6 +122,8 @@ c                                 logarithimic P
       lopt(14) = .false.
 c                                 spreadsheet format
       lopt(15) = .false.
+c                                 refine_bad_nodes
+      lopt(18) = .true. 
 c                                 minimum replicate label distance
       nopt(4) = 0.025
 c                                 speciation_tolerance
