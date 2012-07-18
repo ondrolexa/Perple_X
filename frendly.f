@@ -1091,15 +1091,15 @@ c---------------------------------------------------------------------
  
       include 'perplex_parameters.h'
 
-      integer i,j,ier,id,lct,jdis,klam,imurg,kv,ichk,h,k,kd,jd
+      integer i,j,ier,id,jdis,imurg,kv,ichk,h,k,kd,jd
 
       double precision cmurg8,cmurg7,cmurg6
  
       character y*1
 
-      integer ilam,idiso,lamin,idsin
+      integer ilam,jlam,idiso,lamin,idsin
       double precision tm,td
-      common/ cst202 /tm(m7,m6),td(m8),ilam,idiso,lamin,idsin
+      common/ cst202 /tm(m7,m6),td(m8),ilam,jlam,idiso,lamin,idsin
  
       double precision thermo,uf,us
       common/ cst1 /thermo(k4,k10),uf(2),us(h5)
@@ -1128,8 +1128,8 @@ c---------------------------------------------------------------------
       double precision vuf,vus
       common/ cst201 /vuf(2),vus(h5),iffr,isr
 
-      integer ltyp,lmda,idis
-      common/ cst204 /ltyp(k10),lmda(k10),idis(k10)
+      integer ltyp,lct,lmda,idis
+      common/ cst204 /ltyp(k10),lct(k10),lmda(k10),idis(k10)
 
       double precision cp0
       common/ cst71 /cp0(k0,k5)
@@ -1170,7 +1170,7 @@ c-----------------------------------------------------------------------
             write (*,1040) names(id)
             read (*,1050) names(id)
 
-            call unlam (tm,id,lct)
+            call unlam (tm,id)
 
             call unver
      *           (thermo(1,id),thermo(2,id),thermo(3,id),thermo(4,id),
@@ -1179,8 +1179,6 @@ c-----------------------------------------------------------------------
      *            thermo(12,id),thermo(14,id),
      *            thermo(15,id),thermo(16,id),thermo(17,id),
      *            thermo(18,id),tr,pr)
-c                                get lamda and dis codes
-            if (ltyp(id).gt.7.and.ltyp(id).lt.10) goto 91
 c                                 add in activity correction
             thermo(1,k10) = thermo(1,id)
             thermo(2,k10) = thermo(2,id)
@@ -1198,6 +1196,7 @@ c                                 reset data
             id = k5
             idis(id) = 0
             ltyp(id) = 0
+            lct(id)  = 0 
             jdis = 0
 
             write (*,1130)
@@ -1212,7 +1211,6 @@ c                                 reset data
             end do 
  
             imurg = 0
-            klam = 0 
 
             do j = 1, iphct
 
@@ -1263,26 +1261,24 @@ c                                    test for Murghnahan EoS
 
                if (ltyp(j).ne.0) then
 
+                  if (ltyp(id).ne.0) goto 91
+
                   ltyp(id) = ltyp(j)
                   kd = iphct + 1
                   lmda(id) = kd
                   jd = lmda(j)
-                  klam = klam + 1
+                  lct(id) = lct(j) 
+                   
 
-                  if (ltyp(j).eq.10) then
+                  if (ltyp(j).eq.4) then
 
-                     if (klam.gt.3) goto 91
-                     ltyp(id) = 9 + klam
+                     therlm(1,lct(id),kd) = therlm(1,1,jd)
+                     therlm(2,lct(id),kd) = vnu(j) * therlm(2,1,jd)
+                     therlm(3,lct(id),kd) = vnu(j) * therlm(3,1,jd)
 
-                     therlm(1,klam,kd) = therlm(1,1,jd)
-                     therlm(2,klam,kd) = vnu(j) * therlm(2,1,jd)
-                     therlm(3,klam,kd) = vnu(j) * therlm(3,1,jd)
+                  else if (ltyp(j).eq.1) then
 
-                  else if (ltyp(j).lt.4) then
-
-                     if (klam.gt.1) goto 91
-
-                     do i = 1, ltyp(j)
+                     do i = 1, lct(j)
                         therlm(1,i,kd) = vnu(j) * therlm(1,i,jd)
                         therlm(2,i,kd) = vnu(j) * therlm(2,i,jd)
                         therlm(5,i,kd) = vnu(j) * therlm(5,i,jd)
@@ -1293,11 +1289,9 @@ c                                    test for Murghnahan EoS
                         therlm(8,i,kd) = therlm(8,i,jd)
                      end do
 
-                  else if (ltyp(j).lt.8) then
+                  else if (ltyp(j).le.3) then
 
-                     if (klam.gt.1) goto 91
-
-                     do k = 1, ltyp(j) - 3
+                     do k = 1, lct(j) 
 
                         therlm(1,k,kd) = therlm(1,k,jd)
                         therlm(2,k,kd) = therlm(2,k,jd)
@@ -1314,7 +1308,7 @@ c                                    test for Murghnahan EoS
 
             end do
 
-            call unlam (tm,id,lct)
+            call unlam (tm,id)
 
             call unver
      *           (thermo(1,id),thermo(2,id),thermo(3,id),thermo(4,id),
@@ -1417,7 +1411,7 @@ c
 c
                if (ichk.eq.0) then
 
-                  call unlam (tm,id,lct)
+                  call unlam (tm,id)
 
                   call unver
      *           (thermo(1,id),thermo(2,id),thermo(3,id),thermo(4,id),
@@ -1726,12 +1720,12 @@ c----------------------------------------------------------------------
       double precision comp,tot
       common/ cst43 /comp(k0),tot,icout(k0),ikind,icmpn,ieos
 
-      integer ilam,idiso,lamin,idsin
+      integer ilam,jlam,idiso,lamin,idsin
       double precision tm,td
-      common/ cst202 /tm(m7,m6),td(m8),ilam,idiso,lamin,idsin
+      common/ cst202 /tm(m7,m6),td(m8),ilam,jlam,idiso,lamin,idsin
 
-      integer ltyp,lmda,idis
-      common/ cst204 /ltyp(k10),lmda(k10),idis(k10)
+      integer ltyp,lct,lmda,idis
+      common/ cst204 /ltyp(k10),lct(k10),lmda(k10),idis(k10)
 
       integer idr,ivct
       double precision vnu
@@ -1863,6 +1857,7 @@ c                               initialization for k10 endnmembers
          vnu(k) = 0d0
          act(k) = 0d0
          ltyp(k) = 0
+         lct(k) = 0
       end do
  
       do k = 1, m7

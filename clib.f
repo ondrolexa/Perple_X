@@ -1049,9 +1049,9 @@ c----------------------------------------------------------------------
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 
-      integer ilam,idiso,lamin,idsin
+      integer ilam,jlam,idiso,lamin,idsin
       double precision tm,td
-      common/ cst202 /tm(m7,m6),td(m8),ilam,idiso,lamin,idsin
+      common/ cst202 /tm(m7,m6),td(m8),ilam,jlam,idiso,lamin,idsin
 
       integer ids,isct,icp1,isat,io2
       common/ cst40 /ids(h5,h6),isct(h5),icp1,isat,io2

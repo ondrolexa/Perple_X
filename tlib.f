@@ -17,7 +17,7 @@ c----------------------------------------------------------------------
 	implicit none
 
       write (*,'(/,a)') 
-     *      'Perple_X version 6.6.7, source updated Jun 12, 2012.'
+     *      'Perple_X version 6.6.7, source updated Jul 13, 2012.'
 
       end
 
@@ -122,7 +122,7 @@ c                                 logarithimic P
       lopt(14) = .false.
 c                                 spreadsheet format
       lopt(15) = .false.
-c                                 refine_bad_nodes
+c                                 refine_bad_nodes -> not used
       lopt(18) = .true. 
 c                                 minimum replicate label distance
       nopt(4) = 0.025
@@ -3181,7 +3181,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer lun, ier, iscan, iscnlt, i, j, ibeg, iend, jlam
+      integer lun, ier, iscan, iscnlt, i, j, ibeg, iend
 
       character key*22, values*80, strg*80
 
@@ -3193,9 +3193,9 @@ c----------------------------------------------------------------------
       double precision comp,tot
       common/ cst43 /comp(k0),tot,icout(k0),ikind,icmpn,ieos
 
-      integer ilam,idiso,lamin,idsin
+      integer ilam,jlam,idiso,lamin,idsin
       double precision tm,td
-      common/ cst202 /tm(m7,m6),td(m8),ilam,idiso,lamin,idsin
+      common/ cst202 /tm(m7,m6),td(m8),ilam,jlam,idiso,lamin,idsin
 
       double precision emodu
       common/ cst318 /emodu(k15)
@@ -3357,8 +3357,6 @@ c                                 mock-lambda transition data
          end do
 
       end do 
-c                                 set the transition counter
-      if (ilam.gt.0) ilam = 3*(jlam-1) + ilam
                                  
       end  
 
@@ -3579,9 +3577,9 @@ c----------------------------------------------------------------------
       double precision comp,tot
       common/ cst43 /comp(k0),tot,icout(k0),ikind,icmpn,ieos
 
-      integer ilam,idiso,lamin,idsin
+      integer ilam,jlam,idiso,lamin,idsin
       double precision tm,td
-      common/ cst202 /tm(m7,m6),td(m8),ilam,idiso,lamin,idsin
+      common/ cst202 /tm(m7,m6),td(m8),ilam,jlam,idiso,lamin,idsin
 
       integer iemod,kmod
       logical smod,pmod
@@ -3599,8 +3597,8 @@ c----------------------------------------------------------------------
       double precision thermo, uf, us
       common/ cst1 /thermo(k4,k10),uf(2),us(h5)
 
-      integer idis,lmda,ltyp
-      common/ cst204 /ltyp(k10),lmda(k10),idis(k10)
+      integer ltyp,lct,lmda,idis
+      common/ cst204 /ltyp(k10),lct(k10),lmda(k10),idis(k10)
 
       double precision therdi,therlm
       common/ cst203 /therdi(m8,m9),therlm(m7,m6,k9)
@@ -3726,12 +3724,12 @@ c                                 disorder parameters
       end if 
 c                                 =====================================
 c                                 transition parameters
-      do i = 1, lmda(id)
+      do i = 1, lct(id)
 
          ibeg = 1
          var = i
          call outthr (var,'transition',10,ibeg)
-         var = (ltyp(id)-1)/3 + 1
+         var = ltyp(id)
          call outthr (var,'type',4,ibeg) 
 
          do j = 1, 10

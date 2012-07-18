@@ -170,7 +170,7 @@ c                                 calculate composition phase diagrams
 c                                 calculations and remaining output
             call chmcal (output)
 
-         else if (icopt.eq.1.or.icopt.eq.3) then                       
+         else if (icopt.eq.1.or.icopt.eq.3) then                            
 c                                 phase diagram projection or mixed variable
 c                                 diagram 
             call newhld (output)
@@ -1380,7 +1380,7 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer iwarn9,iwrn48,iwrn49,jd,id,jdis,i,j,klam,ld,k,kd,h,lct
+      integer iwarn9,iwrn48,iwrn49,jd,id,jdis,i,j,klam,ld,k,kd,h
 
       double precision tm(m7,m6),xkd
 
@@ -1393,8 +1393,8 @@ c-----------------------------------------------------------------------
       double precision therdi,therlm      
       common/ cst203 /therdi(m8,m9),therlm(m7,m6,k9)
 
-      integer ltyp,lmda,idis
-      common/ cst204 /ltyp(k10),lmda(k10),idis(k10)
+      integer ltyp,lct,lmda,idis
+      common/ cst204 /ltyp(k10),lct(k10),lmda(k10),idis(k10)
 
       character*8 names
       common/ cst8 /names(k1)
@@ -1438,10 +1438,11 @@ c----------------------------------------------------------------------
 c                              skip fluid cpds
          if (ifp(jd).eq.1) iwrn48 = 1
 c                              create mock-entry iphct + 1 for output
-c                              initialize paramaters
+c                              initialize parameters
          id = k10
          idis(k10) = 0
          ltyp(k10) = 0
+         lct(k10)  = 0 
          jdis = 0
          klam = 0
          names(k10) = names(jd)  
@@ -1493,22 +1494,18 @@ c                                 test for mughnahan EoS
             if (ltyp(k10).ne.0) then
 
                ltyp(k10) = ltyp(kd)
+               lct(k10)   = lct(kd)
                lmda(k10) = k9
                ld = lmda(kd)
-               klam = klam + 1
 
-               if (ltyp(kd).eq.10) then
+               if (ltyp(kd).eq.4) then
 
-                  if (klam.gt.3) goto 91
-                  ltyp(k10) = 9 + klam
                   therlm(1,klam,k9) = therlm(1,1,ld)
                   therlm(2,klam,k9) = xkd * therlm(2,1,ld)
 
-               else if (ltyp(kd).lt.4) then
+               else if (ltyp(kd).eq.1) then
 
-                  if (klam.gt.1) goto 91
-
-                  do i = 1, ltyp(kd)
+                  do i = 1, lct(kd)
                      therlm(1,i,k9) = xkd * therlm(1,i,ld)
                      therlm(2,i,k9) = xkd * therlm(2,i,ld)
                      therlm(5,i,k9) = xkd * therlm(5,i,ld)
@@ -1519,11 +1516,9 @@ c                                 test for mughnahan EoS
                      therlm(8,i,k9) = therlm(8,i,ld)
                   end do
 
-               else if (ltyp(kd).lt.8) then
+               else if (ltyp(kd).lt.3) then
 
-                  if (klam.gt.1) goto 91
-
-                  do k = 1, ltyp(kd) - 3
+                  do k = 1, lct(kd)
 
                      therlm(1,k,k9) = therlm(1,k,ld)
                      therlm(2,k,k9) = therlm(2,k,ld)
@@ -1533,10 +1528,12 @@ c                                 test for mughnahan EoS
                      end do
                   end do 
                end if
+            else 
+               goto 91 
             end if
          end do
 
-         call unlam (tm,id,lct)
+         call unlam (tm,id)
 
          call unver (thermo(1,k10),thermo(2,k10),thermo(3,k10),
      *               thermo(4,k10),thermo(5,k10),thermo(6,k10),
@@ -6500,9 +6497,9 @@ c----------------------------------------------------------------------------
       end 
 
       subroutine amihot (i,j,jhot,jinc)
-c--------------------------------------------------------------------
+c----------------------------------------------------------------------
 c check if cell with lower left corner at node ij is homogeneous
-c---------------------------------------------------------------------
+c----------------------------------------------------------------------
       implicit none
 
       include 'perplex_parameters.h'
@@ -6515,11 +6512,18 @@ c---------------------------------------------------------------------
       integer igrd
       common/ cst311 /igrd(l7,l7)
 
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+c----------------------------------------------------------------------
       jhot = 1
 
       if (iap(igrd(i,j)).eq.iap(igrd(i,j+jinc)).and.
      *    iap(igrd(i,j)).eq.iap(igrd(i+jinc,j+jinc)).and.
      *    iap(igrd(i,j)).eq.iap(igrd(i+jinc,j))) jhot = 0
+
+c     if (lopt(18).and.iap(igrd(i,j)).eq.k3) jhot = 1
      
       end  
 
@@ -6538,19 +6542,28 @@ c---------------------------------------------------------------------
       integer igrd
       common/ cst311 /igrd(l7,l7)
 
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+c----------------------------------------------------------------------
       if (kinc.eq.1) return 
 
       if (igrd(i,j).eq.igrd(i+kinc,j+kinc)) then
 c                                right diagonal
+c        if (igrd(i,j).ne.k2.or.(.not.lopt(18))) then 
          do k = 1, kinc-1
 c                                the conditional prevents 
 c                                overwriting of identities if 
 c                                compression is off and searching
 c                                for true boundaries.
             if (igrd(i+k,j+k).eq.0) igrd(i+k,j+k) = igrd(i,j)
-         end do 
+         end do
+c        end if  
+
       else if (igrd(i+kinc,j).eq.igrd(i,j+kinc)) then
 c                                left diagonal
+c        if (igrd(i+kinc,j).ne.k2.or.(.not.lopt(18))) then 
          do k = 1, kinc-1
 c                                the conditional prevents 
 c                                overwriting of identities if 
@@ -6559,12 +6572,13 @@ c                                for true boundaries.
             if (igrd(i+k,j+kinc-k).eq.0) 
      *          igrd(i+k,j+kinc-k) = igrd(i,j+kinc)
          end do 
-
-c        write (*,*) 'left diagonal'
+c        end if 
 
       end if
 c                                bottom and top edge
       do jj = j, j+kinc, kinc
+c        if (lopt(18).and.igrd(i,jj).eq.k2) then 
+c           cycle 
          if (igrd(i,jj).eq.igrd(i+kinc,jj)) then 
             do k = 1, kinc-1
 c                                the conditional prevents 

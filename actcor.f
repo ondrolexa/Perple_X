@@ -138,9 +138,9 @@ c----------------------------------------------------------------------
       character*8 names
       common/ cst8 /names(k1)
 
-      integer ilam,idiso,lamin,idsin
+      integer ilam,jlam,idiso,lamin,idsin
       double precision tm,td
-      common/ cst202 /tm(m7,m6),td(m8),ilam,idiso,lamin,idsin
+      common/ cst202 /tm(m7,m6),td(m8),ilam,jlam,idiso,lamin,idsin
 
       integer ictr, itrans
       double precision ctrans

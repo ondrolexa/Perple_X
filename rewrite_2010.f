@@ -70,9 +70,9 @@ c------------------------------------------------------------------------
 
       logical eof
  
-      integer ilam,idiso,lamin,idsin
+      integer ilam,jlam,idiso,lamin,idsin
       double precision tm,td
-      common/ cst202 /tm(m7,m6),td(m8),ilam,idiso,lamin,idsin
+      common/ cst202 /tm(m7,m6),td(m8),ilam,jlam,idiso,lamin,idsin
 
       integer ikind,icmpn,icout,ieos
       double precision comp,tot
@@ -123,7 +123,7 @@ c-----------------------------------------------------------------------
  
       include 'perplex_parameters.h'
  
-      integer i, j, jlam, ier
+      integer i, j, ier
 
       double precision ct
 
@@ -134,9 +134,9 @@ c-----------------------------------------------------------------------
       double precision emodu
       common/ cst318 /emodu(k15)
 
-      integer ilam,idiso,lamin,idsin
+      integer ilam,jlam,idiso,lamin,idsin
       double precision tm,td
-      common/ cst202 /tm(m7,m6),td(m8),ilam,idiso,lamin,idsin
+      common/ cst202 /tm(m7,m6),td(m8),ilam,jlam,idiso,lamin,idsin
 
       double precision therlm,therdi
       common/ cst203 /therdi(m8,m9),therlm(m7,m6,k9)
@@ -154,8 +154,8 @@ c-----------------------------------------------------------------------
       double precision emod
       common/ cst319 /emod(k15,k10),smod(h9),pmod(k10),iemod(k10),kmod
 
-      integer idis,lmda,ltyp
-      common/ cst204 /ltyp(k10),lmda(k10),idis(k10)
+      integer ltyp,lct,lmda,idis
+      common/ cst204 /ltyp(k10),lct(k10),lmda(k10),idis(k10)
 
       integer iamir
       common/ cst53 /iamir
@@ -186,6 +186,7 @@ c----------------------------------------------------------------------
       jlam = 0 
       lmda(1) = 0
       ltyp(1) = 0
+      lct(1)  = 0 
       idis(1) = 0 
 
       do 
@@ -241,7 +242,8 @@ c                                 hp2010
                jlam = ilam - 3
             end if 
  
-            ltyp(1) = ilam
+            lct(1)  = jlam 
+            ltyp(1) = ilam/3 + 1
             lmda(1) = 1
  
             do i= 1, jlam
