@@ -1867,6 +1867,7 @@ c                               initialization for k10 endnmembers
       end do 
  
       iphct = 0
+      lamin = 0 
       ipot = 2
       ifyn = 1
       vuf(1) = 0d0

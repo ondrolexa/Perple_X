@@ -38,7 +38,103 @@
 
                              comments can be placed between models provided, nothing is written in the first 10 columns. Comments 
                              may be placed after data if it is separated from the data by a '|' marker.
-                             
+                      --------------------------------------------------------
+begin_model                
+
+                             Orthopyroxene with compound formation, PH '99 Am Min. 
+                             JADC 3/03
+
+                             site population limits added Feb 20, 2011, JADC.
+
+                             added ferric iron, Jul 24, 2012. JADC.
+
+                             NOTES:  
+
+                             * This model will only function for the FASH subsystem
+                               if MGO is present as a component in VERTEX.
+
+
+                                                      1       2             
+                                                      M1      M2      
+                                                     _____________
+
+                                      Mutliplicity    1       1
+                                                     _____________
+
+                                      1 en            Mg      Mg       
+                            Species:  2 fs            Fe2+    Fe2+     
+                                      3 mgts          Al      Mg         
+                                      4 fets          Al      Fe2+  
+                                      5 mots          Fe3+    Mg
+                                      6 feots         Fe3+    Fe2+  
+                                                      _____________
+
+                           Internal:  7 opx           Mg      Fe2+    
+
+
+                           Dependent: fets  = mgts + opx - en
+                                      feots = mots + opx - en 
+
+
+Opx(HP)                    | solution name.
+
+8                          | model type: Reciprocal with speciation
+
+2                          | 2 independent composition spaces
+2 3                        | 2 dimensions on first space, 3 on second
+                           | endmembers: 
+mgts     fets_d   
+en       fs 
+mots     feots 
+
+1                          | ordered species definition
+
+opx = 1/2 en + 1/2  fs  Delta(enthalpy) = -6.95d3   
+
+begin_limits
+opx =     - 2 fs - 1 opx                delta = 2 z(M2,Fe)       
+opx =  -2 + 2 fs + 1 opx                delta = 2 z(M1,Fe)
+opx =     - 2 en - 1 opx                delta = 2 z(M1,Mg)
+end_limits                
+
+2                          | 2 dependent endmembers
+
+fets_d = 1 mgts + 1 opx - 1 en
+feots  = 1 mots + 1 opx - 1 en
+
+0 0 0 0 0 0                | endmember flags, indicate if endmember is part of the solution (i.e. iend = 0).
+
+                           | subdivision model for (binary) site 1 (M2):
+0. 1. .1                   | range and resolution of X(Mg)
+0                          | subdivision scheme for site 1: imod = 0 -> cartesian 
+
+                           | subdivision model for (ternary) site 2 
+0. 1. .1   0               | range and resolution of X(Ts), subdivision scheme for site 3, species 1: imod = 0 -> cartesian   
+0. 1. .1   0               | range and resolution of X(un-Ts), subdivision scheme for site 3, species 2: imod = 0 -> cartesian   
+
+begin_excess_function                
+w(en fs)     68d2 0. 0.  
+w(fs mgts)   -1d3 0. 0.  
+w(en opx)    45d2 0. 0. 
+w(fs opx)    45d2 0. 0. 
+w(mgts opx)  12d2 0. 0.  
+w(en mots)  -14d3 0. 0. 
+w(fs mots)    6d3 0. 0.
+w(opx mots)   6d3 0. 0. 
+end_excess_function 
+
+2                          | 2 site (M1, M2) configurational entropy model
+
+4 1.                       | 3 species on M1, 1 site per formula unit.
+
+z(m1,fe)   = 1 fs 
+z(m1,al)   = 1 mgts + 1 fets_d  
+z(m1,fe3+) = 1 mots
+
+2 1.                       | 2 species on M2, 1 site per formula unit.
+z(m2,mg) = 1 en + 1 mgts + 1 mots
+
+end_of_model       
                       --------------------------------------------------------
 begin_model                         
                              
@@ -159,97 +255,6 @@ z(t1,al)   = 1/2 + 1/2 east + 1/2 fbit
 z(h,o)     = 1 tbit
 
 end_of_model    
-                  --------------------------------------------------------
-begin_model                
-
-                             Orthopyroxene with compound formation, PH '99 Am Min. 
-                             JADC 3/03
-
-                             site population limits added Feb 20, 2011, JADC.
-
-                             NOTES:  
-
-                             * This model will only function for the FASH subsystem
-                               if MGO is present as a component in VERTEX.
-
-
-                                                      1       2             
-                                                      M1      M2      
-                                                     _____________
-
-                                      Mutliplicity    1       1
-                                                     _____________
-
-                                      1 en            Mg      Mg       
-                            Species:  2 fs            Fe      Fe    
-                                      3 mgts          Al      Mg         
-                                      4 fets          Al      Fe    
-                                                      _____________
-
-                           Internal:  5 opx           Mg      Fe    
-
-
-                           Dependent: fets = mgts + opx - en
-
-
-Opx(HP)                    | solution name.
-
-8                          | model type: Reciprocal with speciation
-
-2                          | 2 independent mixing sites
-2 2                        | 2 dimensions on first site, 2 on second
-                           | endmember names 
-mgts     fets_d   
-en       fs 
- 
-
-1                          | ordered species definition
-
-opx = 1/2 en + 1/2  fs  Delta(enthalpy) = -6.95d3   
-
-begin_limits
-opx =     - 2 fs - 1 opx                delta = 2 z(M2,Fe)       
-opx =  -2 + 2 fs + 1 opx                delta = 2 z(M1,Fe)
-opx =     - 2 en - 1 opx                delta = 2 z(M1,Mg)
-end_limits                
-
-1                          | 1 dependent endmember
-
-fets_d = 1 mgts + 1 opx - 1 en
-
-
-0 0 0 0                    | endmember flags, indicate if endmember is part of the solution.
-
-                           | subdivision model for (binary) site 1 (M2):
-0. 1. .1                   | range and resolution of X(Mg)
-0                          | subdivision scheme for site 1: imod = 0 -> cartesian 
-
-                           | subdivision model for (ternary) site 2 
-0. 1. .1                   | range and resolution of X(Ts)  
-0                          | subdivision scheme for site 2: imod = 0 -> cartesian  
-
-
-
-
-begin_excess_function                
-w(en fs)     68d2 0. 0.  
-w(fs mgts)   -1d3 0. 0.  
-w(en opx)    45d2 0. 0. 
-w(fs opx)    45d2 0. 0. 
-w(mgts opx)  12d2 0. 0.   
-end_excess_function 
-
-2                          | 2 site (M1, M2) configurational entropy model
-
-3 1.                       | 3 species on M1, 1 site per formula unit.
-
-z(m1,fe) = 1 fs 
-z(m1,al) = 1 mgts + 1 fets_d  
-
-2 1.                       | 2 species on M2, 1 site per formula unit.
-z(m2,mg) = 1 en + 1 mgts 
-
-end_of_model
                   --------------------------------------------------------
 begin_model                
 
@@ -620,7 +625,10 @@ omrb_dqf      frb
 2                            | 2 ordered species:
 
 ammo1 = 3/7 anth + 4/7 fanth_dq  enthalpy_of_formation = -9.5d3
-ammo2 = 2/7 anth + 5/7 fanth_dq   enthalpy_of_formation = -11.7d3
+ammo2 = 2/7 anth + 5/7 fanth_dq   enthalpy_of_formation = -11.7d3   | these enthalpies differ from the published values
+                                                                    | becuase Thermocalc reactions are specified in terms of the 
+                                                                    | endmember without "DQF" corrections, while in Perple_X
+                                                                    | endmembers automatically include any DQF corrections. 
 
 begin_limits
 ammo1 = -7/4 + 7/4 fanth_dq + 1 ammo1 + 1/2 ammo2 + 5/4 ammo2                               delta = 7/4
@@ -947,8 +955,11 @@ mrb        frb
 
 2                            | 2 ordered species:
 
-cammo1 = 3/7 cumm + 4/7 grun   enthalpy_of_formation = -9.5d3   | these differ from the TC values because they include the DQFs for cumm and grun
-cammo2 = 2/7 cumm + 5/7 grun   enthalpy_of_formation = -11.7d3
+cammo1 = 3/7 cumm + 4/7 grun   enthalpy_of_formation = -9.5d3  
+cammo2 = 2/7 cumm + 5/7 grun   enthalpy_of_formation = -11.7d3   | these enthalpies differ from the published values
+                                                                 | becuase Thermocalc reactions are specified in terms of the 
+                                                                 | endmember without "DQF" corrections, while in Perple_X
+                                                                 | endmembers automatically include any DQF corrections. 
 
 begin_limits
 
@@ -7038,8 +7049,11 @@ mrb        frb
 
 2                            | 2 ordered species:
 
-cammo1 = 3/7 cumm + 4/7 grun   enthalpy_of_formation = -9.5d3   | these are retaind from the original DP model, they differ from TC because the DQFs on deepen cumm & grun are already included
-cammo2 = 2/7 cumm + 5/7 grun   enthalpy_of_formation = -11.7d3
+cammo1 = 3/7 cumm + 4/7 grun   enthalpy_of_formation = -9.5d3   
+cammo2 = 2/7 cumm + 5/7 grun   enthalpy_of_formation = -11.7d3    | these enthalpies differ from the published values
+                                                                  | becuase Thermocalc reactions are specified in terms of the 
+                                                                  | endmember without "DQF" corrections, while in Perple_X
+                                                                  | endmember include any DQF corrections. 
 
 begin_limits
 
@@ -7246,7 +7260,11 @@ omrb_dqf      frb
 2                            | 2 ordered species:
 
 ammo1 = 3/7 anth + 4/7 fanth_dq  enthalpy_of_formation = -9.5d3
-ammo2 = 2/7 anth + 5/7 fanth_dq   enthalpy_of_formation = -11.7d3
+ammo2 = 2/7 anth + 5/7 fanth_dq   enthalpy_of_formation = -11.7d3 | these enthalpies differ from the published values
+                                                                  | becuase Thermocalc reactions are specified in terms of the 
+                                                                  | endmember without "DQF" corrections, while in Perple_X
+                                                                  | endmember include any DQF corrections. 
+
 
 begin_limits
 ammo1 = -7/4 + 7/4 fanth_dq + 1 ammo1 + 1/2 ammo2 + 5/4 ammo2                               delta = 7/4
@@ -7414,7 +7432,10 @@ hed
 
 om   = 1/2 jd + 1/2 di   enthalpy_of_formation  =  -2.9d3 
 cfm  = 1/2 di + 1/2 hed  enthalpy_of_formation  =  -1.5d3
-jac  = 1/2 jd + 1/2 acm  enthalpy_of_formation  =  -1d3  
+jac  = 1/2 jd + 1/2 acm  enthalpy_of_formation  =  -1d3     | this differs from the published value of -3d3 J/mol
+                                                            | becuase Thermocalc reactions are specified in terms of the 
+                                                            | endmember without "DQF" corrections, while in Perple_X
+                                                            | endmember include any DQF corrections. 
 
 begin_limits
 om = -2 + 2 di + 2 hed   delta = 2

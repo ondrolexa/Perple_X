@@ -233,7 +233,7 @@ c---------------------------------------------------------------------
  
       include 'perplex_parameters.h'
 
-      integer id,j,ins(1),jns(1),kns(1)
+      integer id,j,ins(1),kns(1)
 
       double precision ialpha, vt, trv, pth, vdp, ndu, vdpbm3, gsixtr, 
      *                 gstxgi, fs2, fo2, dg, kt, gval, gmake, gkomab,
@@ -277,8 +277,8 @@ c---------------------------------------------------------------------
       double precision y,g,v
       common / cstcoh /y(nsp),g(nsp),v(nsp)
 
-      save kt,trv,ins,jns,kns 
-      data kt,trv,ins,jns,kns/0d0,1673.15d0,14,12,15/
+      save kt,trv,ins,kns 
+      data kt,trv,ins,kns/0d0,1673.15d0,14,15/
 c---------------------------------------------------------------------
 
       if (make(id).ne.0) then 
@@ -478,9 +478,10 @@ c                                 Stoichiometic SiO2 rk fluid
 
          else if (eos(id).eq.605) then 
 c                                 Stoichiometic O rk fluid 
-            call mrkpur (jns,1)
+            xco2 = 0d0
+            call cfluid (fo2,fs2)
 c                                 real O fluid (O and O2 species)
-            gval = gval + r*t*dlog(p*g(12))
+            gval = gval + r*t*f(1)
 c                                 this is -RT(lnk2+lnk3)/2 (rksi5 k's)
      *         -0.3213822427D7 / t + 0.6464888248D6 - 0.1403012026D3*t
 
@@ -1782,6 +1783,10 @@ c                              helgeson:
             p = pr
             lmda(id) = lamin
             ltyp(id) = jlam
+c                              set special eos flag to zero to prevent 
+c                              gzero from including special terms (currently 
+c                              only ieos 605). 
+            eos(id) = 0
 c                              now convert paramters:
             do k = 1, ilam
 c                              load into therlm:
@@ -1827,6 +1832,8 @@ c                              streamline the eos:
      *          z(9),z(10),z(11),z(12),z(13),z(14),tm(1,k),pr,r,0)
 
             end do 
+
+            eos(id) = ieos
 
          else 
 
@@ -4069,7 +4076,7 @@ c---------------------------------------------------------------------
       integer mode, i, ind(ms1), iy(ms1), jsp, ksite, indx, iexit, 
      *        ieyit, j, ids
 
-      double precision tol, y(ms1,mres), ycum, ymax, dy, ync, res, ylmn,
+      double precision y(ms1,mres), ycum, ymax, dy, ync, res, ylmn,
      *                 ylmx, yloc, x, unstch, strtch, yreal
 
       logical odd
@@ -4099,9 +4106,14 @@ c                                 x coordinate description
 
       logical good(h9)
 
-      save tol, good
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
-      data tol, good/1d-5,h9*.true./
+      save good
+
+      data good/h9*.true./
 c----------------------------------------------------------------------
       ycum = 0d0
       jsp = isp(ksite) - 1
@@ -4129,7 +4141,7 @@ c                                 avoid impossible compositions 'cause a min > 0
 
             ycum = ycum + xmn(ksite,i-1)
 c                                 1-ycum is the smallest fraction possible
-            if (1d0-ycum.lt.0) then 
+            if (1d0-ycum.lt.0d0) then 
 c                                 inconsistent limits
                call error (999,ycum,jsp,'cartes')
 
@@ -4146,7 +4158,7 @@ c                                 two means of extracting y-range, cartesian
 c                                 imod = 0 and transformation imod = 1
          if (mode.eq.0) then 
 c                                 check limit
-            if (ync.lt.tol.and.good(ids)) then
+            if (ync.lt.nopt(5).and.good(ids)) then
                good(ids) = .false.
                write (*,1000) fname(ids)
             end if
@@ -4156,7 +4168,7 @@ c                                 cartesian
                iy(i) = iy(i) + 1
                if (iy(i).gt.mres) call error (999,ync,mres,sname)
                y(i,iy(i)) = y(i,iy(i)-1) + ync
-               if (dabs(y(i,iy(i))-ymax).lt.tol) then
+               if (dabs(y(i,iy(i))-ymax).lt.nopt(5)) then
                   y(i,iy(i)) = ymax
                else if (y(i,iy(i)).gt.ymax) then
                   y(i,iy(i)) = ymax
@@ -4182,11 +4194,12 @@ c                                 interval limits
                ylmn = yint(j,i,ksite,ids)
                ylmx = yint(j+1,i,ksite,ids)
 c                                 which interval are we starting from?
-               if (y(i,iy(i)).gt.ylmx-tol) cycle
+               if (y(i,iy(i)).gt.ylmx-nopt(5)) cycle
 c
                dy = ylmx - ylmn
 c                                 pathological case y = ylmn
-               if (dabs(y(i,iy(i))-ylmn).lt.tol) y(i,iy(i)) = ylmn + tol
+               if (dabs(y(i,iy(i))-ylmn).lt.nopt(5))  
+     *                                y(i,iy(i)) = ylmn + nopt(5)
 
                if (res.eq.0d0) then 
 c                                 the current value is in interval j
@@ -4219,7 +4232,7 @@ c                                 compute yreal
                         yreal = ylmx - strtch(1d0-x) * dy
                      end if 
 c                                 cycle if below tolerance
-                     if (yreal-y(i,iy(i)).lt.tol.and.good(ids)) then
+                     if (yreal-y(i,iy(i)).lt.nopt(5).and.good(ids)) then
                         good(ids) = .false.
                         write (*,1010) fname(ids)
                      end if 
@@ -4227,7 +4240,8 @@ c                                 cycle if below tolerance
                      iy(i) = iy(i) + 1
                      if (iy(i).gt.mres) call error (999,ync,mres,sname)
 c                                 check if in bounds
-                     if (dabs(yreal-ymax).lt.tol.or.yreal.gt.ymax) then
+                     if (dabs(yreal-ymax).lt.nopt(5).or.
+     *                                     yreal.gt.ymax) then
                         res = 0d0
                         y(i,iy(i)) = ymax
                         exit
@@ -4318,7 +4332,7 @@ c                                 over the top
                cycle
 
             else if ( y(indx,ind(indx)) - y(indx,ind(indx)-1)
-     *               - ycum + 1d0    .gt. tol ) then          
+     *               - ycum + 1d0    .gt. nopt(5) ) then          
 c                                 reset the current variable
 c                                 and max loop index
                dy =  1d0 - ycum 
@@ -9957,8 +9971,10 @@ c                                 working arrays
       double precision dvnu,deph,dydy
       common/ cxt3r /dvnu(m4,j3,h9),deph(j3,h9),dydy(m4,j3,h9)
 
-      save tol
-      data tol/1d-5/
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 c----------------------------------------------------------------------
 c                                 given dp check if it violates
 c                                 stoichiometric constraints
@@ -9966,14 +9982,12 @@ c                                 stoichiometric constraints
       i2 = ideps(2,k,id)
       jd = lstot(id) + k 
 
-      tol = 1d-7
-
       call plimit (pmn,pmx,k,id)       
 
       if (pa(jd)+dp.gt.pmx) then 
-         dp = pmx - pa(jd) - tol
+         dp = pmx - pa(jd) - nopt(5)
       else if (pa(jd)+dp.lt.pmn) then 
-         dp = pmn - pa(jd) + tol
+         dp = pmn - pa(jd) + nopt(5)
       end if  
 c                                 adjust the composition by the increment
       pa(i1) = pa(i1) + dydy(i1,k,id)*dp
@@ -11540,7 +11554,7 @@ c                              check for invalid compositions
 
          end do
 c                                 y is the mole fraction of endmember l
-         if (y(l).gt.0.9999d0.and.kdsol(l).gt.0) return
+         if (y(l).gt.1d0-nopt(5).and.kdsol(l).gt.0) return
 
       end do   
 c                                 move site fractions into array indexed 

@@ -277,7 +277,8 @@ c        11 = NH3
 c        12 = O
 c        13 = SiO
 c        14 = SiO2
-c        15 = S6
+c        15 = Si
+c        16 = unused
 
 c O2 should be replaced by SO3, and ethane should be added.
 c-----------------------------------------------------------------------
@@ -672,8 +673,9 @@ c                                 atomic fractions
             tags(ipot+isp+4) = 'Y_H'
             tags(ipot+isp+5) = 'Y_N'
             tags(ipot+isp+6) = 'Y_S'
+            tags(ipot+isp+7) = 'Y_Si'
 
-            count = ipot+isp+7
+            count = ipot+isp+8
 c                                  species fugacities
             j = 0
             do i = count, count+isp-1
@@ -904,14 +906,16 @@ c                                 atomic fractions
                   nh = (xs(1) + xs(5) + xs(6))*2d0 + xs(4)*4d0 
      *                                             + xs(11)*3d0 
                   nn = 2d0*xs(10) + xs(11)
+                  nsi = xs(13) + xs(14) + xs(15)
 
-                  tot = ns + no + nh + nc + nn     
+                  tot = ns + no + nh + nc + nn + nsi
 
                   prop(ipot+isp+2) = nc/tot
                   prop(ipot+isp+3) = no/tot
                   prop(ipot+isp+4) = nh/tot
                   prop(ipot+isp+5) = nn/tot
                   prop(ipot+isp+6) = ns/tot
+                  prop(ipot+isp+7) = ns/tot
 
                   prop(count-1) = fo2/tentoe
                   prop(count)   = fs2/tentoe

@@ -249,7 +249,7 @@ c                                 chemical potentials variance
 1020  format (/,'Phase Compositions (',a,'):',
      *        /,19x,'wt %',6x,'vol %',5x,'mol %',5x,'mol  ',
      *          5x,20(1x,a,3x))
-1030  format (1x,a,3x,3(f6.2,4x),g9.3,1x,20(f7.3,2x))
+1030  format (1x,a,3x,3(f6.2,4x),g9.3,1x,20(f7.5,2x))
 1040  format (/,14x,'mol',7x,'mol %',6x,'wt %')
 1060  format (/,' Enthalpy (J/kg) = ',g12.6,/,
      *          ' Specific Enthalpy (J/m3) = ',g12.6,/,

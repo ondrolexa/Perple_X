@@ -230,6 +230,9 @@ zrg  = 1 gr + 3 zrc - 6 q       | Zr garnet endmember
 
 zrru = 1 bdy                    | Zr rutile endmember
        52.84e3 -0.01829e3 -0.074
+
+mots = 1 mgts - 1/2 cor + 1/2 hem | ferric opx endmember MgFe3+AlSiO6 for Opx(HP)
+       22d3 0 0 
                                   
 end_makes 
                                                                                                                                             

@@ -462,7 +462,7 @@ c                                 solve for xh2, xco
 
       oh2o = xh2o
 
-      call mrkmix (ins, 9)
+      call mrkmix (ins, 9, 1)
 
       gh2o = ghh2o * gh2o
       gco2 = ghco2 * gco2 
@@ -722,7 +722,7 @@ c                                 solve for xh2, xco
 
       oh2o = xh2o
 
-      call mrkmix (ins, 8)
+      call mrkmix (ins, 8, 1)
 
       gh2o = ghh2o * gh2o
       gco2 = ghco2 * gco2 
@@ -1194,7 +1194,7 @@ c                                get pure species fugacities
 
       ghh2o = gh2o/gmh2o
 c                                get mrk fugacities:
-      call mrkmix (ins, 2)
+      call mrkmix (ins, 2, 1)
 c                                evaluate lnk's
       kh2o = -7.028214449d0 + 30607.34044d0/t - 475034.4632d0/t/t 
      *                      + 50879842.55d0/t/t/t
@@ -1371,7 +1371,7 @@ c                                 solve for xco
 
       oh2o = xh2o
 
-      call mrkmix (ins, 5)
+      call mrkmix (ins, 5, 1)
 
       gh2o = ghh2o * gh2o
       gco2 = ghco2 * gco2 
@@ -1438,7 +1438,7 @@ c----------------------------------------------------------------------
  
       call setup (ghh2o,ghco2,ghch4,kh2o,kco2,kco,kch4)
 
-      call mrkmix (ins, 5)
+      call mrkmix (ins, 5, 1)
 
       gh2o = ghh2o * gh2o
       gco2 = ghco2 * gco2 
@@ -1558,7 +1558,7 @@ c                                 solve for xco
 
       oh2o = xh2o
 
-      call mrkmix (ins, 5)
+      call mrkmix (ins, 5, 1)
 
       goto 10 
 
@@ -1904,7 +1904,7 @@ c                                 + qb * xh2 + qc
 
          oh2o = xh2o
 
-         call mrkmix (ins, 5)
+         call mrkmix (ins, 5, 1)
 
       end do 
 
@@ -2025,7 +2025,7 @@ c                                 + qb * xh2 + qc
 
          oh2o = xh2o
 
-         call mrkmix (ins, 5)
+         call mrkmix (ins, 5, 1)
 
          gh2o = ghh2o * gh2o
          gco2 = ghco2 * gco2 
@@ -2265,18 +2265,22 @@ c----------------------------------------------------------------------
  
       end
 
-      subroutine mrkmix (ins, isp)
+      subroutine mrkmix (ins, isp, iavg)
 c-----------------------------------------------------------------------
 c subroutine to calculate the log fugacities and volume of mixed
 c species fluids using the RK/MRK EoS. 
 
-c changed volume units from cm3 to J/bar. JADC, 3/26/2012.
-
 c input:
 
 c        ins(i) -  pointers indicating the species are to be calculated.
-c        isp     - the number of species to be calculated.
-c        p,t     - input from cst5, p(bars), t(K)
+c        isp    - the number of species to be calculated.
+c        p,t    - input from cst5, p(bars), t(K)
+c        iavg   - a flag indicating whether the a cross term is to 
+c                 be computed as the geometric mean (iavg = 1), the
+c                 arithmetic mean (iavg = 2), or the harmonic mean; 
+c                 provided the cross term is not specified explicitly, 
+c                 as in the deSantis et al. 1974 formulation for water
+c                 and CO2.  
 
 c output (to common cstcoh):
 
@@ -2305,9 +2309,9 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer ins(*),i,j,k,l,iroots,isp,ineg,ipos
+      integer ins(*),i,j,k,l,iroots,isp,ineg,ipos,iavg 
  
-      double precision f(nsp),aj2(nsp),ev(3),c1,c2,
+      double precision f(nsp),aj2(nsp),ev(3),c1,c2,ax,
      *                 c3,vmin,vmax,d1,d2,d3,d6,rt,dsqrtt,r,
      *                 ch,bx,aij,pdv
  
@@ -2347,6 +2351,9 @@ c----------------------------------------------------------------------
 
       end do 
  
+      ch = dexp(-11.218d0 + (6032d0 + (-2782000d0 + 4.708d8/t)/t)/t) * 
+     *          6912.824964d0 *t*t*dsqrtt + 79267647d0
+
       do k = 1, isp
 
          i = ins(k)
@@ -2358,9 +2365,25 @@ c----------------------------------------------------------------------
             if (i.eq.1.and.j.eq.2.or.i.eq.2.and.j.eq.1) then
                aij = aij + x(i)*x(j)*ch/2d0
                aj2(i) = aj2(i) + x(j)*ch
-            else
-               aij = aij + x(i)*x(j)*dsqrt(a(i)*a(j))
-               aj2(i) = aj2(i) + 2d0*x(j)*dsqrt(a(i)*a(j))
+            else 
+
+               if (i.eq.14.and.j.eq.15.or.i.eq.15.and.j.eq.14) then
+c                                 special mixing rule
+                  ax = 2d0/(1d0/a(i) + 1d0/a(j))
+               else if (iavg.eq.1) then 
+c                                 geometric mean mixing rule
+                  ax = dsqrt(a(i)*a(j))
+               else if (iavg.eq.2) then 
+c                                 arithmetic mean mixing rule
+                  ax = (a(i) + a(j))/2d0
+               else 
+c                                 harmonic mean mixing rule
+                  ax = 2d0/(1d0/a(i) + 1d0/a(j))
+               end if 
+
+               aij = aij + x(i)*x(j)*ax
+               aj2(i) = aj2(i) + 2d0*x(j)*ax
+
             end if
 
          end do 
@@ -3158,7 +3181,7 @@ c                                 inner iteration loop:
 
          if (j.gt.1.and.dabs((xl-xh2o)/xh2o).lt.1d-6) goto 40
 
-         call mrkmix (ins, 4)
+         call mrkmix (ins, 4, 1)
          gh2o = gh2o * ghh2o
          xl = xh2o
 
@@ -3177,7 +3200,7 @@ c                                the fluid will be binary:
       xso2 = 1d0 - xh2o
       xh2s = 0d0
       xh2 = 0d0
-      call mrkmix (ins, 4)
+      call mrkmix (ins, 4, 1)
       vol = vol + xh2o * vm(3)
       gh2o = gh2o * ghh2o
       fh2o = dlog(gh2o*p*xh2o) 
@@ -3304,7 +3327,7 @@ c                                 inner iteration loop:
 
          if (j.gt.1.and.dabs((xl-xh2o)/xh2o).lt.1d-6) goto 40
 
-         call mrkmix (ins, 5)
+         call mrkmix (ins, 5, 1)
          gh2o = gh2o * ghh2o
          xl = xh2o 
 30    continue
@@ -3428,7 +3451,7 @@ c                                 inner iteration loop:
 20       if (xo2.lt.0d0) xo2 = 0d0
          xh2 = 1d0 - xo2 - xh2o
          if (j.gt.1.and.dabs((xl-xh2o)/xh2o).lt.1d-6) goto 40
-         call mrkmix (ins, 3)
+         call mrkmix (ins, 3, 1)
          gh2o = gh2o * ghh2o
          xl = xh2o
 30    continue
@@ -3960,7 +3983,7 @@ c----------------------------------------------------------------------
 
       x(2) = xc
       x(1) = 1d0 - xc
-      call mrkmix (jns, 2)
+      call mrkmix (jns, 2, 1)
 99    end
  
       subroutine hsmrk
@@ -5412,7 +5435,7 @@ c                                 everything seems ok
                end if 
             end if 
 c                                 get new gamma's
-            call mrkmix (ins, isp)
+            call mrkmix (ins, isp, 1)
             xh2o = xh2o - dxh2o
 
          end do 
@@ -5860,7 +5883,7 @@ c                                 ln(gamma) = w*v*x^2
 
       end
 
-      subroutine rksi4 (bad)
+      subroutine rksi4 (bad,iavg)
 c----------------------------------------------------------------------
 c subroutine to compute speciation and fugacites in 4 species silica vapor
 
@@ -5878,7 +5901,7 @@ c----------------------------------------------------------------------
       include 'perplex_parameters.h'
 
       integer ins(4), isp, nit, i1, i2, i3, i4, iroots, ineg, ipos, 
-     *        i, icon
+     *        i, icon, iavg
 
       logical bad
 
@@ -5978,7 +6001,7 @@ c                                 mass balance => sio2:
 
          if ( dabs((oldy-y(icon))/y(icon)).lt.tol) exit  
 c                                 get new gamma's
-         call mrkmix (ins, isp)
+         call mrkmix (ins, isp, iavg)
 
          oldy = y(icon)
 
@@ -5998,11 +6021,6 @@ c                                 get new gamma's
              write (*,'(a,2(g12.6,1x))') 
      *            'ugga wugga not converging T,P:',t,p
 
-            fh2o = 1d99
-            fco2 = 1d99
-
-            return 
-
          else 
 
              write (*,'(a,5(g12.6,1x))') 
@@ -6010,6 +6028,11 @@ c                                 get new gamma's
              
 
          end if 
+
+            fh2o = 1d99
+            fco2 = 1d99
+
+            return 
 
       end if 
 c                                lnK_3 => SiO = Si + O, shornikov H_SiO 
@@ -6048,12 +6071,13 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer ins(5), isp, nit, i1, i2, i3, i4, i5, icon, i
+      integer iavg, ins(5), isp, nit, i1, i2, i3, i4, i5, icon, i, ir, 
+     *        jns(1)
 
-      logical bad
+      logical bad, henry
 
-      double precision c1,c2,c3,rat,rp1,rm1,
-     *                 r2p1,r2m1,oldy,tol,lnk2,lnk3,dquart
+      double precision c1,c2,c3,rat,rp1,rm1,oy(nsp),
+     *                 r2p1,r2m1,oldy,lnk2,lnk3,dquart
 
       external dquart 
 
@@ -6072,12 +6096,19 @@ c----------------------------------------------------------------------
       double precision a0,a1,a2,a3 
       common/ coeffs /a0,a1,a2,a3 
 
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
       save ins, isp 
       data isp, ins, i1, i2, i3, i4, i5/5, 14, 13, 12, 7, 15, 
      *                                     14, 13, 12, 7, 15/
 c----------------------------------------------------------------------
 c                                 get pure species fugacities
       call mrkpur (ins, isp)
+c
+      iavg = 1
 c                                 degenerate compositions:
       if (xc.eq.1d0) then 
 c                                 pure Si
@@ -6094,7 +6125,7 @@ c                                 c1 = exp(lnK_1)*p => 2 O = O2, HSC K
 
       if (xc.eq.0d0) then
 
-         call rko2 (c1)
+         call rko2 (c1,iavg)
 
          return  
 
@@ -6110,6 +6141,14 @@ c                                 c3 = exp(lnK_3)/p => SiO = Si + O, shornikov H
 c                                 some inner loop constants
 c                                 rat = nsi/no = xc/(1-xc) 
       rat = xc/(1d0-xc)
+c                                 set singular compositions if within 
+c                                 speciation tolerance.
+      if (dabs(rat-0.5d0).lt.nopt(5)) then 
+         rat = 0.5d0
+      else if (dabs(rat-1d0).lt.nopt(5)) then 
+         rat = 1d0
+      end if 
+
       rp1    = rat + 1d0
       rm1    = rat - 1d0
       r2p1    = 2d0*rat + 1d0
@@ -6117,7 +6156,6 @@ c                                 rat = nsi/no = xc/(1-xc)
 c
       nit = 0 
       oldy = 0d0
-      tol = 1d-9
 c                                 choose species for convergence test
       if (xc.gt.0.5d0) then
 c                                 Si 
@@ -6169,9 +6207,9 @@ c                                 may not find the root if switch on
 c                                 first iteration
          if (y(i3).eq.0d0) then 
        
-            y(i3) = tol
+            y(i3) = nopt(5)
 
-         else if (isnan(y(i3)).or.y(i3).le.0d0.or.y(i3).eq.tol) then
+         else if (isnan(y(i3)).or.y(i3).le.0d0.or.y(i3).eq.nopt(5)) then
 
             bad = .true.
             exit 
@@ -6189,7 +6227,7 @@ c
      
             if (icon.eq.i2) icon = i1 
 
-            if (dabs(y(i2)).lt.tol) then 
+            if (dabs(y(i2)).lt.nopt(5)) then 
 
                y(i2) = 0d0
 
@@ -6199,7 +6237,7 @@ c
                   y(ins(i)) = 0d0
                end do 
 
-               call rksi4 (bad)
+               call rksi4 (bad,iavg)
 
                if (bad) then
                   write (*,*) 'rksi4 failed',t,xc
@@ -6215,7 +6253,7 @@ c
 
          else if (y(i2).gt.0.5d0) then
 
-            icon = i2
+             icon = i2
 
          end if 
 c                                  K3 => Si
@@ -6227,7 +6265,7 @@ c                                 closure => sio2:
 
             if (icon.eq.i1) icon = i2
 
-            if (dabs(y(i1)).lt.tol) then 
+            if (dabs(y(i1)).lt.nopt(5)) then 
                y(i1) = 0d0
             else 
                bad = .true.
@@ -6240,9 +6278,57 @@ c                                 closure => sio2:
 
          end if 
 
-         if ( dabs((oldy-y(icon))/y(icon)).lt.tol) exit
+         if ( dabs((oldy-y(icon))/y(icon)).lt.nopt(5)) then
+            exit
+         else if (dabs((oldy-y(icon))/y(icon)).gt.0.25.and.
+     *              oldy.eq.1990d0) then 
+c                                 make the change less violent
+            do i = 1, isp
+c                                 save old y's
+               y(ins(i)) = (0.1*y(ins(i))+0.9*oy(ins(i)))
+
+            end do              
+
+         end if 
 c                                 get new gamma's
-         call mrkmix (ins, isp)
+         henry = .false.
+
+         do i = 1, isp
+c                                 save old y's
+            oy(ins(i)) = y(ins(i))
+
+            if (y(ins(i)).gt.0.9999d0) then 
+               ir = i
+               henry = .true.
+               exit 
+            end if 
+         end do          
+
+         if (henry) then 
+
+            if (ins(ir).eq.i1*0) then 
+
+            fh2o = 1d99
+            fco2 = 1d99
+            return
+            end if 
+
+            jns(1) = ins(ir)
+            call mrkpur (jns,1)
+            call mrkhen (ins,isp,ins(ir),iavg)
+
+         else if (t.lt.2000.and.xc.gt.0.33.and.xc.lt.0.34) then
+
+
+            fh2o = 1d99
+            fco2 = 1d99
+            return
+
+         else 
+
+            call mrkmix (ins, isp, iavg)           
+
+         end if 
 
          oldy = y(icon)
 
@@ -6273,11 +6359,11 @@ c                                 get new gamma's
             write (*,'(a,5(g12.6,1x))') 
      *            'ugga wugga not valid solution T,P:',t,p,xc
 
+         end if 
+
             fh2o = 1d99
             fco2 = 1d99
             return 
-
-         end if 
 
       end if 
 
@@ -6347,21 +6433,23 @@ c             O, SiO, SiO2, Si, unk:
 c             asio = aco/aco2 * asio2 => 1/16.722 => 424441664.6d0
      *          174026d2, 424441664.6d0,  7097834092d0, 0d0, 0d0/,
      *     brk /14.6,  29.7,  27.38, 29.681, 15.7699, 29.94,
-     *          22.06956396,  37.4,  43d0,  23.42,   18.84, 
+     *          22.07,  37.4,  43d0,  23.42,   18.84, 
 c             O, SiO, SiO2, Si, unk:
 c             bsio = bco/bco2*bsio2 => 1/4.83
 c             bo  ~ bo2
      *          22.07, 5.148732998d0, 24.85507977, 10.35765058, 0d0/
 
-      save first, choice, fac
-      data first, choice, fac/.true.,0,1d0/
+      save first, choice
+      data first, choice/.true.,0/
+
+c      common/ cfac /fac
 c----------------------------------------------------------------------
-      if (first) then 
-         write (*,*) 'enter fac'
+c      if (first) then 
+c         write (*,*) 'enter fac'
 c         read (*,*) fac
-         if (fac.eq.0d0) fac=1d0
-         first = .false.
-      end if 
+c         if (fac.eq.0d0) fac=16.77
+c         first = .false.
+c      end if 
 
       do k = 1, isp
 
@@ -6404,7 +6492,7 @@ c                                 MRK dispersion term for Si
 
       end do 
 
-      a(13) = ark(14)/16.722
+      a(13) = ark(14)/20d0
       b(13) = brk(13)
 
       end 
@@ -6666,7 +6754,7 @@ c                                 closure => sio2:
         
             if ( bad .or. dabs((oldy-y(icon))/y(icon)).lt.tol) exit
 c                                 get new gamma's
-            call mrkmix (ins, isp)
+            call mrkmix (ins, isp, 1)
 
             oldy = y(icon)
 
@@ -6709,7 +6797,7 @@ c                                 get new gamma's
 
       end
 
-      subroutine mrkhen (ins,isp,ir)
+      subroutine mrkhen (ins,isp,ir,iavg)
 c-----------------------------------------------------------------------
 c subprogram to compute the henryian fugacity coefficient of mrk species 
 c in solvent species ir. 
@@ -6721,6 +6809,7 @@ c input:
 c        ins(i) -  pointers indicating the species are to be calculated.
 c        isp    -  the number of species to be calculated.
 c        ir     -  solvent pointer
+c        iavg   -  specifies the averaging method for the a cross term
 
 c output (to common cstcoh):
 
@@ -6731,9 +6820,9 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer ins(*),i,k,isp,ir
+      integer ins(*),i,k,isp,ir,iavg
  
-      double precision rt,e0,e1,e2,r
+      double precision rt,e0,e1,e2,r,ax
  
       double precision p,t,xco2,u1,u2,tr,pr,rbar,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,rbar,ps
@@ -6762,10 +6851,24 @@ c----------------------------------------------------------------------
 c                                 skip solvent
          if (i.eq.ir) cycle 
 
+
+         if (i.eq.14.and.ir.eq.15.or.i.eq.15.and.ir.eq.14) then
+c                                 arithmetic mean mixing rule
+            ax = 2d0/(1d0/a(ir) + 1d0/a(i))
+         else if (iavg.eq.1) then 
+c                                 geometric mean mixing rule
+            ax = dsqrt(a(ir)*a(i))
+         else if (iavg.eq.2) then 
+c                                 arithmetic mean mixing rule
+            ax = (a(ir) + a(i))/2d0
+         else 
+c                                 harmonic mean mixing rule
+            ax = 2d0/(1d0/a(ir) + 1d0/a(i))
+         end if 
+
          g(i) = dexp (
      *          b(i) * (a(ir) * (e0/b(ir) - 1d0 / (v(ir) + b(ir)) / e1)
-     *          + e2) - 4d0 * dsqrt(a(ir) * a(i)) * e0 
-     *          + dlog(rt*e2/p) )
+     *          + e2) - 2d0 * ax * e0 + dlog(rt*e2/p) )
 
       end do 
    
@@ -6829,7 +6932,7 @@ c                                 lnK_3 => SiO = Si + O, shornikov H_SiO
 c                                 pure species sio2 fugacity
       call mrkpur (ins, 1)
 
-      call mrkhen (ins, isp, i1) 
+      call mrkhen (ins, isp, i1, 2) 
 c                                 solve (yo^3 + a2*yo^2 + a1*yo + a0) for yo
 c                                 a2 is stoichiometric (defined above) and = 0 for rat = 1/2
       a0 = c1* g(i1) / g(i2)** 2 / g(i3) / rm1
@@ -6881,7 +6984,7 @@ c                                 closure => sio2:
 
       end
 
-      subroutine rko2 (c1) 
+      subroutine rko2 (c1,iavg) 
 c----------------------------------------------------------------------
 c subroutine to compute speciation and fugacites in 2 species oxygen
 c call by rksi5
@@ -6899,7 +7002,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer ins(2), isp, nit, i3, i4
+      integer ins(2), isp, nit, i3, i4, iavg
 
       double precision c1,oldy,tol,a0,a1
 
@@ -6922,20 +7025,20 @@ c                                iterate for non-ideality
       do 
 
          a0 = 2d0*c1*g(i3)**2
-         a1 = dsqrt(g(i4)*(g(i4)+2d0*c1*a0))
+         a1 = dsqrt(g(i4)*(g(i4)+2d0*a0))
          y(i3) = (a1-g(i4))/a0
          if (y(i3).gt.1d0.or.y(i3).lt.0d0) y(i3) = -(a1+g(i4))/a0
          y(i4) = 1d0 - y(i3)
          if ( dabs((oldy-y(i3))/y(i3)).lt.tol) exit  
 c                                 get new gamma's
-         call mrkmix (ins, isp)
+         call mrkmix (ins, isp, iavg)
 
          oldy = y(i3)
          nit = nit + 1
 
          if (nit.lt.100) cycle 
          write (*,*) 'ugga wugga not converging on pure O'
-         stop
+         exit 
 
       end do 
 

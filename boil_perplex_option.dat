@@ -28,7 +28,7 @@ global_reach_increment  12   | >= 0; overridden by reach_factor specified in sol
 grid_levels            1 4  | exploratory and autorefine (grid parameters keyword group)
 hard_limits           on    | on or off
 increment         0.1 0.025 | 0, <1; exploratory and autorefine
-initial_resolution    0.023 | >0, <1, default 1e-2
+initial_resolution    0.001 | >0, <1, default 1e-2
 interpolation off       2    | value 1: on or off; value 2, 1->99
 iteration              3  4 | value 2: 2->99; value 3: 1->7
 linear_model           on   | on or off
@@ -47,7 +47,7 @@ short_print            on   | on or off
 site_check              T   | T[rue] or F[alse], T=> reject solution compositions with negative site fractions
 solvus_tolerance      auto  | auto or 0->1 [0.05] should be > initial_resolution/auto_refine_factor
 solvus_tolerance_II    0.25 | 0->1 [0.25]
-speciation_tolerance   1d-3 | tolerance for order-disorder speciation calculations, >0,<1 [1d-3]
+speciation_tolerance   1d-9 | tolerance for order-disorder speciation calculations, >0,<1 [1d-3]
 spreadsheet             T   | T[rue] or F[alse], T=> include independent variable values in werami tab output files 
 stretch_factor        0.016 | >0, <1
 subdivision_override   off  | off, linear, or stretch
@@ -57,5 +57,5 @@ variance              1 99  | 1->99; exploratory and autorefine
 vrh/hs_weighting       0.5  | 0->1, weighting factor for the stiff average in VRH/HS averaging (see bounds)
 x_nodes               40 60 | exploratory and autorefine (grid parameters keyword group)
 y_nodes               40 60 | exploratory and autorefine (grid parameters keyword group)
-zero_mode             1e-6  | 0->1
-zero_bulk             1e-6  | 0->1
+zero_mode             1e-5  | 0->1
+zero_bulk             1e-9  | 0->1
