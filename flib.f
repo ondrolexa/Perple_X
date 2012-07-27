@@ -6107,6 +6107,14 @@ c----------------------------------------------------------------------
 c----------------------------------------------------------------------
 c                                 get pure species fugacities
       call mrkpur (ins, isp)
+
+      if (v(14).lt.1d2.and.xc.gt.0.3.and.xc.lt.0.4) then
+
+            fh2o = 1d99
+            fco2 = 1d99
+            return
+
+      end if 
 c
       iavg = 1
 c                                 degenerate compositions:
@@ -6317,7 +6325,7 @@ c                                 save old y's
             call mrkpur (jns,1)
             call mrkhen (ins,isp,ins(ir),iavg)
 
-         else if (t.lt.2000.and.xc.gt.0.33.and.xc.lt.0.34) then
+         else if (v(14).lt.1d2.and.xc.gt.0.3.and.xc.lt.0.4) then
 
 
             fh2o = 1d99

@@ -8,7 +8,7 @@
 1d_path              40 150 | exploratory and autorefine (grid parameters keyword group)
 approx_alpha           T    | use approximation exp(x)~1+x to evaluate expansivity effect on volume
 Anderson-Gruneisen     F    | Anderson-Gruneisen parameter correction for polythermal Murnaghan and Birch-Murnaghan
-auto_refine            man  | auto, manual, or off (auto_refine keyword group)
+auto_refine            aut  | auto, manual, or off (auto_refine keyword group)
 auto_refine_factor_I   2    | refine factor for gridded minimization and phase fractionation (auto_refine keyword group)
 auto_refine_factor_II  6    | refine factor for composition and mixed variable diagrams (auto_refine keyword group)
 auto_refine_factor_III 2    | refine factor for Schreinemakers diagrams (auto_refine keyword group)
@@ -22,7 +22,7 @@ dependent_potentials   on   | on or off
 efficiency             3    | 1->5
 explicit_bulk_modulus  T    | T[rue] or F[alse], default is F; T -> use explicit function for K if available
 extrapolation          off  | on or off
-final_resolution    1d-6 1e-6 | >0, <1, default 1e-3
+final_resolution    1d-7 1e-7 | >0, <1, default 1e-3
 finite_difference_p  0 0.01 |
 global_reach_increment  12   | >= 0; overridden by reach_factor specified in solution model file
 grid_levels            1 4  | exploratory and autorefine (grid parameters keyword group)
@@ -55,7 +55,7 @@ T_melt                 873. | melt solution model endmember temperature (K) cut 
 T_stop                   0. | equilibration temperature (K) cut off
 variance              1 99  | 1->99; exploratory and autorefine
 vrh/hs_weighting       0.5  | 0->1, weighting factor for the stiff average in VRH/HS averaging (see bounds)
-x_nodes               40 60 | exploratory and autorefine (grid parameters keyword group)
-y_nodes               40 60 | exploratory and autorefine (grid parameters keyword group)
+x_nodes               40 100 | exploratory and autorefine (grid parameters keyword group)
+y_nodes               40 100 | exploratory and autorefine (grid parameters keyword group)
 zero_mode             1e-5  | 0->1
 zero_bulk             1e-9  | 0->1
