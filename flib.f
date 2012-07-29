@@ -5901,7 +5901,7 @@ c----------------------------------------------------------------------
       include 'perplex_parameters.h'
 
       integer ins(4), isp, nit, i1, i2, i3, i4, iroots, ineg, ipos, 
-     *        i, icon, iavg
+     *        i, icon, iavg, iwarn
 
       logical bad
 
@@ -5917,9 +5917,14 @@ c----------------------------------------------------------------------
       double precision p,t,xc,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xc,u1,u2,tr,pr,r,ps
 
-      save ins, isp, tol 
-      data isp, ins, i1, i2, i3, i4, tol/4, 14, 13, 12, 7,  
-     *                                      14, 13, 12, 7, 1d-9/
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      save ins, isp, i1, i2, i3, i4, iwarn
+      data isp, ins, i1, i2, i3, i4, iwarn/4, 14, 13, 12, 7,  
+     *                                        14, 13, 12, 7, 0/
 c----------------------------------------------------------------------
 c                                 rat = nsi/no = xc/(1-xc) 
       rat = xc/(1d0-xc)
@@ -5965,7 +5970,7 @@ c                                 mass balance => sio2:
 
             if (y(i1).lt.0d0) then
 
-               if (dabs(y(i1)).lt.tol) then
+               if (dabs(y(i1)).lt.nopt(5)) then
                   y(i1) = 0d0
                else 
                   cycle
@@ -5999,7 +6004,7 @@ c                                 mass balance => sio2:
  
          end do 
 
-         if ( dabs((oldy-y(icon))/y(icon)).lt.tol) exit  
+         if ( dabs((oldy-y(icon))/y(icon)).lt.nopt(5)) exit  
 c                                 get new gamma's
          call mrkmix (ins, isp, iavg)
 
@@ -6016,18 +6021,21 @@ c                                 get new gamma's
 
       if (bad) then 
 
-         if (nit.gt.999) then
+         if (nit.gt.999.and.iwarn.lt.100) then
 
              write (*,'(a,2(g12.6,1x))') 
      *            'ugga wugga not converging T,P:',t,p
 
-         else 
+         else if (iwarn.lt.100) then
 
              write (*,'(a,5(g12.6,1x))') 
      *            'ugga wugga not valid solution T,P:',t,p,x
              
 
          end if 
+
+         iwarn = iwarn + 1
+         if (iwarn.eq.100) call warn (53,t,0,'RKSI4')
 
             fh2o = 1d99
             fco2 = 1d99
@@ -6072,7 +6080,7 @@ c----------------------------------------------------------------------
       include 'perplex_parameters.h'
 
       integer iavg, ins(5), isp, nit, i1, i2, i3, i4, i5, icon, i, ir, 
-     *        jns(1)
+     *        jns(1), iwarn 
 
       logical bad, henry
 
@@ -6101,20 +6109,20 @@ c----------------------------------------------------------------------
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
-      save ins, isp 
-      data isp, ins, i1, i2, i3, i4, i5/5, 14, 13, 12, 7, 15, 
-     *                                     14, 13, 12, 7, 15/
+      save isp, ins, i1, i2, i3, i4, i5, iwarn 
+      data isp, ins, i1, i2, i3, i4, i5, iwarn/5, 14, 13, 12, 7, 15, 
+     *                                            14, 13, 12, 7, 15, 0/
 c----------------------------------------------------------------------
 c                                 get pure species fugacities
       call mrkpur (ins, isp)
 
-      if (v(14).lt.1d2.and.xc.gt.0.3.and.xc.lt.0.4) then
+c      if (v(14).lt.1d2.and.xc.gt.0.3.and.xc.lt.0.4) then
 
-            fh2o = 1d99
-            fco2 = 1d99
-            return
+c            fh2o = 1d99
+c            fco2 = 1d99
+c            return
 
-      end if 
+c      end if 
 c
       iavg = 1
 c                                 degenerate compositions:
@@ -6248,7 +6256,7 @@ c
                call rksi4 (bad,iavg)
 
                if (bad) then
-                  write (*,*) 'rksi4 failed',t,xc
+                  if (iwarn.lt.100) write (*,*) 'rksi4 failed',t,xc
                   do i = 1, isp
                      y(ins(i)) = 0d0
                   end do 
@@ -6325,7 +6333,7 @@ c                                 save old y's
             call mrkpur (jns,1)
             call mrkhen (ins,isp,ins(ir),iavg)
 
-         else if (v(14).lt.1d2.and.xc.gt.0.3.and.xc.lt.0.4) then
+         else if (v(14).lt.0d2.and.xc.gt.0.3.and.xc.lt.0.4) then
 
 
             fh2o = 1d99
@@ -6342,7 +6350,7 @@ c                                 save old y's
 
          nit = nit + 1
 
-         if (nit.gt.990) then 
+         if (nit.gt.990.and.iwarn.lt.100) then 
 
             write (*,*) 'wug'
 
@@ -6357,17 +6365,20 @@ c                                 save old y's
 
       if (bad) then 
 
-         if (nit.gt.999) then
+         if (nit.gt.999.and.iwarn.lt.100) then
 
             write (*,'(a,2(g12.6,1x))') 
      *            'ugga wugga not converging T,P:',t,p,xc
 
-          else 
+          else if (iwarn.lt.100) then 
 
             write (*,'(a,5(g12.6,1x))') 
      *            'ugga wugga not valid solution T,P:',t,p,xc
 
          end if 
+
+         iwarn = iwarn + 1 
+         if (iwarn.eq.100) call warn (53,t,0,'RKSI4')
 
             fh2o = 1d99
             fco2 = 1d99

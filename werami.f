@@ -1072,11 +1072,7 @@ c                                 multiple property lists, PHEMGP
 
                   exit 
 
-               else if (lop.ne.24) then 
-c                                 general properties
-                  call getprp (prop(i),lop,icx,komp,.false.)
-
-               else 
+               else if (lop.eq.24) then 
 c                                 assemblage index request, lots
 c                                 of redundant calc, but should be 
 c                                 moved to getptp.
@@ -1084,6 +1080,10 @@ c                                 no need to call triang/getlow
                   call xy2ij (itri(1),jtri(1),nodata)
 
                   prop(i) = iap(igrd(itri(1),jtri(1)))
+
+               else 
+c                                 general properties
+                  call getprp (prop(i),lop,icx,komp,.false.)
 
                end if 
 
@@ -1399,6 +1399,9 @@ c                                 (Vphi, Vp, Vs)_T
                else if (lop.ge.31.and.lop.le.33) then
 c                                 (Vphi, Vp, Vs)_P
                   prop = psys(lop-6)
+               else if (lop.eq.39) then 
+c                                 cp/cv
+                  prop = psys(28)
                end if 
             else 
 c                                 fluid absent system properties:
@@ -1458,6 +1461,9 @@ c                                 (Vphi, Vp, Vs)_T
                else if (lop.ge.31.and.lop.le.33) then
 c                                 (Vphi, Vp, Vs)_P
                   prop = psys1(lop-6)
+               else if (lop.eq.38) then 
+c                                 cp/cv
+                  prop = psys1(28)
                end if 
             end if 
 
@@ -1568,6 +1574,10 @@ c                                 mass (kg)
 c                                 mol 
                      prop = props(16,id)
                   end if 
+
+               else if (lop.eq.39) then 
+c                                 cp/cv
+                     prop = props(28,id)
 
                end if 
 
@@ -3646,7 +3656,7 @@ c                                 it in array dname
 1030  format (/,'Retain the compositional criteria you defined ',
      *          'earlier (y/n)?',/,'Answer yes only if you intend ',
      *          'to extract properties for the same phase.',/)
-1050  format (/,'Select properties [enter 0 to finish]:')
+1050  format (/,'Select a property [enter 0 to finish]:')
 1060  format (3x,i2,' - ',a60)
 1070  format (/,'Output cumulative modes (y/n)?',/
      *         ,'(see www.perplex.ethz.ch/perplex_options.html'
@@ -3686,7 +3696,7 @@ c----------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer icx, jprop, lop, komp, l2p(38)
+      integer icx, jprop, lop, komp, l2p(39)
 
       character prname(45)*14, pname*10
 
@@ -3733,11 +3743,15 @@ c                                 25-27
      *      'v0_P          ','vp_P          ','vs_P          ',
 c                                 28-30
      *      'wt,%          ','vol,%         ','mol,%         ',
+c                                 31-33
      *      'h,J/m3        ','cp,J/K/m3     ','blk_comp      ',
+c                                 34-36
      *      'mode          ','composition   ','s,J/K/m3      ',
+c                                 37-39
      *      's,J/K/kg      ','h,J/kg        ','cp,J/K/kg     ',
-c                                 40-44
+c                                 40-42
      *      'specific_mass ','poisson_ratio ','chemical_pot  ',
+c                                 43-45
      *      'assemblage_i  ','extent        ','cp/cv         '/
 c                                 l2p points from lop to prname, 
 c                                 1-10
@@ -3746,8 +3760,8 @@ c                                 11-20
      *         5 , 6, 7, 8, 9,36,37,38,39,40,
 c                                 21-30 
      *         41, 1,42,43, 0,22,23,24,18,19,
-c                                 31-38
-     *         25,26,27,20,21, 0, 44, 0/
+c                                 31-39
+     *         25,26,27,20,21, 0, 44, 0, 45/
 c----------------------------------------------------------------------
 c                                 make property name
       if (lop.eq.6) then
