@@ -4158,10 +4158,10 @@ c                                 two means of extracting y-range, cartesian
 c                                 imod = 0 and transformation imod = 1
          if (mode.eq.0) then 
 c                                 check limit
-            if (ync.lt.nopt(5).and.good(ids)) then
-               good(ids) = .false.
-               write (*,1000) fname(ids)
-            end if
+c            if (ync.lt.nopt(5).and.good(ids)) then
+c               good(ids) = .false.
+c               write (*,1000) fname(ids)
+c            end if
                
 c                                 cartesian
             do while (y(i,iy(i)).lt.ymax)
@@ -4232,10 +4232,10 @@ c                                 compute yreal
                         yreal = ylmx - strtch(1d0-x) * dy
                      end if 
 c                                 cycle if below tolerance
-                     if (yreal-y(i,iy(i)).lt.nopt(5).and.good(ids)) then
-                        good(ids) = .false.
-                        write (*,1010) fname(ids)
-                     end if 
+c                     if (yreal-y(i,iy(i)).lt.nopt(5).and.good(ids)) then
+c                        good(ids) = .false.
+c                        write (*,1010) fname(ids)
+c                     end if 
  
                      iy(i) = iy(i) + 1
                      if (iy(i).gt.mres) call error (999,ync,mres,sname)
@@ -4359,15 +4359,15 @@ c                                 must have just hit on the last increment
 
       end do 
 
-1000  format (/,'Warning: a composition of solution ',a,' has been ',
-     *          'refined to a level that',/,'may destabilize ',
-     *          'calculations. If excessive failure occurs, use less ',
-     *          'extreme',/,'iteration parameters.',/)
-1010  format (/,'Warning: a composition of solution ',a,' has been ',
-     *          'refined to a level that',/,'may destabilize ',
-     *          'calculations. If excessive failure occurs use less ',
-     *        /,'extreme iteration parameters or ',
-     *          'increase the stretching factor.',/)
+c1000  format (/,'Warning: a composition of solution ',a,' has been ',
+c     *          'refined to a level that',/,'may destabilize ',
+c     *          'calculations. If excessive failure occurs, use less ',
+c     *          'extreme',/,'iteration parameters.',/)
+c1010  format (/,'Warning: a composition of solution ',a,' has been ',
+c     *          'refined to a level that',/,'may destabilize ',
+c     *          'calculations. If excessive failure occurs use less ',
+c     *        /,'extreme iteration parameters or ',
+c     *          'increase the stretching factor.',/)
       end
 
 
@@ -11062,7 +11062,7 @@ c---------------------------------------------------------------------
 
       integer i, ind(ms1), iy, indx, iexit, lsp, nsim
 
-      double precision y(mres), ync
+      double precision y(mres), ync 
 
       integer ncoors
 
