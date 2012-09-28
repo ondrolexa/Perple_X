@@ -233,10 +233,10 @@ c---------------------------------------------------------------------
  
       include 'perplex_parameters.h'
 
-      integer id,j,ins(1),kns(1)
+      integer id,j,ins(1),kns(1),iwarn
 
       double precision ialpha, vt, trv, pth, vdp, ndu, vdpbm3, gsixtr, 
-     *                 gstxgi, fs2, fo2, dg, kt, gval, gmake, gkomab,
+     *                 gstxgi, fs2, fo2, kt, gval, gmake, gkomab,
      *                 a, b, c, gstxlq, glacaz
  
       double precision f
@@ -277,8 +277,8 @@ c---------------------------------------------------------------------
       double precision y,g,v
       common / cstcoh /y(nsp),g(nsp),v(nsp)
 
-      save kt,trv,ins,kns 
-      data kt,trv,ins,kns/0d0,1673.15d0,14,15/
+      save kt,trv,ins,kns,iwarn 
+      data kt,trv,ins,kns,iwarn/0d0,1673.15d0,14,15,0/
 c---------------------------------------------------------------------
 
       if (make(id).ne.0) then 
@@ -378,8 +378,17 @@ c                                 and expansivity ala Helffrich & Connolly 2009.
 c                                 a ****wit has entered a ridiculous
 c                                 temperature
             if (kt.lt.0d0) then 
-               call warn (46,t,id,'GCPD') 
-               kt = 0d0
+
+               if (iwarn.lt.50) then 
+                  call warn (46,t,id,'GCPD') 
+                  iwarn = iwarn + 1
+                  if (iwarn.eq.50) call warn (49,t,46,'GCPD')
+               end if 
+c                                 destabalize the phase
+               gval = 1d99 
+
+               return 
+
             end if 
 
          end if 
@@ -421,8 +430,13 @@ c                                 and expansivity ala Helffrich & Connolly 2009.
 c                                 a ****wit has entered a ridiculous
 c                                 temperature
                if (kt.lt.0d0) then 
-                  call warn (46,t,id,'GCPD') 
-                  kt = 0d0
+                  if (iwarn.lt.50) then 
+                     call warn (46,t,id,'GCPD') 
+                     iwarn = iwarn + 1
+                     if (iwarn.eq.50) call warn (49,t,46,'GCPD')
+                  end if 
+c                                 destabalize the phase
+                  gval = 1d99 
                end if 
 
             end if 
@@ -492,8 +506,7 @@ c                                 Stoichiometic Si rk fluid
 
          else if (eos(id).ge.610.and.eos(id).le.623) then
 c                                 lacaze & Sundman (1990) EoS for Fe-Si-C alloys and compounds
-            vdp = 0d0 
-            gval = glacaz(eos(id))    
+            gval = glacaz(eos(id)) + vdp   
               
          end if          
 
@@ -1157,13 +1170,15 @@ c                                 from what's in the TC code such that
 c                                 dGPX - dGTC = (tc0-tc)*q2^3/3.
 c                                 See landau_d60.mws
 c                                                JADC Jan 26, 2012.
-      dg = therlm(2,1,ld) * 
-     *  (therlm(7,1,ld) + t*(q2 - therlm(8,1,ld)) + tc*(q2**3/3d0 - q2))
-c        + vdp...
-c                                 TC version:
 c      dg = therlm(2,1,ld) * 
-c     *   (therlm(7,1,ld) + t*(q2 - therlm(8,1,ld)) 
-c     *                   - tc*q2 + tc0*q2**3/3d0)
+c     *  (therlm(7,1,ld) + t*(q2 - therlm(8,1,ld)) + tc*(q2**3/3d0 - q2))
+c        + vdp...
+c                                 TC version, according to hans vrijmoed 
+c                                 e-mail 9/10/12 this is correct, should 
+c                                 check again....
+      dg = therlm(2,1,ld) * 
+     *   (therlm(7,1,ld) + t*(q2 - therlm(8,1,ld)) 
+     *                   - tc*q2 + tc0*q2**3/3d0)
 c                                 + int(vt,p)
      *     + therlm(6,1,ld)*intvdp
  
@@ -4104,16 +4119,10 @@ c                                 x coordinate description
       character fname*10
       common/ csta7 /fname(h9)
 
-      logical good(h9)
-
       integer iopt
       logical lopt
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
-      save good
-
-      data good/h9*.true./
 c----------------------------------------------------------------------
       ycum = 0d0
       jsp = isp(ksite) - 1
@@ -9638,12 +9647,13 @@ c                                 check ordered state
       rt = r*t*fac
 
       odg = dgdy(h,w,n,f,y,rt)
-c                                 if dgdy > 0 must be fully ordered
+c                                 if dgdy < 0 must be fully ordered
 c                                 (not really, non-zero w could make
 c                                 a zero at intermediate y).
       if (odg.lt.0d0) then 
-
-         g = -h
+c                                 add hp's fudgefactor term 
+         c1 = (n+1d0)/c0
+         g = n*rt*( c1*dlog(c1) + (1d0-c1)*dlog(1d0-c1) )
 
       else 
 c                                 initialize at halfway point
@@ -9667,14 +9677,16 @@ c                                 crossed the zero, flip the search
 c                                 refined to tolerance
                c1 = (n+y)/c0
                c2 = (1-y)*n/c0
-               g = w*y*(1-y) + (1-y)*h
+               g = w*y*(1-y) + (1d0-y)*h
      *            - rt*(-c2*dlog(c2)-(1d0-c2)*dlog(1d0-c2)
      *                 - n*(c1*dlog(c1)+(1d0-c1)*dlog(1d0-c1)))
                exit
 
             else if (y.le.nopt(5)) then 
-c                                 fully disordered
-               g = 0d0
+c                                 fully disordered, y=0, c1 = c2
+               c1 = n/c0
+               g = w + h 
+     *             - rt*((n+1d0)*(-c1*dlog(c1)+(c1-1d0)*dlog(1d0-c1)))
                exit 
 
             end if 
@@ -9957,7 +9969,7 @@ c----------------------------------------------------------------------
 
       integer k,i1,i2,id,jd
 
-      double precision dp,pmx,pmn,tol
+      double precision dp,pmx,pmn
 c                                 working arrays
       double precision z, pa, p0a, x, w, y
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1)

@@ -2100,7 +2100,7 @@ c---------------------------------------------------------------------
       else if (ier.eq.48) then 
          write (*,48) 
       else if (ier.eq.49) then 
-         write (*,49) int
+         write (*,49) int, char
       else if (ier.eq.50) then
          write (*,50) char
       else if (ier.eq.51) then 
@@ -2312,8 +2312,9 @@ c---------------------------------------------------------------------
      *        ' program documentation Eq 2.2)',/,
      *        ' NO OUTPUT WILL BE GENERATED FOR THIS ENTITY.',/)
 46    format (/,'**warning ver046** temperature (',g12.6,' K) is out',
-     *        ' of range for the equation of state (',a,').',/,
-     *        'most likely this problem can be corrected by setting '
+     *        ' of range for the EoS (',a,').',/,
+     *        'The affected phase will be destabilized.',/,
+     *        'This problem can be corrected by setting '
      *        'the Anderson_Gruneisen keyword to TRUE',/,
      *        'in the Perple_X option file.')
 47    format (/,'**warning ver047** invariant point ',i6,' could ',
@@ -2322,7 +2323,8 @@ c---------------------------------------------------------------------
 48    format (/,'**warning ver048** fluid phase pseudocompound data ',
      *         'does not include',/,' volumetric properties (SWASH).',/)
 49    format (/,'**warning ver049** warning ',i3,' will not be repeated'
-     *         ,' for future instances of this problem.',/)
+     *         ,' for future instances of this problem.',/,
+     *          'currently in routine: ',a,//)
 c49    format (/,'**warning ver049** some pseudocompound data has not',
 c     *          ' been output because',/' the bulk modulus pressure ',
 c     *          'derivative is not constant for all endmembers ',/,

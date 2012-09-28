@@ -734,8 +734,9 @@ c                                 it's a solution:
          do j = 1, istg(ids)
             do k = 1, ispg(ids,j)
                itic = itic + 1
-               if (kcoct+itic.gt.k22) 
-     *             call error (60,ycoor(1),k22,'saver')
+               if (kcoct+itic.gt.k22) then 
+                  call error (60,ycoor(1),k22,'saver')
+               end if 
                ycoor(lcoor(i)+itic) = zcoor(jcoor(id)+itic)
             end do 
          end do 

@@ -1099,7 +1099,11 @@ c                                  volume:
                      ag = dexp (elag)
                   end if 
 c                                  routine cfluid returns ln(fs2)/2
-                  if (ifug.ne.26) write (*,1170) fo2, 2d0*fs2/tentoe, ag
+                  if (ifug.ne.26) then
+                     write (*,1170) fo2, 2d0*fs2/tentoe, ag
+                  else 
+                     write (*,1120) fhc(1)/tentoe,fhc(2)/tentoe
+                  end if 
 c                                  output speciation:
                   write (*,1230)
 
@@ -1134,10 +1138,11 @@ c                                  output bulk properties and V:
 
                   write (*,1250) nc/tot, nh/tot, no/tot, ns/tot, nn/tot,
      *                           nsi/tot
-                  write (*,1270) no/(no+nh)
-                  if (ns.ne.0d0) write (*,1310) ns/(ns+nc)
-                  write (*,1350) nc/(nc+no+nh+ns)
-                  if (ifug.eq.24) write (*,1400) nn/nc
+                  if (nh.ne.0d0)  write (*,1270) no/(no+nh)
+                  if (ns.ne.0d0)  write (*,1310) ns/(ns+nc)
+                  if (nc.ne.0d0)  write (*,1350) nc/(nc+no+nh+ns)
+                  if (nsi.ne.0d0) write (*,1390) nsi/(no+nsi)
+                  if (nn.ne.0d0) write (*,1400) nn/nc
                   if (nh.ne.0d0.and.ns.ne.0d0) write (*,1290) ns/nh
                   if (ifug.eq.19.or.ifug.eq.20.and.ag.gt.1d0) 
      *               write (*,1330)
@@ -1156,6 +1161,8 @@ c                                  output bulk properties and V:
 
       end do 
 
+1120  format (/,10x,'log[f(O) ] = ',g12.5,
+     *        /,10x,'log[f(Si)] = ',g12.5,/)
 1130  format (/,10x,'f(H2O) = ',g12.5,/,10x,'f(CO2) = ',g12.5,/)
 1140  format (/,10x,'f(CO2) = ',g12.5,/)
 1150  format (/,10x,'f(H2O)     = ',g12.5,/
@@ -1184,6 +1191,7 @@ c                                  output bulk properties and V:
 1350  format (5x,'Back-calculated X(C) = ',g16.9)
 1370  format (/,5x,'Sum of species fractions: ',f14.9,/)
 1380  format (/,5x,'INVALID SPECIATION!!',/)
+1390  format (5x,'Back-calculated X(Si) = ',g16.9)
 1400  format (5x,'Back-calculated N/C  = ',g16.9)
 1420  format (/,5x,'Molar Volume (cm3/mol) = ',g12.5,/)
 

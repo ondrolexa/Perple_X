@@ -2396,7 +2396,7 @@ c                                 solve for mixture molar volume
 
       call roots3 (c1,c2,c3,ev,vmin,vmax,iroots,ineg,ipos)
 
-      if (iroots.eq.3.and.ineg.eq.0) then
+      if (iroots.eq.3.and.ineg.eq.0.and.vmin.gt.bx) then
 c                                choose the root with lowest gibbs energy
 c                                by evaluating p*delta(v) - int(pdv)
          pdv = p*(vmax-vmin) - 
@@ -2409,7 +2409,11 @@ c                                by evaluating p*delta(v) - int(pdv)
             vol = vmax
          end if 
 
-      else
+      else if (iroots.eq.3) then
+
+         vol = vmax
+
+      else 
 
          vol = ev(ipos)
 
@@ -2426,7 +2430,11 @@ c                                 compute fugacities:
           
          if (x(l).gt.0d0) then
             f(l) = dlog(x(l)) + b(l)*d3 - aj2(l)*d2 + d6
-            g(l) = dexp(f(l))/p/x(l)
+            g(l) = dexp(f(l)-dlog(p*x(l)))
+            if (g(l).gt.1d199) then
+               write (*,*) 'eug'
+               g(l) = 1d99
+            end if 
          else 
             g(l) = 1d0
             f(l) = -1d99
@@ -2987,7 +2995,7 @@ c----------------------------------------------------------------------
 c                                 v2 is the max root, v1 the min
          call roots3 (c1,c2,c3,ev,v1,v2,iroots,ineg,ipos)
 
-         if (iroots.eq.3.and.ineg.eq.0) then
+         if (iroots.eq.3.and.ineg.eq.0.and.v1.gt.bx) then
 c                                choose the root with lowest gibbs energy
 c                                by evaluating p*delta(v) - int(pdv)
             pdv = p*(v2-v1) - 
@@ -2999,6 +3007,10 @@ c                                by evaluating p*delta(v) - int(pdv)
            else 
               vol = v2
            end if 
+
+         else if (iroots.eq.3) then
+
+            vol = v2
 
          else
 c                                 assume only one positive real root,
@@ -5906,7 +5918,7 @@ c----------------------------------------------------------------------
       logical bad
 
       double precision c1,c2,rat,rp1,rm1,r2m1,oldy,a0,a1,a2,
-     *                 vmin,vmax,x(3),lnk2,lnk3,tol
+     *                 vmin,vmax,x(3),lnk2,lnk3
 
       double precision y,g,v
       common / cstcoh /y(nsp),g(nsp),v(nsp)
@@ -5986,7 +5998,7 @@ c                                 mass balance => sio2:
 
             if (y(i2).lt.0d0) then
 
-               if (dabs(y(i2)).lt.tol) then
+               if (dabs(y(i2)).lt.nopt(5)) then
                   y(i2) = 0d0
                else 
                   cycle
@@ -6024,23 +6036,23 @@ c                                 get new gamma's
          if (nit.gt.240.and.iwarn.lt.100) then
 
              write (*,'(a,2(g12.6,1x))') 
-     *            'ugga wugga not converging T,P:',t,p
+     *            'ugga rksi4 not converging T,P:',t,p
 
          else if (iwarn.lt.100) then
 
              write (*,'(a,5(g12.6,1x))') 
-     *            'ugga wugga not valid solution T,P:',t,p,x
+     *            'ugga rksi4 not valid solution T,P:',t,p,x
              
-
          end if 
 
          iwarn = iwarn + 1
-         if (iwarn.eq.100) call warn (53,t,0,'RKSI4')
+    
+         if (iwarn.eq.100) call warn (49,t,0,'RKSI4')
 
-            fh2o = 1d99
-            fco2 = 1d99
+         fh2o = 1d99
+         fco2 = 1d99
 
-            return 
+         return 
 
       end if 
 c                                lnK_3 => SiO = Si + O, shornikov H_SiO 
@@ -6074,18 +6086,19 @@ c fco2 - ln(fSi)
 
 c derivation and data sources in maple work sheet Si-O_rk5_R=R_speciation.mws
 c                                 JADC 6/12
+c the Si-O2_rk4_v1_speciation.mws sheet for rksi4a may be more rational.
 c----------------------------------------------------------------------
       implicit none 
 
       include 'perplex_parameters.h'
 
-      integer iavg, ins(5), isp, nit, i1, i2, i3, i4, i5, icon, i, ir, 
-     *        jns(1), iwarn 
+      integer iavg, ins(5), isp, nit, i1, i2, i3, i4, i5, i,  
+     *        itic, igood, ibad
 
-      logical bad, henry
+      logical bad
 
-      double precision c1,c2,c3,rat,rp1,rm1,oy(nsp),
-     *                 r2p1,r2m1,oldy,lnk1,lnk2,lnk3,dquart
+      double precision c1,c2,c3,rat,rp1,rm1,nsi,no,oymin,nymin,oy(nsp),
+     *                 r2p1,r2m1,lnk1,lnk2,lnk3,dquart,oymax,nymax
 
       external dquart 
 
@@ -6109,14 +6122,15 @@ c----------------------------------------------------------------------
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
-      save isp, ins, i1, i2, i3, i4, i5, iwarn 
-      data isp, ins, i1, i2, i3, i4, i5, iwarn/5, 14, 13, 12, 7, 15, 
-     *                                            14, 13, 12, 7, 15, 0/
+      save isp, ins, i1, i2, i3, i4, i5, itic, igood, ibad 
+      data isp, ins, i1, i2, i3, i4, i5, itic, igood, ibad 
+     *                                      /5, 14, 13, 12, 7, 15, 
+     *                                          14, 13, 12, 7, 15, 3*0/
 c----------------------------------------------------------------------
 c                                 get pure species fugacities
       call mrkpur (ins, isp)
 
-      if (v(14).lt.1d2.and.xc.gt.0.318.and.xc.lt.0.348) then
+      if (v(14).lt.0*1d2.and.xc.gt.0.326.and.xc.lt.0.340) then
 
          fh2o = 1d99
          fco2 = 1d99
@@ -6156,11 +6170,6 @@ c                                 assume pure O2
 
          return  
 
-      else if (c1.gt.1d3) then
-
-         call rksi4a (lnk1)
-         return
-
       end if 
 c                                 c2 = exp(lnK_2)/p => SiO2 = SiO + O, HSC K 
 c     c2 = dexp((-0.1133204D7/t - 0.5491882D5)/t + 0.1710990D2) / p
@@ -6187,44 +6196,13 @@ c                                 speciation tolerance.
       r2m1    = 2d0*rat - 1d0
 c
       nit = 0 
-      oldy = 0d0
-c                                 choose species for convergence test
-      if (xc.gt.0.5d0) then
-c                                 Si 
-         icon = i5
-
-      else if (xc.lt.0.33333333d0) then 
-
-         if (c1.gt.1d0) then 
-c                                 O2
-            icon = i4
-         else 
-c                                 O
-            icon = i3
-         end if 
-
-c      else if (xc.lt.0.334d0) then 
-c                                 SiO2, may blow at high T?
-c         icon = i1
-
-      else if (xc.le.0.5d0) then
- 
-         if (c2.lt.1d0) then 
-c                                 SiO2  
-            icon = i1 
-         else          
-c                                 SiO  
-            icon = i2
-         end if 
-
-         icon = i1 
-
-      end if 
-
+      oymin = 1d0
+      oymax = 0d0 
       bad = .false. 
 
       do 
-c                                 solve (yo^4 + a3*yo^3 + a2*yo^2 + a1*yo + a0) for yo
+c                                 solve mass balance: yo^4 + a3*yo^3 + a2*yo^2 + a1*yo + a0) 
+c                                 for yo
          a0 = -c2 * c3 / c1 * g(i1) * g(i4) / g(i5) / g(i3) ** 4 
          a1 = c2 * g(i1) * g(i4) * (rm1 * g(i3) / g(i2) + c3 * rp1 
      *            / g(i5)) / g(i3) ** 4 / c1
@@ -6254,14 +6232,13 @@ c                                 first iteration
 c                                 back calculate remaining fractions:
 c                                 K1 => O2: 
          y(i4) = c1/g(i4)*(y(i3)*g(i3))**2
-c                                 mass balance => sio:
+c                                 mass balance => sio: this might be singular
+c                                 at R = 1/2?
          y(i2)  = g(i5)*y(i3)*g(i3)*((2d0 - y(i3))*rat 
      *             - 1d0 + y(i3) + y(i4)) / rat 
      *             / (g(i5)*y(i3)*g(i3) + 2d0*c3*g(i2))
 c
          if (y(i2).le.0d0) then 
-     
-            if (icon.eq.i2) icon = i1 
 
             if (dabs(y(i2)).lt.nopt(5)) then 
 
@@ -6269,27 +6246,32 @@ c
 
             else 
 
+               bad = .true.
+               exit 
+
                do i = 1, isp
                   y(ins(i)) = 0d0
                end do 
-
-               call rksi4 (bad,iavg)
+c                                 two 4 species bailouts
+c                                 4a has Si-O2-SiO-SiO2
+c                                 4 has SiO2-SiO-O-O2,
+c                                 neither is appropriate for reduced 
+c                                 liquids.
+               call rksi4a (lnk1,iavg,bad)
 
                if (bad) then
-                  if (iwarn.lt.100) write (*,*) 'rksi4 failed',t,xc
+ 
                   do i = 1, isp
                      y(ins(i)) = 0d0
                   end do 
-                  call rksi3
+
+                  call rksi4 (bad,iavg)
+     
                end if 
 
                return
 
             end if 
-
-         else if (y(i2).gt.0.5d0) then
-
-             icon = i2
 
          end if 
 c                                  K3 => Si
@@ -6299,62 +6281,65 @@ c                                 closure => sio2:
 
          if (y(i1).lt.0d0) then
 
-            if (icon.eq.i1) icon = i2
-
             if (dabs(y(i1)).lt.nopt(5)) then 
                y(i1) = 0d0
             else 
                bad = .true.
                exit
             end if  
-  
-         else if (y(i1).gt.0.5d0) then
-
-            icon = i1 
 
          end if 
 
-         if ( dabs((oldy-y(icon))/y(icon)).lt.nopt(5)) then
-            exit
-         else if (dabs((oldy-y(icon))/y(icon)).gt.0.25.and.
-     *              oldy.eq.1990d0) then 
-c                                 make the change less violent
-            do i = 1, isp
-c                                 save old y's
-               y(ins(i)) = (0.1*y(ins(i))+0.9*oy(ins(i)))
+         nymin = 1d0
+         nymax = 0d0 
+         no = 0d0      
+c                                 renormalize, this helps! 
+         do i = 1, isp
+            no = no + y(ins(i))
+         end do
 
-            end do              
+         do i = 1, isp
+            y(ins(i)) = y(ins(i))/no
+         end do 
+
+         do i = 1, isp
+
+            if (y(ins(i)).gt.nymax) nymax = y(ins(i))
+            if (y(ins(i)).lt.nymin.and.
+     *          y(ins(i)).gt.0d0) nymin = y(ins(i))
+
+         end do
+
+         nsi = y(14) + y(13) + y(15)
+         no  = 2d0*(y(7)+y(14)) + y(13) + y(12) 
+
+         if ( dabs(nymax-oymax)/nymax.lt.nopt(5).and.
+     *        dabs(nymin-oymin)/nymin.lt.nopt(5).and.
+     *        dabs(xc-nsi/(nsi+no)).lt.nopt(5) ) then
+
+            igood = igood + 1 
+
+            exit 
+
+         else if (nit.gt.60) then  
+ 
+            bad = .true.
+            exit
+ 
+         end if 
+c                                 make change less violent
+c                                 this does help!
+         if (nit.gt.1) then 
+
+            do i = 1, isp
+
+               y(ins(i)) = (0.5*y(ins(i))+0.5*oy(ins(i)))
+
+            end do  
 
          end if 
 c                                 get new gamma's
-         henry = .false.
-
-         do i = 1, isp
-c                                 save old y's
-            oy(ins(i)) = y(ins(i))
-
-            if (y(ins(i)).gt.0.9999d0) then 
-               ir = i
-               henry = .true.
-               exit 
-            end if 
-         end do          
-
-         if (henry) then 
-
-            if (ins(ir).eq.i1*0) then 
-
-            fh2o = 1d99
-            fco2 = 1d99
-            return
-            end if 
-
-            jns(1) = ins(ir)
-            call mrkpur (jns,1)
-            call mrkhen (ins,isp,ins(ir),iavg)
-
-         else if (nit.gt.1.and.v(14).lt.1d2
-     *                    .and.xc.gt.0.310.and.xc.lt.0.356) then
+         if (v(14).lt.0*1d2.and.xc.gt.0.326.and.xc.lt.0.340) then
 
 
             fh2o = 1d99
@@ -6367,43 +6352,24 @@ c                                 save old y's
 
          end if 
 
-         oldy = y(icon)
-
          nit = nit + 1
-
-         if (nit.gt.240.and.iwarn.lt.100) then 
-
-            write (*,*) 'wug'
-
-         end if 
-
-         if (nit.lt.250) cycle
- 
-         bad = .true.
-         exit 
+         oymin = nymin
+         oymax = nymax
+         do i = 1, isp
+            oy(ins(i)) = y(ins(i))
+         end do 
 
       end do 
 
+      itic = itic + 1 
+
       if (bad) then 
 
-         if (nit.gt.240.and.iwarn.lt.100) then
+         ibad = ibad + 1 
 
-            write (*,'(a,2(g12.6,1x))') 
-     *            'ugga wugga not converging T,P:',t,p,xc
-
-          else if (iwarn.lt.100) then 
-
-            write (*,'(a,5(g12.6,1x))') 
-     *            'ugga wugga not valid solution T,P:',t,p,xc
-
-         end if 
-
-         iwarn = iwarn + 1 
-         if (iwarn.eq.100) call warn (53,t,0,'RKSI4')
-
-            fh2o = 1d99
-            fco2 = 1d99
-            return 
+         fh2o = 1d99
+         fco2 = 1d99
+         return 
 
       end if 
 
@@ -6415,9 +6381,15 @@ c                                 save old y's
       else if (y(i1).ne.0d0) then 
          fco2 = lnk2 + lnk3 + dlog(g(i1)*y(i1)/p/(g(i3)*y(i3))**2)
       else
-         write (*,*) 'wugga wugga',t,p,xc,y
+         write (*,*) 'wugga rksi5 ',t,p,xc,y
       end if 
 
+      if (itic.gt.200000) then 
+         itic = 0 
+         write (*,*) 'good,bad:',igood,ibad
+      end if 
+
+c      if (nit.gt.20) write (*,*) 'rk5 long nit',nit
       end
 
       subroutine rkparm (ins, isp)
@@ -6452,11 +6424,9 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
  
-      double precision brk(nsp), ark(nsp), ta, fac 
+      double precision brk(nsp), ark(nsp), ta
 
-      integer ins(*), isp, i, k, choice
- 
-      logical first
+      integer ins(*), isp, i, k
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5  /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -6471,18 +6441,17 @@ c-----------------------------------------------------------------------
      *          174026d2, 133.1d6, 130d6, 136d5 , 631d5,
 c             O, SiO, SiO2, Si, unk:
 c             asio = aco/aco2 * asio2 => 1/16.722 => 424441664.6d0
-     *          174026d2, 424441664.6d0,  7097834092d0, 0d0, 0d0/,
+c bp values for si, sio2
+c     *          174026d2, 424441664.6d0,  7097834092d0, 2348660042d0, 
+c max a values for si, sio2
+     *          174026d2, 424441664.6d0,  7500726468d0, 3767833334d0, 
+     *          0d0/,
      *     brk /14.6,  29.7,  27.38, 29.681, 15.7699, 29.94,
      *          22.07,  37.4,  43d0,  23.42,   18.84, 
 c             O, SiO, SiO2, Si, unk:
 c             bsio = bco/bco2*bsio2 => 1/4.83
 c             bo  ~ bo2
      *          22.07, 5.148732998d0, 24.85507977, 10.35765058, 0d0/
-
-      save first, choice
-      data first, choice/.true.,0/
-
-c      common/ cfac /fac
 c----------------------------------------------------------------------
 c      if (first) then 
 c         write (*,*) 'enter fac'
@@ -6504,7 +6473,7 @@ c                                 MRK dispersion term for H2O
 c                                 MRK dispersion term for CO2
             a(2) =  92935540d0 + t*(-82130.73d0 + 21.29d0*t)
 
-         else if (i.eq.14.and.choice.eq.0) then 
+         else if (i.eq.14) then 
 c                                 MRK dispersion term for SiO2 
             if (t.lt.3246.750778) then 
 
@@ -6537,23 +6506,6 @@ c                                 MRK dispersion term for Si
 
       end 
 
-      double precision function quart (x)
-c----------------------------------------------------------------------
-c function quart gives the value of a 4th order polynomial for x
-c coefficients if common block coeffs
-c                                                  JADC, July 26, 2012. 
-c----------------------------------------------------------------------
-      implicit none
-
-      double precision x
-
-      double precision a0,a1,a2,a3 
-      common/ coeffs /a0,a1,a2,a3 
-c----------------------------------------------------------------------
-      quart = a0 + x*(a1 + x*(a2 + x*(a3 + x)))
-
-      end 
-
       double precision function dquart (x)
 c----------------------------------------------------------------------
 c function quart gives the value of a 4th order polynomial for x divided
@@ -6571,15 +6523,19 @@ c----------------------------------------------------------------------
 
       fx = a1 + x*(2d0*a2 + x*(3d0*a3 + 4d0*x))
 
-      dquart = -f/fx
+      if (fx.ne.0d0) then 
+         dquart = -f/fx
+      else
+         dquart = 0d0
+      end if 
 
       end 
 
       double precision function d32 (x)
 c----------------------------------------------------------------------
-c function quart gives the value of a0 + a2*x + x^(1/2)*(a1 + x)
+c function d32 gives the value of (x + a2)*x + (a3*x  + a1)*x^(1/2) + a0
 c by it's derivative. coefficients if common block coeffs
-c                                                  JADC, July 26, 2012. 
+c                                                  JADC, Aug 31, 2012. 
 c----------------------------------------------------------------------
       implicit none
 
@@ -6588,11 +6544,16 @@ c----------------------------------------------------------------------
       double precision a0,a1,a2,a3 
       common/ coeffs /a0,a1,a2,a3 
 c----------------------------------------------------------------------
+      if (x.eq.0d0) then 
+         d32 = 0d0
+         return
+      end if 
+
       x12 = dsqrt(x)       
 
-      f  = a0 + a2*x + x12*(a1 + x)
+      f  = (x + a2)*x + (a3*x  + a1)*x12 + a0
 
-      fx = a2 + (a1/x12 + 3d0*x12)/2d0
+      fx = 2d0*x + a2 + (3d0*a3*x12 + a1/x12)/2d0
 
       d32 = -f/fx
 
@@ -6714,13 +6675,15 @@ c                                 grad points to an out of range solution
           
          if (dabs(x-oldx)/x.lt.tol) exit
 
-         if (nit.gt.250) then 
+         if (nit.gt.1000) then 
 
             bad = .true.
             exit 
 
          else if (isnan(x)) then 
+
             write (*,*) 
+
          end if 
 
          nit = nit + 1
@@ -6861,12 +6824,12 @@ c                                 get new gamma's
           if (nit.gt.240) then
 
              write (*,'(a,2(g12.6,1x))') 
-     *            'ugga wugga not converging T,P:',t,p,xc
+     *            'ugga rksi30 not converging T,P:',t,p,xc
 
           else 
 
              write (*,'(a,5(g12.6,1x))') 
-     *            'ugga wugga not valid solution T,P:',t,p,xc
+     *            'ugga rksi30 not valid solution T,P:',t,p,xc
 
           end if 
 
@@ -7131,7 +7094,7 @@ c                                 get new gamma's
 
       end
 
-      subroutine rksi4a (lnk1)
+      subroutine rksi4a (lnk1,iavg,bad)
 c----------------------------------------------------------------------
 c subroutine to compute speciation and fugacites in SiO2-SiO-Si-O2 silica 
 c vapor, bailout routine for rksi5.
@@ -7142,20 +7105,20 @@ c xc   - bulk Si/(Si+O) (molar)
 c fh2o - ln(fO)
 c fco2 - ln(fSi)
 
-c derivation and data sources in maple work sheet Si-O_rk5_R=R_speciation.mws
-c                                 JADC 6/12
+c derivation and data sources in maple work sheet Si-O2_rk4_v1_speciation.mws 
+c                                 JADC 9/12
 c----------------------------------------------------------------------
       implicit none 
 
       include 'perplex_parameters.h'
 
-      integer iavg, ins(4), isp, nit, i1, i2, i3, i4, icon, i, ir, 
-     *        iwarn 
+      integer iavg, ins(4), isp, nit, i1, i2, i3, i4, i, ir, 
+     *        ibad, igood, imed, itic  
 
       logical bad, henry
 
-      double precision c1,c2,rat,rp1,rm1,oy(nsp),
-     *                 r2m1,oldy,lnk1,lnk2,lnk3,d32
+      double precision c1,c2,c12,rat,rp1,rm1,nsi,no,oymin,nymin,oy(nsp),
+     *                 r2m1,r2p1,r2,a4,lnk1,lnk2,lnk3,d32,oymax,nymax
 
       external d32 
 
@@ -7179,55 +7142,44 @@ c----------------------------------------------------------------------
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
-      save isp, ins, i1, i2, i3, i4, iwarn 
-      data isp, ins, i1, i2, i3, i4, iwarn/4, 14, 13, 15, 7,
-     *                                        14, 13, 15, 7, 0/
+      save isp, ins, i1, i2, i3, i4, ibad, igood, imed, itic 
+      data isp, ins, i1, i2, i3, i4, ibad, igood, imed, itic/
+     *                                   4, 14, 13, 15, 7,
+     *                                      14, 13, 15, 7, 4*0/
 c----------------------------------------------------------------------
 c                                 get pure species fugacities
       call mrkpur (ins, isp)
-c
-      iavg = 1
 c                                 lnk_2 from shornikov enthalpy
       lnk2 = (-1.133204d+06/t - 5.491882d+04)/t + 1.710990d+01
 c                                 lnK_3 => SiO = Si + O, shornikov H_SiO 
       lnk3 = (1.906315d6/t - 1.005993d5)/t + 1.664069d1
 c                                 c1 => 2 sio2 = 2 sio + o2
-      c1 = dexp(lnk2+lnk1)/p
+      c1 = dexp(2d0*lnk2+lnk1)/p
 c                                 c2 => 2 sio = 2 si + o2
-      c2 = dexp(lnk3+lnk1)/p
-
+      c2 = dexp(2d0*lnk3+lnk1)/p
 c                                 some inner loop constants
 c                                 rat = nsi/no = xc/(1-xc) 
       rat   = xc/(1d0-xc)
+      r2    = 2d0 * rat 
       rm1   = rat - 1d0
       rp1   = rat + 1d0 
-      r2m1  = 2d0*rat - 1d0
+      r2m1  = r2 - 1d0
+      r2p1  = r2 + 1d0
+      c12   = dsqrt(c1*c2)
 c
-      nit = 0 
-      oldy = 0d0
-c                                 choose species for convergence test
-      if (xc.gt.0.5d0) then
-c                                 Si 
-         icon = i3
-
-      else if (xc.lt.0.33333333d0) then 
-c                                 O2
-         icon = i4
-
-      else if (xc.le.0.5d0) then
-
-         icon = i1 
-
-      end if 
-
+      nit = 0  
       bad = .false. 
+      oymin = 1d0
+      oymax = 0d0 
 
       do 
-c                                 solve (yo2^(3/2) + a2*yo2 + a1*yo2^(1/2) + a0) for yo
-         a0 = rm1 * g(i1) * dsqrt(c1 / g(i4)) / g(i2)
-         a1 = r2m1 + 2d0 * rat * c1 * g(i1) / g(i4) / g(i3)
-         a2 = rp1 * g(i1) * sqrt(c1 / g(i4)) / g(i2)
-c                                 monatomic O     
+c                                 solve (yo2^2 + a3*yo2^(3/2) + a2*yo2 + a1*yo2^(1/2) + a0) for yo2
+         a4 = g(i1) / dsqrt(g(i4)/c1) / g(i2)
+         a0 = -g(i1) / g(i4) * c12 / g(i3)
+         a1 = rm1 * a4
+         a2 = -r2p1 * a0  + r2m1
+         a3 = rp1 * a4
+  
          call newton (d32,1d0,0d0,1d-12,y(i4),bad)
 c                                 may not find the root if switch on 
 c                                 first iteration
@@ -7245,41 +7197,100 @@ c                                 first iteration
             exit 
 
          end if 
-c                                 back calculate remaining fractions:
-c                                 sio: closure 
-         y(i2) = (1d0 - y(i4)) / ( dsqrt(y(i4)*g(i4)/c1) * g(i2) / g(i1)
-     *         + 1d0 + dsqrt(g(i4)*c2/y(i4)) * g(i2) / g(i3) / g(i4))
-
-         if (y(i2).le.0d0) then 
-
-            bad = .true.
-            exit 
-
-         end if 
-c                                 sio2:
-         y(i1) = dsqrt(y(i4)*g(i4)/c1) * g(i2)*y(i2)/g(i1)
-c                                 si:
+c                                 back calculate remaining fractions, use
+c                                 mass balance and equilibrium constants to assure > 0.
+c                                 sio: mass balance is singular for y(sio) at R = 1
+c                                 and singular for y(sio2) at R = 1/2. 
+c                                 use closure instead:
+         y(i2) = dsqrt(y(i4))*(1d0-y(i4))/(y(i4)*dsqrt(g(i4)/c1) 
+     *   * g(i2)/g(i1) + dsqrt(y(i4)) + dsqrt(c2/g(i4))*g(i2)/g(i3))
+c                                 sio2: equilibrium
+         y(i1) = dsqrt(y(i4) * g(i4) / c1) * g(i2) * y(i2) / g(i1)
+c                                 si: equilibrium
          y(i3) = dsqrt(c2/y(i4)/g(i4)) * g(i2)*y(i2)/g(i3)
-
-
-         if ( dabs((oldy-y(icon))/y(icon)).lt.nopt(5)) exit
-c                                 get new gamma's
+c                                 calculate molar totals to test for
+c                                 convergence
          henry = .false.
+         nymin = 1d0
+         nymax = 0d0 
+         no = 0d0      
 
          do i = 1, isp
-c                                 save old y's
-            oy(ins(i)) = y(ins(i))
+            no = no + y(ins(i))
+            if (y(ins(i)).lt.0d0.or.no.gt.2d0) then 
+               write (*,*) 'wock'
+            end if 
+         end do
 
-            if (y(ins(i)).gt.0.9999d0) then 
+         do i = 1, isp
+            y(ins(i)) = y(ins(i))/no
+         end do 
+
+         do i = 1, isp
+
+            if (y(ins(i)).gt.nymax) nymax = y(ins(i))
+            if (y(ins(i)).lt.nymin.and.
+     *          y(ins(i)).gt.0d0) nymin = y(ins(i))
+
+            if (y(ins(i)).gt.1d0-nopt(5).and.y(ins(i)).le.1d0) then 
                ir = i
                henry = .true.
                exit 
             end if 
-         end do          
 
-         if (nit.gt.1.and.v(14).lt.1d2
-     *                    .and.xc.gt.0.310.and.xc.lt.0.356) then
+         end do
 
+         nsi = y(14) + y(13) + y(15)
+         no  = 2d0*(y(7)+y(14)) + y(13)  
+
+         do i = 1, isp
+
+            if (y(ins(i)).gt.nymax) nymax = y(ins(i))
+            if (y(ins(i)).lt.nymin.and.
+     *          y(ins(i)).gt.0d0) nymin = y(ins(i))
+
+         end do
+
+         if ( dabs(nymax-oymax)/nymax.lt.nopt(5).and.
+     *        dabs(nymin-oymin)/nymin.lt.nopt(5).and.
+     *        dabs(xc-nsi/(nsi+no)).lt.nopt(5).and.
+     *        dabs(nsi+y(7)-1d0).lt.nopt(5) ) then
+
+            igood = igood + 1
+
+            exit 
+
+         else if (nit.gt.400.and.
+     *        dabs(nymax-oymax)/nymax.lt.1d-3.and.
+     *        dabs(nymin-oymin)/nymin.lt.1d0.and.
+     *        dabs(xc-nsi/(nsi+no)).lt.nopt(5).and.
+     *        dabs(nsi+y(7)-1d0).lt.nopt(5) ) then
+          
+            imed = imed + 1
+
+            exit 
+
+         else if (nit.gt.60) then 
+
+            bad = .true.
+            exit           
+
+         end if 
+c                                 make change less violent
+c                                 this does help!
+         if (nit.gt.1.and.
+     *       dabs(nymax-oymax)/nymax.gt.1d-3.or.
+     *       dabs(nymin-oymin)/nymin.gt.1d0) then 
+
+            do i = 1, isp
+
+               y(ins(i)) = (0.5*y(ins(i))+0.5*oy(ins(i)))
+
+            end do  
+
+         end if 
+c                                 get new gamma's
+         if (v(14).lt.0*1d2.and.xc.gt.0.326.and.xc.lt.0.340) then
 
             fh2o = 1d99
             fco2 = 1d99
@@ -7291,46 +7302,49 @@ c                                 save old y's
 
          end if 
 
-         oldy = y(icon)
-
          nit = nit + 1
-
-         if (nit.gt.240.and.iwarn.lt.100) then 
-
-            write (*,*) 'wug'
-
-         end if 
-
-         if (nit.lt.250) cycle
- 
-         bad = .true.
-         exit 
+         oymin = nymin
+         oymax = nymax
+         do i = 1, isp
+            oy(ins(i)) = y(ins(i))
+         end do 
 
       end do 
 
+      itic = itic + 1
+
       if (bad) then 
 
-         if (nit.gt.999.and.iwarn.lt.100) then
+         ibad = ibad + 1
 
-            write (*,'(a,2(g12.6,1x))') 
-     *            'ugga wugga rk4a not converging T,P:',t,p,xc
+c         if (nit.ge.60.and.iwarn.lt.100) then
 
-          else if (iwarn.lt.100) then 
+c            write (*,'(a,2(g12.6,1x))') 
+c     *            'ugga wugga rk4a not converging T,P:',t,p,xc
 
-            write (*,'(a,5(g12.6,1x))') 
-     *            'ugga wugga rk4a not valid solution T,P:',t,p,xc
+c         else if (iwarn.lt.1e6) then 
 
-         end if 
+c            write (*,'(a,5(g12.6,1x))') 
+c     *            'ugga wugga rk4a not valid solution T,P:',t,p,xc
 
-         iwarn = iwarn + 1 
+c         end if 
 
-         if (iwarn.eq.100) call warn (53,t,0,'RKSI4')
+c         iwarn = iwarn + 1 
+
+c         if (iwarn.eq.100) call warn (49,t,0,'RKSI4a')
 
          fh2o = 1d99
          fco2 = 1d99
          return 
 
       end if 
+
+      if (itic.gt.200) then
+         write (*,*) 'rk4a: igood,imed,ibad: ',igood,imed,ibad
+         itic = 0
+      end if 
+
+c      if (nit.gt.20) write (*,*) 'rk4a long it:',nit
 
       fco2 = dlog(p*g(i3)*y(i3))
       fh2o = (dlog(p*g(i4)*y(i4)) - lnk1) / 2d0

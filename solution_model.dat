@@ -5137,25 +5137,23 @@ end_excess_function
                                     | WARNING! fractions can only be used in the site
                                     | fraction definitions, do not use fractions to specify
                                     | site multiplicities in the above line.
+z(m2a,ca)   = 1 di + 1 hed + 1 cats
 
+2 0.5                               | 2 species on m2b, mult. = 1/2
+z(m2b,na)   = 1 jd + 1 acm
 
-z(m2a,ca) = 1 di + 1 hed + 1 cats
-
-2 0.5                                 2 species on m2b, mult. = 1/2
-z(m2a,na) = 1 jd + 1 acm
-
-4 0.5                                 4 species on m1a, mult = 1/2
-z(m1a,mg) = 1 di 
+4 0.5                               | 4 species on m1a, mult = 1/2
+z(m1a,mg)   = 1 di 
 z(m1a,fe2+) = 1 hed
 z(m1a,fe3+) = 1 acm
 
-4 0.5                                 4 species on m1b, mult = 1/2
-z(m1b,al) = 1 jd + 1 cats
-z(m1a,fe2+) = 1 hed
-z(m1a,fe3+) = 1 acm
+4 0.5                               | 4 species on m1b, mult = 1/2
+z(m1b,al)   = 1 jd + 1 cats
+z(m1b,fe2+) = 1 hed
+z(m1b,fe3+) = 1 acm
 
-2 1.0                                 2 species on T1 (perhaps Al should be disordered over T1-T2?)
-z(t1,al)  = 1 cats
+2 1.0                               | 2 species on T1 (perhaps Al should be disordered over T1-T2?)
+z(t1,al)    = 1 cats
 
 end_of_model               | end of model keyword
                       --------------------------------------------------------
