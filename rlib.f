@@ -9651,9 +9651,8 @@ c                                 if dgdy < 0 must be fully ordered
 c                                 (not really, non-zero w could make
 c                                 a zero at intermediate y).
       if (odg.lt.0d0) then 
-c                                 add hp's fudgefactor term 
-         c1 = (n+1d0)/c0
-         g = n*rt*( c1*dlog(c1) + (1d0-c1)*dlog(1d0-c1) )
+c                                 fully ordered (y=1) 
+         y = 1d0 
 
       else 
 c                                 initialize at halfway point
@@ -9675,18 +9674,11 @@ c                                 crossed the zero, flip the search
 
             else if (dabs(dy).lt.nopt(5)) then
 c                                 refined to tolerance
-               c1 = (n+y)/c0
-               c2 = (1-y)*n/c0
-               g = w*y*(1-y) + (1d0-y)*h
-     *            - rt*(-c2*dlog(c2)-(1d0-c2)*dlog(1d0-c2)
-     *                 - n*(c1*dlog(c1)+(1d0-c1)*dlog(1d0-c1)))
                exit
 
             else if (y.le.nopt(5)) then 
 c                                 fully disordered, y=0, c1 = c2
-               c1 = n/c0
-               g = w + h 
-     *             - rt*((n+1d0)*(-c1*dlog(c1)+(c1-1d0)*dlog(1d0-c1)))
+               y = 0d0
                exit 
 
             end if 
@@ -9695,6 +9687,13 @@ c                                 fully disordered, y=0, c1 = c2
 
       end if 
 
+      c1 = (n+y)/c0
+      if (c1.ne.1d0) g = rt*n*(c1*dlog(c1)+(1d0-c1)*dlog(1d0-c1))
+      c2 = (1d0-y)*n/c0
+      if (c2.ne.1d0.and.c2.ne.0d0) g = g + rt*(c2*dlog(c2) 
+     *                                   + (1d0-c2)*dlog(1d0-c2))
+      g = g + (1d0-y)*( w*y + h)
+     *            
       end 
 
       double precision function dgdy (h,w,n,f,y,rt)

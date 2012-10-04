@@ -1679,10 +1679,10 @@ c                                 transition models. ideal gas alpha = 1/t
       props(13,jd) = alpha
       props(14,jd) = beta 
       props(10,jd) = rho  
-c                                 heat capacity ratio (cp/cv)
-      props(28,jd) = 1d0/(1d0 - gpt**2/gpp/gtt)
 
       if (.not.sick(jd).and..not.rxn.and.v.gt.0d0) then
+c                                 heat capacity ratio (cp/cv)
+         props(28,jd) = 1d0/(1d0 - gpt**2/gpp/gtt)
 c                                 gruneisen parameter
          props(3,jd) = v/t/(gtt*gpp/gpt-gpt)
 c                                 aug 28, 2007, removed check on gruneisen to 

@@ -6321,7 +6321,7 @@ c                                 renormalize, this helps!
 
             exit 
 
-         else if (nit.gt.60) then  
+         else if (nit.gt.6000) then  
  
             bad = .true.
             exit
