@@ -9688,12 +9688,20 @@ c                                 fully disordered, y=0, c1 = c2
       end if 
 
       c1 = (n+y)/c0
-      if (c1.ne.1d0) g = rt*n*(c1*dlog(c1)+(1d0-c1)*dlog(1d0-c1))
+
+      if (c1.lt.1d0-nopt(5).and.c1.gt.nopt(5)) then 
+         g = rt*n*(c1*dlog(c1)+(1d0-c1)*dlog(1d0-c1))
+      else  
+         g = 0d0 
+      end if 
+
       c2 = (1d0-y)*n/c0
-      if (c2.ne.1d0.and.c2.ne.0d0) g = g + rt*(c2*dlog(c2) 
-     *                                   + (1d0-c2)*dlog(1d0-c2))
+
+      if (c2.lt.1d0-nopt(5).and.c2.gt.nopt(5)) 
+     *   g = g + rt*(c2*dlog(c2) + (1d0-c2)*dlog(1d0-c2))
+
       g = g + (1d0-y)*( w*y + h)
-     *            
+      
       end 
 
       double precision function dgdy (h,w,n,f,y,rt)
