@@ -59,7 +59,8 @@ c-----------------------------------------------------------------------
       else if (ifug.eq.8) then  
          call cohhyb (fo2)
       else if (ifug.eq.9) then 
-         call cohfit (fo2)
+         write (*,*) 'EoS 9 disabled'
+         stop
       else if (ifug.eq.10) then  
          call hocgra (fo2)
       else if (ifug.eq.11) then 
@@ -142,7 +143,7 @@ c---------------------------------------------------------------------
      *  'X(CO2) Hybrid Haar et al 1979/CORK (TRKMRK)',
      *  'f(O2/CO2)-f(S2) Graphite buffered COHS MRK fluid',
      *  'f(O2/CO2)-f(S2) Graphite buffered COHS hybrid-EoS fluid',
-     *  'Max X(H2O) GCOH fluid Cesare & Connolly 1993',
+     *  'Disabled EoS (cohfit)',
      *  'X(O) GCOH-fluid hybrid-EoS Connolly & Cesare 1993',
      *  'X(O) GCOH-fluid MRK Connolly & Cesare 1993'/
 
@@ -178,11 +179,12 @@ c---------------------------------------------------------------------
 10    write (*,1000)
 
       do i = 0, nrk
+         if (i.eq.9) cycle
          write (*,1070) i,rkname(i)
       end do 
 
       read (*,*,iostat=ier) ifug
-      if (ifug.gt.nrk) ier = 1
+      if (ifug.gt.nrk.or.ifug.eq.9) ier = 1
       call rerror (ier,*10)
 
       if (ifug.eq.12.or.ifug.eq.17) then
@@ -230,8 +232,6 @@ c                                 variable:
             call warn (172,dlnfo2,ifug,'RFLUID')
             goto 10
          end if
-      
-         if (ifug.eq.9) goto 99 
 c                                 change default buffer
 20       write (*,1020)
          read (*,1030) y
@@ -1211,85 +1211,6 @@ c
  
       end
 
-      subroutine cohfit (fo2)
-c----------------------------------------------------------------------
-      implicit none
-
-c subroutine which returns ln(f2o,fco2) from functions fit to the
-c values obtained from cohhyp for fo2 => xh2o max.
-
-c the functions are of the form:
-
-c ln(f) = a*t + b*p + c/t/t + d*p*t + e*p*p + f*t*t + g*sqrt(p*t)
-c       + h*t**3 + i*p**3 + j*p/t/t + k ln t + l ln p 
-c       + m/p**2 + n*p*p/t + o*p/t + pp*t/p + q*t*t/p 
-c       + rp*t*ln(t) + s*p*ln(t) + tp
-
-      double precision fo2,ah,bh,ch,dh,eh,fh,gh,hh,ih,jh,kh,lh,mh,nh,
-     *                 oh,ph,qh,rh,sh,th,ac,bc,cc,dc,ec,fc,gc,hc,ic,jc,
-     *                 kc,lc,mc,nc,oc,pc,qc,rc,sc,tc,ao,bo,co,do,eo,fo,
-     *                 go,ho,io,jo,ko,lo,mo,no,oo,po,qo,ro,so,to,lp,
-     *                 spt,p2,t2,lt
-
-      double precision fh2o,fco2
-      common/ cst11 /fh2o,fco2
-
-      double precision p,t,xc,u1,u2,tr,pr,r,ps
-      common/ cst5 /p,t,xc,u1,u2,tr,pr,r,ps
- 
-      save ah,bh,ch,dh,eh,fh,gh,hh,ih,jh,kh,lh,mh,nh,oh,ph,qh,rh,sh,th
-
-      save ac,bc,cc,dc,ec,fc,gc,hc,ic,jc,kc,lc,mc,nc,oc,pc,qc,rc,sc,tc
-
-      save ao,bo,co,do,eo,fo,go,ho,io,jo,ko,lo,mo,no,oo,po,qo,ro,so,to
-
-      data th,ah,bh,ch,dh,eh,fh,gh,hh,ih,jh,kh,lh,mh,nh,oh,ph,qh,rh,sh/
-     *-121.5649d0  , -.5498738d-01, -.8052569d-02, -169883.7d0  ,
-     *-.5150895d-06, 0.2909217d-08, 0.1484028d-04, 0.1595388d-02,
-     *-.2286740d-08, -.4611758d-14, -118.8630d0  ,  24.90956d0  ,
-     *-1.283717d0  ,  126339.8d0  , -.1875289d-05,  1.141895d0  ,
-     *-1.661033d0  , 0.7550874d-03, 0.9051986d-03, 0.1093571d-02/
-
-      data tc,ac,bc,cc,dc,ec,fc,gc,hc,ic,jc,kc,lc,mc,nc,oc,pc,qc,rc,sc/
-     *-68.24622d0  , -.2797826d-01, -.5658539d-02, -221752.4d0  ,
-     *-.2227993d-06, -.4785067d-08, -.2949820d-05, -.3942711d-02,
-     *0.8136084d-09, 0.6607593d-13, -126.2944d0  ,  12.42835d0  ,
-     *-.1328584d0  , -168530.0d0  , -.1849930d-05,  1.058393d0  ,
-     * 2.131351d0  , -.9849674d-03, 0.3118428d-02, 0.8233771d-03/
- 
-      data to,ao,bo,co,do,eo,fo,go,ho,io,jo,ko,lo,mo,no,oo,po,qo,ro,so/
-     *-804.2316d0  , -.1652445d0  , -.5376252d-02, -4037433d0    ,
-     *-.2091203d-06, -.4638105d-08, 0.3753368d-04, -.3853404d-02,
-     *-.5442896d-08, 0.6484263d-13, -121.6754d0  ,  127.5998d0  ,
-     *-.1486220d0  , -164866.6d0  , -.1863209d-05, 0.9622612d0  ,
-     *  2.097447d0 , -.9838123d-03, 0.3077560d-02, 0.7829503d-03/
-
-      lp = dlog(p)
-      lt = dlog(t)
-      spt = dsqrt(p*t)
-      p2 = p*p
-      t2 = t*t
-  
-      fh2o = th + t*(ah + dh*p + t*(fh + hh*t) + (ph+qh*t)/p +
-     *               rh*lp) 
-     *          + p*(bh + p*(eh + ih*p) + sh*lt)
-     *          + p/t*(jh/t + nh*p + oh)
-     *          + kh*lt + lh*lp + ch/t2 + gh*spt + mh/p2
-
-      fco2 = tc + t*(ac + dc*p + t*(fc + hc*t) + (pc+qc*t)/p +
-     *               rc*lp) 
-     *          + p*(bc + p*(ec + ic*p) + sc*lt)
-     *          + p/t*(jc/t + nc*p + oc)
-     *          + kc*lt + lc*lp + cc/t2 + gc*spt + mc/p2
-
-      fo2  = to + t*(ao + do*p + t*(fo + ho*t) + (po+qo*t)/p +
-     *               ro*lp) 
-     *          + p*(bo + p*(eo + io*p) + so*lt)
-     *          + p/t*(jo/t + no*p + oo)
-     *          + ko*lt + lo*lp + co/t2 + go*spt + mo/p2
-
-      end
-
       subroutine hocgra (fo2)
 c----------------------------------------------------------------------
 c  program to calculate GCOH fluid properties as a function of XO 
@@ -1391,73 +1312,6 @@ c                                 solve for xco
       fco2 = 2d0*(dlog(gco*p*xco) - kco)
 
 99    vol = vol + xh2o * vm(1) + xco2 * vm(2) + xch4 * vm(3)
-
-      end
-
-      subroutine nogcoh (fo2)
-c----------------------------------------------------------------------
-c  program to calculate COH fluid properties for a specified speciation 
-c  using HSMRK/MRK hybrid see Connolly and Cesare (1992) for details.
-c----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      integer ins(nsp)
-
-      double precision ghch4,ghh2o,ghco2,fo2,kh2o,kco2,kco,kch4
-
-      double precision p,t,xo,u1,u2,tr,pr,r,ps
-      common / cst5 /p,t,xo,u1,u2,tr,pr,r,ps
-     
-      double precision vol
-      common/ cst26 /vol
-
-      double precision gmh2o,gmco2,gmch4,vm
-      common/ cstchx /gmh2o,gmco2,gmch4,vm(3)
-
-      double precision xh2o,xco2,xco,xch4,xh2,xh2s,xo2,xso2,xcos,xn2,
-     *                 xnh3,xot,xsio,xsio2,xsi,xunk,
-     *                 gh2o,gco2,gco,gch4,gh2,gh2s,go2,gso2,gcos,gn2,
-     *                 gnh3,go,gsio,gsio2,gsi,gunk,v
-      common / cstcoh /xh2o,xco2,xco,xch4,xh2,xh2s,xo2,xso2,xcos,xn2,
-     *                 xnh3,xot,xsio,xsio2,xsi,xunk,
-     *                 gh2o,gco2,gco,gch4,gh2,gh2s,go2,gso2,gcos,gn2,
-     *                 gnh3,go,gsio,gsio2,gsi,gunk,v(nsp)
-
-      double precision fh2o,fco2
-      common/ cst11 /fh2o,fco2
-
-      integer ibuf,hu,hv,hw,hx   
-      double precision dlnfo2,elag,gz,gy,gx
-      common/ cst100 /dlnfo2,elag,gz,gy,gx,ibuf,hu,hv,hw,hx
-
-      save ins
-
-      data ins/ 1,2,3,4,5,11*0/
- 
-      call setup (ghh2o,ghco2,ghch4,kh2o,kco2,kco,kch4)
-
-      call mrkmix (ins, 5, 1)
-
-      gh2o = ghh2o * gh2o
-      gco2 = ghco2 * gco2 
-      gch4 = ghch4 * gch4 
-
-      goto (91), hu
-
-      fh2o = dlog(gh2o*p*xh2o)
-      fco2 = dlog(gco2*p*xco2)
-      fo2 = 2d0*(dlog(gco*p*xco) - kco)
-
-      goto 99
-
-91    fh2o = dlog(gh2*p*xh2)
-      fco2 = 2d0*(dlog(gco*p*xco) - kco)
-
-99    vol = vol + xh2o * vm(1)
-     *          + xco2 * vm(2)
-     *          + xch4 * vm(3)
 
       end
 

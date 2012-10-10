@@ -291,10 +291,10 @@ c-----------------------------------------------------------------------
 
       character specie(nsp)*4, y*1, n4name*100, title*100, tags(26)*14
 
-      integer ier, igo, ins(nsp), i, isp, j, k, kmax, count
+      integer ier, igo, ins(nsp), i, isp, j, k, l, kmax, count
 
-      double precision nc, nh, no, ns, nn, nsi, tentoe, fo2, fs2, xfh, 
-     *                 xfc, ag, tot, totx, var(l2), f, prop(40), nel
+      double precision nc, nh, no, ns, nn, nsi, tentoe, fo2, fs2, 
+     *                 ag, tot, totx, var(l2), f, prop(40), nel, vdif
 
       double precision fhc
       common / cst11 /fhc(2)
@@ -859,8 +859,6 @@ c                                 variables
                   do k = 1, ipot 
                      prop(k) = var(iv(k))
                   end do 
-c
-                  prop(ipot+1) = vol
 c                                 species fractions/fugacities
                   if (ifug.le.6 .or.ifug.eq.14.or.ifug.eq.21.or.
      *                ifug.eq.22.or.ifug.eq.25) then 
@@ -885,8 +883,6 @@ c                                 xco2 EoS's
                   else 
 c                                 assume multispecies fluids                
                      do k = 1, isp
-
-                        f = g(ins(k))*p*xs(ins(k))
 
                         if (log.and.f.le.0d0) then  
                            prop(ipot+1+k) = nopt(7)
@@ -923,6 +919,44 @@ c                                 atomic fractions
 
                   prop(count-1) = fo2/tentoe
                   prop(count)   = fs2/tentoe
+
+                  if (ifug.lt.4.or.ifug.eq.5.or.ifug.eq.6.or.ifug.eq.18.
+     *                or.ifug.eq.14.or.ifug.gt.20.and.ifug.lt.24) then
+c                                  finite difference estimate for volume:
+                     vdif = 0d0
+                     p = p + 0.5d0
+                     f = 1d0 
+                     do l = 1, 2
+                        call cfluid (fo2,fs2)
+                        vdif = vdif + f*((1d0-xo)*fhc(1) + xo*fhc(2))
+                        f = -1d0
+                        p = p - 1d0
+                     end do 
+
+                     vol = 83.14d0*t*vdif
+
+                  else if (ifug.eq.4.eq.ifug.eq.13.or.ifug.eq.15) then
+c                                 use analytic vol
+                  else 
+c                                 compute volume by finite difference
+                     vdif = 0d0
+                     p = p + 0.5d0
+                     f = 1d0 
+                     do l = 1, 2
+                        call cfluid (fo2,fs2)
+                        do k = 1, isp
+                           vdif = vdif + 
+     *                         f*xs(ins(k))*dlog(g(ins(k))*p*xs(ins(k)))
+                        end do 
+                        f = -1d0
+                        p = p - 1d0
+                     end do 
+
+                     vol = 83.14d0*t*vdif
+
+                  end if 
+
+                  prop(ipot+1) = vol
 
                   write (n4,'(40(g14.7,1x))') (prop(k),k=1,count)
      
@@ -1060,8 +1094,6 @@ c                                  call fluid routine:
                write (*,1280) p,t
 c                                  output results:
                igo = 1
-               xfh = fhc(1)
-               xfc = fhc(2)
                fhc(1) = dexp(fhc(1)) 
                fhc(2) = dexp(fhc(2)) 
                fo2 = fo2 / tentoe
@@ -1070,14 +1102,18 @@ c                                  output results:
      *            .ifug.eq.14.or.ifug.gt.20.and.ifug.lt.24) then
 
                   write (*,1130) fhc(1), fhc(2)
-c                                  increment pressure for
-c                                  finite difference estimate of
-c                                  volume:
-                  p = p + 1d0
+c                                  finite difference estimate of volume:
+                  vdif = 0d0
+                  p = p + 0.5d0
+                  f = 1d0 
+                  do l = 1, 2
+                     call cfluid (fo2,fs2)
+                     vdif = vdif + f*((1d0-xo)*fhc(1) + xo*fhc(2))
+                     f = -1d0
+                     p = p - 1d0
+                  end do 
 
-                  call cfluid (fo2, fs2)
-                  write (*,1300) 83.14d0*t*((1d0-xo)*(fhc(1)-xfh) 
-     *                                     + xo*(fhc(2)-xfc))
+                  write (*,1300) 83.14d0*t*vdif
 
                else if (ifug.eq.4) then
 
@@ -1150,8 +1186,21 @@ c                                  output bulk properties and V:
                   if (nh.ne.0d0.and.ns.ne.0d0) write (*,1290) ns/nh
                   if (ifug.eq.19.or.ifug.eq.20.and.ag.gt.1d0) 
      *               write (*,1330)
+c                                 compute volume by finite difference
+                  vdif = 0d0
+                  p = p + 0.5d0
+                  f = 1d0 
+                  do l = 1, 2
+                     call cfluid (fo2,fs2)
+                     do k = 1, isp
+                        vdif = vdif + 
+     *                         f*xs(ins(k))*dlog(g(ins(k))*p*xs(ins(k)))
+                     end do 
+                     f = -1d0
+                     p = p - 1d0
+                  end do 
 
-                  write (*,1420) vol
+                  write (*,1420) 83.14d0*t*vdif
 
                end if 
 
