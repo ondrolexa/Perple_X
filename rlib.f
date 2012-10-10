@@ -10963,6 +10963,9 @@ c---------------------------------------------------------------------
 
       integer last,i,j,np1,h,index,ids
 
+      logical refine
+      common/ cxt26 /refine
+
       integer ntot,npairs
       double precision y,xy
       common/ cst86 /xy(mdim,k1),y(ms1,mst,k1),ntot,npairs
@@ -11016,7 +11019,17 @@ c                                 compositions.
 
             ntot = ntot + 1
 
-            if (ntot.gt.k1) call error (41,xy(1,1),k1,'SUBDIV')
+            if (ntot.gt.k1) then
+c                                 error diagnostic
+               if (tname.eq.'characters') then
+c                                 adaptive minimization array      
+                  call error (41,xy(1,1),2,'SUBDIV')
+               else if (refine) then 
+                  call error (41,xy(1,1),1,'SUBDIV')
+               else 
+                  call error (41,xy(1,1),0,'SUBDIV')
+               end if 
+            end if
 
             do j = 1, isp(1) - 1
                y(j,1,ntot) = y(j,1,i)
@@ -11459,6 +11472,9 @@ c--------------------------------------------------------------------------
       double precision ctot
       common/ cst3   /ctot(k1)
 
+      logical refine
+      common/ cxt26 /refine
+
       integer jmsol,kdsol
       common/ cst142 /jmsol(m4,mst),kdsol(m4)
 
@@ -11631,7 +11647,14 @@ c                                 the composition is acceptable.
       iphct = iphct + 1
       icpct = icpct + 1 
 
-      if (iphct.gt.k1) call error (41,z(1,1),k1,'SOLOAD')
+      if (iphct.gt.k1) then
+         if (refine) then 
+            call error (41,pa(1),1,'SOLOAD')
+         else 
+            call error (41,pa(1),0,'SOLOAD')
+         end if 
+      end if             
+    
 
       ikp(iphct) = isoct
       ixp(iphct) = ixct

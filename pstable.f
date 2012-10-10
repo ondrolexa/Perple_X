@@ -480,7 +480,9 @@ c                                 write a title
  
 1020  format ('Range of ',a,' is:',g14.6,'->',g14.6,/,
      *        'Range excluding zero values is:',g14.6,'->',g14.6,/)
-1040  format (/,'Convert to logarithmic variables (y/n)?')
+1040  format (/,'Convert to logarithmic variables (y/n)? ',
+     *          'NOTE: if a variable is',/,' already logarithmic, then',
+     *          'answering yes will plot its log-log value.')
 1050  format (/,'Plot base 10 logarithm of ',a,'  (y/n)?')
 1060  format (/,'Reset plot limits (y/n)?')
 1070  format (/,'Enter ',a,' for ',a,' [default='g14.7,']:')

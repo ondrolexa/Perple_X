@@ -294,7 +294,7 @@ c-----------------------------------------------------------------------
       integer ier, igo, ins(nsp), i, isp, j, k, kmax, count
 
       double precision nc, nh, no, ns, nn, nsi, tentoe, fo2, fs2, xfh, 
-     *                 xfc, ag, tot, totx, var(l2), f, prop(40)
+     *                 xfc, ag, tot, totx, var(l2), f, prop(40), nel
 
       double precision fhc
       common / cst11 /fhc(2)
@@ -347,7 +347,11 @@ c                                 iam is a flag indicating the Perple_X program
       iam = 11
       vname(1) = 'P(bar)'
       vname(2) = 'T(K)'
+c                                 max number of indendent potentials, may be
+c                                 increased depending on EoS choices. 
       ipot = 2
+c                                 max number of element fractions to be output
+      nel = 6
 c                                 version info
       call vrsion
 c                                 read options
@@ -870,10 +874,10 @@ c                                 xco2 EoS's
 
                         if (log) then 
                            prop(ipot+1+k) = dlog10(xs(ins(k)))
-                           prop(ipot+isp+6+k) = dlog10(f)
+                           prop(ipot+isp+1+nel+k) = dlog10(f)
                         else 
                            prop(ipot+1+k) = xs(k)
-                           prop(ipot+isp+6+k) = f
+                           prop(ipot+isp+1+nel+k) = f
                         end if
 
                      end do
@@ -886,13 +890,13 @@ c                                 assume multispecies fluids
 
                         if (log.and.f.le.0d0) then  
                            prop(ipot+1+k) = nopt(7)
-                           prop(ipot+isp+6+k) = nopt(7)
+                           prop(ipot+isp+1+nel+k) = nopt(7)
                         else if (log) then 
                            prop(ipot+1+k) = dlog10(xs(ins(k)))
-                           prop(ipot+isp+6+k) = dlog10(f)
+                           prop(ipot+isp+1+nel+k) = dlog10(f)
                         else 
                            prop(ipot+1+k) = xs(ins(k))
-                           prop(ipot+isp+6+k) = f
+                           prop(ipot+isp+1+nel+k) = f
                         end if
 
                      end do
