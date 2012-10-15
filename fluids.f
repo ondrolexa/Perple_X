@@ -935,7 +935,7 @@ c                                  finite difference estimate for volume:
 
                      vol = 83.14d0*t*vdif
 
-                  else if (ifug.eq.4.eq.ifug.eq.13.or.ifug.eq.15) then
+                  else if (ifug.eq.4.or.ifug.eq.13.or.ifug.eq.15) then
 c                                 use analytic vol
                   else 
 c                                 compute volume by finite difference
