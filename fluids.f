@@ -291,10 +291,10 @@ c-----------------------------------------------------------------------
 
       character specie(nsp)*4, y*1, n4name*100, title*100, tags(26)*14
 
-      integer ier, igo, ins(nsp), i, isp, j, k, l, kmax, count
+      integer ier, igo, ins(nsp), i, isp, j, k, l, kmax, count, nel
 
       double precision nc, nh, no, ns, nn, nsi, tentoe, fo2, fs2, 
-     *                 ag, tot, totx, var(l2), f, prop(40), nel, vdif
+     *                 ag, tot, totx, var(l2), f, prop(40), vdif
 
       double precision fhc
       common / cst11 /fhc(2)
