@@ -10003,9 +10003,9 @@ c                                 stoichiometric constraints
 
       call plimit (pmn,pmx,k,id)       
 
-      if (pa(jd)+dp.gt.pmx) then 
+      if (pa(jd)+dp.gt.pmx-nopt(5)) then 
          dp = pmx - pa(jd) - nopt(5)
-      else if (pa(jd)+dp.lt.pmn) then 
+      else if (pa(jd)+dp.lt.pmn+nopt(5)) then 
          dp = pmn - pa(jd) + nopt(5)
       end if  
 c                                 adjust the composition by the increment
@@ -10042,6 +10042,11 @@ c                                 working arrays
 
       logical pin
       common/ cyt2 /pin(j3)
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 c----------------------------------------------------------------------
 
       lord = 0
@@ -10087,7 +10092,7 @@ c                                 case 2: positive partial correlation
 
                if (i.eq.1) then 
 
-                  if (pmn.ge.pmx) then 
+                  if (pmn.ge.pmx.or.dabs(pmn-pmx).lt.nopt(5)) then 
                      pin(k) = .false.
                      cycle 
                   else 

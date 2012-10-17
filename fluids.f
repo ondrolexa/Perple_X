@@ -884,6 +884,8 @@ c                                 xco2 EoS's
 c                                 assume multispecies fluids                
                      do k = 1, isp
 
+                        f = xs(ins(k))*p*g(ins(k))
+
                         if (log.and.f.le.0d0) then  
                            prop(ipot+1+k) = nopt(7)
                            prop(ipot+isp+1+nel+k) = nopt(7)
