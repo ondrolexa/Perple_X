@@ -509,6 +509,11 @@ c                                X(O)-X(C) COH
                ipot = 4
                vname(4) = 'X(C)    '
 
+               if (ibuf.eq.3) then 
+                  ipot = 5
+                  vname(5) = 'log(fS2)'
+               end if 
+
             else if (ifug.eq.24) then 
 c                                fo2-aC-N/C COHN
                vname(3) = 'log(aC) '
@@ -752,6 +757,7 @@ c                                X(O)-X(S) COHS
 c                                X(O)-X(C) COH
                xo = var(3)
                gz = var(4)  
+               if (ibuf.eq.3) dlnfo2 = var(5) * tentoe
 
             else if (ifug.eq.24) then 
 c                                fo2-aC-N/C COHN
@@ -835,7 +841,8 @@ c                                 assign values to local variables
 
                      else if (iv(k).eq.5) then 
 
-                        if (ifug.eq.12.and.ibuf.eq.3) then 
+                        if ((ifug.eq.12.or.ifug.eq.20)
+     *                                    .and.ibuf.eq.3) then 
 
                            dlnfo2 = var(iv(k)) * tentoe
 

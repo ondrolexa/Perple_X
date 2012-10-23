@@ -328,7 +328,7 @@ qfm = 2 mt + 3 q  -3 fa         | qfm O2 buffer
 
 
 
- |tbi = 1 phl - 1 fo + 1 ru - 1 q | Ti-biotite endmember for TiBio(HP) model
+ |tbi = 1 phl - 1 fo + 1 ru + 1 q | Ti-biotite endmember for TiBio(HP) model
  |45e3 0 0 
 
 tbi1 = 1 phl - 1 br + 1 ru      | Ti-biotite endmember for TiBio(WPH) model

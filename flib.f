@@ -187,7 +187,7 @@ c---------------------------------------------------------------------
       if (ifug.gt.nrk.or.ifug.eq.9) ier = 1
       call rerror (ier,*10)
 
-      if (ifug.eq.12.or.ifug.eq.17) then
+      if (ifug.eq.12.or.ifug.eq.17.or.ifug.eq.20) then
 c                                 COHS & HOS equations of state
 c                                 get sulfur fugacity constraint:
          vname(3) = 'X(O)'
@@ -346,7 +346,7 @@ c                                get the salt content (elag):
 1050  format (/,'Enter constant in units of log10(fO2):',/)
 1060  format (/,'Fluid equation of state: ',a)
 1070  format (2x,i2,' - ',a)
-1090  format (/,'Choose a buffer:',//
+1090  format (/,'Choose a sulfur buffer:',//
      *         ,'  1 - Pyrite + Pyrrhotite',
      *        /,'  2 - Pyrrhotite',/,'  3 - f(S2)',/)
 1100  format (/,'Enter atomic Fe/S of pyrrhotite:',/)

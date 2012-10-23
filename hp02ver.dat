@@ -105,7 +105,7 @@ begin_makes
  |fff = 2 fa - 2 iron - 1 fs         | iron fa fs O2 buffer
  |0 0 0 
 
-tbi = 1 phl - 1 fo + 1 ru - 1 q | Ti-biotite endmember for TiBio(HP) model
+tbi = 1 phl - 1 fo + 1 ru + 1 q | Ti-biotite endmember for TiBio(HP) model
  45e3 0 0 
 
  | tbi1 = 1 phl - 1 br + 1 ru      | Ti-biotite endmember for TiBio(WPH) model
