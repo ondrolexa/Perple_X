@@ -49,8 +49,8 @@ c----------------------------------------------------------------------
       double precision cblk
       common/ cst300 /cblk(k5),jbulk
 
-      double precision a,b
-      common/ cst313 /a(k5,k1),b(k5)
+      double precision a,b,c
+      common/ cst313 /a(k5,k1),b(k5),c(k1)
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
