@@ -433,8 +433,11 @@ c                                 lpopt does the minimization and outputs
 c                                 the results to the print file.
                call lpopt (1,j,idead,output)
 c                                 fractionate the composition:
-               if (idead.eq.0) call fractr (output)
-
+               if (idead.eq.0) then
+                  call fractr (output)
+               else
+                  write (*,1030) (vname(jv(i)),v(jv(i)), i = 1, ipot)
+               end if 
             end do 
 
          end if 
@@ -456,6 +459,7 @@ c                                 close fractionation data files
 1010  format (1x,a,1x,g14.6)
 1020  format (/,'Enter molar amounts of the components to be added ',
      *        '(ordered as above:')
+1030  format (/,'optimization failed at:',//,5(1x,a8,'=',g12.6))
 1050  format (a)
 1060  format (/,'Modify composition (y/n)?')
 1070  format (/,'Enter (zeroes to quit) ',7(a,1x))

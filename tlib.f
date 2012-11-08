@@ -17,7 +17,7 @@ c----------------------------------------------------------------------
 	implicit none
 
       write (*,'(/,a)') 
-     *      'Perple_X version 6.6.8, source updated Oct 24, 2012.'
+     *      'Perple_X version 6.6.8, source updated Nov 8, 2012.'
 
       end
 
@@ -31,6 +31,20 @@ c iam - indicates calling program 1 - vertex
 c                                 2 - meemum
 c                                 3 - werami
 c                                 all other values no output
+
+c current max values:
+
+c                lopt(18)
+c                iopt(20)
+c                nopt(27)
+
+c lower unused values may be available.
+
+c special internal values for lopt, iopt, nopt
+
+c               lop_28-30 
+c               iop_28-30
+c               nop_28-30
 
 c option variables - keyword associations
 
@@ -97,7 +111,11 @@ c----------------------------------------------------------------------
       common/ cst4 /iam
 c----------------------------------------------------------------------
 c                                 default option values:
-
+      do i = 28, 30
+         nopt(i) = 0d0
+         lopt(i) = .false.
+         iopt(i) = 0
+      end do 
 c                                 closed or open compositional space
       lopt(1) = .true.
 c                                 Anderson-Gruneisen correction
@@ -638,8 +656,27 @@ c                                 handle missing shear moduli
                read (nval1,*) nopt(16)
                valu(15) = val
                iopt(16) = 2
-            end if             
-
+            end if   
+          
+         else if (key.eq.'lop_28') then
+c                                 reserved values for debugging, etc
+            if (val.eq.'T') lopt(28) = .true.
+         else if (key.eq.'lop_29') then
+            if (val.eq.'T') lopt(29) = .true.
+         else if (key.eq.'lop_30') then
+            if (val.eq.'T') lopt(30) = .true.
+         else if (key.eq.'iop_28') then
+            read (strg,*) iopt(28) 
+         else if (key.eq.'iop_29') then
+            read (strg,*) iopt(29) 
+         else if (key.eq.'iop_30') then
+            read (strg,*) iopt(30) 
+         else if (key.eq.'nop_28') then
+            read (strg,*) iopt(28) 
+         else if (key.eq.'nop_29') then
+            read (strg,*) nopt(29) 
+         else if (key.eq.'nop_30') then
+            read (strg,*) nopt(30) 
          else if (key.ne.'|') then 
 
             write (*,1110) key

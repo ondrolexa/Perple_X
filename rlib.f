@@ -1621,7 +1621,7 @@ c---------------------------------------------------------------------
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 c---------------------------------------------------------------------
 
-      if (id.gt.k10) call error (1,0d0,id,'k10')
+      if (id+1.gt.k10) call error (1,0d0,id,'k10')
 
       ipoint = iphct
       
@@ -8639,7 +8639,7 @@ c----------------------------------------------------------------------
 
       end 
 
-      double precision function ydinc (y,xinc,mode,i,ksite,ids)
+      double precision function ydinc (y0,xinc,mode,i,ksite,ids)
 c----------------------------------------------------------------------
 c get the new value of the stretched coordinate (y) from an
 c increment in the cartesian coordinate (xinc)
@@ -8651,7 +8651,7 @@ c----------------------------------------------------------------------
       integer ids, i, j, mode, ksite
 
       double precision x, xinc, strtch, yreal, yloc, unstch, dy, ylmn,
-     *                 ylmx, y
+     *                 ylmx,y0,y
     
       logical odd
 c                                 interval limits conformal transformation
@@ -8659,6 +8659,9 @@ c                                 interval limits conformal transformation
       double precision yint, yfrc
       common/ cst47 /yint(5,ms1,mst,h9),yfrc(4,ms1,mst,h9),intv(4)
 c----------------------------------------------------------------------
+c                                 use a local y value to avoid changing
+c                                 the input coordinate
+      y = y0 
 c                                 y is the real coordinate.
       if (mode.lt.4) then 
          odd = .false.
@@ -8673,7 +8676,13 @@ c                                 odd or even interval?
 c                                 interval limits              
          ylmx = yint(j+1,i,ksite,ids)
 c                                 which interval are we starting from?
-         if (y.gt.ylmx) cycle
+         if (y.gt.ylmx.and.j.lt.intv(mode)) then 
+            cycle
+         else if (y.gt.ylmx) then  
+c                                 somehow y is out of bounds, assume
+c                                 numerical reset y to max
+            y = ylmx
+         end if 
 
          ylmn = yint(j,i,ksite,ids)
          dy = ylmx - ylmn
@@ -10060,7 +10069,7 @@ c                                 case 1: fully correlated
 
             call plimit (pmn,pmx,k,id) 
 
-            if (pmn.ge.pmx) then 
+            if (pmn.ge.pmx.or.pmx-pmn.lt.nopt(5)) then 
                pin(k) = .false.
                cycle 
             else 
@@ -10092,7 +10101,7 @@ c                                 case 2: positive partial correlation
 
                if (i.eq.1) then 
 
-                  if (pmn.ge.pmx.or.dabs(pmn-pmx).lt.nopt(5)) then 
+                  if (pmn.ge.pmx.or.pmx-pmn.lt.nopt(5)) then 
                      pin(k) = .false.
                      cycle 
                   else 

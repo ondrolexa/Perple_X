@@ -673,7 +673,7 @@ c                                             other programming error.
 c                                             no feasible solution
          call warn (42,c,idead,char)
          iwarn42 = iwarn42 + 1
-         if (iwarn42.eq.5) call warn (49,c,42,'LPWARN')
+         if (iwarn42.eq.6) call warn (49,c,42,'LPWARN')
 
       else if (idead.eq.4.and.iwarn90.lt.6) then 
 c                                             iteration count exceeded,

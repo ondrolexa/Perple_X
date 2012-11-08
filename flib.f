@@ -6278,7 +6278,7 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
  
-      double precision brk(nsp), ark(nsp), ta
+      double precision brk(nsp), ark(nsp) 
 
       integer ins(*), isp, i, k
 
@@ -6287,6 +6287,11 @@ c-----------------------------------------------------------------------
 
       double precision a, b
       common/ rkab /a(nsp),b(nsp)
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       save ark, brk
                              
@@ -6306,7 +6311,7 @@ c    *          174026d2, 424441664.6d0,  7500726468d0, 3767833334d0,
 c             O, SiO, SiO2, Si, unk:
 c             bsio = bco/bco2*bsio2 => 1/4.83
 c             bo  ~ bo2
-     *          22.07, 5.148732998d0, 25.83798814d0, 10.35765058, 0d0/
+     *          22.07, 5.148732998d0, 25.83798814d0, 10.35788774, 0d0/
 c     *          22.07, 5.148732998d0, 24.85507977, 10.35765058, 0d0/
 c----------------------------------------------------------------------
 c      if (first) then 
@@ -6339,12 +6344,22 @@ c                                 sio2_mp_fit3.mws
 
             if (t.gt.8146.72) a(14) = 0d0
 
+            if (lopt(28)) then 
+c                                 use anomalous cp value a-function and b:
+               a(14) = -.9892922996d13 - (.2684024659d7*t 
+     *         + .1084008260d12)*dsqrt(t) + .1659586080d13*dlog(t) 
+     *         + .3721717125d14/dsqrt(t) + .7708307223d9*t
+
+               b(14) = 25.83798814d0
+
+            end if 
+
          else if (i.eq.15) then 
 c                                 MRK dispersion term for Si 
-            ta = t
-            if (t.gt.6341.1d0) ta = 6341.1d0
-          
-            a(15) = (-.6542687d2*ta + 8297.575d2)*ta + .1137043e10
+            a(15) = (.131596431388077d7 - ((.380259023635694d-1*t 
+     *      + .124090483523393d4)*t + .170392520137105d7)*dsqrt(t)
+     *      + .151371320806448d6/dsqrt(t) + .427563259532326d7*dlog(t) 
+     *      + (.108181901455347d2*t + 0.711400073165747d5)*t)*1d2
 
          else 
 
