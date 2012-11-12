@@ -2287,10 +2287,10 @@ c----------------------------------------------------------------------
          write (*,1050)
          write (*,1030) (vname(iv(i)),v(iv(i)), i = 1, ipot)
          write (*,1010) psys(pt2prp(1))/1d3,psys(pt2prp(2))/1d3,lgk,
-     *                  (psys(pt2prp(i)),i=3,7),psys(pt2prp(26))
+     *                  (psys(pt2prp(i)),i=3,7)
 
          if (.not.rxn) then 
-            write (*,1020) (psys(pt2prp(i)),i=8,25)
+            write (*,1020) psys(pt2prp(26)),(psys(pt2prp(i)),i=8,25)
          else 
             write (*,1040) 
          end if
@@ -2305,9 +2305,9 @@ c----------------------------------------------------------------------
      *        /,'heat capacity (J/mol/K) ',t32,'= ',g14.7,/,
      *        /,'volume (J/mol/bar) ',t32,'= ',g14.7,
      *        /,'expansivity (1/K) ',t32,'= ',g14.7,
-     *        /,'compressibility (1/bar) ',t32,'= ',g14.7,
-     *        /,'heat capacity ratio (cp/cv)',t32,'= ',g14.7)
-1020  format (/,'formula weight (g/mol) ',t32,'= ',g14.7,
+     *        /,'compressibility (1/bar) ',t32,'= ',g14.7)
+1020  format (/,'heat capacity ratio (cp/cv)',t32,'= ',g14.7,
+     *        /,'formula weight (g/mol) ',t32,'= ',g14.7,
      *        /,'density (kg/m3) ',t32,'= ',g14.7,/,
      *        /,'Gruneisen_T ',t32,'= ',g14.7,//,
      *        'Adiabatic elastic moduli:',/,

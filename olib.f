@@ -1306,8 +1306,8 @@ c----------------------------------------------------------------------
 
       integer id,jd,iwarn1,iwarn2,j,itemp,m
 
-      double precision dt0, dt1, dt2, g0, g1a, g2a, dg, ss, gpt, gpt1, 
-     *                 gpt2, gpp, dp0, dp1, dp2, e, alpha, v, ginc, 
+      double precision dt0, dt1, dt2, g0, gpt, gpt1, 
+     *                 gpt2, gpp, dp0, dp1, dp2, e, alpha, v, ginc, dt,
      *                 beta, cp, s, rho, gtt, r43, g1, g2, g3, g4, g5,
      *                 g7, gppp, gppt, gptt, gttt, mols, units, root
 
@@ -1355,8 +1355,8 @@ c----------------------------------------------------------------------
       double precision hsb
       common/ cst84 /hsb(i8,4),hs2p(6)
 
-      save dt0,dt1,dt2
-      data dt0,dt1,dt2/0.5d0,5d0,5d1/
+      save dt
+      data dt/0.5d0/
 
       save iwarn1, iwarn2
       data iwarn1, iwarn2 /2*0/
@@ -1427,258 +1427,316 @@ c                                 explicit bulk modulus is present and allowed
          props(21,jd) = 0d0
 
       end if   
+            
+      g0 = ginc(0d0,0d0,id)
 c                                 compute g-derivatives for isostatic 
 c                                 thermodynamic properties
       if (p.gt.nopt(26)) then 
-         dp2 = nopt(27) * p
+         dp0 = nopt(27)/1d2 * p
       else 
-         dp2 = nopt(27) * nopt(26)
+         dp0 = nopt(27)/1d2 * nopt(26)
       end if 
 
-      dp1 = dp2/1d1
-      dp0 = dp1/1d1
-            
-      g0 = ginc(0d0,0d0,id)
+      dt0 = dt
+c                                 if a reaction, cannot use sign to 
+c                                 test behavior, just run through the
+c                                 whole list
+      if (rxn) then 
+c                                 set finite difference increments
+         dp1 = dp0*1d1
+         dp2 = dp0*1d2
+         dt1 = dt0*1d1
+         dt2 = dt0*1d2
 c                                 straight derivatives:
 c                                 first order
-      if (p-dp2.le.0d0) then 
+         if (p-dp2.le.0d0) then 
 
-         v = (ginc(0d0,dp0,id) - g0)/dp0
+            v = (ginc(0d0,dp0,id) - g0)/dp0
 
-         if (v.lt.0d0.or.dabs(v).gt.1d9)  
-c                                 expand increment if invalid v
-     *      v = (ginc(0d0,dp1,id) - g0)/dp1
-         if (v.lt.0d0.or.dabs(v).gt.1d9)  
-c                                 expand increment more if invalid v
-     *      v = (ginc(0d0,dp2,id) - g0)/dp2
+         else 
 
-      else 
+            v = (ginc(0d0,dp0,id) - ginc(0d0,-dp0,id))/dp0/2d0
 
-         v = (ginc(0d0,dp0,id) - ginc(0d0,-dp0,id))/dp0/2d0
-         if ((v.lt.0d0.or.dabs(v).gt.1d9).and.p-dp1.gt.0d0)  
-c                                 expand increment if invalid v
-     *   v = (ginc(0d0,dp1,id) - ginc(0d0,-dp1,id))/dp1/2d0
-         if ((v.lt.0d0.or.dabs(v).gt.1d9).and.p-dp2.gt.0d0)  
-c                                 expand increment more if invalid v
-     *   v = (ginc(0d0,dp2,id) - ginc(0d0,-dp2,id))/dp2/2d0
+         end if 
 
-      end if 
-c                                 in case the evaluating routine fails
-c                                 on both calls to ginc 
-      s = (ginc(-dt0,0d0,id) - ginc(dt0,0d0,id))/dt0/2d0
-c                                 this crap is necessary because 
-c                                 optimization or my bad programming
-c                                 corrupts ginc with compaq visual fortran.
-      g1a = ginc(-dt0,0d0,id)
-      g2a =  ginc(dt0,0d0,id)
-      dg = g1a-g2a
-      ss = dg/dt0/2d0
-      s = ss
-c
-c 
-c     write (*,*) s, ss, dg, ginc(-dt0,0d0,id) - ginc(dt0,0d0,id), dt0
+         s = (ginc(-dt0,0d0,id) - ginc(dt0,0d0,id))/dt0/2d0
 
-      e = g0 + t * s
+         e = g0 + t * s
 c                                 second order
-      gtt = (ginc(dt1,0d0,id) + ginc(-dt1,0d0,id) - 2d0*g0)/dt1/dt1
+         gtt = (ginc(dt1,0d0,id) + ginc(-dt1,0d0,id) - 2d0*g0)/dt1/dt1
 
-      if (gtt.gt.0d0.or.dabs(gtt).gt.1d9)  
-c                                 expand increment if invalid cp
-     *   gtt = (ginc(dt2,0d0,id) + ginc(-dt2,0d0,id) - 2d0*g0)/dt2/dt2
+         cp = -t*gtt
 
-      if (gtt.gt.0d0.or.dabs(gtt).gt.1d9)  
-c                                 shrink increment if invalid cp
-     *   gtt = (ginc(dt0,0d0,id) + ginc(-dt0,0d0,id) - 2d0*g0)/dt0/dt0
-
-      cp = -t*gtt
-c                                 volumetric properties only if v is ok:
-      if (v.gt.0d0) then 
-   
          if (p-dp2.le.0d0) then 
 c                                 use forward difference at small p's
             gpp = (ginc(0d0,2d0*dp1,id) + g0 - 2d0*ginc(0d0,dp1,id))
      *             /dp1/dp1
 
-            if (gpp.lt.-v.or.gpp.ge.0d0)
-c                                 expand increment if invalid beta
-     *         gpp = (ginc(0d0,2d0*dp2,id) + g0 - 2d0*ginc(0d0,dp2,id))
-     *               /dp2/dp2
-                                 
-            if (gpp.lt.-v.or.gpp.ge.0d0)
-c                                 shrink increment if invalid beta
-     *         gpp = (ginc(0d0,2d0*dp0,id) + g0 - 2d0*ginc(0d0,dp0,id))
-     *               /dp0/dp0   
-
             gpt = ( ginc( dt1,dp1,id) - ginc( dt1,0d0,id)
      *             -ginc(-dt1,dp1,id) + ginc(-dt1,0d0,id))/dp1/dt1/2d0
-
-            if (gpt.gt.v.or.gpt.le.0d0)
-c                                 expand increment if invalid alpha
-     *         gpt = ( ginc( dt2,dp2,id) - ginc( dt2,0d0,id)
-     *                -ginc(-dt2,dp2,id) + ginc(-dt2,0d0,id))
-     *               /dp2/dt2/2d0
-
-            if (gpt.gt.v.or.gpt.le.0d0)
-c                                 shrink increment if invalid alpha
-     *         gpt = ( ginc( dt0,dp0,id) - ginc( dt0,0d0,id)
-     *                -ginc(-dt0,dp0,id) + ginc(-dt0,0d0,id))
-     *               /dp0/dt0/2d0
 
          else
 
             gpp = (ginc(0d0,dp1,id) + ginc(0d0,-dp1,id) - 2d0*g0)
      *            /dp1/dp1
-            if (gpp.lt.-v.and.p-dp2.ge.0d0.or.gpp.ge.0d0)
-c                                 expand increment if invalid beta
-     *         gpp = (ginc(0d0,dp2,id) + ginc(0d0,-dp2,id) - 2d0*g0)
-     *               /dp2/dp2
-     
-            if (gpp.lt.-v.or.gpp.ge.0d0)
-c                                 shrink increment if invalid beta
-     *         gpp = (ginc(0d0,dp0,id) 
-     *               + ginc(0d0,-dp0,id) - 2d0*g0)/dp0/dp0
 
             gpt = ( ginc( dt1,dp1,id) - ginc( dt1,-dp1,id)
      *             -ginc(-dt1,dp1,id) + ginc(-dt1,-dp1,id))/dp1/dt1/4d0
 
-            if (gpt.gt.v.or.gpt.le.0d0) then 
-c                                 expand increment if invalid alpha
-               gpt1 = ( ginc( dt2,dp2,id) - ginc( dt2,-dp2,id)
-     *                  - ginc(-dt2,dp2,id) 
-     *                  + ginc(-dt2,-dp2,id))/dp2/dt2/4d0
-
-               if (gpt1.gt.v.or.gpt1.le.0d0) then
-c                                 shrink increment if invalid alpha
-                  gpt2 = ( ginc( dt0,dp0,id) - ginc( dt0,-dp0,id)
-     *                    -ginc(-dt0,dp0,id) + ginc(-dt0,-dp0,id))
-     *                     /dp0/dt2/4d0
-
-                  if (gpt2.lt.v.and.gpt2.ge.0d0) then 
-                     gpt = gpt2
-                  end if 
-
-               else 
-
-                  gpt = gpt1
-
-               end if 
-            end if  
-
          end if  
-c                                 third order derivatives, only need for
-c                                 derivatives of seismic props.
-         if (p-2d0*dp2.le.0d0) then 
+c                                  these are the only properties output
+c                                  for reactions:
+         alpha = gpt/v
+         beta = -gpp/v
+         props(2,jd) = e
+         props(11,jd) = g0 
+         props(12,jd) = cp
+         props(15,jd) = s
+         props(1,jd) = v
+         props(13,jd) = alpha
+         props(14,jd) = beta 
 
-            g1 = ginc(-dt2,0d0,id)
-            g2 = ginc( dt2,2d0*dp2,id)
-            g3 = ginc( dt2,0d0,id)
-            g4 = ginc(-dt2,2d0*dp2,id)
-            g5 = ginc(0d0,dp2,id)
-            g7 = g1 - g3
+      else 
+c                                 real phase, use sign of s and v to check
+c                                 difference increments
+         if (p-1d2*dp0.le.0d0) then 
 
-            gppp = ((ginc(0d0,4d0*dp2,id) - g0)/2d0
-     *              - ginc(0d0,3d0*dp2,id) + g5)/dp2**3
-            gppt = (g2 + g3 + 2d0*(ginc(-dt2, dp2,id)-ginc(dt2,dp2,id))
-     *              -g4 - g1)/dp2/dp2/dt2/2d0
-            gptt = (g2 + g4  + 2d0*(g0 - ginc(0d0,2d0*dp2,id))
-     *              -g3 - g1)/2d0/dp2/dt2/dt2
+            do j = 1, 3
+
+               v = (ginc(0d0,dp0,id) - g0)/dp0
+               if (v.gt.0d0.and.dabs(v).lt.1d9) exit 
+               dp0 = dp0 * 1d1
+
+            end do 
 
          else 
 
-            g1 = ginc(-dt2,-dp2,id) - ginc( dt2,dp2,id)
-            g3 = ginc( dt2,-dp2,id)
-            g4 = ginc(-dt2,dp2,id)
-            g5 = ginc(0d0,dp2,id) - ginc(0d0,-dp2,id)
-            g7 = ginc(-dt2,0d0,id) - ginc(dt2, 0d0,id)
+            do j = 1, 3 
+
+               v = (ginc(0d0,dp0,id) - ginc(0d0,-dp0,id))/dp0/2d0
+               if (v.gt.0d0.and.dabs(v).lt.1d9) exit
+               dp0 = dp0 * 1d1 
+ 
+            end do 
+
+         end if 
+ 
+         do j = 1, 3
+
+            s = (ginc(-dt0,0d0,id) - ginc(dt0,0d0,id))/dt0/2d0
+            if (s.gt.0d0) exit 
+            dt0 = dt0*1d1
+
+         end do
+c                                 enthalpy
+         e = g0 + t * s
+c                                 set increments for higher order derivatives
+         dt1 = dt0 * 1d1
+         dt2 = dt0 * 1d2
+         dp1 = dp0 * 1d1
+         dp2 = dp0 * 1d2
+c                                 second order
+         gtt = (ginc(dt1,0d0,id) + ginc(-dt1,0d0,id) - 2d0*g0)/dt1/dt1
+
+         if (gtt.gt.0d0.or.dabs(gtt).gt.1d9)  
+c                                 expand increment if invalid cp
+     *   gtt = (ginc(dt2,0d0,id) + ginc(-dt2,0d0,id) - 2d0*g0)/dt2/dt2
+
+         if (gtt.gt.0d0.or.dabs(gtt).gt.1d9)  
+c                                 shrink increment if invalid cp
+     *   gtt = (ginc(dt0,0d0,id) + ginc(-dt0,0d0,id) - 2d0*g0)/dt0/dt0
+
+         cp = -t*gtt
+c                                 volumetric properties only if v is ok:
+         if (v.gt.0d0) then 
    
-            gppp = ((ginc(0d0,2d0*dp2,id) - ginc(0d0,-2d0*dp2,id))/2d0 
-     *           - g5)/dp2**3
-            gppt = (g3 - g4 + 2d0*g7 - g1)/dp2/dp2/dt2/2d0
-            gptt = (g4 - g3 - 2d0*g5 - g1)/2d0/dp2/dt2/dt2
+            if (p-dp2.le.0d0) then 
+c                                 use forward difference at small p's
+               gpp = (ginc(0d0,2d0*dp1,id) + g0 - 2d0*ginc(0d0,dp1,id))
+     *                /dp1/dp1
 
-         end if 
+               if (gpp.lt.-v.or.gpp.ge.0d0)
+c                                 expand increment if invalid beta
+     *            gpp = (ginc(0d0,2d0*dp2,id) + g0 
+     *                 - 2d0*ginc(0d0,dp2,id))/dp2/dp2
+                                 
+               if (gpp.lt.-v.or.gpp.ge.0d0)
+c                                 shrink increment if invalid beta
+     *            gpp = (ginc(0d0,2d0*dp0,id) + g0 
+     *                 - 2d0*ginc(0d0,dp0,id))/dp0/dp0   
 
-         gttt = ((ginc(dt2*2d0,0d0,id) - ginc(-dt2*2d0,0d0,id))/2d0 
-     *           + g7)/dt2**3
+               gpt = ( ginc( dt1,dp1,id) - ginc( dt1,0d0,id)
+     *               -ginc(-dt1,dp1,id) + ginc(-dt1,0d0,id))/dp1/dt1/2d0
 
-         g7 = (gtt*gpp-gpt**2)**2
+               if (gpt.gt.v.or.gpt.le.0d0)
+c                                 expand increment if invalid alpha
+     *            gpt = ( ginc( dt2,dp2,id) - ginc( dt2,0d0,id)
+     *                   -ginc(-dt2,dp2,id) + ginc(-dt2,0d0,id))
+     *                  /dp2/dt2/2d0
 
-         if (g7.ne.0d0.and.bulk) then 
+               if (gpt.gt.v.or.gpt.le.0d0)
+c                                 shrink increment if invalid alpha
+     *            gpt = ( ginc( dt0,dp0,id) - ginc( dt0,0d0,id)
+     *                   -ginc(-dt0,dp0,id) + ginc(-dt0,0d0,id))
+     *                  /dp0/dt0/2d0
+
+            else
+
+               gpp = (ginc(0d0,dp1,id) + ginc(0d0,-dp1,id) - 2d0*g0)
+     *               /dp1/dp1
+               if (gpp.lt.-v.and.p-dp2.ge.0d0.or.gpp.ge.0d0)
+c                                 expand increment if invalid beta
+     *            gpp = (ginc(0d0,dp2,id) + ginc(0d0,-dp2,id) - 2d0*g0)
+     *                  /dp2/dp2
+     
+               if (gpp.lt.-v.or.gpp.ge.0d0)
+c                                 shrink increment if invalid beta
+     *            gpp = (ginc(0d0,dp0,id) 
+     *                  + ginc(0d0,-dp0,id) - 2d0*g0)/dp0/dp0
+
+               gpt = ( ginc( dt1,dp1,id) - ginc( dt1,-dp1,id)
+     *              -ginc(-dt1,dp1,id) + ginc(-dt1,-dp1,id))/dp1/dt1/4d0
+
+               if (gpt.gt.v.or.gpt.le.0d0) then 
+c                                 expand increment if invalid alpha
+                  gpt1 = ( ginc( dt2,dp2,id) - ginc( dt2,-dp2,id)
+     *                     - ginc(-dt2,dp2,id) 
+     *                     + ginc(-dt2,-dp2,id))/dp2/dt2/4d0
+
+                  if (gpt1.gt.v.or.gpt1.le.0d0) then
+c                                 shrink increment if invalid alpha
+                     gpt2 = ( ginc( dt0,dp0,id) - ginc( dt0,-dp0,id)
+     *                       -ginc(-dt0,dp0,id) + ginc(-dt0,-dp0,id))
+     *                        /dp0/dt2/4d0
+
+                     if (gpt2.lt.v.and.gpt2.ge.0d0) then 
+                        gpt = gpt2
+                     end if 
+
+                  else 
+
+                     gpt = gpt1
+
+                  end if 
+               end if  
+
+            end if  
+c                                 third order derivatives, only need for
+c                                 derivatives of seismic props.
+            if (p-2d0*dp2.le.0d0) then 
+
+               g1 = ginc(-dt2,0d0,id)
+               g2 = ginc( dt2,2d0*dp2,id)
+               g3 = ginc( dt2,0d0,id)
+               g4 = ginc(-dt2,2d0*dp2,id)
+               g5 = ginc(0d0,dp2,id)
+               g7 = g1 - g3
+
+               gppp = ((ginc(0d0,4d0*dp2,id) - g0)/2d0
+     *                 - ginc(0d0,3d0*dp2,id) + g5)/dp2**3
+               gppt = (g2 + g3 + 2d0*(ginc(-dt2, dp2,id)
+     *                -ginc(dt2,dp2,id)) -g4 - g1)/dp2/dp2/dt2/2d0
+               gptt = (g2 + g4  + 2d0*(g0 - ginc(0d0,2d0*dp2,id))
+     *                 -g3 - g1)/2d0/dp2/dt2/dt2
+
+            else 
+
+               g1 = ginc(-dt2,-dp2,id) - ginc( dt2,dp2,id)
+               g3 = ginc( dt2,-dp2,id)
+               g4 = ginc(-dt2,dp2,id)
+               g5 = ginc(0d0,dp2,id) - ginc(0d0,-dp2,id)
+               g7 = ginc(-dt2,0d0,id) - ginc(dt2, 0d0,id)
+   
+               gppp = ((ginc(0d0,2d0*dp2,id) 
+     *                - ginc(0d0,-2d0*dp2,id))/2d0  - g5)/dp2**3
+               gppt = (g3 - g4 + 2d0*g7 - g1)/dp2/dp2/dt2/2d0
+               gptt = (g4 - g3 - 2d0*g5 - g1)/2d0/dp2/dt2/dt2
+
+            end if 
+
+            gttt = ((ginc(dt2*2d0,0d0,id) - ginc(-dt2*2d0,0d0,id))/2d0 
+     *              + g7)/dt2**3
+
+            g7 = (gtt*gpp-gpt**2)**2
+
+            if (g7.ne.0d0.and.bulk) then 
 c                                 temperature derivative of the adiabatic bulk modulus:
-            props(18,jd) = (((v*gppt-gpt*gpp)*gtt
-     *                      -(2d0*v*gptt-gpt**2)*gpt)*gtt
-     *                      +v*gttt*gpt**2)/g7
+               props(18,jd) = (((v*gppt-gpt*gpp)*gtt
+     *                         -(2d0*v*gptt-gpt**2)*gpt)*gtt
+     *                         +v*gttt*gpt**2)/g7
 c                                 pressure derivative of the adiabatic bulk modulus:
-            props(20,jd) = (((v*gppp-gpp**2)*gtt
-     *                   +(gpt*gpp-2d0*v*gppt)*gpt)*gtt
-     *                   +v*gptt*gpt**2)/g7
-         else if (bulk) then 
+               props(20,jd) = (((v*gppp-gpp**2)*gtt
+     *                      +(gpt*gpp-2d0*v*gppt)*gpt)*gtt
+     *                      +v*gptt*gpt**2)/g7
+            else if (bulk) then 
 
-            props(18,jd) = nopt(7)
-            props(20,jd) = nopt(7)
+               props(18,jd) = nopt(7)
+               props(20,jd) = nopt(7)
 
-         end if 
+            end if 
 
-      else 
+         else 
 c                                 no volume, zero second derivatives
             gpp = 0d0
             gpt = 0d0    
       
-      end if 
-
-      if (v.le.0d0) then 
-
-         if (v.lt.0d0.or.(v.eq.0d0.and.iam.ne.5)) then 
-c                                 allow zero volume for 1 bar gas reference state 
-c                                 in frendly
-            sick(jd) = .true.
-            v = nopt(7)
-            beta = nopt(7)
-            alpha = nopt(7)
-            rho = nopt(7)
-         
-         else 
-
-            beta = 0d0
-            alpha = 0d0
-            rho = 0d0 
-      
          end if 
 
-      else 
+         if (v.le.0d0) then 
 
-         beta = -gpp/v
-         alpha = gpt/v
-         rho = props(17,jd)/v*1d2
+            if (v.lt.0d0.or.(v.eq.0d0.and.iam.ne.5)) then 
+c                                 allow zero volume for 1 bar gas reference state 
+c                                 in frendly
+               sick(jd) = .true.
+               v = nopt(7)
+               beta = nopt(7)
+               alpha = nopt(7)
+               rho = nopt(7)
+         
+            else 
+
+               beta = 0d0
+               alpha = 0d0
+               rho = 0d0 
+      
+            end if 
+
+         else 
+
+            beta = -gpp/v
+            alpha = gpt/v
+            rho = props(17,jd)/v*1d2
 
 c                                 ideal gas beta = 1/p           
-         if (beta.gt.v.or.beta.lt.0d0) then
-            beta = nopt(7)
-            sick(jd) = .true.
-         end if
+            if (beta.gt.v.or.beta.lt.0d0) then
+               beta = nopt(7)
+               sick(jd) = .true.
+            end if
 c                                 aug 28, 2007, removed check on alpha to 
 c                                 accomodate -alpha's generated by landau 
 c                                 transition models. ideal gas alpha = 1/t
-         if (alpha.gt.v) then 
-            alpha = nopt(7)
+            if (alpha.gt.v) then 
+               alpha = nopt(7)
+               sick(jd) = .true.
+            end if 
+
+         end if  
+
+         if (cp.gt.1d9.or.cp.lt.0d0) then
+            cp = nopt(7)
             sick(jd) = .true.
          end if 
 
-      end if  
+         props(2,jd) = e
+         props(11,jd) = g0 
+         props(12,jd) = cp
+         props(15,jd) = s
+         props(1,jd) = v
+         props(13,jd) = alpha
+         props(14,jd) = beta 
+         props(10,jd) = rho  
 
-      if (cp.gt.1d9.or.cp.lt.0d0) then
-         cp = nopt(7)
-         sick(jd) = .true.
       end if 
-
-      props(2,jd) = e
-      props(11,jd) = g0 
-      props(12,jd) = cp
-      props(15,jd) = s
-      props(1,jd) = v
-      props(13,jd) = alpha
-      props(14,jd) = beta 
-      props(10,jd) = rho  
 
       if (.not.sick(jd).and..not.rxn.and.v.gt.0d0) then
 c                                 heat capacity ratio (cp/cv)
@@ -1778,7 +1836,7 @@ c                                 p-wave velocity P derivative
 
          end if 
 
-         if (.not.fluid(jd).and.v.gt.0d0) then 
+         if (.not.fluid(jd)) then 
 c                                 s-wave velocity
             root = props(5,jd)/rho
 

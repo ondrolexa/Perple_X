@@ -9876,8 +9876,14 @@ c                                 error is just a flag to quit
             else 
 
                itic = itic + 1
-               if (itic.gt.20) exit
-
+               if (itic.gt.20) then
+c                                 assume fully ordered if 
+c                                 fails to converge.
+                  pa(jd) = p0a(jd) + dpmax
+                  pa(i1) = p0a(i1) + dy1*dpmax
+                  pa(i2) = p0a(i2) + dy2*dpmax   
+                  exit
+               end if 
             end if 
 
          end do
