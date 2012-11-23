@@ -9425,12 +9425,12 @@ c                                 cross term * infinity
          do k = 1, nord(id)
 
             if (.not.pin(k)) cycle 
-            if (dabs(dsinf(k)).gt.1d-5) dsy(k) = 1d8*dsinf(k)
+            if (dabs(dsinf(k)).gt.1d-5) dsy(k) = 1d4*dsinf(k)
 
             do l = k, nord(id)
                if (.not.pin(l)) cycle 
                if (dabs(d2sinf(l,k)).gt.1d-5) 
-     *                                  dsyy(l,k) = 1d10*d2sinf(l,k)
+     *                                  dsyy(l,k) = 1d6*d2sinf(l,k)
             end do  
  
          end do 
@@ -9742,7 +9742,7 @@ c----------------------------------------------------------------------
 
       integer i1,i2,id,jd,k,itic
 
-      logical error
+      logical error, done
 
       double precision g,pmax,pmin,dy1,dy2,dp,dpmax,
      *                 omega,gex,dg,d2g
@@ -9840,14 +9840,16 @@ c                                 ok
                dp = -dg/d2g
             
             else                
-c                                 full disordered
+c                                 full disordered, setting error to 
+c                                 true will cause specis to compute the 
+c                                 max disorder 
                error = .true.
                return             
 
             end if 
          end if 
 c                                 increment and check p
-         call pcheck (pa(jd),pmin,pmax,dp,error)
+         call pcheck (pa(jd),pmin,pmax,dp,done)
 c                                 set speciation
          dp = pa(jd) - p0a(jd)
          pa(i1) = p0a(i1) + dy1*dp
@@ -9862,9 +9864,9 @@ c                                 newton raphson iteration
 
             dp = -dg/d2g 
 
-            call pcheck (pa(jd),pmin,pmax,dp,error)
+            call pcheck (pa(jd),pmin,pmax,dp,done)
 c                                 error is just a flag to quit           
-            if (error) exit 
+            if (done) exit 
 
             pa(i1) = pa(i1) + dy1*dp
             pa(i2) = pa(i2) + dy2*dp 
@@ -9967,7 +9969,15 @@ c                                 lord is the number of possible species
 
             itic = itic + 1
 
-            if (itic.eq.16) exit 
+            if (itic.eq.20) then
+c                                 not converging, under the assumption that 
+c                                 this happens at low T use pinc0 to set an ordered
+c                                 composition and exit
+               error = .false.
+               call pinc0 (id,lord)
+               exit 
+
+            end if 
 
          end do
 
@@ -10440,8 +10450,8 @@ c                                 derivative may be +/-infinite
             ds = ds + qmult(i,id)*dzy
             d2s = d2s + qmult(i,id)*dzyy
          else 
-            ds = ds + qmult(i,id)*dsinf*1d8
-            d2s = d2s - qmult(i,id)*dabs(dsinf)*1d8
+            ds = ds + qmult(i,id)*dsinf*1d4
+            d2s = d2s - qmult(i,id)*dabs(dsinf)*1d6
          end if 
 
       end do 
