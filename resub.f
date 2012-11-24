@@ -1357,7 +1357,11 @@ c                                 local variables:
       integer i, j, k, ibad1, ibad2, ibad3, igood
 
       logical bad1, bad2, good, reach
+
+      double precision num
 c                                 -------------------------------------
+      double precision goodc, badc
+      common/ cst20 /goodc(3),badc(3)
 c                                 global variables:
 c                                 working arrays
 c                                 x coordinate description
@@ -1579,7 +1583,15 @@ c    *                     ,names(jend(i,2+indx(i,j,k)))
 
       end if 
 
-99    close (n10)
+99    if (goodc(1)+badc(1).gt.0d0) then
+         num = badc(1)/(badc(1)+goodc(1))*1d2
+         write (*,1120) num, badc(1) + goodc(1)
+         if (num.gt.1d-1) call warn (53,num,i,'OUTLIM')
+         goodc(1) = 0d0
+         badc(1) = 0d0 
+      end if 
+
+      close (n10)
       if (lopt(11)) close (n11)
 
 1000  format (/,'WARNING: The following solutions were input, but are',
@@ -1608,6 +1620,9 @@ c     *          'Endmember with this species')
 1100  format (/,'The following solution models have non-zero reach_',
      *          'increment:',//,t30,'reach_increment')
 1110  format (4x,a,t35,i2)
+1120  format (/,'The failure rate during speciation (order-disorder) ',
+     *        'calculations is ',f7.3,'%',/,'out of a total of ',f12.0,
+     *        ' calculations.',/)
       end 
 
       subroutine sorter (kdbulk,ico,jco,output)

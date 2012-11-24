@@ -20,7 +20,7 @@ c----------------------------------------------------------------------
 
       integer itri(4),jtri(4),ijpt
 
-      double precision wt(3) 
+      double precision wt(3), num
 
       integer iwt
       common/ cst209 /iwt
@@ -60,6 +60,9 @@ c----------------------------------------------------------------------
 
       logical gflu,aflu,fluid,shear,lflu,volume,rxn
       common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume,rxn
+
+      double precision goodc, badc
+      common/ cst20 /goodc(3),badc(3)
 
       integer iam
       common/ cst4 /iam
@@ -149,6 +152,13 @@ c                                 print summary to LUN 6
 
             if (io3.eq.0) call calpr0 (n3)
 
+         end if 
+
+         if (goodc(1)+badc(1).gt.0d0) then
+            num = badc(1)/(badc(1)+goodc(1))*1d2
+            if (num.gt.1d-1) call warn (53,num,i,'MEEMUM')
+            goodc(1) = 0d0
+            badc(1) = 0d0 
          end if 
 
       end do

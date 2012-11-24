@@ -17,7 +17,7 @@ c----------------------------------------------------------------------
 	implicit none
 
       write (*,'(/,a)') 
-     *      'Perple_X version 6.6.8, source updated Nov 23, 2012.'
+     *      'Perple_X version 6.6.8, source updated Nov 24, 2012.'
 
       end
 
@@ -35,7 +35,7 @@ c                                 all other values no output
 c current max values:
 
 c                lopt(18)
-c                iopt(20)
+c                iopt(23)
 c                nopt(27)
 
 c lower unused values may be available.
@@ -239,6 +239,12 @@ c                                 seismic data output for WERAMI/MEEMUM, 0 - non
 c                                 reach_increment_switch 0 - off, 1 - on (for auto-refine), 2 - all
       iopt(20) = 1 
       valu(20) = 'on'
+c                                 speciation_max_it - for speciation calculations
+      iopt(21) = 40
+c                                 reaction_max_it - for A(V,T) and fluid EoS
+      iopt(22) = 40
+c                                 volume_max_it - for schreinemakers
+      iopt(23) = 40              
 c                                 -------------------------------------
 c                                 werami output options:
 
@@ -475,8 +481,18 @@ c
 c   
             read (strg,*) nopt(19)
 
-         else if (key.eq.'auto_refine_slop') then
+         else if (key.eq.'speciation_max_it') then
 c   
+            read (strg,*) iopt(21)
+
+         else if (key.eq.'reaction_max_it') then
+c   
+            read (strg,*) iopt(22)
+
+         else if (key.eq.'volume_max_it') then
+c   
+            read (strg,*) iopt(23)
+
          else if (key.eq.'x_nodes') then
 c                                 number of x nodes at level 1 before autorefine
             read (strg,*) grid(1,1)
@@ -1081,7 +1097,7 @@ c                                 pc-perturbation
          if (iam.eq.1.and.icopt.le.3) write (n,1011) nopt(15)
 c                                 generic thermo parameters:
          write (n,1012) nval1,nopt(5),nopt(12),nopt(20),valu(17),
-     *                     lopt(8),lopt(4),lopt(5)
+     *                     lopt(8),lopt(4),lopt(5),iopt(21)
 
          if (iam.eq.1.and.icopt.ne.1) then 
 c                                 vertex output options, dependent potentials
@@ -1156,7 +1172,8 @@ c                                 generic thermo options
      *        4x,'order_check            ',a3,8x,'off [on]',/,
      *        4x,'approx_alpha           ',l1,10x,'[T] F',/,
      *        4x,'Anderson-Gruneisen     ',l1,10x,'[T] F',/,
-     *        4x,'site_check             ',l1,10x,'[T] F')
+     *        4x,'site_check             ',l1,10x,'[T] F',/,
+     *        4x,'speciation_max_it      ',i4,7x,'[200]')
 1013  format (/,2x,'Input/Output options:',//,
      *        4x,'dependent_potentials   ',a3,8x,'off [on]')
 1014  format (4x,'logarithmic_p          ',l1,10x,'[F] T',/,
@@ -2174,6 +2191,8 @@ c---------------------------------------------------------------------
          write (*,51) char
       else if (ier.eq.52) then 
          write (*,52) char
+      else if (ier.eq.53) then 
+         write (*,53) realv
       else if (ier.eq.58) then
          write (*,58)
       else if (ier.eq.60) then
@@ -2364,10 +2383,14 @@ c---------------------------------------------------------------------
      *       ,'glossary.dat file for pseudocompound definitions.',/)
 42    format (/,'**warning ver042** an optimization failed, probably ',
      *          'because the requested',/,'compositional resolution ',
-     *          'is too high, or possibly because the phases of the',/,
-     *          'system do not span the specified bulk composition.',//,
+     *          'is too high or due to numerical instability during',/,
+     *          'speciation calculations or because the phases of the ',
+     *          'system do not span',/,
+     *          'the specified bulk composition.',//,
      *          4x,'In the 1st case: increase final_resolution ',
      *          'in perplex_option.dat.',/,4x,'In the 2nd case: ',
+     *          'increase speciation_max_it in perplex_option.dat.',
+     *          /,4x,'In the 3rd case: ',
      *          'change the bulk composition or add phases.',/)
 43    format (/,'**warning ver043** ',i2,' solutions referenced ',
      *          'in your input',/,'were not found in the solution ',
@@ -2406,6 +2429,12 @@ c     *          ' (SWASH, see program documentation Eq 2.3)',/)
      *       ,/)
 52    format (/,'**warning ver052** rejecting ',a,'; excluded or '
      *       ,'invalid composition.',/)
+53    format (/,'**warning ver053** the failure rate during speciation',
+     *          ' (o/d) calculations is ',f5.1,'%.',/,
+     *          'A high failure rate may cause failed optimizations. ',
+     *          'Usually the failure rate can be',/,'reduced by ',
+     *          'increasing speciation_max_it in ',
+     *          'perplex_option.dat',/)
 58    format (/,'**warning ver058** wway, the equilibrium of the '
      *         ,'following reaction',/,' is inconsistent with the ',
      *          'invariant equilibrium.',/)
@@ -3132,10 +3161,13 @@ c                                 interval limits conformal transformation
       integer hs2p
       double precision hsb
       common/ cst84 /hsb(i8,4),hs2p(6)
+
+      double precision goodc, badc
+      common/ cst20 /goodc(3),badc(3)
 c-----------------------------------------------------------------------
       data hs2p/4, 5, 18, 19, 20, 21/
 
-      data iff/2*0/,ipt2/0/
+      data iff,ipt2,goodc,badc/3*0,6*0d0/
 c
       data us, uf/ h5*0d0, 2*0d0/
 

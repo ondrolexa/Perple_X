@@ -9430,7 +9430,7 @@ c                                 cross term * infinity
             do l = k, nord(id)
                if (.not.pin(l)) cycle 
                if (dabs(d2sinf(l,k)).gt.1d-5) 
-     *                                  dsyy(l,k) = 1d6*d2sinf(l,k)
+     *                                  dsyy(l,k) = 1d5*d2sinf(l,k)
             end do  
  
          end do 
@@ -9742,7 +9742,7 @@ c----------------------------------------------------------------------
 
       integer i1,i2,id,jd,k,itic
 
-      logical error, done
+      logical error, done, inf 
 
       double precision g,pmax,pmin,dy1,dy2,dp,dpmax,
      *                 omega,gex,dg,d2g
@@ -9772,6 +9772,9 @@ c----------------------------------------------------------------------
 
       logical lorder, lexces, llaar, lrecip
       common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
+
+      double precision goodc, badc
+      common/ cst20 /goodc(3),badc(3)
 c----------------------------------------------------------------------
       i1 = ideps(1,k,id)
       i2 = ideps(2,k,id)
@@ -9797,7 +9800,7 @@ c                                 composition to the max - nopt(5), at this
 c                                 condition the first derivative < 0, 
 c                                 and the second derivative > 0 (otherwise
 c                                 the root must lie at p > pmax - nopt(5).               
-      if (dpmax.gt.0d0) then
+      if (dpmax.gt.nopt(5)) then
 
          pin(k) = .true.
          dp = dpmax - nopt(5)
@@ -9809,7 +9812,7 @@ c                                 first try the maximum
          pa(i1) = p0a(i1) + dy1*dp
          pa(i2) = p0a(i2) + dy2*dp 
 
-         call gderi1 (k,id,dg,d2g)
+         call gderi1 (k,id,dg,d2g,inf)
 
          if (dg.gt.0d0.and.d2g.gt.0d0) then 
 c                                 at the maximum concentration, the 
@@ -9817,6 +9820,7 @@ c                                 first derivative is positive, if
 c                                 the second is also > 0 then we're 
 c                                 business
             dp = -dg/d2g
+            if (inf) dp = dsign(1d-1*dpmax,dp)
 
          else if (dg.lt.0d0) then
 c                                 then saturated with the ordered 
@@ -9833,11 +9837,12 @@ c                                 try the min
             pa(i1) = p0a(i1) + dy1*nopt(5)
             pa(i2) = p0a(i2) + dy2*nopt(5)
  
-            call gderi1 (k,id,dg,d2g)
+            call gderi1 (k,id,dg,d2g,inf)
 
             if (dg.lt.0d0.and.d2g.gt.0d0) then 
 c                                 ok
                dp = -dg/d2g
+               if (inf) dp = dsign(1d-1*dpmax,dp)
             
             else                
 c                                 full disordered, setting error to 
@@ -9860,31 +9865,42 @@ c                                 infinite loops
 c                                 newton raphson iteration
          do 
 
-            call gderi1 (k,id,dg,d2g)
+            call gderi1 (k,id,dg,d2g,inf)
 
-            dp = -dg/d2g 
+            if (inf) then 
+               dp = dsign(dp/2d0,-dg/d2g)
+            else
+               dp = -dg/d2g
+            end if  
 
             call pcheck (pa(jd),pmin,pmax,dp,done)
 c                                 error is just a flag to quit           
-            if (done) exit 
+            if (done) then
+               goodc(1) = goodc(1) + 1d0
+               exit 
+            end if 
 
             pa(i1) = pa(i1) + dy1*dp
             pa(i2) = pa(i2) + dy2*dp 
 
             if (dabs(dp).lt.nopt(5)) then 
 
+               goodc(1) = goodc(1) + 1d0
                exit
 
             else 
 
                itic = itic + 1
-               if (itic.gt.20) then
+               if (itic.gt.iopt(21)) then
 c                                 assume fully ordered if 
 c                                 fails to converge.
                   pa(jd) = p0a(jd) + dpmax
                   pa(i1) = p0a(i1) + dy1*dpmax
                   pa(i2) = p0a(i2) + dy2*dpmax   
+                  badc(1) = badc(1) + 1
+
                   exit
+
                end if 
             end if 
 
@@ -9920,6 +9936,9 @@ c----------------------------------------------------------------------
       logical pin
       common/ cyt2 /pin(j3)
 
+      double precision goodc, badc
+      common/ cst20 /goodc(3),badc(3)
+
       integer iopt
       logical lopt
       double precision nopt
@@ -9947,7 +9966,10 @@ c                                 lord is the number of possible species
 
             call gderiv (id,g,dp,error)
 
-            if (error) exit
+            if (error) then
+               badc(1) = badc(1) + 1
+               exit
+            end if 
 
             tdp = 0d0 
 
@@ -9961,7 +9983,10 @@ c                                 lord is the number of possible species
 
             end do 
 
-            if (tdp.lt.nopt(5).and.gold-g.lt.1d2.or.tdp.eq.xtdp) exit
+            if (tdp.lt.nopt(5).and.gold-g.lt.1d2.or.tdp.eq.xtdp) then
+               goodc(1) = goodc(1) + 1d0
+               exit
+            end if 
 
             if (g.gt.gold.and.gold.ne.0d0) xtdp = tdp
 
@@ -9969,10 +9994,11 @@ c                                 lord is the number of possible species
 
             itic = itic + 1
 
-            if (itic.eq.20) then
+            if (itic.gt.iopt(21)) then
 c                                 not converging, under the assumption that 
 c                                 this happens at low T use pinc0 to set an ordered
 c                                 composition and exit
+               badc(1) = badc(1) + 1
                error = .false.
                call pinc0 (id,lord)
                exit 
@@ -10255,7 +10281,7 @@ c                                 dependent variables.
 
       end 
 
-      subroutine gderi1 (k,id,dg,d2g)
+      subroutine gderi1 (k,id,dg,d2g,inf)
 c----------------------------------------------------------------------
 c subroutine to compute the 1st and 2nd derivatives of the g of 
 c solution (id)  with respect to the concentrations of the kth ordered. 
@@ -10268,6 +10294,8 @@ c----------------------------------------------------------------------
       include 'perplex_parameters.h'
 
       integer i,k,i1,i2,id
+
+      logical inf 
 
       double precision g,dg,d2g,t,ds,d2s
 c                                 working arrays
@@ -10333,14 +10361,14 @@ c                                 convert dg and d2g to the full derivative
 
       end if 
 c                                 get the configurational entropy derivatives
-      call sderi1 (k,id,ds,d2s)
+      call sderi1 (k,id,ds,d2s,inf)
 
       dg  = dg + deph(k,id)  - v(2)*ds
       d2g = d2g - v(2)*d2s
 
       end
 
-      subroutine sderi1 (l,id,ds,d2s)
+      subroutine sderi1 (l,id,ds,d2s,inf)
 c----------------------------------------------------------------------
 c subroutine to the derivative of the configurational entropy of a 
 c solution with respect to the proportion of the lth ordered species.
@@ -10352,6 +10380,8 @@ c----------------------------------------------------------------------
       include 'perplex_parameters.h'
 
       integer i,j,k,l,id
+
+      logical inf
 
       double precision zt,dzdy,dzy,dzyy,zl,ds,d2s,zlnz,dsinf
 c                                 working arrays
@@ -10370,6 +10400,7 @@ c                                 configurational entropy variables:
       common/ cxt28 /dppp(j3,j3,m1,h9),d2gx(j3,j3),sdzdp(j3,m11,m10,h9)
 c----------------------------------------------------------------------
 
+      inf = .false.
       ds = 0d0 
       d2s = 0d0 
 
@@ -10450,8 +10481,9 @@ c                                 derivative may be +/-infinite
             ds = ds + qmult(i,id)*dzy
             d2s = d2s + qmult(i,id)*dzyy
          else 
+            inf = .true.
             ds = ds + qmult(i,id)*dsinf*1d4
-            d2s = d2s - qmult(i,id)*dabs(dsinf)*1d6
+            d2s = d2s - qmult(i,id)*dabs(dsinf)*1d5
          end if 
 
       end do 
@@ -12362,7 +12394,7 @@ c                                 iteration counter
             else 
 
                itic = itic + 1
-               if (itic.gt.20) exit
+               if (itic.gt.iopt(21)) exit
 
             end if        
 
