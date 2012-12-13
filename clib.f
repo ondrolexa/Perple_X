@@ -334,7 +334,7 @@ c                                 default search increment
 
       end 
 
-      subroutine input1 (first,output)
+      subroutine input1 (first,output,err)
 c-----------------------------------------------------------------------
 c input1 reads data from a file on unit n1, this data controls the
 c computational options and is modified frequently.

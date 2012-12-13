@@ -114,6 +114,8 @@ c---------------------------------------------------------------------
 c psxypl - subroutine to output x-y plot.
 
       implicit none
+
+      logical err
  
       include 'perplex_parameters.h'
 
@@ -121,7 +123,7 @@ c psxypl - subroutine to output x-y plot.
 c                                 rewind n4, cause icopt was already read
       rewind (n4)
 c                                 read plot file header
-      call plinp 
+      call plinp (err)
 c                                 get user options and read
 c                                 rest of plot file, draw data
       call psdplt (jop0)         
@@ -1817,7 +1819,7 @@ c                            no match
 
       end 
 
-      subroutine plinp 
+      subroutine plinp (err)
 c---------------------------------------------------------------------- 
 c plinp - subroutine to read x-y plot file header.
 
@@ -1826,6 +1828,8 @@ c plinp - subroutine to read x-y plot file header.
       include 'perplex_parameters.h'
 
       integer i,ier,jpt(2),jv(l3),iind,idep
+
+      logical err
 
       double precision c0,c1,c2,c3,c4
 
