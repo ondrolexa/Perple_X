@@ -17,7 +17,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical first, output, fake
+      logical first, output, fake, err
 
       integer imode, ierr, i
 
@@ -69,7 +69,7 @@ c                                 read input from unit n1 (terminal/disk).
 c                                 input1 also initializes:
 c                                 equilibrium counters; units n2 n4 and n6;
 c                                 and the limits for numerical results.
-      call input1 (first,output)
+      call input1 (first,output,err)
 c                                 set ivar flag, this indicates the number
 c                                 of possible independent plotting variables, jvar
 c                                 indicates the number of thermodynamic variables
@@ -87,13 +87,13 @@ c                                 read data for solution phases on n9:
 
       call setau2 (output)
 c                                 read the plot file for grid info
-      call plinp
+      call plinp (err)
 c                                 organize variables 
       call getvar
 c                                 initialize the grid parameters
       call setvar 
 c                                 read bulk composition data file:
-      call bplinp 
+      call bplinp (err)
 
       do 
 

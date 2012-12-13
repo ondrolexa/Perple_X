@@ -913,6 +913,9 @@ c-----------------------------------------------------------------------
       integer ichk,i,j
 
       logical good
+
+      integer iam
+      common/ cst4 /iam
  
       integer icomp,istct,iphct,icp
       common/ cst6 /icomp,istct,iphct,icp
@@ -959,7 +962,9 @@ c                               reject phases with negative/zero compositions
             comp(j) = 0d0
          else if (comp(j).lt.0d0) then 
 c                               use ichk to avoid multiple messages
-            if (ichk.eq.1) call warn (13,tot,j,name)
+            if (ichk.eq.1.and.iam.eq.1.or.iam.eq.2.or.iam.eq.4.or.
+     *                        iam.eq.5.or.iam.eq.6) 
+     *                                    call warn (13,tot,j,name)
             goto 90
          else 
             tot = tot + comp(j)

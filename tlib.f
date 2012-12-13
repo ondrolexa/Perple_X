@@ -17,7 +17,7 @@ c----------------------------------------------------------------------
 	implicit none
 
       write (*,'(/,a)') 
-     *      'Perple_X version 6.6.8, source updated Nov 24, 2012.'
+     *      'Perple_X version 6.6.8, source updated Dec 10, 2012.'
 
       end
 
@@ -66,6 +66,7 @@ c lopt(15) - spreadsheet format -> T = explicit output of independent variables
 c lopt(16) - bounds, T -> VRH averaging, F -> HS
 c lopt(17) - explicit_bulk_modulus, T-> use if available.
 c lopt(18) - refine_bad_nodes
+c lopt(19) - pause_on_error
 c nopt(5)  - speciation_tolerance
 c nopt(8)  - solvus_tolerance
 c nopt(20) - T_melt - kill melt endmembers at T < nopt(20)
@@ -142,6 +143,8 @@ c                                 spreadsheet format
       lopt(15) = .false.
 c                                 refine_bad_nodes -> not used
       lopt(18) = .true. 
+c                                 pause_on_error
+      lopt(19) = .true.
 c                                 minimum replicate label distance
       nopt(4) = 0.025
 c                                 speciation_tolerance
@@ -617,6 +620,10 @@ c                                 assume linear boundaries within a cell during 
  
             if (val.ne.'T') lopt(1) = .false. 
 
+         else if (key.eq.'pause_on_error') then
+ 
+            if (val.ne.'T') lopt(19) = .false. 
+
          else if (key.eq.'logarithmic_p') then
  
             if (val.eq.'T') lopt(14) = .true. 
@@ -704,11 +711,13 @@ c                                 reserved values for debugging, etc
       close (n8)
 c                                 -------------------------------------
 c                                 write and optional file choices
-      if (jer.ne.0) then 
-         write (*,1120) opname
-      else 
-         write (*,1130) opname
-      end if
+      if (iam.ne.14) then 
+         if (jer.ne.0) then 
+            write (*,1120) opname
+         else 
+            write (*,1130) opname
+         end if
+      end if 
 
       if (iam.eq.1) then 
 c                                 vertex only files:
@@ -1173,7 +1182,7 @@ c                                 generic thermo options
      *        4x,'approx_alpha           ',l1,10x,'[T] F',/,
      *        4x,'Anderson-Gruneisen     ',l1,10x,'[T] F',/,
      *        4x,'site_check             ',l1,10x,'[T] F',/,
-     *        4x,'speciation_max_it      ',i4,7x,'[200]')
+     *        4x,'speciation_max_it      ',i4,7x,'[40]')
 1013  format (/,2x,'Input/Output options:',//,
      *        4x,'dependent_potentials   ',a3,8x,'off [on]')
 1014  format (4x,'logarithmic_p          ',l1,10x,'[F] T',/,
@@ -1602,6 +1611,11 @@ c---------------------------------------------------------------------
 
       double precision realv
 
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
       if (ier.eq.1.or.ier.eq.2) then 
          write (*,1) char,int
       else if (ier.eq.3) then 
@@ -1622,6 +1636,8 @@ c---------------------------------------------------------------------
          write (*,10) char
       else if (ier.eq.11) then 
          write (*,11) char,int
+      else if (ier.eq.12) then 
+         write (*,12) char
       else if (ier.eq.13) then
          write (*,13) h8
       else if (ier.eq.14) then
@@ -1689,6 +1705,8 @@ c---------------------------------------------------------------------
          end if             
          write (*,413) 
          write (*,414) k1
+      else if (ier.eq.42) then 
+         write (*,42) char
       else if (ier.eq.43) then
          write (*,43) char
       else if (ier.eq.44) then 
@@ -1746,6 +1764,10 @@ c---------------------------------------------------------------------
          write (*,68) char
       else if (ier.eq.69) then 
          write (*,69) char
+      else if (ier.eq.70) then 
+         write (*,70) char
+      else if (ier.eq.71) then 
+         write (*,71) char
       else if (ier.eq.89) then
          write (*,89) 
       else if (ier.eq.90) then
@@ -1810,6 +1832,11 @@ c---------------------------------------------------------------------
          write (*,999) ier,realv,int,char
       end if
  
+      if (lopt(19)) then 
+         write (*,'(/,a,/)') 'Press Enter to quit...' 
+         pause
+      end if 
+
       stop
 
 1     format (/,'**error ver001** increase parameter ',a,' to ',i7,' in'
@@ -1834,7 +1861,9 @@ c---------------------------------------------------------------------
 10    format (/,'**error ver010** the text string:',/,a,/,'is too long',
      *        ' to be processed.',/,'The maximum allowed length is ',i3,
      *        ' characters.',/)
-11    format (/,'**error ver002** invalid ',a,' choice (',i3,')',a,/)
+11    format (/,'**error ver011** invalid ',a,' choice (',i3,')',a,/)
+12    format (/,'**error ver012** file:',a,/,'is missing or formatted ',
+     *        'incorrectly, run paralyzer or create/edit it manually',/)
 13    format ('**error ver013** too many excluded phases, ',
      *        'increase dimension h8 (',i3,')')
 14    format ('**error ver014** programming error, routine ',a)
@@ -1906,8 +1935,12 @@ c---------------------------------------------------------------------
      *           'perplex_option.dat')
 411   format (2x,'- reduce the auto_refine_factor_I keyword in ',
      *           'perplex_option.dat')
-412   format (2x,'- reduce the 2nd value of the iteration keyword',
+412   format (2x,'- reduce the 1st value of the iteration keyword',
      *           'in perplex_option.dat',/,
+     *        2x,'- reduce the 2nd value of the iteration keyword',
+     *           'in perplex_option.dat',/,
+     *        2x,'- reduce the reach_increment (if any) specified',
+     *           'for solutions in solution_model.dat',/,
      *        2x,'- turn adaptive minimization off by setting the 1st'
      *          ,'value of the iteration keyword to 0',
      *           'in perplex_option.dat')   
@@ -1915,6 +1948,8 @@ c---------------------------------------------------------------------
      *           'components and/or simplify solution models')
 414   format (2x,'- increase dimension k1 (',i7,') and recompile ',
      *           'Perple_X')
+42    format (/,'**error ver042** cannot open file:',a,/,'check that it'
+     *       ,' is not being used by another program',/)
 43    format (/,'**error ver043** you cannot simultaneously treat: ',
      *          a,/,'as a thermodynamic solution and as a saturated',
      *          ' phase.',/)
@@ -1992,6 +2027,13 @@ c---------------------------------------------------------------------
      *        'www.perplex.ethz.ch/datafiles/solution_model.dat',/)
 69    format (/,'**error ver069** too many points (',a,'), increase ',
      *          'parameter L5',/)
+70    format (/,'**error ver070** delete file: ',a,/,
+     *        'and restart UNSPLT')
+71    format (/,'**error ver071** format error or EOF reading the: ',a,
+     *        /,'probably VERTEX is still running or was terminated by '
+     *         ,'an error.',/)
+72    format (/,'**error ver072** UNSPLT found no completed segments',
+     *        ' in folder/directory:'/,5x,'.',a,/)
 89    format (/,'**error ver089** SMPLX programming error. Change ',
      *        'minimnization method.',/)
 90    format (/,'**error ver090** SMPLX failed to converge within ', 
@@ -2037,7 +2079,7 @@ c---------------------------------------------------------------------
 169   format (/,'**error ver169** cart, imod=',i2,' is an invalid ',
      *          'request')
 180   format (/,'**error ver180** too many (pseudo-)compounds, ',
-     *          'routine: ',a,' currently:',i7)
+     *          'routine: ',a,' currently: ',i7)
 181   format (/,'**error ver181** too many reactions,',
      *          ' increase dimension k2 (',i6,')')
 182   format (/,'**error ver182** too many invariant points,',
@@ -4055,7 +4097,10 @@ c fopen1 gets the project name and opens the problem definition file
 c    n1name = project_name.dat
 c iam is a flag indicating the calling program:
 c    4 - build
-c    else - vertex,meemum
+c    1 - vertex
+c    2 - meemum
+c   13 - unsplt, global
+c   14 - unplst, local
 c------------------------------------------------------------------------
       implicit none
  
@@ -4070,40 +4115,48 @@ c------------------------------------------------------------------------
 
       integer iam
       common/ cst4 /iam
+
+      integer jx, jy, lev, xn, yn
+      common/ cst58 /jx, jy, lev, xn, yn
 c-----------------------------------------------------------------------
       do 
 c                                 get the root for all output files
-         if (iam.eq.4) then 
+c                                 except if unsplt-local
+         if (iam.ne.14) then 
+
+            if (iam.eq.4) then 
 c                                 BUILD
-            write (*,1040)
+               write (*,1040)
 
-         else  
+            else  
 c                                 VERTEX, MEEMUM
-            write (*,1030) 
+               write (*,1030) 
 
-         end if 
+            end if 
 c                                 readrt loads the root into prject
-         call readrt 
+            call readrt
+ 
+         end if 
 c                                 make the problem definition file name
          call mertxt (n1name,prject,'.dat',0)
 
          if (iam.eq.4) then 
 
             write (*,1070) n1name
-c                                  BUILD
+c                                 BUILD
             open (n1,file=n1name,iostat=ierr,status='new')
 
             if (ierr.ne.0) then
-c                                  name exists
+c                                 name exists
                write (*,1050) n1name
                read (*,'(a)') y
 
                if (y.eq.'Y'.or.y.eq.'y') then 
-c                                  overwrite it
+c                                 overwrite it
                   open (n1,file=n1name)
 
                else
-c                                  try again 
+c                                 try again 
                   cycle 
 
                end if 
@@ -4111,25 +4164,42 @@ c                                  try again
             end if
          
          else 
-c                                  VERTEX, MEEMUM
+c                                 VERTEX, MEEMUM, UNSPLT
             open (n1,file=n1name,iostat=ierr,status='old')
 
             if (ierr.ne.0) then
-c                                  name does not exist
+c                                 name does not exist
                write (*,1080) n1name
                read (*,'(a)') y
                if (y.eq.'Y'.or.y.eq.'y') then 
-c                                  try again
+c                                 try again
                   cycle 
 
                else 
-c                                  quit
+c                                 quit
                   stop 
  
                end if 
 
             end if
 
+            if (iam.eq.13) then
+c                                 unsplt, read my_project.spt
+               call mertxt (tfname,prject,'.spt',0)
+               open (n8,file=tfname,iostat=ierr,status='old')
+               if (ierr.ne.0) then
+c                                 file does not exist
+                  call error (12,0d0,ierr,tfname)
+               end if 
+
+               read (n8,*,iostat=ierr) jx, jy
+               if (ierr.ne.0) call error (12,0d0,ierr,tfname)
+               read (n8,*,iostat=ierr) lev
+               if (ierr.ne.0) call error (12,0d0,ierr,tfname)
+               read (n8,*,iostat=ierr) xn, yn
+               if (ierr.ne.0) call error (12,0d0,ierr,tfname)
+
+            end if
          end if 
 
          exit 

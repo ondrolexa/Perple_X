@@ -17,7 +17,7 @@ c Please do not distribute any part of this source.
 
       integer jop0
 
-      logical output, first
+      logical output, first, err
 
       character yes*1
  
@@ -43,7 +43,7 @@ c                                 read input from unit n1 (terminal/disk).
 c                                 subroutine input1 also initializes:
 c                                 equilibrium counters; units n2 and n4;
 c                                 and the limits for numerical results.
-      call input1 (first,output)
+      call input1 (first,output,err)
 c                                 don't allow users to do anything
 c                                 other than gridded min
       if (icopt.lt.5) call error (4,0d0,icopt,'PSVDRAW')
@@ -56,9 +56,9 @@ c                                 read data for solution phases on n9:
 
       call setau2 (output)
 c                                 read the plot file for grid info
-      call plinp
+      call plinp (err)
 c                                 read bulk composition data:
-      call bplinp 
+      call bplinp (err)
 c                                 organize variables 
       call getvar  
 c                                 initialize the grid parameters

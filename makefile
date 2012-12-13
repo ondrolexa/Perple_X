@@ -1,5 +1,5 @@
 #
-# makefile for Perple_X 6.6.7
+# makefile for Perple_X 6.6.8
 #
 # To compile the Perple_X programs with this file first edit the compiler
 # variables so that they are consistent with the fortran installation on 
@@ -81,6 +81,9 @@ pssect: psect.o pscom.o pslib.o tlib.o rlib.o flib.o clib.o  dlib.o
 pt2curv: pt2curv.o tlib.o
 	$(COMP77) $(FFLAGS) $@.o tlib.o -o $@
 
+unsplt: unsplt.o tlib.o rlib.o flib.o clib.o dlib.o
+	$(COMP77) $(FFLAGS) $@.o rlib.o tlib.o flib.o clib.o dlib.o -o $@
+
 vertex: vertex.o 
 	$(COMP77) $(FFLAGS) vertex.o -o $@
 
@@ -139,6 +142,8 @@ rk.o: rk.f
 	$(COMP77) $(FFLAGS) -c rk.f
 meemum.o: meemum.f
 	$(COMP77) $(FFLAGS) -c meemum.f
+unsplt.o: unsplt.f
+	$(COMP77) $(FFLAGS) -c unsplt.f
 vertex.o: vertex.f
 	$(COMP77) $(FFLAGS) -c vertex.f
 werami.o: werami.f

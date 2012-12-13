@@ -1,6 +1,6 @@
 c routines common to psect and reader and NOT called by vertex/meemum
 
-      subroutine bplinp
+      subroutine bplinp (err)
 c-----------------------------------------------------------------------
 c read the b-plot file that contains the information on the assemblages
 c stable at each grid node
@@ -9,7 +9,9 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer nco, jxco, kxco, i, j, ids, ier
+      logical err
+
+      integer jxco, kxco, i, j, ids, ier
 c                                 -------------------------------------
 c                                 global variables
 c                                 x coordinate description
@@ -45,6 +47,12 @@ c                                 global assemblage data
       double precision cblk
       common/ cst300 /cblk(k5),jbulk
 
+      integer ncoor
+      common/ cxt24 /ncoor(h9)
+
+      integer iam
+      common/ cst4 /iam
+
       integer iopt
       logical lopt
       double precision nopt
@@ -56,40 +64,46 @@ c                                 pointer to solution compositional coordinates
       jxco = 0 
       kxco = 0
 
+      err = .false. 
+
       do 
 
          ibulk = ibulk + 1
 
-         if (ibulk.gt.k2) call error (183,0d0,k2,'BLINP1')
+         if (ibulk.gt.k2) call error (183,0d0,k2,'BLINP')
 
          read (n5,*,end=99) icog(ibulk),jcog(ibulk),iap(ibulk)
 
          ias = iap(ibulk)
+c                                if ias = 0, probably reading 
+c                                an inconsistent blk file in unsplt
+         if (ias.le.0) then 
+            ier = 1
+            exit 
+         end if 
 c                                phase molar amounts
-         read (n5,*) (bg(i,ibulk),i=1,iavar(3,ias))
+         read (n5,*,iostat=ier) (bg(i,ibulk),i=1,iavar(3,ias))
+
+         if (ier.ne.0) exit
 
          icoor(ibulk) = jxco
 
          do i = 1, iavar(1,ias)
 
-            ids = idasls(i,ias)
+            ids = idasls(i,ias)     
 
-            nco = 0 
-
-            do j = 1, istg(ids)
-               nco = nco + ispg(ids,j)
-            end do       
-
+            kxco = jxco + ncoor(ids) 
             jxco = jxco + 1
-            kxco = jxco + nco - 1
 
             if (kxco.gt.k18) call error (61,0d0,k18,'BPLINP')
 
-            read (n5,*) (xcoor(j), j = jxco, kxco)
+            read (n5,*,iostat=ier) (xcoor(j), j = jxco, kxco)
          
             jxco = kxco
 
          end do 
+
+         if (ier.ne.0) exit 
 
          jxco = kxco  
 c                                 read mu's if available
@@ -105,12 +119,26 @@ c                                 potentials
                   mus(i,ibulk) = nopt(7)
                end do 
  
+               ier = 0 
+
             end if 
          end if 
 
-      end do                 
+      end do
 
-99    end  
+99    ibulk = ibulk - 1                 
+
+      if (ier.ne.0) then 
+
+         if (iam.ne.14) then
+            call error (71,nopt(7),i,' assemblage (*.blk) file')
+         else 
+            err = .true.
+         end if
+
+      end if
+
+      end  
 
       subroutine getvar  
 c--------------------------------------------------------------------
@@ -277,7 +305,7 @@ c                                 switch loopx and loopy
 
       end
 
-      subroutine plinp
+      subroutine plinp (err)
 c---------------------------------------------------------------------- 
 c plinp - subroutine to read assemblage info for gridded min calculations.
 c if icopt = 7 and fileio also reads nodal coordinates.
@@ -288,7 +316,7 @@ c----------------------------------------------------------------------
 
       integer i, j, k, jst, irep, kd, jend, ier
 
-      logical count
+      logical count, err 
 
       integer iopt
       logical lopt
@@ -297,6 +325,9 @@ c----------------------------------------------------------------------
 
       integer igrd
       common/ cst311/igrd(l7,l7)
+
+      integer iam
+      common/ cst4 /iam
 
       integer jlow,jlev,loopx,loopy,jinc
       common/ cst312 /jlow,jlev,loopx,loopy,jinc
@@ -332,6 +363,8 @@ c----------------------------------------------------------------------
       integer idsol,nrep,nph
       common/ cst38/idsol(k5,k3),nrep(k5,k3),nph(k3)
 c----------------------------------------------------------------------
+      err = .false.
+
       if (jcont.ne.0) then 
 c                                 turn interpolation off for
 c                                 fractionation calcs or compositional
@@ -341,12 +374,14 @@ c                                 variables, this could be optional.
 
       end if 
 c                                 top of plot file
-      read (n4,*) loopx, loopy, jinc
+      read (n4,*,iostat=ier) loopx, loopy, jinc
+      if (ier.ne.0) goto 99
 c                                 decompress the grid data
       do i = 1, loopx
          jst = 1
          do while (jst.le.loopy)
-            read (n4,*) irep, kd
+            read (n4,*,iostat=ier) irep, kd
+            if (ier.ne.0) goto 99
             if (kd.eq.0) write (*,*) 'bad un at i, j',i,j
             jend = jst + irep 
             do j = jst, jend
@@ -358,13 +393,15 @@ c                                 decompress the grid data
          end do 
       end do 
 c                                 read assemblages
-      read (n4,*) iasct
+      read (n4,*,iostat=ier) iasct
+      if (ier.ne.0) goto 99
 
       istab = 0 
 
       do i = 1, iasct
-         read (n4,*) iavar(1,i),iavar(2,i),iavar(3,i)
-         read (n4,*) (idasls(j,i), j = 1, iavar(3,i))
+         read (n4,*,iostat=ier) iavar(1,i),iavar(2,i),iavar(3,i)
+         read (n4,*,iostat=ier) (idasls(j,i), j = 1, iavar(3,i))
+         if (ier.ne.0) goto 99
 c                                 make a cumulative list of stable phases
 c                                 first get the number of occurrences of 
 c                                 each phase in the assemblage
@@ -447,6 +484,16 @@ c                                 coordinate file.
          close (n8)
 
       end if 
+
+99    if (ier.ne.0) then 
+
+         if (iam.ne.14) then
+            call error (71,vip(1,1),i,' plot (*.plt) file')
+         else 
+            err = .true.
+         end if
+
+      end if
 
 1000  format (/,'**error ver635** Coordinate file ',a,/,
      *       'is inconsistent with plot file, re-run VERTEX.',/)

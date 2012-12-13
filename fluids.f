@@ -413,7 +413,11 @@ c                                 up species indices:
             ins(3) = 6
             ins(4) = 8
          else if (ifug.eq.13.or.ifug.eq.15) then 
+
             vname(3) = 'X(H2)   '
+            isp = 2
+            ins(1) = 1
+            ins(2) = 5
 
          else if (ifug.le.6.or.ifug.eq.14.or.
      *            ifug.eq.21.or.ifug.eq.22.or.ifug.eq.25) then 
@@ -452,7 +456,8 @@ c                                 tabulated properties
                write (*,'(a)') 'Use frendly.'
                stop
 
-            else if (ifug.le.6.or.ifug.eq.14.or.ifug.eq.17.or.
+            else if (ifug.le.6.or.ifug.eq.13..or.ifug.eq.14.or.
+     *               ifug.eq.17.or.
      *               ifug.eq.21.or.ifug.eq.22.or.ifug.eq.25) then 
 c                                 xco2 EoS's
                ipot = 3
@@ -717,7 +722,8 @@ c                                 computational loop, initialize p,t to be safe
             p = var(1)
             t = var(2) 
 
-            if (ifug.le.6 .or.ifug.eq.14.or.ifug.eq.17.or.
+            if (ifug.le.6 .or.ifug.eq.13.or.ifug.eq.14.or.
+     *          ifug.eq.15.or.
      *          ifug.eq.21.or.ifug.eq.22.or.ifug.eq.25.or.
      *          ifug.eq.15.or.ifug.eq.16.or.ifug.eq.26) then 
 c                                 xco2, xo, xh2 EoS's
@@ -860,7 +866,12 @@ c                                 assign values to local variables
                      end if 
 
                   end do 
-  
+c                                 initialize species fractions in case
+c                                 of a change in EoS or degenerate composition?
+                  do k = 1, nsp
+                     xs(k) = 0d0
+                  end do 
+c                                 calculate properties
                   call cfluid (fo2, fs2)    
 c                                 variables
                   do k = 1, ipot 
@@ -933,23 +944,24 @@ c                                 atomic fractions
      *                or.ifug.eq.14.or.ifug.gt.20.and.ifug.lt.24) then
 c                                  finite difference estimate for volume:
                      vdif = 0d0
-                     p = p + 0.5d0
+                     p = var(1) + 0.5d0
                      f = 1d0 
                      do l = 1, 2
                         call cfluid (fo2,fs2)
                         vdif = vdif + f*((1d0-xo)*fhc(1) + xo*fhc(2))
                         f = -1d0
-                        p = p - 1d0
+                        p = var(1) - 0.5
                      end do 
 
                      vol = 83.14d0*t*vdif
+                     p = var(1)
 
                   else if (ifug.eq.4.or.ifug.eq.13.or.ifug.eq.15) then
 c                                 use analytic vol
                   else 
 c                                 compute volume by finite difference
                      vdif = 0d0
-                     p = p + 0.5d0
+                     p = var(1) + 0.5d0
                      f = 1d0 
                      do l = 1, 2
                         call cfluid (fo2,fs2)
@@ -958,9 +970,10 @@ c                                 compute volume by finite difference
      *                         f*xs(ins(k))*dlog(g(ins(k))*p*xs(ins(k)))
                         end do 
                         f = -1d0
-                        p = p - 1d0
+                        p = var(1) - 0.5
                      end do 
 
+                     p = var(1)
                      vol = 83.14d0*t*vdif
 
                   end if 

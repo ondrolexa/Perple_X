@@ -342,13 +342,15 @@ c computational options and is modified frequently.
 c iam - indicates calling program 1 - vertex
 c                                 2 - meemum
 c                                 3 - werami
+c                                13 - unsplt, global call
+c                                14 - unsplt, local call
 c                                 any other values no output
 c-----------------------------------------------------------------------
       implicit none
  
       include 'perplex_parameters.h'
  
-      logical output, eof, first
+      logical output, eof, first, err
 
       character*100 blank*1,string(3)*8,rname*5,name*8,strg*80,n2name,
      *              n9name,y*1,sname*10,prt*3,plt*3
@@ -973,7 +975,9 @@ c                                 set convergence criteria for routine univeq
 
       if (icopt.ne.0) close (n1)
 c                                 open files requested in input
-      call fopen (n2name,prt,plt,n9name,jbulk,icp)
+      call fopen (n2name,prt,plt,n9name,jbulk,icp,err)
+c                                 err only set for unsplt (iam.eq.14)
+      if (err) return
 c                                 read auxilliary input for 2d fractionation
       if (icopt.eq.9) call rdain
 c                                 get runtime parameters
@@ -2274,7 +2278,7 @@ c                                  decompose ordered species
 
       end
 
-      subroutine fopen (n2name,prt,plt,n9name,jbulk,icp)
+      subroutine fopen (n2name,prt,plt,n9name,jbulk,icp,err)
 c-----------------------------------------------------------------------
 c open files for subroutine input1.
 c-----------------------------------------------------------------------
@@ -2282,7 +2286,7 @@ c-----------------------------------------------------------------------
  
       include 'perplex_parameters.h'
 
-      logical first
+      logical first, err
 
       integer ierr,jbulk,icp
  
@@ -2312,14 +2316,21 @@ c----------------------------------------------------------------------
 c                                 open thermodynamic data file
       call fopen2 (0,n2name) 
 
-      if (iam.gt.2) then 
+      if (iam.gt.2.and.iam.ne.13) then 
 c                                 perplex programs other than
 c                                 meemum and vertex only open
 c                                 exisiting files:
 c                                 open the plot file
          call mertxt (name,prject,'.plt',0)
          open (n4, file = name, iostat = ierr, status = 'old')
-         if (ierr.ne.0) call error (122,0d0,n4,name)
+         if (ierr.ne.0) then
+            if (iam.eq.14) then
+               err = .true.
+               return
+            else 
+               call error (122,0d0,n4,name)
+            end if
+         end if 
 c                                 open solution model file
          if (n9name.ne.blank) then
             io9 = 0 
@@ -2359,7 +2370,7 @@ c                                 open solution model file
 
       end if
 c                                 open print/plot files if requested
-      if (prt.ne.blank.and.prt.ne.'no_') then 
+      if (prt.ne.blank.and.prt.ne.'no_'.and.iam.ne.13) then 
          io3 = 0 
          call mertxt (name,prject,'.prn',0)
          open (n3, file = name)
@@ -2401,5 +2412,59 @@ c                                 create special plot output file
 1190  format ('Writing plot output to file: ',a)
 1210  format ('Reading solution models from file: ',a)
 1220  format ('Writing bulk composition plot output to file: ',a)
+
+      end 
+
+      subroutine outgrd (loopx,loopy,jinc)
+c----------------------------------------------------------------------
+c output grid data to the plot file
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer loopx,loopy,jinc,i,j,jst,kst,kd,ltic
+
+      integer igrd
+      common/ cst311 /igrd(l7,l7)
+
+      integer idasls,iavar,iasct,ias
+      common/ cst75  /idasls(k5,k3),iavar(3,k3),iasct,ias
+c----------------------------------------------------------------------
+
+      write (n4,*) loopx, loopy, jinc
+c                                 fill in grid
+      do i = 1, loopx
+
+         if (i.ne.1.and.igrd(i,1).eq.0) igrd(i,1) = igrd(i-1,1)
+
+         kst = 1
+
+20       jst = kst
+         if (i.ne.1.and.igrd(i,jst).eq.0) igrd(i,jst) = igrd(i-1,jst)
+         kd = igrd(i,jst)
+         ltic = -1
+
+         do j = jst, loopy
+
+            if (i.ne.1.and.igrd(i,j).eq.0) igrd(i,j) = igrd(i-1,j)
+
+            if (igrd(i,j).eq.0.or.igrd(i,j).eq.kd) then
+               ltic = ltic + 1
+               if (j.eq.loopy) write (n4,*) ltic,kd
+            else 
+               write (n4,*) ltic,kd
+               kst = j
+               goto 20 
+            end if 
+         end do 
+      end do         
+c                                 write assemblage list
+      write (n4,*) iasct
+
+      do i = 1, iasct
+         write (n4,*) iavar(1,i),iavar(2,i),iavar(3,i)
+         write (n4,*) (idasls(j,i), j = 1, iavar(3,i))
+      end do 
 
       end 

@@ -1636,7 +1636,7 @@ c----------------------------------------------------------------------
 
       integer i,j,k,l,m,kdbulk,ico,jco,ids,ioct,inct
 
-      logical output 
+      logical output, reord, match, nomtch, ok 
 
       double precision cpt(k5,k5),xt(k5,mst,msp),bt(k5)
 c                                 x-coordinates for the final solution
@@ -1666,113 +1666,148 @@ c                                 x coordinate description
       common/ cst78 /cptot(k5),ctotal,jdv(k19),npt,fulrnk
 c----------------------------------------------------------------------
 c                                 look for a match with known assemblages
-      do 110 i = 1, iasct
+      match = .false.
+ 
+      do i = 1, iasct
 
          if (np.ne.iavar(1,i).or.ncpd.ne.iavar(2,i)) cycle 
 
-         do 120 j = 1, ntot
+         nomtch = .false.
+
+         do j = 1, ntot
+
+            ok = .false.
+
             do k = 1, ntot 
+
                if (idasls(k,i).eq.kkp(j)) then 
+
+                  ok = .true.
 c                                 check that the phase occurs the same 
 c                                 number of times in each assemblage:
-                   inct = 0 
-                   ioct = 0 
-                   do l = 1, ntot
-                      if (kkp(l).eq.kkp(j)) inct = inct + 1
-                      if (idasls(l,i).eq.kkp(j)) ioct = ioct + 1
-                   end do 
+                  inct = 0 
+                  ioct = 0 
 
-                   if (ioct.ne.inct) goto 110 
+                  do l = 1, np
+                     if (kkp(l).eq.kkp(j)) inct = inct + 1
+                     if (idasls(l,i).eq.kkp(j)) ioct = ioct + 1
+                  end do 
 
-                   goto 120
+                  if (ioct.ne.inct) then
+                     nomtch = .true.  
+                     exit 
+                  end if 
 
                end if 
-            end do
-c                                 no match with compound j:
-c                                 do next assemblage
-            goto 110 
 
-120      continue  
+            end do
+
+            if (.not.ok) nomtch = .true. 
+            if (nomtch) exit 
+
+         end do 
+
+         if (nomtch) cycle
+
+         match = .true.
+c                                 check if reordering is necessary
+         reord = .false.
+
+         do j = 1, ntot
+            if (kkp(j).eq.idasls(j,i)) cycle
+            reord = .true.
+            write (*,*) 
+     *'at last! found a case for reordering, please tell me'
+            exit
+         end do
+
+         if (reord) then 
+c                                 reorder the result arrays of the
+c                                 current occurence to match initial 
+c                                 occurence:
+            do j = 1, ntot
+
+               do k = 1, ntot
+
+                  if (kkp(k).eq.idasls(j,i)) then
+c                                 load temporary array
+                  bt(j) = amt(k)
+
+                     if (kkp(k).gt.0) then 
+
+                        do l = 1, icomp
+                           cpt(l,j) = cp3(l,k)
+                        end do
+
+                        do l = 1, istg(kkp(k))
+                           do m = 1, ispg(kkp(k),l)
+                              xt(j,l,m) = x3(k,l,m) 
+                           end do 
+                        end do 
+                     end if 
+c                                 this eliminates immiscible phases
+                     kkp(k) = 0
+
+                     exit 
+ 
+                  end if 
+
+               end do 
+
+            end do
+c                                 reload final arrays from temporary
+            do j = 1, ntot
+
+               amt(j) = bt(j)
+               ids = idasls(j,i)
+               kkp(j) = ids
+
+               if (ids.gt.0) then 
+
+                  do k = 1, icomp
+                     cp3(k,j) = cpt(k,j)
+                  end do
+
+                  do k = 1, istg(ids)
+                     do l = 1, ispg(ids,k)
+                        x3(j,k,l) = xt(j,k,l) 
+                     end do 
+                  end do 
+               end if 
+            end do 
+
+         end if 
 
          if (ibulk.gt.k2) call error (183,0d0,k2,'SORTER')
          ibulk = ibulk + 1
          iap(ibulk) = i
          kdbulk = ibulk
-c                                 reorder the result arrays of the
-c                                 current occurence to match initial 
-c                                 occurence:
-         do j = 1, ntot
 
-            do k = 1, ntot
+         exit  
 
-               if (kkp(k).eq.idasls(j,i)) then
-c                                 load temporary array
-                  bt(j) = amt(k)
+      end do 
 
-                  if (kkp(k).gt.0) then 
-
-                     do l = 1, icomp
-                        cpt(l,j) = cp3(l,k)
-                     end do
-
-                     do l = 1, istg(kkp(k))
-                        do m = 1, ispg(kkp(k),l)
-                           xt(j,l,m) = x3(k,l,m) 
-                        end do 
-                     end do 
-                  end if 
-c                                 this eliminates immiscible phases
-                  kkp(k) = 0
-
-                  exit 
- 
-               end if 
-
-            end do 
-
-         end do
-c                                 reload final arrays from temporary
-         do j = 1, ntot
-
-            amt(j) = bt(j)
-            ids = idasls(j,i)
-            kkp(j) = ids
-
-            if (ids.gt.0) then 
-
-               do k = 1, icomp
-                  cp3(k,j) = cpt(k,j)
-               end do
-
-               do k = 1, istg(ids)
-                  do l = 1, ispg(ids,k)
-                     x3(j,k,l) = xt(j,k,l) 
-                  end do 
-               end do 
-            end if 
-         end do 
-
-         goto 98 
-
-110   continue 
+      if (.not.match) then 
 c                                 the assemblage is new:
-      iasct = iasct + 1
-      if (iasct.gt.k3) call error (184,0d0,k3,'BLKMAT')
+         iasct = iasct + 1
+         if (iasct.gt.k3) call error (184,0d0,k3,'SORTER')
 
-      do i = 1, ntot
-         idasls(i,iasct) = kkp(i)
-      end do
+         do i = 1, ntot
+            idasls(i,iasct) = kkp(i)
+         end do
 
-      ibulk = ibulk + 1
-      if (ibulk.gt.k2) call error (183,0d0,k2,'BLKMAT')
-      kdbulk = ibulk 
-      iap(ibulk) = iasct 
+         ibulk = ibulk + 1
+         if (ibulk.gt.k2) call error (183,0d0,k2,'BLKMAT')
+         kdbulk = ibulk 
+         iap(ibulk) = iasct 
 
-      iavar(1,iasct) = np
-      iavar(2,iasct) = ncpd
-      iavar(3,iasct) = np + ncpd
-c                                
-98    if (output) call outbl1 (ico,jco)
+         iavar(1,iasct) = np
+         iavar(2,iasct) = ncpd
+         iavar(3,iasct) = np + ncpd
+
+      end if 
+                                
+      if (output) call outbl1 (ico,jco)
      
       end 
 

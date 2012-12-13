@@ -62,7 +62,7 @@ c parameters are assigned in "perplex_parameter.h"
 c-----------------------------------------------------------------------
       include 'perplex_parameters.h'
 
-      logical output, first, pots  
+      logical output, first, pots, err  
 
       integer io3,io4,io9
       common / cst41 /io3,io4,io9
@@ -102,6 +102,8 @@ c                                    iam = 9  - actcor
 c                                    iam = 10 - rewrite 
 c                                    iam = 11 - cohsrk
 c                                    iam = 12 - species
+c                                    iam = 13 - unsplt (global)
+c                                    iam = 14 - unsplt (local)
       iam = 1
 c                                 version info
       call vrsion
@@ -118,7 +120,7 @@ c                                 read input from unit n1 (terminal/disk).
 c                                 input1 also initializes: conditions,
 c                                 equilibrium counters; units n2 n4 and n6;
 c                                 and the limits for numerical results.
-         call input1 (first,output)
+         call input1 (first,output,err)
 c                                 read thermodynamic data on unit n2:
          call input2 (first)
 c                                 read/set autorefine dependent parameters, 
@@ -6908,60 +6910,6 @@ c                                 ouput grid data
 1080  format (i6,' minimizations required of the ',
      *        'theoretical limit of ',i6)
 1090  format (7x,'...working (',i6,' minimizations done)')
-
-      end 
-
-      subroutine outgrd (loopx,loopy,jinc)
-c----------------------------------------------------------------------
-c output grid data to the plot file
-c----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      integer loopx,loopy,jinc,i,j,jst,kst,kd,ltic
-
-      integer igrd
-      common/ cst311 /igrd(l7,l7)
-
-      integer idasls,iavar,iasct,ias
-      common/ cst75  /idasls(k5,k3),iavar(3,k3),iasct,ias
-c----------------------------------------------------------------------
-
-      write (n4,*) loopx, loopy, jinc
-c                                 fill in grid
-      do i = 1, loopx
-
-         if (i.ne.1.and.igrd(i,1).eq.0) igrd(i,1) = igrd(i-1,1)
-
-         kst = 1
-
-20       jst = kst
-         if (i.ne.1.and.igrd(i,jst).eq.0) igrd(i,jst) = igrd(i-1,jst)
-         kd = igrd(i,jst)
-         ltic = -1
-
-         do j = jst, loopy
-
-            if (i.ne.1.and.igrd(i,j).eq.0) igrd(i,j) = igrd(i-1,j)
-
-            if (igrd(i,j).eq.0.or.igrd(i,j).eq.kd) then
-               ltic = ltic + 1
-               if (j.eq.loopy) write (n4,*) ltic,kd
-            else 
-               write (n4,*) ltic,kd
-               kst = j
-               goto 20 
-            end if 
-         end do 
-      end do         
-c                                 write assemblage list
-      write (n4,*) iasct
-
-      do i = 1, iasct
-         write (n4,*) iavar(1,i),iavar(2,i),iavar(3,i)
-         write (n4,*) (idasls(j,i), j = 1, iavar(3,i))
-      end do 
 
       end 
 

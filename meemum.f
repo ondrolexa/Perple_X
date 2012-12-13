@@ -179,7 +179,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical first, output 
+      logical first, output, err 
 
       integer iopt
       logical lopt
@@ -198,7 +198,7 @@ c                                 elastic modulii flag
 c                                 -------------------------------------------
 c                                 open statements for units n1-n5 and n9
 c                                 are in subroutine input1
-      call input1 (first,output)
+      call input1 (first,output,err)
 c                                 for meemum turn auto_refine OFF
       iopt(6) = 0 
 c                                 read thermodynamic data on unit n2:
