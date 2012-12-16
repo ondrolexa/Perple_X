@@ -18,7 +18,7 @@ c----------------------------------------------------------------------
       integer ierr, h, i, j, k, l, m, n, o, p, gasct, ggrd(l7,l7), gi,
      *        gsoct, loc2gs(h9), loc2ga(k3), gdasls(k5,k3), gavar(3,k3),
      *        gap(k2), gbulk, gico(k2), gjco(k2), gicoor(k1), inct, gj,
-     *        ioct, ids, jxco, kxco, gjxco, gkxco, gas, kbad, kb(200,2),
+     *        ioct, ids, jxco, kxco, gjxco, gkxco, gas, kbad,kb(1200,2),
      *        loc2gb(k2), ist, jst, gstg(h9), gspg(h9,mst), gcoor(h9)
 
       character gprjct*100, dir*100, gname(h9)*10
@@ -182,6 +182,8 @@ c                                 of the next two statements:
 c----------------------------------------------------------------------
       do j = 1, jx
          do i = 1, jy
+c                                 initialize err just in case
+            err = .false.
 c                                 segment index
             k = k + 1
 c                                 segment folder
@@ -201,7 +203,8 @@ c                                 contains a folder mark_IV in with the
 c                                 programs and data files:
             write (dir,'(i4,a)') k
             call mertxt (dir,dir,'/',0)
-            call mertxt (dir,'yanliu7/working/segment',dir,0)
+            call mertxt (dir,'yanliu8/working/segment',dir,0)
+c           call mertxt (dir,'working/segment',dir,0)
             call mertxt (prject,dir,gprjct,0)
 c                                                            to here:
 c----------------------------------------------------------------------
@@ -236,7 +239,7 @@ c                                 jinc1
 c                                 read local bulk composition data file:   
             if (.not.err) call bplinp (err)
 
-10          if (err.or.iasct.eq.0.or.ibulk.eq.0) then
+10          if (err.or.iasct.eq.0.or.ibulk.eq.0.or.loopx.ne.17) then
                kbad = kbad + 1
                kb(kbad,1) = i
                kb(kbad,2) = j

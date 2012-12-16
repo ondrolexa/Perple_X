@@ -17,7 +17,7 @@ c----------------------------------------------------------------------
 	implicit none
 
       write (*,'(/,a)') 
-     *      'Perple_X version 6.6.8, source updated Dec 13, 2012.'
+     *      'Perple_X version 6.6.8, source updated Dec 16, 2012.'
 
       end
 
@@ -1834,7 +1834,7 @@ c---------------------------------------------------------------------
  
       if (lopt(19)) then 
          write (*,'(/,a,/)') 'Press Enter to quit...' 
-         pause
+         read (*,'(a)') char
       end if 
 
       stop

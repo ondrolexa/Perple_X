@@ -9317,6 +9317,11 @@ c                                 configurational entropy variables:
 
       logical pin
       common/ cyt2 /pin(j3)
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 c----------------------------------------------------------------------
       s = 0d0
 c                                 for each site
@@ -9395,16 +9400,17 @@ c                                 and the jacobians are
      *                         - q * dzdy * sdzdp(l,j,i,id) / zl
                   end do 
 
-               else if (zl.lt.-1d-6) then 
-
-                   write (*,*) 'wacka boom',zl,j,i
-                   write (*,*) (p0a(l),l=1,8)
-                   write (*,*) (pa(l),l=1,8)
-                   write (*,*) 
-
                else 
 
-                  inf = .true.
+                   if (zl.lt.-nopt(5)) then 
+
+                      write (*,*) 'wacka boom',zl,j,i
+                      write (*,*) (p0a(l),l=1,8)
+                      write (*,*) (pa(l),l=1,8)
+                      write (*,*) 
+                      inf = .true.
+
+                   end if 
 c                                 a species with a non-zero
 c                                 derivative is zero, the 
 c                                 first will be sign(dzdy)*infinity
