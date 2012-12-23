@@ -6334,6 +6334,16 @@ c                                 MRK dispersion term for H2O
 c                                 MRK dispersion term for CO2
             a(2) =  92935540d0 + t*(-82130.73d0 + 21.29d0*t)
 
+c         else if (i.eq.5) then 
+c                                 MRK fit to NIS table for H2 at 10 kbar
+c                                 400-1000 K.
+c            b(5) = 12.81508162d0
+c            a(5) = 0.391950132949994654D8 
+c     *           + t * (-0.881231157499978144D5) 
+c     *           + t**2 * 0.890185987380923081D2 
+c     *           + t**3 * (-0.286881183333320412D-1)
+
+
          else if (i.eq.14) then 
 c                                 MRK dispersion term for SiO2, from
 c                                 sio2_mp_fit3.mws 
