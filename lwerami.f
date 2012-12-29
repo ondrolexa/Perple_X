@@ -1,10 +1,10 @@
 
-      include 'olib.f'
-      include 'clib.f'
-      include 'dlib.f'
-      include 'rlib.f'
-      include 'tlib.f'
-      include 'flib.f'
+c      include 'olib.f'
+c      include 'clib.f'
+c      include 'dlib.f'
+c      include 'rlib.f'
+c      include 'tlib.f'
+c      include 'flib.f'
 
       program werami
 c----------------------------------------------------------------------
@@ -2846,9 +2846,6 @@ c----------------------------------------------------------------
 
       integer idstab,nstab,istab
       common/ cst34 /idstab(i11),nstab(i11),istab
-
-      double precision atwt
-      common/ cst45 /atwt(k0)
 c----------------------------------------------------------------------
       if (kop(1).eq.38) then 
 c                                 custom property choices
