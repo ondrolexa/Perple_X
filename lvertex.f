@@ -83,8 +83,8 @@ c-----------------------------------------------------------------------
       integer jtest,jpot
       common/ debug /jtest,jpot
 
-      save first,output,pots
-      data output,first/.false.,.true./
+      save err,first,output,pots
+      data err,output,first/.false.,.false.,.true./
 
       integer iam
       common/ cst4 /iam
