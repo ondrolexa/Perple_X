@@ -2846,6 +2846,9 @@ c----------------------------------------------------------------
 
       integer idstab,nstab,istab
       common/ cst34 /idstab(i11),nstab(i11),istab
+
+      double precision atwt
+      common/ cst45 /atwt(k0)
 c----------------------------------------------------------------------
       if (kop(1).eq.38) then 
 c                                 custom property choices
@@ -3759,27 +3762,29 @@ c                                 22-24
      *      'v0_T          ','vp_T          ','vs_T          ',
 c                                 25-27
      *      'v0_P          ','vp_P          ','vs_P          ',
-c                                 28-30
-     *      'wt,%          ','vol,%         ','mol,%         ',
-c                                 31-33
+c                                 28
+     *      'cp/cv         ',
+c                                 29-31
+     *      'vol,%       ','wt,%            ','mol,%         ',
+c                                 32-34
      *      'h,J/m3        ','cp,J/K/m3     ','blk_comp      ',
-c                                 34-36
+c                                 35-37
      *      'mode          ','composition   ','s,J/K/m3      ',
-c                                 37-39
+c                                 38-40
      *      's,J/K/kg      ','h,J/kg        ','cp,J/K/kg     ',
-c                                 40-42
+c                                 41-43
      *      'specific_mass ','poisson_ratio ','chemical_pot  ',
-c                                 43-45
-     *      'assemblage_i  ','extent        ','cp/cv         '/
+c                                 44-45
+     *      'assemblage_i  ','extent        '/
 c                                 l2p points from lop to prname, 
 c                                 1-10
-      data l2p/34,10,32,13,14,33,37,38, 3, 4,
+      data l2p/35,10,33,13,14,34,38,39, 3, 4,
 c                                 11-20            
-     *         5 , 6, 7, 8, 9,36,37,38,39,40,
+     *         5 , 6, 7, 8, 9,37,38,39,40,41,
 c                                 21-30 
-     *         41, 1,42,43, 0,22,23,24,18,19,
+     *         42, 1,43,44, 0,22,23,24,18,19,
 c                                 31-39
-     *         25,26,27,20,21, 0, 44, 0, 45/
+     *         25,26,27,20,21, 0, 45, 0, 28/
 c----------------------------------------------------------------------
 c                                 make property name
       if (lop.eq.6) then
@@ -3806,8 +3811,6 @@ c                                 mol%
 
          end if 
 
-         call unblnk(dname(jprop))  
-
       else if (lop.eq.8) then 
 c                                phase composition
           write (dname(jprop),'(a,i1,a,a)') 'C',komp,pname
@@ -3816,7 +3819,6 @@ c                                phase composition
       else if (lop.eq.23) then 
 c                                chemical potential of a component
          write (dname(jprop),'(a,a,a)') 'mu_',cname(icx),',J/mol'
-         call unblnk (dname(jprop))
 
       else if (lop.eq.36) then 
 c                                allprp option, lop points directly
@@ -3837,9 +3839,7 @@ c                                 mass
 c                                 mol
             write (dname(jprop),'(a,a)') pname,',mol'
 
-         end if 
-
-         call unblnk(dname(jprop))  
+         end if   
 
       else if (lop.eq.38) then 
 c                                 custom prop (phemgp)
@@ -3850,6 +3850,8 @@ c                                 custom prop (phemgp)
          dname(jprop) = prname(l2p(lop))
           
       end if    
+
+      call unblnk(dname(jprop))  
 
 1000  format (/,'This composition will be designated: ',a,/)
 
