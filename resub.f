@@ -1716,8 +1716,6 @@ c                                 check if reordering is necessary
          do j = 1, ntot
             if (kkp(j).eq.idasls(j,i)) cycle
             reord = .true.
-            write (*,*) 
-     *'at last! found a case for reordering, please tell me'
             exit
          end do
 

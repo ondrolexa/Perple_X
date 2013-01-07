@@ -14,10 +14,10 @@ c----------------------------------------------------------------------
 c----------------------------------------------------------------------
 c a version stamp for each executable
 c----------------------------------------------------------------------
-	implicit none
+      implicit none
 
       write (*,'(/,a)') 
-     *      'Perple_X version 6.6.8, source updated Jan 4, 2013.'
+     *      'Perple_X version 6.6.8, source updated Jan 7, 2013.'
 
       end
 
@@ -956,9 +956,6 @@ c                                 proportionality constant for shear modulus
 1070  format (/,'Warning: auto_refine_factors must be ',
      *         '> 1',/,'the keyword will be',
      *         ' assigned its default value (',i2,').',/)
-1080  format (/,'Warning: auto_refine_slop must be ',
-     *         ' >=0 and <1',/,'the keyword will be',
-     *         ' assigned its default value.',/)
 1090  format (/,'Warning: value2 of the iteration keyword must be ',
      *         ' >1 and <8',/,'value2 will be',
      *         ' assigned its default value [4].',/)
@@ -2033,7 +2030,7 @@ c---------------------------------------------------------------------
      *        /,'probably VERTEX is still running or was terminated by '
      *         ,'an error.',/)
 72    format (/,'**error ver072** UNSPLT found no completed segments',
-     *        ' in folder/directory:'/,5x,'.',a,/)
+     *          ' in folder/directory:'/,5x,'.',a,/)
 89    format (/,'**error ver089** SMPLX programming error. Change ',
      *        'minimnization method.',/)
 90    format (/,'**error ver090** SMPLX failed to converge within ', 
@@ -5030,7 +5027,7 @@ c type 2 - plt, psvdraw format
 c type 3 - pts, pspts format
 c type 4 - phm, phemgp table format
 c----------------------------------------------------------------------
-	implicit none
+      implicit none
 
       integer typ
 c----------------------------------------------------------------------
@@ -5178,3 +5175,4 @@ c                                 scan for blanks:
       write (text,'(400a)') (bitsy(i), i = 1, ict + 1)
 
       end
+

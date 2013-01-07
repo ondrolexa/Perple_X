@@ -265,6 +265,8 @@ alpha(cen)    1.0    0.0    0.0
 alpha(cts)    3.5    0.0    0.0
 end_van_laar_sizes
 
+reach_increment 4
+
 end_of_model                        
                       --------------------------------------------------------
 begin_model                
@@ -465,5 +467,7 @@ z(A,mg) = 1 mfer
                                       
 2 1.                                  al-si mixing on only one "T" site.
 z(M,Si) = 1 nfer
+
+reach_increment 4
 
 end_of_model
