@@ -2217,7 +2217,7 @@ c---------------------------------------------------------------------
       else if (ier.eq.45) then
          write (*,45) char
       else if (ier.eq.46) then 
-         write (*,46) realv, char
+         write (*,46) realv, char, char
       else if (ier.eq.47) then
          write (*,47) int, realv
       else if (ier.eq.48) then 
@@ -2441,9 +2441,9 @@ c---------------------------------------------------------------------
      *        ' program documentation Eq 2.2)',/,
      *        ' NO OUTPUT WILL BE GENERATED FOR THIS ENTITY.',/)
 46    format (/,'**warning ver046** temperature (',g12.6,' K) is out',
-     *        ' of range for the EoS (',a,').',/,
-     *        'The affected phase will be destabilized. ',
-     *        'Usually this problem can be corrected by setting ',/,
+     *        ' of range for endmember/phase: ',a,/,a,
+     *        ' will be destabilized at this condition. In some cases',
+     *        ' this problem can be corrected by',/,'setting ',
      *        'Anderson_Gruneisen to TRUE in the Perple_X option file.')
 47    format (/,'**warning ver047** invariant point ',i6,' could ',
      *        ' not be located within',/,' the specified tolerance ',

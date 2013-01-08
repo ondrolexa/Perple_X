@@ -249,7 +249,10 @@ c---------------------------------------------------------------------
       common/ cst204 /ltyp(k10),lct(k10),lmda(k10),idis(k10)
 
       double precision thermo,uf,us
-      common/ cst1 /thermo(k4,k10),uf(2),us(h5)    
+      common/ cst1 /thermo(k4,k10),uf(2),us(h5)   
+
+      character*8 names
+      common/ cst8   /names(k1) 
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -380,12 +383,12 @@ c                                 temperature
             if (kt.lt.0d0) then 
 
                if (iwarn.lt.50) then 
-                  call warn (46,t,id,'GCPD') 
+                  call warn (46,t,id,'GCPD_M') 
                   iwarn = iwarn + 1
-                  if (iwarn.eq.50) call warn (49,t,46,'GCPD')
+                  if (iwarn.eq.50) call warn (49,t,46,names(id))
                end if 
 c                                 destabalize the phase
-               gval = 1d99 
+               gval = 1d4*p
 
                return 
 
@@ -404,7 +407,7 @@ c                                 (KT+K'*pr)**(1-1/K')]
 c                                 3rd order Birch-Murnaghan
 c                                 Ghirso Eos is a special case
 c                                 indicated by thermo(16,id) = K0 = 0
-         if (thermo(16,id).eq.0) then 
+         if (thermo(16,id).eq.0d0) then 
 c                                 assume ghiorso's expressions for v0 and k (KT)
 c                                 vt = Volume at 1 bar, T
             vt = thermo(3,id) + thermo(11,id) * (t - trv)
@@ -434,8 +437,9 @@ c                                 and expansivity ala Helffrich & Connolly 2009.
 c                                 a ****wit has entered a ridiculous
 c                                 temperature
          if (kt.lt.0d0.or.vt.lt.0d0) then 
+
             if (iwarn.lt.50) then 
-               call warn (46,t,id,'GCPD') 
+               call warn (46,t,id,names(id)) 
                iwarn = iwarn + 1
                if (iwarn.eq.50) call warn (49,t,46,'GCPD')
             end if 
@@ -3566,7 +3570,7 @@ c                                 if we get here, failed to converge
          if (izap.eq.10) call warn (49,r,369,'GETLOC')
       end if 
 c                                 destabilize the phase:
-      gsixtr = 1d10
+      gsixtr = 1d4*p
 
       return 
          
@@ -3706,7 +3710,7 @@ c                                 if we get here, failed to converge
             if (izap.eq.10) call warn (49,r,369,'GSTXLQ')
          end if 
 c                                 destabilize the phase.
-         gstxlq  = 1d10
+         gstxlq  = 1d4*p
 
       else 
 c                                 everything ok, final f:
@@ -3920,7 +3924,7 @@ c                                 if we get here, failed to converge
             if (izap.eq.10) call warn (49,r,369,'GSTX')
          end if 
 c                                 destabilize the phase.
-         gstxgi  = 1d10
+         gstxgi  = 1d4*p
 
       else 
 
