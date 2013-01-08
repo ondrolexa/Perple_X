@@ -426,24 +426,27 @@ c                                 and expansivity ala Helffrich & Connolly 2009.
 
             else 
 
-               kt = thermo(16,id) + thermo(17,id)*t
-c                                 a ****wit has entered a ridiculous
-c                                 temperature
-               if (kt.lt.0d0) then 
-                  if (iwarn.lt.50) then 
-                     call warn (46,t,id,'GCPD') 
-                     iwarn = iwarn + 1
-                     if (iwarn.eq.50) call warn (49,t,46,'GCPD')
-                  end if 
-c                                 destabalize the phase
-                  gval = 1d99 
-               end if 
+               kt = thermo(16,id) + thermo(17,id)*t 
 
             end if 
 
          end if 
+c                                 a ****wit has entered a ridiculous
+c                                 temperature
+         if (kt.lt.0d0.or.vt.lt.0d0) then 
+            if (iwarn.lt.50) then 
+               call warn (46,t,id,'GCPD') 
+               iwarn = iwarn + 1
+               if (iwarn.eq.50) call warn (49,t,46,'GCPD')
+            end if 
+c                                 destabalize the phase
+            vdp = 1d4*p
 
-         vdp = vdpbm3 (vt,kt,thermo(18,id))
+         else
+
+            vdp = vdpbm3 (vt,kt,thermo(18,id))
+
+         end if 
 
       else 
 c                                 gottschalk.
@@ -4050,19 +4053,10 @@ c                                 initial guess for volume:
                write (*,1000) t,p
                if (jerk.eq.10) call warn (49,r,369,'GGHI')
             end if 
+ 
+            vdpbm3 = 1d4*p
 
-            if (k*(k-2d0*p*(1d0+kprime)).gt.0d0) then 
-
-               v = 0.5d0/((3d0+kprime)*k+2d0*p)*((2d0+kprime)*2d0*k
-     *             +2d0*dsqrt(k*(k-2d0*p*(1d0+kprime))))*vt 
-
-            else 
-
-               v = k * vt / (p + k)
-
-            end if 
-
-            exit
+            return
 
          end if 
 
@@ -4076,7 +4070,7 @@ c                                 checked in BM3_integration.mws
      *       ,' P=',f9.1,' bar',/,'Using Birch-Murnaghan ',
      *        'EoS, probably for Ghiorso et al. MELTS/PMELTS endmember',
      *        ' data.',/,
-     *        'Volume estimated using 3rd order taylor series.',/)
+     *        'The affected phase will be destabilized.',/)
 
       end 
 

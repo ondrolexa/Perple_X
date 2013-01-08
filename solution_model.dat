@@ -6899,9 +6899,6 @@ begin_model
 
                                   Ca-Fe2+-Mg-Al-Fe3+ Garnet model after White, Pomroy, Powell & Holland (JMG, 2005)
 
-                                  When originally entered 9/20/11, this model was formulated (incorrectly) in terms of 
-                                  andradite, it was corrected to use the khoharite endmember 10/24/11. JADC
-
                                   In calculations that use this model, the andradite endmember ("andr") in the Holland
                                   and Powell data base must be excluded. This model also requires the following make
                                   definition for khoharite in the thermodynamic data file:
@@ -6927,6 +6924,11 @@ begin_model
                                        gr            Ca      Al          
                                                       ____________             
                                       
+                                  When originally entered 9/20/11, this model was formulated (incorrectly) in terms of 
+                                  andradite, it was corrected to use the khoharite endmember 10/24/11. JADC
+
+                                  definition of andr_i corrected from 1 kho + 1 py - 1 gr to 1 kho - 1 py + 1 gr on
+                                  1/4/13. JADC 
 
 Gt(WPPH) 
     
@@ -6946,7 +6948,7 @@ fmn_i  fkho_i   kho    andr_i
 
 3                                 | number of dependent endmembers 
 
-andr_i = 1 kho  + 1 py   -1 gr  
+andr_i = 1 kho  - 1 py   +1 gr  
 fkho_i = 1 kho  + 1 alm  -1 py  
 fmn_i  = 1 kho  + 1 spss -1 py 
 

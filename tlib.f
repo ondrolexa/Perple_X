@@ -17,7 +17,7 @@ c----------------------------------------------------------------------
       implicit none
 
       write (*,'(/,a)') 
-     *      'Perple_X version 6.6.8, source updated Jan 7, 2013.'
+     *      'Perple_X version 6.6.8, source updated Jan 8, 2013.'
 
       end
 
@@ -2442,10 +2442,9 @@ c---------------------------------------------------------------------
      *        ' NO OUTPUT WILL BE GENERATED FOR THIS ENTITY.',/)
 46    format (/,'**warning ver046** temperature (',g12.6,' K) is out',
      *        ' of range for the EoS (',a,').',/,
-     *        'The affected phase will be destabilized.',/,
-     *        'This problem can be corrected by setting '
-     *        'the Anderson_Gruneisen keyword to TRUE',/,
-     *        'in the Perple_X option file.')
+     *        'The affected phase will be destabilized. ',
+     *        'Usually this problem can be corrected by setting ',/,
+     *        'Anderson_Gruneisen to TRUE in the Perple_X option file.')
 47    format (/,'**warning ver047** invariant point ',i6,' could ',
      *        ' not be located within',/,' the specified tolerance ',
      *        ' (PTOL= ',g12.6,' ) reset PTOL to avoid this problem.',/)
