@@ -3312,7 +3312,7 @@ c                                 inner iteration loop:
 10          xi = xh2o
 
          call warn (176,xh2o,nit,'HOMRK')
-         stop 
+         goto 99
 
 20       if (xo2.lt.0d0) xo2 = 0d0
          xh2 = 1d0 - xo2 - xh2o
@@ -3323,7 +3323,7 @@ c                                 inner iteration loop:
 30    continue
 
       call warn (176,xh2o,nit,'HOMRK')
-      stop 
+      goto 99 
 
 40    fh2o = dlog(gh2o*p*xh2o)
       vol = vol + xh2o * vm(3) 
@@ -3333,6 +3333,11 @@ c                                 inner iteration loop:
       else
          fo2 = dlog (go2 * p * xo2)
       end if
+
+      return 
+
+99    fh2o = dlog(1d4*p)
+      fo2  = fh2o
 
       end 
 
@@ -5578,13 +5583,13 @@ c-----------------------------------------------------------------------
      *                 a2,a3,c12,c20,c33,c34,c36,c44,c46,c55,c56,c66,
      *                 c64,c53,c42,e1,e2,dv,t2
 
-      integer it,iam
+      integer it, iam, iwarn
 
       double precision p,t,xco2,u1,u2,tr,pr,rc,ps
       common/ cst5  /p,t,xco2,u1,u2,tr,pr,rc,ps
 
-      save r
-      data r/83.14/
+      save r, iwarn
+      data r, iwarn/83.14d0, 0/
 c----------------------------------------------------------------------
       t2 = t*t
 c                                 temperature dependent coefficients
@@ -5680,7 +5685,13 @@ c                                 converged, compute ln(fugacity)
           
          else if (v.lt.0d0.or.it.gt.100) then
 c                                 use cork fugacities
-            write (*,*) 'WARNING: pseos did not converge ',p,t,v
+            iwarn = iwarn + 1
+
+            if (iwarn.lt.50) then 
+               write (*,1000) p,t,v
+            else if (iwarn.eq.50) then 
+               call warn (49,p,93,'PSEOS')
+            end if 
 
             exit 
 
@@ -5689,6 +5700,9 @@ c                                 use cork fugacities
          it = it + 1
 
       end do 
+
+1000  format (/,'**warning ver093** PSEoS did not converge at:',
+     *        3(1x,g12.6))
 
       end 
 

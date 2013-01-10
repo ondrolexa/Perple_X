@@ -7777,3 +7777,154 @@ ideal                             | internal excess model
 
 end_of_model 
                       --------------------------------------------------------
+begin_model                
+                                      majoritic garnet from stixrude '11
+                                    
+
+Maj  
+2                                     model type: Margules, endmember fractions.                                                                               
+
+4                                     number of endmembers 
+maj     alm      py       gr         endmember names 
+
+  1  0  0  0                        | endmember flags
+
+0. 0.2  0.1 1              | imod = 1 -> asymmetric transform subdivision
+0. 1.   0.1 0              | imod = 0 -> cartesian subdivision
+0. 1.   0.1 0              | imod = 0 -> cartesian subdivision
+                           | NOTE restricted subdivision range on Mn (Species 1)!
+
+begin_excess_function
+w(py gr) 33000. 0. 0.  
+w(alm py)  2500.  0. 0.               | hp '98 give 2.4 kJ
+W(gr maj)  58d3   0. 0. 
+W(py maj)  21.3d3 0. 0.
+end_excess_function  
+
+2                                     2 site entropy model
+
+3 3.                                  3 species, A site multiplicity 3
+z(Fe) = 1 alm
+z(Ca) = 1 gr
+
+3 2.                                  2 species, B site multiplicity 2
+z(Mg) = 1/2 maj
+z(Si) = 1/2 maj
+
+reach_increment 4
+
+end_of_model  
+                      --------------------------------------------------------
+begin_model               
+                                  | Wadleysite solution
+Wad                                                                               
+2                                 | model type: Margules, macroscopic
+2                                 | 2 endmembers
+mwd       fwd            
+  0  0                            | endmember flags
+0. 1. .1    0                     | subdivision range, imod = 0 -> cartesian subdivision
+begin_excess_function
+W(mwd fwd) 16.5d3 0. 0.     
+end_excess_function 
+1                                     1 site entropy model
+2 2.                                  2 species, site multiplicity = 2.
+z(mg) = 1 mwd
+end_of_model               
+                      --------------------------------------------------------
+begin_model                
+                                  | Ringwoodite solution
+Ring                                                                               
+2                                 | model type: Margules, macroscopic
+2                                 | 2 endmembers
+mrw       frw            
+  0  0                            | endmember flags
+0. 1. .1   0                      | subdivision range, imod = 0 -> cartesian subdivision
+begin_excess_function
+W(mrw frw) 9.1d3 0. 0.          
+end_excess_function 
+1                                     1 site entropy model
+2 2.                                  2 species, site multiplicity = 2.
+z(mg) = 1 mrw
+
+reach_increment 4
+
+end_of_model
+                      --------------------------------------------------------
+begin_model                
+                                      magnesio-wuestite solution
+Wus                                                                               
+2                                     model type: Margules, macroscopic
+2                                     2 endmembers
+per       fper            
+  0  0                           
+0.0 1.0  0.1 0                   
+  
+begin_excess_function
+W(per fper)  13d3 0. 0.            
+end_excess_function 
+
+1                                     1 site entropy model
+
+2 1.                                  2 species, site multiplicity = 1.
+z(mg) = 1 per
+
+reach_increment 4
+
+end_of_model                           
+                      --------------------------------------------------------
+begin_model                
+                                  | akimotoite (ilmenite-structure) solution
+Aki                                                                                                 
+2                                 | model type: Margules, macroscopic
+
+3                                 | 3 endmembers
+cor   mak   fak           
+  0  0  0                         | endmember flags
+0.0 1.  0.1  0                    | subdivision range, imod = 0 -> cartesian subdivision
+0.0 1.  0.1  0                    | subdivision range, imod = 0 -> cartesian subdivision
+
+begin_excess_function                                                
+W(mak cor)  66d3  0. 0. 
+end_excess_function 
+
+2                                     2 site entropy model
+
+3 1.                                  3 species on M site multiplicity = 1.
+z(mg) = 1 mak
+z(fe) = 1 fak
+
+2 1.                                  2 species on T site multiplicity = 1.
+z(al) = 1 cor
+
+end_of_model               
+                      --------------------------------------------------------
+begin_model                
+                                  | perovskite solution
+Pv                                                                               
+2                                 | model type: Margules, macroscopic
+3                                 | 3 endmembers
+apv   mpv   fpv            
+  0  0  0                          
+0. 1.  0.1 0              
+0. 1.  0.1 0             
+
+begin_excess_function
+W(mpv apv)   116d3 0. 0.            
+end_excess_function 
+
+2                                     2 site entropy model
+3 1.                                  3 species on M site multiplicity = 1.
+z(mg) = 1 mpv
+z(fe) = 1 fpv
+2 1.                                  2 species on T site multiplicity = 1.
+z(al) = 1 apv
+
+begin_van_laar_sizes                        
+alpha(mpv)     1.0    0.0    0.0                      
+alpha(apv)    0.39   0.0    0.0                      
+alpha(fpv)    1.0    0.0    0.0
+end_van_laar_sizes
+
+end_of_model                                                          
+   
+

@@ -3931,8 +3931,7 @@ c                                reaction_list.dat
       call outdel 
 
 80    write (n3,*)
-      write (n3,'(2(1x,g12.6),2(2x,g12.6,1x,g12.6))') 
-     *      (ptx(i), i = 1, ipt2)
+      write (n3,'(3(2x,g12.6,1x,g12.6))') (ptx(i), i = 1, ipt2)
       write (n3,*)
 
       if (ier.ne.0) goto 10
