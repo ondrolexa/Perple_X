@@ -17,7 +17,7 @@ c----------------------------------------------------------------------
       implicit none
 
       write (*,'(/,a)') 
-     *      'Perple_X version 6.6.8, source updated Jan 8, 2013.'
+     *      'Perple_X version 6.6.8, source updated Jan 12, 2013.'
 
       end
 
@@ -157,9 +157,6 @@ c
 c                                 interpolation keyword
       iopt(4) = 0
       valu(4) = 'on '
-c                                 extrapolation keyword
-      iopt(5) = 0
-      valu(5) = 'off'
 c                                 vrh_weighting keyword
       nopt(6) = 0.5d0
 c                                 bad_number keyword
@@ -333,15 +330,6 @@ c                                 interpolation key
             if (val.eq.'off') iopt(4) = 0
             valu(4) = val
             if (val.eq.'on ') read (nval1,*) iopt(4)
-
-         else if (key.eq.'extrapolation') then 
-c                                 extrapolation key
-            if (val.eq.'on ') then
-               iopt(5) = 0
-            else 
-               iopt(5) = 1
-            end if 
-            valu(5) = val 
 
          else if (key.eq.'bounds') then 
 c                                 
@@ -778,11 +766,6 @@ c                                 computational options this is redundant
       end if 
 c                                 -------------------------------------
 c                                 dependent parameters and error traps:
-      if (iopt(10).gt.0) then 
-         iopt(5) = 0
-         valu(5) = 'off'
-      end if 
-
       if (nopt(21).lt.2d0) then 
          write (*,1040)
          nopt(21) = 2d0
@@ -1117,7 +1100,7 @@ c                                 logarithmic_p, bad_number
 
       if (iam.eq.3) then 
 c                                 WERAMI input/output options
-         write (n,1230) lopt(15),lopt(14),nopt(7),(valu(i),i=2,5),
+         write (n,1230) lopt(15),lopt(14),nopt(7),(valu(i),i=2,4),
      *                  lopt(6),valu(14)
 c                                 WERAMI info file options
          write (n,1241) lopt(12)       
@@ -1257,10 +1240,9 @@ c                                 thermo options for frendly
      *        4x,'spreadsheet            ',l1,10x,'[F] T',/,
      *        4x,'logarithmic_p          ',l1,10x,'[F] T',/,
      *        4x,'bad_number          ',f7.1,7x,'[0.0]',/,
-     *        4x,'compositions           ',a3,8x,'wt  [mol]',/,
+     *        4x,'composition            ',a3,8x,'wt  [mol]',/,
      *        4x,'proportions            ',a3,8x,'wt  [vol] mol',/,
      *        4x,'interpolation          ',a3,8x,'off [on ]',/,
-     *        4x,'extrapolation          ',a3,8x,'on  [off]',/,
      *        4x,'melt_is_fluid          ',l1,10x,'[F] T',/,
      *        4x,'seismic_output         ',a3,8x,'none [some] all')
 1231  format (/,2x,'Input/Output options:',//,
@@ -1710,8 +1692,6 @@ c---------------------------------------------------------------------
          write (*,44) 
       else if (ier.eq.45) then 
          write (*,45) 
-      else if (ier.eq.46) then 
-         write (*,46) realv, char
       else if (ier.eq.47) then 
          write (*,47) char
       else if (ier.eq.48) then 
@@ -1953,11 +1933,6 @@ c---------------------------------------------------------------------
 44    format (/,'**error ver044** too many saturated phase components.'
      *        /)
 45    format (/,'**error ver045** too many mobile components.'/)
-46    format (/,'**error ver046** temperature (',g12.6,' K) is out of '
-     *       ,'range for the equation of state (',a,'),',/,
-     *        'most likely this problem can be corrected by setting ',
-     *        'the Anderson_Gruneisen keyword to TRUE',/,
-     *        'in the Perple_X option file.')
 47    format (/,'**error ver047** solution model ',a,' is incorrectly ',
      *        'formatted (van Laar).',/)
 48    format (/,'**error ver048** too many terms in solution model ',a,

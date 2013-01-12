@@ -233,12 +233,12 @@ c---------------------------------------------------------------------
  
       include 'perplex_parameters.h'
 
-      integer id,j,ins(1),kns(1),iwarn
+      integer id,j,ins(1),kns(1),iwarn,oldid
 
       double precision ialpha, vt, trv, pth, vdp, ndu, vdpbm3, gsixtr, 
      *                 gstxgi, fs2, fo2, kt, gval, gmake, gkomab,
-     *                 a, b, c, gstxlq, glacaz
- 
+     *                 a, b, c, gstxlq, glacaz, v1, v2
+
       double precision f
       common/ cst11 /f(2)
 
@@ -280,8 +280,8 @@ c---------------------------------------------------------------------
       double precision y,g,v
       common / cstcoh /y(nsp),g(nsp),v(nsp)
 
-      save kt,trv,ins,kns,iwarn 
-      data kt,trv,ins,kns,iwarn/0d0,1673.15d0,14,15,0/
+      save kt,trv,ins,kns,iwarn,oldid 
+      data kt,trv,ins,kns,iwarn,oldid/0d0,1673.15d0,14,15,0/
 c---------------------------------------------------------------------
 
       if (make(id).ne.0) then 
@@ -320,13 +320,30 @@ c                                 -sdt
 c                                 vdp-ndu term:
       if (eos(id).eq.8) then 
 c                                 HP Tait EoS, einstein thermal pressure
-          pth = thermo(11,id)*(1d0/(dexp(thermo(15,id)/t)-1d0)
+         pth = thermo(11,id)*(1d0/(dexp(thermo(15,id)/t)-1d0)
      *         -thermo(19,id))
+
+         v1 = 1d0 + (p -pth)*thermo(17,id)
+         v2 = 1d0 + (pr-pth)*thermo(17,id)
+
+         if (v1.lt.0d0.or.v2.lt.0d0) then
+c                                 destabalize the phase
+            vdp = 1d4*p
+
+            if (iwarn.le.50.and.oldid.ne.id) then 
+               call warn (46,t,id,names(id)) 
+               iwarn = iwarn + 1
+               oldid = id
+               if (iwarn.eq.50) call warn (49,t,46,'GCPD_HP_Tait')
+            end if 
+
+          else 
 c                                 int(vdp,p=Pr..Pf)
-          vdp = (thermo(16,id)*(
-     *         ((1d0+(p -pth)*thermo(17,id))**thermo(18,id)
-     *         -(1d0+(pr-pth)*thermo(17,id))**thermo(18,id))
-     *         /thermo(20,id)-p+pr)+p-pr)*thermo(3,id)
+             vdp = (thermo(16,id)*(
+     *            (v1**thermo(18,id) - v2**thermo(18,id))
+     *            /thermo(20,id)-p+pr)+p-pr)*thermo(3,id)
+
+          end if 
 
       else if (eos(id).eq.9) then 
 c                                 True tait used for melt endmembers
@@ -382,10 +399,11 @@ c                                 a ****wit has entered a ridiculous
 c                                 temperature
             if (kt.lt.0d0) then 
 
-               if (iwarn.lt.50) then 
-                  call warn (46,t,id,'GCPD_M') 
+               if (iwarn.lt.50.and.id.ne.oldid) then 
+                  call warn (46,t,id,names(id)) 
                   iwarn = iwarn + 1
-                  if (iwarn.eq.50) call warn (49,t,46,names(id))
+                  oldid = id
+                  if (iwarn.eq.50) call warn (49,t,46,'GCPD_Murnaghan')
                end if 
 c                                 destabalize the phase
                gval = 1d4*p
@@ -438,10 +456,11 @@ c                                 a ****wit has entered a ridiculous
 c                                 temperature
          if (kt.lt.0d0.or.vt.lt.0d0) then 
 
-            if (iwarn.lt.50) then 
+            if (iwarn.lt.50.and.oldid.ne.id) then 
                call warn (46,t,id,names(id)) 
                iwarn = iwarn + 1
-               if (iwarn.eq.50) call warn (49,t,46,'GCPD')
+               oldid = id
+               if (iwarn.eq.50) call warn (49,t,46,'GCPD_BM3')
             end if 
 c                                 destabalize the phase
             vdp = 1d4*p
@@ -4441,6 +4460,9 @@ c----------------------------------------------------------------------
       integer ikind,icmpn,icout,ieos
       double precision comp,tot
       common/ cst43 /comp(k0),tot,icout(k0),ikind,icmpn,ieos
+
+      integer iam
+      common/ cst4 /iam
 c----------------------------------------------------------------------
 c                                 make a list of all definition names:
       inames = 0 
@@ -4498,7 +4520,8 @@ c                                 find valid makes:
 
                if (mnames(k).eq.mknam(i,j).and.(.not.inph(k))) then 
                   inmk(i) = .false.
-                  call warn (51,tot,icmpn,mknam(i,mknum(i)+1))
+                  if (iam.ne.3.and.iam.lt.6) 
+     *               call warn (51,tot,icmpn,mknam(i,mknum(i)+1))
                   exit 
                else if (mnames(k).eq.mknam(i,j)) then 
                   mkind(i,j) = k
@@ -4795,6 +4818,9 @@ c----------------------------------------------------------------------
       character cmpnt*5, dname*80
       common/ csta5 /cl(k0),cmpnt(k0),dname
 
+      integer iam
+      common/ cst4 /iam
+
       double precision mcomp
       character mknam*8
       integer nmak
@@ -4866,7 +4892,8 @@ c                                 find valid makes:
 
                if (mnames(k).eq.mknam(i,j).and.(.not.inph(k))) then 
                   inmk(i) = .false.
-                  call warn (51,tot,icmpn,mknam(i,mknum(i)+1))
+                  if (iam.ne.3.and.iam.lt.6) 
+     *               call warn (51,tot,icmpn,mknam(i,mknum(i)+1))
                   exit
                else if (mnames(k).eq.mknam(i,j)) then 
                   mkind(i,j) = k

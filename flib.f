@@ -2291,7 +2291,7 @@ c                                 compute fugacities:
             end if 
          else 
             g(l) = 1d0
-            f(l) = -1d99
+            f(l) = dlog(1d4*p)
          end if 
 
          if (l.lt.3) fg(l) = f(l)
@@ -5687,10 +5687,9 @@ c                                 converged, compute ln(fugacity)
 c                                 use cork fugacities
             iwarn = iwarn + 1
 
-            if (iwarn.lt.50) then 
+            if (iwarn.le.50) then 
                write (*,1000) p,t,v
-            else if (iwarn.eq.50) then 
-               call warn (49,p,93,'PSEOS')
+               if (iwarn.eq.50) call warn (49,p,93,'PSEOS')
             end if 
 
             exit 
@@ -5917,8 +5916,8 @@ c                                 get new gamma's
     
          if (iwarn.eq.100) call warn (49,t,0,'RKSI4')
 
-         fh2o = 1d99
-         fco2 = 1d99
+         fh2o = dlog(1d4*p)
+         fco2 = dlog(1d4*p)
 
          return 
 
@@ -6000,8 +5999,8 @@ c                                 get pure species fugacities
 
       if (v(14).lt.0*1d2.and.xc.gt.0.326.and.xc.lt.0.340) then
 
-         fh2o = 1d99
-         fco2 = 1d99
+         fh2o = dlog(1d4*p)
+         fco2 = dlog(1d4*p)
          return
 
       end if 
@@ -6010,7 +6009,7 @@ c
 c                                 degenerate compositions:
       if (xc.eq.1d0) then 
 c                                 pure Si
-         fh2o = 1d99
+         fh2o = dlog(1d8*p)
          fco2 = dlog(p*g(i5))
          y(i5) = 1d0 
          
@@ -6027,7 +6026,7 @@ c                                 c1 = exp(lnK_1)*p => 2 O = O2, HSC K
          if (c1.gt.1d3) then 
 c                                 assume pure O2
             fh2o = (dlog(p*g(i4)) - lnk1)/2d0
-            fco2 = 1d99
+            fco2 = dlog(1d4*p)
             y(i4) = 1d0 
 
          else 
@@ -6210,8 +6209,8 @@ c                                 get new gamma's
          if (v(14).lt.0*1d2.and.xc.gt.0.326.and.xc.lt.0.340) then
 
 
-            fh2o = 1d99
-            fco2 = 1d99
+            fh2o = dlog(1d4*p)
+            fco2 = dlog(1d4*p)
             return
 
          else 
@@ -6235,8 +6234,8 @@ c                                 get new gamma's
 
          ibad = ibad + 1 
 
-         fh2o = 1d99
-         fco2 = 1d99
+         fh2o = dlog(1d4*p)
+         fco2 = dlog(1d4*p)
          return 
 
       end if 
@@ -6725,8 +6724,8 @@ c                                 get new gamma's
 
           end if 
 
-         fh2o = 1d99
-         fco2 = 1d99
+         fh2o = dlog(1d4*p)
+         fco2 = dlog(1d4*p)
       else 
 
          fh2o = dlog(p*g(i2)*y(i2))
@@ -6911,8 +6910,8 @@ c                                 closure => sio2:
          write (*,'(a,5(g12.6,1x))') 
      *            'ugga wugga not valid solution T,P:',t,p,xc
 
-         fh2o = 1d99
-         fco2 = 1d99
+         fh2o = dlog(1d4*p)
+         fco2 = dlog(1d4*p)
 
       else 
 
@@ -6981,7 +6980,7 @@ c                                 get new gamma's
 
       end do 
 
-      fco2 = 1d99
+      fco2 = dlog(1d4*p)
       fh2o = dlog(p*g(i3)*y(i3))
 
       end
@@ -7184,8 +7183,8 @@ c                                 this does help!
 c                                 get new gamma's
          if (v(14).lt.0*1d2.and.xc.gt.0.326.and.xc.lt.0.340) then
 
-            fh2o = 1d99
-            fco2 = 1d99
+            fh2o = dlog(1d4*p)
+            fco2 = dlog(1d4*p)
             return
 
          else 
@@ -7225,8 +7224,8 @@ c         iwarn = iwarn + 1
 
 c         if (iwarn.eq.100) call warn (49,t,0,'RKSI4a')
 
-         fh2o = 1d99
-         fco2 = 1d99
+         fh2o = dlog(1d4*p)
+         fco2 = dlog(1d4*p)
          return 
 
       end if 

@@ -540,7 +540,7 @@ c----------------------------------------------------------------
       logical stol, savg
       double precision rcps
       common/ comps /rcps(k7,2*k5),icps(k7,2*k5),jcx(2*k5),jcx1(2*k5),
-     *               kds(2*k5),stol(h9),savg(h9)
+     *               kds(2*k5),stol(i11),savg(i11)
 c----------------------------------------------------------------------
 c                                choose units for composition
       if (iopt(2).eq.0) then

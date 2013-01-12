@@ -47,7 +47,7 @@ c----------------------------------------------------------------------
       logical stol, savg
       double precision rcps
       common/ comps /rcps(k7,2*k5),icps(k7,2*k5),jcx(2*k5),jcx1(2*k5),
-     *               kds(2*k5),stol(h9),savg(h9)
+     *               kds(2*k5),stol(i11),savg(i11)
 c----------------------------------------------------------------------- 
 c                                 iam is a flag indicating the Perple_X program
       iam = 3
@@ -586,6 +586,9 @@ c              ijpt       - number of good interpolation points
 c              itri, jtri - nodal cordinates of the (3) interpolation 
 c                           points
 c              wt         - weights of interpolation points
+
+c Jan 11, 2013 - modified to forbid extrpolation (i.e., an interpolation
+c point with negative weight. JADC.
 c----------------------------------------------------------------------
       implicit none
 
@@ -597,7 +600,7 @@ c----------------------------------------------------------------------
      *        itri(4), jtri(4), ijpt, iam, jam, kinc, jmin, 
      *        imin, imax, ktri(4), ltri(4), ibest
 
-      logical rinsid, in, isok, jn, warned, left, solvs3
+      logical rinsid, isok, warned, left, solvs3
 
       integer pi(4,4)
 
@@ -645,7 +648,7 @@ c                                 whether there's any point in checking jd?
       if (jd.eq.k2.or.iap(jd).eq.0) then
 c                                 no data at point, set ijpt = 0 and return
          ijpt = 0 
-         goto 99 
+         return
       end if 
 c                                 duplicate assignment because ias is in common
       ias = iap(jd)
@@ -654,9 +657,10 @@ c                                 duplicate assignment because ias is in common
       np = iavar(1,ias)
       ijpt = 1
       itri(1) = iloc
-      jtri(1) = jloc 
+      jtri(1) = jloc
+      wt(1) = 1d0 
 c                                 exit if interpolation is off
-      if (iopt(4).eq.0) goto 99   
+      if (iopt(4).eq.0) return   
 c                                 check for solvus
       if (solvs3(iam,np)) then 
 c                                 a solvus, turn interpolation off, warn and return
@@ -665,7 +669,7 @@ c                                 a solvus, turn interpolation off, warn and ret
             write (*,1000) 
          end if
 
-         goto 99
+         return
 
       end if 
 
@@ -755,7 +759,7 @@ c                                 allowed.
 
          end if 
 
-         if (ijpt.eq.1) goto 99
+         if (ijpt.eq.1) return
 c                                 compute weights of the interpolation points   
          x1 = vmn(1) + dfloat(jtri(2)-1)*dvr(1) 
          x0 = vmn(1) + dfloat(jtri(1)-1)*dvr(1)    
@@ -763,7 +767,7 @@ c                                 compute weights of the interpolation points
          wt(1) = (x1-x)/(x1-x0)
          wt(2) = 1d0 - wt(1)
 
-         goto 99 
+         return
 
       end if 
 c                                 make a spiral-like search outward
@@ -811,10 +815,8 @@ c                                 always take the two points
                   jtri(3) = j      
 c                                 check if on line of previous
 c                                 points
-                  if (isok(itri,jtri)) then 
-                     ijpt = 3
-                     in = rinsid(itri,x,jtri,y,dst(1))
-                  end if 
+                  if (isok(itri,jtri).and.rinsid(itri,x,jtri,y,dst(1)))
+     *               ijpt = 3
 
                else if (ijpt.eq.3) then 
 c                                 four permutations are possible
@@ -824,30 +826,19 @@ c                                 check all
                   ibest = 1
      
                   do k = 2, 4
+
                      do l = 1, 3
                         ktri(l) = itri(pi(l,k))
                         ltri(l) = jtri(pi(l,k))
                      end do 
 
+                     if (isok(ktri,ltri).and.
+     *                   rinsid(ktri,x,ltri,y,dst(k))) then
 
-                     if (isok(ktri,ltri)) then
+                        if (dst(ibest).gt.dst(k)) ibest = k
 
-                        jn = rinsid(ktri,x,ltri,y,dst(k))
+                     end if
 
-                        if (jn.and..not.in) then
-c                                 no in prior bounding triangle, so
-c                                 k is now the best guess  
-                           ibest = k 
-                           in = jn                    
-                        else if (jn.and.in.or..not.jn.and..not.in)
-     *                                                             then 
-c                                 both are bounding, compare weights
-c                                 (total distance to vertices).
-                           if (dst(ibest).gt.dst(k)) then
-                              ibest = k 
-                           end if                              
-                        end if 
-                     end if 
                   end do    
 
                   if (ibest.ne.1) then 
@@ -884,18 +875,12 @@ c                                 z[2] coef
 c                                 z[3] coef
          wt(3) = (x*(py(1)-py(2))+px(1)*py(2)-px(2)*py(1)
      *           +y*(px(2)-px(1)))/div
-c                                 if the triangle is non-bounding
-c                                 and extrapolation is off reset 
-c                                 counter.
-         if (.not.in.and.iopt(5).eq.0) ijpt = 1
 
       else 
 
          ijpt = 1 
 
       end if 
-
-99    if (ijpt.eq.1) wt(1) = 1d0
 
 1000  format (/,'**warning ver637** Immiscibility occurs in one or ',
      *          'more phases ',/,'interpolation will be turned off ',
@@ -1657,7 +1642,7 @@ c ------------------------------------------------------------------
       logical stol, savg
       double precision rcps
       common/ comps /rcps(k7,2*k5),icps(k7,2*k5),jcx(2*k5),jcx1(2*k5),
-     *               kds(2*k5),stol(h9),savg(h9)
+     *               kds(2*k5),stol(i11),savg(i11)
 c----------------------------------------------------------------------
       if (icx.eq.kds(jcomp)) then 
 
@@ -1727,7 +1712,7 @@ c-------------------------------------------------------------------
       logical stol, savg
       double precision rcps
       common/ comps /rcps(k7,2*k5),icps(k7,2*k5),jcx(2*k5),jcx1(2*k5),
-     *               kds(2*k5),stol(h9),savg(h9)
+     *               kds(2*k5),stol(i11),savg(i11)
 
       save cprop, cmin, cmax
 c----------------------------------------------------------------------
@@ -3318,7 +3303,7 @@ c----------------------------------------------------------------
       logical stol, savg
       double precision rcps
       common/ comps /rcps(k7,2*k5),icps(k7,2*k5),jcx(2*k5),jcx1(2*k5),
-     *               kds(2*k5),stol(h9),savg(h9)
+     *               kds(2*k5),stol(i11),savg(i11)
 
       save propty
 
@@ -3327,9 +3312,9 @@ c----------------------------------------------------------------
      *            'Specific heat capacity (J/K/m3)',
      *            'Expansivity (1/K, for volume)',
      *            'Compressibility (1/bar, for volume)',
-     *            'Weight (%) of a component',
+     *            'Composition (Mol or Wt%) of the system',
      *            'Mode (Vol, Mol, or Wt proportion) of a phase',
-     *            'Composition (Mol or Wt) of a solution',
+     *            'Composition (Mol or Wt%) of a solution phase',
      *            'Grueneisen thermal ratio',
      *            'Adiabatic bulk modulus (bar)',
      *            'Adiabatic shear modulus (bar)',

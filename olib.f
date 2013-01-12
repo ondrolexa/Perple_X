@@ -1531,8 +1531,19 @@ c                                 difference increments
 c                                 enthalpy
          e = g0 + t * s
 c                                 set increments for higher order derivatives
-         dt1 = dt0 * 1d1
-         dt2 = dt0 * 1d2
+         if (1d2*dt0.gt.t) then 
+c                                 the foregoing loop on entropy has led to a 
+c                                 ridiculous t increment
+            dt1 = dt0
+            dt2 = dt0 
+
+         else 
+
+            dt1 = dt0 * 1d1
+            dt2 = dt0 * 1d2
+
+         end if 
+
          dp1 = dp0 * 1d1
          dp2 = dp0 * 1d2
 c                                 second order
@@ -1672,6 +1683,7 @@ c                                 pressure derivative of the adiabatic bulk modu
 
                props(18,jd) = nopt(7)
                props(20,jd) = nopt(7)
+               sick(jd) = .true.
 
             end if 
 
