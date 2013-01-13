@@ -60,6 +60,13 @@ c                                  contor interval
          cont(j) = cmin + (i-1) * dcon
       end do 
 
+      if (j.eq.0) then 
+         write (*,'(a)') 
+     *   'no data within your contour limits, press enter to quit'
+         read (*,'(a)') yes
+         stop
+      end if 
+
       ncon = j
       cmin = cont(1)
 
@@ -453,6 +460,9 @@ c-----------------------------------------------------------------
 
       cmax = -1d10
       cmin = 1d10
+
+      kmax = 3
+      kmin = 1
 
       do k = 1,3
         if(cmax .lt. c(k)) then

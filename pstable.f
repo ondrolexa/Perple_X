@@ -286,8 +286,8 @@ c                                      set up contour intervals
  
       call psaxes (jop0)
 
-1020  format ('Contoured variable range:',g14.6,'->',g14.6,/,
-     *        'Range excluding zero values:',g14.6,'->',g14.6,//,
+1020  format ('Contoured variable range: ',g14.6,'->',g14.6,/,
+     *        'Range excluding zero values: ',g14.6,'->',g14.6,//,
      *        'Modify default contour interval (y/n)?')
 1070  format (/,'Old values were: ',4(g12.4),/,'Enter new values:')
 

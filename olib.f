@@ -1739,6 +1739,8 @@ c                                 transition models. ideal gas alpha = 1/t
             sick(jd) = .true.
          end if 
 
+         if (gpp.eq.0d0.or.gtt.eq.0d0.or.gpt.eq.0d0) sick(jd) = .true.
+
          props(2,jd) = e
          props(11,jd) = g0 
          props(12,jd) = cp
@@ -2134,8 +2136,7 @@ c                                 solid.
          end do 
       end if 
 c                                 compute aggregate props:
-c                                 density, kg/m3
-      psys(10) = psys(17)/psys(1)*1d2
+
 c                                 convert volumetrically weighted totals
 c                                 to arithmetic means (for aseismic properties)
       do i = 13, 14
@@ -2147,14 +2148,18 @@ c                                 normalize volumetrically weighted alpha/beta
 c                                 heat capacity ratio (cp/cv)
       psys(28) = 1d0/(1d0-t*psys(1)*psys(13)**2/psys(14)/psys(12))
       psys1(28) = 1d0/(1d0-t*psys1(1)*psys1(13)**2/psys1(14)/psys1(12)) 
+c                                 density, kg/m3
+      psys(10) = psys(17)/psys(1)*1d2
 c                                 gruneisen T
       psys(3) = psys(3)/psys(1)
 
-      if (.not.isnan(psys1(3))) then 
-         if (psys1(1).gt.0d0) then
+      if (psys1(1).gt.0d0) then
+         if (.not.isnan(psys1(3))) then 
             psys1(3) = psys1(3)/psys1(1)
-            psys1(10) = psys1(17)/psys1(1)*1d2
+         else 
+            psys1(3) = nopt(7)
          end if 
+         psys1(10) = psys1(17)/psys1(1)*1d2
       end if 
 c                                 if a reaction (frendly) return
       if (rxn) return

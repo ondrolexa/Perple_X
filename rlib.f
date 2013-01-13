@@ -281,7 +281,7 @@ c---------------------------------------------------------------------
       common / cstcoh /y(nsp),g(nsp),v(nsp)
 
       save kt,trv,ins,kns,iwarn,oldid 
-      data kt,trv,ins,kns,iwarn,oldid/0d0,1673.15d0,14,15,0/
+      data kt,trv,ins,kns,iwarn,oldid/0d0,1673.15d0,14,15,0,0/
 c---------------------------------------------------------------------
 
       if (make(id).ne.0) then 
