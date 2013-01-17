@@ -58,6 +58,7 @@ c                                 initialize some flags
       output = .false.
       fake   = .false.
       rxn = .false.
+      err = .false.
 c                                 this could be eliminated by passing first 
 c                                 to chsprp.
       do i = 1, h9

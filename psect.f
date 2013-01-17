@@ -39,6 +39,7 @@ c                                 version info
 
       output = .false.
       first  = .false.
+      err = .false.
 c                                 read input from unit n1 (terminal/disk).
 c                                 subroutine input1 also initializes:
 c                                 equilibrium counters; units n2 and n4;
