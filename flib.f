@@ -6188,7 +6188,7 @@ c                                 renormalize, this helps!
 
             exit 
 
-         else if (nit.gt.6000) then  
+         else if (nit.gt.iopt(21)) then  
  
             bad = .true.
             exit
@@ -6369,11 +6369,21 @@ c                                 sio2_mp_fit3.mws
 
             if (lopt(28)) then 
 c                                 use anomalous cp value a-function and b:
-               a(14) = -.9892922996d13 - (.2684024659d7*t 
-     *         + .1084008260d12)*dsqrt(t) + .1659586080d13*dlog(t) 
-     *         + .3721717125d14/dsqrt(t) + .7708307223d9*t
+c                                 constant alpha fit:
+c              a(14) = (0.133531570926083967D9 
+c     *              + t ** 1.5d0 * 0.848348337043858010D2 
+c     *              - 0.569964286388078594D10 / dsqrt(t) 
+c     *              + 0.120185807141805908D12 / t)*1d2 
+c                                  gaussian cp fit 
 
-               b(14) = 25.83798814d0
+               b(14) = 25.83798814d0 
+
+               a(14) = 1d2*(-0.172939350788494730D10 
+     *                 + t **1.5d0 * 0.897211229324071156D3 
+     *                 - dsqrt(t) * 0.176947482636917942D8 
+     *                 + 0.582498993840988694D11 / t   
+     *                 + dlog(t) * 0.326976011861655414D9)
+
 
             end if 
 
@@ -6531,6 +6541,11 @@ c----------------------------------------------------------------------
       integer nit 
 
       double precision max,min,dx,oldx,x,tol
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 c----------------------------------------------------------------------
       x = min 
       dx = func(x)
@@ -6566,7 +6581,7 @@ c                                 grad points to an out of range solution
           
          if (dabs(x-oldx)/x.lt.tol) exit
 
-         if (nit.gt.1000) then 
+         if (nit.gt.iopt(21)) then 
 
             bad = .true.
             exit 
@@ -6630,6 +6645,11 @@ c----------------------------------------------------------------------
 
       double precision a0,a1,a2,a3 
       common/ coeffs /a0,a1,a2,a3 
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       save ins, isp 
       data isp, ins, i1, i2, i3/5, 14, 12, 15, 14, 12, 15/
@@ -6704,7 +6724,7 @@ c                                 get new gamma's
 
             end if 
 
-            if (nit.lt.250) cycle
+            if (nit.lt.iopt(21)) cycle
  
             exit 
 
@@ -7161,7 +7181,7 @@ c                                 convergence
 
             exit 
 
-         else if (nit.gt.60) then 
+         else if (nit.gt.iopt(21)) then 
 
             bad = .true.
             exit           

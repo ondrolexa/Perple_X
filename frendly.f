@@ -650,7 +650,7 @@ c        write (*,'(80(a14,1x))') (vname(iv(i)),i=1,jpot),tags
 1020  format (/,'Generate a plot file (y/n)?')
 1060  format (/,'Enter number of sections:')
 1080  format (/,'Enter the output file name [without the ',
-     *          '.plt/.tab suffix]:')
+     *          '.plt/.tab suffix, default is my_project]:')
 1090  format (/,'Table columns will be:',/)
 1110  format (/,'Make a 1-dimensional (e.g., isobaric) table (y/n)?')
 1120  format (/,'Select the independent (x) variable:',/)

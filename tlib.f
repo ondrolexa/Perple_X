@@ -1586,7 +1586,7 @@ c---------------------------------------------------------------------
 
       integer ier, int
  
-      character char*(*)
+      character char*(*), a*1
 
       double precision realv
 
@@ -1811,7 +1811,7 @@ c---------------------------------------------------------------------
  
       if (lopt(19)) then 
          write (*,'(/,a,/)') 'Press Enter to quit...' 
-         read (*,'(a)') char
+         read (*,'(a)') a
       end if 
 
       stop
