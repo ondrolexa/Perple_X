@@ -182,7 +182,7 @@ c                                 this is -RT(lnk2+lnk3)/2 (rksi5 k's)
 
       end 
 
-      subroutine gcpd (id,gval)
+      recursive subroutine gcpd (id,gval)
 c-----------------------------------------------------------------------
 c gcpd computes the gibbs free energy of a compound identified by
 c the arguement 'id' from the thermochemical parameters stored

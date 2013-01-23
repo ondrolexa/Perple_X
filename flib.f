@@ -6240,7 +6240,7 @@ c                                 get new gamma's
 
       end if 
 
-      fh2o = dlog(p*g(i3)*y(i3))
+      fh2o = dlog(p*g(i3)*y(i3)) 
       if (y(i5).ne.0d0) then 
          fco2 = dlog(p*g(i5)*y(i5))
       else if (y(i2).ne.0d0) then 
@@ -6291,7 +6291,7 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
  
-      double precision brk(nsp), ark(nsp) 
+      double precision brk(nsp), ark(nsp), tt
 
       integer ins(*), isp, i, k
 
@@ -6360,12 +6360,19 @@ c     *           + t**3 * (-0.286881183333320412D-1)
          else if (i.eq.14) then 
 c                                 MRK dispersion term for SiO2, from
 c                                 sio2_mp_fit3.mws 
-            a(14) = (-0.370631646315402D9 + 0.710713269453173D8*dlog(t) 
-     *               -0.468778070702675D7/t + 
-     *               (0.194790021605110D4*dsqrt(t) -0.110935131465938D6 
-     *               -0.120230245951606D2 * t) * t)*1d2
 
-            if (t.gt.8146.72) a(14) = 0d0
+            if (t.gt.3100d0) then 
+               tt = 3100d0
+            else 
+               tt = t
+            end if 
+
+            a(14) = (-0.370631646315402D9 + 0.710713269453173D8*dlog(tt)
+     *               -0.468778070702675D7/tt + 
+     *               (0.194790021605110D4*dsqrt(tt) -0.110935131465938D6
+     *               -0.120230245951606D2 * tt) * tt)*1d2
+
+c            if (t.gt.8146.72) a(14) = 0d0
 
             if (lopt(28)) then 
 c                                 use anomalous cp value a-function and b:
