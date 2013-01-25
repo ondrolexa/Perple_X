@@ -76,6 +76,17 @@ while ok == 0;
             a = reshape(a(dvar,1:inc(1),1:inc(2)),inc(1),inc(2));
             a = rot90(a); 
             a = flipud(a);
+                        % filter the a-values
+            dlg_title = ['Filter dialog...'];
+            prompt = {['Minimum ',zname,' value to be plotted:'],['Maximum ',zname,' value to be plotted:']}; 
+            lines = 1;options.Resize='on';
+            def = {num2str(min(a(:))), num2str(max(a(:))) };
+            answer = inputdlg(prompt,dlg_title,lines,def,options); 
+            i = find(a(:)<str2num(answer{1}));
+            a(i) = NaN;
+            i = find(a(:)>str2num(answer{2}));
+            a(i) = NaN;
+          
             
             y = v(2,1:inc(2));
             yname = vname(2,:);

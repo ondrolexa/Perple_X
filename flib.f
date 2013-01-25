@@ -6361,7 +6361,7 @@ c     *           + t**3 * (-0.286881183333320412D-1)
 c                                 MRK dispersion term for SiO2, from
 c                                 sio2_mp_fit3.mws 
 
-            if (t.gt.3100d0) then 
+            if (t.gt.3100d0.and..not.lopt(28)) then 
                tt = 3100d0
             else 
                tt = t
@@ -6374,7 +6374,7 @@ c                                 sio2_mp_fit3.mws
 
 c            if (t.gt.8146.72) a(14) = 0d0
 
-            if (lopt(28)) then 
+            if (lopt(28).and.t.gt.90000.) then 
 c                                 use anomalous cp value a-function and b:
 c                                 constant alpha fit:
 c              a(14) = (0.133531570926083967D9 
