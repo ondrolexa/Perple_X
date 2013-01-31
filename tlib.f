@@ -17,7 +17,7 @@ c----------------------------------------------------------------------
       implicit none
 
       write (*,'(/,a)') 
-     *      'Perple_X version 6.6.8, source updated Jan 21, 2013.'
+     *      'Perple_X version 6.6.8, source updated Jan 30, 2013.'
 
       end
 
@@ -2155,6 +2155,8 @@ c---------------------------------------------------------------------
          write (*,25) int, char
       else if (ier.eq.26) then 
          write (*,26) char
+      else if (ier.eq.27) then 
+         write (*,27) int
       else if (ier.eq.28) then
          write (*,28)
       else if (ier.eq.29) then
@@ -2350,6 +2352,9 @@ c---------------------------------------------------------------------
      *          ' The solution will not be considered.')
 26    format ('**warning ver026** only one endmember for ',a,
      *          ' The solution will not be considered.')
+27    format (/,'**warning ver027** only ',i2,' user defined '
+     *      'compositions permitted.',/,'do multiple runs with WERAMI',
+     *      'or redimension common block comps.',/)
 28    format (/,'**warning ver028** minimization failed, ill-',
      *        'conditioned?',/)
 29    format ('**warning ver029** programming error, routine ',a,/)
@@ -2448,6 +2453,9 @@ c     *          ' (SWASH, see program documentation Eq 2.3)',/)
      *          'Usually the failure rate can be',/,'reduced by ',
      *          'increasing speciation_max_it in ',
      *          'perplex_option.dat',/)
+54    format (/,'**warning ver054** property choices 25, 36, and 38 are'
+     *         ,' not allowed in combination',/,'with other property '
+     *         ,'choices',/)
 58    format (/,'**warning ver058** wway, the equilibrium of the '
      *         ,'following reaction',/,' is inconsistent with the ',
      *          'invariant equilibrium.',/)
