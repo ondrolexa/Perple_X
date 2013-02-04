@@ -2379,7 +2379,7 @@ c                                 open print/plot files if requested
          name = 'none requested'
       end if
 
-      if (first) write (*,1180) name
+      if (first.and.iam.ne.13) write (*,1180) name
 
       if (plt.ne.blank.and.plt.ne.'no_') then
          io4 = 0

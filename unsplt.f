@@ -189,7 +189,7 @@ c                                 segment index
 c                                 segment folder
             write (dir,'(i4,a)') k
             call mertxt (dir,dir,'/',0)
-            call mertxt (dir,gprjct,dir,0)
+            call mertxt (dir,'segment',dir,0)
             call mertxt (dir,'/',dir,0)
             call mertxt (dir,gprjct,dir,0)
 c                                 local project
@@ -201,11 +201,11 @@ c                                 assuming the perplex directory (to
 c                                 which unsplt will write the output
 c                                 contains a folder mark_IV in with the
 c                                 programs and data files:
-            write (dir,'(i4,a)') k
-            call mertxt (dir,dir,'/',0)
-            call mertxt (dir,'yanliu8/working/segment',dir,0)
-c           call mertxt (dir,'working/segment',dir,0)
-            call mertxt (prject,dir,gprjct,0)
+c            write (dir,'(i4,a)') k
+c            call mertxt (dir,dir,'/',0)
+c            call mertxt (dir,'yanliu8/working/segment',dir,0)
+c            call mertxt (dir,'working/segment',dir,0)
+c            call mertxt (prject,dir,gprjct,0)
 c                                                            to here:
 c----------------------------------------------------------------------
 

@@ -17,7 +17,7 @@ c----------------------------------------------------------------------
       implicit none
 
       write (*,'(/,a)') 
-     *      'Perple_X version 6.6.8, source updated Jan 30, 2013.'
+     *      'Perple_X version 6.6.8, source updated Feb 2, 2013.'
 
       end
 
@@ -4171,12 +4171,14 @@ c                                 file does not exist
                   call error (12,0d0,ierr,tfname)
                end if 
 
-               read (n8,*,iostat=ierr) jx, jy
+               read (n8,*,iostat=ierr) jx
                if (ierr.ne.0) call error (12,0d0,ierr,tfname)
-               read (n8,*,iostat=ierr) lev
+               read (n8,*,iostat=ierr) jy
                if (ierr.ne.0) call error (12,0d0,ierr,tfname)
-               read (n8,*,iostat=ierr) xn, yn
-               if (ierr.ne.0) call error (12,0d0,ierr,tfname)
+c               read (n8,*,iostat=ierr) lev
+c               if (ierr.ne.0) call error (12,0d0,ierr,tfname)
+c               read (n8,*,iostat=ierr) xn, yn
+c               if (ierr.ne.0) call error (12,0d0,ierr,tfname)
 
             end if
          end if 
