@@ -17,7 +17,7 @@ c----------------------------------------------------------------------
       implicit none
 
       write (*,'(/,a)') 
-     *      'Perple_X version 6.6.8, source updated Feb 2, 2013.'
+     *      'Perple_X version 6.6.8, source updated Feb 5, 2013.'
 
       end
 
@@ -1912,14 +1912,14 @@ c---------------------------------------------------------------------
      *           'perplex_option.dat')
 411   format (2x,'- reduce the auto_refine_factor_I keyword in ',
      *           'perplex_option.dat')
-412   format (2x,'- reduce the 1st value of the iteration keyword',
+412   format (2x,'- reduce the 1st value of the iteration keyword ',
      *           'in perplex_option.dat',/,
-     *        2x,'- reduce the 2nd value of the iteration keyword',
+     *        2x,'- reduce the 2nd value of the iteration keyword ',
      *           'in perplex_option.dat',/,
-     *        2x,'- reduce the reach_increment (if any) specified',
+     *        2x,'- reduce the reach_increment (if any) specified ',
      *           'for solutions in solution_model.dat',/,
-     *        2x,'- turn adaptive minimization off by setting the 1st'
-     *          ,'value of the iteration keyword to 0',
+     *        2x,'- turn adaptive minimization off by setting the 1st ',
+     *           'value of the iteration keyword to 0 ',
      *           'in perplex_option.dat')   
 413   format (2x,'- simplify the calculation, e.g., eliminate ',
      *           'components and/or simplify solution models')

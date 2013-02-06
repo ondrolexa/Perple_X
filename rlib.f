@@ -8018,31 +8018,17 @@ c                                 set slop to the initial spacing
 c                                 adaptive minimization:
 c                                 set slop to the final compositional
 c                                 resolution of the exploratory stage
-                  dinc = rid(4,1)  
+                  dinc = rid(4,1)
 c                                 adaptive use refine factor I
                   xnc(i,j) = xnc(i,j)/nopt(17) 
 
                end if 
-
-               if (xmn(i,j).eq.xmx(i,j)) then 
-
-                  if (xmx(i,j).eq.0d0) then 
-
-                     xmx(i,j) = xmx(i,j) + dinc
-
-                  else if (xmx(i,j).eq.1d0) then 
-
-                     xmn(i,j) = xmn(i,j) - dinc
-
-                  else 
-
-                     xmn(i,j) = xmn(i,j) - dinc
-                     if (xmn(i,j).lt.0d0) xmn(i,j) = 0d0
-                     xmx(i,j) = xmx(i,j) + dinc
-                     if (xmn(i,j).lt.0d0) xmn(i,j) = 0d0
-
-                  end if 
-               end if 
+c                                 widen the range by the exploratory resolution
+               xmx(i,j) = xmx(i,j) + dinc
+               xmn(i,j) = xmn(i,j) - dinc
+               if (xmx(i,j).gt.1d0) xmx(i,j) = 1d0
+               if (xmn(i,j).lt.0d0) xmn(i,j) = 0d0 
+ 
             end if 
 c                                 -------------------------------------
 c                                 stretching stuff
