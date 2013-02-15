@@ -3601,7 +3601,7 @@ c----------------------------------------------------------------------
 
       integer lun, len0, len1, ier, iscan, i, ibeg, iend
 
-      character key*22, values*80, strg*80, ctemp*5, ntemp*12
+      character key*22, values*80, strg*80, ctemp*5, ntemp*14
 
       logical ok
 

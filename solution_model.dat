@@ -19,13 +19,14 @@
 
                              Special models:
 
-                             23 - Toops-Samis melt model
-                             24 - Holland & Powell Haplogranite melt model 
-                             25 - Ghirso pMELTS/MELTS model
-                             26 - Haefner H2O-CO2-NaCl
-                             27 - Silicate vapor (ideal)
-                             28 - High T silicate melt
-                             29 - BCC Fe-Si alloy, Lacaze & Sundman 1990.
+                             23    - Toops-Samis melt model
+                             24    - Holland & Powell Haplogranite melt model 
+                             25    - Ghirso pMELTS/MELTS model
+                             26    - Haefner H2O-CO2-NaCl
+                             27    - Silicate vapor (ideal)
+                             28    - High T silicate melt
+                             29    - BCC Fe-Si alloy, Lacaze & Sundman 1990.
+                             30-33 - FeSiC alloys (BCC/FCC/CBCC/HCP), Lacaze & Sundman 1990.
 
                              For non-ideal solutions, microscopic models assume Margules type excess functions; 
                              macroscopic models may be posed in terms of Margules (See model "Bio(HP)" for a commented
@@ -7774,25 +7775,105 @@ end_of_model
                       -------------------------------------------------------      
 begin_model  
 
-FeSiC
+FeSiC-BCC
     
 30                                | model type: special reciprocal
 2                                 | number of independent mixing sites, reciprocal solution
 2  2                              | Fe-Si on site 1, Vacancy-C on site 2                                                                         
        
 Fe-BCC Si-BCC                     | endmember names 
-FeC    SiC
+FeC-BCC SiC-BCC
 
 0                                 | number of dependent endmembers 
 
-0  1 1 1                         | endmember flags
+0  0  0  0                        | endmember flags
 
-0.9 1.   0.1  0                    | imod = 0 -> Fe fraction on site 1
-0.98 1.   0.1  0                    | imod = 0 -> vacancy fraction on site 2
+0.  1.   0.1  0                    | imod = 0 -> Fe fraction on site 1
+0.  1.   0.1  0                    | imod = 0 -> vacancy fraction on site 2
                             
 ideal                             | internal excess model
 
 0                                 | 0 site entropy model -> internal model
+
+reach_increment 7
+
+end_of_model 
+                      --------------------------------------------------------
+begin_model  
+
+FeSiC-FCC
+    
+31                                | model type: special reciprocal
+2                                 | number of independent mixing sites, reciprocal solution
+2  2                              | Fe-Si on site 1, Vacancy-C on site 2                                                                         
+       
+Fe-FCC Si-FCC                     | endmember names 
+FeC-FCC SiC-FCC
+
+0                                 | number of dependent endmembers 
+
+0  0  0  0                        | endmember flags
+
+0.  1.   0.1  0                  | imod = 0 -> Fe fraction on site 1
+0.  1.   0.1  0                  | imod = 0 -> vacancy fraction on site 2
+                            
+ideal                             | internal excess model
+
+0                                 | 0 site entropy model -> internal model
+
+reach_increment 7
+
+end_of_model 
+                      --------------------------------------------------------
+begin_model  
+
+FeSiC-CBCC
+    
+32                                | model type: special reciprocal
+2                                 | number of independent mixing sites, reciprocal solution
+2  2                              | Fe-Si on site 1, Vacancy-C on site 2                                                                         
+       
+Fe-CBCC Si-CBCC                   | endmember names 
+FeC-CBCC SiC-CBCC
+
+0                                 | number of dependent endmembers 
+
+0  0  0  0                        | endmember flags
+
+0.  1.   0.1  0                  | imod = 0 -> Fe fraction on site 1
+0.  1.   0.1  0                  | imod = 0 -> vacancy fraction on site 2
+                            
+ideal                             | internal excess model
+
+0                                 | 0 site entropy model -> internal model
+
+reach_increment 7
+
+end_of_model 
+                      --------------------------------------------------------
+begin_model  
+
+FeSiC-HCP
+    
+33                                | model type: special reciprocal
+2                                 | number of independent mixing sites, reciprocal solution
+2  2                              | Fe-Si on site 1, Vacancy-C on site 2                                                                         
+       
+Fe-HCP Si-HCP                     | endmember names 
+FeC-HCP SiC-HCP
+
+0                                 | number of dependent endmembers 
+
+0  0  0  0                        | endmember flags
+
+0.  1.   0.1  0                  | imod = 0 -> Fe fraction on site 1
+0.  1.   0.1  0                  | imod = 0 -> vacancy fraction on site 2
+                            
+ideal                             | internal excess model
+
+0                                 | 0 site entropy model -> internal model
+
+reach_increment 7
 
 end_of_model 
                       --------------------------------------------------------
@@ -7946,6 +8027,54 @@ end_van_laar_sizes
 
 reach_increment 4
 
-end_of_model                                                          
-   
+end_of_model                                                             
+                ------------------------------------------------ 
+begin_model
+
+FeSiC_liq
+
+2
+
+3
+Fe_LIQ
+Si_LIQ
+C_LIQ
+0 0 0
+
+0. 1. 0.1 0
+0. 1. 0.1 0
+
+begin_excess function
+w(Fe_LIQ Si_LIQ C_LIQ)             995155.5667  -495.31  0.
+w(Fe_LIQ C_LIQ)                    -124320.0      28.5   0.
+w(Fe_LIQ Fe_LIQ C_LIQ)              -19300.0       0.    0.
+w(Fe_LIQ C_LIQ C_LIQ)                19300.0       0.    0.
+w(Fe_LIQ Fe_LIQ Fe_LIQ C_LIQ)        49260.0     -19.    0.
+w(Fe_LIQ Fe_LIQ C_LIQ C_LIQ)        -98520.0      38.    0.
+w(Fe_LIQ C_LIQ C_LIQ C_LIQ)          49260.0     -19.    0.
+w(Fe_LIQ Fe_LIQ Fe_LIQ Si_LIQ)      -18821.542    22.07  0.
+w(Fe_LIQ Fe_LIQ Si_LIQ Si_LIQ)       37643.084   -44.14  0.
+w(Fe_LIQ Si_LIQ Si_LIQ Si_LIQ)      -18821.542    22.07  0.
+w(Fe_LIQ Fe_LIQ Fe_LIQ Fe_LIQ Si_LIQ)  9695.8      0.    0.
+w(Fe_LIQ Fe_LIQ Fe_LIQ Si_LIQ Si_LIQ) -29087.4     0.    0.
+w(Fe_LIQ Fe_LIQ Si_LIQ Si_LIQ Si_LIQ)  29087.4     0.    0.
+w(Fe_LIQ Si_LIQ Si_LIQ Si_LIQ Si_LIQ)  -9695.8     0.    0.
+w(Si_LIQ C_LIQ)                      -133000.0    30.97  0.
+w(Fe_LIQ Si_LIQ)                   -164434.6    41.9773  0.
+w(Fe_LIQ Fe_LIQ Si_LIQ)                   0.   -21.523   0.
+w(Fe_LIQ Si_LIQ Si_LIQ)                   0.    21.523   0.
+w(Fe_LIQ Si_LIQ C_LIQ C_LIQ)      -549415.5667   495.31  0.
+w(Fe_LIQ Fe_LIQ Si_LIQ C_LIQ)  -0.1001220867d7  495.98   0.
+w(Fe_LIQ Si_LIQ Si_LIQ C_LIQ)   0.1550636433d7  -955.29  0.
+end_excess_function  
+
+1
+3 1.
+z(Fe) = 1 Fe_LIQ
+z(Si) = 1 Si_LIQ
+
+reach_increment 6
+
+end_of_model
+
 

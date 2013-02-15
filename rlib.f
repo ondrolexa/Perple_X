@@ -530,9 +530,9 @@ c                                 Stoichiometic Si rk fluid
             call mrkpur (kns,1)
             gval = gval + r*t*dlog(p*g(15))
 
-         else if (eos(id).ge.610.and.eos(id).le.623) then
+         else if (eos(id).ge.610.and.eos(id).le.639) then
 c                                 lacaze & Sundman (1990) EoS for Fe-Si-C alloys and compounds
-            gval = glacaz(eos(id)) + vdp   
+            gval = glacaz(eos(id)) + vdp + thermo(1,id)  
               
          end if          
 
@@ -5992,7 +5992,7 @@ c                                 correct jsmod for old versions
       if (jsmod.gt.20) specil = .true.  
 c                                 assign non-default props to 
 c                                 special models:
-      if (jsmod.eq.30) recip = .true.
+      if (jsmod.ge.30.and.jsmod.le.33) recip = .true.
 c                                 read number of independent sites:
       if (recip) then 
          call readda (rnums,1,tname)    
@@ -7115,6 +7115,15 @@ c                                 are not dqf'd
 
             gg = gg - t * omega(id,p0a) + gex(id,p0a)
 
+         else if (ksmod(id).eq.0) then 
+c                                 ------------------------------------
+c                                 internal fluid eos
+            gg = gfluid(y(jspec(id,1)))
+            
+            do k = 1, 2
+               gg = gg + gzero(jend(id,2+k))*y(k)
+            end do 
+
          else if (ksmod(id).eq.23) then 
 
              write (*,*) 'toop samis model not coded'
@@ -7174,21 +7183,12 @@ c                                 -------------------------------------
 c                                 BCC Fe-Si Lacaze and Sundman
             gg =  gfesi(y(1),g(jend(id,3)),g(jend(id,4)))
 
-         else if (ksmod(id).eq.30) then 
+         else if (ksmod(id).ge.30.and.ksmod(id).le.33) then 
 c                                 -------------------------------------
-c                                 Nastia's version of BCC Fe-Si-C Lacaze and Sundman
-            gg =  gfesic(y(1),y(2),y(3),y(4),
-     *                   g(jend(id,3)),g(jend(id,4)),
-     *                   g(jend(id,5)),g(jend(id,6)))
-
-         else if (ksmod(id).eq.0) then 
-c                                 ------------------------------------
-c                                 internal fluid eos
-            gg = gfluid(y(jspec(id,1)))
-            
-            do k = 1, 2
-               gg = gg + gzero(jend(id,2+k))*y(k)
-            end do 
+c                                 Nastia's version of BCC/FCC/CBCC/HCP Fe-Si-C Lacaze and Sundman
+            gg =  gfesic (y(1),y(3),y(4),
+     *                    g(jend(id,3)),g(jend(id,4)),
+     *                    g(jend(id,5)),g(jend(id,6)),ksmod(id))
 
          else 
 
@@ -12109,20 +12109,21 @@ c---------------------------------------------------------------------
 c---------------------------------------------------------------------
       if (id.eq.610) then
 c                                 Fe-bcc
-         glacaz = hserfe(t) 
+         glacaz = hserfe(t)
 
       else if (id.eq.611) then
 c                                 Si-bcc 
-         glacaz = 0.47D5 - 0.225D2*t + hsersi(t) 
-     
+         glacaz = 0.47D5 - 0.225D2*t + hsersi(t)
+
+
       else if (id.eq.612) then
 c                                 Fe-fcc
          if (t.lt.1811d0) then
             glacaz = -0.14624D4 + 0.8282D1*t - 0.115D1*t*dlog(t) 
      *             + 0.64D-3*t**2 + hserfe(t)
          else
-            glacaz = -0.27098266D5 + 0.30025256D3*t - 0.46D2*t*dlog(t) 
-     *             + 0.27885D32/t**9         
+            glacaz = -0.27097396D5 + 0.30025256D3*t - 0.46D2*t*dlog(t) 
+     *             + 0.27885D32/t**9
          end if
 
       else if (id.eq.613) then
@@ -12132,9 +12133,11 @@ c                                 Si-fcc
       else if (id.eq.614) then
 c                                 Fe-liq
          if (t.lt.1811d0) then
-            glacaz = 0.1204d5 - 0.656D1*t - 0.3675d-20*t**7 + hserfe(t)
+            glacaz = 0.1204017d5 - 0.655843d1 * t - 0.36751551d-20 * 
+     *               t ** 7 + hserfe(t)
          else
-            glacaz = -0.1084d5 + 291d0*t - 0.46D2*t*dlog(t) + hserfe(t)
+            glacaz = -0.108397d5 + 0.291302d3 * t - 0.46d2 * t * 
+     *                dlog(t) 
          end if
 
       else if (id.eq.615) then
@@ -12143,7 +12146,9 @@ c                                 Si-liq
             glacaz = 0.506964D5 - 0.300994D2*t + 0.209307d-20*t**7 
      *             + hsersi(t) 
          else
-            glacaz = 0.49828D5 - 0.2956D2*t + 0.42d31/t**9 + hsersi(t)
+            glacaz = 0.49828D5 - 0.295591D2*t + 0.420369d31/t**9 + 
+     *               hsersi(t)
+
          end if 
 
       else if (id.eq.616) then
@@ -12173,20 +12178,145 @@ c                                 Fe3Si7
 
       else if (id.eq.621) then
 c                                 Si-diamond
-         glacaz = hsersi(t) 
+         glacaz = hsersi(t)
 
       else if (id.eq.622) then
-c                                 FeC
-         glacaz = 0. 
+c                                 FeC-BCC
+         glacaz = hserfe(t) + 0.269943d6 + 0.587857d3 * t
+     *            - 0.729d2 * t * dlog(t) - 0.14169d-2 * t ** 2 
+     *            + 0.76878d7 / t - 0.7929d9 /t ** 2 + 
+     *            0.360d11 / t ** 3
 
       else if (id.eq.623) then
+c                                 SiC-BCC
+         glacaz = 0.47D5 - 0.225D2*t + hsersi(t) + 0.269944677d6 + 
+     *            0.436523d3 * t - 0.729d2 * t * dlog(t) - 0.14169d-2 *
+     *            t ** 2 + 0.76878d7 / t - 0.7929d9 / t ** 2 + 
+     *            0.36d11 / t ** 3 
+
+          else if (id.eq.624) then
+c                                 FeC-FCC
+         glacaz = hserfe(t) + 0.58376d5 + 0.163135d3 * t - 0.2545D2 * t
+     *     *dlog(t) + 0.16770d-3 * t ** 2 + 0.25626d7 / t - 0.2643d9 / 
+     *     t ** 2 + 0.12d11 / t ** 3 
+
+      else if (id.eq.625) then
+c                                 SiC-FCC
+         glacaz = hsersi(t) - 0.37879d5 + 0.20943d3 * t - 0.243d2 * t
+     *          * dlog(t) - 0.4723d-3 * t ** 2 + 0.25626d7 / t - 
+     *          0.2643d9 / t ** 2 + 0.120d11 / t ** 3 
+
+         else if (id.eq.626) then
+c                                 C-LIQ
+         glacaz = 0.1017126312D6 + 0.1461D3 * t - 0.243D2 * t * dlog(t) 
+     *            - 0.4723D-3 * t ** 2 + 0.25626D7 / t - 0.2643D9 / 
+     *            t ** 2 + 0.12D11 / t ** 3
+
+      else if (id.eq.627) then
+c                                 C-GPH
+         glacaz = -0.17368441d5 + 0.17037d3 * t - 0.243d2 * t * dlog(t)
+     *            - 0.4723d-3 * t ** 2 + 0.25626d7 / t - 0.2643d9 / 
+     *            t ** 2 + 0.12d11 / t ** 3
+
+      else if (id.eq.628) then
 c                                 SiC
-         glacaz = 0.
+         if (t.lt.700d0) then
+
+            glacaz = -0.85572264D5 + 0.1732005D3 * t - 0.25856D2 * t * 
+     *                dlog(t) - 0.2107D-1 * t ** 2 + 0.32153D-5 * t ** 3
+     *                + 0.438415D6 / t 
+
+         else if (t.gt.700d0.and.t.lt.2100) then
+
+             glacaz = -0.95145902d5 + 0.300346d3 * t - 0.45093d2 * t * 
+     *                dlog(t) - 0.367d-2 * t ** 2 + 0.22d-6 * t ** 3 + 
+     *                0.1341065d7 / t 
+     *               
+
+         else
+
+            glacaz = -0.105007971d6 + 0.360309d3 * t - 0.53073d2 * t * 
+     *                dlog(t) - 0.74525d-3 * t ** 2 + 0.173167d-7 * 
+     *                t ** 3 + 0.3693345d7 / t 
+
+         end if
+
+      else if (id.eq.629) then
+c                              Fe-CBCC
+         glacaz = 4745d0 + hserfe(t)
+
+      else if (id.eq.630) then
+c                             Si-CBCC
+         glacaz = 0.50208d5 - 0.20377d2 * t + hsersi(t)
+
+      else if (id.eq.631) then
+c                             FeC-CBCC
+         glacaz = 0.62631d5 + hserfe(t) + 0.3870412771d10 * t 
+     *            - 0.243d2 * t * dlog(t) - 0.4723d-3 * t ** 2
+
+      else if (id.eq.632) then
+c                             SiC-CBCC
+         glacaz = 0.1d7 + 0.5660326d3 * t - 0.85955678d2 * t * dlog(t) -
+     *            0.7814909d-2 * t ** 2 + 0.37239d-6 * t ** 3 + 
+     *            0.1688653d7 / t
+
+      else if (id.eq.633) then
+c                             Cementite
+         glacaz = -0.10745d5 + 0.70604d3 * t - 0.1206d3 * t * dlog(t)
+
+      else if (id.eq.634) then
+c                            Fe-HCP
+         if (t.lt.1811d0) then
+
+            glacaz = -3705.78d0 + 12.591d0*t - 1.15d0*t*dlog(t) + 
+     *                6.4d-4*t**2 + hserfe(t) 
+         else
+
+            glacaz = -3957.199d0 + 5.24951d0*t + 4.9251d30/t**9 + 
+     *                hserfe(t) 
+         end if
+
+      else if (id.eq.635) then
+c                            Si-HCP
+         glacaz = 49200d0 - 20.8d0*t + hsersi(t) 
+
+      else if (id.eq.636) then
+c                             FeC-HCP
+         if (t.lt.1811d0) then
+
+            glacaz = 52905d0 - 11.9075d0*t + 0.5d0*(-0.17368441d5 + 
+     *               0.17037d3 * t - 0.243d2 * t * dlog(t) - 0.4723d-3 *
+     *               t ** 2 + 0.25626d7 / t - 0.2643d9 / t ** 2 + 
+     *               0.12d11 / t ** 3) 
+         else
+
+            glacaz = 52905d0 - 11.9075d0*t + 0.5d0*(-0.17368441d5 + 
+     *               0.17037d3 * t - 0.243d2 * t * dlog(t) - 0.4723d-3 *
+     *               t ** 2 + 0.25626d7 / t - 0.2643d9 / t ** 2 + 
+     *               0.12d11 / t ** 3) 
+         end if
+
+      else if (id.eq.637) then
+c                            SiC-HCP
+         glacaz = 0d0 
+
+      else if (id.eq.638) then
+c                            Fe8Si2C
+         glacaz = -0.210043d5 + 0.506d0 * t + 0.91d-1 * (-0.17368441d5
+     *            + 0.17037d3 * t - 0.243d2 * t * dlog(t) - 0.4723d-3 
+     *            * t ** 2 + 0.25626d7 / t - 0.2643d9 / t ** 2 + 
+     *            0.12d11 / t ** 3) + 0.727d0 * hserfe(t) + 
+     *            0.182d0 * hsersi(t)
+
+      else if (id.eq.639) then
+c                            C diam
+         glacaz = -0.16359441D5 + 0.17561D3 * t - 0.2431D2 * t * 
+     *             dlog(t) - 0.4723D-3 * t ** 2 + 0.2698D7 / t - 
+     *             0.261D9 / t ** 2 + 0.111D11 / t ** 3 
 
       end if
 
       end 
-
       double precision function gmag (x)
 c-----------------------------------------------------------------------
 c gmag returns the magnetic contribution to G for BCC Fe in FeSi alloy.
@@ -12531,20 +12661,98 @@ c-----------------------------------------------------------------------
 
       end 
 
-      double precision function gfesic (y1,y2,y3,y4,g1,g2,g3,g4)
-c-----------------------------------------------------------------------
-c gfesic returns the free energy change for BCC Fe-Si-C alloy after 
+      double precision function gfesic (y1,y3,y4,g1,g2,g3,g4,id)
+c---------------------------------------------------------------------
+c fesic4 returns the free energy change for Fe-Si-C alloy after 
 c Lacaze & Sundman 1990. 
 
+c    id = 30 -> BCC
+c    id = 31 -> FCC
+c    id = 32 -> CBCC
+c    id = 33 -> HCP
+
 c    y1..y4 - mole fractions of Fe, Si, FeC and SiC, respectively
-c    g1..g4 - free energues of Fe, Si, FeC and SiC, respectively
+c    g1..g4 - free energies of Fe, Si, FeC and SiC, respectively
 c-----------------------------------------------------------------------
       implicit none
 
       include 'perplex_parameters.h'
 
-      double precision g1, g2, g3, g4, y1, y2, y3, y4
-c----------------------------------------------------------------------
-      gfesic = 0d0
-      end
+      integer id
 
+      double precision g1, g2, g3, g4, y1, y3, y4, gmech,
+     *                 logu, logx, gconf, gex, x, y, u, v 
+
+      double precision p,t,xco2,u1,u2,tr,pr,r,ps
+      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
+c----------------------------------------------------------------------
+c     x is the site fraction of Fe on the first site, y is the site 
+c     fraction of Si on the first site, u is the site fraction of C 
+c     on the second site, v is the site fraction of vacancies on the
+c     second site
+
+      x = y1 + y3
+      u = y3 + y4
+      y = 1d0 - x
+      v = 1d0 - u
+
+      gmech = x * v * g1 + y * v * g2 + x * u * g3 + y * u * g4
+
+      if (x.gt.0d0.and.x.lt.1d0) then 
+
+         logx = (x * dlog(x) + y * dlog(y))
+
+      else
+
+         logx = 0d0
+
+      end if 
+
+      if (u.gt.0.and.u.lt.1d0) then 
+
+         logu = (u * dlog(u) + v * dlog(v))
+
+      else
+
+         logu = 0d0
+
+      end if 
+
+      if (id.eq.30) then 
+c                                 BCC
+         gconf = r*t*(logx + 3d0*logu)
+
+         gex = x*y*v*(-0.153138560d6 + 0.4648d2 * t - 0.92352d5 * x +
+     *         0.92352d5*y + 0.62240d5*(x-y)**2) + 0.78866d5 *x*y*u
+     *         - 0.190d3*x*u*v*t
+
+      else if (id.eq.31) then 
+c                                 FCC
+         gconf = r * t * (logx + logu)
+
+         gex = x*y*v* (-0.1252477d6 + 0.41116d2 * t - 0.1427076d6 * x
+     *         + 0.1427076D6 * y + 0.899073D5 * (x - y) ** 2) + 
+     *         x * y * u * (0.1432199d6 + 0.3931d2 * t - 0.2163205d6 * x
+     *         + 0.2163205D6 * y) - 0.34671d5 * x * u * v
+
+      else if (id.eq.32) then 
+c                                 CBCC
+         gconf = r * t * (logx + logu)
+
+         gex = x * y * v * (-0.153141d6 + 0.4648d2 * t - 0.92352d5 * x +
+     *         0.92352d5 * y + 0.62240d5 * (x - y) ** 2) - 
+     *         0.34671d5 * x * u * v
+
+      else if (id.eq.33) then
+c                                 HCP 
+         gconf = r*t*(logx + logu/2d0)
+
+         gex = -0.22126d5 * x * u * v + x * y * v * 
+     *          (-0.123468d6 + 0.41116d2 * t - 0.142708d6 * x + 
+     *          0.142708d6 * y + 0.89907d5 * (x - y) ** 2)
+
+      end if 
+
+      gfesic = gmech + gconf + gex
+
+      end

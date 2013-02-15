@@ -2949,19 +2949,18 @@ c                                 BCC Fe-Si Lacaze and Sundman
 
             end do 
 
-         else if (ksmod(i).eq.30) then 
-c                                 call nastia's BCC model
+         else if (ksmod(i).ge.30.and.ksmod(id).le.33) then 
+c                                 call nastia's BCC/FCC/CBCC/HCP model
+c                                 after Lacaze and Sundman
             do j = 1, jend(i,2)
-c                                 BCC Fe-Si-C Lacaze and Sundman
-               g(id) = gfesic(
-     *                    sxs(ixp(id)+1),sxs(ixp(id)+2),
-     *                    sxs(ixp(id)+3),sxs(ixp(id)+4),
-     *                    g(jend(i,3)),g(jend(i,4)),
-     *                    g(jend(i,5)),g(jend(i,6)))
+
+               g(id) = gfesic (sxs(ixp(id)+1),sxs(ixp(id)+3),
+     *                         sxs(ixp(id)+4),g(jend(i,3)),g(jend(i,4)),
+     *                         g(jend(i,5)),g(jend(i,6)),ksmod(id))
   
                id = id + 1
 
-            end do 
+            end do  
 
          end if 
 
