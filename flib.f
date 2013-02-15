@@ -6361,16 +6361,17 @@ c     *           + t**3 * (-0.286881183333320412D-1)
 c                                 MRK dispersion term for SiO2, from
 c                                 sio2_mp_fit3.mws 
 
-            if (t.gt.3100d0.and..not.lopt(28)) then 
-               tt = 3100d0
-            else 
-               tt = t
-            end if 
+c           if (t.gt.3100d0.and..not.lopt(28)) then 
+c               tt = 3100d0
+c            else 
+c               tt = t
+c            end if 
 
-            a(14) = (-0.370631646315402D9 + 0.710713269453173D8*dlog(tt)
-     *               -0.468778070702675D7/tt + 
-     *               (0.194790021605110D4*dsqrt(tt) -0.110935131465938D6
-     *               -0.120230245951606D2 * tt) * tt)*1d2
+c                                  DP fit
+            a(14) = (-0.370631646315402D9 + 0.710713269453173D8*dlog(t)
+     *               -0.468778070702675D7/t + 
+     *               (0.194790021605110D4*dsqrt(t) -0.110935131465938D6
+     *               -0.120230245951606D2 * t) * t)*1d2
 
 c            if (t.gt.8146.72) a(14) = 0d0
 

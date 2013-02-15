@@ -3733,32 +3733,43 @@ z(Fe3+,T) = 1 mt
 end_of_model               
                       --------------------------------------------------------
 begin_model                
-                                      The Anderson and Lindsley models
+                                      The Andersen and Lindsley models
                                       (Am Min v 73, p 714, 1988)
                                       are for ilmenite coexisiting with
                                       magnetite, its performance at high 
                                       T (ca 1200) has been criticized by
                                       Ghiorso, but this is probably the
-                                      best model for T<800 C                        
+                                      best model for T<800 C
+
+                                      Jury-rigged for geik, JADC, 2/14/13    
+
+                                      Ti only on B, Fe3+ disordered                    
 
 
 IlHm(A)                           
-2                          | macroscopic
+2                            | macroscopic
 
-2                          | 2 endmembers 
-ilm      hem
-  0  0                     | endmember flags
-0. 1. 0.1 0                | subdivision range, imod = 0 -> cartesian subdivision
+3                            | 3 endmembers 
+ilm      hem     geik
+  0  0  0                    | endmember flags
+0. 1. 0.1 0                  | subdivision range, imod = 0 -> cartesian subdivision
+0. 1. 0.1 0                  | subdivision range, imod = 0 -> cartesian subdivision
 
 begin_excess_function
 w(ilm hem hem) 126342.5 -100.6 0. term 1
 w(ilm ilm hem) 44204.8 -12.274 0. term 2
+w(geik hem hem) 126342.5 -100.6 0. term 1
+w(geik geik hem) 44204.8 -12.274 0. term 2
 end_excess_function
 
-1
+2
 
-2 2. 
-z(Ti) = 1 ilm
+2 1.                         | B-site, Fe3+ and Ti 
+z(Ti,B) = 1 ilm + 1 geik
+
+3 1.                         | A-site, Fe2+, Fe3+ and Mg
+z(Mg,A)   = 1 geik
+z(Fe2+,A) = 1 ilm
 
 end_of_model               
                       --------------------------------------------------------
@@ -3787,28 +3798,36 @@ end_of_model
                       --------------------------------------------------------
 begin_model                
 
-MtUl(A)                    | Anderson and Lindsley 1988, Akimoto model
+MtUl(A)                    | Andersen and Lindsley 1988, Akimoto model
+                           | assumes Ti is only octahedral, Mg and Fe2+ 
+                           | jury rigged for magnesio-ferrite, JADC 2/14/13
+
 2                          | model type: Ideal or Margules
 
-2                          | 2 species
-usp      mt
-  0  0                                endmember flags
+3                          | 3 species
+usp     mt     mft
+  0  0  0                  | endmember flags
+0. 1. 0.1 0                | subdivision range, imod = 0 -> cartesian subdivision
 0. 1. 0.1 0                | subdivision range, imod = 0 -> cartesian subdivision
 
 begin_excess_function 
 w(usp mt mt) 46175. -23.077 0. 
 w(usp usp mt) 15748.      0. 0. 
+w(usp mft mft) 46175. -23.077 0. 
+w(usp usp mft) 15748.      0. 0. 
 end_excess_function   
 
-2                          | 2 site model
+2                          | 2 site model, assumes Fe3+ is disorderd
  
-3 2.                       | 3 species on O, 2 sites per formula unit.
+4 2.                       | 4 species on O, 2 sites per formula unit.
 
 z(Ti,O) = 1/2 usp
-z(Fe3+,O) = 1/2 mt
+z(Fe3+,O) = 1/2 mt + 1/2 mft
+z(Mg,O) = 1/2 mft
 
-2 1.                       | 2 species on T, 1 site per formula unit.
-z(Fe3+,T) = 1 mt
+3 1.                       | 2 species on T, 1 site per formula unit.
+z(Fe3+,T) = 1 mt + 1 mft
+z(Fe2+,T) = 1 usp
 
 end_of_model               
                       --------------------------------------------------------
