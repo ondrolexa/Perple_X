@@ -155,11 +155,11 @@ c                                 number of iterations
 c                                 bound relaxation rate
             if (i.eq.1) then 
 c                                 the initial resolution of the exploratory stage
-               nopt(10) = rid(3,1)
+               nopt(10) = rid(3,1) * nopt(29)
            
             else 
 c                                 the final resolution of the exploratory stage   
-               nopt(10) = rid(4,1)  
+               nopt(10) = rid(4,1) * nopt(29)
 
             end if 
 

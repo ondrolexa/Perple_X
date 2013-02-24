@@ -17,7 +17,7 @@ c----------------------------------------------------------------------
       implicit none
 
       write (*,'(/,a)') 
-     *      'Perple_X version 6.6.8, source updated Feb 5, 2013.'
+     *      'Perple_X version 6.6.8, source updated Feb 24, 2013.'
 
       end
 
@@ -113,7 +113,7 @@ c----------------------------------------------------------------------
 c----------------------------------------------------------------------
 c                                 default option values:
       do i = 28, 30
-         nopt(i) = 0d0
+         nopt(i) = 1d0
          lopt(i) = .false.
          iopt(i) = 0
       end do 

@@ -272,7 +272,7 @@ c                                      set up contour intervals
 
          write (*,'(a)') 'Enter min, max and interval for contours:'
          read (*,*) cmin, cmax, dcon
-         ncon = int((cmax-cmin)/dcon) + 1
+         ncon = int((cmax-cmin)*1.0001d0/dcon) + 1
 
       else 
 

@@ -237,8 +237,9 @@ c                                 number of grid points
       read (*,*) nxy
          
       do i = 1, 2
-         tmin(i) = tmin(i) + (tmax(i)-tmin(i))*1d-6
-         tmax(i) = tmax(i) - (tmax(i)-tmin(i))*1d-6
+c                                 earlier solution to round-off:
+c         tmin(i) = tmin(i) + (tmax(i)-tmin(i))*1d-6
+c         tmax(i) = tmax(i) - (tmax(i)-tmin(i))*1d-6
          dx(i) = (tmax(i)-tmin(i))/dfloat(nxy(i)-1)
       end do 
 
@@ -247,8 +248,20 @@ c                                 number of grid points
       do j = 1, nxy(2)
 
          var(2) = tmin(2) + dx(2)*dfloat(j-1)
+c                                 round off tests:
+         if (var(2).gt.tmax(2)) then
+            var(2) = tmax(2)
+         else if (var(2).lt.tmin(2)) then 
+            var(2) = tmin(2)
+         end if 
 
          do i = 1, nxy(1) 
+c                                 round off tests:
+            if (var(1).gt.tmax(1)) then
+               var(1) = tmax(1)
+            else if (var(1).lt.tmin(1)) then 
+               var(1) = tmin(1)
+            end if 
 
             var(1) = tmin(1) + dx(1)*dfloat(i-1)
 
