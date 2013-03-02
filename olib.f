@@ -48,7 +48,7 @@ c----------------------------------------------------------------------
       common/ cst45 /atwt(k0)
 
       logical gflu,aflu,fluid,shear,lflu,volume,rxn
-      common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume,rxn
+      common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume,rxn,bulkg
 
       integer jbulk
       double precision cblk
@@ -361,7 +361,7 @@ c                                 bookkeeping variables
       common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
 
       logical gflu,aflu,fluid,shear,lflu,volume,rxn
-      common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume,rxn
+      common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume,rxn,bulkg
 
       double precision bg
       common/ cxt19 /bg(k5,k2)
@@ -581,11 +581,11 @@ c                                 convert x to y for calls to gsol
 
          end if 
 c                                 get and sum phase properties
-         call getphp (ids,i,sick,ssick,ppois)     
+         call getphp (ids,i,sick,ssick,ppois)    
 
       end do 
 c                                 compute aggregate properties:
-      call gtsysp (sick,ssick)
+      call gtsysp (sick,ssick,bsick)
 
 99    if (lopt(14)) p = dlog10(p)
 
@@ -1306,6 +1306,8 @@ c----------------------------------------------------------------------
 
       integer id,jd,iwarn1,iwarn2,j,itemp,m
 
+      character*14 wname1, wname2
+
       double precision dt0, dt1, dt2, g0, gpt, gpt1, 
      *                 gpt2, gpp, dp0, dp1, dp2, e, alpha, v, ginc, dt,
      *                 beta, cp, s, rho, gtt, r43, g1, g2, g3, g4, g5,
@@ -1329,7 +1331,7 @@ c----------------------------------------------------------------------
       common/ cxt21a /pname(k5)
 
       logical gflu,aflu,fluid,shear,lflu,volume,rxn
-      common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume,rxn
+      common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume,rxn,bulkg
 
       integer iam
       common/ cst4 /iam
@@ -1358,8 +1360,8 @@ c----------------------------------------------------------------------
       save dt
       data dt/0.5d0/
 
-      save iwarn1, iwarn2
-      data iwarn1, iwarn2 /2*0/
+      save iwarn1, iwarn2, wname1, wname2
+      data iwarn1, iwarn2 /2*0,2*'              '/
 c----------------------------------------------------------------------
       sick(jd) = .false.
       pois = .false.
@@ -1417,8 +1419,11 @@ c                                 shear modulus
      *                   props(4,jd),props(18,jd),props(20,jd),ok)
 
          if (.not.ok.and.iopt(16).eq.0) shear = .false.  
-c                                 explicit bulk modulus is present and allowed
-         if (lopt(17).and.props(4,jd).gt.0d0) bulk = .false.
+c                                 explicit bulk modulus is allowed and used
+         if (lopt(17).and.props(4,jd).gt.0d0) then
+            bulk = .false.
+            bulkg = .false.
+         end if 
 
       else
 
@@ -1771,7 +1776,7 @@ c                                 adiabatic bulk modulus
 c                                 use poisson ratio estimates if iopt(16).ne.0
             if ((iopt(16).eq.1.and..not.ok).or.iopt(16).eq.2) then
 
-               if (.not.sick(jd)) then
+               if (.not.sick(jd).or..not.bulk) then
  
                   props(5,jd)  = nopt(16)*props(4,jd)
                   props(19,jd) = nopt(16)*props(18,jd) 
@@ -1795,9 +1800,9 @@ c                                 use poisson ratio estimates if iopt(16).ne.0
 
          end if  
 
-      end if 
+      end if  
 
-      if (sick(jd)) then
+      if (sick(jd).and.bulk) then
 
          props(3,jd) = nopt(7)
          props(4,jd) = nopt(7)
@@ -1808,38 +1813,55 @@ c                                 use poisson ratio estimates if iopt(16).ne.0
 
          if (.not.fluid(jd)) ssick = .true.
 
+      else if (.not.bulk.and.v.le.0d0.or.props(4,jd).lt.0d0) then 
+
+         volume = .false.
+
       end if 
+c                                 at this point sick(jd) is true if:
+c                                 1) v < 0 and not a reaction or an ideal gas in frendly
+c                                 2) alpha and beta are undefined
+c                                 3) cp or beta is < 0 or unreasonably large
+
+c                                 bulk is true if bulk modulus is computed thermodynamically
+c                                 volume is false only if sick and .not.bulk
+
 c                                 seismic properties
-      if (.not.sick(jd).and..not.rxn.and.v.gt.0d0) then 
+      if (vol.gt.0d0.and.(.not.sick(jd).and..not.rxn.or..not.bulk)) then 
 
          units = dsqrt(1d5)/1d3
          r43   = 4d0/3d0
 c                                 sound velocity
          root = props(4,jd)/rho
-         props(6,jd) = dsqrt(root) * units
-c                                 sound velocity T derivative
-         props(22,jd) = (props(18,jd) + props(4,jd) * alpha) 
-     *                  / dsqrt(root) / rho / 2d0 * units
-c                                 sound velocity P derivative
-         props(25,jd) = (props(20,jd) - props(4,jd) * beta) 
-     *                  / dsqrt(root) / rho / 2d0 * units
 
+         if (.not.sick(jd)) then 
+            props(6,jd) = dsqrt(root) * units
+c                                 sound velocity T derivative
+            props(22,jd) = (props(18,jd) + props(4,jd) * alpha) 
+     *                     / dsqrt(root) / rho / 2d0 * units
+c                                 sound velocity P derivative
+            props(25,jd) = (props(20,jd) - props(4,jd) * beta) 
+     *                  / dsqrt(root) / rho / 2d0 * units
+         end if 
 c                                 p-wave velocity
          root = (props(4,jd)+r43*props(5,jd))/rho
 
          if (root.ge.0d0) then 
 
             props(7,jd) = dsqrt(root)*units
+
+            if (.not.sick(jd)) then 
 c                                 p-wave velocity T derivative
-            props(23,jd) = (props(18,jd) + r43 * 
-     *                     (props(19,jd) + alpha * props(5,jd)) 
-     *                    + props(4,jd) * alpha) / 
-     *                      dsqrt(root) / rho / 2d0 * units
+               props(23,jd) = (props(18,jd) + r43 * 
+     *                        (props(19,jd) + alpha * props(5,jd)) 
+     *                         + props(4,jd) * alpha) / 
+     *                         dsqrt(root) / rho / 2d0 * units
 c                                 p-wave velocity P derivative
-            props(26,jd) = (props(20,jd) + r43 *
-     *                     (props(21,jd) - beta * props(5,jd)) 
-     *                    - props(4,jd) * beta) /
-     *                      dsqrt(root) / rho / 2d0 * units
+               props(26,jd) = (props(20,jd) + r43 *
+     *                        (props(21,jd) - beta * props(5,jd)) 
+     *                       - props(4,jd) * beta) /
+     *                         dsqrt(root) / rho / 2d0 * units
+            end if 
 
          else 
 
@@ -1857,10 +1879,14 @@ c                                 s-wave velocity
             if (root.gt.0d0) then 
 
                props(8,jd) = dsqrt(root)*units
-               props(24,jd)= (props(19,jd) + props(5,jd) * alpha)
-     *                     / dsqrt(root) / rho / 2d0 * units
-               props(27,jd)= (props(21,jd) - props(5,jd) * beta)
-     *                     / dsqrt(root) / rho / 2d0 * units
+
+               if (.not.sick(jd)) then
+                  props(24,jd) = (props(19,jd) + props(5,jd) * alpha)
+     *                           / dsqrt(root) / rho / 2d0 * units
+                  props(27,jd) = (props(21,jd) - props(5,jd) * beta)
+     *                           / dsqrt(root) / rho / 2d0 * units
+               end if 
+
             else
 
                props(8,jd) = nopt(7)
@@ -1889,6 +1915,10 @@ c                                 vp/vs
       else 
 
          do j = 3, 9
+            props(j,jd) = nopt(7)
+         end do 
+
+         do j = 18, 27
             props(j,jd) = nopt(7)
          end do 
 
@@ -1934,27 +1964,21 @@ c                                 max solid prop
       end if 
 c                                 check and warn if necessary for negative
 c                                 expansivity
-      if (.not.sick(jd).and.v.gt.0d0) then 
+      if (.not.sick(jd).and.v.gt.0d0.and.alpha.le.0d0.and.iwarn1.lt.11
+     *    .and.pname(jd).ne.wname1) then
 
-         if (alpha.le.0d0.and.iwarn1.lt.11) then
-
-            write (*,1030) t,p,pname(jd)
-            iwarn1 = iwarn1 + 1
-            if (iwarn1.eq.11) call warn (49,r,179,'GETPHP') 
-
-         end if 
+         write (*,1030) t,p,pname(jd)
+         iwarn1 = iwarn1 + 1
+         wname1 = pname(jd)
+         if (iwarn1.eq.11) call warn (49,r,179,'GETPHP') 
 
       end if
 
-      if (ppois.and.iwarn2.lt.11) then
+      if (ppois.and.iwarn2.lt.11.and.pname(jd).ne.wname2.and.pois) then 
 
-         if (pois) then 
-
-            iwarn2 = iwarn2 + 1
-            write (*,1040) t,p,pname(jd)
-
-         end if
- 
+         iwarn2 = iwarn2 + 1
+         wname2 = pname(jd)
+         write (*,1040) t,p,pname(jd)
          if (iwarn2.eq.11) call warn (49,r,178,'GETPHP')
 
       end if 
@@ -2010,7 +2034,7 @@ c                                 solid only totals:
      *        'the effective expansivity of: ',a,/,'is negative. ',
      *        'Most probably this is because of a Landau ordering ',
      *        'model. The Gruneisen',/,'thermal parameter and seismic',
-     *        ' velocities for this phase should be considered ',
+     *        ' speeds for this phase should be considered ',
      *        'with caution.',/)
 
 1040  format (/,'**warning ver178** at T(K)=',g12.4,' P(bar)=',g12.4,1x,
@@ -2039,7 +2063,7 @@ c-----------------------------------------------------------------------
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 
       logical gflu,aflu,fluid,shear,lflu,volume,rxn
-      common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume,rxn
+      common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume,rxn,bulkg
 
       double precision props,psys,psys1,pgeo,pgeo1
       common/ cxt22 /props(i8,k5),psys(i8),psys1(i8),pgeo(i8),pgeo1(i8)
@@ -2557,7 +2581,7 @@ c----------------------------------------------------------------------
       logical ssick,ppois
 
       logical gflu,aflu,fluid,shear,lflu,volume,rxn
-      common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume,rxn
+      common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume,rxn,bulkg
 
       double precision props,psys,psys1,pgeo,pgeo1
       common/ cxt22 /props(i8,k5),psys(i8),psys1(i8),pgeo(i8),pgeo1(i8)
