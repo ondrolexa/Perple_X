@@ -12317,6 +12317,7 @@ c                            C diam
       end if
 
       end 
+
       double precision function gmag (x)
 c-----------------------------------------------------------------------
 c gmag returns the magnetic contribution to G for BCC Fe in FeSi alloy.
@@ -12681,7 +12682,7 @@ c-----------------------------------------------------------------------
       integer id
 
       double precision g1, g2, g3, g4, y1, y3, y4, gmech,
-     *                 logu, logx, gconf, gex, x, y, u, v 
+     *                 logu, logx, gconf, gex, x, y, u, v, gmag 
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -12724,7 +12725,7 @@ c                                 BCC
 
          gex = x*y*v*(-0.153138560d6 + 0.4648d2 * t - 0.92352d5 * x +
      *         0.92352d5*y + 0.62240d5*(x-y)**2) + 0.78866d5 *x*y*u
-     *         - 0.190d3*x*u*v*t
+     *         - 0.190d3*x*u*v*t + gmag(1d0)
 
       else if (id.eq.31) then 
 c                                 FCC
