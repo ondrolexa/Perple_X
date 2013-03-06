@@ -3185,7 +3185,15 @@ c                                 interval limits conformal transformation
 
       double precision goodc, badc
       common/ cst20 /goodc(3),badc(3)
+
+      double precision units, r13, r23, r43
+      common/ cst59 /units, r13, r23, r43
 c-----------------------------------------------------------------------
+      data units, r13, r23, r43/.316227766016837933d0, 
+     *                          .333333333333333333d0,
+     *                          .666666666666666667d0,
+     *                          1.33333333333333333d0/
+
       data hs2p/4, 5, 18, 19, 20, 21/
 
       data iff,ipt2,goodc,badc/3*0,6*0d0/

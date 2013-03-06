@@ -48,7 +48,7 @@ c----------------------------------------------------------------------
       common/ cst45 /atwt(k0)
 
       logical gflu,aflu,fluid,shear,lflu,volume,rxn
-      common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume,rxn,bulkg
+      common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume,rxn
 
       integer jbulk
       double precision cblk
@@ -325,7 +325,7 @@ c----------------------------------------------------------------------
 
       double precision wt(3), cst
 
-      logical sick(i8), nodata, ssick, ppois
+      logical sick(i8), nodata, ssick, ppois, bulkg, bsick
 c                                 x-coordinates for the assemblage solutions
       double precision x3
       common/ cxt16 /x3(k21,mst,msp)
@@ -361,7 +361,7 @@ c                                 bookkeeping variables
       common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
 
       logical gflu,aflu,fluid,shear,lflu,volume,rxn
-      common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume,rxn,bulkg
+      common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume,rxn
 
       double precision bg
       common/ cxt19 /bg(k5,k2)
@@ -470,7 +470,7 @@ c                                 then set p and t
 
       end if 
 c                                 initialize system props/flags
-      call insysp (ssick,ppois)
+      call insysp (ssick,ppois,bulkg,bsick)
 
       do i = 1, ntot
 
@@ -581,11 +581,11 @@ c                                 convert x to y for calls to gsol
 
          end if 
 c                                 get and sum phase properties
-         call getphp (ids,i,sick,ssick,ppois)    
+         call getphp (ids,i,sick,ssick,ppois,bulkg,bsick)    
 
       end do 
 c                                 compute aggregate properties:
-      call gtsysp (sick,ssick,bsick)
+      call gtsysp (sick,ssick,bulkg,bsick)
 
 99    if (lopt(14)) p = dlog10(p)
 
@@ -1239,7 +1239,7 @@ c                                 than necessary.
 
       end 
 
-      subroutine getphp (id,jd,sick,ssick,ppois)
+      subroutine getphp (id,jd,sick,ssick,ppois,bulkg,bsick)
 c-----------------------------------------------------------------------
 c gets properties of phase id and saves them in props(1:i8,i); 
 c if called by werami/meemum id is a general phase pointer; if 
@@ -1302,7 +1302,8 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical ok, sick(i8), ssick, pois, ppois, bulk
+      logical ok, sick(i8), ssick, pois, ppois, bulk, bulkg, bsick, 
+     *        lshear
 
       integer id,jd,iwarn1,iwarn2,j,itemp,m
 
@@ -1310,8 +1311,8 @@ c----------------------------------------------------------------------
 
       double precision dt0, dt1, dt2, g0, gpt, gpt1, 
      *                 gpt2, gpp, dp0, dp1, dp2, e, alpha, v, ginc, dt,
-     *                 beta, cp, s, rho, gtt, r43, g1, g2, g3, g4, g5,
-     *                 g7, gppp, gppt, gptt, gttt, mols, units, root
+     *                 beta, cp, s, rho, gtt, g1, g2, g3, g4, g5,
+     *                 g7, gppp, gppt, gptt, gttt, mols, root
 
       double precision props,psys,psys1,pgeo,pgeo1
       common/ cxt22 /props(i8,k5),psys(i8),psys1(i8),pgeo(i8),pgeo1(i8)
@@ -1331,7 +1332,7 @@ c----------------------------------------------------------------------
       common/ cxt21a /pname(k5)
 
       logical gflu,aflu,fluid,shear,lflu,volume,rxn
-      common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume,rxn,bulkg
+      common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume,rxn
 
       integer iam
       common/ cst4 /iam
@@ -1357,14 +1358,18 @@ c----------------------------------------------------------------------
       double precision hsb
       common/ cst84 /hsb(i8,4),hs2p(6)
 
+      double precision units, r13, r23, r43
+      common/ cst59 /units, r13, r23, r43
+
       save dt
-      data dt/0.5d0/
+      data dt /.5d0/
 
       save iwarn1, iwarn2, wname1, wname2
-      data iwarn1, iwarn2 /2*0,2*'              '/
+      data iwarn1, iwarn2, wname1, wname2 /2*0,2*'              '/
 c----------------------------------------------------------------------
       sick(jd) = .false.
-      pois = .false.
+      pois     = .false.
+      lshear   = .false.
 c                                 make name and composition, 
 c                                 redundant for frendly
       call getnam (pname(jd),id)
@@ -1779,8 +1784,14 @@ c                                 use poisson ratio estimates if iopt(16).ne.0
                if (.not.sick(jd).or..not.bulk) then
  
                   props(5,jd)  = nopt(16)*props(4,jd)
-                  props(19,jd) = nopt(16)*props(18,jd) 
-                  props(21,jd) = nopt(16)*props(20,jd)
+
+                  if (.not.sick(jd)) then 
+                     props(19,jd) = nopt(16)*props(18,jd) 
+                     props(21,jd) = nopt(16)*props(20,jd)
+                  else 
+                     props(19,jd) = nopt(7)
+                     props(21,jd) = nopt(7)
+                  end if 
 
                   if (iopt(16).eq.1) then 
                      ppois = .true.
@@ -1813,9 +1824,13 @@ c                                 use poisson ratio estimates if iopt(16).ne.0
 
          if (.not.fluid(jd)) ssick = .true.
 
-      else if (.not.bulk.and.v.le.0d0.or.props(4,jd).lt.0d0) then 
+      else if (.not.bulk.and.rho.le.0d0.or.props(4,jd).lt.0d0) then 
 
          volume = .false.
+
+      else if (.not.bulk.and.sick(jd)) then
+
+         bsick = .true. 
 
       end if 
 c                                 at this point sick(jd) is true if:
@@ -1827,26 +1842,33 @@ c                                 bulk is true if bulk modulus is computed therm
 c                                 volume is false only if sick and .not.bulk
 
 c                                 seismic properties
-      if (vol.gt.0d0.and.(.not.sick(jd).and..not.rxn.or..not.bulk)) then 
+      if (volume) then
 
-         units = dsqrt(1d5)/1d3
-         r43   = 4d0/3d0
+         if (props(5,jd).gt.0d0.or.fluid(jd)) lshear = .true.
+
+      end if 
+
+      if (volume) then
 c                                 sound velocity
          root = props(4,jd)/rho
 
+         props(6,jd) = dsqrt(root) * units
+
          if (.not.sick(jd)) then 
-            props(6,jd) = dsqrt(root) * units
 c                                 sound velocity T derivative
             props(22,jd) = (props(18,jd) + props(4,jd) * alpha) 
      *                     / dsqrt(root) / rho / 2d0 * units
 c                                 sound velocity P derivative
             props(25,jd) = (props(20,jd) - props(4,jd) * beta) 
      *                  / dsqrt(root) / rho / 2d0 * units
+         else 
+            props(22,jd) = nopt(7)
+            props(25,jd) = nopt(7)
          end if 
-c                                 p-wave velocity
-         root = (props(4,jd)+r43*props(5,jd))/rho
 
-         if (root.ge.0d0) then 
+         if (lshear) then
+c                                 p-wave velocity
+            root = (props(4,jd)+r43*props(5,jd))/rho 
 
             props(7,jd) = dsqrt(root)*units
 
@@ -1861,39 +1883,24 @@ c                                 p-wave velocity P derivative
      *                        (props(21,jd) - beta * props(5,jd)) 
      *                       - props(4,jd) * beta) /
      *                         dsqrt(root) / rho / 2d0 * units
+            else 
+               props(23,jd) = nopt(7)
+               props(26,jd) = nopt(7)
             end if 
-
-         else 
-
-            props(7,jd) = nopt(7)
-            props(23,jd) = nopt(7)
-            props(26,jd) = nopt(7)
-            shear = .false.
-
-         end if 
-
-         if (.not.fluid(jd)) then 
 c                                 s-wave velocity
             root = props(5,jd)/rho
 
-            if (root.gt.0d0) then 
+            props(8,jd) = dsqrt(root)*units
 
-               props(8,jd) = dsqrt(root)*units
+            if (.not.sick(jd)) then
 
-               if (.not.sick(jd)) then
-                  props(24,jd) = (props(19,jd) + props(5,jd) * alpha)
+               props(24,jd) = (props(19,jd) + props(5,jd) * alpha)
      *                           / dsqrt(root) / rho / 2d0 * units
-                  props(27,jd) = (props(21,jd) - props(5,jd) * beta)
+               props(27,jd) = (props(21,jd) - props(5,jd) * beta)
      *                           / dsqrt(root) / rho / 2d0 * units
-               end if 
-
-            else
-
-               props(8,jd) = nopt(7)
+            else 
                props(24,jd) = nopt(7)
                props(27,jd) = nopt(7)
-               shear = .false.
-
             end if 
 c                                 vp/vs
             if (isnan(props(8,jd))) then 
@@ -1904,13 +1911,19 @@ c                                 vp/vs
                props(9,jd) = nopt(7)
             end if 
 
-         else 
+         else
 
-            props(8,jd) = 0d0
-            props(24,jd) = 0d0 
-            props(27,jd) = 0d0 
+            props(7,jd)  = nopt(7)
+            props(23,jd) = nopt(7)
+            props(26,jd) = nopt(7)
 
-         end if 
+            props(8,jd) = nopt(7)
+            props(24,jd) = nopt(7)
+            props(27,jd) = nopt(7)
+
+            shear = .false.
+
+         end if  
 
       else 
 
@@ -2044,7 +2057,7 @@ c                                 solid only totals:
 
       end
 
-      subroutine gtsysp (sick,ssick)
+      subroutine gtsysp (sick,ssick,bulkg,bsick)
 c-----------------------------------------------------------------------
 c computes aggregate (system) properties from phase properties 
 c obtained by prior calls to getphp
@@ -2053,17 +2066,17 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical sick(i8), ssick, solid, bad
+      logical sick(i8), ssick, solid, bad, bulkg, bsick
 
       integer i, j, iwarn, m
 
-      double precision chi, chi1, units, root, r43, k, g, v, vs
+      double precision chi, chi1, root, k, g, v, vs
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 
       logical gflu,aflu,fluid,shear,lflu,volume,rxn
-      common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume,rxn,bulkg
+      common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume,rxn
 
       double precision props,psys,psys1,pgeo,pgeo1
       common/ cxt22 /props(i8,k5),psys(i8),psys1(i8),pgeo(i8),pgeo1(i8)
@@ -2086,6 +2099,9 @@ c-----------------------------------------------------------------------
 
       integer iam
       common/ cst4 /iam
+
+      double precision units, r13, r23, r43
+      common/ cst59 /units, r13, r23, r43
 
       save iwarn
       data iwarn/0/
@@ -2129,8 +2145,6 @@ c                                 frendly but not a reaction
 
       if (.not.volume) shear = .false.
 c                                 not so bad....
-      units = dsqrt(1d5)/1d3
-      r43   = 4d0/3d0
       solid = .true.
 c                                 weighting used to compute average
 c                                 moduli (and derivatives) from bounds:
@@ -2143,6 +2157,7 @@ c                                 in calphp. ony 4,5,18,19,20,21 are used
 c                                 1 - min, 2 - max, 3 - min solid, 4 - max
 c                                 solid. 
       if (.not.lopt(16)) then 
+
          do m = 1, 5, 2
             do i = 1, 4
 
@@ -2158,6 +2173,7 @@ c                                 solid.
 
             end do 
          end do 
+
       end if 
 c                                 compute aggregate props:
 
@@ -2213,7 +2229,7 @@ c                                 VRH if lopt(16), else HS
 
                   m = hs2p(j)
 
-                  if (props(m,i).eq.0d0) cycle 
+                  if (j.gt.1.and.bsick .or. props(m,i).eq.0d0) cycle 
 c                                 Aggregate Bulk Modulus, T-derivative, P-derivative                                
                   psys(m) = psys(m) + v*props(m,i)
                   pgeo(m) = pgeo(m) + v/props(m,i)
@@ -2228,7 +2244,7 @@ c                                 shear mod is available for all phases.
                do j = 2, 6, 2
 
                   m = hs2p(j) 
-                  if (props(m,i).eq.0d0) cycle 
+                  if (j.gt.2.and.bsick .or. props(m,i).eq.0d0) cycle 
 c                                 Aggregate shear Modulus, T-derivative, P-derivative                                
                   psys(m) = psys(m) + v*props(m,i)
                   if (.not.aflu) pgeo(m) = pgeo(m) + v/props(m,i)
@@ -2237,14 +2253,14 @@ c                                 Aggregate shear Modulus, T-derivative, P-deriv
 
             end if 
 
-            if (aflu.and..not.fluid(i).and..not.ssick) then
+            if (aflu.and..not.fluid(i).and.(bulkg.and..not.ssick .or.
+     *                                                .not.bulkg)) then
 c                                 assemblage includes fluid, solid only
 c                                 totals:
                do j = 1, 5, 2
 
                   m = hs2p(j)
-
-                  if (props(m,i).eq.0d0) cycle 
+                  if (j.gt.1.and.bsick .or. props(m,i).eq.0d0) cycle 
 c                                 Aggregate Bulk Modulus, T-derivative, P-derivative                                
                   psys1(m) = psys1(m) + vs*props(m,i)
                   pgeo1(m) = pgeo1(m) + vs/props(m,i)
@@ -2258,7 +2274,7 @@ c                                 Aggregate Bulk Modulus, T-derivative, P-deriva
                do j = 2, 6, 2
 
                   m = hs2p(j)
-                  if (props(m,i).eq.0d0) cycle 
+                  if (j.gt.2.and.bsick .or. props(m,i).eq.0d0) cycle 
 c                                 Aggregate shear Modulus, T-derivative, P-derivative                                
                   psys1(m) = psys1(m) + vs*props(m,i)
                   pgeo1(m) = pgeo1(m) + vs/props(m,i)
@@ -2276,8 +2292,7 @@ c                                 Aggregate bulk modulus, T-derivative, P-deriva
                do j = 1, 5, 2
 
                   m = hs2p(j)
-
-                  if (props(m,i).eq.0d0) cycle 
+                  if (j.gt.1.and.bsick .or. props(m,i).eq.0d0) cycle 
                   psys(m) = psys(m) + v/(props(m,i)+hsb(j,2))
                   pgeo(m) = pgeo(m) + v/(props(m,i)+hsb(j,1))
 
@@ -2291,7 +2306,7 @@ c                                 Aggregate shear modulus, T-derivative, P-deriv
 
                   m = hs2p(j) 
 
-                  if (props(m,i).eq.0d0) cycle 
+                  if (j.gt.2.and.bsick .or. props(m,i).eq.0d0) cycle 
                   psys(m) = psys(m) + v/(props(m,i)+hsb(j,2))
                   if (.not.aflu) pgeo(m) 
      *                              = pgeo(m) + v/(props(m,i)+hsb(j,1))
@@ -2307,7 +2322,7 @@ c                                 Aggregate bulk modulus, T-derivative, P-deriva
 
                   m = hs2p(j)
 
-                  if (props(m,i).eq.0d0) cycle 
+                  if (j.gt.1.and.bsick .or. props(m,i).eq.0d0) cycle 
                   psys1(m) = psys1(m) + vs/(props(m,i)+hsb(j,4))
                   pgeo1(m) = pgeo1(m) + vs/(props(m,i)+hsb(j,3))
 
@@ -2322,7 +2337,7 @@ c                                 Aggregate shear modulus, T-derivative, P-deriv
 
                   m = hs2p(j)
 
-                  if (props(m,i).eq.0d0) cycle 
+                  if (j.gt.2.and.bsick .or. props(m,i).eq.0d0) cycle 
                   psys1(m) = psys1(m) + vs/(props(m,i)+hsb(j,4))
                   pgeo1(m) = pgeo1(m) + vs/(props(m,i)+hsb(j,3))
 
@@ -2363,7 +2378,7 @@ c                                 HS
  
       end do 
 c                                 ----------------------------------
-c                                 aggregate velocities, aggregate 
+c                                 aggregate velocities
       if (volume) then
 c                                 sound velocity
          root = psys(4)/psys(10)
@@ -2371,83 +2386,90 @@ c                                 sound velocity
          if (root.gt.0d0) then 
 
             psys(6) = dsqrt(root) * units
+
+            if (.not.bsick) then 
 c                                 sound velocity T derivative
-            psys(22) = (psys(18) + psys(4) * psys(13)) 
-     *                  / dsqrt(root) / psys(10) / 2d0 * units
+               psys(22) = (psys(18) + psys(4) * psys(13)) 
+     *                     / dsqrt(root) / psys(10) / 2d0 * units
 c                                 sound velocity P derivative
-            psys(25) = (psys(20) - psys(4) * psys(14)) 
-     *                  / dsqrt(root) / psys(10) / 2d0 * units
+               psys(25) = (psys(20) - psys(4) * psys(14)) 
+     *                     / dsqrt(root) / psys(10) / 2d0 * units
+            else 
+               psys(22) = nopt(7)
+               psys(25) = nopt(7) 
+            end if 
          end if 
 
-      else 
-c                                 set missing data  
-         psys(3)   = nopt(7)
-         psys(4)   = nopt(7)
-         psys(6)   = nopt(7)
-         psys(18)  = nopt(7)
-         psys(20)  = nopt(7)
-         psys(22)  = nopt(7)
-         psys(25)  = nopt(7)
-
-      end if 
-
-      if (shear) then 
+         if (shear) then 
 c                                 s-wave velocity
-         root = psys(5)/psys(10)
+            root = psys(5)/psys(10)
 
-         if (root.gt.0d0) then 
+            if (root.gt.0d0) then 
 
-            psys(8) = dsqrt(root) * units
+               psys(8) = dsqrt(root) * units
+
+               if (.not.bsick) then 
 c                                 T-derivative
-            psys(24) = (psys(19) + psys(5) * psys(13)) 
-     *                    / dsqrt(root) / psys(10) / 2d0 * units
+                  psys(24) = (psys(19) + psys(5) * psys(13)) 
+     *                          / dsqrt(root) / psys(10) / 2d0 * units
 c                                 P-derivative 
-            psys(27) = (psys(21) - psys(5) * psys(14)) 
-     *                    / dsqrt(root) / psys(10) / 2d0 * units
+                  psys(27) = (psys(21) - psys(5) * psys(14)) 
+     *                          / dsqrt(root) / psys(10) / 2d0 * units
+               else 
+                  psys(24) = nopt(7)
+                  psys(27) = nopt(7) 
+               end if 
+            end if 
 
-         end if 
+            root = (psys(4)+r43*psys(5))/psys(10)
 
-      else 
-c                                 set missing data
-         psys(5)  = nopt(7)
-         psys(8)  = nopt(7)
-         psys(19) = nopt(7)
-         psys(21) = nopt(7)
-         psys(24) = nopt(7)
-         psys(27) = nopt(7)
-
-      end if 
-
-      if (shear.and.volume) then 
-
-         root = (psys(4)+r43*psys(5))/psys(10)
-
-         if (root.gt.0d0) then 
+            if (root.gt.0d0) then 
 c                                 p-wave velocity
-            psys(7) = dsqrt(root)*units
-c                                 p-wave velocity T derivative
-            psys(23) = (psys(18) + r43*(psys(19) + psys(13) * psys(5)) 
-     *                 + psys(4) * psys(13)) / 
-     *                 dsqrt(root) / psys(10) / 2d0 * units
-c                                 p-wave velocity P derivative
-            psys(26) = (psys(20) + r43*(psys(21) - psys(14) * psys(5)) 
-     *                 - psys(4) * psys(14)) /
-     *                 dsqrt(root) / psys(10) / 2d0 * units
+               psys(7) = dsqrt(root)*units
 
-         end if 
+               if (.not.bsick) then 
+c                                 p-wave velocity T derivative
+                  psys(23) = (psys(18) + r43*(psys(19) 
+     *                       + psys(13) * psys(5)) 
+     *                       + psys(4) * psys(13)) / 
+     *                         dsqrt(root) / psys(10) / 2d0 * units
+c                                 p-wave velocity P derivative
+                  psys(26) = (psys(20) + r43*(psys(21) 
+     *                       - psys(14) * psys(5)) 
+     *                       - psys(4) * psys(14)) /
+     *                         dsqrt(root) / psys(10) / 2d0 * units
+               else 
+                  psys(23) = nopt(7)
+                  psys(26) = nopt(7) 
+               end if 
+            end if 
 c                                 vp/vs
-         if (psys(8).gt.0d0) then 
-            psys(9) = psys(7)/psys(8)
-         else
-            psys(9) = nopt(7)
+            if (psys(8).gt.0d0) then 
+               psys(9) = psys(7)/psys(8)
+            else
+               psys(9) = nopt(7)
+            end if
+         else 
+
+            psys(7)  = nopt(7)
+            psys(8)  = nopt(7)
+            psys(9)  = nopt(7)
+            psys(23) = nopt(7)
+            psys(24) = nopt(7)
+            psys(26) = nopt(7)
+            psys(27) = nopt(7)
+
          end if 
 
       else 
 c                                 set missing data
-         psys(7)  = nopt(7)
-         psys(9)  = nopt(7)
-         psys(23) = nopt(7)
-         psys(26) = nopt(7)
+         do j = 3, 9
+            psys(j) = nopt(7)
+         end do 
+
+         do j = 18, 27
+            psys(j) = nopt(7)
+         end do 
 
       end if 
 c                                 ----------------------------------
@@ -2455,91 +2477,88 @@ c                                 fluid-absent properties:
 c                                 the psys1(1) condition is for the 
 c                                 special case of a system consisting 
 c                                 only of fluid. 
-      if (solid.and..not.ssick) then 
+      if (solid.and.(.not.ssick.and.bulkg).or..not.bulkg) then 
 c                                 fluid absent properties:
          root = psys1(4)/psys1(10)
 
          if (root.gt.0d0) then 
 c                                 sound velocity
             psys1(6) = dsqrt(root) * units
+
+            if (.not.bsick) then 
 c                                 sound velocity T derivative
-            psys1(22) = (psys1(18) + psys1(4) * psys1(13)) 
-     *                  / dsqrt(root) / psys(10) / 2d0 * units
+               psys1(22) = (psys1(18) + psys1(4) * psys1(13)) 
+     *                     / dsqrt(root) / psys(10) / 2d0 * units
 c                                 sound velocity P derivative
-            psys1(25) = (psys1(20) - psys1(4) * psys1(14)) 
-     *                  / dsqrt(root) / psys1(10) / 2d0 * units
+               psys1(25) = (psys1(20) - psys1(4) * psys1(14)) 
+     *                     / dsqrt(root) / psys1(10) / 2d0 * units
+            else 
+               psys1(22) = nopt(7)
+               psys1(25) = nopt(7) 
+            end if 
          end if
 
-      else 
-c                                 set missing data  
-         psys1(3)  = nopt(7)
-         psys1(4)  = nopt(7)
-         psys1(6)  = nopt(7)
-         psys1(18) = nopt(7)
-         psys1(20) = nopt(7)
-         psys1(22) = nopt(7)
-         psys1(25) = nopt(7)
+         if (shear.and.solid) then 
 
-      end if 
+            root = psys1(5)/psys1(10)
 
-      if (shear.and.solid) then 
-
-         root = psys1(5)/psys1(10)
-
-         if (root.gt.0d0) then 
+            if (root.gt.0d0) then 
 c                                 s-wave velocity
-            psys1(8) = dsqrt(root) * units
+               psys1(8) = dsqrt(root) * units
+
+               if (.not.bsick) then 
 c                                 T-derivative
-            psys1(24) = (psys1(19) + psys1(5) * psys1(13)) 
-     *                 / dsqrt(root) / psys1(10) / 2d0 * units
+                  psys1(24) = (psys1(19) + psys1(5) * psys1(13)) 
+     *                       / dsqrt(root) / psys1(10) / 2d0 * units
 c                                 P-derivative 
-            psys1(27) = (psys1(21) - psys1(5) * psys1(14)) 
-     *                 / dsqrt(root) / psys1(10) / 2d0 * units
+                  psys1(27) = (psys1(21) - psys1(5) * psys1(14)) 
+     *                       / dsqrt(root) / psys1(10) / 2d0 * units
+               else
+                  psys1(24) = nopt(7)
+                  psys1(27) = nopt(7) 
+               end if 
+            end if 
 
-         end if 
+            root = (psys1(4)+r43*psys1(5))/psys1(10)
 
-      else
-c                                 set missing data
-         psys1(5)  = nopt(7)
-         psys1(8)  = nopt(7)
-         psys1(19) = nopt(7)
-         psys1(21) = nopt(7)
-         psys1(24) = nopt(7)
-         psys1(27) = nopt(7)
-
-      end if 
-
-      if (shear.and..not.ssick.and.solid) then
-
-         root = (psys1(4)+r43*psys1(5))/psys1(10)
-
-         if (root.gt.0d0) then 
+            if (root.gt.0d0) then 
 c                                 p-wave velocity
-            psys1(7) = dsqrt(root)*units
-c                                 p-wave velocity T derivative
-            psys1(23) = (psys1(18) + r43*(psys1(19) 
-     *                 + psys1(13) * psys1(5)) 
-     *                 + psys1(4) * psys1(13)) / 
-     *                 dsqrt(root) / psys1(10) / 2d0 * units
-c                                 p-wave velocity P derivative
-            psys1(26) = (psys1(20) + r43*(psys1(21)
-     *                 - psys1(14) * psys1(5)) 
-     *                 - psys1(4) * psys1(14)) /
-     *                 dsqrt(root) / psys1(10) / 2d0 * units
-         end if 
-c                                 vp/vs
-         if (psys1(8).gt.0d0) then 
-            psys1(9) = psys1(7)/psys1(8)
-         else
-            psys1(9) = nopt(7)
-         end if 
+               psys1(7) = dsqrt(root)*units
 
+               if (.not.bsick) then 
+c                                 p-wave velocity T derivative
+                  psys1(23) = (psys1(18) + r43*(psys1(19) 
+     *                       + psys1(13) * psys1(5)) 
+     *                       + psys1(4) * psys1(13)) / 
+     *                       dsqrt(root) / psys1(10) / 2d0 * units
+c                                 p-wave velocity P derivative
+                  psys1(26) = (psys1(20) + r43*(psys1(21)
+     *                       - psys1(14) * psys1(5)) 
+     *                       - psys1(4) * psys1(14)) /
+     *                       dsqrt(root) / psys1(10) / 2d0 * units
+               else 
+                  psys1(23) = nopt(7)
+                  psys1(26) = nopt(7) 
+               end if 
+            end if 
+c                                 vp/vs
+            if (psys1(8).gt.0d0) then 
+               psys1(9) = psys1(7)/psys1(8)
+            else
+               psys1(9) = nopt(7)
+            end if 
+         else
+
+         end if 
       else 
 c                                 set missing data
-         psys1(7)  = nopt(7)
-         psys1(9)  = nopt(7)
-         psys1(23) = nopt(7)
-         psys1(26) = nopt(7)
+         do j = 3, 9
+            psys1(j) = nopt(7)
+         end do 
+
+         do j = 18, 27
+            psys1(j) = nopt(7)
+         end do 
          
       end if 
 
@@ -2568,7 +2587,7 @@ c                                 set missing data
 
       end 
 
-      subroutine insysp (ssick,ppois)
+      subroutine insysp (ssick,ppois,bulkg,bsick)
 c-----------------------------------------------------------------------
 c insysp initializes system properties accumulated in getphp and gtsysp
 c----------------------------------------------------------------------
@@ -2578,10 +2597,10 @@ c----------------------------------------------------------------------
 
       integer i
 
-      logical ssick,ppois
+      logical ssick,ppois,bulkg,bsick
 
       logical gflu,aflu,fluid,shear,lflu,volume,rxn
-      common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume,rxn,bulkg
+      common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume,rxn
 
       double precision props,psys,psys1,pgeo,pgeo1
       common/ cxt22 /props(i8,k5),psys(i8),psys1(i8),pgeo(i8),pgeo1(i8)
@@ -2596,13 +2615,24 @@ c----------------------------------------------------------------------
       double precision hsb
       common/ cst84 /hsb(i8,4),hs2p(6)
 c----------------------------------------------------------------------
-c                                 flags
-      aflu = .false.
-      shear = .true.
+c                                 assemblage flags
+c                                 ----------------
+c                                 aflu   = T if a fluid is present
+      aflu   = .false.
+c                                 shear  = T if shear modulus can be computed
+      shear  = .true.
+c                                 volume = T if volume and bulk modulus can be computed
       volume = .true.
-      ssick = .false.
-      ppois = .false.
-      rxn = .false.
+c                                 ssick  = T if one or more phases has problems
+      ssick  = .false.
+c                                 ppois  = T if a shear modulus has been estimated from poisson ratio
+      ppois  = .false.
+c                                 rxn    = T if a reaction (frendly) => no associated mass
+      rxn    = .false.
+c                                 bulkg  = F if a explicit bulk modulus function has been used 
+      bulkg  = .true.
+c                                 bsick  = T if bulkg and volume and shear and ssick
+      bsick  = .false.
 c                                 initialize sums
       do i = 1, i8
          psys(i) = 0d0
@@ -2610,7 +2640,6 @@ c                                 initialize sums
          pgeo(i) = 0d0 
          pgeo1(i) = 0d0
       end do 
-
 c                                 initialize bulk properites
 c                                 total mass
       gtot = 0d0

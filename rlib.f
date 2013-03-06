@@ -3447,7 +3447,7 @@ c-----------------------------------------------------------------------
 
       integer id, itic, izap, izap1
 
-      double precision turd2, a0, v0, v, df, f, dv, root, nr9t0, nr9t,
+      double precision a0, v0, v, df, f, dv, root, nr9t0, nr9t,
      *                 gamma0, k00, plg, c1, c2, c3, f1, gvq, 
      *                 q, vq, v23, theta0, tol, k0p, a, ethv
 
@@ -3472,9 +3472,11 @@ c-----------------------------------------------------------------------
       double precision emod
       common/ cst319 /emod(k15,k10),smod(h9),pmod(k10),iemod(k10),kmod
 
-      save turd2, izap, izap1 
+      double precision units, r13, r23, r43
+      common/ cst59 /units, r13, r23, r43
 
-      data turd2, izap, izap1 /0.6666666666666666667d0, 0, 0/
+      save izap, izap1 
+      data izap, izap1 /0, 0/
 c----------------------------------------------------------------------
 c                                 assign local variables:
       a0     =  thermo(1,id)
@@ -3529,7 +3531,7 @@ c                                 JADC March 1, 2005. formerly 1d-1 bar.
 
          vq = (v/v0)**q
          gvq = gamma0*vq
-         v23 = (v0/v)**turd2
+         v23 = (v0/v)**r23
          f = 0.5d0*v23 - 0.5d0
          df = -v23/v/3d0
          d2f = 5d0/9d0*v23/v**2
@@ -3594,7 +3596,7 @@ c                                 destabilize the phase:
       return 
          
 10    vq = (v/v0)**q
-      f = 0.5d0*(v0/v)**turd2 - 0.5d0
+      f = 0.5d0*(v0/v)**r23 - 0.5d0
       tht  =  theta0*dexp(-gamma0*(vq-1d0)/q)/t
       tht0 =  tht*t/tr 
 
@@ -4034,16 +4036,17 @@ c-----------------------------------------------------------------------
 
       integer itic, jerk
 
-      double precision turd2, k, vt, turd, rat, rat2, c0, c1, c2, 
+      double precision k, vt, rat, rat2, c0, c1, c2, 
      *                 c3, c4, c5, a0, a1, v, df, f, dv, kprime
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 
-      save turd, turd2, jerk 
+      double precision units, r13, r23, r43
+      common/ cst59 /units, r13, r23, r43
 
-      data turd, turd2, jerk /0.3333333333333333333d0,
-     *                      0.6666666666666666667d0, 0/
+      save jerk 
+      data jerk /0/
 c----------------------------------------------------------------------
 c                                 constants:
       a0 = 0.375d0 * vt * k
@@ -4062,7 +4065,7 @@ c                                 initial guess for volume:
       do while (dabs(dv).gt.1d-5)
 
          itic = itic + 1
-         rat = (vt/v)**turd
+         rat = (vt/v)**r13
          rat2 = rat**2
          f = p  + ((c0*v*rat+c1+c2*v**2*rat2)/v**3)
          df = (c3/rat2+c4*v/rat+c5)/v**4
@@ -4085,7 +4088,7 @@ c                                 initial guess for volume:
 
       end do
 c                                 and the vdp integral is:
-      f = 0.5d0*((vt/v)**turd2-1d0)
+      f = 0.5d0*((vt/v)**r23-1d0)
 c                                 checked in BM3_integration.mws
       vdpbm3 = p*v - vt*(pr-4.5d0*k*f**2*(1d0-f*(4d0+kprime))) 
 

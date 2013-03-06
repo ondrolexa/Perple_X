@@ -2308,15 +2308,17 @@ c                                 J.A.D. Connolly, 1992.
 c-----------------------------------------------------------------------
       implicit none
 
-      double precision x(3),b,r,p0,turd,rt,rtp,t12,psat,t,pbar,vol,
+      double precision x(3),b,r,p0,rt,rtp,t12,psat,t,pbar,vol,
      *                 fh2o,a1,a2,a3,xmin,xmax,cc,gam,dp,c,d,e,vmin,
      *                 vmax,gam2,a,p
 
       integer iroots, i, ineg, ipos
 
-      save b,r,p0,turd
+      double precision units, r13, r23, r43
+      common/ cst59 /units, r13, r23, r43
 
-      data b,r,p0,turd /1.465d0,8.314d-3,2d0,0.666666666666667d0/
+      save b,r,p0
+      data b,r,p0 /1.465d0,8.314d-3,2d0/
 c----------------------------------------------------------------------
 
       p = pbar/1d3
@@ -2390,7 +2392,7 @@ c                            new tjbh cork, 97:
 
           vol = vol + c + d + e
 
-          gam = gam + dp*(c/2d0 + d*turd + 0.8d0*e)/rt
+          gam = gam + dp*(c/2d0 + d*r23 + 0.8d0*e)/rt
 
       end if 
 c                              add check to keep T > 273
@@ -2946,7 +2948,7 @@ c-----------------------------------------------------------------------
       integer ins(nsp),jns(3),i,j,nit
 
       double precision fo2,fs2,f,df,kh2s,kso2,kcos,c1,c2,c3,xom,xop,
-     *                 xos,kh2o,a,b,c0,d,ghh2o,turd,c4,xi,xl,c
+     *                 xos,kh2o,a,b,c0,d,ghh2o,c4,xi,xl,c
 
       double precision gmh2o,vm
       common/ cstchx /gmh2o,vm(5)
@@ -2969,9 +2971,12 @@ c-----------------------------------------------------------------------
       double precision fh2o,fco2
       common/ cst11 /fh2o,fco2
 
-      save ins, jns
+      double precision units, r13, r23, r43
+      common/ cst59 /units, r13, r23, r43
 
-      data ins, jns/ 1,5,6,8,12*0,1,2*0/   
+      save ins, jns
+      data ins, jns/ 1,5,6,8,12*0,1,2*0/  
+c---------------------------------------------------------------------- 
 c                                check if xo is <1, >0,
 c                                reset if necessary
       if (xo.gt.0.9999999999d0) then
@@ -3005,11 +3010,9 @@ c                                 hybrid gamma factor for water:
 
       gh2o = gh2o * ghh2o
 c                                 get first guess:
-      turd = 1d0/3d0
-
-      if (xo.lt.turd) then 
+      if (xo.lt.r13) then 
          xl = 2d0 *  xo/(1d0-xo)
-      else if (xo.ge.turd) then
+      else if (xo.ge.r13) then
          xl = 2d0 * (1d0-xo)/xop
       end if
 c                                 outer iteration loop:
@@ -3041,9 +3044,9 @@ c                                 inner iteration loop:
          goto 50 
 
 20       xh2  = -0.5d0*(xo*xh2o+xh2o+2d0*xo-2d0)/(1d0+c1*c2)
-         if (xh2.le.1d-5.and.xo.gt.turd) goto 50
+         if (xh2.le.1d-5.and.xo.gt.r13) goto 50
          xh2s = c1*c2*xh2
-         xso2 = c3*c4*xh2o**2/xh2**2
+         xso2 = c3*c4*(xh2o/xh2)**2
 
          if (j.gt.1.and.dabs((xl-xh2o)/xh2o).lt.1d-6) goto 40
 
@@ -3060,7 +3063,7 @@ c                                 inner iteration loop:
       fo2 = 2d0 * (fh2o - dlog(gh2 * p * xh2) - kh2o)
       vol = vol + xh2o * vm(3)
       goto 99
-c                                if xo.gt.turd, at high fs2
+c                                if xo.gt.r13, at high fs2
 c                                the fluid will be binary:
 50    xh2o = -2d0*xom/xop
       xso2 = 1d0 - xh2o
@@ -3084,7 +3087,7 @@ c-----------------------------------------------------------------------
       include 'perplex_parameters.h'
 
       double precision fo2,fs2,ek1,ek2,kcos,ek3,xom,xop,xos,c0,c1,c2,c3,
-     *                 c4,c5,c6,c7,a,b,c,d,ghh2o,turd,xl,xi,f,df
+     *                 c4,c5,c6,c7,a,b,c,d,ghh2o,xl,xi,f,df
 
       integer ins(nsp), jns(3),j,i,nit
 
@@ -3109,8 +3112,10 @@ c-----------------------------------------------------------------------
       double precision fh2o,fco2
       common/ cst11 /fh2o,fco2
 
-      save ins, jns
+      double precision units, r13, r23, r43
+      common/ cst59 /units, r13, r23, r43
 
+      save ins, jns
       data ins, jns/ 1,5,6,7,8,11*0,1,2*0/
 c----------------------------------------------------------------------
 c                                check if xo is <1, >0,
@@ -3148,12 +3153,10 @@ c                                 hybrid gamma factor for water:
 
       gh2o = gh2o * ghh2o
 c                                 get first guess:
-      turd = 1d0/3d0
-
-      if (xo.lt.turd) then 
+      if (xo.lt.r13) then 
          if (xo.gt.0.3333333333333333d0) xo = 0.3333333333333333d0
          xl = 2d0 *  xo/(1d0-xo)
-      else if (xo.ge.turd) then
+      else if (xo.ge.r13) then
          if (xo.lt.0.3333334d0) xo = 0.3333334d0
          xl = 2d0 * (1d0-xo)/(1d0 + xo)
       end if
@@ -3218,7 +3221,7 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      double precision fo2,k,turd,c1,c10,c11,c12,c13,c14,ghh2o,xl,xi,
+      double precision fo2,k,c1,c10,c11,c12,c13,c14,ghh2o,xl,xi,
      *                 x12
 
       integer ins(nsp), jns(3),i,j,nit
@@ -3244,6 +3247,9 @@ c-----------------------------------------------------------------------
       double precision fh2o,fco2
       common/ cst11 /fh2o,fco2
 
+      double precision units, r13, r23, r43
+      common/ cst59 /units, r13, r23, r43
+
       save ins,jns
 
       data ins, jns/ 1,5,7,13*0,1,2*0/
@@ -3259,8 +3265,6 @@ c                                reset if necessary
       k = dexp(-7.028214449d0 + 30607.34044d0/t - 475034.4632d0/t/t
      *                        + 50879842.55d0/t/t/t)
 
-      turd = 1d0/3d0
-
       c1 = 1d0/dsqrt(p)/k
 
       c10 = (xo - 1d0)/2d0
@@ -3275,10 +3279,10 @@ c                                 hybrid gamma factor for water:
 
       gh2o = gh2o * ghh2o
 
-      if (xo.lt.turd) then 
+      if (xo.lt.r13) then 
          if (xo.gt.0.3333333333333333d0) xo = 0.3333333333333333d0
          xl = 2d0 *  xo/c11
-      else if (xo.gt.turd) then
+      else if (xo.gt.r13) then
          if (xo.lt.0.3333334d0) xo = 0.3333334d0
          xl = 2d0 * c11/(1d0 + xo)
       end if 

@@ -2188,7 +2188,7 @@ c----------------------------------------------------------------------
 
       integer i
 
-      logical sick(i8), ssick, ppois
+      logical sick(i8), ssick, ppois, bulkg, bsick
 
       logical gflu,aflu,fluid,shear,lflu,volume,rxn
       common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume,rxn
@@ -2227,11 +2227,11 @@ c                                 set molar amount of phase
 c                                 getphp uses the sign of the phase
 c                                 pointer to discrimate between pure
 c                                 compounds and solutions
-         call getphp (-i,i,sick,ssick,ppois)
+         call getphp (-i,i,sick,ssick,ppois,bulkg,bsick)
 
       end do 
 c                                 compute aggregate properties:
-      call gtsysp (sick,ssick)
+      call gtsysp (sick,ssick,bulkg,bsick)
 
       end 
 

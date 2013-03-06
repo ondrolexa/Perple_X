@@ -237,8 +237,9 @@ c                                 number of grid points
       read (*,*) nxy
          
       do i = 1, 2
-         tmin(i) = tmin(i) + (tmax(i)-tmin(i))*1d-6
-         tmax(i) = tmax(i) - (tmax(i)-tmin(i))*1d-6
+c                                 earlier solution to round-off:
+c         tmin(i) = tmin(i) + (tmax(i)-tmin(i))*1d-6
+c         tmax(i) = tmax(i) - (tmax(i)-tmin(i))*1d-6
          dx(i) = (tmax(i)-tmin(i))/dfloat(nxy(i)-1)
       end do 
 
@@ -247,8 +248,20 @@ c                                 number of grid points
       do j = 1, nxy(2)
 
          var(2) = tmin(2) + dx(2)*dfloat(j-1)
+c                                 round off tests:
+         if (var(2).gt.tmax(2)) then
+            var(2) = tmax(2)
+         else if (var(2).lt.tmin(2)) then 
+            var(2) = tmin(2)
+         end if 
 
          do i = 1, nxy(1) 
+c                                 round off tests:
+            if (var(1).gt.tmax(1)) then
+               var(1) = tmax(1)
+            else if (var(1).lt.tmin(1)) then 
+               var(1) = tmin(1)
+            end if 
 
             var(1) = tmin(1) + dx(1)*dfloat(i-1)
 
@@ -3429,6 +3442,11 @@ c                                 write blurb about units
              end if 
              
          else if (lop.eq.25) then 
+c                                eject if other props already chosen:
+            if (iprop.gt.1) then 
+               call warn (54,nopt(1),icx,'CHSPRP')
+               cycle
+            end if 
 c                                 all modes
              write (*,1070)
              read (*,'(a)') y
@@ -3502,13 +3520,18 @@ c                                 get user defined composition:
             komp = komp + 1
 
             if (komp.gt.k5) then 
-               write (*,1160) k5
+               call warn (27,nopt(1),k5,'CHSPRP')
                cycle 
             end if 
 
             call mkcomp (komp,icx)
 
          else if (lop.eq.36.or.lop.eq.38) then   
+c                                eject if other props already chosen:
+            if (iprop.gt.1) then 
+               call warn (54,nopt(1),icx,'CHSPRP')
+               cycle
+            end if 
 c                                 multi-prop options, get case i: 
 c                                 1 - system, 2 - phase
 c                                 3 - system + phases
@@ -3566,7 +3589,7 @@ c                                 save property choice
 
             end if 
 
-         else if (lop.ne.6.and.lop.ne.8) then
+         else if (lop.ne.6.and.lop.ne.8.and.lop.ne.24) then
                
             if (icx.eq.0) then   
 c                                 ask if bulk or phase property
@@ -3582,7 +3605,7 @@ c                                 should be included:
                      if (y.eq.'y'.or.y.eq.'Y') lflu = .true. 
                   end if 
 
-               else if (lop.ne.24) then 
+               else 
 c                                 get phase name
                   do 
                      call rnam1 (icx,pname)
@@ -3688,9 +3711,6 @@ c                                 it in array dname
 1140  format (/,'Hey cowboy, that warnt no solution, try again.',/)
 1150  format (/,'Specify a property to be computed from the ',
      *          'list above [0 to end]')
-1160  format (/,'**warning ver011** only ',i2,' user defined '
-     *      'compositions permitted.',/,'do multiple runs with WERAMI',
-     *      'or redimension common block comps.',/)
   
       end
 
