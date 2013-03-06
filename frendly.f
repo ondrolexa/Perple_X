@@ -2213,7 +2213,7 @@ c----------------------------------------------------------------------
 c                                 initialize
       ntot = iphct
 c                                 initialize system properites
-      call insysp (ssick,ppois)
+      call insysp (ssick,ppois,bulkg,bsick)
 
       do i = 1, ntot
 c                                 check for reactions
