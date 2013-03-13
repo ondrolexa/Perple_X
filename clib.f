@@ -2298,9 +2298,6 @@ c-----------------------------------------------------------------------
       character*100 prject,tfname
       common/ cst228 /prject,tfname
 
-      integer jtest,jpot
-      common/ debug /jtest,jpot
-
       integer iopt
       logical lopt
       double precision nopt

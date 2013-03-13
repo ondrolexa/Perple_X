@@ -2549,7 +2549,7 @@ c---------------------------------------------------------------------
 
       logical bad
 
-      double precision u,s,vol,tot,r1,r2
+      double precision u,s,vol,tot 
 
       double precision ctot
       common/ cst3  /ctot(k1)
@@ -2572,9 +2572,6 @@ c---------------------------------------------------------------------
       integer jbulk
       double precision cblk
       common/ cst300 /cblk(k5),jbulk
-c                                 stuff used in lpnag 
-      double precision wmach(9)
-      common /ax02za/wmach
 
       integer ldt,ldq
       common /be04nb/ldt,ldq
@@ -2673,25 +2670,6 @@ c
       end if 
 c                                 cold start istart = 0
       istart = 0
-c                                 stuff for lpnag
-
-c                                 loop to find machine precision
-      r1 = 1d-12
-
-      do
-         if (1d0+r1.eq.1d0) exit
-         r2 = r1 
-         r1 = r1/2d0
-      end do 
-
-      wmach(3) = r2
-      wmach(2) = r2**0.8d0
-      wmach(1) = r2**0.9d0
-      wmach(4) = dsqrt(r2)
-      wmach(9) = max(1d0/wmach(4),1d2)
-c                                 largest number
-      wmach(7) = huge(0d0)
-      wmach(8) = dsqrt(wmach(7))
 
       end 
 

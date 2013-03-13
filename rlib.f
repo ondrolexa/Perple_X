@@ -591,7 +591,10 @@ c----------------------------------------------------------------------
 
       double precision z
 
-      if (z.gt.-1d-5.and.z.le.1.00001) then
+      double precision units, r13, r23, r43, r59, r1, r2
+      common/ cst59 /units, r13, r23, r43, r59, r1, r2
+c----------------------------------------------------------------------
+      if (z.gt.-r2.and.z.le.r1) then
          badz = .false.
       else 
          badz = .true.         
@@ -3472,8 +3475,8 @@ c-----------------------------------------------------------------------
       double precision emod
       common/ cst319 /emod(k15,k10),smod(h9),pmod(k10),iemod(k10),kmod
 
-      double precision units, r13, r23, r43
-      common/ cst59 /units, r13, r23, r43
+      double precision units, r13, r23, r43, r59, r1, r2
+      common/ cst59 /units, r13, r23, r43, r59, r1, r2
 
       save izap, izap1 
       data izap, izap1 /0, 0/
@@ -3659,7 +3662,7 @@ c-----------------------------------------------------------------------
       logical bad
 
       double precision a5, a6, a7, a8, a9, a10, a11, v0, v, v2, df, f, 
-     *                 d2a, f23, v23, tol, f59, d2f, df2, da, a1
+     *                 d2a, v23, tol, d2f, df2, da, a1
  
       double precision thermo, uf, us
       common/ cst1 /thermo(k4,k10),uf(2),us(h5)
@@ -3670,10 +3673,11 @@ c-----------------------------------------------------------------------
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 
-      save f23, f59, izap
+      double precision units, r13, r23, r43, r59, r1, r2
+      common/ cst59 /units, r13, r23, r43, r59, r1, r2
 
-      data f23, f59, izap /0.66666666666666666667d0,
-     *                     0.55555555555555555556d0,0/
+      save izap
+      data izap /0/
 c----------------------------------------------------------------------
 c                                 assign local variables:
       v0 = thermo(3,id)
@@ -3700,12 +3704,12 @@ c                                 initial guess for volume, taylor(diff(a,v),v=v
 
          itic = itic + 1
 c                                 f, and derivatives
-         v23 = (v0/v)**f23
+         v23 = (v0/v)**r23
          v2  = v**2
          f   = 0.5d0*v23 - 0.5d0
          df  = -v23/v/3d0
          df2 = df*df
-         d2f = f59*v23/v2
+         d2f = r59*v23/v2
 c                                 a 1st and 2nd derivatives
 c                                 da is actually diff(a,v) + p
          da  = (a5 + a6*f)*f*df + a10/v + a11 + p
@@ -3735,7 +3739,7 @@ c                                 destabilize the phase.
 
       else 
 c                                 everything ok, final f:
-         f = 0.5d0*(v0/v)**f23 - 0.5d0 
+         f = 0.5d0*(v0/v)**r23 - 0.5d0 
 c                                 g = helmholtz enery + pv
          gstxlq  = (a8 + a9*f)*f**2 + a7 + a10*dlog(v) + a10 + a11*v 
      *             + p*v + thermo(1,id)
@@ -3779,8 +3783,8 @@ c-----------------------------------------------------------------------
       double precision v0, v, df, f, dv, gamma0, k00, k0p,
      *           plg, c1, c2, c3, f1, aiikk, aiikk2, nr9t,
      *           root, aii, etas, a, ethv, gamma, da, nr9t0,
-     *           fpoly, fpoly0, letht, letht0, z, aii2, f23,
-     *           v23, tol, t1, t2, a2f, f59
+     *           fpoly, fpoly0, letht, letht0, z, aii2, 
+     *           v23, tol, t1, t2, a2f
 
       double precision nr9, d2f, tht, tht0, etht, etht0, df1,
      *                 dtht, dtht0, d2tht, d2tht0, 
@@ -3803,10 +3807,11 @@ c-----------------------------------------------------------------------
       double precision emod
       common/ cst319 /emod(k15,k10),smod(h9),pmod(k10),iemod(k10),kmod
 
-      save f23,f59, izap, izap1 
+      double precision units, r13, r23, r43, r59, r1, r2
+      common/ cst59 /units, r13, r23, r43, r59, r1, r2
 
-      data f23, f59, izap, izap1 /0.66666666666666666667d0,
-     *                            0.55555555555555555556d0,0, 0/
+      save izap, izap1 
+      data izap, izap1 /0, 0/
 c----------------------------------------------------------------------
 c                                 assign local variables:
       v0     = -thermo(3,id)
@@ -3859,10 +3864,10 @@ c                                 JADC March 1, 2005. formerly 1d-1 bar.
 
          itic = itic + 1
 c                                 f, and derivatives
-         v23 = (v0/v)**f23
+         v23 = (v0/v)**r23
          f = 0.5d0*v23 - 0.5d0
          df = -v23/v/3d0
-         d2f = f59*v23/v**2
+         d2f = r59*v23/v**2
 c                                 cold part derivatives
          dfc = (c3*f+c1)*f*df
          d2fc = (2d0*c3*f+c1)*df**2+(c3*f+c1)*f*d2f
@@ -3951,7 +3956,7 @@ c                                 destabilize the phase.
 
 c                                 everything is ok, now get 
 c                                 helmoltz energy:
-         f = 0.5d0*(v0/v)**f23 - 0.5d0 
+         f = 0.5d0*(v0/v)**r23 - 0.5d0 
          z = 1d0+(aii+aiikk2*f)*f
          root = dsqrt(z)
 c                                 final estimate for tht
@@ -4042,8 +4047,8 @@ c-----------------------------------------------------------------------
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 
-      double precision units, r13, r23, r43
-      common/ cst59 /units, r13, r23, r43
+      double precision units, r13, r23, r43, r59, r1, r2
+      common/ cst59 /units, r13, r23, r43, r59, r1, r2
 
       save jerk 
       data jerk /0/
@@ -7927,6 +7932,9 @@ c                                 model type
       double precision scoors
       common/ cxt86 /scoors(k24),ndim(mdim),mxsp,cart(mst,h9)
 
+      double precision units, r13, r23, r43, r59, r1, r2
+      common/ cst59 /units, r13, r23, r43, r59, r1, r2
+
       integer iam
       common/ cst4 /iam
 c----------------------------------------------------------------------
@@ -8459,12 +8467,12 @@ c                                 count in evaluating derivatives.
                dzt = 0d0 
 
                do j = 1, ksp(i,im) 
-                  if (dabs(sdzdp(k,j,i,im)).lt.1d-5) 
+                  if (dabs(sdzdp(k,j,i,im)).lt.r2) 
      *                     sdzdp(k,j,i,im) = 0d0
                   dzt = dzt + sdzdp(k,j,i,im)
                end do 
 
-               if (dabs(dzt).lt.1d-5) dzt = 0d0
+               if (dabs(dzt).lt.r2) dzt = 0d0
                sdzdp(k,j,i,im) = -dzt
 
             end do 
@@ -8800,6 +8808,9 @@ c-----------------------------------------------------------------------
       double precision a(k8,k8),d(k8),rmax,tmax,temp,ratio
 
       integer ipvt(k8),i,j,k,ier,ip1,n,istr,nm1
+
+      double precision wmach(9)
+      common /ax02za/wmach
 c-----------------------------------------------------------------------
       ier = 0
 c                            initialize ipvt,d
@@ -8811,7 +8822,7 @@ c                            initialize ipvt,d
             rmax = dmax1(rmax,dabs(a(i,j)))
          end do 
 c                            ax = b is singular if rmax = 0
-         if (dabs(rmax).lt.1d-5) goto 9000
+         if (dabs(rmax).lt.wmach(3)) goto 9000
 
          d(i) = rmax
 
@@ -8832,7 +8843,7 @@ c                            determine pivot row (istr).
             end if 
          end do
 
-         if (dabs(rmax).lt.1d-5) goto 9000
+         if (dabs(rmax).lt.wmach(3)) goto 9000
 c                            if istr gt i, make i the pivot row
 c                            by interchanging it with row istr.
          if (istr.gt.i) then 
@@ -8859,7 +8870,7 @@ c                            eliminate x(k) from rows k+1,...,n.
          end do
       end do 
 
-      if (dabs(a(n,n)).lt.1d-5) ier = 1
+      if (dabs(a(n,n)).lt.wmach(3)) ier = 1
 
       return
 c                           algoritmic singularity.
@@ -9337,6 +9348,9 @@ c                                 configurational entropy variables:
       logical lopt
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      double precision units, r13, r23, r43, r59, r1, r2
+      common/ cst59 /units, r13, r23, r43, r59, r1, r2
 c----------------------------------------------------------------------
       s = 0d0
 c                                 for each site
@@ -9451,11 +9465,11 @@ c                                 cross term * infinity
          do k = 1, nord(id)
 
             if (.not.pin(k)) cycle 
-            if (dabs(dsinf(k)).gt.1d-5) dsy(k) = 1d4*dsinf(k)
+            if (dabs(dsinf(k)).gt.r2) dsy(k) = 1d4*dsinf(k)
 
             do l = k, nord(id)
                if (.not.pin(l)) cycle 
-               if (dabs(d2sinf(l,k)).gt.1d-5) 
+               if (dabs(d2sinf(l,k)).gt.r2) 
      *                                  dsyy(l,k) = 1d5*d2sinf(l,k)
             end do  
  
@@ -9492,6 +9506,9 @@ c-----------------------------------------------------------------------
       integer m,ipvt(m),i,j,k,ip1,n,istr
     
       double precision a(m,m),d(m),rmax,tmax,temp,ratio
+
+      double precision wmach(9)
+      common /ax02za/wmach
 c-----------------------------------------------------------------------
       error = .false.
 c                            initialize ipvt,d
@@ -9504,7 +9521,7 @@ c                            initialize ipvt,d
             rmax = dmax1(rmax,dabs(a(i,j)))
          end do 
 c                            ax = b is singular if rmax = 0
-         if (dabs(rmax).lt.1d-5) then 
+         if (dabs(rmax).lt.wmach(3)) then 
             error = .true.
             return 
          end if 
@@ -9530,7 +9547,7 @@ c                            determine pivot row (istr).
 
          end do
 
-         if (dabs(rmax).lt.1d-5) then 
+         if (dabs(rmax).lt.wmach(3)) then 
             error = .true.
             return
          end if 
@@ -9566,7 +9583,7 @@ c                            eliminate x(k) from rows k+1,...,n.
 
       end do 
 
-      if (dabs(a(n,n)).lt.1d-5) error = .true.
+      if (dabs(a(n,n)).lt.wmach(3)) error = .true.
  
       end
 
@@ -10424,6 +10441,9 @@ c                                 configurational entropy variables:
 
       double precision dppp,d2gx,sdzdp
       common/ cxt28 /dppp(j3,j3,m1,h9),d2gx(j3,j3),sdzdp(j3,m11,m10,h9)
+
+      double precision units, r13, r23, r43, r59, r1, r2
+      common/ cst59 /units, r13, r23, r43, r59, r1, r2
 c----------------------------------------------------------------------
 
       inf = .false.
@@ -10503,7 +10523,7 @@ c                                 derivative may be +/-infinite
 
          end if 
 
-         if (dabs(dsinf).lt.1d-5) then 
+         if (dabs(dsinf).lt.r2) then 
             ds = ds + qmult(i,id)*dzy
             d2s = d2s + qmult(i,id)*dzyy
          else 

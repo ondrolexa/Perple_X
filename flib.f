@@ -383,7 +383,7 @@ c----------------------------------------------------------------------
 
       integer ins(nsp),nit,ier
 
-      double precision fo2,fs2,tol,oh2o,kh2s,kso2,kcos,ghh2o,ghco2,
+      double precision fo2,fs2,oh2o,kh2s,kso2,kcos,ghh2o,ghco2,
      *                 ghch4,kh2o,kco2,kco,kch4,c1,c2,c3,c4,c5,c6,c7,
      *                 ek1,ek2,ek3,ek4,ek5,ek6,ek7
 
@@ -412,10 +412,14 @@ c----------------------------------------------------------------------
       double precision fh2o,fco2
       common/ cst11 /fh2o,fco2
 
-      save tol, ins
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
-      data tol, ins/ .0001d0, 1,2,3,4,5,6,7,8,9,7*0/
-
+      save ins
+      data ins/ 1,2,3,4,5,6,7,8,9,7*0/
+c----------------------------------------------------------------------
       nit = 0
       oh2o = 2d0
       xh2 = 0.00001d0   
@@ -456,9 +460,9 @@ c                                 solve for xh2, xco
 
       nit = nit + 1
 
-      if (nit.gt.100) call warn (502,xo,ier,'COHSGR')        
+      if (nit.gt.iopt(21)) call warn (502,xo,ier,'COHSGR')        
 
-      if (dabs(xh2o-oh2o).lt.tol*xh2o) goto 90
+      if (dabs(xh2o-oh2o).lt.nopt(5)*xh2o) goto 90
 
       oh2o = xh2o
 
@@ -487,27 +491,35 @@ c                                 solve for xh2, xco
 
 99    end
 
-      subroutine evlxh1 (k1,k2,k3,k4,k5,k6,k7,xo,xh2,xco,ier)
+      subroutine evlxh1 (ek1,ek2,ek3,ek4,ek5,ek6,ek7,xo,xh2,xco,ier)
+c----------------------------------------------------------------------
       implicit none
 
-      integer ier,it
-      double precision k1,k2,k3,k4,k5,k6,k7,xo,xh2,xco,f0,e1,e2,e3,e4,
-     *                 e5,e6,e7,e8,e9,e0,r0,t2,t10,t11,t15,c1,g,dg
+      include 'perplex_parameters.h'
 
+      integer ier,it
+      double precision ek1,ek2,ek3,ek4,ek5,ek6,ek7,xo,xh2,xco,f0,e1,e2,
+     *                 e3,e4,e5,e6,e7,e8,e9,e0,r0,t2,t10,t11,t15,c1,g,dg
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+c----------------------------------------------------------------------
       it = 0 
       ier = 0 
 
-      f0 = 2d0*(k7 + k6 + k1)
+      f0 = 2d0*(ek7 + ek6 + ek1)
       e0 = 2d0*xo
       e1 = 1d0/f0
-      e2 = 1d0 + k5**2 + 2d0*(k5 + f0)
-      e3 = 2d0*k2*(1d0 + k5) - 2d0*f0*(k4 + 1d0)
-      e4 = k2**2 - 2d0*k3*f0
-      e5 = e0 + e0*k4 
-      e6 = 4d0*xo*k3
-      e7 = xo - k5 - 1d0 + xo*k5
+      e2 = 1d0 + ek5**2 + 2d0*(ek5 + f0)
+      e3 = 2d0*ek2*(1d0 + ek5) - 2d0*f0*(ek4 + 1d0)
+      e4 = ek2**2 - 2d0*ek3*f0
+      e5 = e0 + e0*ek4 
+      e6 = 4d0*xo*ek3
+      e7 = xo - ek5 - 1d0 + xo*ek5
       e8 = f0 * (xo - 1d0)
-      e9 = k2*(3d0* xo - 1d0)
+      e9 = ek2*(3d0* xo - 1d0)
 
 10    r0 = xh2
       t2 = xh2**2
@@ -526,21 +538,21 @@ c                                 for xh2, find roots:
 
       t10 = dsqrt (t10)
 
-      t11 = t10 - 1d0 - k2*xh2 - k5
+      t11 = t10 - 1d0 - ek2*xh2 - ek5
       xco = e1*t11
       g = e5*xh2 + e6*t2 + (e7 + e8*xco + e9*xh2)*xco
-      t15 = (e3+2d0*e4*xh2)/2d0/t10 - k2
+      t15 = (e3+2d0*e4*xh2)/2d0/t10 - ek2
       dg = e5 + 2d0*e6*xh2 + e1*t15*(e9*xh2 + e7)
      *        + t11*(2d0*e8*e1**2*t15 + e9*e1)
 
       xh2 = r0 - g/dg
       if (xh2.lt.0d0) xh2 = r0/2d0
 c                                 converged:
-      if (dabs((xh2-r0)/xh2).lt.0.1d-6) goto 999
+      if (dabs((xh2-r0)/xh2).lt.nopt(5)) goto 999
 
       it = it + 1
 
-      if (it.gt.1000) then 
+      if (it.gt.iopt(21)) then 
 
          ier = 2
 
@@ -550,7 +562,7 @@ c                                 converged:
 
       goto 10 
 
-999   xco = e1*(dsqrt(e2 + (e3 + e4*xh2)*xh2) - 1d0 - k2*xh2 - k5)
+999   xco = e1*(dsqrt(e2 + (e3 + e4*xh2)*xh2) - 1d0 - ek2*xh2 - ek5)
 
 99    end
 
@@ -639,7 +651,7 @@ c----------------------------------------------------------------------
 
       integer ins(nsp),nit,ier
 
-      double precision fo2,fs2,tol,oh2o,kh2s,kso2,kcos,ghh2o,ghco2,
+      double precision fo2,fs2,oh2o,kh2s,kso2,kcos,ghh2o,ghco2,
      *                 ghch4,kh2o,kco2,kco,kch4,c1,c2,c3,c5,c6,
      *                 ek1,ek2,ek3,ek5,ek6
 
@@ -671,9 +683,13 @@ c----------------------------------------------------------------------
       integer iff,idss,ifug,ifyn,isyn
       common/ cst10 /iff(2),idss(h5),ifug,ifyn,isyn
 
-      save tol, ins
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
-      data tol, ins/ .0001d0, 1,2,3,4,5,6,8,9,8*0/
+      save ins
+      data ins/ 1,2,3,4,5,6,8,9,8*0/
 c----------------------------------------------------------------------
       nit = 0
       oh2o = 2d0
@@ -713,12 +729,12 @@ c                                 solve for xh2, xco
 
       nit = nit + 1
 
-      if (nit.gt.100) then
+      if (nit.gt.iopt(21)) then
          call warn (175,xh2,ier,'XOXSRK')  
          goto 90
       end if     
 
-      if (dabs(xh2o-oh2o).lt.tol*xh2o) goto 90
+      if (dabs(xh2o-oh2o).lt.nopt(5)*xh2o) goto 90
 
       oh2o = xh2o
 
@@ -745,6 +761,8 @@ c                                 compute graphite activity:
 c----------------------------------------------------------------------
       implicit none
 
+      include 'perplex_parameters.h'
+
       integer ier,jt,it
 
       double precision c1,c2,c3,c5,c6,c7,xo,xs,xh2,xco,xh2o,d1,d2,d3,
@@ -754,6 +772,11 @@ c----------------------------------------------------------------------
      *                 t27,t49,t55,t61,t65,t67,t71,t73,t74,t80,t88,t98,
      *                 dg,t10,t11,t25,f2,f3,f4,f7,f8,f9,f11,f12,t4,f13,
      *                 f1,t32,f5,f6,f,t13,t38,t47,df
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 c----------------------------------------------------------------------
       jt = 0 
       ier = 0 
@@ -834,11 +857,11 @@ c                                 evaluate dg:
       xh2 = r0 - g/dg
       if (xh2.lt.0d0) xh2 = r0/2d0
 c                                 converged:
-      if (dabs((xh2-r0)/xh2).lt.0.1d-6) goto 40
+      if (dabs((xh2-r0)/xh2).lt.nopt(5)) goto 40
 
       it = it + 1
 
-      if (it.gt.100) then 
+      if (it.gt.iopt(21)) then 
 
          ier = 2
 
@@ -896,11 +919,11 @@ c                                 evaluate df:
          xh2o = r0 + (1d0 - r0)/2d0
       end if         
 c                                 converged:
-      if (dabs((xh2o-r0)/xh2o).lt.0.1d-6) goto 99
+      if (dabs((xh2o-r0)/xh2o).lt.nopt(5)) goto 99
 
       it = it + 1
 
-      if (it.gt.100) then 
+      if (it.gt.iopt(21)) then 
 
          ier = 2
 
@@ -915,7 +938,7 @@ c                                 converged:
       xco = -(d2*t4*xh2o + d3*xh2o*t11)/
      *       (d4*t10*xh2o - d7*xh2*t4 - d8*t25)
 c                                 is new xh2o same as guess?:
-      if (dabs((xh2o-r1)/xh2o).lt.0.1d-6) goto 9999
+      if (dabs((xh2o-r1)/xh2o).lt.nopt(5)) goto 9999
 
       jt = jt + 1
 
@@ -935,6 +958,8 @@ c                                 is new xh2o same as guess?:
 c----------------------------------------------------------------------
       implicit none
 
+      include 'perplex_parameters.h'
+
       integer ier,jt,it
 
       double precision c1,c2,c3,c5,c6,c7,xo,xh2,xco,xh2o,r1,g1,
@@ -946,6 +971,11 @@ c----------------------------------------------------------------------
      *                 c23,t5,t21,c13,t16,t17,t19,t33,c,t12,t42,t101,
      *                 xc,t46,t58,t60,t62,t79,t81,t87,t91,t93,t95,t99,
      *                 t107,t111,t115,dc,t3,t59,t63,t76,t7
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 c----------------------------------------------------------------------
 
       jt = 0 
@@ -1046,11 +1076,11 @@ c                                 evaluate dc:
 
       if (xh2.lt.0d0) xh2 = r0/2d0
 c                                 converged:
-      if (dabs((xh2-r0)/xh2).lt.0.1d-6) goto 40
+      if (dabs((xh2-r0)/xh2).lt.nopt(5)) goto 40
 
       it = it + 1
 
-      if (it.gt.100) then 
+      if (it.gt.iopt(21)) then 
 
          ier = 2
 
@@ -1109,11 +1139,11 @@ c                                 evaluate df:
          xh2o = r0 + (1d0 - r0)/2d0
       end if         
 c                                 converged:
-      if (dabs((xh2o-r0)/xh2o).lt.0.1d-6) goto 99
+      if (dabs((xh2o-r0)/xh2o).lt.nopt(5)) goto 99
 
       it = it + 1
 
-      if (it.gt.100) then 
+      if (it.gt.iopt(21)) then 
 
          ier = 2
 
@@ -1126,11 +1156,11 @@ c                                 converged:
 99    xco = -((g1-g2)*xh2o**2+((1d0-g3)*xh2o-(g4+g5)*xh2)*xh2**2)*xh2o/
      *       ((((g6-g7)*xh2o+(1d0+c1-xo-g8)*xh2)*xh2o-g9*xh2**4)*xh2)
 c                                 is new xh2o same as guess?:
-      if (dabs((xh2o-r1)/xh2o).lt.0.1d-6) goto 9999
+      if (dabs((xh2o-r1)/xh2o).lt.nopt(5)) goto 9999
 
       jt = jt + 1
 
-      if (it.gt.100) then 
+      if (it.gt.iopt(21)) then 
 
          ier = 2
 
@@ -1225,7 +1255,7 @@ c----------------------------------------------------------------------
 
       integer ins(nsp),nit,ier
 
-      double precision tol,oh2o,ghh2o,ghco2,ghch4,kh2o,kch4,kco,kco2,
+      double precision oh2o,ghh2o,ghco2,ghch4,kh2o,kch4,kco,kco2,
      *                 xt,ek1,ek2,ek3,ek10,ek20,ek30,fo2
 
       double precision p,t,xo,u1,u2,tr,pr,r,ps
@@ -1253,10 +1283,14 @@ c----------------------------------------------------------------------
       double precision dlnfo2,elag,gz,gy,gx
       common/ cst100 /dlnfo2,elag,gz,gy,gx,ibuf,hu,hv,hw,hx
 
-      save tol, ins
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
-      data tol, ins/ .0001d0, 1,2,3,4,5,11*0/
- 
+      save ins
+      data ins/ 1,2,3,4,5,11*0/
+c----------------------------------------------------------------------
       nit = 0
       oh2o = 2d0
 
@@ -1283,12 +1317,12 @@ c                                 solve for xco
  
       nit = nit + 1
 
-      if (nit.gt.100) then 
+      if (nit.gt.iopt(21)) then 
          call warn (176,xh2o,nit,'HOCGRA')
          goto 99          
       end if
 
-      if (dabs(xh2o-oh2o).lt.tol*xh2o) goto 90
+      if (dabs(xh2o-oh2o).lt.nopt(5)*xh2o) goto 90
 
       oh2o = xh2o
 
@@ -1328,7 +1362,7 @@ c----------------------------------------------------------------------
 
       integer ins(nsp),ier,nit
 
-      double precision fo2,tol,t2,t3,oh2o,xt,agph,dg,kh2o,kco2,ek30,kco,
+      double precision fo2,t2,t3,oh2o,xt,agph,dg,kh2o,kco2,ek30,kco,
      *                 ek10,ek20,ek1,ek2,ek3
 
       double precision p,t,xo,u1,u2,tr,pr,r,ps
@@ -1350,10 +1384,14 @@ c----------------------------------------------------------------------
       double precision dlnfo2,elag,gz,gy,gx
       common/ cst100 /dlnfo2,elag,gz,gy,gx,ibuf,hu,hv,hw,hx
 
-      save tol, ins
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
-      data tol, ins/0.0001d0, 1, 2, 3, 4, 5, 11*0/
-
+      save ins
+      data ins/1, 2, 3, 4, 5, 11*0/
+c----------------------------------------------------------------------
       t2 = t*t
       t3 = t2 * t
  
@@ -1403,12 +1441,12 @@ c                                 solve for xco
  
       nit = nit + 1
 
-      if (nit.gt.250) then 
+      if (nit.gt.iopt(21)) then 
          call warn (176,xh2o,nit,'HOCMRK') 
          goto 99          
       end if
 
-      if (dabs(xh2o-oh2o).lt.tol*xh2o) goto 90
+      if (dabs(xh2o-oh2o).lt.nopt(5)*xh2o) goto 90
 
       oh2o = xh2o
 
@@ -1429,13 +1467,20 @@ c                                 solve for xco
 
 99    end
 
-      subroutine evalxh (k1,k2,k3,xt,xh,ier)
+      subroutine evalxh (ek1,ek2,ek3,xt,xh,ier)
 c----------------------------------------------------------------------
       implicit none
 
+      include 'perplex_parameters.h'
+
       integer ier,it
 
-      double precision k1,k2,k3,xt,xh,sign,g,dg,r0
+      double precision ek1,ek2,ek3,xt,xh,sign,g,dg,r0
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 c----------------------------------------------------------------------
       sign = 1d0
 
@@ -1445,11 +1490,11 @@ c----------------------------------------------------------------------
 
 10    r0 = xh
 
-      call evalg (k1,k2,k3,xt,xh,g,dg,sign)
+      call evalg (ek1,ek2,ek3,xt,xh,g,dg,sign)
 
       xh = r0 - g/dg
 
-      if (dabs((xh-r0)/xh).lt.0.1d-6) then
+      if (dabs((xh-r0)/xh).lt.nopt(5)) then
 c                                 converged:
          if (xh.gt.0d0) goto 999
 c                                 xh < 0.
@@ -1465,7 +1510,7 @@ c                                 xh < 0.
 
       it = it + 1
 
-      if (it.gt.100) then 
+      if (it.gt.iopt(21)) then 
 
 c                             uncommenting these lines would make
 c                             evalxh try the second root, however
@@ -1667,7 +1712,7 @@ c----------------------------------------------------------------------
 
       integer ins(nsp),nit
 
-      double precision fo2,tol,t2,t3,kco2,kco,kh2o,kch4,oh2o,qb,qa
+      double precision fo2,t2,t3,kco2,kco,kh2o,kch4,oh2o,qb,qa
 
       double precision p,t,xc,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xc,u1,u2,tr,pr,r,ps
@@ -1688,10 +1733,14 @@ c----------------------------------------------------------------------
       double precision dlnfo2,elag,gz,gy,gx
       common/ cst100 /dlnfo2,elag,gz,gy,gx,ibuf,hu,hv,hw,hx
 
-      save tol,ins
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
-      data tol,ins/.001d0, 1,2,3,4,5,11*0/
-
+      save ins
+      data ins/1,2,3,4,5,11*0/
+c----------------------------------------------------------------------
       t2 = t * t
       t3 = t2 * t
  
@@ -1742,7 +1791,7 @@ c                                 + qb * xh2 + qc
 
          nit = nit + 1
 
-         if (nit.gt.250) then 
+         if (nit.gt.iopt(21)) then 
             call warn (176,xh2o,nit,'COHGRA')
             if (xco2+xco.gt.0.9999d0) then
                xco2 = 1d0
@@ -1754,7 +1803,7 @@ c                                 + qb * xh2 + qc
             end if             
          end if 
 
-         if (dabs(xh2o-oh2o).lt.tol*xh2o) exit
+         if (dabs(xh2o-oh2o).lt.nopt(5)*xh2o) exit
 
          oh2o = xh2o
 
@@ -1789,7 +1838,7 @@ c----------------------------------------------------------------------
 
       integer ins(nsp),nit
 
-      double precision fo2,tol,ghh2o,ghco2,ghch4,kh2o,kco2,kco,kch4,qa,
+      double precision fo2,ghh2o,ghco2,ghch4,kh2o,kco2,kco,kch4,qa,
      *                 qb,oh2o
 
       double precision p,t,xc,u1,u2,tr,pr,r,ps
@@ -1817,9 +1866,13 @@ c----------------------------------------------------------------------
       double precision dlnfo2,elag,gz,gy,gx
       common/ cst100 /dlnfo2,elag,gz,gy,gx,ibuf,hu,hv,hw,hx
 
-      save tol,ins
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
-      data tol,ins/.001d0, 1,2,3,4,5,11*0/
+      save ins
+      data ins/1,2,3,4,5,11*0/
 c----------------------------------------------------------------------
       nit = 0
 
@@ -1862,7 +1915,7 @@ c                                 + qb * xh2 + qc
  
          nit = nit + 1
 
-         if (nit.gt.250) then 
+         if (nit.gt.iopt(21)) then 
             call warn (176,xh2o,nit,'COHHYB')
             if (xco2+xco.gt.0.9999d0) then
                xco2 = 1d0
@@ -1875,7 +1928,7 @@ c                                 + qb * xh2 + qc
             
          end if 
 
-         if (dabs(xh2o-oh2o).lt.tol*xh2o) exit
+         if (dabs(xh2o-oh2o).lt.nopt(5)*xh2o) exit
 
          oh2o = xh2o
 
@@ -2314,8 +2367,8 @@ c-----------------------------------------------------------------------
 
       integer iroots, i, ineg, ipos
 
-      double precision units, r13, r23, r43
-      common/ cst59 /units, r13, r23, r43
+      double precision units, r13, r23, r43, r59, r1, r2
+      common/ cst59 /units, r13, r23, r43, r59, r1, r2
 
       save b,r,p0
       data b,r,p0 /1.465d0,8.314d-3,2d0/
@@ -2971,8 +3024,13 @@ c-----------------------------------------------------------------------
       double precision fh2o,fco2
       common/ cst11 /fh2o,fco2
 
-      double precision units, r13, r23, r43
-      common/ cst59 /units, r13, r23, r43
+      double precision units, r13, r23, r43, r59, r1, r2
+      common/ cst59 /units, r13, r23, r43, r59, r1, r2
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       save ins, jns
       data ins, jns/ 1,5,6,8,12*0,1,2*0/  
@@ -3035,7 +3093,7 @@ c                                 inner iteration loop:
             xh2s = c1*c2*xh2
             xso2 = c3*c4*xh2o**2/xh2**2
  
-            if (dabs((xi-xh2o)/xh2o).lt.1d-6) goto 20
+            if (dabs((xi-xh2o)/xh2o).lt.nopt(5)) goto 20
             if (xh2o.ge.1d0) xh2o = xi + (1d0-xi)/2d0
             xi = xh2o
 
@@ -3044,11 +3102,11 @@ c                                 inner iteration loop:
          goto 50 
 
 20       xh2  = -0.5d0*(xo*xh2o+xh2o+2d0*xo-2d0)/(1d0+c1*c2)
-         if (xh2.le.1d-5.and.xo.gt.r13) goto 50
+         if (xh2.le.nopt(5).and.xo.gt.r13) goto 50
          xh2s = c1*c2*xh2
          xso2 = c3*c4*(xh2o/xh2)**2
 
-         if (j.gt.1.and.dabs((xl-xh2o)/xh2o).lt.1d-6) goto 40
+         if (j.gt.1.and.dabs((xl-xh2o)/xh2o).lt.nopt(5)) goto 40
 
          call mrkmix (ins, 4, 1)
          gh2o = gh2o * ghh2o
@@ -3112,8 +3170,13 @@ c-----------------------------------------------------------------------
       double precision fh2o,fco2
       common/ cst11 /fh2o,fco2
 
-      double precision units, r13, r23, r43
-      common/ cst59 /units, r13, r23, r43
+      double precision units, r13, r23, r43, r59, r1, r2
+      common/ cst59 /units, r13, r23, r43, r59, r1, r2
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       save ins, jns
       data ins, jns/ 1,5,6,7,8,11*0,1,2*0/
@@ -3161,7 +3224,7 @@ c                                 get first guess:
          xl = 2d0 * (1d0-xo)/(1d0 + xo)
       end if
 c                                 outer iteration loop:
-      do 30 j = 1, 20
+      do 30 j = 1, iopt(21)
 
          c2 = gh2/gh2s
          c4 = go2/gso2
@@ -3170,11 +3233,11 @@ c                                 outer iteration loop:
          xh2o = xl
          xi = xl
 
-         do 10 i = 1, 30
+         do 10 i = 1, iopt(21)
 c                                 inner iteration loop:
-            f = a + b * xh2o + c * xh2o**2 + d * xh2o**3
+            f = a + (b + (c + d * xh2o) * xh2o) * xh2o
     
-            df = b + 2d0 * c * xh2o + 3d0 * d * xh2o ** 2
+            df = b + (2d0 * c  + 3d0 * d * xh2o) * xh2o
             xh2o = xi - f/df
 
             xh2  = -0.5d0*(xo*xh2o+xh2o+2d0*xo-2d0)/(1d0+c1*c2)
@@ -3182,7 +3245,7 @@ c                                 inner iteration loop:
             xo2 = c5*c6*(xh2o*xh2o)/(xh2*xh2)
             xso2 = c3*c4*xo2
  
-            if (dabs((xi-xh2o)/xh2o).lt.1d-6) goto 20
+            if (dabs((xi-xh2o)/xh2o).lt.nopt(5)) goto 20
             if (xh2o.ge.1d0) xh2o = xi + (1d0-xi)/2d0
 10          xi = xh2o
 
@@ -3194,7 +3257,7 @@ c                                 inner iteration loop:
          xo2 = c5*c6*(xh2o*xh2o)/(xh2*xh2)
          xso2 = c3*c4*xo2
 
-         if (j.gt.1.and.dabs((xl-xh2o)/xh2o).lt.1d-6) goto 40
+         if (j.gt.1.and.dabs((xl-xh2o)/xh2o).lt.nopt(5)) goto 40
 
          call mrkmix (ins, 5, 1)
          gh2o = gh2o * ghh2o
@@ -3247,8 +3310,13 @@ c-----------------------------------------------------------------------
       double precision fh2o,fco2
       common/ cst11 /fh2o,fco2
 
-      double precision units, r13, r23, r43
-      common/ cst59 /units, r13, r23, r43
+      double precision units, r13, r23, r43, r59, r1, r2
+      common/ cst59 /units, r13, r23, r43, r59, r1, r2
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       save ins,jns
 
@@ -3311,7 +3379,7 @@ c                                 inner iteration loop:
 
             end if 
 
-            if (dabs((xi-xh2o)/xh2o).lt.1d-6) goto 20
+            if (dabs((xi-xh2o)/xh2o).lt.nopt(5)) goto 20
             if (xh2o.ge.1d0) xh2o = xi + (1d0-xi)/2d0
 10          xi = xh2o
 
@@ -3320,7 +3388,7 @@ c                                 inner iteration loop:
 
 20       if (xo2.lt.0d0) xo2 = 0d0
          xh2 = 1d0 - xo2 - xh2o
-         if (j.gt.1.and.dabs((xl-xh2o)/xh2o).lt.1d-6) goto 40
+         if (j.gt.1.and.dabs((xl-xh2o)/xh2o).lt.nopt(5)) goto 40
          call mrkmix (ins, 3, 1)
          gh2o = gh2o * ghh2o
          xl = xh2o
@@ -5145,7 +5213,7 @@ c----------------------------------------------------------------------
 
       integer ins(nsp), isp, nit, i
 
-      double precision fo2,tol,t2,t3,x2,x3,d6,d36,d67,df,xt,d678x,x,tx,
+      double precision fo2,t2,t3,x2,x3,d6,d36,d67,df,xt,d678x,x,tx,
      *                 rad,eq9,dxnh3,deq9,dxh2o,sign,c1,c2,c3,c4,c5
 
       double precision xh2o,xco2,xco,xch4,xh2,xh2s,xo2,xso2,xcos,xn2,
@@ -5167,9 +5235,13 @@ c----------------------------------------------------------------------
       double precision dlnfo2,elag,gz,gy,gx
       common/ cst100 /dlnfo2,elag,gz,gy,gx,ibuf,hu,hv,hw,hx
 
-      save tol, ins
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
-      data tol, ins/1d-6, 1,2,3,4,5,10,11,9*0/
+      save ins
+      data ins/1,2,3,4,5,10,11,9*0/
 c----------------------------------------------------------------------
       t2 = t * t
       t3 = t2 * t
@@ -5288,7 +5360,7 @@ c                                root?
 
             nit = nit + 1
 
-            if (nit.gt.250) then
+            if (nit.gt.iopt(21)) then
 c                                 not converging to much
 c                                 of anything, try other root
                write (*,1000) t,p
@@ -5297,7 +5369,8 @@ c                                 of anything, try other root
 
                exit
 
-            else if (dabs(dxh2o).lt.tol.and.dabs(tx).lt.tol) then 
+            else if (dabs(dxh2o).lt.nopt(5).and.
+     *               dabs(tx).lt.nopt(5)) then 
 c                                 seems to have converged
                if (xh2o.gt.1d0.or.xh2o.lt.0d0.or.
      *             xnh3.gt.1d0.or.xnh3.lt.0d0) then
@@ -5583,6 +5656,8 @@ c                                 J.A.D. Connolly, Nov 26, 2010.
 c-----------------------------------------------------------------------
       implicit none
 
+      include 'perplex_parameters.h'
+
       double precision r,prt,rt,f,c1,c2,c3,c4,c5,c6,c7,c8,c9,c0,v,a1,
      *                 a2,a3,c12,c20,c33,c34,c36,c44,c46,c55,c56,c66,
      *                 c64,c53,c42,e1,e2,dv,t2
@@ -5591,6 +5666,11 @@ c-----------------------------------------------------------------------
 
       double precision p,t,xco2,u1,u2,tr,pr,rc,ps
       common/ cst5  /p,t,xco2,u1,u2,tr,pr,rc,ps
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       save r, iwarn
       data r, iwarn/83.14d0, 0/
@@ -5680,14 +5760,14 @@ c                                 dpdv/rt
 
          v = v + dv
 
-         if (dabs(dv/v).lt.1d-6) then
+         if (dabs(dv/v).lt.nopt(5)) then
 c                                 converged, compute ln(fugacity)      
             f = c1/v+1d0/a1-1d0/c2-(e1-c7)/c8-(e2-c9)/c0
      *          + dlog(rt/v) + p*v/rt - 1d0
 
             exit
           
-         else if (v.lt.0d0.or.it.gt.100) then
+         else if (v.lt.0d0.or.it.gt.iopt(21)) then
 c                                 use cork fugacities
             iwarn = iwarn + 1
 
@@ -5895,7 +5975,7 @@ c                                 get new gamma's
 
          nit = nit + 1
 
-         if (nit.lt.250) cycle
+         if (nit.lt.iopt(21)) cycle
  
          bad = .true.
          exit 
@@ -5904,7 +5984,7 @@ c                                 get new gamma's
 
       if (bad) then 
 
-         if (nit.gt.240.and.iwarn.lt.100) then
+         if (nit.gt.iopt(21).and.iwarn.lt.100) then
 
              write (*,'(a,2(g12.6,1x))') 
      *            'ugga rksi4 not converging T,P:',t,p
@@ -6295,7 +6375,7 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
  
-      double precision brk(nsp), ark(nsp), tt
+      double precision brk(nsp), ark(nsp) 
 
       integer ins(*), isp, i, k
 
@@ -6640,8 +6720,7 @@ c----------------------------------------------------------------------
 
       logical bad
 
-      double precision c1,rat,rp1,rm1,vmin,vmax,x(3),
-     *                 oldy,tol,lnk2,lnk3
+      double precision c1,rat,rp1,rm1,vmin,vmax,x(3),oldy,lnk2,lnk3
 
       double precision y,g,v
       common / cstcoh /y(nsp),g(nsp),v(nsp)
@@ -6685,7 +6764,6 @@ c                                 get pure species fugacities
 
       nit = 0 
       oldy = 0d0
-      tol = 1d-9
 c                                 choose species for convergence test
 c                                 SiO2, may blow at high T?
       icon = i2
@@ -6722,7 +6800,7 @@ c                                 closure => sio2:
 
             end do 
         
-            if ( bad .or. dabs((oldy-y(icon))/y(icon)).lt.tol) exit
+            if ( bad .or. dabs((oldy-y(icon))/y(icon)).lt.nopt(5)) exit
 c                                 get new gamma's
             call mrkmix (ins, isp, 1)
 
@@ -6730,7 +6808,7 @@ c                                 get new gamma's
 
             nit = nit + 1
 
-            if (nit.gt.240) then 
+            if (nit.gt.iopt(21)) then 
 
                write (*,*) 'wug'
 
@@ -6744,7 +6822,7 @@ c                                 get new gamma's
 
       if (bad) then 
 
-          if (nit.gt.240) then
+          if (nit.gt.iopt(21)) then
 
              write (*,'(a,2(g12.6,1x))') 
      *            'ugga rksi30 not converging T,P:',t,p,xc
@@ -6974,7 +7052,7 @@ c----------------------------------------------------------------------
 
       integer ins(2), isp, nit, i3, i4, iavg
 
-      double precision c1,oldy,tol,a0,a1
+      double precision c1,oldy,a0,a1
 
       double precision y,g,v
       common / cstcoh /y(nsp),g(nsp),v(nsp)
@@ -6985,9 +7063,13 @@ c----------------------------------------------------------------------
       double precision p,t,xc,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xc,u1,u2,tr,pr,r,ps
 
-      save ins, isp, tol 
-      data isp, ins, i3, i4, tol /2, 12, 7, 
-     *                               12, 7, 1d-9/
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      save ins, isp
+      data isp, ins, i3, i4 /2, 12, 7, 12, 7/
 c----------------------------------------------------------------------
       nit = 0 
       oldy = 0d0
@@ -6999,14 +7081,14 @@ c                                iterate for non-ideality
          y(i3) = (a1-g(i4))/a0
          if (y(i3).gt.1d0.or.y(i3).lt.0d0) y(i3) = -(a1+g(i4))/a0
          y(i4) = 1d0 - y(i3)
-         if ( dabs((oldy-y(i3))/y(i3)).lt.tol) exit  
+         if ( dabs((oldy-y(i3))/y(i3)).lt.nopt(5)) exit  
 c                                 get new gamma's
          call mrkmix (ins, isp, iavg)
 
          oldy = y(i3)
          nit = nit + 1
 
-         if (nit.lt.250) cycle 
+         if (nit.lt.iopt(21)) cycle 
          write (*,*) 'ugga wugga not converging on pure O'
          exit 
 
@@ -7262,7 +7344,7 @@ c         if (iwarn.eq.100) call warn (49,t,0,'RKSI4a')
 
       end if 
 
-      if (itic.gt.200) then
+      if (itic.gt.iopt(21)) then
          write (*,*) 'rk4a: igood,imed,ibad: ',igood,imed,ibad
          itic = 0
       end if 

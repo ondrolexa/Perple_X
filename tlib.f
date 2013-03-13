@@ -17,7 +17,7 @@ c----------------------------------------------------------------------
       implicit none
 
       write (*,'(/,a)') 
-     *      'Perple_X version 6.6.8, source updated Mar 6, 2013.'
+     *      'Perple_X version 6.6.8, source updated Mar 13, 2013.'
 
       end
 
@@ -25,7 +25,8 @@ c----------------------------------------------------------------------
 c----------------------------------------------------------------------
 c redop1 - redop1 looks for the perplex_option.dat file, if it finds
 c the option file it scans the file for keywords and sets options
-c accordingly.
+c accordingly. also sets machine precision dependent (wmach) and 
+c fractional constants.
 
 c iam - indicates calling program 1 - vertex
 c                                 2 - meemum
@@ -82,7 +83,7 @@ c----------------------------------------------------------------------
       character*3 key*22, val, valu(i10), nval1*12, nval2*12,
      *            nval3*12,opname*100,strg*40,strg1*40
 
-      double precision dnan, res0
+      double precision dnan, res0 
 
       integer jtest,jpot
       common/ debug /jtest,jpot
@@ -107,10 +108,46 @@ c----------------------------------------------------------------------
 
       integer io3,io4,io9
       common / cst41 /io3,io4,io9
+c                                 precision stuff used in lpnag 
+      double precision wmach(9)
+      common /ax02za/wmach
+
+      double precision units, r13, r23, r43, r59, r1, r2
+      common/ cst59 /units, r13, r23, r43, r59, r1, r2
 
       integer iam
       common/ cst4 /iam
 c----------------------------------------------------------------------
+c                                 periodic fractions
+      r13 = 1d0/3d0
+      r23 = 2d0/3d0
+      r43 = 4d0/3d0
+      r59 = 5d0/9d0
+c                                 seismic speed conversion, this shouldn't be
+c                                 hardwired.
+      units = dsqrt(1d1)/1d1
+c                                 -------------------------------------
+c                                 loop to find machine precision (mainly
+c                                 for nag)
+      r1 = 1d-12
+
+      do
+         if (1d0+r1.eq.1d0) exit
+         r2 = r1 
+         r1 = r1/2d0
+      end do 
+
+      wmach(3) = r2
+      wmach(5) = 1d0 + r2
+      wmach(2) = r2**0.8d0
+      wmach(1) = r2**0.9d0
+      wmach(4) = dsqrt(r2)
+      wmach(9) = max(1d0/wmach(4),1d2)
+c                                 largest number
+      wmach(7) = huge(0d0)
+      wmach(8) = dsqrt(wmach(7))
+      r1 = 1d0 + r2
+c                                 -------------------------------------
 c                                 default option values:
       do i = 28, 30
          nopt(i) = 1d0
@@ -3185,15 +3222,7 @@ c                                 interval limits conformal transformation
 
       double precision goodc, badc
       common/ cst20 /goodc(3),badc(3)
-
-      double precision units, r13, r23, r43
-      common/ cst59 /units, r13, r23, r43
 c-----------------------------------------------------------------------
-      data units, r13, r23, r43/.316227766016837933d0, 
-     *                          .333333333333333333d0,
-     *                          .666666666666666667d0,
-     *                          1.33333333333333333d0/
-
       data hs2p/4, 5, 18, 19, 20, 21/
 
       data iff,ipt2,goodc,badc/3*0,6*0d0/
