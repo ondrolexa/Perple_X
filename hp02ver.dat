@@ -233,6 +233,9 @@ zrru = 1 bdy                    | Zr rutile endmember
 
 mots = 1 mgts - 1/2 cor + 1/2 hem | ferric opx endmember MgFe3+AlSiO6 for Opx(HP)
        22d3 0 0 
+
+esn = 1 cats - 1/2 cor + 1/2 hem | essenite, ferric cpx endmember CaFe3+AlSiO6 for Cpx(HP)
+       22d3 0 0 
                                   
 end_makes 
                                                                                                                                             

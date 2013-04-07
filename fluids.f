@@ -966,6 +966,7 @@ c                                 compute volume by finite difference
                      do l = 1, 2
                         call cfluid (fo2,fs2)
                         do k = 1, isp
+                           if (g(ins(k))*p*xs(ins(k)).eq.0d0) cycle
                            vdif = vdif + 
      *                         f*xs(ins(k))*dlog(g(ins(k))*p*xs(ins(k)))
                         end do 
@@ -1215,6 +1216,7 @@ c                                 compute volume by finite difference
                   do l = 1, 2
                      call cfluid (fo2,fs2)
                      do k = 1, isp
+                        if (g(ins(k))*p*xs(ins(k)).eq.0d0) cycle
                         vdif = vdif + 
      *                         f*xs(ins(k))*dlog(g(ins(k))*p*xs(ins(k)))
                      end do 

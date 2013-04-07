@@ -222,7 +222,7 @@ c                                 if ibuf = 2 dlnfo2 is the fs2
 
       else if (ifug.eq.26) then
  
-         vname(3) = 'X(SiO)'
+         vname(3) = 'X(Si)'
 
       else if (ifug.ge.7.and.ifug.le.9.or.ifug.eq.24) then
 c                                 chosen COH speciation option
@@ -2216,9 +2216,11 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer ins(*),i,j,k,l,iroots,isp,ineg,ipos,iavg 
+      integer ins(*),i,j,k,l,iroots,isp,ineg,ipos,iavg,irt,jrt
+
+      logical max
  
-      double precision f(nsp),aj2(nsp),ev(3),c1,c2,ax,
+      double precision f(nsp),aj2(nsp),ev(3),c1,c2,ax,vrt,dv,
      *                 c3,vmin,vmax,d1,d2,d3,d6,rt,dsqrtt,r,
      *                 ch,bx,aij,pdv
  
@@ -2236,10 +2238,13 @@ c-----------------------------------------------------------------------
 
       double precision a, b
       common/ rkab /a(nsp),b(nsp)
+
+      logical sroot
+      common/ rkroot /sroot
  
-      save r
+      save r, irt, vrt
                              
-      data r /83.1441/
+      data r, max /83.1441d0, .false./
 c---------------------------------------------------------------------- 
       dsqrtt = dsqrt(t)
       rt = r*t
@@ -2303,7 +2308,43 @@ c                                 solve for mixture molar volume
 
       call roots3 (c1,c2,c3,ev,vmin,vmax,iroots,ineg,ipos)
 
-      if (iroots.eq.3.and.ineg.eq.0.and.vmin.gt.bx) then
+      if (sroot) then 
+c                                use characteristics of previous solution 
+c                                to choose the, potentially metastable, root
+         if (irt.eq.3.and.iroots.eq.3.and.ineg.eq.0.and.vmin.gt.bx) then
+
+            if (max) then 
+               vol = vmax
+            else 
+               vol = vmin
+            end if 
+
+         else if (iroots.eq.3.and.irt.eq.3) then
+
+            vol = vmax
+
+         else 
+c                                 different number of roots, minimize
+c                                 the difference
+            dv = 1d99
+
+            do i = 1, iroots 
+               if (ev(i).lt.0d0) cycle
+               if (dabs(ev(i) - vrt).lt.dv) then
+                  jrt = i
+                  dv = dabs(ev(i) - vrt)
+               end if 
+            end do
+
+            if (dv.eq.1d99) then 
+               write (*,*) 'rats'
+            else 
+               vol = ev(jrt)
+            end if 
+
+         end if 
+
+      else if (iroots.eq.3.and.ineg.eq.0.and.vmin.gt.bx) then
 c                                choose the root with lowest gibbs energy
 c                                by evaluating p*delta(v) - int(pdv)
          pdv = p*(vmax-vmin) - 
@@ -2312,8 +2353,10 @@ c                                by evaluating p*delta(v) - int(pdv)
 
          if (pdv.gt.0d0) then
             vol = vmin
+            max = .false.
          else 
             vol = vmax
+            max = .true.
          end if 
 
       else if (iroots.eq.3) then
@@ -2325,6 +2368,14 @@ c                                by evaluating p*delta(v) - int(pdv)
          vol = ev(ipos)
 
       end if
+
+      if (.not.sroot) then 
+c                                 for finite difference property 
+c                                 computations, save the root
+         irt = iroots
+         vrt = vol
+
+      end if 
 c                                 compute fugacities:
       d1 = rt*dsqrtt*bx
       d2 = dlog((vol + bx)/vol)/d1
@@ -6081,8 +6132,10 @@ c----------------------------------------------------------------------
 c                                 get pure species fugacities
       call mrkpur (ins, isp)
 
-      if (v(14).lt.0*1d2.and.xc.gt.0.326.and.xc.lt.0.340) then
-
+      if (v(14).lt.0d2.and.xc.gt.0.326.and.xc.lt.0.340) then
+c                                 conditional to destabilize the 
+c                                 multispecies fluid at low P in favor
+c                                 of SiO2(g)
          fh2o = dlog(1d4*p)
          fco2 = dlog(1d4*p)
          return
@@ -6375,7 +6428,7 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
  
-      double precision brk(nsp), ark(nsp) 
+      double precision brk(nsp), ark(nsp), a0 
 
       integer ins(*), isp, i, k
 
@@ -6452,12 +6505,17 @@ c               tt = t
 c            end if 
 
 c                                  DP fit
-            a(14) = (-0.370631646315402D9 + 0.710713269453173D8*dlog(t)
+            a(14) = (-0.370631646315402D9 -88784.52
+     * + 0.710713269453173D8*dlog(t)
      *               -0.468778070702675D7/t + 
      *               (0.194790021605110D4*dsqrt(t) -0.110935131465938D6
      *               -0.120230245951606D2 * t) * t)*1d2
-
+c    *            +  nopt(29)*(t-1999.)
+     *            +  32300.*(t-1999.) + 14.25*(t-1999.)**2
 c            if (t.gt.8146.72) a(14) = 0d0
+c                                   fit to mp s,cp,g,v
+c           a(14) = ( 73828180.7110d0 + 7535d0*(t-1999.)
+c    *                  - 4.438d0*(t-1999.)**2)*1d2
 
             if (lopt(28).and.t.gt.90000.) then 
 c                                 use anomalous cp value a-function and b:
@@ -6484,13 +6542,22 @@ c                                 MRK dispersion term for Si
             a(15) = (.131596431388077d7 - ((.380259023635694d-1*t 
      *      + .124090483523393d4)*t + .170392520137105d7)*dsqrt(t)
      *      + .151371320806448d6/dsqrt(t) + .427563259532326d7*dlog(t) 
-     *      + (.108181901455347d2*t + 0.711400073165747d5)*t)*1d2
+     *      + (.108181901455347d2*t + 0.711400073165747d5)*t
+     *      + 17737.22d0 
+     *      -50.5d0*(t-1687.) - 2.04d-2*(t-1687.)**2
+     *      )*1d2
+
+c                                   fit to mp s,cp,g,v
+c          a(15) = ( 23496628.831d0 + 6342d0  * (t-1687.)
+c    *                              - 1.138d0  * (t-1687.)**2)*1d2
 
          else 
 
             a(i) = ark(i)
  
          end if
+
+         if (a(i).lt.0d0) a(i) = 1d0
 
       end do 
 

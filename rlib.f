@@ -868,7 +868,7 @@ c                                 The HP Tait EoS:
          if (ieos.eq.8) then 
 c                                 HP 2010 Full Tait EoS
 c                                 on input b1=alpha0, b5=theta, b6=k0, b7=k", b8=k'
-c                                 thermal pressure cofficients:
+c                                 thermal pressure coefficients:
 c                                 alpha0/k0/xi0*theta -> b1
             b1 = 1d0/b5*b1*b6*tr**2/dexp(b5/tr)*(dexp(b5/tr)-1d0)**2
             b9 = 1d0/(dexp(b5/tr)-1d0)
@@ -2925,7 +2925,7 @@ c                              read dqf data:
      *          ' solution model file.',//,
      *          ' Copy the current version from:',//,
      *          ' www.perplex.ethz.ch/perplex/datafiles/',
-     *          'solution_model.dat',//)
+     *           'solution_model.dat',//)
 
       end 
 
@@ -3618,8 +3618,8 @@ c                                 adiabatic shear modulus
      *      (emod(1,id)*(1d0 - 5d0*f) + f*emod(2,id)*3d0*k00)
      *    -  thermo(9,id)*v/v0*ethv
 
-      if (tht.gt.5d0.or.tht0.gt.5d0.and.izap1.lt.10) then
-         write (*,1020) id,tht0,tht
+      if ((tht.gt.5d0.or.tht0.gt.5d0).and.izap1.lt.10) then
+         write (*,1020) names(id),tht0,tht
          izap1 = izap1 + 1
          if (izap1.eq.10) call warn (49,r,370,'GSTX')
       end if 
@@ -3628,7 +3628,7 @@ c                                 adiabatic shear modulus
      *       ,' P=',f9.1,' bar',/,'Using Sixtrude EoS.',
      *        ' Phase ',a,' will be destabilized.',/)
 1020  format (/,'**warning ver370** danger will robinson, danger, ',
-     *          'danger!!',/,i6,2(1x,g13.6))
+     *          'danger!!',/,a,2(1x,g13.6))
 
       end 
       
@@ -3982,8 +3982,8 @@ c                                 adiabatic shear modulus
      *         emod(1,id) + f*(thermo(21,id) + thermo(22,id)*f))
      *       - etas*ethv    
      
-         if (tht.gt.5d0.or.tht0.gt.5d0.and.izap1.lt.10) then
-            write (*,1020) id,tht0,tht
+         if ((tht.gt.5d0.or.tht0.gt.5d0).and.izap1.lt.10) then
+            write (*,1020) names(id),tht0,tht
             izap1 = izap1 + 1
             if (izap1.eq.10) call warn (49,r,370,'GSTX')
          end if                  
@@ -3994,7 +3994,7 @@ c                                 adiabatic shear modulus
      *       ,' P=',f9.1,' bar',/,'Using Sixtrude GI EoS.',
      *        ' Phase ',a,' will be destabilized.',/)
 1020  format (/,'**warning ver370** danger will robinson, danger, ',
-     *          'danger!!',/,i6,2(1x,g13.6))
+     *          'danger!!',/,a,2(1x,g13.6))
 
       end 
 
@@ -4116,7 +4116,7 @@ c---------------------------------------------------------------------
 
       integer mres
  
-      parameter (mres=3000)
+      parameter (mres=100001)
 
       integer mode, i, ind(ms1), iy(ms1), jsp, ksite, indx, iexit, 
      *        ieyit, j, ids

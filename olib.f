@@ -1185,12 +1185,15 @@ c-----------------------------------------------------------------------
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
+
+      integer eos
+      common/ cst303 /eos(k10)
 c-----------------------------------------------------------------------
       call gphase (id,gee)
 
       gee = gee + r * t * dlog(act(id))
 
-      if (ifyn.eq.0) then 
+      if (ifyn.eq.0.and.eos(id).lt.100) then 
 c                                 this is a quick fix that will
 c                                 call the fluid routine way more 
 c                                 than necessary.
@@ -1361,6 +1364,9 @@ c----------------------------------------------------------------------
       double precision units, r13, r23, r43, r59, r1, r2
       common/ cst59 /units, r13, r23, r43, r59, r1, r2
 
+      logical sroot
+      common/ rkroot /sroot
+
       save dt
       data dt /.5d0/
 
@@ -1439,6 +1445,9 @@ c                                 explicit bulk modulus is allowed and used
       end if   
             
       g0 = ginc(0d0,0d0,id)
+c                                 set flag for multiple root eos's
+      sroot = .true.
+
 c                                 compute g-derivatives for isostatic 
 c                                 thermodynamic properties
       if (p.gt.nopt(26)) then 
@@ -1892,7 +1901,12 @@ c                                 s-wave velocity
 
             props(8,jd) = dsqrt(root)*units
 
-            if (.not.sick(jd)) then
+            if (fluid(jd)) then 
+
+               props(24,jd) = 0d0
+               props(27,jd) = 0d0
+
+            else if (.not.sick(jd)) then
 
                props(24,jd) = (props(19,jd) + props(5,jd) * alpha)
      *                           / dsqrt(root) / rho / 2d0 * units
@@ -2043,6 +2057,8 @@ c                                 solid only totals:
 
       end if 
 
+      sroot = .false. 
+
 1030  format (/,'**warning ver179** at T(K)=',g12.4,' P(bar)=',g12.4,1x,
      *        'the effective expansivity of: ',a,/,'is negative. ',
      *        'Most probably this is because of a Landau ordering ',
@@ -2187,19 +2203,26 @@ c                                 normalize volumetrically weighted alpha/beta
       end do 
 c                                 heat capacity ratio (cp/cv)
       psys(28) = 1d0/(1d0-t*psys(1)*psys(13)**2/psys(14)/psys(12))
-      psys1(28) = 1d0/(1d0-t*psys1(1)*psys1(13)**2/psys1(14)/psys1(12)) 
 c                                 density, kg/m3
       psys(10) = psys(17)/psys(1)*1d2
 c                                 gruneisen T
       psys(3) = psys(3)/psys(1)
 
       if (psys1(1).gt.0d0) then
+c                                 if the system is not entirely fluid,
+c                                 solid aggregate props, cp/cv 
+         psys1(28) = 1d0 / 
+     *               (1d0-t*psys1(1)*psys1(13)**2/psys1(14)/psys1(12)) 
+
          if (.not.isnan(psys1(3))) then 
+c                                 gruneisen T
             psys1(3) = psys1(3)/psys1(1)
          else 
             psys1(3) = nopt(7)
          end if 
+c                                 density
          psys1(10) = psys1(17)/psys1(1)*1d2
+
       end if 
 c                                 if a reaction (frendly) return
       if (rxn) return

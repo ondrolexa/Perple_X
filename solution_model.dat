@@ -135,7 +135,7 @@ z(m1,fe3+) = 1 mots
 2 1.                       | 2 species on M2, 1 site per formula unit.
 z(m2,mg) = 1 en + 1 mgts + 1 mots
 
-end_of_model       
+end_of_model 
                       --------------------------------------------------------
 begin_model                         
                              
@@ -375,6 +375,8 @@ begin_model
                              * This model will only function for the FASH subsystem
                                if MGO is present as a component in VERTEX.
 
+                             * Added ferric iron. JADC, 3/29/13.
+
 
                                                       1       2             
                                                       M1      M2      
@@ -384,17 +386,20 @@ begin_model
                                                      _____________
 
                                       1 en            Mg      Mg       
-                            Species:  2 fs            Fe      Fe    
+                            Species:  2 fs            Fe2+    Fe2+     
                                       3 mgts          Al      Mg         
-                                      4 fets          Al      Fe    
-                                      5 crts          Cr      Mg
-                                      6 fcrts         Cr      Fe
+                                      4 fets          Al      Fe2+  
+                                      5 mots          Fe3+    Mg
+                                      6 feots         Fe3+    Fe2+  
+                                      7 crts          Cr      Mg
+                                      8 fcrts         Cr      Fe
                                                       _____________
 
-                           Internal:  7 opx           Mg      Fe    
+                           Internal:  9 opx           Mg      Fe2+    
 
 
-                           Dependent: fets = mgts + opx - en
+                           Dependent: fets  = mgts + opx - en
+                                      feots = mots + opx - en 
                                       fcrts = crts + opx - en
 
 
@@ -402,58 +407,62 @@ CrOpx(HP)                  | solution name.
 
 8                          | model type: Reciprocal with speciation
 
-2                          | 2 independent mixing sitea
-2 3                        | 2 dimensions on first site, 3 on second
-                           | endmember names 
+2                          | 2 independent composition spaces
+2 4                        | 2 dimensions on first space, 3 on second
+                           | endmembers: 
 crts     fcrts_d  
 mgts     fets_d   
 en       fs 
- 
+mots     feots 
 
 1                          | ordered species definition
 
-opx = 1/2 en + 1/2  fs  Delta(enthalpy) = -6.95d3     
+opx = 1/2 en + 1/2  fs  Delta(enthalpy) = -6.95d3   
 
 begin_limits
 opx =     - 2 fs - 1 opx                delta = 2 z(M2,Fe)       
 opx =  -2 + 2 fs + 1 opx                delta = 2 z(M1,Fe)
 opx =     - 2 en - 1 opx                delta = 2 z(M1,Mg)
-end_limits                   
+end_limits                
 
-2                          | 2 dependent endmember
+3                          | 3 dependent endmembers
 
-fets_d = 1 mgts + 1 opx - 1 en
+fets_d  = 1 mgts + 1 opx - 1 en
+feots   = 1 mots + 1 opx - 1 en
 fcrts_d = 1 crts - 1/2 en + 1/2 fs
 
-
-0 0 0 0 0 0                | endmember flags, indicate if endmember is part of the solution.
+0 0 0 0 0 0 0 0            | endmember flags, indicate if endmember is part of the solution (i.e. iend = 0).
 
                            | subdivision model for (binary) site 1 (M2):
-0. 1.  .1                  | range and resolution of X(Mg)
-0                          | subdivision scheme for site 1: imod = 0 -> cartesian 
+0. 1. .1   0               | range and resolution of X(Mg),subdivision scheme for site 1: imod = 0 -> cartesian 
 
                            | subdivision model for (ternary) site 2 
-0. 1.  .1  1               | range and resolution of X(Cr): imod = 1 -> assymmetric stretching
-0. 1.  .1  0               | range and resolution of X(Ts): imod = 0 -> cartesian   
+0. 1. .1   0               | range and resolution of X(Cr), subdivision scheme for site 3, species 1: imod = 0 -> cartesian   
+0. 1. .1   0               | range and resolution of X(Ts), subdivision scheme for site 3, species 2: imod = 0 -> cartesian   
+0. 1. .1   0               | range and resolution of X(un-Ts), subdivision scheme for site 3, species 3: imod = 0 -> cartesian   
 
 begin_excess_function                
 w(en fs)     68d2 0. 0.  
-w(fs mgts)  -1d3 -14. 0. 
+w(fs mgts)   -1d3 -14. 0.  
 w(en opx)    45d2 0. 0. 
 w(fs opx)    45d2 0. 0. 
-w(mgts opx)  12d2 -14. 0. 
+w(mgts opx)  12d2 -14. 0.  
+w(en mots)  -14d3 0. 0. 
+w(fs mots)    6d3 0. 0.
+w(opx mots)   6d3 0. 0. 
 end_excess_function 
 
 2                          | 2 site (M1, M2) configurational entropy model
 
-4 1.                       | 4 species on M1, 1 site per formula unit.
+5 1.                       | 5 species on M1, 1 site per formula unit.
 
-z(m1,fe) = 1 fs 
-z(m1,al) = 1 mgts + 1 fets_d  
-z(m1,cr) = 1 crts + 1 fcrts_d
+z(m1,fe)   = 1 fs 
+z(m1,al)   = 1 mgts + 1 fets_d  
+z(m1,fe3+) = 1 mots
+z(m1,cr)   = 1 crts
 
 2 1.                       | 2 species on M2, 1 site per formula unit.
-z(m2,mg) = 1 en + 1 mgts + 1 crts
+z(m2,mg) = 1 en + 1 mgts + 1 mots + 1 crts
 
 end_of_model
                   --------------------------------------------------------
@@ -499,6 +508,9 @@ begin_model
                              the andradite endmember should be excluded from calculations when
                              this model is use. JADC, 6/2010
 
+                             Cr added as in Simon/PGP Cr Workshop,
+                             folk.uio.no/ninasim/Cr_results.html. JADC, 3/29/13
+
                                                       M1      M2      
                                                      _____________
 
@@ -508,34 +520,41 @@ begin_model
                                        skiag         Fe      Fe3+      
                           Dependent:   kho           Mg      Fe3+
                           Dependent:   andr          Ca      Fe3+
+
+                          Dependent:   fuv_d         Fe      Cr      
+                          knor                       Mg      Cr
+                          Dependent:   uv_d          Ca      Cr
    
                                        alm           Fe      Al     
                                        py            Mg      Al     
                                        gr            Ca      Al          
-                                                      ____________             
+                                                     ____________             
                                       
 
 Gt(MPF) 
     
 7                                 | model type: Margules with dependent endmembers
 2                                 | number of independent mixing sites, reciprocal solution
-3  2                              | 3 species on site M1, 2 species on site M2.                                                                          
+3  3                              | 3 species on site M1, 2 species on site M2.                                                                          
 
           
-alm    py    gr                   | endmember names 
-skiag  kho   andr
+alm    py     gr                  | endmember names 
+skiag  kho    andr
+uv_d   fuv_d  knor 
 
+4                                 | number of dependent endmembers 
 
-2                                 | number of dependent endmembers 
+andr  = 1 gr  + 1 skiag - 1 alm
+kho   = 1 py  + 1 skiag - 1 alm
+uv_d  = 1 gr  + 1 knor  - 1 py 
+fuv_d = 1 alm + 1 knor  - 1 py
 
-andr = 1 gr + 1 skiag - 1 alm
-kho  = 1 py + 1 skiag - 1 alm
-
-0  0  0  0  0  0                  | endmember flags
+0  0  0  0  0  0  0  0  0         | endmember flags
 
 0. 1.   0.1 0                     | imod = 0 -> cartesian subdivision (xfe) on M1
 0. 1.   0.1 0                     | imod = 0 -> cartesian subdivision (xmg) on M1
 
+0. 1.   0.1 0                     | imod = 0 -> cartesian subdivision x(al) on M2
 0. 1.   0.1 0                     | imod = 0 -> cartesian subdivision x(fe3+) on M2
 
                             
@@ -552,8 +571,9 @@ end_excess_function
 z(x,fe) = 1 alm + 1 skiag
 z(x,Mg) = 1 py 
 
-2 2.                              |2 species, site multiplicity 2
+3 2.                              |2 species, site multiplicity 2
 z(y,al) = 1 alm + 1 py + 1 gr
+z(y,cr) = 1 knor
 
 end_of_model 
                       --------------------------------------------------------
@@ -5177,48 +5197,7 @@ z(m1a,fe3+) = 1 acm
 2 1.0                                 2 species on T1 (perhaps Al should be disordered over T1-T2?)
 z(t1,al)  = 1 cats
 
-end_of_model               | end of model keyword
-                      --------------------------------------------------------
-begin_model                 
-
-                                Mg-Fe-Ca-Al-Cr Garnet
-                                Hybrid Holland & Powell + Simon/PGP Cr Workshop
-                                (folk.uio.no/ninasim/Cr_results.html)
-
-CrGt
-                                                           
-7                              | model type: reciprocal
-2                              | 2 chemical site model
-3 2                            | 3 endmembers mix on site 1, 2 endmembers mix on site 2
-
-uv_d  fuv_d  knor 
-gr    alm    py   
-     
-
-2                              | 2 dependent endmembers 
-
-uv_d = 1 gr +  1 knor  - 1 py 
-fuv_d = 1 alm +  1 knor  - 1 py
-
-0 0 0 0 0 0                    | endmember flags 0 include it   1 drop it    
-        
-0. 1. .1   0                | range and resolution for  XCa on A
-0. 1. .1   0                | range and resolution for  XFe on A
-
-0. 1. .1   1                | range and resolution for  XCr on B
-
-begin_excess_function 
-w(py gr) 33d3 0. 0.
- | w(py py gr) 59304. -10.5  .036   Ganguly excess paramters
- | w(py gr gr) 25860. -10.5  .174  
-end_excess_function 
-2                                     2 site entropy model
-3 3.                                  3 species, site multiplicity of 3
-z(Ca) = 1 gr + 1 uv_d 
-z(Mg) = 1 py + 1 knor
-2 2.                                  2 species, site multiplicity of 2
-z(Al) = 1 gr + 1 alm + 1 py 
-end_of_model                  
+end_of_model               | end of model keyword    
                       --------------------------------------------------------
 begin_model                | keyword indicating beginning of a solution model
 
@@ -5246,7 +5225,8 @@ Cpx(HP)
 
 2                                   | model type sf.
 
-6                                   | number of endmembers
+7                                   | number of endmembers
+esn
 ccrts 
 cats 
 jd
@@ -5256,9 +5236,10 @@ di
 
 
 
-0  0  0  0  0  0              | endmember flags
+0 0  0  0  0  0  0              | endmember flags
 
                              | NOTE RESTRICTED RANGES:
+0. 1.  .1  1                 | range and resolution of X(esn): imod = 1 -> assymmetric stretching
 0. 1.  .1  1                 | range and resolution of X(ccrts): imod = 1 -> assymmetric stretching
 0. 1.  .1  1                 | range and resolution of X(cats): imod = 1 -> assymmetric stretching 
 0. 1.  .1  0                 | range and resolution of X(jd)
@@ -5279,7 +5260,7 @@ end_excess_function
 5 1.                          | 5 species on M1, 1 site per formula unit.
 z(m1,fe) = 1 hed
 z(m1,al) = 1 jd + 1 cats
-z(m1,fe3+) = 1 acm
+z(m1,fe3+) = 1 acm + 1 esn
 z(m1,cr) = 1 ccrts
 
 
@@ -5287,7 +5268,7 @@ z(m1,cr) = 1 ccrts
 z(m2,na) = 1 jd + 1 acm
 
 2 1.                          | 2 species on T1, ccrts not counted intentionally.
-z(t1,al) = 1 cats
+z(t1,al) = 1 cats + 1 esn
 
 end_of_model                  | end of model keyword
                            --------------------------------------------------------
@@ -5297,9 +5278,7 @@ begin_model
                                       
                                       To use this model, the fcrm endmember must be
                                       excluded from thermodynamic stability calculations.
-                                      
-                                      
-                                                      1       2           
+                                               
                                                       A       B     
                                                      _____________
 
@@ -5309,7 +5288,18 @@ begin_model
                                       1 sp            Mg      Al       
                             Species:  2 herc          Fe      Al    
                                       3 mcrm          Mg      Cr         
-                                      4 fcrm_d        Fe      Cr    
+                                      4 fcrm_d        Fe      Cr 
+                                      5 mft           Fe3+    MgFe3+
+                                      6 mt            Fe3+    FeFe3+
+
+                                      Ad-hoc incorporation of Fe3+ made here by assuming
+                                      Mt remains inverse and the associated divalent Mg
+                                      and Fe is disordered on B. An alternative model would
+                                      be to assume the divalent B cation is associated with
+                                      Fe3+. Model lacks excess function for mt-crm, which 
+                                      could be estimated if the solvus is known. 
+
+                                                                    JADC, 3/29/13
 
   
                            Dependent: fcrm_d = herc + mcrm - sp
@@ -5320,22 +5310,24 @@ CrSp                       | solution name.
 7                          | model type: Reciprocal 
 
 2                          | 2 independent subcompositions
-2 2                        | 2 dimensions on each site
+2 3                        | 2 dimensions on each site
 
 mcrm     fcrm_d  
-sp       herc               
+sp       herc 
+mft      mt               
                    
 1                          | 1 dependent endmember
 
 fcrm_d = 1 herc + 1 mcrm - 1 sp
 
-0 0 0 0                    | endmember flags, indicate if the endmember is part of the solution.
+0 0 0 0 0 0                | endmember flags, indicate if the endmember is part of the solution.
 
                            | subdivision model for (binary) site 1 (A):
 0. 1. .1  0                | range and resolution of X(Mg): imod = 0 -> cartesian 
 
                            | subdivision model for (binary) site 2 (B)
 0. 1. .1  0                | range and resolution of X(Cr): imod = 0 -> cartesion
+0. 1. .1  0
 
 begin_excess_function                
 w(sp herc)      7d2 0 0 
@@ -5346,13 +5338,17 @@ end_excess_function
 
 2                          | 2 site (a, b) configurational entropy model
 
-2 1.                       | 2 species on a, 1 site per formula unit.
+3 1.                       | 3 species on a, 1 site per formula unit.
 
-z(a,fe) = 1 herc + 1 fcrm_d
+z(a,fe)   = 1 herc
+z(a,fe3+) = 1 sp + 1 mcrm 
   
 
-2 2.                       | 2 species on b, 2 site per formula unit.
-z(b,cr) = 1 fcrm_d + 1 mcrm
+5 2.                       | 5 species on b, 2 site per formula unit.
+z(b,cr)   = 1 mcrm
+z(b,al)   = 1 sp + 1 herc
+z(b,fe3+) = 1/2 mt + 1/2 mft
+z(b,mg)   = 1/2 mft 
 
 end_of_model 
                   --------------------------------------------------------
@@ -5365,16 +5361,18 @@ begin_model
 
                                w(esk cor cor) corrected to w(esk esk cor). J. A. Padron-Navarta, 3/30/12.
 
+                               added ideal hem. JADC, 3/29/13
+
 Eskol(C)                                                                         
-2                                     model type: Margules, endmember fractions.                                                                               
+2                          | model type: Margules, endmember fractions.                                                                               
 
-2                                     number of endmembers 
-esk cor                               endmember names 
+3                          | number of endmembers 
+esk cor hem                | endmember names 
 
-  0  0                        | endmember flags
+0  0  0                    | endmember flags
 
-0. 1.   0.1                   | range X(Cr)
-0                             | cartesian model
+0. 1. .1  0                | X(Cr), cartesian
+0. 1. .1  0                | X(Al), cartesian  
 
 begin_excess_function
 w(esk cor cor)   -5755. .385 -.38e-1       | Chattejee et al '82 Am Min
@@ -5383,8 +5381,10 @@ end_excess_function
 
 1                                     1 site entropy model
 
-2 2.                                  2 species, site multiplicity 2
+3 2.                                  2 species, site multiplicity 2
 z(Al) = 1 cor
+z(Cr) = 1 esk
+
 end_of_model              
                       --------------------------------------------------------
 begin_model                

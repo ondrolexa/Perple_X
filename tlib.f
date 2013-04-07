@@ -17,7 +17,7 @@ c----------------------------------------------------------------------
       implicit none
 
       write (*,'(/,a)') 
-     *      'Perple_X version 6.6.8, source updated Mar 13, 2013.'
+     *      'Perple_X version 6.6.8, source updated Apr 4, 2013.'
 
       end
 
@@ -3222,6 +3222,9 @@ c                                 interval limits conformal transformation
 
       double precision goodc, badc
       common/ cst20 /goodc(3),badc(3)
+
+      logical sroot
+      common/ rkroot /sroot
 c-----------------------------------------------------------------------
       data hs2p/4, 5, 18, 19, 20, 21/
 
@@ -3231,7 +3234,7 @@ c
 
       data r,rr/8.3144126d0,83.144126d0/
 
-      data gflu/.false./
+      data gflu, sroot/ 2*.false./
 
       data com/' '/
 

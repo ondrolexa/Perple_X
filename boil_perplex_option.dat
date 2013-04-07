@@ -23,7 +23,7 @@ efficiency             3    | 1->5
 explicit_bulk_modulus  T    | T[rue] or F[alse], default is F; T -> use explicit function for K if available
 extrapolation          off  | on or off
 final_resolution    1d-7 1e-7 | >0, <1, default 1e-3
-finite_difference_p  0 0.01 |
+finite_difference_p  1d1 0.01 |
 global_reach_increment  12   | >= 0; overridden by reach_factor specified in solution model file
 grid_levels            1 4  | exploratory and autorefine (grid parameters keyword group)
 hard_limits           on    | on or off
