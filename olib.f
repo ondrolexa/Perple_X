@@ -1550,7 +1550,7 @@ c                                 difference increments
 c                                 enthalpy
          e = g0 + t * s
 c                                 set increments for higher order derivatives
-         if (1d2*dt0.gt.t) then 
+         if (4d0*dt0.gt.t) then 
 c                                 the foregoing loop on entropy has led to a 
 c                                 ridiculous t increment
             dt1 = dt0
@@ -1558,13 +1558,13 @@ c                                 ridiculous t increment
 
          else 
 
-            dt1 = dt0 * 1d1
-            dt2 = dt0 * 1d2
+            dt1 = dt0 * 2d0
+            dt2 = dt0 * 4d0
 
          end if 
 
-         dp1 = dp0 * 1d1
-         dp2 = dp0 * 1d2
+         dp1 = dp0 * 2d0
+         dp2 = dp0 * 4d0
 c                                 second order
          gtt = (ginc(dt1,0d0,id) + ginc(-dt1,0d0,id) - 2d0*g0)/dt1/dt1
 

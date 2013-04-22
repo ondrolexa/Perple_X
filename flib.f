@@ -2390,8 +2390,8 @@ c                                 compute fugacities:
             f(l) = dlog(x(l)) + b(l)*d3 - aj2(l)*d2 + d6
             g(l) = dexp(f(l)-dlog(p*x(l)))
             if (g(l).gt.1d199) then
-               write (*,*) 'eug'
-               g(l) = 1d99
+c              write (*,*) 'eug'
+c               g(l) = 1d99
             end if 
          else 
             g(l) = 1d0

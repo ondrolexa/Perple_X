@@ -100,7 +100,7 @@
 !                                      constrained minimization on a 2-d grid. this
 !                                      array is not essential.  
 !                                 l8 - max number of levels for multilevel grids            
-      parameter (l2=5,l3=l2+2,l5=1000,l6=1000,l7=2048,l8=10)
+      parameter (l2=5,l3=l2+2,l5=1000,l6=1000,l7=3400,l8=10)
 !                                 m0 - max number of terms for a species site fraction?
 !                                 m1 - max number of terms in excess function
 !                                 m2 - max order of term in excess function

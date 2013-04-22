@@ -5268,7 +5268,7 @@ z(m1,cr) = 1 ccrts
 z(m2,na) = 1 jd + 1 acm
 
 2 1.                          | 2 species on T1, ccrts not counted intentionally.
-z(t1,al) = 1 cats + 1 esn
+z(t1,al) = 1 cats
 
 end_of_model                  | end of model keyword
                            --------------------------------------------------------

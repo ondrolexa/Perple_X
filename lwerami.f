@@ -1695,10 +1695,12 @@ c-------------------------------------------------------------------
 
       include 'perplex_parameters.h' 
 
-      character cprop*6
+      character cprop*6, y*1
+
+      logical max
 
       integer jdsol(k5), choice, index, kdsol(k5), isol, i, j, icx, 
-     *        jsol, ier, phase
+     *        jsol, ier, phase, mode
 
       double precision cmin(k5) ,cmax(k5), tcomp, gtcomp
 
@@ -1728,9 +1730,8 @@ c-------------------------------------------------------------------
       common/ comps /rcps(k7,2*k5),icps(k7,2*k5),jcx(2*k5),jcx1(2*k5),
      *               kds(2*k5),stol(i11),savg(i11)
 
-      save cprop, cmin, cmax
+      save cprop, cmin, cmax, mode, max
 c----------------------------------------------------------------------
-      index = 0 
       isol = 0 
 c                                 how many times does the phase occur?
       do i = 1, iavar(3,ias)
@@ -1742,11 +1743,10 @@ c                                 how many times does the phase occur?
  
       if (isol.ne.0) index = jdsol(1)
 c                                 the phase doesn't occur or occurs once
-      if (isol.lt.2) goto 99 
+      if (isol.lt.2) return 
 
       phase = idasls(index,ias)
 c                                 if here, the phase must be a solution
-
 10    if (.not.stol(phase)) then
 c                                 immisicible phases are present (isol>1)
 c                                 but there is no criterion (stol = .false.)
@@ -1757,21 +1757,20 @@ c                                 but there is no criterion (stol = .false.)
          else
             cprop = 'weight'
          end if
-
+c                                tell the user
          write (*,1000) isol,fname(phase),cprop
          write (*,1040) (cname(i), i = 1, icomp)
          do i = 1, isol 
             write (*,1050) (pcomp(j,jdsol(i)), j = 1, icomp)
          end do 
+c                                choose action
+         write (*,1001) 
+         call rdnumb (nopt(8),nopt(8),choice,1,.false.)
 
-         write (*,1030) 
-c                                 get choice
-         call rdnumb (tcomp,0d0,choice,1,.false.)
-
-         if (choice.eq.2) then
+         if (choice.eq.5) then
 c                                 average the compositions, turn 
 c                                 solvus testing off
-            nopt(8) = 1d0
+            mode = 0
 
          else
 c                                 savg is a flag used only by 
@@ -1779,32 +1778,103 @@ c                                 werami to indicate whether
 c                                 solutions should be averaged 
 c                                 within an exisiting set of solvus
 c                                 criteria, initialized here.
-  
             savg(phase) = .false.
 
-            write (*,1010) isol,isol-1
-            
-            do i = 1, isol-1
+            if (choice.lt.3) then
+c                                 using a max/min criteria
+               mode = 1
 
-               call mkcomp (i+k5,phase)
+               if (choice.eq.1) then 
+                  max = .true.
+               else 
+                  max = .false.
+               end if 
+c                                 prompt for a single composition
+               write (*,1005)
+               write (*,1006)
+
+               call mkcomp (1+k5,phase)
+
+            else if (choice.eq.3) then 
+c                                 just range criteria
+               mode = 2 
+
+               write (*,1010) isol,isol-1
+               write (*,1006)
+            
+               do i = 1, isol-1
+
+                  call mkcomp (i+k5,phase)
 c                                 get the range for the compositional
 c                                 variable:
-5020           write (*,1020) i
-               read (*,*,iostat=ier) cmin(i), cmax(i)
-               call rerror (ier,*5020)
+5020              write (*,1020) i
+                  read (*,*,iostat=ier) cmin(i), cmax(i)
+                  call rerror (ier,*5020)
 
-            end do 
+               end do 
+
+            else
+c                                 a combination of a range and a min/max
+               mode = 3
+
+               write (*,1015)
+               write (*,1006) 
+c                                 the range variable 
+               call mkcomp (1+k5,phase)
+
+5030           write (*,1020) 1
+               read (*,*,iostat=ier) cmin(1), cmax(1)
+               call rerror (ier,*5030)
+c                                 the extremal variable
+               call mkcomp (1+k5,phase)
+               write (*,1025)
+               read (*,'(a1)') y
+
+               if (y.eq.'y'.or.y.eq.'Y') then 
+                  max = .true.
+               else 
+                  max = .false.
+               end if
+ 
+            end if 
 
          end if 
 
       end if 
+           
 
-      if (nopt(8).eq.1d0) then 
-c                                 average immiscible compositions
-c                                 get mole fractions
+      if (mode.eq.0) then 
+c                                 average immiscible compositions/props
          call avgcmp (isol,jdsol)
 
-      else 
+      else if (mode.eq.1) then 
+c                                 min/max
+         if (max) then 
+            cmin(1) = -1d99
+         else 
+            cmin(1) = 1d99
+         end if 
+
+         do i = 1, isol
+
+            tcomp = gtcomp (jdsol(i),idasls(jdsol(i),ias),k5+1)
+
+            if (max) then 
+               if (tcomp.ge.cmin(1)) then 
+                  index = jdsol(i)
+                  cmin(1) = tcomp
+               end if 
+            else 
+               if (tcomp.lt.cmin(1)) then 
+                  index = jdsol(i)
+                  cmin(1) = tcomp
+               end if  
+            end if
+ 
+         end do  
+
+      else if (mode.eq.2) then 
+c                                 range
 c                                 identify the immiscible phase of interest     
 c                                 test which phase (if any) satisfy
 c                                 the compositional criteria:
@@ -1863,27 +1933,102 @@ c                                 existing criterion
          if (jsol.gt.1.and.savg(phase)) call avgcmp (jsol,kdsol) 
 
          if (jsol.eq.0) then 
-            index = 0 
+            index = jdsol(1)
          else 
             index = kdsol(1)
          end if 
+
+      else 
+c                                 min/max + range, first check range:
+         jsol = 0
+
+         do i = 1, isol
+c                                 for each phase, test the range
+            tcomp = gtcomp (jdsol(i),idasls(jdsol(i),ias),k5+1)
+c                                 the composition is not relevant or out
+c                                 of bounds, cycle
+            if (tcomp.eq.-1d99.or.tcomp.lt.cmin(1).or.tcomp.gt.cmax(1))
+     *         cycle 
+
+c                                 the phase passed all tests
+            jsol = jsol + 1
+            kdsol(jsol) = jdsol(i)
+
+         end do  
+c                                 if no phase passed range criterion
+c                                 load them all in to kdsol and use the
+c                                 min/max, could add a 1 time warning.
+         if (jsol.eq.0) then 
+            jsol = isol
+            do i = 1, jsol
+               kdsol(i) = jdsol(i)
+            end do 
+         end if 
+c                                 min/max
+         if (max) then 
+            cmin(2) = -1d99
+         else 
+            cmin(2) = 1d99
+         end if 
+
+         do i = 1, jsol
+
+            tcomp = gtcomp (kdsol(i),idasls(kdsol(i),ias),k5+2)
+
+            if (max) then 
+               if (tcomp.ge.cmin(2)) then 
+                  index = jdsol(i)
+                  cmin(2) = tcomp
+               end if 
+            else 
+               if (tcomp.lt.cmin(2)) then 
+                  index = jdsol(i)
+                  cmin(2) = tcomp
+               end if  
+            end if
+ 
+         end do  
 
       end if 
 
 1000  format (/,i1,' immiscible phases of ',a,/,'coexist with the ',
      *        'following ',a,' compositions:',/)
-1010  format (/'The following prompts define the compositional ',
+1001  format (/,'Identify the phase of interest by:',//,3x,
+     *        '1 - the maximum value of a composition [default].',/,3x,
+     *        '2 - the minimum value of a composition.',/,3x,
+     *        '3 - the range of one or more compositions.',/,3x,
+     *        '4 - a combination of the above.',/,3x,
+     *        '5 - average the compositions of immiscible phases.')
+1005  format (/,'The following prompts define the composition C[1] to ',
+     *         'be used to identify the',/,'phase of interest.')
+1006  format (/,'NOTE: discriminatory criteria are only applied when ',
+     *        'immiscible phases coexist.',/,'If only one phase of a',
+     *        'solution is stable, then data for this phase is output',/
+     *       ,'regardless of whether the phase meets the criteria ',
+     *        'specified here.')
+1010  format (/,'The following prompts define the compositional ',
      *        'variable(s) (C[i]) to be used',/,
      *        'to identify the phase of interest.',//,
      *        'As there are ',i1,' coexisting phases',
      *        ' you will be prompted',/,'for ',i1,
-     *        ' compositional variable(s).',/)
+     *        ' compositional variable(s).')
+1015  format (/,'In this mode you will be prompted to specify: ',/,3x,
+     *        '- a compositional variable C[1] that is used to define a'
+     *        'range criterion',/,3x,
+     *        '- a compositional variable C[2] that is used to define a'
+     *        'minimum/maximum criterion',/,
+     *        'The range criterion is applied first to retrict the '
+     *        'identity of the phase of interest.',/,' The minimum/',
+     *        'maxumum criterion is then used to select the phase of',
+     *        'interest from',/,'those phases that satisfy the range ',
+     *        'criterion. NOTE: if no phases satisfy',/,'the range ',
+     *        'criterion, then the phase of interest will be ',
+     *        'identified by the',/,'minimum/maximum criterion; this',
+     *        'may lead to surprising results.')
 1020  format (/,'Enter the range (minimum, maximum) of C[',i1,'] that ',
-     *        'defines the phase of interest:',/)
-1030  format (/,'Choose an option:',/,3x,
-     *        '1 - specify compositional criteria to identify the',
-     *        ' phase of interest [default].',/,3x,
-     *        '2 - average the compositions of immiscible phases',/)
+     *        'defines the phase of interest:')
+1025  format (/,'Identify the phase of interest as the phase with the ',
+     *        'highest value of C[2] (Y/N)?')
 1040  format (/,4x,20(a,4x))
 1050  format (3x,20(f7.3,2x))
 1060  format (/,i1,' coexisting phases of ',a,' satisfy your ',
@@ -1892,8 +2037,14 @@ c                                 existing criterion
      *        '1 - redefine the compositional criteria [default].',/,3x,
      *        '2 - average the compositions of all phases that',
      *        ' meet the existing criterion.',/,3x,
-     *        '3 - ignore this instance.',/)
-99    end 
+     *        '3 - ignore this instance.')
+1080  format (/,'Identify the phase of interest as:',/,3x,
+     *        '1 - the phase with the maximum value of C[',i1,'].',/,3x,
+     *        '2 - the phase with the minimum value of C[',i1,'].',/,3x,
+     *        '3 - the phase with C[',i1,'] in a specific range ',
+     *        '[default].',/)
+
+      end 
 
       subroutine mode3 
 c----------------------------------------------------------------------

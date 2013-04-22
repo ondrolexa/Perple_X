@@ -17,7 +17,7 @@ c----------------------------------------------------------------------
       implicit none
 
       write (*,'(/,a)') 
-     *      'Perple_X version 6.6.8, source updated Apr 4, 2013.'
+     *      'Perple_X version 6.6.8, source updated Apr 22, 2013.'
 
       end
 
@@ -2140,6 +2140,10 @@ c---------------------------------------------------------------------
  
       character char*(*)
 
+      integer grid
+      double precision rid 
+      common/ cst327 /grid(6,2),rid(4,2)
+c----------------------------------------------------------------------
       if (ier.eq.1) then 
          write (*,1) 
       else if (ier.eq.2) then 
@@ -2271,7 +2275,7 @@ c---------------------------------------------------------------------
       else if (ier.eq.91) then
          write (*,91)
       else if (ier.eq.92) then 
-         write (*,92) int, l7, char
+         write (*,92) int, l7, char, (l7 - 1)/2**(grid(3,2)-1) + 1
       else if (ier.eq.106) then
          write (*,106) char
       else if (ier.eq.108) then
@@ -2544,7 +2548,9 @@ c     *          ' (SWASH, see program documentation Eq 2.3)',/)
      *        i4,' points. To obtain the requested resolution',/,
      *        'increase parameter L7 and recompile; or reduce the ',
      *        'required resolution via',/,'the ',a,' keyword in ',
-     *        'perplex_option.dat',/)
+     *        'perplex_option.dat',/,'The program will continue ',
+     *        'with an effective grid resolution of ',i4,
+     *        ' points.')
 106   format ('**warning ver106** programming error in ',a)
 108   format (/,'**warning ver108** wway, a phase field with the '
      *         ,'following',/,' reaction is stable on both ',
