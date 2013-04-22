@@ -4116,7 +4116,7 @@ c---------------------------------------------------------------------
 
       integer mres
  
-      parameter (mres=100001)
+      parameter (mres=3000)
 
       integer mode, i, ind(ms1), iy(ms1), jsp, ksite, indx, iexit, 
      *        ieyit, j, ids
