@@ -41,35 +41,201 @@ end_special_components
 CHECK WARNINGS BELOW!!!                                                                                                                     
                                                                                                                                             
 begin_makes                                                                                                                                 
-tipc = 1 cel -1 coe 1 ru 
+                                | the make definitions segment of the thermodynamic
+                                | data file is preceeded by the "begin_makes" keyword,
+                                | and terminated by the "end_makes" keyword. Within 
+                                | this segment comments must be preceeded by a "|" 
+                                | character. 
+
+                                | the make definitions define new thermodynamic entities
+                                | (e.g., fO2 buffers, endmembers etc) as a linear combination of 
+                                | the "real" entities in the thermodynamic file. the definition
+                                | includes a "DQF" correction that is used to increment the 
+                                | G of the linearly combined G's as a function of pressure and
+                                | temperature, i.e., the total G computed for a made entity is
+                                | the G of the right-hand-side of the make reaction + Gdqf. 
+
+                                | the format assumes data on one line of less than 240 characters, 
+                                | the expected format is
+
+                                | name = num_1 * name_1 + num_2 * name_2 ....+ num_int * name_int
+                                | dnum_1 dnum_2 dnum_3
+
+                                | where i num_j is a number or fraction (i.e., two numbers separated 
+                                | by a '/') and name_j are the names of the j existing entities. 
+                                | and the dqf correction to the entity 'name' is 
+                                | Gdqf(J/mol) = dnum_1 + T[K]*dnum_2 + P[bar]*dnum_3
+
+                                | made entities are excluded from calculations in vertex if they
+                                | are included in the excluded phase list in the computational option
+                                | file (e.g., "in"); however, real entities to the right of the equals
+                                | sign in a make definition are not effected by the excluded phase list.
+                                | for example, if qL (liquid silica) is excluded, the make defintion
+                                | q8L = 4 qL 
+                                | will function, but qL will not be considered as a possible phase in 
+                                | the vertex calculation. 
+ 
+ |                                kyco silica buffer
+ | kyco = 1 ky - 1 cor
+ | 0 0 0 
+
+ |                                sphene + cc + ru + q CO2 buffer
+ | tcrq = 1 cc + 1 ru + 1 q - 1 sph
+ | 0. 0. 0. 
+
+                                | Ti phengite endmember for Auzanneau et al. (CMP 159:1-24, 2010) mica model
+                                | Gdqf corrected from -482876. to -13469.8 J/mol, D. Dolejs, Mar 6, 2010.
+ | tip = 1 fcel + 1 geik - 1/2 fs
+ | -13469.8  -14.694 .84
+                                                
+ | mthm = 6 hem - 4 mt             | mthm O2 buffer
+ | 0 0 0                        
+
+ | qfm = 2 mt + 3 q  -3 fa         | qfm O2 buffer
+ | 0 0 0                        
+
+ |emog = -1 fo - 2 gph + 1 mag + 1/2 en | EMOG O2 buffer
+ |0 0 0 
+
+ |ffm = -6 fa + 3 fs + 2 mt        | ffm O2 buffer
+ |0 0 0 
+
+ |fff = 2 fa - 2 iron - 1 fs         | iron fa fs O2 buffer
+ |0 0 0 
+
+tbi = 1 phl - 1 fo + 1 ru + 1 q | Ti-biotite endmember for TiBio(HP) model
+ 45e3 0 0 
+
+ | tbi1 = 1 phl - 1 br + 1 ru      | Ti-biotite endmember for TiBio(WPH) model
+ | 78e3 0 0                        | L Tajcamanova, 5/11/2006.
+                                
+
+
+ | fbi = 1 east - 1/2 cor + 1/2 hem  | Fe3+-biotite endmember for TiBio(WPH) model, definition corrected for
+ |                                   | presumed typo in the WPH (JMG, 2007) paper by L Tajcamanova, 5/11/2007.
+ | 13.45e3 0 0                       | fbi = 1 east - 1/2 cor + 1 hem, 8/10/2007, L Tajcamanova                     
+
+
+                                | Fe endmembers for ultramafic mineral solution
+                                | models, based on the talc Fe-Mg exchange.
+
+fbr = 1 br - 1/3 ta + 1/3 fta
+0 0 0 
+
+fchum = 1 chum - 3 ta + 3 fta
+0 0 0 
+
+fphA = 1 phA - 7/3 ta + 7/3 fta
+0 0 0
+
+fper = 1 per - 1/3 ta + 1/3 fta
+0 0 0
+
+fatg = 1 atg - 16 ta + 16 fta
+0 0 0
+
+ | odo = 1/2 mag + 1/2 cc          | ordered dolmite species for H&P dolomite model
+ | -13.5d3 0 0 
+                                | endmembers for the melt(HP) model, the dqf corrections
+                                | made in the solution model could be applied here, but 
+                                | should not be done in both the thermodynamic data file 
+                                | and the solution model. The small dqf corrections here
+                                | are made to avoid degeneracy between sil8L and silL etc.
+                                | These may not be necessary, and are definitely superfluous
+                                | if silL, foL and faL are excluded in calculations with 
+                                | vertex.
+
+sil8L = 8/5 silL                | sil8L is dqf corrected in the melt(HP) solution model
 -20 0 0 
-mthm = 6 hem -4 mt 
-0 0 0 
-qfm = 2 mt 3 q -3 fa 
-0 0 0 
-tbi = 1 phl -1 fo 1 ru -1 q 
-45e3 0 0 
-fbr = 1 br -1/3 ta 1/3 fta 
-0 0 0 
-fchum = 1 chum -3 ta 3 fta 
-0 0 0 
-fphA = 1 phA -7/3 ta 7/3 fta 
-0 0 0 
-fper = 1 per -1/3 ta 1/3 fta 
-0 0 0 
-fatg = 1 atg -16 ta 16 fta 
-0 0 0 
-odo = 1/2 mag 1/2 cc 
--13.5d3 0 0 
-sil8L = 8/5 silL 
+
+fo8L = 2 foL                    | fa8L is dqf corrected in the melt(HP) solution model
 -20 0 0 
-fo8L = 2 foL 
+
+fa8L = 2 faL                    | fa8L is dqf corrected in the melt(HP) solution model            
 -20 0 0 
-fa8L = 2 faL 
+
+q8L = 4 qL                      | q8L has no dqf correction 
 -20 0 0 
-q8L = 4 qL 
--20 0 0 
-end_makes 
+
+                                | endmembers for the Diener et al. (JMG, 2007) amphibole models
+mrb = 1 gl - 2 jd +2 acm        | magnesio riebekite, stoichiometry corrected 3/30/08 JADC
+8d3 0. 0. 
+ts_dqf = 1 ts                   | tschermakite
+10000. 0. 0.  
+parg_dqf = 1 parg               | pargasite, Corrected from 10 kJ, 10/14/11, JADC
+15000. 0. 0.
+gl_dqf = 1 gl                   | glaucophane, Corrected from 15 kJ, 10/14/11, MJC
+3000. 0. 0.
+mpa = 1 parg -1 tr +1 anth      | ortho-pargasite, stoichiometry corrected 3/30/08 JADC
+27d3 0. 0.
+ged_dqf = 1 ged                 | gedrite 
+22000. 0. 0.
+ogl_dqf = 1 gl                  | ortho-glaucophane
+15000. 0. 0.
+fanth_dq = 1 fanth              | ferro-anthophyllite
+7000. 0. 0.
+omrb_dqf = 1 gl -2 jd +2 acm    | ortho-magnesio riebekite (mrb dqf + 25000 J/mol), stoichiometry corrected 3/30/08 JADC
+33000. 0. 0. 
+                                | Make definitions for the revised (Diener et al, JMG 2011 25:631-656)
+                                | ortho-amphibole model.   Oct 31, 2011.
+mpa2      = 1 parg - 1 tr +1 anth 
+25d3 0. 0.
+ged_dqf2  = 1 ged
+20000. 0. 0.                            
+                                | make definition for coma of the unpublished
+                                | thermocalc scapolite model
+coma = 3 ab + 1 cc
+25000. 0. 0. 
+                                | titano-clinohumite to fit weiss experiments. JADC, 2/08.
+ | tichum = 4 fo + 1/2 br + 1/2 ru
+ | -33581. 32. 0.
+
+tbit = 1 phl - 1 br + 1 ru     |Ti-Fe3+ Biotite after Tajcmanova et al. (2009)
+84e3 -11.5 0                   |Model entered by Lucie Tajcmanova, September, 2008.
+
+fbit = 1 east - 1/2 cor + 1/2 hem  |Ti-Fe3+ Biotite after Tajcmanova et al. (2009)
+6e3 0 0     
+       
+                               | Make definitions for the Smye et al (JMG, 2011, 28:753-768)
+                               | models for Mica, Carpholite and Chloritoid, to use these 
+                               | make definitions delete the leading "|" comment characters:
+ocar  = 1 fcar + 1/2 hem - 1/2 cor
+      45d3 0 0 
+mncar = 1 mcar + 1 mang - 1 per | corrected from 1 mcar + 1 mang - 1/2 cor, G Hoschek, 10/24/11.
+      30d3 0 0 
+octd = 1 fctd + 1/4 hem - 1/4 cor
+      125d2 0 0 
+fmu = 1 mu + 1/2 hem - 1/2 cor
+      30d3 0 0                  | corrected from -30 kJ/mol, G Hoschek, 10/24/11.
+ma_dqf = 1 ma
+      3d3 0 0
+                                | Make definition for the White et al (JMG, 2005) garnet, Gt(WPPH), JADC, 10/24/11.
+kho = 1 py - 1 gr + 1 andr
+      40d3 0 0  
+                                | Make definitions for the White et al (JMG, 2000) ilmenite, Ilm(WHP), JADC, 10/29/11.
+oilm = 1 ilm_nol 
+      -13608 9.426 0 
+                                  
+dilm = 1 ilm_nol  
+        1993  -2.1 0 
+
+                                | Make definitions for Kelsey & Powell (JMG, 2011) Zr melting relations. JADC, 2/6/12
+zr8L = 2 zrc                    | Zr-melt endmember
+       69e3 0 0 
+
+zrg  = 1 gr + 3 zrc - 6 q       | Zr garnet endmember
+       96e3 0.165e3 2.7
+
+zrru = 1 bdy                    | Zr rutile endmember
+       52.84e3 -0.01829e3 -0.074
+
+mots = 1 mgts - 1/2 cor + 1/2 hem | ferric opx endmember MgFe3+AlSiO6 for Opx(HP)
+       22d3 0 0 
+
+esn = 1 cats - 1/2 cor + 1/2 hem | essenite, ferric cpx endmember CaFe3+AlSiO6 for Cpx(HP)
+       22d3 0 0 
+                                  
+end_makes
                                                                                                                                             
 This version of hp02ver.dat contains Cr endmembers created and/or added                                                                     
 for the calculation of upper mantle phase relations at the PGP workshop                                                                     
@@ -1926,79 +2092,8 @@ MNO(1)
 G0 = 100 V0 = .1E-3  
 m0 = .1E-15  
 end
-
  
-qGL      EoS = 3 | PMELT liquid endmember (Ghiorso et al, G3, 2002)  -3.555755e6                  
-SIO2(4)
-G0 = -3383116. S0 = 107.93 V0 = 10.76  
-c1 = 330.4  
-b2 = -.756E-4 b3 = .52E-7 b8 = -5  
-m0 = .1E-15  
-end
 
- 
-coGL     EoS = 3 | PMELT liquid endmember (Ghiorso et al, G3, 2002)  -3.307937e6                  
-AL2O3(2)
-G0 = -3034014. S0 = -44.57 V0 = 7.422  
-c1 = 340.6  
-b1 = .524E-3 b2 = -.452E-4 b3 = .54E-7 b8 = -5  
-m0 = .1E-15  
-end
-
- 
-faGL     EoS = 3 | PMELT liquid endmember (Ghiorso et al, G3, 2002)  -1.465621e6                  
-SIO2(1)FEO(2)
-G0 = -1336321. S0 = 106.41 V0 = 5.42  
-c1 = 240.2  
-b1 = .584E-3 b2 = -.279E-4 b3 = -.23E-7 b8 = -5  
-m0 = .1E-15  
-end
-
- 
-foGL     EoS = 3 | PMELT liquid endmember (Ghiorso et al, G3, 2002)  -2.166508e6                  
-MGO(2)SIO2(1)
-G0 = -2059270. S0 = -47.34 V0 = 4.98  
-c1 = 271  
-b1 = .524E-3 b2 = -.135E-4 b3 = -.13E-7 b8 = -5  
-m0 = .1E-15  
-end
-
- 
-woGL     EoS = 3 | PMELT liquid endmember (Ghiorso et al, G3, 2002)   -3.276717e6                 
-SIO2(2)CAO(2)
-G0 = -3108527. S0 = 20.31 V0 = 8.694  
-c1 = 344.8  
-b1 = .584E-3 b2 = -.31E-4 b3 = -.32E-7 b8 = -5  
-m0 = .1E-15  
-end
-
- 
-nasGL    EoS = 3 | PMELT liquid endmember (Ghiorso et al, G3, 2002)  -8.00742e5                   
-NA2O(.5)SIO2(.5)
-G0 = -739767.9 S0 = 50.01 V0 = 2.784  
-c1 = 90.1  
-b1 = .371E-3 b2 = -.215E-4 b3 = -.265E-7 b8 = -5  
-m0 = .1E-15  
-end
-
- 
-kalGL    EoS = 3 | PMELT liquid endmember (Ghiorso et al, G3, 2002)  -2.127829e6                  
-AL2O3(.5)SIO2(1)K2O(.5)
-G0 = -2014274. S0 = 49.59 V0 = 6.8375  
-c1 = 217  
-b1 = .7265E-3 b2 = -.64E-4 b3 = -.46E-7 b8 = -5  
-m0 = .1E-15  
-end
-
- 
-h2oGL    EoS = 3 | PMELT liquid endmember (Ghiorso et al, G3, 2002)  6.64e2                       
-H2O(1)
-G0 = 67460.3 S0 = 9.22 V0 = 2.775  
-b1 = .1086E-2 b2 = -.6E-4 b8 = -3.5  
-m0 = .1E-15  
-end
-
- 
 tichum   EoS = 2 | titanian clinhumite fit to bergell and spain data (ideal activity) JADC 7/04   
 MGO(8.5)SIO2(4)TIO2(.5)H2O(.5)
 G0 = -9083448. S0 = 426.3732 V0 = 19.4945  
@@ -2058,6 +2153,100 @@ MGO(3)SIO2(3)CR2O3(1)
 G0 = -5275960 S0 = 357.8685 V0 = 11.318  
 c1 = 633.5 c3 = -5196100 c5 = -4375.2  
 b1 = .436E-4 b5 = -.436E-3 b6 = 1737000. b7 = -260.55 b8 = 4  
+m0 = .1E-15  
+end
+
+ 
+qGL      EoS = 3 | PMELT liquid endmember (Ghiorso et al, G3, 2002)  -3.555755e6 
+                 | modified 5/16/2012 from -3383116. to match 1 bar liquidus at 1999 K                  
+SIO2(4)
+G0 = -3363173.2 S0 = 107.93 V0 = 10.76  
+c1 = 330.4  
+b2 = -.756E-4 b3 = .52E-7 b8 = -5  
+m0 = .1E-15  
+end
+
+ 
+coGL     EoS = 3 | PMELT liquid endmember (Ghiorso et al, G3, 2002)  -3.307937e6
+                 | modified 5/16/2012 from -3034014. to match 1 bar liquidus at 2320 K                   
+AL2O3(2)
+G0 = -3135674.4 S0 = -44.57 V0 = 7.422  
+c1 = 340.6  
+b1 = .524E-3 b2 = -.452E-4 b3 = .54E-7 b8 = -5  
+m0 = .1E-15  
+end
+ 
+faGL     EoS = 3 | PMELT liquid endmember (Ghiorso et al, G3, 2002)  -1.465621e6  
+                 | modified 5/16/2012 from -1336321. to match fa 1 bar liquidus at 1490 K                  
+SIO2(1)FEO(2)
+G0 = -1339255. S0 = 106.41 V0 = 5.42  
+c1 = 240.2  
+b1 = .584E-3 b2 = -.279E-4 b3 = -.23E-7 b8 = -5  
+m0 = .1E-15  
+end
+
+ 
+foGL     EoS = 3 | PMELT liquid endmember (Ghiorso et al, G3, 2002)  -2.166508e6  
+                 | modified 5/16/2012 from -2059270. to match fo 1 bar liquidus at 2163 K                
+MGO(2)SIO2(1)
+G0 = -2039445. S0 = -47.34 V0 = 4.98  
+c1 = 271  
+b1 = .524E-3 b2 = -.135E-4 b3 = -.13E-7 b8 = -5  
+m0 = .1E-15  
+end
+
+ 
+woGL     EoS = 3 | PMELT liquid endmember (Ghiorso et al, G3, 2002)   -3.276717e6   
+                 | modified 5/16/2012 from -3108527. to match 1 bar liquidus at 1817 K              
+SIO2(2)CAO(2)
+G0 = -3117049.6 S0 = 20.31 V0 = 8.694  
+c1 = 344.8  
+b1 = .584E-3 b2 = -.31E-4 b3 = -.32E-7 b8 = -5  
+m0 = .1E-15  
+end
+
+ 
+nasGL    EoS = 3 | PMELT liquid endmember (Ghiorso et al, G3, 2002)  -8.00742e5                   
+NA2O(.5)SIO2(.5)
+G0 = -739767.9 S0 = 50.01 V0 = 2.784  
+c1 = 90.1  
+b1 = .371E-3 b2 = -.215E-4 b3 = -.265E-7 b8 = -5  
+m0 = .1E-15  
+end
+
+ 
+kalGL    EoS = 3 | PMELT liquid endmember (Ghiorso et al, G3, 2002)  -2.127829e6 
+                 | modified 5/16/2012 from -2014274. to match fo 1 bar liquidus at 2023 K                  
+AL2O3(.5)SIO2(1)K2O(.5)
+G0 = -2019205.3 S0 = 49.59 V0 = 6.8375  
+c1 = 217  
+b1 = .7265E-3 b2 = -.64E-4 b3 = -.46E-7 b8 = -5  
+m0 = .1E-15  
+end
+
+ 
+h2oGL    EoS = 3 | PMELT liquid endmember (Ghiorso et al, G3, 2002)  6.64e2                       
+H2O(1)
+G0 = 67460.3 S0 = 9.22 V0 = 2.775  
+b1 = .1086E-2 b2 = -.6E-4 b8 = -3.5  
+m0 = .1E-15  
+end
+
+
+tiGL    EoS = 3   | PMELT liquid endmember, G/S adjusted to match 1840 K 1 bar fusion for H&P rutile
+TIO2(1)
+G0 = -867802 S0 = 13.0582 V0 = 2.316  
+c1 = 109.2  
+b1 = .7246E-3 b2 = -.231E-4 b8 = -5  
+m0 = .1E-15  
+end
+
+crGL      EoS = 3 | PMELT liquid endmember (Ghiorso et al, G3, 2002)  -3.555755e6 
+                  | g/s to match 1 bar liquidus at 2673 K for mcrm                
+MGO(1)CR2O3(1)
+G0 = -1745030. S0 = -165.3676 V0 = 5.358  
+c1 = 335.1  
+b1 = .1171E-1 b2 = -.113E-4 b3 = .18E-7 b8 = -5  
 m0 = .1E-15  
 end
 

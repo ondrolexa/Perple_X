@@ -1634,6 +1634,132 @@ end_excess_function
   0                                  | no configurational entropy model (internal routine gmelt).
 end_of_model                         
                                       --------------------------------------------------------
+begin_model                          | keyword indicating beginning of a solution model
+
+
+                                      mMELTS(G) is a chopped down version of pMELTS(G) with 
+                                      Cr added to model lunar melting without changing dimensioning. 
+
+                                      Ghiorso et al (2002) G3 v. 3 (n. 5) model for mantle
+                                      melting, 1-3 GPa. Read cautionary notes in Ghirso for
+                                      applications beyond this pressure range. Calculations
+                                      with this model can be sped up significantly by restricting
+                                      the subdivsion ranges specified below.
+
+                                      This is a reduced version of the pMELTS model that excludes
+                                      the Cr-, Ni-, Co-, and P-bearing melt components. The melt
+                                      endmember names have been changed from those used in the pMELTS paper.
+
+                                      This model should be applied with solid phase data 
+                                      and solution models from the MELTS program. The melt
+                                      endmember data converted to PERPLE_X format is in the 
+                                      file pMELTSver.dat. The PERPLE_X solid phase data files
+                                      b92ver.dat and hp98ver.dat also include this data and therefore
+                                      can be used with the pMELTS model, however using these files 
+                                      will almost certainly result in inconsistencies with published
+                                      pMELTS results.
+
+
+                                      JADC 7/03
+
+
+                                      WARNING 1: This model can only be used for hydrous systems  
+                                      if H2O is specified as a thermodynamic component
+                                      (i.e., if H2O is specified as a saturated 
+                                      component, VERTEX will reject the h2oG(L) endmember
+                                      and the model will be applicable only to dry melts).
+
+                                      WARNING 2: this model uses an internal routine to 
+                                      compute the entropy of the melt that assumes 
+                                      h2oG(l) is the first endmember.
+
+                                      WARNING 3: the subdivision ranges below may not
+                                      span the entire range of validity for the pMELT
+                                      model. Check these ranges, and adjust them as 
+                                      necessary before using this model.
+
+                                      ====================================================
+                                      Modified to use pure water at P and T standard
+                                      state (the H2O endmember) as opposed to the h2oGL 
+                                      endmember of Ghiorso et al. (2003), which so far 
+                                      as I understand should  be equivalent. 
+
+                                      NOTE: Use of H2O as an endmember requires the user
+                                      specify an equation of state for H2O when running
+                                      BUILD. To be strictly consistent with Ghiorso et al
+                                      the Sterner and Pitzer EoS for water should be used 
+                                      for this purpose, but it is not presently included
+                                      in perplex. Instead of the Sterner-Pitzer EoS i would
+                                      recommend using the CORK EoS, which differs negligibly
+                                      from the Sterner-Pitzer EoS.
+
+                                      JADC May 23, 2004.
+                                      
+                                      Added TiO2 endmember. JADC Feb 7, 2012. 
+
+
+mMELTS(G)
+25                                    model type: margules, internal entropy routine
+
+8                                     number of endmembers
+
+H2O                                 | h2o MUST be the first endmember, see WARNING 1 above.
+foGL
+faGL
+woGL
+crGL
+coGL
+tiGL
+qGL            
+
+1 0 0 0 0 0 0 0 0                   | endmember flags  
+
+                                    | NOTE restricted compositional ranges!                 
+
+0.0 1.0   0.1  0                    | range and resolution of X(h2o), 0 => cartesian subdivision  
+0.0 1.0   0.1  0                    | range and resolution of X(fo), 0 => cartesian subdivision    
+0.0 1.0   0.1  0                    | range and resolution of X(fa), 0 => cartesian subdivision     
+0.0 1.0   0.1  0                    | range and resolution of X(wo), 0 => cartesian subdivision  
+0.0 1.0   0.1  0                    | range and resolution of X(kal), 0 => cartesian subdivision     
+0.0 1.0   0.1  0                    | range and resolution of X(co), 0 => cartesian subdivision  
+0.0 1.0   0.1  0                    | range and resolution of X(Ti), 0 => cartesian subdivision 
+
+begin_excess_function 
+w( coGL  qGL  ) -296975.2 0. 0.
+w( faGL  qGL  ) -18841.4  0. 0.
+w( foGL  qGL  ) -33833.5  0. 0.
+w( woGL  qGL  ) -34232.9  0. 0.
+w( H2O   qGL  ) -45181.6  0. 0.
+w( faGL  coGL ) -200788.1 0. 0.
+w( foGL  coGL ) -192709.0 0. 0.
+w( woGL  coGL ) -270700.8 0. 0.
+w( H2O   coGL ) -161944.4 0. 0.
+w( foGL  faGL ) -28736.4  0. 0.
+w( woGL  faGL ) -28573.8  0. 0.
+w( H2O   faGL ) 9769.4    0. 0.
+w( woGL  foGL ) 574.1     0. 0.
+
+w( H2O   foGL ) 24630.1   0. 0.
+w( H2O   woGL ) -1583.7   0. 0.
+
+
+w(coGL  tiGL) 144804.9   0. 0.
+w(faGL  tiGL) 9324.2     0. 0.
+w(foGL  tiGL) 16355.6    0. 0.
+w(woGL  tiGL) 9471.5     0. 0.
+
+w(coGL  crGL) -269339.7   0. 0.
+w(faGL  crGL) -74759.0     0. 0.
+w(foGL  crGL) -3638.5    0. 0.
+w(woGL  crGL)  48337.5     0. 0.
+w(tiGL  crGL) -22455.8    0. 0.
+
+
+end_excess_function 
+  0                                  | no configurational entropy model (internal routine gmelt).
+end_of_model                         
+                                      --------------------------------------------------------
+                                      --------------------------------------------------------
 begin_model                         
                                       Ghiorso & Sack (1995) CMP 119:197-212 (the MELTS model)
                                       Read cautionary notes in Ghirso. Calculations

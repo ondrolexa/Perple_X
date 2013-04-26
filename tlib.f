@@ -219,12 +219,12 @@ c                                 global reach factor
 c                                 solvus_tolerance_II
       nopt(25) = 0.25d0       
 c                                 finite_difference_p threshold for finite difference estimates
-      nopt(26) = 1d3
-c                                 finite_difference_p fraction for finte difference estimates, this
-c                                 is the fractional increment for second order differences,
-c                                 which is 10 times the increment for first order differences, and
-c                                 100 times the increment for zeroeth order differences
-      nopt(27) = 0.05d0 
+      nopt(26) = 1d4
+c                                 finite_difference_p fraction for first order difference estimates
+      nopt(27) = 1d-3 
+c                                 fd_expansion_factor is the factor by which finite difference
+c                                 increments increase for higher order derivatives
+      nopt(31) = 2d0
 c                                 quench temperature (K)
       nopt(12) = 0d0
 c                                 initial resolution for adaptive 
@@ -431,6 +431,11 @@ c                                 ier check for the 666/667 transition
                rid(2,1) = 2d-2
                read (strg,*) rid(2,2)
             end if 
+
+         else if (key.eq.'fd_expansion_factor') then 
+
+            read (strg,*) nopt(31)
+
          else if (key.eq.'finite_difference_p') then 
 c                                 p threshold
             read (strg,*) nopt(26)

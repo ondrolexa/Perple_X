@@ -1451,9 +1451,9 @@ c                                 set flag for multiple root eos's
 c                                 compute g-derivatives for isostatic 
 c                                 thermodynamic properties
       if (p.gt.nopt(26)) then 
-         dp0 = nopt(27)/1d2 * p
+         dp0 = nopt(27) * p
       else 
-         dp0 = nopt(27)/1d2 * nopt(26)
+         dp0 = nopt(27) * nopt(26)
       end if 
 
       dt0 = dt
@@ -1462,10 +1462,10 @@ c                                 test behavior, just run through the
 c                                 whole list
       if (rxn) then 
 c                                 set finite difference increments
-         dp1 = dp0*1d1
-         dp2 = dp0*1d2
-         dt1 = dt0*1d1
-         dt2 = dt0*1d2
+         dp1 = dp0*nopt(31)
+         dp2 = dp1*nopt(31)
+         dt1 = dt0*nopt(31)
+         dt2 = dt1*nopt(31)
 c                                 straight derivatives:
 c                                 first order
          if (p-dp2.le.0d0) then 
@@ -1524,7 +1524,7 @@ c                                 difference increments
 
                v = (ginc(0d0,dp0,id) - g0)/dp0
                if (v.gt.0d0.and.dabs(v).lt.1d9) exit 
-               dp0 = dp0 * 1d1
+               dp0 = dp0 * nopt(31)
 
             end do 
 
@@ -1534,7 +1534,7 @@ c                                 difference increments
 
                v = (ginc(0d0,dp0,id) - ginc(0d0,-dp0,id))/dp0/2d0
                if (v.gt.0d0.and.dabs(v).lt.1d9) exit
-               dp0 = dp0 * 1d1 
+               dp0 = dp0 * nopt(31)
  
             end do 
 
@@ -1544,7 +1544,7 @@ c                                 difference increments
 
             s = (ginc(-dt0,0d0,id) - ginc(dt0,0d0,id))/dt0/2d0
             if (s.gt.0d0) exit 
-            dt0 = dt0*1d1
+            dt0 = dt0 * nopt(31)
 
          end do
 c                                 enthalpy
@@ -1558,13 +1558,13 @@ c                                 ridiculous t increment
 
          else 
 
-            dt1 = dt0 * 2d0
-            dt2 = dt0 * 4d0
+            dt1 = dt0 * nopt(31)
+            dt2 = dt1 * nopt(31)
 
          end if 
 
-         dp1 = dp0 * 2d0
-         dp2 = dp0 * 4d0
+         dp1 = dp0 * nopt(31)
+         dp2 = dp0 * nopt(31)
 c                                 second order
          gtt = (ginc(dt1,0d0,id) + ginc(-dt1,0d0,id) - 2d0*g0)/dt1/dt1
 

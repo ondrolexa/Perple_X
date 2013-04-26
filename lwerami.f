@@ -1183,6 +1183,11 @@ c----------------------------------------------------------------------
       integer kkp, np, ncpd, ntot
       double precision cp3, amt
       common/ cxt15 /cp3(k0,k5),amt(k5),kkp(k5),np,ncpd,ntot
+
+      integer ispec
+      double precision spec
+      common/ tspec /
+      
 c----------------------------------------------------------------------
       if (kcx(1).eq.999) then 
 c                                 write phemgp format
@@ -1192,8 +1197,14 @@ c                                 write phemgp format
 
       else if (lopt(15).or.dim.eq.1) then 
 c                                 write spreadsheet tab format
-         write (n5,'(200(g14.7,1x))') (var(i),i=1,ivar), 
-     *                                (prop(i),i=1,iprop)
+         if (lopt(29)) then 
+            write (n5,'(200(g14.7,1x))') (var(i),i=1,ivar), 
+     *                                   (prop(i),i=1,iprop)
+         else 
+            write (n5,'(200(g14.7,1x))') (var(i),i=1,ivar), 
+     *                                   (prop(i),i=1,iprop),
+     *                                   (spec(i),i=1,ispec)
+         end if 
       else 
 c                                 write compact tab format
          write (n5,'(200(g14.7,1x))') (prop(i),i=1,iprop)
