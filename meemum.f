@@ -111,10 +111,8 @@ c                                 in cname, if iwt = 1 the composition is in mas
 c                                 otherwise in molar units. 
             do 
                write (*,1060) amount
-               write (*,'(12(a,1x))') (cname(i),i=1,jbulk-1)
-               read (*,*,iostat=ier) (cblk(i),i=1,jbulk-1)
-               cblk(jbulk) = 1
-               write (*,'(g12.6)') cblk(2)/(cblk(2)+cblk(1))
+               write (*,'(12(a,1x))') (cname(i),i=1,jbulk)
+               read (*,*,iostat=ier) (cblk(i),i=1,jbulk)
                if (ier.eq.0) exit
             end do  
          
