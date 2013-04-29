@@ -2064,7 +2064,7 @@ c                                 necessary
 
       end 
 
-      subroutine ffirst (a, ind, left, right, k, n, dumsub)
+      recursive subroutine ffirst (a, ind, left, right, k, n, dumsub)
 c-----------------------------------------------------------------------
 c find the k smallest values of array between indices left and right
 c from http://en.wikipedia.org/wiki/Selection_algorithm

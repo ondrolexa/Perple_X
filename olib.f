@@ -1367,6 +1367,17 @@ c----------------------------------------------------------------------
       logical sroot
       common/ rkroot /sroot
 
+      integer idspec
+      double precision spec
+      common/ tspec /spec(nsp,k5),idspec
+
+      double precision y,g,vsp
+      common / cstcoh /y(nsp),g(nsp),vsp(nsp)
+
+      integer ins(5)
+      save ins 
+      data ins/14, 13, 12, 7, 15/
+
       save dt
       data dt /.5d0/
 
@@ -1445,6 +1456,12 @@ c                                 explicit bulk modulus is allowed and used
       end if   
             
       g0 = ginc(0d0,0d0,id)
+c                                 speciation trick
+      if (lopt(29)) then 
+         do j = 1, 5
+            spec(j,jd) = y(ins(j))
+         end do 
+      end if 
 c                                 set flag for multiple root eos's
       sroot = .true.
 

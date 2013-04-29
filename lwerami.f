@@ -1184,10 +1184,9 @@ c----------------------------------------------------------------------
       double precision cp3, amt
       common/ cxt15 /cp3(k0,k5),amt(k5),kkp(k5),np,ncpd,ntot
 
-      integer ispec
+      integer idspec
       double precision spec
-      common/ tspec /
-      
+      common/ tspec /spec(nsp,k5),idspec
 c----------------------------------------------------------------------
       if (kcx(1).eq.999) then 
 c                                 write phemgp format
@@ -1197,13 +1196,13 @@ c                                 write phemgp format
 
       else if (lopt(15).or.dim.eq.1) then 
 c                                 write spreadsheet tab format
-         if (lopt(29)) then 
+         if (.not.lopt(29)) then 
             write (n5,'(200(g14.7,1x))') (var(i),i=1,ivar), 
      *                                   (prop(i),i=1,iprop)
          else 
             write (n5,'(200(g14.7,1x))') (var(i),i=1,ivar), 
      *                                   (prop(i),i=1,iprop),
-     *                                   (spec(i),i=1,ispec)
+     *                                   (spec(i,idspec),i=1,5)
          end if 
       else 
 c                                 write compact tab format
@@ -1330,7 +1329,13 @@ c----------------------------------------------------------------
 
       double precision mu
       common/ cst330 /mu(k8)
+
+      integer idspec
+      double precision spec
+      common/ tspec /spec(nsp,k5),idspec
 c----------------------------------------------------------------------
+      idspec = 1
+
       if (lop.eq.6) then 
 c                                 wt % of component 
          if (aflu.and.lflu.or.(.not.aflu)) then 
@@ -1499,6 +1504,8 @@ c                                 find the phase index
                call soltst (id,icx)
 
             end if 
+
+            idspec = id
                                  
             if (id.eq.0.and.lop.ne.7) then 
 c                                 the phase is absent, set 
@@ -1752,7 +1759,11 @@ c                                 how many times does the phase occur?
          end if 
       end do
  
-      if (isol.ne.0) index = jdsol(1)
+      if (isol.ne.0) then
+         index = jdsol(1)
+      else 
+         index = 0
+      end if 
 c                                 the phase doesn't occur or occurs once
       if (isol.lt.2) return 
 
@@ -3290,6 +3301,10 @@ c----------------------------------------------------------------------
       logical fileio
       integer ncol, nrow
       common/ cst226 /ncol,nrow,fileio
+
+      integer idspec
+      double precision spec
+      common/ tspec /spec(nsp,k5),idspec
 c------------------------------------------------------------------------
 c                                 generate a file name and
 c                                 open the file on n5
@@ -3327,10 +3342,19 @@ c                                  phemgp file
       else 
 c                                  tab file
          if (lopt(15).or.nvar.eq.1) then
+
+            if (.not.lopt(29)) then
 c                                  with pseudo-dependent variables 
-            write (n5,*) ivar + iprop 
-            write (n5,'(200(a14,1x))') (vname(i), i = 1,ivar),
-     *                                 (dname(i), i = 1,iprop)
+               write (n5,*) ivar + iprop 
+               write (n5,'(200(a14,1x))') (vname(i), i = 1,ivar),
+     *                                    (dname(i), i = 1,iprop)
+            else 
+               write (n5,*) ivar + iprop + 5
+
+               write (n5,'(200(a14,1x))') (vname(i), i = 1,ivar),
+     *                                    (dname(i), i = 1,iprop),
+     *         'y_SiO2','y_SiO','y_O','y_O2','y_Si'
+            end if 
 
          else 
 c                                  terse format

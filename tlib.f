@@ -808,7 +808,7 @@ c                                 computational options this is redundant
       end if 
 c                                 -------------------------------------
 c                                 dependent parameters and error traps:
-      if (nopt(21).lt.2d0) then 
+      if (nopt(21).le.1d0) then 
          write (*,1040)
          nopt(21) = 2d0
       end if 
@@ -923,8 +923,8 @@ c                                 actual final resolution
 
                if (res0.lt.rid(2,i)) then 
 c                                 real final resolution is res0
-c                                 reset speciation tolerance if < res0
-                  if (nopt(5).gt.res0) nopt(5) = res0
+c                                 reset speciation tolerance if > res0
+                  if (nopt(5).gt.res0) nopt(5) = res0/1d1
 
                   exit
 
@@ -970,9 +970,9 @@ c                                 proportionality constant for shear modulus
       nopt(16) = 1.5d0*(1d0-2d0*nopt(16))/(1d0+nopt(16))
 
 1000  format ('Context specific options are echoed in: ',a,/)
-1040  format (/,'Warning: value2 of the iteration keyword must be ',
-     *         ' >= 1/2',/,'value2 will be',
-     *         ' assigned its default value.',/)
+1040  format (/,'Warning: value1 of the iteration keyword must be ',
+     *         ' > 1',/,'value1 will be',
+     *         ' assigned its default value [2].',/)
 1050  format (/,'Warning: initial_resolution keyword must be ',
      *         '< 1',/,'the keyword will be',
      *         ' assigned its default value.',/)

@@ -1,10 +1,10 @@
-      include 'nlib.f'
-      include 'olib.f'
-      include 'clib.f'
-      include 'resub.f'
-      include 'rlib.f'
-      include 'tlib.f'
-      include 'flib.f'
+c      include 'nlib.f'
+c      include 'olib.f'
+c      include 'clib.f'
+c      include 'resub.f'
+c      include 'rlib.f'
+c      include 'tlib.f'
+c      include 'flib.f'
 
       program meemm       
 c----------------------------------------------------------------------
