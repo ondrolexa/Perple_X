@@ -432,7 +432,7 @@ c                               read the extrinsic variable names:
             vname(3) = ' X(O) ' 
          else if (ifug.eq.25) then 
             vname(3) = 'Y(CO2)*'
-         else if (ifug.eq.14.or.ifug.eq.13) then 
+         else if (ifug.eq.13) then 
             vname(3) = 'X(H2)'
          end if 
       end if  

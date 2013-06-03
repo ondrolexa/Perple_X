@@ -17,7 +17,7 @@ c----------------------------------------------------------------------
       implicit none
 
       write (*,'(/,a)') 
-     *      'Perple_X version 6.6.8, source updated Apr 22, 2013.'
+     *      'Perple_X version 6.6.8, source updated Jun 3, 2013.'
 
       end
 
@@ -4833,7 +4833,7 @@ c                                  this block of code probably never gets execut
             vname(3) = ' X(O) ' 
          else if (ifug.eq.25) then 
             vname(3) = 'Y(CO2)*'
-         else if (ifug.eq.14.or.ifug.eq.13) then 
+         else if (ifug.eq.13) then 
             vname(3) = 'X(H2)'
          end if 
       end if  

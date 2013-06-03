@@ -212,7 +212,7 @@ c                                 if ibuf = 2 dlnfo2 is the fs2
          end if 
 
       else if (ifug.gt.9.and.ifug.lt.13 .or. 
-     *         ifug.gt.13.and.ifug.lt.22) then
+     *         ifug.gt.14.and.ifug.lt.22) then
 
          if (ifug.ne.18) vname(3) = 'X(O)'
 

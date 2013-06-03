@@ -3213,6 +3213,13 @@ begin_model
                              5) extended from Mica(CH1) to include Ti-substitution afer Auzanneau et al (2010).
                                                
 
+                             N.B., the Coggon and Holland mica model predicts a significantly narrower
+                             mu-pa solvus than Chatterjee and Froese's model (1975), so far as I know both 
+                             models are based on Chartterjee and Froese's experimental determination of 
+                             the solvus. 
+
+                             JADC, 5/17/13
+
                                                       A       M2a    M2b    T12    M1
                                                      ___________________________________
 
@@ -3359,6 +3366,12 @@ begin_model
 
                              JADC, 1/18/10
 
+                             N.B., the Coggon and Holland mica model predicts a significantly narrower
+                             mu-pa solvus than Chatterjee and Froese's model (1975), so far as I know both 
+                             models are based on Chartterjee and Froese's experimental determination of 
+                             the solvus. 
+
+                             JADC, 5/17/13
 
 
                                                            
@@ -3451,7 +3464,135 @@ alpha(fcel)   0.63 0. 0.
  | alpha(phl)    0.63 0. 0.
 end_van_laar_sizes
 
-end_of_model                  
+end_of_model         
+                                  --------------------------------------------------------         
+begin_model                
+                             Mica+(CHA): Non-reciprocal version of white mica model Mica(CHA1) after:
+
+                                Coggon & Holland (JMG, 2002, 20:683-696)
+                                Auzanneau et al. (CMP 159:1-24, 2010)
+
+                             extended from Mica(CHA) to allow the pyrophyllite substitution, renamed
+                             to prevent unintentional use.
+
+                             The non-reciprocal version does not allow tschermaks or Ti substutions
+                             in the Ca- and Na-subsystems. If these substitutions are important use 
+                             the more costly model Mica(CHA1)
+
+                             This model requires the make definition:
+
+                                tip = 1 fcel + 1 geik - 1/2 fs
+                                -482876.  -14.694 .84
+
+                             in the thermodynamic data file (e.g., hp02ver.dat) for Ti-phengite (tip).
+
+                             This version does not include the prl and phl endmembers considered by
+                             both Coggon & Holland (2002) and Auzanneau et al. (2010) (the data is commented
+                             below) as solution of these endmembers is usually unimportant.
+
+                             JADC, 1/18/10
+
+                             N.B., the Coggon and Holland mica model predicts a significantly narrower
+                             mu-pa solvus than Chatterjee and Froese's model (1975), so far as I know both 
+                             models are based on Chartterjee and Froese's experimental determination of 
+                             the solvus. 
+
+                             JADC, 5/17/13
+
+
+
+                                                           
+                                                      A       M2a    M2b    T1     M1
+                                                     ___________________________________
+
+                                      Mutliplicity    1       1       1      2      1
+                                                     ___________________________________
+
+                                      1 mu            K       Al      Al    AlSi    _
+                                      2 pa            Na      Al      Al    AlSi    _      
+                                      3 ma            Ca      Al      Al    AlAl    _
+                                      4 cel           K       Mg      Al    SiSi    _                                      
+                                      5 fcel          K       Fe      Al    SiSi    _
+                                      6 tip           K       Mg      Ti    AlSi    _
+                                      7 prl           _       Al      Al    SiSi    _
+
+                             not included:
+                                                     ___________________________________
+                                      8 phl           K       Mg      Mg    AlSi    Mg
+                                                     ___________________________________
+
+
+Mica+(CHA)                    
+2                            | model type: macroscopic.
+
+7                            | # of endmembers
+
+mu pa ma cel tip prl fcel    | phl
+
+0 0 0 0 0 0 0 0              | endmember flags
+                   
+                             | subdivision model
+0. 1.   .1 0                 | range and resolution of X(mu),  imod = 0 -> cartesian subdivision
+0. 1.   .1 0                 | range and resolution of X(pa),  imod = 0 -> cartesian subdivision
+0. 1.   .1 0                 | range and resolution of X(ma),  imod = 0 -> cartesian subdivision
+0. 1.   .1 0                 | range and resolution of X(cel), imod = 0 -> cartesian subdivision
+0. 0.3  .1 1                 | range and resolution of X(tip), imod = 1 -> asymmetric transform subdivision
+0. 0.3  .1 1                 | range and resolution of X(prl), imod = 1 -> asymmetric transform subdivision
+
+begin_excess_function
+
+W(mu pa)    10120. 3.4 0.353  
+W(mu ma)    30000. 0. 0. 
+W(mu cel)   0. 0. 0.2
+W(mu fcel)  0. 0. 0.2
+W(pa ma)    14500. 0. 0. 
+W(pa cel)   52000. 0. 0. 
+W(pa fcel)  52000. 0. 0. 
+W(ma cel)   30000. 0. 0.2
+W(ma fcel)  30000. 0. 0.2
+W(tip cel)  10000. 0. 0.
+W(tip fcel) 10000. 0. 0.
+W(tip pa)   80000. 0. 0.
+W(prl mu)   20000. 0. 0.2
+W(prl pa)   20000. 0. 0.2
+W(prl ma)   30000. 0. 0.2
+W(prl cel)  25000. 0. 0.2
+W(prl fcel) 25000. 0. 0.2
+W(prl tip)  40000. 0. 0.
+
+end_excess function
+
+4                           | Configurational entropy: 4 sites, A, M2a, M2b, T1.
+
+4 1.                        | 3 species on A, 1 site per formula unit.
+
+z(a,k)  = 1 mu  + 1 cel + 1 fcel   
+z(a,na) = 1 pa 
+z(a,V)  = 1 prl
+
+3 1.                        | 3 species on M2a, 1 site per formula unit.
+
+z(m2a,al) = 1 mu + 1 pa + 1 ma + 1 prl
+z(m2a,mg) = 1 cel + 1 tip
+
+2 1.                        | 2 species on M2b, 1 site per formula unit.
+z(m2b,ti) = 1 tip
+
+2 2.                        | 2 species on T1, 2 sites per formula unit.
+z(t,al) = 1/2 mu + 1/2 pa + 1/2 tip + 1 ma 
+
+begin_van_laar_sizes                        
+alpha(mu)     0.63 0. 0.                        
+alpha(pa)     0.37 0. 0.                     
+alpha(ma)     0.37 0. 0.    
+alpha(cel)    0.63 0. 0.
+alpha(tip)    0.63 0. 0.
+alpha(fcel)   0.63 0. 0.
+alpha(prl)    0.5  0. 0.
+ | alpha(phl)    0.63 0. 0.
+end_van_laar_sizes
+
+end_of_model
                                   --------------------------------------------------------
 begin_model                
                                       HP '98 olivine solution
@@ -5475,6 +5616,8 @@ z(b,cr)   = 1 mcrm
 z(b,al)   = 1 sp + 1 herc
 z(b,fe3+) = 1/2 mt + 1/2 mft
 z(b,mg)   = 1/2 mft 
+
+reach_increment 4
 
 end_of_model 
                   --------------------------------------------------------
