@@ -101,17 +101,36 @@ c----------------------------------------------------------------------
 
       do i = 1, ntot
 
-         write (lu,1030) pname(i), 
+         if (iopt(2).eq.0) then 
+
+            write (lu,1030) pname(i), 
 c                                 weight %
-     *                   props(17,i)*props(16,i)/psys(17)*1d2,
+     *                      props(17,i)*props(16,i)/psys(17)*1d2,
 c                                 vol %
-     *                   props(1,i)*props(16,i)/psys(1)*1d2,
+     *                      props(1,i)*props(16,i)/psys(1)*1d2,
 c                                 mol %
-     *                   props(16,i)/psys(16)*1d2,
+     *                      props(16,i)/psys(16)*1d2,
 c                                 mol
-     *                   props(16,i),
+     *                      props(16,i),
 c                                 molar or weight composition
-     *                   (pcomp(l,i), l = 1, icomp)
+     *                      (pcomp(l,i), l = 1, icomp)
+
+         else 
+
+            write (lu,1031) pname(i), 
+c                                 weight %
+     *                      props(17,i)*props(16,i)/psys(17)*1d2,
+c                                 vol %
+     *                      props(1,i)*props(16,i)/psys(1)*1d2,
+c                                 mol %
+     *                      props(16,i)/psys(16)*1d2,
+c                                 mol
+     *                      props(16,i),
+c                                 molar or weight composition
+     *                      (pcomp(l,i), l = 1, icomp)
+
+         end if 
+
       end do 
 
       write (lu,1160)
@@ -249,7 +268,8 @@ c                                 chemical potentials variance
 1020  format (/,'Phase Compositions (',a,'):',
      *        /,19x,'wt %',6x,'vol %',5x,'mol %',5x,'mol  ',
      *          5x,20(1x,a,3x))
-1030  format (1x,a,3x,3(f6.2,4x),g9.3,1x,20(f7.5,2x))
+1030  format (1x,a,3x,3(f6.2,4x),g9.3,1x,20(f8.5,1x))
+1031  format (1x,a,3x,3(f6.2,4x),g9.3,1x,20(f8.3,1x))
 1040  format (/,14x,'mol',7x,'mol %',6x,'wt %')
 1060  format (/,' Enthalpy (J/kg) = ',g12.6,/,
      *          ' Specific Enthalpy (J/m3) = ',g12.6,/,

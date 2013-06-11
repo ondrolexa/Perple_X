@@ -29,10 +29,11 @@ COMP77 = gfortran
 
 # pappel: for use with gfortran
 # JADC 1/21/13: O2 and O3 cause fp errors in the speciation routine speci2 in gfortran, the optimization
-# seems to work if local variables are initialized to zero (even though there are no uninitialized variables).
-# use -ffpe-trap=zero,overflow,underflow to catch fp errors.
+# seems to work if local variables are initialized to zero (-finit-local-zero, even though there are no 
+# uninitialized variables). use -ffpe-trap=zero,overflow,underflow to catch fp errors and -fcheck=all 
+# for safe run-time code.
 
-FFLAGS = -finit-local-zero -O3 
+FFLAGS = -m64 -O3 -static-libgfortran
 
 # WFM Added 2007Sep05, PAPPEL 2010SEPT08: for 6.6.0
 MYOBJ = actcor build fluids ctransf frendly htog meemum pstable pspts psvdraw pssect pt2curv vertex werami unsplt
