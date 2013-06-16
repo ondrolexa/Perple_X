@@ -6076,6 +6076,8 @@ begin_model
 
                                   Added W(pnt oilm). Felix Gervais, Oct 29, 2011. 
 
+                                  Corrected to count Ti in A-site configurational entropy. JADC, Jun 16, 2013. 
+
 Ilm(WPH)                           
 2                          | macroscopic
 
@@ -6104,10 +6106,11 @@ end_excess_function
 
 2                          | 2 site model
  
-4 1.                       | A - Fe2+ Mn Fe3+ Mg
+5 1.                       | A - Fe2+ Mn Fe3+ Mg Ti
 z(A,Mg)   = 1 geik
 z(A,mn)   = 1 pnt
 z(A,fe3+) = 1 hem
+z(A,ti)   = 1/2 dilm
 
 3 1.                       | B - Fe3+ Ti4+ Fe2+
 z(b,fe3+) = 1 hem

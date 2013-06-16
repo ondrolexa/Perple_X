@@ -5890,8 +5890,8 @@ c                                 interaction parameter estimated by H&P
 c                                 2003, 10.5 kJ/mol  
          w = whc/t/(xh2o*vh2o+xco2*vco2)**2
 c                                 ln(gamma) = w*v*x^2
-         fco2 = fco2 + w*vco2*xco2**2 + dlog(xco2)
-         fh2o = fh2o + w*vh2o*xh2o**2 + dlog(xh2o)
+         fco2 = fco2 + w*vco2*xh2o**2 + dlog(xco2)
+         fh2o = fh2o + w*vh2o*xco2**2 + dlog(xh2o)
  
       end if
 
