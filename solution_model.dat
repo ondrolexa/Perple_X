@@ -6059,10 +6059,20 @@ begin_model
                                   the ilm endmember, additionally the following make definitions must be
                                   present in the thermodynamic file.
 
-                                  oilm = ilm_nol -13608. 9.426 0 
-                                  dilm = ilm_nol  1993. -2.1 0 
+                                  oilm = 1 ilm_nol 
+                                        | -13608 9.426 0 => the TC DQF coeffecients added to
+                                        | smax*tc0*(q0^2-1/3*q0^6), -smax*q0^2, vmax*q0^2, respectively, yields
+                                        | the un-landaued DQF coefficients for Perple_X, numeric values here 
+                                        | are for hp02/hp04 thermodynamic data files. hp11 has slightly different
+                                        | values. 
+                                         189.27763 -.67412637 .1836386612d-1  
+                     
+                                  dilm = 1 ilm_nol  
+                                        | 1993  -2.1 0 => the TC DQF coeffecients, the values below are
+                                        | oilm + {DH,R*ln(4),0} 
+                                         15789.27763 -12.19977769  .1836386612d-1
                                   
-                                  Both the ilm and ilm_nol endmembers should be excluded from calculations
+                                  The ilm and ilm_nol endmembers should be excluded from calculations
                                   to avoid conflicts with this model.
 
                                   For Mg and Mn solution this model differs from the Thermocalc version in 
@@ -6077,6 +6087,8 @@ begin_model
                                   Added W(pnt oilm). Felix Gervais, Oct 29, 2011. 
 
                                   Corrected to count Ti in A-site configurational entropy. JADC, Jun 16, 2013. 
+
+                                  Make definitions corrected from the raw thermocalc versions. JADC, Jun 19, 2013.
 
 Ilm(WPH)                           
 2                          | macroscopic

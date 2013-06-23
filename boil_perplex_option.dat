@@ -59,3 +59,7 @@ x_nodes               40 100 | exploratory and autorefine (grid parameters keywo
 y_nodes               40 100 | exploratory and autorefine (grid parameters keyword group)
 zero_mode             1e-5  | 0->1
 zero_bulk             1e-9  | 0->1
+
+lop_28                 F
+lop_29                 T
+nop_29                 1e-2

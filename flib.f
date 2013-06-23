@@ -2241,6 +2241,10 @@ c-----------------------------------------------------------------------
 
       logical sroot
       common/ rkroot /sroot
+
+      double precision pv,pvv
+      integer iroot
+      common/ rkdivs /pv,pvv,iroot
  
       save r, irt, vrt
                              
@@ -2376,6 +2380,15 @@ c                                 computations, save the root
          vrt = vol
 
       end if 
+c                                 derivative for cp search
+      pv = -rt / (vol - bx) ** 2 + aij / dsqrtt / vol ** 2 / (vol + bx)
+     * + aij / dsqrtt / vol / (vol + bx) ** 2
+
+      pvv = 2d0 *( rt /(vol - bx)**3 - aij/dsqrtt/vol**3/(vol + bx) 
+     *     - aij / dsqrtt / vol ** 2 / (vol + bx) ** 2 
+     *    -  aij / dsqrtt / vol / (vol + bx) ** 3)
+
+      iroot = iroots
 c                                 compute fugacities:
       d1 = rt*dsqrtt*bx
       d2 = dlog((vol + bx)/vol)/d1

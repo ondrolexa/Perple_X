@@ -1326,9 +1326,9 @@ c----------------------------------------------------------------------
       include 'perplex_parameters.h'
 
       logical ok, sick(i8), ssick, pois, ppois, bulk, bulkg, bsick, 
-     *        lshear
+     *        lshear, okt
 
-      integer id,jd,iwarn1,iwarn2,j,itemp,m
+      integer id, jd, iwarn1, iwarn2, i, j, itemp, m
 
       character*14 wname1, wname2
 
@@ -1393,6 +1393,14 @@ c----------------------------------------------------------------------
 
       double precision y,g,vsp
       common / cstcoh /y(nsp),g(nsp),vsp(nsp)
+
+      double precision pv,pvv
+      integer iroot
+      common/ rkdivs /pv,pvv,iroot
+
+      double precision vp,vvp
+      integer rooti
+      common/ srkdiv /vp(3),vvp(3),rooti(3)
 
       integer ins(5)
       save ins 
@@ -1484,7 +1492,10 @@ c                                 speciation trick
       end if 
 c                                 set flag for multiple root eos's
       sroot = .true.
-
+c                                 save derivative for cp search
+      vp(jd) = pv
+      vvp(jd) = pvv
+      rooti(jd) = iroot
 c                                 compute g-derivatives for isostatic 
 c                                 thermodynamic properties
       if (p.gt.nopt(26)) then 
@@ -1555,25 +1566,64 @@ c                                  for reactions:
       else 
 c                                 real phase, use sign of s and v to check
 c                                 difference increments
-         if (p-1d2*dp0.le.0d0) then 
+         okt = .false.
 
-            do j = 1, 3
+         if (p-nopt(31)**2*dp0.le.0d0) then 
 
-               v = (ginc(0d0,dp0,id) - g0)/dp0
-               if (v.gt.0d0.and.dabs(v).lt.1d9) exit 
-               dp0 = dp0 * nopt(31)
 
-            end do 
+            do i = 1, 2
+
+               do j = 1, 3
+
+                  v = (ginc(0d0,dp0,id) - g0)/dp0
+
+                  if (v.gt.0d0.and.v.lt.1d9) then
+                     okt = .true.
+                     exit
+                  end if 
+
+                  if (i.eq.1) then 
+                     dp0 = dp0 * nopt(31)
+                  else 
+                     dp0 = dp0 / nopt(31)
+                  end if 
+
+               end do
+
+               if (okt) exit
+
+               dp0 = dp0/nopt(31)**4
+
+            end do  
 
          else 
 
-            do j = 1, 3 
+            do i = 1, 2
 
-               v = (ginc(0d0,dp0,id) - ginc(0d0,-dp0,id))/dp0/2d0
-               if (v.gt.0d0.and.dabs(v).lt.1d9) exit
-               dp0 = dp0 * nopt(31)
+               do j = 1, 3 
+
+                  v = (ginc(0d0,dp0,id) - ginc(0d0,-dp0,id))/dp0/2d0
+
+                  if (v.gt.0d0.and.v.lt.1d9) then
+                     okt = .true.
+                     exit
+                  end if 
+
+                  if (i.eq.1) then 
+                     dp0 = dp0 * nopt(31)
+                  else 
+                     dp0 = dp0 / nopt(31)
+                  end if 
  
-            end do 
+               end do 
+
+               if (okt) exit
+
+               dp0 = dp0/nopt(31)**3
+
+            end do
+
+          
 
          end if 
  

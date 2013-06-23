@@ -222,10 +222,11 @@ kho = 1 py - 1 gr + 1 andr
       40d3 0 0  
                                 | Make definitions for the White et al (JMG, 2000) ilmenite, Ilm(WHP), JADC, 10/29/11.
 oilm = 1 ilm_nol 
-      -13608 9.426 0 
-                                  
+      |-13608 9.426 0 
+       1442.00 -1.594  .184e-1                           
 dilm = 1 ilm_nol  
-        1993  -2.1 0 
+      | 1993  -2.1 0 
+17042. -13.11965132   .184e-1 
 
                                 | Make definitions for Kelsey & Powell (JMG, 2011) Zr melting relations. JADC, 2/6/12
 zr8L = 2 zrc                    | Zr-melt endmember
