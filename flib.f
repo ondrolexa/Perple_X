@@ -2312,6 +2312,12 @@ c                                 solve for mixture molar volume
 
       call roots3 (c1,c2,c3,ev,vmin,vmax,iroots,ineg,ipos)
 
+      if (vmin.lt.bx.and.iroots.gt.1.and.isp.eq.5) then 
+
+         vol = vmin
+
+      end if 
+
       if (sroot) then 
 c                                use characteristics of previous solution 
 c                                to choose the, potentially metastable, root
@@ -6474,7 +6480,12 @@ c    *          174026d2, 424441664.6d0,  7500726468d0, 3767833334d0,
 c             O, SiO, SiO2, Si, unk:
 c             bsio = bco/bco2*bsio2 => 1/4.83
 c             bo  ~ bo2
-     *          22.07, 5.148732998d0, 25.83798814d0, 10.35788774, 0d0/
+c using actual bco/bco2:
+     *          22.07, 23.81d0, 25.83798814d0, 10.35788774, 0d0/
+c rhocrit o2 - 1449 o - 724. sio - 1851 sio2 - 2325 si - 2711
+c using bco/bco2 = 1/4.83 (true critical b's):
+c    *          22.07, 5.148732998d0, 25.83798814d0, 10.35788774, 0d0/
+c who knows what this was
 c     *          22.07, 5.148732998d0, 24.85507977, 10.35765058, 0d0/
 c----------------------------------------------------------------------
 c      if (first) then 

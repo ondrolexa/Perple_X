@@ -8360,5 +8360,106 @@ z(Si) = 1 Si_LIQ
 reach_increment 6
 
 end_of_model
+                      --------------------------------------------------------
+begin_model                
+                            Sapphirine, O/D non-ideal, Taylor-Jones & Powell (JMG, 2010, 28, 615-633)
 
+                            * requires the kel04ver.dat thermodynamic data file (for endmember spr5)
+
+                            Entered June 26, 2013. JADC.
+
+
+                                                      1      2      3           
+                                                      M3     M456   T     
+                                                     _________________
+
+                                      Mutliplicity    1      3     1
+                                                     _________________
+
+                                      1 spr4          Mg     Mg    Si
+                            Species:  2 fspr          Fe     Fe    Si
+                                      3 spr5          Al     Mg    Al
+                                      4 fsp5_d        Al     Fe    Al        dependent
+                                      5 ospr          Fe3+   Mg    Al
+                                      6 fospr_d       Fe3+   Fe    Al        dependent 
+
+                                      7 spro          Fe     Mg    Si        ordered
+
+                                      Dependent endmember:
+
+                                      FeMg-1_M3456 = (fspr-spro)/3
+ 
+                                      fsp5_d = spr5 +  fspr - spro
+                                      fospro_d = spr5 +  fspr - spro
+                                      
+
+
+Sapp(TP)
+
+8                            | model type: reciprocal, margules with dependent endmembers, one ordering parameter
+
+2                            | 2 independent mixing sites, reciprocal solution 
+
+2  3                         | 2 components {Fe2+, Mg} for composition 1, 3 components {Al, Si, Fe3+} for composition 2. 
+                             
+                             | endmember names 
+spr4     fspr        
+spr5     fsp5_d
+ospr     fospr_d
+
+1                            | 1 ordered species:
+
+spro = 3/4 spr4 + 1/4 fspr   enthalpy_of_formation = -10d3
+
+begin_limits
+spro =    - 4/3 fspr - 4/3 ospr - 1/3 spro                 delta = 4/3 z(M3,Mg) 
+spro =    - 4/3 fspr            - 1/3 spro                 delta = 4/3 z(M3,Fe) 
+spro = -4 - 4   fspr +   1 ospr - 4 spr5     + 1 spro      delta = 4   z(M456,Mg)   
+end_limits                
+
+2                            | 2 dependent endmembers
+
+fsp5_d   = 1 spr5 +  1 fspr - 1 spro
+fospr_d  = 1 spr5 +  1 fspr - 1 spro
+
+0 0 0 0 0 0                | endmember flags, indicate if endmember is part of the solution (i.e. iend = 0).
+
+                           | subdivision model for (binary) site 1 (M2):
+0. 1. .1   0               | range and resolution of X(Mg), subdivision scheme for site 1: imod = 0 -> cartesian 
+
+                           | subdivision model for (ternary) site 2 
+0. 1. .1   0               | range and resolution of X(Ts), subdivision scheme for site 3, species 1: imod = 0 -> cartesian   
+0. 1. .1   0               | range and resolution of X(un-Ts), subdivision scheme for site 3, species 2: imod = 0 -> cartesian   
+
+
+begin_excess_function 
+W(spr4 spr5)              10d3         0         0
+W(spr4 fspr)              16d3         0         0
+W(spr4 spro)               4d3         0         0
+W(spr4 ospr)              10d3         0         0
+W(spr5 fspr)              22d3         0         0
+W(spr5 spro)              10d3         0         0
+W(fspr spro)              12d3         0         0
+W(fspr ospr)              22d3         0         0
+W(spro ospr)              10d3         0         0
+end_excess_function 
+
+3                          | 3 site (M3, M456, T) configurational entropy model
+
+2 3.                       | 2 species on M46, 3 sites per formula unit
+z(m456,fe) = 1 fspr
+
+4 1.                       | 4 species on M3, 1 sites per formula unit.
+z(m3,Al)  = 1 spr5 
+z(m3,Fe3) = 1 ospr
+z(m3,mg)  = 1 spr4
+
+2 1.                       | 2 species on T, 1 sites per formula unit.
+z(T,si) = 1 spr4 + 1 fspr + 1 spro
+
+begin_dqf_corrections
+dqf(fspr)   -3d3 0. 0.
+end_dqf_corrections      
+
+end_of_model               
 

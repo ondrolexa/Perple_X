@@ -229,6 +229,11 @@ dilm = 1 ilm_nol
       | oilm + {DH,R*ln(4),0} 
        15789.27763 -12.19977769  .1836386612d-1
 
+                                | made definitions for Sapphirine, O/D non-ideal, Taylor-Jones & Powell 
+                                | JMG 2010, 28:615-633. JADC, 6/26/2013.
+| ospr = 1 spr4 - 1 jd + 1 acm
+|       5d3 0 0 
+
                                 | Make definitions for Kelsey & Powell (JMG, 2011) Zr melting relations. JADC, 2/6/12
 zr8L = 2 zrc                    | Zr-melt endmember
        69e3 0 0 
