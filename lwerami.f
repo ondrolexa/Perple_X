@@ -1841,6 +1841,7 @@ c                                 a combination of a range and a min/max
 
                write (*,1015)
                write (*,1006) 
+               write (*,1008)
 c                                 the range variable 
                call mkcomp (1+k5,phase)
 
@@ -1848,7 +1849,8 @@ c                                 the range variable
                read (*,*,iostat=ier) cmin(1), cmax(1)
                call rerror (ier,*5030)
 c                                 the extremal variable
-               call mkcomp (1+k5,phase)
+               write (*,1007) 
+               call mkcomp (2+k5,phase)
                write (*,1025)
                read (*,'(a1)') y
 
@@ -2028,19 +2030,23 @@ c                                 min/max
      *        'solution is stable, then data for this phase is output',/
      *       ,'regardless of whether the phase meets the criteria ',
      *        'specified here.')
+1007  format (/,
+     *     'The following prompts refer to the extremal variable C[2]')
+1008  format (/,
+     *        'The following prompts refer to the range variable C[1]')
 1010  format (/,'The following prompts define the compositional ',
      *        'variable(s) (C[i]) to be used',/,
      *        'to identify the phase of interest.',//,
      *        'As there are ',i1,' coexisting phases',
      *        ' you will be prompted',/,'for ',i1,
      *        ' compositional variable(s).')
-1015  format (/,'In this mode you will be prompted to specify: ',/,3x,
+1015  format (/,'In this mode you will be prompted to specify: ',//,3x,
      *        '- a compositional variable C[1] that is used to define a'
-     *        'range criterion',/,3x,
+     *        ' range criterion',/,3x,
      *        '- a compositional variable C[2] that is used to define a'
-     *        'minimum/maximum criterion',/,
+     *        'minimum/maximum criterion',//,
      *        'The range criterion is applied first to retrict the '
-     *        'identity of the phase of interest.',/,' The minimum/',
+     *        'identity of the phase of interest.',//,'The minimum/',
      *        'maxumum criterion is then used to select the phase of',
      *        'interest from',/,'those phases that satisfy the range ',
      *        'criterion. NOTE: if no phases satisfy',/,'the range ',

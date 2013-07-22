@@ -1493,9 +1493,9 @@ c                                 speciation trick
 c                                 set flag for multiple root eos's
       sroot = .true.
 c                                 save derivative for cp search
-      vp(jd) = pv
-      vvp(jd) = pvv
-      rooti(jd) = iroot
+c      vp(jd) = pv
+c      vvp(jd) = pvv
+c      rooti(jd) = iroot
 c                                 compute g-derivatives for isostatic 
 c                                 thermodynamic properties
       if (p.gt.nopt(26)) then 

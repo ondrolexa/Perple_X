@@ -1,10 +1,10 @@
 
-      include 'olib.f'
-      include 'clib.f'
-      include 'dlib.f'
-      include 'rlib.f'
-      include 'tlib.f'
-      include 'flib.f'
+c      include 'olib.f'
+c      include 'clib.f'
+c      include 'dlib.f'
+c      include 'rlib.f'
+c      include 'tlib.f'
+c      include 'flib.f'
 
       program werami
 c----------------------------------------------------------------------
@@ -608,13 +608,14 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      double precision x, y, wt(3), px(3), py(3), div, dst(4), x0, x1
+      double precision x, y, wt(3), px(3), py(3), div, dst(4), x0, x1, 
+     *                 dt, dt1
 
       integer jloc, iloc, j, i, k, l, jmax, np, jd, j0,
      *        itri(4), jtri(4), ijpt, iam, jam, kinc, jmin, 
      *        imin, imax, ktri(4), ltri(4), ibest
 
-      logical rinsid, isok, warned, left, solvs3
+      logical rinsid, isok, warned, left, solvs3, gas, gas0
 
       integer pi(4,4)
 
@@ -683,9 +684,13 @@ c                                 a solvus, turn interpolation off, warn and ret
             write (*,1000) 
          end if
 
-         return
+c         return
 
       end if 
+
+      gas0 = gas(itri(1),jtri(1),dt)
+
+      if (dt.lt.10d0) return
 
       ijpt = 0
 c                                 interpolation for 1d grids                             
@@ -804,6 +809,8 @@ c                                 skip out of bounds points
             imax = iloc + kinc
 
             do i = imin, imax
+          
+               if (gas0.ne.gas(i,j,dt1)) cycle 
 c                                 skip out of bounds points           
                if (i.lt.1.or.i.gt.loopx) cycle
 c                                 skip interior points (this is sloppy)
@@ -867,6 +874,7 @@ c                                 load the best choice
             end do 
          end do 
 
+         if (ijpt.eq.3) exit 
          kinc = kinc + 1
 
       end do 
@@ -1615,6 +1623,39 @@ c                                 cp/cv
       end if                
  
       end 
+
+      logical function gas (i,j,dt)
+c----------------------------------------------------------------------
+c check if vertices itri-jtri define a triangle
+
+      implicit none 
+
+      include 'perplex_parameters.h' 
+
+      integer i, j
+      double precision x, y, z, dt
+
+      integer jvar
+      double precision var,dvr,vmn,vmx
+      common/ cxt18 /var(l3),dvr(l3),vmn(l3),vmx(l3),jvar
+
+      x = vmn(1) + (i-1)*dvr(1)
+      y = vmn(2) + (j-1)*dvr(2)
+
+      z = 2.69*y**5 - 12.176*y**4 + 21.859*y**3 + 60.026*y**2 + 350.09*y
+     *     + 2996.8
+
+      if (y.gt.3.84.or.x.gt.z) then
+         gas = .true.
+      else
+         gas = .false.
+      end if 
+
+      dt = dabs(x-z)
+
+      end 
+
+c----------------------------------------------------------------------
 
       logical function isok (itri,jtri)
 c----------------------------------------------------------------------

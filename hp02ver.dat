@@ -136,6 +136,13 @@ fper = 1 per - 1/3 ta + 1/3 fta
 fatg = 1 atg - 16 ta + 16 fta
 0 0 0
 
+| ettore's makes:
+| odo = 1/2 mag 1/2 cc 
+| -1000. 0 0 
+| oank = 1/4 sid 1/2 cc 1/4 mag 
+|  -750 0 0 
+
+
  | odo = 1/2 mag + 1/2 cc          | ordered dolmite species for H&P dolomite model
  | -13.5d3 0 0 
                                 | endmembers for the melt(HP) model, the dqf corrections
@@ -1765,7 +1772,30 @@ m0 = 327000 m1 = .8829 m2 = -143.88
 transition = 1 type = 4 t1  = 1240 t2  = 10 t3  = .4E-1  
 end
 
- 
+CACO3L   EoS = 2  
+CAO(1)CO2(1)
+G0 = -1047060 S0 = 130.505 V0 = 3.9858  
+c1 = 131.156  
+b1 = .256015E-3 b5 = -.256015E-2 b6 = 74728.65 b7 = -11.2093 b8 = 7  
+m0 = 327000 m1 = .8829 m2 = -143.88  
+end
+
+MGCO3L   EoS = 2  
+MGO(1)CO2(1)
+G0 = -947706 S0 = 131.128 V0 = 3.11738  
+c1 = 99.9876  
+b1 = .256015E-3 b5 = -.256015E-2 b6 = 74728.65 b7 = -11.2093 b8 = 7  
+m0 = 680000 m1 = .8829 m2 = -143.88  
+end
+
+FECO3L   EoS = 2
+FEO(1)CO2(1)
+G0 = -667035 S0 = 109.538 V0 = 3.62711  
+c1 = 126.023  
+b1 = .256015E-3 b5 = -.256015E-2 b6 = 74728.65 b7 = -11.2093 b8 = 7  
+m0 = 680000 m1 = .8829 m2 = -143.88  
+end
+
 arag     EoS = 2 | H= -1207580.                                                                   
 CAO(1)CO2(1)
 G0 = -1128370 S0 = 89.5 V0 = 3.415  

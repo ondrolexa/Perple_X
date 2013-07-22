@@ -1491,6 +1491,9 @@ c                                 explicit bulk modulus is allowed and used
          props(21,jd) = 0d0
 
       end if   
+
+      pv = 1d0
+      pvv = pv
             
       g0 = ginc(0d0,0d0,id)
 c                                 speciation trick
@@ -1591,10 +1594,12 @@ c                                 difference increments
             fow = .true.
          end if 
 c                                 set increments for higher order derivatives
-         dp1 = dp0 * nopt(31)
          dp2 = dp0 * nopt(31)
+         if (p-2d0*dp2.le.0d0) dp2 = p/4d0 
+        
 
             dt0 = dt
+            okt = .false.
 
             do
 
@@ -1614,7 +1619,14 @@ c                                 set increments for higher order derivatives
 
                end if 
 
-               if (gtt.lt.0d0.or.dt0.lt.1e-9) exit
+               if (gtt.lt.0d0) then
+                  exit
+               else if (okt) then 
+                  exit 
+               else if (dt0.lt.1e-5) then
+                  dt0 = dt/1d3
+                  okt = .true. 
+               end if 
  
                dt0 = dt0/10d0
 

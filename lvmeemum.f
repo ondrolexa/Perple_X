@@ -208,7 +208,8 @@ c                                 lpopt does the minimization and outputs
 c                                 the results to the print file.
          tlv1 = v(2)
          quit = .false.
-         rhoc = 1035d0
+         rhoc = 995.3d0
+
          dp = nopt(30)
 
          do
@@ -219,6 +220,9 @@ c                                 the results to the print file.
          b(1) = 2d0/3d0
          b(2) = 1d0 - b(1)
          x(2) = 0d0
+
+         dt = 1d0
+         v(2) = tlv1 
 
          do 
 
@@ -244,7 +248,8 @@ c                                 the results to the print file.
 
                      do i = 1, np
                         if (props(10,i).gt.rho.and.
-     *                      pcomp(2,i).gt.1d0/3d0) then
+     *                      pcomp(2,i).gt.1d0/3d0.or.
+     *                      np.eq.1) then
                            rho = props(10,i)
                            imax = i
                         end if 
@@ -410,7 +415,7 @@ c                           cycle
 
                          tic = tic + 1
 
-                         if (rho2.gt.0.99*rho1) cycle 
+                         if (rho2.gt.rhoc) cycle 
                          cp2 = props(12,1)
                          pv2  = vp(1)
                          pvv2 = vvp(1)
@@ -548,8 +553,8 @@ c                                 get entropy/rho of stoichiomentric composition
 
          if (v(1).ge.2.795d0.and.dp.ge.0.09) then
             dp = 0.01
-         else if (v(1).ge.3.77d0.and.dp.ge.0.009) then
-            dp = 0.00001
+         else if (v(1).ge.3.81d0.and.dp.ge.0.009) then
+            dp = 0.005
 c         else if (v(1).ge.3.86d0.and.dp.ge.0.0009) then 
 c            dp = 0.0001
          end if                       

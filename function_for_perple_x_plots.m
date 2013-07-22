@@ -29,7 +29,7 @@ if nvar == 1 % two cases: 1d - table -> 2d plot
     
     for i = 1:jvar,plot(a(kvar,1:nrow),a(dvar(i),1:nrow)),end
     
-    legend(dnames{1}{dvar},'Location','Best'); axis square; axis tight; xlabel(xname); title(titl);
+    legend(dnames{1}{dvar},'Location','Best'); axis square; axis tight; xlabel(dnames{1}{kvar}); title(titl);
     
 elseif nvar == 2 % 2d - table -> 2/3d plot
     
@@ -40,7 +40,7 @@ elseif nvar == 2 % 2d - table -> 2/3d plot
     switch choice;
         
         case '3D Surface';
-            surf(x,y,a); d2 = 0; light; shading interp; lighting gouraud; zlabel(zname); 
+            surf(x,y,a); d2 = 0; light; shading interp; lighting phong; zlabel(zname); 
             %colorbar; %uncomment for colorbar
         case 'Auto-Contour';
             [C,h]=contour(x,y,a); clabel(C,h); d2 = 1;

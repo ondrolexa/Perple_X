@@ -605,7 +605,7 @@ c                                  plot blurb
 
          end if   
 c                                 write version flag
-         write (n4,'(a)') '|6.6.6'
+c        write (n4,'(a)') '|6.6.6'
 c                                 query for title
          write (*,'(/,a)') 'Enter calculation title:'
          read (*,'(a)') title

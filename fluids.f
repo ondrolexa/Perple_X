@@ -1209,22 +1209,30 @@ c                                  output bulk properties and V:
                   if (nh.ne.0d0.and.ns.ne.0d0) write (*,1290) ns/nh
                   if (ifug.eq.19.or.ifug.eq.20.and.ag.gt.1d0) 
      *               write (*,1330)
-c                                 compute volume by finite difference
-                  vdif = 0d0
-                  p = p + 0.5d0
-                  f = 1d0 
-                  do l = 1, 2
-                     call cfluid (fo2,fs2)
-                     do k = 1, isp
-                        if (g(ins(k))*p*xs(ins(k)).eq.0d0) cycle
-                        vdif = vdif + 
-     *                         f*xs(ins(k))*dlog(g(ins(k))*p*xs(ins(k)))
-                     end do 
-                     f = -1d0
-                     p = p - 1d0
-                  end do 
 
-                  write (*,1420) 83.14d0*t*vdif
+                  if (ifug.eq.26) then 
+
+                     write (*,1420) vol
+
+                  else 
+c                                 compute volume by finite difference
+                     vdif = 0d0
+                     p = p + 0.5d0
+                     f = 1d0 
+                     do l = 1, 2
+                        call cfluid (fo2,fs2)
+                        do k = 1, isp
+                           if (g(ins(k))*p*xs(ins(k)).eq.0d0) cycle
+                           vdif = vdif + 
+     *                        f*xs(ins(k))*dlog(g(ins(k))*p*xs(ins(k)))
+                        end do 
+                        f = -1d0
+                        p = p - 1d0
+                     end do 
+
+                     write (*,1420) 83.14d0*t*vdif
+
+                  end if 
 
                end if 
 
