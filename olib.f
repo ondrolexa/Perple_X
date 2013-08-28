@@ -490,7 +490,7 @@ c                                 then set p and t
 
       end if 
 c                                 initialize system props/flags
-      call insysp (ssick,ppois,bulkg,bsick)
+10    call insysp (ssick,ppois,bulkg,bsick)
 
       do i = 1, ntot
 
@@ -601,7 +601,14 @@ c                                 convert x to y for calls to gsol
 
          end if 
 c                                 get and sum phase properties
-         call getphp (ids,i,sick,ssick,ppois,bulkg,bsick)    
+         call getphp (ids,i,sick,ssick,ppois,bulkg,bsick)   
+
+         if ((ssick.or.bsick.or.sick(i)).and.ijpt.gt.1) then 
+            wt(1) = 1d0
+            ijpt = 1
+            write (*,*) 'turned off at :', t, p, dlog10(p)
+            goto 10 
+         end if  
 
       end do 
 c                                 compute aggregate properties:
@@ -1326,7 +1333,7 @@ c----------------------------------------------------------------------
       include 'perplex_parameters.h'
 
       logical ok, sick(i8), ssick, pois, ppois, bulk, bulkg, bsick, 
-     *        lshear, okt
+     *        lshear, okt, fow
 
       integer id, jd, iwarn1, iwarn2, i, j, itemp, m
 
@@ -1568,106 +1575,119 @@ c                                 real phase, use sign of s and v to check
 c                                 difference increments
          okt = .false.
 
-         if (p-nopt(31)**2*dp0.le.0d0) then 
-
-
-            do i = 1, 2
-
-               do j = 1, 3
-
-                  v = (ginc(0d0,dp0,id) - g0)/dp0
-
-                  if (v.gt.0d0.and.v.lt.1d9) then
-                     okt = .true.
-                     exit
-                  end if 
-
-                  if (i.eq.1) then 
-                     dp0 = dp0 * nopt(31)
-                  else 
-                     dp0 = dp0 / nopt(31)
-                  end if 
-
-               end do
-
-               if (okt) exit
-
-               dp0 = dp0/nopt(31)**4
-
-            end do  
-
+         if (p-nopt(31)**2*dp0.le.0d0) then
+            fow = .true.
          else 
+            fow = .false.
+         end if  
 
-            do i = 1, 2
+         do i = 1, 2
 
-               do j = 1, 3 
+            do j = 1, 3 
 
+               if (fow) then 
+                  v = (ginc(0d0,dp0,id) - g0)/dp0
+               else             
                   v = (ginc(0d0,dp0,id) - ginc(0d0,-dp0,id))/dp0/2d0
+               end if 
 
-                  if (v.gt.0d0.and.v.lt.1d9) then
-                     okt = .true.
-                     exit
-                  end if 
+               if (v.gt.0d0.and.v.lt.1d9) then
+                  okt = .true.
+                  exit
+               end if 
 
-                  if (i.eq.1) then 
-                     dp0 = dp0 * nopt(31)
-                  else 
-                     dp0 = dp0 / nopt(31)
-                  end if 
+               if (i.eq.1) then 
+                  dp0 = dp0 * nopt(31)
+               else 
+                  dp0 = dp0 / nopt(31)
+               end if 
  
-               end do 
+            end do 
 
-               if (okt) exit
+            if (okt) exit
 
-               dp0 = dp0/nopt(31)**3
-
-            end do
-
-          
-
-         end if 
- 
-         do j = 1, 3
-
-            s = (ginc(-dt0,0d0,id) - ginc(dt0,0d0,id))/dt0/2d0
-            if (s.gt.0d0) exit 
-            dt0 = dt0 * nopt(31)
+            dp0 = dp0/nopt(31)**3
 
          end do
-c                                 enthalpy
-         e = g0 + t * s
-c                                 set increments for higher order derivatives
-         if (4d0*dt0.gt.t) then 
-c                                 the foregoing loop on entropy has led to a 
-c                                 ridiculous t increment
-            dt1 = dt0
-            dt2 = dt0 
-
-         else 
-
-            dt1 = dt0 * nopt(31)
-            dt2 = dt1 * nopt(31)
-
-         end if 
 
          dp1 = dp0 * nopt(31)
-         dp2 = dp0 * nopt(31)
-c                                 second order
-         gtt = (ginc(dt1,0d0,id) + ginc(-dt1,0d0,id) - 2d0*g0)/dt1/dt1
+         dp2 = dp1 * nopt(31)
 
-         if (gtt.gt.0d0.or.dabs(gtt).gt.1d9)  
-c                                 expand increment if invalid cp
-     *   gtt = (ginc(dt2,0d0,id) + ginc(-dt2,0d0,id) - 2d0*g0)/dt2/dt2
+         if (p-2d0*dp2.le.0d0) then
+            fow = .true.
+         else 
+            fow = .false.
+         end if 
 
-         if (gtt.gt.0d0.or.dabs(gtt).gt.1d9)  
-c                                 shrink increment if invalid cp
-     *   gtt = (ginc(dt0,0d0,id) + ginc(-dt0,0d0,id) - 2d0*g0)/dt0/dt0
+         okt = .false.
 
+         do i = 1, 2
+
+            do j = 1, 3
+
+               s = (ginc(-dt0,0d0,id) - ginc(dt0,0d0,id))/dt0/2d0
+
+               if (s.gt.0d0) then
+                  okt = .true.
+                  exit 
+               end if 
+
+               if (i.eq.1) then 
+                  dt0 = dt0 * nopt(31)
+                  if (dt0.gt.t) exit 
+               else
+                  dt0 = dt0 / nopt(31)
+               end if 
+
+            end do 
+
+            if (okt) exit
+
+            dt0 = dt / nopt(31)
+
+         end do
+c                                 next check dt for second order 
+         dt1 = dt0 * nopt(31) 
+         if (dt1.gt.t) dt1 = t/4d0  
+         okt = .false.
+   
+         do i = 1, 2
+
+            do j = 1, 3
+
+               gtt = (ginc(dt1,0d0,id) + ginc(-dt1,0d0,id) - 2d0*g0)
+     *                                                      /dt1/dt1
+
+               if (gtt.lt.0d0) then
+                  okt = .true.
+                  exit 
+               end if 
+
+               if (i.eq.1) then 
+                  dt1 = dt1 * nopt(31)
+                  if (dt0.gt.t) exit 
+               else
+                  dt1 = dt1 / nopt(31)
+               end if 
+
+            end do 
+
+            if (okt) exit
+
+            dt1 = dt0 / nopt(31)
+
+         end do
+c                                 set increments for higher order derivatives
+         dt2 = dt1 * nopt(31)
+         if (dt2*2d0.gt.t) dt2 = t/4d0
+c                                 enthalpy
+         e = g0 + t * s
+c                                 heat capacity
          cp = -t*gtt
 c                                 volumetric properties only if v is ok:
          if (v.gt.0d0) then 
    
-            if (p-dp2.le.0d0) then 
+            if (fow) then 
 c                                 use forward difference at small p's
                gpp = (ginc(0d0,2d0*dp1,id) + g0 - 2d0*ginc(0d0,dp1,id))
      *                /dp1/dp1
@@ -1740,7 +1760,7 @@ c                                 shrink increment if invalid alpha
             end if  
 c                                 third order derivatives, only need for
 c                                 derivatives of seismic props.
-            if (p-2d0*dp2.le.0d0) then 
+            if (fow) then 
 
                g1 = ginc(-dt2,0d0,id)
                g2 = ginc( dt2,2d0*dp2,id)

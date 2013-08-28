@@ -956,6 +956,9 @@ c                                  x-coordinates for the final solution
       logical usv
       integer pindex,tindex
       common/ cst54 /pindex,tindex,usv
+
+      integer iap,ibulk
+      common/ cst74  /iap(k2),ibulk
 c-----------------------------------------------------------------------
 c                                first check if solution endmembers are
 c                                among the stable compounds:
@@ -1144,7 +1147,7 @@ c
 
       end do
 c                                now reform the arrays kdv and b
-      if (cpnew(2,1).gt.0.3334d0) then 
+      if (cpnew(2,1).gt.cpnew(2,2)) then 
          jkl = 1
       else 
          jkl = 0
@@ -1152,18 +1155,18 @@ c                                now reform the arrays kdv and b
 
       do hij = 1, np
 
-         if (jkl.eq.1) then 
+         if (jkl.eq.1.or.np.eq.1) then 
             i  = hij
          else 
             i = 3 - hij
          end if 
 
-         amt(i) = bnew(i)
-         kkp(i) = kdsol(i,1)
+         amt(hij) = bnew(i)
+         kkp(hij) = kdsol(i,1)
          ids = kkp(i)
 
          do j = 1, icomp
-            cp3(j,i) = cpnew(j,i)
+            cp3(j,hij) = cpnew(j,i)
          end do
 
          do j = 1, istg(ids)
@@ -1171,7 +1174,7 @@ c                                now reform the arrays kdv and b
 c                                 set x's for sollim
                x(j,k) = xnew(i,j,k)
 c                                 set x's for global storage
-               x3(i,j,k) = x(j,k) 
+               x3(hij,j,k) = x(j,k) 
 
             end do 
          end do 

@@ -83,7 +83,7 @@
 !                                 k23 - max number of phases to be fractionated.
 !                                 k24 - max number of discretization points for the standard simplex
 !                                       in adaptive optimization.
-      parameter (k0=25,k1=1000000,k2=100000,k3=500,k4=23,k5=12)
+      parameter (k0=25,k1=1000000,k2=200000,k3=500,k4=23,k5=8)
       parameter (k7=k5+1,k8=k5+2) 
       parameter (k9=30,k10=250,k12=15,k13=mdim*k1,k14=18,k15=6,k16=40)
       parameter (k17=7,k18=29*k1)

@@ -690,7 +690,7 @@ c         return
 
       gas0 = gas(itri(1),jtri(1),dt)
 
-      if (dt.lt.10d0) return
+c      if (dt.lt.10d0) return
 
       ijpt = 0
 c                                 interpolation for 1d grids                             

@@ -490,7 +490,7 @@ c                                 then set p and t
 
       end if 
 c                                 initialize system props/flags
-      call insysp (ssick,ppois,bulkg,bsick)
+10    call insysp (ssick,ppois,bulkg,bsick)
 
       do i = 1, ntot
 
@@ -581,7 +581,7 @@ c                                 molar amounts
 c                                 renormalize the composition
             if (i.le.np) then 
 
-               do l = 1, istg(ids)
+               do l = 1,  istg(ids)
                   do m = 1, ispg(ids,l)    
                      cst = props(16,i)
                      if (cst.eq.0d0) cst = 1d0    
@@ -601,7 +601,14 @@ c                                 convert x to y for calls to gsol
 
          end if 
 c                                 get and sum phase properties
-         call getphp (ids,i,sick,ssick,ppois,bulkg,bsick)    
+         call getphp (ids,i,sick,ssick,ppois,bulkg,bsick)  
+
+         if ((ssick.or.bsick.or.sick(i)).and.ijpt.gt.1) then 
+            wt(1) = 1d0
+            ijpt = 1
+            write (*,*) 'turned off at :', t, p, dlog10(p)
+            goto 10 
+         end if   
 
       end do 
 c                                 compute aggregate properties:
@@ -1601,7 +1608,7 @@ c                                 set increments for higher order derivatives
             dt0 = dt
             okt = .false.
 
-            do
+            do i = 1, 10
 
                if (fow) then
 
@@ -1620,17 +1627,33 @@ c                                 set increments for higher order derivatives
                end if 
 
                if (gtt.lt.0d0) then
-                  exit
-               else if (okt) then 
-                  exit 
-               else if (dt0.lt.1e-5) then
-                  dt0 = dt/1d3
                   okt = .true. 
+                  exit
                end if 
  
-               dt0 = dt0/10d0
+               if (i.le.6) then 
+                  dt0 = dt0/10d0
+               else if (i.eq.7) then
+                  dt0 = dt*10d0 
+               else
+                  dt0 = dt0*10d0
+                  if (dt0.gt.t) exit
+               end if 
 
             end do 
+
+            if (.not.okt) then 
+               dt0 = dt 
+               dt1 = dt
+               dt2 = dt
+            else 
+               dt1 = dt0 * nopt(31)
+               dt2 = dt1 * nopt(31)
+               if (2d0*dt2.gt.t) then 
+                  dt2 = t/4d0
+                  dt1 = dt2/nopt(31)
+               end if 
+            end if 
 c                                 enthalpy
          e = g0 + t * s
 

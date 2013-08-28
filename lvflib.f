@@ -6159,6 +6159,10 @@ c----------------------------------------------------------------------
 c----------------------------------------------------------------------
 c                                 get pure species fugacities
       call mrkpur (ins, isp)
+c                                 zero species in case of degenerate compositions
+      do i = 1, isp
+         y(ins(i)) = 0d0
+      end do 
 
       if (v(14).lt.0d2.and.xc.gt.0.326.and.xc.lt.0.340) then
 c                                 conditional to destabilize the 
@@ -6180,6 +6184,8 @@ c                                 pure Si
          
          return
 
+
+
       end if 
 c                                 evaluate K's and correct for pressure
 c                                 c1 = exp(lnK_1)*p => 2 O = O2, HSC K
@@ -6188,19 +6194,24 @@ c                                 c1 = exp(lnK_1)*p => 2 O = O2, HSC K
 
       if (xc.eq.0d0) then
 
-         if (c1.gt.1d3) then 
-c                                 assume pure O2
+         if (c1.gt.1d0/nopt(5)) then 
+c                                assume pure O2
             fh2o = (dlog(p*g(i4)) - lnk1)/2d0
-            fco2 = dlog(1d4*p)
+           fco2 = dlog(1d4*p)
             y(i4) = 1d0 
 
-         else 
+          else 
 
             call rko2 (c1,iavg)
 
+           return
+         
+
          end if 
 
-         return  
+c         return 
+
+          xc = nopt(5) 
 
       end if 
 c                                 c2 = exp(lnK_2)/p => SiO2 = SiO + O
@@ -6554,6 +6565,8 @@ c                                   fit to mp s,cp,g,v
 c           a(14) = ( 73828180.7110d0 + 7535d0*(t-1999.)
 c    *                  - 4.438d0*(t-1999.)**2)*1d2
 
+
+
             if (lopt(28).and.t.gt.90000.) then 
 c                                 use anomalous cp value a-function and b:
 c                                 constant alpha fit:
@@ -6572,6 +6585,11 @@ c                                  gaussian cp fit
      *                 + dlog(t) * 0.326976011861655414D9)
 
 
+
+c expansivity fit:
+            a(14)  = 0.19151*t**3 + 2497.9*t**2 - 3.3603e+006*t 
+     *               + 2.6254e+009
+
             end if 
 
          else if (i.eq.15) then 
@@ -6589,6 +6607,11 @@ c                                   fit to mp s,cp,g,v
 c          a(15) = ( 23496628.831d0 + 6342d0  * (t-1687.)
 c    *                              - 1.138d0  * (t-1687.)**2)*1d2
 
+c expansivity
+
+           a(15) = 0.09168*t**3 + 1228.1*t**2 - 1.6637e+006*t
+     *        + 1.2746e+009
+
          else 
 
             a(i) = ark(i)
@@ -6601,6 +6624,8 @@ c    *                              - 1.138d0  * (t-1687.)**2)*1d2
 
 c      a(14) = a(14)*1.135
       a(13) = ark(14)/20d0
+      a(13) = 0.0095756*t**3 + 124.9*t**2 - 1.6802e+005*t+ 1.3127e+008
+c      a(14) = ark(14)
       b(13) = brk(13)
 
 

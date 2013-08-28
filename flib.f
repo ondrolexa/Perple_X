@@ -6150,6 +6150,10 @@ c----------------------------------------------------------------------
 c----------------------------------------------------------------------
 c                                 get pure species fugacities
       call mrkpur (ins, isp)
+c                                 zero species in case of degenerate compositions
+      do i = 1, isp
+         y(ins(i)) = 0d0
+      end do 
 
       if (v(14).lt.0d2.and.xc.gt.0.326.and.xc.lt.0.340) then
 c                                 conditional to destabilize the 
@@ -6179,7 +6183,7 @@ c                                 c1 = exp(lnK_1)*p => 2 O = O2, HSC K
 
       if (xc.eq.0d0) then
 
-         if (c1.gt.1d3) then 
+         if (c1.gt.1d0/nopt(5)) then 
 c                                 assume pure O2
             fh2o = (dlog(p*g(i4)) - lnk1)/2d0
             fco2 = dlog(1d4*p)
