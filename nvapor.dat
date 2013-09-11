@@ -11,7 +11,7 @@ Holland & Powell '02 + Connolly & Kerrick '02 shear moduli   |<= data base title
 begin_standard_variables |<= name (<9 characters), reference value, tolerance
 P(bar)      1.00   0.1E-3
 T(K)      298.15   0.1E-4
-X(Si)      0.00   0.1E-6
+X(Si)      0.00   0.1E-6 
 mu(C1)      0.00   0.1E-2
 mu(C2)      0.00   0.1E-2
 end_standard_variables
@@ -28,86 +28,73 @@ begin_special_components
 O
 Si
 end_special_components
+
+begin_makes
+
+siog = 1 SiO(g)
+1d6 0 0 
+
+sio2g = 1 SiO2(g)
+1d6 0 0 
+
+o2g = 1 O2(g)
+1d6 0 0 
+
+end_makes
                    
 end                                                                                                                                         
 
 
-Si      Eos = 606 | real pure Si fluid
+Si      Eos = 606 | HSC ideal gas, eos code adds fsi automatically
 Si(1) 
 G0 = 405.554d3 S0 = 167.979
 c1 = 21.04075 c2 = -0.75852d-3 c3 = 1.23608d5 c4 = 0.58354d-6
 transition = 1 type = 2 t1  = 2000  t4  = 22.56649 t5 = 0.48505d-3 t6 = -55.2434d5 t7 = -0.06694d-6
 transition = 2 type = 2 t1  = 5500  t4  = 33.13343 t5 = -2.5732d-3 t6 = -422.35756d5 t7 = 0.17995d-6  
 end 
+
+O       EoS = 605 | HSC ideal gas,  eos code adds fo automatically
+O(1) 
+G0 = 201.154d3 S0 = 161.059  
+c1 = 21.16715 c2 = -0.62024d-3 c3 = 0.78643d5 c4 = 0.2531d-6  
+transition = 1 type = 2 t1  = 1500  t4  = 20.07968 t5 = 0.13599d-3 t6 = 10.89287d5 t7 = 0.03825d-6
+transition = 2 type = 2 t1  = 6000  t4  = 24.85874 t5 = -0.0962d-3 t6 = -722.90558d5 t7 = -0.00077d-6 
+end
+
+SiO(g)         EoS = 1 | HSC ideal gas => -166.014d3 Shornikov => G0 = -163.668d3
+Si(1)O(1)
+G0 = -163.668d3 S0 = 211.597
+c1 = 23.80206  c2 = 21.78592d-3 c3 = 0.4374d5 c4 = -10.07503d-6
+transition = 1 type = 2 t1 = 400    t4 = 37.02928  t5 = 0.29472d-3  t6 = -15.50846d5  t7 = 0.01456d-6
+transition = 2 type = 2 t1 = 4100   t4 = 73.41891   t5 = -11.88528d-3   t6 = -1014.67529d5   t7 =  1.1742d-6
+transition = 3 type = 2 t1 = 6000   t4 = 41.55976
+end
+
+O2(g)         EoS = 1 | HSC ideal gas good to 8000 K
+O(2)
+G0 = -61.165d3 S0 = 205.149
+c1 = 22.05955  c2 = 20.88672d-3  c3 = 1.62056d5   c4 = -8.20733d-6
+transition = 1 type = 2 t1 = 700     t4 = 29.79298  t5 = 7.91038d-3   t6 = -6.19384d5  t7 = -2.2036d-6
+transition = 2 type = 2 t1 = 1200    t4 = 34.85945  t5 = 1.31218d-3   t6 = -14.14037d5 t7 = 0.16256d-6
+transition = 3 type = 2 t1 = 2500    t4 = 32.69336  t5 = 3.13735d-3   t6 = -17.3023d5  t7 = -0.21417d-6
+transition = 4 type = 2 t1 = 4500    t4 = 18.48998  t5 = 6.56662d-3   t6 = 654.05977d5 t7 = -0.438d-6  
+end
+
+SiO2(g)   EoS = 604 | HSC/shornikov ideal gas   HSC=> G0 -390.292d3 shornikov=> G0 = -378.938d3                                                        
+Si(1)O(2)
+G0 = -378938. S0 = 228.719
+c1 = 27.28805 c2 = 71.29955d-3 c3 = -0.25104d5 c4 = -47.78965d-6
+transition = 1 type = 2 t1  = 400   t4  = 43.14959 t5 = 26.20858d-3 t6 = -6.36805d5 t7 = -10.35122d-6
+transition = 2 type = 2 t1  = 1100  t4  = 62.32068                  t6 = -41.47181d5  
+transition = 3 type = 2 t1  = 6000  t4  = 62.2054140506421    
+end
+
 
 Si(s)    Eos = 1 | HSC Hf apparent G cp valid 298-1690 K (mp)
 Si(1) 
 G0 = -5.611d3 S0 = 18.81963  
 c1 = 23.7 c2 = 3.31d-3 c3 = -4.34998d5 
 end 
-
-O_HSC         EoS = 1 | HSC ideal gas
-O(1) 
-G0 = 201.154d3 S0 = 161.059  
-c1 = 21.16715 c2 = -0.62024d-3 c3 = 0.78643d5 c4 = 0.2531d-6  
-transition = 1 type = 2 t1  = 1500  t4  = 20.07968 t5 = 0.13599d-3 t6 = 10.89287d5 t7 = 0.03825d-6
-transition = 2 type = 2 t1  = 6000  t4  = 24.85874 t5 = -0.0962d-3 t6 = -722.90558d5 t7 = -0.00077d-6 
-end
-
-
-O         EoS = 605 | real pure o as (SiO2(g) - Si(g) - lnk23)/2 [ln K added internally] 
-O(1) 
-G0 = -392246.2934 S0 = 30.369995
-c1 = 3.12365 c2 = 0.036029035 c3 = -74356. c4 = -0.000024186595 
-transition = 1 type = 2 t1 = 400   t4 = 11.05442  t5 = 0.01348355  t6 = -380206.5  t7 = -0.546738d-5
-transition = 2 type = 2 t1 = 1100  t4 = 20.639965  t5 = 0.00037926 t6 = -0.21353945d7 t7 = -0.29177d-6
-transition = 3 type = 2 t1 = 2000  t4 = 19.877095 t5 = -0.000242525 t6 = 688579.5  t7 = 0.3347d-7
-transition = 4 type = 2 t1 = 5500  t4 = 14.593625 t5 = 0.0012866 t6 = 0.190442875d8 t7 = -0.89975d-7
-end 
-
-O0        EoS = 1 | ideal gas o as (SiO2(g) - Si(g) - lnk23)/2 [ln K added internally] 
-O(1) 
-G0 = -392246.2934 S0 = 30.369995
-c1 = 3.12365 c2 = 0.036029035 c3 = -74356. c4 = -0.000024186595 
-transition = 1 type = 2 t1 = 400   t4 = 11.05442  t5 = 0.01348355  t6 = -380206.5  t7 = -0.546738d-5
-transition = 2 type = 2 t1 = 1100  t4 = 20.639965  t5 = 0.00037926 t6 = -0.21353945d7 t7 = -0.29177d-6
-transition = 3 type = 2 t1 = 2000  t4 = 19.877095 t5 = -0.000242525 t6 = 688579.5  t7 = 0.3347d-7
-transition = 4 type = 2 t1 = 5500  t4 = 14.593625 t5 = 0.0012866 t6 = 0.190442875d8 t7 = -0.89975d-7
-end 
-
-
-O(g)         EoS = 1 | HSC ideal gas
-O(1) 
-G0 = 201.154d3 S0 = 161.059  
-c1 = 21.16715 c2 = -0.62024d-3 c3 = 0.78643d5 c4 = 0.2531d-6  
-transition = 1 type = 2 t1  = 1500  t4  = 20.07968 t5 = 0.13599d-3 t6 = 10.89287d5 t7 = 0.03825d-6
-transition = 2 type = 2 t1  = 6000  t4  = 24.85874 t5 = -0.0962d-3 t6 = -722.90558d5 t7 = -0.00077d-6 
-end
-
-Si(g)      Eos = 1 | HSC ideal gas
-Si(1) 
-G0 = 405.554d3 S0 = 167.979
-c1 = 21.04075 c2 = -0.75852d-3 c3 = 1.23608d5 c4 = 0.58354d-6
-transition = 1 type = 2 t1  = 2000  t4  = 22.56649 t5 = 0.48505d-3 t6 = -55.2434d5 t7 = -0.06694d-6
-transition = 2 type = 2 t1  = 5500  t4  = 33.13343 t5 = -2.5732d-3 t6 = -422.35756d5 t7 = 0.17995d-6  
-end 
-
-
-SiO2(g)   EoS = 604 | HSC/shornikov ideal gas    H = -310.74602d3, cp to 6000 K                                                                
-Si(1)O(2)
-G0 = -378938.5869 S0 = 228.71899 
-c1 = 27.28805 c2 = 71.29955d-3 c3 = -0.25104d5 c4 = -47.78965d-6
-transition = 1 type = 2 t1  = 400   t4  = 43.14959 t5 = 26.20858d-3 t6 = -6.36805d5 t7 = -10.35122d-6
-transition = 2 type = 2 t1  = 1100  t4  = 62.32068                  t6 = -41.47181d5  
-end
-
-SiO2(t)   EoS = 1 | HSC/shornikov ideal gas    H = -310.74602d3, cp to 6000 K                                                                
-Si(1)O(2)
-G0 = -378938.5869 S0 = 228.71899 
-c1 = 27.28805 c2 = 71.29955d-3 c3 = -0.25104d5 c4 = -47.78965d-6
-transition = 1 type = 2 t1  = 400   t4  = 43.14959 t5 = 26.20858d-3 t6 = -6.36805d5 t7 = -10.35122d-6
-transition = 2 type = 2 t1  = 1100  t4  = 62.32068                  t6 = -41.47181d5  
-end
 
 crst     EoS = 8 | HP data adjusted by -180 J/mol to melt at 1999 with RK SiO2                                                                   
 Si(1)O(2)
@@ -122,6 +109,17 @@ Si(1)O(2)JUNK(1)
 G0 = -411118.4 S0 = 237.3281 
 c1 = 62.321  c3 = -41.472e5   
 end
+
+O         EoS = 605 | real pure o as (SiO2(g) - Si(g) - R*T*lnk23)/2 [ln K added internally] 
+O(1)JUNK(1) 
+G0 = -392246.2934 S0 = 30.369995
+c1 = 3.12365 c2 = 0.036029035 c3 = -74356. c4 = -0.000024186595 
+transition = 1 type = 2 t1 = 400   t4 = 11.05442  t5 = 0.01348355  t6 = -380206.5  t7 = -0.546738d-5
+transition = 2 type = 2 t1 = 1100  t4 = 20.639965  t5 = 0.00037926 t6 = -0.21353945d7 t7 = -0.29177d-6
+transition = 3 type = 2 t1 = 2000  t4 = 19.877095 t5 = -0.000242525 t6 = 688579.5  t7 = 0.3347d-7
+transition = 4 type = 2 t1 = 5500  t4 = 14.593625 t5 = 0.0012866 t6 = 0.190442875d8 t7 = -0.89975d-7
+end 
+
 
 
 qL       EoS = 9 | H= -920860.                                                                    
@@ -157,7 +155,6 @@ b1 = .123E-4 b5 = 541.5479 b6 = 979000 b7 = -.43E-5 b8 = 4.19
 end
 
 
-     |      0.59d6  1.40097 -24. 0. 0. 0. 0. 0. 0. 0. helffrich www1.gly.bris.ac.uk/~ge
  
 stv      EoS = 8 | H= -875670.                                                                    
 Si(1)O(2) 

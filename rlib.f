@@ -174,9 +174,9 @@ c                                 transitions
 
       if (lct(id).ne.0) call mtrans (g,vdp,ndu,id)
 c                                special correction for O gas
-      if (eos(id).eq.605) g = g + 
+c     if (eos(id).eq.605) g = g + 
 c                                 this is -RT(lnk2+lnk3)/2 (rksi5 k's)
-     *         -0.3213822427D7 / t + 0.6464888248D6 - 0.1403012026D3*t
+c    *         -0.3213822427D7 / t + 0.6464888248D6 - 0.1403012026D3*t
 
       gzero = g
 
@@ -523,7 +523,7 @@ c                                 Stoichiometic O rk fluid
 c                                 real O fluid (O and O2 species)
             gval = gval + r*t*f(1)
 c                                 this is -RT(lnk2+lnk3)/2 (rksi5 k's)
-     *         -0.3213822427D7 / t + 0.6464888248D6 - 0.1403012026D3*t
+c    *         -0.3213822427D7 / t + 0.6464888248D6 - 0.1403012026D3*t
 
          else if (eos(id).eq.606) then 
 c                                 Stoichiometic Si rk fluid 

@@ -1401,9 +1401,10 @@ c----------------------------------------------------------------------
       double precision y,g,vsp
       common / cstcoh /y(nsp),g(nsp),vsp(nsp)
 
-      double precision pv,pvv
-      integer iroot
-      common/ rkdivs /pv,pvv,iroot
+      double precision pv, pvv
+      integer iroots
+      logical switch, rkmin, min
+      common/ rkdivs /pv,pvv,iroots,switch,rkmin,min
 
       double precision vol
       common/ cst26 /vol
@@ -1514,7 +1515,7 @@ c                                 set flag for multiple root eos's
 c                                 save derivative for cp search
       vp(jd) = pv
       vvp(jd) = pvv
-      rooti(jd) = iroot
+      rooti(jd) = iroots
       vrk = vol
 
       ga = ginc(-dt,0d0,id)

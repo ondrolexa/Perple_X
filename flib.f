@@ -6183,19 +6183,15 @@ c                                 c1 = exp(lnK_1)*p => 2 O = O2, HSC K
 
       if (xc.eq.0d0) then
 
-         if (c1.gt.1d0/nopt(5)) then 
-c                                 assume pure O2
-            fh2o = (dlog(p*g(i4)) - lnk1)/2d0
-            fco2 = dlog(1d4*p)
-            y(i4) = 1d0 
-
-         else 
+         if (c1.lt.1d0/nopt(5)) then 
 
             call rko2 (c1,iavg)
 
+            return
+         
          end if 
 
-         return  
+          xc = nopt(5) 
 
       end if 
 c                                 c2 = exp(lnK_2)/p => SiO2 = SiO + O, HSC K 
@@ -6525,45 +6521,12 @@ c     *           + t**3 * (-0.286881183333320412D-1)
          else if (i.eq.14) then 
 c                                 MRK dispersion term for SiO2, from
 c                                 sio2_mp_fit3.mws 
-
-c           if (t.gt.3100d0.and..not.lopt(28)) then 
-c               tt = 3100d0
-c            else 
-c               tt = t
-c            end if 
-
-c                                  DP fit
             a(14) = (-0.370631646315402D9 -88784.52
-     * + 0.710713269453173D8*dlog(t)
+     *            + 0.710713269453173D8*dlog(t)
      *               -0.468778070702675D7/t + 
      *               (0.194790021605110D4*dsqrt(t) -0.110935131465938D6
      *               -0.120230245951606D2 * t) * t)*1d2
-c    *            +  nopt(29)*(t-1999.)
      *            +  32300.*(t-1999.) + 14.25*(t-1999.)**2
-c            if (t.gt.8146.72) a(14) = 0d0
-c                                   fit to mp s,cp,g,v
-c           a(14) = ( 73828180.7110d0 + 7535d0*(t-1999.)
-c    *                  - 4.438d0*(t-1999.)**2)*1d2
-
-            if (lopt(28).and.t.gt.90000.) then 
-c                                 use anomalous cp value a-function and b:
-c                                 constant alpha fit:
-c              a(14) = (0.133531570926083967D9 
-c     *              + t ** 1.5d0 * 0.848348337043858010D2 
-c     *              - 0.569964286388078594D10 / dsqrt(t) 
-c     *              + 0.120185807141805908D12 / t)*1d2 
-c                                  gaussian cp fit 
-
-               b(14) = 25.83798814d0 
-
-               a(14) = 1d2*(-0.172939350788494730D10 
-     *                 + t **1.5d0 * 0.897211229324071156D3 
-     *                 - dsqrt(t) * 0.176947482636917942D8 
-     *                 + 0.582498993840988694D11 / t   
-     *                 + dlog(t) * 0.326976011861655414D9)
-
-
-            end if 
 
          else if (i.eq.15) then 
 c                                 MRK dispersion term for Si 
@@ -6574,10 +6537,6 @@ c                                 MRK dispersion term for Si
      *      + 17737.22d0 
      *      -50.5d0*(t-1687.) - 2.04d-2*(t-1687.)**2
      *      )*1d2
-
-c                                   fit to mp s,cp,g,v
-c          a(15) = ( 23496628.831d0 + 6342d0  * (t-1687.)
-c    *                              - 1.138d0  * (t-1687.)**2)*1d2
 
          else 
 

@@ -2216,7 +2216,7 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer ins(*),i,j,k,l,iroots,isp,ineg,ipos,iavg,irt,jrt
+      integer ins(*),i,j,k,l,isp,ineg,ipos,iavg,irt,jrt
 
       logical max, bad
  
@@ -2242,13 +2242,14 @@ c-----------------------------------------------------------------------
       logical sroot
       common/ rkroot /sroot
 
-      double precision pv,pvv
-      integer iroot
-      common/ rkdivs /pv,pvv,iroot
+      double precision pv, pvv
+      integer iroots
+      logical switch, rkmin, min
+      common/ rkdivs /pv,pvv,iroots,switch,rkmin,min
  
-      save r, irt, vrt
+      save r, irt, vrt, max
                              
-      data r, max /83.1441d0, .false./
+      data r /83.1441d0/
 c---------------------------------------------------------------------- 
       dsqrtt = dsqrt(t)
       rt = r*t
@@ -2319,11 +2320,23 @@ c                                 solve for mixture molar volume
 
       if (vmin.lt.bx.and.iroots.gt.1.and.isp.eq.5) then 
 
-         vol = vmin
+         vol = vmax
 
       end if 
 
-      if (sroot) then 
+      if (iroots.eq.1) then 
+
+         vol = ev(ipos)
+
+      else if (switch.and.ineg.eq.0) then
+
+         if (min) then 
+            vol = vmax
+         else
+            vol = vmin
+         end if 
+
+      else if (sroot) then 
 c                                use characteristics of previous solution 
 c                                to choose the, potentially metastable, root
          if (irt.eq.3.and.iroots.eq.3.and.ineg.eq.0.and.vmin.gt.bx) then
@@ -2369,20 +2382,18 @@ c                                by evaluating p*delta(v) - int(pdv)
          if (pdv.gt.0d0) then
             vol = vmin
             max = .false.
+            rkmin = .true.
          else 
             vol = vmax
             max = .true.
+            rkmin = .false.
          end if 
 
       else if (iroots.eq.3) then
 
          vol = vmax
 
-      else 
-
-         vol = ev(ipos)
-
-      end if
+      end if 
 
       if (.not.sroot) then 
 c                                 for finite difference property 
@@ -2398,8 +2409,6 @@ c                                 derivative for cp search
       pvv = 2d0 *( rt /(vol - bx)**3 - aij/dsqrtt/vol**3/(vol + bx) 
      *     - aij / dsqrtt / vol ** 2 / (vol + bx) ** 2 
      *    -  aij / dsqrtt / vol / (vol + bx) ** 3)
-
-      iroot = iroots
 c                                 compute fugacities:
       d1 = rt*dsqrtt*bx
       d2 = dlog((vol + bx)/vol)/d1
@@ -2944,7 +2953,7 @@ c-----------------------------------------------------------------------
       double precision f(nsp),ev(3),dsqrtt,rt,
      *                 d1,d2,d4,bx,v1,v2,aij,c1,c2,c3,pdv,r
 
-      integer ins(*), isp, k, iroots, i, ineg, ipos 
+      integer ins(*), isp, k, i, ineg, ipos 
  
       double precision p,t,xco2,u1,u2,tr,pr,rbar,ps
       common/ cst5  /p,t,xco2,u1,u2,tr,pr,rbar,ps
@@ -2960,6 +2969,11 @@ c-----------------------------------------------------------------------
 
       double precision a, b
       common/ rkab /a(nsp),b(nsp)
+
+      double precision pv, pvv
+      integer iroots
+      logical switch, rkmin, min
+      common/ rkdivs /pv,pvv,iroots,switch,rkmin,min
  
       save r
                              
@@ -3018,6 +3032,18 @@ c                                 compute fugacities.
          g(i) = dexp(f(i))/p 
 
       end do 
+
+c                                 derivative for cp search
+      pv = -rt / (vol - bx) ** 2 + aij / dsqrtt / vol ** 2 / (vol + bx)
+     * + aij / dsqrtt / vol / (vol + bx) ** 2
+
+      pvv = 2d0 *( rt /(vol - bx)**3 - aij/dsqrtt/vol**3/(vol + bx) 
+     *     - aij / dsqrtt / vol ** 2 / (vol + bx) ** 2 
+     *    -  aij / dsqrtt / vol / (vol + bx) ** 3)
+
+      pvv = pvv/1d1
+      pv = pv/1d1
+      vol = vol/1d1
 
       end
 
@@ -6125,12 +6151,14 @@ c----------------------------------------------------------------------
       integer iavg, ins(5), isp, nit, i1, i2, i3, i4, i5, i,  
      *        itic, igood, ibad
 
-      logical bad
+      logical bad, both
 
       double precision c1,c2,c3,rat,rp1,rm1,nsi,no,oymin,nymin,oy(nsp),
-     *                 r2p1,r2m1,lnk1,lnk2,lnk3,dquart,oymax,nymax
+     *                 r2p1,r2m1,lnk1,lnk2,lnk3,dquart,oymax,nymax,
+     *                 go,go2,gsi,gsio,gsio2, gzero, by(nsp), bg(nsp),
+     *                 bvol, bpv, bpvv, gold, gnew
 
-      external dquart 
+      external dquart, gzero 
 
       double precision y,g,v
       common / cstcoh /y(nsp),g(nsp),v(nsp)
@@ -6152,6 +6180,20 @@ c----------------------------------------------------------------------
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
+      integer ipoint,imyn
+      common/ cst60 /ipoint,imyn
+
+      double precision pv, pvv
+      integer iroots
+      logical switch, rkmin, min
+      common/ rkdivs /pv,pvv,iroots,switch,rkmin,min
+
+      double precision vol
+      common/ cst26 /vol
+
+      logical sroot
+      common/ rkroot /sroot
+
       save isp, ins, i1, i2, i3, i4, i5, itic, igood, ibad 
       data isp, ins, i1, i2, i3, i4, i5, itic, igood, ibad 
      *                                      /5, 14, 13, 12, 7, 15, 
@@ -6164,7 +6206,8 @@ c                                 zero species in case of degenerate composition
          y(ins(i)) = 0d0
       end do 
 
-      if (v(14).lt.0d2.and.xc.gt.0.326.and.xc.lt.0.340) then
+      if (t.lt.2800d0.and.v(14).lt.0d2.and.
+     *     xc.gt.0.326.and.xc.lt.0.340) then
 c                                 conditional to destabilize the 
 c                                 multispecies fluid at low P in favor
 c                                 of SiO2(g)
@@ -6184,12 +6227,15 @@ c                                 pure Si
          
          return
 
-
-
       end if 
 c                                 evaluate K's and correct for pressure
 c                                 c1 = exp(lnK_1)*p => 2 O = O2, HSC K
+      go =  gzero (2)
+      go2 = gzero (ipoint+2)
+
       lnk1 = (-0.9214495D6/t + 0.6234471D5)/t - 0.1631235D2
+      lnk1 = (2d0*go - go2)/r/t
+
       c1 = dexp(lnk1) * p
 
       if (xc.eq.0d0) then
@@ -6217,11 +6263,19 @@ c         return
 c                                 c2 = exp(lnK_2)/p => SiO2 = SiO + O
 c                                  k_2 from shornikov enthalpy
       lnk2 = (-1.133204d+06/t - 5.491882d+04)/t + 1.710990d+01
+
+      gsio  = gzero (ipoint+1)
+      gsio2 = gzero (ipoint+3)
+      gsi = gzero (1)
+
+      lnk2 = (gsio2 - go - gsio)/r/t
+
 c                                  HSC   
 c      lnk2 = (-0.1133204D7/t - 0.5491882D5)/t + 0.1710990D2 
       c2 = dexp(lnk2)/p
 c                                 c3 = exp(lnK_3)/p => SiO = Si + O, shornikov H_SiO 
       lnk3 = (1.906315d6/t - 1.005993d5)/t + 1.664069d1
+      lnk3 = (gsio - go - gsi)/r/t
 c                                  HSC
 c      lnk3 = (4.187931d5/t - 9.909023d4)/t + 1.627557d1
       c3 = dexp(lnk3)/p
@@ -6240,8 +6294,13 @@ c                                 speciation tolerance.
       rm1    = rat - 1d0
       r2p1    = 2d0*rat + 1d0
       r2m1    = 2d0*rat - 1d0
-c
-      nit = 0 
+
+      if (.not.sroot) then 
+         switch = .false.
+         both = .false.
+      end if 
+c                                switch root entry point
+10    nit = 0 
       oymin = 1d0
       oymax = 0d0 
       bad = .false. 
@@ -6395,7 +6454,12 @@ c                                 get new gamma's
          else 
 
             call mrkmix (ins, isp, iavg)           
-
+c                                could converge to the wrong speciation
+            if ((.not.both).and.iroots.eq.3.and.(.not.sroot)) then
+               both = .true.
+               min = rkmin
+            end if
+ 
          end if 
 
          nit = nit + 1
@@ -6408,6 +6472,52 @@ c                                 get new gamma's
       end do 
 
       itic = itic + 1 
+
+      if (both.and.(.not.sroot)) then
+
+         if (switch) then
+c                                on the second solution
+            gnew =  (1d0-xc) * dlog(g(i3)*y(i3)) 
+     *                  + xc * dlog(g(i5)*y(i5))
+            gold =  (1d0-xc) * dlog(bg(i3)*by(i3)) 
+     *                  + xc * dlog(bg(i5)*by(i5))
+
+            if (gold.lt.gnew) then 
+c                                swap to the old solution
+               do i = 1, isp
+                  y(ins(i)) = by(ins(i))
+                  g(ins(i)) = bg(ins(i))
+               end do 
+
+               vol = bvol
+               pv  = bpv
+               pvv = bpvv 
+c                                for sroot, 1st solution is good
+               switch = .false.
+   
+            end if             
+
+         else 
+c                                save old solution
+            do i = 1, isp
+               by(ins(i)) = y(ins(i))
+               oy(ins(i)) = 0d0 
+               bg(ins(i)) = g(ins(i))
+            end do 
+
+            bvol = vol
+            bpv  = pv
+            bpvv = pvv
+
+            switch = .true.
+
+            call mrkpur (ins, isp)
+
+            goto 10
+
+         end if  
+
+      end if 
 
       if (bad) then 
 
@@ -6560,37 +6670,10 @@ c                                  DP fit
 c    *            +  nopt(29)*(t-1999.)
 c delta component :
      *            +  32300.*(t-1999.) + 14.25*(t-1999.)**2
-c            if (t.gt.8146.72) a(14) = 0d0
 c                                   fit to mp s,cp,g,v
 c           a(14) = ( 73828180.7110d0 + 7535d0*(t-1999.)
 c    *                  - 4.438d0*(t-1999.)**2)*1d2
 
-
-
-            if (lopt(28).and.t.gt.90000.) then 
-c                                 use anomalous cp value a-function and b:
-c                                 constant alpha fit:
-c              a(14) = (0.133531570926083967D9 
-c     *              + t ** 1.5d0 * 0.848348337043858010D2 
-c     *              - 0.569964286388078594D10 / dsqrt(t) 
-c     *              + 0.120185807141805908D12 / t)*1d2 
-c                                  gaussian cp fit 
-
-               b(14) = 25.83798814d0 
-
-               a(14) = 1d2*(-0.172939350788494730D10 
-     *                 + t **1.5d0 * 0.897211229324071156D3 
-     *                 - dsqrt(t) * 0.176947482636917942D8 
-     *                 + 0.582498993840988694D11 / t   
-     *                 + dlog(t) * 0.326976011861655414D9)
-
-
-
-c expansivity fit:
-            a(14)  = 0.19151*t**3 + 2497.9*t**2 - 3.3603e+006*t 
-     *               + 2.6254e+009
-
-            end if 
 
          else if (i.eq.15) then 
 c                                 MRK dispersion term for Si 
@@ -6607,11 +6690,6 @@ c                                   fit to mp s,cp,g,v
 c          a(15) = ( 23496628.831d0 + 6342d0  * (t-1687.)
 c    *                              - 1.138d0  * (t-1687.)**2)*1d2
 
-c expansivity
-
-           a(15) = 0.09168*t**3 + 1228.1*t**2 - 1.6637e+006*t
-     *        + 1.2746e+009
-
          else 
 
             a(i) = ark(i)
@@ -6624,7 +6702,6 @@ c expansivity
 
 c      a(14) = a(14)*1.135
       a(13) = ark(14)/20d0
-      a(13) = 0.0095756*t**3 + 124.9*t**2 - 1.6802e+005*t+ 1.3127e+008
 c      a(14) = ark(14)
       b(13) = brk(13)
 
