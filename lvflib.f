@@ -2404,7 +2404,7 @@ c                                 computations, save the root
       end if 
 c                                 derivative for cp search
       pv = -rt / (vol - bx) ** 2 + aij / dsqrtt / vol ** 2 / (vol + bx)
-     * + aij / dsqrtt / vol / (vol + bx) ** 2
+     *                           + aij / dsqrtt / vol / (vol + bx) ** 2
 
       pvv = 2d0 *( rt /(vol - bx)**3 - aij/dsqrtt/vol**3/(vol + bx) 
      *     - aij / dsqrtt / vol ** 2 / (vol + bx) ** 2 
@@ -2434,9 +2434,9 @@ c               g(l) = 1d99
          if (l.lt.3) fg(l) = f(l)
 
       end do 
-
-      pvv = pvv/n/1d1
-      pv = pv/n/1d1
+c                                 convert to "molar amounts"         
+      pvv = pvv*(n*1d1)**2
+      pv = pv*(n*1d1)
       vol = vol/n/1d1
   
       end
@@ -3032,17 +3032,17 @@ c                                 compute fugacities.
          g(i) = dexp(f(i))/p 
 
       end do 
-
+c                                 (only works for a 1 species call)
 c                                 derivative for cp search
-      pv = -rt / (vol - bx) ** 2 + aij / dsqrtt / vol ** 2 / (vol + bx)
-     * + aij / dsqrtt / vol / (vol + bx) ** 2
+      pv = -rt / d4 ** 2 + aij / dsqrtt / vol ** 2 / d1
+     *                   + aij / dsqrtt / vol / d1 ** 2
 
-      pvv = 2d0 *( rt /(vol - bx)**3 - aij/dsqrtt/vol**3/(vol + bx) 
-     *     - aij / dsqrtt / vol ** 2 / (vol + bx) ** 2 
-     *    -  aij / dsqrtt / vol / (vol + bx) ** 3)
+      pvv = 2d0 *( rt /d4**3  - aij / dsqrtt / vol**3 / d1 
+     *                        - aij / dsqrtt / vol**2 / d1**2 
+     *                        - aij / dsqrtt / vol    / d1**3)
 
-      pvv = pvv/1d1
-      pv = pv/1d1
+      pvv = pvv*1d2
+      pv = pv*1d1
       vol = vol/1d1
 
       end
@@ -6194,10 +6194,11 @@ c----------------------------------------------------------------------
       logical sroot
       common/ rkroot /sroot
 
-      save isp, ins, i1, i2, i3, i4, i5, itic, igood, ibad 
-      data isp, ins, i1, i2, i3, i4, i5, itic, igood, ibad 
+      save isp, ins, i1, i2, i3, i4, i5, itic, igood, ibad, both, iavg
+      data isp, ins, i1, i2, i3, i4, i5, itic, igood, ibad, both, iavg
      *                                      /5, 14, 13, 12, 7, 15, 
-     *                                          14, 13, 12, 7, 15, 3*0/
+     *                                          14, 13, 12, 7, 15, 3*0,
+     *                                          .false., 1/
 c----------------------------------------------------------------------
 c                                 get pure species fugacities
       call mrkpur (ins, isp)
@@ -6206,18 +6207,20 @@ c                                 zero species in case of degenerate composition
          y(ins(i)) = 0d0
       end do 
 
-      if (t.lt.2800d0.and.v(14).lt.0d2.and.
+      if (t.lt.2400d0.and.v(14).lt.1d2.and.
      *     xc.gt.0.326.and.xc.lt.0.340) then
 c                                 conditional to destabilize the 
 c                                 multispecies fluid at low P in favor
 c                                 of SiO2(g)
+
+c                                 a more elegant solution would be to 
+c                                 look at the actual solution and reject
+c                                 if it's the dense phase at T < ~2400.
          fh2o = dlog(1d4*p)
          fco2 = dlog(1d4*p)
          return
 
       end if 
-c
-      iavg = 1
 c                                 degenerate compositions:
       if (xc.eq.1d0) then 
 c                                 pure Si
@@ -6477,10 +6480,14 @@ c                                could converge to the wrong speciation
 
          if (switch) then
 c                                on the second solution
-            gnew =  (1d0-xc) * dlog(g(i3)*y(i3)) 
-     *                  + xc * dlog(g(i5)*y(i5))
-            gold =  (1d0-xc) * dlog(bg(i3)*by(i3)) 
-     *                  + xc * dlog(bg(i5)*by(i5))
+            gnew = 1d9
+            gold = 1d9
+            if (y(i3).gt.1d-20.and.y(i5).gt.1d-20)  
+     *         gnew =  (1d0-xc) * dlog(g(i3)*y(i3)) 
+     *                     + xc * dlog(g(i5)*y(i5))
+            if (by(i3).gt.1d-20.and.by(i5).gt.1d-20) 
+     *         gold =  (1d0-xc) * dlog(bg(i3)*by(i3)) 
+     *                     + xc * dlog(bg(i5)*by(i5))
 
             if (gold.lt.gnew) then 
 c                                swap to the old solution
@@ -6542,7 +6549,7 @@ c                                save old solution
 
       if (itic.gt.200000) then 
          itic = 0 
-         write (*,*) 'good,bad:',igood,ibad
+         write (*,*) 'good,bad:',igood,ibad,t,p
       end if 
 
 c      if (nit.gt.20) write (*,*) 'rk5 long nit',nit
@@ -6603,10 +6610,7 @@ c-----------------------------------------------------------------------
 c             O, SiO, SiO2, Si, unk:
 c             asio = aco/aco2 * asio2 => 1/16.722 => 424441664.6d0
 c bp values for si, sio2
-c     *          174026d2, 424441664.6d0,  7097834092d0, 2348660042d0, 
-c max a values for si, sio2
-c    *          174026d2, 424441664.6d0,  7500726468d0, 3767833334d0, 
-     *          174026d2, 424441664.6d0,  7373939618d0, 3767833334d0, 
+     *          174026d2, 424441664.6d0,  7165898184d0, 2349662883d0,  
      *          0d0/a0/1d0/,
      *     brk /14.6,  29.7,  27.38, 29.681, 15.7699, 29.94,
      *          22.07,  37.4,  43d0,  23.42,   18.84, 
@@ -6617,9 +6621,7 @@ c using actual bco/bco2:
 c    *          22.07, 23.81d0, 25.83798814d0, 10.35788774, 0d0/
 c rhocrit o2 - 1449 o - 724. sio - 1851 sio2 - 2325 si - 2711
 c using bco/bco2 = 1/4.83 (true critical b's):
-     *          22.07, 5.148732998d0, 25.83798814d0, 10.35788774, 0d0/
-c who knows what this was
-c     *          22.07, 5.148732998d0, 24.85507977, 10.35765058, 0d0/
+     *          22.07, 5.148732998d0, 25.79671756d0, 10.35788774, 0d0/
 c----------------------------------------------------------------------
 c      if (first) then 
 c         write (*,*) 'enter fac'
@@ -6661,12 +6663,21 @@ c            else
 c               tt = t
 c            end if 
 
-c                                  DP fit
+c                                  shornikov DP fit, with a0 correction
             a(14) = (-0.370631646315402D9 -88784.52
      * + 0.710713269453173D8*dlog(t)
      *               -0.468778070702675D7/t + 
      *               (0.194790021605110D4*dsqrt(t) -0.110935131465938D6
      *               -0.120230245951606D2 * t) * t)*1d2
+c                                  HSC DP fit, with a0 correction
+            a(14) = (-0.374260147394998848D9 
+     * + t **1.5d0 * 0.204563487800252960D4 
+     * + dlog(t) * 0.717244191159245670D8
+     * + (-0.478703597332215404D7)/ t 
+     * + t * (-0.115746244073046750D6) 
+     * + t ** 2 * (-0.126792045931319510D2)) * 1d2
+
+
 c    *            +  nopt(29)*(t-1999.)
 c delta component :
      *            +  32300.*(t-1999.) + 14.25*(t-1999.)**2
@@ -7109,10 +7120,10 @@ c                                 skip solvent
          if (i.eq.ir) cycle 
 
 
-         if (i.eq.14.and.ir.eq.15.or.i.eq.15.and.ir.eq.14) then
+c         if (i.eq.14.and.ir.eq.15.or.i.eq.15.and.ir.eq.14) then
 c                                 arithmetic mean mixing rule
-            ax = 2d0/(1d0/a(ir) + 1d0/a(i))
-         else if (iavg.eq.1) then 
+c            ax = 2d0/(1d0/a(ir) + 1d0/a(i))
+         if (iavg.eq.1) then 
 c                                 geometric mean mixing rule
             ax = dsqrt(a(ir)*a(i))
          else if (iavg.eq.2) then 

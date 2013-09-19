@@ -63,9 +63,9 @@ end
 
 SiO(g)         EoS = 1 | HSC ideal gas => -166.014d3 Shornikov => G0 = -163.668d3
 Si(1)O(1)
-G0 = -163.668d3 S0 = 211.597
+G0 = -166.014d3 S0 = 211.597
 c1 = 23.80206  c2 = 21.78592d-3 c3 = 0.4374d5 c4 = -10.07503d-6
-transition = 1 type = 2 t1 = 400    t4 = 37.02928  t5 = 0.29472d-3  t6 = -15.50846d5  t7 = 0.01456d-6
+transition = 1 type = 2 t1 = 800    t4 = 37.02928   t5 = 0.29472d-3     t6 = -15.50846d5     t7 = 0.01456d-6
 transition = 2 type = 2 t1 = 4100   t4 = 73.41891   t5 = -11.88528d-3   t6 = -1014.67529d5   t7 =  1.1742d-6
 transition = 3 type = 2 t1 = 6000   t4 = 41.55976
 end
@@ -82,7 +82,7 @@ end
 
 SiO2(g)   EoS = 604 | HSC/shornikov ideal gas   HSC=> G0 -390.292d3 shornikov=> G0 = -378.938d3                                                        
 Si(1)O(2)
-G0 = -378938. S0 = 228.719
+G0 = -390.292d3 S0 = 228.719
 c1 = 27.28805 c2 = 71.29955d-3 c3 = -0.25104d5 c4 = -47.78965d-6
 transition = 1 type = 2 t1  = 400   t4  = 43.14959 t5 = 26.20858d-3 t6 = -6.36805d5 t7 = -10.35122d-6
 transition = 2 type = 2 t1  = 1100  t4  = 62.32068                  t6 = -41.47181d5  
@@ -90,9 +90,9 @@ transition = 3 type = 2 t1  = 6000  t4  = 62.2054140506421
 end
 
 
-Si(s)    Eos = 1 | HSC Hf apparent G cp valid 298-1690 K (mp)
+Si(s)    Eos = 1 | HSC Hf apparent G cp valid 298-1690 K (mp), g lowered by 151 j to match RK mp at 1687K
 Si(1) 
-G0 = -5.611d3 S0 = 18.81963  
+G0 = -5.761d3 S0 = 18.81963  
 c1 = 23.7 c2 = 3.31d-3 c3 = -4.34998d5 
 end 
 

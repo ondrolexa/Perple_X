@@ -1155,7 +1155,7 @@ c                                now reform the arrays kdv and b
 
       do hij = 1, np
 
-         if (jkl.eq.1.or.np.eq.1) then 
+         if (jkl.eq.1.or.np.eq.1.or.np.gt.2) then 
             i  = hij
          else 
             i = 3 - hij
@@ -2749,6 +2749,9 @@ c                                 model type
 
       integer ksmod, ksite, kmsol, knsp
       common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
+c                                 endmember names
+      character names*8
+      common/ cst8  /names(k1)
 c-----------------------------------------------------------------------
 c                                 compute the chemical potential
 c                                 of the projected components.
@@ -2771,6 +2774,14 @@ c                                 are allocated independent of ifct!
          end do
 
          g(id) = gval 
+
+         if (t.gt.3500d0.and.names(id).eq.'SiO2(g)') then
+            g(id) = g(id) + 1d5
+         else if (t.gt.2000d0.and.names(id).eq.'trd') then 
+               g(id) = g(id) + 1d5
+         else if (t.gt.2100d0.and.names(id).eq.'crst') then 
+               g(id) = g(id) + 1d5
+         end if 
 
       end do 
 c                                 now do solutions:

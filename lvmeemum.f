@@ -70,15 +70,15 @@ c----------------------------------------------------------------------
       double precision tlv, dt, rho, tst, tlv1, tlv2, rho1, rho2, cp1, 
      *                 cp2, x1, dp, rhoc, x2, pv1, pv2, pvv1, pvv2,
      *                 spec1(5,2),n(2),x(2),molwt(2),specwt(5),nat,
-     *                 prps(7,2),xb(2),no,nsi,tot,p,t,lnk1,lnk2,lnk3,
-     *                 lnk4,lnk5,ravg,savg
+     *                 prps(8,2),xb(2),no,nsi,tot,p,t,lnk1,lnk2,lnk3,
+     *                 lnk4,lnk5,ravg,savg,z(2)
 
       data specwt/60.084, 44.085, 15.999, 31.998, 28.086/
 
-      integer imax,imin,ir1,ir2,tic,j,lprops(7),lun
+      integer imax,imin,ir1,ir2,tic,j,lprops(8),lun
       logical go, quit
 c                                 N, H, S, Cp, Cp/Cv, rho, vphi
-      data lprops/17,2,15,12,28,10,7/
+      data lprops/17,2,15,12,28,10,7,1/
       integer idspec
       double precision spec
       common/ tspec /spec(nsp,k5),idspec
@@ -121,14 +121,14 @@ c                                 version info
       write (lun,*) 0.
       write (lun,*) 1.
       write (lun,*) 1
-      write (lun,*) 47
+      write (lun,*) 51
       write (lun,'(9a)') 'log(p) p(bar) T(K) dtL(K) dtG(K) xL xG ',
      *    'nL(mol) nG(mol) NL(g-mol) NG(g-mol) NA(g-at) DH(J/kg) ',
      *    'SL SG CpL CpG Cp/CvL Cp/CvG rhoL rhoG v_phiL v_phiG ',
      *    'yL_SiO2 yL_SiO yL_O yL_O2 yL_Si ', 
      *    'yG_SiO2 yG_SiO yG_O yG_O2 yG_Si ',
      *    'pvL pvvL irL pvG pvvG irG ln(K4) ln(C4) ln(K5) ln(C5) ravg ',
-     *    'savg ssG rsG'
+     *    'savg ssG rsG VL(j/bar-amol) VG(j/bar-amol) ZL ZG'
 
 c      * v(1),10d0**v(1),tlv,tlv-tlv1,tlv2-tlv,
 c      * x, n, molwt, prps(1,1), 
@@ -208,20 +208,20 @@ c                                 lpopt does the minimization and outputs
 c                                 the results to the print file.
          tlv1 = v(2)
          quit = .false.
-         rhoc = 995.3d0
+         rhoc = 960d0
 
          dp = nopt(30)
 
          do
 
-         dt = 10d0
+         dt = 1d0
          go = .true.
-         v(2) = tlv1 - 5d0
+c         v(2) = tlv1 - 5d0
          b(1) = 2d0/3d0
          b(2) = 1d0 - b(1)
          x(2) = 0d0
 
-         dt = 1d0
+c         dt = 1d0
          v(2) = tlv1 
 
          do 
@@ -248,6 +248,7 @@ c                                 the results to the print file.
 
                      do i = 1, np
                         if (props(10,i).gt.rho.and.
+     *                      pcomp(2,i).lt.0.9.and.
      *                      pcomp(2,i).gt.1d0/3d0.or.
      *                      np.eq.1) then
                            rho = props(10,i)
@@ -261,6 +262,8 @@ c                                 the results to the print file.
                      end do 
 
                       if (b(1).gt.0.99) then
+                         ir1 = 0
+                      else if (b(2).eq.1d0) then
                          ir1 = 0
                       end if 
 
@@ -285,9 +288,8 @@ c                                 the results to the print file.
                      end if 
 
                            call getloc (itri,jtri,ijpt,wt,nodata)
-
-                     if (rho.lt.rhoc.or.rho.gt.2d3.and.v(1).gt.2.5d0) 
-     *                  then
+c                          .or.rho.gt.2d3.and.v(1).gt.2.5d0
+                     if (rho.lt.rhoc) then
 c                                 either the O-rich phase or the faux-gas, back off 
 c                                 to find the plausible root
                         dt = -dabs(dt)
@@ -362,7 +364,7 @@ c                                 save the liq props:
                         spec1(j,1) = spec(j,imax)
                      end do 
 
-                     do j = 1, 7
+                     do j = 1, 8
                         prps(j,1) = props(lprops(j),imax)
                      end do 
 
@@ -423,7 +425,7 @@ c                           cycle
                          do j = 1, 5
                            spec1(j,2) = spec(j,1)
                          end do 
-                         do j = 1, 7
+                         do j = 1, 8
                            prps(j,2) = props(lprops(j),1)
                          end do 
 
@@ -458,24 +460,22 @@ c                           cycle
 
          end do 
 
-         if (quit.and.v(1).gt.3.874d0) exit 
+         if (quit.and.v(1).gt.4.2d0) exit 
+c                                 atomic weight 
+            nat = x(1)*atwt(2) + (1d0-x(1))*atwt(1)
 c                                 compute true molar weight
          do i = 1, 2
-c                                 atomic weight 
-            nat = x(1)*atwt(1) + (1d0-x(1))*atwt(2)
+
             molwt(i) = 0d0
             
             do j = 1, 5
                molwt(i) = molwt(i) + spec1(j,i) * specwt(j)
             end do
 
-            n(i) = molwt(i)/nat
+            n(i) = nat/molwt(i)
+            z(i) = 10d0**v(1)*prps(8,i)/(r*v(2)*n(i))
 
          end do 
-
-
-
-
 
           if (v(2).lt.6200d0)  
      *    write (111,'(120(g14.8,1x))') v(1),tlv,tlv-tlv1,tlv2-tlv,
@@ -525,20 +525,15 @@ c      write (*,'(a,12(g12.6,1x))') 'k5 ',lnk5,lnk5*dlog(p)/2d0
 c      write (113,'(12(g12.6,1x))') 
 c     *  lnk4,lnk4+dlog(p),lnk5,lnk5*dlog(p)/2d0  
        write (*,'(a,12(g12.6,1x))') 'rho-s crit ',ravg,savg
+       write (*,'(a,12(g12.6,1x))') 'vL vG zL zG ',
+     *                              (prps(8,i),i=1,2),(z(i),i=1,2)
 c                                 get entropy/rho of stoichiomentric composition
          b(1) = 2d0/3d0
          b(2) = 1d0 - b(1)
 
-
-
             call lpopt0 (idead)
 
             if (idead.eq.0) call getloc (itri,jtri,ijpt,wt,nodata)
-
-            
-
-
-
 
           write (lun,'(120(g14.8,1x))') 
      *  v(1),10d0**v(1),tlv,tlv-tlv1,tlv2-tlv,
@@ -548,13 +543,14 @@ c                                 get entropy/rho of stoichiomentric composition
      *  ((spec1(j,i),j=1,5),i=1,2),
      *   pv1,pvv1,ir1,pv2,pvv2,ir2,
      *   lnk4,lnk4+dlog(p),lnk5,lnk5*dlog(p)/2d0,ravg,savg,
-     *   props(15,1)/props(17,1)*1e3,props(10,1)
+     *   props(15,1)/props(17,1)*1e3,props(10,1),
+     *   (prps(8,i),i=1,2),(z(i),i=1,2)
 
 
-         if (v(1).ge.2.795d0.and.dp.ge.0.09) then
+         if (v(1).ge.3.5d0.and.dp.ge.0.09.and.v(1).lt.3.8d0) then
             dp = 0.01
          else if (v(1).ge.3.81d0.and.dp.ge.0.009) then
-            dp = 0.005
+            dp = 0.001
 c         else if (v(1).ge.3.86d0.and.dp.ge.0.0009) then 
 c            dp = 0.0001
          end if                       

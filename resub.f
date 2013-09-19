@@ -2734,6 +2734,9 @@ c                                 model type
 
       integer ksmod, ksite, kmsol, knsp
       common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
+c                                 endmember names
+      character names*8
+      common/ cst8  /names(k1)
 c-----------------------------------------------------------------------
 c                                 compute the chemical potential
 c                                 of the projected components.
