@@ -913,7 +913,7 @@ c                                 local variables
      *        i,j,jdsol(k5,k5),jd,k,l,nkp(k5),xjdsol(k5),jkl,hij
 
       double precision bsol(k5,k5),cpnew(k5,k5),xx,xb(k5), 
-     *                 bnew(k5),xnew(k21,mst,msp)
+     *                 bnew(k5),xnew(k21,mst,msp),r1,r2
 c                                 -------------------------------------
 c                                 global variables:
 c                                 x coordinate description
@@ -957,8 +957,14 @@ c                                  x-coordinates for the final solution
       integer pindex,tindex
       common/ cst54 /pindex,tindex,usv
 
+      integer iam
+      common/ cst4 /iam
+
       integer iap,ibulk
       common/ cst74  /iap(k2),ibulk
+
+      logical homo
+      common/ homo / homo
 c-----------------------------------------------------------------------
 c                                first check if solution endmembers are
 c                                among the stable compounds:
@@ -1012,7 +1018,8 @@ c                                 compare the compound to the np solutions
 c                                 identfied so far:        
                if (kdsol(j,1).eq.nkp(i)) then 
 c                                 if match check for a solvus
-                  if (.not.solvs1(i,jdsol(j,idsol(j)),nkp(i))) then
+                  if (.not.solvs1(i,jdsol(j,idsol(j)),nkp(i))
+     *                 .or.homo) then
 c                                 the pseudocompound matches a solution
 c                                 found earlier.
                      idsol(j) = idsol(j) + 1
@@ -1147,15 +1154,24 @@ c
 
       end do
 c                                now reform the arrays kdv and b
-      if (cpnew(2,1).gt.cpnew(2,2)) then 
-         jkl = 1
-      else 
-         jkl = 0
+      if (np.eq.2) then
+
+         r1 = cpnew(2,1)/(cpnew(1,1)+cpnew(2,1))
+         r2 = cpnew(2,2)/(cpnew(1,2)+cpnew(2,2))
+ 
+         if (r2.gt.r1.and.r1.gt.1d0/3d0) then 
+            jkl = 1
+         else if (r1.le.1d0/3d0.and.r2.le.1d0/3d0.and.r2.lt.r1) then 
+            jkl = 1
+         else 
+            jkl = 0
+         end if 
+
       end if 
 
       do hij = 1, np
 
-         if (jkl.eq.1.or.np.eq.1.or.np.gt.2) then 
+         if (jkl.eq.1.or.np.eq.1.or.np.gt.2.or.iam.ne.1) then 
             i  = hij
          else 
             i = 3 - hij
@@ -2699,7 +2715,9 @@ c-----------------------------------------------------------------------
       integer i, j, k, id
 
       double precision dg1, gval, dg, gzero, g0(k5), gex, x0, gfesi,
-     *                 gfesic
+     *                 gfesic, gerk, x1(5)
+
+      external gerk, gzero, gex, gfesi, gfesic 
 
       integer icomp,istct,iphct,icp
       common/ cst6 /icomp,istct,iphct,icp
@@ -2776,7 +2794,7 @@ c                                 are allocated independent of ifct!
          g(id) = gval 
 
          if (t.gt.3500d0.and.names(id).eq.'SiO2(g)') then
-            g(id) = g(id) + 1d5
+c           g(id) = g(id) + 1d5
          else if (t.gt.2000d0.and.names(id).eq.'trd') then 
                g(id) = g(id) + 1d5
          else if (t.gt.2100d0.and.names(id).eq.'crst') then 
@@ -2920,7 +2938,7 @@ c                                 H2O-CO2-Salt:
      *                      sxs(ixp(id)+2),sxs(ixp(id)+3))
 
                do k = 1, nstot(i) 
-                  g(id) = g(id) + g(jend(i,2+k)) * sxs(ixp(id)+k)
+                  g(id) = g(id) + gzero(jend(i,2+k)) * sxs(ixp(id)+k)
                end do 
 
                id = id + 1
@@ -2963,6 +2981,24 @@ c                                 after Lacaze and Sundman
      *                         g(jend(i,3)),g(jend(i,4)),
      *                         g(jend(i,5)),g(jend(i,6)),ksmod(i))
   
+               id = id + 1
+
+            end do  
+
+         else if (ksmod(i).eq.40) then 
+c                                 MRK silica vapor
+            do j = 1, jend(i,2)
+
+               do k = 1, 5
+                  x1(k) = sxs(ixp(id)+k)
+               end do 
+
+               g(id) = gerk (x1)
+
+               do k = 1, nstot(i) 
+                  g(id) = g(id) + gzero(jend(i,2+k)) * x1(k)
+               end do 
+
                id = id + 1
 
             end do  

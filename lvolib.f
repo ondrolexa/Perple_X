@@ -113,7 +113,8 @@ c                                 mol %
 c                                 mol
      *                      props(16,i),
 c                                 molar or weight composition
-     *                      (pcomp(l,i), l = 1, icomp)
+     *                      (pcomp(l,i), l = 1, icomp), pcomp(1,i)
+     *                                  /(pcomp(2,i) + pcomp(1,i))
 
          else 
 
@@ -127,7 +128,8 @@ c                                 mol %
 c                                 mol
      *                      props(16,i),
 c                                 molar or weight composition
-     *                      (pcomp(l,i), l = 1, icomp)
+     *                      (pcomp(l,i), l = 1, icomp), pcomp(1,i)
+     *                                  /(pcomp(2,i) + pcomp(1,i))
 
          end if 
 
@@ -268,7 +270,7 @@ c                                 chemical potentials variance
 1020  format (/,'Phase Compositions (',a,'):',
      *        /,19x,'wt %',6x,'vol %',5x,'mol %',5x,'mol  ',
      *          5x,20(1x,a,3x))
-1030  format (1x,a,3x,3(f6.2,4x),g9.3,1x,20(f8.5,1x))
+1030  format (1x,a,3x,3(f6.2,4x),g9.3,1x,20(f9.7,1x))
 1031  format (1x,a,3x,3(f6.2,4x),g9.3,1x,20(f8.3,1x))
 1040  format (/,14x,'mol',7x,'mol %',6x,'wt %')
 1060  format (/,' Enthalpy (J/kg) = ',g12.6,/,
@@ -721,7 +723,10 @@ c-----------------------------------------------------------------------
       integer k,id
 
       double precision omega, gproj, hpmelt, gmelt, gfluid, gzero, g, 
-     *                 dg, gex, slvmlt, gfesi
+     *                 dg, gex, slvmlt, gfesi, x1(5), gerk
+
+      external omega, gproj, hpmelt, gmelt, gfluid, gzero, 
+     *                 slvmlt, gfesi, gerk
 
       integer jend
       common/ cxt23 /jend(h9,k12)
@@ -871,6 +876,19 @@ c                                 get mechanical mixture contribution
 c                                 -------------------------------------
 c                                 BCC Fe-Si Lacaze and Sundman
             g = gfesi(y(1),gproj(jend(id,3)),gproj(jend(id,4)))
+
+         else if (ksmod(id).eq.40) then 
+
+c                                 MRK silicate vapor
+            g = 0d0
+
+            do k = 1, nstot(id) 
+               g = g + gzero(jend(id,2+k)) * y(k)
+               x1(k) = y(k)
+            end do 
+
+            g = g + gerk(x1)
+
 
          else if (ksmod(id).eq.0) then 
 c                                 ------------------------------------
@@ -1416,15 +1434,15 @@ c----------------------------------------------------------------------
       double precision rhoc
       common/ rcrt /rhoc
 
-      double precision ga, gb, gc, gd,
-     *                 va, vb, vc, vd
+      double precision ga, gb, gc, gd, ge, gf, 
+     *                 va, vb, vc, vd, ve, vf
 
       integer ins(5)
       save ins 
       data ins/14, 13, 12, 7, 15/
 
       save dt
-      data dt /5d0/
+      data dt /.05d0/
 
       save iwarn1, iwarn2, wname1, wname2
       data iwarn1, iwarn2, wname1, wname2 /2*0,2*'              '/
@@ -1499,9 +1517,6 @@ c                                 explicit bulk modulus is allowed and used
          props(21,jd) = 0d0
 
       end if   
-
-      pv = 1d0
-      pvv = pv
             
       g0 = ginc(0d0,0d0,id)
 c                                 speciation trick
@@ -1511,83 +1526,16 @@ c                                 speciation trick
          end do 
       end if 
 c                                 set flag for multiple root eos's
-      sroot = .true.
+c     sroot = .true.
 c                                 save derivative for cp search
-      vp(jd) = pv
-      vvp(jd) = pvv
       rooti(jd) = iroots
       vrk = vol
 
-      ga = ginc(-dt,0d0,id)
-      va = vol
-      gb = ginc( dt,0d0,id)
-      vb = vol
-c                                 compute g-derivatives for isostatic 
-c                                 thermodynamic properties
-      if (p.gt.nopt(26)) then 
-         dp0 = nopt(27) * p
-      else 
-         dp0 = nopt(27) * nopt(26)
-      end if 
 
-      dt0 = dt
 c                                 if a reaction, cannot use sign to 
 c                                 test behavior, just run through the
 c                                 whole list
       if (rxn) then 
-c                                 set finite difference increments
-         dp1 = dp0*nopt(31)
-         dp2 = dp1*nopt(31)
-         dt1 = dt0*nopt(31)
-         dt2 = dt1*nopt(31)
-c                                 straight derivatives:
-c                                 first order
-         if (p-dp2.le.0d0) then 
-
-            v = (ginc(0d0,dp0,id) - g0)/dp0
-
-         else 
-
-            v = (ginc(0d0,dp0,id) - ginc(0d0,-dp0,id))/dp0/2d0
-
-         end if 
-
-         s = (ginc(-dt0,0d0,id) - ginc(dt0,0d0,id))/dt0/2d0
-
-         e = g0 + t * s
-c                                 second order
-         gtt = (ginc(dt1,0d0,id) + ginc(-dt1,0d0,id) - 2d0*g0)/dt1/dt1
-
-         cp = -t*gtt
-
-         if (p-dp2.le.0d0) then 
-c                                 use forward difference at small p's
-            gpp = (ginc(0d0,2d0*dp1,id) + g0 - 2d0*ginc(0d0,dp1,id))
-     *             /dp1/dp1
-
-            gpt = ( ginc( dt1,dp1,id) - ginc( dt1,0d0,id)
-     *             -ginc(-dt1,dp1,id) + ginc(-dt1,0d0,id))/dp1/dt1/2d0
-
-         else
-
-            gpp = (ginc(0d0,dp1,id) + ginc(0d0,-dp1,id) - 2d0*g0)
-     *            /dp1/dp1
-
-            gpt = ( ginc( dt1,dp1,id) - ginc( dt1,-dp1,id)
-     *             -ginc(-dt1,dp1,id) + ginc(-dt1,-dp1,id))/dp1/dt1/4d0
-
-         end if  
-c                                  these are the only properties output
-c                                  for reactions:
-         alpha = gpt/v
-         beta = -gpp/v
-         props(2,jd) = e
-         props(11,jd) = g0 
-         props(12,jd) = cp
-         props(15,jd) = s
-         props(1,jd) = v
-         props(13,jd) = alpha
-         props(14,jd) = beta 
 
       else 
 c                                 real phase, use sign of s and v to check
@@ -1601,10 +1549,39 @@ c                                 difference increments
          else 
             fow = .true.
          end if 
-c                                 set increments for higher order derivatives
-         dp2 = dp0 * nopt(31)
+c                                 real phase, use sign of s and v to check
+c                                 difference increments
+         okt = .false.
+
+         dp0 = 1e-5*p
+
+         do i = 1, 4
+
+            if (.not.fow) then 
+               vc = (ginc(0d0,dp0,id) - g0)/dp0
+            else             
+               vc = (g0 - ginc(0d0,-dp0,id))/dp0
+            end if 
+
+            if (dabs(vrk-vc)/vrk.lt.1d-3) exit 
+
+            dp0 = dp0 * nopt(31)
+
+         end do
+
+         dp1 = dp0 * nopt(31)
+         dp2 = dp1 * nopt(31)
+
          if (p-2d0*dp2.le.0d0) dp2 = p/4d0 
-        
+
+         gc = ginc(0d0,-dp0,id)
+         vc = vol
+         gd = ginc(0d0,dp0,id)
+         vd = vol
+c                                 vp
+         gpp  = (vd - vc)/2d0/dp0
+c                                 vpp
+         gppp = (vd + vc - 2d0*vrk)/dp0**2
 
             dt0 = dt
             okt = .false.
@@ -1655,15 +1632,17 @@ c                                 set increments for higher order derivatives
                   dt1 = dt2/nopt(31)
                end if 
             end if 
+
+                  ga = ginc(-dt0,0d0,id)
+                  va = vol
+                  gb = ginc( dt0,0d0,id)
+                  vb = vol
+
+
 c                                 enthalpy
          e = g0 + t * s
 
          cp = -t*gtt
-
-         dt1 = dt0 * nopt(31)
-         dt2 = dt1 * nopt(31)
-
-         gpp = 1d0/vp(jd)
  
          if (fow) then
             gpt = (vb-v)/dt0
@@ -1677,12 +1656,16 @@ c                                 derivatives of seismic props.
                g4 = ginc(-dt2,dp2,id)
                g5 = ginc(0d0,dp2,id) - ginc(0d0,-dp2,id)
                g7 = ginc(-dt2,0d0,id) - ginc(dt2, 0d0,id)
-   
-               gppp = ((ginc(0d0,2d0*dp2,id) 
-     *                - ginc(0d0,-2d0*dp2,id))/2d0  - g5)/dp2**3
-               gppt = (g3 - g4 + 2d0*g7 - g1)/dp2/dp2/dt2/2d0
-               gptt = (g4 - g3 - 2d0*g5 - g1)/2d0/dp2/dt2/dt2
+c                                  vpt
+            gppt = (g3 - g4 + 2d0*g7 - g1)/dp2/dp2/dt2/2d0
+            ge = ginc(-dt0,-dp0,id)
+            ve = vol
+            gf = ginc(-dt0,dp0,id)
+            vf = vol
 
+            gppt = (gpp - (vf - ve)/2d0/dp0)/dt0
+c                                  vtt
+            gptt = (vb + va - 2d0*vrk)/dt0**2
 
             gttt = ((ginc(dt2*2d0,0d0,id) - ginc(-dt2*2d0,0d0,id))/2d0 
      *              + g7)/dt2**3
@@ -1698,6 +1681,7 @@ c                                 pressure derivative of the adiabatic bulk modu
                props(20,jd) = (((v*gppp-gpp**2)*gtt
      *                      +(gpt*gpp-2d0*v*gppt)*gpt)*gtt
      *                      +v*gptt*gpt**2)/g7
+
             else if (bulk) then 
 
                props(18,jd) = nopt(7)
@@ -1708,6 +1692,9 @@ c                                 pressure derivative of the adiabatic bulk modu
 
             beta = -gpp/v
             alpha = gpt/v
+            vp(jd) = 1d0/beta
+            vvp(jd) = gppp
+
             rho = props(17,jd)/v*1d2
 c                                 ideal gas beta = 1/p           
             if (beta.gt.v.or.beta.lt.0d0) then

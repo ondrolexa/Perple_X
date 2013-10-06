@@ -2684,7 +2684,9 @@ c-----------------------------------------------------------------------
       integer i, j, k, id
 
       double precision dg1, gval, dg, gzero, g0(k5), gex, x0, gfesi,
-     *                 gfesic
+     *                 gfesic, gerk, x1(5)
+
+      external gerk, gzero, gex, gfesi, gfesic 
 
       integer icomp,istct,iphct,icp
       common/ cst6 /icomp,istct,iphct,icp
@@ -2940,6 +2942,23 @@ c                                 after Lacaze and Sundman
      *                         g(jend(i,3)),g(jend(i,4)),
      *                         g(jend(i,5)),g(jend(i,6)),ksmod(i))
   
+               id = id + 1
+
+            end do  
+
+         else if (ksmod(i).eq.40) then 
+
+            do j = 1, jend(i,2)
+c                                 MRK silicate vapor
+               g(id) = 0d0
+
+               do k = 1, nstot(i) 
+                  x1(k) = sxs(ixp(id)+k)
+                  g(id) = g(id) + gzero(jend(i,2+k)) * x1(k)
+               end do 
+
+               g(id) = g(id) + gerk(x1)   
+
                id = id + 1
 
             end do  

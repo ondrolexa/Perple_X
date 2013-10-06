@@ -2222,7 +2222,7 @@ c-----------------------------------------------------------------------
  
       double precision f(nsp),aj2(nsp),ev(3),c1,c2,ax,vrt,dv,
      *                 c3,vmin,vmax,d1,d2,d3,d6,rt,dsqrtt,r,
-     *                 ch,bx,aij,pdv,n
+     *                 ch,bx,aij,pdv 
  
       double precision p,t,xco2,u1,u2,tr,pr,rbar,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,rbar,ps
@@ -2254,8 +2254,6 @@ c----------------------------------------------------------------------
       dsqrtt = dsqrt(t)
       rt = r*t
       bad = .false.
-      pv = 1d0
-      pvv = pv
 
       call rkparm (ins,isp)
 
@@ -2271,8 +2269,6 @@ c----------------------------------------------------------------------
 
       end do 
 
-      n = 3d0*x(14) + 2d0*x(13) + 2d0*x(7) + x(12) + x(15)
- 
       ch = dexp(-11.218d0 + (6032d0 + (-2782000d0 + 4.708d8/t)/t)/t) * 
      *          6912.824964d0 *t*t*dsqrtt + 79267647d0
 
@@ -2289,10 +2285,11 @@ c----------------------------------------------------------------------
                aj2(i) = aj2(i) + x(j)*ch
             else 
 
-               if (i.eq.14.and.j.eq.15.or.i.eq.15.and.j.eq.14) then
+c               if (i.eq.14.and.j.eq.15.or.i.eq.15.and.j.eq.14) then
 c                                 special mixing rule
-                  ax = 2d0/(1d0/a(i) + 1d0/a(j))
-               else if (iavg.eq.1) then 
+c                  ax = 2d0/(1d0/a(i) + 1d0/a(j))
+               iavg = 3
+               if (iavg.eq.1) then 
 c                                 geometric mean mixing rule
                   ax = dsqrt(a(i)*a(j))
                else if (iavg.eq.2) then 
@@ -2402,13 +2399,6 @@ c                                 computations, save the root
          vrt = vol
 
       end if 
-c                                 derivative for cp search
-      pv = -rt / (vol - bx) ** 2 + aij / dsqrtt / vol ** 2 / (vol + bx)
-     *                           + aij / dsqrtt / vol / (vol + bx) ** 2
-
-      pvv = 2d0 *( rt /(vol - bx)**3 - aij/dsqrtt/vol**3/(vol + bx) 
-     *     - aij / dsqrtt / vol ** 2 / (vol + bx) ** 2 
-     *    -  aij / dsqrtt / vol / (vol + bx) ** 3)
 c                                 compute fugacities:
       d1 = rt*dsqrtt*bx
       d2 = dlog((vol + bx)/vol)/d1
@@ -2434,10 +2424,6 @@ c               g(l) = 1d99
          if (l.lt.3) fg(l) = f(l)
 
       end do 
-c                                 convert to "molar amounts"         
-      pvv = pvv*(n*1d1)**2
-      pv = pv*(n*1d1)
-      vol = vol/n/1d1
   
       end
 
@@ -3032,17 +3018,7 @@ c                                 compute fugacities.
          g(i) = dexp(f(i))/p 
 
       end do 
-c                                 (only works for a 1 species call)
-c                                 derivative for cp search
-      pv = -rt / d4 ** 2 + aij / dsqrtt / vol ** 2 / d1
-     *                   + aij / dsqrtt / vol / d1 ** 2
 
-      pvv = 2d0 *( rt /d4**3  - aij / dsqrtt / vol**3 / d1 
-     *                        - aij / dsqrtt / vol**2 / d1**2 
-     *                        - aij / dsqrtt / vol    / d1**3)
-
-      pvv = pvv*1d2
-      pv = pv*1d1
       vol = vol/1d1
 
       end
@@ -6151,12 +6127,12 @@ c----------------------------------------------------------------------
       integer iavg, ins(5), isp, nit, i1, i2, i3, i4, i5, i,  
      *        itic, igood, ibad
 
-      logical bad, both
+      logical bad, both, gas, guess
 
       double precision c1,c2,c3,rat,rp1,rm1,nsi,no,oymin,nymin,oy(nsp),
      *                 r2p1,r2m1,lnk1,lnk2,lnk3,dquart,oymax,nymax,
      *                 go,go2,gsi,gsio,gsio2, gzero, by(nsp), bg(nsp),
-     *                 bvol, bpv, bpvv, gold, gnew
+     *                 bvol, bpv, bpvv, gold, gnew, n, tg, lp
 
       external dquart, gzero 
 
@@ -6228,7 +6204,7 @@ c                                 pure Si
          fco2 = dlog(p*g(i5))
          y(i5) = 1d0 
          
-         return
+         goto 90
 
       end if 
 c                                 evaluate K's and correct for pressure
@@ -6253,7 +6229,7 @@ c                                assume pure O2
 
             call rko2 (c1,iavg)
 
-           return
+           goto 90
          
 
          end if 
@@ -6288,9 +6264,9 @@ c                                 rat = nsi/no = xc/(1-xc)
 c                                 set singular compositions if within 
 c                                 speciation tolerance.
       if (dabs(rat-0.5d0).lt.nopt(5)) then 
-         rat = 0.5d0
+c        rat = 0.5d0
       else if (dabs(rat-1d0).lt.nopt(5)) then 
-         rat = 1d0
+c        rat = 1d0
       end if 
 
       rp1    = rat + 1d0
@@ -6298,15 +6274,81 @@ c                                 speciation tolerance.
       r2p1    = 2d0*rat + 1d0
       r2m1    = 2d0*rat - 1d0
 
-      if (.not.sroot) then 
+c      if (.not.sroot) then 
          switch = .false.
          both = .false.
-      end if 
+c     end if 
 c                                switch root entry point
 10    nit = 0 
       oymin = 1d0
       oymax = 0d0 
       bad = .false. 
+c                                  speciation guesses
+      gas = .false.
+
+      lp = dlog10(p)
+      tg = ((15.392*lp+25.635)*lp+400.7)*lp+3126.7 
+
+      if (t.gt.0d0) then
+      
+      if (rat.le.1d0.and.rat.ge.0.5d0) then
+c                                  SiO-SiO2 mix (this is only true at high T)
+         y(14) = (1d0 - rat)/rat
+         y(13) = 1d0 - y(14)
+         y(15) = nopt(5)
+         y(7)  = nopt(5)/4d0
+         y(12) = nopt(5)/2d0
+
+         call mrkmix (ins, isp, iavg)    
+
+         if (vol.gt.1d2) gas = .true.
+
+         if (gas) then 
+             i = 1
+         end if 
+
+      end if 
+
+      if (rat.le.1d0.and.gas.or.rat.le.0.5d0) then 
+c                                 solve ideal gas speciation
+         a0 = -c2 * c3 / c1  
+         a1 = c2 * (rm1 + c3 * rp1) / c1
+         a2 = (c2 * c3 * r2p1 + (r2m1 + c2) / c1) 
+         a3 = (c2 * rp1 - rm1 / c1) 
+c                                 monatomic O     
+         call newton (dquart,1d0,0d0,1d-12,y(i3),bad)
+
+         if (bad) then
+            write (*,*) 'paused yo',p,t,xc
+            pause
+         end if
+c                                 back calculate remaining fractions:
+c                                 K1 => O2: 
+         y(i4) = c1*y(i3)**2
+c                                 mass balance => sio: this might be singular
+c                                 at R = 1/2?
+         y(i2)  = y(i3)*((2d0 - y(i3))*rat - 1d0 + y(i3) + y(i4)) / rat 
+     *             / (y(i3) + 2d0*c3)
+
+         if (y(i2).lt.0d0) then
+            write (*,*) 'paused ysio',p,t,xc,y(i2)
+            y(i2) = nopt(5)/10d0
+         end if
+c                                  K3 => Si
+         y(i5) = c3/y(i3)*y(i2)
+c                                 closure => sio2: 
+         y(i1) = 1d0 - y(i2) - y(i3) - y(i4) - y(i5)
+
+         if (y(i1).lt.0d0) then
+            write (*,*) 'paused ysio2',p,t,xc,y(i1)
+            y(i1) = nopt(5)/10d0
+         end if
+
+         call mrkmix (ins, isp, iavg)    
+
+      end if 
+
+      end if 
 
       do 
 c                                 solve mass balance: yo^4 + a3*yo^3 + a2*yo^2 + a1*yo + a0) 
@@ -6377,7 +6419,7 @@ c                                 liquids.
      
                end if 
 
-               return
+               goto 90
 
             end if 
 
@@ -6452,13 +6494,14 @@ c                                 get new gamma's
 
             fh2o = dlog(1d4*p)
             fco2 = dlog(1d4*p)
-            return
+            goto 90
 
          else 
 
             call mrkmix (ins, isp, iavg)           
 c                                could converge to the wrong speciation
-            if ((.not.both).and.iroots.eq.3.and.(.not.sroot)) then
+c           if ((.not.both).and.iroots.eq.3.and.(.not.sroot)) then
+            if ((.not.both).and.iroots.eq.3) then
                both = .true.
                min = rkmin
             end if
@@ -6476,7 +6519,8 @@ c                                could converge to the wrong speciation
 
       itic = itic + 1 
 
-      if (both.and.(.not.sroot)) then
+c     if (both.and.(.not.sroot)) then
+      if (both) then
 
          if (switch) then
 c                                on the second solution
@@ -6497,8 +6541,6 @@ c                                swap to the old solution
                end do 
 
                vol = bvol
-               pv  = bpv
-               pvv = bpvv 
 c                                for sroot, 1st solution is good
                switch = .false.
    
@@ -6513,8 +6555,6 @@ c                                save old solution
             end do 
 
             bvol = vol
-            bpv  = pv
-            bpvv = pvv
 
             switch = .true.
 
@@ -6532,7 +6572,7 @@ c                                save old solution
 
          fh2o = dlog(1d4*p)
          fco2 = dlog(1d4*p)
-         return 
+         goto 90 
 
       end if 
 
@@ -6551,8 +6591,62 @@ c                                save old solution
          itic = 0 
          write (*,*) 'good,bad:',igood,ibad,t,p
       end if 
+c                                 convert to g-atom vol
+90    n = 3d0*y(14) + 2d0*y(13) + 2d0*y(7) + y(12) + y(15)
+c                                 convert to "molar amounts"         
+      vol = vol/n/1d1
 
 c      if (nit.gt.20) write (*,*) 'rk5 long nit',nit
+      end
+
+      double precision function gerk (x)
+c----------------------------------------------------------------------
+c subroutine to compute free energy of solution of an Si-O MRK fluid
+c assumes
+c x(1) = ysio2
+c x(2) = ysio
+c x(3) = yo
+c x(4) = yo2
+c x(5) = ysi
+c----------------------------------------------------------------------
+      implicit none 
+
+      include 'perplex_parameters.h'
+
+      integer iavg, ins(5), isp, i
+
+      double precision x(5)
+
+      double precision y,g,v
+      common / cstcoh /y(nsp),g(nsp),v(nsp)
+
+      double precision p,t,xc,u1,u2,tr,pr,r,ps
+      common/ cst5 /p,t,xc,u1,u2,tr,pr,r,ps
+
+      double precision vol
+      common/ cst26 /vol
+
+      save isp, ins, iavg
+      data isp, ins, iavg /5, 14, 13, 12, 7, 15,  1/
+c----------------------------------------------------------------------
+c                                 load composition
+      do i = 1, isp
+         y(ins(i)) = x(i)
+      end do 
+
+      call mrkmix (ins, isp, iavg)    
+
+      gerk = 0d0
+
+      do i = 1, isp
+         if (x(i).eq.0d0) cycle
+         gerk = gerk + x(i)*dlog(g(ins(i))*p*x(i))
+      end do 
+
+      gerk = r*t*gerk
+c                                 convert to j/bar from cm3, only for lv version
+      vol = vol/1d1
+
       end
 
       subroutine rkparm (ins, isp)
@@ -6712,9 +6806,13 @@ c    *                              - 1.138d0  * (t-1687.)**2)*1d2
       end do 
 
 c      a(14) = a(14)*1.135
-      a(13) = ark(14)/20d0
+      
+      a(13) = ark(14)/16.722d0
 c      a(14) = ark(14)
-      b(13) = brk(13)
+      b(13) = brk(14)/4.831d0
+c                                    sio max a parms:
+      b(13) = 16.06179418
+      a(13) = 2205440030.
 
 
       end 

@@ -27,6 +27,7 @@
                              28    - High T silicate melt
                              29    - BCC Fe-Si alloy, Lacaze & Sundman 1990.
                              30-33 - FeSiC alloys (BCC/FCC/CBCC/HCP), Lacaze & Sundman 1990.
+                             40    - Silicate fluid (MRK)
 
                              For non-ideal solutions, microscopic models assume Margules type excess functions; 
                              macroscopic models may be posed in terms of Margules (See model "Bio(HP)" for a commented

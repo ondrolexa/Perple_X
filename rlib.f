@@ -462,7 +462,7 @@ c                                 temperature
                oldid = id
                if (iwarn.eq.50) call warn (49,t,46,'GCPD_BM3')
             end if 
-c                                 destabalize the phase
+c                                 destabilize the phase
             vdp = 1d4*p
 
          else
@@ -513,6 +513,7 @@ c                                 komabayashi & fei (2010) EoS for Fe
 
          else if (eos(id).eq.604) then 
 c                                 Stoichiometic SiO2 rk fluid 
+            ins(1) = 14
             call mrkpur (ins,1)
             gval = gval + r*t*dlog(p*g(14))
 
@@ -533,6 +534,24 @@ c                                 Stoichiometic Si rk fluid
          else if (eos(id).ge.610.and.eos(id).le.639) then
 c                                 lacaze & Sundman (1990) EoS for Fe-Si-C alloys and compounds
             gval = glacaz(eos(id)) + vdp + thermo(1,id)  
+         
+         else if (eos(id).eq.700) then 
+c                                 sio
+            ins(1) = 13
+            call mrkpur (ins,1)
+            gval = gval + r*t*dlog(p*g(13))
+
+         else if (eos(id).eq.701) then 
+c                                 o2
+            ins(1) = 7
+            call mrkpur (ins,1)
+            gval = gval + r*t*dlog(p*g(7))
+
+         else if (eos(id).eq.702) then 
+c                                 o
+            ins(1) = 12
+            call mrkpur (ins,1)
+            gval = gval + r*t*dlog(p*g(12))
               
          end if          
 
@@ -835,7 +854,8 @@ c                                b2 = ln(v0)
          return
 c                                remaining standard forms have caloric polynomial
       else if (ieos.lt.103.or.ieos.eq.604.or.ieos.eq.605.or.
-     *         ieos.eq.606) then
+     *         ieos.eq.606.or.ieos.eq.700.or.ieos.eq.701.or.
+     *         ieos.eq.702) then
 c                                G(Pr,T) polynomial 
          g  = g
      *       + s * tr - a * tr - b * tr * tr / 2d0 + c / tr
@@ -6343,7 +6363,9 @@ c-----------------------------------------------------------------------
 
       integer k,id,ids
 
-      double precision gph,gzero,dg,x0
+      double precision gph,gzero,dg,x0,gerk,x1(5)
+
+      external gzero, gerk
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -6442,6 +6464,17 @@ c                              and/or dqf corrections:
                call hcneos (gph,sxs(ixp(id)+1),
      *                      sxs(ixp(id)+2),sxs(ixp(id)+3))
 
+            else if (ifp(id).eq.40) then
+
+               gph = 0d0 
+
+               do k = 1, 5
+                  x1(k) = sxs(ixp(id)+k)
+                  gph = gph + gzero(jend(ids,2+k))*x1(k)
+               end do 
+
+               gph = gph + gerk (x1)
+
             else
 
                call gexces (id,gph)
@@ -6461,8 +6494,7 @@ c                              ideal gas mix (ifp(id).eq.27)
             do k = 1, nstot(ids) 
                x0 = sxs(ixp(id)+k)
                if (x0.le.0d0) cycle
-               call gcpd (jend(ids,2+k),dg)
-               gph = gph +  x0 *(dg + r*t*dlog(x0))
+               gph = gph +  x0 *(gzero(jend(ids,2+k)) + r*t*dlog(x0))
             end do 
 
          end if 
@@ -7029,7 +7061,10 @@ c-----------------------------------------------------------------------
       integer k,id
 
       double precision omega, hpmelt, slvmlt, gmelt, gfluid, gzero, gg,
-     *                 dg, gex, gfesi, gfesic
+     *                 dg, gex, gfesi, gfesic, gerk, x1(5)
+
+      external omega, hpmelt, slvmlt, gmelt, gfluid, gzero, gex, gfesi, 
+     *         gfesic, gerk
 
       integer jend
       common/ cxt23 /jend(h9,k12)
@@ -7197,6 +7232,17 @@ c                                 Nastia's version of BCC/FCC/CBCC/HCP Fe-Si-C L
             gg =  gfesic (y(1),y(3),y(4),
      *                    g(jend(id,3)),g(jend(id,4)),
      *                    g(jend(id,5)),g(jend(id,6)),ksmod(id))
+
+         else if (ksmod(id).eq.40) then 
+c                                 MRK silicate vapor
+            gg = 0d0
+
+            do k = 1, nstot(id) 
+               gg = gg + gzero(jend(id,2+k)) * y(k)
+               x1(k) = y(k)
+            end do 
+
+            gg = gg + gerk(x1)
 
          else 
 

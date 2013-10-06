@@ -14,13 +14,13 @@ c----------------------------------------------------------------------
 
       integer i,ier,idead
 
-      logical nodata, bulk
+      logical nodata, bulk, atomic, start
 
       character amount*6, yes*1
 
       integer itri(4),jtri(4),ijpt
 
-      double precision wt(3), num
+      double precision wt(3), num, xs, ats(2), tg
 
       integer iwt
       common/ cst209 /iwt
@@ -67,6 +67,9 @@ c----------------------------------------------------------------------
       integer iam
       common/ cst4 /iam
 
+      character fname*10
+      common/ csta7 /fname(h9)
+
       double precision tlv, dt, rho, tst, tlv1, tlv2, rho1, rho2, cp1, 
      *                 cp2, x1, dp, rhoc, x2, pv1, pv2, pvv1, pvv2,
      *                 spec1(5,2),n(2),x(2),molwt(2),specwt(5),nat,
@@ -103,6 +106,9 @@ c                                 N, H, S, Cp, Cp/Cv, rho, vphi
       logical lopt
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      logical homo
+      common/ homo / homo
 c----------------------------------------------------------------------- 
 c                                 iam is a flag indicating the Perple_X program
       iam = 2
@@ -139,6 +145,18 @@ c      * ((spec1(j,i),i=1,2),j=1,5)
 c                                 initialization, read files etc. 
       rxn = .false.
       call iniprp
+c                                 atomic = true, the formula unit is
+c                                 one gram atom
+c                                 else the formula unit is one mole
+c                                 of molecular species.
+      if (fname(1).eq.'Si-O_F') then 
+         atomic = .true.
+      else if (fname(1).eq.'Si-O_f') then 
+         atomic = .false.
+      else 
+         write (*,*) 'wuggah'
+         pause
+      end if 
 
       write (*,1000) 
 c     read (*,'(a)') yes
@@ -208,21 +226,23 @@ c                                 lpopt does the minimization and outputs
 c                                 the results to the print file.
          tlv1 = v(2)
          quit = .false.
-         rhoc = 960d0
+         rhoc = 1030d0
+         rhoc = 722d0
 
          dp = nopt(30)
 
          do
 
-         dt = 1d0
-         go = .true.
-c         v(2) = tlv1 - 5d0
-         b(1) = 2d0/3d0
-         b(2) = 1d0 - b(1)
-         x(2) = 0d0
-
-c         dt = 1d0
-         v(2) = tlv1 
+            homo = .false.
+            dt = 1d0
+            go = .true.
+ 
+            b(1) = 2d0/3d0
+            b(2) = 1d0 - b(1)
+            x(2) = 0d0
+            v(2) = tlv1 
+c                                 use guess
+         v(2) = ((15.392*v(1)+25.635)*v(1)+400.7)*v(1)+3126.7 
 
          do 
 
@@ -232,7 +252,21 @@ c         dt = 1d0
     
                call getloc (itri,jtri,ijpt,wt,nodata)
 
-               if (np.gt.1.or..not.go.or.
+               if (np.eq.2.and.(props(10,1).gt.rhoc)
+     *                    .and.(props(10,2).gt.rhoc)
+     *                    .and.(dt.gt.0d0) ) then
+c                                  in liquid field, continue looking for vapor
+               else if (np.eq.2.and.(props(10,1).lt.rhoc)
+     *                         .and.(props(10,2).lt.rhoc)
+     *                         .and.(dt.lt.0d0) ) then
+c                                  in vapor field, continue looking for liquid
+               else if (np.eq.2.and.(props(10,1).lt.rhoc)
+     *                         .and.(props(10,2).lt.rhoc)
+     *                         .and.(dt.gt.0d0) ) then
+c                                  in pseudo vapor field, back up
+                  dt = -dt/2d0
+
+               else if (np.gt.1.or..not.go.or.
      *             np.eq.1.and.props(10,1).gt.rhoc) then 
 
                   tlv = v(2)
@@ -247,9 +281,12 @@ c         dt = 1d0
                      imax = 0
 
                      do i = 1, np
+
+                        xs =  pcomp(2,i)/(pcomp(1,i)+ pcomp(2,i))
+
                         if (props(10,i).gt.rho.and.
-     *                      pcomp(2,i).lt.0.9.and.
-     *                      pcomp(2,i).gt.1d0/3d0.or.
+     *                      xs.lt.0.45d0.and.
+     *                      xs.ge.1d0/3d0.or.
      *                      np.eq.1) then
                            rho = props(10,i)
                            imax = i
@@ -269,9 +306,9 @@ c         dt = 1d0
 
                      if (np.gt.1) then 
                         if (imax.eq.1) then 
-                            x(2) = pcomp(2,2) 
+                            x(2) = pcomp(2,2)/(pcomp(1,2)+ pcomp(2,2)) 
                         else
-                            x(2) = pcomp(2,1)
+                            x(2) = pcomp(2,1)/(pcomp(1,1)+ pcomp(2,1))
                         end if 
                      end if      
 
@@ -281,13 +318,13 @@ c         dt = 1d0
 
                      if (np.gt.1) then 
                         if (imax.eq.1) then 
-                            x(2) = pcomp(2,2) 
+                            x(2) = pcomp(2,2)/(pcomp(1,2)+ pcomp(2,2)) 
                         else
-                            x(2) = pcomp(2,1)
+                            x(2) = pcomp(2,1)/(pcomp(1,1)+ pcomp(2,1))
                         end if 
                      end if 
 
-                           call getloc (itri,jtri,ijpt,wt,nodata)
+                     call getloc (itri,jtri,ijpt,wt,nodata)
 c                          .or.rho.gt.2d3.and.v(1).gt.2.5d0
                      if (rho.lt.rhoc) then
 c                                 either the O-rich phase or the faux-gas, back off 
@@ -301,24 +338,23 @@ c                                 to find the plausible root
                            call lpopt0 (idead)
                            if (idead.ne.0) cycle
 c                           if (idead.ne.0.or.np.eq.1) cycle
-                           call getloc (itri,jtri,ijpt,wt,nodata)
-
-            if (go) then 
-c            call getloc (itri,jtri,ijpt,wt,nodata)
-c            call calpr0 (6)
-            end if 
+                           call getloc (itri,jtri,ijpt,wt,nodata) 
  
                            imax = 0 
 c comp 1 is O.
                            do i = 1, np
-                              if (pcomp(2,i).lt.1d0/3d0) cycle
+
+                              xs =  pcomp(2,i)/(pcomp(1,i)+ pcomp(2,i))
+
+                              if (xs.lt.1d0/3d0) cycle
                               imax = i
+
                            end do 
 
 
-                     if (imax.eq.0) then
-                        imax = iabs(imax) 
-                     end if 
+                           if (imax.eq.0) then
+                              imax = iabs(imax) 
+                           end if 
 
                            if (tic.gt.10.and.dabs(dt).lt.1) then
                               tic = 0
@@ -327,7 +363,6 @@ c comp 1 is O.
                            end if 
 
                            tic = tic + 1
-
 
                            if (imax.eq.0.or.isnan(props(10,imax))) then
                               write (*,*) 'terrible'
@@ -339,12 +374,9 @@ c comp 1 is O.
      *                         .or.
      *                      props(10,imax).gt.rhoc.and.
      *                      props(10,imax).lt.2.5d3.and.v(1).lt.2.5d0) 
-     * then
+     *                      then
 
-            if (go) then 
-c            call getloc (itri,jtri,ijpt,wt,nodata)
-c            call calpr0 (6)
-            end if 
+
 
                               exit 
                            end if
@@ -370,72 +402,90 @@ c                                 save the liq props:
 
 c                                 now increase t to get into the gas composition
                       do i = 1, icomp
-                            cblk(i) = pcomp(i,imax) 
-                            b(i) = cblk(i)
+                         cblk(i) = pcomp(i,imax) 
+                         b(i) = cblk(i)
                       end do  
 
                       if (b(1).gt.0.99) then
                          ir1 = 0
                       end if 
 
-                      x(1) = pcomp(2,imax) 
+                      x(1)= pcomp(2,imax)/(pcomp(1,imax)+ pcomp(2,imax))
+
                       if (np.gt.1) then 
                          if (imax.eq.1) then 
-                            x(2) = pcomp(2,2) 
+                            x(2) = pcomp(2,2)/(pcomp(1,2)+ pcomp(2,2))
                          else
-                            x(2) = pcomp(2,1)
+                            x(2) = pcomp(2,1)/(pcomp(1,1)+ pcomp(2,1))
                          end if 
                       end if 
 
                       dt = dabs(dt)
                       v(2) = tlv
                       tic = 0 
+                      start = .true.
 
                       do 
 
+c                         homo = .true.
+
                          v(2) = v(2) + dt 
                          call lpopt0 (idead)
-                         if (idead.ne.0.or.np.gt.1) cycle
+                         if (idead.ne.0) cycle
 
                          call getloc (itri,jtri,ijpt,wt,nodata)
 
+                         if (np.gt.1.and.start) then 
+                            start = .false.
+                            dt = 1d0 
+                         else if (np.eq.1.and.start) then 
+                            if (props(10,1).gt.rhoc) then
+                               tlv = v(2)
+                               cycle
+                            end if 
+                         end if 
+
+                         if (np.gt.1) then 
+c                                 in the 2 phase bubble, shift bulk to the average
+                            cblk(1) = (pcomp(1,1) + pcomp(1,2))/2d0 
+                            cblk(2) = 1d0 - cblk(1)
+                            b(1) = cblk(1)
+                            b(2) = cblk(2)
+                            if (dt.lt.0d0) dt = -dt/2d0
+
+                            cycle
+
+                         else 
+
+                            if (dt.gt.nopt(29)) then
+                               dt = -dt/2d0
+                               cycle 
+                            end if 
+
+                         end if 
+
                          tlv2 = v(2)
                          rho2 = props(10,1)
-
-                         if (isnan(rho2)) then 
-                            write (*,*) 'oink'
-                            cycle
-                         else if (rho2.lt.1d0) then
-c                           cycle
-                         end if 
-
-                         if (tic.gt.10.and.dt.lt.1) then
-                            tic = 0
-                            dt = 10d0*dt
-                            if (dt.gt.1) dt = 1d0
-                         end if 
-
-                         tic = tic + 1
-
-                         if (rho2.gt.rhoc) cycle 
+                         x(2) = pcomp(2,1)/(pcomp(1,1)+ pcomp(2,1))
+c                                      homogenizing the pseudo-vapor solutions
+c                                      may give a liquid density.
+c                        if (rho2.gt.rhoc) cycle 
                          cp2 = props(12,1)
                          pv2  = vp(1)
                          pvv2 = vvp(1)
                          ir2  = rooti(1)
+
                          do j = 1, 5
                            spec1(j,2) = spec(j,1)
                          end do 
+
                          do j = 1, 8
                            prps(j,2) = props(lprops(j),1)
                          end do 
 
-
                          exit
  
                       end do
-
-
-
 
                       exit
 
@@ -455,6 +505,11 @@ c                           cycle
                end if 
 
              end if 
+c                                 set the bulk back to the liquid
+                            cblk(1) = pcomp(1,1)
+                            cblk(2) = 1d0 - cblk(1)
+                            b(1) = cblk(1)
+                            b(2) = cblk(2)
 
              v(2) = v(2) + dt
 
@@ -472,19 +527,35 @@ c                                 compute true molar weight
                molwt(i) = molwt(i) + spec1(j,i) * specwt(j)
             end do
 
-            n(i) = nat/molwt(i)
-            z(i) = 10d0**v(1)*prps(8,i)/(r*v(2)*n(i))
+            if (atomic) then 
+               n(i) = nat/molwt(i)
+               ats(i) = 1d0
+            else
+               n(i) = 1d0
+               ats(i) = 3d0*spec(1,i) + 2d0*spec(2,i) + 2d0*spec(4,i)
+     *                  + spec(3,i) + spec(5,i)
+            end if 
+
+c                                 N, H, S, Cp, Cp/Cv, rho, vphi
+            prps(4,i) = prps(4,i)/r/ats(i)/3d0
+            z(i) = 10d0**v(1)*prps(8,i)/(n(i)*r*v(2))
 
          end do 
+
+         pv1 = pv1 * prps(8,1)
+         pvv1 = pvv1
+
+         pv2 = pv2 * prps(8,2)
+         pvv2 = pvv2 
 
           if (v(2).lt.6200d0)  
      *    write (111,'(120(g14.8,1x))') v(1),tlv,tlv-tlv1,tlv2-tlv,
      *                                x,
-     *                                rho1,rho2,cp1,cp2,
+     *                    rho1,rho2,cp1/ats(1)/r/3d0,cp2/ats(1)/r/3d0,
      *                                pv1,pvv1,ir1,pv2,pvv2,ir2
 
           write (*,'(12(g12.6,1x))') v(1),tlv,tlv-tlv1,tlv2-tlv,x,
-     *                                rho1,rho2,cp1,cp2
+     *                     rho1,rho2,cp1/ats(1)/r/3d0,cp2/ats(1)/r/3d0
           write (*,'(12(g12.6,1x))') pv1,pvv1,ir1,pv2,pvv2,ir2
 
           do j = 1, 2 
@@ -546,10 +617,16 @@ c                                 get entropy/rho of stoichiomentric composition
      *   props(15,1)/props(17,1)*1e3,props(10,1),
      *   (prps(8,i),i=1,2),(z(i),i=1,2)
 
+         if (v(2).lt.tg-1d2) then 
+            write (*,*) 'WANKO! tg=',tg
+         end if 
+
+         if ((rho1-rho2)/rho1.lt.1d-3) exit 
+
 
          if (v(1).ge.3.5d0.and.dp.ge.0.09.and.v(1).lt.3.8d0) then
             dp = 0.01
-         else if (v(1).ge.3.81d0.and.dp.ge.0.009) then
+         else if (v(1).ge.3.9d0.and.dp.ge.0.009) then
             dp = 0.001
 c         else if (v(1).ge.3.86d0.and.dp.ge.0.0009) then 
 c            dp = 0.0001

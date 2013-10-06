@@ -6447,7 +6447,7 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
  
-      double precision brk(nsp), ark(nsp), a0 
+      double precision brk(nsp), ark(nsp)
 
       integer ins(*), isp, i, k
 
@@ -7407,5 +7407,55 @@ c      if (nit.gt.20) write (*,*) 'rk4a long it:',nit
 
       fco2 = dlog(p*g(i3)*y(i3))
       fh2o = (dlog(p*g(i4)*y(i4)) - lnk1) / 2d0
+
+      end
+
+      double precision function gerk (x)
+c----------------------------------------------------------------------
+c subroutine to compute free energy of solution of an Si-O MRK fluid
+c assumes
+c x(1) = ysio2
+c x(2) = ysio
+c x(3) = yo
+c x(4) = yo2
+c x(5) = ysi
+c----------------------------------------------------------------------
+      implicit none 
+
+      include 'perplex_parameters.h'
+
+      integer iavg, ins(5), isp, i
+
+      double precision x(5)
+
+      double precision y,g,v
+      common / cstcoh /y(nsp),g(nsp),v(nsp)
+
+      double precision p,t,xc,u1,u2,tr,pr,r,ps
+      common/ cst5 /p,t,xc,u1,u2,tr,pr,r,ps
+
+      double precision vol
+      common/ cst26 /vol
+
+      save isp, ins, iavg
+      data isp, ins, iavg /5, 14, 13, 12, 7, 15,  1/
+c----------------------------------------------------------------------
+c                                 load composition
+      do i = 1, isp
+         y(ins(i)) = x(i)
+      end do 
+
+      call mrkmix (ins, isp, iavg)    
+
+      gerk = 0d0
+
+      do i = 1, isp
+         if (x(i).eq.0d0) cycle
+         gerk = gerk + x(i)*dlog(g(ins(i))*p*x(i))
+      end do 
+
+      gerk = r*t*gerk
+c                                 convert to j/bar from cm3, only for lv version
+      vol = vol/1d1
 
       end

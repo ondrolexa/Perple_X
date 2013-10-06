@@ -558,6 +558,7 @@ c                                 increments or counters:
       else 
 
          do i = 1, jpot
+            inc(i) = 100
             delv(i) = vmax(i)-vmin(i) 
             dv(i) = delv(i) / dfloat(inc(i))
             delv(i) = vmax(i)-vmin(i)

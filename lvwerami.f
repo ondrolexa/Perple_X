@@ -43,6 +43,9 @@ c----------------------------------------------------------------------
       integer ncol, nrow
       common/ cst226 /ncol,nrow,fileio
 
+      double precision rhoc
+      common/ rcrt /rhoc
+
       integer icps, jcx, jcx1, kds
       logical stol, savg
       double precision rcps
@@ -59,6 +62,9 @@ c                                 initialize some flags
       fake   = .false.
       rxn = .false.
       err = .false.
+         rhoc = 1030d0
+         rhoc = 722d0
+
 c                                 this could be eliminated by passing first 
 c                                 to chsprp.
       do i = 1, h9
