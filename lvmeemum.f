@@ -151,7 +151,7 @@ c                                 else the formula unit is one mole
 c                                 of molecular species.
       if (fname(1).eq.'Si-O_F') then 
          atomic = .true.
-      else if (fname(1).eq.'Si-O_f') then 
+      else if (fname(1).eq.'Si-O_f'.or.fname(1).eq.'Si-O_ideal') then 
          atomic = .false.
       else 
          write (*,*) 'wuggah'
@@ -226,8 +226,15 @@ c                                 lpopt does the minimization and outputs
 c                                 the results to the print file.
          tlv1 = v(2)
          quit = .false.
-         rhoc = 1030d0
-         rhoc = 722d0
+c                                 rhoc base model
+         rhoc = 988d0
+c                                 rhoc shornikov
+c        rhoc = 1052d0
+c        rhoc = 1001d0
+c                                 rhoc amax
+         rhoc = 750d0
+c                                 cst a
+c        rhoc = 1060d0
 
          dp = nopt(30)
 
@@ -241,8 +248,18 @@ c                                 the results to the print file.
             b(2) = 1d0 - b(1)
             x(2) = 0d0
             v(2) = tlv1 
-c                                 use guess
-         v(2) = ((15.392*v(1)+25.635)*v(1)+400.7)*v(1)+3126.7 
+c                                 use guess, base model
+         v(2) = ((14.483*v(1)+31.569)*v(1)+391.69)*v(1)+3129.2 
+c         y = 14.483*x^{3} + 31.569*x^{2} + 391.69*x + 3129.2 HSC base model
+c                                 use guess, shornikov model
+         v(2) = ((14.074*v(1)+32.984)*v(1)+385.01)*v(1)+3096.2 
+c         y = 14.074*x^{3} + 32.984*x^{2} + 385.01*x + 3096.2 shonikov model 
+c                                 use guess, asio max model
+         v(2) = ((18.267*v(1)+28.192)*v(1)+375.31)*v(1)+3139.4
+c         y = 18.267*x^{3} + 28.192*x^{2} + 375.31*x + 3139.4
+c                                 use guess, cst a model
+c        v(2) = ((50.739*v(1)- 102.48)*v(1)+545.51)*v(1)+3024
+c         y = 50.739*x^{3} - 102.48*x^{2} + 545.51*x + 3024
 
          do 
 
@@ -441,6 +458,11 @@ c                         homo = .true.
                          else if (np.eq.1.and.start) then 
                             if (props(10,1).gt.rhoc) then
                                tlv = v(2)
+                               tic = tic + 1
+                               if (tic.gt.3) then 
+                                  dt = 2d0*dt
+                                  tic = 0
+                               end if 
                                cycle
                             end if 
                          end if 
@@ -599,12 +621,12 @@ c     *  lnk4,lnk4+dlog(p),lnk5,lnk5*dlog(p)/2d0
        write (*,'(a,12(g12.6,1x))') 'vL vG zL zG ',
      *                              (prps(8,i),i=1,2),(z(i),i=1,2)
 c                                 get entropy/rho of stoichiomentric composition
-         b(1) = 2d0/3d0
-         b(2) = 1d0 - b(1)
+c         b(1) = 2d0/3d0
+c         b(2) = 1d0 - b(1)
 
-            call lpopt0 (idead)
+c            call lpopt0 (idead)
 
-            if (idead.eq.0) call getloc (itri,jtri,ijpt,wt,nodata)
+c            if (idead.eq.0) call getloc (itri,jtri,ijpt,wt,nodata)
 
           write (lun,'(120(g14.8,1x))') 
      *  v(1),10d0**v(1),tlv,tlv-tlv1,tlv2-tlv,
@@ -624,9 +646,9 @@ c                                 get entropy/rho of stoichiomentric composition
          if ((rho1-rho2)/rho1.lt.1d-3) exit 
 
 
-         if (v(1).ge.3.5d0.and.dp.ge.0.09.and.v(1).lt.3.8d0) then
+         if (v(1).ge.2.5d0.and.dp.ge.0.02.and.v(1).lt.3.5d0) then
             dp = 0.01
-         else if (v(1).ge.3.9d0.and.dp.ge.0.009) then
+         else if (v(1).ge.3.5d0.and.dp.ge.0.009) then
             dp = 0.001
 c         else if (v(1).ge.3.86d0.and.dp.ge.0.0009) then 
 c            dp = 0.0001

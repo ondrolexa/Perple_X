@@ -3221,8 +3221,8 @@ c                                 interval limits conformal transformation
       double precision yint, yfrc
       common/ cst47 /yint(5,ms1,mst,h9),yfrc(4,ms1,mst,h9),intv(4)
 
-      character*2 strgs, mstrg, dstrg, tstrg*3
-      common/ cst56 /strgs(18), mstrg(6), dstrg(8), tstrg(10)
+      character*2 strgs*3, mstrg, dstrg, tstrg*3
+      common/ cst56 /strgs(27), mstrg(6), dstrg(8), tstrg(13)
 
       character*80 com
       common/delet/com 
@@ -3234,8 +3234,10 @@ c                                 interval limits conformal transformation
       double precision goodc, badc
       common/ cst20 /goodc(3),badc(3)
 
+      double precision vrt
+      integer irt
       logical sroot
-      common/ rkroot /sroot
+      common/ rkroot /vrt,irt,sroot
 c-----------------------------------------------------------------------
       data hs2p/4, 5, 18, 19, 20, 21/
 
@@ -3251,12 +3253,13 @@ c
 
       data intv/1,2,4,1/
 c                                 tags for thermo data i/o
-      data strgs/'G0','S0','V0','c1','c2','c3','c4','c5','c6',
-     *           'c7','b1','b2','b3','b4','b5','b6','b7','b8'/
+      data strgs/'G0 ','S0 ','V0 ','c1 ','c2 ','c3 ','c4 ','c5 ','c6 ',
+     *           'c7 ','b1 ','b2 ','b3 ','b4 ','b5 ','b6 ','b7 ','b8 ',
+     *           'b9 ','b10','c8 ','c9 ','c10','c11','Tc ','B  ','p  '/
       data mstrg/'m0','m1','m2','k0','k1','k2'/
       data dstrg/'d1','d2','d3','d4','d5','d6','d7','d8'/
       data tstrg/'t1 ','t2 ','t3 ','t4 ','t5 ','t6 ','t7 ','t8 ','t9 ',
-     *           't10'/
+     *           't10','t11','t12','t14'/
 c     data estrg/'eG0','eS0','eV0','ec1','ec2','ec3','ec4','ec5','ec6',
 c    *           'ec7','eb1','eb2','eb3','eb4','eb5','eb6','eb7','eb8'/
 
@@ -3354,7 +3357,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer lun, ier, iscan, iscnlt, i, j, ibeg, iend
+      integer lun, ier, iscan, iscnlt, i, j, ibeg, iend, ic2p(27)
 
       character key*22, values*80, strg*80
 
@@ -3380,8 +3383,12 @@ c----------------------------------------------------------------------
       double precision thermo, uf, us
       common/ cst1 /thermo(k4,k10),uf(2),us(h5)
 
-      character*2 strgs, mstrg, dstrg, tstrg*3
-      common/ cst56 /strgs(18), mstrg(6), dstrg(8), tstrg(10)
+      character*2 strgs*3, mstrg, dstrg, tstrg*3
+      common/ cst56 /strgs(27), mstrg(6), dstrg(8), tstrg(13)
+
+      save ic2p
+      data ic2p/0,0,22,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,
+     *          19,20,21,23,24,25/
 c-----------------------------------------------------------------------
 c                                 initialize data
 c                                 flag for t-dependent disorder
@@ -3469,14 +3476,27 @@ c                                 assign data
             ok = .false.
 c                                 =====================================
 c                                 simple thermo data 
-            do i = 1, 18
-               if (key.eq.strgs(i)) then 
-                  read (values,*,iostat=ier) thermo(i,k10)
-                  if (ier.ne.0) call error (23,tot,ier,strg) 
-                  ok = .true.
-                  exit 
-               end if 
-            end do 
+            if (ieos.ne.12) then 
+               do i = 1, 18
+                  if (key.eq.strgs(i)) then 
+                     read (values,*,iostat=ier) thermo(i,k10)
+                     if (ier.ne.0) call error (23,tot,ier,strg) 
+                     ok = .true.
+                     exit 
+                  end if 
+               end do 
+            else 
+c                                 calphad format
+               do i = 1, 27
+                  if (key.eq.strgs(i)) then 
+                     read (values,*,iostat=ier) thermo(ic2p(i),k10)
+                     if (ier.ne.0) call error (23,tot,ier,strg) 
+                     ok = .true.
+                     exit 
+                  end if 
+               end do
+            end if 
+ 
 
             if (ok) cycle
 c                                 =====================================
@@ -3514,7 +3534,7 @@ c                                 set disorder flag
             if (ok) cycle
 c                                 =====================================
 c                                 mock-lambda transition data 
-            do i = 1, 10
+            do i = 1, 14
                if (key.eq.tstrg(i)) then 
                   read (values,*,iostat=ier) tm(i,ilam)
                   if (ier.ne.0) call error (23,tot,ier,strg) 
@@ -3785,8 +3805,8 @@ c----------------------------------------------------------------------
       character*80 com
       common/delet/com 
 
-      character*2 strgs, mstrg, dstrg, tstrg*3
-      common/ cst56 /strgs(18), mstrg(6), dstrg(8), tstrg(10)
+      character*2 strgs*3, mstrg, dstrg, tstrg*3
+      common/ cst56 /strgs(27), mstrg(6), dstrg(8), tstrg(13)
 c-----------------------------------------------------------------------
 c                                 =====================================
 c                                 name & EoS

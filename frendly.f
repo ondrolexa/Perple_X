@@ -1138,8 +1138,8 @@ c---------------------------------------------------------------------
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 
-      character*2 strgs, mstrg, dstrg, tstrg*3
-      common/ cst56 /strgs(18), mstrg(6), dstrg(8), tstrg(10)
+      character*2 strgs*3, mstrg, dstrg, tstrg*3
+      common/ cst56 /strgs(27), mstrg(6), dstrg(8), tstrg(13)
 c-----------------------------------------------------------------------
       write (*,1110)
       read (*,1050) y
@@ -1548,8 +1548,8 @@ c----------------------------------------------------------------------
       double precision thermo,uf,us
       common/ cst1 /thermo(k4,k10),uf(2),us(h5)    
 
-      character*2 strgs, mstrg, dstrg, tstrg*3
-      common/ cst56 /strgs(18), mstrg(6), dstrg(8), tstrg(10)
+      character*2 strgs*3, mstrg, dstrg, tstrg*3
+      common/ cst56 /strgs(27), mstrg(6), dstrg(8), tstrg(13)
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps

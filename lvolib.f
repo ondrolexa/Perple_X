@@ -1409,9 +1409,6 @@ c----------------------------------------------------------------------
       double precision units, r13, r23, r43, r59, r1, r2
       common/ cst59 /units, r13, r23, r43, r59, r1, r2
 
-      logical sroot
-      common/ rkroot /sroot
-
       integer idspec
       double precision spec
       common/ tspec /spec(nsp,k5),idspec
@@ -1434,6 +1431,11 @@ c----------------------------------------------------------------------
       double precision rhoc
       common/ rcrt /rhoc
 
+      double precision vrt
+      integer irt
+      logical sroot
+      common/ rkroot /vrt,irt,sroot
+
       double precision ga, gb, gc, gd, ge, gf, 
      *                 va, vb, vc, vd, ve, vf
 
@@ -1442,7 +1444,7 @@ c----------------------------------------------------------------------
       data ins/14, 13, 12, 7, 15/
 
       save dt
-      data dt /.05d0/
+      data dt /.5d0/
 
       save iwarn1, iwarn2, wname1, wname2
       data iwarn1, iwarn2, wname1, wname2 /2*0,2*'              '/
@@ -1526,10 +1528,12 @@ c                                 speciation trick
          end do 
       end if 
 c                                 set flag for multiple root eos's
-c     sroot = .true.
+      sroot = .true.
 c                                 save derivative for cp search
       rooti(jd) = iroots
       vrk = vol
+      vrt = vrk
+      irt = iroots
 
 
 c                                 if a reaction, cannot use sign to 
@@ -1541,6 +1545,9 @@ c                                 whole list
 c                                 real phase, use sign of s and v to check
 c                                 difference increments
          v = vrk
+         if (v.le.0d0) then 
+            write (*,*) 'wonk?'
+         end if 
 
          rho = props(17,jd)/v*1d2
 
@@ -1553,9 +1560,10 @@ c                                 real phase, use sign of s and v to check
 c                                 difference increments
          okt = .false.
 
-         dp0 = 1e-5*p
+         dp0 = 1d0
+         if (p-nopt(31)*dp0.lt.0d0) dp0 = p/nopt(31)
 
-         do i = 1, 4
+         do i = 1, 10
 
             if (.not.fow) then 
                vc = (ginc(0d0,dp0,id) - g0)/dp0
@@ -1563,9 +1571,9 @@ c                                 difference increments
                vc = (g0 - ginc(0d0,-dp0,id))/dp0
             end if 
 
-            if (dabs(vrk-vc)/vrk.lt.1d-3) exit 
+            if (dabs(vrk-vc)/vrk.lt.1d-4) exit 
 
-            dp0 = dp0 * nopt(31)
+            dp0 = dp0 / nopt(31)
 
          end do
 
@@ -1578,11 +1586,20 @@ c                                 difference increments
          vc = vol
          gd = ginc(0d0,dp0,id)
          vd = vol
-c                                 vp
-         gpp  = (vd - vc)/2d0/dp0
-c                                 vpp
-         gppp = (vd + vc - 2d0*vrk)/dp0**2
 
+         if (.not.fow) then
+            gpp = (vd - vrk)/dp0
+            ge = ginc(0d0,2d0*dp0,id)
+            ve = vol
+            gppp = (ve + vrk - 2d0*vd)/dp0**2
+         else 
+            gpp = (vrk - vc)/dp0
+            ge = ginc(0d0,-2d0*dp0,id)
+            ve = vol
+            gppp = (ve + vrk - 2d0*vc)/dp0**2
+         end if 
+
+            dt = 15d3/t
             dt0 = dt
             okt = .false.
 
@@ -1604,17 +1621,17 @@ c                                 vpp
 
                end if 
 
-               if (gtt.lt.0d0) then
+               if (gtt.lt.0d0.and.-t*gtt.lt.1d5) then
                   okt = .true. 
                   exit
                end if 
  
                if (i.le.6) then 
-                  dt0 = dt0/10d0
+                  dt0 = dt0/nopt(31)
                else if (i.eq.7) then
-                  dt0 = dt*10d0 
+                  dt0 = dt*nopt(31)
                else
-                  dt0 = dt0*10d0
+                  dt0 = dt0*nopt(31)
                   if (dt0.gt.t) exit
                end if 
 

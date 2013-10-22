@@ -2216,11 +2216,11 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer ins(*),i,j,k,l,isp,ineg,ipos,iavg,irt,jrt
+      integer ins(*),i,j,k,l,isp,ineg,ipos,iavg,jrt
 
       logical max, bad
  
-      double precision f(nsp),aj2(nsp),ev(3),c1,c2,ax,vrt,dv,
+      double precision f(nsp),aj2(nsp),ev(3),c1,c2,ax,dv,
      *                 c3,vmin,vmax,d1,d2,d3,d6,rt,dsqrtt,r,
      *                 ch,bx,aij,pdv 
  
@@ -2239,15 +2239,17 @@ c-----------------------------------------------------------------------
       double precision a, b
       common/ rkab /a(nsp),b(nsp)
 
+      double precision vrt
+      integer irt
       logical sroot
-      common/ rkroot /sroot
+      common/ rkroot /vrt,irt,sroot
 
       double precision pv, pvv
       integer iroots
       logical switch, rkmin, min
       common/ rkdivs /pv,pvv,iroots,switch,rkmin,min
  
-      save r, irt, vrt, max
+      save r, max
                              
       data r /83.1441d0/
 c---------------------------------------------------------------------- 
@@ -2392,13 +2394,12 @@ c                                by evaluating p*delta(v) - int(pdv)
 
       end if 
 
-      if (.not.sroot) then 
+c      if (.not.sroot) then 
 c                                 for finite difference property 
 c                                 computations, save the root
-         irt = iroots
-         vrt = vol
+c         irt = iroots
 
-      end if 
+c      end if 
 c                                 compute fugacities:
       d1 = rt*dsqrtt*bx
       d2 = dlog((vol + bx)/vol)/d1
@@ -6167,8 +6168,10 @@ c----------------------------------------------------------------------
       double precision vol
       common/ cst26 /vol
 
+      double precision vrt
+      integer irt
       logical sroot
-      common/ rkroot /sroot
+      common/ rkroot /vrt,irt,sroot
 
       save isp, ins, i1, i2, i3, i4, i5, itic, igood, ibad, both, iavg
       data isp, ins, i1, i2, i3, i4, i5, itic, igood, ibad, both, iavg
@@ -6301,7 +6304,7 @@ c                                  SiO-SiO2 mix (this is only true at high T)
 
          call mrkmix (ins, isp, iavg)    
 
-         if (vol.gt.1d2) gas = .true.
+c        if (vol.gt.1d2) gas = .true.
 
          if (gas) then 
              i = 1
@@ -6331,7 +6334,7 @@ c                                 at R = 1/2?
      *             / (y(i3) + 2d0*c3)
 
          if (y(i2).lt.0d0) then
-            write (*,*) 'paused ysio',p,t,xc,y(i2)
+c           write (*,*) 'paused ysio',p,t,xc,y(i2)
             y(i2) = nopt(5)/10d0
          end if
 c                                  K3 => Si
@@ -6340,7 +6343,7 @@ c                                 closure => sio2:
          y(i1) = 1d0 - y(i2) - y(i3) - y(i4) - y(i5)
 
          if (y(i1).lt.0d0) then
-            write (*,*) 'paused ysio2',p,t,xc,y(i1)
+c           write (*,*) 'paused ysio2',p,t,xc,y(i1)
             y(i1) = nopt(5)/10d0
          end if
 
@@ -6501,7 +6504,9 @@ c                                 get new gamma's
             call mrkmix (ins, isp, iavg)           
 c                                could converge to the wrong speciation
 c           if ((.not.both).and.iroots.eq.3.and.(.not.sroot)) then
-            if ((.not.both).and.iroots.eq.3) then
+            if (sroot.and.iroots.eq.3) then 
+               both = .true.
+            else if ((.not.both).and.iroots.eq.3) then
                both = .true.
                min = rkmin
             end if
@@ -6811,8 +6816,8 @@ c      a(14) = a(14)*1.135
 c      a(14) = ark(14)
       b(13) = brk(14)/4.831d0
 c                                    sio max a parms:
-      b(13) = 16.06179418
-      a(13) = 2205440030.
+c      b(13) = 16.06179418
+c      a(13) = 2205440030.
 
 
       end 

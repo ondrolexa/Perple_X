@@ -265,7 +265,7 @@ alpha(cen)    1.0    0.0    0.0
 alpha(cts)    3.5    0.0    0.0
 end_van_laar_sizes
 
-reach_increment 4
+reach_increment 1
 
 end_of_model                        
                       --------------------------------------------------------

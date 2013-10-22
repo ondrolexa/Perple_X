@@ -914,6 +914,8 @@ c                                 tait parameters computed as f(T)
 
       else if (ieos.eq.10) then 
 c                                 ideal gas, could make a reference pressure correction here. 
+      else if (ieos.eq.12) then 
+c                                 calphad format, don't do anything. 
       else if (b8.ne.0d0) then 
 c                                 All remaining forms (ieos = 2, 4, >100) assume:
 c                                 1) alpha = b1 + b2*T + b3/T + b4/T^2 + b5/sqrt(T)

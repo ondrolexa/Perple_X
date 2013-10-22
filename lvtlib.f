@@ -3234,8 +3234,10 @@ c                                 interval limits conformal transformation
       double precision goodc, badc
       common/ cst20 /goodc(3),badc(3)
 
+      double precision vrt
+      integer irt
       logical sroot
-      common/ rkroot /sroot
+      common/ rkroot /vrt,irt,sroot
 c-----------------------------------------------------------------------
       data hs2p/4, 5, 18, 19, 20, 21/
 

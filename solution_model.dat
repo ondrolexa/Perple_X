@@ -2217,6 +2217,8 @@ CO2
 ideal                      | internal excess function
 0                          | internal config entropy model
 
+reach_increment 1
+
 end_of_model               
                       --------------------------------------------------------
 begin_model                

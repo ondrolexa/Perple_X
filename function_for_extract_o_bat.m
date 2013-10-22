@@ -17,6 +17,7 @@ elseif nvar == 2 % 2d - table -> 2/3d plot
     conts = str2num(c{1});
     % for some reason the explicit vector of contour levels cannot
     % be of size 1 (because contourc interprets it as the number of levels)
+    hold on
     C = contourc(x,y,a,[conts 1e99]);
     plot(C(1,2:C(2,1)),C(2,2:C(2,1)))
     xlabel(xname);ylabel(yname)

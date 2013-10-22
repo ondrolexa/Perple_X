@@ -64,6 +64,9 @@ c----------------------------------------------------------------------
       double precision goodc, badc
       common/ cst20 /goodc(3),badc(3)
 
+      double precision rhoc
+      common/ rcrt /rhoc
+
       integer iam
       common/ cst4 /iam
 
@@ -79,8 +82,13 @@ c                                 initialization, read files etc.
       rxn = .false.
       call iniprp
 
+         rhoc = 1001d0
+c         rhoc = 722d0
+
       write (*,1000) 
       read (*,'(a)') yes
+
+      write (*,*) 'rhoc = ',rhoc
 
       if (yes.eq.'y'.or.yes.eq.'Y') then 
 c                                 bulk is true, user enters composition and p-t conditions

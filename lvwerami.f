@@ -62,8 +62,8 @@ c                                 initialize some flags
       fake   = .false.
       rxn = .false.
       err = .false.
-         rhoc = 1030d0
-         rhoc = 722d0
+         rhoc = 1001d0
+c         rhoc = 722d0
 
 c                                 this could be eliminated by passing first 
 c                                 to chsprp.
@@ -1201,6 +1201,10 @@ c----------------------------------------------------------------------
       integer idspec
       double precision spec
       common/ tspec /spec(nsp,k5),idspec
+
+      double precision specwt(5),molwt
+      save specwt
+      data specwt/60.084, 44.085, 15.999, 31.998, 28.086/
 c----------------------------------------------------------------------
       if (kcx(1).eq.999) then 
 c                                 write phemgp format
@@ -1214,9 +1218,25 @@ c                                 write spreadsheet tab format
             write (n5,'(200(g14.7,1x))') (var(i),i=1,ivar), 
      *                                   (prop(i),i=1,iprop)
          else 
+            if (idspec.ne.0) then
+
+            molwt = 0d0
+            
+            do i = 1, 5
+               molwt = molwt + spec(i,idspec) * specwt(i)
+            end do
+
+            prop(16) = prop(17)/molwt
+ 
             write (n5,'(200(g14.7,1x))') (var(i),i=1,ivar), 
      *                                   (prop(i),i=1,iprop),
      *                                   (spec(i,idspec),i=1,5)
+            else 
+            write (n5,'(200(g14.7,1x))') (var(i),i=1,ivar), 
+     *                                   (prop(i),i=1,iprop),
+     *                                   (spec(i,1),i=1,5)
+
+            end if 
          end if 
       else 
 c                                 write compact tab format
@@ -3074,6 +3094,10 @@ c----------------------------------------------------------------
 
       double precision atwt
       common/ cst45 /atwt(k0)
+
+      integer idspec
+      double precision spec
+      common/ tspec /spec(nsp,k5),idspec
 c----------------------------------------------------------------------
       if (kop(1).eq.38) then 
 c                                 custom property choices
@@ -3203,6 +3227,8 @@ c                                 the phase is not present
                   end if 
 
                end if 
+
+               idspec = id
 c                                 normal properties
                do i = 1, i8
                   prop(i) = props(i,id)
