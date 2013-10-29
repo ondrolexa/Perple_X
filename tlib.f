@@ -17,7 +17,7 @@ c----------------------------------------------------------------------
       implicit none
 
       write (*,'(/,a)') 
-     *      'Perple_X version 6.6.8, source updated Oct 6, 2013.'
+     *      'Perple_X version 6.6.8, source updated Oct 29, 2013.'
 
       end
 
@@ -1383,6 +1383,9 @@ c                                 now find trailing blank
       iend = iscan (ibeg,240,' ') 
 c                                 return if just a keyword
       if (iend.gt.240) return
+c                                 look if it contains a comment character
+      ist = iscan (ibeg,iend,'|') 
+      if (ist.lt.iend) iend = ist - 1
 c                                 save longer versions (only on first value)
 c                                 this is done in case it's long text or 
 c                                 several numbers on certain options. 
@@ -3222,7 +3225,7 @@ c                                 interval limits conformal transformation
       common/ cst47 /yint(5,ms1,mst,h9),yfrc(4,ms1,mst,h9),intv(4)
 
       character*2 strgs*3, mstrg, dstrg, tstrg*3
-      common/ cst56 /strgs(27), mstrg(6), dstrg(8), tstrg(13)
+      common/ cst56 /strgs(28), mstrg(6), dstrg(8), tstrg(13)
 
       character*80 com
       common/delet/com 
@@ -3255,7 +3258,8 @@ c
 c                                 tags for thermo data i/o
       data strgs/'G0 ','S0 ','V0 ','c1 ','c2 ','c3 ','c4 ','c5 ','c6 ',
      *           'c7 ','b1 ','b2 ','b3 ','b4 ','b5 ','b6 ','b7 ','b8 ',
-     *           'b9 ','b10','c8 ','c9 ','c10','c11','Tc ','B  ','p  '/
+     *           'b9 ','b10','c8 ','c9 ','c10','c11',
+     *           'Tc ','B  ','p  ','v  '/
       data mstrg/'m0','m1','m2','k0','k1','k2'/
       data dstrg/'d1','d2','d3','d4','d5','d6','d7','d8'/
       data tstrg/'t1 ','t2 ','t3 ','t4 ','t5 ','t6 ','t7 ','t8 ','t9 ',
@@ -3357,7 +3361,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer lun, ier, iscan, iscnlt, i, j, ibeg, iend, ic2p(27)
+      integer lun, ier, iscan, iscnlt, i, j, ibeg, iend, ic2p(28)
 
       character key*22, values*80, strg*80
 
@@ -3384,11 +3388,11 @@ c----------------------------------------------------------------------
       common/ cst1 /thermo(k4,k10),uf(2),us(h5)
 
       character*2 strgs*3, mstrg, dstrg, tstrg*3
-      common/ cst56 /strgs(27), mstrg(6), dstrg(8), tstrg(13)
+      common/ cst56 /strgs(28), mstrg(6), dstrg(8), tstrg(13)
 
       save ic2p
-      data ic2p/0,0,22,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,
-     *          19,20,21,23,24,25/
+      data ic2p/0,0,22,1,2,3,4,5,6,7,12,13,14,15,16,17,18,19,20,21,8,
+     *          9,10,11,23,24,25,26/
 c-----------------------------------------------------------------------
 c                                 initialize data
 c                                 flag for t-dependent disorder
@@ -3495,6 +3499,7 @@ c                                 calphad format
                      exit 
                   end if 
                end do
+
             end if 
  
 
@@ -3806,7 +3811,7 @@ c----------------------------------------------------------------------
       common/delet/com 
 
       character*2 strgs*3, mstrg, dstrg, tstrg*3
-      common/ cst56 /strgs(27), mstrg(6), dstrg(8), tstrg(13)
+      common/ cst56 /strgs(28), mstrg(6), dstrg(8), tstrg(13)
 c-----------------------------------------------------------------------
 c                                 =====================================
 c                                 name & EoS
@@ -5230,4 +5235,3 @@ c                                 scan for blanks:
       write (text,'(400a)') (bitsy(i), i = 1, ict + 1)
 
       end
-

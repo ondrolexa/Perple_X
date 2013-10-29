@@ -4488,24 +4488,69 @@ ideal
 z(mg) = 1 chum
 
 end_of_model               | end of model keyword
+
                       --------------------------------------------------------
-begin_model                | keyword indicating beginning of a solution model
+begin_model               
+                             Antigorite with Tschermak's substitution (Padrón-Navarta et al., 2013, Lithos)
 
-Atg                                   ideal antigorite                                          
-2                          | macroscopic
+                                                      M0      M1       T1  
+                                                     ______________________
 
-2 
-atg      fatg     
-  0  0                                endmember flags
- 0. 1. 0.1   1             | subdivision range, imod = 1 -> asymmetric transform subdivision
+                                      Mutliplicity    44       4         8
+                                                     ______________________
 
-ideal 
+                                      1 atg          Mg      Mg       SiSi
+                            Species:  2 fatg         Fe      Fe       SiSi
+                                      3 atgts        Mg      Al       AlSi
+                                      4 fatgts       Fe      Al       AlSi dependent
+                                                      ______________________
 
-1                          | 1 site entropy model 
-2 48.                      | 2 species, 48 sites pfu
-z(mg) = 1 atg    
+                             Dependent: fatgts = 1 atgts + 44/48 fatg - 44/48 atg
 
-end_of_model               | end of model keyword
+                             This model requires the following make definition in the thermodynamic data file:
+
+                                atgts = 4 clin + 9/17 atg - 24/17 br
+                                -2e3. 46.1 0
+                                                                                   
+Atg(PN)                    | solution name
+
+7                          | model type: reciprocal, macroscopic
+
+2                          | 2 site reciprocal solution
+
+2  2                       | 2 species on each site
+
+atg      fatg              | endmember names, this order implies:
+atgts    fatgts            | x(11)=x(mg); x(12) = x(fe); x(21) = x(SiAl,t2); x(22) = x(Al2,t2)
+
+1                          | 1 dependent endmember:
+
+fatgts = 1 atgts + 44/48 fatg - 44/48 atg
+
+0 0 0 0                    | endmember flags, indicate if the endmember is part of the solution.
+0.0 1. 0.1  0              | range and resolution for X(Mg) on site 1, imod = 0 -> cartesian subdivision
+0.0 1. 0.1  0              | range and resolution for 1-X(Tschermaks) on site 2, imod = 0 -> cartesian subdivision
+
+ideal
+
+3                          | 3 site (M0, M1, T1) configurational entropy model
+
+2 44.                      | 2 species on M0, 2 sites per formula unit.
+
+z(m1,mg) = 1 atg + 1 atgts                
+               
+2 8.                       | 2 species on T1, 2 sites per formula unit.
+
+z(t2,al) = 1/2 atgts
+
+3 4.                       | 3 species on M1, 1 site per formula unit.
+
+z(m2,mg) = 1 atg
+z(fe,m2) = 1 fatg
+
+end_of_model              
+
+                      --------------------------------------------------------
                       --------------------------------------------------------
 begin_model                | keyword indicating beginning of a solution model
 

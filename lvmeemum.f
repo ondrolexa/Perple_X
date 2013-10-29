@@ -227,14 +227,13 @@ c                                 the results to the print file.
          tlv1 = v(2)
          quit = .false.
 c                                 rhoc base model
-         rhoc = 988d0
+         rhoc = 996d0
 c                                 rhoc shornikov
 c        rhoc = 1052d0
-c        rhoc = 1001d0
 c                                 rhoc amax
-         rhoc = 750d0
+c        rhoc = 750d0
 c                                 cst a
-c        rhoc = 1060d0
+c        rhoc = 1220d0
 
          dp = nopt(30)
 
@@ -252,13 +251,13 @@ c                                 use guess, base model
          v(2) = ((14.483*v(1)+31.569)*v(1)+391.69)*v(1)+3129.2 
 c         y = 14.483*x^{3} + 31.569*x^{2} + 391.69*x + 3129.2 HSC base model
 c                                 use guess, shornikov model
-         v(2) = ((14.074*v(1)+32.984)*v(1)+385.01)*v(1)+3096.2 
+c        v(2) = ((14.074*v(1)+32.984)*v(1)+385.01)*v(1)+3096.2 
 c         y = 14.074*x^{3} + 32.984*x^{2} + 385.01*x + 3096.2 shonikov model 
 c                                 use guess, asio max model
-         v(2) = ((18.267*v(1)+28.192)*v(1)+375.31)*v(1)+3139.4
+c        v(2) = ((18.267*v(1)+28.192)*v(1)+375.31)*v(1)+3139.4
 c         y = 18.267*x^{3} + 28.192*x^{2} + 375.31*x + 3139.4
 c                                 use guess, cst a model
-c        v(2) = ((50.739*v(1)- 102.48)*v(1)+545.51)*v(1)+3024
+         v(2) = ((50.739*v(1)- 102.48)*v(1)+545.51)*v(1)+3024
 c         y = 50.739*x^{3} - 102.48*x^{2} + 545.51*x + 3024
 
          do 
@@ -453,9 +452,12 @@ c                         homo = .true.
                          call getloc (itri,jtri,ijpt,wt,nodata)
 
                          if (np.gt.1.and.start) then 
-                            start = .false.
+
                             dt = 1d0 
+                            cycle 
+
                          else if (np.eq.1.and.start) then 
+
                             if (props(10,1).gt.rhoc) then
                                tlv = v(2)
                                tic = tic + 1
@@ -465,21 +467,22 @@ c                         homo = .true.
                                end if 
                                cycle
                             end if 
+
                          end if 
 
                          if (np.gt.1) then 
-c                                 in the 2 phase bubble, shift bulk to the average
-                            cblk(1) = (pcomp(1,1) + pcomp(1,2))/2d0 
-                            cblk(2) = 1d0 - cblk(1)
-                            b(1) = cblk(1)
-                            b(2) = cblk(2)
-                            if (dt.lt.0d0) dt = -dt/2d0
+
+                            if (dt.lt.0d0) then 
+                               start = .false.
+                               dt = -dt/2d0
+                            end if 
 
                             cycle
 
                          else 
 
                             if (dt.gt.nopt(29)) then
+                               start = .false.
                                dt = -dt/2d0
                                cycle 
                             end if 
@@ -594,7 +597,7 @@ c                         back calculate compositions
                 tot = tot + spec1(i,j)
              end do 
            
-             do i = 2,4
+             do i = 2,3
                 prps(i,j) = prps(i,j)/prps(1,j)*1d3
              end do 
 
@@ -646,9 +649,9 @@ c            if (idead.eq.0) call getloc (itri,jtri,ijpt,wt,nodata)
          if ((rho1-rho2)/rho1.lt.1d-3) exit 
 
 
-         if (v(1).ge.2.5d0.and.dp.ge.0.02.and.v(1).lt.3.5d0) then
+         if (v(1).ge.2.5d0.and.dp.ge.0.02.and.v(1).lt.3.93d0) then
             dp = 0.01
-         else if (v(1).ge.3.5d0.and.dp.ge.0.009) then
+         else if (v(1).ge.3.925d0.and.dp.ge.0.009) then
             dp = 0.001
 c         else if (v(1).ge.3.86d0.and.dp.ge.0.0009) then 
 c            dp = 0.0001
