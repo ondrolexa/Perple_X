@@ -33,7 +33,9 @@ COMP77 = gfortran
 # uninitialized variables). use -ffpe-trap=zero,overflow,underflow to catch fp errors and -fcheck=all 
 # for safe run-time code.
 
-FFLAGS = -m64 -O3 -static-libgfortran
+# add -m64 to force 64 bit code generation (at least on OSX)
+
+FFLAGS =  -O3 -static-libgfortran
 
 # WFM Added 2007Sep05, PAPPEL 2010SEPT08: for 6.6.0
 MYOBJ = actcor build fluids ctransf frendly htog meemum pstable pspts psvdraw pssect pt2curv vertex werami unsplt
