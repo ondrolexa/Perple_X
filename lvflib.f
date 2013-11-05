@@ -6708,7 +6708,7 @@ c-----------------------------------------------------------------------
      *          174026d2, 133.1d6, 130d6, 136d5 , 631d5,
 c             O, SiO, SiO2, Si, unk:
 c             asio = aco/aco2 * asio2 => 1/16.722 => 424441664.6d0
-c bp values for si, sio2
+c using HSC (shornikov a = 73739...)
      *          174026d2, 424441664.6d0,  7165898184d0, 2349662883d0,  
      *          0d0/a0/1d0/,
      *     brk /14.6,  29.7,  27.38, 29.681, 15.7699, 29.94,
@@ -6716,10 +6716,9 @@ c bp values for si, sio2
 c             O, SiO, SiO2, Si, unk:
 c             bsio = bco/bco2*bsio2 => 1/4.83
 c             bo  ~ bo2
-c using actual bco/bco2:
+c using Shornikov:
 c    *          22.07, 23.81d0, 25.83798814d0, 10.35788774, 0d0/
-c rhocrit o2 - 1449 o - 724. sio - 1851 sio2 - 2325 si - 2711
-c using bco/bco2 = 1/4.83 (true critical b's):
+c using HSC:
      *          22.07, 5.148732998d0, 25.79671756d0, 10.35788774, 0d0/
 c----------------------------------------------------------------------
 c      if (first) then 
@@ -6776,13 +6775,9 @@ c                                  HSC DP fit, with a0 correction
      * + t * (-0.115746244073046750D6) 
      * + t ** 2 * (-0.126792045931319510D2)) * 1d2
 
-
-c    *            +  nopt(29)*(t-1999.)
 c delta component :
+
      *            +  32300.*(t-1999.) + 14.25*(t-1999.)**2
-c                                   fit to mp s,cp,g,v
-c           a(14) = ( 73828180.7110d0 + 7535d0*(t-1999.)
-c    *                  - 4.438d0*(t-1999.)**2)*1d2
 
 
          else if (i.eq.15) then 
@@ -6796,9 +6791,6 @@ c delta component
      *      -50.5d0*(t-1687.) - 2.04d-2*(t-1687.)**2
      *      )*1d2
 
-c                                   fit to mp s,cp,g,v
-c          a(15) = ( 23496628.831d0 + 6342d0  * (t-1687.)
-c    *                              - 1.138d0  * (t-1687.)**2)*1d2
 
          else 
 

@@ -491,8 +491,10 @@ c                                 -ndu term
       end do
 
       gval = gval + vdp + ndu 
+
 c                                 check for transitions:
       if (ltyp(id).ne.0) call mtrans (gval,vdp,ndu,id)
+
 c                                 check for temperature dependent
 c                                 order/disorder:
       if (idis(id).ne.0) call disord (gval,idis(id))
@@ -729,6 +731,7 @@ c---------------------------------------------------------------------
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 c----------------------------------------------------------------------
+      
       if (ieos.eq.1) then 
 c                                G(P,T) polynomial forms, e.g., Helgeson et al 1978 (AJS)
 c                                Berman 1988 (J Pet).
@@ -1278,7 +1281,7 @@ c                                 -sdt
       double precision function gclpht (id,j)
 c-----------------------------------------------------------------------
 c gclpht computes the reference pressure free energy of a compound 
-c aboves its jth transition. 
+c aboves its jth transition (SGTE data type)
 c---------------------------------------------------------------------
       implicit none
  
@@ -1292,12 +1295,12 @@ c---------------------------------------------------------------------
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
  
-      gclpht = therlm(1,j,id) + therlm(2,j,id)*t + 
-     #         therlm(3,j,id)*t*dlog(t) + therlm(4,j,id)/t + 
-     #         therlm(5,j,id)/t**2 + therlm(6,j,id)/t**3 + 
-     #         therlm(7,j,id)/t**9 + therlm(8,j,id)*t**2 + 
-     #         therlm(9,j,id)*t**3 + therlm(10,j,id)*t**4 + 
-     #         therlm(11,j,id)*t**7 
+      gclpht = therlm(5,j,id) + therlm(6,j,id)*t + 
+     #         therlm(7,j,id)*t*dlog(t) + therlm(8,j,id)/t + 
+     #         therlm(9,j,id)/t**2 + therlm(10,j,id)/t**3 + 
+     #         therlm(11,j,id)/t**9 + therlm(12,j,id)*t**2 + 
+     #         therlm(13,j,id)*t**3 + therlm(14,j,id)*t**4 + 
+     #         therlm(15,j,id)*t**7 
      
       end   
 
@@ -1979,7 +1982,7 @@ c                                 s + st at trt:
                   dt = 1d0
                else
                   dt = 1d-3*t
-               end if 
+               end if
 
                t = tm(1,k) + dt 
                g1 = gzero(id)
@@ -1993,6 +1996,7 @@ c                              streamline the eos:
                   z(j) = 0d0 
                end do 
 
+
                call conver (therlm(12,k,lamin),therlm(3,k,lamin),
      *          z(1),therlm(5,k,lamin), therlm(6,k,lamin),
      *               therlm(7,k,lamin), therlm(8,k,lamin),  
@@ -2005,6 +2009,20 @@ c                              streamline the eos:
             end do 
 
             eos(id) = ieos
+
+           else if (jlam.eq.6) then 
+
+           do k = 1, ilam
+c                              SGTE format
+c                              load into therlm:
+              therlm(1,k,lamin) = tm(1,k)
+              therlm(2,k,lamin) = tm(2,k)
+
+              do j = 4, 14
+                 therlm(j+1,k,lamin) = tm(j,k)
+              end do 
+
+           end do
 
          else 
 
@@ -2860,22 +2878,29 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer ibeg, jend, len, ier, iscan, lord, imax, match, idim
+      integer ibeg, jend, len, ier, iscan, lord, imax, match, idim, 
+     *        i, j, iscnlt 
 
-      character name*8, begin*5, eod*3, tname*10
+      character name*8, begin*5, eod*3, tname*10, values*30, key*22
 
-      integer i,j
+      logical ok
+
+      external iscnlt, iscan
 
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
-     *        kstot
-      double precision wg,xmn,xmx,xnc,reach
-      common/ cst108 /wg(m1,m3),xmn(mst,msp),xmx(mst,msp),xnc(mst,msp),
+     *        kstot,rkord,xtyp
+      double precision wg,wk,xmn,xmx,xnc,reach
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),
+     *      xmn(mst,msp),xmx(mst,msp),xnc(mst,msp),
      *      reach,iend(m4),isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),
-     *      isp(mst),isite,iterm,iord,istot,jstot,kstot
+     *      isp(mst),rkord(m18),isite,iterm,iord,istot,jstot,kstot,xtyp
 
       integer length,iblank,icom
       character chars*1
       common/ cst51 /length,iblank,icom,chars(240)
+
+      character*2 strgs*3, mstrg, dstrg, tstrg*3, wstrg*3
+      common/ cst56 /strgs(28),mstrg(6),dstrg(8),tstrg(13),wstrg(m16)
 c----------------------------------------------------------------------
 
       iterm = 0 
@@ -2905,6 +2930,12 @@ c----------------------------------------------------------------------
          if (ier.ne.0) goto 90
 
          write (eod,'(3a)') (chars(i),i=1,3) 
+c                                 find expansion type
+         if (chars(2).eq.'k'.or.chars(2).eq.'K') then 
+            xtyp = 1
+         else 
+            xtyp = 0
+         end if    
 c                                 find brackets
          ibeg = iscan (1,len,'(') + 1
          imax = iscan (1,len,')') - 1
@@ -2915,6 +2946,7 @@ c                                 data found
          if (iterm.gt.m1) call error (48,wg(1,1),m1,tname)
 
          lord = 0
+         rkord(iterm) = 0
 
          do while (ibeg.lt.imax)
 
@@ -2930,17 +2962,86 @@ c                                 data found
 
          end do 
 
-         if (lord.gt.iord) iord = lord
-
          ibeg = imax + 2
 
-         do i = 1, 3
+         if (xtyp.eq.0) then 
+c                                 initialize coefs
+            do i = 1, m3
+               wg(iterm,i) = 0d0
+            end do 
+c                                 read unadorned margules pt functions
+            if (lord.gt.iord) iord = lord
 
-            call readfr (wg(iterm,i),ibeg,jend,len,ier)
+            do i = 1, 3
+
+               call readfr (wg(iterm,i),ibeg,jend,len,ier)
      
-            if (ier.ne.0) goto 90 
+               if (ier.ne.0) goto 90 
     
-         end do 
+            end do 
+
+         else
+c                                 set "perplex" order 
+            iord = 2 
+c                                 rk form, read a new card for each term 
+            do j = 1, m17
+
+               do i = 1, m16
+                  wk(i,j,iterm) = 0d0
+               end do 
+
+            end do
+
+            do  
+
+               ibeg = 1
+c                                 check for end of data 
+               call readcd (n9,len,ier)
+               write (begin,'(3a)') (chars(i), i = 1, 3)
+               if (begin.eq.'end'.or.begin.eq.'wk(') exit 
+c                                 we have a data card
+               rkord(iterm) = rkord(iterm) + 1
+
+               do 
+c                                 locate end of keyword
+                  if (ibeg.ge.icom) exit 
+                  jend = iscan (ibeg,icom,'=') - 1
+                  if (jend.ge.icom) exit
+c                                 write keyword
+                  write (key,'(22a1)',iostat=ier) (chars(i),i=ibeg,jend)
+                  if (ier.ne.0) call error (23,wg(1,1),ier,key) 
+c                                 locate data
+                  ibeg = iscnlt (jend+2,icom,' ')
+                  jend = iscan (ibeg,icom,' ')
+c                                 write data 
+                  write (values,'(80a1)',iostat=ier) (chars(i),
+     *                                                      i=ibeg,jend)
+                  if (ier.ne.0) call error (23,wg(1,1),ier,key) 
+c                                 shift pointer to next key
+                  ibeg = iscnlt(jend,icom,' ')
+c                                 assign data
+                  ok = .false.
+
+                  do i = 1, m16
+                     if (key.eq.wstrg(i)) then 
+                        read (values,*,iostat=ier) 
+     *                                          wk(i,rkord(iterm),iterm)
+                        if (ier.ne.0) call error (23,wg(1,1),ier,key) 
+                        ok = .true.
+                        exit 
+                     end if 
+                  end do 
+
+                  if (ok) cycle
+
+                  call error (9,wg(1,1),i,key)
+
+               end do
+
+            end do
+
+         end if 
+
       end do
 
       return
@@ -3500,11 +3601,12 @@ c-----------------------------------------------------------------
      *      nttyp(m10,m11,m0)
 
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
-     *        kstot
-      double precision wg,xmn,xmx,xnc,reach
-      common/ cst108 /wg(m1,m3),xmn(mst,msp),xmx(mst,msp),xnc(mst,msp),
+     *        kstot,rkord,xtyp
+      double precision wg,wk,xmn,xmx,xnc,reach
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),
+     *      xmn(mst,msp),xmx(mst,msp),xnc(mst,msp),
      *      reach,iend(m4),isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),
-     *      isp(mst),isite,iterm,iord,istot,jstot,kstot
+     *      isp(mst),rkord(m18),isite,iterm,iord,istot,jstot,kstot,xtyp
 c-----------------------------------------------------------------
 
       if (nsite.gt.m10) call error (31,a0(1,1),isite,tname)
@@ -4255,11 +4357,12 @@ c---------------------------------------------------------------------
       common/ cst86 /xy(mdim,k1),yy(ms1,mst,k1),ntot,npairs
 
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
-     *        kstot
-      double precision wg,xmn,xmx,xnc,reach
-      common/ cst108 /wg(m1,m3),xmn(mst,msp),xmx(mst,msp),xnc(mst,msp),
+     *        kstot,rkord,xtyp
+      double precision wg,wk,xmn,xmx,xnc,reach
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),
+     *      xmn(mst,msp),xmx(mst,msp),xnc(mst,msp),
      *      reach,iend(m4),isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),
-     *      isp(mst),isite,iterm,iord,istot,jstot,kstot
+     *      isp(mst),rkord(m18),isite,iterm,iord,istot,jstot,kstot,xtyp
 c                                 interval limits conformal transformation
       integer intv
       double precision yint, yfrc
@@ -5189,11 +5292,12 @@ c---------------------------------------------------------------------
       common/ cst142 /jmsol(m4,mst),kdsol(m4)
 
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
-     *        kstot
-      double precision wg,xmn,xmx,xnc,reach
-      common/ cst108 /wg(m1,m3),xmn(mst,msp),xmx(mst,msp),xnc(mst,msp),
+     *        kstot,rkord,xtyp
+      double precision wg,wk,xmn,xmx,xnc,reach
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),
+     *      xmn(mst,msp),xmx(mst,msp),xnc(mst,msp),
      *      reach,iend(m4),isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),
-     *      isp(mst),isite,iterm,iord,istot,jstot,kstot
+     *      isp(mst),rkord(m18),isite,iterm,iord,istot,jstot,kstot,xtyp
 c----------------------------------------------------------------------
       kill = 1
 
@@ -5331,11 +5435,12 @@ c                                 local input variables
      *      nttyp(m10,m11,m0)
 
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
-     *        kstot
-      double precision wg,xmn,xmx,xnc,reach
-      common/ cst108 /wg(m1,m3),xmn(mst,msp),xmx(mst,msp),xnc(mst,msp),
+     *        kstot,rkord,xtyp
+      double precision wg,wk,xmn,xmx,xnc,reach
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),
+     *      xmn(mst,msp),xmx(mst,msp),xnc(mst,msp),
      *      reach,iend(m4),isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),
-     *      isp(mst),isite,iterm,iord,istot,jstot,kstot
+     *      isp(mst),rkord(m18),isite,iterm,iord,istot,jstot,kstot,xtyp
 
       integer iorig,jnsp,iy2p
       common / cst159 /iorig(m4),jnsp(m4),iy2p(m4)
@@ -5555,12 +5660,28 @@ c                               the term is acceptable
                isub(itic,j,1) = i2ni(isub(i,j,1))
             end if 
          end do 
+
+         if (xtyp.eq.0) then 
 c                                save the coefficient
-         do j = 1, m3
-            wg(itic,j) = wg(i,j)
-         end do 
+            do j = 1, m3
+               wg(itic,j) = wg(i,j)
+            end do 
 c                                find highest order term
-         if (mord.gt.maxord) maxord = mord
+            if (mord.gt.maxord) maxord = mord
+
+         else
+c                                 redlich kistler
+            rkord(itic) = rkord(i)
+
+            do j = 1, rkord(itic)
+               do k = 1, m16
+                  wk(k,j,itic) = wk(k,j,i)
+               end do
+            end do 
+
+            maxord = 2
+
+         end if 
 
       end do     
 c                                reset counters, iord is not reset
@@ -5826,11 +5947,12 @@ c---------------------------------------------------------------------
       common/ cst18a /mname(m4)
 
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
-     *        kstot
-      double precision wg,xmn,xmx,xnc,reach
-      common/ cst108 /wg(m1,m3),xmn(mst,msp),xmx(mst,msp),xnc(mst,msp),
+     *        kstot,rkord,xtyp
+      double precision wg,wk,xmn,xmx,xnc,reach
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),
+     *      xmn(mst,msp),xmx(mst,msp),xnc(mst,msp),
      *      reach,iend(m4),isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),
-     *      isp(mst),isite,iterm,iord,istot,jstot,kstot
+     *      isp(mst),rkord(m18),isite,iterm,iord,istot,jstot,kstot,xtyp
 
       integer mdep,idep,jdep,ndph
       double precision nu,y2p
@@ -5953,11 +6075,12 @@ c----------------------------------------------------------------------
       common/ cst221 /vlaar(m3,m4),jsmod
 
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
-     *        kstot
-      double precision wg,xmn,xmx,xnc,reach
-      common/ cst108 /wg(m1,m3),xmn(mst,msp),xmx(mst,msp),xnc(mst,msp),
+     *        kstot,rkord,xtyp
+      double precision wg,wk,xmn,xmx,xnc,reach
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),
+     *      xmn(mst,msp),xmx(mst,msp),xnc(mst,msp),
      *      reach,iend(m4),isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),
-     *      isp(mst),isite,iterm,iord,istot,jstot,kstot
+     *      isp(mst),rkord(m18),isite,iterm,iord,istot,jstot,kstot,xtyp
 
       integer iddeps,norder 
       double precision depvnu,denth
@@ -6063,11 +6186,12 @@ c---------------------------------------------------------------------
      *      nttyp(m10,m11,m0)
 
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
-     *        kstot
-      double precision wg,xmn,xmx,xnc,reach
-      common/ cst108 /wg(m1,m3),xmn(mst,msp),xmx(mst,msp),xnc(mst,msp),
+     *        kstot,rkord,xtyp
+      double precision wg,wk,xmn,xmx,xnc,reach
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),
+     *      xmn(mst,msp),xmx(mst,msp),xnc(mst,msp),
      *      reach,iend(m4),isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),
-     *      isp(mst),isite,iterm,iord,istot,jstot,kstot
+     *      isp(mst),rkord(m18),isite,iterm,iord,istot,jstot,kstot,xtyp
 
       logical depend,laar,order,fluid,macro,specil,recip
       common/ cst160 /depend,laar,order,fluid,macro,specil,recip
@@ -6363,11 +6487,12 @@ c---------------------------------------------------------------------
       common/ cst160 /depend,laar,order,fluid,macro,specil,recip
 
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
-     *        kstot
-      double precision wg,xmn,xmx,xnc,reach
-      common/ cst108 /wg(m1,m3),xmn(mst,msp),xmx(mst,msp),xnc(mst,msp),
+     *        kstot,rkord,xtyp
+      double precision wg,wk,xmn,xmx,xnc,reach
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),
+     *      xmn(mst,msp),xmx(mst,msp),xnc(mst,msp),
      *      reach,iend(m4),isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),
-     *      isp(mst),isite,iterm,iord,istot,jstot,kstot
+     *      isp(mst),rkord(m18),isite,iterm,iord,istot,jstot,kstot,xtyp
 
       integer jmsol,kdsol
       common/ cst142 /jmsol(m4,mst),kdsol(m4)
@@ -6635,8 +6760,9 @@ c                                 working arrays
       double precision alpha,dt
       common/ cyt0  /alpha(m4),dt(j3)
 c                                 excess energy variables
-      integer jterm, jord, jsub
-      common/ cxt2i /jterm(h9),jord(h9),jsub(m2,m1,h9)
+      integer jterm, jord, extyp, rko, jsub
+      common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m18,h9),
+     *               jsub(m2,m1,h9)
 
       double precision dvnu,deph,dydy
       common/ cxt3r /dvnu(m4,j3,h9),deph(j3,h9),dydy(m4,j3,h9)
@@ -6799,8 +6925,9 @@ c-----------------------------------------------------------------------
       double precision sxs,exces
       common/ cst304 /sxs(k13),exces(m3,k1),ixp(k1)
 c                                 excess energy variables
-      integer jterm, jord, jsub
-      common/ cxt2i /jterm(h9),jord(h9),jsub(m2,m1,h9)
+      integer jterm, jord, extyp, rko, jsub
+      common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m18,h9),
+     *               jsub(m2,m1,h9)
 
       double precision z, pa, p0a, x, w, y
       common/ cxt7 /y(m4),x(m4),pa(m4),p0a(m4),z(mst,msp),w(m1)
@@ -7700,11 +7827,12 @@ c---------------------------------------------------------------------
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 c                                 excess energy variables
-      integer jterm, jord, jsub
-      common/ cxt2i /jterm(h9),jord(h9),jsub(m2,m1,h9)
+      integer jterm, jord, extyp, rko, jsub
+      common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m18,h9),
+     *               jsub(m2,m1,h9)
 
-      double precision wgl,vlar
-      common/ cxt2r /wgl(m3,m1,h9),vlar(m3,m4,h9)
+      double precision wgl, wkl, vlar
+      common/ cxt2r /wgl(m3,m1,h9),wkl(m16,m17,m18,h9),vlar(m3,m4,h9)
 c                                 working arrays
       double precision z, pa, p0a, x, w, y
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1)
@@ -7724,6 +7852,18 @@ c                                 bookkeeping variables
       double precision dppp,d2gx,sdzdp
       common/ cxt28 /dppp(j3,j3,m1,h9),d2gx(j3,j3),sdzdp(j3,m11,m10,h9)
 c----------------------------------------------------------------------
+      if (extyp(id).eq.1) then 
+c                                 redlich kistler is a special case
+c         do i = 1, jterm(id)
+c            do j = 1, rko(i,id)
+c             wk(j,i) = 1d0
+c            end do 
+c         end do 
+            
+         return
+
+      end if 
+
       do i = 1, jterm(id)
          w(i) = wgl(1,i,id) + t*wgl(2,i,id) + p*wgl(3,i,id)
       end do
@@ -7814,6 +7954,9 @@ c                                 local alpha
       common/ cyt0  /alpha(m4),dt(j3)
 c----------------------------------------------------------------------
       gex = 0d0 
+
+c     if (extyp(ids).eq.1) then 
+c
  
       if (lexces(ids)) then 
 
@@ -7940,11 +8083,12 @@ c---------------------------------------------------------------------
      *      nttyp(m10,m11,m0)
 
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
-     *        kstot
-      double precision wg,xmn,xmx,xnc,reach
-      common/ cst108 /wg(m1,m3),xmn(mst,msp),xmx(mst,msp),xnc(mst,msp),
+     *        kstot,rkord,xtyp
+      double precision wg,wk,xmn,xmx,xnc,reach
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),
+     *      xmn(mst,msp),xmx(mst,msp),xnc(mst,msp),
      *      reach,iend(m4),isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),
-     *      isp(mst),isite,iterm,iord,istot,jstot,kstot
+     *      isp(mst),rkord(m18),isite,iterm,iord,istot,jstot,kstot,xtyp
 
       integer iddeps,norder 
       double precision depvnu,denth
@@ -7978,11 +8122,12 @@ c                                 configurational entropy variables:
       common/ cxt1r /qmult(m10,h9),d0(m11,m10,h9),dcoef(m0,m11,m10,h9),
      *               scoef(m4,h9)
 c                                 excess energy variables
-      integer jterm, jord, jsub
-      common/ cxt2i /jterm(h9),jord(h9),jsub(m2,m1,h9)
+      integer jterm, jord, extyp, rko, jsub
+      common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m18,h9),
+     *               jsub(m2,m1,h9)
 
-      double precision wgl,vlar
-      common/ cxt2r /wgl(m3,m1,h9),vlar(m3,m4,h9)
+      double precision wgl, wkl, vlar
+      common/ cxt2r /wgl(m3,m1,h9),wkl(m16,m17,m18,h9),vlar(m3,m4,h9)
 
       double precision dppp,d2gx,sdzdp
       common/ cxt28 /dppp(j3,j3,m1,h9),d2gx(j3,j3),sdzdp(j3,m11,m10,h9)
@@ -8305,11 +8450,28 @@ c                                 -------------------------------------
 c                                 save the excess terms.                              
       jterm(im) = iterm
       jord(im) = iord
+      extyp(im) = xtyp
 
       do i = 1, iterm 
-         do j = 1, m3
-            wgl(j,i,im) = wg(i,j)
-         end do 
+
+
+         if (xtyp.eq.0) then 
+c                                 arbitrary expansion
+            do j = 1, m3
+               wgl(j,i,im) = wg(i,j)
+            end do
+
+         else 
+c                                 redlich-kistler
+            rko(i,im) = rkord(i)
+
+            do k = 1, rkord(i)
+               do j = 1, m16
+                  wkl(j,k,i,im) = wk(j,k,i)
+               end do  
+            end do
+
+         end if  
 
          do j = 1, iord
 c                                 isub points to the position in the list
@@ -9311,8 +9473,9 @@ c                                 working arrays
       double precision alpha,dt
       common/ cyt0  /alpha(m4),dt(j3)
 c                                 excess energy variables
-      integer jterm, jord, jsub
-      common/ cxt2i /jterm(h9),jord(h9),jsub(m2,m1,h9)
+      integer jterm, jord, extyp, rko, jsub
+      common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m18,h9),
+     *               jsub(m2,m1,h9)
 
       double precision dvnu,deph,dydy
       common/ cxt3r /dvnu(m4,j3,h9),deph(j3,h9),dydy(m4,j3,h9)
@@ -10496,8 +10659,9 @@ c                                 working arrays
       double precision alpha,dt
       common/ cyt0  /alpha(m4),dt(j3)
 c                                 excess energy variables
-      integer jterm, jord, jsub
-      common/ cxt2i /jterm(h9),jord(h9),jsub(m2,m1,h9)
+      integer jterm, jord, extyp, rko, jsub
+      common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m18,h9),
+     *               jsub(m2,m1,h9)
 
       double precision dvnu,deph,dydy
       common/ cxt3r /dvnu(m4,j3,h9),deph(j3,h9),dydy(m4,j3,h9)
@@ -10795,12 +10959,13 @@ c---------------------------------------------------------------------
       common/ cxt30 /limc(j6+2,j5,j3),limid(m0,j5,j3),jimid(j3,j5,j3),
      *               limn(j3),limt(j5,j3),jimc(j3,j5,j3),jimt(j5,j3)
 
-      double precision wg,xmn,xmx,xnc,reach
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
-     *        kstot
-      common/ cst108 /wg(m1,m3),xmn(mst,msp),xmx(mst,msp),xnc(mst,msp),
+     *        kstot,rkord,xtyp
+      double precision wg,wk,xmn,xmx,xnc,reach
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),
+     *      xmn(mst,msp),xmx(mst,msp),xnc(mst,msp),
      *      reach,iend(m4),isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),
-     *      isp(mst),isite,iterm,iord,istot,jstot,kstot
+     *      isp(mst),rkord(m18),isite,iterm,iord,istot,jstot,kstot,xtyp
 
       integer iddeps,norder 
       double precision depvnu,denth
@@ -10953,12 +11118,13 @@ c-----------------------------------------------------------------------
       character fname*10
       common/ csta7 /fname(h9)
 
-      double precision wg,xmn,xmx,xnc,reach
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
-     *        kstot
-      common/ cst108 /wg(m1,m3),xmn(mst,msp),xmx(mst,msp),xnc(mst,msp),
+     *        kstot,rkord,xtyp
+      double precision wg,wk,xmn,xmx,xnc,reach
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),
+     *      xmn(mst,msp),xmx(mst,msp),xnc(mst,msp),
      *      reach,iend(m4),isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),
-     *      isp(mst),isite,iterm,iord,istot,jstot,kstot
+     *      isp(mst),rkord(m18),isite,iterm,iord,istot,jstot,kstot,xtyp
 
       character mname*8
       common/ cst18a /mname(m4)
@@ -11226,12 +11392,13 @@ c---------------------------------------------------------------------
       double precision y,xy
       common/ cst86 /xy(mdim,k1),y(ms1,mst,k1),ntot,npairs
 
-      double precision wg,xmn,xmx,xnc,reach
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
-     *        kstot
-      common/ cst108 /wg(m1,m3),xmn(mst,msp),xmx(mst,msp),xnc(mst,msp),
+     *        kstot,rkord,xtyp
+      double precision wg,wk,xmn,xmx,xnc,reach
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),
+     *      xmn(mst,msp),xmx(mst,msp),xnc(mst,msp),
      *      reach,iend(m4),isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),
-     *      isp(mst),isite,iterm,iord,istot,jstot,kstot
+     *      isp(mst),rkord(m18),isite,iterm,iord,istot,jstot,kstot,xtyp
 c---------------------------------------------------------------------
 c                                 do the first site:
       call cartes (1,tname,ids)
@@ -11463,12 +11630,13 @@ c----------------------------------------------------------------------
       double precision y,xy
       common/ cst86 /xy(mdim,k1),y(ms1,mst,k1),ntot,npairs
 
-      double precision wg,xmn,xmx,xnc,reach
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
-     *        kstot
-      common/ cst108 /wg(m1,m3),xmn(mst,msp),xmx(mst,msp),xnc(mst,msp),
+     *        kstot,rkord,xtyp
+      double precision wg,wk,xmn,xmx,xnc,reach
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),
+     *      xmn(mst,msp),xmx(mst,msp),xnc(mst,msp),
      *      reach,iend(m4),isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),
-     *      isp(mst),isite,iterm,iord,istot,jstot,kstot
+     *      isp(mst),rkord(m18),isite,iterm,iord,istot,jstot,kstot,xtyp
 
       integer ndim,mxsp
       logical cart
@@ -11527,12 +11695,13 @@ c----------------------------------------------------------------------
       double precision y,xy
       common/ cst86 /xy(mdim,k1),y(ms1,mst,k1),ntot,npairs
 
-      double precision wg,xmn,xmx,xnc,reach
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
-     *        kstot
-      common/ cst108 /wg(m1,m3),xmn(mst,msp),xmx(mst,msp),xnc(mst,msp),
+     *        kstot,rkord,xtyp
+      double precision wg,wk,xmn,xmx,xnc,reach
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),
+     *      xmn(mst,msp),xmx(mst,msp),xnc(mst,msp),
      *      reach,iend(m4),isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),
-     *      isp(mst),isite,iterm,iord,istot,jstot,kstot
+     *      isp(mst),rkord(m18),isite,iterm,iord,istot,jstot,kstot,xtyp
 
       integer ndim,mxsp
       logical cart
@@ -11765,8 +11934,12 @@ c--------------------------------------------------------------------------
       integer iff,idss,ifug,ifyn,isyn
       common/ cst10  /iff(2),idss(h5),ifug,ifyn,isyn
 
-      integer jterm, jord, jsub
-      common/ cxt2i /jterm(h9),jord(h9),jsub(m2,m1,h9)
+      integer jterm, jord, extyp, rko, jsub
+      common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m18,h9),
+     *               jsub(m2,m1,h9)
+
+      double precision wgl, wkl, vlar
+      common/ cxt2r /wgl(m3,m1,h9),wkl(m16,m17,m18,h9),vlar(m3,m4,h9)
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp  
@@ -11790,9 +11963,6 @@ c--------------------------------------------------------------------------
       double precision xcoor
       integer icoor
       common/ cxt10 /xcoor(k18),icoor(k1)
-
-      double precision wgl,vlar
-      common/ cxt2r /wgl(m3,m1,h9),vlar(m3,m4,h9)
 
       integer ksmod, ksite, kmsol, knsp
       common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
@@ -12705,8 +12875,8 @@ c                                 ubc-type transitions
  
          else if (ltyp(id).eq.2) then
 c                                 standard transitions
-            call lamhel (p,t,gval,vdp,lmda(id),lct(id))
- 
+                call lamhel (p,t,gval,vdp,lmda(id),lct(id))
+
          else if (ltyp(id).eq.3) then
 c                                 supcrt q/coe lambda transition
             call lamqtz (p,t,gval,ndu,lmda(id),id)
@@ -13224,6 +13394,9 @@ c-----------------------------------------------------------------
       double precision thermo
       common/ cst1 /thermo(k4,k10)
 
+      integer ltyp,lct,lmda
+      common/ cst204 /ltyp(k10),lct(k10),lmda(k10)
+
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 
@@ -13240,90 +13413,70 @@ c-----------------------------------------------------------------
 c----------------------------------------------------------------------
 c                             allocate polynomial coeffiecients for
 c                             reference Gibbs free energy function
-       a = thermo(1,id)
-       b = thermo(2,id)
-       c = thermo(3,id)
-       d = thermo(4,id)
-       e = thermo(5,id)
-       f = thermo(6,id)
-       g = thermo(7,id)
-       h = thermo(8,id)
-       i = thermo(9,id)
-       j = thermo(10,id)
-       k = thermo(11,id)
+      a = thermo(1,id)
+      b = thermo(2,id)
+      c = thermo(3,id)
+      d = thermo(4,id)
+      e = thermo(5,id)
+      f = thermo(6,id)
+      g = thermo(7,id)
+      h = thermo(8,id)
+      i = thermo(9,id)
+      j = thermo(10,id)
+      k = thermo(11,id)
 c                             allocate coefficients for EoS
 c                             and magnetic term
-       gam0 = thermo(12,id)
-       nn = thermo(13,id)
-       tet0 = thermo(14,id)
-       b0 = thermo(15,id)
-       dd0 = thermo(16,id)
-       b1 = thermo(17,id)
-       dd1 = thermo(18,id)
-       Bo = thermo(19,id)
-       Bpo = thermo(20,id)
-       v0 = thermo(22,id)
-       tc = thermo(23,id)
-       beta = thermo(24,id)
-       pp = thermo(25,id)
-       vv = thermo(26,id)
+      gam0 = thermo(12,id)
+      nn = thermo(13,id)
+      tet0 = thermo(14,id)
+      b0 = thermo(15,id)
+      dd0 = thermo(16,id)
+      b1 = thermo(17,id)
+      dd1 = thermo(18,id)
+      Bo = thermo(19,id)
+      Bpo = thermo(20,id)
+      v0 = thermo(22,id)
+      tc = thermo(23,id)
+      beta = thermo(24,id)
+      pp = thermo(25,id)
+      vv = thermo(26,id)
 
-      
 c                          read SGTE data and evaluate S, Cp, and H at reference T and P
-      
-      if (t.eq.0d0) then
-          gsgte = 0d0
-      else
      
-          gsgte = a + b*t + c*t*dlog(t) + d/t + e/t**2 + f/t**3 + 
+      gsgte = a + b*t + c*t*dlog(t) + d/t + e/t**2 + f/t**3 + 
      #            g/t**9 + h*t**2 + i*t**3 + j*t**4 + k*t**7    
-     
-      end if
+c                          check for transitions:
+      if (ltyp(id).ne.0) call calpht (t,gsgte,lmda(id),lct(id))  
 
 
       gsgte0 = a + b*tr + c*tr*dlog(tr) + d/tr + e/tr**2 + f/tr**3 + 
      #         g/tr**9 + h*tr**2 + i*tr**3 + j*tr**4 + k*tr**7
-
 c                                            sr = -dg/dt at reference t
       sr = -b - c*dlog(tr) - c + d/tr**2 + 0.2D1*e/tr**3 + 
      #      0.3D1*f/tr**4 + 0.9D1*g/tr**10 - 0.2D1*h*tr - 
      #      0.3D1*i*tr**2 - 0.4D1*j*tr**3 - 0.7D1*k*tr**6
-
 c                                            hr = gr+tr*sr at reference t
       hr = gsgte0 + tr*sr
-
 c                                            cpr = t*ds/dt at reference t
       cpr = -c - 2*d/tr**2 - 6*e/tr**3 - 12*f/tr**4 - 90*g/tr**10 - 
      #       2*h*tr - 6*i*tr**2 - 12*j*tr**3 - 42*k*tr**6
-
-
 c                                         quasi-harmonic part
-      if (t.eq.0d0) then
-          gqh = 0d0
-      
-      else
-      
-          gqh = 0.3D1*nn*r*t*dlog(0.1D1 - exp(-tet0/t))
-      
-      end if
+      gqh = 0.3D1*nn*r*t*dlog(0.1D1 - exp(-tet0/t))
 
+      gqhr = 0.3D1*nn*r*tr*dlog(0.1D1 - exp(-tet0/tr))
 
-          gqhr = 0.3D1*nn*r*tr*dlog(0.1D1 - exp(-tet0/tr))
-
-          sqhr = 0.3D1*nn*r*tet0/tr/(exp(tet0/tr) - 0.1D1) - 
+      sqhr = 0.3D1*nn*r*tet0/tr/(exp(tet0/tr) - 0.1D1) - 
      #           0.3D1*nn*r*dlog(0.1D1 - exp(-tet0/tr))
 
-          hqhr = 0.3D1*nn*r*tet0/(exp(tet0/tr) - 0.1D1)
+      hqhr = 0.3D1*nn*r*tet0/(exp(tet0/tr) - 0.1D1)
 
-          cpqhr = 0.3D1*nn*r*tet0**2/tr**2*exp(-tet0/tr)/
+      cpqhr = 0.3D1*nn*r*tet0**2/tr**2*exp(-tet0/tr)/
      #           (0.1D1 - exp(-tet0/tr))**2
-
 
 c                             interpolation function
        intp = 0.1D1/(1D0 + b1)*(b1 + sqrt(1D0 + 
      #        2D0*b1*(1D0 + dd1)*p/Bo))*dexp(0.10D1/b1 - 
      #        0.10D1/b1*sqrt(1D0 + 2D0*b1*(1D0 + dd1)*p/Bo))
-
 
 c                         Cp(SGTE) - Cp(QH) with low temperature correction
       if (t.lt.tr) then
@@ -13337,11 +13490,9 @@ c                         Cp(SGTE) - Cp(QH) with low temperature correction
 
       end if
 
-
       gbrosh = colcom(Bo,v0,Bpo,p) + 
      #         harter(nn,r,t,p,tet0,Bo,b0,dd0,gam0) - 
      #         gqh + difc*(1D0 - intp)
-
 
 c                     magnetic contribution using Inden-Hillert-Jarl model
       if (pp.eq.0d0) then
@@ -13391,7 +13542,6 @@ c                          bcc metals
          gmagn = r*t*dlog(beta+1D0)*ff
 
       end if
-
 
       gmet = gsgte + gbrosh + gmagn
 

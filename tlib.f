@@ -17,7 +17,7 @@ c----------------------------------------------------------------------
       implicit none
 
       write (*,'(/,a)') 
-     *      'Perple_X version 6.6.8, source updated Oct 29, 2013.'
+     *      'Perple_X version 6.6.8, source updated Nov 5, 2013.'
 
       end
 
@@ -3224,8 +3224,8 @@ c                                 interval limits conformal transformation
       double precision yint, yfrc
       common/ cst47 /yint(5,ms1,mst,h9),yfrc(4,ms1,mst,h9),intv(4)
 
-      character*2 strgs*3, mstrg, dstrg, tstrg*3
-      common/ cst56 /strgs(28), mstrg(6), dstrg(8), tstrg(13)
+      character*2 strgs*3, mstrg, dstrg, tstrg*3, wstrg*3
+      common/ cst56 /strgs(28),mstrg(6),dstrg(8),tstrg(13),wstrg(m16)
 
       character*80 com
       common/delet/com 
@@ -3266,6 +3266,8 @@ c                                 tags for thermo data i/o
      *           't10','t11','t12','t14'/
 c     data estrg/'eG0','eS0','eV0','ec1','ec2','ec3','ec4','ec5','ec6',
 c    *           'ec7','eb1','eb2','eb3','eb4','eb5','eb6','eb7','eb8'/
+c                                 tags for interaction coefficients (Redlich-Kister polynomial)
+      data wstrg/'w0 ','wT ','wP ','wP1','wP2'/
 
       end
 
@@ -3387,8 +3389,8 @@ c----------------------------------------------------------------------
       double precision thermo, uf, us
       common/ cst1 /thermo(k4,k10),uf(2),us(h5)
 
-      character*2 strgs*3, mstrg, dstrg, tstrg*3
-      common/ cst56 /strgs(28), mstrg(6), dstrg(8), tstrg(13)
+      character*2 strgs*3, mstrg, dstrg, tstrg*3, wstrg*3
+      common/ cst56 /strgs(28),mstrg(6),dstrg(8),tstrg(13),wstrg(m16)
 
       save ic2p
       data ic2p/0,0,22,1,2,3,4,5,6,7,12,13,14,15,16,17,18,19,20,21,8,
@@ -3810,8 +3812,8 @@ c----------------------------------------------------------------------
       character*80 com
       common/delet/com 
 
-      character*2 strgs*3, mstrg, dstrg, tstrg*3
-      common/ cst56 /strgs(28), mstrg(6), dstrg(8), tstrg(13)
+      character*2 strgs*3, mstrg, dstrg, tstrg*3, wstrg*3
+      common/ cst56 /strgs(28),mstrg(6),dstrg(8),tstrg(13),wstrg(m16)
 c-----------------------------------------------------------------------
 c                                 =====================================
 c                                 name & EoS

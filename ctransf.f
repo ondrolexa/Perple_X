@@ -25,6 +25,13 @@ c----------------------------------------------------------------------
       integer ic
       common/ cst42 /ic(k0)
 
+      integer ilam,jlam,idiso,lamin,idsin
+      double precision tm,td
+      common/ cst202 /tm(m7,m6),td(m8),ilam,jlam,idiso,lamin,idsin
+
+      integer ltyp,lct,lmda,idis
+      common/ cst204 /ltyp(k10),lct(k10),lmda(k10),idis(k10)
+
       integer iam
       common/ cst4 /iam
 c----------------------------------------------------------------------- 
@@ -52,6 +59,12 @@ c                                 component conversion
          names(k10) = name
 
          eos(k10) = ieos
+
+         lct(k10) = ilam
+
+         ltyp(k10) = jlam
+
+         idis(k10) = idiso
 
          if (eof) exit
 c                                 output new data

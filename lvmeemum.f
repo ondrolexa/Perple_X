@@ -227,7 +227,7 @@ c                                 the results to the print file.
          tlv1 = v(2)
          quit = .false.
 c                                 rhoc base model
-         rhoc = 996d0
+         rhoc = 1002d0
 c                                 rhoc shornikov
 c        rhoc = 1052d0
 c                                 rhoc amax
@@ -481,10 +481,19 @@ c                         homo = .true.
 
                          else 
 
-                            if (dt.gt.nopt(29)) then
-                               start = .false.
-                               dt = -dt/2d0
-                               cycle 
+                            if (dabs(dt).gt.nopt(29)) then
+
+                               if (props(10,1).lt.rhoc) then
+                                  if (dt.gt.0d0) then
+                                     dt = -dt/2d0
+                                     start = .false.
+                                  end if 
+                               else 
+                                  if (dt.lt.0d0) dt = -dt/2d0
+                               end if 
+
+                               cycle
+
                             end if 
 
                          end if 

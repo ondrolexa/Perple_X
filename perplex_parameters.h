@@ -5,7 +5,8 @@
       integer k0,k1,k2,k3,k4,k5,k7,k8,k9,k10,k12,k13,k14,k15
       integer k16,k17,k18,k19,k20,k21,k22,k23,k24,kd2
       integer l2,l3,l5,l6,l7,l8
-      integer m0,m1,m2,m3,m4,m6,m7,m8,m9,m10,m11,m12,m13,m14,m15
+      integer m0,m1,m2,m3,m4,m6,m7,m8,m9,m10,m11,m12,m13,m14,m15,m16
+      integer m17,m18
       integer msp,mst,mdim,ms1
       integer n0,n1,n2,n3,n4,n5,n6,n7,n8,n9,n10,n11,nsp,nx,ny
 !                                 n0  - starting LUN-1 for fractionation files, these files may 
@@ -124,8 +125,11 @@
 !                                      endmember
 !                                m15 - maximum number of dependent endmembers for a 
 !                                      reciprocal solution
-      parameter (m0=8,m1=36,m2=8,m3=3,m4=15,m6=4,m7=14,m8=9,m9=10,m10=5)
-      parameter (m11=5,m12=4,m13=8,m14=2,m15=9)
+!                                m16 - max number of parameters in a redkich-kistler L
+!                                m17 - max order of redlich-kistler expansion
+!                                m18 - max number of pairwise terms in a redlich-kistler expansion
+      parameter (m0=8,m1=36,m2=8,m3=3,m4=15,m6=4,m7=15,m8=9,m9=10,m10=5)
+      parameter (m11=5,m12=4,m13=8,m14=2,m15=9,m16=5,m17=5,m18=6)
 !                                nsp - max number of species in fluid speciation routines 
       parameter (nsp=16)
 !                                 nx - number of x-grid nodes in a contour data grid

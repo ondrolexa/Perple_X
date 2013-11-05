@@ -137,7 +137,7 @@ fatg = 1 atg - 16 ta + 16 fta
 0 0 0
 
 atgts = 4 clin + 9/17 atg - 24/17 br      | Tshermaks antigorite for Atg(PN) model (Padrón-Navarta et al., 2013, Lithos)
--2e3. 46.1 0
+-2e3 46.1 0
 
 | ettore's makes:
 | odo = 1/2 mag 1/2 cc 
