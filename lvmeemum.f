@@ -227,7 +227,7 @@ c                                 the results to the print file.
          tlv1 = v(2)
          quit = .false.
 c                                 rhoc base model
-         rhoc = 1002d0
+         rhoc = 982d0
 c                                 rhoc shornikov
 c        rhoc = 1052d0
 c                                 rhoc amax
@@ -617,6 +617,7 @@ c                         back calculate compositions
 
       ravg = (rho1 + rho2)/2d0
       savg = (prps(3,1) + prps(3,2))/2d0
+      rhoc = ravg
 
       t = v(2)
       p = 1d1**(v(1))

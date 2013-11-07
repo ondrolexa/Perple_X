@@ -2998,7 +2998,11 @@ c                                 rk form, read a new card for each term
 c                                 check for end of data 
                call readcd (n9,len,ier)
                write (begin,'(3a)') (chars(i), i = 1, 3)
-               if (begin.eq.'end'.or.begin.eq.'wk(') exit 
+               if (begin.eq.'end') then 
+                  return
+               else if (begin.eq.'wk(') then 
+                  exit 
+               end if 
 c                                 we have a data card
                rkord(iterm) = rkord(iterm) + 1
 
