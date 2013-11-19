@@ -2216,11 +2216,11 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer ins(*),i,j,k,l,iroots,isp,ineg,ipos,iavg,irt,jrt
+      integer ins(*),i,j,k,l,iroots,isp,ineg,ipos,iavg,jrt
 
       logical max
  
-      double precision f(nsp),aj2(nsp),ev(3),c1,c2,ax,vrt,dv,
+      double precision f(nsp),aj2(nsp),ev(3),c1,c2,ax,dv,
      *                 c3,vmin,vmax,d1,d2,d3,d6,rt,dsqrtt,r,
      *                 ch,bx,aij,pdv
  
@@ -2248,7 +2248,7 @@ c-----------------------------------------------------------------------
       integer iroot
       common/ rkdivs /pv,pvv,iroot
  
-      save r, irt, vrt
+      save r
                              
       data r, max /83.1441d0, .false./
 c---------------------------------------------------------------------- 
