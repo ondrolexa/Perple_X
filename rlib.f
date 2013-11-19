@@ -13467,11 +13467,11 @@ c-----------------------------------------------------------------
       implicit none
       include 'perplex_parameters.h'
 
-      double precision thermo
-      common/ cst1 /thermo(k4,k10)
+      double precision thermo,uf,us 
+      common/ cst1 /thermo(k4,k10),uf(2),us(h5)
 
-      integer ltyp,lct,lmda
-      common/ cst204 /ltyp(k10),lct(k10),lmda(k10)
+      integer ltyp,lct,lmda,idis
+      common/ cst204 /ltyp(k10),lct(k10),lmda(k10),idis(k10)
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps

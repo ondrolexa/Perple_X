@@ -1391,8 +1391,10 @@ c----------------------------------------------------------------------
       double precision units, r13, r23, r43, r59, r1, r2
       common/ cst59 /units, r13, r23, r43, r59, r1, r2
 
+      double precision vrt
+      integer irt
       logical sroot
-      common/ rkroot /sroot
+      common/ rkroot /vrt,irt,sroot
 
       integer idspec
       double precision spec

@@ -2239,8 +2239,10 @@ c-----------------------------------------------------------------------
       double precision a, b
       common/ rkab /a(nsp),b(nsp)
 
+      double precision vrt
+      integer irt
       logical sroot
-      common/ rkroot /sroot
+      common/ rkroot /vrt,irt,sroot
 
       double precision pv,pvv
       integer iroot
