@@ -17,7 +17,7 @@ c----------------------------------------------------------------------
       implicit none
 
       write (*,'(/,a)') 
-     *      'Perple_X version 6.6.8, source updated Nov 5, 2013.'
+     *      'Perple_X version 6.6.8, source updated Nov 19, 2013.'
 
       end
 
@@ -3493,7 +3493,7 @@ c                                 simple thermo data
                end do 
             else 
 c                                 calphad format
-               do i = 1, 27
+               do i = 1, 28
                   if (key.eq.strgs(i)) then 
                      read (values,*,iostat=ier) thermo(ic2p(i),k10)
                      if (ier.ne.0) call error (23,tot,ier,strg) 

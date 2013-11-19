@@ -340,12 +340,13 @@ c                                 x coordinate description
      *               xmno(h9,mst,msp),xmxo(h9,mst,msp),reachg(h9)
       common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
 c                                 temporary subdivision limits:
-      double precision wg,xmn,xmx,xnc,reach
-      integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,
-     *        jstot,kstot
-      common/ cst108 /wg(m1,m3),xmn(mst,msp),xmx(mst,msp),xnc(mst,msp),
+      integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
+     *        kstot,rkord,xtyp
+      double precision wg,wk,xmn,xmx,xnc,reach
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),
+     *      xmn(mst,msp),xmx(mst,msp),xnc(mst,msp),
      *      reach,iend(m4),isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),
-     *      isp(mst),isite,iterm,iord,istot,jstot,kstot
+     *      isp(mst),rkord(m18),isite,iterm,iord,istot,jstot,kstot,xtyp
 c                                 coordinates output by subdiv
       double precision xy,yy
       integer ntot,npairs

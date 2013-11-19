@@ -2946,7 +2946,6 @@ c                                 data found
          if (iterm.gt.m1) call error (48,wg(1,1),m1,tname)
 
          lord = 0
-         rkord(iterm) = 0
 
          do while (ibeg.lt.imax)
 
@@ -2982,6 +2981,7 @@ c                                 read unadorned margules pt functions
 
          else
 c                                 set "perplex" order 
+            rkord(iterm) = 0
             iord = 2 
 c                                 rk form, read a new card for each term 
             do j = 1, m17
@@ -2998,11 +2998,11 @@ c                                 rk form, read a new card for each term
 c                                 check for end of data 
                call readcd (n9,len,ier)
                write (begin,'(3a)') (chars(i), i = 1, 3)
-               if (begin.eq.'end') then 
+               if (begin.eq.'end') then
                   return
-               else if (begin.eq.'wk(') then 
-                  exit 
-               end if 
+               else if (begin.eq.'Wk(') then
+                  exit
+               end if
 c                                 we have a data card
                rkord(iterm) = rkord(iterm) + 1
 
@@ -6617,8 +6617,9 @@ c-----------------------------------------------------------------------
       integer jend
       common/ cxt23 /jend(h9,k12)
 c                                 working arrays
-      double precision z, pa, p0a, x, w, y
-      common/ cxt7 /x(m4),y(m4),pa(m4),p0a(m4),z(mst,msp),w(m1)
+      double precision z, pa, p0a, x, w, y, wl
+      common/ cxt7 /x(m4),y(m4),pa(m4),p0a(m4),z(mst,msp),w(m1),
+     *              wl(m17,m18)
 c                                 new global arrays, 10/25/05:
 c                                 bookkeeping variables
       integer lstot,mstot,nstot,ndep,nord
@@ -6758,8 +6759,9 @@ c----------------------------------------------------------------------
       double precision r,v,tr,pr,ps
       common/ cst5   /v(l2),tr,pr,r,ps
 c                                 working arrays
-      double precision z, pa, p0a, x, w, y
-      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1)
+      double precision z, pa, p0a, x, w, y, wl
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
+     *              wl(m17,m18)
 
       double precision alpha,dt
       common/ cyt0  /alpha(m4),dt(j3)
@@ -6838,8 +6840,9 @@ c----------------------------------------------------------------------
 
       double precision dlnz,dscon,zt,q,dzdy,z,dd
 c                                 working arrays
-      double precision zz, pa, p0a, x, w, y
-      common/ cxt7 /zz(m4),y(m4),pa(m4),p0a(m4),x(mst,msp),w(m1)
+      double precision zz, pa, p0a, x, w, y, wl
+      common/ cxt7 /zz(m4),y(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
+     *              wl(m17,m18)
 c                                 configurational entropy variables:
       integer msite, ksp, lterm, ksub
       common/ cxt1i /msite(h9),ksp(m10,h9),lterm(m11,m10,h9),
@@ -6933,8 +6936,9 @@ c                                 excess energy variables
       common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m18,h9),
      *               jsub(m2,m1,h9)
 
-      double precision z, pa, p0a, x, w, y
-      common/ cxt7 /y(m4),x(m4),pa(m4),p0a(m4),z(mst,msp),w(m1)
+      double precision z, pa, p0a, x, w, y, wl
+      common/ cxt7 /y(m4),x(m4),pa(m4),p0a(m4),z(mst,msp),w(m1),
+     *              wl(m17,m18)
 
       double precision alpha,dt
       common/ cyt0  /alpha(m4),dt(j3)
@@ -6995,8 +6999,9 @@ c                                 special model endmember indexing
       integer jspec
       common/ cxt8 /jspec(h9,m4)
 c                                 working arrays
-      double precision z, pa, p0a, x, w, y
-      common/ cxt7 /y(m4),x(m4),pa(m4),p0a(m4),z(mst,msp),w(m1)
+      double precision z, pa, p0a, x, w, y, wl
+      common/ cxt7 /y(m4),x(m4),pa(m4),p0a(m4),z(mst,msp),w(m1),
+     *              wl(m17,m18)
 c----------------------------------------------------------------------  
       dlnw = 0d0
 
@@ -7055,8 +7060,9 @@ c                                 special model endmember indexing
       integer jspec
       common/ cxt8 /jspec(h9,m4)
 c                                 working arrays
-      double precision z, pa, p0a, x, w, y
-      common/ cxt7 /y(m4),x(m4),pa(m4),p0a(m4),z(mst,msp),w(m1)
+      double precision z, pa, p0a, x, w, y, wl
+      common/ cxt7 /y(m4),x(m4),pa(m4),p0a(m4),z(mst,msp),w(m1),
+     *              wl(m17,m18)
 c----------------------------------------------------------------------
       dlnw = 0d0
 
@@ -7107,8 +7113,9 @@ c                                 bookkeeping variables
       integer lstot,mstot,nstot,ndep,nord
       common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
 c                                 working arrays
-      double precision z, pa, p0a, x, w, y
-      common/ cxt7 /y(m4),x(m4),pa(m4),p0a(m4),z(mst,msp),w(m1)
+      double precision z, pa, p0a, x, w, y, wl
+      common/ cxt7 /y(m4),x(m4),pa(m4),p0a(m4),z(mst,msp),w(m1),
+     *              wl(m17,m18)
 c----------------------------------------------------------------------
       dlnw = 0d0
 c                                 fraction of olivine species
@@ -7145,9 +7152,9 @@ c                                 convert y -> x array
 
       common/ cxt5i /indx(h9,mst,msp)
 c                                 working arrays
-      double precision z, pa, p0a, x, w, y
-
-      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1)
+      double precision z, pa, p0a, x, w, y, wl
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
+     *              wl(m17,m18)
 
 c                                 x coordinate description
       integer istg, ispg, imlt, imdg
@@ -7186,8 +7193,9 @@ c----------------------------------------------------------------------
 
       integer i, j, id, ids, jcoor
 c                                 working arrays
-      double precision z, pa, p0a, x, w, y
-      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1)
+      double precision z, pa, p0a, x, w, y, wl
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
+     *              wl(m17,m18)
 c                                 x coordinate description
       integer istg, ispg, imlt, imdg
       common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
@@ -7252,8 +7260,9 @@ c                                 bookkeeping variables
       integer lstot,mstot,nstot,ndep,nord
       common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
 c                                 working arrays
-      double precision z, pa, p0a, x, w, y
-      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1)
+      double precision z, pa, p0a, x, w, y, wl
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
+     *              wl(m17,m18)
 c                                 x coordinate description
       integer istg, ispg, imlt, imdg
       common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
@@ -7314,8 +7323,9 @@ c                                 bookkeeping variables
       integer lstot,mstot,nstot,ndep,nord
       common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
 c                                 working arrays
-      double precision z, pa, p0a, x, w, y
-      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1)
+      double precision z, pa, p0a, x, w, y, wl
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
+     *              wl(m17,m18)
 c                                 model type
       logical lorder, lexces, llaar, lrecip
       common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
@@ -7680,8 +7690,9 @@ c------------------------------------------------------------------------
 
       double precision omega
 c                                 working arrays
-      double precision z, pa, p0a, x, w, y
-      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1)
+      double precision z, pa, p0a, x, w, y, wl
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
+     *              wl(m17,m18)
 
       integer lstot,mstot,nstot,ndep,nord
       common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
@@ -7826,7 +7837,7 @@ c---------------------------------------------------------------------
   
       include 'perplex_parameters.h'
 
-      integer i, k, l, i1, i2, id
+      integer i, k, l, i1, i2, id, j
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -7838,8 +7849,9 @@ c                                 excess energy variables
       double precision wgl, wkl, vlar
       common/ cxt2r /wgl(m3,m1,h9),wkl(m16,m17,m18,h9),vlar(m3,m4,h9)
 c                                 working arrays
-      double precision z, pa, p0a, x, w, y
-      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1)
+      double precision z, pa, p0a, x, w, y, wl
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
+     *              wl(m17,m18)
 c                                 local alpha
       double precision alpha,dt
       common/ cyt0  /alpha(m4),dt(j3)
@@ -7858,12 +7870,30 @@ c                                 bookkeeping variables
 c----------------------------------------------------------------------
       if (extyp(id).eq.1) then 
 c                                 redlich kistler is a special case
-c         do i = 1, jterm(id)
-c            do j = 1, rko(i,id)
-c             wk(j,i) = 1d0
-c            end do 
-c         end do 
-            
+
+         do i = 1, jterm(id)
+            do j = 1, rko(i,id)
+
+               if (wkl(3,j,i,id).eq.0d0.or.wkl(4,j,i,id).eq.0d0.or.
+     *             wkl(5,j,i,id).eq.0d0) then
+
+                   wl(j,i) = wkl(1,j,i,id) + t*wkl(2,j,i,id)
+               else
+                   wl(j,i) = wkl(1,j,i,id) + t*wkl(2,j,i,id) + 
+     *                   (-0.4D1*wkl(5,j,i,id) - 0.4D1*
+     *                   dsqrt((0.2D1*wkl(5,j,i,id)*p + 
+     *                   wkl(4,j,i,id))/wkl(4,j,i,id)))*
+     *                   wkl(3,j,i,id)*wkl(4,j,i,id)*dexp(-(-0.1D1 + 
+     *                   dsqrt((0.2D1*wkl(5,j,i,id)*p + 
+     *                   wkl(4,j,i,id))/wkl(4,j,i,id)))/
+     *                   wkl(5,j,i,id)) + 
+     *                   0.4D1*wkl(3,j,i,id)*wkl(4,j,i,id)*
+     *                   (wkl(5,j,i,id)+0.1D1)
+               end if
+
+            end do
+         end do
+
          return
 
       end if 
@@ -7940,16 +7970,18 @@ c------------------------------------------------------------------------
 
       integer i,j,ids
 
-      double precision y(m4), tphi, xpr
+      double precision y(m4), tphi, xpr, lex(m17,m18)
 
-      double precision z, pa, p0a, x, w, yy
-      common/ cxt7 /yy(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1)
+      double precision z, pa, p0a, x, w, yy, wl
+      common/ cxt7 /yy(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
+     *              wl(m17,m18)
 c                                 bookkeeping variables
       integer lstot,mstot,nstot,ndep,nord
       common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
 c                                 excess energy variables
-      integer jterm, jord, jsub
-      common/ cxt2i /jterm(h9),jord(h9),jsub(m2,m1,h9)
+      integer jterm, jord, extyp, rko, jsub
+      common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m18,h9),
+     *               jsub(m2,m1,h9)
 c                                 model type
       logical lorder, lexces, llaar, lrecip
       common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
@@ -7959,10 +7991,35 @@ c                                 local alpha
 c----------------------------------------------------------------------
       gex = 0d0 
 
-c     if (extyp(ids).eq.1) then 
-c
- 
-      if (lexces(ids)) then 
+
+      if (extyp(ids).eq.1) then 
+c                                    redlich kistler 
+c                                    expand polynomial
+
+         do i = 1, jterm(ids)
+            do j = 1, rko(i,ids)
+               lex(j,i) = 0d0
+            end do
+         end do
+
+         do i = 1, jterm(ids)
+            do j = 1, rko(i,ids)
+               lex(j,i) = lex(j,i) + wl(j,i)*
+     *                        (y(jsub(1,i,ids))-y(jsub(2,i,ids)))**(j-1)
+            end do
+         end do
+
+         do i = 1, jterm(ids)
+            do j = 1, rko(i,ids)
+            gex = gex + lex(j,i)*y(jsub(1,i,ids))*y(jsub(2,i,ids))
+            end do
+         end do
+
+      return
+      
+      end if
+
+         if (lexces(ids)) then 
 
          if (llaar(ids)) then 
 c                                 holland & powells version of the van laar
@@ -9211,8 +9268,9 @@ c-----------------------------------------------------------------------
       double precision y2pg
       common/ cxt4  /y2pg(m15,m4,h9)
 
-      double precision z, pa, p0a, x, w, y
-      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1)
+      double precision z, pa, p0a, x, w, y, wl
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
+     *              wl(m17,m18)
 
       integer lstot,mstot,nstot,ndep,nord
       common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
@@ -9260,8 +9318,9 @@ c-----------------------------------------------------------------------
       integer ideps,icase
       common/ cxt3i /ideps(2,j3,h9),icase(h9)
 
-      double precision z, pa, p0a, x, w, y
-      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1)
+      double precision z, pa, p0a, x, w, y, wl
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
+     *              wl(m17,m18)
 
       integer lstot,mstot,nstot,ndep,nord
       common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
@@ -9374,8 +9433,9 @@ c----------------------------------------------------------------------
 
       double precision g, gdord, omega, gex
 
-      double precision z, pa, p0a, x, w, y
-      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1)
+      double precision z, pa, p0a, x, w, y, wl
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
+     *              wl(m17,m18)
 
       integer lstot,mstot,nstot,ndep,nord
       common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
@@ -9471,8 +9531,9 @@ c----------------------------------------------------------------------
 
       double precision g,dp(j3),t,s,ds(j3),d2s(j3,j3),dg(j3),d2g(j3,j3)
 c                                 working arrays
-      double precision z, pa, p0a, x, w, y
-      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1)
+      double precision z, pa, p0a, x, w, y, wl
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
+     *              wl(m17,m18)
 
       double precision alpha,dt
       common/ cyt0  /alpha(m4),dt(j3)
@@ -9639,8 +9700,9 @@ c----------------------------------------------------------------------
      *                 z(m11,m10),s0,ztemp,zlnz,
      *                 dsinf(j3),d2sinf(j3,j3)
 c                                 working arrays
-      double precision zz, pa, p0a, x, w, y
-      common/ cxt7 /zz(m4),y(m4),pa(m4),p0a(m4),x(mst,msp),w(m1)
+      double precision zz, pa, p0a, x, w, y, wl
+      common/ cxt7 /zz(m4),y(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
+     *              wl(m17,m18)
 c                                 configurational entropy variables:
       integer msite, ksp, lterm, ksub
       common/ cxt1i /msite(h9),ksp(m10,h9),lterm(m11,m10,h9),
@@ -10105,8 +10167,9 @@ c----------------------------------------------------------------------
       double precision g,pmax,pmin,dy1,dy2,dp,dpmax,
      *                 omega,gex,dg,d2g
 
-      double precision z, pa, p0a, x, w, y
-      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1)
+      double precision z, pa, p0a, x, w, y, wl
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
+     *              wl(m17,m18)
 
       double precision r,tr,pr,ps,p,t,xco2,u1,u2
       common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -10387,8 +10450,9 @@ c----------------------------------------------------------------------
 
       double precision dp,pmx,pmn
 c                                 working arrays
-      double precision z, pa, p0a, x, w, y
-      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1)
+      double precision z, pa, p0a, x, w, y, wl
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
+     *              wl(m17,m18)
 
       integer ideps,icase
       common/ cxt3i /ideps(2,j3,h9),icase(h9)
@@ -10437,8 +10501,9 @@ c----------------------------------------------------------------------
 
       double precision dp,pmn,pmx,dpp(j3),dinc,tinc
 c                                 working arrays
-      double precision z, pa, p0a, x, w, y
-      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1)
+      double precision z, pa, p0a, x, w, y, wl
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
+     *              wl(m17,m18)
 
       integer ideps,icase
       common/ cxt3i /ideps(2,j3,h9),icase(h9)
@@ -10657,8 +10722,9 @@ c----------------------------------------------------------------------
 
       double precision g,dg,d2g,t,ds,d2s
 c                                 working arrays
-      double precision z, pa, p0a, x, w, y
-      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1)
+      double precision z, pa, p0a, x, w, y, wl
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
+     *              wl(m17,m18)
 
       double precision alpha,dt
       common/ cyt0  /alpha(m4),dt(j3)
@@ -10744,8 +10810,9 @@ c----------------------------------------------------------------------
 
       double precision zt,dzdy,dzy,dzyy,zl,ds,d2s,zlnz,dsinf
 c                                 working arrays
-      double precision zz, pa, p0a, x, w, y
-      common/ cxt7 /zz(m4),y(m4),pa(m4),p0a(m4),x(mst,msp),w(m1)
+      double precision zz, pa, p0a, x, w, y, wl
+      common/ cxt7 /zz(m4),y(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
+     *              wl(m17,m18)
 c                                 configurational entropy variables:
       integer msite, ksp, lterm, ksub
       common/ cxt1i /msite(h9),ksp(m10,h9),lterm(m11,m10,h9),
@@ -10863,8 +10930,9 @@ c----------------------------------------------------------------------
 
       integer i,j,k,id
 c                                 working arrays
-      double precision z, pa, p0a, x, w, y
-      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1)
+      double precision z, pa, p0a, x, w, y, wl
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
+     *              wl(m17,m18)
 
       integer lstot,mstot,nstot,ndep,nord
       common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
@@ -10910,8 +10978,9 @@ c----------------------------------------------------------------------
 
       double precision pmn,pmx,mini
 c                                 working arrays
-      double precision z, pa, p0a, x, w, y
-      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1)
+      double precision z, pa, p0a, x, w, y, wl
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
+     *              wl(m17,m18)
 
       integer ln,lt,lid,jt,jid
       double precision lc, l0c, jc
@@ -11162,8 +11231,10 @@ c-----------------------------------------------------------------------
       integer ksmod, ksite, kmsol, knsp
       common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
 
-      double precision pa, p0a, xx, w, yy, z
-      common/ cxt7 /yy(m4),xx(m4),pa(m4),p0a(m4),z(mst,msp),w(m1)
+      double precision pa, p0a, xx, w, yy, z, wl
+      common/ cxt7 /yy(m4),xx(m4),pa(m4),p0a(m4),z(mst,msp),w(m1),
+     *              wl(m17,m18)
+
 
       integer lstot,mstot,nstot,ndep,nord
       common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
@@ -11961,8 +12032,9 @@ c--------------------------------------------------------------------------
       logical depend,laar,order,fluid,macro,specil,recip
       common/ cst160 /depend,laar,order,fluid,macro,specil,recip
 
-      double precision pa, p0a, zp, w, y, z
-      common/ cxt7 /y(m4),zp(m4),pa(m4),p0a(m4),z(mst,msp),w(m1)
+      double precision pa, p0a, zp, w, y, z, wl
+      common/ cxt7 /y(m4),zp(m4),pa(m4),p0a(m4),z(mst,msp),w(m1),
+     *              wl(m17,m18)
 
       double precision xcoor
       integer icoor
