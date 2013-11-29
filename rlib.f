@@ -236,8 +236,8 @@ c---------------------------------------------------------------------
       integer id,j,ins(1),kns(1),iwarn,oldid
 
       double precision ialpha, vt, trv, pth, vdp, ndu, vdpbm3, gsixtr, 
-     *                 gstxgi, fs2, fo2, kt, gval, gmake, gkomab,
-     *                 a, b, c, gstxlq, glacaz, v1, v2, gmet
+     *                 gstxgi, fs2, fo2, kt, gval, gmake, gkomab, kp,
+     *                 a, b, c, gstxlq, glacaz, v1, v2, gmet, km, kmk
 
       double precision f
       common/ cst11 /f(2)
@@ -370,6 +370,21 @@ c                                 vt
 c                                 ideal gas EoS
          vdp = r*t*dlog(p/pr)
 
+      else if (eos(id).eq.13) then 
+c                                 komabayashi/omori polynomials, murnaghan EoS
+         vt = thermo(3,id) * dexp((thermo(11,id) + thermo(12,id)*t)*t +
+     *        thermo(13,id)*dlog(t) + thermo(14,id)/t + thermo(23,id))
+         kt = 1d0 / (thermo(15,id) + t*(thermo(16,id) + t*(thermo(17,id)
+     *                             + thermo(18,id)*t))) 
+c                                 komatose form, k'(T)
+         kp = thermo(19,id) + thermo(20,id)*t*dlog(t)
+
+         km = kp - 1d0
+         kmk = km/kp
+
+         vdp = vt * kt**(1d0/kp)/km 
+     *            * ((kt + kp*p )**kmk - (kt + kp*pr)**kmk)
+
       else if (thermo(18,id).eq.0d0) then 
 c                                 normal polynomial:
           vdp =  p * (thermo(3,id) 
@@ -392,7 +407,7 @@ c                                 v(t,pr), correct form
             vt = thermo(3,id)*dexp(ialpha)
 
          end if 
-
+c                                
          if (lopt(4)) then 
 c                                 compute kt using Anderson-Gruneisen parameter
 c                                 and expansivity ala Helffrich & Connolly 2009.
@@ -409,7 +424,8 @@ c                                 temperature
                   call warn (46,t,id,names(id)) 
                   iwarn = iwarn + 1
                   oldid = id
-                  if (iwarn.eq.50) call warn (49,t,46,'GCPD_Murnaghan')
+                  if (iwarn.eq.50) 
+     *               call warn (49,t,46,'GCPD_Murnaghan')
                end if 
 c                                 destabalize the phase
                gval = 1d4*p
@@ -418,7 +434,7 @@ c                                 destabalize the phase
 
             end if 
 
-         end if 
+         end if  
 c                                 Murnaghan EoS:
 c                                 vdp = V(1,T)*KT**(1/K')/(K'-1)
 c                                 * [(KT+K'*p)**(1-1/K') -
@@ -731,7 +747,11 @@ c---------------------------------------------------------------------
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 c----------------------------------------------------------------------
-      
+c                                first conditional reformulates and returns for eos:
+c                                      1, 5, 6, 11, 12, 101, 102
+c                                reformulates and continues to second conditional for
+c                                      eos < 100 and special cases (see final conditional)
+c                                     
       if (ieos.eq.1) then 
 c                                G(P,T) polynomial forms, e.g., Helgeson et al 1978 (AJS)
 c                                Berman 1988 (J Pet).
@@ -887,7 +907,8 @@ c                                 fluid special case, this is sloppy
          if (ieos.gt.100.and.ieos.lt.103) return
 
       end if 
-
+c                                 -------------------------------------
+c                                 mechanical eos:
       if (ieos.eq.3) then 
 c                                 for Ghiorso et al.'s PMELTS formulation
 c                                 b6 (K0) is 0 and alpha is a constant to an
@@ -928,6 +949,16 @@ c                                 tait parameters computed as f(T)
 
       else if (ieos.eq.10) then 
 c                                 ideal gas, could make a reference pressure correction here. 
+      else if (ieos.eq.13) then 
+c                                 1) alpha = b1 + b2*T + b3/T + b4/T^2 
+c                                    which is reformulated here to 
+c                                    int(alpha,T=Tr..Tf) = b13 + b1*T + b2*T^2 + b3*ln(T) + b4/T 
+         b2 = b2/2d0 
+         b4 = -b4 
+         b13 = -(b1*tr + b2*tr*tr + b3*dlog(tr) + b4/tr)
+c                                 2)  K' is a f(T) 
+         b9 = b9 - b10*tr*dlog(tr)
+
       else if (b8.ne.0d0) then 
 c                                 All remaining forms (ieos = 2, 4, >100) assume:
 c                                 1) alpha = b1 + b2*T + b3/T + b4/T^2 + b5/sqrt(T)
@@ -937,6 +968,8 @@ c                                    int(alpha,T=Tr..Tf) = b13 + b1*T + b2*T^2 +
          b4 = -b4 
          b5 = 2d0*b5
          b13 = -(b1*tr + b2*tr*tr + b3*dlog(tr) + b4/tr + b5*dsqrt(tr))
+c                                 old parameter test forms:
+
 c                                 2) if lopt(4) not true, then the isothermal bulk modulus is
 c                                    K = b6 + b7*(T-Tr)
 c                                    which is reformulated to 
@@ -955,7 +988,7 @@ c                                 special EoS forms
 c                                 special EoS, anderson-gruneisen stored in 
 c                                 s-position. 
             b11 = dabs(b8) 
-         end if 
+         end if
 
       end if 
 

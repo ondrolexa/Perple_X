@@ -17,7 +17,7 @@ c----------------------------------------------------------------------
       implicit none
 
       write (*,'(/,a)') 
-     *      'Perple_X version 6.6.8, source updated Nov 19, 2013.'
+     *      'Perple_X version 6.6.8, source updated Nov 29, 2013.'
 
       end
 
@@ -3483,7 +3483,7 @@ c                                 assign data
 c                                 =====================================
 c                                 simple thermo data 
             if (ieos.ne.12) then 
-               do i = 1, 18
+               do i = 1, 20
                   if (key.eq.strgs(i)) then 
                      read (values,*,iostat=ier) thermo(i,k10)
                      if (ier.ne.0) call error (23,tot,ier,strg) 

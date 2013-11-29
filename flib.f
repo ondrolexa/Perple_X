@@ -1577,35 +1577,45 @@ c----------------------------------------------------------------------
 
       end
 
-      subroutine evalxc (k1,k2,k3,xt,xh,xco)
+      subroutine evalxc (c1,c2,c3,xt,xh,xco)
 c----------------------------------------------------------------------
       implicit none
 
+      include 'perplex_parameters.h'
+
       integer ier
 
-      double precision k1,k2,k3,xt,xh,xco,k2x,xk2x,t8,t9,t15,t21,t24,
-     *                 t32,k22
+      double precision c1,c2,c3,xt,xh,xco,k2x,xk2x,t8,t9,t15,t21,t24,
+     *                 t32,c22
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 c----------------------------------------------------------------------
-      k2x = k2*xh
+      k2x = c2*xh
       xk2x = xt*k2x
-      k22 = k2**2
+      c22 = c2**2
       t8 = xh**2
-      t9 = k22*t8
+      t9 = c22*t8
       t15 = xt**2
-      t21 = k1*k3*t8
-      t24 = k1*xh
+      t21 = c1*c3*t8
+      t24 = c1*xh
       t32 = dsqrt (4d0*(t9  - xk2x)
      *      + t15*(9d0*t9 + 6d0*k2x + 1d0 - 32d0*t21 - 16d0*t24)
      *      + xt*(32d0*t21 - 12d0*t9 + 16d0*t24))
 
-      xco = (2d0*k2x - 3d0*xk2x - xt + t32)/xt/k1/4d0
+      xco = (2d0*k2x - 3d0*xk2x - xt + t32)/xt/c1/4d0
 
       if (xco.le.0d0) then 
-         xco = -1d0/xt/k1*(- 2d0*k2x + 3d0*xk2x + xt + t32)/4d0
+
+         xco = -1d0/xt/c1*(- 2d0*k2x + 3d0*xk2x + xt + t32)/4d0
+
          if (xco.le.0d0) then 
             call warn (176,xh,ier,'EVALXC')
-            stop
+            xco = nopt(5) 
          end if       
+
       end if 
 
       end 
