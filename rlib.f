@@ -237,7 +237,11 @@ c---------------------------------------------------------------------
 
       double precision ialpha, vt, trv, pth, vdp, ndu, vdpbm3, gsixtr, 
      *                 gstxgi, fs2, fo2, kt, gval, gmake, gkomab, kp,
-     *                 a, b, c, gstxlq, glacaz, v1, v2, gmet, km, kmk
+     *                 a, b, c, gstxlq, glacaz, v1, v2, gmet, km, kmk,
+     *                 hsfch4
+
+      external vdpbm3, gsixtr, gstxgi, gmake, gkomab, gstxlq, glacaz, 
+     *                 hsfch4
 
       double precision f
       common/ cst11 /f(2)
@@ -530,6 +534,18 @@ c                                 are not used for mixture props.
             xco2 = 1d0
             call cfluid (fo2,fs2)
             gval = gval + r*t*f(2)
+
+         else if (eos(id).lt.115) then 
+
+            ins(1) = eos(id) - 100
+            call mrkpur (ins,1)
+            gval = gval + r*t*dlog(p*g(ins(1)))
+
+         else if (eos(id).eq.116) then 
+
+            ins(1) = 4
+            call mrkpur (ins,1)
+            gval = gval + r*t * hsfch4 (v(4))
             
          else if (eos(id).ge.600.and.eos(id).le.603) then
 c                                 komabayashi & fei (2010) EoS for Fe
@@ -887,7 +903,7 @@ c                                b2 = ln(v0)
 c                                 calphad format, don't do anything.
          return 
 c                                 remaining standard forms have caloric polynomial
-      else if (ieos.lt.103.or.ieos.eq.604.or.ieos.eq.605.or.
+      else if (ieos.lt.120.or.ieos.eq.604.or.ieos.eq.605.or.
      *         ieos.eq.606.or.ieos.eq.700.or.ieos.eq.701.or.
      *         ieos.eq.702) then
 c                                G(Pr,T) polynomial 
@@ -904,7 +920,7 @@ c                                G(Pr,T) polynomial
          e  = 4d0 * e
          gg = gg/6d0
 c                                 fluid special case, this is sloppy
-         if (ieos.gt.100.and.ieos.lt.103) return
+         if (ieos.gt.100.and.ieos.lt.120) return
 
       end if 
 c                                 -------------------------------------

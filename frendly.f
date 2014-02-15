@@ -24,9 +24,13 @@ c      include 'flib.f'
  
       include 'perplex_parameters.h'
  
+      logical nonlin
+
       character uname*8, y*1, rxny*1, opname*100
 
-      integer i,j,k,idiag, ier, icopt
+      integer i, j, k, l, idiag, ier, icopt, iord
+
+      double precision coef(0:10)
 
       double precision props,psys,psys1,pgeo,pgeo1
       common/ cxt22 /props(i8,k5),psys(i8),psys1(i8),pgeo(i8),pgeo1(i8)
@@ -77,6 +81,7 @@ c                                 harass the user for no reason
 
       write (*,1050) uname
       read (*,'(a)') y
+
       if (y.ne.'y'.and.y.ne.'Y') then
          write (*,1060) uname
          stop
@@ -92,11 +97,13 @@ c                                 read icopt, default icopt = 2.
 
          call jnput2 (icopt,rxny,uname)
  
+         nonlin = .false.
+
          if (icopt.eq.1) then
 c                                 calculating equilibrium properties for a
 c                                 reaction:
 c                                 select variables and set up plot file:
-            if (idiag.eq.0) call setplt (.false.)
+            if (idiag.eq.0) call setplt (.false.,nonlin,coef,iord)
  
             idiag = 1
  
@@ -120,7 +127,17 @@ c                                 calculating properties at arbitrary conditions
 
             if (y.eq.'y'.or.y.eq.'Y') then
 c                                 tabulated properties
-               call setplt (.true.)
+               write (*,1190)         
+               read (*,'(a)') y
+
+               if (y.eq.'y'.or.y.eq.'Y') then 
+c                                 non-linear 1d table
+                  nonlin = .true.
+                  call setplt (.true.,nonlin,coef,iord)
+               else 
+c                                 linear 1d or 2d table
+                  call setplt (.true.,nonlin,coef,iord)       
+               end if 
 
                do k = 1, inc(iv(3))
 
@@ -133,6 +150,16 @@ c                                 tabulated properties
                      do i = 1, inc(iv(1))
 
                         v(iv(1)) = vmin(iv(1)) + dfloat(i-1)*dv(iv(1))
+
+                        if (nonlin) then 
+
+                           v(iv(2)) = 0d0
+
+                           do l = 0, iord
+                              v(iv(2)) = v(iv(2)) + coef(l)*v(iv(1))**l
+                           end do
+
+                        end if 
 
                         call calphp 
 
@@ -224,6 +251,7 @@ c                                 create a new data base entry
 1120  format (/,'The table has been written.',/)
 1130  format (/,'Have a nice day ',a,'!',/)
 1180  format ('Write a properties table (Y/N)?')
+1190  format ('Compute properties along a path (Y/N)?')
  
       end
 
@@ -319,7 +347,7 @@ c                                on the x-y coordinate frame.
  
       end
  
-      subroutine setplt (table)
+      subroutine setplt (table,nonlin,coef,iord)
 c----------------------------------------------------------------------
 c select variables for a plot or table
 c----------------------------------------------------------------------
@@ -327,13 +355,15 @@ c----------------------------------------------------------------------
  
       include 'perplex_parameters.h'
  
-      character y*1,n4name*100,title*100
+      character y*1,n4name*100,title*100,text*200
 
-      integer i,j,ier,ic,ix
+      integer i,j,ier,ic,ix,iord 
 
-      logical table
+      logical table, nonlin
 
       character*14 tags(27)
+
+      double precision coef(0:10)
 
       integer inc,jpot
       common/ cst101 /inc(l2),jpot
@@ -385,9 +415,13 @@ c----------------------------------------------------------------------
       oned = .false.
 c                                 query for 1d table
       if (table) then
-         write (*,1110) 
-         read (*,'(a)') y
-         if (y.eq.'y'.or.y.eq.'Y') oned = .true.
+         if (nonlin) then
+            oned = .true.
+         else
+            write (*,1110) 
+            read (*,'(a)') y
+            if (y.eq.'y'.or.y.eq.'Y') oned = .true.
+         end if 
       end if 
 
       do 
@@ -425,9 +459,62 @@ c                                 get x variable limits and increment
 
       end do 
 
-      if (oned) then 
+      if (oned.and.nonlin) then 
+c                                 select the dependent variable
+         jpot = ipot
+
+         if (ipot.eq.3) then
+
+            do 
+
+                write (*,1030)
+                write (*,2140) (j,vname(iv(j)), j = 2, ipot)
+                write (*,*)
+                read (*,*,iostat=ier) ic
+
+                if (ier.eq.0) exit 
+                call rerr
+
+             end do 
+
+         else
+
+            ic = 2
+
+         end if
+
+         ix = iv(2)
+         iv(2) = iv(ic)
+         iv(ic) = ix
+         inc(iv(2)) = 1
+         vmin(iv(2)) = 0d0
+         vmax(iv(2)) = vmin(iv(2))
+
+         if (ipot.eq.3) then 
+c                                 specify the value for the 3rd variable
+            write (*,2180) vname(iv(3))
+            read (*,*,iostat=ier) vmin(iv(3))
+            vmax(iv(3)) = vmin(iv(3))
+            inc(iv(3)) = 1
+
+         end if 
+c                                 get the path function
+         write (*,1040) vname(iv(2)),vname(iv(1))
+         read (*,*) iord
+
+         do i = 0, iord
+            write (*,1050) i
+            read (*,*) coef(i)
+         end do
+
+         write (text,1070) vname(iv(2)), 
+     *                     (coef(i),vname(iv(1)),i,i=0,iord)
+         call unblnk (text)
+         write (*,1070) text
+
+      else if (oned) then 
 c                                 specify the sectioning variables
-         jpot = 1
+         jpot = ipot
 
           do i = 2, ipot
 
@@ -438,7 +525,7 @@ c                                 specify the sectioning variables
                 call rerr
              end do
 
-             inc(i) = 1
+             inc(iv(i)) = 1
 
           end do 
 
@@ -488,6 +575,8 @@ c                                 third variable?
          if (ipot.eq.3) then 
 
             if (table) then 
+
+               jpot = 3
 
                write (*,1010) vname(iv(3))
                read (*,'(a)') y
@@ -649,12 +738,19 @@ c        write (*,'(80(a14,1x))') (vname(iv(i)),i=1,jpot),tags
      *       'WARNING: the resulting 3d table cannot be plotted ',
      *       'with current Perple_X',/,'programs or scripts',/)
 1020  format (/,'Generate a plot file (y/n)?')
+1030  format (/,'Select the dependent path variable:',/)
+1040  format (/,'Profile must be described by the function',/,a,
+     *        ' = Sum ( c(i) * ',a,' ^i, i = 0..n)',/,'Enter n (<10)')
+1050  format (/,'Enter c(',i2,')')
 1060  format (/,'Enter number of sections:')
+1070  format (a,'=',5('+(',g12.6,')','*',a,'^',i1))
 1080  format (/,'Enter the output file name [without the ',
      *          '.plt/.tab suffix, default is my_project]:')
 1090  format (/,'Table columns will be:',/)
+1100  format (/,'Your polynomial is:',/,a)
 1110  format (/,'Make a 1-dimensional (e.g., isobaric) table (y/n)?')
 1120  format (/,'Select the independent (x) variable:',/)
+
 2130  format (/,'Select the first independent (x) variable:',/)
 2140  format (10x,i1,' - ',a)
 2150  format (/,'Enter minimum and maximum values for ',a,':')

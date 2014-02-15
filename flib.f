@@ -577,7 +577,7 @@ c----------------------------------------------------------------------
       double precision ghh2o,ghco2,ghch4,kh2o,kco2,kco,kch4,t2,t3,agph,
      *                 dg
 
-      integer ins(nsp), jns(3)
+      integer ins(nsp)
 
       integer is,i3,ifug,i1,i2
       common/ cst10 /is(2),i3(h5),ifug,i1,i2
@@ -597,10 +597,9 @@ c----------------------------------------------------------------------
       double precision p,t,xo,u1,u2,tr,pr,r,ps
       common / cst5 /p,t,xo,u1,u2,tr,pr,r,ps
 
-      save jns, ins
-
-      data ins, jns/ 1,2,3,4,5,6,7,8,9,7*0,1,2,3/
-
+      save ins
+      data ins/ 1,2,3,4,5,6,7,8,9,7*0/
+c----------------------------------------------------------------------
       t2 = t * t
       t3 = t2 * t
 c                                check if xo is <1, >0,
@@ -616,7 +615,7 @@ c     call hsmrkp (ins, 9, jns, 3)
 c                                replaced by hscrkp which uses CORK
 c                                for h2o and CO2 and HSMRK for CH4,
 c                                JADC, 4/27/04.
-      call hscrkp (ins, 9, jns)
+      call hscrkp (ins, 9)
 
       ghh2o = gh2o/gmh2o
       ghco2 = gco2/gmco2
@@ -1986,7 +1985,7 @@ c---------------------------------------------------------------------
 
       integer ins(nsp),jns(3),isp,jsp,ij(3),k,i,j
 
-      double precision fg(3),bw,bc,bm,t15,rtt,t2,b,c,d,e,yz,fugp
+      double precision fg(3),bw,bc,bm,t12,rtt,t2,b,c,d,e,yz,fugp,rr
  
       double precision gm,vm
       common/ cstchx /gm(3),vm(3)
@@ -1994,24 +1993,18 @@ c---------------------------------------------------------------------
       double precision x,g,v
       common/ cstcoh /x(nsp),g(nsp),v(nsp)
 
-      double precision pbar,tk,xc,u1,u2,tr,pr,rcal,ps
-      common/ cst5 /pbar,tk,xc,u1,u2,tr,pr,rcal,ps
-
-      double precision p,t,t12,r
-      common/ cst85 /p,t,t12,r
+      double precision p,t,xc,u1,u2,tr,pr,r,ps
+      common/ cst5 /p,t,xc,u1,u2,tr,pr,r,ps
 
       double precision f
       common/ cst11 /f(2)
 
-      save bw, bc, bm
+      save bw, bc, bm, rr
+      data bw, bc, bm, rr, ij /29d0, 58d0, 60d0, 83.144126d0, 1, 2, 4/
+c----------------------------------------------------------------------
 
-      data bw, bc, bm, ij /29d0, 58d0, 60d0, 1, 2, 4/
-
-      t = tk
-      p = pbar
-      t15 = dsqrt(t**3)
       t12 = dsqrt(t)
-      rtt = r*t15
+      rtt = rr*dsqrt(t**3)
       t2 = t*t
 
       call mrkpur (ins,isp)
@@ -2041,17 +2034,21 @@ c---------------------------------------------------------------------
 
          vm(i) = -v(j)
          gm(i) = g(j)
-         call nurap (b,c,d,e,yz,v(j))
+
+         call nurap (b,c,d,e,yz,v(j),t12,rr)
+
          vm(i) = vm(i) + v(j)
          fg(i) = dlog(p) + fugp (rtt,b,yz,c,d,e,v(j))
+
          g(j) = dexp(fg(i))/p
+
          if (i.lt.3) f(i) = fg(i)
 
       end do 
  
       end
 
-      subroutine hscrkp (ins, isp, jns)
+      subroutine hscrkp (ins, isp)
 c---------------------------------------------------------------------
 c subprogram to get fugacity of pure H2O, CO2 from CORK and of pure CH4
 c fluids from HSMRK EOS of Kerrick and Jacobs (1981) and Jacobs and
@@ -2063,9 +2060,9 @@ c---------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer ins(nsp),jns(3),isp,i
+      integer ins(nsp),isp
 
-      double precision fg(3),bm,t15,rtt,t2,c,d,e,yz,fugp
+      double precision fg(3), hsfch4
  
       double precision gm,vm
       common/ cstchx /gm(3),vm(3)
@@ -2073,24 +2070,12 @@ c---------------------------------------------------------------------
       double precision x,g,v
       common/ cstcoh /x(nsp),g(nsp),v(nsp)
 
-      double precision pbar,tk,xc,u1,u2,tr,pr,rcal,ps
-      common/ cst5 /pbar,tk,xc,u1,u2,tr,pr,rcal,ps
-
-      double precision p,t,t12,r
-      common/ cst85 /p,t,t12,r
+      double precision p,t,xc,u1,u2,tr,pr,r,ps
+      common/ cst5 /p,t,xc,u1,u2,tr,pr,r,ps
 
       double precision f
       common/ cst11 /f(2)
-
-      save bm
-      data bm /6d1/
 c----------------------------------------------------------------------
-      t = tk
-      p = pbar
-      t15 = dsqrt(t**3)
-      t12 = dsqrt(t)
-      rtt = r*t15
-      t2 = t*t
 c                                 first get mrk props
       call mrkpur (ins,isp)
 c                                 water:
@@ -2107,25 +2092,51 @@ c                                 co2:
       g(2) = dexp(fg(2))/p
       vm(2) = vm(2) + v(2)
       f(2) = fg(2)
-c                                 ch4:
-      i = jns(3) 
-         
+c                                 ch4:         
+      vm(3) = -v(4)
+      gm(3) = g(4)
+
+      fg(3) = hsfch4 (v(4))
+
+      vm(3) = vm(3) + v(4)
+      g(4) = dexp(fg(3))/p
+
+      end
+
+      double precision function hsfch4 (vch4)
+c---------------------------------------------------------------------
+c subprogram to get fugacity of pure CH4
+c fluids from HSMRK EOS of Kerrick and Jacobs (1981) and Jacobs and
+c Kerrick (1981).
+c---------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      double precision bm,rtt,t2,c,d,e,yz,fugp,rr,vch4,t12
+
+      double precision p,t,xc,u1,u2,tr,pr,r,ps
+      common/ cst5 /p,t,xc,u1,u2,tr,pr,r,ps
+
+      save bm, rr
+      data bm, rr /6d1, 83.144126d0/
+c----------------------------------------------------------------------
+
+      t12 = dsqrt(t)
+      rtt = rr*dsqrt(t**3)
+      t2 = t*t
+
       c = 13.403d6 + 9.28d4 * t + 2.7d0 * t2
       d = 5.216d9 - 6.8d6 * t + 3.28d3 * t2
       e = -2.3322d11 + 6.738d8 * t + 3.179d5 * t2
 
-      vm(i) = -v(4)
-      gm(i) = g(4)
+      call nurap (bm,c,d,e,yz,vch4,t12,rr)
 
-      call nurap (bm,c,d,e,yz,v(4))
+      hsfch4 = dlog(p) + fugp (rtt,bm,yz,c,d,e,vch4)
 
-      vm(i) = vm(i) + v(4)
-      fg(i) = dlog(p) + fugp (rtt,bm,yz,c,d,e,v(4))
-      g(4) = dexp(fg(i))/p
+      end 
 
-      end
-
-      subroutine nurap (b,c,d,e,yz,vi)
+      subroutine nurap (b,c,d,e,yz,vi,t12,r)
 c----------------------------------------------------------------------
 c newton-raphson iteration to solve for hsmrk volume, my
 c idea here was to evaluate all the constants outside of 
@@ -2139,10 +2150,10 @@ c----------------------------------------------------------------------
       integer k
 
       double precision b,c,d,e,yz,vi,s1,s2,s3,p0,b2,q0,q1,q2,q3,q4,q5,
-     *                 q6,q7,q8,q9,p1,p2,p3,p4,p5,p6,p7,p8,cor
- 
-      double precision p,t,t12,r
-      common/ cst85 /p,t,t12,r
+     *                 q6,q7,q8,q9,p1,p2,p3,p4,p5,p6,p7,p8,cor,t12,r
+
+      double precision p,t,xc,u1,u2,tr,pr,r0,ps
+      common/ cst5 /p,t,xc,u1,u2,tr,pr,r0,ps
 c----------------------------------------------------------------------
       s1 = r*t*t12
       s2 = b*s1
@@ -2174,11 +2185,10 @@ c----------------------------------------------------------------------
      *         +q6)*vi+q7)*vi+q8)*vi+q9)*vi)/((((((((p0*vi+p1)*vi
      *         +p2)*vi+p3)*vi+p4)*vi+p5)*vi+p6)*vi+p7)*vi+p8)
          vi = vi + cor
-         if (dabs(cor).lt.1d-2) goto 99
-
+         if (dabs(cor).lt.1d-2) exit
       end do 
  
-99    yz = vi * p/r/t
+      yz = vi * p/r/t
  
       end
 
@@ -4022,21 +4032,17 @@ c---------------------------------------------------------------------
 
       integer jns(3), ins(nsp)
  
-      double precision bc,bw,xw,t15,rtt,t2,cc,dc,ec,cw,dw,ew,bm,cij,
-     *                 dij,eij,xc2,xw2,xwc2,cm,dm,em,yzm,fug
+      double precision bc,bw,xw,t12,rtt,t2,cc,dc,ec,cw,dw,ew,bm,cij,
+     *                 dij,eij,xc2,xw2,xwc2,cm,dm,em,yzm,fug,rr
 
-      double precision pbar,tk,xc,u1,u2,tr,pr,r,ps
-      common/ cst5 /pbar,tk,xc,u1,u2,tr,pr,r,ps
-
-      double precision p,t,t12,rr
-      common/ cst85 /p,t,t12,rr
+      double precision p,t,xc,u1,u2,tr,pr,r,ps
+      common/ cst5 /p,t,xc,u1,u2,tr,pr,r,ps
 
       double precision fh2o,fco2
       common/ cst11 /fh2o,fco2
  
-      save bw, bc
- 
-      data bw, bc/ 29d0, 58d0/
+      save bw, bc, rr
+      data bw, bc, rr/ 29d0, 58d0, 83.144126d0/
 c----------------------------------------------------------------------
       if (xc.eq.1d0) then
          ins(1) = 2
@@ -4051,11 +4057,9 @@ c----------------------------------------------------------------------
       end if
  
       xw = 1d0 - xc
-      p = pbar
-      t = tk
-      t15 = dsqrt(t**3)
+
       t12 = dsqrt(t)
-      rtt = rr*t15
+      rtt = rr*dsqrt(t**3)
       t2 = t*t
  
       cc = 28.31d6+0.10721d6*t-0.00000881d6*t2
@@ -4091,7 +4095,7 @@ c                                 get initial volume estimate for
 c                                 newrap from mrk, implicit in newrap
  
 c                                 solve for hsmrk volume
-      call newrap (bm,cm,dm,em,yzm)
+      call newrap (bm,cm,dm,em,yzm,t12,rr)
 c                                 calculate hsmrk (log) fugacities:
       fco2 = dlog(xc*p)+ fug(rtt,cij,dij,eij,xc,xw,bm,yzm,cm,
      *                      dm,em,bc,cc,dc,ec)
@@ -4104,17 +4108,17 @@ c                                 calculate hsmrk (log) fugacities:
  
 99    end
  
-      subroutine newrap (b,c,d,e,yz)
+      subroutine newrap (b,c,d,e,yz,t12,r)
 c----------------------------------------------------------------------
       implicit none
 
       integer k
 
       double precision x,y,bi,bi2,vi2,vi3,x3,y3,pn,pa1,d1,d3,df,yz,
-     *                 diff,v,b,c,d,e
- 
-      double precision p,t,t12,r
-      common/ cst85 /p,t,t12,r
+     *                 diff,v,b,c,d,e,t12,r
+
+      double precision p,t,xc,u1,u2,tr,pr,r0,ps
+      common/ cst5 /p,t,xc,u1,u2,tr,pr,r0,ps
 
       double precision vi
       common/ cst26 /vi
@@ -4149,11 +4153,11 @@ c                                 call mrk to get initial volume
       diff = dabs(v-vi)
       vi = v
  
-      if (diff.lt.0.01d0) goto 99
+      if (diff.lt.0.01d0) exit
 
       end do 
  
-99    yz = vi * p/83.14d0/t
+      yz = vi * p/83.14d0/t
  
       end
  
@@ -4165,38 +4169,30 @@ c  mixtures
 c-----------------------------------------------------------------------
       implicit none
 
-      double precision bw,bc,xw,t15,t2,dlp,rtt,cc,dc,ec,cw,dw,ew,fmh2o,
-     *                 xmc,yzm,fmco2,tfh2o,fug
+      double precision bw,bc,xw,t12,t2,dlp,rtt,cc,dc,ec,cw,dw,ew,fmh2o,
+     *                 xmc,yzm,fmco2,tfh2o,fug,rr
 
-      double precision pbar,tk,xc,u1,u2,tr,pr,rcal,ps
-      common/ cst5 /pbar,tk,xc,u1,u2,tr,pr,rcal,ps
-
-      double precision p,t,t12,r
-      common/ cst85 /p,t,t12,r
+      double precision p,t,xc,u1,u2,tr,pr,rcal,ps
+      common/ cst5 /p,t,xc,u1,u2,tr,pr,rcal,ps
 
       double precision fh2o,fco2
       common/ cst11 /fh2o,fco2
  
-      save bw, bc
- 
-      data bw, bc/29d0, 58d0/
-c-----------------------------------------------------------------------
-      t = tk
- 
+      save bw, bc, rr
+      data bw, bc, rr/29d0, 58d0, 83.144126d0/
+c----------------------------------------------------------------------- 
       if (xc.ge.1d0) then
          call hsmrk
-         goto 99
+         return
       else if (xc.le.0d0) then
          call hsmrk
-         goto 99
+         return
       end if
  
-      p = pbar
-      t15 = dsqrt(t**3)
       t12 = dsqrt(t)
       t2 = t*t
       dlp  = dlog(p)
-      rtt = r*t15
+      rtt = rr*dsqrt(t**3)
  
       cc = 28.31d6+0.10721d6*t-0.00000881d6*t2
       dc = 9380d6-8.53d6*t+0.001189d6*t2
@@ -4218,7 +4214,7 @@ c                                 f(h2o) & estimate V for hsmrk
       xw = 1d0 
       xc = 0d0 
 c                                 call newrap for hsmrk h2o volume:
-      call newrap (bw,cw,dw,ew,yzm)
+      call newrap (bw,cw,dw,ew,yzm,t12,rr)
 c                                 calculate water fugacity save as
 c                                 th2o.
       tfh2o = dlp + fmh2o - fh2o
@@ -4227,14 +4223,14 @@ c                                 co2
       xc = 1d0
       xw = 0d0
  
-      call newrap (bc,cc,dc,ec,yzm)
+      call newrap (bc,cc,dc,ec,yzm,t12,rr)
       fco2 = dlp + fmco2 - fco2
      *     + fug(rtt,cc,dc,ec,xc,xw,bc,yzm,cc,dc,ec,bc,cc,dc,ec)
       fh2o = tfh2o
  
       xc = xmc
  
-99    end
+      end
  
       subroutine haar
 c-----------------------------------------------------------------------

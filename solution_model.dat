@@ -257,6 +257,152 @@ z(t1,al)   = 1/2 + 1/2 east + 1/2 fbit
 z(h,o)     = 1 tbit
 
 end_of_model    
+                    --------------------------------------------------------  
+begin_model                         
+
+                                  Ti-Biotite model after White, Powell & Holland (JMG, 2007)
+
+                                  Model entered by Lucie Tajcamanova, May 11, 2007. 
+
+                                  DQF corrections to annite added, Mark Caddick, Nov, 2007.
+
+
+
+
+                                  NOTE: this model requires make defintions for fbi and tbi
+                                  in the thermodynamic data file.
+
+
+                                                      1       2      3      4
+                                                      M1      M2     T1     H
+                                                     ____________________________
+
+                                      Mutliplicity    1       2      2      2 
+                                                     ____________________________
+
+                          Dependent:  1 ffbi          Fe3+    Fe     AlAl   OH  
+                                      2 fbi           Fe3+    Mg     AlAl   OH
+                          
+                          Dependent:  3 ftbi          Ti      Fe     AlSi   O
+                                      4 tbi1          Ti      Mg     AlSi   O
+   
+                          Dependent:  5 Sdph          Al      Fe     AlAl   OH
+                                      6 East          Al      Mg     AlAl   OH
+
+                            Species:  7 Ann           Fe      Fe     AlSi   OH
+                                      8 Phl           Mg      Mg     AlSi   OH
+                                                      __________________________
+
+                            Ordered:  9 Obi           Fe      Mg     AlSi   OH
+
+
+                       
+
+TiBio(WPH)                   | solution name.
+
+8                            | model type: Margules with dependent endmembers and speciation.
+
+2                            | the number of independent subcompositions, reciprocal solution if > 1.
+
+2  4                         | 2 species on site 1, 4 species on site 2. 
+                             | M2 and M1 can be identified as sites 1 and 2, respectively. the
+                             | species that mix on site 1 are Mg-Fe and the species that mix on 
+                             | site 2 are M2+, Al, Ti. Fe3+. The identity of M2+ on site 2 is determined by
+                             | the identity of the M2+ cation on site 1
+
+ffbi_i   fbi
+ftbi_i   tbi1
+sdph_i   east                | endmember names    
+ann      phl                 
+        
+1                            | ordered species:
+
+obi = 2/3 phl + 1/3 ann   enthalpy_of_formation = -10.73d3  
+
+begin_limits
+obi = -3   + 3   ann  + 1 obi                       delta = 3 z(M2,Fe) 
+obi =      - 3   phl  - 3 tbi1 - 3 east - 2 obi     delta = 3 z(M2,Mg)
+obi =      - 3/2 ann  - 1/2 obi                     delta = 3/2 z(M1,Fe)
+obi = -3/2 + 3/2 phl  + 1 obi                       delta = 3/2 z(M1,Mg)
+end_limits   
+
+3                            | 3 dependent endmembers 
+
+                              
+sdph_i = 1 east  + 1 ann - 1 obi 
+ffbi_i = 1 fbi   + 1 ann - 1 obi
+ftbi_i = 1 tbi1  + 1 ann - 1 obi
+
+0 0 0 0 0 0 0 0 0            | endmember flags: if 0 the endmember is considered to be part of the solution.
+                   
+                             | subdivision model for (binary) site 1 (M2):
+
+
+0. 1.  .1  0                 | range and resolution of X(Fe)
+
+                             | subdivision model for (quinary) site 2 (M1)
+0. 0.2 .1  1                 | range and resolution of X(Fe3+,M1)
+0. 0.2 .1  1                 | range and resolution of X(Ti,M1)
+0. 1. .1   0                 | range and resolution of X(Al,M1)              
+
+                             
+
+
+begin_excess_function
+                             | current preferred thermocalc values, Caddick, Nov '07
+
+W(phl ann)   9000. 0. 0.     
+W(phl east) 10000. 0. 0.  
+W(phl obi)   3000. 0. 0. 
+W(ann east) -1000. 0. 0.  
+W(ann obi)   6000. 0. 0.
+W(ann fbi)   8000. 0  0 
+W(ann tbi1) 10000. 0  0
+W(obi east) 10000. 0. 0. 
+                             | values from White et al paper and earlier Perple_X verions.
+                             | W(phl ann) 12000. 0. 0.       
+                             | W(phl east) 10000. 0. 0.  
+                             | W(phl obi) 4000. 0. 0. 
+                             | W(phl fbi) 0.  0.  0.
+                             | W(phl tbi1) 0.  0.  0.
+                             | W(ann east)  3000. 0. 0.  
+                             | W(ann obi) 8000. 0. 0.
+                             | W(ann fbi)   8000.  0  0 
+                             | W(ann tbi1)   10000.  0  0
+                             | W(obi east)  7000.  0. 0. 
+
+end_excess_function 
+
+4                           | Configurational entropy: 4 sites, M1, M2, T1 H.
+
+5 1.                        | 5 species on M1, 1 site per formula unit.
+
+
+z(m1,fe) = 1 ann  + 1 obi   
+z(m1,mg) = 1 phl           
+z(m1,Fe3+) = 1 fbi 
+z(m1,Ti) = 1 tbi1  
+
+2 2.                        | 2 species on M2, 2 sites per formula unit.
+
+z(m2,fe) = 1 ann 
+   
+
+2 2.                        | 2 species on T1, 2 site per formula unit.
+
+z(t1,al) = 1/2  + 1/2 east + 1/2 fbi 
+
+2 2.                        | 2 species on H, 2 site per formula unit.
+
+z(h,o) = 1 tbi1 
+
+
+begin_dqf_corrections
+dqf(ann) -3000 0 0
+end_dqf_corrections
+
+end_of_model               
+                    --------------------------------------------------------  
                   --------------------------------------------------------
 begin_model                
 
@@ -1248,6 +1394,9 @@ begin_model
                            | Entered by Thomas Wagner, 5/12.
                               
                              LWV 7/12
+
+                           | The reference for this model is Lanari, Wagner and Vidal,
+                           | CMP 2014 167:968
 
                            | the model is formulated here explicitly
                            | in terms of the dependent endmembers with the
@@ -2281,8 +2430,7 @@ end_of_model
 
                       --------------------------------------------------------
 begin_model                
-                             Scapolite as an ideal H&P solution.
-                             Presumably from Barbara Kuhn's thesis.
+                             Scapolite. Presumably from Barbara Kuhn's thesis.
 
                                                                         
                                                       M       T2a       T2b   
@@ -2298,6 +2446,11 @@ begin_model
                                       3 mizz          NaCa3   Si       Al     ordered
 
 
+                            enthalpy of ordering changed to match thermocalc phase eq, 
+                            rather than the incorrect enthalpy that follows 
+                            from table 6.4. JADC, Dec 30, 2013.
+
+
 
 Scap                       | solution name 
 
@@ -2311,7 +2464,7 @@ coma
 
 1                          | ordered species definition
 
-mizz = 2/3 me + 1/3 coma   enthalpy_of_formation = -13.67d3 
+mizz = 2/3 me + 1/3 coma   enthalpy_of_formation = -29000 
 
 0 0                        | endmember flags
 0.0 1. 0.1  0              

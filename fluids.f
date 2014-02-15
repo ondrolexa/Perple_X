@@ -294,7 +294,8 @@ c-----------------------------------------------------------------------
       integer ier, igo, ins(nsp), i, isp, j, k, l, kmax, count, nel
 
       double precision nc, nh, no, ns, nn, nsi, tentoe, fo2, fs2, 
-     *                 ag, tot, totx, var(l2), f, prop(40), vdif
+     *                 ag, tot, totx, var(l2), f, prop(40), vdif,
+     *                 vpar(nsp), xxs(nsp), xg(nsp)
 
       double precision fhc
       common / cst11 /fhc(2)
@@ -357,6 +358,8 @@ c                                 version info
 c                                 read options
       n4name = 'perplex_option.dat'
       call redop1 (.false.,n4name)
+
+      open (39,file='partial_molar_volumes.dat')
 
       do 
 c                                 configure EoS
@@ -960,22 +963,36 @@ c                                  finite difference estimate for volume:
 c                                 use analytic vol
                   else 
 c                                 compute volume by finite difference
-                     vdif = 0d0
+                     vdif = 0d0 
+
+                     do k = 1, isp
+                        vpar(k) = 0d0
+                        xxs(ins(k)) = xs(ins(k))
+                     end do 
+
                      p = var(1) + 0.5d0
                      f = 1d0 
+
                      do l = 1, 2
+
                         call cfluid (fo2,fs2)
+
                         do k = 1, isp
-                           if (g(ins(k))*p*xs(ins(k)).eq.0d0) cycle
+                           if (g(ins(k))*p*xxs(ins(k)).eq.0d0) cycle
+                           vpar(k) = vpar(k) +  
+     *                         83.14d0*t*f*dlog(g(ins(k))*p*xxs(ins(k)))
                            vdif = vdif + 
-     *                         f*xs(ins(k))*dlog(g(ins(k))*p*xs(ins(k)))
+     *                       f*xxs(ins(k))*dlog(g(ins(k))*p*xxs(ins(k)))
                         end do 
+
                         f = -1d0
                         p = var(1) - 0.5
+
                      end do 
 
                      p = var(1)
                      vol = 83.14d0*t*vdif
+                     write (39,'(12(g14.6,1x))') p, t, (vpar(k),k=1,isp)
 
                   end if 
 
@@ -1152,6 +1169,10 @@ c                                  finite difference estimate of volume:
                   write (*,1160) fhc(1),fhc(2),fo2
                   write (*,1300) vol
 
+               else if (ifug.eq.25) then 
+c                                 primitive output for Leonya's EoS
+                  write (*,1130) fhc(1), fhc(2)
+
                else 
 
                   if (ifug.eq.16.or.ifug.eq.17) then
@@ -1167,27 +1188,7 @@ c                                  routine cfluid returns ln(fs2)/2
                   else 
                      write (*,1120) fhc(1)/tentoe,fhc(2)/tentoe
                   end if 
-c                                  output speciation:
-                  write (*,1230)
-
-                  do j = 1, isp, 4
-                     kmax = j + 3
-                     if (kmax.gt.isp) kmax = isp
-                     write (*,1180) (specie(ins(k)), k = j, kmax)
-                     write (*,1190) (xs(ins(k)), k = j, kmax)
-                     write (*,1200) (g(ins(k))*p*xs(ins(k)), k = j,kmax)
-                  end do 
-c                                  total species fractions:
-                  totx = 0d0
-                  do k = 1, isp
-                     totx = totx + xs(ins(k))
-                  end do 
-
-                  write (*,1370) totx
-                  if (totx.gt.1.001d0.or.totx.lt.0.999d0) write (*,1380)
-c                                  output bulk properties and V:
-                  write (*,1240)
-
+c                                  compute sums:
                   ns = xs(6) + xs(8) + xs(9) 
                   no = xs(1) + xs(2)*2d0 + xs(3) + xs(7)*2d0 + xs(12)
      *                       + xs(8)*2d0 + xs(9) + xs(14)*2d0 + xs(13)
@@ -1196,6 +1197,66 @@ c                                  output bulk properties and V:
      *                                             + xs(11)*3d0 
                   nn = 2d0*xs(10) + xs(11)
                   nsi = xs(13) + xs(14) + xs(15)
+c                                  save old speciation and initialize for fd
+                  vdif = 0d0
+                  totx = 0d0
+
+                  do k = 1, isp
+                     totx = totx + xs(ins(k))
+                     vpar(k) = 0d0
+                     xxs(ins(k)) = xs(ins(k))
+                     xg(ins(k)) = g(ins(k))
+                  end do 
+c                                  volumes by finite difference
+                  if (ifug.ne.26) then 
+
+                     p = p + 0.5d0
+                     f = 1d0 
+
+                     do l = 1, 2
+
+                        call cfluid (fo2,fs2)
+
+                        do k = 1, isp
+
+                           if (g(ins(k))*p*xxs(ins(k)).eq.0d0) cycle
+
+                           vdif = vdif + 
+     *                       f*xxs(ins(k))*dlog(g(ins(k))*p*xxs(ins(k)))
+
+                           vpar(k) = vpar(k) +  
+     *                       83.14d0*t*f*dlog(g(ins(k))*p*xxs(ins(k)))
+
+
+                        end do 
+
+                        f = -1d0
+                        p = p - 1d0
+
+                     end do 
+
+                  end if 
+c                                  output speciation:
+                  write (*,1230)
+
+                  do j = 1, isp, 4
+                     kmax = j + 3
+                     if (kmax.gt.isp) kmax = isp
+                     write (*,1180) (specie(ins(k)), k = j, kmax)
+                     write (*,1190) ' x    ',
+     *                            (xxs(ins(k)), k = j, kmax)
+                     write (*,1190) ' f,bar',
+     *                            (xg(ins(k))*p*xxs(ins(k)), k = j,kmax)
+                     write (*,1190) ' v,cm3',
+     *                             (vpar(k), k = j,kmax)
+                     write (*,'(/)')
+
+                  end do 
+
+                  write (*,1370) totx
+                  if (totx.gt.1.001d0.or.totx.lt.0.999d0) write (*,1380)
+c                                  output bulk properties and V:
+                  write (*,1240)
 
                   tot = ns + no + nh + nc + nn + nsi    
 
@@ -1215,20 +1276,6 @@ c                                  output bulk properties and V:
                      write (*,1420) vol
 
                   else 
-c                                 compute volume by finite difference
-                     vdif = 0d0
-                     p = p + 0.5d0
-                     f = 1d0 
-                     do l = 1, 2
-                        call cfluid (fo2,fs2)
-                        do k = 1, isp
-                           if (g(ins(k))*p*xs(ins(k)).eq.0d0) cycle
-                           vdif = vdif + 
-     *                        f*xs(ins(k))*dlog(g(ins(k))*p*xs(ins(k)))
-                        end do 
-                        f = -1d0
-                        p = p - 1d0
-                     end do 
 
                      write (*,1420) 83.14d0*t*vdif
 
@@ -1260,9 +1307,8 @@ c                                 compute volume by finite difference
      *        /,10x,'log[f(S2)] = ',g12.5,
      *        /,10x,'a(gph/dia) = ',g12.5,/)
 1180  format (10x,4(4x,a,5x))
-1190  format (5x,'x',4x,4(g12.5,1x))
-1200  format (5x,'f',4x,4(g12.5,1x),/)
-1230  format (/,22x,'Speciation/Fugacities',/)
+1190  format (2x,a,2x,4(g12.5,1x))
+1230  format (/,16x,'Speciation/Fugacities/Partial Molar Volumes',/)
 1240  format (/,22x,'Atomic Proportions',//,
      *        10x,'C',12x,'H',12x,'O',12x,'S',12x,'N',12x,'Si')
 1250  format (4x,6(g12.5,1x),/)

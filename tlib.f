@@ -3204,9 +3204,6 @@ c-----------------------------------------------------------------------
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5  /p,t,xco2,u1,u2,tr,pr,r,ps
 
-      double precision pp,tt,yy,rr
-      common/ cst85 /pp,tt,yy,rr
-
       integer iff,idss,ifug,ifyn,isyn
       common / cst10 /iff(2),idss(h5),ifug,ifyn,isyn
     
@@ -3248,7 +3245,7 @@ c-----------------------------------------------------------------------
 c
       data us, uf/ h5*0d0, 2*0d0/
 
-      data r,rr/8.3144126d0,83.144126d0/
+      data r/8.3144126d0/
 
       data gflu, sroot/ 2*.false./
 
