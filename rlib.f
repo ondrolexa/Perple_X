@@ -5442,8 +5442,104 @@ c                                 the ordered species.
          end if 
 
       end do 
+c                                 eliminate sites with only one
+c                                 species
+      if (isite.gt.1) call dedsit
 
       end 
+
+      subroutine dedsit
+c---------------------------------------------------------------------
+c dedsit - eliminates chemical mixing sites with only one species
+c---------------------------------------------------------------------
+      implicit none
+  
+      include 'perplex_parameters.h'
+
+      integer i,j,itic,iwas(mst)
+
+      logical depend,laar,order,fluid,macro,specil,recip
+      common/ cst160 /depend,laar,order,fluid,macro,specil,recip
+c                                 local input variables
+      integer jmsol,kdsol
+      common/ cst142 /jmsol(m4,mst),kdsol(m4)
+
+      integer iddeps,norder
+      double precision depvnu,denth
+      common/ cst141 /depvnu(2,j3),denth(j3),iddeps(2,j3),norder
+
+      integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
+     *        kstot,rkord,xtyp
+      double precision wg,wk,xmn,xmx,xnc,reach
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),
+     *      xmn(mst,msp),xmx(mst,msp),xnc(mst,msp),
+     *      reach,iend(m4),isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),
+     *      isp(mst),rkord(m18),isite,iterm,iord,istot,jstot,kstot,xtyp
+
+      double precision yin
+      common/ cst50 /yin(ms1,mst)
+
+      integer jsmod
+      double precision vlaar
+      common/ cst221 /vlaar(m3,m4),jsmod
+c----------------------------------------------------------------------
+
+      itic = 0 
+
+      do i = 1, isite
+
+         if (isp(i).gt.1) then 
+            itic = itic + 1
+            iwas(itic) = i
+         end if 
+
+      end do 
+
+      if (itic.eq.isite) return
+
+      isite = itic
+c                                 a dead site, shift the counters and limits:
+      do i = 1, isite
+
+         isp(i) = isp(iwas(i))
+c                                 shift subdivision ranges
+         do j = 1, isp(i) - 1
+            xmn(i,j) = xmn(iwas(i),j)
+            xmx(i,j) = xmx(iwas(i),j)
+            xnc(i,j) = xnc(iwas(i),j)
+            imd(j,i) = imd(j,iwas(i))
+            if (imd(j,i).gt.0) yin(j,i) = yin(j,iwas(i))
+         end do
+
+      end do 
+
+      do i = 1, istot + norder 
+c                                 reset the species pointers (jmsol) 
+         do j = 1, isite
+
+            jmsol(i,j) = jmsol(i,iwas(j))
+
+         end do
+
+      end do  
+
+      if (isite.eq.1) recip = .false.
+
+      if (order) then 
+
+         if (isite.eq.1) jsmod = 6
+
+      else if (depend) then 
+
+         jsmod = 7
+
+      else 
+
+         jsmod = 2
+
+      end if 
+
+      end
 
 
       subroutine killsp (ikill,jkill)
@@ -9014,11 +9110,15 @@ c                                 this looks like bad news, for laar/recip
 c                                 or laar/order, but appears to be overridden
 c                                 by use of logical classification variables,
 c                                 in which case, why is it here????
-      if (laar.and.ksmod(im).ne.3) ksmod(im) = 7 
+      if (laar) then 
 
-      if (laar.and.iterm.eq.0) then 
-          if (ksmod(im).eq.3) ksmod(im) = 2
-          laar = .false.
+         if (recip) ksmod(im) = 7 
+
+         if (iterm.eq.0) then 
+            if (ksmod(im).eq.3) ksmod(im) = 2
+            laar = .false.
+         end if 
+
       end if 
 c                                 set type flags, presently no provision for 
 c                                 bw summation
@@ -9039,7 +9139,7 @@ c                                 setting depend = .false., while retaining
 c                                 a dummy site with no mixing. reform should
 c                                 be redone to truly reformulate multiple
 c                                 models to single site models. 
-      if (depend.or.ksmod(im).eq.7) lrecip(im) = .true. 
+      if (recip) lrecip(im) = .true. 
 
       if (.not.lopt(3)) then 
 c                                 hard limits are off, set limits to 0/1
@@ -10453,7 +10553,7 @@ c                                 lord is the number of possible species
 
             end do 
 
-            if (tdp.lt.nopt(5).and.gold-g.lt.1d2.or.tdp.eq.xtdp) then
+            if (tdp.lt.nopt(5).and.gold-g.lt.1d-2.or.tdp.eq.xtdp) then
                goodc(1) = goodc(1) + 1d0
                exit
             end if 

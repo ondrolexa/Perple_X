@@ -17,7 +17,7 @@ c----------------------------------------------------------------------
       implicit none
 
       write (*,'(/,a)') 
-     *      'Perple_X version 6.6.8, source updated Nov 29, 2013.'
+     *      'Perple_X version 6.6.9, source updated Mar 7, 2014.'
 
       end
 

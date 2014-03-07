@@ -1107,7 +1107,7 @@ begin_model
                                 Enthalpies of ordering corrected. JADC.
                          6/08   z(m1,mg) corrected to include mrb, second limit
                                 equations for cammo1 and cammo2 corrected accordingly.   
-                                corrected enthalpies for cammo1 and cammo2.            
+                                corrected enthalpies for cammo1 and cammo2.          
      
 
 cAmph(DP)                    | solution name 
@@ -1123,8 +1123,9 @@ mrb        frb
 
 2                            | 2 ordered species:
 
-cammo1 = 3/7 cumm + 4/7 grun   enthalpy_of_formation = -9.5d3  
-cammo2 = 2/7 cumm + 5/7 grun   enthalpy_of_formation = -11.7d3   | these enthalpies differ from the published values
+cammo1 = 3/7 cumm + 4/7 grun   enthalpy_of_formation = -9.5d3   
+cammo2 = 2/7 cumm + 5/7 grun   enthalpy_of_formation = -11.7d3
+                                                                 | these enthalpies differ from the thermocalc values
                                                                  | becuase Thermocalc reactions are specified in terms of the 
                                                                  | endmember without "DQF" corrections, while in Perple_X
                                                                  | endmembers automatically include any DQF corrections. 
@@ -1142,6 +1143,7 @@ cammo2 = -7/2 grun + 2 cammo1 - 2 cammo1 - 5/2 cammo2                           
 cammo2 = -7/5 tr - 7/10 parg_dqf - 7/5 cumm + 3/5 cammo1 - 3/5 cammo1 - 2/5 cammo2      delta = 7/5
 cammo2 = -7/2 + 7/2 cumm - 3/2 cammo1 + 3/2 cammo1 + 1 cammo2                           delta = 7/2
 cammo2 = -7/2 grun - 3/2 cammo1  - 2 cammo1 - 5/2 cammo2                                delta = 7/2
+
 end_limits
 
 5                            | 5 dependent endmembers 
