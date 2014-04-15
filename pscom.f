@@ -296,16 +296,16 @@ c psylbl - subroutine to put on y-axis labels.
       do i = 1, i1
 
          if (icase.eq.2) then 
-             write (numbs(i),1002) int(r)
+             write (numbs(i),'(i4)') int(r)
          else if (icase.eq.3) then 
-            write (numbs(i),1003) int(r)
-         else if (icase.eq.4) then          
-            write (numbs(i),1004) r
+            write (numbs(i),'(i3)') int(r)
+         else if (icase.eq.4) then
+            write (numbs(i),'(g10.3)') r
          else 
-            write (numbs(i),1001) int(r)
+            write (numbs(i),'(i5)') int(r)
          end if 
 
-         read (numbs(i),1010) text
+         read (numbs(i),'(12a1)') text
 
          k = 0
 
@@ -316,16 +316,10 @@ c psylbl - subroutine to put on y-axis labels.
          end do 
 
          ic(i) = k
-         write (numbs(i),1010) (next(j),j=1,k)
+         write (numbs(i),'(12a1)') (next(j),j=1,k)
          r = r + dr
 
       end do 
- 
-1001  format (i5)
-1002  format (i4)
-1003  format (i3)
-1004  format (g9.3)
-1010  format (12a1)
  
       end
  

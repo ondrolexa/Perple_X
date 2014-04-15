@@ -237,11 +237,11 @@ c---------------------------------------------------------------------
 
       double precision ialpha, vt, trv, pth, vdp, ndu, vdpbm3, gsixtr, 
      *                 gstxgi, fs2, fo2, kt, gval, gmake, gkomab, kp,
-     *                 a, b, c, gstxlq, glacaz, v1, v2, gmet, km, kmk,
-     *                 hsfch4
+     *                 a, b, c, gstxlq, glacaz, v1, v2, gmet, gterm2, 
+     *                 km, kmk, hsfch4
 
       external vdpbm3, gsixtr, gstxgi, gmake, gkomab, gstxlq, glacaz, 
-     *                 hsfch4
+     *                 hsfch4, gmet, gterm2
 
       double precision f
       common/ cst11 /f(2)
@@ -317,7 +317,14 @@ c                                 stixrude EPSL '09 Liquid Eos
 c                                read SGTE data and evaluate EOS after Brosh '07,'08
          gval = gmet(id)
 
-      return
+         return
+
+      else if (eos(id).eq.14) then
+c                                read SGTE data and evaluate EOS after Brosh'07,'08
+c                                (modified for liquid carbon)
+         gval = gterm2(id)
+
+         return
 
       end if 
 c                                 all other EoS's with Cp function
@@ -571,7 +578,7 @@ c                                 Stoichiometic Si rk fluid
             call mrkpur (kns,1)
             gval = gval + r*t*dlog(p*g(15))
 
-         else if (eos(id).ge.610.and.eos(id).le.649) then
+         else if (eos(id).ge.610.and.eos(id).le.637) then
 c                                 lacaze & Sundman (1990) EoS for Fe-Si-C alloys and compounds
 c                                 Xiong et al., 2011 for Fe-Cr alloys
             gval = glacaz(eos(id)) + vdp + thermo(1,id)  
@@ -740,7 +747,7 @@ c---------------------------------------------------------------------
       end
  
       subroutine conver (g,s,v,a,b,c,d,e,f,gg,b1,b2,b3,b4,b5,b6,b7,b8,
-     *                   b9,b10,b11,b12,b13,b14,b15,tr,pr,r,ieos)
+     *                   b9,b10,b11,b12,b13,tr,pr,r,ieos)
 c---------------------------------------------------------------------
 c convert thermodynamic equation of state from a pr tr reference state
 c to minimize references to to reference conditions and constants.
@@ -752,7 +759,7 @@ c---------------------------------------------------------------------
       integer ieos
 
       double precision g,s,v,a,b,c,d,e,f,gg,b1,b2,b3,b4,b5,b6,b7,b8,
-     *                 b9,b10,b11,b12,b13,b14,b15,tr,pr,n,v0,k00,k0p,
+     *                 b9,b10,b11,b12,b13,tr,pr,n,v0,k00,k0p,
      *                 gamma0,q0,etas0,g0,g0p,r,c1,c2
 
       double precision emodu
@@ -899,7 +906,7 @@ c                                b2 = ln(v0)
 
          return
 
-      else if (ieos.eq.12) then 
+      else if (ieos.eq.12.or.ieos.eq.14) then 
 c                                 calphad format, don't do anything.
          return 
 c                                 remaining standard forms have caloric polynomial
@@ -1345,11 +1352,11 @@ c---------------------------------------------------------------------
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
  
       gclpht = therlm(5,j,id) + therlm(6,j,id)*t + 
-     #         therlm(7,j,id)*t*dlog(t) + therlm(8,j,id)/t + 
-     #         therlm(9,j,id)/t**2 + therlm(10,j,id)/t**3 + 
-     #         therlm(11,j,id)/t**9 + therlm(12,j,id)*t**2 + 
-     #         therlm(13,j,id)*t**3 + therlm(14,j,id)*t**4 + 
-     #         therlm(15,j,id)*t**7 
+     *         therlm(7,j,id)*t*dlog(t) + therlm(8,j,id)/t + 
+     *         therlm(9,j,id)/t**2 + therlm(10,j,id)/t**3 + 
+     *         therlm(11,j,id)/t**9 + therlm(12,j,id)*t**2 + 
+     *         therlm(13,j,id)*t**3 + therlm(14,j,id)*t**4 + 
+     *         therlm(15,j,id)*t**7 
      
       end   
 
@@ -1929,7 +1936,6 @@ c                               load errors for MC calculations
      *             thermo(15,id),thermo(16,id),thermo(17,id),
      *             thermo(18,id),thermo(19,id),thermo(20,id),
      *             thermo(21,id),thermo(22,id),thermo(23,id),
-     *             thermo(24,id),thermo(25,id),
      *             tr,pr,r,eos(id))
  
       if (tr.eq.0d0) then
@@ -2047,13 +2053,13 @@ c                              streamline the eos:
 
 
                call conver (therlm(12,k,lamin),therlm(3,k,lamin),
-     *          z(1),therlm(5,k,lamin), therlm(6,k,lamin),
-     *               therlm(7,k,lamin), therlm(8,k,lamin),  
-     *               therlm(9,k,lamin), therlm(10,k,lamin),
-     *               therlm(11,k,lamin),
-     *               therlm(13,k,lamin),therlm(14,k,lamin),           
-     *          z(2),z(3),z(4),z(5),z(6),z(7),z(8),
-     *          z(9),z(10),z(11),z(12),z(13),z(14),tm(1,k),pr,r,0)
+     *                     z(1),therlm(5,k,lamin), therlm(6,k,lamin),
+     *                     therlm(7,k,lamin), therlm(8,k,lamin),  
+     *                     therlm(9,k,lamin), therlm(10,k,lamin),
+     *                     therlm(11,k,lamin),
+     *                     therlm(13,k,lamin),therlm(14,k,lamin),           
+     *                     z(2),z(3),z(4),z(5),z(6),z(7),z(8),
+     *                     z(9),z(10),z(11),z(12),tm(1,k),pr,r,0)
 
             end do 
 
@@ -2949,7 +2955,7 @@ c----------------------------------------------------------------------
       common/ cst51 /length,iblank,icom,chars(240)
 
       character*2 strgs*3, mstrg, dstrg, tstrg*3, wstrg*3
-      common/ cst56 /strgs(28),mstrg(6),dstrg(8),tstrg(13),wstrg(m16)
+      common/ cst56 /strgs(32),mstrg(6),dstrg(8),tstrg(13),wstrg(m16)
 c----------------------------------------------------------------------
 
       iterm = 0 
@@ -6395,7 +6401,7 @@ c                                 correct jsmod for old versions
       if (jsmod.gt.20) specil = .true.  
 c                                 assign non-default props to 
 c                                 special models:
-      if (jsmod.ge.30.and.jsmod.le.33) recip = .true.
+      if (jsmod.ge.30.and.jsmod.le.31) recip = .true.
 c                                 read number of independent sites:
       if (recip) then 
          call readda (rnums,1,tname)    
@@ -7448,10 +7454,10 @@ c-----------------------------------------------------------------------
       integer k,id
 
       double precision omega, hpmelt, slvmlt, gmelt, gfluid, gzero, gg,
-     *                 dg, gex, gfesi, gfesic, gerk, x1(5)
+     *                 dg, gex, gfesi, gfesic, gfecr1, gerk, x1(5)
 
       external omega, hpmelt, slvmlt, gmelt, gfluid, gzero, gex, gfesi, 
-     *         gfesic, gerk
+     *         gfesic, gfecr1, gerk
 
       integer jend
       common/ cxt23 /jend(h9,k12)
@@ -7614,12 +7620,17 @@ c                                 -------------------------------------
 c                                 BCC Fe-Si Lacaze and Sundman
             gg =  gfesi(y(1),g(jend(id,3)),g(jend(id,4)))
 
-         else if (ksmod(id).ge.30.and.ksmod(id).le.33) then 
+         else if (ksmod(id).ge.30.and.ksmod(id).le.31) then 
 c                                 -------------------------------------
-c                                 Nastia's version of BCC/FCC/CBCC/HCP Fe-Si-C Lacaze and Sundman
+c                                 Nastia's version of BCC/FCC Fe-Si-C Lacaze and Sundman
             gg =  gfesic (y(1),y(3),y(4),
      *                    g(jend(id,3)),g(jend(id,4)),
      *                    g(jend(id,5)),g(jend(id,6)),ksmod(id))
+
+         else if (ksmod(id).eq.32) then 
+c                                 -------------------------------------
+c                                 BCC Fe-Cr Andersson and Sundman
+            gg =  gfecr1(y(1),g(jend(id,3)),g(jend(id,4)))
 
          else if (ksmod(id).eq.40) then 
 c                                 MRK silicate vapor
@@ -8025,15 +8036,15 @@ c                                 redlich kistler is a special case
                    wl(j,i) = wkl(1,j,i,id) + t*wkl(2,j,i,id)
                else
                    wl(j,i) = wkl(1,j,i,id) + t*wkl(2,j,i,id) + 
-     *                   (-0.4D1*wkl(5,j,i,id) - 0.4D1*
-     *                   dsqrt((0.2D1*wkl(5,j,i,id)*p + 
+     *                   4d0*((-1d0*wkl(5,j,i,id) - 
+     *                   dsqrt((2d0*wkl(5,j,i,id)*p + 
      *                   wkl(4,j,i,id))/wkl(4,j,i,id)))*
-     *                   wkl(3,j,i,id)*wkl(4,j,i,id)*dexp(-(-0.1D1 + 
-     *                   dsqrt((0.2D1*wkl(5,j,i,id)*p + 
+     *                   wkl(3,j,i,id)*wkl(4,j,i,id)*dexp(-(-1d0 + 
+     *                   dsqrt((2d0*wkl(5,j,i,id)*p + 
      *                   wkl(4,j,i,id))/wkl(4,j,i,id)))/
      *                   wkl(5,j,i,id)) + 
-     *                   0.4D1*wkl(3,j,i,id)*wkl(4,j,i,id)*
-     *                   (wkl(5,j,i,id)+0.1D1)
+     *                   wkl(3,j,i,id)*wkl(4,j,i,id)*
+     *                   (wkl(5,j,i,id)+1d0))
                end if
 
             end do
@@ -8150,7 +8161,7 @@ c                                    expand polynomial
          do i = 1, jterm(ids)
             do j = 1, rko(i,ids)
                lex(j,i) = lex(j,i) + wl(j,i)*
-     *                        (y(jsub(1,i,ids))-y(jsub(2,i,ids)))**(j-1)
+     *                        (y(jsub(2,i,ids))-y(jsub(1,i,ids)))**(j-1)
             end do
          end do
 
@@ -9070,8 +9081,15 @@ c                                 tolerance
 c                                 
 
             do k = 1, icp
+                
                dx = dabs(cp(k,id) - cp(k,jd))
-               if (dcp(k,im).lt.dx) dcp(k,im) = dx
+               
+               if (dx.lt.nopt(5)) then 
+                  cycle
+               else if (dcp(k,im).lt.dx) then 
+                  dcp(k,im) = dx
+               end if 
+               
             end do 
 
          end do 
@@ -12738,7 +12756,7 @@ c---------------------------------------------------------------------
 
       integer id
 
-      double precision hserfe, hsersi, crbcc, fefcc, hserc
+      double precision hserfe, hsersi, crbcc, hserc
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -12830,7 +12848,7 @@ c                                 SiC-BCC
      *            t ** 2 + 0.76878d7 / t - 0.7929d9 / t ** 2 + 
      *            0.36d11 / t ** 3 
 
-          else if (id.eq.624) then
+      else if (id.eq.624) then
 c                                 FeC-FCC
                if (t.lt.1811d0) then
                
@@ -12888,65 +12906,11 @@ c                                 SiC
          end if
 
       else if (id.eq.629) then
-c                              Fe-CBCC
-         glacaz = 4745d0 + hserfe(t)
-
-      else if (id.eq.630) then
-c                             Si-CBCC
-         glacaz = 0.50208d5 - 0.20377d2 * t + hsersi(t)
-
-      else if (id.eq.631) then
-c                             FeC-CBCC
-         glacaz = 0.62631d5 + hserfe(t) + 0.3870412771d10 * t 
-     *            - 0.243d2 * t * dlog(t) - 0.4723d-3 * t ** 2
-
-      else if (id.eq.632) then
-c                             SiC-CBCC
-         glacaz = 0.1d7 + 0.5660326d3 * t - 0.85955678d2 * t * dlog(t) -
-     *            0.7814909d-2 * t ** 2 + 0.37239d-6 * t ** 3 + 
-     *            0.1688653d7 / t
-
-      else if (id.eq.633) then
 c                             Cementite
          glacaz = -0.10745d5 + 0.70604d3 * t - 0.1206d3 * t * dlog(t)
 
-      else if (id.eq.634) then
-c                            Fe-HCP
-         if (t.lt.1811d0) then
 
-            glacaz = -3705.78d0 + 12.591d0*t - 1.15d0*t*dlog(t) + 
-     *                6.4d-4*t**2 + hserfe(t) 
-         else
-
-            glacaz = -3957.199d0 + 5.24951d0*t + 4.9251d30/t**9 + 
-     *                hserfe(t) 
-         end if
-
-      else if (id.eq.635) then
-c                            Si-HCP
-         glacaz = 49200d0 - 20.8d0*t + hsersi(t) 
-
-      else if (id.eq.636) then
-c                             FeC-HCP
-         if (t.lt.1811d0) then
-
-            glacaz = 52905d0 - 11.9075d0*t + 0.5d0*(-0.17368441d5 + 
-     *               0.17037d3 * t - 0.243d2 * t * dlog(t) - 0.4723d-3 *
-     *               t ** 2 + 0.25626d7 / t - 0.2643d9 / t ** 2 + 
-     *               0.12d11 / t ** 3) 
-         else
-
-            glacaz = 52905d0 - 11.9075d0*t + 0.5d0*(-0.17368441d5 + 
-     *               0.17037d3 * t - 0.243d2 * t * dlog(t) - 0.4723d-3 *
-     *               t ** 2 + 0.25626d7 / t - 0.2643d9 / t ** 2 + 
-     *               0.12d11 / t ** 3) 
-         end if
-
-      else if (id.eq.637) then
-c                            SiC-HCP
-         glacaz = 0d0 
-
-      else if (id.eq.638) then
+      else if (id.eq.630) then
 c                            Fe8Si2C
          glacaz = -0.210043d5 + 0.506d0 * t + 0.91d-1 * (-0.17368441d5
      *            + 0.17037d3 * t - 0.243d2 * t * dlog(t) - 0.4723d-3 
@@ -12954,25 +12918,25 @@ c                            Fe8Si2C
      *            0.12d11 / t ** 3) + 0.727d0 * hserfe(t) + 
      *            0.182d0 * hsersi(t)
 
-      else if (id.eq.639) then
+      else if (id.eq.631) then
 c                            C diam
          glacaz = -0.16359441D5 + 0.17561D3 * t - 0.2431D2 * t * 
      *             dlog(t) - 0.4723D-3 * t ** 2 + 0.2698D7 / t - 
      *             0.261D9 / t ** 2 + 0.111D11 / t ** 3 
       
-      else if (id.eq.640) then
+      else if (id.eq.632) then
 c                            Cr-BCC
            
            glacaz = crbcc(t)
 
 
-      else if (id.eq.641) then
+      else if (id.eq.633) then
 c                            Cr-FCC
 
            glacaz = crbcc(t) + 7284d0 + 0.163d0*t
 
 
-      else if (id.eq.642) then
+      else if (id.eq.634) then
 c                            Cr_LIQ
            if (t.lt.2180d0) then
 
@@ -12986,36 +12950,17 @@ c                            Cr_LIQ
 
            end if
 
-
-      else if (id.eq.643) then
-c                            Fe-sig after Xiong et al., 2011
-              glacaz = (15d4/30 + hserfe(t))
-
-      else if (id.eq.644) then
-c                            Cr-sig after Xiong et al., 2011
-              glacaz = (15d4/30 + crbcc(t))
-
-      else if (id.eq.645) then
-c                            FeCr-sig after Xiong et al., 2011
-              glacaz = (0.31380714D6 - 0.10715D2 * t + 10d0*hserfe(t)
-     *                 +20d0*crbcc(t))/30d0
-
-      else if (id.eq.646) then
-c                            CrFe-sig after Xiong et al., 2011
-              glacaz = (-0.1380714D5 - 0.10715D2 * t + 10d0*crbcc(t)
-     *                 + 20d0*hserfe(t))/30d0
-
-      else if (id.eq.647) then
+      else if (id.eq.635) then
 c                            FeCr-sig after Hertzman, 1980
               glacaz = (183802.0638d0 + 26d0*hserfe(t) + 
      *                  4d0*crbcc(t))/30d0
       
-      else if (id.eq.648) then
+      else if (id.eq.636) then
 c                            CrFe-sig after Hertzman, 1980
               glacaz =(-22624.05686d0 + 20d0*crbcc(t)
      *                 + 10d0*hserfe(t))/30d0
 
-      else if (id.eq.649) then
+      else if (id.eq.637) then
 c                            Fe7C3 after Djurkovic et al., 2011
               glacaz =-0.2345062954D5 + 0.1761006488D4 * t - 
      *                 0.2975999679D3 * t * dlog(t) - 0.3148668241D-3 * 
@@ -13052,7 +12997,7 @@ c-----------------------------------------------------------------------
 
       if (t0.lt.1d0) then 
 
-         f = 0.1D1 - 0.905299383D0 / t0 - (0.153008346D0 
+         f = 1d0 - 0.905299383D0 / t0 - (0.153008346D0 
      *       + (0.680037095D-2 + 0.153008346D-2 * t0**6) * t0**6)
      *       * t0**3
 
@@ -13377,8 +13322,6 @@ c Lacaze & Sundman 1990.
 
 c    id = 30 -> BCC
 c    id = 31 -> FCC
-c    id = 32 -> CBCC
-c    id = 33 -> HCP
 
 c    y1..y4 - mole fractions of Fe, Si, FeC and SiC, respectively
 c    g1..g4 - free energies of Fe, Si, FeC and SiC, respectively
@@ -13444,22 +13387,6 @@ c                                 FCC
      *         x * y * u * (0.1432199d6 + 0.3931d2 * t - 0.2163205d6 * x
      *         + 0.2163205D6 * y) - 0.34671d5 * x * u * v
 
-      else if (id.eq.32) then 
-c                                 CBCC
-         gconf = r * t * (logx + logu)
-
-         gex = x * y * v * (-0.153141d6 + 0.4648d2 * t - 0.92352d5 * x +
-     *         0.92352d5 * y + 0.62240d5 * (x - y) ** 2) - 
-     *         0.34671d5 * x * u * v
-
-      else if (id.eq.33) then
-c                                 HCP 
-         gconf = r*t*(logx + logu/2d0)
-
-         gex = -0.22126d5 * x * u * v + x * y * v * 
-     *          (-0.123468d6 + 0.41116d2 * t - 0.142708d6 * x + 
-     *          0.142708d6 * y + 0.89907d5 * (x - y) ** 2)
-
       end if 
 
       gfesic = gmech + gconf + gex
@@ -13487,7 +13414,7 @@ c-----------------------------------------------------------------------
          return
       end if 
 
-      tc = 0.13545D4 * x - 0.3115D3 + (0.1D1 - x) * x * 
+      tc = 0.13545D4 * x - 0.3115D3 + (1d0 - x) * x * 
      *     (0.2200D4 - 0.11D4 * x)
 
 
@@ -13495,7 +13422,7 @@ c-----------------------------------------------------------------------
 
       if (t0.lt.1d0) then 
 
-         f = 0.1D1 - 0.905299383D0 / t0 - (0.153008346D0 
+         f = 1d0 - 0.905299383D0 / t0 - (0.153008346D0 
      *       + (0.680037095D-2 + 0.153008346D-2 * t0**6) * t0**6)
      *       * t0**3
 
@@ -13506,7 +13433,7 @@ c-----------------------------------------------------------------------
 
       end if 
 
-      b = 0.2228D1 * x - 0.8D-2 - 0.85D0 * (0.1D1 - x) * x
+      b = 0.2228D1 * x - 0.8D-2 - 0.85D0 * (1d0 - x) * x
 
       gmag2 = r*t*f*dlog(b+1)
 
@@ -13515,7 +13442,7 @@ c-----------------------------------------------------------------------
       double precision function gfecr1 (y,g1,g2)
 c-----------------------------------------------------------------------
 c     gfecr1 returns the free energy change for BCC Fe-Cr alloy after 
-c     Andersson and Sundman, 1987. 
+c     Andersson and Sundman, 1987. (solution model id = 32) 
 
 c    y      - mole fractions of Fe
 c    g1, g2 - free energues of Fe-bcc and Cr-bcc
@@ -13549,56 +13476,6 @@ c----------------------------------------------------------------------
 
       end
 
-      double precision function gsig (y1,y2,y3,y4,g1,g2,g3,g4)
-c-----------------------------------------------------------------------
-c gsig returns the free energy change for sigma Fe-Cr phase after
-c Xiong et al., 2011 (FeCr_sig in solution_model_xiong.dat)
-
-c    y1..y4 - mole fractions of Fe-sig, CrFe-sig, FeCr-sig, Cr-sig, respectively
-c    g1..g4 - free energies of Fe-sig, CrFe-sig, FeCr-sig, Cr-sig, respectively
-c    x - site fraction of Fe on the 1st site, v - site fraction of Fe on the 2nd site
-c-----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      double precision g1, g2, g3, g4, y1, y2, y3, y4, gmech, 
-     *                 logu, logx, gconf, gex, x, y, u, v
-
-
-      double precision p,t,xco2,u1,u2,tr,pr,r,ps
-      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
-c----------------------------------------------------------------------
-
-      x = y1 + y3
-      v = y1 + y2
-      y = 1d0 - x
-      u = 1d0 - v
-
-      gmech = x * v * g1 + y * v * g2 + x * u * g3 + y * u * g4
-
-      if (x.gt.0d0.and.x.lt.1d0) then 
-         logx = x * dlog(x) + y * dlog(y) 
-      else
-         logx = 0d0
-      end if 
-
-      if (u.gt.0d0.and.u.lt.1d0) then 
-         logu = u * dlog(u) + v * dlog(v) 
-      else
-         logu = 0d0
-      end if 
-
-      gconf = r * t * (logx + 2d0 * logu)/3d0
-
-      gex = u * v * (0.8990852D5 - 0.156894D3 * t) + 
-     *      y * x * (0.772264D4 - 0.139766D3 * t)
-
-      gsig = gmech + gconf + gex/30d0
-
-      end
-
-
       double precision function gmet(id)
 c----------------------------------------------------------------
 c function reads SGTE data format for reference Gibbs free energy
@@ -13616,7 +13493,7 @@ c-----------------------------------------------------------------
       implicit none
       include 'perplex_parameters.h'
 
-      double precision thermo,uf,us 
+      double precision thermo,uf,us
       common/ cst1 /thermo(k4,k10),uf(2),us(h5)
 
       integer ltyp,lct,lmda,idis
@@ -13625,16 +13502,15 @@ c-----------------------------------------------------------------
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 
-      integer id
-      integer nn
+      integer id, nn
 
       double precision a,b,c,d,e,f,g,h,i,j,k
-      double precision v0,gam0,tet0,b1,dd1,b0,dd0,Bo,Bpo
+      double precision v0,gam0,tet0,tet02,gam02,b1,dd1,b0,dd0,Bo,Bpo
       double precision gsgte,gsgte0,sr,hr,cpr
       double precision gqh,gqhr,sqhr,hqhr,cpqhr
       double precision intp,difc,gbrosh
       double precision colcom,harter
-      double precision tc,tc1,t0,beta,pp,ff,gmagn,vv
+      double precision tc,tc1,t0,beta,pp,ff,gmagn,gmagn0,vv,cst1,cst2
 c----------------------------------------------------------------------
 c                             allocate polynomial coeffiecients for
 c                             reference Gibbs free energy function
@@ -13665,112 +13541,150 @@ c                             and magnetic term
       beta = thermo(24,id)
       pp = thermo(25,id)
       vv = thermo(26,id)
+c                           thermodynamic properties calculated at tr=0 K
+c                           cst1: hsgte(at reference T) - hqh(at ref T) -
+c                                 - tr/2*(Cpsgte(at ref T) - Cpqh(at ref T)) = hsgte(at reference T)
+c                           cst2: (sqh(at ref T) - ssgte(at ref T)) + 
+c                                 + (Cpsgte(at ref T)-Cpqh(at ref T)) = - ssgte(at ref T)
+      cst1 = thermo(27,id)
+      cst2 = thermo(28,id)
+c                           additional Grueneisen parameter and Einstein's temperature for graphite
+      gam02 = thermo(29,id)
+      tet02 = thermo(30,id)
 
-c                          read SGTE data and evaluate S, Cp, and H at reference T and P
-     
+c                          read SGTE data 
       gsgte = a + b*t + c*t*dlog(t) + d/t + e/t**2 + f/t**3 + 
-     #            g/t**9 + h*t**2 + i*t**3 + j*t**4 + k*t**7    
+     *                  g/t**9 + h*t**2 + i*t**3 + j*t**4 + k*t**7    
 c                          check for transitions:
-      if (ltyp(id).ne.0) call calpht (t,gsgte,lmda(id),lct(id))  
+      if (ltyp(id).ne.0) call calpht (t,gsgte,lmda(id),lct(id))
+        
+c                          quasi-harmonic term
+      if (nn.eq.0) then
+c                          quasi-harmonic term for graphite
+          gqh = 1d0*r*t*dlog(1d0 - dexp(-tet0/t)) + 
+     *          2d0*r*t*dlog(1d0 - dexp(-tet02/t))
 
+      else
 
-      gsgte0 = a + b*tr + c*tr*dlog(tr) + d/tr + e/tr**2 + f/tr**3 + 
-     #         g/tr**9 + h*tr**2 + i*tr**3 + j*tr**4 + k*tr**7
-c                                            sr = -dg/dt at reference t
-      sr = -b - c*dlog(tr) - c + d/tr**2 + 0.2D1*e/tr**3 + 
-     #      0.3D1*f/tr**4 + 0.9D1*g/tr**10 - 0.2D1*h*tr - 
-     #      0.3D1*i*tr**2 - 0.4D1*j*tr**3 - 0.7D1*k*tr**6
-c                                            hr = gr+tr*sr at reference t
-      hr = gsgte0 + tr*sr
-c                                            cpr = t*ds/dt at reference t
-      cpr = -c - 2*d/tr**2 - 6*e/tr**3 - 12*f/tr**4 - 90*g/tr**10 - 
-     #       2*h*tr - 6*i*tr**2 - 12*j*tr**3 - 42*k*tr**6
-c                                         quasi-harmonic part
-      gqh = 0.3D1*nn*r*t*dlog(0.1D1 - exp(-tet0/t))
-
-      gqhr = 0.3D1*nn*r*tr*dlog(0.1D1 - exp(-tet0/tr))
-
-      sqhr = 0.3D1*nn*r*tet0/tr/(exp(tet0/tr) - 0.1D1) - 
-     #           0.3D1*nn*r*dlog(0.1D1 - exp(-tet0/tr))
-
-      hqhr = 0.3D1*nn*r*tet0/(exp(tet0/tr) - 0.1D1)
-
-      cpqhr = 0.3D1*nn*r*tet0**2/tr**2*exp(-tet0/tr)/
-     #           (0.1D1 - exp(-tet0/tr))**2
+          gqh = 3d0*nn*r*t*dlog(1d0 - dexp(-tet0/t))
+      
+      end if
 
 c                             interpolation function
-       intp = 0.1D1/(1D0 + b1)*(b1 + sqrt(1D0 + 
-     #        2D0*b1*(1D0 + dd1)*p/Bo))*dexp(0.10D1/b1 - 
-     #        0.10D1/b1*sqrt(1D0 + 2D0*b1*(1D0 + dd1)*p/Bo))
+      intp = 1d0/(1D0 + b1)*(b1 + dsqrt(1D0 + 
+     *              2D0*b1*(1D0 + dd1)*p/Bo))*dexp(0.10D1/b1 - 
+     *              1d0/b1*dsqrt(1D0 + 2D0*b1*(1D0 + dd1)*p/Bo))
+
+c                    evaluate S, Cp, and H at reference T and P
+c                    at tr and pr defined in the thermodynamic data file (tr=298.15 K)
+      if (cst1.eq.0d0.or.cst2.eq.0d0) then
+
+          gsgte0 = a + b*tr + c*tr*dlog(tr) + d/tr + e/tr**2 + f/tr**3 +
+     *                 g/tr**9 + h*tr**2 + i*tr**3 + j*tr**4 + k*tr**7
+c                                            sr = -dg/dt at reference t
+          sr = -b - c*dlog(tr) - c + d/tr**2 + 2d0*e/tr**3 + 
+     *              3d0*f/tr**4 + 0.9D1*g/tr**10 - 2d0*h*tr - 
+     *              3d0*i*tr**2 - 0.4D1*j*tr**3 - 0.7D1*k*tr**6
+c                                            hr = gr+tr*sr at reference t
+          hr = gsgte0 + tr*sr
+c                                            cpr = t*ds/dt at reference t
+          cpr = -c - 2d0*d/tr**2 - 6d0*e/tr**3 - 12d0*f/tr**4 
+     *          - 9d1*g/tr**10  
+     *          - 2d0*h*tr - 6d0*i*tr**2 - 12d0*j*tr**3 - 42d0*k*tr**6
+
+          gqhr = 3d0*nn*r*tr*dlog(1d0 - dexp(-tet0/tr))
+
+          sqhr = 3d0*nn*r*tet0/tr/(dexp(tet0/tr) - 1d0) - 
+     *                     3d0*nn*r*dlog(1d0 - dexp(-tet0/tr))
+
+          hqhr = 3d0*nn*r*tet0/(dexp(tet0/tr) - 1d0)
+
+          cpqhr = 3d0*nn*r*tet0**2/tr**2*dexp(-tet0/tr)/
+     *                    (1d0 - dexp(-tet0/tr))**2
 
 c                         Cp(SGTE) - Cp(QH) with low temperature correction
-      if (t.lt.tr) then
+c                         for the case tr=298.15
+          if (t.lt.tr) then
 
-               difc = t**2/(2D0*tr)*(cpr - cpqhr)
+             difc = t**2/(2D0*tr)*(cpr - cpqhr)
         
           else
           
-               difc = -(gsgte - hr + t*sr) + (gqh - hqhr + t*sqhr) 
-     #                + (t-tr/2D0)*(cpr-cpqhr)
+             difc = -(gsgte - hr + t*sr) + (gqh - hqhr + t*sqhr) 
+     *                + (t-tr/2D0)*(cpr-cpqhr)
+
+          end if
+
+
+      else
+
+         difc = -gsgte + gqh + cst1 + t*cst2 
 
       end if
 
+
       gbrosh = colcom(Bo,v0,Bpo,p) + 
-     #         harter(nn,r,t,p,tet0,Bo,b0,dd0,gam0) - 
-     #         gqh + difc*(1D0 - intp)
+     *         harter(nn,r,t,p,tet0,tet02,Bo,b0,dd0,gam0,gam02) - 
+     *         gqh + difc*(1D0 - intp)
+
 
 c                     magnetic contribution using Inden-Hillert-Jarl model
-      if (pp.eq.0d0) then
+
+      if (tc.eq.0D0.or.pp.eq.0D0) then
 c                     no magnetic contribution
-          gmagn = 0D0
-      
-      else
+         gmagn = 0D0
+
+      else 
 c                     pressure dependence of Tc (as modelled for cementite)
-        if (vv.eq.0D0) then 
-           tc1 = tc
-        else
-           tc1 = tc*exp(vv*p)
-        end if
-
-        t0 = t/tc1
-c                     fcc,hcp metals and cementite
-         if (pp.eq.0.28) then
-
-            if (t0.lt.1d0) then
-                     ff = 0.1D1 - 0.8603387544D0/t0 - 
-     #                    0.1744912404D0*t0**3 - 
-     #                    0.7755166236D-2*t0**9 - 0.1744912404D-2*t0**15
-                 else
-                     ff = -0.4269022681D-1/t0**5 - 
-     #                     0.1355245296D-2/t0**15 - 
-     #                     0.2846015121D-3/t0**25
-                 end if
-
-c                          bcc metals
-              else if (pp.eq.0.40) then
-
-                    if (t0.lt.1d0) then
-                        ff = 0.1D1 - 0.9052993829D0/t0 - 
-     #                       0.1530083464D0*t0**3 - 
-     #                       0.6800370949D-2*t0**9 - 
-     #                       0.1530083464D-2*t0**15
-
-                    else
-                        ff = -0.6417312080D-1/t0**5 - 
-     #                        0.2037241930D-2 /t0**15 - 
-     #                        0.4278208053D-3/t0**25
-
-                 end if
-
+         if (vv.eq.0D0) then 
+            tc1 = tc
+         else
+            tc1 = tc*dexp(vv*p)
          end if
 
-         gmagn = r*t*dlog(beta+1D0)*ff
+          t0 = t/tc1
+
+          if (pp.eq.0.28D0) then
+c                           fcc,hcp metals and cementite
+c                           for fcc-Fe beta is a negative number,
+c                           therefore, gmagn can't be calculated
+c                           dlog(<0)
+
+         if (t0.lt.1D0) then
+                  ff = 1d0 - 0.8603387544D0/t0 - 
+     #                0.1744912404D0*t0**3 - 
+     #                0.7755166236D-2*t0**9 - 0.1744912404D-2*t0**15
+              else
+                  ff = -0.4269022681D-1/t0**5 - 
+     #                  0.1355245296D-2/t0**15 - 
+     #                  0.2846015121D-3/t0**25
+              end if
+
+          gmagn0 = r*t*dlog(beta+1D0)*ff
+
+          else if (pp.eq.0.4D0) then
+c                           bcc metals
+             if (t0.lt.1D0) then
+                 ff = 1d0 - 0.9052993829D0/t0 - 
+     #                0.1530083464D0*t0**3 - 
+     *                0.6800370949D-2*t0**9 - 
+     *                0.1530083464D-2*t0**15
+             else
+                 ff = -0.6417312080D-1/t0**5 - 
+     *                 0.2037241930D-2 /t0**15 - 
+     *                 0.4278208053D-3/t0**25
+             end if
+          gmagn0 = r*t*dlog(beta+1D0)*ff
+          end if
+
+          gmagn=gmagn0
 
       end if
 
       gmet = gsgte + gbrosh + gmagn
 
       end function gmet
+
 
       double precision function colcom (Bo,v0,Bpo,p)
 c------------------------------------------------------------------------
@@ -13783,49 +13697,111 @@ c------------------------------------------------------------------------
 
          n = 4d0
          a = (n-1D0)/(3.*Bpo-1d0)
-         I4XC = 0.1D1 - a + a*(0.1D1 + n/a*p/Bo/0.3D1)**(1D0/n)
+         I4XC = 1d0 - a + a*(1d0 + n/a*p/Bo/3d0)**(1D0/n)
 
          G42 = 0.15D1*Bpo**3 - 0.6D1*Bpo**2 + 
-     #                         0.8D1*Bpo - 0.3555555555D1
+     *                         0.8D1*Bpo - 0.3555555555D1
 
          G41 = -9D0*Bpo**3 + 27D0*Bpo**2 - 
-     #                       24D0*Bpo + 0.5333333333D1
+     *                       24D0*Bpo + 0.5333333333D1
 
          G4L = 9D0*Bpo**3 - 18D0*Bpo**2 + 
-     #                       9D0*Bpo - 0.1333333333D1
+     *                       9D0*Bpo - 0.1333333333D1
 
          G4M1 = 3D0*Bpo**3 - 3D0*Bpo**2 + 
-     #                           Bpo - 0.111111111D0
+     *                           Bpo - 0.111111111D0
 
          G4PC = G42*I4XC**(-2) + G41*I4XC**(-1) - G4L*dlog(I4XC) + 
-     #          G4M1*I4XC - G42 - G41 - G4M1
+     *          G4M1*I4XC - G42 - G41 - G4M1
 
         colcom = Bo*v0*G4PC
 
       end function colcom
 
 
-      double precision function harter (nn,r,t,p,tet0,Bo,b0,dd0,gam0)
+      double precision function harter (nn,r,t,p,tet0,tet02,Bo,b0,dd0,
+     *                                  gam0,gam02)
 c---------------------------------------------------------------------
 c integrated "thermal" volume used in EOS Brosh et al., 2007, 2008
 c---------------------------------------------------------------------
       implicit none
 
-      double precision          r,t,p,tet0,Bo,b0,dd0,gam0
-      double precision          b,tet,I2XT,G2XT
+      double precision          r,t,p,tet0,tet02,Bo,b0,dd0,gam0,gam02
+      double precision          b,tet,tet1,tet2,I2XT,G2XT
       integer                   m, nn
 
          m = 2
-         b = (m-1D0)/(3.*b0-1)
+         b = (m-1D0)/(3d0*b0-1d0)
 
-         I2XT = 0.1D1 - b + b*(0.1D1 + m/b*(1D0 + dd0)*
-     #          P/Bo/0.3D1)**(1D0/m)
+         I2XT = 1d0 - b + b*(1d0 + m/b*(1D0 + dd0)*
+     *          P/Bo/3d0)**(1D0/m)
 
          G2XT = (4.5D0*b0 - 3D0)*I2XT**(-2) + (-9D0*b0+3D0)*I2XT**(-1)
-     #                                                      + 4.5D0*b0
+     *                                                      + 4.5D0*b0
+         
+         if (nn.eq.0) then
 
-         tet = tet0*exp(gam0/(1D0+dd0)*G2XT)
+             tet1 = tet0*dexp(gam0/(1D0+dd0)*G2XT)
+             tet2 = tet02*dexp(gam02/(1D0+dd0)*G2XT)
 
-         harter = 3D0*nn*r*t*dlog(1D0-exp(-tet/t))
+             harter = 1D0*r*t*dlog(1D0-dexp(-tet1/t)) + 
+     *               2D0*r*t*dlog(1D0-dexp(-tet2/t))
+         
+         else
+
+             tet = tet0*dexp(gam0/(1D0+dd0)*G2XT)
+
+             harter = 3D0*nn*r*t*dlog(1D0-dexp(-tet/t))
+         
+         end if
 
       end function harter
+
+      double precision function gterm2(id)
+c----------------------------------------------------------------
+c function evaluates 2nd part of modified EoS for liquid C after Brosh
+c
+c EOS includes 2 terms: G1 (gsgte + gbrosh) and G2; G2 converges to
+c a constant at high p; the term is added to the eos of liquid C
+c to model graphite-like behavior of liquid at lower p and diamond-
+c like at high p
+c
+c parameters for the second part of eos: v02, b20 (B2), b2(B'2),
+c tet2 (theta2), al2 (alpha2); Murnaghan EoS was used for the
+c additional term
+c in thermodynamic data file: c1 - v02; c2 - b20; c3 - b2; c4 - theta2;
+c c5 - alpha2
+c-----------------------------------------------------------------
+      implicit none
+      include 'perplex_parameters.h'
+
+      double precision thermo,uf,us
+      common/ cst1 /thermo(k4,k10),uf(2),us(h5)
+
+      integer ltyp,lct,lmda,idis
+      common/ cst204 /ltyp(k10),lct(k10),lmda(k10),idis(k10)
+
+      double precision p,t,xco2,u1,u2,tr,pr,r,ps
+      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
+
+      integer id
+
+      double precision v02,b20,b2,tet2,al2
+c----------------------------------------------------------------------
+c                             allocate coefficients for 2nd term in EoS
+      v02 = thermo(1,id)
+      b20 = thermo(2,id)
+      b2 = thermo(3,id)
+      tet2 = thermo(4,id)
+      al2 = thermo(5,id)
+
+
+      gterm2 = b20*v02/(b2-1d0)*(dexp(-b2*(al2*t-al2*
+     *         dlog(1d0+t/tet2)*tet2))+(b2*p/b20))**(1d0-1d0/b2)- 
+     *         b20*v02/(b2-1d0)*(dexp(-b2*(al2*t-al2*
+     *         dlog(1d0+t/tet2)*tet2)))**(1d0-1d0/b2)
+
+      end function gterm2
+
+
+      

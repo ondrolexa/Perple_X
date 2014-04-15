@@ -857,6 +857,7 @@ c-----------------------------------------------------------------------
             solvs1 = .true.
             exit 
          end if 
+         
       end do 
 
       end 
@@ -1002,6 +1003,7 @@ c                                solvus_tolerance
       soltol = nopt(8)
 
       do 30 i = 1, ntot
+          
          if (nkp(i).lt.0) then
 c                                 the pseudocompound is a true compound
             ncpd = ncpd + 1 
@@ -1009,7 +1011,9 @@ c                                 the pseudocompound is a true compound
             bsol(ntot,ncpd) = amt(i)
             kdsol(ntot,ncpd) = nkp(i)       
             jdsol(ntot,ncpd) = i   
+
          else 
+
             do j = 1, np
 c                                 compare the compound to the np solutions 
 c                                 identfied so far:        
@@ -1021,9 +1025,13 @@ c                                 found earlier.
                      idsol(j) = idsol(j) + 1
                      bsol(j,idsol(j)) = amt(i)
                      jdsol(j,idsol(j)) = i  
+                     
                      goto 30 
-                  end if 
-               end if 
+                     
+                  end if
+ 
+            end if 
+
             end do
 c                                 the pseudocompound is a new solution 
 c                                 phase.
@@ -1034,6 +1042,7 @@ c                                 phase.
             bsol(np,1) = amt(i)
 
          end if    
+
 30    continue  
 c                                 check if a solution occurs more than once
 c                                 but the occurences are not sequential (this
@@ -2691,7 +2700,7 @@ c-----------------------------------------------------------------------
       integer i, j, k, id
 
       double precision dg1, gval, dg, gzero, g0(k5), gex, x0, gfesi,
-     *                 gfesic, gerk, x1(5)
+     *                 gfesic, gfecr1, gerk, x1(5)
 
       external gerk, gzero, gex, gfesi, gfesic 
 
@@ -2940,8 +2949,8 @@ c                                 BCC Fe-Si Lacaze and Sundman
 
             end do 
 
-         else if (ksmod(i).ge.30.and.ksmod(i).le.33) then 
-c                                 call nastia's BCC/FCC/CBCC/HCP model
+         else if (ksmod(i).eq.30.or.ksmod(i).eq.31) then 
+c                                 call nastia's BCC/FCC model
 c                                 after Lacaze and Sundman
             do j = 1, jend(i,2)
 
@@ -2951,6 +2960,14 @@ c                                 after Lacaze and Sundman
      *                         g(jend(i,5)),g(jend(i,6)),ksmod(i))
   
                id = id + 1
+
+            end do
+
+         else if (ksmod(i).eq.32) then 
+ 
+            do j = 1, jend(i,2)
+c                                 BCC Fe-Cr Andersson and Sundman
+               g(id) = gfecr1 (sxs(ixp(id)+1),g(jend(i,3)),g(jend(i,4)))
 
             end do  
 
@@ -3402,7 +3419,7 @@ c                                 check zero modes the amounts
             else if (lopt(13).and.x(jdv(i)).lt.-nopt(9)
      *                             .and.tic.lt.5) then 
 
-               call warn (2,x(jdv(i)),i,'REBULK')
+               call warn (2,x(jdv(i)),i,'YCLOS2')
                tic = tic + 1
 
                if (tic.eq.5) call warn (49,x(1),2,'YCLOS2')

@@ -17,7 +17,7 @@ c----------------------------------------------------------------------
       implicit none
 
       write (*,'(/,a)') 
-     *      'Perple_X version 6.6.9, source updated Mar 7, 2014.'
+     *      'Perple_X version 6.6.9, source updated Apr 15, 2014.'
 
       end
 
@@ -3222,7 +3222,7 @@ c                                 interval limits conformal transformation
       common/ cst47 /yint(5,ms1,mst,h9),yfrc(4,ms1,mst,h9),intv(4)
 
       character*2 strgs*3, mstrg, dstrg, tstrg*3, wstrg*3
-      common/ cst56 /strgs(28),mstrg(6),dstrg(8),tstrg(13),wstrg(m16)
+      common/ cst56 /strgs(32),mstrg(6),dstrg(8),tstrg(13),wstrg(m16)
 
       character*80 com
       common/delet/com 
@@ -3256,7 +3256,7 @@ c                                 tags for thermo data i/o
       data strgs/'G0 ','S0 ','V0 ','c1 ','c2 ','c3 ','c4 ','c5 ','c6 ',
      *           'c7 ','b1 ','b2 ','b3 ','b4 ','b5 ','b6 ','b7 ','b8 ',
      *           'b9 ','b10','c8 ','c9 ','c10','c11',
-     *           'Tc ','B  ','p  ','v  '/
+     *           'Tc ','B  ','p  ','v  ','cs1','cs2','cs3','cs4'/
       data mstrg/'m0','m1','m2','k0','k1','k2'/
       data dstrg/'d1','d2','d3','d4','d5','d6','d7','d8'/
       data tstrg/'t1 ','t2 ','t3 ','t4 ','t5 ','t6 ','t7 ','t8 ','t9 ',
@@ -3360,7 +3360,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer lun, ier, iscan, iscnlt, i, j, ibeg, iend, ic2p(28)
+      integer lun, ier, iscan, iscnlt, i, j, ibeg, iend, ic2p(32)
 
       character key*22, values*80, strg*80
 
@@ -3387,11 +3387,11 @@ c----------------------------------------------------------------------
       common/ cst1 /thermo(k4,k10),uf(2),us(h5)
 
       character*2 strgs*3, mstrg, dstrg, tstrg*3, wstrg*3
-      common/ cst56 /strgs(28),mstrg(6),dstrg(8),tstrg(13),wstrg(m16)
+      common/ cst56 /strgs(32),mstrg(6),dstrg(8),tstrg(13),wstrg(m16)
 
       save ic2p
       data ic2p/0,0,22,1,2,3,4,5,6,7,12,13,14,15,16,17,18,19,20,21,8,
-     *          9,10,11,23,24,25,26/
+     *          9,10,11,23,24,25,26,27,28,29,30/
 c-----------------------------------------------------------------------
 c                                 initialize data
 c                                 flag for t-dependent disorder
@@ -3479,7 +3479,8 @@ c                                 assign data
             ok = .false.
 c                                 =====================================
 c                                 simple thermo data 
-            if (ieos.ne.12) then 
+            if (ieos.ne.12.and.ieos.ne.14) then
+
                do i = 1, 20
                   if (key.eq.strgs(i)) then 
                      read (values,*,iostat=ier) thermo(i,k10)
@@ -3488,9 +3489,10 @@ c                                 simple thermo data
                      exit 
                   end if 
                end do 
+
             else 
 c                                 calphad format
-               do i = 1, 28
+               do i = 1, 32
                   if (key.eq.strgs(i)) then 
                      read (values,*,iostat=ier) thermo(ic2p(i),k10)
                      if (ier.ne.0) call error (23,tot,ier,strg) 
@@ -3810,7 +3812,7 @@ c----------------------------------------------------------------------
       common/delet/com 
 
       character*2 strgs*3, mstrg, dstrg, tstrg*3, wstrg*3
-      common/ cst56 /strgs(28),mstrg(6),dstrg(8),tstrg(13),wstrg(m16)
+      common/ cst56 /strgs(32),mstrg(6),dstrg(8),tstrg(13),wstrg(m16)
 c-----------------------------------------------------------------------
 c                                 =====================================
 c                                 name & EoS
