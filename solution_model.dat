@@ -1,4 +1,4 @@
-011 DO NOT DELETE THIS LINE
+670 DO NOT DELETE THIS LINE
 
                              FOR MODEL DEFINITIONS AND REFERENCES REFER TO THE GLOSSARY AT:
 
@@ -1519,7 +1519,6 @@ begin_model
 
                                       Zr8L added. Jeff Marsh, Jan 10, 2012.
 
-
                                       WARNING 1: This model can only be used for hydrous systems  
                                       if H2O is specified as a thermodynamic component or as a
                                       staurated component, it CANNOT be used if water is specified
@@ -1545,23 +1544,15 @@ begin_model
                                       fo-fa-q or sil-q melting phase relations, the dqf corrections
                                       (below) should be set to zero. 
 
-
                                       WARNING 4: different versions of the HP data base
                                       may result in significant variations in the predicted
                                       position of the wet-solidus (Powell, pers comm.).
 
-
                                       WARNING 5: The melt model incorrectly predicts a high 
                                       pressure-low temperature stability field for water-silica
                                       rich melts. at 10 kb this field extends to ca 750 K and 
-                                      at 3 kb to ca 550 K. For this reason the melt model should
-                                      not be used at pressures far above 10 kb.
-
-                                      
-                                      WARNING 6: the subdivision ranges below may not
-                                      span the entire range of validity for the solution
-                                      model. Check these ranges, and adjust them as 
-                                      necessary before using this model.
+                                      at 3 kb to ca 550 K. To eliminate this artifact set T_melt 
+                                      in perplex_option.dat.
 
 melt(HP)
 24                                    model type: margules, internal entropy routine
@@ -5559,14 +5550,13 @@ z(t,al) = 1 ged
 z(m2,mg) = 1 anth + 3/5 ged
 z(m2,fe) = 1 fanth 
 
-end_of_model               | end of model keyword
+end_of_model               
                               --------------------------------------------------------
-begin_model                   | keyword indicating beginning of a solution model
+begin_model                    
 
                                       HP '96 Am Min, Non-ideal quasi ordered omphacite,
                                       i.e., compound formation only occurs for omph.
-                                      This model should only be used in conjunction with 
-                                      Cpx(HP). The value of wdh appears discrepant 
+                                      The value of wdh appears discrepant 
                                       with the value in HP '98.
 
                                       The interaction parameters here are from the
@@ -5574,9 +5564,6 @@ begin_model                   | keyword indicating beginning of a solution model
                                       Thermocalc program. JADC 2/03
 
                                       Added ideal acm+cats, JADC, 1/06. 
-
-                                      NOTE: this model does not require Mg/(Fe+Mg)
-                                      is the same across sites (as done in Thermocalc). 
 
                                       CORRECTIONS:
 
@@ -7570,7 +7557,7 @@ begin_limits
 
 cammo1 = -7/3 grun - 4/3 cammo1 + 5/3 cammo2 - 5/3 cammo2                               delta = 7/3 z(M2,Fe)       
 cammo1 = -7/4 + 7/4 grun + 1  cammo1 + 1/2 cammo2 + 5/4 cammo2                          delta = 7/4 z(M1,Fe)
-cammo1 = -7/3 + 7/3 tr + 7/6 parg_dqf + 7/3 cumm + 1 cammo1 + 5/3 cammo2 + 2/3 cammo2  delta = 7/3 z(M2,Mg)
+cammo1 = -7/3 + 7/3 tr + 7/6 parg_dqf + 7/3 cumm + 1 cammo1 + 5/3 cammo2 + 2/3 cammo2   delta = 7/3 z(M2,Mg)
 cammo1 = -7/3 + 7/3 cumm + 1 cammo1 - 2/3 cammo2 + 2/3 cammo2                           delta = 7/3 z(M4,Mg)
 cammo1 = -7/3 grun - 4/3 cammo1 - 2/3 cammo2 - 5/3 cammo2                               delta = 7/3 z(M4,Fe)
 
@@ -8740,3 +8727,254 @@ end_van_laar_sizes
 
 end_of_model        
                           --------------------------------------------------------
+begin_model                
+
+                             Fe2+-Fe3+-Mg-Al-Ca Orthopyroxene, White et al., JMG 32:261-286, 2014.  
+
+                             This model requires the make definitions:
+
+                             mots1    = 1 mgts + 1/2  andr  - 1/2   gr
+                             2d3 0 0 
+ 
+                             odi  = 1 di 
+                             -0.1d3       0.211       0.005
+
+                             JADC, 4/14
+
+                                       Site:          M1      M2      T
+                                                     ____________________
+
+                                      Mutliplicity:   1       1       2
+                                                     ____________________
+
+                                      1 en            Mg      Mg      Si 
+                            Species:  2 fs            Fe2+    Fe2+    Si 
+                                      3 mgts          Al      Mg      AlSi   
+                                      4 fets          Al      Fe2+    AlSi  dependent
+                                      5 mots1         Fe3+    Mg      AlSi
+                                      6 feots         Fe3+    Fe2+    AlSi  dependent
+                                      7 odi           Mg      Ca      Si
+                                      8 fodi          Fe      Ca      Si    dependent
+                                                      ___________________
+
+                           Internal:  9 opx           Mg      Fe2+    Si
+
+
+                           Dependent: fets  = mgts + opx - en
+                                      feots = mots1+ opx - en 
+                                      fodi =  odi  + opx - en
+
+Opx(W)                    | solution name.
+
+8                          | model type: Reciprocal with speciation
+
+2                          | 2 independent composition spaces
+2 4                        | 2 dimensions on first space, 3 on second
+                           | endmembers: 
+mots1    feots 
+odi      fodi 
+mgts     fets_d   
+en       fs 
+
+1                          | ordered species definition
+
+opx = 1/2 en + 1/2  fs  Delta(enthalpy) = -6.95d3   
+
+begin_limits
+opx =     - 2 fs - 1 opx                delta = 2 z(M2,Fe)       
+opx =  -2 + 2 fs + 1 opx                delta = 2 z(M1,Fe)
+opx =     - 2 en - 1 opx                delta = 2 z(M1,Mg)
+end_limits                
+
+3                          | 3 dependent endmembers
+
+fets_d = 1 mgts  + 1 opx - 1 en
+feots  = 1 mots1 + 1 opx - 1 en
+fodi   = 1 odi   + 1 opx - 1 en
+
+0 0 0 0 0 0 0 0 0          | endmember flags, indicate if endmember is part of the solution (i.e. iend = 0).
+
+                           | subdivision model for (binary) site 1:
+0. 1. .1                   | range and resolution of X(Mg)
+0                          | subdivision scheme for site 1: imod = 0 -> cartesian 
+
+                           | subdivision model for (quaternary) site 2 
+0. .1 .1   1               | range and resolution of X(Fe3+),  subdivision scheme: imod = 1 -> assymetric transform   
+0. .1 .1   1               | range and resolution of X(un-Ts), subdivision scheme: imod = 1 -> assymetric transform     
+0. .2 .1   1               | range and resolution of X(Ts),    subdivision scheme: imod = 1 -> assymetric transform     
+
+
+begin_excess_function                
+W(en fs)                   7d3         0         0
+W(en opx)                  4d3         0         0
+W(en mgts)                13d3         0     -0.15
+W(en mots1)               11d3         0     -0.15 
+W(en odi)               32.2d3         0      0.12
+W(fs opx)                  4d3         0         0
+W(fs mgts)                13d3         0     -0.15
+W(fs mots1)             11.6d3         0     -0.15
+W(fs odi)              25.54d3         0     0.084
+W(opx mgts)               17d3         0     -0.15
+W(opx mots1)              15d3         0     -0.15
+W(opx odi)             22.54d3         0     0.084
+W(mgts mots1)              1d3         0         0
+W(mgts odi)             75.4d3         0     -0.94
+W(mots1 odi)            73.4d3         0     -0.94
+end_excess_function 
+
+3                          | 2 site (M1, M2, T) configurational entropy model
+
+4 1.                       | 4 species on M1, 1 site per formula unit.
+
+z(m1,fe)   = 1 fs 
+z(m1,al)   = 1 mgts   
+z(m1,fe3+) = 1 mots1
+
+3 1.                       | 3 species on M2, 1 site per formula unit.
+z(m2,fe) = 1 fs + 1 opx
+z(m2,ca) = 1 odi
+
+2 2.                       | 2 species on 2 T sites
+z(T,al) = 1 mgts + 1 mots1
+
+begin_van_laar_sizes                        
+alpha(en)       1.0    0.    0.                      
+alpha(fs)       1.0    0.    0.
+alpha(opx)      1.0    0.    0.
+alpha(mgts)     1.0    0.    0.
+alpha(mots1)    1.0    0.    0.
+alpha(odi)      1.2    0.    0.
+end_van_laar_sizes
+
+end_of_model 
+                          --------------------------------------------------------
+begin_model                
+                             CHLORITE, White et al JMG 32:261-286, 2014
+
+                             NOTES:  
+
+                             * This model will only function in the Al-free and
+                               Mg-free limits is Al and Mg are retained as thermodynamic
+                               components.
+
+                             JADC 4/14
+
+                                                      M1      M2+M3     M4     T2
+                                                     ________________________________
+
+                                      Mutliplicity    1         4       1      2 
+                                                     ________________________________
+  
+                                      1 fames         Al        Fe      Al     Al_Al   dependent
+                                      2 fafchl        Fe        Fe      Fe     Si_Si   dependent
+                                      3 ff3clin       Fe        Fe      Fe3+   Al_Si   dependent
+                                      4 daph          Fe        Fe      Al     Al_Si 
+                                      5 f3clin        Mg        Mg      Fe3+   Al_Si   
+                                      6 ames          Al        Mg      Al     Al_Al
+                                      7 afchl         Mg        Mg      Mg     Si_Si
+                                      8 clin          Mg        Mg      Al     Al_Si 
+                                                      _______________________________ 
+
+                                      9 och1          Mg        Fe      Fe     Si_Si   ordered
+                                     10 och2          Fe        Mg      Mg     Si_Si   ordered
+
+Chl(W)     
+                       
+8                               | model type reciprocal, macroscopic formulation
+2 
+4 2 
+
+fames    fafchl   ff3cli    daph
+ames     afchl    f3clin    clin
+
+2                               | 2 ordered species:
+
+och1 = 1 afchl  - 1 clin   + 1 daph      enthalpy_of_formation = 3d3
+och2 = 1 afchl  - 1/5 clin + 1/5 daph    enthalpy_of_formation = 2.4d3 
+
+
+
+begin_limits
+
+och1 =  0                                                                             delta = 1     zFeM4
+och1 = -1   + 1 afchl   + 1 och1 + 0   och2 + 1   och2                                delta = 1     zMgM4
+och1 = -1   + 1 daph    + 1 och1 + 4/5 och2 + 1/5 och2                                delta = 1     zFeM1
+
+och2 =      - 5/4 daph                           + 5/4 och1 - 5/4 och1 - 1/4 och2     delta = 5/4   zFeM1
+och2 = -5/4 + 5/4 afchl  + 5/4 f3clin + 5/4 clin + 5/4 och1 + 1 och2                  delta = 5/4   zMgM1 
+och2 = -5   + 5   daph                           + 0   och1 + 5   och1 + 1   och2     delta = 5     zFeM2
+
+| unecessary limit:
+| och1 =     - 1 afchl  - 1 clin - 1 f3clin            + 4/5 och2 - 4/5 och2  delta = 1      zMgM1 
+
+end_limits
+
+3                               | 3 dependent endmembers 
+
+fames  = 1 ames   + 1 daph - 1 och2 + 1 afchl - 1 clin
+fafchl = 1 och1   + 1 och2 - 1 afchl
+ff3cli = 1 f3clin + 1 daph - 1 clin
+
+0 0 0 0 
+0 0 0 0                         |endmember flags
+
+                                | subdivision model for (quaternary) chemical mixing:
+
+0. 1. .1 0                      | range and resolution of X(fames+ames),    imod = 0 -> cartesian subdivision
+0. 1. .1 0                      | range and resolution of X(fafchls+afchl), imod = 0 -> cartesian subdivision
+0. 1. .1 0                      | range and resolution of X(ff3cli+f3clin), imod = 0 -> cartesian subdivision
+
+                                | subdivision model for (binary) chemical mixing
+
+0. 1. .1 0                      | range and resolution of X(Fe), imod = 0 -> cartesian subdivision 
+
+begin_excess_function
+
+W(clin afchl)             17000.           0         0
+W(clin ames)              17000.           0         0
+W(clin daph)              20000.           0         0
+W(clin och1)              30000.           0         0
+W(clin och2)              21000.           0         0
+W(clin f3clin)             2000.           0         0
+W(afchl ames)             16000.           0         0
+W(afchl daph)             37000.           0         0
+W(afchl och1)             20000.           0         0
+W(afchl och2)              4000.           0         0
+W(afchl f3clin)           15000.           0         0
+W(ames daph)              30000.           0         0
+W(ames och1)              29000.           0         0
+W(ames och2)              13000.           0         0
+W(ames f3clin)            19000.           0         0
+W(daph och1)              18000.           0         0
+W(daph och2)              33000.           0         0
+W(daph f3clin)            22000.           0         0
+W(och1 och2)              24000.           0         0
+W(och1 f3clin)            28600.           0         0
+W(och2 f3clin)            19000.           0         0
+
+end_excess_function
+
+4                               | 4 site configurational entropy model:
+
+3 1.                            | 3 species on 1 M1 site
+
+z(al,M1)    = 1 ames 
+z(fe,M1)    = 1 daph + 1 och2
+
+2 4.                            | 2 species on 4 M2+M3 sites
+
+z(fe,m2+m3) = 1 daph + 1 och1
+
+4 1.                            | 4 species on 1 M4 site
+
+z(fe3,m4)   = 1 f3clin
+z(fe,m4)    = 1 och1
+z(mg,m4)    = 1 afchl + 1 och2
+
+2 2.                            | 2 species on 2 T2 sites 
+
+z(al,T2)    = 1 ames + 1/2 clin + 1/2 daph + 1/2 f3clin
+
+end_of_model  
+                                  --------------------------------------------------------	
+

@@ -1166,8 +1166,11 @@ c                                 changed as of 5/31/04, JADC.
             b2 = ' '
 c                                 test file format
             read (n9,*) new
-            if (new.eq.'011') exit 
+
+            if (new.eq.'011'.or.new.eq.'670') exit 
+
             call warn (3,r,i,new)
+
             cycle 
 
          end do 

@@ -53,7 +53,7 @@
 !                                 j5  - max number of stoichiometric limits on an ordered species
 !                                 j6  - max number of terms in a stoichiometric limit on an ordered species
 !                                 j9  - max number of divariant assemblages
-      parameter (j3=4,j4=5,j5=6,j6=8,j9=160000)
+      parameter (j3=4,j4=5,j5=8,j6=8,j9=160000)
 !                                 k0  - max number of database components
 !                                 k1  - max number of compounds
 !                                 k2  - max number of invariant and univariant compound 
@@ -86,7 +86,7 @@
 !                                       in adaptive optimization.
       parameter (k0=25,k1=1000000,k2=100000,k3=500,k4=32,k5=12)
       parameter (k7=k5+1,k8=k5+2) 
-      parameter (k9=30,k10=250,k12=15,k13=mdim*k1,k14=18,k15=6,k16=40)
+      parameter (k9=30,k10=250,k12=15,k13=mdim*k1,k14=18,k15=6,k16=50)
       parameter (k17=7,k18=29*k1)
       parameter (k19=2*k5+14,k21=1700000,k20=mdim*k21,k22=mdim*k19,
      *           k23=5)

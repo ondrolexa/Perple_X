@@ -2082,7 +2082,7 @@ c                              load into therlm:
          else 
 
             write (*,*) 'no such transition model'
-            stop
+            call errpau
 
          end if
  
@@ -2834,7 +2834,8 @@ c                                 find the name
       return      
 
 90    write (*,1000) tname,(chars(i),i=1,len),name
-      stop
+      
+      call errpau
       
 1000  format ('**error ver200** READN bad data, currently ',
      *        'reading solution model: ',a,' data was:',/,240a,/,
@@ -2902,13 +2903,15 @@ c                                 write numbers to string
 
          write (*,1000) tname, (chars(i),i = 1, len)
          write (*,1020)
-         stop
+         
+         call errpau
 
       else if (ier.lt.0) then 
 
          write (*,1010) tname
          write (*,1020)
-         stop
+         
+         call errpau
 
       end if 
 
@@ -3106,7 +3109,8 @@ c                                 assign data
       return
 
 90    write (*,1000) tname,(chars(i),i=1,len),name
-      stop
+      
+      call errpau
       
 1000  format ('**error ver200** READX bad data, currently ',
      *        'reading solution model: ',a,' data was:',/,240a,/,
@@ -3169,7 +3173,8 @@ c----------------------------------------------------------------------
 c                              found new model, current
 c                              model does not of end_of_model keyword
             write (*,1000) tname,(chars(i),i=1,length)
-            stop
+            
+            call errpau
 
          else if (key.eq.'begin_van_laar_sizes') then 
 c                              read van laar data: 
@@ -3191,7 +3196,8 @@ c                              read dqf data:
 
             write (*,1010) tname,(chars(i),i=1,length)
             write (*,1020)
-            stop
+            
+            call errpau
 
          end if
 
@@ -3281,10 +3287,10 @@ c                                 data found
 
 90    write (*,1000) tname,(chars(i),i=1,len),vlaar(i,index)
       write (*,1001)
-      stop
+      call errpau
 
 91    write (*,1010) tname
-      stop
+      call errpau
       
 1000  format ('**error ver200** READVL bad data, currently ',
      *        'reading solution model: ',a,' data was:',/,240a,/,
@@ -3372,7 +3378,8 @@ c                                 data found
 
 90    write (*,1000) tname,(chars(i),i=1,len),dqf(i,idqf)
       write (*,1001)
-      stop
+      
+      call errpau
       
 1000  format ('**error ver200** READDQ bad data, currently',
      *        'reading solution model: ',a,' data was:',/,240a,/,
@@ -3390,8 +3397,8 @@ c data on one line of less than 240 characters, the expected format
 c        name "=" (acoef(i), mame(i), i= 2..nreact) Enthalpy_value
 
 c nreact >= 4 + nord for reciprocal reactions
-c nreact = 3 for ordered species
-c enthalpy_value is only read if on input nreact = 3
+c nreact = -1 on input for ordered/disorder reactions
+c enthalpy_value is only read if on input nreact = -1
 
 c end_of_data is either a "|" or the end of the record.
 c----------------------------------------------------------------------
@@ -3424,8 +3431,8 @@ c                                 first name
 
       if (ier.ne.0) goto 90
 
-      if (nreact.eq.3) then 
-c                                 if nreact = 3, new name
+      if (nreact.eq.-1) then 
+c                                 if nreact = -1, new name
          idim = idim + 1
          mname(idim) = name
          inds(1) = idim
@@ -3466,7 +3473,7 @@ c                                 the next coeff+name
            
       end do
 
-      if (nreact.eq.3.and.i.eq.3) then      
+      if (nreact.eq.-1) then      
 c                                 ordered compound, read
 c                                 enthalpy, find marker '='
          ibeg = iscan (ibeg,len,'=') + 1
@@ -3474,6 +3481,8 @@ c                                 enthalpy, find marker '='
          call readfr (rnum,ibeg,iend,len,ier)
 
          enth = rnum
+
+         nreact = i - 2
 
          if (ier.ne.0) goto 90
 
@@ -3491,7 +3500,8 @@ c                                 is unexpected, write error
       return      
 
 90    write (*,1000) tname,(chars(i),i=1,len),name,rnum
-      stop
+      
+      call errpau
       
 1000  format ('**error ver200** READR bad data, currently ',
      *        'reading solution model: ',a,' data was:',/,240a,
@@ -3608,6 +3618,21 @@ c                                 invalid data
          if (ier.ne.0) goto 90
 c                                 find the name
          call readnm (ibeg,iend,len,ier,name)
+c                                 for constant bounds, read delta         
+         if (name.eq.'delta') then 
+c                                 the lower bound should be the last number read
+            coeffs(ict) = rnum
+c                                 next find the delta
+            ibeg = iscan (iend,len,'=') + 1
+            call readfr (rnum,ibeg,iend,len,ier)
+            if (ier.ne.0) goto 90
+            coeffs(ict+1) = rnum
+
+            exit 
+
+         end if 
+         
+         
          if (ier.ne.0) goto 90
 
          ict = ict + 1
@@ -3616,7 +3641,9 @@ c                                 find the name
 
          if (ier.ne.0) then 
             write (*,1010) name,tname,(chars(i),i=1,len)
-            stop
+            
+            call errpau
+            
          end if 
            
       end do
@@ -3624,7 +3651,8 @@ c                                 find the name
       return
 
 90    write (*,1000) tname,(chars(i),i=1,len),name,rnum
-      stop
+      
+      call errpau
       
 1010  format (/,'**error ver201** invalid name: ',a,' in an expression',
      *        ' for solution model: ',a,/,' data was:',/,240a)
@@ -5470,9 +5498,9 @@ c                                 local input variables
       integer jmsol,kdsol
       common/ cst142 /jmsol(m4,mst),kdsol(m4)
 
-      integer iddeps,norder
-      double precision depvnu,denth
-      common/ cst141 /depvnu(2,j3),denth(j3),iddeps(2,j3),norder
+      integer iddeps,norder,nr
+      double precision depnu,denth
+      common/ cst141 /depnu(j4,j3),denth(j3),iddeps(j4,j3),norder,nr(j3)
 
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
      *        kstot,rkord,xtyp
@@ -5572,9 +5600,9 @@ c                                 dqf variables
       logical depend,laar,order,fluid,macro,specil,recip
       common/ cst160 /depend,laar,order,fluid,macro,specil,recip
 c                                 local input variables
-      integer iddeps,norder
-      double precision depvnu,denth
-      common/ cst141 /depvnu(2,j3),denth(j3),iddeps(2,j3),norder
+      integer iddeps,norder,nr
+      double precision depnu,denth
+      common/ cst141 /depnu(j4,j3),denth(j3),iddeps(j4,j3),norder,nr(j3)
 
       integer jsmod
       double precision vlaar
@@ -5964,10 +5992,11 @@ c                                 species.
 
                jold = kwas(j)
                denth(j) = denth(jold)
+               nr(j) = nr(jold)
 
-               do i = 1, 2
+               do i = 1, nr(j)
                   iddeps(i,j) = i2ni(iddeps(i,jold))
-                  depvnu(i,j) = depvnu(i,jold)
+                  depnu(i,j) = depnu(i,jold)
                end do
 
                itic = 1 
@@ -5977,34 +6006,45 @@ c                                 eliminate absent species from
 c                                 stoichiometric p0 limits
                   ktic = 0 
 
-                  do k = 1, limt(i,jold)
+                  if (limt(i,jold).gt.0) then 
+   
+                     do k = 1, limt(i,jold)
 
-                     skip = .false.
+                        skip = .false.
 
-                     do l = 1, kill
+                        do l = 1, kill
 c                                 check if limid points to a killed 
 c                                 endmember
-                        if (limid(k,i,jold).eq.ijkill(l)) then
-                           skip = .true.
-                           exit 
-                        end if
+                           if (limid(k,i,jold).eq.ijkill(l)) then
+                              skip = .true.
+                              exit 
+                           end if
   
-                     end do  
+                        end do  
 
-                     if (skip) cycle
+                        if (skip) cycle
 
-                     ktic = ktic + 1
+                        ktic = ktic + 1
 
-                     limid(ktic,itic,j) = i2ni(limid(k,i,jold))
-                     limc(ktic,itic,j) = limc(k,i,jold)
+                        limid(ktic,itic,j) = i2ni(limid(k,i,jold))
+                        limc(ktic,itic,j) = limc(k,i,jold)
 
-                  end do 
+                     end do 
 
-                  if (ktic.eq.0) cycle
+                     if (ktic.eq.0) cycle
+
+                     limt(itic,j) = ktic
+
+                  else 
+c                                 constant bounds
+                     limt(itic,j) = -1
+                     k = 1
+
+                  end if   
 
                   limc(ktic+1,itic,j) = limc(k,i,jold)
                   limc(ktic+2,itic,j) = limc(k+1,i,jold)
-                  limt(itic,j) = ktic
+ 
 c                                 now check the p terms, this assumes
 c                                 there are no p terms if there are no
 c                                 p0 terms, which maynot be true?
@@ -6237,9 +6277,9 @@ c----------------------------------------------------------------------
      *      reach,iend(m4),isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),
      *      isp(mst),rkord(m18),isite,iterm,iord,istot,jstot,kstot,xtyp
 
-      integer iddeps,norder 
-      double precision depvnu,denth
-      common/ cst141 /depvnu(2,j3),denth(j3),iddeps(2,j3),norder
+      integer iddeps,norder,nr 
+      double precision depnu,denth
+      common/ cst141 /depnu(j4,j3),denth(j3),iddeps(j4,j3),norder,nr(j3)
 
       integer mdep,idep,jdep,ndph
       double precision nu,y2p
@@ -6354,9 +6394,9 @@ c---------------------------------------------------------------------
       integer iorig,jnsp,iy2p
       common / cst159 /iorig(m4),jnsp(m4),iy2p(m4)
 
-      integer iddeps,norder 
-      double precision depvnu,denth
-      common/ cst141 /depvnu(2,j3),denth(j3),iddeps(2,j3),norder
+      integer iddeps,norder,nr 
+      double precision depnu,denth
+      common/ cst141 /depnu(j4,j3),denth(j3),iddeps(j4,j3),norder,nr(j3)
 
       integer mdep,idep,jdep,ndph
       double precision nu,y2p
@@ -6432,19 +6472,20 @@ c                               get the number of ordered species
          norder = idint(rnums(1)) 
 
          if (norder.gt.j3) call error (5,rnums(1),norder,tname)
-c                               nreact can only be 3 for ordered
-c                               species:
-         nreact = 3
 c                               get ordering reaction and name
 c                               of ordered species:   
          do i = 1, norder   
 
+            nreact = -1
+
             call readr (coeffs,enth,inds,idim,nreact,tname)
 
             denth(i) = enth
+
+            nr(i) = nreact
   
-            do j = 1, 2
-               depvnu(j,i) = coeffs(j+1)
+            do j = 1, nreact
+               depnu(j,i) = coeffs(j+1)
                iddeps(j,i) = inds(j+1)
             end do
 
@@ -6660,9 +6701,9 @@ c---------------------------------------------------------------------
       common/ cst146 /nu(m15,j4),y2p(m4,m15),mdep,jdep(m15),
      *                idep(m15,j4),ndph(m15)
 
-      integer iddeps,norder 
-      double precision depvnu,denth
-      common/ cst141 /depvnu(2,j3),denth(j3),iddeps(2,j3),norder
+      integer iddeps,norder,nr 
+      double precision depnu,denth
+      common/ cst141 /depnu(j4,j3),denth(j3),iddeps(j4,j3),norder,nr(j3)
 c----------------------------------------------------------------------
 c                                 make the insp arrays, 
 
@@ -7646,7 +7687,7 @@ c                                 MRK silicate vapor
          else 
 
             write (*,*) 'what the **** am i doing here?'
-            stop
+            call errpau
 
          end if 
 
@@ -8147,11 +8188,8 @@ c                                 local alpha
 c----------------------------------------------------------------------
       gex = 0d0 
 
-
       if (extyp(ids).eq.1) then 
-c                                    redlich kistler 
-c                                    expand polynomial
-
+c                                    redlich kistler; expand polynomial
          do i = 1, jterm(ids)
             do j = 1, rko(i,ids)
                lex(j,i) = 0d0
@@ -8167,15 +8205,11 @@ c                                    expand polynomial
 
          do i = 1, jterm(ids)
             do j = 1, rko(i,ids)
-            gex = gex + lex(j,i)*y(jsub(1,i,ids))*y(jsub(2,i,ids))
+               gex = gex + lex(j,i)*y(jsub(1,i,ids))*y(jsub(2,i,ids))
             end do
          end do
 
-      return
-      
-      end if
-
-         if (lexces(ids)) then 
+      else if (lexces(ids)) then 
 
          if (llaar(ids)) then 
 c                                 holland & powells version of the van laar
@@ -8213,7 +8247,8 @@ c                                 macroscopic margules formulation by default
 
             end do  
 
-         end if 
+         end if
+
       end if 
 
       end 
@@ -8307,9 +8342,9 @@ c---------------------------------------------------------------------
      *      reach,iend(m4),isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),
      *      isp(mst),rkord(m18),isite,iterm,iord,istot,jstot,kstot,xtyp
 
-      integer iddeps,norder 
-      double precision depvnu,denth
-      common/ cst141 /depvnu(2,j3),denth(j3),iddeps(2,j3),norder
+      integer iddeps,norder,nr 
+      double precision depnu,denth
+      common/ cst141 /depnu(j4,j3),denth(j3),iddeps(j4,j3),norder,nr(j3)
 
       integer mdep,idep,jdep,ndph
       double precision nu,y2p
@@ -8349,8 +8384,8 @@ c                                 excess energy variables
       double precision dppp,d2gx,sdzdp
       common/ cxt28 /dppp(j3,j3,m1,h9),d2gx(j3,j3),sdzdp(j3,m11,m10,h9)
 
-      integer ideps,icase
-      common/ cxt3i /ideps(2,j3,h9),icase(h9)
+      integer ideps,icase,nrct
+      common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
 
       double precision dvnu,deph,dydy
       common/ cxt3r /dvnu(m4,j3,h9),deph(j3,h9),dydy(m4,j3,h9)
@@ -8808,8 +8843,9 @@ c                                 models with speciation:
          do j = 1, norder 
 
             deph(j,im) = denth(j) 
+            nrct(j,im) = nr(j)
 
-            do i = 1, 2
+            do i = 1, nr(j)
                ideps(i,j,im) = iy2p(iddeps(i,j))
             end do 
 c                                 stoichiometric limits on ordered species
@@ -8858,11 +8894,11 @@ c                                 possible cases.
 
             imatch = 0
 
-            do j = 1, 2 
+            do j = 1, nr(1) 
 
                id = ideps(j,1,im)
      
-               do i = 1, 2          
+               do i = 1, nr(2)          
                   if (id.eq.ideps(i,2,im)) then
                      imatch = imatch + 1
                      exit
@@ -8875,7 +8911,7 @@ c                                 possible cases.
 c                                 if match = 1 one species didn't match
 c                                 assume partial correlation
                icase(im) = 2
-            else if (imatch.eq.2) then 
+            else if (imatch.gt.2) then 
                icase(im) = 1
             end if 
 
@@ -8893,15 +8929,15 @@ c                                respect to itself:
             dydy(kstot+j,j,im) = 1d0
 c                                each ordered species decomposes to
 c                                two disordered species iddeps(1-2,j)
-c                                depvnu is the stoichiometric coefficient
+c                                depnu is the stoichiometric coefficient
 c                                of the disordered species in the ordered
 c                                species.
 
 c                                derivatives of the consituent species 
 c                                with respect to the ordered species
-            do i = 1, 2
+            do i = 1, nr(j)
                dydy(ideps(i,j,im),j,im) = dydy(ideps(i,j,im),j,im) 
-     *                                  - depvnu(i,j)
+     *                                  - depnu(i,j)
             end do
 
          end do 
@@ -8932,9 +8968,9 @@ c                                the dydy array formed above.
 
                   dvnu(i,k,im) = 0d0
 
-                  do j = 1, 2
+                  do j = 1, nr(k)
                      if (i.ne.ideps(j,k,im)) cycle
-                     dvnu(i,k,im) = dvnu(i,k,im) + depvnu(j,k)
+                     dvnu(i,k,im) = dvnu(i,k,im) + depnu(j,k)
                   end do
 
                end do  
@@ -8965,7 +9001,7 @@ c                                 get derivatives, of species fractions
 c                                 with respect to ordered species
                   do l = 1, norder 
                      itic = 0 
-                     do ii = 1, 2
+                     do ii = 1, nr(l)
                         if (ind.eq.ideps(ii,l,im)) then
                            sdzdp(l,j,i,im) = sdzdp(l,j,i,im) 
      *                     + dydy(ideps(ii,l,im),l,im)*dcoef(k,j,i,im)  
@@ -9147,7 +9183,10 @@ c                                 bw summation
       
       if (iterm.gt.0) then 
          lexces(im) = .true.
-         if (laar) llaar(im) = .true.
+         if (laar) then 
+            llaar(im) = .true.
+            extyp(im) = 2
+         end if    
       end if 
 
       if (order) lorder(im) = .true.
@@ -9482,8 +9521,8 @@ c-----------------------------------------------------------------------
       double precision dvnu,deph,dydy
       common/ cxt3r /dvnu(m4,j3,h9),deph(j3,h9),dydy(m4,j3,h9)
 
-      integer ideps,icase
-      common/ cxt3i /ideps(2,j3,h9),icase(h9)
+      integer ideps,icase,nrct
+      common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
 
       double precision z, pa, p0a, x, w, y, wl
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
@@ -9494,7 +9533,7 @@ c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
 
       do k = 1, nord(id)
-         do l = 1, 2
+         do l = 1, nrct(k,id)
             ind = ideps(l,k,id)
             p0a(ind) = p0a(ind) + dvnu(ind,k,id) * p0a(lstot(id)+k)
          end do 
@@ -9743,18 +9782,18 @@ c                                 initialize, d2gx has been set in setw
 
          do i = 1, jterm(id)
 c                                 assuming regular terms
-           i1 = jsub(1,i,id)
-           i2 = jsub(2,i,id)
+            i1 = jsub(1,i,id)
+            i2 = jsub(2,i,id)
 
-           g = g + w(i) * pa(i1) * pa(i2)
+            g = g + w(i) * pa(i1) * pa(i2)
 
-           do k = 1, norder
+            do k = 1, norder
 
-              if (.not.pin(k)) cycle
+               if (.not.pin(k)) cycle
 
-              dg(k) = dg(k) + w(i) * (pa(i1)*dydy(i2,k,id) 
-     *                              + pa(i2)*dydy(i1,k,id))
-           end do 
+               dg(k) = dg(k) + w(i) * (pa(i1)*dydy(i2,k,id) 
+     *                               + pa(i2)*dydy(i1,k,id))
+            end do 
 
          end do  
 c                                 get derivative of excess function
@@ -10341,8 +10380,8 @@ c----------------------------------------------------------------------
       double precision r,tr,pr,ps,p,t,xco2,u1,u2
       common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
 
-      integer ideps,icase
-      common/ cxt3i /ideps(2,j3,h9),icase(h9)
+      integer ideps,icase,nrct
+      common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
 
       integer lstot,mstot,nstot,ndep,nord
       common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
@@ -10613,7 +10652,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer k,i1,i2,id,jd
+      integer k,id,jd
 
       double precision dp,pmx,pmn
 c                                 working arrays
@@ -10621,14 +10660,8 @@ c                                 working arrays
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
      *              wl(m17,m18)
 
-      integer ideps,icase
-      common/ cxt3i /ideps(2,j3,h9),icase(h9)
-
       integer lstot,mstot,nstot,ndep,nord
       common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
-
-      double precision dvnu,deph,dydy
-      common/ cxt3r /dvnu(m4,j3,h9),deph(j3,h9),dydy(m4,j3,h9)
 
       integer iopt
       logical lopt
@@ -10637,8 +10670,6 @@ c                                 working arrays
 c----------------------------------------------------------------------
 c                                 given dp check if it violates
 c                                 stoichiometric constraints
-      i1 = ideps(1,k,id)
-      i2 = ideps(2,k,id)
       jd = lstot(id) + k 
 
       call plimit (pmn,pmx,k,id)       
@@ -10649,8 +10680,41 @@ c                                 stoichiometric constraints
          dp = pmn - pa(jd) + nopt(5)
       end if  
 c                                 adjust the composition by the increment
-      pa(i1) = pa(i1) + dydy(i1,k,id)*dp
-      pa(i2) = pa(i2) + dydy(i2,k,id)*dp 
+      call dpinc (dp,k,id,jd)
+
+      end 
+
+      subroutine dpinc (dp,k,id,jd)
+c----------------------------------------------------------------------
+c subroutine to increment the k'th species of solution id, if the increment
+c violates a stoichiometric limit, it's set to half it's maximum value.
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer i,k,id,jd
+
+      double precision dp
+c                                 working arrays
+      double precision z, pa, p0a, x, w, y, wl
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
+     *              wl(m17,m18)
+
+      integer ideps,icase,nrct
+      common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
+
+      double precision dvnu,deph,dydy
+      common/ cxt3r /dvnu(m4,j3,h9),deph(j3,h9),dydy(m4,j3,h9)
+c----------------------------------------------------------------------
+c                                 adjust the composition by the increment
+      do i = 1, nrct(k,id)
+
+         pa(ideps(i,k,id)) = pa(ideps(i,k,id)) 
+     *                     + dydy(ideps(i,k,id),k,id)*dp
+
+      end do
+
       pa(jd) = pa(jd) + dp
 
       end 
@@ -10664,7 +10728,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i,j,k,i1,i2,id,jd,lord,iout,ibad(m4)
+      integer i,j,k,id,jd,lord,iout,ibad(m4)
 
       double precision dp,pmn,pmx,dpp(j3),dinc,tinc
 c                                 working arrays
@@ -10672,14 +10736,11 @@ c                                 working arrays
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
      *              wl(m17,m18)
 
-      integer ideps,icase
-      common/ cxt3i /ideps(2,j3,h9),icase(h9)
-
       integer lstot,mstot,nstot,ndep,nord
       common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
 
-      double precision dvnu,deph,dydy
-      common/ cxt3r /dvnu(m4,j3,h9),deph(j3,h9),dydy(m4,j3,h9)
+      integer ideps,icase,nrct
+      common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
 
       logical pin
       common/ cyt2 /pin(j3)
@@ -10710,14 +10771,10 @@ c                                 case 1: fully correlated
             end if 
 
             jd = lstot(id) + k 
-            i1 = ideps(1,k,id)
-            i2 = ideps(2,k,id)
 
             dp = pmn + (pmx - pmn) * tinc - pa(jd)
 c                                 adjust the composition by the first increment
-            pa(i1) = pa(i1) + dydy(i1,k,id)*dp
-            pa(i2) = pa(i2) + dydy(i2,k,id)*dp 
-            pa(jd) = pa(jd) + dp
+            call dpinc (dp,k,id,jd)
 
             tinc = tinc + dinc
 
@@ -10760,14 +10817,10 @@ c                                 back off from maximum for final assignements
 
             jd = lstot(id) + k 
             pa(jd) = p0a(jd)
-            i1 = ideps(1,k,id)
-            i2 = ideps(2,k,id)
 
             dp = dpp(k)*0.9d0
 c                                 adjust the composition by the first increment
-            pa(i1) = pa(i1) + dydy(i1,k,id)*dp
-            pa(i2) = pa(i2) + dydy(i2,k,id)*dp 
-            pa(jd) = pa(jd) + dp
+            call dpinc (dp,k,id,jd)
 
          end do 
 
@@ -10783,14 +10836,10 @@ c                                 this will never be called.
             pin(1) = .true.
             lord = 1
             jd = lstot(id) + 1
-            i1 = ideps(1,1,id)
-            i2 = ideps(2,1,id)
 
             dp = pmn + (pmx - pmn) * 0.9d0 - pa(jd)
 c                                 adjust the composition by the first increment
-            pa(i1) = pa(i1) + dydy(i1,1,id)*dp
-            pa(i2) = pa(i2) + dydy(i2,1,id)*dp 
-            pa(jd) = pa(jd) + dp
+            call dpinc (dp,k,id,jd)
 
          end if 
 
@@ -10816,7 +10865,7 @@ c                                 the indices of the present components are igoo
             do k = 1, nord(id)
                if (pin(k)) then    
 c                                 check that the ordered species are in the subcomposition
-                  do j = 1, 2                                    
+                 do j = 1, nrct(k,id)                                    
                      do i = 1, iout
                         if (ideps(j,k,id).eq.ibad(i)) then 
                            lord = 0 
@@ -11207,9 +11256,9 @@ c---------------------------------------------------------------------
      *      reach,iend(m4),isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),
      *      isp(mst),rkord(m18),isite,iterm,iord,istot,jstot,kstot,xtyp
 
-      integer iddeps,norder 
-      double precision depvnu,denth
-      common/ cst141 /depvnu(2,j3),denth(j3),iddeps(2,j3),norder
+      integer iddeps,norder,nr 
+      double precision depnu,denth
+      common/ cst141 /depnu(j4,j3),denth(j3),iddeps(j4,j3),norder,nr(j3)
 
       integer length,iblank,icom
       character chars*1
@@ -11242,9 +11291,10 @@ c                                 amount of the ordered endmembers
 
             if (tag.eq.'end') then 
                exit 
-            else if (ict.eq.1) then
-               bad = .true.
-               exit
+c                                 commented to allow fixed bounds
+c           else if (ict.eq.1) then
+c               bad = .true.
+c               exit
             end if 
 c                                 convert the endmember index to the 
 c                                 ordered species index
@@ -11290,6 +11340,12 @@ c                                 4) is an ordered species p-term
             end do 
 c                                 the constant and delta (max-min) are:
             j = limt(k,jd) + 1
+c                                 set number of terms to negative if constant bounds
+            if (limt(k,jd).eq.0) then
+               limt(k,jd) = -1 
+               jimt(k,jd) = -1
+            end if 
+
             limc(j  ,k,jd) = coeffs(1)
             limc(j+1,k,jd) = coeffs(ict+1)
 
@@ -11430,18 +11486,23 @@ c                                 initialize model counter
       im = 0
 c                                 no request for solutions
       if (io9.eq.1) then 
+
          isoct = 0 
          return 
+
       end if 
 c                                 open pseudocompund list file
       if (output.and.lopt(10)) then
+
          call mertxt (tfname,prject,'_pseudocompound_list.txt',0)
          open (n8,file=tfname)
+
       end if 
 c                                 format test line
       read (n9,'(a)') new
 
-      if (new.ne.'011'.and.new.ne.'008') call error (3,zt,im,new)
+      if (new.ne.'670'.and.new.ne.'011'.and.new.ne.'008') 
+     *                                        call error (3,zt,im,new)
 
       do 
 c                                 -------------------------------------
@@ -12155,9 +12216,9 @@ c--------------------------------------------------------------------------
       integer lstot,mstot,nstot,ndep,nord
       common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
 
-      integer iddeps,norder 
-      double precision depvnu,denth
-      common/ cst141 /depvnu(2,j3),denth(j3),iddeps(2,j3),norder
+      integer iddeps,norder,nr 
+      double precision depnu,denth
+      common/ cst141 /depnu(j4,j3),denth(j3),iddeps(j4,j3),norder,nr(j3)
 
       double precision qmult, d0, dcoef, scoef      
       common/ cxt1r /qmult(m10,h9),d0(m11,m10,h9),dcoef(m0,m11,m10,h9),
@@ -12210,8 +12271,8 @@ c--------------------------------------------------------------------------
       integer ksmod, ksite, kmsol, knsp
       common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
 
-      integer ideps,icase
-      common/ cxt3i /ideps(2,j3,h9),icase(h9)
+      integer ideps,icase,nrct
+      common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
 
       double precision y2pg
       common/ cxt4  /y2pg(m15,m4,h9)
@@ -12471,9 +12532,9 @@ c                              accumulate endmember configurational entropy
             sxs(ixct) = pa(h)
 c                              split these fraction into the fractions of the
 c                              consituent disordered species:
-            do j = 1, 2
+            do j = 1, nr(i)
 
-               x = depvnu(j,i)*pa(h)
+               x = depnu(j,i)*pa(h)
                id = jend(im,2+ideps(j,i,im)) 
 c                              composition vector
                do l = 1, icomp
@@ -12529,7 +12590,7 @@ c                              ghiorso melt model, use internal routine to get e
 c                              save it:
       exces(2,iphct) = smix 
 c                              load excess terms, if not Laar or ordered:
-      if ((.not.laar).and.(.not.order)) then 
+      if (extyp(im).eq.0.and.(.not.order)) then 
 
          do i = 1, jterm(im)
 
@@ -13073,7 +13134,7 @@ c                                 holland and powell bragg-williams model
          else 
 
             write (*,*) 'no such transition model'
-            stop
+            call errpau
  
          end if
 
@@ -13773,33 +13834,29 @@ c in thermodynamic data file: c1 - v02; c2 - b20; c3 - b2; c4 - theta2;
 c c5 - alpha2
 c-----------------------------------------------------------------
       implicit none
+      
       include 'perplex_parameters.h'
 
       double precision thermo,uf,us
       common/ cst1 /thermo(k4,k10),uf(2),us(h5)
-
-      integer ltyp,lct,lmda,idis
-      common/ cst204 /ltyp(k10),lct(k10),lmda(k10),idis(k10)
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 
       integer id
 
-      double precision v02,b20,b2,tet2,al2
+      double precision tet2, b2,t1, t2, b20
 c----------------------------------------------------------------------
 c                             allocate coefficients for 2nd term in EoS
-      v02 = thermo(1,id)
-      b20 = thermo(2,id)
+
       b2 = thermo(3,id)
+      b20 = thermo(2,id)
       tet2 = thermo(4,id)
-      al2 = thermo(5,id)
+      
+      t1  = dexp(- b2*thermo(5,id) * (t - dlog(1d0+t/tet2)*tet2) )
+      t2  = 1d0-1d0/b2
 
-
-      gterm2 = b20*v02/(b2-1d0)*(dexp(-b2*(al2*t-al2*
-     *         dlog(1d0+t/tet2)*tet2))+(b2*p/b20))**(1d0-1d0/b2)- 
-     *         b20*v02/(b2-1d0)*(dexp(-b2*(al2*t-al2*
-     *         dlog(1d0+t/tet2)*tet2)))**(1d0-1d0/b2)
+      gterm2 = b20*thermo(1,id)/(b2-1d0)*((t1+b2*p/b20)**t2 - t1**t2)
 
       end function gterm2
 

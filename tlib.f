@@ -17,7 +17,7 @@ c----------------------------------------------------------------------
       implicit none
 
       write (*,'(/,a)') 
-     *      'Perple_X version 6.6.9, source updated Apr 15, 2014.'
+     *      'Perple_X version 6.7.0, source updated May 7, 2014.'
 
       end
 
@@ -1621,6 +1621,30 @@ c---------------------------------------------------------------------
  
       end
 
+      subroutine errpau 
+c---------------------------------------------------------------------
+c pause on error option
+c---------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      character a*1
+      
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+      
+      if (lopt(19)) then 
+         write (*,'(/,a,/)') 'Press Enter to quit...' 
+         read (*,'(a)') a
+      end if 
+      
+      stop
+      
+      end 
+
       subroutine error (ier,realv,int,char)
 c---------------------------------------------------------------------
 c write error messages and terminate execution
@@ -1631,7 +1655,7 @@ c---------------------------------------------------------------------
 
       integer ier, int
  
-      character char*(*), a*1
+      character char*(*)
 
       double precision realv
 
@@ -1854,19 +1878,14 @@ c---------------------------------------------------------------------
          write (*,999) ier,realv,int,char
       end if
  
-      if (lopt(19)) then 
-         write (*,'(/,a,/)') 'Press Enter to quit...' 
-         read (*,'(a)') a
-      end if 
-
-      stop
+      call errpau
 
 1     format (/,'**error ver001** increase parameter ',a,' to ',i7,' in'
      *       ,' perplex_parameters.h and recompile Perple_X',/)
-3     format (/,'**error ver003** the solution model file is',
-     *        'in a format that is no longer supported.',/,
-     *        'copy the current version from: ',
-     *        'www.perplex.ethz.ch/datafiles/solution_model.dat',/)
+3     format (/,'**error ver003** the solution model file is ',
+     *         'in a format that is inconsistent with ',/,
+     *         'this version of Perple_X.',/,'Update the file and/or '
+     *         'Perple_X',/)
 4     format (/,'**error ver004** you must use ',a,' to analyze this ',
      *        'type of calculation.',/)
 5     format (/,'**error ver005** too many ordered species (',i2,') in',
@@ -2325,9 +2344,9 @@ c----------------------------------------------------------------------
      *        '(-zero_mode) this may be',/,'indicative of numeric ',
      *        'instability',/)
 3     format (/,'**warning ver003** the solution model file is ',
-     *        'in a format that is no longer supported.',/,
-     *        'copy the current version from: ',
-     *        'www.perplex.ethz.ch/datafiles/solution_model.dat',/)
+     *         'in a format that is inconsistent with ',/,
+     *         'this version of Perple_X.',/,'Update the file and/or '
+     *         'Perple_X',/)
 4     format (/,'**warning ver004** the data includes ',a,' values, '
      *      ,'probably because bad_number',/,'in perplex_option.dat = '
      *      ,'NaN, these values will be replaced by zeros. To avoid ',/,
