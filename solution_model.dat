@@ -8255,10 +8255,10 @@ FeSiC-BCC
     
 30                                | model type: special reciprocal
 2                                 | number of independent mixing sites, reciprocal solution
-2  2                              | Fe-Si on site 1, Vacancy-C on site 2                                                                         
+3  2                              | Fe-Si on site 1, Vacancy-C on site 2                                                                         
        
-Fe-BCC Si-BCC                     | endmember names 
-FeC-BCC SiC-BCC
+Fe-BCC Si-BCC    Cr-BCC            | endmember names 
+FeC-BCC SiC-BCC  CrC-BCC
 
 0                                 | number of dependent endmembers 
 

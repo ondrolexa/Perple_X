@@ -1345,7 +1345,9 @@ c----------------------------------------------------------------------
       double precision dt0, dt1, dt2, g0, gpt, gpt1, 
      *                 gpt2, gpp, dp0, dp1, dp2, e, alpha, v, ginc, dt,
      *                 beta, cp, s, rho, gtt, g1, g2, g3, g4, g5,
-     *                 g7, gppp, gppt, gptt, gttt, mols, root
+     *                 g7, gppp, gppt, gptt, gttt, mols, root, poiss
+
+      external poiss, ginc
 
       double precision props,psys,psys1,pgeo,pgeo1
       common/ cxt22 /props(i8,k5),psys(i8),psys1(i8),pgeo(i8),pgeo1(i8)
@@ -1611,7 +1613,7 @@ c                                 difference increments
 
             if (okt) exit
 
-            dp0 = dp0/nopt(31)**3
+            dp0 = dp0/nopt(31)**4
 
          end do
 
@@ -2035,6 +2037,47 @@ c                                 vp/vs
                props(9,jd) = props(7,jd)/props(8,jd)
             else
                props(9,jd) = nopt(7)
+            end if 
+c                                 check for negative poisson ratio
+            if (poiss(props(7,jd),props(8,jd)).lt.0d0) then
+
+               sick(jd) = .true.
+               bsick = .true.
+               ssick = .true.
+               volume = .false.
+               shear = .false.
+
+               v = nopt(7)
+               beta = nopt(7)
+               alpha = nopt(7)
+               rho = nopt(7)
+
+               props(13,jd) = nopt(7)
+               props(14,jd) = nopt(7) 
+               props(10,jd) = nopt(7) 
+
+               props(5,jd) = nopt(7)
+               props(19,jd) = nopt(7)    
+               props(21,jd) = nopt(7)
+
+               props(1,jd) = nopt(7)
+               props(3,jd) = nopt(7)
+               props(4,jd) = nopt(7)
+
+               props(6,jd)  = nopt(7)
+               props(22,jd) = nopt(7)
+               props(25,jd) = nopt(7)
+
+               props(7,jd)  = nopt(7)
+               props(23,jd) = nopt(7)
+               props(26,jd) = nopt(7)
+
+               props(8,jd) = nopt(7)
+               props(24,jd) = nopt(7)
+               props(27,jd) = nopt(7)
+
+               props(28,jd) = nopt(7)
+
             end if 
 
          else

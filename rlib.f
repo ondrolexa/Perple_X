@@ -8911,7 +8911,7 @@ c                                 possible cases.
 c                                 if match = 1 one species didn't match
 c                                 assume partial correlation
                icase(im) = 2
-            else if (imatch.gt.2) then 
+            else if (imatch.ge.2) then 
                icase(im) = 1
             end if 
 
