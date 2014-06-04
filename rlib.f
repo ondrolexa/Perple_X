@@ -6336,13 +6336,16 @@ c                                dependent endmember is ok
          if (mdep.eq.0) then
 
             depend = .false.
+c                                 june 5, 2014 => jsmod used to be changed to 
+c                                 non-reciprocal case if mdep = 0. now unchanged
+c                                 but hopefully caught by dedsit?
+c            if (jsmod.eq.7.or.jsmod.eq.5) then
+c               jsmod = 2
+c               if (laar) jsmod = 3
+c            else 
+c               jsmod = 6
+c            end if 
 
-            if (jsmod.eq.7.or.jsmod.eq.5) then
-               jsmod = 2
-               if (laar) jsmod = 3
-            else 
-               jsmod = 6
-            end if 
          end if  
 
       end if 
