@@ -9199,7 +9199,10 @@ c                                 setting depend = .false., while retaining
 c                                 a dummy site with no mixing. reform should
 c                                 be redone to truly reformulate multiple
 c                                 models to single site models. 
-      if (recip) lrecip(im) = .true. 
+c                                 a non-reciprocal model (ksmod=5) with 
+c                                 dependent endmembers is also classified
+c                                 as lrecip.
+      if (recip.or.depend) lrecip(im) = .true. 
 
       if (.not.lopt(3)) then 
 c                                 hard limits are off, set limits to 0/1

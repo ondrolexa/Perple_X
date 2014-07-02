@@ -1,5 +1,5 @@
 #
-# makefile for Perple_X 6.6.8
+# makefile for Perple_X 6.6.8+
 #
 # To compile the Perple_X programs with this file first edit the compiler
 # variables so that they are consistent with the fortran installation on 
@@ -36,6 +36,9 @@ COMP77 = gfortran
 # add -m64 to force 64 bit code generation (at least on OSX)
 
 FFLAGS =  -O3 -static-libgfortran
+
+# Mark Caddick's OSX generic gfortran compilation flags:
+#FFLAGS = -static-libgfortran -lgfortran -lgcc -lSystem -nodefaultlibs -mmacosx-version-min=10.6  -O3 /usr/local/lib/libquadmath.a
 
 # WFM Added 2007Sep05, PAPPEL 2010SEPT08: for 6.6.0
 MYOBJ = actcor build fluids ctransf frendly htog meemum pstable pspts psvdraw pssect pt2curv vertex werami unsplt
