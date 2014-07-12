@@ -83,6 +83,12 @@ c-----------------------------------------------------------------------
       integer jtest,jpot
       common/ debug /jtest,jpot
 
+      integer ipoint,kphct,imyn
+      common/ cst60 /ipoint,kphct,imyn
+
+      integer icomp,istct,iphct,icp
+      common/ cst6  /icomp,istct,iphct,icp
+
       save err,first,output,pots
       data err,output,first/.false.,.false.,.true./
 
@@ -175,6 +181,9 @@ c                                 calculations and remaining output
          else if (icopt.eq.1.or.icopt.eq.3) then                            
 c                                 phase diagram projection or mixed variable
 c                                 diagram 
+
+            istct = kphct 
+
             call newhld (output)
 
          else if (icopt.eq.4) then 
@@ -749,8 +758,8 @@ c-------------------------------------------------------------------
       integer jasmbl,iasmbl
       common/ cst27  /jasmbl(j9),iasmbl(j9)
 
-      integer ipoint,imyn
-      common/ cst60 /ipoint,imyn
+      integer ipoint,kphct,imyn
+      common/ cst60 /ipoint,kphct,imyn
 
       character*8 vname,xname
       common/ csta2  /xname(k5),vname(l2)
@@ -862,8 +871,8 @@ c-----------------------------------------------------------------------
       double precision ctot
       common/ cst3   /ctot(k1)
 
-      integer ipoint,imyn
-      common/ cst60 /ipoint,imyn
+      integer ipoint,kphct,imyn
+      common/ cst60 /ipoint,kphct,imyn
 
       character*8 vname,xname
       common/ csta2  /xname(k5),vname(l2)
@@ -1405,8 +1414,8 @@ c-----------------------------------------------------------------------
       character*8 names
       common/ cst8 /names(k1)
 
-      integer ipoint,imyn
-      common/ cst60 /ipoint,imyn
+      integer ipoint,kphct,imyn
+      common/ cst60 /ipoint,kphct,imyn
 
       integer ic
       common/ cst42 /ic(k0)
@@ -2039,8 +2048,8 @@ c----------------------------------------------------------------------------
       integer hcp,id
       common/ cst52 /hcp,id(k7)
 
-      integer ipoint,imyn
-      common/ cst60 /ipoint,imyn
+      integer ipoint,kphct,imyn
+      common/ cst60 /ipoint,kphct,imyn
 
       double precision cp
       common/ cst12 /cp(k5,k1)
@@ -2317,8 +2326,8 @@ c                                 solution limits and stability
       integer ikp
       common/ cst61 /ikp(k1)
 
-      integer ipoint, imyn
-      common/ cst60 /ipoint,imyn
+      integer ipoint, imyn, kphct
+      common/ cst60 /ipoint,kphct,imyn
 c----------------------------------------------------------------------
       do k = 1, ntot
 

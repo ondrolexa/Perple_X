@@ -189,8 +189,8 @@ c                                 adaptive x(i,j) coordinates
       double precision ycoor
       common/ cxt14 /ycoor(k22),lcoor(k19),lkp(k19)
 
-      integer ipoint,imyn
-      common/ cst60 /ipoint,imyn
+      integer ipoint,kphct,imyn
+      common/ cst60 /ipoint,kphct,imyn
 
       integer npt,jdv
       logical fulrnk
@@ -1900,8 +1900,8 @@ c----------------------------------------------------------------------
 
       double precision clamda(*), x(*),  slam(h8+1)
 
-      integer ipoint,imyn
-      common/ cst60 /ipoint,imyn
+      integer ipoint,kphct,imyn
+      common/ cst60 /ipoint,kphct,imyn
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
@@ -2561,7 +2561,7 @@ c---------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i,j,k,l,inc,kphct,id,jk
+      integer i,j,k,l,inc,id,jk
 
       logical bad
 
@@ -2603,6 +2603,9 @@ c---------------------------------------------------------------------
       logical fulrnk
       double precision cptot,ctotal
       common/ cst78 /cptot(k5),ctotal,jdv(k19),npt,fulrnk
+
+      integer ipoint,kphct,imyn
+      common/ cst60  /ipoint,kphct,imyn
 c-----------------------------------------------------------------------
       inc = istct - 1
 
@@ -2707,8 +2710,8 @@ c-----------------------------------------------------------------------
       integer icomp,istct,iphct,icp
       common/ cst6 /icomp,istct,iphct,icp
 
-      integer ipoint,imyn
-      common/ cst60 /ipoint,imyn
+      integer ipoint,kphct,imyn
+      common/ cst60 /ipoint,kphct,imyn
 
       double precision g
       common/ cst2 /g(k1)
@@ -2761,21 +2764,9 @@ c                                 compute the chemical potential
 c                                 of the projected components.
       call uproj
 c                                 first do the endmembers:
-      do id = istct, ipoint
+      do id = kphct+1, ipoint
 
          call gcpd(id,gval)
-c                                 this is a screw up solution
-c                                 necessary cause uf(1) and uf(2)
-c                                 are allocated independent of ifct!
-         if (ifct.gt.0) then 
-            do j = 1, 2
-               if (iff(j).ne.0) gval = gval - cp(iff(j),id)*uf(j)
-            end do 
-         end if 
-
-         do j = 1, isat
-            gval = gval - us(j) * cp(icp+j,id)
-         end do
 
          g(id) = gval 
 
@@ -2817,6 +2808,20 @@ c                                 components.
                id = id + 1
 
             end do 
+
+         else if (ksmod(i).eq.30.or.ksmod(i).eq.31) then 
+c                                 call nastia's BCC/FCC model
+c                                 after Lacaze and Sundman
+            do j = 1, jend(i,2)
+
+               g(id) = gfesic (sxs(ixp(id)+1),
+     *                         sxs(ixp(id)+3),sxs(ixp(id)+4),
+     *                         g(jend(i,3)),g(jend(i,4)),
+     *                         g(jend(i,5)),g(jend(i,6)),ksmod(i))
+  
+               id = id + 1
+
+            end do
 
          else if (lrecip(i).and.lorder(i)) then
 c                                 reciprocal solution with ordering 
@@ -2948,20 +2953,6 @@ c                                 BCC Fe-Si Lacaze and Sundman
                id = id + 1
 
             end do 
-
-         else if (ksmod(i).eq.30.or.ksmod(i).eq.31) then 
-c                                 call nastia's BCC/FCC model
-c                                 after Lacaze and Sundman
-            do j = 1, jend(i,2)
-
-               g(id) = gfesic (sxs(ixp(id)+1),
-     *                         sxs(ixp(id)+3),sxs(ixp(id)+4),
-     *                         g(jend(i,3)),g(jend(i,4)),
-     *                         g(jend(i,5)),g(jend(i,6)),ksmod(i))
-  
-               id = id + 1
-
-            end do
 
          else if (ksmod(i).eq.32) then 
  
@@ -3153,8 +3144,8 @@ c                                  x-coordinates for the final solution
       double precision x3
       common/ cxt16 /x3(k21,mst,msp)
 
-      integer ipoint,imyn
-      common/ cst60 /ipoint,imyn
+      integer ipoint,kphct,imyn
+      common/ cst60 /ipoint,kphct,imyn
 
       integer lstot,mstot,nstot,ndep,nord
       common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
@@ -3531,8 +3522,8 @@ c                                 hcp is different from icp only if usv
       double precision ctot
       common/ cst3  /ctot(k1)
 
-      integer ipoint,imyn
-      common/ cst60 /ipoint,imyn
+      integer ipoint,kphct,imyn
+      common/ cst60 /ipoint,kphct,imyn
 
       double precision thermo,uf,us
       common/ cst1 /thermo(k4,k10),uf(2),us(h5)

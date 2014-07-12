@@ -1078,8 +1078,8 @@ c----------------------------------------------------------------------
       character*8 exname,afname
       common/ cst36 /exname(h8),afname(2)
 
-      integer ipoint,imyn
-      common/ cst60 /ipoint,imyn
+      integer ipoint,kphct,imyn
+      common/ cst60 /ipoint,kphct,imyn
 
       integer jfct,jmct,jprct
       common/ cst307 /jfct,jmct,jprct
@@ -1378,6 +1378,31 @@ c                                 for each saturation constraint
 40    do i = 1, isat
          if (isct(i).lt.1) call error (15,r,i,cname(icp+i))
       end do
+c                                 save endmembers that consist entirely 
+c                                 of constrained components:
+      kphct = iphct 
+
+      if (ifct+isat+jmct.gt.0) then 
+
+         call eohead (n2)
+
+         do 
+
+            call getphi (name,eof)
+
+            if (eof) exit
+
+            call chkphi (4,name,good)
+
+            if (.not.good) cycle 
+c                                 matched a name
+            iphct = iphct + 1
+c                                 store thermodynamic parameters:
+            call loadit (iphct,.false.)
+
+         end do
+
+      end if 
 c                                 read data for the remaining
 c                                 phases of appropriate composition.
       istct = iphct + 1
@@ -1427,10 +1452,11 @@ c                                 real entity in the make definition
          call loadit (iphct,.true.)
 
          make(iphct) = i
-c                                pointer used for iemod.
+c                                 pointer used for iemod.
          imak(i) = iphct
 
       end do 
+
 c                                 get/save data for makes, this
 c                                 data is saved in the arrays thermo
 c                                 and cp by loadit, but are not counted,
@@ -1459,7 +1485,7 @@ c                                 matched a name
 c                                 store thermodynamic parameters:
             call loadit (iphct,.false.)
 
-         end do 
+         end do
 
       end do 
 

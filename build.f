@@ -68,8 +68,8 @@ c-----------------------------------------------------------------------
       double precision ctrans
       common/ cst207 /ctrans(k0,k5),ictr(k5),itrans
 
-      integer ipoint,imyn
-      common/ cst60 /ipoint,imyn
+      integer ipoint,kphct,imyn
+      common/ cst60 /ipoint,kphct,imyn
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp

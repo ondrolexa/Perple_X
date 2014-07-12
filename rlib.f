@@ -249,6 +249,9 @@ c---------------------------------------------------------------------
       integer jfct,jmct,jprct
       common/ cst307 /jfct,jmct,jprct
 
+      integer iff,idss,ifug,ifyn,isyn
+      common/ cst10  /iff(2),idss(h5),ifug,ifyn,isyn
+
       integer ltyp,lct,lmda,idis
       common/ cst204 /ltyp(k10),lct(k10),lmda(k10),idis(k10)
 
@@ -284,6 +287,21 @@ c---------------------------------------------------------------------
       double precision y,g,v
       common / cstcoh /y(nsp),g(nsp),v(nsp)
 
+      integer icomp,istct,iphct,icp
+      common/ cst6 /icomp,istct,iphct,icp
+
+      integer ifct,idfl
+      common/ cst208 /ifct,idfl
+
+      integer ids,isct,icp1,isat,io2
+      common/ cst40 /ids(h5,h6),isct(h5),icp1,isat,io2
+
+      double precision cp
+      common/ cst12 /cp(k5,k1)
+
+      integer ipoint,kphct,imyn
+      common/ cst60 /ipoint,kphct,imyn
+
       save kt,trv,ins,kns,iwarn,oldid 
       data kt,trv,ins,kns,iwarn,oldid/0d0,1673.15d0,14,15,0,0/
 c---------------------------------------------------------------------
@@ -299,13 +317,13 @@ c                                 and sum the component g's.
 c                                 sixtrude 05 JGR EoS 
          gval = gsixtr (id)
          
-         return
+         goto 999
 
       else if (eos(id).eq.6) then
 c                                 stixrude JGI '05 Eos
          gval = gstxgi (id) 
 
-         return
+         goto 999
          
       else if (eos(id).eq.11) then
 c                                 stixrude EPSL '09 Liquid Eos
@@ -317,14 +335,14 @@ c                                 stixrude EPSL '09 Liquid Eos
 c                                read SGTE data and evaluate EOS after Brosh '07,'08
          gval = gmet(id)
 
-         return
+         goto 999
 
       else if (eos(id).eq.14) then
 c                                read SGTE data and evaluate EOS after Brosh'07,'08
 c                                (modified for liquid carbon)
          gval = gterm2(id)
 
-         return
+         goto 999
 
       end if 
 c                                 all other EoS's with Cp function
@@ -510,14 +528,8 @@ c                                 gottschalk.
      *               (1d0 - dexp(thermo(18,id)*(p - pr)))
 
       end if
-c                                 -ndu term
-      ndu = 0d0
 
-      do j = 1, jmct      
-         ndu = ndu - vnumu(j,id) * mu(j)
-      end do
-
-      gval = gval + vdp + ndu 
+      gval = gval + vdp
 
 c                                 check for transitions:
       if (ltyp(id).ne.0) call mtrans (gval,vdp,ndu,id)
@@ -604,8 +616,38 @@ c                                 o
          end if          
 
       end if
+c                                 thermodynamic projections
+999   if (id.gt.kphct.and.id.le.ipoint) then
+c999   if (id.ge.istct) then
+
+         ndu = 0d0
+c                                 mobile components
+         do j = 1, jmct      
+            ndu = ndu - vnumu(j,id) * mu(j)
+         end do
+c                                 if istct > 0 must be some saturated
+c                                 components
+         if (istct.gt.1) then 
+c                                 this is a screw up solution
+c                                 necessary cause uf(1) and uf(2)
+c                                 are allocated independent of ifct!
+            if (ifct.gt.0) then 
+               do j = 1, 2
+                  if (iff(j).ne.0) ndu = ndu - cp(iff(j),id)*uf(j)
+               end do 
+            end if 
+
+            do j = 1, isat
+               ndu = ndu - cp(icp+j,id) * us(j)
+            end do 
+
+        end if 
+
+        gval = gval + ndu
+
+      end if 
 c                                 kill melt endmembers if T < T_melt 
-999   if (ifp(id).lt.0.and.t.lt.nopt(20)) gval = gval + 1d8
+      if (ifp(id).lt.0.and.t.lt.nopt(20)) gval = gval + 1d8
 
       end
 
@@ -1021,7 +1063,8 @@ c                                 s-position.
 c-----------------------------------------------------------------------
 c ichk = 0 and 2 -> test for saturated entities
 c ichk = 1 and 3 -> test for non-saturated entities
-c ichk > 1 -> do not compare against excluded list (for make definitions). 
+c ichk = 4 -> look for phases that consist entirely of constrained components
+c ichk > 1  and not 4 -> do not compare against excluded list (for make definitions). 
 c-----------------------------------------------------------------------
       implicit none
  
@@ -1063,7 +1106,7 @@ c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
       good = .true.
 c                               reject the data if excluded in input:
-      if (ichk.lt.2) then 
+      if (ichk.lt.2.or.ichk.eq.4) then 
          do i = 1, ixct
             if (name.eq.exname(i)) goto 90
          end do
@@ -1093,7 +1136,7 @@ c                               use ichk to avoid multiple messages
       if (tot.eq.0d0) goto 90 
 c                               do a check to make sure that the phase does
 c                               not consist of just mobile components
-      if (jmct.gt.0) then
+      if (jmct.gt.0.and.ichk.ne.4) then
 
          tot = 0d0
 
@@ -1101,7 +1144,7 @@ c                               not consist of just mobile components
             tot = tot + comp(ic(j))
          end do  
 
-         if (tot.eq.0d0) goto 90
+          if (tot.eq.0d0) goto 90
 
       end if 
 c                               the following is not executed by build:
@@ -1112,11 +1155,13 @@ c                               of saturated components:
 c                               reject phases with null composition, in case
 c                               a user puts one in by accident
       tot = 0d0
+
       do j = 1, icp
          tot = tot + comp(ic(j))
       end do 
 
-      if (tot.eq.0d0) goto 90
+      if ((tot.eq.0d0.and.ichk.ne.4).or.
+     *    (tot.ne.0d0.and.ichk.eq.4)) goto 90
 
       return
 
@@ -1758,8 +1803,8 @@ c---------------------------------------------------------------------
       integer icomp,istct,iphct,icp
       common/ cst6 /icomp,istct,iphct,icp
 
-      integer ipoint,imyn
-      common/ cst60  /ipoint,imyn
+      integer ipoint,kphct,imyn
+      common/ cst60  /ipoint,kphct,imyn
 
       character*8 name
       common/ csta6 /name
@@ -1905,11 +1950,12 @@ c                               compositional array for frendly
          end do 
       end if 
 
-      if (make) return
 c                               and just mobile components
       do i = 1, jmct 
          vnumu(i,id) = comp(ic(i+jprct))
       end do 
+
+      if (make) return
 c                               load elastic props if present
       if (iemod(id).ne.0) then 
 c                               kmod initialized 0 in main.
@@ -6129,8 +6175,8 @@ c---------------------------------------------------------------------
       double precision vlaar
       common/ cst221 /vlaar(m3,m4),jsmod
 
-      integer ipoint,imyn
-      common/ cst60 /ipoint,imyn
+      integer ipoint,kphct,imyn
+      common/ cst60 /ipoint,kphct,imyn
 
       character*8 names
       common/ cst8 /names(k1)
@@ -6796,8 +6842,8 @@ c-----------------------------------------------------------------------
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 
-      integer ipoint,imyn
-      common/ cst60 /ipoint,imyn
+      integer ipoint,kphct,imyn
+      common/ cst60 /ipoint,kphct,imyn
 
       integer ikp
       common/ cst61 /ikp(k1)
@@ -7545,6 +7591,15 @@ c                                 get mechanical mixture contribution
                gg = gg + y(k) * g(jend(id,2+k))
             end do 
 
+         else if (ksmod(id).ge.30.and.ksmod(id).le.31) then 
+c                                 -------------------------------------
+c                                 Nastia's version of BCC/FCC Fe-Si-C Lacaze and Sundman
+c                                 this model has to be called ahead of the standard models
+c                                 because it sets lrecip(id) = true. 
+            gg =  gfesic (y(1),y(3),y(4),
+     *                    g(jend(id,3)),g(jend(id,4)),
+     *                    g(jend(id,5)),g(jend(id,6)),ksmod(id))
+
          else if (lrecip(id).and.lorder(id)) then 
 c                                 -------------------------------------
 c                                 initialize p's
@@ -7595,6 +7650,7 @@ c                                 are not dqf'd
             call gdqf (id,gg,p0a)
 
             gg = gg - t * omega(id,p0a) + gex(id,p0a)
+
 
          else if (ksmod(id).eq.0) then 
 c                                 ------------------------------------
@@ -7663,13 +7719,6 @@ c                                 get mechanical mixture contribution
 c                                 -------------------------------------
 c                                 BCC Fe-Si Lacaze and Sundman
             gg =  gfesi(y(1),g(jend(id,3)),g(jend(id,4)))
-
-         else if (ksmod(id).ge.30.and.ksmod(id).le.31) then 
-c                                 -------------------------------------
-c                                 Nastia's version of BCC/FCC Fe-Si-C Lacaze and Sundman
-            gg =  gfesic (y(1),y(3),y(4),
-     *                    g(jend(id,3)),g(jend(id,4)),
-     *                    g(jend(id,5)),g(jend(id,6)),ksmod(id))
 
          else if (ksmod(id).eq.32) then 
 c                                 -------------------------------------
@@ -7987,7 +8036,7 @@ c-----------------------------------------------------------------------
  
       include 'perplex_parameters.h'
 
-      integer j,id
+      integer id
 
       double precision gph
 
@@ -8011,18 +8060,6 @@ c-----------------------------------------------------------------------
 
 c-----------------------------------------------------------------------
       call gphase (id,gph)
-c                                 this is a screw up solution
-c                                 necessary cause uf(1) and uf(2)
-c                                 are allocated independent of ifct!
-      if (ifct.gt.0) then 
-         do j = 1, 2
-            if (iff(j).ne.0) gph = gph - cp(iff(j),id)*uf(j)
-          end do 
-      end if 
-
-      do j = 1, isat
-         gph = gph - cp(icp+j,id) * us(j)
-      end do 
 
       gproj = gph
 
@@ -11411,8 +11448,8 @@ c-----------------------------------------------------------------------
       integer jmsol,kdsol
       common/ cst142 /jmsol(m4,mst),kdsol(m4)
 
-      integer ipoint,imyn
-      common/ cst60 /ipoint,imyn
+      integer ipoint,kphct,imyn
+      common/ cst60 /ipoint,kphct,imyn
 
       character*8 names
       common/ cst8 /names(k1)

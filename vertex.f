@@ -83,6 +83,12 @@ c-----------------------------------------------------------------------
       integer jtest,jpot
       common/ debug /jtest,jpot
 
+      integer ipoint,kphct,imyn
+      common/ cst60 /ipoint,kphct,imyn
+
+      integer icomp,istct,iphct,icp
+      common/ cst6  /icomp,istct,iphct,icp
+
       save err,first,output,pots
       data err,output,first/.false.,.false.,.true./
 
@@ -174,7 +180,9 @@ c                                 calculations and remaining output
 
          else if (icopt.eq.1.or.icopt.eq.3) then                            
 c                                 phase diagram projection or mixed variable
-c                                 diagram 
+c                                 diagram
+            istct = kphct 
+c
             call newhld (output)
 
          else if (icopt.eq.4) then 
