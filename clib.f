@@ -1379,10 +1379,10 @@ c                                 for each saturation constraint
          if (isct(i).lt.1) call error (15,r,i,cname(icp+i))
       end do
 c                                 save endmembers that consist entirely 
-c                                 of constrained components:
+c                                 of saturated phase or mobile components:
       kphct = iphct 
 
-      if (ifct+isat+jmct.gt.0) then 
+      if (ifct+jmct.gt.0) then 
 
          call eohead (n2)
 

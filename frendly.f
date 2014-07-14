@@ -1138,7 +1138,9 @@ c--------------------------------------------------------------------
 
       integer j
 
-      double precision fo2,fs2,gph,gval
+      double precision fo2, fs2, gval, gphase
+
+      external gphase
 
       integer iffr,isr
       double precision vuf,vus
@@ -1172,8 +1174,7 @@ c                                 compute free energy change of the rxn
       if (ifyn.eq.0) call cfluid (fo2,fs2)
  
       do j = 1, iphct
-         call gphase (j,gph)
-         gval = gval + vnu(j) * (gph + r * t * dlog(act(j)))
+         gval = gval + vnu(j) * (gphase(j) + r * t * dlog(act(j)))
       end do 
  
       gval = gval + vuf(1) * fh2o*r*t + vuf(2)*fco2*r*t

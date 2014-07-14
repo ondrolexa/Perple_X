@@ -2393,7 +2393,9 @@ c----------------------------------------------------------------------
 
       integer i
  
-      double precision xf(2),fo2,fs2,gph
+      double precision xf(2), fo2, fs2, gphase
+
+      external gphase
 
       double precision thermo,uf,us 
       common/ cst1 /thermo(k4,k10),uf(2),us(h5)
@@ -2416,19 +2418,24 @@ c                           systems.
       call cfluid (fo2,fs2)
 
       if (idfl.ne.0) then
-         call gphase (idfl,gph)
-         uf(idfl) = gph + r * t * f(idfl)
+   
+         uf(idfl) = gphase (idfl) + r * t * f(idfl)
+
       else
+
          xf(1) = 1d0 - xco2
          xf(2) = xco2
  
          do i = 1, 2
             if (iff(i).ne.0) then 
                if (xf(i).lt.1d-38) then 
+
                   uf(i) = -1d10
+
                else 
-                  call gphase (i,gph)
-                  uf(i) = gph + r * t * f(i)
+
+                  uf(i) = gphase (i) + r * t * f(i)
+
                end if
             end if 
          end do
@@ -2451,7 +2458,9 @@ c----------------------------------------------------------------------
  
       integer i,j,k,l,ict,ll,i1,id
 
-      double precision uss(h6),fo2,gph,u
+      double precision uss(h6),fo2,gph,u, gphase
+
+      external gphase
 
       double precision g
       common/ cst2 /g(k1)
@@ -2492,7 +2501,7 @@ c                                 and the corresponding chemical potentials
          do j = 1, ict
 
             k = ids(i,j)
-            call gphase (k,gph)
+            gph = gphase (k)
             
             if (ifct.gt.0) then 
                do l = 1, 2
@@ -3040,7 +3049,9 @@ c-----------------------------------------------------------------------
 
       integer j
 
-      double precision gval,gproj
+      double precision gval, gphase
+
+      external gphase
 
       integer iffr,isr
       double precision vuf,vus
@@ -3070,7 +3081,7 @@ c                                 compute free energy change of the rxn
 10    gval = 0d0
 
       do j = 1, ivct
-         gval = gval + vnu(j) * gproj(idr(j))
+         gval = gval + vnu(j) * gphase (idr(j))
       end do 
 
       end
@@ -3193,22 +3204,22 @@ c id indicates a static pseudocompound, use ginc for dynamic compound
 c-----------------------------------------------------------------------
       implicit none
 
-      double precision dt,dp,gee
+      double precision dt, dp, gphase
+
+      external gphase
 
       integer id
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
-
+c----------------------------------------------------------------------
       p = p + dp 
       t = t + dt 
 
-      call gphase (id,gee)
+      ginc0 = gphase (id)
 
       p = p - dp 
       t = t - dt
-
-      ginc0 = gee 
 
       end 
 

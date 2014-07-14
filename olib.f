@@ -721,8 +721,11 @@ c-----------------------------------------------------------------------
 
       integer k,id
 
-      double precision omega, gproj, hpmelt, gmelt, gfluid, gzero, g, 
-     *                 dg, gex, slvmlt, gfesi
+      double precision omega, hpmelt, gmelt, gfluid, gzero, g, 
+     *                 dg, gex, slvmlt, gfesi, gphase
+
+      external gphase, omega, hpmelt, gmelt, gfluid, gzero, gex, slvmlt,
+     *         gfesi
 
       integer jend
       common/ cxt23 /jend(h9,k12)
@@ -748,8 +751,7 @@ c                                 model type
 c----------------------------------------------------------------------
       if (id.lt.0) then 
 
-         call gphase (-id,g)
-         gsol = g
+         gsol = gphase (-id)
 
       else 
 
@@ -767,7 +769,7 @@ c                                 add entropy and excess contributions
             g = g - t * omega(id,y) + gex(id,y)
 c                                 get mechanical mixture contribution
             do k = 1, mstot(id) 
-               g = g + y(k) * gproj (jend(id,2+k))
+               g = g + y(k) * gphase (jend(id,2+k))
             end do 
 
          else if (lrecip(id).and.lorder(id)) then 
@@ -780,7 +782,7 @@ c                                 get the speciation, excess and entropy effects
             do k = 1, lstot(id) 
 c                                 compute mechanical g from these z's, 
 c                                 specip adds a correction for the ordered species.
-               g = g + gproj(jend(id,2+k)) * p0a(k)
+               g = g + gphase (jend(id,2+k)) * p0a(k)
             end do 
 c                                 get the dqf, this assumes the independent reactants
 c                                 are not dqf'd. gex not neccessary as computed in specip
@@ -792,7 +794,7 @@ c                                 non-reciprocal speciation.
             do k = 1, lstot(id)  
                pa(k) = y(k)
                p0a(k) = y(k)
-               g = g + y(k) * gproj (jend(id,2+k))
+               g = g + y(k) * gphase (jend(id,2+k))
             end do 
 c                                 get the speciation energy effect
             call specis (dg,id)
@@ -809,7 +811,7 @@ c                                 convert y's to p's (p0a here).
             call y2p0 (id)
 
             do k = 1, lstot(id)
-               g = g + gproj (jend(id,2+k)) * p0a(k) 
+               g = g + gphase (jend(id,2+k)) * p0a(k) 
             end do 
 c                                 get the dqf
             call gdqf (id,g,p0a)
@@ -828,7 +830,7 @@ c                                 hp melt model
             g = g - t * hpmelt(id) + gex(id,y)
 c                                 get mechanical mixture contribution
             do k = 1, mstot(id)  
-               g = g + y(k) * gproj (jend(id,2+k))
+               g = g + y(k) * gphase (jend(id,2+k))
             end do 
 
          else if (ksmod(id).eq.25) then 
@@ -839,7 +841,7 @@ c                                 ghiorso pmelt model
             g = g - t * gmelt(id) + gex(id,y)
 c                                 get mechanical mixture contribution
             do k = 1, mstot(id)  
-               g = g + y(k) * gproj (jend(id,2+k))
+               g = g + y(k) * gphase (jend(id,2+k))
             end do 
 
          else if (ksmod(id).eq.26) then 
@@ -848,14 +850,14 @@ c                                 andreas salt model
             call hcneos (g,y(1),y(2),y(3))
 
             do k = 1, 3
-               g = g + y(k) * gproj (jend(id,2+k))
+               g = g + y(k) * gphase (jend(id,2+k))
             end do 
 
          else if (ksmod(id).eq.27) then 
 
             do k = 1, mstot(id)
                if (y(k).gt.0d0)   
-     *            g = g + (gproj(jend(id,2+k))+r*t*dlog(y(k)))*y(k) 
+     *            g = g + (gphase(jend(id,2+k)) + r*t*dlog(y(k)))*y(k) 
             end do 
 
          else if (ksmod(id).eq.28) then 
@@ -866,13 +868,13 @@ c                                 high T fo-fa-sio2 model
             g = g - t * slvmlt() + gex(id,y)
 c                                 get mechanical mixture contribution
             do k = 1, mstot(id)  
-               g = g + y(k) * gproj (jend(id,2+k))
+               g = g + y(k) * gphase (jend(id,2+k))
             end do 
 
          else if (ksmod(id).eq.29) then 
 c                                 -------------------------------------
 c                                 BCC Fe-Si Lacaze and Sundman
-            g = gfesi(y(1),gproj(jend(id,3)),gproj(jend(id,4)))
+            g = gfesi(y(1),gphase(jend(id,3)),gphase(jend(id,4)))
 
          else if (ksmod(id).eq.0) then 
 c                                 ------------------------------------
@@ -890,7 +892,7 @@ c                                 internal fluid eos
 
          end if 
 
-      gsol = g 
+         gsol = g 
 
       end if 
 
@@ -1201,7 +1203,9 @@ c-----------------------------------------------------------------------
 
       integer id
 
-      double precision gee, fo2, fs2
+      double precision gee, fo2, fs2, gphase
+ 
+      external gphase
 
       integer iff,idss,ifug,ifyn,isyn
       common/ cst10 /iff(2),idss(h5),ifug,ifyn,isyn
@@ -1219,9 +1223,8 @@ c-----------------------------------------------------------------------
       integer eos
       common/ cst303 /eos(k10)
 c-----------------------------------------------------------------------
-      call gphase (id,gee)
 
-      gee = gee + r * t * dlog(act(id))
+      gee = gphase (id) + r * t * dlog(act(id))
 
       if (ifyn.eq.0.and.eos(id).lt.100) then 
 c                                 this is a quick fix that will

@@ -180,9 +180,10 @@ c                                 calculations and remaining output
 
          else if (icopt.eq.1.or.icopt.eq.3) then                            
 c                                 phase diagram projection or mixed variable
-c                                 diagram
+c                                 diagram 
+
             istct = kphct 
-c
+
             call newhld (output)
 
          else if (icopt.eq.4) then 
@@ -757,8 +758,8 @@ c-------------------------------------------------------------------
       integer jasmbl,iasmbl
       common/ cst27  /jasmbl(j9),iasmbl(j9)
 
-      integer ipoint,imyn
-      common/ cst60 /ipoint,imyn
+      integer ipoint,kphct,imyn
+      common/ cst60 /ipoint,kphct,imyn
 
       character*8 vname,xname
       common/ csta2  /xname(k5),vname(l2)
@@ -870,8 +871,8 @@ c-----------------------------------------------------------------------
       double precision ctot
       common/ cst3   /ctot(k1)
 
-      integer ipoint,imyn
-      common/ cst60 /ipoint,imyn
+      integer ipoint,kphct,imyn
+      common/ cst60 /ipoint,kphct,imyn
 
       character*8 vname,xname
       common/ csta2  /xname(k5),vname(l2)
@@ -1413,8 +1414,8 @@ c-----------------------------------------------------------------------
       character*8 names
       common/ cst8 /names(k1)
 
-      integer ipoint,imyn
-      common/ cst60 /ipoint,imyn
+      integer ipoint,kphct,imyn
+      common/ cst60 /ipoint,kphct,imyn
 
       integer ic
       common/ cst42 /ic(k0)
@@ -2047,8 +2048,8 @@ c----------------------------------------------------------------------------
       integer hcp,id
       common/ cst52 /hcp,id(k7)
 
-      integer ipoint,imyn
-      common/ cst60 /ipoint,imyn
+      integer ipoint,kphct,imyn
+      common/ cst60 /ipoint,kphct,imyn
 
       double precision cp
       common/ cst12 /cp(k5,k1)
@@ -2325,8 +2326,8 @@ c                                 solution limits and stability
       integer ikp
       common/ cst61 /ikp(k1)
 
-      integer ipoint, imyn
-      common/ cst60 /ipoint,imyn
+      integer ipoint, imyn, kphct
+      common/ cst60 /ipoint,kphct,imyn
 c----------------------------------------------------------------------
       do k = 1, ntot
 
@@ -3219,7 +3220,9 @@ c-----------------------------------------------------------------------
 
       integer i,lphi,lchkl,j,ier
 
-      double precision gproj, gphi
+      double precision gphase, gphi
+
+      external gphase
 
       double precision g
       common/ cst2 /g(k1)
@@ -3238,10 +3241,11 @@ c-----------------------------------------------------------------------
       call uproj
 
       do i = 1, icp
-        b(i) = gproj(idv(i))
+        b(i) = gphase (idv(i))
       end do 
 
-      g(lphi) = gproj(lphi)
+      g(lphi) = gphase (lphi)
+
       lchkl = 0
 
       call subst (a,ipvt,icp,b,ier)
@@ -3973,7 +3977,9 @@ c-----------------------------------------------------------------------
 
       integer igo,i,j,ier
 
-      double precision gproj,dg
+      double precision gphase, dg
+
+      external gphase
 
       double precision delt,dtol,utol,ptol
       common/ cst87 /delt(l2),dtol,utol,ptol
@@ -3998,10 +4004,10 @@ c                                 compute energies:
       call uproj
 
       do i = 1, icp
-         b(i) = gproj(idv(i))
+         b(i) = gphase (idv(i))
       end do 
 
-      dg = gproj(idphi)
+      dg = gphase (idphi)
 c                                 solve for chemical potentials:
       call subst (a,ipvt,icp,b,ier)
 c                                 compute energy difference:

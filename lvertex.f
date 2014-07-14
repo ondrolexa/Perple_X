@@ -182,7 +182,7 @@ c                                 calculations and remaining output
 c                                 phase diagram projection or mixed variable
 c                                 diagram 
 
-            istct = kphct 
+c            istct = kphct 
 
             call newhld (output)
 
@@ -3220,7 +3220,9 @@ c-----------------------------------------------------------------------
 
       integer i,lphi,lchkl,j,ier
 
-      double precision gproj, gphi
+      double precision gphase, gphi
+
+      external gphase
 
       double precision g
       common/ cst2 /g(k1)
@@ -3239,10 +3241,11 @@ c-----------------------------------------------------------------------
       call uproj
 
       do i = 1, icp
-        b(i) = gproj(idv(i))
+        b(i) = gphase (idv(i))
       end do 
 
-      g(lphi) = gproj(lphi)
+      g(lphi) = gphase (lphi)
+
       lchkl = 0
 
       call subst (a,ipvt,icp,b,ier)
@@ -3974,7 +3977,9 @@ c-----------------------------------------------------------------------
 
       integer igo,i,j,ier
 
-      double precision gproj,dg
+      double precision gphase, dg
+
+      external gphase
 
       double precision delt,dtol,utol,ptol
       common/ cst87 /delt(l2),dtol,utol,ptol
@@ -3999,10 +4004,10 @@ c                                 compute energies:
       call uproj
 
       do i = 1, icp
-         b(i) = gproj(idv(i))
+         b(i) = gphase (idv(i))
       end do 
 
-      dg = gproj(idphi)
+      dg = gphase (idphi)
 c                                 solve for chemical potentials:
       call subst (a,ipvt,icp,b,ier)
 c                                 compute energy difference:
@@ -4353,7 +4358,11 @@ c                                 phase indexed by idphi.
 c                                 iflag=2 metastable with respect to
 c                                 multiple phases refine the
 c                                 search increment.
-         if (iflag.eq.1) goto 99
+         if (iflag.eq.1) then
+c                                 added 7/13/2014
+            if (v(ivd).ge.vmax(ivd)) v(ivd) = v(ivd) - ddv
+            goto 99
+         end if 
 c                                 check if search is in range:
          if (i.lt.3) then 
             if (v(ivd).ge.vmax(ivd).and.iflag.eq.0) cycle

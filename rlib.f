@@ -1150,18 +1150,40 @@ c                               not consist of just mobile components
 c                               the following is not executed by build:
 c                               if ichk ne 0 reject phases that consist entirely
 c                               of saturated components: 
-
       if (ichk.eq.0.or.ichk.eq.2) return
-c                               reject phases with null composition, in case
-c                               a user puts one in by accident
+c                               phases with null composition, saved if ichk = 4
+c                               otherwise rejected.
       tot = 0d0
 
       do j = 1, icp
          tot = tot + comp(ic(j))
       end do 
 
-      if ((tot.eq.0d0.and.ichk.ne.4).or.
-     *    (tot.ne.0d0.and.ichk.eq.4)) goto 90
+      if (tot.eq.0d0.and.ichk.ne.4) then
+     
+         goto 90
+
+      else if (tot.ne.0d0.and.ichk.eq.4) then
+
+         goto 90
+
+      else if (ichk.eq.4.and.tot.eq.0d0) then 
+c                               reject a null phase if it contains only 
+c                               saturated components, since these phases
+c                               are already saved in the sat list.
+         tot = 0d0
+
+         do j = icp + 1, icp + ifct
+            tot = tot + comp(ic(j))
+         end do 
+
+         do j = icp + ifct + isat + 1, icp + ifct + isat + jmct
+            tot = tot + comp(ic(j))
+         end do
+
+         if (tot.eq.0d0) goto 90
+
+      end if 
 
       return
 
@@ -2158,7 +2180,7 @@ c the state variable v(i), goes to infinity.
 c---------------------------------------------------------------------
       implicit none
 
-      double precision vi,delv,del,u,gr,b
+      double precision vi, delv, del, u, gr, b, xg
 
       integer i,j,ier
  
@@ -2201,17 +2223,22 @@ c                                 phase composition special case:
          call incdep (i)
 
          call grxn (dgr) 
+         xg = dgr
          dgr = dgr - gr
 
          if (dgr.eq.0d0) exit
  
          delv = gr*del/dgr
 
-         if (delv/ddv(i).gt.1d0) then 
-            v(i) = vi - del
-            del = del*ddv(i)/delv/2d0
-            if (del/delt(i).lt.1d-6) goto 30 
-            cycle
+         if (dabs(delv/ddv(i)).gt.1d0) then
+ 
+c            v(i) = vi - del
+c            del = del*ddv(i)/delv/2d0
+c            if (dabs(del/delt(i)).lt.1d-6) goto 30 
+c            cycle
+c                                  changed 7/13/2014
+             delv = dabs(delv)/delv * ddv(i)
+
          end if 
 
          vi = vi - delv
@@ -2520,7 +2547,9 @@ c---------------------------------------------------------------------
 
       integer ilam,id,jd,i,j,k
   
-      double precision tm(m7,m6),z(9),g1,gph,g0,s0
+      double precision tm(m7,m6), z(9), g1, g0, s0, gphase
+
+      external gphase
 
       double precision therdi, therlm
       common/ cst203 /therdi(m8,m9),therlm(m7,m6,k9)
@@ -2587,11 +2616,10 @@ c                              for call to gphase
             lct(id) = i - 1   
 c                             -s at trt, this should be 
 c                             changed to centered rel diff:
-            call gphase (id,g1)
+            g1 = gphase (id)
             t = t + 1d-3
 
-            call gphase (id,gph)
-            tm(3,i) =  (gph - g1)/1d-3
+            tm(3,i) =  (gphase(id) - g1)/1d-3
 
             g0 = therlm(12,i,jd)
             s0 = therlm(3,i,jd)
@@ -6823,7 +6851,7 @@ c                                 make y2p array
 
       end 
 
-      subroutine gphase (id,gph)
+      double precision function gphase (id)
 c-----------------------------------------------------------------------
 c gphase computes the gibbs free energy of a compound identified by index id.
 c gphase does not assume that the properties of a pseudocompound endmembers
@@ -6835,7 +6863,7 @@ c-----------------------------------------------------------------------
 
       integer k,id,ids
 
-      double precision gph,gzero,dg,x0,gerk,x1(5)
+      double precision gzero, dg, x0, gerk, x1(5), gph
 
       external gzero, gerk
 
@@ -6980,6 +7008,8 @@ c                              for van laar get fancier excess function
          end if 
 
       end if 
+
+      gphase = gph
 
       end
 
@@ -7595,7 +7625,11 @@ c                                 get mechanical mixture contribution
 c                                 -------------------------------------
 c                                 Nastia's version of BCC/FCC Fe-Si-C Lacaze and Sundman
 c                                 this model has to be called ahead of the standard models
-c                                 because it sets lrecip(id) = true. 
+c                                 because it sets lrecip(id) = true.
+
+c                                 initialize p's
+            call y2p0 (id)
+
             gg =  gfesic (y(1),y(3),y(4),
      *                    g(jend(id,3)),g(jend(id,4)),
      *                    g(jend(id,5)),g(jend(id,6)),ksmod(id))
@@ -8026,44 +8060,6 @@ c----------------------------------------------------------------------
       end do  
 
       end 
-
-      double precision function gproj (id)
-c-----------------------------------------------------------------------
-c gproj computes the projected molar free energy of the
-c phase with index id.
-c-----------------------------------------------------------------------
-      implicit none
- 
-      include 'perplex_parameters.h'
-
-      integer id
-
-      double precision gph
-
-      double precision thermo,uf,us
-      common/ cst1 /thermo(k4,k10),uf(2),us(h5)
-
-      integer icomp,istct,iphct,icp
-      common/ cst6 /icomp,istct,iphct,icp
-
-      double precision cp
-      common/ cst12 /cp(k5,k1)
-
-      integer iff,idss,ifug,ifyn,isyn
-      common/ cst10  /iff(2),idss(h5),ifug,ifyn,isyn
-
-      integer ifct,idfl
-      common/ cst208 /ifct,idfl
-
-      integer ids,isct,icp1,isat,io2
-      common/ cst40 /ids(h5,h6),isct(h5),icp1,isat,io2
-
-c-----------------------------------------------------------------------
-      call gphase (id,gph)
-
-      gproj = gph
-
-      end
 
       subroutine setw (id)
 c---------------------------------------------------------------------
