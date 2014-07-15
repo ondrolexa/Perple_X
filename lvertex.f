@@ -3220,9 +3220,9 @@ c-----------------------------------------------------------------------
 
       integer i,lphi,lchkl,j,ier
 
-      double precision gphase, gphi
+      double precision gproj, gphi
 
-      external gphase
+      external gproj
 
       double precision g
       common/ cst2 /g(k1)
@@ -3241,10 +3241,10 @@ c-----------------------------------------------------------------------
       call uproj
 
       do i = 1, icp
-        b(i) = gphase (idv(i))
+        b(i) = gproj (idv(i))
       end do 
 
-      g(lphi) = gphase (lphi)
+      g(lphi) = gproj (lphi)
 
       lchkl = 0
 
@@ -3977,9 +3977,9 @@ c-----------------------------------------------------------------------
 
       integer igo,i,j,ier
 
-      double precision gphase, dg
+      double precision gproj, dg
 
-      external gphase
+      external gproj
 
       double precision delt,dtol,utol,ptol
       common/ cst87 /delt(l2),dtol,utol,ptol
@@ -4004,10 +4004,10 @@ c                                 compute energies:
       call uproj
 
       do i = 1, icp
-         b(i) = gphase (idv(i))
+         b(i) = gproj (idv(i))
       end do 
 
-      dg = gphase (idphi)
+      dg = gproj (idphi)
 c                                 solve for chemical potentials:
       call subst (a,ipvt,icp,b,ier)
 c                                 compute energy difference:

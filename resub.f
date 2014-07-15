@@ -2712,9 +2712,9 @@ c-----------------------------------------------------------------------
       integer i, j, k, id
 
       double precision dg1, gval, dg, gzero, g0(k5), gex, x0, gfesi,
-     *                 gfesic, gfecr1, gerk, x1(5)
+     *                 gfesic, gfecr1, gerk, x1(5), gproj
 
-      external gerk, gzero, gex, gfesi, gfesic 
+      external gerk, gzero, gex, gfesi, gfesic, gproj
 
       integer icomp,istct,iphct,icp
       common/ cst6 /icomp,istct,iphct,icp
@@ -2775,9 +2775,7 @@ c                                 of the projected components.
 c                                 first do the endmembers:
       do id = kphct+1, ipoint
 
-         call gcpd(id,gval)
-
-         g(id) = gval 
+         g(id) = gproj (id) 
 
       end do 
 c                                 now do solutions:
@@ -2911,7 +2909,7 @@ c                                 add the real excess energy
          else if (ksmod(i).eq.23) then
 c                                 toop melt:
             do j = 1, nstot(i)
-               g0(j) = gzero(jend(i,2+j))
+               g0(j) = gzero (jend(i,2+j))
             end do 
 
             do j = 1, jend(i,2)
@@ -3049,9 +3047,9 @@ c-----------------------------------------------------------------------
 
       integer j
 
-      double precision gval, gphase
+      double precision gval, gproj
 
-      external gphase
+      external gproj
 
       integer iffr,isr
       double precision vuf,vus
@@ -3081,7 +3079,7 @@ c                                 compute free energy change of the rxn
 10    gval = 0d0
 
       do j = 1, ivct
-         gval = gval + vnu(j) * gphase (idr(j))
+         gval = gval + vnu(j) * gproj (idr(j))
       end do 
 
       end

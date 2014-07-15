@@ -182,7 +182,7 @@ c    *         -0.3213822427D7 / t + 0.6464888248D6 - 0.1403012026D3*t
 
       end 
 
-      recursive subroutine gcpd (id,gval)
+      recursive double precision function gcpd (id)
 c-----------------------------------------------------------------------
 c gcpd computes the gibbs free energy of a compound identified by
 c the arguement 'id' from the thermochemical parameters stored
@@ -243,15 +243,6 @@ c---------------------------------------------------------------------
       external vdpbm3, gsixtr, gstxgi, gmake, gkomab, gstxlq, glacaz, 
      *                 hsfch4, gmet, gterm2
 
-      double precision f
-      common/ cst11 /f(2)
-
-      integer jfct,jmct,jprct
-      common/ cst307 /jfct,jmct,jprct
-
-      integer iff,idss,ifug,ifyn,isyn
-      common/ cst10  /iff(2),idss(h5),ifug,ifyn,isyn
-
       integer ltyp,lct,lmda,idis
       common/ cst204 /ltyp(k10),lct(k10),lmda(k10),idis(k10)
 
@@ -264,9 +255,6 @@ c---------------------------------------------------------------------
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 
-      double precision mu
-      common/ cst39 /mu(i6)
-
       integer make
       common / cst335 /make(k10)
 
@@ -276,8 +264,8 @@ c---------------------------------------------------------------------
       integer ifp
       common/ cxt32 /ifp(k1)
 
-      double precision vnumu
-      common/ cst44 /vnumu(i6,k10)
+      double precision f
+      common/ cst11 /f(2)
 
       integer iopt
       logical lopt
@@ -286,21 +274,6 @@ c---------------------------------------------------------------------
 
       double precision y,g,v
       common / cstcoh /y(nsp),g(nsp),v(nsp)
-
-      integer icomp,istct,iphct,icp
-      common/ cst6 /icomp,istct,iphct,icp
-
-      integer ifct,idfl
-      common/ cst208 /ifct,idfl
-
-      integer ids,isct,icp1,isat,io2
-      common/ cst40 /ids(h5,h6),isct(h5),icp1,isat,io2
-
-      double precision cp
-      common/ cst12 /cp(k5,k1)
-
-      integer ipoint,kphct,imyn
-      common/ cst60 /ipoint,kphct,imyn
 
       save kt,trv,ins,kns,iwarn,oldid 
       data kt,trv,ins,kns,iwarn,oldid/0d0,1673.15d0,14,15,0,0/
@@ -616,38 +589,10 @@ c                                 o
          end if          
 
       end if
-c                                 thermodynamic projections
-999   if (id.gt.kphct.and.id.le.ipoint) then
-c999   if (id.ge.istct) then
-
-         ndu = 0d0
-c                                 mobile components
-         do j = 1, jmct      
-            ndu = ndu - vnumu(j,id) * mu(j)
-         end do
-c                                 if istct > 0 must be some saturated
-c                                 components
-         if (istct.gt.1) then 
-c                                 this is a screw up solution
-c                                 necessary cause uf(1) and uf(2)
-c                                 are allocated independent of ifct!
-            if (ifct.gt.0) then 
-               do j = 1, 2
-                  if (iff(j).ne.0) ndu = ndu - cp(iff(j),id)*uf(j)
-               end do 
-            end if 
-
-            do j = 1, isat
-               ndu = ndu - cp(icp+j,id) * us(j)
-            end do 
-
-        end if 
-
-        gval = gval + ndu
-
-      end if 
 c                                 kill melt endmembers if T < T_melt 
-      if (ifp(id).lt.0.and.t.lt.nopt(20)) gval = gval + 1d8
+999   if (ifp(id).lt.0.and.t.lt.nopt(20)) gval = gval + 1d8
+
+      gcpd = gval
 
       end
 
@@ -2729,7 +2674,9 @@ c-----------------------------------------------------------------------
 
       integer i
        
-      double precision gref, xp
+      double precision gref, xp, gcpd
+
+      external gcpd
 
       double precision v,tr,pr,r,ps
       common/ cst5  /v(l2),tr,pr,r,ps
@@ -2757,12 +2704,12 @@ c                                 an activity.
 c                                 fugacity
                   xp = v(1)
                   v(1) = pr
-                  call gcpd (idaf(i),gref)
+                  gref = gcpd (idaf(i))
                   v(1) = xp
 
                else 
 c                                 activity
-                  call gcpd (idaf(i),gref)
+                  gref = gcpd (idaf(i))
 
                end if 
 
@@ -5161,7 +5108,9 @@ c-----------------------------------------------------------------------
 
       integer i, id, jd
 
-      double precision g, dg
+      double precision g, dg, gcpd
+ 
+      external gcpd
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -5181,8 +5130,7 @@ c-----------------------------------------------------------------------
 c                                compute the sum of the component g's
       do i = 1, mknum(jd)
 
-         call gcpd (mkind(jd,i),dg)
-         g = g + mkcoef(jd,i)*dg 
+         g = g + mkcoef(jd,i) * gcpd (mkind(jd,i))
 
       end do 
 c                                add the dqf correction
@@ -6851,7 +6799,85 @@ c                                 make y2p array
 
       end 
 
-      double precision function gphase (id)
+      recursive double precision function gproj (id)
+c-----------------------------------------------------------------------
+c gproj - computes projected free energy of phase id. uproj must be 
+c called prior to any call to gproj. 
+c-----------------------------------------------------------------------
+      implicit none
+ 
+      include 'perplex_parameters.h'
+
+      integer id,j
+
+      double precision gphase, ndu
+
+      external gphase
+
+      integer jfct,jmct,jprct
+      common/ cst307 /jfct,jmct,jprct
+
+      integer iff,idss,ifug,ifyn,isyn
+      common/ cst10  /iff(2),idss(h5),ifug,ifyn,isyn
+
+      double precision thermo,uf,us
+      common/ cst1 /thermo(k4,k10),uf(2),us(h5)
+
+      double precision vnumu
+      common/ cst44 /vnumu(i6,k10)
+
+      integer icomp,istct,iphct,icp
+      common/ cst6 /icomp,istct,iphct,icp
+
+      integer ifct,idfl
+      common/ cst208 /ifct,idfl
+
+      integer ids,isct,icp1,isat,io2
+      common/ cst40 /ids(h5,h6),isct(h5),icp1,isat,io2
+
+      double precision cp
+      common/ cst12 /cp(k5,k1)
+
+      integer ipoint,kphct,imyn
+      common/ cst60 /ipoint,kphct,imyn
+
+      double precision mu
+      common/ cst39 /mu(i6)
+c--------------------------------------------------------------------- 
+      gproj = gphase(id)
+
+      ndu = 0d0 
+
+      if (id.le.ipoint) then 
+c                                 mobile components
+         do j = 1, jmct      
+            ndu = ndu - vnumu(j,id) * mu(j)
+         end do
+c                                 if istct > 0 must be some saturated
+c                                 components
+         if (istct.gt.1) then 
+c                                 this is a screw up solution
+c                                 necessary cause uf(1) and uf(2)
+c                                 are allocated independent of ifct!
+            if (ifct.gt.0) then 
+               do j = 1, 2
+                  if (iff(j).ne.0) ndu = ndu - cp(iff(j),id)*uf(j)
+               end do 
+            end if 
+
+            do j = 1, isat
+               ndu = ndu - cp(icp+j,id) * us(j)
+            end do 
+
+         end if 
+
+         gproj = gproj + ndu
+
+      end if 
+
+      end
+
+      recursive double precision function gphase (id)
 c-----------------------------------------------------------------------
 c gphase computes the gibbs free energy of a compound identified by index id.
 c gphase does not assume that the properties of a pseudocompound endmembers
@@ -6863,9 +6889,9 @@ c-----------------------------------------------------------------------
 
       integer k,id,ids
 
-      double precision gzero, dg, x0, gerk, x1(5), gph
+      double precision gzero, dg, x0, gerk, x1(5), gph, gproj, gcpd
 
-      external gzero, gerk
+      external gzero, gerk, gproj, gcpd
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -6901,7 +6927,7 @@ c----------------------------------------------------------------------
  
       if (id.le.ipoint) then
 c                                 phase is an endmember compound
-         call gcpd (id,gph)
+         gph = gcpd (id)
 
       else if (lorder(ids).and.lrecip(ids)) then 
 c                                 reciprocal solution speciation model 
@@ -6921,8 +6947,7 @@ c                                 get endmember dqf's
          gph = gph + dg 
 c                                 get gmech
          do k = 1, lstot(ids)
-            call gcpd (jend(ids,2+k),dg)
-            gph = gph + dg * p0a(k) 
+            gph = gph + gproj (jend(ids,2+k)) * p0a(k) 
          end do 
 
       else if (lorder(ids)) then
@@ -6932,8 +6957,7 @@ c                                 get gmech
          do k = 1, lstot(ids)
             p0a(k) = sxs(ixp(id)+k)
             pa(k) = p0a(k)
-            call gcpd (jend(ids,2+k),dg)
-            gph = gph + dg*p0a(k)
+            gph = gph +  gproj (jend(ids,2+k)) * p0a(k)
          end do 
 c                                 compute margules coefficients
          call setw (ids) 
@@ -6950,7 +6974,7 @@ c                              and/or dqf corrections:
             call fexces (id,gph)
 c                              excess props don't include vdp:
             do k = 1, nstot(ids) 
-               gph = gph + gzero(jend(ids,2+k))*sxs(ixp(id)+k)
+               gph = gph + gzero (jend(ids,2+k)) * sxs(ixp(id)+k)
             end do 
 
          else if (ifp(id).ne.27) then 
@@ -6971,7 +6995,7 @@ c                              and/or dqf corrections:
 
                do k = 1, 5
                   x1(k) = sxs(ixp(id)+k)
-                  gph = gph + gzero(jend(ids,2+k))*x1(k)
+                  gph = gph + gzero(jend(ids,2+k)) * x1(k)
                end do 
 
                gph = gph + gerk (x1)
@@ -6984,8 +7008,7 @@ c                              and/or dqf corrections:
 c                              compute mech mix G for 
 c                              all models except fluid 
             do k = 1, nstot(ids) 
-               call gcpd (jend(ids,2+k),dg)
-               gph = gph + dg*sxs(ixp(id)+k)
+               gph = gph +  gproj (jend(ids,2+k)) * sxs(ixp(id)+k)
             end do 
 
          else 
