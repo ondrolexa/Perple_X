@@ -178,11 +178,10 @@ c                                 calculate composition phase diagrams
 c                                 calculations and remaining output
             call chmcal (output)
 
-         else if (icopt.eq.1.or.icopt.eq.3) then                            
+         else if (icopt.eq.1.or.icopt.eq.3) then                     
 c                                 phase diagram projection or mixed variable
 c                                 diagram 
-
-c            istct = kphct 
+c            istct = kphct + 1
 
             call newhld (output)
 

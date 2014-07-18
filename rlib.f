@@ -233,7 +233,7 @@ c---------------------------------------------------------------------
  
       include 'perplex_parameters.h'
 
-      integer id,j,ins(1),kns(1),iwarn,oldid
+      integer id, ins(1), kns(1), iwarn, oldid
 
       double precision ialpha, vt, trv, pth, vdp, ndu, vdpbm3, gsixtr, 
      *                 gstxgi, fs2, fo2, kt, gval, gmake, gkomab, kp,
@@ -2492,9 +2492,9 @@ c---------------------------------------------------------------------
 
       integer ilam,id,jd,i,j,k
   
-      double precision tm(m7,m6), z(9), g1, g0, s0, gphase
+      double precision tm(m7,m6), z(9), g1, g0, s0, gcpd
 
-      external gphase
+      external gcpd
 
       double precision therdi, therlm
       common/ cst203 /therdi(m8,m9),therlm(m7,m6,k9)
@@ -2561,10 +2561,10 @@ c                              for call to gphase
             lct(id) = i - 1   
 c                             -s at trt, this should be 
 c                             changed to centered rel diff:
-            g1 = gphase (id)
+            g1 = gcpd (id)
             t = t + 1d-3
 
-            tm(3,i) =  (gphase(id) - g1)/1d-3
+            tm(3,i) =  (gcpd(id) - g1)/1d-3
 
             g0 = therlm(12,i,jd)
             s0 = therlm(3,i,jd)
@@ -5108,7 +5108,7 @@ c-----------------------------------------------------------------------
 
       integer i, id, jd
 
-      double precision g, dg, gcpd
+      double precision g, gcpd
  
       external gcpd
 
@@ -6810,9 +6810,9 @@ c-----------------------------------------------------------------------
 
       integer id,j
 
-      double precision gphase, ndu
+      double precision gphase, ndu, gcpd
 
-      external gphase
+      external gphase, gcpd 
 
       integer jfct,jmct,jprct
       common/ cst307 /jfct,jmct,jprct
@@ -6844,11 +6844,9 @@ c-----------------------------------------------------------------------
       double precision mu
       common/ cst39 /mu(i6)
 c--------------------------------------------------------------------- 
-      gproj = gphase(id)
-
-      ndu = 0d0 
-
       if (id.le.ipoint) then 
+
+         ndu = 0d0 
 c                                 mobile components
          do j = 1, jmct      
             ndu = ndu - vnumu(j,id) * mu(j)
@@ -6871,7 +6869,11 @@ c                                 are allocated independent of ifct!
 
          end if 
 
-         gproj = gproj + ndu
+         gproj = gcpd(id) + ndu
+
+      else 
+
+         gproj = gphase(id)
 
       end if 
 
@@ -12359,6 +12361,9 @@ c                                 model type
 
       integer ineg
       common/ cst91 /ineg(h9,m15)
+
+      integer isec,icopt,ifull,imsg,io3p
+      common/ cst103 /isec,icopt,ifull,imsg,io3p
 c----------------------------------------------------------------------
 c                              eliminate end-member compositions 
       do l = 1, mstot(im)
@@ -12620,11 +12625,25 @@ c                              composition vector
 c                                 check if the phase consists
 c                                 entirely of saturated components:
       if (ctotal.eq.0d0) then
+c                                 only allowed for unconstrained minimization
+         if (icopt.ge.5) then 
+
+            call warn (55,cp(l,iphct),l,tname)
+
+            iphct = iphct - 1
+
+            return
+            
+         end if 
+
          call satsrt 
 c                                 to prevent nan's in the compositional coordinates:
          ctot(iphct) = 1d0
+
       else
+
          ctot(iphct) = ctotal
+
       end if 
 c                                 compute ideal configurational negentropy:
       if (order) then

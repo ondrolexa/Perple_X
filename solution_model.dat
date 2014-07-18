@@ -1579,14 +1579,14 @@ kspL     zr8L     q8L
                                     | Ab-H2O etc etc; these numbers seem about right
                                     | for pelite melting.
 
-0.0 0.8  0.1 0                      | range and resolution of X(h2o), 0 => cartesian subdivision  
-0.0 0.1  0.1 1                      | range and resolution of X(fo),  1 => asymmetric subdivision   
-0.0 0.1  0.1 1                      | range and resolution of X(fa),  1 => asymmetric subdivision   
-0.0 0.4  0.1 0                      | range and resolution of X(ab),  0 => cartesian subdivision   
-0.0 0.2  0.1 1                      | range and resolution of X(sil), 1 => asymmetric subdivision  
-0.0 0.1  0.1 1                      | range and resolution of X(an),  1 => asymmetric subdivision   
-0.0 0.4  0.1 0                      | range and resolution of X(ksp), 0 => cartesian subdivision
-0.0 0.2  0.1 0                      | range and resolution of X(zr),  0 => cartesian subdivision
+0.0 1  0.1 0                      | range and resolution of X(h2o), 0 => cartesian subdivision  
+0.0 1  0.1 0                      | range and resolution of X(fo),  1 => asymmetric subdivision   
+0.0 1  0.1 0                      | range and resolution of X(fa),  1 => asymmetric subdivision   
+0.0 1  0.1 0                      | range and resolution of X(ab),  0 => cartesian subdivision   
+0.0 1  0.1 0                      | range and resolution of X(sil), 1 => asymmetric subdivision  
+0.0 1  0.1 0                      | range and resolution of X(an),  1 => asymmetric subdivision   
+0.0 1  0.1 0                      | range and resolution of X(ksp), 0 => cartesian subdivision
+0.0 1  0.1 0                      | range and resolution of X(zr),  0 => cartesian subdivision
 
 begin_excess_function 
                                     | the excess parameters used for the haplo-

@@ -17,7 +17,7 @@ c----------------------------------------------------------------------
       implicit none
 
       write (*,'(/,a)') 
-     *      'Perple_X version 6.7.0, source updated July 2, 2014.'
+     *      'Perple_X version 6.7.1, source updated July 18, 2014.'
 
       end
 
@@ -2277,6 +2277,8 @@ c----------------------------------------------------------------------
          write (*,52) char
       else if (ier.eq.53) then 
          write (*,53) realv
+      else if (ier.eq.55) then 
+         write (*,55) char
       else if (ier.eq.58) then
          write (*,58)
       else if (ier.eq.60) then
@@ -2524,6 +2526,12 @@ c     *          ' (SWASH, see program documentation Eq 2.3)',/)
 54    format (/,'**warning ver054** property choices 25, 36, and 38 are'
      *         ,' not allowed in combination',/,'with other property '
      *         ,'choices',/)
+55    format (/,'**warning ver055** a possible composition of solution '
+     *         ,a,' lies within the',/,'saturated component composition'
+     *         ,' space. the composition will not be considered.',/,
+     *         'to eliminate this problem relax the component ',
+     *         'saturation constraints',/,'or use unconstrained free ',
+     *         'energy minimization.',/)
 58    format (/,'**warning ver058** wway, the equilibrium of the '
      *         ,'following reaction',/,' is inconsistent with the ',
      *          'invariant equilibrium.',/)

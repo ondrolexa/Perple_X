@@ -2393,9 +2393,9 @@ c----------------------------------------------------------------------
 
       integer i
  
-      double precision xf(2), fo2, fs2, gphase
+      double precision xf(2), fo2, fs2, gcpd
 
-      external gphase
+      external gcpd
 
       double precision thermo,uf,us 
       common/ cst1 /thermo(k4,k10),uf(2),us(h5)
@@ -2419,7 +2419,7 @@ c                           systems.
 
       if (idfl.ne.0) then
    
-         uf(idfl) = gphase (idfl) + r * t * f(idfl)
+         uf(idfl) = gcpd (idfl) + r * t * f(idfl)
 
       else
 
@@ -2434,7 +2434,7 @@ c                           systems.
 
                else 
 
-                  uf(i) = gphase (i) + r * t * f(i)
+                  uf(i) = gcpd (i) + r * t * f(i)
 
                end if
             end if 
@@ -2458,7 +2458,7 @@ c----------------------------------------------------------------------
  
       integer i,j,k,l,ict,ll,i1,id
 
-      double precision uss(h6),fo2,gph,u, gphase
+      double precision uss(h6), fo2, gph, u, gphase
 
       external gphase
 
@@ -2505,7 +2505,7 @@ c                                 and the corresponding chemical potentials
             
             if (ifct.gt.0) then 
                do l = 1, 2
-c                                 legendre transform for saturared phase
+c                                 legendre transform for saturated phase
 c                                 component potentials
                   if (iff(l).ne.0) gph = gph - cp(iff(l),k)*uf(l)
                end do 
