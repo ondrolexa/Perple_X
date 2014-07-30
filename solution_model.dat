@@ -1345,7 +1345,7 @@ fafchl_i = 1 afchl  + 6/5 daph  - 6/5 clin
 mame_i   = 1 ames   + 4/5 mnchl - 4/5 clin
 mafchl_i = 1 afchl  + 6/5 mnchl - 6/5 clin
 
-1 1 1 0 0 0 0 0 0            |endmember flags
+0 0 0 0 0 0 0 0 0            |endmember flags
 
                              | subdivision model for (ternary) site 1 (T2):
 0. 1. .1 0                   | range and resolution of X(Al_Si), imod = 0 -> cartesian subdivision

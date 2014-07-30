@@ -182,7 +182,7 @@ c    *         -0.3213822427D7 / t + 0.6464888248D6 - 0.1403012026D3*t
 
       end 
 
-      recursive double precision function gcpd (id)
+      recursive double precision function gcpd (id,proj)
 c-----------------------------------------------------------------------
 c gcpd computes the gibbs free energy of a compound identified by
 c the arguement 'id' from the thermochemical parameters stored
@@ -233,7 +233,9 @@ c---------------------------------------------------------------------
  
       include 'perplex_parameters.h'
 
-      integer id, ins(1), kns(1), iwarn, oldid
+      integer id, ins(1), kns(1), iwarn, oldid, j
+
+      logical proj
 
       double precision ialpha, vt, trv, pth, vdp, ndu, vdpbm3, gsixtr, 
      *                 gstxgi, fs2, fo2, kt, gval, gmake, gkomab, kp,
@@ -274,6 +276,15 @@ c---------------------------------------------------------------------
 
       double precision y,g,v
       common / cstcoh /y(nsp),g(nsp),v(nsp)
+
+      integer jfct,jmct,jprct
+      common/ cst307 /jfct,jmct,jprct
+
+      double precision vnumu
+      common/ cst44 /vnumu(i6,k10)
+
+      double precision mu
+      common/ cst39 /mu(i6)
 
       save kt,trv,ins,kns,iwarn,oldid 
       data kt,trv,ins,kns,iwarn,oldid/0d0,1673.15d0,14,15,0,0/
@@ -591,6 +602,14 @@ c                                 o
       end if
 c                                 kill melt endmembers if T < T_melt 
 999   if (ifp(id).lt.0.and.t.lt.nopt(20)) gval = gval + 1d8
+c                                 do legendre transform if proj
+      if (proj) then 
+c                                 mobile components
+         do j = 1, jmct      
+            gval = gval - vnumu(j,id) * mu(j)
+         end do
+
+      end if 
 
       gcpd = gval
 
@@ -2561,10 +2580,10 @@ c                              for call to gphase
             lct(id) = i - 1   
 c                             -s at trt, this should be 
 c                             changed to centered rel diff:
-            g1 = gcpd (id)
+            g1 = gcpd (id,.false.)
             t = t + 1d-3
 
-            tm(3,i) =  (gcpd(id) - g1)/1d-3
+            tm(3,i) =  (gcpd (id,.false.) - g1)/1d-3
 
             g0 = therlm(12,i,jd)
             s0 = therlm(3,i,jd)
@@ -2704,12 +2723,12 @@ c                                 an activity.
 c                                 fugacity
                   xp = v(1)
                   v(1) = pr
-                  gref = gcpd (idaf(i))
+                  gref = gcpd (idaf(i),.false.)
                   v(1) = xp
 
                else 
 c                                 activity
-                  gref = gcpd (idaf(i))
+                  gref = gcpd (idaf(i),.false.)
 
                end if 
 
@@ -5130,7 +5149,7 @@ c-----------------------------------------------------------------------
 c                                compute the sum of the component g's
       do i = 1, mknum(jd)
 
-         g = g + mkcoef(jd,i) * gcpd (mkind(jd,i))
+         g = g + mkcoef(jd,i) * gcpd (mkind(jd,i),.false.)
 
       end do 
 c                                add the dqf correction
@@ -6810,7 +6829,7 @@ c-----------------------------------------------------------------------
 
       integer id,j
 
-      double precision gphase, ndu, gcpd
+      double precision gphase, gcpd
 
       external gphase, gcpd 
 
@@ -6840,17 +6859,10 @@ c-----------------------------------------------------------------------
 
       integer ipoint,kphct,imyn
       common/ cst60 /ipoint,kphct,imyn
-
-      double precision mu
-      common/ cst39 /mu(i6)
 c--------------------------------------------------------------------- 
       if (id.le.ipoint) then 
 
-         ndu = 0d0 
-c                                 mobile components
-         do j = 1, jmct      
-            ndu = ndu - vnumu(j,id) * mu(j)
-         end do
+         gproj = gcpd (id,.true.)
 c                                 if istct > 0 must be some saturated
 c                                 components
          if (istct.gt.1) then 
@@ -6859,17 +6871,15 @@ c                                 necessary cause uf(1) and uf(2)
 c                                 are allocated independent of ifct!
             if (ifct.gt.0) then 
                do j = 1, 2
-                  if (iff(j).ne.0) ndu = ndu - cp(iff(j),id)*uf(j)
+                  if (iff(j).ne.0) gproj = gproj - cp(iff(j),id)*uf(j)
                end do 
             end if 
 
             do j = 1, isat
-               ndu = ndu - cp(icp+j,id) * us(j)
+               gproj = gproj - cp(icp+j,id) * us(j)
             end do 
 
          end if 
-
-         gproj = gcpd(id) + ndu
 
       else 
 
@@ -6929,7 +6939,7 @@ c----------------------------------------------------------------------
  
       if (id.le.ipoint) then
 c                                 phase is an endmember compound
-         gph = gcpd (id)
+         gph = gcpd (id,.true.)
 
       else if (lorder(ids).and.lrecip(ids)) then 
 c                                 reciprocal solution speciation model 

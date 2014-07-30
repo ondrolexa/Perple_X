@@ -1395,8 +1395,19 @@ c                                 of saturated phase or mobile components:
             call chkphi (4,name,good)
 
             if (.not.good) cycle 
+c                                 reject phases already in the list
+            do i = 1, kphct
+               if (names(i).eq.name) then
+                  good = .false.
+                  exit
+               end if 
+            end do 
+
+            if (.not.good) cycle             
 c                                 matched a name
             iphct = iphct + 1
+
+c           pause
 c                                 store thermodynamic parameters:
             call loadit (iphct,.false.)
 

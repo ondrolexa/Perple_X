@@ -2419,7 +2419,7 @@ c                           systems.
 
       if (idfl.ne.0) then
    
-         uf(idfl) = gcpd (idfl) + r * t * f(idfl)
+         uf(idfl) = gcpd (idfl,.false.) + r * t * f(idfl)
 
       else
 
@@ -2427,17 +2427,21 @@ c                           systems.
          xf(2) = xco2
  
          do i = 1, 2
+
             if (iff(i).ne.0) then 
+
                if (xf(i).lt.1d-38) then 
 
                   uf(i) = -1d10
 
                else 
 
-                  uf(i) = gcpd (i) + r * t * f(i)
+                  uf(i) = gcpd (i,.false.) + r * t * f(i)
 
                end if
+
             end if 
+
          end do
 
       end if 
