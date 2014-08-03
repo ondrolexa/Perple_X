@@ -893,30 +893,59 @@ c                             dependent, independent, and secondary
 c                             independent intensive variables, p = 1,
 c                             t = 2, and xco2 = 3, respectively.
       read (n1,*,err=998) (iv(i), i = 1, 5)
-c                             check to make sure input requests are
-c                             consistent:
+c                             check variable ranges are consistent,
+c                             variable iv(1):
       if (icopt.ne.0.and.icopt.ne.4) then
-c                             first check iv(1):
+
          if (iv(1).eq.3.and.ifyn.eq.1) call error (110,r,i,'I')
+
          if (iv(1).eq.3.and.ifct.eq.1) then 
+
             if (icopt.ne.7.and.iv(2).ne.3) call error (111,r,i,'I')
+
          end if 
 
-         if (vmin(iv(1)).ge.vmax(iv(1)).and.icopt.lt.5) 
-     *                                 call error (112,r,i,'I') 
+         if (vmin(iv(1)).ge.vmax(iv(1)).and.icopt.lt.5) then 
+
+            call error (112,r,i,'less than or equal')
+
+         else if (vmin(iv(1)).eq.vmax(iv(1)).and.
+     *           ((icopt.eq.5.and.icont.lt.3).or.
+     *            icopt.eq.7.or.icopt.eq.9)) then
+
+            call error (112,r,i,'equal')
+
+         end if 
+
          if (vname(iv(1)).eq.blank) call error (116,dip,i,'I')
+
       end if
-c                             now check iv(2):
-      if (icopt.eq.1) then
+c                             variable iv(2):
+      if (icopt.eq.1.or.(icopt.eq.5.and.icont.eq.1)) then
+
          if (iv(2).eq.3.and.ifyn.eq.1) call error (110,r,i,'INPUT1')
+
          if (iv(2).eq.3.and.ifct.eq.1) call error (111,r,i,'INPUT1')
-         if (vmin(iv(2)).ge.vmax(iv(2))) call error (112,r,i,'I')
+
+         if (icopt.eq.1) then 
+
+            if (vmin(iv(2)).ge.vmax(iv(2))) call error (112,r,i,
+     *                                            'less than or equal')
+
+         else 
+
+            if (vmin(iv(2)).eq.vmax(iv(2))) call error (112,r,i,'equal')
+
+         end if 
+
          if (vname(iv(2)).eq.blank) call error (116,r,i,'INPUT1')
+
       end if
 c                             if a chemical potential is specified as an
 c                             independent variable (iv(1-3)), check if
 c                             the variable is defined:
       kct = 0
+
       do i = 1, 3
          if (iv(i).gt.3) kct = kct + 1
       end do 
@@ -940,7 +969,7 @@ c                             no P or T, choose independent V
          end if
       end if
 c                             ok, now find out which variables are
-c                             dummies and story the indexes of the
+c                             dummies and store the indexes of the
 c                             non-dummy variables in jv.
       ipot = 0
 
@@ -966,6 +995,7 @@ c                             imyn = 1:
                jv(ipot) = iv(i)
             end if
          end if
+
       end do 
 c                                 if dependent variable add to jv list, could
 c                                 increment ipot, but maybe it's better not to.

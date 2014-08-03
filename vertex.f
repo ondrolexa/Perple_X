@@ -89,6 +89,9 @@ c-----------------------------------------------------------------------
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
 
+      integer jfct,jmct,jprct
+      common/ cst307 /jfct,jmct,jprct
+
       save err,first,output,pots
       data err,output,first/.false.,.false.,.true./
 
@@ -178,11 +181,10 @@ c                                 calculate composition phase diagrams
 c                                 calculations and remaining output
             call chmcal (output)
 
-         else if (icopt.eq.1.or.icopt.eq.3) then                            
+         else if (icopt.eq.1.or.icopt.eq.3) then                     
 c                                 phase diagram projection or mixed variable
 c                                 diagram 
-
-            istct = kphct 
+            if (jmct.gt.0) istct = kphct + 1
 
             call newhld (output)
 
@@ -1672,11 +1674,15 @@ c
 c                                 test phases against the
 c                                 assemblage idv
       do 20 i = istct, iphct
+
          gphi = 0d0
+
          do j = 1, icp
             gphi = gphi + cp(j,i) * b(j)
          end do 
+
          dg = g(i) - gphi
+
          if (dg.gt.dtol) goto 20
 c                                check that a phase is not metastable
 c                                with respect to itself, this
@@ -1694,6 +1700,7 @@ c                                of condtions by the calling
 c                                routine. since utol << dtol
 c        if (dabs(dg).gt.utol) iflag = iflag + 1
          if (iflag.gt.1) goto 99
+
 20    continue
 
 99    end
@@ -3220,9 +3227,9 @@ c-----------------------------------------------------------------------
 
       integer i,lphi,lchkl,j,ier
 
-      double precision gphase, gphi
+      double precision gproj, gphi
 
-      external gphase
+      external gproj
 
       double precision g
       common/ cst2 /g(k1)
@@ -3241,10 +3248,10 @@ c-----------------------------------------------------------------------
       call uproj
 
       do i = 1, icp
-        b(i) = gphase (idv(i))
+        b(i) = gproj (idv(i))
       end do 
 
-      g(lphi) = gphase (lphi)
+      g(lphi) = gproj (lphi)
 
       lchkl = 0
 
@@ -3977,9 +3984,9 @@ c-----------------------------------------------------------------------
 
       integer igo,i,j,ier
 
-      double precision gphase, dg
+      double precision gproj, dg
 
-      external gphase
+      external gproj
 
       double precision delt,dtol,utol,ptol
       common/ cst87 /delt(l2),dtol,utol,ptol
@@ -4004,10 +4011,10 @@ c                                 compute energies:
       call uproj
 
       do i = 1, icp
-         b(i) = gphase (idv(i))
+         b(i) = gproj (idv(i))
       end do 
 
-      dg = gphase (idphi)
+      dg = gproj (idphi)
 c                                 solve for chemical potentials:
       call subst (a,ipvt,icp,b,ier)
 c                                 compute energy difference:
@@ -4358,7 +4365,11 @@ c                                 phase indexed by idphi.
 c                                 iflag=2 metastable with respect to
 c                                 multiple phases refine the
 c                                 search increment.
-         if (iflag.eq.1) goto 99
+         if (iflag.eq.1) then
+c                                 added 7/13/2014
+            if (v(ivd).ge.vmax(ivd)) v(ivd) = v(ivd) - ddv
+            goto 99
+         end if 
 c                                 check if search is in range:
          if (i.lt.3) then 
             if (v(ivd).ge.vmax(ivd).and.iflag.eq.0) cycle
@@ -5897,10 +5908,13 @@ c----------------------------------------------------------------------
       common/ cst6  /icomp,istct,iphct,icp  
 c----------------------------------------------------------------------
       do i = istct, iphct
+
+         kmax(i) = 0
 c                                 sort phases into subcompositions
          do j = 1, icp
             if (cp(j,i).gt.1d-5) kmax(i) = j
          end do
+
       end do
 
       do hcp = 1, icp
@@ -5909,10 +5923,12 @@ c                             formerly ic(hcp) = hcp, 9/27/08.
 c                             make the first guess for the
 c                             stable hcp component phase:
          do i = istct, iphct
+
             if (kmax(i).eq.hcp) then
                id(hcp) = i
                goto 20
             end if
+
          end do
 c                             missing composant error
          call error (15,r,i,cname(hcp))
@@ -5920,7 +5936,9 @@ c
 20       call abload (*992)
 c                             start test loop:
          do j = istct, iphct 
-            if (kmax(j).gt.hcp) cycle
+
+            if (kmax(j).gt.hcp.or.kmax(j).eq.0) cycle
+
             dg = g(j)
 
             do i = 1, hcp

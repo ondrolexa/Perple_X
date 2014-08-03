@@ -17,7 +17,7 @@ c----------------------------------------------------------------------
       implicit none
 
       write (*,'(/,a)') 
-     *      'Perple_X version 6.7.1, source updated July 18, 2014.'
+     *      'Perple_X version 6.7.1, source updated August 3, 2014.'
 
       end
 
@@ -1831,7 +1831,7 @@ c---------------------------------------------------------------------
       else if (ier.eq.111) then
          write (*,111)
       else if (ier.eq.112) then
-         write (*,112)
+         write (*,112) char
       else if (ier.eq.116) then
          write (*,116)
       else if (ier.eq.117) then
@@ -2094,7 +2094,7 @@ c---------------------------------------------------------------------
      *        'with the composition ',/,'of a saturated phase as a ',
      *        'variable, but the phase has only one component')
 112   format (/,'**error ver112** the maximum value of an independent '
-     *       ,'variable',/,'is less than or equal to the minimum value')
+     *       ,'variable',/,'is ',a,' to the minimum value')
 116   format (/,'**error ver116** an independent variable, or at least'
      *       ,' its name, is undefined')
 117   format (/,'**error ver117** vmax(iv(3)) ne vmin(iv(3) but no ',

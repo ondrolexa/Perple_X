@@ -252,7 +252,7 @@ c----------------------------------------------------------------------
       include 'perplex_parameters.h'
 
       integer i, n, id(n), kex(k8), ntot, imatch, iop5, iop6, iop7, 
-     *        itic, itis
+     *        itic, itis, j
 
       integer ixct, iex, ict, jex
       common/ excl1 /ixct(3),iex(50,3),jex(50,3),ict(3)
@@ -270,6 +270,12 @@ c                                 show only with assemblage:
             itic = 0
 
             do i = 1, ntot
+c                                 skip occurences of immiscible phases
+               do j = 1, itic
+                  if (id(i).eq.kex(i)) exit
+               end do 
+
+               if (j.le.itic) cycle
 c                                 if match then look at
 c                                 look for the next phase
                call checki (1,id(i),kex(i))

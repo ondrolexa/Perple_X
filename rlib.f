@@ -106,6 +106,9 @@ c-----------------------------------------------------------------------
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 
+      integer iff,idss,ifug,ifyn,isyn
+      common/ cst10  /iff(2),idss(h5),ifug,ifyn,isyn
+
       integer ixp
       double precision sxs,exces
       common/ cst304 /sxs(k13),exces(m3,k1),ixp(k1)
@@ -113,11 +116,11 @@ c-----------------------------------------------------------------------
 
       dg = exces(1,id) + t * exces(2,id) + p * exces(3,id)
 
-      xco2 = cp(2,id)
+      xco2 = cp(iff(2),id)
 
       call cfluid (fo2,fs2)
 
-      dg = dg + r*t*(cp(1,id)*f(1) + cp(2,id)*f(2))
+      dg = dg + r*t*(cp(iff(1),id)*f(1) + cp(iff(2),id)*f(2))
 
       end 
 
