@@ -6760,6 +6760,9 @@ c                               do all points on lowest level
          end do
 c                               progress info
          write (*,1030) dfloat(i)/dfloat(loopx)*1d2
+c                               flush stdout for paralyzer
+         flush (6)
+
       end do 
 c                               get hot points
       ihot = 0 
@@ -6802,6 +6805,8 @@ c                              now working on new level
          kinc2 = kinc/2
 c
          write (*,1060) ihot,k
+c                               flush stdout for paralyzer
+         flush (6)      
 c                              compute assemblages at refinement
 c                              points
          do h = 1, ihot

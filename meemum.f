@@ -136,6 +136,8 @@ c                                 is necessary for reasons of stupidity (lpopt0)
             end do
 
          end if 
+c                                 set dependent variables
+         call incdp0
 c                                 lpopt does the minimization and outputs
 c                                 the results to the print file.
          call lpopt0 (idead)

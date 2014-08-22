@@ -910,8 +910,7 @@ c                             variable iv(1):
             call error (112,r,i,'less than or equal')
 
          else if (vmin(iv(1)).eq.vmax(iv(1)).and.
-     *           ((icopt.eq.5.and.icont.lt.3).or.
-     *            icopt.eq.7.or.icopt.eq.9)) then
+     *            icopt.eq.5.and.icont.lt.3) then
 
             call error (112,r,i,'equal')
 

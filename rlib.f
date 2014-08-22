@@ -11704,6 +11704,8 @@ c                               read next solution
       if (isoct.gt.0) then 
 
          if (iam.lt.3) write (*,1110) iphct - ipoint
+c                               flush for paralyzer's piped output
+         flush (6)
 c                               scan for "killed endmembers"
          do i = 1, ipoint
 c                               reset ikp
