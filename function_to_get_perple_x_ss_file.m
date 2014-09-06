@@ -44,7 +44,12 @@ while ok == 0;
         nvar  = fscanf(fid, '%f', 1); % number of independent variables
         
         for i = 1:nvar                % independent variables
-            vname(i,:) = fscanf(fid, '%8c', 1);
+                                      % the problem with using fscanf here
+                                      % is that an error will result if the
+                                      % variable name exceeds the length
+                                      % specified by the format, there's
+                                      % gotta be a better way to do this.
+            vname(i,:) = fscanf(fid, '%9c', 1);
             vmin(i)    = fscanf(fid, '%f', 1);
             dv(i)      = fscanf(fid, '%f', 1);
             inc(i)     = fscanf(fid, '%f', 1);

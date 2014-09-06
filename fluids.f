@@ -287,7 +287,7 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical log
+      logical log, bad
 
       character specie(nsp)*4, y*1, n4name*100, title*100, tags(26)*14
 
@@ -875,6 +875,8 @@ c                                 of a change in EoS or degenerate composition?
                      xs(k) = 0d0
                   end do 
 c                                 calculate properties
+                  bad = .false.
+
                   call cfluid (fo2, fs2)    
 c                                 variables
                   do k = 1, ipot 
@@ -899,6 +901,9 @@ c                                 xco2 EoS's
                            prop(ipot+isp+1+nel+k) = f
                         end if
 
+                        if (dabs(prop(ipot+isp+1+nel+k)).gt.1d99) 
+     *                           prop(ipot+isp+1+nel+k) = nopt(7) 
+
                      end do
 
                   else 
@@ -918,6 +923,9 @@ c                                 assume multispecies fluids
                            prop(ipot+isp+1+nel+k) = f
                         end if
 
+                        if (dabs(prop(ipot+isp+1+nel+k)).gt.1d99) 
+     *                           prop(ipot+isp+1+nel+k) = nopt(7) 
+
                      end do
 
                   end if 
@@ -931,11 +939,26 @@ c                                 atomic fractions
                   nn = 2d0*xs(10) + xs(11)
                   nsi = xs(13) + xs(14) + xs(15)
 
+                  tot = 0d0 
+
+                  do k = 1, isp
+                     tot = tot + xs(ins(k))
+                  end do 
+
+                  if (dabs(tot-1d0).gt.nopt(5)+0.5d0) then
+                     write (*,*) ' bad total :',tot-1d0,xo,elag
+                     bad = .true. 
+                  end if 
+
                   tot = ns + no + nh + nc + nn + nsi
 
                   prop(ipot+isp+2) = nc/tot
                   prop(ipot+isp+3) = no/tot
                   prop(ipot+isp+4) = nh/tot
+c                                 ternary coordinates (XC = Y, XO = X)
+c                 prop(ipot+isp+2) = nc/tot * 0.866025d0
+c                 prop(ipot+isp+3) = (no + nc/2d0)/tot
+c
                   prop(ipot+isp+5) = nn/tot
                   prop(ipot+isp+6) = ns/tot
                   prop(ipot+isp+7) = ns/tot
@@ -997,6 +1020,12 @@ c                                 compute volume by finite difference
                   end if 
 
                   prop(ipot+1) = vol
+
+                  if (bad) then 
+                     do k = ipot+1, count
+                        prop(k) = nopt(7)
+                     end do
+                  end if 
 
                   write (n4,'(40(g14.7,1x))') (prop(k),k=1,count)
      
@@ -1254,7 +1283,7 @@ c                                  output speciation:
                   end do 
 
                   write (*,1370) totx
-                  if (totx.gt.1.001d0.or.totx.lt.0.999d0) write (*,1380)
+                  if (dabs(totx-1d0).gt.1d-3) call warn (177,p,i,y)
 c                                  output bulk properties and V:
                   write (*,1240)
 

@@ -17,7 +17,7 @@ c----------------------------------------------------------------------
       implicit none
 
       write (*,'(/,a)') 
-     *      'Perple_X version 6.7.1, source updated August 20, 2014.'
+     *      'Perple_X version 6.7.1, source updated Sept 3, 2014.'
 
       end
 
@@ -157,7 +157,7 @@ c                                 default option values:
 c                                 closed or open compositional space
       lopt(1) = .true.
 c                                 Anderson-Gruneisen correction
-      lopt(4) = .true.
+      lopt(4) = .false.
 c                                 reject invalid site fractions
       lopt(5) = .true.
 c                                 melt_is_fluid
@@ -664,7 +664,7 @@ c                                 assume linear boundaries within a cell during 
 
          else if (key.eq.'Anderson-Gruneisen') then
 
-            if (val.eq.'F') lopt(4) = .false.
+            if (val.eq.'T') lopt(4) = .true.
 
          else if (key.eq.'approx_alpha') then
 
@@ -1202,7 +1202,7 @@ c                                 generic thermo options
      *        4x,'T_melt (K)             ',f6.1,5x,'[873]',/,
      *        4x,'order_check            ',a3,8x,'off [on]',/,
      *        4x,'approx_alpha           ',l1,10x,'[T] F',/,
-     *        4x,'Anderson-Gruneisen     ',l1,10x,'[T] F',/,
+     *        4x,'Anderson-Gruneisen     ',l1,10x,'[F] T',/,
      *        4x,'site_check             ',l1,10x,'[T] F',/,
      *        4x,'speciation_max_it      ',i4,7x,'[40]')
 1013  format (/,2x,'Input/Output options:',//,
@@ -1214,7 +1214,7 @@ c                                 generic thermo options
 c                                 thermo options for frendly
 1016  format (/,2x,'Thermodynamic options:',//,
      *        4x,'approx_alpha           ',l1,10x,'[T] F',/,
-     *        4x,'Anderson-Gruneisen     ',l1,10x,'[T] F')
+     *        4x,'Anderson-Gruneisen     ',l1,10x,'[F] T')
 1020  format (/,'To change these options see: ',
      *        'www.perplex.ethz.ch/perplex_options.html',/)      
 1090  format (/,2x,
@@ -2170,6 +2170,11 @@ c---------------------------------------------------------------------
       integer grid
       double precision rid 
       common/ cst327 /grid(6,2),rid(4,2)
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 c----------------------------------------------------------------------
       if (ier.eq.1) then 
          write (*,1) 
@@ -2322,7 +2327,9 @@ c----------------------------------------------------------------------
       else if (ier.eq.175) then
          write (*,175) char,ier,realv
       else if (ier.eq.176) then
-         write (*,176) char
+         write (*,176) char, iopt(21)
+      else if (ier.eq.177) then
+         write (*,177) nopt(5)
       else if (ier.eq.190) then
          write (*,190) int
       else if (ier.eq.205) then
@@ -2611,10 +2618,18 @@ c     *          ' (SWASH, see program documentation Eq 2.3)',/)
 175   format (/,'**warning ver175** speciation routine ',a,' did',
      *          ' not converge ',/,' possibly due to graphite super-',
      *          'saturation. ier = ',i1,' real = ',g16.5,/)
-176   format ('**warning ver176** fluid equation of state routine ',
+176   format (/,'**warning ver176** fluid equation of state routine ',
      *        a,' did not converge.',/,' If execution continues this ',
      *        'may lead to incorrect results.',/,' To avoid this ',
-     *        'problem choose a different equation of state.')
+     *        'problem increase speciation_max_it (',i4,') in ',
+     *        'perplex_option.dat',/,' or ',
+     *        'choose a different equation of state.',/,
+     *        'NOTE: at compositional extremes fluid speciation ' 
+     *        'calculations, may converge ',/,'only after many ',
+     *        'thousands of iterations',/)
+177   format (/,'**warning ver177** Invalid fluid speciation. ',
+     *          'Reducing speciation tolerance (',g14.6,') in ',
+     *          'perplex_option.dat',/,'may resolve this problem',/)
 190   format (/,'**warning ver190** SMPLX failed to converge within ', 
      *        i6,' iterations.',/,3x,'Probable cause: the possible ',
      *        'phases do not span the systems composition',/,3x,

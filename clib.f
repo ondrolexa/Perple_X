@@ -920,7 +920,7 @@ c                             variable iv(1):
 
       end if
 c                             variable iv(2):
-      if (icopt.eq.1.or.(icopt.eq.5.and.icont.eq.1)) then
+      if (icopt.eq.1.or.(icopt.eq.5.and.icont.eq.1.and..not.oned)) then
 
          if (iv(2).eq.3.and.ifyn.eq.1) call error (110,r,i,'INPUT1')
 
