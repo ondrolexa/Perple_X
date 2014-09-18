@@ -603,12 +603,12 @@ c                                 convert x to y for calls to gsol
 c                                 get and sum phase properties
          call getphp (ids,i,sick,ssick,ppois,bulkg,bsick)   
 
-         if ((ssick.or.bsick.or.sick(i)).and.ijpt.gt.1) then 
-            wt(1) = 1d0
-            ijpt = 1
-            write (*,*) 'turned off at :', t, p, dlog10(p)
-            goto 10 
-         end if  
+c         if ((ssick.or.bsick.or.sick(i)).and.ijpt.gt.1) then 
+c            wt(1) = 1d0
+c            ijpt = 1
+c            write (*,*) 'turned off at :', t, p, dlog10(p)
+c            goto 10 
+c         end if  
 
       end do 
 c                                 compute aggregate properties:
