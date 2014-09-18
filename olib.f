@@ -428,7 +428,7 @@ c                                 bookkeeping variables
       common/ cst84 /hsb(i8,4),hs2p(6)
 c----------------------------------------------------------------------
 c                                 logarithmic_p option
-      if (lopt(14)) p = 1d1**p 
+10    if (lopt(14)) p = 1d1**p 
 
       nodata = .false. 
 
@@ -490,7 +490,7 @@ c                                 then set p and t
 
       end if 
 c                                 initialize system props/flags
-10    call insysp (ssick,ppois,bulkg,bsick)
+      call insysp (ssick,ppois,bulkg,bsick)
 
       do i = 1, ntot
 
@@ -1343,9 +1343,9 @@ c----------------------------------------------------------------------
       include 'perplex_parameters.h'
 
       logical ok, sick(i8), ssick, pois, ppois, bulk, bulkg, bsick, 
-     *        lshear, okt, fow
+     *        lshear, fow
 
-      integer id, jd, iwarn1, iwarn2, i, j, itemp, m
+      integer id, jd, iwarn1, iwarn2, j, itemp, m
 
       character*14 wname1, wname2
 
@@ -1525,48 +1525,27 @@ c                                 thermodynamic properties
          dp0 = nopt(27) * nopt(26)
       end if 
 
+c     if (fluid(jd)) dp0 = dp0/10d0
+
       dt0 = dt
 c                                 if a reaction, cannot use sign to 
 c                                 test behavior, just run through the
 c                                 whole list
       if (rxn) then 
-c                                 set finite difference increments
-         dp1 = dp0*nopt(31)
-         dp2 = dp1*nopt(31)
-         dt1 = dt0*nopt(31)
-         dt2 = dt1*nopt(31)
-c                                 straight derivatives:
-c                                 first order
-         if (p-dp2.le.0d0) then 
-
-            v = (ginc(0d0,dp0,id) - g0)/dp0
-
-         else 
-
-            v = (ginc(0d0,dp0,id) - ginc(0d0,-dp0,id))/dp0/2d0
-
-         end if 
-
-         s = (ginc(-dt0,0d0,id) - ginc(dt0,0d0,id))/dt0/2d0
+c                                 use sign of s and v and second derivatives
+c                                 to refine difference increments
+         call getdpt (g0,dp0,dp1,dp2,dt0,dt1,dt2,v,gpp,s,gtt,id,fow)
 
          e = g0 + t * s
-c                                 second order
-         gtt = (ginc(dt1,0d0,id) + ginc(-dt1,0d0,id) - 2d0*g0)/dt1/dt1
 
          cp = -t*gtt
 
-         if (p-dp2.le.0d0) then 
-c                                 use forward difference at small p's
-            gpp = (ginc(0d0,2d0*dp1,id) + g0 - 2d0*ginc(0d0,dp1,id))
-     *             /dp1/dp1
+         if (fow) then 
 
             gpt = ( ginc( dt1,dp1,id) - ginc( dt1,0d0,id)
      *             -ginc(-dt1,dp1,id) + ginc(-dt1,0d0,id))/dp1/dt1/2d0
 
          else
-
-            gpp = (ginc(0d0,dp1,id) + ginc(0d0,-dp1,id) - 2d0*g0)
-     *            /dp1/dp1
 
             gpt = ( ginc( dt1,dp1,id) - ginc( dt1,-dp1,id)
      *             -ginc(-dt1,dp1,id) + ginc(-dt1,-dp1,id))/dp1/dt1/4d0
@@ -1585,115 +1564,9 @@ c                                  for reactions:
          props(14,jd) = beta 
 
       else 
-c                                 real phase, use sign of s and v to check
-c                                 difference increments
-         okt = .false.
-
-         if (p-nopt(31)**2*dp0.le.0d0) then
-            fow = .true.
-         else 
-            fow = .false.
-         end if  
-
-         do i = 1, 2
-
-            do j = 1, 3 
-
-               if (fow) then 
-                  v = (ginc(0d0,dp0,id) - g0)/dp0
-               else             
-                  v = (ginc(0d0,dp0,id) - ginc(0d0,-dp0,id))/dp0/2d0
-               end if 
-
-               if (v.gt.0d0.and.v.lt.1d9) then
-                  okt = .true.
-                  exit
-               end if 
-
-               if (i.eq.1) then 
-                  dp0 = dp0 * nopt(31)
-               else 
-                  dp0 = dp0 / nopt(31)
-               end if 
- 
-            end do 
-
-            if (okt) exit
-
-            dp0 = dp0/nopt(31)**4
-
-         end do
-
-         dp1 = dp0 * nopt(31)
-         dp2 = dp1 * nopt(31)
-
-         if (p-2d0*dp2.le.0d0) then
-            fow = .true.
-         else 
-            fow = .false.
-         end if 
-
-         okt = .false.
-
-         do i = 1, 2
-
-            do j = 1, 3
-
-               s = (ginc(-dt0,0d0,id) - ginc(dt0,0d0,id))/dt0/2d0
-
-               if (s.gt.0d0) then
-                  okt = .true.
-                  exit 
-               end if 
-
-               if (i.eq.1) then 
-                  dt0 = dt0 * nopt(31)
-                  if (dt0.gt.t) exit 
-               else
-                  dt0 = dt0 / nopt(31)
-               end if 
-
-            end do 
-
-            if (okt) exit
-
-            dt0 = dt / nopt(31)
-
-         end do
-c                                 next check dt for second order 
-         dt1 = dt0 * nopt(31) 
-         if (dt1.gt.t) dt1 = t/4d0  
-         okt = .false.
-   
-         do i = 1, 2
-
-            do j = 1, 3
-
-               gtt = (ginc(dt1,0d0,id) + ginc(-dt1,0d0,id) - 2d0*g0)
-     *                                                      /dt1/dt1
-
-               if (gtt.lt.0d0) then
-                  okt = .true.
-                  exit 
-               end if 
-
-               if (i.eq.1) then 
-                  dt1 = dt1 * nopt(31)
-                  if (dt0.gt.t) exit 
-               else
-                  dt1 = dt1 / nopt(31)
-               end if 
-
-            end do 
-
-            if (okt) exit
-
-            dt1 = dt0 / nopt(31)
-
-         end do
-c                                 set increments for higher order derivatives
-         dt2 = dt1 * nopt(31)
-         if (dt2*2d0.gt.t) dt2 = t/4d0
+c                                 real phase, use sign of s and v and second derivatives
+c                                 to refine difference increments
+         call getdpt (g0,dp0,dp1,dp2,dt0,dt1,dt2,v,gpp,s,gtt,id,fow)
 c                                 enthalpy
          e = g0 + t * s
 c                                 heat capacity
@@ -1702,19 +1575,6 @@ c                                 volumetric properties only if v is ok:
          if (v.gt.0d0) then 
    
             if (fow) then 
-c                                 use forward difference at small p's
-               gpp = (ginc(0d0,2d0*dp1,id) + g0 - 2d0*ginc(0d0,dp1,id))
-     *                /dp1/dp1
-
-               if (gpp.lt.-v.or.gpp.ge.0d0)
-c                                 expand increment if invalid beta
-     *            gpp = (ginc(0d0,2d0*dp2,id) + g0 
-     *                 - 2d0*ginc(0d0,dp2,id))/dp2/dp2
-                                 
-               if (gpp.lt.-v.or.gpp.ge.0d0)
-c                                 shrink increment if invalid beta
-     *            gpp = (ginc(0d0,2d0*dp0,id) + g0 
-     *                 - 2d0*ginc(0d0,dp0,id))/dp0/dp0   
 
                gpt = ( ginc( dt1,dp1,id) - ginc( dt1,0d0,id)
      *               -ginc(-dt1,dp1,id) + ginc(-dt1,0d0,id))/dp1/dt1/2d0
@@ -1732,18 +1592,6 @@ c                                 shrink increment if invalid alpha
      *                  /dp0/dt0/2d0
 
             else
-
-               gpp = (ginc(0d0,dp1,id) + ginc(0d0,-dp1,id) - 2d0*g0)
-     *               /dp1/dp1
-               if (gpp.lt.-v.and.p-dp2.ge.0d0.or.gpp.ge.0d0)
-c                                 expand increment if invalid beta
-     *            gpp = (ginc(0d0,dp2,id) + ginc(0d0,-dp2,id) - 2d0*g0)
-     *                  /dp2/dp2
-     
-               if (gpp.lt.-v.or.gpp.ge.0d0)
-c                                 shrink increment if invalid beta
-     *            gpp = (ginc(0d0,dp0,id) 
-     *                  + ginc(0d0,-dp0,id) - 2d0*g0)/dp0/dp0
 
                gpt = ( ginc( dt1,dp1,id) - ginc( dt1,-dp1,id)
      *              -ginc(-dt1,dp1,id) + ginc(-dt1,-dp1,id))/dp1/dt1/4d0
@@ -2234,6 +2082,190 @@ c                                 solid only totals:
      *        'ratio ',/)
 
       end
+
+      subroutine getdpt (g0,dp0,dp1,dp2,dt0,dt1,dt2,v,gpp,s,gtt,id,fow)
+c----------------------------------------------------------------------
+c getdpt computes finite difference increments for phase id based on finite
+c difference estimates of v, gpp (dv/dp), s, gtt (ds/dt) and initial guesses 
+c for dp0.  returns:
+c    v, gpp (dv/dp), s, gtt (ds/dt)  - finite difference estimates
+c    dp0, dp1, dp2 - increments for 1st, 2nd and 3rd order p finite differences
+c    dt0, dt1, dt2 - increments for 1st, 2nd and 3rd order p finite differences
+c    fow - if true, forward differences are needed on p, otherwise centered.
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      logical fow, okt
+
+      integer i, j, id
+
+      double precision g0, dp0, dp1, dp2, v, gpp, ginc, 
+     *                 s, gtt, dt0, dt1, dt2 
+
+      external ginc
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      double precision p,t,xco2,u1,u2,tr,pr,r,ps
+      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
+c----------------------------------------------------------------------
+c                                 pressure increments
+      okt = .false.
+
+      do i = 1, 2
+
+         do j = 1, 3 
+
+            call getgpp (g0,dp0,dp1,dp2,v,gpp,id,fow)
+
+            if (v.gt.0d0.and.gpp.lt.0d0.and.gpp.gt.-v) then
+               okt = .true.
+               exit
+            end if 
+
+            if (i.eq.1) then 
+               dp0 = dp0 * nopt(31)
+            else 
+               dp0 = dp0 / nopt(31)
+            end if 
+ 
+         end do 
+
+         if (okt) exit
+
+         dp0 = dp0/nopt(31)**4
+
+      end do
+
+      dp0 = dabs(1d-5*v/gpp)
+c                                 final values
+      call getgpp (g0,dp0,dp1,dp2,v,gpp,id,fow)
+c                                 -------------------------------------
+c                                 temperature increments
+      okt = .false.
+
+      do i = 1, 2
+
+         do j = 1, 3
+
+            call getgtt (g0,dt0,dt1,dt2,s,gtt,id)
+
+            if (s.gt.0d0.and.gtt.lt.0) then
+                 okt = .true.
+                 exit 
+            end if 
+
+            if (i.eq.1) then 
+               dt0 = dt0 * nopt(31)
+               if (dt0.gt.t) exit 
+            else
+                dt0 = dt0 / nopt(31)
+            end if 
+
+         end do 
+
+         if (okt) exit
+
+         dt0 = dt0/nopt(31)**4
+
+      end do
+
+      dt0 = dabs(1d-5*s/gtt)
+c                                 final values
+      call getgtt (g0,dt0,dt1,dt2,s,gtt,id)
+
+      end 
+
+      subroutine getgpp (g0,dp0,dp1,dp2,v,gpp,id,fow)
+c----------------------------------------------------------------------
+c for phase id getgpp computes:
+c    v, gpp (dv/dp) by finite difference
+c    dp1, dp2 - increments for 2nd and 3rd order p finite differences
+c    fow - if true, forward differences needed, otherwise centered.
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      logical fow
+
+      integer id 
+
+      double precision g0,dp0,dp1,dp2,v,gpp, ginc
+
+      external ginc
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      double precision p,t,xco2,u1,u2,tr,pr,r,ps
+      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
+c----------------------------------------------------------------------
+      dp1 = dp0 * nopt(31)
+      dp2 = dp1 * nopt(31)
+
+      if (p-dp2.le.0d0) then
+         fow = .true.
+      else 
+         fow = .false.
+      end if  
+
+      if (fow) then 
+
+         v = (ginc(0d0,dp0,id) - g0)/dp0
+         gpp = (ginc(0d0,2d0*dp1,id) + g0 
+     *                  - 2d0*ginc(0d0,dp1,id))/dp1/dp1
+
+      else             
+
+         v = (ginc(0d0,dp0,id) - ginc(0d0,-dp0,id))/dp0/2d0
+         gpp = (ginc(0d0,dp1,id) + ginc(0d0,-dp1,id) - 2d0*g0)/dp1/dp1
+
+      end if 
+
+      end 
+
+      subroutine getgtt (g0,dt0,dt1,dt2,s,gtt,id)
+c----------------------------------------------------------------------
+c for phase id getgtt computes:
+c    s, gtt (ds/dt) by finite difference
+c    dt1, dt2 - increments for 2nd and 3rd order t finite differences
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer id 
+
+      double precision g0,dt0,dt1,dt2,s,gtt, ginc
+
+      external ginc
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      double precision p,t,xco2,u1,u2,tr,pr,r,ps
+      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
+c----------------------------------------------------------------------
+
+      if (nopt(31)**2*dt0.ge.t) dt0 = t/nopt(31)**2*dt0*0.9d0
+
+      dt1 = dt0 * nopt(31)
+      dt2 = dt1 * nopt(31)
+
+      s = (ginc(-dt0,0d0,id) - ginc(dt0,0d0,id))/dt0/2d0
+      gtt = (ginc(dt1,0d0,id) + ginc(-dt1,0d0,id) - 2d0*g0)/dt1/dt1
+
+      end 
 
       subroutine gtsysp (sick,ssick,bulkg,bsick)
 c-----------------------------------------------------------------------
