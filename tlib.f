@@ -17,7 +17,7 @@ c----------------------------------------------------------------------
       implicit none
 
       write (*,'(/,a)') 
-     *      'Perple_X version 6.7.1, source updated Sept 18, 2014.'
+     *      'Perple_X version 6.7.1, source updated Oct 17, 2014.'
 
       end
 
@@ -1870,8 +1870,6 @@ c---------------------------------------------------------------------
          write (*,227) char, int
       else if (ier.eq.228) then 
          write (*,228) char, realv, int
-      else if (ier.eq.279) then
-         write (*,279) int
       else if (ier.eq.323) then
          write (*,323)
       else
@@ -2146,7 +2144,6 @@ c---------------------------------------------------------------------
      *          'composition (',g12.6,') for component ',i2,/,
      *          'probable cause is an incorrect stoichiometric ',
      *          'definition for a dependent endmember.',/)
-279   format (/,'**error ver279** you have got a problem ',i3)
 323   format (/,'**error ver323** prime9, imd(i)=0 is the only',/,
      *        'subdivision scheme permitted for this version' )
 999   format (/,'**error vertex** unspecified error ier=',i3,/,
@@ -3502,6 +3499,8 @@ c                                 position for next keyword
 c                                 read remaining keywords and values
 c                                 from card
          do 
+
+            key = ''
 c                                 locate end of keyword
             if (ibeg.ge.icom) exit 
             iend = iscan (ibeg,icom,'=') - 1

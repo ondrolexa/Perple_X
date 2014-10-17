@@ -1349,8 +1349,8 @@ c----------------------------------------------------------------------
 
       character*14 wname1, wname2
 
-      double precision dt0, dt1, dt2, g0, gpt, gpt1, 
-     *                 gpt2, gpp, dp0, dp1, dp2, e, alpha, v, ginc, dt,
+      double precision dt0, dt1, dt2, g0, gpt, gpp, dp0, dp1, dp2, e, 
+     *                 alpha, v, ginc, dt,
      *                 beta, cp, s, rho, gtt, g1, g2, g3, g4, g5,
      *                 g7, gppp, gppt, gptt, gttt, mols, root, poiss
 
@@ -1534,23 +1534,11 @@ c                                 whole list
       if (rxn) then 
 c                                 use sign of s and v and second derivatives
 c                                 to refine difference increments
-         call getdpt (g0,dp0,dp1,dp2,dt0,dt1,dt2,v,gpp,s,gtt,id,fow)
+         call getdpt (g0,dp0,dp1,dp2,dt0,dt1,dt2,v,gpp,s,gtt,gpt,id,fow)
 
          e = g0 + t * s
 
          cp = -t*gtt
-
-         if (fow) then 
-
-            gpt = ( ginc( dt1,dp1,id) - ginc( dt1,0d0,id)
-     *             -ginc(-dt1,dp1,id) + ginc(-dt1,0d0,id))/dp1/dt1/2d0
-
-         else
-
-            gpt = ( ginc( dt1,dp1,id) - ginc( dt1,-dp1,id)
-     *             -ginc(-dt1,dp1,id) + ginc(-dt1,-dp1,id))/dp1/dt1/4d0
-
-         end if  
 c                                  these are the only properties output
 c                                  for reactions:
          alpha = gpt/v
@@ -1566,60 +1554,13 @@ c                                  for reactions:
       else 
 c                                 real phase, use sign of s and v and second derivatives
 c                                 to refine difference increments
-         call getdpt (g0,dp0,dp1,dp2,dt0,dt1,dt2,v,gpp,s,gtt,id,fow)
+         call getdpt (g0,dp0,dp1,dp2,dt0,dt1,dt2,v,gpp,s,gtt,gpt,id,fow)
 c                                 enthalpy
          e = g0 + t * s
 c                                 heat capacity
          cp = -t*gtt
 c                                 volumetric properties only if v is ok:
          if (v.gt.0d0) then 
-   
-            if (fow) then 
-
-               gpt = ( ginc( dt1,dp1,id) - ginc( dt1,0d0,id)
-     *               -ginc(-dt1,dp1,id) + ginc(-dt1,0d0,id))/dp1/dt1/2d0
-
-               if (gpt.gt.v.or.gpt.le.0d0)
-c                                 expand increment if invalid alpha
-     *            gpt = ( ginc( dt2,dp2,id) - ginc( dt2,0d0,id)
-     *                   -ginc(-dt2,dp2,id) + ginc(-dt2,0d0,id))
-     *                  /dp2/dt2/2d0
-
-               if (gpt.gt.v.or.gpt.le.0d0)
-c                                 shrink increment if invalid alpha
-     *            gpt = ( ginc( dt0,dp0,id) - ginc( dt0,0d0,id)
-     *                   -ginc(-dt0,dp0,id) + ginc(-dt0,0d0,id))
-     *                  /dp0/dt0/2d0
-
-            else
-
-               gpt = ( ginc( dt1,dp1,id) - ginc( dt1,-dp1,id)
-     *              -ginc(-dt1,dp1,id) + ginc(-dt1,-dp1,id))/dp1/dt1/4d0
-
-               if (gpt.gt.v.or.gpt.le.0d0) then 
-c                                 expand increment if invalid alpha
-                  gpt1 = ( ginc( dt2,dp2,id) - ginc( dt2,-dp2,id)
-     *                     - ginc(-dt2,dp2,id) 
-     *                     + ginc(-dt2,-dp2,id))/dp2/dt2/4d0
-
-                  if (gpt1.gt.v.or.gpt1.le.0d0) then
-c                                 shrink increment if invalid alpha
-                     gpt2 = ( ginc( dt0,dp0,id) - ginc( dt0,-dp0,id)
-     *                       -ginc(-dt0,dp0,id) + ginc(-dt0,-dp0,id))
-     *                        /dp0/dt2/4d0
-
-                     if (gpt2.lt.v.and.gpt2.ge.0d0) then 
-                        gpt = gpt2
-                     end if 
-
-                  else 
-
-                     gpt = gpt1
-
-                  end if 
-               end if  
-
-            end if  
 c                                 third order derivatives, only need for
 c                                 derivatives of seismic props.
             if (fow) then 
@@ -1823,10 +1764,6 @@ c                                 seismic properties
       if (volume) then
 
          if (props(5,jd).gt.0d0.or.fluid(jd)) lshear = .true.
-
-      end if 
-
-      if (volume) then
 c                                 sound velocity
          root = props(4,jd)/rho
 
@@ -2083,7 +2020,8 @@ c                                 solid only totals:
 
       end
 
-      subroutine getdpt (g0,dp0,dp1,dp2,dt0,dt1,dt2,v,gpp,s,gtt,id,fow)
+      subroutine getdpt (g0,dp0,dp1,dp2,dt0,dt1,dt2,v,gpp,s,gtt,gpt,
+     *                   id,fow)
 c----------------------------------------------------------------------
 c getdpt computes finite difference increments for phase id based on finite
 c difference estimates of v, gpp (dv/dp), s, gtt (ds/dt) and initial guesses 
@@ -2101,7 +2039,7 @@ c----------------------------------------------------------------------
 
       integer i, j, id
 
-      double precision g0, dp0, dp1, dp2, v, gpp, ginc, 
+      double precision g0, dp0, dp1, dp2, v, gpp, ginc, gpt, gpt1, gpt2,
      *                 s, gtt, dt0, dt1, dt2 
 
       external ginc
@@ -2178,6 +2116,58 @@ c                                 temperature increments
       dt0 = dabs(1d-5*s/gtt)
 c                                 final values
       call getgtt (g0,dt0,dt1,dt2,s,gtt,id)
+
+      if (v.gt.0d0) then 
+c                                 get the cross derivative gpt for expansivity
+         if (fow) then 
+
+            gpt = ( ginc( dt1,dp1,id) - ginc( dt1,0d0,id)
+     *             -ginc(-dt1,dp1,id) + ginc(-dt1,0d0,id))/dt1/dp1/2d0
+
+            if (gpt.gt.v.or.gpt.le.0d0)
+c                                 expand increment if invalid alpha
+     *         gpt = ( ginc( dt2,dp2,id) - ginc( dt2,0d0,id)
+     *                -ginc(-dt2,dp2,id) + ginc(-dt2,0d0,id))
+     *                /dp2/dt2/2d0
+
+               if (gpt.gt.v.or.gpt.le.0d0)
+c                                 shrink increment if invalid alpha
+     *            gpt = ( ginc( dt0,dp0,id) - ginc( dt0,0d0,id)
+     *                   -ginc(-dt0,dp0,id) + ginc(-dt0,0d0,id))
+     *                  /dp0/dt0/2d0
+
+         else
+
+            gpt = ( ginc( dt1,dp1,id) - ginc( dt1,-dp1,id)
+     *             -ginc(-dt1,dp1,id) + ginc(-dt1,-dp1,id))/dt1/dp1/4d0
+
+            if (gpt.gt.v.or.gpt.le.0d0) then 
+c                                 expand increment if invalid alpha
+               gpt1 = ( ginc( dt2,dp2,id) - ginc( dt2,-dp2,id)
+     *                - ginc(-dt2,dp2,id) 
+     *                     + ginc(-dt2,-dp2,id))/dp2/dt2/4d0
+
+               if (gpt1.gt.v.or.gpt1.le.0d0) then
+c                                 shrink increment if invalid alpha
+                  gpt2 = ( ginc( dt0,dp0,id) - ginc( dt0,-dp0,id)
+     *                    -ginc(-dt0,dp0,id) + ginc(-dt0,-dp0,id))
+     *                     /dp0/dt0/4d0
+
+                  if (gpt2.lt.v.and.gpt2.ge.0d0) then 
+                     gpt = gpt2
+                  end if 
+
+               else 
+
+                  gpt = gpt1
+
+               end if 
+
+            end if  
+
+         end if  
+
+      end if 
 
       end 
 

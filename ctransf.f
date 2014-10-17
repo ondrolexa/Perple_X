@@ -67,12 +67,20 @@ c                                 component conversion
          idis(k10) = idiso
 
          if (eof) exit
+
+         if (ieos.eq.12.or.ieos.eq.14) then 
+            write (*,1010) name
+            cycle
+         end if 
 c                                 output new data
          call outdat (n8,k10,0)
 
       end do 
       
 1000  format (//,'NO is the default answer to all Y/N prompts',/)
+1010  format (//,'**warning ver000** ctransf cannot reformat CALPHAD ',
+     *          'format data',/,'the data for ',a,' will not be ',
+     *          'written to ctransf.dat',//)
 
       end
 

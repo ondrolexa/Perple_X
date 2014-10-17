@@ -757,8 +757,8 @@ c-------------------------------------------------------------------
 
       integer i,j
 
-      integer jasmbl,iasmbl
-      common/ cst27  /jasmbl(j9),iasmbl(j9)
+      integer iasmbl
+      common/ cst27  /iasmbl(j9)
 
       integer ipoint,kphct,imyn
       common/ cst60 /ipoint,kphct,imyn
@@ -938,8 +938,8 @@ c-----------------------------------------------------------------------
       integer iff,idss,ifug,ifyn,isyn
       common/ cst10  /iff(2),idss(h5),ifug,ifyn,isyn
 
-      integer jasmbl,iasmbl
-      common/ cst27  /jasmbl(j9),iasmbl(j9)
+      integer iasmbl
+      common/ cst27  /iasmbl(j9)
 
       integer idcf,icfct
       common/ cst96 /idcf(k5,j9),icfct
@@ -2231,8 +2231,8 @@ c-----------------------------------------------------------------------
 
       logical solvs1
  
-      integer jasmbl,iasmbl
-      common/ cst27 /jasmbl(j9),iasmbl(j9)
+      integer iasmbl
+      common/ cst27 /iasmbl(j9)
 
       integer ht,id
       common/ cst52 /ht,id(k7)
@@ -2265,7 +2265,7 @@ c                             matches earlier assemblage, return.
 c                             unique (and bounding) assemblage:   
       icfct = icfct + 1
       if (icfct.gt.j9) call error (204,0d0,j9,'ASSDC')
-      jasmbl(icfct) = 0
+
       icase = 1
 c                             assign the assemblage:
       isol = 0  
@@ -5739,13 +5739,13 @@ c-----------------------------------------------------------------------
  
       include 'perplex_parameters.h'
  
-      integer i,j,itot,ic11
+      integer i, j
 
       character*162 title
       common/ csta8 /title(4)
  
-      integer jasmbl,iasmbl
-      common/ cst27  /jasmbl(j9),iasmbl(j9)
+      integer iasmbl
+      common/ cst27  /iasmbl(j9)
 
       double precision ctot
       common/ cst3   /ctot(k1)
@@ -5831,26 +5831,12 @@ c                          phases
          write (n3,1130)
          write (n3,'(7(1x,a,1x))') (names(i), i = istct, iphct)
       end if 
-c                          saturation composant phases,
-c                          load the indexes into iasmbl:
-      if (isat.gt.0) then 
-         itot = 0
-         do i = 1, isat
-            ic11 = isct(i)
-c                          do a check that there is at least
-c                          one composant for each saturated component:
-c                          why here? well, why not?
-            if (ic11.eq.0) call error (279,cp(1,1),i,'OUTTIT')
- 
-            do j = 1, ic11
-               iasmbl(itot+j) = ids(i,j)
-            end do 
-            itot = itot+ic11
-         end do 
- 
-         write (n3,1170)
-         write (n3,'(7(1x,a,1x))') (names(iasmbl(i)), i = 1, itot)
-      end if 
+c                          saturation composant phases
+      do i = 1, isat
+
+          write (n3,'(7(1x,a,1x))') (names(ids(i,j)), j = 1, isct(i))
+
+      end do 
 c                          excluded phases
       if (iexyn.eq.0) then 
          write (n3,1140)
@@ -6064,6 +6050,8 @@ c----------------------------------------------------------------------
       include 'perplex_parameters.h'
 
       logical solvs1, solvus 
+
+      external solvus
 c                                 -------------------------------------
 c                                 local variables
       integer idsol(k8,k8),jdsol(k8),ids,np,np1,np2,ncpd,idim,
@@ -6085,17 +6073,22 @@ c-----------------------------------------------------------------------
       solvs1 = .false.
 c                                 solvus tolerance, miscib 1.2
       if (lopt(9)) then 
-         soltol = 1.2d0*nopt(8)
+         soltol = 1.8d0*nopt(8)
       else 
          soltol = nopt(8)
       end if 
 
       do 10 i = 1, ntot
+
          ids = ikp(id(i))
+
          if (ids.le.0) then 
+
             ncpd = ncpd + 1
             cycle
+
          else   
+
             do j = 1, np
                if (ikp(idsol(1,j)).eq.ids) then
                   jdsol(j) = jdsol(j) + 1
@@ -6103,10 +6096,13 @@ c                                 solvus tolerance, miscib 1.2
                   goto 10 
                end if 
             end do                   
+
             np = np + 1
             jdsol(np) = 1
             idsol(1,np) = id(i)
+
          end if
+
 10    continue  
 c                                now check if the np solutions
 c                                are homogeneous
