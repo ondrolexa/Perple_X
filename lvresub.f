@@ -331,9 +331,8 @@ c                                 adaptive z coordinates
       double precision zcoor
       common/ cxt13 /zcoor(k20),jcoor(k21),jkp(k21),jcoct
 c                                 working arrays
-      double precision z, pa, p0a, x, w, y, wl
-      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
-     *              wl(m17,m18)
+      double precision z, pa, p0a, x, w, y
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1)
 c                                 x coordinate description
       integer istg, ispg, imlt, imdg
       double precision xmng, xmxg, xncg, xmno, xmxo, reachg
@@ -558,9 +557,8 @@ c                                 bookkeeping variables
       integer ksmod, ksite, kmsol, knsp
       common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
 c                                 working arrays
-      double precision z, pa, p0a, x, w, y, wl
-      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
-     *              wl(m17,m18)
+      double precision z, pa, p0a, x, w, y
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1)
 
       integer jend
       common/ cxt23 /jend(h9,k12)
@@ -760,9 +758,8 @@ c----------------------------------------------------------------------
 
       integer i, j, jd, id, ids, icoor
 c                                 working arrays
-      double precision z, pa, p0a, x, w, y, wl
-      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
-     *              wl(m17,m18)
+      double precision z, pa, p0a, x, w, y
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1)
 c                                 x coordinate description
       integer istg, ispg, imlt, imdg
       common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
@@ -797,9 +794,8 @@ c----------------------------------------------------------------------
 
       integer i, j, id, ids, jcoor
 c                                 working arrays
-      double precision z, pa, p0a, x, w, y, wl
-      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
-     *              wl(m17,m18)
+      double precision z, pa, p0a, x, w, y
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1)
 c                                 x coordinate description
       integer istg, ispg, imlt, imdg
       common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
@@ -949,9 +945,8 @@ c                                  x-coordinates for the final solution
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
-      double precision z, pa, p0a, x, w, y, wl
-      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
-     *              wl(m17,m18)
+      double precision z, pa, p0a, x, w, y
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1)
 
       integer npt,jdv
       logical fulrnk
@@ -1283,9 +1278,8 @@ c----------------------------------------------------------------------
 
       integer ids,i,j
 
-      double precision z, pa, p0a, x, w, y, wl
-      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
-     *              wl(m17,m18)
+      double precision z, pa, p0a, x, w, y
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1)
 c                                 x coordinate description
       integer istg, ispg, imlt, imdg
       double precision xmng, xmxg, xncg, xmno, xmxo, reachg
@@ -2759,9 +2753,8 @@ c-----------------------------------------------------------------------
       integer jend
       common/ cxt23 /jend(h9,k12)
 c                                 working arrays
-      double precision z, pa, p0a, x, w, y, wl
-      common/ cxt7 /x(m4),y(m4),pa(m4),p0a(m4),z(mst,msp),w(m1),
-     *              wl(m17,m18)
+      double precision z, pa, p0a, x, w, y
+      common/ cxt7 /x(m4),y(m4),pa(m4),p0a(m4),z(mst,msp),w(m1)
 c                                 model type
       logical lorder, lexces, llaar, lrecip
       common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)

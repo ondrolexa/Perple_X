@@ -69,13 +69,9 @@ c----------------------------------------------------------------------
 
       integer iam
       common/ cst4 /iam
-
-      logical homo
-      common/ homo / homo
 c----------------------------------------------------------------------- 
 c                                 iam is a flag indicating the Perple_X program
       iam = 2
-      homo = .false. 
 c                                 version info
       call vrsion
 c                                 initialization, read files etc. 

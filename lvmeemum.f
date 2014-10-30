@@ -112,6 +112,7 @@ c                                 N, H, S, Cp, Cp/Cv, rho, vphi
 c----------------------------------------------------------------------- 
 c                                 iam is a flag indicating the Perple_X program
       iam = 2
+      homo = .false. 
 c                                 version info
       call vrsion
 
@@ -187,7 +188,9 @@ c                                 simply as a f(P,T)
          write (*,1070) (vname(jv(i)), i = 1, ipot)
          read (*,*,iostat=ier) (v(jv(i)), i = 1, ipot)
          if (ier.ne.0) cycle
-         if (v(jv(1)).eq.0d0) exit 
+         if (v(jv(1)).eq.0d0) then 
+            exit
+         end if  
           
          if (bulk) then 
 c                                 load the composition into b, the component names are  
@@ -199,7 +202,9 @@ c                                 otherwise in molar units.
                read (*,*,iostat=ier) (cblk(i),i=1,jbulk-1)
                cblk(jbulk) = 1
                write (*,'(g12.6)') cblk(2)/(cblk(2)+cblk(1))
-               if (ier.eq.0) exit
+               if (ier.eq.0) then 
+                  exit
+               end if 
             end do  
          
             if (iwt.eq.1) then 
@@ -227,7 +232,7 @@ c                                 the results to the print file.
          tlv1 = v(2)
          quit = .false.
 c                                 rhoc base model
-         rhoc = 982d0
+         rhoc = 996d0
 c                                 rhoc shornikov
 c        rhoc = 1052d0
 c                                 rhoc amax
@@ -239,7 +244,6 @@ c        rhoc = 1220d0
 
          do
 
-            homo = .false.
             dt = 1d0
             go = .true.
  
@@ -248,7 +252,7 @@ c        rhoc = 1220d0
             x(2) = 0d0
             v(2) = tlv1 
 c                                 use guess, base model
-         v(2) = ((14.483*v(1)+31.569)*v(1)+391.69)*v(1)+3129.2 
+c         v(2) = ((14.483*v(1)+31.569)*v(1)+391.69)*v(1)+3120.2 
 c         y = 14.483*x^{3} + 31.569*x^{2} + 391.69*x + 3129.2 HSC base model
 c                                 use guess, shornikov model
 c        v(2) = ((14.074*v(1)+32.984)*v(1)+385.01)*v(1)+3096.2 
@@ -443,8 +447,6 @@ c                                 now increase t to get into the gas composition
 
                       do 
 
-c                         homo = .true.
-
                          v(2) = v(2) + dt 
                          call lpopt0 (idead)
                          if (idead.ne.0) cycle
@@ -481,19 +483,10 @@ c                         homo = .true.
 
                          else 
 
-                            if (dabs(dt).gt.nopt(29)) then
-
-                               if (props(10,1).lt.rhoc) then
-                                  if (dt.gt.0d0) then
-                                     dt = -dt/2d0
-                                     start = .false.
-                                  end if 
-                               else 
-                                  if (dt.lt.0d0) dt = -dt/2d0
-                               end if 
-
-                               cycle
-
+                            if (dt.gt.nopt(29)) then
+                               start = .false.
+                               dt = -dt/2d0
+                               cycle 
                             end if 
 
                          end if 
@@ -577,10 +570,7 @@ c                                 N, H, S, Cp, Cp/Cv, rho, vphi
          end do 
 
          pv1 = pv1 * prps(8,1)
-         pvv1 = pvv1
-
          pv2 = pv2 * prps(8,2)
-         pvv2 = pvv2 
 
           if (v(2).lt.6200d0)  
      *    write (111,'(120(g14.8,1x))') v(1),tlv,tlv-tlv1,tlv2-tlv,
@@ -617,7 +607,6 @@ c                         back calculate compositions
 
       ravg = (rho1 + rho2)/2d0
       savg = (prps(3,1) + prps(3,2))/2d0
-      rhoc = ravg
 
       t = v(2)
       p = 1d1**(v(1))
@@ -656,12 +645,13 @@ c            if (idead.eq.0) call getloc (itri,jtri,ijpt,wt,nodata)
             write (*,*) 'WANKO! tg=',tg
          end if 
 
-         if ((rho1-rho2)/rho1.lt.1d-3) exit 
+         if ((rho1-rho2)/rho1.lt.1d-3) then 
+            exit 
+         end if 
 
-
-         if (v(1).ge.2.5d0.and.dp.ge.0.02.and.v(1).lt.3.93d0) then
+         if (v(1).ge.2.5d0.and.dp.ge.0.02.and.v(1).lt.4d0) then
             dp = 0.01
-         else if (v(1).ge.3.925d0.and.dp.ge.0.009) then
+         else if (v(1).ge.4d0.and.dp.ge.0.009) then
             dp = 0.001
 c         else if (v(1).ge.3.86d0.and.dp.ge.0.0009) then 
 c            dp = 0.0001

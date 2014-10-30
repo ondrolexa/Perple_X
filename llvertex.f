@@ -2300,9 +2300,8 @@ c                                 local variables:
 c                                 -------------------------------------
 c                                 global variables:
 c                                 working arrays
-      double precision z, pa, p0a, x, w, y, wl
-      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
-     *              wl(m17,m18)
+      double precision z, pa, p0a, x, w, y
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1)
 c                                 x coordinate description
       integer istg, ispg, imlt, imdg
       double precision xmng, xmxg, xncg, xmno, xmxo, reachg

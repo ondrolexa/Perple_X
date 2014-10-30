@@ -90,7 +90,7 @@ c-----------------------------------------------------------------------
       else if (ifug.eq.25) then 
          call waddah
       else if (ifug.eq.26) then 
-         call rksi5  
+         call rkboth  
       else 
          call error (11,xco2,ifug,'EoS (routine CFLUID)') 
       end if 
@@ -6128,12 +6128,12 @@ c----------------------------------------------------------------------
       integer iavg, ins(5), isp, nit, i1, i2, i3, i4, i5, i,  
      *        itic, igood, ibad
 
-      logical bad, both, gas, guess
+      logical bad, both, gas
 
       double precision c1,c2,c3,rat,rp1,rm1,nsi,no,oymin,nymin,oy(nsp),
      *                 r2p1,r2m1,lnk1,lnk2,lnk3,dquart,oymax,nymax,
      *                 go,go2,gsi,gsio,gsio2, gzero, by(nsp), bg(nsp),
-     *                 bvol, bpv, bpvv, gold, gnew, n, tg, lp
+     *                 bvol, gold, gnew, tg, lp
 
       external dquart, gzero 
 
@@ -6145,9 +6145,6 @@ c----------------------------------------------------------------------
 
       double precision p,t,xc,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xc,u1,u2,tr,pr,r,ps
-
-      integer iam
-      common/ cst4 /iam
 
       double precision a0,a1,a2,a3 
       common/ coeffs /a0,a1,a2,a3 
@@ -6185,71 +6182,21 @@ c                                 zero species in case of degenerate composition
       do i = 1, isp
          y(ins(i)) = 0d0
       end do 
-
-      if (t.lt.2400d0.and.v(14).lt.1d2.and.
-     *     xc.gt.0.326.and.xc.lt.0.340) then
-c                                 conditional to destabilize the 
-c                                 multispecies fluid at low P in favor
-c                                 of SiO2(g)
-
-c                                 a more elegant solution would be to 
-c                                 look at the actual solution and reject
-c                                 if it's the dense phase at T < ~2400.
-         fh2o = dlog(1d4*p)
-         fco2 = dlog(1d4*p)
-         return
-
-      end if 
-c                                 degenerate compositions:
-      if (xc.eq.1d0) then 
-c                                 pure Si
-         fh2o = dlog(1d8*p)
-         fco2 = dlog(p*g(i5))
-         y(i5) = 1d0 
-         
-         goto 90
-
-      end if 
 c                                 evaluate K's and correct for pressure
 c                                 c1 = exp(lnK_1)*p => 2 O = O2, HSC K
       go =  gzero (2)
       go2 = gzero (ipoint+2)
-
-      lnk1 = (-0.9214495D6/t + 0.6234471D5)/t - 0.1631235D2
-      lnk1 = (2d0*go - go2)/r/t
-
-      c1 = dexp(lnk1) * p
-
-      if (xc.eq.0d0) then
-
-         if (c1.gt.1d0/nopt(5)) then 
-c                                assume pure O2
-            fh2o = (dlog(p*g(i4)) - lnk1)/2d0
-           fco2 = dlog(1d4*p)
-            y(i4) = 1d0 
-
-          else 
-
-            call rko2 (c1,iavg)
-
-           goto 90
-         
-
-         end if 
-
-c         return 
-
-          xc = nopt(5) 
-
-      end if 
-c                                 c2 = exp(lnK_2)/p => SiO2 = SiO + O
-c                                  k_2 from shornikov enthalpy
-      lnk2 = (-1.133204d+06/t - 5.491882d+04)/t + 1.710990d+01
-
       gsio  = gzero (ipoint+1)
       gsio2 = gzero (ipoint+3)
       gsi = gzero (1)
 
+c      lnk1 = (-0.9214495D6/t + 0.6234471D5)/t - 0.1631235D2
+      lnk1 = (2d0*go - go2)/r/t
+      c1 = dexp(lnk1) * p
+
+c                                 c2 = exp(lnK_2)/p => SiO2 = SiO + O
+c                                  k_2 from shornikov enthalpy
+c      lnk2 = (-1.133204d+06/t - 5.491882d+04)/t + 1.710990d+01
       lnk2 = (gsio2 - go - gsio)/r/t
 
 c                                  HSC   
@@ -6264,14 +6211,6 @@ c      lnk3 = (4.187931d5/t - 9.909023d4)/t + 1.627557d1
 c                                 some inner loop constants
 c                                 rat = nsi/no = xc/(1-xc) 
       rat = xc/(1d0-xc)
-c                                 set singular compositions if within 
-c                                 speciation tolerance.
-      if (dabs(rat-0.5d0).lt.nopt(5)) then 
-c        rat = 0.5d0
-      else if (dabs(rat-1d0).lt.nopt(5)) then 
-c        rat = 1d0
-      end if 
-
       rp1    = rat + 1d0
       rm1    = rat - 1d0
       r2p1    = 2d0*rat + 1d0
@@ -6286,72 +6225,31 @@ c                                switch root entry point
       oymin = 1d0
       oymax = 0d0 
       bad = .false. 
-c                                  speciation guesses
       gas = .false.
 
       lp = dlog10(p)
       tg = ((15.392*lp+25.635)*lp+400.7)*lp+3126.7 
 
-      if (t.gt.0d0) then
-      
-      if (rat.le.1d0.and.rat.ge.0.5d0) then
-c                                  SiO-SiO2 mix (this is only true at high T)
+c                                 initial guess:
+      if (rat.ge.0.5.and.rat.le.1d0) then 
+c                                 SiO-SiO2 mix 
          y(14) = (1d0 - rat)/rat
          y(13) = 1d0 - y(14)
          y(15) = nopt(5)
          y(7)  = nopt(5)/4d0
          y(12) = nopt(5)/2d0
 
-         call mrkmix (ins, isp, iavg)    
-
-c        if (vol.gt.1d2) gas = .true.
-
-         if (gas) then 
-             i = 1
-         end if 
-
-      end if 
-
-      if (rat.le.1d0.and.gas.or.rat.le.0.5d0) then 
-c                                 solve ideal gas speciation
-         a0 = -c2 * c3 / c1  
-         a1 = c2 * (rm1 + c3 * rp1) / c1
-         a2 = (c2 * c3 * r2p1 + (r2m1 + c2) / c1) 
-         a3 = (c2 * rp1 - rm1 / c1) 
-c                                 monatomic O     
-         call newton (dquart,1d0,0d0,1d-12,y(i3),bad)
-
-         if (bad) then
-            write (*,*) 'paused yo',p,t,xc
-            pause
-         end if
-c                                 back calculate remaining fractions:
-c                                 K1 => O2: 
-         y(i4) = c1*y(i3)**2
-c                                 mass balance => sio: this might be singular
-c                                 at R = 1/2?
-         y(i2)  = y(i3)*((2d0 - y(i3))*rat - 1d0 + y(i3) + y(i4)) / rat 
-     *             / (y(i3) + 2d0*c3)
-
-         if (y(i2).lt.0d0) then
-c           write (*,*) 'paused ysio',p,t,xc,y(i2)
-            y(i2) = nopt(5)/10d0
-         end if
-c                                  K3 => Si
-         y(i5) = c3/y(i3)*y(i2)
-c                                 closure => sio2: 
-         y(i1) = 1d0 - y(i2) - y(i3) - y(i4) - y(i5)
-
-         if (y(i1).lt.0d0) then
-c           write (*,*) 'paused ysio2',p,t,xc,y(i1)
-            y(i1) = nopt(5)/10d0
-         end if
-
-         call mrkmix (ins, isp, iavg)    
+      else
+c                                 Si-SiO mix
+         y(14) = nopt(5)
+         y(13) = 1d0/rat
+         y(15) = 1d0 - 1/rat
+         y(7)  = nopt(5)
+         y(12) = nopt(5)
 
       end if 
 
-      end if 
+      call mrkmix (ins, isp, iavg)    
 
       do 
 c                                 solve mass balance: yo^4 + a3*yo^3 + a2*yo^2 + a1*yo + a0) 
@@ -6422,7 +6320,7 @@ c                                 liquids.
      
                end if 
 
-               goto 90
+               return
 
             end if 
 
@@ -6492,15 +6390,6 @@ c                                 this does help!
 
          end if 
 c                                 get new gamma's
-         if (v(14).lt.0*1d2.and.xc.gt.0.326.and.xc.lt.0.340) then
-
-
-            fh2o = dlog(1d4*p)
-            fco2 = dlog(1d4*p)
-            goto 90
-
-         else 
-
             call mrkmix (ins, isp, iavg)           
 c                                could converge to the wrong speciation
 c           if ((.not.both).and.iroots.eq.3.and.(.not.sroot)) then
@@ -6510,8 +6399,6 @@ c           if ((.not.both).and.iroots.eq.3.and.(.not.sroot)) then
                both = .true.
                min = rkmin
             end if
- 
-         end if 
 
          nit = nit + 1
          oymin = nymin
@@ -6577,7 +6464,7 @@ c                                save old solution
 
          fh2o = dlog(1d4*p)
          fco2 = dlog(1d4*p)
-         goto 90 
+         return
 
       end if 
 
@@ -6596,12 +6483,568 @@ c                                save old solution
          itic = 0 
          write (*,*) 'good,bad:',igood,ibad,t,p
       end if 
+
+      end
+
+      subroutine rkboth 
+c----------------------------------------------------------------------
+c subroutine to compute speciation and fugacites in 5 species silica vapor
+
+c p    - pressure, bar
+c t    - temperature, K
+c xc   - bulk Si/(Si+O) (molar)
+c fh2o - ln(fO)
+c fco2 - ln(fSi)
+
+c derivation and data sources in maple work sheet Si-O_rk5_R=R_speciation.mws
+c                                 JADC 6/12
+c the Si-O2_rk4_v1_speciation.mws sheet for rksi4a may be more rational.
+c----------------------------------------------------------------------
+      implicit none 
+
+      include 'perplex_parameters.h'
+
+      integer iavg, ins(5), isp, i4, i5, i
+
+      double precision oy(nsp), og(nsp), xfo, xfs, xv, lnk1, go2, go,
+     *                 n, dg, g1, g2, c1, gzero, rat
+
+      external gzero
+
+      double precision y,g,v
+      common / cstcoh /y(nsp),g(nsp),v(nsp)
+
+      double precision fh2o,fco2
+      common/ cst11 /fh2o,fco2
+
+      double precision p,t,xc,u1,u2,tr,pr,r,ps
+      common/ cst5 /p,t,xc,u1,u2,tr,pr,r,ps
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      integer ipoint,imyn
+      common/ cst60 /ipoint,imyn
+
+      double precision vol
+      common/ cst26 /vol
+
+      save isp, ins, i4, i5
+      data isp, ins, i4, i5
+     *                                      /5, 14, 13, 12, 7, 15, 
+     *                                                      7, 15/
+c----------------------------------------------------------------------
+c                                  low T hack
+      if (t.lt.2400d-3.and.v(14).lt.1d2.and.
+     *     xc.gt.0.326.and.xc.lt.0.340) then
+c                                 conditional to destabilize the 
+c                                 multispecies fluid at low P in favor
+c                                 of SiO2(g)
+
+c                                 a more elegant solution would be to 
+c                                 look at the actual solution and reject
+c                                 if it's the dense phase at T < ~2400.
+         fh2o = dlog(1d4*p)
+         fco2 = dlog(1d4*p)
+         return
+
+      end if 
+
+
+      if (xc.eq.0d0.or.xc.eq.1d0) then 
+c                                 degenerate cases
+c                                 get pure species fugacities, formerly
+c                                 in these cases xc was set to tol or 1 - tol
+c                                 probably to stabilize optimization? or maybe for
+c                                 chemical potentials.
+         call mrkpur (ins, isp)
+c                                 zero species in case of degenerate compositions
+         do i = 1, isp
+            y(ins(i)) = 0d0
+         end do 
+
+         if (xc.eq.1d0) then 
+c                                 pure Si
+            fh2o = dlog(1d8*p)
+            fco2 = dlog(p*g(i5))
+            y(i5) = 1d0 
+
+         else 
+c                                 pure O
+c                                 evaluate K's and correct for pressure
+c                                 c1 = exp(lnK_1)*p => 2 O = O2, HSC K
+            go =  gzero (2)
+            go2 = gzero (ipoint+2)
+
+            lnk1 = (-0.9214495D6/t + 0.6234471D5)/t - 0.1631235D2
+            lnk1 = (2d0*go - go2)/r/t
+
+            c1 = dexp(lnk1) * p
+
+            if (c1.gt.1d0/nopt(5)) then 
+c                                assume pure O2
+               fh2o = (dlog(p*g(i4)) - lnk1)/2d0
+               fco2 = dlog(1d4*p)
+               y(i4) = 1d0 
+
+            else 
+
+               call rko2 (c1,iavg)
+
+            end if 
+         
+         end if 
+
+      else 
+
+         rat = xc/(1d0-xc)
+c                                 non-degenerate compositions:
+         if (rat.ge.0.5d0) then 
+c                                 use a liquid like starting guess
+            call rksi5
+
+            g1 = fco2*xc + fh2o*(1d0-xc)
+
+            do i = 1, isp
+               oy(ins(i)) = y(ins(i))
+               og(ins(i)) = g(ins(i))
+            end do 
+
+            xfs = fco2
+            xfo = fh2o
+            xv = vol
+
+         else
+
+            g1 = 1d99
+
+         end if 
+
+         call rksi5a
+
+         g2 = fco2*xc + fh2o*(1d0-xc)
+
+         dg = g1 - g2
+
+         if (dg.lt.1d-5) then 
+
+c            if (dg.lt.-1d1) write (*,*) 'liq wins: ',dg,p,t,xc
+
+            do i = 1, isp
+               y(ins(i)) = oy(ins(i))
+               g(ins(i)) = og(ins(i))
+            end do 
+
+            fco2 = xfs 
+            fh2o = xfo
+            vol = xv 
+
+         end if 
+
+      end if 
 c                                 convert to g-atom vol
-90    n = 3d0*y(14) + 2d0*y(13) + 2d0*y(7) + y(12) + y(15)
+      n = 3d0*y(14) + 2d0*y(13) + 2d0*y(7) + y(12) + y(15)
 c                                 convert to "molar amounts"         
       vol = vol/n/1d1
 
-c      if (nit.gt.20) write (*,*) 'rk5 long nit',nit
+      end 
+
+      subroutine rksi5a 
+c----------------------------------------------------------------------
+c subroutine to compute speciation and fugacites in 5 species silica vapor
+
+c p    - pressure, bar
+c t    - temperature, K
+c xc   - bulk Si/(Si+O) (molar)
+c fh2o - ln(fO)
+c fco2 - ln(fSi)
+
+c derivation and data sources in maple work sheet Si-O_rk5_R=R_speciation.mws
+c                                 JADC 6/12
+c the Si-O2_rk4_v1_speciation.mws sheet for rksi4a may be more rational.
+c----------------------------------------------------------------------
+      implicit none 
+
+      include 'perplex_parameters.h'
+
+      integer iavg, ins(5), isp, nit, i1, i2, i3, i4, i5, i,  
+     *        itic, igood, ibad
+
+      logical bad, both, gas
+
+      double precision c1,c2,c3,rat,rp1,rm1,nsi,no,oymin,nymin,oy(nsp),
+     *                 r2p1,r2m1,lnk1,lnk2,lnk3,dquart,oymax,nymax,
+     *                 go,go2,gsi,gsio,gsio2, by(nsp), bg(nsp), gzero, 
+     *                 bvol, gold, gnew, tg, lp
+
+      external dquart, gzero 
+
+      double precision y,g,v
+      common / cstcoh /y(nsp),g(nsp),v(nsp)
+
+      double precision fh2o,fco2
+      common/ cst11 /fh2o,fco2
+
+      double precision p,t,xc,u1,u2,tr,pr,r,ps
+      common/ cst5 /p,t,xc,u1,u2,tr,pr,r,ps
+
+      double precision a0,a1,a2,a3 
+      common/ coeffs /a0,a1,a2,a3 
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      integer ipoint,imyn
+      common/ cst60 /ipoint,imyn
+
+      double precision pv, pvv
+      integer iroots
+      logical switch, rkmin, min
+      common/ rkdivs /pv,pvv,iroots,switch,rkmin,min
+
+      double precision vol
+      common/ cst26 /vol
+
+      double precision vrt
+      integer irt
+      logical sroot
+      common/ rkroot /vrt,irt,sroot
+
+      save isp, ins, i1, i2, i3, i4, i5, itic, igood, ibad, both, iavg
+      data isp, ins, i1, i2, i3, i4, i5, itic, igood, ibad, both, iavg
+     *                                      /5, 14, 13, 12, 7, 15, 
+     *                                          14, 13, 12, 7, 15, 3*0,
+     *                                          .false., 1/
+c----------------------------------------------------------------------
+c                                 get pure species fugacities
+      call mrkpur (ins, isp)
+c                                 zero species in case of degenerate compositions
+      do i = 1, isp
+         y(ins(i)) = 0d0
+      end do 
+c                                 evaluate K's and correct for pressure
+c                                 c1 = exp(lnK_1)*p => 2 O = O2, HSC K
+      go =  gzero (2)
+      go2 = gzero (ipoint+2)
+      gsio  = gzero (ipoint+1)
+      gsio2 = gzero (ipoint+3)
+      gsi = gzero (1)
+
+      lnk1 = (-0.9214495D6/t + 0.6234471D5)/t - 0.1631235D2
+      lnk1 = (2d0*go - go2)/r/t
+
+      c1 = dexp(lnk1) * p
+c                                 c2 = exp(lnK_2)/p => SiO2 = SiO + O
+c                                  k_2 from shornikov enthalpy
+      lnk2 = (-1.133204d+06/t - 5.491882d+04)/t + 1.710990d+01
+      lnk2 = (gsio2 - go - gsio)/r/t
+c                                  HSC   
+c      lnk2 = (-0.1133204D7/t - 0.5491882D5)/t + 0.1710990D2 
+      c2 = dexp(lnk2)/p
+c                                 c3 = exp(lnK_3)/p => SiO = Si + O, shornikov H_SiO 
+      lnk3 = (1.906315d6/t - 1.005993d5)/t + 1.664069d1
+      lnk3 = (gsio - go - gsi)/r/t
+c                                  HSC
+c      lnk3 = (4.187931d5/t - 9.909023d4)/t + 1.627557d1
+      c3 = dexp(lnk3)/p
+c                                 some inner loop constants
+c                                 rat = nsi/no = xc/(1-xc) 
+      rat = xc/(1d0-xc)
+
+      rp1    = rat + 1d0
+      rm1    = rat - 1d0
+      r2p1    = 2d0*rat + 1d0
+      r2m1    = 2d0*rat - 1d0
+
+c      if (.not.sroot) then 
+         switch = .false.
+         both = .false.
+c     end if 
+c                                switch root entry point
+10    nit = 0 
+      oymin = 1d0
+      oymax = 0d0 
+      bad = .false. 
+c                                  speciation guesses
+      gas = .false.
+
+      lp = dlog10(p)
+      tg = ((15.392*lp+25.635)*lp+400.7)*lp+3126.7 
+
+c                                 solve ideal gas speciation
+         a0 = -c2 * c3 / c1  
+         a1 = c2 * (rm1 + c3 * rp1) / c1
+         a2 = (c2 * c3 * r2p1 + (r2m1 + c2) / c1) 
+         a3 = (c2 * rp1 - rm1 / c1) 
+c                                 monatomic O     
+         call newton (dquart,1d0,0d0,1d-12,y(i3),bad)
+
+         if (bad) then
+            write (*,*) 'paused yo',p,t,xc
+            pause
+         end if
+c                                 back calculate remaining fractions:
+c                                 K1 => O2: 
+         y(i4) = c1*y(i3)**2
+c                                 mass balance => sio: this might be singular
+c                                 at R = 1/2?
+         y(i2)  = y(i3)*((2d0 - y(i3))*rat - 1d0 + y(i3) + y(i4)) / rat 
+     *             / (y(i3) + 2d0*c3)
+
+         if (y(i2).lt.0d0) then
+c           write (*,*) 'paused ysio',p,t,xc,y(i2)
+            y(i2) = nopt(5)/10d0
+         end if
+c                                  K3 => Si
+         y(i5) = c3/y(i3)*y(i2)
+c                                 closure => sio2: 
+         y(i1) = 1d0 - y(i2) - y(i3) - y(i4) - y(i5)
+
+         if (y(i1).lt.0d0) then
+c           write (*,*) 'paused ysio2',p,t,xc,y(i1)
+            y(i1) = nopt(5)/10d0
+         end if
+
+         call mrkmix (ins, isp, iavg)    
+
+
+      do 
+c                                 solve mass balance: yo^4 + a3*yo^3 + a2*yo^2 + a1*yo + a0) 
+c                                 for yo
+         a0 = -c2 * c3 / c1 * g(i1) * g(i4) / g(i5) / g(i3) ** 4 
+         a1 = c2 * g(i1) * g(i4) * (rm1 * g(i3) / g(i2) + c3 * rp1 
+     *            / g(i5)) / g(i3) ** 4 / c1
+         a2 = (c2 * g(i1) * g(i3) / g(i5) * c3 * r2p1 + g(i4) * 
+     *           (r2m1 * g(i3) + c2 * g(i1) / g(i2)) / c1) / g(i3) ** 3
+
+         a3 = (c2 * g(i1) * g(i3) / g(i2) * rp1 - rm1 * g(i4) / c1) 
+     *           / g(i3) ** 2
+c                                 monatomic O     
+         call newton (dquart,1d0,0d0,1d-12,y(i3),bad)
+
+         if (bad) then 
+           
+            exit 
+
+         else if (y(i3).eq.0d0) then 
+c                                 may not find the root if switch on 
+c                                 first iteration       
+            y(i3) = nopt(5)
+
+         else if (isnan(y(i3)).or.y(i3).le.0d0.or.y(i3).eq.nopt(5)) then
+
+            bad = .true.
+            exit 
+
+         end if 
+c                                 back calculate remaining fractions:
+c                                 K1 => O2: 
+         y(i4) = c1/g(i4)*(y(i3)*g(i3))**2
+c                                 mass balance => sio: this might be singular
+c                                 at R = 1/2?
+         y(i2)  = g(i5)*y(i3)*g(i3)*((2d0 - y(i3))*rat 
+     *             - 1d0 + y(i3) + y(i4)) / rat 
+     *             / (g(i5)*y(i3)*g(i3) + 2d0*c3*g(i2))
+c
+         if (y(i2).le.0d0) then 
+
+            if (dabs(y(i2)).lt.nopt(5)) then 
+
+               y(i2) = 0d0
+
+            else 
+
+               bad = .true.
+               exit 
+
+               do i = 1, isp
+                  y(ins(i)) = 0d0
+               end do 
+c                                 two 4 species bailouts
+c                                 4a has Si-O2-SiO-SiO2
+c                                 4 has SiO2-SiO-O-O2,
+c                                 neither is appropriate for reduced 
+c                                 liquids.
+               call rksi4a (lnk1,iavg,bad)
+
+               if (bad) then
+ 
+                  do i = 1, isp
+                     y(ins(i)) = 0d0
+                  end do 
+
+                  call rksi4 (bad,iavg)
+     
+               end if 
+
+               return
+
+            end if 
+
+         end if 
+c                                  K3 => Si
+         y(i5) = c3/g(i5)/y(i3)/g(i3)*y(i2)*g(i2)
+c                                 closure => sio2: 
+         y(i1) = 1d0 - y(i2) - y(i3) - y(i4) - y(i5)
+
+         if (y(i1).lt.0d0) then
+
+            if (dabs(y(i1)).lt.nopt(5)) then 
+               y(i1) = 0d0
+            else 
+               bad = .true.
+               exit
+            end if  
+
+         end if 
+
+         nymin = 1d0
+         nymax = 0d0 
+         no = 0d0      
+c                                 renormalize, this helps! 
+         do i = 1, isp
+            no = no + y(ins(i))
+         end do
+
+         do i = 1, isp
+            y(ins(i)) = y(ins(i))/no
+         end do 
+
+         do i = 1, isp
+
+            if (y(ins(i)).gt.nymax) nymax = y(ins(i))
+            if (y(ins(i)).lt.nymin.and.
+     *          y(ins(i)).gt.0d0) nymin = y(ins(i))
+
+         end do
+
+         nsi = y(14) + y(13) + y(15)
+         no  = 2d0*(y(7)+y(14)) + y(13) + y(12) 
+
+         if ( dabs(nymax-oymax)/nymax.lt.nopt(5).and.
+     *        dabs(nymin-oymin)/nymin.lt.nopt(5).and.
+     *        dabs(xc-nsi/(nsi+no)).lt.nopt(5) ) then
+
+            igood = igood + 1 
+
+            exit 
+
+         else if (nit.gt.iopt(21)) then  
+ 
+            bad = .true.
+            exit
+ 
+         end if 
+c                                 make change less violent
+c                                 this does help!
+         if (nit.gt.1) then 
+
+            do i = 1, isp
+
+               y(ins(i)) = (0.5*y(ins(i))+0.5*oy(ins(i)))
+
+            end do  
+
+         end if 
+c                                 get new gamma's
+            call mrkmix (ins, isp, iavg)           
+c                                could converge to the wrong speciation
+c           if ((.not.both).and.iroots.eq.3.and.(.not.sroot)) then
+            if (sroot.and.iroots.eq.3) then 
+               both = .true.
+            else if ((.not.both).and.iroots.eq.3) then
+               both = .true.
+               min = rkmin
+            end if
+
+         nit = nit + 1
+         oymin = nymin
+         oymax = nymax
+         do i = 1, isp
+            oy(ins(i)) = y(ins(i))
+         end do 
+
+      end do 
+
+      itic = itic + 1 
+
+c     if (both.and.(.not.sroot)) then
+      if (both) then
+
+         if (switch) then
+c                                on the second solution
+            gnew = 1d9
+            gold = 1d9
+            if (y(i3).gt.1d-20.and.y(i5).gt.1d-20)  
+     *         gnew =  (1d0-xc) * dlog(g(i3)*y(i3)) 
+     *                     + xc * dlog(g(i5)*y(i5))
+            if (by(i3).gt.1d-20.and.by(i5).gt.1d-20) 
+     *         gold =  (1d0-xc) * dlog(bg(i3)*by(i3)) 
+     *                     + xc * dlog(bg(i5)*by(i5))
+
+            if (gold.lt.gnew) then 
+c                                swap to the old solution
+               do i = 1, isp
+                  y(ins(i)) = by(ins(i))
+                  g(ins(i)) = bg(ins(i))
+               end do 
+
+               vol = bvol
+c                                for sroot, 1st solution is good
+               switch = .false.
+   
+            end if             
+
+         else 
+c                                save old solution
+            do i = 1, isp
+               by(ins(i)) = y(ins(i))
+               oy(ins(i)) = 0d0 
+               bg(ins(i)) = g(ins(i))
+            end do 
+
+            bvol = vol
+
+            switch = .true.
+
+            call mrkpur (ins, isp)
+
+            goto 10
+
+         end if  
+
+      end if 
+
+      if (bad) then 
+
+         ibad = ibad + 1 
+
+         fh2o = dlog(1d4*p)
+         fco2 = dlog(1d4*p)
+         return
+
+      end if 
+
+      fh2o = dlog(p*g(i3)*y(i3)) 
+      if (y(i5).ne.0d0) then 
+         fco2 = dlog(p*g(i5)*y(i5))
+      else if (y(i2).ne.0d0) then 
+         fco2 = lnk3 + dlog(g(i2)*y(i2)/g(i3)/y(i3))
+      else if (y(i1).ne.0d0) then 
+         fco2 = lnk2 + lnk3 + dlog(g(i1)*y(i1)/p/(g(i3)*y(i3))**2)
+      else
+         write (*,*) 'wugga rksi5 ',t,p,xc,y
+      end if 
+
+      if (itic.gt.200000) then 
+         itic = 0 
+         write (*,*) 'good,bad:',igood,ibad,t,p
+      end if 
+
       end
 
       double precision function gerk (x)
@@ -6686,7 +7129,7 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
  
-      double precision brk(nsp), ark(nsp), a0 
+      double precision brk(nsp), ark(nsp)
 
       integer ins(*), isp, i, k
 
@@ -6708,17 +7151,18 @@ c-----------------------------------------------------------------------
      *          174026d2, 133.1d6, 130d6, 136d5 , 631d5,
 c             O, SiO, SiO2, Si, unk:
 c             asio = aco/aco2 * asio2 => 1/16.722 => 424441664.6d0
-c using HSC (shornikov a = 73739...)
+c bp values for si, sio2
      *          174026d2, 424441664.6d0,  7165898184d0, 2349662883d0,  
-     *          0d0/a0/1d0/,
+     *          0d0/,
      *     brk /14.6,  29.7,  27.38, 29.681, 15.7699, 29.94,
      *          22.07,  37.4,  43d0,  23.42,   18.84, 
 c             O, SiO, SiO2, Si, unk:
 c             bsio = bco/bco2*bsio2 => 1/4.83
 c             bo  ~ bo2
-c using Shornikov:
+c using actual bco/bco2:
 c    *          22.07, 23.81d0, 25.83798814d0, 10.35788774, 0d0/
-c using HSC:
+c rhocrit o2 - 1449 o - 724. sio - 1851 sio2 - 2325 si - 2711
+c using bco/bco2 = 1/4.83 (true critical b's):
      *          22.07, 5.148732998d0, 25.79671756d0, 10.35788774, 0d0/
 c----------------------------------------------------------------------
 c      if (first) then 
@@ -6775,9 +7219,13 @@ c                                  HSC DP fit, with a0 correction
      * + t * (-0.115746244073046750D6) 
      * + t ** 2 * (-0.126792045931319510D2)) * 1d2
 
-c delta component :
 
+c    *            +  nopt(29)*(t-1999.)
+c delta component :
      *            +  32300.*(t-1999.) + 14.25*(t-1999.)**2
+c                                   fit to mp s,cp,g,v
+c           a(14) = ( 73828180.7110d0 + 7535d0*(t-1999.)
+c    *                  - 4.438d0*(t-1999.)**2)*1d2
 
 
          else if (i.eq.15) then 
@@ -6791,6 +7239,9 @@ c delta component
      *      -50.5d0*(t-1687.) - 2.04d-2*(t-1687.)**2
      *      )*1d2
 
+c                                   fit to mp s,cp,g,v
+c          a(15) = ( 23496628.831d0 + 6342d0  * (t-1687.)
+c    *                              - 1.138d0  * (t-1687.)**2)*1d2
 
          else 
 
