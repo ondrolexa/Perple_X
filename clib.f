@@ -302,8 +302,8 @@ c                                 gridded minimization
             jlow = grid(4,index)
             loopx = 1
          else 
-            jlow = grid(1,index)
-            loopx = grid(2,index) 
+            jlow = grid(2,index)
+            loopx = grid(1,index) 
          end if
 
          jlev = grid(3,index) 

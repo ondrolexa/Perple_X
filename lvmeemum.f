@@ -74,7 +74,7 @@ c----------------------------------------------------------------------
      *                 cp2, x1, dp, rhoc, x2, pv1, pv2, pvv1, pvv2,
      *                 spec1(5,2),n(2),x(2),molwt(2),specwt(5),nat,
      *                 prps(8,2),xb(2),no,nsi,tot,p,t,lnk1,lnk2,lnk3,
-     *                 lnk4,lnk5,ravg,savg,z(2)
+     *                 lnk4,lnk5,ravg,savg,z(2), xtlv, xdt
 
       data specwt/60.084, 44.085, 15.999, 31.998, 28.086/
 
@@ -185,8 +185,8 @@ c                                 read potential variable values
 c                                 v(1) is P(bar), v(2) is T(K) the pointer jv used 
 c                                 for general problems but can be eliminated for calculations 
 c                                 simply as a f(P,T)       
-         write (*,1070) (vname(jv(i)), i = 1, ipot)
-         read (*,*,iostat=ier) (v(jv(i)), i = 1, ipot)
+         write (*,1070) (vname(jv(i)), i = 1, ipot), 'rhoc'
+         read (*,*,iostat=ier) (v(jv(i)), i = 1, ipot), rhoc
          if (ier.ne.0) cycle
          if (v(jv(1)).eq.0d0) then 
             exit
@@ -229,10 +229,12 @@ c                                 is necessary for reasons of stupidity (lpopt0)
          end if 
 c                                 lpopt does the minimization and outputs
 c                                 the results to the print file.
+         xtlv = 0d0
+         xdt = 1d0
          tlv1 = v(2)
          quit = .false.
 c                                 rhoc base model
-         rhoc = 996d0
+c        rhoc = 1170d0
 c                                 rhoc shornikov
 c        rhoc = 1052d0
 c                                 rhoc amax
@@ -245,6 +247,14 @@ c        rhoc = 1220d0
          do
 
             dt = 1d0
+
+            if (xtlv.ne.0) then 
+               dt = (tlv1 - xtlv)/3d0
+               xdt = dt
+            end if    
+
+            xtlv = tlv1
+
             go = .true.
  
             b(1) = 2d0/3d0
@@ -376,11 +386,11 @@ c comp 1 is O.
                               imax = iabs(imax) 
                            end if 
 
-                           if (tic.gt.10.and.dabs(dt).lt.1) then
+                           if (tic.gt.10.and.dabs(dt).lt.xdt) then
                               tic = 0
                               dt = 10d0*dt
-                              if (dabs(dt).gt.1d0) dt = -1d0
-                           end if 
+                              if (dabs(dt).gt.xdt) dt = -xdt
+                           end if
 
                            tic = tic + 1
 
@@ -455,7 +465,7 @@ c                                 now increase t to get into the gas composition
 
                          if (np.gt.1.and.start) then 
 
-                            dt = 1d0 
+                            dt = xdt 
                             cycle 
 
                          else if (np.eq.1.and.start) then 
