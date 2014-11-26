@@ -17,7 +17,7 @@ c----------------------------------------------------------------------
       implicit none
 
       write (*,'(/,a)') 
-     *      'Perple_X version 6.7.1, source updated Oct 17, 2014.'
+     *      'Perple_X version 6.7.1, source updated Nov 18, 2014.'
 
       end
 
@@ -1761,6 +1761,8 @@ c---------------------------------------------------------------------
          write (*,44) 
       else if (ier.eq.45) then 
          write (*,45) 
+      else if (ier.eq.46) then 
+         write (*,46) iopt(16), int, char
       else if (ier.eq.47) then 
          write (*,47) char
       else if (ier.eq.48) then 
@@ -1995,6 +1997,10 @@ c---------------------------------------------------------------------
 44    format (/,'**error ver044** too many saturated phase components.'
      *        /)
 45    format (/,'**error ver045** too many mobile components.'/)
+46    format (/,'**error ver046** the first value of the iteration ',
+     *          'keyword exceeds (',i3,') the value',/,'of MRES (',i3,
+     *          ') specified in routine ',a,'. Either reduce the',/,
+     *          'iteration keyword value or increase MRES.',/) 
 47    format (/,'**error ver047** solution model ',a,' is incorrectly ',
      *        'formatted (van Laar).',/)
 48    format (/,'**error ver048** too many terms in solution model ',a,

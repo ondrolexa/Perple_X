@@ -4560,7 +4560,7 @@ c            end if
 c                                 cartesian
             do while (y(i,iy(i)).lt.ymax)
                iy(i) = iy(i) + 1
-               if (iy(i).gt.mres) call error (999,ync,mres,sname)
+               if (iy(i).gt.mres) call error (50,ync,mres,sname)
                y(i,iy(i)) = y(i,iy(i)-1) + ync
                if (dabs(y(i,iy(i))-ymax).lt.nopt(5)) then
                   y(i,iy(i)) = ymax
@@ -4632,7 +4632,7 @@ c                        write (*,1010) fname(ids)
 c                     end if 
  
                      iy(i) = iy(i) + 1
-                     if (iy(i).gt.mres) call error (999,ync,mres,sname)
+                     if (iy(i).gt.mres) call error (50,ync,mres,sname)
 c                                 check if in bounds
                      if (dabs(yreal-ymax).lt.nopt(5).or.
      *                                     yreal.gt.ymax) then
@@ -4667,7 +4667,7 @@ c                                 add last point if necessary, can it be?
 c                                 certainly not for conformal. 
          if (y(i,iy(i)).lt.ymax) then
             iy(i) = iy(i) + 1
-            if (iy(i).gt.mres) call error (999,ync,mres,sname)
+            if (iy(i).gt.mres) call error (50,ync,mres,sname)
             y(i,iy(i)) = ymax
          end if          
  
@@ -11913,6 +11913,8 @@ c---------------------------------------------------------------------
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 c----------------------------------------------------------------------
+c                                 this trap should be in redopt
+      if (iopt(11).gt.mres) call error (46,ync,mres,'SUBDV0')
 
       ync = 1d0/dfloat(iopt(11))
       lsp = mxsp - 1
@@ -11926,7 +11928,6 @@ c                                 generate coordinates for i'th component
       do while (y(iy).lt.1d0)
 
          iy = iy + 1
-         if (iy.gt.mres) call error (999,ync,mres,'SUBDV0')
 
          y(iy) = y(iy-1) + ync
 

@@ -2040,7 +2040,7 @@ c----------------------------------------------------------------------
       integer i, j, id
 
       double precision g0, dp0, dp1, dp2, v, gpp, ginc, gpt, gpt1, gpt2,
-     *                 s, gtt, dt0, dt1, dt2 
+     *                 s, gtt, dt0, dt1, dt2, xdp, xdt
 
       external ginc
 
@@ -2054,6 +2054,9 @@ c----------------------------------------------------------------------
 c----------------------------------------------------------------------
 c                                 pressure increments
       okt = .false.
+
+      xdp = dp0
+      xdt = dt0
 
       do i = 1, 2
 
@@ -2080,7 +2083,12 @@ c                                 pressure increments
 
       end do
 
-      dp0 = dabs(1d-5*v/gpp)
+      if (okt) then 
+         dp0 = dabs(1d-5*v/gpp)
+      else 
+c                                 negative compressibility?
+         dp0 = xdp
+      end if 
 c                                 final values
       call getgpp (g0,dp0,dp1,dp2,v,gpp,id,fow)
 c                                 -------------------------------------
@@ -2113,7 +2121,12 @@ c                                 temperature increments
 
       end do
 
-      dt0 = dabs(1d-5*s/gtt)
+      if (okt) then 
+         dt0 = dabs(1d-5*s/gtt)
+      else 
+c                                 something has gone horribly wrong! 
+         dt0 = xdt
+      end if 
 c                                 final values
       call getgtt (g0,dt0,dt1,dt2,s,gtt,id)
 
