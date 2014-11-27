@@ -902,7 +902,7 @@ c                                 internal fluid eos
 
       end
 
-      subroutine shearm (mu,mut,mup,ks,kst,ksp,id)
+      recursive subroutine shearm (mu,mut,mup,ks,kst,ksp,id)
 c-----------------------------------------------------------------------
 c shearm returns a linear model for the adiabatic shear/bulk modulus
 c relative to the current pressure and temperature.
@@ -1039,9 +1039,8 @@ c                                compute the sum of the component g's
          mup = mup + mkcoef(jd,i) * pmup
 
          ks = ks + mkcoef(jd,i) * pks
-         mut = kst + mkcoef(jd,i) * pkst
-         mup = ksp + mkcoef(jd,i) * pksp
-
+         kst = kst + mkcoef(jd,i) * pkst
+         ksp = ksp + mkcoef(jd,i) * pksp
 
       end do 
 
