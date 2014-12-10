@@ -45,9 +45,9 @@ c----------------------------------------------------------------------
 
       integer icps, jcx, jcx1, kds
       logical stol, savg
-      double precision rcps
-      common/ comps /rcps(k7,2*k5),icps(k7,2*k5),jcx(2*k5),jcx1(2*k5),
-     *               kds(2*k5),stol(i11),savg(i11)
+      double precision rcps, a0
+      common/ comps /rcps(k7,2*k5),a0(k7,2),icps(k7,2*k5),jcx(2*k5),
+     *               jcx1(2*k5),kds(2*k5),stol(i11),savg(i11)
 c----------------------------------------------------------------------- 
 c                                 iam is a flag indicating the Perple_X program
       iam = 3
@@ -1672,14 +1672,14 @@ c ------------------------------------------------------------------
 
       integer icps, jcx, jcx1, kds
       logical stol, savg
-      double precision rcps
-      common/ comps /rcps(k7,2*k5),icps(k7,2*k5),jcx(2*k5),jcx1(2*k5),
-     *               kds(2*k5),stol(i11),savg(i11)
+      double precision rcps, a0
+      common/ comps /rcps(k7,2*k5),a0(k7,2),icps(k7,2*k5),jcx(2*k5),
+     *               jcx1(2*k5),kds(2*k5),stol(i11),savg(i11)
 c----------------------------------------------------------------------
       if (icx.eq.kds(jcomp)) then 
 
-         comp = 0d0 
-         totden = 0d0
+         comp = a0(jcomp,1)
+         totden = a0(jcomp,2)
 c                                 now compute the composition:
 c                                 numerator:
          do j = 1, jcx(jcomp)
@@ -1744,9 +1744,9 @@ c-------------------------------------------------------------------
 
       integer icps, jcx, jcx1, kds
       logical stol, savg
-      double precision rcps
-      common/ comps /rcps(k7,2*k5),icps(k7,2*k5),jcx(2*k5),jcx1(2*k5),
-     *               kds(2*k5),stol(i11),savg(i11)
+      double precision rcps, a0
+      common/ comps /rcps(k7,2*k5),a0(k7,2),icps(k7,2*k5),jcx(2*k5),
+     *               jcx1(2*k5),kds(2*k5),stol(i11),savg(i11)
 
       save cprop, cmin, cmax, mode, max
 c----------------------------------------------------------------------
@@ -3507,9 +3507,9 @@ c----------------------------------------------------------------
 
       integer icps, jcx, jcx1, kds
       logical stol, savg
-      double precision rcps
-      common/ comps /rcps(k7,2*k5),icps(k7,2*k5),jcx(2*k5),jcx1(2*k5),
-     *               kds(2*k5),stol(i11),savg(i11)
+      double precision rcps, a0
+      common/ comps /rcps(k7,2*k5),a0(k7,2),icps(k7,2*k5),jcx(2*k5),
+     *               jcx1(2*k5),kds(2*k5),stol(i11),savg(i11)
 
       save propty
 

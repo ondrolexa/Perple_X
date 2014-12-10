@@ -538,9 +538,9 @@ c----------------------------------------------------------------
 
       integer icps, jcx, jcx1, kds
       logical stol, savg
-      double precision rcps
-      common/ comps /rcps(k7,2*k5),icps(k7,2*k5),jcx(2*k5),jcx1(2*k5),
-     *               kds(2*k5),stol(i11),savg(i11)
+      double precision rcps, a0
+      common/ comps /rcps(k7,2*k5),a0(k7,2),icps(k7,2*k5),jcx(2*k5),
+     *               jcx1(2*k5),kds(2*k5),stol(i11),savg(i11)
 c----------------------------------------------------------------------
 c                                choose units for composition
       if (iopt(2).eq.0) then
@@ -586,8 +586,11 @@ c                                define the numerator
          exit 
 
       end do  
+
+      write (*,1050) 'a1'
+
+      call rdnumb (a0(jcomp,1),0d0,i,0,.true.)
 c                                define the denominator
-  
       do 
 
          write (*,1030) 'denominator',k5+1-jcx(jcomp)
@@ -605,7 +608,7 @@ c                                define the denominator
 
       end do 
 
-      if (jcx1(jcomp).gt.jcx(jcomp)) then 
+      if (jcx1(jcomp).gt.0) then 
 
          do 
 
@@ -625,15 +628,22 @@ c                                define the denominator
                write (*,1020)
                cycle 
             end if 
+
+           write (*,1050) 'a2'
+
+           call rdnumb (a0(jcomp,2),0d0,i,0,.true.)
+
 c                                show the user the composition: 
             write (*,1070)           
-            write (text,1130) (rcps(i,jcomp),cname(icps(i,jcomp)), 
-     *                                      i = 1, jcx(jcomp))
+            write (text,1130) a0(jcomp,1),
+     *                        (rcps(i,jcomp),cname(icps(i,jcomp)), 
+     *                                         i = 1, jcx(jcomp))
             call deblnk (text)
             write (*,1150) text 
             write (*,*) '   divided by '
 
-            write (text,1130) (rcps(i,jcomp),cname(icps(i,jcomp)), 
+            write (text,1130) a0(jcomp,2),
+     *                        (rcps(i,jcomp),cname(icps(i,jcomp)), 
      *                                 i = jcx(jcomp)+1, jcx1(jcomp))
             call deblnk (text)
             write (*,1150) text 
@@ -644,7 +654,8 @@ c                                show the user the composition:
 
       else 
 
-         write (text,1130) (rcps(i,jcomp),cname(icps(i,jcomp)), 
+         write (text,1130)  a0(jcomp,1),
+     *                      (rcps(i,jcomp),cname(icps(i,jcomp)), 
      *                                    i = 1, jcx(jcomp))
          call deblnk (text)
          write (*,1080) text 
@@ -663,15 +674,17 @@ c                                show the user the composition:
      *          ' composition (<',i2,')?')
 1040  format (/,'Enter component indices and weighting factors for the '
      *        ,a,':')
+1050  format (/,'Enter the constant ',a,' [defaults to 0]:')
 1070  format (/,'The compositional variable is:')
 1080  format (/,'The compositional variable is: ',a,/)
 1090  format ('Change it (y/n)?')
 1100  format (/,'Compositions are defined as a ratio of the form:',/,
-     *        4x,' Sum {w(i)*n(i), i = 1, c1} / Sum {w(i)*n(i), i',
-     *        ' = c2, c3}',/,15x,
-     *        ' n(j) = ',a,' of component j',/,15x,
-     *        ' w(j) = weighting factor of component j (usually 1)')
-1130  format (15('+',1x,f4.1,1x,a5,1x))
+     *        4x,'[a1 + Sum {w(i)*n(i), i = 1, c1}] / [a2 + Sum {w(i)*',
+     *        'n(i), i = c2, c3}]',/,15x,
+     *        'n(j)   = ',a,' of component j',/,15x,
+     *        'w(j)   = weighting factor of component j (usually 1)',/,
+     *    15x,'a1, a2 = optional constants (usually 0)')
+1130  format (f4.1,1x,15('+',1x,f4.1,1x,a5,1x))
 1140  format ('Enter zero to use the numerator as a composition.')
 1150  format (/,a,/)  
 
