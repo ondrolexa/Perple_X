@@ -289,16 +289,16 @@ c-----------------------------------------------------------------------
 
       logical log, bad
 
-      character specie(nsp)*4, y*1, n4name*100, title*100, tags(26)*14
+      character specie(nsp)*4, y*1, n4name*100, title*100, tags(28)*14
 
       integer ier, igo, ins(nsp), i, isp, j, k, l, kmax, count, nel
 
-      double precision nc, nh, no, ns, nn, nsi, tentoe, fo2, fs2, 
+      double precision nc, nh, no, ns, nn, nsi, tentoe, fo2, fs2, fh2,
      *                 ag, tot, totx, var(l2), f, prop(40), vdif,
      *                 vpar(nsp), xxs(nsp), xg(nsp)
 
       double precision fhc
-      common / cst11 /fhc(2)
+      common / cst11 /fhc(3)
 
       character*8 vname,xname
       common/ csta2  /xname(k5),vname(l2)
@@ -370,10 +370,11 @@ c                                 configure EoS
          vname(3) = 'X(CO2)  '
 c                                 get the users choice of EoS:   
          call rfluid (1, ifug)
+c          ifug = 27
 c                                 for multispecies fluids set
 c                                 up species indices:
          if (ifug.gt.6.and.ifug.lt.13.or.ifug.eq.19.or.ifug.eq.20.or.
-     *       ifug.eq.24) then
+     *       ifug.eq.24.or.ifug.eq.27) then
 
             if (ifug.eq.7.or.ifug.eq.8.or.ifug.eq.24) then
                vname(3) = 'log(fO2)'
@@ -400,6 +401,12 @@ c                                 up species indices:
                isp = 7
                ins(6) = 10
                ins(7) = 11
+
+            else if (ifug.eq.27) then
+c                                 C-O-H free
+               vname(4) = 'Y(C)    '
+               isp = 6
+               ins(6) = 7
             end if
 
          else if (ifug.eq.16) then
@@ -442,16 +449,16 @@ c                                 silica vapor
 
          else 
 
+             ipot = 4
              write (*,'(/a,i2)') 
      *             '**error** not initialized for ifug = ',
      *             ifug
-
 
          end if 
 
          write (*,'(/,a)') 'Tabulate properties (y/n)?'
          read (*,'(a)') y
-
+c         y = 'n'
          if (y.eq.'y'.or.y.eq.'Y') then 
 c                                 tabulated properties
             if (ifug.eq.4.or.ifug.eq.9.or.ifug.eq.23) then
@@ -537,6 +544,11 @@ c                                fo2-aC-N/C COHN
             else if (ifug.eq.26) then 
 
                ipot = 3
+
+            else if (ifug.eq.27) then 
+c                                X(O)-X(C) COH
+               ipot = 4
+               vname(4) = 'X(C)    '
 
             end if 
 
@@ -705,10 +717,11 @@ c                                  species fugacities
                call unblnk (tags(i))
             end do
 
-            count = count + isp + 1
-            tags(count-1) = 'log[f(O2)]'
-            tags(count)   = 'log[f(S2)]'
-
+            count = count + isp + 3
+            tags(count-3) = 'log[f(O2)]'
+            tags(count-2) = 'log[f(S2)]'
+            tags(count-1) = 'log[f(H2)]'
+            tags(count)   = 'log[a(C)] '
 
             write (n4,*) count 
             write (n4,'(40(a14,1x))') (tags(i),i=1,count)
@@ -778,6 +791,11 @@ c                                fo2-aC-N/C COHN
                   gz = var(4) 
                end if 
 
+            else if (ifug.eq.27) then 
+c                                 C-O-H XO-YC
+               xo  = var(3)
+               fs2 = var(4) 
+
             end if 
 
             do j = 1, inc(iv(2))
@@ -840,6 +858,10 @@ c                                 assign values to local variables
                            else 
                               gz = var(iv(k)) 
                            end if 
+
+                        else if (ifug.eq.27) then 
+
+                           fs2 = var(iv(k)) 
 
                         else 
 
@@ -963,8 +985,25 @@ c
                   prop(ipot+isp+6) = ns/tot
                   prop(ipot+isp+7) = ns/tot
 
-                  prop(count-1) = fo2/tentoe
-                  prop(count)   = fs2/tentoe
+                  prop(count-3) = fo2/tentoe
+                  prop(count-2) = fs2/tentoe
+
+                  if (ifug.eq.27) then 
+c                                   ac, fo2, fh2 computed from major
+c                                   species
+                     prop(count-3) = fhc(2)/tentoe
+                     prop(count-2) = nopt(7)
+                     prop(count-1) = fhc(3)/tentoe
+                     prop(count)   = fhc(1)/tentoe
+
+                  else 
+
+                     prop(count-3) = fo2/tentoe
+                     prop(count-2) = fs2/tentoe
+                     prop(count-1) = nopt(7)
+                     prop(count)   = elag/tentoe
+
+                  end if 
 
                   if (ifug.lt.4.or.ifug.eq.5.or.ifug.eq.6.or.ifug.eq.18.
      *                or.ifug.eq.14.or.ifug.gt.20.and.ifug.lt.24) then
@@ -1123,6 +1162,24 @@ c                                 get P-T conditions:
 
                   end if 
 
+               else if (ifug.eq.27) then 
+         
+                     write (*,'(/,a)') 
+     *                    'Enter p(bar), T(K), XO, YC:'
+
+                    do 
+                        read (*,*,iostat=ier) p, t, xo, fs2
+                        if (ier.eq.0) exit
+                        call rerr
+                     end do
+
+c               p = 5000d0
+c               t = 800d0
+c               xo = 0.05d0
+c               fs2 =0.173
+
+               write (*,*) 'oinm'
+
                else 
 c                                  or get P-T-X/f conditions:
                   write (*,'(/,a,a,a)') 
@@ -1150,6 +1207,7 @@ c                                  a buffer:
 
                   do 
                      read (*,*,iostat=ier) dlnfo2
+                     if (ier.eq.0) exit
                      call rerr
                   end do 
 
@@ -1163,9 +1221,12 @@ c                                  call fluid routine:
                write (*,1280) p,t
 c                                  output results:
                igo = 1
-               fhc(1) = dexp(fhc(1)) 
-               fhc(2) = dexp(fhc(2)) 
-               fo2 = fo2 / tentoe
+
+               if (ifug.ne.27) then 
+                  fhc(1) = dexp(fhc(1)) 
+                  fhc(2) = dexp(fhc(2)) 
+                  fo2 = fo2 / tentoe
+               end if 
 
                if (ifug.lt.4.or.ifug.eq.5.or.ifug.eq.6.or.ifug.eq.18.or
      *            .ifug.eq.14.or.ifug.gt.20.and.ifug.lt.24) then
@@ -1212,10 +1273,24 @@ c                                 primitive output for Leonya's EoS
                      ag = dexp (elag)
                   end if 
 c                                  routine cfluid returns ln(fs2)/2
-                  if (ifug.ne.26) then
-                     write (*,1170) fo2, 2d0*fs2/tentoe, ag
-                  else 
+                  if (ifug.eq.26) then
                      write (*,1120) fhc(1)/tentoe,fhc(2)/tentoe
+                  else if (ifug.eq.27) then 
+c                                   ac, fo2, fh2 computed from major
+c                                   species, and direct values:
+                     if (xs(7).eq.0d0) then 
+                        fo2 =  0d0
+                        fh2 = dlog10(p*xs(5)*g(5))
+                     else 
+                        fo2 = dlog10(p*xs(7)*g(7))
+                        fh2 = 0d0
+                     end if 
+
+                     write (*,1110) dexp(fhc(1)),
+     *                              fhc(2)/tentoe,fo2,
+     *                              fhc(3)/tentoe,fh2
+                  else 
+                     write (*,1170) fo2, 2d0*fs2/tentoe, ag
                   end if 
 c                                  compute sums:
                   ns = xs(6) + xs(8) + xs(9) 
@@ -1321,7 +1396,9 @@ c                                  output bulk properties and V:
          if (y.ne.'y'.and.y.ne.'Y') exit
 
       end do 
-
+1110  format (/,10x,'a(gph/dia) = ',g12.5,
+     *        /,10x,'log[f(O2)] = ',g12.5,' (',g12.5,')'
+     *        /,10x,'log[f(H2)] = ',g12.5,' (',g12.5,')'/)
 1120  format (/,10x,'log[f(O) ] = ',g12.5,
      *        /,10x,'log[f(Si)] = ',g12.5,/)
 1130  format (/,10x,'f(H2O) = ',g12.5,/,10x,'f(CO2) = ',g12.5,/)

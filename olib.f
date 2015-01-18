@@ -721,11 +721,11 @@ c-----------------------------------------------------------------------
 
       integer k,id
 
-      double precision omega, hpmelt, gmelt, gfluid, gzero, g, 
-     *                 dg, gex, slvmlt, gfesi, gcpd
+      double precision omega, hpmelt, gmelt, gfluid, gzero, g, x1(5), 
+     *                 dg, gex, slvmlt, gfesi, gcpd, gerk, gfecr1
 
       external gphase, omega, hpmelt, gmelt, gfluid, gzero, gex, slvmlt,
-     *         gfesi
+     *         gfesi, gerk, gfecr1
 
       integer jend
       common/ cxt23 /jend(h9,k12)
@@ -879,6 +879,29 @@ c                                 -------------------------------------
 c                                 BCC Fe-Si Lacaze and Sundman
             g = gfesi(y(1), gcpd (jend(id,3),.true.), 
      *                      gcpd (jend(id,4),.true.) )
+
+         else if (ksmod(id).eq.32) then 
+c                                 -------------------------------------
+c                                 BCC Fe-Cr Andersson and Sundman
+            g =  gfecr1(y(1), gcpd (jend(id,3),.true.), 
+     *                        gcpd (jend(id,4),.true.) )
+
+         else if (ksmod(id).eq.41) then 
+c                                 hybrid MRK ternary COH fluid
+            call rkcoh6 (y(1),y(2),g) 
+
+            do k = 1, 3 
+               g = g + gzero(jend(id,2+k)) * y(k)
+            end do 
+
+         else if (ksmod(id).eq.40) then 
+c                                 MRK silicate vapor
+            do k = 1, nstot(id) 
+               g = g + gzero(jend(id,2+k)) * y(k)
+               x1(k) = y(k)
+            end do 
+
+            g = g + gerk(x1)
 
          else if (ksmod(id).eq.0) then 
 c                                 ------------------------------------
@@ -1213,8 +1236,8 @@ c-----------------------------------------------------------------------
       integer iff,idss,ifug,ifyn,isyn
       common/ cst10 /iff(2),idss(h5),ifug,ifyn,isyn
 
-      double precision fh2o,fco2
-      common/ cst11 /fh2o,fco2
+      double precision fh2o,fco2,funk
+      common/ cst11 /fh2o,fco2,funk
 
       integer idf
       double precision act
@@ -1414,9 +1437,10 @@ c----------------------------------------------------------------------
       double precision y,g,vsp
       common / cstcoh /y(nsp),g(nsp),vsp(nsp)
 
-      double precision pv,pvv
-      integer iroot
-      common/ rkdivs /pv,pvv,iroot
+      double precision pv, pvv
+      integer iroots
+      logical switch, rkmin, min
+      common/ rkdivs /pv,pvv,iroots,switch,rkmin,min
 
       double precision vp,vvp
       integer rooti

@@ -28,6 +28,7 @@
                              29    - BCC Fe-Si alloy, Lacaze & Sundman 1990.
                              30-33 - FeSiC alloys (BCC/FCC/CBCC/HCP), Lacaze & Sundman 1990.
                              40    - Silicate fluid (MRK)
+                             41    - COH fluid (hybrid MRK)
 
                              For non-ideal solutions, microscopic models assume Margules type excess functions; 
                              macroscopic models may be posed in terms of Margules (See model "Bio(HP)" for a commented
@@ -3240,6 +3241,24 @@ ideal
 0
 
 reach_increment 3 
+
+end_of_model               
+                      --------------------------------------------------------
+begin_model                
+                                      Ternary C-O-H Fluid 
+
+COHF   
+41                         | model type: Internal EoS
+3                                  
+gph      O2       H2     
+ 1  1  1                   | endmember flags
+0.0 0.67 0.1       0
+0.0 1.0  0.1       0       | subdivision ranges, imod = 0 -> cartesian subdivision
+
+ideal
+0
+
+reach_increment 0 
 
 end_of_model               
                       --------------------------------------------------------

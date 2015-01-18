@@ -2404,7 +2404,7 @@ c----------------------------------------------------------------------
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 
       double precision f
-      common/ cst11 /f(2)
+      common/ cst11 /f(3)
 
       integer ifct,idfl
       common/ cst208 /ifct,idfl
@@ -2971,7 +2971,24 @@ c                                 BCC Fe-Si Lacaze and Sundman
 c                                 BCC Fe-Cr Andersson and Sundman
                g(id) = gfecr1 (sxs(ixp(id)+1),g(jend(i,3)),g(jend(i,4)))
 
+               id = id + 1
+
             end do  
+
+
+         else if (ksmod(i).eq.41) then 
+
+            do j = 1, jend(i,2)
+c                                 hybrid MRK ternary COH fluid
+               call rkcoh6 (sxs(ixp(id)+1),sxs(ixp(id)+2),g(id)) 
+
+               do k = 1, 3 
+                  g(id) = g(id) + gzero(jend(i,2+k)) * sxs(ixp(id)+k)
+               end do 
+
+               id = id + 1
+
+            end do 
 
          else if (ksmod(i).eq.40) then 
 

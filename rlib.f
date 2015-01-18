@@ -73,7 +73,7 @@ c-----------------------------------------------------------------------
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 
       double precision f
-      common/ cst11 /f(2)
+      common/ cst11 /f(3)
 c-----------------------------------------------------------------------
       xco2 = y
 
@@ -98,7 +98,7 @@ c-----------------------------------------------------------------------
 
       double precision dg,f,fo2,fs2
 
-      common/ cst11 /f(2)
+      common/ cst11 /f(3)
 
       double precision cp
       common/ cst12 /cp(k5,k1)
@@ -270,7 +270,7 @@ c---------------------------------------------------------------------
       common/ cxt32 /ifp(k1)
 
       double precision f
-      common/ cst11 /f(2)
+      common/ cst11 /f(3)
 
       integer iopt
       logical lopt
@@ -4354,30 +4354,33 @@ c                                 adiabatic shear modulus
 
       double precision function plg (t)
 c-----------------------------------------------------------------------
-c 29th order series expansion of polylog terms in sixtrude's EoS about
-c t = 0, good to 0.0001 accuracy to t = 5.
-c f := int((ln(1-exp(-t))*t^2),t=0..TD);
-c gg := convert(series(f,TD=0,29),polynom);
+c evaluates debye integral: int((ln(1-exp(-t))*t^2),t=0..t)
 c-----------------------------------------------------------------------
       implicit none
 
-      double precision c2, t
+      integer i
 
-      save c2 
+      double precision t, p1, p2, p3, p4, dinc
 
-      data c2 /0.1111111111111111111d0/
+      double precision wmach(9)
+      common /ax02za/wmach
+c-----------------------------------------------------------------------
 
-c                              13th order expansion good to t ~ 3
-c       c1 = 1/3
-c     plg  = t**3*((dlog(t)*c1-c2) - t/8d0 + t**2/120d0     
-c    *     - t**4/20160d0 + t**6/1632960d0 - t**8/106444800d0)
+      p1 = dexp(-t)
+      p2 = t*t
+      p3 = 2d0*t
 
-      plg  = (t**3*((dlog(t)/3d0-c2) - t/8d0 + t**2/120d0     
-     *     - t**4/20160d0 + t**6/1632960d0 - t**8/106444800d0
-     *     + t**10/6227020800d0 - 0.2935661189d-11*t**12 
-     *     + 0.562291451d-13*t**14 - 0.1115026413d-14*t**16
-     *     + 0.2271444989d-16*t**18 - 0.4727975432d-18*t**20
-     *     + 0.1001636878d-19*t**22 - 0.2153466772d-21*t**24))
+      plg = -2.1646464674223d0
+
+      do i = 1, 100000
+
+         p4 = dfloat(i)
+         dinc = (p2 + (p3 + 2d0/p4)/p4)*p1**i/p4/p4  
+         plg = plg + dinc
+
+         if (dinc.lt.wmach(3)) exit
+
+      end do 
 
       end 
 
@@ -6983,10 +6986,18 @@ c                                 add in entropy effect pseudocompound version
 
       else 
 c                              a pseudocompound without speciation:
-         if (ifp(id).eq.1) then
+         if (ifp(id).eq.1.or.ifp(id).eq.41) then
+
+            if (ifp(id).eq.1) then 
 c                              get the excess and/or ideal mixing effect
 c                              and/or dqf corrections:
-            call fexces (id,gph)
+               call fexces (id,gph)
+
+            else 
+c                              ternary coh fluid deltag
+               call rkcoh6 (sxs(ixp(id)+1),sxs(ixp(id)+2),gph)
+
+            end if 
 c                              excess props don't include vdp:
             do k = 1, nstot(ids) 
                gph = gph + gzero (jend(ids,2+k)) * sxs(ixp(id)+k)
@@ -7020,8 +7031,8 @@ c                              and/or dqf corrections:
                call gexces (id,gph)
 
             end if 
-c                              compute mech mix G for 
-c                              all models except fluid 
+c                                 compute mech mix G for 
+c                                 all models except fluid 
             do k = 1, nstot(ids) 
                gph = gph +  gproj (jend(ids,2+k)) * sxs(ixp(id)+k)
             end do 
@@ -7029,7 +7040,7 @@ c                              all models except fluid
          else 
 
             gph = 0d0
-c                              ideal gas mix (ifp(id).eq.27)
+c                                 ideal gas mix (ifp(id).eq.27)
             do k = 1, nstot(ids) 
                x0 = sxs(ixp(id)+k)
                if (x0.le.0d0) cycle
@@ -7796,6 +7807,14 @@ c                                 BCC Fe-Si Lacaze and Sundman
 c                                 -------------------------------------
 c                                 BCC Fe-Cr Andersson and Sundman
             gg =  gfecr1(y(1),g(jend(id,3)),g(jend(id,4)))
+
+         else if (ksmod(id).eq.41) then 
+c                                 hybrid MRK ternary COH fluid
+            call rkcoh6 (y(1),y(2),gg) 
+
+            do k = 1, 3 
+               gg = gg + gzero(jend(id,2+k)) * y(k)
+            end do 
 
          else if (ksmod(id).eq.40) then 
 c                                 MRK silicate vapor
@@ -12405,6 +12424,9 @@ c                                 y is the mole fraction of endmember l
          if (y(l).gt.1d0-nopt(5).and.kdsol(l).gt.0) return
 
       end do   
+c                                 reject special cases:
+c                                 ternary coh fluids above the CH4-CO join
+      if (ksmod(im).eq.41.and.y(1).ge.1d0/3d0+y(2)) return
 c                                 move site fractions into array indexed 
 c                                 only by independent disordered endmembers:
       do i = 1, mstot(im)
