@@ -6806,7 +6806,7 @@ c                                 monatomic O
 
       if (bad) then
          write (*,*) 'paused yo',p,t,xc
-         pause
+         call errpau
       end if
 c                                 back calculate remaining fractions:
 c                                 K1 => O2: 

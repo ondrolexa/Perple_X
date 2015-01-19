@@ -608,7 +608,7 @@ c                                define the denominator
 
       end do 
 
-      if (jcx1(jcomp).gt.0) then 
+      if (jcx1(jcomp).gt.jcx(jcomp)) then 
 
          do 
 
@@ -668,13 +668,13 @@ c                                show the user the composition:
 
       kds(jcomp) = ids
 
-1010  format (2x,i2,' - ',a5)
+1010  format (2x,i2,' - ',a)
 1020  format (/,'Invalid input, try again:',/)
 1030  format (/,'How many components in the ',a,' of the',
      *          ' composition (<',i2,')?')
 1040  format (/,'Enter component indices and weighting factors for the '
      *        ,a,':')
-1050  format (/,'Enter the constant ',a,' [defaults to 0]:')
+1050  format (/,'Enter the optional constant ',a,' [defaults to 0]:')
 1070  format (/,'The compositional variable is:')
 1080  format (/,'The compositional variable is: ',a,/)
 1090  format ('Change it (y/n)?')
