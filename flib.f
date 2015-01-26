@@ -2102,6 +2102,7 @@ c                                 water:
       vm(1) = -v(1)
       gm(1) = g(1)
       call crkh2o (p,t,v(1),fg(1)) 
+c      call pseos (v(1),fg(1),1)
       g(1) = dexp(fg(1))/p
       vm(1) = vm(1) + v(1)
       f(1) = fg(1)
@@ -2109,6 +2110,7 @@ c                                 co2:
       vm(2) = -v(2)
       gm(2) = g(2)
       call crkco2 (p,t,v(2),fg(2)) 
+c      call pseos (v(2),fg(2),2)
       g(2) = dexp(fg(2))/p
       vm(2) = vm(2) + v(2)
       f(2) = fg(2)
@@ -8256,9 +8258,10 @@ c----------------------------------------------------------------------
 
       double precision a(3,4),yc,yo2,x0,xo3,deltag,yh2,
      *                 ghh2o,ghco2,ghch4,kh2o,kch4,kco,kco2,xc,xo,
-     *                 dg(nsp),eg(nsp),oy(6),s4,s5,gtot,ogtot,
-     *                 xc5,xc3,xo1, x1,x2,x3,x4,x5,x6,x7,x8,x9,
-     *                 d1,d2,d11,d22,d12,det,dp(2), e1,e2,e3,e4
+     *                 dg(nsp),eg(nsp),oy(7),s4,s5,gtot,ogtot,
+     *                 xc5,xc3,xo1, x1,x2,x3,x4,x5,x6,x7,x8,x9,t4,t5,
+     *                 d1,d2,d11,d22,d12,det,dp(2),b(3),
+     *                 dgs1,dgs2,s
 
       double precision vol
       common/ cst26 /vol
@@ -8280,12 +8283,12 @@ c----------------------------------------------------------------------
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
-      save s4,s5,ins
-      data s4,s5,ins/1d-3,1d-3,1,2,4,3,5,7,10*0/
+      save t4,t5,ins
+      data t4,t5,ins/1d-3,1d-3,1,2,4,3,5,7,10*0/
 c----------------------------------------------------------------------
       bad = .false.
 
-      yh2 = yo2 + yc
+      yh2 = 1d0 - yo2 - yc
 
 20    if (yc.ge.1d0/3d0+yo2.or.bad
      *                     .or.yh2.lt.nopt(5).or.yh2.ge.1d0-nopt(5)
@@ -8294,8 +8297,6 @@ c----------------------------------------------------------------------
      *                            ) then
 c                                 above the ch4-co join
          deltag = 1d5
-
-c         if (bad) write (*,*) yc,yo2,xo,xc
 
          return
 
@@ -8318,23 +8319,19 @@ c                                 do not allow degenerate compositions:
       end if
 c                                 calls mrkpur, cork, etc
       call setup (ghh2o,ghco2,ghch4,kh2o,kco2,kco,kch4)
-
-      do i = 1, 7
-         g(i) = 1d0
-      end do 
 c                                 gh => gcork/gmrk, the g(i)'s are the fugacity coefficients
 c                                 of the pure gas according to the various eos's (CORK, HSMRK, MRK)
 c                                 could replace CORK with pitzer and sterner.
 c                                 ---------------------------------------------
 c                                 free energies for go2=gh2=gc=0
 c                                 g0h2o/R/T - ln phi0
-      dg(1) = -kh2o - 0*dlog(g(5)*dsqrt(g(7)*p))
+      dg(1) = (-kh2o - dlog(g(5)*dsqrt(g(7)*p)))
 c                                 gco2/R/T 
-      dg(2) = -kco2 - 0*dlog(g(7))
+      dg(2) = (-kco2 - dlog(g(7)))
 c                                 gco/R/T 
-      dg(3) = -kco  + 0*dlog(p/g(7))/2d0
+      dg(3) = (-kco  + dlog(p/g(7))/2d0)
 c                                 gch4/R/T 
-      dg(4) = -kch4 - 0*dlog(g(5)*g(5)*p)
+      dg(4) = (-kch4 - dlog(g(5)*g(5)*p))
 c                                 
       dg(5)  = - dlog(g(5))
       dg(7)  = - dlog(g(7))
@@ -8357,7 +8354,14 @@ c                                 first assume co2-h2o-ch4 ternary
       y(4) = 1d0 - y(1) - y(2)
       y(7) = 0d0 
 
-      if (y(1).ge.0d0.and.y(2).ge.0d0.and.y(4).ge.0d0) then
+      do i = 1, 7
+         oy(i) = y(i)
+      end do 
+
+      s4 = t4
+      s5 = t5 
+
+30    if (y(1).ge.0d0.and.y(2).ge.0d0.and.y(4).ge.0d0) then
 c                                 inside co2-h2o-ch4 ternary
          ins(1) = 1
          ins(2) = 2
@@ -8385,6 +8389,10 @@ c                                 stoichiometric coefficients:
          a(3,1) = x7/x3
          a(3,2) = 4d0*xc/x3
          a(3,3) = x4/x3
+
+         b(1) = 1.5d0*a(2, 1) + 3d0*a(1,1) + 1.5d0 + a(3,1)
+         b(2) = 2d0 + 1.5d0*a(2,2) + 3d0*a(1,2) + a(3,2)
+         b(3) = 1.5d0*a(2,3) + 3d0*a(1,3) + a(3,3)
 
       else if (y(1).ge.0d0.and.y(2).lt.0d0.and.y(4).ge.0d0) then
 c                                 inside h2-h2o-ch4 ternary
@@ -8414,6 +8422,10 @@ c                                 inside h2-h2o-ch4 ternary
          a(3,2) = (3d0*x9 - 1d0)/x0
          a(3,3) = -x4/x0
 
+         b(1) = 3d0*a(1,1) + 1.5d0*a(2,1) + 2d0*a(3,1) + 1.5d0
+         b(2) = 3d0*a(1,2) + 1.5d0*a(2,2) + 2d0*a(3,2) + 1d0
+         b(3) = 3d0*a(1,3) + 1.5d0*a(2,3) + 2d0*a(3,3)
+
       else if (y(1).lt.0d0.and.y(2).ge.0d0.and.y(4).ge.0d0) then
 c                                 inside co-co2-ch4 ternary
          ins(1) = 3
@@ -8437,6 +8449,10 @@ c                                 stoichiometric coefficients:
          a(3,1) = -x7/x8
          a(3,2) = 2d0*x2/x8
          a(3,3) = (xc5 + xo3 - 1d0)/x8
+
+         b(1) = 1.5d0 + 3d0*a(1,1) + 1.5d0*a(2,1) + a(3,1)
+         b(2) = 2d0   + 3d0*a(1,2) + 1.5d0*a(2,2) + a(3,2)
+         b(3) = 3d0*a(1,3) + 1.5d0*a(2,3) + a(3,3)
 
       else
 c                                 inside h2o-co2-o2 simplex
@@ -8464,7 +8480,29 @@ c                                 inside h2o-co2-o2 simplex
          a(3,2) = -x5/2d0
          a(3,3) = -x5
 
+         b(1) = 1.5d0*a(2,1) + a(1,1) + 1.5d0 + a(3,1)
+         b(2) = 2d0 + 1.5d0*a(2,2) + a(1,2) + a(3,2)
+         b(3) = 1.5d0*a(2,3) + a(1,3) + a(3,3)
+
       end if
+c                                 check if ok
+      do i = 1, 2
+
+         if (y(ins(i)).lt.0d0) then 
+            s4 = s4/2d0
+            s5 = s4
+
+            do j = 1, 7
+               y(j) = oy(j)
+            end do 
+
+            if (s5.gt.1d-10) goto 30
+            bad = .true.
+            goto 20 
+
+         end if 
+
+      end do 
 c                                 pre-loop initialization
       do i = 1, 3
 
@@ -8474,13 +8512,10 @@ c                                 pre-loop initialization
 
       end do 
 
-c      write (*,*) (y(ins(i)),i=1,6)
       gtot = 0d0
       ogtot = -99d0
-
-      do i = 1, 2
-         dp(i) = 0d0
-      end do 
+      dp(1) = 0d0
+      dp(2) = 0d0 
 
       call mrkmix (ins, 5, 1)
 
@@ -8488,15 +8523,11 @@ c      write (*,*) (y(ins(i)),i=1,6)
       g(2) = ghco2 * g(2) 
       g(4) = ghch4 * g(4) 
 
-      do i = 1, 7
-         g(i) = 1d0
-      end do
-
       itct = 0
 c                                 iteration loop
       do  
 
-         do i = 1, 6
+         do i = 1, 5
 c                                 save old values for convergence test
             oy(i) = y(ins(i))
 
@@ -8547,28 +8578,33 @@ c                                 check convergence
 
          end do 
 
-         if (itct.gt.1.and.quit) then
-c            write (*,*) itct 
-            exit
-         else if (dabs(gtot-ogtot).lt.nopt(5)) then 
-c            write (*,*) itct,gtot-ogtot
-            exit
+         if (itct.gt.1.and.dabs(gtot-ogtot).lt.nopt(5)) then
+            quit = .true.
+            do j = 1, 5
+
+               if (dabs(y(ins(j))-oy(j))/oy(j).gt.nopt(5)) then
+               quit = .false.
+               end if 
+
+             end do      
+
+            if (quit) exit
+
+            if (itct.gt.iopt(21)) then 
+               bad = .true.
+               goto 20 
+            end if 
+
          else if (itct.gt.iopt(21)) then 
             bad = .true.
             goto 20 
          end if 
-
-         quit = .true. 
 c                                 get activity coefficients
          call mrkmix (ins, 5, 1)
 
          g(1) = ghh2o * g(1)
          g(2) = ghco2 * g(2) 
          g(4) = ghch4 * g(4) 
-
-      do i = 1, 7
-         g(i) = 1d0
-      end do
 c                                 gi/T/T + ln P + ln gamma
          ogtot = gtot
          gtot = 0d0 
@@ -8579,18 +8615,16 @@ c                                 gi/T/T + ln P + ln gamma
             gtot = gtot + y(ins(i))*(eg(i) + dlog(y(ins(i))))
 
          end do 
-
-c       write (*,*) gtot - ogtot, itct
 c                                 get newton-raphson increments
-c                                 negative first derivatives
-         d1  = - eg(1) - dlog(y(ins(1))) - 1d0 
-     *         - (eg(3) + dlog(y(ins(3))) + 1d0)*a(1,1)
-     *         - (eg(4) + dlog(y(ins(4))) + 1d0)*a(2,1)
-     *         - (eg(5) + dlog(y(ins(5))) + 1d0)*a(3,1)
-         d2  = - eg(2) - dlog(y(ins(2))) - 1d0 
-     *         - (eg(3) + dlog(y(ins(3))) + 1d0)*a(1,2) 
-     *         - (eg(4) + dlog(y(ins(4))) + 1d0)*a(2,2) 
-     *         - (eg(5) + dlog(y(ins(5))) + 1d0)*a(3,2)
+c                                 first derivatives of Gf
+         d1  =   (eg(1) + dlog(y(ins(1))) + 1d0) 
+     *         + (eg(3) + dlog(y(ins(3))) + 1d0)*a(1,1)
+     *         + (eg(4) + dlog(y(ins(4))) + 1d0)*a(2,1)
+     *         + (eg(5) + dlog(y(ins(5))) + 1d0)*a(3,1)
+         d2  = + (eg(2) + dlog(y(ins(2))) + 1d0) 
+     *         + (eg(3) + dlog(y(ins(3))) + 1d0)*a(1,2)  
+     *         + (eg(4) + dlog(y(ins(4))) + 1d0)*a(2,2)  
+     *         + (eg(5) + dlog(y(ins(5))) + 1d0)*a(3,2) 
 c                                 second derivatives 
          d11 = 1d0/y(ins(1)) + a(1,1)*a(1,1)/y(ins(3)) 
      *                       + a(2,1)*a(2,1)/y(ins(4)) 
@@ -8598,69 +8632,35 @@ c                                 second derivatives
          d22 = 1d0/y(ins(2)) + a(1,2)*a(1,2)/y(ins(3)) 
      *                       + a(2,2)*a(2,2)/y(ins(4)) 
      *                       + a(3,2)*a(3,2)/y(ins(5))
-         d12 =                 a(1,1)*a(1,2)/y(ins(3)) 
+         d12 =                 a(1,1)*a(1,2)/y(ins(3))
      *                       + a(2,1)*a(2,2)/y(ins(4)) 
      *                       + a(3,1)*a(3,2)/y(ins(5))
+
+         s = b(1)*y(ins(1)) + b(2)*y(ins(2)) + b(3)
+c                                 complete negative first derivatives
+         dgs1  = (gtot*b(1)/s - d1)/s
+         dgs2  = (gtot*b(2)/s - d2)/s
+c                                 complete second derivatives
+         d11 = (d11 + 2d0*dgs1*b(1))/s 
+         d22 = (d22 + 2d0*dgs2*b(2))/s 
+         d12 = (((2d0*gtot*b(2)/s - d2)*b(1) - d1*b(2))/s + d12 )/s
 c                                 determinant of the jacobian
          det = d11*d22 - d12*d12
 
          if (det.eq.0d0) then 
             write (*,*) 'dead'
-            stop
+            bad = .true.
+            goto 20 
          end if 
 c                                 newton-raphson increments for the ordered species
 c                                 compositions. 
-         dp(1) = (d1*d22 - d2*d12)/det 
-         dp(2) = (d2*d11 - d1*d12)/det 
+         dp(1) = (dgs1*d22 - dgs2*d12)/det 
+         dp(2) = (dgs2*d11 - dgs1*d12)/det 
 
          itct = itct + 1
 
       end do 
 
-
-
-
-c                                 compute c-o2-h2 fugacities
-      if (icase.eq.1) then 
-c                                 h2o-co2-ch4 simplex
-
-         muc  = kh2o - (kco2 + kch4)/2d0 
-     *        - dlog(dsqrt(y(2)*g(2)*y(4)*g(4))/y(1)/g(1))
-         muo2 = dlog(y(2)*g(2)*p) - kco2 - muc
-         muh2 = dlog(y(1)*g(1)*p) - kh2o - muo2/2d0
-
-
-      e1 = kco - dlog(y(3)*g(3)*p) + muc + muo2/2d0
-      e2 = kco2 - dlog(y(2)*g(2)*p) + muc + muo2
-      e3 = kh2o - dlog(y(1)*g(1)/y(5)/g(5)) + muo2/2d0
-      e4 = kch4 - dlog(y(4)*g(4)/(y(5)*g(5))**2) + muc
-
-      else if (icase.eq.2) then 
-c                                 h2-h2o-ch4 simplex
-         muh2 = dlog(y(5)*g(5)*p)
-         muc  = dlog(y(4)*g(4)*p) - kch4 - 2d0*muh2
-         muo2 = 2d0 * (dlog(y(1)*g(1)*p) - kh2o - muh2)
-
-      else if (icase.eq.3) then 
-c                                 co-co2-ch4 simplex
-         muo2 = 2d0 * (kco - kco2 + dlog(y(2)*g(2)/y(3)/g(3)))
-         muc  = kco2 - 2d0*kco + dlog(p*(y(3)*g(3))**2/y(2)/g(2))
-         muh2 = (dlog(y(4)*g(4)*p) - muc - kch4) / 2d0
-
-      else
-c                                 h2o-co2-o2 simplex
-         muc  = dlog(y(2)*g(2)/y(7)/g(7)) - kco2
-         muo2 = dlog(p*y(7)*g(7))
-         muh2 = dlog(y(1)*g(1)*dsqrt(p/y(7)/g(7))) - kh2o
-
-      end if 
-
-      deltag = r*t*(yc*muc + yo2*muo2 + (1d0-yc-yo2)*muh2)
-
-      do i = 1, 3
-         if (y(ins(i)).lt.1d-4) then 
-            write (*,*) ins(i), y(ins(i)), xo, xc, ' icase = ',icase
-         end if 
-      end do 
+      deltag = gtot*r*t/s
 
       end

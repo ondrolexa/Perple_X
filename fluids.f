@@ -339,6 +339,8 @@ c-----------------------------------------------------------------------
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
+      save ins
+
       data tentoe, fo2, fs2, specie /2.302585093d0, 0d0, 0d0,
      *      'H2O ','CO2 ','CO  ','CH4 ','H2  ','H2S ','O2  ',
      *      'SO2 ','COS ','N2  ','NH3 ','O   ','SiO ','SiO2',
@@ -1173,13 +1175,6 @@ c                                 get P-T conditions:
                         call rerr
                      end do
 
-c               p = 5000d0
-c               t = 800d0
-c               xo = 0.05d0
-c               fs2 =0.173
-
-               write (*,*) 'oinm'
-
                else 
 c                                  or get P-T-X/f conditions:
                   write (*,'(/,a,a,a)') 
@@ -1323,14 +1318,13 @@ c                                  volumes by finite difference
 
                         do k = 1, isp
 
-                           if (g(ins(k))*p*xxs(ins(k)).eq.0d0) cycle
+                           if (g(ins(k))*p*xs(ins(k)).eq.0d0) cycle
 
                            vdif = vdif + 
-     *                       f*xxs(ins(k))*dlog(g(ins(k))*p*xxs(ins(k)))
+     *                       f*xs(ins(k))*dlog(g(ins(k))*p*xs(ins(k)))
 
                            vpar(k) = vpar(k) +  
-     *                       83.14d0*t*f*dlog(g(ins(k))*p*xxs(ins(k)))
-
+     *                       83.14d0*t*f*dlog(g(ins(k))*p*xs(ins(k)))
 
                         end do 
 

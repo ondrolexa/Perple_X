@@ -2980,10 +2980,10 @@ c                                 BCC Fe-Cr Andersson and Sundman
 
             do j = 1, jend(i,2)
 c                                 hybrid MRK ternary COH fluid
-               call rkcoh6 (sxs(ixp(id)+1),sxs(ixp(id)+2),g(id)) 
+               call rkcoh6 (sxs(ixp(id)+2),sxs(ixp(id)+1),g(id)) 
 
                do k = 1, 3 
-                  g(id) = g(id) + gzero(jend(i,2+k)) * sxs(ixp(id)+k)
+                  g(id) = g(id) + g(jend(i,2+k)) * sxs(ixp(id)+k)
                end do 
 
                id = id + 1

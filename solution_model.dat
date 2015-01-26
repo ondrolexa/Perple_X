@@ -649,7 +649,48 @@ ideal
   0                                 | internal routine for configurational entropy
 
 end_of_model
-                    --------------------------------------------------------  
+                      --------------------------------------------------------
+begin_model                 
+
+                                Mg-Fe-Ca-Al-Cr Garnet
+                                Hybrid Holland & Powell + Simon/PGP Cr Workshop
+                                (folk.uio.no/ninasim/Cr_results.html)
+
+CrGt
+                                                           
+7                              | model type: reciprocal
+2                              | 2 chemical site model
+3 2                            | 3 endmembers mix on site 1, 2 endmembers mix on site 2
+
+uv_d  fuv_d  knor 
+gr    alm    py   
+     
+
+2                              | 2 dependent endmembers 
+
+uv_d = 1 gr +  1 knor  - 1 py 
+fuv_d = 1 alm +  1 knor  - 1 py
+
+0 0 0 0 0 0                    | endmember flags 0 include it   1 drop it    
+        
+0. 1. .1   0                | range and resolution for  XCa on A
+0. 1. .1   0                | range and resolution for  XFe on A
+
+0. 1. .1   1                | range and resolution for  XCr on B
+
+begin_excess_function 
+w(py gr) 33d3 0. 0.
+ | w(py py gr) 59304. -10.5  .036   Ganguly excess paramters
+ | w(py gr gr) 25860. -10.5  .174  
+end_excess_function 
+2                                     2 site entropy model
+3 3.                                  3 species, site multiplicity of 3
+z(Ca) = 1 gr + 1 uv_d 
+z(Mg) = 1 py + 1 knor
+2 2.                                  2 species, site multiplicity of 2
+z(Al) = 1 gr + 1 alm + 1 py 
+end_of_model                  
+                      -------------------------------------------------------- 
 begin_model
                              Garnet model of Malaspina et al. 2009
 
@@ -658,6 +699,8 @@ begin_model
 
                              Cr added as in Simon/PGP Cr Workshop,
                              folk.uio.no/ninasim/Cr_results.html. JADC, 3/29/13
+
+                             For Cr garnet it's probably better to use CrGt. JADC, 23/1/15.
 
                                                       M1      M2      
                                                      _____________
@@ -3250,7 +3293,7 @@ begin_model
 COHF   
 41                         | model type: Internal EoS
 3                                  
-gph      O2       H2     
+gphb     O2       H2     
  1  1  1                   | endmember flags
 0.0 0.67 0.1       0
 0.0 1.0  0.1       0       | subdivision ranges, imod = 0 -> cartesian subdivision
@@ -3258,7 +3301,7 @@ gph      O2       H2
 ideal
 0
 
-reach_increment 0 
+reach_increment 3 
 
 end_of_model               
                       --------------------------------------------------------
@@ -4080,7 +4123,7 @@ MF
 2                          | model type: Ideal or Margules
 
 2  1                                isp(1), ist(1) 
-mt       mfer    
+mt       mft    
   0  0                                endmember flags
 0.    1.  .1     0         subdivision range, imod = 0 -> cartesian subdivision
 
@@ -8995,5 +9038,173 @@ z(mg,m4)    = 1 afchl + 1 och2
 z(al,T2)    = 1 ames + 1/2 clin + 1/2 daph + 1/2 f3clin
 
 end_of_model  
-                                  --------------------------------------------------------	
+                                  --------------------------------------------------------	   
+begin_model  
 
+FeSiC-BCC
+    
+30                                | model type: special reciprocal (Lacaze & Sundman, 1991)
+2                                 | number of independent mixing sites, reciprocal solution
+2  2                              | Fe-Si on site 1, Vacancy-C on site 2                                                                         
+       
+Fe-BCC Si-BCC                     | endmember names 
+FeC-BCC SiC-BCC
+
+0                                 | number of dependent endmembers 
+
+0  0  0  0                        | endmember flags
+
+0.  1.   0.1  0                    | imod = 0 -> Fe fraction on site 1
+0.  1.   0.1  0                    | imod = 0 -> vacancy fraction on site 2
+                            
+ideal                             | internal excess model
+
+0                                 | 0 site entropy model -> internal model
+
+reach_increment 7
+
+end_of_model 
+                      --------------------------------------------------------
+begin_model  
+
+FeSiC-FCC
+    
+31                                | model type: special reciprocal (Lacaze & Sundman, 1991)
+2                                 | number of independent mixing sites, reciprocal solution
+2  2                              | Fe-Si on site 1, Vacancy-C on site 2                                                                         
+       
+Fe-FCC Si-FCC                     | endmember names 
+FeC-FCC SiC-FCC
+
+0                                 | number of dependent endmembers 
+
+0  0  0  0                        | endmember flags
+
+0.  1.   0.1  0                  | imod = 0 -> Fe fraction on site 1
+0.  1.   0.1  0                  | imod = 0 -> vacancy fraction on site 2
+                            
+ideal                             | internal excess model
+
+0                                 | 0 site entropy model -> internal model
+
+reach_increment 7
+
+end_of_model 
+
+                              --------------------------------------------------------
+begin_model                
+                                      | magnesio-wustite solution
+Per(SS)     
+2                                     | model type margules, macroscopic                                                                         
+
+2                                     | 2 endmembers
+
+per 
+wst
+
+0  0                               | endmember flags
+
+0. 1. 0.1 0                        | range and resolution 
+
+begin_excess_function   
+w(per wst)  13d3 0. 0.    
+end_excess_function
+
+1                                     | 1 site entropy model 
+2 1.                                  | 2 species, site mutiplicity = 1
+z(mg) = 1 per
+
+reach_increment 4
+
+end_of_model                  
+                              --------------------------------------------------------
+                            --------------------------------------------------------
+begin_model
+                           |solution model parameters after Brosh, 2013
+
+FeCliq
+
+2                          |solution model type: Margules
+
+2                          |2 end-members
+Feliq
+Cliq
+
+
+
+0 0                       |end-member flags
+
+0. 1. 0.1 0               |imod = 0 -> cartesian subdivision scheme
+
+begin_excess_function
+Wk(Feliq Cliq)
+w0 = -124320. wT = 28.5  wP = -1.53d-1 wP1 = 6d4 wP2 = 2.3d-1
+w0 = 19300.   
+w0 = 49260.   wT = -19.
+end_excess_function
+
+1                         |one site entropy model
+2 1.                      |two end-members mixing on one site and site multiplicity
+z(Fe) = 1 Feliq           |site fraction of Fe on this site in terms of end-members
+
+
+end_of_model
+
+                           --------------------------------------------------------
+begin_model 
+                          | solution model parameters after Brosh, 2013
+
+FeCfcc
+
+2
+
+2
+FeA1
+FeCA1
+
+
+0 0 
+
+0. 1. 0.1 0
+
+begin_excess_function
+Wk(FeA1 FeCA1)
+w0 = -34671. 
+end_excess_function
+
+1
+2 1.
+z(C) = 1 FeCA1
+
+
+end_of_model
+
+                           --------------------------------------------------------
+begin_model
+                          | solution model parameters after Brosh, 2013 
+
+FeCbcc
+
+2
+
+2
+FeA2
+FeCA2
+
+
+0 0 
+
+0. 1. 0.1 0
+
+begin_excess_function
+Wk(FeA2 FeCA2)
+w0 = 0. wT = -190. 
+end_excess_function
+
+1
+2 3.
+z(c) = 1 FeCA2
+
+
+end_of_model
+                        --------------------------------------------------------

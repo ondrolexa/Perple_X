@@ -6985,22 +6985,22 @@ c                                 add in entropy effect pseudocompound version
          gph = gph + dg
 
       else 
-c                              a pseudocompound without speciation:
-         if (ifp(id).eq.1.or.ifp(id).eq.41) then
 
-            if (ifp(id).eq.1) then 
+         if (ifp(id).eq.1) then
 c                              get the excess and/or ideal mixing effect
 c                              and/or dqf corrections:
-               call fexces (id,gph)
-
-            else 
-c                              ternary coh fluid deltag
-               call rkcoh6 (sxs(ixp(id)+1),sxs(ixp(id)+2),gph)
-
-            end if 
+            call fexces (id,gph)
 c                              excess props don't include vdp:
             do k = 1, nstot(ids) 
                gph = gph + gzero (jend(ids,2+k)) * sxs(ixp(id)+k)
+            end do 
+
+         else if (ifp(id).eq.41) then
+c                              ternary coh fluid deltag
+            call rkcoh6 (sxs(ixp(id)+2),sxs(ixp(id)+1),gph)
+c                              excess props don't include vdp:
+            do k = 1, nstot(ids) 
+               gph = gph + gproj (jend(ids,2+k)) * sxs(ixp(id)+k)
             end do 
 
          else if (ifp(id).ne.27) then 
@@ -7810,10 +7810,10 @@ c                                 BCC Fe-Cr Andersson and Sundman
 
          else if (ksmod(id).eq.41) then 
 c                                 hybrid MRK ternary COH fluid
-            call rkcoh6 (y(1),y(2),gg) 
+            call rkcoh6 (y(2),y(1),gg) 
 
             do k = 1, 3 
-               gg = gg + gzero(jend(id,2+k)) * y(k)
+               gg = gg + g(jend(id,2+k)) * y(k)
             end do 
 
          else if (ksmod(id).eq.40) then 
@@ -7821,7 +7821,7 @@ c                                 MRK silicate vapor
             gg = 0d0
 
             do k = 1, nstot(id) 
-               gg = gg + gzero(jend(id,2+k)) * y(k)
+               gg = gg + gzero (jend(id,2+k)) * y(k)
                x1(k) = y(k)
             end do 
 

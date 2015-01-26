@@ -888,10 +888,10 @@ c                                 BCC Fe-Cr Andersson and Sundman
 
          else if (ksmod(id).eq.41) then 
 c                                 hybrid MRK ternary COH fluid
-            call rkcoh6 (y(1),y(2),g) 
+            call rkcoh6 (y(2),y(1),g) 
 
             do k = 1, 3 
-               g = g + gzero(jend(id,2+k)) * y(k)
+               g = g + gcpd(jend(id,2+k),.true.) * y(k)
             end do 
 
          else if (ksmod(id).eq.40) then 
