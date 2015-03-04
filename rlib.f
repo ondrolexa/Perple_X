@@ -163,7 +163,7 @@ c----------------------------------------------------------------------
       g = thermo(1,id)
 c                                 -sdt
      *      + t * (thermo(2,id) - thermo(4,id) * dlog(t)
-     *      - t * (thermo(5,id) + thermo(7,id) * t))
+     *      - t * (thermo(5,id) + (thermo(7,id) - thermo(24,id)*t) * t))
      *      - (thermo(6,id) + thermo(10,id) / t) / t
      *      + thermo(8,id) * dsqrt(t) + thermo(9,id)*dlog(t)
  
@@ -320,14 +320,14 @@ c                                 stixrude EPSL '09 Liquid Eos
 
       else if (eos(id).eq.12) then
 c                                read SGTE data and evaluate EOS after Brosh '07,'08
-         gval = gmet(id)
+         gval = gmet (id)
 
          goto 999
 
       else if (eos(id).eq.14) then
 c                                read SGTE data and evaluate EOS after Brosh'07,'08
 c                                (modified for liquid carbon)
-         gval = gterm2(id)
+         gval = gterm2 (id)
 
          goto 999
 
@@ -335,10 +335,10 @@ c                                (modified for liquid carbon)
 c                                 all other EoS's with Cp function
       gval = thermo(1,id)
 c                                 -sdt
-     *       + t * (thermo(2,id) - thermo(4,id) * dlog(t)
-     *       - t * (thermo(5,id) + thermo(7,id) * t))
-     *       - (thermo(6,id) + thermo(10,id) / t) / t
-     *       + thermo(8,id) * dsqrt(t) + thermo(9,id)*dlog(t)
+     *      + t * (thermo(2,id) - thermo(4,id) * dlog(t)
+     *      - t * (thermo(5,id) + (thermo(7,id) - thermo(24,id)*t) * t))
+     *      - (thermo(6,id) + thermo(10,id) / t) / t
+     *      + thermo(8,id) * dsqrt(t) + thermo(9,id)*dlog(t)
 c                                 vdp-ndu term:
       if (eos(id).eq.8) then 
 c                                 HP Tait EoS, einstein thermal pressure
@@ -755,7 +755,8 @@ c---------------------------------------------------------------------
  
       end
  
-      subroutine conver (g,s,v,a,b,c,d,e,f,gg,b1,b2,b3,b4,b5,b6,b7,b8,
+      subroutine conver (g,s,v,a,b,c,d,e,f,gg,c8,
+     *                   b1,b2,b3,b4,b5,b6,b7,b8,
      *                   b9,b10,b11,b12,b13,tr,pr,r,ieos)
 c---------------------------------------------------------------------
 c convert thermodynamic equation of state from a pr tr reference state
@@ -767,7 +768,7 @@ c---------------------------------------------------------------------
 
       integer ieos
 
-      double precision g,s,v,a,b,c,d,e,f,gg,b1,b2,b3,b4,b5,b6,b7,b8,
+      double precision g,s,v,a,b,c,d,e,f,gg,c8,b1,b2,b3,b4,b5,b6,b7,b8,
      *                 b9,b10,b11,b12,b13,tr,pr,n,v0,k00,k0p,
      *                 gamma0,q0,etas0,g0,g0p,r,c1,c2
 
@@ -792,6 +793,7 @@ c                                add the integral of sdt at tr,pr:
      *       + s * tr - a * tr - b * tr * tr / 2d0 + c / tr
      *       - d * tr**3 / 3d0 - 2d0 * e * dsqrt(tr)
      *       - f * dlog(tr) + gg / tr / tr / 2d0 + f
+     *       + c8 / 4d0 * tr**4
 c                                add the constant components of the
 c                                integral -vdp at (t,pr):
      *       - v * pr + b2 * tr * pr + b4 * pr * pr / 2d0
@@ -800,7 +802,7 @@ c                                sign on b7 corrected June 16, 2004. PJ Gorman.
 c                                S* (T)
          s  = a - b2*pr - s + a*dlog(tr) + b*tr - c/tr/tr/2d0
      *        + d * tr * tr / 2d0 - 2d0 * e / dsqrt(tr) - f/tr
-     *        - gg / tr**3 / 3.d0
+     *        - gg / tr**3 / 3d0 + c8 * tr**3 /3d0
 c                                b7 term added June 16, 2004. PJ Gorman.
      *        + b7 * 2d0 * pr * tr
 c                                V* (P)
@@ -823,6 +825,8 @@ c                                f*  (log T)
 c        f  = f
 c                                gg* (-1/T**2)
          gg = gg/6d0
+c                                c8* T**4
+         c8 = c8/12d0
 c                                b2* (PT)
          b2 = b2
 c                                b7 term added June 16, 2004. PJ Gorman.
@@ -927,14 +931,17 @@ c                                G(Pr,T) polynomial
      *       + s * tr - a * tr - b * tr * tr / 2d0 + c / tr
      *       - d * tr**3 / 3d0 - 2d0 * e * dsqrt(tr)
      *       - f * dlog(tr) + gg / tr / tr / 2d0 + f
+     *       + c8 / 4d0 * tr**4
          s  = a - s + a * dlog(tr) + b * tr - c / tr / tr /2d0
      *        + d * tr * tr / 2d0 - 2d0 * e / dsqrt(tr) - f / tr
-     *        - gg / tr**3 / 3d0
+     *        - gg / tr**3 / 3d0 + c8 * tr**3 /3d0
+
          b  = b / 2d0
          c  = c / 2d0
          d  = d / 6d0
          e  = 4d0 * e
          gg = gg/6d0
+         c8 = c8/12d0
 c                                 fluid special case, this is sloppy
          if (ieos.gt.100.and.ieos.lt.120) return
 
@@ -1372,6 +1379,8 @@ c                                 -sdt
 c-----------------------------------------------------------------------
 c gclpht computes the reference pressure free energy of a compound 
 c aboves its jth transition (SGTE data type)
+
+c therlm(13-15,i,id) are never assigned/used so far as i can tell, JADC 23//2/2015.
 c---------------------------------------------------------------------
       implicit none
  
@@ -1388,9 +1397,11 @@ c---------------------------------------------------------------------
       gclpht = therlm(5,j,id) + therlm(6,j,id)*t + 
      *         therlm(7,j,id)*t*dlog(t) + therlm(8,j,id)/t + 
      *         therlm(9,j,id)/t**2 + therlm(10,j,id)/t**3 + 
-     *         therlm(11,j,id)/t**9 + therlm(12,j,id)*t**2 + 
-     *         therlm(13,j,id)*t**3 + therlm(14,j,id)*t**4 + 
-     *         therlm(15,j,id)*t**7 
+     *         therlm(11,j,id)/t**9 + therlm(12,j,id)*t**2 
+
+c            + 
+c     *        therlm(13,j,id)*t**3 + therlm(14,j,id)*t**4 + 
+c     *        therlm(15,j,id)*t**7 
      
       end   
 
@@ -1964,13 +1975,21 @@ c                               load errors for MC calculations
          del(i,id) = delta(i)
       end do 
  
-      call conver (thermo(1,id),thermo(2,id),thermo(3,id),thermo(4,id),
-     *             thermo(5,id),thermo(6,id),thermo(7,id),thermo(8,id),
-     *             thermo(9,id),thermo(10,id),thermo(11,id),
-     *             thermo(12,id),thermo(13,id),thermo(14,id),
-     *             thermo(15,id),thermo(16,id),thermo(17,id),
-     *             thermo(18,id),thermo(19,id),thermo(20,id),
-     *             thermo(21,id),thermo(22,id),thermo(23,id),
+      call conver (
+c                               g0, s0, v0
+     *             thermo(1,id),thermo(2,id),thermo(3,id),
+c                               c1-c8
+     *             thermo(4,id),thermo(5,id),thermo(6,id),
+     *             thermo(7,id),thermo(8,id),thermo(9,id),
+     *             thermo(10,id),thermo(24,id),
+c                               b1-b12                          
+     *             thermo(11,id),thermo(12,id),thermo(13,id),
+     *             thermo(14,id),thermo(15,id),thermo(16,id),
+     *             thermo(17,id),thermo(18,id),thermo(19,id),
+     *             thermo(20,id),thermo(21,id),thermo(22,id),
+c                               b13 on return
+     *             thermo(23,id),
+c                               ref stuff
      *             tr,pr,r,eos(id))
  
       if (tr.eq.0d0) then
@@ -2049,15 +2068,17 @@ c                              set special eos flag to zero to prevent
 c                              gzero from including special terms (currently 
 c                              only ieos 605). 
             eos(id) = 0
-c                              now convert paramters:
+c                                 now convert paramters:
             do k = 1, ilam
-c                              load into therlm:
+c                                 load into therlm:
                therlm(1,k,lamin) = tm(1,k)
                therlm(2,k,lamin) = tm(2,k)
-
+c                                 c1-c7 cp coefficients
                do j = 4, 10
                   therlm(j+1,k,lamin) = tm(j,k)
                end do 
+c                                 the c8 heat capacity coefficient
+               therlm(13,k,lamin) = tm(11,k)
 
                t = tm(1,k)
 c                                 temporary counter value
@@ -2087,20 +2108,25 @@ c                              streamline the eos:
                end do 
 
 
-               call conver (therlm(12,k,lamin),therlm(3,k,lamin),
-     *                     z(1),therlm(5,k,lamin), therlm(6,k,lamin),
+               call conver (
+c                                 g0,s0, dummy
+     *                     therlm(12,k,lamin),therlm(3,k,lamin), z(1),
+c                                 c1-c8
+     *                     therlm(5,k,lamin), therlm(6,k,lamin),
      *                     therlm(7,k,lamin), therlm(8,k,lamin),  
      *                     therlm(9,k,lamin), therlm(10,k,lamin),
-     *                     therlm(11,k,lamin),
-     *                     therlm(13,k,lamin),therlm(14,k,lamin),           
-     *                     z(2),z(3),z(4),z(5),z(6),z(7),z(8),
-     *                     z(9),z(10),z(11),z(12),tm(1,k),pr,r,0)
+     *                     therlm(11,k,lamin),therlm(13,k,lamin),
+c                                 dummies (b1-b12)
+     *                     z(14),z(2),z(3),z(4),z(5),z(6),z(7),z(8),
+     *                     z(9),z(10),z(11),z(12),z(13),
+c                                 ref stuff
+     *                     tm(1,k),pr,r,0)
 
             end do 
 
             eos(id) = ieos
 
-           else if (jlam.eq.6) then 
+        else if (jlam.eq.6) then 
 
            do k = 1, ilam
 c                              SGTE format
@@ -2108,8 +2134,12 @@ c                              load into therlm:
               therlm(1,k,lamin) = tm(1,k)
               therlm(2,k,lamin) = tm(2,k)
 
-              do j = 4, 14
+              do j = 4, 11
+c                              nastia originally had t12-t15 here, but there
+c                              doesn't appear to be any data with more than
+c                              the first 11 parameters
                  therlm(j+1,k,lamin) = tm(j,k)
+
               end do 
 
            end do
@@ -2229,7 +2259,7 @@ c                                 range, refine iv increment.
 30    ier = 2
       end
 
-      subroutine unver (g,s,v,a,b,c,d,e,f,gg,
+      subroutine unver (g,s,v,a,b,c,d,e,f,gg,c8,
      *                  b1,b2,b4,b5,b6,b7,b8,tr,pr)
 c----------------------------------------------------------------------
 c convert thermodynamic equation of state from a 0-0 reference state
@@ -2242,12 +2272,14 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      double precision v,gg,a,b,c,d,e,f,g,b1,b2,b4,b5,b6,b7,b8,pr,tr,s
+      double precision v,gg,a,b,c,d,e,f,g,b1,b2,b4,b5,b6,b7,b8,pr,tr,s,
+     *                 c8
 c----------------------------------------------------------------------
 c                               Stixrude's EoS, exit without
 c                               doing anything
       if (v.lt.0d0) return
 
+      c8 = 12d0 * c8
       gg = 6d0 * gg
       e  = e / 4d0
       d  = 6d0 * d
@@ -2263,10 +2295,12 @@ c                                normal vdp term:
          s  = -1d0 * ( s - ( a - b2 * pr  + a * dlog(tr) + b * tr
      *        - c / tr / tr /2d0
      *        + d * tr * tr / 2d0 - 2d0 * e / dsqrt(tr) - f / tr
-     *        - gg / tr**3 / 3d0 + b7 * 2d0 * pr * tr ) )
+     *        - gg / tr**3 / 3d0 + c8 * tr**3 / 3d0
+     *        + b7 * 2d0 * pr * tr ) )
          g  = g - ( s * tr - a * tr - b * tr * tr / 2d0 + c / tr
      *        - d * tr**3 / 3d0 - 2d0 * e * dsqrt(tr)
      *        - f * dlog(tr) + gg / tr / tr / 2d0 + f
+     *        - c8 * tr**4 / 4d0
      *        - v * pr + b2 * tr * pr + b4 * pr * pr / 2d0 
      *        - b6 * pr**3/3d0 - b7 * tr * tr * pr )
       else 
@@ -2276,10 +2310,11 @@ c                                normal vdp term:
          s  = -1d0 * ( s - ( a + a * dlog(tr) + b * tr
      *        - c / tr / tr /2d0
      *        + d * tr * tr / 2d0 - 2d0 * e / dsqrt(tr) - f / tr
-     *        - gg / tr**3 / 3d0 ) )
+     *        - gg / tr**3 / 3d0 + c8 * tr**3 / 3d0 ) )
          g  = g - ( s * tr - a * tr - b * tr * tr / 2d0 + c / tr
      *        - d * tr**3 / 3d0 - 2d0 * e * dsqrt(tr)
-     *        - f * dlog(tr) + gg / tr / tr / 2d0 + f)
+     *        - f * dlog(tr) + gg / tr / tr / 2d0 + f
+     *        - c8 * tr**4 / 4d0)
 
          if (b8.gt.0d0.or.(b8.le.-3d0.and.b6.ne.0d0)) then 
 c                                 murnaghan or bm3:
@@ -2296,6 +2331,7 @@ c                                 ghirso, do nothing.
 c                                 v = f(exponential(beta))
 c                                 zero b1, so users don't get confused.
             b1 = 0d0
+
          end if  
 
       end if 
@@ -2577,6 +2613,8 @@ c                                 load into therlm:
                tm(j-1,i) = therlm(j,i,jd)  
             end do 
 
+            tm(11,i) = therlm(13,i,jd)
+
             t = tm(1,i)
 c                              set transition type to null
 c                              for call to gphase 
@@ -2595,9 +2633,17 @@ c                             changed to centered rel diff:
                z(k) = 0d0
             end do 
 
-            call unver (g0,s0,z(1),tm(4,i),tm(5,i),tm(6,i),tm(7,i),
-     *                  tm(8,i),tm(9,i),tm(10,i),z(2),z(3),z(5),
-     *                  z(6),z(7),z(8),z(9),tm(1,i),pr) 
+            call unver (
+c                                 g0, s0, dummy
+     *                  g0,s0,z(1),
+c                                 c1-c8 
+     *                  tm(4,i),tm(5,i),tm(6,i),tm(7,i),
+     *                  tm(8,i),tm(9,i),tm(10,i),tm(13,i),
+c                                 dummies 
+     *                  z(2),z(3),z(5),
+     *                  z(6),z(7),z(8),z(9),
+c                                 ref stuff
+     *                  tm(1,i),pr) 
 
             tm(3,i) = s0 + tm(3,i)
 
@@ -3001,7 +3047,7 @@ c----------------------------------------------------------------------
       common/ cst51 /length,iblank,icom,chars(240)
 
       character*2 strgs*3, mstrg, dstrg, tstrg*3, wstrg*3
-      common/ cst56 /strgs(32),mstrg(6),dstrg(8),tstrg(13),wstrg(m16)
+      common/ cst56 /strgs(32),mstrg(6),dstrg(8),tstrg(11),wstrg(m16)
 c----------------------------------------------------------------------
 
       iterm = 0 
@@ -13656,7 +13702,7 @@ c----------------------------------------------------------------------
 
       end
 
-      double precision function gmet(id)
+      double precision function gmet (id)
 c----------------------------------------------------------------
 c function reads SGTE data format for reference Gibbs free energy
 c and evaluates thermal and pressure EoS
@@ -13728,7 +13774,7 @@ c                           cst2: (sqh(at ref T) - ssgte(at ref T)) +
 c                                 + (Cpsgte(at ref T)-Cpqh(at ref T)) = - ssgte(at ref T)
       cst1 = thermo(27,id)
       cst2 = thermo(28,id)
-c                           additional Grueneisen parameter and Einstein's temperature for graphite
+c                           additional Grueneisen parameter and Einstein temperature for graphite
       gam02 = thermo(29,id)
       tet02 = thermo(30,id)
 

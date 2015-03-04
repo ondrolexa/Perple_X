@@ -1892,7 +1892,7 @@ c----------------------------------------------------------------------
 
       integer jphct, i, j, k, is(*), idsol(k5), kdv(h8+1), nsol, 
      *        mpt, iam, id, is1, left, right, inc, jdsol(k5,k5), 
-     *        kdsol(k5), max
+     *        kdsol(k5), max, is0
 
       external ffirst
 
@@ -1932,7 +1932,8 @@ c----------------------------------------------------------------------
       npt = 0 
       nsol = 0
       inc = istct - 1
-      is1 = isoct + 1 
+      is1 = isoct + 2 
+      is0 = is1 - 1
       quit = .true.
 c                                 solvus_tolerance_II, 0.25
       soltol = nopt(25)
@@ -1946,9 +1947,12 @@ c                                 currently endmember compositions are not
 c                                 refined (this is probably a mistake, but 
 c                                 seems to work fine), so use id > ipoint
 c                                 to identify a refineable point
-            if (id.gt.ipoint) quit = .false.
 
-            if (ikp(id).ne.0.and.id.gt.ipoint) then 
+c                                 modified 3/4/2015 to refine endmember compositions. JADC
+            if (ikp(id).ne.0) then 
+
+               quit = .false.
+
                do j = 1, nsol
                   if (ikp(id).eq.idsol(j)) then 
                      kdsol(j) = kdsol(j) + 1
@@ -1985,8 +1989,8 @@ c                                 each solution.
 
          id = i + inc 
          iam = ikp(id)
-
-         if (iam.ne.0.and.id.gt.ipoint) then   
+c                                modified to allow endmembers, Mar 4, 2015. JADC
+         if (iam.ne.0.and.id.gt.0*ipoint) then   
 
             if (clamda(i).lt.slam(iam)) then
 c                                the composition is more stable
@@ -2011,10 +2015,16 @@ c                                the composition is acceptable
             end if
 
          else 
-c                                a compound, save only one
-            if (clamda(i).lt.slam(is1)) then 
-               slam(is1) = clamda(i)
-               kdv(is1) = i
+c                                a compound, save lowest 2, changed from 1
+c                                march 4, 2015, JADC
+            if (clamda(i).lt.slam(is0)) then 
+c                                put the old min into is1
+               kdv(is1) = kdv(is0)
+               slam(is1) = slam(is0)
+c                                and save the current in is1
+               kdv(is0) = i
+               slam(is0) = clamda(i)
+
             end if 
  
          end if 

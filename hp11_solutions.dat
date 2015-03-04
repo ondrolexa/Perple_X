@@ -6,7 +6,7 @@ begin_model
                              NOTES:  
 
                              * This model will only function in the Al-free and
-                               Mg-free limits is Al and Mg are retained as thermodynamic
+                               Mg-free limits if Al and Mg are retained as thermodynamic
                                components.
 
                              JADC 4/14
@@ -148,6 +148,9 @@ begin_model
                                       27d3 0 0  
 
                                   * Mn added as in Gt(WPPH). JADC 4/14
+
+                                  * Mn excess energy updated, alpha(kho1 & spss) reduced 
+                                    to 1.0 (formerly 2.7). Felix Gervais, 1/28/2015.
     
                                                       X       Y 
                                                      _____________
@@ -164,7 +167,6 @@ begin_model
                                        alm           Fe      Al     
                                        py            Mg      Al     
                                        gr            Ca      Al          
-
 
 Gt(W) 
     
@@ -202,10 +204,12 @@ begin_excess_function
 W(py  alm)               2.5d3           0         0
 W(py  gr)                 31d3           0         0
 W(py  kho1)              5.4d3           0         0
+W(py  spss)                2d3           0         0
 W(alm gr)                  5d3           0         0
 W(alm kho1)             22.6d3           0         0
+W(alm spss)                2d3           0         0
 W(gr  kho1)            -15.3d3           0         0
-w(spss kho1)              20d3           0         0 
+w(spss kho1)            29.4d3           0         0 
 end_excess_function  
 
 2                                     |2 site entropy model
@@ -222,8 +226,8 @@ begin_van_laar_sizes
 alpha(py)       1.0    0.    0.                      
 alpha(alm)      1.0    0.    0.
 alpha(gr)       2.7    0.    0.
-alpha(kho1)     2.7    0.    0.
-alpha(spss)     2.7    0.    0.
+alpha(kho1)     1.0    0.    0.
+alpha(spss)     1.0    0.    0.
 end_van_laar_sizes
 
 end_of_model   
@@ -485,12 +489,10 @@ begin_model
                              JADC, 4/14
 
                              Missing DQF for mst added by Mark Caddick. 
-
                              JADC, 1/26/2014
 
-                             mnst added by Felix Gervais.
-
-                             JADC, 1/26/2014
+                             mnst added, vacancy on Al site disassociated 
+                             from Ti, by Felix Gervais.  JADC, 1/26/2014
 
 St(W)                     
                                                             
@@ -525,13 +527,14 @@ end_excess_function
 z(Fe) = 1 fst
 z(Mg) = 1 mst
 
-3 2.                                  3 species, site multiplicity of 2, not clear if the vacancy is associated with Ti
+4 2.                                  4 species, site multiplicity of 2, not clear if the vacancy is associated with Ti
 z(Ti)  = 3/4 mstt
 z(Fe3) =   1 msto
+z(vac) =   1/4 mstt
 
 begin_dqf_corrections
-dqf(mst) -8000 0 0  
-dqf(mnst) -1900 0 0
+dqf(mst)  -8000 0 0  
+dqf(mnst) -0.19 0 0        | is this a joke? 
 end_dqf_corrections
 
 end_of_model               
@@ -548,15 +551,23 @@ begin_model
                              odi  = 1 di 
                              -0.1d3       0.211       0.005
 
+                             mnopx = 2 pxmn
+                             6.68d3 0 0
+
                              JADC, 4/14
 
                              Al site fraction of T "corrected" to (mots1 + mgts)/8 by Mark Caddick. 
 
-                             JADC, 1/26/2014
+                             JADC, 1/26/2015
 
-                             Mn added by Felix Gervais.
+                             Mn added by Felix Gervais, 1/28/2015.
 
-                             JADC, 1/26/2014
+                             This model is as implemented in THERMOCALC. The implementation is 
+                             irrational because Mn is assumed to remain disordered across M1 and 
+                             M2, while Al, Fe, Fe3+ and Ca order. The model should only be used 
+                             with the site_check set to true in perplex_option.dat
+
+                             JADC, 1/28/2015
 
                                        Site:          M1      M2      T
                                                      ____________________
@@ -570,15 +581,12 @@ begin_model
 
                                       4 mgts          Al      Mg      AlSi   
                                       5 fets          Al      Fe2+    AlSi  dependent
-                                      6 mnts          Al      Mn      AlSi  dependent
 
                                       7 mots1         Fe3+    Mg      AlSi
                                       8 feots         Fe3+    Fe2+    AlSi  dependent
-                                      9 mnots         Fe3+    Mn      AlSi  dependent
 
                                      10 odi           Mg      Ca      Si
                                      11 fodi          Fe      Ca      Si    dependent
-                                     12 modi          Mn      Ca      Si    dependent
                                                       ___________________
 
                            Internal: 13 opx           Mg      Fe2+    Si
@@ -586,8 +594,10 @@ begin_model
 
                            Dependent: fets  = mgts  + opx - en
                                       feots = mots1 + opx - en 
-                                      fodi  =  odi  + opx - en
-                                      .............
+                                      fodi  = odi  + opx - en
+                                      mnts  = 1 mgts + 1/2 mnopx - 1/2 en 
+                                      mnots = 1 mots + 1/2 mnopx - 1/2 en 
+                                      modi  = 1 odi  + 1/2 mnopx - 1/2 en
                          
                            ----------------------------------------------------
 
@@ -596,12 +606,13 @@ Opx(W)                     | solution name.
 8                          | model type: Reciprocal with speciation
 
 2                          | 2 independent composition spaces
-2 4                        | 2 dimensions on first space, 3 on second
+
+3 4                        | 2 dimensions on first space, 3 on second
                            | endmembers: 
-mots1    feots 
-odi      fodi 
-mgts     fets_d   
-en       fs 
+mnots    mots1    feots 
+modi     odi      fodi 
+mnts     mgts     fets_d   
+mnopx    en       fs 
 
 1                          | ordered species definition
 
@@ -610,24 +621,27 @@ opx = 1/2 en + 1/2  fs  Delta(enthalpy) = -6.95d3
 begin_limits
 opx =     - 2 fs - 1 opx                delta = 2 z(M2,Fe)       
 opx =  -2 + 2 fs + 1 opx                delta = 2 z(M1,Fe)
-opx =     - 2 en - 1 opx                delta = 2 z(M1,Mg)
+opx =     - 2 en - 2 odi - 1 opx        delta = 2 z(M1,Mg)
 end_limits                
 
-3                          | 3 dependent endmembers
+6                          | 6 dependent endmembers, 3 real, 3 pointers
 
 fets_d = 1 mgts  + 1 opx - 1 en
 feots  = 1 mots1 + 1 opx - 1 en
 fodi   = 1 odi   + 1 opx - 1 en
+mnts   = 1 mgts + 1/2 mnopx - 1/2 en 
+mnots  = 1 mots + 1/2 mnopx - 1/2 en 
+modi   = 1 odi  + 1/2 mnopx - 1/2 en
 
-0 0 0 0 0 0 0 0 0          | endmember flags, indicate if endmember is part of the solution (i.e. iend = 0).
+0 0 0 0 0 0 0 0 0 0 0 0    | endmember flags, indicate if endmember is part of the solution (i.e. iend = 0).
 
-                           | subdivision model for (binary) site 1:
-0. 1. .1                   | range and resolution of X(Mg)
-0                          | subdivision scheme for site 1: imod = 0 -> cartesian 
+                           | subdivision model for (ternary) site 1:
+0. .2 .1   1               | range and resolution of X(Mn), subdivision scheme: imod = 1 -> assymetric transform 
+0. 1. .1   0               | range and resolution of X(Mg), subdivision scheme: imod = 0 -> cartesian 
 
                            | subdivision model for (quaternary) site 2 
-0. .1 .1   1               | range and resolution of X(Fe3+),  subdivision scheme: imod = 1 -> assymetric transform   
-0. .1 .1   1               | range and resolution of X(un-Ts), subdivision scheme: imod = 1 -> assymetric transform     
+0. .2 .1   1               | range and resolution of X(Fe3+),  subdivision scheme: imod = 1 -> assymetric transform   
+0. .2 .1   1               | range and resolution of X(un-Ts), subdivision scheme: imod = 1 -> assymetric transform     
 0. .2 .1   1               | range and resolution of X(Ts),    subdivision scheme: imod = 1 -> assymetric transform     
 
 
@@ -635,31 +649,39 @@ begin_excess_function
 W(en fs)                   7d3         0         0
 W(en opx)                  4d3         0         0
 W(en mgts)                13d3         0     -0.15
-W(en mots1)               11d3         0     -0.15 
+W(en mots1)               11d3         0     -0.15
+W(en mnopx)                5d3         0         0 
 W(en odi)               32.2d3         0      0.12
 W(fs opx)                  4d3         0         0
 W(fs mgts)                13d3         0     -0.15
 W(fs mots1)             11.6d3         0     -0.15
+W(fs mnopx)              4.2d3         0         0
 W(fs odi)              25.54d3         0     0.084
 W(opx mgts)               17d3         0     -0.15
 W(opx mots1)              15d3         0     -0.15
+W(opx mnopx)             5.1d3         0         0
 W(opx odi)             22.54d3         0     0.084
 W(mgts mots1)              1d3         0         0
+W(mgts mnopx)             12d3         0     -0.15
 W(mgts odi)             75.4d3         0     -0.94
+W(mots1 mnopx)          10.6d3         0     -0.15
 W(mots1 odi)            73.4d3         0     -0.94
+W(odi mnopx)            25.4d3         0     0.084
 end_excess_function 
 
-3                          | 2 site (M1, M2, T) configurational entropy model
+3                          | 3 site (M1, M2, T) configurational entropy model
 
-4 1.                       | 4 species on M1, 1 site per formula unit.
+5 1.                       | 5 species on M1, 1 site per formula unit.
 
 z(m1,fe)   = 1 fs 
 z(m1,al)   = 1 mgts   
 z(m1,fe3+) = 1 mots1
+z(m1,mn)   = 1 mnopx
 
-3 1.                       | 3 species on M2, 1 site per formula unit.
+4 1.                       | 4 species on M2, 1 site per formula unit.
 z(m2,fe) = 1 fs + 1 opx
 z(m2,ca) = 1 odi
+z(m2,mn)   = 1 mnopx
 
 2 2.                       | 2 species on 2 T sites
 z(T,al) = 1/8 mgts + 1/8 mots1
@@ -671,6 +693,7 @@ alpha(opx)      1.0    0.    0.
 alpha(mgts)     1.0    0.    0.
 alpha(mots1)    1.0    0.    0.
 alpha(odi)      1.2    0.    0.
+alpha(mnopx)    1.0    0.    0.
 end_van_laar_sizes
 
 end_of_model 
@@ -722,40 +745,51 @@ end_of_model
                       --------------------------------------------------------
 begin_model                         
 
-                             KFMASHTO BIOTITE model after White et al., JMG 32:261-286, 2014.
-
-                             added by TJ 4/14
-
-                             enthalpy of formation for obi corrected, Mark Caddick, JADC 1/26/2014.
+                             BIOTITE model after White et al., JMG 32:261-286, 2014.
 
                              NOTE: this model requires make definitions for fbi and tbi
-                             in the thermodynamic data file.
+                             in the thermodynamic data file:
 
+                             tbi = 1 phl - 1 br + 1 ru           
+                             55e3 0 0 
+                             fbi = 1 east - 1/2 andr + 1 gr    
+                             -3e3 0 0  
 
-                                                      1       2      3      4
+                             Modified model entered by Tim Johnson, Apr 7, 2014.
+
+                             enthalpy of formation for obi corrected, Mark Caddick, JADC 1/26/2015.
+
+                             Mn added and Ti occupancy corrected by Felix Gervais, 1/28/2015.
+
+                             This model is as implemented in THERMOCALC. The implementation is 
+                             irrational because Mn is assumed to remain disordered across M1 and 
+                             M2, while Al, Fe, Fe3+ and Ti order. The model should only be used 
+                             with the site_check set to true in perplex_option.dat
+
+                             JADC, 1/28/2015
+
                                                       M1      M2    T1     H
                                                      ____________________________
 
                                       Mutliplicity    1       2      2      2 
                                                      ____________________________
 
-                          Dependent:  1 ffbi          Fe3+    Fe     AlAl   OH  
-                                      2 fbi           Fe3+    Mg     AlAl   OH
+                          Dependent:    ffbi          Fe3+    Fe     AlAl   OH   
+                                        fbi           Fe3+    Mg     AlAl   OH
                           
-                          Dependent:  3 ftbi          Ti      Fe     AlSi   O
-                                      4 tbi           Ti      Mg     AlSi   O
+                          Dependent:    ftbi          Ti      Fe     AlSi   O
+                                        tbi           Ti      Mg     AlSi   O
    
-                          Dependent:  5 Sdph          Al      Fe     AlAl   OH
-                                      6 East          Al      Mg     AlAl   OH
+                          Dependent:    Sdph          Al      Fe     AlAl   OH
+                                        East          Al      Mg     AlAl   OH
 
-                            Species:  7 Ann           Fe      Fe     AlSi   OH
-                                      8 Phl           Mg      Mg     AlSi   OH
+                            Species:    Ann           Fe      Fe     AlSi   OH
+                                        Phl           Mg      Mg     AlSi   OH
+                                        mnbi          Mn      Mn     AlSi   OH
                                                       __________________________
 
-                            Ordered:  9 Obi           Fe      Mg     AlSi   OH
+                            Ordered:    Obi           Fe      Mg     AlSi   OH
 
-
-                              Modified model entered by Tim Johnson, Apr 7, 2014.
                        
 
 Bi(W)                        | solution name.
@@ -764,16 +798,16 @@ Bi(W)                        | solution name.
 
 2                            | the number of independent subcompositions, reciprocal solution if > 1.
 
-2  4                         | 2 species on site 1, 4 species on site 2. 
+3  4                         | 2 species on site 1, 4 species on site 2. 
                              | M2 and M1 can be identified as sites 1 and 2, respectively. the
                              | species that mix on site 1 are Mg-Fe and the species that mix on 
                              | site 2 are M2+, Al, Ti. Fe3+. The identity of M2+ on site 2 is determined by
                              | the identity of the M2+ cation on site 1
 
-ffbi_i   fbi
-ftbi_i   tbi
-sdph_i   east                | endmember names    
-ann      phl                 
+mfbi   ffbi_i   fbi
+mtbi   ftbi_i   tbi
+mts    sdph_i   east         | endmember names    
+mnbi   ann      phl                 
         
 1                            | ordered species:
 
@@ -786,63 +820,67 @@ obi =      - 3/2 ann  - 1/2 obi                     delta = 3/2 z(M1,Fe)
 obi = -3/2 + 3/2 phl  + 1 obi                       delta = 3/2 z(M1,Mg)
 end_limits   
 
-3                            | 3 dependent endmembers 
-
+6                            | 6 dependent endmembers, 3 real, 3 pointers 
                               
 sdph_i = 1 east  + 1 ann - 1 obi 
 ffbi_i = 1 fbi   + 1 ann - 1 obi
 ftbi_i = 1 tbi   + 1 ann - 1 obi
+mts    = 1 east  + 2/3 mnbi - 2/3 phl 
+mfbi   = 1 fbi   + 2/3 mnbi - 2/3 phl   
+mtbi   = 1 tbi   + 2/3 mnbi - 2/3 phl 
 
 0 0 0 0 0 0 0 0 0            | endmember flags: if 0 the endmember is considered to be part of the solution.
                    
-                             | subdivision model for (binary) site 1 (M2):
-
-
+                             | subdivision model for site 1 (Fe-Mg-Mn):
+0. .2  .1  1                 | range and resolution of X(Mn)
 0. 1.  .1  0                 | range and resolution of X(Fe)
 
-                             | subdivision model for (quinary) site 2 (M1)
-0. 0.2 .1  1                 | range and resolution of X(Fe3+,M1)
-0. 0.2 .1  1                 | range and resolution of X(Ti,M1)
-0. 1. .1   0                 | range and resolution of X(Al,M1)              
-
+                             | subdivision model for (quinary) site 2 (Fe3+-Al-Ti-Si)
+0. .2  .1  1                 | range and resolution of X(Fe3+)
+0. .2  .1  1                 | range and resolution of X(Ti)
+0. 1.  .1  0                 | range and resolution of X(Al)              
                              
-
-
 begin_excess_function
 
 W(phl ann)   12d3 0. 0.     
 W(phl obi)    4d3 0. 0.
 W(phl east)  10d3 0. 0.  
 W(phl tbi)   30d3 0. 0.  
-W(phl fbi)    8d3 0. 0.  
+W(phl fbi)    8d3 0. 0.
+W(phl mnbi)   9d3 0. 0.    
 W(ann obi)    8d3 0. 0.
 W(ann east)  15d3 0. 0.  
 W(ann tbi)   32d3 0. 0.
-W(ann fbi) 13.6d3 0. 0. 
+W(ann fbi)  136d2 0. 0.
+W(ann mnbi)  63d2 0. 0.  
 W(obi east)   7d3 0. 0.
 W(obi tbi)   24d3 0. 0. 
-W(obi fbi)   5.6d3 0. 0. 
+W(obi fbi)  5.6d3 0. 0.
+W(obi mnbi) 8.1d3 0. 0. 
 W(east tbi)  40d3 0. 0.
 W(east fbi)   1d3 0. 0.
-W(tbi fbi)   40d3 0. 0.  
-                             
+W(east mnbi) 13d3 0. 0.
+W(tbi fbi)   40d3 0. 0.
+W(tbi mnbi)  30d3 0. 0.  
+W(fbi mnbi) 116d2 0. 0.    
+                
 end_excess_function 
 
 4                           | Configurational entropy: 4 sites, M1, M2, T1 H.
 
-5 1.                        | 5 species on M1, 1 site per formula unit.
+6 1.                        | 5 species on M1, 1 site per formula unit.
 
-
-z(m1,fe) = 1 ann  + 1 obi   
-z(m1,mg) = 1 phl           
+z(m1,fe)   = 1 ann  + 1 obi   
+z(m1,mg)   = 1 phl           
 z(m1,Fe3+) = 1 fbi 
-z(m1,Ti) = 1 tbi  
+z(m1,mn)   = 1 mnbi
+z(m1,Ti)   = 1 tbi  
 
-2 2.                        | 2 species on M2, 2 sites per formula unit.
+3 2.                        | 2 species on M2, 2 sites per formula unit.
 
-z(m2,fe) = 1 ann 
+z(m2,fe)   = 1 ann                                                                                
+z(m2,mn)   = 1 mnbi 
    
-
 2 2.                        | 2 species on T1, 2 site per formula unit.
 
 z(t1,al) = 1/2  + 1/2 east + 1/2 fbi 
@@ -851,9 +889,9 @@ z(t1,al) = 1/2  + 1/2 east + 1/2 fbi
 
 z(h,o) = 1 tbi 
 
-
 begin_dqf_corrections
-dqf(ann) -3d3 0 0
+dqf(ann)  -3000  0 0
+dqf(mnbi) -7890  0 0
 end_dqf_corrections
 
 end_of_model               
@@ -1039,13 +1077,6 @@ begin_model
                                   
                                   The ilm and ilm_nol endmembers should be excluded from calculations
                                   to avoid conflicts with this model.
-
-                                  For Mg and Mn solution this model differs from the Thermocalc version in 
-                                  that Mg and Mn are confined to the A-site, in contrast in Thermocalc the 
-                                  "equipartition" assumption is used to allocate Mg and Mn to the B-site in
-                                  proportion to the Ferrous iron intersite partitioning. Consequently, this
-                                  model predicts lower Mn and Mg solubility in ilmenite than the Thermocalc
-                                  version of the model. 
                                   
                                                                        JADC, Oct 29, 2011.
 
@@ -1054,6 +1085,8 @@ begin_model
                                   Corrected to count Ti in A-site configurational entropy. JADC, Jun 16, 2013. 
 
                                   Make definitions corrected from the raw thermocalc versions. JADC, Jun 19, 2013.
+
+                                  Excess terms updated, Felix Gervais, Jan 28, 2015.
 
 Ilm(W)                           
 2                          | macroscopic
@@ -1076,11 +1109,14 @@ dilm
 begin_excess_function
 W(oilm dilm)    15.6d3  0.  0. 
 W(oilm hem)     26.6d3  0.  0.
-W(oilm geik)       4d3  0.  0.
+W(oilm geik)       2d3  0.  0.
+W(oilm pnt)        4d3  0.  0.
 W(dilm hem)       11d3  0.  0.
 W(dilm geik)       4d3  0.  0.
+W(dilm pnt)        2d3  0.  0.
 W(hem geik)       36d3  0.  0.
-W(oilm pnt)       1760  0.  0.
+W(hem pnt)        25d3  0.  0.
+W(geik pnt)        4d3  0.  0.
 end_excess_function
 
 
@@ -1121,6 +1157,8 @@ begin_model
                             Modified model entered by Tim Johnson, Apr 7 2014.
 
                             w(fcrd hcrd) changed from w(crd hcrd), May 16, 2014. Felix Gervais.
+
+                            w(mncrd ...)'s and mncrd DQF added. Felix Gervais, Jan 28, 2015.
                            
 Crd(W) 
 7                                 model type: reciprocal                                     
@@ -1144,8 +1182,11 @@ hmncrd_i = 1 hcrd + 1 mncrd - 1 crd
 0. 1.  .1 0                | range and resolution for 1-X(H2O) on H site, imod = 0 -> cartesian subdivision  
 
 begin_excess_function
-W(crd fcrd)      8d3  0.  0. 
-W(fcrd hcrd)      9d3  0.  0. 
+W(crd fcrd)        8d3  0.  0. 
+W(fcrd hcrd)       9d3  0.  0. 
+W(crd mncrd)       6d3  0.  0. 
+W(fcrd mncrd)      4d3  0.  0.
+W(hcrd mncrd)      6d3  0.  0. 
 end_excess_function
 
 2                                       2 site entropy model.
@@ -1156,6 +1197,10 @@ z(m,fe) = 1 fcrd
 
 2 1.                                    2 species on H, 1 sites per formula unit.
 z(H,H2O) = 1 hcrd 
+
+begin_dqf_corrections
+dqf(mncrd)   -4210 0. 0.
+end_dqf_corrections  
 
 end_of_model                       
                       --------------------------------------------------------

@@ -1236,7 +1236,7 @@ c---------------------------------------------------------------------
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 
       character*2 strgs*3, mstrg, dstrg, tstrg*3, wstrg*3
-      common/ cst56 /strgs(32),mstrg(6),dstrg(8),tstrg(13),wstrg(m16)
+      common/ cst56 /strgs(32),mstrg(6),dstrg(8),tstrg(11),wstrg(m16)
 c-----------------------------------------------------------------------
       write (*,1110)
       read (*,1050) y
@@ -1270,13 +1270,18 @@ c-----------------------------------------------------------------------
 
             call unlam (tm,id)
 
-            call unver
-     *           (thermo(1,id),thermo(2,id),thermo(3,id),thermo(4,id),
-     *            thermo(5,id),thermo(6,id),thermo(7,id),thermo(8,id),
-     *            thermo(9,id),thermo(10,id),thermo(11,id),
-     *            thermo(12,id),thermo(14,id),
+            call unver (
+c                                 g0, s0, v0
+     *            thermo(1,id),thermo(2,id),thermo(3,id),
+c                                 c1-c8
+     *            thermo(4,id),thermo(5,id),thermo(6,id),thermo(7,id),
+     *            thermo(8,id),thermo(9,id),thermo(10,id),thermo(24,id),
+c                                 b1-b8 (skips b3)
+     *            thermo(11,id),thermo(12,id),thermo(14,id),
      *            thermo(15,id),thermo(16,id),thermo(17,id),
-     *            thermo(18,id),tr,pr)
+     *            thermo(18,id),
+c                                 ref stuff
+     *            tr,pr)
 c                                 add in activity correction
             thermo(1,k10) = thermo(1,id)
             thermo(2,k10) = thermo(2,id)
@@ -1408,13 +1413,20 @@ c                                    test for Murghnahan EoS
 
             call unlam (tm,id)
 
-            call unver
-     *           (thermo(1,id),thermo(2,id),thermo(3,id),thermo(4,id),
-     *            thermo(5,id),thermo(6,id),thermo(7,id),thermo(8,id),
-     *            thermo(9,id),thermo(10,id),thermo(11,id),
-     *            thermo(12,id),thermo(14,id),
+            call unver (
+c                                 g0,s0, v0
+     *            thermo(1,id),thermo(2,id),thermo(3,id),
+c                                 c1-c8
+     *            thermo(4,id),thermo(5,id),thermo(6,id),
+     *            thermo(7,id),thermo(8,id),thermo(9,id),
+     *            thermo(10,id),thermo(24,id),
+c                                 b1-b8 (skips b3)
+     *            thermo(11,id),thermo(12,id),thermo(14,id),
      *            thermo(15,id),thermo(16,id),thermo(17,id),
-     *            thermo(18,id),tr,pr)
+     *            thermo(18,id),
+c                                 ref stuff
+     *            tr,pr)
+
 c                                 add in activity correction
             thermo(1,k10) = thermo(1,id)
             thermo(2,k10) = thermo(2,id)
@@ -1494,14 +1506,22 @@ c                                 add in activity correction
 
                   end if
 c
-                  call conver
-     *           (thermo(1,id), thermo(2,id), thermo(3,id),thermo(4,id),
-     *            thermo(5,id), thermo(6,id), thermo(7,id),thermo(8,id),
-     *            thermo(9,id), thermo(10,id),thermo(11,id),
-     *            thermo(12,id),thermo(13,id),thermo(14,id),
-     *            thermo(15,id),thermo(16,id),thermo(17,id),
-     *            thermo(18,id),thermo(19,id),thermo(20,id),
-     *            thermo(21,id),thermo(22,id),thermo(23,id),tr,pr,r,0)
+                  call conver (
+c                                 g0, s0, v0:
+     *            thermo(1,id), thermo(2,id), thermo(3,id),
+c                                 c1-c8 
+     *            thermo(4,id),thermo(5,id), thermo(6,id), thermo(7,id),
+     *            thermo(8,id),thermo(9,id), thermo(10,id),
+     *            thermo(24,id),
+c                                 b1-b12
+     *            thermo(11,id),thermo(12,id),thermo(13,id),
+     *            thermo(14,id),thermo(15,id),thermo(16,id),
+     *            thermo(17,id),thermo(18,id),thermo(19,id),
+     *            thermo(20,id),thermo(21,id),thermo(22,id),
+c                                 b13 on return
+     *            thermo(23,id),
+c                                 ref stuff
+     *            tr,pr,r,0)
 
                   exit 
 
@@ -1511,13 +1531,19 @@ c
 
                   call unlam (tm,id)
 
-                  call unver
-     *           (thermo(1,id),thermo(2,id),thermo(3,id),thermo(4,id),
-     *            thermo(5,id),thermo(6,id),thermo(7,id),thermo(8,id),
-     *            thermo(9,id),thermo(10,id),thermo(11,id),
-     *            thermo(12,id),thermo(14,id),
+                  call unver (
+c                                 g0,s0, v0
+     *            thermo(1,id),thermo(2,id),thermo(3,id),
+c                                 c1-c8
+     *            thermo(4,id),thermo(5,id),thermo(6,id),
+     *            thermo(7,id),thermo(8,id),thermo(9,id),
+     *            thermo(10,id),thermo(24,id),
+c                                 b1-b8 (skips b3)
+     *            thermo(11,id),thermo(12,id),thermo(14,id),
      *            thermo(15,id),thermo(16,id),thermo(17,id),
-     *            thermo(18,id),tr,pr)
+     *            thermo(18,id),
+c                                 ref stuff
+     *            tr,pr)
 
                   write (*,1040) names(id)
                   read (*,1050) names(id)
@@ -1646,7 +1672,7 @@ c----------------------------------------------------------------------
       common/ cst1 /thermo(k4,k10),uf(2),us(h5)    
 
       character*2 strgs*3, mstrg, dstrg, tstrg*3, wstrg*3
-      common/ cst56 /strgs(32),mstrg(6),dstrg(8),tstrg(13),wstrg(m16)
+      common/ cst56 /strgs(32),mstrg(6),dstrg(8),tstrg(11),wstrg(m16)
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps

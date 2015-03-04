@@ -139,6 +139,9 @@ c---------------------------------------------------------------------
       integer ipot,jv,iv
       common/ cst24 /ipot,jv(l2),iv(l2)
 
+      integer iam
+      common/ cst4 /iam
+
       save rkname 
 
       data (rkname(i), i = 0, 11)/
@@ -256,13 +259,13 @@ c                                 change default buffer
                call warn (173,dlnfo2,ifug,'RFLUID')
                goto 20
             end if 
-c                                ibuf = 5, define own buffer
+c                                 ibuf = 5, define own buffer
             if (ibuf.eq.5) then
 45             write (*,1180)  
                read (*,*,iostat=ier) buf
                call rerror (ier,*45)
                goto 30
-c                                ibuf = 3, constant fo2.
+c                                 ibuf = 3, constant fo2.
             else if (ibuf.eq.3) then
 40             write (*,1140) 
                read (*,*,iostat=ier) dlnfo2
@@ -270,7 +273,7 @@ c                                ibuf = 3, constant fo2.
                dlnfo2 = 2.302585093d0 * dlnfo2
                goto 50
             end if 
-c                                ibuf 2 or 1, permit del(fo2)
+c                                 ibuf 2 or 1, permit del(fo2)
 30          write (*,1040) 
             read (*,1030) y
             if (y.eq.'y'.or.y.eq.'Y') then 
@@ -281,21 +284,29 @@ c                                ibuf 2 or 1, permit del(fo2)
             end if 
          end if
       end if 
-c                                for graphite EoS's allow
-c                                reduced gph activity:
-c                                this could be done for all
-c                                but here we only allow simple
-c                                EoS's because the X(C),S/C and N/C
-c                                routines use the variable elag to
-c                                store these ratios.
+c                                 for graphite EoS's allow
+c                                 reduced gph activity:
+c                                 this could be done for all
+c                                 but here we only allow simple
+c                                 EoS's because the X(C),S/C and N/C
+c                                 routines use the variable elag to
+c                                 store these ratios.
 50    if (ifug.ge.7.and.ifug.le.12.and.ifug.ne.9) then
-         write (*,1170)
-         read (*,1030) y
+c                                 if build, then ask whether to 
+c                                 set H2 and O2 as the independent
+c                                 fugacities (hu = 1), otherwise they 
+c                                 are H2O and CO2 (hu = 0).
          hu = 0 
-         if (y.eq.'y'.or.y.eq.'Y') hu = 1
+
+         if (iam.eq.4) then 
+            write (*,1170)
+            read (*,1030) y 
+            if (y.eq.'y'.or.y.eq.'Y') hu = 1
+         end if 
 
          write (*,1120) 
          read (*,1030) y
+
          if (y.eq.'y'.or.y.eq.'Y') then
             write (*,1130) 
             read (*,*,iostat=ier) elag
@@ -304,19 +315,19 @@ c                                store these ratios.
          end if
 
       else if (ifug.eq.19) then 
-c                                for XO-XS EoS get S/C
+c                                 for XO-XS EoS get S/C
          write (*,1150) 
          read (*,*,iostat=ier) elag
          call rerror (ier,*50)
 
       else if (ifug.eq.20) then
-c                                for XO-XC EoS get X(C)
+c                                 for XO-XC EoS get X(C)
          write (*,1160) 
          read (*,*,iostat=ier) elag
          call rerror (ier,*50)
     
       else if (ifug.eq.25) then 
-c                                special conditions for H2O-CO2-NaCl EoS
+c                                 special conditions for H2O-CO2-NaCl EoS
          write (*,1200)
          read (*,*,iostat=ier) ibuf
          call rerror (ier,*50)
@@ -2101,16 +2112,16 @@ c                                 first get mrk props
 c                                 water:
       vm(1) = -v(1)
       gm(1) = g(1)
-      call crkh2o (p,t,v(1),fg(1)) 
-c      call pseos (v(1),fg(1),1)
+c     call crkh2o (p,t,v(1),fg(1)) 
+      call pseos (v(1),fg(1),1)
       g(1) = dexp(fg(1))/p
       vm(1) = vm(1) + v(1)
       f(1) = fg(1)
 c                                 co2:
       vm(2) = -v(2)
       gm(2) = g(2)
-      call crkco2 (p,t,v(2),fg(2)) 
-c      call pseos (v(2),fg(2),2)
+c     call crkco2 (p,t,v(2),fg(2)) 
+      call pseos (v(2),fg(2),2)
       g(2) = dexp(fg(2))/p
       vm(2) = vm(2) + v(2)
       f(2) = fg(2)
@@ -5550,13 +5561,12 @@ c----------------------------------------------------------------------
       implicit none 
 
       double precision pbar,t,xco2,u1,u2,tr,pr,r,ps,alpha,
-     *                 w2,w3,w4,w5,a1,gex,x1,x2,x3,fh2o,fco2,funk,
+     *                 w2,w3,w4,w5,a1,gex,x1,x2,x3,fh2o,fco2,
      *                 p,v1,v2,rt,rid,sid,tid,uid,vid
 
       common/ cst5  /pbar,t,xco2,u1,u2,tr,pr,r,ps
 
-c                                 supposedly these routines 
-c                                 return volume in J/bar
+c                                 these routines return volume in J/bar
       call crkco2 (pbar,t,v2,fco2) 
       call crkh2o (pbar,t,v1,fh2o)
 c                                 leonya needs cm3/mol

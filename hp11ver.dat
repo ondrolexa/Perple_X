@@ -221,14 +221,18 @@ mots1    = 1 mgts + 1/2  andr  - 1/2 gr
 odi  = 1 di 
 -0.1d3       0.211       0.005
 
-tbi = 1 phl - 1 br + 1 ru      | Ti-biotite endmember for Bio(W) model
+tbi = 1 phl - 1 br + 1 ru         | Ti-biotite endmember for Bi(W) model
 55e3 0 0                        
                                 
-fbi = 1 east - 1/2 gr + 1/2 andr  | Fe3+-biotite endmember for Bio(W) model                                   
+fbi = 1 east - 1/2 gr + 1/2 andr  | Fe3+-biotite endmember for Bi(W) model                                   
 -3e3 0 0
 
 ospr = 1/2 andr - 1/2 gr + 1 spr5
 -16d3 0 0    
+
+mnopx = 2 pxmn                    | Mn endmember for Opx(W) model
+6680 0 0
+
                                   
 end_makes 
 
@@ -1282,7 +1286,7 @@ end
 
 
 cl_phl     EoS = 8 | Leonid Aranovich, 1/26/2015 JADC                           
-MGO(3)AL2O3(.5)SIO2(3)K2O(.5)F2(1)
+MGO(3)AL2O3(.5)SIO2(3)K2O(.5)CL2(1)
 G0 = -6040825.784 S0 = 352.3531263 V0 = 16.59 
 c1 = 573.417922 c3 = -16464532.98 c5 = -2063.40084  c7 = 2105614373
 b1 = .38E-4 b5 = 500.325 b6 = 513000 b7 = -.143E-4 b8 = 7.33  
@@ -1306,7 +1310,7 @@ end
 
 
 cl_ann     EoS = 8 | Leonid Aranovich, 1/26/2015 JADC                           
-FEO(3)AL2O3(.5)SIO2(3)K2O(.5)F2(1)
+FEO(3)AL2O3(.5)SIO2(3)K2O(.5)CL2(1)
 G0 = -5016844.597   S0 = 447.5285546  V0 = 17.247  
 c1 = 690.394174 c3 = -8724687.98 c5 = -4759.79549  c7 = 1376730159
 b1 = .38E-4 b5 = 500.325 b6 = 513000 b7 = -.143E-4 b8 = 7.33  
@@ -2333,3 +2337,11 @@ c1 = 287
 b1 = .67E-4 b5 = 639.1827 b6 = 175000 b7 = -.394E-4 b8 = 7  
 end
 
+NaF      EoS = 12 | Leonid Aranovich Feb 23, 2015, JADC                           
+NA2O(.5)O2(-.25)F2(.5)
+G0 = -568102 S0 = 73.46 V0 = 8.62  
+c1 = 66.43350
+c2 = -2.270481  
+c3 = 0.701306
+c
+end

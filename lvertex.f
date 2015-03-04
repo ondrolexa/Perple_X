@@ -1552,13 +1552,19 @@ c                                 test for mughnahan EoS
 
          call unlam (tm,id)
 
-         call unver (thermo(1,k10),thermo(2,k10),thermo(3,k10),
+         call unver (
+c                                 g0, s0, v0
+     *               thermo(1,k10),thermo(2,k10),thermo(3,k10),
+c                                 c1-c8
      *               thermo(4,k10),thermo(5,k10),thermo(6,k10),
      *               thermo(7,k10),thermo(8,k10),
-     *               thermo(9,k10),thermo(10,k10),thermo(11,k10),
-     *               thermo(12,k10),thermo(14,k10),
+     *               thermo(9,k10),thermo(10,k10),thermo(24,k10),
+c                                  b1-b8 (skips b3)
+     *               thermo(11,k10),thermo(12,k10),thermo(14,k10),
      *               thermo(15,k10),thermo(16,k10),thermo(17,k10),
-     *               thermo(18,k10),tr,pr)
+     *               thermo(18,k10),
+c                                 ref-stuff
+     *               tr,pr)
 c                                 output the data
 c                                 this needs to be corrected so
 c                                 that the output data is in thermo
