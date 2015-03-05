@@ -3614,13 +3614,16 @@ c                                 only static optimization
          else 
 c                                 getcmp assigns cp3, cptot, x3, and kkp
             call getcmp (i,jdv(i),jkp(jdv(i)))
+c                                 convert normalized g's to molar g's,
+c                                 before 3/5/2015 this was outside the
+c                                 if construction. JADC.
+            mu(i) = g2(jdv(i))*cptot(i)
 
          end if          
 c                                 convert normalized amounts to molar 
 c                                 amounts
          amt(i) = ctotal*amt(i)/cptot(i)
-c                                 convert normalized g's to molar g's
-         mu(i) = g2(jdv(i))*cptot(i)
+
 
       end do 
 
