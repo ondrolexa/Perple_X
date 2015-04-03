@@ -1367,9 +1367,9 @@ c----------------------------------------------------------------------
       logical ok, sick(i8), ssick, pois, ppois, bulk, bulkg, bsick, 
      *        lshear, fow
 
-      integer id, jd, iwarn1, iwarn2, j, itemp, m
+      integer id, jd, iwarn1, iwarn2, iwarn3, j, itemp, m
 
-      character*14 wname1, wname2
+      character*14 wname1, wname2, wname3
 
       double precision dt0, dt1, dt2, g0, gpt, gpp, dp0, dp1, dp2, e, 
      *                 alpha, v, ginc, dt,
@@ -1453,8 +1453,8 @@ c----------------------------------------------------------------------
       save dt
       data dt /.5d0/
 
-      save iwarn1, iwarn2, wname1, wname2
-      data iwarn1, iwarn2, wname1, wname2 /2*0,2*'              '/
+      save iwarn1, iwarn2, iwarn3, wname1, wname2, wname3
+      data iwarn1, iwarn2, iwarn3, wname1, wname2, wname3 /3*0,3*' '/
 c----------------------------------------------------------------------
       sick(jd) = .false.
       pois     = .false.
@@ -1856,42 +1856,61 @@ c                                 vp/vs
 c                                 check for negative poisson ratio
             if (poiss(props(7,jd),props(8,jd)).lt.0d0) then
 
-               sick(jd) = .true.
-               bsick = .true.
-               ssick = .true.
-               volume = .false.
-               shear = .false.
+               if (iwarn3.lt.11.and.pname(jd).ne.wname3) then 
 
-               v = nopt(7)
-               beta = nopt(7)
-               alpha = nopt(7)
-               rho = nopt(7)
+                 write (*,1050) t,p,pname(jd)
 
-               props(13,jd) = nopt(7)
-               props(14,jd) = nopt(7) 
-               props(10,jd) = nopt(7) 
+                 if (lopt(20)) then 
+                    write (*,1070)
+                 else 
+                    write (*,1060)
+                 end if 
 
-               props(5,jd) = nopt(7)
-               props(19,jd) = nopt(7)    
-               props(21,jd) = nopt(7)
+                 iwarn3 = iwarn3 + 1
+                 wname3 = pname(jd)
+                 if (iwarn3.eq.11) call warn (49,r,180,'GETPHP') 
 
-               props(1,jd) = nopt(7)
-               props(3,jd) = nopt(7)
-               props(4,jd) = nopt(7)
+               end if
 
-               props(6,jd)  = nopt(7)
-               props(22,jd) = nopt(7)
-               props(25,jd) = nopt(7)
+               if (lopt(20)) then 
 
-               props(7,jd)  = nopt(7)
-               props(23,jd) = nopt(7)
-               props(26,jd) = nopt(7)
+                  sick(jd) = .true.
+                  bsick = .true.
+                  ssick = .true.
+                  volume = .false.
+                  shear = .false.
 
-               props(8,jd) = nopt(7)
-               props(24,jd) = nopt(7)
-               props(27,jd) = nopt(7)
+                  v = nopt(7)
+                  beta = nopt(7)
+                  alpha = nopt(7)
+                  rho = nopt(7)
 
-               props(28,jd) = nopt(7)
+                  props(13,jd) = nopt(7)
+                  props(14,jd) = nopt(7) 
+                  props(10,jd) = nopt(7) 
+
+                  props(5,jd) = nopt(7)
+                  props(19,jd) = nopt(7)    
+                  props(21,jd) = nopt(7)
+
+                  props(1,jd) = nopt(7)
+                  props(3,jd) = nopt(7)
+                  props(4,jd) = nopt(7)
+
+                  props(6,jd)  = nopt(7)
+                  props(22,jd) = nopt(7)
+                  props(25,jd) = nopt(7)
+
+                  props(7,jd)  = nopt(7)
+                  props(23,jd) = nopt(7)
+                  props(26,jd) = nopt(7)
+
+                  props(8,jd) = nopt(7)
+                  props(24,jd) = nopt(7)
+                  props(27,jd) = nopt(7)
+
+                  props(28,jd) = nopt(7)
+               end if 
 
             end if 
 
@@ -2035,11 +2054,18 @@ c                                 solid only totals:
      *        'model. The Gruneisen',/,'thermal parameter and seismic',
      *        ' speeds for this phase should be considered ',
      *        'with caution.',/)
-
 1040  format (/,'**warning ver178** at T(K)=',g12.4,' P(bar)=',g12.4,1x,
-     *        'the shear modulus of: ',a,/,'is missing or invalid ',
+     *        /,'the shear modulus of: ',a,/,'is missing or invalid ',
      *        'and has been estimated from the default poisson ',
-     *        'ratio ',/)
+     *        'ratio',/)
+1050  format (/,'**warning ver180** at T(K)=',g12.4,' P(bar)=',g12.4,1x,
+     *        /,'the poisson ratio of: ',a,' is negative.')
+1060  format (/,'the suspect data will be output and used to ',
+     *        'compute aggregate properties.',/,'to prevent this set ',
+     *        'poisson_check to true in perplex_option.dat',/)
+1070  format (/,'the suspect data will be rejected and aggregate ',
+     *        'properties will not be output.',/,'to prevent this set',
+     *        'poisson_check to false in perplex_option.dat',/)
 
       end
 

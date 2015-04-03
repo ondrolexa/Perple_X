@@ -9118,7 +9118,6 @@ reach_increment 4
 
 end_of_model                  
                               --------------------------------------------------------
-                            --------------------------------------------------------
 begin_model
                            |solution model parameters after Brosh, 2013
 
@@ -9208,3 +9207,33 @@ z(c) = 1 FeCA2
 
 end_of_model
                         --------------------------------------------------------
+begin_model 
+                                  
+ideal_gas
+                                    
+27                                     model type: 
+
+6                                     number of species
+                                 
+                                    | species NAMES:                               
+O2(g)  
+O(g)                              
+Mg(g)
+Fe(g)
+FeO(g)
+MgO(g)
+
+
+0 0 0 0 0 0                         | endmember flags.  
+
+0.0 1.   0.1 0                      | range and resolution of X(O2), 0 => cartesian subdivision/1 
+0.0 1.   0.1 0                      | range and resolution of X(O)  
+0.0 1.   0.1 0                      | range and resolution of X(Mg)   
+0.0 1.   0.1 0                      | range and resolution of X(Fe)  
+0.0 1.   0.1 0                      | range and resolution of X(MgO)  
+
+ideal
+
+  0                                 | molecular configurational entropy model 
+
+end_of_model

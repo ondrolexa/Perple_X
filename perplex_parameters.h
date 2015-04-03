@@ -128,7 +128,7 @@
 !                                m16 - max number of parameters in a redkich-kistler L
 !                                m17 - max order of redlich-kistler expansion
 !                                m18 - max number of pairwise terms in a redlich-kistler expansion
-      parameter (m0=8,m1=36,m2=8,m3=3,m4=15,m6=4,m7=15,m8=9,m9=10,m10=5)
+      parameter (m0=8,m1=36,m2=8,m3=3,m4=15,m6=5,m7=15,m8=9,m9=10,m10=5)
       parameter (m11=5,m12=4,m13=8,m14=2,m15=9,m16=5,m17=5,m18=6)
 !                                nsp - max number of species in fluid speciation routines 
       parameter (nsp=16)

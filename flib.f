@@ -5897,7 +5897,15 @@ c                                 dpdv/rt
      *          + (c20*a1 - c44 + (c36 + (c55 + (c56 
      *          - c66/v)/v)/v)/v)/v)/v/a3)/v)/v)/v/v)
 
-         v = v + dv
+         if (dv.lt.0d0.and.v+dv.lt.0d0) then 
+
+            v = v*0.8d0
+
+         else 
+
+            v = v + dv
+
+         end if 
 
          if (dabs(dv/v).lt.nopt(5)) then
 c                                 converged, compute ln(fugacity)      

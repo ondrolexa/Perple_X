@@ -90,8 +90,8 @@ begin_makes
  | tip = 1 fcel + 1 geik - 1/2 fs
  | -13469.8  -14.694 .84
                                                 
- | mthm = 6 hem - 4 mt             | mthm O2 buffer
- | 0 0 0                        
+ mthm = 6 hem - 4 mt             | mthm O2 buffer
+ 0 0 0                        
 
  | qfm = 2 mt + 3 q  -3 fa         | qfm O2 buffer
  | 0 0 0                        

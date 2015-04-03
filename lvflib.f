@@ -6125,7 +6125,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer iavg, ins(5), isp, nit, i1, i2, i3, i4, i5, i
+      integer iavg, ins(5), isp, nit, i1, i2, i3, i4, i5, i, itic
 
       logical bad, both
 

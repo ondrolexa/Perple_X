@@ -7090,7 +7090,7 @@ c                                 ideal gas mix (ifp(id).eq.27)
             do k = 1, nstot(ids) 
                x0 = sxs(ixp(id)+k)
                if (x0.le.0d0) cycle
-               gph = gph +  x0 *(gzero(jend(ids,2+k)) + r*t*dlog(x0))
+               gph = gph +  x0 *(gproj(jend(ids,2+k)) + r*t*dlog(x0))
             end do 
 
          end if 
