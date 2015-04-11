@@ -211,6 +211,9 @@ c                                 first iteration
 
          id = jdv(i) + inc
 
+
+c         if (ikp(id).eq.0) then #refine endmember change
+
          if (id.le.ipoint) then
 c                                 the point is a true compound
             jphct = jphct + 1
@@ -1949,7 +1952,8 @@ c                                 seems to work fine), so use id > ipoint
 c                                 to identify a refineable point
 
 c                                 modified 3/4/2015 to refine endmember compositions. JADC
-            if (ikp(id).ne.0) then 
+c           if (ikp(id).ne.0) then  #refine endmember change
+            if (ikp(id).ne.0.and.id.gt.ipoint) then
 
                quit = .false.
 
@@ -1990,7 +1994,8 @@ c                                 each solution.
          id = i + inc 
          iam = ikp(id)
 c                                modified to allow endmembers, Mar 4, 2015. JADC
-         if (iam.ne.0.and.id.gt.0*ipoint) then   
+c        if (iam.ne.0.and.id.gt.0*ipoint) then   #refine endmember change
+         if (iam.ne.0.and.id.gt.ipoint) then  
 
             if (clamda(i).lt.slam(iam)) then
 c                                the composition is more stable
@@ -2063,7 +2068,8 @@ c                                 find the most stable iopt(12) points
 
          jdv(npt+i) = kdv(i)
 c                                 a metastable solution to be refined
-         if (kdv(i)+inc.gt.ipoint) quit = .false.
+c        if (kdv(i)+inc.gt.ipoint) quit = .false.
+         if (ikp(kdv(i)+inc).ne.0) quit = .false.
       end do
 
       if (quit) then 

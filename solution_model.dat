@@ -3293,8 +3293,8 @@ begin_model
 COHF   
 41                         | model type: Internal EoS
 3                                  
-gphb     O2       H2     
- 1  1  1                   | endmember flags
+gph      O2       H2     
+ 1  0  0                   | endmember flags
 0.0 0.67 0.1       0
 0.0 1.0  0.1       0       | subdivision ranges, imod = 0 -> cartesian subdivision
 
@@ -4117,7 +4117,7 @@ z(fe) = 1 sid
 end_of_model  
                       --------------------------------------------------------
 begin_model               
-                             Magnesioferrite/magnetite
+                             Magnesioferrite/magnetite (inverse)
 
 MF                                                                               
 2                          | model type: Ideal or Margules
@@ -4127,7 +4127,9 @@ mt       mft
   0  0                                endmember flags
 0.    1.  .1     0         subdivision range, imod = 0 -> cartesian subdivision
 
-ideal
+begin_excess_function 
+w(mt mft)  8368. 0. 0.     | Sack & Ghiorso, W_FeMg, CMP, 1991. 
+end_excess_function
 
 1                                     1 site entropy model
 
@@ -4136,6 +4138,7 @@ z(Fe) = 1 mt
 
 end_of_model               | end of model keyword
                       --------------------------------------------------------
+
 begin_model                | keyword indicating beginning of a solution model
 
 
@@ -8719,8 +8722,29 @@ alpha(sid)    0.01 0.000666 0
 alpha(oank)   0.929 0 0
 end_van_laar_sizes
 
-end_of_model              
+end_of_model          
+                                  --------------------------------------------------------	
+begin_model
+                                      |Magnesite-Siderite melt, nathan kang, 4/2015. 
+LIQ(NK)
+2                                     |margules-subregular                                           
+2                                     |number of endmembers
+MGCO3L FECO3L
+  0  0                                |endmember flags
+0. 1. 0.1  1                          |range and increments on X(Fe) 
 
+
+begin_excess_function
+W(FECO3L MGCO3L MGCO3L)      -7600. 0. 0. |W_sid-mag = W12
+W(MGCO3L FECO3L FECO3L)      -7600. 0. 0. |W_mag-sid = W21
+end_excess_function 
+
+
+1                                     |1 site entropy model
+
+2 1                                   |2 species, multiplicity = 1
+z(fe) = 1 FECO3L 
+end_of_model    
                       --------------------------------------------------------
 begin_model                
                                       |Melting

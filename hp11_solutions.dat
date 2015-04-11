@@ -525,7 +525,7 @@ end_excess_function
 
 3 4.                                  3 species, site multiplicity of 4
 z(Fe) = 1 fst
-z(Mg) = 1 mst
+z(Mg) = 1 mst +1 mstt + 1 msto     | corrected from just 1 mst by Felix Gervais, 4/9/2015. JADC
 
 4 2.                                  4 species, site multiplicity of 2, not clear if the vacancy is associated with Ti
 z(Ti)  = 3/4 mstt
@@ -534,7 +534,7 @@ z(vac) =   1/4 mstt
 
 begin_dqf_corrections
 dqf(mst)  -8000 0 0  
-dqf(mnst) -0.19 0 0        | is this a joke? 
+dqf(mnst) -190 0 0                  | corrected from 0.19 by Felix Gervais, 4/9/2015. JADC
 end_dqf_corrections
 
 end_of_model               
@@ -629,9 +629,9 @@ end_limits
 fets_d = 1 mgts  + 1 opx - 1 en
 feots  = 1 mots1 + 1 opx - 1 en
 fodi   = 1 odi   + 1 opx - 1 en
-mnts   = 1 mgts + 1/2 mnopx - 1/2 en 
-mnots  = 1 mots + 1/2 mnopx - 1/2 en 
-modi   = 1 odi  + 1/2 mnopx - 1/2 en
+mnts   = 1 mgts  + 1/2 mnopx - 1/2 en 
+mnots  = 1 mots1 + 1/2 mnopx - 1/2 en 
+modi   = 1 odi   + 1/2 mnopx - 1/2 en
 
 0 0 0 0 0 0 0 0 0 0 0 0    | endmember flags, indicate if endmember is part of the solution (i.e. iend = 0).
 
@@ -829,7 +829,7 @@ mts    = 1 east  + 2/3 mnbi - 2/3 phl
 mfbi   = 1 fbi   + 2/3 mnbi - 2/3 phl   
 mtbi   = 1 tbi   + 2/3 mnbi - 2/3 phl 
 
-0 0 0 0 0 0 0 0 0            | endmember flags: if 0 the endmember is considered to be part of the solution.
+0 0 0 0 0 0 0 0 0 0 0 0      | endmember flags: if 0 the endmember is considered to be part of the solution.
                    
                              | subdivision model for site 1 (Fe-Mg-Mn):
 0. .2  .1  1                 | range and resolution of X(Mn)

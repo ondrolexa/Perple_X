@@ -2835,6 +2835,21 @@ end_of_model
 begin_model                
                                       Silica Fluid
                                     
+SIO2F   
+0                          | model type: Internal EoS
+2                                  
+O        SIO     
+  0  0                                endmember flags
+0.5 0.5 0.1       0        | subdivision ranges, imod = 0 -> cartesian subdivision
+
+ideal
+0
+
+end_of_model  
+                      --------------------------------------------------------
+begin_model                
+                                      Silica Fluid
+                                    
 Si-O_F   
 0                          | model type: Internal EoS
 2                                  
@@ -7547,64 +7562,61 @@ z(Mg) = 1 py
 z(Zr) = 1 zrg
 
 end_of_model     
-                      -------------------------------------------------------- 
+                             --------------------------------------------------------
 begin_model 
-                                  Silicate ideal gas 
-Si-vapor
+                                  Silica MRK gas
+Si-O_f
 
-27                                    model type: internal, ideal gas
+40                                    model type: internal, ideal gas
 
-9                                     number of endmembers
+5                                     number of endmembers
                                  
                                     | ENDMEMBER NAMES:                               
-SiO2                                
-Fe
-Si
-O2
+SiO2(g)  
+SiO(g)                              
 O
-MgO
-Mg
-FeO
-SiO
+O2(g)
+Si
 
-0 0 0 0 0 0 0 0 0                   | endmember flags.  
 
-0.0 0.1  0.1 1                      | range and resolution of X(SiO2), 0 => cartesian subdivision/1 => asymmetric subdivision   
-0.0 0.1  0.1 1                      | range and resolution of X(Fe)  
-0.0 0.2  0.1 0                      | range and resolution of X(Si)   
-0.0 0.3  0.1 0                      | range and resolution of X(O2)  
-0.0 0.6  0.1 0                      | range and resolution of X(O)   
-0.0 0.2  0.2 0                      | range and resolution of X(MgO)
-0.0 0.4  0.1 1                      | range and resolution of X(Mg)
-0.0 0.1  0.1 1                      | range and resolution of X(FeO)
+0 0 0 0 0                           | endmember flags.  
+
+0.0 1.   0.1 0                      | range and resolution of X(SiO2), 0 => cartesian subdivision/1 
+0.0 1.   0.1 0                      | range and resolution of X(SiO)  
+0.0 .5   0.1 0                      | range and resolution of X(O)   
+0.0 1.   0.1 0                      | range and resolution of X(O2)  
 
 ideal
 
   0                               | no configurational entropy model (internal routine hpmelt).
 
 end_of_model
-                                  --------------------------------------------------------
+                             --------------------------------------------------------
 begin_model 
-                                  High T fo-fa-sio2 ideal melt model 
-Si-melt
+                                  Silica ideal gas, to use this model the EoS flag must be set to 
+Si-O_ideal
+                                    
+27                                    model type: internal, ideal gas
 
-28                                    model type: internal
-
-3                                     number of endmembers
+5                                     number of endmembers
                                  
                                     | ENDMEMBER NAMES:                               
-foL
-faL
-qL
+SiO2(g)  
+SiO(g)                              
+O
+O2(g)
+Si
 
-0 0 0                               | endmember flags.  
 
-0.0 1.0  0.1 0                      | range and resolution of X(fo), 0 => cartesian subdivision/1 => asymmetric subdivision   
-0.0 1.0  0.1 0                      | range and resolution of X(fa)  
+0 0 0 0 0                           | endmember flags.  
+
+0.0 1.   0.1 0                      | range and resolution of X(SiO2), 0 => cartesian subdivision/1 
+0.0 1.   0.1 0                      | range and resolution of X(SiO)  
+0.0 .5   0.1 0                      | range and resolution of X(O)   
+0.0 1.   0.1 0                      | range and resolution of X(O2)  
 
 ideal
 
-  0                                 | no configurational entropy model (internal routine slvmlt).
+  0                                 | molecular configurational entropy model 
 
 end_of_model
-                                  --------------------------------------------------------

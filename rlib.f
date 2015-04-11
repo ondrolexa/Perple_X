@@ -444,7 +444,7 @@ c                                 temperature
      *               call warn (49,t,46,'GCPD_Murnaghan')
                end if 
 c                                 destabalize the phase
-               gval = 1d4*p
+               gcpd = 1d4*p
 
                return 
 
