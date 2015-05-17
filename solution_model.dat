@@ -1563,24 +1563,17 @@ begin_model
 
                                       Zr8L added. Jeff Marsh, Jan 10, 2012.
 
-                                      WARNING 1: This model can only be used for hydrous systems  
-                                      if H2O is specified as a thermodynamic component or as a
-                                      staurated component, it CANNOT be used if water is specified
-                                      as a saturated phase component (i.e., if H2O is specified as a saturated 
-                                      phase component, VERTEX will reject the H2OL endmember
-                                      and the model will be applicable only to dry melts).
-
-                                      WARNING 2: DO NOT CHANGE THE ORDER OF THE FIRST 3 ENDMEMBERS
+                                      WARNING 1: DO NOT CHANGE THE ORDER OF THE FIRST 3 ENDMEMBERS
                                       this model uses an internal routine to compute the
                                       entropy of the melt that assumes the order entered
                                       here, see comments with endmember names below.
 
-                                      WARNING 3: the endmembers q8L, fa8L, fo8L, and
+                                      WARNING 2: the endmembers q8L, fa8L, fo8L, and
                                       sil8L must be "made" in the thermodynamic data
                                       file. See the header section of hp02ver.dat for
                                       details on the "make" structure.
 
-                                      WARNING 3.1: the (stabilizing) dqf corrections made
+                                      WARNING 3: the (stabilizing) dqf corrections made
                                       to the fo8L, fa8L, and sil8L enedmembers make the 
                                       haplogranite melt model inapplicable to melts where
                                       these endmembers are present in high concentrations,

@@ -17,7 +17,7 @@ c----------------------------------------------------------------------
       implicit none
 
       write (*,'(/,a)') 
-     *      'Perple_X version 6.7.1, source updated Apr 11, 2015.'
+     *      'Perple_X version 6.7.1, source updated May 4, 2015.'
 
       end
 
@@ -2589,7 +2589,7 @@ c     *          ' (SWASH, see program documentation Eq 2.3)',/)
 89    format (//,'**warning ver089** BUILD you did not request',
      *        'plot file output.',/,' You will not be able to process',
      *        ' the results of the requested calculation.',//)
-90    format (/,'**warning ver090** optimization failed. ',/,
+90    format (/,'**warning ver090** optimization failed. '
      *        'Probable cause: the possible ',
      *        'phases do not span the systems composition',/,3x,
      *        'To avoid this problem add phases or modify the bulk ',

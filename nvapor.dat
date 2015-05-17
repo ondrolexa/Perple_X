@@ -165,3 +165,11 @@ end
 
 
 
+SiO2(t)   EoS = 1 | HSC/shornikov ideal gas   HSC=> G0 -390.292d3 shornikov=> G0 = -378.938d3                                                        
+Si(1)O(2)
+G0 = -390.292d3 S0 = 228.719
+c1 = 27.28805 c2 = 71.29955d-3 c3 = -0.25104d5 c4 = -47.78965d-6
+transition = 1 type = 2 t1  = 400   t4  = 43.14959 t5 = 26.20858d-3 t6 = -6.36805d5 t7 = -10.35122d-6
+transition = 2 type = 2 t1  = 1100  t4  = 62.32068                  t6 = -41.47181d5  
+transition = 3 type = 2 t1  = 6000  t4  = 62.2054140506421    
+end

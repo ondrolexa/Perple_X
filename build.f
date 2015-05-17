@@ -44,7 +44,7 @@ c-----------------------------------------------------------------------
      *        ict, jvct, jc, ix, jst,ind, loopy, 
      *        loopx, ierr, idsol, isoct, kvct, inames
 
-      logical eof, good, satflu, mobflu, oned, findph, bad, first
+      logical eof, good, satflu, mobflu, oned, findph, bad, first, feos
 
       double precision c(0:4)
 
@@ -85,6 +85,9 @@ c-----------------------------------------------------------------------
 
       character*8 names
       common/ cst8 /names(k1)
+
+      integer eos
+      common/ cst303 /eos(k10)
 
       character*8 vname, xname
       common/ csta2 /xname(k5),vname(l2)
@@ -215,6 +218,7 @@ c                                 initialization:
       satflu = .false.
       mobflu = .false.
       first = .true. 
+      feos = .false.
 
       call redop1 (satflu,opname)
 
@@ -569,7 +573,10 @@ c                                 in thermodynamic composition space.
 
       end do     
 c                                 get fluid equation of state
-      if (ifyn.ne.0.or.ifugy.ne.0.or.satflu) call rfluid (1,ifug)
+      if (ifyn.ne.0.or.ifugy.ne.0.or.satflu) then
+         feos = .true.
+         call rfluid (1,ifug)
+      end if 
 c                                 eliminate composition variable
 c                                 for saturated fluid if constrained
 c                                 fugacity EoS is used:
@@ -1131,6 +1138,38 @@ c                                 Excluded phases:
         end if
  
       end if
+c                                check for fluid species EoS if no special components:
+      good = .true.
+
+      if (.not.feos) then
+ 
+         do i = 1, iphct
+
+            if (eos(i).ne.101.and.eos(i).ne.102) then 
+
+               do j = 1, ixct
+
+                  if (exname(j).eq.names(i)) then
+                     good = .false.
+                     exit 
+                  end if  
+
+               end do 
+
+               if (.not.good) cycle
+c                               got one, get the EoS
+               write (*,'(/,a,/)') 
+     *               'One or more endmembers require a fluid EoS'
+
+               call rfluid (1,ifug) 
+
+               exit 
+
+            end if 
+
+         end do 
+
+      end if 
 c                                read solution phases.
       write (*,2500)
       read (*,'(a)') y

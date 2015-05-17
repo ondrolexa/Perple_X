@@ -2290,7 +2290,7 @@ c----------------------------------------------------------------------
 c               if (i.eq.14.and.j.eq.15.or.i.eq.15.and.j.eq.14) then
 c                                 special mixing rule
 c                  ax = 2d0/(1d0/a(i) + 1d0/a(j))
-               iavg = 3
+c              iavg = 3
                if (iavg.eq.1) then 
 c                                 geometric mean mixing rule
                   ax = dsqrt(a(i)*a(j))

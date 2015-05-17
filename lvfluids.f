@@ -1281,3 +1281,18 @@ c                                 compute volume by finite difference
 1420  format (/,5x,'Molar Volume (cm3/mol) = ',g12.5,/)
 
       end 
+
+      subroutine grxn (gval) 
+c-----------------------------------------------------------------------
+c grxn computes the free energy of univariant equilibria
+c defined by the data in commonn block cst21 which is initialized
+c in the subprogram balanc.  grxn is partially redundant with
+c the function gphase but because of the frequency that these
+c these routines are used a significant increase in efficiency is
+c gained by maintaining separate functions.
+c-----------------------------------------------------------------------
+      implicit none
+
+      double precision gval
+
+      end

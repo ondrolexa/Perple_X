@@ -541,7 +541,7 @@ c                                 are not used for mixture props.
             call cfluid (fo2,fs2)
             gval = gval + r*t*f(2)
 
-         else if (eos(id).lt.115) then 
+         else if (eos(id).le.115) then 
 
             ins(1) = eos(id) - 100
             call mrkpur (ins,1)
@@ -1938,6 +1938,17 @@ c                                 in the calculation.
 
          end do 
           
+      end if 
+c                                 identify fluid if no special components
+      if (.not.gflu) then 
+         
+         if (eos(id).eq.101.or.eos(id).eq.102) then 
+
+            gflu = .true.
+            ifp(id) = 1
+
+         end if  
+
       end if 
 c                               load stoichiometry of components.
       do i = 1, icomp
@@ -7895,6 +7906,8 @@ c----------------------------------------------------------------------
 
       logical bad, badz
 
+      external badz
+
       double precision y(m4),z,zt,n(m10)
 
       integer i,j,k,ids
@@ -8075,6 +8088,8 @@ c------------------------------------------------------------------------
       integer h,id,j
 
       double precision omega
+
+      external omega
 c                                 working arrays
       double precision z, pa, p0a, x, w, y, wl
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
@@ -9780,6 +9795,8 @@ c----------------------------------------------------------------------
       logical error
 
       double precision g, gdord, omega, gex
+
+      external omega, gex
 
       double precision z, pa, p0a, x, w, y, wl
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
@@ -12448,26 +12465,44 @@ c                                 model type
 c----------------------------------------------------------------------
 c                              eliminate end-member compositions 
       do l = 1, mstot(im)
+
          y(l) = 1d0
+
          do m = 1, istg(im)
 c                              check for invalid compositions
             x = z(m,jmsol(l,m))
 
-            if (x.gt.1d0.or.x.lt.0d0) then 
-               if (x.gt.0d0.and.x.lt.1.0001d0) then
+            if (x.gt.1d0) then 
+
+               if (x-1d0.lt.nopt(5)) then
                   x = 1d0
-               else if (x.gt.-1d-4) then
+               else 
+                  call error (125,x,1,tname)
+               end if
+
+            else if (x.lt.0d0) then 
+
+               if (x.gt.-nopt(5)) then
                   x = 0d0
                else 
                   call error (125,x,1,tname)
                end if
+
             end if 
 
             y(l) = y(l)*x
 
          end do
 c                                 y is the mole fraction of endmember l
-         if (y(l).gt.1d0-nopt(5).and.kdsol(l).gt.0) return
+         if (y(l).gt.1d0-nopt(5).and.kdsol(l).gt.0) then
+ 
+            return
+
+         else if (y(l).lt.nopt(5)) then
+
+            y(l) = 0d0
+
+         end if 
 
       end do   
 c                                 reject special cases:
