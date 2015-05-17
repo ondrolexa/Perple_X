@@ -17,7 +17,7 @@ c----------------------------------------------------------------------
       implicit none
 
       write (*,'(/,a)') 
-     *      'Perple_X version 6.7.1, source updated May 4, 2015.'
+     *      'Perple_X version 6.7.1, source updated May 17, 2015.'
 
       end
 
@@ -137,6 +137,8 @@ c                                 for nag)
          r2 = r1 
          r1 = r1/2d0
       end do 
+
+      r2 = 1d1 * r2
 
       wmach(3) = r2
       wmach(5) = 1d0 + r2
