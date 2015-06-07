@@ -80,6 +80,8 @@ begin_model
 
 
 Opx(HP)                    | solution name.
+abbreviation Opx
+full_name    orthopyroxene
 
 8                          | model type: Reciprocal with speciation
 
@@ -184,6 +186,8 @@ begin_model
                        
 
 Bio(TCC)                     | model name
+abbreviation Bio
+full_name    biotite
 
 8                            | model type: reciprocal, margules with dependent endmembers, one ordering parameter
 
@@ -299,7 +303,9 @@ begin_model
 
                        
 
-TiBio(WPH)                   | solution name.
+Bio(WPH)                     | solution name.
+abbreviation Bio
+full_name    biotite
 
 8                            | model type: Margules with dependent endmembers and speciation.
 
@@ -442,6 +448,8 @@ begin_model
 
 
 Opx(HP11)                  | solution name.
+abbreviation Opx
+full_name    orthopyroxene
 
 8                          | model type: Reciprocal with speciation
 
@@ -552,6 +560,8 @@ begin_model
 
 
 CrOpx(HP)                  | solution name.
+abbreviation Opx
+full_name    orthopyroxene
 
 8                          | model type: Reciprocal with speciation
 
@@ -617,6 +627,8 @@ end_of_model
 begin_model 
                                   Silicate ideal gas 
 Si-vapor
+abbreviation gas
+full_name    gas
 
 27                                    model type: internal, ideal gas
 
@@ -657,6 +669,8 @@ begin_model
                                 (folk.uio.no/ninasim/Cr_results.html)
 
 CrGt
+abbreviation Gt
+full_name    garnet
                                                            
 7                              | model type: reciprocal
 2                              | 2 chemical site model
@@ -723,6 +737,8 @@ begin_model
                                       
 
 Gt(MPF) 
+abbreviation Gt
+full_name    garnet
     
 7                                 | model type: Margules with dependent endmembers
 2                                 | number of independent mixing sites, reciprocal solution
@@ -823,6 +839,9 @@ begin_model
                          8/08   Enthalpy of ordering corrected for HP dqfs.
      
 oAmph(DP)                    | model name 
+abbreviation oAmph
+full_name    orthoamphibole
+
 8                            | model type: reciprocal, margules, two ordering parameters
 2                            | 2 site reciprocal solution
 2 6                          | 1 binary and 1 hexary                
@@ -1006,9 +1025,10 @@ begin_model
                                       6 cfm           Ca     Ca     Mg     Fe 
                                       7 jac           Na     Na     Fe3+   Al
 
+Omph(GHP)
+abbreviation Cpx
+full_name    clinopyroxene
 
-
-Omph(GHP)     
 6                           | model type margules with multiple compound formation  
                                                                        
 4                           | disordered endmembers
@@ -1155,6 +1175,9 @@ begin_model
      
 
 cAmph(DP)                    | solution name 
+abbreviation Amph
+full_name    clinoamphibole
+
 8                            | model type: reciprocal, margules, two ordering parameters
 2                            | 2 site reciprocal solution
 2 6                          | 1 binary and 1 hexary                
@@ -1373,7 +1396,10 @@ begin_model
                            | (see fig 4 of holland et al)
 
 
-Chl(HP)     
+Chl(HP)
+abbreviation Chl
+full_name    chlorite
+
                        
 7                               | model type reciprocal, macroscopic formulation
 2 
@@ -1470,7 +1496,9 @@ begin_model
                                           
 
 
-Chl(LWV)     
+Chl(LWV)
+abbreviation Chl
+full_name    chlorite
                        
 7                               | model type reciprocal, macroscopic formulation
 2 
@@ -1528,7 +1556,10 @@ begin_model
                                       [an astoundingly complex presentation]
                                       JADC 7/03         
 
-O(SG)     
+O(SG)
+abbreviation Ol
+full_name    olivine
+
 2                                     model type margules, macroscopic                                                                         
 
 2                                     2 endmembers
@@ -1592,6 +1623,9 @@ begin_model
                                       in perplex_option.dat.
 
 melt(HP)
+abbreviation Melt
+full_name    liquid
+
 24                                    model type: margules, internal entropy routine
 
 9                                     number of endmembers
@@ -1746,6 +1780,9 @@ begin_model                          | keyword indicating beginning of a solutio
 
 
 pMELTS(G)
+abbreviation Melt
+full_name    liquid
+
 25                                    model type: margules, internal entropy routine
 
 9                                     number of endmembers
@@ -1875,10 +1912,12 @@ begin_model                          | keyword indicating beginning of a solutio
 
                                       JADC May 23, 2004.
                                       
-                                      Added TiO2 endmember. JADC Feb 7, 2012. 
-
+                                      Added TiO2 endmember. JADC Feb 7, 2012
 
 mMELTS(G)
+abbreviation Melt
+full_name    liquid
+
 25                                    model type: margules, internal entropy routine
 
 8                                     number of endmembers
@@ -1981,6 +2020,9 @@ begin_model
                                       
 
 MELTS(GS)
+abbreviation Melt
+full_name    liquid
+
 25                                    model type: margules, internal entropy routine
 
 8                                     number of endmembers
@@ -2059,6 +2101,9 @@ begin_model
 
                    
 Ep(HP)
+abbreviation Ep
+full_name    epidote
+
 6                          | model type: Margules, speciation           
 2                          | 2 endmembers                                        
 cz       fep               | endmember names 
@@ -2117,6 +2162,9 @@ begin_model
 
 
 Pheng(HP)                             | solution name 
+abbreviation Mica
+full_name    white-mica
+
 2                                     | model type: Margules, endmember fractions
 4                                     | 4 species 
 
@@ -2203,6 +2251,8 @@ begin_model
 
 
 Sapp(HP)
+abbreviation Sap
+full_name    sapphirine
 
 7                                     model type 
 2                                     reciprocal solution
@@ -2263,6 +2313,8 @@ begin_model
 
 
 Sapp(KWP)
+abbreviation Sap
+full_name    sapphirine
 
 7                                     model type 
 2                                     reciprocal solution
@@ -2313,6 +2365,8 @@ begin_model
                                                 fosm  Fe    Al     Al       
 
 Osm(HP)
+abbreviation Osm
+full_name    osumilite
 
 2                                     model type: Margules, endmember fractions. 
 3                                     number of endmembers 
@@ -2343,6 +2397,9 @@ begin_model
                                       parameters after Nichols et al.(1992), CMP
                                       111, 362-377. Jiri Konopasek
 GaHcSp
+abbreviation Sp
+full_name    spinel
+
 2                                     model type margules, macroscopic
 3                                     3 endmembers
 gah      herc     sp                  endmember names - this order implies: x(1) = x(Zn),x(2) = x(Fe), x(3) = x(Mg)
@@ -2370,6 +2427,9 @@ end_of_model
 begin_model                
                          
 F                                 | Fluid, ala Connolly and Trommsdorff CMP 1991.
+abbreviation F
+full_name    fluid
+
 0                                 | model type internal EoS.
 2                                 | 2 endmembers
 CO2      H2O     
@@ -2384,6 +2444,9 @@ end_of_model
 begin_model                                                                                   
 
 F(salt)                    | H2O-CO2-NaCl Fluid from andreas's thesis
+abbreviation F
+full_name    fluid
+
 26                         | model type internal EoS.
 3                          | three endmembers  
 hltL                                   
@@ -2421,6 +2484,8 @@ begin_model
 
 
 T                          | solution name 
+abbreviation Tlc
+full_name    talc
 
 7                          | model type: reciprocal, macroscopic
 
@@ -2483,6 +2548,8 @@ begin_model
 
 
 Scap                       | solution name 
+abbreviation Scp
+full_name    scapolite
 
 6                          | model type: compound formation
 
@@ -2523,6 +2590,8 @@ end_of_model
 begin_model                
                                       
 St(HP)                     | Mn-Fe-Mg Staurolite 
+abbreviation St
+full_name    staurolite
                                                             
 2                                     model type: Ideal or Margules
 3                                     3 endmembers 
@@ -2549,7 +2618,10 @@ begin_model                | keyword indicating beginning of a solution model
 
                              Mn-Fe-Mg Ctd
 
-Ctd(HP)                                                                                
+Ctd(HP)                
+abbreviation Ctd
+full_name    chloritoid
+                                                                
 2                          | model type: Ideal or Margules
 3                          | 3 endmembers 
 mnctd    fctd     mctd                 
@@ -2574,7 +2646,10 @@ end_of_model
                       --------------------------------------------------------
 begin_model                
 
-Carp                       | Carpholite 
+Carp                       | Carpholite
+abbreviation Crp
+full_name    carpholite
+ 
 2                          | model type: Margules.
 2                          | 2 endmembers 
 mcar     fcar    
@@ -2610,7 +2685,10 @@ begin_model
 
                             Dependent: hfcrd = hcrd + (fcrd - crd)
                            
-hCrd 
+hCrd
+abbreviation Crd
+full_name    cordierite
+ 
 7                                 model type: reciprocal                                     
 2                                 2 reciprocal sites
 3  2                              3 species on site 1, 2 on site 2 
@@ -2650,6 +2728,9 @@ begin_model
                            | mg fe and al are distributed over 
                            | 4 m1 sites. 
 Sud(Livi)
+abbreviation Sud
+full_name    sudoite
+
 2                          | Macroscopic
 
 2                          | 2 endmembers
@@ -2674,6 +2755,9 @@ begin_model
                            | 2 sites. 
 
 Sud
+abbreviation Sud
+full_name    sudoite
+
 2                          | model type: Margules
 
 2                          | 2 endmembers
@@ -2694,6 +2778,9 @@ begin_model
                               HP '98 Non-ideal amphibole
 
 Cumm                                                                              
+abbreviation Cumm
+full_name    clinoamphibole
+
 2                           | model type: macroscopic
 2                                    
 cumm     grun   
@@ -2714,7 +2801,10 @@ end_of_model
 begin_model                
                                       anthophyllite
 
-Anth                                                                              
+Anth         
+abbreviation oAmph
+full_name    orthoamphibole
+
 2                                   | model type: macroscopic
 2                                     isp
 fanth    anth     
@@ -2736,6 +2826,9 @@ begin_model
                                       Fe-endmember, cumm and fap should
                                       be excluded.
 A
+abbreviation oAmph
+full_name    orthoamphibole
+
 2                          | model type: Macroscopic
 2                             
 grun     ap      
@@ -2754,6 +2847,9 @@ end_of_model
 begin_model                
 
 Gl                                                                                
+abbreviation Gl
+full_name    clinoamphibole
+
 2                          | model type: Macroscopic
 2                              
 gl       fgl     
@@ -2771,7 +2867,10 @@ end_of_model
                       --------------------------------------------------------
 begin_model                
 
-Tr                         | Tremolite                                                      
+Tr                         | Tremolite        
+abbreviation Tr
+full_name    clinoamphibole
+                                              
 2                          | model type: Macroscopic
 2                           
 ftr      tr      
@@ -2799,6 +2898,10 @@ begin_model
 
 
 GlTrTsPg                   | solution name 
+abbreviation Amph
+full_name    clinoamphibole
+
+
 7                          | model type: reciprocal, margules
 2                          | 2 site reciprocal solution
 2 4                        | 1 binary and 1 quaternary                
@@ -2896,6 +2999,9 @@ begin_model
 
 
 Amph(DHP)                  | solution name 
+abbreviation Amph
+full_name    clinoamphibole
+
 7                          | model type: reciprocal, margules
 2                          | 2 site reciprocal solution
 2 5                        | 1 binary and 1 quinary                
@@ -3000,6 +3106,9 @@ begin_model
 
 
 Amph(DPW)                  | solution name 
+abbreviation Amph
+full_name    clinoamphibole
+
 7                          | model type: reciprocal, margules
 2                          | 2 site reciprocal solution
 2 5                        | 1 binary and 1 quinary                
@@ -3088,6 +3197,9 @@ begin_model
                              CORRECTED FOR TYPO IN ORIGINAL PAPER.
 
 feldspar                   
+abbreviation Fsp
+full_name    ternary-feldspar
+
 2                          | model type: Margules or Ideal
 3                          | 3 endmembers
 abh      
@@ -3127,6 +3239,8 @@ begin_model
                            | Entered by Vratislav Hurai, May 10, 2011.
                                             
 feldspar_B 
+abbreviation Fsp
+full_name    ternary-feldspar
 2                          | model type: Margules or Ideal
 3                          | 3 endmembers
 
@@ -3166,6 +3280,9 @@ end_of_model
 begin_model               
 
 Pl(h)                      | Newton et al 1981 
+abbreviation Pl
+full_name    binary-feldspar
+
 2                          | model type: Margules or Ideal                                     
 2                          | 2 endmembers  
 abh      an      
@@ -3191,6 +3308,9 @@ begin_model
                            | Waldbaum and Thompson 1968. This model is just the San 
                            | model with the low structural state endmembers.
 Kf                         
+abbreviation Mic
+full_name    binary-feldspar
+
 2                          | model type: Macroscopic 
 2                          | 2 endmembers
 
@@ -3216,6 +3336,9 @@ end_of_model
 begin_model                
 
 San                        | Waldbaum and Thompson 1968.
+abbreviation San
+full_name    binary-feldspar
+
 2                          | model type: Macroscopic 
 2                          | 2 endmembers
 san      abh     
@@ -3240,6 +3363,9 @@ end_of_model
 begin_model                
 
 San(TH)                    | Thompson and Hovis 1979.
+abbreviation San
+full_name    binary-feldspar
+
 2                          | model type: Macroscopic 
 2                          | 2 endmembers
 san      abh     
@@ -3266,6 +3392,9 @@ begin_model
                                       this model is for X(O) = 0-1
 
 GCOHF   
+abbreviation F
+full_name    fluid
+
 0                          | model type: Internal EoS
 2                                  
 O2       H2     
@@ -3284,6 +3413,9 @@ begin_model
                                       Ternary C-O-H Fluid 
 
 COHF   
+abbreviation F
+full_name    fluid
+
 41                         | model type: Internal EoS
 3                                  
 gph      O2       H2     
@@ -3307,6 +3439,9 @@ begin_model
 
 
 MaPa                       | margarite-paragonite                                          
+abbreviation Ma
+full_name    white-mica
+
 2                          | macroscopic
 2
 pa       ma      
@@ -3347,6 +3482,9 @@ begin_model
 
 
 Mica(CF)                   | solution name 
+abbreviation Mica
+full_name    white-mica
+
 2                          | model type: Margules, reciprocal
 4                          | endmembers
 cel      
@@ -3454,6 +3592,8 @@ begin_model
 
 
 Mica(CHA1)                    
+abbreviation Mica
+full_name    white-mica
 
 7                            | model type: Macroscopic Margules with dependent endmembers.
 2                            | number of independent mixing sites
@@ -3600,6 +3740,9 @@ begin_model
 
 
 Mica(CHA)                    
+abbreviation Mica
+full_name    white-mica
+
 2                            | model type: macroscopic.
 
 6                            | 6 endmembers
@@ -3726,7 +3869,10 @@ begin_model
                                                      ___________________________________
 
 
-Mica+(CHA)                    
+Mica+(CHA)          
+abbreviation Mica
+full_name    white-mica
+          
 2                            | model type: macroscopic.
 
 7                            | # of endmembers
@@ -3800,7 +3946,10 @@ end_of_model
                                   --------------------------------------------------------
 begin_model                
                                       HP '98 olivine solution
-O(HP)                                                                               
+O(HP)                     
+abbreviation Ol
+full_name    olivine
+                                                          
 2                                     model type: Margules, macroscopic
 
 3                                     3 endmembers
@@ -3847,7 +3996,10 @@ begin_model
                                       of the two T-sites.
 
 
-Cpx(l)                                                    
+Cpx(l)  
+abbreviation Cpx
+full_name    clinopyroxene
+
 2                                  | model type: Ideal or Margules
 
 4                                  | 4 endmembers
@@ -3916,8 +4068,10 @@ begin_model
                                       uses an X^2 molecular model for CaTs-Di and 
                                       Jd-Di. See comments for Cpx(l) above.
 
-Cpx(h)               
-                                     
+Cpx(h)   
+abbreviation Cpx
+full_name    clinopyroxene
+
 2                                  
 4                                  
 di       
@@ -3972,6 +4126,9 @@ end_of_model
 begin_model                
                                    
 Mont                                                                               
+abbreviation Mont
+full_name    olivine
+
 2                          | macroscopic
 
 3                          | 3 endmembers
@@ -3998,7 +4155,10 @@ begin_model                | keyword indicating beginning of a solution model
 
                                       HP '98 dolomite-ankerite solution
 
-Do(HP)                                                                               
+Do(HP)  
+abbreviation Do
+full_name    carbonate
+ 
 2                          | macroscopic
 
 2                          | 2 endmembers                     
@@ -4020,7 +4180,10 @@ end_of_model
 begin_model               
                                       HP '98 Magnesite/siderite modified by DMH 
                                       to include rhc 
-M(HP)                                                                           
+M(HP)      
+abbreviation Mag
+full_name    carbonate
+
 2                                     model type: Margules, endmember fractions.                                                                               
 
 3                                     number of endmembers 
@@ -4050,7 +4213,10 @@ begin_model
                    G 20920 j > than the cc-structure endmember, these 
                    are made here by a "DQF" correction.
 
-Do(AE)                            
+Do(AE)                
+abbreviation Do
+full_name    carbonate
+            
 2                          | model type: Ideal or Margules
 
 3                          | 3 endmembers    
@@ -4084,6 +4250,9 @@ begin_model
                    A solution model for Magnesite from Anovitz & Essene 
                    1987 J Pet 28:389-414.
 Cc(AE)          
+abbreviation Cc
+full_name    carbonate
+
                    
 2                          | model type: Ideal or Margules
 
@@ -4113,6 +4282,9 @@ begin_model
                              Magnesioferrite/magnetite (inverse)
 
 MF                                                                               
+abbreviation Mt
+full_name    spinel
+
 2                          | model type: Ideal or Margules
 
 2  1                                isp(1), ist(1) 
@@ -4136,6 +4308,8 @@ begin_model                | keyword indicating beginning of a solution model
 
 
 Sp(JR)                      Jamieson and Roeder '85 (iron + ol,1300 C)                          
+abbreviation Sp
+full_name    spinel
 
 2                          | model type: Ideal or Margules
 
@@ -4159,6 +4333,9 @@ begin_model
                                       Ghiorso 1991, gives similar W=8638
 
 Sp(GS)                                Ganguly and Saxena '87 (ol, 1200-1300 C, 1-5 kb)
+abbreviation Sp
+full_name    spinel
+
 2                          | model type: Ideal or Margules
 
 2                          | 2 endmembers 
@@ -4180,6 +4357,9 @@ end_of_model
 begin_model                | keyword indicating beginning of a solution model
 
 Sp(HP)                                 HP '98:
+abbreviation Sp
+full_name    spinel
+
 2                          | model type: Ideal or Margules
 
 2                          | 2 endmembers 
@@ -4202,6 +4382,9 @@ begin_model
                             valid for T>800C<1300C
 
 Mt(W)                                 Wood et al 1991
+abbreviation Mt
+full_name    spinel
+
 2                          | model type: Ideal or Margules
 
 2                          | 2 endmembers          
@@ -4242,6 +4425,9 @@ begin_model
 
 
 IlHm(A)                           
+abbreviation Ilm
+full_name    ilmenite
+
 2                            | macroscopic
 
 3                            | 3 endmembers 
@@ -4270,7 +4456,10 @@ end_of_model
                       --------------------------------------------------------
 begin_model                
                                       Ideal ilmenite-geikielite-pyrophanite solution
-IlGkPy                                   
+IlGkPy
+abbreviation Ilm
+full_name    ilmenite
+
 2                          | model type: Ideal or Margules
 
 3                          | 3 endmembers
@@ -4294,6 +4483,9 @@ end_of_model
 begin_model                
 
 MtUl(A)                    | Andersen and Lindsley 1988, Akimoto model
+abbreviation Mt
+full_name    spinel
+
                            | assumes Ti is only octahedral, Mg and Fe2+ 
                            | jury rigged for magnesio-ferrite, JADC 2/14/13
 
@@ -4329,6 +4521,8 @@ end_of_model
 begin_model                
 
 Neph(FB)                              Ferry and Blencoe '78        
+abbreviation Neph
+full_name    feldspathoid
                                        
 2                          | macroscopic
 
@@ -4351,9 +4545,12 @@ reach_increment 3
 
 end_of_model               
                       --------------------------------------------------------
-begin_model                
+begin_model
 
-GrPyAlSp(B)                           Grossular-pyrope-almandine-spessartine, Berman '90,
+Gt(B)                           Grossular-pyrope-almandine-spessartine, Berman '90,
+abbreviation Gt
+full_name    garnet
+
 2                          | macroscopic
 
 4                          | 4 endmembers
@@ -4397,7 +4594,9 @@ begin_model
                                   garnet_jiba_96.mws
 
                                   JADC Nov 23, 2010.
-Gt(GCT)   
+Gt(GCT)
+abbreviation Gt
+full_name    garnet
                               
 2                          | model type: 2 - margules expansion                                     
 
@@ -4449,9 +4648,10 @@ end_of_model
                       --------------------------------------------------------
 begin_model                
                                       hp '98 quaternary garnet model
-                                    
-
 Gt(HP) 
+abbreviation Gt
+full_name    garnet
+
 2                                     model type: Margules, endmember fractions.                                                                               
 
 4                                     number of endmembers 
@@ -4486,9 +4686,11 @@ begin_model                | keyword indicating beginning of a solution model
                              Hybrid Holland & Powell + Engi & Wersin
                              The Engi & Wersin terms for the excess energy 
                              are suspect and should probably be set to zero.
-                                         
 
-Gt(EWHP)                                                                                 
+Gt(EWHP)
+abbreviation Gt
+full_name    garnet
+
 7                              | model type: reciprocal
 2                              | 2 chemical site model
 3 2                            | 3 endmembers mix on site 1, 2 endmembers mix on site 2
@@ -4556,10 +4758,11 @@ begin_model
                                        py            Mg      Al     
                                        gr            Ca      Al          
                                                       ____________             
-                                      
 
 Gt(WPH) 
-    
+abbreviation Gt
+full_name    garnet
+
 7                            | model type: Margules with dependent endmembers .
 
 2                            | the number of independent subcompositions, reciprocal solution if > 1.
@@ -4625,7 +4828,11 @@ end_of_model
 begin_model                
                                   berman and brown 1984, cao-al2o3-sio2 melt
                                   model. reformulated as macroscopic Aug 21, 2007.
-casmelt                                                         
+
+casmelt
+abbreviation Melt
+full_name    liquid
+
 2                          | model type: macroscopic
 3                          | 3 species 
 SIO2     AL2O3    CAO      | endmember names 
@@ -4659,7 +4866,10 @@ end_of_model               | end of model keyword
                       --------------------------------------------------------
 begin_model                | keyword indicating beginning of a solution model
 
-A-phase                               ideal phase A                                          
+A-phase                               ideal phase A
+abbreviation phA
+full_name    alphabet-phase
+
 2                          | macroscopic
 
 2
@@ -4677,7 +4887,10 @@ end_of_model               | end of model keyword
                       --------------------------------------------------------
 begin_model                | keyword indicating beginning of a solution model
 
-Chum                                  ideal clinohumite                                          
+Chum
+abbreviation Chu
+full_name    clinohumite
+
 2                          | macroscopic
 
 2
@@ -4717,6 +4930,8 @@ begin_model
                                 -2e3. 46.1 0
                                                                                    
 Atg(PN)                    | solution name
+abbreviation Atg
+full_name    serpentine
 
 7                          | model type: reciprocal, macroscopic
 
@@ -4760,7 +4975,10 @@ end_of_model
                       --------------------------------------------------------
 begin_model                | keyword indicating beginning of a solution model
 
-B                                     ideal brucite                                           
+B
+abbreviation Br
+full_name    brucite
+
 2                          | macroscopic
 
 2                                isp(1)
@@ -4778,7 +4996,10 @@ end_of_model
                       --------------------------------------------------------
 begin_model                
 
-P                                     ideal periclase                                           
+P                                     ideal periclase
+abbreviation Per
+full_name    wuestite
+
 2                          | macroscopic
 
 2                          | 2 endmembers 
@@ -4804,7 +5025,10 @@ begin_model                | keyword indicating beginning of a solution model
                            the endmember in the thermodynamic data file it will eliminate
                            the component from the model. 
 
-Toop-Melt                               
+Toop-Melt
+abbreviation Melt
+full_name    liquid
+
 23                                    model type: Toop internal EoS
 
 4                                     number of endmembers
@@ -4911,6 +5135,8 @@ begin_model
                              | See WARNING above for HP ASF Ternary Feldspar
 
 OrFsp(C1)                    | solution name. To be used with Pl(I1,HP) and AbFsp(C1).
+abbreviation Or
+full_name    ternary-feldspar
 
 2                            | model type: van laar as formulated by Holland & Powell (macroscopic formulation)
 
@@ -4952,6 +5178,8 @@ begin_model
                              | See WARNING above for HP ASF Ternary Feldspar
 
 AbFsp(C1)                    | solution name. To be used with Pl(I1,HP) and OrFsp(C1).
+abbreviation Ab
+full_name    ternary-feldspar
 
 2                            | model type: van laar as formulated by Holland & Powell (macroscopic formulation)
 
@@ -4994,6 +5222,8 @@ begin_model
                              | AbFsp(C1) and OrFsp(C1)
 
 Pl(I1,HP)                    | solution name.
+abbreviation Pl
+full_name    ternary-feldspar
 
 2                            | model type: van laar as formulated by Holland & Powell (macroscopic formulation)
  
@@ -5037,6 +5267,8 @@ begin_model
                              | See WARNING above for HP ASF Ternary Feldspar
 
 Fsp(C1)                      | solution name. To be used with Pl(I1,HP)
+abbreviation Fsp
+full_name    ternary-feldspar
 
 2                            | model type: van laar as formulated by Holland & Powell (macroscopic formulation)
  
@@ -5079,11 +5311,14 @@ begin_model
                                       Calcite-Magnesite with Dolomite
                                       compound formation.
 
-oCcM(HP)     
+oCcM(HP)
+abbreviation Do
+full_name    carbonate
+
 2                                     model type van laar.                                                                         
 
 3                                     number of endmembers
-cc       mag      odo       
+cc       mag      odo
   0  0  0                             endmember flags
 0. 1. 0.1  0                        | range and increments on X(cc)
 0. 1. 0.1  0                        | range and increments on X(mag)
@@ -5134,6 +5369,8 @@ begin_model
                                          Vincent van Hinsberg <v.j.vanHinsberg@bristol.ac.uk> 
 
 Tour(V)                      | solution name.
+abbreviation Tour
+full_name    tourmaline
 
 2                            | model type: margules in terms of endmember fractions
 
@@ -5188,6 +5425,9 @@ begin_model                | keyword indicating beginning of a solution model
 
 
 DoDo    
+abbreviation Do
+full_name    carbonate
+
 2                                     model type margules.                                                                         
 
 2                                     number of endmembers
@@ -5211,7 +5451,10 @@ end_of_model               | end of model keyword
 begin_model                
                                       magnesio-wuestite solution, after fabrichnaya '99
 
-Wus(fab)                                                                               
+Wus(fab)
+abbreviation Wus
+full_name    wuestite
+                                                                               
 2                                     model type: Margules, macroscopic
 
 2                                     2 endmembers
@@ -5234,7 +5477,10 @@ end_of_model
 begin_model                
                                       akimotoite (ilmenite-structure) solution, after fabrichnaya '99
 
-Aki(fab)                                                                                                 
+Aki(fab)
+abbreviation Aki
+full_name    ilmenite
+
 2                                     model type: Margules, macroscopic
 
 3                                    3 endmembers
@@ -5261,7 +5507,10 @@ end_of_model
                       --------------------------------------------------------
 begin_model                
                            | perovskite solution, after fabrichnaya '99
-Pv(fab)                                                                               
+Pv(fab)
+abbreviation Pv
+full_name    perovskite
+                                                                               
 2                                     model type: Margules, macroscopic
 
 3                                    3 endmembers
@@ -5291,7 +5540,10 @@ end_of_model
 begin_model                
                            | perovskite solution, after oganov. the fppv and 
                            | appv endmembers are henry's law ss. 
-Ppv(og)                                                                               
+Ppv(og)
+abbreviation Ppv
+full_name    postperovskite
+
 2                                     model type: Margules, macroscopic
 
 3                                    3 endmembers
@@ -5316,7 +5568,10 @@ end_of_model
                       --------------------------------------------------------
 begin_model                
                                       olivine solution
-O(stx)                                                                               
+O(stx) 
+abbreviation Ol
+full_name    olivine
+                                                                              
 2                                     model type: Margules, macroscopic
 
 2                                     2 endmembers
@@ -5336,8 +5591,11 @@ z(mg) = 1 fo
 end_of_model               
                       --------------------------------------------------------
 begin_model               
-                                    Wadleysite solution
-Wad(stx)                                                                               
+
+Wad(stx)
+abbreviation Wad
+full_name    wadleysite
+
 2                          | model type: Margules, macroscopic
 
 2                          | 2 endmembers
@@ -5356,8 +5614,11 @@ z(mg) = 1 wad
 end_of_model               
                       --------------------------------------------------------
 begin_model                
-                                      Ringwoodite solution
-Ring(stx)                                                                               
+
+Ring(stx)
+abbreviation Ring
+full_name    ringwoodite
+                                                                               
 2                                     model type: Margules, macroscopic
 
 2                                     2 endmembers
@@ -5379,7 +5640,10 @@ end_of_model
                       --------------------------------------------------------
 begin_model                
                                       Spinel solution, fixed order! 
-Sp(stx)                                                                               
+Sp(stx)
+abbreviation Sp
+full_name    spinel
+                    
 2                                     model type: Margules, macroscopic
 
 2                                     2 endmembers
@@ -5404,14 +5668,14 @@ z(B,fe) = 3/4 herc
 end_of_model               
                       --------------------------------------------------------
 begin_model                
-                                      Garnet solution.
-
                                       From Stixrude's endmember notation (parenthesis
                                       used to indicate disordered site populations), it
                                       appears the B site should be split into two M-sites
                                       for the 05 paper.
+Gt(stx)
+abbreviation Gt
+full_name    garnet
 
-Gt(stx)                                                                               
 2                                     model type: Margules, macroscopic
 4                                     4 endmembers
 gr   alm  maj  py             
@@ -5438,8 +5702,11 @@ z(M1,Si) = 1 maj
 end_of_model               
                       --------------------------------------------------------
 begin_model                
-                                      C2/c pyroxene solution
-C2/c(stx)                                                                               
+
+C2/c(stx)
+abbreviation C2/c
+full_name    C2/c-pyroxene
+ 
 2                                     model type: Margules, macroscopic
 2                                     2 endmembers
 c2/c      fc2/c            
@@ -5455,13 +5722,14 @@ z(mg) = 1 c2/c
 end_of_model              
                       --------------------------------------------------------
 begin_model                
-                                      Opx solution
-
                                       From Stixrude's endmember notation (parenthesis
                                       used to indicate disordered site populations), it
                                       appears disorder is assumed across all 4 M sites,
                                       for the 05-07 papers.
-Opx(stx)                                                                               
+Opx(stx)        
+abbreviation Opx
+full_name    orthopyroxene
+ 
 2                                     model type: Margules, macroscopic
 3                                     3 endmembers
 en   fs   ts        
@@ -5476,19 +5744,17 @@ ideal
 3 4.                                  3 species, M site multiplicity = 4.
 z(M,al) = 1/2 ts
 z(M,fe) = 1 fs
-
-
-
 end_of_model                        
                       --------------------------------------------------------
 begin_model                
-
                                       Cpx solution, entropy model not specified
                                       by stixrude, additionally there is some 
                                       ambiguity about his excess term, here i
                                       assume its Gex = X(M1,Ca)*X(M1,M)*W.
-
-Cpx(stx)                                                                               
+Cpx(stx)
+abbreviation Cpx
+full_name    clinopyroxene
+  
 2                                     model type: Margules, macroscopic
 
 3                                     3 endmembers
@@ -5520,7 +5786,10 @@ begin_model
 
                                       Corrected excess function to include 
                                       W(mdi hed), 9/08, JADC.
-Cpx(stx7)                                                                               
+Cpx(stx7)
+abbreviation Cpx
+full_name    clinopyroxene
+
 2                                     model type: Margules, macroscopic
 
 3                                     3 endmembers
@@ -5545,8 +5814,7 @@ z(M2,Fe) = 1 hed
 
 end_of_model                        
                       --------------------------------------------------------
-begin_model                | keyword indicating beginning of a solution model
-
+begin_model 
                              Ideal orthoamphibole, this model assumes Al is present
                              on only two tetrahedral sites and all five M2 sites. 
                              I have no idea if this is correct! 
@@ -5571,6 +5839,8 @@ begin_model                | keyword indicating beginning of a solution model
 
 
 o-Amph                     | solution name 
+abbreviation oAmph
+full_name    orthoamphibole
 
 7                          | model type: reciprocal, macroscopic
 
@@ -5610,8 +5880,7 @@ z(m2,fe) = 1 fanth
 
 end_of_model               
                               --------------------------------------------------------
-begin_model                    
-
+begin_model 
                                       HP '96 Am Min, Non-ideal quasi ordered omphacite,
                                       i.e., compound formation only occurs for omph.
                                       The value of wdh appears discrepant 
@@ -5650,9 +5919,9 @@ begin_model
 
                         Ordered Cpd:  6 Omphacite     Na     Ca     Al     Mg    Si
 
-
-
 Omph(HP)     
+abbreviation Cpx
+full_name    clinopyroxene
 
 6                                     model type margules with compound formation  
                                                                        
@@ -5714,10 +5983,9 @@ z(m1a,fe3+) = 1 acm
 2 1.0                                 2 species on T1 (perhaps Al should be disordered over T1-T2?)
 z(t1,al)  = 1 cats
 
-end_of_model               | end of model keyword    
+end_of_model               
                       --------------------------------------------------------
-begin_model                | keyword indicating beginning of a solution model
-
+begin_model             
                                       HP '96 Am Min, Non-ideal disordered cpx
                                       Note HP '98 give Wdh = 2500 j/mol.
 
@@ -5739,6 +6007,8 @@ begin_model                | keyword indicating beginning of a solution model
                                       M. Caddick, 5/8/08.
 
 Cpx(HP)
+abbreviation Cpx
+full_name    clinopyroxene
 
 2                                   | model type sf.
 
@@ -5751,8 +6021,6 @@ acm
 hed          
 di
 
-
-
 0 0  0  0  0  0  0              | endmember flags
 
                              | NOTE RESTRICTED RANGES:
@@ -5762,7 +6030,6 @@ di
 0. 1.  .1  0                 | range and resolution of X(jd)
 0. 1.  .1  1                 | range and resolution of X(acm): imod = 1 -> assymmetric stretching
 0. 1.  .1  0                 | range and resolution of X(hed)
-
 
 begin_excess_function
 w(jd di)     26d3 0. 0.
@@ -5780,14 +6047,13 @@ z(m1,al) = 1 jd + 1 cats
 z(m1,fe3+) = 1 acm + 1 esn
 z(m1,cr) = 1 ccrts
 
-
 2 1.                          | 2 species on M2, 1 site per formula unit.
 z(m2,na) = 1 jd + 1 acm
 
 2 1.                          | 2 species on T1, ccrts not counted intentionally.
 z(t1,al) = 1 cats + 1 esn
 
-end_of_model                  | end of model keyword
+end_of_model
                            --------------------------------------------------------
 begin_model  
 
@@ -5818,11 +6084,9 @@ begin_model
 
                                                                     JADC, 3/29/13
 
-  
-                           Dependent: fcrm_d = herc + mcrm - sp
-
-
 CrSp                       | solution name.
+abbreviation Sp
+full_name    spinel
 
 7                          | model type: Reciprocal 
 
@@ -5860,7 +6124,6 @@ end_excess_function
 z(a,fe)   = 1 herc
 z(a,fe3+) = 1 sp + 1 mcrm 
   
-
 5 2.                       | 5 species on b, 2 site per formula unit.
 z(b,cr)   = 1 mcrm
 z(b,al)   = 1 sp + 1 herc
@@ -5882,7 +6145,10 @@ begin_model
 
                                added ideal hem. JADC, 3/29/13
 
-Eskol(C)                                                                         
+Eskol(C)
+abbreviation Esk
+full_name    ilmenite
+
 2                          | model type: Margules, endmember fractions.                                                                               
 
 3                          | number of endmembers 
@@ -5906,10 +6172,7 @@ z(Cr) = 1 esk
 
 end_of_model              
                       --------------------------------------------------------
-begin_model                
-                           
-                             Ca-Amph(D)
-
+begin_model
                              Dale et al, CMP 2000 140:353-362 amphibole model
                              without Na, K, Ti or Mn solution.
 
@@ -5937,6 +6200,9 @@ begin_model
 
 
 Ca-Amph(D)                 | solution name 
+abbreviation Amph
+full_name    clinoamphibole
+
 7                          | model type: reciprocal, margules
 2                          | 2 site reciprocal solution
 2 4                        | 1 binary and 1 quinary                
@@ -5959,7 +6225,6 @@ ffets_i = 1 mfets + 3/5 ftr  - 3/5 tr
 0. 1.0 0.1 0              | range and resolution for X(tr) on site 2
 0. 1.0 0.1 0              | range and resolution for X(pg) on site 2 
 0. 1.  0.1 0              | range and resolution for X(ts) on site 2
-
 
 begin_excess_function
 W(parg tr)  29.3d3 0. 0.
@@ -5991,10 +6256,7 @@ end_dqf_corrections
 
 end_of_model               
                       --------------------------------------------------------
-begin_model                
-                           
-                             Na-Amph(D)
-
+begin_model 
                              Dale et al, CMP 2000 140:353-362 amphibole model
                              without Ca, K, Ti or Mn solution.
 
@@ -6019,6 +6281,8 @@ begin_model
                              mrieb_i = 1 rieb + 3/5 tr - 3/5 ftr        
 
 Na-Amph(D)                 | solution name 
+abbreviation Amph
+full_name    clinoamphibole
 
 7                          | model type: reciprocal, margules
 
@@ -6057,7 +6321,10 @@ end_of_model
 begin_model                
                                       magnesio-wuestite solution, stixrude EPSL 07 also xu et al EPSL 08
 
-Wus(stx7)                                                                               
+Wus(stx7)  
+abbreviation Wus
+full_name    wuestite
+
 2                                     model type: Margules, macroscopic
 
 2                                     2 endmembers
@@ -6079,8 +6346,10 @@ end_of_model
                       --------------------------------------------------------
 begin_model                
                                       akimotoite (ilmenite-structure) solution, stixrude EPSL 07
+Aki(stx7)
+abbreviation Aki
+full_name    ilmenite
 
-Aki(stx7)                                                                                                 
 2                                     model type: Margules, macroscopic
 
 3                                    3 endmembers
@@ -6110,7 +6379,10 @@ end_of_model
                       --------------------------------------------------------
 begin_model                
                            | perovskite solution, stixrude epsl 07 also xu et al epsl 08
-Pv(stx7)                                                                               
+Pv(stx7)
+abbreviation Pv
+full_name    perovskite
+
 2                                     model type: Margules, macroscopic
 
 3                                    3 endmembers
@@ -6140,8 +6412,11 @@ z(al) = 1 aperov
 end_of_model               
                       --------------------------------------------------------
 begin_model                
-                                      olivine solution
-O(stx7)                                                                               
+
+O(stx7)
+abbreviation Ol
+full_name    olivine
+
 2                                     model type: Margules, macroscopic
 
 2                                     2 endmembers
@@ -6161,8 +6436,11 @@ z(mg) = 1 fo
 end_of_model               
                       --------------------------------------------------------
 begin_model               
-                                    Wadleysite solution
-Wad(stx7)                                                                               
+
+Wad(stx7) 
+abbreviation Wad
+full_name    wadleysite
+
 2                          | model type: Margules, macroscopic
 
 2                          | 2 endmembers
@@ -6180,9 +6458,12 @@ z(mg) = 1 wad
 
 end_of_model               
                       --------------------------------------------------------
-begin_model                
-                                      Ringwoodite solution
-Ring(stx7)                                                                               
+begin_model 
+
+Ring(stx7)
+abbreviation Ring
+full_name    ringwoodite
+
 2                                     model type: Margules, macroscopic
 
 2                                     2 endmembers
@@ -6204,7 +6485,10 @@ end_of_model
                       --------------------------------------------------------
 begin_model                
                                       Spinel solution, fixed order! 
-Sp(stx7)                                                                               
+Sp(stx7)
+abbreviation Sp
+full_name    spinel
+
 2                                     model type: Margules, macroscopic
 
 2                                     2 endmembers
@@ -6247,8 +6531,10 @@ begin_model
                                       3 usp           Ti      Fe2+         
                                       4 mt            Fe3+    Fe2+    
 
-Sp(WPC)                      
-          
+Sp(WPC)
+abbreviation Sp
+full_name    spinel
+
 2                                 | model type: Ideal or Margules
 
 4                                 | 4 endmembers 
@@ -6258,7 +6544,6 @@ usp
 mt       
 
 0  0  0  0                        | endmember flags
-                           
 
 0. 1. .1 0                        | X(sp) subdivision range,   imod = 0 -> cartesian 
 0. 0.2  .1  1                     | X(herc) subdivision range, imod = 1 -> assymmetric stretching
@@ -6276,7 +6561,6 @@ end_excess_function
 3 1.                                  3 species, site multiplicity of 1
 z(a,Fe3+) =  1 mt
 z(a,Ti)   =  1 usp
-
 
 2 1.                                  2 species, site multiplicity of 1
 z(b,Mg)   =  1 sp
@@ -6340,7 +6624,10 @@ begin_model
 
                                   Make definitions corrected from the raw thermocalc versions. JADC, Jun 19, 2013.
 
-Ilm(WPH)                           
+Ilm(WPH)
+abbreviation Ilm
+full_name    ilmenite
+
 2                          | macroscopic
 
 5                          | 5 endmembers 
@@ -6399,8 +6686,9 @@ begin_model                | keyword indicating beginning of a solution model
                                       Modified for non-ideal cats after 
                                       Zeh et al. (2005) JMG, v. 23, p. 1-17. 
                                       T. Wagner 2/18/06. 
-                                      
 Cpx(m)
+abbreviation Cpx
+full_name    clinopyroxene
 
 2                                   | model type sf.
 
@@ -6409,16 +6697,12 @@ en
 cats 
 di
 
-
-
 0  0  0                      | endmember flags
 
-                             | NOTE RESTRICTED RANGES:
-
+                             | NOTE RESTRICTED RANGES
 
 0. 1.  .1  1                 | range and resolution of X(en): imod = 1 -> assymmetric stretching
 0. 1.  .1  1                 | range and resolution of X(cats): imod = 1 -> assymmetric stretching 
-
 
 begin_excess_function
 w(en cats)   24d3 0. 0.
@@ -6431,7 +6715,6 @@ end_excess_function
 2 1.                          | 2 species on M1, 1 site per formula unit.
 z(m1,al) = 1 cats
 
-
 2 1.                          | 2 species on M2, 1 site per formula unit.
 z(m2,mg) = 1 en
 
@@ -6439,17 +6722,16 @@ begin_dqf_corrections
 dqf(en) 8100 -4.5 0 
 end_dqf_corrections
 
-end_of_model                  | end of model keyword
-
-
-
+end_of_model
                       --------------------------------------------------------
 begin_model                
                             Olivine in marble; from TC-solution model: Ca only on M2
                             Entered by A Proyer, Aug 27, 2008.
-Ol(m)                               
-2                          | model type: Ideal or Margules
+Ol(m)
+abbreviation Ol
+full_name    olivine
 
+2                          | model type: Ideal or Margules
 2                          | 2 endmembers 
 fo       mont    
   0  0                     | endmember flags
@@ -6469,6 +6751,9 @@ end_of_model
 begin_model               
 
 Pl(stx8)                   | Xu et al. EPSL 08, to be used with the stx08ver.dat data generated from that paper. 
+abbreviation Pl
+full_name    binary-feldspar
+
 2                          | model type: Margules or Ideal                                     
 2                          | # of endmembers  
 ab       an      
@@ -6489,7 +6774,10 @@ end_of_model
                       --------------------------------------------------------
 begin_model                
                                       Spinel solution, fixed order! 
-Sp(stx8)                                                                               
+Sp(stx8)                    
+abbreviation Sp
+full_name    spinel
+
 2                                     model type: Margules, macroscopic
 
 2                                     2 endmembers
@@ -6513,9 +6801,12 @@ z(B,fe) = 3/4 herc
 
 end_of_model                             
                       --------------------------------------------------------
-begin_model                
-                                      olivine solution
+begin_model
+
 O(stx8)                                                                               
+abbreviation Ol
+full_name    olivine
+
 2                                     model type: Margules, macroscopic
 
 2                                     2 endmembers
@@ -6534,9 +6825,12 @@ z(mg) = 1 fo
 
 end_of_model               
                       --------------------------------------------------------
-begin_model               
-                                    Wadleysite solution
-Wad(stx8)                                                                               
+begin_model
+
+Wad(stx8)           
+abbreviation Wad
+full_name    wadleysite
+
 2                          | model type: Margules, macroscopic
 
 2                          | 2 endmembers
@@ -6554,9 +6848,12 @@ z(mg) = 1 wad
 
 end_of_model               
                       --------------------------------------------------------
-begin_model                
-                                      Ringwoodite solution
-Ring(stx8)                                                                               
+begin_model
+
+Ring(stx8)
+abbreviation Ring
+full_name    ringwoodite
+
 2                                     model type: Margules, macroscopic
 
 2                                     2 endmembers
@@ -6576,15 +6873,15 @@ z(mg) = 1 ring
 
 end_of_model               
                       --------------------------------------------------------
-begin_model                
-                                      Opx solution
-
+begin_model
                                       From Stixrude's endmember notation (parenthesis
                                       used to indicate disordered site populations), it
                                       appears disorder that in the '08 papers the M sites
                                       are now split.
-
-Opx(stx8)                                                                               
+Opx(stx8)
+abbreviation Opx
+full_name    orthopyroxene
+ 
 2                                     model type: Margules, macroscopic
 4                                     4 endmembers
 odi  en   fs   ts        
@@ -6609,13 +6906,14 @@ z(M1,Fe) = 1 fs
 z(M2,Al) = 1 ts
 z(M2,Fe) = 1 fs
 
-
 end_of_model                        
                       --------------------------------------------------------
 begin_model                
 
-Cpx(stx8)    
-                                                                           
+Cpx(stx8)
+abbreviation Cpx
+full_name    clinopyroxene
+
 2                                     model type: Margules, macroscopic
 
 5                                     # of endmembers
@@ -6642,17 +6940,18 @@ end_excess_function
 z(M1,Mg) = 1 mdi
 z(M1,Na) = 1 jd
 
-
 3 2.                                  3 species, M2 site multiplicity = 2.
 z(M2,Fe) = 1 hed
 z(M2,Al) = 1 jd + 1 cts
-
 
 end_of_model                        
                       --------------------------------------------------------
 begin_model                
                                      akimotoite (ilmenite-structure) solution
-Aki(stx8)                                                                                                 
+Aki(stx8)
+abbreviation Aki
+full_name    ilmenite
+
 2                                    model type: Margules, macroscopic
 
 3                                    3 endmembers
@@ -6678,9 +6977,11 @@ z(al) = 1 cor
 end_of_model               
                       --------------------------------------------------------
 begin_model                
-                                      Garnet solution, from Xu et al '08.                                  
+                                      Garnet solution, from Xu et al '08.
+Gt(stx8)
+abbreviation Gt
+full_name    garnet
 
-Gt(stx8)                                                                               
 2                                     model type: Margules, macroscopic
 5                                     # of endmembers
 gr   alm  maj  py jmaj          
@@ -6711,7 +7012,10 @@ end_of_model
                       --------------------------------------------------------
 begin_model                
 
-Ppv(stx8)                                                                               
+Ppv(stx8)
+abbreviation Ppv
+full_name    postperovskite
+
 2                                     model type: Margules, macroscopic
 
 3                                    3 endmembers
@@ -6738,7 +7042,10 @@ end_of_model
                       --------------------------------------------------------
 begin_model                
                                       Ca-Ferrite solution.
-CF(stx8)                                                                               
+CF(stx8)
+abbreviation CF
+full_name    calcium-ferrite
+
 2                                     model type: Margules, macroscopic
 3                                     3 endmembers
 mfer ffer nfer             
@@ -6762,7 +7069,10 @@ end_of_model
 begin_model                
                                     Fe2+-Fe3+-Mg pumpellyite 
                                     Massonne & Willner (EJM, 2008) Ideal 
-Pu(M)                                                                                
+Pu(M)
+abbreviation Pu
+full_name    pumpellyite
+
 2                                 | model type: Ideal or Margules
 3                                 | 3 endmembers 
 pump     fpum     ffpu                 
@@ -6784,13 +7094,16 @@ end_of_model
 begin_model                
                            Low Temperature Amphibole from 
                            Massonne & Willner (EJM, 2008) 
-Act(M)                                                                                
+Act(M)
+abbreviation Amph
+full_name    clinoamphibole
+
 2                          | model type: Ideal or Margules
 4                          | 4 endmembers 
 tr     acti
 gl     mrie
-  0  0  0  0               | endmember flags
 
+  0  0  0  0               | endmember flags
 
 0. 1. 0.1  0               | range and resolution for X(Mn)
 0. 1. 0.1  0               | range and resolution for X(Fe)
@@ -6815,7 +7128,10 @@ end_of_model
 begin_model                
                             Fe2-Mg-Mn Stilpnomelane from 
                             Massonne & Willner (EJM, 2008)
-Stlp(M)                                                                                
+Stlp(M)
+abbreviation Stlp
+full_name    stilpnomelane
+
 2                          | model type: Ideal or Margules
 3                          | 3 endmembers 
 stlp     mstl     mnsp                 
@@ -6837,7 +7153,11 @@ end_of_model
 begin_model                
                              Margarite-Muscovite-Paragonite from 
                              Massonne & Willner (EJM, 2008)
-Mica(M)                                                                                
+Mica(M)
+abbreviation Mica
+full_name    white-mica
+
+
 2                          | model type: Ideal or Margules
 3                          | 3 endmembers 
 ma    mu    pa              
@@ -6865,7 +7185,10 @@ end_of_model
 begin_model                
                              Mn-Fe-Mg Carpholite from 
                              Massonne & Willner (EJM, 2008)
-Carp(M)                                                                                
+Carp(M)                
+abbreviation Carp
+full_name    carpholite
+                                                                
 2                          | model type: Ideal or Margules
 3                          | 3 endmembers 
 mnca    fcar     mcar                 
@@ -6887,7 +7210,10 @@ end_of_model
 begin_model                
                              fe-mg sudoite from 
                              Massonne & Willner (EJM, 2008)
-Sud(M)                                                                                
+Sud(M)                 
+abbreviation Sud
+full_name    sudoite
+                                                               
 2                          | model type: Ideal or Margules
 2                          | 2 endmembers 
 fsud    sud              
@@ -6907,7 +7233,10 @@ end_of_model
 begin_model                
                             Amphibole from Massonne & Willner (EJM, 2008)
                             See notes for TrTsPg (above).        
-GlTrTsMr                    
+GlTrTsMr            
+abbreviation Amph
+full_name    clinoamphibole
+        
 7                          | model type: reciprocal, margules
 2                          | 2 site reciprocal solution
 2 4                        | 1 binary and 1 quaternary                
@@ -6965,7 +7294,10 @@ end_of_model
 begin_model                
                              Magnesite-Siderite-Calcite-Rhodochrosite
 
-Carb(M)                                                                                
+Carb(M)                   
+abbreviation Cc
+full_name    carbonate
+                                                             
 2                          | model type: Ideal or Margules
 4                          | 4 endmembers 
 cc     mag
@@ -7036,7 +7368,9 @@ begin_model                | keyword indicating beginning of a solution model
                              | in general comments should not be placed before numerica data, 
                              | but they can be written following numeric data on the same line.
 
-TiBio(HP)                    | solution name.
+Bio(HP)                      | solution name.
+abbreviation Bio
+full_name    biotite
 
 8                            | model type: Margules with dependent endmembers and speciation.
 
@@ -7169,7 +7503,6 @@ ftbi_i = 1 tbi  + 1/2 ann - 1/2 obi
                              | restrict the composition of dilute species, endmembers should be specified 
                              | (READ 4) so that the dilute species is not the last species.
 
-
 begin_excess_function
 
                              | format is W(e1 e1 e2 ...) num1 num2 num3
@@ -7256,9 +7589,10 @@ begin_model
                                       4 cel           K       Mg      Al    SiSi    _                                      
                                       5 fcel          K       Fe      Al    SiSi    _
                                       6 fmu           K       Al      Fe3+  AlSi    _
+Mica(SGH) 
+abbreviation Mica
+full_name    white-mica
 
-
-Mica(SGH)                    
 2                            | model type: macroscopic.
 
 6                            | 6 endmembers
@@ -7351,8 +7685,9 @@ begin_model
                                           fctd         Al     Fe
                                           mnctd        Al     Mn
                                           octd         Fe3+   Fe
-
-Ctd(SGH)                                                                                
+Ctd(SGH)               
+abbreviation Ctd
+full_name    chloritoid
 
 2                          | model type 
 
@@ -7413,9 +7748,9 @@ begin_model
                                           fcar         Al     Fe
                                           mncar        Al     Mn
                                           ocar         Fe3+   Fe
-
-
 Carp(SGH)
+abbreviation Crp
+full_name    carpholite
 
 2                          | model type
 
@@ -7483,9 +7818,10 @@ begin_model
 
                                   definition of andr_i corrected from 1 kho + 1 py - 1 gr to 1 kho - 1 py + 1 gr on
                                   1/4/13. JADC 
-
 Gt(WPPH) 
-    
+abbreviation Gt
+full_name    garnet
+
 7                            | model type: Margules with dependent endmembers .
 
 2                            | the number of independent subcompositions, reciprocal solution if > 1.
@@ -7590,9 +7926,11 @@ begin_model
                          6/08   z(m1,mg) corrected to include mrb, second limit
                                 equations for cammo1 and cammo2 corrected accordingly.   
                                 corrected enthalpies for cammo1 and cammo2.            
-     
 
 cAmph(DP2)                   | solution name 
+abbreviation Amph
+full_name    clinoamphibole
+
 8                            | model type: reciprocal, margules, two ordering parameters
 2                            | 2 site reciprocal solution
 2 6                          | 1 binary and 1 hexary                
@@ -7633,7 +7971,6 @@ fparg = 1 parg_dqf + 3/2 grun - 1 cammo1 - 1/2 cammo2
 fgl   = 1 gl_dqf +  1 grun - 1 cammo1
 frb   = 1 mrb + 1 grun - 1 cammo1
 fts   = 1 ts_dqf + 1 grun - 1 cammo1
-
 
 1 1 1 1 1 1 1 1 1 1 1 1    | endmember flags.
 
@@ -7739,9 +8076,7 @@ dqf(cumm) -6400. 0. 0.
 dqf(grun) -5000. 0. 0. 
 end_dqf_corrections
 
-end_of_model                   
-
-
+end_of_model
                       --------------------------------------------------------
 begin_model 
                       ORTHOAMPHIBOLE: Diener et al, JMG 2011 25:631-656, modified from Diener et al, JMG 2008
@@ -7800,8 +8135,11 @@ begin_model
                                 Enthalpies of ordering corrected.
                                           JADC.
                          8/08   Enthalpy of ordering corrected for HP dqfs.
-     
+
 oAmph(DP2)                   | model name 
+abbreviation oAmph
+full_name    othoamphibole
+
 8                            | model type: reciprocal, margules, two ordering parameters
 2                            | 2 site reciprocal solution
 2 6                          | 1 binary and 1 hexary                
@@ -7812,7 +8150,6 @@ ogl_dqf       fgl
 anth          fanth_dq 
 omrb_dqf      frb 
 
-
 2                            | 2 ordered species:
 
 ammo1 = 3/7 anth + 4/7 fanth_dq  enthalpy_of_formation = -9.5d3
@@ -7820,7 +8157,6 @@ ammo2 = 2/7 anth + 5/7 fanth_dq   enthalpy_of_formation = -11.7d3 | these enthal
                                                                   | becuase Thermocalc reactions are specified in terms of the 
                                                                   | endmember without "DQF" corrections, while in Perple_X
                                                                   | endmember include any DQF corrections. 
-
 
 begin_limits
 ammo1 = -7/4 + 7/4 fanth_dq + 1 ammo1 + 1/2 ammo2 + 5/4 ammo2                               delta = 7/4
@@ -7843,7 +8179,6 @@ fpa   = 1 mpa2 + 1/2 fanth_dq + 1/2 ammo2 - 1 anth
 fged  = 1 ged_dqf2 - 1 anth + 1 ammo2
 fgl   = 1 ogl_dqf +  1 fanth_dq - 1 ammo1
 frb   = 1 omrb_dqf + 1 fanth_dq - 1 ammo1
-
 
 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0  1 1 1 1 1 1 1 1 1 1 1 1    | endmember flags.
 
@@ -7972,9 +8307,10 @@ begin_model
                                       6 cfm           Ca     Ca     Mg     Fe 
                                       7 jac           Na     Na     Fe3+   Al
 
-
-
 Omph(GHP2)     
+abbreviation Cpx
+full_name    clinopyroxene
+
 6                           | model type margules with multiple compound formation  
                                                                        
 4                           | disordered endmembers
@@ -8071,7 +8407,10 @@ end_of_model
                       --------------------------------------------------------
 begin_model                
                            | preliminary BCC iron solution model
-FeSi(BCC)                  
+FeSi(BCC) 
+abbreviation BCC
+full_name    alloy
+
 2                          | model type: Margules.
 2                          | 2 endmembers 
 iron     Si    
@@ -8094,7 +8433,10 @@ end_of_model
                       --------------------------------------------------------
 begin_model                
                            | FCC Fe-Si alloy after Lacaze and Sundman (1990) Metal. Trans 22A:1991-2211
-FeSi(fcc)                  
+FeSi(fcc)
+abbreviation FCC
+full_name    alloy
+
 2                          | model type: Margules.
 2                          | 2 endmembers 
 Fe-FCC
@@ -8129,6 +8471,8 @@ begin_model
                            | not be modified (the compositional limits and subdivision scheme are an exception in 
                            | this regard). 
 oFeSi(bcc)
+abbreviation BCC
+full_name    alloy
 
 29
 
@@ -8150,7 +8494,8 @@ end_of_model
 begin_model 
 
 FeSi_liq
-
+abbreviation Liq
+full_name    liquid
 2
 
 2
@@ -8184,6 +8529,10 @@ begin_model
                             | Entered by Jeff Marsh, Jan 10, 2012. 
 
 ZrRu                        | zr in rutile after Tomkins et al., 07
+abbreviation Ru
+full_name    ilmenite
+
+
 2                           | model type 2
 2                           | number of endmembers
 zrru  ru
@@ -8205,6 +8554,9 @@ end_of_model
 begin_model
                              | Entered by Jeff Marsh, Jan 10, 2012. 
 ZrGt(KP)                     | addition of Ca3Al2[Si2Zr]O12 end-mem after Kelsey & Powell ‘11
+abbreviation Gt
+full_name    garnet
+
 2                            | model type: Margules, endmember fractions.   
                                                                             
 4                            | number of endmembers 
@@ -8243,6 +8595,9 @@ begin_model
                                       | This model requires make definitions in the thermodynamic data file for the 
                                       | odo_ef and oank endmembers.  JADC, 3/26/2012. 
 odCcMS(EF)
+abbreviation Do
+full_name    carbonate
+
 2                                     |model type van laar.                                                                         
 
 5                                     |number of endmembers
@@ -8293,7 +8648,10 @@ end_of_model
                       --------------------------------------------------------
 begin_model                
                                       Silica Fluid                                  
-Si-Fluid   
+Si-Fluid 
+abbreviation F
+full_name    fluid
+
 0                          | model type: Internal EoS
 2                                  
 O        SIO     
@@ -8310,6 +8668,8 @@ end_of_model
 begin_model  
 
 FeSiC-BCC
+abbreviation BCC
+full_name    alloy
     
 30                                | model type: special reciprocal
 2                                 | number of independent mixing sites, reciprocal solution
@@ -8336,6 +8696,8 @@ end_of_model
 begin_model  
 
 FeSiC-FCC
+abbreviation FCC
+full_name    alloy
     
 31                                | model type: special reciprocal
 2                                 | number of independent mixing sites, reciprocal solution
@@ -8364,6 +8726,9 @@ begin_model
                                     
 
 Maj  
+abbreviation Gt
+full_name    garnet
+
 2                                     model type: Margules, endmember fractions.                                                                               
 
 4                                     number of endmembers 
@@ -8398,8 +8763,11 @@ reach_increment 4
 end_of_model  
                       --------------------------------------------------------
 begin_model               
-                                  | Wadleysite solution
-Wad                                                                               
+
+Wad
+abbreviation Wad
+full_name    wadleysite
+
 2                                 | model type: Margules, macroscopic
 2                                 | 2 endmembers
 mwd       fwd            
@@ -8414,8 +8782,11 @@ z(mg) = 1 mwd
 end_of_model               
                       --------------------------------------------------------
 begin_model                
-                                  | Ringwoodite solution
-Ring                                                                               
+
+Ring
+abbreviation Ring
+full_name    ringwoodite
+
 2                                 | model type: Margules, macroscopic
 2                                 | 2 endmembers
 mrw       frw            
@@ -8433,8 +8804,11 @@ reach_increment 4
 end_of_model
                       --------------------------------------------------------
 begin_model                
-                                      magnesio-wuestite solution
-Wus                                                                               
+
+Wus  
+abbreviation Wus
+full_name    wuestite
+                                                          
 2                                     model type: Margules, macroscopic
 2                                     2 endmembers
 per       fper            
@@ -8456,7 +8830,10 @@ end_of_model
                       --------------------------------------------------------
 begin_model                
                                   | akimotoite (ilmenite-structure) solution
-Aki                                                                                                 
+Aki                  
+abbreviation Aki
+full_name    ilmenite
+                                                                               
 2                                 | model type: Margules, macroscopic
 
 3                                 | 3 endmembers
@@ -8481,8 +8858,11 @@ z(al) = 1 cor
 end_of_model               
                       --------------------------------------------------------
 begin_model                
-                                  | perovskite solution
-Pv                                                                               
+
+Pv                
+abbreviation Pv
+full_name    perovskite
+                                                               
 2                                 | model type: Margules, macroscopic
 3                                 | 3 endmembers
 apv   mpv   fpv            
@@ -8514,6 +8894,8 @@ end_of_model
 begin_model
 
 FeSiC_liq
+abbreviation Liq
+full_name    liquid
 
 2
 
@@ -8589,10 +8971,9 @@ begin_model
  
                                       fsp5_d = spr5 +  fspr - spro
                                       fospro_d = spr5 +  fspr - spro
-                                      
-
-
 Sapp(TP)
+abbreviation Sap
+full_name    sapphirine
 
 8                            | model type: reciprocal, margules with dependent endmembers, one ordering parameter
 
@@ -8667,8 +9048,10 @@ begin_model
                                       |Calcite-Magnesite with Dolomite
                                       |compound formation.
                                       |requires ettore's makes for odo and oank
+oCcM(EF) 
+abbreviation Do
+full_name    carbonate
 
-oCcM(EF)     
 2                                     |model type van laar.                                                                         
 
 5                                     |number of endmembers
@@ -8705,7 +9088,6 @@ z(m2a,mg) =  1 mag + 1 odo
 3 0.25                                 |3 species on m2b, mult. = 1/4
 z(m2b,ca) =  1 cc  
 z(m2b,mg) =  1 mag + 1 odo + 1 oank
-               
 
 begin_van_laar_sizes                        
 alpha(cc)     0.25 0.000929 0                      
@@ -8720,18 +9102,19 @@ end_of_model
 begin_model
                                       |Magnesite-Siderite melt, nathan kang, 4/2015. 
 LIQ(NK)
+abbreviation Liq
+full_name    liquid
+
 2                                     |margules-subregular                                           
 2                                     |number of endmembers
 MGCO3L FECO3L
   0  0                                |endmember flags
 0. 1. 0.1  1                          |range and increments on X(Fe) 
 
-
 begin_excess_function
 W(FECO3L MGCO3L MGCO3L)      -7600. 0. 0. |W_sid-mag = W12
 W(MGCO3L FECO3L FECO3L)      -7600. 0. 0. |W_mag-sid = W21
 end_excess_function 
-
 
 1                                     |1 site entropy model
 
@@ -8740,10 +9123,11 @@ z(fe) = 1 FECO3L
 end_of_model    
                       --------------------------------------------------------
 begin_model                
-                                      |Melting
-                                      |Calcite-Magnesite
-                                      
-LIQ(EF)     
+
+LIQ(EF)
+abbreviation Liq
+full_name    liquid
+
 2                                     |margules.                                                                         
 
 3                                     |number of endmembers
@@ -8751,7 +9135,6 @@ CACO3L MGCO3L FECO3L
   0  0  0                             |endmember flags
 0. 1. 0.1  1 
 0. 1. 0.1  1                          | range and increments on X(cc)
-
 
 begin_excess_function
 W(CACO3L CACO3L FECO3L)  -65000 0. 0.
@@ -8763,19 +9146,20 @@ W(MGCO3L FECO3L FECO3L)  -5594.2 0. 0.
 W(CACO3L FECO3L MGCO3L) 0. 0. 0.
 end_excess_function 
 
-
 1                                    
 
 3 1                                 
 z(ca) = 1 CACO3L 
-z(fe) = 1 FECO3L 
-end_of_model                  
-                          
+z(fe) = 1 FECO3L
+ 
+end_of_model
                            --------------------------------------------------------
-
 begin_model                
                                       |EF disordered ternary carb
 dis(EF)     
+abbreviation Cc
+full_name    carbonate
+
 2                                     |model type van laar.                                                                         
 
 3                                     |number of endmembers
@@ -8844,6 +9228,8 @@ begin_model
                                       fodi =  odi  + opx - en
 
 Opx(W)                    | solution name.
+abbreviation Opx
+full_name    orthopyroxene
 
 8                          | model type: Reciprocal with speciation
 
@@ -8956,8 +9342,9 @@ begin_model
 
                                       9 och1          Mg        Fe      Fe     Si_Si   ordered
                                      10 och2          Fe        Mg      Mg     Si_Si   ordered
-
-Chl(W)     
+Chl(W)
+abbreviation Chl
+full_name    chlorite
                        
 8                               | model type reciprocal, macroscopic formulation
 2 
@@ -8970,8 +9357,6 @@ ames     afchl    f3clin    clin
 
 och1 = 1 afchl  - 1 clin   + 1 daph      enthalpy_of_formation = 3d3
 och2 = 1 afchl  - 1/5 clin + 1/5 daph    enthalpy_of_formation = 2.4d3 
-
-
 
 begin_limits
 
@@ -9059,6 +9444,8 @@ end_of_model
 begin_model  
 
 FeSiC-BCC
+abbreviation BCC
+full_name    alloy
     
 30                                | model type: special reciprocal (Lacaze & Sundman, 1991)
 2                                 | number of independent mixing sites, reciprocal solution
@@ -9085,6 +9472,8 @@ end_of_model
 begin_model  
 
 FeSiC-FCC
+abbreviation FCC
+full_name    alloy
     
 31                                | model type: special reciprocal (Lacaze & Sundman, 1991)
 2                                 | number of independent mixing sites, reciprocal solution
@@ -9111,7 +9500,10 @@ end_of_model
                               --------------------------------------------------------
 begin_model                
                                       | magnesio-wustite solution
-Per(SS)     
+Per(SS)
+abbreviation Wus
+full_name    wuestite
+
 2                                     | model type margules, macroscopic                                                                         
 
 2                                     | 2 endmembers
@@ -9136,9 +9528,11 @@ reach_increment 4
 end_of_model                  
                               --------------------------------------------------------
 begin_model
-                           |solution model parameters after Brosh, 2013
+                           |Brosh, 2013
 
 FeCliq
+abbreviation Liq
+full_name    liquid
 
 2                          |solution model type: Margules
 
@@ -9168,16 +9562,16 @@ end_of_model
 
                            --------------------------------------------------------
 begin_model 
-                          | solution model parameters after Brosh, 2013
-
+                          | Brosh, 2013
 FeCfcc
+abbreviation FCC
+full_name    alloy 
 
 2
 
 2
 FeA1
 FeCA1
-
 
 0 0 
 
@@ -9192,21 +9586,19 @@ end_excess_function
 2 1.
 z(C) = 1 FeCA1
 
-
 end_of_model
-
                            --------------------------------------------------------
 begin_model
-                          | solution model parameters after Brosh, 2013 
-
+                          | Brosh, 2013 
 FeCbcc
+abbreviation BCC
+full_name    alloy
 
 2
 
 2
 FeA2
 FeCA2
-
 
 0 0 
 
@@ -9221,12 +9613,13 @@ end_excess_function
 2 3.
 z(c) = 1 FeCA2
 
-
 end_of_model
                         --------------------------------------------------------
 begin_model 
                                   
 ideal_gas
+abbreviation gas
+full_name    gas
                                     
 27                                     model type: 
 
@@ -9239,7 +9632,6 @@ Mg(g)
 Fe(g)
 FeO(g)
 MgO(g)
-
 
 0 0 0 0 0 0                         | endmember flags.  
 

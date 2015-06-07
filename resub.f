@@ -1280,8 +1280,8 @@ c                                 solution limits and stability
       common/ cxt11 /xlo(m4,mst,h9),xhi(m4,mst,h9),stable(h9),limit(h9),
      *               relax(h9)
 
-      character fname*10
-      common/ csta7 /fname(h9)
+      character fname*10, aname*6, lname*22
+      common/ csta7 /fname(h9),aname(h9),lname(h9)
 c                                 interval limits conformal transformation
       integer intv
       double precision yint, yfrc
@@ -1395,8 +1395,8 @@ c                                 solution model counter
       integer isoct
       common/ cst79 /isoct
 c                                 solution model names
-      character*10 fname
-      common/ csta7 /fname(h9)
+      character fname*10, aname*6, lname*22
+      common/ csta7 /fname(h9),aname(h9),lname(h9)
 c                                 endmember pointers
       integer jend
       common/ cxt23 /jend(h9,k12)

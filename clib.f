@@ -28,8 +28,8 @@ c                                 solution model counter
       integer isoct
       common/ cst79 /isoct
 c                                 solution model names
-      character*10 fname
-      common/ csta7 /fname(h9)
+      character fname*10, aname*6, lname*22
+      common/ csta7 /fname(h9),aname(h9),lname(h9)
 
       integer isec,icopt,ifull,imsg,io3p
       common/ cst103 /isec,icopt,ifull,imsg,io3p
@@ -378,8 +378,8 @@ c-----------------------------------------------------------------------
       double precision vmax,vmin,dv
       common/ cst9 /vmax(l2),vmin(l2),dv(l2)
 
-      character*10 fname
-      common/ csta7 /fname(h9) 
+      character fname*10, aname*6, lname*22
+      common/ csta7 /fname(h9),aname(h9),lname(h9)
 
       character*8 xname,vname
       common/ csta2 /xname(k5),vname(l2)
@@ -2006,14 +2006,14 @@ c----------------------------------------------------------------------
       character names*8
       common/ cst8 /names(k1)
 
-      character sname*10
-      common/ csta7 /sname(h9)
+      character fname*10, aname*6, lname*22
+      common/ csta7 /fname(h9),aname(h9),lname(h9)
 c---------------------------------------------------------------------- 
  
       itis = 0
 
       do i = 1, isoct
-         if (unnown.eq.sname(i)) then
+         if (unnown.eq.fname(i)) then
              itis = i
              goto 99
          end if

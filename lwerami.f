@@ -1722,8 +1722,8 @@ c-------------------------------------------------------------------
 
       double precision cmin(k5) ,cmax(k5), tcomp, gtcomp
 
-      character fname*10
-      common/ csta7 /fname(h9)
+      character fname*10, aname*6, lname*22
+      common/ csta7 /fname(h9),aname(h9),lname(h9)
 
       character*5 cname
       common/ csta4 /cname(k5)

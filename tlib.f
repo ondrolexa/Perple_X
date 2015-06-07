@@ -17,7 +17,7 @@ c----------------------------------------------------------------------
       implicit none
 
       write (*,'(/,a)') 
-     *      'Perple_X version 6.7.1, source updated May 17, 2015.'
+     *      'Perple_X version 6.7.2, source updated June 7, 2015.'
 
       end
 
@@ -287,6 +287,8 @@ c                                 reaction_max_it - for A(V,T) and fluid EoS
       iopt(22) = 40
 c                                 volume_max_it - for schreinemakers
       iopt(23) = 40              
+c                                 solution_names 0 - model, 1 - abbreviation, 2 - full
+      iopt(24) = 0
 c                                 -------------------------------------
 c                                 werami output options:
 
@@ -392,6 +394,14 @@ c                                 bad number key
             else 
                read (strg,*) nopt(7)
             end if 
+
+         else if (key.eq.'solution_names') then 
+
+              if (val.eq.'abb') then 
+                 iopt(24) = 1
+              else if (val.eq.'ful') then 
+                 iopt(24) = 2
+              end if 
 
          else if (key.eq.'solvus_tolerance') then 
 
@@ -3201,8 +3211,13 @@ c----------------------------------------------------------------------
       character names*8, name*14
       common/ cst8  /names(k1)
 
-      character fname*10
-      common/ csta7 /fname(h9)
+      character fname*10, aname*6, lname*22
+      common/ csta7 /fname(h9),aname(h9),lname(h9)
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 c-----------------------------------------------------------------------
       if (ids.lt.0) then
 c                                 simple compound:
@@ -3210,7 +3225,19 @@ c                                 simple compound:
 
       else  
 c                                 solution phases:
-         name = fname(ids)
+         if (iopt(24).eq.0) then
+c                                 use model name
+            name = fname(ids)
+
+         else if (iopt(24).eq.1) then
+c                                 use phase abbreviation
+            name = aname(ids) 
+
+         else 
+c                                 use full name
+            name = lname(ids)
+
+         end if 
 
       end if 
       

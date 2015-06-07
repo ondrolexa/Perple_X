@@ -191,54 +191,38 @@ c id identifies the assemblage
 
       character*8 text(400)*1, string*400
 
-      integer i, j, ist, iend, id, np, ncpd
+      integer i, j, ist, iend, id, np, ntot, ids
 
       integer idasls,iavar,iasct,ias
       common/ cst75  /idasls(k5,k3),iavar(3,k3),iasct,ias
-
-      character names*8
-      common/ cst8  /names(k1)
-
-      character fname*10
-      common/ csta7 /fname(h9)
 c----------------------------------------------------------------------
       iend = 0
 
       string = ' '
 
-         ist = 1
-         np = iavar(1,id)
-         ncpd = iavar(2,id)
+      ist = 1
+      np = iavar(1,id)
+      ntot = iavar(3,id)
 
-         do i = 1, 400
-            text(i) = ' '
-         end do
+      do i = 1, 400
+         text(i) = ' '
+      end do
 c                                 first solution names:
-         do i = 1, np
-  
-            write (string,1030) fname(idasls(i,id))
-               
-            ist = iend + 1
-            iend = ist + 11
-            read (string,1000) (text(j),j=ist,iend)
-            call ftext (text,ist,iend)
+      do i = 1, ntot
+             
+         ids = idasls(i,id)
 
-         end do 
-c                                   next compounds
-         do i = np + 1, np + ncpd
+         call getnam (string,ids) 
 
-             write (string,1030) names(-idasls(i,id)) 
-             ist = iend + 1
-             iend = ist + 9
-             read (string,1000) (text(j),j=ist,iend)
-             call ftext (text,ist,iend)
+         ist = iend + 1
+         iend = ist + 11
+         read (string,'(400a1)') (text(j),j=ist,iend)
 
-          end do               
+         call ftext (text,ist,iend)
 
-         write (string,1000) (text(j),j=1,iend) 
+      end do 
 
-1000  format (400a1)
-1030  format (a)
+      write (string,'(400a1)') (text(j),j=1,iend) 
 
       end 
 

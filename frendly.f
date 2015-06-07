@@ -970,19 +970,20 @@ c                                 if univeq fails on a bounding edge
 c                                 write error message and return:
       goto (9000,9000),ier
 c                                 set the increment for the iv
-      div=odiv
+      div = odiv
 c                                 initialize counters
-      ipt2=0
-      icter=0
+      ipt2 = 0
+      icter = 0
 c                                 assign the 1st point
       call assptx
 c                                 follow the equilibrium
 60    call sfol1 (ivd,ivi,ier,div)
 c                                 sfol1 returns ier=1
       goto (70,70),ier
-      ivi=iovi
-      ivd=iovd
+      ivi = iovi
+      ivd = iovd
       goto 9999
+
 70    call switch (div,ivi,ivd,jer)
       goto (75),jer
       icter=icter+1
@@ -991,8 +992,8 @@ c                                 sfol1 returns ier=1
 75    call warn (10, v(ivi), igo, 'TRACE')
  
       call outrxn
-      ivi=iovi
-      ivd=iovd
+      ivi = iovi
+      ivd = iovd
 c                                 return on error
       goto 9999
 c                                 error in univeq:

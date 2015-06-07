@@ -387,8 +387,8 @@ c pschem - subroutine to output ternary chemographies.
       character names*8
       common/ cst8  /names(k1)
 
-      character sname*10
-      common/ csta7 /sname(h9)
+      character fname*10, aname*6, lname*22
+      common/ csta7 /fname(h9),aname(h9),lname(h9)
 
       integer ikp
       common/ phase /ikp(k1)
@@ -423,7 +423,7 @@ c                                  phase coordinates
       read (n4,*) ((x(j,i),j = 1, 2), i=istct, iphct)
       read (n4,*) (ikp(i), i = 1, iphct)
 c                                  solution names
-      if (isoct.ne.0) read (n4,'(8a)') (sname(i),i = 1, isoct)
+      if (isoct.ne.0) read (n4,'(8a)') (fname(i),i = 1, isoct)
 c                                  write graphics code names for x variables:
       read (n4,'(10a)') (xname(i), i = 1, icp)
 c                                  -----------------------------------------------
@@ -1014,8 +1014,8 @@ c subprogram to write a text label for a reaction
       character*8 names
       common/ cst8 /names(k1)
 
-      character fname*10
-      common/ csta7 /fname(h9)
+      character fname*10, aname*6, lname*22
+      common/ csta7 /fname(h9),aname(h9),lname(h9)
 
       integer ikp
       common/ phase /ikp(k1)
@@ -1194,8 +1194,8 @@ c psmixd - subroutine to draw binary mixed variable diagrams
       character*8 names
       common/ cst8 /names(k1)
 
-      character sname*10
-      common/ csta7 /sname(h9)
+      character fname*10, aname*6, lname*22
+      common/ csta7 /fname(h9),aname(h9),lname(h9)
 
       integer ikp
       common/ phase /ikp(k1)
@@ -1240,7 +1240,7 @@ c                                 phase coordinates
 c                                 read solution identifier flags
       read (n4,*) (ikp(i),i=1,iphct)
 c                                 read solution names
-      if (isoct.ne.0) read (n4,'(8a)') (sname(i), i=1, isoct)
+      if (isoct.ne.0) read (n4,'(8a)') (fname(i), i=1, isoct)
 
       read (n4,'(10a)') (xname(i),i = 1, icp)
 c                                 end-of-header
@@ -1846,8 +1846,8 @@ c plinp - subroutine to read x-y plot file header.
       character*8 names
       common/ cst8  /names(k1)
 
-      character sname*10
-      common/ csta7 /sname(h9)
+      character fname*10, aname*6, lname*22
+      common/ csta7 /fname(h9),aname(h9),lname(h9)
 
       character*162 title
       common/ csta8 /title(4)
@@ -1871,7 +1871,7 @@ c----------------------------------------------------------------------
          read (n4,*) (ikp(i), i = 1, iphct)
       end if
 
-      if (isoct.ne.0) read (n4,'(8a)') (sname(i), i = 1, isoct) 
+      if (isoct.ne.0) read (n4,'(8a)') (fname(i), i = 1, isoct) 
 
       read (n4,'(a)') title
       read (n4,*) jvar,(jv(i),i=1,jvar),jpt
@@ -2081,14 +2081,14 @@ c   icpd = the id of the compound if itis = 0
 
       common/ cst8 /names(k1)
 
-      character sname*10
-      common/ csta7 /sname(h9)
+      character fname*10, aname*6, lname*22
+      common/ csta7 /fname(h9),aname(h9),lname(h9)
 
       integer icopt,isoct,iphct
       common/ ln4 /icopt,isoct,iphct
 c----------------------------------------------------------------------
       do i = 1, isoct
-         if (unnown.eq.sname(i)) then
+         if (unnown.eq.fname(i)) then
              itis = i
              return
          end if

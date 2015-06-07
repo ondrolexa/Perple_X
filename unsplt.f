@@ -70,8 +70,8 @@ c                                 solution model counter
       integer isoct
       common/ cst79 /isoct
 c                                 solution model names
-      character*10 fname
-      common/ csta7 /fname(h9)
+      character fname*10, aname*6, lname*22
+      common/ csta7 /fname(h9),aname(h9),lname(h9)
 
       integer jx, jy, lev, xn, yn
       common/ cst58 /jx, jy, lev, xn, yn

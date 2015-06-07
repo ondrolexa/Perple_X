@@ -31,17 +31,18 @@ c-----------------------------------------------------------------------
       character*100 n9name, cfname, dsol,  char6*6, opname
 
       character*5 mname(k5), nname(k5), oname(k5), qname(k0), pname(k5), 
-     *            char5, uname(k0), lname(k0)
+     *            char5, uname(k0), bname(k0), group*28
 
       character amount*6,nc(3)*2,text*256, dtext*200, new*3, blank*1, 
      *          stext*11, title*162, y*1
 
-      character*10 blah, fname(h9), tname(i9)
+      character*10 blah, sname(i9), tn1*6, tn2*22, fname(i9), 
+     *          aname(i9)*6, lname(i9)*22
 
-      integer i, iind, ifugy, im, idum, ima, jsat(h5),
+      integer i, k, l, iind, ifugy, im, idum, ima, jsat(h5),
      *        ifct, ivct, iwt, jcth, icth, igood,
-     *        jcmpn, j, ier,icopt,idep,
-     *        ict, jvct, jc, ix, jst,ind, loopy, 
+     *        jcmpn, j, ier, icopt, idep, gct(i9), gid(i9,i9),
+     *        ict, jvct, jc, ix, jst, ind, loopy, 
      *        loopx, ierr, idsol, isoct, kvct, inames
 
       logical eof, good, satflu, mobflu, oned, findph, bad, first, feos
@@ -233,7 +234,7 @@ c                                 Component stuff first:
       do i = 1, icmpn
          uname(i) = cmpnt(i)
          qname(i) = cmpnt(i)
-         lname(i) = cmpnt(i)
+         bname(i) = cmpnt(i)
       end do
 
       if (lopt(7)) then 
@@ -547,7 +548,7 @@ c                                 mobile or a saturated component:
 c                                  good name, count and save index
             icp = icp + 1
             ic(icp) = igood
-            lname(icp) = char5    
+            bname(icp) = char5    
 
          else 
 c                                 blank input, check counter
@@ -566,8 +567,8 @@ c                                 in thermodynamic composition space.
       do i = 1, icp
 
          do j = 1, ispec
-            if (lname(i).ne.uname(idspe(j))) cycle
-            call warn (16,r,i,lname(i))
+            if (bname(i).ne.uname(idspe(j))) cycle
+            call warn (16,r,i,bname(i))
             ifugy = ifugy + 1
          end do              
 
@@ -954,7 +955,7 @@ c                                 for constrained minimization
          end if 
 
          do i = 1, icp
-            pname(i) = lname(i)
+            pname(i) = bname(i)
          end do 
 
          do i = icp + 1, icp + isat
@@ -1206,7 +1207,7 @@ c                                 changed as of 5/31/04, JADC.
 c                                 test file format
             read (n9,*) new
 
-            if (new.eq.'011'.or.new.eq.'670') exit 
+            if (new.eq.'011'.or.new.eq.'670'.or.new.eq.'672') exit 
 
             call warn (3,r,i,new)
 
@@ -1216,7 +1217,7 @@ c                                 test file format
 
          do 
 c                                 read candidates:
-            call rmodel (blah,bad)
+            call rmodel (blah,tn1,tn2,bad)
 c                                 istot = 0 = eof
             if (bad.or.istot.eq.0) exit 
 c                                 don't allow fluid models if 
@@ -1229,18 +1230,80 @@ c                                 check for endmembers:
             ict = ict + 1
             if (ict.gt.i9) call error (24,r,i9,'build')
 
-            tname(ict) = blah 
+            fname(ict) = blah 
+            aname(ict) = tn1
+            lname(ict) = tn2
+
+         end do 
+c                                 group models according to fullname
+         j = 0
+         do i = 1, ict
+            gct(i) = 0 
+         end do 
+
+         do i = 1, ict 
+
+            good = .false.
+
+            do k = 1, j
+
+               if (lname(i).eq.lname(gid(k,1))) then 
+c                                 in group j
+                  gct(k) = gct(k) + 1
+                  gid(k,gct(k)) = i
+                  good = .true.
+                  exit
+
+               end if 
+
+            end do 
+
+            if (good) cycle
+c                                 in a new group
+            j = j + 1
+            gct(j) = 1
+            gid(j,gct(j)) = i
 
          end do 
 c                                 we have the list, ask user for choices
          if (ict.eq.0) then
- 
+c                                 no valid models
             write (*,7040)
  
-         else
- 
+         else 
+
             write (*,2510)
-            write (*,2520) (tname(i), i = 1, ict)
+
+            if (j.eq.1) then 
+c                                 just one group
+               write (*,'(6(2x,a))') (fname(i), i = 1, ict)
+
+            else
+
+               do i = 1, j
+
+                  call mertxt (group,lname(gid(i,1)),' models:',1)
+
+                  l = 5
+                  if (gct(i).lt.6) l = gct(i)
+
+                  write (*,'(a25,5(1x,a))') group,
+     *                                 (fname(gid(i,k)), k = 1, l)
+
+                  if (gct(i).lt.6) cycle 
+
+                  do k = 6, gct(i)-4, 5
+                     write (*,'(t26,5(1x,a))') 
+     *                                 (fname(gid(i,l)), l = k, k+4)
+                  end do
+ 
+                  if (k-5.lt.gct(i)) write (*,'(t23,5(1x,a))')
+     *                                 (fname(gid(i,l)), l = k, gct(i))
+
+               end do 
+
+            end if 
+
             write (*,1180) 
 
             blah = 'b'
@@ -1251,16 +1314,16 @@ c                                 we have the list, ask user for choices
                if (blah.eq.blank) exit
 c                                 check if same name entered twice
                do i = 1, isoct
-                  if (blah.eq.fname(i)) cycle
+                  if (blah.eq.sname(i)) cycle
                end do 
 c                                 check if name in list
                good = .false.
 
                do i = 1, ict
-                  if (blah.eq.tname(i)) then
+                  if (blah.eq.fname(i)) then
                      isoct = isoct + 1
                      if (isoct.gt.h9) call error (25,r,h9,'BUILD') 
-                     fname(isoct) = blah
+                     sname(isoct) = blah
                      good = .true.
                      exit 
                   end if 
@@ -1368,9 +1431,9 @@ c                                 output component data:
 
       do i = 1, icp 
          if (i.gt.jcth) then 
-            write (n1,3000) lname(i),0,0.,0.,0.,'unconstrained'
+            write (n1,3000) bname(i),0,0.,0.,0.,'unconstrained'
          else 
-            write (n1,3000) lname(i),icont,(dblk(j,i),j=1,3),amount
+            write (n1,3000) bname(i),icont,(dblk(j,i),j=1,3),amount
          end if 
       end do 
       write (n1,3050) 'thermodynamic component list'
@@ -1572,10 +1635,9 @@ c                                 diagrams:
 2210  format (/,'Select vertical axis variable:')
 2310  format (/,a,' is invalid. Check spelling, upper/lower case match',
      *        ', and do not use leading blanks. Try again:',/)
-2500  format (/,'Include solution phases (Y/N)?')
-2510  format (/,'Select phases from the following list, enter',
+2500  format (/,'Include solution models (Y/N)?')
+2510  format (/,'Select models from the following list, enter',
      *        ' 1 per line, press <enter> to finish',/)
-2520  format (6(2x,a))
 3000  format (a,1x,i1,1x,3(g12.6,1x),a,' amount')
 3010  format ('Enter the solution model file name [default = ',
      *        'solution_model.dat]: ')

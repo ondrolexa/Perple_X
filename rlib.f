@@ -21,8 +21,8 @@ c-----------------------------------------------------------------------
       character names*8
       common/ cst8  /names(k1)
 
-      character fname*10
-      common/ csta7 /fname(h9)
+      character fname*10, aname*6, lname*22
+      common/ csta7 /fname(h9),aname(h9),lname(h9)
 c-----------------------------------------------------------------------
       if (id.lt.0) then
          gname = names(-id)
@@ -3859,7 +3859,7 @@ c-----------------------------------------------------------------------
  
       include 'perplex_parameters.h'
 
-      integer id, itic, izap, izap1
+      integer id, itic, izap
 
       double precision a0, v0, v, df, f, dv, root, nr9t0, nr9t,
      *                 gamma0, k00, plg, c1, c2, c3, f1, gvq, 
@@ -3889,8 +3889,8 @@ c-----------------------------------------------------------------------
       double precision units, r13, r23, r43, r59, r1, r2
       common/ cst59 /units, r13, r23, r43, r59, r1, r2
 
-      save izap, izap1 
-      data izap, izap1 /0, 0/
+      save izap
+      data izap /0/
 c----------------------------------------------------------------------
 c                                 assign local variables:
       a0     =  thermo(1,id)
@@ -4029,17 +4029,9 @@ c                                 adiabatic shear modulus
      *      (emod(1,id)*(1d0 - 5d0*f) + f*emod(2,id)*3d0*k00)
      *    -  thermo(9,id)*v/v0*ethv
 
-      if ((tht.gt.5d0.or.tht0.gt.5d0).and.izap1.lt.10) then
-         write (*,1020) names(id),tht0,tht
-         izap1 = izap1 + 1
-         if (izap1.eq.10) call warn (49,r,370,'GSTX')
-      end if 
-                   
 1000  format (/,'**warning ver369** failed to converge at T= ',f8.2,' K'
      *       ,' P=',f9.1,' bar',/,'Using Sixtrude EoS.',
      *        ' Phase ',a,' will be destabilized.',/)
-1020  format (/,'**warning ver370** danger will robinson, danger, ',
-     *          'danger!!',/,a,2(1x,g13.6))
 
       end 
       
@@ -4187,7 +4179,7 @@ c-----------------------------------------------------------------------
  
       include 'perplex_parameters.h'
 
-      integer id, itic, izap, izap1
+      integer id, itic, izap
 
       logical bad
 
@@ -4221,8 +4213,8 @@ c-----------------------------------------------------------------------
       double precision units, r13, r23, r43, r59, r1, r2
       common/ cst59 /units, r13, r23, r43, r59, r1, r2
 
-      save izap, izap1 
-      data izap, izap1 /0, 0/
+      save izap
+      data izap /0/
 c----------------------------------------------------------------------
 c                                 assign local variables:
       v0     = -thermo(3,id)
@@ -4391,21 +4383,13 @@ c                                 previous v estimate
 c                                 adiabatic shear modulus
          smu = (1d0 + 2d0*f)**(2.5d0)*(
      *         emod(1,id) + f*(thermo(21,id) + thermo(22,id)*f))
-     *       - etas*ethv    
-     
-         if ((tht.gt.5d0.or.tht0.gt.5d0).and.izap1.lt.10) then
-            write (*,1020) names(id),tht0,tht
-            izap1 = izap1 + 1
-            if (izap1.eq.10) call warn (49,r,370,'GSTX')
-         end if                  
+     *       - etas*ethv
 
       end if  
                    
 1000  format (/,'**warning ver369** failed to converge at T= ',f8.2,' K'
      *       ,' P=',f9.1,' bar',/,'Using Sixtrude GI EoS.',
      *        ' Phase ',a,' will be destabilized.',/)
-1020  format (/,'**warning ver370** danger will robinson, danger, ',
-     *          'danger!!',/,a,2(1x,g13.6))
 
       end 
 
@@ -4561,8 +4545,8 @@ c                                 x coordinate description
       integer istg, ispg, imlt, imdg
       common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
 
-      character fname*10
-      common/ csta7 /fname(h9)
+      character fname*10, aname*6, lname*22
+      common/ csta7 /fname(h9),aname(h9),lname(h9)
 
       integer iopt
       logical lopt
@@ -6239,8 +6223,8 @@ c---------------------------------------------------------------------
       character*8 names
       common/ cst8 /names(k1)
 
-      character fname*10
-      common/ csta7 /fname(h9)
+      character fname*10, aname*6, lname*22
+      common/ csta7 /fname(h9),aname(h9),lname(h9)
 
       character mname*8
       common/ cst18a /mname(m4)
@@ -6456,7 +6440,7 @@ c            end if
 
       end 
 
-      subroutine rmodel (tname,bad)
+      subroutine rmodel (tname,tn1,tn2,bad)
 c---------------------------------------------------------------------
 c rmodel - reads solution models from LUN n9.
 c---------------------------------------------------------------------
@@ -6464,7 +6448,8 @@ c---------------------------------------------------------------------
   
       include 'perplex_parameters.h'
  
-      character*10 tname, tag*3, char*1
+      character*10 tname, tn1*6, tn2*22, tag*3, char*1, key*22, val*3, 
+     *          nval1*12, nval2*12, nval3*12, strg*40, strg1*40
 
       integer nreact,i,j,k,l,m,jlaar,idim
 
@@ -6534,10 +6519,35 @@ c                               set logical variables
           if (char.eq.' '.or.char.eq.'|') cycle
           if (tname.ne.'begin_mode') exit
       end do 
+c                             initialize strings
+      tn1 = tname
+      tn2 = 'unclassified'
+c                             next look for optional abbreviation and full_name
+      do 
+          call redcd1 (n9,i,key,val,nval1,nval2,nval3,strg,strg1)
 
-      call readda (rnums,1,tname)
-c                                 model type flag
-      jsmod = idint(rnums(1))   
+          read (key,'(i)', iostat = i) jsmod
+
+          if (i.eq.0) then 
+c                             read jsmod, model type flag
+             exit
+
+          else if (key.eq.'abbreviation') then
+
+             tn1 = strg1
+
+          else if (key.eq.'full_name') then 
+
+             tn2 = strg1
+
+          else
+
+             write (*,*) 'unrecognized text:',key,' in model ',tname
+             stop
+
+          end if  
+                   
+      end do   
 c                                 correct jsmod for old versions    
       if (jsmod.eq.3) jsmod = 2  
       if (jsmod.eq.0) fluid = .true.
@@ -11550,7 +11560,7 @@ c-----------------------------------------------------------------------
 
       logical output, first, bad
  
-      character*10 tname, uname(2)*8, sname(h9), new*3
+      character*10 tname, uname(2)*8, sname(h9), new*3, tn1*6, tn2*22
 
       double precision zt
 
@@ -11570,8 +11580,8 @@ c-----------------------------------------------------------------------
       character*8 names
       common/ cst8 /names(k1)
 
-      character fname*10
-      common/ csta7 /fname(h9)
+      character fname*10, aname*6, lname*22
+      common/ csta7 /fname(h9),aname(h9),lname(h9)
 
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
      *        kstot,rkord,xtyp
@@ -11660,13 +11670,13 @@ c                                 open pseudocompund list file
 c                                 format test line
       read (n9,'(a)') new
 
-      if (new.ne.'670'.and.new.ne.'011'.and.new.ne.'008') 
-     *                                        call error (3,zt,im,new)
+      if (new.ne.'670'.and.new.ne.'011'.and.new.ne.'008'.and.
+     *    new.ne.'672') call error (3,zt,im,new)
 
       do 
 c                                 -------------------------------------
 c                                 read the solution name
-         call rmodel (tname,bad)
+         call rmodel (tname,tn1,tn2,bad)
 
          if (bad) cycle 
 c                                 istot is zero, if eof: 
@@ -11695,7 +11705,10 @@ c                                 jmsol, dydz, .....)
          call nmodel
 c                                 save solution name
          sname(im) = tname
-c           
+c                                 abbreviation
+         aname(im) = tn1
+c                                 long name
+         lname(im) = tn2
 c                                 save found solutions in global solution 
 c                                 model arrays
          call gmodel (im,tname)

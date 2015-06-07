@@ -881,8 +881,8 @@ c-----------------------------------------------------------------------
       character*8 names
       common/ cst8 /names(k1)
 
-      character fname*10
-      common/ csta7 /fname(h9)
+      character fname*10, aname*6, lname*22
+      common/ csta7 /fname(h9),aname(h9),lname(h9)
 
       double precision cp
       common/ cst12 /cp(k5,k1)
@@ -1326,8 +1326,8 @@ c-----------------------------------------------------------------------
       character*8 names
       common/ cst8 /names(k1)
 
-      character fname*10
-      common/ csta7 /fname(h9)
+      character fname*10, aname*6, lname*22
+      common/ csta7 /fname(h9),aname(h9),lname(h9)
 
       double precision g
       common/ cst2 /g(k1)
@@ -2332,8 +2332,8 @@ c                                 solution limits and stability
       common/ cxt11 /xlo(m4,mst,h9),xhi(m4,mst,h9),stable(h9),limit(h9),
      *               relax(h9)
 
-      character fname*10
-      common/ csta7 /fname(h9)
+      character fname*10, aname*6, lname*22
+      common/ csta7 /fname(h9),aname(h9),lname(h9)
 
       integer ikp
       common/ cst61 /ikp(k1)
@@ -3153,8 +3153,8 @@ c-----------------------------------------------------------------------
       character*8 names
       common/ cst8 /names(k1)
 
-      character fname*10
-      common/ csta7 /fname(h9)
+      character fname*10, aname*6, lname*22
+      common/ csta7 /fname(h9),aname(h9),lname(h9)
 
       integer iff,idss,ifug,ifyn,isyn
       common/ cst10  /iff(2),idss(h5),ifug,ifyn,isyn
@@ -3693,8 +3693,8 @@ c-----------------------------------------------------------------------
       character*8 names
       common/ cst8  /names(k1)
 
-      character fname*10
-      common/ csta7 /fname(h9)
+      character fname*10, aname*6, lname*22
+      common/ csta7 /fname(h9),aname(h9),lname(h9)
 
       integer icp2
       common/ cst81 /icp2
@@ -3760,8 +3760,8 @@ c-----------------------------------------------------------------------
       character*8 names
       common/ cst8 /names(k1)
 
-      character fname*10
-      common/ csta7 /fname(h9)
+      character fname*10, aname*6, lname*22
+      common/ csta7 /fname(h9),aname(h9),lname(h9)
 
       integer irct,ird
       double precision vn
@@ -5562,8 +5562,8 @@ c-----------------------------------------------------------------------
 
       character*8 name, part*30
 
-      character fname*10
-      common/ csta7 /fname(h9)
+      character fname*10, aname*6, lname*22
+      common/ csta7 /fname(h9),aname(h9),lname(h9)
 
       integer isec,icopt,ifull,imsg,io3p
       common/ cst103 /isec,icopt,ifull,imsg,io3p
