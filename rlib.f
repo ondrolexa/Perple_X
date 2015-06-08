@@ -6526,7 +6526,7 @@ c                             next look for optional abbreviation and full_name
       do 
           call redcd1 (n9,i,key,val,nval1,nval2,nval3,strg,strg1)
 
-          read (key,'(i)', iostat = i) jsmod
+          read (key,'(i3)', iostat = i) jsmod
 
           if (i.eq.0) then 
 c                             read jsmod, model type flag
