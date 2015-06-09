@@ -12626,10 +12626,10 @@ c                               Ideal or Margules.
 c                                encode a name
       if (istg(im).eq.2.and.mstot(im).eq.4) then
 c                                special case 1, bin-bin reciprocal solution
-c         write (names(iphct),1020) tname,
-c     *                             (idint(1d2*z(j,1)), j = 1, 2)
+         write (names(iphct),1020) tname,
+     *                             (idint(1d2*z(j,1)), j = 1, 2)
       else if (istg(im).eq.2.and.mstot(im).eq.6.and.ispg(im,1).eq.3) 
-     8        then
+     *        then
 c                                special case 2, tern-bin reciprocal solution
          write (names(iphct),1060) tname,
      *                             (idint(1d2*z(1,j)), j = 1, 2),
