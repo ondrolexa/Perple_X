@@ -1151,6 +1151,7 @@ c                               initialization for each data set
 c                               for k10 endmembers
       do i = 1, k10
          make(i) = 0 
+         names(i) = ' '
       end do
 c                               for k1 phases:
       do i = 1, k1
@@ -1316,7 +1317,7 @@ c                                 got a match, count
 
                   idaf(i) = iphct
 c                                 store thermodynamic parameters:
-                  call loadit (iphct,.false.)
+                  call loadit (iphct,.false.,.true.)
 c                                 zero the component
                   vnumu(i,iphct) = 0d0
 
@@ -1435,10 +1436,8 @@ c                                 reject phases already in the list
             if (.not.good) cycle             
 c                                 matched a name
             iphct = iphct + 1
-
-c           pause
 c                                 store thermodynamic parameters:
-            call loadit (iphct,.false.)
+            call loadit (iphct,.false.,.true.)
 
          end do
 
@@ -1464,7 +1463,7 @@ c                                 acceptable data, count the phase:
 c                                 for normalized composition:
             ctot(iphct) = tot
 c                                 store thermodynamic parameters:
-            call loadit (iphct,.false.)
+            call loadit (iphct,.false.,.true.)
          end if 
       end do 
 
@@ -1489,7 +1488,7 @@ c                                 set ieos flag to that of the first
 c                                 real entity in the make definition
          ieos = eos(mkind(i,1))
 
-         call loadit (iphct,.true.)
+         call loadit (iphct,.true.,.true.)
 
          make(iphct) = i
 c                                 pointer used for iemod.
@@ -1523,7 +1522,7 @@ c                                 read header
 c                                 matched a name
             iphct = iphct + 1
 c                                 store thermodynamic parameters:
-            call loadit (iphct,.false.)
+            call loadit (iphct,.false.,.false.)
 
          end do
 

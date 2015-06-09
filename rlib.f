@@ -1757,7 +1757,7 @@ c---------------------------------------------------------------------
 
       end
  
-      subroutine loadit (id,make)
+      subroutine loadit (id,make,nchk)
 c---------------------------------------------------------------------
 c loadit loads descriptive data for phases and species (name,comp,
 c and therm) into the appropriate arrays (names,comps,thermo,vf,
@@ -1772,7 +1772,7 @@ c---------------------------------------------------------------------
  
       integer id,i,j,k
 
-      logical make 
+      logical make, nchk 
 
       double precision gzero
       external gzero
@@ -1881,7 +1881,13 @@ c---------------------------------------------------------------------
       if (id+1.gt.k10) call error (1,0d0,id,'k10')
 
       ipoint = iphct
-      
+c                               check for duplicates
+      if (nchk) then 
+         do i = 1, iphct
+            if (name.ne.names(i)) cycle
+            call error (73,g1,i,name) 
+         end do  
+      end if       
 c                               load name and phase flag
       names(id) = name
 c                               moduli flags, indicate availability of
@@ -5126,7 +5132,7 @@ c                               check for fluid species data
             if (name.ne.cmpnt(idspe(j))) cycle 
             ifer = ifer + 1
             good = .true.
-            call loadit (j,.false.)
+            call loadit (j,.false.,.true.)
             return
 
          end do 
@@ -5151,7 +5157,7 @@ c                               the saturated component idc:
                if (iphct.gt.k1) call error (180,1d0,k1,
      *                            'SATTST increase parameter k1')
                ids(j,isct(j)) = iphct
-               call loadit (iphct,.false.)
+               call loadit (iphct,.false.,.true.)
                good = .true.
                return
             end if
@@ -6449,13 +6455,14 @@ c---------------------------------------------------------------------
       include 'perplex_parameters.h'
  
       character*10 tname, tn1*6, tn2*22, tag*3, char*1, key*22, val*3, 
-     *          nval1*12, nval2*12, nval3*12, strg*40, strg1*40
+     *          nval1*12, nval2*12, nval3*12, strg*40, strg1*40, 
+     *          estrg*80
 
       integer nreact,i,j,k,l,m,jlaar,idim
 
       logical bad
 
-      double precision coeffs(k7),rnums(100),enth
+      double precision coeffs(k7), rnums(100), enth
 
       integer ijk(mst),inds(k7),ict
 
@@ -6542,8 +6549,9 @@ c                             read jsmod, model type flag
 
           else
 
-             write (*,*) 'unrecognized text:',key,' in model ',tname
-             stop
+             write (estrg,'(4(a))') 'unrecognized text: ', key,
+     *                              ' reading solution model ', tname
+             call error (72, enth, i, estrg)
 
           end if  
                    
@@ -12618,8 +12626,8 @@ c                               Ideal or Margules.
 c                                encode a name
       if (istg(im).eq.2.and.mstot(im).eq.4) then
 c                                special case 1, bin-bin reciprocal solution
-         write (names(iphct),1020) tname,
-     *                             (idint(1d2*z(j,1)), j = 1, 2)
+c         write (names(iphct),1020) tname,
+c     *                             (idint(1d2*z(j,1)), j = 1, 2)
       else if (istg(im).eq.2.and.mstot(im).eq.6.and.ispg(im,1).eq.3) 
      8        then
 c                                special case 2, tern-bin reciprocal solution

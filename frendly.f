@@ -2126,7 +2126,7 @@ c                                 read icopt, default icopt = 2.
 c                               reaction coefficient:
 40       vnu(iphct)= vvv
 c                               store the data 
-         call loadit (iphct,.false.)
+         call loadit (iphct,.false.,.true.)
 
       end do 
 
@@ -2148,7 +2148,7 @@ c                                read header
 c                                matched a name
             jphct = jphct + 1
 c                                store thermodynamic parameters:
-            call loadit (jphct,.false.)
+            call loadit (jphct,.false.,.true.)
 
          end do 
 

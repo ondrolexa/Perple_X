@@ -6667,10 +6667,10 @@ c                                 convert to g-atom vol
 c                                 convert to "molar amounts"         
       vol = vol/n/1d1
 
-      if (itic.gt.200000) then 
-         itic = 0 
-         write (*,*) 'good,bad:',igood,ibad,t,p
-      end if 
+c      if (itic.gt.200000) then 
+c         itic = 0 
+c         write (*,*) 'good,bad:',igood,ibad,t,p
+c      end if 
 
       end 
 

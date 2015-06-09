@@ -1068,7 +1068,7 @@ c                                 next get consistent real phases
  
          iphct = iphct + 1
 
-         call loadit (iphct,.false.)
+         call loadit (iphct,.false.,.true.)
  
       end do 
 c                                 get all made phases
@@ -1472,7 +1472,7 @@ c                                 output component data:
 
       write (n1,3060) 'solution phase list'
       do i = 1, isoct
-         write (n1,'(a)') fname(i)
+         write (n1,'(a)') sname(i)
       end do 
       write (n1,3050) 'solution phase list'
 c                                 output variable choices and values:

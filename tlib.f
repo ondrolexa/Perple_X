@@ -1839,6 +1839,10 @@ c---------------------------------------------------------------------
          write (*,70) char
       else if (ier.eq.71) then 
          write (*,71) char
+      else if (ier.eq.72) then 
+         write (*,72) char
+      else if (ier.eq.73) then 
+         write (*,73) char
       else if (ier.eq.89) then
          write (*,89) 
       else if (ier.eq.90) then
@@ -2095,8 +2099,13 @@ c---------------------------------------------------------------------
 71    format (/,'**error ver071** format error or EOF reading the: ',a,
      *        /,'probably VERTEX is still running or was terminated by '
      *         ,'an error.',/)
-72    format (/,'**error ver072** UNSPLT found no completed segments',
-     *          ' in folder/directory:'/,5x,'.',a,/)
+72    format (/,'**error ver072** ',a)
+73    format (/,'**error ver073** the thermodynamic data file has ', 
+     *          'more than one entity named: ',a,/,'delete or rename ',
+     *          'the entities, this error is often caused by make ',
+     *          'definitions.')
+c72    format (/,'**error ver072** UNSPLT found no completed segments',
+c     *          ' in folder/directory:'/,5x,'.',a,/)
 89    format (/,'**error ver089** SMPLX programming error. Change ',
      *        'minimnization method.',/)
 90    format (/,'**error ver090** SMPLX failed to converge within ', 
