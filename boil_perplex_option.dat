@@ -63,3 +63,4 @@ zero_bulk             1e-9  | 0->1
 lop_28                 F
 lop_29                 T
 nop_29                 1e-2
+nop_30                 0.1

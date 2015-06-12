@@ -54,6 +54,9 @@ c      include 'flib.f'
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
+      double precision fac,fac1
+      common/junk/fac,fac1
+
       save idiag
 c----------------------------------------------------------------------- 
 c                                 iam flag indicates the Perple_X program
@@ -162,6 +165,9 @@ c                                 interactively entered conditions
                   end if 
 
                   if (v(1).eq.0d0) exit 
+
+c                  write (*,*) 'enter fac, fac1'
+c                  read (*,*) fac, fac1
 
                   if (ifyn.eq.0) then
 

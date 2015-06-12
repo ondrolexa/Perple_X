@@ -2148,7 +2148,7 @@ c                                read header
 c                                matched a name
             jphct = jphct + 1
 c                                store thermodynamic parameters:
-            call loadit (jphct,.false.,.true.)
+            call loadit (jphct,.false.,.false.)
 
          end do 
 

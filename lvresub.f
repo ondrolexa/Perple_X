@@ -1153,6 +1153,8 @@ c
          end do 
 
       end do
+
+      jkl = 0 
 c                                now reform the arrays kdv and b
       if (np.eq.2) then
 
