@@ -6169,12 +6169,13 @@ c----------------------------------------------------------------------
       logical sroot
       common/ rkroot /vrt,irt,sroot
 
-      save isp, ins, i1, i2, i3, i4, i5, both, iavg
-      data isp, ins, i1, i2, i3, i4, i5, both, iavg
+      save isp, ins, i1, i2, i3, i4, i5, both, iavg, itic
+      data isp, ins, i1, i2, i3, i4, i5, both, iavg, itic
      *                                      /5, 14, 13, 12, 7, 15, 
      *                                          14, 13, 12, 7, 15, 
-     *                                          .false., 3/
+     *                                          .false., 3, 0/
 c----------------------------------------------------------------------
+      iavg = iopt(29)
 c                                 get pure species fugacities
       call mrkpur (ins, isp)
 c                                 zero species in case of degenerate compositions
@@ -6470,10 +6471,10 @@ c----------------------------------------------------------------------
       double precision vol
       common/ cst26 /vol
 
-      save isp, ins, i1, i2, i3, i4, i5
-      data isp, ins, i1, i2, i3, i4, i5
+      save isp, ins, i1, i2, i3, i4, i5, itic, igood, ibad
+      data isp, ins, i1, i2, i3, i4, i5, itic, igood, ibad
      *                                  /5, 14, 13, 12, 7, 15, 
-     *                                      14, 13, 12, 7, 15/
+     *                                      14, 13, 12, 7, 15, 3*0/
 c----------------------------------------------------------------------
 c                                  low T hack
       if (t.lt.2400d-3.and.v(14).lt.1d2.and.
@@ -6667,11 +6668,6 @@ c                                 convert to g-atom vol
 c                                 convert to "molar amounts"         
       vol = vol/n/1d1
 
-c      if (itic.gt.200000) then 
-c         itic = 0 
-c         write (*,*) 'good,bad:',igood,ibad,t,p
-c      end if 
-
       end 
 
       subroutine rksi5a (c1,c2,c3,bad)
@@ -6741,6 +6737,7 @@ c----------------------------------------------------------------------
      *                                          14, 13, 12, 7, 15, 
      *                                          .false., 3/
 c----------------------------------------------------------------------
+      iavg = iopt(29)
 c                                 get pure species fugacities
       call mrkpur (ins, isp)
 c                                 zero species in case of degenerate compositions
@@ -7151,7 +7148,7 @@ c     *           + t**3 * (-0.286881183333320412D-1)
 
 
          else if (i.eq.14) then 
-c                                 MRK dispersion term for SiO2, from
+c                                 MRK dispersion term for SiO2, from 
 c                                 sio2_mp_fit3.mws 
 
 c           if (t.gt.3100d0.and..not.lopt(28)) then 
@@ -7159,39 +7156,44 @@ c               tt = 3100d0
 c            else 
 c               tt = t
 c            end if 
-
+            if (iopt(28).eq.2) then 
 c                                  shornikov DP fit, with a0 correction
-c            a(14) = (-0.370631646315402D9 -88784.52
-c     * + 0.710713269453173D8*dlog(t)
-c     *               -0.468778070702675D7/t + 
-c     *               (0.194790021605110D4*dsqrt(t) -0.110935131465938D6
-c     *               -0.120230245951606D2 * t) * t)*1d2
-c                                  HSC DP fit, with a0 correction
-            a(14) = (-0.374260147394998848D9 
-     * + t **1.5d0 * 0.204563487800252960D4 
-     * + dlog(t) * 0.717244191159245670D8
-     * + (-0.478703597332215404D7)/ t 
-     * + t * (-0.115746244073046750D6) 
-     * + t ** 2 * (-0.126792045931319510D2)) * 1d2
-
-
-c    *            +  nopt(29)*(t-1999.)
+                a(14) = (-0.370631646315402D9 -88784.52
+     *                 + 0.710713269453173D8*dlog(t)
+     *                 -0.468778070702675D7/t + (0.194790021605110D4
+     *                 *dsqrt(t) -0.110935131465938D6
+     *                 -0.120230245951606D2 * t) * t)*1d2
 c delta component :
      *            +  32300.*(t-1999.) + 14.25*(t-1999.)**2
+
+            else if (iopt(28).eq.0.or.iopt(28).eq.1.) then 
+         
+c                                  HSC DP fit, with a0 correction
+               a(14) = (-0.374260147394998848D9 
+     *                + t **1.5d0 * 0.204563487800252960D4 
+     *                + dlog(t) * 0.717244191159245670D8
+     *                + (-0.478703597332215404D7)/ t 
+     *                + t * (-0.115746244073046750D6) 
+     *                + t ** 2 * (-0.126792045931319510D2)) * 1d2
+c delta component :
+     *                +  32300.*(t-1999.) + 14.25*(t-1999.)**2
 c                                   fit to mp s,cp,g,v
 c           a(14) = ( 73828180.7110d0 + 7535d0*(t-1999.)
 c    *                  - 4.438d0*(t-1999.)**2)*1d2
 c-------------------------------------------------------------
+            else if (iopt(28).eq.3) then    
 c                                 HSC decaying CP, june 2015.
-c      a(14) = (-0.106829676139492080D9 
-c     * + t **1.5d0 * 0.464367503957971803D4 
-c     * + dsqrt(t) * 0.122916896089585051D8  
-c     * + (-0.102186452066881191D8)/dsqrt(t) 
-c     * + t * (-0.342784555992215290D6) 
-c     * + t ** 2 * (-0.250204509615233768D2))*1d2
+               a(14) = (-0.106829676139492080D9 
+     *              + t **1.5d0 * 0.464367503957971803D4 
+     *              + dsqrt(t) * 0.122916896089585051D8  
+     *              + (-0.102186452066881191D8)/dsqrt(t) 
+     *              + t * (-0.342784555992215290D6) 
+     *              + t ** 2 * (-0.250204509615233768D2))*1d2
 c                                 dcp
 cc     *            +  fac*(t-1999.) + fac1*(t-1999.)**2
-c     *            +  103850d0*(t-1999.) - 112.05*(t-1999.)**2
+     *            +  103850d0*(t-1999.) - 112.05*(t-1999.)**2
+
+            end if 
 
          else if (i.eq.15) then 
 c                                 MRK dispersion term for Si 
@@ -7218,14 +7220,17 @@ c    *                              - 1.138d0  * (t-1687.)**2)*1d2
 
       end do 
 
-c      a(14) = a(14)*1.135
+      if (iopt(28).ne.1) then 
       
-      a(13) = ark(14)/16.722d0
-c      a(14) = ark(14)
-      b(13) = brk(14)/4.831d0
+         a(13) = ark(14)/16.722d0
+         b(13) = brk(14)/4.831d0
+
+       else 
 c                                    sio max a parms:
-c      b(13) = 16.06179418
-c      a(13) = 2205440030.
+         b(13) = 16.06179418
+         a(13) = 2205440030.
+
+       end if 
 
 
       end 

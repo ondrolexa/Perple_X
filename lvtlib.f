@@ -281,7 +281,12 @@ c                                 speciation_max_it - for speciation calculation
 c                                 reaction_max_it - for A(V,T) and fluid EoS
       iopt(22) = 40
 c                                 volume_max_it - for schreinemakers
-      iopt(23) = 40              
+      iopt(23) = 40            
+c                                 lv special flags: 
+c                                 iop_28 0-hsc, 1-amax, 2-shorn, 3-cp
+      iopt(28) = 0 
+c                                 iop_29 mixing 1-geometric, 2-arith, 3-harmonic
+      iopt(29) = 1
 c                                 -------------------------------------
 c                                 werami output options:
 

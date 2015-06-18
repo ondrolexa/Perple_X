@@ -2405,7 +2405,7 @@ c                                 frendly but not a reaction
 
       end if 
 
-      if (.not.volume) shear = .false.
+c     if (.not.volume) shear = .false.
 c                                 not so bad....
       solid = .true.
 c                                 weighting used to compute average

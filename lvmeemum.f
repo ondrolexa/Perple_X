@@ -20,7 +20,8 @@ c----------------------------------------------------------------------
 
       integer itri(4),jtri(4),ijpt
 
-      double precision wt(3), num, xs, ats(2), tg
+      double precision wt(3), num, xs, ats(2), tg, xlt, xp, xrl, xrv, 
+     *                 bl, bv, beta, ml, mv, rl, rv, lt
 
       integer iwt
       common/ cst209 /iwt
@@ -173,12 +174,16 @@ c                                 else user enters only p-t and composition read
 
       end if 
 
+      xlt = 0d0
+
 c                                 iwt is set by input, it is only used below to determine
 c                                 whether to convert weight compositions to molar. the 
 c                                 computations are done solely in molar units. 
       amount = 'molar '
 
       if (iwt.eq.1) amount = 'weight'
+
+      write (*,*) ' iop_28 iop_29: ', iopt(28), iopt(29)
 c                                 computational loop
       do 
 c                                 read potential variable values    
@@ -591,6 +596,10 @@ c                                 N, H, S, Cp, Cp/Cv, rho, vphi
           write (*,'(12(g12.6,1x))') v(1),tlv,tlv-tlv1,tlv2-tlv,x,
      *                     rho1,rho2,cp1/ats(1)/r/3d0,cp2/ats(1)/r/3d0
           write (*,'(12(g12.6,1x))') pv1,pvv1,ir1,pv2,pvv2,ir2
+c
+
+
+
 
           do j = 1, 2 
 
@@ -650,6 +659,24 @@ c            if (idead.eq.0) call getloc (itri,jtri,ijpt,wt,nodata)
      *   lnk4,lnk4+dlog(p),lnk5,lnk5*dlog(p)/2d0,ravg,savg,
      *   props(15,1)/props(17,1)*1e3,props(10,1),
      *   (prps(8,i),i=1,2),(z(i),i=1,2)
+c                                critical exponent stuff
+         if (xlt.ne.0d0) then 
+            rl = dlog(rho1)
+            rv = dlog(rho2)
+            lt = dlog(v(2))
+            ml = (rl-xrl)/(lT-xlT)
+            bl = (lT*xrl-rl*xlT)/(lT-xlT)
+            mv = (rv-xrv)/(lT-xlT)
+            bv = (lT*xrv-rv*xlT)/(lT-xlT)
+
+            write (*,*) ' ml, mv ', ml, mv
+            write (*,*) ' bl, bv ', bl, bv
+
+         end if 
+
+         xlt = dlog(v(2))
+         xrl = dlog(rho1)
+         xrv = dlog(rho2)
 
          if (v(2).lt.tg-1d2) then 
             write (*,*) 'WANKO! tg=',tg
