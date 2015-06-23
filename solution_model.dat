@@ -8138,7 +8138,7 @@ begin_model
 
 oAmph(DP2)                   | model name 
 abbreviation oAmph
-full_name    othoamphibole
+full_name    orthoamphibole
 
 8                            | model type: reciprocal, margules, two ordering parameters
 2                            | 2 site reciprocal solution

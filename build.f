@@ -1297,7 +1297,7 @@ c                                 just one group
      *                                 (fname(gid(i,l)), l = k, k+4)
                   end do
  
-                  if (k-5.lt.gct(i)) write (*,'(t23,5(1x,a))')
+                  if (k-5.lt.gct(i)) write (*,'(t26,5(1x,a))')
      *                                 (fname(gid(i,l)), l = k, gct(i))
 
                end do 

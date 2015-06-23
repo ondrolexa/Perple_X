@@ -1546,7 +1546,7 @@ c                                 real phase, use sign of s and v to check
 c                                 difference increments
          v = vrk
          if (v.le.0d0) then 
-            write (*,*) 'wonk?'
+            write (*,*) 'wonk?',p,t
          end if 
 
          rho = props(17,jd)/v*1d2

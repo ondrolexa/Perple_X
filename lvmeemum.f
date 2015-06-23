@@ -21,7 +21,8 @@ c----------------------------------------------------------------------
       integer itri(4),jtri(4),ijpt
 
       double precision wt(3), num, xs, ats(2), tg, xlt, xp, xrl, xrv, 
-     *                 bl, bv, beta, ml, mv, rl, rv, lt
+     *                 bl, bv, beta, ml, mv, rl, rv, lt, bb, rhocv,
+     *                 f, df, tc, r1, r2, r3, t1, t2, t3, rhocl
 
       integer iwt
       common/ cst209 /iwt
@@ -174,8 +175,9 @@ c                                 else user enters only p-t and composition read
 
       end if 
 
-      xlt = 0d0
-
+      t1 = 0d0
+      t2 = 0d0
+      t3 = 0d0
 c                                 iwt is set by input, it is only used below to determine
 c                                 whether to convert weight compositions to molar. the 
 c                                 computations are done solely in molar units. 
@@ -660,23 +662,60 @@ c            if (idead.eq.0) call getloc (itri,jtri,ijpt,wt,nodata)
      *   props(15,1)/props(17,1)*1e3,props(10,1),
      *   (prps(8,i),i=1,2),(z(i),i=1,2)
 c                                critical exponent stuff
-         if (xlt.ne.0d0) then 
-            rl = dlog(rho1)
-            rv = dlog(rho2)
-            lt = dlog(v(2))
-            ml = (rl-xrl)/(lT-xlT)
-            bl = (lT*xrl-rl*xlT)/(lT-xlT)
-            mv = (rv-xrv)/(lT-xlT)
-            bv = (lT*xrv-rv*xlT)/(lT-xlT)
+         r3  = dlog(rho1-rho2)
+         t3  = v(2)
 
-            write (*,*) ' ml, mv ', ml, mv
-            write (*,*) ' bl, bv ', bl, bv
+         if (t2.gt.0d0.and.t1.gt.0d0.and.t3.ne.t1.and.t2.ne.t1.and.
+     *       t2.ne.t3) then
+
+            dt = dabs (t3 - t1)
+            tc = t3 + dt
+
+
+            do 
+
+               f = ((r3 - r2) / (dlog(tc - t3) - 
+     *                           dlog(tc - t2)) - (r2 - r1) / 
+     *                          (dlog(tc - t2) - dlog(tc - t1))) / 
+     *             (dlog(tc - t3) / 2D0 - dlog(tc - t1)/ 2d0) 
+
+               df = ((r3 - r2) * (t2 - t3) / (-tc + t3) / (-tc + t2) / 
+     *            (log(tc -t3) - dlog(tc - t2)) ** 2 - (r2 - r1) * 
+     *             (t1 - t2) / (-tc + t2) / (-tc + t1) / 
+     *            (dlog(tc - t2) - dlog(tc - t1)) ** 2) / (dlog(tc - t3)
+     *             / 0.2D1 - dlog(tc - t1) / 0.2D1) + ((r3 - r2) / 
+     *            (dlog(tc - t3) - dlog(tc - t2)) + (r1 - r2) / 
+     *            (dlog(tc - t2) - dlog(tc - t1))) * (t1 - t3) 
+     *            / (-tc + t3) / (-tc + t1) / (dlog(tc - t3) / 0.2D1 
+     *            - dlog(tc - t1) / 0.2D1) ** 2 / 0.2D1 
+
+               tc = tc - f/df
+
+               if (isnan(tc)) exit
+
+               if (tc.lt.0d0.or.dabs(f/df).lt.1d-3) exit
+
+            end do 
+
+            beta = (-r1 + r3) / (log(tc - t3) - log(tc - t1))
+            Bb = (dlog(tc - t3) * r1 - r3 * dlog(tc - t1)) / 
+     *          (dlog(tc - t3) - dlog(tc - t1)) / 2D0
+
+            rhocv = Bb * (tc - t3) ** beta + rho2
+            rhocl = -Bb * (tc - t3) ** beta + rho1
+
+
+            write (*,*) 'beta tc',beta, tc 
+            write (*,*) Bb
+            write (*,*) rhocv, rhocl
 
          end if 
 
-         xlt = dlog(v(2))
-         xrl = dlog(rho1)
-         xrv = dlog(rho2)
+         t1 = t2
+         r1 = r2
+
+         t2 = t3
+         r2 = r3 
 
          if (v(2).lt.tg-1d2) then 
             write (*,*) 'WANKO! tg=',tg
