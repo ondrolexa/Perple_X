@@ -88,9 +88,6 @@ fchum = 1 chum - 3 ta + 3 fta
 fphA = 1 phA - 7/3 ta + 7/3 fta
 0 0 0
 
-fper = 1 per - 1/3 ta + 1/3 fta
-0 0 0
-
 fatg = 1 atg - 16 ta + 16 fta
 0 0 0
 

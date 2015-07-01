@@ -17,7 +17,7 @@ c----------------------------------------------------------------------
       implicit none
 
       write (*,'(/,a)') 
-     *      'Perple_X version 6.7.2, source updated June 23, 2015.'
+     *      'Perple_X version 6.7.2, source updated June 29, 2015.'
 
       end
 
@@ -1843,6 +1843,8 @@ c---------------------------------------------------------------------
          write (*,72) char
       else if (ier.eq.73) then 
          write (*,73) char
+      else if (ier.eq.74) then 
+         write (*,74) int
       else if (ier.eq.89) then
          write (*,89) 
       else if (ier.eq.90) then
@@ -2104,6 +2106,8 @@ c---------------------------------------------------------------------
      *          'more than one entity named: ',a,/,'delete or rename ',
      *          'the entities, this error is often caused by make ',
      *          'definitions.')
+74    format (/,'**error ver073** unrecognized EoS pointer (',i3, 
+     *          ') in routine SETINS',/)
 c72    format (/,'**error ver072** UNSPLT found no completed segments',
 c     *          ' in folder/directory:'/,5x,'.',a,/)
 89    format (/,'**error ver089** SMPLX programming error. Change ',
@@ -3332,6 +3336,10 @@ c                                 interval limits conformal transformation
       integer irt
       logical sroot
       common/ rkroot /vrt,irt,sroot
+
+      character specie*4
+      integer isp, ins
+      common/ cxt33 /isp,ins(nsp),specie(nsp)
 c-----------------------------------------------------------------------
       data hs2p/4, 5, 18, 19, 20, 21/
 
@@ -3359,6 +3367,11 @@ c     data estrg/'eG0','eS0','eV0','ec1','ec2','ec3','ec4','ec5','ec6',
 c    *           'ec7','eb1','eb2','eb3','eb4','eb5','eb6','eb7','eb8'/
 c                                 tags for interaction coefficients (Redlich-Kister polynomial)
       data wstrg/'w0 ','wT ','wP ','wP1','wP2'/
+c                                 fluid eos species
+      data specie /
+     *      'H2O ','CO2 ','CO  ','CH4 ','H2  ','H2S ','O2  ',
+     *      'SO2 ','COS ','N2  ','NH3 ','O   ','SiO ','SiO2',
+     *      'Si  ','UNK '/
 
       end
 

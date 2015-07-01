@@ -390,6 +390,138 @@ c                                get the salt content (elag):
 
 99    end 
 
+      subroutine setins (ifug)
+c-----------------------------------------------------------------------
+c set species for internal eos choices and, if appropriate, variable name.
+
+c    ifug - eos pointer
+c    isp  - species counter
+c    ins  - pointer to species
+
+c-----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer ifug, i
+
+      character*8 vname,xname
+      common/ csta2  /xname(k5),vname(l2)
+
+      double precision vmax,vmin,dv
+      common/ cst9  /vmax(l2),vmin(l2),dv(l2)
+
+      character specie*4
+      integer isp, ins
+      common/ cxt33 /isp,ins(nsp),specie(nsp)
+c----------------------------------------------------------------------- 
+      if (ifug.le.6.or.ifug.eq.14.or.ifug.eq.21.or.
+     *    ifug.eq.22.or.ifug.eq.25) then 
+c                                 xco2 EoS's
+            vname(3) = 'X(CO2)  '
+
+            isp = 2
+
+            ins(1) = 1
+            ins(2) = 2
+
+      else if (ifug.gt.6.and.ifug.lt.13.or.ifug.eq.19.or.
+     *         ifug.eq.20.or.ifug.eq.24.or.ifug.eq.27) then
+c                                 standard COHS species  
+         if (ifug.eq.7.or.ifug.eq.8.or.ifug.eq.24) then
+            vname(3) = 'log(fO2)'
+         else 
+            vname(3) = 'X(O)    '
+         end if 
+
+         isp = 5
+
+         do i = 1, 6
+            ins(i) = i
+         end do
+ 
+         if (ifug.eq.19.or.ifug.eq.20) then
+
+            isp = 8
+  
+            ins(7) = 8
+            ins(8) = 9
+  
+         else if (ifug.ge.12.and.ifug.lt.19) then
+
+            isp = 9
+
+            ins(7) = 7
+            ins(8) = 8
+            ins(9) = 9
+
+         else if (ifug.eq.24) then
+
+            isp = 7
+
+            ins(6) = 10
+            ins(7) = 11
+
+         else if (ifug.eq.27) then
+c                                 C-O-H free
+            vname(4) = 'Y(C)    '
+
+            isp = 6
+
+            ins(6) = 7
+
+         end if
+
+      else if (ifug.eq.13.or.ifug.eq.15) then 
+
+         vname(3) = 'X(H2)   '
+
+         isp = 2
+
+         ins(1) = 1
+         ins(2) = 5
+
+      else if (ifug.eq.16) then
+
+         vname(3) = 'X(O)    '
+
+         isp = 3
+
+         ins(1) = 1
+         ins(2) = 5
+         ins(3) = 7
+
+      else if (ifug.eq.17) then
+
+         vname(3) = 'X(O)    '
+
+         isp = 4
+
+         ins(1) = 1
+         ins(2) = 5
+         ins(3) = 6
+         ins(4) = 8
+
+      else if (ifug.eq.26) then
+c                                 silica vapor 
+         vname(3) = 'X(Si)   '
+
+         isp = 5
+
+         ins(1) = 14
+         ins(2) = 13
+         ins(3) = 12
+         ins(4) = 7
+         ins(5) = 15
+
+      else 
+
+         call error (74,1d0,ifug,vname(3))
+
+      end if 
+
+      end 
+
       subroutine cohsgr (fo2,fs2)
 c----------------------------------------------------------------------
 c program to calculate graphite saturated C-H-O-S speciation as 

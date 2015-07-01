@@ -1430,9 +1430,6 @@ c-----------------------------------------------------------------------
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp  
 
-      integer ifp
-      common/ cxt32 /ifp(k1)
-
       integer ixp
       double precision sxs,exces
       common/ cst304 /sxs(k13),exces(m3,k1),ixp(k1)
@@ -1450,8 +1447,6 @@ c----------------------------------------------------------------------
       iwrn48 = 0
       
       do 10 jd = ipoint + 1, iphct
-c                              skip fluid cpds
-         if (ifp(jd).eq.1) iwrn48 = 1
 c                              create mock-entry iphct + 1 for output
 c                              initialize parameters
          id = k10

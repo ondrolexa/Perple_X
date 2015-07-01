@@ -2731,7 +2731,7 @@ c-----------------------------------------------------------------------
 
       integer i, j, k, id
 
-      double precision dg1, gval, dg, gzero, g0(k5), gex, x0, gfesi,
+      double precision dg1, gval, dg, gzero, g0(k5), gex, gfesi,
      *                 gfesic, gfecr1, gerk, x1(5), gproj
 
       external gerk, gzero, gex, gfesi, gfesic, gproj
@@ -2954,22 +2954,6 @@ c                                 H2O-CO2-Salt:
                id = id + 1
 
             end do
-
-         else if (ksmod(i).eq.27) then 
-
-            do j = 1, jend(i,2)
-
-               g(id) = 0d0 
-c                                 ideal gas mix
-               do k = 1, mstot(i)
-                  x0 = sxs(ixp(id)+k)
-                  if (x0.le.0d0) cycle 
-                  g(id) = g(id) + (g(jend(i,2+k)) + r*t*dlog(x0)) * x0 
-               end do
-
-               id = id + 1
-
-            end do  
 
          else if (ksmod(i).eq.29) then 
  

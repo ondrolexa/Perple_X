@@ -354,7 +354,8 @@ c                                 x-coordinates for the assemblage solutions
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 c                                 
       integer ifp
-      common/ cxt32 /ifp(k1)
+      logical fp
+      common/ cxt32 /ifp(k10), fp(h9)
 c                                 composition and model flags
 c                                 for final adaptive solution
       integer kkp, np, ncpd, ntot
@@ -498,7 +499,7 @@ c                                 initialize system props/flags
 
          if (i.le.np) then 
 
-            if (ksmod(ids).eq.0.or.ksmod(ids).gt.20.and.lopt(6)) then 
+            if (fp(ids)) then 
                aflu = .true.
                fluid(i) = .true.
             else 
@@ -523,7 +524,7 @@ c                                 composition of zero phase
 
          else 
 
-            if (ifp(-ids).eq.1) then 
+            if (ifp(-ids).gt.0.or.ifp(-ids).lt.0.and.lopt(6)) then 
                aflu = .true.
                fluid(i) = .true.
             else 
@@ -853,16 +854,6 @@ c                                 andreas salt model
                g = g + y(k) * gcpd (jend(id,2+k),.true.)
             end do 
 
-         else if (ksmod(id).eq.27) then 
-
-            do k = 1, mstot(id)
-
-               if (y(k).eq.0d0) cycle    
-
-               g = g + (gcpd (jend(id,2+k),.true.) 
-     *               + r*t*dlog(y(k)))*y(k) 
-            end do 
-
          else if (ksmod(id).eq.28) then 
 c                                 -------------------------------------
 c                                 high T fo-fa-sio2 model  
@@ -920,6 +911,84 @@ c                                 internal fluid eos
          end if 
 
          gsol = g 
+
+      end if 
+
+      end
+
+      subroutine getspc (id)
+c-----------------------------------------------------------------------
+c getspc loads independent endmember fractions of a solution id into a 
+c single compositional array y(m4). it is used only for output and 
+c must be called after function gsol (id) and routine setspc (id).
+c-----------------------------------------------------------------------
+      implicit none
+ 
+      include 'perplex_parameters.h'
+
+      integer k,id
+
+      double precision yt(m4)  
+c                                 bookkeeping variables
+      integer ksmod, ksite, kmsol, knsp
+      common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
+c                                 model type
+      logical lorder, lexces, llaar, lrecip
+      common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
+
+      integer spct
+      character*8 spnams
+      common/ cxt34 /spct(h9),spnams(m4,h9)
+
+      double precision z, pa, p0a, x, w, y, wl
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
+     *              wl(m17,m18)
+
+      character specie*4
+      integer isp, ins
+      common/ cxt33 /isp,ins(nsp),specie(nsp)
+
+      double precision xs,g,v
+      common/ cstcoh /xs(nsp),g(nsp),v(nsp)
+c----------------------------------------------------------------------
+
+      if (ksmod(id).eq.2.or.ksmod(id).eq.3.or.ksmod(id).eq.24.or.
+     *    ksmod(id).eq.25.or.ksmod(id).eq.26.or.ksmod(id).eq.28) then 
+c                                 macroscopic formulation for normal solutions (2,3) and
+c                                 hp melt model (24)
+c                                 ghiorso melt model (25)
+c                                 andreas salt model (26)
+c                                 high T melt model (28)
+         do k = 1, spct(id) 
+            yt(k) = y(k)
+         end do 
+
+      else if ((lrecip(id).and.lorder(id)).or.lorder(id)) then 
+
+         do k = 1, spct(id) 
+            yt(k) = pa(k)
+         end do 
+
+      else if (lrecip(id)) then 
+
+         do k = 1, spct(id) 
+            yt(k) = p0a(k)
+         end do 
+
+      else if (ksmod(id).eq.29.or.ksmod(id).eq.32) then 
+c                                 BCC Fe-Si Lacaze and Sundman (29) 
+c                                 BCC Fe-Cr Andersson and Sundman (32)
+         spct = 4
+c                                 need to load something
+
+      else if (ksmod(id).eq.40.or.ksmod(id).eq.41.or.ksmod(id).eq.0) 
+     *        then 
+c                                 fluid speciation with known routines:
+c                                 MRK silicate vapor (40) 
+c                                 hybrid MRK ternary COH fluid (41)
+         do k = 1, spct(id) 
+            yt(k) = xs(ins(k))
+         end do          
 
       end if 
 

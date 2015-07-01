@@ -267,7 +267,8 @@ c---------------------------------------------------------------------
       common/ cst303 /eos(k10)
 
       integer ifp
-      common/ cxt32 /ifp(k1)
+      logical fp
+      common/ cxt32 /ifp(k10), fp(h9)
 
       double precision f
       common/ cst11 /f(3)
@@ -1835,7 +1836,8 @@ c---------------------------------------------------------------------
       common/ cst319 /emod(k15,k10),smod(h9),pmod(k10),iemod(k10),kmod
 
       integer ifp
-      common/ cxt32 /ifp(k1)
+      logical fp
+      common/ cxt32 /ifp(k10), fp(h9)
 
       logical gflu,aflu,fluid,shear,lflu,volume,rxn
       common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume,rxn
@@ -1910,9 +1912,6 @@ c                                        = 2, shear and bulk
       lmda(id) = 0
 
       eos(id) = ieos
-c                                 use ieos flag to signal melt endmembers
-c                                 in ifp array, this is only used by gcpd.
-      if (ieos.eq.3.or.ieos.eq.9) ifp(id) = -1
 
       if (lopt(7)) then
 
@@ -1945,17 +1944,19 @@ c                                 in the calculation.
          end do 
           
       end if 
-c                                 identify fluid if no special components
-      if (.not.gflu) then 
-         
-         if (eos(id).eq.101.or.eos(id).eq.102) then 
+c                                 use ieos flag to signal melt endmembers
+c                                 in ifp array, this is only used by gcpd.
+      if (eos(id).eq.3.or.eos(id).eq.9) then
 
-            gflu = .true.
-            ifp(id) = 1
+         ifp(id) = -1
 
-         end if  
+      else if (eos(id).eq.10.or.eos(id).ge.101.and.eos(id).le.116) then 
+ 
+         gflu = .true.
+         ifp(id) = 1
 
       end if 
+
 c                               load stoichiometry of components.
       do i = 1, icomp
          cp(i,id) = comp(ic(i))
@@ -6982,7 +6983,7 @@ c-----------------------------------------------------------------------
 
       integer k,id,ids
 
-      double precision gzero, dg, x0, gerk, x1(5), gph, gproj, gcpd
+      double precision gzero, dg, gerk, x1(5), gph, gproj, gcpd
 
       external gzero, gerk, gproj, gcpd
 
@@ -6993,10 +6994,7 @@ c-----------------------------------------------------------------------
       common/ cst60 /ipoint,kphct,imyn
 
       integer ikp
-      common/ cst61 /ikp(k1)
-
-      integer ifp
-      common/ cxt32 /ifp(k1)
+      common/ cst61 /ikp(k10)
 
       integer ixp
       double precision sxs,exces
@@ -7015,6 +7013,9 @@ c                                 bookkeeping variables
 c                                 model type
       logical lorder, lexces, llaar, lrecip
       common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
+
+      integer ksmod, ksite, kmsol, knsp
+      common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
 c----------------------------------------------------------------------
       ids = ikp(id)
  
@@ -7061,7 +7062,7 @@ c                                 add in entropy effect pseudocompound version
 
       else 
 
-         if (ifp(id).eq.1) then
+         if (ksmod(ids).eq.1) then
 c                              get the excess and/or ideal mixing effect
 c                              and/or dqf corrections:
             call fexces (id,gph)
@@ -7070,7 +7071,7 @@ c                              excess props don't include vdp:
                gph = gph + gzero (jend(ids,2+k)) * sxs(ixp(id)+k)
             end do 
 
-         else if (ifp(id).eq.41) then
+         else if (ksmod(ids).eq.41) then
 c                              ternary coh fluid deltag
             call rkcoh6 (sxs(ixp(id)+2),sxs(ixp(id)+1),gph)
 c                              excess props don't include vdp:
@@ -7078,19 +7079,19 @@ c                              excess props don't include vdp:
                gph = gph + gproj (jend(ids,2+k)) * sxs(ixp(id)+k)
             end do 
 
-         else if (ifp(id).ne.27) then 
+         else 
 c                              get the excess and/or ideal mixing effect
 c                              and/or dqf corrections:
-            if (ifp(id).eq.23) then 
+            if (ksmod(ids).eq.23) then 
 
                call toop(id,gph)
 
-            else if (ifp(id).eq.26) then 
+            else if (ksmod(ids).eq.26) then 
 
                call hcneos (gph,sxs(ixp(id)+1),
      *                      sxs(ixp(id)+2),sxs(ixp(id)+3))
 
-            else if (ifp(id).eq.40) then
+            else if (ksmod(ids).eq.40) then
 
                gph = 0d0 
 
@@ -7110,16 +7111,6 @@ c                                 compute mech mix G for
 c                                 all models except fluid 
             do k = 1, nstot(ids) 
                gph = gph +  gproj (jend(ids,2+k)) * sxs(ixp(id)+k)
-            end do 
-
-         else 
-
-            gph = 0d0
-c                                 ideal gas mix (ifp(id).eq.27)
-            do k = 1, nstot(ids) 
-               x0 = sxs(ixp(id)+k)
-               if (x0.le.0d0) cycle
-               gph = gph +  x0 *(gproj(jend(ids,2+k)) + r*t*dlog(x0))
             end do 
 
          end if 
@@ -7852,14 +7843,6 @@ c                                 andreas salt model
 
             do k = 1, 3
                gg = gg + y(k) * g(jend(id,2+k))
-            end do 
-
-         else if (ksmod(id).eq.27) then 
-c                                 ------------------------------------
-c                                 ideal gas
-            do k = 1, mstot(id)  
-               if (y(k).gt.0d0) 
-     *            gg = gg + y(k) * (g(jend(id,2+k)) + r*t*dlog(y(k)))
             end do 
 
          else if (ksmod(id).eq.28) then 
@@ -8638,7 +8621,8 @@ c                                 model type
      *               jid(j3,j5,j3,h9),jt(j5,j3,h9)
 
       integer ifp
-      common/ cxt32 /ifp(k1)
+      logical fp
+      common/ cxt32 /ifp(k10), fp(h9)
 
       integer grid
       double precision rid 
@@ -8648,6 +8632,20 @@ c                                 model type
       logical cart
       double precision scoors
       common/ cxt86 /scoors(k24),ndim(mdim),mxsp,cart(mst,h9)
+
+      integer spct
+      character*8 spnams
+      common/ cxt34 /spct(h9),spnams(m4,h9)
+
+      character specie*4
+      integer jsp, ins
+      common/ cxt33 /jsp,ins(nsp),specie(nsp)
+
+      integer iff,idss,ifug,ifyn,isyn
+      common/ cst10  /iff(2),idss(h5),ifug,ifyn,isyn
+
+      character mname*8
+      common/ cst18a /mname(m4)
 
       double precision units, r13, r23, r43, r59, r1, r2
       common/ cst59 /units, r13, r23, r43, r59, r1, r2
@@ -8945,7 +8943,7 @@ c                                 term coefficient amd species index:
 c                                 number of distinct identisites for entropy
       msite(im) = nloc
 
-      do i = 1, mstot(im) + nord(im)
+      do i = 1, nstot(im)
 c                                 insp points to the original position 
 c                                 of endmember i in the solution model input:
          knsp(i,im) = insp(i)
@@ -9276,6 +9274,17 @@ c                                 endmember order.
       smod(im) = .true.
       pmod(im) = .true.
       killct = 0 
+c                                 classify model as fluid/not fluid
+      if (((jsmod.eq.24.or.jsmod.eq.25.or.jsmod.eq.28).and.
+     *    lopt(6)).or.jsmod.eq.0.or.jsmod.eq.26.or.jsmod.eq.41) then 
+
+         fp(im) = .true.
+
+      else 
+
+         fp(im) = .false.
+
+      end if 
 
       do i = 1, kstot
 c                                 pointer to endmember
@@ -9301,10 +9310,9 @@ c
             end do 
 
          end do 
-c                                 set ifp for melt endmembers
-         if (ifp(id).le.0.and.(jsmod.eq.24.or.jsmod.eq.25)) then
-            ifp(id) = -jsmod
-         end if 
+c                                 set ifp for models with an 
+c                                 endmember identified as "fluid"
+         if (ifp(id).gt.0) fp(im) = .true.  
 c
          jend(im,2+i) = id
 c                                 set shear/bulk moduli flags
@@ -9384,6 +9392,48 @@ c                                 hard limits are off, set limits to 0/1
             end do 
          end do
       end if   
+c                                 set independent species names and counters for output
+c                                 special cases first:
+      if (ksmod(im).eq.0.or.ksmod(im).eq.40.or.ksmod(im).eq.41) then
+c                                 model uses an internal speciation routine
+         if (ksmod(im).eq.0) then
+c                                 fluid eos specified via ifug 
+            call setins (ifug)
+
+         else if (ksmod(im).eq.40) then 
+c                                 MRK silicate vapor (40), EoS code 26
+            call setins (26)
+
+         else if (ksmod(im).eq.41) then 
+c                                 MRK COH fluid (41), EoS code 27
+            call setins (27)
+
+         end if 
+
+         spct(im) = jsp
+
+         do i = 1, jsp
+            spnams(i,im) = specie(ins(i))
+         end do 
+
+      else 
+
+         spct(im) = nstot(im)
+
+         do i = 1, nstot(im)
+            spnams(i,im) = mname(knsp(i,im))
+         end do 
+
+         if (ksmod(id).eq.29.or.ksmod(id).eq.32) then 
+c                                 BCC Fe-Si Lacaze and Sundman (29) 
+c                                 BCC Fe-Cr Andersson and Sundman (32)
+            spct(im) = 4
+            spnams(3,im) = 'osp'
+            spnams(4,im) = 'asp'
+
+         end if 
+
+      end if 
 
       end 
 
@@ -12357,10 +12407,6 @@ c   ixp(i)        - a pointer that locates the first mole fraction (- 1)
 c                   of the ith pseudocompound, the remaining mole fractions
 c                   follow sequentially (as in jend(i,3-3+j)).
 c   ikp(i)        - the index of the solution corresponding to pseudocompound i.
-c   ifp(i)        - flag, 0  - margules/ideal
-c                         1  - internal eos fluid                         
-c                         3  - van laar
-c                         23 - toop, internal
 c   exces(j,i)    - the excess function of pseudocompound i, accounts for 
 c                   excess properties and configurational entropy as a function
 c                   of pressure and temperature:
@@ -12436,9 +12482,6 @@ c--------------------------------------------------------------------------
       integer ixp
       double precision sxs,exces
       common/ cst304 /sxs(k13),exces(m3,k1),ixp(k1)
-
-      integer ifp
-      common/ cxt32 /ifp(k1)
 
       logical depend,laar,order,fluid,macro,specil,recip
       common/ cst160 /depend,laar,order,fluid,macro,specil,recip
@@ -12595,34 +12638,12 @@ c                                 the composition is acceptable.
 
       ikp(iphct) = isoct
       ixp(iphct) = ixct
+
       icky = 0 
 
       do i = 1, m3
          exces(i,iphct) = 0d0
       end do
-c                               classify model:
-      if (jsmod.eq.0) then
-c                               fluid uses internal eos
-         ifp(iphct) = 1
-c                               don't allow gonzoids to treat fluid
-c                               as a solution if the user has also 
-c                               specified fluid saturation
-         if (ifyn.eq.0) call error (43,r,i,tname)  
-      else if ((jsmod.eq.2.or.jsmod.eq.7.or.jsmod.eq.24
-     *          .or.jsmod.eq.25.or.jsmod.eq.5).and.(.not.laar)) then
-c                               no special treatment in computational
-c                               routines.
-         ifp(iphct) = 0 
-c                               other special cases (internal solution
-c                               models)
-      else if (jsmod.ge.2) then
-c                               Toop, internal EoS
-c                               Van Laar ala HP.
-         ifp(iphct) = jsmod    
-      else 
-c                               Ideal or Margules.
-         ifp(iphct) = 0
-      end if 
 c                                encode a name
       if (istg(im).eq.2.and.mstot(im).eq.4) then
 c                                special case 1, bin-bin reciprocal solution

@@ -2,7 +2,7 @@
  | comments are indicated by the | character.
  | check for warnings at the end of the header section.
 
-Holland & Powell '02 + PGP Cr    => data base name                               |<= data base title
+Holland & Powell '02 + Klemme et al '09 + Ziberna et al '13    => data base name                               |<= data base title
 
 begin_standard_variables |<= name (<9 characters), reference value, tolerance
 P(bar)      1.00   0.1E-3
@@ -247,12 +247,14 @@ fcrm_i = 1 herc + 1 mcrm - 1 sp  | dependent emdmember from the CrSp solution mo
 0. 0. 0.
                  
 end_makes
+
+data modified as described in ziberna et al (2013, CMP)
                                                                                                                                             
 This version of hp02ver.dat contains Cr endmembers created and/or added                                                                     
 for the calculation of upper mantle phase relations at the PGP workshop                                                                     
-April 10-12, 2006; see folk.uio.no/ninasim/Cr_results.html. To avoid                                                                        
-reformatting the data file ZrO2 was replaced Cr2O3, necessitating the                                                                       
-elimination of bdy (baddelyite) and zrn (zircon).                                                                                           
+April 10-12, 2006; see folk.uio.no/ninasim/Cr_results.html or Klemme et al 
+(2009, lithos). To avoid reformatting the data file ZrO2 was replaced Cr2O3, 
+necessitating the elimination of bdy (baddelyite) and zrn (zircon).                                                                                           
                                                            JADC Apr 24, 2006.                                                               
                                                                                                                                             
 The Holland & Powell data base reproduced here has been augmented by shear                                                                  
@@ -2141,18 +2143,18 @@ m0 = .1E-15
 end
 
  
-crts     EoS = 2 | original -2474378.  mg-ts volume                                               
+crts     EoS = 2 | opx                                               
 MGO(1)SIO2(1)CR2O3(1)
-G0 = -2494378 S0 = 169.3 V0 = 6.2  
+G0 = -2352378.  S0 = 305 V0 = 5.79  
 c1 = 220 c2 = .47E-2 c3 = -3780000 c5 = -1016 c7 = 344000000  
 b1 = .508E-4 b5 = -.508E-3 b6 = 1143999. b7 = -171.6 b8 = 4  
 m0 = .1E-15  
 end
 
  
-ccrts    EoS = 2 | was originally -2591446.                                                       
-SIO2(1)CAO(1)CR2O3(1)
-G0 = -2611446 S0 = 176.3 V0 = 6.656  
+ccrts    EoS = 2 | cpx                                                      
+SIO2(1)MGO(1)CR2O3(1)
+G0 = -2479446. S0 = 305 V0 = 6.65  
 c1 = 196.2 c2 = .1808E-2 c3 = -5163200 c5 = -226.4 c7 = 344000000  
 b1 = .4459297E-4 b5 = -.4459297E-3 b6 = 1143999. b7 = -171.6 b8 = 4  
 m0 = .1E-15  

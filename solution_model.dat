@@ -23,7 +23,6 @@
                              24    - Holland & Powell Haplogranite melt model 
                              25    - Ghirso pMELTS/MELTS model
                              26    - Haefner H2O-CO2-NaCl
-                             27    - Silicate vapor (ideal)
                              28    - High T silicate melt
                              29    - BCC Fe-Si alloy, Lacaze & Sundman 1990.
                              30-33 - FeSiC alloys (BCC/FCC/CBCC/HCP), Lacaze & Sundman 1990.
@@ -694,6 +693,7 @@ fuv_d = 1 alm +  1 knor  - 1 py
 
 begin_excess_function 
 w(py gr) 33d3 0. 0.
+w(py knor) 30d3 0 0 
  | w(py py gr) 59304. -10.5  .036   Ganguly excess paramters
  | w(py gr gr) 25860. -10.5  .174  
 end_excess_function 
@@ -766,6 +766,7 @@ fuv_d = 1 alm + 1 knor  - 1 py
 
                             
 begin_excess_function
+w(py knor) 30000. 0. 0.
 w(alm gr) 15000. 0. 0.
 w(py gr) 80000. 0. 0.             | HP (33000. 0. 0.)   
 w(alm py) 2500.  0. 0.            | HP       
@@ -9621,7 +9622,7 @@ ideal_gas
 abbreviation gas
 full_name    gas
                                     
-27                                     model type: 
+2                                     model type: 
 
 6                                     number of species
                                  
@@ -9643,6 +9644,13 @@ MgO(g)
 
 ideal
 
-  0                                 | molecular configurational entropy model 
+  1                                 | molecular configurational entropy model 
+6 1.                                | 6 species, multiplicity 1
+
+z(O2)  = 1 O2(g)  
+z(O)   = 1 O(g)                              
+z(Mg)  = 1 Mg(g)
+z(Fe)  = 1 Fe(g)
+z(FeO) = 1 FeO(g)
 
 end_of_model

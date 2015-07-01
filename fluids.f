@@ -165,7 +165,7 @@ c----------------------------------------------------------------------
 
 c NOTES ON THIS SOURCE AND COMPILING:
 
-c The MAIN program COHSRK and a BLOCK DATA are included in this file,
+c The MAIN program COHSRK is included in this file,
 c all the subroutines called by COHSRK are in the file flib.f.
 c The files may be compiled separately and the objects linked together,
 c or you may concatenate the two files. 
@@ -289,9 +289,9 @@ c-----------------------------------------------------------------------
 
       logical log, bad
 
-      character specie(nsp)*4, y*1, n4name*100, title*100, tags(28)*14
+      character y*1, n4name*100, title*100, tags(28)*14
 
-      integer ier, igo, ins(nsp), i, isp, j, k, l, kmax, count, nel
+      integer ier, igo, i, isp, j, k, l, kmax, count, nel
 
       double precision nc, nh, no, ns, nn, nsi, tentoe, fo2, fs2, fh2,
      *                 ag, tot, totx, var(l2), f, prop(40), vdif,
@@ -321,6 +321,10 @@ c-----------------------------------------------------------------------
       double precision xs,g,v
       common/ cstcoh /xs(nsp),g(nsp),v(nsp)
 
+      character specie*4
+      integer ins
+      common/ cxt33 /ins(nsp),specie(nsp)
+
       double precision vol
       common/ cst26 /vol
 
@@ -338,13 +342,6 @@ c-----------------------------------------------------------------------
       logical lopt
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
-      save ins
-
-      data tentoe, fo2, fs2, specie /2.302585093d0, 0d0, 0d0,
-     *      'H2O ','CO2 ','CO  ','CH4 ','H2  ','H2S ','O2  ',
-     *      'SO2 ','COS ','N2  ','NH3 ','O   ','SiO ','SiO2',
-     *      'Si  ','UNK '/
 c----------------------------------------------------------------------- 
 c                                 iam is a flag indicating the Perple_X program
       iam = 11
@@ -368,99 +365,16 @@ c                                 configure EoS
          igo = 0
          fs2 = -9999d0*tentoe/2d0
          elag = 0d0
-
-         vname(3) = 'X(CO2)  '
 c                                 get the users choice of EoS:   
          call rfluid (1, ifug)
-c          ifug = 27
 c                                 for multispecies fluids set
-c                                 up species indices:
-         if (ifug.gt.6.and.ifug.lt.13.or.ifug.eq.19.or.ifug.eq.20.or.
-     *       ifug.eq.24.or.ifug.eq.27) then
-
-            if (ifug.eq.7.or.ifug.eq.8.or.ifug.eq.24) then
-               vname(3) = 'log(fO2)'
-            else 
-               vname(3) = 'X(O)    '
-            end if 
-
-            isp = 5
-
-            do i = 1, 6
-               ins(i) = i
-            end do
- 
-            if (ifug.eq.19.or.ifug.eq.20) then
-               isp = 8
-               ins(7) = 8
-               ins(8) = 9
-            else if (ifug.ge.12.and.ifug.lt.19) then
-               isp = 9
-               ins(7) = 7
-               ins(8) = 8
-               ins(9) = 9
-            else if (ifug.eq.24) then
-               isp = 7
-               ins(6) = 10
-               ins(7) = 11
-
-            else if (ifug.eq.27) then
-c                                 C-O-H free
-               vname(4) = 'Y(C)    '
-               isp = 6
-               ins(6) = 7
-            end if
-
-         else if (ifug.eq.16) then
-            vname(3) = 'X(O)    '
-            isp = 3
-            ins(1) = 1
-            ins(2) = 5
-            ins(3) = 7
-         else if (ifug.eq.17) then
-            vname(3) = 'X(O)    '
-            isp = 4
-            ins(1) = 1
-            ins(2) = 5
-            ins(3) = 6
-            ins(4) = 8
-         else if (ifug.eq.13.or.ifug.eq.15) then 
-
-            vname(3) = 'X(H2)   '
-            isp = 2
-            ins(1) = 1
-            ins(2) = 5
-
-         else if (ifug.le.6.or.ifug.eq.14.or.
-     *            ifug.eq.21.or.ifug.eq.22.or.ifug.eq.25) then 
-c                                 xco2 EoS's
-            vname(3) = 'X(CO2)  '
-            isp = 2
-            ins(1) = 1
-            ins(2) = 2
-
-         else if (ifug.eq.26) then
-c                                 silica vapor 
-            vname(3) = 'X(Si)   '
-            isp = 5
-            ins(1) = 14
-            ins(2) = 13
-            ins(3) = 12
-            ins(4) = 7
-            ins(5) = 15
-
-         else 
-
-             ipot = 4
-             write (*,'(/a,i2)') 
-     *             '**error** not initialized for ifug = ',
-     *             ifug
-
-         end if 
+c                                 up species indices and name
+c                                 of independent variable
+         call setins (ifug)
 
          write (*,'(/,a)') 'Tabulate properties (y/n)?'
          read (*,'(a)') y
-c         y = 'n'
+
          if (y.eq.'y'.or.y.eq.'Y') then 
 c                                 tabulated properties
             if (ifug.eq.4.or.ifug.eq.9.or.ifug.eq.23) then
