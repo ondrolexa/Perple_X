@@ -10,9 +10,9 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
  
-      character cprop*18
+      character cprop*18, text*240
 
-      integer i,j,l,lu
+      integer i,j,l,lu,id
 
       double precision poiss
 
@@ -78,6 +78,15 @@ c----------------------------------------------------------------------
       character pname*14
       common/ cxt21a /pname(k5)
 
+      integer spct
+      double precision ysp
+      character*8 spnams
+      common/ cxt34 /ysp(m4,k5),spct(h9),spnams(m4,h9)
+
+      integer length,iblank,icom
+      character chars*1
+      common/ cst51 /length,iblank,icom,chars(240)
+
       integer iam
       common/ cst4 /iam
 c---------------------------------------------------------------------- 
@@ -132,6 +141,26 @@ c                                 molar or weight composition
          end if 
 
       end do 
+
+      if (lopt(21).and.np.gt.0) then 
+c                                 species_ouput
+         write (lu,'(/,a,/)') 'Phase speciation (molar proportions):'
+
+         do i = 1, np 
+
+            id = kkp(i) 
+
+            write (text,'(20(a,a,f7.5,a))')
+     *            (spnams(j,id),': ',ysp(j,i),', ', j =1,spct(id))
+
+            call deblnk (text)
+
+            write (lu,'(1x,a,4x,240a)') pname(i), 
+     *                                 (chars(j), j = 1, length)
+
+         end do 
+
+      end if 
 
       write (lu,1160)
 c                                 phase/system summary, normal thermo:
@@ -819,9 +848,6 @@ c                                 get the dqf
 c                                 and excess contributions
             g = g - t * omega (id,p0a) + gex (id,p0a)
 
-         else if (ksmod(id).eq.23) then 
-
-             write (*,*) 'toop samis model not coded'
 
          else if (ksmod(id).eq.24) then 
 c                                 -------------------------------------
@@ -881,7 +907,7 @@ c                                 BCC Fe-Cr Andersson and Sundman
 c                                 hybrid MRK ternary COH fluid
             call rkcoh6 (y(2),y(1),g) 
 
-            do k = 1, 3 
+            do k = 1, nstot(id) 
                g = g + gcpd(jend(id,2+k),.true.) * y(k)
             end do 
 
@@ -916,19 +942,18 @@ c                                 internal fluid eos
 
       end
 
-      subroutine getspc (id)
+      subroutine getspc (id,jd)
 c-----------------------------------------------------------------------
 c getspc loads independent endmember fractions of a solution id into a 
 c single compositional array y(m4). it is used only for output and 
 c must be called after function gsol (id) and routine setspc (id).
+c jd is the local phase counter from the calling routine. 
 c-----------------------------------------------------------------------
       implicit none
  
       include 'perplex_parameters.h'
 
-      integer k,id
-
-      double precision yt(m4)  
+      integer k, id, jd
 c                                 bookkeeping variables
       integer ksmod, ksite, kmsol, knsp
       common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
@@ -937,8 +962,9 @@ c                                 model type
       common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
 
       integer spct
+      double precision ysp
       character*8 spnams
-      common/ cxt34 /spct(h9),spnams(m4,h9)
+      common/ cxt34 /ysp(m4,k5),spct(h9),spnams(m4,h9)
 
       double precision z, pa, p0a, x, w, y, wl
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
@@ -960,26 +986,29 @@ c                                 ghiorso melt model (25)
 c                                 andreas salt model (26)
 c                                 high T melt model (28)
          do k = 1, spct(id) 
-            yt(k) = y(k)
+            ysp(k,jd) = y(k)
          end do 
 
       else if ((lrecip(id).and.lorder(id)).or.lorder(id)) then 
 
          do k = 1, spct(id) 
-            yt(k) = pa(k)
+            ysp(k,jd) = pa(k)
          end do 
 
       else if (lrecip(id)) then 
 
          do k = 1, spct(id) 
-            yt(k) = p0a(k)
+            ysp(k,jd) = p0a(k)
          end do 
 
       else if (ksmod(id).eq.29.or.ksmod(id).eq.32) then 
 c                                 BCC Fe-Si Lacaze and Sundman (29) 
 c                                 BCC Fe-Cr Andersson and Sundman (32)
-         spct = 4
-c                                 need to load something
+         spct(id) = 4
+c                                 need to correct routines to give o/d
+         do k = 1, spct(id) 
+            ysp(k,jd) = 0d0
+         end do 
 
       else if (ksmod(id).eq.40.or.ksmod(id).eq.41.or.ksmod(id).eq.0) 
      *        then 
@@ -987,7 +1016,7 @@ c                                 fluid speciation with known routines:
 c                                 MRK silicate vapor (40) 
 c                                 hybrid MRK ternary COH fluid (41)
          do k = 1, spct(id) 
-            yt(k) = xs(ins(k))
+            ysp(k,jd) = xs(ins(k))
          end do          
 
       end if 
@@ -1499,10 +1528,6 @@ c----------------------------------------------------------------------
       logical sroot
       common/ rkroot /vrt,irt,sroot
 
-      integer idspec
-      double precision spec
-      common/ tspec /spec(nsp,k5),idspec
-
       double precision y,g,vsp
       common / cstcoh /y(nsp),g(nsp),vsp(nsp)
 
@@ -1514,10 +1539,6 @@ c----------------------------------------------------------------------
       double precision vp,vvp
       integer rooti
       common/ srkdiv /vp(3),vvp(3),rooti(3)
-
-      integer ins(5)
-      save ins 
-      data ins/14, 13, 12, 7, 15/
 
       save dt
       data dt /.5d0/
@@ -1597,12 +1618,8 @@ c                                 explicit bulk modulus is allowed and used
       end if   
             
       g0 = ginc(0d0,0d0,id)
-c                                 speciation trick
-      if (lopt(29)) then 
-         do j = 1, 5
-            spec(j,jd) = y(ins(j))
-         end do 
-      end if 
+c                                 get speciation 
+      if (id.gt.0) call getspc (id,jd)
 c                                 set flag for multiple root eos's
       sroot = .true.
 c                                 save derivative for cp search

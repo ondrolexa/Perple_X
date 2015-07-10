@@ -521,7 +521,7 @@ c----------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      character*5 y*1, units*15, text*195
+      character*5 y*1, units*13, text*195, what*9, sym*1
 
       integer jcomp, ier, i, ids
 
@@ -536,20 +536,52 @@ c----------------------------------------------------------------
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
+      character fname*10, aname*6, lname*22
+      common/ csta7 /fname(h9),aname(h9),lname(h9)
+
       integer icps, jcx, jcx1, kds
-      logical stol, savg
+      logical stol, savg, spec
       double precision rcps, a0
       common/ comps /rcps(k7,2*k5),a0(k7,2),icps(k7,2*k5),jcx(2*k5),
-     *               jcx1(2*k5),kds(2*k5),stol(i11),savg(i11)
+     *               jcx1(2*k5),kds(2*k5),stol(i11),savg(i11),spec(2*k5)
+
+      integer spct
+      double precision ysp
+      character*8 spnams
+      common/ cxt34 /ysp(m4,k5),spct(h9),spnams(m4,h9)
 c----------------------------------------------------------------------
-c                                choose units for composition
-      if (iopt(2).eq.0) then
-         units = 'mole proportion'
+c                                choose components vs species
+      write (*,1000) fname(ids)
+      read (*,'(a)') y
+
+      if (y.eq.'y'.or.y.eq.'Y') then 
+         spec(jcomp) = .true.
+         what = ' species'
+      else
+         spec(jcomp) = .false.
+         what = 'component'
+      end if 
+c                                set units for composition
+      if (spec(jcomp)) then
+         units = 'mole fraction'
+         sym = 'y'
+      else if (iopt(2).eq.0) then
+         units = 'molar amount '
+         sym = 'n'
       else 
-         units = 'weight fraction'
+         units = ' mass amount '
+         sym = 'm'
       end if 
 c                                get the composition to be contoured
-10    write (*,1100) units
+10    if (lopt(22)) then
+c                                with moronic constant 
+         write (*,1100) sym, sym, units, what, what
+      else 
+         write (*,1110) sym, sym, units, what, what
+c                                zero the constant
+         a0(jcomp,1) = 0d0
+         a0(jcomp,2) = a0(jcomp,1)
+      end if 
   
       do 
 
@@ -567,8 +599,14 @@ c                                get the composition to be contoured
 c                                define the numerator
       do 
 
-         write (*,1040) 'numerator'
-         write (*,1010) (i,cname(i),i = 1, icomp)
+         write (*,1040) what,'numerator'
+
+         if (spec(jcomp)) then
+            write (*,1010) (i,spnams(i,ids), i = 1, spct(ids))
+         else 
+            write (*,1010) (i,cname(i), i = 1, icomp)
+         end if 
+
          read (*,*,iostat=ier) (icps(i,jcomp),rcps(i,jcomp), 
      *                                     i = 1, jcx(jcomp))
          do i = 1, jcx(jcomp)
@@ -587,9 +625,10 @@ c                                define the numerator
 
       end do  
 
-      write (*,1050) 'a1'
-
-      call rdnumb (a0(jcomp,1),0d0,i,0,.true.)
+      if (lopt(22)) then 
+         write (*,1050) 'a1'
+         call rdnumb (a0(jcomp,1),0d0,i,0,.true.)
+      end if 
 c                                define the denominator
       do 
 
@@ -612,8 +651,14 @@ c                                define the denominator
 
          do 
 
-            write (*,1040) 'denominator'
-            write (*,1010) (i,cname(i),i = 1, icomp)
+            write (*,1040) what,'denominator'
+
+            if (spec(jcomp)) then
+               write (*,1010) (i,spnams(i,ids), i = 1, spct(ids))
+            else 
+               write (*,1010) (i,cname(i), i = 1, icomp)
+            end if 
+
             read (*,*,iostat=ier) (icps(i,jcomp),rcps(i,jcomp), 
      *                                 i = jcx(jcomp)+1, jcx1(jcomp))
 
@@ -629,22 +674,67 @@ c                                define the denominator
                cycle 
             end if 
 
-           write (*,1050) 'a2'
+            if (lopt(22)) then 
 
-           call rdnumb (a0(jcomp,2),0d0,i,0,.true.)
-
+               write (*,1050) 'a2'
+               call rdnumb (a0(jcomp,2),0d0,i,0,.true.)
 c                                show the user the composition: 
-            write (*,1070)           
-            write (text,1130) a0(jcomp,1),
-     *                        (rcps(i,jcomp),cname(icps(i,jcomp)), 
-     *                                         i = 1, jcx(jcomp))
+               write (*,1070)   
+
+               if (spec(jcomp)) then
+                  write (text,1120) a0(jcomp,1),(rcps(i,jcomp),
+     *                               spnams(icps(i,jcomp),ids),
+     *                               i = 1, jcx(jcomp))
+               else           
+                  write (text,1130) a0(jcomp,1),
+     *                         (rcps(i,jcomp),cname(icps(i,jcomp)), 
+     *                                          i = 1, jcx(jcomp))
+               end if 
+
+            else 
+
+               write (*,1070)  
+
+               if (spec(jcomp)) then
+                  write (text,1120) (rcps(i,jcomp),
+     *                               spnams(icps(i,jcomp),ids),
+     *                               i = 1, jcx(jcomp))
+               else          
+                  write (text,1120) (rcps(i,jcomp),cname(icps(i,jcomp)),
+     *                                            i = 1, jcx(jcomp))
+               end if 
+
+            end if  
+
             call deblnk (text)
-            write (*,1150) text 
+            write (*,1150) text    
             write (*,*) '   divided by '
 
-            write (text,1130) a0(jcomp,2),
+            if (lopt(22)) then 
+
+               if (spec(jcomp)) then
+                  write (text,1130) a0(jcomp,1),(rcps(i,jcomp),
+     *                               spnams(icps(i,jcomp),ids),
+     *                               i = jcx(jcomp)+1, jcx1(jcomp))
+               else  
+                  write (text,1130) a0(jcomp,2),
      *                        (rcps(i,jcomp),cname(icps(i,jcomp)), 
-     *                                 i = jcx(jcomp)+1, jcx1(jcomp))
+     *                               i = jcx(jcomp)+1, jcx1(jcomp))
+               end if 
+
+            else
+
+               if (spec(jcomp)) then
+                  write (text,1120) (rcps(i,jcomp),
+     *                               spnams(icps(i,jcomp),ids),
+     *                               i = jcx(jcomp)+1, jcx1(jcomp))
+               else  
+                  write (text,1120) (rcps(i,jcomp),cname(icps(i,jcomp)),
+     *                               i = jcx(jcomp)+1, jcx1(jcomp))
+               end if 
+
+            end if 
+
             call deblnk (text)
             write (*,1150) text 
 
@@ -654,9 +744,31 @@ c                                show the user the composition:
 
       else 
 
-         write (text,1130)  a0(jcomp,1),
-     *                      (rcps(i,jcomp),cname(icps(i,jcomp)), 
-     *                                    i = 1, jcx(jcomp))
+         if (lopt(22)) then 
+
+            if (spec(jcomp)) then
+               write (text,1130) a0(jcomp,1),(rcps(i,jcomp),
+     *                           spnams(icps(i,jcomp),ids),
+     *                           i = 1, jcx(jcomp))
+            else  
+               write (text,1130) a0(jcomp,1),
+     *                           (rcps(i,jcomp),cname(icps(i,jcomp)), 
+     *                           i = 1, jcx(jcomp))
+            end if 
+
+         else
+
+            if (spec(jcomp)) then
+               write (text,1120) (rcps(i,jcomp),
+     *                           spnams(icps(i,jcomp),ids),
+     *                           i = 1, jcx(jcomp))
+            else  
+               write (text,1120) (rcps(i,jcomp),cname(icps(i,jcomp)), 
+     *                                       i = 1, jcx(jcomp))
+            end if 
+
+         end if  
+
          call deblnk (text)
          write (*,1080) text 
 
@@ -668,11 +780,16 @@ c                                show the user the composition:
 
       kds(jcomp) = ids
 
+1000  format (/,'Define the composition in terms of the species/endmem',
+     *          'bers of ',a,/,'(y/n)?',/,'Answer no to define a ',
+     *          'composition in terms of the systems components.',/,
+     *          'Units (mass or molar) are controlled by the ',
+     *          'composition keyword in',/,'perplex_option.dat.')
 1010  format (2x,i2,' - ',a)
 1020  format (/,'Invalid input, try again:',/)
 1030  format (/,'How many components in the ',a,' of the',
      *          ' composition (<',i2,')?')
-1040  format (/,'Enter component indices and weighting factors for the '
+1040  format (/,'Enter ',a,' indices and weighting factors for the '
      *        ,a,':')
 1050  format (/,'Enter the optional constant ',a,' [defaults to 0]:')
 1070  format (/,'The compositional variable is:')
@@ -680,10 +797,16 @@ c                                show the user the composition:
 1090  format ('Change it (y/n)?')
 1100  format (/,'Compositions are defined as a ratio of the form:',/,
      *        4x,'[a1 + Sum {w(i)*n(i), i = 1, c1}] / [a2 + Sum {w(i)*',
-     *        'n(i), i = c2, c3}]',/,15x,
-     *        'n(j)   = ',a,' of component j',/,15x,
-     *        'w(j)   = weighting factor of component j (usually 1)',/,
+     *        a,'(i), i = c2, c3}]',/,15x,
+     *        a,'(j)   = ',a,' of ',a,' j',/,15x,
+     *        'w(j)   = weighting factor of ',a,' j (usually 1)',/,
      *    15x,'a1, a2 = optional constants (usually 0)')
+1110  format (/,'Compositions are defined as a ratio of the form:',/,
+     *        4x,' Sum {w(i)*n(i), i = 1, c1} / Sum {w(i)*',
+     *        a,'(i), i = c2, c3}',/,15x,
+     *        a,'(j)   = ',a,' of ',a,' j',/,15x,
+     *        'w(j)   = weighting factor of ',a,' j (usually 1)')
+1120  format (15('+',1x,f4.1,1x,a5,1x))
 1130  format (f4.1,1x,15('+',1x,f4.1,1x,a5,1x))
 1140  format ('Enter zero to use the numerator as a composition.')
 1150  format (/,a,/)  

@@ -176,10 +176,6 @@ c                                 transitions
       ndu = 0d0 
 
       if (lct(id).ne.0) call mtrans (g,vdp,ndu,id)
-c                                special correction for O gas
-c     if (eos(id).eq.605) g = g + 
-c                                 this is -RT(lnk2+lnk3)/2 (rksi5 k's)
-c    *         -0.3213822427D7 / t + 0.6464888248D6 - 0.1403012026D3*t
 
       gzero = g
 
@@ -6976,6 +6972,10 @@ c-----------------------------------------------------------------------
 c gphase computes the gibbs free energy of a compound identified by index id.
 c gphase does not assume that the properties of a pseudocompound endmembers
 c are known (unlike gall) it is thus less efficient than gall.
+
+c used only (i think) for mixed variable and schreinemaker's projections.
+c alloy solution models are commented out. these must be reinstated for the 
+c aforementioned diagram types. 
 c-----------------------------------------------------------------------
       implicit none
  
@@ -6983,9 +6983,10 @@ c-----------------------------------------------------------------------
 
       integer k,id,ids
 
-      double precision gzero, dg, gerk, x1(5), gph, gproj, gcpd
+      double precision gzero, dg, gerk, x1(5), gph, gproj, gcpd, gfesi,
+     *                 gfecr1, gfesic
 
-      external gzero, gerk, gproj, gcpd
+      external gzero, gerk, gproj, gcpd, gfesi, gfecr1, gfesic
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -7022,6 +7023,16 @@ c----------------------------------------------------------------------
       if (id.le.ipoint) then
 c                                 phase is an endmember compound
          gph = gcpd (id,.true.)
+
+c      else if (ksmod(ids).ge.30.and.ksmod(ids).le.31) then 
+c                                 -------------------------------------
+c                                 Nastia's version of BCC/FCC Fe-Si-C Lacaze and Sundman
+c                                 this model has to be called ahead of the standard models
+c                                 because it sets lrecip(id) = true.
+c          gph =  gfesic (sxs(ixp(id)+1),sxs(ixp(id)+3),sxs(ixp(id)+4),
+c     *                   gproj (jend(ids,3)), gproj (jend(ids,4)),
+c     *                   gproj (jend(ids,5)), gproj (jend(ids,6)),
+c     *                   ksmod(ids))
 
       else if (lorder(ids).and.lrecip(ids)) then 
 c                                 reciprocal solution speciation model 
@@ -7060,61 +7071,62 @@ c                                 get the speciation energy effect
 c                                 add in entropy effect pseudocompound version
          gph = gph + dg
 
+      else if (ksmod(ids).eq.0) then
+c                              get the excess and/or ideal mixing effect
+c                              and/or dqf corrections:
+         call fexces (id,gph)
+c                              excess props don't include vdp:
+         do k = 1, nstot(ids) 
+            gph = gph + gzero (jend(ids,2+k)) * sxs(ixp(id)+k)
+         end do 
+
+c      else if (ksmod(ids).eq.29) then 
+c                                 -------------------------------------
+c                                 BCC Fe-Si Lacaze and Sundman
+c         gph = gfesi(sxs(ixp(id)+1), gproj (jend(ids,3)), 
+c     *                               gproj (jend(ids,4)) )
+
+c      else if (ksmod(ids).eq.32) then 
+c                                 -------------------------------------
+c                                 BCC Fe-Cr Andersson and Sundman
+c         gph = gfecr1(sxs(ixp(id)+1), gproj (jend(ids,3)), 
+c     *                                gproj (jend(ids,4)) )
+
+      else if (ksmod(ids).eq.40) then
+c                                 si-o mrk fluid
+         gph = 0d0 
+
+         do k = 1, nstot(ids)
+            x1(k) = sxs(ixp(id)+k)
+            gph = gph + gzero(jend(ids,2+k)) * x1(k)
+         end do 
+
+         gph = gph + gerk (x1)
+
       else 
-
-         if (ksmod(ids).eq.1) then
-c                              get the excess and/or ideal mixing effect
-c                              and/or dqf corrections:
-            call fexces (id,gph)
-c                              excess props don't include vdp:
-            do k = 1, nstot(ids) 
-               gph = gph + gzero (jend(ids,2+k)) * sxs(ixp(id)+k)
-            end do 
-
-         else if (ksmod(ids).eq.41) then
-c                              ternary coh fluid deltag
+c                                 normal models (configurational 
+c                                 entropy fixed, excess function
+c                                 linear in p-t) and special models 
+c                                 with normal gmech term
+         if (ksmod(ids).eq.41) then
+c                                 ternary coh fluid deltag
             call rkcoh6 (sxs(ixp(id)+2),sxs(ixp(id)+1),gph)
-c                              excess props don't include vdp:
-            do k = 1, nstot(ids) 
-               gph = gph + gproj (jend(ids,2+k)) * sxs(ixp(id)+k)
-            end do 
 
+         else if (ksmod(ids).eq.26) then 
+
+            call hcneos (gph,sxs(ixp(id)+1),
+     *                       sxs(ixp(id)+2),sxs(ixp(id)+3))
          else 
-c                              get the excess and/or ideal mixing effect
-c                              and/or dqf corrections:
-            if (ksmod(ids).eq.23) then 
-
-               call toop(id,gph)
-
-            else if (ksmod(ids).eq.26) then 
-
-               call hcneos (gph,sxs(ixp(id)+1),
-     *                      sxs(ixp(id)+2),sxs(ixp(id)+3))
-
-            else if (ksmod(ids).eq.40) then
-
-               gph = 0d0 
-
-               do k = 1, 5
-                  x1(k) = sxs(ixp(id)+k)
-                  gph = gph + gzero(jend(ids,2+k)) * x1(k)
-               end do 
-
-               gph = gph + gerk (x1)
-
-            else
-
-               call gexces (id,gph)
-
-            end if 
-c                                 compute mech mix G for 
-c                                 all models except fluid 
-            do k = 1, nstot(ids) 
-               gph = gph +  gproj (jend(ids,2+k)) * sxs(ixp(id)+k)
-            end do 
+c                                 get the excess and/or ideal mixing effect
+c                                 and/or dqf corrections:
+            call gexces (id,gph)
 
          end if 
-c                              for van laar get fancier excess function         
+c                                 add gmech
+         do k = 1, nstot(ids) 
+            gph = gph +  gproj (jend(ids,2+k)) * sxs(ixp(id)+k)
+         end do 
+c                                 for van laar get fancier excess function         
          if (llaar(ids)) then
 
             call setw(ids) 
@@ -8634,8 +8646,9 @@ c                                 model type
       common/ cxt86 /scoors(k24),ndim(mdim),mxsp,cart(mst,h9)
 
       integer spct
+      double precision ysp
       character*8 spnams
-      common/ cxt34 /spct(h9),spnams(m4,h9)
+      common/ cxt34 /ysp(m4,k5),spct(h9),spnams(m4,h9)
 
       character specie*4
       integer jsp, ins
@@ -8943,7 +8956,7 @@ c                                 term coefficient amd species index:
 c                                 number of distinct identisites for entropy
       msite(im) = nloc
 
-      do i = 1, nstot(im)
+      do i = 1, mstot(im)
 c                                 insp points to the original position 
 c                                 of endmember i in the solution model input:
          knsp(i,im) = insp(i)
@@ -9418,13 +9431,17 @@ c                                 MRK COH fluid (41), EoS code 27
 
       else 
 
-         spct(im) = nstot(im)
-
-         do i = 1, nstot(im)
-            spnams(i,im) = mname(knsp(i,im))
+         spct(im) = lstot(im) + nord(im) 
+c                                 independent disordered species
+         do i = 1, lstot(im)
+            spnams(i,im) = mname(iorig(knsp(i,im)))
+         end do 
+c                                 ordered species
+         do i = lstot(im) + ndep(im) + 1, nstot(im)
+            spnams(i,im) = mname(iorig(i))
          end do 
 
-         if (ksmod(id).eq.29.or.ksmod(id).eq.32) then 
+         if (ksmod(im).eq.29.or.ksmod(im).eq.32) then 
 c                                 BCC Fe-Si Lacaze and Sundman (29) 
 c                                 BCC Fe-Cr Andersson and Sundman (32)
             spct(im) = 4
@@ -12574,7 +12591,7 @@ c                                 ternary coh fluids above the CH4-CO join
       if (ksmod(im).eq.41.and.y(1).ge.1d0/3d0+y(2)) return
 c                                 move site fractions into array indexed 
 c                                 only by independent disordered endmembers:
-      do i = 1, mstot(im)
+      do i = 1, lstot(im)
          pa(i) = y(knsp(i,im))
       end do
 

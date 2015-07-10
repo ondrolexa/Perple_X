@@ -44,10 +44,10 @@ c----------------------------------------------------------------------
       common/ cst226 /ncol,nrow,fileio
 
       integer icps, jcx, jcx1, kds
-      logical stol, savg
+      logical stol, savg, spec
       double precision rcps, a0
       common/ comps /rcps(k7,2*k5),a0(k7,2),icps(k7,2*k5),jcx(2*k5),
-     *               jcx1(2*k5),kds(2*k5),stol(i11),savg(i11)
+     *               jcx1(2*k5),kds(2*k5),stol(i11),savg(i11),spec(2*k5)
 c----------------------------------------------------------------------- 
 c                                 iam is a flag indicating the Perple_X program
       iam = 3
@@ -1183,10 +1183,6 @@ c----------------------------------------------------------------------
       integer kkp, np, ncpd, ntot
       double precision cp3, amt
       common/ cxt15 /cp3(k0,k5),amt(k5),kkp(k5),np,ncpd,ntot
-
-      integer idspec
-      double precision spec
-      common/ tspec /spec(nsp,k5),idspec
 c----------------------------------------------------------------------
       if (kcx(1).eq.999) then 
 c                                 write phemgp format
@@ -1196,14 +1192,9 @@ c                                 write phemgp format
 
       else if (lopt(15).or.dim.eq.1) then 
 c                                 write spreadsheet tab format
-         if (.not.lopt(29)) then 
-            write (n5,'(200(g14.7,1x))') (var(i),i=1,ivar), 
-     *                                   (prop(i),i=1,iprop)
-         else 
-            write (n5,'(200(g14.7,1x))') (var(i),i=1,ivar), 
-     *                                   (prop(i),i=1,iprop),
-     *                                   (spec(i,idspec),i=1,5)
-         end if 
+         write (n5,'(200(g14.7,1x))') (var(i),i=1,ivar), 
+     *                                (prop(i),i=1,iprop)
+
       else 
 c                                 write compact tab format
          write (n5,'(200(g14.7,1x))') (prop(i),i=1,iprop)
@@ -1329,25 +1320,19 @@ c----------------------------------------------------------------
 
       double precision mu
       common/ cst330 /mu(k8)
-
-      integer idspec
-      double precision spec
-      common/ tspec /spec(nsp,k5),idspec
 c----------------------------------------------------------------------
-      idspec = 1
-
       if (lop.eq.6) then 
 c                                 wt % of component 
          if (aflu.and.lflu.or.(.not.aflu)) then 
 c                                 include fluid
-            if (iopt(2).eq.1) then 
+            if (lopt(23)) then 
                prop = fbulk(icx)*atwt(icx)/psys(17)*1d2
             else 
                prop = fbulk(icx)/gtot*1d2
             end if 
          else 
 c                                 exclude fluid
-            if (iopt(2).eq.1) then
+            if (lopt(23)) then
                prop = fbulk1(icx)*atwt(icx)/psys1(17)*1d2
             else 
                prop = fbulk1(icx)/gtot1*1d2
@@ -1504,8 +1489,6 @@ c                                 find the phase index
                call soltst (id,icx)
 
             end if 
-
-            idspec = id
                                  
             if (id.eq.0.and.lop.ne.7) then 
 c                                 the phase is absent, set 
@@ -1670,25 +1653,50 @@ c ------------------------------------------------------------------
       double precision pcomp
       common/ cst324 /pcomp(k0,k5)
 
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
       integer icps, jcx, jcx1, kds
-      logical stol, savg
+      logical stol, savg, spec
       double precision rcps, a0
       common/ comps /rcps(k7,2*k5),a0(k7,2),icps(k7,2*k5),jcx(2*k5),
-     *               jcx1(2*k5),kds(2*k5),stol(i11),savg(i11)
+     *               jcx1(2*k5),kds(2*k5),stol(i11),savg(i11),spec(2*k5)
+
+      integer spct
+      double precision ysp
+      character*8 spnams
+      common/ cxt34 /ysp(m4,k5),spct(h9),spnams(m4,h9)
 c----------------------------------------------------------------------
       if (icx.eq.kds(jcomp)) then 
 
          comp = a0(jcomp,1)
          totden = a0(jcomp,2)
 c                                 now compute the composition:
+         if (spec(jcomp)) then 
+c                                 composition in terms of species:
 c                                 numerator:
-         do j = 1, jcx(jcomp)
-            comp = comp + rcps(j,jcomp)*pcomp(icps(j,jcomp),id)
-         end do
+            do j = 1, jcx(jcomp)
+               comp = comp + rcps(j,jcomp)*ysp(icps(j,jcomp),id)
+            end do
 c                                 denominator:
-         do j = jcx(jcomp)+1, jcx1(jcomp)
-            totden = totden + rcps(j,jcomp)*pcomp(icps(j,jcomp),id)
-         end do     
+            do j = jcx(jcomp)+1, jcx1(jcomp)
+               totden = totden + rcps(j,jcomp)*ysp(icps(j,jcomp),id)
+            end do     
+
+         else 
+c                                 compoisiton in terms of components:
+c                                 numerator:
+            do j = 1, jcx(jcomp)
+               comp = comp + rcps(j,jcomp)*pcomp(icps(j,jcomp),id)
+            end do
+c                                 denominator:
+            do j = jcx(jcomp)+1, jcx1(jcomp)
+               totden = totden + rcps(j,jcomp)*pcomp(icps(j,jcomp),id)
+            end do     
+
+         end if 
 c                                 numerator/denominator:        
          if (totden.ne.0d0) comp = comp / totden
 
@@ -1743,10 +1751,10 @@ c-------------------------------------------------------------------
       common/ cst6  /icomp,istct,iphct,icp
 
       integer icps, jcx, jcx1, kds
-      logical stol, savg
+      logical stol, savg, spec
       double precision rcps, a0
       common/ comps /rcps(k7,2*k5),a0(k7,2),icps(k7,2*k5),jcx(2*k5),
-     *               jcx1(2*k5),kds(2*k5),stol(i11),savg(i11)
+     *               jcx1(2*k5),kds(2*k5),stol(i11),savg(i11),spec(2*k5)
 
       save cprop, cmin, cmax, mode, max
 c----------------------------------------------------------------------
@@ -3081,7 +3089,7 @@ c                                 modes
                end do 
 c                                 bulk composition 
                do i = i8+4, i8+3+icomp
-                  if (iopt(2).eq.1) then 
+                  if (lopt(23)) then 
                      prop(i) = fbulk(i-i8-3)*atwt(i-i8-3)/psys(17)*1d2
                   else 
                      prop(i) = fbulk(i-i8-3)
@@ -3108,7 +3116,7 @@ c                                 modes
                end do 
 c                                 bulk composition 
                do i = i8+4, i8+3+icomp
-                  if (iopt(2).eq.1) then 
+                  if (lopt(23)) then 
                      prop(i) = fbulk1(i-i8-3)*atwt(i-i8-3)/psys1(17)*1d2
                   else 
                      prop(i) = fbulk1(i-i8-3)
@@ -3307,10 +3315,6 @@ c----------------------------------------------------------------------
       logical fileio
       integer ncol, nrow
       common/ cst226 /ncol,nrow,fileio
-
-      integer idspec
-      double precision spec
-      common/ tspec /spec(nsp,k5),idspec
 c------------------------------------------------------------------------
 c                                 generate a file name and
 c                                 open the file on n5
@@ -3506,10 +3510,10 @@ c----------------------------------------------------------------
       common/ cst76 /inv(i11),dname(i11),title
 
       integer icps, jcx, jcx1, kds
-      logical stol, savg
+      logical stol, savg, spec
       double precision rcps, a0
       common/ comps /rcps(k7,2*k5),a0(k7,2),icps(k7,2*k5),jcx(2*k5),
-     *               jcx1(2*k5),kds(2*k5),stol(i11),savg(i11)
+     *               jcx1(2*k5),kds(2*k5),stol(i11),savg(i11),spec(2*k5)
 
       save propty
 
@@ -3987,7 +3991,7 @@ c----------------------------------------------------------------------
 c                                 make property name
       if (lop.eq.6) then
 c                                 wt% or mol component icx
-         if (iopt(2).eq.1) then
+         if (lopt(23)) then
             write (dname(jprop),'(a,a)') cname(icx),',wt%     '
          else 
             write (dname(jprop),'(a,a)') cname(icx),',mol     '

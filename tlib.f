@@ -17,7 +17,7 @@ c----------------------------------------------------------------------
       implicit none
 
       write (*,'(/,a)') 
-     *      'Perple_X version 6.7.2, source updated June 29, 2015.'
+     *      'Perple_X version 6.7.2, source updated July 3, 2015.'
 
       end
 
@@ -69,6 +69,9 @@ c lopt(17) - explicit_bulk_modulus, T-> use if available.
 c lopt(18) - refine_bad_nodes
 c lopt(19) - pause_on_error
 c lopt(20) - poisson_test
+c lopt(21) - species_output
+c lopt(22) - composition_constant
+c lopt(23) - composition_system
 c nopt(5)  - speciation_tolerance
 c nopt(8)  - solvus_tolerance
 c nopt(20) - T_melt - kill melt endmembers at T < nopt(20)
@@ -187,13 +190,20 @@ c                                 pause_on_error
       lopt(19) = .true.
 c                                 poisson_test (reject results with poisson < 0)
       lopt(20) = .false.
+c                                 species_output
+      lopt(21) = .true. 
+c                                 composition_constant
+      lopt(22) = .false.
+c                                 composition_system (true = wt)
+      lopt(23) = .true. 
 c                                 minimum replicate label distance
       nopt(4) = 0.025
 c                                 speciation_tolerance
       nopt(5) = 1d-3
-c
+c                                 composition_phase
       iopt(2) = 0 
       valu(2) = 'mol'
+c                                 porportions
       iopt(3) = 0 
       valu(3) = 'vol'
 c                                 interpolation keyword
@@ -348,7 +358,7 @@ c                                 ier ne 0 bad record or eof
          if (ier.ne.0) exit 
 c                                 if here we should have a keyword and
 c                                 value
-         if (key.eq.'composition') then 
+         if (key.eq.'composition'.or.key.eq.'composition_phase') then 
 c                                 phase composition key
             if (val.eq.'wt') then
                iopt(2) = 1
@@ -671,7 +681,19 @@ c                                 assume linear boundaries within a cell during 
 
          else if (key.eq.'poisson_test') then
  
-            if (val.ne.'F') lopt(19) = .true. 
+            if (val.ne.'F') lopt(20) = .true. 
+
+         else if (key.eq.'species_output') then
+ 
+            if (val.ne.'T') lopt(21) = .false. 
+
+         else if (key.eq.'composition_constant') then
+ 
+            if (val.ne.'F') lopt(22) = .true. 
+
+         else if (key.eq.'composition_system') then
+ 
+            if (val.ne.'wt') lopt(23) = .false. 
 
          else if (key.eq.'logarithmic_p') then
  
@@ -3107,7 +3129,123 @@ c----------------------------------------------------------------------
 c----------------------------------------------------------------------
 c deblnk - scan text and delete multiple blank characters, strip
 c out sequential + - or - + operators, trailing -/+ operators, 
-c leading blanks, and leading + operators.
+c leading blanks, and leading + operators. also deletes blanks
+c preceding punctuation (',' and ':').
+ 
+c     text - character string 
+
+c no test is made for a blank string or a string of "+" signs.
+c----------------------------------------------------------------------
+      implicit none 
+
+      integer i, nchar
+
+      logical strip
+ 
+      character text*(*)
+
+      integer ict,iblank,icom
+      character bitsy*1
+      common/ cst51 /ict,iblank,icom,bitsy(240)
+c---------------------------------------------------------------------- 
+      nchar = len(text) 
+
+      read (text,1000) (bitsy(i), i = 1, nchar)
+c                                find last non-blank
+      ict = 1 
+      
+      do i = 1, nchar
+         if (bitsy(i).gt.' ') ict = i
+      end do  
+
+      nchar = ict          
+c                                 kill any trailing +/- or ','
+      if (bitsy(nchar).eq.'+'.or.bitsy(nchar).eq.'-'.or.
+     *    bitsy(nchar).eq.',') nchar = nchar - 1
+         
+c                                 scan for first non blank/+ character:
+      ict = 0 
+      
+      do i = 1, nchar
+         if (bitsy(i).eq.' '.or.bitsy(i).eq.'+') cycle
+         ict = i
+         exit 
+      end do 
+c                                 shift everything right
+      if (ict.gt.1) then 
+
+         ict = ict - 1
+         
+         do i = ict+1, nchar
+            bitsy(i-ict) = bitsy(i)
+         end do 
+
+         nchar = nchar - ict
+
+      end if 
+
+      ict = 1
+      
+      do i = 2, nchar
+c                                 strip out double blanks
+         if ((bitsy(i).eq.' '.and.bitsy(i+1).eq.' ').or.
+     *       (bitsy(i).eq.' '.and.bitsy(i+1).eq.':').or.
+     *       (bitsy(i).eq.' '.and.bitsy(i+1).eq.',').or.
+     *       (bitsy(i).eq.' '.and.bitsy(i+1).eq.')')) cycle 
+         ict = ict + 1
+         bitsy(ict) = bitsy(i)
+
+      end do
+
+      nchar = ict      
+c                                 strip put + - and - + strings
+      strip = .false.
+
+      do i = 1, nchar - 2
+
+         if (bitsy(i).eq.'+'.and.bitsy(i+1).eq.'-'.or.
+     *       bitsy(i).eq.'-'.and.bitsy(i+1).eq.'+') then
+
+             bitsy(i) = '-'
+             bitsy(i+1) = ' '
+             strip = .true.
+
+         else if (bitsy(i).eq.'+'.and.bitsy(i+2).eq.'-'.or.
+     *            bitsy(i).eq.'-'.and.bitsy(i+2).eq.'+') then
+
+             bitsy(i) = '-'
+             bitsy(i+2) = ' '
+             strip = .true.
+
+         end if 
+
+      end do 
+
+      if (strip) then 
+c                                 strip out new double blanks
+         ict = 1
+
+         do i = 2, nchar
+
+            if (bitsy(i).eq.' '.and.bitsy(i-1).eq.' ') cycle 
+            ict = ict + 1
+            bitsy(ict) = bitsy(i)
+
+         end do 
+
+      end if 
+
+      write (text,1000) (bitsy(i), i = 1, ict),
+     *                  (' ',i = ict+1, len(text))
+ 
+1000  format (240a)
+
+      end
+
+      subroutine peblnk (text)
+c----------------------------------------------------------------------
+c deblnk - scan text and delete multiple blank characters and blanks
+c preceding punctuation (',' and ':').
  
 c     text - character string 
 

@@ -20,13 +20,16 @@ c-----------------------------------------------------------------------
 
       integer i
  
-      double precision x(2),fo2,fs2,yo2,yc,dg
+      double precision fo2,fs2,yo2,yc,dg
  
       integer iff,idss,ifug,ifyn,isyn
       common/ cst10 /iff(2),idss(h5),ifug,ifyn,isyn
 
       double precision f
       common/ cst11 /f(3)
+
+      double precision xs,g,v
+      common/ cstcoh /xs(nsp),g(nsp),v(nsp)
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -37,8 +40,8 @@ c-----------------------------------------------------------------------
          xco2 = 0d0
       end if 
 
-      x(2) = xco2
-      x(1) = 1d0 - xco2
+      xs(2) = xco2
+      xs(1) = 1d0 - xco2
  
       if (ifug.eq.0) then 
          call mrk
@@ -104,7 +107,7 @@ c                                 bulk coordinates
       end if 
 
       do i = 1, 2
-         if (x(i).gt.1d-38) cycle 
+         if (xs(i).gt.1d-38) cycle 
          f(i) = dlog(1d4*p)
       end do 
 
