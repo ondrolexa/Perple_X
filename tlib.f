@@ -17,7 +17,7 @@ c----------------------------------------------------------------------
       implicit none
 
       write (*,'(/,a)') 
-     *      'Perple_X version 6.7.2, source updated July 3, 2015.'
+     *      'Perple_X version 6.7.2, source updated July 13, 2015.'
 
       end
 
@@ -196,6 +196,7 @@ c                                 composition_constant
       lopt(22) = .false.
 c                                 composition_system (true = wt)
       lopt(23) = .true. 
+      valu(21) = 'wt '
 c                                 minimum replicate label distance
       nopt(4) = 0.025
 c                                 speciation_tolerance
@@ -292,13 +293,14 @@ c                                 reach_increment_switch 0 - off, 1 - on (for au
       iopt(20) = 1 
       valu(20) = 'on'
 c                                 speciation_max_it - for speciation calculations
-      iopt(21) = 40
+      iopt(21) = 100
 c                                 reaction_max_it - for A(V,T) and fluid EoS
       iopt(22) = 40
 c                                 volume_max_it - for schreinemakers
       iopt(23) = 40              
 c                                 solution_names 0 - model, 1 - abbreviation, 2 - full
       iopt(24) = 0
+      valu(22) = 'mod'
 c                                 -------------------------------------
 c                                 werami output options:
 
@@ -412,6 +414,8 @@ c                                 bad number key
               else if (val.eq.'ful') then 
                  iopt(24) = 2
               end if 
+
+              valu(22) = val
 
          else if (key.eq.'solvus_tolerance') then 
 
@@ -693,7 +697,10 @@ c                                 assume linear boundaries within a cell during 
 
          else if (key.eq.'composition_system') then
  
-            if (val.ne.'wt') lopt(23) = .false. 
+            if (val.ne.'wt') then
+               lopt(23) = .false. 
+               valu(21) = val
+            end if 
 
          else if (key.eq.'logarithmic_p') then
  
@@ -1170,10 +1177,12 @@ c                                 pc-perturbation
 c                                 generic thermo parameters:
          write (n,1012) nval1,nopt(5),nopt(12),nopt(20),valu(17),
      *                     lopt(8),lopt(4),lopt(5),iopt(21)
+c                                 for meemum add fd stuff
+         if (iam.eq.2) write (n,1017) nopt(31),nopt(26),nopt(27)
 
          if (iam.eq.1.and.icopt.ne.1) then 
 c                                 vertex output options, dependent potentials
-            write (n,1013) valu(11)
+            write (n,1013) valu(11),lopt(19)
 c                                 logarithmic_p, bad_number
             if (icopt.gt.3) write (n,1014) lopt(14),nopt(7)
 
@@ -1183,29 +1192,36 @@ c                                 logarithmic_p, bad_number
 
       if (iam.eq.3) then 
 c                                 WERAMI input/output options
-         write (n,1230) lopt(15),lopt(14),nopt(7),(valu(i),i=2,4),
-     *                  lopt(6),valu(14),lopt(20)
+         write (n,1230) lopt(15),lopt(14),nopt(7),lopt(22),valu(2),
+     *                  valu(21),valu(3),valu(4),lopt(6),valu(22),
+     *                  lopt(21),valu(14),lopt(19),lopt(20)
 c                                 WERAMI info file options
          write (n,1241) lopt(12)       
 c                                 WERAMI thermodynamic options
          write (n,1016) lopt(8),lopt(4)
+         write (n,1017) nopt(31),nopt(26),nopt(27)
 
       else if (iam.eq.2) then 
 c                                 MEEMUM input/output options
-         write (n,1231) lopt(14),nopt(7),(valu(i),i=2,3),lopt(6),
-     *                  valu(14),lopt(20)
+         write (n,1231) lopt(14),nopt(7),valu(2),lopt(22),valu(2),
+     *                  valu(21),valu(3),lopt(6),valu(22),lopt(21),
+     *                  valu(14),lopt(19),lopt(20)
 
       else if (iam.eq.5) then 
 c                                 FRENDLY input/output options
          write (n,1232) lopt(15),lopt(14),nopt(7),lopt(6),valu(14),
-     *                  lopt(20)
+     *                  lopt(19),lopt(20)
 
       end if 
 c                                 seismic property options
       if (iam.eq.2.or.iam.eq.3.or.iam.eq.5) write (n,1233) valu(19),
      *                                nopt(6),lopt(17),valu(15),nopt(16)
+
+      if (iam.eq.5) then 
 c                                 FRENDLY thermo options
-      if (iam.eq.5) write (n,1016) lopt(8),lopt(4) 
+         write (n,1016) lopt(8),lopt(4)
+         write (n,1017) nopt(31),nopt(26),nopt(27)
+      end if 
 
       if (iam.le.2) then 
 c                                 info file options
@@ -1246,9 +1262,10 @@ c                                 generic thermo options
      *        4x,'approx_alpha           ',l1,10x,'[T] F',/,
      *        4x,'Anderson-Gruneisen     ',l1,10x,'[F] T',/,
      *        4x,'site_check             ',l1,10x,'[T] F',/,
-     *        4x,'speciation_max_it      ',i4,7x,'[40]')
+     *        4x,'speciation_max_it      ',i4,7x,'[100]')
 1013  format (/,2x,'Input/Output options:',//,
-     *        4x,'dependent_potentials   ',a3,8x,'off [on]')
+     *        4x,'dependent_potentials   ',a3,8x,'off [on]',/,
+     *        4x,'pause_on_error         ',l1,10x,'[T] F')
 1014  format (4x,'logarithmic_p          ',l1,10x,'[F] T',/,
      *        4x,'bad_number          ',f7.1,7x,'[0.0]')
 1015  format (/,2x,'Auto-refine options:',//,
@@ -1257,6 +1274,9 @@ c                                 thermo options for frendly
 1016  format (/,2x,'Thermodynamic options:',//,
      *        4x,'approx_alpha           ',l1,10x,'[T] F',/,
      *        4x,'Anderson-Gruneisen     ',l1,10x,'[F] T')
+1017  format (4x,'fd_expansion_factor    ',f3.1,8x,'>0 [2.]',/,
+     *        4x,'finite_difference_p    ',d7.1,4x,'>0 [1d4]; ',
+     *           'fraction = ',d7.1,1x,'[1d-2]')
 1020  format (/,'To change these options see: ',
      *        'www.perplex.ethz.ch/perplex_options.html',/)      
 1090  format (/,2x,
@@ -1323,33 +1343,45 @@ c                                 thermo options for frendly
 1230  format (/,2x,'Input/Output options:',//,
      *        4x,'spreadsheet            ',l1,10x,'[F] T',/,
      *        4x,'logarithmic_p          ',l1,10x,'[F] T',/,
-     *        4x,'bad_number          ',f7.1,7x,'[0.0]',/,
-     *        4x,'composition            ',a3,8x,'wt  [mol]',/,
-     *        4x,'proportions            ',a3,8x,'wt  [vol] mol',/,
-     *        4x,'interpolation          ',a3,8x,'off [on ]',/,
+     *        4x,'bad_number         ',f7.1,8x,'[0.0]',/,
+     *        4x,'composition_constant   ',l1,10x,'[F] T',/,
+     *        4x,'composition_phase      ',a3,8x,'[mol] wt',/,
+     *        4x,'composition_system     ',a3,8x,'[wt] mol',/,
+     *        4x,'proportions            ',a3,8x,'[vol] wt mol',/,
+     *        4x,'interpolation          ',a3,8x,'[on] off ',/,
      *        4x,'melt_is_fluid          ',l1,10x,'[F] T',/,
-     *        4x,'seismic_output         ',a3,8x,'none [some] all',/,
+     *        4x,'solution_names         ',a3,8x,'[model] abbreviation',
+     *                                           ' full',/,
+     *        4x,'species_output         ',l1,10x,'[T] F',/,
+     *        4x,'seismic_output         ',a3,8x,'[some] none all',/,
+     *        4x,'pause_on_error         ',l1,10x,'[T] F',/,
      *        4x,'poisson_test           ',l1,10x,'[F] T')
 1231  format (/,2x,'Input/Output options:',//,
      *        4x,'logarithmic_p          ',l1,10x,'[F] T',/,
      *        4x,'bad_number          ',f7.1,7x,'[0.0]',/,
-     *        4x,'compositions           ',a3,8x,'wt  [mol]',/,
-     *        4x,'proportions            ',a3,8x,'wt  [vol] mol',/,
+     *        4x,'composition_constant   ',l1,10x,'[F] T',/,
+     *        4x,'composition_phase      ',a3,8x,'[mol] wt',/,
+     *        4x,'composition_system     ',a3,8x,'[wt] mol',/,
+     *        4x,'proportions            ',a3,8x,'[vol] wt mol',/,
      *        4x,'melt_is_fluid          ',l1,10x,'[F] T',/,
-     *        4x,'seismic_output         ',a3,8x,'none [some] all',/,
+     *        4x,'solution_names         ',a3,8x,'[mod] abb ful',/,
+     *        4x,'species_output         ',l1,10x,'[T] F',/,
+     *        4x,'seismic_output         ',a3,8x,'[some] none all',/,
+     *        4x,'pause_on_error         ',l1,10x,'[T] F',/,
      *        4x,'poisson_test           ',l1,10x,'[F] T')
 1232  format (/,2x,'Input/Output options:',//,
      *        4x,'spreadsheet            ',l1,10x,'[F] T',/,
      *        4x,'logarithmic_p          ',l1,10x,'[F] T',/,
      *        4x,'bad_number          ',f7.1,7x,'[0.0]',/,
      *        4x,'melt_is_fluid          ',l1,10x,'[F] T',/,
-     *        4x,'seismic_output         ',a3,8x,'none [some] all',/,
+     *        4x,'seismic_output         ',a3,8x,'[some] none all',/,
+     *        4x,'pause_on_error         ',l1,10x,'[T] F',/,
      *        4x,'poisson_test           ',l1,10x,'[F] T')
 1233  format (/,2x,'Seismic velocity options:',//,
-     *        4x,'bounds                 ',a3,8x,'HS  [VRH]',/,
-     *        4x,'vrh/hs_weighting       ',f3.1,8x,'0->1 [0.5]',/,
+     *        4x,'bounds                 ',a3,8x,'[VRH] HS',/,
+     *        4x,'vrh/hs_weighting       ',f3.1,8x,'[0.5] 0->1',/,
      *        4x,'explicit_bulk_modulus  ',l1,10x,'[F] T',/,
-     *        4x,'poisson_ratio          ',a3,8x,'off [on ] all; ',
+     *        4x,'poisson_ratio          ',a3,8x,'[on] all off; ',
      *        'Poisson ratio = ',f4.2)
 1240  format (/,2x,'Information file output options:',//,
      *        4x,'option_list_files      ',l1,10x,'[F] T; ',

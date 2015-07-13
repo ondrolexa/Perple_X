@@ -1788,7 +1788,7 @@ c                                 but there is no criterion (stol = .false.)
             cprop = 'weight'
          end if
 c                                tell the user
-         write (*,1000) isol,fname(phase),cprop
+         write (*,1000) isol, fname(phase), cprop
          write (*,1040) (cname(i), i = 1, icomp)
          do i = 1, isol 
             write (*,1050) (pcomp(j,jdsol(i)), j = 1, icomp)
