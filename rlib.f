@@ -6995,7 +6995,7 @@ c-----------------------------------------------------------------------
       common/ cst60 /ipoint,kphct,imyn
 
       integer ikp
-      common/ cst61 /ikp(k10)
+      common/ cst61 /ikp(k1)
 
       integer ixp
       double precision sxs,exces
