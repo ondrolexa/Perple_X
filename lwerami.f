@@ -3621,7 +3621,7 @@ c                                 choose property
          if (lop.eq.7.or.lop.eq.20.or.lop.eq.37) then 
 c                                 modes:
 c                                 get phase name
-             call rnam1 (icx,pname)
+             call rnam1 (icx,pname,2)
 c                                 ask if fluid should be included:
              if (gflu) then 
 
@@ -3707,7 +3707,7 @@ c                                 ask if fluids included
 c                                 get solution identity
             do 
 
-               call rnam1 (icx,pname)
+               call rnam1 (icx,pname,0)
                if (icx.gt.0) exit  
                write (*,1140)
 
@@ -3742,7 +3742,7 @@ c                                 icx = 999 all props, else phase index
 
             else if (i.eq.2) then 
 c                                 get phase index
-               call rnam1 (icx,pname)
+               call rnam1 (icx,pname,2)
 
             end if 
 
@@ -3804,7 +3804,7 @@ c                                 should be included:
                else 
 c                                 get phase name
                   do 
-                     call rnam1 (icx,pname)
+                     call rnam1 (icx,pname,2)
                      if (icx.lt.1.and.lop.eq.8) then
                         write (*,1140)
                         cycle 

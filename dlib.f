@@ -813,16 +813,17 @@ c                                show the user the composition:
 
       end
 
-      subroutine rnam1 (iex,xnam)
+      subroutine rnam1 (iex,xnam,what)
 c----------------------------------------------------------------------
-c read a solution/compound name from console, return
+c read a solution name (what = 0) compound name (what = 1) or either
+c (what = 2) from console, return
 c iex = -id if a compound
 c iex = ikp if a solution
 c iex = 0 if invalid choice
 c----------------------------------------------------------------------
       implicit none
 
-      integer iex
+      integer iex, what
 
       character*10 xnam
 c----------------------------------------------------------------------
@@ -830,7 +831,14 @@ c----------------------------------------------------------------------
 
       do 
 
-         write (*,1040) 
+         if (what.eq.0) then 
+            write (*,1040) 'solution' 
+         else if (what.eq.1) then 
+            write (*,1040) 'compound' 
+         else 
+            write (*,1040) 'solution or compound' 
+         end if  
+
          read (*,'(a)') xnam
 
          call matchj (xnam,iex)
@@ -840,7 +848,7 @@ c----------------------------------------------------------------------
 
       end do 
 
-1040  format (/,'Enter solution or compound name (left justified): ')
+1040  format (/,'Enter ',a,' (left justified): ')
 1100  format (/,'No such entity as ',a,', try again: ')
 
       end

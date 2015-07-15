@@ -41,13 +41,16 @@ c-----------------------------------------------------------------------
 
       integer i, k, l, iind, ifugy, im, idum, ima, jsat(h5),
      *        ifct, ivct, iwt, jcth, icth, igood,
-     *        jcmpn, j, ier, icopt, idep, gct(i9), gid(i9,i9),
+     *        jcmpn, j, ier, idep, gct(i9), gid(i9,i9),
      *        ict, jvct, jc, ix, jst, ind, loopy, 
      *        loopx, ierr, idsol, isoct, kvct, inames
 
       logical eof, good, satflu, mobflu, oned, findph, bad, first, feos
 
       double precision c(0:4)
+
+      integer isec,icopt,ifull,imsg,io3p
+      common/ cst103 /isec,icopt,ifull,imsg,io3p
 
       character*8 name
       common/ csta6 /name

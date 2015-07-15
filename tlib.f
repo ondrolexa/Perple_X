@@ -5063,6 +5063,9 @@ c----------------------------------------------------------------------
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
+      integer isec,icopt,ifull,imsg,io3p
+      common/ cst103 /isec,icopt,ifull,imsg,io3p
+
       double precision delt,dtol,utol,ptol
       common/ cst87 /delt(l2),dtol,utol,ptol
 
@@ -5126,7 +5129,9 @@ c                                 allow build to use fugacities or activities.
          read (values,*) v(i), delt(i)
 
       end do
-c                                  read end key
+c                                 set log p variable name.
+      if (icopt.gt.4.and.lopt(14)) vname(1) = 'log[P,b]'
+c                                 read end key
       call getkey (n2,ier,key,values,strg)
 c                                  set reference conditions
       pr = v(1)

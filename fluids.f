@@ -323,7 +323,7 @@ c-----------------------------------------------------------------------
 
       character specie*4
       integer ins
-      common/ cxt33 /ins(nsp),specie(nsp)
+      common/ cxt33 /isp,ins(nsp),specie(nsp)
 
       double precision vol
       common/ cst26 /vol
