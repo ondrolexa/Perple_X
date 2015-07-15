@@ -17,7 +17,7 @@ c----------------------------------------------------------------------
       implicit none
 
       write (*,'(/,a)') 
-     *      'Perple_X version 6.7.2, source updated July 14, 2015.'
+     *      'Perple_X version 6.7.2, source updated July 15, 2015.'
 
       end
 
@@ -1203,7 +1203,7 @@ c                                 WERAMI thermodynamic options
 
       else if (iam.eq.2) then 
 c                                 MEEMUM input/output options
-         write (n,1231) lopt(14),nopt(7),valu(2),lopt(22),valu(2),
+         write (n,1231) lopt(14),nopt(7),lopt(22),valu(2),
      *                  valu(21),valu(3),lopt(6),valu(22),lopt(21),
      *                  valu(14),lopt(19),lopt(20)
 
@@ -1358,7 +1358,7 @@ c                                 thermo options for frendly
      *        4x,'poisson_test           ',l1,10x,'[F] T')
 1231  format (/,2x,'Input/Output options:',//,
      *        4x,'logarithmic_p          ',l1,10x,'[F] T',/,
-     *        4x,'bad_number          ',f7.1,7x,'[0.0]',/,
+     *        4x,'bad_number         ',f7.1,8x,'[0.0]',/,
      *        4x,'composition_constant   ',l1,10x,'[F] T',/,
      *        4x,'composition_phase      ',a3,8x,'[mol] wt',/,
      *        4x,'composition_system     ',a3,8x,'[wt] mol',/,
