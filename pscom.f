@@ -365,51 +365,6 @@ c psxlbl - subroutine to put on x-axis labels.
       end do 
  
       end
-
-c-----------------------------------------------------------------------
-      subroutine ftext (text,ist,iend)
-
-c subprogram to filter blanks from text 
-
-      implicit none
-
-      integer ist,iend,i,itic,igot,jend
-
-      character*1 text(400)
-
-      itic = ist - 1
-      igot = 0
-      jend = iend 
-
-      do i = ist, iend-1
-
-         if (text(i).eq.' '.and.text(i + 1).eq.' '.or. 
-     *       text(i).eq.' '.and.text(i + 1).eq.')'.or. 
-     *       text(i).eq.' '.and.text(i + 1).eq.'('.or.
-     *       igot.eq.0.and.text(i).eq.' ') cycle
-         if (i.gt.ist) then
-            if (text(i-1).eq.'-'.and.text(i).eq.' ') cycle 
-         end if 
-
-         itic = itic + 1
-         igot = 1
-         text(itic) = text(i)
-
-      end do 
-
-      if (text(iend).ne.' ') then
-         itic = itic + 1
-         text(itic) = text(iend)
-      end if 
-
-      iend = itic + 1
-
-      do i = iend, jend 
-         text(i) = ' '
-      end do 
- 
-      end
-
 c----------------------------------------------------------------------
       subroutine psaxes (jop0)
  

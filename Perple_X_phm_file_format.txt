@@ -1,4 +1,4 @@
-                          PHM (PHEMGP) File Format
+                          phm (PHEMGP) File Format
 
 Under property options #36 ("all properties") and #38 ("multiple properties")
 the Perple_X program WERAMI writes 1- or 2-dimensional tables. 2-dimensional
@@ -7,7 +7,7 @@ while both 1- and 2-dimensional tables can be processed in spreadsheet programs
 such as Excel. 
 
 The format of tables written for PHEMGP is a minor variation on the generic
-tab file format (www.perplex.ethz.ch/Perple_X_tab_file_format.txt) used by Perple_X.
+tab file format (www.perplex.ethz.ch/faq/Perple_X_tab_file_format.txt) used by Perple_X.
 PHEMGP format tables are indicated by the file type suffix ".phm".
  
 The distinction between generic tab format tables and phm format tables is that:
@@ -22,9 +22,7 @@ a character string that indicates whether the record is for system or phase prop
 In the former case the string is "system", in the latter case the string is the name
 used in Perple_X for the phase. The second value
 
-
-
-                           Details on phm Format
+                             phm Format Details
 
 All data is space delimited.
 

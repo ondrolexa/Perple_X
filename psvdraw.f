@@ -1009,7 +1009,7 @@ c subprogram to write a text label for a reaction
 
       integer ip,im,i,j,is,ist,id,iend
  
-      character text(400)*1, string*400
+      character text(400)*1, string*(*)
   
       character*8 names
       common/ cst8 /names(k1)

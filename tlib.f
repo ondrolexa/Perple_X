@@ -17,7 +17,7 @@ c----------------------------------------------------------------------
       implicit none
 
       write (*,'(/,a)') 
-     *      'Perple_X version 6.7.2, source updated July 15, 2015.'
+     *      'Perple_X version 6.7.2, source updated August 27, 2015.'
 
       end
 
@@ -5519,4 +5519,49 @@ c                                 scan for blanks:
 
       write (text,'(400a)') (bitsy(i), i = 1, ict + 1)
 
+      end
+
+      subroutine ftext (ist,iend)
+
+c subprogram to filter blanks from text 
+
+      implicit none
+
+      integer ist,iend,i,itic,igot,jend
+
+      integer length,iblank,icom
+      character chars*1
+      common/ cst51 /length,iblank,icom,chars(240)
+
+      itic = ist - 1
+      igot = 0
+      jend = iend 
+
+      do i = ist, iend-1
+
+         if (chars(i).eq.' '.and.chars(i + 1).eq.' '.or. 
+     *       chars(i).eq.' '.and.chars(i + 1).eq.')'.or. 
+     *       chars(i).eq.' '.and.chars(i + 1).eq.'('.or.
+     *       igot.eq.0.and.chars(i).eq.' ') cycle
+         if (i.gt.ist) then
+            if (chars(i-1).eq.'-'.and.chars(i).eq.' ') cycle 
+         end if 
+
+         itic = itic + 1
+         igot = 1
+         chars(itic) = chars(i)
+
+      end do 
+
+      if (chars(iend).ne.' ') then
+         itic = itic + 1
+         chars(itic) = chars(iend)
+      end if 
+
+      iend = itic + 1
+
+      do i = iend, jend 
+         chars(i) = ' '
+      end do 
+ 
       end

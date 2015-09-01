@@ -2486,13 +2486,22 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer loopx,loopy,jinc,i,j,jst,kst,kd,ltic
+      integer loopx,loopy,jinc,i,j,jst,kst,kd,ltic,iend
+
+      character string*240
 
       integer igrd
       common/ cst311 /igrd(l7,l7)
 
+      integer io3,io4,io9
+      common / cst41 /io3,io4,io9
+
       integer idasls,iavar,iasct,ias
       common/ cst75  /idasls(k5,k3),iavar(3,k3),iasct,ias
+
+      integer length,iblank,icom
+      character chars*1
+      common/ cst51 /length,iblank,icom,chars(240)
 c----------------------------------------------------------------------
 
       write (n4,*) loopx, loopy, jinc
@@ -2529,5 +2538,68 @@ c                                 write assemblage list
          write (n4,*) iavar(1,i),iavar(2,i),iavar(3,i)
          write (n4,*) (idasls(j,i), j = 1, iavar(3,i))
       end do 
+c                                 write assemblages to print file
+      if (io3.eq.0) then 
+
+         write (n3,'(/,1x,a,a,/)') 'Stable assemblages identified ',
+     *                         'by assemblage index:'
+         do i = 1, iasct
+            call psbtxt (i,string,iend)
+            write (n3,'(i4,a,240a)') i,' - ',(chars(j), j = 1, length)
+         end do       
+
+      end if 
+
+      end 
+
+      subroutine psbtxt (id,string,iend)
+c----------------------------------------------------------------------
+c subprogram to write a text labels for bulk composition output 
+c id identifies the assemblage
+
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      character string*(*), pname*14
+
+      integer i, j, ist, iend, id, np, ntot, ids
+
+      integer idasls,iavar,iasct,ias
+      common/ cst75  /idasls(k5,k3),iavar(3,k3),iasct,ias
+
+      integer length,iblank,icom
+      character chars*1
+      common/ cst51 /length,iblank,icom,chars(240)
+c----------------------------------------------------------------------
+      iend = 0
+
+      string = ' '
+
+      ist = 1
+      np = iavar(1,id)
+      ntot = iavar(3,id)
+
+      do i = 1, 240
+         chars(i) = ' '
+      end do
+c                                 first solution names:
+      do i = 1, ntot
+             
+         ids = idasls(i,id)
+
+         call getnam (pname,ids) 
+
+         ist = iend + 1
+         iend = ist + 14
+         read (pname,'(400a1)') (chars(j),j=ist,iend)
+
+         call ftext (ist,iend)
+
+      end do 
+
+      write (string,'(400a1)') (chars(j),j=1,iend) 
+
+      length = iend
 
       end 

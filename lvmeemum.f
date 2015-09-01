@@ -75,15 +75,15 @@ c----------------------------------------------------------------------
       double precision tlv, dt, rho, tst, tlv1, tlv2, rho1, rho2, cp1, 
      *                 cp2, x1, dp, rhoc, x2, pv1, pv2, pvv1, pvv2,
      *                 spec1(5,2),n(2),x(2),molwt(2),specwt(5),nat,
-     *                 prps(8,2),xb(2),no,nsi,tot,p,t,lnk1,lnk2,lnk3,
+     *                 prps(10,2),xb(2),no,nsi,tot,p,t,lnk1,lnk2,lnk3,
      *                 lnk4,lnk5,ravg,savg,z(2), xtlv, xdt
 
       data specwt/60.084, 44.085, 15.999, 31.998, 28.086/
 
-      integer imax,imin,ir1,ir2,tic,j,lprops(8),lun
+      integer imax,imin,ir1,ir2,tic,j,lprops(10),lun
       logical go, quit
-c                                 N, H, S, Cp, Cp/Cv, rho, vphi
-      data lprops/17,2,15,12,28,10,7,1/
+c                                 N, H, S, Cp, Cp/Cv, rho, vphi, alpha, beta
+      data lprops/17,2,15,12,28,10,7,1,13,14/
       integer idspec
       double precision spec
       common/ tspec /spec(nsp,k5),idspec
@@ -130,14 +130,15 @@ c                                 version info
       write (lun,*) 0.
       write (lun,*) 1.
       write (lun,*) 1
-      write (lun,*) 51
+      write (lun,*) 55
       write (lun,'(9a)') 'log(p) p(bar) T(K) dtL(K) dtG(K) xL xG ',
      *    'nL(mol) nG(mol) NL(g-mol) NG(g-mol) NA(g-at) DH(J/kg) ',
      *    'SL SG CpL CpG Cp/CvL Cp/CvG rhoL rhoG v_phiL v_phiG ',
      *    'yL_SiO2 yL_SiO yL_O yL_O2 yL_Si ', 
      *    'yG_SiO2 yG_SiO yG_O yG_O2 yG_Si ',
      *    'pvL pvvL irL pvG pvvG irG ln(K4) ln(C4) ln(K5) ln(C5) ravg ',
-     *    'savg ssG rsG VL(j/bar-amol) VG(j/bar-amol) ZL ZG'
+     *    'savg ssG rsG VL(j/bar-amol) VG(j/bar-amol) ZL ZG ',
+     *    'alphaL alphaV KTL KTV'
 
 c      * v(1),10d0**v(1),tlv,tlv-tlv1,tlv2-tlv,
 c      * x, n, molwt, prps(1,1), 
@@ -433,7 +434,7 @@ c                                 save the liq props:
                         spec1(j,1) = spec(j,imax)
                      end do 
 
-                     do j = 1, 8
+                     do j = 1, 10
                         prps(j,1) = props(lprops(j),imax)
                      end do 
 
@@ -523,7 +524,7 @@ c                        if (rho2.gt.rhoc) cycle
                            spec1(j,2) = spec(j,1)
                          end do 
 
-                         do j = 1, 8
+                         do j = 1, 10
                            prps(j,2) = props(lprops(j),1)
                          end do 
 
@@ -582,6 +583,8 @@ c                                 compute true molar weight
 
 c                                 N, H, S, Cp, Cp/Cv, rho, vphi
             prps(4,i) = prps(4,i)/r/ats(i)/3d0
+c                                 beta to bulk
+            prps(10,i) = 1d0/prps(10,i)
             z(i) = 10d0**v(1)*prps(8,i)/(n(i)*r*v(2))
 
          end do 
@@ -660,7 +663,8 @@ c            if (idead.eq.0) call getloc (itri,jtri,ijpt,wt,nodata)
      *   pv1,pvv1,ir1,pv2,pvv2,ir2,
      *   lnk4,lnk4+dlog(p),lnk5,lnk5*dlog(p)/2d0,ravg,savg,
      *   props(15,1)/props(17,1)*1e3,props(10,1),
-     *   (prps(8,i),i=1,2),(z(i),i=1,2)
+     *   (prps(8,i),i=1,2),(z(i),i=1,2),
+     *   ((prps(j,i),i=1,2),j=9,10)
 c                                critical exponent stuff
          r3  = dlog(rho1-rho2)
          t3  = v(2)

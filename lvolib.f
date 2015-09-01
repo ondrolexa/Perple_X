@@ -14,7 +14,11 @@ c----------------------------------------------------------------------
 
       integer i,j,l,lu
 
-      double precision poiss
+      double precision poiss, cn(k5), cnsys
+
+      integer idspec
+      double precision spec
+      common/ tspec /spec(nsp,k5),idspec
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
@@ -91,6 +95,8 @@ c----------------------------------------------------------------------
          write (lu,1120) (vnm(i), var(i), i = 1, jvar)
       end if 
 
+      write (lu,1120) 'pressure',1d1**v(1),'density',psys(10)
+
       if (iopt(2).eq.0) then 
          cprop = 'molar  proportions'
       else
@@ -149,6 +155,25 @@ c                                 N, H, S, V, Cp, alpha, beta, density
       if (aflu) write (lu,1170) 'System - fluid',psys1(17),psys1(2),
      *                psys1(15),psys1(1),(psys1(j),j=12,14),psys1(28),
      *                psys1(10)
+
+
+
+      write (lu,'(/,a,/)') 'speciation and Si-O CN'
+
+      cnsys = 0 
+
+      do i = 1, ntot
+c                                 
+         cn(i) = (spec(1,i)*2d0 + spec(2,i))
+     *         / (spec(1,i) + spec(2,i))
+         write (lu,'(15(g14.6,1x))') (spec(j,i),j=1,5),cn(i)
+
+         cnsys = cnsys + props(16,i)*pcomp(2,i)/fbulk(2) * cn(i)
+
+      end do 
+
+      write (lu,'(/,a,g12.6,/)') 'Bulk Si-O CN = ', cnsys
+      
 
 
       if (iopt(14).gt.0) then 
@@ -1433,8 +1458,8 @@ c----------------------------------------------------------------------
 
       double precision vrt
       integer irt
-      logical sroot
-      common/ rkroot /vrt,irt,sroot
+      logical sroot, nospe
+      common/ rkroot /vrt,irt,sroot,nospe
 
       double precision ga, gb, gc, gd, ge, gf, 
      *                 va, vb, vc, vd, ve, vf
@@ -1522,13 +1547,17 @@ c                                 explicit bulk modulus is allowed and used
             
       g0 = ginc(0d0,0d0,id)
 c                                 speciation trick
-      if (lopt(29)) then 
+c     if (lopt(29)) then 
          do j = 1, 5
             spec(j,jd) = y(ins(j))
          end do 
-      end if 
+c      end if 
 c                                 set flag for multiple root eos's
       sroot = .true.
+c      nospe = .true.
+      idspec = jd
+
+c      g0 = ginc(0d0,0d0,id)
 c                                 save derivative for cp search
       rooti(jd) = iroots
       vrk = vol
@@ -1576,6 +1605,10 @@ c                                 difference increments
             dp0 = dp0 / nopt(31)
 
          end do
+c!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+c          dp0 = 1d0
+c          v = (g0 - ginc(0d0,-dp0,id))/dp0
+c                 rho = props(17,jd)/v*1d2
 
          dp1 = dp0 * nopt(31)
          dp2 = dp1 * nopt(31)
@@ -2030,7 +2063,8 @@ c                                 solid only totals:
 
       end if 
 
-      sroot = .false. 
+      sroot = .false.
+      nospe = .false.  
 
 1030  format (/,'**warning ver179** at T(K)=',g12.4,' P(bar)=',g12.4,1x,
      *        'the effective expansivity of: ',a,/,'is negative. ',

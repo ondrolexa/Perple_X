@@ -179,53 +179,6 @@ c                                 gridded pseudosection construction
 
       end 
 
-c-----------------------------------------------------------------------
-      subroutine psbtxt (id,string,iend)
-
-c subprogram to write a text labels for bulk composition output 
-c id identifies the assemblage
-
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      character*8 text(400)*1, string*400
-
-      integer i, j, ist, iend, id, np, ntot, ids
-
-      integer idasls,iavar,iasct,ias
-      common/ cst75  /idasls(k5,k3),iavar(3,k3),iasct,ias
-c----------------------------------------------------------------------
-      iend = 0
-
-      string = ' '
-
-      ist = 1
-      np = iavar(1,id)
-      ntot = iavar(3,id)
-
-      do i = 1, 400
-         text(i) = ' '
-      end do
-c                                 first solution names:
-      do i = 1, ntot
-             
-         ids = idasls(i,id)
-
-         call getnam (string,ids) 
-
-         ist = iend + 1
-         iend = ist + 11
-         read (string,'(400a1)') (text(j),j=ist,iend)
-
-         call ftext (text,ist,iend)
-
-      end do 
-
-      write (string,'(400a1)') (text(j),j=1,iend) 
-
-      end 
-
       subroutine check1 (iop5,iop6,iop7,id,n,ntot,imatch)
 c----------------------------------------------------------------------
 c checkr  - subroutine to check exclusions by phase identity
@@ -320,7 +273,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      character yes*1, text*400
+      character yes*1, text*240
 
       logical bad
 
@@ -538,7 +491,6 @@ c                                 test that it's ok
             if (rlabel.lt.1d0) then 
 c                                 ---------begin georges block-----------
             call psbtxt (lex(k), text, iend)
-            call psublk (text, iend)
 c                                  scan the range to find a node
 c                                  with the assemblage
             nax(1) = 0
@@ -882,7 +834,7 @@ c psgrd1 - subprogram draw 1d gridded minimization diagrams.
 
       include 'perplex_parameters.h'
 
-      character yes*1, text*400
+      character yes*1, text*240
 
       integer k, hfill, jop0,
      *        j, ipoly, idr(k5), iop5, iop6, jmin, jmax,

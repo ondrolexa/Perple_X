@@ -693,7 +693,7 @@ fuv_d = 1 alm +  1 knor  - 1 py
 
 begin_excess_function 
 w(py gr) 33d3 0. 0.
-w(py knor) 30d3 0 0 
+w(py knor) 3d3 0 0          | corrected as in erratum to ziberna et al 2013 (2014)
  | w(py py gr) 59304. -10.5  .036   Ganguly excess paramters
  | w(py gr gr) 25860. -10.5  .174  
 end_excess_function 
@@ -703,6 +703,9 @@ z(Ca) = 1 gr + 1 uv_d
 z(Mg) = 1 py + 1 knor
 2 2.                                  2 species, site multiplicity of 2
 z(Al) = 1 gr + 1 alm + 1 py 
+
+reach_increment 0
+
 end_of_model                  
                       -------------------------------------------------------- 
 begin_model
@@ -4122,6 +4125,7 @@ z(na,m2) = 1 jd
 2 1.                                  T, Al-Si, this is fake to get gasparik's model.
 z(al,t) = 1 cats
 
+
 end_of_model               
                       --------------------------------------------------------
 begin_model                
@@ -6054,6 +6058,8 @@ z(m2,na) = 1 jd + 1 acm
 2 1.                          | 2 species on T1, ccrts not counted intentionally.
 z(t1,al) = 1 cats + 1 esn
 
+reach_increment 0
+
 end_of_model
                            --------------------------------------------------------
 begin_model  
@@ -6131,7 +6137,7 @@ z(b,al)   = 1 sp + 1 herc
 z(b,fe3+) = 1/2 mt + 1/2 mft
 z(b,mg)   = 1/2 mft 
 
-reach_increment 4
+reach_increment 3
 
 end_of_model 
                   --------------------------------------------------------

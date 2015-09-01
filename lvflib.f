@@ -2241,13 +2241,17 @@ c-----------------------------------------------------------------------
 
       double precision vrt
       integer irt
-      logical sroot
-      common/ rkroot /vrt,irt,sroot
+      logical sroot, nospe
+      common/ rkroot /vrt,irt,sroot,nospe
 
       double precision pv, pvv
       integer iroots
       logical switch, rkmin, min
       common/ rkdivs /pv,pvv,iroots,switch,rkmin,min
+
+      integer idspec
+      double precision spec
+      common/ tspec /spec(nsp,k5),idspec
  
       save r, max
                              
@@ -2256,6 +2260,15 @@ c----------------------------------------------------------------------
       dsqrtt = dsqrt(t)
       rt = r*t
       bad = .false.
+
+      if (nospe) then 
+c                                 load known composition to override
+c                                 speciation routine calculations
+         do k = 1, isp
+            x(ins(k)) = spec(k,idspec) 
+         end do 
+
+      end if 
 
       call rkparm (ins,isp)
 
@@ -6166,8 +6179,8 @@ c----------------------------------------------------------------------
 
       double precision vrt
       integer irt
-      logical sroot
-      common/ rkroot /vrt,irt,sroot
+      logical sroot, nospe
+      common/ rkroot /vrt,irt,sroot,nospe
 
       save isp, ins, i1, i2, i3, i4, i5, both, iavg, itic
       data isp, ins, i1, i2, i3, i4, i5, both, iavg, itic
@@ -6176,6 +6189,21 @@ c----------------------------------------------------------------------
      *                                          .false., 3, 0/
 c----------------------------------------------------------------------
       iavg = iopt(29)
+
+      if (nospe.and.iavg.eq.99) then 
+c                                 speciation is shut off
+         call mrkmix (ins, isp, iavg) 
+c                                 who knows what this is gonna do
+         if (sroot.and.iroots.eq.3) then 
+            both = .true.
+         else if ((.not.both).and.iroots.eq.3) then
+            both = .true.
+            min = rkmin
+         end if
+
+         return 
+
+      end if 
 c                                 get pure species fugacities
       call mrkpur (ins, isp)
 c                                 zero species in case of degenerate compositions
@@ -6468,6 +6496,11 @@ c----------------------------------------------------------------------
       integer ipoint,imyn
       common/ cst60 /ipoint,imyn
 
+      double precision vrt
+      integer irt, iavg
+      logical sroot, nospe
+      common/ rkroot /vrt,irt,sroot,nospe
+
       double precision vol
       common/ cst26 /vol
 
@@ -6534,7 +6567,31 @@ c                                assume pure O2
 
             end if 
          
-         end if 
+         end if
+
+      else if (nospe.and.c1.eq.-99.) then 
+
+        iavg = iopt(29)
+
+		y(7)	= 0.233783469451155	 
+		y(12)	= 9.357294087823798D-002 
+		y(13)	= 0.561565921033080	 
+		y(14)	= 0.111058627225356	 
+		y(15)	= 1.904141217084223D-005 
+
+         call mrkmix (ins, isp, iavg) 
+
+               fh2o = dlog(p*g(i3)*y(i3)) 
+               if (y(i5).ne.0d0) then 
+                  fco2 = dlog(p*g(i5)*y(i5))
+               else if (y(i2).ne.0d0) then 
+                  fco2 = lnk3 + dlog(g(i2)*y(i2)/g(i3)/y(i3))
+               else if (y(i1).ne.0d0) then 
+                  fco2 = lnk2 + lnk3 + 
+     *                   dlog(g(i1)*y(i1)/p/(g(i3)*y(i3))**2)
+               else
+                  write (*,*) 'wugga rksi5 ',t,p,xc,y
+               end if 
 
       else 
 
@@ -6617,6 +6674,8 @@ c                                 use a liquid like starting guess
 
          end if 
 
+c         goto 98
+
          call rksi5a (c1,c2,c3,bad)
 
          if (bad) then 
@@ -6664,7 +6723,7 @@ c                                 use a liquid like starting guess
 
       end if 
 c                                 convert to g-atom vol
-      n = 3d0*y(14) + 2d0*y(13) + 2d0*y(7) + y(12) + y(15)
+98    n = 3d0*y(14) + 2d0*y(13) + 2d0*y(7) + y(12) + y(15)
 c                                 convert to "molar amounts"         
       vol = vol/n/1d1
 
@@ -6728,8 +6787,8 @@ c----------------------------------------------------------------------
 
       double precision vrt
       integer irt
-      logical sroot
-      common/ rkroot /vrt,irt,sroot
+      logical sroot, nospe
+      common/ rkroot /vrt,irt,sroot,nospe
 
       save isp, ins, i1, i2, i3, i4, i5, both, iavg
       data isp, ins, i1, i2, i3, i4, i5, both, iavg
@@ -6738,6 +6797,22 @@ c----------------------------------------------------------------------
      *                                          .false., 3/
 c----------------------------------------------------------------------
       iavg = iopt(29)
+
+      if (nospe.and.iavg.eq.39) then 
+c                                 speciation is shut off
+         call mrkmix (ins, isp, iavg) 
+c                                 who knows what this is gonna do
+         if (sroot.and.iroots.eq.3) then 
+            both = .true.
+         else if ((.not.both).and.iroots.eq.3) then
+            both = .true.
+            min = rkmin
+         end if
+
+         return 
+
+      end if 
+
 c                                 get pure species fugacities
       call mrkpur (ins, isp)
 c                                 zero species in case of degenerate compositions
@@ -7156,7 +7231,14 @@ c               tt = 3100d0
 c            else 
 c               tt = t
 c            end if 
+c                                 the hsc b
+            b(14) = 25.79671756d0
+
             if (iopt(28).eq.2) then 
+c                                  shornikov b was probably not used in 
+c                                  original calculations, the cp correction
+c                                  should be checked.
+                b(14) = 25.83798814d0
 c                                  shornikov DP fit, with a0 correction
                 a(14) = (-0.370631646315402D9 -88784.52
      *                 + 0.710713269453173D8*dlog(t)
@@ -7181,7 +7263,7 @@ c                                   fit to mp s,cp,g,v
 c           a(14) = ( 73828180.7110d0 + 7535d0*(t-1999.)
 c    *                  - 4.438d0*(t-1999.)**2)*1d2
 c-------------------------------------------------------------
-            else if (iopt(28).eq.3) then    
+            else if (iopt(28).eq.3.or.iopt(28).eq.4) then    
 c                                 HSC decaying CP, june 2015.
                a(14) = (-0.106829676139492080D9 
      *              + t **1.5d0 * 0.464367503957971803D4 
@@ -7220,7 +7302,8 @@ c    *                              - 1.138d0  * (t-1687.)**2)*1d2
 
       end do 
 
-      if (iopt(28).ne.1) then 
+      
+      if (iopt(28).ne.1.and.iopt(28).ne.4) then 
       
          a(13) = ark(14)/16.722d0
          b(13) = brk(14)/4.831d0
