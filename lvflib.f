@@ -2172,7 +2172,7 @@ c----------------------------------------------------------------------
  
       end
 
-      subroutine mrkmix (ins, isp, iavg)
+      subroutine x_mrkmix (ins, isp, iavg)
 c-----------------------------------------------------------------------
 c subroutine to calculate the log fugacities and volume of mixed
 c species fluids using the RK/MRK EoS. 
@@ -2912,8 +2912,10 @@ c                                 fugacities.
   
       end
 
-      subroutine mrkpur (ins, isp)
+      subroutine xmrkpur (ins, isp)
 c-----------------------------------------------------------------------
+c real mrkpur 
+
 c subroutine to calculate the log fugacities and volume of single
 c species fluids using the RK/MRK EoS. 
 
@@ -6573,12 +6575,6 @@ c                                assume pure O2
 
         iavg = iopt(29)
 
-		y(7)	= 0.233783469451155	 
-		y(12)	= 9.357294087823798D-002 
-		y(13)	= 0.561565921033080	 
-		y(14)	= 0.111058627225356	 
-		y(15)	= 1.904141217084223D-005 
-
          call mrkmix (ins, isp, iavg) 
 
                fh2o = dlog(p*g(i3)*y(i3)) 
@@ -8166,3 +8162,517 @@ c      if (nit.gt.20) write (*,*) 'rk4a long it:',nit
       fh2o = (dlog(p*g(i4)*y(i4)) - lnk1) / 2d0
 
       end
+
+      subroutine mrkpur (ins, isp)
+c-----------------------------------------------------------------------
+c real crkpur
+
+c subroutine to calculate the log fugacities and volume of single
+c species fluids using the hard sphere MRK EoS. 
+
+c input:
+
+c        ins(i) -  pointers indicating the species are to be calculated.
+c        isp     - the number of species to be calculated.
+c        p,t     - input from cst5, p(bars), t(K)
+
+c output (to common cstcoh):
+
+c        g(i)    - fugacity coefficient of ith species
+c        v(i)    - volume of the ith species
+
+c species indices:
+
+c         7 = O2
+c        12 = O
+c        13 = SiO
+c        14 = SiO2
+c        15 = Si  
+c-----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+ 
+      double precision bv, v4b, rt, rt3, prt, f1, f2, f3, f4, df1, df2, 
+     *                 df3, dv, vi(2), fi(2), vmb, fdf, at2
+
+      integer i, j, itic, ir(2), ins(*), isp, k, ict
+ 
+      double precision p,t,xco2,u1,u2,tr,pr,r,ps
+      common/ cst5  /p,t,xco2,u1,u2,tr,pr,r,ps
+
+      double precision fg
+      common/ cst11 /fg(2) 
+
+      double precision x,g,v
+      common/ cstcoh /x(nsp),g(nsp),v(nsp)
+
+      double precision vol
+      common/ cst26 /vol
+
+      double precision a, b
+      common/ rkab /a(nsp),b(nsp)
+
+      double precision pv, pvv
+      integer iroots
+      logical switch, rkmin, min
+      common/ rkdivs /pv,pvv,iroots,switch,rkmin,min
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+c----------------------------------------------------------------------
+
+      call crkprm 
+
+      rt = r*t 
+      rt3 = rt*dsqrt(t)
+      prt = p/rt
+
+      do k = 1, isp
+
+         i = ins(k)
+         at2 = a(i)/dsqrt(t)
+         ict = 0
+
+         do j = 1, 2
+c                                 iterate for a low and high root
+            if (j.eq.1) then
+               vi(j) = 2d0*b(i)
+            else 
+               vi(j) = 1d0/prt
+            end if 
+
+            ir(j) = 0
+            itic = 0
+c                                iteration loop
+            do 
+
+               bv = b(i)/vi(j)
+               v4b = vi(j) + 4d0*b(i)
+               f1 = 1d0 + bv*(1d0 + bv*(1d0 + bv))
+               df1 = -(3d0*bv**3 + 2d0*bv**2 + bv)/vi(j)
+               f2 = (1d0 - bv)**3 
+               df2 = 3d0*(1d0 - bv)**2 * bv/vi(j)
+               f3 = vi(j)*v4b
+               df3 = vi(j) + v4b
+
+               fdf = (rt/vi(j)*f1/f2 - at2/f3  - p) / 
+     *               ((df1 - f1*(1d0/vi(j) + df2/f2)) *rt/f2/vi(j) + 
+     *               at2 / f3 ** 2 * df3)
+
+               vi(j) = vi(j) - fdf
+               itic = itic + 1
+
+               if (dabs(fdf/vi(j)).lt.nopt(5)) then
+c                                 converged
+                  ir(j) = 1
+                  ict = ict + 1
+                  vmb = vi(j) - b(i)
+                  f4 = b(i)/vmb
+c                                 compute fugacity
+                  fi(j) = (6d0 + 8d0 *f4 + 4d0 * f4**2)*f4  
+     *                  + dlog(vi(j)*rt/vmb**2)
+     *                  + (dlog(vi(j)/v4b)/b(i)/4d0 - 1d0/v4b)*a(i)/rt3
+                  exit
+
+               else if (itic.gt.1000.or.vi(j).lt.0d0) then 
+
+                  exit
+
+               end if 
+
+            end do
+                  
+         end do
+
+         j = 2
+ 
+         if (ict.eq.2) then       
+c                                 found high low roots, choose the stable one:
+            if (dabs(vi(1)-vi(2))/vi(1).lt.2d0*nopt(5)
+     *                    .or.fi(1).lt.fi(2))  j = 1
+
+         else if (ict.eq.1.and.ir(1).eq.1) then
+
+             j = 1
+
+         end if    
+
+         if (ict.ge.1) then 
+            v(i) = vi(j)
+            g(i) = dexp(fi(j))/p
+            vol = v(i)
+         else 
+c                                 failed
+            write (*,*) 'failed'
+            write (*,*) p,t,i,vi
+            v(i) = 1d0/prt
+            g(i) = 1d0
+
+         end if 
+c                                 next species:
+      end do 
+
+      end
+
+      subroutine mrkmix (ins, isp, iavg)
+c-----------------------------------------------------------------------
+c this is really crkmix
+
+c subroutine to calculate the log fugacities and volume of mixed
+c species fluids using the  hard spehere MRK EoS. 
+
+c input:
+
+c        ins(i) -  pointers indicating the species are to be calculated.
+c        isp    - the number of species to be calculated.
+c        p,t    - input from cst5, p(bars), t(K)
+c        iavg   - a flag indicating whether the a cross term is to 
+c                 be computed as the geometric mean (iavg = 1), the
+c                 arithmetic mean (iavg = 2), or the harmonic mean
+
+c output (to common cstcoh):
+
+c        g(i)    - fugacity coefficient of ith species
+c        v(i)    - volume of the ith species
+
+c species indices:
+
+c         7 = O2
+c        12 = O
+c        13 = SiO
+c        14 = SiO2
+c        15 = Si
+c-----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      logical bad
+ 
+      integer i, j, k, l, itic, ir(2), ins(*), isp, ict, iavg
+
+      double precision vi(2), fi(2), aik(nsp), rt, rt3, vmb, v4b, 
+     *                 c0, c1, c2, aij, bx, at2, y, ym1, fdf, vvb,
+     *                 f1, f2, f3, f4, df1, df2, df3, ax, bv, b4
+ 
+      double precision p,t,xco2,u1,u2,tr,pr,r,ps
+      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
+
+      double precision x,g,v
+      common/ cstcoh /x(nsp),g(nsp),v(nsp)
+
+      double precision vol
+      common/ cst26 /vol
+
+      double precision a, b
+      common/ rkab /a(nsp),b(nsp)
+
+      double precision vrt
+      integer irt
+      logical sroot, nospe
+      common/ rkroot /vrt,irt,sroot,nospe
+
+      double precision pv, pvv
+      integer iroots
+      logical switch, rkmin, min
+      common/ rkdivs /pv,pvv,iroots,switch,rkmin,min
+
+      integer idspec
+      double precision spec
+      common/ tspec /spec(nsp,k5),idspec
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+c---------------------------------------------------------------------- 
+      bad = .false.
+
+      if (nospe) then 
+c                                 load known composition to override
+c                                 speciation routine calculations
+         do k = 1, isp
+            x(ins(k)) = spec(k,idspec) 
+         end do 
+
+      end if 
+
+      call crkprm 
+
+      bx = 0d0
+      aij = 0d0
+
+      do k = 1, isp
+
+         i = ins(k)
+
+         aik(i) = 0d0
+         bx = bx + b(i)*x(i)
+
+      end do 
+
+      do k = 1, isp
+
+         i = ins(k)
+
+         do l = 1, isp
+
+            j = ins(l)
+ 
+            if (iavg.eq.1) then 
+c                                 geometric mean mixing rule
+               ax = dsqrt(a(i)*a(j))
+            else if (iavg.eq.2) then 
+c                                 arithmetic mean mixing rule
+               ax = (a(i) + a(j))/2d0
+            else 
+c                                 harmonic mean mixing rule
+               ax = 2d0/(1d0/a(i) + 1d0/a(j))
+            end if 
+
+            aij = aij + x(i)*x(j)*ax
+            aik(i) = aik(i) + x(j)*ax
+
+         end do 
+
+      end do 
+c                                 solve for high/low mixture molar volume
+      rt = r*t 
+      rt3 = rt*dsqrt(t)
+      at2 = aij/dsqrt(t)
+
+      ict = 0
+
+      do j = 1, 2
+c                                 iterate for a low and high root
+         if (j.eq.1) then
+            vi(j) = 2d0*b(i)
+         else 
+            vi(j) = rt/p
+         end if 
+
+         ir(j) = 0
+         itic = 0
+c                                iteration loop
+         do 
+
+            bv = bx/vi(j)
+            v4b = vi(j) + 4d0*b(i)
+            f1 = 1d0 + bv*(1d0 + bv*(1d0 + bv))
+            df1 = -(3d0*bv**3 + 2d0*bv**2 + bv)/vi(j)
+            f2 = (1d0 - bv)**3 
+            df2 = 3d0*(1d0 - bv)**2 * bv/vi(j)
+            f3 = vi(j)*v4b
+            df3 = vi(j) + v4b
+
+            fdf = (rt/vi(j)*f1/f2 - at2/f3  - p) / 
+     *            ((df1 - f1*(1d0/vi(j) + df2/f2)) *rt/f2/vi(j) + 
+     *               at2 / f3 ** 2 * df3)
+
+            vi(j) = vi(j) - fdf
+            itic = itic + 1
+
+            if (dabs(fdf/vi(j)).lt.nopt(5)) then
+c                                 converged
+               ir(j) = 1
+               ict = ict + 1
+               vmb = vi(j) - bx
+               f4 = bx/vmb
+c                                 compute fugacity
+               fi(j) = (6d0 + 8d0 *f4 + 4d0 * f4**2)*f4  
+     *                 + dlog(vi(j)*rt/vmb**2)
+     *                 + (dlog(vi(j)/v4b)/bx/4d0 - 1d0/v4b)*aij/rt3
+               exit
+
+            else if (itic.gt.1000.or.vi(j).lt.0d0) then 
+
+               exit
+
+            end if 
+
+         end do
+                  
+      end do
+
+      j = 2
+      rkmin = .false.
+ 
+      if (ict.eq.2) then       
+c                                 found high low roots, choose the stable one:
+         if (dabs(vi(1)-vi(2))/vi(1).lt.2d0*nopt(5)
+     *                    .or.fi(1).lt.fi(2))  j = 1
+
+      else if (ict.eq.1.and.ir(1).eq.1) then
+
+         j = 1
+
+      end if    
+
+      if (ict.ge.1) then 
+
+         vol = vi(j)
+         if (j.eq.1) rkmin = .true.
+
+      else 
+c                                 failed
+         write (*,*) 'failed'
+         write (*,*) p,t,i,vi
+         vol = rt/p
+
+         bad = .true. 
+
+      end if 
+c                                 compute fugacities:
+      y = bx/vol
+      b4 = 4d0*bx
+      v4b = vol + b4
+      vvb = dlog(vol/v4b)
+      ym1 = 1d0 - y
+      c0 = (4d0-3d0*y)*y/ym1**2 - dlog(p*vol/rt)
+      c1 = ((4d0-2d0*y)*y/ym1**3 - aij/rt3*(vvb/b4+1d0/v4b))/bx
+      c2 = 0.5d0/rt3/bx*vvb
+ 
+      do i = 1, isp
+
+         k = ins(i)
+          
+         if (x(k).gt.0d0) then
+c                                 ln(g(k)) 
+            g(k) = c0 + c1*b(k) + c2*aik(k)
+c                                 f(k) is returned as the log of the fugacity
+c           f(k) = g(k) + dlog(p*x(k))
+c                                 g(k) is returned as the fugacity coefficient
+            g(k) = dexp(g(k))
+
+         else 
+
+            g(l) = 1d0
+c           f(l) = dlog(1d4*p)
+
+         end if 
+
+      end do 
+  
+      end
+
+      subroutine crkprm 
+c-----------------------------------------------------------------------
+c subroutine to return standard crk a and b terms. 
+
+c input:
+
+c        ins(i) -  pointers indicating the species are to be calculated.
+c        isp     - the number of species to be calculated.
+c        t       - input from cst5, p(bars), t(K)
+
+c species indices:
+
+c         7 = O2
+c        12 = O
+c        13 = SiO
+c        14 = SiO2
+c        15 = Si  
+c-----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+ 
+      double precision brk(nsp), ark(nsp)
+
+      double precision p,t,xco2,u1,u2,tr,pr,r,ps
+      common/ cst5  /p,t,xco2,u1,u2,tr,pr,r,ps
+
+      double precision a, b
+      common/ rkab /a(nsp),b(nsp)
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      double precision fac, fac1
+      common/junk/fac,fac1
+c             /6*0,O2,4*0,SiO,SiO2,Si,extra/
+      data ark/6*0, 197250.3755, 4*0,  197250.3755, 34442201d0, 
+     *                                 103737441d0, 34145483.64d0,0d0/
+      data brk/6*0, .6991496981d0, 4*0, .6991496981d0, 0.87d0, 
+     *                                 1.404308450, .5692957742d0,0d0/
+c----------------------------------------------------------------------
+c      if (first) then 
+c         write (*,*) 'enter fac'
+c         read (*,*) fac
+c         if (fac.eq.0d0) fac=16.77
+c         first = .false.
+c      end if 
+
+c iopt_28 0 - HSC
+c iopt_28 1 - shorn
+c iopt_28 2 - amax
+c iopt_28 3 - lo_cp
+c iopt_28 4 - lo_cp + amax
+c iopt_28 5 - cstA
+
+      a(7) = ark(7)
+      b(7) = brk(7)
+c                                  O = O2
+      a(12) = ark(7)
+      b(12) = brk(7)
+c                                  amax values
+      a(13) = ark(13) 
+      b(13) = brk(13)
+c                                  Si (HSC)
+      a(15) = -0.143182723956312150D9 
+     *      + dsqrt(T) * T * 0.632401227965891962D3 
+     *      + dlog(T) * 0.263255060973985531D8 
+     *      + T * (-0.306664513481886788D5) 
+     *      + T ** 2 * (-0.362745315385726119D1)
+      b(15) = brk(15)
+c                                  SiO2
+      if (iopt(28).eq.2) then 
+c                                  shornikov 
+               stop
+
+      else if (iopt(28).eq.0.or.iopt(28).eq.1.) then         
+c                                  HSC DP fit
+         b(14) = brk(14)
+
+         a(14) = -0.749255053043097258D9 
+     *           + dsqrt(T) * T * 0.513703560938930059D4 
+     *           + dlog(T) * 0.139385980759038210D9 
+     *           - T * 0.268011409248898912D6 
+     *           - T**2 * 0.324444596182990921D2
+c delta component :
+c        *            +  fac*(t-1999.) + fac1*(t-1999.)**2
+c                                  HSC Low Cp fit
+
+c-------------------------------------------------------------
+      else if (iopt(28).eq.3.or.iopt(28).eq.4) then    
+c                                 HSC decaying CP
+         b(14) = brk(14)
+
+         a(14) = -0.124160697379198694D10 
+     *           + dsqrt(T) * T * 0.983048341715197239D4 
+     *           + dlog(T) * 0.229017895319238782D9 
+     *           - T * 0.516809574417529920D6 
+     *           - T ** 2 * 0.602303238739998790D2
+
+      end if 
+c                                 SiO
+      if (iopt(28).ne.1.and.iopt(28).ne.4) then 
+c                                 fraction of sio2 values
+         a(13) = ark(14)/7.4004d0
+         b(13) = brk(14)/2.1363d0
+
+      else 
+c                                 amax values
+         a(13) = ark(13) 
+         b(13) = brk(13)
+
+
+      end if 
+
+
+      end 

@@ -136,6 +136,9 @@ fper = 1 per - 1/3 ta + 1/3 fta
 fatg = 1 atg - 16 ta + 16 fta
 0 0 0
 
+atgts = 4 clin + 9/17 atg - 24/17 br      | Tshermaks antigorite for Atg(PN) model (Padrón-Navarta et al., 2013, Lithos)
+-2e3 46.1 0
+
  | odo = 1/2 mag + 1/2 cc          | ordered dolmite species for H&P dolomite model
  | -13.5d3 0 0 
                                 | endmembers for the melt(HP) model, the dqf corrections
@@ -215,12 +218,20 @@ ma_dqf = 1 ma
 kho = 1 py - 1 gr + 1 andr
       40d3 0 0  
                                 | Make definitions for the White et al (JMG, 2000) ilmenite, Ilm(WHP), JADC, 10/29/11.
+                                | Corrected coeffiecients for TC un-landau, formerly, the TC DQF was used without
+                                | modification. NOTE: the ilm and ilm_nol endmembers must be excluded from calculations 
+                                | with the Ilm(WPH) model and the ilm_nol, oilm and dilm must be excluded from calculations 
+                                | without the Ilm(WPH) model. JADC, 6/19/13. 
 oilm = 1 ilm_nol 
-      -13608 9.426 0 
-                                  
+      | -13608 9.426 0 => the TC DQF coeffecients added to
+      | smax*tc0*(q0^2-1/3*q0^6), -smax*q0^2, vmax*q0^2, respectively, yields
+      | the un-landaued DQF coefficients for Perple_X
+       189.27763 -.67412637 .1836386612d-1  
+                     
 dilm = 1 ilm_nol  
-        1993  -2.1 0 
-
+      | 1993  -2.1 0 => the TC DQF coeffecients, the values below are
+      | oilm + {DH,R*ln(4),0} 
+       15789.27763 -12.19977769  .1836386612d-1
                                 | Make definitions for Kelsey & Powell (JMG, 2011) Zr melting relations. JADC, 2/6/12
 zr8L = 2 zrc                    | Zr-melt endmember
        69e3 0 0 
@@ -1682,7 +1693,14 @@ m0 = 910000 m1 = 1.7 m2 = -170
 transition = 1 type = 4 t1  = 1900 t2  = 11 t3  = .2E-1  
 end
 
- 
+ilm_nol  EoS = 2 | created from ilm for Ilm(WPH) by suppressing the Landau model                                                                
+TIO2(1)FEO(1)
+G0 = -1154702 S0 = 108.9 V0 = 3.169  
+c1 = 138.9 c2 = .5081E-2 c3 = -1288800 c5 = -463.7  
+b1 = .495E-4 b5 = -.495E-3 b6 = 1770000. b7 = -265.5 b8 = 4  
+m0 = 910000 m1 = 1.7 m2 = -170  
+end
+
 bdy      EoS = 2 | H= -1101310.                                                                   
 ZRO2(1)
 G0 = -1043530 S0 = 50.4 V0 = 2.115  
