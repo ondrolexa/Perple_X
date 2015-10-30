@@ -5836,7 +5836,6 @@ c                          saturation composant phases
 
       do i = 1, isat
 
-         write (n3,1180) (cname(i), i = icp1, j)
          write (n3,'(/,3a,/)') ' for component ', cname(i+icp),':'
          write (n3,'(7(1x,a,1x))') (names(ids(i,j)), j = 1, isct(i))
 
