@@ -520,7 +520,7 @@ c                                 komabayashi & fei (2010) EoS for Fe
          else if (eos(id).eq.604) then 
 c                                 Stoichiometic SiO2 rk fluid 
             ins(1) = 14
-            call mrkpur (ins,1)
+            call rkpur (ins,1)
             gval = gval + r*t*dlog(p*g(14))
 
          else if (eos(id).eq.605) then 
@@ -534,7 +534,7 @@ c    *         -0.3213822427D7 / t + 0.6464888248D6 - 0.1403012026D3*t
 
          else if (eos(id).eq.606) then 
 c                                 Stoichiometic Si rk fluid 
-            call mrkpur (kns,1)
+            call rkpur (kns,1)
             gval = gval + r*t*dlog(p*g(15))
 
          else if (eos(id).ge.610.and.eos(id).le.649) then
@@ -545,19 +545,19 @@ c                                 Xiong et al., 2011 for Fe-Cr alloys
          else if (eos(id).eq.700) then 
 c                                 sio
             ins(1) = 13
-            call mrkpur (ins,1)
+            call rkpur (ins,1)
             gval = gval + r*t*dlog(p*g(13))
 
          else if (eos(id).eq.701) then 
 c                                 o2
             ins(1) = 7
-            call mrkpur (ins,1)
+            call rkpur (ins,1)
             gval = gval + r*t*dlog(p*g(7))
 
          else if (eos(id).eq.702) then 
 c                                 o
             ins(1) = 12
-            call mrkpur (ins,1)
+            call rkpur (ins,1)
             gval = gval + r*t*dlog(p*g(12))
               
          end if          

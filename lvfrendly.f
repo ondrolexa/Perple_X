@@ -66,7 +66,7 @@ c                                 version info
 c                                 assign data files
       call fopen2 (2,opname)
 c                                 read options
-      opname = 'perplex_option.dat'
+      opname = 'boil_perplex_option_final.dat'
       call redop1 (.false.,opname)
 c                                 override T_melt option
       nopt(20) = 0d0

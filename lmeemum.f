@@ -142,11 +142,7 @@ c                                 lpopt does the minimization and outputs
 c                                 the results to the print file.
          call lpopt0 (idead)
 
-         if (idead.gt.0) then
- 
-            write (*,*) 'minimization failed'
-
-         else 
+         if (idead.eq.0) then
 c                                 compute derivative properties
             call getloc (itri,jtri,ijpt,wt,nodata)
 c                                 print summary to LUN 6

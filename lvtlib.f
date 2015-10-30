@@ -287,6 +287,8 @@ c                                 iop_28 0-hsc, 1-amax, 2-shorn, 3-cp
       iopt(28) = 0 
 c                                 iop_29 mixing 1-geometric, 2-arith, 3-harmonic
       iopt(29) = 1
+c                                 iop_30 0 - csrk, 1 - mrk
+      iopt(30) = 0 
 c                                 -------------------------------------
 c                                 werami output options:
 

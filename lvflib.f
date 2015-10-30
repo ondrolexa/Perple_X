@@ -2172,7 +2172,7 @@ c----------------------------------------------------------------------
  
       end
 
-      subroutine x_mrkmix (ins, isp, iavg)
+      subroutine mrkmix (ins, isp, iavg)
 c-----------------------------------------------------------------------
 c subroutine to calculate the log fugacities and volume of mixed
 c species fluids using the RK/MRK EoS. 
@@ -2912,7 +2912,45 @@ c                                 fugacities.
   
       end
 
-      subroutine xmrkpur (ins, isp)
+      subroutine rkpur (ins, isp)
+
+      include 'perplex_parameters.h'
+
+      integer ins(*), isp
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      if (iopt(30).eq.0) then 
+         call crkpur (ins, isp)
+      else
+         call mrkpur (ins, isp)
+      end if
+ 
+      end 
+
+      subroutine rkmix (ins, isp, iavg)
+
+      include 'perplex_parameters.h'
+
+      integer ins(*), isp, avg
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      if (iopt(30).eq.0) then 
+         call crkmix (ins, isp, iavg)
+      else
+         call mrkmix (ins, isp, iavg)
+      end if
+ 
+      end 
+
+      subroutine mrkpur (ins, isp)
 c-----------------------------------------------------------------------
 c real mrkpur 
 
@@ -6184,6 +6222,9 @@ c----------------------------------------------------------------------
       logical sroot, nospe
       common/ rkroot /vrt,irt,sroot,nospe
 
+      logical crkbad
+      common/ crk /crkbad
+
       save isp, ins, i1, i2, i3, i4, i5, both, iavg, itic
       data isp, ins, i1, i2, i3, i4, i5, both, iavg, itic
      *                                      /5, 14, 13, 12, 7, 15, 
@@ -6207,7 +6248,7 @@ c                                 who knows what this is gonna do
 
       end if 
 c                                 get pure species fugacities
-      call mrkpur (ins, isp)
+      call rkpur (ins, isp)
 c                                 zero species in case of degenerate compositions
       do i = 1, isp
          y(ins(i)) = 0d0
@@ -6246,7 +6287,12 @@ c                                 Si-SiO mix
 
       end if 
 
-      call mrkmix (ins, isp, iavg)    
+      call rkmix (ins, isp, iavg) 
+
+      if (crkbad) then 
+         bad = .true.
+         return
+      end if    
 
       do 
 c                                 solve mass balance: yo^4 + a3*yo^3 + a2*yo^2 + a1*yo + a0) 
@@ -6385,7 +6431,12 @@ c                                 this does help!
 
          end if 
 c                                 get new gamma's
-            call mrkmix (ins, isp, iavg)           
+            call rkmix (ins, isp, iavg)   
+
+      if (crkbad) then 
+         bad = .true.
+         return
+      end if          
 c                                could converge to the wrong speciation
             if (sroot.and.iroots.eq.3) then 
                both = .true.
@@ -6443,7 +6494,7 @@ c                                save old solution
 
             switch = .true.
 
-            call mrkpur (ins, isp)
+            call rkpur (ins, isp)
 
             goto 10
 
@@ -6533,7 +6584,7 @@ c                                 get pure species fugacities, formerly
 c                                 in these cases xc was set to tol or 1 - tol
 c                                 probably to stabilize optimization? or maybe for
 c                                 chemical potentials.
-         call mrkpur (ins, isp)
+         call rkpur (ins, isp)
 c                                 zero species in case of degenerate compositions
          do i = 1, isp
             y(ins(i)) = 0d0
@@ -6570,24 +6621,6 @@ c                                assume pure O2
             end if 
          
          end if
-
-      else if (nospe.and.c1.eq.-99.) then 
-
-        iavg = iopt(29)
-
-         call mrkmix (ins, isp, iavg) 
-
-               fh2o = dlog(p*g(i3)*y(i3)) 
-               if (y(i5).ne.0d0) then 
-                  fco2 = dlog(p*g(i5)*y(i5))
-               else if (y(i2).ne.0d0) then 
-                  fco2 = lnk3 + dlog(g(i2)*y(i2)/g(i3)/y(i3))
-               else if (y(i1).ne.0d0) then 
-                  fco2 = lnk2 + lnk3 + 
-     *                   dlog(g(i1)*y(i1)/p/(g(i3)*y(i3))**2)
-               else
-                  write (*,*) 'wugga rksi5 ',t,p,xc,y
-               end if 
 
       else 
 
@@ -6721,7 +6754,7 @@ c         goto 98
 c                                 convert to g-atom vol
 98    n = 3d0*y(14) + 2d0*y(13) + 2d0*y(7) + y(12) + y(15)
 c                                 convert to "molar amounts"         
-      vol = vol/n/1d1
+      vol = vol/n
 
       end 
 
@@ -6786,6 +6819,9 @@ c----------------------------------------------------------------------
       logical sroot, nospe
       common/ rkroot /vrt,irt,sroot,nospe
 
+      logical crkbad
+      common/ crk /crkbad
+
       save isp, ins, i1, i2, i3, i4, i5, both, iavg
       data isp, ins, i1, i2, i3, i4, i5, both, iavg
      *                                      /5, 14, 13, 12, 7, 15, 
@@ -6796,7 +6832,7 @@ c----------------------------------------------------------------------
 
       if (nospe.and.iavg.eq.39) then 
 c                                 speciation is shut off
-         call mrkmix (ins, isp, iavg) 
+         call rkmix (ins, isp, iavg) 
 c                                 who knows what this is gonna do
          if (sroot.and.iroots.eq.3) then 
             both = .true.
@@ -6810,7 +6846,7 @@ c                                 who knows what this is gonna do
       end if 
 
 c                                 get pure species fugacities
-      call mrkpur (ins, isp)
+      call rkpur (ins, isp)
 c                                 zero species in case of degenerate compositions
       do i = 1, isp
          y(ins(i)) = 0d0
@@ -6861,7 +6897,12 @@ c                                 closure => sio2:
       if (y(i1).lt.0d0) y(i1) = nopt(5)/10d0
 
 
-      call mrkmix (ins, isp, iavg)    
+      call rkmix (ins, isp, iavg)    
+
+      if (crkbad) then 
+         bad = .true.
+         return
+      end if  
 
       do 
 c                                 solve mass balance: yo^4 + a3*yo^3 + a2*yo^2 + a1*yo + a0) 
@@ -7000,7 +7041,12 @@ c                                 this does help!
 
          end if 
 c                                 get new gamma's
-            call mrkmix (ins, isp, iavg)           
+         call rkmix (ins, isp, iavg)          
+
+         if (crkbad) then 
+            bad = .true.
+            return
+         end if   
 c                                could converge to the wrong speciation
             if (sroot.and.iroots.eq.3) then 
                both = .true.
@@ -7056,7 +7102,7 @@ c                                save old solution
 
             switch = .true.
 
-            call mrkpur (ins, isp)
+            call rkpur (ins, isp)
 
             goto 10
 
@@ -7220,13 +7266,7 @@ c     *           + t**3 * (-0.286881183333320412D-1)
 
          else if (i.eq.14) then 
 c                                 MRK dispersion term for SiO2, from 
-c                                 sio2_mp_fit3.mws 
-
-c           if (t.gt.3100d0.and..not.lopt(28)) then 
-c               tt = 3100d0
-c            else 
-c               tt = t
-c            end if 
+c                                 sio2_mp_fit3.mws  
 c                                 the hsc b
             b(14) = 25.79671756d0
 
@@ -7898,7 +7938,7 @@ c                                iterate for non-ideality
          y(i4) = 1d0 - y(i3)
          if ( dabs((oldy-y(i3))/y(i3)).lt.nopt(5)) exit  
 c                                 get new gamma's
-         call mrkmix (ins, isp, iavg)
+         call rkmix (ins, isp, iavg)
 
          oldy = y(i3)
          nit = nit + 1
@@ -8163,9 +8203,8 @@ c      if (nit.gt.20) write (*,*) 'rk4a long it:',nit
 
       end
 
-      subroutine mrkpur (ins, isp)
+      subroutine crkpur (ins, isp)
 c-----------------------------------------------------------------------
-c real crkpur
 
 c subroutine to calculate the log fugacities and volume of single
 c species fluids using the hard sphere MRK EoS. 
@@ -8194,9 +8233,12 @@ c-----------------------------------------------------------------------
       include 'perplex_parameters.h'
  
       double precision bv, v4b, rt, rt3, prt, f1, f2, f3, f4, df1, df2, 
-     *                 df3, dv, vi(2), fi(2), vmb, fdf, at2
+     *                 df3, vi(2), fi(2), vmb, f, df, at2, fac1, v0,
+     *                 vdfmin, vdfmax, dfmax, dfmin
 
-      integer i, j, itic, ir(2), ins(*), isp, k, ict
+      integer i, j, itic, ir(2), ins(*), isp, k, ict, jtic 
+
+      logical fog, bad, case1
  
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5  /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -8223,6 +8265,8 @@ c-----------------------------------------------------------------------
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 c----------------------------------------------------------------------
+      bad = .false.
+      fog = .true.
 
       call crkprm 
 
@@ -8234,50 +8278,125 @@ c----------------------------------------------------------------------
 
          i = ins(k)
          at2 = a(i)/dsqrt(t)
-         ict = 0
+         v0 = rt/p
+         fac1 = 1.5d0
+         dfmin = 1d99
+         vdfmin = 1d99
+         dfmax = 0d0
+         vdfmax = 0d0
+         case1 = .true.
+c                                 two cases: 1) 3 real roots, if this occurs
+c                                 convergence to the false root can be 
+c                                 avoided by expanding the distance of the
+c                                 guesses from the false root (case 1 below).
+c                                 2) real roots, in this case the scheme to 
+c                                 solve case 1 may not yield any results, in 
+c                                 this case the correct root should lie between
+c                                 v_dfmax(1) and v_dfmin(2) of the 3 root search
+c                         
+10       ict = 0
 
          do j = 1, 2
+c                                 only one root for low t gases
+            if ((i.eq.7.or.i.eq.12).and.j.eq.1) cycle 
 c                                 iterate for a low and high root
-            if (j.eq.1) then
-               vi(j) = 2d0*b(i)
+            if (j.eq.1.and.case1) then
+               vi(j) = fac1 * b(i)
+            else if (case1) then
+               vi(j) = v0
             else 
-               vi(j) = 1d0/prt
+c                                 hail mary
+               vi(j) = (vdfmax + vdfmin)/2d0
             end if 
 
             ir(j) = 0
             itic = 0
+            jtic = 0
 c                                iteration loop
             do 
 
                bv = b(i)/vi(j)
                v4b = vi(j) + 4d0*b(i)
-               f1 = 1d0 + bv*(1d0 + bv*(1d0 + bv))
-               df1 = -(3d0*bv**3 + 2d0*bv**2 + bv)/vi(j)
+
+               f1 = 1d0 + bv*(1d0 + bv*(1d0 - bv))
+               df1 = (3d0*bv**3 - 2d0*bv**2 - bv)/vi(j)
                f2 = (1d0 - bv)**3 
                df2 = 3d0*(1d0 - bv)**2 * bv/vi(j)
                f3 = vi(j)*v4b
                df3 = vi(j) + v4b
 
-               fdf = (rt/vi(j)*f1/f2 - at2/f3  - p) / 
-     *               ((df1 - f1*(1d0/vi(j) + df2/f2)) *rt/f2/vi(j) + 
-     *               at2 / f3 ** 2 * df3)
+               f = rt/vi(j)*f1/f2 - at2/f3  - p
+               df = (df1 - f1*(1d0/vi(j) + df2/f2))*rt/f2/vi(j) + 
+     *               at2 / f3 ** 2 * df3
 
-               vi(j) = vi(j) - fdf
+               if (case1) then 
+                  if (j.eq.1.and.df.gt.dfmax) then 
+                     dfmax = df
+                     vdfmax = vi(j)
+                  else if (j.eq.2) then 
+                     if (vi(j).gt.vdfmax.and.df.lt.dfmin) then 
+                        dfmin = df
+                        vdfmin = vi(j)
+                     end if 
+                  end if 
+               end if 
+
+               if (vi(j)-f/df.lt.b(i)) then 
+                  vi(j) = 1.1d0*b(i)
+               else if (j.eq.2.and.dfmax.gt.0d0.and.
+     *                  vi(j)-f/df.lt.vdfmax) then 
+                  vi(j) = (vdfmax + vdfmin)/2d0
+               else 
+                  vi(j) = vi(j) - f/df
+               end if 
+
                itic = itic + 1
 
-               if (dabs(fdf/vi(j)).lt.nopt(5)) then
+               if (dabs(f/df/vi(j)).lt.nopt(5)/100d0) then
 c                                 converged
+                  if (df.gt.0d0) then 
+c                                 case 1 =>
+c                                 got the middle root
+                     if (j.eq.2) then 
+c                                 try a new guess, assuming the root 
+c                                 is < videal
+                        v0 = vi(2) + 0.9*(v0-vi(2))
+                        vi(2) = v0
+                        jtic = jtic + 1
+
+                     else if (j.eq.1) then 
+
+                        fac1 = 1d0 + (fac1-1d0)*0.9
+                        vi(1) = fac1 * b(i) 
+                        jtic = jtic + 1  
+
+                     end if 
+ 
+                     if (jtic.lt.10) then
+
+                        cycle 
+
+                     else  
+c                                 ten tries and you're toast.
+                        write (*,*) 'crkpur got wrong root on ',j,p,t
+                        write (*,*) 'b,a,vi',b(i),a(i),vi
+                        exit
+
+                     end if 
+
+                  end if 
+
                   ir(j) = 1
                   ict = ict + 1
-                  vmb = vi(j) - b(i)
-                  f4 = b(i)/vmb
-c                                 compute fugacity
-                  fi(j) = (6d0 + 8d0 *f4 + 4d0 * f4**2)*f4  
-     *                  + dlog(vi(j)*rt/vmb**2)
+                  v4b = vi(j) + 4d0*b(i)
+c                                 compute (log) fugacity
+                  fi(j) = b(i)*(3d0*b(i)*(b(i) - 3d0*vi(j))
+     *                  + 8d0*vi(j)**2)/(vi(j) - b(i))**3  
+     *                  + dlog(rt/vi(j))
      *                  + (dlog(vi(j)/v4b)/b(i)/4d0 - 1d0/v4b)*a(i)/rt3
                   exit
 
-               else if (itic.gt.1000.or.vi(j).lt.0d0) then 
+               else if (itic.gt.100) then 
 
                   exit
 
@@ -8291,8 +8410,12 @@ c                                 compute fugacity
  
          if (ict.eq.2) then       
 c                                 found high low roots, choose the stable one:
-            if (dabs(vi(1)-vi(2))/vi(1).lt.2d0*nopt(5)
-     *                    .or.fi(1).lt.fi(2))  j = 1
+            if (dabs(vi(1)-vi(2))/vi(1).lt.2d0*nopt(5)) then
+               iroots = 1
+            else 
+               iroots = 3
+               if (fi(1).lt.fi(2))  j = 1
+            end if 
 
          else if (ict.eq.1.and.ir(1).eq.1) then
 
@@ -8304,10 +8427,21 @@ c                                 found high low roots, choose the stable one:
             v(i) = vi(j)
             g(i) = dexp(fi(j))/p
             vol = v(i)
+
+         else if (case1) then 
+c                                 failed
+            if (fog) then
+               write (*,*) 'crkpur got no root on ',i,itic,jtic
+               write (*,*) 'b = ',b(i),', a = ',a(i),', p = ',p, 
+     *                     ', t = ',t
+               case1 = .false.
+               goto 10
+            end if 
+
          else 
 c                                 failed
-            write (*,*) 'failed'
-            write (*,*) p,t,i,vi
+            write (*,*) 'failed crkpur case 2'
+            write (*,*) p,t,i,vi,iroots
             v(i) = 1d0/prt
             g(i) = 1d0
 
@@ -8317,7 +8451,7 @@ c                                 next species:
 
       end
 
-      subroutine mrkmix (ins, isp, iavg)
+      subroutine crkmix (ins, isp, iavg)
 c-----------------------------------------------------------------------
 c this is really crkmix
 
@@ -8350,13 +8484,15 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical bad
+      logical fog, case1
  
-      integer i, j, k, l, itic, ir(2), ins(*), isp, ict, iavg
+      integer i, j, k, l, itic, ir(2), ins(*), isp, ict, iavg, jtic 
 
       double precision vi(2), fi(2), aik(nsp), rt, rt3, vmb, v4b, 
-     *                 c0, c1, c2, aij, bx, at2, y, ym1, fdf, vvb,
-     *                 f1, f2, f3, f4, df1, df2, df3, ax, bv, b4
+     *                 c0, c1, c2, aij, bx, at2, f, df, vvb,
+     *                 f1, f2, f3, f4, df1, df2, df3, ax, bv, b4, v0, 
+     *                 fac1, dfmax, dfmin, vdfmax, vdfmin, xdv, xd2f,
+     *                 d2f2, d2f1, d2f
  
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -8388,10 +8524,14 @@ c-----------------------------------------------------------------------
       logical lopt
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      logical bad
+      common/ crk /bad
 c---------------------------------------------------------------------- 
       bad = .false.
+      fog = .true.
 
-      if (nospe) then 
+      if (nospe.and.isp.eq.5) then 
 c                                 load known composition to override
 c                                 speciation routine calculations
          do k = 1, isp
@@ -8443,57 +8583,129 @@ c                                 solve for high/low mixture molar volume
       rt = r*t 
       rt3 = rt*dsqrt(t)
       at2 = aij/dsqrt(t)
+      v0 = rt/p
+      fac1 = 1.5d0
+      dfmin = 1d99
+      vdfmin = 1d99
+      dfmax = 0d0
+      vdfmax = 0d0
+      case1 = .true.
 
-      ict = 0
+10    ict = 0
+c                                 two cases: 1) 3 real roots, if this occurs
+c                                 convergence to the false root can be 
+c                                 avoided by expanding the distance of the
+c                                 guesses from the false root (case 1 below).
+c                                 2) real roots, in this case the scheme to 
+c                                 solve case 1 may not yield any results, in 
+c                                 this case the correct root should lie between
+c                                 v_dfmax(1) and v_dfmin(2) of the 3 root search
+c                         
 
       do j = 1, 2
 c                                 iterate for a low and high root
-         if (j.eq.1) then
-            vi(j) = 2d0*b(i)
+         if (j.eq.1.and.case1) then
+            vi(j) = fac1 * bx
+         else if (case1) then
+            vi(j) = v0
          else 
-            vi(j) = rt/p
+c                                 hail mary
+            vi(j) = (vdfmax + vdfmin)/2d0
          end if 
 
          ir(j) = 0
          itic = 0
+         jtic = 0 
 c                                iteration loop
          do 
 
             bv = bx/vi(j)
-            v4b = vi(j) + 4d0*b(i)
-            f1 = 1d0 + bv*(1d0 + bv*(1d0 + bv))
-            df1 = -(3d0*bv**3 + 2d0*bv**2 + bv)/vi(j)
+            v4b = vi(j) + 4d0*bx
+
+            f1 = 1d0 + bv*(1d0 + bv*(1d0 - bv))
+            df1 = (3d0*bv**3 - 2d0*bv**2 - bv)/vi(j)
             f2 = (1d0 - bv)**3 
             df2 = 3d0*(1d0 - bv)**2 * bv/vi(j)
             f3 = vi(j)*v4b
             df3 = vi(j) + v4b
 
-            fdf = (rt/vi(j)*f1/f2 - at2/f3  - p) / 
-     *            ((df1 - f1*(1d0/vi(j) + df2/f2)) *rt/f2/vi(j) + 
-     *               at2 / f3 ** 2 * df3)
+            f = rt/vi(j)*f1/f2 - at2/f3  - p 
+            df = (df1 - f1*(1d0/vi(j) + df2/f2)) *rt/f2/vi(j) + 
+     *               at2/f3**2*df3
 
-            vi(j) = vi(j) - fdf
+            if (case1) then 
+               if (j.eq.1.and.df.gt.dfmax) then 
+                  dfmax = df
+                  vdfmax = vi(j)
+               else if (j.eq.2) then 
+                  if (vi(j).gt.vdfmax.and.df.lt.dfmin) then 
+                     dfmin = df
+                     vdfmin = vi(j)
+                  end if 
+               end if 
+            end if 
+
+            if (vi(j)-f/df.lt.bx) then 
+               vi(j) = 1.1d0*bx
+            else if (j.eq.2.and.dfmax.gt.0d0.and.vi(j)-f/df.lt.vdfmax)
+     *           then 
+               vi(j) = (vdfmax + vdfmin)/2d0
+            else 
+               vi(j) = vi(j) - f/df
+            end if 
+
             itic = itic + 1
 
-            if (dabs(fdf/vi(j)).lt.nopt(5)) then
+            if (dabs(f/df/vi(j)).lt.nopt(5)) then
 c                                 converged
+               if (df.gt.0d0) then 
+c                                 case 1 =>
+c                                 got the middle root
+                  if (j.eq.2) then 
+c                                 try a new guess, assuming the root 
+c                                 is < videal
+                     v0 = vi(2) + 0.9*(v0-vi(2))
+                     vi(2) = v0
+                     jtic = jtic + 1
+                  else if (j.eq.1) then 
+                     fac1 = 1d0 + (fac1-1d0)*0.9
+                     vi(1) = fac1 * bx 
+                     jtic = jtic + 1  
+                  end if 
+ 
+                  if (jtic.lt.10) then
+
+                     cycle 
+
+                  else  
+c                                 ten tries and you're toast.
+                     write (*,*) 'crkmix got wrong root on ',j,p,t
+                     write (*,*) 'b,a,vi',bx,aij,vi
+                     exit
+
+                  end if 
+
+               end if 
+
                ir(j) = 1
                ict = ict + 1
-               vmb = vi(j) - bx
-               f4 = bx/vmb
-c                                 compute fugacity
-               fi(j) = (6d0 + 8d0 *f4 + 4d0 * f4**2)*f4  
-     *                 + dlog(vi(j)*rt/vmb**2)
-     *                 + (dlog(vi(j)/v4b)/bx/4d0 - 1d0/v4b)*aij/rt3
+c                                 compute (log) fugacity
+               fi(j) = bx*(3d0*bx*(bx - 3d0*vi(j)) 
+     *                     + 8d0*vi(j)**2)/(vi(j) - bx)**3  
+     *               + dlog(rt/vi(j))
+     *               + (dlog(vi(j)/v4b)/bx/4d0 - 1d0/v4b)*aij/rt3
+
                exit
 
-            else if (itic.gt.1000.or.vi(j).lt.0d0) then 
+            else if (itic.gt.100) then 
 
                exit
 
             end if 
 
          end do
+
+         if (.not.case1) exit
                   
       end do
 
@@ -8502,8 +8714,12 @@ c                                 compute fugacity
  
       if (ict.eq.2) then       
 c                                 found high low roots, choose the stable one:
-         if (dabs(vi(1)-vi(2))/vi(1).lt.2d0*nopt(5)
-     *                    .or.fi(1).lt.fi(2))  j = 1
+         if (dabs(vi(1)-vi(2))/vi(1).lt.2d0*nopt(5)) then
+            iroots = 1
+         else 
+            iroots = 3
+            if (fi(1).lt.fi(2))  j = 1
+         end if 
 
       else if (ict.eq.1.and.ir(1).eq.1) then
 
@@ -8516,24 +8732,34 @@ c                                 found high low roots, choose the stable one:
          vol = vi(j)
          if (j.eq.1) rkmin = .true.
 
-      else 
+      else if (case1) then 
 c                                 failed
-         write (*,*) 'failed'
-         write (*,*) p,t,i,vi
+         if (fog) then
+            write (*,*) 'crkmix got no root on ',itic,jtic
+            write (*,*) 'b = ',bx,', a = ',aij,', p = ',p, 
+     *                  ', t = ',t
+            case1 = .false.
+            goto 10
+         end if 
+
+      else 
+
+         write (*,*) 'failed crkmix case 2'
+         write (*,*) p,t,vi,iroots
          vol = rt/p
 
          bad = .true. 
 
       end if 
-c                                 compute fugacities:
-      y = bx/vol
+c                                 compute fugacity coefficients:
       b4 = 4d0*bx
       v4b = vol + b4
       vvb = dlog(vol/v4b)
-      ym1 = 1d0 - y
-      c0 = (4d0-3d0*y)*y/ym1**2 - dlog(p*vol/rt)
-      c1 = ((4d0-2d0*y)*y/ym1**3 - aij/rt3*(vvb/b4+1d0/v4b))/bx
-      c2 = 0.5d0/rt3/bx*vvb
+      vmb = vol - bx
+
+      c0 = bx*(4d0*vol-3d0*bx)/vmb**2-dlog(p*vol/rt)
+      c1 = 2d0*vol*(2d0*vol-bx)/vmb**3 - aij/bx/rt3*(vvb/4d0/bx-1d0/v4b)
+      c2 = vvb/2d0/rt3/bx
  
       do i = 1, isp
 
@@ -8542,15 +8768,12 @@ c                                 compute fugacities:
          if (x(k).gt.0d0) then
 c                                 ln(g(k)) 
             g(k) = c0 + c1*b(k) + c2*aik(k)
-c                                 f(k) is returned as the log of the fugacity
-c           f(k) = g(k) + dlog(p*x(k))
 c                                 g(k) is returned as the fugacity coefficient
             g(k) = dexp(g(k))
 
          else 
 
             g(l) = 1d0
-c           f(l) = dlog(1d4*p)
 
          end if 
 
@@ -8595,11 +8818,11 @@ c-----------------------------------------------------------------------
 
       double precision fac, fac1
       common/junk/fac,fac1
-c             /6*0,O2,4*0,SiO,SiO2,Si,extra/
-      data ark/6*0, 197250.3755, 4*0,  197250.3755, 34442201d0, 
-     *                                 103737441d0, 34145483.64d0,0d0/
-      data brk/6*0, .6991496981d0, 4*0, .6991496981d0, 0.87d0, 
-     *                                 1.404308450, .5692957742d0,0d0/
+c             /6*0,O2,4*0,O,SiO,SiO2,Si,extra/
+      data ark/6*0, 198564.287d0, 4*0,  198564.287d0, 33763512.65d0, 
+     *                                 105874910d0, 34133758.81d0,0d0/
+      data brk/6*0, .7061092932d0, 4*0, .7061092932d0, 0.858d0, 
+     *                                 1.461146594, .5912977334, 0d0/
 c----------------------------------------------------------------------
 c      if (first) then 
 c         write (*,*) 'enter fac'
@@ -8623,12 +8846,15 @@ c                                  O = O2
 c                                  amax values
       a(13) = ark(13) 
       b(13) = brk(13)
-c                                  Si (HSC)
-      a(15) = -0.143182723956312150D9 
-     *      + dsqrt(T) * T * 0.632401227965891962D3 
-     *      + dlog(T) * 0.263255060973985531D8 
-     *      + T * (-0.306664513481886788D5) 
-     *      + T ** 2 * (-0.362745315385726119D1)
+c                                  Si (HSC) -> this version is fit to T = 1670..7812 K
+      a(15) = -0.162675013861649871D9 + 
+     *         + dsqrt(T) * T * 0.711090979178141765D3 
+     *         + dlog(T) * 0.302051228266203068D8 
+     *         + T * (-0.366287546541563570D5) 
+     *         + T ** 2 * (-0.399047367965869792D1) 
+     *         - 0.1134271320D11/ T 
+     *         + 0.9567578584D13 / T ** 2
+
       b(15) = brk(15)
 c                                  SiO2
       if (iopt(28).eq.2) then 
@@ -8636,28 +8862,37 @@ c                                  shornikov
                stop
 
       else if (iopt(28).eq.0.or.iopt(28).eq.1.) then         
-c                                  HSC DP fit
+c                                  HSC DP fit 1990..5358
          b(14) = brk(14)
 
-         a(14) = -0.749255053043097258D9 
-     *           + dsqrt(T) * T * 0.513703560938930059D4 
-     *           + dlog(T) * 0.139385980759038210D9 
-     *           - T * 0.268011409248898912D6 
-     *           - T**2 * 0.324444596182990921D2
-c delta component :
-c        *            +  fac*(t-1999.) + fac1*(t-1999.)**2
+         a(14) = -0.189732356455955838D10 
+     *         + dsqrt(T) * T * 0.109169966705432816D5 
+     *         + dlog(T) * 0.338073205503342212D9 
+     *         + T * (-0.640616525713361567D6) 
+     *         + T ** 2 * (-0.607460044767094800D2) 
+     *         - 0.7465865200D11/ T + 0.7462132267D14 / T ** 2
+
 c                                  HSC Low Cp fit
 
 c-------------------------------------------------------------
       else if (iopt(28).eq.3.or.iopt(28).eq.4) then    
 c                                 HSC decaying CP
          b(14) = brk(14)
+c                                 this one makes the flip around 3000 K
+c         a(14) = -0.124160697379198694D10 
+c     *           + dsqrt(T) * T * 0.983048341715197239D4 
+c     *           + dlog(T) * 0.229017895319238782D9 
+c     *           - T * 0.516809574417529920D6 
+c     *           - T ** 2 * 0.602303238739998790D2
+c                                 flip around 4000 K, includes corrections
+c                                 to match a, cp, and s at 1999 K
+          a(14) = -0.115033657587105156D10 
+     *            + dsqrt(T) * T  * 0.844196361849501591D4 
+     *            + dlog(T) * 0.211331977511108011D9 
+     *            + T * (-0.451460561846663943D6) 
+     *            + T ** 2 * (-0.510936615049275176D2)
+     *            +  1047d0*(t-1999d0) + 0.0614*(t-1999.)**2
 
-         a(14) = -0.124160697379198694D10 
-     *           + dsqrt(T) * T * 0.983048341715197239D4 
-     *           + dlog(T) * 0.229017895319238782D9 
-     *           - T * 0.516809574417529920D6 
-     *           - T ** 2 * 0.602303238739998790D2
 
       end if 
 c                                 SiO

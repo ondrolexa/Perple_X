@@ -121,8 +121,14 @@ c        compute the tq factorization of the working set matrix.
 
                write (*,*) 'i am gonna crash, set msg and die, but why?'
 
-            end if             
+               idead = 7 
+
+               return
+
+            end if   
+          
          end if
+
       else 
 c                                 warm start
          unitq = iw(1) .eq. 1

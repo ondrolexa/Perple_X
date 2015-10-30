@@ -120,8 +120,8 @@ c                                 version info
 
       lun = 112
 
-      open (lun,file='lv.tab')
-      open (111,file='scratch')
+      open (lun,file='lvz.tab')
+      open (111,file='scratchz')
 
       write (lun,'(a)') '|6.6.6'
       write (lun,*) 'output from LVmeemum'
@@ -136,16 +136,10 @@ c                                 version info
      *    'SL SG CpL CpG Cp/CvL Cp/CvG rhoL rhoG v_phiL v_phiG ',
      *    'yL_SiO2 yL_SiO yL_O yL_O2 yL_Si ', 
      *    'yG_SiO2 yG_SiO yG_O yG_O2 yG_Si ',
-     *    'pvL pvvL irL pvG pvvG irG ln(K4) ln(C4) ln(K5) ln(C5) ravg ',
+     *    'null null irL null null irG null null null null ravg ',
      *    'savg ssG rsG VL(j/bar-amol) VG(j/bar-amol) ZL ZG ',
      *    'alphaL alphaV KTL KTV'
 
-c      * v(1),10d0**v(1),tlv,tlv-tlv1,tlv2-tlv,
-c      * x, n, molwt, prps(1,1), 
-c      * prps(2,2) - prps(2,1), 
-c                                 S, Cp, Cp/Cv, rho, vphi
-c      * ((prps(j,i),i=1,2),j=3,7),
-c      * ((spec1(j,i),i=1,2),j=1,5)
 c                                 initialization, read files etc. 
       rxn = .false.
       call iniprp
@@ -187,6 +181,7 @@ c                                 computations are done solely in molar units.
       if (iwt.eq.1) amount = 'weight'
 
       write (*,*) ' iop_28 iop_29: ', iopt(28), iopt(29)
+      write (*,*) ' lop_28 (nospe): ',lopt(28)
 c                                 computational loop
       do 
 c                                 read potential variable values    
@@ -195,6 +190,9 @@ c                                 for general problems but can be eliminated for
 c                                 simply as a f(P,T)       
          write (*,1070) (vname(jv(i)), i = 1, ipot), 'rhoc'
          read (*,*,iostat=ier) (v(jv(i)), i = 1, ipot), rhoc
+
+         tst = v(2) 
+
          if (ier.ne.0) cycle
          if (v(jv(1)).eq.0d0) then 
             exit
@@ -241,14 +239,6 @@ c                                 the results to the print file.
          xdt = 1d0
          tlv1 = v(2)
          quit = .false.
-c                                 rhoc base model
-c        rhoc = 1170d0
-c                                 rhoc shornikov
-c        rhoc = 1052d0
-c                                 rhoc amax
-c        rhoc = 750d0
-c                                 cst a
-c        rhoc = 1220d0
 
          dp = nopt(30)
 
@@ -269,18 +259,6 @@ c        rhoc = 1220d0
             b(2) = 1d0 - b(1)
             x(2) = 0d0
             v(2) = tlv1 
-c                                 use guess, base model
-c         v(2) = ((14.483*v(1)+31.569)*v(1)+391.69)*v(1)+3120.2 
-c         y = 14.483*x^{3} + 31.569*x^{2} + 391.69*x + 3129.2 HSC base model
-c                                 use guess, shornikov model
-c        v(2) = ((14.074*v(1)+32.984)*v(1)+385.01)*v(1)+3096.2 
-c         y = 14.074*x^{3} + 32.984*x^{2} + 385.01*x + 3096.2 shonikov model 
-c                                 use guess, asio max model
-c        v(2) = ((18.267*v(1)+28.192)*v(1)+375.31)*v(1)+3139.4
-c         y = 18.267*x^{3} + 28.192*x^{2} + 375.31*x + 3139.4
-c                                 use guess, cst a model
-c        v(2) = ((50.739*v(1)- 102.48)*v(1)+545.51)*v(1)+3024
-c         y = 50.739*x^{3} - 102.48*x^{2} + 545.51*x + 3024
 
          do 
 
@@ -298,12 +276,10 @@ c                                  in liquid field, continue looking for vapor
      *                         .and.(props(10,2).lt.rhoc)
      *                         .and.(dt.lt.0d0) ) then
 c                                  in vapor field, continue looking for liquid
-               else if (np.eq.2.and.(props(10,1).lt.rhoc)
+               else if (np.eq.2.and.(props(10,1).gt.rhoc)
      *                         .and.(props(10,2).lt.rhoc)
      *                         .and.(dt.gt.0d0) ) then
-c                                  in pseudo vapor field, back up
-                  dt = -dt/2d0
-
+c                                  in L+V keep going 
                else if (np.gt.1.or..not.go.or.
      *             np.eq.1.and.props(10,1).gt.rhoc) then 
 
@@ -373,6 +349,12 @@ c                                 to find the plausible root
                         do
 
                            v(2) = v(2) + dt 
+
+            if (v(2).lt.tst) then 
+                write (*,*) 'we are sinking 2'
+                exit
+            end if 
+
                            call lpopt0 (idead)
                            if (idead.ne.0) cycle
 c                           if (idead.ne.0.or.np.eq.1) cycle
@@ -466,6 +448,12 @@ c                                 now increase t to get into the gas composition
                       do 
 
                          v(2) = v(2) + dt 
+
+            if (v(2).lt.tst) then 
+                write (*,*) 'we are sinking 1'
+                exit
+            end if 
+
                          call lpopt0 (idead)
                          if (idead.ne.0) cycle
 
@@ -551,12 +539,18 @@ c                        if (rho2.gt.rhoc) cycle
 
              end if 
 c                                 set the bulk back to the liquid
-                            cblk(1) = pcomp(1,1)
+             if (imax.lt.1.or.imax.gt.2) imax = 1
+                            cblk(1) = pcomp(1,imax)
                             cblk(2) = 1d0 - cblk(1)
                             b(1) = cblk(1)
                             b(2) = cblk(2)
 
              v(2) = v(2) + dt
+ 
+            if (v(2).lt.tst.and..not.go) then 
+                write (*,*) 'we are sinking'
+                exit
+            end if 
 
          end do 
 
@@ -600,10 +594,6 @@ c                                 beta to bulk
 
           write (*,'(12(g12.6,1x))') v(1),tlv,tlv-tlv1,tlv2-tlv,x,
      *                     rho1,rho2,cp1/ats(1)/r/3d0,cp2/ats(1)/r/3d0
-          write (*,'(12(g12.6,1x))') pv1,pvv1,ir1,pv2,pvv2,ir2
-c
-
-
 
 
           do j = 1, 2 
@@ -634,15 +624,7 @@ c                         back calculate compositions
 
       t = v(2)
       p = 1d1**(v(1))
-      lnk1 = (-0.9214495D6/t + 0.6234471D5)/t - 0.1631235D2
-      lnk2 = (-1.133204d+06/t - 5.491882d+04)/t + 1.710990d+01
-      lnk3 = (1.906315d6/t - 1.005993d5)/t + 1.664069d1
-      lnk4 = lnk1 + lnk2 + lnk3
-c      write (*,'(a,12(g12.6,1x))') 'k4 ',lnk4,lnk4+dlog(p)
-      lnk5 = lnk1/2d0 + lnk3
-c      write (*,'(a,12(g12.6,1x))') 'k5 ',lnk5,lnk5*dlog(p)/2d0    
-c      write (113,'(12(g12.6,1x))') 
-c     *  lnk4,lnk4+dlog(p),lnk5,lnk5*dlog(p)/2d0  
+
        write (*,'(a,12(g12.6,1x))') 'rho-s crit ',ravg,savg
        write (*,'(a,12(g12.6,1x))') 'vL vG zL zG ',
      *                              (prps(8,i),i=1,2),(z(i),i=1,2)
@@ -660,8 +642,8 @@ c            if (idead.eq.0) call getloc (itri,jtri,ijpt,wt,nodata)
      *  prps(2,2) - prps(2,1), 
      *  ((prps(j,i),i=1,2),j=3,7),
      *  ((spec1(j,i),j=1,5),i=1,2),
-     *   pv1,pvv1,ir1,pv2,pvv2,ir2,
-     *   lnk4,lnk4+dlog(p),lnk5,lnk5*dlog(p)/2d0,ravg,savg,
+     *   0d0,0d0,ir1,0d0,0d0,ir2,
+     *   0d0,0d0,0d0,0d0,ravg,savg,
      *   props(15,1)/props(17,1)*1e3,props(10,1),
      *   (prps(8,i),i=1,2),(z(i),i=1,2),
      *   ((prps(j,i),i=1,2),j=9,10)

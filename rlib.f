@@ -9431,14 +9431,14 @@ c                                 MRK COH fluid (41), EoS code 27
 
       else 
 
-         spct(im) = lstot(im) + nord(im) 
+         spct(im) = nstot(im) 
 c                                 independent disordered species
          do i = 1, lstot(im)
             spnams(i,im) = mname(iorig(knsp(i,im)))
          end do 
 c                                 ordered species
-         do i = lstot(im) + ndep(im) + 1, nstot(im)
-            spnams(i,im) = mname(iorig(i))
+         do i = lstot(im), nstot(im)
+            spnams(i,im) = mname(iorig(ndep(im)+i))
          end do 
 
          if (ksmod(im).eq.29.or.ksmod(im).eq.32) then 

@@ -5831,9 +5831,14 @@ c                          phases
          write (n3,'(7(1x,a,1x))') (names(i), i = istct, iphct)
       end if 
 c                          saturation composant phases
+      write (n3,'(/,a,/)')
+     *          'Phases on saturation and buffering surfaces:'
+
       do i = 1, isat
 
-          write (n3,'(7(1x,a,1x))') (names(ids(i,j)), j = 1, isct(i))
+         write (n3,1180) (cname(i), i = icp1, j)
+         write (n3,'(/,3a,/)') ' for component ', cname(i+icp),':'
+         write (n3,'(7(1x,a,1x))') (names(ids(i,j)), j = 1, isct(i))
 
       end do 
 c                          excluded phases

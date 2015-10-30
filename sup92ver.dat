@@ -796,7 +796,7 @@ Ab       EoS = 1 | ALBITE          NaAlSi3O8                 ref:1
 NA2O(.5)AL2O3(.5)SIO2(3)
 G0 = -3708313 S0 = 207.15 V0 = 10.025  
 c1 = 258.153 c2 = .581576E-1 c3 = -6280184  
-transition = 1 type = 1  t1 = 473  t4 = 342.586  t5 = .148699E-1  t6 = -20984430  
+transition = 1 type = 2  t1 = 473  t4 = 342.586  t5 = .148699E-1  t6 = -20984430  
 end
 
  
@@ -804,7 +804,7 @@ Hi-Ab    EoS = 1 | ALBITE,HIGH     NaAlSi3O8                 ref:1
 NA2O(.5)AL2O3(.5)SIO2(3)
 G0 = -3700786 S0 = 218.823 V0 = 10.043  
 c1 = 258.153 c2 = .581576E-1 c3 = -6280184  
-transition = 1 type = 1  t1 = 623  t4 = 268.487  t5 = .581576E-1  t6 = -6280184  
+transition = 1 type = 2  t1 = 623  t4 = 268.487  t5 = .581576E-1  t6 = -6280184  
 end
 
  
@@ -812,7 +812,7 @@ Atg      EoS = 1 | ANTIGORITE      Mg48Si34O85(OH)62         ref:1
 MGO(48)SIO2(34)H2O(31)
 G0 = -66140760 S0 = 3603.93 V0 = 174.913  
 c1 = 5139.84 c2 = 2.14957 c3 = -119946900  
-transition = 1 type = 1  t1 = 848  t4 = 5166.53  t5 = 2.09719  t6 = -117687600  
+transition = 1 type = 2  t1 = 848  t4 = 5166.53  t5 = 2.09719  t6 = -117687600  
 end
 
  
@@ -820,7 +820,7 @@ end
 MGO(5)AL2O3(1)SIO2(3)H2O(4)
 G0 = -8188511 S0 = 445.596 V0 = 21.15  
 c1 = 681.239 c2 = .211794 c3 = -17104190  
-transition = 1 type = 1  t1 = 848  t4 = 694.586  t5 = .185602  t6 = -15974510  
+transition = 1 type = 2  t1 = 848  t4 = 694.586  t5 = .185602  t6 = -15974510  
 end
 
  
@@ -828,7 +828,7 @@ Cos      EoS = 1 | COESITE         SiO2                      ref:1
 SIO2(1)
 G0 = -851616. S0 = 40.3756 V0 = 2.0641  
 c1 = 46.024 c2 = .343088E-1 c3 = -1129680  
-transition = 1 type = 1  t1 = 848  t4 = 59.371  t5 = .811696E-2  
+transition = 1 type = 3  t1 = 848  t4 = 59.371  t5 = .811696E-2  
 end
 
  
@@ -836,7 +836,7 @@ Crs      EoS = 1 | CRISTOBALITE    SiO2                      ref:1
 SIO2(1)
 G0 = -853097. S0 = 43.3965 V0 = 2.574  
 c1 = 58.4923 c2 = .139746E-1 c3 = -1594104  
-transition = 1 type = 1  t1 = 543  t3 = 2.47341  t4 = 72.7598  t5 = .129704E-2  t6 = -4137976  
+transition = 1 type = 2  t1 = 543  t3 = 2.47341  t4 = 72.7598  t5 = .129704E-2  t6 = -4137976  
 end
 
  
@@ -844,7 +844,7 @@ Fs       EoS = 1 | FERROSILITE     FeSiO3                    ref:1,13
 SIO2(1)FEO(1)
 G0 = -1119588 S0 = 90.4999 V0 = 3.2952  
 c1 = 110.834 c2 = .212129E-1 c3 = -2322120  
-transition = 1 type = 1  t1 = 413  t2 = 67  t3 = .374838  t4 = 99.8512  t5 = .367355E-1  t6 = -1966480  
+transition = 1 type = 2  t1 = 413  t2 = 67  t3 = .374838  t4 = 99.8512  t5 = .367355E-1  t6 = -1966480  
 end
 
  
@@ -852,7 +852,7 @@ Hrz      EoS = 1 | HERZENBERGITE   SnS                       ref:12
 O2(-.5)S2(.5)SNO(1)
 G0 = -104696. S0 = 76.8182 V0 = 2.901  
 c1 = 35.6895 c2 = .312963E-1 c3 = 376560  
-transition = 1 type = 1  t1 = 875  t3 = .765074  t4 = 40.9195  t5 = .156482E-1  
+transition = 1 type = 2  t1 = 875  t3 = .765074  t4 = 40.9195  t5 = .156482E-1  
 end
 
  
@@ -860,7 +860,7 @@ Kls      EoS = 1 | KALSILITE       KAlSiO4                   ref:1
 AL2O3(.5)SIO2(1)K2O(.5)
 G0 = -2015642 S0 = 133.26 V0 = 5.989  
 c1 = 123.135 c2 = .726342E-1 c3 = -2225888  
-transition = 1 type = 1  t1 = 810  t4 = 177.82  
+transition = 1 type = 2  t1 = 810  t4 = 177.82  
 end
 
  
@@ -868,7 +868,7 @@ Lws      EoS = 1 | LAWSONITE       CaAl2Si2O7(OH)2*H2O       ref:1,19
 AL2O3(1)SIO2(2)CAO(1)H2O(2)
 G0 = -4491139 S0 = 233.467 V0 = 10.132  
 c1 = 342.251 c2 = .977382E-1 c3 = -6803184  
-transition = 1 type = 1  t1 = 848  t4 = 355.598  t5 = .715464E-1  t6 = -5673504  
+transition = 1 type = 2  t1 = 848  t4 = 355.598  t5 = .715464E-1  t6 = -5673504  
 end
 
  
@@ -876,7 +876,7 @@ Mag      EoS = 1 | MAGNETITE       Fe3O4                     ref:1
 FEO(3)O2(.5)
 G0 = -1014930 S0 = 145.729 V0 = 4.4524  
 c1 = 91.5459 c2 = .201669  
-transition = 1 type = 1  t1 = 900  t4 = 200.832  
+transition = 1 type = 2  t1 = 900  t4 = 200.832  
 end
 
  
@@ -884,7 +884,7 @@ Mrg      EoS = 1 | MARGARITE       CaAl2(Al2Si2)O10(OH)2     ref:1,19
 AL2O3(2)SIO2(2)CAO(1)H2O(1)
 G0 = -5833124 S0 = 266.939 V0 = 12.94  
 c1 = 428.86 c2 = .684084E-1 c3 = -11736120  
-transition = 1 type = 1  t1 = 848  t4 = 415.513  t5 = .946002E-1  t6 = -12865800  
+transition = 1 type = 2  t1 = 848  t4 = 415.513  t5 = .946002E-1  t6 = -12865800  
 end
 
  
@@ -892,7 +892,7 @@ Nsh      EoS = 1 | NESQUEHONITE    MgCO3*3H2O                ref:1
 MGO(1)H2O(3)CO2(1)
 G0 = -1723954 S0 = 195.644 V0 = 7.479  
 c1 = -6588.98 c2 = 16.3141 c3 = -174608800  
-transition = 1 type = 1  t1 = 306.5  t3 = 2.51177  t4 = 105.629  t5 = .381953  t6 = -1766485  
+transition = 1 type = 2  t1 = 306.5  t3 = 2.51177  t4 = 105.629  t5 = .381953  t6 = -1766485  
 end
 
  
@@ -900,7 +900,7 @@ Ni       EoS = 1 | NICKEL          Ni ref:1
 O2(-.5)NIO(1)
 S0 = 29.8738 V0 = .6588  
 c1 = 16.987 c2 = .294554E-1  
-transition = 1 type = 1  t1 = 633  t4 = 25.104  t5 = .75312E-2  
+transition = 1 type = 2  t1 = 633  t4 = 25.104  t5 = .75312E-2  
 end
 
  
@@ -908,7 +908,7 @@ Prh      EoS = 1 | PREHNITE        Ca2Al2Si3O10(OH)2         ref:1,19
 AL2O3(1)SIO2(3)CAO(2)H2O(1)
 G0 = -5816166 S0 = 271.96 V0 = 14.033  
 c1 = 383.254 c2 = .158239 c3 = -8200640  
-transition = 1 type = 1  t1 = 848  t4 = 423.295  t5 = .796634E-1  t6 = -4811600  
+transition = 1 type = 2  t1 = 848  t4 = 423.295  t5 = .796634E-1  t6 = -4811600  
 end
 
  
@@ -916,7 +916,7 @@ Qtz      EoS = 1 | QUARTZ          SiO2                      ref:1
 SIO2(1)
 G0 = -856239. S0 = 41.3379 V0 = 2.2688  
 c1 = 46.9445 c2 = .343088E-1 c3 = -1129680  
-transition = 1 type = 1  t1 = 848  t2 = 38.5  t3 = 1.43085  t4 = 60.2914  t5 = .811696E-2  
+transition = 1 type = 3  t1 = 848  t2 = 38.5  t3 = 1.43085  t4 = 60.2914  t5 = .811696E-2  
 end
 
  
@@ -924,7 +924,7 @@ Hg       EoS = 1 | QUICKSILVER     Hg ref:1
 O2(-.5)HGO(1)
 S0 = 76.0233 V0 = 1.4822  
 c1 = 26.945 c3 = 79496  
-transition = 1 type = 1  t1 = 629  t4 = 20.7945  
+transition = 1 type = 2  t1 = 629  t4 = 20.7945  
 end
 
  
@@ -932,7 +932,7 @@ Sn       EoS = 1 | TIN,NATIVE      Sn ref:12
 O2(-.5)SNO(1)
 S0 = 51.2122 V0 = 1.6289  
 c1 = 18.4933 c2 = .263592E-1  
-transition = 1 type = 1  t1 = 505.06  t3 = 13.9174  t4 = 30.5432  
+transition = 1 type = 2  t1 = 505.06  t3 = 13.9174  t4 = 30.5432  
 end
 
  
@@ -940,7 +940,7 @@ Acn      EoS = 1 | ACANTHITE       Ag2S                      ref:1
 O2(-1)S2(.5)AGO(2)
 G0 = -39522.1 S0 = 143.511 V0 = 3.42  
 c1 = 65.3959 c2 = .359824E-1  
-transition = 1 type = 1  t1 = 450  t3 = 8.83289  t4 = 7.6107  t5 = .221752  
+transition = 1 type = 2  t1 = 450  t3 = 8.83289  t4 = 7.6107  t5 = .221752  
 end
 
  
@@ -948,7 +948,7 @@ Ath      EoS = 1 | ANTHOPHYLLITE   Mg7Si8O22(OH)2            ref:1
 MGO(7)SIO2(8)H2O(1)
 G0 = -11361360 S0 = 538.062 V0 = 26.44  
 c1 = 755.973 c2 = .253442 c3 = -16092500  
-transition = 1 type = 1  t1 = 903  t4 = 826.516  t5 = .174113  t6 = -5582293  
+transition = 1 type = 2  t1 = 903  t4 = 826.516  t5 = .174113  t6 = -5582293  
 end
 
  
@@ -956,7 +956,7 @@ Bn       EoS = 1 | BORNITE         Cu5FeS4                   ref:1,16
 FEO(1)O2(-3)S2(2)CUO(5)
 G0 = -362770. S0 = 415.429 V0 = 9.86  
 c1 = 208.196 c2 = .146775 c3 = -564840  
-transition = 1 type = 1  t1 = 485  t3 = 12.3363  t4 = -143.553  t5 = 1.03345  
+transition = 1 type = 2  t1 = 485  t3 = 12.3363  t4 = -143.553  t5 = 1.03345  
 end
 
  
@@ -964,7 +964,7 @@ Bsn      EoS = 1 | BUNSENITE       NiO                       ref:1
 NIO(1)
 G0 = -211597. S0 = 37.9907 V0 = 1.097  
 c1 = -20.8782 c2 = .157235 c3 = 1627576  
-transition = 1 type = 1  t1 = 525  t4 = 58.0739  
+transition = 1 type = 2  t1 = 525  t4 = 58.0739  
 end
 
  
@@ -972,7 +972,7 @@ Cc       EoS = 1 | CHALCOCITE      Cu2S                      ref:1
 O2(-1)S2(.5)CUO(2)
 G0 = -86299.2 S0 = 120.918 V0 = 2.748  
 c1 = 52.8439 c2 = .787429E-1  
-transition = 1 type = 1  t1 = 376  t3 = 10.2375  t4 = 112.047  t5 = -.307524E-1  
+transition = 1 type = 2  t1 = 376  t3 = 10.2375  t4 = 112.047  t5 = -.307524E-1  
 end
 
  
@@ -980,7 +980,7 @@ Ccp      EoS = 1 | CHALCOPYRITE    CuFeS2                    ref:1,16
 FEO(1)O2(-1)S2(1)CUO(1)
 G0 = -187862. S0 = 130.332 V0 = 4.283  
 c1 = 86.9854 c2 = .535552E-1 c3 = -560656  
-transition = 1 type = 1  t1 = 830  t3 = 12.1235  t4 = -591.618  t5 = .87864  
+transition = 1 type = 2  t1 = 830  t3 = 12.1235  t4 = -591.618  t5 = .87864  
 end
 
  
@@ -988,7 +988,7 @@ En       EoS = 1 | ENSTATITE       MgSiO3                    ref:1
 MGO(1)SIO2(1)
 G0 = -1459923 S0 = 67.7808 V0 = 3.1276  
 c1 = 102.717 c2 = .198322E-1 c3 = -2627552  
-transition = 1 type = 1  t1 = 903  t2 = 384.615  t3 = .769152  t4 = 120.353  
+transition = 1 type = 2  t1 = 903  t2 = 384.615  t3 = .769152  t4 = 120.353  
 end
 
  
@@ -996,7 +996,7 @@ Hem      EoS = 1 | HEMATITE        Fe2O3                     ref:1
 FEO(2)O2(.5)
 G0 = -745400. S0 = 87.613 V0 = 3.0274  
 c1 = 98.2822 c2 = .778224E-1 c3 = -1485320  
-transition = 1 type = 1  t1 = 950  t3 = .704674  t4 = 150.624  
+transition = 1 type = 2  t1 = 950  t3 = .704674  t4 = 150.624  
 end
 
  
@@ -1004,7 +1004,7 @@ Po       EoS = 1 | PYRRHOTITE      FeS                       ref:1
 FEO(1)O2(-.5)S2(.5)
 G0 = -100768. S0 = 60.2914 V0 = 1.82  
 c1 = 21.715 c2 = .110458  
-transition = 1 type = 1  t1 = 411  t3 = 5.80263  t4 = 72.8016  
+transition = 1 type = 2  t1 = 411  t3 = 5.80263  t4 = 72.8016  
 end
 
  
@@ -1012,7 +1012,7 @@ Fe       EoS = 1 | IRON            Fe ref:7,8
 FEO(1)O2(-.5)
 S0 = 27.2797 V0 = .7092  
 c1 = 12.7194 c2 = .317147E-1 c3 = 251040  
-transition = 1 type = 1  t1 = 1033  t3 = 1.32041  t4 = 46.5679  
+transition = 1 type = 2  t1 = 1033  t3 = 1.32041  t4 = 46.5679  
 end
 
  

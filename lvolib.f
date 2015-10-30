@@ -1547,14 +1547,15 @@ c                                 explicit bulk modulus is allowed and used
             
       g0 = ginc(0d0,0d0,id)
 c                                 speciation trick
-c     if (lopt(29)) then 
+
          do j = 1, 5
             spec(j,jd) = y(ins(j))
          end do 
-c      end if 
+
 c                                 set flag for multiple root eos's
       sroot = .true.
-c      nospe = .true.
+      nospe = lopt(28)
+
       idspec = jd
 
 c      g0 = ginc(0d0,0d0,id)
@@ -1577,7 +1578,7 @@ c                                 difference increments
          if (v.le.0d0) then 
             write (*,*) 'wonk?',p,t
          end if 
-
+c                                 100 converts g/(J/bar) to kg/m3
          rho = props(17,jd)/v*1d2
 
          if (rho.gt.rhoc) then
