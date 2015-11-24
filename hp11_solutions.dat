@@ -602,6 +602,9 @@ begin_model
                            ----------------------------------------------------
 
 Opx(W)                     | solution name.
+abbreviation Opx
+full_name    orthopyroxene
+
 
 8                          | model type: Reciprocal with speciation
 

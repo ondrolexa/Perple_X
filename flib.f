@@ -202,6 +202,11 @@ c---------------------------------------------------------------------
       if (ifug.gt.nrk.or.ifug.eq.9) ier = 1
       call rerror (ier,*10)
 
+      if (iam.ne.11.and.ifug.eq.27) then 
+         write (*,56)
+         goto 10 
+      end if 
+
       if (ifug.eq.12.or.ifug.eq.17.or.ifug.eq.20) then
 c                                 COHS & HOS equations of state
 c                                 get sulfur fugacity constraint:
@@ -390,6 +395,11 @@ c                                get the salt content (elag):
      *          ' 1 - weight fraction',/,
      *          ' 2 - mole fraction',/)
 1210  format (/,'Enter ',a,' salt fraction (0->1) in the fluid:',/)
+56    format (/,'**warning ver056** C-O-H hybrid cannot be specified ',
+     *          'for saturated components',/,'or a saturated phase. To',
+     *          'use this EoS see:',/,
+     *          'www.perplex.ethz.ch/perplex/faq/calculations_with_un',
+     *          'buffered_COH_fluids.txt',/)
 
 99    end 
 

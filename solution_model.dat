@@ -6129,7 +6129,7 @@ end_excess_function
 3 1.                       | 3 species on a, 1 site per formula unit.
 
 z(a,fe)   = 1 herc
-z(a,fe3+) = 1 sp + 1 mcrm 
+z(a,mg) =   1 sp + 1 mcrm 
   
 5 2.                       | 5 species on b, 2 site per formula unit.
 z(b,cr)   = 1 mcrm
@@ -6148,7 +6148,11 @@ begin_model
 
                                notes:
 
-                               w(esk cor cor) corrected to w(esk esk cor). J. A. Padron-Navarta, 3/30/12.
+                               w(esk cor cor) corrected to w(esk esk cor). this error was noted by 
+                               J. A. Padron-Navarta, 3/30/12, but left uncorrected until 11/24/2015;
+                               the thermodynamic data in cr_hp02ver.dat as used by Klemme et al. 2009 and
+                               Ziberna et al. 2013; to reproduce the calculations in those papers the 
+                               error must be reinstated. 
 
                                added ideal hem. JADC, 3/29/13
 
@@ -6167,7 +6171,7 @@ esk cor hem                | endmember names
 0. 1. .1  0                | X(Al), cartesian  
 
 begin_excess_function
-w(esk cor cor)   -5755. .385 -.38e-1       | Chattejee et al '82 Am Min
+w(esk esk cor)   -5755. .385 -.38e-1       | Chattejee et al '82 Am Min
 w(esk cor)       37484  4.334  0.0386      | Chattejee et al '82 Am Min
 end_excess_function  
 
@@ -9196,7 +9200,7 @@ alpha(sid)    0.01 0.000666 0
 end_van_laar_sizes
 
 end_of_model        
-                          --------------------------------------------------------
+                      --------------------------------------------------------
 begin_model                
 
                              Fe2+-Fe3+-Mg-Al-Ca Orthopyroxene, White et al., JMG 32:261-286, 2014.  
@@ -9209,7 +9213,23 @@ begin_model
                              odi  = 1 di 
                              -0.1d3       0.211       0.005
 
+                             mnopx = 2 pxmn
+                             6.68d3 0 0
+
                              JADC, 4/14
+
+                             Al site fraction of T "corrected" to (mots1 + mgts)/8 by Mark Caddick. 
+
+                             JADC, 1/26/2015
+
+                             Mn added by Felix Gervais, 1/28/2015.
+
+                             This model is as implemented in THERMOCALC. The implementation is 
+                             irrational because Mn is assumed to remain disordered across M1 and 
+                             M2, while Al, Fe, Fe3+ and Ca order. The model should only be used 
+                             with the site_check set to true in perplex_option.dat
+
+                             JADC, 1/28/2015
 
                                        Site:          M1      M2      T
                                                      ____________________
@@ -9219,34 +9239,45 @@ begin_model
 
                                       1 en            Mg      Mg      Si 
                             Species:  2 fs            Fe2+    Fe2+    Si 
-                                      3 mgts          Al      Mg      AlSi   
-                                      4 fets          Al      Fe2+    AlSi  dependent
-                                      5 mots1         Fe3+    Mg      AlSi
-                                      6 feots         Fe3+    Fe2+    AlSi  dependent
-                                      7 odi           Mg      Ca      Si
-                                      8 fodi          Fe      Ca      Si    dependent
+                                      3 mnopx         Mn      Mn      Si
+
+                                      4 mgts          Al      Mg      AlSi   
+                                      5 fets          Al      Fe2+    AlSi  dependent
+
+                                      7 mots1         Fe3+    Mg      AlSi
+                                      8 feots         Fe3+    Fe2+    AlSi  dependent
+
+                                     10 odi           Mg      Ca      Si
+                                     11 fodi          Fe      Ca      Si    dependent
                                                       ___________________
 
-                           Internal:  9 opx           Mg      Fe2+    Si
+                           Internal: 13 opx           Mg      Fe2+    Si
 
 
-                           Dependent: fets  = mgts + opx - en
-                                      feots = mots1+ opx - en 
-                                      fodi =  odi  + opx - en
+                           Dependent: fets  = mgts  + opx - en
+                                      feots = mots1 + opx - en 
+                                      fodi  = odi  + opx - en
+                                      mnts  = 1 mgts + 1/2 mnopx - 1/2 en 
+                                      mnots = 1 mots + 1/2 mnopx - 1/2 en 
+                                      modi  = 1 odi  + 1/2 mnopx - 1/2 en
+                         
+                           ----------------------------------------------------
 
-Opx(W)                    | solution name.
+Opx(W)                     | solution name.
 abbreviation Opx
 full_name    orthopyroxene
+
 
 8                          | model type: Reciprocal with speciation
 
 2                          | 2 independent composition spaces
-2 4                        | 2 dimensions on first space, 3 on second
+
+3 4                        | 2 dimensions on first space, 3 on second
                            | endmembers: 
-mots1    feots 
-odi      fodi 
-mgts     fets_d   
-en       fs 
+mnots    mots1    feots 
+modi     odi      fodi 
+mnts     mgts     fets_d   
+mnopx    en       fs 
 
 1                          | ordered species definition
 
@@ -9255,24 +9286,27 @@ opx = 1/2 en + 1/2  fs  Delta(enthalpy) = -6.95d3
 begin_limits
 opx =     - 2 fs - 1 opx                delta = 2 z(M2,Fe)       
 opx =  -2 + 2 fs + 1 opx                delta = 2 z(M1,Fe)
-opx =     - 2 en - 1 opx                delta = 2 z(M1,Mg)
+opx =     - 2 en - 2 odi - 1 opx        delta = 2 z(M1,Mg)
 end_limits                
 
-3                          | 3 dependent endmembers
+6                          | 6 dependent endmembers, 3 real, 3 pointers
 
 fets_d = 1 mgts  + 1 opx - 1 en
 feots  = 1 mots1 + 1 opx - 1 en
 fodi   = 1 odi   + 1 opx - 1 en
+mnts   = 1 mgts  + 1/2 mnopx - 1/2 en 
+mnots  = 1 mots1 + 1/2 mnopx - 1/2 en 
+modi   = 1 odi   + 1/2 mnopx - 1/2 en
 
-0 0 0 0 0 0 0 0 0          | endmember flags, indicate if endmember is part of the solution (i.e. iend = 0).
+0 0 0 0 0 0 0 0 0 0 0 0    | endmember flags, indicate if endmember is part of the solution (i.e. iend = 0).
 
-                           | subdivision model for (binary) site 1:
-0. 1. .1                   | range and resolution of X(Mg)
-0                          | subdivision scheme for site 1: imod = 0 -> cartesian 
+                           | subdivision model for (ternary) site 1:
+0. .2 .1   1               | range and resolution of X(Mn), subdivision scheme: imod = 1 -> assymetric transform 
+0. 1. .1   0               | range and resolution of X(Mg), subdivision scheme: imod = 0 -> cartesian 
 
                            | subdivision model for (quaternary) site 2 
-0. .1 .1   1               | range and resolution of X(Fe3+),  subdivision scheme: imod = 1 -> assymetric transform   
-0. .1 .1   1               | range and resolution of X(un-Ts), subdivision scheme: imod = 1 -> assymetric transform     
+0. .2 .1   1               | range and resolution of X(Fe3+),  subdivision scheme: imod = 1 -> assymetric transform   
+0. .2 .1   1               | range and resolution of X(un-Ts), subdivision scheme: imod = 1 -> assymetric transform     
 0. .2 .1   1               | range and resolution of X(Ts),    subdivision scheme: imod = 1 -> assymetric transform     
 
 
@@ -9280,34 +9314,42 @@ begin_excess_function
 W(en fs)                   7d3         0         0
 W(en opx)                  4d3         0         0
 W(en mgts)                13d3         0     -0.15
-W(en mots1)               11d3         0     -0.15 
+W(en mots1)               11d3         0     -0.15
+W(en mnopx)                5d3         0         0 
 W(en odi)               32.2d3         0      0.12
 W(fs opx)                  4d3         0         0
 W(fs mgts)                13d3         0     -0.15
 W(fs mots1)             11.6d3         0     -0.15
+W(fs mnopx)              4.2d3         0         0
 W(fs odi)              25.54d3         0     0.084
 W(opx mgts)               17d3         0     -0.15
 W(opx mots1)              15d3         0     -0.15
+W(opx mnopx)             5.1d3         0         0
 W(opx odi)             22.54d3         0     0.084
 W(mgts mots1)              1d3         0         0
+W(mgts mnopx)             12d3         0     -0.15
 W(mgts odi)             75.4d3         0     -0.94
+W(mots1 mnopx)          10.6d3         0     -0.15
 W(mots1 odi)            73.4d3         0     -0.94
+W(odi mnopx)            25.4d3         0     0.084
 end_excess_function 
 
-3                          | 2 site (M1, M2, T) configurational entropy model
+3                          | 3 site (M1, M2, T) configurational entropy model
 
-4 1.                       | 4 species on M1, 1 site per formula unit.
+5 1.                       | 5 species on M1, 1 site per formula unit.
 
 z(m1,fe)   = 1 fs 
 z(m1,al)   = 1 mgts   
 z(m1,fe3+) = 1 mots1
+z(m1,mn)   = 1 mnopx
 
-3 1.                       | 3 species on M2, 1 site per formula unit.
+4 1.                       | 4 species on M2, 1 site per formula unit.
 z(m2,fe) = 1 fs + 1 opx
 z(m2,ca) = 1 odi
+z(m2,mn)   = 1 mnopx
 
 2 2.                       | 2 species on 2 T sites
-z(T,al) = 1 mgts + 1 mots1
+z(T,al) = 1/8 mgts + 1/8 mots1
 
 begin_van_laar_sizes                        
 alpha(en)       1.0    0.    0.                      
@@ -9316,9 +9358,10 @@ alpha(opx)      1.0    0.    0.
 alpha(mgts)     1.0    0.    0.
 alpha(mots1)    1.0    0.    0.
 alpha(odi)      1.2    0.    0.
+alpha(mnopx)    1.0    0.    0.
 end_van_laar_sizes
 
-end_of_model 
+end_of_model
                           --------------------------------------------------------
 begin_model                
                              CHLORITE, White et al JMG 32:261-286, 2014

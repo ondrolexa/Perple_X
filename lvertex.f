@@ -1642,6 +1642,8 @@ c-----------------------------------------------------------------------
 
       integer i,j,ier
 
+      logical bad
+
       double precision delt,dtol,utol,ptol,gphi,dg
 
       common/ cst87 /delt(l2),dtol,utol,ptol
@@ -1682,7 +1684,7 @@ c                                 assemblage idv
 
          dg = g(i) - gphi
 
-         if (dg.gt.dtol) goto 20
+         if (dg.gt.dtol) cycle
 c                                check that a phase is not metastable
 c                                with respect to itself, this
 c                                could be remedied by changing the 
@@ -1690,6 +1692,12 @@ c                                value of dtol.
          do j = 1, icp
             if (idv(j).eq.i) goto 20
          end do 
+c                                do not test against null phases unless
+c                                the null phase contains a mobile component,
+c                                could have an array to flag this, but hopefully
+c                                this is unusual.
+         call nullck (i,bad)
+         if (bad) cycle
 c                                assemblage is metastable with respect
 c                                to phase idphi.
          iflag = iflag + 1
@@ -1698,11 +1706,59 @@ c                                this would force a refinement
 c                                of condtions by the calling
 c                                routine. since utol << dtol
 c        if (dabs(dg).gt.utol) iflag = iflag + 1
-         if (iflag.gt.1) goto 99
+         if (iflag.gt.1) exit
 
 20    continue
 
 99    end
+
+      subroutine nullck (i,bad)
+c-----------------------------------------------------------------------
+c eliminate null phases from thermodynamic stability tests (schk, lchk, 
+c nschk) unless they contain mobile components. could have an array to flag 
+c this, but hopefully it's unusual.
+c-----------------------------------------------------------------------
+      implicit none
+ 
+      include 'perplex_parameters.h'
+
+      integer i,j
+
+      logical bad
+
+      double precision cp
+      common/ cst12 /cp(k5,k1)
+
+      double precision ctot
+      common/ cst3   /ctot(k1)
+
+      integer jfct,jmct,jprct
+      common/ cst307 /jfct,jmct,jprct
+c-----------------------------------------------------------------------
+c                                do not test against null phases unless
+c                                the null phase contains a mobile component,
+c                                could have an array to flag this, but hopefully
+c                                this is unusual.
+      bad = .false.
+
+      if (ctot(i).eq.0d0) then
+
+         bad = .true.
+
+         if (jmct.eq.0) return
+
+         do j = 1, jmct
+
+            if (cp(jprct+j,i).ne.0d0) then 
+               bad = .false.
+               return
+            end if 
+
+         end do
+
+      end if 
+
+      end 
 
       subroutine assir (bad)
 c----------------------------------------------------------------------
@@ -3257,6 +3313,7 @@ c-----------------------------------------------------------------------
       call subst (a,ipvt,icp,b,ier)
 
       gphi = 0d0
+
       do j = 1, icp
          gphi = gphi + cp(j,lphi) * b(j)
       end do
@@ -4078,11 +4135,13 @@ c-----------------------------------------------------------------------
 
       integer i,lphi,j,ier
 
+      logical bad
+
       double precision dg
 
-      double precision a,u
+      double precision a,b
       integer ipvt,idv,iophi,idphi,iiphi,iflg1
-      common/ cst23  /a(k8,k8),u(k8),ipvt(k8),idv(k8),iophi,idphi,
+      common/ cst23  /a(k8,k8),b(k8),ipvt(k8),idv(k8),iophi,idphi,
      *                iiphi,iflg1
 
 
@@ -4103,37 +4162,47 @@ c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
 c                                 determine chemical potentials
       iflag = 0
+
       do i = 1, icp
-         u(i) = g(idv(i))
+         b(i) = g(idv(i))
       end do 
 
-      call subst (a,ipvt,icp,u,ier)
+      call subst (a,ipvt,icp,b,ier)
 c                                 test phases, not=iophi, against the
 c                                 assemblage idv(i),i = 1, icp
-      do 20 i = istct, iphct
-         if (i.eq.iophi.or.i.eq.lphi) goto 20
+      do i = istct, iphct
+
+         if (i.eq.iophi.or.i.eq.lphi) cycle
+
          dg = g(i)
 
          do j = 1, icp
-            dg = dg - cp(j,i) * u(j)
+            dg = dg - cp(j,i) * b(j)
          end do 
 
-         if (dg.gt.dtol) goto 20
+         if (dg.gt.dtol) cycle
 c                                check that a phase is not metastable
 c                                with respect to itself, this
 c                                could be remedied by changing the 
 c                                value of dtol.
          do j = 1, icp
-            if (idv(j).eq.i) goto 20
+            if (idv(j).eq.i) exit
          end do 
+
+         if (j.le.icp) cycle
+
+         call nullck (i,bad)
+
+         if (bad) cycle
 
          iflag = iflag + 1
          idphi = i
-         goto (20,40,40), iflag
 
-20    continue
+         if (iflag.gt.1) exit
 
-40    end
+      end do 
+
+      end
 
       subroutine nschk 
 c-----------------------------------------------------------------------
@@ -4142,6 +4211,8 @@ c-----------------------------------------------------------------------
       include 'perplex_parameters.h'
 
       integer i,j,ier
+
+      logical bad
 
       double precision blim, ulim, dg
       common/ cxt62 /blim(l2),ulim(l2),dg
@@ -4196,6 +4267,10 @@ c                                value of dtol.
          end do 
 
          if (j.le.icp) cycle
+
+         call nullck (i,bad)
+
+         if (bad) cycle
 
          iflag = iflag + 1
          idphi = i

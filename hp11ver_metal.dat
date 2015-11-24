@@ -35,10 +35,13 @@ CR      51.9958
 S2      32.0650
 end_components
 
-begin_special_components
-H2
-O2
-end_special_components
+| H2 and O2 should be specified as special components to make calculations with a saturated fluid phase, but
+| should NOT be specified as such to use the ternary solution model COHF
+
+|begin_special_components
+|H2
+|O2
+|end_special_components
 
 begin_makes                                                                                                                                 
 fbr = 1 br -1/3 ta 1/3 fta 
@@ -2005,16 +2008,14 @@ end
 H2O      EoS = 1  
 O2(.5)H2(1)
 G0 = -298100.7 S0 = 188.8  
-c1 = 40.1 c2 = .8656E-2 c3 = 487500 c5 = -251.2  
-b5 = 153.3154  
+c1 = 40.1 c2 = .8656E-2 c3 = 487500 c5 = -251.2   
 end
 
  
 CO2      EoS = 1  
 O2(1)C(1)
 G0 = -457224.7 S0 = 213.7  
-c1 = 87.8 c2 = -.2644E-2 c3 = 706400 c5 = -998.9  
-b5 = 136.9325  
+c1 = 87.8 c2 = -.2644E-2 c3 = 706400 c5 = -998.9   
 end
 
  
@@ -2022,7 +2023,6 @@ CO       EoS = 1
 O2(.5)C(1)
 G0 = -169465.3 S0 = 197.67  
 c1 = 45.7 c2 = -.97E-4 c3 = 662700 c5 = -414.7  
-b5 = 101.0306  
 end
 
  
@@ -2030,31 +2030,27 @@ CH4      EoS = 1
 H2(2)C(1)
 G0 = -130343.4 S0 = 186.26  
 c1 = 150.1 c2 = .2063E-2 c3 = 3427700 c5 = -2650.4  
-b5 = 243.4313  
 end
 
  
 O2       EoS = 107  
 O2(1)
 G0 = -61180.38 S0 = 205.2  
-c1 = 48.3 c2 = -.691E-3 c3 = 499200 c5 = -420.7  
-b5 = 97.54219  
+c1 = 48.3 c2 = -.691E-3 c3 = 499200 c5 = -420.7   
 end
 
  
 H2       EoS = 105  
 H2(1)
 G0 = -38968.2 S0 = 130.7  
-c1 = 23.3 c2 = .4627E-2 c5 = 76.3  
-b5 = 148.1543  
+c1 = 23.3 c2 = .4627E-2 c5 = 76.3   
 end
 
  
 S2       EoS = 10 | 10 invokes ideal gas  
 S2(1)
 G0 = 59667.35 S0 = 231  
-c1 = 37.1 c2 = .2398E-2 c3 = -161000 c5 = -65  
-b5 = 87.22322  
+c1 = 37.1 c2 = .2398E-2 c3 = -161000 c5 = -65    
 end
 
  
@@ -2062,7 +2058,6 @@ H2S      EoS = 106  | 106 invokes MRK specifically for H2S
 H2(1)S2(.5)
 G0 = -81650.32 S0 = 205.77  
 c1 = 47.4 c2 = .1024E-1 c3 = 615900 c5 = -397.8  
-b5 = 141.7566  
 end
 
  
@@ -2233,13 +2228,6 @@ MGO(1)CR(2)O2(1.5)
 G0 = -1797871 S0 = 118.3 V0 = 4.356  
 c1 = 196.1 c2 = .5398E-2 c3 = -3126000 c5 = -616.9  
 b1 = 4.2769E-5 b5 = -4.2769E-4 b6 = 1922000 b8 = 4.04  
-end
-
-maj      EoS = 2 | H= -6050330.                                                                   
-MGO(4)SI(4)O2(4)
-G0 = -6126418 S0 = 255.2 V0 = 11.457  
-c1 = 713.6 c2 = -.997E-3 c3 = -1158200 c5 = -6622.3  
-b1 = 4.34482E-5 b5 = -4.34482E-4 b6 = 1600000 b8 = 4.56  
 end
 
 Si-BCC   EoS = 611 | Lacaze & Sundman 1990 Special EoS, for FeSiC bcc solution model (SiC paper)

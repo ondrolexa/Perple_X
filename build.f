@@ -1576,12 +1576,12 @@ c                                 diagrams:
 1470  format (5x,i1,' - Composition X(C1)* (user defined)')
 1480  format (5x,i1,' - Composition X(C2) (user defined)')
 1490  format ('Specify computational mode:',//,
-     *    5x,'1 - Unconstrained minimization',/, 
+     *    5x,'1 - Convex-Hull minimization',/, 
      *    5x,'2 - Constrained minimization on a 2d grid [default]',/,
      *    5x,'3 - Constrained minimization on a 1d grid',/,
      *    5x,'4 - Output pseudocompound data',/,
      *    5x,'5 - Phase fractionation calculations',//,
-     *        'Use unconstrained minimization for Schreinemakers ',
+     *        'Use Convex-Hull minimization for Schreinemakers ',
      *        'projections or phase diagrams',/,
      *        'with > 2 independent variables. ',
      *        'Use constrained minimization for phase diagrams',/,

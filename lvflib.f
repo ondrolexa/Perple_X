@@ -8326,6 +8326,7 @@ c                                iteration loop
                df3 = vi(j) + v4b
 
                f = rt/vi(j)*f1/f2 - at2/f3  - p
+
                df = (df1 - f1*(1d0/vi(j) + df2/f2))*rt/f2/vi(j) + 
      *               at2 / f3 ** 2 * df3
 
@@ -8394,6 +8395,13 @@ c                                 compute (log) fugacity
      *                  + 8d0*vi(j)**2)/(vi(j) - b(i))**3  
      *                  + dlog(rt/vi(j))
      *                  + (dlog(vi(j)/v4b)/b(i)/4d0 - 1d0/v4b)*a(i)/rt3
+
+      fi(j) = -dble(b(i) * (3 * b(i) * (b(i) - 3 * vi(j)) + 8 * vi(j)**2
+     #) / (-vi(j) + b(i)) ** 3) + (0.1D1 / dble(b(i)) * log(dble(vi(j) /
+     # (vi(j) + 4 * b(i)))) / 0.4D1 - 0.1D1 / dble(vi(j) + 4 * b(i))) * 
+     #a(i) / r * T ** (-0.3D1 / 0.2D1) + log(r * T / dble(vi(j)))
+
+
                   exit
 
                else if (itic.gt.100) then 
@@ -8630,6 +8638,7 @@ c                                iteration loop
             df3 = vi(j) + v4b
 
             f = rt/vi(j)*f1/f2 - at2/f3  - p 
+
             df = (df1 - f1*(1d0/vi(j) + df2/f2)) *rt/f2/vi(j) + 
      *               at2/f3**2*df3
 
@@ -8695,6 +8704,12 @@ c                                 compute (log) fugacity
      *               + dlog(rt/vi(j))
      *               + (dlog(vi(j)/v4b)/bx/4d0 - 1d0/v4b)*aij/rt3
 
+      fi(j) = -dble(bx * (3 * bx * (bx - 3 * vi(j)) + 8 * vi(j) ** 2)/(-
+     #vi(j) + bx) ** 3) + (0.1D1 / dble(bx) * log(dble(vi(j) / (vi(j) + 
+     #4 * bx))) / 0.4D1 - 0.1D1 / dble(vi(j) + 4 * bx)) * aij / r * T **
+     # (-0.3D1 / 0.2D1) + log(r * T / dble(vi(j)))
+
+
                exit
 
             else if (itic.gt.100) then 
@@ -8758,9 +8773,9 @@ c                                 compute fugacity coefficients:
       vmb = vol - bx
 
       c0 = bx*(4d0*vol-3d0*bx)/vmb**2-dlog(p*vol/rt)
-      c1 = 2d0*vol*(2d0*vol-bx)/vmb**3 - aij/bx/rt3*(vvb/4d0/bx-1d0/v4b)
+      c1 = 2d0*vol*(2d0*vol-bx)/vmb**3 - aij/bx/rt3*(vvb/4d0/bx+1d0/v4b)
       c2 = vvb/2d0/rt3/bx
- 
+
       do i = 1, isp
 
          k = ins(i)
@@ -8878,21 +8893,14 @@ c-------------------------------------------------------------
       else if (iopt(28).eq.3.or.iopt(28).eq.4) then    
 c                                 HSC decaying CP
          b(14) = brk(14)
-c                                 this one makes the flip around 3000 K
-c         a(14) = -0.124160697379198694D10 
-c     *           + dsqrt(T) * T * 0.983048341715197239D4 
-c     *           + dlog(T) * 0.229017895319238782D9 
-c     *           - T * 0.516809574417529920D6 
-c     *           - T ** 2 * 0.602303238739998790D2
 c                                 flip around 4000 K, includes corrections
 c                                 to match a, cp, and s at 1999 K
-          a(14) = -0.115033657587105156D10 
-     *            + dsqrt(T) * T  * 0.844196361849501591D4 
-     *            + dlog(T) * 0.211331977511108011D9 
-     *            + T * (-0.451460561846663943D6) 
-     *            + T ** 2 * (-0.510936615049275176D2)
-     *            +  1047d0*(t-1999d0) + 0.0614*(t-1999.)**2
-
+          a(14) = -0.294125053372381592D10 
+     *            + dsqrt(T) * T * 0.175420765397274408D5 
+     *            + dlog(T) * 0.521302499671041548D9 
+     *            + T * (-0.103678009476037347D7) 
+     *            + T ** 2 * (-0.957158405896093143D2) 
+     *            - 0.1111991726D12 / T + 0.1111435730D15 / T ** 2
 
       end if 
 c                                 SiO
