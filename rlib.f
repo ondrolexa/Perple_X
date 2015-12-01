@@ -3061,7 +3061,7 @@ c----------------------------------------------------------------------
       common/ cst51 /length,iblank,icom,chars(240)
 
       character*2 strgs*3, mstrg, dstrg, tstrg*3, wstrg*3
-      common/ cst56 /strgs(32),mstrg(6),dstrg(8),tstrg(11),wstrg(m16)
+      common/ cst56 /strgs(32),mstrg(6),dstrg(m8),tstrg(11),wstrg(m16)
 c----------------------------------------------------------------------
 
       iterm = 0 
