@@ -480,6 +480,9 @@ c-----------------------------------------------------------------------
       character*8 eoscmp
       common/ cst98 /eoscmp(2)
 
+      integer iam
+      common/ cst4 /iam
+
       save blank
       data blank/' '/
 c-----------------------------------------------------------------------
@@ -531,6 +534,9 @@ c                                 new version, read icopt
          read (n1,*,err=998) icopt
 
       end if 
+c                                 if meemum, override whatever computational option
+c                                 is set in the input file. 
+      if (iam.eq.2) icopt = 5
 c                                 if fractionation path from data 
 c                                 file, get name:
       fileio = .false.
@@ -664,8 +670,8 @@ c                                 unblank the name
          end if 
 c                                 check for compositional constraints
          read (strg,*,err=998) icont
-
-         if (icont.ne.0) then 
+c                                 for meemum override icont
+         if (icont.ne.0.or.iam.eq.2) then 
             jbulk = jbulk + 1
             read (strg,*,err=998) j, (dblk(i,jbulk), i = 1, icont)    
          end if 
@@ -895,7 +901,7 @@ c                             t = 2, and xco2 = 3, respectively.
       read (n1,*,err=998) (iv(i), i = 1, 5)
 c                             check variable ranges are consistent,
 c                             variable iv(1):
-      if (icopt.ne.0.and.icopt.ne.4) then
+      if (icopt.ne.0.and.icopt.ne.4.and.iam.ne.2) then
 
          if (iv(1).eq.3.and.ifyn.eq.1) call error (110,r,i,'I')
 
@@ -920,7 +926,8 @@ c                             variable iv(1):
 
       end if
 c                             variable iv(2):
-      if (icopt.eq.1.or.(icopt.eq.5.and.icont.eq.1.and..not.oned)) then
+      if (iam.ne.2.and.(icopt.eq.1.or.
+     *                  (icopt.eq.5.and.icont.eq.1.and..not.oned))) then
 
          if (iv(2).eq.3.and.ifyn.eq.1) call error (110,r,i,'INPUT1')
 

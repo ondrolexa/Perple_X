@@ -86,7 +86,7 @@
 !                                       in adaptive optimization.
       parameter (k0=25,k1=1000000,k2=100000,k3=500,k4=32,k5=12)
       parameter (k7=k5+1,k8=k5+2) 
-      parameter (k9=30,k10=300,k12=15,k13=mdim*k1,k14=18,k15=6,k16=50)
+      parameter (k9=30,k10=300,k12=15,k13=mdim*k1,k14=18,k15=6,k16=70)
       parameter (k17=7,k18=29*k1)
       parameter (k19=2*k5+14,k21=1700000,k20=mdim*k21,k22=mdim*k19,
      *           k23=5)
@@ -129,7 +129,7 @@
 !                                m17 - max order of redlich-kistler expansion
 !                                m18 - max number of pairwise terms in a redlich-kistler expansion
       parameter (m0=8,m1=36,m2=8,m3=3,m4=15,m6=5,m7=15,m8=9,m9=10,m10=5)
-      parameter (m11=5,m12=4,m13=8,m14=2,m15=9,m16=5,m17=5,m18=6)
+      parameter (m11=6,m12=4,m13=8,m14=2,m15=9,m16=5,m17=5,m18=6)
 !                                nsp - max number of species in fluid speciation routines 
       parameter (nsp=16)
 !                                 nx - number of x-grid nodes in a contour data grid

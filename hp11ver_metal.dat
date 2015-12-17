@@ -139,6 +139,40 @@ FeCA2 = 1 FeA2 + 3 CA2
   322050d0  75.667d0 0
 Cliq = 1 Cliq1 + 1 Cliq2
   0  0 0
+                                  | Make definitions for Jennings and Holland, J Pet, 56:869-892, 2013 Cpx
+cfs = 1 fs
+3.8d3 -3 0.03
+crdi = 1 cats + 1 kos - 1 jd
+-3d3 0 0
+cess = 1 cats + 1 acm - 1 jd
+-6d3 0 0
+cenjh = 1 en
+3.5d3 -2 0.048
+                                  | Make definitions for Jennings and Holland, J Pet, 56:869-892, 2013 Opx
+cren  = 1 mgts + 1 kos - 1 jd
+3d3 0 0
+oen   = 1 mgts + 1 acm - 1 jd
+-15d3 0 0.15
+odijh = 1 di
+-0.1d3 2.11 0.005
+                                  | Make definitions for Jennings and Holland, J Pet, 56:869-892, 2013 melt
+qjL = 2 qL
+4d3  0  -0.43   
+dijL = 1 diL
+-6.7d3  0  0.17     
+jdjL = 2 abL - 1 qL
+18.7d3  0  -0.16  
+ctjL = 2 anL - 1 qL
+2.5d3  0  0.29     
+fojL = 1 foL
+2d3  0  -0.03  
+fajL = 1 faL
+-2.5d3  0  0.18  
+hmjL = 0.5 hemL
+0  0  0.20  
+ekjL = 0.5 eskL
+21d3  0  0    
+
 end_makes 
                                                                                                                                             
 tc-ds61.txt produced at 8.42 on Sun 13 Nov,2011 (sigfit =   1.038)                                                                          
@@ -2533,3 +2567,20 @@ G0 = -284567.6 S0 = 58.6 V0 = 1.206
 c1 = 44.4 c2 = .828E-2 c3 = -1214200 c5 = 185.2  
 b1 = .322E-4 b5 = 297.5937 b6 = 1520000 b7 = -.32E-5 b8 = 4.9  
 end
+
+
+eskL   EoS = 9 | –106225              
+CR(2)O2(1.5)
+G0 = -1062250 S0 = 63.3 V0 = 3.07090
+c1 = 157.6
+b1 = 0.703E-4 b5 = -35 b6 = 150000 b7 = 0.4E-4 b8 = 6.00
+end
+
+ 
+hemL   EoS = 9 | –87514
+FE(2)O2(1.5)
+G0 = -875140 S0 = -33.20 V0 = 3.2208
+c1 = 229
+b1 = 0.1953E-3 b5 = -46 b6 = 230000 b7 = -0.1740E-4 b8 = 4.00  
+end
+

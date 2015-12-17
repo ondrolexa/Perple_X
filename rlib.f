@@ -3211,13 +3211,14 @@ c                                 assign data
 
       return
 
-90    write (*,1000) tname,(chars(i),i=1,len),name
+90    write (*,1000) tname,(chars(i),i=1,len)
+      write (*,1010) name
       
       call errpau
       
 1000  format ('**error ver200** READX bad data, currently ',
-     *        'reading solution model: ',a,' data was:',/,240a,/,
-     *        'last name read was: ',a,/,
+     *        'reading solution model: ',a,' data was:',/,240a)
+1010  format ('last name read was: ',a,/,
      *        'usually this error is due to a mispelled ',
      *        'endmember name.',/)
 
@@ -5016,6 +5017,7 @@ c                                 clean up arrays:
 
             do j = 1, mknum(ict)+1
                mknam(ict,j) = mknam(i,j)
+               mkind(ict,j) = mkind(i,j)
             end do 
 
             do j = 1, mknum(ict)
@@ -6743,6 +6745,8 @@ c                                 number of expressions
          else 
             nspm1(i) = idint(rnums(1))
          end if 
+
+         if (nspm1(i).gt.m11) call error (1,a0(1,1),nspm1(i),'m11')
 c                                 for each species, read
 c                                 function to define the
 c                                 site fraction of the species:

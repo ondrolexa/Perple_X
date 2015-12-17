@@ -1,4 +1,454 @@
 670 DO NOT DELETE THIS LINE
+                      -------------------------------------------------------- 
+begin_model
+                             Jennings and Holland, J Pet, 56:869-892, 2013
+                             Mantle Melt Model, intended for pressures of 0-60 GPa
+
+                             Pierre Bouilhol & JADC, 12/16/15 
+Melt(JH)
+abbreviation Melt
+full_name    liquid
+
+2
+8
+jdjL ctjL fojL fajL dijL hmjL ekjL qjL 
+
+0 0 0 0 0 0 0 0 
+
+0. 1   .1 0                 
+0. 0.5 .1 0                 
+0. 1   .1 0                 
+0. 1   .1 0                 
+0. 0.5 .1 0                 
+0. 0.5 .1 0                 
+0. 0.5 .1 0                 
+
+begin_excess_function
+W(qjL dijL)     26d3   0  -0.4
+W(qjL jdjL)    -10d3   0   0 
+W(qjL ctjL)    -10d3   0   0   
+W(qjL fojL)    -25d3   0  -0.1  
+W(qjL fajL)     -7d3   0   0  
+W(dijL ctjL)    -2d3   0   0      
+W(dijL fojL)    24d3   0   0.2  
+W(dijL fajL)    17d3   0   0 
+W(ctjL fojL)    -1d3   0   0.1
+W(fojL fajL)     9d3   0   0  
+end_excess_function
+
+2               only 2 sites contribute to configurational entropy
+
+3 2.            M-site has Fe, Mg, Ca
+z(Ca) = 1/2 dijL
+z(Fe) = 1 fajL
+
+7 1.            bogus F site
+z(jd) = 1 jdjL
+z(di) = 1 dijL
+z(ct) = 1 ctjL
+z(ol) = 1 fojL + 1 fajL
+z(q)  = 1 qjL
+z(ek) = 1 ekjL
+
+end_of_model
+                      --------------------------------------------------------         
+begin_model      
+                             Jennings and Holland, J Pet, 56:869-892, 2013
+                             Mantle Melt Model, intended for pressures of 0-60 GPa
+
+                             Pierre Bouilhol & JADC, 12/16/15                                           
+O(JH) 
+abbreviation Ol
+full_name    olivine 
+                                                                              
+2                                     model type: Margules, macroscopic
+2                                     2 endmembers
+fo       fa            
+0  0                                | endmember flags
+
+0.0 1.0  0.1   0                    | range and resolution for X(Mg), imod = 0 -> cartesian subdivision
+
+begin_excess_function
+W(fo fa) 9000. 0. 0.                 
+end_excess_function 
+
+1                                     1 site entropy model
+
+2 2.                                  2 species, site multiplicity = 2.
+z(fe) = 1 fa 
+
+end_of_model              
+                      --------------------------------------------------------           
+begin_model               
+                             Jennings and Holland, J Pet, 56:869-892, 2013
+                             Mantle Melt Model, intended for pressures of 0-60 GPa
+
+                             Pierre Bouilhol & JADC, 12/16/15 
+Sp(JH)                      
+abbreviation Sp
+full_name    spinel
+
+2                          | model type: Ideal or Margules
+
+4                          | 4 endmembers 
+sp mt picr herc    
+0  0  0  0                 | endmember flags
+0. 1. .1 0                 | subdivision range, imod = 0 -> cartesian subdivision
+0. 1. .1 0                 | subdivision range, imod = 0 -> cartesian subdivision
+0. 1. .1 0                 | subdivision range, imod = 0 -> cartesian subdivision
+
+begin_excess_function 
+w(sp herc)     7d2  0  0
+W(sp herc)     4d3  0  0
+W(sp mt)      56d3  0  0
+W(sp picr)    39d3  0  0
+W(herc mt)    32d3  0  0
+W(herc picr)  27d3  0  0
+W(mt picr)    36d3  0  0 
+end_excess_function 
+
+1
+
+4 3.                        cations disordered across all sites
+
+z(mg)  = 1/3 sp + 1/3 picr 
+z(fe3) = 2/3 mt
+z(cr)  = 2/3 picr 
+
+end_of_model               
+                      --------------------------------------------------------
+begin_model               
+                             Jennings and Holland, J Pet, 56:869-892, 2013
+                             Mantle Melt Model, intended for pressures of 0-60 GPa
+
+                             Pierre Bouilhol & JADC, 12/16/15 
+Pl(JH)                                       
+abbreviation Pl
+full_name    binary-feldspar
+
+2                          | model type: Margules or Ideal                                     
+2                          | 2 endmembers  
+abh      an      
+  1  0                     | endmember flags
+0. 1. .1  0                | imod = 0 -> cartesian subdivision
+begin_excess_function 
+w(abh an) 22.4d3 0  0  
+end_excess_function 
+
+2                          | 2 sites (O, T) kerrick and darkens Al-avoidance model:
+2 1.                       | 2 species on O site, multiplicity = 1.
+z(Na) = 1 abh
+
+2 2.                       | 2 species on T, mutiplicity = 2.
+z(Al) = 1/2 + 1/2 an
+
+begin_van_laar_sizes
+alpha(abh)   1.0   0  0
+alpha(an)    0.39  0  0
+end_van_laar_sizes
+
+end_of_model         
+                      -------------------------------------------------------- 
+begin_model
+                             Jennings and Holland, J Pet, 56:869-892, 2013
+                             Mantle Melt Model, intended for pressures of 0-60 GPa
+
+                             Pierre Bouilhol & JADC, 12/16/15 
+
+                                                      X       Y 
+                                                     _____________
+
+                                      Mutliplicity    3       2     
+                                                     _____________
+
+                          Dependent:   fkho_d        Fe      Fe3+      
+                          Dependent:   kho_d         Mg      Fe3+
+                                       andr          Ca      Fe3+
+
+                          Dependent:   fkno_d        Fe      Cr     
+                                       knor          Mg      Cr
+                          Dependent:   ckno_d        Ca      Cr
+   
+                                       alm           Fe      Al     
+                                       py            Mg      Al     
+                                       gr            Ca      Al          
+                                                      ____________    
+Grt(JH)
+abbreviation Gt
+full_name    garnet
+
+7
+2
+3 3 
+alm     py     gr 
+fkno_d  knor   ckno_d
+fkho_d  kho_d  andr
+
+4
+fkno_d = 1 alm + 1 knor - 1 py  
+ckno_d = 1 gr  + 1 knor - 1 py 
+fkho_d = 1 alm + 1 andr - 1 gr
+kho_d  = 1 py  + 1 andr - 1 gr
+
+0 0 0 0 0 0 0 0 0
+
+0. 1. .1   0             
+0. 1. .1   0    
+      
+0. 1. .1   0
+0. 1. .1   0  
+              
+begin_excess_function                 
+W(py alm)       4d3        0   0.1
+W(py gr)       35d3        0   0.1    
+W(py andr)     91d3      1.7   0.032 
+W(py knor)      2d3        0   0
+W(alm gr)       4d3        0   0.1
+W(alm andr)    60d3      1.7   0.032
+W(alm knor)     6d3        0   0.01
+W(gr andr)      2d3        0   0
+W(gr knor)     47d3    -33.8   0.221   
+W(andr knor)  101d3    -32.1   0.153
+end_excess_function 
+
+2
+3 3.
+z(m1,fe) = 1 alm
+z(m1,mg) = 1 py + 1 knor
+
+3 2.
+z(m2,cr)  = 1 knor
+z(m2,fe3) = 1 andr
+
+end_of_model 
+                      -------------------------------------------------------- 
+begin_model                
+                             Jennings and Holland, J Pet, 56:869-892, 2013
+                             Mantle Melt Model, intended for pressures of 0-60 GPa
+
+                             Pierre Bouilhol & JADC, 12/16/15 
+
+                                                      1       2             
+                                                      M1      M2      
+                                                     _____________
+
+                                      Mutliplicity    1       1
+                                                     _____________
+
+                                        en            Mg      Mg 
+                                        mgts          Al      Mg 
+                                        oen           Fe3+    Mg   
+                                        cren          Cr      Mg   
+      
+                            Species:    fs            Fe2+    Fe2+      
+                                        tsfs          Al      Fe2+  dependent
+                                        ofs           Fe3+    Fe2+  dependent  
+                                        crfs          Cr      Fe2+  dependent 
+
+                            Species:    odijh         Mg      Ca      
+                                        tsdi          Al      Ca    dependent
+                                        odif          Fe3+    Ca    dependent  
+                                        odicr         Cr      Ca    dependent 
+                                                      _____________
+
+                           Internal:    opx           Mg      Fe2+       
+Opx(JH)
+abbreviation Opx
+full_name    orthopyroxene 
+
+8                          | model type: Reciprocal with speciation
+
+2                          | 2 independent composition spaces
+3 4                        | 3 dimensions on first space, 4 on second
+
+                           | endmembers: 
+en      fs     odijh
+mgts    tsfs   tsdi 
+oen     ofs    odif  
+cren    crfs   odicr      
+
+1                          | ordered species definition
+
+opx = 1/2 en + 1/2  fs  Delta(enthalpy) = -6d3          
+
+begin_limits
+opx =     - 2 fs - 1 opx                delta = 2 z(M2,Fe)       
+opx =  -2 + 2 fs + 1 opx                delta = 2 z(M1,Fe)
+opx =     - 2 en - 1 opx                delta = 2 z(M1,Mg)
+end_limits   
+
+6                          | 6 dependent endmembers
+
+tsfs  = 1 mgts   + 1 opx - 1 en
+tsdi  = 1 odijh  + 1 mgts - 1 en 
+
+ofs   = 1 oen    + 1 opx - 1 en  
+odif  = 1 odijh  + 1 oen - 1 en 
+
+crfs  = 1 cren   + 1 opx - 1 en  
+odicr = 1 odijh  + 1 cren - 1 en 
+                                               
+0 0 0 0 0 0 0 0 0 0 0 0    | endmember flags, indicate if endmember is part of the solution (i.e. iend = 0).
+
+                           | subdivision model for (ternary) site 1 (M1):
+0. 1. .1   0                
+0. 1. .1   0
+                           | subdivision model for (quaternary) site 2 (M2):
+0. 1. .1   0                
+0. 1. .1   0
+0. 1. .1   0
+
+begin_excess_function                
+W(en fs)        5.2d3  0   0
+W(en opx)         4d3  0   0
+W(en odijh)    32.2d3  0   0.12 
+W(en mgts)       13d3  0  -0.15
+W(en cren)        8d3  0   0
+W(en oen)         8d3  0   0
+W(fs opx)         4d3  0   0
+W(fs odijh)      24d3  0   0
+W(fs mgts)        7d3  0  -0.15
+W(fs cren)       10d3  0   0
+W(fs oen)        10d3  0   0
+W(opx odijh)     18d3  0   0
+W(opx mgts)       2d3  0  -0.15
+W(opx cren)      12d3  0   0
+W(opx oen)       12d3  0   0
+W(odijh mgts)  75.4d3  0  -0.94
+W(odijh cren)    30d3  0   0   
+W(odijh oen)     30d3  0   0   
+W(mgts cren)      2d3  0   0
+W(mgts oen)       2d3  0   0
+W(cren oen)       2d3  0   0
+end_excess_function 
+
+2                          | 2 site (M1, M2) configurational entropy model
+
+5 1.                       | 5 species on M1, 1 site per formula unit.
+z(m1,fe)   = 1 fs 
+z(m1,cr)   = 1 cren
+z(m1,fe3+) = 1 oen
+z(m1,al)   = 1 mgts 
+
+3 1.                       | 2 species on M2, 1 site per formula unit.
+z(m2,ca) = 1 odijh
+z(m2,fe) = 1 fs + 1 opx
+
+begin_van_laar_sizes
+alpha(en)     1.0  0  0
+alpha(fs)     1.0  0  0
+alpha(opx)    1.0  0  0
+alpha(odijh)  1.2  0  0
+alpha(mgts)   1.0  0  0
+alpha(cren)   1.0  0  0
+alpha(oen)    1.0  0  0
+end_van_laar_sizes
+
+end_of_model 
+     -------------------------------------------------------------------------------------------
+begin_model  
+                             Jennings and Holland, J Pet, 56:869-892, 2013
+                             Mantle Melt Model, intended for pressures of 0-60 GPa
+
+                             Pierre Bouilhol & JADC, 12/16/15 
+      
+                                                      M1      M2     T  
+                                                     ____________________
+
+                                      Mutliplicity    1       1     1/4  <- fake multiplicity
+                                                     ____________________
+
+                                      1 di            ca      mg    SiSi  
+                                      2 cfs           Fe      Fe    SiSi
+                                      3 cats          ca      al    AlSi     
+                                      4 crdi          ca      cr    AlSi
+                                      5 cess          ca     fe3    AlSi
+                                      6 jd            na      al    SiSi
+                                      7 cenjh           mg      mg    SiSi
+
+                                      8 cfm           fe      mg    SiSi  
+
+                                                      M1      M2     T  
+                                                     ____________________
+Cpx(JH)
+abbreviation Cpx
+full_name    clinopyroxene 
+
+6                            | model type    
+7                                
+cfs  cats  crdi  cess jd    cenjh  di 
+
+1                            | number of ordered species 
+cfm   = 1/2 cfs + 1/2 cenjh   enthalpy_of_formation  =  -3653d0 | should be -3653 + .25e-2*p -.39e-1*T
+ 
+0 0  0  0  0  0   0          | endmember flags
+
+0. 1.  .1  0                  
+0. 1.  .1  0                  
+0. 1.  .1  0                  
+0. 1.  .1  0                  
+0. 1.  .1  0                  
+0. 1.  .1  0                 
+
+begin_excess_function
+W(di cfs)     21d3  0   0                           
+W(di cats)  12.3d3  0  -0.1
+W(di crdi)     8d3  0   0
+W(di cess)     8d3  0   0
+W(di jd)      26d3  0   0
+W(di cenjh)   29.8d3  0  -0.03
+W(di cfm)     18d3  0   0
+W(cfs cats)   25d3  0  -0.1
+W(cfs crdi)   34d3  0   0   | Wfscrdi = 24 - x
+W(cfs cess)   34d3  0   0   | Wfscess = 24 - x
+W(cfs jd)     24d3  0   0
+W(cfs cenjh)     7d3  0   0
+W(cfs cfm)     4d3  0   0
+W(cats crdi)   2d3  0   0
+W(cats cess)   2d3  0   0
+W(cats jd)     6d3  0   0
+W(cats cenjh) 45.7d3  0  -0.29
+W(cats cfm)   27d3  0  -0.1
+W(crdi cess)   2d3  0   0
+W(crdi jd)     3d3  0   0
+W(crdi cenjh)   48d3  0   0   | Wcrdicen = 38 - x
+W(crdi cfm)   36d3  0   0   | Wcrdicfm = 26 - x
+W(cess jd)     3d3  0   0
+W(cess cenjh)   58d3  0   0   | Wcesscen = 48 - x
+W(cess cfm)   36d3  0   0   | Wcesscfm = 26 - x
+W(jd cenjh)     40d3  0   0
+W(jd cfm)     40d3  0   0
+W(cenjh cfm)     4d3  0   0
+end_excess_function
+
+3                             | 3 site (M1, M2, T1) configurational entropy model
+
+4 1.                          | 5 species on M1, 1 site per formula unit.
+z(m1,fe) = 1 cfs + 1 cfm
+z(m1,na) = 1 jd 
+z(m1,mg) = 1 cenjh 
+
+5 1.                          | 2 species on M2, 1 site per formula unit.
+z(m2,fe3) = 1 cess
+z(m2,cr)  = 1 crdi
+z(m2,al)  = 1 cats + 1 jd 
+z(m2,fe)  = 1 cfs
+
+2 0.25                        | 2 species on T1
+z(t1,al) = 1/2 cats + 1/2 cess + 1/2 crdi
+
+begin_van_laar_sizes
+alpha(di)    1.2  0  0
+alpha(cfs)   1.0  0  0
+alpha(cats)  1.9  0  0
+alpha(crdi)  1.9  0  0
+alpha(cess)  1.9  0  0
+alpha(jd)    1.2  0  0
+alpha(cenjh)   1.0  0  0
+alpha(cfm)   1.0  0  0
+end_van_laar_sizes
+
+end_of_model                  
                     -------------------------------------------------------- 
 begin_model                
                              CHLORITE, White et al JMG 32:261-286, 2014

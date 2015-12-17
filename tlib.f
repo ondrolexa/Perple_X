@@ -17,7 +17,7 @@ c----------------------------------------------------------------------
       implicit none
 
       write (*,'(/,a)') 
-     *      'Perple_X version 6.7.2, source updated December 1, 2015.'
+     *      'Perple_X version 6.7.2, source updated December 17, 2015.'
 
       end
 
@@ -3408,7 +3408,7 @@ c                                 simple compound:
 
       else  
 c                                 solution phases:
-         if (iopt(24).eq.0) then
+         if (iopt(24).eq.0.or.lname(ids).eq.'unclassified') then
 c                                 use model name
             name = fname(ids)
 

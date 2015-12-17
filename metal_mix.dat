@@ -2277,7 +2277,12 @@ transition = 1 type = 2 t1  = 1500  t4  = 20.07968 t5 = 0.13599d-3 t6 = 10.89287
 transition = 2 type = 2 t1  = 6000  t4  = 24.85874 t5 = -0.0962d-3 t6 = -722.90558d5 t7 = -0.00077d-6 
 end
 
-
+C(g)     EoS = 10 | HSC ideal gas (to 20 kK)
+C(1)   
+G0 = 699012.6 S0 = 158.099 c1 = 20.850 c2 = -0.192d-3 c3 = 0.028d5 c4 = 0.114d-6
+transition = 1 type = 2 t1 = 1500 t4 = 17.468 t5 = 1.657d-3 t6 = 26.014d5 t7 = -0.118d-6
+transition = 2 type = 2 t1 = 6000 t4 = 23.533 t5 = -0.084d-3 t6 = -91.839d5 t7 = 0.010d-6
+end 
 
 SiO(g)         EoS = 10 | HSC ideal gas => -166.014d3 Shornikov => G0 = -163.668d3
 Si(1)O(1)
