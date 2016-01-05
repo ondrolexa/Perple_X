@@ -232,7 +232,7 @@ ospr = 1/2 andr - 1/2 gr + 1 spr5
 
 mnopx = 2 pxmn                    | Mn endmember for Opx(W) model
 6680 0 0
-                                  | Make definitions for Jennings and Holland, J Pet, 56:869-892, 2013 Cpx
+                                  | Make definitions for Jennings and Holland, J Pet, 56:869-892, 2015 Cpx
 cfs = 1 fs
 3.8d3 -3 0.03
 crdi = 1 cats + 1 kos - 1 jd
@@ -241,14 +241,14 @@ cess = 1 cats + 1 acm - 1 jd
 -6d3 0 0
 cenjh = 1 en
 3.5d3 -2 0.048
-                                  | Make definitions for Jennings and Holland, J Pet, 56:869-892, 2013 Opx
+                                  | Make definitions for Jennings and Holland, J Pet, 56:869-892, 2015 Opx
 cren  = 1 mgts + 1 kos - 1 jd
 3d3 0 0
 oen   = 1 mgts + 1 acm - 1 jd
 -15d3 0 0.15
 odijh = 1 di
 -0.1d3 2.11 0.005
-                                  | Make definitions for Jennings and Holland, J Pet, 56:869-892, 2013 melt
+                                  | Make definitions for Jennings and Holland, J Pet, 56:869-892, 2015 melt
 qjL = 2 qL
 4d3  0  -0.43   
 dijL = 1 diL

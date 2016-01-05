@@ -781,7 +781,7 @@ c                                show the user the composition:
       kds(jcomp) = ids
 
 1000  format (/,'Define the composition in terms of the species/endmem',
-     *          'bers of ',a,/,'(y/n)?',/,'Answer no to define a ',
+     *          'bers of ',a,'(y/n)?',//,'Answer no to define a ',
      *          'composition in terms of the systems components.',/,
      *          'Units (mass or molar) are controlled by the ',
      *          'composition keyword in',/,'perplex_option.dat.')

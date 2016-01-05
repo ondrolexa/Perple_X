@@ -1,7 +1,7 @@
 670 DO NOT DELETE THIS LINE
                       -------------------------------------------------------- 
 begin_model
-                             Jennings and Holland, J Pet, 56:869-892, 2013
+                             Jennings and Holland, J Pet, 56:869-892, 2015
                              Mantle Melt Model, intended for pressures of 0-60 GPa
 
                              Pierre Bouilhol & JADC, 12/16/15 
@@ -53,7 +53,7 @@ z(ek) = 1 ekjL
 end_of_model
                       --------------------------------------------------------         
 begin_model      
-                             Jennings and Holland, J Pet, 56:869-892, 2013
+                             Jennings and Holland, J Pet, 56:869-892, 2015
                              Mantle Melt Model, intended for pressures of 0-60 GPa
 
                              Pierre Bouilhol & JADC, 12/16/15                                           
@@ -80,7 +80,7 @@ z(fe) = 1 fa
 end_of_model              
                       --------------------------------------------------------           
 begin_model               
-                             Jennings and Holland, J Pet, 56:869-892, 2013
+                             Jennings and Holland, J Pet, 56:869-892, 2015
                              Mantle Melt Model, intended for pressures of 0-60 GPa
 
                              Pierre Bouilhol & JADC, 12/16/15 
@@ -118,7 +118,7 @@ z(cr)  = 2/3 picr
 end_of_model               
                       --------------------------------------------------------
 begin_model               
-                             Jennings and Holland, J Pet, 56:869-892, 2013
+                             Jennings and Holland, J Pet, 56:869-892, 2015
                              Mantle Melt Model, intended for pressures of 0-60 GPa
 
                              Pierre Bouilhol & JADC, 12/16/15 
@@ -150,7 +150,7 @@ end_van_laar_sizes
 end_of_model         
                       -------------------------------------------------------- 
 begin_model
-                             Jennings and Holland, J Pet, 56:869-892, 2013
+                             Jennings and Holland, J Pet, 56:869-892, 2015
                              Mantle Melt Model, intended for pressures of 0-60 GPa
 
                              Pierre Bouilhol & JADC, 12/16/15 
@@ -223,7 +223,7 @@ z(m2,fe3) = 1 andr
 end_of_model 
                       -------------------------------------------------------- 
 begin_model                
-                             Jennings and Holland, J Pet, 56:869-892, 2013
+                             Jennings and Holland, J Pet, 56:869-892, 2015
                              Mantle Melt Model, intended for pressures of 0-60 GPa
 
                              Pierre Bouilhol & JADC, 12/16/15 
@@ -347,7 +347,7 @@ end_van_laar_sizes
 end_of_model 
      -------------------------------------------------------------------------------------------
 begin_model  
-                             Jennings and Holland, J Pet, 56:869-892, 2013
+                             Jennings and Holland, J Pet, 56:869-892, 2015
                              Mantle Melt Model, intended for pressures of 0-60 GPa
 
                              Pierre Bouilhol & JADC, 12/16/15 
