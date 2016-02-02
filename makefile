@@ -1,5 +1,5 @@
 #
-# makefile for Perple_X 6.6.8+
+# makefile for Perple_X 6.6.9
 #
 # To compile the Perple_X programs with this file first edit the compiler
 # variables so that they are consistent with the fortran installation on 
@@ -24,21 +24,37 @@
 #                  COMP77 = the name of the local fortran 77 compatible compiler
 #COMP77 = g77
 COMP77 = gfortran
-#                  FFLAGS = the desired compile options
-#FFLAGS = -C -O3 -Wpedantic -Wunused 
+#                  FFLAGS = compile options
+#                  FLINK = linker options
+#FFLAGS = -C -O3 -Wpedantic -Wunused
 
 # pappel: for use with gfortran
 # JADC 1/21/13: O2 and O3 cause fp errors in the speciation routine speci2 in gfortran, the optimization
-# seems to work if local variables are initialized to zero (-finit-local-zero, even though there are no 
-# uninitialized variables). use -ffpe-trap=zero,overflow,underflow to catch fp errors and -fcheck=all 
-# for safe run-time code.
-
-# add -m64 to force 64 bit code generation (at least on OSX)
-
-FFLAGS =  -O3 -static-libgfortran
+# seems to work if local variables are initialized to zero (even though there are no uninitialized variables).
+# use -ffpe-trap=zero,overflow,underflow to catch fp errors.
 
 # Mark Caddick's OSX generic gfortran compilation flags:
-#FFLAGS = -static-libgfortran -lgfortran -lgcc -lSystem -nodefaultlibs -mmacosx-version-min=10.6  -O3 /usr/local/lib/libquadmath.a
+
+#FFLAGS = -O3 
+#FFLINK = -static-libgfortran -lgfortran -lgcc -lSystem -nodefaultlibs -mmacosx-version-min=10.6  /usr/local/lib/libquadmath.a
+
+# FFLAGS = -finit-local-zero -Os -m64 -static-libgfortran
+# For distribution using static (pre-linked) compiler run-time libraries, use
+# following compiler flags for gfortran builds on MacOSX/Darwin.  gfortran
+# versions up through 4.9 lack the ability to include a static libquadmath, so
+# awkward link flags (FLINK) and directory for static libquadmath defined.
+# Most commonly, gfortran will use the directory /usr/local/lib, but some
+# builds will differ on location.  To find your library location, use a command
+# (from the command line) like,
+#    find /usr/local -name libquadmath.a -print
+# and substitute the directory name you find for LQMDIR.  En garde choosing
+# 32/64 bit libraries.
+# G. Helffrich/30 Nov. '15
+# FFLAGS =  -O3 -static-libgfortran
+
+FFLAGS = -O3
+LQMDIR = /usr/local/lib
+FLINK = -static-libgfortran -m64 -lgfortran -lgcc -lSystem -lm -nodefaultlibs ${LQMDIR}/libquadmath.a
 
 # WFM Added 2007Sep05, PAPPEL 2010SEPT08: for 6.6.0
 MYOBJ = actcor build fluids ctransf frendly htog meemum pstable pspts psvdraw pssect pt2curv vertex werami unsplt
@@ -50,19 +66,19 @@ clean:
 ###################### TARGETS FOR FORTRAN PROGRAMS #########################   
 # 
 actcor: actcor.o tlib.o 
-	$(COMP77) $(FFLAGS) $@.o tlib.o -o $@
+	$(COMP77) $(FFLAGS) $(FLINK) $@.o tlib.o -o $@
 
 build: build.o tlib.o rlib.o flib.o 
-	$(COMP77) $(FFLAGS) build.o tlib.o rlib.o flib.o -o $@ 
+	$(COMP77) $(FFLAGS) $(FLINK) build.o tlib.o rlib.o flib.o -o $@ 
 
 fluids: fluids.o tlib.o flib.o 
-	$(COMP77) $(FFLAGS) $@.o tlib.o flib.o -o $@
+	$(COMP77) $(FFLAGS) $(FLINK) $@.o tlib.o flib.o -o $@
 
 ctransf: ctransf.o tlib.o 
-	$(COMP77) $(FFLAGS) $@.o tlib.o -o $@
+	$(COMP77) $(FFLAGS) $(FLINK) $@.o tlib.o -o $@
 
 frendly: frendly.o tlib.o rlib.o flib.o olib.o clib.o dlib.o
-	$(COMP77) $(FFLAGS) $@.o rlib.o tlib.o flib.o olib.o clib.o dlib.o -o $@
+	$(COMP77) $(FFLAGS) $(FLINK) $@.o rlib.o tlib.o flib.o olib.o clib.o dlib.o -o $@
 
 #hptover: hptover.o
 #	$(COMP77) $(FFLAGS) $@.o -o $@
@@ -71,31 +87,31 @@ htog: htog.o
 	$(COMP77) $(FFLAGS) $@.o -o $@
 
 meemum: meemum.o 
-	$(COMP77) $(FFLAGS) meemum.o -o $@   
+	$(COMP77) $(FFLAGS) $(FLINK) meemum.o -o $@   
 
 pstable: pstable.o pslib.o pscom.o  tlib.o cont_lib.o 
-	$(COMP77) $(FFLAGS) $@.o pslib.o pscom.o  tlib.o cont_lib.o -o $@
+	$(COMP77) $(FFLAGS) $(FLINK) $@.o pslib.o pscom.o  tlib.o cont_lib.o -o $@
 
 pspts: pspts.o pslib.o tlib.o pscom.o 
-	$(COMP77) $(FFLAGS) $@.o pslib.o tlib.o pscom.o -o $@
+	$(COMP77) $(FFLAGS) $(FLINK) $@.o pslib.o tlib.o pscom.o -o $@
 
 psvdraw: psvdraw.o pslib.o tlib.o pscom.o
-	$(COMP77) $(FFLAGS) $@.o pslib.o tlib.o pscom.o -o $@
+	$(COMP77) $(FFLAGS) $(FLINK) $@.o pslib.o tlib.o pscom.o -o $@
 
 pssect: psect.o pscom.o pslib.o tlib.o rlib.o flib.o clib.o  dlib.o 
-	$(COMP77) $(FFLAGS) psect.o pscom.o pslib.o tlib.o rlib.o flib.o clib.o dlib.o -o $@
+	$(COMP77) $(FFLAGS) $(FLINK) psect.o pscom.o pslib.o tlib.o rlib.o flib.o clib.o dlib.o -o $@
 
 pt2curv: pt2curv.o tlib.o
-	$(COMP77) $(FFLAGS) $@.o tlib.o -o $@
+	$(COMP77) $(FFLAGS) $(FLINK) $@.o tlib.o -o $@
 
 unsplt: unsplt.o tlib.o rlib.o flib.o clib.o dlib.o
-	$(COMP77) $(FFLAGS) $@.o rlib.o tlib.o flib.o clib.o dlib.o -o $@
+	$(COMP77) $(FFLAGS) $(FLINK) $@.o rlib.o tlib.o flib.o clib.o dlib.o -o $@
 
 vertex: vertex.o 
-	$(COMP77) $(FFLAGS) vertex.o -o $@
+	$(COMP77) $(FFLAGS) $(FLINK) vertex.o -o $@
 
 werami: werami.o 
-	$(COMP77) $(FFLAGS) werami.o -o $@
+	$(COMP77) $(FFLAGS) $(FLINK) werami.o -o $@
 
 # targets missing from '07:
 #rk: rk.o flib.o tlib.o

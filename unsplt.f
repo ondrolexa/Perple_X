@@ -146,22 +146,32 @@ c                                 initialize, set global lists and project name
             ggrd(i,j) = 0
          end do 
       end do 
-c                                 open global plt and blk files
-      call mertxt (tfname,gprjct,'.plt',0)
-      open (n6,file=tfname,iostat=ierr)
-      if (ierr.ne.0) call error (42,bt(1),i,tfname)
+c                                 dummy opens, these are too check
+c                                 if the arf and tof files exist in 
+c                                 the cwd (they should not as they 
+c                                 could cause conflict in werami/pssect).
 
-      call mertxt (tfname,gprjct,'.plt',0)
-      open (n6,file=tfname)
-      if (ierr.ne.0) call error (42,bt(1),i,tfname)
-c                                 open and blank the arf and tof tiles
+c                                 previously this was done for the plt
+c                                 and blk files as well, but i don't think
+c                                 that is necessary for any OS. 
+
+c                                 the close statement appears to be necessary
+c                                 for gfortran
+
+c                                 make sure my_project.arf
+c                                 and my_project.tof do not
+c                                 exist, if either exists write 
+c                                 an error message that instructs
+c                                 the user to delete them.
       call mertxt (tfname,gprjct,'.arf',0)
       open (n8,file=tfname,status="old",iostat=ierr)
       if (ierr.eq.0) call error (70,bt(1),i,tfname)
+      close (n8)
 
       call mertxt (tfname,gprjct,'.tof',0)
       open (n8,file=tfname,status="old",iostat=ierr)
       if (ierr.eq.0) call error (70,bt(1),i,tfname)
+      close (n8)
 
       write (*,'(/)')
 c                                 at this point we have a complete list
@@ -239,7 +249,7 @@ c                                 jinc1
 c                                 read local bulk composition data file:   
             if (.not.err) call bplinp (err)
 
-10          if (err.or.iasct.eq.0.or.ibulk.eq.0.or.loopx.ne.17) then
+10          if (err.or.iasct.eq.0.or.ibulk.eq.0) then
                kbad = kbad + 1
                kb(kbad,1) = i
                kb(kbad,2) = j

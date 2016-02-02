@@ -23,34 +23,7 @@
 | CF
 | Gt or Gt_maj for the distinction between these two models refer to 
 | the comments with the Gt_maj model in stx11_solution_model.dat
-| Melt - MgO-Mg2SiO4-MgSiO3 melt
-
-                      --------------------------------------------------------     
-begin_model                
-
-Melt                                                                               
-2                                     model type: Margules, macroscopic
-
-3                                    3 endmembers
-MgO_L  Mg2SiO4L MgSiO3_L              
-  0  0  0                           | endmember flags
-
-0. 1.0  0.1  0             | subdivision range, imod = 0 -> cartesian subdivision
-0. 1.0  0.1  0             | subdivision range, imod = 0 -> cartesian subdivision
-
-begin_excess_function                                                
-W(MgO_L    MgSiO3_L)  0d0  0. 0.  
-W(MgO_L    Mg2SiO4L)  0d0  0. 0.  
-W(MgSiO3_L Mg2SiO4L)  0d0  0. 0. 
-end_excess_function 
-
-1                                     molecular entropy model (1 site)
-
-3 1.                                  3 species on M site multiplicity = 1.
-z(per) = 1 MgO_L
-z(ens) = 1 MgSiO3_L
-
-end_of_model   
+     
                       --------------------------------------------------------
 begin_model                
                                       C2/c pyroxene solution
@@ -265,8 +238,6 @@ alpha(cen)    1.0    0.0    0.0
 alpha(cts)    3.5    0.0    0.0
 end_van_laar_sizes
 
-reach_increment 0
-
 end_of_model                        
                       --------------------------------------------------------
 begin_model                
@@ -467,7 +438,5 @@ z(A,mg) = 1 mfer
                                       
 2 1.                                  al-si mixing on only one "T" site.
 z(M,Si) = 1 nfer
-
-reach_increment 4
 
 end_of_model
