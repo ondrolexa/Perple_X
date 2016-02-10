@@ -17,7 +17,7 @@ c----------------------------------------------------------------------
       implicit none
 
       write (*,'(/,a)') 
-     *      'Perple_X version 6.7.2, source updated December 17, 2015.'
+     *      'Perple_X version 6.7.2, source updated February 3, 2016.'
 
       end
 
@@ -1899,6 +1899,8 @@ c---------------------------------------------------------------------
          write (*,73) char
       else if (ier.eq.74) then 
          write (*,74) int
+      else if (ier.eq.75) then 
+         write (*,75) char
       else if (ier.eq.89) then
          write (*,89) 
       else if (ier.eq.90) then
@@ -2160,8 +2162,11 @@ c---------------------------------------------------------------------
      *          'more than one entity named: ',a,/,'delete or rename ',
      *          'the entities, this error is often caused by make ',
      *          'definitions.')
-74    format (/,'**error ver073** unrecognized EoS pointer (',i3, 
+74    format (/,'**error ver074** unrecognized EoS pointer (',i3, 
      *          ') in routine SETINS',/)
+75    format (/,'**error ver075** more than one solution model is ',
+     *          'named ',a,/,'delete or rename the replicate models in',
+     *          ' the solution model file.',/)
 c72    format (/,'**error ver072** UNSPLT found no completed segments',
 c     *          ' in folder/directory:'/,5x,'.',a,/)
 89    format (/,'**error ver089** SMPLX programming error. Change ',

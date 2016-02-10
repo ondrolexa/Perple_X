@@ -5,12 +5,15 @@ c Copyright (c) 1998 by James A. D. Connolly, Institute for Mineralogy
 c & Petrography, Swiss Federal Insitute of Technology, CH-8092 Zurich,
 c SWITZERLAND. All rights reserved.
 
-      include 'nlib.f'
-      include 'clib.f'
-      include 'resub.f'
-      include 'rlib.f'
-      include 'tlib.f'
-      include 'flib.f'
+c compiling with include statements causes run-time crash with Intel 
+c compiler optimized code.
+    
+c      include 'nlib.f'
+c      include 'clib.f'
+c      include 'resub.f'
+c      include 'rlib.f'
+c      include 'tlib.f'
+c      include 'flib.f'
 
       program vertx        
 c----------------------------------------------------------------------

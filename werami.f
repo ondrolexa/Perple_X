@@ -1,10 +1,12 @@
-
-      include 'olib.f'
-      include 'clib.f'
-      include 'dlib.f'
-      include 'rlib.f'
-      include 'tlib.f'
-      include 'flib.f'
+c compiling with include statements causes run-time crash with Intel 
+c compiler optimized code.
+    
+c      include 'olib.f'
+c      include 'clib.f'
+c      include 'dlib.f'
+c      include 'rlib.f'
+c      include 'tlib.f'
+c      include 'flib.f'
 
       program werami
 c----------------------------------------------------------------------

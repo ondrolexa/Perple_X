@@ -2264,6 +2264,13 @@ c1 = 196.1 c2 = .5398E-2 c3 = -3126000 c5 = -616.9
 b1 = 4.2769E-5 b5 = -4.2769E-4 b6 = 1922000 b8 = 4.04  
 end
 
+Fe-BCC   EoS = 610 | Lacaze & Sundman 1990 Special EoS, for FeSiC bcc solution model (SiC paper)
+FE(1)
+V0 = 0.705  
+b1 = 2.7919d-5 |b5 = -2.7919d-4 
+b6 = 170d4 b8 = 6.2
+end
+
 Si-BCC   EoS = 611 | Lacaze & Sundman 1990 Special EoS, for FeSiC bcc solution model (SiC paper)
 SI(1)
 V0 = 0.93  

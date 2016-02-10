@@ -87,7 +87,7 @@ htog: htog.o
 	$(COMP77) $(FFLAGS) $@.o -o $@
 
 meemum: meemum.o 
-	$(COMP77) $(FFLAGS) $(FLINK) meemum.o -o $@   
+	$(COMP77) $(FFLAGS) $(FLINK) $@.o rlib.o tlib.o flib.o olib.o clib.o resub.o nlib.o -o $@   
 
 pstable: pstable.o pslib.o pscom.o  tlib.o cont_lib.o 
 	$(COMP77) $(FFLAGS) $(FLINK) $@.o pslib.o pscom.o  tlib.o cont_lib.o -o $@
@@ -108,10 +108,10 @@ unsplt: unsplt.o tlib.o rlib.o flib.o clib.o dlib.o
 	$(COMP77) $(FFLAGS) $(FLINK) $@.o rlib.o tlib.o flib.o clib.o dlib.o -o $@
 
 vertex: vertex.o 
-	$(COMP77) $(FFLAGS) $(FLINK) vertex.o -o $@
+	$(COMP77) $(FFLAGS) $(FLINK) $@.o rlib.o tlib.o flib.o clib.o resub.o nlib.o -o $@
 
 werami: werami.o 
-	$(COMP77) $(FFLAGS) $(FLINK) werami.o -o $@
+	$(COMP77) $(FFLAGS) $(FLINK) $@.o rlib.o tlib.o flib.o olib.o clib.o dlib.o-o $@
 
 # targets missing from '07:
 #rk: rk.o flib.o tlib.o

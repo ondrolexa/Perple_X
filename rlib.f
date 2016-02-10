@@ -11782,6 +11782,13 @@ c                                 -------------------------------------
 c                                 make various book keeping arrays (y2p,
 c                                 jmsol, dydz, .....)
          call nmodel
+c                             check that the name has not already been found, i.e., 
+c                             that the name is duplicated in the solution model file
+         if (first) then
+            do i = 1, im 
+               if (tname.eq.sname(i)) call error (75,0d0,i,tname)
+            end do
+         end if
 c                                 save solution name
          sname(im) = tname
 c                                 abbreviation
