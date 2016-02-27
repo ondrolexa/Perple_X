@@ -486,8 +486,7 @@ c                                 select the dependent variable
          ix = iv(2)
          iv(2) = iv(ic)
          iv(ic) = ix
-         inc(iv(2)) = 1
-         vmin(iv(2)) = 0d0
+
          vmax(iv(2)) = vmin(iv(2))
 
          if (ipot.eq.3) then 
@@ -495,7 +494,6 @@ c                                 specify the value for the 3rd variable
             write (*,2180) vname(iv(3))
             read (*,*,iostat=ier) vmin(iv(3))
             vmax(iv(3)) = vmin(iv(3))
-            inc(iv(3)) = 1
 
          end if 
 c                                 get the path function
@@ -525,7 +523,7 @@ c                                 specify the sectioning variables
                 call rerr
              end do
 
-             inc(iv(i)) = 1
+             vmax(iv(i)) = vmin(iv(i))
 
           end do 
 
@@ -1974,6 +1972,7 @@ c                               initialize:
 c                               initialization for k10 endnmembers
       do i = 1, k10
          make(i) = 0 
+         names(i) = ' '
       end do
  
       do k = 1, k5+1
