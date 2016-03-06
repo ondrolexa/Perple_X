@@ -4728,7 +4728,7 @@ c                                 assign the first point
       npairs = 1
 
       do i = 1, jsp
-         xy(i,1) = y(i,ind(i))
+         xy(i,1) = y(i,1)
       end do
 c                                 now make the array index run over all
 c                                 values increasing the last index fastest
@@ -4739,11 +4739,13 @@ c                                 values increasing the last index fastest
       do while (iexit.eq.0)
 c                                 figure out which index to increment
          do i = jsp, 1, -1
+
             if (ind(i).lt.iy(i).and.ieyit.eq.0) then
 c                                 this is the one to increment
                ind(i) = ind(i) + 1
                indx = i 
                exit 
+
             else if (i.gt.1) then 
 c                                 saturated the index
                ind(i) = 1
@@ -4753,7 +4755,8 @@ c                                 saturated the index
 c                                 saturated first index, done.
                 return 
 
-            end if 
+            end if
+ 
          end do 
 c                                 ok now we have the indices, check
 c                                 the composition
@@ -4784,6 +4787,11 @@ c                                 must have just hit on the last increment
                cycle 
 
             end if 
+
+         else if (ind(indx).eq.iy(indx)) then 
+
+            ieyit = 1
+
          end if 
 
          npairs = npairs + 1
@@ -12555,7 +12563,9 @@ c                                 model type
       integer isec,icopt,ifull,imsg,io3p
       common/ cst103 /isec,icopt,ifull,imsg,io3p
 c----------------------------------------------------------------------
-c                              eliminate end-member compositions 
+      zpr = 0d0 
+      i = 0 
+c                              compute end-member fractions
       do l = 1, mstot(im)
 
          y(l) = 1d0
@@ -12586,9 +12596,11 @@ c                              check for invalid compositions
 
          end do
 c                                 y is the mole fraction of endmember l
+         zpr = zpr + y(l) 
+
          if (y(l).gt.1d0-nopt(5).and.kdsol(l).gt.0) then
- 
-            return
+c                                 the pure endmember index is 
+            i = l       
 
          else if (y(l).lt.nopt(5)) then
 
@@ -12596,7 +12608,27 @@ c                                 y is the mole fraction of endmember l
 
          end if 
 
-      end do   
+      end do
+c                                 check for badly normalized compositions
+      if (dabs(1d0-zpr).gt.nopt(5)) then 
+         write (*,*) 'got a bad un, ysum = ',zpr,' tol is ',nopt(5)
+      end if 
+
+      if (i.ne.0) then 
+c                                 (presumably) a pure endmember composition:
+c                                 shift the endmember composition slightly 
+c                                 off the pure composition to avoid degneracy
+         y(i) = y(i) - nopt(5)
+
+         do l = 1, mstot(im)
+
+            if (l.eq.i) cycle 
+
+            y(l) = y(l) + nopt(5)/mstot(im)
+
+         end do    
+
+      end if 
 c                                 reject special cases:
 c                                 ternary coh fluids above the CH4-CO join
       if (ksmod(im).eq.41.and.y(1).ge.1d0/3d0+y(2)) return
