@@ -2039,28 +2039,28 @@ b1 = .64E-4 b5 = 276.3315 b6 = 145000 b7 = -.48E-4 b8 = 7
 end
 
  
-H2O      EoS = 1  
+H2O      EoS = 101
 O2(.5)H2(1)
 G0 = -298100.7 S0 = 188.8  
 c1 = 40.1 c2 = .8656E-2 c3 = 487500 c5 = -251.2   
 end
 
  
-CO2      EoS = 1  
+CO2      EoS = 102
 O2(1)C(1)
 G0 = -457224.7 S0 = 213.7  
 c1 = 87.8 c2 = -.2644E-2 c3 = 706400 c5 = -998.9   
 end
 
  
-CO       EoS = 1  
+CO       EoS = 103
 O2(.5)C(1)
 G0 = -169465.3 S0 = 197.67  
 c1 = 45.7 c2 = -.97E-4 c3 = 662700 c5 = -414.7  
 end
 
  
-CH4      EoS = 1  
+CH4      EoS = 104
 H2(2)C(1)
 G0 = -130343.4 S0 = 186.26  
 c1 = 150.1 c2 = .2063E-2 c3 = 3427700 c5 = -2650.4  
@@ -2092,6 +2092,107 @@ H2S      EoS = 106  | 106 invokes MRK specifically for H2S
 H2(1)S2(.5)
 G0 = -81650.32 S0 = 205.77  
 c1 = 47.4 c2 = .1024E-1 c3 = 615900 c5 = -397.8  
+end
+
+
+Mg(g)     Eos = 10 | HSC ideal gas good to 9200 K
+MGO(1)O2(-0.5)
+G0 = 102.781d3 S0 = 148.64698
+c1 = 102.781 c2 = -0.27238d-3 c3 = -0.10732d5 c4 = 0.0928d-6
+
+transition = 1 type = 2 t1  = 3000  t4  = 24.64439 t5 = -4.19509d-3 t6 = 86.67662d5 t7 = 0.88588d-6
+
+transition = 2 type = 2 t1  = 5500  t4  = -70.53931 t5 = 21.29631d-3 t6 = 3993.02967d5 t7 = -1.02981d-6  
+
+end 
+
+
+
+MgO(g)    Eos = 10 | HSC ideal gas good to 10000 K
+MGO(1)   
+G0 = -5.4d3 S0 = 213.314
+c1 = 40.69467 c2 = -37.45633d-3 c3 = -2.73321d5 c4 = 63.651d-6
+
+transition = 1 type = 2 t1  = 600  t4  = -60.77722 t5 = 192.48896d-3 t6 = 55.25711d5 t7 = -82.47799d-6
+
+transition = 2 type = 2 t1  = 1100  t4  = 161.29787 t5 = -89.73512d-3 t6 = -354.32525d5 t7 = 18.54352d-6
+
+transition = 3 type = 2 t1  = 1800  t4  = 37.68396 t5 = -0.50316d-3 t6 = 362.73469d5 t7 = 0.29204d-6  
+
+transition = 4 type = 2 t1  = 3900  t4  = 36.57035 t5 = 2.20207d-3 t6 = 36.88744d5 t7 = -0.18764d-6  
+
+transition = 5 type = 2 t1  = 8000  t4  = 61.57191 t5 = -3.03329d-3 t6 = -1500.6069d5 t7 = 0.11367d-6  
+end 
+
+
+FeO(g)    Eos = 10 | HSC ideal gas good to 6000 K
+FE(1)O2(0.5)
+G0 = 185.262d3 S0 = 241.9
+c1 = 47.39195 c2 = -12.0513d-3 c3 = -4.58674d5 c4 = 4.67128d-6
+transition = 1 type = 2 t1  = 1300  t4  = 37.33143 t5 = -0.40208d-3 t6 = 21.53793d5 t7 = 0.74914d-6
+transition = 2 type = 2 t1  = 4300  t4  = -37.17225 t5 = 23.94432d-3 t6 = 2156.59484d5 t7 = -1.50801d-6  
+end 
+
+
+Fe(g)    Eos = 10 | HSC ideal gas good to 10000 K
+FE(1)
+G0 = 361.531d3 S0 = 180.487
+c1 = 30.96344 c2 = -13.73105d-3 c3 = -1.44294d5 c4 = 5.361d-6
+transition = 1 type = 2 t1  = 1500  t4  = 17.70104 t5 = 2.12292d-3 t6 = 18.70323d5 t7 = 0.20882d-6
+transition = 2 type = 2 t1  = 5000  t4  = -19.56133 t5 = 12.83877d-3 t6 = 1187.1528d5 t7 = -0.63045d-6  
+end 
+
+
+Si(g)    Eos = 10 | HSC ideal gas 
+SI(1) 
+G0 = 405.554d3 S0 = 167.979
+c1 = 21.04075 c2 = -0.75852d-3 c3 = 1.23608d5 c4 = 0.58354d-6
+transition = 1 type = 2 t1  = 2000  t4  = 22.56649 t5 = 0.48505d-3 t6 = -55.2434d5 t7 = -0.06694d-6
+transition = 2 type = 2 t1  = 5500  t4  = 33.13343 t5 = -2.5732d-3 t6 = -422.35756d5 t7 = 0.17995d-6  
+end 
+
+
+O(g)     EoS = 10 | HSC ideal gas 
+O2(0.5) 
+G0 = 201.154d3 S0 = 161.059  
+c1 = 21.16715 c2 = -0.62024d-3 c3 = 0.78643d5 c4 = 0.2531d-6  
+transition = 1 type = 2 t1  = 1500  t4  = 20.07968 t5 = 0.13599d-3 t6 = 10.89287d5 t7 = 0.03825d-6
+transition = 2 type = 2 t1  = 6000  t4  = 24.85874 t5 = -0.0962d-3 t6 = -722.90558d5 t7 = -0.00077d-6 
+end
+
+C(g)     EoS = 10 | HSC ideal gas (to 20 kK)
+C(1)   
+G0 = 699012.6 S0 = 158.099 c1 = 20.850 c2 = -0.192d-3 c3 = 0.028d5 c4 = 0.114d-6
+transition = 1 type = 2 t1 = 1500 t4 = 17.468 t5 = 1.657d-3 t6 = 26.014d5 t7 = -0.118d-6
+transition = 2 type = 2 t1 = 6000 t4 = 23.533 t5 = -0.084d-3 t6 = -91.839d5 t7 = 0.010d-6
+end 
+
+SiO(g)         EoS = 10 | HSC ideal gas => -166.014d3 Shornikov => G0 = -163.668d3
+SI(1)O2(0.5)
+G0 = -166.014d3 S0 = 211.597
+c1 = 23.80206  c2 = 21.78592d-3 c3 = 0.4374d5 c4 = -10.07503d-6
+transition = 1 type = 2 t1 = 800    t4 = 37.02928   t5 = 0.29472d-3     t6 = -15.50846d5     t7 = 0.01456d-6
+transition = 2 type = 2 t1 = 4100   t4 = 73.41891   t5 = -11.88528d-3   t6 = -1014.67529d5   t7 =  1.1742d-6
+transition = 3 type = 2 t1 = 6000   t4 = 41.55976
+end
+
+O2(g)         EoS = 10 | HSC ideal gas good to 8000 K
+O2(1)
+G0 = -61.165d3 S0 = 205.149
+c1 = 22.05955  c2 = 20.88672d-3  c3 = 1.62056d5   c4 = -8.20733d-6
+transition = 1 type = 2 t1 = 700     t4 = 29.79298  t5 = 7.91038d-3   t6 = -6.19384d5  t7 = -2.2036d-6
+transition = 2 type = 2 t1 = 1200    t4 = 34.85945  t5 = 1.31218d-3   t6 = -14.14037d5 t7 = 0.16256d-6
+transition = 3 type = 2 t1 = 2500    t4 = 32.69336  t5 = 3.13735d-3   t6 = -17.3023d5  t7 = -0.21417d-6
+transition = 4 type = 2 t1 = 4500    t4 = 18.48998  t5 = 6.56662d-3   t6 = 654.05977d5 t7 = -0.438d-6  
+end
+
+SiO2(g)   EoS = 10 | HSC/shornikov ideal gas   HSC=> G0 -390.292d3 shornikov=> G0 = -378.938d3                                                        
+SI(1)O2(1)
+G0 = -390.292d3 S0 = 228.719
+c1 = 27.28805 c2 = 71.29955d-3 c3 = -0.25104d5 c4 = -47.78965d-6
+transition = 1 type = 2 t1  = 400   t4  = 43.14959 t5 = 26.20858d-3 t6 = -6.36805d5 t7 = -10.35122d-6
+transition = 2 type = 2 t1  = 1100  t4  = 62.32068                  t6 = -41.47181d5  
+transition = 3 type = 2 t1  = 6000  t4  = 62.2054140506421    
 end
 
  
@@ -2249,6 +2350,7 @@ b5 = .01412 b6 = 1330772 b8 = 5
 end
 
 wst EoS = 2 | G0 was fitted to highP data on IW from Campbell et al.'09; eos data Siebert et al.'05         
+            | this appears to be incorrect, possibly wrong reference convention.
 FE(1)O2(0.5)
 G0 = -251d3 S0 = 59.5 V0 = 1.225 
 c1 = 44.4 c2 = .828E-2 c3 = -1214200 c5 = 185.2  

@@ -36,9 +36,9 @@ picture_transformation 0.18 0.18 130 220 0
                                 | obsolete in PerplexPDF.
                                 | x,y-scale, x,y-translation, rotation
 
-plot_aspect_ratio     1.        | x_axis_length/y_axis_length 
+plot_aspect_ratio     1.       | x_axis_length/y_axis_length 
 plot_output_type     PDF        | graphics output type: PS/PDF/SVG
-replicate_label      1.        | 0->1, 0 - all replicate fields labeled, 1 - no replicate field labels
+replicate_label     0.25       | 0->1, 0 - all replicate fields labeled, 1 - no replicate field labels
 splines                T        | use B-splines to smooth curves (psvdraw only; not pssect)
 tenth_ticks              F      | draw tenth-interval ticks on axes 
 text_scale              1.0     | default scaling for text

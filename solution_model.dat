@@ -622,44 +622,6 @@ z(m1,cr)   = 1 crts
 z(m2,mg) = 1 en + 1 mgts + 1 mots + 1 crts
 
 end_of_model
-                  --------------------------------------------------------
-begin_model 
-                                  Silicate ideal gas 
-Si-vapor
-abbreviation gas
-full_name    gas
-
-27                                    model type: internal, ideal gas
-
-9                                     number of endmembers
-                                 
-                                    | ENDMEMBER NAMES:                               
-SiO2                                
-SiO
-Si
-O2
-O
-MgO
-Mg
-FeO
-Fe
-
-0 0 0 0 0 0 0 0 0                   | endmember flags.  
-
-0.0 1.0  0.1 0                      | range and resolution of X(SiO2), 0 => cartesian subdivision/1 => asymmetric subdivision   
-0.0 0.5  0.1 0                      | range and resolution of X(SiO)  
-0.0 0.5  0.1 0                      | range and resolution of X(Si)   
-0.0 0.5  0.1 0                      | range and resolution of X(O2)  
-0.0 0.5  0.1 0                      | range and resolution of X(O)   
-0.0 0.5  0.1 0                      | range and resolution of X(MgO)
-0.0 0.5  0.1 0                      | range and resolution of X(Mg)
-0.0 0.5  0.1 0                      | range and resolution of X(FeO)
-
-ideal
-
-  0                                 | internal routine for configurational entropy
-
-end_of_model
                       --------------------------------------------------------
 begin_model                 
 
@@ -4306,6 +4268,8 @@ end_excess_function
 2 1.                                  2 species, site multiplicity of 2
 z(Fe) = 1 mt
 
+reach_increment 3
+
 end_of_model               | end of model keyword
                       --------------------------------------------------------
 
@@ -4996,26 +4960,6 @@ ideal
 1                          | 1 site entropy model 
 2 1.                       | 2 species, 1 site pfu
 z(mg) = 1 br
-
-end_of_model               
-                      --------------------------------------------------------
-begin_model                
-
-P                                     ideal periclase
-abbreviation Per
-full_name    wuestite
-
-2                          | macroscopic
-
-2                          | 2 endmembers 
-per      fper      
-  0  0                                endmember flags
- 0.  1.  0.1  1            | subdivision range, imod = 1 -> asymmetric transform subdivision
-ideal 
-
-1                          | 1 site entropy model 
-2 1.                       | 2 species, 1 site pfu
-z(mg) = 1 per
 
 end_of_model               
                       --------------------------------------------------------
@@ -9377,192 +9321,117 @@ z(mg,m4)    = 1 afchl + 1 och2
 z(al,T2)    = 1 ames + 1/2 clin + 1/2 daph + 1/2 f3clin
 
 end_of_model  
-                                  --------------------------------------------------------	   
-begin_model  
-
-FeSiC-BCC
-abbreviation BCC
-full_name    alloy
-    
-30                                | model type: special reciprocal (Lacaze & Sundman, 1991)
-2                                 | number of independent mixing sites, reciprocal solution
-2  2                              | Fe-Si on site 1, Vacancy-C on site 2                                                                         
-       
-Fe-BCC Si-BCC                     | endmember names 
-FeC-BCC SiC-BCC
-
-0                                 | number of dependent endmembers 
-
-0  0  0  0                        | endmember flags
-
-0.  1.   0.1  0                    | imod = 0 -> Fe fraction on site 1
-0.  1.   0.1  0                    | imod = 0 -> vacancy fraction on site 2
-                            
-ideal                             | internal excess model
-
-0                                 | 0 site entropy model -> internal model
-
-reach_increment 7
-
-end_of_model 
-                      --------------------------------------------------------
-begin_model  
-
-FeSiC-FCC
-abbreviation FCC
-full_name    alloy
-    
-31                                | model type: special reciprocal (Lacaze & Sundman, 1991)
-2                                 | number of independent mixing sites, reciprocal solution
-2  2                              | Fe-Si on site 1, Vacancy-C on site 2                                                                         
-       
-Fe-FCC Si-FCC                     | endmember names 
-FeC-FCC SiC-FCC
-
-0                                 | number of dependent endmembers 
-
-0  0  0  0                        | endmember flags
-
-0.  1.   0.1  0                  | imod = 0 -> Fe fraction on site 1
-0.  1.   0.1  0                  | imod = 0 -> vacancy fraction on site 2
-                            
-ideal                             | internal excess model
-
-0                                 | 0 site entropy model -> internal model
-
-reach_increment 7
-
-end_of_model 
-
-                              --------------------------------------------------------
-begin_model                
-                                      | magnesio-wustite solution
-Per(SS)
-abbreviation Wus
-full_name    wuestite
-
-2                                     | model type margules, macroscopic                                                                         
-
-2                                     | 2 endmembers
-
-per 
-wst
-
-0  0                               | endmember flags
-
-0. 1. 0.1 0                        | range and resolution 
-
-begin_excess_function   
-w(per wst)  13d3 0. 0.    
-end_excess_function
-
-1                                     | 1 site entropy model 
-2 1.                                  | 2 species, site mutiplicity = 1
-z(mg) = 1 per
-
-reach_increment 4
-
-end_of_model                  
-                              --------------------------------------------------------
-begin_model
-                           |Brosh, 2013
-
-FeCliq
-abbreviation Liq
-full_name    liquid
-
-2                          |solution model type: Margules
-
-2                          |2 end-members
-Feliq
-Cliq
-
-
-
-0 0                       |end-member flags
-
-0. 1. 0.1 0               |imod = 0 -> cartesian subdivision scheme
-
-begin_excess_function
-Wk(Feliq Cliq)
-w0 = -124320. wT = 28.5  wP = -1.53d-1 wP1 = 6d4 wP2 = 2.3d-1
-w0 = 19300.   
-w0 = 49260.   wT = -19.
-end_excess_function
-
-1                         |one site entropy model
-2 1.                      |two end-members mixing on one site and site multiplicity
-z(Fe) = 1 Feliq           |site fraction of Fe on this site in terms of end-members
-
-
-end_of_model
-
-                           --------------------------------------------------------
+                          --------------------------------------------------------
 begin_model 
-                          | Brosh, 2013
-FeCfcc
-abbreviation FCC
-full_name    alloy 
+                                  Silicate gas, Lewis and Randal (Ideal) Mixing, the
+                                  EoS used for the pure species is determined by the 
+                                  EoS flag specified for the species in the thermodynamic
+                                  data file
+Si-vapor
+abbreviation gas
+full_name    gas
 
 2
 
-2
-FeA1
-FeCA1
+7                                     number of endmembers
+                                 
+                                    | ENDMEMBER NAMES:                               
+SiO2                                
+SiO
+Si
+O2
+O
+MgO
+| Mg commented out so entropy model can be read without changing parameter m11
+FeO
+| Fe
 
-0 0 
+0 0 0 0 0 0 0 0 0                   | endmember flags.  
 
-0. 1. 0.1 0
+0.0 1.0  0.1 0                      | range and resolution of X(SiO2), 0 => cartesian subdivision/1 => asymmetric subdivision   
+0.0 0.5  0.1 0                      | range and resolution of X(SiO)  
+0.0 0.5  0.1 0                      | range and resolution of X(Si)   
+0.0 0.5  0.1 0                      | range and resolution of X(O2)  
+0.0 0.5  0.1 0                      | range and resolution of X(O)   
+0.0 0.5  0.1 0                      | range and resolution of X(MgO)
+| 0.0 0.5  0.1 0                      | range and resolution of X(Mg)
+|0.0 0.5  0.1 0                      | range and resolution of X(FeO)
 
-begin_excess_function
-Wk(FeA1 FeCA1)
-w0 = -34671. 
-end_excess_function
+ideal
 
-1
-2 1.
-z(C) = 1 FeCA1
+  1                                 | molecular configurational entropy model 
+7 1.                                | 6 species, multiplicity 1
+
+z(SiO2)  = 1 SiO2 
+z(SiO)   = 1 SiO
+z(O2)   = 1 O2
+z(O)   = 1 O
+| z(Mg)  = 1 Mg
+| z(Fe)  = 1 Fe
+z(FeO) = 1 FeO
+z(MgO) = 1 MgO
 
 end_of_model
-                           --------------------------------------------------------
-begin_model
-                          | Brosh, 2013 
-FeCbcc
-abbreviation BCC
-full_name    alloy
-
-2
-
-2
-FeA2
-FeCA2
-
-0 0 
-
-0. 1. 0.1 0
-
-begin_excess_function
-Wk(FeA2 FeCA2)
-w0 = 0. wT = -190. 
-end_excess_function
-
-1
-2 3.
-z(c) = 1 FeCA2
-
-end_of_model
-                        --------------------------------------------------------
+                          --------------------------------------------------------
 begin_model 
-                                  
+                                  Silicate gas, Lewis and Randal (Ideal) Mixing, the
+                                  EoS used for the pure species is determined by the 
+                                  EoS flag specified for the species in the thermodynamic
+                                  data file
+CCO-vapor
+abbreviation gas
+full_name    gas
+
+2 
+
+7                                    number of endmembers
+                                    | ENDMEMBER NAMES:                               
+CO2                                
+CO
+O2
+| xO(g)
+xMgO(g)
+xMg(g)
+xFeO(g)
+xFe(g)
+
+0 0 0 0 0 0 0 0 0                   | endmember flags.  
+
+0.0 1.0  0.1 0                      | range and resolution of X(CO2), 0 => cartesian subdivision/1 => asymmetric subdivision   
+0.0 1.0  0.1 0                      | range and resolution of X(CO)  
+0.0 0.5  0.1 1                      | range and resolution of X(O2)  
+| 0.0 0.5  0.1 1                      | range and resolution of X(O)   
+0.0 0.5  0.1 1                      | range and resolution of X(MgO)
+0.0 0.5  0.1 1                      | range and resolution of X(Mg)
+0.0 0.5  0.1 1                      | range and resolution of X(FeO)
+
+ideal
+
+  1                                 | molecular configurational entropy model 
+7 1.                                | 6 species, multiplicity 1
+
+z(CO2)  = 1 CO2 
+z(CO)   = 1 CO
+z(O2)   = 1 O2
+| z(O)   = 1 xO(g)
+z(Mg)  = 1 xMg(g)
+z(Fe)  = 1 xFe(g)
+z(FeO) = 1 xFeO(g)
+
+end_of_model
+                          --------------------------------------------------------
+begin_model 
+                                  Formally this need not be an ideal gas, but it assumes Lewis and Randal
+                                  (Ideal) mixing, the EoS (e.g., ideal gas) used for the pure species is 
+                                  determined by the EoS flag specified for the species in the thermodynamic
+                                  data file                                  
 ideal_gas
 abbreviation gas
 full_name    gas
                                     
-2                                     model type: 
-
-6                                     number of species
-                                 
-                                    | species NAMES:                               
+2                                   | model type: 
+6                                   | number of species
+                                    | species
 O2(g)  
 O(g)                              
 Mg(g)
@@ -9590,3 +9459,203 @@ z(Fe)  = 1 Fe(g)
 z(FeO) = 1 FeO(g)
 
 end_of_model
+                                  --------------------------------------------------------
+begin_model
+FeSiC-BCC
+abbreviation BCC
+full_name    alloy
+30                                | model type: special reciprocal (Lacaze & Sundman, 1991)
+2                                 | number of independent mixing sites, reciprocal solution
+2  2                              | Fe-Si on site 1, Vacancy-C on site 2
+Fe-BCC Si-BCC                     | endmember names 
+FeC-BCC SiC-BCC
+0                                 | number of dependent endmembers 
+0  0  0  0                        | endmember flags
+0.  1.   0.1  0                   | imod = 0 -> Fe fraction on site 1
+0.  1.   0.1  0                   | imod = 0 -> vacancy fraction on site 2
+ideal                             | internal excess model
+0                                 | 0 site entropy model -> internal model
+reach_increment 3
+end_of_model 
+                           --------------------------------------------------------
+begin_model  
+FeSiC-FCC
+abbreviation FCC
+full_name    alloy
+31                                | model type: special reciprocal (Lacaze & Sundman, 1991)
+2                                 | number of independent mixing sites, reciprocal solution
+2  2                              | Fe-Si on site 1, Vacancy-C on site 2
+Fe-FCC Si-FCC                     | endmember names 
+FeC-FCC SiC-FCC
+0                                 | number of dependent endmembers 
+0  0  0  0                        | endmember flags
+0.  1.   0.1  0                   | imod = 0 -> Fe fraction on site 1
+0.  1.   0.1  0                   | imod = 0 -> vacancy fraction on site 2
+ideal                             | internal excess model
+0                                 | 0 site entropy model -> internal model
+reach_increment 3
+end_of_model 
+                           --------------------------------------------------------
+begin_model                
+                                  | magnesio-wustite solution
+Per(SS)
+abbreviation Wus
+full_name    wuestite
+2                                 | model type margules, macroscopic
+2                                 | 2 endmembers
+per
+wst
+0  0                              | endmember flags
+0. 1. 0.1 0                       | range and resolution 
+begin_excess_function   
+w(per wst)  13d3 0. 0.    
+end_excess_function
+1                                 | 1 site entropy model 
+2 1.                              | 2 species, site mutiplicity = 1
+z(mg) = 1 per
+reach_increment 3
+end_of_model
+                           --------------------------------------------------------
+begin_model
+                           |FeCr-liquid solution model after Xiong et al., 2011
+FeCr(liq)
+abbreviation Liq
+full_name    liquid
+2                          |model type: Margules.
+2                          |2 endmembers 
+Fe_LIQ
+Cr_LIQ
+  0  0                     |endmember flags
+0.     1.      0.1     0   |imod = 0 -> cartesian subdivision
+begin_excess_function   
+W(Cr_LIQ Fe_LIQ)                    0.      -5.983    0d0
+W(Cr_LIQ Fe_LIQ Cr_LIQ)          -384.41     0.0      0d0
+W(Cr_LIQ Fe_LIQ Fe_LIQ)           384.41     0.0      0d0
+end_excess_function
+1                                     1 site entropy model
+2 1.                                  2 species, site multiplicity = 1.
+z(Fe) = 1 Fe_LIQ
+reach_increment 3
+end_of_model
+                           --------------------------------------------------------
+begin_model                
+                           |FeCr-FCC solution model after Xiong et al., 2011
+FeCr-FCC
+abbreviation FCC
+full_name    alloy
+2                          |model type: Margules.
+2                          |2 endmembers 
+Fe-FCC
+Cr-FCC
+0  0                       |endmember flags
+0.     1.      0.1     0   |imod = 0 -> cartesian subdivision
+begin_excess_function   
+W(Fe-FCC Cr-FCC)                 28871.89  -22.318    0d0
+W(Cr-FCC Fe-FCC Cr-FCC)          32711.42  -18.180    0d0
+W(Cr-FCC Fe-FCC Fe-FCC)         -32711.42   18.180    0d0 
+end_excess_function 
+1                            1 site entropy model
+2 1.                         2 species, site multiplicity = 1.
+z(Fe) = 1 Fe-FCC
+reach_increment 3
+end_of_model
+                           --------------------------------------------------------
+begin_model 
+                           |BCC Fe-Cr alloy after Xiong et al., 2011, with the contribution from magnetic ordering
+FeCr-BCC 
+abbreviation BCC
+full_name    alloy
+32                         |special solution model
+2                          |2 end-members
+Fe-BCC
+Cr-BCC
+0 0
+0.   1.   0.1 0            |compositional limits and subdivision scheme
+ideal
+0
+reach_increment 3
+end_of_model 
+                           --------------------------------------------------------
+begin_model
+                           |FeCr-sigma solution model after Hertzman and Sundman, 1980
+FeCr-s
+abbreviation Sigma
+full_name    alloy
+2                          |solution model type
+2                          |2 endmembers 
+FeCr_sig 
+CrFe_sig 
+0  0                       |endmember flags
+0.     1.      0.1     0   |imod = 0 -> cartesian subdivision
+begin_excess_function   
+W(FeCr_sig CrFe_sig)                -11617.64   -3.403      0d0
+end_excess_function 
+1                          |1 site entropy model 
+2 0.5333                   |2 species, 1 site multiplicity = 16/30
+z(Fe) = 1. FeCr_sig 
+reach_increment 3
+end_of_model
+                           --------------------------------------------------------
+begin_model
+                           |solution model parameters after Brosh, 2013
+FeCliq
+abbreviation Liq
+full_name    liquid
+2                          |solution model type: Margules
+2                          |2 end-members
+Feliq
+Cliq
+0 0                        |end-member flags
+0. 1. 0.1 0                |imod = 0 -> cartesian subdivision scheme
+begin_excess_function
+Wk(Feliq Cliq)
+w0 = -124320. wT = 28.5  wP = -1.53d-1 wP1 = 6d4 wP2 = 2.3d-1
+w0 = 19300.   
+w0 = 49260.   wT = -19.
+end_excess_function
+1                          |one site entropy model
+2 1.                       |two end-members mixing on one site and site multiplicity
+z(Fe) = 1 Feliq            |site fraction of Fe on this site in terms of end-members
+end_of_model
+                           --------------------------------------------------------
+begin_model 
+                           | solution model parameters after Brosh, 2013
+FeCfcc
+abbreviation FCC
+full_name    alloy
+2
+2
+FeA1
+FeCA1
+0 0 
+0. 1. 0.1 0
+begin_excess_function
+Wk(FeA1 FeCA1)
+w0 = -34671. 
+end_excess_function
+1
+2 1.
+z(C) = 1 FeCA1
+end_of_model
+                           --------------------------------------------------------
+begin_model
+                           |solution model parameters after Brosh, 2013 
+FeCbcc
+abbreviation BCC
+full_name    alloy
+2
+2
+FeA2
+FeCA2
+0 0 
+0. 1. 0.1 0
+begin_excess_function
+Wk(FeA2 FeCA2)
+w0 = 0. wT = -190. 
+end_excess_function
+1
+2 3.
+z(c) = 1 FeCA2
+end_of_model
+                           --------------------------------------------------------
+
