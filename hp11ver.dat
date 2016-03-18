@@ -250,9 +250,9 @@ qjL = 2 qL
 4d3  0  -0.43   
 dijL = 1 diL
 -6.7d3  0  0.17     
-jdjL = 2 abL - 1 qL
+jdjL = 1 abL - 1 qL               | corrected 3/18/16, Oliver Shortle
 18.7d3  0  -0.16  
-ctjL = 2 anL - 1 qL
+ctjL = 1 anL - 1 qL               | corrected 3/18/16, Oliver Shortle
 2.5d3  0  0.29     
 fojL = 1 foL
 2d3  0  -0.03  

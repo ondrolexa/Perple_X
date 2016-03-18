@@ -405,8 +405,8 @@ c-----------------------------------------------------------------------
       integer ivfl
       common/ cst102 /ivfl
 
-      integer jfct,jmct,jprct
-      common/ cst307 /jfct,jmct,jprct
+      integer jfct,jmct,jprct,jmuct
+      common/ cst307 /jfct,jmct,jprct,jmuct
 
       integer iind, idep
       double precision c0,c1,c2,c3,c4,c5
@@ -439,8 +439,8 @@ c-----------------------------------------------------------------------
       integer ifct,idfl
       common/ cst208 /ifct,idfl
 
-      integer ixct,iexyn,ifact
-      common/ cst37 /ixct,iexyn,ifact 
+      integer ixct,ifact
+      common/ cst37 /ixct,ifact 
 
       character*100 prject,tfname
       common/ cst228 /prject,tfname
@@ -770,7 +770,8 @@ c                                 for use in input2.
 c                                  decode mobile components
 c                                  jmct - mobile component counter
       jmct = 0 
-      ifact = 0 
+      ifact = 0
+      jmuct = 0 
 
       do 
 
@@ -800,6 +801,7 @@ c                                  jmct - mobile component counter
 c                                 old format, create variable name
                write (vname(3+jmct),'(a,a)') 'mu_',rname
                imaf(jmct) = 1
+               jmuct = jmuct + 1
 
             else 
 c                                 new format
@@ -810,6 +812,7 @@ c                                 new format
                if (y.eq.'m') then 
 c                                 chemical potential
                   imaf(jmct) = 1
+                  jmuct = jmuct + 1
 
                else if (y.eq.'f') then 
 
@@ -834,7 +837,6 @@ c                             is in the thermodynamic composition space.
 c                             jprct+1..icomp -> (jmct.ne.0) mobile components 
       jprct = icomp - jmct 
 c                             excluded phases
-      iexyn = 1
       ixct = 0
 c                             decode excluded phases
       do 
@@ -846,10 +848,9 @@ c                             decode excluded phases
 
         read (n1,'(a)') name
 
-         if (name.eq.'end excl') then 
-            if (ixct.ne.0) iexyn = 0 
+         if (name.eq.'end excl') then
             exit
-         else if (name.eq.blank) then 
+         else if (name.eq.blank) then
             cycle 
          end if 
 
@@ -1108,8 +1109,8 @@ c----------------------------------------------------------------------
       double precision cblk
       common/ cst300 /cblk(k5),jbulk
 
-      integer ixct,iexyn,ifact
-      common/ cst37 /ixct,iexyn,ifact 
+      integer ixct,ifact
+      common/ cst37 /ixct,ifact 
 
       character*8 exname,afname
       common/ cst36 /exname(h8),afname(2)
@@ -1117,8 +1118,8 @@ c----------------------------------------------------------------------
       integer ipoint,kphct,imyn
       common/ cst60 /ipoint,kphct,imyn
 
-      integer jfct,jmct,jprct
-      common/ cst307 /jfct,jmct,jprct
+      integer jfct,jmct,jprct,jmuct
+      common/ cst307 /jfct,jmct,jprct,jmuct
 
       integer imaf,idaf
       common/ cst33 /imaf(i6),idaf(i6)

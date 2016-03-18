@@ -141,8 +141,8 @@ c----------------------------------------------------------------------
       double precision thermo,uf,us
       common/ cst1 /thermo(k4,k10),uf(2),us(h5)
 
-      integer jfct,jmct,jprct
-      common/ cst307 /jfct,jmct,jprct
+      integer jfct,jmct,jprct,jmuct
+      common/ cst307 /jfct,jmct,jprct,jmuct
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -277,8 +277,8 @@ c---------------------------------------------------------------------
       double precision y,g,v
       common / cstcoh /y(nsp),g(nsp),v(nsp)
 
-      integer jfct,jmct,jprct
-      common/ cst307 /jfct,jmct,jprct
+      integer jfct,jmct,jprct,jmuct
+      common/ cst307 /jfct,jmct,jprct,jmuct
 
       double precision vnumu
       common/ cst44 /vnumu(i6,k10)
@@ -1056,8 +1056,8 @@ c-----------------------------------------------------------------------
       integer ic
       common/ cst42 /ic(k0)
 
-      integer jfct,jmct,jprct
-      common/ cst307 /jfct,jmct,jprct
+      integer jfct,jmct,jprct,jmuct
+      common/ cst307 /jfct,jmct,jprct,jmuct
 
       integer ids,isct,icp1,isat,io2
       common/ cst40 /ids(h5,h6),isct(h5),icp1,isat,io2
@@ -1065,8 +1065,8 @@ c-----------------------------------------------------------------------
       integer ifct,idfl
       common/ cst208 /ifct,idfl
 
-      integer ixct,iexyn,ifact
-      common/ cst37 /ixct,iexyn,ifact 
+      integer ixct,ifact
+      common/ cst37 /ixct,ifact 
 
       character*8 exname,afname
       common/ cst36 /exname(h8),afname(2)
@@ -1858,8 +1858,8 @@ c---------------------------------------------------------------------
       double precision vnumu
       common/ cst44 /vnumu(i6,k10)
 
-      integer jfct,jmct,jprct
-      common/ cst307 /jfct,jmct,jprct
+      integer jfct,jmct,jprct,jmuct
+      common/ cst307 /jfct,jmct,jprct,jmuct
 
       character*8 eoscmp
       common/ cst98 /eoscmp(2)
@@ -1881,7 +1881,7 @@ c---------------------------------------------------------------------
       ipoint = iphct
 c                               check for duplicates
       if (nchk) then 
-         do i = 1, iphct
+         do i = jmct + 1, iphct
             if (name.ne.names(i)) cycle
             call error (73,g1,i,name) 
          end do  
@@ -2704,8 +2704,8 @@ c-----------------------------------------------------------------------
       double precision c0,c1,c2,c3,c4,c5
       common/ cst316 /c0,c1,c2,c3,c4,c5,iind,idep
 
-      integer jfct,jmct,jprct
-      common/ cst307 /jfct,jmct,jprct
+      integer jfct,jmct,jprct,jmuct
+      common/ cst307 /jfct,jmct,jprct,jmuct
 c----------------------------------------------------------------------
       if (ind.eq.iind) then 
          var = v(iind)
@@ -2763,8 +2763,8 @@ c-----------------------------------------------------------------------
       double precision v,tr,pr,r,ps
       common/ cst5  /v(l2),tr,pr,r,ps
 
-      integer jfct,jmct,jprct
-      common/ cst307 /jfct,jmct,jprct
+      integer jfct,jmct,jprct,jmuct
+      common/ cst307 /jfct,jmct,jprct,jmuct
 
       integer imaf,idaf
       common/ cst33 /imaf(i6),idaf(i6)
@@ -2828,8 +2828,8 @@ c----------------------------------------------------------------------
       double precision c0,c1,c2,c3,c4,c5
       common/ cst316 /c0,c1,c2,c3,c4,c5,iind,idep
 
-      integer jfct,jmct,jprct
-      common/ cst307 /jfct,jmct,jprct
+      integer jfct,jmct,jprct,jmuct
+      common/ cst307 /jfct,jmct,jprct,jmuct
 c----------------------------------------------------------------------
       if (idep.ne.0) then 
          var = v(iind)
@@ -6923,8 +6923,8 @@ c-----------------------------------------------------------------------
 
       external gphase, gcpd 
 
-      integer jfct,jmct,jprct
-      common/ cst307 /jfct,jmct,jprct
+      integer jfct,jmct,jprct,jmuct
+      common/ cst307 /jfct,jmct,jprct,jmuct
 
       integer iff,idss,ifug,ifyn,isyn
       common/ cst10  /iff(2),idss(h5),ifug,ifyn,isyn
@@ -11714,7 +11714,6 @@ c-----------------------------------------------------------------------
       common/ cxt7 /yy(m4),xx(m4),pa(m4),p0a(m4),z(mst,msp),w(m1),
      *              wl(m17,m18)
 
-
       integer lstot,mstot,nstot,ndep,nord
       common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
 
@@ -11731,7 +11730,6 @@ c-----------------------------------------------------------------------
       common/ cst4 /iam
 
       save uname
-
       data uname/' ',' '/
 c-----------------------------------------------------------------------
 c                                 initialize counters
@@ -11767,7 +11765,7 @@ c                                 read the solution name
 
          if (bad) cycle 
 c                                 istot is zero, if eof: 
-         if (istot.eq.0) then 
+         if (istot.eq.0.and.isoct-im.gt.0) then 
 c                                 then at least one solution phase referenced
 c                                 in the input is not present in the
 c                                 solution phase data file, write warning:
@@ -11904,7 +11902,8 @@ c                               make general simplicial coordinates
 c                               for iterative subdivision
 c        if (iopt(10).gt.0.and.im.gt.0) call subdv0
 
-         if (io3.eq.0.and.output.and.iam.lt.3) then 
+         if (io3.eq.0.and.output.and.iam.lt.3.and.isoct.ne.im) then
+
             write (n3,1020)
             write (n3,1010) (fname(i), i = 1, isoct)
             if (im.gt.0) then 
@@ -11913,11 +11912,13 @@ c        if (iopt(10).gt.0.and.im.gt.0) call subdv0
             else if (output) then 
                write (n3,1040) 
             end if 
+
          end if 
 
          do i = 1, im
             fname(i) = sname(i)
          end do 
+
       end if 
 
       isoct = im
@@ -12542,6 +12543,9 @@ c--------------------------------------------------------------------------
       integer jend
       common/ cxt23 /jend(h9,k12)
 
+      integer jfct,jmct,jprct,jmuct
+      common/ cst307 /jfct,jmct,jprct,jmuct
+
       integer iopt
       logical lopt
       double precision nopt
@@ -12727,12 +12731,20 @@ c                                special case 4, tern-tern reciprocal solution
      *                             (idint(1d2*z(2,j)), j = 1, 2)
       else if (mstot(im).eq.2) then 
 c                                binary solutions
-         if (pa(1).eq.0d0.or.pa(1).eq.1d0) then
-
-            write (names(iphct),1030) names(jend(im,3)),idint(1d2*pa(1))
+         if (pa(1).gt.0.9999d0) then 
+            write (names(iphct),'(a3,a)') names(jend(im,3)),'_100*'
+         else if (pa(1).ge.0.98d0) then 
+            write (names(iphct),'(a2,a,f5.2)') 
+     *             names(jend(im,3)),'_',1d2*pa(1)
+         else if (pa(1).lt.1d-6) then 
+            write (names(iphct),'(a3,a)') names(jend(im,3)),'_0*'
+         else if (pa(1).lt.0.02d0) then 
+            write (names(iphct),'(a2,a,f5.4)') 
+     *             names(jend(im,3)),'_',1d2*pa(1)
          else 
             write (names(iphct),1070) names(jend(im,3)),1d2*pa(1)
-         end if
+         end if 
+
       else if (mstot(im).eq.3) then 
 c                                ternary solutions
          write (names(iphct),1040) (names(jend(im,2+j)),
@@ -12847,7 +12859,8 @@ c                                 check if the phase consists
 c                                 entirely of saturated components:
       if (ctotal.eq.0d0) then
 c                                 only allowed for unconstrained minimization
-         if (icopt.ge.5) then 
+         if (icopt.ge.5.or.
+     *       jmct.gt.0.and.jmuct.lt.jmct) then 
 
             call warn (55,cp(l,iphct),l,tname)
 
@@ -12942,10 +12955,9 @@ c                              or a dependent endmember
 
 1010  format (i2,i2,i2,i2)
 1020  format (a2,i2,'_',i2)
-1030  format (a2,i2)
 1040  format (a1,i2,a1,i2)
 1060  format (a2,i2,i2,i2)
-1070  format (a2,f5.2)
+1070  format (a3,'_',f4.1)
 1080  format (a2,i6)
 1100  format (a1,i7)
 1110  format (i8)

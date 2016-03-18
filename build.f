@@ -58,8 +58,8 @@ c-----------------------------------------------------------------------
       integer ids,isct,icp1,isat,io2
       common/ cst40 /ids(h5,h6),isct(h5),icp1,isat,io2
 
-      integer jfct,jmct,jprct
-      common/ cst307 /jfct,jmct,jprct
+      integer jfct,jmct,jprct,jmuct
+      common/ cst307 /jfct,jmct,jprct,jmuct
 
       integer imaf,idaf
       common/ cst33 /imaf(i6),idaf(i6)
@@ -106,8 +106,8 @@ c-----------------------------------------------------------------------
       double precision dlnfo2,elag,gz,gy,gx
       common/ cst100 /dlnfo2,elag,gz,gy,gx,ibuf,hu,hv,hw,hx
   
-      integer ixct,iexyn,ifact
-      common/ cst37 /ixct,iexyn,ifact 
+      integer ixct,ifact
+      common/ cst37 /ixct,ifact 
 
       character*8 exname,afname
       common/ cst36 /exname(h8),afname(2)
@@ -204,7 +204,6 @@ c                                 initialization:
       iv(5) = 3
       idum = 0  
       ifyn = 0
-      iexyn = 0
       ixct = 0
       ifugy = 0
       isat=0
@@ -218,7 +217,8 @@ c                                 initialization:
       iphct = 0
       isoct = 0 
       iwt = 0
-      jcth = 0 
+      jcth = 0
+      jmuct = 0
       satflu = .false.
       mobflu = .false.
       first = .true. 
@@ -426,6 +426,7 @@ c                                 names contains the list of candidates
                   write (*,2061) fugact(ima),char5
                   ima = 1
                   imaf(jmct) = ima
+                  jmuct = jmuct + 1
                else if (iphct.eq.1) then 
                   write (*,2062) names(1),char5,fugact(ima)
                   afname(jmct) = names(1)
@@ -608,6 +609,22 @@ c                                 and ranges
 c                                 get choice
       call rdnumb (c(0),0d0,icopt,2,.false.)
       if (icopt.lt.1.or.icopt.gt.5) icopt = 2
+c                                 warn about the use of chemical potentials
+c                                 in different types of calculations
+      if (jmct.gt.0) then 
+
+         if (icopt.eq.2.or.icopt.eq.3.or.icopt.eq.5.or.
+     *       icopt.eq.1.and.jmuct.ne.jmct) then 
+
+            write (*,3110)
+
+         else if (icopt.eq.1) then 
+
+            write (*,3111)
+
+         end if 
+
+      end if 
 c                                 reorder for oned flag
       if (icopt.eq.3.or.icopt.eq.5) then 
          oned = .true.
@@ -1143,13 +1160,22 @@ c                                 Excluded phases:
  
       end if
 c                                check for fluid species EoS if no special components:
+c                                as of 3/16/2016 this was incorrect, so far as i can 
+c                                an EoS is automatically associated with fluid species
+c                                if eos(i) = 10 (ideal) gas, or 117 > eos(i) > 103, therefore
+c                                101 (H2O) and 102 (CO2) are the only special cases that
+c                                require the user to specify an EoS
+
+c                                for true ternary c-o-h fluid calculations H2O and CO2
+c                                should be excluded and this loop should not request that
+c                                the user specify an EoS
       good = .true.
 
       if (.not.feos) then
  
          do i = 1, iphct
 
-            if (eos(i).ne.101.and.eos(i).ne.102) then 
+            if (eos(i).eq.101.or.eos(i).eq.102) then 
 
                do j = 1, ixct
 
@@ -1666,6 +1692,18 @@ c                                 diagrams:
      *        'for this parameter are currently',/,
      *        'set to ',i3,' and ',i3,' points for the exploratory ',
      *        'and autorefine cycles.')
+3110  format (/,'**warning ver110** in this mode Perple_X  will not che'
+     *        'ck whether conditions are',/,'supersaturated with respe',
+     *        'ct to mobile components.',/,'To compute surfaces either:'
+     *     ,/,'  1) use convex hull optimization and do not use ',
+     *        'activities fugacities as independent variables',/,
+     *        '  2) compute the saturation surface with FLUIDS or ',
+     *        'FRENDLY',/)
+3111  format (/,'**warning ver111** in this mode Perple_X  will fail if'
+     *        'the minimum value of a chemical',/,'potential is above ',
+     *        'its saturation value, if such a problem emerges lower ',/
+     *       ,'the specified value by trial and error or check the ',
+     *        'saturation values with FRENDLY.',/)
 4020  format (2(g11.5,1x),f10.8,1x,2(g11.5,1x),a)
 5000  format (a,'_',a)
 6020  format (/,'Specify values for:',/,(10x,5(a,2x)))

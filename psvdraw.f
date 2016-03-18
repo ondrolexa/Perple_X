@@ -311,7 +311,7 @@ c                                 look for text labels
       call psblrb (4)
 
 1030  format (/,'Enter minimum fraction of the axes length that a',/
-     *        ' curve must be to receive a text label (0-1): ')
+     *        'curve must be to receive a text label (0-1): ')
 1070  format (/,'Change default labeling of curve segments (y/n)?')
 1080  format (/,'Suppress labels of pseudounivariant curves (y/n)?')
 1090  format (/,'Select true variance restriction to be applied to ',

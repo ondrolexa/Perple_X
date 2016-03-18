@@ -9421,7 +9421,7 @@ z(FeO) = 1 xFeO(g)
 end_of_model
                           --------------------------------------------------------
 begin_model 
-                                  Formally this need not be an ideal gas, but it assumes Lewis and Randal
+                                  Formally this need not be an ideal gas, but it assumes Lewis and Randall
                                   (Ideal) mixing, the EoS (e.g., ideal gas) used for the pure species is 
                                   determined by the EoS flag specified for the species in the thermodynamic
                                   data file                                  

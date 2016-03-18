@@ -289,7 +289,7 @@ c-----------------------------------------------------------------------
 
       logical log, bad
 
-      character y*1, n4name*100, title*100, tags(28)*14
+      character y*1, n4name*100, title*100, tags(33)*14
 
       integer ier, igo, i, isp, j, k, l, kmax, count, nel
 

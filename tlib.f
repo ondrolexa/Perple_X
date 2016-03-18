@@ -17,7 +17,7 @@ c----------------------------------------------------------------------
       implicit none
 
       write (*,'(/,a)') 
-     *      'Perple_X version 6.7.2, source updated March 10, 2016.'
+     *      'Perple_X version 6.7.2, source updated March 17, 2016.'
 
       end
 
@@ -2800,8 +2800,8 @@ c----------------------------------------------------------------------
       common / cst334 /mkcoef(k16,k17),mdqf(k16,k17),mkind(k16,k17),
      *                 mknum(k16)
 
-      integer ixct,iexyn,ifact
-      common/ cst37 /ixct,iexyn,ifact 
+      integer ixct,ifact
+      common/ cst37 /ixct,ifact 
 
       character*8 exname,afname
       common/ cst36 /exname(h8),afname(2)

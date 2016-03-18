@@ -1431,7 +1431,7 @@ c----------------------------------------------------------------------
       integer ins(nsp),nit,ier
 
       double precision oh2o,ghh2o,ghco2,ghch4,kh2o,kch4,kco,kco2,
-     *                 xt,ek1,ek2,ek3,ek10,ek20,ek30,fo2
+     *                 xt,ek1,ek2,ek3,ek10,ek20,ek30,fo2,xxo
 
       double precision p,t,xo,u1,u2,tr,pr,r,ps
       common / cst5 /p,t,xo,u1,u2,tr,pr,r,ps
@@ -1468,6 +1468,7 @@ c----------------------------------------------------------------------
 c----------------------------------------------------------------------
       nit = 0
       oh2o = 2d0
+      xxo = xo
 
       call setup (ghh2o,ghco2,ghch4,kh2o,kco2,kco,kch4)
 
@@ -1521,6 +1522,8 @@ c                                 solve for xco
       fco2 = 2d0*(dlog(gco*p*xco) - kco)
 
 99    vol = vol + xh2o * vm(1) + xco2 * vm(2) + xch4 * vm(3)
+
+      xo = xxo 
 
       end
 
@@ -2016,6 +2019,8 @@ c                                 + qb * xh2 + qc
       end
 
       subroutine cohhyb (fo2)
+c----------------------------------------------------------------------
+c C-O-H speciation as a function of fo2
 c----------------------------------------------------------------------
       implicit none
 

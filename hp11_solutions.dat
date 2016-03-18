@@ -84,6 +84,15 @@ begin_model
                              Mantle Melt Model, intended for pressures of 0-60 GPa
 
                              Pierre Bouilhol & JADC, 12/16/15 
+
+                             Removed extraneous line in Sp(JH) excess 
+                             definitions [which read w(sp herc) 7d2  0  0]
+                             Added z(al)  = 2/3 sp + 2/3 herc definition to Sp(JH) 
+                             configurational entropy site fractions.
+
+                             Oliver Shortle, 3/18/16
+
+
 Sp(JH)                      
 abbreviation Sp
 full_name    spinel
@@ -98,7 +107,6 @@ sp mt picr herc
 0. 1. .1 0                 | subdivision range, imod = 0 -> cartesian subdivision
 
 begin_excess_function 
-w(sp herc)     7d2  0  0
 W(sp herc)     4d3  0  0
 W(sp mt)      56d3  0  0
 W(sp picr)    39d3  0  0
@@ -109,8 +117,9 @@ end_excess_function
 
 1
 
-4 3.                        cations disordered across all sites
+5 3.                        cations disordered across all sites
 
+z(al)  = 1/3 sp + 1/3 picr  
 z(mg)  = 1/3 sp + 1/3 picr 
 z(fe3) = 2/3 mt
 z(cr)  = 2/3 picr 
@@ -391,7 +400,7 @@ cfm   = 1/2 cfs + 1/2 cenjh   enthalpy_of_formation  =  -3653d0 | should be -365
 0. 1.  .1  0                 
 
 begin_excess_function
-W(di cfs)     21d3  0   0                           
+W(di cfs)     20d3  0   0              | corrected from 21d3, 3/18/16, Oliver Shortle
 W(di cats)  12.3d3  0  -0.1
 W(di crdi)     8d3  0   0
 W(di cess)     8d3  0   0

@@ -2409,9 +2409,9 @@ c----------------------------------------------------------------------
 
       integer i
  
-      double precision xf(2), fo2, fs2, gcpd
+      double precision xf(2), fo2, fs2, gcpd, gzero 
 
-      external gcpd
+      external gcpd, gzero
 
       double precision thermo,uf,us 
       common/ cst1 /thermo(k4,k10),uf(2),us(h5)
@@ -2452,7 +2452,7 @@ c                           systems.
 
                else 
 
-                  uf(i) = gcpd (i,.false.) + r * t * f(i)
+                  uf(i) = gzero (i) + r * t * f(i)
 
                end if
 

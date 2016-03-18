@@ -145,5 +145,5 @@
 
 
 !                                  the following are dependent parameters (also k7,k8)
-      parameter (kd2=k8*31)
+      parameter (kd2=k8*35)
 
