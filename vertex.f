@@ -2965,8 +2965,8 @@ c-----------------------------------------------------------------------
       double precision vuf,vus
       common/ cst201 /vuf(2),vus(h5),iffr,isr
 
-      integer jfct,jmct,jprct
-      common/ cst307 /jfct,jmct,jprct
+      integer jfct,jmct,jprct,jmuct
+      common/ cst307 /jfct,jmct,jprct,jmuct
 
       integer jds,ifr
       double precision du,dv
