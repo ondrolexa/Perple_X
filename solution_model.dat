@@ -3392,7 +3392,7 @@ gph      O2       H2
 ideal
 0
 
-reach_increment 3 
+reach_increment 0 
 
 end_of_model               
                       --------------------------------------------------------
@@ -3918,12 +3918,12 @@ full_name    olivine
                                                           
 2                                     model type: Margules, macroscopic
 
-3                                     3 endmembers
-teph     fo       fa            
-  0  0  0                           | endmember flags
+4                                     3 endmembers
+mont     teph     fo       fa        
+  0  0  0   0                        | endmember flags
 
                                     | NOTE restricted compositional range for Mn 
-
+0.0 1.0  0.1   1                    | range and resolution for X(Ca), imod = 1
 0.0 1.0  0.1   1                    | range and resolution for X(Mn), imod = 1 -> asymmetric transform subdivision
 0.0 1.0  0.1   0                    | range and resolution for X(Mg), imod = 0 -> cartesian subdivision
 
@@ -3933,7 +3933,8 @@ end_excess_function
 
 1                                     1 site entropy model
 
-3 2.                                  3 species, site multiplicity = 2.
+4 2.                                  3 species, site multiplicity = 2.
+z(mn) = 1 teph
 z(mg) = 1 fo
 z(fe) = 1 fa 
 
@@ -4089,34 +4090,6 @@ z(al,t) = 1 cats
 
 
 end_of_model               
-                      --------------------------------------------------------
-begin_model                
-                                   
-Mont                                                                               
-abbreviation Mont
-full_name    olivine
-
-2                          | macroscopic
-
-3                          | 3 endmembers
-fo       mont 
-fa    
-0  0  0                               
-
-0.0    1.0    0.1     0    | subdivision range, imod = 0 -> cartesian subdivision
-0.0    1.0    0.1     0    | subdivision range, imod = 0 -> cartesian subdivision
-
-begin_excess_function
-W(fo fa) 8400. 0. 0.                | corrected from 4.2 kJ Nov 15, 2004.
-end_excess_function 
-
-1
-3 1.
-z(Ca) = 1/2 mont
-z(Mg) = 1 fo + 1/2 mont
-
-
-end_of_model               | end of model keyword
                       --------------------------------------------------------
 begin_model                | keyword indicating beginning of a solution model
 
@@ -9495,26 +9468,6 @@ ideal                             | internal excess model
 0                                 | 0 site entropy model -> internal model
 reach_increment 3
 end_of_model 
-                           --------------------------------------------------------
-begin_model                
-                                  | magnesio-wustite solution
-Per(SS)
-abbreviation Wus
-full_name    wuestite
-2                                 | model type margules, macroscopic
-2                                 | 2 endmembers
-per
-wst
-0  0                              | endmember flags
-0. 1. 0.1 0                       | range and resolution 
-begin_excess_function   
-w(per wst)  13d3 0. 0.    
-end_excess_function
-1                                 | 1 site entropy model 
-2 1.                              | 2 species, site mutiplicity = 1
-z(mg) = 1 per
-reach_increment 3
-end_of_model
                            --------------------------------------------------------
 begin_model
                            |FeCr-liquid solution model after Xiong et al., 2011

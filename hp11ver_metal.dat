@@ -2095,107 +2095,6 @@ c1 = 47.4 c2 = .1024E-1 c3 = 615900 c5 = -397.8
 end
 
 
-Mg(g)     Eos = 10 | HSC ideal gas good to 9200 K
-MGO(1)O2(-0.5)
-G0 = 102.781d3 S0 = 148.64698
-c1 = 102.781 c2 = -0.27238d-3 c3 = -0.10732d5 c4 = 0.0928d-6
-
-transition = 1 type = 2 t1  = 3000  t4  = 24.64439 t5 = -4.19509d-3 t6 = 86.67662d5 t7 = 0.88588d-6
-
-transition = 2 type = 2 t1  = 5500  t4  = -70.53931 t5 = 21.29631d-3 t6 = 3993.02967d5 t7 = -1.02981d-6  
-
-end 
-
-
-
-MgO(g)    Eos = 10 | HSC ideal gas good to 10000 K
-MGO(1)   
-G0 = -5.4d3 S0 = 213.314
-c1 = 40.69467 c2 = -37.45633d-3 c3 = -2.73321d5 c4 = 63.651d-6
-
-transition = 1 type = 2 t1  = 600  t4  = -60.77722 t5 = 192.48896d-3 t6 = 55.25711d5 t7 = -82.47799d-6
-
-transition = 2 type = 2 t1  = 1100  t4  = 161.29787 t5 = -89.73512d-3 t6 = -354.32525d5 t7 = 18.54352d-6
-
-transition = 3 type = 2 t1  = 1800  t4  = 37.68396 t5 = -0.50316d-3 t6 = 362.73469d5 t7 = 0.29204d-6  
-
-transition = 4 type = 2 t1  = 3900  t4  = 36.57035 t5 = 2.20207d-3 t6 = 36.88744d5 t7 = -0.18764d-6  
-
-transition = 5 type = 2 t1  = 8000  t4  = 61.57191 t5 = -3.03329d-3 t6 = -1500.6069d5 t7 = 0.11367d-6  
-end 
-
-
-FeO(g)    Eos = 10 | HSC ideal gas good to 6000 K
-FE(1)O2(0.5)
-G0 = 185.262d3 S0 = 241.9
-c1 = 47.39195 c2 = -12.0513d-3 c3 = -4.58674d5 c4 = 4.67128d-6
-transition = 1 type = 2 t1  = 1300  t4  = 37.33143 t5 = -0.40208d-3 t6 = 21.53793d5 t7 = 0.74914d-6
-transition = 2 type = 2 t1  = 4300  t4  = -37.17225 t5 = 23.94432d-3 t6 = 2156.59484d5 t7 = -1.50801d-6  
-end 
-
-
-Fe(g)    Eos = 10 | HSC ideal gas good to 10000 K
-FE(1)
-G0 = 361.531d3 S0 = 180.487
-c1 = 30.96344 c2 = -13.73105d-3 c3 = -1.44294d5 c4 = 5.361d-6
-transition = 1 type = 2 t1  = 1500  t4  = 17.70104 t5 = 2.12292d-3 t6 = 18.70323d5 t7 = 0.20882d-6
-transition = 2 type = 2 t1  = 5000  t4  = -19.56133 t5 = 12.83877d-3 t6 = 1187.1528d5 t7 = -0.63045d-6  
-end 
-
-
-Si(g)    Eos = 10 | HSC ideal gas 
-SI(1) 
-G0 = 405.554d3 S0 = 167.979
-c1 = 21.04075 c2 = -0.75852d-3 c3 = 1.23608d5 c4 = 0.58354d-6
-transition = 1 type = 2 t1  = 2000  t4  = 22.56649 t5 = 0.48505d-3 t6 = -55.2434d5 t7 = -0.06694d-6
-transition = 2 type = 2 t1  = 5500  t4  = 33.13343 t5 = -2.5732d-3 t6 = -422.35756d5 t7 = 0.17995d-6  
-end 
-
-
-O(g)     EoS = 10 | HSC ideal gas 
-O2(0.5) 
-G0 = 201.154d3 S0 = 161.059  
-c1 = 21.16715 c2 = -0.62024d-3 c3 = 0.78643d5 c4 = 0.2531d-6  
-transition = 1 type = 2 t1  = 1500  t4  = 20.07968 t5 = 0.13599d-3 t6 = 10.89287d5 t7 = 0.03825d-6
-transition = 2 type = 2 t1  = 6000  t4  = 24.85874 t5 = -0.0962d-3 t6 = -722.90558d5 t7 = -0.00077d-6 
-end
-
-C(g)     EoS = 10 | HSC ideal gas (to 20 kK)
-C(1)   
-G0 = 699012.6 S0 = 158.099 c1 = 20.850 c2 = -0.192d-3 c3 = 0.028d5 c4 = 0.114d-6
-transition = 1 type = 2 t1 = 1500 t4 = 17.468 t5 = 1.657d-3 t6 = 26.014d5 t7 = -0.118d-6
-transition = 2 type = 2 t1 = 6000 t4 = 23.533 t5 = -0.084d-3 t6 = -91.839d5 t7 = 0.010d-6
-end 
-
-SiO(g)         EoS = 10 | HSC ideal gas => -166.014d3 Shornikov => G0 = -163.668d3
-SI(1)O2(0.5)
-G0 = -166.014d3 S0 = 211.597
-c1 = 23.80206  c2 = 21.78592d-3 c3 = 0.4374d5 c4 = -10.07503d-6
-transition = 1 type = 2 t1 = 800    t4 = 37.02928   t5 = 0.29472d-3     t6 = -15.50846d5     t7 = 0.01456d-6
-transition = 2 type = 2 t1 = 4100   t4 = 73.41891   t5 = -11.88528d-3   t6 = -1014.67529d5   t7 =  1.1742d-6
-transition = 3 type = 2 t1 = 6000   t4 = 41.55976
-end
-
-O2(g)         EoS = 10 | HSC ideal gas good to 8000 K
-O2(1)
-G0 = -61.165d3 S0 = 205.149
-c1 = 22.05955  c2 = 20.88672d-3  c3 = 1.62056d5   c4 = -8.20733d-6
-transition = 1 type = 2 t1 = 700     t4 = 29.79298  t5 = 7.91038d-3   t6 = -6.19384d5  t7 = -2.2036d-6
-transition = 2 type = 2 t1 = 1200    t4 = 34.85945  t5 = 1.31218d-3   t6 = -14.14037d5 t7 = 0.16256d-6
-transition = 3 type = 2 t1 = 2500    t4 = 32.69336  t5 = 3.13735d-3   t6 = -17.3023d5  t7 = -0.21417d-6
-transition = 4 type = 2 t1 = 4500    t4 = 18.48998  t5 = 6.56662d-3   t6 = 654.05977d5 t7 = -0.438d-6  
-end
-
-SiO2(g)   EoS = 10 | HSC/shornikov ideal gas   HSC=> G0 -390.292d3 shornikov=> G0 = -378.938d3                                                        
-SI(1)O2(1)
-G0 = -390.292d3 S0 = 228.719
-c1 = 27.28805 c2 = 71.29955d-3 c3 = -0.25104d5 c4 = -47.78965d-6
-transition = 1 type = 2 t1  = 400   t4  = 43.14959 t5 = 26.20858d-3 t6 = -6.36805d5 t7 = -10.35122d-6
-transition = 2 type = 2 t1  = 1100  t4  = 62.32068                  t6 = -41.47181d5  
-transition = 3 type = 2 t1  = 6000  t4  = 62.2054140506421    
-end
-
- 
 syvL     EoS = 9  
 K2O(.5)CL2(.5)O2(-.25)
 G0 = -445585.2 S0 = 94.5 V0 = 3.822  
@@ -2282,7 +2181,6 @@ G0 = -3095347 S0 = -4 V0 = 6.984
 c1 = 353.6  
 b1 = .681E-4 b5 = -24 b6 = 218000 b7 = -.33E-4 b8 = 7.2  
 end
-
  
 diL      EoS = 9  
 MGO(1)SI(2)CAO(1)O2(2)
@@ -2290,7 +2188,6 @@ G0 = -3206412 S0 = 42.1 V0 = 7.288
 c1 = 334  
 b1 = .851E-4 b5 = -37.3 b6 = 249000 b7 = -.323E-4 b8 = 8.04  
 end
-
  
 silL     EoS = 9  
 AL2O3(1)SI(1)O2(1)
@@ -2298,7 +2195,6 @@ G0 = -2596411 S0 = 10 V0 = 6.051
 c1 = 253  
 b1 = .408E-4 b5 = -29 b6 = 220000 b7 = -.289E-4 b8 = 6.36  
 end
-
  
 anL      EoS = 9  
 AL2O3(1)SI(2)CAO(1)O2(2)
@@ -2306,7 +2202,6 @@ G0 = -4286606 S0 = 29 V0 = 10.014
 c1 = 430  
 b1 = .514E-4 b5 = -55 b6 = 210000 b7 = -.304E-4 b8 = 6.38  
 end
-
  
 kspL     EoS = 9  
 AL2O3(.5)SI(3)K2O(.5)O2(3)
@@ -2314,7 +2209,6 @@ G0 = -4023731 S0 = 129.2 V0 = 11.431
 c1 = 368  
 b1 = .493E-4 b5 = -9 b6 = 173000 b7 = -.393E-4 b8 = 6.84  
 end
-
  
 abL      EoS = 9  
 NA2O(.5)AL2O3(.5)SI(3)O2(3)
@@ -2322,7 +2216,6 @@ G0 = -3971223 S0 = 149.9 V0 = 10.858
 c1 = 358  
 b1 = .337E-4 b5 = -26 b6 = 176000 b7 = -.815E-4 b8 = 14.35  
 end
-
  
 neL      EoS = 9  
 NA2O(.5)AL2O3(.5)SI(1)O2(1)
@@ -2330,7 +2223,6 @@ G0 = -2132482 S0 = 52.9 V0 = 5.2
 c1 = 216.5  
 b1 = .137E-3 b5 = -8 b6 = 250000 b7 = -.295E-4 b8 = 7.37  
 end
-
  
 lcL      EoS = 9  
 AL2O3(.5)SI(2)K2O(.5)O2(2)
@@ -2339,18 +2231,43 @@ c1 = 287
 b1 = .67E-4 b5 = 639.1827 b6 = 175000 b7 = -.394E-4 b8 = 7  
 end
 
-
-iron-fcc EoS = 2          
-FE(1)
-G0 = 0 S0 = 27.321 V0 = .7075 
-c1 = 198.8 c2 = -.04982 c3 = -8.939E6 c4 = 1.252E-5 c5 = -6986 
-c6 = 9.597E4 c7 = 5.553E8
-b1 = -3.057E-4 b2 = 9.504E-8 b3 = -.1789 b4 = 9.409 
-b5 = .01412 b6 = 1330772 b8 = 5 
+eskL   EoS = 9 | –106225              
+CR(2)O2(1.5)
+G0 = -1062250 S0 = 63.3 V0 = 3.07090
+c1 = 157.6
+b1 = 0.703E-4 b5 = -35 b6 = 150000 b7 = 0.4E-4 b8 = 6.00
+end
+ 
+hemL   EoS = 9 | –87514
+FE(2)O2(1.5)
+G0 = -875140 S0 = -33.20 V0 = 3.2208
+c1 = 229
+b1 = 0.1953E-3 b5 = -46 b6 = 230000 b7 = -0.1740E-4 b8 = 4.00  
 end
 
+| data below here is modified from other sources ..........
+
+fper     EoS = 8 | H= -259860.0, orginal G0 = -277331.6, Used for Kang et al 2014 calculations. JADC.          
+FE(1)O2(0.5)
+G0 = -284567.6 S0 = 58.6 V0 = 1.206  
+c1 = 44.4 c2 = .828E-2 c3 = -1214200 c5 = 185.2  
+b1 = .322E-4 b5 = 297.5937 b6 = 1520000 b7 = -.32E-5 b8 = 4.9  
+end
+
+| this may have been used by kang et al or golobkova et al, but is Gf rather than Hf conevtion as used in this file. 
+|iron-fcc EoS = 2          
+|FE(1)
+|G0 = 0 S0 = 27.321 V0 = .7075 
+|c1 = 198.8 c2 = -.04982 c3 = -8.939E6 c4 = 1.252E-5 c5 = -6986 
+|c6 = 9.597E4 c7 = 5.553E8
+|b1 = -3.057E-4 b2 = 9.504E-8 b3 = -.1789 b4 = 9.409 
+|b5 = .01412 b6 = 1330772 b8 = 5 
+|end
+
+| endmembers used for the golubkova et al paper: CEM was excluded above 1 GPa, Fe7C3 was excluded below 6 GPa
+
 wst EoS = 2 | G0 was fitted to highP data on IW from Campbell et al.'09; eos data Siebert et al.'05         
-            | this appears to be incorrect, possibly wrong reference convention.
+            | this appears to be incorrect, possibly wrong reference convention. JADC.
 FE(1)O2(0.5)
 G0 = -251d3 S0 = 59.5 V0 = 1.225 
 c1 = 44.4 c2 = .828E-2 c3 = -1214200 c5 = 185.2  
@@ -2359,11 +2276,39 @@ b5 = 3.44E-4
 b6 = 1490378 b8 = 3.6 
 end
 
-mcrm     EoS = 2 | H= -1762600.                                                                   
+mcrm     EoS = 2 | H= -1762600. this appears to be hp11 data (picr) with a Murnaghan EoS of unknown source. JADC
 MGO(1)CR(2)O2(1.5)
 G0 = -1797871 S0 = 118.3 V0 = 4.356  
 c1 = 196.1 c2 = .5398E-2 c3 = -3126000 c5 = -616.9  
 b1 = 4.2769E-5 b5 = -4.2769E-4 b6 = 1922000 b8 = 4.04  
+end
+
+SiC-FCC    EoS = 625 | Lacaze & Sundman 1990 Special EoS, for FeSiC-fcc diagram                                        
+SI(1)C(1)
+V0 = 0.896  
+|b1 = 0.608d-5 |b5 = -0.608d-4 
+b6 = 70.70d4 b8 = 4
+end
+
+GPH        EoS = 627 | Lacaze & Sundman 1990 Special EoS
+C(1)
+V0 = .5298  
+b1 = .484E-4 b5 = -.484E-3 
+b6 = 39d4 b8 = 4  
+end
+
+SiC-lac    EoS = 628 | Lacaze & Sundman 1990 Special EoS                                        
+SI(1)C(1)
+V0 = 1.247  
+b1 = 1.04105d-5 b5 = -1.04105d-4 
+b6 = 220d4 b8 = 4.
+end
+
+CEM        EoS = 629 | Lacaze & Sundman 1990 Special EoS
+FE(3)C(1)
+V0 = 2.29  
+b1 = 9.7d-5 b5 = -9.7d-4 
+b6 = 174d4 b8 = 4.8
 end
 
 Fe-BCC   EoS = 610 | Lacaze & Sundman 1990 Special EoS, for FeSiC bcc solution model (SiC paper)
@@ -2380,65 +2325,35 @@ b1 = 0.608d-5 |b5 = -0.608d-4
 b6 = 71d4 b8 = 4
 end
 
-Fe-FCC   EoS = 612 | Lacaze & Sundman 1990 Special EoS, for FeSiC and FeCr fcc solution models (SiC paper); all Fe endmembers from Brosh should be excluded                                        
+Fe-FCC   EoS = 612 | Lacaze & Sundman 1990 Special EoS, for FeSiC and FeCr fcc solution models (SiC paper)
 FE(1)
 V0 = 0.6826  
 b1 = 5.797d-5 b5 = -5.797d-4 
 b6 = 140d4 b8 = 8
 end
 
-Si-FCC   EoS = 613 | Lacaze & Sundman 1990 Special EoS, for FeSiC fcc solution model (SiC paper)                                        
+Si-FCC   EoS = 613 | Lacaze & Sundman 1990 Special EoS, for FeSiC fcc solution model (SiC paper) 
 SI(1)
 V0 = 0.896  
 b1 = 0.608d-5 |b5 = -0.608d-4 
 b6 = 70.7d4 b8 = 4
 end
 
-Fe_LIQ   EoS = 614 | Lacaze & Sundman 1990 Special EoS, for FeSi and FeCr liquid solution models, was excluded from the calculations for SiC paper, but is suitable for Fe-Si and Fe-Cr phase diagrams at 1 bar (Fe endmembers from Brosh should be excluded)                                        
-FE(1)
-V0 = 0.706  
-b1 = 5.12d-5 b5 = -5.12d-4 
-b6 = 140d4 b8 = 5.8  
-end
-
-Si_LIQ   EoS = 615 | Lacaze & Sundman 1990 Special EoS, for FeSi liquid solution model, was excluded from the calculations for SiC paper, but it is suitable for Fe-Si phase diagram at 1 bar                                        
-SI(1)
-V0 = 0.951  
-b1 = 1.2067d-4 b5 = -1.2067d-3 
-b6 = 66d4 b8 = 4
-end
-
-fe2si   EoS = 616 | Lacaze & Sundman 1990 Special EoS, for Fe-Si phase diagram at 1 bar                                        
-FE(0.6666667)SI(0.3333333)
-end
-
-fe5si3   EoS = 617 | Lacaze & Sundman 1990 Special EoS, for Fe-Si phase diagram at 1 bar                                        
-FE(.625)SI(.375)
-end
-
-fesi   EoS = 618 | Lacaze & Sundman 1990 Special EoS, for Fe-Si and Fe-Si-C diagram calculations at 1 bar and high pressures                                        
+fesi   EoS = 618 | Lacaze & Sundman 1990 Special EoS, for Fe-Si and Fe-Si-C diagram calculations at 1 bar and high pressures 
 FE(0.5)SI(0.5)
 V0 =  0.6745  
 b1 = 4.85e-5
 b6 = 187d4 b8 = 5.2
 end
 
-fesi2   EoS = 619 | Lacaze & Sundman 1990 Special EoS, for Fe-Si diagram at 1 bar                                        
-FE(0.3333333)SI(0.6666667)
-end
-
-fe3si7   EoS = 620 | Lacaze & Sundman 1990 Special EoS, for Fe-Si diaram at 1 bar                                        
-FE(0.3)SI(0.7)
-end
-
-Si-diam  EoS = 621 | Lacaze & Sundman 1990 Special EoS, for Fe-Si and Fe-Si-C diagrams at 1 bar and high pressures                                        
+Si-diam  EoS = 621 | Lacaze & Sundman 1990 Special EoS, for Fe-Si and Fe-Si-C diagrams at 1 bar and high pressures      
 SI(1)
 V0 = 1.2  
 b1 = 0.608069d-5 b5 = -0.608069d-4 
 b6 = 100d4 b8 = 4
 end
 
-FeC-BCC    EoS = 622 | Lacaze & Sundman 1990 Special EoS, for FeSiC bcc solution model (SiC paper), FeC endmembers from Brosh should be excluded from calculations                                        
+FeC-BCC    EoS = 622 | Lacaze & Sundman 1990 Special EoS, for FeSiC bcc solution model (SiC paper)                                     
 FE(1)C(3)
 V0 = 0.72  
 |b1 = 2.707d-5 |b5 = -2.707d-4 
@@ -2452,53 +2367,14 @@ V0 = 0.93
 b6 = 71d4 b8 = 4
 end
 
-FeC-FCC    EoS = 624 | Lacaze & Sundman 1990 Special EoS, for FeSiC fcc solution model (SiC paper), FeC endmembers from Brosh should be excluded from the calculations                                        
+FeC-FCC    EoS = 624 | Lacaze & Sundman 1990 Special EoS, for FeSiC fcc solution model (SiC paper)                                     
 FE(1)C(1)
 V0 = 0.726  
 |b1 = 5.726d-5 |b5 = -5.726d-4 
 b6 = 140d4 b8 = 8
 end
 
-SiC-FCC    EoS = 625 | Lacaze & Sundman 1990 Special EoS, for FeSiC-fcc diagram                                        
-SI(1)C(1)
-V0 = 0.896  
-|b1 = 0.608d-5 |b5 = -0.608d-4 
-b6 = 70.70d4 b8 = 4
-end
-
-C_LIQ      EoS = 626 | Lacaze & Sundman 1990 Special EoS, excluded from all calculations                                        
-C(1)
-V0 = 0.778  
-b1 = 5.44d-4  b5 = -5.44d-3 
-b6 = 10d4 b8 = 4
-end
-
-GPH        EoS = 627 | Lacaze & Sundman 1990 Special EoS, for the calculations with the data from Lacaze, C endmembers from Brosh should be excluded                                        
-C(1)
-V0 = .5298  
-b1 = .484E-4 b5 = -.484E-3 
-b6 = 39d4 b8 = 4  
-end
-
-SiC-lac    EoS = 628 | Lacaze & Sundman 1990 Special EoS                                        
-SI(1)C(1)
-V0 = 1.247  
-b1 = 1.04105d-5 b5 = -1.04105d-4 
-b6 = 220d4 b8 = 4.
-end
-
-CEM        EoS = 629 | Lacaze & Sundman 1990 Special EoS, Fe3C from Brosh should be excluded                                        
-FE(3)C(1)
-V0 = 2.29  
-b1 = 9.7d-5 b5 = -9.7d-4 
-b6 = 174d4 b8 = 4.8
-end
-
-FeSiC       EoS = 630 | Lacaze & Sundman 1990 Special EoS, for FeSiC diagram at 1 bar, should be excluded from the calculations at high pressures                                        
-FE(.7273)SI(.1818)C(.0909)
-end
-
-Cdiam      EoS = 631 | Lacaze & Sundman 1990 Special EoS, for FeSiC diagram calculations with the data from Lacaze (SiC paper), C endmembers from Brosh should be excluded                                        
+Cdiam      EoS = 631 | Lacaze & Sundman 1990 Special EoS, for FeSiC diagram calculations with the data from Lacaze (SiC paper)                                 
 C(1)
 V0 = 0.342  
 b1 = 0.540d-5 b5 = -0.540d-4 
@@ -2519,13 +2395,6 @@ b1 = 5.797d-5 b5 = -5.797d-4
 b6 = 140d4 b8 = 8
 end
 
-Cr_LIQ     EoS = 634 | Andersson & Sundman 1987 Special EoS, for FeCr diagram at 1 bar (should be excluded from the calculations at high pressures)                                        
-CR(1)
-V0 = 0.706  
-b1 = 5.12d-5 b5 = -5.12d-4 
-b6 = 140d4 b8 = 5.8  
-end
-
 FeCr_sig   EoS = 635 | Hertzman and Sundman, 1980, for FeCr diagram at 1 bar and high pressures (SiC paper)                                        
 CR(0.1333)FE(0.8667)
 V0 = 0.58035
@@ -2540,13 +2409,6 @@ b1 = 2.7919d-5 |b5 = -2.7919d-4
 b6 = 217d4 b8 = 5.8
 end
 
-Si_sig   EoS = 640 | should be excluded from the calculations                                        
-FE(0.333334)SI(0.5333333)CR(0.133333)
-V0 = 0.58035
-b1 = 2.7919d-5 |b5 = -2.7919d-4 
-b6 = 217d4 b8 = 5.8
-end
-
 Fe7C3 EoS = 637 | Djurovic; Nakajima; Mookherjee, for FeSiC diagram (SiC paper), Fe7C3 from Brosh should be excluded from the calculations
 FE(7)C(3)
 V0 = 5.  
@@ -2554,15 +2416,74 @@ b1 = 8.99d-5 b5 = -8.99d-4
 b6 = 253d4 b8 = 3.6
 end
 
-CrC-BCC EoS = 638 | should be excluded from the calculations 
+| data only to be used to verify CALPHAD calculations at ambient pressure: 
+
+Fe_LIQ   EoS = 614 | Lacaze & Sundman 1990 Special EoS, for FeSi and FeCr liquid solution models suitable for Fe-Si and Fe-Cr phase diagrams at 1 bar
+FE(1)
+V0 = 0.706  
+b1 = 5.12d-5 b5 = -5.12d-4 
+b6 = 140d4 b8 = 5.8  
+end
+
+Si_LIQ   EoS = 615 | Lacaze & Sundman 1990 Special EoS, for FeSi liquid solution model suitable for Fe-Si phase diagram at 1 bar                                        
+SI(1)
+V0 = 0.951  
+b1 = 1.2067d-4 b5 = -1.2067d-3 
+b6 = 66d4 b8 = 4
+end
+
+fe2si   EoS = 616 | Lacaze & Sundman 1990 Special EoS, for Fe-Si phase diagram at 1 bar    
+FE(0.6666667)SI(0.3333333)
+end
+
+fe5si3   EoS = 617 | Lacaze & Sundman 1990 Special EoS, for Fe-Si phase diagram at 1 bar  
+FE(.625)SI(.375)
+end
+
+fesi2   EoS = 619 | Lacaze & Sundman 1990 Special EoS, for Fe-Si diagram at 1 bar                                        
+FE(0.3333333)SI(0.6666667)
+end
+
+fe3si7   EoS = 620 | Lacaze & Sundman 1990 Special EoS, for Fe-Si diaram at 1 bar                                        
+FE(0.3)SI(0.7)
+end
+
+C_LIQ      EoS = 626 | Lacaze & Sundman 1990 Special EoS, excluded from all calculations                                        
+C(1)
+V0 = 0.778  
+b1 = 5.44d-4  b5 = -5.44d-3 
+b6 = 10d4 b8 = 4
+end
+
+FeSiC       EoS = 630 | Lacaze & Sundman 1990 Special EoS, for FeSiC diagram at 1 bar                                       
+FE(.7273)SI(.1818)C(.0909)
+end
+
+Cr_LIQ     EoS = 634 | Andersson & Sundman 1987 Special EoS, for FeCr diagram at 1 bar                                         
+CR(1)
+V0 = 0.706  
+b1 = 5.12d-5 b5 = -5.12d-4 
+b6 = 140d4 b8 = 5.8  
+end
+
+Si_sig   EoS = 640 | should be excluded
+FE(0.333334)SI(0.5333333)CR(0.133333)
+V0 = 0.58035
+b1 = 2.7919d-5 |b5 = -2.7919d-4 
+b6 = 217d4 b8 = 5.8
+end
+
+CrC-BCC EoS = 638 | should be excluded 
 CR(1)C(3)
 end
 
-CrC-FCC EoS = 639 | should be excluded from the calculations 
+CrC-FCC EoS = 639 | should be excluded  
 CR(1)C(1)
 end
 
-Cliq1    EoS = 12 | Brosh's EoS, 1st term to model liquid C, forC and FeC diagram at 1 bar and high pressures, data to be excluded for FeC diagram: Cliq1, Cliq2, CA1, CA2, C_LIQ, Fe_LIQ, GPH, gph, Cdiam, diam, CEM, Fe7C3, FeCbcc, gphb2, gphb1, Fe-FCC, Fe-HCP, Fe-BCC, iron-fcc, Fe-CBCC, iron, Carb2, FeA3
+| Brosh data, suitable for high pressures, but may not be consistent with CALPHAD data 
+
+Cliq1    EoS = 12 | Brosh's EoS, 1st term to model liquid C, forC and FeC diagram at 1 bar and high pressures
 C(0.5)
 V0 = 0.38
 c1 = 116380.7491 c2 = -32.02898691 c3 = 1.76583 c8 = -.1706952d-1 
@@ -2572,12 +2493,12 @@ cs1 = 116319.8592 cs2 = -24.72009204
 transition = 1 type = 6 t2 = 350 t4 = 100000.559 t5 = 146.10 t6 = -24.3 t7 = 2562600 t8 = -.2643d9 t9 = .12d11 t11 = -.4723d-3
 end
 
-Cliq2    EoS = 14 | Brosh's EoS, 2nd term to model liquid C, for C and FeC diagram at 1 bar and high pressures, data to be excluded for FeC diagram: Cliq1, Cliq2, CA1, CA2, C_LIQ, Fe_LIQ, GPH, gph, Cdiam, diam, CEM, Fe7C3, FeCbcc, gphb2, gphb1, Fe-FCC, Fe-HCP, Fe-BCC, iron-fcc, Fe-CBCC, iron, Carb2, FeA3   
+Cliq2    EoS = 14 | Brosh's EoS, 2nd term to model liquid C, for C and FeC diagram at 1 bar and high pressures
 C(0.5)
 c1 = 0.36 c2 = 4d4 c3 = 0.1 c4 = 500 c5 = 65e-6
 end
 
-Feliq    EoS = 12 | Brosh's EoS, for Fe and FeC diagram at 1 bar and high pressures, data to be excluded for FeC diagram: Cliq1, Cliq2, CA1, CA2, C_LIQ, Fe_LIQ, GPH, gph, Cdiam, diam, CEM, Fe7C3, FeCbcc, gphb2, gphb1, Fe-FCC, Fe-HCP, Fe-BCC, iron-fcc, Fe-CBCC, iron, Carb2, FeA3 
+Feliq    EoS = 12 | Brosh's EoS, for Fe and FeC diagram at 1 bar and high pressures
 FE(1)
 V0 = 0.7084
 c1 = 13265.87 c2 = 117.57557 c3 = -23.5143 c4 = 77359. c8 = -0.00439752 c9 = -0.58927d-7 c11 = -0.367516d-20
@@ -2586,7 +2507,7 @@ Tc = 0 B = 0 p = 0
 transition = 1 type = 6 t1 = 1811 t4 = -10838.83 t5 = 291.302 t6 = -46.
 end
 
-FeA1    EoS = 12 | Brosh's EoS, fcc Fe, for Fe and FeC diagram at 1 bar and high pressures, data to be excluded for FeC diagram: Cliq1, Cliq2, CA1, CA2, C_LIQ, Fe_LIQ, GPH, gph, Cdiam, diam, CEM, Fe7C3, FeCbcc, gphb2, gphb1, Fe-FCC, Fe-HCP, Fe-BCC, iron-fcc, Fe-CBCC, iron, Carb2, FeA3
+FeA1    EoS = 12 | Brosh's EoS, fcc Fe, for Fe and FeC diagram at 1 bar and high pressures
 FE(1)
 V0 = 0.6836
 c1 = -236.7 c2 = 132.416 c3 = -24.6643 c4 = 77359. c8 = -.375752d-2 c9 = -0.58927d-7
@@ -2595,7 +2516,7 @@ Tc = 0. B = 0 p = 0
 transition = 1 type = 6 t1 = 1811 t4 = -27097.396 t5 = 300.252559 t6 = -46 t10 = .278854d32
 end
 
-CA1    EoS = 12 | Brosh's EoS, term to model fcc FeC, for C and FeC diagram at 1 bar and high pressures, data to be excluded for FeC diagram: Cliq1, Cliq2, CA1, CA2, C_LIQ, Fe_LIQ, GPH, gph, Cdiam, diam, CEM, Fe7C3, FeCbcc, gphb2, gphb1, Fe-FCC, Fe-HCP, Fe-BCC, iron-fcc, Fe-CBCC, iron, Carb2, FeA3
+CA1    EoS = 12 | Brosh's EoS, term to model fcc FeC, for C and FeC diagram at 1 bar and high pressures
 C(1)
 V0 = 0.4
 c1 = -988.25091 c2 = -7.39898691 c3 = 1.76583 c8 = -.1706952d-1
@@ -2604,7 +2525,7 @@ Tc = 0 B = 0 p = 0
 transition = 1 type = 6 t1 = 350 t4 = -17368.441 t5 = 170.73 t6 = -24.3 t7 = 2562600. t8 = -.2643d9 t9 = .12d11 t11 = -.4723d-3
 end
 
-FeA2    EoS = 12 | Brosh's EoS, bcc Fe, for Fe and FeC diagram at 1 bar and high pressures, data to be excluded for FeC diagram: Cliq1, Cliq2, CA1, CA2, C_LIQ, Fe_LIQ, GPH, gph, Cdiam, diam, CEM, Fe7C3, FeCbcc, gphb2, gphb1, Fe-FCC, Fe-HCP, Fe-BCC, iron-fcc, Fe-CBCC, iron, Carb2, FeA3
+FeA2    EoS = 12 | Brosh's EoS, bcc Fe, for Fe and FeC diagram at 1 bar and high pressures
 FE(1)
 V0 = 0.705
 c1 = 1225.7 c2 = 124.134 c3 = -23.5143 c4 = 77359. c8 = -.00439752 c9 = -5.8927d-08 
@@ -2614,7 +2535,7 @@ cs1 = 4701.390794 cs2 = -9.929607200
 transition = 1 type = 6 t1 = 1811 t4 = -25383.581 t5 = 299.31255 t6 = -46. t10 = 2.29603d31
 end
 
-CA2    EoS = 12 | Brosh's EoS, term to model bcc FeC, for C and FeC diagram at 1 bar and high pressures, data to be excluded for FeC diagram: Cliq1, Cliq2, CA1, CA2, C_LIQ, Fe_LIQ, GPH, gph, Cdiam, diam, CEM, Fe7C3, FeCbcc, gphb2, gphb1, Fe-FCC, Fe-HCP, Fe-BCC, iron-fcc, Fe-CBCC, iron, Carb2, FeA3
+CA2    EoS = 12 | Brosh's EoS, term to model bcc FeC, for C and FeC diagram at 1 bar and high pressures
 C(3)
 V0 = 0.45
 c1 = -988.25091 c2 = -7.39898691 c3 = 1.76583 c8 = -.1706952d-1
@@ -2623,7 +2544,7 @@ Tc = 0 B = 0 p = 0
 transition = 1 type = 6 t1 = 350 t4 = -17368.441 t5 = 170.73 t6 = -24.3 t7 = 2562600. t8 = -.2643d9 t9 = .12d11 t11 = -.4723d-3
 end
 
-Carb1 EoS = 12   | Brosh's EoS; Fe3C cementite, for FeC diagram at 1 bar and high pressures, data to be excluded for FeC diagram: Cliq1, Cliq2, CA1, CA2, C_LIQ, Fe_LIQ, GPH, gph, Cdiam, diam, CEM, Fe7C3, FeCbcc, gphb2, gphb1, Fe-FCC, Fe-HCP, Fe-BCC, iron-fcc, Fe-CBCC, iron, Carb2, FeA3
+Carb1 EoS = 12   | Brosh's EoS; Fe3C cementite, for FeC diagram at 1 bar and high pressures
 FE(3)C(1)
 V0 = 2.3024
 c1 = -10195.8608 c2 = 690.949888 c3 = -118.47637 c4 = 590527 c8 = -.7d-3
@@ -2632,7 +2553,7 @@ Tc = 485 B = 1.008 p = 0.28 v = -6d-6
 cs1 = 11369.93775 cs2 = -5.641259263
 end
 
-Carb2 EoS = 12   | Brosh's EoS; Fe7C3, for FeC diagram at 1 bar and high pressures, data to be excluded for FeC diagram: Cliq1, Cliq2, CA1, CA2, C_LIQ, Fe_LIQ, GPH, gph, Cdiam, diam, CEM, Fe7C3, FeCbcc, gphb2, gphb1, Fe-FCC, Fe-HCP, Fe-BCC, iron-fcc, Fe-CBCC, iron, Carb2, FeA3  
+Carb2 EoS = 12   | Brosh's EoS; Fe7C3, for FeC diagram at 1 bar and high pressures 
 FE(7)C(3)
 V0 = 5.511
 c1 = -11249.17274 c2 = 1607.283515 c3 = -275.2676032 c4 = 1377896.136 c8 = -.1301301879d-1
@@ -2642,7 +2563,7 @@ cs1 = 39030.42338 cs2 = -13.22299779
 transition = 1 type = 6 t1 = 350 t4 = -22169.30493 t5 = 1726.036232 t6 = -292.6448319 t7 = 3086296.990 t8 = -176200088.1 t9 = .8000004d10  t11 = -.1948199924d-2
 end
 
-diamb EoS = 12 | Brosh's EoS; diamond, for C and FeC diagram at 1 bar and high pressures, data to be excluded for FeC diagram: Cliq1, Cliq2, CA1, CA2, C_LIQ, Fe_LIQ, GPH, gph, Cdiam, diam, CEM, Fe7C3, FeCbcc, gphb2, gphb1, Fe-FCC, Fe-HCP, Fe-BCC, iron-fcc, Fe-CBCC, iron, Carb2, FeA3
+diamb EoS = 12 | Brosh's EoS; diamond, for C and FeC diagram at 1 bar and high pressures
 C(1)
 V0 = 0.34145
 c1 = 3386.8147 c2 = -64.4266811 c3 = 11.71699 c4 = -91196.5 c5 = 2797170. c6 = -38820740. c8 = -.0304 c9 = 3.3333d-06
@@ -2652,7 +2573,7 @@ cs1 = 1366.369440 cs2 = .3756844930e-1
 transition = 1 type = 6 t2 = 330 t4 = -16359.441 t5 = 175.61 t6 = -24.31 t7 = 2698000 t8 = -.261d9 t9 = .111d11  t11 = -.4723d-3
 end
 
-gphb EoS = 12 | Brosh's EoS; graphite, for C and FeC diagram at 1 bar and high pressures, data to be excluded for FeC diagram: Cliq1, Cliq2, CA1, CA2, C_LIQ, Fe_LIQ, GPH, gph, Cdiam, diam, CEM, Fe7C3, FeCbcc, gphb2, gphb1, Fe-FCC, Fe-HCP, Fe-BCC, iron-fcc, Fe-CBCC, iron, Carb2, FeA3
+gphb EoS = 12 | Brosh's EoS; graphite, for C and FeC diagram at 1 bar and high pressures
 C(1)
 V0 = 0.5273
 c1 = -988.25091 c2 = -7.39898691 c3 = 1.76583 c8 = -.1706952d-1
@@ -2661,7 +2582,7 @@ cs1 = -1049.140840 cs2 = -.9009203175e-1 cs3 = 0.01 cs4 = 1677.
 transition = 1 type = 6 t1 = 350 t4 = -17368.441 t5 = 170.73 t6 = -24.3 t7 = 2562600 t8 = -.2643d9 t9 = .12d11  t11 = -.4723d-3  
 end
 
-FeA3    EoS = 12 | Brosh's EoS; hcp Fe, for Fe and FeC diagram at 1 bar and high pressures, data to be excluded for FeC diagram: Cliq1, Cliq2, CA1, CA2, C_LIQ, Fe_LIQ, GPH, gph, Cdiam, diam, CEM, Fe7C3, FeCbcc, gphb2, gphb1, Fe-FCC, Fe-HCP, Fe-BCC, iron-fcc, Fe-CBCC, iron, Carb2, FeA3
+FeA3    EoS = 12 | Brosh's EoS; hcp Fe, for Fe and FeC diagram at 1 bar and high pressures
 FE(1)
 V0 = 0.6678
 c1 = -2480.08 c2 = 136.725 c3 = -24.6643 c4 = 77359. c8 = -.375752d-2 c9 = -.58927d-7 
@@ -2670,26 +2591,99 @@ Tc = 0 B = 0 p = 0
 transition = 1 type = 6 t1 = 1811 t4 = -29340.776 t5 = 304.561559 t6 = -46. t10 = .278854d32
 end
 
-fper     EoS = 8 | H= -259860.0, orginal G0 = -277331.6, this is jamie's fit.                                                                  
+| HSC gas phase data.........
+
+Mg(g)     Eos = 10 | HSC ideal gas good to 9200 K
+MGO(1)O2(-0.5)
+G0 = 102.781d3 S0 = 148.64698
+c1 = 102.781 c2 = -0.27238d-3 c3 = -0.10732d5 c4 = 0.0928d-6
+transition = 1 type = 2 t1  = 3000  t4  = 24.64439 t5 = -4.19509d-3 t6 = 86.67662d5 t7 = 0.88588d-6
+transition = 2 type = 2 t1  = 5500  t4  = -70.53931 t5 = 21.29631d-3 t6 = 3993.02967d5 t7 = -1.02981d-6
+end 
+
+
+
+MgO(g)    Eos = 10 | HSC ideal gas good to 10000 K
+MGO(1)   
+G0 = -5.4d3 S0 = 213.314
+c1 = 40.69467 c2 = -37.45633d-3 c3 = -2.73321d5 c4 = 63.651d-6
+transition = 1 type = 2 t1  = 600  t4  = -60.77722 t5 = 192.48896d-3 t6 = 55.25711d5 t7 = -82.47799d-6
+transition = 2 type = 2 t1  = 1100  t4  = 161.29787 t5 = -89.73512d-3 t6 = -354.32525d5 t7 = 18.54352d-6
+transition = 3 type = 2 t1  = 1800  t4  = 37.68396 t5 = -0.50316d-3 t6 = 362.73469d5 t7 = 0.29204d-6  
+transition = 4 type = 2 t1  = 3900  t4  = 36.57035 t5 = 2.20207d-3 t6 = 36.88744d5 t7 = -0.18764d-6  
+transition = 5 type = 2 t1  = 8000  t4  = 61.57191 t5 = -3.03329d-3 t6 = -1500.6069d5 t7 = 0.11367d-6  
+end 
+
+
+FeO(g)    Eos = 10 | HSC ideal gas good to 6000 K
 FE(1)O2(0.5)
-G0 = -284567.6 S0 = 58.6 V0 = 1.206  
-c1 = 44.4 c2 = .828E-2 c3 = -1214200 c5 = 185.2  
-b1 = .322E-4 b5 = 297.5937 b6 = 1520000 b7 = -.32E-5 b8 = 4.9  
+G0 = 185.262d3 S0 = 241.9
+c1 = 47.39195 c2 = -12.0513d-3 c3 = -4.58674d5 c4 = 4.67128d-6
+transition = 1 type = 2 t1  = 1300  t4  = 37.33143 t5 = -0.40208d-3 t6 = 21.53793d5 t7 = 0.74914d-6
+transition = 2 type = 2 t1  = 4300  t4  = -37.17225 t5 = 23.94432d-3 t6 = 2156.59484d5 t7 = -1.50801d-6  
+end 
+
+
+Fe(g)    Eos = 10 | HSC ideal gas good to 10000 K
+FE(1)
+G0 = 361.531d3 S0 = 180.487
+c1 = 30.96344 c2 = -13.73105d-3 c3 = -1.44294d5 c4 = 5.361d-6
+transition = 1 type = 2 t1  = 1500  t4  = 17.70104 t5 = 2.12292d-3 t6 = 18.70323d5 t7 = 0.20882d-6
+transition = 2 type = 2 t1  = 5000  t4  = -19.56133 t5 = 12.83877d-3 t6 = 1187.1528d5 t7 = -0.63045d-6  
+end 
+
+
+Si(g)    Eos = 10 | HSC ideal gas 
+SI(1) 
+G0 = 405.554d3 S0 = 167.979
+c1 = 21.04075 c2 = -0.75852d-3 c3 = 1.23608d5 c4 = 0.58354d-6
+transition = 1 type = 2 t1  = 2000  t4  = 22.56649 t5 = 0.48505d-3 t6 = -55.2434d5 t7 = -0.06694d-6
+transition = 2 type = 2 t1  = 5500  t4  = 33.13343 t5 = -2.5732d-3 t6 = -422.35756d5 t7 = 0.17995d-6  
+end 
+
+
+O(g)     EoS = 10 | HSC ideal gas 
+O2(0.5) 
+G0 = 201.154d3 S0 = 161.059  
+c1 = 21.16715 c2 = -0.62024d-3 c3 = 0.78643d5 c4 = 0.2531d-6  
+transition = 1 type = 2 t1  = 1500  t4  = 20.07968 t5 = 0.13599d-3 t6 = 10.89287d5 t7 = 0.03825d-6
+transition = 2 type = 2 t1  = 6000  t4  = 24.85874 t5 = -0.0962d-3 t6 = -722.90558d5 t7 = -0.00077d-6 
 end
 
+C(g)     EoS = 10 | HSC ideal gas (to 20 kK)
+C(1)   
+G0 = 699012.6 S0 = 158.099 c1 = 20.850 c2 = -0.192d-3 c3 = 0.028d5 c4 = 0.114d-6
+transition = 1 type = 2 t1 = 1500 t4 = 17.468 t5 = 1.657d-3 t6 = 26.014d5 t7 = -0.118d-6
+transition = 2 type = 2 t1 = 6000 t4 = 23.533 t5 = -0.084d-3 t6 = -91.839d5 t7 = 0.010d-6
+end 
 
-eskL   EoS = 9 | –106225              
-CR(2)O2(1.5)
-G0 = -1062250 S0 = 63.3 V0 = 3.07090
-c1 = 157.6
-b1 = 0.703E-4 b5 = -35 b6 = 150000 b7 = 0.4E-4 b8 = 6.00
+SiO(g)         EoS = 10 | HSC ideal gas => -166.014d3 Shornikov => G0 = -163.668d3
+SI(1)O2(0.5)
+G0 = -166.014d3 S0 = 211.597
+c1 = 23.80206  c2 = 21.78592d-3 c3 = 0.4374d5 c4 = -10.07503d-6
+transition = 1 type = 2 t1 = 800    t4 = 37.02928   t5 = 0.29472d-3     t6 = -15.50846d5     t7 = 0.01456d-6
+transition = 2 type = 2 t1 = 4100   t4 = 73.41891   t5 = -11.88528d-3   t6 = -1014.67529d5   t7 =  1.1742d-6
+transition = 3 type = 2 t1 = 6000   t4 = 41.55976
+end
+
+O2(g)         EoS = 10 | HSC ideal gas good to 8000 K
+O2(1)
+G0 = -61.165d3 S0 = 205.149
+c1 = 22.05955  c2 = 20.88672d-3  c3 = 1.62056d5   c4 = -8.20733d-6
+transition = 1 type = 2 t1 = 700     t4 = 29.79298  t5 = 7.91038d-3   t6 = -6.19384d5  t7 = -2.2036d-6
+transition = 2 type = 2 t1 = 1200    t4 = 34.85945  t5 = 1.31218d-3   t6 = -14.14037d5 t7 = 0.16256d-6
+transition = 3 type = 2 t1 = 2500    t4 = 32.69336  t5 = 3.13735d-3   t6 = -17.3023d5  t7 = -0.21417d-6
+transition = 4 type = 2 t1 = 4500    t4 = 18.48998  t5 = 6.56662d-3   t6 = 654.05977d5 t7 = -0.438d-6  
+end
+
+SiO2(g)   EoS = 10 | HSC/shornikov ideal gas   HSC=> G0 -390.292d3 shornikov=> G0 = -378.938d3                                                        
+SI(1)O2(1)
+G0 = -390.292d3 S0 = 228.719
+c1 = 27.28805 c2 = 71.29955d-3 c3 = -0.25104d5 c4 = -47.78965d-6
+transition = 1 type = 2 t1  = 400   t4  = 43.14959 t5 = 26.20858d-3 t6 = -6.36805d5 t7 = -10.35122d-6
+transition = 2 type = 2 t1  = 1100  t4  = 62.32068                  t6 = -41.47181d5  
+transition = 3 type = 2 t1  = 6000  t4  = 62.2054140506421    
 end
 
  
-hemL   EoS = 9 | –87514
-FE(2)O2(1.5)
-G0 = -875140 S0 = -33.20 V0 = 3.2208
-c1 = 229
-b1 = 0.1953E-3 b5 = -46 b6 = 230000 b7 = -0.1740E-4 b8 = 4.00  
-end
 

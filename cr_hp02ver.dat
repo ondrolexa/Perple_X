@@ -2125,7 +2125,7 @@ m0 = .1E-15
 end
 
  
-mcrm     EoS = 1 |  mg-chromite H from klemme                                                     
+mcrm     EoS = 1 |  mg-chromite H from klemme 
 MGO(1)CR2O3(1)
 G0 = -1650534 S0 = 119.6 V0 = 4.356  
 c1 = 221.24 c2 = -.10203E-2 c3 = -1757210 c5 = -1247.9  
