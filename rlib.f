@@ -577,7 +577,7 @@ c                                 Stoichiometic Si rk fluid
          else if (eos(id).ge.610.and.eos(id).le.637) then
 c                                 lacaze & Sundman (1990) EoS for Fe-Si-C alloys and compounds
 c                                 Xiong et al., 2011 for Fe-Cr alloys
-            gval = glacaz(eos(id)) + vdp + thermo(1,id)  
+            gval = gval + glacaz(eos(id)) + vdp + thermo(1,id)  
          
          else if (eos(id).eq.700) then 
 c                                 sio
@@ -601,7 +601,7 @@ c                                 o
 
       end if
 c                                 kill melt endmembers if T < T_melt 
-999   if (ifp(id).lt.0.and.t.lt.nopt(20)) gval = gval + 1d8
+999   if (ifp(id).lt.0.and.t.lt.nopt(20)) gval = gval + 1d6
 c                                 do legendre transform if proj
       if (proj) then 
 c                                 mobile components
@@ -1942,7 +1942,7 @@ c                                 in the calculation.
       end if 
 c                                 use ieos flag to signal melt endmembers
 c                                 in ifp array, this is only used by gcpd.
-      if (eos(id).eq.3.or.eos(id).eq.9) then
+      if (eos(id).eq.3.or.eos(id).eq.9.or.eos(id).eq.11) then
 
          ifp(id) = -1
 
@@ -8368,7 +8368,7 @@ c----------------------------------------------------------------------
       gex = 0d0 
 
       if (extyp(ids).eq.1) then 
-c                                    redlich kistler; expand polynomial
+c                                 redlich kistler; expand polynomial
          do i = 1, jterm(ids)
             do j = 1, rko(i,ids)
                lex(j,i) = 0d0
@@ -8377,8 +8377,9 @@ c                                    redlich kistler; expand polynomial
 
          do i = 1, jterm(ids)
             do j = 1, rko(i,ids)
+c                                 interchanged subscripts, G Helffrich, 4/8/16.
                lex(j,i) = lex(j,i) + wl(j,i)*
-     *                        (y(jsub(2,i,ids))-y(jsub(1,i,ids)))**(j-1)
+     *                        (y(jsub(1,i,ids))-y(jsub(2,i,ids)))**(j-1)
             end do
          end do
 
@@ -8391,13 +8392,13 @@ c                                    redlich kistler; expand polynomial
       else if (lexces(ids)) then 
 
          if (llaar(ids)) then 
-c                                 holland & powells version of the van laar
+c                                 holland & powell's version of the van laar
 c                                 first compute "volumes"
             tphi = 0d0
 
             do i = 1, nstot(ids)
 c                                 tphi is the sum of holland & powell's
-c                                 phi's
+c                                 phis
                tphi = tphi + alpha(i) * y(i)
 
              end do 
@@ -9265,7 +9266,14 @@ c                                 h2o absent, fo (in hp) is first endmember
          else if (iorig(1).eq.3) then 
 c                                 h2o and fo absent, fa (in hp) is first endmember
             jspec(im,3) = 1
-         end if     
+         end if
+c                                 set the ifp flag for t_melt option
+         do i = 1, mstot(im)
+c                                 insp points to the original position 
+c                                 of endmember i in the solution model input:
+            ifp(knsp(i,im)) = -1
+
+         end do 
 
       else if (jsmod.eq.0) then
 c                                 fluid eos, make pointer to co2
@@ -12886,11 +12894,11 @@ c                                 is evaluated from speciation.
          smix = 0d0
 
       else if (jsmod.eq.24) then 
-c                              hp melt model, use internal routine to get entropy
+c                                 hp melt model, use internal routine to get entropy
          smix = -hpmelt(im)
 
       else if (jsmod.eq.25) then 
-c                              ghiorso melt model, use internal routine to get entropy
+c                                 ghiorso melt model, use internal routine to get entropy
          smix = -gmelt(im)
 
       else if (jsmod.eq.28) then 
@@ -12902,9 +12910,9 @@ c                              ghiorso melt model, use internal routine to get e
          smix = -omega(im,pa)
 
       end if 
-c                              save it:
+c                                 save it:
       exces(2,iphct) = smix 
-c                              load excess terms, if not Laar or ordered:
+c                                 load excess terms, if not Laar or ordered:
       if (extyp(im).eq.0.and.(.not.order)) then 
 
          do i = 1, jterm(im)
@@ -12921,7 +12929,21 @@ c                              load excess terms, if not Laar or ordered:
 
          end do  
 
-      end if 
+      else if (extyp(im).eq.1) then
+c                                 redlich kister; expand polynomial
+c                                 G Helffrich, 4/16
+         do i = 1, jterm(im)
+            do j = 1, rko(i,im)
+               zpr = y(jsub(1,i,im))*y(jsub(2,i,im))
+     *             * (y(jsub(1,i,im))-y(jsub(2,i,im)))**(j-1)
+               do l = 1, m3
+                  exces(l,iphct) = exces(l,iphct) +
+     *               zpr * wkl(l,j,i,im)
+               end do
+            end do
+         end do
+
+      end if
 c                              dqf corrections are also be saved in the
 c                              exces array this implies that speciation
 c                              does not effect the amount of the dqf'd
@@ -13046,6 +13068,7 @@ c----------------------------------------------------------------------
          hsersi = -9457.64d0 + t*(167.272d0 - 27.196d0*dlog(t)) 
      *        - .420369e31/t**9
       end if 
+
       end 
 
 
@@ -13121,9 +13144,7 @@ c-----------------------------------------------------------------------
 
       double precision function glacaz (id)
 c---------------------------------------------------------------------
-c evaluate g for iron-Si alloys and compounds according to the EoS of
-c Lacaze & Sundman (1990)
-c id points to the phase
+c evaluate various CALPHAD g functions
 c---------------------------------------------------------------------
       implicit none
  
@@ -13131,7 +13152,7 @@ c---------------------------------------------------------------------
 
       integer id
 
-      double precision hserfe, hsersi, crbcc, hserc
+      double precision hserfe, hsersi, crbcc, hserc, fefcc
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -13144,16 +13165,9 @@ c                                 Fe-bcc
 c                                 Si-bcc 
          glacaz = 0.47D5 - 0.225D2*t + hsersi(t)
 
-
       else if (id.eq.612) then
 c                                 Fe-fcc
-         if (t.lt.1811d0) then
-            glacaz = -0.14624D4 + 0.8282D1*t - 0.115D1*t*dlog(t) 
-     *             + 0.64D-3*t**2 + hserfe(t)
-         else
-            glacaz = -0.27097396D5 + 0.30025256D3*t - 0.46D2*t*dlog(t) 
-     *             + 0.27885D32/t**9
-         end if
+         glacaz = fefcc(t)
 
       else if (id.eq.613) then
 c                                 Si-fcc
@@ -13193,17 +13207,17 @@ c                                 Fe5si3
       else if (id.eq.618) then
 c                                 FeSi
          glacaz = -0.363806D5 + 0.222D1*t + hserfe(t)/2D0 
-     *          + hsersi(t)/2D0
+     *           + hsersi(t)/2D0
 
       else if (id.eq.619) then
 c                                 FeSi2 
          glacaz = -0.27383D5 + 0.348D1*t + 0.33D0*hserfe(t) 
-     *          + 0.67D0*hsersi(t)
+     *           + 0.67D0*hsersi(t)
 
       else if (id.eq.620) then
 c                                 Fe3Si7
          glacaz = -0.19649D5 - 0.92D0*t + 0.3D0 * hserfe(t) 
-     *          + 0.7D0 * hsersi(t)
+     *           + 0.7D0 * hsersi(t)
 
       else if (id.eq.621) then
 c                                 Si-diamond
@@ -13225,21 +13239,21 @@ c                                 SiC-BCC
 
       else if (id.eq.624) then
 c                                 FeC-FCC
-               if (t.lt.1811d0) then
+         if (t.lt.1811d0) then
                
-                  glacaz = 0.58376159d5 + 0.163135d3 * t - 0.2545D2 * 
-     *                     t * dlog(t) + 0.1677d-3 * t ** 2 + 0.256260d7
-     *                     / t - 0.2643d9 / t ** 2 + 0.12D11 / t ** 3 + 
-     *                     hserfe(t)
+            glacaz = 0.58376159d5 + 0.163135d3 * t - 0.2545D2 * 
+     *               t * dlog(t) + 0.1677d-3 * t ** 2 + 0.256260d7
+     *               / t - 0.2643d9 / t ** 2 + 0.12D11 / t ** 3 + 
+     *               hserfe(t)
 
-               else
+         else
 
-                  glacaz = 0.32740293d5 + 0.45510556d3 * t - 0.703d2 * t
-     *                     * dlog(t) - 0.4723d-3 * t ** 2 + 
-     *                     0.25626d7 / t - 0.2643D9 / t ** 2 + 0.12D11 /
-     *                     t ** 3 + 0.278854D32 / t ** 9
+            glacaz = 0.32740293d5 + 0.45510556d3 * t - 0.703d2 * t
+     *               * dlog(t) - 0.4723d-3 * t ** 2 + 
+     *               0.25626d7 / t - 0.2643D9 / t ** 2 + 0.12D11 /
+     *               t ** 3 + 0.278854D32 / t ** 9
 
-               end if
+         end if
 
       else if (id.eq.625) then
 c                                 SiC-FCC
@@ -13263,30 +13277,29 @@ c                                 SiC
 
             glacaz = -0.85572264D5 + 0.1732005D3 * t - 0.25856D2 * t * 
      *                dlog(t) - 0.2107D-1 * t ** 2 + 0.32153D-5 * t ** 3
-     *                + 0.438415D6 / t 
+     *                + 0.438415D6 / t
 
          else if (t.gt.700d0.and.t.lt.2100) then
 
-             glacaz = -0.95145902d5 + 0.300346d3 * t - 0.45093d2 * t * 
+            glacaz = -0.95145902d5 + 0.300346d3 * t - 0.45093d2 * t * 
      *                dlog(t) - 0.367d-2 * t ** 2 + 0.22d-6 * t ** 3 + 
-     *                0.1341065d7 / t 
-     *               
+     *                0.1341065d7 / t
 
          else
 
             glacaz = -0.105007971d6 + 0.360309d3 * t - 0.53073d2 * t * 
      *                dlog(t) - 0.74525d-3 * t ** 2 + 0.173167d-7 * 
-     *                t ** 3 + 0.3693345d7 / t 
+     *                t ** 3 + 0.3693345d7 / t
 
          end if
 
       else if (id.eq.629) then
-c                             Cementite
+c                                 Cementite
          glacaz = -0.10745d5 + 0.70604d3 * t - 0.1206d3 * t * dlog(t)
 
 
       else if (id.eq.630) then
-c                            Fe8Si2C
+c                                 Fe8Si2C
          glacaz = -0.210043d5 + 0.506d0 * t + 0.91d-1 * (-0.17368441d5
      *            + 0.17037d3 * t - 0.243d2 * t * dlog(t) - 0.4723d-3 
      *            * t ** 2 + 0.25626d7 / t - 0.2643d9 / t ** 2 + 
@@ -13294,53 +13307,55 @@ c                            Fe8Si2C
      *            0.182d0 * hsersi(t)
 
       else if (id.eq.631) then
-c                            C diam
+c                                 C diam
          glacaz = -0.16359441D5 + 0.17561D3 * t - 0.2431D2 * t * 
      *             dlog(t) - 0.4723D-3 * t ** 2 + 0.2698D7 / t - 
      *             0.261D9 / t ** 2 + 0.111D11 / t ** 3 
       
       else if (id.eq.632) then
-c                            Cr-BCC
-           
+c                                 Cr-BCC
            glacaz = crbcc(t)
 
-
       else if (id.eq.633) then
-c                            Cr-FCC
-
+c                                 Cr-FCC
            glacaz = crbcc(t) + 7284d0 + 0.163d0*t
 
-
       else if (id.eq.634) then
-c                            Cr_LIQ
-           if (t.lt.2180d0) then
+c                                 Cr_LIQ
+         if (t.lt.2180d0) then
 
-               glacaz = crbcc(t) + 0.2433593D5 - 0.1142D2 * t + 
-     *                  0.237615D-20 * t ** 7
+            glacaz = crbcc(t) + 0.2433593D5 - 0.1142D2 * t + 
+     *               0.237615D-20 * t ** 7
 
-           else
+         else
 
-               glacaz = -0.16459d5 + 0.335618d3 * t - 
-     *                   0.50d2 * t * dlog(t)
+             glacaz = -0.16459d5 + 0.335618d3 * t - 
+     *                0.50d2 * t * dlog(t)
 
-           end if
+         end if
 
       else if (id.eq.635) then
-c                            FeCr-sig after Hertzman, 1980
-              glacaz = (183802.0638d0 + 26d0*hserfe(t) + 
-     *                  4d0*crbcc(t))/30d0
-      
+c                                 FeCr-sig after Hertzman, 1980; used by Nastia
+c          glacaz = (183802.0638d0 + 26d0*hserfe(t) +
+c    *               4d0*crbcc(t))/30d0
+c                                 FeCr-sig after Andersson & Sundman 1987; used by George
+         glacaz = (8d0*fefcc(t) + 4d0*crbcc(t) + 18d0*hserfe(t) +
+     *            117 300d0 - 95.96d0*t) / 30d0
+
       else if (id.eq.636) then
-c                            CrFe-sig after Hertzman, 1980
-              glacaz =(-22624.05686d0 + 20d0*crbcc(t)
-     *                 + 10d0*hserfe(t))/30d0
+c                                 CrFe-sig after Hertzman, 1980; used by Nastia
+c        glacaz =(-22624.05686d0 + 20d0*crbcc(t)
+c    *            + 10d0*hserfe(t))/30d0
+c                                 CrFe-sig after Andersson & Sundman 1987; used by George
+         glacaz = (8d0*fefcc(t) + 22d0*crbcc(t)
+     *            + 92 300d0 - 95.96d0*t) / 30d0
 
       else if (id.eq.637) then
-c                            Fe7C3 after Djurkovic et al., 2011
-              glacaz =-0.2345062954D5 + 0.1761006488D4 * t - 
-     *                 0.2975999679D3 * t * dlog(t) - 0.3148668241D-3 * 
-     *                 t ** 2 + 0.1708400854D7 / t - 0.1762000881D9 / 
-     *                 t ** 2 + 0.8000004D10 / t ** 3
+c                                 Fe7C3 after Djurkovic et al., 2011
+         glacaz =-0.2345062954D5 + 0.1761006488D4 * t - 
+     *            0.2975999679D3 * t * dlog(t) - 0.3148668241D-3 * 
+     *            t ** 2 + 0.1708400854D7 / t - 0.1762000881D9 / 
+     *            t ** 2 + 0.8000004D10 / t ** 3
 
       end if
 
@@ -13386,6 +13401,72 @@ c-----------------------------------------------------------------------
       b = 2.22d0 * x
 
       gmag = r*t*f*dlog(b+1)
+
+      end 
+
+      double precision function gmags (tc,b,pee)
+c-----------------------------------------------------------------------
+c gmags returns the magnetic contribution to G parameterized as in
+c Sundman 1991 J. Ph. Equil. v12, 127-140.
+c     tc - transition temperature
+c     b - Bohr magneton value
+c     pee - structural magnetic parameter
+c
+c Not described or referenced in the original ref, but in an obscure reference,
+c viz. Hertzman and Sundman (1982), CALPHAD v6. 67-80, negative tc means the
+c material is antiferromagnetic, and the magnetic strength will also be a
+c negative number by convention.  As explained in Xiong et al. (2012)
+c CALPHAD v39, 11-20, to get actual values for evaluation, one examines the
+c structural parameter pee.  For bcc structure p = 0.4, while for fcc & hcp
+c structures p = 0.28.  The convention is for bcc (p=0.4) antiferromagnetic
+c structures, divide tc and b by -1; for fcc & hcp (p=0.28) antiferromagnetic
+c structures, divide tc and b by -3.
+
+c                                      G. Helffrich, ELSI, 8 Apr. 2016.
+c-----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      double precision a0,a1,t5,t15,t25,f1,f0,f3,f9,f15
+
+      parameter (a0=518d0/1125d0, a1=11692d0/15975d0)
+      parameter (t5=1d0/10d0, t15=1d0/315d0, t25=1d0/1500d0)
+      parameter (f1=79d0/140d0, f0=474d0/497d0, f3=1d0/6d0,
+     *           f9=1d0/135d0, f15=1d0/600d0)
+
+      double precision a,b,t0,tc,f,pee,bc
+
+      double precision p,t,xco2,u1,u2,tr,pr,r,ps
+      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
+
+      if (tc.lt.0d0) then
+         if (pee.lt.0.4d0) then
+	    bc = -b/3
+	    t0 = -3*t/tc
+	 else
+	    bc = -b
+	    t0 = -t/tc
+	 endif
+      else
+         t0 = t/tc
+	 bc = b
+      endif
+
+      a = a0 + a1*(1d0/pee - 1d0)
+
+      if (t0.lt.1d0) then 
+
+         f = t - (f1*tc/pee + t * f0 * (1d0/pee - 1d0) *
+     *       (f3 + t0**6 * (f9 + t0**6 * f15)) * t0**3) / a
+
+      else 
+
+         f = -t*(t5 + (t15 + t25 / t0**10) / t0**10) / t0**5 / a
+
+      end if 
+
+      gmags = r*f*dlog(bc+1)
 
       end 
 
@@ -13768,59 +13849,19 @@ c                                 FCC
 
       end
 
-
-      double precision function gmag2 (x)
-c-----------------------------------------------------------------------
-c gmag2 returns the magnetic contribution to G for BCC Fe in FeCr alloy
-c after Andersson and Sundman (1987).
-c     x - bulk mole fraction of Fe 
-c-----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      double precision b,t0,tc,f,x 
-
-      double precision p,t,xco2,u1,u2,tr,pr,r,ps
-      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
-
-      if (x.eq.0d0) then 
-         gmag2 = 0d0
-         return
-      end if 
-
-      tc = 0.13545D4 * x - 0.3115D3 + (1d0 - x) * x * 
-     *     (0.2200D4 - 0.11D4 * x)
-
-
-      t0 = t/tc
-
-      if (t0.lt.1d0) then 
-
-         f = 1d0 - 0.905299383D0 / t0 - (0.153008346D0 
-     *       + (0.680037095D-2 + 0.153008346D-2 * t0**6) * t0**6)
-     *       * t0**3
-
-      else 
-
-         f = -(0.641731208D-1 + (0.203724193D-2 + 0.42782080051D-3 / 
-     *        t0**10) / t0**10) / t0**5
-
-      end if 
-
-      b = 0.2228D1 * x - 0.8D-2 - 0.85D0 * (1d0 - x) * x
-
-      gmag2 = r*t*f*dlog(b+1)
-
-      end 
-
       double precision function gfecr1 (y,g1,g2)
 c-----------------------------------------------------------------------
 c     gfecr1 returns the free energy change for BCC Fe-Cr alloy after 
-c     Andersson and Sundman, 1987. (solution model id = 32) 
+c     Andersson and Sundman, 1987, updated by Xiong et al. 2011
+c     (solution model id = 32) 
+c     The only reason this model needs to be built in is due to the
+c     continuous change in magnetic Tc and B through the FM-AFM transition.
+c     Otherwise it could be a normal solution model
 
 c    y      - mole fractions of Fe
-c    g1, g2 - free energues of Fe-bcc and Cr-bcc
+c    g1, g2 - free energies of Fe-bcc and Cr-bcc
+
+c                                      G. Helffrich, ELSI, 8 Apr. 2016.
 c-----------------------------------------------------------------------
       implicit none
 
@@ -13843,13 +13884,54 @@ c----------------------------------------------------------------------
       
       end if
 
+c     gex below is from Xiong et al. (2011) and uses an alternative magnetic
+c     model than is implemented in gmag2/gmags.
       gex = (1 - y) * y * (0.2421206D5 - 0.15507D2 * t + 
      *      (1 - 2 * y) * (0.166469D4 + 0.286D0 * t) + 
      *      ((1 - 2 * y) ** 2) * (-0.1325088D5 + 0.8252D1 * t))
+c     gex below is from Andersson & Sundman (1987) whose magnetic model is
+c     consistent with gmag2/gmags.  This doesn't work due to unknown errors
+c     in the Andersson & Sundman (1987) data listed in the article.
+c     gex = y*(1d0-y)*(20 500d0 - 9.68d0*t)
 
-      gfecr1 = gmech + gconf + gex + gmag2(1d0)
+      gfecr1 = gmech + gconf + gex + gmag2(y)
 
       end
+
+      double precision function gmag2 (x)
+c-----------------------------------------------------------------------
+c gmag2 returns the magnetic contribution to G for BCC Fe in FeCr alloy
+c after Andersson and Sundman (1987).
+c     x - bulk mole fraction of Fe
+
+c                                      G. Helffrich, ELSI, 8 Apr. 2016.
+c-----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      double precision b,tc,x,gmags,xfe,xcr
+
+      if (x.eq.0d0) then 
+
+         gmag2 = 0d0
+
+      else
+
+c        tc = 0.13545D4 * x - 0.3115D3 + (1d0 - x) * x * 
+c    *        (0.2200D4 - 0.11D4 * x)
+c        b = 0.2228D1 * x - 0.8D-2 - 0.85D0 * (1d0 - x) * x
+
+	 xfe = x
+	 xcr = 1d0-x
+	 tc = 1043d0 * xfe + (-311.5d0) * xcr +
+     *        xfe * xcr * (1650d0 + 550d0*(xcr-xfe))
+         b = 2.22d0 * xfe + (-0.008d0) * xcr + xfe*xcr*(-0.008d0)
+	 gmag2 = gmags (tc,b,0.40d0)
+
+      end if
+
+      end 
 
       double precision function gmet (id)
 c----------------------------------------------------------------

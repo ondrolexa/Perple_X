@@ -9471,6 +9471,7 @@ end_of_model
                            --------------------------------------------------------
 begin_model
                            |FeCr-liquid solution model after Xiong et al., 2011
+                           |G. Helffrich, April 2016
 FeCr(liq)
 abbreviation Liq
 full_name    liquid
@@ -9481,9 +9482,9 @@ Cr_LIQ
   0  0                     |endmember flags
 0.     1.      0.1     0   |imod = 0 -> cartesian subdivision
 begin_excess_function   
-W(Cr_LIQ Fe_LIQ)                    0.      -5.983    0d0
-W(Cr_LIQ Fe_LIQ Cr_LIQ)          -384.41     0.0      0d0
-W(Cr_LIQ Fe_LIQ Fe_LIQ)           384.41     0.0      0d0
+Wk(Cr_LIQ Fe_LIQ)
+w0 = 0. wT = -5.983
+w0 = -384.41
 end_excess_function
 1                                     1 site entropy model
 2 1.                                  2 species, site multiplicity = 1.
@@ -9493,6 +9494,7 @@ end_of_model
                            --------------------------------------------------------
 begin_model                
                            |FeCr-FCC solution model after Xiong et al., 2011
+                           |G. Helffrich, April 2016
 FeCr-FCC
 abbreviation FCC
 full_name    alloy
@@ -9503,9 +9505,9 @@ Cr-FCC
 0  0                       |endmember flags
 0.     1.      0.1     0   |imod = 0 -> cartesian subdivision
 begin_excess_function   
-W(Fe-FCC Cr-FCC)                 28871.89  -22.318    0d0
-W(Cr-FCC Fe-FCC Cr-FCC)          32711.42  -18.180    0d0
-W(Cr-FCC Fe-FCC Fe-FCC)         -32711.42   18.180    0d0 
+Wk(Cr-FCC Fe-FCC)
+w0 = 28871.89 wT = -22.318
+w0 = 32711.42 wT = -18.180
 end_excess_function 
 1                            1 site entropy model
 2 1.                         2 species, site multiplicity = 1.
@@ -9530,7 +9532,16 @@ reach_increment 3
 end_of_model 
                            --------------------------------------------------------
 begin_model
-                           |FeCr-sigma solution model after Hertzman and Sundman, 1980
+                           |FeCr-sigma solution model after Andersson & Sundman,
+                           |1987, which is based on 30 sites and mixing on 18.
+                           |This source defines no excess mixing for the soln.,
+                           |but it is needed to stabilize the sigma phase.  One
+                           |cause might be use of the Xiong et al. (2011) for
+                           |BCC Fe-Cr.  As it is, this frankenstein-like mix
+                           |of parts from Andersson & Sundman '87 and Xiong
+                           |et al. '11 works concisely to reproduce the
+                           |subsolidus and melting relations.
+                           |                        G. Helffrich, ELSI, 8 Apr. 2016.
 FeCr-s
 abbreviation Sigma
 full_name    alloy
@@ -9541,10 +9552,11 @@ CrFe_sig
 0  0                       |endmember flags
 0.     1.      0.1     0   |imod = 0 -> cartesian subdivision
 begin_excess_function   
-W(FeCr_sig CrFe_sig)                -11617.64   -3.403      0d0
+W(FeCr_sig CrFe_sig)       -1936.273 -0.5671667 0 | original from Nastia: -11617.64  -3.403  0
 end_excess_function 
 1                          |1 site entropy model 
-2 0.5333                   |2 species, 1 site multiplicity = 16/30
+| Nastia's version: 2 0.5333                   |2 species, 1 site multiplicity = 16/30
+2 0.6                      |2 species, 1 site, multiplicity = 18/30
 z(Fe) = 1. FeCr_sig 
 reach_increment 3
 end_of_model

@@ -2396,14 +2396,14 @@ b6 = 140d4 b8 = 8
 end
 
 FeCr_sig   EoS = 635 | Hertzman and Sundman, 1980, for FeCr diagram at 1 bar and high pressures (SiC paper)                                        
-CR(0.1333)FE(0.8667)
+Fe(26/30)Cr(4/30)                    | originally Fe(.8667)Cr(.1333)
 V0 = 0.58035
 b1 = 2.7919d-5 |b5 = -2.7919d-4 
 b6 = 217d4 b8 = 5.8
 end
 
 CrFe_sig   EoS = 636 | Hertzman and sundman, 1980, for FeCr diagram at 1 bar and high pressures (SiC paper)                                        
-CR(0.6667)FE(0.3333)
+Fe(8/30)Cr(22/30)                    | originally Fe(.3333)Cr(.6667)
 V0 = 0.58035
 b1 = 2.7919d-5 |b5 = -2.7919d-4 
 b6 = 217d4 b8 = 5.8

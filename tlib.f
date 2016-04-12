@@ -17,7 +17,7 @@ c----------------------------------------------------------------------
       implicit none
 
       write (*,'(/,a)') 
-     *      'Perple_X version 6.7.2, source updated March 17, 2016.'
+     *      'Perple_X version 6.7.2, source updated April 12, 2016.'
 
       end
 
@@ -3078,6 +3078,58 @@ c                                 second number
 
 99    end 
 
+      subroutine redfr0 (rnum,ibeg,iend,ier)
+c----------------------------------------------------------------------
+c redfr0 looks for a number or two numbers separated by a backslash / in
+c that array chars(iend:ibeg), the latter case is interpreted as a ratio. 
+c the result is returned as rnum. differs from readfr in that redfr0
+c expects ibeg/iend are known on input.
+c-----------------------------------------------------------------------
+      implicit none
+
+      double precision rnum, rnum1 
+
+      integer ibeg, iend, iback, ier, iscan, i
+
+      character num*30
+
+      integer length,iblank,icom
+      character chars*1
+      common/ cst51 /length,iblank,icom,chars(240)
+c----------------------------------------------------------------------
+      ier = 0 
+
+c                                 find backslash
+      iback = iscan (ibeg,iend,'/') - 1
+c                                 two cases:
+      if (iback.ge.iend) then
+c                                 no fraction
+         if (iend-ibeg+1.gt.30) goto 90
+c                                 simple number
+         write (num,'(30a)') (chars(i),i=ibeg,iend)
+         read (num,*,err=90) rnum
+
+      else 
+c                                 fraction write numerator
+         if (iback+1-ibeg.gt.30) goto 90
+c                                 first number
+         write (num,'(30a)') (chars(i),i=ibeg,iback)       
+         read (num,*,err=90) rnum
+c                                 second number 
+         if (iend-iback-1.gt.30) goto 90
+         write (num,'(30a)') (chars(i),i=iback+2,iend)      
+         read (num,*,err=90) rnum1
+
+         rnum = rnum/rnum1
+
+      end if 
+
+      return
+
+90    ier = 2
+
+      end
+
       integer function iscan (ibeg,iend,char)
 c----------------------------------------------------------------------
 c iscan finds the first occurence of char in chars(ibeg..iend), if not
@@ -3962,7 +4014,7 @@ c----------------------------------------------------------------------
 
       integer lun, len0, len1, ier, iscan, i, ibeg, iend
 
-      character key*22, values*80, strg*80, ctemp*5, ntemp*14
+      character key*22, values*80, strg*80, ctemp*5
 
       logical ok
 
@@ -3994,16 +4046,17 @@ c                                 find the "(" and ")"
          len1 = iscan (len0,iend,')')
 c                                 write the name and number
          write (ctemp,'(5a)')   (chars(i),i=ibeg,len0-1)
-         write (ntemp,'(14a1)') (chars(i),i=len0+1,len1-1)
 c                                 identify the component
          ok = .false.
 
          do i = 1, icmpn
+
             if (xcmpnt(i).eq.ctemp) then
-               read (ntemp,*) comp(i)
-               ok = .true.
+               call redfr0 (comp(i),len0+1,len1-1,ier)
+               if (ier.eq.0) ok = .true.
                exit 
             end if 
+
          end do      
 
          if (.not.ok) call error (23,0d0,i,strg)

@@ -2017,14 +2017,14 @@ end
 
  
 FeCr_sig EoS = 635  
-Fe(.8667)Cr(.1333)
+Fe(26/30)Cr(4/30)                    | originally Fe(.8667)Cr(.1333)
 V0 = .58035  
 b1 = .27919E-4 b6 = 2170000 b8 = 5.8  
 end
 
  
 CrFe_sig EoS = 636  
-Fe(.3333)Cr(.6667)
+Fe(8/30)Cr(22/30)                    | originally Fe(.3333)Cr(.6667)
 V0 = .58035  
 b1 = .27919E-4 b6 = 2170000 b8 = 5.8  
 end
