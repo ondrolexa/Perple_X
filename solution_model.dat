@@ -1,4 +1,4 @@
-670 DO NOT DELETE THIS LINE
+673 DO NOT DELETE THIS LINE
 
                              FOR MODEL DEFINITIONS AND REFERENCES REFER TO THE GLOSSARY AT:
 
@@ -201,7 +201,7 @@ mnbi      ann       phl
         
 1                            | 1 ordered species:
 
-obi = 2/3 phl + 1/3 ann   enthalpy_of_formation = -6.8d3 
+obi = 2/3 phl + 1/3 ann   enthalpy_of_ordering = -6.8d3 
 
 begin_limits
 obi = -3   + 3   ann  + 1   obi                     delta = 3 z(M2,Fe) 
@@ -323,7 +323,7 @@ ann      phl
         
 1                            | ordered species:
 
-obi = 2/3 phl + 1/3 ann   enthalpy_of_formation = -10.73d3  
+obi = 2/3 phl + 1/3 ann   enthalpy_of_ordering = -10.73d3  
 
 begin_limits
 obi = -3   + 3   ann  + 1 obi                       delta = 3 z(M2,Fe) 
@@ -821,8 +821,8 @@ omrb_dqf      frb
 
 2                            | 2 ordered species:
 
-ammo1 = 3/7 anth + 4/7 fanth_dq  enthalpy_of_formation = -9.5d3
-ammo2 = 2/7 anth + 5/7 fanth_dq   enthalpy_of_formation = -11.7d3   | these enthalpies differ from the published values
+ammo1 = 3/7 anth + 4/7 fanth_dq  enthalpy_of_ordering = -9.5d3
+ammo2 = 2/7 anth + 5/7 fanth_dq   enthalpy_of_ordering = -11.7d3   | these enthalpies differ from the published values
                                                                     | becuase Thermocalc reactions are specified in terms of the 
                                                                     | endmember without "DQF" corrections, while in Perple_X
                                                                     | endmembers automatically include any DQF corrections. 
@@ -1006,10 +1006,10 @@ hed
 
 3                            | number of ordered species 
 
-om   = 1/2 jd + 1/2 di   enthalpy_of_formation  =  -2.9d3 
-cfm  = 1/2 di + 1/2 hed  enthalpy_of_formation  =  -1.5d3
-jac  = 1/2 jd + 1/2 acm  enthalpy_of_formation  =  -1d3  
-                             | fom  = 1/2 jd + 1/2 hed  enthalpy_of_formation  =  -3.6d3
+om   = 1/2 jd + 1/2 di   enthalpy_of_ordering  =  -2.9d3 
+cfm  = 1/2 di + 1/2 hed  enthalpy_of_ordering  =  -1.5d3
+jac  = 1/2 jd + 1/2 acm  enthalpy_of_ordering  =  -1d3  
+                             | fom  = 1/2 jd + 1/2 hed  enthalpy_of_ordering  =  -3.6d3
 begin_limits
 om = -2 + 2 di + 2 hed   delta = 2
 om = -2 + 2 jd + 2 acm   delta = 2 
@@ -1156,8 +1156,8 @@ mrb        frb
 
 2                            | 2 ordered species:
 
-cammo1 = 3/7 cumm + 4/7 grun   enthalpy_of_formation = -9.5d3   
-cammo2 = 2/7 cumm + 5/7 grun   enthalpy_of_formation = -11.7d3
+cammo1 = 3/7 cumm + 4/7 grun   enthalpy_of_ordering = -9.5d3   
+cammo2 = 2/7 cumm + 5/7 grun   enthalpy_of_ordering = -11.7d3
                                                                  | these enthalpies differ from the thermocalc values
                                                                  | becuase Thermocalc reactions are specified in terms of the 
                                                                  | endmember without "DQF" corrections, while in Perple_X
@@ -2527,7 +2527,7 @@ coma
 
 1                          | ordered species definition
 
-mizz = 2/3 me + 1/3 coma   enthalpy_of_formation = -29000 
+mizz = 2/3 me + 1/3 coma   enthalpy_of_ordering = -29000 
 
 0 0                        | endmember flags
 0.0 1. 0.1  0              
@@ -5857,7 +5857,7 @@ hed
 
 1                             | ordered species definition
 
-omph = 1/2 jd + 1/2 di enthalpy_of_formation = -35d2 
+omph = 1/2 jd + 1/2 di enthalpy_of_ordering = -35d2 
 
 0  0  0  0  0                 | endmember flags
 
@@ -7344,7 +7344,7 @@ mnbi     ann      phl        | vdoc.pdf).
                              | name of a valid endmember. text is arbitrary and
                              | enthalpy is the enthalpy of formation of the ordered species.
 
-obi = 2/3 phl + 1/3 ann   enthalpy_of_formation = -10.73d3  
+obi = 2/3 phl + 1/3 ann   enthalpy_of_ordering = -10.73d3  
 
 begin_limits
 obi = -3   + 3 ann    + 1 obi                     delta = 3   z(M2,Fe) 
@@ -7871,8 +7871,8 @@ mrb        frb
 
 2                            | 2 ordered species:
 
-cammo1 = 3/7 cumm + 4/7 grun   enthalpy_of_formation = -9.5d3   
-cammo2 = 2/7 cumm + 5/7 grun   enthalpy_of_formation = -11.7d3    | these enthalpies differ from the published values
+cammo1 = 3/7 cumm + 4/7 grun   enthalpy_of_ordering = -9.5d3   
+cammo2 = 2/7 cumm + 5/7 grun   enthalpy_of_ordering = -11.7d3    | these enthalpies differ from the published values
                                                                   | becuase Thermocalc reactions are specified in terms of the 
                                                                   | endmember without "DQF" corrections, while in Perple_X
                                                                   | endmember include any DQF corrections. 
@@ -8080,8 +8080,8 @@ omrb_dqf      frb
 
 2                            | 2 ordered species:
 
-ammo1 = 3/7 anth + 4/7 fanth_dq  enthalpy_of_formation = -9.5d3
-ammo2 = 2/7 anth + 5/7 fanth_dq   enthalpy_of_formation = -11.7d3 | these enthalpies differ from the published values
+ammo1 = 3/7 anth + 4/7 fanth_dq  enthalpy_of_ordering = -9.5d3
+ammo2 = 2/7 anth + 5/7 fanth_dq   enthalpy_of_ordering = -11.7d3 | these enthalpies differ from the published values
                                                                   | becuase Thermocalc reactions are specified in terms of the 
                                                                   | endmember without "DQF" corrections, while in Perple_X
                                                                   | endmember include any DQF corrections. 
@@ -8250,9 +8250,9 @@ hed
 
 3                            | number of ordered species 
 
-om   = 1/2 jd + 1/2 di   enthalpy_of_formation  =  -2.9d3 
-cfm  = 1/2 di + 1/2 hed  enthalpy_of_formation  =  -1.5d3
-jac  = 1/2 jd + 1/2 acm  enthalpy_of_formation  =  -1d3     | this differs from the published value of -3d3 J/mol
+om   = 1/2 jd + 1/2 di   enthalpy_of_ordering  =  -2.9d3 
+cfm  = 1/2 di + 1/2 hed  enthalpy_of_ordering  =  -1.5d3
+jac  = 1/2 jd + 1/2 acm  enthalpy_of_ordering  =  -1d3     | this differs from the published value of -3d3 J/mol
                                                             | becuase Thermocalc reactions are specified in terms of the 
                                                             | endmember without "DQF" corrections, while in Perple_X
                                                             | endmember include any DQF corrections. 
@@ -8800,7 +8800,7 @@ ospr     fospr_d
 
 1                            | 1 ordered species:
 
-spro = 3/4 spr4 + 1/4 fspr   enthalpy_of_formation = -10d3
+spro = 3/4 spr4 + 1/4 fspr   enthalpy_of_ordering = -10d3
 
 begin_limits
 spro =    - 4/3 fspr - 4/3 ospr - 1/3 spro                 delta = 4/3 z(M3,Mg) 
@@ -9209,8 +9209,8 @@ ames     afchl    f3clin    clin
 
 2                               | 2 ordered species:
 
-och1 = 1 afchl  - 1 clin   + 1 daph      enthalpy_of_formation = 3d3
-och2 = 1 afchl  - 1/5 clin + 1/5 daph    enthalpy_of_formation = 2.4d3 
+och1 = 1 afchl  - 1 clin   + 1 daph      enthalpy_of_ordering = 3d3
+och2 = 1 afchl  - 1/5 clin + 1/5 daph    enthalpy_of_ordering = 2.4d3 
 
 begin_limits
 

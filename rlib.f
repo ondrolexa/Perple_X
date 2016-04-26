@@ -3040,7 +3040,9 @@ c----------------------------------------------------------------------
       include 'perplex_parameters.h'
 
       integer ibeg, jend, len, ier, iscan, lord, imax, match, idim, 
-     *        i, j, iscnlt 
+     *        i, j, iscnlt
+
+      double precision nums(m3) 
 
       character name*8, begin*5, eod*3, tname*10, values*30, key*22
 
@@ -3122,22 +3124,18 @@ c                                 data found
 
          end do 
 
-         ibeg = imax + 2
-
          if (xtyp.eq.0) then 
-c                                 initialize coefs
-            do i = 1, m3
-               wg(iterm,i) = 0d0
-            end do 
-c                                 read unadorned margules pt functions
+
+            ibeg = imax + 2
+c                                 read standard form margules pt functions
             if (lord.gt.iord) iord = lord
 
-            do i = 1, 3
+            call redlpt (nums,ibeg,jend,len,ier) 
 
-               call readfr (wg(iterm,i),ibeg,jend,len,ier)
-     
-               if (ier.ne.0) goto 90 
-    
+            if (ier.ne.0) goto 90 
+
+            do i = 1, m3
+               wg(iterm,i) = nums(i)
             end do 
 
          else
@@ -3338,6 +3336,8 @@ c----------------------------------------------------------------------
 
       character name*8, eod*3, tname*10
 
+      double precision nums(m3)
+
       integer length,iblank,icom
       character chars*1
       common/ cst51 /length,iblank,icom,chars(240)
@@ -3370,17 +3370,16 @@ c                                 data found
          if (ier.ne.0) goto 90
 
          index = match (idim,ier,name)  
-
          if (ier.ne.0) goto 90         
 
          ibeg = imax + 2
 
-         do i = 1, m3
+         call redlpt (nums,ibeg,jend,len,ier) 
 
-            call readfr (vlaar(i,index),ibeg,jend,len,ier)
-     
-            if (ier.ne.0) goto 90 
-    
+         if (ier.ne.0) goto 90 
+
+         do i = 1, m3
+            vlaar(i,index) = nums(i)
          end do 
 
       end do
@@ -3434,6 +3433,8 @@ c----------------------------------------------------------------------
 
       character name*8, eod*3, tname*10
 
+      double precision nums(m3)
+
       integer length,iblank,icom
       character chars*1
       common/ cst51 /length,iblank,icom,chars(240)
@@ -3463,17 +3464,15 @@ c                                 data found
          if (ier.ne.0) goto 90
 
          indq(idqf) = match (idim,ier,name)  
-
          if (ier.ne.0) goto 90         
 
          ibeg = imax + 2
 
-         do i = 1, m3
+         call redlpt (nums,ibeg,jend,len,ier) 
+         if (ier.ne.0) goto 90 
 
-            call readfr (dqf(i,idqf),ibeg,jend,len,ier)
-     
-            if (ier.ne.0) goto 90 
-    
+         do i = 1, m3
+            dqf(i,idqf) = nums(i)
          end do 
 
       end do
@@ -3511,11 +3510,13 @@ c----------------------------------------------------------------------
       include 'perplex_parameters.h'
 
       integer ibeg, iend, len, ier, iscan, i, nreact, inds(k7), 
-     *        idim, match
+     *        idim, match, iscnlt
 
-      double precision coeffs(k7), enth, rnum
+      double precision coeffs(k7), enth(3), rnum
 
       character name*8, tname*10 
+
+      external iscan, iscnlt
 
       character mname*8
       common/ cst18a /mname(m4)
@@ -3555,7 +3556,6 @@ c                                 find marker '='
       do 
 c                                 find a stoichiometric coeff
          call readfr (rnum,ibeg,iend,len,ier)
-
          if (ier.ne.0) exit 
 
          coeffs(i) = rnum
@@ -3567,7 +3567,6 @@ c                                 find the name
          if (i.gt.k7) call error (1,0d0,i,'k7')
 
          inds(i) = match(idim,ier,name)
-
          if (ier.ne.0) goto 90
 
          if (nreact.gt.0.and.i.eq.nreact) exit 
@@ -3580,11 +3579,8 @@ c                                 the next coeff+name
       if (nreact.eq.-1) then      
 c                                 ordered compound, read
 c                                 enthalpy, find marker '='
-         ibeg = iscan (ibeg,len,'=') + 1
-
-         call readfr (rnum,ibeg,iend,len,ier)
-
-         enth = rnum
+         ibeg = iscan (ibeg,len,'=') + 2
+         call redlpt (enth,ibeg,iend,len,ier)
 
          nreact = i - 2
 
@@ -5601,7 +5597,8 @@ c                                 local input variables
 
       integer iddeps,norder,nr
       double precision depnu,denth
-      common/ cst141 /depnu(j4,j3),denth(j3),iddeps(j4,j3),norder,nr(j3)
+      common/ cst141 /depnu(j4,j3),denth(j3,3),iddeps(j4,j3),norder,
+     *      nr(j3)
 
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
      *        kstot,rkord,xtyp
@@ -5703,7 +5700,8 @@ c                                 dqf variables
 c                                 local input variables
       integer iddeps,norder,nr
       double precision depnu,denth
-      common/ cst141 /depnu(j4,j3),denth(j3),iddeps(j4,j3),norder,nr(j3)
+      common/ cst141 /depnu(j4,j3),denth(j3,3),iddeps(j4,j3),norder,
+     *                nr(j3)
 
       integer jsmod
       double precision vlaar
@@ -6092,7 +6090,11 @@ c                                 species.
             do j = 1, morder 
 
                jold = kwas(j)
-               denth(j) = denth(jold)
+
+               do i = 1, 3
+                  denth(j,i) = denth(jold,i)
+               end do 
+
                nr(j) = nr(jold)
 
                do i = 1, nr(j)
@@ -6380,7 +6382,8 @@ c----------------------------------------------------------------------
 
       integer iddeps,norder,nr 
       double precision depnu,denth
-      common/ cst141 /depnu(j4,j3),denth(j3),iddeps(j4,j3),norder,nr(j3)
+      common/ cst141 /depnu(j4,j3),denth(j3,3),iddeps(j4,j3),norder,
+     *                nr(j3)
 
       integer mdep,idep,jdep,ndph
       double precision nu,y2p
@@ -6469,7 +6472,7 @@ c---------------------------------------------------------------------
 
       logical bad
 
-      double precision coeffs(k7), rnums(100), enth
+      double precision coeffs(k7), rnums(100), enth(3)
 
       integer ijk(mst),inds(k7),ict
 
@@ -6502,7 +6505,8 @@ c---------------------------------------------------------------------
 
       integer iddeps,norder,nr 
       double precision depnu,denth
-      common/ cst141 /depnu(j4,j3),denth(j3),iddeps(j4,j3),norder,nr(j3)
+      common/ cst141 /depnu(j4,j3),denth(j3,3),iddeps(j4,j3),norder,
+     *                nr(j3)
 
       integer mdep,idep,jdep,ndph
       double precision nu,y2p
@@ -6558,7 +6562,7 @@ c                             read jsmod, model type flag
 
              write (estrg,'(4(a))') 'unrecognized text: ', key,
      *                              ' reading solution model ', tname
-             call error (72, enth, i, estrg)
+             call error (72, enth(1), i, estrg)
 
           end if  
                    
@@ -6566,7 +6570,7 @@ c                             read jsmod, model type flag
 c                                 correct jsmod for old versions    
       if (jsmod.eq.3) jsmod = 2  
       if (jsmod.eq.0) fluid = .true.
-      if (jsmod.eq.1) call error (68,enth,jsmod,tname)
+      if (jsmod.eq.1) call error (68,enth(1),jsmod,tname)
       if (jsmod.eq.6.or.jsmod.eq.8) order = .true.
       if (jsmod.eq.5.or.jsmod.eq.7.or.jsmod.eq.8) depend = .true. 
       if (jsmod.eq.7.or.jsmod.eq.8) recip = .true. 
@@ -6612,7 +6616,9 @@ c                               of ordered species:
 
             call readr (coeffs,enth,inds,idim,nreact,tname)
 
-            denth(i) = enth
+            do j = 1, 3
+               denth(i,j) = enth(j)
+            end do 
 
             nr(i) = nreact
   
@@ -6837,7 +6843,8 @@ c---------------------------------------------------------------------
 
       integer iddeps,norder,nr 
       double precision depnu,denth
-      common/ cst141 /depnu(j4,j3),denth(j3),iddeps(j4,j3),norder,nr(j3)
+      common/ cst141 /depnu(j4,j3),denth(j3,3),iddeps(j4,j3),norder,
+     *                nr(j3)
 c----------------------------------------------------------------------
 c                                 make the insp arrays, 
 
@@ -7166,6 +7173,9 @@ c----------------------------------------------------------------------
 
       double precision gex,dgex,dsconf,tphi,dtphi
 
+      double precision enth
+      common/ cxt35 /enth(j3)
+
       double precision r,v,tr,pr,ps
       common/ cst5   /v(l2),tr,pr,r,ps
 c                                 working arrays
@@ -7181,7 +7191,7 @@ c                                 excess energy variables
      *               jsub(m2,m1,h9)
 
       double precision dvnu,deph,dydy
-      common/ cxt3r /dvnu(m4,j3,h9),deph(j3,h9),dydy(m4,j3,h9)
+      common/ cxt3r /dvnu(m4,j3,h9),deph(3,j3,h9),dydy(m4,j3,h9)
 c                                 model type
       logical lorder, lexces, llaar, lrecip
       common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
@@ -7231,7 +7241,7 @@ c                                note the excess energy is gex/tphi
 
       end if 
 c                                 now get dg/dy(jd)
-      dgdp = deph(1,id) + dgex - v(2)*dsconf(id)
+      dgdp = enth(1) + dgex - v(2)*dsconf(id)
 
       end
 
@@ -7985,11 +7995,19 @@ c                                 for each term:
  
             end do 
 
-            do j = 1, ksp(i,ids)
+            if (zt.gt.0d0) then
+c                                 if site exists, check fractions
+               do j = 1, ksp(i,ids)
 
-               if (badz(n(j)/zt)) goto 90
+                  if (badz(n(j)/zt)) goto 90
             
-            end do
+               end do
+
+            else if (zt.lt.0d0) then 
+c                                 negative site?
+               goto 90
+
+            end if 
 
          end if 
 
@@ -8075,12 +8093,16 @@ c                                 zt is the multiplicity
             
             end do   
 
-            do j = 1, ksp(i,id)
+            if (zt.gt.0d0) then 
+c                                 if site has non-zero multiplicity
+               do j = 1, ksp(i,id)
 c                                 z is site fraction
-               z = n(j)/zt
-               if (z.gt.0d0) dlnz = dlnz - z * dlog(z)
+                  z = n(j)/zt
+                  if (z.gt.0d0) dlnz = dlnz - z * dlog(z)
             
-            end do                  
+               end do       
+         
+            end if   
 
             dlnw = dlnw + r*zt*dlnz
 
@@ -8233,7 +8255,7 @@ c                                 local alpha
       common/ cyt0  /alpha(m4),dt(j3)
 
       double precision dvnu,deph,dydy
-      common/ cxt3r /dvnu(m4,j3,h9),deph(j3,h9),dydy(m4,j3,h9)
+      common/ cxt3r /dvnu(m4,j3,h9),deph(3,j3,h9),dydy(m4,j3,h9)
 c                                 model type
       logical lorder, lexces, llaar, lrecip
       common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
@@ -8524,7 +8546,8 @@ c---------------------------------------------------------------------
 
       integer iddeps,norder,nr 
       double precision depnu,denth
-      common/ cst141 /depnu(j4,j3),denth(j3),iddeps(j4,j3),norder,nr(j3)
+      common/ cst141 /depnu(j4,j3),denth(j3,3),iddeps(j4,j3),norder,
+     *                nr(j3)
 
       integer mdep,idep,jdep,ndph
       double precision nu,y2p
@@ -8568,7 +8591,7 @@ c                                 excess energy variables
       common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
 
       double precision dvnu,deph,dydy
-      common/ cxt3r /dvnu(m4,j3,h9),deph(j3,h9),dydy(m4,j3,h9)
+      common/ cxt3r /dvnu(m4,j3,h9),deph(3,j3,h9),dydy(m4,j3,h9)
       
       double precision y2pg
       common/ cxt4  /y2pg(m15,m4,h9)
@@ -9038,7 +9061,10 @@ c                                 -------------------------------------
 c                                 models with speciation: 
          do j = 1, norder 
 
-            deph(j,im) = denth(j) 
+            do i = 1, 3 
+               deph(i,j,im) = denth(j,i) 
+            end do 
+
             nrct(j,im) = nr(j)
 
             do i = 1, nr(j)
@@ -9283,6 +9309,13 @@ c                                 fluid eos, make pointer to co2
                jspec(im,1) = i
                exit
             end if 
+         end do 
+
+      else 
+c                                 save original endmember indexes for hard-wired 
+c                                 solution models
+         do i = 1, istot
+            jspec(im,i) = iorig(i)
          end do 
 
       end if 
@@ -9781,7 +9814,7 @@ c-----------------------------------------------------------------------
       integer id,k,l,ind 
 
       double precision dvnu,deph,dydy
-      common/ cxt3r /dvnu(m4,j3,h9),deph(j3,h9),dydy(m4,j3,h9)
+      common/ cxt3r /dvnu(m4,j3,h9),deph(3,j3,h9),dydy(m4,j3,h9)
 
       integer ideps,icase,nrct
       common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
@@ -9903,6 +9936,9 @@ c----------------------------------------------------------------------
 
       external omega, gex
 
+      double precision enth
+      common/ cxt35 /enth(j3)
+
       double precision z, pa, p0a, x, w, y, wl
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
      *              wl(m17,m18)
@@ -9917,7 +9953,7 @@ c----------------------------------------------------------------------
       common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
 
       double precision dvnu,deph,dydy
-      common/ cxt3r /dvnu(m4,j3,h9),deph(j3,h9),dydy(m4,j3,h9)
+      common/ cxt3r /dvnu(m4,j3,h9),deph(3,j3,h9),dydy(m4,j3,h9)
 
       integer iopt
       logical lopt
@@ -9940,7 +9976,9 @@ c                                 and if necessary, limits.
 
          if (nord(id).gt.1) call p0limt (id)
 
-      end if 
+      end if
+c                                 compute the enthalpy of ordering
+      call oenth (id)
 c                                 as most models are single species and
 c                                 there is so much overhead in computing
 c                                 multiple speciation, use a special routine
@@ -9962,7 +10000,7 @@ c                                  i.e., iopt(17).ne.0, compute disordered g.
  
          if (lrecip(id)) then 
             do i = 1, nord(id)
-               gdord = gdord + p0a(lstot(id)+i)*deph(i,id)
+               gdord = gdord + p0a(lstot(id)+i)*enth(i)
             end do 
          end if 
 
@@ -9980,6 +10018,34 @@ c                                  i.e., iopt(17).ne.0, compute disordered g.
 c                                 convert the ordered endmember fractions to 
 c                                 disordered fractions (stored in the p0a array).      
       if (lrecip(id)) call p0dord (id)
+
+      end
+
+      subroutine oenth (id)
+c----------------------------------------------------------------------
+c subroutine to the enthalpy of ordering for speciation models
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer i,id
+
+      double precision enth
+      common/ cxt35 /enth(j3)
+
+      double precision r,tr,pr,ps,p,t,xco2,u1,u2
+      common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
+
+      double precision dvnu,deph,dydy
+      common/ cxt3r /dvnu(m4,j3,h9),deph(3,j3,h9),dydy(m4,j3,h9)
+
+      integer lstot,mstot,nstot,ndep,nord
+      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
+c----------------------------------------------------------------------
+      do i = 1, nord(id) 
+         enth(i) = deph(1,i,id) + t * deph(2,i,id) + p * deph(3,i,id) 
+      end do 
 
       end 
 
@@ -10013,7 +10079,7 @@ c                                 excess energy variables
      *               jsub(m2,m1,h9)
 
       double precision dvnu,deph,dydy
-      common/ cxt3r /dvnu(m4,j3,h9),deph(j3,h9),dydy(m4,j3,h9)
+      common/ cxt3r /dvnu(m4,j3,h9),deph(3,j3,h9),dydy(m4,j3,h9)
 c                                 model type
       logical lorder, lexces, llaar, lrecip
       common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
@@ -10026,6 +10092,9 @@ c                                 model type
 
       double precision p,tk,xc,u1,u2,tr,pr,r,ps
       common/ cst5 /p,tk,xc,u1,u2,tr,pr,r,ps
+
+      double precision enth
+      common/ cxt35 /enth(j3)
 
       logical pin
       common/ cyt2 /pin(j3)
@@ -10095,10 +10164,10 @@ c                                 get the configurational entropy derivatives
 
          if (.not.pin(k)) cycle
 
-         g = g + deph(k,id) * pa(lstot(id)+k)
+         g = g + enth(k) * pa(lstot(id)+k)
 c                                 dg is the negative of the differential of g 
 c                                 with respect to the kth species.
-         dg(k) = -(deph(k,id) + dg(k) - tk*ds(k))
+         dg(k) = -(enth(k) + dg(k) - tk*ds(k))
          do l = k, norder 
             d2g(l,k) = d2g(l,k) - tk*d2s(l,k)
          end do 
@@ -10651,10 +10720,13 @@ c----------------------------------------------------------------------
       common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
 
       double precision dvnu,deph,dydy
-      common/ cxt3r /dvnu(m4,j3,h9),deph(j3,h9),dydy(m4,j3,h9)
+      common/ cxt3r /dvnu(m4,j3,h9),deph(3,j3,h9),dydy(m4,j3,h9)
 
       logical pin
       common/ cyt2 /pin(j3)
+
+      double precision enth
+      common/ cxt35 /enth(j3)
 
       integer iopt
       logical lopt
@@ -10799,7 +10871,7 @@ c                                 fails to converge.
 
       end if  
 
-90    g = pa(jd)*deph(k,id) - t*omega(id,pa) + gex(id,pa)
+90    g = pa(jd)*enth(k) - t*omega(id,pa) + gex(id,pa)
 
       end
 
@@ -10969,7 +11041,7 @@ c                                 working arrays
       common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
 
       double precision dvnu,deph,dydy
-      common/ cxt3r /dvnu(m4,j3,h9),deph(j3,h9),dydy(m4,j3,h9)
+      common/ cxt3r /dvnu(m4,j3,h9),deph(3,j3,h9),dydy(m4,j3,h9)
 c----------------------------------------------------------------------
 c                                 adjust the composition by the increment
       do i = 1, nrct(k,id)
@@ -11214,7 +11286,7 @@ c                                 excess energy variables
      *               jsub(m2,m1,h9)
 
       double precision dvnu,deph,dydy
-      common/ cxt3r /dvnu(m4,j3,h9),deph(j3,h9),dydy(m4,j3,h9)
+      common/ cxt3r /dvnu(m4,j3,h9),deph(3,j3,h9),dydy(m4,j3,h9)
 c                                 model type
       logical lorder, lexces, llaar, lrecip
       common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
@@ -11224,6 +11296,9 @@ c                                 model type
 
       double precision dppp,d2gx,sdzdp
       common/ cxt28 /dppp(j3,j3,m1,h9),d2gx(j3,j3),sdzdp(j3,m11,m10,h9)
+
+      double precision enth
+      common/ cxt35 /enth(j3)
 
       double precision v,tr,pr,r,ps
       common / cst5 /v(l2),tr,pr,r,ps
@@ -11268,7 +11343,7 @@ c                                 convert dg and d2g to the full derivative
 c                                 get the configurational entropy derivatives
       call sderi1 (k,id,ds,d2s,inf)
 
-      dg  = dg + deph(k,id)  - v(2)*ds
+      dg  = dg + enth(k)  - v(2)*ds
       d2g = d2g - v(2)*d2s
 
       end
@@ -11522,7 +11597,8 @@ c---------------------------------------------------------------------
 
       integer iddeps,norder,nr 
       double precision depnu,denth
-      common/ cst141 /depnu(j4,j3),denth(j3),iddeps(j4,j3),norder,nr(j3)
+      common/ cst141 /depnu(j4,j3),denth(j3,3),iddeps(j4,j3),norder,
+     *                nr(j3)
 
       integer length,iblank,icom
       character chars*1
@@ -11764,7 +11840,7 @@ c                                 format test line
       read (n9,'(a)') new
 
       if (new.ne.'670'.and.new.ne.'011'.and.new.ne.'008'.and.
-     *    new.ne.'672') call error (3,zt,im,new)
+     *    new.ne.'672'.and.new.ne.'673') call error (3,zt,im,new)
 
       do 
 c                                 -------------------------------------
@@ -12492,7 +12568,8 @@ c--------------------------------------------------------------------------
 
       integer iddeps,norder,nr 
       double precision depnu,denth
-      common/ cst141 /depnu(j4,j3),denth(j3),iddeps(j4,j3),norder,nr(j3)
+      common/ cst141 /depnu(j4,j3),denth(j3,3),iddeps(j4,j3),norder,
+     *                nr(j3)
 
       double precision qmult, d0, dcoef, scoef      
       common/ cxt1r /qmult(m10,h9),d0(m11,m10,h9),dcoef(m0,m11,m10,h9),

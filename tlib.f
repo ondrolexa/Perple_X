@@ -17,7 +17,7 @@ c----------------------------------------------------------------------
       implicit none
 
       write (*,'(/,a)') 
-     *      'Perple_X version 6.7.2, source updated April 12, 2016.'
+     *      'Perple_X version 6.7.3, source updated April 20, 2016.'
 
       end
 
@@ -2785,7 +2785,7 @@ c----------------------------------------------------------------------
 
       integer ibeg, iend, len, ier, iscan, i, nreact, iopt
 
-      double precision rnum
+      double precision rnum, nums(m3)
 
       character tname*8, name*8, rec*240, tag*3
 
@@ -2866,9 +2866,14 @@ c                                 now the dqf
          if (ier.ne.0) goto 90
 c                                 echo data for ctransf/actcor 
          if (iopt.gt.3) write (n8,'(240a1)') (chars(i),i=1,len)
+c                                 read the DQF coefficients
+         ibeg = 1
+         call redlpt (nums,ibeg,iend,len,ier) 
+         if (ier.ne.0) goto 90
 
-         write (rec,'(240a1)') chars
-         read (rec,*) mdqf(nmak,1),mdqf(nmak,2),mdqf(nmak,3)
+         do i = 1, m3 
+            mdqf(nmak,i) = nums(i)
+         end do 
 c                                 start next make definition
          call readcd (n2,len,ier)
          write (rec,'(240a1)') chars
@@ -3103,10 +3108,12 @@ c                                 find backslash
       iback = iscan (ibeg,iend,'/') - 1
 c                                 two cases:
       if (iback.ge.iend) then
+       
+         iback = iscan(ibeg,iend,' ') - 1
 c                                 no fraction
-         if (iend-ibeg+1.gt.30) goto 90
+         if (iback-ibeg+1.gt.30) goto 90
 c                                 simple number
-         write (num,'(30a)') (chars(i),i=ibeg,iend)
+         write (num,'(30a)') (chars(i),i=ibeg,iback)
          read (num,*,err=90) rnum
 
       else 
@@ -5623,3 +5630,102 @@ c subprogram to filter blanks from text
       end do 
  
       end
+
+      subroutine redlpt (coeffs,ibeg,iend,len,ier)
+c----------------------------------------------------------------------
+c redlpt - read coefficients of a linear p-t function:
+
+c                f = c0 + c1 T + c2 P
+
+c from chars array. 
+
+c on input
+
+c    ibeg - the first possible location of the data
+c    len  - the last possible location of the data
+
+c assumes one of two formats:
+
+c    c0 c1 c2
+
+c or
+
+c    c0 +/- ci Tag ....
+
+c where the first character of a < 9 character Tag is used to identify P or T coefficients
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer i, ibeg, iend, len, ier, iscan, iscnlt, itag
+
+      double precision coeffs(3)
+
+      external iscan, iscnlt
+
+      integer length,iblank,icom
+      character chars*1
+      common/ cst51 /length,iblank,icom,chars(240)
+c----------------------------------------------------------------------
+      do i = 2, 3
+         coeffs(i) = 0d0
+      end do 
+c                                 scan for an equals sign from ibeg
+      iend = iscan (ibeg,len,'=') + 1
+      if (iend.lt.len) ibeg = iend
+c                                 get the first number
+      ibeg = iscnlt (ibeg,len,' ') 
+
+      call readfr (coeffs(1),ibeg,iend,len,ier)
+      if (ier.ne.0.or.iend+1.ge.len) return
+
+      ibeg = iend + 1
+      itag = ibeg
+c                                 try reading as though no tags 
+c                                 are present (pre-6.7.3)
+      do i = 2, 3
+
+         call readfr (coeffs(i),ibeg,iend,len,ier)
+         if (ier.ne.0) exit
+
+      end do 
+
+      if (ier.eq.0) return
+
+      do i = 2, 3
+         coeffs(i) = 0d0
+      end do 
+c                                 if an error, numbs/tags must be present
+c                                 locate the number
+      ibeg = itag
+      iend = iscan (ibeg,len,' ') 
+c                                 locate the first character of the tag
+      itag = iend + 1
+
+      if (chars(itag).eq.'T'.or.chars(itag).eq.'t') then
+         i = 2
+      else if (chars(itag).eq.'P'.or.chars(itag).eq.'p') then
+c                                 must be c2, but check for invalid tag
+         i = 3
+      else 
+         ier = 1
+         return
+      end if 
+c                                 read the number
+      call readfr (coeffs(i),ibeg,iend,len,ier)
+c                                 the next number, if present begins at
+      ibeg = iscan (itag,len,' ') + 1
+      iend = iscan (ibeg,len,' ')
+
+      if (ier.ne.0.or.iend.ge.len) return 
+c                                 swap indexes
+      if (i.eq.2) then 
+          i = 3
+       else 
+          i = 2
+      end if 
+c                                 read the second tag
+      call readfr (coeffs(i),ibeg,iend,len,ier)
+
+      end 

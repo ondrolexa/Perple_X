@@ -25,32 +25,32 @@ c   this subroutine reads part of the H&P data
       integer       index, igst, igen, isst, isen, ivst, iven
       integer       ihptov(19),i,inen,nst,j,inst,icomp,ilam,itype
 c     hp ind      1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 
-      data ihptov/4,7,3,9,2,8,6,1,5,13,14,15,12,19,10,11,18,16,17/
+      data ihptov/4,7,3,9,2,8,6,1,5,13,14,15,12,19,10,11,18,16,17/                2016
       data catoms/3.,2.,5.,3.,3.,2.,3.,2.,2.,2.,3.,2.,2.,3.,3.,2.,5.,2.,
      *            0./
 
 c component indices in hp vs ver:
 
-c                    hp          ver
-c na2o               4            1
-c mgo                7            2
-c al2o3              3            3
-c sio2               9            4
-c k2o                2            5
-c cao                8            6
-c tio2               6            7
-c mno                1            8
-c feo                5            9
-c nio                15           10
-c zro2               16           11
-c cl2                13           12
-c o2                 10           13
-c h2o                11           14
-c co2                12           15
-c cuo                18           16
-c cr2o3              19           17 
-c s2                 17           18
-c electron           14           19
+c                    hp'10?       ver      hp'16 (622)
+c na2o               4            1        8
+c mgo                7            2        5
+c al2o3              3            3        3 
+c sio2               9            4        1
+c k2o                2            5        9
+c cao                8            6        7
+c tio2               6            7        2
+c mno                1            8        6
+c feo                5            9        4
+c nio                15           10       15
+c zro2               16           11       16
+c cl2                13           12       13
+c o2                 10           13       10
+c h2o                11           14       11
+c co2                12           15       12
+c cuo                18           16       18
+c cr2o3              19           17       19 
+c s2                 17           18       17
+c electron           14           19       14 
 
 1000  format(132a1)
 2000  format(a8,4(i2),' H= ',g13.7)

@@ -1,6 +1,12 @@
 c----------------------------------------------------------------------
 c rewrite 2010 is a program to rewrite *ver.dat thermodynami data files
 c from before May 2010 to the current format.
+
+c to run this code you must temporarily modify perplex_parameters such that:
+
+c k5 = max number of components in the data base (<=k0)
+c m7 = number of parameters in a transition (was formerly m7 = 12)
+
 c----------------------------------------------------------------------
 
       implicit none
@@ -222,7 +228,7 @@ c                          with a blank 1st character
 1010     format (a,i2,i2,i2,i2,a)
          read (n2,1010) names(1),ieos,ikind,ilam,idiso,com          
          read (n2,*,iostat=ier) (cp(i,1), i= 1, icmpn), 
-     *                          (thermo(i,1), i= 1, k14)
+     *                          (thermo(i,1), i= 1, 18)
 
          if (ier.ne.0) exit 
          if (ilam.ne.0) then
@@ -452,7 +458,7 @@ c                               read number of data base comps
       read (n2,*,err=90) icmpn
 c                               read component names.
       read (n2,1180,err=90) (cmpnt(i), i = 1, icmpn)
-c                               component atomic wts.
+c                               component atomic wts. 
       read (n2,*,err=90) (atwt(i), i = 1, icmpn)
 c                               read pointers for water and co2 cmpnt.  
 c                               if data file doesn't contain water
@@ -526,7 +532,7 @@ c                                 read and echo unformatted comments and make da
 1000  format (3(a8,18x))
 1010  format (i2)
 1030  format (6(g12.6,1x))
-1180  format (6(a5,1X)/6(a5,1X))
+1180  format (6(a5,1X)/6(a5,1X)/6(a5,1X))
 9010  format (10(i2,1x))
 9020  format (8(g9.2,1x))
 9030  format (i2,1x,8(g12.6,1x))
