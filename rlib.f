@@ -12810,10 +12810,10 @@ c                                special case 3, bin-tern reciprocal solution
          write (names(iphct),1060) tname,
      *                              idint(1d2*z(1,1)),
      *                             (idint(1d2*z(2,j)), j = 1, 2)
-      else if (istg(im).eq.2.and.mstot(im).eq.9) then
+c      else if (istg(im).eq.2.and.mstot(im).eq.9) then
 c                                special case 4, tern-tern reciprocal solution
-         write (names(iphct),1010) (idint(1d2*z(1,j)), j = 1, 2),
-     *                             (idint(1d2*z(2,j)), j = 1, 2)
+c         write (names(iphct),1010) (idint(1d2*z(1,j)), j = 1, 2),
+c     *                             (idint(1d2*z(2,j)), j = 1, 2)
       else if (mstot(im).eq.2) then 
 c                                binary solutions
          if (pa(1).gt.0.9999d0) then 

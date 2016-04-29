@@ -17,6 +17,7 @@ c   this subroutine reads part of the H&P data
 
       character     text(132)*1, name*8, cnum*80, gnum*80, twod*80 
       character     snum*80, vnum*80
+      logical aq
       double precision rnum, comp(19), rgib, g, reas, s, reav,sfe,
      *                 tr,b1,b5,b6,b7,b8,dsf,atoms,l4,l5,l6,
      *                 catoms(19),patoms,lam,kp,kpp,dkdt
@@ -197,8 +198,10 @@ c   fortran way
 
       dkdt = 0d0
       itype = 8
+      aq = .false.
 
       if(lam.gt.0) then
+
          backspace(9)
          read(9,*) newa, k298, kp, kpp, lam, 
      *             l1, l2, l3
@@ -212,6 +215,15 @@ c                             distinguish type by landau entropy
             write (*,*) 'bragg ',name
             lam = 2
          end if 
+
+      else if (lam.eq.-1) then 
+c                             aqueous species
+            aq = .true.
+            backspace (9)
+            read(9,*) newa, k298, kp, kpp, lam, c
+            lam = 0
+
+
       else if (lam.lt.0.or.name.eq.'lcL') then 
 c                             hp98 style eos
          backspace(9)
@@ -237,9 +249,13 @@ c                             hp98 style eos
        b6 = k298*1d3
        b7 = kpp/1d3
 
-       if (dkdt.ne.0d0) then 
+       if (aq) then 
+      
+       b5 = 0 
+       else if (dkdt.ne.0d0) then 
 c                                    dkdt
        b5 = dkdt*1000.
+       
        else 
 c                                    debye T
        b5 = 10636./(s/atoms+6.44)
@@ -248,7 +264,11 @@ c                                     type flag
 c                                      0 - old
 c                                      1 - new
 c                                      2 - ideal gas
-      if (b8.eq.0d0) itype = 1
+      if (aq) then
+         itype = 14 
+      else if (b8.eq.0d0) then
+         itype = 1
+      end if 
 
        write (10,2000) name,itype,0,ilam,0,g
 c                                    convert hp H to G
@@ -291,18 +311,24 @@ c        s2
 
        if (patoms.ne.atoms) then 
           write (*,*) 'correct stoich of:',name
-          write (10,*) 'correct stoich of:',name
+c          write (10,*) 'correct stoich of:',name
        end if 
 
        write (10,2001) (comp(j),j=1,icomp)
+
+       if (aq) then 
+       write (10,2002) g,s,v,c,b,-comp(19),
+     *                 0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.
+       else 
        write (10,2002) g,s,v,a,b,c,0.,e,0.,0.,b1,0.,0.,0.,b5,b6,b7,b8
+       end if 
       if (lam.eq.1d0) then
          write (10,2002) l1,l2*1d3,l3,0.,0.,0.,0.,0.,0.,0.
       else if (lam.eq.2) then 
          write (10,2002) l1*1d3,l2,l3*1d3,l4,l5,l6,0.,0.,0.,0.
       end if 
 
-       do i = 1, icomp
+       do i = 1, 19
           comp(i) = 0.
        end do 
 

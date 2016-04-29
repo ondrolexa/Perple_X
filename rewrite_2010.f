@@ -292,7 +292,7 @@ c                                 read uncertainties for MC calculations
       end if 
 
 
-      if (ieos.eq.8.or.ieos.eq.9) then 
+      if (ieos.eq.8.or.ieos.eq.9.or.ieos.eq.14) then 
          eos(1) = ieos
       else if (ieos.lt.100) then 
          eos(1) = 0 
@@ -324,49 +324,46 @@ c   2    - Standard (USGS 1452, JANAF)
 c   3    - Helgeson et al. AJS 1978
 c   4    - Holland & Powell JMet 1998
 
-      if (eos(1).ne.8.and.eos(1).ne.9) then 
-      if (thermo(3,1).lt.0d0) then 
+      if (eos(1).ne.8.and.eos(1).ne.9.and.eos(1).ne.14) then 
+         if (thermo(3,1).lt.0d0) then 
 c                              negative "volume" signals one of the 
 c                              stixrude EoS's, for these EoS's "s" is
 c                              +/-n - number of atoms pfu.
-        if (thermo(2,1).gt.0d0) then
+            if (thermo(2,1).gt.0d0) then
 
-           eos(1) = 5
+               eos(1) = 5
 c                              stixrude & bukowinski JGR '93
 c            n = s
 
-         else
+            else
 
-           eos(1) = 6
+                eos(1) = 6
 c                              stixrude & lithgow-bertelloni GJI '05
 c           n = -s
 
-         end if 
+            end if 
 
-      else if (thermo(18,1).eq.0d0) then
+         else if (thermo(18,1).eq.0d0) then
 
-         eos(1) = 1
+            eos(1) = 1
 c                              normal polynomial vdp term:
+         else
 
-      else
-
-         if (ieos.lt.100) then
-            if (thermo(16,1).eq.0d0) then
-               eos(1) = 3
-            else if (thermo(18,1).ge.3d0) then
-               eos(1) = 2
+            if (ieos.lt.100) then
+               if (thermo(16,1).eq.0d0) then
+                    eos(1) = 3
+               else if (thermo(18,1).ge.3d0) then
+                    eos(1) = 2
 c                              convert from k = k0 + b7*T
 c                              back to k = ktr + b7*(T-Tr)
-               thermo(16,1) = thermo(16,1) + 298.15*thermo(17,1)
-            else if (thermo(18,1).le.3d0) then
-               eos(1) = 4
-            else 
-               eos(1) = 7
+                    thermo(16,1) = thermo(16,1) + 298.15*thermo(17,1)
+               else if (thermo(18,1).le.3d0) then
+                    eos(1) = 4
+               else 
+                    eos(1) = 7
+               end if
             end if
-
-         end if
-
-      end if 
+         end if 
       end if 
 
       end

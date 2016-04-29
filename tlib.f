@@ -17,7 +17,7 @@ c----------------------------------------------------------------------
       implicit none
 
       write (*,'(/,a)') 
-     *      'Perple_X version 6.7.3, source updated April 20, 2016.'
+     *      'Perple_X version 6.7.3, source updated April 29, 2016.'
 
       end
 
@@ -3614,6 +3614,14 @@ c                                 fluid eos species
 c----------------------------------------------------------------------
 c read phase data from the thermodynamic data file from lun N2, assumes
 c topn2 has read the header section of the file.
+
+c cycles past aqueous species data for all programs other than 
+
+c    frendly  5
+c    ctransf  6
+c    actcor   9
+c    rewrite 10
+
 c----------------------------------------------------------------------
       implicit none
  
@@ -3638,6 +3646,9 @@ c----------------------------------------------------------------------
       integer ikind,icmpn,icout,ieos
       double precision comp,tot
       common/ cst43 /comp(k0),tot,icout(k0),ikind,icmpn,ieos
+
+      integer iam
+      common/ cst4 /iam
 c----------------------------------------------------------------------
       eof = .false.
 
@@ -3686,6 +3697,11 @@ c                                 component is in the phase.
                end if 
             end do
          end if
+
+         if (ieos.eq.15.and.iam.ne.5
+     *                 .and.iam.ne.6
+     *                 .and.iam.ne.9
+     *                 .and.iam.ne.10) cycle
  
          exit 
 
@@ -5680,7 +5696,7 @@ c                                 get the first number
       call readfr (coeffs(1),ibeg,iend,len,ier)
       if (ier.ne.0.or.iend+1.ge.len) return
 
-      ibeg = iend + 1
+      ibeg = iend + 2
       itag = ibeg
 c                                 try reading as though no tags 
 c                                 are present (pre-6.7.3)
