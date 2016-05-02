@@ -1448,6 +1448,9 @@ c-----------------------------------------------------------------------
 
       integer jend
       common/ cxt23 /jend(h9,k12)
+
+      integer eos
+      common/ cst303 /eos(k10)
 c----------------------------------------------------------------------
       open (n2,file='swash.dat')
 
@@ -1465,6 +1468,7 @@ c                              initialize parameters
          jdis = 0
          klam = 0
          names(k10) = names(jd)  
+         eos(k10) = eos(jd)
  
          do i = 1, k4
             thermo(i,k10) = 0d0
@@ -1566,7 +1570,7 @@ c                                  b1-b8 (skips b3)
      *               thermo(15,k10),thermo(16,k10),thermo(17,k10),
      *               thermo(18,k10),
 c                                 ref-stuff
-     *               tr,pr)
+     *               tr,pr,eos(k10))
 c                                 output the data
 c                                 this needs to be corrected so
 c                                 that the output data is in thermo

@@ -266,7 +266,7 @@ begin_model
 
                                   Ti-Biotite model after White, Powell & Holland (JMG, 2007)
 
-                                  Model entered by Lucie Tajcamanova, May 11, 2007. 
+                                  Model entered by Lucie Tajcmanova, May 11, 2007. 
 
                                   DQF corrections to annite added, Mark Caddick, Nov, 2007.
 
@@ -2854,7 +2854,22 @@ z(mg) = 1 tr
 end_of_model                    
                       --------------------------------------------------------
 begin_model                
-                                      See notes for TrTsPg (above).
+                                      tr-ts-parg non-ideal model for
+                                      holland and powell. assumes 2 M2 sites are 
+                                      coupled to 4 T1 sites. site multiplicity 
+                                      of the T1 site is reduced to 2, this is 
+                                      suggested by HP98 to account for charge 
+                                      balance constraints. but doesn't make a lot
+                                      of sense for the tr-parg mixing. assume
+                                      Na on the A-site is coupled to Al on M2.
+
+                                      JADC Nov, 98. 
+
+                                      HP Am Min 99, 84:1-14
+                                      Oli Jagoutz revised april 9, 2002
+
+                                      in contrast to the earlier version of TrTsPg
+                                      this version assumes the A site is decoupled from M2
  
                                       JADC 4/03. 
 
@@ -2910,7 +2925,7 @@ W(tr ftr)   10d3 0. 0.
                             | W(tr ts)    38000. 0. 0.  
 end_excess_function
 
-5                          | 5 site (A, M1, M2, M4, T1) entropu model 
+5                          | 5 site (A, M1, M2, M4, T1) entropy model 
 
 2 1.                       | 2 species on A (V, Na), 1 site per formula unit.
 z(A,Na) = 1 parg  
@@ -4667,7 +4682,7 @@ begin_model
 
                                   Ca-Fe2+-Mg-Al-Fe3+ Garnet model after White, Powell & Holland (JMG, 2007, 25:511-527)
 
-                                  Model entered by Lucie Tajcamanova, May 11, 2007.
+                                  Model entered by Lucie Tajcmanova, May 11, 2007.
 
                                   w(alm py) value and reference corrected, Thomas Wagner, June 22, 2007.
 
@@ -4676,7 +4691,7 @@ begin_model
 
                                   Deleted the unused kho_i interaction term, JADC, Nov 07.
 
-                                  alphas and w's updated to current TC values, Lucie Tajcamanova, April 14, 2010. 
+                                  alphas and w's updated to current TC values, Lucie Tajcmanova, April 14, 2010. 
 
                                   NOTE: the more recent Smye et al. (2011) models [Mica(SGH),  Carp(SGH), and 
                                   Ctd(SGH)]are calibrated in terms of the Gt(WPPH) model for garnet. JADC, Oct 27, 2011.
@@ -6512,7 +6527,7 @@ begin_model
                                       4 pnt           Mn                Ti  
                                       5 geik          Mg                Ti       
                                                            
-                                  Model entered by Lucie Tajcamanova, Apr 14, 2008.                         
+                                  Model entered by Lucie Tajcmanova, Apr 14, 2008.                         
                             
                                   NOTES:
                                   
@@ -7187,10 +7202,7 @@ fgl_i   = 1 gl   + 3/5 ftr  - 3/5 tr
 0. 1.0 0.1 0               | range and resolution for X(pg) on site 2 
 0. 1.0 0.1 0               | range and resolution for X(ts) on site 2
 
-begin_excess_function
-W(mrie gl)    0d3 0. 0. 
-W(mrie tr)    0d3 0. 0. 
-W(mrie ftr)   0d3 0. 0.  
+begin_excess_function 
 W(gl tr)     77d3 0. 0. 
 W(gl ftr)    83d3 0. 0. 
 W(ts tr)     20d3 0. 0. 

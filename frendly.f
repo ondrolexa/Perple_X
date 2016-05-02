@@ -574,15 +574,18 @@ c                                 third variable?
 
             if (table) then 
 
-               jpot = 3
-
                write (*,1010) vname(iv(3))
                read (*,'(a)') y
 c
                if (y.eq.'y'.or.y.eq.'Y') then
+c                                 setting jpot = 3 will cause plotting programs 
+c                                 to crash. 
+                  jpot = 3
+
                   write (*,1000) vname(iv(3))
                   read (*,*,iostat=ier) vmin(iv(3)),vmax(iv(3)),
      *                                  dv(iv(3)) 
+
                end if 
   
             else 
@@ -692,8 +695,6 @@ c                                  plot blurb
             call plblrb (2)
 
          end if   
-c                                 write version flag
-c        write (n4,'(a)') '|6.6.6'
 c                                 query for title
          write (*,'(/,a)') 'Enter calculation title:'
          read (*,'(a)') title
@@ -704,8 +705,8 @@ c                                 write file headers
 c                                 terminal info on variables
 c        write (*,1090)
 c        write (*,'(80(a14,1x))') (vname(iv(i)),i=1,jpot),tags
-         
-         write (n4,'(a)') title 
+c                                 write version flag       
+         write (n4,'(a,/,a)') '|6.6.6',title 
          write (n4,*) jpot
 
          do i = 1, jpot
@@ -733,8 +734,9 @@ c        write (*,'(80(a14,1x))') (vname(iv(i)),i=1,jpot),tags
 
 1000  format ('Enter minimum, maximum, and increment for 'a,':')
 1010  format (/,'Make the table also a function of ',a,' (y/n)?',//,
-     *       'WARNING: the resulting 3d table cannot be plotted ',
-     *       'with current Perple_X',/,'programs or scripts',/)
+     *       'WARNING: if you answer yes, then the resulting 3d table ',
+     *       'cannot be plotted ',/,
+     *       'with current Perple_X programs or scripts.',/)
 1020  format (/,'Generate a plot file (y/n)?')
 1030  format (/,'Select the dependent path variable:',/)
 1040  format (/,'Profile must be described by the function',/,a,
@@ -1236,6 +1238,9 @@ c---------------------------------------------------------------------
 
       character*2 strgs*3, mstrg, dstrg, tstrg*3, wstrg*3
       common/ cst56 /strgs(32),mstrg(6),dstrg(m8),tstrg(11),wstrg(m16)
+
+      integer eos
+      common/ cst303 /eos(k10)
 c-----------------------------------------------------------------------
       write (*,1110)
       read (*,1050) y
@@ -1280,7 +1285,7 @@ c                                 b1-b8 (skips b3)
      *            thermo(15,id),thermo(16,id),thermo(17,id),
      *            thermo(18,id),
 c                                 ref stuff
-     *            tr,pr)
+     *            tr,pr,eos(id))
 c                                 add in activity correction
             thermo(1,k10) = thermo(1,id)
             thermo(2,k10) = thermo(2,id)
@@ -1424,7 +1429,7 @@ c                                 b1-b8 (skips b3)
      *            thermo(15,id),thermo(16,id),thermo(17,id),
      *            thermo(18,id),
 c                                 ref stuff
-     *            tr,pr)
+     *            tr,pr,eos(id))
 
 c                                 add in activity correction
             thermo(1,k10) = thermo(1,id)
@@ -1542,7 +1547,7 @@ c                                 b1-b8 (skips b3)
      *            thermo(15,id),thermo(16,id),thermo(17,id),
      *            thermo(18,id),
 c                                 ref stuff
-     *            tr,pr)
+     *            tr,pr,eos(id))
 
                   write (*,1040) names(id)
                   read (*,1050) names(id)
@@ -1906,12 +1911,18 @@ c-----------------------------------------------------------------------
       if (first) then
 
          call eohead (n2)
+
          call smakcp (inames,mnames)
+
          first = .false.
+
          call eohead (n2)
+
          do i = 1, l2
             iv(i) = i
          end do
+
+         if (icmpn.gt.k5) write (*,3020) k5
 
       end if 
 
@@ -1932,7 +1943,6 @@ c                                 component pointers
       if (icmpn.gt.k5) then
          icomp = k5
          jcmpn = k5
-         write (*,3020) k5
       end if 
 c                               list database phases:
       write (*,1030)
@@ -2233,7 +2243,7 @@ c                               data file to allow writing:
 3000  format (t30,'composition',/,' phase',4x,12(a5,1x))
 3010  format (1x,a8,1x,12(f5.2,1x))
 3020  format (/,'too many components, only first ',i2,
-     *          ' will be listed.',/)
+     *          ' are listed.',/)
 4020  format ('Calculate thermodynamic properties for phase: ')
 4030  format ('Enter phase or species number ',i2,
      *       ' in your reaction: ')

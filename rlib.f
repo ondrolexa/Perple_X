@@ -239,10 +239,10 @@ c---------------------------------------------------------------------
       double precision ialpha, vt, trv, pth, vdp, ndu, vdpbm3, gsixtr, 
      *                 gstxgi, fs2, fo2, kt, gval, gmake, gkomab, kp,
      *                 a, b, c, gstxlq, glacaz, v1, v2, gmet, gterm2, 
-     *                 km, kmk, hsfch4
+     *                 km, kmk, hsfch4, gaq
 
       external vdpbm3, gsixtr, gstxgi, gmake, gkomab, gstxlq, glacaz, 
-     *                 hsfch4, gmet, gterm2
+     *         gaq,    hsfch4, gmet, gterm2
 
       integer ltyp,lct,lmda,idis
       common/ cst204 /ltyp(k10),lct(k10),lmda(k10),idis(k10)
@@ -294,38 +294,37 @@ c---------------------------------------------------------------------
 c                                 the phase is a made phase, compute 
 c                                 and sum the component g's.
          gval = gmake (id)
-
          goto 999
 
       else if (eos(id).eq.5) then
 c                                 sixtrude 05 JGR EoS 
          gval = gsixtr (id)
-         
          goto 999
 
       else if (eos(id).eq.6) then
 c                                 stixrude JGI '05 Eos
          gval = gstxgi (id) 
-
          goto 999
          
       else if (eos(id).eq.11) then
 c                                 stixrude EPSL '09 Liquid Eos
          gval = gstxlq (id) 
-
          goto 999
 
       else if (eos(id).eq.12) then
 c                                read SGTE data and evaluate EOS after Brosh '07,'08
          gval = gmet (id)
-
          goto 999
 
       else if (eos(id).eq.14) then
 c                                read SGTE data and evaluate EOS after Brosh'07,'08
 c                                (modified for liquid carbon)
          gval = gterm2 (id)
+         goto 999
 
+      else if (eos(id).eq.15) then 
+
+         gval = gaq (id)
          goto 999
 
       end if 
@@ -766,8 +765,8 @@ c---------------------------------------------------------------------
       integer ieos
 
       double precision g,s,v,a,b,c,d,e,f,gg,c8,b1,b2,b3,b4,b5,b6,b7,b8,
-     *                 b9,b10,b11,b12,b13,tr,pr,n,v0,k00,k0p,
-     *                 gamma0,q0,etas0,g0,g0p,r,c1,c2
+     *                 b9,b10,b11,b12,b13,tr,pr,n,v0,k00,k0p, dadt0,
+     *                 gamma0,q0,etas0,g0,g0p,r,c1,c2, alpha0, beta0
 
       double precision emodu
       common/ cst318 /emodu(k15)
@@ -776,6 +775,9 @@ c---------------------------------------------------------------------
       logical lopt
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
+c                                constants for anderson electrolyte extrapolation
+      save alpha0, beta0, dadt0
+      data alpha0, beta0, dadt0 /25.93d-5,45.23d-6,9.5714d-6/
 c----------------------------------------------------------------------
 c                                first conditional reformulates and returns for eos:
 c                                      1, 5, 6, 11, 12, 101, 102
@@ -918,6 +920,18 @@ c                                b2 = ln(v0)
 
       else if (ieos.eq.12.or.ieos.eq.14) then 
 c                                 calphad format, don't do anything.
+         return 
+
+      else if (ieos.eq.15) then 
+c                                 aqueous species, rearrange constants
+c                                 and load into thermo(10-14) => (gg,c8,b1,b2,b3)
+         gg = -s + tr*b + (a - b*tr)/tr/dadt0*alpha0
+         b1 =  (a - b*tr)/tr/dadt0  
+         b2 = -b/2d0
+         b3 = tr*(s - b/2d0*tr) + g - pr*v 
+     *        + (a-b*tr)/tr/dadt0*(beta0*pr-alpha0*tr)  
+         b4 = v - (a-b*tr)/tr/dadt0*beta0
+
          return 
 c                                 remaining standard forms have caloric polynomial
       else if (ieos.lt.120.or.ieos.eq.604.or.ieos.eq.605.or.
@@ -2274,7 +2288,7 @@ c                                 range, refine iv increment.
       end
 
       subroutine unver (g,s,v,a,b,c,d,e,f,gg,c8,
-     *                  b1,b2,b4,b5,b6,b7,b8,tr,pr)
+     *                  b1,b2,b4,b5,b6,b7,b8,tr,pr,ieos)
 c----------------------------------------------------------------------
 c convert thermodynamic equation of state from a 0-0 reference state
 c to a pr-tr reference state.
@@ -2284,14 +2298,17 @@ c June 16, 2004.
 c----------------------------------------------------------------------
       implicit none
 
+      integer ieos
+
       include 'perplex_parameters.h'
 
       double precision v,gg,a,b,c,d,e,f,g,b1,b2,b4,b5,b6,b7,b8,pr,tr,s,
      *                 c8
 c----------------------------------------------------------------------
-c                               Stixrude's EoS, exit without
+c                               Stixrude's EoS, Aq, CALPHAD exit without
 c                               doing anything
-      if (v.lt.0d0) return
+      if (ieos.eq. 5.or.ieos.eq. 6.or.ieos.eq.11.or.ieos.eq.12.or.
+     *    ieos.eq.14) return
 
       c8 = 12d0 * c8
       gg = 6d0 * gg
@@ -2576,6 +2593,9 @@ c---------------------------------------------------------------------
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
+
+      integer eos
+      common/ cst303 /eos(k10)
 c-----------------------------------------------------------------------
       if (ltyp(id).eq.0) return
 
@@ -2657,7 +2677,7 @@ c                                 dummies
      *                  z(2),z(3),z(5),
      *                  z(6),z(7),z(8),z(9),
 c                                 ref stuff
-     *                  tm(1,i),pr) 
+     *                  tm(1,i),pr,eos(id)) 
 
             tm(3,i) = s0 + tm(3,i)
 
@@ -4035,6 +4055,74 @@ c                                 adiabatic shear modulus
 
       end 
       
+      double precision function gaq (id)
+c-----------------------------------------------------------------------
+c gaq computes apparent G for aqueous species with the Anderson et al. 
+c (GCA 1991) density model as extended by Holland & Powell (JMG 1998)
+c and modified to account for P-Pr integration.  
+
+c parameters, 0 indicates property at Tr,Pr:
+
+c t10 := -s0+Tr*b0+(-Tr*b0+c0)/Tr/dadt0*alpha0;
+c t11 := (-Tr*b0+c0)/Tr/dadt0;
+c t12 := -1/2*b0;
+c t13 := Tr*s0+g0-pr*v0-1/2*b0*Tr^2+(-Tr*b0+c0)/Tr/dadt0*(-Tr*alpha0+beta0*pr);
+c t14 := v0-(-Tr*b0+c0)/Tr/dadt0*beta0;
+
+c vh2o = water volume
+c vh2o0 = water volume
+c alpha0 = water expansivity
+c beta0 = water compressibility
+c dadT0 = temperature derivative of alpha
+c-----------------------------------------------------------------------
+      implicit none
+ 
+      include 'perplex_parameters.h'
+
+      integer id
+
+      double precision vh2o, vh2o0, fh2o, tp, alpha0, beta0, dadt0,
+     * g0,g2,s0,v0,c0,b0,h0,cstar
+ 
+      double precision thermo, uf, us
+      common/ cst1 /thermo(k4,k10),uf(2),us(h5)
+
+      double precision p,t,xco2,u1,u2,tr,pr,r,ps
+      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
+
+      save vh2o0
+      data vh2o0/18.7231148995863/
+
+      save alpha0, beta0, dadt0
+      data alpha0, beta0, dadt0 /25.93d-5,45.23d-6,9.5714d-6/
+c----------------------------------------------------------------------
+c                                 compare to last p-t, to save expensive
+c                                 calls to the h2o eos.
+      call pseos (vh2o,fh2o,1)
+c                                 tp instead of t is a h-p innovation
+      if (t.lt.500d0) then 
+         tp = t 
+      else 
+         tp = 500d0
+      end if 
+
+      g0 = thermo(1,id)
+      s0 = thermo(2,id)
+      v0 = thermo(3,id)
+      c0 = thermo(4,id)
+      b0 = thermo(5,id)
+      h0 = g0 + tr*s0
+      cstar = c0 - tr*b0
+      g2 = h0 - t*s0 + (p-pr)*v0 + b0*(tr*t - tr**2/2 - t**2/2) 
+     *     + cstar/tr/dadt0*(alpha0*(t-tr) - beta0*(p-pr) 
+     *     + t/tp * dlog(vh2o0/vh2o))
+
+      gaq = thermo(13,id) 
+     *      + t*(thermo(10,id) + thermo(11,id)*dlog(vh2o0/vh2o)/tp 
+     *         + thermo(12,id)*t) + thermo(14,id)*p 
+
+      end 
+
       double precision function gstxlq (id)
 c-----------------------------------------------------------------------
 c gstxlq computes G from the liquid EoS formulated by Sixtrude et al 2009
@@ -11729,11 +11817,13 @@ c-----------------------------------------------------------------------
 
       integer icoct, i,j,h,im,icky,id,icpct,idsol,ixct
 
-      logical output, first, bad
+      logical output, first, bad, chksol
  
       character*10 tname, uname(2)*8, sname(h9), new*3, tn1*6, tn2*22
 
       double precision zt
+
+      external chksol
 
       integer jsmod
       double precision vlaar
@@ -11838,9 +11928,8 @@ c                                 open pseudocompund list file
       end if 
 c                                 format test line
       read (n9,'(a)') new
-
-      if (new.ne.'670'.and.new.ne.'011'.and.new.ne.'008'.and.
-     *    new.ne.'672'.and.new.ne.'673') call error (3,zt,im,new)
+c                                 check version compatability
+      if (.not.chksol(new)) call error (3,zt,im,new)
 
       do 
 c                                 -------------------------------------

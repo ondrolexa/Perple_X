@@ -17,9 +17,33 @@ c----------------------------------------------------------------------
       implicit none
 
       write (*,'(/,a)') 
-     *      'Perple_X version 6.7.3, source updated April 29, 2016.'
+     *      'Perple_X version 6.7.3, source updated May 2, 2016.'
 
       end
+
+      logical function chksol (new)
+c----------------------------------------------------------------------
+c check that the version flag in the solution model file is consistent.
+c This creates headaches, but is used to prevent old versions of Perple_X 
+c from crashing while reading a new solution model format
+c----------------------------------------------------------------------
+      implicit none
+
+      character*3 new
+
+      if (new.eq.'008'.or.new.eq.'011'.or.new.eq.'670'.or.
+     *    new.eq.'672'.or.new.eq.'673') then 
+
+         chksol = .true.
+
+      else 
+
+         chksol = .false.
+
+      end if 
+
+      end 
+
 
       subroutine redop1 (output,opname)
 c----------------------------------------------------------------------
@@ -1967,9 +1991,9 @@ c---------------------------------------------------------------------
 
 1     format (/,'**error ver001** increase parameter ',a,' to ',i7,' in'
      *       ,' perplex_parameters.h and recompile Perple_X',/)
-3     format (/,'**error ver003** the solution model file is ',
-     *         'in a format that is inconsistent with ',/,
-     *         'this version of Perple_X.',/,'Update the file and/or '
+3     format (/,'**error ver003** the solution model file format ',
+     *         'is inconsistent with',/,
+     *         'this version of Perple_X. Update the file and/or '
      *         'Perple_X',/)
 4     format (/,'**error ver004** you must use ',a,' to analyze this ',
      *        'type of calculation.',/)

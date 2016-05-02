@@ -45,7 +45,10 @@ c-----------------------------------------------------------------------
      *        ict, jvct, jc, ix, jst, ind, loopy, 
      *        loopx, ierr, idsol, isoct, kvct, inames
 
-      logical eof, good, satflu, mobflu, oned, findph, bad, first, feos
+      logical eof, good, satflu, mobflu, oned, findph, bad, first, feos, 
+     *        chksol
+
+      external chksol
 
       double precision c(0:4)
 
@@ -1233,10 +1236,10 @@ c                                 but using the components in a fluid.
 c                                 changed as of 5/31/04, JADC.
             b1 = ' '
             b2 = ' '
-c                                 test file format
+c                                 format test line
             read (n9,*) new
-
-            if (new.eq.'011'.or.new.eq.'670'.or.new.eq.'672') exit 
+c                                 check version compatability
+            if (chksol(new)) exit 
 
             call warn (3,r,i,new)
 

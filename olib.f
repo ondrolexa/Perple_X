@@ -1540,6 +1540,9 @@ c----------------------------------------------------------------------
       integer rooti
       common/ srkdiv /vp(3),vvp(3),rooti(3)
 
+      integer eos
+      common/ cst303 /eos(k10)
+
       save dt
       data dt /.5d0/
 
@@ -1584,7 +1587,13 @@ c                                 molar phase composition
 c                                 an entity with no mass signals that 
 c                                 frendly is using a make definition
 c                                 which corresponds to a balanced reaction
-      if (gtot.eq.0d0) rxn = .true.
+      if (gtot.eq.0d0) then 
+         rxn = .true.
+      else if (id.lt.0) then 
+c                                 properties of an aqueous species, turn
+c                                 off sign-based testing.
+          if (eos(-id).eq.15) rxn = .true.
+      end if 
 
       if (iopt(2).eq.1) then 
 c                                 convert molar phase composition to 
@@ -1643,7 +1652,8 @@ c                                 whole list
       if (rxn) then 
 c                                 use sign of s and v and second derivatives
 c                                 to refine difference increments
-         call getdpt (g0,dp0,dp1,dp2,dt0,dt1,dt2,v,gpp,s,gtt,gpt,id,fow)
+         call getdpt (g0,dp0,dp1,dp2,dt0,dt1,dt2,v,gpp,s,gtt,gpt,id,fow,
+     *                rxn)
 
          e = g0 + t * s
 
@@ -1663,7 +1673,8 @@ c                                  for reactions:
       else 
 c                                 real phase, use sign of s and v and second derivatives
 c                                 to refine difference increments
-         call getdpt (g0,dp0,dp1,dp2,dt0,dt1,dt2,v,gpp,s,gtt,gpt,id,fow)
+         call getdpt (g0,dp0,dp1,dp2,dt0,dt1,dt2,v,gpp,s,gtt,gpt,id,fow,
+     *                rxn)
 c                                 enthalpy
          e = g0 + t * s
 c                                 heat capacity
@@ -1870,7 +1881,7 @@ c                                 bulk is true if bulk modulus is computed therm
 c                                 volume is false only if sick and .not.bulk
 
 c                                 seismic properties
-      if (volume) then
+      if (volume.and..not.rxn) then
 
          if (props(5,jd).gt.0d0.or.fluid(jd)) lshear = .true.
 c                                 sound velocity
@@ -2067,7 +2078,7 @@ c                                 max solid prop
 c                                 check and warn if necessary for negative
 c                                 expansivity
       if (.not.sick(jd).and.v.gt.0d0.and.alpha.le.0d0.and.iwarn1.lt.11
-     *    .and.pname(jd).ne.wname1) then
+     *    .and.pname(jd).ne.wname1.and..not.rxn) then
 
          write (*,1030) t,p,pname(jd)
          iwarn1 = iwarn1 + 1
@@ -2156,11 +2167,14 @@ c                                 solid only totals:
       end
 
       subroutine getdpt (g0,dp0,dp1,dp2,dt0,dt1,dt2,v,gpp,s,gtt,gpt,
-     *                   id,fow)
+     *                   id,fow,rxn)
 c----------------------------------------------------------------------
 c getdpt computes finite difference increments for phase id based on finite
 c difference estimates of v, gpp (dv/dp), s, gtt (ds/dt) and initial guesses 
-c for dp0.  returns:
+c for dp0 and dt0. if rxn = .true. no assumptions can be made about the 
+c sign of s and v and getdpt will use input values of dp0 and dt0.   
+
+c  returns:
 c    v, gpp (dv/dp), s, gtt (ds/dt)  - finite difference estimates
 c    dp0, dp1, dp2 - increments for 1st, 2nd and 3rd order p finite differences
 c    dt0, dt1, dt2 - increments for 1st, 2nd and 3rd order p finite differences
@@ -2170,12 +2184,12 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical fow, okt
+      logical fow, okt, rxn
 
       integer i, j, id
 
       double precision g0, dp0, dp1, dp2, v, gpp, ginc, gpt, gpt1, gpt2,
-     *                 s, gtt, dt0, dt1, dt2, xdp, xdt
+     *                 s, gtt, dt0, dt1, dt2, xdp, xdt, fac
 
       external ginc
 
@@ -2186,130 +2200,158 @@ c----------------------------------------------------------------------
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
+
+      save fac
+      data fac/1d-3/
 c----------------------------------------------------------------------
 c                                 pressure increments
-      okt = .false.
+      if (.not.rxn) then 
 
-      xdp = dp0
-      xdt = dt0
+         okt = .false.
 
-      do i = 1, 2
+         xdp = dp0
+         xdt = dt0
 
-         do j = 1, 3 
+         do i = 1, 2
 
-            call getgpp (g0,dp0,dp1,dp2,v,gpp,id,fow)
+            do j = 1, 3 
 
-            if (v.gt.0d0.and.gpp.lt.0d0.and.gpp.gt.-v) then
-               okt = .true.
-               exit
-            end if 
+               call getgpp (g0,dp0,dp1,dp2,v,gpp,id,fow)
 
-            if (i.eq.1) then 
-               dp0 = dp0 * nopt(31)
-            else 
-               dp0 = dp0 / nopt(31)
-            end if 
+               if (v.gt.0d0.and.gpp.lt.0d0.and.gpp.gt.-v) then
+                  okt = .true.
+                  exit
+               end if 
+
+               if (i.eq.1) then 
+                  dp0 = dp0 * nopt(31)
+               else 
+                  dp0 = dp0 / nopt(31)
+               end if 
  
-         end do 
+            end do 
 
-         if (okt) exit
+            if (okt) exit
 
-         dp0 = dp0/nopt(31)**4
+            dp0 = dp0/nopt(31)**4
 
-      end do
+         end do
 
-      if (okt) then 
-         dp0 = dabs(1d-5*v/gpp)
-      else 
+         if (okt) then 
+            dp0 = dabs(fac*v/gpp)
+         else 
 c                                 negative compressibility?
-         dp0 = xdp
-      end if 
+            dp0 = xdp
+         end if
+
+      else 
+
+         call getgpp (g0,dp0,dp1,dp2,v,gpp,id,fow)
+         dp0 = dabs(fac*v/gpp)
+
+      end if  
 c                                 final values
       call getgpp (g0,dp0,dp1,dp2,v,gpp,id,fow)
 c                                 -------------------------------------
 c                                 temperature increments
-      okt = .false.
+      if (.not.rxn) then 
 
-      do i = 1, 2
+         okt = .false.
 
-         do j = 1, 3
+         do i = 1, 2
 
-            call getgtt (g0,dt0,dt1,dt2,s,gtt,id)
+            do j = 1, 3
 
-            if (s.gt.0d0.and.gtt.lt.0) then
-                 okt = .true.
-                 exit 
-            end if 
+               call getgtt (g0,dt0,dt1,dt2,s,gtt,id)
 
-            if (i.eq.1) then 
-               dt0 = dt0 * nopt(31)
-               if (dt0.gt.t) exit 
-            else
-                dt0 = dt0 / nopt(31)
-            end if 
+               if (s.gt.0d0.and.gtt.lt.0) then
+                    okt = .true.
+                    exit 
+               end if 
 
-         end do 
+               if (i.eq.1) then 
+                  dt0 = dt0 * nopt(31)
+                  if (dt0.gt.t) exit 
+               else
+                  dt0 = dt0 / nopt(31)
+               end if 
 
-         if (okt) exit
+            end do 
 
-         dt0 = dt0/nopt(31)**4
+            if (okt) exit
 
-      end do
+            dt0 = dt0/nopt(31)**4
 
-      if (okt) then 
-         dt0 = dabs(1d-5*s/gtt)
-      else 
+         end do
+
+         if (okt) then 
+            dt0 = dabs(fac*s/gtt)
+         else 
 c                                 something has gone horribly wrong! 
-         dt0 = xdt
-      end if 
+            dt0 = xdt
+         end if
+
+      else 
+
+         call getgtt (g0,dt0,dt1,dt2,s,gtt,id)
+         dt0 = dabs(fac*s/gtt)  
+
+      end if  
 c                                 final values
       call getgtt (g0,dt0,dt1,dt2,s,gtt,id)
 
-      if (v.gt.0d0) then 
+      if (v.gt.0d0.or.rxn) then 
 c                                 get the cross derivative gpt for expansivity
          if (fow) then 
 
             gpt = ( ginc( dt1,dp1,id) - ginc( dt1,0d0,id)
      *             -ginc(-dt1,dp1,id) + ginc(-dt1,0d0,id))/dt1/dp1/2d0
 
-            if (gpt.gt.v.or.gpt.le.0d0)
+            if (.not.rxn) then 
+
+               if (gpt.gt.v.or.gpt.le.0d0)
 c                                 expand increment if invalid alpha
-     *         gpt = ( ginc( dt2,dp2,id) - ginc( dt2,0d0,id)
-     *                -ginc(-dt2,dp2,id) + ginc(-dt2,0d0,id))
-     *                /dp2/dt2/2d0
+     *            gpt = ( ginc( dt2,dp2,id) - ginc( dt2,0d0,id)
+     *                   -ginc(-dt2,dp2,id) + ginc(-dt2,0d0,id))
+     *                   /dp2/dt2/2d0
 
                if (gpt.gt.v.or.gpt.le.0d0)
 c                                 shrink increment if invalid alpha
      *            gpt = ( ginc( dt0,dp0,id) - ginc( dt0,0d0,id)
      *                   -ginc(-dt0,dp0,id) + ginc(-dt0,0d0,id))
      *                  /dp0/dt0/2d0
+            end if 
 
          else
 
             gpt = ( ginc( dt1,dp1,id) - ginc( dt1,-dp1,id)
      *             -ginc(-dt1,dp1,id) + ginc(-dt1,-dp1,id))/dt1/dp1/4d0
 
-            if (gpt.gt.v.or.gpt.le.0d0) then 
+            if (.not.rxn) then 
+
+               if (gpt.gt.v.or.gpt.le.0d0) then 
 c                                 expand increment if invalid alpha
-               gpt1 = ( ginc( dt2,dp2,id) - ginc( dt2,-dp2,id)
-     *                - ginc(-dt2,dp2,id) 
-     *                     + ginc(-dt2,-dp2,id))/dp2/dt2/4d0
+                  gpt1 = ( ginc( dt2,dp2,id) - ginc( dt2,-dp2,id)
+     *                   - ginc(-dt2,dp2,id) 
+     *                        + ginc(-dt2,-dp2,id))/dp2/dt2/4d0
 
-               if (gpt1.gt.v.or.gpt1.le.0d0) then
+                  if (gpt1.gt.v.or.gpt1.le.0d0) then
 c                                 shrink increment if invalid alpha
-                  gpt2 = ( ginc( dt0,dp0,id) - ginc( dt0,-dp0,id)
-     *                    -ginc(-dt0,dp0,id) + ginc(-dt0,-dp0,id))
-     *                     /dp0/dt0/4d0
+                     gpt2 = ( ginc( dt0,dp0,id) - ginc( dt0,-dp0,id)
+     *                       -ginc(-dt0,dp0,id) + ginc(-dt0,-dp0,id))
+     *                        /dp0/dt0/4d0
 
-                  if (gpt2.lt.v.and.gpt2.ge.0d0) then 
-                     gpt = gpt2
-                  end if 
+                     if (gpt2.lt.v.and.gpt2.ge.0d0) then 
+                        gpt = gpt2
+                     end if 
 
-               else 
+                  else 
 
-                  gpt = gpt1
+                     gpt = gpt1
 
-               end if 
+                  end if
+
+               end if  
 
             end if  
 
