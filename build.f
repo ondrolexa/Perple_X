@@ -1696,12 +1696,14 @@ c                                 diagrams:
      *        'set to ',i3,' and ',i3,' points for the exploratory ',
      *        'and autorefine cycles.')
 3110  format (/,'**warning ver110** in this mode Perple_X  will not che'
-     *        'ck whether conditions are',/,'supersaturated with respe',
-     *        'ct to mobile components.',/,'To compute surfaces either:'
+     *        'ck whether conditions are',//,'supersaturated with resp',
+     *        'ect to mobile components.',//,
+     *        'To compute saturation surfaces:'
      *     ,/,'  1) use convex hull optimization and do not use ',
-     *        'activities fugacities as independent variables',/,
-     *        '  2) compute the saturation surface with FLUIDS or ',
-     *        'FRENDLY',/)
+     *        'activities or fugacities as',/,
+              '     independent variables',/,
+     *        '  2) or compute the saturation surface with FLUIDS or ',
+     *        'FRENDLY.',/)
 3111  format (/,'**warning ver111** in this mode Perple_X  will fail if'
      *        'the minimum value of a chemical',/,'potential is above ',
      *        'its saturation value, if such a problem emerges lower ',/
