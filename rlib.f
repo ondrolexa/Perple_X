@@ -239,10 +239,10 @@ c---------------------------------------------------------------------
       double precision ialpha, vt, trv, pth, vdp, ndu, vdpbm3, gsixtr, 
      *                 gstxgi, fs2, fo2, kt, gval, gmake, gkomab, kp,
      *                 a, b, c, gstxlq, glacaz, v1, v2, gmet, gterm2, 
-     *                 km, kmk, hsfch4, gaq
+     *                 km, kmk, hsfch4, gaq, ghkf
 
       external vdpbm3, gsixtr, gstxgi, gmake, gkomab, gstxlq, glacaz, 
-     *         gaq,    hsfch4, gmet, gterm2
+     *         gaq,    hsfch4, gmet, gterm2, ghkf
 
       integer ltyp,lct,lmda,idis
       common/ cst204 /ltyp(k10),lct(k10),lmda(k10),idis(k10)
@@ -323,8 +323,13 @@ c                                (modified for liquid carbon)
          goto 999
 
       else if (eos(id).eq.15) then 
-
+c                                Anderson density extrapolation aqueous species EoS
          gval = gaq (id)
+         goto 999
+
+      else if (eos(id).eq.16) then 
+c                                DEW/HKF aqueous species formulation
+         gval = ghkf (id)
          goto 999
 
       end if 
@@ -766,7 +771,8 @@ c---------------------------------------------------------------------
 
       double precision g,s,v,a,b,c,d,e,f,gg,c8,b1,b2,b3,b4,b5,b6,b7,b8,
      *                 b9,b10,b11,b12,b13,tr,pr,n,v0,k00,k0p, dadt0,
-     *                 gamma0,q0,etas0,g0,g0p,r,c1,c2, alpha0, beta0
+     *                 gamma0,q0,etas0,g0,g0p,r,c1,c2, alpha0, beta0, 
+     *                 yr,w,theta,psi,epsr
 
       double precision emodu
       common/ cst318 /emodu(k15)
@@ -775,9 +781,12 @@ c---------------------------------------------------------------------
       logical lopt
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
-c                                constants for anderson electrolyte extrapolation
+c                                constants for anderson electrolyte extrapolation (ieos = 15)
       save alpha0, beta0, dadt0
       data alpha0, beta0, dadt0 /25.93d-5,45.23d-6,9.5714d-6/
+c                                constants for hkf electrolyte formulation (ieos = 16)
+      save psi, theta, epsr, yr
+      data psi, theta, epsr, yr/2600d0, 228d0, 78.47d0, -5.79865d-5/
 c----------------------------------------------------------------------
 c                                first conditional reformulates and returns for eos:
 c                                      1, 5, 6, 11, 12, 101, 102
@@ -923,7 +932,7 @@ c                                 calphad format, don't do anything.
          return 
 
       else if (ieos.eq.15) then 
-c                                 aqueous species, rearrange constants
+c                                 H&P aqueous species, rearrange constants
 c                                 and load into thermo(10-14) => (gg,c8,b1,b2,b3)
          gg = -s + tr*b + (a - b*tr)/tr/dadt0*alpha0
          b1 =  (a - b*tr)/tr/dadt0  
@@ -931,6 +940,31 @@ c                                 and load into thermo(10-14) => (gg,c8,b1,b2,b3
          b3 = tr*(s - b/2d0*tr) + g - pr*v 
      *        + (a-b*tr)/tr/dadt0*(beta0*pr-alpha0*tr)  
          b4 = v - (a-b*tr)/tr/dadt0*beta0
+
+         return 
+ 
+      else if (ieos.eq.16) then 
+c                                 DEW/HKF aqueous species
+c                                 psi, theta, epsr, yr are generic parameters. 
+c                                 coming in HKF species parameters loaded as:
+c                                 g, s, v,   a, b, c,  d,   e,  f, gg, b1
+c                                 and correspond to (HKF notation):
+c                                 g, s, v, cp0, w, a1, a2, a3, a4, c1, c2
+c                                 the compound constants on output will be 
+c        b2 = -s + c1*dlog(tr) + c1 + w*yr + dlog(tr/(tr-theta))*c2/theta**2 => b8 in HKF_G.mws
+         b2 = -s + gg*dlog(tr) + gg + w*yr 
+     *            + dlog(tr/(tr-theta))*b1/theta**2
+c        b3 = (-w*yr-c1+s)*tr + (-1/epsilonr+1)*w - a1*pr - a2*ln(psi+pr) + g + c2/theta => b9
+         b3 = (-b*yr-gg+s)*tr + (-1d0/epsr+1d0)*b - c*pr -d*dlog(psi+pr) 
+     *                         + g + b1/theta
+c        b4 = -a3*pr-a4*ln(psi+pr) => b10
+         b4 = -e*pr - f*dlog(psi+pr)
+c        b5 = -c2/(tr-theta)/theta => b11
+         b5 = -b1/(tr-theta)/theta
+c        b6 = c2/theta^2 => b12
+         b6 = b1/theta**2
+c        b7 = -c1-c2/theta^2
+         b7 = -(gg+b6)
 
          return 
 c                                 remaining standard forms have caloric polynomial
@@ -1457,7 +1491,7 @@ c                                 and exit:
 
             if (i.eq.1) then
 c                                 T<T lowest transition, ignore
-c                                 possibility of < clapeyron slope
+c                                 possibility of < 0 clapeyron slope
 c                                 and exit:
                 return
              else
@@ -1501,10 +1535,7 @@ c                                 the 1 bar polymorph isn't stable.
 
       subroutine calpht (t,g,ld,lct)
 c---------------------------------------------------------------------
-c     calculate the extra energy of a lamdba transition using model
-c     of helgeson et al 1978 (AJS).
- 
-c     there is something seriously wrong in this routine!!!!
+c     calculate the extra energy of a standard cp transition.
  
 c     input variables
 
@@ -3082,8 +3113,9 @@ c----------------------------------------------------------------------
       character chars*1
       common/ cst51 /length,iblank,icom,chars(240)
 
-      character*2 strgs*3, mstrg, dstrg, tstrg*3, wstrg*3
-      common/ cst56 /strgs(32),mstrg(6),dstrg(m8),tstrg(11),wstrg(m16)
+      character*2 strgs*3, mstrg, dstrg, tstrg*3, wstrg*3, e16st*3
+      common/ cst56 /strgs(32),mstrg(6),dstrg(m8),tstrg(11),wstrg(m16),
+     *               e16st(12)
 c----------------------------------------------------------------------
 
       iterm = 0 
@@ -4054,7 +4086,156 @@ c                                 adiabatic shear modulus
      *        ' Phase ',a,' will be destabilized.',/)
 
       end 
-      
+
+      double precision function ghkf (id)
+c-----------------------------------------------------------------------
+c ghkf computes apparent G for aqueous species HKF formulation
+c-----------------------------------------------------------------------
+      implicit none 
+
+      include 'perplex_parameters.h'
+
+      integer id
+
+      double precision epsilon, ft, fp, omega, psi, theta
+
+      double precision p,t,xco2,u1,u2,tr,pr,r,ps
+      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
+
+      double precision thermo, uf, us
+      common/ cst1 /thermo(k4,k10),uf(2),us(h5)
+
+      save psi, theta
+      data psi, theta/2600d0, 228d0/
+c-----------------------------------------------------------------------
+      ft = t - theta
+      fp = dlog(psi+p)
+c                                 hi p approximation (omega -> omegar)
+      omega = thermo(5,id)
+
+c     ghkf = (b8+b12*ln(ft)+b13*ln(t))*t+b11*ft+a1*p+a2*fp+b9-omega+omega/epsilon+(a3*p+a4*fp+b10)/ft
+
+      ghkf = thermo(13,id) + (thermo(12,id) + thermo(16,id)*dlog(ft) 
+     *                                      + thermo(17,id)*dlog(t))*t 
+     *     + thermo(15,id)*ft 
+     *     + thermo(6,id)*p + thermo(7,id)*fp 
+     *     + (thermo(8,id)*p + thermo(9,id)*fp + thermo(14,id))/ft
+     *     + omega*(1d0/epsilon - 1d0) 
+
+      end 
+
+      double precision function epsh2o (v)
+c----------------------------------------------------------------------
+c Sverjenski 2014 dielectic constant for pure water, v is the molar 
+c volume of water in j/bar [HKF_epsilon.mws].
+c----------------------------------------------------------------------
+      implicit none 
+
+      double precision v
+
+      double precision p,t,xco2,u1,u2,tr,pr,r,ps
+      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
+
+
+      epsh2o = dexp(-0.8016651D-4 * t + 0.4769870482D1 - 0.6871618D-1 * 
+     *         dsqrt(t - 0.27315D3)) * (0.1801526833D1 / v) ** 
+     *         (-0.1576377D-2 * t + 0.1185462878D1 + 0.6810288D-1 * 
+     *         dsqrt(t - 0.27315D3))
+
+      end 
+
+
+      double precision function duah2o (fug)
+c----------------------------------------------------------------------
+c Duan 2005 pure water volume of water in j/bar [HKF_duan_h2o.mws].
+c---------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      double precision prt,b,c,d,e,f,g,expg,gamm,v,vi,veq,dveq,fug,dv
+
+      integer it, iwarn
+
+      double precision p,t,xco2,u1,u2,tr,pr,r,ps
+      common/ cst5  /p,t,xco2,u1,u2,tr,pr,r,ps
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      save iwarn
+      data iwarn/0/
+c---------------------------------------------------------------------
+c                                 CORK volume guess and backup fugacity
+      call crkh2o (p,t,v,fug)
+
+      prt = p/r/t
+      it = 0
+
+      gamm = 1.05999998e-02
+
+      b = 1.957197778 - 6821674.863d0/t**2 + 3047984261d0/t**3
+      c = 3.531471196 + 9821873.173d0/t**2 - 7411448875d0/t**3
+      d = 16.71639581 - 6007496.747d0/t**2 + .1540316803d11/t**3
+      e = -4.611555959 + 11372008.36d0/t**2 - .136192675d11/t**3
+      f = -2033.267066d0 / t
+      g = -0.002765323035d0 * t
+c                                 iteration loop for volume
+      do 
+
+         vi = 1d0/v
+
+         expg = dexp(-gamm/v/v)
+c                                 p(v)/rt
+         veq = -vi - b*vi**2 + (-f*expg-c)*vi**3 + (-g*expg-d)*vi**5 
+     *             - e*vi**6
+c                                 diff(veq,v)
+         dveq = -veq*vi + b*vi**3 + 2d0*(f*expg+c)*vi**4  
+     *           + (-2d0*f*expg*gamm + 4d0*g*expg + 4d0*d)*vi**6 
+     *           + 5d0*e*vi**7 - 2d0*g*expg*gamm*vi**8
+
+         dv = -(prt + veq)/dveq
+
+         if (dv.lt.0d0.and.v+dv.lt.0d0) then 
+
+            v = v*0.8d0
+
+         else 
+
+            v = v + dv
+
+         end if 
+
+         if (dabs(dv/v).lt.nopt(5)) then
+
+            exit
+          
+         else if (v.lt.0d0.or.it.gt.iopt(21)) then
+c                                 use cork fugacities
+            iwarn = iwarn + 1
+
+            if (iwarn.le.50) then 
+               write (*,1000) p,t,v
+               if (iwarn.eq.50) call warn (49,p,93,'DUAH2O')
+            end if 
+
+            exit 
+
+         end if 
+
+         it = it + 1
+
+      end do 
+
+      duah2o = v
+
+1000  format (/,'**warning ver093** DUAH2O did not converge at:',
+     *        3(1x,g12.6))
+
+      end 
+
       double precision function gaq (id)
 c-----------------------------------------------------------------------
 c gaq computes apparent G for aqueous species with the Anderson et al. 
@@ -13646,7 +13827,9 @@ c----------------------------------------------------------------------
 
       integer id
 
-      double precision gval, dg, vdp, ndu
+      double precision gval, dg, vdp, ndu, tc, b, pee, gmags
+
+      external gmags
 
       integer eos
       common/ cst303 /eos(k10)
@@ -13667,7 +13850,7 @@ c                                 ubc-type transitions
  
          else if (ltyp(id).eq.2) then
 c                                 standard transitions
-                call lamhel (p,t,gval,vdp,lmda(id),lct(id))
+            call lamhel (p,t,gval,vdp,lmda(id),lct(id))
 
          else if (ltyp(id).eq.3) then
 c                                 supcrt q/coe lambda transition
@@ -13691,6 +13874,14 @@ c                                 putnis landau model as implemented in hp98
 c                                 holland and powell bragg-williams model
             call lambw (dg,lmda(id))
             gval = gval + dg
+
+         else if (ltyp(id).eq.7) then
+c                                 George's Hillert & Jarl magnetic transition model
+            if (lct(id).gt.1) write(0,*)'**>1 type = 7 trans.!?'
+            tc = therlm(1,1,lmda(id))
+            b = therlm(2,1,lmda(id))
+            pee = therlm(3,1,lmda(id))
+            gval = gval + gmags (tc,b,pee)
 
          else 
 

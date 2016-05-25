@@ -3577,8 +3577,9 @@ c                                 interval limits conformal transformation
       double precision yint, yfrc
       common/ cst47 /yint(5,ms1,mst,h9),yfrc(4,ms1,mst,h9),intv(4)
 
-      character*2 strgs*3, mstrg, dstrg, tstrg*3, wstrg*3
-      common/ cst56 /strgs(32),mstrg(6),dstrg(m8),tstrg(11),wstrg(m16)
+      character*2 strgs*3, mstrg, dstrg, tstrg*3, wstrg*3, e16st*3
+      common/ cst56 /strgs(32),mstrg(6),dstrg(m8),tstrg(11),wstrg(m16),
+     *               e16st(12)
 
       character*80 com
       common/delet/com 
@@ -3621,6 +3622,8 @@ c                                 tags for thermo data i/o
       data dstrg/'d1','d2','d3','d4','d5','d6','d7','d8','d9'/
       data tstrg/'t1 ','t2 ','t3 ','t4 ','t5 ','t6 ','t7 ','t8 ','t9 ',
      *           't10','t11'/
+      data e16st/'G0 ','S0 ','V0 ','Cp0','w ','q ','a1 ','a2 ','a3 ',
+     *           'a4 ','c1 ','c2 '/
 c     data estrg/'eG0','eS0','eV0','ec1','ec2','ec3','ec4','ec5','ec6',
 c    *           'ec7','eb1','eb2','eb3','eb4','eb5','eb6','eb7','eb8'/
 c                                 tags for interaction coefficients (Redlich-Kister polynomial)
@@ -3721,8 +3724,10 @@ c                                 component is in the phase.
                end if 
             end do
          end if
-
-         if (ieos.eq.15.and.iam.ne.5
+c                                 exclude aqueous species from
+c                                 FEM routines.
+         if (ieos.eq.15.or.ieos.eq.16
+     *                 .and.iam.ne.5
      *                 .and.iam.ne.6
      *                 .and.iam.ne.9
      *                 .and.iam.ne.10) cycle
@@ -3767,8 +3772,9 @@ c----------------------------------------------------------------------
       double precision thermo, uf, us
       common/ cst1 /thermo(k4,k10),uf(2),us(h5)
 
-      character*2 strgs*3, mstrg, dstrg, tstrg*3, wstrg*3
-      common/ cst56 /strgs(32),mstrg(6),dstrg(m8),tstrg(11),wstrg(m16)
+      character*2 strgs*3, mstrg, dstrg, tstrg*3, wstrg*3, e16st*3
+      common/ cst56 /strgs(32),mstrg(6),dstrg(m8),tstrg(11),wstrg(m16),
+     *               e16st(12)
 
       save ic2p
       data ic2p/0,0,22,1,2,3,4,5,6,7,12,13,14,15,16,17,18,19,20,21,8,
@@ -3861,9 +3867,31 @@ c                                 shift pointer to next key
 c                                 assign data
             ok = .false.
 c                                 =====================================
-c                                 simple thermo data 
-            if (ieos.ne.12.and.ieos.ne.14) then
+c                                 thermo data 
+            if (ieos.eq.12.and.ieos.eq.14) then
+c                                 calphad format
+               do i = 1, 32
+                  if (key.eq.strgs(i)) then 
+                     read (values,*,iostat=ier) thermo(ic2p(i),k10)
+                     if (ier.ne.0) call error (23,tot,ier,key) 
+                     ok = .true.
+                     exit 
+                  end if 
+               end do
 
+            else if (ieos.eq.16) then 
+c                                 DEW/HKF aqueous data
+               do i = 1, 12
+                  if (key.eq.e16st(i)) then 
+                     read (values,*,iostat=ier) thermo(i,k10)
+                     if (ier.ne.0) call error (23,tot,ier,key) 
+                     ok = .true.
+                     exit 
+                  end if 
+               end do
+
+            else 
+c                                 generic thermo data 
                do i = 1, 21
                   if (key.eq.strgs(i)) then 
                      read (values,*,iostat=ier) thermo(i,k10)
@@ -3872,17 +3900,6 @@ c                                 simple thermo data
                      exit 
                   end if 
                end do 
-
-            else 
-c                                 calphad format
-               do i = 1, 32
-                  if (key.eq.strgs(i)) then 
-                     read (values,*,iostat=ier) thermo(ic2p(i),k10)
-                     if (ier.ne.0) call error (23,tot,ier,strg) 
-                     ok = .true.
-                     exit 
-                  end if 
-               end do
 
             end if 
  
@@ -4195,8 +4212,9 @@ c----------------------------------------------------------------------
       character*80 com
       common/delet/com 
 
-      character*2 strgs*3, mstrg, dstrg, tstrg*3, wstrg*3
-      common/ cst56 /strgs(32),mstrg(6),dstrg(m8),tstrg(11),wstrg(m16)
+      character*2 strgs*3, mstrg, dstrg, tstrg*3, wstrg*3, e16st*3
+      common/ cst56 /strgs(32),mstrg(6),dstrg(m8),tstrg(11),wstrg(m16),
+     *               e16st(12)
 c-----------------------------------------------------------------------
 c                                 =====================================
 c                                 name & EoS
@@ -4344,16 +4362,28 @@ c----------------------------------------------------------------------
 
       character strg*(*), text(14)*1
 
-      integer i, ibeg, iend, len, len0 
+      integer i, ibeg, iend, len, len0, jend
 
       integer length,iblank,icom
       character chars*1
       common/ cst51 /length,iblank,icom,chars(240)
 
       if (num.ne.0d0) then 
-
+c                                 pad with a left blank, if not at line begining
+         if (ibeg.gt.1) then
+            chars(ibeg) = ' '
+            ibeg = ibeg + 1
+         end if 
          iend = ibeg + len - 1
          read (strg,'(14a1)') (chars(i),i=ibeg,iend)
+c                                 trim out trailing blanks
+         jend = ibeg
+         do i = ibeg + 1, iend
+            if (chars(i).eq.' ') cycle
+            jend = jend + 1
+         end do          
+         iend = jend
+
          chars(iend+1) = ' '
          chars(iend+2) = '='
          chars(iend+3) = ' '

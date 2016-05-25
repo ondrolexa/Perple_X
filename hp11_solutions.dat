@@ -1,5 +1,50 @@
 673 DO NOT DELETE THIS LINE
-                      -------------------------------------------------------------------------------------------
+                      --------------------------------------------------------
+begin_model                         
+                                      holland and powell '11 non-ideal cz-fep solution
+
+                                      entered by Pierre-Henri Trapy, May 16, 2016
+
+                                                      M1      M3     
+                                                     _____________
+
+                                      Mutliplicity    1       1
+                                                     _____________
+
+                                      1 cz            Al      Al       
+                            Species:  2 fep           Fe      Fe      
+                                                      _____________
+
+                        Ordered Cpd:  3 ep            Al      Fe    
+
+Ep(HP11)
+6                          | model type: Margules, speciation           
+2                          | 2 endmembers
+cz       fep               | endmember names 
+
+1                          | ordered species definition
+
+ep = 1/2 fep + 1/2 cz Delta(enthalpy) = -12.5d3     
+ 
+0 0 0                      | endmember flags
+0. 1. 0.1  0               | range and resolution for X(cz), imod = 0 -> cartesian subdivision
+
+begin_excess_function 
+w(cz fep) 3d3 0. 0. 
+w(fep ep) 1d3 0. 0.
+w(cz ep) 1d3 0. 0. 
+end_excess_function
+
+2                          | 2 site (M1, M3) configurational entropy model
+
+2 1.                       | 2 species on M1, 1 site per formula unit.
+z(fe,m1) = 1 fep
+
+2 1.                       | 2 species on M3, 1 site per formula unit.
+z(al,m3) = 1 cz 
+
+end_of_model               
+                      --------------------------------------------------------
 begin_model  
                              Jennings and Holland, J Pet, 56:869-892, 2015
                              Mantle Melt Model, intended for pressures of 0-60 GPa
@@ -160,16 +205,16 @@ z(q)  = 1 qjL
 z(ek) = 1 ekjL
 
 end_of_model
-                      --------------------------------------------------------         
+                      --------------------------------------------------------
 begin_model      
                              Jennings and Holland, J Pet, 56:869-892, 2015
                              Mantle Melt Model, intended for pressures of 0-60 GPa
 
-                             Pierre Bouilhol & JADC, 12/16/15                                           
+                             Pierre Bouilhol & JADC, 12/16/15
 O(JH) 
 abbreviation Ol
 full_name    olivine 
-                                                                              
+
 2                                     model type: Margules, macroscopic
 2                                     2 endmembers
 fo       fa            
@@ -200,7 +245,6 @@ begin_model
                              configurational entropy site fractions.
 
                              Oliver Shorttle, 3/18/16
-
 
 Sp(JH)                      
 abbreviation Sp
@@ -239,12 +283,13 @@ begin_model
                              Jennings and Holland, J Pet, 56:869-892, 2015
                              Mantle Melt Model, intended for pressures of 0-60 GPa
 
-                             Pierre Bouilhol & JADC, 12/16/15 
-Pl(JH)                                       
+                             Pierre Bouilhol & JADC, 12/16/15
+
+Pl(JH)
 abbreviation Pl
 full_name    binary-feldspar
 
-2                          | model type: Margules or Ideal                                     
+2                          | model type: Margules or Ideal
 2                          | 2 endmembers  
 abh      an      
   1  0                     | endmember flags
@@ -290,7 +335,7 @@ begin_model
                                        alm           Fe      Al     
                                        py            Mg      Al     
                                        gr            Ca      Al          
-                                                      ____________    
+
 Grt(JH)
 abbreviation Gt
 full_name    garnet
@@ -372,6 +417,7 @@ begin_model
                                                       _____________
 
                            Internal:    opx           Mg      Fe2+       
+
 Opx(JH)
 abbreviation Opx
 full_name    orthopyroxene 
@@ -392,7 +438,7 @@ cren    crfs   odicr
 opx = 1/2 en + 1/2  fs  Delta(enthalpy) = -6d3          
 
 begin_limits
-opx =     - 2 fs - 1 opx                delta = 2 z(M2,Fe)       
+opx =     - 2 fs - 1 opx                delta = 2 z(M2,Fe)
 opx =  -2 + 2 fs + 1 opx                delta = 2 z(M1,Fe)
 opx =     - 2 en - 1 opx                delta = 2 z(M1,Mg)
 end_limits   
@@ -692,8 +738,8 @@ z(x,ca) = 1 gr
 2 2.                                  |2 species, site multiplicity 2
 z(y,al) = 1 spss + 1 alm + 1 py + 1 gr
 
-begin_van_laar_sizes                        
-alpha(py)       1.0    0.    0.                      
+begin_van_laar_sizes
+alpha(py)       1.0    0.    0.
 alpha(alm)      1.0    0.    0.
 alpha(gr)       2.7    0.    0.
 alpha(kho1)     1.0    0.    0.
@@ -701,9 +747,9 @@ alpha(spss)     1.0    0.    0.
 end_van_laar_sizes
 
 end_of_model   
-                              --------------------------------------------------------             
-begin_model                   
-            
+                              --------------------------------------------------------
+begin_model
+
                                       Melt, White et al., JMG 32:261-286, 2014. 
 
                                       JADC 4/14
@@ -754,7 +800,7 @@ melt(W)
 
 8                                     number of endmembers
                                  
-                                    | ENDMEMBER NAMES:                               
+                                    | ENDMEMBER NAMES:
 
 h2oL                                | Because this model uses an internal routine to compute the
                                     | entropy of the melt h2oL must be the specified as the first
@@ -837,19 +883,19 @@ begin_model
                                                      ___________________________________
 
                                       1 mu            K       Al      Al    AlSi    _
-                                      2 pa            Na      Al      Al    AlSi    _      
+                                      2 pa            Na      Al      Al    AlSi    _
                                       3 ma1_dqf       Ca      Al      Al    AlAl    _
-                                      4 cel           K       Mg      Al    SiSi    _                                      
+                                      4 cel           K       Mg      Al    SiSi    _
                                       5 fcel          K       Fe      Al    SiSi    _
                                       6 fmu           K       Al      Fe3+  AlSi    _
 
 
-Mica(W)                    
+Mica(W) 
 2                            | model type: macroscopic.
 
 6                            | 6 endmembers
 
-mu pa ma1_dqf cel fmu fcel        
+mu pa ma1_dqf cel fmu fcel
 
 0 0 0 0 0 0 0 0              | endmember flags
                    
@@ -918,7 +964,7 @@ begin_model
 
                              JADC, 4/14
 
-Ctd(W)                                                                                
+Ctd(W)
 2                          | model type: Ideal or Margules
 3                          | 3 endmembers 
 ctdo    fctd     mctd                 
@@ -943,11 +989,11 @@ z(Fe) = 1 fctd
 2 0.5                                2 species on M1a, site multiplicity = 0.5
 z(Fe3) = 1 ctdo
 
-end_of_model               
-                      --------------------------------------------------------	
-begin_model                
+end_of_model
+                      --------------------------------------------------------
+begin_model
                              Ti-Fe-Fe3-Mg-Mn Staurolite, White et al., JMG 32:261-286, 2014. 
-                                                                  
+
                              This model requires the make definitions:
 
                              msto   = 1 andr  -1 gr  + 1 mst  
@@ -964,15 +1010,14 @@ begin_model
                              mnst added, vacancy on Al site disassociated 
                              from Ti, by Felix Gervais.  JADC, 1/26/2014
 
-St(W)                     
-                                                            
+St(W)
 2                                     model type: Ideal or Margules
 5                                     5 endmembers 
 
-mstt   msto    fst    mnst   mst   
+mstt   msto    fst    mnst   mst 
 
   0  0  0  0  0            | endmember flags
-              
+
 0. 0.1 0.1 1               | range and resolution for X(Ti),  imod = 1 -> asymmetric transform subdivision
 0. 0.1 0.1 1               | range and resolution for X(Fe3), imod = 1 -> asymmetric transform subdivision
 0. 1. 0.1 0                | range and resolution for X(Fe),  imod = 0 -> cartesian subdivision
@@ -1007,9 +1052,9 @@ dqf(mst)  -8000 0 0
 dqf(mnst) -190 0 0                  | corrected from 0.19 by Felix Gervais, 4/9/2015. JADC
 end_dqf_corrections
 
-end_of_model               
+end_of_model
                       --------------------------------------------------------
-begin_model                
+begin_model 
 
                              Fe2+-Fe3+-Mg-Al-Ca Orthopyroxene, White et al., JMG 32:261-286, 2014.  
 
@@ -1068,13 +1113,11 @@ begin_model
                                       mnts  = 1 mgts + 1/2 mnopx - 1/2 en 
                                       mnots = 1 mots + 1/2 mnopx - 1/2 en 
                                       modi  = 1 odi  + 1/2 mnopx - 1/2 en
-                         
                            ----------------------------------------------------
 
 Opx(W)                     | solution name.
 abbreviation Opx
 full_name    orthopyroxene
-
 
 8                          | model type: Reciprocal with speciation
 
@@ -1173,7 +1216,7 @@ end_of_model
                       -------------------------------------------------------
 begin_model
                              NCKAS ternary feldspar Cbar1 ASF, White et al., JMG 32:261-286, 2014.
-                  
+
                              See WARNING in solutions.dat for HP ASF Ternary Feldspar
 
                              added by TJ 4/14
@@ -1214,9 +1257,9 @@ begin_dqf_corrections
 dqf(an) 7030 -4.66 0 
 end_dqf_corrections
 
-end_of_model             
+end_of_model
                       --------------------------------------------------------
-begin_model                         
+begin_model
 
                              BIOTITE model after White et al., JMG 32:261-286, 2014.
 
@@ -1262,8 +1305,6 @@ begin_model
                                                       __________________________
 
                             Ordered:    Obi           Fe      Mg     AlSi   OH
-
-                       
 
 Bi(W)                        | solution name.
 
@@ -1367,9 +1408,9 @@ dqf(ann)  -3000  0 0
 dqf(mnbi) -7890  0 0
 end_dqf_corrections
 
-end_of_model               
-                    -------------------------------------------------------- 
-begin_model                         
+end_of_model
+                    --------------------------------------------------------
+begin_model
 
                              Fe-Mg-F-Cl-OH BIOTITE model, Leonid Aranovich
 
@@ -1515,24 +1556,22 @@ begin_model
                              Ilmenite after White et al., JMG 32:261-286, 2014,
                              modified from White, RW, Powell, R, Holland, TJB & Worley, BA (2000, JMG) with Mn added
 
-                             added by TJ 4/14
-
-                                                      A                B     
+                                                      A                B
                                                      _____________________
 
                                       Mutliplicity    1                1
                                                      _____________________
 
-                                      1 oilm          Fe                Ti       
-                            Species:  2 dilm          FeTi              FeTi   
-                                      3 hem           Fe3+              Fe3+  
-                                      4 pnt           Mn                Ti  
-                                      5 geik          Mg                Ti       
-                                                           
-                                  Model entered by Lucie Tajcamanova, Apr 14, 2008; modified to include geik Ws (TJ).                         
-                            
+                                      1 oilm          Fe                Ti
+                            Species:  2 dilm          FeTi              FeTi
+                                      3 hem           Fe3+              Fe3+
+                                      4 pnt           Mn                Ti
+                                      5 geik          Mg                Ti
+
                                   NOTES:
-                                  
+
+                                  originally entered by L Tajcmanova, April 2008. 
+
                                   Requires that the endmember ilm_nol be created from the endmember ilm
                                   in the thermodynamic data file by eliminating the Landau transition from 
                                   the ilm endmember, additionally the following make definitions must be
@@ -1550,7 +1589,7 @@ begin_model
                                   
                                   The ilm and ilm_nol endmembers should be excluded from calculations
                                   to avoid conflicts with this model.
-                                  
+
                                                                        JADC, Oct 29, 2011.
 
                                   Added W(pnt oilm). Felix Gervais, Oct 29, 2011. 
@@ -1558,6 +1597,8 @@ begin_model
                                   Corrected to count Ti in A-site configurational entropy. JADC, Jun 16, 2013. 
 
                                   Make definitions corrected from the raw thermocalc versions. JADC, Jun 19, 2013.
+
+                                  H&P 2011 version added by TJ 4/14
 
                                   Excess terms updated, Felix Gervais, Jan 28, 2015.
 
@@ -1682,7 +1723,6 @@ begin_model
 
                             Modified JADC model entered by Tim Johnson, 7 April 2014.
 
-
                                                       1      2      3           
                                                       M3     M456   T     
                                                      _________________
@@ -1702,10 +1742,10 @@ begin_model
                                       Dependent endmember:
 
                                       FeMg-1_M3456 = (fspr-spro)/3
- 
+
                                       fsp5_d = spr5 +  fspr - spro
                                       fospro_d = spr5 +  fspr - spro
-                                      
+
 Sa(WP)
 
 8                            | model type: reciprocal, margules with dependent endmembers, one ordering parameter
@@ -1772,7 +1812,7 @@ z(T,si) = 1 spr4 + 1 fspr + 1 spro
 
 begin_dqf_corrections
 dqf(fspr)   -2d3 0. 0.
-end_dqf_corrections      
+end_dqf_corrections
 
-end_of_model               
-                      -------------------------------------------------------- 		 
+end_of_model
+                      --------------------------------------------------------

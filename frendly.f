@@ -1236,8 +1236,9 @@ c---------------------------------------------------------------------
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 
-      character*2 strgs*3, mstrg, dstrg, tstrg*3, wstrg*3
-      common/ cst56 /strgs(32),mstrg(6),dstrg(m8),tstrg(11),wstrg(m16)
+      character*2 strgs*3, mstrg, dstrg, tstrg*3, wstrg*3, e16st*3
+      common/ cst56 /strgs(32),mstrg(6),dstrg(m8),tstrg(11),wstrg(m16),
+     *               e16st(12)
 
       integer eos
       common/ cst303 /eos(k10)
@@ -1675,8 +1676,9 @@ c----------------------------------------------------------------------
       double precision thermo,uf,us
       common/ cst1 /thermo(k4,k10),uf(2),us(h5)    
 
-      character*2 strgs*3, mstrg, dstrg, tstrg*3, wstrg*3
-      common/ cst56 /strgs(32),mstrg(6),dstrg(m8),tstrg(11),wstrg(m16)
+      character*2 strgs*3, mstrg, dstrg, tstrg*3, wstrg*3, e16st*3
+      common/ cst56 /strgs(32),mstrg(6),dstrg(m8),tstrg(11),wstrg(m16),
+     *               e16st(12)
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
