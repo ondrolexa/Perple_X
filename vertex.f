@@ -375,7 +375,7 @@ c                                 lpopt does the minimization and outputs
 c                                 the results to the print file.
             call lpopt (1,j,idead,output)
 c                                 fractionate the composition:
-            if (idead.eq.0) call fractr (output)
+            call fractr (idead,output)
 
          end do 
 
@@ -448,11 +448,8 @@ c                                 lpopt does the minimization and outputs
 c                                 the results to the print file.
                call lpopt (1,j,idead,output)
 c                                 fractionate the composition:
-               if (idead.eq.0) then
-                  call fractr (output)
-               else
-                  write (*,1030) (vname(jv(i)),v(jv(i)), i = 1, ipot)
-               end if 
+               call fractr (idead,output)
+ 
             end do 
 
          end if 
@@ -474,7 +471,6 @@ c                                 close fractionation data files
 1010  format (1x,a,1x,g14.6)
 1020  format (/,'Enter molar amounts of the components to be added ',
      *        '(ordered as above:')
-1030  format (/,'optimization failed at:',//,5(1x,a8,'=',g12.6))
 1050  format (a)
 1060  format (/,'Modify composition (y/n)?')
 1070  format (/,'Enter (zeroes to quit) ',7(a,1x))
@@ -663,7 +659,7 @@ c                                 the results to the print file.
 
             call lpopt (j,k,idead,output)
 
-            call fractr (output)
+            call fractr (idead,output)
 c                                 at this point we've computed the stable
 c                                 assemblage at each point in our column
 c                                 and could do mass transfer, etc etc 
@@ -7318,7 +7314,7 @@ c                                 for true boundaries.
      
       end  
 
-      subroutine fractr (output)  
+      subroutine fractr (idead,output)  
 c-----------------------------------------------------------------------
       implicit none
 
@@ -7326,9 +7322,11 @@ c-----------------------------------------------------------------------
  
       character gname*10
 
-      integer i,j,k
+      external gname
 
-      logical there, warn, output
+      integer i,j,k,idead
+
+      logical there(k5), warn, output
  
       character*8 vname,xname
       common/ csta2  /xname(k5),vname(l2)
@@ -7365,45 +7363,74 @@ c-----------------------------------------------------------------------
 c                                 fractionation effects:
       do i = 1, jbulk
          dcomp(i) = 0d0
+         there(i) = .false.
       end do 
 
-      do i = 1, ifrct
+      if (idead.eq.0) then 
+c                                 optimization suceeded
+         do i = 1, ifrct
 
-         there = .false.
+            do j = 1, ntot
 
-         do j = 1, ntot
-
-            if (kkp(j).eq.ifr(i).and.amt(j).ge.0d0) then 
-
-               there = .true.
+               if (kkp(j).eq.ifr(i)) then 
 c                                 the phase to be fractionated
-c                                 is present
-               do k = 1, jbulk 
-                  dcomp(k) = dcomp(k) + amt(j)*cp3(k,j)
-               end do 
+c                                 is present, remove from bulk
+                  there(i) = .true.
+
+                  if (amt(j).lt.0d0) amt(j) = 0d0
+
+                  do k = 1, jbulk 
+                     dcomp(k) = dcomp(k) + amt(j)*cp3(k,j)
+                  end do
+c                                 write to console
+                  write (*,1185) vname(iv(2)),v(iv(2)),
+     *                           vname(iv(1)),v(iv(1))
+
+                  write (*,1190) amt(j),gname(ifr(i)),
+     *                           (amt(j)*cp3(k,j),k=1,jbulk)
+c                                 write to file
+                  if (output) write (n0+i,1200) v,amt(j),
+     *                                       (amt(j)*cp3(k,j),k=1,jbulk) 
+               end if
+
+            end do 
+ 
+         end do
+c                                 write output for fractionated phases 
+c                                 that are NOT stable
+         do i = 1, ifrct
+
+            if (.not.there(i)) then 
+c                                 console output:
 c                                 write to console
                write (*,1185) vname(iv(2)),v(iv(2)),
      *                        vname(iv(1)),v(iv(1))
-               write (*,1190) amt(j),gname(ifr(i)),
-     *                        (amt(j)*cp3(k,j),k=1,jbulk)
+               write (*,1210) gname(ifr(i))
 c                                 write to file
-               if (output) write (n0+i,1200) v(iv(1)),amt(j),
-     *                     gname(ifr(i)),(amt(j)*cp3(k,j),k=1,jbulk)
-         
-            end if
+               if (output) write (n0+i,1200) v,nopt(7),
+     *                                       (nopt(7),k=1,jbulk) 
 
-         end do 
+            end if 
 
-         if (.not.there) then
-            write (*,1185) vname(iv(2)),v(iv(2)),vname(iv(1)),v(iv(1))
-            write (*,1210) gname(ifr(i))
-         end if 
- 
-      end do   
+         end do
+
+      else 
+c                                 optimization failed
+         write (*,1030) (vname(jv(i)),v(jv(i)), i = 1, ipot)
+c                                 
+         do i = 1, ifrct
+c                                 write bad_number to fractionation file
+            if (output) write (n0+i,1200) v,nopt(7),
+     *                                    (nopt(7),k=1,jbulk)
+         end do
+
+      end if 
 
       warn = .false.     
-
+c                                 remove fractionated mass from bulk,
+c                                 warn on complete depletion of a component
       do i = 1, jbulk
+
          cblk(i) = cblk(i) - dcomp(i)
 
          if (cblk(i).le.nopt(11)) then 
@@ -7421,7 +7448,7 @@ c                                 write to file
       end do
 
       if (output.and.ifrct.gt.0) 
-     *   write (n0,1220) v(iv(1)),(cblk(k),k=1,jbulk)
+     *   write (n0,1200) v(iv(1)),(cblk(k),k=1,jbulk)
  
       if (warn) then 
          do i = 1, jbulk 
@@ -7438,13 +7465,14 @@ c                                 write to file
      *        'fractionation calculation at the',/,'current point on ',
      *        'the fractionation path with the current molar bulk ', 
      *        'composition:',/)
-1010  format (4x,a,2x,g12.6)       
+1010  format (4x,a,2x,g12.6)  
+1030  format (/,'optimization failed at:',//,5(1x,a8,'=',g12.6))     
 1185  format (/,'At ',a,'=',g12.6,' and ',a,'=',g12.6)
 1190  format ('fractionating ',g12.6,' moles of ',a,'; changes bulk by:'
      *        ,/,15(1x,g12.6))
-1200  format (g12.6,1x,g12.6,1x,a,15(1x,g12.6))
+1200  format (21(1x,g12.6))
 1210  format (a,' is not stable.')
-1220  format (17(g12.6,1x))
+
       end 
 
       subroutine frname 

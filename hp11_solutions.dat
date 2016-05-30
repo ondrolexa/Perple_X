@@ -1,4 +1,166 @@
 673 DO NOT DELETE THIS LINE
+                    -------------------------------------------------------- 
+begin_model                
+                             CHLORITE, White et al JMG 32:261-286, 2014
+                              
+                             NOTES:  
+
+                             * This model will only function in the Al-free and
+                               Mg-free limits if Al and Mg are retained as thermodynamic
+                               components.
+
+                             JADC 4/14
+
+                             This model requires the following make definition for f3clin:
+
+                                      f3clin = 1 clin - 1/2 gr + 1/2 andr
+                                      2d3 0 0 
+
+                             TJ 4/14
+                    
+                                                      M1      M2+M3     M4     T2
+                                                     ________________________________
+
+                                      Mutliplicity    1         4       1      2 
+                                                     ________________________________
+  
+                                      1 fames         Al        Fe      Al     Al_Al   dependent
+                                      2 fafchl        Fe        Fe      Fe     Si_Si   dependent
+                                      3 ff3cli        Fe        Fe      Fe3+   Al_Si   dependent
+                                      4 daph          Fe        Fe      Al     Al_Si 
+                                      5 f3clin        Mg        Mg      Fe3+   Al_Si   
+                                      6 ames          Al        Mg      Al     Al_Al
+                                      7 afchl         Mg        Mg      Mg     Si_Si
+                                      8 clin          Mg        Mg      Al     Al_Si 
+                                      9 mnchl         Mn        Mn      Al     Al_Si
+                                     10 mame          Al        Mn      Al     Al_Al   dependent
+                                     11 mafchl        Mn        Mn      Mn     Si_Si   dependent
+                                     12 f3mcli        Mn        Mn      Fe3+   Al_Si   dependent   
+                                                      _______________________________ 
+
+                                     13 och1          Mg        Fe      Fe     Si_Si   ordered
+                                     14 och2          Fe        Mg      Mg     Si_Si   ordered
+
+Chl(W1)     
+                       
+8                               | model type reciprocal, macroscopic formulation
+2 
+3 4 
+
+fames    fafchl   ff3cli    
+daph     f3clin   ames
+afchl    clin     mnchl
+mame     mafchl   f3mcli
+
+2                               | 2 ordered species:
+
+och1 = 1 afchl  - 1 clin   + 1 daph      enthalpy_of_ordering = 3d3
+och2 = 1 afchl  - 1/5 clin + 1/5 daph    enthalpy_of_ordering = 2.4d3 
+
+
+
+begin_limits
+
+och1 =  0                                                                             delta = 1     zFeM4
+och1 = -1   + 1 afchl   + 1 och1 + 0   och2 + 1   och2                                delta = 1     zMgM4
+och1 = -1   + 1 daph    + 1 och1 + 4/5 och2 + 1/5 och2                                delta = 1     zFeM1
+
+och2 =      - 5/4 daph                           + 5/4 och1 - 5/4 och1 - 1/4 och2     delta = 5/4   zFeM1
+och2 = -5/4 + 5/4 afchl  + 5/4 f3clin + 5/4 clin + 5/4 och1 + 1 och2                  delta = 5/4   zMgM1 
+och2 = -5   + 5   daph                           + 0   och1 + 5   och1 + 1   och2     delta = 5     zFeM2
+
+| unecessary limit:
+| och1 =     - 1 afchl  - 1 clin - 1 f3clin            + 4/5 och2 - 4/5 och2  delta = 1      zMgM1 
+
+end_limits
+
+6                               | 6 dependent endmembers 
+
+fames  = 1 ames   + 1 daph - 1 och2 + 1 afchl - 1 clin
+fafchl = 1 och1   + 1 och2 - 1 afchl
+ff3cli = 1 f3clin + 1 daph - 1 clin
+
+mame   = 1 ames   + 4/5 mnchl - 4/5 clin
+mafchl = 1 afchl  + 6/5 mnchl - 6/5 clin
+f3mcli = 1 mnchl  + 1  f3clin - 1   clin
+
+
+0 0 0 0 0 0 0 0 0 0 0 0         |endmember flags
+
+
+                                | subdivision model for (quaternary) chemical mixing:
+
+0. 1. .1 0                      | range and resolution of X(fames+ames),    imod = 0 -> cartesian subdivision
+0. 1. .1 0                      | range and resolution of X(fafchls+afchl), imod = 0 -> cartesian subdivision
+0. 1. .1 0                      | range and resolution of X(ff3cli+f3clin), imod = 0 -> cartesian subdivision
+
+                                | subdivision model for (binary) chemical mixing
+0. 1. .1 0                      | range and resolution of X(Fe), imod = 0 -> cartesian subdivision 
+0. .2  .1 1                     | range and resolution of X(Mn), imod = 1 => asymmetric subdivision
+
+
+
+begin_excess_function
+
+W(clin afchl)             17d3           0.         0.
+W(clin ames)              17d3           0.         0.
+W(clin daph)              20d3           0.         0.
+W(clin och1)              30d3           0.         0.
+W(clin och2)              21d3           0.         0.
+W(clin f3clin)             2d3           0.         0.
+W(clin mnchl)             15d3           0.         0.
+W(afchl ames)             16d3           0.         0.
+W(afchl daph)             37d3           0.         0.
+W(afchl och1)             20d3           0.         0.
+W(afchl och2)              4d3           0.         0.
+W(afchl f3clin)           15d3           0.         0.
+W(afchl mnchl)            32d3           0.         0.
+W(ames daph)              30d3           0.         0.
+W(ames och1)              29d3           0.         0.
+W(ames och2)              13d3           0.         0.
+W(ames f3clin)            19d3           0.         0.
+W(ames mnchl)             26d3           0.         0.
+W(daph och1)              18d3           0.         0.
+W(daph och2)              33d3           0.         0.
+W(daph f3clin)            22d3           0.         0.
+W(daph mnchl)             10d3           0.         0.
+W(och1 och2)              24d3           0.         0.
+W(och1 f3clin)          28.6d3           0.         0.
+W(och1 mnchl)             25d3           0.         0.
+W(och2 f3clin)            19d3           0.         0.
+W(och2 mnchl)             31d3           0.         0.
+W(f3clin mnchl)           17d3           0.         0.
+
+end_excess_function
+
+4                               | 4 site configurational entropy model:
+
+4 1.                            | 4 species on 1 M1 site
+
+z(al,M1)    = 1 ames 
+z(fe,M1)    = 1 daph + 1 och2
+z(mn,M1)    = 1 mnchl
+
+3 4.                            | 2 species on 4 M2+M3 sites
+
+z(fe,m2+m3) = 1 daph + 1 och1
+z(mn,m2+m3) = 1 mnchl
+
+4 1.                            | 4 species on 1 M4 site
+
+z(fe3,m4)   = 1 f3clin
+z(fe,m4)    = 1 och1
+z(mg,m4)    = 1 afchl + 1 och2
+
+2 2.                            | 2 species on 2 T2 sites 
+
+z(al,T2)    = 1 ames + 1/2 clin + 1/2 daph + 1/2 f3clin + 1/2 mnchl
+
+begin_dqf_corrections
+dqf(mnchl) -13030  0 0
+end_dqf_corrections
+
+end_of_model  
                       --------------------------------------------------------
 begin_model                         
                                       holland and powell '11 non-ideal cz-fep solution

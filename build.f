@@ -1701,7 +1701,7 @@ c                                 diagrams:
      *        'To compute saturation surfaces:'
      *     ,/,'  1) use convex hull optimization and do not use ',
      *        'activities or fugacities as',/,
-              '     independent variables',/,
+     *        '     independent variables',/,
      *        '  2) or compute the saturation surface with FLUIDS or ',
      *        'FRENDLY.',/)
 3111  format (/,'**warning ver111** in this mode Perple_X  will fail if'
