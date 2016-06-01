@@ -952,7 +952,7 @@ c                                 and correspond to (HKF notation):
 c                                 g, s, v, cp0, w, a1, a2, a3, a4, c1, c2
 c                                 the compound constants on output will be 
 c        b2 = -s + c1*dlog(tr) + c1 + w*yr + dlog(tr/(tr-theta))*c2/theta**2 => b8 in HKF_G.mws
-         b2 = -s + gg*dlog(tr) + gg + w*yr 
+         b2 = -s + gg*dlog(tr) + gg + b*yr 
      *            + dlog(tr/(tr-theta))*b1/theta**2
 c        b3 = (-w*yr-c1+s)*tr + (-1/epsilonr+1)*w - a1*pr - a2*ln(psi+pr) + g + c2/theta => b9
          b3 = (-b*yr-gg+s)*tr + (-1d0/epsr+1d0)*b - c*pr -d*dlog(psi+pr) 
@@ -3118,7 +3118,7 @@ c----------------------------------------------------------------------
      *               e16st(12)
 c----------------------------------------------------------------------
 
-      iterm = 0 
+      iterm = 0
       iord = 0 
 
       call readcd (n9,len,ier)
@@ -11934,6 +11934,9 @@ c                                    and it's the second occurence
 
                else if (inds(l).gt.istot) then 
 c                                 4) is an ordered species p-term
+c                                    if the coefficient is zero it's just
+c                                    a place holder and can be skipped.
+                  if (coeffs(l).eq.0d0) cycle
                   jimt(k,jd) = jimt(k,jd) + 1
                   j = jimt(k,jd)
                   if (j.gt.j3) call error (33,coeffs(1),j,tname)
@@ -13322,7 +13325,6 @@ c                              or a dependent endmember
 
       end do
 
-1010  format (i2,i2,i2,i2)
 1020  format (a2,i2,'_',i2)
 1040  format (a1,i2,a1,i2)
 1060  format (a2,i2,i2,i2)
@@ -13789,15 +13791,15 @@ c-----------------------------------------------------------------------
 
       if (tc.lt.0d0) then
          if (pee.lt.0.4d0) then
-	    bc = -b/3
-	    t0 = -3*t/tc
-	 else
-	    bc = -b
-	    t0 = -t/tc
-	 endif
+            bc = -b/3
+            t0 = -3*t/tc
+         else
+            bc = -b
+            t0 = -t/tc
+         endif
       else
          t0 = t/tc
-	 bc = b
+         bc = b
       endif
 
       a = a0 + a1*(1d0/pee - 1d0)
@@ -14279,12 +14281,12 @@ c        tc = 0.13545D4 * x - 0.3115D3 + (1d0 - x) * x *
 c    *        (0.2200D4 - 0.11D4 * x)
 c        b = 0.2228D1 * x - 0.8D-2 - 0.85D0 * (1d0 - x) * x
 
-	 xfe = x
-	 xcr = 1d0-x
-	 tc = 1043d0 * xfe + (-311.5d0) * xcr +
+         xfe = x
+         xcr = 1d0-x
+         tc = 1043d0 * xfe + (-311.5d0) * xcr +
      *        xfe * xcr * (1650d0 + 550d0*(xcr-xfe))
          b = 2.22d0 * xfe + (-0.008d0) * xcr + xfe*xcr*(-0.008d0)
-	 gmag2 = gmags (tc,b,0.40d0)
+         gmag2 = gmags (tc,b,0.40d0)
 
       end if
 

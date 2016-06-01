@@ -2781,7 +2781,7 @@ c                                 error in univeq:
       
 1020  format ('Network traced, resuming boundary search.',/)
 
-999   end
+      end
 
       subroutine delvar (dv,iflag,iflg1)
 c-----------------------------------------------------------------------
@@ -3742,7 +3742,7 @@ c                              list of possible failures:
 1190  format ('WARNING!! The stability fields of the following',
      *        ' equilibria may',/,'have been entirely or',
      *        ' partially skipped in the calculation: ',/)
-99    end
+      end
 
       subroutine iptext (text,iend,jp)
 c-----------------------------------------------------------------------
@@ -4050,7 +4050,7 @@ c                                reaction_list.dat
 1110  format ('finished with equilibrium (',i6,') ',434a1)
 1120  format (' (',i6,'-',i1,') ',434a1)
 
-99    end
+      end
 
       subroutine pchk (dg,igo)
 c-----------------------------------------------------------------------
@@ -5961,7 +5961,6 @@ c                          excluded phases
 1140  format (/,'Excluded phases:',/)
 1150  format (/,'Phases and (projected) compositions:',//,
      *        11x,12(1x,a5,1x),/)
-1170  format (/,'Phases on saturation and buffering surfaces:',/)
 1180  format (/,'Saturated or buffered components:',//,3x,7(a,3x))
 1190  format (/,'Problem title: ',a,/)
 1200  format (/,'Saturated phase components:',//,3x,5(a,3x))

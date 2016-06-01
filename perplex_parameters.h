@@ -86,7 +86,7 @@
 !                                       in adaptive optimization.
       parameter (k0=25,k1=1000000,k2=100000,k3=500,k4=32,k5=12)
       parameter (k7=k5+1,k8=k5+2) 
-      parameter (k9=30,k10=300,k12=15,k13=mdim*k1,k14=18,k15=6,k16=70)
+      parameter (k9=30,k10=350,k12=15,k13=mdim*k1,k14=18,k15=6,k16=70)
       parameter (k17=7,k18=29*k1)
       parameter (k19=2*k5+14,k21=1700000,k20=mdim*k21,k22=mdim*k19,
      *           k23=5)

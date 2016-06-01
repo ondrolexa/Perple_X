@@ -17,7 +17,7 @@ c----------------------------------------------------------------------
       implicit none
 
       write (*,'(/,a)') 
-     *      'Perple_X version 6.7.3, source updated May 29, 2016.'
+     *      'Perple_X version 6.7.3, source updated Jun 1, 2016.'
 
       end
 
@@ -2404,6 +2404,8 @@ c----------------------------------------------------------------------
          write (*,52) char
       else if (ier.eq.53) then 
          write (*,53) realv
+      else if (ier.eq.54) then 
+         write (*,54)
       else if (ier.eq.55) then 
          write (*,55) char
       else if (ier.eq.58) then

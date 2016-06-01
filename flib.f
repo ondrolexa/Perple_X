@@ -6679,10 +6679,10 @@ c      external gzero
       double precision vol
       common/ cst26 /vol
 
-      save isp, ins, i1, i2, i3, i4, i5
-      data isp, ins, i1, i2, i3, i4, i5
+      save isp, ins, i1, i2, i3, i4, i5, itic
+      data isp, ins, i1, i2, i3, i4, i5, itic 
      *                                  /5, 14, 13, 12, 7, 15, 
-     *                                      14, 13, 12, 7, 15/
+     *                                      14, 13, 12, 7, 15, 0/
 c----------------------------------------------------------------------
 c                                  low T hack
       if (t.lt.2400d-3.and.v(14).lt.1d2.and.
