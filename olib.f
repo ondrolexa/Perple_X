@@ -121,7 +121,7 @@ c                                 mol %
      *                      props(16,i)/psys(16)*1d2,
 c                                 mol
      *                      props(16,i),
-c                                 molar or weight composition
+c                                 molar composition
      *                      (pcomp(l,i), l = 1, icomp)
 
          else 
@@ -135,7 +135,7 @@ c                                 mol %
      *                      props(16,i)/psys(16)*1d2,
 c                                 mol
      *                      props(16,i),
-c                                 molar or weight composition
+c                                 weight composition
      *                      (pcomp(l,i), l = 1, icomp)
 
          end if 

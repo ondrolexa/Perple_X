@@ -1064,10 +1064,10 @@ c                                 proportionality constant for shear modulus
      *       'If the text is intentional, check spelling and case.',/) 
 1120  format (/,'Warning: the Perple_X option file: ',a,/,
      *       'was not found, default option values will be used.',/) 
-1130  format (/,'Reading computational options from: ',a)
+1130  format (/,'Reading Perple_X options from: ',a)
 1140  format ('Writing pseudocompound glossary to file: ',a)
 1150  format ('Writing auto refine summary to file: ',a)
-1160  format ('Writing computational option summary to file: ',a)
+1160  format ('Writing Perple_X option summary to file: ',a)
 1170  format ('Writing complete reaction list to file: ',a)
       end 
 
@@ -2043,7 +2043,7 @@ c---------------------------------------------------------------------
      *        ' increase parameter h9 (',i3,')')
 26    format (/,'**error ver026** the number of fixed components (',
      *        i2,') in ',a,/,' is >= the number of components ',/)
-27    format (/,'**error ver027** Error reading the computational',
+27    format (/,'**error ver027** Error reading the Perple_X',
      *        ' option file.',//,'Probable cause: You are using an ',
      *        'input file created by an out-of-date',/,
      *        '                version of BUILD, or you have',

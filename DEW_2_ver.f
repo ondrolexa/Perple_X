@@ -82,7 +82,6 @@ c                                 DEW data consists of a name, formula
 c                                 Gf, Hf, S0, v0, cp0, omega, z, a1, a2, a3, a4, c1, c2, comment
       do 
 
-
          bad = .false. 
 
          call redcd3 (n9,len,ier)
@@ -274,48 +273,55 @@ c                                 write the formula
 c                                 =====================================
 c                                 thermo data
 c                                 conversions:
-      do i = 1, 13
+         do i = 1, 13
 
-         if (i.eq.4) then
+            if (i.eq.4) then
 c                                 volume
-            nums(i) = nums(i)/1d1
-         else if (i.eq.7) then 
+               nums(i) = nums(i)/1d1
+            else if (i.eq.7) then 
 c                                 charge
-         else 
-            nums(i) = 4.184d0*nums(i)
-         end if
+            else 
+               nums(i) = 4.184d0*nums(i)
+            end if
 
-      end do 
-c                                 scale a1-a4, c1-c2
-      nums(8)  = nums(8)/1d1
-      nums(9)  = nums(9)*1d2
-      nums(11) = nums(11)*1d4
-      nums(13) = nums(13)*1d4
+         end do 
+c                                 Gf, Hf, S0, v0, cp0, omega, z, a1, a2, a3, a4, c1, c2, comment
+c                                  1   2   3   4    5      6  7   8   9  10  11  12  13
+c                                 scale omega, a1, a2, a4, c2
+         nums(6)  = nums(6)*1d5
+         nums(8)  = nums(8)/1d1
+         nums(9)  = nums(9)*1d2
+         nums(11) = nums(11)*1d4
+         nums(13) = nums(13)*1d4
 
-      ibeg = 1
+         ibeg = 1
  
-      do i = 1, 7
+         do i = 1, 6
 
-         if (i.eq.1) then 
-            if (HSC) nums(1) = nums(2) - 298.15*nums(3)
-            j = i
-         else 
-            j = i + 1
-         end if 
+            if (i.eq.1) then 
+               if (HSC) nums(1) = nums(2) - 298.15*nums(3)
+               j = i
+            else 
+               j = i + 1
+            end if 
+c                                 don't write v0, cp0
+            if (j.eq.4.or.j.eq.5) cycle
 
-         call outthr (nums(j),e16st(i),3,ibeg)
+            call outthr (nums(j),e16st(i),3,ibeg)
 
-      end do
+         end do
 c                                 write G,S,V,cp,w,q
-      if (ibeg.gt.1) write (lun,'(240a1)') (chars(i), i = 1, ibeg)
+         if (ibeg.gt.1) write (lun,'(240a1)') (chars(i), i = 1, ibeg)
 c                                 write a1-a4,c1-c2
-      ibeg = 1
+         ibeg = 1
  
-      do i = 8, 13
-         call outthr (nums(i),e16st(i-1),3,ibeg)
-      end do       
+         do i = 8, 13
+            call outthr (nums(i),e16st(i-1),3,ibeg)
+         end do       
 
-      if (ibeg.gt.1) write (lun,'(240a1)') (chars(i), i = 1, ibeg)
+         if (ibeg.gt.1) write (lun,'(240a1)') (chars(i), i = 1, ibeg)
+
+         write (lun,'(a,/)') 'end'
 
       end do
 

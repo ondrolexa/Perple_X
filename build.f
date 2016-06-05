@@ -1383,7 +1383,7 @@ c                                 plot output request
       write (n1,'(a)') 'plot     | no_plot suppresses plot output'
 c                                 solution model file request
       call mertxt (text,n9name,
-     *            'solution model file, blank = none',5)
+     *            '| solution model file, blank = none',5)
       write (n1,'(a)') text
 c                               if special dependencies, put them in the
 c                               title
@@ -1399,7 +1399,7 @@ c                               title
 c                                 title
       write (n1,'(a)') text
 c                                 option file name
-      call mertxt (text,opname,'computational option file',5)
+      call mertxt (text,opname,'| Perple_X option file',5)
       write (n1,'(a)') text 
 c                                 computational mode:
       write (n1,1010) icopt,'calculation type: 0 - composition,',
@@ -1409,7 +1409,7 @@ c                                 computational mode:
      *                ' 9 - 2d fract, 10 - 7 w/file input' 
 c                                 coordinate file name if necessary
       if (icopt.eq.10) then 
-         call mertxt (text,cfname,'coordinate file',5)
+         call mertxt (text,cfname,'| coordinate file',5)
          write (n1,'(a)') text
       end if 
 

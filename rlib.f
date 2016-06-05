@@ -772,11 +772,11 @@ c---------------------------------------------------------------------
       double precision g,s,v,a,b,c,d,e,f,gg,c8,b1,b2,b3,b4,b5,b6,b7,b8,
      *                 b9,b10,b11,b12,b13,tr,pr,n,v0,k00,k0p, dadt0,
      *                 gamma0,q0,etas0,g0,g0p,r,c1,c2, alpha0, beta0, 
-     *                 yr,w,theta,psi,epsr
+     *                 yr,theta,psi,epsr
 
       double precision emodu
       common/ cst318 /emodu(k15)
-      
+
       integer iopt
       logical lopt
       double precision nopt
@@ -947,24 +947,24 @@ c                                 and load into thermo(10-14) => (gg,c8,b1,b2,b3
 c                                 DEW/HKF aqueous species
 c                                 psi, theta, epsr, yr are generic parameters. 
 c                                 coming in HKF species parameters loaded as:
-c                                 g, s, v,   a, b, c,  d,   e,  f, gg, b1
+c                                 g, s, v,   a, b, c,  d,   e,  f, gg, b1, b2
 c                                 and correspond to (HKF notation):
-c                                 g, s, v, cp0, w, a1, a2, a3, a4, c1, c2
+c                                 g, s, v, cp0, w,  q, a1, a2, a3, a4, c1, c2
 c                                 the compound constants on output will be 
 c        b2 = -s + c1*dlog(tr) + c1 + w*yr + dlog(tr/(tr-theta))*c2/theta**2 => b8 in HKF_G.mws
-         b2 = -s + gg*dlog(tr) + gg + b*yr 
-     *            + dlog(tr/(tr-theta))*b1/theta**2
+         b3 = -s + b1*dlog(tr) + b1 + b*yr 
+     *            + dlog(tr/(tr-theta))*b2/theta**2
 c        b3 = (-w*yr-c1+s)*tr + (-1/epsilonr+1)*w - a1*pr - a2*ln(psi+pr) + g + c2/theta => b9
-         b3 = (-b*yr-gg+s)*tr + (-1d0/epsr+1d0)*b - c*pr -d*dlog(psi+pr) 
-     *                         + g + b1/theta
+         b4 = (-b*yr-b1+s)*tr + (-1d0/epsr+1d0)*b - d*pr -e*dlog(psi+pr) 
+     *                         + g + b2/theta
 c        b4 = -a3*pr-a4*ln(psi+pr) => b10
-         b4 = -e*pr - f*dlog(psi+pr)
+         b5 = -f*pr - gg*dlog(psi+pr)
 c        b5 = -c2/(tr-theta)/theta => b11
-         b5 = -b1/(tr-theta)/theta
+         b6 = -b2/(tr-theta)/theta
 c        b6 = c2/theta^2 => b12
-         b6 = b1/theta**2
+         b7 = b2/theta**2
 c        b7 = -c1-c2/theta^2
-         b7 = -(gg+b6)
+         b8 = -(b1+b7)
 
          return 
 c                                 remaining standard forms have caloric polynomial
@@ -4090,6 +4090,27 @@ c                                 adiabatic shear modulus
       double precision function ghkf (id)
 c-----------------------------------------------------------------------
 c ghkf computes apparent G for aqueous species HKF formulation
+c
+c HKF parameters are loaded into thermo as:
+
+c thermo(1 ,id) = G0
+c thermo(2 ,id) = S0
+c thermo(3 ,id) = V0
+c thermo(4 ,id) = Cp0
+c thermo(5 ,id) = w (omega)
+c thermo(6 ,id) = q (charge)
+c thermo(7 ,id) = a1
+c thermo(8 ,id) = a2
+c thermo(9 ,id) = a3
+c thermo(10,id) = a4
+c thermo(11,id) = c1
+c thermo(12,id) = c2
+c thermo(13,id) = -s + c1*dlog(tr) + c1 + w*yr + dlog(tr/(tr-theta))*c2/theta**2 => b8 in HKF_G.mws
+c thermo(14,id) = (-w*yr-c1+s)*tr + (-1/epsilonr+1)*w - a1*pr - a2*ln(psi+pr) + g + c2/theta => b9 
+c thermo(15,id) = -a3*pr-a4*ln(psi+pr) => b10
+c thermo(16,id) = -c2/(tr-theta)/theta => b11
+c thermo(17,id) = c2/theta^2 => b12
+c thermo(18,id) = -c1-c2/theta^2
 c-----------------------------------------------------------------------
       implicit none 
 
@@ -4097,7 +4118,10 @@ c-----------------------------------------------------------------------
 
       integer id
 
-      double precision epsilon, ft, fp, omega, psi, theta
+      double precision epsilo, ft, fp, omega, psi, theta, vh2o, fh2o,
+     *                 epsh2o, duah2o
+
+      external duah2o, epsh2o
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -4110,17 +4134,21 @@ c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
       ft = t - theta
       fp = dlog(psi+p)
+
+      vh2o = duah2o (fh2o)
+
+      epsilo = epsh2o (vh2o) 
 c                                 hi p approximation (omega -> omegar)
       omega = thermo(5,id)
 
 c     ghkf = (b8+b12*ln(ft)+b13*ln(t))*t+b11*ft+a1*p+a2*fp+b9-omega+omega/epsilon+(a3*p+a4*fp+b10)/ft
 
-      ghkf = thermo(13,id) + (thermo(12,id) + thermo(16,id)*dlog(ft) 
-     *                                      + thermo(17,id)*dlog(t))*t 
-     *     + thermo(15,id)*ft 
-     *     + thermo(6,id)*p + thermo(7,id)*fp 
-     *     + (thermo(8,id)*p + thermo(9,id)*fp + thermo(14,id))/ft
-     *     + omega*(1d0/epsilon - 1d0) 
+      ghkf = thermo(14,id) + (thermo(13,id) + thermo(17,id)*dlog(ft) 
+     *                                      + thermo(18,id)*dlog(t))*t 
+     *     + thermo(16,id)*ft 
+     *     + thermo(7,id)*p + thermo(8,id)*fp 
+     *     + (thermo(9,id)*p + thermo(10,id)*fp + thermo(15,id))/ft
+     *     + omega*(1d0/epsilo - 1d0) 
 
       end 
 
@@ -12812,7 +12840,7 @@ c--------------------------------------------------------------------------
   
       include 'perplex_parameters.h'
 
-      character*10 tname
+      character tname*10, znm(2,2)*2, pnm(3)*2 
 
       logical bad
  
@@ -13067,26 +13095,50 @@ c                                 the composition is acceptable.
          exces(i,iphct) = 0d0
       end do
 c                                encode a name
+      if (istg(im).gt.1) then 
+c                                make character nums for standard cases
+c                                this is only to avoid run-time errors
+c                                during debugging. 
+         do i = 1, istg(im)
+            do j = 1, 2 
+               h = idint(1d2*z(j,1))
+               if (h.eq.100) then 
+                  znm(i,j) = '**'
+               else 
+                  write (znm(i,j),'(a2)') h 
+               end if 
+            end do
+         end do 
+      end if 
+
+      do j = 1, 3
+         h = idint(1d2*pa(j))
+
+         if (h.eq.100) then 
+            pnm(j) = '**'
+         else 
+            write (pnm(j),'(a2)') h 
+         end if 
+      end do
+      
       if (istg(im).eq.2.and.mstot(im).eq.4) then
 c                                special case 1, bin-bin reciprocal solution
-         write (names(iphct),1020) tname,
-     *                             (idint(1d2*z(j,1)), j = 1, 2)
+         write (names(iphct),1020) tname, znm(1,1),znm(2,1)
+
       else if (istg(im).eq.2.and.mstot(im).eq.6.and.ispg(im,1).eq.3) 
      *        then
 c                                special case 2, tern-bin reciprocal solution
-         write (names(iphct),1060) tname,
-     *                             (idint(1d2*z(1,j)), j = 1, 2),
-     *                              idint(1d2*z(2,1))
+         write (names(iphct),1060) tname, znm(1,1),znm(1,2),znm(2,j)
+
       else if (istg(im).eq.2.and.mstot(im).eq.6.and.ispg(im,1).eq.2) 
      *        then
 c                                special case 3, bin-tern reciprocal solution
-         write (names(iphct),1060) tname,
-     *                              idint(1d2*z(1,1)),
-     *                             (idint(1d2*z(2,j)), j = 1, 2)
-c      else if (istg(im).eq.2.and.mstot(im).eq.9) then
+         write (names(iphct),1060) tname, znm(1,1),znm(2,1),znm(2,2)
+
+      else if (istg(im).eq.2.and.mstot(im).eq.9) then
 c                                special case 4, tern-tern reciprocal solution
-c         write (names(iphct),1010) (idint(1d2*z(1,j)), j = 1, 2),
-c     *                             (idint(1d2*z(2,j)), j = 1, 2)
+         write (names(iphct),1060) znm(1,1),znm(1,2),znm(2,1),znm(2,2)
+
       else if (mstot(im).eq.2) then 
 c                                binary solutions
          if (pa(1).gt.0.9999d0) then 
@@ -13105,13 +13157,12 @@ c                                binary solutions
 
       else if (mstot(im).eq.3) then 
 c                                ternary solutions
-         write (names(iphct),1040) (names(jend(im,2+j)),
-     *                                idint(1d2*pa(j)), j = 1, 2)
+         write (names(iphct),1060) (names(jend(im,2+j)),
+     *                             pnm(j), j = 1, 2)
       else if (mstot(im).eq.4) then 
 c                                quaternary solutions
-         icky = 1
-         write (names(iphct),1060) tname,
-     *                    (idint(1d2*pa(j)), j = 1, 3)
+         write (names(iphct),1060) tname, (pnm(j), j = 1, 3)
+
       else
 c                                all the rest:
          icky = 1
@@ -13325,9 +13376,8 @@ c                              or a dependent endmember
 
       end do
 
-1020  format (a2,i2,'_',i2)
-1040  format (a1,i2,a1,i2)
-1060  format (a2,i2,i2,i2)
+1020  format (a2,a2,'_',a2)
+1060  format (a2,a2,a2,a2)
 1070  format (a3,'_',f4.1)
 1080  format (a2,i6)
 1100  format (a1,i7)
