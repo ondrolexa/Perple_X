@@ -17,7 +17,7 @@ c----------------------------------------------------------------------
       implicit none
 
       write (*,'(/,a)') 
-     *      'Perple_X version 6.7.3, source updated Jun 1, 2016.'
+     *      'Perple_X version 6.7.3, source updated Jun 8, 2016.'
 
       end
 
@@ -2822,9 +2822,9 @@ c----------------------------------------------------------------------
       common / cst333 /mcomp(k16,k0),nmak,mksat(k16),mknam(k16,k17)
 
       double precision mkcoef, mdqf
-      integer mknum, mkind
+      integer mknum, mkind, meos
       common / cst334 /mkcoef(k16,k17),mdqf(k16,k17),mkind(k16,k17),
-     *                 mknum(k16)
+     *                 mknum(k16),meos(k16)
 
       integer ixct,ifact
       common/ cst37 /ixct,ifact 

@@ -1133,9 +1133,9 @@ c-----------------------------------------------------------------------
 
       double precision mkcoef, mdqf
 
-      integer mknum, mkind
+      integer mknum, mkind, meos
       common / cst334 /mkcoef(k16,k17),mdqf(k16,k17),mkind(k16,k17),
-     *                 mknum(k16)
+     *                 mknum(k16),meos(k16)
 
       integer make
       common / cst335 /make(k10)

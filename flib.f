@@ -4464,7 +4464,9 @@ c-----------------------------------------------------------------------
 
       double precision r,t0,amh2o,b,bb,ps,rhn,rh,rh2,y,er,y3,aly,rt,
      *                 bety,f1,f2,pr,dpr,s,del,rhoi2,tau,abc,q10,qm,
-     *                 x,dp,dr,gh2o,aid,gid,aa
+     *                 x,dp,dr,gh2o,aid,gid,aa, psat2
+
+      external psat2
 
       integer i,loo,nlow,nhigh
  
@@ -4532,7 +4534,7 @@ c -----the values (t/t0)**i are stored in the array taui(i)
      1     0.63684256d0/taui(4)
 c
       ps = 220.55d0
-      if (t .le. 647.25d0) call psat2(t, ps)
+      if (t .le. 647.25d0) ps = psat2(t)
 c                                 get initial guess for volume from
 c                                 mrk:
       call mrk
@@ -4659,7 +4661,7 @@ c
       end
 
 c----------------------------------------------------------------
-      subroutine psat2(t, ps)
+      double precision function psat2 (t)
 
       implicit none
  
@@ -4685,6 +4687,8 @@ c----------------------------------------------------------------
          end do 
          ps = 220.93d0 * dexp(ff/v)
       end if
+
+      psat2 = ps 
  
       end
 c----------------------------------------------------------------

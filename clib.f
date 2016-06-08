@@ -1131,9 +1131,9 @@ c----------------------------------------------------------------------
       common / cst333 /mcomp(k16,k0),nmak,mksat(k16),mknam(k16,k17)
 
       double precision mkcoef, mdqf
-      integer mknum, mkind
+      integer mknum, mkind, meos
       common / cst334 /mkcoef(k16,k17),mdqf(k16,k17),mkind(k16,k17),
-     *                 mknum(k16)
+     *                 mknum(k16),meos(k16)
 
       integer make
       common / cst335 /make(k10)
@@ -1398,6 +1398,8 @@ c                                 redundant check:
          call chkphi (2,name,good)
 c                               
          if (.not.good) call error (57,comp(1),iphct,name)
+c                                 set eos flag
+         ieos = meos(i)
 
          call sattst (ifer,good)
 

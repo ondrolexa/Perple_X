@@ -772,7 +772,7 @@ c---------------------------------------------------------------------
       double precision g,s,v,a,b,c,d,e,f,gg,c8,b1,b2,b3,b4,b5,b6,b7,b8,
      *                 b9,b10,b11,b12,b13,tr,pr,n,v0,k00,k0p, dadt0,
      *                 gamma0,q0,etas0,g0,g0p,r,c1,c2, alpha0, beta0, 
-     *                 yr,theta,psi,epsr
+     *                 yr,theta,psi,epsr,eta
 
       double precision emodu
       common/ cst318 /emodu(k15)
@@ -785,14 +785,14 @@ c                                constants for anderson electrolyte extrapolatio
       save alpha0, beta0, dadt0
       data alpha0, beta0, dadt0 /25.93d-5,45.23d-6,9.5714d-6/
 c                                constants for hkf electrolyte formulation (ieos = 16)
-      save psi, theta, epsr, yr
-      data psi, theta, epsr, yr/2600d0, 228d0, 78.47d0, -5.79865d-5/
+      save psi, theta, epsr, yr, eta 
+      data psi, theta, epsr, yr, eta/2600d0, 228d0, 78.47d0, 
+     *                               -5.79865d-5, 694656.968d0/
 c----------------------------------------------------------------------
 c                                first conditional reformulates and returns for eos:
-c                                      1, 5, 6, 11, 12, 101, 102
+c                                      1, 5, 6, 11, 12, 15, 16, 101, 102
 c                                reformulates and continues to second conditional for
 c                                      eos < 100 and special cases (see final conditional)
-c                                     
       if (ieos.eq.1) then 
 c                                G(P,T) polynomial forms, e.g., Helgeson et al 1978 (AJS)
 c                                Berman 1988 (J Pet).
@@ -948,6 +948,7 @@ c                                 DEW/HKF aqueous species
 c                                 psi, theta, epsr, yr are generic parameters. 
 c                                 coming in HKF species parameters loaded as:
 c                                 g, s, v,   a, b, c,  d,   e,  f, gg, b1, b2
+c                                 (actually v and cp0 are not loaded)
 c                                 and correspond to (HKF notation):
 c                                 g, s, v, cp0, w,  q, a1, a2, a3, a4, c1, c2
 c                                 the compound constants on output will be 
@@ -965,6 +966,8 @@ c        b6 = c2/theta^2 => b12
          b7 = b2/theta**2
 c        b7 = -c1-c2/theta^2
          b8 = -(b1+b7)
+c                                 the reference condition born radius (thermo 19) 
+         b9 = 5d9 * eta * c**2 / (1.622323167d9 * eta * c + 5d9 * b)
 
          return 
 c                                 remaining standard forms have caloric polynomial
@@ -4095,9 +4098,7 @@ c HKF parameters are loaded into thermo as:
 
 c thermo(1 ,id) = G0
 c thermo(2 ,id) = S0
-c thermo(3 ,id) = V0
-c thermo(4 ,id) = Cp0
-c thermo(5 ,id) = w (omega)
+c thermo(5 ,id) = w (omega0)
 c thermo(6 ,id) = q (charge)
 c thermo(7 ,id) = a1
 c thermo(8 ,id) = a2
@@ -4111,6 +4112,7 @@ c thermo(15,id) = -a3*pr-a4*ln(psi+pr) => b10
 c thermo(16,id) = -c2/(tr-theta)/theta => b11
 c thermo(17,id) = c2/theta^2 => b12
 c thermo(18,id) = -c1-c2/theta^2
+c thermo(19,id) = reference born radius 5d10*eta*q^2/(1622323167*eta*q+5d10*omega0)
 c-----------------------------------------------------------------------
       implicit none 
 
@@ -4119,9 +4121,9 @@ c-----------------------------------------------------------------------
       integer id
 
       double precision epsilo, ft, fp, omega, psi, theta, vh2o, fh2o,
-     *                 epsh2o, duah2o
+     *                 epsh2o, duah2o, z, eta, gfunc, gf 
 
-      external duah2o, epsh2o
+      external duah2o, epsh2o, gfunc
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -4129,17 +4131,38 @@ c-----------------------------------------------------------------------
       double precision thermo, uf, us
       common/ cst1 /thermo(k4,k10),uf(2),us(h5)
 
-      save psi, theta
-      data psi, theta/2600d0, 228d0/
+      save psi, theta, eta
+      data psi, theta, eta/2600d0, 228d0, 694656.968d0/
 c-----------------------------------------------------------------------
-      ft = t - theta
-      fp = dlog(psi+p)
+      if (thermo(1,id).eq.0d0) then 
+c                                 assumes proton is the only species 
+c                                 with zero G0, return G_H+(P,T) = 0.
+         ghkf = 0
+         return 
+
+      end if 
 
       vh2o = duah2o (fh2o)
 
       epsilo = epsh2o (vh2o) 
-c                                 hi p approximation (omega -> omegar)
-      omega = thermo(5,id)
+c                                 shock et al 1992 g function
+      gf = gfunc (vh2o) 
+
+      z = thermo(6,id)
+
+      if (z.ne.0d0) then 
+c                                 ionic species
+         omega = eta * z * (z/(thermo(19,id) + dabs(z)*gf) 
+     *                      - 1d0/(3.082d0 + gf))
+
+      else 
+c                                 neutral species
+         omega = thermo(5,id)
+
+      end if 
+
+      ft = t - theta
+      fp = dlog(psi+p)
 
 c     ghkf = (b8+b12*ln(ft)+b13*ln(t))*t+b11*ft+a1*p+a2*fp+b9-omega+omega/epsilon+(a3*p+a4*fp+b10)/ft
 
@@ -4151,6 +4174,68 @@ c     ghkf = (b8+b12*ln(ft)+b13*ln(t))*t+b11*ft+a1*p+a2*fp+b9-omega+omega/epsilo
      *     + omega*(1d0/epsilo - 1d0) 
 
       end 
+
+      double precision function gfunc (v)
+c----------------------------------------------------------------------
+c Shock et al 1992 dielectic g function, v is the molar volume of water 
+c in j/bar [HKF_g_function.mws]. g is in angstrom.
+c----------------------------------------------------------------------
+      implicit none 
+
+      integer iwarn
+
+      double precision v, g, tf, psat2 
+
+      external psat2
+
+      double precision p,t,xco2,u1,u2,tr,pr,r,ps
+      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
+
+      save iwarn
+      data iwarn/0/
+c---------------------------------------------------------------------
+      if (v.le.1.8015d0) then
+c                                 region III, rho = 1 g/cm3, g = 0
+         g = 0d0
+
+      else 
+c                                 region I function
+         g = ((-6.557892d-6*t + 9.3295764d-3)*t
+     *       -4.096745422)*((1d0 - 1.8015d0/v)) ** 
+     *       ((1.268348e-5*t - 1.767275512e-2)*t + 9.98834792)
+
+         if (t.gt.428.15.and.p.lt.1d3) then
+c
+            tf = (t/300d0 - 1.427166667d0)
+c                                 add region II perturbation term
+            g  = g - 
+     *           (tf**4.8d0 + 0.366666D-15*tf**16) 
+     *         * ((((5.01799d-14*p - 5.0224D-11)*p - 1.504074d-7)*p 
+     *               + 2.507672D-4)*p - 0.1003157d0)
+
+         end if 
+c                                 check on physical conditions
+         if ((v.gt.5.1471.and.p.gt.500d0).or.
+     *       (t.gt.623.15.and.p.lt.500d0).or.
+     *       (t.le.623.15.and.p.lt.psat2(t))) then 
+c                                 warn
+            if (iwarn.lt.10) then
+               write (*,1000) t, p
+               iwarn = iwarn + 1
+               if (iwarn.eq.10) call warn (49,r,277,'GFUNC')
+            end if 
+         end if 
+      end if 
+
+      gfunc = g 
+
+1000  format (/,'**warning ver277** T= ',f8.2,' K P=',f9.1,' bar',
+     *        /,'is beyond the HKF limits',/,'the HKF g function',
+     *        ' will be set to zero.',/)
+
+      end 
+
+
 
       double precision function epsh2o (v)
 c----------------------------------------------------------------------
@@ -4290,8 +4375,7 @@ c-----------------------------------------------------------------------
 
       integer id
 
-      double precision vh2o, vh2o0, fh2o, tp, alpha0, beta0, dadt0,
-     * g0,g2,s0,v0,c0,b0,h0,cstar
+      double precision vh2o, vh2o0, fh2o, tp
  
       double precision thermo, uf, us
       common/ cst1 /thermo(k4,k10),uf(2),us(h5)
@@ -4301,10 +4385,14 @@ c-----------------------------------------------------------------------
 
       save vh2o0
       data vh2o0/18.7231148995863/
-
-      save alpha0, beta0, dadt0
-      data alpha0, beta0, dadt0 /25.93d-5,45.23d-6,9.5714d-6/
 c----------------------------------------------------------------------
+      if (thermo(1,id).eq.0d0) then 
+c                                 assumes proton is the only species 
+c                                 with zero G0, return G_H+(P,T) = 0.
+         gaq = 0
+         return 
+
+      end if 
 c                                 compare to last p-t, to save expensive
 c                                 calls to the h2o eos.
       call pseos (vh2o,fh2o,1)
@@ -4314,17 +4402,6 @@ c                                 tp instead of t is a h-p innovation
       else 
          tp = 500d0
       end if 
-
-      g0 = thermo(1,id)
-      s0 = thermo(2,id)
-      v0 = thermo(3,id)
-      c0 = thermo(4,id)
-      b0 = thermo(5,id)
-      h0 = g0 + tr*s0
-      cstar = c0 - tr*b0
-      g2 = h0 - t*s0 + (p-pr)*v0 + b0*(tr*t - tr**2/2 - t**2/2) 
-     *     + cstar/tr/dadt0*(alpha0*(t-tr) - beta0*(p-pr) 
-     *     + t/tp * dlog(vh2o0/vh2o))
 
       gaq = thermo(13,id) 
      *      + t*(thermo(10,id) + thermo(11,id)*dlog(vh2o0/vh2o)/tp 
@@ -5147,7 +5224,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer inames, i, j, k,ict, id, incomp(k0), jct 
+      integer inames, i, j, k,ict, id, incomp(k0), jct, mmeos(k16*k17)
 
       logical inph(k16*k17), inmk(k16), eof, good, first
 
@@ -5165,9 +5242,9 @@ c----------------------------------------------------------------------
       common / cst333 /mcomp(k16,k0),nmak,mksat(k16),mknam(k16,k17)
 
       double precision mkcoef, mdqf
-      integer mknum, mkind
+      integer mknum, mkind, meos
       common / cst334 /mkcoef(k16,k17),mdqf(k16,k17),mkind(k16,k17),
-     *                 mknum(k16)
+     *                 mknum(k16),meos(k16)
 
       integer ikind,icmpn,icout,ieos
       double precision comp,tot
@@ -5217,6 +5294,7 @@ c                                 the mnames phases:
                end do 
 
                inph(i) = .true.
+               mmeos(i) = ieos
 
                exit
             end if 
@@ -5237,6 +5315,7 @@ c                                 find valid makes:
                   exit 
                else if (mnames(k).eq.mknam(i,j)) then 
                   mkind(i,j) = k
+                  meos(i) = mmeos(k)
                end if 
 
             end do
@@ -5315,6 +5394,8 @@ c                                 clean up arrays:
             mksat(ict) = mksat(i)
 
             mknum(ict) = mknum(i)
+
+            meos(ict) = meos(i)
 
             do j = 1, mknum(ict)+1
                mknam(ict,j) = mknam(i,j)
@@ -5487,10 +5568,10 @@ c-----------------------------------------------------------------------
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 
-      integer mknum, mkind
+      integer mknum, mkind, meos
       double precision mkcoef, mdqf
       common / cst334 /mkcoef(k16,k17),mdqf(k16,k17),mkind(k16,k17),
-     *                 mknum(k16)
+     *                 mknum(k16),meos(k16)
 
       integer make
       common / cst335 /make(k10)
@@ -5542,9 +5623,9 @@ c----------------------------------------------------------------------
       common / cst333 /mcomp(k16,k0),nmak,mksat(k16),mknam(k16,k17)
 
       double precision mkcoef, mdqf
-      integer mknum, mkind
+      integer mknum, mkind, meos
       common / cst334 /mkcoef(k16,k17),mdqf(k16,k17),mkind(k16,k17),
-     *                 mknum(k16)
+     *                 mknum(k16),meos(k16)
 
       integer ikind,icmpn,icout,ieos
       double precision comp,tot
@@ -13128,7 +13209,7 @@ c                                special case 1, bin-bin reciprocal solution
       else if (istg(im).eq.2.and.mstot(im).eq.6.and.ispg(im,1).eq.3) 
      *        then
 c                                special case 2, tern-bin reciprocal solution
-         write (names(iphct),1060) tname, znm(1,1),znm(1,2),znm(2,j)
+         write (names(iphct),1060) tname, znm(1,1),znm(1,2),znm(2,1)
 
       else if (istg(im).eq.2.and.mstot(im).eq.6.and.ispg(im,1).eq.2) 
      *        then
