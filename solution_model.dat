@@ -256,6 +256,8 @@ begin_model
                              Pierre Bouilhol & JADC, 12/16/15 
 
                              Changed to true T site multiplicity, Oliver Shorttle, 3/16
+
+                             Changed to fake T site multiplicity (1/4) with true Al site fraction, JADC 6/16
       
                                                       M1      M2     T  
                                                      ____________________
@@ -339,8 +341,8 @@ z(m2,cr)  = 1 crdi
 z(m2,al)  = 1 cats + 1 jd 
 z(m2,fe)  = 1 cfs
 
-2 2.                          | 2 species on T1, OS_EDIT-3/16, multiplicity -> 2 [0.25], fractions -> 1/8 [1/2]
-z(t1,al) = 1/8 cats + 1/8 cess + 1/8 crdi
+2 0.25                        | fake multiplicity -> 0.25, fractions -> 1/2
+z(t1,al) = 1/2 cats + 1/2 cess + 1/2 crdi
 
 begin_van_laar_sizes
 alpha(di)    =  1.2  
@@ -597,30 +599,33 @@ begin_model
 
                              T-site mixing added 3/16, O. Shorttle. 
 
-                                                      1       2             
-                                                      M1      M2      
-                                                     _____________
+                             T-site mixing corrected for a false multiplicity of 1/4,
+                             with the fully disordered tetrahedral Al site fraction. 
+                             JADC, 6/10/15
+             
+                                                      M1      M2     T 
+                                                     _____________________
 
-                                      Mutliplicity    1       1
-                                                     _____________
+                                      Mutliplicity    1       1      1/4
+                                                     ______________________
 
-                                        en            Mg      Mg 
-                                        mgts          Al      Mg 
-                                        oen           Fe3+    Mg   
-                                        cren          Cr      Mg   
+                                        en            Mg      Mg     SiSi
+                                        mgts          Al      Mg     SiAl 
+                                        oen           Fe3+    Mg     SiAl   
+                                        cren          Cr      Mg     SiAl   
       
-                            Species:    fs            Fe2+    Fe2+      
-                                        tsfs          Al      Fe2+  dependent
-                                        ofs           Fe3+    Fe2+  dependent  
-                                        crfs          Cr      Fe2+  dependent 
+                            Species:    fs            Fe      Fe     SiSi      
+                                        tsfs          Al      Fe     SiAl      dependent
+                                        ofs           Fe3+    Fe     SiAl      dependent  
+                                        crfs          Cr      Fe     SiAl      dependent 
 
-                            Species:    odijh         Mg      Ca      
-                                        tsdi          Al      Ca    dependent
-                                        odif          Fe3+    Ca    dependent  
-                                        odicr         Cr      Ca    dependent 
+                            Species:    odijh         Mg      Ca     SiSi       
+                                        tsdi          Al      Ca     SiAl     dependent
+                                        odif          Fe3+    Ca     SiAl     dependent  
+                                        odicr         Cr      Ca     SiAl     dependent 
                                                       _____________
 
-                           Internal:    opx           Mg      Fe2+       
+                           Internal:    opx           Mg      Fe     SiSi         
 
 Opx(JH)
 abbreviation Opx
@@ -704,8 +709,8 @@ z(m1,al)   = 1 mgts
 z(m2,ca) = 1 odijh
 z(m2,fe) = 1 fs + 1 opx
 
-2 2.                       | OS_EDIT-3/16 added T site in mixing model, 2 species on 2 T1 sites
-z(t1,al) = 1/8 mgts + 1/8 cren + 1/8 oen
+2 0.25                     | 2 species on "1/4" T sites with true site fraction.
+z(t,al) = 1/2 mgts + 1/2 cren + 1/2 oen
 
 
 begin_van_laar_sizes
@@ -1161,10 +1166,17 @@ begin_model
 
                              JADC, 1/28/2015
 
+                             The correction on 1/26/15 was NOT what is done in thermocalc, 
+                             apparently the correct form is to compute the true disordered
+                             tetrahedral site fraction  (mots1 + mgts)/2, but apply a fake 
+                             multiplicity of 1/4.
+
+                             JADC, 6/10/2016
+
                                        Site:          M1      M2      T
                                                      ____________________
 
-                                      Mutliplicity:   1       1       2
+                                      Mutliplicity:   1       1       1/4 <- fake
                                                      ____________________
 
                                       1 en            Mg      Mg      Si 
@@ -1276,8 +1288,8 @@ z(m2,fe) = 1 fs + 1 opx
 z(m2,ca) = 1 odi
 z(m2,mn)   = 1 mnopx
 
-2 2.                       | 2 species on 2 T sites
-z(T,al) = 1/8 mgts + 1/8 mots1
+2 0.25                     | 2 species on "1/4" T site
+z(T,al) = 1/2 mgts + 1/2 mots1
 
 begin_van_laar_sizes                        
 alpha(en)       1.0    0.    0.                      

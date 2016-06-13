@@ -17,7 +17,7 @@ c----------------------------------------------------------------------
       implicit none
 
       write (*,'(/,a)') 
-     *      'Perple_X version 6.7.3, source updated Jun 8, 2016.'
+     *      'Perple_X version 6.7.3, source updated Jun 13, 2016.'
 
       end
 
@@ -43,7 +43,6 @@ c----------------------------------------------------------------------
       end if 
 
       end 
-
 
       subroutine redop1 (output,opname)
 c----------------------------------------------------------------------
@@ -1662,7 +1661,6 @@ c                                 read data from card
 
       end
 
-
       subroutine eohead (n)
 c----------------------------------------------------------------------
 c eohead reads cards from n until an 'END ' or 'end ' is found in
@@ -3163,314 +3161,6 @@ c                                 second number
 
       end
 
-      integer function iscan (ibeg,iend,char)
-c----------------------------------------------------------------------
-c iscan finds the first occurence of char in chars(ibeg..iend), if not
-c found iscan is ?; kscan does the forward/inverse scans and sets value
-c for bad ranges
-c----------------------------------------------------------------------
-      implicit none
-
-      character char*1
-
-      integer ibeg, iend
-
-      integer length,iblank,icom
-      character chars*1
-      common/ cst51 /length,iblank,icom,chars(240)
-c----------------------------------------------------------------------
-
-      do iscan = ibeg, iend
-
-         if (chars(iscan).eq.char) exit
-
-      end do 
-
-      end 
-
-      integer function kscan (ibeg,iend,char)
-c----------------------------------------------------------------------
-c iscan finds the first occurence of char in chars(ibeg..iend), if not
-c found iscan is iend + inc
-c----------------------------------------------------------------------
-      implicit none
-
-      character char*1
-
-      integer ibeg, iend, inc
-
-      integer length,iblank,icom
-      character chars*1
-      common/ cst51 /length,iblank,icom,chars(240)
-c----------------------------------------------------------------------
-      if (ibeg.gt.iend) then 
-         inc = -1
-      else 
-         inc = 1
-      end if 
-
-      do kscan = ibeg, iend, inc 
-
-         if (chars(kscan).eq.char) exit
-
-      end do 
-c                                 normal loop exit kscan = iend + inc
-      end 
-
-      integer function iscnlt (ibeg,iend,char)
-c----------------------------------------------------------------------
-c iscan finds the first occurence of a character in chars(ibeg..iend) that
-c is greater than char. assuming ascii collating sequence +/- < 0 < a
-c----------------------------------------------------------------------
-      implicit none
-
-      character char*1
-
-      integer ibeg, iend, inc
-
-      integer length,iblank,icom
-      character chars*1
-      common/ cst51 /length,iblank,icom,chars(240)
-c----------------------------------------------------------------------
-
-      if (ibeg.le.iend) then 
-         inc = 1
-      else 
-         inc = -1
-      end if 
-
-      do iscnlt = ibeg, iend, inc
-
-         if (chars(iscnlt).gt.char) exit
-
-      end do 
-
-      end 
-
-      subroutine deblnk (text)
-c----------------------------------------------------------------------
-c deblnk - scan text and delete multiple blank characters, strip
-c out sequential + - or - + operators, trailing -/+ operators, 
-c leading blanks, and leading + operators. also deletes blanks
-c preceding punctuation (',' and ':').
- 
-c     text - character string 
-
-c no test is made for a blank string or a string of "+" signs.
-c----------------------------------------------------------------------
-      implicit none 
-
-      integer i, nchar
-
-      logical strip
- 
-      character text*(*)
-
-      integer ict,iblank,icom
-      character bitsy*1
-      common/ cst51 /ict,iblank,icom,bitsy(240)
-c---------------------------------------------------------------------- 
-      nchar = len(text) 
-
-      read (text,1000) (bitsy(i), i = 1, nchar)
-c                                find last non-blank
-      ict = 1 
-      
-      do i = 1, nchar
-         if (bitsy(i).gt.' ') ict = i
-      end do  
-
-      nchar = ict          
-c                                 kill any trailing +/- or ','
-      if (bitsy(nchar).eq.'+'.or.bitsy(nchar).eq.'-'.or.
-     *    bitsy(nchar).eq.',') nchar = nchar - 1
-         
-c                                 scan for first non blank/+ character:
-      ict = 0 
-      
-      do i = 1, nchar
-         if (bitsy(i).eq.' '.or.bitsy(i).eq.'+') cycle
-         ict = i
-         exit 
-      end do 
-c                                 shift everything right
-      if (ict.gt.1) then 
-
-         ict = ict - 1
-         
-         do i = ict+1, nchar
-            bitsy(i-ict) = bitsy(i)
-         end do 
-
-         nchar = nchar - ict
-
-      end if 
-
-      ict = 1
-      
-      do i = 2, nchar
-c                                 strip out double blanks
-         if ((bitsy(i).eq.' '.and.bitsy(i+1).eq.' ').or.
-     *       (bitsy(i).eq.' '.and.bitsy(i+1).eq.':').or.
-     *       (bitsy(i).eq.' '.and.bitsy(i+1).eq.',').or.
-     *       (bitsy(i).eq.' '.and.bitsy(i+1).eq.')')) cycle 
-         ict = ict + 1
-         bitsy(ict) = bitsy(i)
-
-      end do
-
-      nchar = ict      
-c                                 strip put + - and - + strings
-      strip = .false.
-
-      do i = 1, nchar - 2
-
-         if (bitsy(i).eq.'+'.and.bitsy(i+1).eq.'-'.or.
-     *       bitsy(i).eq.'-'.and.bitsy(i+1).eq.'+') then
-
-             bitsy(i) = '-'
-             bitsy(i+1) = ' '
-             strip = .true.
-
-         else if (bitsy(i).eq.'+'.and.bitsy(i+2).eq.'-'.or.
-     *            bitsy(i).eq.'-'.and.bitsy(i+2).eq.'+') then
-
-             bitsy(i) = '-'
-             bitsy(i+2) = ' '
-             strip = .true.
-
-         end if 
-
-      end do 
-
-      if (strip) then 
-c                                 strip out new double blanks
-         ict = 1
-
-         do i = 2, nchar
-
-            if (bitsy(i).eq.' '.and.bitsy(i-1).eq.' ') cycle 
-            ict = ict + 1
-            bitsy(ict) = bitsy(i)
-
-         end do 
-
-      end if 
-
-      write (text,1000) (bitsy(i), i = 1, ict),
-     *                  (' ',i = ict+1, len(text))
- 
-1000  format (240a)
-
-      end
-
-      subroutine peblnk (text)
-c----------------------------------------------------------------------
-c deblnk - scan text and delete multiple blank characters and blanks
-c preceding punctuation (',' and ':').
- 
-c     text - character string 
-
-c no test is made for a blank string or a string of "+" signs.
-c----------------------------------------------------------------------
-      implicit none 
-
-      integer i, ict, nchar
-
-      logical strip
- 
-      character text*(*), bitsy(400)*1 
- 
-      nchar = len(text) 
-
-      read (text,1000) (bitsy(i), i = 1, nchar)
-c                                find last non-blank
-      ict = 1 
-      
-      do i = 1, nchar
-         if (bitsy(i).gt.' ') ict = i
-      end do  
-
-      nchar = ict          
-c                                 kill any trailing +/-
-      if (bitsy(nchar).eq.'+'.or.bitsy(nchar).eq.'-') nchar = nchar - 1
-         
-c                                 scan for first non blank/+ character:
-      ict = 0 
-      
-      do i = 1, nchar
-         if (bitsy(i).eq.' '.or.bitsy(i).eq.'+') cycle
-         ict = i
-         exit 
-      end do 
-c                                 shift everything right
-      if (ict.gt.1) then 
-
-         ict = ict - 1
-         
-         do i = ict+1, nchar
-            bitsy(i-ict) = bitsy(i)
-         end do 
-
-         nchar = nchar - ict
-
-      end if 
-
-      ict = 1
-      
-      do i = 2, nchar
-c                                 strip out double blanks
-         if (bitsy(i).eq.' '.and.bitsy(i-1).eq.' ') cycle 
-         ict = ict + 1
-         bitsy(ict) = bitsy(i)
-
-      end do
-
-      nchar = ict      
-c                                 strip put + - and - + strings
-      strip = .false.
-
-      do i = 1, nchar - 2
-
-         if (bitsy(i).eq.'+'.and.bitsy(i+1).eq.'-'.or.
-     *       bitsy(i).eq.'-'.and.bitsy(i+1).eq.'+') then
-
-             bitsy(i) = '-'
-             bitsy(i+1) = ' '
-             strip = .true.
-
-         else if (bitsy(i).eq.'+'.and.bitsy(i+2).eq.'-'.or.
-     *            bitsy(i).eq.'-'.and.bitsy(i+2).eq.'+') then
-
-             bitsy(i) = '-'
-             bitsy(i+2) = ' '
-             strip = .true.
-
-         end if 
-
-      end do 
-
-      if (strip) then 
-c                                 strip out new double blanks
-         ict = 1
-
-         do i = 2, nchar
-
-            if (bitsy(i).eq.' '.and.bitsy(i-1).eq.' ') cycle 
-            ict = ict + 1
-            bitsy(ict) = bitsy(i)
-
-         end do 
-
-      end if 
-
-      write (text,1000) (bitsy(i), i = 1, ict),
-     *                  (' ',i = ict+1, len(text))
- 
-1000  format (400a)
-
-      end
-
       subroutine getnam (name,ids)
 c----------------------------------------------------------------------
 c subroutine to retrieve phase name corresponding to index ids
@@ -3638,7 +3328,6 @@ c                                 fluid eos species
 
       end
 
- 
       subroutine getphi (name,eof)
 c----------------------------------------------------------------------
 c read phase data from the thermodynamic data file from lun N2, assumes
@@ -3870,7 +3559,7 @@ c                                 assign data
             ok = .false.
 c                                 =====================================
 c                                 thermo data 
-            if (ieos.eq.12.and.ieos.eq.14) then
+            if (ieos.eq.12.or.ieos.eq.14) then
 c                                 calphad format
                do i = 1, 32
                   if (key.eq.strgs(i)) then 
@@ -4066,7 +3755,6 @@ c                                 no values
       end if 
 
       end 
-
 
       subroutine formul (lun)
 c----------------------------------------------------------------------
@@ -4519,50 +4207,6 @@ c                                 delete superfluous 0
 
       end 
 
-      integer function jscnlt (ibeg,iend,char,chars)
-c----------------------------------------------------------------------
-c iscan finds the first occurence of a character in chars(ibeg..iend) that
-c is greater than char. assuming ascii collating sequence +/- < 0 < a
-c----------------------------------------------------------------------
-      implicit none
-
-      character char*1, chars(14)*1
-
-      integer ibeg, iend, inc
-c----------------------------------------------------------------------
-
-      if (ibeg.le.iend) then 
-         inc = 1
-      else 
-         inc = -1
-      end if 
-
-      do jscnlt = ibeg, iend, inc
-
-         if (chars(jscnlt).gt.char) exit
-
-      end do 
-
-      end 
-
-      integer function jscan (ibeg,iend,char,chars)
-c----------------------------------------------------------------------
-c jscan finds the first occurence of char in chars(ibeg..iend)
-c----------------------------------------------------------------------
-      implicit none
-
-      character char*1, chars(*)*1
-
-      integer ibeg, iend
-c----------------------------------------------------------------------
-      do jscan = ibeg, iend
-
-         if (chars(jscan).eq.char) exit
-
-      end do 
-
-      end 
-
       subroutine fopen1 
 c-----------------------------------------------------------------------
 c fopen1 gets the project name and opens the problem definition file
@@ -4916,100 +4560,6 @@ c                                 get pointer to end of string in chars
       text = ' '
       if (nchar2.gt.len(text)) call error (10,0d0,240,text2)
       write (text,'(240a)') (chars(i), i = 1, nchar2)
-
-      end
-
-      subroutine leblnk (text,ibeg,nchar)
-c----------------------------------------------------------------------
-c leblnk - scan text and strip leading blanks load into chars from
-c position ibeg, nchar is the last non blank in char
-c non-blank character in stripped string
-c----------------------------------------------------------------------
-      implicit none 
-
-      integer i, ibeg, nchar, ist
- 
-      character text*(*)
-
-      integer length,iblank,icom
-      character chars*1
-      common/ cst51 /length,iblank,icom,chars(240)
-c----------------------------------------------------------------------
-      nchar = len(text) + ibeg -1 
-      if (nchar.gt.240) nchar = 240
-
-      read (text,'(240a)') (chars(i), i = ibeg, nchar)
-c                                 find last non-blank   
-      
-      do i = ibeg, nchar
-         if (chars(i).gt.' ') exit
-      end do  
-
-      ist = i 
-
-      if (ist.gt.nchar) then 
-c                                 all blank
-         nchar = 0
-
-      else 
-
-         if (ist.gt.ibeg) then 
-c                                 shift chars ist-1 left
-            do i = ist, nchar
-               chars(i+ibeg-ist) = chars(i)
-            end do
-         end if  
-c                                 find last non-blank
-         nchar = nchar + ibeg - ist
-
-         do i = nchar, ibeg, -1
-            if (chars(i).gt.' ') exit
-         end do 
-
-         nchar = i 
-
-      end if 
-
-      end
-
-      subroutine getstg (text)
-c---------------------------------------------------------------------- 
-c getstg - subroutine to get first non-blank string  
-c          
-c     text - character string on input, first non-blank strg on output
-c----------------------------------------------------------------------
-      implicit none 
-
-      integer i, nchar, ist
- 
-      character text*(*)
-
-      integer length,iblank,icom
-      character chars*1
-      common/ cst51 /length,iblank,icom,chars(240)
-c----------------------------------------------------------------------
-      nchar = len(text) 
-      if (nchar.gt.240) nchar = 240
-
-      read (text,'(240a)') (chars(i), i = 1, nchar)
-c                                 scan for blanks:
-      ist = 1
-
-      do i = 1, nchar
-         if (chars(i).eq.' ') cycle 
-         ist = i
-         exit 
-      end do 
-
-      do i = ist, nchar
-         if (chars(i).ne.' ') cycle 
-         nchar = i-1
-         exit 
-      end do 
-
-      text = ' '
-
-      write (text,'(240a)') (chars(i), i = ist, nchar)
 
       end
 
@@ -5701,6 +5251,452 @@ c subprogram to filter blanks from text
          chars(i) = ' '
       end do 
  
+      end
+
+      subroutine leblnk (text,ibeg,nchar)
+c----------------------------------------------------------------------
+c leblnk - scan text and strip leading blanks load into chars from
+c position ibeg, nchar is the last non blank in char
+c non-blank character in stripped string
+c----------------------------------------------------------------------
+      implicit none 
+
+      integer i, ibeg, nchar, ist
+ 
+      character text*(*)
+
+      integer length,iblank,icom
+      character chars*1
+      common/ cst51 /length,iblank,icom,chars(240)
+c----------------------------------------------------------------------
+      nchar = len(text) + ibeg -1 
+      if (nchar.gt.240) nchar = 240
+
+      read (text,'(240a)') (chars(i), i = ibeg, nchar)
+c                                 find last non-blank   
+      
+      do i = ibeg, nchar
+         if (chars(i).gt.' ') exit
+      end do  
+
+      ist = i 
+
+      if (ist.gt.nchar) then 
+c                                 all blank
+         nchar = 0
+
+      else 
+
+         if (ist.gt.ibeg) then 
+c                                 shift chars ist-1 left
+            do i = ist, nchar
+               chars(i+ibeg-ist) = chars(i)
+            end do
+         end if  
+c                                 find last non-blank
+         nchar = nchar + ibeg - ist
+
+         do i = nchar, ibeg, -1
+            if (chars(i).gt.' ') exit
+         end do 
+
+         nchar = i 
+
+      end if 
+
+      end
+
+      integer function iscan (ibeg,iend,char)
+c----------------------------------------------------------------------
+c iscan finds the first occurence of char in chars(ibeg..iend), if not
+c found iscan is ?; kscan does the forward/inverse scans and sets value
+c for bad ranges
+c----------------------------------------------------------------------
+      implicit none
+
+      character char*1
+
+      integer ibeg, iend
+
+      integer length,iblank,icom
+      character chars*1
+      common/ cst51 /length,iblank,icom,chars(240)
+c----------------------------------------------------------------------
+
+      do iscan = ibeg, iend
+
+         if (chars(iscan).eq.char) exit
+
+      end do 
+
+      end 
+
+      integer function kscan (ibeg,iend,char)
+c----------------------------------------------------------------------
+c iscan finds the first occurence of char in chars(ibeg..iend), if not
+c found iscan is iend + inc
+c----------------------------------------------------------------------
+      implicit none
+
+      character char*1
+
+      integer ibeg, iend, inc
+
+      integer length,iblank,icom
+      character chars*1
+      common/ cst51 /length,iblank,icom,chars(240)
+c----------------------------------------------------------------------
+      if (ibeg.gt.iend) then 
+         inc = -1
+      else 
+         inc = 1
+      end if 
+
+      do kscan = ibeg, iend, inc 
+
+         if (chars(kscan).eq.char) exit
+
+      end do 
+c                                 normal loop exit kscan = iend + inc
+      end 
+
+      integer function iscnlt (ibeg,iend,char)
+c----------------------------------------------------------------------
+c iscan finds the first occurence of a character in chars(ibeg..iend) that
+c is greater than char. assuming ascii collating sequence +/- < 0 < a
+c----------------------------------------------------------------------
+      implicit none
+
+      character char*1
+
+      integer ibeg, iend, inc
+
+      integer length,iblank,icom
+      character chars*1
+      common/ cst51 /length,iblank,icom,chars(240)
+c----------------------------------------------------------------------
+
+      if (ibeg.le.iend) then 
+         inc = 1
+      else 
+         inc = -1
+      end if 
+
+      do iscnlt = ibeg, iend, inc
+
+         if (chars(iscnlt).gt.char) exit
+
+      end do 
+
+      end 
+
+      integer function jscnlt (ibeg,iend,char,chars)
+c----------------------------------------------------------------------
+c iscan finds the first occurence of a character in chars(ibeg..iend) that
+c is greater than char. assuming ascii collating sequence +/- < 0 < a
+c----------------------------------------------------------------------
+      implicit none
+
+      character char*1, chars(14)*1
+
+      integer ibeg, iend, inc
+c----------------------------------------------------------------------
+
+      if (ibeg.le.iend) then 
+         inc = 1
+      else 
+         inc = -1
+      end if 
+
+      do jscnlt = ibeg, iend, inc
+
+         if (chars(jscnlt).gt.char) exit
+
+      end do 
+
+      end 
+
+      integer function jscan (ibeg,iend,char,chars)
+c----------------------------------------------------------------------
+c jscan finds the first occurence of char in chars(ibeg..iend)
+c----------------------------------------------------------------------
+      implicit none
+
+      character char*1, chars(*)*1
+
+      integer ibeg, iend
+c----------------------------------------------------------------------
+      do jscan = ibeg, iend
+
+         if (chars(jscan).eq.char) exit
+
+      end do 
+
+      end 
+
+      subroutine deblnk (text)
+c----------------------------------------------------------------------
+c deblnk - scan text and delete multiple blank characters, strip
+c out sequential + - or - + operators, trailing -/+ operators, 
+c leading blanks, and leading + operators. also deletes blanks
+c preceding punctuation (',' and ':').
+ 
+c     text - character string 
+
+c no test is made for a blank string or a string of "+" signs.
+c----------------------------------------------------------------------
+      implicit none 
+
+      integer i, nchar
+
+      logical strip
+ 
+      character text*(*)
+
+      integer ict,iblank,icom
+      character bitsy*1
+      common/ cst51 /ict,iblank,icom,bitsy(240)
+c---------------------------------------------------------------------- 
+      nchar = len(text) 
+
+      read (text,1000) (bitsy(i), i = 1, nchar)
+c                                find last non-blank
+      ict = 1 
+      
+      do i = 1, nchar
+         if (bitsy(i).gt.' ') ict = i
+      end do  
+
+      nchar = ict          
+c                                 kill any trailing +/- or ','
+      if (bitsy(nchar).eq.'+'.or.bitsy(nchar).eq.'-'.or.
+     *    bitsy(nchar).eq.',') nchar = nchar - 1
+         
+c                                 scan for first non blank/+ character:
+      ict = 0 
+      
+      do i = 1, nchar
+         if (bitsy(i).eq.' '.or.bitsy(i).eq.'+') cycle
+         ict = i
+         exit 
+      end do 
+c                                 shift everything right
+      if (ict.gt.1) then 
+
+         ict = ict - 1
+         
+         do i = ict+1, nchar
+            bitsy(i-ict) = bitsy(i)
+         end do 
+
+         nchar = nchar - ict
+
+      end if 
+
+      ict = 1
+      
+      do i = 2, nchar
+c                                 strip out double blanks
+         if ((bitsy(i).eq.' '.and.bitsy(i+1).eq.' ').or.
+     *       (bitsy(i).eq.' '.and.bitsy(i+1).eq.':').or.
+     *       (bitsy(i).eq.' '.and.bitsy(i+1).eq.',').or.
+     *       (bitsy(i).eq.' '.and.bitsy(i+1).eq.')')) cycle 
+         ict = ict + 1
+         bitsy(ict) = bitsy(i)
+
+      end do
+
+      nchar = ict      
+c                                 strip put + - and - + strings
+      strip = .false.
+
+      do i = 1, nchar - 2
+
+         if (bitsy(i).eq.'+'.and.bitsy(i+1).eq.'-'.or.
+     *       bitsy(i).eq.'-'.and.bitsy(i+1).eq.'+') then
+
+             bitsy(i) = '-'
+             bitsy(i+1) = ' '
+             strip = .true.
+
+         else if (bitsy(i).eq.'+'.and.bitsy(i+2).eq.'-'.or.
+     *            bitsy(i).eq.'-'.and.bitsy(i+2).eq.'+') then
+
+             bitsy(i) = '-'
+             bitsy(i+2) = ' '
+             strip = .true.
+
+         end if 
+
+      end do 
+
+      if (strip) then 
+c                                 strip out new double blanks
+         ict = 1
+
+         do i = 2, nchar
+
+            if (bitsy(i).eq.' '.and.bitsy(i-1).eq.' ') cycle 
+            ict = ict + 1
+            bitsy(ict) = bitsy(i)
+
+         end do 
+
+      end if 
+
+      write (text,1000) (bitsy(i), i = 1, ict),
+     *                  (' ',i = ict+1, len(text))
+ 
+1000  format (240a)
+
+      end
+
+      subroutine peblnk (text)
+c----------------------------------------------------------------------
+c deblnk - scan text and delete multiple blank characters and blanks
+c preceding punctuation (',' and ':').
+ 
+c     text - character string 
+
+c no test is made for a blank string or a string of "+" signs.
+c----------------------------------------------------------------------
+      implicit none 
+
+      integer i, ict, nchar
+
+      logical strip
+ 
+      character text*(*), bitsy(400)*1 
+ 
+      nchar = len(text) 
+
+      read (text,1000) (bitsy(i), i = 1, nchar)
+c                                find last non-blank
+      ict = 1 
+      
+      do i = 1, nchar
+         if (bitsy(i).gt.' ') ict = i
+      end do  
+
+      nchar = ict          
+c                                 kill any trailing +/-
+      if (bitsy(nchar).eq.'+'.or.bitsy(nchar).eq.'-') nchar = nchar - 1
+         
+c                                 scan for first non blank/+ character:
+      ict = 0 
+      
+      do i = 1, nchar
+         if (bitsy(i).eq.' '.or.bitsy(i).eq.'+') cycle
+         ict = i
+         exit 
+      end do 
+c                                 shift everything right
+      if (ict.gt.1) then 
+
+         ict = ict - 1
+         
+         do i = ict+1, nchar
+            bitsy(i-ict) = bitsy(i)
+         end do 
+
+         nchar = nchar - ict
+
+      end if 
+
+      ict = 1
+      
+      do i = 2, nchar
+c                                 strip out double blanks
+         if (bitsy(i).eq.' '.and.bitsy(i-1).eq.' ') cycle 
+         ict = ict + 1
+         bitsy(ict) = bitsy(i)
+
+      end do
+
+      nchar = ict      
+c                                 strip put + - and - + strings
+      strip = .false.
+
+      do i = 1, nchar - 2
+
+         if (bitsy(i).eq.'+'.and.bitsy(i+1).eq.'-'.or.
+     *       bitsy(i).eq.'-'.and.bitsy(i+1).eq.'+') then
+
+             bitsy(i) = '-'
+             bitsy(i+1) = ' '
+             strip = .true.
+
+         else if (bitsy(i).eq.'+'.and.bitsy(i+2).eq.'-'.or.
+     *            bitsy(i).eq.'-'.and.bitsy(i+2).eq.'+') then
+
+             bitsy(i) = '-'
+             bitsy(i+2) = ' '
+             strip = .true.
+
+         end if 
+
+      end do 
+
+      if (strip) then 
+c                                 strip out new double blanks
+         ict = 1
+
+         do i = 2, nchar
+
+            if (bitsy(i).eq.' '.and.bitsy(i-1).eq.' ') cycle 
+            ict = ict + 1
+            bitsy(ict) = bitsy(i)
+
+         end do 
+
+      end if 
+
+      write (text,1000) (bitsy(i), i = 1, ict),
+     *                  (' ',i = ict+1, len(text))
+ 
+1000  format (400a)
+
+      end
+
+      subroutine getstg (text)
+c---------------------------------------------------------------------- 
+c getstg - subroutine to get first non-blank string  
+c          
+c     text - character string on input, first non-blank strg on output
+c----------------------------------------------------------------------
+      implicit none 
+
+      integer i, nchar, ist
+ 
+      character text*(*)
+
+      integer length,iblank,icom
+      character chars*1
+      common/ cst51 /length,iblank,icom,chars(240)
+c----------------------------------------------------------------------
+      nchar = len(text) 
+      if (nchar.gt.240) nchar = 240
+
+      read (text,'(240a)') (chars(i), i = 1, nchar)
+c                                 scan for blanks:
+      ist = 1
+
+      do i = 1, nchar
+         if (chars(i).eq.' ') cycle 
+         ist = i
+         exit 
+      end do 
+
+      do i = ist, nchar
+         if (chars(i).ne.' ') cycle 
+         nchar = i-1
+         exit 
+      end do 
+
+      text = ' '
+
+      write (text,'(240a)') (chars(i), i = ist, nchar)
+
       end
 
       subroutine redlpt (coeffs,ibeg,iend,len,ier)
