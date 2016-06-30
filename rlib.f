@@ -4834,9 +4834,10 @@ c                                 constants:
       c3 = a1 * vt * (-196d0 - 42d0 * kprime)
       c4 = a1 * (80d0 + 15d0 * kprime)
       c5 = a1 * vt * (108d0 + 27d0 * kprime)
+c                                 use murnaghan guess for volume. GH, 6/23/16
 c                                 initial guess for volume:
-      v = k * vt / (p + k)
       dv = 1d0
+      v = vt * (1d0 - kprime*p/k)**(dv/kprime)
       itic = 0 
 
       do while (dabs(dv).gt.1d-5)
@@ -4854,7 +4855,7 @@ c                                 initial guess for volume:
             if (jerk.lt.10) then 
                jerk = jerk + 1
                write (*,1000) t,p
-               if (jerk.eq.10) call warn (49,r,369,'GGHI')
+               if (jerk.eq.10) call warn (49,r,369,'VDPBM3')
             end if 
  
             vdpbm3 = 1d4*p
@@ -12206,7 +12207,7 @@ c                                 gloabl coordinate counter for xcoor (cxt10)
 c                                 initialize model counter
       im = 0
 c                                 no request for solutions
-      if (io9.eq.1) then 
+      if (io9.eq.1.or.isoct.eq.0) then 
 
          isoct = 0 
          return 
