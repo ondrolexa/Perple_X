@@ -17,7 +17,7 @@ c----------------------------------------------------------------------
       implicit none
 
       write (*,'(/,a)') 
-     *      'Perple_X version 6.7.3, source updated Jun 30, 2016.'
+     *      'Perple_X version 6.7.3, source updated Jul 10, 2016.'
 
       end
 
@@ -1778,7 +1778,7 @@ c---------------------------------------------------------------------
       else if (ier.eq.8) then 
          write (*,8) 
       else if (ier.eq.9) then 
-         write (*,9)
+         write (*,9) char
       else if (ier.eq.10) then 
          write (*,10) char
       else if (ier.eq.11) then 

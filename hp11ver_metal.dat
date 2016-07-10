@@ -2591,12 +2591,19 @@ Tc = 0 B = 0 p = 0
 transition = 1 type = 6 t1 = 1811 t4 = -29340.776 t5 = 304.561559 t6 = -46. t10 = .278854d32
 end
 
-| HSC gas phase data.........
+| HSC gas/liq phase data.........
+
+MgO(l)    Eos = 1
+MGO(1) 
+G0 = -564.830d3 S0 = 12.833
+c1 = 66.944
+end 
+  
 
 Mg(g)     Eos = 10 | HSC ideal gas good to 9200 K
 MGO(1)O2(-0.5)
 G0 = 102.781d3 S0 = 148.64698
-c1 = 102.781 c2 = -0.27238d-3 c3 = -0.10732d5 c4 = 0.0928d-6
+c1 = 20.9673214607239  c2 = -0.27238d-3 c3 = -0.10732d5 c4 = 0.0928d-6
 transition = 1 type = 2 t1  = 3000  t4  = 24.64439 t5 = -4.19509d-3 t6 = 86.67662d5 t7 = 0.88588d-6
 transition = 2 type = 2 t1  = 5500  t4  = -70.53931 t5 = 21.29631d-3 t6 = 3993.02967d5 t7 = -1.02981d-6
 end 
