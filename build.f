@@ -1404,8 +1404,8 @@ c                                 option file name
 c                                 computational mode:
       write (n1,1010) icopt,'calculation type: 0 - composition,',
      *                ' 1 - Schreinemakers,', 
-     *                ' 3 - Mixed, 4 - gwash,',
-     *                ' 5 - gridded min, 7 - 1d fract, 8 - gwash',
+     *                ' 3 - Mixed, 4 - swash,',
+     *                ' 5 - gridded min, 7 - 1d fract, 8 - gwash,',
      *                ' 9 - 2d fract, 10 - 7 w/file input' 
 c                                 coordinate file name if necessary
       if (icopt.eq.10) then 

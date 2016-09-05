@@ -9676,7 +9676,7 @@ c                                 set the ifp flag for t_melt option
          do i = 1, mstot(im)
 c                                 insp points to the original position 
 c                                 of endmember i in the solution model input:
-            ifp(knsp(i,im)) = -1
+            ifp(kdsol(knsp(i,im))) = -1
 
          end do 
 

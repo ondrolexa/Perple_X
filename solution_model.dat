@@ -5401,8 +5401,44 @@ end_van_laar_sizes
 end_of_model
                                   --------------------------------------------------------
 begin_model                
-                                      HP '98 olivine solution
+                                      HP '98 olivine solution.
+
 O(HP)                     
+abbreviation Ol
+full_name    olivine
+                                                          
+2                                     model type: Margules, macroscopic
+
+3                                     3 endmembers
+teph     fo       fa        
+0  0   0                            | endmember flags
+
+                                    | NOTE restricted compositional range for Mn 
+
+0.0 1.0  0.1   1                    | range and resolution for X(Mn), imod = 1 -> asymmetric transform subdivision
+0.0 1.0  0.1   0                    | range and resolution for X(Mg), imod = 0 -> cartesian subdivision
+
+begin_excess_function
+W(fo fa) 8400. 0. 0.                | corrected from 4.2 kJ Nov 15, 2004.          
+end_excess_function 
+
+1                                     1 site entropy model
+
+3 2.                                  3 species, site multiplicity = 2.
+
+z(mg) = 1 fo
+z(fe) = 1 fa 
+
+end_of_model              
+                                  --------------------------------------------------------
+begin_model                
+                                      HP '98 olivine solution with an approximation to the
+                                      T Kawasaki (J Min Pet Sci, 96:54-66, 2001) symetric fo-monticellite 
+                                      excess function, this is probably adequate a first order 
+                                      model for Ca solution in olivine. To reproduce the solvus
+                                      or evaluate pressure effects refer to Kawasaki or Warner
+                                      and Luth 1973 or find more recent work. JADC, Jul 10, 2016. 
+O(HPK)                     
 abbreviation Ol
 full_name    olivine
                                                           
@@ -5410,20 +5446,25 @@ full_name    olivine
 
 4                                     3 endmembers
 mont     teph     fo       fa        
-  0  0  0   0                        | endmember flags
+  0  0  0   0                       | endmember flags
 
                                     | NOTE restricted compositional range for Mn 
-0.0 1.0  0.1   1                    | range and resolution for X(Ca), imod = 1
-0.0 1.0  0.1   1                    | range and resolution for X(Mn), imod = 1 -> asymmetric transform subdivision
+0.0 1.0  0.1   0                    | range and resolution for X(Ca), imod = 0
+0.0 1.0  0.1   0                    | range and resolution for X(Mn), imod = 0 
 0.0 1.0  0.1   0                    | range and resolution for X(Mg), imod = 0 -> cartesian subdivision
 
 begin_excess_function
 W(fo fa) 8400. 0. 0.                | corrected from 4.2 kJ Nov 15, 2004.
+W(fo mont) 34050. 0. 0.             
 end_excess_function 
+
+                                    | this model is not incorrect because Ca partitions onto M1, i.e., 
+                                    | the model should be an o/d model, such a model has been published
+                                    | (probably by Ghiorso or coworkers). 
 
 1                                     1 site entropy model
 
-4 2.                                  3 species, site multiplicity = 2.
+4 2.                                  4 species, site multiplicity = 2
 z(mn) = 1 teph
 z(mg) = 1 fo
 z(fe) = 1 fa 
