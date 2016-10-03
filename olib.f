@@ -711,6 +711,12 @@ c-----------------------------------------------------------------------
       integer iam
       common/ cst4 /iam
 c----------------------------------------------------------------------
+c                                 put NaN check to prevent a NaN increment 
+c                                 from setting p/t to a NaN, this should only 
+c                                 happen if a phase has no volumetric and/or 
+c                                 caloric EoS. JADC 9/18/2016.
+      if (isnan(dp)) dp = 0d0
+      if (isnan(dt)) dt = 0d0
 
       p = p + dp 
       t = t + dt 
@@ -758,7 +764,7 @@ c-----------------------------------------------------------------------
      *         gfesi, gerk, gfecr1
 
       integer jend
-      common/ cxt23 /jend(h9,k12)
+      common/ cxt23 /jend(h9,m4)
 
       double precision r,tr,pr,ps,p,t,xco2,u1,u2
       common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -778,6 +784,9 @@ c                                 model type
 
       integer jspec
       common/ cxt8 /jspec(h9,m4)
+
+      integer ideps,icase,nrct
+      common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
 c----------------------------------------------------------------------
       if (id.lt.0) then 
 
@@ -806,6 +815,8 @@ c                                 get mechanical mixture contribution
 c                                 -------------------------------------
 c                                 convert y coordinates to independent p coordinates
             call y2p0 (id)
+c                                 evaluate enthalpies of ordering
+            call oenth (id)
 c                                 get the speciation, excess and entropy effects.
             call specis (g,id)
 
@@ -820,19 +831,21 @@ c                                 are not dqf'd. gex not neccessary as computed 
 
          else if (lorder(id)) then 
 c                                 -------------------------------------
+c                                 evaluate enthalpies of ordering
+            call oenth (id)
 c                                 non-reciprocal speciation.
             do k = 1, lstot(id)  
                pa(k) = y(k)
                p0a(k) = y(k)
                g = g + y(k) * gcpd (jend(id,2+k),.true.)
             end do 
-c                                 get the speciation energy effect
+
             call specis (dg,id)
 
             g = g + dg 
 c                                 get dqf corrections
-            call gdqf (id,g,p0a) 
- 
+            call gdqf (id,g,p0a)
+
          else if (lrecip(id)) then 
 c                                 -------------------------------------
 c                                 macroscopic reciprocal solution w/o order-disorder
@@ -854,7 +867,7 @@ c                                 -------------------------------------
 c                                 hp melt model         
             call gdqf (id,g,y) 
 
-            g = g - t * hpmelt (id) + gex (id,y)
+            g = g - t * hpmelt (id,y) + gex (id,y)
 c                                 get mechanical mixture contribution
             do k = 1, mstot(id)  
                g = g + y(k) * gcpd (jend(id,2+k),.true.)
@@ -978,18 +991,7 @@ c                                 model type
       common/ cstcoh /xs(nsp),g(nsp),v(nsp)
 c----------------------------------------------------------------------
 
-      if (ksmod(id).eq.2.or.ksmod(id).eq.3.or.ksmod(id).eq.24.or.
-     *    ksmod(id).eq.25.or.ksmod(id).eq.26.or.ksmod(id).eq.28) then 
-c                                 macroscopic formulation for normal solutions (2,3) and
-c                                 hp melt model (24)
-c                                 ghiorso melt model (25)
-c                                 andreas salt model (26)
-c                                 high T melt model (28)
-         do k = 1, spct(id) 
-            ysp(k,jd) = y(k)
-         end do 
-
-      else if ((lrecip(id).and.lorder(id)).or.lorder(id)) then 
+      if ((lrecip(id).and.lorder(id)).or.lorder(id)) then 
 
          do k = 1, spct(id) 
             ysp(k,jd) = pa(k)
@@ -999,7 +1001,18 @@ c                                 high T melt model (28)
 
          do k = 1, spct(id) 
             ysp(k,jd) = p0a(k)
-         end do 
+         end do
+
+      else if (ksmod(id).eq.2.or.ksmod(id).eq.3.or.ksmod(id).ge.24.and.
+     *         ksmod(id).le.28) then 
+c                                 macroscopic formulation for normal solutions (2,3) and
+c                                 hp melt model (24)
+c                                 ghiorso melt model (25)
+c                                 andreas salt model (26)
+c                                 high T melt model (28)
+         do k = 1, spct(id)
+            ysp(k,jd) = y(k)
+         end do
 
       else if (ksmod(id).eq.29.or.ksmod(id).eq.32) then 
 c                                 BCC Fe-Si Lacaze and Sundman (29) 
@@ -1192,7 +1205,7 @@ c                                 bookkeeping variables
       common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
 
       integer jend
-      common/ cxt23 /jend(h9,k12)
+      common/ cxt23 /jend(h9,m4)
 
       logical lorder, lexces, llaar, lrecip
       common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)

@@ -1443,7 +1443,7 @@ c-----------------------------------------------------------------------
       common/ cst61 /ikp(k1)
 
       integer jend
-      common/ cxt23 /jend(h9,k12)
+      common/ cxt23 /jend(h9,m4)
 
       integer eos
       common/ cst303 /eos(k10)

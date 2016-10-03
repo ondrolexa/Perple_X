@@ -1864,7 +1864,7 @@ c                                 working arrays
      *              wl(m17,m18)
 c                                 single site solution coordinates:
       integer jend
-      common/ cxt23 /jend(h9,k12)
+      common/ cxt23 /jend(h9,m4)
 c                                 refined compositions and solution 
 c                                 pointer
       integer kkp,np,ncpd,ntot

@@ -17,7 +17,7 @@ c----------------------------------------------------------------------
       implicit none
 
       write (*,'(/,a)') 
-     *      'Perple_X version 6.7.3, source updated Sep 5, 2016.'
+     *      'Perple_X version 6.7.4, source updated Oct 3, 2016.'
 
       end
 
@@ -32,7 +32,7 @@ c----------------------------------------------------------------------
       character*3 new
 
       if (new.eq.'008'.or.new.eq.'011'.or.new.eq.'670'.or.
-     *    new.eq.'672'.or.new.eq.'673') then 
+     *    new.eq.'672'.or.new.eq.'673'.or.new.eq.'674') then 
 
          chksol = .true.
 
@@ -1821,8 +1821,6 @@ c---------------------------------------------------------------------
          write (*,29) int, char
       else if (ier.eq.30) then
          write (*,30) int,char
-      else if (ier.eq.31) then
-         write (*,31) char
       else if (ier.eq.32) then 
          write (*,32)
       else if (ier.eq.33) then 
@@ -2054,8 +2052,6 @@ c---------------------------------------------------------------------
 30    format (/,'**error ver030** the number of mixing sites ',i2,
      *          ' is < the number of independent sites',/,' for',
      *          ' solution model: ',a,/)
-31    format (/,'**error ver031** erroneous solution model',
-     *          ' parameter for: ',a,/)
 32    format (/,'**error ver032** stability field calculations (',
      *          'option 2) are disabled in this version of PERPLEX',/)
 33    format (/,'**error ver033** expression with too many terms in ',a

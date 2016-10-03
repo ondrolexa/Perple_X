@@ -3107,10 +3107,10 @@ c----------------------------------------------------------------------
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
      *        kstot,rkord,xtyp
       double precision wg,wk,xmn,xmx,xnc,reach
-      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),
-     *      xmn(mst,msp),xmx(mst,msp),xnc(mst,msp),
-     *      reach,iend(m4),isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),
-     *      isp(mst),rkord(m18),isite,iterm,iord,istot,jstot,kstot,xtyp
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),xmn(mst,msp),
+     *      xmx(mst,msp),xnc(mst,msp),reach,iend(m4),isub(m1,m2,2),
+     *      imd(msp,mst),insp(m4),ist(mst),isp(mst),rkord(m18),isite,
+     *      iterm,iord,istot,jstot,kstot,xtyp
 
       integer length,iblank,icom
       character chars*1
@@ -3845,13 +3845,13 @@ c-----------------------------------------------------------------
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
      *        kstot,rkord,xtyp
       double precision wg,wk,xmn,xmx,xnc,reach
-      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),
-     *      xmn(mst,msp),xmx(mst,msp),xnc(mst,msp),
-     *      reach,iend(m4),isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),
-     *      isp(mst),rkord(m18),isite,iterm,iord,istot,jstot,kstot,xtyp
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),xmn(mst,msp),
+     *      xmx(mst,msp),xnc(mst,msp),reach,iend(m4),isub(m1,m2,2),
+     *      imd(msp,mst),insp(m4),ist(mst),isp(mst),rkord(m18),isite,
+     *      iterm,iord,istot,jstot,kstot,xtyp
 c-----------------------------------------------------------------
 
-      if (nsite.gt.m10) call error (31,a0(1,1),isite,tname)
+      if (nsite.gt.m10) call error (1,a0(1,1),nsite,'m10')
 c
       if (nsite.lt.isite) call error (30,a0(1,1),isite,tname)
 c                                 for each site
@@ -4908,10 +4908,10 @@ c---------------------------------------------------------------------
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
      *        kstot,rkord,xtyp
       double precision wg,wk,xmn,xmx,xnc,reach
-      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),
-     *      xmn(mst,msp),xmx(mst,msp),xnc(mst,msp),
-     *      reach,iend(m4),isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),
-     *      isp(mst),rkord(m18),isite,iterm,iord,istot,jstot,kstot,xtyp
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),xmn(mst,msp),
+     *      xmx(mst,msp),xnc(mst,msp),reach,iend(m4),isub(m1,m2,2),
+     *      imd(msp,mst),insp(m4),ist(mst),isp(mst),rkord(m18),isite,
+     *      iterm,iord,istot,jstot,kstot,xtyp
 c                                 interval limits conformal transformation
       integer intv
       double precision yint, yfrc
@@ -5857,10 +5857,10 @@ c---------------------------------------------------------------------
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
      *        kstot,rkord,xtyp
       double precision wg,wk,xmn,xmx,xnc,reach
-      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),
-     *      xmn(mst,msp),xmx(mst,msp),xnc(mst,msp),
-     *      reach,iend(m4),isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),
-     *      isp(mst),rkord(m18),isite,iterm,iord,istot,jstot,kstot,xtyp
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),xmn(mst,msp),
+     *      xmx(mst,msp),xnc(mst,msp),reach,iend(m4),isub(m1,m2,2),
+     *      imd(msp,mst),insp(m4),ist(mst),isp(mst),rkord(m18),isite,
+     *      iterm,iord,istot,jstot,kstot,xtyp
 c----------------------------------------------------------------------
       kill = 1
 
@@ -5982,10 +5982,10 @@ c                                 local input variables
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
      *        kstot,rkord,xtyp
       double precision wg,wk,xmn,xmx,xnc,reach
-      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),
-     *      xmn(mst,msp),xmx(mst,msp),xnc(mst,msp),
-     *      reach,iend(m4),isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),
-     *      isp(mst),rkord(m18),isite,iterm,iord,istot,jstot,kstot,xtyp
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),xmn(mst,msp),
+     *      xmx(mst,msp),xnc(mst,msp),reach,iend(m4),isub(m1,m2,2),
+     *      imd(msp,mst),insp(m4),ist(mst),isp(mst),rkord(m18),isite,
+     *      iterm,iord,istot,jstot,kstot,xtyp
 
       double precision yin
       common/ cst50 /yin(ms1,mst)
@@ -6098,10 +6098,10 @@ c                                 local input variables
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
      *        kstot,rkord,xtyp
       double precision wg,wk,xmn,xmx,xnc,reach
-      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),
-     *      xmn(mst,msp),xmx(mst,msp),xnc(mst,msp),
-     *      reach,iend(m4),isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),
-     *      isp(mst),rkord(m18),isite,iterm,iord,istot,jstot,kstot,xtyp
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),xmn(mst,msp),
+     *      xmx(mst,msp),xnc(mst,msp),reach,iend(m4),isub(m1,m2,2),
+     *      imd(msp,mst),insp(m4),ist(mst),isp(mst),rkord(m18),isite,
+     *      iterm,iord,istot,jstot,kstot,xtyp
 
       integer iorig,jnsp,iy2p
       common / cst159 /iorig(m4),jnsp(m4),iy2p(m4)
@@ -6200,7 +6200,7 @@ c                                 may be stable
 c                                 check if a missing constituent 
             bad = .false.
 
-            do j = 1, 2
+            do j = 1, nr(k)
                if (kdsol(iddeps(j,k)).eq.-3) then 
                   bad = .true.
                   exit 
@@ -6626,10 +6626,10 @@ c---------------------------------------------------------------------
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
      *        kstot,rkord,xtyp
       double precision wg,wk,xmn,xmx,xnc,reach
-      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),
-     *      xmn(mst,msp),xmx(mst,msp),xnc(mst,msp),
-     *      reach,iend(m4),isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),
-     *      isp(mst),rkord(m18),isite,iterm,iord,istot,jstot,kstot,xtyp
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),xmn(mst,msp),
+     *      xmx(mst,msp),xnc(mst,msp),reach,iend(m4),isub(m1,m2,2),
+     *      imd(msp,mst),insp(m4),ist(mst),isp(mst),rkord(m18),isite,
+     *      iterm,iord,istot,jstot,kstot,xtyp
 
       integer mdep,idep,jdep,ndph
       double precision nu,y2p
@@ -6754,10 +6754,10 @@ c----------------------------------------------------------------------
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
      *        kstot,rkord,xtyp
       double precision wg,wk,xmn,xmx,xnc,reach
-      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),
-     *      xmn(mst,msp),xmx(mst,msp),xnc(mst,msp),
-     *      reach,iend(m4),isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),
-     *      isp(mst),rkord(m18),isite,iterm,iord,istot,jstot,kstot,xtyp
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),xmn(mst,msp),
+     *      xmx(mst,msp),xnc(mst,msp),reach,iend(m4),isub(m1,m2,2),
+     *      imd(msp,mst),insp(m4),ist(mst),isp(mst),rkord(m18),isite,
+     *      iterm,iord,istot,jstot,kstot,xtyp
 
       integer iddeps,norder,nr 
       double precision depnu,denth
@@ -6871,10 +6871,10 @@ c---------------------------------------------------------------------
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
      *        kstot,rkord,xtyp
       double precision wg,wk,xmn,xmx,xnc,reach
-      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),
-     *      xmn(mst,msp),xmx(mst,msp),xnc(mst,msp),
-     *      reach,iend(m4),isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),
-     *      isp(mst),rkord(m18),isite,iterm,iord,istot,jstot,kstot,xtyp
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),xmn(mst,msp),
+     *      xmx(mst,msp),xnc(mst,msp),reach,iend(m4),isub(m1,m2,2),
+     *      imd(msp,mst),insp(m4),ist(mst),isp(mst),rkord(m18),isite,
+     *      iterm,iord,istot,jstot,kstot,xtyp
 
       logical depend,laar,order,fluid,macro,specil,recip
       common/ cst160 /depend,laar,order,fluid,macro,specil,recip
@@ -6950,7 +6950,7 @@ c                                 correct jsmod for old versions
       if (jsmod.eq.3) jsmod = 2  
       if (jsmod.eq.0) fluid = .true.
       if (jsmod.eq.1) call error (68,enth(1),jsmod,tname)
-      if (jsmod.eq.6.or.jsmod.eq.8) order = .true.
+      if (jsmod.eq.6.or.jsmod.eq.8.or.jsmod.eq.27) order = .true.
       if (jsmod.eq.5.or.jsmod.eq.7.or.jsmod.eq.8) depend = .true. 
       if (jsmod.eq.7.or.jsmod.eq.8) recip = .true. 
       if (jsmod.gt.20) specil = .true.  
@@ -7118,7 +7118,7 @@ c                              expansion for S(configurational)
 
       nsite = idint(rnums(1))
 
-      if (nsite.gt.m10) call error (31,a0(1,1),isite,tname)
+      if (nsite.gt.m10) call error (1,a0(1,1),nsite,'m10')
 c                                 for each site
       do i = 1, nsite 
 c                                 read # of species, and site 
@@ -7204,10 +7204,10 @@ c---------------------------------------------------------------------
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
      *        kstot,rkord,xtyp
       double precision wg,wk,xmn,xmx,xnc,reach
-      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),
-     *      xmn(mst,msp),xmx(mst,msp),xnc(mst,msp),
-     *      reach,iend(m4),isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),
-     *      isp(mst),rkord(m18),isite,iterm,iord,istot,jstot,kstot,xtyp
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),xmn(mst,msp),
+     *      xmx(mst,msp),xnc(mst,msp),reach,iend(m4),isub(m1,m2,2),
+     *      imd(msp,mst),insp(m4),ist(mst),isp(mst),rkord(m18),isite,
+     *      iterm,iord,istot,jstot,kstot,xtyp
 
       integer jmsol,kdsol
       common/ cst142 /jmsol(m4,mst),kdsol(m4)
@@ -7400,7 +7400,7 @@ c-----------------------------------------------------------------------
       common/ cst304 /sxs(k13),exces(m3,k1),ixp(k1)
 
       integer jend
-      common/ cxt23 /jend(h9,k12)
+      common/ cxt23 /jend(h9,m4)
 c                                 working arrays
       double precision z, pa, p0a, x, w, y, wl
       common/ cxt7 /x(m4),y(m4),pa(m4),p0a(m4),z(mst,msp),w(m1),
@@ -7412,6 +7412,9 @@ c                                 bookkeeping variables
 c                                 model type
       logical lorder, lexces, llaar, lrecip
       common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
+
+      integer ideps,icase,nrct
+      common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
 
       integer ksmod, ksite, kmsol, knsp
       common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
@@ -7435,13 +7438,15 @@ c     *                   ksmod(ids))
       else if (lorder(ids).and.lrecip(ids)) then 
 c                                 reciprocal solution speciation model 
 c                                 with nord order parameters
-c                                 load x's from sxs array.                              
+c                                 load x's from sxs array.
          do k = 1, nstot(ids) 
             p0a(k) = sxs(ixp(id)+k)
             pa(k) = p0a(k)
          end do 
 c                                 compute margules coefficients
          call setw (ids)
+c                                 evaluate enthalpies of ordering
+         call oenth (ids)
 c                                 get the speciation energy effect
          call specis (gph,ids)
 c                                 get endmember dqf's
@@ -7454,19 +7459,21 @@ c                                 get gmech
          end do 
 
       else if (lorder(ids)) then
-c                                 initialize gph and get any dqf corrections
+c                                 initialize gph and any dqf corrections
          call gexces (id,gph)
+c                                 compute margules coefficients
+         call setw (ids)
+c                                 evaluate enthalpies of ordering
+         call oenth (ids)
 c                                 get gmech
          do k = 1, lstot(ids)
             p0a(k) = sxs(ixp(id)+k)
             pa(k) = p0a(k)
-            gph = gph +  gproj (jend(ids,2+k)) * p0a(k)
+            gph = gph + gproj(jend(ids,2+k)) * p0a(k)
          end do 
-c                                 compute margules coefficients
-         call setw (ids) 
-c                                 get the speciation energy effect
+c                                 get the speciation energy effect     
          call specis (dg,ids)
-c                                 add in entropy effect pseudocompound version
+
          gph = gph + dg
 
       else if (ksmod(ids).eq.0) then
@@ -7501,7 +7508,7 @@ c                                 si-o mrk fluid
 
          gph = gph + gerk (x1)
 
-      else 
+      else
 c                                 normal models (configurational 
 c                                 entropy fixed, excess function
 c                                 linear in p-t) and special models 
@@ -7510,7 +7517,7 @@ c                                 with normal gmech term
 c                                 ternary coh fluid deltag
             call rkcoh6 (sxs(ixp(id)+2),sxs(ixp(id)+1),gph)
 
-         else if (ksmod(ids).eq.26) then 
+         else if (ksmod(ids).eq.26) then
 
             call hcneos (gph,sxs(ixp(id)+1),
      *                       sxs(ixp(id)+2),sxs(ixp(id)+3))
@@ -7524,7 +7531,7 @@ c                                 add gmech
          do k = 1, nstot(ids) 
             gph = gph +  gproj (jend(ids,2+k)) * sxs(ixp(id)+k)
          end do 
-c                                 for van laar get fancier excess function         
+c                                 for van laar get fancier excess function
          if (llaar(ids)) then
 
             call setw(ids) 
@@ -7773,21 +7780,20 @@ c                                 assume holland powell form, all terms regular
 
       end 
 
-      double precision function hpmelt (im)
+      double precision function hpmelt (im,y)
 c----------------------------------------------------------------------
 c evaluates the configurational entropy of Holland & Powell's haplogranite 
 c melt model, dlnw is S/R.
 
 c modified to use global arrays, 10/26/05.
 c----------------------------------------------------------------------
-
       implicit none
 
       include 'perplex_parameters.h'
 
       integer i, im
 
-      double precision dlnw, ytot, yh2o, yfo, yfa
+      double precision dlnw, yfac, yh2o, yfo, yfa, y(m4)
 c                                 global arrays:
       double precision t, p, xco2, u1, u2, tr, pr, r, ps
       common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -7797,41 +7803,41 @@ c                                 bookkeeping variables
 c                                 special model endmember indexing
       integer jspec
       common/ cxt8 /jspec(h9,m4)
-c                                 working arrays
-      double precision z, pa, p0a, x, w, y, wl
-      common/ cxt7 /y(m4),x(m4),pa(m4),p0a(m4),z(mst,msp),w(m1),
-     *              wl(m17,m18)
 c----------------------------------------------------------------------  
-      dlnw = 0d0
 
-      if (jspec(im,1).eq.1) then
+      yfo = 0d0
+      yfa = 0d0
 
-         yh2o = y(1)
+      if (jspec(im,1).eq.1.and.y(1).gt.0d0) then
 c                                 the quadratic water term
-         if (yh2o.ne.0d0) dlnw = -2d0 * yh2o * dlog(yh2o)
+         yh2o = y(1)
+         dlnw = -2d0 * yh2o * dlog(yh2o)
 
       else 
  
          yh2o = 0d0 
+         dlnw = 0d0
 
       end if 
+
+      yfac = 1d0 - yh2o
 c                                 the basic entropy
-      do i = jspec(im,4), mstot(im)
+      do i = jspec(im,4), nstot(im)
 
          if (y(i).le.0d0) cycle
-         dlnw = dlnw - y(i) * dlog(y(i)*(1d0-yh2o))
+         dlnw = dlnw - y(i) * dlog(y(i)*yfac)
  
       end do 
 c                                 the fe-mg fudge factor
-      yfo = 0d0
-      yfa = 0d0
+
       if (jspec(im,2).ne.0) yfo = y(jspec(im,2))   
       if (jspec(im,3).ne.0) yfa = y(jspec(im,3))
-      ytot = yfo + yfa
 
-      if (ytot.ne.0d0) then 
-         if (yfo.ne.0d0) dlnw = dlnw - 4d0 * yfo * dlog(yfo/ytot)
-         if (yfa.ne.0d0) dlnw = dlnw - 4d0 * yfa * dlog(yfa/ytot)
+      yfac = yfo + yfa
+
+      if (yfo.gt.0d0.and.yfa.gt.0d0) then 
+         dlnw = dlnw - 4d0 * yfo * dlog(yfo/yfac)
+         dlnw = dlnw - 4d0 * yfa * dlog(yfa/yfac)
       end if 
 
       hpmelt = dlnw*r
@@ -8108,7 +8114,7 @@ c-----------------------------------------------------------------------
      *         gfesic, gfecr1, gerk
 
       integer jend
-      common/ cxt23 /jend(h9,k12)
+      common/ cxt23 /jend(h9,m4)
 
       double precision g
       common/ cst2 /g(k1)
@@ -8131,6 +8137,9 @@ c                                 model type
 
       integer jspec
       common/ cxt8 /jspec(h9,m4)
+
+      integer ideps,icase,nrct
+      common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
 c----------------------------------------------------------------------
          gg = 0d0
 c                                 evaluate margules coefficients
@@ -8166,6 +8175,8 @@ c                                 initialize p's
 c                                 -------------------------------------
 c                                 initialize p's
             call y2p0 (id)
+c                                 evaluate enthalpies of ordering
+            call oenth (id)
 c                                 get the speciation, excess and entropy effects.
             call specis (gg,id)
 c                                 decompose the ordered species into 
@@ -8183,8 +8194,9 @@ c                                 are not dqf'd. gex not neccessary as computed 
 
          else if (lorder(id)) then 
 c                                 -------------------------------------
-c                                 macroscopic formulation for ordering solutions.
-
+c                                 non-reciprocal ordering solutions.
+c                                 evaluate enthalpies of ordering
+            call oenth (id)
 c                                 get mechanical mixture contribution
             do k = 1, lstot(id)  
                pa(k) = y(k)
@@ -8196,7 +8208,7 @@ c                                 get the speciation energy effect
 
             gg = gg + dg 
 c                                 get dqf corrections
-            call gdqf (id,gg,p0a) 
+            call gdqf (id,gg,p0a)
 
          else if (lrecip(id)) then 
 c                                 -------------------------------------
@@ -8232,7 +8244,7 @@ c                                 -------------------------------------
 c                                 hp melt model         
             call gdqf (id,gg,y) 
 
-            gg = gg - t * hpmelt(id) + gex(id,y)
+            gg = gg - t * hpmelt(id,y) + gex(id,y)
 c                                 get mechanical mixture contribution
             do k = 1, mstot(id)  
                gg = gg + y(k) * g(jend(id,2+k))
@@ -8852,7 +8864,7 @@ c                                 x coordinate description
       common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
 
       integer jend
-      common/ cxt23 /jend(h9,k12)
+      common/ cxt23 /jend(h9,m4)
 
       double precision x3
       common/ cxt16 /x3(k21,mst,msp)
@@ -8918,10 +8930,10 @@ c---------------------------------------------------------------------
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
      *        kstot,rkord,xtyp
       double precision wg,wk,xmn,xmx,xnc,reach
-      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),
-     *      xmn(mst,msp),xmx(mst,msp),xnc(mst,msp),
-     *      reach,iend(m4),isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),
-     *      isp(mst),rkord(m18),isite,iterm,iord,istot,jstot,kstot,xtyp
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),xmn(mst,msp),
+     *      xmx(mst,msp),xnc(mst,msp),reach,iend(m4),isub(m1,m2,2),
+     *      imd(msp,mst),insp(m4),ist(mst),isp(mst),rkord(m18),isite,
+     *      iterm,iord,istot,jstot,kstot,xtyp
 
       integer iddeps,norder,nr 
       double precision depnu,denth
@@ -8979,7 +8991,7 @@ c                                 convert y -> x array
       common/ cxt5i /indx(h9,mst,msp)
 c                                 endmember pointers
       integer jend
-      common/ cxt23 /jend(h9,k12)
+      common/ cxt23 /jend(h9,m4)
 c                                 x coordinate description
       integer istg, ispg, imlt, imdg
       double precision xmng, xmxg, xncg, xmno, xmxo, reachg
@@ -9645,7 +9657,7 @@ c                                 count in evaluating derivatives.
       end if 
 c                                 ----------------------------------------------
 c                                 models with special endmember indexing:  
-      if (jsmod.eq.24.or.jsmod.eq.25) then 
+      if (jsmod.eq.24.or.jsmod.eq.25.or.jsmod.eq.27) then 
 c                                 hp & ghiroso models:
          do i = 1, 3
             jspec(im,i) = 0 
@@ -9714,14 +9726,15 @@ c                                 endmember order.
          end do 
       end do 
       
-      if (istot+norder.gt.k12) call error (39,0d0,k12,'INPUT9')    
+      if (istot+norder.gt.m4) call error (39,0d0,m4,'INPUT9')    
 
       smod(im) = .true.
       pmod(im) = .true.
       killct = 0 
 c                                 classify model as fluid/not fluid
-      if (((jsmod.eq.24.or.jsmod.eq.25.or.jsmod.eq.28).and.
-     *    lopt(6)).or.jsmod.eq.0.or.jsmod.eq.26.or.jsmod.eq.41) then 
+      if ((jsmod.eq.24.or.jsmod.eq.25.or.jsmod.eq.27.or.jsmod.eq.28)
+     *    .and.lopt(6)
+     *    .or.jsmod.eq.0.or.jsmod.eq.26.or.jsmod.eq.41) then 
 
          fp(im) = .true.
 
@@ -10338,12 +10351,22 @@ c----------------------------------------------------------------------
       logical lopt
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      integer ksmod, ksite, kmsol, knsp
+      common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
 c----------------------------------------------------------------------
       g = 0d0 
 
       if (lrecip(id)) then 
 c                                 initialize limit expressions
          call p0limt (id)
+
+      else if (ksmod(id).eq.27) then 
+c                                 green et al 2016 melt model,
+c                                 special case because of non-equimolar
+c                                 speciation reaction.
+         call gpmelt (g,id)
+         return
 
       else 
 c                                 non-reciprocal, initialize p0 
@@ -10356,8 +10379,7 @@ c                                 and if necessary, limits.
          if (nord(id).gt.1) call p0limt (id)
 
       end if
-c                                 compute the enthalpy of ordering
-      call oenth (id)
+
 c                                 as most models are single species and
 c                                 there is so much overhead in computing
 c                                 multiple speciation, use a special routine
@@ -10368,13 +10390,13 @@ c                                 for single species models:
 
       else 
 
-         call speci1 (g,id,1,error) 
+         call speci1 (g,id,1,error)
 
       end if 
 
       if (error.or.iopt(17).ne.0) then 
 c                                 if speciation returns error, or order_check is on,
-c                                  i.e., iopt(17).ne.0, compute disordered g.                               
+c                                 i.e., iopt(17).ne.0, compute disordered g.
          gdord =  gex(id,p0a) - t*omega(id,p0a)
  
          if (lrecip(id)) then 
@@ -10395,7 +10417,7 @@ c                                  i.e., iopt(17).ne.0, compute disordered g.
 
       end if 
 c                                 convert the ordered endmember fractions to 
-c                                 disordered fractions (stored in the p0a array).      
+c                                 disordered fractions (stored in the p0a array).
       if (lrecip(id)) call p0dord (id)
 
       end
@@ -11067,7 +11089,6 @@ c----------------------------------------------------------------------
       subroutine speci1 (g,id,k,error)
 c----------------------------------------------------------------------
 c subroutine to speciation of a solution with a single ordering parameter
-c and disordered composition p0a by newton raphson. the speciated 
 c composition is returned 
 c in array pa. 
 c    id identifies the solution.
@@ -11080,10 +11101,11 @@ c----------------------------------------------------------------------
 
       integer i1,i2,id,jd,k,itic
 
-      logical error, done, inf 
+      logical error, done
 
-      double precision g,pmax,pmin,dy1,dy2,dp,dpmax,
-     *                 omega,gex,dg,d2g
+      double precision g,pmax,pmin,dy1,dy2,dp,dpmax,omega,gex
+
+      external gex, omega
 
       double precision z, pa, p0a, x, w, y, wl
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
@@ -11142,115 +11164,102 @@ c                                 composition to the max - nopt(5), at this
 c                                 condition the first derivative < 0, 
 c                                 and the second derivative > 0 (otherwise
 c                                 the root must lie at p > pmax - nopt(5).               
-      if (dpmax.gt.nopt(5)) then
+      if (dpmax.lt.nopt(5)) return
 
-         pin(k) = .true.
-         dp = dpmax - nopt(5)
-         pmax = p0a(jd) + dp
-         pmin = p0a(jd) + nopt(5)
+      pin(k) = .true.
+      dp = dpmax - nopt(5)
+      pmax = p0a(jd) + dp
+      pmin = p0a(jd) + nopt(5)
 c                                 get starting end for the search
 c                                 first try the maximum
-         pa(jd) = p0a(jd) + dp 
-         pa(i1) = p0a(i1) + dy1*dp
-         pa(i2) = p0a(i2) + dy2*dp 
+      pa(jd) = p0a(jd) + dp 
+      pa(i1) = p0a(i1) + dy1*dp
+      pa(i2) = p0a(i2) + dy2*dp 
 
-         call gderi1 (k,id,dg,d2g,inf)
+      call gderi1 (k,id,dp)
 
-         if (dg.gt.0d0.and.d2g.gt.0d0) then 
-c                                 at the maximum concentration, the 
-c                                 first derivative is positive, if 
-c                                 the second is also > 0 then we're 
-c                                 business
-            dp = -dg/d2g
-            if (inf) dp = dsign(1d-1*dpmax,dp)
+      if (dp.gt.0d0) then 
+c                                 at the maximum concentration
+c                                 and the increment is positive,
+c                                 the solution is fully ordered
+c                                 or a local minimum, try the 
+c                                 the disordered case:
+         pa(jd) = pmin
+         pa(i1) = p0a(i1) + dy1*nopt(5)
+         pa(i2) = p0a(i2) + dy2*nopt(5)
 
-         else if (dg.lt.0d0) then
-c                                 then saturated with the ordered 
-c                                 species
-            pa(jd) = p0a(jd) + dpmax
-            pa(i1) = p0a(i1) + dy1*dpmax
-            pa(i2) = p0a(i2) + dy2*dpmax    
+         call gderi1 (k,id,dp)
 
-            goto 90       
+         if (dp.lt.0d0) then 
+c                                 neither min nor max starting point
+c                                 is possible. setting error to 
+c                                 true will cause specis to compare 
+c                                 the min/max order cases, specis 
+c                                 computes the min case g, therefore
+c                                 the case is set to max order here:
+            error = .true.
 
-         else
-c                                 try the min
-            pa(jd) = pmin
-            pa(i1) = p0a(i1) + dy1*nopt(5)
-            pa(i2) = p0a(i2) + dy2*nopt(5)
- 
-            call gderi1 (k,id,dg,d2g,inf)
+         end if
 
-            if (dg.lt.0d0.and.d2g.gt.0d0) then 
-c                                 ok
-               dp = -dg/d2g
-               if (inf) dp = dsign(1d-1*dpmax,dp)
-            
-            else                
-c                                 full disordered, setting error to 
-c                                 true will cause specis to compute the 
-c                                 max disorder 
-               error = .true.
-               return             
+      end if 
 
-            end if 
-         end if 
+      if (.not.error) then 
 c                                 increment and check p
          call pcheck (pa(jd),pmin,pmax,dp,done)
 c                                 set speciation
          dp = pa(jd) - p0a(jd)
          pa(i1) = p0a(i1) + dy1*dp
-         pa(i2) = p0a(i2) + dy2*dp    
+         pa(i2) = p0a(i2) + dy2*dp
 c                                 iteration counter to escape
 c                                 infinite loops
-         itic = 0 
-c                                 newton raphson iteration
+         itic = 0
+c                             newton raphson iteration
          do 
 
-            call gderi1 (k,id,dg,d2g,inf)
-
-            if (inf) then 
-               dp = dsign(dp/2d0,-dg/d2g)
-            else
-               dp = -dg/d2g
-            end if  
+            call gderi1 (k,id,dp)
 
             call pcheck (pa(jd),pmin,pmax,dp,done)
-c                                 error is just a flag to quit           
-            if (done) then
-               goodc(1) = goodc(1) + 1d0
-               exit 
-            end if 
-
-            pa(i1) = pa(i1) + dy1*dp
-            pa(i2) = pa(i2) + dy2*dp 
-
-            if (dabs(dp).lt.nopt(5)) then 
+c                                 done means the search hit a limit
+            if (done.or.dabs(dp).lt.nopt(5)) then
 
                goodc(1) = goodc(1) + 1d0
+
+               if (done) exit
+c                                 use the last increment
+               pa(i1) = pa(i1) + dy1*dp
+               pa(i2) = pa(i2) + dy2*dp
+
                exit
 
             else 
 
                itic = itic + 1
-               if (itic.gt.iopt(21)) then
-c                                 assume fully ordered if 
-c                                 fails to converge.
-                  pa(jd) = p0a(jd) + dpmax
-                  pa(i1) = p0a(i1) + dy1*dpmax
-                  pa(i2) = p0a(i2) + dy2*dpmax   
-                  badc(1) = badc(1) + 1
 
-                  exit
+               if (itic.le.iopt(21)) cycle
+c                                 failed to converge. exit
+               error = .true.
+               badc(1) = badc(1) + 1
 
-               end if 
-            end if 
+               exit
+
+            end if
 
          end do
 
-      end if  
+      end if
 
-90    g = pa(jd)*enth(k) - t*omega(id,pa) + gex(id,pa)
+      if (error) then
+c                                 didn't converge or couldn't 
+c                                 find a starting point, set 
+c                                 ordered speciation, specis will
+c                                 compare this the disordered case.
+         pa(jd) = p0a(jd) + dpmax
+         pa(i1) = p0a(i1) + dy1*dpmax
+         pa(i2) = p0a(i2) + dy2*dpmax
+
+      end if
+
+      g = pa(jd)*enth(k) - t*omega(id,pa) + gex(id,pa)
 
       end
 
@@ -11635,13 +11644,23 @@ c                                 dependent variables.
 
       end 
 
-      subroutine gderi1 (k,id,dg,d2g,inf)
+      subroutine gderi1 (k,id,dg)
 c----------------------------------------------------------------------
-c subroutine to compute the 1st and 2nd derivatives of the g of 
-c solution (id)  with respect to the concentrations of the kth ordered. 
-c the formulation assumes atomic site fractions are linear 
-c functions of the ordered species concentrations (p's) and that the 
-c excess function is second order.
+c subroutine computes the newton raphson increment dg from the 1st and 2nd 
+c derivatives of the g of solution (id) with respect to the concentration 
+c of the kth ordered species. 
+
+c on input dg is the last increment. 
+
+c the formulation assumes:
+
+c  1) the speciation reaction is equimolar (see gpmelt for non-equimolar 
+c     case.
+
+c  2) atomic site fractions are linear functions of the ordered species 
+c     concentrations (p's).
+
+c  3) the excess function is second order.
 c----------------------------------------------------------------------
       implicit none
 
@@ -11651,7 +11670,7 @@ c----------------------------------------------------------------------
 
       logical inf 
 
-      double precision g,dg,d2g,t,ds,d2s
+      double precision g,dg,d2g,t,ds,d2s,dp
 c                                 working arrays
       double precision z, pa, p0a, x, w, y, wl
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
@@ -11684,7 +11703,8 @@ c                                 model type
 c----------------------------------------------------------------------
 c                                 initialize, d2gx has been set in setw
       g = 0d0
-      dg = 0d0
+      dp = dg 
+      dg = g
       d2g = d2gx(k,k)
 
       if (lexces(id)) then
@@ -11724,6 +11744,12 @@ c                                 get the configurational entropy derivatives
 
       dg  = dg + enth(k)  - v(2)*ds
       d2g = d2g - v(2)*d2s
+c                                 dg becomes the newton raphson increment
+      if (inf) then 
+         dg = dsign(dp/2d0,-dg/d2g)
+      else
+         dg = -dg/d2g
+      end if  
 
       end
 
@@ -11969,10 +11995,10 @@ c---------------------------------------------------------------------
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
      *        kstot,rkord,xtyp
       double precision wg,wk,xmn,xmx,xnc,reach
-      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),
-     *      xmn(mst,msp),xmx(mst,msp),xnc(mst,msp),
-     *      reach,iend(m4),isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),
-     *      isp(mst),rkord(m18),isite,iterm,iord,istot,jstot,kstot,xtyp
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),xmn(mst,msp),
+     *      xmx(mst,msp),xnc(mst,msp),reach,iend(m4),isub(m1,m2,2),
+     *      imd(msp,mst),insp(m4),ist(mst),isp(mst),rkord(m18),isite,
+     *      iterm,iord,istot,jstot,kstot,xtyp
 
       integer iddeps,norder,nr 
       double precision depnu,denth
@@ -11995,7 +12021,7 @@ c                               initialize limit counter
          limn(j) = 0
       end do 
 
-      if (jsmod.eq.6.and.norder.eq.1) return
+      if (jsmod.eq.6.and.norder.eq.1.or.jsmod.eq.27) return
 
       call readcd (n9,len,ier)
 
@@ -12141,10 +12167,10 @@ c-----------------------------------------------------------------------
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
      *        kstot,rkord,xtyp
       double precision wg,wk,xmn,xmx,xnc,reach
-      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),
-     *      xmn(mst,msp),xmx(mst,msp),xnc(mst,msp),
-     *      reach,iend(m4),isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),
-     *      isp(mst),rkord(m18),isite,iterm,iord,istot,jstot,kstot,xtyp
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),xmn(mst,msp),
+     *      xmx(mst,msp),xnc(mst,msp),reach,iend(m4),isub(m1,m2,2),
+     *      imd(msp,mst),insp(m4),ist(mst),isp(mst),rkord(m18),isite,
+     *      iterm,iord,istot,jstot,kstot,xtyp
 
       character mname*8
       common/ cst18a /mname(m4)
@@ -12170,7 +12196,7 @@ c-----------------------------------------------------------------------
       common/ cst304 /sxs(k13),exces(m3,k1),ixp(k1)
 
       integer jend
-      common/ cxt23 /jend(h9,k12)
+      common/ cxt23 /jend(h9,m4)
 
       integer ikp
       common/ cst61 /ikp(k1)
@@ -12434,10 +12460,10 @@ c---------------------------------------------------------------------
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
      *        kstot,rkord,xtyp
       double precision wg,wk,xmn,xmx,xnc,reach
-      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),
-     *      xmn(mst,msp),xmx(mst,msp),xnc(mst,msp),
-     *      reach,iend(m4),isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),
-     *      isp(mst),rkord(m18),isite,iterm,iord,istot,jstot,kstot,xtyp
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),xmn(mst,msp),
+     *      xmx(mst,msp),xnc(mst,msp),reach,iend(m4),isub(m1,m2,2),
+     *      imd(msp,mst),insp(m4),ist(mst),isp(mst),rkord(m18),isite,
+     *      iterm,iord,istot,jstot,kstot,xtyp
 c---------------------------------------------------------------------
 c                                 do the first site:
       call cartes (1,tname,ids)
@@ -12673,10 +12699,10 @@ c----------------------------------------------------------------------
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
      *        kstot,rkord,xtyp
       double precision wg,wk,xmn,xmx,xnc,reach
-      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),
-     *      xmn(mst,msp),xmx(mst,msp),xnc(mst,msp),
-     *      reach,iend(m4),isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),
-     *      isp(mst),rkord(m18),isite,iterm,iord,istot,jstot,kstot,xtyp
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),xmn(mst,msp),
+     *      xmx(mst,msp),xnc(mst,msp),reach,iend(m4),isub(m1,m2,2),
+     *      imd(msp,mst),insp(m4),ist(mst),isp(mst),rkord(m18),isite,
+     *      iterm,iord,istot,jstot,kstot,xtyp
 
       integer ndim,mxsp
       logical cart
@@ -12738,10 +12764,10 @@ c----------------------------------------------------------------------
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
      *        kstot,rkord,xtyp
       double precision wg,wk,xmn,xmx,xnc,reach
-      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),
-     *      xmn(mst,msp),xmx(mst,msp),xnc(mst,msp),
-     *      reach,iend(m4),isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),
-     *      isp(mst),rkord(m18),isite,iterm,iord,istot,jstot,kstot,xtyp
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),xmn(mst,msp),
+     *      xmx(mst,msp),xnc(mst,msp),reach,iend(m4),isub(m1,m2,2),
+     *      imd(msp,mst),insp(m4),ist(mst),isp(mst),rkord(m18),isite,
+     *      iterm,iord,istot,jstot,kstot,xtyp
 
       integer ndim,mxsp
       logical cart
@@ -12899,7 +12925,7 @@ c---------------------------------------------------------------------
 c--------------------------------------------------------------------------
 c soload - loads/requires solution properties: 
 
-c   jend(h9,k12)  - h9 is the maximum number of solutions
+c   jend(h9,m4)  - h9 is the maximum number of solutions
 c                   k12 is the maximum number of endmembers pers
 c                   solution plus two.
 c   jend(i,1)     - OBSOLETE! is the number of endmembers in solution i.
@@ -13009,7 +13035,7 @@ c--------------------------------------------------------------------------
       common/ cxt4  /y2pg(m15,m4,h9)
 
       integer jend
-      common/ cxt23 /jend(h9,k12)
+      common/ cxt23 /jend(h9,m4)
 
       integer jfct,jmct,jprct,jmuct
       common/ cst307 /jfct,jmct,jprct,jmuct
@@ -13254,7 +13280,7 @@ c                                all the rest:
          else if (iphct.lt.10000000) then
             write (names(iphct),1100) tname, iphct
          else
-            write (names(iphct),1110) iphct
+            write (names(iphct),'(i8)') iphct
          end if 
 
       end if 
@@ -13378,7 +13404,7 @@ c                                 is evaluated from speciation.
 
       else if (jsmod.eq.24) then 
 c                                 hp melt model, use internal routine to get entropy
-         smix = -hpmelt(im)
+         smix = -hpmelt(im,pa)
 
       else if (jsmod.eq.25) then 
 c                                 ghiorso melt model, use internal routine to get entropy
@@ -13463,7 +13489,6 @@ c                              or a dependent endmember
 1070  format (a3,'_',f4.1)
 1080  format (a2,i6)
 1100  format (a1,i7)
-1110  format (i8)
 
       end
 
@@ -14747,5 +14772,374 @@ c                             allocate coefficients for 2nd term in EoS
 
       end function gterm2
 
+      subroutine gpmelt (g,id)
+c----------------------------------------------------------------------
+c subroutine to speciation of the green et al (JMG, 2016) melt model. this
+c model is a special case (ksmod(id)=27) because of the peculiar configurational
+c entropy expression and because the model has a single ordering parameter, which 
+c green et al take as the fraction of the ordered species (an). this formulation is 
+c unfortunate because p(an) is not orthogonal to the disordered speciation
+c (p0, because the moles of the species is not constant with changing speciation). 
+c here the model is recast as g(p0,q) where q is the number of moles of an that can be 
+c formed give p0. 
 
-      
+c    id identifies the solution.
+c    g  is the change in G for the stable speciation relative to a mechanical
+c       mixture of the endmembers.
+c    pc is the mass normalization factor, sum(p0*ctot)
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer i, i1, i2, id, jd, itic
+
+      logical error, done 
+
+      double precision g, qmax, qmin, q, dq, rqmax, d0
+
+      double precision hpmelt, gex
+      external hpmelt, gex
+
+      double precision z, pa, p0a, x, w, y, wl
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
+     *              wl(m17,m18)
+
+      double precision r,tr,pr,ps,p,t,xco2,u1,u2
+      common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
+
+      integer ideps,icase,nrct
+      common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
+
+      integer lstot,mstot,nstot,ndep,nord
+      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
+
+      double precision dvnu,deph,dydy
+      common/ cxt3r /dvnu(m4,j3,h9),deph(3,j3,h9),dydy(m4,j3,h9)
+
+      logical pin
+      common/ cyt2 /pin(j3)
+
+      double precision enth
+      common/ cxt35 /enth(j3)
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      logical lorder, lexces, llaar, lrecip
+      common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
+
+      double precision goodc, badc
+      common/ cst20 /goodc(3),badc(3)
+c----------------------------------------------------------------------
+      i1 = ideps(1,1,id)
+      i2 = ideps(2,1,id)
+      jd = lstot(id) + 1 
+      error = .false.
+c                                 starting point:
+c                                 find the maximum amount of the 
+c                                 ordered species that can be formed
+c                                 from the fully disordered species
+c                                 fractions 
+      rqmax = dmin1(p0a(i1),p0a(i2))
+c                                 to avoid singularity set the initial 
+c                                 composition to the max - nopt(5), at this
+c                                 condition the first derivative < 0, 
+c                                 and the second derivative > 0 (otherwise
+c                                 the root must lie at p > pmax - nopt(5).
+      if (rqmax.gt.nopt(5)) then
+
+         pin(1) = .true.
+         qmax = rqmax - nopt(5)
+         qmin = nopt(5)
+c                                 the p's are computed in gpderi
+         call gpderi (i1,i2,jd,id,qmax,dq,g)
+
+         if (dq.lt.0d0) then 
+c                                 at the maximum concentration, the 
+c                                 first derivative is positive, if 
+c                                 the second is also > 0 then we're 
+c                                 business
+            q = qmax
+
+         else
+c                                 try the min
+
+            call gpderi (i1,i2,jd,id,qmin,dq,g)
+
+            if (dq.gt.0d0) then 
+c                                 ok
+               q = qmin
+
+            else
+c                                 no search from either limit possible
+c                                 set error .true. to compare g at the 
+c                                 limits.
+               error = .true.
+               goto 90
+
+            end if 
+         end if 
+c                                 increment and check p
+         call pcheck (q,qmin,qmax,dq,done)   
+c                                 iteration counter to escape
+c                                 infinite loops
+         itic = 0
+c                                 newton raphson iteration
+         do 
+
+            call gpderi (i1,i2,jd,id,q,dq,g)
+
+            call pcheck (q,qmin,qmax,dq,done)
+c                                 done is just a flag to quit           
+            if (done.or.dabs(dq).lt.nopt(5)) then
+
+               goodc(1) = goodc(1) + 1d0
+               return
+
+            end if
+
+            itic = itic + 1
+
+            if (itic.gt.iopt(21)) then
+c                                 fails to converge.
+               error = .true.
+               badc(1) = badc(1) + 1
+               exit
+
+            end if 
+
+         end do
+
+      else
+c                                 speciation is not stoichiometrically possible
+         g = t*hpmelt(id,p0a) + gex(id,p0a)
+         return
+
+      end if
+
+90    if (error) then 
+c                                 didn't converge or couldn't find a good 
+c                                 starting point compare the fully ordered 
+c                                 and disordered g's and choose the lowest
+c                                 full disorder:
+         dq = t*hpmelt(id,p0a) + gex(id,p0a)
+c                                 full order:
+         do i = 1, jd
+
+            if (i.eq.i1.or.i.eq.i2) then
+               d0 = (p0a(i) - rqmax)
+            else if (i.lt.jd) then 
+               d0 = p0a(i)
+            else
+               d0 = rqmax
+            end if 
+
+            pa(i)  = d0/(1d0 - rqmax)
+
+         end do 
+
+         g = (pa(jd)*enth(1) - t*hpmelt(id,pa) + gex(id,pa)) * 
+     *       (1d0 - rqmax)
+c                                 compare
+         if (g.gt.dq) then 
+            g = dq
+            do i = 1, jd 
+               pa(i)  = p0a(i)
+            end do 
+         end if 
+
+      end if
+
+      end
+
+      subroutine gpderi (kd,ld,jd,id,q,dg,g)
+c----------------------------------------------------------------------
+c subroutine to compute the newton-raphson increment (dg) in the ordering
+c parameter from the 1st and 2nd derivatives of the g of the 
+c green et al (JMG, 2016) melt model. kd and kd are the indices of the
+c true dependent endmembers (woL and qL), jd is the index of the ordered
+c species (anL). id is the solution. 
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer i, kd, ld, i1, i2, id, jd
+
+      double precision g, dg, d2g, s, ds, d2s, pfac, dpfac, d2pfac,
+     *                 q, ph2o, dph2o, d2ph2o, pfo, pfa, pnorm, pnorm2,
+     *                 dp(m4), d2p(m4), lpa(m4), lpfac, ng, dng,
+     *                 nusum, dsfo, dsfa, gnorm, dgnorm
+c                                 working arrays
+      double precision z, pa, p0a, x, w, y, wl
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
+     *              wl(m17,m18)
+c                                 excess energy variables
+      integer jterm, jord, extyp, rko, jsub
+      common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m18,h9),
+     *               jsub(m2,m1,h9)
+
+      integer lstot,mstot,nstot,ndep,nord
+      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
+
+      double precision enth
+      common/ cxt35 /enth(j3)
+
+      integer jspec
+      common/ cxt8 /jspec(h9,m4)
+
+      double precision v,tr,pr,r,ps
+      common / cst5 /v(l2),tr,pr,r,ps
+c----------------------------------------------------------------------
+c                                 initialize
+      g   = 0d0 
+      dg  = 0d0
+      d2g = 0d0
+ 
+      pfo = 0d0
+      pfa = 0d0
+c                                 the difficulty in this model is the
+c                                 non-equimolar speciation reaction, this 
+c                                 causes the number of moles of the components
+c                                 in a mole of solution to change as a function
+c                                 of the order parameter even if composition is
+c                                 held constant. 
+
+c                                 to keep the number of moles of the components
+c                                 in the solution constant the gibbs energy
+c                                 is multiplied by gnorm = 1 + sum(nu(i)), where
+c                                 the nu(i) are the stoichiometric coefficients of
+c                                 the endmembers in the ordering reaction (it being
+c                                 assumed that nu(jd) = 1 and p0(jd) = 0). this gives 
+c                                 the solutions g when it has the same amounts of the 
+c                                 components as in the disordered limit (p = p0). the
+c                                 amounts of the species (p) for a partially or completely
+c                                 disordered state are p(i) = (p0(i) + nu(i))*q/gnorm.
+c                                 q is the molar amount of the ordered species formed
+c                                 by the ordering reaction from the amounts of the 
+c                                 reactant species in the disordered limit. 
+
+c                                 for the green et al melt model sum(nu(i)) for the
+c                                 reaction wo + als = an is -1, therefore 
+c                                 gnorm = (1 - q) and pnorm = 1/(gnorm)
+      gnorm  = 1d0 - q
+      dgnorm = -1d0
+      pnorm = 1d0/gnorm
+c                                 diff(pnorm,q,q)
+      pnorm2 = 2d0*pnorm
+
+      do i = 1, jd
+c                                 calculate dp(i)/dq, d2p(i)/dq.
+         if (i.eq.kd.or.i.eq.ld) then
+c                                 reactive species
+            pa(i)  = (p0a(i) - q) * pnorm
+            dp(i)  = (pa(i) - 1d0) * pnorm
+
+         else if (i.lt.jd) then
+c                                 inert species
+            pa(i)  = p0a(i) * pnorm
+            dp(i)  = pa(i)  * pnorm
+
+         else 
+c                                 the ordered species
+            pa(i)  = q*pnorm
+            dp(i)  = (pa(i) + 1d0) * pnorm
+
+         end if
+
+         d2p(i) = dp(i)  * pnorm2
+
+         if (pa(i).gt.0d0) lpa(i) = dlog(pa(i)) + 1d0 
+
+      end do
+
+      do i = 1, jterm(id)
+c                                 assuming regular terms
+        i1 = jsub(1,i,id)
+        i2 = jsub(2,i,id)
+
+        g = g + w(i) * pa(i1) * pa(i2)
+        dg = dg + w(i) * (pa(i1)*dp(i2) + pa(i2)*dp(i1))
+        d2g = d2g + w(i) * (      d2p(i1)* pa(i2) 
+     *                      + 2d0*dp(i2) * dp(i1)
+     *                      +     d2p(i2)* pa(i1) )
+
+      end do  
+c                                 get the configurational entropy derivatives
+      if (jspec(id,1).eq.1.and.pa(1).gt.0d0) then
+c                                 quadratic water term:
+         ph2o = pa(1)
+         dph2o = dp(1)
+         d2ph2o = d2p(1)
+
+         s   =  -2d0 * ph2o * dlog(ph2o)
+         ds  =  -2d0 * lpa(1) * dph2o
+         d2s =  -2d0*(lpa(1)*d2ph2o + dph2o*dph2o/ph2o)
+c                                 the water x factor (renormalizes the non-volatile
+c                                 fractions:
+         pfac = 1d0 - ph2o
+         lpfac = dlog(pfac)  
+
+      else 
+ 
+         ph2o = 0d0 
+         dph2o = 0d0
+         d2ph2o = 0d0
+
+         s = 0d0 
+         ds = 0d0 
+         d2s = 0d0
+         pfac = 1d0 
+         lpfac = 0d0  
+
+      end if 
+
+      dpfac = -dph2o 
+      d2pfac = -d2ph2o  
+c                                 the configurational entropy
+      do i = jspec(id,4), jd
+
+         if (pa(i).le.0d0) cycle
+         s = s - pa(i) * dlog(pa(i))
+         ds = ds - ( (lpa(i) + lpfac)*dp(i) + pa(i)*dpfac/pfac )
+         d2s = d2s - (  (lpa(i) + lpfac)*d2p(i)
+     *                + dp(i)*(dp(i)/pa(i) + 2d0*dpfac/pfac)
+     *                + pa(i)/pfac * (d2pfac - dpfac*dpfac/pfac) )
+ 
+      end do 
+c                                 the fe-mg fudge factor
+      if (jspec(id,2).ne.0) pfo = pa(jspec(id,2))   
+      if (jspec(id,3).ne.0) pfa = pa(jspec(id,3))
+
+      pfac = pfo + pfa
+
+      if (pfo.ne.0d0.and.pfa.ne.0d0) then 
+
+         dsfo = 4d0 * dlog(pfo/pfac)
+         dsfa = 4d0 * dlog(pfa/pfac)
+
+         s  = s  - pfo*dsfo
+         s  = s  - pfa*dsfa
+         ds  = ds  - dsfo * dp(jspec(id,2))
+         ds  = ds  - dsfa * dp(jspec(id,3))
+         d2s = d2s - dsfo * d2p(jspec(id,2))
+         d2s = d2s - dsfa * d2p(jspec(id,3))
+
+      end if 
+
+      g   = g   + enth(1)*pa(jd)  - r*v(2)*s
+      dg  = dg  + enth(1)*dp(jd)  - r*v(2)*ds
+c                                 the normalized g derivative
+      dng  = g * dgnorm + gnorm * dg
+c                                 and second derivative
+      d2g = gnorm * (d2g + enth(1)*d2p(jd) - r*v(2)*d2s) 
+     *       + 2d0 * dg * dgnorm
+c                                 dg becomes the newton-raphson increment:
+      dg = -dng/d2g
+c                                 and g the normalized g:
+      g   = g * gnorm
+
+      end

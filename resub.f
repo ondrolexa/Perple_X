@@ -347,10 +347,10 @@ c                                 temporary subdivision limits:
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
      *        kstot,rkord,xtyp
       double precision wg,wk,xmn,xmx,xnc,reach
-      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),
-     *      xmn(mst,msp),xmx(mst,msp),xnc(mst,msp),
-     *      reach,iend(m4),isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),
-     *      isp(mst),rkord(m18),isite,iterm,iord,istot,jstot,kstot,xtyp
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),xmn(mst,msp),
+     *      xmx(mst,msp),xnc(mst,msp),reach,iend(m4),isub(m1,m2,2),
+     *      imd(msp,mst),insp(m4),ist(mst),isp(mst),rkord(m18),isite,
+     *      iterm,iord,istot,jstot,kstot,xtyp
 c                                 coordinates output by subdiv
       double precision xy,yy
       integer ntot,npairs
@@ -495,7 +495,7 @@ c                                 reject composition
       
             if (bad) cycle 
 
-         end if 
+         end if
 
 
 c                                 call gsol to get g of the solution, gsol also
@@ -517,15 +517,15 @@ c                                 implemented).
                jphct = jphct - 1
                jcoct = jcoct - ncoor(ids)
                cycle
-            end if 
+            end if
 
-         end if 
+         end if
 c                                 use the coordinates to compute the composition 
 c                                 of the solution
          call csol (ids)
 
          iref = iref + 1
-     
+
 10    continue  
 
       end 
@@ -567,7 +567,7 @@ c                                 working arrays
      *              wl(m17,m18)
 
       integer jend
-      common/ cxt23 /jend(h9,k12)
+      common/ cxt23 /jend(h9,m4)
 
       logical lorder, lexces, llaar, lrecip
       common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
@@ -1399,7 +1399,7 @@ c                                 solution model names
       common/ csta7 /fname(h9),aname(h9),lname(h9)
 c                                 endmember pointers
       integer jend
-      common/ cxt23 /jend(h9,k12)
+      common/ cxt23 /jend(h9,m4)
 c                                 endmember names
       character names*8
       common/ cst8  /names(k1)
@@ -2768,7 +2768,7 @@ c-----------------------------------------------------------------------
       common/ cst304 /sxs(k13),exces(m3,k1),ixp(k1)
 
       integer jend
-      common/ cxt23 /jend(h9,k12)
+      common/ cxt23 /jend(h9,m4)
 c                                 working arrays
       double precision z, pa, p0a, x, w, y, wl
       common/ cxt7 /x(m4),y(m4),pa(m4),p0a(m4),z(mst,msp),w(m1),
@@ -2785,6 +2785,9 @@ c                                 model type
 
       integer ksmod, ksite, kmsol, knsp
       common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
+
+      integer ideps,icase,nrct
+      common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
 c                                 endmember names
       character names*8
       common/ cst8  /names(k1)
@@ -2884,21 +2887,24 @@ c                                 of the ordered species
          else if (lorder(i)) then
 c                                 compute margules coefficients
             call setw (i)
+c                                 compute enthalpy of ordering
+            call oenth (i)
 c                                 now for each compound:
             do j = 1, jend(i,2)
-c                                 here excess gets the endmember entropies
-c                                 and dqf corrections
+c                                 for speciation models gexces
+c                                 evaluates only endmember sconf 
+c                                 and internal dqf's
                call gexces (id,g(id))
-
+c                                 gmech
                do k = 1, lstot(i)
                   p0a(k) = sxs(ixp(id)+k)
                   pa(k) = p0a(k)
                   g(id) = g(id) + g(jend(i,2+k)) * p0a(k)
-               end do 
-c                                 get the speciation energy effect
+               end do
+
                call specis (dg,i)
 
-               g(id) = g(id) + dg  
+               g(id) = g(id) + dg
 
                id = id + 1
 

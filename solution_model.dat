@@ -1,4 +1,4 @@
-673 DO NOT DELETE THIS LINE
+674 DO NOT DELETE THIS LINE
 
                              FOR MODEL DEFINITIONS AND REFERENCES REFER TO THE GLOSSARY AT:
 
@@ -23,6 +23,7 @@
                              24    - Holland & Powell Haplogranite melt model 
                              25    - Ghirso pMELTS/MELTS model
                              26    - Haefner H2O-CO2-NaCl
+                             27    - Green et al. 2016 tonalitic melt model
                              28    - High T silicate melt
                              29    - BCC Fe-Si alloy, Lacaze & Sundman 1990.
                              30-33 - FeSiC alloys (BCC/FCC/CBCC/HCP), Lacaze & Sundman 1990.
@@ -40,6 +41,512 @@
 
                              comments can be placed between models provided, nothing is written in the first 10 columns. Comments 
                              may be placed after data if it is separated from the data by a '|' marker.
+                      --------------------------------------------------------
+begin_model
+                      Green et al (JMG, 2016) Augite model.
+
+                      NOTE: to use this the following endmembers must be specified with make 
+                      definitions in the thermodynamic data file
+
+                      cenh  = 1 en
+                            DQF = 3500 - 2 * T + 0.048 * P 
+                      cfsg  = 1 fs
+                            DQF = 2100 - 2 * T + 0.045 * P
+
+                      to avoid cluttering thermodynamic data files with the new plague of TC 
+                      DQF "corrections", the following simple DQF's are specified in the
+                      make_definition section at the end of this model:
+
+                      dqf(jd)   =  2000
+                      dqf(acm)  = -5000
+                      dqf(cats) =  3800  - 2.8816 * T  + 0.01  * P
+
+                      For (nonsensical, but common) positive DFQ's this approach may lead to 
+                      interference between the phase relations of the solution model and the 
+                      un-DQF'd endmember. If such interference occurs: the DQF'd endmember must
+                      be renamed; its definition placed in the thermodynamic data file;
+                      and the un-DQF'd endmember excluded from the calculation.
+
+                                                                Sites 
+                                                       M1     M2    T1    T2
+                                                     ____________________________________
+
+                                      Mutliplicity      1      1     1      1   
+                                                     ____________________________________
+
+                                        Diopside        Ca     Mg    Si     Si
+                                        cEnstatite      Mg     Mg    Si     Si
+                                        cferrosilite    Fe     Fe    Si     Si
+                            Species:    Jadeite         Al     Na    Si     Si
+                                        CaTs            Al     Ca   AlSi   AlSi
+                                        Acmite          Fe3+   Na    Si     Si
+                                                      ___________________________________
+
+                       Ordered Cpds:    oCaTs           Al     Ca     Si    Al
+                                        fmc             Mg     Fe     Si    Si
+
+Augite(G)
+abbreviation Cpx
+full_name    clinopyroxene
+
+6                           | model type margules with multiple compound formation  
+                                                                       
+6                           | disordered endmembers
+
+jd
+cenh
+cfsg
+cats
+acm
+di
+
+2                            | number of ordered species 
+
+ocats = 1 cats              enthalpy_of_ordering  =  -3800  + 2.8816 * T  -0.01  * P | this undoes the DQF on cats
+fmc   = 1/2 cenh + 1/2 cfsg enthalpy_of_ordering  =  -4400 | DQF(fmc) - (DQF(cenh) + DQF(cfs))/2
+
+begin_limits
+
+fmc = -2 + 2 cfsg                delta = 2  z(M1,Fe)
+fmc = -1 di                      delta = 1  z(M1,Mg)
+fmc = -2 cfsg                    delta = 2  z(M1,Fe)
+
+ocats = -2 + 1 cats              delta = 2  z(T1,Al)
+ocats = -1 cats                  delta = 2  z(T2,Al)
+
+end_limits
+
+0  0  0  0  0  0                 | endmember flags
+
+0. 1. 0.1  0                 | range and resolution of X(jd)
+0. 1. 0.1  0                 | range and resolution of X(cenh)
+0. 1. 0.1  0                 | range and resolution of X(cfs)
+0. 1. 0.1  0                 | range and resolution of X(cats) 
+0. 1. 0.1  0                 | range and resolution of X(acm)
+
+begin_excess_function
+W(di cenh)                29.8d3   -0.03 * p
+W(di cfsg)                25.8d3   -0.03 * p
+W(di jd)                  26d3
+W(di acm)                 21d3
+W(di ocats)               12.3d3   -0.01 * p
+W(di cats)                12.3d3   -0.01 * p
+W(di fmc)                 20.6d3   -0.03 * p
+W(cenh cfsg)              2.3d3
+W(cenh jd)                50d3
+W(cenh acm)               62d3
+W(cenh ocats)             45.7d3   -0.29 * p
+W(cenh cats)              45.7d3   -0.29 * p
+W(cenh fmc)               4d3
+W(cfsg jd)                60d3
+W(cfsg acm)               58d3
+W(cfsg ocats)             48d3
+W(cfsg cats)              48d3
+W(cfsg fmc)               3.5d3
+W(jd acm)                 5d3
+W(jd ocats)               40d3
+W(jd cats)                40d3
+W(jd fmc)                 40d3
+W(acm ocats)              35d3
+W(acm cats)               35d3
+W(acm fmc)                60d3
+W(ocats cats)             3.8d3   + 0.01 * p
+W(ocats fmc)              50d3
+W(cats fmc)               50d3
+end_excess_function
+
+4                                   | 4 site entropy model (M1, M2, T1, T2)
+
+4 1                                 | 4 species on m1, mult = 1
+z(m1,fe)   = 1 cfsg
+z(m1,mg)   = 1 di + 1 fmc
+z(m1,fe3+) = 1 acm 
+
+4 1                                 | 4 species on m2, mult. = 1
+z(m2,na)   = 1 acm  + 1 jd
+z(m2,ca)   = 1 ocats + 1 cats
+z(m2,fe)   = 1 fmc  + 1 cfsg
+
+2 1                                 | 2 species on T1, mult. = 1
+z(Al,T1) = 1/2 cats
+
+2 1                                 | 2 species on T2, mult. = 1
+z(Al,T2) = 1/2 cats + 1 ocats
+
+begin_dqf_corrections
+dqf(jd)   =  2000
+dqf(acm)  = -5000
+dqf(cats) =  3800  - 2.8816 * T  + 0.01  * P
+end_dqf_corrections
+
+end_of_model
+                      --------------------------------------------------------
+begin_model
+                      Green, ECR, et al. (JMG, 2016). 
+
+                      NOTE: to use this the following endmembers must be specified with make 
+                      definitions in the thermodynamic data file
+
+                         mrbG  = 1 gl - 1 gr + 1 andr
+                            DQF = 0
+                         kprg  = 1 mu - 1 pa + 1 parg  
+                            DQF = -7060 + 20 * T_K
+                         tts   = -2 dsp + 2 ru + 1 ts    
+                            DQF =   95000
+
+                      to avoid cluttering thermodynamic data files with the new plague of TC 
+                      DQF "corrections", the following simple DQF's are specified in the
+                      make_definition section at the end of this model:
+
+                         DQF(gl)   = -3000
+                         DQF(parg) = -10000
+                         DQF(ts)   =  10000
+                         DQF(grun) = -3000
+
+                      For (nonsensical, but common) positive DFQ's this approach may lead to 
+                      interference between the phase relations of the solution model and the 
+                      un-DQF'd endmember. If such interference occurs: the DQF'd endmember must
+                      be renamed; its definition placed in the thermodynamic data file;
+                      and the un-DQF'd endmember excluded from the calculation.
+
+                                                            Sites
+                                            A    M1      M2      M4     T1     OH
+                                            _______________________________________
+
+                            Multiplicity    1     3      2       2     1(4)    2 
+                                            _______________________________________
+                              Tr            V     Mg     Mg     Ca      Si     OH
+                              Ts            V     Mg     Al     Ca     SiAl    OH
+                              Parg          Na    Mg     Mg     Ca     SiAl    OH
+                              Gl            V     Mg     Al     Na      Si     OH
+                              Cumm          V     Mg     Mg     Mg      Si     OH
+                              Grun          V     Fe     Fe     Fe      Si     OH
+                              Mrb           V     Mg     Fe3    Na      Si     OH
+                              Kprg          K     Mg    MgAl    Ca     SiAl    OH
+                              Tts           V     Mg     Ti     Ca     SiAl    O
+
+                              A             V     Mg     Fe     Fe      Si     OH
+                              B             V     Fe     Mg     Fe      Si     OH
+
+cAmph(G)
+abbreviation Amph
+full_name    clinoamphibole
+
+8                           | model type reciprocal space, van Laar, two ordered species 
+2                           | 2 site reciprocal space
+2 8                         | 1 binary + 1 octary
+
+ts      fts_d
+parg    fparg_d
+gl      fgl_d
+cumm    grun
+mrb     frb_d
+kprg    fkprg_d
+tts     ftts_d
+tr      ftr_d
+
+2                            | 2 ordered species:
+
+a     = 3/7 cumm + 4/7 grun  enthalpy_of_ordering  =   -9486  | = DQF(A) -4/7 DQF(Grun)
+b     = 2/7 cumm + 5/7 grun  enthalpy_of_ordering  =  -11657  | = DQF(B) -5/7 DQF(Grun)
+
+begin_limits                                                  
+
+a = -7/4 + 7/4 grun + 7/4 tts + 1 a + 1/2 b + 5/4 b                 delta = 7/4 z(M1,Fe)
+a = -7/3 grun - 4/3 a + 5/3 b - 5/3 b                               delta = 7/3 z(M2,Fe)
+a = -7/3 + 7/3 tr + 7/6 parg + 7/3 cumm + 1 a + 5/3 b + 2/3 b       delta = 7/3 z(M2,Mg)
+a = -7/3 + 7/3 cumm + 1 a - 2/3 b + 2/3 b                           delta = 7/3 z(M4,Mg)
+a = -7/3 grun - 4/3 a - 2/3 b - 5/3 b                               delta = 7/3 z(M4,Fe)
+
+b = -7/2 grun -7/2 tts + 2 a - 2 a - 5/2 b                          delta = 7/2 z(M1,Fe)
+b = -7/5 + 7/5 grun + 3/5 a + 4/5 a + 1 b                           delta = 7/5 z(M2,Fe)
+b = -7/5 tr - 7/10 parg - 7/5 cumm + 3/5 a - 3/5 a - 2/5 b          delta = 7/5 z(M2,Mg)
+b = -7/2 + 7/2 cumm - 3/2 a + 3/2 a + 1 b                           delta = 7/2 z(M4,Mg)
+b = -7/2 grun - 3/2 a - 2 a -5/2 b                                  delta = 7/2 z(M4,Fe)
+
+end_limits
+
+7                            | 7 dependent endmembers 
+
+ftr_d   = 1 tr    + 2 grun   - 1 a - 1 b
+fts_d   = 1 ts    + 1 grun   - 1 a
+fparg_d = 1 parg  + 3/2 grun - 1 a - 1/2 b
+fgl_d   = 1 gl    + 1 grun   - 1 a
+frb_d   = 1 mrb   + 1 grun   - 1 a
+fkprg_d = 1 kprg  + 3/2 grun - 1 a - 1/2 b
+ftts_d  = 1 tts   + 1 grun   - 1 a
+
+1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1  | endmember flags
+
+                             | imod = 0 -> cartesian subdivision
+                             | imod = 1 -> assymetric stretching subdivision
+
+0. 1.  .1  0                 | range and resolution for X(Mg) on site 1, imod = 0
+
+0. 1.  .1  0                 | range and resolution for X(ts)   on site 2, imod = 0
+0. 1.  .1  0                 | range and resolution for X(pg)   on site 2, imod = 0
+0. .4  .1  1                 | range and resolution for X(gl)   on site 2, imod = 1
+0. 1.  .1  0                 | range and resolution for X(cumm) on site 2, imod = 0
+0. .4  .1  1                 | range and resolution for X(mrb)  on site 2, imod = 1
+0. .1  .1  1                 | range and resolution for X(kprg) on site 2, imod = 1
+0. .1  .1  1                 | range and resolution for X(tts)  on site 2, imod = 1
+
+begin_excess_function   
+
+W(tr ts)                  20d3
+W(tr parg)                25d3
+W(tr gl)                  65d3
+W(tr cumm)                45d3
+W(tr grun)                75d3
+W(tr a)                   57d3
+W(tr b)                   63d3
+W(tr mrb)                 52d3
+W(tr kprg)                30d3
+W(tr tts)                 85d3
+W(ts parg)               -40d3
+W(ts gl)                  25d3
+W(ts cumm)                70d3
+W(ts grun)                80d3
+W(ts a)                   70d3
+W(ts b)                 72.5d3
+W(ts mrb)                 20d3
+W(ts kprg)               -40d3
+W(ts tts)                 35d3
+W(parg gl)                50d3
+W(parg cumm)              90d3
+W(parg grun)           106.7d3
+W(parg a)               94.8d3
+W(parg b)               94.8d3
+W(parg mrb)               40d3
+W(parg kprg)               8d3
+W(parg tts)               15d3
+W(gl cumm)               100d3
+W(gl grun)             113.5d3
+W(gl a)                  100d3
+W(gl b)                111.2d3
+W(gl kprg)                54d3
+W(gl tts)                 75d3
+W(cumm grun)              33d3
+W(cumm a)                 18d3
+W(cumm b)                 23d3
+W(cumm mrb)               80d3
+W(cumm kprg)              87d3
+W(cumm tts)              100d3
+W(grun a)                 12d3
+W(grun b)                  8d3
+W(grun mrb)               91d3
+W(grun kprg)              96d3
+W(grun tts)               65d3
+W(a b)                    20d3
+W(a mrb)                  80d3
+W(a kprg)                 94d3
+W(a tts)                  95d3
+W(b mrb)                  90d3
+W(b kprg)                 94d3
+W(b tts)                  95d3
+W(mrb kprg)               50d3
+W(mrb tts)                50d3
+W(kprg tts)               35d3
+
+end_excess_function
+
+6                                   | 6 site configurational entropy model (A, M1, M2, M4,T1, OH)
+
+3 1                                 | 3 species on A, mult = 1
+z(A,na)    = 1 parg 
+z(A,k)     = 1 kprg 
+
+2 3                                 | 2 species on M1, mult = 3
+z(M1,fe)   = 1 grun + 1 b 
+
+5 1                                 | 5 species on M2, mult = 1
+z(M2,fe)   = 1 grun + 1 a
+z(M2,fe3)  = 1 mrb
+z(M2,al)   = 1 ts + 1 gl + 1/2 kprg + 1/2 parg
+z(M2,ti)   = 1 tts
+
+4 2                                 | 4 species on M4, mult = 2
+z(M4,mg)   = 1 cumm
+z(M4,na)   = 1 gl + 1 mrb
+z(M4,fe)   = 1 grun + 1 a + 1 b
+
+2 1                                 | 2 species on T1, fake mutiplicity = 1
+z(T1,Al)   = 1/2 ts + 1/2 parg + 1/2 kprg + 1/2 tts
+
+2 2                                 | 2 species on OH, mutiplicity = 2
+z(OH,O)    = 1 tts
+
+begin_van_laar_sizes
+
+alpha(tr)          1
+alpha(ts)          1.5
+alpha(parg)        1.7
+alpha(gl)          0.8
+alpha(cumm)        1
+alpha(grun)        1
+alpha(a)           1
+alpha(b)           1
+alpha(mrb)         0.8
+alpha(kprg)        1.7
+alpha(tts)         1.5
+
+end_van_laar_sizes
+
+begin_dqf_corrections
+
+              | Perple_X, in contrast to THERMOCALC, automatically considers all endmembers
+              | present in the thermodynamic data base. This behavior creates a potential 
+              | problem with THERMOCALC models that specify positive DQF corrections because
+              | the DQF'd endmember is always less stable than the real endmember. For example
+              | here the solution will always be metastable at compositions near to the ts and 
+              | parg endmember compositions. To avoid this problem, DQF corrected endmembers
+              | (ts, gl, grun, and parg) must be specified in the thermodynamic data file 
+              | and the true endmembers must be excluded from calculations.  
+
+DQF(gl)   = -3000
+DQF(parg) = -10000
+DQF(ts)   =  10000
+DQF(grun) = -3000
+
+end_dqf_corrections
+
+end_of_model
+                           --------------------------------------------------------
+begin_model
+                      Tonalitic melt, Green et al., JMG, 2016. 
+
+                      JADC 9/16
+
+                      This model requires the following make definitions in the
+                      thermodynamic data file make_definitions section:
+
+                      foTL = 2 foL
+                         dqf = -4d3 
+
+                      faTL = 2 faL
+                         dqf = -8.2d3  - 1.4 * P
+
+                      q8L = 4 qL
+                         dqf = 0
+
+                      to avoid cluttering thermodynamic data files with the new plague of TC 
+                      DQF "corrections", the following simple DQF's are specified in the
+                      make_definition section at the end of this model:
+
+                      dqf(silL) = -7800
+                      dqf(woL) = 1300
+
+                      For (nonsensical, but common) positive DFQ's this approach may lead to 
+                      interference between the phase relations of the solution model and the 
+                      un-DQF'd endmember. If such interference occurs: the DQF'd endmember must
+                      be renamed; its definition placed in the thermodynamic data file;
+                      and the un-DQF'd endmember excluded from the calculation.
+
+                      WARNING 0: DQF'd endmembers (e.g., sil8L, ctjL) created for other thermocalc 
+                      melt models (e.g., melt(W), melt(JH)) should be excluded (or deleted from the 
+                      thermodynamic data file) from calculations with this model. 
+
+                      WARNING 1: This model can only be used for hydrous systems  
+                      if H2O is specified as a thermodynamic component or as a
+                      staurated component, it CANNOT be used if water is specified
+                      as a saturated phase component (i.e., if H2O is specified as a saturated 
+                      phase component, VERTEX will reject the H2OL endmember
+                      and the model will be applicable only to dry melts).
+
+                      WARNING 2: DO NOT CHANGE THE ORDER OF THE FIRST 3 ENDMEMBERS
+                      this model uses an internal routine to compute the
+                      entropy of the melt that assumes the order entered
+                      here, see comments with endmember names below.
+
+melt(G)
+abbreviation Melt
+full_name    liquid
+
+27                                  | model type: margules, speciation, internal entropy routine
+
+8                                   | number of endmembers
+
+                                    | ENDMEMBERS:
+
+h2oL                                | Because this model uses an internal routine to compute the
+                                    | entropy of the melt h2oL must be the specified as the first
+                                    | endmember.
+
+                                    | foTL and faTL must be the 2nd and 3rd endmembers, but their
+foTL     faTL                       | relative order is arbitrary.
+
+abL      silL                       | The relative order of the remaining endmembers is arbitrary.
+kspL     woL     
+q8L
+
+1                                   | ordered species definition
+                                    | H(oanL) = -46.5d3 - 0.25 * P - dqf(woL) 1300 - dqf(silL) -7800
+
+oanL = 1 woL + 1 silL        Delta(enthalpy)   = -40000  - 0.25 * P
+
+1 1 1 1 1 1 1 1                     | endmember flags.  
+
+0.0 1.0  0.1 0                      | range and resolution of X(h2o), 0 => cartesian subdivision  
+0.0 1.0  0.1 0                      | range and resolution of X(fo),  1 => asymmetric subdivision   
+0.0 1.0  0.1 0                      | range and resolution of X(fa),  1 => asymmetric subdivision   
+0.0 1.0  0.1 0                      | range and resolution of X(ab),  0 => cartesian subdivision   
+0.0 1.0  0.1 0                      | range and resolution of X(sil), 1 => asymmetric subdivision  
+0.0 1.0  0.1 0                      | range and resolution of X(ksp), 1 => asymmetric subdivision   
+0.0 1.0  0.1 0                      | range and resolution of X(wo),  1 => asymmetric subdivision
+
+begin_excess_function 
+
+W(q8L abL)    =    12d3   - 0.4 * P
+W(q8L kspL)   =   -2d3    - 0.5 * P
+W(q8L woL)    =   -5d3      
+W(q8L foTL)   =    42d3   + 1.0 * P
+W(q8L h2oL)   =    18.1d3 - 0.68 * P
+W(q8L oanL)   =   -29.5d3 - 0.1 * P
+    
+W(abL kspL)   =   -6d3    + 3.0 * P
+W(abL woL)    =   -12d3   
+W(abL silL)   =    10d3     
+W(abL faTL)   =   -30d3   + 0.8 * P
+W(abL foTL)   =   -47.3d3 + 0.3 * P
+W(abL h2oL)   =   -4.4d3  - 0.17 * P
+W(abL oanL)   =    8.6d3  +  0.4 * P
+
+W(kspL woL)   =   -13d3    
+W(kspL faTL)  =   -11.3d3    
+W(kspL foTL)  =    6.8d3     
+W(kspL h2oL)  =    10.4d3 - 0.39 * P
+W(kspL oanL)  =   -16d3   - 0.25 * P
+
+W(woL silL)   =   -1.6d3   
+W(woL faTL)   =    6.5d3    
+W(woL foTL)   =    4d3     
+W(woL h2oL)   =    21d3    
+W(woL oanL)   =    3.5d3   
+
+W(silL faTL)  =    12d3
+W(silL foTL)  =    12d3    
+W(silL h2oL)  =    11d3   - 0.5 * P
+W(silL oanL)  =    6.4d3   
+
+W(faTL foTL)  =    18d3    
+W(faTL h2oL)  =    29d3       
+W(faTL oanL)  =   -43.5d3 - 0.95 * P 
+
+W(foTL h2oL)  =    29d3   - 0.5 * P  
+W(foTL oanL)  =   -26d3   - 0.6 * P  
+
+W(h2oL oanL)  =    9.75d3 - 0.5 * P
+
+end_excess_function 
+
+  0                                  | no configurational entropy model (internal routine hpmelt).
+
+begin_dqf_corrections
+dqf(silL) = -7800
+dqf(woL)  =  1300
+end_dqf_corrections
+
+end_of_model
                     -------------------------------------------------------- 
 begin_model                
                              CHLORITE, White et al JMG 32:261-286, 2014
@@ -228,7 +735,7 @@ cz       fep               | endmember names
 
 1                          | ordered species definition
 
-ep = 1/2 fep + 1/2 cz Delta(enthalpy) = -12.5d3     
+ep = 1/2 fep + 1/2 cz   Delta(enthalpy) = -12.5d3     
  
 0 0 0                      | endmember flags
 0. 1. 0.1  0               | range and resolution for X(cz), imod = 0 -> cartesian subdivision
@@ -298,8 +805,8 @@ cfm   = 1/2 cfs + 1/2 cenjh   enthalpy_of_ordering     =  - 6653 + .25d-2 * p_ba
 0. 1.  .1  0                 
 
 begin_excess_function
-W(di cfs)20d3             | corrected from 21d3, 3/18/16, Oliver Shorttle
-W(di cats)=123d2 -0.1*p_bar
+W(di cfs) 20d3             | corrected from 21d3, 3/18/16, Oliver Shorttle
+W(di cats) = 123d2 -0.1*p_bar
 W(di crdi)     8d3  
 W(di cess)     8d3  
 W(di jd)      26d3  
@@ -355,7 +862,7 @@ alpha(cenjh) =  1.0
 alpha(cfm)   =  1.0 
 end_van_laar_sizes
 
-end_of_model             
+end_of_model
                       -------------------------------------------------------- 
 begin_model
                              Jennings and Holland, J Pet, 56:869-892, 2015
@@ -2373,10 +2880,10 @@ omrb_dqf      frb
 2                            | 2 ordered species:
 
 ammo1 = 3/7 anth + 4/7 fanth_dq  enthalpy_of_ordering = -9.5d3
-ammo2 = 2/7 anth + 5/7 fanth_dq   enthalpy_of_ordering = -11.7d3   | these enthalpies differ from the published values
-                                                                    | becuase Thermocalc reactions are specified in terms of the 
-                                                                    | endmember without "DQF" corrections, while in Perple_X
-                                                                    | endmembers automatically include any DQF corrections. 
+ammo2 = 2/7 anth + 5/7 fanth_dq  enthalpy_of_ordering = -11.7d3    | these enthalpies differ from the published values
+                                                                   | becuase Thermocalc reactions are specified in terms of the 
+                                                                   | endmember without "DQF" corrections, while in Perple_X
+                                                                   | endmembers automatically include any DQF corrections. 
 
 begin_limits
 ammo1 = -7/4 + 7/4 fanth_dq + 1 ammo1 + 1/2 ammo2 + 5/4 ammo2                               delta = 7/4
@@ -9271,9 +9778,9 @@ mrb        frb
 
 cammo1 = 3/7 cumm + 4/7 grun   enthalpy_of_ordering = -9.5d3   
 cammo2 = 2/7 cumm + 5/7 grun   enthalpy_of_ordering = -11.7d3    | these enthalpies differ from the published values
-                                                                  | becuase Thermocalc reactions are specified in terms of the 
-                                                                  | endmember without "DQF" corrections, while in Perple_X
-                                                                  | endmember include any DQF corrections. 
+                                                                 | becuase Thermocalc reactions are specified in terms of the 
+                                                                 | endmember without "DQF" corrections, while in Perple_X
+                                                                 | endmember include any DQF corrections. 
 
 begin_limits
 
@@ -9480,9 +9987,9 @@ omrb_dqf      frb
 
 ammo1 = 3/7 anth + 4/7 fanth_dq  enthalpy_of_ordering = -9.5d3
 ammo2 = 2/7 anth + 5/7 fanth_dq   enthalpy_of_ordering = -11.7d3 | these enthalpies differ from the published values
-                                                                  | becuase Thermocalc reactions are specified in terms of the 
-                                                                  | endmember without "DQF" corrections, while in Perple_X
-                                                                  | endmember include any DQF corrections. 
+                                                                 | becuase Thermocalc reactions are specified in terms of the 
+                                                                 | endmember without "DQF" corrections, while in Perple_X
+                                                                 | endmember include any DQF corrections. 
 
 begin_limits
 ammo1 = -7/4 + 7/4 fanth_dq + 1 ammo1 + 1/2 ammo2 + 5/4 ammo2                               delta = 7/4
@@ -10730,4 +11237,3 @@ end_excess_function
 2 3.
 z(c) = 1 FeCA2
 end_of_model
-                           --------------------------------------------------------

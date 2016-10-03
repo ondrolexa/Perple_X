@@ -287,13 +287,30 @@ hmjL = 0.5 hemL
        DQF(J/mol) = 0       +  0.20 * p_bar  
 ekjL = 0.5 eskL
        DQF(J/mol) = 21d3     
-                                  
+                                  | Make definitions for Green et al., JMG, 2016 melt
+foTL = 2 foL
+   dqf = -4d3 
+faTL = 2 faL
+   dqf = -8.2d3  - 1.4 * P
+                                  | Make definitions for Green et al., JMG, 2016 clinoamphibole
+mrbG  = 1 gl - 1 gr + 1 andr
+   DQF = 0
+kprg  = 1 mu - 1 pa + 1 parg  
+   DQF = -7060 + 20 * T_K
+tts   = -2 dsp + 2 ru + 1 ts    
+   DQF =   95000
+                                  | Make definitions for Green et al., JMG, 2016 augite (clinopyroxene)
+cenh  = 1 en
+   DQF = 3500 - 2 * T + 0.048 * P 
+cfsg  = 1 fs
+   DQF = 2100 - 2 * T + 0.045 * P
+
 end_makes
 
 Notation (incomplete and NOT alphabetical!)
-                          
-Entity                     Symbol          Formula              
-                          
+
+Entity                     Symbol          Formula
+
 akermanite                 ak              Ca2MgSi2O7           
 almandine                  alm             Fe3Al2Si3O12         
 andalusite                 and             Al2SiO5              
@@ -483,10 +500,9 @@ MgCl2(aq)                  MgCl2
 MgCl+(aq)                  MgCl                                 
 FeCl(aq)                   FeCl2                                
 Aqueous silica             aqSi            SiO2                 
-                         
-                                 
-end             
- 
+
+end
+
 fo       EoS = 8 | H= -2172490. 
 MgO(2)SiO2(1)
 G0 = -2200844 S0 = 95.1 V0 = 4.366  
@@ -494,7 +510,7 @@ c1 = 233.3 c2 = .1494E-2 c3 = -603800 c5 = -1869.7
 b1 = .285E-4 b5 = 531.1171 b6 = 1285000 b7 = -.3E-5 b8 = 3.84  
 end
 
- 
+
 fa       EoS = 8 | H= -1477540. 
 SiO2(1)FeO(2)
 G0 = -1522561 S0 = 151 V0 = 4.631  
@@ -502,7 +518,7 @@ c1 = 201.1 c2 = .1733E-1 c3 = -1960600 c5 = -900.9
 b1 = .282E-4 b5 = 379.7022 b6 = 1256000 b7 = -.37E-5 b8 = 4.68  
 end
 
- 
+
 teph     EoS = 8 | H= -1733920. 
 SiO2(1)MnO(2)
 G0 = -1780402 S0 = 155.9 V0 = 4.899  
@@ -510,7 +526,7 @@ c1 = 219.6 c3 = -1292700 c5 = -1308.3
 b1 = .286E-4 b5 = 370.4448 b6 = 1256000 b7 = -.37E-5 b8 = 4.68  
 end
 
- 
+
 lrn      EoS = 8 | H= -2306930. 
 SiO2(1)CaO(2)
 G0 = -2344974 S0 = 127.6 V0 = 5.16  
@@ -605,12 +621,6 @@ Na2O(.25)Al2O3(.25)SiO2(1)
 G0 = -1383783 S0 = 63 V0 = 2.334  
 c1 = 135 c2 = .846E-2 c3 = -1850300 c5 = -600.8  
 b1 = .18E-4 b5 = 558.6134 b6 = 2030000 b7 = -.2E-5 b8 = 4  
-end
-
- 
-ppv      EoS = 1 | H=  0.000000 
-MgO(1)SiO2(1)
-b5 = 1651.553  
 end
 
  
@@ -1012,24 +1022,6 @@ b1 = .355E-4 b5 = 574.1056 b6 = 1450000 b7 = -.28E-5 b8 = 4.06
 end
 
  
-phD      EoS = 1 | H=  0.000000 
-MgO(1)SiO2(2)H2O(1)
-b5 = 1651.553  
-end
-
- 
-phE      EoS = 1 | H=  0.000000 
-MgO(2.4)SiO2(1.2)H2O(1.2)
-b5 = 1651.553  
-end
-
- 
-shB      EoS = 1 | H=  0.000000 
-MgO(10)SiO2(3)H2O(2)
-b5 = 1651.553  
-end
-
- 
 sph      EoS = 8 | H= -2601530. 
 SiO2(1)CaO(1)TiO2(1)
 G0 = -2638501 S0 = 124 V0 = 5.565  
@@ -1052,18 +1044,6 @@ SiO2(1)ZrO2(1)
 G0 = -2059915 S0 = 83.03 V0 = 3.926  
 c1 = 232 c2 = -.14405E-1 c5 = -2238.2  
 b1 = .125E-4 b5 = 524.5007 b6 = 2301000 b7 = -.18E-5 b8 = 4.04  
-end
-
- 
-zrt      EoS = 1 | H=  0.000000 
-TiO2(1)ZrO2(1)
-b5 = 1651.553  
-end
-
- 
-tcn      EoS = 1 | H=  0.000000 
-SiO2(1)TiO2(1)
-b5 = 1651.553  
 end
 
  
@@ -2074,18 +2054,6 @@ ZrO2(1)
 G0 = -1115337 S0 = 50.4 V0 = 2.115  
 c1 = 89.6 c2 = .354E-3 c3 = -853100 c5 = -413.7  
 b1 = .2E-4 b5 = 457.6592 b6 = 953000 b7 = -.41E-5 b8 = 3.88  
-end
-
- 
-bdyT     EoS = 1 | H=  0.000000 
-ZrO2(1)
-b5 = 1651.553  
-end
-
- 
-bdyC     EoS = 1 | H=  0.000000 
-ZrO2(1)
-b5 = 1651.553  
 end
 
  
