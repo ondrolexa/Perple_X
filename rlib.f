@@ -11099,11 +11099,11 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i1,i2,id,jd,k,itic
+      integer i, id, jd, k, itic, nr, ind(m4)
 
       logical error, done
 
-      double precision g,pmax,pmin,dy1,dy2,dp,dpmax,omega,gex
+      double precision g,pmax,pmin,dp,dpmax,omega,gex,dy(m4)
 
       external gex, omega
 
@@ -11140,11 +11140,18 @@ c----------------------------------------------------------------------
       double precision goodc, badc
       common/ cst20 /goodc(3),badc(3)
 c----------------------------------------------------------------------
-      i1 = ideps(1,k,id)
-      i2 = ideps(2,k,id)
-      dy1 = dydy(i1,k,id)
-      dy2 = dydy(i2,k,id)
-      jd = lstot(id) + k 
+c                                 number of reactants to form ordered species k
+      nr = nrct(k,id)
+
+      do i = 1, nrct(k,id)
+c                                 dependent disordered species
+         ind(i) = ideps(1,k,id)
+c                                 stoichiometric coefficients
+         dy(i) = dydy(ind(i),k,id)
+      end do 
+
+      jd = lstot(id) + k
+
       error = .false.
 c                                 starting point
       if (lrecip(id)) then 
@@ -11155,8 +11162,11 @@ c                                 reciprocal
       else 
 c                                 find the maximum proportion of the 
 c                                 ordered species cannot be > the amount 
-c                                 of reactant initially present
-         dpmax = dmin1(-pa(i1)/dy1,-pa(i2)/dy2)
+c                                 of reactant initially present.
+         dpmax = 1d0
+         do i = 1, nr
+            if (-p0a(ind(i))/dy(i).lt.dpmax) dpmax = -p0a(ind(i))/dy(i)
+         end do 
 
       end if 
 c                                 to avoid singularity set the initial 
@@ -11172,9 +11182,7 @@ c                                 the root must lie at p > pmax - nopt(5).
       pmin = p0a(jd) + nopt(5)
 c                                 get starting end for the search
 c                                 first try the maximum
-      pa(jd) = p0a(jd) + dp 
-      pa(i1) = p0a(i1) + dy1*dp
-      pa(i2) = p0a(i2) + dy2*dp 
+      call pincs (dp,dy,ind,jd,nr)
 
       call gderi1 (k,id,dp)
 
@@ -11184,9 +11192,7 @@ c                                 and the increment is positive,
 c                                 the solution is fully ordered
 c                                 or a local minimum, try the 
 c                                 the disordered case:
-         pa(jd) = pmin
-         pa(i1) = p0a(i1) + dy1*nopt(5)
-         pa(i2) = p0a(i2) + dy2*nopt(5)
+         call pincs (pmin,dy,ind,jd,nr)
 
          call gderi1 (k,id,dp)
 
@@ -11207,27 +11213,21 @@ c                                 the case is set to max order here:
 c                                 increment and check p
          call pcheck (pa(jd),pmin,pmax,dp,done)
 c                                 set speciation
-         dp = pa(jd) - p0a(jd)
-         pa(i1) = p0a(i1) + dy1*dp
-         pa(i2) = p0a(i2) + dy2*dp
-c                                 iteration counter to escape
-c                                 infinite loops
+         call pincs (pa(jd)-p0a(jd),dy,ind,jd,nr)
+c                                 iteration counter
          itic = 0
-c                             newton raphson iteration
+c                                 newton raphson iteration
          do 
 
             call gderi1 (k,id,dp)
 
             call pcheck (pa(jd),pmin,pmax,dp,done)
 c                                 done means the search hit a limit
-            if (done.or.dabs(dp).lt.nopt(5)) then
+            if (done) then
 
                goodc(1) = goodc(1) + 1d0
-
-               if (done) exit
 c                                 use the last increment
-               pa(i1) = pa(i1) + dy1*dp
-               pa(i2) = pa(i2) + dy2*dp
+               call pincs (pa(jd)-p0a(jd),dy,ind,jd,nr)
 
                exit
 
@@ -11247,17 +11247,11 @@ c                                 failed to converge. exit
          end do
 
       end if
-
-      if (error) then
 c                                 didn't converge or couldn't 
 c                                 find a starting point, set 
 c                                 ordered speciation, specis will
 c                                 compare this the disordered case.
-         pa(jd) = p0a(jd) + dpmax
-         pa(i1) = p0a(i1) + dy1*dpmax
-         pa(i2) = p0a(i2) + dy2*dpmax
-
-      end if
+      if (error) call pincs (dpmax,dy,ind,jd,nr)
 
       g = pa(jd)*enth(k) - t*omega(id,pa) + gex(id,pa)
 
@@ -11367,6 +11361,36 @@ c                                 to calculate g (setting error will do this).
 
       end                  
 
+
+      subroutine pincs (dp,dy,ind,jd,nr)
+c----------------------------------------------------------------------
+c subroutine to increment the proportions of endmembers involved in a
+c predefined ordering reaction (called only by speci1, see pinc and speci2
+c for the general case).
+
+c this routine replicates dpinc, but the p's are computed from p0 and
+c uses simple arrays. 
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer i, jd, nr, ind(m4)
+
+      double precision dp, dy(m4)
+
+      double precision z, pa, p0a, x, w, y, wl
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
+     *              wl(m17,m18)
+c----------------------------------------------------------------------
+      pa(jd) = p0a(jd) + dp
+
+      do i = 1, nr
+         pa(ind(i)) = p0a(ind(i)) + dy(i)*dp
+      end do
+
+      end 
+
       subroutine pinc (dp,k,id)
 c----------------------------------------------------------------------
 c subroutine to increment the k'th species of solution id, if the increment
@@ -11379,7 +11403,7 @@ c----------------------------------------------------------------------
       integer k,id,jd
 
       double precision dp,pmx,pmn
-c                                 working arrays
+
       double precision z, pa, p0a, x, w, y, wl
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
      *              wl(m17,m18)
@@ -11420,7 +11444,7 @@ c----------------------------------------------------------------------
       integer i,k,id,jd
 
       double precision dp
-c                                 working arrays
+
       double precision z, pa, p0a, x, w, y, wl
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
      *              wl(m17,m18)
@@ -11610,9 +11634,16 @@ c subroutine to increment x for a 1-d root search between xmin and xmax
 c-----------------------------------------------------------------------
       implicit none
 
+      include 'perplex_parameters.h'
+
       logical quit 
 
       double precision x, xmin, xmax, dx, xt
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 c-----------------------------------------------------------------------
       quit = .false.
 
@@ -11633,14 +11664,18 @@ c                                 revise the increment
       else if (xt.eq.xmin.or.xt.eq.xmax) then 
 c                                 hit the limit, don't set x to 
 c                                 the limit to save revaluating x
-c                                 dependent variables. 
-         quit = .true.
+c                                 dependent variables.
+        x = xt
+        quit = .true.
 
       else 
 
          x = xt         
 
       end if
+c                                 check if dx has dropped below 
+c                                 threshold for convergence
+      if (dabs(dx).lt.nopt(5)) quit = .true.
 
       end 
 
@@ -13213,7 +13248,7 @@ c                                during debugging.
                if (h.eq.100) then 
                   znm(i,j) = '**'
                else 
-                  write (znm(i,j),'(a2)') h 
+                  write (znm(i,j),'(i2)') h 
                end if 
             end do
          end do 
@@ -13225,7 +13260,7 @@ c                                during debugging.
          if (h.eq.100) then 
             pnm(j) = '**'
          else 
-            write (pnm(j),'(a2)') h 
+            write (pnm(j),'(i2)') h 
          end if 
       end do
       
@@ -14156,17 +14191,13 @@ c                                 iteration counter
 
          do
 
-            call dgfesi (dg,d2g,y,x,g12,rt)            
+            call dgfesi (dg,d2g,y,x,g12,rt)
 
             dx = -dg/d2g 
 
-            call pcheck (x,xmin,xmax,dx,done)  
+            call pcheck (x,xmin,xmax,dx,done)
 
             if (done) then 
-
-               exit    
-
-            else if (dabs(dx).lt.nopt(5)) then 
 
                exit
 
@@ -14893,10 +14924,12 @@ c                                 newton raphson iteration
             call gpderi (i1,i2,jd,id,q,dq,g)
 
             call pcheck (q,qmin,qmax,dq,done)
-c                                 done is just a flag to quit           
-            if (done.or.dabs(dq).lt.nopt(5)) then
+c                                 done is just a flag to quit
+            if (done) then
 
                goodc(1) = goodc(1) + 1d0
+c                                 in principle the p's could be incremented
+c                                 here and g evaluated for the last update.
                return
 
             end if
@@ -14971,8 +15004,8 @@ c----------------------------------------------------------------------
 
       double precision g, dg, d2g, s, ds, d2s, pfac, dpfac, d2pfac,
      *                 q, ph2o, dph2o, d2ph2o, pfo, pfa, pnorm, pnorm2,
-     *                 dp(m4), d2p(m4), lpa(m4), lpfac, ng, dng,
-     *                 nusum, dsfo, dsfa, gnorm, dgnorm
+     *                 dp(m4), d2p(m4), lpa(m4), lpfac, dng,
+     *                 dsfo, dsfa, gnorm, dgnorm
 c                                 working arrays
       double precision z, pa, p0a, x, w, y, wl
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
