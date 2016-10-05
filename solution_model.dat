@@ -107,12 +107,12 @@ fmc   = 1/2 cenh + 1/2 cfsg enthalpy_of_ordering  =  -4400 | DQF(fmc) - (DQF(cen
 
 begin_limits
 
-fmc = -2 + 2 cfsg                delta = 2  z(M1,Fe)
-fmc = -1 di                      delta = 1  z(M1,Mg)
-fmc = -2 cfsg                    delta = 2  z(M1,Fe)
+fmc = 0                          delta = 1
+fmc = -2 + 2 cenh                delta = 2 inoperative lower limit
+fmc = -2 + 2 cfsg                delta = 2 inoperative lower limit
 
-ocats = -2 + 1 cats              delta = 2  z(T1,Al)
-ocats = -1 cats                  delta = 2  z(T2,Al)
+ocats = 0                        delta = 1 
+ocats = -1 + 1 cats              delta = 1 inoperative lower limit
 
 end_limits
 
@@ -172,6 +172,17 @@ z(Al,T1) = 1/2 cats
 
 2 1                                 | 2 species on T2, mult. = 1
 z(Al,T2) = 1/2 cats + 1 ocats
+
+begin_van_laar_sizes
+alpha(di)          1.2
+alpha(cenh)        1
+alpha(cfsg)        1
+alpha(jd)          1.2
+alpha(acm)         1.2
+alpha(ocats)       1.9
+alpha(cats)        1.9
+alpha(fmc)         1.0
+end_van_laar_sizes
 
 begin_dqf_corrections
 dqf(jd)   =  2000
@@ -490,9 +501,9 @@ oanL = 1 woL + 1 silL        Delta(enthalpy)   = -40000  - 0.25 * P
 0.0 1.0  0.1 0                      | range and resolution of X(fo),  1 => asymmetric subdivision   
 0.0 1.0  0.1 0                      | range and resolution of X(fa),  1 => asymmetric subdivision   
 0.0 1.0  0.1 0                      | range and resolution of X(ab),  0 => cartesian subdivision   
-0.0 1.0  0.1 1                      | range and resolution of X(sil), 1 => asymmetric subdivision  
+0.5 1.0  0.1 0                      | range and resolution of X(sil), 1 => asymmetric subdivision  
 0.0 1.0  0.1 0                      | range and resolution of X(ksp), 1 => asymmetric subdivision   
-0.0 1.0  0.1 1                      | range and resolution of X(wo),  1 => asymmetric subdivision
+0.5 1.0  0.1 0                      | range and resolution of X(wo),  1 => asymmetric subdivision
 
 begin_excess_function 
 

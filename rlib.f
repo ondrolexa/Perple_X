@@ -9499,8 +9499,7 @@ c                                 convert index from y to p pointer and save
 c                                 classify multiple species models according
 c                                 to whether the disordered reactants are 
 c                                 partially or completely correlated, assume
-c                                 anti-correlation and no correlation are not 
-c                                 possible cases.
+c                                 anti-correlation is not a possible case.
          icase(im) = 0
 
          if (norder.gt.1) then 
@@ -11234,6 +11233,8 @@ c                                 use the last increment
             else 
 
                itic = itic + 1
+c                                 apply the increment
+               call pincs (pa(jd)-p0a(jd),dy,ind,jd,nr)
 
                if (itic.le.iopt(21)) cycle
 c                                 failed to converge. exit
@@ -11528,9 +11529,18 @@ c                                 adjust the composition by the first increment
 
          end do
 
-      else if (icase(id).eq.2) then 
+      else if (icase(id).eq.2.or.icase(id).eq.0) then 
+
+         if (icase(id).eq.2) then 
 c                                 case 2: positive partial correlation
-         do i = 1, 5
+c                                         iterate 4 times for increments
+            iout = 5
+         else 
+c                                 case 0: no correlation/iteration
+            iout = 1
+         end if
+
+         do i = 1, iout
 
             do k = 1, nord(id)
 
@@ -11594,7 +11604,7 @@ c                                 adjust the composition by the first increment
       else 
 c                                 unanticipated case?
          call error (999,p0a(1),i,
-     *               'unanticpated correlation between ordered species')
+     *              'unanticipated correlation between ordered species')
 
       end if
 c                                 check for degenerate compositions
@@ -12365,7 +12375,12 @@ c                                 a the site fraction array:
                      zt = zt + z(i,j)
                   end do 
                   z(i,isp(i)) = 1d0 - zt
-               end do 
+               end do
+c                                 add a trap for the case that
+c                                 the sum of the minima > 0, this 
+c                                 can only happen with stretching 
+c                                 transformations.
+               if (zt-1d0.gt.nopt(5)) cycle
 c                                 generate the pseudocompound:
                call soload (im,icoct,icpct,ixct,tname,icky,im)
 
