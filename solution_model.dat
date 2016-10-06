@@ -45,6 +45,8 @@
 begin_model
                       Green et al (JMG, 2016) Augite model.
 
+                      This model should not be used for Na-rich compositions.
+
                       NOTE: to use this the following endmembers must be specified with make 
                       definitions in the thermodynamic data file
 
