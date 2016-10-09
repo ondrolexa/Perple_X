@@ -499,13 +499,13 @@ oanL = 1 woL + 1 silL        Delta(enthalpy)   = -40000  - 0.25 * P
 
 1 1 1 1 1 1 1 1                     | endmember flags.  
 
-0.0 1.0  0.1 0                      | range and resolution of X(h2o), 0 => cartesian subdivision  
-0.0 1.0  0.1 0                      | range and resolution of X(fo),  1 => asymmetric subdivision   
-0.0 1.0  0.1 0                      | range and resolution of X(fa),  1 => asymmetric subdivision   
-0.0 1.0  0.1 0                      | range and resolution of X(ab),  0 => cartesian subdivision   
-0.5 1.0  0.1 0                      | range and resolution of X(sil), 1 => asymmetric subdivision  
-0.0 1.0  0.1 0                      | range and resolution of X(ksp), 1 => asymmetric subdivision   
-0.5 1.0  0.1 0                      | range and resolution of X(wo),  1 => asymmetric subdivision
+0.0 0.8  0.1 0                      | range and resolution of X(h2o), 0 => cartesian subdivision  
+0.0 0.2  0.1 0                      | range and resolution of X(fo),  1 => asymmetric subdivision   
+0.0 0.2  0.1 0                      | range and resolution of X(fa),  1 => asymmetric subdivision   
+0.0 0.8  0.1 0                      | range and resolution of X(ab),  0 => cartesian subdivision   
+0.0 0.2  0.1 0                      | range and resolution of X(sil), 1 => asymmetric subdivision  
+0.0 0.8  0.1 0                      | range and resolution of X(ksp), 1 => asymmetric subdivision   
+0.0 0.2  0.1 0                      | range and resolution of X(wo),  1 => asymmetric subdivision
 
 begin_excess_function 
 

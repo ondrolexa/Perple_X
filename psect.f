@@ -203,6 +203,10 @@ c----------------------------------------------------------------------
          if (iop5.eq.1) then      
  
             if (ntot.lt.ixct(1)) goto 99  
+c                                 initialize kex
+            do i = 1, ntot
+               kex(i) = 0 
+            end do 
 c                                 show only with assemblage:
             itic = 0
 
