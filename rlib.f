@@ -7436,7 +7436,7 @@ c     *                   gproj (jend(ids,5)), gproj (jend(ids,6)),
 c     *                   ksmod(ids))
 
       else if (lorder(ids).and.lrecip(ids)) then 
-c                                 reciprocal solution speciation model 
+c                                 prismatic solution speciation model 
 c                                 with nord order parameters
 c                                 load x's from sxs array.
          do k = 1, nstot(ids) 
@@ -8173,7 +8173,7 @@ c                                 initialize p's
 
          else if (lrecip(id).and.lorder(id)) then 
 c                                 -------------------------------------
-c                                 initialize p's
+c                                 prismatic solution, initialize p's
             call y2p0 (id)
 c                                 evaluate enthalpies of ordering
             call oenth (id)
@@ -8194,7 +8194,7 @@ c                                 are not dqf'd. gex not neccessary as computed 
 
          else if (lorder(id)) then 
 c                                 -------------------------------------
-c                                 non-reciprocal ordering solutions.
+c                                 simplicial ordering solutions.
 c                                 evaluate enthalpies of ordering
             call oenth (id)
 c                                 get mechanical mixture contribution
@@ -11144,7 +11144,7 @@ c                                 number of reactants to form ordered species k
 
       do i = 1, nrct(k,id)
 c                                 dependent disordered species
-         ind(i) = ideps(1,k,id)
+         ind(i) = ideps(i,k,id)
 c                                 stoichiometric coefficients
          dy(i) = dydy(ind(i),k,id)
       end do 

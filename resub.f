@@ -2854,10 +2854,12 @@ c                                 after Lacaze and Sundman
             end do
 
          else if (lrecip(i).and.lorder(i)) then
-c                                 reciprocal solution with ordering 
+c                                 prismatic solution with ordering 
 
 c                                 compute margules coefficients
             call setw (i)
+c                                 compute enthalpy of ordering
+            call oenth (i)
 c                                 now for each compound:
             do j = 1, jend(i,2)
 c                                 assign x's

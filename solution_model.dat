@@ -407,15 +407,6 @@ end_van_laar_sizes
 
 begin_dqf_corrections
 
-              | Perple_X, in contrast to THERMOCALC, automatically considers all endmembers
-              | present in the thermodynamic data base. This behavior creates a potential 
-              | problem with THERMOCALC models that specify positive DQF corrections because
-              | the DQF'd endmember is always less stable than the real endmember. For example
-              | here the solution will always be metastable at compositions near to the ts and 
-              | parg endmember compositions. To avoid this problem, DQF corrected endmembers
-              | (ts, gl, grun, and parg) must be specified in the thermodynamic data file 
-              | and the true endmembers must be excluded from calculations.  
-
 DQF(gl)   = -3000
 DQF(parg) = -10000
 DQF(ts)   =  10000
