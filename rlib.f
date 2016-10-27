@@ -6457,9 +6457,18 @@ c                                 there are no ordered species left
             order = .false.
 
             if (depend) then
+
                jsmod = 7
+
+            else if (jsmod.eq.27) then 
+c                                 special case, green et al 2016 melt model
+c                                 converts to normal HP melt model
+               jsmod = 24
+
             else 
+c                                 why jsmod = 2?
                jsmod = 2
+
             end if 
 
          else 
@@ -8140,6 +8149,11 @@ c                                 model type
 
       integer ideps,icase,nrct
       common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 c----------------------------------------------------------------------
          gg = 0d0
 c                                 evaluate margules coefficients
@@ -8239,27 +8253,32 @@ c                                 internal fluid eos
 
              write (*,*) 'toop samis model not coded'
 
-         else if (ksmod(id).eq.24) then 
+         else if (ksmod(id).eq.25.or.ksmod(id).eq.24) then 
 c                                 -------------------------------------
-c                                 hp melt model         
-            call gdqf (id,gg,y) 
+c                                 hp and ghiorso pmelt models 
+            if (t.lt.nopt(20)) then 
+c                                 t < t_melt, destabilize the melt
+               gg = 1d6
 
-            gg = gg - t * hpmelt(id,y) + gex(id,y)
+            else
+
+               call gdqf (id,gg,y) 
+
+               if (ksmod(id).eq.24) then 
+
+                  gg = gg - t * hpmelt(id,y) + gex(id,y)
+
+               else 
+
+                  gg = gg - t * gmelt(id) + gex(id,y)
+
+               end if 
 c                                 get mechanical mixture contribution
-            do k = 1, mstot(id)  
-               gg = gg + y(k) * g(jend(id,2+k))
-            end do 
+               do k = 1, mstot(id)  
+                  gg = gg + y(k) * g(jend(id,2+k))
+               end do 
 
-         else if (ksmod(id).eq.25) then 
-c                                 -------------------------------------
-c                                 ghiorso pmelt model 
-            call gdqf (id,gg,y) 
-
-            gg = gg - t * gmelt(id) + gex(id,y)
-c                                 get mechanical mixture contribution
-            do k = 1, mstot(id)  
-               gg = gg + y(k) * g(jend(id,2+k))
-            end do 
+            end if 
 
          else if (ksmod(id).eq.26) then 
 c                                 ------------------------------------
@@ -10364,7 +10383,12 @@ c                                 initialize limit expressions
 c                                 green et al 2016 melt model,
 c                                 special case because of non-equimolar
 c                                 speciation reaction.
-         call gpmelt (g,id)
+         if (t.lt.nopt(20)) then
+            g = 1d6 
+         else  
+            call gpmelt (g,id)
+         end if 
+
          return
 
       else 

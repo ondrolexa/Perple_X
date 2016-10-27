@@ -265,13 +265,13 @@ b     = 2/7 cumm + 5/7 grun  enthalpy_of_ordering  =  -11657  | = DQF(B) -5/7 DQ
 
 begin_limits                                                  
 
-a = -7/4 + 7/4 grun + 7/4 tts + 1 a + 1/2 b + 5/4 b                 delta = 7/4 z(M1,Fe)
+a = -7/4 + 7/4 grun + 1 a + 1/2 b + 5/4 b                           delta = 7/4 z(M1,Fe)
 a = -7/3 grun - 4/3 a + 5/3 b - 5/3 b                               delta = 7/3 z(M2,Fe)
 a = -7/3 + 7/3 tr + 7/6 parg + 7/3 cumm + 1 a + 5/3 b + 2/3 b       delta = 7/3 z(M2,Mg)
 a = -7/3 + 7/3 cumm + 1 a - 2/3 b + 2/3 b                           delta = 7/3 z(M4,Mg)
 a = -7/3 grun - 4/3 a - 2/3 b - 5/3 b                               delta = 7/3 z(M4,Fe)
 
-b = -7/2 grun -7/2 tts + 2 a - 2 a - 5/2 b                          delta = 7/2 z(M1,Fe)
+b = -7/2 grun + 2 a - 2 a - 5/2 b                                   delta = 7/2 z(M1,Fe)
 b = -7/5 + 7/5 grun + 3/5 a + 4/5 a + 1 b                           delta = 7/5 z(M2,Fe)
 b = -7/5 tr - 7/10 parg - 7/5 cumm + 3/5 a - 3/5 a - 2/5 b          delta = 7/5 z(M2,Mg)
 b = -7/2 + 7/2 cumm - 3/2 a + 3/2 a + 1 b                           delta = 7/2 z(M4,Mg)
@@ -494,9 +494,9 @@ oanL = 1 woL + 1 silL        Delta(enthalpy)   = -40000  - 0.25 * P
 0.0 0.2  0.1 0                      | range and resolution of X(fo),  1 => asymmetric subdivision   
 0.0 0.2  0.1 0                      | range and resolution of X(fa),  1 => asymmetric subdivision   
 0.0 0.8  0.1 0                      | range and resolution of X(ab),  0 => cartesian subdivision   
-0.0 0.2  0.1 0                      | range and resolution of X(sil), 1 => asymmetric subdivision  
+0.0 0.5  0.1 0                      | range and resolution of X(sil), 1 => asymmetric subdivision  
 0.0 0.8  0.1 0                      | range and resolution of X(ksp), 1 => asymmetric subdivision   
-0.0 0.2  0.1 0                      | range and resolution of X(wo),  1 => asymmetric subdivision
+0.0 0.5  0.1 0                      | range and resolution of X(wo),  1 => asymmetric subdivision
 
 begin_excess_function 
 
@@ -5042,8 +5042,10 @@ z(m2,fe3+) = 1 mfets
 z(m4,na) = 1 gl 
 
 begin_dqf_corrections
-dqf(ts) 10000 0 0 
+dqf(ts) 10000
 end_dqf_corrections
+
+reach_increment 1
 
 end_of_model               
                       --------------------------------------------------------
