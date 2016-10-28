@@ -278,9 +278,9 @@ c        12 = O
 c        13 = SiO
 c        14 = SiO2
 c        15 = Si
-c        16 = unused
+c        16 = C2H6
 
-c O2 should be replaced by SO3, and ethane should be added.
+c O2 should be replaced by SO3.
 c-----------------------------------------------------------------------
 
       implicit none

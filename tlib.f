@@ -3320,7 +3320,7 @@ c                                 fluid eos species
       data specie /
      *      'H2O ','CO2 ','CO  ','CH4 ','H2  ','H2S ','O2  ',
      *      'SO2 ','COS ','N2  ','NH3 ','O   ','SiO ','SiO2',
-     *      'Si  ','UNK '/
+     *      'Si  ','C2H6'/
 
       end
 

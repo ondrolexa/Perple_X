@@ -550,7 +550,7 @@ c----------------------------------------------------------------------
 
       double precision fo2,fs2,oh2o,kh2s,kso2,kcos,ghh2o,ghco2,
      *                 ghch4,kh2o,kco2,kco,kch4,c1,c2,c3,c4,c5,c6,c7,
-     *                 ek1,ek2,ek3,ek4,ek5,ek6,ek7
+     *                 ek1,ek2,ek3,ek4,ek5,ek6,ek7,kc2h6
 
       integer ibuf,hu,hv,hw,hx
       double precision rat,elag,gz,gy,gx
@@ -592,7 +592,7 @@ c                                fs2 = 1/2 ln (fs2),
 c                                k's are ln(k)
       call setfs2 (fs2,kh2s,kso2,kcos)
 
-      call setup (ghh2o,ghco2,ghch4,kh2o,kco2,kco,kch4)
+      call setup (ghh2o,ghco2,ghch4,kh2o,kco2,kco,kch4,kc2h6)
 
       c3 = dexp (kch4) * p
       c1 = dexp (kco2 - 2d0*kco) * p 
@@ -731,7 +731,7 @@ c                                 converged:
 
 99    end
 
-      subroutine setup (ghh2o,ghco2,ghch4,kh2o,kco2,kco,kch4)  
+      subroutine setup (ghh2o,ghco2,ghch4,kh2o,kco2,kco,kch4,kc2h6)  
 c----------------------------------------------------------------------
 c program to setup C-O-H-S speciation calculations 
 c----------------------------------------------------------------------
@@ -740,7 +740,7 @@ c----------------------------------------------------------------------
       include 'perplex_parameters.h'
 
       double precision ghh2o,ghco2,ghch4,kh2o,kco2,kco,kch4,t2,t3,agph,
-     *                 dg
+     *                 dg,kc2h6
 
       integer ins(nsp)
 
@@ -798,14 +798,17 @@ c                                graphite pressure effect:
 c                                graphite activity effect:
       if (ifug.ne.20) dg = dg + agph
 c                                ln k's fitted from robie:
-      kh2o = -7.028214449d0 + 30607.34044d0/t  - 475034.4632d0/t2 
+      kh2o  = -7.028214449d0 + 30607.34044d0/t  - 475034.4632d0/t2 
      *                      + 50879842.55d0/t3
-      kco2 = .04078341613d0 + 47681.676177d0/t - 134662.1904d0/t2 
+      kco2  = .04078341613d0 + 47681.676177d0/t - 134662.1904d0/t2 
      *                      + 17015794.31d0/t3 + dg
-      kco =  10.32730663d0  + 14062.7396777d0/t- 371237.1571d0/t2  
+      kco   =  10.32730663d0  + 14062.7396777d0/t- 371237.1571d0/t2  
      *                      + 53515365.95d0/t3 + dg
-      kch4 = -13.86241656d0 + 12309.03706d0/t  - 879314.7005d0/t2 
+      kch4  = -13.86241656d0 + 12309.03706d0/t  - 879314.7005d0/t2 
      *                      + .7754138439d8/t3 + dg
+c                                ethane from HSC, 10/2016
+      kc2h6 = 4.09702552d7/t3 - 8.01186095d5/t2 + 1.39350247d4/t
+     *                      - 2.64306669d1 + 2d0 * dg
 
       end 
 
@@ -822,7 +825,7 @@ c----------------------------------------------------------------------
 
       double precision fo2,fs2,oh2o,kh2s,kso2,kcos,ghh2o,ghco2,
      *                 ghch4,kh2o,kco2,kco,kch4,c1,c2,c3,c5,c6,
-     *                 ek1,ek2,ek3,ek5,ek6
+     *                 ek1,ek2,ek3,ek5,ek6,kc2h6
 
       integer ibuf,hu,hv,hw,hx
       double precision rat,xs,ag,gy,gx
@@ -868,7 +871,7 @@ c                                this fs2 = 1/2 ln (fs2),
 c                                k's are ln(k)
       call setfs2 (fs2,kh2s,kso2,kcos)
   
-      call setup (ghh2o,ghco2,ghch4,kh2o,kco2,kco,kch4)
+      call setup (ghh2o,ghco2,ghch4,kh2o,kco2,kco,kch4,kc2h6)
 c
       c1 = dexp (kcos + fs2) 
       c2 = dexp (kco2 - kco - kh2o) 
@@ -1431,7 +1434,7 @@ c----------------------------------------------------------------------
       integer ins(nsp),nit,ier
 
       double precision oh2o,ghh2o,ghco2,ghch4,kh2o,kch4,kco,kco2,
-     *                 xt,ek1,ek2,ek3,ek10,ek20,ek30,fo2,xxo
+     *                 xt,ek1,ek2,ek3,ek10,ek20,ek30,fo2,xxo,kc2h6
 
       double precision p,t,xo,u1,u2,tr,pr,r,ps
       common / cst5 /p,t,xo,u1,u2,tr,pr,r,ps
@@ -1470,7 +1473,7 @@ c----------------------------------------------------------------------
       oh2o = 2d0
       xxo = xo
 
-      call setup (ghh2o,ghco2,ghch4,kh2o,kco2,kco,kch4)
+      call setup (ghh2o,ghco2,ghch4,kh2o,kco2,kco,kch4,kc2h6)
 
       xt = 1d0 - xo
 
@@ -1490,6 +1493,8 @@ c                                 solve for xco
       xch4 = ek3 * xh2**2 
       xh2o = ek2 * xh2 * xco
       xco2 = ek1 * xco**2
+
+      if (dabs(xh2o-oh2o).lt.nopt(5)*xh2o) goto 90
  
       nit = nit + 1
 
@@ -1497,8 +1502,6 @@ c                                 solve for xco
          call warn (176,xh2o,nit,'HOCGRA')
          goto 99          
       end if
-
-      if (dabs(xh2o-oh2o).lt.nopt(5)*xh2o) goto 90
 
       oh2o = xh2o
 
@@ -1900,7 +1903,7 @@ c----------------------------------------------------------------------
 
       integer ins(nsp),nit
 
-      double precision fo2,t2,t3,kco2,kco,kh2o,kch4,oh2o,qb,qa
+      double precision fo2,t2,t3,kco2,kco,kh2o,kch4,oh2o,qb,qa,kc2h6
 
       double precision p,t,xc,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xc,u1,u2,tr,pr,r,ps
@@ -2029,7 +2032,7 @@ c----------------------------------------------------------------------
       integer ins(nsp),nit
 
       double precision fo2,ghh2o,ghco2,ghch4,kh2o,kco2,kco,kch4,qa,
-     *                 qb,oh2o
+     *                 qb,oh2o,kc2h6
 
       double precision p,t,xc,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xc,u1,u2,tr,pr,r,ps
@@ -2068,7 +2071,7 @@ c----------------------------------------------------------------------
 
       call fo2buf (fo2)
 
-      call setup (ghh2o,ghco2,ghch4,kh2o,kco2,kco,kch4)
+      call setup (ghh2o,ghco2,ghch4,kh2o,kco2,kco,kch4,kc2h6)
 c                                evaluate k CO2, CO:
       kco2 = dexp(kco2 + fo2)/p
       kco  = dexp(kco  + fo2/2d0)/p
@@ -3133,6 +3136,7 @@ c        12 = O
 c        13 = SiO
 c        14 = SiO2
 c        15 = Si  
+c        16 = C2H6
 c-----------------------------------------------------------------------
       implicit none
 
@@ -7398,6 +7402,7 @@ c        12 = O
 c        13 = SiO
 c        14 = SiO2
 c        15 = Si  
+c        16 = C2H6
 c-----------------------------------------------------------------------
       implicit none
 
@@ -7430,14 +7435,14 @@ c     *          174026d2, 424441664.6d0,  7097834092d0, 2348660042d0,
 c max a values for si, sio2
 c    *          174026d2, 424441664.6d0,  7500726468d0, 3767833334d0, 
      *          174026d2, 424441664.6d0,  7373939618d0, 3767833334d0, 
-     *          0d0/,
+     *          98774720.4d0/,
      *     brk /14.6,  29.7,  27.38, 29.681, 15.7699, 29.94,
      *          22.07,  37.4,  43d0,  23.42,   18.84, 
 c             O, SiO, SiO2, Si, unk:
 c             bsio = bco/bco2*bsio2 => 1/4.83
 c             bo  ~ bo2
 c using actual bco/bco2:
-     *          22.07, 23.81d0, 25.83798814d0, 10.35788774, 0d0/
+     *          22.07, 23.81d0, 25.83798814d0, 10.35788774, 45.139d0/
 c rhocrit o2 - 1449 o - 724. sio - 1851 sio2 - 2325 si - 2711
 c using bco/bco2 = 1/4.83 (true critical b's):
 c    *          22.07, 5.148732998d0, 25.83798814d0, 10.35788774, 0d0/
@@ -8490,7 +8495,7 @@ c                                 do not allow degenerate compositions:
          xc = 1d0 - nopt(5)
       end if
 c                                 calls mrkpur, cork, etc
-      call setup (ghh2o,ghco2,ghch4,kh2o,kco2,kco,kch4)
+      call setup (ghh2o,ghco2,ghch4,kh2o,kco2,kco,kch4,kc2h6)
 c                                 gh => gcork/gmrk, the g(i)'s are the fugacity coefficients
 c                                 of the pure gas according to the various eos's (CORK, HSMRK, MRK)
 c                                 could replace CORK with pitzer and sterner.
