@@ -1544,10 +1544,9 @@ c----------------------------------------------------------------------
       double precision y,g,vsp
       common / cstcoh /y(nsp),g(nsp),vsp(nsp)
 
-      double precision pv, pvv
       integer iroots
       logical switch, rkmin, min
-      common/ rkdivs /pv,pvv,iroots,switch,rkmin,min
+      common/ rkdivs /iroots,switch,rkmin,min
 
       double precision vp,vvp
       integer rooti
@@ -1644,10 +1643,6 @@ c                                 get speciation
       if (id.gt.0) call getspc (id,jd)
 c                                 set flag for multiple root eos's
       sroot = .true.
-c                                 save derivative for cp search
-c      vp(jd) = pv
-c      vvp(jd) = pvv
-c      rooti(jd) = iroot
 c                                 compute g-derivatives for isostatic 
 c                                 thermodynamic properties
       if (p.gt.nopt(26)) then 
@@ -1655,8 +1650,6 @@ c                                 thermodynamic properties
       else 
          dp0 = nopt(27) * nopt(26)
       end if 
-
-c     if (fluid(jd)) dp0 = dp0/10d0
 
       dt0 = dt
 c                                 if a reaction, cannot use sign to 

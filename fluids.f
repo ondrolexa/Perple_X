@@ -871,14 +871,7 @@ c                                 assume multispecies fluids
 
                   end if 
 c                                 atomic fractions 
-                  ns = xs(6) + xs(8) + xs(9) 
-                  no = xs(1) + xs(2)*2d0 + xs(3) + xs(7)*2d0 
-     *                       + xs(8)*2d0 + xs(9) 
-                  nc = xs(2) + xs(3) + xs(4) + xs(9)
-                  nh = (xs(1) + xs(5) + xs(6))*2d0 + xs(4)*4d0 
-     *                                             + xs(11)*3d0 
-                  nn = 2d0*xs(10) + xs(11)
-                  nsi = xs(13) + xs(14) + xs(15)
+                  call elmnts (nc,no,nh,nn,ns,nsi)
 
                   tot = 0d0 
 
@@ -902,7 +895,7 @@ c                 prop(ipot+isp+3) = (no + nc/2d0)/tot
 c
                   prop(ipot+isp+5) = nn/tot
                   prop(ipot+isp+6) = ns/tot
-                  prop(ipot+isp+7) = ns/tot
+                  prop(ipot+isp+7) = nsi/tot
 
                   prop(count-3) = fo2/tentoe
                   prop(count-2) = fs2/tentoe
@@ -1204,15 +1197,8 @@ c                                   species, and direct values:
                   else 
                      write (*,1170) fo2, 2d0*fs2/tentoe, ag
                   end if 
-c                                  compute sums:
-                  ns = xs(6) + xs(8) + xs(9) 
-                  no = xs(1) + xs(2)*2d0 + xs(3) + xs(7)*2d0 + xs(12)
-     *                       + xs(8)*2d0 + xs(9) + xs(14)*2d0 + xs(13)
-                  nc = xs(2) + xs(3) + xs(4) + xs(9)
-                  nh = (xs(1) + xs(5) + xs(6))*2d0 + xs(4)*4d0 
-     *                                             + xs(11)*3d0 
-                  nn = 2d0*xs(10) + xs(11)
-                  nsi = xs(13) + xs(14) + xs(15)
+c                                  compute atomic sums:
+                  call elmnts (nc,no,nh,nn,ns,nsi) 
 c                                  save old speciation and initialize for fd
                   vdif = 0d0
                   totx = 0d0
@@ -1342,5 +1328,29 @@ c                                  output bulk properties and V:
 1390  format (5x,'Back-calculated X(Si) = ',g16.9)
 1400  format (5x,'Back-calculated N/C  = ',g16.9)
 1420  format (/,5x,'Molar Volume (cm3/mol) = ',g12.5,/)
+
+      end 
+
+      subroutine elmnts (nc,no,nh,nn,ns,nsi) 
+c----------------------------------------------------------------------
+c compute element totals per mol of fluid species, hardwired stoichiometries
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      double precision nc,no,nh,nn,ns,nsi
+
+      double precision y,g,v
+      common/ cstcoh /y(nsp),g(nsp),v(nsp)
+c----------------------------------------------------------------------
+      ns = y(6) + y(8) + y(9) 
+      no = y(1) + y(2)*2d0 + y(3) + y(7)*2d0 + y(12)
+     *     + y(8)*2d0 + y(9) + y(14)*2d0 + y(13)
+      nc = y(2) + y(3) + y(4) + y(9) + y(16)*2d0
+      nh = (y(1) + y(5) + y(6))*2d0 + y(4)*4d0 
+     *     + y(11)*3d0 + y(16)*6d0
+      nn = 2d0*y(10) + y(11)
+      nsi = y(13) + y(14) + y(15)
 
       end 

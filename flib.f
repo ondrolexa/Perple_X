@@ -64,10 +64,10 @@ c-----------------------------------------------------------------------
       else if (ifug.eq.9) then 
          write (*,*) 'EoS 9 disabled'
          stop
-      else if (ifug.eq.10) then  
-         call hocgra (fo2)
+      else if (ifug.eq.10) then
+         call gcohx6 (fo2,.true.)
       else if (ifug.eq.11) then 
-         call hocmrk (fo2)
+         call gcohx6 (fo2,.false.)
       else if (ifug.eq.12) then 
          call cohsgr (fo2,fs2)
       else if (ifug.eq.13) then 
@@ -453,17 +453,20 @@ c                                 standard COHS species
             ins(i) = i
          end do
  
-         if (ifug.eq.19.or.ifug.eq.20) then
+         if (ifug.eq.10.or.ifug.eq.11) then 
+
+            isp = 6 
+            ins(6) = 16
+
+         else if (ifug.eq.19.or.ifug.eq.20) then
 
             isp = 8
-  
             ins(7) = 8
             ins(8) = 9
   
          else if (ifug.ge.12.and.ifug.lt.19) then
 
             isp = 9
-
             ins(7) = 7
             ins(8) = 8
             ins(9) = 9
@@ -471,7 +474,6 @@ c                                 standard COHS species
          else if (ifug.eq.24) then
 
             isp = 7
-
             ins(6) = 10
             ins(7) = 11
 
@@ -480,7 +482,6 @@ c                                 C-O-H free
             vname(4) = 'Y(C)    '
 
             isp = 6
-
             ins(6) = 7
 
          end if
@@ -490,7 +491,6 @@ c                                 C-O-H free
          vname(3) = 'X(H2)   '
 
          isp = 2
-
          ins(1) = 1
          ins(2) = 5
 
@@ -499,7 +499,6 @@ c                                 C-O-H free
          vname(3) = 'X(O)    '
 
          isp = 3
-
          ins(1) = 1
          ins(2) = 5
          ins(3) = 7
@@ -509,7 +508,6 @@ c                                 C-O-H free
          vname(3) = 'X(O)    '
 
          isp = 4
-
          ins(1) = 1
          ins(2) = 5
          ins(3) = 6
@@ -520,7 +518,6 @@ c                                 silica vapor
          vname(3) = 'X(Si)   '
 
          isp = 5
-
          ins(1) = 14
          ins(2) = 13
          ins(3) = 12
@@ -768,7 +765,7 @@ c----------------------------------------------------------------------
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       save ins
-      data ins/ 1,2,3,4,5,6,7,8,9,7*0/
+      data ins/ 1,2,3,4,5,6,7,8,9,16,6*0/
 c----------------------------------------------------------------------
       t2 = t * t
       t3 = t2 * t
@@ -785,7 +782,10 @@ c     call hsmrkp (ins, 9, jns, 3)
 c                                replaced by hscrkp which uses CORK
 c                                for h2o and CO2 and HSMRK for CH4,
 c                                JADC, 4/27/04.
-      call hscrkp (ins, 9)
+
+c                                modified to use pseos (pitzer and sterner)
+c                                for h2o/co2, ca 2014, JADC
+      call hscrkp (ins, 10)
 
       ghh2o = gh2o/gmh2o
       ghco2 = gco2/gmco2
@@ -1419,300 +1419,6 @@ c
  
       end
 
-      subroutine hocgra (fo2)
-c----------------------------------------------------------------------
-c  program to calculate GCOH fluid properties as a function of XO 
-c  using HSMRK/MRK hybrid see Connolly and Cesare (1992) for details.
-
-c  modified to account for diamond stability and to use CORK for
-c  h2o and co2, 4/27/04, JADC.
-c----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      integer ins(nsp),nit,ier
-
-      double precision oh2o,ghh2o,ghco2,ghch4,kh2o,kch4,kco,kco2,
-     *                 xt,ek1,ek2,ek3,ek10,ek20,ek30,fo2,xxo,kc2h6
-
-      double precision p,t,xo,u1,u2,tr,pr,r,ps
-      common / cst5 /p,t,xo,u1,u2,tr,pr,r,ps
-
-      double precision vol
-      common/ cst26 /vol
-
-      double precision gmh2o,gmco2,gmch4,vm
-      common/ cstchx /gmh2o,gmco2,gmch4,vm(3)
-
-      double precision xh2o,xco2,xco,xch4,xh2,xh2s,xo2,xso2,xcos,xn2,
-     *                 xnh3,xot,xsio,xsio2,xsi,xunk,
-     *                 gh2o,gco2,gco,gch4,gh2,gh2s,go2,gso2,gcos,gn2,
-     *                 gnh3,go,gsio,gsio2,gsi,gunk,v
-      common / cstcoh /xh2o,xco2,xco,xch4,xh2,xh2s,xo2,xso2,xcos,xn2,
-     *                 xnh3,xot,xsio,xsio2,xsi,xunk,
-     *                 gh2o,gco2,gco,gch4,gh2,gh2s,go2,gso2,gcos,gn2,
-     *                 gnh3,go,gsio,gsio2,gsi,gunk,v(nsp)
-
-      double precision fh2o,fco2,funk
-      common/ cst11 /fh2o,fco2,funk
-
-      integer ibuf,hu,hv,hw,hx   
-      double precision dlnfo2,elag,gz,gy,gx
-      common/ cst100 /dlnfo2,elag,gz,gy,gx,ibuf,hu,hv,hw,hx
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
-      save ins
-      data ins/ 1,2,3,4,5,11*0/
-c----------------------------------------------------------------------
-      nit = 0
-      oh2o = 2d0
-      xxo = xo
-
-      call setup (ghh2o,ghco2,ghch4,kh2o,kco2,kco,kch4,kc2h6)
-
-      xt = 1d0 - xo
-
-      ek30 = dexp (kch4) * p
-      ek10 = dexp (kco2 - 2d0*kco) * p 
-      ek20 = dexp (kh2o - kco) * p
-c                                 solve 
-10    ek1 = ek10 * gco**2/gco2 
-      ek2 = ek20 * gco * gh2/gh2o
-      ek3 = ek30 * gh2**2/gch4 
-c                                 solve for xh2
-      call evalxh (ek1,ek2,ek3,xt,xh2,ier)
-      if (ier.eq.1) goto 99
-c                                 solve for xco
-      call evalxc (ek1,ek2,ek3,xt,xh2,xco)
-
-      xch4 = ek3 * xh2**2 
-      xh2o = ek2 * xh2 * xco
-      xco2 = ek1 * xco**2
-
-      if (dabs(xh2o-oh2o).lt.nopt(5)*xh2o) goto 90
- 
-      nit = nit + 1
-
-      if (nit.gt.iopt(21)) then 
-         call warn (176,xh2o,nit,'HOCGRA')
-         goto 99          
-      end if
-
-      oh2o = xh2o
-
-      call mrkmix (ins, 5, 1)
-
-      gh2o = ghh2o * gh2o
-      gco2 = ghco2 * gco2 
-      gch4 = ghch4 * gch4 
-
-      goto 10 
-
-90    goto (91), hu
-
-      fh2o = dlog(gh2o*p*xh2o)
-      fco2 = dlog(gco2*p*xco2)
-      fo2 = 2d0*(dlog(gco*p*xco) - kco)
-
-      goto 99
-
-91    fh2o = dlog(gh2*p*xh2)
-      fco2 = 2d0*(dlog(gco*p*xco) - kco)
-
-99    vol = vol + xh2o * vm(1) + xco2 * vm(2) + xch4 * vm(3)
-
-      xo = xxo 
-
-      end
-
-      subroutine hocmrk (fo2)
-c----------------------------------------------------------------------
-c  program to calculate GCOH fluid properties as a function of XO using
-c  MRK see Connolly and Cesare (1991) for details.
-
-c  modified to account for diamond stability, 4/27/04, JADC.
-c----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      integer ins(nsp),ier,nit
-
-      double precision fo2,t2,t3,oh2o,xt,agph,dg,kh2o,kco2,ek30,kco,
-     *                 ek10,ek20,ek1,ek2,ek3
-
-      double precision p,t,xo,u1,u2,tr,pr,r,ps
-      common / cst5 /p,t,xo,u1,u2,tr,pr,r,ps
-
-      double precision xh2o,xco2,xco,xch4,xh2,xh2s,xo2,xso2,xcos,xn2,
-     *                 xnh3,xot,xsio,xsio2,xsi,xunk,
-     *                 gh2o,gco2,gco,gch4,gh2,gh2s,go2,gso2,gcos,gn2,
-     *                 gnh3,go,gsio,gsio2,gsi,gunk,v
-      common / cstcoh /xh2o,xco2,xco,xch4,xh2,xh2s,xo2,xso2,xcos,xn2,
-     *                 xnh3,xot,xsio,xsio2,xsi,xunk,
-     *                 gh2o,gco2,gco,gch4,gh2,gh2s,go2,gso2,gcos,gn2,
-     *                 gnh3,go,gsio,gsio2,gsi,gunk,v(nsp)
-
-      double precision fh2o,fco2,funk
-      common/ cst11 /fh2o,fco2,funk
-
-      integer ibuf,hu,hv,hw,hx   
-      double precision dlnfo2,elag,gz,gy,gx
-      common/ cst100 /dlnfo2,elag,gz,gy,gx,ibuf,hu,hv,hw,hx
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
-      save ins
-      data ins/1, 2, 3, 4, 5, 11*0/
-c----------------------------------------------------------------------
-      t2 = t*t
-      t3 = t2 * t
- 
-      nit = 0
-      oh2o = 2d0
-c                                check if xo is <1, >0,
-c                                reset if necessary.
-      if (xo.lt.nopt(5)) then
-         xo = nopt(5)
-      else if (dabs(xo-1d0).lt.nopt(5)) then
-         xo = 1d0 - nopt(5)
-      end if 
-
-      xt = 1d0 - xo
-c                                correct activity of graphite
-c                                for diamond stability if necessary:
-      call dimond (agph)
-c                                graphite pressure effect:
-      dg = p*( 1.8042d-06 + (0.058345d0 - 8.42d-08*p)/t ) + agph
-c                                get pure species fugacities
-      call mrkpur (ins, 5)
-c                                ln k's fitted from robie:
-      kh2o = -7.028214449d0 + 30607.34044d0/t - 475034.4632d0/t2 
-     *                      + 50879842.55d0/t3
-      kco2 = .04078341613d0 + 47681.676177d0/t - 134662.1904d0/t2 
-     *                      + 17015794.31d0/t3 + dg 
-      kco =  10.32730663d0  + 14062.7396777d0/t - 371237.1571d0/t2  
-     *                      + 53515365.95d0/t3  + dg
-c                               kch4 * p
-      ek30 = dexp (-13.86241656d0 + 12309.03706d0/t - 879314.7005d0/t2 
-     *                          + .7754138439d8/t3 + dg) * p
-      ek10 = dexp (kco2 - 2d0*kco) * p 
-      ek20 = dexp (kh2o - kco) * p
-c                                solve 
-10    ek1 = ek10 * gco**2/gco2 
-      ek2 = ek20 * gco * gh2/gh2o
-      ek3 = ek30 * gh2**2/gch4 
-c                                 solve for xh2
-      call evalxh (ek1,ek2,ek3,xt,xh2,ier)
-      if (ier.eq.1) goto 99
-c                                 solve for xco
-      call evalxc (ek1,ek2,ek3,xt,xh2,xco)
-
-      xch4 = ek3 * xh2**2 
-      xh2o = ek2 * xh2 * xco
-      xco2 = ek1 * xco**2
- 
-      nit = nit + 1
-
-      if (nit.gt.iopt(21)) then 
-         call warn (176,xh2o,nit,'HOCMRK') 
-         goto 99          
-      end if
-
-      if (dabs(xh2o-oh2o).lt.nopt(5)*xh2o) goto 90
-
-      oh2o = xh2o
-
-      call mrkmix (ins, 5, 1)
-
-      goto 10 
-
-90    goto (91), hu
-
-      fh2o = dlog(gh2o*p*xh2o)
-      fco2 = dlog(gco2*p*xco2)
-      fo2 = 2d0*(dlog(gco*p*xco) - kco)
-
-      goto 99
-
-91    fh2o = dlog(gh2*p*xh2)
-      fco2 = 2d0*(dlog(gco*p*xco) - kco)
-
-99    end
-
-      subroutine evalxh (ek1,ek2,ek3,xt,xh,ier)
-c----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      integer ier,it
-
-      double precision ek1,ek2,ek3,xt,xh,sign,g,dg,r0
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-c----------------------------------------------------------------------
-      sign = 1d0
-
-20    xh = 0.01d0
-      it = 0 
-      ier = 0 
-
-10    r0 = xh
-
-      call evalg (ek1,ek2,ek3,xt,xh,g,dg,sign)
-
-      xh = r0 - g/dg
-
-      if (dabs((xh-r0)/xh).lt.nopt(5)) then
-c                                 converged:
-         if (xh.gt.0d0) goto 999
-c                                 xh < 0.
-            if (sign.lt.0d0) then
-               call warn (176,xh,it,'EVALXH') 
-               ier = 1
-               goto 999
-            else
-               sign = -1d0
-               goto 20
-            end if
-      end if 
-
-      it = it + 1
-
-      if (it.gt.iopt(21)) then 
-
-c                             uncommenting these lines would make
-c                             evalxh try the second root, however
-c                             my experience is that this doesn't 
-c                             help.
-c         if (sign.gt.0d0) then 
-c            write (*,*) ' evalxh, did not converge on root 1'
-c            sign = -1d0
-c            goto 20 
-c         end if 
-         
-         call warn (176,xh,it,'EVALXH')
-         ier = 1
-         goto 999 
-
-      end if 
-
-      goto 10 
-
-999   end 
-
       subroutine evalg (k1,k2,k3,xt,xh,g,dg,sign)
 c----------------------------------------------------------------------
       implicit none
@@ -1757,49 +1463,6 @@ c----------------------------------------------------------------------
      *      + 2d0*t53 - t68/4d0 + 1d0
 
       end
-
-      subroutine evalxc (c1,c2,c3,xt,xh,xco)
-c----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      integer ier
-
-      double precision c1,c2,c3,xt,xh,xco,k2x,xk2x,t8,t9,t15,t21,t24,
-     *                 t32,c22
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-c----------------------------------------------------------------------
-      k2x = c2*xh
-      xk2x = xt*k2x
-      c22 = c2**2
-      t8 = xh**2
-      t9 = c22*t8
-      t15 = xt**2
-      t21 = c1*c3*t8
-      t24 = c1*xh
-      t32 = dsqrt (4d0*(t9  - xk2x)
-     *      + t15*(9d0*t9 + 6d0*k2x + 1d0 - 32d0*t21 - 16d0*t24)
-     *      + xt*(32d0*t21 - 12d0*t9 + 16d0*t24))
-
-      xco = (2d0*k2x - 3d0*xk2x - xt + t32)/xt/c1/4d0
-
-      if (xco.le.0d0) then 
-
-         xco = -1d0/xt/c1*(- 2d0*k2x + 3d0*xk2x + xt + t32)/4d0
-
-         if (xco.le.0d0) then 
-            call warn (176,xh,ier,'EVALXC')
-            xco = nopt(5) 
-         end if       
-
-      end if 
-
-      end 
 
       subroutine fo2buf (fo2)
 c----------------------------------------------------------------------
@@ -1903,7 +1566,7 @@ c----------------------------------------------------------------------
 
       integer ins(nsp),nit
 
-      double precision fo2,t2,t3,kco2,kco,kh2o,kch4,oh2o,qb,qa,kc2h6
+      double precision fo2,t2,t3,kco2,kco,kh2o,kch4,oh2o,qb,qa
 
       double precision p,t,xc,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xc,u1,u2,tr,pr,r,ps
@@ -2239,6 +1902,8 @@ c fluids from HSMRK EOS of Kerrick and Jacobs (1981) and Jacobs and
 c Kerrick (1981).
 
 c this routine was made to replace hsmrkp, 4/27/04 JADC
+
+c modified to use pseos (pitzer and sterner) for h2o/co2, ca 2014, JADC
 c---------------------------------------------------------------------
       implicit none
 
@@ -2399,24 +2064,6 @@ c output (to common cstcoh):
 
 c        g(i)    - fugacity coefficient of ith species
 c        v(i)    - volume of the ith species
-
-c species indices:
-
-c         1 = H2O
-c         2 = CO2
-c         3 = CO
-c         4 = CH4 
-c         5 = H2
-c         6 = H2S
-c         7 = O2
-c         8 = SO2
-c         9 = COS
-c        xx = C2H6 a = 90d6, b = 20.
-c        10 = N2
-c        11 = NH3
-c        12 = O
-c        13 = SiO
-c        14 = SiO2
 c-----------------------------------------------------------------------
       implicit none
 
@@ -2426,10 +2073,9 @@ c-----------------------------------------------------------------------
 
       logical max
  
-      double precision f(nsp),aj2(nsp),ev(3),c1,c2,ax,dv,
-     *                 c3,vmin,vmax,d1,d2,d3,d6,rt,dsqrtt,r,
-     *                 ch,bx,aij,pdv
- 
+      double precision f(nsp),aj2(nsp),ev(3),c1,c2,ax,dv,ch,bx,aij,pdv,
+     *                 c3,vmin,vmax,d1,d2,d3,d6,rt,dsqrtt,r
+
       double precision p,t,xco2,u1,u2,tr,pr,rbar,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,rbar,ps
 
@@ -2450,13 +2096,11 @@ c-----------------------------------------------------------------------
       logical sroot
       common/ rkroot /vrt,irt,sroot
 
-      double precision pv, pvv
       integer iroots
       logical switch, rkmin, min
-      common/ rkdivs /pv,pvv,iroots,switch,rkmin,min
+      common/ rkdivs /iroots,switch,rkmin,min
  
       save r
-                             
       data r, max /83.1441d0, .false./
 c---------------------------------------------------------------------- 
       dsqrtt = dsqrt(t)
@@ -2520,12 +2164,6 @@ c                                 solve for mixture molar volume
       c2 = c1*bx + aij/dsqrtt/p - bx*bx
 
       call roots3 (c1,c2,c3,ev,vmin,vmax,iroots,ineg,ipos)
-
-      if (vmin.lt.bx.and.iroots.gt.1.and.isp.eq.5) then 
-
-         vol = vmin
-
-      end if 
 
       if (sroot) then 
 c                                use characteristics of previous solution 
@@ -2595,13 +2233,6 @@ c                                 computations, save the root
          vrt = vol
 
       end if 
-c                                 derivative for cp search
-      pv = -rt / (vol - bx) ** 2 + aij / dsqrtt / vol ** 2 / (vol + bx)
-     * + aij / dsqrtt / vol / (vol + bx) ** 2
-
-      pvv = 2d0 *( rt /(vol - bx)**3 - aij/dsqrtt/vol**3/(vol + bx) 
-     *     - aij / dsqrtt / vol ** 2 / (vol + bx) ** 2 
-     *    -  aij / dsqrtt / vol / (vol + bx) ** 3)
 
       iroot = iroots
 c                                 compute fugacities:
@@ -2617,10 +2248,6 @@ c                                 compute fugacities:
          if (x(l).gt.0d0) then
             f(l) = dlog(x(l)) + b(l)*d3 - aj2(l)*d2 + d6
             g(l) = dexp(f(l)-dlog(p*x(l)))
-            if (g(l).gt.1d199) then
-c              write (*,*) 'eug'
-c               g(l) = 1d99
-            end if 
          else 
             g(l) = 1d0
             f(l) = dlog(1d4*p)
@@ -6375,10 +6002,9 @@ c----------------------------------------------------------------------
       integer ipoint,kphct,imyn
       common/ cst60 /ipoint,kphct,imyn
 
-      double precision pv, pvv
       integer iroots
       logical switch, rkmin, min
-      common/ rkdivs /pv,pvv,iroots,switch,rkmin,min
+      common/ rkdivs /iroots,switch,rkmin,min
 
       double precision vol
       common/ cst26 /vol
@@ -6933,10 +6559,9 @@ c----------------------------------------------------------------------
       integer ipoint,kphct,imyn
       common/ cst60 /ipoint,kphct,imyn
 
-      double precision pv, pvv
       integer iroots
       logical switch, rkmin, min
-      common/ rkdivs /pv,pvv,iroots,switch,rkmin,min
+      common/ rkdivs /iroots,switch,rkmin,min
 
       double precision vol
       common/ cst26 /vol
@@ -8433,7 +8058,7 @@ c----------------------------------------------------------------------
 
       integer ins(nsp), i, j, k, itct, icase
 
-      double precision a(3,4),yc,yo2,x0,xo3,deltag,yh2,
+      double precision a(3,4),yc,yo2,x0,xo3,deltag,yh2,kc2h6,
      *                 ghh2o,ghco2,ghch4,kh2o,kch4,kco,kco2,xc,xo,
      *                 dg(nsp),eg(nsp),oy(7),s4,s5,gtot,ogtot,
      *                 xc5,xc3,xo1, x1,x2,x3,x4,x5,x6,x7,x8,x9,t4,t5,
