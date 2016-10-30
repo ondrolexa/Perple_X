@@ -5,27 +5,22 @@ c  see Connolly (1995) and/or coh_speciation_with_ethane.mws for
 c  details. the routine uses a hybrid EoS (pure CO2 and H2O from 
 c  Pitzer & Sterner 2004, CH4 from Kerrick & Jacobs 1981, MRK for 
 c  all activities and all other fugacities) if hybrid = .true., else
-c  uses MRK for all purposes. 
+c  uses MRK for all purposes.
 
-c  modified to account for diamond stability and to use CORK for
-c  h2o and co2. 4/27/04, JADC
+c  replaces hocgra and hocmrk.
 
-c  modified to use pseos (pitzer and sterner, 1994) for h2o/co2, 
-c  3/5/2015, JADC
-
-c  modified to include ethane and use 2d newton-raphson. 10/28/16, JADC.
+c  10/28/16, JADC.
 c----------------------------------------------------------------------
       implicit none
 
       include 'perplex_parameters.h'
 
-      integer ins(nsp),nit,i
+      integer ins(6),jns(3),isp,jsp,nit,i
 
       logical bad, hybrid 
 
-      double precision ghh2o,ghco2,ghch4,kh2o,kch4,kco,kco2,kc2h6,oy5,
-     *       c1,c2,c3,c4,t1,t2,t3,t4,m,dm3,dm5,c,dc3,dc5,nh,rat,
-     *       dy5,dy3,y5,y3,fo2,ytot,t4y3,t3y3,t2y5,t4y5,det,x
+      double precision oy5,fo2,ytot,t4y3,t3y3,t2y5,t4y5,det,x,dy5,dy3,
+     *       c1,c2,c3,c4,t1,t2,t3,t4,m,dm3,dm5,c,dc3,dc5,nh,rat,y5,y3
 
       double precision dinc
       external dinc
@@ -36,8 +31,8 @@ c----------------------------------------------------------------------
       double precision vol
       common/ cst26 /vol
 
-      double precision gmh2o,gmco2,gmch4,vm
-      common/ cstchx /gmh2o,gmco2,gmch4,vm(3)
+      double precision gh,vh
+      common/ csthyb /gh(nsp),vh(nsp)
 
       double precision y,g,v
       common / cstcoh /y(nsp),g(nsp),v(nsp)
@@ -57,20 +52,29 @@ c----------------------------------------------------------------------
       double precision units, r13, r23, r43, r59, r1, r2
       common/ cst59 /units, r13, r23, r43, r59, r1, r2
 
-      save ins
-      data ins/1,2,3,4,5,16,10*0/
+      double precision eqk
+      common / csteqk /eqk(nsp)
+
+      save isp, jsp, ins, jns
+      data isp, jsp, ins, jns/6,3,1,2,3,4,5,16,1,2,4/
 c----------------------------------------------------------------------
       nit = 0
       oy5 = 0d0
       bad = .false.
-c                                 setup calculates equilibrium constants
-c                                 and computes pure species fugacities
-      call setup (ghh2o,ghco2,ghch4,kh2o,kco2,kco,kch4,kc2h6)
+c                                 check for in bounds composition
+      call xochk 
+c                                 compute equilibrium constants, returned
+c                                 in csteqk
+      call seteqk (ins,isp,elag)
+c                                 compute pure mrk fluid properties
+      call mrkpur (ins,isp)
+c                                 compute hybrid pure fluid props
+      if (hybrid) call hybeos (jns,jsp)
 
-      c1 = dexp (kch4) * p
-      c2 = dexp (2d0*kc2h6 - 3d0*kch4) *p
-      c3 = dexp (kco2 - 2d0*kco) * p 
-      c4 = dexp (kh2o - kco) * p
+      c1 = dexp (eqk(4)) * p
+      c2 = dexp (2d0*eqk(16) - 3d0*eqk(4)) * p
+      c3 = dexp (eqk(2) - 2d0*eqk(3)) * p 
+      c4 = dexp (eqk(1) - eqk(3)) * p
 c                                 initial guess, assume near binary
       x = 1d0 + xo 
       rat = xo/(1d0-xo) 
@@ -150,9 +154,9 @@ c                                 calculate new fugacity coefficients
          call mrkmix (ins, 6, 1)
 
          if (hybrid) then 
-            g(ins(1)) = ghh2o * g(ins(1))
-            g(ins(2)) = ghco2 * g(ins(2)) 
-            g(ins(4)) = ghch4 * g(ins(4))
+            do i = 1, jsp 
+               g(jns(i)) = gh(jns(i)) * g(jns(i))
+            end do 
          end if 
 
          oy5 = y5
@@ -177,19 +181,22 @@ c                                 calculate new fugacity coefficients
 c                                 normal fugacities
             fh2o = dlog(g(ins(1))*p*y(ins(1)))
             fco2 = dlog(g(ins(2))*p*y(ins(2)))
-            fo2 = 2d0*(dlog(g(ins(3))*p*y3) - kco)
+            fo2 = 2d0*(dlog(g(ins(3))*p*y3) - eqk(3))
 
          else 
 c                                 projecting through graphite
             fh2o = dlog(g(ins(5))*p*y5)
-            fco2 = 2d0*(dlog(g(ins(3))*p*y3) - kco)
+            fco2 = 2d0*(dlog(g(ins(3))*p*y3) - eqk(3))
 
          end if
 
       end if 
 
-      if (hybrid) 
-     *   vol = vol + y(ins(1))*vm(1) + y(ins(2))*vm(2) + y(ins(4))*vm(3)
+      if (hybrid) then
+         do i = 1, jsp 
+            vol = vol + y(jns(i))*vh(jns(i))
+         end do 
+      end if 
 
       end
 
@@ -209,6 +216,198 @@ c----------------------------------------------------------------------
          dinc = y / 2d0
       else 
          dinc = y + dy
+      end if 
+
+      end 
+
+      subroutine seteqk (ins,isp,ac)
+c----------------------------------------------------------------------
+c program to compute standard (from the elements convention) ln equilibrium 
+c constants for 1 mole of the nsp fluid species. 
+
+c ac - ln(a[graphite])
+c 
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      double precision dg,t2,t3,ac
+
+      integer i,j,isp,ins(*)
+
+      double precision eqk
+      common / csteqk /eqk(nsp)
+
+      double precision p,t,xo,u1,u2,tr,pr,r,ps
+      common / cst5 /p,t,xo,u1,u2,tr,pr,r,ps
+
+c----------------------------------------------------------------------
+      t2 = t * t
+      t3 = t2 * t
+c                                correct activity of graphite
+c                                for diamond stability if necessary:
+      call dimond (dg)
+c                                graphite pressure effect and activity
+c                                corrections:
+      dg = dg + ac + p*( 1.8042d-06 + (0.058345d0 - 8.42d-08*p)/t ) 
+c                                graphite activity effect, note for
+c                                certain routines (xoxsrk, ifug = 19/20
+c                                the agph term should not be added)!!!
+      do i = 1, isp 
+
+         j = ins(i)
+
+         if (j.eq.1) then 
+c                                h2o/robie
+            eqk(j) = -7.028214449d0 + 30607.34044d0/t  
+     *               - 475034.4632d0/t2 + 50879842.55d0/t3
+         else if (j.eq.2) then 
+c                                co2/robie
+            eqk(j) = .04078341613d0 + 47681.676177d0/t 
+     *              - 134662.1904d0/t2 + 17015794.31d0/t3 + dg
+         else if (j.eq.3) then 
+c                                co/robie
+            eqk(j) = 10.32730663d0  + 14062.7396777d0/t
+     *              - 371237.1571d0/t2 + 53515365.95d0/t3 + dg
+         else if (j.eq.4) then 
+c                                ch4/robie
+            eqk(j) = -13.86241656d0 + 12309.03706d0/t
+     *             - 879314.7005d0/t2 + .7754138439d8/t3 + dg
+         else if (j.eq.16) then 
+c                                c2h6/HSC, 10/2016
+            eqk(j) =  4.09702552d7/t3 - 8.01186095d5/t2 + 1.39350247d4/t
+     *                      - 2.64306669d1 + 2d0 * dg
+         end if 
+
+      end do 
+
+      end 
+
+      subroutine dimon1 (agph)
+c-----------------------------------------------------------------------
+c dimon1 tests if p-t conditions are in the diamond stability field
+c if they are it computes the activity of graphite needed to represent
+c diamond stability for C-O-H fluid speciation routines. 
+
+c dimon1 should replace dimond which automatically adds a graphite
+c activity correction
+
+c  agph - natural log of graphite activity to be added to graphite
+c        free energy to equate g(diamond) = g(graphite). 
+
+c polynomial functions fit by S. Poli, 4/27/04
+c                                 JADC, 4/27/04
+c-----------------------------------------------------------------------
+      implicit none 
+
+      double precision ptrans,agph
+
+      double precision p,t,xco2,u1,u2,tr,pr,r,ps
+      common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
+
+c                                 get transition pressure
+c                                 (should really use the G
+c                                 function for consistency):
+
+      ptrans = 5284.165053d0 + (33.21515773d0 - .002106330992d0*t)*t
+
+      if (p.gt.ptrans) then 
+c                                 compute corrected graphite activity
+         agph = 0.008423508384179629d0 
+     *        + (4.693008650307614d-11 * p - 3.850380793502567d-5)*p
+     *        + (1.4126916053951515d-3 + 1.393226795939807d-8*p 
+     *        - 5.887505938975768d-7 * t)*t
+
+      end if 
+
+      end 
+
+      subroutine hybeos (jns, jsp)
+c---------------------------------------------------------------------
+c set up routine for hybrid fluid EoS calculations. computes the 
+c (unecessay?) delta volumes and pure fluid fugacity coefficient 
+c rations used to convert the mrk fugacities to hybrid fugacities.
+
+c the choice of the pure fluid eos are hard wired (pseos, pitzer & sterner
+c 1994 for h2o/co2; hsmrk, kerrick and jacobs 1981 for methane).
+
+c this routine is to replace hscrkp and cstchx, 10/2015 JADC
+c---------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer i,j,jns(*),jsp
+
+      double precision hsfch4,fg(nsp)
+
+      external hsfch4
+ 
+      double precision gh,vh
+      common/ csthyb /gh(nsp),vh(nsp)
+
+      double precision x,g,v
+      common/ cstcoh /x(nsp),g(nsp),v(nsp)
+
+      double precision p,t,xc,u1,u2,tr,pr,r,ps
+      common/ cst5 /p,t,xc,u1,u2,tr,pr,r,ps
+c----------------------------------------------------------------------
+      do i = 1, jsp
+
+         j = jns(i)
+
+         vh(j) = -v(j)
+         gh(j) = g(j)
+         
+         if (j.le.2) then 
+c                                 water/co2, pitzer and sterner 1994:
+            call pseos (v(j),fg(j),j)
+
+         else if (j.eq.4) then 
+c                                 methane hsmrk kerrick and jacobs 191.
+            fg(j) = hsfch4 (v(j))
+
+         else
+
+            stop
+
+         end if 
+c                                 the fugacity coefficient of the pure gas
+         g(j) = dexp(fg(j))/p
+c                                 the hybrid delta volume (hyb-mrk), it's 
+c                                 doubtful this thing is really used, if it 
+c                                 is it must be in fluids.
+         vh(j) = vh(j) + v(j)
+c                                 the hybrid/mrk pure fluid fugacity ratio
+         gh(j) = g(j)/gh(j)
+
+      end do 
+
+      end
+
+      subroutine xochk
+c----------------------------------------------------------------------
+c xo check for speciation routines that can't handle xo = 0, 1.
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      double precision p,t,xo,u1,u2,tr,pr,r,ps
+      common / cst5 /p,t,xo,u1,u2,tr,pr,r,ps
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+c----------------------------------------------------------------------
+c                                check if xo is <1, >0,
+c                                reset if necessary
+      if (xo.lt.nopt(5)) then
+         xo = nopt(5)
+      else if (dabs(xo-1d0).lt.nopt(5)) then
+         xo = 1d0 - nopt(5)
       end if 
 
       end 
