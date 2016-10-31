@@ -63,8 +63,7 @@ c----------------------------------------------------------------------
       bad = .false.
 c                                 check for in bounds composition
       call xochk 
-c                                 compute equilibrium constants, returned
-c                                 in csteqk
+c                                 compute equilibrium constants in csteqk
       call seteqk (ins,isp,elag)
 c                                 compute pure mrk fluid properties
       call mrkpur (ins,isp)
@@ -274,6 +273,15 @@ c                                co/robie
 c                                ch4/robie
             eqk(j) = -13.86241656d0 + 12309.03706d0/t
      *             - 879314.7005d0/t2 + .7754138439d8/t3 + dg
+         else if (j.eq.6) then 
+c                                h2s/ohmoto and kerrick
+            eq(j) = 10115.3d0/t - 0.791d0 * dlog (t) + 0.30164d0
+         else if (j.eq.8) then 
+c                                so2/ohmoto and kerrick
+            eq(j) = 43585.63147d0/t - 8.710679055d0
+         else if (j.eq.9) then 
+c                                cos/ohmoto and kerrick
+            eq(j) = 10893.52964d0/t - 9.988613730d0
          else if (j.eq.16) then 
 c                                c2h6/HSC, 10/2016
             eqk(j) =  4.09702552d7/t3 - 8.01186095d5/t2 + 1.39350247d4/t

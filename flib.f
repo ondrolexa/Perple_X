@@ -58,9 +58,9 @@ c-----------------------------------------------------------------------
       else if (ifug.eq.6) then 
          call trkmrk
       else if (ifug.eq.7) then 
-         call cohgra (fo2)
+         call cohfo2 (fo2,.false.)
       else if (ifug.eq.8) then  
-         call cohhyb (fo2)
+         call cohfo2 (fo2,.true.)
       else if (ifug.eq.9) then 
          write (*,*) 'EoS 9 disabled'
          stop
@@ -155,8 +155,8 @@ c---------------------------------------------------------------------
      *  'Bottinga & Richet 1981 (CO2 RK)',
      *  'X(CO2) Holland & Powell 1991, 1998 (CORK)',
      *  'X(CO2) Hybrid Haar et al 1979/CORK (TRKMRK)',
-     *  'f(O2/CO2)-f(S2) Graphite buffered COHS MRK fluid',
-     *  'f(O2/CO2)-f(S2) Graphite buffered COHS hybrid-EoS fluid',
+     *  'f(O2/CO2) Graphite buffered COH MRK fluid',
+     *  'f(O2/CO2) Graphite buffered COH hybrid-EoS fluid',
      *  'Disabled EoS (cohfit)',
      *  'X(O) GCOH-fluid hybrid-EoS Connolly & Cesare 1993',
      *  'X(O) GCOH-fluid MRK Connolly & Cesare 1993'/
@@ -535,7 +535,8 @@ c                                 silica vapor
       subroutine cohsgr (fo2,fs2)
 c----------------------------------------------------------------------
 c program to calculate graphite saturated C-H-O-S speciation as 
-c a function of XO using an MRK/HSMRK hybrid. 
+c a function of XO using an MRK/HSMRK hybrid.
+
 c Species are CO2 CH4 CO H2 H2O H2S O2 SO2 COS. The latter 3 species
 c are only significant for reduced graphite activities. 
 c----------------------------------------------------------------------
@@ -543,11 +544,10 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer ins(nsp),nit,ier
+      integer i,ins(9),jns(3),isp,jsp,nit,ier
 
-      double precision fo2,fs2,oh2o,kh2s,kso2,kcos,ghh2o,ghco2,
-     *                 ghch4,kh2o,kco2,kco,kch4,c1,c2,c3,c4,c5,c6,c7,
-     *                 ek1,ek2,ek3,ek4,ek5,ek6,ek7,kc2h6
+      double precision fo2,fs2,oh2o,c1,c2,c3,c4,c5,c6,c7,
+     *                 ek1,ek2,ek3,ek4,ek5,ek6,ek7
 
       integer ibuf,hu,hv,hw,hx
       double precision rat,elag,gz,gy,gx
@@ -555,18 +555,6 @@ c----------------------------------------------------------------------
 
       double precision vol
       common/ cst26 /vol
-
-      double precision gmh2o,gmco2,gmch4,vm
-      common/ cstchx /gmh2o,gmco2,gmch4,vm(3)
-
-      double precision xh2o,xco2,xco,xch4,xh2,xh2s,xo2,xso2,xcos,xn2,
-     *                 xnh3,xot,xsio,xsio2,xsi,xunk,
-     *                 gh2o,gco2,gco,gch4,gh2,gh2s,go2,gso2,gcos,gn2,
-     *                 gnh3,go,gsio,gsio2,gsi,gunk,v
-      common / cstcoh /xh2o,xco2,xco,xch4,xh2,xh2s,xo2,xso2,xcos,xn2,
-     *                 xnh3,xot,xsio,xsio2,xsi,xunk,
-     *                 gh2o,gco2,gco,gch4,gh2,gh2s,go2,gso2,gcos,gn2,
-     *                 gnh3,go,gsio,gsio2,gsi,gunk,v(nsp)
 
       double precision p,t,xo,u1,u2,tr,pr,r,ps
       common / cst5 /p,t,xo,u1,u2,tr,pr,r,ps
@@ -579,77 +567,90 @@ c----------------------------------------------------------------------
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
-      save ins
-      data ins/ 1,2,3,4,5,6,7,8,9,7*0/
+      double precision gh,vh
+      common/ csthyb /gh(nsp),vh(nsp)
+
+      double precision y,g,v
+      common / cstcoh /y(nsp),g(nsp),v(nsp)
+
+      double precision eqk
+      common / csteqk /eqk(nsp)
+
+      save isp, jsp, ins, jns
+      data isp, jsp, ins, jns/9,3,1,2,3,4,5,6,7,8,9,1,2,4/
 c----------------------------------------------------------------------
       nit = 0
       oh2o = 2d0
-      xh2 = 0.00001d0   
-c                                fs2 = 1/2 ln (fs2),
-c                                k's are ln(k)
-      call setfs2 (fs2,kh2s,kso2,kcos)
+      y(5) = 0.00001d0
+c                                check for in bounds composition
+      call xochk 
+c                                fs2 = 1/2 ln (fs2)
+      call setfs2 (fs2)
+c                                compute equilibrium constants in csteqk
+      call seteqk (ins,isp,elag)
+c                                compute pure mrk fluid properties
+      call mrkpur (ins,isp)
+c                                compute hybrid pure fluid props
+      call hybeos (jns,jsp)
 
-      call setup (ghh2o,ghco2,ghch4,kh2o,kco2,kco,kch4,kc2h6)
-
-      c3 = dexp (kch4) * p
-      c1 = dexp (kco2 - 2d0*kco) * p 
-      c2 = dexp (kh2o - kco) * p
-      c4 = dexp (kh2s + fs2)
-      c5 = dexp (kcos + fs2)
-      c6 = dexp (kso2 - 2d0*kco + fs2) * p
-      c7 = dexp (-2d0*kco) * p
-
+      c3 = dexp (eqk(4)) * p
+      c1 = dexp (eqk(2) - 2d0*eqk(3)) * p 
+      c2 = dexp (eqk(1) - eqk(3)) * p
+      c4 = dexp (eqk(6) + fs2)
+      c5 = dexp (eqk(9) + fs2)
+      c6 = dexp (eqk(8) - 2d0*eqk(3) + fs2) * p
+      c7 = dexp (-2d0*eqk(3)) * p
 c                                outer iteration loop: 
-10    ek1 = c1 * gco**2/gco2 
-      ek2 = c2 * gco * gh2/gh2o
-      ek3 = c3 * gh2**2/gch4 
-      ek4 = c4 * gh2/gh2s
-      ek5 = c5 * gco/gcos
-      ek6 = c6 * gco**2/gso2
-      ek7 = c7 * gco**2/go2
+10    ek1 = c1 * g(3)**2/g(2) 
+      ek2 = c2 * g(3) * g(5)/g(1)
+      ek3 = c3 * g(5)**2/g(4) 
+      ek4 = c4 * g(5)/g(6)
+      ek5 = c5 * g(3)/g(9)
+      ek6 = c6 * g(3)**2/g(8)
+      ek7 = c7 * g(3)**2/g(7)
 c                                 solve for xh2, xco
-      call evlxh1 (ek1,ek2,ek3,ek4,ek5,ek6,ek7,xo,xh2,xco,ier)
+      call evlxh1 (ek1,ek2,ek3,ek4,ek5,ek6,ek7,xo,y(5),y(3),ier)
 
       if (ier.ne.0) call warn (501,xo,ier,'COHSGR')
 
-      xch4 = ek3 * xh2**2 
-      xh2o = ek2 * xh2 * xco
-      xco2 = ek1 * xco**2
-      xh2s = ek4 * xh2
-      xso2 = ek6 * xco**2
-      xcos = ek5 * xco
-      xo2  = ek7 * xco**2
+      y(4) = ek3 * y(5)**2 
+      y(1) = ek2 * y(5) * y(3)
+      y(2) = ek1 * y(3)**2
+      y(6) = ek4 * y(5)
+      y(8) = ek6 * y(3)**2
+      y(9) = ek5 * y(3)
+      y(7) = ek7 * y(3)**2
 
       nit = nit + 1
 
-      if (nit.gt.iopt(21)) call warn (502,xo,ier,'COHSGR')        
+      if (nit.gt.iopt(21)) call warn (502,xo,ier,'COHSGR')
 
-      if (dabs(xh2o-oh2o).lt.nopt(5)*xh2o) goto 90
+      if (dabs(y(1)-oh2o).lt.nopt(5)*y(1)) goto 90
 
-      oh2o = xh2o
+      oh2o = y(1)
 
       call mrkmix (ins, 9, 1)
 
-      gh2o = ghh2o * gh2o
-      gco2 = ghco2 * gco2 
-      gch4 = ghch4 * gch4 
+      do i = 1, jsp 
+         g(jns(i)) = gh(jns(i)) * g(jns(i))
+      end do 
 
       goto 10 
 
-90    vol = vol + xh2o * vm(1)
-     *          + xco2 * vm(2)
-     *          + xch4 * vm(3)
+90    do i = 1, jsp 
+         vol = vol + y(jns(i))*vh(jns(i))
+      end do 
 
       goto (91), hu
 
-      fh2o = dlog(gh2o*p*xh2o)
-      fco2 = dlog(gco2*p*xco2)
-      fo2 = 2d0 * (dlog(gco*p*xco) - kco)
+      fh2o = dlog(g(1)*p*y(1))
+      fco2 = dlog(g(2)*p*y(2))
+      fo2 = 2d0 * (dlog(g(3)*p*y(3)) - eqk(3))
 
       goto 99
 
-91    fh2o = dlog(gh2*p*xh2)
-      fco2 = 2d0 * (dlog(gco*p*xco) - kco)
+91    fh2o = dlog(g(5)*p*y(5))
+      fco2 = 2d0 * (dlog(g(3)*p*y(3)) - eqk(3))
 
 99    end
 
@@ -865,7 +866,7 @@ c----------------------------------------------------------------------
       xh2o = 0.1d0
 c                                this fs2 = 1/2 ln (fs2),
 c                                k's are ln(k)
-      call setfs2 (fs2,kh2s,kso2,kcos)
+      call xetfs2 (fs2,kh2s,kso2,kcos)
   
       call setup (ghh2o,ghco2,ghch4,kh2o,kco2,kco,kch4,kc2h6)
 c
@@ -1550,148 +1551,66 @@ c----------------------------------------------------------------------
   
       end
 
-      subroutine cohgra (fo2)
-c----------------------------------------------------------------------
-c subroutine to compute H2O and CO2 fugacities in a COH fluid
-c consistent with graphite saturatuion and an oxygen fugacity
-c buffer specified by ibuf in routine fo2buf.
-c----------------------------------------------------------------------
+      subroutine setfs2 (fs2)
+c-----------------------------------------------------------------------
+c set fs2 according to buffer choice (ibuf)
+c-----------------------------------------------------------------------
       implicit none
 
-      include 'perplex_parameters.h'
+      double precision fs2,xf
 
-      integer ins(nsp),nit
+      integer ibuf,hu,hv,hw,hx
+      double precision rat,elag,gz,gy,gx
+      common/ cst100 /rat,elag,gz,gy,gx,ibuf,hu,hv,hw,hx
 
-      double precision fo2,t2,t3,kco2,kco,kh2o,kch4,oh2o,qb,qa
+      double precision p,t,xo,u1,u2,tr,pr,r,ps
+      common / cst5 /p,t,xo,u1,u2,tr,pr,r,ps
+c                                get sulfur fugacity according to
+c                                the value of ibuf:
+      if (ibuf.eq.1) then 
+c                                get po-py 1/2 ln sulfur fugacity:
+c                                from simon poulson:
+         fs2 = .005388049d0*t + 10.24535d0 - 15035.91d0/t 
+     *                        + 0.03453878d0/t*p
 
-      double precision p,t,xc,u1,u2,tr,pr,r,ps
-      common/ cst5 /p,t,xc,u1,u2,tr,pr,r,ps
-
-      double precision xh2o,xco2,xco,xch4,xh2,xh2s,xo2,xso2,xcos,xn2,
-     *                 xnh3,xot,xsio,xsio2,xsi,xunk,
-     *                 gh2o,gco2,gco,gch4,gh2,gh2s,go2,gso2,gcos,gn2,
-     *                 gnh3,go,gsio,gsio2,gsi,gunk,v
-      common / cstcoh /xh2o,xco2,xco,xch4,xh2,xh2s,xo2,xso2,xcos,xn2,
-     *                 xnh3,xot,xsio,xsio2,xsi,xunk,
-     *                 gh2o,gco2,gco,gch4,gh2,gh2s,go2,gso2,gcos,gn2,
-     *                 gnh3,go,gsio,gsio2,gsi,gunk,v(nsp)
-
-      double precision fh2o,fco2,funk
-      common/ cst11 /fh2o,fco2,funk
-
-      integer ibuf,hu,hv,hw,hx   
-      double precision dlnfo2,elag,gz,gy,gx
-      common/ cst100 /dlnfo2,elag,gz,gy,gx,ibuf,hu,hv,hw,hx
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
-      save ins
-      data ins/1,2,3,4,5,11*0/
-c----------------------------------------------------------------------
-      t2 = t * t
-      t3 = t2 * t
- 
-      nit = 0
-c                                modified to return fo2 = ln(fo2), 11/17/2010
-      call fo2buf (fo2)
-c                                evaluate k CO2, CO:
-      kco2 = dexp(.04078341613d0 + (47681.676177d0+.06372383931d0*p)/t  
-     *        + elag - 134662.1904d0/t2 + 17015794.31d0/t3 + fo2)/p
-      kco = dexp(10.32730663d0 + (14062.7396777d0+.06372383931d0*p)/t   
-     *        + elag - 371237.1571d0/t2 + 53515365.95d0/t3 + fo2/2d0)/p
-c                                get pure species fugacities
-      call mrkpur (ins, 5)
-c                                check for graphite saturation:
-      xco2 =  kco2/gco2
-      xco = kco/gco
-
-      if (xco2+xco.ge.1d0) then 
- 
-         write (*,1000) fo2,p,t
-         fco2 = dlog(p*gco2)
-         xco2 = 1d0
-         xco = 0d0
-         return
-
-      end if 
-c                                evaluate other lnk's:
-      kh2o = dexp(-7.028214449d0 + 30607.34044d0/t - 475034.4632d0/t2 
-     *                           + 50879842.55d0/t3 + fo2/2d0)
-
-      kch4 = dexp(-13.86241656d0 + (12309.03706d0+.06372383931d0*p)/t 
-     *            + elag - 879314.7005d0/t2 + .7754138439d8/t3)*p
-c                                solve for x's
-      oh2o = 2d0
-
-      do 
-
-         xco2 =  kco2/gco2
-         xco = kco/gco
-c                                make quadratic 0 = qa * xh2**2 
-c                                 + qb * xh2 + qc
-         qb = kh2o * gh2/gh2o + 1d0
-         qa = kch4 * gh2**2/gch4
-
-         xh2 = (-qb + dsqrt(qb**2 - 4d0*qa*(xco + xco2 -1d0)))/2d0/qa
-         xch4 = kch4 * gh2**2 * xh2**2/gch4
-         xh2o = kh2o * gh2 * xh2/gh2o
-
-         nit = nit + 1
-
-         if (nit.gt.iopt(21)) then 
-            call warn (176,xh2o,nit,'COHGRA')
-            if (xco2+xco.gt.0.9999d0) then
-               xco2 = 1d0
-               xh2o = 1d-20
-               call mrkpur (ins, 5)
-               exit 
-            else 
-               stop
-            end if             
-         end if 
-
-         if (dabs(xh2o-oh2o).lt.nopt(5)*xh2o) exit
-
-         oh2o = xh2o
-
-         call mrkmix (ins, 5, 1)
-
-      end do 
-
-      xc = xco2 
-
-      if (hu.ne.1) then 
-
-         fh2o = dlog(gh2o*p*xh2o)
-         fco2 = dlog(gco2*p*xco2)
-
+      else if (ibuf.eq.2) then
+c                                get suflur fugacity from fe/s ratio
+c                                of po, expression derived from 
+c                                toulmin & barton 1964, with p
+c                                correction from Craig & Scott 1982.
+c                                (this only takes into account V(S2),
+c                                hope it's right.
+         xf = rat/( rat + 1d0)
+         fs2 = 197.6309d0*xf + 45.2458d0*dsqrt(1d0- 1.9962d0*xf) 
+     *         - 94.33691d0
+     *         + (80624.79d0 + 0.2273782d0*p - 197630.9d0*xf)/t
+      
       else 
 
-         fh2o = dlog(gh2*p*xh2)
-         fco2 = fo2
+         fs2 = rat/2d0
 
-      end if 
+      end if
 
-1000  format ('**warning ver222** routine cohgra, specified lnfO2 (',
-     *        g12.6,')',/,'is inconsistent with graphite saturation',
-     *       ' at P(bar)=',g12.6,' T(K)=',g12.6,/,'XCO2=1 assumed.') 
-      end
+      end 
 
-      subroutine cohhyb (fo2)
+      subroutine cohfo2 (fo2,hybrid)
 c----------------------------------------------------------------------
-c C-O-H speciation as a function of fo2
+c subroutine to compute H2O and CO2 fugacities in a COH fluid
+c consistent with a specifed graphite activity and oxygen fugacity
+c specified by ibuf in routine fo2buf. Uses a hybrid EoS (pure CO2 and 
+c H2O from Pitzer & Sterner 2004, CH4 from Kerrick & Jacobs 1981, MRK for 
+c all activities and all other fugacities) if hybrid = .true., else
+c uses MRK for all purposes.
 c----------------------------------------------------------------------
       implicit none
 
       include 'perplex_parameters.h'
 
-      integer ins(nsp),nit
+      integer i,ins(5),jns(3),nit,isp,jsp
 
-      double precision fo2,ghh2o,ghco2,ghch4,kh2o,kco2,kco,kch4,qa,
-     *                 qb,oh2o,kc2h6
+      logical hybrid 
+
+      double precision fo2,kh2o,kco2,kco,kch4,qa,qb,oh2o
 
       double precision p,t,xc,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xc,u1,u2,tr,pr,r,ps
@@ -1699,20 +1618,17 @@ c----------------------------------------------------------------------
       double precision vol
       common/ cst26 /vol 
 
-      double precision gmh2o,gmco2,gmch4,vm
-      common/ cstchx /gmh2o,gmco2,gmch4,vm(3)
-
-      double precision xh2o,xco2,xco,xch4,xh2,xh2s,xo2,xso2,xcos,xn2,
-     *                 xnh3,xot,xsio,xsio2,xsi,xunk,
-     *                 gh2o,gco2,gco,gch4,gh2,gh2s,go2,gso2,gcos,gn2,
-     *                 gnh3,go,gsio,gsio2,gsi,gunk,v
-      common / cstcoh /xh2o,xco2,xco,xch4,xh2,xh2s,xo2,xso2,xcos,xn2,
-     *                 xnh3,xot,xsio,xsio2,xsi,xunk,
-     *                 gh2o,gco2,gco,gch4,gh2,gh2s,go2,gso2,gcos,gn2,
-     *                 gnh3,go,gsio,gsio2,gsi,gunk,v(nsp)
+      double precision y,g,v
+      common / cstcoh /y(nsp),g(nsp),v(nsp)
 
       double precision fh2o,fco2,funk
       common/ cst11 /fh2o,fco2,funk
+
+      double precision eqk
+      common / csteqk /eqk(nsp)
+
+      double precision gh,vh
+      common/ csthyb /gh(nsp),vh(nsp)
 
       integer ibuf,hu,hv,hw,hx   
       double precision dlnfo2,elag,gz,gy,gx
@@ -1723,55 +1639,60 @@ c----------------------------------------------------------------------
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
-      save ins
-      data ins/1,2,3,4,5,11*0/
+      save isp, jsp, ins, jns
+      data isp, jsp, ins, jns/5,3,1,2,3,4,5,1,2,4/
 c----------------------------------------------------------------------
       nit = 0
 
       call fo2buf (fo2)
 
-      call setup (ghh2o,ghco2,ghch4,kh2o,kco2,kco,kch4,kc2h6)
-c                                evaluate k CO2, CO:
-      kco2 = dexp(kco2 + fo2)/p
-      kco  = dexp(kco  + fo2/2d0)/p
-c                                check for graphite saturation:
-      xco2 = kco2/gco2
-      xco  = kco/gco
+      call seteqk (ins,isp,elag)
+c                                 compute pure mrk fluid properties
+      call mrkpur (ins,isp)
+c                                 compute hybrid pure fluid props
+      if (hybrid) call hybeos (jns,jsp)
 
-      if (xco2+xco.ge.1d0) then 
+      kco2 = dexp(eqk(2) + fo2)/p
+      kco  = dexp(eqk(3) + fo2/2d0)/p
+c                                check for graphite saturation:
+      y(2) = kco2/g(2)
+      y(3) = kco/g(3)
+
+      if (y(2)+y(3).ge.1d0) then 
  
          write (*,1000) fo2,p,t
-         fco2 = dlog(p*gco2)
-         xco2 = 1d0
-         xco = 0d0
+         fco2 = dlog(p*g(2))
+         y(2) = 1d0
+         y(3) = 0d0
          return
 
       end if  
 c                                evaluate other k's:
-      kh2o = dexp(kh2o + fo2/2d0)
-      kch4 = dexp(kch4)*p
+      kh2o = dexp(eqk(1) + fo2/2d0)
+      kch4 = dexp(eqk(4))*p
 c                                solve for x's
       oh2o = 2d0
 
-      do 
-         xco2 =  kco2/gco2
-         xco = kco/gco
+      do
+
+         y(2) =  kco2/g(2)
+         y(3) = kco/g(3)
 c                                make quadratic 0 = qa * xh2**2 
 c                                 + qb * xh2 + qc
-         qb = kh2o * gh2/gh2o + 1d0
-         qa = kch4 * gh2**2/gch4
+         qb = kh2o * g(5)/g(1) + 1d0
+         qa = kch4 * g(5)**2/g(4)
 
-         xh2 = (-qb + dsqrt(qb**2 - 4d0*qa*(xco + xco2 -1d0)))/2d0/qa
-         xch4 = kch4 * gh2**2 * xh2**2/gch4
-         xh2o = kh2o * gh2 * xh2/gh2o
+         y(5) = (-qb + dsqrt(qb**2 - 4d0*qa*(y(3) + y(2) -1d0)))/2d0/qa
+         y(4) = kch4 * g(5)**2 * y(5)**2/g(4)
+         y(1) = kh2o * g(5) * y(5)/g(1)
  
          nit = nit + 1
 
          if (nit.gt.iopt(21)) then 
-            call warn (176,xh2o,nit,'COHHYB')
-            if (xco2+xco.gt.0.9999d0) then
-               xco2 = 1d0
-               xh2o = 1d-20
+            call warn (176,y(1),nit,'COHFO2')
+            if (y(2)+y(3).gt.0.9999d0) then
+               y(2) = 1d0
+               y(1) = 1d-20
                call mrkpur (ins, 5)
                exit 
             else 
@@ -1780,37 +1701,41 @@ c                                 + qb * xh2 + qc
             
          end if 
 
-         if (dabs(xh2o-oh2o).lt.nopt(5)*xh2o) exit
+         if (dabs(y(1)-oh2o).lt.nopt(5)*y(1)) exit
 
-         oh2o = xh2o
+         oh2o = y(1)
 
          call mrkmix (ins, 5, 1)
 
-         gh2o = ghh2o * gh2o
-         gco2 = ghco2 * gco2 
-         gch4 = ghch4 * gch4 
+         if (hybrid) then 
+            do i = 1, jsp 
+               g(jns(i)) = gh(jns(i)) * g(jns(i))
+            end do 
+         end if 
 
-      end do  
+      end do
 
-      vol = vol + xh2o * vm(1)
-     *          + xco2 * vm(2)
-     *          + xch4 * vm(3)
+      if (hybrid) then
+         do i = 1, jsp 
+            vol = vol + y(jns(i))*vh(jns(i))
+         end do 
+      end if 
 
-      xc = xco2 
+      xc = y(2) 
 
       if (hu.ne.1) then 
 
-         fh2o = dlog(gh2o*p*xh2o)
-         fco2 = dlog(gco2*p*xco2)
+         fh2o = dlog(g(1)*p*y(1))
+         fco2 = dlog(g(2)*p*y(2))
 
       else 
 
-         fh2o = dlog(gh2*p*xh2)
+         fh2o = dlog(g(5)*p*y(5))
          fco2 = fo2
 
       end if 
 
-1000  format ('**warning ver222** routine cohhyb, specified lnfO2 (',
+1000  format ('**warning ver222** routine COHFO2, specified lnfO2 (',
      *        g12.6,')',/,'is inconsistent with graphite saturation',
      *        ' at P(bar)=',g12.6,' T(K)=',g12.6,/,'XCO2=1 assumed.') 
 
@@ -2845,52 +2770,6 @@ c                                 compute fugacities.
 
       end
 
-      subroutine setfs2 (fs2,kh2s,kso2,kcos)
-c-----------------------------------------------------------------------
-c fs2, kh2s, kso2, kcos calculation.
-c-----------------------------------------------------------------------
-      implicit none
-
-      double precision fs2,kh2s,kso2,kcos,xf
-
-      integer ibuf,hu,hv,hw,hx
-      double precision rat,elag,gz,gy,gx
-      common/ cst100 /rat,elag,gz,gy,gx,ibuf,hu,hv,hw,hx
-
-      double precision p,t,xo,u1,u2,tr,pr,r,ps
-      common / cst5 /p,t,xo,u1,u2,tr,pr,r,ps
-c                                get sulfur fugacity according to
-c                                the value of ibuf:
-      if (ibuf.eq.1) then 
-c                                get po-py 1/2 ln sulfur fugacity:
-c                                from simon poulson:
-         fs2 = .005388049d0*t + 10.24535d0 - 15035.91d0/t 
-     *                        + 0.03453878d0/t*p
-
-      else if (ibuf.eq.2) then
-c                                get suflur fugacity from fe/s ratio
-c                                of po, expression derived from 
-c                                toulmin & barton 1964, with p
-c                                correction from Craig & Scott 1982.
-c                                (this only takes into account V(S2),
-c                                hope it's right.
-         xf = rat/( rat + 1d0)
-         fs2 = 197.6309d0*xf + 45.2458d0*dsqrt(1d0- 1.9962d0*xf) 
-     *         - 94.33691d0
-     *         + (80624.79d0 + 0.2273782d0*p - 197630.9d0*xf)/t
-      
-      else 
-
-         fs2 = rat/2d0
-
-      end if
-c                                k's from ohmoto and kerrick
-      kh2s = 10115.3d0/t - 0.791d0 * dlog (t) + 0.30164d0
-      kcos = 10893.52964d0/t - 9.988613730d0
-      kso2 = 43585.63147d0/t - 8.710679055d0
-
-      end 
-
       subroutine hosmrk (fo2, fs2)
 c-----------------------------------------------------------------------
 c program to calculate H-O-S speciation as a function of XO using
@@ -2943,7 +2822,7 @@ c                                reset if necessary
       call xochk
 c                                this fs2 = 1/2 ln (fs2),
 c                                k's are ln(k)
-      call setfs2 (fs2,kh2s,kso2,kcos)
+      call xetfs2 (fs2,kh2s,kso2,kcos)
 
       kh2o = -7.028214449d0 + 30607.34044d0/t - 475034.4632d0/t/t
      *                      + 50879842.55d0/t/t/t
@@ -3089,7 +2968,7 @@ c                                reset if necessary
       call xochk 
 c                                this fs2 = 1/2 ln (fs2),
 c                                k's are ln(k)
-      call setfs2 (fs2,ek1,ek2,kcos)
+      call xetfs2 (fs2,ek1,ek2,kcos)
 c                                kh2o from robie:
       ek3 = dexp(-7.028214449d0+30607.34044d0/t-475034.4632d0/t/t 
      *                         +50879842.55d0/t/t/t)
@@ -5101,7 +4980,7 @@ c--------------------------------------------------------------
       subroutine cohngr (fo2)
 c----------------------------------------------------------------------
 c subroutine to compute speciation and fugacites in graphite
-c saturated COHN fluid at an oxygen fugacity buffer specified 
+c saturated COHN fluid at oxygen fugacity specified 
 c by ibuf in routine fo2buf.
 
 c fo2  - log of the oxygen fugacity (from subroutine fo2buf)
@@ -8858,5 +8737,51 @@ c                                reset if necessary
       else if (dabs(xo-1d0).lt.nopt(5)) then
          xo = 1d0 - nopt(5)
       end if 
+
+      end 
+
+      subroutine xetfs2 (fs2,kh2s,kso2,kcos)
+c-----------------------------------------------------------------------
+c fs2, kh2s, kso2, kcos calculation. TO BE MADE OBSOLETE
+c-----------------------------------------------------------------------
+      implicit none
+
+      double precision fs2,kh2s,kso2,kcos,xf
+
+      integer ibuf,hu,hv,hw,hx
+      double precision rat,elag,gz,gy,gx
+      common/ cst100 /rat,elag,gz,gy,gx,ibuf,hu,hv,hw,hx
+
+      double precision p,t,xo,u1,u2,tr,pr,r,ps
+      common / cst5 /p,t,xo,u1,u2,tr,pr,r,ps
+c                                get sulfur fugacity according to
+c                                the value of ibuf:
+      if (ibuf.eq.1) then 
+c                                get po-py 1/2 ln sulfur fugacity:
+c                                from simon poulson:
+         fs2 = .005388049d0*t + 10.24535d0 - 15035.91d0/t 
+     *                        + 0.03453878d0/t*p
+
+      else if (ibuf.eq.2) then
+c                                get suflur fugacity from fe/s ratio
+c                                of po, expression derived from 
+c                                toulmin & barton 1964, with p
+c                                correction from Craig & Scott 1982.
+c                                (this only takes into account V(S2),
+c                                hope it's right.
+         xf = rat/( rat + 1d0)
+         fs2 = 197.6309d0*xf + 45.2458d0*dsqrt(1d0- 1.9962d0*xf) 
+     *         - 94.33691d0
+     *         + (80624.79d0 + 0.2273782d0*p - 197630.9d0*xf)/t
+      
+      else 
+
+         fs2 = rat/2d0
+
+      end if
+c                                k's from ohmoto and kerrick
+      kh2s = 10115.3d0/t - 0.791d0 * dlog (t) + 0.30164d0
+      kcos = 10893.52964d0/t - 9.988613730d0
+      kso2 = 43585.63147d0/t - 8.710679055d0
 
       end 
