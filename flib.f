@@ -71,15 +71,15 @@ c-----------------------------------------------------------------------
       else if (ifug.eq.12) then 
          call cohsgr (fo2,fs2)
       else if (ifug.eq.13) then 
-         call hh2ork (fo2)
+         call hh2ork (fo2,.false.)
       else if (ifug.eq.14) then 
          call pshp 
       else if (ifug.eq.15) then 
-         call lohork (fo2)
+         call hh2ork (fo2,.true.)
       else if (ifug.eq.16) then 
          call homrk (fo2)
       else if (ifug.eq.17) then 
-         call hosmrk (fo2,fs2)
+         call hosrk5 (fo2,fs2)
       else if (ifug.eq.18) then 
          call dhhsrk
       else if (ifug.eq.19.or.ifug.eq.20) then 
@@ -507,11 +507,12 @@ c                                 C-O-H free
 
          vname(3) = 'X(O)    '
 
-         isp = 4
+         isp = 5
          ins(1) = 1
          ins(2) = 5
          ins(3) = 6
-         ins(4) = 8
+         ins(4) = 7
+         ins(5) = 8
 
       else if (ifug.eq.26) then
 c                                 silica vapor 
@@ -544,7 +545,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i,ins(9),jns(3),isp,jsp,nit,ier
+      integer i,ins(9),jns(3),nit,ier
 
       double precision fo2,fs2,oh2o,c1,c2,c3,c4,c5,c6,c7,
      *                 ek1,ek2,ek3,ek4,ek5,ek6,ek7
@@ -576,8 +577,8 @@ c----------------------------------------------------------------------
       double precision eqk
       common / csteqk /eqk(nsp)
 
-      save isp, jsp, ins, jns
-      data isp, jsp, ins, jns/9,3,1,2,3,4,5,6,7,8,9,1,2,4/
+      save ins, jns
+      data ins, jns/1,2,3,4,5,6,7,8,9,1,2,4/
 c----------------------------------------------------------------------
       nit = 0
       oh2o = 2d0
@@ -587,11 +588,11 @@ c                                check for in bounds composition
 c                                fs2 = 1/2 ln (fs2)
       call setfs2 (fs2)
 c                                compute equilibrium constants in csteqk
-      call seteqk (ins,isp,elag)
+      call seteqk (ins,9,elag)
 c                                compute pure mrk fluid properties
-      call mrkpur (ins,isp)
+      call mrkpur (ins,9)
 c                                compute hybrid pure fluid props
-      call hybeos (jns,jsp)
+      call hybeos (jns,3)
 
       c3 = dexp (eqk(4)) * p
       c1 = dexp (eqk(2) - 2d0*eqk(3)) * p 
@@ -629,15 +630,11 @@ c                                 solve for xh2, xco
 
       oh2o = y(1)
 
-      call mrkmix (ins, 9, 1)
-
-      do i = 1, jsp 
-         g(jns(i)) = gh(jns(i)) * g(jns(i))
-      end do 
+      call mrkhyb (ins, jns, 9, 3, 1)
 
       goto 10 
 
-90    do i = 1, jsp 
+90    do i = 1, 3 
          vol = vol + y(jns(i))*vh(jns(i))
       end do 
 
@@ -729,202 +726,6 @@ c                                 converged:
 
 99    end
 
-      subroutine setup (ghh2o,ghco2,ghch4,kh2o,kco2,kco,kch4,kc2h6)  
-c----------------------------------------------------------------------
-c program to setup C-O-H-S speciation calculations 
-c----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      double precision ghh2o,ghco2,ghch4,kh2o,kco2,kco,kch4,t2,t3,agph,
-     *                 dg,kc2h6
-
-      integer ins(nsp)
-
-      integer is,i3,ifug,i1,i2
-      common/ cst10 /is(2),i3(h5),ifug,i1,i2
-
-      double precision gmh2o,gmco2,gmch4,vm
-      common/ cstchx /gmh2o,gmco2,gmch4,vm(3)
-
-      double precision xh2o,xco2,xco,xch4,xh2,xh2s,xo2,xso2,xcos,xn2,
-     *                 xnh3,xot,xsio,xsio2,xsi,xunk,
-     *                 gh2o,gco2,gco,gch4,gh2,gh2s,go2,gso2,gcos,gn2,
-     *                 gnh3,go,gsio,gsio2,gsi,gunk,v
-      common / cstcoh /xh2o,xco2,xco,xch4,xh2,xh2s,xo2,xso2,xcos,xn2,
-     *                 xnh3,xot,xsio,xsio2,xsi,xunk,
-     *                 gh2o,gco2,gco,gch4,gh2,gh2s,go2,gso2,gcos,gn2,
-     *                 gnh3,go,gsio,gsio2,gsi,gunk,v(nsp)
-
-      double precision p,t,xo,u1,u2,tr,pr,r,ps
-      common / cst5 /p,t,xo,u1,u2,tr,pr,r,ps
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
-      save ins
-      data ins/ 1,2,3,4,5,6,7,8,9,16,6*0/
-c----------------------------------------------------------------------
-      t2 = t * t
-      t3 = t2 * t
-c                                check if xo is <1, >0,
-c                                reset if necessary
-      call xochk 
-c                                get pure species fugacities
-c                                hsmrkp used hsmrk for h2o and co2
-c     call hsmrkp (ins, 9, jns, 3)
-c                                replaced by hscrkp which uses CORK
-c                                for h2o and CO2 and HSMRK for CH4,
-c                                JADC, 4/27/04.
-
-c                                modified to use pseos (pitzer and sterner)
-c                                for h2o/co2, ca 2014, JADC
-      call hscrkp (ins, 10)
-
-      ghh2o = gh2o/gmh2o
-      ghco2 = gco2/gmco2
-      ghch4 = gch4/gmch4
-c                                correct activity of graphite
-c                                for diamond stability if necessary:
-      call dimond (agph)
-c                                graphite pressure effect:
-      dg = p*( 1.8042d-06 + (0.058345d0 - 8.42d-08*p)/t ) 
-c                                graphite activity effect:
-      if (ifug.ne.20) dg = dg + agph
-c                                ln k's fitted from robie:
-      kh2o  = -7.028214449d0 + 30607.34044d0/t  - 475034.4632d0/t2 
-     *                      + 50879842.55d0/t3
-      kco2  = .04078341613d0 + 47681.676177d0/t - 134662.1904d0/t2 
-     *                      + 17015794.31d0/t3 + dg
-      kco   =  10.32730663d0  + 14062.7396777d0/t- 371237.1571d0/t2  
-     *                      + 53515365.95d0/t3 + dg
-      kch4  = -13.86241656d0 + 12309.03706d0/t  - 879314.7005d0/t2 
-     *                      + .7754138439d8/t3 + dg
-c                                ethane from HSC, 10/2016
-      kc2h6 = 4.09702552d7/t3 - 8.01186095d5/t2 + 1.39350247d4/t
-     *                      - 2.64306669d1 + 2d0 * dg
-
-      end 
-
-      subroutine xoxsrk (fo2,fs2)
-c----------------------------------------------------------------------
-c program to calculate C-H-O-S speciation as a function of XO and XS
-c or XC using an MRK/HSMRK hybrid. 
-c----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      integer ins(nsp),nit,ier
-
-      double precision fo2,fs2,oh2o,kh2s,kso2,kcos,ghh2o,ghco2,
-     *                 ghch4,kh2o,kco2,kco,kch4,c1,c2,c3,c5,c6,
-     *                 ek1,ek2,ek3,ek5,ek6,kc2h6
-
-      integer ibuf,hu,hv,hw,hx
-      double precision rat,xs,ag,gy,gx
-      common/ cst100 /rat,xs,ag,gy,gx,ibuf,hu,hv,hw,hx
-
-      double precision vol
-      common/ cst26 /vol
-
-      double precision gmh2o,gmco2,gmch4,vm
-      common/ cstchx /gmh2o,gmco2,gmch4,vm(3)
-
-      double precision xh2o,xco2,xco,xch4,xh2,xh2s,xo2,xso2,xcos,xn2,
-     *                 xnh3,xot,xsio,xsio2,xsi,xunk,
-     *                 gh2o,gco2,gco,gch4,gh2,gh2s,go2,gso2,gcos,gn2,
-     *                 gnh3,go,gsio,gsio2,gsi,gunk,v
-      common / cstcoh /xh2o,xco2,xco,xch4,xh2,xh2s,xo2,xso2,xcos,xn2,
-     *                 xnh3,xot,xsio,xsio2,xsi,xunk,
-     *                 gh2o,gco2,gco,gch4,gh2,gh2s,go2,gso2,gcos,gn2,
-     *                 gnh3,go,gsio,gsio2,gsi,gunk,v(nsp)
-
-      double precision p,t,xo,u1,u2,tr,pr,r,ps
-      common / cst5 /p,t,xo,u1,u2,tr,pr,r,ps
-
-      double precision fh2o,fco2,funk
-      common/ cst11 /fh2o,fco2,funk
-
-      integer iff,idss,ifug,ifyn,isyn
-      common/ cst10 /iff(2),idss(h5),ifug,ifyn,isyn
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
-      save ins
-      data ins/ 1,2,3,4,5,6,8,9,8*0/
-c----------------------------------------------------------------------
-      nit = 0
-      oh2o = 2d0
-      xh2 = 0.00001d0
-      xh2o = 0.1d0
-c                                this fs2 = 1/2 ln (fs2),
-c                                k's are ln(k)
-      call xetfs2 (fs2,kh2s,kso2,kcos)
-  
-      call setup (ghh2o,ghco2,ghch4,kh2o,kco2,kco,kch4,kc2h6)
-c
-      c1 = dexp (kcos + fs2) 
-      c2 = dexp (kco2 - kco - kh2o) 
-      c3 = dexp (kh2s + fs2)
-      c5 = dexp (kso2 + 4d0*(kco-kco2) + 2d0*kh2o + fs2)/p
-      c6 = dexp (kch4 + kh2o - kco) * p * p
-c                                outer iteration loop: 
-10    ek1 = c1 * gco/gcos 
-      ek2 = c2 * gco * gh2o/gh2/gco2
-      ek3 = c3 * gh2/gh2s     
-      ek5 = c5 * gco2**4 * gh2**2/gco**4/gso2/gh2o/gh2o
-      ek6 = c6 * gh2**3 * gco/gh2o/gch4
-c                                 solve for xh2, xco
-      if (ifug.eq.19) then
-         call evlxh2 (ek1,ek2,ek3,ek5,ek6,xo,xs,xh2,xco,xh2o,ier)
-      else 
-         call evlxh3 (ek1,ek2,ek3,ek5,ek6,xo,xs,xh2,xco,xh2o,ier)
-      end if 
-
-      if (ier.ne.0) call warn (501,xh2,ier,'XOXSRK')
-
-      xch4 = ek6 * xco * xh2**3/xh2o
-      xco2 = ek2 * xh2o * xco/xh2
-      xh2s = ek3 * xh2
-      xso2 = ek5 * xh2o**2/xh2**2
-      xcos = ek1 * xco
-
-      nit = nit + 1
-
-      if (nit.gt.iopt(21)) then
-         call warn (175,xh2,ier,'XOXSRK')  
-         goto 90
-      end if     
-
-      if (dabs(xh2o-oh2o).lt.nopt(5)*xh2o) goto 90
-
-      oh2o = xh2o
-
-      call mrkmix (ins, 8, 1)
-
-      gh2o = ghh2o * gh2o
-      gco2 = ghco2 * gco2 
-      gch4 = ghch4 * gch4 
-
-      goto 10 
-
-90    fh2o = dlog(gh2o*p*xh2o)
-      fco2 = dlog(gco2*p*xco2)
-
-      fo2 = 2d0 * (fh2o - dlog(gh2*p*xh2) - kh2o)
-c                                 compute graphite activity:
-      ag = fco2 - fo2 - kco2
-
-      vol = vol + xh2o * vm(1) + xco2 * vm(2) + xch4 * vm(3)
-
-      end
 
       subroutine evlxh2 (c1,c2,c3,c5,c6,xo,xs,xh2,xco,xh2o,ier)
 c----------------------------------------------------------------------
@@ -1341,80 +1142,7 @@ c                                 is new xh2o same as guess?:
 
 9999  end
 
-      subroutine hh2ork (fo2)
-c----------------------------------------------------------------------
-c program to calculate fh2o, fo2 for H2-H2O mixtures using hsmrk/mrk
-c hybrid EoS
-c----------------------------------------------------------------------
-      implicit none
 
-      include 'perplex_parameters.h'
-
-      integer ins(nsp), jns(3)
-
-      double precision fo2,ghh2o,kh2o
-
-      double precision fh2o,fh2,funk
-      common/ cst11 /fh2o,fh2,funk
-
-      double precision p,t,xv,u1,u2,tr,pr,r,ps
-      common/ cst5 /p,t,xv,u1,u2,tr,pr,r,ps
-
-      double precision vol
-      common/ cst26 /vol
-
-      double precision gmh2o,gmco2,gmch4,vm
-      common/ cstchx /gmh2o,gmco2,gmch4,vm(3)
-
-      double precision xh2o,xco2,xco,xch4,xh2,xh2s,xo2,xso2,xcos,xn2,
-     *                 xnh3,xot,xsio,xsio2,xsi,xunk,
-     *                 gh2o,gco2,gco,gch4,gh2,gh2s,go2,gso2,gcos,gn2,
-     *                 gnh3,go,gsio,gsio2,gsi,gunk,v
-      common / cstcoh /xh2o,xco2,xco,xch4,xh2,xh2s,xo2,xso2,xcos,xn2,
-     *                 xnh3,xot,xsio,xsio2,xsi,xunk,
-     *                 gh2o,gco2,gco,gch4,gh2,gh2s,go2,gso2,gcos,gn2,
-     *                 gnh3,go,gsio,gsio2,gsi,gunk,v(nsp)
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
-      save ins, jns
-
-      data ins, jns/1, 5, 14*0, 1, 2*0/
-c----------------------------------------------------------------------
-      xh2 = xv
-c                                check if xh2 is <1, >0,
-c                                reset if necessary.
-      if (dabs(xh2-1d0).lt.nopt(5)) then
-         xh2 = 1d0 - nopt(5)
-      else if (xh2.lt.nopt(5)) then
-         xh2 = nopt(5)
-      end if 
-
-      xh2o = 1d0 - xh2
-c                                get pure species fugacities
-      call hsmrkp (ins, 2, jns, 1)
-
-      ghh2o = gh2o/gmh2o
-c                                get mrk fugacities:
-      call mrkmix (ins, 2, 1)
-c                                evaluate lnk's
-      kh2o = -7.028214449d0 + 30607.34044d0/t - 475034.4632d0/t/t 
-     *                      + 50879842.55d0/t/t/t
-c                                 
-      gh2o = ghh2o * gh2o
-
-      fh2o = dlog(gh2o*p*xh2o)
-
-      fh2 = dlog(gh2*p*xh2)
-  
-      fo2 = 2d0 * (fh2o - fh2 - kh2o)
-
-      vol = vol + xh2o * vm(1)
- 
-      end
 
       subroutine evalg (k1,k2,k3,xt,xh,g,dg,sign)
 c----------------------------------------------------------------------
@@ -1593,6 +1321,501 @@ c                                hope it's right.
 
       end 
 
+      subroutine xoxsrk (fo2,fs2)
+c----------------------------------------------------------------------
+c program to calculate C-H-O-S speciation as a function of XO and XS
+c or XC using an MRK/HSMRK hybrid. 
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer ins(8),jns(3),nit,ier,i
+
+      double precision fo2,fs2,oh2o,c1,c2,c3,c5,c6,
+     *                 ek1,ek2,ek3,ek5,ek6
+
+      integer ibuf,hu,hv,hw,hx
+      double precision rat,xs,ag,gy,gx
+      common/ cst100 /rat,xs,ag,gy,gx,ibuf,hu,hv,hw,hx
+
+      double precision vol
+      common/ cst26 /vol
+
+      double precision eqk
+      common / csteqk /eqk(nsp)
+
+      double precision gh,vh
+      common/ csthyb /gh(nsp),vh(nsp)
+
+      double precision y,g,v
+      common / cstcoh /y(nsp),g(nsp),v(nsp)
+
+      double precision p,t,xo,u1,u2,tr,pr,r,ps
+      common / cst5 /p,t,xo,u1,u2,tr,pr,r,ps
+
+      double precision fh2o,fco2,funk
+      common/ cst11 /fh2o,fco2,funk
+
+      integer iff,idss,ifug,ifyn,isyn
+      common/ cst10 /iff(2),idss(h5),ifug,ifyn,isyn
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      save ins, jns
+      data ins, jns/ 1,2,3,4,5,6,8,9,1,2,4/
+c----------------------------------------------------------------------
+      nit = 0
+      oh2o = 2d0
+      y(5) = 0.00001d0
+      y(1) = 0.1d0
+c                                this fs2 = 1/2 ln (fs2),
+      call setfs2 (fs2)
+c                                 check for in bounds composition
+      call xochk 
+c                                 compute equilibrium constants in csteqk
+      call seteqk (ins,8,-1d0)
+c                                 compute pure mrk fluid properties
+      call mrkpur (ins,8)
+c                                 compute hybrid pure fluid props
+      call hybeos (jns,3)
+c
+      c1 = dexp (eqk(9) + fs2) 
+      c2 = dexp (eqk(2) - eqk(3) - eqk(1)) 
+      c3 = dexp (eqk(6) + fs2)
+      c5 = dexp (eqk(8) + 4d0*(eqk(3)-eqk(2)) + 2d0*eqk(1) + fs2)/p
+      c6 = dexp (eqk(4) + eqk(1) - eqk(3)) * p * p
+c                                outer iteration loop: 
+10    ek1 = c1 * g(3)/g(9) 
+      ek2 = c2 * g(3) * g(1)/g(5)/g(2)
+      ek3 = c3 * g(5)/g(6)     
+      ek5 = c5 * g(2)**4 * g(5)**2/g(3)**4/g(8)/g(1)/g(1)
+      ek6 = c6 * g(5)**3 * g(3)/g(1)/g(4)
+c                                 solve for xh2, xco
+      if (ifug.eq.19) then
+         call evlxh2 (ek1,ek2,ek3,ek5,ek6,xo,xs,y(5),y(3),y(1),ier)
+      else 
+         call evlxh3 (ek1,ek2,ek3,ek5,ek6,xo,xs,y(5),y(3),y(1),ier)
+      end if 
+
+      if (ier.ne.0) call warn (501,y(5),ier,'XOXSRK')
+
+      y(4) = ek6 * y(3) * y(5)**3/y(1)
+      y(2) = ek2 * y(1) * y(3)/y(5)
+      y(6) = ek3 * y(5)
+      y(8) = ek5 * y(1)**2/y(5)**2
+      y(9) = ek1 * y(3)
+
+      nit = nit + 1
+
+      if (nit.gt.iopt(21)) then
+         call warn (175,y(5),ier,'XOXSRK')  
+         goto 90
+      end if     
+
+      if (dabs(y(1)-oh2o).lt.nopt(5)*y(1)) goto 90
+
+      oh2o = y(1)
+
+      call mrkhyb (ins, jns, 8, 3, 1)
+
+      goto 10 
+
+90    fh2o = dlog(g(1)*p*y(1))
+      fco2 = dlog(g(2)*p*y(2))
+
+      fo2 = 2d0 * (fh2o - dlog(g(5)*p*y(5)) - eqk(1))
+c                                 compute graphite activity:
+      ag = fco2 - fo2 - eqk(2)
+
+      do i = 1, 3 
+         vol = vol + y(jns(i))*vh(jns(i))
+      end do 
+
+      end
+
+
+      subroutine hosrk5 (fo2,fs2)
+c-----------------------------------------------------------------------
+c program to calculate H-O-S speciation as a function of XO using
+c an MRK/HSMRK hybrid. Species are H2 O2 H2O H2S SO2.
+c-----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      double precision fo2,fs2,ek3,xom,xop,xos,c0,c1,c2,c3,
+     *                 c4,c5,c6,c7,a,b,c,d,xl,xi,h,dh
+
+      integer ins(5), jns(1), j, i
+
+      double precision vol
+      common/ cst26 /vol
+
+      double precision eqk
+      common / csteqk /eqk(nsp)
+
+      double precision gh,vh
+      common/ csthyb /gh(nsp),vh(nsp)
+
+      double precision y,g,v
+      common / cstcoh /y(nsp),g(nsp),v(nsp)
+
+      double precision p,t,xo,u1,u2,tr,pr,r,ps
+      common / cst5 /p,t,xo,u1,u2,tr,pr,r,ps
+
+      double precision f
+      common/ cst11 /f(3)
+
+      double precision units, r13, r23, r43, r59, r1, r2
+      common/ cst59 /units, r13, r23, r43, r59, r1, r2
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      save ins, jns
+      data ins, jns/ 1,5,6,7,8,1/
+c----------------------------------------------------------------------
+c                                check if xo is <1, >0,
+c                                reset if necessary
+      call xochk 
+c                                 compute equilibrium constants in csteqk
+      call seteqk (ins,5,-1d0)
+c                                this fs2 = 1/2 ln (fs2),
+      call setfs2 (fs2)
+c                                 compute pure mrk fluid properties
+      call mrkpur (ins,5)
+c                                 compute hybrid pure fluid props
+      call hybeos (jns,1)
+c                               
+      ek3 = dexp(eqk(1))
+c                                 get first guess:
+      if (xo.lt.r13) then 
+         if (xo.gt.r13-nopt(5)) xo = r13 - nopt(5)
+         xl = 2d0 *  xo/(1d0 - xo)
+      else if (xo.ge.r13) then
+         if (xo.lt.r13+nopt(5)) xo = r13 + nopt(5)
+         xl = 2d0 * (1d0 - xo)/(1d0 + xo)
+      end if
+
+      xom = xo - 1d0
+      xop = xo + 1d0
+      xos = xo * xo
+
+      c1 = dexp(eqk(6) + fs2)
+      c3 = dexp(eqk(8) + fs2)
+      c5 = 1d0/p/ek3/ek3
+      a = -8d0*xo*xom**3
+      b = -4d0*(3d0*xos+1d0)*xom**2 
+      c0 = 2d0*xom*(-xop * (3d0*xo*xom + 2d0))
+      c7 = 8d0*xom*c5
+      d = -xom**2 * xop**2
+c                                 outer iteration loop:
+      do 30 j = 1, iopt(21)
+
+         c2 = g(5)/g(6)
+         c4 = g(7)/g(8)
+         c6 = g(1)**2/g(5)**2/g(7)
+         c =  c0 + c7*c6*(1d0+c1*c2)**2*(1d0+c3*c4)
+         y(1) = xl
+         xi = xl
+
+         do 10 i = 1, iopt(21)
+c                                 inner iteration loop:
+            h = a + (b + (c + d * y(1)) * y(1)) * y(1)
+    
+            dh = b + (2d0 * c  + 3d0 * d * y(1)) * y(1)
+            y(1) = xi - h/dh
+
+            y(5)  = -0.5d0*(xo*y(1)+y(1)+2d0*xo-2d0)/(1d0+c1*c2)
+            y(6) = c1*c2*y(5)
+            y(7) = c5*c6*(y(1)*y(1))/(y(5)*y(5))
+            y(8) = c3*c4*y(7)
+ 
+            if (dabs((xi-y(1))/y(1)).lt.nopt(5)) goto 20
+            if (y(1).ge.1d0) y(1) = xi + (1d0-xi)/2d0
+10          xi = y(1)
+
+         call warn (176,y(1),i,'HOSRK5')
+         stop 
+
+20       y(5)  = -0.5d0*(xo*y(1)+y(1)+2d0*xo-2d0)/(1d0+c1*c2)
+         y(6) = c1*c2*y(5)
+         y(7) = c5*c6*(y(1)*y(1))/(y(5)*y(5))
+         y(8) = c3*c4*y(7)
+
+         if (j.gt.1.and.dabs((xl-y(1))/y(1)).lt.nopt(5)) goto 40
+
+         call mrkhyb (ins, jns, 5, 1, 1)
+
+         xl = y(1) 
+
+30    continue
+
+      call warn (176,y(1),j,'HOSRK5')
+      stop 
+
+40    f(1) = dlog(g(5)*p*y(5)) 
+
+      vol = vol + y(1) * vh(1)
+
+      if (y(7).lt.y(5)) then
+         fo2 = 2d0 * (dlog(g(1)*p*y(1)) - f(1) - dlog(ek3))
+      else
+         fo2 = dlog (g(7) * p * y(7))
+      end if
+
+      f(2) = fo2
+
+      end 
+
+      subroutine homrk (fo2)
+c-----------------------------------------------------------------------
+c program to calculate H-O speciation as a function of XO using
+c an MRK/HSMRK hybrid. 
+c-----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      double precision fo2,c1,c10,c11,c12,c13,c14,xl,xi,x12
+
+      integer ins(3), jns(1), i, j
+
+      double precision eqk
+      common / csteqk /eqk(nsp)
+
+      double precision gh,vh
+      common/ csthyb /gh(nsp),vh(nsp)
+
+      double precision y,g,v
+      common / cstcoh /y(nsp),g(nsp),v(nsp)
+
+      double precision vol
+      common/ cst26 /vol
+
+      double precision p,t,xo,u1,u2,tr,pr,r,ps
+      common / cst5 /p,t,xo,u1,u2,tr,pr,r,ps
+
+      double precision f
+      common/ cst11 /f(3)
+
+      double precision units, r13, r23, r43, r59, r1, r2
+      common/ cst59 /units, r13, r23, r43, r59, r1, r2
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      save ins,jns
+      data ins, jns/1,5,7,1/
+c----------------------------------------------------------------------
+c                                check if xo is <1, >0,
+c                                reset if necessary
+      call xochk  
+c                                 compute equilibrium constants in csteqk
+      call seteqk (ins,1,-1d0)
+c                                 compute pure mrk fluid properties
+      call mrkpur (ins,3)
+c                                 compute hybrid pure fluid props
+      call hybeos (jns,1)
+
+      c1 = 1d0/dsqrt(p)/eqk(1)
+
+      if (xo.lt.r13) then 
+c                                 this trap avoids singularity, a better approach
+c                                 would be to acknowledge that xh2 and xo2 are not
+c                                 independent at xo=1/3
+         if (xo.gt.r13-nopt(5)) xo = r13-nopt(5)
+         xl = 2d0 *  xo/(1d0 - xo)
+
+      else if (xo.ge.r13) then
+
+         if (xo.lt.r13+nopt(5)) xo = r13+nopt(5)
+         xl = 2d0 * (1d0 - xo)/(1d0 + xo)
+
+      end if 
+
+      c10 = (xo - 1d0)/2d0
+      c11 = 1d0 - xo
+      c12 = 1d0 + c10
+c                                 outer iteration loop:
+      do 30 j = 1, iopt(21)
+c                                 
+         c13 = c1 * g(1)/g(5)/dsqrt(g(7))
+         c14 = c10 * c13/2d0
+         xi = xl
+
+         do 10 i = 1, iopt(21)
+c                                 inner iteration loop:
+            y(7) = xo + c10 * y(1)
+
+            if (y(7).gt.nopt(5)) then  
+
+               x12 = dsqrt (y(7))
+
+               y(1) = xi + 
+     *               (c11 - c12 * y(1) - c13 * y(1)/x12) /
+     *               (c12 + c13 * x12 + c14 * y(1)/x12)
+
+            else 
+
+               y(1) = 2d0 *  xo/c11 
+
+            end if 
+
+            if (dabs((xi-y(1))/y(1)).lt.nopt(5)) goto 20
+            if (y(1).ge.1d0) y(1) = xi + (1d0-xi)/2d0
+10          xi = y(1)
+
+         call warn (176,y(1),i,'HOMRK')
+
+         goto 99
+
+20       if (y(7).lt.0d0) y(7) = 0d0
+         y(5) = 1d0 - y(7) - y(1)
+         if (j.gt.1.and.dabs((xl-y(1))/y(1)).lt.nopt(5)) goto 40
+
+         call mrkhyb (ins, jns, 3, 1, 1)
+
+         xl = y(1)
+
+30    continue
+
+      call warn (176,y(1),j,'HOMRK')
+      goto 99 
+
+40    f(1) = dlog(g(5)*p*y(5))
+
+      vol = vol + y(1) * vh(1) 
+      
+      if (y(7).lt.y(5)) then
+         fo2 = 2d0 * (dlog(g(1)*p*y(1)) - f(1) - dlog(eqk(1)))
+      else
+         fo2 = dlog (g(7) * p * y(7))
+      end if
+
+      f(2) = fo2
+
+      return 
+
+99    f(1) = dlog(1d4*p)
+      f(2) = f(1)
+
+      end 
+
+
+
+      subroutine hh2ork (fo2,low)
+c----------------------------------------------------------------------
+c program to calculate fh2o, fo2 for H2-H2O mixtures using hsmrk/mrk
+c hybrid EoS
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      logical low
+
+      integer ins(2), jns(1)
+
+      double precision fo2
+
+      double precision fh2o,fh2,funk
+      common/ cst11 /fh2o,fh2,funk
+
+      double precision p,t,xv,u1,u2,tr,pr,r,ps
+      common/ cst5 /p,t,xv,u1,u2,tr,pr,r,ps
+
+      double precision vol
+      common/ cst26 /vol
+
+      double precision eqk
+      common / csteqk /eqk(nsp)
+
+      double precision gh,vh
+      common/ csthyb /gh(nsp),vh(nsp)
+
+      double precision y,g,v
+      common / cstcoh /y(nsp),g(nsp),v(nsp)
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      save ins, jns
+      data ins, jns/1, 5, 1/
+c----------------------------------------------------------------------
+      y(5) = xv
+c                                check if xh2 is <1, >0,
+c                                reset if necessary.
+      if (dabs(y(5)-1d0).lt.nopt(5)) then
+         y(5) = 1d0 - nopt(5)
+      else if (y(5).lt.nopt(5)) then
+         y(5) = nopt(5)
+      end if 
+
+      y(1) = 1d0 - y(5)
+c                                get pure species fugacities
+      call hybeos (jns,1)
+c                                 compute equilibrium constants in csteqk
+      call seteqk (ins,1,-1d0)
+
+      if (low) then 
+c                                get mrk fugacities:
+         call lomrk (ins, 2)
+
+      else 
+c                                get mrk fugacities:
+         call mrkmix (ins, 2, 1)
+
+      end if 
+                    
+      g(1) = gh(1) * g(1)
+
+      fh2o = dlog(g(1)*p*y(1))
+
+      fh2 = dlog(g(5)*p*y(5))
+  
+      fo2 = 2d0 * (fh2o - fh2 - eqk(1))
+
+      vol = vol + y(1) * vh(1)
+ 
+      end
+
+      subroutine mrkhyb (ins,jns,isp,jsp,imix)
+c---------------------------------------------------------------------
+c routine to make mrk mixture calculations and convert to hybridized
+c fugacity coefficients.
+c---------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer i,ins(*),isp,jns(*),jsp,imix
+ 
+      double precision gh,vh
+      common/ csthyb /gh(nsp),vh(nsp)
+
+      double precision x,g,v
+      common/ cstcoh /x(nsp),g(nsp),v(nsp)
+c----------------------------------------------------------------------
+      call mrkmix (ins, isp, imix)
+
+      do i = 1, jsp 
+         g(jns(i)) = gh(jns(i)) * g(jns(i))
+      end do 
+
+      end 
+
+
       subroutine cohfo2 (fo2,hybrid)
 c----------------------------------------------------------------------
 c subroutine to compute H2O and CO2 fugacities in a COH fluid
@@ -1606,7 +1829,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i,ins(5),jns(3),nit,isp,jsp
+      integer i,ins(5),jns(3),nit
 
       logical hybrid 
 
@@ -1639,18 +1862,18 @@ c----------------------------------------------------------------------
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
-      save isp, jsp, ins, jns
-      data isp, jsp, ins, jns/5,3,1,2,3,4,5,1,2,4/
+      save ins, jns
+      data ins, jns/1,2,3,4,5,1,2,4/
 c----------------------------------------------------------------------
       nit = 0
 
       call fo2buf (fo2)
 
-      call seteqk (ins,isp,elag)
+      call seteqk (ins,5,elag)
 c                                 compute pure mrk fluid properties
-      call mrkpur (ins,isp)
+      call mrkpur (ins,5)
 c                                 compute hybrid pure fluid props
-      if (hybrid) call hybeos (jns,jsp)
+      if (hybrid) call hybeos (jns,3)
 
       kco2 = dexp(eqk(2) + fo2)/p
       kco  = dexp(eqk(3) + fo2/2d0)/p
@@ -1708,7 +1931,7 @@ c                                 + qb * xh2 + qc
          call mrkmix (ins, 5, 1)
 
          if (hybrid) then 
-            do i = 1, jsp 
+            do i = 1, 3 
                g(jns(i)) = gh(jns(i)) * g(jns(i))
             end do 
          end if 
@@ -1716,7 +1939,7 @@ c                                 + qb * xh2 + qc
       end do
 
       if (hybrid) then
-         do i = 1, jsp 
+         do i = 1, 3 
             vol = vol + y(jns(i))*vh(jns(i))
          end do 
       end if 
@@ -1751,7 +1974,7 @@ c---------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer ins(nsp),jns(3),isp,jsp,ij(3),k,i,j
+      integer ins(*),jns(*),isp,jsp,ij(3),k,i,j
 
       double precision fg(3),bw,bc,bm,t12,rtt,t2,b,c,d,e,yz,fugp,rr
  
@@ -1816,64 +2039,6 @@ c----------------------------------------------------------------------
  
       end
 
-      subroutine hscrkp (ins, isp)
-c---------------------------------------------------------------------
-c subprogram to get fugacity of pure H2O, CO2 from CORK and of pure CH4
-c fluids from HSMRK EOS of Kerrick and Jacobs (1981) and Jacobs and
-c Kerrick (1981).
-
-c this routine was made to replace hsmrkp, 4/27/04 JADC
-
-c modified to use pseos (pitzer and sterner) for h2o/co2, ca 2014, JADC
-c---------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      integer ins(nsp),isp
-
-      double precision fg(3), hsfch4
- 
-      double precision gm,vm
-      common/ cstchx /gm(3),vm(3)
-
-      double precision x,g,v
-      common/ cstcoh /x(nsp),g(nsp),v(nsp)
-
-      double precision p,t,xc,u1,u2,tr,pr,r,ps
-      common/ cst5 /p,t,xc,u1,u2,tr,pr,r,ps
-
-      double precision f
-      common/ cst11 /f(3)
-c----------------------------------------------------------------------
-c                                 first get mrk props
-      call mrkpur (ins,isp)
-c                                 water:
-      vm(1) = -v(1)
-      gm(1) = g(1)
-c     call crkh2o (p,t,v(1),fg(1)) 
-      call pseos (v(1),fg(1),1)
-      g(1) = dexp(fg(1))/p
-      vm(1) = vm(1) + v(1)
-      f(1) = fg(1)
-c                                 co2:
-      vm(2) = -v(2)
-      gm(2) = g(2)
-c     call crkco2 (p,t,v(2),fg(2)) 
-      call pseos (v(2),fg(2),2)
-      g(2) = dexp(fg(2))/p
-      vm(2) = vm(2) + v(2)
-      f(2) = fg(2)
-c                                 ch4:         
-      vm(3) = -v(4)
-      gm(3) = g(4)
-
-      fg(3) = hsfch4 (v(4))
-
-      vm(3) = vm(3) + v(4)
-      g(4) = dexp(fg(3))/p
-
-      end
 
       double precision function hsfch4 (vch4)
 c---------------------------------------------------------------------
@@ -1886,6 +2051,8 @@ c---------------------------------------------------------------------
       include 'perplex_parameters.h'
 
       double precision bm,rtt,t2,c,d,e,yz,fugp,rr,vch4,t12
+
+      external fugp
 
       double precision p,t,xc,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xc,u1,u2,tr,pr,r,ps
@@ -2389,71 +2556,6 @@ c     *               + d/2d0*dp*dp)/rt
       end
 
 
-      subroutine xrkco2 (pbar,t,fco2)
-c-----------------------------------------------------------------------
-c compute ln(f[co2], bar) from Eq 8 of Holland 
-c & Powell CMP 109:265-273. Input pbar - pressure (bars); tk - temp (K).
-c                                 J.A.D. Connolly, 1992.
-c this approximation assumes p-t conditions are always in the 1-phase
-c field for the RK, i.e., T > 373 K
-c
-c apparently thermocalc does not use this simplification.
-c----------------------------------------------------------------------
-      implicit none 
-
-      double precision b,r,p0,pbar,t,fco2,rt,bp,p,ab,dp,c,d
-
-      save b,r,p0
-
-      data b,r,p0 /3.7852d0,8.314d-3,5d0/
-c----------------------------------------------------------------------
-      p = pbar/1d3
-      rt = r*t
-      bp = b*p
-
-c     a = (5.45963d-5*tc - 8.6392d-6*t)*tc**(1.5d0)/pc
-c     a = 1194.001504d0 - 0.6210920651d0*t
-c     ab = a/b
-
-      ab = 315.4394758d0 - 0.1640843456d0*t
-
-      fco2 = dlog(pbar) + (bp + ab/dsqrt(t)*(dlog(rt+bp)
-     *       - dlog(rt+2d0*bp)))/rt 
-
-c                       cork classic?
-c      c = (-3.30558d-5*tc + 2.30524d-6*t)/pc**(1.5d0)
-c      d = (6.93054d-7*tc - 8.38293d-8*t)/pc/pc
-c      with tc = 304.2 and pc = 0.0738 gives:
-
-c                       tjbh cork '97
-
-      if (p.gt.p0) then
-c                       add virial component:
-          dp = p - p0
-
-c         c = 5.40776d-3 - 1.59046d-6*t
-c         d = -1.78198d-1 + 2.45317d-5*t
-c         then the virial contribution to ln(f) is 
-c         dp*(
-c         or:
-c         dp*[{.3252201107/t-.9564950686d-4}*dp
-c             + {.1967099672d-2 - 14.28899046/t}*dsqrt(dp)]
-c 
-c                        cork classic:
-c         c = -0.5015593595d0 + 0.1149824621d-3*t
-c         d = .3870914337d-1 - 0.1539157688d-4*t
-c                        new parms:
-
-          d = 5.40776d-3 - 1.59046d-6*t
-          c = -1.78198d-1 + 2.45317d-5*t
-
-
-          fco2 = fco2 + dp*(d*dp/2d0 + c*2d0/3d0*dsqrt(dp))/rt
-
-      end if 
-
-      end
-
       subroutine roots3 (a1,a2,a3,x,vmin,vmax,iroots,ineg,ipos)
 c----------------------------------------------------------------------
 c returns real roots (in x) of: x**3 + a1*x**2 + a2*x + a3
@@ -2551,7 +2653,7 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer ins(nsp), i, j, k, l, isp, iroots, ineg, ipos
+      integer ins(*), i, j, k, l, isp, iroots, ineg, ipos
  
       double precision f(nsp),aj2(nsp),ev(3),t2,rt,d2,
      *                 dsqrtt,ch,bx,aij,c1,c2,c3,aij12,vmin,vmax,vol,
@@ -2570,7 +2672,6 @@ c-----------------------------------------------------------------------
       common/ rkab /a(nsp),b(nsp)
 
       save r 
-
       data r /83.1441/
 c----------------------------------------------------------------------
       t2 = t*t
@@ -2770,461 +2871,6 @@ c                                 compute fugacities.
 
       end
 
-      subroutine hosmrk (fo2, fs2)
-c-----------------------------------------------------------------------
-c program to calculate H-O-S speciation as a function of XO using
-c an MRK/HSMRK hybrid. Specifically for high (po+py) fs2.
-c Species are H2 H2O H2S SO2.
-c-----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      integer ins(nsp), jns(3), i, j
-
-      double precision fo2,fs2,h,dh,kh2s,kso2,kcos,c1,c2,c3,xom,xop,
-     *                 xos,kh2o,a,b,c0,d,ghh2o,c4,xi,xl,c
-
-      double precision gmh2o,vm
-      common/ cstchx /gmh2o,vm(5)
-
-      double precision vol
-      common/ cst26 /vol
-
-      double precision xh2o,xco2,xco,xch4,xh2,xh2s,xo2,xso2,xcos,xn2,
-     *                 xnh3,xot,xsio,xsio2,xsi,xunk,
-     *                 gh2o,gco2,gco,gch4,gh2,gh2s,go2,gso2,gcos,gn2,
-     *                 gnh3,go,gsio,gsio2,gsi,gunk,v
-      common / cstcoh /xh2o,xco2,xco,xch4,xh2,xh2s,xo2,xso2,xcos,xn2,
-     *                 xnh3,xot,xsio,xsio2,xsi,xunk,
-     *                 gh2o,gco2,gco,gch4,gh2,gh2s,go2,gso2,gcos,gn2,
-     *                 gnh3,go,gsio,gsio2,gsi,gunk,v(nsp)
-
-      double precision p,t,xo,u1,u2,tr,pr,r,ps
-      common / cst5 /p,t,xo,u1,u2,tr,pr,r,ps
-
-      double precision f
-      common/ cst11 /f(3)
-
-      double precision units, r13, r23, r43, r59, r1, r2
-      common/ cst59 /units, r13, r23, r43, r59, r1, r2
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
-      save ins, jns
-      data ins, jns/ 1,5,6,8,12*0,1,2*0/  
-c---------------------------------------------------------------------- 
-c                                check if xo is <1, >0,
-c                                reset if necessary
-      call xochk
-c                                this fs2 = 1/2 ln (fs2),
-c                                k's are ln(k)
-      call xetfs2 (fs2,kh2s,kso2,kcos)
-
-      kh2o = -7.028214449d0 + 30607.34044d0/t - 475034.4632d0/t/t
-     *                      + 50879842.55d0/t/t/t
-      c1 = dexp (kh2s + fs2)
-      c3 = dexp (kso2 - 2d0*kh2o + fs2)/p
-c                                 get first guess:
-      if (xo.lt.r13) then 
-         if (xo.gt.r13-nopt(5)) xo = r13 - nopt(5)
-         xl = 2d0 *  xo/(1d0 - xo)
-      else if (xo.ge.r13) then
-         if (xo.lt.r13+nopt(5)) xo = r13 + nopt(5)
-         xl = 2d0 * (1d0 - xo)/(xo + 1d0)
-      end if
-    
-      xom = xo - 1d0
-      xop = xo + 1d0
-      xos = xo * xo
-
-      a = 8d0*xo*xom**2
-      b = 4d0*xom*(3d0*xos + 1d0) 
-      c0 = 2d0*xo*(3d0*xos - 1d0) + 4d0
-      d = xom*xop**2
-c                                 get first gammas 
-      call hsmrkp (ins, 1, jns, 1)
-c                                 hybrid gamma factor for water:
-      ghh2o = gh2o/gmh2o
-
-      call mrkpur (ins, 4) 
-
-      gh2o = gh2o * ghh2o
-c                                 outer iteration loop:
-      do j = 1, iopt(21)
-
-         c2 = gh2/gh2s
-         c4 = gh2o**2/gso2/gh2**2
-         c =  c0 - 8d0*c3*c4*(1d0+c1*c2)**2
-         xh2o = xl
-         xi = xl
-
-         do i = 1, iopt(21)
-c                                 inner iteration loop:
-            h = a + b * xh2o + c * xh2o**2 + d * xh2o**3
-    
-            dh = b + 2d0 * c * xh2o + 3d0 * d * xh2o ** 2
-            xh2o = xi - h/dh
-
-            xh2  = (-xo*xh2o-xh2o-2d0*xop)/(1d0+c1*c2)/2d0
-            xh2s = c1*c2*xh2
-            xso2 = c3*c4*xh2o**2/xh2**2
- 
-            if (dabs((xi-xh2o)/xh2o).lt.nopt(5)) goto 20
-            if (xh2o.ge.1d0) xh2o = xi + (1d0-xi)/2d0
-            xi = xh2o
-
-         end do 
-
-         goto 50 
-
-20       xh2  = -0.5d0*(xo*xh2o+xh2o+2d0*xo-2d0)/(1d0+c1*c2)
-         if (xh2.le.nopt(5).and.xo.gt.r13) goto 50
-         xh2s = c1*c2*xh2
-         xso2 = c3*c4*(xh2o/xh2)**2
-
-         if (j.gt.1.and.dabs((xl-xh2o)/xh2o).lt.nopt(5)) goto 40
-
-         call mrkmix (ins, 4, 1)
-         gh2o = gh2o * ghh2o
-         xl = xh2o
-
-      end do 
-
-      call warn (176,xh2o,j,'HOSMRK')
-      stop 
-
-40    f(1) = dlog(gh2*p*xh2) 
-      fo2 = 2d0 * (dlog(gh2o*p*xh2o) - f(1) - kh2o)
-      f(2) = fo2
-      vol = vol + xh2o * vm(3)
-      goto 99
-c                                if xo.gt.r13, at high fs2
-c                                the fluid will be binary:
-50    xh2o = -2d0*xom/xop
-      xso2 = 1d0 - xh2o
-      xh2s = 0d0
-      xh2 = 0d0
-      call mrkmix (ins, 4, 1)
-      vol = vol + xh2o * vm(3)
-      gh2o = gh2o * ghh2o
-      f(1) = dlog(gh2*p*xh2) 
-      fo2  = dlog(gso2*p*xso2) - kso2 - fs2
-      f(2) = fo2
-
-99    end
-
-      subroutine hosrk5 (fo2)
-c-----------------------------------------------------------------------
-c program to calculate H-O-S speciation as a function of XO using
-c an MRK/HSMRK hybrid. Species are H2 O2 H2O H2S SO2.
-c-----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      double precision fo2,fs2,ek1,ek2,kcos,ek3,xom,xop,xos,c0,c1,c2,c3,
-     *                 c4,c5,c6,c7,a,b,c,d,ghh2o,xl,xi,h,dh
-
-      integer ins(nsp), jns(3), j, i
-
-      double precision gmh2o,vm
-      common/ cstchx /gmh2o,vm(5)
-
-      double precision vol
-      common/ cst26 /vol
-
-      double precision xh2o,xco2,xco,xch4,xh2,xh2s,xo2,xso2,xcos,xn2,
-     *                 xnh3,xot,xsio,xsio2,xsi,xunk,
-     *                 gh2o,gco2,gco,gch4,gh2,gh2s,go2,gso2,gcos,gn2,
-     *                 gnh3,go,gsio,gsio2,gsi,gunk,v
-      common / cstcoh /xh2o,xco2,xco,xch4,xh2,xh2s,xo2,xso2,xcos,xn2,
-     *                 xnh3,xot,xsio,xsio2,xsi,xunk,
-     *                 gh2o,gco2,gco,gch4,gh2,gh2s,go2,gso2,gcos,gn2,
-     *                 gnh3,go,gsio,gsio2,gsi,gunk,v(nsp)
-
-      double precision p,t,xo,u1,u2,tr,pr,r,ps
-      common / cst5 /p,t,xo,u1,u2,tr,pr,r,ps
-
-      double precision f
-      common/ cst11 /f(3)
-
-      double precision units, r13, r23, r43, r59, r1, r2
-      common/ cst59 /units, r13, r23, r43, r59, r1, r2
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
-      save ins, jns
-      data ins, jns/ 1,5,6,7,8,11*0,1,2*0/
-c----------------------------------------------------------------------
-c                                check if xo is <1, >0,
-c                                reset if necessary
-      call xochk 
-c                                this fs2 = 1/2 ln (fs2),
-c                                k's are ln(k)
-      call xetfs2 (fs2,ek1,ek2,kcos)
-c                                kh2o from robie:
-      ek3 = dexp(-7.028214449d0+30607.34044d0/t-475034.4632d0/t/t 
-     *                         +50879842.55d0/t/t/t)
-    
-c                                 get first guess:
-      if (xo.lt.r13) then 
-         if (xo.gt.r13-nopt(5)) xo = r13 - nopt(5)
-         xl = 2d0 *  xo/(1d0 - xo)
-      else if (xo.ge.r13) then
-         if (xo.lt.r13+nopt(5)) xo = r13 + nopt(5)
-         xl = 2d0 * (1d0 - xo)/(1d0 + xo)
-      end if
-
-      xom = xo - 1d0
-      xop = xo + 1d0
-      xos = xo * xo
-
-      c1 = dexp(ek1 + fs2)
-      c3 = dexp(ek2 + fs2)
-      c5 = 1d0/p/ek3/ek3
-      a = -8d0*xo*xom**3
-      b = -4d0*(3d0*xos+1d0)*xom**2 
-      c0 = 2d0*xom*(-xop * (3d0*xo*xom + 2d0))
-      c7 = 8d0*xom*c5
-      d = -xom**2 * xop**2
-c                                 get first gammas 
-      call hsmrkp (ins, 1, jns, 1)
-c                                 hybrid gamma factor for water:
-      ghh2o = gh2o/gmh2o
-
-      call mrkpur (ins, 5) 
-
-      gh2o = gh2o * ghh2o
-c                                 outer iteration loop:
-      do 30 j = 1, iopt(21)
-
-         c2 = gh2/gh2s
-         c4 = go2/gso2
-         c6 = gh2o**2/gh2**2/go2
-         c =  c0 + c7*c6*(1d0+c1*c2)**2*(1d0+c3*c4)
-         xh2o = xl
-         xi = xl
-
-         do 10 i = 1, iopt(21)
-c                                 inner iteration loop:
-            h = a + (b + (c + d * xh2o) * xh2o) * xh2o
-    
-            dh = b + (2d0 * c  + 3d0 * d * xh2o) * xh2o
-            xh2o = xi - h/dh
-
-            xh2  = -0.5d0*(xo*xh2o+xh2o+2d0*xo-2d0)/(1d0+c1*c2)
-            xh2s = c1*c2*xh2
-            xo2 = c5*c6*(xh2o*xh2o)/(xh2*xh2)
-            xso2 = c3*c4*xo2
- 
-            if (dabs((xi-xh2o)/xh2o).lt.nopt(5)) goto 20
-            if (xh2o.ge.1d0) xh2o = xi + (1d0-xi)/2d0
-10          xi = xh2o
-
-         call warn (176,xh2o,i,'HOSRK5')
-         stop 
-
-20       xh2  = -0.5d0*(xo*xh2o+xh2o+2d0*xo-2d0)/(1d0+c1*c2)
-         xh2s = c1*c2*xh2
-         xo2 = c5*c6*(xh2o*xh2o)/(xh2*xh2)
-         xso2 = c3*c4*xo2
-
-         if (j.gt.1.and.dabs((xl-xh2o)/xh2o).lt.nopt(5)) goto 40
-
-         call mrkmix (ins, 5, 1)
-         gh2o = gh2o * ghh2o
-         xl = xh2o 
-30    continue
-
-      call warn (176,xh2o,j,'HOSRK5')
-      stop 
-
-40    f(1) = dlog(gh2*p*xh2) 
-
-      vol = vol + xh2o * vm(3)
-
-      if (xo2.lt.xh2) then
-         fo2 = 2d0 * (dlog(gh2o*p*xh2o) - f(1) - dlog(ek3))
-      else
-         fo2 = dlog (go2 * p * xo2)
-      end if
-
-      f(2) = fo2
-
-      end  
-
-      subroutine homrk (fo2)
-c-----------------------------------------------------------------------
-c program to calculate H-O speciation as a function of XO using
-c an MRK/HSMRK hybrid. 
-c-----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      double precision fo2,k,c1,c10,c11,c12,c13,c14,ghh2o,xl,xi,
-     *                 x12
-
-      integer ins(nsp), jns(3), i, j
-
-      double precision gmh2o,vm
-      common/ cstchx /gmh2o,vm(5)
-
-      double precision xh2o,xco2,xco,xch4,xh2,xh2s,xo2,xso2,xcos,xn2,
-     *                 xnh3,xot,xsio,xsio2,xsi,xunk,
-     *                 gh2o,gco2,gco,gch4,gh2,gh2s,go2,gso2,gcos,gn2,
-     *                 gnh3,go,gsio,gsio2,gsi,gunk,v
-      common / cstcoh /xh2o,xco2,xco,xch4,xh2,xh2s,xo2,xso2,xcos,xn2,
-     *                 xnh3,xot,xsio,xsio2,xsi,xunk,
-     *                 gh2o,gco2,gco,gch4,gh2,gh2s,go2,gso2,gcos,gn2,
-     *                 gnh3,go,gsio,gsio2,gsi,gunk,v(nsp)
-
-      double precision vol
-      common/ cst26 /vol
-
-      double precision p,t,xo,u1,u2,tr,pr,r,ps
-      common / cst5 /p,t,xo,u1,u2,tr,pr,r,ps
-
-      double precision f
-      common/ cst11 /f(3)
-
-      double precision units, r13, r23, r43, r59, r1, r2
-      common/ cst59 /units, r13, r23, r43, r59, r1, r2
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
-      save ins,jns
-
-      data ins, jns/ 1,5,7,13*0,1,2*0/
-c----------------------------------------------------------------------
-c                                check if xo is <1, >0,
-c                                reset if necessary
-      call xochk  
-
-      k = dexp(-7.028214449d0 + (30607.34044d0 + (-475034.4632d0
-     *                        + 50879842.55d0/t)/t)/t)
-
-      c1 = 1d0/dsqrt(p)/k
-
-      if (xo.lt.r13) then 
-c                                 this trap avoids singularity, a better approach
-c                                 would be to acknowledge that xh2 and xo2 are not
-c                                 independent at xo=1/3
-         if (xo.gt.r13-nopt(5)) xo = r13-nopt(5)
-         xl = 2d0 *  xo/(1d0 - xo)
-
-      else if (xo.ge.r13) then
-
-         if (xo.lt.r13+nopt(5)) xo = r13+nopt(5)
-         xl = 2d0 * (1d0 - xo)/(1d0 + xo)
-
-      end if 
-
-      c10 = (xo - 1d0)/2d0
-      c11 = 1d0 - xo
-      c12 = 1d0 + c10
-c                                 get first gammas 
-      call hsmrkp (ins, 1, jns, 1)
-c                                 hybrid gamma factor for water:
-      ghh2o = gh2o/gmh2o
-
-      call mrkpur (ins, 3) 
-
-      gh2o = gh2o * ghh2o
-c                                 outer iteration loop:
-      do 30 j = 1, iopt(21)
-c                                 
-         c13 = c1 * gh2o/gh2/dsqrt(go2)
-         c14 = c10 * c13/2d0
-         xi = xl
-
-         do 10 i = 1, iopt(21)
-c                                 inner iteration loop:
-            xo2 = xo + c10 * xh2o
-
-            if (xo2.gt.nopt(5)) then  
-
-               x12 = dsqrt (xo2)
-
-               xh2o = xi + 
-     *               (c11 - c12 * xh2o - c13 * xh2o/x12) /
-     *               (c12 + c13 * x12 + c14 * xh2o/x12)
-
-            else 
-
-               xh2o = 2d0 *  xo/c11 
-
-            end if 
-
-            if (dabs((xi-xh2o)/xh2o).lt.nopt(5)) goto 20
-            if (xh2o.ge.1d0) xh2o = xi + (1d0-xi)/2d0
-10          xi = xh2o
-
-         call warn (176,xh2o,i,'HOMRK')
-         goto 99
-
-20       if (xo2.lt.0d0) xo2 = 0d0
-         xh2 = 1d0 - xo2 - xh2o
-         if (j.gt.1.and.dabs((xl-xh2o)/xh2o).lt.nopt(5)) goto 40
-         call mrkmix (ins, 3, 1)
-         gh2o = gh2o * ghh2o
-         xl = xh2o
-30    continue
-
-      call warn (176,xh2o,j,'HOMRK')
-      goto 99 
-
-40    f(1) = dlog(gh2*p*xh2)
-      vol = vol + xh2o * vm(3) 
-      
-      if (xo2.lt.xh2) then
-         fo2 = 2d0 * (dlog(gh2o*p*xh2o) - f(1) - dlog(k))
-      else
-         fo2 = dlog (go2 * p * xo2)
-      end if
-
-      f(2) = fo2
-
-      return 
-
-99    f(1) = dlog(1d4*p)
-      f(2) = f(1)
-
-      end 
-
-      double precision function fugp (rtt,b,yz,c,d,e,v)
-c----------------------------------------------------------------------
-c streamlined JADC July 96.
-c----------------------------------------------------------------------
-      implicit none
-
-      double precision y,y1,vpb,dvbv,rtt,b,yz,c,d,e,v
-c----------------------------------------------------------------------
-  
-      y = b/4d0/v
-      vpb = v + b
-      dvbv = dlog(vpb/v)
-      y1 = 1d0 - y
-
-      fugp = ((4d0-3d0*y)*y + (2d0-y)*2d0*y/y1)/y1/y1
-     *     + (d*(dvbv/b + (4d0*y + 2d0)/vpb - 3d0/v)
-     *      - c*(dvbv + b/vpb)
-     *      + e*((4d0/b-2d0/v)/v - dvbv/b/b 
-     *         + ((2d0*y - 1.5d0)/v - 3d0/b)/vpb)
-     *        )/rtt/b - dlog(yz)
-
-      end
-
       function fug (rtt,cij,dij,eij,x1,x2,b,yz,c,d,e,b1,c1,d1,e1)
 c---------------------------------------------------------------------
 c streamlined JADC July 96.
@@ -3255,6 +2901,30 @@ c----------------------------------------------------------------------
      *       )/rtt/b-dlog(yz)
  
       end
+ 
+      double precision function fugp (rtt,b,yz,c,d,e,v)
+c----------------------------------------------------------------------
+c streamlined JADC July 96.
+c----------------------------------------------------------------------
+      implicit none
+
+      double precision y,y1,vpb,dvbv,rtt,b,yz,c,d,e,v
+c----------------------------------------------------------------------
+  
+      y = b/4d0/v
+      vpb = v + b
+      dvbv = dlog(vpb/v)
+      y1 = 1d0 - y
+
+      fugp = ((4d0-3d0*y)*y + (2d0-y)*2d0*y/y1)/y1/y1
+     *     + (d*(dvbv/b + (4d0*y + 2d0)/vpb - 3d0/v)
+     *      - c*(dvbv + b/vpb)
+     *      + e*((4d0/b-2d0/v)/v - dvbv/b/b 
+     *         + ((2d0*y - 1.5d0)/v - 3d0/b)/vpb)
+     *        )/rtt/b - dlog(yz)
+
+      end
+
  
       subroutine brmrk
 c-----------------------------------------------------------------------
@@ -3691,7 +3361,7 @@ c---------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer ins(nsp), jns(nsp)
+      integer ins(1), jns(2)
 
       double precision p,t,xc,u1,u2,tr,pr,r,ps
       common / cst5 /p,t,xc,u1,u2,tr,pr,r,ps
@@ -3700,8 +3370,7 @@ c---------------------------------------------------------------------
       common/ cstcoh /x(nsp),g(nsp),v(nsp)
  
       save jns 
- 
-      data jns/ 1, 2, 14*0/
+      data jns/ 1, 2/
 c----------------------------------------------------------------------
       if (xc.eq.1d0) then
          ins(1) = 2
@@ -3716,6 +3385,7 @@ c----------------------------------------------------------------------
       x(2) = xc
       x(1) = 1d0 - xc
       call mrkmix (jns, 2, 1)
+
 99    end
  
       subroutine hsmrk
@@ -3727,10 +3397,12 @@ c---------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer jns(3), ins(nsp)
+      integer jns(3), ins(1)
  
       double precision bc,bw,xw,t12,rtt,t2,cc,dc,ec,cw,dw,ew,bm,cij,
      *                 dij,eij,xc2,xw2,xwc2,cm,dm,em,yzm,fug,rr
+
+      external fug
 
       double precision p,t,xc,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xc,u1,u2,tr,pr,r,ps
@@ -4456,79 +4128,6 @@ c                                 calculate pure CO2 fugacity
  
 99    end
  
-      subroutine lohork (fo2)
-c----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      double precision fo2,kh2o,ghh2o
-
-      integer ins(nsp), jns(3)
-
-c           program to calculate fh2o, fo2 for H2-H2O
-c           mixtures.
-
-      double precision fh2o,fh2,funk
-      common/ cst11 /fh2o,fh2,funk
-
-      double precision p,t,xv,u1,u2,tr,pr,r,ps
-      common/ cst5 /p,t,xv,u1,u2,tr,pr,r,ps
-
-      double precision xh2o,xco2,xco,xch4,xh2,xh2s,xo2,xso2,xcos,xn2,
-     *                 xnh3,xot,xsio,xsio2,xsi,xunk,
-     *                 gh2o,gco2,gco,gch4,gh2,gh2s,go2,gso2,gcos,gn2,
-     *                 gnh3,go,gsio,gsio2,gsi,gunk,v
-      common / cstcoh /xh2o,xco2,xco,xch4,xh2,xh2s,xo2,xso2,xcos,xn2,
-     *                 xnh3,xot,xsio,xsio2,xsi,xunk,
-     *                 gh2o,gco2,gco,gch4,gh2,gh2s,go2,gso2,gcos,gn2,
-     *                 gnh3,go,gsio,gsio2,gsi,gunk,v(nsp)
-
-      double precision vol
-      common/ cst26 /vol
-
-      double precision gmh2o,gmco2,gmch4,vm
-      common/ cstchx /gmh2o,gmco2,gmch4,vm(3)
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
-      save ins
-
-      data ins, jns / 1, 5, 14*0, 1, 2*0/
-c----------------------------------------------------------------------
-      xh2 = xv
-c                                check if xo2 is <1, >0,
-c                                reset if necessary.
-      if (xh2.lt.nopt(5)) then
-         xh2 = nopt(5)
-      else if (dabs(xh2-1d0).lt.nopt(5)) then
-         xh2 = 1d0 - nopt(5)
-      end if 
-
-      xh2o = 1d0 - xh2
-c                                get pure species fugacities
-      call hsmrkp (ins, 2, jns, 1)
-
-      ghh2o = gh2o/gmh2o
-c                                get mrk fugacities:
-      call lomrk (ins, 2)
-c                                evaluate lnk's
-      kh2o = -7.028214449d0 + 30607.34044d0/t - 475034.4632d0/t/t
-     *                      + 50879842.55d0/t/t/t
-      gh2o = ghh2o * gh2o
-
-      fh2o = dlog(gh2o*p*xh2o)
-
-      fh2 = dlog(gh2*p*xh2)
-
-      fo2 = 2d0 * (fh2o - fh2 - kh2o)
-
-      vol = vol + xh2o * vm(1)
- 
-      end
 
       subroutine saxfei
 c---------------------------------------------------------------------
@@ -4999,7 +4598,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer ins(nsp), isp, nit, i
+      integer ins(7), nit, i
 
       double precision fo2,t2,t3,x2,x3,d6,d36,d67,df,xt,d678x,x,tx,
      *                 rad,eq9,dxnh3,deq9,dxh2o,sign,c1,c2,c3,c4,c5
@@ -5029,12 +4628,11 @@ c----------------------------------------------------------------------
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       save ins
-      data ins/1,2,3,4,5,10,11,9*0/
+      data ins/1,2,3,4,5,10,11/
 c----------------------------------------------------------------------
       t2 = t * t
       t3 = t2 * t
       x = gz
-      isp = 7 
 
       call fo2buf (fo2)
 c                                evaluate lnk's and correct for pressure, carbon 
@@ -5050,7 +4648,7 @@ c                                activity and oxygen fugacity
       c5 = dexp(0.2527543051D8/t3-0.4017985659D6/t2+0.7323735697D4/t
      *         -0.1439146998D2)*p**2
 c                                get pure species fugacities
-      call mrkpur (ins, isp)
+      call mrkpur (ins, 7)
 c                                check for graphite saturation:
       xco2 = c2/gco2
       xco = c3/gco
@@ -5171,7 +4769,7 @@ c                                 everything seems ok
                end if 
             end if 
 c                                 get new gamma's
-            call mrkmix (ins, isp, 1)
+            call mrkmix (ins, 7, 1)
             xh2o = xh2o - dxh2o
 
          end do 
@@ -7219,7 +6817,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer ins(3), isp, nit, i1, i2, i3, icon, ineg, ipos, iroots, i
+      integer ins(3), nit, i1, i2, i3, icon, ineg, ipos, iroots, i
 
       logical bad
 
@@ -7245,8 +6843,8 @@ c----------------------------------------------------------------------
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
-      save ins, isp 
-      data isp, ins, i1, i2, i3/5, 14, 12, 15, 14, 12, 15/
+      save ins 
+      data ins, i1, i2, i3/14, 12, 15, 14, 12, 15/
 c----------------------------------------------------------------------
 c                                 rat = nsi/no = xc/(1-xc) 
       rat = xc/(1d0-xc)
@@ -7263,7 +6861,7 @@ c                                 some inner loop constants
       a2     = -(2d0*rat - 1d0) / rm1
       rm1    = c1/rm1
 c                                 get pure species fugacities
-      call mrkpur (ins, isp)
+      call mrkpur (ins, 5)
 
       nit = 0 
       oldy = 0d0
@@ -7305,7 +6903,7 @@ c                                 closure => sio2:
         
             if ( bad .or. dabs((oldy-y(icon))/y(icon)).lt.nopt(5)) exit
 c                                 get new gamma's
-            call mrkmix (ins, isp, 1)
+            call mrkmix (ins, 5, 1)
 
             oldy = y(icon)
 
@@ -7901,6 +7499,435 @@ c                                 convert to j/bar from cm3, only for lv version
 
       end
 
+      subroutine gcohx6 (fo2,hybrid)
+c----------------------------------------------------------------------
+c  program to calculate GCOH fluid properties as a function of XO 
+c  see Connolly (1995) and/or coh_speciation_with_ethane.mws for 
+c  details. the routine uses a hybrid EoS (pure CO2 and H2O from 
+c  Pitzer & Sterner 2004, CH4 from Kerrick & Jacobs 1981, MRK for 
+c  all activities and all other fugacities) if hybrid = .true., else
+c  uses MRK for all purposes.
+
+c  replaces hocgra and hocmrk.
+
+c  10/28/16, JADC.
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer ins(6),jns(3),nit,i
+
+      logical bad, hybrid 
+
+      double precision oy5,fo2,ytot,t4y3,t3y3,t2y5,t4y5,det,x,dy5,dy3,
+     *       c1,c2,c3,c4,t1,t2,t3,t4,m,dm3,dm5,c,dc3,dc5,nh,rat,y5,y3
+
+      double precision dinc
+      external dinc
+
+      double precision p,t,xo,u1,u2,tr,pr,r,ps
+      common / cst5 /p,t,xo,u1,u2,tr,pr,r,ps
+
+      double precision vol
+      common/ cst26 /vol
+
+      double precision gh,vh
+      common/ csthyb /gh(nsp),vh(nsp)
+
+      double precision y,g,v
+      common / cstcoh /y(nsp),g(nsp),v(nsp)
+
+      double precision fh2o,fco2,funk
+      common/ cst11 /fh2o,fco2,funk
+
+      integer ibuf,hu,hv,hw,hx   
+      double precision dlnfo2,elag,gz,gy,gx
+      common/ cst100 /dlnfo2,elag,gz,gy,gx,ibuf,hu,hv,hw,hx
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      double precision units, r13, r23, r43, r59, r1, r2
+      common/ cst59 /units, r13, r23, r43, r59, r1, r2
+
+      double precision eqk
+      common / csteqk /eqk(nsp)
+
+      save ins, jns
+      data ins, jns/1,2,3,4,5,16,1,2,4/
+c----------------------------------------------------------------------
+      nit = 0
+      oy5 = 0d0
+      bad = .false.
+c                                 check for in bounds composition
+      call xochk 
+c                                 compute equilibrium constants, returned
+c                                 in csteqk
+      call seteqk (ins,6,elag)
+c                                 compute pure mrk fluid properties
+      call mrkpur (ins,6)
+c                                 compute hybrid pure fluid props
+      if (hybrid) call hybeos (jns,3)
+
+      c1 = dexp (eqk(4)) * p
+      c2 = dexp (2d0*eqk(16) - 3d0*eqk(4)) * p
+      c3 = dexp (eqk(2) - 2d0*eqk(3)) * p 
+      c4 = dexp (eqk(1) - eqk(3)) * p
+c                                 initial guess, assume near binary
+      x = 1d0 + xo 
+      rat = xo/(1d0-xo) 
+
+      if (xo.gt.r13) then
+         y3 = dsqrt((c3*x*(3d0*xo - 1d0)))/c3/x
+         y5 = 2d0 * (1d0 - xo)/c4/y3/x
+      else if (xo.eq.r13) then 
+         y3 = 1d0/dsqrt(c4)
+         y5 = y3 
+      else 
+         y5 = dsqrt((c1*x*(1d0 - 3d0*xo)))/c1/x
+         y3 = 4d0*xo/c4/y5/x
+      end if
+
+      do
+c                                 iteration loop
+         t1 = c1 / g(ins(4)) * g(ins(5)) ** 2
+         t2 = dsqrt(c2 * (t1 * g(ins(4))) ** 3) / g(ins(6))
+         t3 = c3 / g(ins(2)) * g(ins(3)) ** 2
+         t4 = c4 / g(ins(1)) * g(ins(5)) * g(ins(3))
+
+         t4y3 = t4*y3
+         t3y3 = t3*y3
+         t2y5 = t2*y5
+         t4y5 = t4*y5
+
+         nh = ((3d0*t2y5 + 2d0*t1)*y5 + t4y3 + 1d0)*y5
+c                                 no/nh
+         x = (t3*y3 + (1d0 + t4y5)/2d0)*y3/nh
+c                                 mass balance eq
+         m = rat - x
+c                                 diff(m,y5)
+         dm5 = (x*((9d0*t2y5 + 4d0*t1)*y5 + t4y3 + 1d0) - t4y3/2d0)/nh
+c                                 diff(m,y3)
+         dm3 = (x*t4y5 - 2d0*t3y3 - 0.5d0 - t4y5/2d0)/nh
+c                                 closure eq
+         c = ((-t2y5 - t1)*y5 - t4y3 - 1d0)*y5 + 1d0 - (t3y3 + 1d0)*y3 
+c                                 diff(c,y5)
+         dc5 = (-3d0*t2y5 - 2d0*t1)*y5 - t4y3 - 1d0
+c                                 diff(c,y3)
+         dc3 = -2d0*t3y3 - t4y5 - 1d0
+c                                 newton-raphson increments
+         det = dc5 * dm3 - dc3 * dm5
+         dy5 = -(c * dm3 - dc3 * m) / det
+         dy3 =  (c * dm5 - dc5 * m) / det
+c                                 add the increment
+         y5 = dinc(y5,dy5)
+         y3 = dinc(y3,dy3)
+c                                 back calculate y's
+         y(ins(5)) = y5
+         y(ins(3)) = y3
+         y(ins(4)) = t1 * y5**2 
+         y(ins(6)) = t2 * y5**3
+         y(ins(2)) = t3 * y3**2
+         y(ins(1)) = t4 * y5 * y3
+c                                 compute ytot
+         ytot = 0d0
+
+         do i = 1, 6 
+            ytot = ytot + y(ins(i))
+         end do 
+c                                 renormalize
+         do i = 1, 6
+            y(ins(i)) = y(ins(i)) / ytot
+         end do 
+c                                 check for convergence, could 
+c                                 do better than this
+         if (dabs(y5-oy5).lt.nopt(5)*y5) exit
+c                                 check if iteration count exceeded
+         if (nit.gt.iopt(21)) then 
+            call warn (176,y5,nit,'HOCNIK')
+            bad = .true.
+            exit
+         end if
+c                                 calculate new fugacity coefficients
+         call mrkmix (ins, 6, 1)
+
+         if (hybrid) then 
+            do i = 1, 3
+               g(jns(i)) = gh(jns(i)) * g(jns(i))
+            end do 
+         end if 
+
+         oy5 = y5
+
+         nit = nit + 1
+
+         y5 = y(ins(5))
+         y3 = y(ins(3))
+
+      end do 
+
+      if (bad) then 
+
+         vol  = 0d0 
+         fh2o = dlog(p*1d4)
+         fco2 = fh2o
+         fo2  = fh2o
+         
+      else 
+
+         if (hu.eq.0) then 
+c                                 normal fugacities
+            fh2o = dlog(g(ins(1))*p*y(ins(1)))
+            fco2 = dlog(g(ins(2))*p*y(ins(2)))
+            fo2 = 2d0*(dlog(g(ins(3))*p*y3) - eqk(3))
+
+         else 
+c                                 projecting through graphite
+            fh2o = dlog(g(ins(5))*p*y5)
+            fco2 = 2d0*(dlog(g(ins(3))*p*y3) - eqk(3))
+
+         end if
+
+      end if 
+
+      if (hybrid) then
+         do i = 1, 3
+            vol = vol + y(jns(i))*vh(jns(i))
+         end do 
+      end if 
+
+      end
+
+      double precision function dinc (y,dy)
+c----------------------------------------------------------------------
+c function to increment 0 < y < 1 by dy, if the increment would cause
+c y to exceed its bounds, the increment is taken to be half the 
+c interval to the bound. 10/2016, JADC.
+c----------------------------------------------------------------------
+      implicit none
+
+      double precision y, dy
+c----------------------------------------------------------------------
+      if (y+dy.ge.1d0) then
+         dinc = 0.5d0 + y / 2d0
+      else if (y+dy.le.0d0) then 
+         dinc = y / 2d0
+      else 
+         dinc = y + dy
+      end if 
+
+      end 
+
+      subroutine seteqk (ins,isp,ac)
+c----------------------------------------------------------------------
+c program to compute standard (from the elements convention) ln equilibrium 
+c constants for 1 mole of the nsp fluid species. 
+
+c ac - ln(a[graphite])
+c 
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      double precision dg,t2,t3,ac
+
+      integer i,j,isp,ins(*)
+
+      double precision eqk
+      common / csteqk /eqk(nsp)
+
+      double precision p,t,xo,u1,u2,tr,pr,r,ps
+      common / cst5 /p,t,xo,u1,u2,tr,pr,r,ps
+
+c----------------------------------------------------------------------
+      t2 = t * t
+      t3 = t2 * t
+
+      if (ac.ge.0d0) then 
+c                                correct activity of graphite
+c                                for diamond stability if necessary:
+         call dimond (dg)
+c                                graphite pressure effect and activity
+c                                corrections:
+         dg = dg + ac + p*( 1.8042d-06 + (0.058345d0 - 8.42d-08*p)/t ) 
+
+      else 
+
+         dg = 0d0
+
+      end if 
+ 
+      do i = 1, isp 
+
+         j = ins(i)
+
+         if (j.eq.1) then 
+c                                h2o/robie
+            eqk(j) = -7.028214449d0 + 30607.34044d0/t  
+     *               - 475034.4632d0/t2 + 50879842.55d0/t3
+         else if (j.eq.2) then 
+c                                co2/robie
+            eqk(j) = .04078341613d0 + 47681.676177d0/t 
+     *              - 134662.1904d0/t2 + 17015794.31d0/t3 + dg
+         else if (j.eq.3) then 
+c                                co/robie
+            eqk(j) = 10.32730663d0  + 14062.7396777d0/t
+     *              - 371237.1571d0/t2 + 53515365.95d0/t3 + dg
+         else if (j.eq.4) then 
+c                                ch4/robie
+            eqk(j) = -13.86241656d0 + 12309.03706d0/t
+     *             - 879314.7005d0/t2 + .7754138439d8/t3 + dg
+         else if (j.eq.6) then 
+c                                h2s/ohmoto and kerrick
+            eqk(j) = 10115.3d0/t - 0.791d0 * dlog (t) + 0.30164d0
+         else if (j.eq.8) then 
+c                                so2/ohmoto and kerrick
+            eqk(j) = 43585.63147d0/t - 8.710679055d0
+         else if (j.eq.9) then 
+c                                cos/ohmoto and kerrick
+            eqk(j) = 10893.52964d0/t - 9.988613730d0
+         else if (j.eq.16) then 
+c                                c2h6/HSC, 10/2016
+            eqk(j) =  4.09702552d7/t3 - 8.01186095d5/t2 + 1.39350247d4/t
+     *                      - 2.64306669d1 + 2d0 * dg
+         end if 
+
+      end do 
+
+      end 
+
+      subroutine dimon1 (agph)
+c-----------------------------------------------------------------------
+c dimon1 tests if p-t conditions are in the diamond stability field
+c if they are it computes the activity of graphite needed to represent
+c diamond stability for C-O-H fluid speciation routines. 
+
+c dimon1 should replace dimond which automatically adds a graphite
+c activity correction
+
+c  agph - natural log of graphite activity to be added to graphite
+c        free energy to equate g(diamond) = g(graphite). 
+
+c polynomial functions fit by S. Poli, 4/27/04
+c                                 JADC, 4/27/04
+c-----------------------------------------------------------------------
+      implicit none 
+
+      double precision ptrans,agph
+
+      double precision p,t,xco2,u1,u2,tr,pr,r,ps
+      common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
+
+c                                 get transition pressure
+c                                 (should really use the G
+c                                 function for consistency):
+
+      ptrans = 5284.165053d0 + (33.21515773d0 - .002106330992d0*t)*t
+
+      if (p.gt.ptrans) then 
+c                                 compute corrected graphite activity
+         agph = 0.008423508384179629d0 
+     *        + (4.693008650307614d-11 * p - 3.850380793502567d-5)*p
+     *        + (1.4126916053951515d-3 + 1.393226795939807d-8*p 
+     *        - 5.887505938975768d-7 * t)*t
+
+      end if 
+
+      end 
+
+      subroutine hybeos (jns, jsp)
+c---------------------------------------------------------------------
+c set up routine for hybrid fluid EoS calculations. computes the 
+c (unecessay?) delta volumes and pure fluid fugacity coefficient 
+c rations used to convert the mrk fugacities to hybrid fugacities.
+
+c the choice of the pure fluid eos are hard wired (pseos, pitzer & sterner
+c 1994 for h2o/co2; hsmrk, kerrick and jacobs 1981 for methane).
+
+c this routine is to replace hscrkp and cstchx, 10/2015 JADC
+c---------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer i,j,jns(*),jsp
+
+      double precision hsfch4,fg(nsp)
+
+      external hsfch4
+ 
+      double precision gh,vh
+      common/ csthyb /gh(nsp),vh(nsp)
+
+      double precision x,g,v
+      common/ cstcoh /x(nsp),g(nsp),v(nsp)
+
+      double precision p,t,xc,u1,u2,tr,pr,r,ps
+      common/ cst5 /p,t,xc,u1,u2,tr,pr,r,ps
+c----------------------------------------------------------------------
+      do i = 1, jsp
+
+         j = jns(i)
+
+         vh(j) = -v(j)
+         gh(j) = g(j)
+         
+         if (j.le.2) then 
+c                                 water/co2, pitzer and sterner 1994:
+            call pseos (v(j),fg(j),j)
+
+         else if (j.eq.4) then 
+c                                 methane hsmrk kerrick and jacobs 191.
+            fg(j) = hsfch4 (v(j))
+
+         else
+
+            stop
+
+         end if 
+c                                 the fugacity coefficient of the pure gas
+         g(j) = dexp(fg(j))/p
+c                                 the hybrid delta volume (hyb-mrk), it's 
+c                                 doubtful this thing is really used, if it 
+c                                 is it must be in fluids.
+         vh(j) = vh(j) + v(j)
+c                                 the hybrid/mrk pure fluid fugacity ratio
+         gh(j) = g(j)/gh(j)
+
+      end do 
+
+      end
+
+      subroutine xochk
+c----------------------------------------------------------------------
+c xo check for speciation routines that can't handle xo = 0, 1.
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      double precision p,t,xo,u1,u2,tr,pr,r,ps
+      common / cst5 /p,t,xo,u1,u2,tr,pr,r,ps
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+c----------------------------------------------------------------------
+c                                check if xo is <1, >0,
+c                                reset if necessary
+      if (xo.lt.nopt(5)) then
+         xo = nopt(5)
+      else if (dabs(xo-1d0).lt.nopt(5)) then
+         xo = 1d0 - nopt(5)
+      end if 
+
+      end 
+
       subroutine rkcoh6 (yo2,yc,deltag)
 c----------------------------------------------------------------------
 c subroutine to compute speciation and fugacites in 6 species COH fluid
@@ -7919,23 +7946,24 @@ c----------------------------------------------------------------------
 
       logical bad, quit
 
-      integer ins(nsp), i, j, k, itct, icase
+      integer ins(6), jns(3), i, j, k, itct, icase
 
-      double precision a(3,4),yc,yo2,x0,xo3,deltag,yh2,kc2h6,
-     *                 ghh2o,ghco2,ghch4,kh2o,kch4,kco,kco2,xc,xo,
+      double precision a(3,4),yc,yo2,x0,xo3,deltag,yh2,xc,xo,
      *                 dg(nsp),eg(nsp),oy(7),s4,s5,gtot,ogtot,
      *                 xc5,xc3,xo1, x1,x2,x3,x4,x5,x6,x7,x8,x9,t4,t5,
-     *                 d1,d2,d11,d22,d12,det,dp(2),b(3),
-     *                 dgs1,dgs2,s
+     *                 d1,d2,d11,d22,d12,det,dp(2),b(3),dgs1,dgs2,s
 
       double precision vol
       common/ cst26 /vol
 
-      double precision gmh2o,gmco2,gmch4,vm
-      common/ cstchx /gmh2o,gmco2,gmch4,vm(3)
-
       double precision y,g,v
       common / cstcoh /y(nsp),g(nsp),v(nsp)
+
+      double precision gh,vh
+      common/ csthyb /gh(nsp),vh(nsp)
+
+      double precision eqk
+      common / csteqk /eqk(nsp)
 
       double precision muc,muo2,muh2
       common / cst11 /muc,muo2,muh2
@@ -7948,8 +7976,8 @@ c----------------------------------------------------------------------
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
-      save t4,t5,ins
-      data t4,t5,ins/1d-3,1d-3,1,2,4,3,5,7,10*0/
+      save t4,t5,ins,jns
+      data t4,t5,ins,jns/1d-3,1d-3,1,2,4,3,5,7,1,2,4/
 c----------------------------------------------------------------------
       bad = .false.
 
@@ -7978,21 +8006,25 @@ c                                 do not allow degenerate compositions:
       else if (xc.eq.1d0) then 
          xc = 1d0 - nopt(5)
       end if
-c                                 calls mrkpur, cork, etc
-      call setup (ghh2o,ghco2,ghch4,kh2o,kco2,kco,kch4,kc2h6)
+c                                 compute equilibrium constants in csteqk
+      call seteqk (ins,6,0d0)
+c                                 compute pure mrk fluid properties
+      call mrkpur (ins,6)
+c                                 compute hybrid pure fluid props
+      call hybeos (jns,3)
 c                                 gh => gcork/gmrk, the g(i)'s are the fugacity coefficients
 c                                 of the pure gas according to the various eos's (CORK, HSMRK, MRK)
 c                                 could replace CORK with pitzer and sterner.
 c                                 ---------------------------------------------
 c                                 free energies for go2=gh2=gc=0
 c                                 g0h2o/R/T - ln phi0
-      dg(1) = (-kh2o - dlog(g(5)*dsqrt(g(7)*p)))
+      dg(1) = (-eqk(1) - dlog(g(5)*dsqrt(g(7)*p)))
 c                                 gco2/R/T 
-      dg(2) = (-kco2 - dlog(g(7)))
+      dg(2) = (-eqk(2) - dlog(g(7)))
 c                                 gco/R/T 
-      dg(3) = (-kco  + dlog(p/g(7))/2d0)
+      dg(3) = (-eqk(3)  + dlog(p/g(7))/2d0)
 c                                 gch4/R/T 
-      dg(4) = (-kch4 - dlog(g(5)*g(5)*p))
+      dg(4) = (-eqk(4) - dlog(g(5)*g(5)*p))
 c                                 
       dg(5)  = - dlog(g(5))
       dg(7)  = - dlog(g(7))
@@ -8178,11 +8210,7 @@ c                                 pre-loop initialization
       dp(1) = 0d0
       dp(2) = 0d0 
 
-      call mrkmix (ins, 5, 1)
-
-      g(1) = ghh2o * g(1)
-      g(2) = ghco2 * g(2) 
-      g(4) = ghch4 * g(4) 
+      call mrkhyb (ins, jns, 5, 3, 1)
 
       itct = 0
 c                                 iteration loop
@@ -8261,11 +8289,7 @@ c                                 check convergence
             goto 20 
          end if 
 c                                 get activity coefficients
-         call mrkmix (ins, 5, 1)
-
-         g(1) = ghh2o * g(1)
-         g(2) = ghco2 * g(2) 
-         g(4) = ghch4 * g(4) 
+         call mrkhyb (ins, jns, 5, 3, 1)
 c                                 gi/T/T + ln P + ln gamma
          ogtot = gtot
          gtot = 0d0 
@@ -8325,463 +8349,3 @@ c                                 compositions.
       deltag = gtot*r*t/s
 
       end
-
-      subroutine gcohx6 (fo2,hybrid)
-c----------------------------------------------------------------------
-c  program to calculate GCOH fluid properties as a function of XO 
-c  see Connolly (1995) and/or coh_speciation_with_ethane.mws for 
-c  details. the routine uses a hybrid EoS (pure CO2 and H2O from 
-c  Pitzer & Sterner 2004, CH4 from Kerrick & Jacobs 1981, MRK for 
-c  all activities and all other fugacities) if hybrid = .true., else
-c  uses MRK for all purposes.
-
-c  replaces hocgra and hocmrk.
-
-c  10/28/16, JADC.
-c----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      integer ins(6),jns(3),isp,jsp,nit,i
-
-      logical bad, hybrid 
-
-      double precision oy5,fo2,ytot,t4y3,t3y3,t2y5,t4y5,det,x,dy5,dy3,
-     *       c1,c2,c3,c4,t1,t2,t3,t4,m,dm3,dm5,c,dc3,dc5,nh,rat,y5,y3
-
-      double precision dinc
-      external dinc
-
-      double precision p,t,xo,u1,u2,tr,pr,r,ps
-      common / cst5 /p,t,xo,u1,u2,tr,pr,r,ps
-
-      double precision vol
-      common/ cst26 /vol
-
-      double precision gh,vh
-      common/ csthyb /gh(nsp),vh(nsp)
-
-      double precision y,g,v
-      common / cstcoh /y(nsp),g(nsp),v(nsp)
-
-      double precision fh2o,fco2,funk
-      common/ cst11 /fh2o,fco2,funk
-
-      integer ibuf,hu,hv,hw,hx   
-      double precision dlnfo2,elag,gz,gy,gx
-      common/ cst100 /dlnfo2,elag,gz,gy,gx,ibuf,hu,hv,hw,hx
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
-      double precision units, r13, r23, r43, r59, r1, r2
-      common/ cst59 /units, r13, r23, r43, r59, r1, r2
-
-      double precision eqk
-      common / csteqk /eqk(nsp)
-
-      save isp, jsp, ins, jns
-      data isp, jsp, ins, jns/6,3,1,2,3,4,5,16,1,2,4/
-c----------------------------------------------------------------------
-      nit = 0
-      oy5 = 0d0
-      bad = .false.
-c                                 check for in bounds composition
-      call xochk 
-c                                 compute equilibrium constants, returned
-c                                 in csteqk
-      call seteqk (ins,isp,elag)
-c                                 compute pure mrk fluid properties
-      call mrkpur (ins,isp)
-c                                 compute hybrid pure fluid props
-      if (hybrid) call hybeos (jns,jsp)
-
-      c1 = dexp (eqk(4)) * p
-      c2 = dexp (2d0*eqk(16) - 3d0*eqk(4)) * p
-      c3 = dexp (eqk(2) - 2d0*eqk(3)) * p 
-      c4 = dexp (eqk(1) - eqk(3)) * p
-c                                 initial guess, assume near binary
-      x = 1d0 + xo 
-      rat = xo/(1d0-xo) 
-
-      if (xo.gt.r13) then
-         y3 = dsqrt((c3*x*(3d0*xo - 1d0)))/c3/x
-         y5 = 2d0 * (1d0 - xo)/c4/y3/x
-      else if (xo.eq.r13) then 
-         y3 = 1d0/dsqrt(c4)
-         y5 = y3 
-      else 
-         y5 = dsqrt((c1*x*(1d0 - 3d0*xo)))/c1/x
-         y3 = 4d0*xo/c4/y5/x
-      end if
-
-      do
-c                                 iteration loop
-         t1 = c1 / g(ins(4)) * g(ins(5)) ** 2
-         t2 = dsqrt(c2 * (t1 * g(ins(4))) ** 3) / g(ins(6))
-         t3 = c3 / g(ins(2)) * g(ins(3)) ** 2
-         t4 = c4 / g(ins(1)) * g(ins(5)) * g(ins(3))
-
-         t4y3 = t4*y3
-         t3y3 = t3*y3
-         t2y5 = t2*y5
-         t4y5 = t4*y5
-
-         nh = ((3d0*t2y5 + 2d0*t1)*y5 + t4y3 + 1d0)*y5
-c                                 no/nh
-         x = (t3*y3 + (1d0 + t4y5)/2d0)*y3/nh
-c                                 mass balance eq
-         m = rat - x
-c                                 diff(m,y5)
-         dm5 = (x*((9d0*t2y5 + 4d0*t1)*y5 + t4y3 + 1d0) - t4y3/2d0)/nh
-c                                 diff(m,y3)
-         dm3 = (x*t4y5 - 2d0*t3y3 - 0.5d0 - t4y5/2d0)/nh
-c                                 closure eq
-         c = ((-t2y5 - t1)*y5 - t4y3 - 1d0)*y5 + 1d0 - (t3y3 + 1d0)*y3 
-c                                 diff(c,y5)
-         dc5 = (-3d0*t2y5 - 2d0*t1)*y5 - t4y3 - 1d0
-c                                 diff(c,y3)
-         dc3 = -2d0*t3y3 - t4y5 - 1d0
-c                                 newton-raphson increments
-         det = dc5 * dm3 - dc3 * dm5
-         dy5 = -(c * dm3 - dc3 * m) / det
-         dy3 =  (c * dm5 - dc5 * m) / det
-c                                 add the increment
-         y5 = dinc(y5,dy5)
-         y3 = dinc(y3,dy3)
-c                                 back calculate y's
-         y(ins(5)) = y5
-         y(ins(3)) = y3
-         y(ins(4)) = t1 * y5**2 
-         y(ins(6)) = t2 * y5**3
-         y(ins(2)) = t3 * y3**2
-         y(ins(1)) = t4 * y5 * y3
-c                                 compute ytot
-         ytot = 0d0
-
-         do i = 1, 6 
-            ytot = ytot + y(ins(i))
-         end do 
-c                                 renormalize
-         do i = 1, 6
-            y(ins(i)) = y(ins(i)) / ytot
-         end do 
-c                                 check for convergence, could 
-c                                 do better than this
-         if (dabs(y5-oy5).lt.nopt(5)*y5) exit
-c                                 check if iteration count exceeded
-         if (nit.gt.iopt(21)) then 
-            call warn (176,y5,nit,'HOCNIK')
-            bad = .true.
-            exit
-         end if
-c                                 calculate new fugacity coefficients
-         call mrkmix (ins, 6, 1)
-
-         if (hybrid) then 
-            do i = 1, jsp 
-               g(jns(i)) = gh(jns(i)) * g(jns(i))
-            end do 
-         end if 
-
-         oy5 = y5
-
-         nit = nit + 1
-
-         y5 = y(ins(5))
-         y3 = y(ins(3))
-
-      end do 
-
-      if (bad) then 
-
-         vol  = 0d0 
-         fh2o = dlog(p*1d4)
-         fco2 = fh2o
-         fo2  = fh2o
-         
-      else 
-
-         if (hu.eq.0) then 
-c                                 normal fugacities
-            fh2o = dlog(g(ins(1))*p*y(ins(1)))
-            fco2 = dlog(g(ins(2))*p*y(ins(2)))
-            fo2 = 2d0*(dlog(g(ins(3))*p*y3) - eqk(3))
-
-         else 
-c                                 projecting through graphite
-            fh2o = dlog(g(ins(5))*p*y5)
-            fco2 = 2d0*(dlog(g(ins(3))*p*y3) - eqk(3))
-
-         end if
-
-      end if 
-
-      if (hybrid) then
-         do i = 1, jsp 
-            vol = vol + y(jns(i))*vh(jns(i))
-         end do 
-      end if 
-
-      end
-
-      double precision function dinc (y,dy)
-c----------------------------------------------------------------------
-c function to increment 0 < y < 1 by dy, if the increment would cause
-c y to exceed its bounds, the increment is taken to be half the 
-c interval to the bound. 10/2016, JADC.
-c----------------------------------------------------------------------
-      implicit none
-
-      double precision y, dy
-c----------------------------------------------------------------------
-      if (y+dy.ge.1d0) then
-         dinc = 0.5d0 + y / 2d0
-      else if (y+dy.le.0d0) then 
-         dinc = y / 2d0
-      else 
-         dinc = y + dy
-      end if 
-
-      end 
-
-      subroutine seteqk (ins,isp,ac)
-c----------------------------------------------------------------------
-c program to compute standard (from the elements convention) ln equilibrium 
-c constants for 1 mole of the nsp fluid species. 
-
-c ac - ln(a[graphite])
-c 
-c----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      double precision dg,t2,t3,ac
-
-      integer i,j,isp,ins(*)
-
-      double precision eqk
-      common / csteqk /eqk(nsp)
-
-      double precision p,t,xo,u1,u2,tr,pr,r,ps
-      common / cst5 /p,t,xo,u1,u2,tr,pr,r,ps
-
-c----------------------------------------------------------------------
-      t2 = t * t
-      t3 = t2 * t
-c                                correct activity of graphite
-c                                for diamond stability if necessary:
-      call dimond (dg)
-c                                graphite pressure effect and activity
-c                                corrections:
-      dg = dg + ac + p*( 1.8042d-06 + (0.058345d0 - 8.42d-08*p)/t ) 
-c                                graphite activity effect, note for
-c                                certain routines (xoxsrk, ifug = 19/20
-c                                the agph term should not be added)!!!
-      do i = 1, isp 
-
-         j = ins(i)
-
-         if (j.eq.1) then 
-c                                h2o/robie
-            eqk(j) = -7.028214449d0 + 30607.34044d0/t  
-     *               - 475034.4632d0/t2 + 50879842.55d0/t3
-         else if (j.eq.2) then 
-c                                co2/robie
-            eqk(j) = .04078341613d0 + 47681.676177d0/t 
-     *              - 134662.1904d0/t2 + 17015794.31d0/t3 + dg
-         else if (j.eq.3) then 
-c                                co/robie
-            eqk(j) = 10.32730663d0  + 14062.7396777d0/t
-     *              - 371237.1571d0/t2 + 53515365.95d0/t3 + dg
-         else if (j.eq.4) then 
-c                                ch4/robie
-            eqk(j) = -13.86241656d0 + 12309.03706d0/t
-     *             - 879314.7005d0/t2 + .7754138439d8/t3 + dg
-         else if (j.eq.16) then 
-c                                c2h6/HSC, 10/2016
-            eqk(j) =  4.09702552d7/t3 - 8.01186095d5/t2 + 1.39350247d4/t
-     *                      - 2.64306669d1 + 2d0 * dg
-         end if 
-
-      end do 
-
-      end 
-
-      subroutine dimon1 (agph)
-c-----------------------------------------------------------------------
-c dimon1 tests if p-t conditions are in the diamond stability field
-c if they are it computes the activity of graphite needed to represent
-c diamond stability for C-O-H fluid speciation routines. 
-
-c dimon1 should replace dimond which automatically adds a graphite
-c activity correction
-
-c  agph - natural log of graphite activity to be added to graphite
-c        free energy to equate g(diamond) = g(graphite). 
-
-c polynomial functions fit by S. Poli, 4/27/04
-c                                 JADC, 4/27/04
-c-----------------------------------------------------------------------
-      implicit none 
-
-      double precision ptrans,agph
-
-      double precision p,t,xco2,u1,u2,tr,pr,r,ps
-      common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
-
-c                                 get transition pressure
-c                                 (should really use the G
-c                                 function for consistency):
-
-      ptrans = 5284.165053d0 + (33.21515773d0 - .002106330992d0*t)*t
-
-      if (p.gt.ptrans) then 
-c                                 compute corrected graphite activity
-         agph = 0.008423508384179629d0 
-     *        + (4.693008650307614d-11 * p - 3.850380793502567d-5)*p
-     *        + (1.4126916053951515d-3 + 1.393226795939807d-8*p 
-     *        - 5.887505938975768d-7 * t)*t
-
-      end if 
-
-      end 
-
-      subroutine hybeos (jns, jsp)
-c---------------------------------------------------------------------
-c set up routine for hybrid fluid EoS calculations. computes the 
-c (unecessay?) delta volumes and pure fluid fugacity coefficient 
-c rations used to convert the mrk fugacities to hybrid fugacities.
-
-c the choice of the pure fluid eos are hard wired (pseos, pitzer & sterner
-c 1994 for h2o/co2; hsmrk, kerrick and jacobs 1981 for methane).
-
-c this routine is to replace hscrkp and cstchx, 10/2015 JADC
-c---------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      integer i,j,jns(*),jsp
-
-      double precision hsfch4,fg(nsp)
-
-      external hsfch4
- 
-      double precision gh,vh
-      common/ csthyb /gh(nsp),vh(nsp)
-
-      double precision x,g,v
-      common/ cstcoh /x(nsp),g(nsp),v(nsp)
-
-      double precision p,t,xc,u1,u2,tr,pr,r,ps
-      common/ cst5 /p,t,xc,u1,u2,tr,pr,r,ps
-c----------------------------------------------------------------------
-      do i = 1, jsp
-
-         j = jns(i)
-
-         vh(j) = -v(j)
-         gh(j) = g(j)
-         
-         if (j.le.2) then 
-c                                 water/co2, pitzer and sterner 1994:
-            call pseos (v(j),fg(j),j)
-
-         else if (j.eq.4) then 
-c                                 methane hsmrk kerrick and jacobs 191.
-            fg(j) = hsfch4 (v(j))
-
-         else
-
-            stop
-
-         end if 
-c                                 the fugacity coefficient of the pure gas
-         g(j) = dexp(fg(j))/p
-c                                 the hybrid delta volume (hyb-mrk), it's 
-c                                 doubtful this thing is really used, if it 
-c                                 is it must be in fluids.
-         vh(j) = vh(j) + v(j)
-c                                 the hybrid/mrk pure fluid fugacity ratio
-         gh(j) = g(j)/gh(j)
-
-      end do 
-
-      end
-
-      subroutine xochk
-c----------------------------------------------------------------------
-c xo check for speciation routines that can't handle xo = 0, 1.
-c----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      double precision p,t,xo,u1,u2,tr,pr,r,ps
-      common / cst5 /p,t,xo,u1,u2,tr,pr,r,ps
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-c----------------------------------------------------------------------
-c                                check if xo is <1, >0,
-c                                reset if necessary
-      if (xo.lt.nopt(5)) then
-         xo = nopt(5)
-      else if (dabs(xo-1d0).lt.nopt(5)) then
-         xo = 1d0 - nopt(5)
-      end if 
-
-      end 
-
-      subroutine xetfs2 (fs2,kh2s,kso2,kcos)
-c-----------------------------------------------------------------------
-c fs2, kh2s, kso2, kcos calculation. TO BE MADE OBSOLETE
-c-----------------------------------------------------------------------
-      implicit none
-
-      double precision fs2,kh2s,kso2,kcos,xf
-
-      integer ibuf,hu,hv,hw,hx
-      double precision rat,elag,gz,gy,gx
-      common/ cst100 /rat,elag,gz,gy,gx,ibuf,hu,hv,hw,hx
-
-      double precision p,t,xo,u1,u2,tr,pr,r,ps
-      common / cst5 /p,t,xo,u1,u2,tr,pr,r,ps
-c                                get sulfur fugacity according to
-c                                the value of ibuf:
-      if (ibuf.eq.1) then 
-c                                get po-py 1/2 ln sulfur fugacity:
-c                                from simon poulson:
-         fs2 = .005388049d0*t + 10.24535d0 - 15035.91d0/t 
-     *                        + 0.03453878d0/t*p
-
-      else if (ibuf.eq.2) then
-c                                get suflur fugacity from fe/s ratio
-c                                of po, expression derived from 
-c                                toulmin & barton 1964, with p
-c                                correction from Craig & Scott 1982.
-c                                (this only takes into account V(S2),
-c                                hope it's right.
-         xf = rat/( rat + 1d0)
-         fs2 = 197.6309d0*xf + 45.2458d0*dsqrt(1d0- 1.9962d0*xf) 
-     *         - 94.33691d0
-     *         + (80624.79d0 + 0.2273782d0*p - 197630.9d0*xf)/t
-      
-      else 
-
-         fs2 = rat/2d0
-
-      end if
-c                                k's from ohmoto and kerrick
-      kh2s = 10115.3d0/t - 0.791d0 * dlog (t) + 0.30164d0
-      kcos = 10893.52964d0/t - 9.988613730d0
-      kso2 = 43585.63147d0/t - 8.710679055d0
-
-      end 
