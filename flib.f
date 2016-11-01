@@ -38,11 +38,11 @@ c-----------------------------------------------------------------------
          xco2 = 0d0
       end if 
 
-      if (ifug.eq.0) then 
+      if (ifug.eq.0) then
          call mrk
       else if (ifug.eq.1) then 
          call hsmrk
-      else if (ifug.eq.2.or.ifug.eq.23) then 
+      else if (ifug.eq.2) then 
          call qrkmrk
       else if (ifug.eq.3) then 
          call saxfei
@@ -81,8 +81,11 @@ c-----------------------------------------------------------------------
          call xoxsrk (fo2,fs2)
       else if (ifug.eq.21) then 
          call hcrk 
-      else if (ifug.eq.22) then 
+      else if (ifug.eq.22) then
          call dhcork 
+      else if (ifug.eq.23) then 
+         write (*,*) 'EoS 23 disabled'
+         stop
       else if (ifug.eq.24) then 
          call cohngr (fo2)
       else if (ifug.eq.25) then 
@@ -147,7 +150,7 @@ c---------------------------------------------------------------------
      *  'X(CO2) Hybrid Haar et al 1979/CORK (TRKMRK)',
      *  'f(O2/CO2) Graphite buffered COH MRK fluid',
      *  'f(O2/CO2) Graphite buffered COH hybrid-EoS fluid',
-     *  'Disabled EoS (cohfit)',
+     *  'Disabled EoS',
      *  'X(O) GCOH-fluid hybrid-EoS Connolly & Cesare 1993',
      *  'X(O) GCOH-fluid MRK Connolly & Cesare 1993'/
 
@@ -163,7 +166,7 @@ c---------------------------------------------------------------------
      *  'X(O)-X(C) COHS hybrid-EoS Connolly & Cesare 1993',
      *  'X(CO2) Halbach & Chatterjee 1982, P > 10 kb, hybrid-Eos',
      *  'X(CO2) DHCORK, hybrid-Eos',
-     *  'Toop-Samis Silicate Melt',
+     *  'Disabled EoS',
      *  'f(O2/CO2)-N/C Graphite saturated COHN MRK fluid',
      *  'H2O-CO2-NaCl Aranovich et al. 2010',
      *  'O-Si Silicate fluid RK EoS',
@@ -1367,7 +1370,12 @@ c                                this fs2 = 1/2 ln (fs2),
 c                                 check for in bounds composition
       call xcheck (xo)
 c                                 compute equilibrium constants in csteqk
-      call seteqk (ins,8,-1d0)
+
+c                                 who knows how this works, i guess if 
+c                                 ifug = 19 graphite saturated and if 
+c                                 ifug = 20 it isn't (but then what happens
+c                                 to sulfur?)
+      call seteqk (ins,8,0d0)
 c                                 compute pure mrk fluid properties
       call mrkpur (ins,8)
 c                                 compute hybrid pure fluid props
@@ -3356,6 +3364,9 @@ c---------------------------------------------------------------------
 
       double precision x,g,v
       common/ cstcoh /x(nsp),g(nsp),v(nsp)
+
+      double precision fh2o,fco2,funk
+      common/ cst11 /fh2o,fco2,funk
  
       save jns 
       data jns/ 1, 2/
@@ -3363,15 +3374,18 @@ c----------------------------------------------------------------------
       if (xc.eq.1d0) then
          ins(1) = 2
          call mrkpur (ins, 1)
+         fh2o = -1d1
          goto 99          
       else if (xc.eq.0d0) then
          ins(1) = 1
          call mrkpur (ins, 1)
+         fco2 = -1d1
          goto 99
       end if
 
       x(2) = xc
       x(1) = 1d0 - xc
+
       call mrkmix (jns, 2, 1)
 
 99    end
@@ -3405,11 +3419,13 @@ c----------------------------------------------------------------------
          ins(1) = 2
          jns(1) = 2
          call hsmrkp (ins, 1, jns, 1)
+         fh2o = -1d1
          goto 99          
       else if (xc.eq.0d0) then
          ins(1) = 1
          jns(1) = 1
          call hsmrkp (ins, 1, jns, 1)
+         fco2 = -1d1
          goto 99
       end if
  
