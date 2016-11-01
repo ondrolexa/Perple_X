@@ -18,8 +18,6 @@ c-----------------------------------------------------------------------
  
       include 'perplex_parameters.h'
 
-      integer i
- 
       double precision fo2,fs2,yo2,yc,dg
  
       integer iff,idss,ifug,ifyn,isyn
@@ -40,9 +38,6 @@ c-----------------------------------------------------------------------
          xco2 = 0d0
       end if 
 
-      xs(2) = xco2
-      xs(1) = 1d0 - xco2
- 
       if (ifug.eq.0) then 
          call mrk
       else if (ifug.eq.1) then 
@@ -105,11 +100,6 @@ c                                 bulk coordinates
       else 
          call error (11,xco2,ifug,'EoS (routine CFLUID)') 
       end if 
-
-      do i = 1, 2
-         if (xs(i).gt.1d-38) cycle 
-         f(i) = dlog(1d4*p)
-      end do 
 
       end
 
@@ -428,7 +418,7 @@ c-----------------------------------------------------------------------
       integer isp, ins
       common/ cxt33 /isp,ins(nsp),specie(nsp)
 c----------------------------------------------------------------------- 
-      if (ifug.le.6.or.ifug.eq.14.or.ifug.eq.21.or.
+      if (ifug.le.6.or.ifug.eq.14.or.ifug.eq.18.or.ifug.eq.21.or.
      *    ifug.eq.22.or.ifug.eq.25) then 
 c                                 xco2 EoS's
             vname(3) = 'X(CO2)  '
@@ -584,7 +574,7 @@ c----------------------------------------------------------------------
       oh2o = 2d0
       y(5) = 0.00001d0
 c                                check for in bounds composition
-      call xochk 
+      call xcheck (xo)
 c                                fs2 = 1/2 ln (fs2)
       call setfs2 (fs2)
 c                                compute equilibrium constants in csteqk
@@ -1375,7 +1365,7 @@ c----------------------------------------------------------------------
 c                                this fs2 = 1/2 ln (fs2),
       call setfs2 (fs2)
 c                                 check for in bounds composition
-      call xochk 
+      call xcheck (xo)
 c                                 compute equilibrium constants in csteqk
       call seteqk (ins,8,-1d0)
 c                                 compute pure mrk fluid properties
@@ -1442,13 +1432,15 @@ c                                 compute graphite activity:
 c-----------------------------------------------------------------------
 c program to calculate H-O-S speciation as a function of XO using
 c an MRK/HSMRK hybrid. Species are H2 O2 H2O H2S SO2.
+
+c this routine is probably not accurate cause it solves on yh2o. 
 c-----------------------------------------------------------------------
       implicit none
 
       include 'perplex_parameters.h'
 
       double precision fo2,fs2,ek3,xom,xop,xos,c0,c1,c2,c3,
-     *                 c4,c5,c6,c7,a,b,c,d,xl,xi,h,dh
+     *                 c4,c5,c6,c7,a,b,c,d,xl,xi,h,dh,oy5
 
       integer ins(5), jns(1), j, i
 
@@ -1483,7 +1475,7 @@ c-----------------------------------------------------------------------
 c----------------------------------------------------------------------
 c                                check if xo is <1, >0,
 c                                reset if necessary
-      call xochk 
+      call xcheck (xo) 
 c                                 compute equilibrium constants in csteqk
       call seteqk (ins,5,-1d0)
 c                                this fs2 = 1/2 ln (fs2),
@@ -1515,6 +1507,7 @@ c                                 get first guess:
       c0 = 2d0*xom*(-xop * (3d0*xo*xom + 2d0))
       c7 = 8d0*xom*c5
       d = -xom**2 * xop**2
+      oy5 = 2d0 
 c                                 outer iteration loop:
       do 30 j = 1, iopt(21)
 
@@ -1549,11 +1542,11 @@ c                                 inner iteration loop:
          y(7) = c5*c6*(y(1)*y(1))/(y(5)*y(5))
          y(8) = c3*c4*y(7)
 
-         if (j.gt.1.and.dabs((xl-y(1))/y(1)).lt.nopt(5)) goto 40
+         if (dabs((oy5-y(5))/y(5)).lt.nopt(5)) goto 40
 
          call mrkhyb (ins, jns, 5, 1, 1)
 
-         xl = y(1) 
+         oy5 = y(5) 
 
 30    continue
 
@@ -1618,7 +1611,7 @@ c-----------------------------------------------------------------------
 c----------------------------------------------------------------------
 c                                check if xo is <1, >0,
 c                                reset if necessary
-      call xochk  
+      call xcheck (xo)  
 c                                 compute equilibrium constants in csteqk
       call seteqk (ins,1,-1d0)
 c                                 compute pure mrk fluid properties
@@ -1756,11 +1749,7 @@ c----------------------------------------------------------------------
       y(5) = xv
 c                                check if xh2 is <1, >0,
 c                                reset if necessary.
-      if (dabs(y(5)-1d0).lt.nopt(5)) then
-         y(5) = 1d0 - nopt(5)
-      else if (y(5).lt.nopt(5)) then
-         y(5) = nopt(5)
-      end if 
+      call xcheck (y(5))
 
       y(1) = 1d0 - y(5)
 c                                get pure species fugacities
@@ -2151,7 +2140,6 @@ c                 and CO2.
 c output (to common cstcoh):
 
 c        g(i)    - fugacity coefficient of ith species
-c        v(i)    - volume of the ith species
 c-----------------------------------------------------------------------
       implicit none
 
@@ -4329,7 +4317,7 @@ c-----------------------------------------------------------------------
       double precision rr,a1,a2,a3,a4,c1,c2,c3,c4,b1,b2,p0,f0,vbw,t2,a,
      *                 rt,t12,t15,t25,b,e0,e1,e3,v1,pdv,cor
 
-      integer ins(nsp),jns(3),i
+      integer ins(1),jns(1),i
 
       double precision x,g,v
       common/ cstcoh /x(nsp),g(nsp),v(nsp)
@@ -4346,7 +4334,7 @@ c-----------------------------------------------------------------------
      *     -3038.79d0,-9.24574d-3,3.02674d9,36490.5d0,-1.02451d7,
      *     -1.79681d8,2.18437d9,-3.90463d-2,-0.991078d0/
 
-      data ins,jns/nsp*1,1,1,1/
+      data ins,jns/1,1/
 c-----------------------------------------------------------------------
 c                                at p < 10000 kerrick      
       if (p.lt.1d4) then
@@ -4437,7 +4425,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer ins(nsp)
+      integer ins(2)
 
       double precision xmc,fmh2o,fmco2,ah2o,aco2,tfh2o
 
@@ -4449,7 +4437,7 @@ c----------------------------------------------------------------------
 
       save ins
 
-      data ins/ 1, 2, 14*0/
+      data ins/ 1, 2/
 c----------------------------------------------------------------------
       if (xc.le.0d0) then
 c                                 for pure h2o:
@@ -7563,7 +7551,7 @@ c----------------------------------------------------------------------
       oy5 = 0d0
       bad = .false.
 c                                 check for in bounds composition
-      call xochk 
+      call xcheck (xo)
 c                                 compute equilibrium constants, returned
 c                                 in csteqk
       call seteqk (ins,6,elag)
@@ -7902,16 +7890,15 @@ c                                 the hybrid/mrk pure fluid fugacity ratio
 
       end
 
-      subroutine xochk
+      subroutine xcheck (x)
 c----------------------------------------------------------------------
-c xo check for speciation routines that can't handle xo = 0, 1.
+c x check for speciation routines that can't handle xo = 0, 1.
 c----------------------------------------------------------------------
       implicit none
 
       include 'perplex_parameters.h'
 
-      double precision p,t,xo,u1,u2,tr,pr,r,ps
-      common / cst5 /p,t,xo,u1,u2,tr,pr,r,ps
+      double precision x
 
       integer iopt
       logical lopt
@@ -7920,10 +7907,10 @@ c----------------------------------------------------------------------
 c----------------------------------------------------------------------
 c                                check if xo is <1, >0,
 c                                reset if necessary
-      if (xo.lt.nopt(5)) then
-         xo = nopt(5)
-      else if (dabs(xo-1d0).lt.nopt(5)) then
-         xo = 1d0 - nopt(5)
+      if (x.lt.nopt(5)) then
+         x = nopt(5)
+      else if (dabs(x-1d0).lt.nopt(5)) then
+         x = 1d0 - nopt(5)
       end if 
 
       end 
@@ -7997,15 +7984,12 @@ c                                 above the ch4-co join
 c                                 for reasons of stupidity convert 
 c                                 c-o2-h2 coordinates to c-o-h
       xo = 2d0*yo2/(2d0-yc)
-      xc = yc/(2d0-yc)
 c                                 do not allow degenerate compositions:
-      call xochk 
+      call xcheck (xo)
 
-      if (xc.eq.0d0) then
-         xc = nopt(5)
-      else if (xc.eq.1d0) then 
-         xc = 1d0 - nopt(5)
-      end if
+      xc = yc/(2d0-yc)
+
+      call xcheck (xc)
 c                                 compute equilibrium constants in csteqk
       call seteqk (ins,6,0d0)
 c                                 compute pure mrk fluid properties
