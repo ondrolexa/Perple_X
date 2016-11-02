@@ -324,11 +324,11 @@ c                                 volume_max_it - for schreinemakers
 c                                 solution_names 0 - model, 1 - abbreviation, 2 - full
       iopt(24) = 0
       valu(22) = 'mod'
-c                                 hyb_h2o - eos to be used for pure h2o, 1-2, 4-8
-      iopt(25) = 7
-c                                 hyb_co2 - eos to be used for pure co2, 1-4
-      iopt(26) = 7
-c                                 hyb_ch4 - eos to be used for pure co2, 1-4
+c                                 hyb_h2o - eos to be used for pure h2o, 0-2, 4-5
+      iopt(25) = 4
+c                                 hyb_co2 - eos to be used for pure co2, 0-4
+      iopt(26) = 4
+c                                 hyb_ch4 - eos to be used for pure ch4, 0-1
       iopt(27) = 1     
 c                                 -------------------------------------
 c                                 werami output options:
@@ -402,7 +402,7 @@ c                                 phase composition key
 
             read (strg,*) iopt(25)
 
-            if (iopt(25).lt.0.or.iopt(25).eq.3.or.iopt(25).gt.8) then 
+            if (iopt(25).lt.0.or.iopt(25).eq.3.or.iopt(25).gt.5) then 
                write (*,1180) strg,key
                pause
                stop
@@ -1326,8 +1326,8 @@ c                                 generic thermo options
      *        4x,'Anderson-Gruneisen     ',l1,10x,'[F] T',/,
      *        4x,'site_check             ',l1,10x,'[T] F',/,
      *        4x,'speciation_max_it      ',i4,7x,'[100]',/,
-     *        4x,'hybrid_EoS_H2O         ',i4,7x,'[7] 0-2, 4-8',/,
-     *        4x,'hybrid_EoS_CO2         ',i4,7x,'[7] 0-4',/,
+     *        4x,'hybrid_EoS_H2O         ',i4,7x,'[4] 0-2, 4-5',/,
+     *        4x,'hybrid_EoS_CO2         ',i4,7x,'[4] 0-4',/,
      *        4x,'hybrid_EoS_CH4         ',i4,7x,'[1] 0-1')
 1013  format (/,2x,'Input/Output options:',//,
      *        4x,'dependent_potentials   ',a3,8x,'off [on]',/,

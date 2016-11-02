@@ -1356,4 +1356,142 @@ c----------------------------------------------------------------------
       nn = 2d0*y(10) + y(11)
       nsi = y(13) + y(14) + y(15)
 
-      end 
+      end
+
+      subroutine hybeos (jns, jsp)
+c---------------------------------------------------------------------
+c set up routine for hybrid fluid EoS calculations. computes the 
+c (unecessay?) delta volumes and pure fluid fugacity coefficient 
+c rations used to convert the mrk fugacities to hybrid fugacities.
+
+c the choice of the pure fluid eos are specified by the perplex_option
+c keywords hybrid_EoS_H2O (iopt(24)), hybrid_EoS_CO2 (iopt(25)), and
+c hybrid_EoS_H2O (iopt(26)).
+
+c the routine mrkpur must be called prior to hybeos to set initial 
+c guesses for volume. 
+
+c 11/2016 JADC
+c---------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer i,j,jns(*),jsp
+
+      double precision hsmrkf,fg(nsp)
+
+      external hsmrkf
+ 
+      double precision gh,vh
+      common/ csthyb /gh(nsp),vh(nsp)
+
+      double precision y,g,v
+      common/ cstcoh /y(nsp),g(nsp),v(nsp)
+
+      double precision p,t,xc,u1,u2,tr,pr,r,ps
+      common/ cst5 /p,t,xc,u1,u2,tr,pr,r,ps
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+c----------------------------------------------------------------------
+      do i = 1, jsp
+
+         j = jns(i)
+
+         vh(j) = -v(j)
+         gh(j) = g(j)
+         
+         if (j.eq.1) then 
+c                                 water
+            if (iopt(24).eq.0) then 
+c                                 mrk
+            else if (iopt(24).eq.1) then 
+c                                 hsmrk
+               fg(j) = hsmrkf (v(j),j)
+
+            else if (iopt(24).eq.2) then
+c                                 cork
+               call crkh2o (p,t,v(j),fg(j))
+
+            else if (iopt(24).eq.4) then
+c                                 pseos, pitzer & sterner 1994
+               call pseos (v(j),fg(j),j)
+
+            else if (iopt(24).eq.5) then
+c                                 haar, haar et el. 1982
+               call haar (v(j),fg(j))
+
+            else 
+
+               write (*,*) 'invalid eos call in hybeos'
+               pause
+               stop
+
+            end if 
+
+         else if (j.eq.2) then 
+c                                CO2
+            if (iopt(25).eq.0) then 
+c                                 mrk
+            else if (iopt(25).eq.1) then 
+c                                 hsmrk
+               fg(j) = hsmrkf (v(j),j)
+
+            else if (iopt(25).eq.2) then
+c                                 cork
+               call crkco2 (p,t,v(j),fg(j))
+
+            else if (iopt(25).eq.3) then
+c                                 brmrk, bottinga & richet 1981
+               call brmrk (v(j),fg(j))
+
+            else if (iopt(25).eq.4) then
+c                                 pseos, pitzer & sterner 1994
+               call pseos (v(j),fg(j),j)
+
+            else 
+
+               write (*,*) 'invalid eos call in hybeos'
+               pause
+               stop
+
+            end if
+
+         else if (j.eq.4) then
+c                                CH4
+            if (iopt(25).eq.0) then 
+c                                 mrk
+            else if (iopt(25).eq.1) then 
+c                                 methane hsmrk kerrick and jacobs 191.
+               fg(j) = hsmrkf (v(j),j)
+
+            else 
+
+               write (*,*) 'invalid eos call in hybeos'
+               pause
+               stop
+
+            end if
+
+         else
+
+            write (*,*) 'invalid species in hybeos'
+            pause
+            stop
+
+         end if 
+c                                 the fugacity coefficient of the pure gas
+         g(j) = dexp(fg(j))/p
+c                                 the hybrid delta volume (hyb-mrk), it's 
+c                                 doubtful this thing is really used, if it 
+c                                 is it must be in fluids.
+         vh(j) = vh(j) + v(j)
+c                                 the hybrid/mrk pure fluid fugacity ratio
+         gh(j) = g(j)/gh(j)
+
+      end do 
+
+      end
