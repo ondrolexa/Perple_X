@@ -17,7 +17,7 @@ c----------------------------------------------------------------------
       implicit none
 
       write (*,'(/,a)') 
-     *      'Perple_X version 6.7.4, source updated Oct 31, 2016.'
+     *      'Perple_X version 6.7.4, source updated Nov 2, 2016.'
 
       end
 
@@ -59,7 +59,7 @@ c                                 all other values no output
 c current max values:
 
 c                lopt(18)
-c                iopt(23)
+c                iopt(27)
 c                nopt(27)
 
 c lower unused values may be available.
@@ -324,6 +324,12 @@ c                                 volume_max_it - for schreinemakers
 c                                 solution_names 0 - model, 1 - abbreviation, 2 - full
       iopt(24) = 0
       valu(22) = 'mod'
+c                                 hyb_h2o - eos to be used for pure h2o, 1-2, 4-8
+      iopt(25) = 7
+c                                 hyb_co2 - eos to be used for pure co2, 1-4
+      iopt(26) = 7
+c                                 hyb_ch4 - eos to be used for pure co2, 1-4
+      iopt(27) = 1     
 c                                 -------------------------------------
 c                                 werami output options:
 
@@ -391,6 +397,36 @@ c                                 phase composition key
                iopt(2) = 0
             end if 
             valu(2) = val
+
+         else if (key.eq.'hybrid_EoS_H2O') then
+
+            read (strg,*) iopt(25)
+
+            if (iopt(25).lt.0.or.iopt(25).eq.3.or.iopt(25).gt.8) then 
+               write (*,1180) strg,key
+               pause
+               stop
+            end if 
+
+         else if (key.eq.'hybrid_EoS_CO2') then
+
+            read (strg,*) iopt(26)
+
+            if (iopt(26).lt.0.or.iopt(26).gt.4) then 
+               write (*,1180) strg,key
+               pause
+               stop
+            end if
+
+         else if (key.eq.'hybrid_EoS_CH4') then
+
+            read (strg,*) iopt(27)
+
+            if (iopt(27).lt.0.or.iopt(27).gt.1) then 
+               write (*,1180) strg,key
+               pause
+               stop
+            end if 
 
          else if (key.eq.'proportions') then 
 c                                 phase proportion key
@@ -1068,6 +1104,9 @@ c                                 proportionality constant for shear modulus
 1150  format ('Writing auto refine summary to file: ',a)
 1160  format ('Writing Perple_X option summary to file: ',a)
 1170  format ('Writing complete reaction list to file: ',a)
+1180  format (/,'Error: value ',a,' is invalid for Perple_X option ',
+     *        'keyword ',a,/,'see www.perplex.ch/perplex_options.html ',
+     *        'for a list of valid values',/)
       end 
 
       subroutine outopt (n,valu)
@@ -1199,7 +1238,8 @@ c                                 pc-perturbation
          if (iam.eq.1.and.icopt.le.3) write (n,1011) nopt(15)
 c                                 generic thermo parameters:
          write (n,1012) nval1,nopt(5),nopt(12),nopt(20),valu(17),
-     *                     lopt(8),lopt(4),lopt(5),iopt(21)
+     *                     lopt(8),lopt(4),lopt(5),iopt(21),
+     *                     iopt(24),iopt(25),iopt(26)
 c                                 for meemum add fd stuff
          if (iam.eq.2) write (n,1017) nopt(31),nopt(26),nopt(27)
 
@@ -1221,7 +1261,7 @@ c                                 WERAMI input/output options
 c                                 WERAMI info file options
          write (n,1241) lopt(12)       
 c                                 WERAMI thermodynamic options
-         write (n,1016) lopt(8),lopt(4)
+         write (n,1016) lopt(8),lopt(4),iopt(24),iopt(25),iopt(26)
          write (n,1017) nopt(31),nopt(26),nopt(27)
 
       else if (iam.eq.2) then 
@@ -1242,7 +1282,7 @@ c                                 seismic property options
 
       if (iam.eq.5) then 
 c                                 FRENDLY thermo options
-         write (n,1016) lopt(8),lopt(4)
+         write (n,1016) lopt(8),lopt(4),iopt(24),iopt(25),iopt(26)
          write (n,1017) nopt(31),nopt(26),nopt(27)
       end if 
 
@@ -1285,7 +1325,10 @@ c                                 generic thermo options
      *        4x,'approx_alpha           ',l1,10x,'[T] F',/,
      *        4x,'Anderson-Gruneisen     ',l1,10x,'[F] T',/,
      *        4x,'site_check             ',l1,10x,'[T] F',/,
-     *        4x,'speciation_max_it      ',i4,7x,'[100]')
+     *        4x,'speciation_max_it      ',i4,7x,'[100]',/,
+     *        4x,'hybrid_EoS_H2O         ',i4,7x,'[7] 0-2, 4-8',/,
+     *        4x,'hybrid_EoS_CO2         ',i4,7x,'[7] 0-4',/,
+     *        4x,'hybrid_EoS_CH4         ',i4,7x,'[1] 0-1')
 1013  format (/,2x,'Input/Output options:',//,
      *        4x,'dependent_potentials   ',a3,8x,'off [on]',/,
      *        4x,'pause_on_error         ',l1,10x,'[T] F')
@@ -1296,7 +1339,10 @@ c                                 generic thermo options
 c                                 thermo options for frendly
 1016  format (/,2x,'Thermodynamic options:',//,
      *        4x,'approx_alpha           ',l1,10x,'[T] F',/,
-     *        4x,'Anderson-Gruneisen     ',l1,10x,'[F] T')
+     *        4x,'Anderson-Gruneisen     ',l1,10x,'[F] T',/,
+     *        4x,'hybrid_EoS_H2O         ',i4,7x,'[7] 0-2, 4-8',/,
+     *        4x,'hybrid_EoS_CO2         ',i4,7x,'[7] 0-4',/,
+     *        4x,'hybrid_EoS_CH4         ',i4,7x,'[1] 0-1')
 1017  format (4x,'fd_expansion_factor    ',f3.1,8x,'>0 [2.]',/,
      *        4x,'finite_difference_p    ',d7.1,4x,'>0 [1d4]; ',
      *           'fraction = ',d7.1,1x,'[1d-2]')

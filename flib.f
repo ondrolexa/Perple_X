@@ -46,19 +46,12 @@ c-----------------------------------------------------------------------
          call qrkmrk
       else if (ifug.eq.3) then 
          call saxfei
-      else if (ifug.eq.4) then 
-         call brmrk
       else if (ifug.eq.5) then 
          call hprk
-      else if (ifug.eq.6) then 
-         call trkmrk
       else if (ifug.eq.7) then 
          call cohfo2 (fo2,.false.)
       else if (ifug.eq.8) then  
          call cohfo2 (fo2,.true.)
-      else if (ifug.eq.9) then 
-         write (*,*) 'EoS 9 disabled'
-         stop
       else if (ifug.eq.10) then
          call gcohx6 (fo2,.true.)
       else if (ifug.eq.11) then 
@@ -75,17 +68,8 @@ c-----------------------------------------------------------------------
          call homrk (fo2)
       else if (ifug.eq.17) then 
          call hosrk5 (fo2,fs2)
-      else if (ifug.eq.18) then 
-         call dhhsrk
       else if (ifug.eq.19.or.ifug.eq.20) then 
          call xoxsrk (fo2,fs2)
-      else if (ifug.eq.21) then 
-         call hcrk 
-      else if (ifug.eq.22) then
-         call dhcork 
-      else if (ifug.eq.23) then 
-         write (*,*) 'EoS 23 disabled'
-         stop
       else if (ifug.eq.24) then 
          call cohngr (fo2)
       else if (ifug.eq.25) then 
@@ -143,14 +127,14 @@ c---------------------------------------------------------------------
       data (rkname(i), i = 0, 11)/
      *  'X(CO2) Modified Redlich-Kwong (MRK/DeSantis/Holloway)',
      *  'X(CO2) Kerrick & Jacobs 1981 (HSMRK)',
-     *  'X(CO2) Hybrid MRK/HSMRK',
-     *  'X(CO2) Saxena & Fei 1987 pseudo-virial expansion',
-     *  'Bottinga & Richet 1981 (CO2 RK)',
+     *  'X(CO2) MRK hybrid-EoS',
+     *  'X(CO2) Saxena & Fei 1987, P > 5 kbar',
+     *  'CO2 - Bottinga & Richet 1981',
      *  'X(CO2) Holland & Powell 1991, 1998 (CORK)',
-     *  'X(CO2) Hybrid Haar et al 1979/CORK (TRKMRK)',
+     *  'H2O - Haar et al 1982',
      *  'f(O2/CO2) Graphite buffered COH MRK fluid',
      *  'f(O2/CO2) Graphite buffered COH hybrid-EoS fluid',
-     *  'Disabled EoS',
+     *  'H2O - Brodholt & Wood, 1993, P > 10 kbar',
      *  'X(O) GCOH-fluid hybrid-EoS Connolly & Cesare 1993',
      *  'X(O) GCOH-fluid MRK Connolly & Cesare 1993'/
 
@@ -159,13 +143,13 @@ c---------------------------------------------------------------------
      *  'X(H2) H2-H2O hybrid-EoS',
      *  'X(CO2) Pitzer & Sterner 1994; Holland & Powell mixing 2003',
      *  'X(H2) low T H2-H2O hybrid-EoS',
-     *  'X(O) H-O HSMRK/MRK hybrid-EoS',
-     *  'X(O)-f(S2) H-O-S HSMRK/MRK hybrid-EoS',
-     *  'X(CO2) Delany/HSMRK/MRK hybrid-EoS, for P > 10 kb',
+     *  'X(O) H-O hybrid-EoS',
+     *  'X(O)-f(S2) H-O-S hybrid-EoS',
+     *  'H2O - Halbach & Chatterjee 1984, P > 1 kbar',
      *  'X(O)-X(S) COHS hybrid-EoS Connolly & Cesare 1993',
      *  'X(O)-X(C) COHS hybrid-EoS Connolly & Cesare 1993',
-     *  'X(CO2) Halbach & Chatterjee 1982, P > 10 kb, hybrid-Eos',
-     *  'X(CO2) DHCORK, hybrid-Eos',
+     *  'H2O - Delaney & Helgeson 1978, P > 10 kbar',
+     *  'Disabled Eos',
      *  'Disabled EoS',
      *  'f(O2/CO2)-N/C Graphite saturated COHN MRK fluid',
      *  'H2O-CO2-NaCl Aranovich et al. 2010',
@@ -187,12 +171,17 @@ c---------------------------------------------------------------------
 10    write (*,1000)
 
       do i = 0, nrk
-         if (i.eq.9) cycle
+         if (i.eq.4.or.i.eq.6.or.i.eq.9.or.i.eq.18.or.i.eq.21.or.
+     *       i.eq.22.or.i.eq.23) cycle
+
          write (*,1070) i,rkname(i)
+
       end do 
 
       read (*,*,iostat=ier) ifug
-      if (ifug.gt.nrk.or.ifug.eq.9) ier = 1
+      if (ifug.gt.nrk.or.i.eq.4.or.i.eq.6.or.i.eq.9.or.i.eq.18.or.
+     *    i.eq.21.or.i.eq.22.or.i.eq.23.or.ifug.lt.0) ier = 1
+
       call rerror (ier,*10)
 
       if (iam.ne.11.and.ifug.eq.27) then 
@@ -225,7 +214,7 @@ c                                 if ibuf = 2 dlnfo2 is the fs2
          end if 
 
       else if (ifug.gt.9.and.ifug.lt.13 .or. 
-     *         ifug.gt.14.and.ifug.lt.22) then
+     *         ifug.gt.14.and.ifug.lt.21) then
 
          if (ifug.ne.18) vname(3) = 'X(O)'
 
@@ -237,7 +226,7 @@ c                                 if ibuf = 2 dlnfo2 is the fs2
  
          vname(3) = 'X(Si)'
 
-      else if (ifug.ge.7.and.ifug.le.9.or.ifug.eq.24) then
+      else if (ifug.ge.7.and.ifug.le.8.or.ifug.eq.24) then
 c                                 chosen COH speciation option
 c                                 check that XCO2 isn't a independent
 c                                 variable:
@@ -575,7 +564,6 @@ c----------------------------------------------------------------------
 c----------------------------------------------------------------------
       nit = 0
       oh2o = 2d0
-      y(5) = 0.00001d0
 c                                check for in bounds composition
       call xcheck (xo)
 c                                fs2 = 1/2 ln (fs2)
@@ -586,6 +574,10 @@ c                                compute pure mrk fluid properties
       call mrkpur (ins,9)
 c                                compute hybrid pure fluid props
       call hybeos (jns,3)
+
+      call zeroys
+
+      y(5) = 0.00001d0
 
       c3 = dexp (eqk(4)) * p
       c1 = dexp (eqk(2) - 2d0*eqk(3)) * p 
@@ -1363,8 +1355,6 @@ c----------------------------------------------------------------------
 c----------------------------------------------------------------------
       nit = 0
       oh2o = 2d0
-      y(5) = 0.00001d0
-      y(1) = 0.1d0
 c                                this fs2 = 1/2 ln (fs2),
       call setfs2 (fs2)
 c                                 check for in bounds composition
@@ -1380,6 +1370,11 @@ c                                 compute pure mrk fluid properties
       call mrkpur (ins,8)
 c                                 compute hybrid pure fluid props
       call hybeos (jns,3)
+
+      call zeroys
+
+      y(5) = 0.00001d0
+      y(1) = 0.1d0
 c
       c1 = dexp (eqk(9) + fs2) 
       c2 = dexp (eqk(2) - eqk(3) - eqk(1)) 
@@ -1492,6 +1487,9 @@ c                                 compute pure mrk fluid properties
       call mrkpur (ins,5)
 c                                 compute hybrid pure fluid props
       call hybeos (jns,1)
+
+      call zeroys
+
 c                               
       ek3 = dexp(eqk(1))
 c                                 get first guess:
@@ -1627,6 +1625,8 @@ c                                 compute pure mrk fluid properties
 c                                 compute hybrid pure fluid props
       call hybeos (jns,1)
 
+      call zeroys
+
       c1 = 1d0/dsqrt(p)/eqk(1)
 
       if (xo.lt.r13) then 
@@ -1712,7 +1712,6 @@ c                                 inner iteration loop:
       end 
 
 
-
       subroutine hh2ork (fo2,low)
 c----------------------------------------------------------------------
 c program to calculate fh2o, fo2 for H2-H2O mixtures using hsmrk/mrk
@@ -1754,6 +1753,8 @@ c----------------------------------------------------------------------
       save ins, jns
       data ins, jns/1, 5, 1/
 c----------------------------------------------------------------------
+      call zeroys
+
       y(5) = xv
 c                                check if xh2 is <1, >0,
 c                                reset if necessary.
@@ -1872,6 +1873,8 @@ c                                 compute pure mrk fluid properties
 c                                 compute hybrid pure fluid props
       if (hybrid) call hybeos (jns,3)
 
+      call zeroys
+
       kco2 = dexp(eqk(2) + fo2)/p
       kco  = dexp(eqk(3) + fo2/2d0)/p
 c                                check for graphite saturation:
@@ -1961,114 +1964,58 @@ c                                 + qb * xh2 + qc
 
       end 
 
-      subroutine hsmrkp (ins, isp, jns, jsp)
+      double precision function hsmrkf (v,i)
 c---------------------------------------------------------------------
-c subprogram to get volume and fugacity of pure H2O, CO2, and CH4
-c fluids from HSMRK EOS of Kerrick and Jacobs (1981) and Jacobs and
-c Kerrick (1981).
-c---------------------------------------------------------------------
-      implicit none
+c subprogram to get ln(fugacity) of pure Kerrick and Jacobs (1981) HSMRK 
+c species i given an initial volume estimate v:
 
-      include 'perplex_parameters.h'
+c   i = 1 - H2O
+c   i = 2 - CO2
+c   i > 2 - CH4
 
-      integer ins(*),jns(*),isp,jsp,ij(3),k,i,j
-
-      double precision fg(3),bw,bc,bm,t12,rtt,t2,b,c,d,e,yz,fugp,rr
- 
-      double precision gm,vm
-      common/ cstchx /gm(3),vm(3)
-
-      double precision x,g,v
-      common/ cstcoh /x(nsp),g(nsp),v(nsp)
-
-      double precision p,t,xc,u1,u2,tr,pr,r,ps
-      common/ cst5 /p,t,xc,u1,u2,tr,pr,r,ps
-
-      double precision f
-      common/ cst11 /f(3)
-
-      save bw, bc, bm, rr
-      data bw, bc, bm, rr, ij /29d0, 58d0, 60d0, 83.144126d0, 1, 2, 4/
-c----------------------------------------------------------------------
-
-      t12 = dsqrt(t)
-      rtt = rr*dsqrt(t**3)
-      t2 = t*t
-
-      call mrkpur (ins,isp)
-
-      do k = 1, jsp
-
-         i = jns(k)
-
-         j = ij(i)
-         
-         if (i.eq.1) then 
-           b = bw
-           c = 290.78d6-0.30276d6*t+0.00014774d6*t2
-           d = -8374d6+19.437d6*t-0.008148d6*t2
-           e = 76600d6-133.9d6*t+0.1071d6*t2
-         else if (i.eq.2) then 
-           b = bc 
-           c = 28.31d6+0.10721d6*t-0.00000881d6*t2
-           d = 9380d6-8.53d6*t+0.001189d6*t2
-           e = -368654d6+715.9d6*t+0.1534d6*t2
-         else 
-           b = bm 
-           c = 13.403d6 + 9.28d4 * t + 2.7d0 * t2
-           d = 5.216d9 - 6.8d6 * t + 3.28d3 * t2
-           e = -2.3322d11 + 6.738d8 * t + 3.179d5 * t2
-         end if 
-
-         vm(i) = -v(j)
-         gm(i) = g(j)
-
-         call nurap (b,c,d,e,yz,v(j),t12,rr)
-
-         vm(i) = vm(i) + v(j)
-         fg(i) = dlog(p) + fugp (rtt,b,yz,c,d,e,v(j))
-
-         g(j) = dexp(fg(i))/p
-
-         if (i.lt.3) f(i) = fg(i)
-
-      end do 
- 
-      end
-
-
-      double precision function hsfch4 (vch4)
-c---------------------------------------------------------------------
-c subprogram to get fugacity of pure CH4
-c fluids from HSMRK EOS of Kerrick and Jacobs (1981) and Jacobs and
-c Kerrick (1981).
+c on return v is the HSMRK volume of species i
 c---------------------------------------------------------------------
       implicit none
 
       include 'perplex_parameters.h'
 
-      double precision bm,rtt,t2,c,d,e,yz,fugp,rr,vch4,t12
+      integer i
+
+      double precision b,bw,bc,bm,rtt,t2,c,d,e,yz,fugp,rr,v,t12
 
       external fugp
 
       double precision p,t,xc,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xc,u1,u2,tr,pr,r,ps
 
-      save bm, rr
-      data bm, rr /6d1, 83.144126d0/
+      save bw, bc, bm, rr
+      data bw, bc, bm, rr /29d0, 58d0, 60d0, 83.144126d0/
 c----------------------------------------------------------------------
 
       t12 = dsqrt(t)
       rtt = rr*dsqrt(t**3)
       t2 = t*t
 
-      c = 13.403d6 + 9.28d4 * t + 2.7d0 * t2
-      d = 5.216d9 - 6.8d6 * t + 3.28d3 * t2
-      e = -2.3322d11 + 6.738d8 * t + 3.179d5 * t2
+      if (i.eq.1) then 
+         b = bw
+         c = 290.78d6-0.30276d6*t+0.00014774d6*t2
+         d = -8374d6+19.437d6*t-0.008148d6*t2
+         e = 76600d6-133.9d6*t+0.1071d6*t2
+      else if (i.eq.2) then 
+         b = bc 
+         c = 28.31d6+0.10721d6*t-0.00000881d6*t2
+         d = 9380d6-8.53d6*t+0.001189d6*t2
+         e = -368654d6+715.9d6*t+0.1534d6*t2
+      else 
+         b = bm 
+         c = 13.403d6 + 9.28d4 * t + 2.7d0 * t2
+         d = 5.216d9 - 6.8d6 * t + 3.28d3 * t2
+         e = -2.3322d11 + 6.738d8 * t + 3.179d5 * t2
+      end if
 
-      call nurap (bm,c,d,e,yz,vch4,t12,rr)
+      call nurap (bm,c,d,e,yz,v,t12,rr)
 
-      hsfch4 = dlog(p) + fugp (rtt,bm,yz,c,d,e,vch4)
+      hsmrkf = dlog(p) + fugp (rtt,bm,yz,c,d,e,v)
 
       end 
 
@@ -2090,6 +2037,9 @@ c----------------------------------------------------------------------
 
       double precision p,t,xc,u1,u2,tr,pr,r0,ps
       common/ cst5 /p,t,xc,u1,u2,tr,pr,r0,ps
+
+      double precision vol
+      common/ cst26 /vol
 c----------------------------------------------------------------------
       s1 = r*t*t12
       s2 = b*s1
@@ -2125,6 +2075,8 @@ c----------------------------------------------------------------------
       end do 
  
       yz = vi * p/r/t
+
+      vol = vi
  
       end
 
@@ -3324,10 +3276,12 @@ c----------------------------------------------------------------------
       if (xco2.eq.1d0) then
  
          call crkco2 (pbars,t,vco2,fco2) 
+         fh2o = dlog(1d4*p)
 
       else if (xco2.eq.0d0) then
  
          call crkh2o (pbars,t,vol,fh2o) 
+         fco2 = dlog(1d4*p)
 
       else
 
@@ -3346,6 +3300,7 @@ c----------------------------------------------------------------------
          fh2o = fh2o + gh2o + dlog(xh2o)
  
       end if
+
       end
 
       subroutine mrk
@@ -3362,8 +3317,8 @@ c---------------------------------------------------------------------
       double precision p,t,xc,u1,u2,tr,pr,r,ps
       common / cst5 /p,t,xc,u1,u2,tr,pr,r,ps
 
-      double precision x,g,v
-      common/ cstcoh /x(nsp),g(nsp),v(nsp)
+      double precision y,g,v
+      common/ cstcoh /y(nsp),g(nsp),v(nsp)
 
       double precision fh2o,fco2,funk
       common/ cst11 /fh2o,fco2,funk
@@ -3372,19 +3327,25 @@ c---------------------------------------------------------------------
       data jns/ 1, 2/
 c----------------------------------------------------------------------
       if (xc.eq.1d0) then
+
          ins(1) = 2
          call mrkpur (ins, 1)
-         fh2o = -1d1
-         goto 99          
+         fh2o = dlog(1d4*p)
+         return
+        
       else if (xc.eq.0d0) then
+
          ins(1) = 1
          call mrkpur (ins, 1)
-         fco2 = -1d1
-         goto 99
+         fco2 = dlog(1d4*p)
+         return 
+
       end if
 
-      x(2) = xc
-      x(1) = 1d0 - xc
+      call zeroys
+
+      y(2) = xc
+      y(1) = 1d0 - xc
 
       call mrkmix (jns, 2, 1)
 
@@ -3399,34 +3360,41 @@ c---------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer jns(3), ins(1)
+      integer ins(1)
  
       double precision bc,bw,xw,t12,rtt,t2,cc,dc,ec,cw,dw,ew,bm,cij,
-     *                 dij,eij,xc2,xw2,xwc2,cm,dm,em,yzm,fug,rr
+     *       dij,eij,xc2,xw2,xwc2,cm,dm,em,yzm,fug,rr,hsmrkf
 
-      external fug
+      external fug, hsmrkf
 
       double precision p,t,xc,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xc,u1,u2,tr,pr,r,ps
 
       double precision fh2o,fco2,funk
       common/ cst11 /fh2o,fco2,funk
+
+      double precision y,g,v
+      common / cstcoh /y(nsp),g(nsp),v(nsp)
  
       save bw, bc, rr
       data bw, bc, rr/ 29d0, 58d0, 83.144126d0/
 c----------------------------------------------------------------------
       if (xc.eq.1d0) then
+
          ins(1) = 2
-         jns(1) = 2
-         call hsmrkp (ins, 1, jns, 1)
-         fh2o = -1d1
-         goto 99          
+         call mrkpur (ins,1)
+         fco2 = hsmrkf (v(2),2)
+         fh2o = dlog(1d4*p)
+         return 
+         
       else if (xc.eq.0d0) then
+
          ins(1) = 1
-         jns(1) = 1
-         call hsmrkp (ins, 1, jns, 1)
-         fco2 = -1d1
-         goto 99
+         call mrkpur (ins,1)
+         fh2o = hsmrkf (v(1),1)
+         fco2 = dlog(1d4*p)
+         return
+
       end if
  
       xw = 1d0 - xc
@@ -3536,73 +3504,59 @@ c                                 call mrk to get initial volume
  
       subroutine qrkmrk
 c---------------------------------------------------------------------
-c  qrkmrk calculates the log of water and co2 fugacities using the hsmrk
-c  for pure fluids, and the mrk for the acivities of h2o and co2 in
-c  mixtures
+c qrkmrk calculates properties of a binary H2O-CO2 fluids using MRK
+c acivities and pure fluid routines specified in hybeos. 
 c-----------------------------------------------------------------------
       implicit none
 
-      double precision bw,bc,xw,t12,t2,dlp,rtt,cc,dc,ec,cw,dw,ew,fmh2o,
-     *                 xmc,yzm,fmco2,tfh2o,fug,rr
+      include 'perplex_parameters.h'
+
+      integer i, jns(2)
+
+      double precision gh,vh
+      common/ csthyb /gh(nsp),vh(nsp)
+
+      double precision y,g,v
+      common/ cstcoh /y(nsp),g(nsp),v(nsp)
 
       double precision p,t,xc,u1,u2,tr,pr,rcal,ps
       common/ cst5 /p,t,xc,u1,u2,tr,pr,rcal,ps
 
-      double precision fh2o,fco2,funk
-      common/ cst11 /fh2o,fco2,funk
- 
-      save bw, bc, rr
-      data bw, bc, rr/29d0, 58d0, 83.144126d0/
+      double precision f
+      common/ cst11 /f(3)
+
+      double precision vol
+      common/ cst26 /vol
+
+      save jns
+      data jns/1,2/
 c----------------------------------------------------------------------- 
-      if (xc.ge.1d0) then
-         call hsmrk
+c                                 compute pure mrk fluid properties
+      call mrkpur (jns,2)
+c                                 compute hybrid pure fluid props
+      call hybeos (jns,2)
+
+      if (xc.eq.1d0) then 
+         f(1) = dlog(1d4*p)
          return
-      else if (xc.le.0d0) then
-         call hsmrk
+      else if (xc.eq.0d0) then 
+         f(2) = dlog(1d4*p)
          return
-      end if
- 
-      t12 = dsqrt(t)
-      t2 = t*t
-      dlp  = dlog(p)
-      rtt = rr*dsqrt(t**3)
- 
-      cc = 28.31d6+0.10721d6*t-0.00000881d6*t2
-      dc = 9380d6-8.53d6*t+0.001189d6*t2
-      ec = -368654d6+715.9d6*t+0.1534d6*t2
-      cw = 290.78d6-0.30276d6*t+0.00014774d6*t2
-      dw = -8374d6+19.437d6*t-0.008148d6*t2
-      ew = 76600d6-133.9d6*t+0.1071d6*t2
-c                                 mixed volatiles
-c                                 call mrk to get ln fugacities of
-c                                 h2o and co2 in binary mixes,
-c                                 save as fmh2o and fmco2:
-      call mrk
-      fmh2o = fh2o
-      fmco2 = fco2
-      xmc = xc
-c                                 call mrk (this call is now 
-c                                 implicit in newrap) to get pure 
-c                                 f(h2o) & estimate V for hsmrk
-      xw = 1d0 
-      xc = 0d0 
-c                                 call newrap for hsmrk h2o volume:
-      call newrap (bw,cw,dw,ew,yzm,t12,rr)
-c                                 calculate water fugacity save as
-c                                 th2o.
-      tfh2o = dlp + fmh2o - fh2o
-     *     + fug(rtt,cw,dw,ew,xw,xc,bw,yzm,cw,dw,ew,bw,cw,dw,ew)
-c                                 co2
-      xc = 1d0
-      xw = 0d0
- 
-      call newrap (bc,cc,dc,ec,yzm,t12,rr)
-      fco2 = dlp + fmco2 - fco2
-     *     + fug(rtt,cc,dc,ec,xc,xw,bc,yzm,cc,dc,ec,bc,cc,dc,ec)
-      fh2o = tfh2o
- 
-      xc = xmc
- 
+      end if 
+
+      call zeroys
+
+      y(2) = xc
+      y(1) = 1d0 - xc
+
+      call mrkmix (jns, 2, 1)
+
+      do i = 1, 2
+         f(i) = dlog(y(i)*gh(i)*g(i)*p)
+      end do 
+
+      vol = vol + y(1)*vh(1) + y(2)*vh(2)
+
       end
  
       subroutine haar
@@ -3894,71 +3848,12 @@ c subroutine to compute the helmoltz free energy of ideal steam.
  
       end
  
-      subroutine trkmrk
-c---------------------------------------------------------------------
-c  trkmrk calculates the log of water and co2 fugacities using the haar
-c  equation of state for pure water and the hsmrk for co2 and
-c  the mrk for activities of h2o and co2 in mixtures
-c-----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      integer ins(nsp)
-
-      double precision xmc,fmh2o,fmco2,ah2o,aco2,tfh2o
-
-      double precision fh2o,fco2,funk
-      common / cst11 /fh2o,fco2,funk
-
-      double precision p,t,xc,vv
-      common/ cst5  /p,t,xc,vv(6)
-
-      save ins
-      data ins/ 1, 2, 14*0/
-c----------------------------------------------------------------------- 
-      if (xc.le.0d0) then
-c                                 for pure h2o:
-         xc = 0d0
-         call haar
-         goto 99
- 
-      else if (xc.ge.1d0) then
-c                                 for pure co2:
-         call hprk
-         goto 99
- 
-      end if
-c                                 mixed volatiles
- 
-c                                 call mrk to get ln fugacities of
-c                                 h2o and co2 in binary mixtures,
-c                                 save as fmh2o and fmco2:
-      xmc = xc
-      call mrk
-      fmh2o=fh2o
-      fmco2=fco2
-c                                 now get activities fugacities:
-      call mrkpur (ins, 2)
-      ah2o = fmh2o - fh2o
-      aco2 = fmco2 - fco2
-c                                 calculate pure water fugacity
-      call haar
-      tfh2o = fh2o + ah2o
-c                                 calculate pure CO2 fugacity
-      xc = 1d0
-      call hprk
-      fco2 = fco2 + aco2
-      fh2o = tfh2o
-
-      xc = xmc
- 
-99    end
 
       subroutine delany
 c---------------------------------------------------------------------
 c  delany calculates ln(fh2o) at P>10 KB using the delaney and
-c  helgeson fit (AJS ca 81?), routine by S. Poli
+c  helgeson fit (AJS ca 74/78?), routine by S. Poli. this routine
+c  is returning delta fh2o!
 c-----------------------------------------------------------------------
       implicit none
 
@@ -3984,16 +3879,12 @@ c
       data c/4d0,1d0,-2d0,-5d0,-9d0,-1d0,-4d0,-8d0,-11d0,0d0,-6d0,-9d0,
      *    -14d0,0d0,0d0,-11d0,-15d0,0d0,0d0,0d0,-17d0,0d0,0d0,0d0,0d0/
  
-      if (p.le.1d4) then
-         call hsmrk
-         goto 99
-      end if 
+      if (p.lt.1d4) then
 
-      p0 = p
-      p = 1d4
-      call hsmrk
-      p = p0
-      p0 = 1d4
+         write (*,*) 'Delany & Helgeson EoS invalid at P < 10 kbar'
+         stop
+
+      end if
 
       tc = tk - 273.15d0
 
@@ -4007,131 +3898,9 @@ c
          end do 
       end do 
 
-      fh2o = ((gh2o(1)-gh2o(2))/(1.9872d0*tk)) + fh2o
+      fh2o = ((gh2o(1)-gh2o(2))/(1.9872d0*tk)) 
 
 99    end 
-
-      subroutine dhhsrk
-c----------------------------------------------------------------------
-c  dhhsrk calculates the log of water and co2 fugacities using the haar
-c  equation of state for pure water and the hsmrk for co2 and
-c  the mrk for activities of h2o and co2 in mixtures
-c----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      integer ins(nsp)
-
-      double precision xmc,fmh2o,fmco2,ah2o,aco2,tfh2o
-
-      double precision fh2o,fco2,funk
-      common / cst11 /fh2o,fco2,funk
-
-      double precision p,t,xc,vv
-      common/ cst5  /p,t,xc,vv(6)
-
-      save ins
-      data ins/ 1, 2, 14*0/
-c----------------------------------------------------------------------
-      if (xc.le.0d0) then
-c                                 for pure h2o:
-         xc = 0d0
-         call delany
-         goto 99
- 
-      else if (xc.ge.1d0) then
-c                                 for pure co2:
-         call hsmrk
-         goto 99
- 
-      end if
-c                                 mixed volatiles
- 
-c                                 call mrk to get ln fugacity
-c                                 of h2o and co2 in binary mixes,
-c                                 save as fmh2o and fmco2:
-      xmc = xc
-      call mrk
-      fmh2o=fh2o
-      fmco2=fco2
-c                                 now get activities fugacities:
-      call mrkpur (ins, 2)
-      ah2o = fmh2o - fh2o
-      aco2 = fmco2 - fco2
-c                                 calculate pure water fugacity
-      call delany
-      tfh2o = fh2o + ah2o
-c                                 calculate pure CO2 fugacity
-      xc = 1d0
-      call hsmrk
-      fco2 = fco2 + aco2
-      fh2o = tfh2o
-
-      xc = xmc
- 
-99    end
-
-      subroutine dhcork
-c---------------------------------------------------------------------
-c  dhhsrk calculates the log of water and co2 fugacities using the haar
-c  equation of state for pure water and the cork for co2 and
-c  the mrk for activities of h2o and co2 in mixtures
-c-----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      integer ins(nsp)
-
-      double precision xmc,fmh2o,fmco2,ah2o,aco2,tfh2o
-
-      double precision fh2o,fco2,funk
-      common / cst11 /fh2o,fco2,funk
-
-      double precision p,t,xc,vv
-      common/ cst5  /p,t,xc,vv(6)
-
-      data ins/ 1, 2, 14*0/
- 
-      if (xc.le.0d0) then
-c                                 for pure h2o:
-         xc = 0d0
-         call delany
-         goto 99
- 
-      else if (xc.ge.1d0) then
-c                                 for pure co2:
-         call hprk
-         goto 99
- 
-      end if
-c                                 mixed volatiles
- 
-c                                 call mrk to get ln fugacity
-c                                 of h2o and co2 in binary mixes,
-c                                 save as fmh2o and fmco2:
-      xmc = xc
-      call mrk
-      fmh2o=fh2o
-      fmco2=fco2
-c                                 now get activities fugacities:
-      call mrkpur (ins, 2)
-      ah2o = fmh2o - fh2o
-      aco2 = fmco2 - fco2
-c                                 calculate pure water fugacity
-      call delany
-      tfh2o = fh2o + ah2o
-c                                 calculate pure CO2 fugacity
-      xc = 1d0
-      call hprk
-      fco2 = fco2 + aco2
-      fh2o = tfh2o
-
-      xc = xmc
- 
-99    end
- 
 
       subroutine saxfei
 c---------------------------------------------------------------------
@@ -4199,6 +3968,7 @@ c       the indices on lhs of equalities.
         if (p.lt.5d3) then
            write (*,*) 'this version of saxfei is invalid at ',
      *                 'pressures less than 5000 bars.'
+           stop
         end if
  
            tr = t/tcr(1)
@@ -4258,9 +4028,8 @@ c      saxena & fei (1987b) for h2o
  
       end
 
-      subroutine browoo
-c---------------------------------------------------------------------
-c  browoo calculates the log of water and co2 fugacities using the
+      subroutine browop           
+c-----------------------------------------------------------------------
 c  Brodholt & Wood, 1993 equation of state for pure water and
 c  the hsmrk for co2 and the mrk for activities of h2o and co2 in mixtures
 c  this and ancillary subroutines were written by 
@@ -4270,70 +4039,10 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer ins(nsp)
-
-      double precision xmc,fmh2o,fmco2,ah2o,aco2,tfh2o
-
-      double precision fh2o,fco2,funk
-      common / cst11 /fh2o,fco2,funk
-
-      double precision p,t,xc,vv
-      common / cst5  /p,t,xc,vv(6)
-
-      save ins
-
-      data ins/ 1, 2, 14*0/
-c-----------------------------------------------------------------------
-      if (xc.le.0d0) then
-c                                 for pure h2o:
-         xc = 0d0
-         call browop
-         goto 99
-
-      else if (xc.ge.1d0) then
-c                                 for pure co2:
-         call hsmrk
-         goto 99
-
-      end if
-c                                 mixed volatiles
-
-c                                 call mrk to get ln fugacity
-c                                 of h2o and co2 in binary mixes,
-c                                 save as fmh2o and fmco2:
-      xmc = xc
-      call mrk
-      fmh2o=fh2o
-      fmco2=fco2
-c                                 now get activities fugacities:
-      call mrkpur (ins, 2)
-
-      ah2o = fmh2o - fh2o
-      aco2 = fmco2 - fco2
-c                                 calculate pure water fugacity
-      call browop 
-
-      tfh2o = fh2o + ah2o
-c                                 calculate pure CO2 fugacity
-      xc = 1d0
-      call hsmrk
-      fco2 = fco2 + aco2
-      fh2o = tfh2o
-
-      xc = xmc
-
-99    end
-
-      subroutine browop           
-c-----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      double precision rr,a1,a2,a3,a4,c1,c2,c3,c4,b1,b2,p0,f0,vbw,t2,a,
+      double precision a1,a2,a3,a4,c1,c2,c3,c4,b1,b2,a,
      *                 rt,t12,t15,t25,b,e0,e1,e3,v1,pdv,cor
 
-      integer ins(1),jns(1),i
+      integer ins(1),i
 
       double precision x,g,v
       common/ cstcoh /x(nsp),g(nsp),v(nsp)
@@ -4344,157 +4053,63 @@ c-----------------------------------------------------------------------
       double precision p,t,xc,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xc,u1,u2,tr,pr,r,ps
 
-      save rr,a1,a2,a3,a4,c1,c2,c3,c4,b1,b2,ins,jns
+      double precision vol
+      common/ cst26 /vol
 
-      data rr,a1,a2,a3,a4,c1,c2,c3,c4,b1,b2/83.144126d0,-582468d0,
+      save a1,a2,a3,a4,c1,c2,c3,c4,b1,b2,ins
+
+      data a1,a2,a3,a4,c1,c2,c3,c4,b1,b2/-582468d0,
      *     -3038.79d0,-9.24574d-3,3.02674d9,36490.5d0,-1.02451d7,
      *     -1.79681d8,2.18437d9,-3.90463d-2,-0.991078d0/
 
-      data ins,jns/1,1/
+      data ins/1/
 c-----------------------------------------------------------------------
-c                                at p < 10000 kerrick      
       if (p.lt.1d4) then
-         call hsmrk
-         goto 9999
-      end if
-c                                get portion of fh2o below 10 kbar from hsmrk
-      p0 = p
-      p = 1d4
-      call hsmrkp (ins, 1, jns, 1)
-      f0 = fh2o
-c                                brodholdt & wood part:
-c                                call mrk to get initial guess for volume 
-      vbw = v(1)
 
-      t2 = t*t
-      a = a1 + t*(a2 + a3*t) + a4/t2
-      rt = rr*t
-      t12 = dsqrt (t)
-      t15 = t*t12
-      t25 = t2*t12
+         write (*,*) 'Brodholt & Wood EoS invalid at P < 10000 b'
+         stop
+
+      end if
+
+      call mrkpur (ins, 1)
+
+      vol = v(1)
 
       do i = 1, 100
-         b = b1 + b2*vbw
-         e0 = vbw - b
-         e1 = b + vbw
+
+         b = b1 + b2*vol
+         e0 = vol - b
+         e1 = b + vol
          e3 = 1d0 + b2
 
-         cor = (rt/e0+(c1-a/t12/e1+(c2+(c3+c4/vbw)/vbw)/vbw)/vbw - p) 
+         cor = (rt/e0+(c1-a/t12/e1+(c2+(c3+c4/vol)/vol)/vol)/vol - p) 
      *         / 
-     *         ((((-4d0*c4/vbw-3d0*c3)/vbw-2d0*c2)/vbw-c1)/vbw**2
+     *         ((((-4d0*c4/vol-3d0*c3)/vol-2d0*c2)/vol-c1)/vol**2
      *         -rt*e3/e0/e0 
-     *         +(e3/e1+1d0/vbw)/vbw/e1*(a4/t25+a2*t12+a1/t12+a3*t15))
+     *         +(e3/e1+1d0/vol)/vol/e1*(a4/t25+a2*t12+a1/t12+a3*t15))
 
-         vbw = vbw - cor
+         vol = vol - cor
 
-         if (dabs(cor).lt.1d-3) goto 99
+         if (dabs(cor).lt.1d-3) exit
 
       end do 
-c                                 compute integral vdp by parts to get fugacity
-c                                 vdP = V2*P2 - V1*P1 - (integral of PdV)
-c                                 do integral of PdV for V1 first.
-99    b = b1 + b2*vbw
 
-      pdv = rt/(1d0-b2)*dlog(vbw-b) + a/t12/b1*dlog((vbw+b)/vbw)
-     *    + c1*dlog(vbw) - (c2 + (c3/2d0 + c4/vbw/3d0)/vbw)/vbw
-c                                 v1 is vbw at 10 kb
-      v1 = vbw
-c                                 v at p = p bar
-      p = p0
-      call mrkpur (ins, 1)
-      vbw = v(1)
+      b = b1 + b2*vol
 
-      do 110  i = 1, 100
+      fh2o =  (vol*p - v1*1d4 - a/t12/b1*dlog((vol+b)/vol)
+     *    - c1*dlog(vol) + (c2 + (c3/2d0 + c4/vol/3d0)/vol)/vol
+     *    + pdv ) / rt - dlog(vol-b)/(1d0-b2)
 
-         b = b1 + b2*vbw
-         e0 = vbw - b
-         e1 = b + vbw
-         e3 = 1d0 + b2
+      end
 
-         cor = (rt/e0+(c1-a/t12/e1+(c2+(c3+c4/vbw)/vbw)/vbw)/vbw - p) 
-     *         / 
-     *         ((((-4d0*c4/vbw-3d0*c3)/vbw-2d0*c2)/vbw-c1)/vbw**2
-     *         -rt*e3/e0/e0 
-     *         +(e3/e1+1d0/vbw)/vbw/e1*(a4/t25+a2*t12+a1/t12+a3*t15))
 
-         vbw = vbw - cor
-
-110      if (dabs(cor).lt.1d-3) goto 999
-
-999   b = b1 + b2*vbw
-
-      fh2o =  (vbw*p - v1*1d4 - a/t12/b1*dlog((vbw+b)/vbw)
-     *    - c1*dlog(vbw) + (c2 + (c3/2d0 + c4/vbw/3d0)/vbw)/vbw
-     *    + pdv ) / rt + f0 - dlog(vbw-b)/(1d0-b2)
-
-9999  end
-
-      subroutine hcrk
+      subroutine hcrkp 
 c----------------------------------------------------------------------
 c  hcrk calculates the log of water and co2 fugacities using the
 c  Halbach Chatterjee 82 equation of state for pure water and
 c  the hsmrk for co2 and the mrk for activities of h2o and co2 in 
 c  mixtures. this and ancillary subroutines were written by 
 c  Stefano Poli, Milan, 1996. modified, but untested, July 96, JADC.
-c----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      integer ins(2)
-
-      double precision xmc,fmh2o,fmco2,ah2o,aco2,tfh2o
-
-      double precision fh2o,fco2,funk
-      common / cst11 /fh2o,fco2,funk
-
-      double precision p,t,xc,vv
-      common/ cst5  /p,t,xc,vv(6)
-
-      save ins
-
-      data ins/ 1, 2/
-c----------------------------------------------------------------------
-      if (xc.le.0d0) then
-c                                 for pure h2o:
-         xc = 0d0
-         call hcrkp
-         goto 99
-
-      else if (xc.ge.1d0) then
-c                                 for pure co2:
-         call hsmrk
-         goto 99
-
-      end if
-c                                 mixed volatiles:
-c                                 call mrk to get ln fugacity
-c                                 of h2o and co2 in binary mixes,
-c                                 save as fmh2o and fmco2:
-      xmc = xc
-      call mrk
-      fmh2o=fh2o
-      fmco2=fco2
-c                                 now get activities fugacities:
-      call mrkpur (ins, 2)
-
-      ah2o = fmh2o - fh2o
-      aco2 = fmco2 - fco2
-c                                 calculate pure water fugacity
-      call hcrkp
-
-      tfh2o = fh2o + ah2o
-c                                 calculate pure CO2 fugacity
-      xc = 1d0
-      call hsmrk
-      fco2 = fco2 + aco2
-      fh2o = tfh2o
-
-      xc = xmc
-
-99    end
-
-      subroutine hcrkp 
 c----------------------------------------------------------------------
       implicit none
 
@@ -4512,10 +4127,12 @@ c----------------------------------------------------------------------
 
       data rcm, pdisc, nincr/ 83.144126d0, 1d3, 1000/
 c----------------------------------------------------------------------
-c                        at p < pdisc  kerrick
+
       if (p.lt.pdisc) then
-         call hsmrk
-         goto 9999
+
+         write (*,*) 'Halbach & Chatterjee EoS invalid at P < 1000 b'
+         stop
+
       end if
 c                        get portion of fh2o below 10 kbar from MRK 
       p0 = p
@@ -4971,16 +4588,16 @@ c                                 this is ln(fH2O)
      *        + w1*x2*(v1*x1**2*x3+v2*x2*(x1+x2+x1*x3))/t0)/rt
      *        + dlog(x1*(x1+x3)/(1d0+x3*alpha))
       else 
-         fh2o = 0d0
+         fh2o = dlog(p*1d4)
       end if 
-c                                 this is ln(aCO2)
+c                                 this is ln(fCO2)
       if (x2.ne.0d0) then 
          fco2 = fco2 + ( w5*x1*x3*(x1-x2+x3) - w2*x1*x3 
      *        + w1*x1*(v2*x2**2*x3+v1*x1*(x1+x2+x2*x3))/t0
      *        + x3/t1**2*(w4*x3*(-x2**2+x1*x3+x3**2)
      *        + w3*x2*(2d0*x3*t1+x1*(t1+x3))))/rt + dlog(x2)
       else 
-         fco2 = 0d0
+         fco2 = dlog(p*1d4)
       end if 
 
       end 
@@ -5208,8 +4825,8 @@ c-----------------------------------------------------------------------
 
       double precision vh2o,vco2,w,xh2o,whc
  
-      double precision pbars,t,xco2,u1,u2,tr,pr,r,ps
-      common/ cst5 /pbars,t,xco2,u1,u2,tr,pr,r,ps
+      double precision p,t,xco2,u1,u2,tr,pr,r,ps
+      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 
       double precision fh2o,fco2,funk
       common/ cst11 /fh2o,fco2,funk
@@ -5220,10 +4837,12 @@ c----------------------------------------------------------------------
       if (xco2.eq.1d0) then
  
          call pseos (w,fco2,2) 
+         fh2o = dlog(1d4*p)
 
       else if (xco2.eq.0d0) then
  
          call pseos (w,fh2o,1) 
+         fco2 = dlog(1d4*p)
 
       else
 
@@ -7155,7 +6774,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer ins(2), isp, nit, i3, i4, iavg
+      integer ins(2), nit, i3, i4, iavg
 
       double precision c1,oldy,a0,a1
 
@@ -7173,11 +6792,13 @@ c----------------------------------------------------------------------
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
-      save ins, isp
-      data isp, ins, i3, i4 /2, 12, 7, 12, 7/
+      save ins
+      data ins, i3, i4 /12, 7, 12, 7/
 c----------------------------------------------------------------------
       nit = 0 
       oldy = 0d0
+
+      call zeroys
 c                                iterate for non-ideality
       do 
 
@@ -7188,7 +6809,7 @@ c                                iterate for non-ideality
          y(i4) = 1d0 - y(i3)
          if ( dabs((oldy-y(i3))/y(i3)).lt.nopt(5)) exit  
 c                                 get new gamma's
-         call mrkmix (ins, isp, iavg)
+         call mrkmix (ins, 2, iavg)
 
          oldy = y(i3)
          nit = nit + 1
@@ -7576,6 +7197,8 @@ c                                 compute pure mrk fluid properties
 c                                 compute hybrid pure fluid props
       if (hybrid) call hybeos (jns,3)
 
+      call zeroys 
+
       c1 = dexp (eqk(4)) * p
       c2 = dexp (2d0*eqk(16) - 3d0*eqk(4)) * p
       c3 = dexp (eqk(2) - 2d0*eqk(3)) * p 
@@ -7843,6 +7466,26 @@ c                                 compute corrected graphite activity
 
       end 
 
+      subroutine zeroys
+c---------------------------------------------------------------------
+c zero complete fluid speciation array to avoid potential conflicts.
+c---------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer i
+
+      double precision y,g,v
+      common/ cstcoh /y(nsp),g(nsp),v(nsp)
+c---------------------------------------------------------------------
+      do i = 1, nsp
+         y(i) = 0d0
+      end do
+
+      end 
+
+
       subroutine hybeos (jns, jsp)
 c---------------------------------------------------------------------
 c set up routine for hybrid fluid EoS calculations. computes the 
@@ -7860,15 +7503,15 @@ c---------------------------------------------------------------------
 
       integer i,j,jns(*),jsp
 
-      double precision hsfch4,fg(nsp)
+      double precision hsmrkf,fg(nsp)
 
-      external hsfch4
+      external hsmrkf
  
       double precision gh,vh
       common/ csthyb /gh(nsp),vh(nsp)
 
-      double precision x,g,v
-      common/ cstcoh /x(nsp),g(nsp),v(nsp)
+      double precision y,g,v
+      common/ cstcoh /y(nsp),g(nsp),v(nsp)
 
       double precision p,t,xc,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xc,u1,u2,tr,pr,r,ps
@@ -7886,7 +7529,7 @@ c                                 water/co2, pitzer and sterner 1994:
 
          else if (j.eq.4) then 
 c                                 methane hsmrk kerrick and jacobs 191.
-            fg(j) = hsfch4 (v(j))
+            fg(j) = hsmrkf (v(j),j)
 
          else
 
@@ -8012,6 +7655,8 @@ c                                 compute pure mrk fluid properties
       call mrkpur (ins,6)
 c                                 compute hybrid pure fluid props
       call hybeos (jns,3)
+c                                 for safety, zero the species array
+      call zeroys
 c                                 gh => gcork/gmrk, the g(i)'s are the fugacity coefficients
 c                                 of the pure gas according to the various eos's (CORK, HSMRK, MRK)
 c                                 could replace CORK with pitzer and sterner.

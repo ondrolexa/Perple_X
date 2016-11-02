@@ -242,7 +242,7 @@ c---------------------------------------------------------------------
      *                 km, kmk, hsfch4, gaq, ghkf
 
       external vdpbm3, gsixtr, gstxgi, gmake, gkomab, gstxlq, glacaz, 
-     *         gaq,    hsfch4, gmet, gterm2, ghkf
+     *         gaq,    hsrkf, gmet, gterm2, ghkf
 
       integer ltyp,lct,lmda,idis
       common/ cst204 /ltyp(k10),lct(k10),lmda(k10),idis(k10)
@@ -552,7 +552,7 @@ c                                 are not used for mixture props.
 
             ins(1) = 4
             call mrkpur (ins,1)
-            gval = gval + r*t * hsfch4 (v(4))
+            gval = gval + r*t * hsrkf (v(4),ins(1))
             
          else if (eos(id).ge.600.and.eos(id).le.603) then
 c                                 komabayashi & fei (2010) EoS for Fe

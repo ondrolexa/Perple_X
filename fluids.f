@@ -380,14 +380,14 @@ c                                 of independent variable
 
          if (y.eq.'y'.or.y.eq.'Y') then 
 c                                 tabulated properties
-            if (ifug.eq.4.or.ifug.eq.9.or.ifug.eq.23) then
+            if (ifug.eq.4.or.ifug.eq.6.or.ifug.eq.9.or.ifug.eq.18
+     *                   .or.ifug.eq.9.) then
 
                write (*,'(a)') 'Use frendly.'
                stop
 
-            else if (ifug.le.6.or.ifug.eq.13..or.ifug.eq.14.or.
-     *               ifug.eq.17.or.
-     *               ifug.eq.21.or.ifug.eq.22.or.ifug.eq.25) then 
+            else if (ifug.le.3.or.ifug.eq.13..or.ifug.eq.14.or.
+     *               ifug.eq.17.or.ifug.eq.25) then 
 c                                 xco2 EoS's
                ipot = 3
 
@@ -1001,7 +1001,8 @@ c                                 of a change in EoS
 
                if ((igo.eq.0.and.(ifug.eq.7.or.ifug.eq.8)).or.
      *              (ibuf.ne.3.and.(ifug.eq.7.or.ifug.eq.8)).or.
-     *             ifug.eq.4.or.ifug.eq.9) then 
+     *             ifug.eq.4.or.ifug.eq.6.or.ifug.eq.9.or.ifug.eq.18.or.
+     *             ifug.eq.21) then 
 c                                 get P-T conditions:
                   write (*,'(/,a)') 'Enter p(bar), T(K): '
 
@@ -1133,8 +1134,8 @@ c                                  output results:
                   fo2 = fo2 / tentoe
                end if 
 
-               if (ifug.lt.4.or.ifug.eq.5.or.ifug.eq.6.or.ifug.eq.18.or
-     *            .ifug.eq.14.or.ifug.gt.20.and.ifug.lt.24) then
+               if (ifug.lt.4.or.ifug.eq.5.or.ifug.eq.14.or.ifug.eq.20) 
+     *                                                              then
 
                   write (*,1130) fhc(1), fhc(2)
 c                                  finite difference estimate of volume:
@@ -1151,13 +1152,15 @@ c                                  finite difference estimate of volume:
                   write (*,1300) 83.14d0*t*vdif
 
                else if (ifug.eq.4) then
-
-                  write (*,1140) fhc(2)
+c                                 bottinga & richet pure co2 EoS
+                  write (*,1140) 'CO2',fhc(2)
                   write (*,1300) vol
 
-               else if (ifug.eq.9) then
-
-                  write (*,1150) fhc(1), fhc(2), fo2
+               else if (ifug.eq.6.or.ifug.eq.9.or.ifug.eq.18.or.
+     *                  ifug.eq.21) then 
+c                                 various pure h2o EoS
+                  write (*,1140) 'H2O',fhc(1)
+                  write (*,1300) vol
 
                else if (ifug.eq.13.or.ifug.eq.15) then
 
@@ -1299,7 +1302,7 @@ c                                  output bulk properties and V:
 1120  format (/,10x,'log[f(O) ] = ',g12.5,
      *        /,10x,'log[f(Si)] = ',g12.5,/)
 1130  format (/,10x,'f(H2O) = ',g12.5,/,10x,'f(CO2) = ',g12.5,/)
-1140  format (/,10x,'f(CO2) = ',g12.5,/)
+1140  format (/,10x,'f('a') = ',g12.5,/)
 1150  format (/,10x,'f(H2O)     = ',g12.5,/
      *         ,10x,'f(CO2)     = ',g12.5,/
      *         ,10x,'log[f(O2)] = ',g12.5,/)
