@@ -1134,8 +1134,7 @@ c                                  output results:
                   fo2 = fo2 / tentoe
                end if 
 
-               if (ifug.lt.4.or.ifug.eq.5.or.ifug.eq.14.or.ifug.eq.20) 
-     *                                                              then
+               if (ifug.lt.4.or.ifug.eq.5.or.ifug.eq.14) then
 
                   write (*,1130) fhc(1), fhc(2)
 c                                  finite difference estimate of volume:
@@ -1151,16 +1150,7 @@ c                                  finite difference estimate of volume:
 
                   write (*,1300) 83.14d0*t*vdif
 
-               else if (ifug.eq.4) then
-c                                 bottinga & richet pure co2 EoS
-                  write (*,1140) 'CO2',fhc(2)
-                  write (*,1300) vol
-
-               else if (ifug.eq.6.or.ifug.eq.9.or.ifug.eq.18.or.
-     *                  ifug.eq.21) then 
-c                                 various pure h2o EoS
-                  write (*,1140) 'H2O',fhc(1)
-                  write (*,1300) vol
+                  call hybout (2,ifug)
 
                else if (ifug.eq.13.or.ifug.eq.15) then
 
@@ -1406,21 +1396,21 @@ c----------------------------------------------------------------------
          
          if (j.eq.1) then 
 c                                 water
-            if (iopt(24).eq.0) then 
+            if (iopt(25).eq.0) then 
 c                                 mrk
-            else if (iopt(24).eq.1) then 
+            else if (iopt(25).eq.1) then 
 c                                 hsmrk
                fg(j) = hsmrkf (v(j),j)
 
-            else if (iopt(24).eq.2) then
+            else if (iopt(25).eq.2) then
 c                                 cork
                call crkh2o (p,t,v(j),fg(j))
 
-            else if (iopt(24).eq.4) then
+            else if (iopt(25).eq.4) then
 c                                 pseos, pitzer & sterner 1994
                call pseos (v(j),fg(j),j)
 
-            else if (iopt(24).eq.5) then
+            else if (iopt(25).eq.5) then
 c                                 haar, haar et el. 1982
                call haar (v(j),fg(j))
 
@@ -1434,21 +1424,21 @@ c                                 haar, haar et el. 1982
 
          else if (j.eq.2) then 
 c                                CO2
-            if (iopt(25).eq.0) then 
+            if (iopt(26).eq.0) then 
 c                                 mrk
             else if (iopt(25).eq.1) then 
 c                                 hsmrk
                fg(j) = hsmrkf (v(j),j)
 
-            else if (iopt(25).eq.2) then
+            else if (iopt(26).eq.2) then
 c                                 cork
                call crkco2 (p,t,v(j),fg(j))
 
-            else if (iopt(25).eq.3) then
+            else if (iopt(26).eq.3) then
 c                                 brmrk, bottinga & richet 1981
                call brmrk (v(j),fg(j))
 
-            else if (iopt(25).eq.4) then
+            else if (iopt(26).eq.4) then
 c                                 pseos, pitzer & sterner 1994
                call pseos (v(j),fg(j),j)
 
@@ -1462,9 +1452,9 @@ c                                 pseos, pitzer & sterner 1994
 
          else if (j.eq.4) then
 c                                CH4
-            if (iopt(25).eq.0) then 
+            if (iopt(27).eq.0) then 
 c                                 mrk
-            else if (iopt(25).eq.1) then 
+            else if (iopt(27).eq.1) then 
 c                                 methane hsmrk kerrick and jacobs 191.
                fg(j) = hsmrkf (v(j),j)
 

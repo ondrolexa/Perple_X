@@ -44,8 +44,6 @@ c-----------------------------------------------------------------------
          call hsmrk
       else if (ifug.eq.2) then 
          call qrkmrk
-      else if (ifug.eq.3) then 
-         call saxfei
       else if (ifug.eq.5) then 
          call hprk
       else if (ifug.eq.7) then 
@@ -127,35 +125,35 @@ c---------------------------------------------------------------------
       data (rkname(i), i = 0, 11)/
      *  'X(CO2) Modified Redlich-Kwong (MRK/DeSantis/Holloway)',
      *  'X(CO2) Kerrick & Jacobs 1981 (HSMRK)',
-     *  'X(CO2) MRK hybrid-EoS',
-     *  'X(CO2) Saxena & Fei 1987, P > 5 kbar',
-     *  'CO2 - Bottinga & Richet 1981',
+     *  'X(CO2) MRK hybrid-EoS*',
+     *  'Disabled Eos',
+     *  'Disabled Eos',
      *  'X(CO2) Holland & Powell 1991, 1998 (CORK)',
-     *  'H2O - Haar et al 1982',
+     *  'Disabled Eos',
      *  'f(O2/CO2) Graphite buffered COH MRK fluid',
-     *  'f(O2/CO2) Graphite buffered COH hybrid-EoS fluid',
-     *  'H2O - Brodholt & Wood, 1993, P > 10 kbar',
-     *  'X(O) GCOH-fluid hybrid-EoS Connolly & Cesare 1993',
+     *  'f(O2/CO2) Graphite buffered COH hybrid-EoS fluid*',
+     *  'Disabled Eos',
+     *  'X(O) GCOH-fluid hybrid-EoS Connolly & Cesare 1993*',
      *  'X(O) GCOH-fluid MRK Connolly & Cesare 1993'/
 
       data (rkname(i), i = 12, nrk)/
-     *  'X(O)-f(S2) GCOHS-fluid hybrid-EoS Connolly & Cesare 1993',
-     *  'X(H2) H2-H2O hybrid-EoS',
+     *  'X(O)-f(S2) GCOHS-fluid hybrid-EoS Connolly & Cesare 1993*',
+     *  'X(H2) H2-H2O hybrid-EoS*',
      *  'X(CO2) Pitzer & Sterner 1994; Holland & Powell mixing 2003',
-     *  'X(H2) low T H2-H2O hybrid-EoS',
-     *  'X(O) H-O hybrid-EoS',
-     *  'X(O)-f(S2) H-O-S hybrid-EoS',
-     *  'H2O - Halbach & Chatterjee 1984, P > 1 kbar',
-     *  'X(O)-X(S) COHS hybrid-EoS Connolly & Cesare 1993',
-     *  'X(O)-X(C) COHS hybrid-EoS Connolly & Cesare 1993',
-     *  'H2O - Delaney & Helgeson 1978, P > 10 kbar',
+     *  'X(H2) low T H2-H2O hybrid-EoS*',
+     *  'X(O) H-O hybrid-EoS*',
+     *  'X(O)-f(S2) H-O-S hybrid-EoS*',
+     *  'Disabled Eos',
+     *  'X(O)-X(S) COHS hybrid-EoS Connolly & Cesare 1993*',
+     *  'X(O)-X(C) COHS hybrid-EoS Connolly & Cesare 1993*',
+     *  'Disabled Eos',
      *  'Disabled Eos',
      *  'Disabled EoS',
      *  'f(O2/CO2)-N/C Graphite saturated COHN MRK fluid',
      *  'H2O-CO2-NaCl Aranovich et al. 2010',
      *  'O-Si Silicate fluid RK EoS',
-     *  'C-O-H hybrid EoS'/
-
+     *  'C-O-H hybrid EoS*'/
+c---------------------------------------------------------------------
       if (irk.eq.2) then
          write (n3,1060) rkname(ifug)
          goto 99
@@ -171,16 +169,18 @@ c---------------------------------------------------------------------
 10    write (*,1000)
 
       do i = 0, nrk
-         if (i.eq.4.or.i.eq.6.or.i.eq.9.or.i.eq.18.or.i.eq.21.or.
-     *       i.eq.22.or.i.eq.23) cycle
+         if (i.eq.4.or.i.eq.6.or.i.eq.9.or.i.eq.18.or.i.eq.21.or.    
+     *       i.eq.3.or.i.eq.22.or.i.eq.23) cycle 
 
          write (*,1070) i,rkname(i)
 
       end do 
+c                                 write hybrid eos blurb
+      call hybout (2,-1)
 
       read (*,*,iostat=ier) ifug
       if (ifug.gt.nrk.or.i.eq.4.or.i.eq.6.or.i.eq.9.or.i.eq.18.or.
-     *    i.eq.21.or.i.eq.22.or.i.eq.23.or.ifug.lt.0) ier = 1
+     *  i.eq.21.or.i.eq.22.or.i.eq.23.or.ifug.lt.0.or.ifug.eq.3) ier = 1
 
       call rerror (ier,*10)
 
@@ -384,6 +384,93 @@ c                                get the salt content (elag):
      *          'buffered_COH_fluids.txt',/)
 
 99    end 
+
+      subroutine hybout (irk,icheck)
+c----------------------------------------------------------------------
+c irk = 1 - write hybrid fluid equations of state for outtit to unit n3
+c irk = 2 - write hybrid fluid equations of state to console
+c if icheck is >= 0 it identifies an eos and output is only
+c written if icheck corresponds to a hybrid EoS
+c----------------------------------------------------------------------
+      implicit none
+   
+      include 'perplex_parameters.h'
+
+      integer i, j, nhyb, irk, icheck, n
+
+      parameter (nhyb=5)
+   
+      character hyname(0:nhyb)*32
+
+      character specie*4
+      integer ins, isp
+      common/ cxt33 /isp,ins(nsp),specie(nsp)
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      save hyname 
+
+      data (hyname(i), i = 0, 5)/
+     *  'MRK DeSantis et al 1974',
+     *  'HSMRK Kerrick & Jacobs 1981',
+     *  'BRMRK Bottinga & Richet 1981',
+     *  'CORK Holland & Powell 1998',
+     *  'PSEoS Pitzer & Sterner 1994',
+     *  'Haar et al 1982'/
+c----------------------------------------------------------------------
+      if (irk.eq.1) then 
+         n = n3
+      else
+         n = 5
+      end if 
+
+      if (icheck.lt.0) then 
+
+         write (*,1000)
+
+         do j = 1, 3
+            if (j.eq.1) then 
+               write (*,1020) specie(j),hyname(iopt(25))
+            else if (j.eq.2) then 
+               write (*,1020) specie(j),hyname(iopt(26))
+            else if (j.eq.3) then 
+               write (*,1020) specie(j+1),hyname(iopt(27))
+            end if 
+         end do 
+
+
+      else if (icheck.eq.2.or.icheck.eq.8.or.icheck.eq.10.or.
+     *         icheck.eq.12.or.icheck.eq.13.or.icheck.eq.27.or.
+     *        (icheck.ge.15.and.icheck.lt.20)) then 
+
+         write (*,1010) 
+
+         do i = 1, isp
+            j = ins(i)
+            if (j.eq.1) then 
+               write (*,1020) specie(j),hyname(iopt(25))
+            else if (j.eq.2) then 
+               write (*,1020) specie(j),hyname(iopt(26))
+            else if (j.eq.4) then 
+               write (*,1020) specie(j),hyname(iopt(27))
+            end if 
+
+         end do
+
+      end if 
+
+1000  format (/,'*Hybrid EoS use the following pure species EoS, ',
+     *      'to change these associations',/,' modify the hybrid_EoS ',
+     *      'keyword in the perplex_option file:')
+1010  format (/,'*This hybrid EoS uses the following pure species EoS,',
+     *      ' to change these associations',/,' modify the hybrid_EoS ',
+     *      'keyword in the perplex_option file:')
+1020  format (7x,a,' - ',a)
+
+      end 
 
       subroutine setins (ifug)
 c-----------------------------------------------------------------------
@@ -7112,69 +7199,6 @@ c---------------------------------------------------------------------
       end do
 
       end 
-
-      subroutine hybeos (jns, jsp)
-c---------------------------------------------------------------------
-c set up routine for hybrid fluid EoS calculations. computes the 
-c (unecessay?) delta volumes and pure fluid fugacity coefficient 
-c rations used to convert the mrk fugacities to hybrid fugacities.
-
-c the choice of the pure fluid eos are hard wired (pseos, pitzer & sterner
-c 1994 for h2o/co2; hsmrk, kerrick and jacobs 1981 for methane).
-
-c this routine is to replace hscrkp and cstchx, 10/2015 JADC
-c---------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      integer i,j,jns(*),jsp
-
-      double precision hsmrkf,fg(nsp)
-
-      external hsmrkf
- 
-      double precision gh,vh
-      common/ csthyb /gh(nsp),vh(nsp)
-
-      double precision y,g,v
-      common/ cstcoh /y(nsp),g(nsp),v(nsp)
-
-      double precision p,t,xc,u1,u2,tr,pr,r,ps
-      common/ cst5 /p,t,xc,u1,u2,tr,pr,r,ps
-c----------------------------------------------------------------------
-      do i = 1, jsp
-
-         j = jns(i)
-
-         vh(j) = -v(j)
-         gh(j) = g(j)
-         
-         if (j.le.2) then 
-c                                 water/co2, pitzer and sterner 1994:
-            call pseos (v(j),fg(j),j)
-
-         else if (j.eq.4) then 
-c                                 methane hsmrk kerrick and jacobs 191.
-            fg(j) = hsmrkf (v(j),j)
-
-         else
-
-            stop
-
-         end if 
-c                                 the fugacity coefficient of the pure gas
-         g(j) = dexp(fg(j))/p
-c                                 the hybrid delta volume (hyb-mrk), it's 
-c                                 doubtful this thing is really used, if it 
-c                                 is it must be in fluids.
-         vh(j) = vh(j) + v(j)
-c                                 the hybrid/mrk pure fluid fugacity ratio
-         gh(j) = g(j)/gh(j)
-
-      end do 
-
-      end
 
       subroutine xcheck (x)
 c----------------------------------------------------------------------

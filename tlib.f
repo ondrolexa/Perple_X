@@ -1239,7 +1239,7 @@ c                                 pc-perturbation
 c                                 generic thermo parameters:
          write (n,1012) nval1,nopt(5),nopt(12),nopt(20),valu(17),
      *                     lopt(8),lopt(4),lopt(5),iopt(21),
-     *                     iopt(24),iopt(25),iopt(26)
+     *                     iopt(25),iopt(26),iopt(27)
 c                                 for meemum add fd stuff
          if (iam.eq.2) write (n,1017) nopt(31),nopt(26),nopt(27)
 
@@ -1282,7 +1282,7 @@ c                                 seismic property options
 
       if (iam.eq.5) then 
 c                                 FRENDLY thermo options
-         write (n,1016) lopt(8),lopt(4),iopt(24),iopt(25),iopt(26)
+         write (n,1016) lopt(8),lopt(4),iopt(25),iopt(26),iopt(27)
          write (n,1017) nopt(31),nopt(26),nopt(27)
       end if 
 
@@ -1745,9 +1745,10 @@ c---------------------------------------------------------------------
          return 1
       end if
  
-1000  format (/,' Your input is incorrect, probably you are using ',
-     *        'a character where',/,' you should be using a number ',
-     *        'or vice versa, try again...',/)
+1000  format (/,'Your input is incorrect, probably you have specified ',
+     *        'an invalid numerical value',/,'or you are using ',
+     *        'a character where you should be using a number ',
+     *        'or vice versa.',/,'try again...',/)
  
       end
 
