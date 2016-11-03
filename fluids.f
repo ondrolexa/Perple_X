@@ -338,6 +338,9 @@ c-----------------------------------------------------------------------
       integer iam
       common/ cst4 /iam
 
+      double precision eqk
+      common / csteqk /eqk(nsp)
+
       integer iopt
       logical lopt
       double precision nopt
@@ -1176,19 +1179,27 @@ c                                  routine cfluid returns ln(fs2)/2
                   else if (ifug.eq.27) then 
 c                                   ac, fo2, fh2 computed from major
 c                                   species, and direct values:
-                     if (xs(7).eq.0d0) then 
-                        fo2 =  0d0
-                        fh2 = dlog10(p*xs(5)*g(5))
-                     else 
-                        fo2 = dlog10(p*xs(7)*g(7))
-                        fh2 = 0d0
+                     if (xs(7).eq.0d0.or.xs(4).eq.0d0.or.
+     *                                   xs(3).eq.0d0) then
+                        fh2 = dlog(p*xs(5)*g(5))
+                        fo2 = 2d0*(dlog(p*xs(1)*g(1)) - eqk(1) - fh2)
+                        ag  = p*xs(2)*g(2)*dexp(-fo2 - eqk(2))
+                     else if (xs(5).eq.0d0) then 
+                        fo2 = dlog(p*xs(7)*g(7))
+                        fh2 = dlog(p*xs(1)*g(1)) - eqk(1) - fo2/2d0
+                        ag  = p*xs(2)*g(2)*dexp(-fo2 - eqk(2))
+                     else if (xs(1).eq.0d0.or.xs(2).eq.0d0) then
+                        fh2 = dlog(p*xs(5)*g(5))
+                        fo2 = dlog(p*xs(7)*g(7))
+                        ag  = p*xs(3)*g(3)*dexp(-fo2/2d0 - eqk(3))
                      end if 
 
-                     write (*,1110) dexp(fhc(1)),
-     *                              fhc(2)/tentoe,fo2,
-     *                              fhc(3)/tentoe,fh2
-                  else 
+                     write (*,1110) ag,fo2/tentoe,fh2/tentoe
+
+                  else
+
                      write (*,1170) fo2, 2d0*fs2/tentoe, ag
+
                   end if 
 c                                  compute atomic sums:
                   call elmnts (nc,no,nh,nn,ns,nsi) 
@@ -1287,8 +1298,8 @@ c                                  output bulk properties and V:
 
       end do 
 1110  format (/,10x,'a(gph/dia) = ',g12.5,
-     *        /,10x,'log[f(O2)] = ',g12.5,' (',g12.5,')'
-     *        /,10x,'log[f(H2)] = ',g12.5,' (',g12.5,')'/)
+     *        /,10x,'log[f(O2)] = ',g12.5,
+     *        /,10x,'log[f(H2)] = ',g12.5,/)
 1120  format (/,10x,'log[f(O) ] = ',g12.5,
      *        /,10x,'log[f(Si)] = ',g12.5,/)
 1130  format (/,10x,'f(H2O) = ',g12.5,/,10x,'f(CO2) = ',g12.5,/)
