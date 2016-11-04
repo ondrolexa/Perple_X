@@ -46,14 +46,10 @@ c-----------------------------------------------------------------------
          call qrkmrk
       else if (ifug.eq.5) then 
          call hprk
-      else if (ifug.eq.7) then 
-         call cohfo2 (fo2,.false.)
       else if (ifug.eq.8) then  
-         call cohfo2 (fo2,.true.)
+         call cohfo2 (fo2)
       else if (ifug.eq.10) then
-         call gcohx6 (fo2,.true.)
-      else if (ifug.eq.11) then 
-         call gcohx6 (fo2,.false.)
+         call gcohx6 (fo2)
       else if (ifug.eq.12) then 
          call cohsgr (fo2,fs2)
       else if (ifug.eq.13) then 
@@ -102,7 +98,7 @@ c---------------------------------------------------------------------
 
       parameter (nrk=27)
    
-      character rkname(0:nrk)*60, y*1
+      character rkname(0:nrk)*62, y*1
 
       character vname*8, xname*8
       common / csta2 /xname(k5),vname(l2)
@@ -123,43 +119,49 @@ c---------------------------------------------------------------------
       save rkname 
 
       data (rkname(i), i = 0, 11)/
-     *  'X(CO2) Modified Redlich-Kwong (MRK/DeSantis/Holloway)',
-     *  'X(CO2) Kerrick & Jacobs 1981 (HSMRK)',
-     *  'X(CO2) MRK hybrid-EoS*',
-     *  'Disabled Eos',
-     *  'Disabled Eos',
-     *  'X(CO2) Holland & Powell 1991, 1998 (CORK)',
-     *  'Disabled Eos',
-     *  'f(O2/CO2) Graphite buffered COH MRK fluid',
-     *  'f(O2/CO2) Graphite buffered COH hybrid-EoS fluid*',
-     *  'Disabled Eos',
-     *  'X(O) GCOH-fluid hybrid-EoS Connolly & Cesare 1993*',
-     *  'X(O) GCOH-fluid MRK Connolly & Cesare 1993'/
+     *'X(CO2) H2O-CO2 Modified Redlich-Kwong (MRK DeSantis et al 74)',
+     *'X(CO2) H2O-CO2 Kerrick & Jacobs 81 (HSMRK)',
+     *'X(CO2) H2O-CO2 MRK hybrid-EoS*',
+     *'Disabled Eos',
+     *'Disabled Eos',
+     *'X(CO2) H2O-CO2 Holland & Powell 91, 98 (CORK)',
+     *'Disabled Eos',
+     *'Disabled Eos',
+     *'f(O2/CO2) C-buffered COH MRK hybrid-EoS*',
+     *'Disabled Eos',
+     *'X(O) C-buffered COH MRK hybrid-EoS Connolly & Cesare 93*',
+     *'Disabled Eos'/
 
       data (rkname(i), i = 12, nrk)/
-     *  'X(O)-f(S2) GCOHS-fluid hybrid-EoS Connolly & Cesare 1993*',
-     *  'X(H2) H2-H2O hybrid-EoS*',
-     *  'X(CO2) Pitzer & Sterner 1994; Holland & Powell mixing 2003',
-     *  'X(H2) low T H2-H2O hybrid-EoS*',
-     *  'X(O) H-O hybrid-EoS*',
-     *  'X(O)-f(S2) H-O-S hybrid-EoS*',
-     *  'Disabled Eos',
-     *  'X(O)-X(S) COHS hybrid-EoS Connolly & Cesare 1993*',
-     *  'X(O)-X(C) COHS hybrid-EoS Connolly & Cesare 1993*',
-     *  'Disabled Eos',
-     *  'Disabled Eos',
-     *  'Disabled EoS',
-     *  'f(O2/CO2)-N/C Graphite saturated COHN MRK fluid',
-     *  'H2O-CO2-NaCl Aranovich et al. 2010',
-     *  'O-Si Silicate fluid RK EoS',
-     *  'C-O-H hybrid EoS*'/
+     *'X(O)-f(S2) C-buffered COHS MRK hybrid-EoS Connolly & Cesare 93*',
+     *'X(H2) H2O-H2 MRK hybrid-EoS*',
+     *'X(CO2) H2O-CO2 Pitzer & Sterner 94; Holland & Powell mixing 03',
+     *'X(H2) H2O-H2 low T MRK hybrid-EoS*',
+     *'X(O) H-O MRK hybrid-EoS*',
+     *'X(O)-f(S2) H-O-S MRK hybrid-EoS*',
+     *'Disabled Eos',
+     *'X(O)-X(S) C-buffered COHS MRK hybrid-EoS Connolly & Cesare 93*',
+     *'X(O)-X(C) COHS MRK hybrid-EoS Connolly & Cesare 93*',
+     *'Disabled Eos',
+     *'Disabled Eos',
+     *'Disabled EoS',
+     *'f(O2/CO2)-N/C C-buffered COHN MRK hybrid-EoS*',
+     *'X(CO2)-X(NaCl) H2O-CO2-NaCl Aranovich et al 10',
+     *'X(O) O-Si MRK Connolly 16',
+     *'X(O)-X(C) C-O-H MRK hybrid-EoS*'/
 c---------------------------------------------------------------------
       if (irk.eq.2) then
+
          write (n3,1060) rkname(ifug)
-         goto 99
-      else if (irk.eq.3) then 
+         call hybout (ifug,n3)
+         return
+
+      else if (irk.eq.3) then
+
          write (*,1060) rkname(ifug)
-         goto 99         
+         call hybout (ifug,6)
+         return
+      
       end if     
 
       elag = 0d0
@@ -170,17 +172,18 @@ c---------------------------------------------------------------------
 
       do i = 0, nrk
          if (i.eq.4.or.i.eq.6.or.i.eq.9.or.i.eq.18.or.i.eq.21.or.    
-     *       i.eq.3.or.i.eq.22.or.i.eq.23) cycle 
+     *       i.eq.3.or.i.eq.22.or.i.eq.23.or.i.eq.7.or.i.eq.11) cycle 
 
          write (*,1070) i,rkname(i)
 
       end do 
 c                                 write hybrid eos blurb
-      call hybout (2,-1)
+      call hybout (-1,6)
 
       read (*,*,iostat=ier) ifug
-      if (ifug.gt.nrk.or.i.eq.4.or.i.eq.6.or.i.eq.9.or.i.eq.18.or.
-     *  i.eq.21.or.i.eq.22.or.i.eq.23.or.ifug.lt.0.or.ifug.eq.3) ier = 1
+      if (ifug.gt.nrk.or.ifug.eq.4.or.ifug.eq.6.or.ifug.eq.9.or.
+     *    ifug.eq.18.or.ifug.eq.21.or.ifug.eq.22.or.ifug.eq.23.or.
+     *    ifug.lt.0.or.ifug.eq.3) ier = 1
 
       call rerror (ier,*10)
 
@@ -188,6 +191,13 @@ c                                 write hybrid eos blurb
          write (*,56)
          goto 10 
       end if 
+c                                 warn about variable mass-speciation 
+c                                 routines
+      if ((iam.eq.5.or.iam.eq.11).and.(
+     *    ifug.eq.7.or.ifug.eq.8.or.ifug.eq.10.or.ifug.eq.11.or.
+     *    ifug.eq.12.or.ifug.eq.16.or.ifug.eq.17.or.ifug.eq.19.or.
+     *    ifug.eq.20.or.ifug.eq.24)) write (*,1190)
+
 
       if (ifug.eq.12.or.ifug.eq.17.or.ifug.eq.20) then
 c                                 COHS & HOS equations of state
@@ -369,6 +379,14 @@ c                                get the salt content (elag):
 1170  format (/,'Compute f(H2) & f(O2) as the dependent fugacities',
      *        /,'(do not unless you project through carbon) (Y/N)?',/)
 1180  format ('Enter a-e :',/)
+1190  format (/,'**warning ver119** volumetric properties for this EoS',
+     *       ' computed by FRENDLY or FLUIDS',/,'are estimated by',
+     *       ' finite difference under the assumption that fluid',
+     *       ' speciation',/,'does not change over the 1 bar',
+     *       ' finite difference interval. The estimates',/,
+     *        'should be considered',
+     *       ' with caution. This assumption is not made in'
+     *       ' calculations',/,'with VERTEX, WERAMI, or MEEMUM.',/)
 1200  format (/,'For this EoS Y(CO2)* is defined as:',/,
      *          '  Y(CO2)* = n(CO2)/[n(H2O)+n(CO2)]',/,
      *          'i.e., Y(CO2)* may vary from 0 -> 1 ',
@@ -385,10 +403,9 @@ c                                get the salt content (elag):
 
 99    end 
 
-      subroutine hybout (irk,icheck)
+      subroutine hybout (icheck,nout)
 c----------------------------------------------------------------------
-c irk = 1 - write hybrid fluid equations of state for outtit to unit n3
-c irk = 2 - write hybrid fluid equations of state to console
+c write hybrid fluid equations of state for outtit to unit nout
 c if icheck is >= 0 it identifies an eos and output is only
 c written if icheck corresponds to a hybrid EoS
 c----------------------------------------------------------------------
@@ -396,7 +413,7 @@ c----------------------------------------------------------------------
    
       include 'perplex_parameters.h'
 
-      integer i, j, nhyb, irk, icheck, n
+      integer i, j, nhyb, icheck, nout
 
       parameter (nhyb=5)
    
@@ -421,46 +438,41 @@ c----------------------------------------------------------------------
      *  'PSEoS Pitzer & Sterner 1994',
      *  'Haar et al 1982'/
 c----------------------------------------------------------------------
-      if (irk.eq.1) then 
-         n = n3
-      else
-         n = 5
-      end if 
 
       if (icheck.lt.0) then 
 
-         write (*,1000)
+         write (nout,1000)
 
          do j = 1, 3
             if (j.eq.1) then 
-               write (*,1020) specie(j),hyname(iopt(25))
+               write (nout,1020) specie(j),hyname(iopt(25))
             else if (j.eq.2) then 
-               write (*,1020) specie(j),hyname(iopt(26))
+               write (nout,1020) specie(j),hyname(iopt(26))
             else if (j.eq.3) then 
-               write (*,1020) specie(j+1),hyname(iopt(27))
+               write (nout,1020) specie(j+1),hyname(iopt(27))
             end if 
          end do 
 
 
       else if (icheck.eq.2.or.icheck.eq.8.or.icheck.eq.10.or.
      *         icheck.eq.12.or.icheck.eq.13.or.icheck.eq.27.or.
-     *        (icheck.ge.15.and.icheck.lt.20)) then 
+     *        (icheck.ge.15.and.icheck.le.20)) then 
 
-         write (*,1010) 
+         write (nout,1010) 
 
          do i = 1, isp
             j = ins(i)
             if (j.eq.1) then 
-               write (*,1020) specie(j),hyname(iopt(25))
+               write (nout,1020) specie(j),hyname(iopt(25))
             else if (j.eq.2) then 
-               write (*,1020) specie(j),hyname(iopt(26))
+               write (nout,1020) specie(j),hyname(iopt(26))
             else if (j.eq.4) then 
-               write (*,1020) specie(j),hyname(iopt(27))
+               write (nout,1020) specie(j),hyname(iopt(27))
             end if 
 
          end do
 
-      end if 
+      end if
 
 1000  format (/,'*Hybrid EoS use the following pure species EoS, ',
      *      'to change these associations',/,' modify the hybrid_EoS ',
@@ -1779,12 +1791,12 @@ c                                 inner iteration loop:
       call warn (176,y(1),j,'HOMRK')
       goto 99 
 
-40    f(1) = dlog(g(5)*p*y(5))
+40    f(1) = dlog(g(1)*p*y(1))
 
       vol = vol + y(1) * vh(1) 
       
       if (y(7).lt.y(5)) then
-         fo2 = 2d0 * (dlog(g(1)*p*y(1)) - f(1) - dlog(eqk(1)))
+         fo2 = 2d0 * (f(1) - dlog(g(5)*p*y(5))- eqk(1))
       else
          fo2 = dlog (g(7) * p * y(7))
       end if
@@ -1901,22 +1913,18 @@ c----------------------------------------------------------------------
       end 
 
 
-      subroutine cohfo2 (fo2,hybrid)
+      subroutine cohfo2 (fo2)
 c----------------------------------------------------------------------
 c subroutine to compute H2O and CO2 fugacities in a COH fluid
 c consistent with a specifed graphite activity and oxygen fugacity
-c specified by ibuf in routine fo2buf. Uses a hybrid EoS (pure CO2 and 
-c H2O from Pitzer & Sterner 2004, CH4 from Kerrick & Jacobs 1981, MRK for 
-c all activities and all other fugacities) if hybrid = .true., else
-c uses MRK for all purposes.
+c specified by ibuf in routine fo2buf. Uses MRK activities with
+c pure fluid fugacities as specified by the hybrid_EoS option.
 c----------------------------------------------------------------------
       implicit none
 
       include 'perplex_parameters.h'
 
       integer i,ins(5),jns(3),nit
-
-      logical hybrid 
 
       double precision fo2,kh2o,kco2,kco,kch4,qa,qb,oh2o
 
@@ -1958,7 +1966,7 @@ c----------------------------------------------------------------------
 c                                 compute pure mrk fluid properties
       call mrkpur (ins,5)
 c                                 compute hybrid pure fluid props
-      if (hybrid) call hybeos (jns,3)
+      call hybeos (jns,3)
 
       call zeroys
 
@@ -2017,19 +2025,16 @@ c                                 + qb * xh2 + qc
 
          call mrkmix (ins, 5, 1)
 
-         if (hybrid) then 
-            do i = 1, 3 
-               g(jns(i)) = gh(jns(i)) * g(jns(i))
-            end do 
-         end if 
+         do i = 1, 3 
+            g(jns(i)) = gh(jns(i)) * g(jns(i))
+         end do 
 
       end do
 
-      if (hybrid) then
-         do i = 1, 3 
-            vol = vol + y(jns(i))*vh(jns(i))
-         end do 
-      end if 
+      do i = 1, 3 
+         vol = vol + y(jns(i))*vh(jns(i))
+      end do 
+
 
       xc = y(2) 
 
@@ -6839,14 +6844,12 @@ c                                 convert to j/bar from cm3, only for lv version
 
       end
 
-      subroutine gcohx6 (fo2,hybrid)
+      subroutine gcohx6 (fo2)
 c----------------------------------------------------------------------
 c  program to calculate GCOH fluid properties as a function of XO 
 c  see Connolly (1995) and/or coh_speciation_with_ethane.mws for 
-c  details. the routine uses a hybrid EoS (pure CO2 and H2O from 
-c  Pitzer & Sterner 2004, CH4 from Kerrick & Jacobs 1981, MRK for 
-c  all activities and all other fugacities) if hybrid = .true., else
-c  uses MRK for all purposes.
+c  details. Uses MRK activities with pure fluid fugacities as specified 
+c  by the hybrid_EoS option.
 
 c  replaces hocgra and hocmrk.
 
@@ -6858,7 +6861,7 @@ c----------------------------------------------------------------------
 
       integer ins(6),jns(3),nit,i
 
-      logical bad, hybrid 
+      logical bad
 
       double precision oy5,fo2,ytot,t4y3,t3y3,t2y5,t4y5,det,x,dy5,dy3,
      *       c1,c2,c3,c4,t1,t2,t3,t4,m,dm3,dm5,c,dc3,dc5,nh,rat,y5,y3
@@ -6910,7 +6913,7 @@ c                                 in csteqk
 c                                 compute pure mrk fluid properties
       call mrkpur (ins,6)
 c                                 compute hybrid pure fluid props
-      if (hybrid) call hybeos (jns,3)
+      call hybeos (jns,3)
 
       call zeroys 
 
@@ -6996,11 +6999,9 @@ c                                 check if iteration count exceeded
 c                                 calculate new fugacity coefficients
          call mrkmix (ins, 6, 1)
 
-         if (hybrid) then 
-            do i = 1, 3
-               g(jns(i)) = gh(jns(i)) * g(jns(i))
-            end do 
-         end if 
+         do i = 1, 3
+            g(jns(i)) = gh(jns(i)) * g(jns(i))
+         end do 
 
          oy5 = y5
 
@@ -7035,11 +7036,9 @@ c                                 projecting through graphite
 
       end if 
 
-      if (hybrid) then
-         do i = 1, 3
-            vol = vol + y(jns(i))*vh(jns(i))
-         end do 
-      end if 
+      do i = 1, 3
+         vol = vol + y(jns(i))*vh(jns(i))
+      end do 
 
       end
 
@@ -7643,5 +7642,239 @@ c                                 compositions.
       end do 
 
       deltag = gtot*r*t/s
+
+      end
+
+      subroutine hybeos (jns, jsp)
+c---------------------------------------------------------------------
+c set up routine for hybrid fluid EoS calculations. computes the 
+c (unecessay?) delta volumes and pure fluid fugacity coefficient 
+c rations used to convert the mrk fugacities to hybrid fugacities.
+
+c the choice of the pure fluid eos are specified by the perplex_option
+c keywords hybrid_EoS_H2O (iopt(24)), hybrid_EoS_CO2 (iopt(25)), and
+c hybrid_EoS_H2O (iopt(26)).
+
+c the routine mrkpur must be called prior to hybeos to set initial 
+c guesses for volume. 
+
+c 11/2016 JADC
+c---------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer i,j,jns(*),jsp
+
+      double precision hsmrkf,fg(nsp)
+
+      external hsmrkf
+ 
+      double precision gh,vh
+      common/ csthyb /gh(nsp),vh(nsp)
+
+      double precision y,g,v
+      common/ cstcoh /y(nsp),g(nsp),v(nsp)
+
+      double precision p,t,xc,u1,u2,tr,pr,r,ps
+      common/ cst5 /p,t,xc,u1,u2,tr,pr,r,ps
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+c----------------------------------------------------------------------
+      do i = 1, jsp
+
+         j = jns(i)
+
+         vh(j) = -v(j)
+         gh(j) = g(j)
+         
+         if (j.eq.1) then 
+c                                 water
+            if (iopt(25).eq.0) then 
+c                                 mrk
+            else if (iopt(25).eq.1) then 
+c                                 hsmrk
+               fg(j) = hsmrkf (v(j),j)
+
+            else if (iopt(25).eq.2) then
+c                                 cork
+               call crkh2o (p,t,v(j),fg(j))
+
+            else if (iopt(25).eq.4) then
+c                                 pseos, pitzer & sterner 1994
+               call pseos (v(j),fg(j),j)
+
+            else if (iopt(25).eq.5) then
+c                                 haar, haar et el. 1982
+               call haar (v(j),fg(j))
+
+            else 
+
+               write (*,*) 'invalid eos call in hybeos'
+               pause
+               stop
+
+            end if 
+
+         else if (j.eq.2) then 
+c                                CO2
+            if (iopt(26).eq.0) then 
+c                                 mrk
+            else if (iopt(25).eq.1) then 
+c                                 hsmrk
+               fg(j) = hsmrkf (v(j),j)
+
+            else if (iopt(26).eq.2) then
+c                                 cork
+               call crkco2 (p,t,v(j),fg(j))
+
+            else if (iopt(26).eq.3) then
+c                                 brmrk, bottinga & richet 1981
+               call brmrk (v(j),fg(j))
+
+            else if (iopt(26).eq.4) then
+c                                 pseos, pitzer & sterner 1994
+               call pseos (v(j),fg(j),j)
+
+            else 
+
+               write (*,*) 'invalid eos call in hybeos'
+               pause
+               stop
+
+            end if
+
+         else if (j.eq.4) then
+c                                CH4
+            if (iopt(27).eq.0) then 
+c                                 mrk
+            else if (iopt(27).eq.1) then 
+c                                 methane hsmrk kerrick and jacobs 191.
+               fg(j) = hsmrkf (v(j),j)
+
+            else 
+
+               write (*,*) 'invalid eos call in hybeos'
+               pause
+               stop
+
+            end if
+
+         else
+
+            write (*,*) 'invalid species in hybeos'
+            pause
+            stop
+
+         end if 
+c                                 the fugacity coefficient of the pure gas
+         g(j) = dexp(fg(j))/p
+c                                 the hybrid delta volume (hyb-mrk), it's 
+c                                 doubtful this thing is really used, if it 
+c                                 is it must be in fluids.
+         vh(j) = vh(j) + v(j)
+c                                 the hybrid/mrk pure fluid fugacity ratio
+         gh(j) = g(j)/gh(j)
+
+      end do 
+
+      end
+
+      double precision function lnfpur (id)
+c---------------------------------------------------------------------
+c function to return log fugacity of pure fluid of the nsp standard
+c perple_x gas species, id is 100 + the index of the standard species. 
+c the fugacity is calculated by the EoS indicated by the hyb_EoS
+c option or, if no such option exists, with the MRK EoS. 
+
+c 11/2016 JADC
+c---------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer j, ins(1), id
+
+      double precision hsmrkf,ftemp
+
+      external hsmrkf
+ 
+      double precision gh,vh
+      common/ csthyb /gh(nsp),vh(nsp)
+
+      double precision y,g,v
+      common/ cstcoh /y(nsp),g(nsp),v(nsp)
+
+      double precision p,t,xc,u1,u2,tr,pr,r,ps
+      common/ cst5 /p,t,xc,u1,u2,tr,pr,r,ps
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+c----------------------------------------------------------------------
+      j = id - 100
+      ins(1) = j
+c                                call mrkpur in all cases to, at least, 
+c                                get a volume guess
+      call mrkpur (ins,1)
+
+      ftemp = dlog(g(j)*p)
+c                                then check if hyb_EoS indicates another
+c                                EoS:         
+      if (j.eq.1) then 
+c                                 water
+         if (iopt(25).eq.1) then 
+c                                 hsmrk
+            ftemp = hsmrkf (v(j),j)
+
+         else if (iopt(25).eq.2) then
+c                                 cork
+            call crkh2o (p,t,v(j),ftemp)
+
+         else if (iopt(25).eq.4) then
+c                                 pseos, pitzer & sterner 1994
+            call pseos (v(j),ftemp,j)
+
+         else if (iopt(25).eq.5) then
+c                                 haar, haar et el. 1982
+            call haar (v(j),ftemp)
+
+         end if 
+
+      else if (ins(1).eq.2) then 
+c                                CO2
+         if (iopt(25).eq.1) then 
+c                                 hsmrk
+            ftemp = hsmrkf (v(j),j)
+
+         else if (iopt(26).eq.2) then
+c                                 cork
+            call crkco2 (p,t,v(j),ftemp)
+
+         else if (iopt(26).eq.3) then
+c                                 brmrk, bottinga & richet 1981
+            call brmrk (v(j),ftemp)
+
+         else if (iopt(26).eq.4) then
+c                                 pseos, pitzer & sterner 1994
+            call pseos (v(j),ftemp,j)
+
+         end if
+
+      else if (j.eq.4) then
+c                                CH4
+         if (iopt(27).eq.1) then 
+c                                 methane hsmrk kerrick and jacobs 191.
+            ftemp = hsmrkf (v(j),j)
+
+         end if
+
+      end if 
+
+      lnfpur = ftemp
 
       end

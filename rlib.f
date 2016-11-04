@@ -232,17 +232,17 @@ c---------------------------------------------------------------------
  
       include 'perplex_parameters.h'
 
-      integer id, ins(1), kns(1), iwarn, oldid, j
+      integer id, iwarn, oldid, j
 
       logical proj
 
       double precision ialpha, vt, trv, pth, vdp, ndu, vdpbm3, gsixtr, 
      *                 gstxgi, fs2, fo2, kt, gval, gmake, gkomab, kp,
      *                 a, b, c, gstxlq, glacaz, v1, v2, gmet, gterm2, 
-     *                 km, kmk, hsfch4, gaq, ghkf
+     *                 km, kmk, lnfpur, gaq, ghkf
 
       external vdpbm3, gsixtr, gstxgi, gmake, gkomab, gstxlq, glacaz, 
-     *         gaq,    hsrkf, gmet, gterm2, ghkf
+     *         gaq,    lnfpur, gmet, gterm2, ghkf
 
       integer ltyp,lct,lmda,idis
       common/ cst204 /ltyp(k10),lct(k10),lmda(k10),idis(k10)
@@ -274,9 +274,6 @@ c---------------------------------------------------------------------
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
-      double precision y,g,v
-      common / cstcoh /y(nsp),g(nsp),v(nsp)
-
       integer jfct,jmct,jprct,jmuct
       common/ cst307 /jfct,jmct,jprct,jmuct
 
@@ -286,8 +283,8 @@ c---------------------------------------------------------------------
       double precision mu
       common/ cst39 /mu(i6)
 
-      save kt,trv,ins,kns,iwarn,oldid 
-      data kt,trv,ins,kns,iwarn,oldid/0d0,1673.15d0,14,15,0,0/
+      save kt,trv,iwarn,oldid 
+      data kt,trv,iwarn,oldid/0d0,1673.15d0,0,0/
 c---------------------------------------------------------------------
 
       if (make(id).ne.0) then 
@@ -530,39 +527,13 @@ c                                 or thermodynamic composition space, these
 c                                 are not used for mixture props.
       if (eos(id).gt.100) then 
 
-         if (eos(id).eq.101) then 
-         
-            xco2 = 0d0 
-            call cfluid (fo2,fs2)
-            gval = gval + r*t*f(1)
-            
-         else if (eos(id).eq.102) then
-          
-            xco2 = 1d0
-            call cfluid (fo2,fs2)
-            gval = gval + r*t*f(2)
-
-         else if (eos(id).le.115) then 
-
-            ins(1) = eos(id) - 100
-            call mrkpur (ins,1)
-            gval = gval + r*t*dlog(p*g(ins(1)))
-
-         else if (eos(id).eq.116) then 
-
-            ins(1) = 4
-            call mrkpur (ins,1)
-            gval = gval + r*t * hsrkf (v(4),ins(1))
+         if (eos(id).lt.116) then  
+c                                 call appropriate pure fluid EoS
+            gval = gval + r*t * lnfpur(eos(id))
             
          else if (eos(id).ge.600.and.eos(id).le.603) then
 c                                 komabayashi & fei (2010) EoS for Fe
             gval = gkomab(eos(id),id,vdp)
-
-         else if (eos(id).eq.604) then 
-c                                 Stoichiometic SiO2 rk fluid 
-            ins(1) = 14
-            call mrkpur (ins,1)
-            gval = gval + r*t*dlog(p*g(14))
 
          else if (eos(id).eq.605) then 
 c                                 Stoichiometic O rk fluid 
@@ -573,34 +544,11 @@ c                                 real O fluid (O and O2 species)
 c                                 this is -RT(lnk2+lnk3)/2 (rksi5 k's)
 c    *         -0.3213822427D7 / t + 0.6464888248D6 - 0.1403012026D3*t
 
-         else if (eos(id).eq.606) then 
-c                                 Stoichiometic Si rk fluid 
-            call mrkpur (kns,1)
-            gval = gval + r*t*dlog(p*g(15))
-
          else if (eos(id).ge.610.and.eos(id).le.637) then
 c                                 lacaze & Sundman (1990) EoS for Fe-Si-C alloys and compounds
 c                                 Xiong et al., 2011 for Fe-Cr alloys
             gval = gval + glacaz(eos(id)) + vdp + thermo(1,id)  
          
-         else if (eos(id).eq.700) then 
-c                                 sio
-            ins(1) = 13
-            call mrkpur (ins,1)
-            gval = gval + r*t*dlog(p*g(13))
-
-         else if (eos(id).eq.701) then 
-c                                 o2
-            ins(1) = 7
-            call mrkpur (ins,1)
-            gval = gval + r*t*dlog(p*g(7))
-
-         else if (eos(id).eq.702) then 
-c                                 o
-            ins(1) = 12
-            call mrkpur (ins,1)
-            gval = gval + r*t*dlog(p*g(12))
-              
          end if          
 
       end if
@@ -1964,7 +1912,8 @@ c                                        = 2, shear and bulk
             if (name.ne.cmpnt(idspe(k)).and.name.ne.eoscmp(k)) cycle 
 
             if (ifyn.ne.0) then 
-c                                 no saturated phase
+c                                 there is no saturated phase
+c                                 assign it the default molecular fluid eos
                eos(id) = 100 + k 
 
             else if (k.eq.1.and.idfl.ne.2.or. 
@@ -1973,6 +1922,31 @@ c                                 saturated phase, and it's not component(k), er
 c                                 will be computed by ufluid. this only will work
 c                                 for ispec < 3.
                eos(id) = ieos 
+c                                 to be safe switch the hybrid_EoS option value
+c                                 if the saturated phase EoS is not hybrid:
+c                                 commented out because this would involve working
+c                                 out how ufluid is working. some other time...
+c               if (k.eq.1) then 
+c                  if (ifug.eq.0) then 
+c                     iopt(25) = 0
+c                  else if (ifug.eq.1) then 
+c                     iopt(25) = 1
+c                  else if (ifug.eq.5) then 
+c                     iopt(25) = 3
+c                  else if (ifug.eq.14) then 
+c                     iopt(25) = 4
+c                  end if 
+c               else if (k.eq.2) then 
+c                  if (ifug.eq.0) then 
+c                     iopt(26) = 0
+c                  else if (ifug.eq.1) then 
+c                     iopt(26) = 1
+c                  else if (ifug.eq.5) then 
+c                     iopt(26) = 3
+c                  else if (ifug.eq.14) then 
+c                     iopt(26) = 4
+c                  end if
+c               end if 
 
             end if
 c                                 set fluid flag, this flag is 
