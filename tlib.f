@@ -404,8 +404,7 @@ c                                 phase composition key
 
             if (iopt(25).lt.0.or.iopt(25).eq.3.or.iopt(25).gt.5) then 
                write (*,1180) strg,key
-               pause
-               stop
+               call errpau
             end if 
 
          else if (key.eq.'hybrid_EoS_CO2') then
@@ -414,8 +413,7 @@ c                                 phase composition key
 
             if (iopt(26).lt.0.or.iopt(26).gt.4) then 
                write (*,1180) strg,key
-               pause
-               stop
+               call errpau
             end if
 
          else if (key.eq.'hybrid_EoS_CH4') then
@@ -424,8 +422,7 @@ c                                 phase composition key
 
             if (iopt(27).lt.0.or.iopt(27).gt.1) then 
                write (*,1180) strg,key
-               pause
-               stop
+               call errpau
             end if 
 
          else if (key.eq.'proportions') then 
