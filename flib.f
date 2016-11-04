@@ -7714,8 +7714,7 @@ c                                 haar, haar et el. 1982
             else 
 
                write (*,*) 'invalid eos call in hybeos'
-               pause
-               stop
+               call errpau
 
             end if 
 
@@ -7742,8 +7741,7 @@ c                                 pseos, pitzer & sterner 1994
             else 
 
                write (*,*) 'invalid eos call in hybeos'
-               pause
-               stop
+               call errpau
 
             end if
 
@@ -7758,16 +7756,14 @@ c                                 methane hsmrk kerrick and jacobs 191.
             else 
 
                write (*,*) 'invalid eos call in hybeos'
-               pause
-               stop
+               call errpau
 
             end if
 
          else
 
             write (*,*) 'invalid species in hybeos'
-            pause
-            stop
+            call errpau
 
          end if 
 c                                 the fugacity coefficient of the pure gas
