@@ -383,15 +383,9 @@ c                                 of independent variable
 
          if (y.eq.'y'.or.y.eq.'Y') then 
 c                                 tabulated properties
-            if (ifug.eq.4.or.ifug.eq.6.or.ifug.eq.9.or.ifug.eq.18
-     *                   .or.ifug.eq.9.) then
-
-               write (*,'(a)') 'Use frendly.'
-               stop
-
-            else if (ifug.le.3.or.ifug.eq.13..or.ifug.eq.14.or.
+            if (ifug.le.3.or.ifug.eq.13..or.ifug.eq.14.or.
      *               ifug.eq.17.or.ifug.eq.25) then 
-c                                 xco2 EoS's
+c                                 binary x EoS's
                ipot = 3
 
             else if (ifug.lt.9) then
@@ -419,11 +413,7 @@ c                                 X(O)-a(C)-f(S2) EoS
                   vname(5) = 'log(fS2)'
                end if 
 
-            else if (ifug.eq.15) then 
-c                                X(H2)
-               ipot = 3
-
-            else if (ifug.eq.16) then 
+            else if (ifug.eq.15.or.ifug.eq.16) then 
 c                                X(O) HO
                ipot = 3
 
@@ -660,14 +650,13 @@ c                                 computational loop, initialize p,t to be safe
             p = var(1)
             t = var(2) 
 
-            if (ifug.le.6 .or.ifug.eq.13.or.ifug.eq.14.or.
-     *          ifug.eq.15.or.
-     *          ifug.eq.21.or.ifug.eq.22.or.ifug.eq.25.or.
-     *          ifug.eq.15.or.ifug.eq.16.or.ifug.eq.26) then 
+            if (ifug.le.5 .or.ifug.eq.13.or.ifug.eq.14.or.
+     *          ifug.eq.15.or.ifug.eq.16.or.ifug.eq.25.or.
+     *          ifug.eq.26) then 
 c                                 xco2, xo, xh2 EoS's
                 xo = var(3)
 
-            else if (ifug.lt.9) then
+            else if (ifug.eq.8) then
 c                                 fo2 EoS's
                if (ibuf.eq.3) then
                   dlnfo2 = var(3) * tentoe
@@ -676,7 +665,7 @@ c                                 fo2 EoS's
                   elag = var(3) * tentoe
                end if
                
-            else if (ifug.le.11) then
+            else if (ifug.eq.10) then
 c                                 X(O)-a(C) EoS
                xo = var(3)
                elag = var(4) * tentoe
@@ -736,7 +725,7 @@ c                                 assign values to local variables
                         t = var(iv(k))
                      else if (iv(k).eq.3) then 
 
-                        if (ifug.eq.7.or.ifug.eq.8) then
+                        if (ifug.eq.8) then
 
                            if (ibuf.eq.3) then
                               dlnfo2 = var(iv(k)) * tentoe
@@ -788,7 +777,7 @@ c                                 assign values to local variables
                         else 
 
                            write (*,*) 'fugga wugga!'
-                           stop
+                           call errpau
 
                         end if 
 
@@ -806,18 +795,14 @@ c                                 assign values to local variables
                         else 
 
                            write (*,*) 'fugga wugga!'
-                           stop
+                           call errpau
 
                         end if
  
                      end if 
 
                   end do 
-c                                 initialize species fractions in case
-c                                 of a change in EoS or degenerate composition?
-                  do k = 1, nsp
-                     xs(k) = 0d0
-                  end do 
+
 c                                 calculate properties
                   bad = .false.
 
@@ -827,7 +812,7 @@ c                                 variables
                      prop(k) = var(iv(k))
                   end do 
 c                                 species fractions/fugacities
-                  if (ifug.le.6 .or.ifug.eq.14.or.ifug.eq.21.or.
+                  if (ifug.le.5 .or.ifug.eq.14.or.ifug.eq.21.or.
      *                ifug.eq.22.or.ifug.eq.25) then 
 c                                 xco2 EoS's 
                      xs(ins(1)) = 1d0 - xo
@@ -920,23 +905,7 @@ c                                   species
 
                   end if 
 
-                  if (ifug.lt.4.or.ifug.eq.5.or.ifug.eq.6.or.ifug.eq.18.
-     *                or.ifug.eq.14.or.ifug.gt.20.and.ifug.lt.24) then
-c                                  finite difference estimate for volume:
-                     vdif = 0d0
-                     p = var(1) + 0.5d0
-                     f = 1d0 
-                     do l = 1, 2
-                        call cfluid (fo2,fs2)
-                        vdif = vdif + f*((1d0-xo)*fhc(1) + xo*fhc(2))
-                        f = -1d0
-                        p = var(1) - 0.5
-                     end do 
-
-                     vol = 83.14d0*t*vdif
-                     p = var(1)
-
-                  else if (ifug.eq.4.or.ifug.eq.13.or.ifug.eq.15) then
+                  if (ifug.le.2.or.ifug.eq.13.or.ifug.eq.15) then
 c                                 use analytic vol
                   else 
 c                                 compute volume by finite difference
@@ -968,7 +937,10 @@ c                                 compute volume by finite difference
                      end do 
 
                      p = var(1)
-                     vol = 83.14d0*t*vdif
+c                                 use finite difference total volume only if non-hybrid EoS
+                    if (ifug.eq.5.or.ifug.eq.14.or.ifug.eq.25) 
+     *                 vol = 83.14d0*t*vdif
+
                      write (39,'(12(g14.6,1x))') p, t, (vpar(k),k=1,isp)
 
                   end if 
@@ -996,16 +968,10 @@ c                                 properties at arbitrary conditions
             write (*,'(/,a,/)') 'Enter a zero for pressure to quit.'
 
             do 
-c                                 initialize species fractions in case
-c                                 of a change in EoS
-               do i = 1, nsp
-                  xs(i) = 0d0
-               end do 
+c                                 just a check
+               vol = 0d0
 
-               if ((igo.eq.0.and.(ifug.eq.7.or.ifug.eq.8)).or.
-     *              (ibuf.ne.3.and.(ifug.eq.7.or.ifug.eq.8)).or.
-     *             ifug.eq.4.or.ifug.eq.6.or.ifug.eq.9.or.ifug.eq.18.or.
-     *             ifug.eq.21) then 
+               if ((igo.eq.0.or.ibuf.ne.3).and.ifug.eq.8) then 
 c                                 get P-T conditions:
                   write (*,'(/,a)') 'Enter p(bar), T(K): '
 
@@ -1137,21 +1103,29 @@ c                                  output results:
                   fo2 = fo2 / tentoe
                end if 
 
-               if (ifug.lt.4.or.ifug.eq.5.or.ifug.eq.14) then
+               if (ifug.le.2.or.ifug.eq.5.or.ifug.eq.14) then
 
                   write (*,1130) fhc(1), fhc(2)
-c                                  finite difference estimate of volume:
-                  vdif = 0d0
-                  p = p + 0.5d0
-                  f = 1d0 
-                  do l = 1, 2
-                     call cfluid (fo2,fs2)
-                     vdif = vdif + f*((1d0-xo)*fhc(1) + xo*fhc(2))
-                     f = -1d0
-                     p = p - 1d0
-                  end do 
 
-                  write (*,1300) 83.14d0*t*vdif
+                  if (ifug.eq.5.or.ifug.eq.14) then 
+c                                  finite difference estimate of volume:
+                     vdif = 0d0
+                     p = p + 0.5d0
+                     f = 1d0 
+                     do l = 1, 2
+                        call cfluid (fo2,fs2)
+                        vdif = vdif + f*((1d0-xo)*fhc(1) + xo*fhc(2))
+                        f = -1d0
+                        p = p - 1d0
+                     end do 
+
+                     write (*,1300) 83.14d0*t*vdif
+
+                  else 
+
+                     write (*,1300) vol
+
+                  end if 
 
                else if (ifug.eq.13.or.ifug.eq.15) then
 
@@ -1202,7 +1176,6 @@ c                                   species, and direct values:
 c                                  compute atomic sums:
                   call elmnts (nc,no,nh,nn,ns,nsi) 
 c                                  save old speciation and initialize for fd
-                  vdif = 0d0
                   totx = 0d0
 
                   do k = 1, isp
@@ -1212,33 +1185,26 @@ c                                  save old speciation and initialize for fd
                      xg(ins(k)) = g(ins(k))
                   end do 
 c                                  volumes by finite difference
-                  if (ifug.ne.26) then 
+                  p = p + 0.5d0
+                  f = 1d0 
 
-                     p = p + 0.5d0
-                     f = 1d0 
+                  do l = 1, 2
 
-                     do l = 1, 2
+                     call cfluid (fo2,fs2)
 
-                        call cfluid (fo2,fs2)
+                     do k = 1, isp
 
-                        do k = 1, isp
+                        if (g(ins(k))*p*xs(ins(k)).eq.0d0) cycle
 
-                           if (g(ins(k))*p*xs(ins(k)).eq.0d0) cycle
-
-                           vdif = vdif + 
-     *                       f*xs(ins(k))*dlog(g(ins(k))*p*xs(ins(k)))
-
-                           vpar(k) = vpar(k) +  
+                        vpar(k) = vpar(k) +  
      *                       83.14d0*t*f*dlog(g(ins(k))*p*xs(ins(k)))
-
-                        end do 
-
-                        f = -1d0
-                        p = p - 1d0
 
                      end do 
 
-                  end if 
+                     f = -1d0
+                     p = p - 1d0
+
+                  end do 
 c                                  output speciation:
                   write (*,1230)
 
@@ -1269,20 +1235,12 @@ c                                  output bulk properties and V:
                   if (ns.ne.0d0)  write (*,1310) ns/(ns+nc)
                   if (nc.ne.0d0)  write (*,1350) nc/(nc+no+nh+ns)
                   if (nsi.ne.0d0) write (*,1390) nsi/(no+nsi)
-                  if (nn.ne.0d0) write (*,1400) nn/nc
+                  if (nn.ne.0d0)  write (*,1400) nn/nc
                   if (nh.ne.0d0.and.ns.ne.0d0) write (*,1290) ns/nh
                   if (ifug.eq.19.or.ifug.eq.20.and.ag.gt.1d0) 
      *               write (*,1330)
 
-                  if (ifug.eq.26) then 
-
-                     write (*,1420) vol
-
-                  else 
-
-                     write (*,1420) 83.14d0*t*vdif
-
-                  end if 
+                  write (*,1420) vol
 
                end if 
 

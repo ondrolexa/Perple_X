@@ -584,6 +584,7 @@ c                                 get fluid equation of state
       if (ifyn.ne.0.or.ifugy.ne.0.or.satflu) then
          feos = .true.
          call rfluid (1,ifug)
+         write (*,'(/)')
       end if 
 c                                 eliminate composition variable
 c                                 for saturated fluid if constrained

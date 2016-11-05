@@ -98,7 +98,7 @@ c---------------------------------------------------------------------
 
       parameter (nrk=27)
    
-      character rkname(0:nrk)*62, y*1
+      character rkname(0:nrk)*63, y*1
 
       character vname*8, xname*8
       common / csta2 /xname(k5),vname(l2)
@@ -119,12 +119,12 @@ c---------------------------------------------------------------------
       save rkname 
 
       data (rkname(i), i = 0, 11)/
-     *'X(CO2) H2O-CO2 Modified Redlich-Kwong (MRK DeSantis et al 74)',
-     *'X(CO2) H2O-CO2 Kerrick & Jacobs 81 (HSMRK)',
+     *'X(CO2) H2O-CO2 Modified Redlich-Kwong (MRK) DeSantis et al 74',
+     *'X(CO2) H2O-CO2 HSMRK Kerrick & Jacobs 81',
      *'X(CO2) H2O-CO2 MRK hybrid-EoS*',
      *'Disabled Eos',
      *'Disabled Eos',
-     *'X(CO2) H2O-CO2 Holland & Powell 91, 98 (CORK)',
+     *'X(CO2) H2O-CO2 CORK Holland & Powell 91, 98',
      *'Disabled Eos',
      *'Disabled Eos',
      *'f(O2/CO2) C-buffered COH MRK hybrid-EoS*',
@@ -181,9 +181,9 @@ c                                 write hybrid eos blurb
       call hybout (-1,6)
 
       read (*,*,iostat=ier) ifug
-      if (ifug.gt.nrk.or.ifug.eq.4.or.ifug.eq.6.or.ifug.eq.9.or.
+      if (ifug.gt.nrk.or.ifug.eq.4.or.ifug.eq.6.or.ifug.eq.7.or.
      *    ifug.eq.18.or.ifug.eq.21.or.ifug.eq.22.or.ifug.eq.23.or.
-     *    ifug.lt.0.or.ifug.eq.3) ier = 1
+     *    ifug.lt.0.or.ifug.eq.3.or.ifug.eq.9) ier = 1
 
       call rerror (ier,*10)
 
@@ -193,11 +193,16 @@ c                                 write hybrid eos blurb
       end if 
 c                                 warn about variable mass-speciation 
 c                                 routines
-      if ((iam.eq.5.or.iam.eq.11).and.(
-     *    ifug.eq.7.or.ifug.eq.8.or.ifug.eq.10.or.ifug.eq.11.or.
-     *    ifug.eq.12.or.ifug.eq.16.or.ifug.eq.17.or.ifug.eq.19.or.
-     *    ifug.eq.20.or.ifug.eq.24)) write (*,1190)
-
+      if (iam.eq.5.or.iam.eq.11) then 
+         if (ifug.eq.5.or.ifug.eq.14) then
+            write (*,1191)
+         else if (ifug.eq.26.or.ifug.eq.27.or.
+     *          ifug.eq.8.or.ifug.eq.10.or.ifug.eq.11.or.
+     *          ifug.eq.12.or.ifug.eq.16.or.ifug.eq.17.or.ifug.eq.19.or.
+     *          ifug.eq.20.or.ifug.eq.24) then 
+            write (*,1190)
+         end if 
+      end if 
 
       if (ifug.eq.12.or.ifug.eq.17.or.ifug.eq.20) then
 c                                 COHS & HOS equations of state
@@ -223,12 +228,12 @@ c                                 if ibuf = 2 dlnfo2 is the fs2
 
          end if 
 
-      else if (ifug.gt.9.and.ifug.lt.13 .or. 
-     *         ifug.gt.14.and.ifug.lt.21) then
+      else if (ifug.eq.10.or.ifug.eq.12.or. 
+     *         ifug.gt.16.and.ifug.lt.21) then
 
          if (ifug.ne.18) vname(3) = 'X(O)'
 
-      else if (ifug.eq.13) then
+      else if (ifug.eq.13.or.ifug.eq.15) then
  
          vname(3) = 'X(H2)'
 
@@ -236,7 +241,7 @@ c                                 if ibuf = 2 dlnfo2 is the fs2
  
          vname(3) = 'X(Si)'
 
-      else if (ifug.ge.7.and.ifug.le.8.or.ifug.eq.24) then
+      else if (ifug.eq.8.or.ifug.eq.24) then
 c                                 chosen COH speciation option
 c                                 check that XCO2 isn't a independent
 c                                 variable:
@@ -291,7 +296,7 @@ c                                 but here we only allow simple
 c                                 EoS's because the X(C),S/C and N/C
 c                                 routines use the variable elag to
 c                                 store these ratios.
-50    if (ifug.ge.7.and.ifug.le.12.and.ifug.ne.9) then
+50    if (ifug.ge.8.and.ifug.le.12) then
 c                                 if build, then ask whether to 
 c                                 set H2 and O2 as the independent
 c                                 fugacities (hu = 1), otherwise they 
@@ -379,14 +384,15 @@ c                                get the salt content (elag):
 1170  format (/,'Compute f(H2) & f(O2) as the dependent fugacities',
      *        /,'(do not unless you project through carbon) (Y/N)?',/)
 1180  format ('Enter a-e :',/)
-1190  format (/,'**warning ver119** volumetric properties for this EoS',
-     *       ' computed by FRENDLY or FLUIDS',/,'are estimated by',
-     *       ' finite difference under the assumption that fluid',
-     *       ' speciation',/,'does not change over the 1 bar',
-     *       ' finite difference interval. The estimates',/,
-     *        'should be considered',
-     *       ' with caution. This assumption is not made in'
-     *       ' calculations',/,'with VERTEX, WERAMI, or MEEMUM.',/)
+1191  format (/,'**warning ver119** volume for this EoS',
+     *       ' computed by FRENDLY or FLUIDS',/,'is estimated by',
+     *       ' finite difference over a 1 bar interval',/)
+1190  format (/,'**warning ver119** partial molar volumes for this EoS',
+     *       ' are estimated by finite',/,
+     *       'difference under the assumption that fluid',
+     *       ' speciation does not change over',/,'the 1 bar',
+     *       ' finite difference interval. The estimates'
+     *       ' should be considered',/,'with caution.',/)
 1200  format (/,'For this EoS Y(CO2)* is defined as:',/,
      *          '  Y(CO2)* = n(CO2)/[n(H2O)+n(CO2)]',/,
      *          'i.e., Y(CO2)* may vary from 0 -> 1 ',
@@ -433,8 +439,8 @@ c----------------------------------------------------------------------
       data (hyname(i), i = 0, 5)/
      *  'MRK DeSantis et al 1974',
      *  'HSMRK Kerrick & Jacobs 1981',
-     *  'BRMRK Bottinga & Richet 1981',
      *  'CORK Holland & Powell 1998',
+     *  'BRMRK Bottinga & Richet 1981',
      *  'PSEoS Pitzer & Sterner 1994',
      *  'Haar et al 1982'/
 c----------------------------------------------------------------------
@@ -452,7 +458,6 @@ c----------------------------------------------------------------------
                write (nout,1020) specie(j+1),hyname(iopt(27))
             end if 
          end do 
-
 
       else if (icheck.eq.2.or.icheck.eq.8.or.icheck.eq.10.or.
      *         icheck.eq.12.or.icheck.eq.13.or.icheck.eq.27.or.
@@ -509,8 +514,7 @@ c-----------------------------------------------------------------------
       integer isp, ins
       common/ cxt33 /isp,ins(nsp),specie(nsp)
 c----------------------------------------------------------------------- 
-      if (ifug.le.6.or.ifug.eq.14.or.ifug.eq.18.or.ifug.eq.21.or.
-     *    ifug.eq.22.or.ifug.eq.25) then 
+      if (ifug.le.5.or.ifug.eq.14.or.ifug.eq.25) then 
 c                                 xco2 EoS's
             vname(3) = 'X(CO2)  '
 
@@ -519,10 +523,10 @@ c                                 xco2 EoS's
             ins(1) = 1
             ins(2) = 2
 
-      else if (ifug.gt.6.and.ifug.lt.13.or.ifug.eq.19.or.
+      else if (ifug.ge.8.and.ifug.le.12.or.ifug.eq.19.or.
      *         ifug.eq.20.or.ifug.eq.24.or.ifug.eq.27) then
 c                                 standard COHS species  
-         if (ifug.eq.7.or.ifug.eq.8.or.ifug.eq.24) then
+         if (ifug.eq.8.or.ifug.eq.24) then
             vname(3) = 'log(fO2)'
          else 
             vname(3) = 'X(O)    '
@@ -534,7 +538,7 @@ c                                 standard COHS species
             ins(i) = i
          end do
  
-         if (ifug.eq.10.or.ifug.eq.11) then 
+         if (ifug.eq.10) then 
 
             isp = 6 
             ins(6) = 16
@@ -545,7 +549,7 @@ c                                 standard COHS species
             ins(7) = 8
             ins(8) = 9
   
-         else if (ifug.ge.12.and.ifug.lt.19) then
+         else if (ifug.ge.12.and.ifug.le.18) then
 
             isp = 9
             ins(7) = 7
@@ -2023,11 +2027,7 @@ c                                 + qb * xh2 + qc
 
          oh2o = y(1)
 
-         call mrkmix (ins, 5, 1)
-
-         do i = 1, 3 
-            g(jns(i)) = gh(jns(i)) * g(jns(i))
-         end do 
+         call mrkhyb (ins, jns, 5, 3, 1)
 
       end do
 
@@ -3589,7 +3589,7 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i, jns(2)
+      integer jns(2)
 
       double precision gh,vh
       common/ csthyb /gh(nsp),vh(nsp)
@@ -3607,7 +3607,7 @@ c-----------------------------------------------------------------------
       common/ cst26 /vol
 
       save jns
-      data jns/1,2/
+      data jns/1, 2/
 c----------------------------------------------------------------------- 
 c                                 compute pure mrk fluid properties
       call mrkpur (jns,2)
@@ -3627,11 +3627,7 @@ c                                 compute hybrid pure fluid props
       y(2) = xc
       y(1) = 1d0 - xc
 
-      call mrkmix (jns, 2, 1)
-
-      do i = 1, 2
-         f(i) = dlog(y(i)*gh(i)*g(i)*p)
-      end do 
+      call mrkhyb (jns, jns, 2, 2, 1)
 
       vol = vol + y(1)*vh(1) + y(2)*vh(2)
 
@@ -3709,7 +3705,7 @@ c -----gi are in (bar cc / g)  =  10 * (j / g)
       data alpi /34d0, 40d0, 30d0, 1050d0/
       data beti /2d4, 2d4, 4d4, 25d0/
       data r, t0, amh2o/4.6152d0,647.073d0,18.0152d0/
- 
+c----------------------------------------------------------------------
       rt = r * t
       nlow = 40
       nhigh = 20
@@ -6997,11 +6993,7 @@ c                                 check if iteration count exceeded
             exit
          end if
 c                                 calculate new fugacity coefficients
-         call mrkmix (ins, 6, 1)
-
-         do i = 1, 3
-            g(jns(i)) = gh(jns(i)) * g(jns(i))
-         end do 
+         call mrkhyb (ins, jns, 6, 3, 1)
 
          oy5 = y5
 
