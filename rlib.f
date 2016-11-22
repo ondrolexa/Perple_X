@@ -5915,7 +5915,8 @@ c                                 failed, rejected too many endmembers
             if (first) call warn (25,wg(1,1),jstot,sname)
             jstot = 0
 
-         else if (istot.eq.jstot) then  
+         else if (istot.le.jstot) then  
+c                                 changed from eq to le. JADC Nov 22, 2016
 c                                 succeeded
             kill = 99 
 c                                 reorder the insp array so that the 
@@ -7254,7 +7255,11 @@ c                                 in the p array (1..kstot+norder)
 c                                added for reformulated reciprocal
 c                                solutions with no dependent endmembers
 c                                June 12, 2012, JADC.
-         if (recip) kstot = istot
+c        if (recip) kstot = istot
+c                                JADC Nov 22, 2016:
+c                                changed to general case, i.e., if there
+c                                are no dependent endmembers then
+         kstot = istot 
 
       end if 
 
