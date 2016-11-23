@@ -9120,8 +9120,10 @@ c                                 initialize compositional distances
       do i = 1, icp
          dcp(i,im) = 0d0
       end do 
-c                                 endmember counters:
+c                                 check endmember counters:
       if (im.gt.h9) call error (52,dq(1),idqf,'GMODEL')
+c                                 check for inconsistent model reformation
+      if (kstot+mdep.gt.jstot) call error (76,dq(1),idqf,tname)
 c                                 number of endmembers
       mstot(im) = istot
 c                                 number of independent + ordered endmebers
