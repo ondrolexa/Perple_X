@@ -169,10 +169,10 @@ z(m2,na)   = 1 acm  + 1 jd
 z(m2,ca)   = 1 ocats + 1 cats
 z(m2,fe)   = 1 fmc  + 1 cfsg
 
-2 1                                 | 2 species on T1, mult. = 1
+2 0.25                               | 2 species on T1, mult. = 1
 z(Al,T1) = 1/2 cats
 
-2 1                                 | 2 species on T2, mult. = 1
+2 0.25                               | 2 species on T2, mult. = 1
 z(Al,T2) = 1/2 cats + 1 ocats
 
 begin_van_laar_sizes

@@ -5840,7 +5840,7 @@ c----------------------------------------------------------------------
 
       if (first.and.isite.gt.1) call warn (50,wg(1,1),isite,sname)
 
-      do while (kill.lt.99) 
+      do 
 
          do i = 1, isite
             ksp(i) = 1
@@ -5909,16 +5909,17 @@ c                                 inefficient, but we don't care here).
 c                                 check exit conditions
          if (istot.lt.2) then
 c                                 failed, rejected too many endmembers
-            kill = 99 
 
             im = im - 1
             if (first) call warn (25,wg(1,1),jstot,sname)
             jstot = 0
 
-         else if (istot.le.jstot) then  
+            exit 
+
+         else if (istot.le.jstot.or.kill.eq.99) then  
 c                                 changed from eq to le. JADC Nov 22, 2016
 c                                 succeeded
-            kill = 99 
+            exit 
 c                                 reorder the insp array so that the 
 c                                 the first kstot endmembers are 
 c                                 independent, followed by the 
@@ -9881,7 +9882,7 @@ c                                 independent disordered species
             spnams(i,im) = mname(iorig(knsp(i,im)))
          end do 
 c                                 ordered species
-         do i = lstot(im), nstot(im)
+         do i = lstot(im)+1, nstot(im)
             spnams(i,im) = mname(iorig(ndep(im)+i))
          end do 
 
@@ -11333,13 +11334,17 @@ c                                 lord is the number of possible species
                tdp = tdp + dabs(dp(k))
 
             end do 
-
-            if (tdp.lt.nopt(5).and.gold-g.lt.1d-2.or.tdp.eq.xtdp) then
+c                                 nov 23, 2016 added exit if diverging 
+c                                 g > gold, itic > 2
+            if (tdp.lt.nopt(5).or.
+     *          dabs((gold-g)/g).lt.1d-3.or.tdp.eq.xtdp.or.
+     *          itic.gt.2.and.gold.le.g) then
                goodc(1) = goodc(1) + 1d0
                exit
             end if 
-
-            if (g.gt.gold.and.gold.ne.0d0) xtdp = tdp
+c                                 before nov 23, 2016, xtdp was only set 
+c                                 if g > gold (i.e., diverging).
+            xtdp = tdp
 
             gold = g 
 
@@ -13155,9 +13160,9 @@ c                                 y is the mole fraction of endmember l
 c                                 the pure endmember index is 
             i = l       
 
-         else if (y(l).lt.nopt(5)) then
-
-            y(l) = 0d0
+c        else if (y(l).lt.nopt(5)) then
+c                                cancelled nov 24, 2016
+c            y(l) = 0d0
 
          end if 
 
@@ -13177,7 +13182,7 @@ c                                 off the pure composition to avoid degneracy
 
             if (l.eq.i) cycle 
 
-            y(l) = y(l) + nopt(5)/mstot(im)
+            y(l) = y(l) + nopt(5)/(mstot(im)-1)
 
          end do    
 
@@ -13512,7 +13517,9 @@ c                              dqf corrections are also be saved in the
 c                              exces array this implies that speciation
 c                              does not effect the amount of the dqf'd
 c                              endmembers.
-
+      do i = 1, nstot(im)
+         p0a(i) = pa(i)
+      end do
 c                              p0dord converts the p0 of any ordered species
 c                              to it's disordered equivalents, as necessary
 c                              for the dqf.
@@ -13529,7 +13536,7 @@ c                              or a dependent endmember
 
          if (depend) then
             do j = 1, m3
-               exces(j,iphct) = exces(j,iphct) + pa(index)*dqfg(j,i,im)
+               exces(j,iphct) = exces(j,iphct) + p0a(index)*dqfg(j,i,im)
             end do 
          else 
             do j = 1, m3
