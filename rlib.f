@@ -527,7 +527,7 @@ c                                 or thermodynamic composition space, these
 c                                 are not used for mixture props.
       if (eos(id).gt.100) then 
 
-         if (eos(id).lt.116) then  
+         if (eos(id).lt.117) then  
 c                                 call appropriate pure fluid EoS
             gval = gval + r*t * lnfpur(eos(id))
             
@@ -8094,13 +8094,13 @@ c-----------------------------------------------------------------------
  
       include 'perplex_parameters.h'
 
-      integer k,id
+      integer k, id, isp, ins(nsp)
 
       double precision omega, hpmelt, slvmlt, gmelt, gfluid, gzero, gg,
-     *                 dg, gex, gfesi, gfesic, gfecr1, gerk, x1(5)
+     *         dg, gex, gfesi, gfesic, gfecr1, gerk, x1(5), ghybrid
 
       external omega, hpmelt, slvmlt, gmelt, gfluid, gzero, gex, gfesi, 
-     *         gfesic, gfecr1, gerk
+     *         gfesic, gfecr1, gerk, ghybrid
 
       integer jend
       common/ cxt23 /jend(h9,m4)
@@ -8289,6 +8289,23 @@ c                                 BCC Fe-Si Lacaze and Sundman
 c                                 -------------------------------------
 c                                 BCC Fe-Cr Andersson and Sundman
             gg =  gfecr1(y(1),g(jend(id,3)),g(jend(id,4)))
+
+         else if (ksmod(id).eq.39) then
+c                                 -------------------------------------
+c                                 generic hybrid EoS
+c                                 initialize pointer array
+            isp = mstot(id)
+
+            do k = 1, isp
+
+               ins(k) = jspec(id,k)
+c                                 sum pure species g's
+               gg = gg + g(jend(id,2+k)) * y(k)
+
+            end do
+c                                 compute and add in activities
+            gg = gg + ghybrid (y,ins,isp)
+
 
          else if (ksmod(id).eq.41) then 
 c                                 hybrid MRK ternary COH fluid
@@ -8915,6 +8932,9 @@ c---------------------------------------------------------------------
                              
       integer jmsol,kdsol
       common/ cst142 /jmsol(m4,mst),kdsol(m4)
+
+      integer eos
+      common/ cst303 /eos(k10)
 
       integer jsmod
       double precision vlaar
@@ -9701,6 +9721,13 @@ c                                 fluid eos, make pointer to co2
                exit
             end if 
          end do 
+
+      else if (jsmod.eq.39) then
+c                                 generic hybrid fluid EoS, convert endmember EoS
+c                                 flag to fluid species indices
+         do i = 1, istot 
+            jspec(im,i) = eos(kdsol(insp(i))) - 100
+         end do
 
       else 
 c                                 save original endmember indexes for hard-wired 

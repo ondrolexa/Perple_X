@@ -2729,12 +2729,12 @@ c-----------------------------------------------------------------------
  
       include 'perplex_parameters.h'
 
-      integer i, j, k, id
+      integer i, j, k, id, isp, ins(nsp)
 
       double precision dg1, gval, dg, gzero, g0(k5), gex, gfesi,
-     *                 gfesic, gfecr1, gerk, x1(5), gproj
+     *                 gfesic, gfecr1, gerk, x1(5), gproj, ghybrid
 
-      external gerk, gzero, gex, gfesi, gfesic, gproj
+      external gerk, gzero, gex, gfesi, gfesic, gproj, ghybrid
 
       integer icomp,istct,iphct,icp
       common/ cst6 /icomp,istct,iphct,icp
@@ -2769,6 +2769,9 @@ c-----------------------------------------------------------------------
 
       integer jend
       common/ cxt23 /jend(h9,m4)
+
+      integer jspec
+      common/ cxt8 /jspec(h9,m4)
 c                                 working arrays
       double precision z, pa, p0a, x, w, y, wl
       common/ cxt7 /x(m4),y(m4),pa(m4),p0a(m4),z(mst,msp),w(m1),
@@ -2962,6 +2965,33 @@ c                                 H2O-CO2-Salt:
                id = id + 1
 
             end do
+
+         else if (ksmod(i).eq.39) then
+c                                 generic hybrid EoS
+c                                 initialize pointer array
+            isp = mstot(i)
+
+            do j = 1, isp
+               ins(j) = jspec(i,j)
+            end do 
+
+            do j = 1, jend(i,2)
+
+               g(id) = 0d0
+
+               do k = 1, isp
+c                                 load composition array and pointers 
+                  x(k) = sxs(ixp(id)+k)
+c                                 sum pure species g's
+                  g(id) = g(id) + g(jend(i,2+k)) * x(k)
+
+               end do
+c                                 compute and add in activities
+               g(id) = g(id) + ghybrid (x,ins,isp)
+
+               id = id + 1
+
+            end do 
 
          else if (ksmod(i).eq.29) then 
  

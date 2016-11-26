@@ -755,13 +755,13 @@ c-----------------------------------------------------------------------
  
       include 'perplex_parameters.h'
 
-      integer k,id
+      integer k, id, isp, ins(nsp)
 
       double precision omega, hpmelt, gmelt, gfluid, gzero, g, x1(5), 
-     *                 dg, gex, slvmlt, gfesi, gcpd, gerk, gfecr1
+     *         dg, gex, slvmlt, gfesi, gcpd, gerk, gfecr1, ghybrid
 
       external gphase, omega, hpmelt, gmelt, gfluid, gzero, gex, slvmlt,
-     *         gfesi, gerk, gfecr1
+     *         gfesi, gerk, gfecr1, ghybrid
 
       integer jend
       common/ cxt23 /jend(h9,m4)
@@ -916,6 +916,22 @@ c                                 BCC Fe-Cr Andersson and Sundman
             g =  gfecr1(y(1), gcpd (jend(id,3),.true.), 
      *                        gcpd (jend(id,4),.true.) )
 
+         else if (ksmod(id).eq.39) then
+c                                 -------------------------------------
+c                                 generic hybrid EoS
+c                                 initialize pointer array
+            isp = mstot(id)
+
+            do k = 1, isp
+
+               ins(k) = jspec(id,k)
+c                                 sum pure species g's
+               g = g + gcpd(jend(id,2+k),.true.) * y(k)
+
+            end do
+c                                 compute and add in activities
+            g = g + ghybrid (y,ins,isp)
+
          else if (ksmod(id).eq.41) then 
 c                                 hybrid MRK ternary COH fluid
             call rkcoh6 (y(2),y(1),g) 
@@ -1004,12 +1020,13 @@ c----------------------------------------------------------------------
          end do
 
       else if (ksmod(id).eq.2.or.ksmod(id).eq.3.or.ksmod(id).ge.24.and.
-     *         ksmod(id).le.28) then 
+     *         ksmod(id).le.28.or.ksmod(id).eq.39) then 
 c                                 macroscopic formulation for normal solutions (2,3) and
 c                                 hp melt model (24)
 c                                 ghiorso melt model (25)
 c                                 andreas salt model (26)
 c                                 high T melt model (28)
+c                                 generic hybrid fluid (39)
          do k = 1, spct(id)
             ysp(k,jd) = y(k)
          end do

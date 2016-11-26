@@ -653,8 +653,8 @@ c----------------------------------------------------------------------
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
-      double precision gh,vh
-      common/ csthyb /gh(nsp),vh(nsp)
+      double precision gh,vh,g0
+      common/ csthyb /gh(nsp),vh(nsp),g0(nsp) 
 
       double precision y,g,v
       common / cstcoh /y(nsp),g(nsp),v(nsp)
@@ -1433,8 +1433,8 @@ c----------------------------------------------------------------------
       double precision eqk
       common / csteqk /eqk(nsp)
 
-      double precision gh,vh
-      common/ csthyb /gh(nsp),vh(nsp)
+      double precision gh,vh,g0
+      common/ csthyb /gh(nsp),vh(nsp),g0(nsp) 
 
       double precision y,g,v
       common / cstcoh /y(nsp),g(nsp),v(nsp)
@@ -1556,8 +1556,8 @@ c-----------------------------------------------------------------------
       double precision eqk
       common / csteqk /eqk(nsp)
 
-      double precision gh,vh
-      common/ csthyb /gh(nsp),vh(nsp)
+      double precision gh,vh,g0
+      common/ csthyb /gh(nsp),vh(nsp),g0(nsp) 
 
       double precision y,g,v
       common / cstcoh /y(nsp),g(nsp),v(nsp)
@@ -1692,8 +1692,8 @@ c-----------------------------------------------------------------------
       double precision eqk
       common / csteqk /eqk(nsp)
 
-      double precision gh,vh
-      common/ csthyb /gh(nsp),vh(nsp)
+      double precision gh,vh,g0
+      common/ csthyb /gh(nsp),vh(nsp),g0(nsp) 
 
       double precision y,g,v
       common / cstcoh /y(nsp),g(nsp),v(nsp)
@@ -1842,8 +1842,8 @@ c----------------------------------------------------------------------
       double precision eqk
       common / csteqk /eqk(nsp)
 
-      double precision gh,vh
-      common/ csthyb /gh(nsp),vh(nsp)
+      double precision gh,vh,g0
+      common/ csthyb /gh(nsp),vh(nsp),g0(nsp) 
 
       double precision y,g,v
       common / cstcoh /y(nsp),g(nsp),v(nsp)
@@ -1902,8 +1902,8 @@ c---------------------------------------------------------------------
 
       integer i,ins(*),isp,jns(*),jsp,imix
  
-      double precision gh,vh
-      common/ csthyb /gh(nsp),vh(nsp)
+      double precision gh,vh,g0
+      common/ csthyb /gh(nsp),vh(nsp),g0(nsp) 
 
       double precision x,g,v
       common/ cstcoh /x(nsp),g(nsp),v(nsp)
@@ -1947,8 +1947,8 @@ c----------------------------------------------------------------------
       double precision eqk
       common / csteqk /eqk(nsp)
 
-      double precision gh,vh
-      common/ csthyb /gh(nsp),vh(nsp)
+      double precision gh,vh,g0
+      common/ csthyb /gh(nsp),vh(nsp),g0(nsp) 
 
       integer ibuf,hu,hv,hw,hx   
       double precision dlnfo2,elag,gz,gy,gx
@@ -3591,8 +3591,8 @@ c-----------------------------------------------------------------------
 
       integer jns(2)
 
-      double precision gh,vh
-      common/ csthyb /gh(nsp),vh(nsp)
+      double precision gh,vh,g0
+      common/ csthyb /gh(nsp),vh(nsp),g0(nsp) 
 
       double precision y,g,v
       common/ cstcoh /y(nsp),g(nsp),v(nsp)
@@ -6840,6 +6840,50 @@ c                                 convert to j/bar from cm3, only for lv version
 
       end
 
+      double precision function ghybrid (x,ins,isp)
+c----------------------------------------------------------------------
+c  generic hybrid EoS called for solution model type ksmod = 27.
+c  reads composition from solution model 
+
+c  10/28/16, JADC.
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer ins(*), isp, k
+
+      double precision gtemp, x(*)
+
+      double precision p,t,xo,u1,u2,tr,pr,r,ps
+      common / cst5 /p,t,xo,u1,u2,tr,pr,r,ps
+
+      double precision gh,vh,g0
+      common/ csthyb /gh(nsp),vh(nsp),g0(nsp) 
+
+      double precision y,g,v
+      common / cstcoh /y(nsp),g(nsp),v(nsp)
+c----------------------------------------------------------------------
+      call zeroys
+c                                 load the solution model y's into the
+c                                 fluid species y array
+      do k = 1, isp
+         y(ins(k)) = x(k)
+      end do 
+c                                 calculate hybrid fugacity coefficients
+      call mrkmix (ins, isp, 1)
+c                                 compute hybrid activity effect
+      gtemp = 0d0
+
+      do k = 1, isp
+         if (x(k).le.0d0) cycle
+         gtemp = gtemp + x(k) * dlog(x(k)*g(ins(k))/g0(ins(k)))
+      end do
+  
+      ghybrid = r*t*gtemp
+
+      end
+
       subroutine gcohx6 (fo2)
 c----------------------------------------------------------------------
 c  program to calculate GCOH fluid properties as a function of XO 
@@ -6871,8 +6915,8 @@ c----------------------------------------------------------------------
       double precision vol
       common/ cst26 /vol
 
-      double precision gh,vh
-      common/ csthyb /gh(nsp),vh(nsp)
+      double precision gh,vh,g0
+      common/ csthyb /gh(nsp),vh(nsp),g0(nsp) 
 
       double precision y,g,v
       common / cstcoh /y(nsp),g(nsp),v(nsp)
@@ -7247,8 +7291,8 @@ c----------------------------------------------------------------------
       double precision y,g,v
       common / cstcoh /y(nsp),g(nsp),v(nsp)
 
-      double precision gh,vh
-      common/ csthyb /gh(nsp),vh(nsp)
+      double precision gh,vh,g0
+      common/ csthyb /gh(nsp),vh(nsp),g0(nsp) 
 
       double precision eqk
       common / csteqk /eqk(nsp)
@@ -7662,8 +7706,8 @@ c---------------------------------------------------------------------
 
       external hsmrkf
  
-      double precision gh,vh
-      common/ csthyb /gh(nsp),vh(nsp)
+      double precision gh,vh,g0
+      common/ csthyb /gh(nsp),vh(nsp),g0(nsp) 
 
       double precision y,g,v
       common/ cstcoh /y(nsp),g(nsp),v(nsp)
@@ -7790,8 +7834,8 @@ c---------------------------------------------------------------------
 
       external hsmrkf
  
-      double precision gh,vh
-      common/ csthyb /gh(nsp),vh(nsp)
+      double precision gh,vh,g0
+      common/ csthyb /gh(nsp),vh(nsp),g0(nsp) 
 
       double precision y,g,v
       common/ cstcoh /y(nsp),g(nsp),v(nsp)
@@ -7811,6 +7855,9 @@ c                                get a volume guess
       call mrkpur (ins,1)
 
       ftemp = dlog(g(j)*p)
+c                                for the generic hybrid eos solution model
+c                                save the pure mix_EoS fugacity
+      g0(j) = g(j)
 c                                then check if hyb_EoS indicates another
 c                                EoS:         
       if (j.eq.1) then 

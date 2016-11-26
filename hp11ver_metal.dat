@@ -2395,15 +2395,15 @@ b1 = 5.797d-5 b5 = -5.797d-4
 b6 = 140d4 b8 = 8
 end
 
-FeCr_sig   EoS = 635 | Hertzman and Sundman, 1980, for FeCr diagram at 1 bar and high pressures (SiC paper)                                        
-Fe(26/30)Cr(4/30)                    | originally Fe(.8667)Cr(.1333)
+FeCr_sig   EoS = 635 | Hertzman and Sundman, 1980, for FeCr diagram at 1 bar and high pressures (SiC paper) originally Fe(.8667)Cr(.1333) 
+FE(26/30)CR(4/30)                
 V0 = 0.58035
 b1 = 2.7919d-5 |b5 = -2.7919d-4 
 b6 = 217d4 b8 = 5.8
 end
 
-CrFe_sig   EoS = 636 | Hertzman and sundman, 1980, for FeCr diagram at 1 bar and high pressures (SiC paper)                                        
-Fe(8/30)Cr(22/30)                    | originally Fe(.3333)Cr(.6667)
+CrFe_sig   EoS = 636 | Hertzman and sundman, 1980, for FeCr diagram at 1 bar and high pressures (SiC paper) originally Fe(.3333)Cr(.6667)                                     
+FE(8/30)CR(22/30)
 V0 = 0.58035
 b1 = 2.7919d-5 |b5 = -2.7919d-4 
 b6 = 217d4 b8 = 5.8
@@ -2692,5 +2692,10 @@ transition = 2 type = 2 t1  = 1100  t4  = 62.32068                  t6 = -41.471
 transition = 3 type = 2 t1  = 6000  t4  = 62.2054140506421    
 end
 
- 
-
+C2H6      EoS = 116 | HSC/MRK Ethane
+C(2)H2(3)
+G0 = -152.135425062466d3 S0 = 229.600929272063
+c1 = -6.566 c2 = 175.454d-3 c3 = 5.878d5 c4 = -64.885d-6
+transition = 1 type = 2 t1  = 1400   t4  = 39.896 t5 = 92.427d-3 t6 = -38.222d5 t7 = -22.727d-6
+transition = 2 type = 2 t1  = 3400   t4  = 127.129  t5 = 12.005d-3 t6 = -354.785d5 t7 = -1.550d-6 
+end
