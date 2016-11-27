@@ -359,7 +359,7 @@ c                                 increased depending on EoS choices.
 c                                 max number of element fractions to be output
       nel = 6
 c                                 version info
-      call vrsion
+      call vrsion (6)
 c                                 read options
       n4name = 'perplex_option.dat'
       call redop1 (.false.,n4name)

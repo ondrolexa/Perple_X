@@ -117,7 +117,7 @@ c                                    iam = 13 - unsplt (global)
 c                                    iam = 14 - unsplt (local)
       iam = 1
 c                                 version info
-      call vrsion
+      call vrsion (6)
 c                                 elastic modulii flag
       kmod = 0 
 c                                 this do loop is a cheap strategy to automate

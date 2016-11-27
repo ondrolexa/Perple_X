@@ -98,7 +98,7 @@ c-----------------------------------------------------------------------
 c                                 iam is a flag indicating the Perple_X program
       iam = 13
 c                                 version info
-      call vrsion
+      call vrsion (6)
 c                                 initialize some flags
       first = .true.
       output = .false.

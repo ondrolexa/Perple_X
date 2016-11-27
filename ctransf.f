@@ -38,7 +38,7 @@ c-----------------------------------------------------------------------
 c                                 iam is a flag indicating the Perple_X program
       iam = 6
 c                                 version info
-      call vrsion
+      call vrsion (6)
 
       write (*,1000)
 c                                 assign data files

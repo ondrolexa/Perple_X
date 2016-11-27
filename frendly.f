@@ -63,7 +63,7 @@ c-----------------------------------------------------------------------
 c                                 iam flag indicates the Perple_X program
       iam = 5
 c                                 version info
-      call vrsion
+      call vrsion (6)
 c                                 assign data files
       call fopen2 (2,opname)
 c                                 read options

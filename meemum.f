@@ -73,7 +73,7 @@ c-----------------------------------------------------------------------
 c                                 iam is a flag indicating the Perple_X program
       iam = 2
 c                                 version info
-      call vrsion
+      call vrsion (6)
 c                                 initialization, read files etc. 
       rxn = .false.
       call iniprp

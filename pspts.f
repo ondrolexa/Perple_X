@@ -26,7 +26,7 @@ c Please do not distribute any part of this source.
       common / basic /iop0
 c----------------------------------------------------------------------
 c                                 version info
-      call vrsion
+      call vrsion (6)
 c                                 set iop0 to 1 to allow 
 c                                 drafting ptompts
       iop0 = 1

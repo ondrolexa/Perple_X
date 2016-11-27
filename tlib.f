@@ -10,14 +10,16 @@ c Please do not distribute this source.
 
 c----------------------------------------------------------------------
 
-      subroutine vrsion
+      subroutine vrsion (n)
 c----------------------------------------------------------------------
 c a version stamp for each executable
 c----------------------------------------------------------------------
       implicit none
 
-      write (*,'(/,a)') 
-     *      'Perple_X version 6.7.4, source updated Nov 25, 2016.'
+      integer n
+
+      write (n,'(/,a)') 
+     *      'Perple_X version 6.7.4, source updated Nov 26, 2016.'
 
       end
 
@@ -1144,6 +1146,8 @@ c----------------------------------------------------------------------
       integer iam
       common/ cst4 /iam
 c----------------------------------------------------------------------
+c                                 version
+      call vrsion (n)
 c                                 generic blurb
       if (iam.eq.1) then 
          write (n,1000) 'VERTEX'

@@ -174,7 +174,7 @@ c-----------------------------------------------------------------------
 c                                 iam is a flag indicating the Perple_X program
       iam = 4
 c                                 version info
-      call vrsion
+      call vrsion (6)
 
       write (*,7020)
 c                                 name and open computational option file (unit n1)      

@@ -523,7 +523,7 @@ c----------------------------------------------------------------
 
       character*5 y*1, units*13, text*195, what*9, sym*1
 
-      integer jcomp, ier, i, ids
+      integer jcomp, ier, i, ids, count
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
@@ -603,14 +603,16 @@ c                                define the numerator
 
          if (spec(jcomp)) then
             write (*,1010) (i,spnams(i,ids), i = 1, spct(ids))
+            count = spct(ids)
          else 
             write (*,1010) (i,cname(i), i = 1, icomp)
+            count = icomp
          end if 
 
          read (*,*,iostat=ier) (icps(i,jcomp),rcps(i,jcomp), 
      *                                     i = 1, jcx(jcomp))
          do i = 1, jcx(jcomp)
-            if (icps(i,jcomp).lt.1.or.icps(i,jcomp).gt.icomp) then
+            if (icps(i,jcomp).lt.1.or.icps(i,jcomp).gt.count) then
                ier = 1
                exit 
             end if 

@@ -28,7 +28,7 @@ c----------------------------------------------------------------------
       common / basic /iop0
 c----------------------------------------------------------------------
 c                                 version info
-      call vrsion
+      call vrsion (6)
 c                                 read plot option file, set
 c                                 default transformation
       call rdopt 

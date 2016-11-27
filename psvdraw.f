@@ -34,7 +34,7 @@ c-----------------------------------------------------------------------
 c                                 iam is a flag indicating the Perple_X program
       iam = 8
 c                                 version info
-      call vrsion
+      call vrsion (6)
 c                                 default no modification prompts
       iop0 = 0
  
