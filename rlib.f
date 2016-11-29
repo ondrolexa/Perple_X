@@ -8432,10 +8432,8 @@ c subroutine to evaluate the configurational entropy of a solution
 c with composition y, including the correction for endmember 
 c configurational negentropies. reciprocal end-member composition version.
 
-c note this version doesn't evaluate ordered endmember S, this is fine
-c so long as the ordered and its stoichiometrically equivalent disordered 
-c endmembers have the same S (as is currently the case for HP models, 
-c 10/20/05).
+c THIS ROUTINE MAKES NO CORRECTION FOR NON-ZERO CONFIGURATIONAL ENTROPY
+C IN ORDERED ENDMEMBERS OF O/D MODELS.
 c----------------------------------------------------------------------
       implicit none
 
@@ -8449,6 +8447,10 @@ c                                 configurational entropy variables:
       common/ cxt1i /msite(h9),ksp(m10,h9),lterm(m11,m10,h9),
      *               ksub(m0,m11,m10,h9)
 
+      double precision zz, pa, p0a, x, w, yy, wl
+      common/ cxt7 /yy(m4),zz(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
+     *              wl(m17,m18)
+
       double precision qmult, d0, dcoef, scoef      
       common/ cxt1r /qmult(m10,h9),d0(m11,m10,h9),dcoef(m0,m11,m10,h9),
      *               scoef(m4,h9)
@@ -8458,6 +8460,9 @@ c                                 configurational entropy variables:
 
       double precision v,tr,pr,r,ps
       common / cst5 /v(l2),tr,pr,r,ps
+
+      logical lorder, lexces, llaar, lrecip
+      common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
 c----------------------------------------------------------------------
       dlnw = 0d0
 c                                 for each site
@@ -8517,9 +8522,15 @@ c                                 z is site fraction
 
       end do 
 c                                 endmember corrections
-      do i = 1, nstot(id)
-         dlnw = dlnw - y(i)*scoef(i,id)
-      end do 
+      if (lorder(id)) then 
+         do i = 1, nstot(id)
+            dlnw = dlnw - p0a(i)*scoef(i,id)
+         end do
+      else 
+         do i = 1, nstot(id)
+            dlnw = dlnw - y(i)*scoef(i,id)
+         end do
+       end if 
 
       omega = dlnw 
 
@@ -10590,7 +10601,7 @@ c                                 and the full excess energy
          end if 
 
       end if 
-c                                 get the configurational entropy derivatives
+c                                 get the delta configurational entropy and derivatives
       call sderiv (id,s,ds,d2s)
 
       do k = 1, norder
@@ -10658,7 +10669,8 @@ c----------------------------------------------------------------------
 c subroutine to the derivative of the configurational entropy of a 
 c solution with respect to the proportion of a dependent species.
 
-c THIS DOES NOT INCLUDE ENDMEMBER CONFIGURATION ENTROPY DERIVATIVES!
+c THIS ROUTINE MAKES NO CORRECTION FOR NON-ZERO CONFIGURATIONAL ENTROPY
+C IN ORDERED ENDMEMBERS! 
 c----------------------------------------------------------------------
       implicit none
 
@@ -10728,11 +10740,6 @@ c                                 for each term:
          s = s + qmult(i,id) * s0
 
       end do 
-c                                 endmember corrections
-      do i = 1, nstot(id)
-         s = s - pa(i)*scoef(i,id)
-      end do 
-
 c                                 initialize derivatives:
       inf = .false.
 
@@ -10824,7 +10831,12 @@ c                                 cross term * infinity
  
          end do 
 
-      end if 
+      end if
+c                                 endmember corrections
+      do i = 1, nstot(id)
+         s = s - p0a(i)*scoef(i,id)
+         dsy = dsy - scoef(i,id)
+      end do 
 
       end
 
@@ -11878,6 +11890,10 @@ c----------------------------------------------------------------------
       inf = .false.
       ds = 0d0 
       d2s = 0d0
+      pa(1) = 0d0 
+      pa(2) = 0.3
+      pa(3) = 0.6
+      pa(4) = 0.1 
 
       do i = 1, msite(id)
 
@@ -11964,7 +11980,7 @@ c                                 derivative may be +/-infinite
       end do 
 
       do i = 1, nstot(id) 
-         ds = ds - scoef(i,id)
+         ds = ds + dyy... scoef(i,id)
       end do 
 
       end
