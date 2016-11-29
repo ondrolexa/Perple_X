@@ -77,7 +77,7 @@ begin_model
                                       Mutliplicity      1      1     1      1   
                                                      ____________________________________
 
-                                        Diopside        Ca     Mg    Si     Si
+                                        Diopside        Mg     Ca    Si     Si
                                         cEnstatite      Mg     Mg    Si     Si
                                         cferrosilite    Fe     Fe    Si     Si
                             Species:    Jadeite         Al     Na    Si     Si
@@ -162,12 +162,12 @@ end_excess_function
 
 4 1                                 | 4 species on m1, mult = 1
 z(m1,fe)   = 1 cfsg
-z(m1,mg)   = 1 di + 1 fmc
+z(m1,mg)   = 1 di + 1 fmc + 1 cenh
 z(m1,fe3+) = 1 acm 
 
 4 1                                 | 4 species on m2, mult. = 1
 z(m2,na)   = 1 acm  + 1 jd
-z(m2,ca)   = 1 ocats + 1 cats
+z(m2,mg)   = 1 cenh
 z(m2,fe)   = 1 fmc  + 1 cfsg
 
 2 0.25                               | 2 species on T1, mult. = 1
@@ -176,17 +176,6 @@ z(Al,T1) = 1/2 cats
 2 0.25                               | 2 species on T2, mult. = 1
 z(Al,T2) = 1/2 cats + 1 ocats
 
-begin_van_laar_sizes
-alpha(di)          1.2
-alpha(cenh)        1
-alpha(cfsg)        1
-alpha(jd)          1.2
-alpha(acm)         1.2
-alpha(ocats)       1.9
-alpha(cats)        1.9
-alpha(fmc)         1.0
-end_van_laar_sizes
-
 begin_dqf_corrections
 dqf(jd)   =  2000
 dqf(acm)  = -5000
@@ -194,6 +183,9 @@ dqf(cats) =  3800  - 2.8816 * T  + 0.01  * P
 end_dqf_corrections
 
 end_of_model
+
+
+
                       --------------------------------------------------------
 begin_model
                       Green, ECR, et al. (JMG, 2016). 
@@ -373,7 +365,7 @@ z(A,k)     = 1 kprg
 2 3                                 | 2 species on M1, mult = 3
 z(M1,fe)   = 1 grun + 1 b 
 
-5 1                                 | 5 species on M2, mult = 1
+5 2                                 | 5 species on M2, mult = 2
 z(M2,fe)   = 1 grun + 1 a
 z(M2,fe3)  = 1 mrb
 z(M2,al)   = 1 ts + 1 gl + 1/2 kprg + 1/2 parg

@@ -11803,7 +11803,8 @@ c                                 assuming regular terms
          end do  
 c                                 get derivative of excess function
          if (llaar(id)) then 
-
+c                                 for h&p van laar, this is unnecessary because
+c                                 t is constant.
             t = 0d0 
 c                                 h&p van laar
             do i = 1, nstot(id)
@@ -11867,13 +11868,16 @@ c                                 configurational entropy variables:
       double precision dppp,d2gx,sdzdp
       common/ cxt28 /dppp(j3,j3,m1,h9),d2gx(j3,j3),sdzdp(j3,m11,m10,h9)
 
+      integer lstot,mstot,nstot,ndep,nord
+      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
+
       double precision units, r13, r23, r43, r59, r1, r2
       common/ cst59 /units, r13, r23, r43, r59, r1, r2
 c----------------------------------------------------------------------
 
       inf = .false.
       ds = 0d0 
-      d2s = 0d0 
+      d2s = 0d0
 
       do i = 1, msite(id)
 
@@ -11957,6 +11961,10 @@ c                                 derivative may be +/-infinite
             d2s = d2s - qmult(i,id)*dabs(dsinf)*1d5
          end if 
 
+      end do 
+
+      do i = 1, nstot(id) 
+         ds = ds - scoef(i,id)
       end do 
 
       end
