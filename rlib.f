@@ -8524,7 +8524,7 @@ c                                 z is site fraction
 c                                 endmember corrections
       if (lorder(id)) then 
          do i = 1, nstot(id)
-            dlnw = dlnw - p0a(i)*scoef(i,id)
+            dlnw = dlnw + (p0a(i)-pa(i))*scoef(i,id)
          end do
       else 
          do i = 1, nstot(id)
@@ -10692,9 +10692,12 @@ c                                 configurational entropy variables:
       common/ cxt1i /msite(h9),ksp(m10,h9),lterm(m11,m10,h9),
      *               ksub(m0,m11,m10,h9)
 
-      double precision qmult, d0, dcoef, scoef      
+      double precision qmult, d0, dcoef, scoef
       common/ cxt1r /qmult(m10,h9),d0(m11,m10,h9),dcoef(m0,m11,m10,h9),
      *               scoef(m4,h9)
+
+      double precision dvnu,deph,dydy
+      common/ cxt3r /dvnu(m4,j3,h9),deph(3,j3,h9),dydy(m4,j3,h9)
 
       double precision dppp,d2gx,sdzdp
       common/ cxt28 /dppp(j3,j3,m1,h9),d2gx(j3,j3),sdzdp(j3,m11,m10,h9)
@@ -10834,9 +10837,14 @@ c                                 cross term * infinity
       end if
 c                                 endmember corrections
       do i = 1, nstot(id)
-         s = s - p0a(i)*scoef(i,id)
-         dsy = dsy - scoef(i,id)
-      end do 
+
+         s = s + (p0a(i) - pa(i)) * scoef(i,id)
+         
+         do k = 1, nord(id) 
+           dsy(k) = dsy(k) - dydy(i,k,id) * scoef(i,id)
+         end do 
+
+      end do
 
       end
 
@@ -11853,7 +11861,7 @@ c----------------------------------------------------------------------
 c subroutine to the derivative of the configurational entropy of a 
 c solution with respect to the proportion of the lth ordered species.
 
-c THIS DOES NOT INCLUDE ENDMEMBER CONFIGURATION ENTROPY DERIVATIVES!
+c ASSUMES ORDERED SPECIES HAVE NO CONFIGURATIONAL ENTROPY!
 c----------------------------------------------------------------------
       implicit none
 
@@ -11885,15 +11893,14 @@ c                                 configurational entropy variables:
 
       double precision units, r13, r23, r43, r59, r1, r2
       common/ cst59 /units, r13, r23, r43, r59, r1, r2
+
+      double precision dvnu,deph,dydy
+      common/ cxt3r /dvnu(m4,j3,h9),deph(3,j3,h9),dydy(m4,j3,h9)
 c----------------------------------------------------------------------
 
       inf = .false.
       ds = 0d0 
       d2s = 0d0
-      pa(1) = 0d0 
-      pa(2) = 0.3
-      pa(3) = 0.6
-      pa(4) = 0.1 
 
       do i = 1, msite(id)
 
@@ -11980,7 +11987,7 @@ c                                 derivative may be +/-infinite
       end do 
 
       do i = 1, nstot(id) 
-         ds = ds + dyy... scoef(i,id)
+         ds = ds - dydy(i,1,id) * scoef(i,id)
       end do 
 
       end

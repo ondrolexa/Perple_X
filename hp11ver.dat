@@ -200,9 +200,6 @@ mstt   = 1 mst - 1 cor   +3/2   ru
        DQF(J/mol) = 13d3 
 mots1    = 1 mgts + 1/2  andr  - 1/2 gr
        DQF(J/mol) = 2d3  
- 
-odi  = 1 di 
-       DQF(J/mol) = -0.1d3       0.211       0.005
 
 tbi = 1 phl - 1 br + 1 ru         | Ti-biotite endmember for Bi(W) model
        DQF(J/mol) = 55e3                        

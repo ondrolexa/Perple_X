@@ -1,4 +1,4 @@
-674 DO NOT DELETE THIS LINE
+675 DO NOT DELETE THIS LINE
 
                              FOR MODEL DEFINITIONS AND REFERENCES REFER TO THE GLOSSARY AT:
 
@@ -170,11 +170,22 @@ z(m2,na)   = 1 acm  + 1 jd
 z(m2,mg)   = 1 cenh
 z(m2,fe)   = 1 fmc  + 1 cfsg
 
-2 0.25                               | 2 species on T1, mult. = 1
+2 0.25                               | 2 species on T1, effective mult. = 1/4
 z(Al,T1) = 1/2 cats
 
-2 0.25                               | 2 species on T2, mult. = 1
+2 0.25                               | 2 species on T2, effective mult. = 1/4
 z(Al,T2) = 1/2 cats + 1 ocats
+
+begin_van_laar_sizes
+alpha(di)          1.2
+alpha(cenh)        1
+alpha(cfsg)        1
+alpha(jd)          1.2
+alpha(acm)         1.2
+alpha(ocats)       1.9
+alpha(cats)        1.9
+alpha(fmc)         1.0
+end_van_laar_sizes
 
 begin_dqf_corrections
 dqf(jd)   =  2000
@@ -1293,15 +1304,15 @@ fmn_i  = 1 kho1  + 1 spss -1 py
 0. 1.   0.1 0                     | imod = 0 -> cartesian subdivision x(fe3+) on Y
 
 begin_excess_function
-W(py  alm)               2.5d3           0         0
-W(py  gr)                 31d3           0         0
+W(py  alm)               2.5d3           0         0         | as given by Green et al 2016.
+W(py  gr)                30.1d3          0         0.164
 W(py  kho1)              5.4d3           0         0
 W(py  spss)                2d3           0         0
 W(alm gr)                  5d3           0         0
-W(alm kho1)             22.6d3           0         0
+W(alm kho1)            21.63d3           0         0.168
 W(alm spss)                2d3           0         0
-W(gr  kho1)            -15.3d3           0         0
-w(spss kho1)            29.4d3           0         0 
+W(gr  kho1)           -16.15d3           0         0.164
+w(spss kho1)           28.43d3           0         0.168 
 end_excess_function  
 
 2                                     |2 site entropy model
@@ -1485,8 +1496,7 @@ mu pa ma1_dqf cel fmu fcel
 0. 1.   .1 0                 | range and resolution of X(pa),      imod = 0 -> cartesian subdivision
 0. 1.   .1 0                 | range and resolution of X(ma1_dqf), imod = 0 -> cartesian subdivision
 0. 1.   .1 0                 | range and resolution of X(cel),     imod = 0 -> cartesian subdivision
-0. 0.3  .1 1                 | range and resolution of X(fmu),     imod = 1 -> asymmetric transform subdivision
-
+0. 1.   .1 0                 | range and resolution of X(fmu), 
 begin_excess_function
 
 W(mu cel)                  0d3           0       0.2
@@ -1648,9 +1658,6 @@ begin_model
 
                              mots1    = 1 mgts + 1/2  andr  - 1/2   gr
                              2d3 0 0 
- 
-                             odi  = 1 di 
-                             -0.1d3       0.211       0.005
 
                              mnopx = 2 pxmn
                              6.68d3 0 0
@@ -1677,6 +1684,11 @@ begin_model
 
                              JADC, 6/10/2016
 
+
+                             odi replaced by a internal dqf on di
+
+                             JADC, 30/11/2016
+
                                        Site:          M1      M2      T
                                                      ____________________
 
@@ -1693,8 +1705,8 @@ begin_model
                                       7 mots1         Fe3+    Mg      AlSi
                                       8 feots         Fe3+    Fe2+    AlSi  dependent
 
-                                     10 odi           Mg      Ca      Si
-                                     11 fodi          Fe      Ca      Si    dependent
+                                     10 di            Mg      Ca      Si
+                                     11 fdi           Fe      Ca      Si    dependent
                                                       ___________________
 
                            Internal: 13 opx           Mg      Fe2+    Si
@@ -1702,10 +1714,10 @@ begin_model
 
                            Dependent: fets  = mgts  + opx - en
                                       feots = mots1 + opx - en 
-                                      fodi  = odi  + opx - en
+                                      fdi   = di   + opx - en
                                       mnts  = 1 mgts + 1/2 mnopx - 1/2 en 
                                       mnots = 1 mots + 1/2 mnopx - 1/2 en 
-                                      modi  = 1 odi  + 1/2 mnopx - 1/2 en
+                                      mdi   = 1 di   + 1/2 mnopx - 1/2 en
                            ----------------------------------------------------
 
 Opx(W)                     | solution name.
@@ -1719,7 +1731,7 @@ full_name    orthopyroxene
 3 4                        | 2 dimensions on first space, 3 on second
                            | endmembers: 
 mnots    mots1    feots 
-modi     odi      fodi 
+mdi      di       fdi  
 mnts     mgts     fets_d   
 mnopx    en       fs 
 
@@ -1730,17 +1742,17 @@ opx = 1/2 en + 1/2  fs  Delta(enthalpy) = -6.95d3
 begin_limits
 opx =     - 2 fs - 1 opx                delta = 2 z(M2,Fe)       
 opx =  -2 + 2 fs + 1 opx                delta = 2 z(M1,Fe)
-opx =     - 2 en - 2 odi - 1 opx        delta = 2 z(M1,Mg)
+opx =     - 2 en - 2 di  - 1 opx        delta = 2 z(M1,Mg)
 end_limits                
 
 6                          | 6 dependent endmembers, 3 real, 3 pointers
 
 fets_d = 1 mgts  + 1 opx - 1 en
 feots  = 1 mots1 + 1 opx - 1 en
-fodi   = 1 odi   + 1 opx - 1 en
+fdi    = 1 di    + 1 opx - 1 en
 mnts   = 1 mgts  + 1/2 mnopx - 1/2 en 
 mnots  = 1 mots1 + 1/2 mnopx - 1/2 en 
-modi   = 1 odi   + 1/2 mnopx - 1/2 en
+mdi    = 1 di    + 1/2 mnopx - 1/2 en
 
 0 0 0 0 0 0 0 0 0 0 0 0    | endmember flags, indicate if endmember is part of the solution (i.e. iend = 0).
 
@@ -1760,22 +1772,22 @@ W(en opx)                  4d3         0         0
 W(en mgts)                13d3         0     -0.15
 W(en mots1)               11d3         0     -0.15
 W(en mnopx)                5d3         0         0 
-W(en odi)               32.2d3         0      0.12
+W(en di)                32.2d3         0      0.12
 W(fs opx)                  4d3         0         0
 W(fs mgts)                13d3         0     -0.15
 W(fs mots1)             11.6d3         0     -0.15
 W(fs mnopx)              4.2d3         0         0
-W(fs odi)              25.54d3         0     0.084
+W(fs di)               25.54d3         0     0.084
 W(opx mgts)               17d3         0     -0.15
 W(opx mots1)              15d3         0     -0.15
 W(opx mnopx)             5.1d3         0         0
-W(opx odi)             22.54d3         0     0.084
+W(opx di)              22.54d3         0     0.084
 W(mgts mots1)              1d3         0         0
 W(mgts mnopx)             12d3         0     -0.15
-W(mgts odi)             75.4d3         0     -0.94
+W(mgts di)              75.4d3         0     -0.94
 W(mots1 mnopx)          10.6d3         0     -0.15
-W(mots1 odi)            73.4d3         0     -0.94
-W(odi mnopx)            25.4d3         0     0.084
+W(mots1 di)             73.4d3         0     -0.94
+W(di mnopx)             24.54d3         0     0.084
 end_excess_function 
 
 3                          | 3 site (M1, M2, T) configurational entropy model
@@ -1789,21 +1801,25 @@ z(m1,mn)   = 1 mnopx
 
 4 1.                       | 4 species on M2, 1 site per formula unit.
 z(m2,fe) = 1 fs + 1 opx
-z(m2,ca) = 1 odi
+z(m2,ca) = 1 di 
 z(m2,mn)   = 1 mnopx
 
 2 0.25                     | 2 species on "1/4" T site
 z(T,al) = 1/2 mgts + 1/2 mots1
 
 begin_van_laar_sizes                        
-alpha(en)       1.0    0.    0.                      
+alpha(en)       1.0    0.    0.
 alpha(fs)       1.0    0.    0.
 alpha(opx)      1.0    0.    0.
 alpha(mgts)     1.0    0.    0.
 alpha(mots1)    1.0    0.    0.
-alpha(odi)      1.2    0.    0.
+alpha(di)       1.2    0.    0.
 alpha(mnopx)    1.0    0.    0.
 end_van_laar_sizes
+
+begin_dqf_corrections
+dqf(di)  = -100    +   0.211 *T      0.005 *P
+end_dqf_corrections
 
 end_of_model 
                       --------------------------------------------------------
@@ -1817,7 +1833,8 @@ begin_model
                              tbi = 1 phl - 1 br + 1 ru           
                              55e3 0 0 
                              fbi = 1 east - 1/2 andr + 1 gr    
-                             -3e3 0 0  
+                             -3e3 0 0
+
 
                              Modified model entered by Tim Johnson, Apr 7, 2014.
 
@@ -1963,6 +1980,8 @@ end_of_model
 begin_model        
                              Ilmenite after White et al., JMG 32:261-286, 2014,
                              modified from White, RW, Powell, R, Holland, TJB & Worley, BA (2000, JMG) with Mn added
+
+                             Green et al (2016) remark this model "may be suspect" and use the original 2000 model.
 
                                                       A                B
                                                      _____________________

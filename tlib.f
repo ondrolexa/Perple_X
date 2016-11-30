@@ -19,7 +19,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a)') 
-     *      'Perple_X version 6.7.4, source updated Nov 26, 2016.'
+     *      'Perple_X version 6.7.5, source updated Nov 30, 2016.'
 
       end
 
@@ -34,7 +34,8 @@ c----------------------------------------------------------------------
       character*3 new
 
       if (new.eq.'008'.or.new.eq.'011'.or.new.eq.'670'.or.
-     *    new.eq.'672'.or.new.eq.'673'.or.new.eq.'674') then 
+     *    new.eq.'672'.or.new.eq.'673'.or.new.eq.'674'.or.
+     *    new.eq.'675') then 
 
          chksol = .true.
 
