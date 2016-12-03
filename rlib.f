@@ -525,9 +525,26 @@ c                                 order/disorder:
 c                                 fluids in the saturated
 c                                 or thermodynamic composition space, these
 c                                 are not used for mixture props.
-      if (eos(id).gt.100) then 
+      if (eos(id).gt.100) then
 
-         if (eos(id).lt.117) then  
+         if (eos(id).eq.201.or.eos(id).eq.202) then
+c                                 species has been identified as a special composant
+c                                 and eos is set by ifug
+            if (eos(id).eq.201) then 
+         
+               xco2 = 0d0 
+               call cfluid (fo2,fs2)
+               gval = gval + r*t*f(1)
+            
+            else
+          
+               xco2 = 1d0
+               call cfluid (fo2,fs2)
+               gval = gval + r*t*f(2)
+
+            end if 
+
+         else if (eos(id).lt.117) then  
 c                                 call appropriate pure fluid EoS
             gval = gval + r*t * lnfpur(eos(id))
             
@@ -919,7 +936,7 @@ c                                 the reference condition born radius (thermo 19
 
          return 
 c                                 remaining standard forms have caloric polynomial
-      else if (ieos.lt.120.or.ieos.eq.604.or.ieos.eq.605.or.
+      else if (ieos.le.202.or.ieos.eq.604.or.ieos.eq.605.or.
      *         ieos.eq.606.or.ieos.eq.700.or.ieos.eq.701.or.
      *         ieos.eq.702) then
 c                                G(Pr,T) polynomial 
@@ -939,7 +956,8 @@ c                                G(Pr,T) polynomial
          gg = gg/6d0
          c8 = c8/12d0
 c                                 fluid special case, this is sloppy
-         if (ieos.gt.100.and.ieos.lt.120) return
+         if (ieos.gt.100.and.ieos.lt.120.or.ieos.eq.201.or.ieos.eq.202)
+     *      return
 
       end if 
 c                                 -------------------------------------
@@ -1017,7 +1035,7 @@ c                                 used for the BM3.
          b12 = b8 - 1d0 
 c                                 anderson-gruneisen parameter is assumed = K' (abs(b8)) except for
 c                                 special EoS forms           
-         if (ieos.gt.100) then 
+         if (ieos.gt.300) then 
             b11 = -s
          else 
 c                                 special EoS, anderson-gruneisen stored in 
@@ -1914,7 +1932,7 @@ c                                        = 2, shear and bulk
             if (ifyn.ne.0) then 
 c                                 there is no saturated phase
 c                                 assign it the default molecular fluid eos
-               eos(id) = 100 + k 
+               eos(id) = 200 + k 
 
             else if (k.eq.1.and.idfl.ne.2.or. 
      *               k.eq.2.and.idfl.ne.1) then 
@@ -1968,7 +1986,8 @@ c                                 in ifp array, this is only used by gcpd.
 
          ifp(id) = -1
 
-      else if (eos(id).eq.10.or.eos(id).ge.101.and.eos(id).le.116) then 
+      else if (eos(id).eq.10.or.eos(id).ge.101.and.eos(id).le.116.or.
+     *         eos(id).eq.201.or.eos(id).eq.202) then 
  
          gflu = .true.
          ifp(id) = 1

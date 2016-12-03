@@ -1179,7 +1179,7 @@ c                                the user specify an EoS
  
          do i = 1, iphct
 
-            if (eos(i).eq.101.or.eos(i).eq.102) then 
+            if (eos(i).eq.201.or.eos(i).eq.202) then 
 
                do j = 1, ixct
 
