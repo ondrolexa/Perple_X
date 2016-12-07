@@ -7801,7 +7801,7 @@ c----------------------------------------------------------------------
 
       integer i, im
 
-      double precision dlnw, yfac, yh2o, yfo, yfa, y(m4)
+      double precision dlnw, yfac, yfo, yfa, y(m4)
 c                                 global arrays:
       double precision t, p, xco2, u1, u2, tr, pr, r, ps
       common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -7818,22 +7818,19 @@ c----------------------------------------------------------------------
 
       if (jspec(im,1).eq.1.and.y(1).gt.0d0) then
 c                                 the quadratic water term
-         yh2o = y(1)
-         dlnw = -2d0 * yh2o * dlog(yh2o)
+c                                 and temkin renormalization term
+         dlnw = -2d0*y(1)*dlog(y(1)) - (1d0 - y(1))*dlog(1d0 - y(1))
 
       else 
  
-         yh2o = 0d0 
          dlnw = 0d0
 
       end if 
-
-      yfac = 1d0 - yh2o
-c                                 the basic entropy
+c                                 the molecular entropy
       do i = jspec(im,4), nstot(im)
 
          if (y(i).le.0d0) cycle
-         dlnw = dlnw - y(i) * dlog(y(i)*yfac)
+         dlnw = dlnw - y(i) * dlog(y(i))
  
       end do 
 c                                 the fe-mg fudge factor
@@ -10594,7 +10591,8 @@ c                                 assuming regular terms
          end do  
 c                                 get derivative of excess function
          if (llaar(id)) then 
-
+c                                 so far this is unessecary because
+c                                 t does not vary in h&p ordering models.
             t = 0d0 
 c                                 h&p van laar
             do i = 1, nstot(id)
@@ -14973,6 +14971,17 @@ c----------------------------------------------------------------------
       i2 = ideps(2,1,id)
       jd = lstot(id) + 1 
       error = .false.
+
+c      p0a(1) = .3954786492
+c      p0a(2) = .3022606754
+c      p0a(3) = .3022606754
+
+
+c      p0a(1) = .5668
+c      p0a(2) = 0.4332/2d0
+c      p0a(3) = 0.4332/2d0
+
+
 c                                 starting point:
 c                                 find the maximum amount of the 
 c                                 ordered species that can be formed
@@ -15052,7 +15061,7 @@ c                                 fails to converge.
 
       else
 c                                 speciation is not stoichiometrically possible
-         g = t*hpmelt(id,p0a) + gex(id,p0a)
+         g = -t*hpmelt(id,p0a) + gex(id,p0a)
          return
 
       end if
@@ -15062,7 +15071,7 @@ c                                 didn't converge or couldn't find a good
 c                                 starting point compare the fully ordered 
 c                                 and disordered g's and choose the lowest
 c                                 full disorder:
-         dq = t*hpmelt(id,p0a) + gex(id,p0a)
+         dq = -t*hpmelt(id,p0a) + gex(id,p0a)
 c                                 full order:
          do i = 1, jd
 
@@ -15106,7 +15115,7 @@ c----------------------------------------------------------------------
 
       integer i, kd, ld, i1, i2, id, jd
 
-      double precision g, dg, d2g, s, ds, d2s, pfac, dpfac, d2pfac,
+      double precision g, dg, d2g, s, ds, d2s, pfac,
      *                 q, ph2o, dph2o, d2ph2o, pfo, pfa, pnorm, pnorm2,
      *                 dp(m4), d2p(m4), lpa(m4), lpfac, dng,
      *                 dsfo, dsfa, gnorm, dgnorm
@@ -15211,40 +15220,33 @@ c                                 quadratic water term:
          ph2o = pa(1)
          dph2o = dp(1)
          d2ph2o = d2p(1)
-
-         s   =  -2d0 * ph2o * dlog(ph2o)
-         ds  =  -2d0 * lpa(1) * dph2o
-         d2s =  -2d0*(lpa(1)*d2ph2o + dph2o*dph2o/ph2o)
-c                                 the water x factor (renormalizes the non-volatile
-c                                 fractions:
+c                                 pfac renormalizes the non-volatile
+c                                 fractions (i.e., the multiplicity of
+c                                 the non-volatike site is pfac):
          pfac = 1d0 - ph2o
          lpfac = dlog(pfac)  
+c                                 entropy expression rewritten
+c                                 to collect the pfac term
+         s   =  -2d0 * ph2o * dlog(ph2o) - pfac*lpfac
+         ds  =  (-2d0 * lpa(1) + (lpfac + 1d0)) * dph2o
+         d2s =  (-2d0*lpa(1) + lpfac + 1d0) * d2p(1)
+     *        - (2d0/ph2o + 1d0/pfac)*dph2o*dph2o
 
       else 
- 
-         ph2o = 0d0 
-         dph2o = 0d0
-         d2ph2o = 0d0
 
          s = 0d0 
          ds = 0d0 
-         d2s = 0d0
-         pfac = 1d0 
-         lpfac = 0d0  
+         d2s = 0d0 
 
       end if 
-
-      dpfac = -dph2o 
-      d2pfac = -d2ph2o  
+ 
 c                                 the configurational entropy
       do i = jspec(id,4), jd
 
          if (pa(i).le.0d0) cycle
          s = s - pa(i) * dlog(pa(i))
-         ds = ds - ( (lpa(i) + lpfac)*dp(i) + pa(i)*dpfac/pfac )
-         d2s = d2s - (  (lpa(i) + lpfac)*d2p(i)
-     *                + dp(i)*(dp(i)/pa(i) + 2d0*dpfac/pfac)
-     *                + pa(i)/pfac * (d2pfac - dpfac*dpfac/pfac) )
+         ds = ds - lpa(i)*dp(i)
+         d2s = d2s - (lpa(i)*d2p(i) + dp(i)*dp(i)/pa(i))
  
       end do 
 c                                 the fe-mg fudge factor
@@ -15277,6 +15279,7 @@ c                                 and second derivative
 c                                 dg becomes the newton-raphson increment:
       dg = -dng/d2g
 c                                 and g the normalized g:
+
       g   = g * gnorm
 
       end
