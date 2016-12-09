@@ -8447,9 +8447,6 @@ c----------------------------------------------------------------------
 c subroutine to evaluate the configurational entropy of a solution
 c with composition y, including the correction for endmember 
 c configurational negentropies. reciprocal end-member composition version.
-
-c THIS ROUTINE MAKES NO CORRECTION FOR NON-ZERO CONFIGURATIONAL ENTROPY
-C IN ORDERED ENDMEMBERS OF O/D MODELS.
 c----------------------------------------------------------------------
       implicit none
 
@@ -8462,10 +8459,6 @@ c                                 configurational entropy variables:
       integer msite, ksp, lterm, ksub
       common/ cxt1i /msite(h9),ksp(m10,h9),lterm(m11,m10,h9),
      *               ksub(m0,m11,m10,h9)
-
-      double precision zz, pa, p0a, x, w, yy, wl
-      common/ cxt7 /yy(m4),zz(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
-     *              wl(m17,m18)
 
       double precision qmult, d0, dcoef, scoef      
       common/ cxt1r /qmult(m10,h9),d0(m11,m10,h9),dcoef(m0,m11,m10,h9),
@@ -8538,15 +8531,9 @@ c                                 z is site fraction
 
       end do 
 c                                 endmember corrections
-      if (lorder(id)) then 
-         do i = 1, nstot(id)
-            dlnw = dlnw + (p0a(i)-pa(i))*scoef(i,id)
-         end do
-      else 
-         do i = 1, nstot(id)
-            dlnw = dlnw - y(i)*scoef(i,id)
-         end do
-       end if 
+      do i = 1, nstot(id)
+         dlnw = dlnw - y(i)*scoef(i,id)
+      end do
 
       omega = dlnw 
 
@@ -10685,9 +10672,6 @@ c                                 compositions.
 c----------------------------------------------------------------------
 c subroutine to the derivative of the configurational entropy of a 
 c solution with respect to the proportion of a dependent species.
-
-c THIS ROUTINE MAKES NO CORRECTION FOR NON-ZERO CONFIGURATIONAL ENTROPY
-C IN ORDERED ENDMEMBERS! 
 c----------------------------------------------------------------------
       implicit none
 
@@ -10855,10 +10839,10 @@ c                                 cross term * infinity
 c                                 endmember corrections
       do i = 1, nstot(id)
 
-         s = s + (p0a(i) - pa(i)) * scoef(i,id)
+         s = s - pa(i) * scoef(i,id)
          
          do k = 1, nord(id) 
-           dsy(k) = dsy(k) - dydy(i,k,id) * scoef(i,id)
+            dsy(k) = dsy(k) - dydy(i,k,id) * scoef(i,id)
          end do 
 
       end do
