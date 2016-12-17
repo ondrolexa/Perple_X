@@ -10697,9 +10697,6 @@ c                                 configurational entropy variables:
       common/ cxt1r /qmult(m10,h9),d0(m11,m10,h9),dcoef(m0,m11,m10,h9),
      *               scoef(m4,h9)
 
-      double precision dvnu,deph,dydy
-      common/ cxt3r /dvnu(m4,j3,h9),deph(3,j3,h9),dydy(m4,j3,h9)
-
       double precision dppp,d2gx,sdzdp
       common/ cxt28 /dppp(j3,j3,m1,h9),d2gx(j3,j3),sdzdp(j3,m11,m10,h9)
 
@@ -10838,12 +10835,11 @@ c                                 cross term * infinity
       end if
 c                                 endmember corrections
       do i = 1, nstot(id)
-
-         s = s - pa(i) * scoef(i,id)
-         
-         do k = 1, nord(id) 
-            dsy(k) = dsy(k) - dydy(i,k,id) * scoef(i,id)
-         end do 
+c                                 the mechanical g term 
+c                                 includes only -p0*s0 terms,
+c                                 ergo these are the only terms
+c                                 that need to be cancelled. 
+         s = s - p0a(i) * scoef(i,id)
 
       end do
 
@@ -11345,6 +11341,11 @@ c----------------------------------------------------------------------
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 c----------------------------------------------------------------------
 c                                 get initial p values
+            lord = 2
+            pin(1) = .true.
+            pin(2) = .true.
+            call gderiv (id,g,dp,error)
+
       call pinc0 (id,lord)
 c                                 lord is the number of possible species
       if (lord.eq.1) then 
@@ -11385,7 +11386,7 @@ c                                 lord is the number of possible species
 c                                 nov 23, 2016 added exit if diverging 
 c                                 g > gold, itic > 2
             if (tdp.lt.nopt(5).or.
-     *          dabs((gold-g)/g).lt.1d-3.or.tdp.eq.xtdp.or.
+     *          dabs((gold-g)/g).lt.nopt(5).or.tdp.eq.xtdp.or.
      *          itic.gt.2.and.gold.le.g) then
                goodc(1) = goodc(1) + 1d0
                exit
@@ -11985,10 +11986,6 @@ c                                 derivative may be +/-infinite
             d2s = d2s - qmult(i,id)*dabs(dsinf)*1d5
          end if 
 
-      end do 
-
-      do i = 1, nstot(id) 
-         ds = ds - dydy(i,1,id) * scoef(i,id)
       end do 
 
       end

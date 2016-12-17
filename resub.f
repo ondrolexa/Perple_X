@@ -2858,6 +2858,20 @@ c                                 after Lacaze and Sundman
 
          else if (lrecip(i).and.lorder(i)) then
 c                                 prismatic solution with ordering 
+c            sxs(1) = .6407726359
+c            sxs(2) = .4912112378e-1
+c            sxs(3) = .1781709887e-1
+c            sxs(4) = .2657701269
+c            sxs(5) = .2972736393e-1
+c            sxs(6) = -.320834956e-2
+c eq
+c            sxs(1) = .7012131600d0
+c            sxs(2) = .513d-1
+c            sxs(3) = .1882040400d0
+c            sxs(4) = .2473868400d0
+c            sxs(5) = .5216d-4
+c            sxs(6) = -.1881562000d0
+
 
 c                                 compute margules coefficients
             call setw (i)
@@ -2865,6 +2879,8 @@ c                                 compute enthalpy of ordering
             call oenth (i)
 c                                 now for each compound:
             do j = 1, jend(i,2)
+
+            id = 12
 c                                 assign x's
                do k = 1, nstot(i) 
                   p0a(k) = sxs(ixp(id)+k)
