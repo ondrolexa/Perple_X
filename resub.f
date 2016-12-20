@@ -2879,8 +2879,6 @@ c                                 compute enthalpy of ordering
             call oenth (i)
 c                                 now for each compound:
             do j = 1, jend(i,2)
-
-            id = 12
 c                                 assign x's
                do k = 1, nstot(i) 
                   p0a(k) = sxs(ixp(id)+k)
