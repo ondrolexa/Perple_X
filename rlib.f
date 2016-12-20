@@ -11341,11 +11341,6 @@ c----------------------------------------------------------------------
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 c----------------------------------------------------------------------
 c                                 get initial p values
-            lord = 2
-            pin(1) = .true.
-            pin(2) = .true.
-            call gderiv (id,g,dp,error)
-
       call pinc0 (id,lord)
 c                                 lord is the number of possible species
       if (lord.eq.1) then 
