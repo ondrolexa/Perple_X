@@ -302,7 +302,7 @@ ftts_d  = 1 tts   + 1 grun   - 1 a
 
 0. 1.  .1  0                 | range and resolution for X(ts)   on site 2, imod = 0
 0. 1.  .1  0                 | range and resolution for X(pg)   on site 2, imod = 0
-0. .4  .1  1                 | range and resolution for X(gl)   on site 2, imod = 1
+0. 1.  .1  0                 | range and resolution for X(gl)   on site 2, imod = 1
 0. 1.  .1  0                 | range and resolution for X(cumm) on site 2, imod = 0
 0. .4  .1  1                 | range and resolution for X(mrb)  on site 2, imod = 1
 0. .1  .1  1                 | range and resolution for X(kprg) on site 2, imod = 1

@@ -10451,15 +10451,7 @@ c                                 i.e., iopt(17).ne.0, compute disordered g.
             end do 
          end if 
 
-         if (error) then 
-
-            g = gdord
-
-         else
-
-            if (gdord.lt.g) g = gdord
-
-         end if 
+         if (gdord.lt.g) g = gdord
 
       end if 
 c                                 convert the ordered endmember fractions to 
@@ -11272,6 +11264,7 @@ c                                 newton raphson iteration
 
             call pcheck (pa(jd),pmin,pmax,dp,done)
 c                                 done means the search hit a limit
+c                                 or dp < tolerance.
             if (done) then
 
                goodc(1) = goodc(1) + 1d0
@@ -11694,7 +11687,8 @@ c                                 check that the ordered species are in the subc
 
       subroutine pcheck (x,xmin,xmax,dx,quit)
 c-----------------------------------------------------------------------
-c subroutine to increment x for a 1-d root search between xmin and xmax
+c subroutine to increment x for a 1-d root search between xmin and xmax.
+c modified to redefine limits according to gradient, Dec 20, 2016.
 c-----------------------------------------------------------------------
       implicit none
 
@@ -11711,32 +11705,38 @@ c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
       quit = .false.
 
-      xt = x + dx 
+      xt = x + dx
 
-      if (xt.lt.xmin) then
-c                                 increment would make x < xmin
-c                                 revise the increment
-         dx = (xmin - x)/2d0
-         x = x + dx
-
-      else if (xt.gt.xmax) then
-c                                 increment would make x > xmax
-c                                 revise the increment 
-         dx = (xmax - x)/2d0
-         x = x + dx 
-
-      else if (xt.eq.xmin.or.xt.eq.xmax) then 
+      if (xt.eq.xmin.or.xt.eq.xmax) then 
 c                                 hit the limit, don't set x to 
 c                                 the limit to save revaluating x
 c                                 dependent variables.
         x = xt
         quit = .true.
 
-      else 
+        write (*,*) 'this should not happen!!'
 
-         x = xt         
+        return
+
+      end if 
+
+      if (dx.lt.0d0) then 
+c                                 narrow limit to avoid oscillating
+         if (x.lt.xmax) xmax = x
+c                                 increment would make x < xmin
+c                                 revise the increment
+         if (xt.lt.xmin) dx = (xmin - x)/2d0 
+
+      else if (dx.gt.0d0) then 
+c                                 narrow limit to avoid oscillating
+         if (x.gt.xmin) xmin = x
+c                                 increment would make x > xmax
+c                                 revise the increment 
+         if (xt.gt.xmax) dx = (xmax - x)/2d0
 
       end if
+
+      x = x + dx
 c                                 check if dx has dropped below 
 c                                 threshold for convergence
       if (dabs(dx).lt.nopt(5)) quit = .true.
@@ -14284,7 +14284,7 @@ c                                 iteration counter
                itic = itic + 1
                if (itic.gt.iopt(21)) exit
 
-            end if        
+            end if
 
          end do 
 
