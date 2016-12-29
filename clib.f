@@ -1496,7 +1496,7 @@ c
          ctot(iphct) = tot
 c                                 set ieos flag to that of the first
 c                                 real entity in the make definition
-         ieos = eos(mkind(i,1))
+         ieos = meos(i)
 
          call loadit (iphct,.true.,.true.)
 

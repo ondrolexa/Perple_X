@@ -238,7 +238,7 @@ begin_model
                               Gl            V     Mg     Al     Na      Si     OH
                               Cumm          V     Mg     Mg     Mg      Si     OH
                               Grun          V     Fe     Fe     Fe      Si     OH
-                              Mrb           V     Mg     Fe3    Na      Si     OH
+                              mrbG          V     Mg     Fe3    Na      Si     OH
                               Kprg          K     Mg    MgAl    Ca     SiAl    OH
                               Tts           V     Mg     Ti     Ca     SiAl    O
 
@@ -257,7 +257,7 @@ ts      fts_d
 parg    fparg_d
 gl      fgl_d
 cumm    grun
-mrb     frb_d
+mrbG    frb_d
 kprg    fkprg_d
 tts     ftts_d
 tr      ftr_d
@@ -289,7 +289,7 @@ ftr_d   = 1 tr    + 2 grun   - 1 a - 1 b
 fts_d   = 1 ts    + 1 grun   - 1 a
 fparg_d = 1 parg  + 3/2 grun - 1 a - 1/2 b
 fgl_d   = 1 gl    + 1 grun   - 1 a
-frb_d   = 1 mrb   + 1 grun   - 1 a
+frb_d   = 1 mrbG  + 1 grun   - 1 a
 fkprg_d = 1 kprg  + 3/2 grun - 1 a - 1/2 b
 ftts_d  = 1 tts   + 1 grun   - 1 a
 
@@ -317,7 +317,7 @@ W(tr cumm)                45d3
 W(tr grun)                75d3
 W(tr a)                   57d3
 W(tr b)                   63d3
-W(tr mrb)                 52d3
+W(tr mrbG)                52d3
 W(tr kprg)                30d3
 W(tr tts)                 85d3
 W(ts parg)               -40d3
@@ -326,7 +326,7 @@ W(ts cumm)                70d3
 W(ts grun)                80d3
 W(ts a)                   70d3
 W(ts b)                 72.5d3
-W(ts mrb)                 20d3
+W(ts mrbG)                20d3
 W(ts kprg)               -40d3
 W(ts tts)                 35d3
 W(parg gl)                50d3
@@ -334,7 +334,7 @@ W(parg cumm)              90d3
 W(parg grun)           106.7d3
 W(parg a)               94.8d3
 W(parg b)               94.8d3
-W(parg mrb)               40d3
+W(parg mrbG)              40d3
 W(parg kprg)               8d3
 W(parg tts)               15d3
 W(gl cumm)               100d3
@@ -346,23 +346,23 @@ W(gl tts)                 75d3
 W(cumm grun)              33d3
 W(cumm a)                 18d3
 W(cumm b)                 23d3
-W(cumm mrb)               80d3
+W(cumm mrbG)              80d3
 W(cumm kprg)              87d3
 W(cumm tts)              100d3
 W(grun a)                 12d3
 W(grun b)                  8d3
-W(grun mrb)               91d3
+W(grun mrbG)              91d3
 W(grun kprg)              96d3
 W(grun tts)               65d3
 W(a b)                    20d3
-W(a mrb)                  80d3
+W(a mrbG)                 80d3
 W(a kprg)                 94d3
 W(a tts)                  95d3
-W(b mrb)                  90d3
+W(b mrbG)                 90d3
 W(b kprg)                 94d3
 W(b tts)                  95d3
-W(mrb kprg)               50d3
-W(mrb tts)                50d3
+W(mrbG kprg)              50d3
+W(mrbG tts)               50d3
 W(kprg tts)               35d3
 
 end_excess_function
@@ -378,13 +378,13 @@ z(M1,fe)   = 1 grun + 1 b
 
 5 2                                 | 5 species on M2, mult = 2
 z(M2,fe)   = 1 grun + 1 a
-z(M2,fe3)  = 1 mrb
+z(M2,fe3)  = 1 mrbG
 z(M2,al)   = 1 ts + 1 gl + 1/2 kprg + 1/2 parg
 z(M2,ti)   = 1 tts
 
 4 2                                 | 4 species on M4, mult = 2
 z(M4,mg)   = 1 cumm
-z(M4,na)   = 1 gl + 1 mrb
+z(M4,na)   = 1 gl + 1 mrbG
 z(M4,fe)   = 1 grun + 1 a + 1 b
 
 2 1                                 | 2 species on T1, fake mutiplicity = 1
@@ -403,7 +403,7 @@ alpha(cumm)        1
 alpha(grun)        1
 alpha(a)           1
 alpha(b)           1
-alpha(mrb)         0.8
+alpha(mrbG)        0.8
 alpha(kprg)        1.7
 alpha(tts)         1.5
 
