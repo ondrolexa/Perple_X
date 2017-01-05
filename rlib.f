@@ -106,8 +106,8 @@ c-----------------------------------------------------------------------
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 
-      integer iff,idss,ifug,ifyn,isyn
-      common/ cst10  /iff(2),idss(h5),ifug,ifyn,isyn
+      integer iff,idss,ifug
+      common/ cst10  /iff(2),idss(h5),ifug
 
       integer ixp
       double precision sxs,exces
@@ -1799,8 +1799,8 @@ c---------------------------------------------------------------------
       integer ltyp,lct,lmda,idis
       common/ cst204 /ltyp(k10),lct(k10),lmda(k10),idis(k10)
 
-      integer iff,idss,ifug,ifyn,isyn
-      common/ cst10  /iff(2),idss(h5),ifug,ifyn,isyn
+      integer iff,idss,ifug
+      common/ cst10  /iff(2),idss(h5),ifug
 
       double precision thermo, uf, us
       common/ cst1 /thermo(k4,k10),uf(2),us(h5)
@@ -1929,7 +1929,7 @@ c                                        = 2, shear and bulk
 
             if (name.ne.cmpnt(idspe(k)).and.name.ne.eoscmp(k)) cycle 
 
-            if (ifyn.ne.0) then 
+            if (ifct.eq.0) then 
 c                                 there is no saturated phase
 c                                 assign it the default molecular fluid eos
                eos(id) = 200 + k 
@@ -1940,31 +1940,6 @@ c                                 saturated phase, and it's not component(k), er
 c                                 will be computed by ufluid. this only will work
 c                                 for ispec < 3.
                eos(id) = ieos 
-c                                 to be safe switch the hybrid_EoS option value
-c                                 if the saturated phase EoS is not hybrid:
-c                                 commented out because this would involve working
-c                                 out how ufluid is working. some other time...
-c               if (k.eq.1) then 
-c                  if (ifug.eq.0) then 
-c                     iopt(25) = 0
-c                  else if (ifug.eq.1) then 
-c                     iopt(25) = 1
-c                  else if (ifug.eq.5) then 
-c                     iopt(25) = 3
-c                  else if (ifug.eq.14) then 
-c                     iopt(25) = 4
-c                  end if 
-c               else if (k.eq.2) then 
-c                  if (ifug.eq.0) then 
-c                     iopt(26) = 0
-c                  else if (ifug.eq.1) then 
-c                     iopt(26) = 1
-c                  else if (ifug.eq.5) then 
-c                     iopt(26) = 3
-c                  else if (ifug.eq.14) then 
-c                     iopt(26) = 4
-c                  end if
-c               end if 
 
             end if
 c                                 set fluid flag, this flag is 
@@ -1972,8 +1947,11 @@ c                                 used only to match fluid endmembers
 c                                 with fluid pseudocompounds
             ifp(id) = 1  
 c                                 gflu used to indicate whether a fluid is 
-c                                 in the calculation.  
-            if (ifyn.eq.1) gflu = .true. 
+c                                 in the calculation. not clear why gflu
+c                                 is set if saturated phase (formerly it
+c                                 was set only if saturated phase was 
+c                                 ABSENT, 1/5/2017).
+            gflu = .true. 
 
             exit 
 
@@ -5477,9 +5455,6 @@ c----------------------------------------------------------------------
       integer icomp,istct,iphct,icp
       common/ cst6 /icomp,istct,iphct,icp
 
-      integer iff,idss,ifug,ifyn,isyn
-      common/ cst10  /iff(2),idss(h5),ifug,ifyn,isyn
-
       integer ic
       common/ cst42 /ic(k0)
 
@@ -5496,11 +5471,14 @@ c----------------------------------------------------------------------
 
       integer idspe,ispec
       common/ cst19 /idspe(2),ispec
+
+      integer ifct,idfl
+      common/ cst208 /ifct,idfl
 c-----------------------------------------------------------------------
 
       good = .false.
 
-      if (ifyn.eq.0) then
+      if (ifct.gt.0) then
 c                               check for fluid species data
          do j = 1, ispec
 
@@ -5514,8 +5492,8 @@ c                               check for fluid species data
 
       end if
  
-      if (isyn.eq.0) then 
-c                               check for saturated phases:
+      if (isat.gt.0) then 
+c                               check for saturated composants:
 c                               reject the phase if it contains
 c                               a thermodynamic component:
          do j = 1, icp
@@ -7320,8 +7298,8 @@ c-----------------------------------------------------------------------
       integer jfct,jmct,jprct,jmuct
       common/ cst307 /jfct,jmct,jprct,jmuct
 
-      integer iff,idss,ifug,ifyn,isyn
-      common/ cst10  /iff(2),idss(h5),ifug,ifyn,isyn
+      integer iff,idss,ifug
+      common/ cst10  /iff(2),idss(h5),ifug
 
       double precision thermo,uf,us
       common/ cst1 /thermo(k4,k10),uf(2),us(h5)
@@ -9114,8 +9092,8 @@ c                                 model type
       integer jsp, ins
       common/ cxt33 /jsp,ins(nsp),specie(nsp)
 
-      integer iff,idss,ifug,ifyn,isyn
-      common/ cst10  /iff(2),idss(h5),ifug,ifyn,isyn
+      integer iff,idss,ifug
+      common/ cst10  /iff(2),idss(h5),ifug
 
       character mname*8
       common/ cst18a /mname(m4)
@@ -13105,8 +13083,8 @@ c--------------------------------------------------------------------------
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 
-      integer iff,idss,ifug,ifyn,isyn
-      common/ cst10  /iff(2),idss(h5),ifug,ifyn,isyn
+      integer iff,idss,ifug
+      common/ cst10  /iff(2),idss(h5),ifug
 
       integer jterm, jord, extyp, rko, jsub
       common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m18,h9),

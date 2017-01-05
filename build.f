@@ -99,8 +99,8 @@ c-----------------------------------------------------------------------
       character*8 vname, xname
       common/ csta2 /xname(k5),vname(l2)
 
-      integer iff,idss,ifug,ifyn,isyn
-      common/ cst10  /iff(2),idss(h5),ifug,ifyn,isyn
+      integer iff,idss,ifug
+      common/ cst10  /iff(2),idss(h5),ifug
 
       double precision buf
       common/ cst112 /buf(5)
@@ -205,8 +205,7 @@ c                                 initialization:
       nc(3) = 'C2'
  
       iv(5) = 3
-      idum = 0  
-      ifyn = 0
+      idum = 0
       ixct = 0
       ifugy = 0
       isat=0
@@ -283,9 +282,8 @@ c                                 blank input
             end do 
 
             if (ifct.ne.0) then 
-               ifyn = 1
                iv(3) = 3
-               ivct = 3           
+               ivct = 3
             end if 
 
          end if
@@ -497,7 +495,7 @@ c                                 reset n2
 c                                 end of mobile component loop
       end if
  
-      if (ifyn.eq.0) then 
+      if (ifct.eq.0) then 
 c                                 no saturated fluid phase 
          iv(3)=4
          iv(4)=5
@@ -581,7 +579,7 @@ c                                 in thermodynamic composition space.
 
       end do     
 c                                 get fluid equation of state
-      if (ifyn.ne.0.or.ifugy.ne.0.or.satflu) then
+      if (ifct.gt.0.or.ifugy.ne.0.or.satflu) then
          feos = .true.
          call rfluid (1,ifug)
          write (*,'(/)')
@@ -590,7 +588,7 @@ c                                 eliminate composition variable
 c                                 for saturated fluid if constrained
 c                                 fugacity EoS is used:
 c                                 probably should change iv(3)?
-      if ((ifug.ge.7.and.ifug.le.9.or.ifug.eq.24).and.ifct.gt.1) 
+      if ((ifug.eq.9.or.ifug.eq.24).and.ifct.gt.1) 
      *   ivct = ivct - 1
 c                                 jcmpn unused components are in qname
 c                                 get the indices for chkphi
@@ -701,7 +699,7 @@ c                                 allowed.
          if (ivct.gt.1) then 
 6026        write (*,1210)
             write (*,2140) (j,vname(iv(j)), j = 1, ivct) 
-            if (ifct.eq.1.and.ifyn.eq.1) write (*,7150) vname(3) 
+            if (ifct.eq.1) write (*,7150) vname(3) 
             read (*,*,iostat=ier) jc
             call rerror (ier,*6026)
          else 
@@ -760,7 +758,7 @@ c                                  Select the x variable
 6017        write (*,2111)
 6013        write (*,2140) (j,vname(iv(j)), j = 1, ivct)
             if (icp.gt.1) write (*,1470) j
-            if (ifct.eq.1.and.ifyn.eq.1) write (*,7150) vname(3) 
+            if (ifct.eq.1) write (*,7150) vname(3) 
             if (icp.gt.1) write (*,1570)
             read (*,*,iostat=ier) jc
             call rerror (ier,*6013)
@@ -871,7 +869,7 @@ c                                  Select the x variable (IV(1)):
 5017        write (*,2111)
  
 5013        write (*,2140) (j,vname(iv(j)), j = 1, ivct)
-            if (ifct.eq.1.and.ifyn.eq.1) write (*,7150) vname(3) 
+            if (ifct.eq.1) write (*,7150) vname(3) 
             read (*,*,iostat=ier) jc
             call rerror (ier,*5013)
  
@@ -920,7 +918,7 @@ c                                 select the y variable (iv(1)):
 5027        write (*,2210)
  
 5023        write (*,2140) (j,vname(iv(j)), j = 1, ivct)
-            if (ifct.eq.1.and.ifyn.eq.1) write (*,7150) vname(3) 
+            if (ifct.eq.1) write (*,7150) vname(3) 
             read (*,*,iostat=ier) jc
             call rerror (ier,*5023)
  
@@ -941,24 +939,6 @@ c                                 specify sectioning variable (iv(2)):
             end do 
          end if
       end if 
-c                                 =====================================
-c                                 check that X(O) is not 0 or 1
-c                                 for fluid speciation routines:
-      if (ifyn.eq.1.and.(ifug.ge.10.and.ifug.ne.13.and.ifug.ne.14
-     *    .and.ifug.ne.15.and.ifug.ne.18)) then
-         if (vmin(3).eq.vmax(3)) then
-            if (vmin(3).lt.1d-6) then
-               vmin(3) = 1d-6
-               vmax(3) = vmin(3)
-             else if (vmin(3).gt.0.999999d0) then
-               vmin(3) = 0.999999d0
-               vmax(3) = vmin(3)
-             end if
-          else 
-             if (vmin(3).lt.1d-6) vmin(3) = 1d-6
-             if (vmax(3).gt.0.999999d0) vmax(3) = 0.999999d0
-          end if
-      end if
 
       icth = icp + isat
       
@@ -1255,7 +1235,7 @@ c                                 istot = 0 = eof
             if (bad.or.istot.eq.0) exit 
 c                                 don't allow fluid models if 
 c                                 the system is fluid saturated:
-            if (jsmod.eq.0.and.ifyn.eq.1) cycle
+            if (jsmod.eq.0.and.ifct.gt.0) cycle
 c                                 check for endmembers:
             call cmodel (im,idsol,blah,1,b1,b2,first)
             if (jstot.eq.0) cycle
@@ -1270,6 +1250,7 @@ c                                 check for endmembers:
          end do 
 c                                 group models according to fullname
          j = 0
+
          do i = 1, ict
             gct(i) = 0 
          end do 
@@ -1425,28 +1406,26 @@ c                                 coordinate file name if necessary
       write (n1,1010) idum,'unused place holder, post 06'
       write (n1,1010) itrans,'number component transformations'
       write (n1,1010) icmpn,'number of components in the data base'
+
       if (itrans.gt.0) then
          do i = 1, itrans
             write (n1,1120) uname(ictr(i)), ictr(i)
             write (n1,1125) (ctrans(j,i), j = 1, icmpn)
          end do 
       end if 
+
       write (n1,1010) iwt,'component amounts, 0 - molar, 1 weight'
       write (n1,1010) idum,'unused place holder, post 06'
       write (n1,1010) idum,'unused place holder, post 06'
       write (n1,1010) idum,'unused place holder, post 05'
 c                                 output saturated phase eos choice:
-      if (ifyn.eq.0.and.ifugy.eq.0) then
-         write (n1,1010) 0,'ifug EoS for saturated phase'
-      else
-         write (n1,1010) ifug,'ifug EoS for saturated phase'
-            if (ifug.ge.7.and.ifug.le.12.and.ifug.ne.9.and.
-     *          ifug.ne.14.or.ifug.eq.16.or.ifug.eq.17.or.
-     *          ifug.eq.24.or.ifug.eq.24.or.ifug.eq.25) 
-     *         write (n1,1330) ibuf, hu, dlnfo2, elag,
+      write (n1,1010) ifug,'ifug EoS for saturated phase'
+
+      if (ifug.eq.11.or.ifug.eq.12.or.ifug.eq.16.or.ifug.eq.17.or.
+     *    ifug.eq.24.or.ifug.eq.24.or.ifug.eq.25)  write (n1,1330) ibuf,
+     *                                             hu, dlnfo2, elag,
      *              'ibuf, ipro, choice dependent parameter, ln(ag)'
-               if (ibuf.eq.5) write (n1,4020) buf,'a-e'
-      end if
+      if (ibuf.eq.5) write (n1,4020) buf,'a-e'
 
       if (oned) then 
          loopx = 1
@@ -1527,7 +1506,7 @@ c                                 get conditions for composition
 c                                 diagrams:
       if (icopt.eq.0) then
 
-         if (ifct.eq.1.and.ifyn.eq.1) write (*,7150) phase, vname(3) 
+         if (ifct.eq.1) write (*,7150) phase, vname(3) 
 
          i = 0
 

@@ -3304,8 +3304,8 @@ c-----------------------------------------------------------------------
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5  /p,t,xco2,u1,u2,tr,pr,r,ps
 
-      integer iff,idss,ifug,ifyn,isyn
-      common / cst10 /iff(2),idss(h5),ifug,ifyn,isyn
+      integer iff,idss,ifug
+      common / cst10 /iff(2),idss(h5),ifug
     
       double precision ptx
       integer ipt2
@@ -4815,8 +4815,8 @@ c----------------------------------------------------------------------
       integer ictr,itrans
       common/ cst207 /ctrans(k0,k5),ictr(k5),itrans
 
-      integer iff,idss,ifug,ifyn,isyn
-      common/ cst10 /iff(2),idss(h5),ifug,ifyn,isyn
+      integer iff,idss,ifug
+      common/ cst10 /iff(2),idss(h5),ifug
 
       integer ikind,icmpn,icout,ieos
       double precision comp,tot

@@ -368,7 +368,7 @@ c pschem - subroutine to output ternary chemographies.
  
       integer idss(10),iperm(2,3),i,j,iflag,isat,iop1,ivert,id,nchar
 
-      integer icp,istct,ipoint,ifyn,isyn,ipot,ias,jd
+      integer icp,istct,ipoint,ifct,ipot,ias,jd
 
       logical vline, tlbl
 
@@ -408,7 +408,7 @@ c pschem - subroutine to output ternary chemographies.
 c----------------------------------------------------------------------
       iflag = 0
 c                                  read header information 
-      read (n4,*) icp,istct,iphct,ipoint,ifyn,isyn,ipot,isoct
+      read (n4,*) icp,istct,iphct,ipoint,ifct,isat,ipot,isoct
 
       if (icp.ne.3) call error (64,xfac,iphct,'PSCHEM')
  
@@ -487,7 +487,7 @@ c                                  read phase configurations
 c                                  read assemblage flags
          read (n4,*) (iasmbl(i), i = 1, ib)
 c                                  read saturated phase id's
-         if (isyn.ne.1) then 
+         if (isat.gt.0) then 
             read (n4,*) isat
             read (n4,*) (idss(i), i = 1, isat)
          end if 
@@ -618,12 +618,12 @@ c                                       sectioning constraints
             y = y - 0.06d0*nscale
          end do 
  
-         if (ifyn.eq.0) then 
+         if (ifct.eq.0) then 
             call pstext (0.75d0,y,'(fluid saturated)',17)
             y = y - 0.06d0*nscale
          end if 
 
-         if (isyn.eq.0) then
+         if (isat.gt.0) then
             write (record,1050) (names(idss(i)),i=1,isat)
             nchar = 72 
             call psublk (record,nchar)
@@ -1170,7 +1170,7 @@ c psmixd - subroutine to draw binary mixed variable diagrams
 
       include 'perplex_parameters.h'
 
-      integer icp,ipoint,ifyn,isyn,ipot,i,isat,ird,ivar
+      integer icp,ipoint,ifct,isat,ipot,i,ird,ivar
   
       character*8 title*162, string*400, y*1, tname(5),xname(k5)
   
@@ -1223,7 +1223,7 @@ c psmixd - subroutine to draw binary mixed variable diagrams
 c                                  start-of-header
 c                                  ------------------------------
 c                                  read simple variables
-      read (n4,*) icp,istct,iphct,ipoint,ifyn,isyn,ipot,isoct
+      read (n4,*) icp,istct,iphct,ipoint,ifct,isat,ipot,isoct
 
       if (icp.ne.2) call error (64,xfac,ifont,'PSMIXD')
   
@@ -1250,7 +1250,7 @@ c                                 read stable phase ids
       read (n4,*) ib
       read (n4,*) (iphi(i), i = 1, ib)
 c                                 read saturated phase id's
-      if (isyn.ne.1) then 
+      if (isat.gt.0) then 
          read (n4,*) isat
          read (n4,*) (idss(i),i=1,isat)
       end if 

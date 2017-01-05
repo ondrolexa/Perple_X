@@ -424,8 +424,8 @@ c-----------------------------------------------------------------------
       integer ictr,itrans
       common/ cst207 /ctrans(k0,k5),ictr(k5),itrans
 
-      integer iff,idss,ifug,ifyn,isyn
-      common/ cst10  /iff(2),idss(h5),ifug,ifyn,isyn
+      integer iff,idss,ifug
+      common/ cst10  /iff(2),idss(h5),ifug
 
       integer isoct
       common/ cst79 /isoct
@@ -695,9 +695,7 @@ c                                 for meemum override icont
 
       end if 
 c                                 decode saturated components    
-c                                 isat is the saturated component counter,
-c                                 isyn = 1 if isat = 0, else isyn = 0
-      isyn = 1
+c                                 isat is the saturated component counter
       isat = 0
       io2  = 0 
 
@@ -713,7 +711,6 @@ c                                 isyn = 1 if isat = 0, else isyn = 0
 
          if (rname.eq.'end s') then 
 
-            if (isat.ne.0) isyn = 0
             icomp = icp + isat
             exit 
 
@@ -743,9 +740,7 @@ c                                 decode saturated phase components
          read (n1,'(a)',end=998) rname
          if (rname.eq.'begin') exit
       end do 
-c                                 ifct is the fluid component counter,
-c                                 ifyn = 1 if ifct = 0.
-      ifyn = 1
+c                                 ifct is the saturated phase component counter
       ifct = 0
 
       do 
@@ -753,7 +748,6 @@ c                                 ifyn = 1 if ifct = 0.
          read (n1,'(a)') rname
 
          if (rname.eq.'end s') then 
-            if (ifct.ne.0) ifyn = 0
             icomp = icomp + ifct
             exit 
          else if (rname.eq.blank) then 
@@ -904,7 +898,7 @@ c                             check variable ranges are consistent,
 c                             variable iv(1):
       if (icopt.ne.0.and.icopt.ne.4.and.iam.ne.2) then
 
-         if (iv(1).eq.3.and.ifyn.eq.1) call error (110,r,i,'I')
+         if (iv(1).eq.3.and.ifct.eq.0) call error (110,r,i,'I')
 
          if (iv(1).eq.3.and.ifct.eq.1) then 
 
@@ -930,7 +924,7 @@ c                             variable iv(2):
       if (iam.ne.2.and.(icopt.eq.1.or.
      *                  (icopt.eq.5.and.icont.eq.1.and..not.oned))) then
 
-         if (iv(2).eq.3.and.ifyn.eq.1) call error (110,r,i,'INPUT1')
+         if (iv(2).eq.3.and.ifct.eq.0) call error (110,r,i,'INPUT1')
 
          if (iv(2).eq.3.and.ifct.eq.1) call error (111,r,i,'INPUT1')
 
@@ -987,8 +981,8 @@ c                             only dummies if idep is set.
      *       (iv(i).eq.1.or.iv(i).eq.2)) then
             ipot = ipot+1
             jv(ipot) = iv(i)
-c                             variable v(3) is a dummy if ifyn = 1:
-         else if ((iv(i).eq.3).and.(ifyn.eq.0)) then
+c                             variable v(3) is a dummy if ifct = 0:
+         else if ((iv(i).eq.3).and.ifct.gt.0) then
             ipot = ipot+1
             jv(ipot) = iv(i)
 c                             variables v(4) and v(4) are dummies if
@@ -1045,8 +1039,8 @@ c----------------------------------------------------------------------
  
       logical eof, good, first
 
-      integer iff,idss,ifug,ifyn,isyn
-      common / cst10 /iff(2),idss(h5),ifug,ifyn,isyn
+      integer iff,idss,ifug
+      common / cst10 /iff(2),idss(h5),ifug
 
       double precision ctot
       common/ cst3  /ctot(k1)
@@ -1212,7 +1206,7 @@ c                               present
 
       end if  
 c                              load the old cbulk array
-      if (ifyn.ne.1) iphct = 2
+      if (ifct.gt.0) iphct = 2
 c                               identify nonzero components.
 c                               initialize icout(i) = 0
       do i = 1, icmpn
@@ -1337,7 +1331,7 @@ c                                 gphase from calling the EoS.
                   else if (lopt(7)) then 
 c                                 check for special component names
 c                                 this is necessary because loadit 
-c                                 will not set isfp if ifyn = 0.
+c                                 will not set isfp if ifct > 0.
                      do k = 1, ispec
                         if (name.ne.cmpnt(idspe(k))) cycle
                         eos(iphct) = 100 + k 
@@ -1366,7 +1360,7 @@ c                                 tagged entries
       end if 
 c                                 begin first read loop for data on
 c                                 saturated components.
-      if (isyn.ne.0.and.ifyn.ne.0) goto 40
+      if (isat.eq.0.and.ifct.eq.0) goto 40
 c                                 read 'til end of header
       call eohead (n2)
 c                                 loop to read real saturated
@@ -1412,7 +1406,7 @@ c                                 pointer used for iemod.
       end do 
 c                                 check that there is data for
 c                                 every fluid component.
-      if (ifyn.eq.0.and.ifer.ne.ifct) call error (36,r,i,'INPUT2')
+      if (ifct.gt.0.and.ifer.ne.ifct) call error (36,r,i,'INPUT2')
 c                                 check that there is one phase
 c                                 for each saturation constraint
 40    do i = 1, isat
@@ -2068,8 +2062,8 @@ c-----------------------------------------------------------------------
       integer isec,icopt,ifull,imsg,io3p
       common/ cst103 /isec,icopt,ifull,imsg,io3p
 
-      integer iff,idss,ifug,ifyn,isyn
-      common/ cst10  /iff(2),idss(h5),ifug,ifyn,isyn
+      integer iff,idss,ifug
+      common/ cst10  /iff(2),idss(h5),ifug
 
       integer ids,isct,icp1,isat,io2
       common/ cst40 /ids(h5,h6),isct(h5),icp1,isat,io2
@@ -2081,7 +2075,7 @@ c-----------------------------------------------------------------------
          title(i) = ' '
       end do                              
 c                               saturated and buffered component names:
-      if (isyn.eq.0) then 
+      if (isat.gt.0) then 
          write (title(2),1070) (cname(i+icp), i= 1, isat)
       else 
          write (title(2),1000) ' '
