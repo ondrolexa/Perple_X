@@ -6772,7 +6772,7 @@ c---------------------------------------------------------------------
 
       logical bad
 
-      double precision coeffs(k7), rnums(10), enth(3)
+      double precision coeffs(k7), rnums(20), enth(3)
 
       integer ijk(mst),inds(k7),ict
 
@@ -11402,7 +11402,10 @@ c                                 composition and exit
 
       else 
 c                                 no speciation possible, but still need
-c                                 to calculate g (setting error will do this). 
+c                                 to calculate g (setting error will do this).
+c                                 set g to a large number to assure specis
+c                                 selects the disordered configuration.
+         g = 1d9
          error = .true.
 
       end if 
