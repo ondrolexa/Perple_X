@@ -328,8 +328,8 @@ c-----------------------------------------------------------------------
       double precision vol
       common/ cst26 /vol
 
-      integer iff,idss,ifug
-      common/ cst10 /iff(2),idss(h5),ifug
+      integer iff,idss,ifug,ifyn,isyn
+      common/ cst10 /iff(2),idss(h5),ifug,ifyn,isyn
 
       integer ibuf,hu,hv,hw,hx 
       double precision dlnfo2,elag,gz,gy,gx

@@ -767,8 +767,8 @@ c-------------------------------------------------------------------
       character*8 names
       common/ cst8 /names(k1)
 
-      integer iff,idss,ifug
-      common/ cst10  /iff(2),idss(h5),ifug
+      integer iff,idss,ifug,ifyn,isyn
+      common/ cst10  /iff(2),idss(h5),ifug,ifyn,isyn
 
       integer idcf,icfct
       common/ cst96 /idcf(k5,j9),icfct
@@ -818,7 +818,7 @@ c                             output quaternary chemographies:
       end if 
 c                             output phases consistent with component
 c                             saturation constraints:
-      if (isat.eq.0) goto 9000
+      if (isyn.eq.1) goto 9000
 
       write (n3,6000)
       write (n3,2030) (names(idss(i)), i = 1, isat)
@@ -886,6 +886,9 @@ c-----------------------------------------------------------------------
       double precision cp
       common/ cst12 /cp(k5,k1)
 
+      integer iff,idss,ifug,ifyn,isyn
+      common/ cst10  /iff(2),idss(h5),ifug,ifyn,isyn
+
       integer isoct
       common/ cst79 /isoct
 
@@ -897,12 +900,6 @@ c-----------------------------------------------------------------------
 
       integer ikp
       common/ cst61 /ikp(k1)
-
-      integer ifct,idfl
-      common/ cst208 /ifct,idfl
-
-      integer ids,isct,icp1,isat,io2
-      common/ cst40 /ids(h5,h6),isct(h5),icp1,isat,io2
 c-----------------------------------------------------------------------
 c                             number of components, phase counters,
 c                             assemblage counter, fluid saturation flag,
@@ -910,7 +907,7 @@ c                             component saturation flag, ipot = number
 c                             of independent potential variables:
       write (n4,*) icopt
 c
-      write (n4,*) icp,istct,iphct,ipoint,ifct,isat,ipot,isoct
+      write (n4,*) icp,istct,iphct,ipoint,ifyn,isyn,ipot,isoct
 c                             write graphics code variable names:
       write (n4,'(a)') (vname(jv(i)), i = 1, ipot)
 c                             write a blank record as left caption
@@ -935,6 +932,9 @@ c-----------------------------------------------------------------------
       include 'perplex_parameters.h'
 
       integer i,j
+ 
+      integer iff,idss,ifug,ifyn,isyn
+      common/ cst10  /iff(2),idss(h5),ifug,ifyn,isyn
 
       integer iasmbl
       common/ cst27  /iasmbl(j9)
@@ -953,9 +953,6 @@ c-----------------------------------------------------------------------
 
       integer ipot,jv,iv
       common/ cst24 /ipot,jv(l2),iv(l2)
-
-      integer iff,idss,ifug
-      common/ cst10  /iff(2),idss(h5),ifug
 c-----------------------------------------------------------------------
 c                             stable configurations, phases are
 c                             labelled by the index 'i' in the
@@ -974,7 +971,7 @@ c                             binary is a special case (1-d)
          write (n4,*) (idcf(1,j), j = 1, icfct),idcf(2,icfct)
 
       else if (icp.eq.1) then 
-         goto 10
+         goto 99
       else 
 c                             higher order:
          write (n4,*) ((idcf(j,i), j = 1, icp), i = 1, icfct)
@@ -982,12 +979,12 @@ c                             higher order:
 c                             write assemblage flags
       if (icp.gt.2) write (n4,*) (iasmbl(j), j = 1, icfct)
 
-10    if (isat.eq.0) return
+      if (isyn.eq.1) goto 99
 
       write (n4,*) isat
       write (n4,*) (idss(i), i = 1, isat)
 
-      end
+99    end
  
       subroutine prtpot
 c---------------------------------------------------------------------
@@ -1088,8 +1085,8 @@ c-----------------------------------------------------------------------
       common/ cst23 /a(k8,k8),b(k8),ipvt(k8),idv(k8),
      *               iophi,idphi,iiphi,iflg1
 
-      integer iff,idss,ifug
-      common/ cst10  /iff(2),idss(h5),ifug
+      integer iff,idss,ifug,ifyn,isyn
+      common/ cst10  /iff(2),idss(h5),ifug,ifyn,isyn
 
       integer irct,ird
       double precision vn
@@ -1168,7 +1165,7 @@ c                                 constraints:
          end if
 c                                 write saturated and buffered
 c                                 component names:
-         if (isat.gt.0) write (n3,1200) (cname(i+icp), i= 1, isat)
+         if (isyn.eq.0) write (n3,1200) (cname(i+icp), i= 1, isat)
 c                                 write dependent extensities blurb
          write (n3,1210)
          write (n3,1230) vname(ivfl)
@@ -2012,8 +2009,8 @@ c-----------------------------------------------------------------------
       double precision cp
       common/ cst12 /cp(k5,k1)
 
-      integer iff,idss,ifug
-      common/ cst10  /iff(2),idss(h5),ifug
+      integer iff,idss,ifug,ifyn,isyn
+      common/ cst10  /iff(2),idss(h5),ifug,ifyn,isyn
 
       integer idr,ivct
       double precision vnu
@@ -2069,6 +2066,8 @@ c                                 eliminate phases with vnu= 0
          end if 
 
       end do 
+
+      if (isyn.eq.1) goto 40
 c                                determine stoichiometric coefficients
 c                                of saturated components:
 c                                (these aren't used for anything real)
@@ -2078,7 +2077,8 @@ c                                (these aren't used for anything real)
          do i = 1, ivct
             vus(j) = vus(j) + vnu(i) * cp(icp+j,idr(i))
          end do 
-         if (vus(j).ne.0d0) isr = 0
+c                                flag isr is not used.
+         if (vus(j).ne.0d0) isr = 0   
       end do 
 c                                ok, now vus has the total deltas
    
@@ -2972,8 +2972,8 @@ c-----------------------------------------------------------------------
       double precision du,dv
       common/ cst21 /du(2),dv(2),jds(h5),ifr
 
-      integer iff,idss,ifug
-      common/ cst10  /iff(2),idss(h5),ifug
+      integer iff,idss,ifug,ifyn,isyn
+      common/ cst10  /iff(2),idss(h5),ifug,ifyn,isyn
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp  
@@ -2981,21 +2981,18 @@ c-----------------------------------------------------------------------
       integer ids,isct,icp1,isat,io2
       common/ cst40 /ids(h5,h6),isct(h5),icp1,isat,io2
 
-      integer ifct,idfl
-      common/ cst208 /ifct,idfl
-
       save exten 
 c                                 this is a bullshit trick and
 c                                 will cause errors of someone
 c                                 uses a function other than G.
       data exten/'-V(j/b)','S(j/k)'/
 c                                 composant stoichiometry:
-c----------------------------------------------------------------------
+ 
       do i = 1, isat 
          write (n3,1000) cname(icp+i),vus(i),names(jds(i))
       end do 
 c                                 fluid stoichiometry:
-      if (ifct.gt.0) then 
+      if (ifyn.eq.0) then 
          do i = 1, 2
             if (iff(i).ne.0) write (n3,1010) names(i),vuf(i)
          end do 
@@ -3062,8 +3059,8 @@ c-----------------------------------------------------------------------
       double precision du,dv
       common/ cst21 /du(2),dv(2),jds(h5),ifr
 
-      integer iff,idss,ifug
-      common/ cst10  /iff(2),idss(h5),ifug
+      integer iff,idss,ifug,ifyn,isyn
+      common/ cst10  /iff(2),idss(h5),ifug,ifyn,isyn
 
       integer idr,ivct
       double precision vnu
@@ -3219,6 +3216,9 @@ c-----------------------------------------------------------------------
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
 
+      integer iff,idss,ifug,ifyn,isyn
+      common/ cst10  /iff(2),idss(h5),ifug,ifyn,isyn
+
       integer ipot,jv,iv1,iv2,iv3,iv4,iv5
       common/ cst24 /ipot,jv(l2),iv1,iv2,iv3,iv4,iv5
 
@@ -3233,19 +3233,13 @@ c-----------------------------------------------------------------------
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp  
-
-      integer ifct,idfl
-      common/ cst208 /ifct,idfl
-
-      integer ids,isct,icp1,isat,io2
-      common/ cst40 /ids(h5,h6),isct(h5),icp1,isat,io2
 c-----------------------------------------------------------------------
 c                              value to be read as icopt
       write (n4,*) icopt
 c                              phase and solution count:
       write (n4,*) iphct, iso
 c                              component and volatile counters:
-      if (ifct.gt.0.or.isat.gt.0) then 
+      if (ifyn.eq.0.or.isyn.eq.0) then 
          write (n4,*) 1, icp
       else
          write (n4,*) 0, icp
@@ -5398,11 +5392,8 @@ c-----------------------------------------------------------------------
       integer jfct,jmct,jprct,jmuct
       common/ cst307 /jfct,jmct,jprct,jmuct
 
-      integer ifct,idfl
-      common/ cst208 /ifct,idfl
-
-      integer iff,idss,ifug
-      common/ cst10  /iff(2),idss(h5),ifug
+      integer iff,idss,ifug,ifyn,isyn
+      common/ cst10  /iff(2),idss(h5),ifug,ifyn,isyn
 
       integer idr,ivct
       double precision vnu
@@ -5460,7 +5451,7 @@ c                             composant stoichiometry:
          end if 
       end do 
 c                                 fluid stoichiometry:
-      if (ifct.gt.0) then 
+      if (ifyn.eq.0) then 
          do i = 1, 2
             if (iff(i).ne.0) then
                if (vuf(i).gt.0d0) then
@@ -5582,8 +5573,8 @@ c-----------------------------------------------------------------------
       double precision du,dv
       common/ cst21 /du(2),dv(2),jds(h5),ifr
 
-      integer ifct,idfl
-      common/ cst208 /ifct,idfl
+      integer iff,idss,ifug,ifyn,isyn
+      common/ cst10  /iff(2),idss(h5),ifug,ifyn,isyn
 
       integer idr,ivct
       double precision vnu
@@ -5599,15 +5590,11 @@ c-----------------------------------------------------------------------
       integer ids,isct,icp1,isat,io2
       common/ cst40 /ids(h5,h6),isct(h5),icp1,isat,io2
 
-      integer iff,idss,ifug
-      common/ cst10  /iff(2),idss(h5),ifug
-
       save exten 
 c                                 this is a bullshit trick and
 c                                 will cause errors if someone
 c                                 uses a function other than G.
       data exten/'-V(j/b) ','S(j/k) '/
-c----------------------------------------------------------------------
 c                                 ouput data as follows
 c                                 V, S, mobile components, fluid components, 
 c                                 saturated component, thermodynamic components
@@ -5626,7 +5613,7 @@ c                                 mobile components:
 
       ict = ict + jmct
 c                                 saturated phase components:
-      if (ifct.gt.0) then 
+      if (ifyn.eq.0) then 
          do i = 1, 2
             if (iff(i).ne.0) then
                ict = ict + 1
@@ -5889,8 +5876,8 @@ c-----------------------------------------------------------------------
       integer ifct,idfl
       common/ cst208 /ifct,idfl
 
-      integer iff,idss,ifug
-      common/ cst10  /iff(2),idss(h5),ifug
+      integer iff,idss,ifug,ifyn,isyn
+      common/ cst10  /iff(2),idss(h5),ifug,ifyn,isyn
 
       integer ipot,jv,iv1,iv2,iv3,iv4,iv5
       common/ cst24 /ipot,jv(l2),iv1,iv2,iv3,iv4,iv5
@@ -5910,16 +5897,16 @@ c                          title:
 c                          data base
       write (n3,1210) dname
 c                          fluid
-      if (ifct.gt.0.or.gflu) call rfluid (2,ifug) 
+      if (ifyn.eq.0.or.gflu) call rfluid (2,ifug) 
 c                          independent potentials:
       write (n3,1070) (vname(jv(j)), j = 1, ipot)
 c                          saturated phase components:
-      if (ifct.gt.0) then 
+      if (ifyn.eq.0) then 
          j = icp + isat
          write (n3,1200) (cname(j+i), i = 1, ifct)
       end if 
 c                          saturated components:
-      if (isat.gt.0) then 
+      if (isyn.eq.0) then 
          j = icp + isat
          write (n3,1180) (cname(i), i = icp1, j)
       end if 

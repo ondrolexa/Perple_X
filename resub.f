@@ -430,8 +430,8 @@ c                                 to allow hardlimits. JADC
          end do 
       end do 
                             
-c     call subdv1 (ids) 
-      call subdiv (ids)
+c     call subdv1 ('characters',ids) 
+      call subdiv ('characters',ids)
 
       do 10 i = 1, ntot 
 
@@ -2425,8 +2425,8 @@ c----------------------------------------------------------------------
       integer ifct,idfl
       common/ cst208 /ifct,idfl
 
-      integer iff,idss,ifug
-      common/ cst10  /iff(2),idss(h5),ifug
+      integer iff,idss,ifug,ifyn,isyn
+      common/ cst10  /iff(2),idss(h5),ifug,ifyn,isyn
 c-----------------------------------------------------------------------
 c                           compute the chemical potentials of
 c                           fluid components in fluid saturated
@@ -2494,8 +2494,8 @@ c----------------------------------------------------------------------
       integer ifct,idfl
       common/ cst208 /ifct,idfl
 
-      integer iff,idss,ifug
-      common/ cst10  /iff(2),idss(h5),ifug
+      integer iff,idss,ifug,ifyn,isyn
+      common/ cst10  /iff(2),idss(h5),ifug,ifyn,isyn
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp  
@@ -2509,7 +2509,7 @@ c-----------------------------------------------------------------------
       fo2 = 0d0
 c                                 compute the chemical potentials of
 c                                 saturated phase components.
-      if (ifct.gt.0) call ufluid (fo2)
+      if (ifyn.ne.1) call ufluid (fo2)
 
       do i = 1, isat
 c                                 determine stable saturated composants
@@ -2754,8 +2754,8 @@ c-----------------------------------------------------------------------
       integer ifct,idfl
       common/ cst208 /ifct,idfl
 
-      integer iff,idss,ifug
-      common/ cst10  /iff(2),idss(h5),ifug
+      integer iff,idss,ifug,ifyn,isyn
+      common/ cst10  /iff(2),idss(h5),ifug,ifyn,isyn
 
       integer isoct
       common/ cst79 /isoct
@@ -3128,6 +3128,9 @@ c-----------------------------------------------------------------------
       double precision vuf,vus
       common/ cst201 /vuf(2),vus(h5),iffr,isr
 
+      integer iff,idss,ifug,ifyn,isyn
+      common/ cst10  /iff(2),idss(h5),ifug,ifyn,isyn
+
       integer idr,ivct
       double precision vnu
       common/ cst25 /vnu(k7),idr(k7),ivct
@@ -3139,7 +3142,7 @@ c                                 such components may vary.
 
 c                                 no saturated phase components and no
 c                                 saturated components:
-      if (iffr.eq.1.and.isr.eq.1) goto 10
+      if (iffr.eq.1.and.isyn.eq.1) goto 10
 c                                 note that this call to uproj makes a
 c                                 subsequent call in gall redundant if
 c                                 sfol1 is used to trace a univariant
@@ -3544,8 +3547,8 @@ c----------------------------------------------------------------------
 
       double precision c(k5),u,comp(k8,k8)
 
-      integer iff,idss,ifug
-      common/ cst10  /iff(2),idss(h5),ifug
+      integer iff,idss,ifug,ifyn,isyn
+      common/ cst10  /iff(2),idss(h5),ifug,ifyn,isyn
  
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp

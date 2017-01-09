@@ -1361,6 +1361,9 @@ c-----------------------------------------------------------------------
  
       external gcpd
 
+      integer iff,idss,ifug,ifyn,isyn
+      common/ cst10 /iff(2),idss(h5),ifug,ifyn,isyn
+
       double precision fh2o,fco2,funk
       common/ cst11 /fh2o,fco2,funk
 
@@ -1373,14 +1376,11 @@ c-----------------------------------------------------------------------
 
       integer eos
       common/ cst303 /eos(k10)
-
-      integer ifct,idfl
-      common/ cst208 /ifct,idfl
 c-----------------------------------------------------------------------
 
       gee = gcpd (id,.false.) + r * t * dlog(act(id))
 
-      if (ifct.gt.0.and.eos(id).lt.100) then 
+      if (ifyn.eq.0.and.eos(id).lt.100) then 
 c                                 this is a quick fix that will
 c                                 call the fluid routine way more 
 c                                 than necessary.

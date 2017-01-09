@@ -20,8 +20,8 @@ c-----------------------------------------------------------------------
 
       double precision fo2,fs2,yo2,yc,dg
  
-      integer iff,idss,ifug
-      common/ cst10 /iff(2),idss(h5),ifug
+      integer iff,idss,ifug,ifyn,isyn
+      common/ cst10 /iff(2),idss(h5),ifug,ifyn,isyn
 
       double precision f
       common/ cst11 /f(3)
@@ -1445,8 +1445,8 @@ c----------------------------------------------------------------------
       double precision fh2o,fco2,funk
       common/ cst11 /fh2o,fco2,funk
 
-      integer iff,idss,ifug
-      common/ cst10 /iff(2),idss(h5),ifug
+      integer iff,idss,ifug,ifyn,isyn
+      common/ cst10 /iff(2),idss(h5),ifug,ifyn,isyn
 
       integer iopt
       logical lopt
