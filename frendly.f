@@ -2057,7 +2057,7 @@ c                               general input data for main program
 c                               first look in the real data:
          do  
 
-           call getphi (name,eof)
+           call getphi (name,.true.,eof)
 c                               looked at all real data
            if (eof) exit
 
@@ -2157,7 +2157,7 @@ c                                read header
 
       do 
 
-         call getphi (name,eof)
+         call getphi (name,.false.,eof)
 
          if (eof) exit
 

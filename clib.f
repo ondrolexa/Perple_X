@@ -1106,6 +1106,9 @@ c----------------------------------------------------------------------
       integer ixct,ifact
       common/ cst37 /ixct,ifact 
 
+      integer aqct
+      common/ cst336 /aqct
+
       character*8 exname,afname
       common/ cst36 /exname(h8),afname(2)
 
@@ -1298,7 +1301,7 @@ c                                 rewind and read 'til end of header
 
          do
 
-            call getphi (name,eof)
+            call getphi (name,.false.,eof)
 
             if (eof) then 
 
@@ -1369,7 +1372,7 @@ c                                 entities:
 
       do 
 
-         call getphi (name,eof)
+         call getphi (name,.false.,eof)
 
          if (eof) exit
  
@@ -1422,7 +1425,7 @@ c                                 of saturated phase or mobile components:
 
          do 
 
-            call getphi (name,eof)
+            call getphi (name,.false.,eof)
 
             if (eof) exit
 
@@ -1451,11 +1454,10 @@ c                                 phases of appropriate composition.
       istct = iphct + 1
 c                                 read till end of header
       call eohead (n2)
-c                                 begin second read loop:
-
+c                                 loop to load normal thermodynamic data:
       do  
     
-         call getphi (name,eof)
+         call getphi (name,.false.,eof)
 
          if (eof) exit 
 c                                 check if valid phase:
@@ -1499,7 +1501,40 @@ c                                 pointer used for iemod.
          imak(i) = iphct
 
       end do 
+c                                 load thermodynamic data for solute species, at this
+c                                 point iphct points to the last real entity, save
+c                                 this value and restore it later.
+      jphct = iphct
+c                                 read header
+      call eohead (n2)
+c                                 loop to load solute data:
+      do  
+    
+         call getphi (name,.true.,eof)
 
+         if (eof) exit
+c                                 skip non-solute standard state data
+         if (ieos.ne.15.and.ieos.ne.16) cycle
+c                                 check if valid species:
+         call chkphi (1,name,good)
+
+         if (good) then 
+c                                 acceptable data, count the phase:
+            iphct = iphct + 1
+c                                 for normalized composition, probably
+c                                 con't need this, but could be used to
+c                                 save molar wt or something like that:
+            ctot(iphct) = tot
+c                                 store thermodynamic parameters:
+            call loadit (iphct,.false.,.true.)
+
+         end if 
+
+      end do
+c                                 later aqct is used to determine
+c                                 the indices of aqueous species used
+c                                 in the calculation. 
+      aqct = iphct
 c                                 get/save data for makes, this
 c                                 data is saved in the arrays thermo
 c                                 and cp by loadit, but are not counted,
@@ -1510,13 +1545,13 @@ c                                 but thermo should not be affected. gmake
 c                                 then gets the data using the array 
 c                                 mkind. the names array will also be 
 c                                 overwritten.
-      jphct = iphct
+
 c                                 read header
       call eohead (n2)
 
       do 
 
-         call getphi (name,eof)
+         call getphi (name,.true.,eof)
 
          if (eof) exit
 
@@ -1544,8 +1579,13 @@ c                                remake pointer array for makes
 c                                reset ipoint counter, but do not 
 c                                reset iphct, because the compositions
 c                                of the make phases are necessary for
-c                                chemical potential variables. 
-      iphct = jphct 
+c                                chemical potential variables.
+
+c                                really? then why was it reset here? this
+c                                IS going to wipe out the compositions of
+c                                aqueous species, so iphct is now set to
+c                                aqct (formerly it was jphct). Jan 6, 2017.
+      iphct = aqct
       ipoint = jphct
 
       do i = 1, nmak

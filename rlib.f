@@ -1110,15 +1110,17 @@ c                               reject phases with negative/zero compositions
       do j = 1, icmpn
          if (comp(j).lt.0d0.and.comp(j).gt.-1d-14) then
             comp(j) = 0d0
-         else if (comp(j).lt.0d0) then 
+         else if (comp(j).lt.0d0.and.(ieos.ne.15.and.ieos.ne.16)) then
 c                               use ichk to avoid multiple messages
             if (ichk.eq.1.and.iam.eq.1.or.iam.eq.2.or.iam.eq.4.or.
      *                        iam.eq.5.or.iam.eq.6) 
      *                                    call warn (13,tot,j,name)
             goto 90
-         else 
-            tot = tot + comp(j)
+
          end if
+
+         tot = tot + comp(j)
+
       end do 
 
       if (tot.eq.0d0) goto 90 
@@ -2911,9 +2913,9 @@ c----------------------------------------------------------------------
       
       end 
 
-      subroutine readn (idim,tname)
+      subroutine readn (i,idim,tname)
 c----------------------------------------------------------------------
-c readn - read idim endmember names expected format
+c readn - read idim endmember names expected format into mname(i+1..i+idim)
 
 c  name_1 name_2 ... | comment
 c  name_n+1....      | comment
@@ -2938,13 +2940,13 @@ c----------------------------------------------------------------------
 c----------------------------------------------------------------------
       ier = 0 
 
-      call readcd (n9,len,ier)
+      call readcd (n9,len,ier,.false.)
       if (ier.ne.0) goto 90
 
       ibeg = 1
-      ict = 0  
+      ict = i
 
-      do while (ict.lt.idim) 
+      do while (ict-i.lt.idim) 
 c                                 find the name
          call readnm (ibeg,iend,len,ier,name)
          if (ier.ne.0) goto 90
@@ -2952,7 +2954,7 @@ c                                 find the name
          mname(ict) = name
 
          if (ibeg.ge.len.and.ict.lt.idim) then
-            call readcd (n9,len,ier)
+            call readcd (n9,len,ier,.false.)
             ibeg = 1
             if (ier.ne.0) goto 90
          end if 
@@ -2986,7 +2988,7 @@ c----------------------------------------------------------------------
 
       character tname*10, nums*240
 
-      double precision rnums(100)
+      double precision rnums(*)
 
       integer length,iblank,icom
       character chars*1
@@ -3002,7 +3004,7 @@ c                                 card:
 
       do while (jdim.lt.idim)
 
-         call readcd (n9,len,ier)
+         call readcd (n9,len,ier,.true.)
          if (ier.ne.0) exit
 c                                 got data, count how many "numbers"
          do i = 1, len
@@ -3095,7 +3097,7 @@ c----------------------------------------------------------------------
       iterm = 0
       iord = 0 
 
-      call readcd (n9,len,ier)
+      call readcd (n9,len,ier,.true.)
 
       write (begin,'(5a)') (chars(i),i=1, 5)
 
@@ -3115,7 +3117,7 @@ c----------------------------------------------------------------------
 
       do while (eod.ne.'end')  
 
-         call readcd (n9,len,ier)
+         call readcd (n9,len,ier,.true.)
          if (ier.ne.0) goto 90
 
          write (eod,'(3a)') (chars(i),i=1,3) 
@@ -3181,7 +3183,7 @@ c                                 rk form, read a new card for each term
 
                ibeg = 1
 c                                 check for end of data 
-               call readcd (n9,len,ier)
+               call readcd (n9,len,ier,.true.)
                write (begin,'(3a)') (chars(i), i = 1, 3)
                if (begin.eq.'end') then
                   return
@@ -3379,7 +3381,7 @@ c----------------------------------------------------------------------
 
       do while (eod.ne.'end')  
 
-         call readcd (n9,len,ier)
+         call readcd (n9,len,ier,.true.)
          if (ier.ne.0) goto 90
 
          write (eod,'(3a)') (chars(i),i=1,3) 
@@ -3474,7 +3476,7 @@ c----------------------------------------------------------------------
 
       do while (eod.ne.'end')  
 
-         call readcd (n9,len,ier)
+         call readcd (n9,len,ier,.true.)
          if (ier.ne.0) goto 90
 
          write (eod,'(3a)') (chars(i),i=1,3) 
@@ -3553,7 +3555,7 @@ c----------------------------------------------------------------------
 c----------------------------------------------------------------------
       ier = 0 
 
-      call readcd (n9,len,ier)
+      call readcd (n9,len,ier,.true.)
       if (ier.ne.0) goto 90
 
       ibeg = 1
@@ -3662,7 +3664,7 @@ c----------------------------------------------------------------------
 c----------------------------------------------------------------------
       ict = 0 
 
-      call readcd (n9,len,ier)
+      call readcd (n9,len,ier,.true.)
       if (ier.ne.0) goto 90 
 c                                 this first segment is only done for
 c                                 the readlm routine:
@@ -4849,7 +4851,7 @@ c                                 checked in BM3_integration.mws
 
       end 
 
-      subroutine cartes (ksite,sname,ids)
+      subroutine cartes (ksite,ids)
 c---------------------------------------------------------------------
 c subroutine to cartesian or transform subdivision on site ksite of 
 c solution ids (or sname). called by subdiv.
@@ -4858,19 +4860,9 @@ c---------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer mres
- 
-      parameter (mres=12000)
+      integer i, ind(ms1), iy(ms1), jsp, ksite, j, ids
 
-      integer mode, i, ind(ms1), iy(ms1), jsp, ksite, indx, iexit, 
-     *        ieyit, j, ids
-
-      double precision y(ms1,mres), ycum, ymax, dy, ync, res, ylmn,
-     *                 ylmx, yloc, x, unstch, strtch, yreal
-
-      logical odd
-
-      character sname*10
+      double precision ycum
 
       integer ntot,npairs
       double precision yy,xy
@@ -4883,21 +4875,6 @@ c---------------------------------------------------------------------
      *      xmx(mst,msp),xnc(mst,msp),reach,iend(m4),isub(m1,m2,2),
      *      imd(msp,mst),insp(m4),ist(mst),isp(mst),rkord(m18),isite,
      *      iterm,iord,istot,jstot,kstot,xtyp
-c                                 interval limits conformal transformation
-      integer intv
-      double precision yint, yfrc
-      common/ cst47 /yint(5,ms1,mst,h9),yfrc(4,ms1,mst,h9),intv(4)
-c                                 x coordinate description
-      integer istg, ispg, imlt, imdg
-      common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
-
-      character fname*10, aname*6, lname*22
-      common/ csta7 /fname(h9),aname(h9),lname(h9)
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 c----------------------------------------------------------------------
       ycum = 0d0
       jsp = isp(ksite) - 1
@@ -4905,263 +4882,19 @@ c----------------------------------------------------------------------
       if (jsp.eq.0) then 
 c                                 a relict site with only one species
 c                                 left over from reform, i have know idea
-c                                 if this works
-         y(1,1) = xmn(ksite,1)
+c                                 if this works. i doubt it does, until
+c                                 jan 8, 2016 it was setting an array (y)
+c                                 that was not returned to the calling 
+c                                 program. 
+         yy(1,ksite,1) = xmn(ksite,1)
          npairs = 1
-         return 
+         return
+
       end if 
 
-      do i = 1, jsp
-c                                 generate coordinates for i'th component
-         iy(i) = 1
-         y(i,1) = xmn(ksite,i)
-         ync = xnc(ksite,i)
+      call chopit (ycum,1,jsp,ksite,ids) 
 
-         if (ync.eq.0d0) cycle
-
-         mode = imdg(i,ksite,ids)
-c                                 avoid impossible compositions 'cause a min > 0
-         if (i.gt.1) then 
-
-            ycum = ycum + xmn(ksite,i-1)
-c                                 1-ycum is the smallest fraction possible
-            if (1d0-ycum.lt.0d0) then 
-c                                 inconsistent limits
-               call error (999,ycum,jsp,'cartes')
-
-            else
-c                                 the smallest fraction possible is lt
-c                                 than xmax
-               ymax = xmx(ksite,i)
-
-            end if 
-         else 
-            ymax = xmx(ksite,i)
-         end if 
-c                                 two means of extracting y-range, cartesian
-c                                 imod = 0 and transformation imod = 1
-         if (mode.eq.0) then 
-c                                 check limit
-c            if (ync.lt.nopt(5).and.good(ids)) then
-c               good(ids) = .false.
-c               write (*,1000) fname(ids)
-c            end if
-               
-c                                 cartesian
-            do while (y(i,iy(i)).lt.ymax)
-               iy(i) = iy(i) + 1
-               if (iy(i).gt.mres) call error (50,ync,mres,sname)
-               y(i,iy(i)) = y(i,iy(i)-1) + ync
-               if (dabs(y(i,iy(i))-ymax).lt.nopt(5)) then
-                  y(i,iy(i)) = ymax
-               else if (y(i,iy(i)).gt.ymax) then
-                  y(i,iy(i)) = ymax
-               end if 
-            end do
-
-         else 
-c                                 conformal x is the cartesian coordinate
-c                                 y is the real coordinate.
-            if (mode.lt.4) then 
-               odd = .false.
-            else
-               odd = .true.
-            end if 
-
-            res = 0d0
-c                                 there are as many as intv(mode)
-c                                 intervals to cycle through
-            do j = 1, intv(mode)
-c                                 odd or even interval?
-               odd = .not.odd
-c                                 interval limits              
-               ylmn = yint(j,i,ksite,ids)
-               ylmx = yint(j+1,i,ksite,ids)
-c                                 which interval are we starting from?
-               if (y(i,iy(i)).gt.ylmx-nopt(5)) cycle
-c
-               dy = ylmx - ylmn
-c                                 pathological case y = ylmn
-               if (dabs(y(i,iy(i))-ylmn).lt.nopt(5))  
-     *                                y(i,iy(i)) = ylmn + nopt(5)
-
-               if (res.eq.0d0) then 
-c                                 the current value is in interval j
-c                                 convert to raw y (varies from 0 ->1 
-c                                 over the local interval)
-                  yloc = (y(i,iy(i))-ylmn) / dy
-c                                 convert to conformal x
-                  if (odd) then 
-                     x = unstch(yloc)
-                  else 
-                     x = 1d0 - unstch(1d0-yloc)
-                  end if 
-
-               else
-c                                 have jumped from an earlier interval
-                  x = res - ync / yfrc(j-1,i,ksite,ids)
-c                 if (x.lt.0d0) x = 0d0
-
-               end if                 
-c                                 now generate all compositions in
-c                                 local interval
-               do while (x.le.1d0) 
-c                                 increment conformal x
-                  x = x + ync / yfrc(j,i,ksite,ids)
-c                                 compute yreal
-                  if (x.le.1d0) then 
-                     if (odd) then 
-                        yreal = ylmn + strtch(x) * dy
-                     else
-                        yreal = ylmx - strtch(1d0-x) * dy
-                     end if 
-c                                 cycle if below tolerance
-c                     if (yreal-y(i,iy(i)).lt.nopt(5).and.good(ids)) then
-c                        good(ids) = .false.
-c                        write (*,1010) fname(ids)
-c                     end if 
- 
-                     iy(i) = iy(i) + 1
-                     if (iy(i).gt.mres) call error (50,ync,mres,sname)
-c                                 check if in bounds
-                     if (dabs(yreal-ymax).lt.nopt(5).or.
-     *                                     yreal.gt.ymax) then
-                        res = 0d0
-                        y(i,iy(i)) = ymax
-                        exit
-                     else 
-                        y(i,iy(i)) = yreal
-                     end if 
-
-                  else if (x.gt.1d0.and.j.eq.intv(mode)) then
-c                                 at the last interval
-                     iy(i) = iy(i) + 1
-                     y(i,iy(i)) = ymax                
-                     exit
-
-                  else 
-c                                the point is in the next interval
-                     res = x - 1d0 
-                     exit 
-
-                  end if 
-c                                 coordinate generating end do 
-               end do 
-c                                 if y is at ymax exit
-               if (y(i,iy(i)).ge.ymax) exit
-c                                 interval loop end do 
-            end do 
-
-         end if 
-c                                 add last point if necessary, can it be? 
-c                                 certainly not for conformal. 
-         if (y(i,iy(i)).lt.ymax) then
-            iy(i) = iy(i) + 1
-            if (iy(i).gt.mres) call error (50,ync,mres,sname)
-            y(i,iy(i)) = ymax
-         end if          
- 
-      end do
-c                                  
-      do i = 1, jsp
-         ind(i) = 1
-      end do 
-c                                 assign the first point
-      npairs = 1
-
-      do i = 1, jsp
-         xy(i,1) = y(i,1)
-      end do
-c                                 now make the array index run over all
-c                                 values increasing the last index fastest
-      iexit = 0 
-      ieyit = 0 
-      dy = 0d0
-
-      do while (iexit.eq.0)
-c                                 figure out which index to increment
-         do i = jsp, 1, -1
-
-            if (ind(i).lt.iy(i).and.ieyit.eq.0) then
-c                                 this is the one to increment
-               ind(i) = ind(i) + 1
-               indx = i 
-               exit 
-
-            else if (i.gt.1) then 
-c                                 saturated the index
-               ind(i) = 1
-               ieyit = 0 
-               
-            else
-c                                 saturated first index, done.
-                return 
-
-            end if
- 
-         end do 
-c                                 ok now we have the indices, check
-c                                 the composition
-         ycum = 0d0
-
-         do i = 1, jsp 
-            ycum = ycum + y(i,ind(i))  
-         end do 
-
-         if (ycum.gt.1d0) then
-
-            ieyit = 1
-c                                 here is where it gets messy:
-            if (indx.eq.1) then
-c                                 we're at the first point, and already
-c                                 over the top
-               iexit = 1
-               cycle
-
-            else if ( y(indx,ind(indx)) - y(indx,ind(indx)-1)
-     *               - ycum + 1d0    .gt. nopt(5) ) then          
-c                                 reset the current variable
-c                                 and max loop index
-               dy =  1d0 - ycum 
-
-            else
-c                                 must have just hit on the last increment
-               cycle 
-
-            end if 
-
-         else if (ind(indx).eq.iy(indx)) then 
-
-            ieyit = 1
-
-         end if 
-
-         npairs = npairs + 1
-
-         if (npairs.gt.k1) call error (180,ycum,k1,
-     *                      'CARTES increase parameter k1')
-
-         do i = 1, jsp
-            xy(i,npairs) = y(i,ind(i))
-         end do
-
-         xy(indx,npairs) = xy(indx,npairs) + dy
-
-         dy = 0d0 
-
-      end do 
-
-c1000  format (/,'Warning: a composition of solution ',a,' has been ',
-c     *          'refined to a level that',/,'may destabilize ',
-c     *          'calculations. If excessive failure occurs, use less ',
-c     *          'extreme',/,'iteration parameters.',/)
-c1010  format (/,'Warning: a composition of solution ',a,' has been ',
-c     *          'refined to a level that',/,'may destabilize ',
-c     *          'calculations. If excessive failure occurs use less ',
-c     *        /,'extreme iteration parameters or ',
-c     *          'increase the stretching factor.',/)
       end
-
 
       subroutine blanko (text,chars,nchar,ilen)
 c------------------------------------------------------------------- 
@@ -5254,7 +4987,7 @@ c                                 now get the composition vectors for
 c                                 the mnames phases:
       do 
 
-         call getphi (name,eof)
+         call getphi (name,.false.,eof)
 
          if (eof) exit
 
@@ -5632,7 +5365,7 @@ c                                 now get the composition vectors for
 c                                 the mnames phases:
       do 
 
-         call getphi (name,eof)
+         call getphi (name,.false.,eof)
 
          if (eof) exit
 
@@ -5825,6 +5558,10 @@ c---------------------------------------------------------------------
       integer jmsol,kdsol
       common/ cst142 /jmsol(m4,mst),kdsol(m4)
 
+      integer jsmod
+      double precision vlaar
+      common/ cst221 /vlaar(m3,m4),jsmod
+
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
      *        kstot,rkord,xtyp
       double precision wg,wk,xmn,xmx,xnc,reach
@@ -5833,6 +5570,16 @@ c---------------------------------------------------------------------
      *      imd(msp,mst),insp(m4),ist(mst),isp(mst),rkord(m18),isite,
      *      iterm,iord,istot,jstot,kstot,xtyp
 c----------------------------------------------------------------------
+
+      if (jsmod.eq.20) then
+
+         call reaqus (sname,first)
+         kstot = jstot
+         istot = jstot
+         return
+
+      end if 
+
       kill = 1
 
       if (first.and.isite.gt.1) call warn (50,wg(1,1),isite,sname)
@@ -5941,8 +5688,8 @@ c---------------------------------------------------------------------
 
       integer i,j,itic,iwas(mst)
 
-      logical depend,laar,order,fluid,macro,specil,recip
-      common/ cst160 /depend,laar,order,fluid,macro,specil,recip
+      logical depend,laar,order,fluid,macro,recip
+      common/ cst160 /depend,laar,order,fluid,macro,recip
 c                                 local input variables
       integer jmsol,kdsol
       common/ cst142 /jmsol(m4,mst),kdsol(m4)
@@ -6025,7 +5772,6 @@ c                                 reset the species pointers (jmsol)
 
       end
 
-
       subroutine killsp (ikill,jkill)
 c---------------------------------------------------------------------
 c killsp - eliminates species jkill from site ikill in a solution model
@@ -6047,8 +5793,8 @@ c                                 dqf variables
       double precision dqf
       common/ cst222 /dqf(m3,m4),indq(m4),idqf
 
-      logical depend,laar,order,fluid,macro,specil,recip
-      common/ cst160 /depend,laar,order,fluid,macro,specil,recip
+      logical depend,laar,order,fluid,macro,recip
+      common/ cst160 /depend,laar,order,fluid,macro,recip
 c                                 local input variables
       integer iddeps,norder,nr
       double precision depnu,denth
@@ -6568,7 +6314,86 @@ c                                 indices:
 
       end
 
-      subroutine cmodel (im,idsol,tname,ibuild,x1,x2,first)
+      subroutine reaqus (tname,first)
+c---------------------------------------------------------------------
+c reaqus - reformulates aqueous solution models to eliminate missing 
+c endmembers and shift ranges.
+c---------------------------------------------------------------------
+      implicit none
+  
+      include 'perplex_parameters.h'
+
+      character*10 tname
+
+      integer i, jq, jn, js
+
+      logical first
+
+      integer jmsol,kdsol
+      common/ cst142 /jmsol(m4,mst),kdsol(m4)
+
+      integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
+     *        kstot,rkord,xtyp
+      double precision wg,wk,xmn,xmx,xnc,reach
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),xmn(mst,msp),
+     *      xmx(mst,msp),xnc(mst,msp),reach,iend(m4),isub(m1,m2,2),
+     *      imd(msp,mst),insp(m4),ist(mst),isp(mst),rkord(m18),isite,
+     *      iterm,iord,istot,jstot,kstot,xtyp
+
+      integer nq,nn,ns
+      common/ cst337 /nq,nn,ns
+c----------------------------------------------------------------------
+
+      jq = 0
+      jn = 0
+      js = 0 
+
+      do i = 1, nq
+
+         if (kdsol(i).ne.0) then
+            jq = jq + 1
+            kdsol(jq) = kdsol(i)
+            xmn(1,jq) = xmn(1,i)
+            xmx(1,jq) = xmx(1,i)
+            xnc(1,jq) = xnc(1,i)
+            imd(jq,1) = imd(i,1)
+         end if
+
+      end do
+
+      do i = nq+1, nq+nn
+
+         if (kdsol(i).ne.0) then
+            jn = jn + 1
+            kdsol(jq+jn) = kdsol(i)
+            xmn(1,jq+jn-1) = xmn(1,i)
+            xmx(1,jq+jn-1) = xmx(1,i)
+            xnc(1,jq+jn-1) = xnc(1,i)
+            imd(jq+jn-1,1) = imd(i,1)
+         end if
+
+      end do
+
+      do i = nq+nn+1, nq+nn+ns
+
+         if (kdsol(i).ne.0) then
+            js = js + 1
+            kdsol(jq+jn+js) = kdsol(i)
+            xmn(1,jq+jn+js-1) = xmn(1,i-1)
+            xmx(1,jq+jn+js-1) = xmx(1,i-1)
+            xnc(1,jq+jn+js-1) = xnc(1,i-1)
+            imd(jq+jn+js-1,1) = imd(i-1,1)
+         end if
+
+      end do
+
+      nq = jq
+      nn = jn
+      ns = js
+
+      end 
+
+      subroutine cmodel (im,idsol,tname,first)
 c---------------------------------------------------------------------
 c cmodel - checks to see if solution models contain valid endmembers.
 c modified to allow saturated phase/component endmembers, 10/25/05.
@@ -6577,14 +6402,20 @@ c---------------------------------------------------------------------
   
       include 'perplex_parameters.h'
 
-      logical first
+      logical first, ok
  
-      character*10 tname,missin(m4)*8,x1*8,x2*8
+      character*10 tname, missin(m4)*8
 
-      integer imiss,im,idsol,ibuild,i,j,h
+      integer imiss,im,idsol,i,j,h, ineg, ipos, local
  
       integer isoct
-      common/ cst79 /isoct  
+      common/ cst79 /isoct
+
+      double precision thermo,uf,us
+      common/ cst1 /thermo(k4,k10),uf(2),us(h5)
+
+      integer eos
+      common/ cst303 /eos(k10)
 
       integer jmsol,kdsol
       common/ cst142 /jmsol(m4,mst),kdsol(m4)
@@ -6618,53 +6449,82 @@ c---------------------------------------------------------------------
       common/ cst146 /nu(m15,j4),y2p(m4,m15),mdep,jdep(m15),
      *                idep(m15,j4),ndph(m15)
 
+      integer iam
+      common/ cst4 /iam
+
+      integer aqct
+      common/ cst336 /aqct
+
       integer ikp
       common/ cst61 /ikp(k1)
+
+      integer icomp,istct,iphct,icp
+      common/ cst6  /icomp,istct,iphct,icp  
+
+      integer nq, nn, ns
+      common/ cst337 /nq,nn,ns
 c----------------------------------------------------------------------
       jstot = 0
-c                              if called by build (ibuild = 1) skip the
+      ineg = 0 
+      ipos = 0 
+      ok = .false.
+c                              if called by build (iam = 4) skip the
 c                              name check:
-      if (ibuild.eq.1) goto 60
+      if (iam.ne.4) then
 c                              check that solution name matches a 
 c                              name requested in input from n1
-      do i = 1, isoct
+         do i = 1, isoct
 
-         if (tname.eq.fname(i)) then 
-c                              got a match, goto 60:
-            idsol = i 
-            im = im + 1
-            goto 60 
-         end if 
+           if (tname.eq.fname(i)) then 
+c                              got a match, exit
+               idsol = i 
+               im = im + 1
+               ok = .true.
+               exit 
+
+            end if 
 c
-      end do 
-c                              didn't find a match, read a new name:
-      return 
-c                              check that the endmembers match with data
-c                              from n2:   
-60    do 70 i = 1, istot
+         end do 
+c                                 didn't find a match, read a new name:
+         if (.not.ok) return 
+
+      end if 
+c                                 check that the endmembers match with data
+c                                 in the thermodynamic data file. set local
+c                                 to include/exclude solute species
+      if (jsmod.eq.20.and.iam.ne.4) then
+c                                 look through solute species 
+         local = aqct
+
+      else 
+c                                 or only real entities
+          local = ipoint
+
+      end if 
+
+      do i = 1, istot
 
          kdsol(i) = 0
+         ok = .false.
 
          if (jsmod.eq.5.or.jsmod.eq.7.or.jsmod.eq.8) then
 c                              solution with dependent endmembers, if endmember i
 c                              is dependent endmember flag it by setting kdsol(i) = -2
             do j = 1, mdep
+
                if (jdep(j).eq.i) then
                   kdsol(i) = -2
-                  goto 70
+                  ok = .true.
+                  exit 
                end if 
-            end do 
+
+            end do
+
+            if (ok) cycle 
+
          end if 
 
-         do h = 1, ipoint
-c                                 in build, check for forbidden choices:
-            if (ibuild.eq.1) then
-               if (mname(i).eq.x1.or.mname(i).eq.x2) then
-                  write (*,1010) tname, x1, x2
-                  jstot = 0
-                  return
-               end if
-            end if
+         do h = 1, local
 
             if (names(h).eq.mname(i)) then
 c                                 got a valid endmember, count and                     
@@ -6676,38 +6536,117 @@ c                                 set kill flag:
 c                                 don't reset ikp if it has been set for 
 c                                 another model.
                if (iend(i).ne.0.and.ikp(h).eq.0) ikp(h) = -1
-c                                 found all endmembers:
-               if (jstot.eq.istot) return
 
-               goto 70
+               if (jsmod.eq.20) then 
+c                                 tests for aq solvent models
+                  if (i.le.nq) then 
+c                                 must be a charged solute species
+                     if (thermo(6,h).eq.0) then
+                        write (*,*) names(h),' is not a charged species'
+     *                  ,'remove it from the list of charged species in'
+     *                  ,'solution model:',tname
+                        call errpau
+                        stop
+                     else if (thermo(6,h).gt.0) then
+                        ipos = ipos + 1
+                     else 
+                        ineg = ineg + 1
+                     end if
+
+                     if (h.le.ipoint) then 
+                        write (*,*) names(h),' is not described by a '
+     *       ,'solute EoS remove it from the list of solute species in'
+     *                  ,'solution model:',tname
+                        call errpau
+                        stop
+                     end if 
+
+                  else if (i.gt.nq.and.i.le.nq+nn) then 
+c                                  must be neutral species
+                     if (thermo(6,h).ne.0) then
+                        write (*,*) names(h),' is a charged species'
+     *                  ,'remove it from the list of neutral species in'
+     *                  ,'solution model:',tname
+                        call errpau
+                        stop
+                     end if
+
+                     if (h.le.ipoint) then 
+                        write (*,*) names(h),' is not described by a '
+     *       ,'solute EoS remove it from the list of solute species in'
+     *                  ,'solution model:',tname
+                        call errpau
+                        stop
+                     end if 
+
+                  else
+
+                     if (h.gt.ipoint) then 
+                        write (*,*) names(h),' is not described by a '
+     *       ,'solute EoS remove it from the list of solute species in'
+     *                  ,'solution model:',tname
+                        call errpau
+                        stop
+                     end if
+
+                  end if 
+
+               end if 
+
+               exit 
+
             end if 
+
          end do
-70    continue
+c                                 found all endmembers:
+         if (jstot.eq.istot) exit
+
+      end do
+
+
+      if (jsmod.eq.20) then 
+c                                 for solvent models, check that charge balance
+c                                 is possible
+         if ((ipos.eq.0.and.ineg.gt.0).or.
+     *       (ipos.gt.0.and.ineg.eq.0)) then 
+ 
+             write (*,*) 'solution models with charged species must',
+     *      ' include both postive and negative species',
+     *      ' solution model:',tname,' will be rejected'
+  
+             jstot = 0 
+
+         end if
+      end if 
 
       call redep (0)
 c                                done if nothing is missing:
       if (jstot.eq.istot) return
 c                                missing endmember warnings:
       if (jstot.lt.2) then
+
          im = im - 1
          if (first) call warn (25,wg(1,1),jstot,tname)
          jstot = 0 
+
       else 
-         imiss = 0 
+
+         imiss = 0
+
          do i = 1, istot
             if (kdsol(i).eq.0) then
                imiss = imiss + 1
                missin(imiss) = mname(i)
             end if 
          end do 
+
          if (first) write (*,1000) tname,(missin(i), i = 1, imiss)
+
       end if 
 
 1000  format (/,'**warning ver114** the following endmembers',
      *          ' are missing for ',a,/,4(8(2x,a),/),/)
-1010  format (/,'**warning ver113** ',a,' is not a valid model',
-     *        ' because component ',a,' or ',a,/,
-     *        ' is constrained or missing.',/)
+
       end
 
       subroutine redep (jkill)
@@ -6723,8 +6662,8 @@ c----------------------------------------------------------------------
 
       integer i,j,l,ndep,k,jkill
 
-      logical depend,laar,order,fluid,macro,specil,recip
-      common/ cst160 /depend,laar,order,fluid,macro,specil,recip
+      logical depend,laar,order,fluid,macro,recip
+      common/ cst160 /depend,laar,order,fluid,macro,recip
  
       integer jmsol,kdsol
       common/ cst142 /jmsol(m4,mst),kdsol(m4)
@@ -6833,7 +6772,7 @@ c---------------------------------------------------------------------
 
       logical bad
 
-      double precision coeffs(k7), rnums(100), enth(3)
+      double precision coeffs(k7), rnums(10), enth(3)
 
       integer ijk(mst),inds(k7),ict
 
@@ -6858,8 +6797,8 @@ c---------------------------------------------------------------------
      *      imd(msp,mst),insp(m4),ist(mst),isp(mst),rkord(m18),isite,
      *      iterm,iord,istot,jstot,kstot,xtyp
 
-      logical depend,laar,order,fluid,macro,specil,recip
-      common/ cst160 /depend,laar,order,fluid,macro,specil,recip
+      logical depend,laar,order,fluid,macro,recip
+      common/ cst160 /depend,laar,order,fluid,macro,recip
 
       integer iorig,jnsp,iy2p
       common / cst159 /iorig(m4),jnsp(m4),iy2p(m4)
@@ -6876,13 +6815,15 @@ c---------------------------------------------------------------------
 
       double precision yin
       common/ cst50 /yin(ms1,mst)
+
+      integer nq, nn, ns
+      common/ cst337 /nq,nn,ns
 c----------------------------------------------------------------------
 
       mdep = 0 
       istot = 0
       ist(1) = 0 
 c                               set logical variables
-      specil = .false.
       macro = .false.
       order = .false.
       laar = .false.
@@ -6927,15 +6868,24 @@ c                             read jsmod, model type flag
 
           end if  
                    
-      end do   
+      end do
+
+      if (jsmod.eq.20) then
+c                                 aqueous model reads to different 
+c                                 arrays
+         call raqmod (tname)
+         istot = nq + nn + ns
+
+         return
+
+       end if
 c                                 correct jsmod for old versions    
       if (jsmod.eq.3) jsmod = 2  
       if (jsmod.eq.0) fluid = .true.
       if (jsmod.eq.1) call error (68,enth(1),jsmod,tname)
       if (jsmod.eq.6.or.jsmod.eq.8.or.jsmod.eq.27) order = .true.
       if (jsmod.eq.5.or.jsmod.eq.7.or.jsmod.eq.8) depend = .true. 
-      if (jsmod.eq.7.or.jsmod.eq.8) recip = .true. 
-      if (jsmod.gt.20) specil = .true.  
+      if (jsmod.eq.7.or.jsmod.eq.8) recip = .true.
 c                                 assign non-default props to 
 c                                 special models:
       if (jsmod.ge.30.and.jsmod.le.31) recip = .true.
@@ -6957,9 +6907,11 @@ c                               total number of endmembers:
          istot = istot*isp(i)
       end do 
 c                               counter for character read routines
+c                               and starting index
       idim = istot
+      i = 0
 c                               read endmember names:
-      call readn (idim,tname)
+      call readn (i,idim,tname)
 c                               compound formation models
       norder = 0 
 
@@ -7167,6 +7119,76 @@ c                                 equations of state.
          iorig(i) = i 
       end do
 
+      end
+
+      subroutine raqmod (tname)
+c---------------------------------------------------------------------
+c raqmod - reads aq electrolyte solution model, jsmod = 20.
+c---------------------------------------------------------------------
+      implicit none
+  
+      include 'perplex_parameters.h'
+
+      character tname*10
+
+      integer i, j
+
+      double precision rnums(10)
+
+      integer iorig,jnsp,iy2p
+      common / cst159 /iorig(m4),jnsp(m4),iy2p(m4)
+
+      integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
+     *        kstot,rkord,xtyp
+      double precision wg,wk,xmn,xmx,xnc,reach
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),xmn(mst,msp),
+     *      xmx(mst,msp),xnc(mst,msp),reach,iend(m4),isub(m1,m2,2),
+     *      imd(msp,mst),insp(m4),ist(mst),isp(mst),rkord(m18),isite,
+     *      iterm,iord,istot,jstot,kstot,xtyp
+
+      integer nq, nn, ns
+      common/ cst337 /nq,nn,ns
+c----------------------------------------------------------------------
+c                               read number of charged species:
+      call readda (rnums,1,tname)
+      nq = idint(rnums(1))
+c                               read charged species names:
+      i = 0
+      if (nq.gt.0) call readn (i,nq,tname)
+c                               read number of neutral species:
+      call readda (rnums,1,tname)
+      nn = idint(rnums(1))
+c                               read neutral species names:
+      i = nq
+      if (nn.gt.0) call readn (i,nn,tname)
+c                               read number of solvent species:
+      call readda (rnums,1,tname)
+      ns = idint(rnums(1))
+c                               read solvent species names:
+      i = nq + nn
+      if (ns.gt.0) call readn (i,ns,tname)
+c                               read composition limits, subdivision type
+c                               for nq - 1 + (nn + ns) - 1 species
+      do j = 1, nq + nn + ns - 2
+
+         call readda (rnums,4,tname)
+
+         xmn(1,j) = rnums(1)
+         xmx(1,j) = rnums(2)
+         xnc(1,j) = rnums(3)
+         imd(j,1) = idint(rnums(4))
+c                                 don't allow imod > 2
+         if (imd(j,1).ge.3) call error (169,rnums(1),imd(j,1),tname)
+
+      end do
+c                              look for van laar and/or dqf parameters
+c                              or the end of model marker
+      call readop (j,j,j,reach,tname)
+
+      do i = 1, nq+nn+ns
+         iorig(i) = i 
+      end do
+
       end 
 
       subroutine nmodel 
@@ -7180,8 +7202,8 @@ c---------------------------------------------------------------------
  
       integer itic,i,j,k
 
-      logical depend,laar,order,fluid,macro,specil,recip
-      common/ cst160 /depend,laar,order,fluid,macro,specil,recip
+      logical depend,laar,order,fluid,macro,recip
+      common/ cst160 /depend,laar,order,fluid,macro,recip
 
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
      *        kstot,rkord,xtyp
@@ -8962,8 +8984,8 @@ c---------------------------------------------------------------------
       integer iorig,jnsp,iy2p
       common / cst159 /iorig(m4),jnsp(m4),iy2p(m4)
 
-      logical depend,laar,order,fluid,macro,specil,recip
-      common/ cst160 /depend,laar,order,fluid,macro,specil,recip
+      logical depend,laar,order,fluid,macro,recip
+      common/ cst160 /depend,laar,order,fluid,macro,recip
 c                                 GLOBAL SOLUTION PARAMETERS:
       integer ksmod, ksite, kmsol, knsp
       common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
@@ -12107,7 +12129,7 @@ c                               initialize limit counter
 
       if (jsmod.eq.6.and.norder.eq.1.or.jsmod.eq.27) return
 
-      call readcd (n9,len,ier)
+      call readcd (n9,len,ier,.true.)
 
       write (begin,'(5a)') (chars(j),j=1, 5)
 
@@ -12223,7 +12245,7 @@ c-----------------------------------------------------------------------
 
       logical output, first, bad, chksol
  
-      character*10 tname, uname(2)*8, sname(h9), new*3, tn1*6, tn2*22
+      character*10 tname, sname(h9), new*3, tn1*6, tn2*22
 
       double precision zt
 
@@ -12306,9 +12328,6 @@ c-----------------------------------------------------------------------
 
       integer iam
       common/ cst4 /iam
-
-      save uname
-      data uname/' ',' '/
 c-----------------------------------------------------------------------
 c                                 initialize counters
       ixct = 0 
@@ -12352,12 +12371,12 @@ c                                 solution phase data file, write warning:
          end if 
 c                                 -------------------------------------
 c                                 check the solution model:
-         call cmodel (im,idsol,tname,0,uname(1),uname(2),first)
+         call cmodel (im,idsol,tname,first)
 
          if (jstot.lt.2) cycle 
 c                                 -------------------------------------
 c                                 reformulate the model so that it has 
-c                                 no missing endmembers:             
+c                                 no missing endmembers:
          if (jstot.lt.istot) call reform (tname,im,first)
 
          if (istot.lt.2) cycle  
@@ -12389,7 +12408,7 @@ c                                 the site fraction of the jth species on
 c                                 the ith site of the hth pseudocompound.
          if (iam.lt.3) then  
 c                                 vertex/meemum need static pseudocompounds
-            call subdiv (tname,im)       
+            call subdiv (im)       
 c                                 subdiv generates ntot compositions,
 c                                 generate the compound data for each solution:
 c                                 save the identities of the endmembers
@@ -12529,7 +12548,7 @@ c                              close solution model file
      *          'initial proportions.',/)
       end 
 
-      subroutine subdiv (tname,ids)
+      subroutine subdiv (ids)
 c---------------------------------------------------------------------
       implicit none
  
@@ -12553,9 +12572,19 @@ c---------------------------------------------------------------------
      *      xmx(mst,msp),xnc(mst,msp),reach,iend(m4),isub(m1,m2,2),
      *      imd(msp,mst),insp(m4),ist(mst),isp(mst),rkord(m18),isite,
      *      iterm,iord,istot,jstot,kstot,xtyp
+
+      integer ksmod, ksite, kmsol, knsp
+      common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
 c---------------------------------------------------------------------
+      if (ksmod(ids).eq.20) then
+c                                subdivision with charge balance
+         call carteq (ids)
+c                                assign to y()?
+         return
+
+      end if 
 c                                 do the first site:
-      call cartes (1,tname,ids)
+      call cartes (1,ids)
 
       last = isp(1) - 1
       if (isp(1).eq.1) last = 1
@@ -12571,7 +12600,7 @@ c                                 do the first site:
 
       if (isite.eq.1) return
 c                                 do the second site:
-      call cartes (2,tname,ids)
+      call cartes (2,ids)
 
       index = 2 
       last = isp(index) - 1
@@ -12623,7 +12652,7 @@ c                                 this hardwires the array dimensions to "mst"
 
       np1 = (npairs-1) * np1
 
-      call cartes (3,tname,ids)
+      call cartes (3,ids)
 c                                 the use of "index" is necessary in case mst<3.
       index = 3 
       last = isp(index) - 1
@@ -12879,7 +12908,7 @@ c                                 a general cube generated by subdv0
  
       else
 c                                 do explicit subdivision 
-         call cartes (1,tname,ids)
+         call cartes (1,ids)
 
       end if
 
@@ -12903,7 +12932,7 @@ c                                 do the second site:
 
       else  
 
-         call cartes (2,tname,ids)
+         call cartes (2,ids)
 
       end if 
 c                                 there will be a total of
@@ -12943,7 +12972,7 @@ c                                 this hardwires the array dimensions to "mst"
 
       np1 = (npairs-1) * np1
 
-      call cartes (3,tname,ids)
+      call cartes (3,ids)
 c                                 the use of "index" is necessary in case mst<3.
       index = 3 
       last = isp(index) - 1
@@ -13103,8 +13132,8 @@ c--------------------------------------------------------------------------
       double precision sxs,exces
       common/ cst304 /sxs(k13),exces(m3,k1),ixp(k1)
 
-      logical depend,laar,order,fluid,macro,specil,recip
-      common/ cst160 /depend,laar,order,fluid,macro,specil,recip
+      logical depend,laar,order,fluid,macro,recip
+      common/ cst160 /depend,laar,order,fluid,macro,recip
 
       double precision pa, p0a, zp, w, y, z, wl
       common/ cxt7 /y(m4),zp(m4),pa(m4),p0a(m4),z(mst,msp),w(m1),
@@ -13599,7 +13628,7 @@ c---------------------------------------------------------------------
       double precision  g,vdp
 
       double precision thermo,uf,us
-      common/ cst1 /thermo(k4,k10),uf(2),us(h5)    
+      common/ cst1 /thermo(k4,k10),uf(2),us(h5)
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps

@@ -26,7 +26,7 @@ c-----------------------------------------------------------------------
  
       include 'perplex_parameters.h'
 
-      character*8 fugact(3), phase, b1, b2, mnames(k16*k17)
+      character*8 fugact(3), phase, mnames(k16*k17)
 
       character*100 n9name, cfname, dsol,  char6*6, opname
 
@@ -412,7 +412,7 @@ c                                 phase
 
                do 
  
-                  call getphi (name,eof)
+                  call getphi (name,.false.,eof)
 
                   if (eof) exit
 
@@ -1062,7 +1062,7 @@ c                                 defined by a make definition:
 c                                 next get consistent real phases
       do 
  
-         call getphi (name,eof)
+         call getphi (name,.true.,eof)
 
          if (eof) exit
  
@@ -1211,12 +1211,6 @@ c                                 try again
  
             ict = 0
             ipoint = iphct
-c                                 this was here to prevent users
-c                                 from making h2o and/or co2 mobile
-c                                 but using the components in a fluid.
-c                                 changed as of 5/31/04, JADC.
-            b1 = ' '
-            b2 = ' '
 c                                 format test line
             read (n9,*) new
 c                                 check version compatability
@@ -1237,7 +1231,7 @@ c                                 don't allow fluid models if
 c                                 the system is fluid saturated:
             if (jsmod.eq.0.and.ifct.gt.0) cycle
 c                                 check for endmembers:
-            call cmodel (im,idsol,blah,1,b1,b2,first)
+            call cmodel (im,idsol,blah,first)
             if (jstot.eq.0) cycle
       
             ict = ict + 1

@@ -19,7 +19,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a)') 
-     *      'Perple_X version 6.7.5, source updated Dec 29, 2016.'
+     *      'Perple_X version 6.7.6, source updated Jan 6, 2016.'
 
       end
 
@@ -35,7 +35,7 @@ c----------------------------------------------------------------------
 
       if (new.eq.'008'.or.new.eq.'011'.or.new.eq.'670'.or.
      *    new.eq.'672'.or.new.eq.'673'.or.new.eq.'674'.or.
-     *    new.eq.'675') then 
+     *    new.eq.'675'.or.new.eq.'676') then 
 
          chksol = .true.
 
@@ -2887,7 +2887,7 @@ c----------------------------------------------------------------------
       common/ cst51 /length,iblank,icom,chars(240)
 c----------------------------------------------------------------------
 
-      call readcd (n2,len,ier)
+      call readcd (n2,len,ier,.true.)
       if (ier.ne.0) goto 90 
 c                                 echo data for ctransf/actcor
       if (iopt.gt.3) write (n8,'(240a1)') (chars(i),i=1,len)
@@ -2938,7 +2938,7 @@ c                                 find the name
          mknam(nmak,nreact+1) = tname
          mknum(nmak) = nreact
 c                                 now the dqf
-         call readcd (n2,len,ier)
+         call readcd (n2,len,ier,.true.)
          if (ier.ne.0) goto 90
 c                                 echo data for ctransf/actcor 
          if (iopt.gt.3) write (n8,'(240a1)') (chars(i),i=1,len)
@@ -2951,7 +2951,7 @@ c                                 read the DQF coefficients
             mdqf(nmak,i) = nums(i)
          end do 
 c                                 start next make definition
-         call readcd (n2,len,ier)
+         call readcd (n2,len,ier,.true.)
          write (rec,'(240a1)') chars
          read (rec,'(a3)') tag
 c                                 echo data for ctransf/actcor
@@ -3029,12 +3029,14 @@ c                                 anyway in case it's a tag
 
       end 
 
-      subroutine readcd (nloc,len,ier)
+      subroutine readcd (nloc,len,ier,strip)
 c----------------------------------------------------------------------
 c readcd - read 240 column card image from unit 9, strip out unwanted
-c characters. ier = 1 no card found.
+c characters if strip. ier = 1 no card found.
 c----------------------------------------------------------------------    
       implicit none
+
+      logical strip
 
       integer len, ier, iscan, ict, i, iscnlt, ibeg, nloc
 
@@ -3070,26 +3072,34 @@ c                                 find a non blank character
          end if 
 
       end do 
+c                                 there is a non-blank data character
+      if (strip) then 
 
-      ict = 1
+         ict = 1
 
-      do i = 2, len 
+         do i = 2, len 
 c                                 strip out '+' and '*' chars
-         if (chars(i).eq.'+'.or.chars(i).eq.'*') chars(i) = ' '
+            if (chars(i).eq.'+'.or.chars(i).eq.'*') chars(i) = ' '
 c                                 eliminate blanks after '/' and '-'
 c                                 and double blanks
-         if ((chars(ict).eq.'/'.and.chars(i  ).ne.' ') .or. 
-     *       (chars(ict).eq.'-'.and.chars(i  ).ne.' ') .or.
-     *       (chars(ict).eq.' '.and.chars(i  ).ne.' ') .or.
-     *       (chars(ict).ne.'-'.and.chars(ict).ne.'/'.and.
-     *        chars(ict).ne.' ') ) then
-             ict = ict + 1
-             chars(ict) = chars(i)
-         end if
+            if ((chars(ict).eq.'/'.and.chars(i  ).ne.' ') .or. 
+     *          (chars(ict).eq.'-'.and.chars(i  ).ne.' ') .or.
+     *          (chars(ict).eq.' '.and.chars(i  ).ne.' ') .or.
+     *          (chars(ict).ne.'-'.and.chars(ict).ne.'/'.and.
+     *           chars(ict).ne.' ') ) then
+                ict = ict + 1
+                chars(ict) = chars(i)
+            end if
 
-      end do 
+         end do 
 
-      len = ict
+         len = ict
+
+      else
+c                                 scan backwards to the last non-blank
+         len = iscnlt (len,1,' ')
+
+      end if
 
       goto 99
 
@@ -3380,18 +3390,13 @@ c                                 fluid eos species
 
       end
 
-      subroutine getphi (name,eof)
+      subroutine getphi (name,aq,eof)
 c----------------------------------------------------------------------
 c read phase data from the thermodynamic data file from lun N2, assumes
 c topn2 has read the header section of the file.
 
-c cycles past aqueous species data for all programs other than 
-
-c    frendly  5
-c    ctransf  6
-c    actcor   9
-c    rewrite 10
-
+c on input aq is a flag which determines if solute species data is
+c accepted (ieos = 15-16).
 c----------------------------------------------------------------------
       implicit none
  
@@ -3401,7 +3406,7 @@ c----------------------------------------------------------------------
 
       double precision ct
 
-      logical eof
+      logical eof, aq
 
       character key*22, val*3, name*8,
      *          nval1*12, nval2*12, nval3*12, strg*40, strg1*40
@@ -3467,13 +3472,8 @@ c                                 component is in the phase.
                end if 
             end do
          end if
-c                                 exclude aqueous species from
-c                                 FEM routines.
-         if (ieos.eq.15.or.ieos.eq.16
-     *                 .and.iam.ne.5
-     *                 .and.iam.ne.6
-     *                 .and.iam.ne.9
-     *                 .and.iam.ne.10) cycle
+
+         if (.not.aq.and.(ieos.eq.15.or.ieos.eq.16)) cycle
  
          exit 
 
@@ -3645,7 +3645,6 @@ c                                 generic thermo data
                end do 
 
             end if 
- 
 
             if (ok) cycle
 c                                 =====================================

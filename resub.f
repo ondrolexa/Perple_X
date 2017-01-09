@@ -430,8 +430,8 @@ c                                 to allow hardlimits. JADC
          end do 
       end do 
                             
-c     call subdv1 ('characters',ids) 
-      call subdiv ('characters',ids)
+c     call subdv1 (ids) 
+      call subdiv (ids)
 
       do 10 i = 1, ntot 
 
