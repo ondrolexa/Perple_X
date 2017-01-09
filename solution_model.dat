@@ -8400,8 +8400,8 @@ mt
 0  0  0  0                        | endmember flags
 
 0. 1. .1 0                        | X(sp) subdivision range,   imod = 0 -> cartesian 
-0. 0.2  .1  1                     | X(herc) subdivision range, imod = 1 -> assymmetric stretching
-0. 0.2  .1  1                     | X(usp) subdivision range,  imod = 1 -> assymmetric stretching
+0. 1. .1 0                        | X(herc) subdivision range, imod = 1 -> assymmetric stretching
+0. 1. .1 0                        | X(usp) subdivision range,  imod = 1 -> assymmetric stretching
              
 begin_excess_function 
 W(herc mt)    18.5d3 0  0

@@ -47,8 +47,8 @@ c                                 global assemblage data
       double precision cblk
       common/ cst300 /cblk(k5),jbulk
 
-      integer ncoor
-      common/ cxt24 /ncoor(h9)
+      integer ncoor,mcoor,ndim
+      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
 
       integer iam
       common/ cst4 /iam

@@ -319,7 +319,7 @@ c                                 local variables
 
       double precision xxnc, ysum, res0
 
-      integer i, j, k, ids, id, jd, iter, kcoct, iref
+      integer i, j, k, l, m, ids, id, jd, iter, kcoct, iref
 c                                 -------------------------------------
 c                                 functions
       double precision gsol1, ydinc
@@ -344,20 +344,15 @@ c                                 x coordinate description
      *               xmno(h9,mst,msp),xmxo(h9,mst,msp),reachg(h9)
       common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
 c                                 temporary subdivision limits:
-      integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
-     *        kstot,rkord,xtyp
-      double precision wg,wk,xmn,xmx,xnc,reach
-      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),xmn(mst,msp),
-     *      xmx(mst,msp),xnc(mst,msp),reach,iend(m4),isub(m1,m2,2),
-     *      imd(msp,mst),insp(m4),ist(mst),isp(mst),rkord(m18),isite,
-     *      iterm,iord,istot,jstot,kstot,xtyp
+      double precision xmn,xmx,xnc
+      common/ cxt108 /xmn(mst,msp),xmx(mst,msp),xnc(mst,msp)
 c                                 coordinates output by subdiv
-      double precision xy,yy
       integer ntot,npairs
-      common/ cst86 /xy(mdim,k1),yy(ms1,mst,k1),ntot,npairs
-c                                 max number of refinements for solution h9
-      integer ncoor
-      common/ cxt24 /ncoor(h9)
+      double precision simp,prism
+      common/ cxt86 /simp(k13),prism(k24),ntot,npairs
+
+      integer ncoor,mcoor,ndim
+      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
 
       integer ksmod, ksite, kmsol, knsp
       common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
@@ -396,30 +391,24 @@ c                                below.
       end if
 c                                load the subdivision limits into
 c                                temporary limit arrays:
-      isite = istg(ids)
-
       res0 = nopt(24)/nopt(21)**iter
       
-      do i = 1, isite
+      do i = 1, istg(ids)
 
-         isp(i) = ispg(ids,i)
-
-         do j = 1, isp(i) - 1
-
-            imd(j,i) = imdg(j,i,ids)
+         do j = 1, ndim(i,ids)
 
             xnc(i,j) = xncg(ids,i,j)*res0
             xxnc = xnc(i,j)*reachg(ids)
 
-            if (imd(j,i).eq.0) then 
+            if (imdg(j,i,ids).eq.0) then 
 c                                 cartesian
                xmn(i,j) = x(i,j) - xxnc
                xmx(i,j) = x(i,j) + xxnc
 
             else
 c                                 conformal
-               xmn(i,j) = ydinc (x(i,j),-xxnc,imd(j,i),j,i,ids)
-               xmx(i,j) = ydinc (x(i,j),xxnc,imd(j,i),j,i,ids)
+               xmn(i,j) = ydinc (x(i,j),-xxnc,imdg(j,i,ids),j,i,ids)
+               xmx(i,j) = ydinc (x(i,j),xxnc,imdg(j,i,ids),j,i,ids)
 
             end if 
 c                                 changed feb 6, 2012 from xmng/xmxg
@@ -430,12 +419,12 @@ c                                 to allow hardlimits. JADC
          end do 
       end do 
                             
-c     call subdv1 ('characters',ids) 
-      call subdiv ('characters',ids)
+      call subdiv (ids,.true.)
 
-      do 10 i = 1, ntot 
+      do 10 i = 1, ntot
 
          jphct = jphct + 1
+
          if (jphct.gt.k21) call error (58,x(1,1),k21,'resub')
 c                                 convert to compositional corrdinates 
 c                                 required by routine gsol, y coordinates
@@ -450,10 +439,18 @@ c                                 counter for number of non 0 or 1 compositions
 
          if (kcoct.gt.k20) call error (59,x(1,1),k20,'resub')
 
-         do j = 1, isite
+         l = (i-1)*mcoor(ids)
+         m = 0
+
+         do j = 1, istg(ids)
+
             ysum = 0d0
-            do k = 1, isp(j) - 1
-               x(j,k) = yy(k,j,i)
+
+            do k = 1, ndim(j,ids)
+
+               m = m + 1
+
+               x(j,k) = prism(l+m)
                ysum = ysum + x(j,k)
                zcoor(jcoct) = x(j,k)
 
@@ -463,12 +460,17 @@ c                                 the composition is out of range
                   jphct = jphct - 1
                   jcoct = kcoct - ncoor(ids)
                   goto 10
-               end if 
+
+               end if
+
                jcoct = jcoct + 1
-            end do 
-            x(j,isp(j)) = 1d0 - ysum
-            zcoor(jcoct) = x(j,isp(j))
+
+            end do
+
+            x(j,ispg(ids,j)) = 1d0 - ysum
+            zcoor(jcoct) = x(j,ispg(ids,j))
             jcoct = jcoct + 1
+
          end do 
 
          call xtoy (ids)
@@ -2425,8 +2427,8 @@ c----------------------------------------------------------------------
       integer ifct,idfl
       common/ cst208 /ifct,idfl
 
-      integer iff,idss,ifug,ifyn,isyn
-      common/ cst10  /iff(2),idss(h5),ifug,ifyn,isyn
+      integer iff,idss,ifug
+      common/ cst10  /iff(2),idss(h5),ifug
 c-----------------------------------------------------------------------
 c                           compute the chemical potentials of
 c                           fluid components in fluid saturated
@@ -2494,8 +2496,8 @@ c----------------------------------------------------------------------
       integer ifct,idfl
       common/ cst208 /ifct,idfl
 
-      integer iff,idss,ifug,ifyn,isyn
-      common/ cst10  /iff(2),idss(h5),ifug,ifyn,isyn
+      integer iff,idss,ifug
+      common/ cst10  /iff(2),idss(h5),ifug
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp  
@@ -2509,7 +2511,7 @@ c-----------------------------------------------------------------------
       fo2 = 0d0
 c                                 compute the chemical potentials of
 c                                 saturated phase components.
-      if (ifyn.ne.1) call ufluid (fo2)
+      if (ifct.gt.0) call ufluid (fo2)
 
       do i = 1, isat
 c                                 determine stable saturated composants
@@ -2754,8 +2756,8 @@ c-----------------------------------------------------------------------
       integer ifct,idfl
       common/ cst208 /ifct,idfl
 
-      integer iff,idss,ifug,ifyn,isyn
-      common/ cst10  /iff(2),idss(h5),ifug,ifyn,isyn
+      integer iff,idss,ifug
+      common/ cst10  /iff(2),idss(h5),ifug
 
       integer isoct
       common/ cst79 /isoct
@@ -3128,9 +3130,6 @@ c-----------------------------------------------------------------------
       double precision vuf,vus
       common/ cst201 /vuf(2),vus(h5),iffr,isr
 
-      integer iff,idss,ifug,ifyn,isyn
-      common/ cst10  /iff(2),idss(h5),ifug,ifyn,isyn
-
       integer idr,ivct
       double precision vnu
       common/ cst25 /vnu(k7),idr(k7),ivct
@@ -3142,7 +3141,7 @@ c                                 such components may vary.
 
 c                                 no saturated phase components and no
 c                                 saturated components:
-      if (iffr.eq.1.and.isyn.eq.1) goto 10
+      if (iffr.eq.1.and.isr.eq.1) goto 10
 c                                 note that this call to uproj makes a
 c                                 subsequent call in gall redundant if
 c                                 sfol1 is used to trace a univariant
@@ -3547,8 +3546,8 @@ c----------------------------------------------------------------------
 
       double precision c(k5),u,comp(k8,k8)
 
-      integer iff,idss,ifug,ifyn,isyn
-      common/ cst10  /iff(2),idss(h5),ifug,ifyn,isyn
+      integer iff,idss,ifug
+      common/ cst10  /iff(2),idss(h5),ifug
  
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp

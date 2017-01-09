@@ -34,9 +34,9 @@ c      include 'flib.f'
 
       double precision props,psys,psys1,pgeo,pgeo1
       common/ cxt22 /props(i8,k5),psys(i8),psys1(i8),pgeo(i8),pgeo1(i8)
- 
-      integer iff,idss,ifug,ifyn,isyn
-      common/ cst10 /iff(2),idss(h5),ifug,ifyn,isyn
+
+      integer ifct,idfl
+      common/ cst208 /ifct,idfl
 
       double precision v,tr,pr,r,ps
       common/ cst5  /v(l2),tr,pr,r,ps
@@ -190,7 +190,7 @@ c                                 interactively entered conditions
 
                   if (v(1).eq.0d0) exit 
 
-                  if (ifyn.eq.0) then
+                  if (ifct.gt.0) then
 
                      do 
                         write (*,1110)
@@ -380,8 +380,8 @@ c----------------------------------------------------------------------
       double precision vmax,vmin,dv
       common/ cst9  /vmax(l2),vmin(l2),dv(l2)
 
-      integer iff,idss,ifug,ifyn,isyn
-      common/ cst10 /iff(2),idss(h5),ifug,ifyn,isyn
+      integer iff,idss,ifug
+      common/ cst10 /iff(2),idss(h5),ifug
 
       integer ipot,jv,iv
       common/ cst24 /ipot,jv(l2),iv(l2)
@@ -1151,8 +1151,8 @@ c--------------------------------------------------------------------
       double precision act
       common/ cst205 /act(k7),idf(3)
 
-      integer iff,idss,ifug,ifyn,isyn
-      common/ cst10 /iff(2),idss(h5),ifug,ifyn,isyn
+      integer ifct,idfl
+      common/ cst208 /ifct,idfl
 
       double precision fh2o,fco2
       common/ cst11 /fh2o,fco2
@@ -1172,7 +1172,7 @@ c                                 compute free energy change of the rxn
       fh2o = 0d0
       fco2 = 0d0
  
-      if (ifyn.eq.0) call cfluid (fo2,fs2)
+      if (ifct.gt.0) call cfluid (fo2,fs2)
  
       do j = 1, iphct
          gval = gval + vnu(j) * (gphase(j) + r * t * dlog(act(j)))
@@ -1180,7 +1180,7 @@ c                                 compute free energy change of the rxn
  
       gval = gval + vuf(1) * fh2o*r*t + vuf(2)*fco2*r*t
 
-      if (idf(3).ne.0.and.ifyn.eq.0) gval = gval + vnu(idf(3))*r*t*fo2
+      if (idf(3).ne.0.and.ifct.gt.0) gval = gval + vnu(idf(3))*r*t*fo2
  
       end
 
@@ -1213,8 +1213,11 @@ c---------------------------------------------------------------------
       double precision act
       common/ cst205 /act(k7),idf(3)
 
-      integer iff,idss,ifug,ifyn,isyn
-      common/ cst10 /iff(2),idss(h5),ifug,ifyn,isyn
+      integer iff,idss,ifug
+      common/ cst10  /iff(2),idss(h5),ifug
+
+      integer ifct,idfl
+      common/ cst208 /ifct,idfl
 
       integer icomp,istct,iphct,icp
       common/ cst6 /icomp,istct,iphct,icp
@@ -1608,7 +1611,7 @@ c                                end of phase loop
  
       end if 
 
-      if (ifyn.eq.1) return 
+      if (ifct.eq.0) return 
 
       write (*,1160)
       read (*,1050) y
@@ -1618,7 +1621,7 @@ c                                end of phase loop
 
       return 
 
-91    call warn (9,t,ifyn,names(id))
+91    call warn (9,t,ifct,names(id))
 
 1000  format (/,'Select phase to modify or output:',9(/,6x,i2,') ',a))
 1010  format (/,'For definitions of the EoS parameters refer to:',/
@@ -1824,8 +1827,8 @@ c----------------------------------------------------------------------
       double precision vuf,vus
       common/ cst201 /vuf(2),vus(h5),iffr,isr
 
-      integer iff,idss,ifug,ifyn,isyn
-      common/ cst10  /iff(2),idss(h5),ifug,ifyn,isyn
+      integer iff,idss,ifug
+      common/ cst10  /iff(2),idss(h5),ifug
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp  
@@ -1904,6 +1907,9 @@ c----------------------------------------------------------------------
       integer idspe,ispec
       common/ cst19 /idspe(2),ispec
 
+      integer ifct,idfl
+      common/ cst208 /ifct,idfl
+
       save first, inames, mnames
       data first/.true./
 c-----------------------------------------------------------------------
@@ -1927,8 +1933,6 @@ c-----------------------------------------------------------------------
          if (icmpn.gt.k5) write (*,3020) k5
 
       end if 
-
-      isyn = 1
 c                              this check is here to avoid
 c                              redimensioning comps, but cause
 c                              the maximum number of components
@@ -2005,7 +2009,7 @@ c                               initialization for k10 endnmembers
       iphct = 0
       lamin = 0 
       ipot = 2
-      ifyn = 1
+      ifct = 0
       vuf(1) = 0d0
       vuf(2) = 0d0
       idf(1) = 0
@@ -2053,7 +2057,7 @@ c                               general input data for main program
 c                               first look in the real data:
          do  
 
-           call getphi (name,eof)
+           call getphi (name,.true.,eof)
 c                               looked at all real data
            if (eof) exit
 
@@ -2112,16 +2116,20 @@ c                                 set special flag if O2
          end if
  
          if (lopt(7)) then 
+
+            ifct = 0 
+
             do k = 1, ispec
                if (exname(1).ne.cmpnt(idspe(k))) cycle 
                vuf(k) = vvv
                idf(k) = iphct
-               ifyn = 0
+               ifct = ifct + 1
                exit 
-            end do 
-         end if     
+            end do
+
+         end if
 c                                 get activity:
-         if (ifyn.eq.0) then 
+         if (ifct.gt.0) then 
 
             do k = 1, ispec
                if (exname(1).ne.cmpnt(idspe(k))) cycle 
@@ -2141,7 +2149,7 @@ c                               store the data
 
       end do 
 
-      if (ifyn.eq.0) ipot = 3
+      if (ifct.gt.0) ipot = 3
 c                                load the make dependencies               
       jphct = 21
 c                                read header
@@ -2149,7 +2157,7 @@ c                                read header
 
       do 
 
-         call getphi (name,eof)
+         call getphi (name,.false.,eof)
 
          if (eof) exit
 
@@ -2179,7 +2187,7 @@ c                                remake pointer array for makes
       end do  
 c                                 select equation of state for the
 c                                 saturated phase.
-      if (ifyn.eq.0) call rfluid (1,ifug)
+      if (ifct.gt.0) call rfluid (1,ifug)
 c                                 compute formula weights
       do l = 1,iphct
 

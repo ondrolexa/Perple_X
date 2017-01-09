@@ -29,8 +29,8 @@ c----------------------------------------------------------------------
       logical oned
       common/ cst82 /oned
 
-      integer ncoor
-      common/ cxt24 /ncoor(h9)
+      integer ncoor,mcoor,ndim
+      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
 
       integer igrd
       common/ cst311 /igrd(l7,l7)

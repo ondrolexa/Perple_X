@@ -81,15 +81,15 @@
 !                                       but usually much smaller (see k18).
 !                                 k21 - max number of pseudocompounds for adaptive refinement.
 !                                 k23 - max number of phases to be fractionated.
-!                                 k24 - max number of discretization points for the standard simplex
-!                                       in adaptive optimization.
+!                                 k24 - max number of coordinates for the pseudocompounds of a 
+!                                       prismatic solution.
       parameter (k0=25,k1=1000000,k2=100000,k3=500,k4=32,k5=12)
       parameter (k7=k5+1,k8=k5+2) 
       parameter (k9=30,k10=350,k13=mdim*k1,k14=18,k15=6,k16=70)
       parameter (k17=7,k18=29*k1)
       parameter (k19=2*k5+14,k21=1700000,k20=mdim*k21,k22=mdim*k19,
      *           k23=5)
-      parameter (k24=1)  
+      parameter (k24=k13*mst)  
 !                                 l2 - max number of independent potential variables
 !                                 l3 - max number of variables for gridded min and graphics (l2+2)
 !                                 l5 - max number of coordinates along a univariant curve                
