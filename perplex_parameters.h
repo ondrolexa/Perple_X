@@ -85,11 +85,11 @@
 !                                       prismatic solution.
       parameter (k0=25,k1=1000000,k2=100000,k3=500,k4=32,k5=12)
       parameter (k7=k5+1,k8=k5+2) 
-      parameter (k9=30,k10=350,k13=mdim*k1,k14=18,k15=6,k16=70)
+      parameter (k9=30,k10=350,k14=18,k15=6,k16=70)
       parameter (k17=7,k18=29*k1)
-      parameter (k19=2*k5+14,k21=1700000,k20=mdim*k21,k22=mdim*k19,
-     *           k23=5)
-      parameter (k24=k13*mst)  
+      parameter (k19=2*k5+14,k21=1250000,k20=mdim*k21,k22=mdim*k19,
+     *           k23=5) 
+      parameter (k13=mdim*k21,k24=k13*mst)
 !                                 l2 - max number of independent potential variables
 !                                 l3 - max number of variables for gridded min and graphics (l2+2)
 !                                 l5 - max number of coordinates along a univariant curve                
@@ -128,7 +128,7 @@
 !                                m17 - max order of redlich-kistler expansion
 !                                m18 - max number of pairwise terms in a redlich-kistler expansion
       parameter (m0=8,m1=60,m2=8,m3=3,m4=18,m6=5,m7=15,m8=9,
-     *           m9=10,m10=6,m11=6,m12=4,m13=8,m14=2,m15=9,m16=5,m17=5,
+     *           m9=10,m10=6,m11=6,m12=4,m13=8,m14=2,m15=10,m16=5,m17=5,
      *           m18=6)
 !                                nsp - max number of species in fluid speciation routines 
       parameter (nsp=16)

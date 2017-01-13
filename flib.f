@@ -407,7 +407,7 @@ c                                get the salt content (elag):
      *          'www.perplex.ethz.ch/perplex/faq/calculations_with_un',
      *          'buffered_COH_fluids.txt',/)
 
-99    end 
+      end 
 
       subroutine hybout (icheck,nout)
 c----------------------------------------------------------------------
@@ -3427,7 +3427,7 @@ c----------------------------------------------------------------------
 
       call mrkmix (jns, 2, 1)
 
-99    end
+      end
  
       subroutine hsmrk
 c---------------------------------------------------------------------

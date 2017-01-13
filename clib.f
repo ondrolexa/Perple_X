@@ -1510,7 +1510,7 @@ c                                 read header
 c                                 loop to load solute data:
       do  
     
-         call getphi (name,.true.,eof)
+         call getphi (name,.false.,eof)
 
          if (eof) exit
 c                                 skip non-solute standard state data

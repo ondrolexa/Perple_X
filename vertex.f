@@ -2085,7 +2085,7 @@ c                                ok, now vus has the total deltas
 c                                determine stoichiometric coefficients
 c                                of saturated phase components:
       iffr = 1
-40    do j = 1, 2
+      do j = 1, 2
          vuf(j) = 0d0
          if (iff(j).ne.0d0) then 
             do i = 1, ivct
@@ -3821,7 +3821,7 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      character*8 text(*)*1,alpha(*)*1,string*(kd2)
+      character text(*)*1,alpha(*)*1,string*(kd2)
 
       integer iplus(k5),iminus(k5),jplus(k5),jminus(k5),ip,im,i,j,ist,
      *        ione(k7),jone(k7),iend,jst,is,jend,id
@@ -5377,8 +5377,8 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      character*8 text(kd2,2)*1, rtxt(kd2)*1, ppart(k8)*34, char8, 
-     *            mpart(k8)*34, exten(2)*8, ptext*(kd2), mtext*(kd2)
+      character text(kd2,2)*1, rtxt(kd2)*1, ppart(k8)*34, char8*8, 
+     *          mpart(k8)*34, exten(2)*8, ptext*(kd2), mtext*(kd2)
 
       integer jchar(2),ip,im,i,id,j,nchar
 
@@ -7504,7 +7504,7 @@ c----------------------------------------------------------------------
 
       integer iam, jfrct, i
 
-      character*10 phase(k23), fname*14, y*1
+      character phase(k23)*10, fname*14, y*1
 
       integer ifrct,ifr
       logical gone

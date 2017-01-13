@@ -78,30 +78,43 @@ begin_model
                                                      ____________________________________
 
                                         Diopside        Mg     Ca    Si     Si
+                                        hed             Fe     Ca    Si     Si  dependent
+                                        Cats            Al     Ca   AlSi   AlSi
+                                        cacm            Fe3    Ca   AlSi   AlSi dependent
+
                                         cEnstatite      Mg     Mg    Si     Si
+                                        mfc             Fe     Mg    Si     Si  dependent
+                                        Mats            Al     Mg   AlSi   AlSi dependent 
+                                        macm            Fe3    Mg   AlSi   AlSi dependent 
+                            Species: 
+                                        fmc             Mg     Fe    Si     Si  independent ordered species
                                         cferrosilite    Fe     Fe    Si     Si
-                            Species:    Jadeite         Al     Na    Si     Si
-                                        CaTs            Al     Ca   AlSi   AlSi
+                                        fats            Al     Fe   AlSi   AlSi dependent 
+                                        facm            Fe3    Fe   AlSi   AlSi dependent
+
+                                        ndi             Mg     Na   AlSi   AlSi dependent 
+                                        nhed            Fe     Na   AlSi   AlSi dependent 
+                                        Jadeite         Al     Na    Si     Si
                                         Acmite          Fe3+   Na    Si     Si
                                                       ___________________________________
 
-                       Ordered Cpds:    oCaTs           Al     Ca     Si    Al
+                    Ordered species:    oCaTs           Al     Ca     Si    Al
                                         fmc             Mg     Fe     Si    Si
+
 
 Augite(G)
 abbreviation Cpx
 full_name    clinopyroxene
+  
+8                           | model type: order-disorder with prismatic composition space
+2                           | prismatic space defined by the conjunction of 2 simplicies
+4 4                         | both simplices are quaternary
+                            | 4 * 4 = 16 endmembers that define the vertices of the compositional prism
 
-6                           | model type margules with multiple compound formation  
-                                                                       
-6                           | disordered endmembers
-
-jd
-cenh
-cfsg
-cats
-acm
-di
+hed   cats  cacm  di 
+cfsg  fats  facm  ffmc
+nhed  jd    acm   ndi 
+mfc   mats  macm  cenh 
 
 2                            | number of ordered species 
 
@@ -110,22 +123,38 @@ fmc   = 1/2 cenh + 1/2 cfsg enthalpy_of_ordering  =  -4400 | DQF(fmc) - (DQF(cen
 
 begin_limits
 
-fmc = 0                          delta = 1
-fmc = -2 + 2 cenh                delta = 2 inoperative lower limit
-fmc = -2 + 2 cfsg                delta = 2 inoperative lower limit
+fmc = -2 + 2 cfsg                delta = 2 zm1fe
+fmc =  0 - 1 di                  delta = 1 zm1mg
+fmc =  0 - 2 cfsg                delta = 2 zm2fe
+fmc = -2 + 2 cenh                delta = 2 zm2mg
 
-ocats = 0                        delta = 1 
-ocats = -1 + 1 cats              delta = 1 inoperative lower limit
+ocats =  0 - 1 cats              delta = 2 zAlT2
+ocats = -2 + 1 cats              delta = 2 zAlT1
 
 end_limits
 
-0  0  0  0  0  0                 | endmember flags
+10                           | 10 dependent endmembers
 
-0. 1. 0.1  0                 | range and resolution of X(jd)
-0. 1. 0.1  0                 | range and resolution of X(cenh)
-0. 1. 0.1  0                 | range and resolution of X(cfs)
-0. 1. 0.1  0                 | range and resolution of X(cats) 
-0. 1. 0.1  0                 | range and resolution of X(acm)
+hed  = 1 di   + 1 cfsg - 1 fmc 
+cacm = 1 acm  + 1 cats - 1 jd 
+mfc  = 1 cenh + 1 cfsg - 1 fmc 
+mats = 1 cats + 1 cenh - 1 di
+macm = 1 cats + 1 cenh - 1 di  + 1 acm - 1 jd
+ffmc = 1 fmc
+fats = 1 cats - 1 di   + 1 fmc
+facm = 1 cats - 1 di   + 1 fmc + 1 acm - 1 jd
+ndi  = 1 di   + 1 cfsg - 1 fmc + 1 jd  - 1 cats
+nhed = 1 di   + 2 cfsg - 2 fmc + 1 jd  - 1 cats
+
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | endmember flags
+
+0. 1. 0.1  0                 | range and resolution of X(Fe,M1)
+0. 1. 0.1  0                 | range and resolution of X(Al,M1)
+0. 1. 0.1  0                 | range and resolution of X(Fe3+,M1)
+
+0. 1. 0.1  0                 | range and resolution of X(Ca,M2)
+0. 1. 0.1  0                 | range and resolution of X(Fe,M2)
+0. 1. 0.1  0                 | range and resolution of X(Na,M2)
 
 begin_excess_function
 W(di cenh)                29.8d3   -0.03 * p
@@ -194,9 +223,6 @@ dqf(cats) =  3800  - 2.8816 * T  + 0.01  * P
 end_dqf_corrections
 
 end_of_model
-
-
-
                       --------------------------------------------------------
 begin_model
                       Green, ECR, et al. (JMG, 2016). 

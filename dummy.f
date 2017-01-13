@@ -258,7 +258,7 @@ c                                 must have just hit on the last increment
          npairs = npairs + 1
          j = (npairs-1)*jsp
 
-         if (j+jsp.gt.k23) call error (180,ycum,k13,
+         if (j+jsp.gt.k13) call error (180,ycum,k13,
      *                      'CARTES increase parameter k13')
 
          do i = 1, jsp
