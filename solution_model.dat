@@ -123,10 +123,10 @@ fmc   = 1/2 cenh + 1/2 cfsg enthalpy_of_ordering  =  -4400 | DQF(fmc) - (DQF(cen
 
 begin_limits
 
-fmc = -2 + 2 cfsg                delta = 2 zm1fe
+fmc = -2 + 2 cfsg + 1 fmc        delta = 2 zm1fe
 fmc =  0 - 1 di                  delta = 1 zm1mg
-fmc =  0 - 2 cfsg                delta = 2 zm2fe
-fmc = -2 + 2 cenh                delta = 2 zm2mg
+fmc =  0 - 2 cfsg - 1 fmc        delta = 2 zm2fe
+fmc = -2 + 2 cenh + 1 fmc        delta = 2 zm2mg
 
 ocats =  0 - 1 cats              delta = 2 zAlT2
 ocats = -2 + 1 cats              delta = 2 zAlT1
@@ -7187,7 +7187,7 @@ alpha(an)      1.0    0.0    0.0
 end_van_laar_sizes
 
 begin_dqf_corrections
-dqf(an) 7030 -4.66 0 
+dqf(an) = 7030 - 4.66 * T_K
 end_dqf_corrections
 
 end_of_model
@@ -8459,7 +8459,7 @@ begin_model
                                                      _____________________
 
                                       1 oilm          Fe                Ti       
-                            Species:  2 dilm          FeTi              FeTi   
+                            Species:  2 ailm          Ti                Fe   
                                       3 hem           Fe3+              Fe3+  
                                       4 pnt           Mn                Ti  
                                       5 geik          Mg                Ti       
@@ -8485,7 +8485,9 @@ begin_model
                                         | 1993  -2.1 0 => the TC DQF coeffecients, the values below are
                                         | oilm + {DH,R*ln(4),0} 
                                          15789.27763 -12.19977769  .1836386612d-1
-                                  
+
+                                  ailm = dilm - oilm/2 
+
                                   The ilm and ilm_nol endmembers should be excluded from calculations
                                   to avoid conflicts with this model.
 
@@ -8503,6 +8505,8 @@ begin_model
                                   Corrected to count Ti in A-site configurational entropy. JADC, Jun 16, 2013. 
 
                                   Make definitions corrected from the raw thermocalc versions. JADC, Jun 19, 2013.
+
+                                  Corrected to vary from anti-oilm to oilm. JADC, Jan 14, 2017.
 
 Ilm(WPH)
 abbreviation Ilm
@@ -8669,7 +8673,7 @@ begin_excess_function
 W(sp herc) 29.6d3  0. 0.            
 end_excess_function 
 
-2                                     2 site entropy model
+2                                     2 site configurational entropy model
 
 3 8.                                  3 species, site multiplicity = 8.
 z(B,mg) = 1/8 sp
@@ -8680,6 +8684,30 @@ z(B,mg) = 3/4 sp
 z(B,fe) = 3/4 herc
 
 end_of_model                             
+
+begin_model                
+                      --------------------------------------------------------
+Po(HP)                    
+abbreviation Po
+full_name    pyrrhotite 
+
+2                                     model type: Margules, macroscopic
+
+2                                     2 endmembers
+trov trot          
+  0  0                     | endmember flags
+0. 1. .1   0               | subdivision range, imod = 0 -> cartesian subdivision
+
+begin_excess_function
+W(trov trot) = -3190
+end_excess_function 
+
+1                                     1 site configurational entropy model
+
+2 1.                                  2 species (Fe, V), site multiplicity = 1.
+z(M2,V) = 1/8 trov
+
+end_of_model        
                       --------------------------------------------------------
 begin_model
 
@@ -10201,8 +10229,8 @@ hed
 
 om   = 1/2 jd + 1/2 di   enthalpy_of_ordering  =  -2.9d3 
 cfm  = 1/2 di + 1/2 hed  enthalpy_of_ordering  =  -1.5d3
-jac  = 1/2 jd + 1/2 acm  enthalpy_of_ordering  =  -1d3     | this differs from the published value of -3d3 J/mol
-                                                            | becuase Thermocalc reactions are specified in terms of the 
+jac  = 1/2 jd + 1/2 acm  enthalpy_of_ordering  =  -1d3      | this differs from the published value of -3d3 J/mol
+                                                            | because Thermocalc reactions are specified in terms of the 
                                                             | endmember without "DQF" corrections, while in Perple_X
                                                             | endmember include any DQF corrections. 
 
@@ -11307,3 +11335,113 @@ end_excess_function
 2 3.
 z(c) = 1 FeCA2
 end_of_model
+
+
+                    --------------------------------------------------------
+begin_model        
+
+                    Ilmenite after White, RW, Powell, R, Holland, TJB & Worley, BA (2000, JMG)
+
+                                                      A                B     
+                                                     _____________________
+
+                                      Mutliplicity    1                1
+                                                     _____________________
+
+                                      1 oilm          Fe                Ti       
+                            Species:  2 dilm          TiFe              TiFe   
+                                      3 hem           Fe3+              Fe3+  
+                                      4 pnt           Mn                Ti  
+                                      5 geik          Mg                Ti       
+                                                           
+                     Previously present as a brute force model which did not allow the anti-ordered 
+                     ilmenite configuration. Re-formulated as standard o/d model to remove this 
+                     limitation, JADC Jan 14, 2017.
+
+                                  NOTES:
+                                  
+                                  Requires that the endmember ilm_nol be created from the endmember ilm
+                                  in the thermodynamic data file by eliminating the Landau transition from 
+                                  the ilm endmember, additionally the following make definitions must be
+                                  present in the thermodynamic file.
+
+                                  oilm = 1 ilm_nol 
+                                        | -13608 9.426 0 => the TC DQF coeffecients added to
+                                        | smax*tc0*(q0^2-1/3*q0^6), -smax*q0^2, vmax*q0^2, respectively, yields
+                                        | the un-landaued DQF coefficients for Perple_X, numeric values here 
+                                        | are for hp02/hp04 thermodynamic data files. hp11 has slightly different
+                                        | values. 
+                                         189.27763 -.67412637 .1836386612d-1  
+                     
+                                  dilm = 1 ilm_nol  
+                                        | 1993  -2.1 0 => the TC DQF coeffecients, the values below are
+                                        | oilm + {DH,R*ln(4),0} 
+                                         15789.27763 -12.19977769  .1836386612d-1
+
+                                  The ilm and ilm_nol endmembers should be excluded from calculations
+                                  to avoid conflicts with this model.
+
+                                  For Mg and Mn solution this model differs from the Thermocalc version in 
+                                  that Mg and Mn are confined to the A-site, in contrast in Thermocalc the 
+                                  "equipartition" assumption is used to allocate Mg and Mn to the B-site in
+                                  proportion to the Ferrous iron intersite partitioning. Consequently, this
+                                  model predicts lower Mn and Mg solubility in ilmenite than the Thermocalc
+                                  version of the model. 
+                                  
+                                                                       JADC, Oct 29, 2011.
+
+                                  Added W(pnt oilm). Felix Gervais, Oct 29, 2011. 
+
+                                  Corrected to count Ti in A-site configurational entropy. JADC, Jun 16, 2013. 
+
+                                  Make definitions corrected from the raw thermocalc versions. JADC, Jun 19, 2013.
+
+Ilm(WPH1)
+abbreviation Ilm
+full_name    ilmenite
+
+6                          | macroscopic
+
+4                          | 4 endmembers
+pnt 
+geik
+hem
+dilm
+
+1                            | 1 ordered species:
+
+oilm = 1 dilm   enthalpy_of_ordering = -15600 + 11.52565132 T_K
+
+begin_limits
+oilm =    -2 + 1 dilm                   delta = 2 z(A,Ti) 
+end_limits
+
+0 0 0  0                   | endmember flags
+
+0. .2 0.1 1                | subdivision range, X(pnt), imod = 1 -> assymetric
+0. .2 0.1 1                | subdivision range, X(geik), imod = 1 -> assymetric
+0. 1. 0.1 0                | subdivision range, X(hem), imod = 0 -> cartesian subdivision
+
+
+begin_excess_function
+W(oilm dilm)    15600
+W(oilm hem)     26600
+W(dilm hem)     11000
+W(oilm pnt)      1760
+end_excess_function
+
+2                          | 2 site model
+ 
+5 1.                       | A - Fe2+ Mn Fe3+ Mg Ti
+z(A,Mg)   = 1 geik
+z(A,mn)   = 1 pnt
+z(A,fe3+) = 1 hem
+z(A,ti)   = 1/2 dilm
+
+3 1.                       | B - Fe3+ Ti4+ Fe2+
+z(b,fe3+) = 1 hem
+z(b,fe2+) = 1/2 dilm
+
+end_of_model
+  
+                     --------------------------------------------------------

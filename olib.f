@@ -14,7 +14,9 @@ c----------------------------------------------------------------------
 
       integer i,j,l,lu,id
 
-      double precision poiss
+      double precision poiss, gcpd
+ 
+      external gcpd
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
@@ -80,8 +82,14 @@ c----------------------------------------------------------------------
 
       integer spct
       double precision ysp
-      character*8 spnams
+      character spnams*8
       common/ cxt34 /ysp(m4,k5),spct(h9),spnams(m4,h9)
+
+      integer lstot,mstot,nstot,ndep,nord
+      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
+
+      integer jend
+      common/ cxt23 /jend(h9,m4)
 
       integer length,iblank,icom
       character chars*1
@@ -160,20 +168,39 @@ c                                 species_ouput
 
          end do 
 
+         write (lu,'(/,a,/)') 'Pure species molar Gibbs energies*:'
+
+         do i = 1, np 
+
+            id = kkp(i) 
+
+            write (text,'(20(a,a,i10,a))')
+     *            (spnams(j,id),': ',int(gcpd(jend(id,2+j),.true.)),
+     *                          ', ', j =1, lstot(id))
+
+            call deblnk (text)
+
+            write (lu,'(1x,a,4x,240a)') pname(i), 
+     *                                 (chars(j), j = 1, length)
+
+         end do
+
       end if 
 
       write (lu,1160)
 c                                 phase/system summary, normal thermo:
       do i = 1, ntot
-c                                 N, H, S, V, Cp, alpha, beta, density
-         write (lu,1170) pname(i),props(17,i),props(2,i),props(15,i),
+c                                 N, G, S, V, Cp, alpha, beta, density
+         write (lu,1170) pname(i),props(17,i),int(props(11,i)),
+     *                   props(15,i),
      *                   props(1,i),(props(j,i),j=12,14),props(28,i),
      *                   props(10,i)
       end do
 
-      write (lu,1170) 'System        ',psys(17),psys(2),psys(15),
+      write (lu,1170) 'System        ',psys(17),int(psys(11)),psys(15),
      *                psys(1),(psys(j),j=12,14),psys(28),psys(10)
-      if (aflu) write (lu,1170) 'System - fluid',psys1(17),psys1(2),
+      if (aflu) write (lu,1170) 'System - fluid',psys1(17),
+     *                int(psys1(11)),
      *                psys1(15),psys1(1),(psys1(j),j=12,14),psys1(28),
      *                psys1(10)
 
@@ -321,10 +348,10 @@ c                                 chemical potentials variance
 1130  format (/,'Chemical Potentials (J/mol):',/,2x,20(4x,a,5x))
 1140  format (2x,20(1x,g13.6))
 1160  format (/,'Molar Properties and Density:'
-     *        /,20x,'N(g)',8x,'H(J)',6x,'S(J/K)',6x,'V(J/bar)',6x,
+     *        /,20x,'N(g)',8x,'G(J)',6x,'S(J/K)',6x,'V(J/bar)',6x,
      *         'Cp(J/K)',6x,'Alpha(1/K)',2x,'Beta(1/bar)',4x,'Cp/Cv',5x,
      *         'Density(kg/m3)')
-1170  format (1x,a,1x,f9.2,3x,13(g12.5,1x),3x,f7.4)
+1170  format (1x,a,1x,f9.2,3x,i12,1x,12(g12.5,1x),3x,f7.4)
 1190  format (/,'Seismic Properties:'
      *        /,17x,'Gruneisen_T',7x,'Ks(bar)',7x,'Mu(bar)',
      *        4x,'V0(km/s)',5x,'Vp(km/s)',5x,'Vs(km/s)',5x,
@@ -992,7 +1019,7 @@ c                                 model type
 
       integer spct
       double precision ysp
-      character*8 spnams
+      character spnams*8
       common/ cxt34 /ysp(m4,k5),spct(h9),spnams(m4,h9)
 
       double precision z, pa, p0a, x, w, y, wl

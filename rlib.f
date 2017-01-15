@@ -9118,7 +9118,7 @@ c                                 model type
 
       integer spct
       double precision ysp
-      character*8 spnams
+      character spnams*8
       common/ cxt34 /ysp(m4,k5),spct(h9),spnams(m4,h9)
 
       character specie*4
@@ -10401,13 +10401,9 @@ c----------------------------------------------------------------------
       integer ksmod, ksite, kmsol, knsp
       common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
 c----------------------------------------------------------------------
-      g = 0d0 
+      g = 0d0
 
-      if (lrecip(id)) then 
-c                                 initialize limit expressions
-         call p0limt (id)
-
-      else if (ksmod(id).eq.27) then 
+      if (ksmod(id).eq.27) then 
 c                                 green et al 2016 melt model,
 c                                 special case because of non-equimolar
 c                                 speciation reaction.
@@ -10419,18 +10415,16 @@ c                                 speciation reaction.
 
          return
 
-      else 
-c                                 non-reciprocal, initialize p0 
-c                                 and if necessary, limits.
+      else if (.not.lrecip(id)) then
+c                                 non-reciprocal, initialize p0/pa
          do i = lstot(id)+1, nstot(id)
             p0a(i) = 0d0
             pa(i) = p0a(i)
          end do
 
-         if (nord(id).gt.1) call p0limt (id)
-
       end if
-
+c                                 initialize limit expressions
+      call p0limt (id)
 c                                 as most models are single species and
 c                                 there is so much overhead in computing
 c                                 multiple speciation, use a special routine
@@ -11172,6 +11166,12 @@ c----------------------------------------------------------------------
       logical pin
       common/ cyt2 /pin(j3)
 
+      integer ln,lt,lid,jt,jid
+      double precision lc, l0c, jc
+      common/ cxt29 /lc(j6,j5,j3,h9),l0c(2,j5,j3,h9),lid(j6,j5,j3,h9),
+     *               ln(j3,h9),lt(j5,j3,h9),jc(j3,j5,j3,h9),
+     *               jid(j3,j5,j3,h9),jt(j5,j3,h9)
+
       double precision enth
       common/ cxt35 /enth(j3)
 
@@ -11200,19 +11200,22 @@ c                                 stoichiometric coefficients
 
       error = .false.
 c                                 starting point
-      if (lrecip(id)) then 
+      if (lrecip(id).or.ln(1,id).gt.0d0) then 
 c                                 reciprocal
          call plimit (pmin,pmax,k,id) 
-         dpmax = pmax - pmin
 
       else 
 c                                 find the maximum proportion of the 
 c                                 ordered species cannot be > the amount 
 c                                 of reactant initially present.
-         dpmax = 1d0
+         pmax = 1d0
+
          do i = 1, nr
-            if (-p0a(ind(i))/dy(i).lt.dpmax) dpmax = -p0a(ind(i))/dy(i)
-         end do 
+            if (-p0a(ind(i))/dy(i).lt.pmax) pmax = -p0a(ind(i))/dy(i)
+         end do
+c                                 for legacy models w/o limits set
+c                                 pmin for the antiordered case
+         pmin = -pmax
 
       end if 
 c                                 to avoid singularity set the initial 
@@ -11220,40 +11223,43 @@ c                                 composition to the max - nopt(5), at this
 c                                 condition the first derivative < 0, 
 c                                 and the second derivative > 0 (otherwise
 c                                 the root must lie at p > pmax - nopt(5).               
-      if (dpmax.lt.nopt(5)) return
+      if (pmax-pmin.lt.2d0*nopt(5)) return
 
       pin(k) = .true.
-      dp = dpmax - nopt(5)
-      pmax = p0a(jd) + dp
-      pmin = p0a(jd) + nopt(5)
-c                                 get starting end for the search
-c                                 first try the maximum
-      call pincs (dp,dy,ind,jd,nr)
+c                                 save pmax for bailout or order check.
+c                                 in principle should also save pmin. 
+      dpmax = pmax
+
+      pmax = pmax - nopt(5)
+      pmin = pmin + nopt(5)
+c                                 get increment from the disordered
+c                                 state:
+      p0a(jd) = 0d0 
 
       call gderi1 (k,id,dp)
 
-      if (dp.gt.0d0) then 
+c      if (dp.gt.0d0) then 
 c                                 at the maximum concentration
 c                                 and the increment is positive,
 c                                 the solution is fully ordered
 c                                 or a local minimum, try the 
-c                                 the disordered case:
-         call pincs (pmin,dy,ind,jd,nr)
+c                                 the anti- or dis-ordered case:
+c         call pincs (pmin,dy,ind,jd,nr)
 
-         call gderi1 (k,id,dp)
+c         call gderi1 (k,id,dp)
 
-         if (dp.lt.0d0) then 
+c         if (dp.lt.0d0) then 
 c                                 neither min nor max starting point
 c                                 is possible. setting error to 
 c                                 true will cause specis to compare 
 c                                 the min/max order cases, specis 
 c                                 computes the min case g, therefore
 c                                 the case is set to max order here:
-            error = .true.
+c            error = .true.
 
-         end if
+c         end if
 
-      end if 
+c      end if 
 
       if (.not.error) then 
 c                                 increment and check p
@@ -12135,7 +12141,7 @@ c                               initialize limit counter
          limn(j) = 0
       end do 
 
-      if (jsmod.eq.6.and.norder.eq.1.or.jsmod.eq.27) return
+      if (jsmod.eq.27) return
 
       call readcd (n9,len,ier,.true.)
 
@@ -12212,6 +12218,10 @@ c                                 set number of terms to negative if constant bo
             limc(j+1,k,jd) = coeffs(ict+1)
 
          end do 
+
+      else if (jsmod.eq.6.and.norder.eq.1) then 
+
+         backspace (n9)
 
       else 
 

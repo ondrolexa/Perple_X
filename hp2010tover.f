@@ -2,7 +2,7 @@ c   program to read the original hp2010 thermodynamic datafile
 
       program trans
 
-      open (9, file='hp2010.dat', status= 'old')
+      open (9, file='hp62.dat', status= 'old')
       open (10,file='junk.dat')
 
       call rdin
@@ -54,8 +54,8 @@ c s2                 17           18       17
 c electron           14           19       14 
 
 1000  format(132a1)
-2000  format(a8,4(i2),' H= ',g13.7)
-2002  format(6(g13.7,1x))
+2000  format(a8,4(i2),' H= ',g14.7)
+2002  format(6(g14.7,1x))
 2001  format(20(f5.2,1x))
 c                          entropies of the elements at 298, 1bar
           icomp = 18
@@ -265,7 +265,7 @@ c                                      0 - old
 c                                      1 - new
 c                                      2 - ideal gas
       if (aq) then
-         itype = 14 
+         itype = 15 
       else if (b8.eq.0d0) then
          itype = 1
       end if 
