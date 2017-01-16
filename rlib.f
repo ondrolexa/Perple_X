@@ -11166,11 +11166,9 @@ c----------------------------------------------------------------------
       logical pin
       common/ cyt2 /pin(j3)
 
-      integer ln,lt,lid,jt,jid
-      double precision lc, l0c, jc
-      common/ cxt29 /lc(j6,j5,j3,h9),l0c(2,j5,j3,h9),lid(j6,j5,j3,h9),
-     *               ln(j3,h9),lt(j5,j3,h9),jc(j3,j5,j3,h9),
-     *               jid(j3,j5,j3,h9),jt(j5,j3,h9)
+      double precision qmult, d0, dcoef, scoef      
+      common/ cxt1r /qmult(m10,h9),d0(m11,m10,h9),dcoef(m0,m11,m10,h9),
+     *               scoef(m4,h9)
 
       double precision enth
       common/ cxt35 /enth(j3)
@@ -11200,22 +11198,19 @@ c                                 stoichiometric coefficients
 
       error = .false.
 c                                 starting point
-      if (lrecip(id).or.ln(1,id).gt.0d0) then 
+      if (lrecip(id)) then 
 c                                 reciprocal
          call plimit (pmin,pmax,k,id) 
+         dpmax = pmax - pmin
 
       else 
 c                                 find the maximum proportion of the 
 c                                 ordered species cannot be > the amount 
 c                                 of reactant initially present.
-         pmax = 1d0
-
+         dpmax = 1d0
          do i = 1, nr
-            if (-p0a(ind(i))/dy(i).lt.pmax) pmax = -p0a(ind(i))/dy(i)
-         end do
-c                                 for legacy models w/o limits set
-c                                 pmin for the antiordered case
-         pmin = -pmax
+            if (-p0a(ind(i))/dy(i).lt.dpmax) dpmax = -p0a(ind(i))/dy(i)
+         end do 
 
       end if 
 c                                 to avoid singularity set the initial 
@@ -11223,43 +11218,40 @@ c                                 composition to the max - nopt(5), at this
 c                                 condition the first derivative < 0, 
 c                                 and the second derivative > 0 (otherwise
 c                                 the root must lie at p > pmax - nopt(5).               
-      if (pmax-pmin.lt.2d0*nopt(5)) return
+      if (dpmax.lt.nopt(5)) return
 
       pin(k) = .true.
-c                                 save pmax for bailout or order check.
-c                                 in principle should also save pmin. 
-      dpmax = pmax
-
-      pmax = pmax - nopt(5)
-      pmin = pmin + nopt(5)
-c                                 get increment from the disordered
-c                                 state:
-      p0a(jd) = 0d0 
+      dp = dpmax - nopt(5)
+      pmax = p0a(jd) + dp
+      pmin = p0a(jd) + nopt(5)
+c                                 get starting end for the search
+c                                 first try the maximum
+      call pincs (dp,dy,ind,jd,nr)
 
       call gderi1 (k,id,dp)
 
-c      if (dp.gt.0d0) then 
+      if (dp.gt.0d0) then 
 c                                 at the maximum concentration
 c                                 and the increment is positive,
 c                                 the solution is fully ordered
 c                                 or a local minimum, try the 
-c                                 the anti- or dis-ordered case:
-c         call pincs (pmin,dy,ind,jd,nr)
+c                                 the disordered case:
+         call pincs (pmin,dy,ind,jd,nr)
 
-c         call gderi1 (k,id,dp)
+         call gderi1 (k,id,dp)
 
-c         if (dp.lt.0d0) then 
+         if (dp.lt.0d0) then 
 c                                 neither min nor max starting point
 c                                 is possible. setting error to 
 c                                 true will cause specis to compare 
 c                                 the min/max order cases, specis 
 c                                 computes the min case g, therefore
 c                                 the case is set to max order here:
-c            error = .true.
+            error = .true.
 
-c         end if
+         end if
 
-c      end if 
+      end if 
 
       if (.not.error) then 
 c                                 increment and check p
@@ -11308,7 +11300,11 @@ c                                 ordered speciation, specis will
 c                                 compare this the disordered case.
       if (error) call pincs (dpmax,dy,ind,jd,nr)
 
-      g = pa(jd)*enth(k) - t*omega(id,pa) + gex(id,pa)
+      do i = 1, nstot(i)
+         g = g + (pa(i)-p0a(i)) * scoef(i,id)
+      end do 
+
+      g = pa(jd)*enth(k) - t*(g + omega(id,pa)) + gex(id,pa)
 
       end
 
@@ -11995,6 +11991,12 @@ c                                 derivative may be +/-infinite
             d2s = d2s - qmult(i,id)*dabs(dsinf)*1d5
          end if 
 
+      end do
+c                                 for models with disordered 
+c                                 endmembers, correct first derivative for the
+c                                 change in endmember configurational entropy
+      do i = 1, nstot(id)
+         ds = ds + dydy(i,k,id)*scoef(i,id)
       end do 
 
       end
