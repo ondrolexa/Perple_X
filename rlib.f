@@ -11166,10 +11166,6 @@ c----------------------------------------------------------------------
       logical pin
       common/ cyt2 /pin(j3)
 
-      double precision qmult, d0, dcoef, scoef      
-      common/ cxt1r /qmult(m10,h9),d0(m11,m10,h9),dcoef(m0,m11,m10,h9),
-     *               scoef(m4,h9)
-
       double precision enth
       common/ cxt35 /enth(j3)
 
@@ -11300,11 +11296,7 @@ c                                 ordered speciation, specis will
 c                                 compare this the disordered case.
       if (error) call pincs (dpmax,dy,ind,jd,nr)
 
-      do i = 1, nstot(i)
-         g = g + (pa(i)-p0a(i)) * scoef(i,id)
-      end do 
-
-      g = pa(jd)*enth(k) - t*(g + omega(id,pa)) + gex(id,pa)
+      g = pa(jd)*enth(k) - t*omega(id,pa) + gex(id,pa)
 
       end
 
@@ -11992,12 +11984,6 @@ c                                 derivative may be +/-infinite
          end if 
 
       end do
-c                                 for models with disordered 
-c                                 endmembers, correct first derivative for the
-c                                 change in endmember configurational entropy
-      do i = 1, nstot(id)
-         ds = ds + dydy(i,k,id)*scoef(i,id)
-      end do 
 
       end
 
