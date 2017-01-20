@@ -2730,8 +2730,10 @@ c-----------------------------------------------------------------------
       implicit none
  
       include 'perplex_parameters.h'
-
-      integer i, j, k, id, isp, ins(nsp)
+c DEBUG
+      integer i, j, k, id, isp, ins(nsp), ibug
+      double precision gsol0
+      external gsol0
 
       double precision dg1, gval, dg, gzero, g0(k5), gex, gfesi,
      *                 gfesic, gfecr1, gerk, x1(5), gproj, ghybrid
@@ -2796,6 +2798,9 @@ c                                 model type
 c                                 endmember names
       character names*8
       common/ cst8  /names(k1)
+
+      save ibug
+      data ibug/1/
 c-----------------------------------------------------------------------
 c                                 compute the chemical potential
 c                                 of the projected components.
@@ -2874,21 +2879,59 @@ c            sxs(4) = .2473868400d0
 c            sxs(5) = .5216d-4
 c            sxs(6) = -.1881562000d0
 
-
 c                                 compute margules coefficients
             call setw (i)
 c                                 compute enthalpy of ordering
             call oenth (i)
 c                                 now for each compound:
             do j = 1, jend(i,2)
+
+
+              ibug = 2
+              if (ibug.eq.0) then 
+c DELETE ME DELETE ME DEBUG 1050 K 4000
+         p0a(1) =                   -0.0065200000
+         p0a(2) =                    0.2235000000
+         p0a(3) =                    0.4769502876
+         p0a(4) =                    -.21934
+         p0a(5) =                    0.0928182680
+         p0a(6) =                    0.5919781530
+         p0a(7) =                      0.24302
+         p0a(8) =                    0.0354697124
+         p0a(9) =                      0.07056
+         p0a(10) =                   -0.3901582680
+         p0a(11) =                   -0.1182781530
+               do k = 1, nstot(i) 
+                  pa(k) = p0a(k)
+               end do 
+         dg = gsol0(i)
+
+             else if (ibug.eq.2) then 
+
+         p0a(1) =  .8124e-1              
+         p0a(2) =   .79822           
+         p0a(3) =   .4341293766            
+         p0a(4) =   -.6628e-1             
+         p0a(5) =  .9605e-1                 
+         p0a(6) =    .464433782e-1              
+         p0a(8) =  -.3898027548         
+         p0a(7) =   0.                
+
+               do k = 1, nstot(i) 
+                  pa(k) = p0a(k)
+               end do 
+         dg = gsol0(i)
+
+            end if 
 c                                 assign x's
                do k = 1, nstot(i) 
+c DELETE ME DELETE ME DEBUG 
                   p0a(k) = sxs(ixp(id)+k)
                   pa(k) = p0a(k)
                end do 
 c                                 get the speciation energy effect
                call specis (dg,i)
-c                                 and endmember dqf
+c                                 and internal endmember dqf
                call gexces (id,dg1)
 
                g(id) = dg + dg1 

@@ -271,13 +271,17 @@ begin_model
                               A             V     Mg     Fe     Fe      Si     OH
                               B             V     Fe     Mg     Fe      Si     OH
 
+           dependent exchange fug           V     M      Fe3    M      SiAl     OH
+
 cAmph(G)
 abbreviation Amph
 full_name    clinoamphibole
 
 8                           | model type reciprocal space, van Laar, two ordered species 
 2                           | 2 site reciprocal space
-2 8                         | 1 binary + 1 octary
+2 9                         | 1 binary + 1 octary
+
+
 
 ts      fts_d
 parg    fparg_d
@@ -286,6 +290,7 @@ cumm    grun
 mrbG    frb_d
 kprg    fkprg_d
 tts     ftts_d
+fug_d   ffug_d
 tr      ftr_d
 
 2                            | 2 ordered species:
@@ -297,19 +302,19 @@ begin_limits
 
 a = -7/4 + 7/4 grun + 1 a + 1/2 b + 5/4 b                           delta = 7/4 z(M1,Fe)
 a = -7/3 grun - 4/3 a + 5/3 b - 5/3 b                               delta = 7/3 z(M2,Fe)
-a = -7/3 + 7/3 tr + 7/6 parg + 7/3 cumm + 1 a + 5/3 b + 2/3 b       delta = 7/3 z(M2,Mg)
-a = -7/3 + 7/3 cumm + 1 a - 2/3 b + 2/3 b                           delta = 7/3 z(M4,Mg)
+a = -7/3 + 7/3 tr + 7/6 parg + 7/6 kprg + 7/3 cumm + 1 a + 5/3 b + 2/3 b  delta = 7/3 z(M2,Mg) only 1 m2 equation can be independent 
+a = -7/3 + 7/3 cumm + 1 a - 2/3 b + 2/3 b                           delta = 7/3 z(M4,Mg) only 1 m4 equation can be independent 
 a = -7/3 grun - 4/3 a - 2/3 b - 5/3 b                               delta = 7/3 z(M4,Fe)
 
 b = -7/2 grun + 2 a - 2 a - 5/2 b                                   delta = 7/2 z(M1,Fe)
 b = -7/5 + 7/5 grun + 3/5 a + 4/5 a + 1 b                           delta = 7/5 z(M2,Fe)
-b = -7/5 tr - 7/10 parg - 7/5 cumm + 3/5 a - 3/5 a - 2/5 b          delta = 7/5 z(M2,Mg)
+b = -7/5 tr - 7/10 parg - 7/10 kprg - 7/5 cumm + 3/5 a - 3/5 a - 2/5 b  delta = 7/5 z(M2,Mg)
 b = -7/2 + 7/2 cumm - 3/2 a + 3/2 a + 1 b                           delta = 7/2 z(M4,Mg)
 b = -7/2 grun - 3/2 a - 2 a -5/2 b                                  delta = 7/2 z(M4,Fe)
 
 end_limits
 
-7                            | 7 dependent endmembers 
+9                            | 7 dependent endmembers 
 
 ftr_d   = 1 tr    + 2 grun   - 1 a - 1 b
 fts_d   = 1 ts    + 1 grun   - 1 a
@@ -318,21 +323,24 @@ fgl_d   = 1 gl    + 1 grun   - 1 a
 frb_d   = 1 mrbG  + 1 grun   - 1 a
 fkprg_d = 1 kprg  + 3/2 grun - 1 a - 1/2 b
 ftts_d  = 1 tts   + 1 grun   - 1 a
+fug_d   = 1 mrbG  + 1 ts    + 1 cumm   - 1 gl - 1 tr
+ffug_d  = 1 mrbG  + 1 ts    + 1/2 grun - 1 gl - 1 tr + 1/2 b
 
-1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1  | endmember flags
+1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 | endmember flags
 
                              | imod = 0 -> cartesian subdivision
                              | imod = 1 -> assymetric stretching subdivision
 
-0. 1.  .1  0                 | range and resolution for X(Mg) on site 1, imod = 0
+.4 .6  .1  0                 | range and resolution for X(Mg) on site 1, imod = 0
 
-0. 1.  .1  0                 | range and resolution for X(ts)   on site 2, imod = 0
-0. 1.  .1  0                 | range and resolution for X(pg)   on site 2, imod = 0
-0. 1.  .1  0                 | range and resolution for X(gl)   on site 2, imod = 1
-0. 1.  .1  0                 | range and resolution for X(cumm) on site 2, imod = 0
-0. .4  .1  1                 | range and resolution for X(mrb)  on site 2, imod = 1
-0. .1  .1  1                 | range and resolution for X(kprg) on site 2, imod = 1
-0. .1  .1  1                 | range and resolution for X(tts)  on site 2, imod = 1
+0. .3  .1  0                 | range and resolution for X(ts)   on site 2, imod = 0
+0.5 1  .1  0                 | range and resolution for X(pg)   on site 2, imod = 0
+0. .1  .1  0                 | range and resolution for X(gl)   on site 2, imod = 1
+0. .1  .1  0                 | range and resolution for X(cumm) on site 2, imod = 0
+.15 .3  .1  0                 | range and resolution for X(mrb)  on site 2, imod = 1
+0. .1  .1  0                 | range and resolution for X(kprg) on site 2, imod = 1
+0. .1  .1  0                 | range and resolution for X(tts)  on site 2, imod = 1
+0. .1  .1  0                 | range and resolution for X(fug)  on site 2, imod = 1
 
 begin_excess_function   
 
@@ -647,15 +655,15 @@ och2 = 1 afchl  - 1/5 clin + 1/5 daph    enthalpy_of_ordering = 2.4d3
 begin_limits
 
 och1 =  0                                                                             delta = 1   zFeM4 
-och1 = -1   + 1 afchl + 0 och1 + 1 och1   + 0 och2 + 1 och2                           delta = 1   zMgM4 
+och1 = -1   + 1 afchl + 1 och1   + 0 och2 + 1 och2                           delta = 1   zMgM4 
 och1 = -1   + 1 daph  + 1 och1 + 4/5 och2 + 1/5 och2                                  delta = 1   zFeM1 
 | this limit may never be active??
 och1 =     - 1 afchl  - 1 clin - 1 f3clin + 4/5 och2 - 4/5 och2                       delta = 1   zMgM1 
 
-och2 =      - 5/4 daph   + 5/4 och1   - 5/4 och1 + 0 och2   - 1/4 och2                delta = 5/4 zFeM1 
-och2 = -5/4 + 5/4 afchl  + 5/4 f3clin + 5/4 clin + 5/4 och1 + 0 och2 + 1 och2         delta = 5/4 zMgM1 
-och2 = -5   + 5 daph                  + 0   och1 + 5   och1 + 0 och2 + 1 och2         delta = 5   zFeM2 
-och2 =      - 5 ames - 5 f3clin - 5 clin -5 afchl + 0 och2 - 4 och2                   delta = 5   zMgM2.
+och2 =      - 5/4 daph   + 5/4 och1   - 5/4 och1 - 1/4 och2                delta = 5/4 zFeM1 
+och2 = -5/4 + 5/4 afchl  + 5/4 f3clin + 5/4 clin + 5/4 och1 + 1 och2         delta = 5/4 zMgM1 
+och2 = -5   + 5 daph                  + 0   och1 + 5   och1 + 1 och2         delta = 5   zFeM2 
+och2 =      - 5 ames - 5 f3clin - 5 clin -5 afchl - 4 och2                   delta = 5   zMgM2.
 
 end_limits
 
@@ -9864,7 +9872,7 @@ cammo1 = -7/3 grun - 4/3 cammo1 - 2/3 cammo2 - 5/3 cammo2                       
 
 cammo2 = -7/5 + 7/5 grun + 3/5 cammo1 + 4/5 cammo1 + 1 cammo2                           delta = 7/5 z(M2,Fe)
 cammo2 = -7/2 grun + 2 cammo1 - 2 cammo1 - 5/2 cammo2                                   delta = 7/2 z(M1,Fe)
-cammo2 = -7/5 tr - 7/10 parg_dqf - 7/5 cumm + 3/5 cammo1 - 3/5 cammo1 - 2/5 cammo2     delta = 7/5
+cammo2 = -7/5 tr - 7/10 parg_dqf - 7/5 cumm + 3/5 cammo1 - 3/5 cammo1 - 2/5 cammo2      delta = 7/5
 cammo2 = -7/2 + 7/2 cumm - 3/2 cammo1 + 3/2 cammo1 + 1 cammo2                           delta = 7/2
 cammo2 = -7/2 grun - 3/2 cammo1  - 2 cammo1 - 5/2 cammo2                                delta = 7/2
 end_limits
