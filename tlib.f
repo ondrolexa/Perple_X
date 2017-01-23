@@ -19,7 +19,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a)') 
-     *      'Perple_X version 6.7.6, source updated Jan 17, 2017.'
+     *      'Perple_X version 6.7.6, source updated Jan 23, 2017.'
 
       end
 
@@ -920,7 +920,7 @@ c                                 dependent parameters and error traps:
          nopt(21) = 2d0
       end if 
 
-      if (iopt(12).gt.7.or.iopt(12).lt.1) then 
+      if (iopt(12).gt.k5.or.iopt(12).lt.1) then 
          write (*,1090)
          iopt(12) = 4
       end if 
@@ -1031,7 +1031,7 @@ c                                 actual final resolution
                if (res0.lt.rid(2,i)) then 
 c                                 real final resolution is res0
 c                                 reset speciation tolerance if > res0
-                  if (nopt(5).gt.res0) nopt(5) = res0/1d1
+                  if (nopt(5).gt.res0) nopt(5) = res0/1d2
 
                   exit
 
@@ -1204,7 +1204,7 @@ c                                 iopt(6) is automatically off
 c                                 for meemum             
             if (iopt(6).ne.0) write (n,1170) nopt(17)
 c                                 adaptive optimization
-            write (n,1180) rid(2,1),rid(2,2),int(nopt(21)),iopt(12),
+            write (n,1180) rid(2,1),rid(2,2),int(nopt(21)),iopt(12),k5,
      *                     nopt(25),int(nopt(23)),valu(20),
      *                     nopt(9),nopt(11)
 c                                 gridding parameters
@@ -1382,7 +1382,7 @@ c                                 thermo options for frendly
      *        4x,'resolution factor      ',i2,9x,
      *           '>2 [3]; iteration keyword value 1',/,
      *        4x,'refinement points      ',i2,9x,
-     *           '1->7 [4]; iteration keyword value 2',/,
+     *           '1->',i,' [4]; iteration keyword value 2',/,
      *        4x,'solvus_tolerance_II    ',f4.2,7x,'0->1 [0.25]',/,
      *        4x,'global_reach_increment ',i2,9x,'>= 0 [0]',/,
      *        4x,'reach_increment_switch ',a3,8x,'[on] off all',/,

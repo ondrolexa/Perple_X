@@ -1,357 +1,361 @@
-        subroutine chopit (ycum,jst,jsp,ksite,ids)
-c---------------------------------------------------------------------
-c subroutine to do cartesian or transform subdivision of species
-c jst through jsp on site k of solution ids. ycum is the smallest
-c fraction possible (i.e., if the minimum bound for some species 
-c is > 0). the npair coordinate sets are loaded into xy(mdim,k1).
-c---------------------------------------------------------------------
+      subroutine yclos1 (clamda,x,is,jphct,quit)
+c----------------------------------------------------------------------
+c subroutine to identify pseudocompounds close to the solution for 
+c subsequent refinement. this routine is only called as preparation
+c for iterative refinement.
+c----------------------------------------------------------------------
       implicit none
 
       include 'perplex_parameters.h'
 
-      integer mres
- 
-      parameter (mres=12000)
+      integer jphct, i, j, k, is(*), idsol(k5), kdv(k19+1), nsol, 
+     *        mpt, iam, id, is1, left, right, inc, jdsol(k5,k5), 
+     *        kdsol(k5), max, is0, mcpd
 
-      integer mode, i, ind(ms1), iy(ms1), jsp, ksite, indx, iexit, 
-     *        ieyit, j, ids, jst
+      external ffirst
 
-      double precision y(ms1,mres), ycum, ymax, dy, ync, res, ylmn,
-     *                 ylmx, yloc, x, unstch, strtch, yreal
+      logical solvus, quit
 
-      logical odd
+      double precision clamda(*), x(*),  slam(k19+1)
 
-      integer ntot,npairs
-      double precision simp,prism
-      common/ cxt86 /simp(k13),prism(k24),ntot,npairs
-c                                 interval limits conformal transformation
-      integer intv
-      double precision yint, yfrc
-      common/ cst47 /yint(5,ms1,mst,h9),yfrc(4,ms1,mst,h9),intv(4)
-c                                 x coordinate description
-      integer istg, ispg, imlt, imdg
-      common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
+      integer ipoint,kphct,imyn
+      common/ cst60 /ipoint,kphct,imyn
 
-      character fname*10, aname*6, lname*22
-      common/ csta7 /fname(h9),aname(h9),lname(h9)
-
-      double precision xmn,xmx,xnc
-      common/ cxt108 /xmn(mst,msp),xmx(mst,msp),xnc(mst,msp)
+      integer icomp,istct,iphct,icp
+      common/ cst6  /icomp,istct,iphct,icp
 
       integer iopt
       logical lopt
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      integer isoct
+      common/ cst79 /isoct
+
+      double precision dcp,soltol
+      common/ cst57 /dcp(k5,k19),soltol
+
+      integer ikp
+      common/ cst61 /ikp(k1)
+
+      integer kkp, np, ncpd, ntot
+      double precision cp3, amt
+      common/ cxt15 /cp3(k0,k5),amt(k5),kkp(k5),np,ncpd,ntot
+
+      integer npt,jdv
+      logical fulrnk
+      double precision cptot,ctotal
+      common/ cst78 /cptot(k5),ctotal,jdv(k19),npt,fulrnk
 c----------------------------------------------------------------------
-      do i = 1, jsp
-c                                 generate coordinates for i'th component
-         iy(i) = 1
-         y(i,1) = xmn(ksite,i)
-         ync = xnc(ksite,i)
+      npt = 0 
+      mcpd = 0 
+      nsol = 0
+      inc = istct - 1
+      is1 = isoct + 2 
+      is0 = is1 - 1
+      quit = .true.
+c                                 solvus_tolerance_II, 0.25
+      soltol = nopt(25)
 
-         if (ync.eq.0d0) cycle
+      do i = 1, jphct
 
-         mode = imdg(i,ksite,ids)
-c                                 avoid impossible compositions 'cause a min > 0
-         if (i.gt.1) then 
+         if (is(i).ne.1) then 
+c                                 make a list of found phases:
+            id = i + inc
+c                                 currently endmember compositions are not 
+c                                 refined (this is probably a mistake, but 
+c                                 seems to work fine), so use id > ipoint
+c                                 to identify a refineable point
 
-            ycum = ycum + xmn(ksite,i-1)
-c                                 1-ycum is the smallest fraction possible
-            if (1d0-ycum.lt.0d0) then 
-c                                 inconsistent limits
-               call error (999,ycum,jsp,'cartes')
+c                                 modified 3/4/2015 to refine endmember compositions. JADC
+c           if (ikp(id).ne.0) then  #refine endmember change
+            if (ikp(id).ne.0.and.id.gt.ipoint) then
 
-            else
-c                                 the smallest fraction possible is lt
-c                                 than xmax
-               ymax = xmx(ksite,i)
+               quit = .false.
+
+               do j = 1, nsol
+                  if (ikp(id).eq.idsol(j)) then 
+                     kdsol(j) = kdsol(j) + 1
+                     jdsol(kdsol(j),j) = id
+                     goto 10
+                  end if 
+               end do
+c                                 new phase, add to list
+               nsol = nsol + 1
+               idsol(nsol) = ikp(id)
+               jdsol(1,nsol) = id
+               kdsol(nsol) = 1
 
             end if 
-         else 
-            ymax = xmx(ksite,i)
-         end if 
-c                                 two means of extracting y-range, cartesian
-c                                 imod = 0 and transformation imod = 1
-         if (mode.eq.0) then 
-c                                 cartesian
-            do while (y(i,iy(i)).lt.ymax)
-               iy(i) = iy(i) + 1
-               if (iy(i).gt.mres) call error (50,ync,mres,fname(ids))
-               y(i,iy(i)) = y(i,iy(i)-1) + ync
-               if (dabs(y(i,iy(i))-ymax).lt.nopt(5)) then
-                  y(i,iy(i)) = ymax
-               else if (y(i,iy(i)).gt.ymax) then
-                  y(i,iy(i)) = ymax
-               end if 
-            end do
-
-         else 
-c                                 conformal x is the cartesian coordinate
-c                                 y is the real coordinate.
-            if (mode.lt.4) then 
-               odd = .false.
-            else
-               odd = .true.
-            end if 
-
-            res = 0d0
-c                                 there are as many as intv(mode)
-c                                 intervals to cycle through
-            do j = 1, intv(mode)
-c                                 odd or even interval?
-               odd = .not.odd
-c                                 interval limits              
-               ylmn = yint(j,i,ksite,ids)
-               ylmx = yint(j+1,i,ksite,ids)
-c                                 which interval are we starting from?
-               if (y(i,iy(i)).gt.ylmx-nopt(5)) cycle
-c
-               dy = ylmx - ylmn
-c                                 pathological case y = ylmn
-               if (dabs(y(i,iy(i))-ylmn).lt.nopt(5))  
-     *                                y(i,iy(i)) = ylmn + nopt(5)
-
-               if (res.eq.0d0) then 
-c                                 the current value is in interval j
-c                                 convert to raw y (varies from 0 ->1 
-c                                 over the local interval)
-                  yloc = (y(i,iy(i))-ylmn) / dy
-c                                 convert to conformal x
-                  if (odd) then 
-                     x = unstch(yloc)
-                  else 
-                     x = 1d0 - unstch(1d0-yloc)
-                  end if 
-
-               else
-c                                 have jumped from an earlier interval
-                  x = res - ync / yfrc(j-1,i,ksite,ids)
-c                 if (x.lt.0d0) x = 0d0
-
-               end if                 
-c                                 now generate all compositions in
-c                                 local interval
-               do while (x.le.1d0) 
-c                                 increment conformal x
-                  x = x + ync / yfrc(j,i,ksite,ids)
-c                                 compute yreal
-                  if (x.le.1d0) then 
-                     if (odd) then 
-                        yreal = ylmn + strtch(x) * dy
-                     else
-                        yreal = ylmx - strtch(1d0-x) * dy
-                     end if 
- 
-                     iy(i) = iy(i) + 1
-                     if (iy(i).gt.mres) 
-     *                  call error (50,ync,mres,fname(ids))
-c                                 check if in bounds
-                     if (dabs(yreal-ymax).lt.nopt(5).or.
-     *                                     yreal.gt.ymax) then
-                        res = 0d0
-                        y(i,iy(i)) = ymax
-                        exit
-                     else 
-                        y(i,iy(i)) = yreal
-                     end if 
-
-                  else if (x.gt.1d0.and.j.eq.intv(mode)) then
-c                                 at the last interval
-                     iy(i) = iy(i) + 1
-                     y(i,iy(i)) = ymax                
-                     exit
-
-                  else 
-c                                the point is in the next interval
-                     res = x - 1d0 
-                     exit 
-
-                  end if 
-c                                 coordinate generating end do 
-               end do 
-c                                 if y is at ymax exit
-               if (y(i,iy(i)).ge.ymax) exit
-c                                 interval loop end do 
-            end do 
+c                                 new point, add to list
+10          npt = npt + 1
+            jdv(npt) = i
 
          end if 
-c                                 add last point if necessary, can it be? 
-c                                 certainly not for conformal. 
-         if (y(i,iy(i)).lt.ymax) then
-            iy(i) = iy(i) + 1
-            if (iy(i).gt.mres) call error (50,ync,mres,fname(ids))
-            y(i,iy(i)) = ymax
-         end if          
- 
+
       end do
-c                                 the first coordinate
-      npairs = 1
 
-      do i = 1, jsp
-         ind(i) = 1
-         simp(i) = y(i,1)
-      end do
-c                                 now make the array index run over all
-c                                 values increasing the last index fastest
-      iexit = 0 
-      ieyit = 0 
-      dy = 0d0
+      do i = 1, is1
+         slam(i) = 1d99
+         kdv(i) = 0 
+      end do 
+c                                 perp 6.6.3, make a list of metastable
+c                                 phases, this list includes two compounds
+c                                 and the least metastable composition of
+c                                 each solution.      
+      do 20 i = 1, jphct
 
-      do while (iexit.eq.0)
-c                                 figure out which index to increment
-         do i = jsp, 1, -1
+         if (is(i).ne.1) cycle 
 
-            if (ind(i).lt.iy(i).and.ieyit.eq.0) then
-c                                 this is the one to increment
-               ind(i) = ind(i) + 1
-               indx = i 
-               exit 
+         id = i + inc 
+         iam = ikp(id)
+c                                modified to allow endmembers, Mar 4, 2015. JADC
+c        if (iam.ne.0.and.id.gt.0*ipoint) then   #refine endmember change
+         if (iam.ne.0.and.id.gt.ipoint) then  
 
-            else if (i.gt.1) then 
-c                                 saturated the index
-               ind(i) = 1
-               ieyit = 0 
-               
-            else
-c                                 saturated first index, done.
-                return 
+            if (clamda(i).lt.slam(iam)) then
+c                                the composition is more stable
+c                                than the previous composition 
+c                                of the solution. check if it's 
+c                                one of the stable solutions                               
+               do j = 1, nsol
+                  if (iam.eq.idsol(j)) then
+c                                it's already stable, only accept
+c                                it if its further than the solvus
+c                                tolerance from any of the stable
+c                                compositions.
+                     do k = 1, kdsol(j)
+                        if (.not.solvus(jdsol(k,j),id,iam)) goto 20
+                     end do 
+                  end if
+               end do
+c                                the composition is acceptable
+               slam(iam) = clamda(i)
+               kdv(iam) = i
 
             end if
- 
-         end do 
-c                                 ok now we have the indices, check
-c                                 the composition
-         ycum = 0d0
 
-         do i = 1, jsp 
-            ycum = ycum + y(i,ind(i))  
-         end do 
+         else 
+c                                a compound, save lowest 2, changed from 1
+c                                march 4, 2015, JADC
+            if (clamda(i).lt.slam(is0)) then 
+c                                put the old min into is1
+               kdv(is1) = kdv(is0)
+               slam(is1) = slam(is0)
+c                                and save the current in is1
+               kdv(is0) = i
+               slam(is0) = clamda(i)
 
-         if (ycum.gt.1d0) then
-
-            ieyit = 1
-c                                 here is where it gets messy:
-            if (indx.eq.1) then
-c                                 we're at the first point, and already
-c                                 over the top
-               iexit = 1
-               cycle
-
-            else if ( y(indx,ind(indx)) - y(indx,ind(indx)-1)
-     *               - ycum + 1d0    .gt. nopt(5) ) then          
-c                                 reset the current variable
-c                                 and max loop index
-               dy =  1d0 - ycum 
-
-            else
-c                                 must have just hit on the last increment
-               cycle 
+               mcpd = mcpd + 1
 
             end if 
-
-         else if (ind(indx).eq.iy(indx)) then 
-
-            ieyit = 1
-
+ 
          end if 
 
-         npairs = npairs + 1
-         j = (npairs-1)*jsp
+20    continue
 
-         if (j+jsp.gt.k13) call error (180,ycum,k13,
-     *                      'CARTES increase parameter k13')
+      if (mcpd.gt.2) mcpd = 2
+c                                 load the metastable points into
+c                                 kdv, the mcpd metastable points
+c                                 will be last in this list
+      mpt = 0 
 
-         do i = 1, jsp
-            simp(j+i) = y(i,ind(i))
-         end do
+      do i = 1, is1
 
-         simp(j+indx) = simp(j+indx) + dy
+         if (kdv(i).eq.0) cycle
+         mpt = mpt + 1
+         kdv(mpt) = kdv(i)
+         slam(mpt) = slam(i)
 
-         dy = 0d0 
+      end do 
 
+      if (mpt-mcpd.le.iopt(12)) then 
+c                                 less metastable refinement points than
+c                                 iopt(12)
+            max = mpt
+
+      else 
+c                                 sort the metastable points to
+c                                 find the most stable iopt(12) points
+         left = 1
+         right = mpt-mcpd
+         max = iopt(12)
+
+         call ffirst (slam,kdv,left,right,max,k19+1,ffirst)
+
+      end if 
+ 
+      do i = 1, max
+
+         jdv(npt+i) = kdv(i)
+c                                 a metastable solution to be refined
+c        if (kdv(i)+inc.gt.ipoint) quit = .false.
+         if (ikp(kdv(i)+inc).ne.0) quit = .false.
       end do
+c                                 and load the compounds
+      do i = 1, mcpd
+         jdv(npt+max+i) = kdv(mpt-mcpd+i)
+      end do
+
+      if (quit) then 
+c                                 zero mode filter and 
+c                                 save amounts for final processing
+         mpt = npt
+         npt = 0 
+
+         do i = 1, mpt
+            if (x(jdv(i)).lt.nopt(9)) cycle 
+            npt = npt + 1
+            jdv(npt) = jdv(i)
+            amt(npt) = x(jdv(i)) 
+         end do 
+
+      else 
+
+         npt = npt + max + mcpd
+c                                 sort the phases, why? don't know, but it's 
+c                                 necessary
+         call sortin 
+
+      end if 
 
       end 
 
-      subroutine carteq (ids)
-c---------------------------------------------------------------------
-c subroutine to cartesian or transform subdivision on a single site
-c solution with charge balance. called by subdiv. 
-c---------------------------------------------------------------------
+
+
+      subroutine yclos3 (clamda,x,is,iter,opt)
+c----------------------------------------------------------------------
+c subroutine to identify pseudocompounds close to the solution for 
+c subsequent refinement, for iteration > 1. yclos3 serves the same 
+c function as yclos2, but adopts the strategy of yclos1: a maximum of
+c iopt(12) + 2 refinement points will be selected, these include the 
+c 2 least metastable compounds and 1 least stable composition for 
+c each solution phase.
+c----------------------------------------------------------------------
       implicit none
 
       include 'perplex_parameters.h'
 
-      integer i, jsp, j, k, l, ids, qpairs
+      integer i, is(*), id, jmin(k19), opt, mpt, iter, tic
 
-      double precision ycum, sum, q, ratio
+      double precision clamda(*), clam(k19), x(*)
 
-      integer ntot,npairs
-      double precision simp,prism
-      common/ cxt86 /simp(k13),prism(k24),ntot,npairs
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
-      integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
-     *        kstot,rkord,xtyp
-      double precision wg,wk,reach
-      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),
-     *      reach,iend(m4),isub(m1,m2,2),
-     *      imd(msp,mst),insp(m4),ist(mst),isp(mst),rkord(m18),isite,
-     *      iterm,iord,istot,jstot,kstot,xtyp
-c                                 x coordinate description
-      integer istg, ispg, imlt, imdg
-      common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
+      integer jphct
+      double precision g2, cp2
+      common/ cxt12 /g2(k21),cp2(k5,k21),jphct
 
-      character fname*10, aname*6, lname*22
-      common/ csta7 /fname(h9),aname(h9),lname(h9)
+      integer icomp,istct,iphct,icp
+      common/ cst6  /icomp,istct,iphct,icp
 
-      integer nq,nn,ns
-      common/ cst337 /nq,nn,ns
+      integer npt,jdv
+      logical fulrnk
+      double precision cptot,ctotal
+      common/ cst78 /cptot(k5),ctotal,jdv(k19),npt,fulrnk
 
-      integer ksmod, ksite, kmsol, knsp
-      common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
+      integer hkp,mkp
+      common/ cst72 /hkp(k21),mkp(k19)
 
-      double precision thermo, uf, us
-      common/ cst1 /thermo(k4,k10),uf(2),us(h5)
+      integer kkp, np, ncpd, ntot
+      double precision cp3, amt
+      common/ cxt15 /cp3(k0,k5),amt(k5),kkp(k5),np,ncpd,ntot
+
+      integer jcoct, jcoor, jkp
+      double precision zcoor
+      common/ cxt13 /zcoor(k20),jcoor(k21),jkp(k21),jcoct
+
+      save tic
+      data tic/0/
 c----------------------------------------------------------------------
+c                                 npt is the number of points refined
+c                                 from the previous cycle, opt is the
+c                                 number of points in the original 
+c                                 solution.
+      do i = 1, npt
+         jmin(i) = 0 
+         clam(i) = 1d99
+      end do 
 
-      if (nq.ne.0) then 
-c                                 do the first nq-1 species independently
-         ycum = 0d0
-         jsp = nq - 1
- 
-         call chopit (ycum,1,jsp,1,ids)
-c                                 at this point xy(mdim,k1) contains all 
-c                                 possible compositions of the nq-1 species,
-c                                 use charge balance to get the nqth species
-         qpairs = 1 
+      npt = 0
 
-         do i = 1, npairs
+      do i = 1, jphct
+c                                 id indicates the original refinement
+c                                 point.
+         id = hkp(i)
+c                                 check the stability of all points 
+         if (is(i).ne.1.and.x(i).gt.0d0) then 
+c                                 a stable point, add to list
+            npt = npt + 1
+            jdv(npt) = i
 
-            q = 0d0
-            sum = 0d0
-            k = (i-1)*jsp
-            l = (qpairs - 1)*(nq+nn+ns - 1)
+         else if (clamda(i).lt.clam(id)) then 
+c                                 find the nearest phase           
+            jmin(id) = i
+            clam(id) = clamda(i)
 
-            do j = 1, jsp
-               q = q + thermo(6,knsp(j,ids))*simp(k+j)
-               sum = sum + simp(k+j)
-               prism(l+j) = simp(k+j)
-            end do
-c                                 charge ratio
-            ratio = q/thermo(6,knsp(nq,ids))
-c                                 the net charge has the same sign as the nqth
-c                                 species or its amount violates closure, reject:
-            if (ratio.gt.0d0.or.sum-ratio.ge.1e0) cycle
-c                                 the amount of the species determined by charge balance
-            prism(l+nq) = -ratio
-c                                 the total moles of charged species
-            prism(l+nq+1) = sum - ratio
+         end if 
 
-            qpairs = qpairs + 1
+      end do 
 
+      if (iter.le.iopt(10)) then
+c                                 at this point there is one metastable refinement
+c                                 point for each original point.
+
+
+
+c                                 if not done iterating, add the metastable
+c                                 phases
+         do i = 1, opt
+            if (jmin(i).eq.0) cycle 
+            npt = npt + 1
+            jdv(npt) = jmin(i)
          end do
+c                                 sort the phases, this is only necessary if
+c                                 metastable phases have been added
+         call sortin
+c                                 make a pointer to the original refinement 
+c                                 point
+         do i = 1, npt
+            mkp(i) = hkp(jdv(i))
+         end do 
 
-         qpairs = qpairs - 1
+      else  
+  
+         mpt = npt 
+         npt = 0  
+c                                 check zero modes the amounts
+         do i = 1, mpt
+
+            if (x(jdv(i)).ge.nopt(9)) then 
+               npt = npt + 1
+               amt(npt) = x(jdv(i))
+               jdv(npt) = jdv(i)
+            else if (lopt(13).and.x(jdv(i)).lt.-nopt(9)
+     *                             .and.tic.lt.5) then 
+
+               call warn (2,x(jdv(i)),i,'YCLOS2')
+               tic = tic + 1
+
+               if (tic.eq.5) call warn (49,x(1),2,'YCLOS2')
+
+            end if 
+
+         end do 
+
+         if (npt.ne.icp) then
+ 
+            fulrnk = .false.
+         
+         else 
+
+            fulrnk = .true.
+
+         end if 
+
 
       end if 
 

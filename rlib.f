@@ -8966,7 +8966,7 @@ c---------------------------------------------------------------------
       common/ cst6  /icomp,istct,iphct,icp  
 
       double precision dcp,soltol
-      common/ cst57 /dcp(k5,h8),soltol
+      common/ cst57 /dcp(k5,k19),soltol
                              
       integer jmsol,kdsol
       common/ cst142 /jmsol(m4,mst),kdsol(m4)

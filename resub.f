@@ -840,7 +840,7 @@ c-----------------------------------------------------------------------
       common/ cst6  /icomp,istct,iphct,icp
 
       double precision dcp,soltol
-      common/ cst57 /dcp(k5,h8),soltol
+      common/ cst57 /dcp(k5,k19),soltol
 
       integer iopt
       logical lopt
@@ -882,7 +882,7 @@ c-----------------------------------------------------------------------
       common/ cst6 /icomp,istct,iphct,icp
 
       double precision dcp,soltol
-      common/ cst57 /dcp(k5,h8),soltol
+      common/ cst57 /dcp(k5,k19),soltol
 
       integer jphct
       double precision g2, cp2
@@ -935,7 +935,7 @@ c                                 x coordinate description
       common/ cst6  /icomp,istct,iphct,icp
 
       double precision dcp,soltol
-      common/ cst57 /dcp(k5,h8),soltol
+      common/ cst57 /dcp(k5,k19),soltol
 c                                 composition and model flags
 c                                 for final adaptive solution
       integer kkp, np, ncpd, ntot
@@ -1895,15 +1895,15 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer jphct, i, j, k, is(*), idsol(k5), kdv(h8+1), nsol, 
-     *        mpt, iam, id, is1, left, right, inc, jdsol(k5,k5), 
-     *        kdsol(k5), max, is0
+      integer jphct, i, j, k, is(*), idsol(k5), kdv(k19+1), nsol, 
+     *        mpt, iam, id, is1, inc, jdsol(k5,k5), 
+     *        kdsol(k5), max, is0, mcpd
 
       external ffirst
 
       logical solvus, quit
 
-      double precision clamda(*), x(*),  slam(h8+1)
+      double precision clamda(*), x(*),  slam(k19)
 
       integer ipoint,kphct,imyn
       common/ cst60 /ipoint,kphct,imyn
@@ -1920,7 +1920,7 @@ c----------------------------------------------------------------------
       common/ cst79 /isoct
 
       double precision dcp,soltol
-      common/ cst57 /dcp(k5,h8),soltol
+      common/ cst57 /dcp(k5,k19),soltol
 
       integer ikp
       common/ cst61 /ikp(k1)
@@ -1935,6 +1935,7 @@ c----------------------------------------------------------------------
       common/ cst78 /cptot(k5),ctotal,jdv(k19),npt,fulrnk
 c----------------------------------------------------------------------
       npt = 0 
+      mcpd = 0 
       nsol = 0
       inc = istct - 1
       is1 = isoct + 2 
@@ -1986,7 +1987,7 @@ c                                 new point, add to list
          kdv(i) = 0 
       end do 
 c                                 perp 6.6.3, make a list of metastable
-c                                 phases, this list includes one compound
+c                                 phases, this list includes two compounds
 c                                 and the least metastable composition of
 c                                 each solution.      
       do 20 i = 1, jphct
@@ -2032,13 +2033,18 @@ c                                and save the current in is1
                kdv(is0) = i
                slam(is0) = clamda(i)
 
+               mcpd = mcpd + 1
+
             end if 
  
          end if 
 
-20    continue 
+20    continue
+
+      if (mcpd.gt.2) mcpd = 2
 c                                 load the metastable points into
-c                                 kdv
+c                                 kdv, the mcpd metastable points
+c                                 will be last in this list
       mpt = 0 
 
       do i = 1, is1
@@ -2050,19 +2056,17 @@ c                                 kdv
 
       end do 
 
-      if (mpt.le.iopt(12)) then 
+      if (mpt-mcpd.le.iopt(12)) then 
 c                                 less metastable refinement points than
 c                                 iopt(12)
-            max = mpt
+         max = mpt
 
       else 
 c                                 sort the metastable points to
 c                                 find the most stable iopt(12) points
-         left = 1
-         right = mpt
          max = iopt(12)
 
-         call ffirst (slam,kdv,left,right,max,h8+1,ffirst)
+         call ffirst (slam,kdv,1,mpt-mcpd,max,k19,ffirst)
 
       end if 
  
@@ -2072,6 +2076,10 @@ c                                 find the most stable iopt(12) points
 c                                 a metastable solution to be refined
 c        if (kdv(i)+inc.gt.ipoint) quit = .false.
          if (ikp(kdv(i)+inc).ne.0) quit = .false.
+      end do
+c                                 and load the compounds
+      do i = 1, mcpd
+         jdv(npt+max+i) = kdv(mpt-mcpd+i)
       end do
 
       if (quit) then 
@@ -2089,7 +2097,7 @@ c                                 save amounts for final processing
 
       else 
 
-         npt = npt + max
+         npt = npt + max + mcpd
 c                                 sort the phases, why? don't know, but it's 
 c                                 necessary
          call sortin 
@@ -3128,7 +3136,7 @@ c-----------------------------------------------------------------------
       common/ cst12 /cp(k5,k1)
 
       double precision dcp,soltol
-      common/ cst57 /dcp(k5,h8),soltol
+      common/ cst57 /dcp(k5,k19),soltol
 
       integer iopt
       logical lopt
@@ -3442,9 +3450,14 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i, is(*), id, jmin(k19), opt, mpt, iter, tic
+      external ffirst
+
+      integer i, is(*), id, jmin(k19), kmin(k19), opt, kpt, mpt, iter, 
+     *        tic
 
       double precision clamda(*), clam(k19), x(*)
+
+      logical stable(k19)
 
       integer iopt
       logical lopt
@@ -3470,6 +3483,10 @@ c----------------------------------------------------------------------
       double precision cp3, amt
       common/ cxt15 /cp3(k0,k5),amt(k5),kkp(k5),np,ncpd,ntot
 
+      integer jcoct, jcoor, jkp
+      double precision zcoor
+      common/ cxt13 /zcoor(k20),jcoor(k21),jkp(k21),jcoct
+
       save tic
       data tic/0/
 c----------------------------------------------------------------------
@@ -3480,9 +3497,11 @@ c                                 solution.
       do i = 1, npt
          jmin(i) = 0 
          clam(i) = 1d99
+         stable(i) = .false.
       end do 
 
       npt = 0
+      mpt = 0 
 
       do i = 1, jphct
 c                                 id indicates the original refinement
@@ -3493,11 +3512,24 @@ c                                 check the stability of all points
 c                                 a stable point, add to list
             npt = npt + 1
             jdv(npt) = i
+            stable(id) = .true.
 
          else if (clamda(i).lt.clam(id)) then 
-c                                 find the nearest phase           
-            jmin(id) = i
-            clam(id) = clamda(i)
+
+            if (jkp(id).gt.0) then
+c                                 it's a solution, keep the  
+c                                 least metastable point
+               jmin(id) = i
+               clam(id) = clamda(i)
+               mpt = mpt + 1
+  
+            else 
+c                                 it's a compound, keep all 
+c                                 as they hardly cost anything. 
+               kpt = kpt + 1
+               kmin(kpt) = i
+
+            end if 
 
          end if 
 
@@ -3505,12 +3537,42 @@ c                                 find the nearest phase
 
       if (iter.le.iopt(10)) then
 c                                 if not done iterating, add the metastable
-c                                 phases
+c                                 phases, first the compounds:
+         do i = 1, kpt
+            npt = npt + 1 
+            jdv(npt) = kmin(i)
+         end do 
+c                                 make a list of the solutions
+         kpt = 0 
+
          do i = 1, opt
-            if (jmin(i).eq.0) cycle 
-            npt = npt + 1
-            jdv(npt) = jmin(i)
+
+            if (jmin(i).eq.0) then
+               cycle
+            else if (stable(hkp(jmin(i)))) then 
+               cycle 
+            end if 
+
+            kpt = kpt + 1
+            jmin(kpt) = jmin(i)
+            clam(kpt) = clam(i)
          end do
+
+         if (kpt.gt.iopt(12)) then 
+c                                 sort if too many
+
+            kpt = iopt(12)
+
+            call ffirst (clam,jmin,1,kpt,iopt(12),k19,ffirst)
+
+         end if 
+
+         do i = 1, kpt
+
+           npt = npt + 1
+           jdv(npt) = jmin(i)
+
+         end do 
 c                                 sort the phases, this is only necessary if
 c                                 metastable phases have been added
          call sortin
@@ -3553,20 +3615,7 @@ c                                 check zero modes the amounts
 
          end if 
 
-
       end if 
-
-c1000  format (/,'**warning ver666** the compositional resolution ',
-c     *       'specified for this problem is too',/,' high. The global ',
-c     *       'minimum may not be clearly defined. If this ambiguity ',
-c     *       'causes',
-c     *     /,'spurious results, reduce the resolution by changing any ',
-c     *       'of the following keywords ',/,'in perplex_option.dat:',//,
-c     *    5x,'increase initial_resolution',/,
-c     *    5x,'decrease auto_refine_factor_I',/,
-c     *    5x,'decrease iteration (first value)',//,
-c     *       'Typically compositional resolution <0.05 mol% causes ',
-c     *       'numerical instability',/)   
 
       end
 
