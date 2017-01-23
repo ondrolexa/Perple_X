@@ -152,10 +152,7 @@ parg_dqf = 1 parg               | pargasite, Corrected from 10 kJ, 10/14/11, JAD
        DQF(J/mol) = 15000. 
 gl_dqf = 1 gl                   | glaucophane, Corrected from 15 kJ, 10/14/11, MJC
        DQF(J/mol) = 3000. 
-mpa = 1 parg -1 tr +1 anth      | ortho-pargasite, stoichiometry corrected 3/30/08 JADC
-       DQF(J/mol) = 27d3 
-ged_dqf = 1 ged                 | gedrite 
-       DQF(J/mol) = 22000. 
+
 ogl_dqf = 1 gl                  | ortho-glaucophane
        DQF(J/mol) = 15000. 
 fanth_dq = 1 fanth              | ferro-anthophyllite
@@ -164,9 +161,9 @@ omrb_dqf = 1 gl -2 jd +2 acm    | ortho-magnesio riebekite (mrb dqf + 25000 J/mo
        DQF(J/mol) = 33000. 
                                 | Make definitions for the revised (Diener et al, JMG 2011 25:631-656)
                                 | ortho-amphibole model.   Oct 31, 2011.
-mpa2      = 1 parg - 1 tr +1 anth 
+mpa       = 1 parg - 1 tr +1 anth 
        DQF(J/mol) = 25d3 
-ged_dqf2  = 1 ged
+ged_dqf   = 1 ged
        DQF(J/mol) = 20000.                          
                                 | make definition for coma of the unpublished
                                 | thermocalc scapolite model

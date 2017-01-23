@@ -143,6 +143,8 @@ c-----------------------------------------------------------------------
       integer liw, lw, iter, iref, i, j, id, idead, ids, jstart, inc, 
      *        opt
 
+      logical first
+
       parameter (liw=2*k21+3,lw=2*(k5+1)**2+7*k21+5*k5)  
 
       double precision  ax(k5), x(k21), clamda(k21+k5), w(lw)
@@ -207,6 +209,8 @@ c                                 are identified in jdv(1..npt)
       opt = npt
 c                                 --------------------------------------
 c                                 first iteration
+      first = .true.
+
       do i = 1, npt
 
          id = jdv(i) + inc
@@ -230,7 +234,7 @@ c                                 hkp indicates which refinement point
 
          else 
 c                                 the point is a pseudocompound, refine it
-            call resub (i,id,ikp(id),iref,iter)
+            call resub (i,id,ikp(id),iref,iter,first)
 
          end if
 c                                 reset jdv in case of exit
@@ -272,6 +276,8 @@ c                                 the xcoor array.
          jphct = 0 
          iref = 0 
          jcoct = 1
+
+         first = .true.
 c                                 generate new pseudocompounds
          do i = 1, npt
 
@@ -291,7 +297,7 @@ c                                 the point is a true compound
 
             else
 c                                 the point is a pseudocompound 
-               call resub (mkp(i),i,ids,iref,iter)
+               call resub (mkp(i),i,ids,iref,iter,first)
 
             end if
 c                                 reset jdv in case of exit
@@ -303,7 +309,7 @@ c                                 reset jdv in case of exit
 
       end
 
-      subroutine resub (jd,id,ids,iref,iter)
+      subroutine resub (jd,id,ids,iref,iter,first)
 c----------------------------------------------------------------------
 c subroutine to generate new pseudocompound compositions around the
 c pseudocompound id of solution ids in iteration iter. ifst is the 
@@ -315,11 +321,11 @@ c----------------------------------------------------------------------
       include 'perplex_parameters.h'
 c                                 -------------------------------------
 c                                 local variables
-      logical bad
+      logical bad, first, keep
 
       double precision xxnc, ysum, res0
 
-      integer i, j, k, l, m, ids, id, jd, iter, kcoct, iref
+      integer i, j, k, l, m, ids, id, jd, iter, kcoct, iref, last 
 c                                 -------------------------------------
 c                                 functions
       double precision gsol1, ydinc
@@ -373,8 +379,10 @@ c                                 option values
 
       integer ineg
       common/ cst91 /ineg(h9,m15)
+
+      save last 
 c----------------------------------------------------------------------
-      
+
       if (iter.eq.1) then
 c                                first iteration id array points to 
 c                                original compound arrays:
@@ -389,8 +397,35 @@ c                                below.
          call getxy0 (ids,id)
 
       end if
+
+      if (.not.first.and.ids.eq.last.and.iopt(31).eq.3) then
+
+         keep = .false.
+c                                check if the point lies within the 
+c                                limits of the previous refinement point, 
+c                                if it does, then skip the point. 
+         do i = 1, istg(ids)
+
+            do j = 1, ndim(i,ids)
+
+               if (x(i,j).gt.xmx(i,j).or.x(i,j).lt.xmn(i,j)) then 
+                  keep = .true.
+                  exit
+               end if
+
+            end do
+           
+            if (keep) exit 
+ 
+         end do
+
+         if (.not.keep) return 
+
+      end if 
 c                                load the subdivision limits into
 c                                temporary limit arrays:
+      last = ids 
+
       res0 = nopt(24)/nopt(21)**iter
       
       do i = 1, istg(ids)
@@ -417,7 +452,7 @@ c                                 to allow hardlimits. JADC
             if (xmx(i,j).gt.xmxo(ids,i,j)) xmx(i,j) = xmxo(ids,i,j)
 
          end do 
-      end do 
+      end do
                             
       call subdiv (ids,.true.)
 
@@ -528,7 +563,9 @@ c                                 of the solution
 
          iref = iref + 1
 
-10    continue  
+10    continue
+
+      first = .false.
 
       end 
 
@@ -1895,15 +1932,15 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer jphct, i, j, k, is(*), idsol(k5), kdv(k19+1), nsol, 
-     *        mpt, iam, id, is1, inc, jdsol(k5,k5), 
-     *        kdsol(k5), max, is0, mcpd
+      integer jphct, i, j, k, is(*), idsol(k5), kdv(h9), nsol, 
+     *        mpt, iam, id, inc, jdsol(k5,k5), ldv1, ldv2,
+     *        kdsol(k5), max, mcpd
 
       external ffirst
 
       logical solvus, quit
 
-      double precision clamda(*), x(*),  slam(k19)
+      double precision clamda(*), x(*),  slam(h9), clam
 
       integer ipoint,kphct,imyn
       common/ cst60 /ipoint,kphct,imyn
@@ -1935,11 +1972,9 @@ c----------------------------------------------------------------------
       common/ cst78 /cptot(k5),ctotal,jdv(k19),npt,fulrnk
 c----------------------------------------------------------------------
       npt = 0 
-      mcpd = 0 
       nsol = 0
       inc = istct - 1
-      is1 = isoct + 2 
-      is0 = is1 - 1
+
       quit = .true.
 c                                 solvus_tolerance_II, 0.25
       soltol = nopt(25)
@@ -1982,7 +2017,11 @@ c                                 new point, add to list
 
       end do
 
-      do i = 1, is1
+      ldv1 = 0
+      ldv2 = 0 
+      clam = 1d99
+
+      do i = 1, isoct
          slam(i) = 1d99
          kdv(i) = 0 
       end do 
@@ -2025,38 +2064,45 @@ c                                the composition is acceptable
          else 
 c                                a compound, save lowest 2, changed from 1
 c                                march 4, 2015, JADC
-            if (clamda(i).lt.slam(is0)) then 
-c                                put the old min into is1
-               kdv(is1) = kdv(is0)
-               slam(is1) = slam(is0)
-c                                and save the current in is1
-               kdv(is0) = i
-               slam(is0) = clamda(i)
+            if (clamda(i).lt.clam) then 
+c                                put the old min into ldv2
+               ldv2 = ldv1
+c                                and save the current in ldv1
+               ldv1 = i
 
-               mcpd = mcpd + 1
+               clam = clamda(i)
 
             end if 
  
          end if 
 
 20    continue
-
-      if (mcpd.gt.2) mcpd = 2
-c                                 load the metastable points into
-c                                 kdv, the mcpd metastable points
-c                                 will be last in this list
+c                                 load the metastable compounds directly
+c                                 into jdv
+      if (ldv2.ne.0) then 
+         npt = npt + 2
+         jdv(npt-1) = ldv2
+         jdv(npt) = ldv1
+         mcpd = 2
+      else if (ldv1.ne.0) then 
+         npt = npt + 1
+         jdv(npt) = 1
+         mcpd = 1
+      else 
+         mcpd = 0 
+      end if 
+c                                 load the metastable solutions into kdv
       mpt = 0 
 
-      do i = 1, is1
+      do i = 1, isoct
 
-         if (kdv(i).eq.0) cycle
          mpt = mpt + 1
          kdv(mpt) = kdv(i)
          slam(mpt) = slam(i)
 
       end do 
 
-      if (mpt-mcpd.le.iopt(12)) then 
+      if (mpt.le.iopt(12)) then 
 c                                 less metastable refinement points than
 c                                 iopt(12)
          max = mpt
@@ -2066,7 +2112,7 @@ c                                 sort the metastable points to
 c                                 find the most stable iopt(12) points
          max = iopt(12)
 
-         call ffirst (slam,kdv,1,mpt-mcpd,max,k19,ffirst)
+         call ffirst (slam,kdv,1,mpt,max,h9,ffirst)
 
       end if 
  
@@ -2077,15 +2123,11 @@ c                                 a metastable solution to be refined
 c        if (kdv(i)+inc.gt.ipoint) quit = .false.
          if (ikp(kdv(i)+inc).ne.0) quit = .false.
       end do
-c                                 and load the compounds
-      do i = 1, mcpd
-         jdv(npt+max+i) = kdv(mpt-mcpd+i)
-      end do
 
       if (quit) then 
 c                                 zero mode filter and 
 c                                 save amounts for final processing
-         mpt = npt
+         mpt = npt - mcpd 
          npt = 0 
 
          do i = 1, mpt
@@ -2097,7 +2139,7 @@ c                                 save amounts for final processing
 
       else 
 
-         npt = npt + max + mcpd
+         npt = npt + max
 c                                 sort the phases, why? don't know, but it's 
 c                                 necessary
          call sortin 
@@ -2895,7 +2937,7 @@ c                                 now for each compound:
             do j = 1, jend(i,2)
 
 
-              ibug = 2
+           ibug = 99
               if (ibug.eq.0) then 
 c DELETE ME DELETE ME DEBUG 1050 K 4000
          p0a(1) =                   -0.0065200000
@@ -3502,6 +3544,7 @@ c                                 solution.
 
       npt = 0
       mpt = 0 
+      kpt = 0
 
       do i = 1, jphct
 c                                 id indicates the original refinement
@@ -3558,7 +3601,7 @@ c                                 make a list of the solutions
             clam(kpt) = clam(i)
          end do
 
-         if (kpt.gt.iopt(12)) then 
+         if (kpt.gt.iopt(12).and.iopt(31).gt.0) then 
 c                                 sort if too many
 
             kpt = iopt(12)

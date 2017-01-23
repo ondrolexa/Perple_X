@@ -1,4 +1,4 @@
-675 DO NOT DELETE THIS LINE
+676 DO NOT DELETE THIS LINE
 
                              FOR MODEL DEFINITIONS AND REFERENCES REFER TO THE GLOSSARY AT:
 
@@ -331,16 +331,16 @@ ffug_d  = 1 mrbG  + 1 ts    + 1/2 grun - 1 gl - 1 tr + 1/2 b
                              | imod = 0 -> cartesian subdivision
                              | imod = 1 -> assymetric stretching subdivision
 
-.4 .6  .1  0                 | range and resolution for X(Mg) on site 1, imod = 0
+0. 1.  .1  0                 | range and resolution for X(Mg) on site 1, imod = 0
 
-0. .3  .1  0                 | range and resolution for X(ts)   on site 2, imod = 0
-0.5 1  .1  0                 | range and resolution for X(pg)   on site 2, imod = 0
-0. .1  .1  0                 | range and resolution for X(gl)   on site 2, imod = 1
-0. .1  .1  0                 | range and resolution for X(cumm) on site 2, imod = 0
-.15 .3  .1  0                 | range and resolution for X(mrb)  on site 2, imod = 1
+0. 1.  .1  0                 | range and resolution for X(ts)   on site 2, imod = 0
+0. 1.  .1  0                 | range and resolution for X(pg)   on site 2, imod = 0
+0. 1.  .1  0                 | range and resolution for X(gl)   on site 2, imod = 1
+0. 1.  .1  0                 | range and resolution for X(cumm) on site 2, imod = 0
+0. 1.  .1  0                 | range and resolution for X(mrb)  on site 2, imod = 1
 0. .1  .1  0                 | range and resolution for X(kprg) on site 2, imod = 1
 0. .1  .1  0                 | range and resolution for X(tts)  on site 2, imod = 1
-0. .1  .1  0                 | range and resolution for X(fug)  on site 2, imod = 1
+0. 1.  .1  0                 | range and resolution for X(fug)  on site 2, imod = 1
 
 begin_excess_function   
 
@@ -802,19 +802,28 @@ begin_model
                              Jennings and Holland, J Pet, 56:869-892, 2015
                              Mantle Melt Model, intended for pressures of 0-60 GPa
 
+                             NOTE: this implementation does not span the full composition space of the
+                             model as formulated by J&H (2015), notably in the Ca-Mg-Si limit cpx 
+                             compositions are confined to the di-en-fs simplex (i.e., hedenbergite is
+                             not a possible composition). this restriction is probably reasonable for
+                             mantle applications. to cover the full composition space the model must
+                             be reformulated to include dependent endmembers that correspond to the 
+                             vertices of the composition space (see, e.g., Augite(G)). 
+
                              Pierre Bouilhol & JADC, 12/16/15 
 
                              Changed to true T site multiplicity, Oliver Shorttle, 3/16
 
                              Changed to fake T site multiplicity (1/4) with true Al site fraction, JADC 6/16
-      
+
+
                                                       M1      M2     T  
                                                      ____________________
 
                                       Mutliplicity    1       1     1/4  <- fake multiplicity
                                                      ____________________
 
-                                      1 di            ca      mg    SiSi  
+                                      1 di            ca      mg    SiSi
                                       2 cfs           Fe      Fe    SiSi
                                       3 cats          ca      al    AlSi     
                                       4 crdi          ca      cr    AlSi
@@ -831,7 +840,7 @@ abbreviation Cpx
 full_name    clinopyroxene 
 
 6                            | model type    
-7                                
+7
 cfs  cats  crdi  cess jd    cenjh  di 
 
 1                            | number of ordered species 
@@ -2859,212 +2868,6 @@ z(y,cr) = 1 knor
 
 end_of_model 
                       --------------------------------------------------------
-begin_model 
-                      ORTHOAMPHIBOLE: Diener et al, JMG 2007 25:631-656
-
-                      NOTE to use this the following endmembers must be specified with make 
-                      definitions in the thermodynamic data file
-
-                              mpa      = 1 parg - 1 tr +1 anth dqf(27d3)
-                              ged_dqf  = dqf(ged)   22000. 0. 0.
-                              ogl_dqf  = dqf(gl)    15000. 0. 0. 
-                              fanth_dq = dqf(fanth)  7000. 0. 0.
-                              omrb_dqf = 1 gl -2 jd -2 acm dqf(33d3)
-
-                       additionally the following endmembers should be excluded in the 
-                       computational option file:
-
-                              ged 
-                              fanth 
-                              gl 
-
-                                             A         M1      M2     M4      T1
-                                            _________________________________________
-
-                             Mutliplicity    1         3       2      2       1(4)*
-                                            _________________________________________
-  
-                             1 tr            Vac       Mg      Mg     Ca      Si_Si      independent
-                             2 ftr           Vac       Fe      Fe     Ca      Si_Si      dependent
-                             3 ged_dqf       Vac       Mg      Al     Mg      Al_Si      independent
-                             4 fged          Vac       Fe      Al     Fe      Al_Si      dependent
-                             5 mpa           Na        Mg      Mg_Al  Mg      Al_Si      independent
-                             6 fpa           Na        Fe      Fe_Al  Fe      Al_Si      dependent
-                             7 ogl_dqf       Vac       Mg      Al     Na      Si_Si      independent
-                             8 fgl           Vac       Fe      Al     Na      Si_Si      dependent
-                             9 anth          Vac       Mg      Mg     Mg      Si_Si      independent
-                            10 fanth_dq      Vac       Fe      Fe     Fe      Si_Si      independent
-                            11 omrb_dqf      Vac       Mg      Fe3+   Na      Si_Si      independent
-                            12 frb           Vac       Fe      Fe3+   Na      Si_Si      dependent
-
-                            13 ammo1         Vac       Mg      Fe     Fe      Si_Si      ordered
-                            14 ammo2         Vac       Fe      Mg     Fe      Si_Si      ordered 
-
-                        *T1 has a true multiplicity of 4, H&P previously used an effective multiplicity of 2;
-                        in Diener et al '07 the multiplicity has been reduced to 1.  
-
-                        JADC 9/07. 
-
-                        10/07   z(m2a,al) corrected.  
-                                          Y. Podladchikov.
-                         3/08   z(m1a,mg),z(m4,ca),z(m4,mg), and fged corrected, 
-                                T1 multiplicity reduced to 1. 
-                                Enthalpies of ordering corrected.
-                                          JADC.
-                         8/08   Enthalpy of ordering corrected for HP dqfs.
-     
-oAmph(DP)                    | model name 
-abbreviation oAmph
-full_name    orthoamphibole
-
-8                            | model type: reciprocal, margules, two ordering parameters
-2                            | 2 site reciprocal solution
-2 6                          | 1 binary and 1 hexary                
-tr            ftr      
-mpa           fpa  
-ged_dqf       fged  
-ogl_dqf       fgl 
-anth          fanth_dq 
-omrb_dqf      frb 
-
-2                            | 2 ordered species:
-
-ammo1 = 3/7 anth + 4/7 fanth_dq  enthalpy_of_ordering = -9.5d3
-ammo2 = 2/7 anth + 5/7 fanth_dq  enthalpy_of_ordering = -11.7d3    | these enthalpies differ from the published values
-                                                                   | becuase Thermocalc reactions are specified in terms of the 
-                                                                   | endmember without "DQF" corrections, while in Perple_X
-                                                                   | endmembers automatically include any DQF corrections. 
-
-begin_limits
-ammo1 = -7/4 + 7/4 fanth_dq + 1 ammo1 + 1/2 ammo2 + 5/4 ammo2                               delta = 7/4
-ammo1 = -7/3 + 7/3 tr + 7/6 mpa + 7/3 anth + 1 ammo1 + 5/3 ammo2 + 2/3 ammo2                delta = 7/3
-ammo1 = -7/3 + 7/3 mpa + 7/3 anth + 7/3 ged_dqf + 1 ammo1  - 2/3 ammo2 + 2/3 ammo2          delta = 7/3
-ammo1 =      - 7/3 fanth_dq - 4/3 ammo1 - 2/3 ammo2 - 5/3 ammo2                             delta = 7/3
-ammo1 =      - 7/3 fanth_dq - 4/3 ammo1 + 5/3 ammo2 - 5/3 ammo2                             delta = 7/3
-
-ammo2 = -7/2 fanth_dq + 2 ammo1 - 2 ammo1 - 5/2 ammo2                                       delta = 7/2
-ammo2 = -7/5 tr - 7/10 mpa - 7/5 anth + 3/5 ammo1 - 3/5 ammo1 - 2/5 ammo2                   delta = 7/5
-ammo2 = -7/2 + 7/2 anth + 7/2 mpa + 7/2 ged_dqf - 3/2 ammo1 + 3/2 ammo1 + 1 ammo2           delta = 7/2
-ammo2 =      - 7/2 fanth_dq - 3/2 ammo1 - 2 ammo1 - 5/2 ammo2                               delta = 7/2
-ammo2 = -7/5 + 7/5 fanth_dq + 3/5 ammo1 + 4/5 ammo1 + 1 ammo2                               delta = 7/5
-end_limits
-
-5                            | 5 dependent endmembers 
-
-ftr   = 1 tr + 2 fanth_dq - 1 ammo1 - 1 ammo2
-fpa   = 1 mpa + 1/2 fanth_dq + 1/2 ammo2 - 1 anth
-fged  = 1 ged_dqf - 1 anth + 1 ammo2
-fgl   = 1 ogl_dqf +  1 fanth_dq - 1 ammo1
-frb   = 1 omrb_dqf + 1 fanth_dq - 1 ammo1
-
-0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0  1 1 1 1 1 1 1 1 1 1 1 1    | endmember flags.
-
-0. 1.0 0.1  0              | range and resolution for X(Mg) on site 1, imod = 0 -> cartesian subdivision
-
-0. 1.  .1  0               | range and resolution for X(tr) on site 2, imod = 0 -> cartesian subdivision
-0. 1.  .1  0               | range and resolution for X(pa) on site 2, imod = 0 -> cartesian subdivision 
-0. 1.  .1  0               | range and resolution for X(ged_dqf) on site 2, imod = 0 -> cartesian subdivision
-0. 1.  .1  0               | range and resolution for X(ogl_dqf) on site 2, imod = 0 -> cartesian subdivision
-0. 1.  .1  0               | range and resolution for X(anth) on site 2, imod = 0 -> cartesian subdivision
-
-begin_excess_function
-W(anth ged_dqf)       25d3  0  0
-W(anth mpa)           25d3  0  0
-W(anth ogl_dqf)       65d3  0  0
-W(anth tr)            45d3  0  0
-W(anth fanth_dq)      33d3  0  0
-W(anth omrb_dqf)      65d3  0  0 
-W(anth ammo1)         18d3  0  0
-W(anth ammo2)         23d3  0  0
-
-W(ged_dqf mpa)           -40d3  0  0
-W(ged_dqf ogl_dqf)        25d3  0  0
-W(ged_dqf tr)             70d3  0  0
-W(ged_dqf fanth_dq)     39.5d3  0  0
-W(ged_dqf omrb_dqf)       25d3  0  0 
-W(ged_dqf ammo1)          29d3  0  0
-W(ged_dqf ammo2)        34.6d3  0  0
-
-W(mpa ogl_dqf)       50d3  0  0
-W(mpa tr)            90d3  0  0
-W(mpa fanth_dq)      45d3  0  0
-W(mpa omrb_dqf)      50d3  0  0 
-W(mpa ammo1)       33.2d3  0  0
-W(mpa ammo2)         36d3  0  0
-
-W(ogl_dqf tr)            65d3  0  0
-W(ogl_dqf fanth_dq)    81.2d3  0  0
-W(ogl_dqf ammo1)       65.5d3  0  0
-W(ogl_dqf ammo2)       78.4d3  0  0
-
-W(tr fanth_dq)        75d3 0  0
-W(tr omrb_dqf)       65d3  0  0 
-W(tr ammo1)          57d3  0  0
-W(tr ammo2)          63d3  0  0
-
-W(fanth_dq omrb_dqf)   81.2d3  0  0 
-W(fanth_dq ammo1)        12d3  0  0
-W(fanth_dq ammo2)         8d3  0  0
-
-W(omrb_dqf ammo1)       65.5d3  0  0 
-W(omrb_dqf ammo2)       78.4d3  0  0 
-
-W(ammo1 ammo2)            20d3  0  0
-end_excess_function
-
-5                          | 5 site (A, M1, M2, M4, T1) entropy model 
-
-2 1.                       | 2 species on A (V, Na), 1 site per formula unit.
-z(A,Na)    = 1 mpa 
-              
-2 1.                       | 2 species on T1, fake site multiplicity of 1.
-z(T1,Al)   = 1/2 ged_dqf + 1/2 mpa 
-
-2 3.                       | 2 species on M1, 3 sites per formula unit
-z(m1,fe)   = 1 fanth_dq + 1 ammo2
-
-4 2.                       | 4 species on M2, 2 sites pfu
-z(m2,fe)   = 1 fanth_dq + 1 ammo1
-z(m2,al)   = 1 ged_dqf + 1/2 mpa  + 1 ogl_dqf  
-z(m2,fe3+) = 1 omrb_dqf 
-
-4 2.                       | 4 species on M4, 2 sites pfu
-z(m4,ca)   = 1 tr      
-z(m4,mg)   = 1 mpa     + 1 anth + 1 ged_dqf
-z(m4,na)   = 1 ogl_dqf + 1 omrb_dqf 
-
-begin_van_laar_sizes                        
-alpha(tr)          1.0    0.    0.                      
-alpha(ged_dqf)     1.5    0.    0.                      
-alpha(mpa)         1.7    0.    0.
-alpha(ogl_dqf)     0.8    0.    0.
-alpha(anth)        1.0    0.    0.
-alpha(fanth_dq)    1.0    0.    0.
-alpha(ammo1)       1.0    0.    0.
-alpha(ammo2)       1.0    0.    0.
-alpha(omrb_dqf)    0.8    0.    0.
-end_van_laar_sizes
-
-begin_dqf_corrections
-
-              | Perple_X, in contrast to THERMOCALC, automatically considers all endmembers
-              | present in the thermodynamic data base. This behavior creates a potential 
-              | problem with THERMOCALC models that specify positive DQF corrections because
-              | the DQF'd endmember is always less stable than the real endmember. For example
-              | here the solution will always be metastable at compositions near to the ts and 
-              | parg endmember compositions. To avoid this problem, DQF corrected endmembers
-              | (ged_dqf, ogl_dqf, fanth_dq and omrb_dqf) must be specified in the thermodynamic 
-              | data file and the true endmembers must be excluded from calculations.  
-
- | dqf(ged)   22000. 0. 0.
- | dqf(gl)    15000. 0. 0. 
- | dqf(fanth)  7000. 0. 0.
- | dqf(mrb)   25000. 0. 0.
-
-end_dqf_corrections
-
-end_of_model
-                      --------------------------------------------------------
 begin_model          
                                       Green, ECR, Holland, TJB & Powell, R (2007) An order-disorder model for
                                       omphacitic pyroxenes in the system jadeite-diopside-hedenbergite-acmite,
@@ -3190,215 +2993,6 @@ z(m1a,fe2+) = 1 hed
 z(m1a,fe3+) = 1 acm + 1 jac 
 
 end_of_model
-                    --------------------------------------------------------  
-begin_model               
-                      CLINOAMPHIBOLE: Diener et al., JMG 2007 25:631-656 
-
-                      NOTE to use this model the following endmembers must be specified with make 
-                      definitions in the thermodynamic data file
-
-                          ts_dqf   = dqf(ts)   10000. 0. 0.  
-                          parg_dqf = dqf(parg) 15000. 0. 0.
-                          gl_dqf   = dqf(gl)    3000. 0. 0.
-
-                       additionally the following endmembers should be excluded in the 
-                       computational option file:
-
-                          ts
-                          parg
-                          gl
-
-                                             A         M1      M2     M4      T1
-                                            _________________________________________
-
-                             Mutliplicity    1         3       2      2       1(4)*
-                                            _________________________________________
-  
-                             1 tr            Vac       Mg      Mg     Ca      Si_Si      independent
-                             2 ftr           Vac       Fe      Fe     Ca      Si_Si      dependent
-                             3 ts_dqf        Vac       Mg      Al     Ca      Al_Si      independent
-                             4 fts           Vac       Fe      Al     Ca      Al_Si      dependent
-                             5 parg_dqf      Na        Mg      Mg_Al  Ca      Al_Si      independent
-                             6 fparg         Na        Fe      Fe_Al  Ca      Al_Si      dependent
-                             7 gl_dqf        Vac       Mg      Al     Na      Si_Si      independent
-                             8 fgl           Vac       Fe      Al     Na      Si_Si      dependent
-                             9 cumm          Vac       Mg      Mg     Mg      Si_Si      independent
-                            10 grun          Vac       Fe      Fe     Fe      Si_Si      independent
-                            11 mrb           Vac       Mg      Fe3+   Na      Si_Si      independent
-                            12 frb           Vac       Fe      Fe3+   Na      Si_Si      dependent
-
-                            13 cammo1        Vac       Mg      Fe     Fe      Si_Si      ordered
-                            14 cammo2        Vac       Fe      Mg     Fe      Si_Si      ordered 
-
-                        *T1 has a true multiplicity of 4, H&P previously used an effective multiplicity of 2;
-                        however in Diener et al. '07 the multiplicity has been reduced to 1. 
-
-                        JADC 9/07. 
-
-                        10/07   z(m2a,al) corrected. Y Y. Podladchikov
-                         3/08   z(m1a,mg),z(m4,ca),z(m4,mg), and fged corrected, 
-                                T1 multiplicity reduced to 1. 
-                                Enthalpies of ordering corrected. JADC.
-                         6/08   z(m1,mg) corrected to include mrb, second limit
-                                equations for cammo1 and cammo2 corrected accordingly.   
-                                corrected enthalpies for cammo1 and cammo2.
-
-cAmph(DP)                    | solution name 
-abbreviation Amph
-full_name    clinoamphibole
-
-8                            | model type: reciprocal, margules, two ordering parameters
-2                            | 2 site reciprocal solution
-2 6                          | 1 binary and 1 hexary                
-tr         ftr      
-parg_dqf   fparg  
-ts_dqf     fts  
-gl_dqf     fgl 
-cumm       grun 
-mrb        frb 
-
-2                            | 2 ordered species:
-
-cammo1 = 3/7 cumm + 4/7 grun   enthalpy_of_ordering = -9.5d3   
-cammo2 = 2/7 cumm + 5/7 grun   enthalpy_of_ordering = -11.7d3
-                                                                 | these enthalpies differ from the thermocalc values
-                                                                 | becuase Thermocalc reactions are specified in terms of the 
-                                                                 | endmember without "DQF" corrections, while in Perple_X
-                                                                 | endmembers automatically include any DQF corrections. 
-
-begin_limits
-
-cammo1 = -7/3 grun - 4/3 cammo1 + 5/3 cammo2 - 5/3 cammo2                               delta = 7/3 z(M2,Fe)       
-cammo1 = -7/4 + 7/4 grun + 1  cammo1 + 1/2 cammo2 + 5/4 cammo2                          delta = 7/4 z(M1,Fe)
-cammo1 = -7/3 + 7/3 tr + 7/6 parg_dqf + 7/3 cumm + 1 cammo1 + 5/3 cammo2 + 2/3 cammo2   delta = 7/3 z(M2,Mg)
-cammo1 = -7/3 + 7/3 cumm + 1 cammo1 - 2/3 cammo2 + 2/3 cammo2                           delta = 7/3 z(M4,Mg)
-cammo1 = -7/3 grun - 4/3 cammo1 - 2/3 cammo2 - 5/3 cammo2                               delta = 7/3 z(M4,Fe)
-
-cammo2 = -7/5 + 7/5 grun + 3/5 cammo1 + 4/5 cammo1 + 1 cammo2                           delta = 7/5 z(M2,Fe)
-cammo2 = -7/2 grun + 2 cammo1 - 2 cammo1 - 5/2 cammo2                                   delta = 7/2 z(M1,Fe)
-cammo2 = -7/5 tr - 7/10 parg_dqf - 7/5 cumm + 3/5 cammo1 - 3/5 cammo1 - 2/5 cammo2      delta = 7/5
-cammo2 = -7/2 + 7/2 cumm - 3/2 cammo1 + 3/2 cammo1 + 1 cammo2                           delta = 7/2
-cammo2 = -7/2 grun - 3/2 cammo1  - 2 cammo1 - 5/2 cammo2                                delta = 7/2
-
-end_limits
-
-5                            | 5 dependent endmembers 
-
-ftr   = 1 tr + 2 grun - 1 cammo1 - 1 cammo2
-fparg = 1 parg_dqf + 3/2 grun - 1 cammo1 - 1/2 cammo2
-fgl   = 1 gl_dqf +  1 grun - 1 cammo1
-frb   = 1 mrb + 1 grun - 1 cammo1
-fts   = 1 ts_dqf + 1 grun - 1 cammo1
-
-1 1 1 1 1 1 1 1 1 1 1 1    | endmember flags.
-
-0. 1.0 0.1  0              | range and resolution for X(Mg) on site 1, imod = 0 -> cartesian subdivision
-
-0. 1.  .1  0               | range and resolution for X(tr) on site 2, imod = 0 -> cartesian subdivision
-0. 1.  .1  0               | range and resolution for X(pg) on site 2, imod = 0 -> cartesian subdivision 
-0. 1.  .1  0               | range and resolution for X(ts_dqf) on site 2, imod = 0 -> cartesian subdivision
-0. 1.  .1  0               | range and resolution for X(gl) on site 2, imod = 0 -> cartesian subdivision
-0. 1.  .1  0               | range and resolution for X(cumm) on site 2, imod = 0 -> cartesian subdivision
-
-begin_excess_function
-w(mrb tr)          65e3   0. 0.  
-w(mrb ts_dqf)      25e3   0. 0. 
-w(mrb parg_dqf)    50e3   0. 0. 
-                                  | w(mrb gl)     is zero
-w(mrb cumm)        100e3   0. 0. 
-w(mrb grun)      113.5e3   0. 0. 
-w(mrb cammo1)      100e3   0. 0.
-w(mrb cammo2)    111.2e3   0. 0.
- 
-w(cammo2 tr)          63e3   0. 0. 
-w(cammo2 ts_dqf)    72.5e3   0. 0.    
-w(cammo2 parg_dqf)  94.8e3   0. 0. 
-w(cammo2 gl_dqf)   111.2e3   0. 0. 
-w(cammo2 cumm)        23e3   0. 0. 
-w(cammo2 grun)         8e3   0. 0. 
-w(cammo2 cammo1)      20e3   0. 0.
-
-w(cammo1 tr)         57e3   0. 0.
-w(cammo1 ts_dqf)     70e3   0. 0.
-w(cammo1 parg_dqf) 94.8e3   0. 0.
-w(cammo1 gl_dqf)    100e3   0. 0.
-w(cammo1 cumm)       18e3   0. 0.
-w(cammo1 grun)       12e3   0. 0.
-
-w(grun tr)          75e3   0. 0.
-w(grun ts_dqf)      80e3   0. 0.
-w(grun parg_dqf) 106.7e3   0. 0.
-w(grun gl_dqf)   113.5e3   0. 0.
-w(grun cumm)        33e3   0. 0.
-
-w(cumm tr)          45e3   0. 0.
-w(cumm ts_dqf)      70e3   0. 0.
-w(cumm parg_dqf)    90e3   0. 0.
-w(cumm gl_dqf)     100e3   0. 0.
-
-w(gl_dqf tr)          65e3   0. 0.
-w(gl_dqf ts_dqf)      25e3   0. 0.
-w(gl_dqf parg_dqf)    50e3   0. 0.
-
-w(parg_dqf tr)      25e3   0. 0.
-w(parg_dqf ts_dqf) -40e3   0. 0.
-
-w(ts_dqf tr)        20e3   0. 0.
-end_excess_function
-
-5                          | 5 site (A, M1, M2, M4, T1) entropy model 
-
-2 1.                       | 2 species on A (V, Na), 1 site per formula unit.
-z(A,Na) =    1 parg_dqf  
-              
-2 3.                       | 2 species on M1, 3 sites per formula unit
-z(m1,mg) =   1 tr + 1 ts_dqf + 1 parg_dqf + 1 gl_dqf + 1 cammo1 + 1 cumm + 1 mrb
-
-4 2.                       | 4 species on M2, 2 sites pfu
-z(m2,mg) =   1 tr + 1/2 parg_dqf + 1 cumm + 1 cammo2
-z(m2,al) =   1 ts_dqf + 1/2 parg_dqf + 1 gl_dqf 
-z(m2,fe3+) = 1 mrb 
-
-4 2.                       | 4 species on M4, 2 sites pfu
-z(m4,na) =   1 gl_dqf + 1 mrb 
-z(m4,mg) =   1 cumm
-z(m4,fe) =   1 grun + 1 cammo1 + 1 cammo2  
-
-2 1.                       | 2 species on T1, fake site multiplicity of 1.
-z(T1,Al) =   1/2 ts_dqf  + 1/2 parg_dqf  
-
-begin_van_laar_sizes                        
-alpha(tr)       1.0    0.    0.                      
-alpha(parg_dqf) 1.7    0.    0.
-alpha(ts_dqf)   1.5    0.    0.                      
-alpha(gl_dqf)   0.8    0.    0.
-alpha(cumm)     1.0    0.    0.
-alpha(grun)     1.0    0.    0.
-alpha(cammo1)   1.0    0.    0.
-alpha(cammo2)   1.0    0.    0.
-alpha(mrb)      0.8    0.    0.
-end_van_laar_sizes
-
-begin_dqf_corrections
-
-              | Perple_X, in contrast to THERMOCALC, automatically considers all endmembers
-              | present in the thermodynamic data base. This behavior creates a potential 
-              | problem with THERMOCALC models that specify positive DQF corrections because
-              | the DQF'd endmember is always less stable than the real endmember. For example
-              | here the solution will always be metastable at compositions near to the ts and 
-              | parg endmember compositions. To avoid this problem, DQF corrected endmembers
-              | (ts_dqf, gl_dqf and parg_dqf) must be specified in the thermodynamic data file and the
-              | true ts, gl and parg endmembers must be excluded from calculations.  
-
-
-              | dqf(ts)   10000. 0. 0.  
-              | dqf(parg) 10000. 0. 0.
-
-dqf(cumm) -6400. 0. 0.
-dqf(grun) -5000. 0. 0. 
-end_dqf_corrections
-
-end_of_model                   
                     -------------------------------------------------------- 
 begin_model                
                            | CHLORITE: extended from holland et al. 1998, EJM.
@@ -9786,10 +9380,20 @@ z(y,al) = 1 spss + 1 alm + 1 py + 1 gr
 end_of_model      
                       --------------------------------------------------------
 begin_model               
-                      CLINOAMPHIBOLE: Diener et al, JMG 2011 25:631-656, modified from Diener et al, JMG 2008
+                      CLINOAMPHIBOLE: Diener et al, JMG 2011 25:631-656, modified from Diener et al, JMG 2008.
+                      --------------------------------------------------------
+                      corrections/revisions 
 
-                                      2011 Model revisions entered by MJC, Oct 31, 2011.
-                                      ---------------------------------------------
+                        10/07   z(m2a,al) corrected. Y Y. Podladchikov
+                         3/08   z(m1a,mg),z(m4,ca),z(m4,mg), and fged corrected, 
+                                T1 multiplicity reduced to 1. 
+                                Enthalpies of ordering corrected. JADC.
+                         6/08   z(m1,mg) corrected to include mrb, second limit
+                                equations for cammo1 and cammo2 corrected accordingly.   
+                                corrected enthalpies for cammo1 and cammo2.    
+                       8/31/11 2011 DP odel revisions entered by MJC, Oct 31, 2011.
+                       1/24/17 fcrp-crp exchange added Jan 24, 2017.
+                      --------------------------------------------------------
 
                       NOTE to use this model the following endmembers must be specified with make 
                       definitions in the thermodynamic data file
@@ -9825,34 +9429,30 @@ begin_model
                             12 frb           Vac       Fe      Fe3+   Na      Si_Si      dependent
 
                             13 cammo1        Vac       Mg      Fe     Fe      Si_Si      ordered
-                            14 cammo2        Vac       Fe      Mg     Fe      Si_Si      ordered 
+                            14 cammo2        Vac       Fe      Mg     Fe      Si_Si      ordered
+
+           dependent exchange crp            V         M      Fe3     M       Si_Al
 
                         *T1 has a true multiplicity of 4, H&P previously used an effective multiplicity of 2;
-                        however in Diener et al. '07 the multiplicity has been reduced to 1. 
+                        however in Diener et al. '07 the multiplicity has been reduced to 1. JADC 9/07. 
 
-                        JADC 9/07. 
+                      ---------------------------------------------
 
-                        10/07   z(m2a,al) corrected. Y Y. Podladchikov
-                         3/08   z(m1a,mg),z(m4,ca),z(m4,mg), and fged corrected, 
-                                T1 multiplicity reduced to 1. 
-                                Enthalpies of ordering corrected. JADC.
-                         6/08   z(m1,mg) corrected to include mrb, second limit
-                                equations for cammo1 and cammo2 corrected accordingly.   
-                                corrected enthalpies for cammo1 and cammo2.            
-
-cAmph(DP2)                   | solution name 
+cAmph(DP)                    | solution name 
 abbreviation Amph
 full_name    clinoamphibole
 
-8                            | model type: reciprocal, margules, two ordering parameters
-2                            | 2 site reciprocal solution
-2 6                          | 1 binary and 1 hexary                
-tr         ftr      
+8                            | model type: prismatic, two ordering parameters
+2                            | 2 simplices
+2 7                          | 1 binary and 1 septary
+
 parg_dqf   fparg  
 ts_dqf     fts  
 gl_dqf     fgl 
 cumm       grun 
-mrb        frb 
+mrb        frb
+crp        fcrp
+tr         ftr
 
 2                            | 2 ordered species:
 
@@ -9877,29 +9477,32 @@ cammo2 = -7/2 + 7/2 cumm - 3/2 cammo1 + 3/2 cammo1 + 1 cammo2                   
 cammo2 = -7/2 grun - 3/2 cammo1  - 2 cammo1 - 5/2 cammo2                                delta = 7/2
 end_limits
 
-5                            | 5 dependent endmembers 
+7                            | # of dependent endmembers 
 
-ftr   = 1 tr + 2 grun - 1 cammo1 - 1 cammo2
-fparg = 1 parg_dqf + 3/2 grun - 1 cammo1 - 1/2 cammo2
-fgl   = 1 gl_dqf +  1 grun - 1 cammo1
-frb   = 1 mrb + 1 grun - 1 cammo1
-fts   = 1 ts_dqf + 1 grun - 1 cammo1
+ftr   = 1 tr       + 2 grun    - 1 cammo1 - 1 cammo2
+fparg = 1 parg_dqf + 3/2 grun  - 1 cammo1 - 1/2 cammo2
+fgl   = 1 gl_dqf   +  1 grun   - 1 cammo1
+frb   = 1 mrb      + 1 grun    - 1 cammo1
+fts   = 1 ts_dqf   + 1 grun    - 1 cammo1
+crp   = 1 mrb      + 1 ts_dqf  + 1 cumm   - 1 gl_dqf - 1 tr
+fcrp  = 1 mrb      + 1 ts_dqf  + 1/2 grun - 1 gl_dqf - 1 tr + 1/2 cammo2
 
-1 1 1 1 1 1 1 1 1 1 1 1    | endmember flags.
+1 1 1 1 1 1 1 1 1 1 1 1 1 1   | endmember flags.
 
-0. 1.0 0.1  0              | range and resolution for X(Mg) on site 1, imod = 0 -> cartesian subdivision
+0. 1.  .1  0               | range and resolution for X(Mg) on site 1, imod = 0 -> cartesian subdivision
 
-0. 1.  .1  0               | range and resolution for X(tr) on site 2, imod = 0 -> cartesian subdivision
 0. 1.  .1  0               | range and resolution for X(pg) on site 2, imod = 0 -> cartesian subdivision 
 0. 1.  .1  0               | range and resolution for X(ts_dqf) on site 2, imod = 0 -> cartesian subdivision
 0. 1.  .1  0               | range and resolution for X(gl) on site 2, imod = 0 -> cartesian subdivision
 0. 1.  .1  0               | range and resolution for X(cumm) on site 2, imod = 0 -> cartesian subdivision
+0. 1.  .1  0               | range and resolution for X(mrb) on site 2, imod = 0 -> cartesian subdivision
+0. 1.  .1  0               | range and resolution for X(crp) on site 2, imod = 0 -> cartesian subdivision
 
 begin_excess_function
 w(mrb tr)          52e3   0. 0.  
 w(mrb ts_dqf)      20e3   0. 0. 
 w(mrb parg_dqf)        40e3   0. 0. 
-                                  | w(mrb gl)     is zero
+
 w(mrb cumm)        80e3   0. 0. 
 w(mrb grun)        91e3   0. 0. 
 w(mrb cammo1)      80e3   0. 0.
@@ -9947,10 +9550,10 @@ end_excess_function
 z(A,Na) =    1 parg_dqf  
               
 2 3.                       | 2 species on M1, 3 sites per formula unit
-z(m1,mg) =   1 tr + 1 ts_dqf + 1 parg_dqf + 1 gl_dqf + 1 cammo1 + 1 cumm + 1 mrb
+z(M1,fe)   = 1 grun + 1 cammo2
 
 4 2.                       | 4 species on M2, 2 sites pfu
-z(m2,mg) =   1 tr + 1/2 parg_dqf + 1 cumm + 1 cammo2
+z(M2,fe)   = 1 grun + 1 cammo1
 z(m2,al) =   1 ts_dqf + 1/2 parg_dqf + 1 gl_dqf 
 z(m2,fe3+) = 1 mrb 
 
@@ -9963,15 +9566,15 @@ z(m4,fe) =   1 grun + 1 cammo1 + 1 cammo2
 z(T1,Al) =   1/2 ts_dqf  + 1/2 parg_dqf  
 
 begin_van_laar_sizes                        
-alpha(tr)       1.0    0.    0.                      
-alpha(parg_dqf) 1.7   0.    0.
-alpha(ts_dqf)   1.5    0.    0.                      
-alpha(gl_dqf)   0.8    0.    0.
-alpha(cumm)     1.0    0.    0.
-alpha(grun)     1.0    0.    0.
-alpha(cammo1)   1.0    0.    0.
-alpha(cammo2)   1.0    0.    0.
-alpha(mrb)      0.8    0.    0.
+alpha(tr)       1.0 
+alpha(parg_dqf) 1.7
+alpha(ts_dqf)   1.5
+alpha(gl_dqf)   0.8
+alpha(cumm)     1.0
+alpha(grun)     1.0
+alpha(cammo1)   1.0
+alpha(cammo2)   1.0
+alpha(mrb)      0.8
 end_van_laar_sizes
 
 begin_dqf_corrections
@@ -9985,8 +9588,8 @@ begin_dqf_corrections
               | (ts_dqf, gl_dqf and parg_dqf) must be specified in the thermodynamic data file and the
               | true ts, gl and parg_dqf endmembers must be excluded from calculations.  
 
-dqf(cumm) -6400. 0. 0.
-dqf(grun) -5000. 0. 0. 
+dqf(cumm) -6400.
+dqf(grun) -5000.
 end_dqf_corrections
 
 end_of_model
@@ -9994,15 +9597,22 @@ end_of_model
 begin_model 
                       ORTHOAMPHIBOLE: Diener et al, JMG 2011 25:631-656, modified from Diener et al, JMG 2008
 
+                      --------------------------------------------------------
+                      corrections/revisions
 
-                                      2011 Model revisions entered by MJC, Oct 31, 2011.
+                        10/07   z(m2a,al) corrected. Y. Podladchikov.
+                         3/08   z(m1a,mg),z(m4,ca),z(m4,mg), and fged corrected, 
+                                T1 multiplicity reduced to 1. 
+                                Enthalpies of ordering corrected. JADC.
+                         8/08   Enthalpy of ordering corrected for HP dqfs.
+                     10/31/11   2011 DP revisions entered by MJC.
                                       ---------------------------------------------
 
                       NOTE to use this the following endmembers must be specified with make 
                       definitions in the thermodynamic data file
 
-                              mpa2      = 1 parg - 1 tr +1 anth dqf(25d3)
-                              ged_dqf2  = dqf(ged)   20000. 0. 0.
+                              mpa       = 1 parg - 1 tr +1 anth dqf(25d3)
+                              ged_dqf   = dqf(ged)   20000. 0. 0.
                               ogl_dqf  = dqf(gl)    15000. 0. 0. 
                               fanth_dq = dqf(fanth)  7000. 0. 0.
                               omrb_dqf = 1 gl -2 jd -2 acm dqf(33d3)
@@ -10024,7 +9634,7 @@ begin_model
                              2 ftr           Vac       Fe      Fe     Ca      Si_Si      dependent
                              3 ged_dqf       Vac       Mg      Al     Mg      Al_Si      independent
                              4 fged          Vac       Fe      Al     Fe      Al_Si      dependent
-                             5 mpa2          Na        Mg      Mg_Al  Mg      Al_Si      independent
+                             5 mpa           Na        Mg      Mg_Al  Mg      Al_Si      independent
                              6 fpa           Na        Fe      Fe_Al  Fe      Al_Si      dependent
                              7 ogl_dqf       Vac       Mg      Al     Na      Si_Si      independent
                              8 fgl           Vac       Fe      Al     Na      Si_Si      dependent
@@ -10041,15 +9651,8 @@ begin_model
 
                         JADC 9/07. 
 
-                        10/07   z(m2a,al) corrected.  
-                                          Y. Podladchikov.
-                         3/08   z(m1a,mg),z(m4,ca),z(m4,mg), and fged corrected, 
-                                T1 multiplicity reduced to 1. 
-                                Enthalpies of ordering corrected.
-                                          JADC.
-                         8/08   Enthalpy of ordering corrected for HP dqfs.
 
-oAmph(DP2)                   | model name 
+oAmph(DP)                   | model name 
 abbreviation oAmph
 full_name    orthoamphibole
 
@@ -10057,8 +9660,8 @@ full_name    orthoamphibole
 2                            | 2 site reciprocal solution
 2 6                          | 1 binary and 1 hexary                
 tr            ftr      
-mpa2          fpa  
-ged_dqf2      fged  
+mpa           fpa  
+ged_dqf       fged  
 ogl_dqf       fgl 
 anth          fanth_dq 
 omrb_dqf      frb 
@@ -10073,14 +9676,14 @@ ammo2 = 2/7 anth + 5/7 fanth_dq   enthalpy_of_ordering = -11.7d3 | these enthalp
 
 begin_limits
 ammo1 = -7/4 + 7/4 fanth_dq + 1 ammo1 + 1/2 ammo2 + 5/4 ammo2                               delta = 7/4
-ammo1 = -7/3 + 7/3 tr + 7/6 mpa2 + 7/3 anth + 1 ammo1 + 5/3 ammo2 + 2/3 ammo2                delta = 7/3
-ammo1 = -7/3 + 7/3 mpa2 + 7/3 anth + 7/3 ged_dqf2 + 1 ammo1  - 2/3 ammo2 + 2/3 ammo2          delta = 7/3
+ammo1 = -7/3 + 7/3 tr + 7/6 mpa  + 7/3 anth + 1 ammo1 + 5/3 ammo2 + 2/3 ammo2               delta = 7/3
+ammo1 = -7/3 + 7/3 mpa  + 7/3 anth + 7/3 ged_dqf  + 1 ammo1  - 2/3 ammo2 + 2/3 ammo2        delta = 7/3
 ammo1 =      - 7/3 fanth_dq - 4/3 ammo1 - 2/3 ammo2 - 5/3 ammo2                             delta = 7/3
 ammo1 =      - 7/3 fanth_dq - 4/3 ammo1 + 5/3 ammo2 - 5/3 ammo2                             delta = 7/3
 
 ammo2 = -7/2 fanth_dq + 2 ammo1 - 2 ammo1 - 5/2 ammo2                                       delta = 7/2
-ammo2 = -7/5 tr - 7/10 mpa2 - 7/5 anth + 3/5 ammo1 - 3/5 ammo1 - 2/5 ammo2                   delta = 7/5
-ammo2 = -7/2 + 7/2 anth + 7/2 mpa2 + 7/2 ged_dqf2 - 3/2 ammo1 + 3/2 ammo1 + 1 ammo2           delta = 7/2
+ammo2 = -7/5 tr - 7/10 mpa  - 7/5 anth + 3/5 ammo1 - 3/5 ammo1 - 2/5 ammo2                  delta = 7/5
+ammo2 = -7/2 + 7/2 anth + 7/2 mpa  + 7/2 ged_dqf  - 3/2 ammo1 + 3/2 ammo1 + 1 ammo2         delta = 7/2
 ammo2 =      - 7/2 fanth_dq - 3/2 ammo1 - 2 ammo1 - 5/2 ammo2                               delta = 7/2
 ammo2 = -7/5 + 7/5 fanth_dq + 3/5 ammo1 + 4/5 ammo1 + 1 ammo2                               delta = 7/5
 end_limits
@@ -10088,24 +9691,24 @@ end_limits
 5                            | 5 dependent endmembers 
 
 ftr   = 1 tr + 2 fanth_dq - 1 ammo1 - 1 ammo2
-fpa   = 1 mpa2 + 1/2 fanth_dq + 1/2 ammo2 - 1 anth
-fged  = 1 ged_dqf2 - 1 anth + 1 ammo2
+fpa   = 1 mpa  + 1/2 fanth_dq + 1/2 ammo2 - 1 anth
+fged  = 1 ged_dqf  - 1 anth + 1 ammo2
 fgl   = 1 ogl_dqf +  1 fanth_dq - 1 ammo1
 frb   = 1 omrb_dqf + 1 fanth_dq - 1 ammo1
 
 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0  1 1 1 1 1 1 1 1 1 1 1 1    | endmember flags.
 
-0. 1.0 0.1  0              | range and resolution for X(Mg) on site 1, imod = 0 -> cartesian subdivision
+0. 1.  .1  0              | range and resolution for X(Mg) on site 1, imod = 0 -> cartesian subdivision
 
 0. 1.  .1  0               | range and resolution for X(tr) on site 2, imod = 0 -> cartesian subdivision
 0. 1.  .1  0               | range and resolution for X(pa) on site 2, imod = 0 -> cartesian subdivision 
-0. 1.  .1  0               | range and resolution for X(ged_dqf2) on site 2, imod = 0 -> cartesian subdivision
+0. 1.  .1  0               | range and resolution for X(ged_dqf ) on site 2, imod = 0 -> cartesian subdivision
 0. 1.  .1  0               | range and resolution for X(ogl_dqf) on site 2, imod = 0 -> cartesian subdivision
 0. 1.  .1  0               | range and resolution for X(anth) on site 2, imod = 0 -> cartesian subdivision
 
 begin_excess_function
-W(anth ged_dqf2)      25d3  0  0
-W(anth mpa2)          25d3  0  0
+W(anth ged_dqf )      25d3  0  0
+W(anth mpa )          25d3  0  0
 W(anth ogl_dqf)       65d3  0  0
 W(anth tr)            45d3  0  0
 W(anth fanth_dq)      33d3  0  0
@@ -10113,20 +9716,20 @@ W(anth omrb_dqf)      52d3  0  0
 W(anth ammo1)         18d3  0  0
 W(anth ammo2)         23d3  0  0
 
-W(ged_dqf2 mpa2)          -40d3  0  0
-W(ged_dqf2 ogl_dqf)        25d3  0  0
-W(ged_dqf2 tr)             70d3  0  0
-W(ged_dqf2 fanth_dq)     38.5d3  0  0
-W(ged_dqf2 omrb_dqf)       20d3  0  0 
-W(ged_dqf2 ammo1)          29d3  0  0
-W(ged_dqf2 ammo2)        34.6d3  0  0
+W(ged_dqf  mpa )          -40d3  0  0
+W(ged_dqf  ogl_dqf)        25d3  0  0
+W(ged_dqf  tr)             70d3  0  0
+W(ged_dqf  fanth_dq)     38.5d3  0  0
+W(ged_dqf  omrb_dqf)       20d3  0  0 
+W(ged_dqf  ammo1)          29d3  0  0
+W(ged_dqf  ammo2)        34.6d3  0  0
 
-W(mpa2 ogl_dqf)       50d3  0  0
-W(mpa2 tr)            90d3  0  0
-W(mpa2 fanth_dq)      45d3  0  0
-W(mpa2 omrb_dqf)      40d3  0  0 
-W(mpa2 ammo1)       33.2d3  0  0
-W(mpa2 ammo2)         36d3  0  0
+W(mpa  ogl_dqf)       50d3  0  0
+W(mpa  tr)            90d3  0  0
+W(mpa  fanth_dq)      45d3  0  0
+W(mpa  omrb_dqf)      40d3  0  0 
+W(mpa  ammo1)       33.2d3  0  0
+W(mpa  ammo2)         36d3  0  0
 
 W(ogl_dqf tr)            65d3  0  0
 W(ogl_dqf fanth_dq)    81.2d3  0  0
@@ -10151,28 +9754,28 @@ end_excess_function
 5                          | 5 site (A, M1, M2, M4, T1) entropy model 
 
 2 1.                       | 2 species on A (V, Na), 1 site per formula unit.
-z(A,Na)    = 1 mpa2 
+z(A,Na)    = 1 mpa  
               
 2 1.                       | 2 species on T1, fake site multiplicity of 1.
-z(T1,Al)   = 1/2 ged_dqf2 + 1/2 mpa2 
+z(T1,Al)   = 1/2 ged_dqf  + 1/2 mpa  
 
 2 3.                       | 2 species on M1, 3 sites per formula unit
 z(m1,fe)   = 1 fanth_dq + 1 ammo2
 
 4 2.                       | 4 species on M2, 2 sites pfu
 z(m2,fe)   = 1 fanth_dq + 1 ammo1
-z(m2,al)   = 1 ged_dqf2 + 1/2 mpa2  + 1 ogl_dqf  
+z(m2,al)   = 1 ged_dqf  + 1/2 mpa   + 1 ogl_dqf  
 z(m2,fe3+) = 1 omrb_dqf 
 
 4 2.                       | 4 species on M4, 2 sites pfu
 z(m4,ca)   = 1 tr      
-z(m4,mg)   = 1 mpa2     + 1 anth + 1 ged_dqf2
+z(m4,mg)   = 1 mpa      + 1 anth + 1 ged_dqf 
 z(m4,na)   = 1 ogl_dqf + 1 omrb_dqf 
 
 begin_van_laar_sizes                        
 alpha(tr)          1.0    0.    0.                      
-alpha(ged_dqf2)    1.5    0.    0.                      
-alpha(mpa2)        1.7    0.    0.
+alpha(ged_dqf )    1.5    0.    0.                      
+alpha(mpa )        1.7    0.    0.
 alpha(ogl_dqf)     0.8    0.    0.
 alpha(anth)        1.0    0.    0.
 alpha(fanth_dq)    1.0    0.    0.
@@ -11373,17 +10976,9 @@ begin_model
                                   the ilm endmember, additionally the following make definitions must be
                                   present in the thermodynamic file.
 
-                                  oilm = 1 ilm_nol 
-                                        | -13608 9.426 0 => the TC DQF coeffecients added to
-                                        | smax*tc0*(q0^2-1/3*q0^6), -smax*q0^2, vmax*q0^2, respectively, yields
-                                        | the un-landaued DQF coefficients for Perple_X, numeric values here 
-                                        | are for hp02/hp04 thermodynamic data files. hp11 has slightly different
-                                        | values. 
-                                         189.27763 -.67412637 .1836386612d-1  
-                     
                                   dilm = 1 ilm_nol  
                                         | 1993  -2.1 0 => the TC DQF coeffecients, the values below are
-                                        | oilm + {DH,R*ln(4),0} 
+                                        | smax*tc0*(q0^2-1/3*q0^6), -smax*q0^2, vmax*q0^2 + {DH,R*ln(4),0} 
                                          15789.27763 -12.19977769  .1836386612d-1
 
                                   The ilm and ilm_nol endmembers should be excluded from calculations

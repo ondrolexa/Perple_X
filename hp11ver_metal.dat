@@ -62,19 +62,15 @@ parg_dqf = 1 parg
 15000. 0. 0. 
 gl_dqf = 1 gl 
 3000. 0. 0. 
-mpa = 1 parg -1 tr 1 anth 
-27d3 0. 0. 
-ged_dqf = 1 ged 
-22000. 0. 0. 
 ogl_dqf = 1 gl 
 15000. 0. 0. 
 fanth_dq = 1 fanth 
 7000. 0. 0. 
 omrb_dqf = 1 gl -2 jd 2 acm 
 33000. 0. 0. 
-mpa2 = 1 parg -1 tr 1 anth 
+mpa  = 1 parg -1 tr 1 anth 
 25d3 0. 0. 
-ged_dqf2 = 1 ged 
+ged_dqf  = 1 ged 
 20000. 0. 0. 
 coma = 3 ab 1 cc 
 25000. 0. 0. 

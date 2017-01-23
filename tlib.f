@@ -19,7 +19,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a)') 
-     *      'Perple_X version 6.7.6, source updated Jan 23, 2017.'
+     *      'Perple_X version 6.7.6, source updated Jan 24, 2017.'
 
       end
 
@@ -332,7 +332,13 @@ c                                 hyb_h2o - eos to be used for pure h2o, 0-2, 4-
 c                                 hyb_co2 - eos to be used for pure co2, 0-4
       iopt(26) = 4
 c                                 hyb_ch4 - eos to be used for pure ch4, 0-1
-      iopt(27) = 1     
+      iopt(27) = 1   
+c                                 
+c     iopt(28-30)                 reserved as debug options iop_28 - iop_30
+
+c                                 refinement strategy, 0 - safe, 1 - moderate, 2 - agressive
+      iopt(31) = 1
+      valu(31) = 'mod'
 c                                 -------------------------------------
 c                                 werami output options:
 
@@ -545,6 +551,18 @@ c                                 seismic data output WERAMI/MEEMUM/FRENDLY
                 iopt(14) = 2
              else
                 valu(14) = 'som'
+             end if
+
+         else if (key.eq.'refinement') then 
+c                                 reach_increment_switch
+             valu(31) = val
+
+             if (val.eq.'saf') then 
+                iopt(31) = 0
+             else if (val.eq.'mod') then
+                iopt(31) = 1
+             else if (val.eq.'agg') then 
+                iopt(31) = 2
              end if 
 
          else if (key.eq.'reach_increment_switch') then 
@@ -1205,6 +1223,7 @@ c                                 for meemum
             if (iopt(6).ne.0) write (n,1170) nopt(17)
 c                                 adaptive optimization
             write (n,1180) rid(2,1),rid(2,2),int(nopt(21)),iopt(12),k5,
+     *                     valu(31), 
      *                     nopt(25),int(nopt(23)),valu(20),
      *                     nopt(9),nopt(11)
 c                                 gridding parameters
@@ -1383,6 +1402,8 @@ c                                 thermo options for frendly
      *           '>2 [3]; iteration keyword value 1',/,
      *        4x,'refinement points      ',i2,9x,
      *           '1->',i,' [4]; iteration keyword value 2',/,
+     *        4x,'refinement             ',a3,8x,'safe [moderate] ',
+     *           'agressive',/,
      *        4x,'solvus_tolerance_II    ',f4.2,7x,'0->1 [0.25]',/,
      *        4x,'global_reach_increment ',i2,9x,'>= 0 [0]',/,
      *        4x,'reach_increment_switch ',a3,8x,'[on] off all',/,
@@ -2141,7 +2162,7 @@ c---------------------------------------------------------------------
      *           'in perplex_option.dat')   
 413   format (2x,'- simplify the calculation, e.g., eliminate ',
      *           'components and/or simplify solution models')
-414   format (2x,'- increase dimension k24 (',i7,') and recompile ',
+414   format (2x,'- increase dimension k24 (',i,') and recompile ',
      *           'Perple_X')
 42    format (/,'**error ver042** cannot open file:',a,/,'check that it'
      *       ,' is not being used by another program',/)
@@ -2152,13 +2173,13 @@ c---------------------------------------------------------------------
      *        /)
 45    format (/,'**error ver045** too many mobile components.'/)
 46    format (/,'**error ver046** the first value of the iteration ',
-     *          'keyword exceeds (',i3,') the value',/,'of MRES (',i3,
+     *          'keyword exceeds (',i,') the value',/,'of MRES (',i3,
      *          ') specified in routine ',a,'. Either reduce the',/,
      *          'iteration keyword value or increase MRES.',/) 
 47    format (/,'**error ver047** solution model ',a,' is incorrectly ',
      *        'formatted (van Laar).',/)
 48    format (/,'**error ver048** too many terms in solution model ',a,
-     *        ' increase parameter m1 (',i2,').',/)
+     *        ' increase parameter m1 (',i,').',/)
 49    format (/,'**error ver049** the order of solution model ',a,
      *        ' is too high, increase parameter m2 (',i2,').',/)
 50    format (/,'**error ver050** requested compositional resolution ',
