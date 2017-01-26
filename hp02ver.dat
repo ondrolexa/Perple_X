@@ -229,12 +229,6 @@ kho = 1 py - 1 gr + 1 andr
                                 | modification. NOTE: the ilm and ilm_nol endmembers must be excluded from calculations 
                                 | with the Ilm(WPH) model and the ilm_nol, oilm and dilm must be excluded from calculations 
                                 | without the Ilm(WPH) model. JADC, 6/19/13. 
-oilm = 1 ilm_nol 
-      | -13608 9.426 0 => the TC DQF coeffecients added to
-      | smax*tc0*(q0^2-1/3*q0^6), -smax*q0^2, vmax*q0^2, respectively, yields
-      | the un-landaued DQF coefficients for Perple_X
-       189.27763 -.67412637 .1836386612d-1  
-                     
 dilm = 1 ilm_nol  
       | 1993  -2.1 0 => the TC DQF coeffecients, the values below are
       | oilm + {DH,R*ln(4),0} 

@@ -1,3 +1,99 @@
+      subroutine getmus (iter,ier) 
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer i, ier, ipvt(k5), iter
+
+      double precision comp(k5,k5)
+
+      integer hcp,idv
+      common/ cst52  /hcp,idv(k7) 
+
+      integer jphct
+      double precision g2, cp2
+      common/ cxt12 /g2(k21),cp2(k5,k21),jphct
+
+      double precision a,b,c
+      common/ cst313 /a(k5,k1),b(k5),c(k1)
+
+      double precision mu
+      common/ cst330 /mu(k8)
+
+      integer npt,jdv
+      logical fulrnk
+      double precision cptot,ctotal
+      common/ cst78 /cptot(k5),ctotal,jdv(k19),npt,fulrnk
+c----------------------------------------------------------------------
+
+       if (iter.gt.0) then 
+
+         do i = 1, hcp
+
+            id = jdv(i) 
+
+            do j = 1, hcp 
+               comp(i,j) = cp2(j,id)
+            end do 
+
+            mu(i) = g2(id)
+
+         end do 
+
+      end if 
+
+      call factor (comp,hcp,ipvt,ier)
+
+      if (ier.ne.0) return
+
+      call subst (comp,ipvt,hcp,mu,ier)
+
+      end 
+
+      double precision function deltag (id,iter)
+c----------------------------------------------------------------------
+c return the difference g phase id - g current solution, i.e., < 0 phase
+c id is metastable. 
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer i, iter
+
+      integer hcp,idv
+      common/ cst52  /hcp,idv(k7) 
+
+      integer jphct
+      double precision g2, cp2
+      common/ cxt12 /g2(k21),cp2(k5,k21),jphct
+
+      double precision a,b,c
+      common/ cst313 /a(k5,k1),b(k5),c(k1)
+
+      double precision mu
+      common/ cst330 /mu(k8)
+
+      integer npt,jdv
+      logical fulrnk
+      double precision cptot,ctotal
+      common/ cst78 /cptot(k5),ctotal,jdv(k19),npt,fulrnk
+c----------------------------------------------------------------------
+      if (iter.gt.0) then 
+
+         deltag = g2(id)
+
+         do i = 1, hcp
+
+            deltag = g2(id) - cp2(j,id)*mu(i)
+
+         end do
+
+      end if
+ 
+      end 
+
       subroutine yclos1 (clamda,x,is,jphct,quit)
 c----------------------------------------------------------------------
 c subroutine to identify pseudocompounds close to the solution for 

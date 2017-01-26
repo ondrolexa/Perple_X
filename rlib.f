@@ -10125,7 +10125,6 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-     
       double precision a(k8,k8),d(k8),rmax,tmax,temp,ratio
 
       integer ipvt(k8),i,j,k,ier,ip1,n,istr,nm1
@@ -10136,6 +10135,7 @@ c-----------------------------------------------------------------------
       ier = 0
 c                            initialize ipvt,d
       do i = 1, n
+
          ipvt(i) = i
          rmax = 0d0
 

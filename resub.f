@@ -559,7 +559,7 @@ c                                 implemented).
          end if
 c                                 use the coordinates to compute the composition 
 c                                 of the solution
-         call csol (ids)
+         call csol (ids,iter)
 
          iref = iref + 1
 
@@ -569,7 +569,7 @@ c                                 of the solution
 
       end 
 
-      subroutine csol (id)
+      subroutine csol (id,iter)
 c-----------------------------------------------------------------------
 c csol computes chemical composition of solution id from the macroscopic
 c endmember fraction array y or p0a (cxt7), these arrays are prepared by a prior
@@ -580,9 +580,13 @@ c-----------------------------------------------------------------------
  
       include 'perplex_parameters.h'
 
-      integer i,j,id
+      external deltag
 
-      double precision ctot2
+      integer i,j,id,ibad,iter, ibad1, igood, igood1
+
+      logical bad 
+
+      double precision ctot2, deltag, dg
 c                                 -------------------------------------
 c                                 global variables:
       integer icomp,istct,iphct,icp
@@ -613,6 +617,13 @@ c                                 working arrays
 
       integer lstot,mstot,nstot,ndep,nord
       common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
+
+      logical mus
+      double precision mu
+      common/ cst330 /mu(k8),mus
+
+      data ibad,ibad1,igood,igood1/0,0,0,0/
+      save ibad,ibad1,igood,igood1
 c----------------------------------------------------------------------
 
       ctot2 = 0d0
@@ -645,6 +656,20 @@ c                                 general case (y coordinates)
 
          end do 
          
+      end if
+c DEBUG DEBUG 
+      if (mus) then 
+
+         dg = deltag(jphct,iter)/ctot2
+         if (dg.gt.20d3) then 
+            ibad = ibad + 1
+         else if (dg.gt.1d3) then
+            ibad1 = ibad1 + 1
+         else if (dg.gt.0d0) then 
+            igood = igood + 1
+         else
+            igood1 = igood1 + 1 
+         end if 
       end if 
 c                                  normalize the composition and free energy
       g2(jphct) = g2(jphct)/ctot2
@@ -1895,8 +1920,9 @@ c                                 i/o
       integer io3,io4,io9
       common / cst41 /io3,io4,io9
 
+      logical mus
       double precision mu
-      common/ cst330 /mu(k8)
+      common/ cst330 /mu(k8),mus
 
       integer jtest,jpot
       common/ debug /jtest,jpot
@@ -3492,14 +3518,21 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      external ffirst
+      external ffirst, deltag
 
       integer i, is(*), id, jmin(k19), kmin(k19), opt, kpt, mpt, iter, 
-     *        tic
+     *        tic, ier
 
-      double precision clamda(*), clam(k19), x(*)
+      double precision clamda(*), clam(k19), x(*), dg(k19), deltag
 
       logical stable(k19)
+
+      integer hcp,idv
+      common/ cst52  /hcp,idv(k7)
+
+      logical mus
+      double precision mu
+      common/ cst330 /mu(k8),mus
 
       integer iopt
       logical lopt
@@ -3546,6 +3579,8 @@ c                                 solution.
       mpt = 0 
       kpt = 0
 
+      mus = .true. 
+
       do i = 1, jphct
 c                                 id indicates the original refinement
 c                                 point.
@@ -3576,7 +3611,21 @@ c                                 as they hardly cost anything.
 
          end if 
 
-      end do 
+      end do
+c DEBUG DEBUG 
+      if (npt.eq.hcp) then 
+
+         call getmus (iter,ier)
+
+         if (ier.ne.0) mus = .false. 
+
+      else
+
+           write (*,*) ' ugga wugga'
+
+           mus = .false. 
+
+      end if 
 
       if (iter.le.iopt(10)) then
 c                                 if not done iterating, add the metastable
@@ -3585,6 +3634,14 @@ c                                 phases, first the compounds:
             npt = npt + 1 
             jdv(npt) = kmin(i)
          end do 
+c DEBUG DEBUG 
+
+      if (mus) then 
+            do i = 1, npt
+               dg(i) = deltag(jdv(i),iter)
+            end do 
+      end if 
+
 c                                 make a list of the solutions
          kpt = 0 
 
@@ -3599,7 +3656,15 @@ c                                 make a list of the solutions
             kpt = kpt + 1
             jmin(kpt) = jmin(i)
             clam(kpt) = clam(i)
+
          end do
+c DEBUG DEBUG 
+
+         if (mus) then 
+            do i = 1, kpt
+               dg(i) = deltag(jmin(i),iter)
+            end do 
+         end if 
 
          if (kpt.gt.iopt(12).and.iopt(31).gt.0) then 
 c                                 sort if too many
@@ -3662,6 +3727,104 @@ c                                 check zero modes the amounts
 
       end
 
+      subroutine getmus (iter,ier) 
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer i, j, id, ier, ipvt(k8), iter
+
+      double precision comp(k8,k8)
+
+      integer hcp,idv
+      common/ cst52  /hcp,idv(k7) 
+
+      integer jphct
+      double precision g2, cp2
+      common/ cxt12 /g2(k21),cp2(k5,k21),jphct
+
+      double precision a,b,c
+      common/ cst313 /a(k5,k1),b(k5),c(k1)
+
+      logical mus
+      double precision mu
+      common/ cst330 /mu(k8),mus
+
+      integer npt,jdv
+      logical fulrnk
+      double precision cptot,ctotal
+      common/ cst78 /cptot(k5),ctotal,jdv(k19),npt,fulrnk
+c----------------------------------------------------------------------
+
+       if (iter.gt.0) then 
+
+         do i = 1, hcp
+
+            id = jdv(i) 
+
+            do j = 1, hcp 
+               comp(i,j) = cp2(j,id)
+            end do 
+
+            mu(i) = g2(id)
+
+         end do 
+
+      end if 
+
+      call factor (comp,hcp,ipvt,ier)
+
+      if (ier.ne.0) return
+
+      call subst (comp,ipvt,hcp,mu,ier)
+
+      end 
+
+      double precision function deltag (id,iter)
+c----------------------------------------------------------------------
+c return the difference g phase id - g current solution, i.e., < 0 phase
+c id is metastable. 
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer i, id, iter
+
+      integer hcp,idv
+      common/ cst52  /hcp,idv(k7) 
+
+      integer jphct
+      double precision g2, cp2
+      common/ cxt12 /g2(k21),cp2(k5,k21),jphct
+
+      double precision a,b,c
+      common/ cst313 /a(k5,k1),b(k5),c(k1)
+
+      logical mus
+      double precision mu
+      common/ cst330 /mu(k8),mus
+
+      integer npt,jdv
+      logical fulrnk
+      double precision cptot,ctotal
+      common/ cst78 /cptot(k5),ctotal,jdv(k19),npt,fulrnk
+c----------------------------------------------------------------------
+      if (iter.gt.0) then 
+
+         deltag = g2(id)
+
+         do i = 1, hcp
+
+            deltag = deltag - cp2(i,id)*mu(i)
+
+         end do
+
+      end if
+ 
+      end 
+
       subroutine rebulk (static)
 c----------------------------------------------------------------------
 c upon successful completion of an optimization with either static or
@@ -3722,8 +3885,9 @@ c                                 hcp is different from icp only if usv
       integer hcp,idv
       common/ cst52  /hcp,idv(k7) 
 
+      logical mus
       double precision mu
-      common/ cst330 /mu(k8)
+      common/ cst330 /mu(k8),mus
 
       integer jtest,jpot
       common/ debug /jtest,jpot

@@ -191,12 +191,7 @@ kho = 1 py - 1 gr + 1 andr
                                 | Corrected coeffiecients for TC un-landau, formerly, the TC DQF was used without
                                 | modification. NOTE: the ilm and ilm_nol endmembers must be excluded from calculations 
                                 | with the Ilm(WPH) model and the ilm_nol, oilm and dilm must be excluded from calculations 
-                                | without the Ilm(WPH) model. JADC, 6/19/11. 
-oilm = 1 ilm_nol 
-                                | -13608 9.426 0 => the TC DQF coeffecients added to
-                                | smax*tc0*(q0^2-1/3*q0^6) = unlan, -smax*q0^2, vmax*q0^2, respectively, yields
-                                | the un-landaued DQF coefficients for Perple_X
-       DQF(J/mol) = 1443.57559 -1.59231967  .1836386612e-1
+                                | without the Ilm(WPH) model. JADC, 6/19/11.
 dilm = 1 ilm_nol  
                                 | 1993  -2.1 0 => the TC DQF coeffecients, the values below are
                                 | oilm + {DH,R*ln(4),0} 
