@@ -1687,7 +1687,7 @@ c-----------------------------------------------------------------------
       integer npt,jdv
       logical fulrnk
       double precision cptot,ctotal
-      common/ cst78 /cptot(k5),ctotal,jdv(k19),npt,fulrnk
+      common/ cst78 /cptot(k19),ctotal,jdv(k19),npt,fulrnk
 
       double precision a,b,c
       common/ cst313 /a(k5,k1),b(k5),c(k1)
@@ -1903,7 +1903,7 @@ c                                 refined compositions and solution
 c                                 pointer
       integer kkp,np,ncpd,ntot
       double precision cp3,amt
-      common/ cxt15 /cp3(k0,k5),amt(k5),kkp(k5),np,ncpd,ntot
+      common/ cxt15 /cp3(k0,k19),amt(k19),kkp(k19),np,ncpd,ntot
 
       logical lorder, lexces, llaar, lrecip
       common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
@@ -1920,7 +1920,7 @@ c                                 pointer
       integer npt,jdv
       logical fulrnk
       double precision cptot,ctotal
-      common/ cst78 /cptot(k5),ctotal,jdv(k19),npt,fulrnk
+      common/ cst78 /cptot(k19),ctotal,jdv(k19),npt,fulrnk
 c----------------------------------------------------------------------
 
       kkp(jd) = ids

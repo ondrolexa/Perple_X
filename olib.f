@@ -35,9 +35,9 @@ c----------------------------------------------------------------------
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
-      integer kkp, np, ncpd, ntot
-      double precision cp3, amt
-      common/ cxt15 /cp3(k0,k5),amt(k5),kkp(k5),np,ncpd,ntot
+      integer kkp,np,ncpd,ntot
+      double precision cp3,amt
+      common/ cxt15 /cp3(k0,k19),amt(k19),kkp(k19),np,ncpd,ntot
 
       integer jvar
       double precision var,dvr,vmn,vmx
@@ -62,8 +62,9 @@ c----------------------------------------------------------------------
       integer ipot,jv,iv
       common / cst24 /ipot,jv(l2),iv(l2)
 
-      double precision mu
-      common/ cst330 /mu(k8)
+      logical mus
+      double precision mu, gmax
+      common/ cst330 /mu(k8),gmax,mus
 
       integer hcp,idv
       common/ cst52  /hcp,idv(k7) 
@@ -414,9 +415,9 @@ c
       common/ cxt32 /ifp(k10), fp(h9)
 c                                 composition and model flags
 c                                 for final adaptive solution
-      integer kkp, np, ncpd, ntot
-      double precision cp3, amt
-      common/ cxt15 /cp3(k0,k5),amt(k5),kkp(k5),np,ncpd,ntot
+      integer kkp,np,ncpd,ntot
+      double precision cp3,amt
+      common/ cxt15 /cp3(k0,k19),amt(k19),kkp(k19),np,ncpd,ntot
 c                                 x coordinate description
       integer istg, ispg, imlt, imdg
       common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
@@ -457,8 +458,9 @@ c                                 bookkeeping variables
       double precision mus
       common/ cst48 /mus(k8,k2)
 
-      double precision mu
-      common/ cst330 /mu(k8)
+      logical lmu
+      double precision mu, gmax
+      common/ cst330 /mu(k8),gmax,lmu
 
       integer jtest,jpot
       common/ debug /jtest,jpot
@@ -1562,9 +1564,9 @@ c----------------------------------------------------------------------
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
 
-      integer kkp, np, ncpd, ntot
-      double precision cp3, amt
-      common/ cxt15 /cp3(k0,k5),amt(k5),kkp(k5),np,ncpd,ntot
+      integer kkp,np,ncpd,ntot
+      double precision cp3,amt
+      common/ cxt15 /cp3(k0,k19),amt(k19),kkp(k19),np,ncpd,ntot
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -2533,9 +2535,9 @@ c-----------------------------------------------------------------------
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
-      integer kkp, np, ncpd, ntot
-      double precision cp3, amt
-      common/ cxt15 /cp3(k0,k5),amt(k5),kkp(k5),np,ncpd,ntot
+      integer kkp,np,ncpd,ntot
+      double precision cp3,amt
+      common/ cxt15 /cp3(k0,k19),amt(k19),kkp(k19),np,ncpd,ntot
 
       integer iam
       common/ cst4 /iam

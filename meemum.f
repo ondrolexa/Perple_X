@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer npt,jdv
       logical fulrnk
       double precision cptot,ctotal
-      common/ cst78 /cptot(k5),ctotal,jdv(k19),npt,fulrnk
+      common/ cst78 /cptot(k19),ctotal,jdv(k19),npt,fulrnk
 
       double precision atwt
       common/ cst45 /atwt(k0)

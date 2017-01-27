@@ -2350,9 +2350,9 @@ c----------------------------------------------------------------------
       double precision gtot,fbulk,gtot1,fbulk1
       common/ cxt81 /gtot,fbulk(k0),gtot1,fbulk1(k0)
 
-      integer kkp, np, ncpd, ntot
-      double precision cp3, amt
-      common/ cxt15 /cp3(k0,k5),amt(k5),kkp(k5),np,ncpd,ntot
+      integer kkp,np,ncpd,ntot
+      double precision cp3,amt
+      common/ cxt15 /cp3(k0,k19),amt(k19),kkp(k19),np,ncpd,ntot
 c----------------------------------------------------------------------
 c                                 initialize
       ntot = iphct

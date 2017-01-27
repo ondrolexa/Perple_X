@@ -282,7 +282,7 @@ c-----------------------------------------------------------------------
       integer npt,jdv
       logical fulrnk
       double precision cptot,ctotal
-      common/ cst78 /cptot(k5),ctotal,jdv(k19),npt,fulrnk
+      common/ cst78 /cptot(k19),ctotal,jdv(k19),npt,fulrnk
 
       character cname*5
       common/ csta4 /cname(k5)
@@ -502,7 +502,7 @@ c-----------------------------------------------------------------------
       integer npt,jdv
       logical fulrnk
       double precision cptot,ctotal
-      common/ cst78 /cptot(k5),ctotal,jdv(k19),npt,fulrnk
+      common/ cst78 /cptot(k19),ctotal,jdv(k19),npt,fulrnk
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
@@ -7363,9 +7363,9 @@ c-----------------------------------------------------------------------
       character*5 cname
       common/ csta4 /cname(k5)
 
-      integer kkp, np, ncpd, ntot
-      double precision cp3, amt
-      common/ cxt15 /cp3(k0,k5),amt(k5),kkp(k5),np,ncpd,ntot
+      integer kkp,np,ncpd,ntot
+      double precision cp3,amt
+      common/ cxt15 /cp3(k0,k19),amt(k19),kkp(k19),np,ncpd,ntot
 
       integer iopt
       logical lopt

@@ -1129,9 +1129,9 @@ c----------------------------------------------------------------
       double precision var,dvr,vmn,vmx
       common/ cxt18 /var(l3),dvr(l3),vmn(l3),vmx(l3),jvar
 
-      integer kkp, np, ncpd, ntot
-      double precision cp3, amt
-      common/ cxt15 /cp3(k0,k5),amt(k5),kkp(k5),np,ncpd,ntot
+      integer kkp,np,ncpd,ntot
+      double precision cp3,amt
+      common/ cxt15 /cp3(k0,k19),amt(k19),kkp(k19),np,ncpd,ntot
 c----------------------------------------------------------------------
       write (*,1000) vnm(1),var(1),vnm(2),var(2),nopt(7)
 c                                 for phemgp format:
@@ -1182,9 +1182,9 @@ c----------------------------------------------------------------------
       integer ivar,ind,ichem
       common/ cst83 /ivar,ind,ichem
 
-      integer kkp, np, ncpd, ntot
-      double precision cp3, amt
-      common/ cxt15 /cp3(k0,k5),amt(k5),kkp(k5),np,ncpd,ntot
+      integer kkp,np,ncpd,ntot
+      double precision cp3,amt
+      common/ cxt15 /cp3(k0,k19),amt(k19),kkp(k19),np,ncpd,ntot
 c----------------------------------------------------------------------
       if (kcx(1).eq.999) then 
 c                                 write phemgp format
@@ -3006,9 +3006,9 @@ c----------------------------------------------------------------
       double precision var,dvr,vmn,vmx
       common/ cxt18 /var(l3),dvr(l3),vmn(l3),vmx(l3),jvar
 
-      integer kkp, np, ncpd, ntot
-      double precision cp3, amt
-      common/ cxt15 /cp3(k0,k5),amt(k5),kkp(k5),np,ncpd,ntot
+      integer kkp,np,ncpd,ntot
+      double precision cp3,amt
+      common/ cxt15 /cp3(k0,k19),amt(k19),kkp(k19),np,ncpd,ntot
 
       integer ivar,ind,ichem
       common/ cst83 /ivar,ind,ichem

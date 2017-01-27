@@ -62,7 +62,7 @@ c                                 solution model counter
       integer npt,jdv
       logical fulrnk
       double precision cptot,ctotal
-      common/ cst78 /cptot(k5),ctotal,jdv(k19),npt,fulrnk
+      common/ cst78 /cptot(k19),ctotal,jdv(k19),npt,fulrnk
 
       save ax, x, clamda, w, is, iw
 c-----------------------------------------------------------------------
@@ -197,7 +197,16 @@ c                                 adaptive x(i,j) coordinates
       integer npt,jdv
       logical fulrnk
       double precision cptot,ctotal
-      common/ cst78 /cptot(k5),ctotal,jdv(k19),npt,fulrnk
+      common/ cst78 /cptot(k19),ctotal,jdv(k19),npt,fulrnk
+
+      integer jcount
+      logical switch
+      double precision number 
+      common/ debug /jcount(10),switch(10)
+
+      logical mus
+      double precision mu, gmax
+      common/ cst330 /mu(k8),gmax,mus
 c-----------------------------------------------------------------------
 c                                 the pseudocompounds to be refined
 c                                 are identified in jdv(1..npt)
@@ -278,6 +287,12 @@ c                                 the xcoor array.
          jcoct = 1
 
          first = .true.
+
+         switch(1) = .true.
+         jcount(3) = 0
+         jcount(4) = 0
+         write (*,*) 'iter =',iter,' gmax =', gmax
+
 c                                 generate new pseudocompounds
          do i = 1, npt
 
@@ -304,6 +319,14 @@ c                                 reset jdv in case of exit
             jdv(i) = i 
 
          end do 
+
+c        if (switch(1)) then  
+
+            write (*,*) 'igoodt =',jcount(4),' ibadt =',jcount(3)
+            write (*,*) 1d2*jcount(4)/(jcount(4)+jcount(3))
+            jcount(5) = jcount(5) + jcount(3)
+            jcount(6) = jcount(6) + jcount(4)
+c        end if 
 
       end do 
 
@@ -380,6 +403,15 @@ c                                 option values
       integer ineg
       common/ cst91 /ineg(h9,m15)
 
+      integer jcount
+      logical switch
+      double precision number 
+      common/ debug /jcount(10),switch(10)
+
+      logical mus
+      double precision mu, gmax
+      common/ cst330 /mu(k8),gmax,mus
+
       save last 
 c----------------------------------------------------------------------
 
@@ -453,7 +485,10 @@ c                                 to allow hardlimits. JADC
 
          end do 
       end do
-                            
+
+      jcount(1) = 0d0
+      jcount(2) = 0d0 
+
       call subdiv (ids,.true.)
 
       do 10 i = 1, ntot
@@ -559,17 +594,32 @@ c                                 implemented).
          end if
 c                                 use the coordinates to compute the composition 
 c                                 of the solution
-         call csol (ids,iter)
+         call csol (ids,iter,bad)
+
+         if (bad) then 
+               jphct = jphct - 1
+               jcoct = jcoct - ncoor(ids)
+               cycle
+         end if
 
          iref = iref + 1
 
 10    continue
 
+
+      if (switch(1)) then  
+            write (*,*) 'igood =',jcount(2),' ibad =',jcount(1)
+            write (*,*) 'ids =',ids
+            write (*,*) 1d2*jcount(2)/(jcount(2)+jcount(1))
+            jcount(3) = jcount(3) + jcount(1)
+            jcount(4) = jcount(4) + jcount(2)
+      end if 
+
       first = .false.
 
       end 
 
-      subroutine csol (id,iter)
+      subroutine csol (id,iter,bad)
 c-----------------------------------------------------------------------
 c csol computes chemical composition of solution id from the macroscopic
 c endmember fraction array y or p0a (cxt7), these arrays are prepared by a prior
@@ -582,8 +632,7 @@ c-----------------------------------------------------------------------
 
       external deltag
 
-      integer i,j,id,ibad,iter, ibad1, igood, igood1
-
+      integer i,j,id,iter
       logical bad 
 
       double precision ctot2, deltag, dg
@@ -619,11 +668,13 @@ c                                 working arrays
       common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
 
       logical mus
-      double precision mu
-      common/ cst330 /mu(k8),mus
+      double precision mu, gmax
+      common/ cst330 /mu(k8),gmax,mus
 
-      data ibad,ibad1,igood,igood1/0,0,0,0/
-      save ibad,ibad1,igood,igood1
+      integer jcount
+      logical switch
+      double precision number 
+      common/ debug /jcount(10),switch(10)
 c----------------------------------------------------------------------
 
       ctot2 = 0d0
@@ -658,18 +709,20 @@ c                                 general case (y coordinates)
          
       end if
 c DEBUG DEBUG 
+
+      bad = .false. 
+
       if (mus) then 
 
          dg = deltag(jphct,iter)/ctot2
-         if (dg.gt.20d3) then 
-            ibad = ibad + 1
-         else if (dg.gt.1d3) then
-            ibad1 = ibad1 + 1
-         else if (dg.gt.0d0) then 
-            igood = igood + 1
+
+         if (dg.gt.gmax) then 
+            bad = .true.
+            jcount(1) = jcount(1) + 1
          else
-            igood1 = igood1 + 1 
+            jcount(2) = jcount(2) + 1 
          end if 
+
       end if 
 c                                  normalize the composition and free energy
       g2(jphct) = g2(jphct)/ctot2
@@ -693,7 +746,7 @@ c-----------------------------------------------------------------------
       integer npt,jdv
       logical fulrnk
       double precision cptot,ctotal
-      common/ cst78 /cptot(k5),ctotal,jdv(k19),npt,fulrnk
+      common/ cst78 /cptot(k19),ctotal,jdv(k19),npt,fulrnk
 
       do j = 1, npt-1
 
@@ -786,7 +839,7 @@ c                                 x coordinate description
       integer npt,jdv
       logical fulrnk
       double precision cptot,ctotal
-      common/ cst78 /cptot(k5),ctotal,jdv(k19),npt,fulrnk
+      common/ cst78 /cptot(k19),ctotal,jdv(k19),npt,fulrnk
 c----------------------------------------------------------------------
       kcoct = 0
 
@@ -911,8 +964,8 @@ c-----------------------------------------------------------------------
 c                                 composition and model flags
 c                                 for final adaptive solution
       integer kkp,np,ncpd,ntot
-      double precision cp3, amt
-      common/ cxt15 /cp3(k0,k5),amt(k5),kkp(k5),np,ncpd,ntot
+      double precision cp3,amt
+      common/ cxt15 /cp3(k0,k19),amt(k19),kkp(k19),np,ncpd,ntot
 c-----------------------------------------------------------------------
       solvs1 = .false.
 
@@ -1000,9 +1053,9 @@ c                                 x coordinate description
       common/ cst57 /dcp(k5,k19),soltol
 c                                 composition and model flags
 c                                 for final adaptive solution
-      integer kkp, np, ncpd, ntot
-      double precision cp3, amt
-      common/ cxt15 /cp3(k0,k5),amt(k5),kkp(k5),np,ncpd,ntot
+      integer kkp,np,ncpd,ntot
+      double precision cp3,amt
+      common/ cxt15 /cp3(k0,k19),amt(k19),kkp(k19),np,ncpd,ntot
 c                                  x-coordinates for the final solution
       double precision x3
       common/ cxt16 /x3(k21,mst,msp)
@@ -1025,7 +1078,7 @@ c                                  x-coordinates for the final solution
       integer npt,jdv
       logical fulrnk
       double precision cptot,ctotal
-      common/ cst78 /cptot(k5),ctotal,jdv(k19),npt,fulrnk
+      common/ cst78 /cptot(k19),ctotal,jdv(k19),npt,fulrnk
 
       logical usv
       integer pindex,tindex
@@ -1733,9 +1786,9 @@ c                                 x-coordinates for the final solution
       common/ cst75  /idasls(k5,k3),iavar(3,k3),iasct,ias
 c                                 composition and model flags
 c                                 for final adaptive solution
-      integer kkp, np, ncpd, ntot
-      double precision cp3, amt
-      common/ cxt15 /cp3(k0,k5),amt(k5),kkp(k5),np,ncpd,ntot
+      integer kkp,np,ncpd,ntot
+      double precision cp3,amt
+      common/ cxt15 /cp3(k0,k19),amt(k19),kkp(k19),np,ncpd,ntot
 c                                 x coordinate description
       integer istg, ispg, imlt, imdg
       common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
@@ -1746,7 +1799,7 @@ c                                 x coordinate description
       integer npt,jdv
       logical fulrnk
       double precision cptot,ctotal
-      common/ cst78 /cptot(k5),ctotal,jdv(k19),npt,fulrnk
+      common/ cst78 /cptot(k19),ctotal,jdv(k19),npt,fulrnk
 c----------------------------------------------------------------------
 c                                 look for a match with known assemblages
       match = .false.
@@ -1907,9 +1960,9 @@ c                                 global variables
       common/ cst74  /iap(k2),ibulk
 c                                 composition and model flags
 c                                 for final adaptive solution
-      integer kkp, np, ncpd, ntot
-      double precision cp3, amt
-      common/ cxt15 /cp3(k0,k5),amt(k5),kkp(k5),np,ncpd,ntot
+      integer kkp,np,ncpd,ntot
+      double precision cp3,amt
+      common/ cxt15 /cp3(k0,k19),amt(k19),kkp(k19),np,ncpd,ntot
 c                                 x-coordinates for the final solution
       double precision x3
       common/ cxt16 /x3(k21,mst,msp)
@@ -1921,8 +1974,8 @@ c                                 i/o
       common / cst41 /io3,io4,io9
 
       logical mus
-      double precision mu
-      common/ cst330 /mu(k8),mus
+      double precision mu, gmax
+      common/ cst330 /mu(k8),gmax,mus
 
       integer jtest,jpot
       common/ debug /jtest,jpot
@@ -1974,6 +2027,9 @@ c----------------------------------------------------------------------
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
 
+      double precision wmach(9)
+      common /ax02za/wmach
+
       integer iopt
       logical lopt
       double precision nopt
@@ -1988,19 +2044,24 @@ c----------------------------------------------------------------------
       integer ikp
       common/ cst61 /ikp(k1)
 
-      integer kkp, np, ncpd, ntot
-      double precision cp3, amt
-      common/ cxt15 /cp3(k0,k5),amt(k5),kkp(k5),np,ncpd,ntot
+      integer kkp,np,ncpd,ntot
+      double precision cp3,amt
+      common/ cxt15 /cp3(k0,k19),amt(k19),kkp(k19),np,ncpd,ntot
 
       integer npt,jdv
       logical fulrnk
       double precision cptot,ctotal
-      common/ cst78 /cptot(k5),ctotal,jdv(k19),npt,fulrnk
+      common/ cst78 /cptot(k19),ctotal,jdv(k19),npt,fulrnk
+
+      logical mus
+      double precision mu, gmax
+      common/ cst330 /mu(k8),gmax,mus
 c----------------------------------------------------------------------
       npt = 0 
       nsol = 0
       inc = istct - 1
 
+      mus = .false.
       quit = .true.
 c                                 solvus_tolerance_II, 0.25
       soltol = nopt(25)
@@ -2056,7 +2117,8 @@ c                                 phases, this list includes two compounds
 c                                 and the least metastable composition of
 c                                 each solution.      
       do 20 i = 1, jphct
-
+c DEBUG
+         if (is(i).ne.1.or.clamda(i).lt.wmach(3)) cycle 
          if (is(i).ne.1) cycle 
 
          id = i + inc 
@@ -2709,7 +2771,7 @@ c---------------------------------------------------------------------
       integer npt,jdv
       logical fulrnk
       double precision cptot,ctotal
-      common/ cst78 /cptot(k5),ctotal,jdv(k19),npt,fulrnk
+      common/ cst78 /cptot(k19),ctotal,jdv(k19),npt,fulrnk
 
       integer ipoint,kphct,imyn
       common/ cst60  /ipoint,kphct,imyn
@@ -3288,14 +3350,14 @@ c----------------------------------------------------------------------
       double precision x(*)
 c                                 compositions of stable adaptive
 c                                 coordinates (and solution ids).
-      integer kkp, np, ncpd, ntot
-      double precision cp3, amt
-      common/ cxt15 /cp3(k0,k5),amt(k5),kkp(k5),np,ncpd,ntot
+      integer kkp,np,ncpd,ntot
+      double precision cp3,amt
+      common/ cxt15 /cp3(k0,k19),amt(k19),kkp(k19),np,ncpd,ntot
 
       integer npt,jdv
       logical fulrnk
       double precision cptot,ctotal
-      common/ cst78 /cptot(k5),ctotal,jdv(k19),npt,fulrnk
+      common/ cst78 /cptot(k19),ctotal,jdv(k19),npt,fulrnk
 
       integer iopt
       logical lopt
@@ -3531,8 +3593,11 @@ c----------------------------------------------------------------------
       common/ cst52  /hcp,idv(k7)
 
       logical mus
-      double precision mu
-      common/ cst330 /mu(k8),mus
+      double precision mu, gmax
+      common/ cst330 /mu(k8),gmax,mus
+
+      double precision wmach(9)
+      common /ax02za/wmach
 
       integer iopt
       logical lopt
@@ -3549,14 +3614,14 @@ c----------------------------------------------------------------------
       integer npt,jdv
       logical fulrnk
       double precision cptot,ctotal
-      common/ cst78 /cptot(k5),ctotal,jdv(k19),npt,fulrnk
+      common/ cst78 /cptot(k19),ctotal,jdv(k19),npt,fulrnk
 
       integer hkp,mkp
       common/ cst72 /hkp(k21),mkp(k19)
 
-      integer kkp, np, ncpd, ntot
-      double precision cp3, amt
-      common/ cxt15 /cp3(k0,k5),amt(k5),kkp(k5),np,ncpd,ntot
+      integer kkp,np,ncpd,ntot
+      double precision cp3,amt
+      common/ cxt15 /cp3(k0,k19),amt(k19),kkp(k19),np,ncpd,ntot
 
       integer jcoct, jcoor, jkp
       double precision zcoor
@@ -3592,7 +3657,9 @@ c                                 a stable point, add to list
             jdv(npt) = i
             stable(id) = .true.
 
-         else if (clamda(i).lt.clam(id)) then 
+         else if (clamda(i).lt.clam(id)) then
+c DEBUG
+c            if (clamda(i).lt.wmach(3)) cycle 
 
             if (jkp(id).gt.0) then
 c                                 it's a solution, keep the  
@@ -3675,12 +3742,20 @@ c                                 sort if too many
 
          end if 
 
+         gmax = 1d-5
+
          do i = 1, kpt
 
            npt = npt + 1
            jdv(npt) = jmin(i)
+           if (mus) then
+              dg(i) = deltag(jmin(i),iter)
+              if (dg(i).gt.gmax) gmax = dg(i)
+           end if 
 
          end do 
+
+         gmax = gmax/1d0
 c                                 sort the phases, this is only necessary if
 c                                 metastable phases have been added
          call sortin
@@ -3748,13 +3823,13 @@ c----------------------------------------------------------------------
       common/ cst313 /a(k5,k1),b(k5),c(k1)
 
       logical mus
-      double precision mu
-      common/ cst330 /mu(k8),mus
+      double precision mu, gmax
+      common/ cst330 /mu(k8),gmax,mus
 
       integer npt,jdv
       logical fulrnk
       double precision cptot,ctotal
-      common/ cst78 /cptot(k5),ctotal,jdv(k19),npt,fulrnk
+      common/ cst78 /cptot(k19),ctotal,jdv(k19),npt,fulrnk
 c----------------------------------------------------------------------
 
        if (iter.gt.0) then 
@@ -3803,13 +3878,13 @@ c----------------------------------------------------------------------
       common/ cst313 /a(k5,k1),b(k5),c(k1)
 
       logical mus
-      double precision mu
-      common/ cst330 /mu(k8),mus
+      double precision mu, gmax
+      common/ cst330 /mu(k8),gmax,mus
 
       integer npt,jdv
       logical fulrnk
       double precision cptot,ctotal
-      common/ cst78 /cptot(k5),ctotal,jdv(k19),npt,fulrnk
+      common/ cst78 /cptot(k19),ctotal,jdv(k19),npt,fulrnk
 c----------------------------------------------------------------------
       if (iter.gt.0) then 
 
@@ -3864,7 +3939,7 @@ c                                 compositions of stable adaptive
 c                                 coordinates (and solution ids).
       integer kkp,np,ncpd,ntot
       double precision cp3,amt
-      common/ cxt15 /cp3(k0,k5),amt(k5),kkp(k5),np,ncpd,ntot
+      common/ cxt15 /cp3(k0,k19),amt(k19),kkp(k19),np,ncpd,ntot
 c                                 options from perplex_option.dat
       integer iopt
       logical lopt
@@ -3877,7 +3952,7 @@ c                                 options from perplex_option.dat
       integer npt,jdv
       logical fulrnk
       double precision cptot,ctotal
-      common/ cst78 /cptot(k5),ctotal,jdv(k19),npt,fulrnk
+      common/ cst78 /cptot(k19),ctotal,jdv(k19),npt,fulrnk
 
       integer iam,jam,tloop,ploop
       common/ cst55 /iam(k1),jam(k1),tloop,ploop
@@ -3886,8 +3961,8 @@ c                                 hcp is different from icp only if usv
       common/ cst52  /hcp,idv(k7) 
 
       logical mus
-      double precision mu
-      common/ cst330 /mu(k8),mus
+      double precision mu, gmax
+      common/ cst330 /mu(k8),gmax,mus
 
       integer jtest,jpot
       common/ debug /jtest,jpot
