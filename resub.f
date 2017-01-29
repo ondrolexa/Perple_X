@@ -198,7 +198,7 @@ c                                 adaptive x(i,j) coordinates
       logical fulrnk
       double precision cptot,ctotal
       common/ cst78 /cptot(k19),ctotal,jdv(k19),npt,fulrnk
-
+c DEBUG
       integer jcount
       logical switch
       double precision number 
@@ -288,10 +288,11 @@ c                                 the xcoor array.
 
          first = .true.
 
-         switch(1) = .true.
-         jcount(3) = 0
-         jcount(4) = 0
-         write (*,*) 'iter =',iter,' gmax =', gmax
+c DEBUG DEBUG 
+c         switch(1) = .true.
+c         jcount(3) = 0
+c         jcount(4) = 0
+c         write (*,*) 'iter =',iter,' gmax =', gmax
 
 c                                 generate new pseudocompounds
          do i = 1, npt
@@ -321,11 +322,8 @@ c                                 reset jdv in case of exit
          end do 
 
 c        if (switch(1)) then  
-
-            write (*,*) 'igoodt =',jcount(4),' ibadt =',jcount(3)
-            write (*,*) 1d2*jcount(4)/(jcount(4)+jcount(3))
-            jcount(5) = jcount(5) + jcount(3)
-            jcount(6) = jcount(6) + jcount(4)
+c            jcount(5) = jcount(5) + jcount(3)
+c            jcount(6) = jcount(6) + jcount(4)
 c        end if 
 
       end do 
@@ -485,9 +483,10 @@ c                                 to allow hardlimits. JADC
 
          end do 
       end do
+
 c DEBUG DEBUG 
-      jcount(1) = 0d0
-      jcount(2) = 0d0
+c      jcount(1) = 0d0
+c      jcount(2) = 0d0
       gmin = 1d99 
 
       call subdiv (ids,.true.)
@@ -607,14 +606,14 @@ c                                 of the solution
 
 10    continue
 
-
-      if (switch(1)) then  
-            write (*,*) 'igood =',jcount(2),' ibad =',jcount(1)
-            write (*,*) 'ids =',ids
-            write (*,*) 1d2*jcount(2)/(jcount(2)+jcount(1))
-            jcount(3) = jcount(3) + jcount(1)
-            jcount(4) = jcount(4) + jcount(2)
-      end if 
+c DEBUG
+c      if (switch(1)) then  
+c            write (*,*) 'igood =',jcount(2),' ibad =',jcount(1)
+c            write (*,*) 'ids =',ids
+c            write (*,*) 1d2*jcount(2)/(jcount(2)+jcount(1))
+c            jcount(3) = jcount(3) + jcount(1)
+c            jcount(4) = jcount(4) + jcount(2)
+c      end if 
 
       first = .false.
 
@@ -717,12 +716,12 @@ c DEBUG DEBUG
 
          dg = deltag(jphct,iter)/ctot2
 
-         if (dg.lt.gmin.or.dg.lt.gmax) then 
-            jcount(2) = jcount(2) + 1 
+         if (dg.lt.gmin.or.dg.lt.1d-5) then 
+            jcount(4) = jcount(4) + 1 
             if (dg.lt.gmin) gmin = dg
          else 
             bad = .true.
-            jcount(1) = jcount(1) + 1
+            jcount(3) = jcount(3) + 1
          end if 
 
       end if 
@@ -1528,6 +1527,11 @@ c                                 endmember names
 
       integer isec,icopt,ifull,imsg,io3p
       common/ cst103 /isec,icopt,ifull,imsg,io3p
+c DEBUG 
+      integer jcount
+      logical switch
+      double precision number 
+      common/ debug /jcount(10),switch(10)
 
       integer iopt
       logical lopt
@@ -1729,6 +1733,8 @@ c    *                     ,names(jend(i,2+indx(i,j,k)))
          badc(1) = 0d0 
       end if 
 
+      write (*,1130) 1d2*jcount(3)/(jcount(4)+jcount(3))
+
       close (n10)
       if (lopt(11)) close (n11)
 
@@ -1761,6 +1767,8 @@ c     *          'Endmember with this species')
 1120  format (/,'The failure rate during speciation (order-disorder) ',
      *        'calculations is ',f7.3,'%',/,'out of a total of ',f12.0,
      *        ' calculations.',/)
+1130  format (/,'Metastability filtering eliminated ',f7.3,'% of trial',
+     *        'compositions prior',/,'to optimization.',/)
       end 
 
       subroutine sorter (kdbulk,ico,jco,output)
@@ -3704,12 +3712,12 @@ c                                 phases, first the compounds:
             jdv(npt) = kmin(i)
          end do 
 c DEBUG DEBUG 
-
-      if (mus) then 
-            do i = 1, npt
-               dg(i) = deltag(jdv(i),iter)
-            end do 
-      end if 
+c
+c      if (mus) then 
+c            do i = 1, npt
+c               dg(i) = deltag(jdv(i),iter)
+c            end do 
+c      end if 
 
 c                                 make a list of the solutions
          kpt = 0 
@@ -3729,11 +3737,11 @@ c                                 make a list of the solutions
          end do
 c DEBUG DEBUG 
 
-         if (mus) then 
-            do i = 1, kpt
-               dg(i) = deltag(jmin(i),iter)
-            end do 
-         end if 
+c         if (mus) then 
+c            do i = 1, kpt
+c               dg(i) = deltag(jmin(i),iter)
+c            end do 
+c         end if 
 
          if (kpt.gt.iopt(12).and.iopt(31).gt.0) then 
 c                                 sort if too many
@@ -3750,14 +3758,15 @@ c         gmax = nopt(28)/(2d0**(iter-1))
 
            npt = npt + 1
            jdv(npt) = jmin(i)
-           if (mus) then
-              dg(i) = deltag(jmin(i),iter)
-              if (dg(i).gt.gmax) gmax = dg(i)
-           end if 
+c DEBUG 
+c           if (mus) then
+c              dg(i) = deltag(jmin(i),iter)
+c              if (dg(i).gt.gmax) gmax = dg(i)
+c           end if 
 
          end do 
-
-         gmax = nopt(28)
+c DEBUG 
+c         gmax = nopt(28)
 c                                 sort the phases, this is only necessary if
 c                                 metastable phases have been added
          call sortin

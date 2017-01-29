@@ -97,6 +97,11 @@ c-----------------------------------------------------------------------
 
       save err,first,output,pots
       data err,output,first/.false.,.false.,.true./
+c DEBUG
+      integer jcount
+      logical switch
+      double precision number 
+      common/ debug /jcount(10),switch(10)
 
       integer iam
       common/ cst4 /iam
@@ -123,6 +128,9 @@ c                                 elastic modulii flag
 c                                 this do loop is a cheap strategy to automate
 c                                 "auto_refine"
       do
+c DEBUG 
+         jcount(3) = 0 
+         jcount(4) = 0
 c                                 -------------------------------------
 c                                 open statements for units n1-n6 and n9
 c                                 are in subroutine input1
