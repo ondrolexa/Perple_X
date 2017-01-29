@@ -346,7 +346,7 @@ c                                 -------------------------------------
 c                                 local variables
       logical bad, first, keep
 
-      double precision xxnc, ysum, res0
+      double precision xxnc, ysum, res0, gmin
 
       integer i, j, k, l, m, ids, id, jd, iter, kcoct, iref, last 
 c                                 -------------------------------------
@@ -485,9 +485,10 @@ c                                 to allow hardlimits. JADC
 
          end do 
       end do
-
+c DEBUG DEBUG 
       jcount(1) = 0d0
-      jcount(2) = 0d0 
+      jcount(2) = 0d0
+      gmin = 1d99 
 
       call subdiv (ids,.true.)
 
@@ -594,7 +595,7 @@ c                                 implemented).
          end if
 c                                 use the coordinates to compute the composition 
 c                                 of the solution
-         call csol (ids,iter,bad)
+         call csol (ids,iter,bad,gmin)
 
          if (bad) then 
                jphct = jphct - 1
@@ -619,7 +620,7 @@ c                                 of the solution
 
       end 
 
-      subroutine csol (id,iter,bad)
+      subroutine csol (id,iter,bad,gmin)
 c-----------------------------------------------------------------------
 c csol computes chemical composition of solution id from the macroscopic
 c endmember fraction array y or p0a (cxt7), these arrays are prepared by a prior
@@ -635,7 +636,7 @@ c-----------------------------------------------------------------------
       integer i,j,id,iter
       logical bad 
 
-      double precision ctot2, deltag, dg
+      double precision ctot2, deltag, dg, gmin
 c                                 -------------------------------------
 c                                 global variables:
       integer icomp,istct,iphct,icp
@@ -716,11 +717,12 @@ c DEBUG DEBUG
 
          dg = deltag(jphct,iter)/ctot2
 
-         if (dg.gt.gmax) then 
+         if (dg.lt.gmin.or.dg.lt.gmax) then 
+            jcount(2) = jcount(2) + 1 
+            if (dg.lt.gmin) gmin = dg
+         else 
             bad = .true.
             jcount(1) = jcount(1) + 1
-         else
-            jcount(2) = jcount(2) + 1 
          end if 
 
       end if 
@@ -3659,7 +3661,7 @@ c                                 a stable point, add to list
 
          else if (clamda(i).lt.clam(id)) then
 c DEBUG
-c            if (clamda(i).lt.wmach(3)) cycle 
+            if (clamda(i).lt.wmach(3)) cycle 
 
             if (jkp(id).gt.0) then
 c                                 it's a solution, keep the  
@@ -3742,7 +3744,7 @@ c                                 sort if too many
 
          end if 
 
-         gmax = 1d-5
+c         gmax = nopt(28)/(2d0**(iter-1))
 
          do i = 1, kpt
 
@@ -3755,7 +3757,7 @@ c                                 sort if too many
 
          end do 
 
-         gmax = gmax/1d0
+         gmax = nopt(28)
 c                                 sort the phases, this is only necessary if
 c                                 metastable phases have been added
          call sortin

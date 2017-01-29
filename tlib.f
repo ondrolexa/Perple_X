@@ -850,7 +850,7 @@ c                                 reserved values for debugging, etc
          else if (key.eq.'iop_30') then
             read (strg,*) iopt(30) 
          else if (key.eq.'nop_28') then
-            read (strg,*) iopt(28) 
+            read (strg,*) nopt(28) 
          else if (key.eq.'nop_29') then
             read (strg,*) nopt(29) 
          else if (key.eq.'nop_30') then

@@ -9239,7 +9239,7 @@ c                                 set slop to the initial spacing
 c                                 adaptive minimization:
 c                                 set slop to the final compositional
 c                                 resolution of the exploratory stage
-                  dinc = rid(4,1)*nopt(28)
+                  dinc = rid(4,1)
 c                                 adaptive use refine factor I
                   xnc(i,j) = xnc(i,j)/nopt(17) 
 
