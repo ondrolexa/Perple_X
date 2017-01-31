@@ -19,7 +19,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a)') 
-     *      'Perple_X version 6.7.6, source updated Jan 24, 2017.'
+     *      'Perple_X version 6.7.6, source updated Jan 30, 2017.'
 
       end
 
@@ -223,6 +223,8 @@ c                                 composition_constant
 c                                 composition_system (true = wt)
       lopt(23) = .true. 
       valu(21) = 'wt '
+c                                 output endmember gibbs energies (werami/meemum)
+      lopt(24) = .false. 
 c                                 minimum replicate label distance
       nopt(4) = 0.025
 c                                 speciation_tolerance
@@ -336,7 +338,7 @@ c                                 hyb_ch4 - eos to be used for pure ch4, 0-1
 c                                 
 c     iopt(28-30)                 reserved as debug options iop_28 - iop_30
 
-c                                 refinement strategy, 0 - safe, 1 - moderate, 2 - agressive
+c                                 refinement_strategy, 0 - safe, 1 - moderate, 2 - agressive
       iopt(31) = 1
       valu(31) = 'mod'
 c                                 -------------------------------------
@@ -553,8 +555,8 @@ c                                 seismic data output WERAMI/MEEMUM/FRENDLY
                 valu(14) = 'som'
              end if
 
-         else if (key.eq.'refinement') then 
-c                                 reach_increment_switch
+         else if (key.eq.'refinement_strategy') then 
+c                                 metastable refinement point strategy
              valu(31) = val
 
              if (val.eq.'saf') then 
@@ -777,7 +779,11 @@ c                                 assume linear boundaries within a cell during 
             if (val.ne.'wt') then
                lopt(23) = .false. 
                valu(21) = val
-            end if 
+            end if
+
+         else if (key.eq.'endmember_Gs') then
+ 
+            if (val.ne.'F') lopt(24) = .true. 
 
          else if (key.eq.'logarithmic_p') then
  
@@ -1278,7 +1284,7 @@ c                                 logarithmic_p, bad_number
 c                                 WERAMI input/output options
          write (n,1230) lopt(15),lopt(14),nopt(7),lopt(22),valu(2),
      *                  valu(21),valu(3),valu(4),lopt(6),valu(22),
-     *                  lopt(21),valu(14),lopt(19),lopt(20)
+     *                  lopt(21),lopt(24),valu(14),lopt(19),lopt(20)
 c                                 WERAMI info file options
          write (n,1241) lopt(12)       
 c                                 WERAMI thermodynamic options
@@ -1289,7 +1295,7 @@ c                                 WERAMI thermodynamic options
 c                                 MEEMUM input/output options
          write (n,1231) lopt(14),nopt(7),lopt(22),valu(2),
      *                  valu(21),valu(3),lopt(6),valu(22),lopt(21),
-     *                  valu(14),lopt(19),lopt(20)
+     *                  lopt(24),valu(14),lopt(19),lopt(20)
 
       else if (iam.eq.5) then 
 c                                 FRENDLY input/output options
@@ -1402,7 +1408,7 @@ c                                 thermo options for frendly
      *           '>2 [3]; iteration keyword value 1',/,
      *        4x,'refinement points      ',i2,9x,
      *           '1->',i,' [4]; iteration keyword value 2',/,
-     *        4x,'refinement             ',a3,8x,'safe [moderate] ',
+     *        4x,'refinement_strategy    ',a3,8x,'safe [moderate] ',
      *           'agressive',/,
      *        4x,'solvus_tolerance_II    ',f4.2,7x,'0->1 [0.25]',/,
      *        4x,'global_reach_increment ',i2,9x,'>= 0 [0]',/,
@@ -1445,6 +1451,7 @@ c                                 thermo options for frendly
      *        4x,'solution_names         ',a3,8x,'[model] abbreviation',
      *                                           ' full',/,
      *        4x,'species_output         ',l1,10x,'[T] F',/,
+     *        4x,'endmember_Gs           ',l1,10x,'[F] T',/,
      *        4x,'seismic_output         ',a3,8x,'[some] none all',/,
      *        4x,'pause_on_error         ',l1,10x,'[T] F',/,
      *        4x,'poisson_test           ',l1,10x,'[F] T')
@@ -1458,6 +1465,7 @@ c                                 thermo options for frendly
      *        4x,'melt_is_fluid          ',l1,10x,'[F] T',/,
      *        4x,'solution_names         ',a3,8x,'[mod] abb ful',/,
      *        4x,'species_output         ',l1,10x,'[T] F',/,
+     *        4x,'endmember_Gs           ',l1,10x,'[F] T',/,
      *        4x,'seismic_output         ',a3,8x,'[some] none all',/,
      *        4x,'pause_on_error         ',l1,10x,'[T] F',/,
      *        4x,'poisson_test           ',l1,10x,'[F] T')

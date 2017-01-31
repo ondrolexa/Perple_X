@@ -169,6 +169,10 @@ c                                 species_ouput
 
          end do 
 
+      end if 
+
+      if (lopt(24)) then 
+
          write (lu,'(/,a,/)') 'Pure species molar Gibbs energies*:'
 
          do i = 1, np 
@@ -185,6 +189,8 @@ c                                 species_ouput
      *                                 (chars(j), j = 1, length)
 
          end do
+
+         write (lu,'(/,a,/)') '*these do not include internal DQFs'
 
       end if 
 

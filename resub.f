@@ -427,7 +427,7 @@ c                                below.
          call getxy0 (ids,id)
 
       end if
-
+c DEBUG should be eq 3
       if (.not.first.and.ids.eq.last.and.iopt(31).eq.3) then
 
          keep = .false.
@@ -670,11 +670,16 @@ c                                 working arrays
       logical mus
       double precision mu, gmax
       common/ cst330 /mu(k8),gmax,mus
-
+c DEBUG 
       integer jcount
       logical switch
       double precision number 
       common/ debug /jcount(10),switch(10)
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 c----------------------------------------------------------------------
 
       ctot2 = 0d0
@@ -716,7 +721,7 @@ c DEBUG DEBUG
 
          dg = deltag(jphct,iter)/ctot2
 
-         if (dg.lt.gmin.or.dg.lt.1d-5) then 
+         if (dg.lt.gmin.or.dg.lt.nopt(28)) then 
             jcount(4) = jcount(4) + 1 
             if (dg.lt.gmin) gmin = dg
          else 
@@ -1767,8 +1772,8 @@ c     *          'Endmember with this species')
 1120  format (/,'The failure rate during speciation (order-disorder) ',
      *        'calculations is ',f7.3,'%',/,'out of a total of ',f12.0,
      *        ' calculations.',/)
-1130  format (/,'Metastability filtering eliminated ',f7.3,'% of trial',
-     *        'compositions prior',/,'to optimization.',/)
+1130  format (/,'Metastability filtering eliminated ',f7.3,'% of the ',
+     *        'trial compositions prior',/,'to optimization.',/)
       end 
 
       subroutine sorter (kdbulk,ico,jco,output)
@@ -2184,7 +2189,7 @@ c                                 into jdv
          mcpd = 2
       else if (ldv1.ne.0) then 
          npt = npt + 1
-         jdv(npt) = 1
+         jdv(npt) = ldv1
          mcpd = 1
       else 
          mcpd = 0 
@@ -2194,6 +2199,7 @@ c                                 load the metastable solutions into kdv
 
       do i = 1, isoct
 
+         if (kdv(i).eq.0) cycle
          mpt = mpt + 1
          kdv(mpt) = kdv(i)
          slam(mpt) = slam(i)
@@ -3742,7 +3748,7 @@ c            do i = 1, kpt
 c               dg(i) = deltag(jmin(i),iter)
 c            end do 
 c         end if 
-
+c should be gt 0
          if (kpt.gt.iopt(12).and.iopt(31).gt.0) then 
 c                                 sort if too many
 
