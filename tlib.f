@@ -19,7 +19,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a)') 
-     *      'Perple_X version 6.7.6, source updated Jan 30, 2017.'
+     *      'Perple_X version 6.7.6, source updated Jan 31, 2017.'
 
       end
 
@@ -338,9 +338,10 @@ c                                 hyb_ch4 - eos to be used for pure ch4, 0-1
 c                                 
 c     iopt(28-30)                 reserved as debug options iop_28 - iop_30
 
-c                                 refinement_strategy, 0 - safe, 1 - moderate, 2 - agressive
-      iopt(31) = 1
-      valu(31) = 'mod'
+c                                 refinement_points_II
+      iopt(31) = 5
+c                                 refinement_threshold
+      nopt(32) = 1d1
 c                                 -------------------------------------
 c                                 werami output options:
 
@@ -540,32 +541,27 @@ c                                 p fraction
 
          else if (key.eq.'global_reach_increment') then
           
-            read (strg,*) i
-            nopt(23) = dfloat(i)
+            read (strg,*) nopt(23) 
 
          else if (key.eq.'seismic_output') then 
 c                                 seismic data output WERAMI/MEEMUM/FRENDLY
-             valu(14) = val
+            valu(14) = val
 
-             if (val.eq.'non') then 
-                iopt(14) = 0
-             else if (val.eq.'all') then
-                iopt(14) = 2
-             else
-                valu(14) = 'som'
-             end if
+            if (val.eq.'non') then 
+               iopt(14) = 0
+            else if (val.eq.'all') then
+               iopt(14) = 2
+            else
+               valu(14) = 'som'
+            end if
 
-         else if (key.eq.'refinement_strategy') then 
-c                                 metastable refinement point strategy
-             valu(31) = val
+         else if (key.eq.'refinement_points_II') then 
+c                                 2nd stage refinement points
+            read (strg,*) iopt(31)
 
-             if (val.eq.'saf') then 
-                iopt(31) = 0
-             else if (val.eq.'mod') then
-                iopt(31) = 1
-             else if (val.eq.'agg') then 
-                iopt(31) = 2
-             end if 
+         else if (key.eq.'refinement_threshold') then
+
+            read (strg,*) nopt(32)
 
          else if (key.eq.'reach_increment_switch') then 
 c                                 reach_increment_switch
@@ -1229,7 +1225,7 @@ c                                 for meemum
             if (iopt(6).ne.0) write (n,1170) nopt(17)
 c                                 adaptive optimization
             write (n,1180) rid(2,1),rid(2,2),int(nopt(21)),iopt(12),k5,
-     *                     valu(31), 
+     *                     iopt(31),k5,nopt(32),
      *                     nopt(25),int(nopt(23)),valu(20),
      *                     nopt(9),nopt(11)
 c                                 gridding parameters
@@ -1407,9 +1403,9 @@ c                                 thermo options for frendly
      *        4x,'resolution factor      ',i2,9x,
      *           '>2 [3]; iteration keyword value 1',/,
      *        4x,'refinement points      ',i2,9x,
-     *           '1->',i,' [4]; iteration keyword value 2',/,
-     *        4x,'refinement_strategy    ',a3,8x,'safe [moderate] ',
-     *           'agressive',/,
+     *           '1->',i2,' [4]; iteration keyword value 2',/,
+     *        4x,'refinement_points_II   ',i2,9x,'1->',i2,' [5]',/,
+     *        4x,'refinement_threshold   ',g8.3,3x,'>0, [10] J',/,
      *        4x,'solvus_tolerance_II    ',f4.2,7x,'0->1 [0.25]',/,
      *        4x,'global_reach_increment ',i2,9x,'>= 0 [0]',/,
      *        4x,'reach_increment_switch ',a3,8x,'[on] off all',/,
@@ -2686,8 +2682,12 @@ c----------------------------------------------------------------------
      *          'speciation calculations or because the phases of the ',
      *          'system do not span',/,
      *          'the specified bulk composition.',//,
-     *          4x,'In the 1st case: increase final_resolution ',
-     *          'in perplex_option.dat.',/,4x,'In the 2nd case: ',
+     *          4x,'In the 1st case, in perplex_option.dat:',/,
+     *          14x,'increase final_resolution and/or',/,
+     *          14x,'increase refinement_threshold and/or',/,
+     *          14x,'increase value 2 of iteration and/or',/,
+     *          14x,'increase refine_points_II',
+     *          /,4x,'In the 2nd case: ',
      *          'increase speciation_max_it in perplex_option.dat.',
      *          /,4x,'In the 3rd case: ',
      *          'change the bulk composition or add phases.',/)

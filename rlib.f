@@ -10024,6 +10024,7 @@ c                                 odd or even interval?
          odd = .not.odd
 c                                 interval limits              
          ylmx = yint(j+1,i,ksite,ids)
+         ylmn = yint(j,i,ksite,ids)
 c                                 which interval are we starting from?
          if (y.gt.ylmx.and.j.lt.intv(mode)) then 
             cycle
@@ -10031,9 +10032,14 @@ c                                 which interval are we starting from?
 c                                 somehow y is out of bounds, assume
 c                                 numerical reset y to max
             y = ylmx
+
+         else if (y.lt.ylmn) then
+
+            y = ylmn 
+
          end if 
 
-         ylmn = yint(j,i,ksite,ids)
+
          dy = ylmx - ylmn
 c                                 the current value is in interval j
 c                                 convert to raw y (varies from 0 ->1 

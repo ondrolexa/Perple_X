@@ -721,7 +721,7 @@ c DEBUG DEBUG
 
          dg = deltag(jphct,iter)/ctot2
 
-         if (dg.lt.gmin.or.dg.lt.nopt(28)) then 
+         if (dg.lt.gmin.or.dg.lt.nopt(32)) then 
             jcount(4) = jcount(4) + 1 
             if (dg.lt.gmin) gmin = dg
          else 
@@ -1609,7 +1609,7 @@ c                                 adaptive minimization
          if (ibad2.gt.0) then 
 c                                 solutions whose limits could be relaxed
             write (*,1080) 
-            if (lopt(11)) write (n11,1010) 
+            if (lopt(11)) write (n11,1080) 
             do i = 1, isoct
                if (limit(i).and.relax(i)) then
                   write (*,'(5x,a)') fname(i) 
@@ -1621,7 +1621,7 @@ c                                 solutions whose limits could be relaxed
          if (ibad3.gt.0) then 
 c                                 solutions whose limits could NOT be relaxed
             write (*,1090) 
-            if (lopt(11)) write (n11,1010) 
+            if (lopt(11)) write (n11,1090) 
             do i = 1, isoct
                if (limit(i).and.(.not.relax(i))) then
                   write (*,'(5x,a)') fname(i) 
@@ -2075,8 +2075,6 @@ c----------------------------------------------------------------------
       npt = 0 
       nsol = 0
       inc = istct - 1
-
-      mus = .false.
       quit = .true.
 c                                 solvus_tolerance_II, 0.25
       soltol = nopt(25)
@@ -2118,6 +2116,18 @@ c                                 new point, add to list
          end if 
 
       end do
+c DEBUG DEBUG 
+      if (npt.eq.icp) then 
+
+         call getmus (1)
+
+      else
+
+           write (*,*) ' ugga wugga yclos1'
+
+           mus = .false. 
+
+      end if
 
       ldv1 = 0
       ldv2 = 0 
@@ -3596,12 +3606,12 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      external ffirst, deltag
+      external ffirst
 
       integer i, is(*), id, jmin(k19), kmin(k19), opt, kpt, mpt, iter, 
-     *        tic, ier
+     *        tic
 
-      double precision clamda(*), clam(k19), x(*), dg(k19), deltag
+      double precision clamda(*), clam(k19), x(*)
 
       logical stable(k19)
 
@@ -3698,13 +3708,11 @@ c                                 as they hardly cost anything.
 c DEBUG DEBUG 
       if (npt.eq.hcp) then 
 
-         call getmus (iter,ier)
-
-         if (ier.ne.0) mus = .false. 
+         call getmus (iter)
 
       else
 
-           write (*,*) ' ugga wugga'
+           write (*,*) ' ugga wugga yclos2'
 
            mus = .false. 
 
@@ -3717,14 +3725,6 @@ c                                 phases, first the compounds:
             npt = npt + 1 
             jdv(npt) = kmin(i)
          end do 
-c DEBUG DEBUG 
-c
-c      if (mus) then 
-c            do i = 1, npt
-c               dg(i) = deltag(jdv(i),iter)
-c            end do 
-c      end if 
-
 c                                 make a list of the solutions
          kpt = 0 
 
@@ -3742,37 +3742,22 @@ c                                 make a list of the solutions
 
          end do
 c DEBUG DEBUG 
-
-c         if (mus) then 
-c            do i = 1, kpt
-c               dg(i) = deltag(jmin(i),iter)
-c            end do 
-c         end if 
 c should be gt 0
-         if (kpt.gt.iopt(12).and.iopt(31).gt.0) then 
+         if (kpt.gt.iopt(31)) then 
 c                                 sort if too many
 
-            kpt = iopt(12)
+            kpt = iopt(31)
 
-            call ffirst (clam,jmin,1,kpt,iopt(12),k19,ffirst)
+            call ffirst (clam,jmin,1,kpt,iopt(31),k19,ffirst)
 
          end if 
-
-c         gmax = nopt(28)/(2d0**(iter-1))
 
          do i = 1, kpt
 
            npt = npt + 1
            jdv(npt) = jmin(i)
-c DEBUG 
-c           if (mus) then
-c              dg(i) = deltag(jmin(i),iter)
-c              if (dg(i).gt.gmax) gmax = dg(i)
-c           end if 
 
          end do 
-c DEBUG 
-c         gmax = nopt(28)
 c                                 sort the phases, this is only necessary if
 c                                 metastable phases have been added
          call sortin
@@ -3819,7 +3804,7 @@ c                                 check zero modes the amounts
 
       end
 
-      subroutine getmus (iter,ier) 
+      subroutine getmus (iter) 
 c----------------------------------------------------------------------
       implicit none
 
@@ -3849,7 +3834,9 @@ c----------------------------------------------------------------------
       common/ cst78 /cptot(k19),ctotal,jdv(k19),npt,fulrnk
 c----------------------------------------------------------------------
 
-       if (iter.gt.0) then 
+       mus = .false.
+
+       if (iter.gt.1) then 
 
          do i = 1, hcp
 
@@ -3861,7 +3848,21 @@ c----------------------------------------------------------------------
 
             mu(i) = g2(id)
 
-         end do 
+         end do
+
+      else
+
+         do i = 1, hcp
+
+            id = jdv(i) 
+
+            do j = 1, hcp 
+               comp(i,j) = a(j,id)
+            end do 
+
+            mu(i) = c(id)
+
+         end do
 
       end if 
 
@@ -3870,6 +3871,8 @@ c----------------------------------------------------------------------
       if (ier.ne.0) return
 
       call subst (comp,ipvt,hcp,mu,ier)
+
+      if (ier.eq.0) mus = .true. 
 
       end 
 
