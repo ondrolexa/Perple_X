@@ -1960,7 +1960,7 @@ c                               list database phases:
 
          do 
 
-            call getphi (name,eof)
+            call getphi (name,.true.,eof)
 
             if (eof) then
 c                               write make list:

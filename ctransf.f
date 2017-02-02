@@ -54,7 +54,7 @@ c                                 read and echo data cards with
 c                                 component conversion
       do 
 
-         call getphi (name,eof)
+         call getphi (name,.true.,eof)
 
          names(k10) = name
 

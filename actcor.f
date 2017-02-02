@@ -66,7 +66,7 @@ c                             get the name:
 
          do 
  
-            call getphi (name,eof)
+            call getphi (name,.false.,eof)
  
             if (eof) then 
                write (*,1050) test
@@ -84,7 +84,7 @@ c                             get the name:
 c                             read and modify individual entries  
          do 
  
-            call getphi (name,eof)
+            call getphi (name,.false.,eof)
  
             if (eof) exit
 

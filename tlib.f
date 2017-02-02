@@ -19,7 +19,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a)') 
-     *      'Perple_X version 6.7.6, source updated Jan 31, 2017.'
+     *      'Perple_X version 6.7.6, source updated Feb 2, 2017.'
 
       end
 
@@ -98,7 +98,7 @@ c lopt(20) - poisson_test
 c lopt(21) - species_output
 c lopt(22) - composition_constant
 c lopt(23) - composition_system
-c nopt(5)  - speciation_tolerance
+c nopt(5)  - speciation_factor, ultimately speciation precision. 
 c nopt(8)  - solvus_tolerance
 c nopt(20) - T_melt - kill melt endmembers at T < nopt(20)
 c----------------------------------------------------------------------
@@ -131,7 +131,7 @@ c----------------------------------------------------------------------
 
       integer grid
       double precision rid 
-      common/ cst327 /grid(6,2),rid(4,2)
+      common/ cst327 /grid(6,2),rid(5,2)
 
       integer isec,icopt,ifull,imsg,io3p
       common/ cst103 /isec,icopt,ifull,imsg,io3p
@@ -227,8 +227,8 @@ c                                 output endmember gibbs energies (werami/meemum
       lopt(24) = .false. 
 c                                 minimum replicate label distance
       nopt(4) = 0.025
-c                                 speciation_tolerance
-      nopt(5) = 1d-3
+c                                 speciation_factor
+      nopt(5) = 1d2
 c                                 composition_phase
       iopt(2) = 0 
       valu(2) = 'mol'
@@ -496,9 +496,10 @@ c                                 bad number key
 
             read (strg,*) nopt(25)
 
-         else if (key.eq.'speciation_tolerance') then 
+         else if (key.eq.'speciation_factor') then 
 
             read (strg,*) nopt(5)
+            if (nopt(5).lt.10) nopt(5) = 1d1
 
          else if (key.eq.'zero_bulk') then
 c                                 zero_bulk key
@@ -777,7 +778,7 @@ c                                 assume linear boundaries within a cell during 
                valu(21) = val
             end if
 
-         else if (key.eq.'endmember_Gs') then
+         else if (key.eq.'species_Gibbs_energies') then
  
             if (val.ne.'F') lopt(24) = .true. 
 
@@ -1035,8 +1036,11 @@ c                                 initial resolution to a representative value
       do i = 1, 2
 
          if (rid(2,i).gt.rid(3,i)) then
-
-            grid(6,i) = 0 
+c                                  requested final resolution > requested initial resolution
+c                                  grid(6,i) is the iteration counter
+            grid(6,i) = 0
+c                                  speciation tolerance, later set to nopt(5)
+            rid(5,i) = rid(3,i)/nopt(5)
 
          else
           
@@ -1048,20 +1052,16 @@ c                                 initial resolution to a representative value
 c                                 actual final resolution
                rid(4,i) = res0
 
-               if (res0.lt.rid(2,i)) then 
-c                                 real final resolution is res0
-c                                 reset speciation tolerance if > res0
-                  if (nopt(5).gt.res0) nopt(5) = res0/1d2
-
-                  exit
-
-               end if
-
+               if (res0.lt.rid(2,i)) exit
+c                                  grid(6,i) is the iteration counter
                grid(6,i) = grid(6,i) + 1
 
-            end do 
+            end do
+c                                  real final resolution is res0
+c                                  speciation tolerance, later set to nopt(5)
+            rid(5,i) = res0/nopt(5)
 
-         end if 
+         end if
 
       end do 
 c                                 --------------------------------------
@@ -1152,7 +1152,7 @@ c----------------------------------------------------------------------
 
       integer grid
       double precision rid 
-      common/ cst327 /grid(6,2),rid(4,2)
+      common/ cst327 /grid(6,2),rid(5,2)
 
       logical oned
       common/ cst82 /oned
@@ -1340,8 +1340,8 @@ c                                 generic thermo options
      *        4x,'solvus_tolerance       ',a7,4x,          
      *           '[aut] or 0->1; aut = automatic, 0 => ',
      *           'p=c pseudocompounds, 1 => homogenize',/,
-     *        4x,'speciation_tolerance   ',e7.1,4x,             
-     *       '0->1 [1e-3]; order-disorder speciation precision',/,
+     *        4x,'speciation_factor   ',f6.0,5x,'>10 [100] speciation ',
+     *           'precision = final resolution / speciation_factor',/,
      *        4x,'T_stop (K)             ',f6.1,5x,'[0]',/,
      *        4x,'T_melt (K)             ',f6.1,5x,'[873]',/,
      *        4x,'order_check            ',a3,8x,'off [on]',/,
@@ -1447,7 +1447,7 @@ c                                 thermo options for frendly
      *        4x,'solution_names         ',a3,8x,'[model] abbreviation',
      *                                           ' full',/,
      *        4x,'species_output         ',l1,10x,'[T] F',/,
-     *        4x,'endmember_Gs           ',l1,10x,'[F] T',/,
+     *        4x,'species_Gibbs_energies ',l1,10x,'[F] T',/,
      *        4x,'seismic_output         ',a3,8x,'[some] none all',/,
      *        4x,'pause_on_error         ',l1,10x,'[T] F',/,
      *        4x,'poisson_test           ',l1,10x,'[F] T')
@@ -2366,7 +2366,7 @@ c---------------------------------------------------------------------
 
       integer grid
       double precision rid 
-      common/ cst327 /grid(6,2),rid(4,2)
+      common/ cst327 /grid(6,2),rid(5,2)
 
       integer iopt
       logical lopt
@@ -2676,20 +2676,20 @@ c----------------------------------------------------------------------
 41    format (/,'**warning ver041** icky pseudocompound names'
      *       ,' for solution model: ',a,/,'refer to pseudocompound_'
      *       ,'glossary.dat file for pseudocompound definitions.',/)
-42    format (/,'**warning ver042** an optimization failed, probably ',
-     *          'because the requested',/,'compositional resolution ',
-     *          'is too high or due to numerical instability during',/,
-     *          'speciation calculations or because the phases of the ',
-     *          'system do not span',/,
-     *          'the specified bulk composition.',//,
-     *          4x,'In the 1st case, in perplex_option.dat:',/,
-     *          14x,'increase final_resolution and/or',/,
-     *          14x,'increase refinement_threshold and/or',/,
-     *          14x,'increase value 2 of iteration and/or',/,
-     *          14x,'increase refine_points_II',
-     *          /,4x,'In the 2nd case: ',
-     *          'increase speciation_max_it in perplex_option.dat.',
-     *          /,4x,'In the 3rd case: ',
+42    format (/,'**warning ver042** an optimization failed due ',
+     *          'to numerical instability',/,
+     *          'or because the phases of the system do not span ',
+     *          'its bulk composition.',//,
+     *          4x,'In the 1st case:',/,
+     *          8x,'increase final_resolution and/or',/,
+     *          8x,'increase refinement_threshold and/or',/,
+     *          8x,'increase value 2 of iteration and/or',/,
+     *          8x,'increase refine_points_II and/or',/,
+     *          8x,'increase speciation_factor and/or',/,
+     *          8x,'increase speciation_max_it and/or',/,
+     *          4x,'see: www.perplex.ch/perplex_options.html for ',
+     *          'explanation.',//,
+     *          4x,'In the 2nd case: ',
      *          'change the bulk composition or add phases.',/)
 43    format (/,'**warning ver043** ',i2,' solutions referenced ',
      *          'in your input',/,'were not found in the solution ',

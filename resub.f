@@ -427,8 +427,9 @@ c                                below.
          call getxy0 (ids,id)
 
       end if
-c DEBUG should be eq 3
-      if (.not.first.and.ids.eq.last.and.iopt(31).eq.3) then
+c DEBUG should be eq 3, to use this need a different iopt value, i.e., 
+c iopt(31) is the number of metastable iteration points for yclos2
+      if (.not.first.and.ids.eq.last.and.iopt(31).eq.99) then
 
          keep = .false.
 c                                check if the point lies within the 

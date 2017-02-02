@@ -47,7 +47,7 @@ c                                 solution model names
 
       integer grid
       double precision rid 
-      common/ cst327 /grid(6,2),rid(4,2)
+      common/ cst327 /grid(6,2),rid(5,2)
 
       integer iam
       common/ cst4 /iam
@@ -153,15 +153,10 @@ c                                 solvus tolerance
 c                                 number of iterations
             iopt(10) = grid(6,i)
 c                                 bound relaxation rate
-            if (i.eq.1) then 
 c                                 the initial resolution of the exploratory stage
-               nopt(10) = rid(3,1) * nopt(29)
-           
-            else 
-c                                 the final resolution of the exploratory stage   
-               nopt(10) = rid(4,1) * nopt(29)
-
-            end if 
+            nopt(10) = rid(3,i) 
+c                                 speciation tolerance
+            nopt(5) = rid(5,i)
 
          else 
 c                                 werami/pssect if refine, get the 
@@ -259,7 +254,7 @@ c                                 solution model counter
 
       integer grid
       double precision rid 
-      common/ cst327 /grid(6,2),rid(4,2)
+      common/ cst327 /grid(6,2),rid(5,2)
 
       integer ipot,jv,iv
       common/ cst24 /ipot,jv(l2),iv(l2)
@@ -482,6 +477,11 @@ c-----------------------------------------------------------------------
 
       integer iam
       common/ cst4 /iam
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       save blank
       data blank/' '/
@@ -1014,6 +1014,9 @@ c                                 read auxilliary input for 2d fractionation
 c                                 get runtime parameters
       if (first.or.(.not.first).and.(.not.output)) 
      *   call redop1 (first,tfname)
+c                                 reset number of metastable iteration points
+c                                 for yclos2 if greater than icp
+      if (icp+2.lt.iopt(31)) iopt(31) = icp + 2
 
       goto 999
 c                                 archaic error trap
