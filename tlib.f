@@ -1405,7 +1405,7 @@ c                                 thermo options for frendly
      *        4x,'refinement points      ',i2,9x,
      *           '1->',i2,' [4]; iteration keyword value 2',/,
      *        4x,'refinement_points_II   ',i2,9x,'1->',i2,' [5]',/,
-     *        4x,'refinement_threshold   ',g8.3,3x,'>0, [10] J',/,
+     *        4x,'refinement_threshold   ',g8.0,3x,'>0, [10] J',/,
      *        4x,'solvus_tolerance_II    ',f4.2,7x,'0->1 [0.25]',/,
      *        4x,'global_reach_increment ',i2,9x,'>= 0 [0]',/,
      *        4x,'reach_increment_switch ',a3,8x,'[on] off all',/,
