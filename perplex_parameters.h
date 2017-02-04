@@ -82,11 +82,12 @@
 !                                 k23 - max number of phases to be fractionated.
 !                                 k24 - max number of coordinates for the pseudocompounds of a 
 !                                       prismatic solution.
-      parameter (k0=25,k1=750000,k2=100000,k3=500,k4=32,k5=12)
+      parameter (k0=25,k1=900000,k2=100000,k3=500,k4=32,k5=12)
       parameter (k7=k5+1,k8=k5+2) 
       parameter (k9=30,k10=350,k14=18,k15=6,k16=70)
       parameter (k17=7,k18=29*k1)
-      parameter (k19=2*k5+2,k21=1600000,k20=mdim*k21,k22=mdim*k19,k23=5) 
+      parameter (k19=2*k5+2,k21=1500000,k20=(mdim+3)*k21)
+      parameter (k22=mdim*k19,k23=5)
       parameter (k13=mdim*k21,k24=k13*mst)
 !                                 l2 - max number of independent potential variables
 !                                 l3 - max number of variables for gridded min and graphics (l2+2)

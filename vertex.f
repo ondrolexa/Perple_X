@@ -100,7 +100,6 @@ c-----------------------------------------------------------------------
 c DEBUG
       integer jcount
       logical switch
-      double precision number 
       common/ debug /jcount(10),switch(10)
 
       integer iam
@@ -129,6 +128,7 @@ c                                 this do loop is a cheap strategy to automate
 c                                 "auto_refine"
       do
 c DEBUG 
+         jcount(1) = 0
          jcount(3) = 0 
          jcount(4) = 0
 c                                 -------------------------------------

@@ -19,7 +19,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a)') 
-     *      'Perple_X version 6.7.6, source updated Feb 2, 2017.'
+     *      'Perple_X version 6.7.6, source updated Feb 4, 2017.'
 
       end
 
@@ -341,7 +341,7 @@ c     iopt(28-30)                 reserved as debug options iop_28 - iop_30
 c                                 refinement_points_II
       iopt(31) = 5
 c                                 refinement_threshold
-      nopt(32) = 1d1
+      nopt(32) = 1d4
 c                                 -------------------------------------
 c                                 werami output options:
 
@@ -1260,9 +1260,9 @@ c                                 generic subdivision parameters:
 c                                 pc-perturbation
          if (iam.eq.1.and.icopt.le.3) write (n,1011) nopt(15)
 c                                 generic thermo parameters:
-         write (n,1012) nval1,nopt(5),nopt(12),nopt(20),valu(17),
-     *                     lopt(8),lopt(4),lopt(5),iopt(21),
-     *                     iopt(25),iopt(26),iopt(27)
+         write (n,1012) nval1,nopt(12),nopt(20),valu(17),
+     *                  lopt(8),lopt(4),lopt(5),nopt(5),iopt(21),
+     *                  iopt(25),iopt(26),iopt(27)
 c                                 for meemum add fd stuff
          if (iam.eq.2) write (n,1017) nopt(31),nopt(26),nopt(27)
 
@@ -1340,14 +1340,14 @@ c                                 generic thermo options
      *        4x,'solvus_tolerance       ',a7,4x,          
      *           '[aut] or 0->1; aut = automatic, 0 => ',
      *           'p=c pseudocompounds, 1 => homogenize',/,
-     *        4x,'speciation_factor   ',f6.0,5x,'>10 [100] speciation ',
-     *           'precision = final resolution / speciation_factor',/,
      *        4x,'T_stop (K)             ',f6.1,5x,'[0]',/,
      *        4x,'T_melt (K)             ',f6.1,5x,'[873]',/,
      *        4x,'order_check            ',a3,8x,'off [on]',/,
      *        4x,'approx_alpha           ',l1,10x,'[T] F',/,
      *        4x,'Anderson-Gruneisen     ',l1,10x,'[F] T',/,
      *        4x,'site_check             ',l1,10x,'[T] F',/,
+     *     4x,'speciation_factor      ',f6.0,5x,'>10 [100] speciation ',
+     *           'precision = final resolution/speciation_factor',/,
      *        4x,'speciation_max_it      ',i4,7x,'[100]',/,
      *        4x,'hybrid_EoS_H2O         ',i4,7x,'[4] 0-2, 4-5',/,
      *        4x,'hybrid_EoS_CO2         ',i4,7x,'[4] 0-4',/,
@@ -1405,7 +1405,7 @@ c                                 thermo options for frendly
      *        4x,'refinement points      ',i2,9x,
      *           '1->',i2,' [4]; iteration keyword value 2',/,
      *        4x,'refinement_points_II   ',i2,9x,'1->',i2,' [5]',/,
-     *        4x,'refinement_threshold   ',g8.0,3x,'>0, [10] J',/,
+     *        4x,'refinement_threshold   ',f8.0,3x,'>0, [1e4] J',/,
      *        4x,'solvus_tolerance_II    ',f4.2,7x,'0->1 [0.25]',/,
      *        4x,'global_reach_increment ',i2,9x,'>= 0 [0]',/,
      *        4x,'reach_increment_switch ',a3,8x,'[on] off all',/,
@@ -1922,7 +1922,8 @@ c---------------------------------------------------------------------
          else if (int.eq.2) then 
             write (*,412)
          end if             
-         write (*,413) 
+         write (*,413)
+         write (*,415)
          write (*,414) k24
       else if (ier.eq.42) then 
          write (*,42) char
@@ -2155,19 +2156,20 @@ c---------------------------------------------------------------------
      *           'perplex_option.dat')
 411   format (2x,'- reduce the auto_refine_factor_I keyword in ',
      *           'perplex_option.dat')
-412   format (2x,'- reduce the 1st value of the iteration keyword ',
+412   format (2x,'- reduce refinement_points_II keyword ',
+     *           'in perplex_option.dat',/,
+     *        2x,'- reduce the 1st value of the iteration keyword ',
      *           'in perplex_option.dat',/,
      *        2x,'- reduce the 2nd value of the iteration keyword ',
      *           'in perplex_option.dat',/,
      *        2x,'- reduce the reach_increment (if any) specified ',
-     *           'for solutions in solution_model.dat',/,
-     *        2x,'- turn adaptive minimization off by setting the 1st ',
-     *           'value of the iteration keyword to 0 ',
-     *           'in perplex_option.dat')   
+     *           'for solutions in solution_model.dat')
 413   format (2x,'- simplify the calculation, e.g., eliminate ',
      *           'components and/or simplify solution models')
 414   format (2x,'- increase dimension k24 (',i,') and recompile ',
      *           'Perple_X')
+415   format (2x,'- restrict the compositional ranges of the solution ',
+     *           'models')
 42    format (/,'**error ver042** cannot open file:',a,/,'check that it'
      *       ,' is not being used by another program',/)
 43    format (/,'**error ver043** you cannot simultaneously treat: ',

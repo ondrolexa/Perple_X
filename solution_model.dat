@@ -92,15 +92,14 @@ begin_model
                                         fats            Al     Fe   AlSi   AlSi dependent 
                                         facm            Fe3    Fe   AlSi   AlSi dependent
 
-                                        ndi             Mg     Na   AlSi   AlSi dependent 
-                                        nhed            Fe     Na   AlSi   AlSi dependent 
+                                        ndi             Mg     Na               dependent => illegitimate [Si_1.5 Al_-.5]
+                                        nhed            Fe     Na               dependent => ditto, using these is a huge waste of space
                                         Jadeite         Al     Na    Si     Si
                                         Acmite          Fe3+   Na    Si     Si
                                                       ___________________________________
 
                     Ordered species:    oCaTs           Al     Ca     Si    Al
                                         fmc             Mg     Fe     Si    Si
-
 
 Augite(G)
 abbreviation Cpx
@@ -123,13 +122,13 @@ fmc   = 1/2 cenh + 1/2 cfsg enthalpy_of_ordering  =  -4400 | DQF(fmc) - (DQF(cen
 
 begin_limits
 
-fmc = -2 + 2 cfsg + 1 fmc        delta = 2 zm1fe
-fmc =  0 - 1 di                  delta = 1 zm1mg
-fmc =  0 - 2 cfsg - 1 fmc        delta = 2 zm2fe
-fmc = -2 + 2 cenh + 1 fmc        delta = 2 zm2mg
+fmc = -2 + 2 cfsg + 1 fmc                        delta = 2 zm1fe
+fmc =  0 - 2 di - 2 cenh - 1 fmc                 delta = 2 zm1mg
+fmc =  0 - 2 cfsg - 1 fmc                        delta = 2 zm2fe
+fmc = -2 + 2 cenh + 1 fmc                        delta = 2 zm2mg
 
-ocats =  0 - 1 cats              delta = 2 zAlT2
-ocats = -2 + 1 cats              delta = 2 zAlT1
+ocats =  0 - 1 cats                              delta = 2 zAlT2 | these assume p0_ocats = 0 as is true for the model as configured
+ocats = -2 + 1 cats                              delta = 2 zAlT1
 
 end_limits
 
@@ -139,12 +138,12 @@ hed  = 1 di   + 1 cfsg - 1 fmc
 cacm = 1 acm  + 1 cats - 1 jd 
 mfc  = 1 cenh + 1 cfsg - 1 fmc 
 mats = 1 cats + 1 cenh - 1 di
-macm = 1 cats + 1 cenh - 1 di  + 1 acm - 1 jd
+macm = 1 cats + 1 cenh - 1 di   + 1 acm - 1 jd
 ffmc = 1 fmc
 fats = 1 cats - 1 di   + 1 fmc
-facm = 1 cats - 1 di   + 1 fmc + 1 acm - 1 jd
-ndi  = 1 di   + 1 cfsg - 1 fmc + 1 jd  - 1 cats
-nhed = 1 di   + 2 cfsg - 2 fmc + 1 jd  - 1 cats
+facm = 1 cats - 1 di   + 1 fmc  + 1 acm - 1 jd
+ndi  = 1 di   + 1 jd   - 1 cats
+nhed = 1 di   + 1 jd   - 1 cats + 1 cfsg - 1 fmc 
 
 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | endmember flags
 
@@ -260,7 +259,7 @@ begin_model
                                             _______________________________________
                               Tr            V     Mg     Mg     Ca      Si     OH
                               Ts            V     Mg     Al     Ca     SiAl    OH
-                              Parg          Na    Mg     Mg     Ca     SiAl    OH
+                              Parg          Na    Mg    MgAl    Ca     SiAl    OH
                               Gl            V     Mg     Al     Na      Si     OH
                               Cumm          V     Mg     Mg     Mg      Si     OH
                               Grun          V     Fe     Fe     Fe      Si     OH
@@ -271,7 +270,7 @@ begin_model
                               A             V     Mg     Fe     Fe      Si     OH
                               B             V     Fe     Mg     Fe      Si     OH
 
-           dependent exchange fug           V     M      Fe3    M      SiAl     OH
+           dependent exchange grk           V     M      Fe3    M      SiAl     OH
 
 cAmph(G)
 abbreviation Amph
@@ -281,8 +280,6 @@ full_name    clinoamphibole
 2                           | 2 site reciprocal space
 2 9                         | 1 binary + 1 octary
 
-
-
 ts      fts_d
 parg    fparg_d
 gl      fgl_d
@@ -290,7 +287,7 @@ cumm    grun
 mrbG    frb_d
 kprg    fkprg_d
 tts     ftts_d
-fug_d   ffug_d
+grk_d   fgrk_d
 tr      ftr_d
 
 2                            | 2 ordered species:
@@ -323,8 +320,8 @@ fgl_d   = 1 gl    + 1 grun   - 1 a
 frb_d   = 1 mrbG  + 1 grun   - 1 a
 fkprg_d = 1 kprg  + 3/2 grun - 1 a - 1/2 b
 ftts_d  = 1 tts   + 1 grun   - 1 a
-fug_d   = 1 mrbG  + 1 ts    + 1 cumm   - 1 gl - 1 tr
-ffug_d  = 1 mrbG  + 1 ts    + 1/2 grun - 1 gl - 1 tr + 1/2 b
+grk_d   = 1 mrbG  + 1 ts    + 1 cumm   - 1 gl - 1 tr
+fgrk_d  = 1 mrbG  + 1 ts    - 1 gl     - 1 tr + 1 b
 
 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 | endmember flags
 
@@ -340,7 +337,7 @@ ffug_d  = 1 mrbG  + 1 ts    + 1/2 grun - 1 gl - 1 tr + 1/2 b
 0. 1.  .1  0                 | range and resolution for X(mrb)  on site 2, imod = 1
 0. .1  .1  0                 | range and resolution for X(kprg) on site 2, imod = 1
 0. .1  .1  0                 | range and resolution for X(tts)  on site 2, imod = 1
-0. 1.  .1  0                 | range and resolution for X(fug)  on site 2, imod = 1
+0. .1  .1  0                 | range and resolution for X(fug)  on site 2, imod = 1
 
 begin_excess_function   
 
@@ -2019,105 +2016,6 @@ dqf(mnbi) -7890  0 0
 end_dqf_corrections
 
 end_of_model
-                    --------------------------------------------------------
-begin_model        
-                             Ilmenite after White et al., JMG 32:261-286, 2014,
-                             modified from White, RW, Powell, R, Holland, TJB & Worley, BA (2000, JMG) with Mn added
-
-                             Green et al (2016) remark this model "may be suspect" and use the original 2000 model.
-
-                                                      A                B
-                                                     _____________________
-
-                                      Mutliplicity    1                1
-                                                     _____________________
-
-                                      1 oilm          Fe                Ti
-                            Species:  2 dilm          FeTi              FeTi
-                                      3 hem           Fe3+              Fe3+
-                                      4 pnt           Mn                Ti
-                                      5 geik          Mg                Ti
-
-                                  NOTES:
-
-                                  originally entered by L Tajcmanova, April 2008. 
-
-                                  Requires that the endmember ilm_nol be created from the endmember ilm
-                                  in the thermodynamic data file by eliminating the Landau transition from 
-                                  the ilm endmember, additionally the following make definitions must be
-                                  present in the thermodynamic file.
-                                  oilm = 1 ilm_nol 
-                                        | -13608 9.426 0 => the TC DQF coeffecients added to
-                                        | smax*tc0*(q0^2-1/3*q0^6), -smax*q0^2, vmax*q0^2, respectively, yields
-                                        | the un-landaued DQF coefficients for Perple_X
-                                         1443.57559 -1.59231967  .1836386612e-1 
-                     
-                                  dilm = 1 ilm_nol  
-                                        | 1993  -2.1 0 => the TC DQF coeffecients, the values below are
-                                        | oilm + {DH,R*ln(4),0} 
-                                         17043.57559 -13.11797099 .1836386612e-1 
-                                  
-                                  The ilm and ilm_nol endmembers should be excluded from calculations
-                                  to avoid conflicts with this model.
-
-                                                                       JADC, Oct 29, 2011.
-
-                                  Added W(pnt oilm). Felix Gervais, Oct 29, 2011. 
-
-                                  Corrected to count Ti in A-site configurational entropy. JADC, Jun 16, 2013. 
-
-                                  Make definitions corrected from the raw thermocalc versions. JADC, Jun 19, 2013.
-
-                                  H&P 2011 version added by TJ 4/14
-
-                                  Excess terms updated, Felix Gervais, Jan 28, 2015.
-
-Ilm(W) 
-abbreviation Ilm
-full_name    ilmenite
-
-2                          | macroscopic
-
-5                          | 5 endmembers 
-pnt 
-geik
-hem      
-oilm      
-dilm     
-
-0 0 1 0  0                 | endmember flags
-
-0. .2 0.1 1                | subdivision range, X(pnt), imod = 1 -> assymetric
-0. .2 0.1 1                | subdivision range, X(geik), imod = 1 -> assymetric
-0. 1. 0.1 0                | subdivision range, X(hem), imod = 0 -> cartesian subdivision
-0. 1. 0.1 0                | subdivision range, X(oilm), imod = 0 -> cartesian subdivision
-
-begin_excess_function
-W(oilm dilm)    15.6d3  0.  0. 
-W(oilm hem)     26.6d3  0.  0.
-W(oilm geik)       2d3  0.  0.
-W(oilm pnt)        4d3  0.  0.
-W(dilm hem)       11d3  0.  0.
-W(dilm geik)       4d3  0.  0.
-W(dilm pnt)        2d3  0.  0.
-W(hem geik)       36d3  0.  0.
-W(hem pnt)        25d3  0.  0.
-W(geik pnt)        4d3  0.  0.
-end_excess_function
-
-2                          | 2 site model
-
-5 1.                       | A - Fe2+ Mn Fe3+ Mg Ti
-z(A,Mg)   = 1 geik
-z(A,mn)   = 1 pnt
-z(A,fe3+) = 1 hem
-z(A,ti)   = 1/2 dilm
-
-3 1.                       | B - Fe3+ Ti4+ Fe2+
-z(b,fe3+) = 1 hem
-z(b,fe2+) = 1/2 dilm
-
-end_of_model               
                      --------------------------------------------------------
 begin_model               
                              non-ideal CORDIERITE model after White et al., JMG 32:261-286, 2014
@@ -4609,8 +4507,6 @@ begin_model
                              8 fgl           Vac       Fe      Al     Na      Si_Si
                              9 mfets         Vac       Mg      Fe3+   Ca      Al_Si
                             10 ffets         Vac       Fe      Fe3+   Ca      Al_Si
-                             
-
 
                              Dale et al, CMP 2000 140:353-362 amphibole model
                              without K, Ti or Mn solution.
@@ -4619,7 +4515,7 @@ begin_model
 
                              fparg = parg + 4/5 (ftr  - tr)
                              fgl   = gl   + 3/5 (ftr  - tr)
-                             fts   = ts   + 3/5 (ftr  - tr)         
+                             fts   = ts   + 3/5 (ftr  - tr)
 
 Amph(DHP)                  | solution name 
 abbreviation Amph
@@ -4627,7 +4523,7 @@ full_name    clinoamphibole
 
 7                          | model type: reciprocal, margules
 2                          | 2 site reciprocal solution
-2 5                        | 1 binary and 1 quinary                
+2 5                        | 1 binary and 1 quinary
 tr       ftr      
 parg     fparg_i  
 ts       fts_i  
@@ -8048,111 +7944,6 @@ z(a,Ti)   =  1 usp
 z(b,Mg)   =  1 sp
 
 end_of_model  
-
-                    --------------------------------------------------------
-begin_model        
-
-                    Ilmenite after White, RW, Powell, R, Holland, TJB & Worley, BA (2000, JMG)
-
-                                                      A                B     
-                                                     _____________________
-
-                                      Mutliplicity    1                1
-                                                     _____________________
-
-                                      1 oilm          Fe                Ti       
-                            Species:  2 ailm          Ti                Fe   
-                                      3 hem           Fe3+              Fe3+  
-                                      4 pnt           Mn                Ti  
-                                      5 geik          Mg                Ti       
-                                                           
-                                  Model entered by Lucie Tajcmanova, Apr 14, 2008.                         
-                            
-                                  NOTES:
-                                  
-                                  Requires that the endmember ilm_nol be created from the endmember ilm
-                                  in the thermodynamic data file by eliminating the Landau transition from 
-                                  the ilm endmember, additionally the following make definitions must be
-                                  present in the thermodynamic file.
-
-                                  oilm = 1 ilm_nol 
-                                        | -13608 9.426 0 => the TC DQF coeffecients added to
-                                        | smax*tc0*(q0^2-1/3*q0^6), -smax*q0^2, vmax*q0^2, respectively, yields
-                                        | the un-landaued DQF coefficients for Perple_X, numeric values here 
-                                        | are for hp02/hp04 thermodynamic data files. hp11 has slightly different
-                                        | values. 
-                                         189.27763 -.67412637 .1836386612d-1  
-                     
-                                  dilm = 1 ilm_nol  
-                                        | 1993  -2.1 0 => the TC DQF coeffecients, the values below are
-                                        | oilm + {DH,R*ln(4),0} 
-                                         15789.27763 -12.19977769  .1836386612d-1
-
-                                  ailm = dilm - oilm/2 
-
-                                  The ilm and ilm_nol endmembers should be excluded from calculations
-                                  to avoid conflicts with this model.
-
-                                  For Mg and Mn solution this model differs from the Thermocalc version in 
-                                  that Mg and Mn are confined to the A-site, in contrast in Thermocalc the 
-                                  "equipartition" assumption is used to allocate Mg and Mn to the B-site in
-                                  proportion to the Ferrous iron intersite partitioning. Consequently, this
-                                  model predicts lower Mn and Mg solubility in ilmenite than the Thermocalc
-                                  version of the model. 
-                                  
-                                                                       JADC, Oct 29, 2011.
-
-                                  Added W(pnt oilm). Felix Gervais, Oct 29, 2011. 
-
-                                  Corrected to count Ti in A-site configurational entropy. JADC, Jun 16, 2013. 
-
-                                  Make definitions corrected from the raw thermocalc versions. JADC, Jun 19, 2013.
-
-                                  Corrected to vary from anti-oilm to oilm. JADC, Jan 14, 2017.
-
-Ilm(WPH)
-abbreviation Ilm
-full_name    ilmenite
-
-2                          | macroscopic
-
-5                          | 5 endmembers 
-pnt 
-geik
-hem      
-oilm      
-dilm     
-  
-
-0 0 1  0  0                  | endmember flags
-
-0. .2 0.1 1                | subdivision range, X(pnt), imod = 1 -> assymetric
-0. .2 0.1 1                | subdivision range, X(geik), imod = 1 -> assymetric
-0. 1. 0.1 0                | subdivision range, X(hem), imod = 0 -> cartesian subdivision
-0. 1. 0.1 0                | subdivision range, X(oilm), imod = 0 -> cartesian subdivision
-
-begin_excess_function
-W(oilm dilm)    15600  0  0 
-W(oilm hem)     26600  0  0
-W(dilm hem)     11000  0  0 
-W(oilm pnt)      1760  0  0 
-end_excess_function
-
-
-2                          | 2 site model
- 
-5 1.                       | A - Fe2+ Mn Fe3+ Mg Ti
-z(A,Mg)   = 1 geik
-z(A,mn)   = 1 pnt
-z(A,fe3+) = 1 hem
-z(A,ti)   = 1/2 dilm
-
-3 1.                       | B - Fe3+ Ti4+ Fe2+
-z(b,fe3+) = 1 hem
-z(b,fe2+) = 1/2 dilm
-
-end_of_model               
-  
                      --------------------------------------------------------
 begin_model
 
@@ -9392,7 +9183,7 @@ begin_model
                                 equations for cammo1 and cammo2 corrected accordingly.   
                                 corrected enthalpies for cammo1 and cammo2.    
                        8/31/11 2011 DP odel revisions entered by MJC, Oct 31, 2011.
-                       1/24/17 fcrp-crp exchange added Jan 24, 2017.
+                       1/24/17 fgrk-grk exchange added Jan 24, 2017.
                       --------------------------------------------------------
 
                       NOTE to use this model the following endmembers must be specified with make 
@@ -9431,7 +9222,7 @@ begin_model
                             13 cammo1        Vac       Mg      Fe     Fe      Si_Si      ordered
                             14 cammo2        Vac       Fe      Mg     Fe      Si_Si      ordered
 
-           dependent exchange crp            V         M      Fe3     M       Si_Al
+           dependent exchange grk            V         M      Fe3     M       Si_Al
 
                         *T1 has a true multiplicity of 4, H&P previously used an effective multiplicity of 2;
                         however in Diener et al. '07 the multiplicity has been reduced to 1. JADC 9/07. 
@@ -9451,7 +9242,7 @@ ts_dqf     fts
 gl_dqf     fgl 
 cumm       grun 
 mrb        frb
-crp        fcrp
+grk        fgrk
 tr         ftr
 
 2                            | 2 ordered species:
@@ -9484,8 +9275,8 @@ fparg = 1 parg_dqf + 3/2 grun  - 1 cammo1 - 1/2 cammo2
 fgl   = 1 gl_dqf   +  1 grun   - 1 cammo1
 frb   = 1 mrb      + 1 grun    - 1 cammo1
 fts   = 1 ts_dqf   + 1 grun    - 1 cammo1
-crp   = 1 mrb      + 1 ts_dqf  + 1 cumm   - 1 gl_dqf - 1 tr
-fcrp  = 1 mrb      + 1 ts_dqf  + 1/2 grun - 1 gl_dqf - 1 tr + 1/2 cammo2
+grk   = 1 mrb      + 1 ts_dqf  + 1 cumm   - 1 gl_dqf - 1 tr
+fgrk  = 1 mrb      + 1 ts_dqf  - 1 gl_dqf - 1 tr + 1 cammo2
 
 1 1 1 1 1 1 1 1 1 1 1 1 1 1   | endmember flags.
 
@@ -9496,7 +9287,7 @@ fcrp  = 1 mrb      + 1 ts_dqf  + 1/2 grun - 1 gl_dqf - 1 tr + 1/2 cammo2
 0. 1.  .1  0               | range and resolution for X(gl) on site 2, imod = 0 -> cartesian subdivision
 0. 1.  .1  0               | range and resolution for X(cumm) on site 2, imod = 0 -> cartesian subdivision
 0. 1.  .1  0               | range and resolution for X(mrb) on site 2, imod = 0 -> cartesian subdivision
-0. 1.  .1  0               | range and resolution for X(crp) on site 2, imod = 0 -> cartesian subdivision
+0. 1.  .1  0               | range and resolution for X(grk) on site 2, imod = 0 -> cartesian subdivision
 
 begin_excess_function
 w(mrb tr)          52e3   0. 0.  
@@ -10951,7 +10742,11 @@ end_of_model
                     --------------------------------------------------------
 begin_model        
 
-                    Ilmenite after White, RW, Powell, R, Holland, TJB & Worley, BA (2000, JMG)
+                    Ilmenite after White, RW, Powell, R, Holland, TJB & Worley, BA (2000, JMG), modified
+                    as described by White et al (2014).
+
+                    Green et al (2016) remark this modification "may be suspect" and use the original 2000 model, 
+                    i.e., that obtained by excluding geikielite.
 
                                                       A                B     
                                                      _____________________
@@ -10999,7 +10794,7 @@ begin_model
 
                                   Make definitions corrected from the raw thermocalc versions. JADC, Jun 19, 2013.
 
-Ilm(WPH1)
+Ilm(WPH)
 abbreviation Ilm
 full_name    ilmenite
 

@@ -5529,7 +5529,7 @@ c          endmember, original indexing.
 c jstot - total number of endmembers (excluding ordered species) used
 c         in the computation (i.e., excluding missing endmembers), but
 c         including dependent endmembers.
-c kdsol(istot/istot+1) - endmember index, 0 if missing, -2 if dependent,
+c kdsol(istot/istot+nord) - endmember index, 0 if missing, -2 if dependent,
 c          -1 if ordered species (istot+1/jstot+1), original indexing.
 c kstot - total number of endmembers (excluding ordered species) 
 c         used in the computation (i.e., excluding missing endmembers)
@@ -6837,6 +6837,10 @@ c----------------------------------------------------------------------
       mdep = 0 
       istot = 0
       ist(1) = 0 
+c DEBUG DEBUG
+      do i = 1, m4
+         kdsol(i) = 0
+      end do 
 c                               set logical variables
       macro = .false.
       order = .false.
@@ -10724,6 +10728,9 @@ c                                 configurational entropy variables:
 
       double precision units, r13, r23, r43, r59, r1, r2
       common/ cst59 /units, r13, r23, r43, r59, r1, r2
+c DEBUG
+      double precision r,tr,pr,ps,p,t,xco2,u1,u2
+      common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
 c----------------------------------------------------------------------
       s = 0d0
 c                                 for each site
@@ -10800,10 +10807,11 @@ c                                 and the jacobians are
                else 
 
                    if (zl.lt.-nopt(5)) then 
-
                       write (*,*) 'wacka boom',zl,j,i
-                      write (*,*) (p0a(l),l=1,8)
-                      write (*,*) (pa(l),l=1,8)
+                      write (*,*) (p0a(l),l=1,nstot(id))
+                      write (*,*) (pa(l),l=1,nstot(id))
+                      write (*,*) p, t
+                      write (*,*) 'please report this error'
                       write (*,*) 
                       inf = .true.
 
@@ -11204,6 +11212,10 @@ c----------------------------------------------------------------------
 
       double precision goodc, badc
       common/ cst20 /goodc(3),badc(3)
+c DEBUG 
+      integer jcount
+      logical switch
+      common/ debug /jcount(10),switch(10)
 c----------------------------------------------------------------------
 c                                 number of reactants to form ordered species k
       nr = nrct(k,id)
@@ -11292,6 +11304,7 @@ c                                 or dp < tolerance.
             if (done) then
 
                goodc(1) = goodc(1) + 1d0
+               jcount(1) = jcount(1) + itic 
 c                                 use the last increment
                call pincs (pa(jd)-p0a(jd),dy,ind,jd,nr)
 
@@ -11307,6 +11320,7 @@ c                                 apply the increment
 c                                 failed to converge. exit
                error = .true.
                badc(1) = badc(1) + 1
+               jcount(1) = jcount(1) + itic 
 
                exit
 
@@ -11356,6 +11370,10 @@ c----------------------------------------------------------------------
       logical lopt
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
+c DEBUG 
+      integer jcount
+      logical switch
+      common/ debug /jcount(10),switch(10)
 c----------------------------------------------------------------------
 c                                 get initial p values
       call pinc0 (id,lord)
@@ -11401,6 +11419,7 @@ c                                 g > gold, itic > 2
      *          dabs((gold-g)/g).lt.nopt(5).or.tdp.eq.xtdp.or.
      *          itic.gt.2.and.gold.le.g) then
                goodc(1) = goodc(1) + 1d0
+               jcount(1) = jcount(1) + itic 
 c DELETE ME DELETE ME DEBUG 
 c            call gderiv (id,g,dp,error)
                exit
@@ -11418,6 +11437,7 @@ c                                 not converging, under the assumption that
 c                                 this happens at low T use pinc0 to set an ordered
 c                                 composition and exit
                badc(1) = badc(1) + 1
+               jcount(1) = jcount(1) + itic 
                error = .false.
                call pinc0 (id,lord)
                exit 
@@ -11434,9 +11454,9 @@ c                                 selects the disordered configuration.
          g = 1d9
          error = .true.
 
-      end if 
+      end if
 
-      end                  
+      end
 
 
       subroutine pincs (dp,dy,ind,jd,nr)
@@ -12015,7 +12035,7 @@ c                                 for models with disordered
 c                                 endmembers, correct first derivative for the
 c                                 change in endmember configurational entropy
       do i = 1, nstot(id)
-         ds = ds - dydy(i,k,id)*scoef(i,id)
+         ds = ds - dydy(i,l,id)*scoef(i,id)
       end do 
 
       end
@@ -14722,6 +14742,10 @@ c----------------------------------------------------------------------
 
       double precision goodc, badc
       common/ cst20 /goodc(3),badc(3)
+c DEBUG 
+      integer jcount
+      logical switch
+      common/ debug /jcount(10),switch(10)
 c----------------------------------------------------------------------
       i1 = ideps(1,1,id)
       i2 = ideps(2,1,id)
@@ -14797,6 +14821,7 @@ c                                 done is just a flag to quit
             if (done) then
 
                goodc(1) = goodc(1) + 1d0
+               jcount(1) = jcount(1) + itic 
 c                                 in principle the p's could be incremented
 c                                 here and g evaluated for the last update.
                return
@@ -14809,6 +14834,7 @@ c                                 here and g evaluated for the last update.
 c                                 fails to converge.
                error = .true.
                badc(1) = badc(1) + 1
+               jcount(1) = jcount(1) + itic
                exit
 
             end if 

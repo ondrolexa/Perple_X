@@ -201,7 +201,6 @@ c                                 adaptive x(i,j) coordinates
 c DEBUG
       integer jcount
       logical switch
-      double precision number 
       common/ debug /jcount(10),switch(10)
 
       logical mus
@@ -403,7 +402,6 @@ c                                 option values
 
       integer jcount
       logical switch
-      double precision number 
       common/ debug /jcount(10),switch(10)
 
       logical mus
@@ -674,7 +672,6 @@ c                                 working arrays
 c DEBUG 
       integer jcount
       logical switch
-      double precision number 
       common/ debug /jcount(10),switch(10)
 
       integer iopt
@@ -1536,7 +1533,6 @@ c                                 endmember names
 c DEBUG 
       integer jcount
       logical switch
-      double precision number 
       common/ debug /jcount(10),switch(10)
 
       integer iopt
@@ -1735,11 +1731,16 @@ c    *                     ,names(jend(i,2+indx(i,j,k)))
          num = badc(1)/(badc(1)+goodc(1))*1d2
          write (*,1120) num, badc(1) + goodc(1)
          if (num.gt.1d-1) call warn (53,num,i,'OUTLIM')
+         write (*,1140) dfloat(jcount(1))/(badc(1)+goodc(1))
          goodc(1) = 0d0
          badc(1) = 0d0 
       end if 
 
       write (*,1130) 1d2*jcount(3)/(jcount(4)+jcount(3))
+
+      jcount(3) = 0
+      jcount(4) = 0
+      jcount(1) = 0
 
       close (n10)
       if (lopt(11)) close (n11)
@@ -1775,6 +1776,9 @@ c     *          'Endmember with this species')
      *        ' calculations.',/)
 1130  format (/,'Metastability filtering eliminated ',f7.3,'% of the ',
      *        'trial compositions prior',/,'to optimization.',/)
+
+1140  format (/,'Average number of iterations per speciation ',
+     *          'calculation:',f5.1,/)
       end 
 
       subroutine sorter (kdbulk,ico,jco,output)
