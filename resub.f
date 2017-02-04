@@ -1736,7 +1736,11 @@ c    *                     ,names(jend(i,2+indx(i,j,k)))
          badc(1) = 0d0 
       end if 
 
-      write (*,1130) 1d2*jcount(3)/(jcount(4)+jcount(3))
+      if (lopt(32)) then 
+         write (*,1130) 1d2*jcount(3)/(jcount(4)+jcount(3))
+      else
+         write (*,'(/,a,/)') 'Metastability filtering is off.'
+      end if 
 
       jcount(3) = 0
       jcount(4) = 0
@@ -1776,7 +1780,6 @@ c     *          'Endmember with this species')
      *        ' calculations.',/)
 1130  format (/,'Metastability filtering eliminated ',f7.3,'% of the ',
      *        'trial compositions prior',/,'to optimization.',/)
-
 1140  format (/,'Average number of iterations per speciation ',
      *          'calculation:',f5.1,/)
       end 
@@ -2122,17 +2125,21 @@ c                                 new point, add to list
 
       end do
 c DEBUG DEBUG 
-      if (npt.eq.icp) then 
+      if (lopt(32)) then
 
-         call getmus (1)
+         if (npt.eq.icp) then 
 
-      else
+            call getmus (1)
 
-           write (*,*) ' ugga wugga yclos1'
+         else
 
-           mus = .false. 
+            write (*,*) ' ugga wugga yclos1'
 
-      end if
+            mus = .false. 
+
+         end if
+
+      end if 
 
       ldv1 = 0
       ldv2 = 0 
@@ -3675,8 +3682,6 @@ c                                 solution.
       mpt = 0 
       kpt = 0
 
-      mus = .true. 
-
       do i = 1, jphct
 c                                 id indicates the original refinement
 c                                 point.
@@ -3710,16 +3715,22 @@ c                                 as they hardly cost anything.
          end if 
 
       end do
-c DEBUG DEBUG 
-      if (npt.eq.hcp) then 
 
-         call getmus (iter)
+c DEBUG DEBUG
 
-      else
+      if (lopt(32)) then 
+
+         if (npt.eq.hcp) then 
+
+            call getmus (iter)
+
+         else
 
            write (*,*) ' ugga wugga yclos2'
 
            mus = .false. 
+
+         end if
 
       end if 
 

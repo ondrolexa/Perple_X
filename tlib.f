@@ -147,6 +147,10 @@ c                                 precision stuff used in lpnag
 
       integer iam
       common/ cst4 /iam
+
+      logical mus
+      double precision mu, gmax
+      common/ cst330 /mu(k8),gmax,mus
 c----------------------------------------------------------------------
 c                                 periodic fractions
       r13 = 1d0/3d0
@@ -342,6 +346,9 @@ c                                 refinement_points_II
       iopt(31) = 5
 c                                 refinement_threshold
       nopt(32) = 1d4
+      lopt(32) = .true.
+c                                 initialize mus flag for refinement threshold
+      mus = .false.
 c                                 -------------------------------------
 c                                 werami output options:
 
@@ -563,6 +570,7 @@ c                                 2nd stage refinement points
          else if (key.eq.'refinement_threshold') then
 
             read (strg,*) nopt(32)
+            if (nopt(32).gt.1d4) lopt(32) = .false.
 
          else if (key.eq.'reach_increment_switch') then 
 c                                 reach_increment_switch
@@ -1140,7 +1148,7 @@ c----------------------------------------------------------------------
 
       integer i, len, n
 
-      character*3 valu(i10), nval1*12, text(14)*1
+      character*3 valu(i10), nval1*12, text(14)*1,strg*8
 
       integer iopt
       logical lopt
@@ -1194,6 +1202,16 @@ c                                 solvus tolerance text
            write (nval1,'(14a)') (text(i),i=1,len)
 
          end if 
+c                                 refine threshold text
+         if (lopt(32)) then 
+
+           write (strg,'(g8.2)') nopt(32)
+
+         else 
+
+           strg = '     off'
+
+         end if 
 
          if (iam.eq.1) write (n,1015) valu(6)
 c                                 context specific parameters:
@@ -1225,7 +1243,7 @@ c                                 for meemum
             if (iopt(6).ne.0) write (n,1170) nopt(17)
 c                                 adaptive optimization
             write (n,1180) rid(2,1),rid(2,2),int(nopt(21)),iopt(12),k5,
-     *                     iopt(31),k5,nopt(32),
+     *                     iopt(31),k5,strg,
      *                     nopt(25),int(nopt(23)),valu(20),
      *                     nopt(9),nopt(11)
 c                                 gridding parameters
@@ -1405,7 +1423,7 @@ c                                 thermo options for frendly
      *        4x,'refinement points      ',i2,9x,
      *           '1->',i2,' [4]; iteration keyword value 2',/,
      *        4x,'refinement_points_II   ',i2,9x,'1->',i2,' [5]',/,
-     *        4x,'refinement_threshold   ',f8.0,3x,'>0, [1e4] J',/,
+     *        4x,'refinement_threshold   ',a,3x,'>0, [1e4] J',/,
      *        4x,'solvus_tolerance_II    ',f4.2,7x,'0->1 [0.25]',/,
      *        4x,'global_reach_increment ',i2,9x,'>= 0 [0]',/,
      *        4x,'reach_increment_switch ',a3,8x,'[on] off all',/,
