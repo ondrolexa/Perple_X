@@ -4869,8 +4869,10 @@ c---------------------------------------------------------------------
       double precision ycum
 
       integer ntot,npairs
+      common/ cst86 /ntot,npairs
+
       double precision simp,prism
-      common/ cxt86 /simp(k13),prism(k24),ntot,npairs
+      common/ cxt86 /simp(k13),prism(k24)
 
       integer ncoor,mcoor,ndim
       common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
@@ -12345,8 +12347,10 @@ c-----------------------------------------------------------------------
       common/ cst18a /mname(m4)
 
       integer ntot,npairs
+      common/ cst86 /ntot,npairs
+
       double precision simp,prism
-      common/ cxt86 /simp(k13),prism(k24),ntot,npairs
+      common/ cxt86 /simp(k13),prism(k24)
 
       integer iorig,jnsp,iy2p
       common / cst159 /iorig(m4),jnsp(m4),iy2p(m4)
@@ -12503,14 +12507,11 @@ c                                 a the site fraction array:
                      l = l + 1
                      z(i,j) = prism(k+l)
                      zt = zt + z(i,j)
-                  end do 
+                  end do
+
                   z(i,isp(i)) = 1d0 - zt
+
                end do
-c                                 add a trap for the case that
-c                                 the sum of the minima > 0, this 
-c                                 can only happen with stretching 
-c                                 transformations.
-               if (zt-1d0.gt.nopt(5)) cycle
 c                                 generate the pseudocompound:
                call soload (im,icoct,icpct,ixct,tname,icky,im)
 
@@ -12631,8 +12632,10 @@ c---------------------------------------------------------------------
       common/ cxt26 /refine
 
       integer ntot,npairs
+      common/ cst86 /ntot,npairs
+
       double precision simp,prism
-      common/ cxt86 /simp(k13),prism(k24),ntot,npairs
+      common/ cxt86 /simp(k13),prism(k24)
 
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
      *        kstot,rkord,xtyp
@@ -12980,7 +12983,8 @@ c                              compute end-member fractions
          y(l) = 1d0
 
          do m = 1, istg(im)
-c                              check for invalid compositions
+c                              check for invalid compositions,
+c                              necessary for conformal transformtions
             x = z(m,jmsol(l,m))
 
             if (x.gt.1d0) then 
@@ -15090,8 +15094,10 @@ c---------------------------------------------------------------------
       logical odd
 
       integer ntot,npairs
+      common/ cst86 /ntot,npairs
+
       double precision simp,prism
-      common/ cxt86 /simp(k13),prism(k24),ntot,npairs
+      common/ cxt86 /simp(k13),prism(k24)
 c                                 interval limits conformal transformation
       integer intv
       double precision yint, yfrc
@@ -15309,7 +15315,10 @@ c                                 over the top
      *               - ycum + 1d0    .gt. nopt(5) ) then          
 c                                 reset the current variable
 c                                 and max loop index
-               dy =  1d0 - ycum 
+               dy =  1d0 - ycum
+c DEBUG that means cycle?? for sure yes, but this is not
+c reseting anything in the right way......
+               cycle
 
             else
 c                                 must have just hit on the last increment
@@ -15331,7 +15340,7 @@ c                                 must have just hit on the last increment
 
          do i = 1, jsp
             simp(j+i) = y(i,ind(i))
-         end do
+         end do 
 
          simp(j+indx) = simp(j+indx) + dy
 
@@ -15355,8 +15364,10 @@ c---------------------------------------------------------------------
       double precision ycum, sum, q, ratio
 
       integer ntot,npairs
+      common/ cst86 /ntot,npairs
+
       double precision simp,prism
-      common/ cxt86 /simp(k13),prism(k24),ntot,npairs
+      common/ cxt86 /simp(k13),prism(k24)
 
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
      *        kstot,rkord,xtyp

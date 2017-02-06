@@ -374,8 +374,10 @@ c                                 temporary subdivision limits:
       common/ cxt108 /xmn(mst,msp),xmx(mst,msp),xnc(mst,msp)
 c                                 coordinates output by subdiv
       integer ntot,npairs
+      common/ cst86 /ntot,npairs
+
       double precision simp,prism
-      common/ cxt86 /simp(k13),prism(k24),ntot,npairs
+      common/ cxt86 /simp(k13),prism(k24)
 
       integer ncoor,mcoor,ndim
       common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
@@ -604,15 +606,6 @@ c                                 of the solution
          iref = iref + 1
 
 10    continue
-
-c DEBUG
-c      if (switch(1)) then  
-c            write (*,*) 'igood =',jcount(2),' ibad =',jcount(1)
-c            write (*,*) 'ids =',ids
-c            write (*,*) 1d2*jcount(2)/(jcount(2)+jcount(1))
-c            jcount(3) = jcount(3) + jcount(1)
-c            jcount(4) = jcount(4) + jcount(2)
-c      end if 
 
       first = .false.
 
@@ -1736,7 +1729,7 @@ c    *                     ,names(jend(i,2+indx(i,j,k)))
          badc(1) = 0d0 
       end if 
 
-      if (lopt(32)) then 
+      if (lopt(32).and.jcount(4)+jcount(3).gt.0) then 
          write (*,1130) 1d2*jcount(3)/(jcount(4)+jcount(3))
       else
          write (*,'(/,a,/)') 'Metastability filtering is off.'
@@ -2132,8 +2125,6 @@ c DEBUG DEBUG
             call getmus (1)
 
          else
-
-            write (*,*) ' ugga wugga yclos1'
 
             mus = .false. 
 
@@ -3725,8 +3716,6 @@ c DEBUG DEBUG
             call getmus (iter)
 
          else
-
-           write (*,*) ' ugga wugga yclos2'
 
            mus = .false. 
 
