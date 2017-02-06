@@ -632,6 +632,8 @@ c----------------------------------------------------------------------
 
       integer i,ins(9),jns(3),nit,ier
 
+      logical limit
+
       double precision fo2,fs2,oh2o,c1,c2,c3,c4,c5,c6,c7,
      *                 ek1,ek2,ek3,ek4,ek5,ek6,ek7
 
@@ -668,7 +670,7 @@ c----------------------------------------------------------------------
       nit = 0
       oh2o = 2d0
 c                                check for in bounds composition
-      call xcheck (xo)
+      call xcheck (xo,limit)
 c                                fs2 = 1/2 ln (fs2)
       call setfs2 (fs2)
 c                                compute equilibrium constants in csteqk
@@ -679,6 +681,8 @@ c                                compute hybrid pure fluid props
       call hybeos (jns,3)
 
       call zeroys
+
+      if (limit) return
 
       y(5) = 0.00001d0
 
@@ -1420,6 +1424,8 @@ c----------------------------------------------------------------------
 
       integer ins(8),jns(3),nit,ier,i
 
+      logical limit 
+
       double precision fo2,fs2,oh2o,c1,c2,c3,c5,c6,
      *                 ek1,ek2,ek3,ek5,ek6
 
@@ -1461,7 +1467,7 @@ c----------------------------------------------------------------------
 c                                this fs2 = 1/2 ln (fs2),
       call setfs2 (fs2)
 c                                 check for in bounds composition
-      call xcheck (xo)
+      call xcheck (xo,limit)
 c                                 compute equilibrium constants in csteqk
 
 c                                 who knows how this works, i guess if 
@@ -1475,6 +1481,8 @@ c                                 compute hybrid pure fluid props
       call hybeos (jns,3)
 
       call zeroys
+
+      if (limit) return
 
       y(5) = 0.00001d0
       y(1) = 0.1d0
@@ -1550,6 +1558,8 @@ c-----------------------------------------------------------------------
 
       integer ins(5), jns(1), j, i
 
+      logical limit
+
       double precision vol
       common/ cst26 /vol
 
@@ -1581,7 +1591,7 @@ c-----------------------------------------------------------------------
 c----------------------------------------------------------------------
 c                                check if xo is <1, >0,
 c                                reset if necessary
-      call xcheck (xo) 
+      call xcheck (xo,limit) 
 c                                 compute equilibrium constants in csteqk
       call seteqk (ins,5,-1d0)
 c                                this fs2 = 1/2 ln (fs2),
@@ -1593,6 +1603,7 @@ c                                 compute hybrid pure fluid props
 
       call zeroys
 
+      if (limit) return
 c                               
       ek3 = dexp(eqk(1))
 c                                 get first guess:
@@ -1689,6 +1700,8 @@ c-----------------------------------------------------------------------
 
       integer ins(3), jns(1), i, j
 
+      logical limit 
+
       double precision eqk
       common / csteqk /eqk(nsp)
 
@@ -1720,7 +1733,7 @@ c-----------------------------------------------------------------------
 c----------------------------------------------------------------------
 c                                check if xo is <1, >0,
 c                                reset if necessary
-      call xcheck (xo)  
+      call xcheck (xo,limit)  
 c                                 compute equilibrium constants in csteqk
       call seteqk (ins,1,-1d0)
 c                                 compute pure mrk fluid properties
@@ -1729,6 +1742,8 @@ c                                 compute hybrid pure fluid props
       call hybeos (jns,1)
 
       call zeroys
+
+      if (limit) return
 
       c1 = 1d0/dsqrt(p)/eqk(1)
 
@@ -1824,7 +1839,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical low
+      logical low, limit 
 
       integer ins(2), jns(1)
 
@@ -1861,7 +1876,7 @@ c----------------------------------------------------------------------
       y(5) = xv
 c                                check if xh2 is <1, >0,
 c                                reset if necessary.
-      call xcheck (y(5))
+      call xcheck (y(5),limit)
 
       y(1) = 1d0 - y(5)
 c                                get pure species fugacities
@@ -6901,7 +6916,7 @@ c----------------------------------------------------------------------
 
       integer ins(6),jns(3),nit,i
 
-      logical bad
+      logical bad, limit
 
       double precision oy5,fo2,ytot,t4y3,t3y3,t2y5,t4y5,det,x,dy5,dy3,
      *       c1,c2,c3,c4,t1,t2,t3,t4,m,dm3,dm5,c,dc3,dc5,nh,rat,y5,y3
@@ -6946,7 +6961,7 @@ c----------------------------------------------------------------------
       oy5 = 0d0
       bad = .false.
 c                                 check for in bounds composition
-      call xcheck (xo)
+      call xcheck (xo,limit)
 c                                 compute equilibrium constants, returned
 c                                 in csteqk
       call seteqk (ins,6,elag)
@@ -6955,7 +6970,9 @@ c                                 compute pure mrk fluid properties
 c                                 compute hybrid pure fluid props
       call hybeos (jns,3)
 
-      call zeroys 
+      call zeroys
+
+      if (limit) return 
 
       c1 = dexp (eqk(4)) * p
       c2 = dexp (2d0*eqk(16) - 3d0*eqk(4)) * p
@@ -7235,15 +7252,19 @@ c---------------------------------------------------------------------
 
       end 
 
-      subroutine xcheck (x)
+      subroutine xcheck (x,limit)
 c----------------------------------------------------------------------
-c x check for speciation routines that can't handle xo = 0, 1.
+c x check for speciation routines that can't handle xo = 0, 1. this
+c causes too many possibilities for error in vertex/meemum so modified
+c merely to avoid x out of range. feb 7, 2017. jadc,
 c----------------------------------------------------------------------
       implicit none
 
       include 'perplex_parameters.h'
 
       double precision x
+
+      logical limit
 
       integer iopt
       logical lopt
@@ -7252,10 +7273,14 @@ c----------------------------------------------------------------------
 c----------------------------------------------------------------------
 c                                check if xo is <1, >0,
 c                                reset if necessary
-      if (x.lt.nopt(5)) then
-         x = nopt(5)
-      else if (dabs(x-1d0).lt.nopt(5)) then
-         x = 1d0 - nopt(5)
+      if (x.le.0d0) then
+         x = 0d0
+         limit = .true.
+      else if (x.gt.1d0) then
+         x = 1d0
+         limit = .true.
+      else
+         limit = .false.
       end if 
 
       end 
@@ -7276,7 +7301,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical bad, quit
+      logical bad, quit, limito, limitc
 
       integer ins(6), jns(3), i, j, k, itct, icase
 
@@ -7330,11 +7355,11 @@ c                                 for reasons of stupidity convert
 c                                 c-o2-h2 coordinates to c-o-h
       xo = 2d0*yo2/(2d0-yc)
 c                                 do not allow degenerate compositions:
-      call xcheck (xo)
+      call xcheck (xo,limito)
 
       xc = yc/(2d0-yc)
 
-      call xcheck (xc)
+      call xcheck (xc,limitc)
 c                                 compute equilibrium constants in csteqk
       call seteqk (ins,6,0d0)
 c                                 compute pure mrk fluid properties
@@ -7343,6 +7368,8 @@ c                                 compute hybrid pure fluid props
       call hybeos (jns,3)
 c                                 for safety, zero the species array
       call zeroys
+
+      if (limito.or.limitc) return
 c                                 gh => gcork/gmrk, the g(i)'s are the fugacity coefficients
 c                                 of the pure gas according to the various eos's (CORK, HSMRK, MRK)
 c                                 could replace CORK with pitzer and sterner.

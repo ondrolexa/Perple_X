@@ -12715,7 +12715,7 @@ c                                 compositions.
 
             ntot = ntot + 1
             l = (i-1) * mcoor(ids) 
-            k = ntot * mcoor(ids)
+            k = (ntot-1) * mcoor(ids)
 
             if (k+mcoor(ids).gt.k24) then
 c                                 error diagnostic
@@ -12985,25 +12985,7 @@ c                              compute end-member fractions
          do m = 1, istg(im)
 c                              check for invalid compositions,
 c                              necessary for conformal transformtions
-            x = z(m,jmsol(l,m))
-
-            if (x.gt.1d0) then 
-
-               if (x-1d0.lt.nopt(5)) then
-                  x = 1d0
-               else 
-                  call error (125,x,1,tname)
-               end if
-
-            else if (x.lt.0d0) then 
-
-               if (x.gt.-nopt(5)) then
-                  x = 0d0
-               else 
-                  call error (125,x,1,tname)
-               end if
-
-            end if 
+            x = z(m,jmsol(l,m)) 
 
             y(l) = y(l)*x
 
@@ -15296,15 +15278,18 @@ c                                 saturated first index, done.
 c                                 ok now we have the indices, check
 c                                 the composition
          ycum = 0d0
+         dy = 0d0 
 
          do i = 1, jsp 
             ycum = ycum + y(i,ind(i))  
          end do 
 
          if (ycum.gt.1d0) then
-
+c                                 no matter what this is the last point
+c                                 to be generated for ind(indx), set ieyit
+c                                 to change indx
             ieyit = 1
-c                                 here is where it gets messy:
+c                                 but here is where it gets messy:
             if (indx.eq.1) then
 c                                 we're at the first point, and already
 c                                 over the top
@@ -15312,22 +15297,25 @@ c                                 over the top
                cycle
 
             else if ( y(indx,ind(indx)) - y(indx,ind(indx)-1)
-     *               - ycum + 1d0    .gt. nopt(5) ) then          
-c                                 reset the current variable
-c                                 and max loop index
+     *               - ycum + 1d0    .gt. nopt(5) ) then
+c                                 the excess (ycum-1) is less then the 
+c                                 amount the variable was previously incremented
+c                                 so it's possible to back off the composition
+c                                 to zero excess. this will always be true for
+c                                 cartesian transformations, it might not be true
+c                                 for conformal stretching (i.e., increments could
+c                                 grow in the direction of the nodal index).
                dy =  1d0 - ycum
-c DEBUG that means cycle?? for sure yes, but this is not
-c reseting anything in the right way......
-               cycle
 
             else
-c                                 must have just hit on the last increment
+c                                 must have just hit on the last increment or
+c                                 conformal. 
                cycle 
 
             end if 
 
          else if (ind(indx).eq.iy(indx)) then 
-
+c                                 terminates by hitting an internal bound. 
             ieyit = 1
 
          end if 
@@ -15343,8 +15331,6 @@ c                                 must have just hit on the last increment
          end do 
 
          simp(j+indx) = simp(j+indx) + dy
-
-         dy = 0d0 
 
       end do
 
