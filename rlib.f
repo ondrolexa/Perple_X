@@ -11217,7 +11217,7 @@ c----------------------------------------------------------------------
 c DEBUG 
       integer jcount
       logical switch
-      common/ debug /jcount(10),switch(10)
+      common/ debug1 /jcount(10),switch(10)
 c----------------------------------------------------------------------
 c                                 number of reactants to form ordered species k
       nr = nrct(k,id)
@@ -11375,7 +11375,7 @@ c----------------------------------------------------------------------
 c DEBUG 
       integer jcount
       logical switch
-      common/ debug /jcount(10),switch(10)
+      common/ debug1 /jcount(10),switch(10)
 c----------------------------------------------------------------------
 c                                 get initial p values
       call pinc0 (id,lord)
@@ -14731,7 +14731,7 @@ c----------------------------------------------------------------------
 c DEBUG 
       integer jcount
       logical switch
-      common/ debug /jcount(10),switch(10)
+      common/ debug1 /jcount(10),switch(10)
 c----------------------------------------------------------------------
       i1 = ideps(1,1,id)
       i2 = ideps(2,1,id)

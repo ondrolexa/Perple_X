@@ -19,7 +19,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a)') 
-     *      'Perple_X version 6.7.6, source updated Feb 6, 2017.'
+     *      'Perple_X version 6.7.6, source updated Feb 27, 2017.'
 
       end
 
@@ -2184,7 +2184,7 @@ c---------------------------------------------------------------------
      *           'for solutions in solution_model.dat')
 413   format (2x,'- simplify the calculation, e.g., eliminate ',
      *           'components and/or simplify solution models')
-414   format (2x,'- increase dimension k24 (',i,') and recompile ',
+414   format (2x,'- increase dimension k24 (',i7,') and recompile ',
      *           'Perple_X')
 415   format (2x,'- restrict the compositional ranges of the solution ',
      *           'models')
@@ -2197,13 +2197,13 @@ c---------------------------------------------------------------------
      *        /)
 45    format (/,'**error ver045** too many mobile components.'/)
 46    format (/,'**error ver046** the first value of the iteration ',
-     *          'keyword exceeds (',i,') the value',/,'of MRES (',i3,
+     *          'keyword exceeds (',i2,') the value',/,'of MRES (',i3,
      *          ') specified in routine ',a,'. Either reduce the',/,
      *          'iteration keyword value or increase MRES.',/) 
 47    format (/,'**error ver047** solution model ',a,' is incorrectly ',
      *        'formatted (van Laar).',/)
 48    format (/,'**error ver048** too many terms in solution model ',a,
-     *        ' increase parameter m1 (',i,').',/)
+     *        ' increase parameter m1 (',i2,').',/)
 49    format (/,'**error ver049** the order of solution model ',a,
      *        ' is too high, increase parameter m2 (',i2,').',/)
 50    format (/,'**error ver050** requested compositional resolution ',

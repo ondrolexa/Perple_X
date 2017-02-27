@@ -1864,7 +1864,6 @@ end_dqf_corrections
 end_of_model 
                       --------------------------------------------------------
 begin_model
-
                              BIOTITE model after White et al., JMG 32:261-286, 2014.
 
                              NOTE: this model requires make definitions for fbi and tbi
@@ -2017,7 +2016,7 @@ end_dqf_corrections
 
 end_of_model
                      --------------------------------------------------------
-begin_model               
+begin_model
                              non-ideal CORDIERITE model after White et al., JMG 32:261-286, 2014
                              with Mn added
    
@@ -2287,7 +2286,7 @@ z(m2,mg) = 1 en + 1 mgts + 1 mots
 end_of_model 
                       --------------------------------------------------------
 begin_model
-                             
+
                              Ti-Fe3+ Biotite from Tajcmanova et al., JMG 2009;
                              extended for Mn solution after Tinkham et al. 2001.
 
@@ -2766,132 +2765,6 @@ z(y,cr) = 1 knor
 
 end_of_model 
                       --------------------------------------------------------
-begin_model          
-                                      Green, ECR, Holland, TJB & Powell, R (2007) An order-disorder model for
-                                      omphacitic pyroxenes in the system jadeite-diopside-hedenbergite-acmite,
-                                      with applications to eclogite rocks. American Mineralogist, 92, 1181-1189.
-
-                                      WARNING: The choice of independent ordered species (here, cfm, om, jac)
-                                      has the conseqence that this model CANNOT be used for the following
-                                      subcompositions:
-
-                                          jd-hed, hed-acm, di-acm, hed-acm-jd, hed-acm-di
-
-                                      to work in these joins either fom, hac, or dac must replace either 
-                                      om or/and cfm.
-
-                                                         Site:
-                                                       1      2      3      4    
-                                                      M2a    M2b    M1a    M1b     
-                                                     ____________________________________
-
-                                      Mutliplicity    1/2    1/2    1/2    1/2   
-                                                     ____________________________________
-
-                                      1 Diopside      Ca     Ca     Mg     Mg    
-                            Species:  2 Jadeite       Na     Na     Al     Al    
-                                      3 Hedenbergite  Ca     Ca     Fe2+   Fe2+ 
-                                      4 Acmite        Na     Na     Fe3+   Fe3+  
-                                                      ___________________________________
-
-                        Ordered Cpd:  5 om            Na     Ca     Al     Mg   
-                                      6 cfm           Ca     Ca     Mg     Fe 
-                                      7 jac           Na     Na     Fe3+   Al
-
-Omph(GHP)
-abbreviation Cpx
-full_name    clinopyroxene
-
-6                           | model type margules with multiple compound formation  
-                                                                       
-4                           | disordered endmembers
-
-di       
-jd   
-acm   
-hed
-
-3                            | number of ordered species 
-
-om   = 1/2 jd + 1/2 di   enthalpy_of_ordering  =  -2.9d3 
-cfm  = 1/2 di + 1/2 hed  enthalpy_of_ordering  =  -1.5d3
-jac  = 1/2 jd + 1/2 acm  enthalpy_of_ordering  =  -1d3  
-                             | fom  = 1/2 jd + 1/2 hed  enthalpy_of_ordering  =  -3.6d3
-begin_limits
-om = -2 + 2 di + 2 hed   delta = 2
-om = -2 + 2 jd + 2 acm   delta = 2 
-om = -2 + 2 di + 1 cfm   delta = 2 
-om = -2 + 2 jd + 1 jac   delta = 2 
-om = -2 + 2 acm + 2 jd + 2 hed + 1 cfm delta = 2
-om = -2 + 2 acm + 2 di + 2 hed + 1 jac delta = 2
-
-cfm = -2 di + 1 om       delta = 2
-cfm = -2 + 2 hed         delta = 2
-cfm = -2 hed             delta = 2
-cfm = -2 jd - 2 hed - 2 acm + 1 om      delta = 2
-
-jac = -2 acm             delta = 2
-jac = -2 jd + 1 om       delta = 2
-jac = -2 + 2 acm         delta = 2
-jac = -2 acm - 2 di - 2 hed + 1 om      delta = 2
-end_limits
-
-0  0  0  0                   | endmember flags
-
-0. 1. 0.1  0                 | range and resolution of X(di)
-0. 1. 0.1  0                 | range and resolution of X(jd)
-0. 1. 0.1  0                 | range and resolution of X(acm) 
-
-begin_excess_function   
-W(jd di)       26d3  0  0 1
-W(jd hed)      24d3  0  0 2
-W(jd acm)       5d3  0  0
-W(jd om)     15.5d3  0  0 3
-W(jd cfm)    25.2d3  0  0 4      
-W(jd jac)       3d3  0  0
-W(di hed)       4d3  0  0 5
-W(di acm)      15d3  0  0
-W(di om)    15.75d3  0  0 6
-W(di cfm)       2d3  0  0 7
-W(di jac)   21.05d3  0  0
-W(hed acm)     14d3  0  0
-W(hed om)    17.2d3  0  0  8     
-W(hed cfm)      2d3  0  0 9
-W(hed jac)   20.1d3  0  0
-W(acm om)    12.8d3  0  0
-W(acm cfm)   15.5d3  0  0
-W(acm jac)      3d3  0  0
-W(om cfm)   18.45d3  0  0 10
-W(om jac)    19.3d3  0  0
-W(cfm jac)  21.05d3  0  0
-                             | W(fom cfm)  17.75d3  0  0 11
-                             | W(fom di)   17.05d3  0  0 12
-                             | W(fom hed)  14.5d3   0  0 13
-                             | W(fom jd )  14.d3    0  0 14
-                             | W(fom cfm)  15.75d3  0  0 15
-                             | W(fom om)       2d3  0  0 16
-end_excess_function
-
-4                                   | 4 site entropy model (m1a, m1b, m2b, m2a)
-
-4 0.5                               | 4 species on m1b, mult = 1/2
-z(m1b,al)   = 1 jd + 1 jac 
-z(m1b,fe2+) = 1 hed + 1 cfm 
-z(m1b,fe3+) = 1 acm 
-
-2 0.5                               | 2 species on m2a, mutiplicity = 1/2
-z(m2a,ca)   = 1 di + 1 hed + 1 cfm
-
-2 0.5                               | 2 species on m2b, mult. = 1/2
-z(m2b,na)   = 1 jd + 1 acm + 1 jac 
-
-4 0.5                               | 4 species on m1a, mult = 1/2
-z(m1a,mg)   = 1 di + 1 cfm 
-z(m1a,fe2+) = 1 hed 
-z(m1a,fe3+) = 1 acm + 1 jac 
-
-end_of_model
-                    -------------------------------------------------------- 
 begin_model                
                            | CHLORITE: extended from holland et al. 1998, EJM.
 
@@ -9577,14 +9450,14 @@ end_van_laar_sizes
 
 end_of_model   
                       --------------------------------------------------------
-begin_model          
-                                      Diener & Powell's (2011) modification of the Green, Holland &
-                                      Powell (2007) omphacite
+begin_model
+                                      Green, ECR, Holland, TJB & Powell, R (2007) An order-disorder model for
+                                      omphacitic pyroxenes in the system jadeite-diopside-hedenbergite-acmite,
+                                      with applications to eclogite rocks. American Mineralogist, 92, 1181-1189.
+                                      
+                                      Diener & Powell's (2011) modifications entered by MJC, Oct 31, 2011.
 
-                                      2011  Model revisions entered by MJC, Oct 31, 2011.
-
-                                      requires use of acm = acm - 4000 J/mol (NOT IN ORIGINAL
-                                      GHP MODEL)
+                                      requires use of acm = acm - 4000 J/mol (NOT IN ORIGINAL GHP MODEL)
                                       ---------------------------------------------
 
                                       WARNING: The choice of independent ordered species (here, cfm, om, jac)
@@ -9614,7 +9487,7 @@ begin_model
                                       6 cfm           Ca     Ca     Mg     Fe 
                                       7 jac           Na     Na     Fe3+   Al
 
-Omph(GHP2)     
+Omph(GHP)     
 abbreviation Cpx
 full_name    clinopyroxene
 

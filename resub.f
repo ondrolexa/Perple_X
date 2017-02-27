@@ -201,7 +201,7 @@ c                                 adaptive x(i,j) coordinates
 c DEBUG
       integer jcount
       logical switch
-      common/ debug /jcount(10),switch(10)
+      common/ debug1 /jcount(10),switch(10)
 
       logical mus
       double precision mu, gmax
@@ -404,7 +404,7 @@ c                                 option values
 
       integer jcount
       logical switch
-      common/ debug /jcount(10),switch(10)
+      common/ debug1 /jcount(10),switch(10)
 
       logical mus
       double precision mu, gmax
@@ -665,7 +665,7 @@ c                                 working arrays
 c DEBUG 
       integer jcount
       logical switch
-      common/ debug /jcount(10),switch(10)
+      common/ debug1 /jcount(10),switch(10)
 
       integer iopt
       logical lopt
@@ -1526,7 +1526,7 @@ c                                 endmember names
 c DEBUG 
       integer jcount
       logical switch
-      common/ debug /jcount(10),switch(10)
+      common/ debug1 /jcount(10),switch(10)
 
       integer iopt
       logical lopt

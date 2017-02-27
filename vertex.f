@@ -100,7 +100,7 @@ c-----------------------------------------------------------------------
 c DEBUG
       integer jcount
       logical switch
-      common/ debug /jcount(10),switch(10)
+      common/ debug1 /jcount(10),switch(10)
 
       integer iam
       common/ cst4 /iam
