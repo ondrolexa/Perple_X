@@ -3663,7 +3663,7 @@ c                                 npt is the number of points refined
 c                                 from the previous cycle, opt is the
 c                                 number of points in the original 
 c                                 solution.
-      do i = 1, npt
+      do i = 1, k19
          jmin(i) = 0 
          clam(i) = 1d99
          stable(i) = .false.
