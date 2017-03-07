@@ -142,6 +142,9 @@ c----------------------------------------------------------------------
       double precision tm,td
       common/ cst202 /tm(m7,m6),td(m8),ilam,jlam,idiso,lamin,idsin
 
+      integer ltyp,lct,lmda,idis
+      common/ cst204 /ltyp(k10),lct(k10),lmda(k10),idis(k10)
+
       integer ictr, itrans
       double precision ctrans
       common/ cst207 /ctrans(k0,k5),ictr(k5),itrans
@@ -196,6 +199,12 @@ c
       names(k10) = name
 
       eos(k10) = ieos
+
+      lct(k10) = ilam
+
+      ltyp(k10) = jlam
+
+      idis(k10) = idiso
 
       call outdat (n8,k10,0)
 

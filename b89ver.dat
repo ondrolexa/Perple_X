@@ -21,18 +21,18 @@ end_standard_variables
 tolerance  -.1E-2  |<= DTOL for unconstrained minimization, energy units
 
 begin_components |<= name (<5 characters), molar weight (g)
-NA2O    11.0000
-MGO     12.0000
-AL2O3   61.9820
-SIO2    40.3200
-K2O    101.9400
-CAO     60.0900
-TIO2    94.2000
-MNO     56.0800
-FEO     79.9000
-O2      70.9400
-H2O     71.8500
-CO2     32.0000
+NA2O    61.9790
+MGO     40.3040
+AL2O3  101.9610
+SIO2    60.0840
+K2O     94.1960
+CAO     56.0770
+TIO2    79.8660
+MNO     70.9370
+FEO     71.8440
+O2      31.9990
+H2O     18.0150
+CO2     44.01000
 end_components
 
 begin_special_components

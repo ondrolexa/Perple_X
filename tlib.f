@@ -19,7 +19,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a)') 
-     *      'Perple_X version 6.7.6, source updated Mar 1, 2017.'
+     *      'Perple_X version 6.7.6, source updated Mar 7, 2017.'
 
       end
 
@@ -4104,10 +4104,12 @@ c                                 shear/bulk modulus
       if (ibeg.gt.1) write (lun,'(240a1)') (chars(i), i = 1, ibeg)
 c                                 =====================================
 c                                 disorder parameters
-      if (idis(id).ne.0) then 
+      if (idis(id).ne.0) then
+
          ibeg = 1
+
          do i = 1, 8
-            call outthr (therdi(i,idis(id)),dstrg(i),2,ibeg)
+            call outthr (td(i),dstrg(i),2,ibeg)
          end do 
 
          if (ibeg.gt.1) write (lun,'(240a1)') (chars(i), i = 1, ibeg)
