@@ -19,7 +19,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a)') 
-     *      'Perple_X version 6.7.6, source updated Mar 7, 2017.'
+     *      'Perple_X version 6.7.6, source updated Mar 10, 2017.'
 
       end
 
@@ -2725,9 +2725,10 @@ c----------------------------------------------------------------------
      *        ' will be destabilized at this condition. In some cases',
      *        ' this problem can be corrected by',/,'setting ',
      *        'Anderson_Gruneisen to TRUE in the Perple_X option file.')
-47    format (/,'**warning ver047** invariant point ',i6,' could ',
-     *        ' not be located within',/,' the specified tolerance ',
-     *        ' (PTOL= ',g12.6,' ) reset PTOL to avoid this problem.',/)
+47    format (/,'**warning ver047** univariant field ',i6,' terminates',
+     *        ' at an invariant field',/,'that could not be located ',
+     *         'within the tolerance specified in the thermodynamic',/,
+     *         'data file (PTOL= ',g12.6,').',/)
 48    format (/,'**warning ver048** fluid phase pseudocompound data ',
      *         'does not include',/,' volumetric properties (SWASH).',/)
 49    format (/,'**warning ver049** warning ',i3,' will not be repeated'
@@ -2773,12 +2774,10 @@ c     *          ' (SWASH, see program documentation Eq 2.3)',/)
      *          'COFACE, this should never occur',/,'if you see this ',
      *          'message more than once, please report the problem',/)
 73    format (/,'**warning ver073** an invariant point has been',
-     *          ' skipped, routine:',a,/,' This problem typically',
-     *          ' occurs because two phases in the thermodynamic data',
-     *          ' file have identical properties.',/,' Otherwise ',
-     *          ' decreasing DTOL (',g9.3,') in the thermodynamic', 
-     *          ' data file (Doc Sect 3, Card 6) for  variable ',i1,/,
-     *          ' may eliminate this problem',/)
+     *          'skipped, routine: ',a,/,
+     *          'decreasing DTOL (',g9.3,') in the thermodynamic ', 
+     *          'data file for variable ',i1,/,
+     *          'may eliminate this problem',/)
 74    format (/,'**warning ver074** no new equilibria identified,',
      *          ' if degenerate segments have',/,' been skipped',
      *          ' increase the computational reliability level.',/)

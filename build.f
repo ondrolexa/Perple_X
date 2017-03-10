@@ -423,15 +423,20 @@ c                                 phase
                end do 
 c                                 names contains the list of candidates
                if (iphct.eq.0) then
+
                   write (*,2061) fugact(ima),char5
                   ima = 1
                   imaf(jmct) = ima
                   jmuct = jmuct + 1
+
                else if (iphct.eq.1) then 
+
                   write (*,2062) names(1),char5,fugact(ima)
                   afname(jmct) = names(1)
                   icp = 1
+
                else 
+
                   write (*,2063) char5,fugact(ima)
                   write (*,2064) (names(i),i=1,iphct)
                   good = .false.
@@ -447,11 +452,17 @@ c                                 names contains the list of candidates
                      end do 
                      if (good) exit
                      write (*,2310) name
-                  end do 
-               end if 
-            else 
+                  end do
+
+                  write (*,1190) 
+
+               end if
+
+            else
+
                ima = 1
                afname(jmct) = blank
+
             end if
 c                                 now make the variable name
             if (ima.eq.2.or.ima.eq.3) then
@@ -1560,6 +1571,13 @@ c                                 diagrams:
 1180  format (/,'For details on these models see:',
      *        'www.perplex.ethz.ch/perplex_solution_model_glossary.html'
      *      /,'or read the commentary in the solution model file.',/)
+1190  format (/,'**warning ver064** in general it wise to exclude any ',
+     *        'the unused phases from',/,'the above list from your ',
+     *        'calcultion. NOTE: you will not be prompted for these',/,
+     *        'phases if you select the automatic phase exclusion ',
+     *        'prompt. to exclude unused',/,'reference phases either',
+     *        'do not select the prompt option or edit the problem',/,
+     *        'definition after running BUILD',/)
 1210  format ('Select the path variable for the calculation:',/)
 1310  format (/,5(i2,1x),2x,a,/)
 1330  format (i2,1x,i2,1x,g13.6,1x,g13.6,1x,a)

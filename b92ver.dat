@@ -885,6 +885,7 @@ end
  
 qGL      EoS = 1 | PMELT liquid endmember (Ghiorso et al, G3, 2002)  -3.555755e6                  
 SIO2(4)
+G0 = -3363173.2 S0 = 107.93 V0 = 10.76  
 c1 = -3383116. c2 = 107.93 c3 = 10.76 c4 = 330.4  
 b5 = -.756E-4 b6 = .52E-7  
 end

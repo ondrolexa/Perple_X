@@ -2854,7 +2854,10 @@ c-----------------------------------------------------------------------
      *               iophi,idphi,iiphi,iflg1
 
       integer icomp,istct,iphct,icp
-      common/ cst6  /icomp,istct,iphct,icp  
+      common/ cst6  /icomp,istct,iphct,icp
+
+      integer jfct,jmct,jprct,jmuct
+      common/ cst307 /jfct,jmct,jprct,jmuct
 
       double precision vmax,vmin,dv
       common/ cst9  /vmax(l2),vmin(l2),dv(l2)
@@ -2862,11 +2865,17 @@ c-----------------------------------------------------------------------
 c                                 initialization
       call gall 
       call asschk
-c                                 the goto 20 is a dummy to avoid
-c                                 compiler errors, change 90 to 20 to
-c                                 get backup search, ha ha
-      if (iflag.ne.0.and.v(ivd).eq.vst.and.ist.eq.inow) goto 90
 
+      if (iflag.ne.0.and.v(ivd).eq.vst.and.ist.eq.inow) then
+c                                 by allowing null phases it is possible that the initial
+c                                 assemblage is metastable (i.e., the system is supersaturated).
+         if (jmct.gt.0) write (*,1000) 
+c                                 change 90 to 20 to
+c                                 get backup search, ha ha
+         goto 90
+
+      end if 
+ 
       goto (10,20,20),iflag
 c                                 the assemblage is stable, return
       jer = 0
@@ -2937,7 +2946,15 @@ c                                 next traverse.
 c                                 write warning message:
 9000  write (n3,1010) ivd,dv(ivd),(names(idv(j)),j = 1, icp)
 90    jer = 2
-c                                 done:
+
+1000  format (/,'**warning ver099** FLIPIT: most probably the initial ',
+     *          'condition for this calculation',/,'is supersaturated ',
+     *          'with respect to a phase that consists entirely of ',/,
+     *          'mobile components. If this calculation is a function ',
+     *          'of fugacity/activity,',/,'then eliminate extraneous ',
+     *          'null phases; otherwise lower the independent chemical',
+     *        /,'potentials to obtain an undersaturated initial ',
+     *          'condition.',/)
 1010  format (/,'**warning ver045** FLIPIT: > 1 equilibrium',
      *          ' occurs within the',/,'minimum search increment for',
      *          ' variable: ',i1,', this often occurs as YCO2 => 1',
@@ -4066,7 +4083,7 @@ c                                reaction_list.dat
 
       end
 
-      subroutine pchk (dg,igo)
+      subroutine pchk (igo)
 c-----------------------------------------------------------------------
 c a subprogram which returns the difference in free energy
 c beteen a g-x plane, defined by the assemblage idv, and a phase lphi.
@@ -4108,26 +4125,34 @@ c                                 compute energies:
       end do 
 
       dg = gproj (idphi)
-c                                 solve for chemical potentials:
+c                                solve for chemical potentials:
       call subst (a,ipvt,icp,b,ier)
-c                                 compute energy difference:
+c                                compute energy difference:
       do j = 1, icp
          dg = dg - cp(j,idphi)*b(j)
       end do 
 
       if (dabs(dg).lt.ptol) then
-        igo = 1
-        iflag = 1
 
-        call ssaptx 
+        igo = 1
+
+        call ssaptx
+
       else
-        if (dg.gt.dtol) then
+
+        if (dg.gt.0d0) then
+c                                 prior to march 9, 2017, this was
+c                                 dg > dtol (and dtol was < 0).
           iflag= 0
 
           call ssaptx
+
         else
+
           iflag= 1
+
         end if
+
       end if
 
       end
@@ -4526,8 +4551,8 @@ c                                 next traverse.
 
       ier = 1
 
-1000  format ('Metastable assemblage in FLIPIT, ',
-     *        'the assemblage is:',/,4x,12(1x,a))
+1000  format ('**warning ver066** Metastable assemblage into FLIPIT: ',
+     *        /,4x,12(1x,a))
 1010  format ('v =',5(g12.6,1x))
 1020  format (/,'**warning ver047** SEARCH: > 1 equilibrium',
      *         ' occurs within the minimum search',/,'increment for',
@@ -4667,7 +4692,7 @@ c                                 an invariant equilibrium:
 
 c                                 iterate independent variable to refine
 c                                 the conditions of the invariant point:
-            call findjp (ivi,ivd,dv,ip)
+            call findjp (ivi,ivd,dv,ip,ird)
 
 
          else if (iflag.eq.2) then   
@@ -4786,6 +4811,7 @@ c-----------------------------------------------------------------------
       end if 
 
       do j = 2, icp2
+
          jtic = 0
          idno  = icp3 - j
          lphi  = ipid(ip,idno)
@@ -5115,6 +5141,8 @@ c-----------------------------------------------------------------------
       integer l,ikwk,isign,lchkl,i,iv,jfail,ier,ivi,
      *        ivd,icter,lphi,jswit,ifail
 
+      logical fail 
+
       character*8 names
       common/ cst8 /names(k1)
 
@@ -5143,57 +5171,94 @@ c-----------------------------------------------------------------------
       double precision v,tr,pr,r,ps
       common/ cst5  /v(l2),tr,pr,r,ps
 c-----------------------------------------------------------------------
-      iophi =idphi
+
+      iophi = idphi
       ikwk = 0
-      icter = 0
-      ier = 0
+
       vo(iv1) = v(iv1)
       vo(iv2) = v(iv2)
 c                                 first try iv1 as the iv
       ivi = iv2
       ivd = iv1
 
-      ifail= 0
+      fail = .false.
 
-5     call univeq (ivd,ier)
+      do 
 
-      if (ier.eq.0) then
+         call univeq (ivd,ier)
+
+         if (ier.eq.0) then
 c                                 is the equilibrium condition
 c                                 for this reaction consistent
 c                                 with the invariant point?
-         if ( dabs( (v(ivd)-vo(ivd))/dv(ivd) ).gt.0.1d0) then 
-            vo(iv1) = v(iv1)
-            vo(iv2) = v(iv2)
-            call warn (18,v(ivd),ird,'WWAY')
-         end if 
+            if ( dabs( (v(ivd)-vo(ivd))/dv(ivd) ).gt.0.1d0) then 
+               vo(iv1) = v(iv1)
+               vo(iv2) = v(iv2)
+               call warn (18,v(ivd),ird,'WWAY')
+            end if
 
-      else
-         goto (9800),ifail
-         ivi = iv1
-         ivd = iv2
+            exit 
+
+         else
+
+            if (fail) then
+
+               call warn (58,dv(1),ier,'WWAY')
+
+               if (ivct.lt.5) then 
+
+                 write (*,1050) ird,(vnu(l),names(idr(l)), l= 1, ivct)
+ 
+               else 
+
+                  write (*,1050) ird,(vnu(l),names(idr(l)), l= 1, 4)
+                  write (*,1060) (vnu(l),names(idr(l)), l= 5, ivct)
+
+               end if 
+
+               write (n3,*)
+
+               return
+ 
+            end if 
+
+            ivi = iv1
+            ivd = iv2
 c                                 added april 2001 without check!!
-         div = dv(ivi)
+            div = dv(ivi)
 
-         v(iv1) = vo(iv1)
-         v(iv2) = vo(iv2)
-         call incdp0
+            v(iv1) = vo(iv1)
+            v(iv2) = vo(iv2)
+            call incdp0
 
-         ifail = ifail + 1
-         goto 5
-      end if
+            fail = .true.
+
+         end if
+
+      end do 
 c                                 test that the ip isn't on an edge
       if (v(iv1).eq.vmin(iv1).or.v(iv1).eq.vmax(iv1).or.
-     *    v(iv2).eq.vmin(iv2).or.v(iv2).eq.vmax(iv2)) goto 9600
+     *    v(iv2).eq.vmin(iv2).or.v(iv2).eq.vmax(iv2)) then 
+
+         call warn  (63,dv(1),ivi,'WWAY')
+         ier = 1
+
+         return
+
+      end if 
 
       jswit = 0
 
 190   order = 1d0
+
 c                                 set iv increment
-60    div = dv(ivi) / order
+      do
 
-      ifail = 0
+         div = dv(ivi) / order
 
-      do i = 1, 2
+         ifail = 0
+
+         do i = 1, 2
 c                                 because of numerical slop 
 c                                 an equilibrium may appear stable
 c                                 on its metastable extension close to
@@ -5204,64 +5269,71 @@ c                                 conditions on both sides of an ip
 c                                 the increment is decreased and if this
 c                                 fails the independent and dependent
 c                                 variables are switched.
-         jfail = 0
+            jfail = 0
 
-15       v(ivi) = vo(ivi) + div
+            do 
+
+               v(ivi) = vo(ivi) + div
 c                                 check if the increment is too large
-         if (v(ivi).gt.vmax(ivi)) then
-            v(ivi) = vmax(ivi)
-         else if (v(ivi).lt.vmin(ivi)) then 
-            v(ivi) = vmin(ivi)
-         end if 
+               if (v(ivi).gt.vmax(ivi)) then
+                  v(ivi) = vmax(ivi)
+               else if (v(ivi).lt.vmin(ivi)) then 
+                  v(ivi) = vmin(ivi)
+              end if 
 c                                 set the dependent variable to ip:
-         v(ivd) = vo(ivd)
+               v(ivd) = vo(ivd)
 
-         call incdp0 
+               call incdp0 
 c                                 solve for the equilibrium
-         call univeq (ivd,ier)
+               call univeq (ivd,ier)
 
-         if (jfail.le.5.and.ier.eq.0.and.(v(ivd).gt.vmax(ivd)
-     *       .or.v(ivd).lt.vmin(ivd))) then
+               if (jfail.le.5.and.ier.eq.0.and.(v(ivd).gt.vmax(ivd)
+     *            .or.v(ivd).lt.vmin(ivd))) then
 c                                 increment to big:
-            div = div / 1d1
-            jfail = jfail + 1
-            goto 15
+                  div = div / 1d1
+                  jfail = jfail + 1
+                  cycle
   
-         else if (jswit.eq.0.and.ier.gt.0) then 
+               else if (jswit.eq.0.and.ier.gt.0) then 
 c                                 on error switch dependent and
 c                                 independent variables
-            iv  = ivi
-            ivi = ivd
-            ivd = iv
-            jswit = 1
+                  iv  = ivi
+                  ivi = ivd
+                  ivd = iv
+                  jswit = 1
 
-            goto 190
+                  goto 190
 
-         else if (jswit.gt.0.and.ier.gt.0) then
+               else if (jswit.gt.0.and.ier.gt.0) then
 
-            call warn (999,dv(1),ivi,'WWAY')
-            ier = 1
-            return
+                  call warn (999,dv(1),ivi,'WWAY')
 
-         end if 
+                  return
 
-         vvi(i) = v(ivi)
-         vvd(i) = v(ivd)
-         ddv(i) = div
+               end if
+
+               exit 
+
+            end do 
+
+            vvi(i) = v(ivi)
+            vvd(i) = v(ivd)
+            ddv(i) = div
 c                                 determine if the equilibrium is
 c                                 metastable with respect to lphi
 c                                 (lchkl=1):
-         call lchk (lphi,lchkl)
-         if (lchkl.eq.0) then
-            ifail = ifail + 1
-            isign = i
-         end if
+            call lchk (lphi,lchkl)
+            if (lchkl.eq.0) then
+               ifail = ifail + 1
+               isign = i
+            end if
 c                                 end of looop
-         div = -div
-      end do 
+            div = -div
+
+         end do 
 c                                 at this stage there are three
 c                                 possibilities indicated by ifail
-      if (ifail.eq.1) goto 50
+         if (ifail.eq.1) exit 
 c                                 ifail= 0 or 2 the equilibrium was stable
 c                                 or metastable on both sides, the most 
 c                                 plausible scenario is the increment is
@@ -5274,28 +5346,29 @@ c                                 increment is too small to cross the border.
 c                                 
 c                                 so first decrease the increment:
          if (order.ge.1d0) then 
-            order = order * 10d0 
+            order = order * 1d1 
 c                                 stop decreasing after four orders 
 c                                 of magnitude, and try increasing
 c                                 increment:
             if (order.gt.1d4) order = 1d-1
          else 
-            order = order / 10d0
+            order = order / 1d1
 c                                 stop increasing after two orders 
 c                                 of magnitude, cause there should 
 c                                 never be a default increment much less 
 c                                 than 1 % of the variable range.
             if (order.lt.1d-2) goto 9500
+
          end if 
 c                                 why the **** was this here?
-c         ivi = iv1
-c         ivd = iv2
+c        ivi = iv1
+c        ivd = iv2
 
-      goto 60
+      end do 
 c                                 ifail=1, stable extension identified.
 c                                 determine the sign of the increment
 c                                 and its magnitude:
-50    if (isign.eq.1) then
+      if (isign.eq.1) then
          div = dv(ivi)
          del= vmax(ivi)-vo(ivi)
          if (del.lt.div) div = del/3.d0
@@ -5307,40 +5380,58 @@ c                                 and its magnitude:
 c                                 reset variable values and save
       v(ivi) = vvi(isign)
       v(ivd) = vvd(isign)
+
       call incdp0
-  
-      odiv = ddv(isign)
-      icter = 0
 c                                 now check the stability with respect
 c                                 to all phases
       order = 1d0
-70    call gall 
-      call schk (lphi)
+      odiv = ddv(isign)
+      fail = .false.
+      icter = 0 
+
+      do
+
+         call gall 
+         call schk (lphi)
 c                                 stable if iflag= 0 from schk
 c                                 now check if dependent variable is in
 c                                 range.
-      if (iflag.eq.0) goto 9999
+         if (iflag.eq.0) exit 
 c                                 metastable try refining the increment
-      order = order * 5.d0
-      div = div / order
+         order = order * 5d0
+         div = div / order
 
-      v(ivi) = vo(ivi) + div
-      v(ivd) = vo(ivd)
-      call incdp0
+         v(ivi) = vo(ivi) + div
+         v(ivd) = vo(ivd)
+
+         call incdp0
+
+         do 
  
-100   call univeq (ivd,ier)
+            call univeq (ivd,ier)
 
-      if (ier.eq.0) goto 90
+            if (ier.eq.0) exit
 c                                 error from univeq, more than once quit
-      goto (9400), icter
-      div =odiv
-      icter = icter + 1
-      goto 100
-c                                 no error from univeq
-90    if (order.gt.10.d6) goto 9500
-      goto 70
+            if (fail) then
+
+               call warn (87,dv(1),ivi,'WWAY')
+
+               return
+
+            end if 
+
+            div =odiv
+            icter = icter + 1
+            fail = .true.
+
+         end do 
+
+         if (order.gt.1d6) goto 9500
+
+      end do 
 c                                 all systems go
-9999  call assptx
+      call assptx
+
       if (dabs(div).lt.dv(ivi)) then
          div = dv(ivi)*div/dabs(div)
       end if 
@@ -5352,25 +5443,8 @@ c                                 all systems go
 
       return
 
-9400  call warn (87,dv(1),ivi,'WWAY')
-      ier = 1
-      return  
-       
 9500  call warn (24,dv(ivi)/order,ivi,'WWAY')
-      ier = 1
-      return
 
-9600  call warn  (63,dv(1),ivi,'WWAY')     
-      ier = 1
-      return
-  
-9800  call warn (58,dv(1),ier,'WWAY')
-      if (ivct.gt.4) goto 9820
-      write (n3,1050) ird,(vnu(l),names(idr(l)), l= 1, ivct)
-      goto 9830
-9820  write (n3,1050) ird,(vnu(l),names(idr(l)), l= 1, 4)
-      write (n3,1060) (vnu(l),names(idr(l)), l= 5, ivct)
-9830  write (n3,*) 
       ier = 1
 
 1050  format (1x,'(',i6,')',4(1x,g9.3,1x,a))
@@ -6273,7 +6347,7 @@ c                                 if here, it's a new phase
 
       end 
 
-      subroutine findjp (ivi,ivd,odv,ip)
+      subroutine findjp (ivi,ivd,odv,ip,ird)
 c----------------------------------------------------------------------
 c findjp - called by sfol1 to iteratitvely refine the location of 
 c an invariant point, the invariant point is located within an 
@@ -6283,9 +6357,11 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer iwarn,ier,ip,ivi,ivd,igo
+      integer iwarn,ier,ip,ivi,ivd,igo,ird
 
-      double precision odv,dg
+      logical fail, inside
+
+      double precision odv
 
       double precision delt,dtol,utol,ptol
       common/ cst87 /delt(l2),dtol,utol,ptol 
@@ -6305,41 +6381,121 @@ c                                 the conditions of the invariant point:
       ier = 0 
       ip = 0
 c                                 step back to stable condition
-20    call reptx
-      odv = odv / 2d0
-c                                 check if the point is already known
+      call reptx
+c                                 check if the point is already known, 
+c                                 based on identities and whether the 
+c                                 current coordinate twice the default
+c                                 increment (prior to 2017, one increment). 
       call sameip (ip)
 
-      if (ip.ne.0) goto 99
+      if (ip.ne.0) return
 
-      if (dabs(odv).lt.delt(ivi)) goto 30
+      odv = odv / 2d0
  
-10    v(ivi) = v(ivi) + odv 
-      call incdep (ivi)   
+      fail = .false. 
+      inside = .true.
 
-      call univeq (ivd,ier)
-      if (ier.ne.0) goto 30 
+      do
+c                                 unidirectional search to find ip, moved 
+c                                 call to ssaptx call from pchk
+         v(ivi) = v(ivi) + odv 
 
-      call pchk (dg,igo)
+         if (v(ivi).gt.vmax(ivi)) then 
+            v(ivi) = vmax(ivi)
+         else if (v(ivi).lt.vmin(ivi)) then 
+            v(ivi) = vmin(ivi)
+         end if 
+            
+         call incdep (ivi)   
 
-      if (igo.eq.1) then
-         goto 40 
-      else if (iflag.eq.1) then
-         goto 20
-      else  
-         if (v(ivi).gt.vmax(ivi).or.v(ivi).lt.vmin(ivi)) goto 30
-         goto 10
-      end if 
-c                                 univeq blew up, assign ip with 
-c                                 warning:
-30    call reptx 
-      iwarn = 1 
+         call univeq (ivd,ier)
+
+         if (ier.ne.0) then
+c                                 previous to march 7, 2017, if univeq failed
+c                                 reptx was called and the last coordinates 
+c                                 were saved as the IP with warning. 
+            fail = .true.
+            exit 
+
+         end if  
+
+         call pchk (igo)
+
+         if (igo.eq.1) then
+c                                 pchk returns igo = 1 if the ip assemblage 
+c                                 is within ptol
+            if (v(ivd).lt.vmin(ivd).or.v(ivd).gt.vmax(ivd)) 
+     *         inside = .false.
+
+            exit  
+
+         else if (iflag.eq.1) then
+c                                 the independent variable increment is too 
+c                                 large and the search has jumped to the metastable
+c                                 side of the ip
+            call reptx
+            odv = odv / 2d0
+c                                 step back to stable condition
+            if (dabs(odv).lt.delt(ivi)) then 
+               fail = .true.
+               exit
+            end if 
+
+            cycle 
+
+         else
+c                                 still stable and on the edge
+            if (v(ivi).eq.vmax(ivi).or.v(ivi).eq.vmin(ivi)) then
+
+               inside = .false.
+               exit 
+
+            end if 
+
+            cycle
+
+         end if 
+
+      end do 
 c                                 assign the invariant assemblage:
-40    call assip (ip)
-      
-      if (iwarn.eq.1) call warn (47,ptol,ip,'FINDJP')
+      if (.not.fail) then
 
-99    end 
+c                                 check if in range
+         if (inside) then
+
+            call assip (ip)
+
+         else 
+
+            call reptx
+
+            if (v(ivd).gt.vmax(ivd)) then 
+
+               v(ivd) = vmax(ivd) 
+
+            else if (v(ivd).lt.vmin(ivd)) then
+
+               v(ivd) = vmax(ivd) 
+
+            end if 
+
+            call incdep (ivd)
+
+            call univeq (ivd,ier)
+
+            if (ier.ne.0)  return
+
+            call assptx 
+
+         end if 
+
+      else 
+      
+         call warn (47,ptol,ird,'FINDJP')
+
+      end if 
+
+      end 
 
       subroutine ssaptx
 c---------------------------------------------------------------------
@@ -6515,8 +6671,8 @@ c                                 to the ith ip already found
 c                      the new ip assemblage is equivalent to one found 
 c                      earlier, check if the conditions match:
          do j = 1, 5
-            if (dabs(vip(j,i)-v(j)).gt.ddv(j).and.
-     *                                 ddv(j).ne.0d0) then
+            if (dabs(vip(j,i)-v(j)).gt.2d0*ddv(j).and.
+     *                                     ddv(j).ne.0d0) then
                if (i.lt.ipct) then 
                   jps = i + 1
                   goto 5
