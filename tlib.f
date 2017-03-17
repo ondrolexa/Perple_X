@@ -19,7 +19,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a)') 
-     *      'Perple_X version 6.7.6, source updated Mar 10, 2017.'
+     *      'Perple_X version 6.7.6, source updated Mar 17, 2017.'
 
       end
 
@@ -2016,6 +2016,8 @@ c---------------------------------------------------------------------
          write (*,75) char
       else if (ier.eq.76) then 
          write (*,76) char, char, char
+      else if (ier.eq.77) then 
+         write (*,77) char
       else if (ier.eq.89) then
          write (*,89) 
       else if (ier.eq.90) then
@@ -2286,6 +2288,7 @@ c---------------------------------------------------------------------
      *        a,' has a logically inconsistent ordering scheme.',/,
      *        'To correct this error exclude either more or fewer ',a,
      *        'endmembers.',/)
+77    format (/,'**error ver077** ',a,/)
 c72    format (/,'**error ver072** UNSPLT found no completed segments',
 c     *          ' in folder/directory:'/,5x,'.',a,/)
 89    format (/,'**error ver089** SMPLX programming error. Change ',
@@ -2505,6 +2508,8 @@ c----------------------------------------------------------------------
          write (*,55) char
       else if (ier.eq.58) then
          write (*,58)
+      else if (ier.eq.59) then
+         write (*,59) char
       else if (ier.eq.60) then
          write (*,60) char
       else if (ier.eq.63) then
@@ -2648,7 +2653,7 @@ c----------------------------------------------------------------------
      *          ' The solution will not be considered.')
 26    format ('**warning ver026** only one endmember for ',a,
      *          ' The solution will not be considered.')
-27    format (/,'**warning ver027** only ',i2,' user defined '
+27    format (/,'**warning ver027** only ',i2,' user defined ',
      *      'compositions permitted.',/,'do multiple runs with WERAMI',
      *      'or redimension common block comps.',/)
 28    format (/,'**warning ver028** minimization failed, ill-',
@@ -2766,6 +2771,9 @@ c     *          ' (SWASH, see program documentation Eq 2.3)',/)
 58    format (/,'**warning ver058** wway, the equilibrium of the '
      *         ,'following reaction',/,' is inconsistent with the ',
      *          'invariant equilibrium.',/)
+59    format (/,'**warning ver059** endmember ',a,
+     *        ' has invalid site population.',/,'It will be retained',
+     *        ' as a placeholder with zero concentration',/)
 60    format (/,'**warning ver060** non-fatal programming error ',
      *          'routine:',a,/)
 63    format (/,'**warning ver063** wway, invariant point on an edge?',
@@ -4800,7 +4808,7 @@ c                                 get the component stoichiometries:
       end do 
 
 1000  format ('Try again.')
-1010  format (/,a,' is a possible saturated phase component. Is '
+1010  format (/,a,' is a possible saturated phase component. Is ',
      *        'the new component ',a,/,'also a possible saturated ',
      *        'phase component (Y/N)?')
 1030  format (/,'The current data base components are:')
@@ -5109,7 +5117,7 @@ c                                 read and echo unformatted comments and make da
 
       double precision function dnan()
 c----------------------------------------------------------------------
-c george helfrich's function to make a safe NaN
+c george helffrich's function to make a safe NaN
 c----------------------------------------------------------------------
       implicit none 
 

@@ -408,7 +408,7 @@ c----------------------------------------------------------------------
 
       double precision wt(3), cst
 
-      logical sick(i8), nodata, ssick, ppois, bulkg, bsick
+      logical sick(i8), nodata, ssick, ppois, bulkg, bsick, bad
 c                                 x-coordinates for the assemblage solutions
       double precision x3
       common/ cxt16 /x3(k21,mst,msp)
@@ -660,7 +660,7 @@ c                                 renormalize the composition
 c                                 revover x from x3, 2nd arg has no meaning.
                call getxz (i,i,ids)
 c                                 convert x to y for calls to gsol
-               call xtoy (ids)
+               call xtoy (ids,bad)
 
             end if 
 

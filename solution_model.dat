@@ -1789,7 +1789,7 @@ end_limits
 
 fets_d = 1 mgts  + 1 opx - 1 en
 feots  = 1 mots1 + 1 opx - 1 en
-fdi    = 1 di    + 1 opx - 1 en
+fdi    = 1 di    + 1 fs  - 1 opx                        | corrected march 17, 2017, formerly di - opx + fs
 mnts   = 1 mgts  + 1/2 mnopx - 1/2 en 
 mnots  = 1 mots1 + 1/2 mnopx - 1/2 en 
 mdi    = 1 di    + 1/2 mnopx - 1/2 en
@@ -2277,7 +2277,7 @@ end_excess_function
 4 1.                       | 3 species on M1, 1 site per formula unit.
 
 z(m1,fe)   = 1 fs 
-z(m1,al)   = 1 mgts + 1 fets_d  
+z(m1,al)   = 1 mgts 
 z(m1,fe3+) = 1 mots
 
 2 1.                       | 2 species on M2, 1 site per formula unit.

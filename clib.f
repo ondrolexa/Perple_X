@@ -1882,6 +1882,8 @@ c-----------------------------------------------------------------------
       include 'perplex_parameters.h'
 
       integer i,j,id,jd,ids
+
+      logical bad
 c                                 -------------------------------------
 c                                 global variables:
       integer icomp,istct,iphct,icp
@@ -1959,7 +1961,7 @@ c                                 xcoordinates in x3(jd,i,j)
          call getxz (jd,id,ids)
 c                                 convert the x(i,j) coordinates to the
 c                                 geometric y coordinates
-         call xtoy (ids)
+         call xtoy (ids,bad)
 
          if (lrecip(ids)) then
 c                                 get the p' coordinates (amounts of 

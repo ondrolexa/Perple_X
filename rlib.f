@@ -5524,7 +5524,7 @@ c local variables:
 c insp(jstot/jstot+1) - pointer to original index of first kstot independent
 c         endmembers, followed by jstot-kstot dependent endmembers, followed
 c         by the ordered species, if present (jstot+1).
-c istot - total number of endmembers (excluding ordered species) used
+c istot - total number of endmembers excluding ordered species used
 c         to formulate the solution model in the input file
 c jmsol(jstot,msp) - chemical species present on m'th site of jstot'th
 c          endmember, original indexing.
@@ -5532,7 +5532,7 @@ c jstot - total number of endmembers (excluding ordered species) used
 c         in the computation (i.e., excluding missing endmembers), but
 c         including dependent endmembers.
 c kdsol(istot/istot+nord) - endmember index, 0 if missing, -2 if dependent,
-c          -1 if ordered species (istot+1/jstot+1), original indexing.
+c          -1 or 0 if ordered species, reordered for missing species.
 c kstot - total number of endmembers (excluding ordered species) 
 c         used in the computation (i.e., excluding missing endmembers)
 
@@ -5542,6 +5542,7 @@ c indx(i,j,k,l) - for solution i, pointer to the l'th original endmember
 c                 index with species k on site j. 
 c mstot(i) - istot globally
 c jgsol(i,j,k) - k species indices of endmember j in solution i (jmsol globally) 
+c knsp(i=1:mstot,ids) - points to the original (?) index of endmember i in ids
 
       subroutine reform (sname,im,first)
 c---------------------------------------------------------------------
@@ -8083,7 +8084,7 @@ c                                 reciprocal solutions
 
       end 
 
-      subroutine xtoy (ids)
+      subroutine xtoy (ids,bad)
 c----------------------------------------------------------------------
 c subroutine to convert geometric reciprocal solution compositions (x(i,j))
 c to geometric endmember fractions (y) for solution model ids.
@@ -8094,6 +8095,8 @@ c----------------------------------------------------------------------
 c                                 -------------------------------------
 c                                 local variables:
       integer ids, l, m
+
+      logical bad
 c                                 -------------------------------------
 c                                 global variables:
 c                                 bookkeeping variables
@@ -8109,7 +8112,17 @@ c                                 x coordinate description
 
       integer ksmod, ksite, kmsol, knsp
       common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
+
+      logical badend
+      common/ cxt36 /badend(m4,h9)
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 c----------------------------------------------------------------------
+
+      bad = .false.
 
       do l = 1, mstot(ids)
 
@@ -8118,6 +8131,17 @@ c----------------------------------------------------------------------
          do m = 1, istg(ids)
             y(l) = y(l)*x(m,kmsol(ids,l,m))
          end do
+
+         if (y(l).gt.0d0.and.badend(l,ids)) then 
+
+            if (y(l).lt.nopt(5)) then 
+               y(l) = 0d0
+            else 
+               bad = .true.
+               return 
+            end if 
+
+         end if 
 
       end do   
 
@@ -8958,15 +8982,22 @@ c---------------------------------------------------------------------
 
       character tname*10, sname*10
 
-      logical add
+      logical add, bad
 
       integer im,nloc,i,j,ind,id,jd,k,l,itic,ii,imatch, killct,
      *        killid(20)
 
       double precision dinc,xsym,dzt,dx
 
+      double precision z, pa, p0a, x, w, y, wl
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
+     *              wl(m17,m18)
+
       integer ineg
       common/ cst91 /ineg(h9,m15)
+
+      logical badend
+      common/ cxt36 /badend(m4,h9)
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp  
@@ -9183,7 +9214,7 @@ c                                 check endmember counters:
       if (im.gt.h9) call error (52,dq(1),idqf,'GMODEL')
 c                                 check for inconsistent model reformation
       if (kstot+mdep.gt.jstot) call error (76,dq(1),idqf,tname)
-c                                 number of endmembers
+c                                 number of dependent + independent - ordered endmembers
       mstot(im) = istot
 c                                 number of independent + ordered endmebers
       nstot(im) = kstot + norder 
@@ -9397,13 +9428,42 @@ c                                 isub points to the position in the list
 c                                 of endmembers potentially including dependent 
 c                                 species. use iy2p to convert to independent
 c                                 endmember pointers.
-            if (isub(i,j,1).eq.0) then 
-               jsub(j,i,im) = 0 
-            else 
+            if (isub(i,j,1).eq.0) then
+c                                 term may be of order < iord
+               jsub(j,i,im) = 0
+
+            else
+
                jsub(j,i,im) = iy2p(isub(i,j,1))
+
+               if (kdsol(isub(i,j,1)).eq.-2) then 
+
+                  call error (77,r,i,'dependent endmember '
+     *                 //mname(iorig(isub(i,j,1)))//' in solution '
+     *                 //tname//'appears in an excess term.')
+
+               end if 
+
             end if 
 
+         end do
+
+      end do 
+
+
+      do i = 1, mstot(im)
+c                                 initialize invalid speciation flag
+         badend(i,im) = .false.
+c                                 insp points to the original position 
+c                                 of endmember i in the solution model input:
+         knsp(i,im) = insp(i)
+c                                 kmsol points to the species on the j'th site
+c                                 of the i'th endmember, used for the xtoy
+c                                 conversion      
+         do j = 1, isite
+            kmsol(im,i,j) = jmsol(i,j)
          end do 
+
       end do 
 c                                 ----------------------------------------------
 c                                 configurational entropy models
@@ -9431,30 +9491,22 @@ c                                 site fraction function and a0.
 c                                 for each term:
             do k = 1, nterm(i,j)
 c                                 term coefficient amd species index:
-               dcoef(k,j,nloc,im) = acoef(i,j,k) 
-               ksub(k,j,nloc,im) = nsub(i,j,k,1)
+               dcoef(k,j,nloc,im) = acoef(i,j,k)
+               ksub(k,j,nloc,im) = iy2p(nsub(i,j,k,1))
+
+               if (kdsol(nsub(i,j,k,1)).eq.-2) then 
+
+                  call error (77,r,k,'dependent endmember '
+     *              //mname(iorig(nsub(i,j,k,1)))//' in solution '
+     *              //tname//'appears in a site fraction expression.')
+
+               end if 
 
             end do 
          end do
       end do  
 c                                 number of distinct identisites for entropy
       msite(im) = nloc
-
-      do i = 1, mstot(im)
-c                                 insp points to the original position 
-c                                 of endmember i in the solution model input:
-         knsp(i,im) = insp(i)
-
-      end do 
-c                                 -------------------------------------
-c                                 kmsol points to the species on the j'th site
-c                                 of the i'th endmember, used for the xtoy
-c                                 conversion      
-      do i = 1, mstot(im)
-         do j = 1, isite
-            kmsol(im,i,j) = jmsol(i,j)
-         end do 
-      end do 
 c                                 --------------------------------------
 c                                 van laar volumes, and pointers for "in" endmembers
       do i = 1, nstot(im)
@@ -9472,10 +9524,15 @@ c                                 entropy calculation (done by snorm).
       end do   
 c                                 -------------------------------------
       if (depend) then 
-c                                 save y -> p array 
+c                                 march, 2017: deleted y2p4z routine that converted
+c                                 z(y) expressions to z(p), i.e., by simply
+c                                 eliminating dependent endmembers. 
+
+c                                 save y -> p array
          ndep(im) = mdep
 
          do i = 1, nstot(im)
+
             do j = 1, mdep
 
                y2pg(j,i,im) = y2p(i,j)
@@ -9483,10 +9540,32 @@ c                                 save y -> p array
      *                                         ineg(im,j) = knsp(i,im)
 
             end do
+
          end do
-c                                 for reasons of stupidity, convert the z(y) 
-c                                 expressions to z(p). 
-         call y2p4z (im)
+c                                 check for invalid dependent endmembers, these
+c                                 are occasionally used as place holders:
+         do j = 1, mdep
+
+
+            do i = 1, mstot(im)
+               y(i) = 0d0
+            end do 
+
+            y(knsp(lstot(im)+j,im)) = 1d0 
+
+            call y2p0 (im)
+c                                 check for invalid site fractions, this is only necessary
+c                                 for H&P models that assume equipartition (which is not 
+c                                 implemented). 
+            call zchk (pa,im,bad)
+
+            if (bad) then
+               call warn (59,y(1),i,mname(iorig(knsp(lstot(im)+j,im)))
+     *             //' in solution model '//tname)
+               badend(knsp(lstot(im)+j,im),im) = bad
+            end if 
+
+         end do
 
       end if 
 c                                 -------------------------------------
@@ -10296,86 +10375,6 @@ c-----------------------------------------------------------------------
       end do 
 
       end 
-
-      subroutine y2p4z (id)
-c----------------------------------------------------------------------
-c subroutine to convert site fraction expressions in terms of 
-c y's to p's, this conversion consists simply of eliminating 
-c the dependent endmembers and coverting the pointer array 
-c jsub is changed from a pointer to the y array to a pointer
-c to the p array.
-
-c the reason for writing z(y) is it is a more intuitive input,
-c i.e., users do not have to understand the distinction between
-c dependent and independent endmembers.
-c----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      double precision ncoef(m0)
-
-      integer i,j,k,id,ind,jconv,mterm(m0)
-c                                 -------------------------------------
-      integer msite, ksp, lterm, ksub
-      common/ cxt1i /msite(h9),ksp(m10,h9),lterm(m11,m10,h9),
-     *               ksub(m0,m11,m10,h9)
-
-      double precision qmult, d0, dcoef, scoef      
-      common/ cxt1r /qmult(m10,h9),d0(m11,m10,h9),dcoef(m0,m11,m10,h9),
-     *               scoef(m4,h9)
-
-      integer lstot,mstot,nstot,ndep,nord
-      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
-
-      integer jmsol,kdsol
-      common/ cst142 /jmsol(m4,mst),kdsol(m4)
-
-      integer iorig,jnsp,iy2p
-      common / cst159 /iorig(m4),jnsp(m4),iy2p(m4)
-c----------------------------------------------------------------------
-c                                 for each site
-      do i = 1, msite(id)
-c                                 for each species
-         do j = 1, ksp(i,id)
- 
-            jconv = 0 
-
-            do k = 1, lterm(j,i,id)
-
-               ind = ksub(k,j,i,id)
-
-               if (kdsol(ind).ne.-2) then
-c                                 index points to an independent endmember
-                  jconv = jconv + 1
-                  mterm(jconv) = ind
-                  ncoef(jconv) = dcoef(k,j,i,id)
-
-               end if 
-
-            end do 
-c                                 load the reformulated function
-c                                 into lterm, ksub, and dcoef
-            lterm(j,i,id) = jconv
- 
-            do k = 1, jconv
-
-               dcoef(k,j,i,id) = ncoef(k)
-               ind = mterm(k)
-
-               if (ind.le.mstot(id)) then 
-                  ksub(k,j,i,id) = iy2p(ind)
-               else 
-                  ksub(k,j,i,id) = mterm(k) - ndep(id)
-               end if 
-
-            end do                       
-
-         end do 
- 
-      end do  
-
-      end
 
       subroutine specis (g,id)
 c----------------------------------------------------------------------
@@ -11762,10 +11761,11 @@ c-----------------------------------------------------------------------
 c                                 hit the limit, don't set x to 
 c                                 the limit to save revaluating x
 c                                 dependent variables.
-        x = xt
-        quit = .true.
 
         write (*,*) 'this should not happen!!'
+
+        x = xt
+        quit = .true.
 
         return
 
@@ -12454,10 +12454,10 @@ c                                 -------------------------------------
 c                                 make various book keeping arrays (y2p,
 c                                 jmsol, dydz, .....)
          call nmodel
-c                             check that the name has not already been found, i.e., 
-c                             that the name is duplicated in the solution model file
+c                                 check that the name has not already been found, i.e., 
+c                                 that the name is duplicated in the solution model file
          if (first) then
-            do i = 1, im 
+            do i = 1, im - 1
                if (tname.eq.sname(i)) call error (75,0d0,i,tname)
             end do
          end if
@@ -12972,6 +12972,9 @@ c                                 model type
       integer ineg
       common/ cst91 /ineg(h9,m15)
 
+      logical badend
+      common/ cxt36 /badend(m4,h9)
+
       integer isec,icopt,ifull,imsg,io3p
       common/ cst103 /isec,icopt,ifull,imsg,io3p
 c----------------------------------------------------------------------
@@ -12983,13 +12986,25 @@ c                              compute end-member fractions
          y(l) = 1d0
 
          do m = 1, istg(im)
-c                              check for invalid compositions,
-c                              necessary for conformal transformtions
+c                                 check for invalid compositions,
+c                                 necessary for conformal transformtions
             x = z(m,jmsol(l,m)) 
 
             y(l) = y(l)*x
 
          end do
+
+         if (y(l).gt.0d0.and.badend(l,im)) then 
+c                                 reject an edmember if it contains a
+c                                 species with negative site fractions
+            if (y(l).lt.nopt(5)) then 
+               y(l) = 0d0
+            else 
+c              write (*,*) 'rejected ',l,y(l)
+               return
+            end if
+ 
+         end if 
 c                                 y is the mole fraction of endmember l
          zpr = zpr + y(l) 
 
@@ -12997,9 +13012,9 @@ c                                 y is the mole fraction of endmember l
 c                                 the pure endmember index is 
             i = l       
 
-c        else if (y(l).lt.nopt(5)) then
-c                                cancelled nov 24, 2016
-c            y(l) = 0d0
+         else if (y(l).lt.nopt(5)) then
+c                                cancelled nov 24, 2016, back march 2017.
+            y(l) = 0d0
 
          end if 
 
@@ -13117,13 +13132,17 @@ c                                during debugging.
       end if 
 
       do j = 1, 3
+
          h = idint(1d2*pa(j))
 
          if (h.eq.100) then 
             pnm(j) = '**'
          else 
-            write (pnm(j),'(i2)') h 
+            write (pnm(j),'(i2.2)') h 
          end if 
+
+c use mname array to flag retained absent endmembers
+
       end do
       
       if (istg(im).eq.2.and.mstot(im).eq.4) then
@@ -15052,7 +15071,7 @@ c                                 and g the normalized g:
 
       end
 
-      subroutine chopit (ycum,jsp,ksite,ids)
+      subroutine chopit (ycum,jsp,lsite,ids)
 c---------------------------------------------------------------------
 c subroutine to do cartesian or transform subdivision of species
 c jst through jsp on site k of solution ids. ycum is the smallest
@@ -15067,7 +15086,7 @@ c---------------------------------------------------------------------
  
       parameter (mres=12000)
 
-      integer mode, ind(ms1), iy(ms1), jsp, ksite, indx, iexit, 
+      integer mode, ind(ms1), iy(ms1), jsp, lsite, indx, iexit, 
      *        ieyit, i, j, ids
 
       double precision y(ms1,mres), ycum, ymax, dy, ync, res, ylmn,
@@ -15102,16 +15121,16 @@ c----------------------------------------------------------------------
       do i = 1, jsp
 c                                 generate coordinates for i'th component
          iy(i) = 1
-         y(i,1) = xmn(ksite,i)
-         ync = xnc(ksite,i)
+         y(i,1) = xmn(lsite,i)
+         ync = xnc(lsite,i)
 
          if (ync.eq.0d0) cycle
 
-         mode = imdg(i,ksite,ids)
+         mode = imdg(i,lsite,ids)
 c                                 avoid impossible compositions 'cause a min > 0
          if (i.gt.1) then 
 
-            ycum = ycum + xmn(ksite,i-1)
+            ycum = ycum + xmn(lsite,i-1)
 c                                 1-ycum is the smallest fraction possible
             if (1d0-ycum.lt.0d0) then 
 c                                 inconsistent limits
@@ -15120,11 +15139,11 @@ c                                 inconsistent limits
             else
 c                                 the smallest fraction possible is lt
 c                                 than xmax
-               ymax = xmx(ksite,i)
+               ymax = xmx(lsite,i)
 
             end if 
          else 
-            ymax = xmx(ksite,i)
+            ymax = xmx(lsite,i)
          end if 
 c                                 two means of extracting y-range, cartesian
 c                                 imod = 0 and transformation imod = 1
@@ -15157,8 +15176,8 @@ c                                 intervals to cycle through
 c                                 odd or even interval?
                odd = .not.odd
 c                                 interval limits              
-               ylmn = yint(j,i,ksite,ids)
-               ylmx = yint(j+1,i,ksite,ids)
+               ylmn = yint(j,i,lsite,ids)
+               ylmx = yint(j+1,i,lsite,ids)
 c                                 which interval are we starting from?
                if (y(i,iy(i)).gt.ylmx-nopt(5)) cycle
 c
@@ -15181,7 +15200,7 @@ c                                 convert to conformal x
 
                else
 c                                 have jumped from an earlier interval
-                  x = res - ync / yfrc(j-1,i,ksite,ids)
+                  x = res - ync / yfrc(j-1,i,lsite,ids)
 c                 if (x.lt.0d0) x = 0d0
 
                end if                 
@@ -15189,7 +15208,7 @@ c                                 now generate all compositions in
 c                                 local interval
                do while (x.le.1d0) 
 c                                 increment conformal x
-                  x = x + ync / yfrc(j,i,ksite,ids)
+                  x = x + ync / yfrc(j,i,lsite,ids)
 c                                 compute yreal
                   if (x.le.1d0) then 
                      if (odd) then 

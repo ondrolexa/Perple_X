@@ -544,14 +544,18 @@ c                                 the composition is out of range
 
          end do 
 
-         call xtoy (ids)
+         call xtoy (ids,bad)
 
-         if (ksmod(ids).eq.5) then
+         if (bad) then 
+
+            jphct = jphct - 1
+            jcoct = kcoct - ncoor(ids)
+            cycle
+
+         else if (ksmod(ids).eq.5) then
 c                                 this is an el cheapo filter for redundant
 c                                 compositions, a better method would be to
 c                                 do the subdivision properly.
-            bad = .false.
-
             do j = 1, ndep(ids)
 
                if (y(knsp(lstot(ids)+j,ids)).gt.0d0.and.
