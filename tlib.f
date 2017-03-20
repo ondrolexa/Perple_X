@@ -19,7 +19,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a)') 
-     *      'Perple_X version 6.7.6, source updated Mar 18, 2017.'
+     *      'Perple_X version 6.7.7, source updated Mar 20, 2017.'
 
       end
 
@@ -79,7 +79,6 @@ c lopt(1)  - closed_c_space -> T = closed compositional variables
 c lopt(2)  - set in getprp -> T = cumulative modes 
 c lopt(3)  - hard_limits -> T = on
 c lopt(4)  - Anderson-Gruneisen -> Helffrich Murnaghan correction
-c lopt(5)  - site_check -> T = reject invalid site fractions
 c lopt(6)  - melt_is_fluid -> T = classify melts as fluids in output
 c lopt(7)  - saturated phase in data base, set by topN2
 c lopt(8)  - approx_alpha -> T = approx exp(x)=1+x in volume integral
@@ -203,8 +202,6 @@ c                                 closed or open compositional space
       lopt(1) = .true.
 c                                 Anderson-Gruneisen correction
       lopt(4) = .false.
-c                                 reject invalid site fractions
-      lopt(5) = .true.
 c                                 melt_is_fluid
       lopt(6) = .false.
 c                                 approx_alpha
@@ -815,10 +812,6 @@ c                                 assume linear boundaries within a cell during 
 
             if (val.eq.'F') lopt(8) = .false.
 
-         else if (key.eq.'site_check') then 
-
-            if (val.eq.'F') lopt(5) = .false.
-
          else if (key.eq.'melt_is_fluid') then 
 
             if (val.eq.'T') lopt(6) = .true.
@@ -1288,7 +1281,7 @@ c                                 pc-perturbation
          if (iam.eq.1.and.icopt.le.3) write (n,1011) nopt(15)
 c                                 generic thermo parameters:
          write (n,1012) nval1,nopt(12),nopt(20),valu(17),
-     *                  lopt(8),lopt(4),lopt(5),nopt(5),iopt(21),
+     *                  lopt(8),lopt(4),nopt(5),iopt(21),
      *                  iopt(25),iopt(26),iopt(27)
 c                                 for meemum add fd stuff
          if (iam.eq.2) write (n,1017) nopt(31),nopt(26),nopt(27)
@@ -1372,7 +1365,6 @@ c                                 generic thermo options
      *        4x,'order_check            ',a3,8x,'off [on]',/,
      *        4x,'approx_alpha           ',l1,10x,'[T] F',/,
      *        4x,'Anderson-Gruneisen     ',l1,10x,'[F] T',/,
-     *        4x,'site_check             ',l1,10x,'[T] F',/,
      *     4x,'speciation_factor      ',f6.0,5x,'>10 [100] speciation ',
      *           'precision = final resolution/speciation_factor',/,
      *        4x,'speciation_max_it      ',i4,7x,'[100]',/,

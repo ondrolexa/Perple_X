@@ -198,10 +198,6 @@ c                                 adaptive x(i,j) coordinates
       logical fulrnk
       double precision cptot,ctotal
       common/ cst78 /cptot(k19),ctotal,jdv(k19),npt,fulrnk
-c DEBUG
-      integer jcount
-      logical switch
-      common/ debug1 /jcount(10),switch(10)
 
       logical mus
       double precision mu, gmax
@@ -286,13 +282,6 @@ c                                 the xcoor array.
          jcoct = 1
 
          first = .true.
-
-c DEBUG DEBUG 
-c         switch(1) = .true.
-c         jcount(3) = 0
-c         jcount(4) = 0
-c         write (*,*) 'iter =',iter,' gmax =', gmax
-
 c                                 generate new pseudocompounds
          do i = 1, npt
 
@@ -319,11 +308,6 @@ c                                 reset jdv in case of exit
             jdv(i) = i 
 
          end do 
-
-c        if (switch(1)) then  
-c            jcount(5) = jcount(5) + jcount(3)
-c            jcount(6) = jcount(6) + jcount(4)
-c        end if 
 
       end do 
 
@@ -578,25 +562,6 @@ c                                 reject composition
 c                                 call gsol to get g of the solution, gsol also
 c                                 computes the p compositional coordinates
          g2(jphct) = gsol1(ids)
-c                                 this is to check for invalid site fractions
-c                                 arising from h&p's equipartition models.
-c                                 this is redundant with the z calculations 
-c                                 made in gsol1, but to avoid modifying the code
-c                                 the test is repeated here, the test will be 
-c                                 obsolete once equipartition is phased out.
-         if (lopt(5).and.lrecip(ids)) then 
-c                                 check for invalid site fractions, this is only necessary
-c                                 for H&P models that assume equipartition (which is not 
-c                                 implemented). 
-            call zchk (pa,ids,bad)
-
-            if (bad) then
-               jphct = jphct - 1
-               jcoct = jcoct - ncoor(ids)
-               cycle
-            end if
-
-         end if
 c                                 use the coordinates to compute the composition 
 c                                 of the solution
          call csol (ids,iter,bad,gmin)
@@ -2151,7 +2116,7 @@ c                                 each solution.
       do 20 i = 1, jphct
 c DEBUG
          if (is(i).ne.1.or.clamda(i).lt.wmach(3)) cycle 
-         if (is(i).ne.1) cycle 
+c        if (is(i).ne.1) cycle 
 
          id = i + inc 
          iam = ikp(id)
@@ -2901,10 +2866,8 @@ c-----------------------------------------------------------------------
       implicit none
  
       include 'perplex_parameters.h'
-c DEBUG
-      integer i, j, k, id, isp, ins(nsp), ibug
-      double precision gsol0
-      external gsol0
+
+      integer i, j, k, id, isp, ins(nsp)
 
       double precision dg1, gval, dg, gzero, g0(k5), gex, gfesi,
      *                 gfesic, gfecr1, gerk, x1(5), gproj, ghybrid
@@ -2969,9 +2932,6 @@ c                                 model type
 c                                 endmember names
       character names*8
       common/ cst8  /names(k1)
-
-      save ibug
-      data ibug/1/
 c-----------------------------------------------------------------------
 c                                 compute the chemical potential
 c                                 of the projected components.
@@ -3035,68 +2995,15 @@ c                                 after Lacaze and Sundman
             end do
 
          else if (lrecip(i).and.lorder(i)) then
-c                                 prismatic solution with ordering 
-c            sxs(1) = .6407726359
-c            sxs(2) = .4912112378e-1
-c            sxs(3) = .1781709887e-1
-c            sxs(4) = .2657701269
-c            sxs(5) = .2972736393e-1
-c            sxs(6) = -.320834956e-2
-c eq
-c            sxs(1) = .7012131600d0
-c            sxs(2) = .513d-1
-c            sxs(3) = .1882040400d0
-c            sxs(4) = .2473868400d0
-c            sxs(5) = .5216d-4
-c            sxs(6) = -.1881562000d0
-
+c                                 prismatic solution with ordering:
 c                                 compute margules coefficients
             call setw (i)
 c                                 compute enthalpy of ordering
             call oenth (i)
 c                                 now for each compound:
             do j = 1, jend(i,2)
-
-
-           ibug = 99
-              if (ibug.eq.0) then 
-c DELETE ME DELETE ME DEBUG 1050 K 4000
-         p0a(1) =                   -0.0065200000
-         p0a(2) =                    0.2235000000
-         p0a(3) =                    0.4769502876
-         p0a(4) =                    -.21934
-         p0a(5) =                    0.0928182680
-         p0a(6) =                    0.5919781530
-         p0a(7) =                      0.24302
-         p0a(8) =                    0.0354697124
-         p0a(9) =                      0.07056
-         p0a(10) =                   -0.3901582680
-         p0a(11) =                   -0.1182781530
-               do k = 1, nstot(i) 
-                  pa(k) = p0a(k)
-               end do 
-         dg = gsol0(i)
-
-             else if (ibug.eq.2) then 
-
-         p0a(1) =  .8124e-1              
-         p0a(2) =   .79822           
-         p0a(3) =   .4341293766            
-         p0a(4) =   -.6628e-1             
-         p0a(5) =  .9605e-1                 
-         p0a(6) =    .464433782e-1              
-         p0a(8) =  -.3898027548         
-         p0a(7) =   0.                
-
-               do k = 1, nstot(i) 
-                  pa(k) = p0a(k)
-               end do 
-         dg = gsol0(i)
-
-            end if 
 c                                 assign x's
                do k = 1, nstot(i) 
-c DELETE ME DELETE ME DEBUG 
                   p0a(k) = sxs(ixp(id)+k)
                   pa(k) = p0a(k)
                end do 

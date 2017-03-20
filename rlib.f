@@ -8136,14 +8136,15 @@ c----------------------------------------------------------------------
             y(l) = y(l)*x(m,kmsol(ids,l,m))
          end do
 
-         if (y(l).gt.0d0.and.badend(l,ids)) then 
+         if (badend(l,ids)) then 
 
             if (y(l).lt.zero) then 
 
                y(l) = 0d0
 
             else 
-
+c                                 reject compositions with non-zero dependent
+c                                 endmember concentrations. 
                bad = .true.
                return 
 
@@ -8158,14 +8159,13 @@ c----------------------------------------------------------------------
       end do
 
       if (k.ne.0) then 
-c                                 it seems nigh impossible that 
-c                                 reopt is gonna get to a badend composition. 
-         if (badend(k,ids).or.ldsol(k,ids).gt.0) then 
+c                                 reject pure independent endmember compsoitions. 
+         if (ldsol(k,ids).gt.0) then 
             
             bad = .true.
 
             write (*,*) 'rejected endmember comp xtoy ',k,
-     *                  ' solution', ids, badend(k,ids), ldsol(k,ids)
+     *                  ' solution', ids, ldsol(k,ids)
 
             return
   
@@ -10897,11 +10897,7 @@ c                                 cross term * infinity
       end if
 c                                 endmember corrections
       do i = 1, nstot(id)
-c                                 the mechanical g term 
-c                                 includes only -p0*s0 terms,
-c                                 ergo these are the only terms
-c                                 that need to be cancelled. 
-c DEBUG DELETE ETC
+
          s = s - pa(i) * scoef(i,id)
 
          do k = 1, nord(id) 
@@ -11294,19 +11290,19 @@ c                                 composition to the max - nopt(5), at this
 c                                 condition the first derivative < 0, 
 c                                 and the second derivative > 0 (otherwise
 c                                 the root must lie at p > pmax - nopt(5).               
-      if (dpmax.lt.nopt(5)) return
-
       pin(k) = .true.
       dp = dpmax - nopt(5)
       pmax = p0a(jd) + dp
       pmin = p0a(jd) + nopt(5)
+
+      if (pmax-pmin.lt.nopt(5)) return 
 c                                 get starting end for the search
 c                                 first try the maximum
       call pincs (dp,dy,ind,jd,nr)
 
       call gderi1 (k,id,dp)
 
-      if (dp.gt.0d0) then 
+      if (dp.ge.0d0) then 
 c                                 at the maximum concentration
 c                                 and the increment is positive,
 c                                 the solution is fully ordered
@@ -11316,7 +11312,7 @@ c                                 the disordered case:
 
          call gderi1 (k,id,dp)
 
-         if (dp.lt.0d0) then 
+         if (dp.le.0d0) then 
 c                                 neither min nor max starting point
 c                                 is possible. setting error to 
 c                                 true will cause specis to compare 
@@ -11461,11 +11457,11 @@ c                                 g > gold, itic > 2
             if (tdp.lt.nopt(5).or.
      *          dabs((gold-g)/g).lt.nopt(5).or.tdp.eq.xtdp.or.
      *          itic.gt.2.and.gold.le.g) then
+
                goodc(1) = goodc(1) + 1d0
-               jcount(1) = jcount(1) + itic 
-c DELETE ME DELETE ME DEBUG 
-c            call gderiv (id,g,dp,error)
+               jcount(1) = jcount(1) + itic
                exit
+
             end if 
 c                                 before nov 23, 2016, xtdp was only set 
 c                                 if g > gold (i.e., diverging).
@@ -13022,9 +13018,6 @@ c                                 model type
       integer isec,icopt,ifull,imsg,io3p
       common/ cst103 /isec,icopt,ifull,imsg,io3p
 c----------------------------------------------------------------------
-
-      one = 1d0 - nopt(5)
-      zero = nopt(5)
       zpr = 0d0 
       i = 0 
 c                              compute end-member fractions
@@ -13042,12 +13035,11 @@ c                                 necessary for conformal transformtions
          end do
 
          if (y(l).gt.0d0.and.badend(l,im)) then 
-c                                 reject an edmember if it contains a
-c                                 species with negative site fractions
+c                                 reject non-zero dependent endmember 
+c                                 compositions. 
             if (y(l).lt.zero) then 
                y(l) = 0d0
             else 
-c              write (*,*) 'rejected ',l,y(l)
                return
             end if
  
@@ -13057,9 +13049,9 @@ c              write (*,*) 'rejected ',l,y(l)
 c                                 the pure endmember index is 
             i = l       
 
-         else if (y(l).lt.zero) then
+c         else if (y(l).lt.zero) then
 c                                cancelled nov 24, 2016, back march 2017.
-            y(l) = 0d0
+c           y(l) = 0d0
 
          end if 
 c                                 y is the mole fraction of endmember l
@@ -13069,18 +13061,12 @@ c                                 y is the mole fraction of endmember l
 c                                 DEBUG DEBUG
 c                                 check for badly normalized compositions
       if (dabs(1d0-zpr).gt.zero) then 
-         write (*,*) 'got a bad un, ysum = ',zpr,' tol is ',nopt(5),
-     *               zero
+         write (*,*) 'got a bad un, ysum =',zpr,' tol is ',zero,nopt(5)
       end if 
 
       if (i.ne.0) then 
-c                                 reject if its an independent or invalid 
-c                                 endmember then
-         if (badend(i,im).or.ldsol(i,im).gt.0) then 
-            write (*,*) 'rejected endmember comp soload ',i,
-     *                  ' solution', im, badend(i,im), ldsol(i,im)
-            return 
-         end if 
+c                                 reject pure independent endmembers
+         if (ldsol(i,im).gt.0) return 
 c                                 a pure endmember composition:
          y(i) = 1d0 
 
@@ -13139,14 +13125,6 @@ c                                 disordered species:
             end do 
          end do  
       end if 
-
-      if (lopt(5).and.depend.or.order) then 
-c                                 check for invalid site fractions, this is only necessary
-c                                 for H&P models that assume equipartition (which is not 
-c                                 implemented). 
-         call zchk (pa,im,bad)
-         if (bad) return 
-      end if
 c                                 the composition is acceptable.
       iphct = iphct + 1
       icpct = icpct + 1 
@@ -14810,17 +14788,6 @@ c----------------------------------------------------------------------
       i2 = ideps(2,1,id)
       jd = lstot(id) + 1 
       error = .false.
-
-c      p0a(1) = .3954786492
-c      p0a(2) = .3022606754
-c      p0a(3) = .3022606754
-
-
-c      p0a(1) = .5668
-c      p0a(2) = 0.4332/2d0
-c      p0a(3) = 0.4332/2d0
-
-
 c                                 starting point:
 c                                 find the maximum amount of the 
 c                                 ordered species that can be formed

@@ -1,5 +1,5 @@
 |----------------------------------------------------------------------
-        | Run-time Perple_X 6.7.6 options:
+        | Run-time Perple_X 6.7.7 options:
         | Comments must be preceeded by the "|" character.
         | Keywords and values are case sensitive!
         | For documentation refer to:
@@ -54,8 +54,7 @@ refinement_points_II        5   | > 0, number of metstable refinement points ret
 refinement_threshold       1d5  | > 0, [10000 J] relative metastable Gibbs Energy at which a composition will be rejected
 seismic_output            some  | all, some, none
 short_print                on   | on or off
-site_check                  T   | T[rue] or F[alse], T=> reject solution compositions with negative site fractions
-solution_names            abb   | mod[el], abb[reviation], ful[l] 
+solution_names             mod  | mod[el], abb[reviation], ful[l] 
 solvus_tolerance          auto  | auto or 0->1 [0.05] should be > initial_resolution/auto_refine_factor
 solvus_tolerance_II        0.25 | 0->1 [0.25]
 speciation_factor          100  | >10, speciation precision = final resolution/speciation factor
