@@ -19,7 +19,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a)') 
-     *      'Perple_X version 6.7.6, source updated Mar 17, 2017.'
+     *      'Perple_X version 6.7.6, source updated Mar 18, 2017.'
 
       end
 
@@ -148,6 +148,11 @@ c                                 precision stuff used in lpnag
       integer iam
       common/ cst4 /iam
 
+      logical badend
+      integer ldsol
+      double precision one, zero
+      common/ cxt36 /one,zero,ldsol(m4,h9),badend(m4,h9)
+
       logical mus
       double precision mu, gmax
       common/ cst330 /mu(k8),gmax,mus
@@ -182,7 +187,11 @@ c                                 for nag)
 c                                 largest number
       wmach(7) = huge(0d0)
       wmach(8) = dsqrt(wmach(7))
+
       r1 = 1d0 + r2
+c                                 solution composition zero and one
+      zero = r2
+      one = 1d0 - r2
 c                                 -------------------------------------
 c                                 default option values:
       do i = 28, 30
@@ -2773,7 +2782,7 @@ c     *          ' (SWASH, see program documentation Eq 2.3)',/)
      *          'invariant equilibrium.',/)
 59    format (/,'**warning ver059** endmember ',a,
      *        ' has invalid site population.',/,'It will be retained',
-     *        ' as a placeholder with zero concentration',/)
+     *        ' as a place-holder with zero concentration',/)
 60    format (/,'**warning ver060** non-fatal programming error ',
      *          'routine:',a,/)
 63    format (/,'**warning ver063** wway, invariant point on an edge?',

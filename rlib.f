@@ -8094,7 +8094,7 @@ c----------------------------------------------------------------------
       include 'perplex_parameters.h'
 c                                 -------------------------------------
 c                                 local variables:
-      integer ids, l, m
+      integer ids, k, l, m
 
       logical bad
 c                                 -------------------------------------
@@ -8114,7 +8114,9 @@ c                                 x coordinate description
       common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
 
       logical badend
-      common/ cxt36 /badend(m4,h9)
+      integer ldsol
+      double precision one, zero
+      common/ cxt36 /one,zero,ldsol(m4,h9),badend(m4,h9)
 
       integer iopt
       logical lopt
@@ -8123,6 +8125,8 @@ c                                 x coordinate description
 c----------------------------------------------------------------------
 
       bad = .false.
+
+      k = 0
 
       do l = 1, mstot(ids)
 
@@ -8134,16 +8138,50 @@ c----------------------------------------------------------------------
 
          if (y(l).gt.0d0.and.badend(l,ids)) then 
 
-            if (y(l).lt.nopt(5)) then 
+            if (y(l).lt.zero) then 
+
                y(l) = 0d0
+
             else 
+
                bad = .true.
                return 
+
             end if 
+
+         else if (y(l).gt.one) then
+
+            k = l
 
          end if 
 
-      end do   
+      end do
+
+      if (k.ne.0) then 
+c                                 it seems nigh impossible that 
+c                                 reopt is gonna get to a badend composition. 
+         if (badend(k,ids).or.ldsol(k,ids).gt.0) then 
+            
+            bad = .true.
+
+            write (*,*) 'rejected endmember comp xtoy ',k,
+     *                  ' solution', ids, badend(k,ids), ldsol(k,ids)
+
+            return
+  
+         end if 
+
+         y(k) = 1d0 
+
+         do l = 1, mstot(ids)
+            
+            if (l.eq.k) cycle
+            
+            y(l) = 0d0
+
+         end do
+
+      end if 
 
       end 
 
@@ -8997,7 +9035,9 @@ c---------------------------------------------------------------------
       common/ cst91 /ineg(h9,m15)
 
       logical badend
-      common/ cxt36 /badend(m4,h9)
+      integer ldsol
+      double precision one, zero
+      common/ cxt36 /one,zero,ldsol(m4,h9),badend(m4,h9)
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp  
@@ -9454,6 +9494,8 @@ c                                 term may be of order < iord
       do i = 1, mstot(im)
 c                                 initialize invalid speciation flag
          badend(i,im) = .false.
+c                                 save global copy of kdsol
+         ldsol(i,im) = kdsol(i) 
 c                                 insp points to the original position 
 c                                 of endmember i in the solution model input:
          knsp(i,im) = insp(i)
@@ -12973,11 +13015,16 @@ c                                 model type
       common/ cst91 /ineg(h9,m15)
 
       logical badend
-      common/ cxt36 /badend(m4,h9)
+      integer ldsol
+      double precision one, zero
+      common/ cxt36 /one,zero,ldsol(m4,h9),badend(m4,h9)
 
       integer isec,icopt,ifull,imsg,io3p
       common/ cst103 /isec,icopt,ifull,imsg,io3p
 c----------------------------------------------------------------------
+
+      one = 1d0 - nopt(5)
+      zero = nopt(5)
       zpr = 0d0 
       i = 0 
 c                              compute end-member fractions
@@ -12997,7 +13044,7 @@ c                                 necessary for conformal transformtions
          if (y(l).gt.0d0.and.badend(l,im)) then 
 c                                 reject an edmember if it contains a
 c                                 species with negative site fractions
-            if (y(l).lt.nopt(5)) then 
+            if (y(l).lt.zero) then 
                y(l) = 0d0
             else 
 c              write (*,*) 'rejected ',l,y(l)
@@ -13005,36 +13052,43 @@ c              write (*,*) 'rejected ',l,y(l)
             end if
  
          end if 
-c                                 y is the mole fraction of endmember l
-         zpr = zpr + y(l) 
 
-         if (y(l).gt.1d0-nopt(5).and.kdsol(l).gt.0) then
+         if (y(l).gt.one) then
 c                                 the pure endmember index is 
             i = l       
 
-         else if (y(l).lt.nopt(5)) then
+         else if (y(l).lt.zero) then
 c                                cancelled nov 24, 2016, back march 2017.
             y(l) = 0d0
 
          end if 
+c                                 y is the mole fraction of endmember l
+         zpr = zpr + y(l) 
 
       end do
+c                                 DEBUG DEBUG
 c                                 check for badly normalized compositions
-      if (dabs(1d0-zpr).gt.nopt(5)) then 
-         write (*,*) 'got a bad un, ysum = ',zpr,' tol is ',nopt(5)
+      if (dabs(1d0-zpr).gt.zero) then 
+         write (*,*) 'got a bad un, ysum = ',zpr,' tol is ',nopt(5),
+     *               zero
       end if 
 
       if (i.ne.0) then 
-c                                 (presumably) a pure endmember composition:
-c                                 shift the endmember composition slightly 
-c                                 off the pure composition to avoid degneracy
-         y(i) = y(i) - nopt(5)
+c                                 reject if its an independent or invalid 
+c                                 endmember then
+         if (badend(i,im).or.ldsol(i,im).gt.0) then 
+            write (*,*) 'rejected endmember comp soload ',i,
+     *                  ' solution', im, badend(i,im), ldsol(i,im)
+            return 
+         end if 
+c                                 a pure endmember composition:
+         y(i) = 1d0 
 
          do l = 1, mstot(im)
 
             if (l.eq.i) cycle 
 
-            y(l) = y(l) + nopt(5)/(mstot(im)-1)
+            y(l) = 0d0
 
          end do    
 
