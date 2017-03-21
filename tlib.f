@@ -1100,7 +1100,11 @@ c                                 file version, create the file name
 
          end if 
 
-      end if  
+      end if 
+c                                 convert speciation factor to speciation tolerance
+c                                 for fluids and frendly (routines that do not call 
+c                                 setau1). 
+      if (iam.eq.5.or.iam.eq.11) nopt(5) = 1d-4/nopt(5)
 c                                 -------------------------------------
 c                                 recalculate parameters:
 c                                 proportionality constant for shear modulus
