@@ -439,8 +439,6 @@ c                                if it does, then skip the point.
       end if 
 c                                load the subdivision limits into
 c                                temporary limit arrays:
-      last = ids 
-
       res0 = nopt(24)/nopt(21)**iter
       
       do i = 1, istg(ids)
@@ -469,10 +467,11 @@ c                                 to allow hardlimits. JADC
          end do 
       end do
 
-c DEBUG DEBUG 
-c      jcount(1) = 0d0
-c      jcount(2) = 0d0
       gmin = 1d99 
+c                                  set solution model parameters for
+c                                  gsol1, don't call if the previous
+c                                  refinement point was the same solution.
+      if (ids.ne.last) call ingsol (ids) 
 
       call subdiv (ids,.true.)
 
@@ -557,8 +556,6 @@ c                                 reject composition
             if (bad) cycle 
 
          end if
-
-
 c                                 call gsol to get g of the solution, gsol also
 c                                 computes the p compositional coordinates
          g2(jphct) = gsol1(ids)
@@ -577,6 +574,8 @@ c                                 of the solution
 10    continue
 
       first = .false.
+
+      last = ids 
 
       end 
 

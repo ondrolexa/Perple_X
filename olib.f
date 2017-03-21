@@ -830,10 +830,8 @@ c----------------------------------------------------------------------
       else 
 
          g = 0d0
-c                                 evaluate dqf coefficients
-         call setdqf (id)
-
-         call setw (id) 
+c                                 initialize p-t dependent coefficients
+         call ingsol (id)
 
          if (ksmod(id).eq.2.or.ksmod(id).eq.3) then 
 c                                 -------------------------------------
@@ -850,8 +848,6 @@ c                                 get mechanical mixture contribution
 c                                 -------------------------------------
 c                                 convert y coordinates to independent p coordinates
             call y2p0 (id)
-c                                 evaluate enthalpies of ordering
-            call oenth (id)
 c                                 get the speciation, excess and entropy effects.
             call specis (g,id)
 
@@ -866,8 +862,6 @@ c                                 are not dqf'd. gex not neccessary as computed 
 
          else if (lorder(id)) then 
 c                                 -------------------------------------
-c                                 evaluate enthalpies of ordering
-            call oenth (id)
 c                                 non-reciprocal speciation.
             do k = 1, lstot(id)  
                pa(k) = y(k)

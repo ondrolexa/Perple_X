@@ -8196,7 +8196,8 @@ c the y's for the full reciprocal model.
 c gsol assumes the endmember g's have not been calculated by gall and is
 c      only called by WERAMI.
 c gsol1 is identical to gsol but can only been called after gall and is 
-c      only called by VERTEX and MEEMUM. 
+c      only called by VERTEX and MEEMUM. ingsol must be called prior to
+c      gsol1 to initialize p-t dependnent model parameters. 
 c-----------------------------------------------------------------------
       implicit none
  
@@ -8244,10 +8245,6 @@ c                                 model type
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 c----------------------------------------------------------------------
          gg = 0d0
-c                                 evaluate margules coefficients
-         call setw (id)
-c                                 evaluate dqf coefficients
-         call setdqf(id)
 
          if (ksmod(id).eq.2.or.ksmod(id).eq.3) then 
 c                                 -------------------------------------
@@ -8277,8 +8274,6 @@ c                                 initialize p's
 c                                 -------------------------------------
 c                                 prismatic solution, initialize p's
             call y2p0 (id)
-c                                 evaluate enthalpies of ordering
-            call oenth (id)
 c                                 get the speciation, excess and entropy effects.
             call specis (gg,id)
 c                                 decompose the ordered species into 
@@ -8297,8 +8292,6 @@ c                                 are not dqf'd. gex not neccessary as computed 
          else if (lorder(id)) then 
 c                                 -------------------------------------
 c                                 simplicial ordering solutions.
-c                                 evaluate enthalpies of ordering
-            call oenth (id)
 c                                 get mechanical mixture contribution
             do k = 1, lstot(id)  
                pa(k) = y(k)
@@ -8442,6 +8435,28 @@ c                                 MRK silicate vapor
          end if 
 
       gsol1 = gg 
+
+      end
+
+      subroutine ingsol (id)
+c-----------------------------------------------------------------------
+c ingso1 initializes p-t dependent solution model id parameters for gsol1
+c-----------------------------------------------------------------------
+      implicit none
+ 
+      include 'perplex_parameters.h'
+
+      integer id
+c                                 model type
+      logical lorder, lexces, llaar, lrecip
+      common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
+c----------------------------------------------------------------------
+c                                 evaluate margules coefficients
+      call setw (id)
+c                                 evaluate dqf coefficients
+      call setdqf (id)
+c                                 evaluate enthalpies of ordering
+      if (lorder(id)) call oenth (id)
 
       end
 
@@ -15459,267 +15474,5 @@ c                                 the total moles of charged species
          qpairs = qpairs - 1
 
       end if 
-
-      end
-
-c DEBUG DELETE 
-
-      double precision function gsol0 (id)
-c-----------------------------------------------------------------------
-c gsol computes the total (excess+ideal) free energy of solution 
-c for a solution identified by index ids and composition y(m4) input
-c from cxt7, the composition y is the independent endmember fractions
-c for all model types except reciprocal solutions, in which case it is 
-c the y's for the full reciprocal model.
-
-c gsol assumes the endmember g's have not been calculated by gall and is
-c      only called by WERAMI.
-c gsol1 is identical to gsol but can only been called after gall and is 
-c      only called by VERTEX and MEEMUM. 
-c-----------------------------------------------------------------------
-      implicit none
- 
-      include 'perplex_parameters.h'
-
-      integer k, id, isp, ins(nsp)
-
-      double precision omega, hpmelt, slvmlt, gmelt, gfluid, gzero, gg,
-     *         dg, gex, gfesi, gfesic, gfecr1, gerk, x1(5), ghybrid
-
-      external omega, hpmelt, slvmlt, gmelt, gfluid, gzero, gex, gfesi, 
-     *         gfesic, gfecr1, gerk, ghybrid
-
-      integer jend
-      common/ cxt23 /jend(h9,m4)
-
-      double precision g
-      common/ cst2 /g(k1)
-
-      double precision r,tr,pr,ps,p,t,xco2,u1,u2
-      common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
-c                                 bookkeeping variables
-      integer ksmod, ksite, kmsol, knsp
-      common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
-
-      integer lstot,mstot,nstot,ndep,nord
-      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
-c                                 working arrays
-      double precision z, pa, p0a, x, w, y, wl
-      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
-     *              wl(m17,m18)
-c                                 model type
-      logical lorder, lexces, llaar, lrecip
-      common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
-
-      integer jspec
-      common/ cxt8 /jspec(h9,m4)
-
-      integer ideps,icase,nrct
-      common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-c----------------------------------------------------------------------
-         gg = 0d0
-c                                 evaluate margules coefficients
-         call setw (id)
-c                                 evaluate dqf coefficients
-         call setdqf(id)
-
-         if (ksmod(id).eq.2.or.ksmod(id).eq.3) then 
-c                                 -------------------------------------
-c                                 macroscopic formulation for normal solutions.
-            call gdqf (id,gg,y) 
-
-            gg = gg - t * omega(id,y) + gex(id,y)
-c                                 get mechanical mixture contribution
-            do k = 1, mstot(id) 
-               gg = gg + y(k) * g(jend(id,2+k))
-            end do 
-
-         else if (ksmod(id).ge.30.and.ksmod(id).le.31) then 
-c                                 -------------------------------------
-c                                 Nastia's version of BCC/FCC Fe-Si-C Lacaze and Sundman
-c                                 this model has to be called ahead of the standard models
-c                                 because it sets lrecip(id) = true.
-
-c                                 initialize p's
-            call y2p0 (id)
-
-            gg =  gfesic (y(1),y(3),y(4),
-     *                    g(jend(id,3)),g(jend(id,4)),
-     *                    g(jend(id,5)),g(jend(id,6)),ksmod(id))
-
-         else if (lrecip(id).and.lorder(id)) then 
-c                                 -------------------------------------
-c                                 prismatic solution, initialize p's
-c            call y2p0 (id)
-c                                 evaluate enthalpies of ordering
-            call oenth (id)
-c                                 get the speciation, excess and entropy effects.
-            call specis (gg,id)
-c                                 decompose the ordered species into 
-c                                 the independent disordered species
-c                                 i.e., the p0a array becomes the p's if the 
-c                                 abundance of the ordered species is 0.
-            do k = 1, lstot(id)
-c                                 compute mechanical g from these z's, 
-c                                 specip adds a correction for the ordered species.
-               gg = gg + g(jend(id,2+k)) * p0a(k)
-            end do 
-c                                 get the dqf, this assumes the independent reactants
-c                                 are not dqf'd. gex not neccessary as computed in specip
-            call gdqf (id,gg,p0a)
-
-         else if (lorder(id)) then 
-c                                 -------------------------------------
-c                                 simplicial ordering solutions.
-c                                 evaluate enthalpies of ordering
-            call oenth (id)
-c                                 get mechanical mixture contribution
-            do k = 1, lstot(id)  
-c               pa(k) = y(k)
-c               p0a(k) = y(k)
-               gg = gg + y(k) * g(jend(id,2+k))
-            end do 
-c                                 get the speciation energy effect
-            call specis (dg,id)
-
-            gg = gg + dg 
-c                                 get dqf corrections
-            call gdqf (id,gg,p0a)
-
-         else if (lrecip(id)) then 
-c                                 -------------------------------------
-c                                 macroscopic reciprocal solution
-c                                 initialize p's
-            call y2p0 (id)
-
-            do k = 1, lstot(id)
-               gg = gg + g(jend(id,2+k)) * p0a(k) 
-            end do 
-c                                 get the dqf, this assumes the independent reactants
-c                                 are not dqf'd
-            call gdqf (id,gg,p0a)
-
-            gg = gg - t * omega(id,p0a) + gex(id,p0a)
-
-
-         else if (ksmod(id).eq.0) then 
-c                                 ------------------------------------
-c                                 internal fluid eos
-            gg = gfluid(y(jspec(id,1)))
-            
-            do k = 1, 2
-               gg = gg + gzero(jend(id,2+k))*y(k)
-            end do 
-
-         else if (ksmod(id).eq.23) then 
-
-             write (*,*) 'toop samis model not coded'
-
-         else if (ksmod(id).eq.25.or.ksmod(id).eq.24) then 
-c                                 -------------------------------------
-c                                 hp and ghiorso pmelt models 
-            if (t.lt.nopt(20)) then 
-c                                 t < t_melt, destabilize the melt
-               gg = 1d6
-
-            else
-
-               call gdqf (id,gg,y) 
-
-               if (ksmod(id).eq.24) then 
-
-                  gg = gg - t * hpmelt(id,y) + gex(id,y)
-
-               else 
-
-                  gg = gg - t * gmelt(id) + gex(id,y)
-
-               end if 
-c                                 get mechanical mixture contribution
-               do k = 1, mstot(id)  
-                  gg = gg + y(k) * g(jend(id,2+k))
-               end do 
-
-            end if 
-
-         else if (ksmod(id).eq.26) then 
-c                                 ------------------------------------
-c                                 andreas salt model
-            call hcneos (gg,y(1),y(2),y(3))
-
-            do k = 1, 3
-               gg = gg + y(k) * g(jend(id,2+k))
-            end do 
-
-         else if (ksmod(id).eq.28) then 
-c                                 -------------------------------------
-c                                 high T fo-fa-sio2 model  
-            call gdqf (id,gg,y) 
-
-            gg = gg - t * slvmlt() + gex(id,y)
-c                                 get mechanical mixture contribution
-            do k = 1, mstot(id)  
-               gg = gg + y(k) * g(jend(id,2+k)) 
-            end do 
-
-         else if (ksmod(id).eq.29) then 
-c                                 -------------------------------------
-c                                 BCC Fe-Si Lacaze and Sundman
-            gg =  gfesi(y(1),g(jend(id,3)),g(jend(id,4)))
-
-         else if (ksmod(id).eq.32) then 
-c                                 -------------------------------------
-c                                 BCC Fe-Cr Andersson and Sundman
-            gg =  gfecr1(y(1),g(jend(id,3)),g(jend(id,4)))
-
-         else if (ksmod(id).eq.39) then
-c                                 -------------------------------------
-c                                 generic hybrid EoS
-c                                 initialize pointer array
-            isp = mstot(id)
-
-            do k = 1, isp
-
-               ins(k) = jspec(id,k)
-c                                 sum pure species g's
-               gg = gg + g(jend(id,2+k)) * y(k)
-
-            end do
-c                                 compute and add in activities
-            gg = gg + ghybrid (y,ins,isp)
-
-
-         else if (ksmod(id).eq.41) then 
-c                                 hybrid MRK ternary COH fluid
-            call rkcoh6 (y(2),y(1),gg) 
-
-            do k = 1, 3 
-               gg = gg + g(jend(id,2+k)) * y(k)
-            end do 
-
-         else if (ksmod(id).eq.40) then 
-c                                 MRK silicate vapor
-            gg = 0d0
-
-            do k = 1, nstot(id) 
-               gg = gg + gzero (jend(id,2+k)) * y(k)
-               x1(k) = y(k)
-            end do 
-
-            gg = gg + gerk(x1)
-
-         else 
-
-            write (*,*) 'what the **** am i doing here?'
-            call errpau
-
-         end if 
-
-      gsol0 = gg 
 
       end
