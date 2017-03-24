@@ -6541,9 +6541,9 @@ abh
 0.    1.0  0.1   0           | compositional range and resolution of san 
 
 begin_excess_function 
-w(san abh)     25100.  -10.8  0.343
-w(san an)      40000.    0.   0. 
-w(abh an)       3100.    0.   0. 
+w(san abh)  =   25100.  -10.8 * TK +  0.343 * Pb
+w(san an)   =   40000.   
+w(abh an)   =    3100.    
 end_excess_function  
 
 1                            | 1 site entropy model 
@@ -6552,9 +6552,9 @@ z(Ca) = 1 an
 z(K)  = 1 san            
                            
 begin_van_laar_sizes                        
-alpha(san)     1.0    0.0    0.0                      
-alpha(abh)     0.643  0.0    0.0                      
-alpha(an)      1.0    0.0    0.0
+alpha(san)  =   1.0                        
+alpha(abh)  =   0.643                      
+alpha(an)   =   1.0   
 end_van_laar_sizes
 
 begin_dqf_corrections

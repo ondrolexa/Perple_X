@@ -19,7 +19,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a)') 
-     *      'Perple_X version 6.7.7, source updated Mar 21, 2017.'
+     *      'Perple_X version 6.7.7, source updated Mar 24, 2017.'
 
       end
 
@@ -1102,9 +1102,11 @@ c                                 file version, create the file name
 
       end if 
 c                                 convert speciation factor to speciation tolerance
-c                                 for fluids and frendly (routines that do not call 
-c                                 setau1). 
-      if (iam.eq.5.or.iam.eq.11) nopt(5) = 1d-4/nopt(5)
+c                                 for fluids and frendly assuming final resolution 
+c                                 value, for meemum and vertex this will be over-ridden
+c                                 according to whether the program is in the exploratory
+c                                 or auto-refine stage in setau1. 
+      nopt(5) = rid(5,2)
 c                                 -------------------------------------
 c                                 recalculate parameters:
 c                                 proportionality constant for shear modulus

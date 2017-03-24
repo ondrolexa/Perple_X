@@ -8146,6 +8146,7 @@ c----------------------------------------------------------------------
 c                                 reject compositions with non-zero dependent
 c                                 endmember concentrations. 
                bad = .true.
+
                return 
 
             end if 
@@ -8163,9 +8164,6 @@ c                                 reject pure independent endmember compsoitions
          if (ldsol(k,ids).gt.0) then 
             
             bad = .true.
-
-            write (*,*) 'rejected endmember comp xtoy ',k,
-     *                  ' solution', ids, ldsol(k,ids)
 
             return
   
@@ -12916,8 +12914,6 @@ c--------------------------------------------------------------------------
       include 'perplex_parameters.h'
 
       character tname*10, znm(2,2)*2, pnm(3)*2 
-
-      logical bad
  
       double precision zpr,hpmelt,slvmlt,gmelt,smix,esum,ctotal,omega,x
 
