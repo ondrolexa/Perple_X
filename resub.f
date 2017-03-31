@@ -2868,10 +2868,10 @@ c-----------------------------------------------------------------------
 
       integer i, j, k, id, isp, ins(nsp)
 
-      double precision dg1, gval, dg, gzero, g0(m4), mo(m4), q(m4) 
+      double precision dg1, gval, dg, g0(m4), mo(m4), q(m4), x1(5), is
 
-      double precision gex, gfesi, gfesic, gfecr1, gerk, x1(5), gproj, 
-     *                 ghybrid, gaq
+      double precision gex, gfesi, gfesic, gfecr1, gerk, gproj, 
+     *                 ghybrid, gaq, gzero
 
       external gerk, gzero, gex, gfesi, gfesic, gproj, ghybrid, gaq
 
