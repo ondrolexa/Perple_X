@@ -4097,7 +4097,7 @@ c-----------------------------------------------------------------------
 
       integer id
 
-      double precision epsilo, ft, fp, omega, psi, theta, vh2o, fh2o,
+      double precision ft, fp, omega, psi, theta, fh2o, cdh,
      *                 epsh2o, duah2o, z, eta, gfunc, gf 
 
       external duah2o, epsh2o, gfunc
@@ -4108,14 +4108,12 @@ c-----------------------------------------------------------------------
       double precision thermo, uf, us
       common/ cst1 /thermo(k4,k10),uf(2),us(h5)
 
-      double precision vh2o, epsilo
-      common/ cxt37 /vh2o, epsilo
+      double precision vh2o, epsilo, adh
+      common/ cxt37 /vh2o, epsilo, adh
 
       save psi, theta, eta, cdh
       data psi, theta, eta, cdh/2600d0, 228d0, 694656.968d0, 
-     *                          5661800.47810d0/
-
-
+     *                          -5661800.47810d0/
 c-----------------------------------------------------------------------
       if (thermo(1,id).eq.0d0) then 
 c                                 assumes proton is the only species 
@@ -4130,7 +4128,7 @@ c                                 vh2o J/bar
       epsilo = epsh2o (vh2o) 
 c                                 Debye-Hueckel factor, A[cgs] = -q^3*sqrt(NA)/(4*Pi*k^(3/2))
 c                                 *(NH2O/(10*vh2o))^(1/2)/(epsilon*T)^(3/2) for ln(gamma) = +A*....
-      adh = cdh/dsqrt(vh2o*(epsilo*t)^3)
+      adh = cdh/dsqrt(vh2o*(epsilo*t)**3)
        
 c                                 shock et al 1992 g function
       gf = gfunc (vh2o) 
@@ -4233,8 +4231,7 @@ c----------------------------------------------------------------------
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
-
-
+c----------------------------------------------------------------------
       epsh2o = dexp(-0.8016651D-4 * t + 0.4769870482D1 - 0.6871618D-1 * 
      *         dsqrt(t - 0.27315D3)) * (0.1801526833D1 / v) ** 
      *         (-0.1576377D-2 * t + 0.1185462878D1 + 0.6810288D-1 * 

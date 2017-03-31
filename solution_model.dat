@@ -9813,20 +9813,20 @@ end_of_model
                       --------------------------------------------------------
 begin_model                
                                                                         
-H-O-S-Fluid 
+HOS-Fluid 
 abbreviation F
 full_name    fluid
 
 39                          | model type: Generic Hybrid EoS
-3
+4
 H2S
 SO2
-S2
 H2O
 H2 
 
-  0  0  0                              endmember flags
+  0  0  0  0                            endmember flags
 
+0.0 1.0 0.1       0        | subdivision ranges, imod = 0 -> cartesian subdivision
 0.0 1.0 0.1       0        | subdivision ranges, imod = 0 -> cartesian subdivision
 0.0 1.0 0.1       0        | subdivision ranges, imod = 0 -> cartesian subdivision
 

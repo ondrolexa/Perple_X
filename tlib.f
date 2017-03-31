@@ -2607,10 +2607,10 @@ c----------------------------------------------------------------------
 9     format ('**warning ver009** unable to deconstruct transition,'
      *       ,/,'data for ',a,' will not be output.')
 10    format (/,'**warning ver010** not able to traverse ',
-     *          'the entire',/,'extent of equilibrium (',i6,')',
+     *          'the entire  extent of equilibrium',/,'(',i6,')',
      *          ' at v(3)=',g12.6,/,
      *          'this error can usually be avoided by increasing the ',
-     *          'finite',/,'difference increment delt(iv(1)) or delv',
+     *          'finite difference',/,'increment delt(iv(1)) or delv',
      *          '(iv(2)), as defined on card 6 of',/,'the file on n2.',
      *          ' In routine:',a,/)
 11    format (/,'**warning ver011** ',a,' has > 1',
@@ -2654,7 +2654,7 @@ c----------------------------------------------------------------------
      *        'xmin will be set to xmax NO PSEUDOCOMPOUNDS WILL BE',
      *        ' GENERATED.',/,'see documentation, section 4.0',/)
 24    format (/,'**warning ver024** wway, increment refined out of',
-     *          ' range (',g8.1,')',/,' before the stable',
+     *          ' range (',g8.1,')',/,'before the stable',
      *          ' extension of the equilibria was located')
 25    format ('**warning ver025** ',i1,' endmembers for ',a,
      *          ' The solution will not be considered.')
@@ -2788,7 +2788,7 @@ c     *          ' (SWASH, see program documentation Eq 2.3)',/)
 68    format (/,'**warning ver068** degenerate initial assemblage in ',
      *          'COFACE, this should never occur',/,'if you see this ',
      *          'message more than once, please report the problem',/)
-73    format (/,'**warning ver073** an invariant point has been',
+73    format (/,'**warning ver073** an invariant point has been ',
      *          'skipped, routine: ',a,/,
      *          'decreasing DTOL (',g9.3,') in the thermodynamic ', 
      *          'data file for variable ',i1,/,

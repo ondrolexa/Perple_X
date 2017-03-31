@@ -2866,14 +2866,16 @@ c-----------------------------------------------------------------------
  
       include 'perplex_parameters.h'
 
-      integer i, j, k, id, isp, ins(nsp)
+      integer i, j, k, l, id, isp, ins(nsp)
 
-      double precision dg1, gval, dg, g0(m4), mo(m4), q(m4), x1(5), is
+      double precision dg1, gval, dg, g0(m4), mo(m4), q(m4), x1(5), is, 
+     *                 msol, lng0
 
       double precision gex, gfesi, gfesic, gfecr1, gerk, gproj, 
-     *                 ghybrid, gaq, gzero
+     *                 ghybrid, gaq, gzero, gcpd
 
-      external gerk, gzero, gex, gfesi, gfesic, gproj, ghybrid, gaq
+      external gerk, gzero, gex, gfesi, gfesic, gproj, ghybrid, gaq,
+     *         gcpd
 
       integer icomp,istct,iphct,icp
       common/ cst6 /icomp,istct,iphct,icp
@@ -2939,8 +2941,6 @@ c                                 endmember names
 
       double precision vh2o, epsilo, adh
       common/ cxt37 /vh2o, epsilo, adh
-
-      save 
 c-----------------------------------------------------------------------
 c                                 compute the chemical potential
 c                                 of the projected components.
@@ -3089,13 +3089,13 @@ c                                 1) molal electrolyte standard state
 c                                 2) water is the last species
 c                                 species Gibbs energies:
             do j = 1, lstot(i) - ns
-               g0(j) = gproj(jend(i,2+j))
-               x(k) = sxs(ixp(id) + j) 
+               g0(j) = gcpd (jend(i,2+j),.true.)
+               x(j) = sxs(ixp(id) + j) 
             end do 
 c                                 solvent Gibbs energies
             do k = j, lstot(i)
                g0(k) = g(jend(i,2+k))
-               x(k) = sxs(ixp(id) + j) 
+               x(k) = sxs(ixp(id) + k) 
             end do 
 c                                 generate compounds 
             do j = 1, jend(i,2)
@@ -3126,13 +3126,13 @@ c                                 ionic solutes, Davies D-H extension
 
                end do 
 c                                 neutral solutes, ideal
-               do j = k, nq + nn
+               do l = k, nq + nn
 
-                  g(id) = g(id) + x(j) * (g0(j) + dlog(mo(j)))
+                  g(id) = g(id) + x(l) * (g0(l) + dlog(mo(j)))
 
                end do 
 c                                 solvent species, ideal 
-               do k = j, nq + nn + ns
+               do k = l, nq + nn + ns
 
                   g(id) = g(id) + x(k) * (g0(k) + dlog(x(k)))
 
