@@ -2868,10 +2868,12 @@ c-----------------------------------------------------------------------
 
       integer i, j, k, id, isp, ins(nsp)
 
-      double precision dg1, gval, dg, gzero, g0(k5), gex, gfesi,
-     *                 gfesic, gfecr1, gerk, x1(5), gproj, ghybrid
+      double precision dg1, gval, dg, gzero, g0(m4), mo(m4), q(m4) 
 
-      external gerk, gzero, gex, gfesi, gfesic, gproj, ghybrid
+      double precision gex, gfesi, gfesic, gfecr1, gerk, x1(5), gproj, 
+     *                 ghybrid, gaq
+
+      external gerk, gzero, gex, gfesi, gfesic, gproj, ghybrid, gaq
 
       integer icomp,istct,iphct,icp
       common/ cst6 /icomp,istct,iphct,icp
@@ -2931,6 +2933,14 @@ c                                 model type
 c                                 endmember names
       character names*8
       common/ cst8  /names(k1)
+
+      integer nq, nn, ns
+      common/ cst337 /nq,nn,ns
+
+      double precision vh2o, epsilo, adh
+      common/ cxt37 /vh2o, epsilo, adh
+
+      save 
 c-----------------------------------------------------------------------
 c                                 compute the chemical potential
 c                                 of the projected components.
@@ -3068,6 +3078,65 @@ c                                 and configurational entropy terms
                end do 
 c                                 add the real excess energy
                g(id) = g(id) + gex(i,x)
+
+               id = id + 1
+
+            end do 
+
+         else if (ksmod(i).eq.20) then 
+c                                 electrolytic solution, assumes:
+c                                 1) molal electrolyte standard state
+c                                 2) water is the last species
+c                                 species Gibbs energies:
+            do j = 1, lstot(i) - ns
+               g0(j) = gproj(jend(i,2+j))
+               x(k) = sxs(ixp(id) + j) 
+            end do 
+c                                 solvent Gibbs energies
+            do k = j, lstot(i)
+               g0(k) = g(jend(i,2+k))
+               x(k) = sxs(ixp(id) + j) 
+            end do 
+c                                 generate compounds 
+            do j = 1, jend(i,2)
+c                                 solvent mass, kg/mol compound
+               msol = x(lstot(i)) * 0.001801528d0
+c                                 ionic strength 
+               is = 0d0 
+
+               do k = 1, nq + nn 
+c                                 ln molality of solutes
+                  mo(k) = x(k)/msol
+                  if (k.gt.nq) cycle 
+                  q(k) = thermo(6,jend(i,2+k))**2
+                  is = is + q(k) * mo(k)
+
+               end do 
+
+               is = is/2d0
+c                                 DH law activity coefficient factor:
+               lng0 = adh*dsqrt(is)/(1d0 + dsqrt(is)) + 0.2d0*is
+
+               g(id) = 0d0
+c                                 ionic solutes, Davies D-H extension
+               do k = 1, nq 
+
+                  g(id) = g(id) + x(k) * (g0(k) + dlog(mo(k)) 
+     *                  + lng0*q(k))  
+
+               end do 
+c                                 neutral solutes, ideal
+               do j = k, nq + nn
+
+                  g(id) = g(id) + x(j) * (g0(j) + dlog(mo(j)))
+
+               end do 
+c                                 solvent species, ideal 
+               do k = j, nq + nn + ns
+
+                  g(id) = g(id) + x(k) * (g0(k) + dlog(x(k)))
+
+               end do 
 
                id = id + 1
 

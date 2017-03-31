@@ -6,6 +6,8 @@
  | comments are indicated by the | character.
  | check for warnings at the end of the header section.
 
+ | GO IN THIS DATA FILE IS BASED ON THE SUPCRT APPARENT GIBBS ENERGY CONVENTION
+
 Holland & Powell '02 + Connolly & Kerrick '02 shear moduli   |<= data base title
 
 begin_standard_variables |<= name (<9 characters), reference value, tolerance

@@ -4108,8 +4108,14 @@ c-----------------------------------------------------------------------
       double precision thermo, uf, us
       common/ cst1 /thermo(k4,k10),uf(2),us(h5)
 
-      save psi, theta, eta
-      data psi, theta, eta/2600d0, 228d0, 694656.968d0/
+      double precision vh2o, epsilo
+      common/ cxt37 /vh2o, epsilo
+
+      save psi, theta, eta, cdh
+      data psi, theta, eta, cdh/2600d0, 228d0, 694656.968d0, 
+     *                          5661800.47810d0/
+
+
 c-----------------------------------------------------------------------
       if (thermo(1,id).eq.0d0) then 
 c                                 assumes proton is the only species 
@@ -4118,10 +4124,14 @@ c                                 with zero G0, return G_H+(P,T) = 0.
          return 
 
       end if 
-
+c                                 vh2o J/bar 
       vh2o = duah2o (fh2o)
 
       epsilo = epsh2o (vh2o) 
+c                                 Debye-Hueckel factor, A[cgs] = -q^3*sqrt(NA)/(4*Pi*k^(3/2))
+c                                 *(NH2O/(10*vh2o))^(1/2)/(epsilon*T)^(3/2) for ln(gamma) = +A*....
+      adh = cdh/dsqrt(vh2o*(epsilo*t)^3)
+       
 c                                 shock et al 1992 g function
       gf = gfunc (vh2o) 
 
@@ -4140,8 +4150,6 @@ c                                 neutral species
 
       ft = t - theta
       fp = dlog(psi+p)
-
-c     ghkf = (b8+b12*ln(ft)+b13*ln(t))*t+b11*ft+a1*p+a2*fp+b9-omega+omega/epsilon+(a3*p+a4*fp+b10)/ft
 
       ghkf = thermo(14,id) + (thermo(13,id) + thermo(17,id)*dlog(ft) 
      *                                      + thermo(18,id)*dlog(t))*t 
