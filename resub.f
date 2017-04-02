@@ -2868,7 +2868,7 @@ c-----------------------------------------------------------------------
 
       integer i, j, k, l, id, isp, ins(nsp)
 
-      double precision dg1, gval, dg, g0(m4), mo(m4), q(m4), x1(5), is, 
+      double precision dg1, gval, dg, g0(m4), mo(m4), q(m4), is, 
      *                 msol, lng0
 
       double precision gex, gfesi, gfesic, gfecr1, gerk, gproj, 
@@ -2936,8 +2936,8 @@ c                                 endmember names
       character names*8
       common/ cst8  /names(k1)
 
-      integer nq, nn, ns
-      common/ cst337 /nq,nn,ns
+      integer nq,nn,ns,nqs,nqs1,sn,qn,nq1
+      common/ cst337 /nq,nn,ns,nqs,nqs1,sn,qn,nq1
 
       double precision vh2o, epsilo, adh
       common/ cxt37 /vh2o, epsilo, adh
@@ -3088,23 +3088,25 @@ c                                 electrolytic solution, assumes:
 c                                 1) molal electrolyte standard state
 c                                 2) water is the last species
 c                                 species Gibbs energies:
-            do j = 1, lstot(i) - ns
+            do j = 1, qn
                g0(j) = gcpd (jend(i,2+j),.true.)
-               x(j) = sxs(ixp(id) + j) 
             end do 
 c                                 solvent Gibbs energies
-            do k = j, lstot(i)
+            do k = j, ns
                g0(k) = g(jend(i,2+k))
-               x(k) = sxs(ixp(id) + k) 
             end do 
 c                                 generate compounds 
             do j = 1, jend(i,2)
+
+               do k = 1, nqs
+                  x(k) = sxs(ixp(id) + k) 
+               end do 
 c                                 solvent mass, kg/mol compound
-               msol = x(lstot(i)) * 0.001801528d0
+               msol = x(nqs) * 0.001801528d0
 c                                 ionic strength 
                is = 0d0 
 
-               do k = 1, nq + nn 
+               do k = 1, qn
 c                                 ln molality of solutes
                   mo(k) = x(k)/msol
                   if (k.gt.nq) cycle 
@@ -3122,17 +3124,17 @@ c                                 ionic solutes, Davies D-H extension
                do k = 1, nq 
 
                   g(id) = g(id) + x(k) * (g0(k) + dlog(mo(k)) 
-     *                  + lng0*q(k))  
+     *                  + lng0*q(k))
 
                end do 
 c                                 neutral solutes, ideal
-               do l = k, nq + nn
+               do l = k, qn
 
-                  g(id) = g(id) + x(l) * (g0(l) + dlog(mo(j)))
+                  g(id) = g(id) + x(l) * (g0(l) + dlog(mo(l)))
 
                end do 
 c                                 solvent species, ideal 
-               do k = l, nq + nn + ns
+               do k = l, nqs
 
                   g(id) = g(id) + x(k) * (g0(k) + dlog(x(k)))
 
@@ -3240,11 +3242,11 @@ c                                 MRK silicate vapor
                g(id) = 0d0
 
                do k = 1, nstot(i) 
-                  x1(k) = sxs(ixp(id)+k)
-                  g(id) = g(id) + gzero(jend(i,2+k)) * x1(k)
+                  x(k) = sxs(ixp(id)+k)
+                  g(id) = g(id) + gzero(jend(i,2+k)) * x(k)
                end do 
 
-               g(id) = g(id) + gerk(x1)   
+               g(id) = g(id) + gerk(x)
 
                id = id + 1
 

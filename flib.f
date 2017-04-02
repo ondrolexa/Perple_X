@@ -6821,7 +6821,7 @@ c----------------------------------------------------------------------
 
       integer iavg, ins(5), isp, i
 
-      double precision x(5)
+      double precision x(*)
 
       double precision y,g,v
       common / cstcoh /y(nsp),g(nsp),v(nsp)

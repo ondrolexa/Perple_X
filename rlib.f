@@ -6359,8 +6359,8 @@ c---------------------------------------------------------------------
      *      imd(msp,mst),insp(m4),ist(mst),isp(mst),rkord(m18),isite,
      *      iterm,iord,istot,jstot,kstot,xtyp
 
-      integer nq,nn,ns
-      common/ cst337 /nq,nn,ns
+      integer nq,nn,ns,nqs,nqs1,sn,qn,nq1
+      common/ cst337 /nq,nn,ns,nqs,nqs1,sn,qn,nq1
 c----------------------------------------------------------------------
 
       jq = 0
@@ -6480,8 +6480,8 @@ c---------------------------------------------------------------------
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp  
 
-      integer nq, nn, ns
-      common/ cst337 /nq,nn,ns
+      integer nq,nn,ns,nqs,nqs1,sn,qn,nq1
+      common/ cst337 /nq,nn,ns,nqs,nqs1,sn,qn,nq1
 c----------------------------------------------------------------------
       jstot = 0
       ineg = 0 
@@ -6838,8 +6838,8 @@ c---------------------------------------------------------------------
       double precision yin
       common/ cst50 /yin(ms1,mst)
 
-      integer nq, nn, ns
-      common/ cst337 /nq,nn,ns
+      integer nq,nn,ns,nqs,nqs1,sn,qn,nq1
+      common/ cst337 /nq,nn,ns,nqs,nqs1,sn,qn,nq1
 c----------------------------------------------------------------------
 
       mdep = 0 
@@ -7182,8 +7182,8 @@ c---------------------------------------------------------------------
       integer iorig,jnsp,iy2p
       common / cst159 /iorig(m4),jnsp(m4),iy2p(m4)
 
-      integer nq, nn, ns
-      common/ cst337 /nq,nn,ns
+      integer nq,nn,ns,nqs,nqs1,sn,qn,nq1
+      common/ cst337 /nq,nn,ns,nqs,nqs1,sn,qn,nq1
 c----------------------------------------------------------------------
 c                               read number of charged species:
       call readda (rnums,1,tname)
@@ -8165,7 +8165,7 @@ c                                 endmember concentrations.
       end do
 
       if (k.ne.0) then 
-c                                 reject pure independent endmember compsoitions. 
+c                                 reject pure independent endmember compositions. 
          if (ldsol(k,ids).gt.0) then 
             
             bad = .true.
@@ -8206,10 +8206,12 @@ c-----------------------------------------------------------------------
  
       include 'perplex_parameters.h'
 
-      integer k, id, isp, ins(nsp)
+      integer k, l, id, isp, ins(nsp)
 
-      double precision omega, hpmelt, slvmlt, gmelt, gfluid, gzero, gg,
-     *         dg, gex, gfesi, gfesic, gfecr1, gerk, x1(5), ghybrid
+      double precision is, gg, dg, msol, mo(m4), q(m4), lng0
+
+      double precision omega, hpmelt, slvmlt, gmelt, gfluid, gzero,
+     *                 gex, gfesi, gfesic, gfecr1, gerk, ghybrid
 
       external omega, hpmelt, slvmlt, gmelt, gfluid, gzero, gex, gfesi, 
      *         gfesic, gfecr1, gerk, ghybrid
@@ -8246,196 +8248,247 @@ c                                 model type
       logical lopt
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
-c----------------------------------------------------------------------
-         gg = 0d0
 
-         if (ksmod(id).eq.2.or.ksmod(id).eq.3) then 
+      integer nq,nn,ns,nqs,nqs1,sn,qn,nq1
+      common/ cst337 /nq,nn,ns,nqs,nqs1,sn,qn,nq1
+
+      double precision vh2o, epsilo, adh
+      common/ cxt37 /vh2o, epsilo, adh
+
+      double precision thermo,uf,us
+      common/ cst1 /thermo(k4,k10),uf(2),us(h5)
+c----------------------------------------------------------------------
+      gg = 0d0
+
+      if (ksmod(id).eq.2.or.ksmod(id).eq.3) then 
 c                                 -------------------------------------
 c                                 macroscopic formulation for normal solutions.
-            call gdqf (id,gg,y) 
+         call gdqf (id,gg,y) 
 
-            gg = gg - t * omega(id,y) + gex(id,y)
+         gg = gg - t * omega(id,y) + gex(id,y)
 c                                 get mechanical mixture contribution
-            do k = 1, mstot(id) 
-               gg = gg + y(k) * g(jend(id,2+k))
-            end do 
+         do k = 1, mstot(id) 
+            gg = gg + y(k) * g(jend(id,2+k))
+         end do 
 
-         else if (ksmod(id).ge.30.and.ksmod(id).le.31) then 
+      else if (ksmod(id).ge.30.and.ksmod(id).le.31) then 
 c                                 -------------------------------------
 c                                 Nastia's version of BCC/FCC Fe-Si-C Lacaze and Sundman
 c                                 this model has to be called ahead of the standard models
 c                                 because it sets lrecip(id) = true.
 
 c                                 initialize p's
-            call y2p0 (id)
+         call y2p0 (id)
 
-            gg =  gfesic (y(1),y(3),y(4),
-     *                    g(jend(id,3)),g(jend(id,4)),
-     *                    g(jend(id,5)),g(jend(id,6)),ksmod(id))
+         gg =  gfesic (y(1),y(3),y(4),
+     *                 g(jend(id,3)),g(jend(id,4)),
+     *                 g(jend(id,5)),g(jend(id,6)),ksmod(id))
 
-         else if (lrecip(id).and.lorder(id)) then 
+      else if (lrecip(id).and.lorder(id)) then 
 c                                 -------------------------------------
 c                                 prismatic solution, initialize p's
-            call y2p0 (id)
+         call y2p0 (id)
 c                                 get the speciation, excess and entropy effects.
-            call specis (gg,id)
+         call specis (gg,id)
 c                                 decompose the ordered species into 
 c                                 the independent disordered species
 c                                 i.e., the p0a array becomes the p's if the 
 c                                 abundance of the ordered species is 0.
-            do k = 1, lstot(id)
+         do k = 1, lstot(id)
 c                                 compute mechanical g from these z's, 
 c                                 specip adds a correction for the ordered species.
-               gg = gg + g(jend(id,2+k)) * p0a(k)
-            end do 
+            gg = gg + g(jend(id,2+k)) * p0a(k)
+         end do 
 c                                 get the dqf, this assumes the independent reactants
 c                                 are not dqf'd. gex not neccessary as computed in specip
-            call gdqf (id,gg,p0a)
+         call gdqf (id,gg,p0a)
 
-         else if (lorder(id)) then 
+      else if (lorder(id)) then 
 c                                 -------------------------------------
 c                                 simplicial ordering solutions.
 c                                 get mechanical mixture contribution
-            do k = 1, lstot(id)  
-               pa(k) = y(k)
-               p0a(k) = y(k)
-               gg = gg + y(k) * g(jend(id,2+k))
-            end do 
+         do k = 1, lstot(id)  
+            pa(k) = y(k)
+            p0a(k) = y(k)
+            gg = gg + y(k) * g(jend(id,2+k))
+         end do 
 c                                 get the speciation energy effect
-            call specis (dg,id)
+         call specis (dg,id)
 
-            gg = gg + dg 
+         gg = gg + dg 
 c                                 get dqf corrections
-            call gdqf (id,gg,p0a)
+         call gdqf (id,gg,p0a)
 
-         else if (lrecip(id)) then 
+      else if (lrecip(id)) then 
 c                                 -------------------------------------
 c                                 macroscopic reciprocal solution
 c                                 initialize p's
-            call y2p0 (id)
+         call y2p0 (id)
 
-            do k = 1, lstot(id)
-               gg = gg + g(jend(id,2+k)) * p0a(k) 
-            end do 
+         do k = 1, lstot(id)
+            gg = gg + g(jend(id,2+k)) * p0a(k) 
+         end do 
 c                                 get the dqf, this assumes the independent reactants
 c                                 are not dqf'd
-            call gdqf (id,gg,p0a)
+         call gdqf (id,gg,p0a)
 
-            gg = gg - t * omega(id,p0a) + gex(id,p0a)
+         gg = gg - t * omega(id,p0a) + gex(id,p0a)
 
 
-         else if (ksmod(id).eq.0) then 
+      else if (ksmod(id).eq.0) then 
 c                                 ------------------------------------
 c                                 internal fluid eos
-            gg = gfluid(y(jspec(id,1)))
+         gg = gfluid(y(jspec(id,1)))
             
-            do k = 1, 2
-               gg = gg + gzero(jend(id,2+k))*y(k)
-            end do 
+         do k = 1, 2
+            gg = gg + gzero(jend(id,2+k))*y(k)
+         end do 
 
-         else if (ksmod(id).eq.23) then 
+      else if (ksmod(id).eq.20) then 
+c                                 electrolytic solution, assumes:
+c                                 1) molal electrolyte standard state
+c                                 2) water is the last species
+c                                 solvent mass, kg/mol compound
+         msol = y(nqs) * 0.001801528d0
+c                                 ionic strength 
+         is = 0d0 
 
-             write (*,*) 'toop samis model not coded'
+         do k = 1, qn
+c                                 ln molality of solutes
+            mo(k) = y(k)/msol
+            if (k.gt.nq) cycle 
+            q(k) = thermo(6,jend(id,2+k))**2
+            is = is + q(k) * mo(k)
 
-         else if (ksmod(id).eq.25.or.ksmod(id).eq.24) then 
+         end do 
+
+         is = is/2d0
+c                                 DH law activity coefficient factor:
+         lng0 = adh*dsqrt(is)/(1d0 + dsqrt(is)) + 0.2d0*is
+
+         gg = 0d0
+c                                 ionic solutes, Davies D-H extension
+         do k = 1, nq 
+
+            gg = gg + y(k) * (g(jend(id,2+k)) + dlog(mo(k))
+     *                                           + lng0*q(k))
+
+         end do 
+c                                 neutral solutes, ideal
+         do l = k, qn
+
+            gg = gg + y(l) * (g(jend(id,2+l)) + dlog(mo(l)))
+
+         end do 
+c                                 solvent species, ideal 
+         do k = l, nqs
+
+            g(id) = g(id) + y(k) * (g(jend(id,2+k)) + dlog(y(k)))
+
+         end do 
+
+      else if (ksmod(id).eq.23) then 
+
+         write (*,*) 'toop samis model not coded'
+
+      else if (ksmod(id).eq.25.or.ksmod(id).eq.24) then 
 c                                 -------------------------------------
 c                                 hp and ghiorso pmelt models 
-            if (t.lt.nopt(20)) then 
+         if (t.lt.nopt(20)) then 
 c                                 t < t_melt, destabilize the melt
-               gg = 1d6
+            gg = 1d4*p
 
-            else
+         else
 
-               call gdqf (id,gg,y) 
-
-               if (ksmod(id).eq.24) then 
-
-                  gg = gg - t * hpmelt(id,y) + gex(id,y)
-
-               else 
-
-                  gg = gg - t * gmelt(id) + gex(id,y)
-
-               end if 
-c                                 get mechanical mixture contribution
-               do k = 1, mstot(id)  
-                  gg = gg + y(k) * g(jend(id,2+k))
-               end do 
-
-            end if 
-
-         else if (ksmod(id).eq.26) then 
-c                                 ------------------------------------
-c                                 andreas salt model
-            call hcneos (gg,y(1),y(2),y(3))
-
-            do k = 1, 3
-               gg = gg + y(k) * g(jend(id,2+k))
-            end do 
-
-         else if (ksmod(id).eq.28) then 
-c                                 -------------------------------------
-c                                 high T fo-fa-sio2 model  
             call gdqf (id,gg,y) 
 
-            gg = gg - t * slvmlt() + gex(id,y)
-c                                 get mechanical mixture contribution
-            do k = 1, mstot(id)  
-               gg = gg + y(k) * g(jend(id,2+k)) 
-            end do 
+            if (ksmod(id).eq.24) then 
 
-         else if (ksmod(id).eq.29) then 
-c                                 -------------------------------------
-c                                 BCC Fe-Si Lacaze and Sundman
-            gg =  gfesi(y(1),g(jend(id,3)),g(jend(id,4)))
-
-         else if (ksmod(id).eq.32) then 
-c                                 -------------------------------------
-c                                 BCC Fe-Cr Andersson and Sundman
-            gg =  gfecr1(y(1),g(jend(id,3)),g(jend(id,4)))
-
-         else if (ksmod(id).eq.39) then
-c                                 -------------------------------------
-c                                 generic hybrid EoS
-c                                 initialize pointer array
-            isp = mstot(id)
-
-            do k = 1, isp
-
-               ins(k) = jspec(id,k)
-c                                 sum pure species g's
-               gg = gg + g(jend(id,2+k)) * y(k)
-
-            end do
-c                                 compute and add in activities
-            gg = gg + ghybrid (y,ins,isp)
-
-
-         else if (ksmod(id).eq.41) then 
-c                                 hybrid MRK ternary COH fluid
-            call rkcoh6 (y(2),y(1),gg) 
-
-            do k = 1, 3 
-               gg = gg + g(jend(id,2+k)) * y(k)
-            end do 
-
-         else if (ksmod(id).eq.40) then 
-c                                 MRK silicate vapor
-            gg = 0d0
-
-            do k = 1, nstot(id) 
-               gg = gg + gzero (jend(id,2+k)) * y(k)
-               x1(k) = y(k)
-            end do 
-
-            gg = gg + gerk(x1)
+               gg = gg - t * hpmelt(id,y) + gex(id,y)
 
          else 
 
-            write (*,*) 'what the **** am i doing here?'
-            call errpau
+               gg = gg - t * gmelt(id) + gex(id,y)
+
+            end if 
+c                                 get mechanical mixture contribution
+            do k = 1, mstot(id)  
+               gg = gg + y(k) * g(jend(id,2+k))
+            end do 
 
          end if 
+
+      else if (ksmod(id).eq.26) then 
+c                                 ------------------------------------
+c                                 andreas salt model
+         call hcneos (gg,y(1),y(2),y(3))
+
+         do k = 1, 3
+            gg = gg + y(k) * g(jend(id,2+k))
+         end do 
+
+      else if (ksmod(id).eq.28) then 
+c                                 -------------------------------------
+c                                 high T fo-fa-sio2 model  
+         call gdqf (id,gg,y) 
+
+         gg = gg - t * slvmlt() + gex(id,y)
+c                                 get mechanical mixture contribution
+         do k = 1, mstot(id)  
+            gg = gg + y(k) * g(jend(id,2+k)) 
+          end do 
+
+      else if (ksmod(id).eq.29) then 
+c                                 -------------------------------------
+c                                 BCC Fe-Si Lacaze and Sundman
+         gg =  gfesi(y(1),g(jend(id,3)),g(jend(id,4)))
+
+      else if (ksmod(id).eq.32) then 
+c                                 -------------------------------------
+c                                 BCC Fe-Cr Andersson and Sundman
+         gg =  gfecr1(y(1),g(jend(id,3)),g(jend(id,4)))
+
+      else if (ksmod(id).eq.39) then
+c                                 -------------------------------------
+c                                 generic hybrid EoS
+c                                 initialize pointer array
+         isp = mstot(id)
+
+         do k = 1, isp
+
+            ins(k) = jspec(id,k)
+c                                 sum pure species g's
+            gg = gg + g(jend(id,2+k)) * y(k)
+
+         end do
+c                                 compute and add in activities
+         gg = gg + ghybrid (y,ins,isp)
+
+
+      else if (ksmod(id).eq.41) then 
+c                                 hybrid MRK ternary COH fluid
+         call rkcoh6 (y(2),y(1),gg) 
+
+         do k = 1, 3 
+            gg = gg + g(jend(id,2+k)) * y(k)
+         end do 
+
+      else if (ksmod(id).eq.40) then 
+c                                 MRK silicate vapor
+         gg = 0d0
+
+         do k = 1, nstot(id) 
+            gg = gg + gzero (jend(id,2+k)) * y(k)
+         end do 
+
+         gg = gg + gerk(y)
+
+      else 
+
+         write (*,*) 'what the **** am i doing here?'
+         call errpau
+
+      end if 
 
       gsol1 = gg 
 
@@ -9242,6 +9295,9 @@ c                                 model type
 
       integer iam
       common/ cst4 /iam
+
+      integer nq,nn,ns,nqs,nqs1,sn,qn,nq1
+      common/ cst337 /nq,nn,ns,nqs,nqs1,sn,qn,nq1
 c----------------------------------------------------------------------
 c                                 auto_refine changes
       if (refine) then
@@ -9254,6 +9310,25 @@ c                                 initialize autorefine arrays
       stable(im) = .false.
       limit(im) = .false.
       relax(im) = .true.
+c                                 set up simple counters for
+c                                 charge balance models
+      if (jsmod.eq.20) then
+
+         isite = 1
+
+         nqs = nn + nq + ns
+         nqs1 = nqs - 1
+         nq1 = nq - 1
+         sn = nn + ns 
+         qn = nn + nq
+
+         isp(1) = nqs1
+
+         do i = 1, istot
+            jmsol(i,1) = i
+         end do
+
+      end if 
 
       do i = 1, isite 
 
@@ -9305,15 +9380,20 @@ c                                 make all stretch (if not already)
                if (imd(j,i).eq.0) imd(j,i) = 2
 
             end if 
-          
-           if (nopt(13).gt.0d0.and.icopt.le.3) then 
+c                                 for aqueous solutions always use
+c                                 model specified increments
+            if (jsmod.ne.20) then 
+c                                 otherwise:
+               if (nopt(13).gt.0d0.and.icopt.le.3) then 
 c                                 use default initial resolution, perturbed
 c                                 by a per-mil scale increment to reduce 
 c                                 compositional degeneracies. 
-               xnc(i,j) = (1d0 + nopt(15)*float(im-5)) * nopt(13)
-            else if (nopt(13).gt.0d0) then 
-               xnc(i,j) = nopt(13)
-            end if 
+                  xnc(i,j) = (1d0 + nopt(15)*float(im-5)) * nopt(13)
+               else if (nopt(13).gt.0d0) then 
+                  xnc(i,j) = nopt(13)
+               end if
+
+            end if  
 c                                 save solution model values as hard limits for 
             xmno(im,i,j) = xmn(i,j)
             xmxo(im,i,j) = xmx(i,j)
@@ -12452,6 +12532,9 @@ c-----------------------------------------------------------------------
       integer iam
       common/ cst4 /iam
 
+      integer nq,nn,ns,nqs,nqs1,sn
+      common/ cst337 /nq,nn,ns,nqs,nqs1,sn
+
       integer ncoor,mcoor,ndim
       common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
 c-----------------------------------------------------------------------
@@ -12547,31 +12630,58 @@ c                                 global pseudo-cpd counter for sxs
                id = kdsol(knsp(i,im))
                if (iend(knsp(i,im)).eq.0) ikp(id) = im
 
-            end do             
-      
-            do h = 1, ntot
+            end do
+
+            if (ksmod(im).eq.20) then 
+c                                 electrolyte model
+               do h = 1, ntot
 c                                 load the composition into
 c                                 a the site fraction array:
-               k = (h-1)*mcoor(im)
-               l = 0 
-
-               do i = 1, isite
+                  k = (h-1)*(nn + nq + ns - 1)
+                  l = 0
 
                   zt = 0d0
 
-                  do j = 1, ndim(i,im)
+                  do j = 1, nqs1
                      l = l + 1
-                     z(i,j) = prism(k+l)
-                     zt = zt + z(i,j)
+                     z(1,j) = prism(k+l)
+                     zt = zt + z(1,j)
                   end do
 
-                  z(i,isp(i)) = 1d0 - zt
+                  z(1,nqs) = 1d0 - zt
+c                                 generate the pseudocompound:
+                  call soload (im,icoct,icpct,ixct,tname,icky,im)
+
+               end do 
+
+
+            else 
+c                                 normal solutions
+               do h = 1, ntot
+c                                 load the composition into
+c                                 a the site fraction array:
+                  k = (h-1)*mcoor(im)
+                  l = 0 
+
+                  do i = 1, isite
+
+                     zt = 0d0
+
+                     do j = 1, ndim(i,im)
+                        l = l + 1
+                        z(i,j) = prism(k+l)
+                        zt = zt + z(i,j)
+                     end do
+
+                     z(i,isp(i)) = 1d0 - zt
+
+                  end do
+c                                 generate the pseudocompound:
+                  call soload (im,icoct,icpct,ixct,tname,icky,im)
 
                end do
-c                                 generate the pseudocompound:
-               call soload (im,icoct,icpct,ixct,tname,icky,im)
 
-            end do 
+            end if 
 
             if (icpct.gt.0) then 
 c                                 write pseudocompound count
@@ -12718,6 +12828,7 @@ c                                assign to y()?
 
       end if 
 c                                 do the first site:
+
       call cartes (1,ids)
 
       last = ndim(1,ids)
@@ -15372,7 +15483,7 @@ c                                 conformal.
 
          else if (ind(indx).eq.iy(indx)) then 
 c                                 terminates by hitting an internal bound. 
-            ieyit = 1
+c            ieyit = 1
 
          end if 
 
@@ -15401,7 +15512,7 @@ c---------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i, jsp, j, k, l, ids, qpairs
+      integer i, j, k, l, ids, qpairs
 
       double precision ycum, sum, q, ratio
 
@@ -15425,22 +15536,23 @@ c                                 x coordinate description
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
 
-      integer nq,nn,ns
-      common/ cst337 /nq,nn,ns
+      integer nq,nn,ns,nqs,nqs1,sn,qn,nq1
+      common/ cst337 /nq,nn,ns,nqs,nqs1,sn,qn,nq1
 
       integer ksmod, ksite, kmsol, knsp
       common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
 
       double precision thermo, uf, us
       common/ cst1 /thermo(k4,k10),uf(2),us(h5)
-c----------------------------------------------------------------------
 
+      integer jend
+      common/ cxt23 /jend(h9,m4)
+c----------------------------------------------------------------------
       if (nq.ne.0) then 
 c                                 do the first nq-1 species independently
          ycum = 0d0
-         jsp = nq - 1
  
-         call chopit (ycum,jsp,1,ids)
+         call chopit (ycum,nq1,1,ids)
 c                                 at this point xy(mdim,k1) contains all 
 c                                 possible compositions of the nq-1 species,
 c                                 use charge balance to get the nqth species
@@ -15450,23 +15562,23 @@ c                                 use charge balance to get the nqth species
 
             q = 0d0
             sum = 0d0
-            k = (i-1)*jsp
-            l = (qpairs - 1)*(nq+nn+ns - 1)
+            k = (i-1)*nq1
+            l = (qpairs - 1)*nqs1
 
-            do j = 1, jsp
-               q = q + thermo(6,knsp(j,ids))*simp(k+j)
+            do j = 1, nq1
+               q = q + thermo(6,jend(ids,2+j))*simp(k+j)
                sum = sum + simp(k+j)
                prism(l+j) = simp(k+j)
             end do
 c                                 charge ratio
-            ratio = q/thermo(6,knsp(nq,ids))
+            ratio = q/thermo(6,jend(ids,2+j))
 c                                 the net charge has the same sign as the nqth
 c                                 species or its amount violates closure, reject:
             if (ratio.gt.0d0.or.sum-ratio.ge.1e0) cycle
 c                                 the amount of the species determined by charge balance
             prism(l+nq) = -ratio
 c                                 the total moles of charged species
-            prism(l+nq+1) = sum - ratio
+c           prism(l+nq+1) = sum - ratio
 
             qpairs = qpairs + 1
 
@@ -15474,6 +15586,8 @@ c                                 the total moles of charged species
 
          qpairs = qpairs - 1
 
-      end if 
+      end if
+
+      ntot = qpairs
 
       end

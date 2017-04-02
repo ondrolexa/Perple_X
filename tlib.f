@@ -19,7 +19,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a)') 
-     *      'Perple_X version 6.7.7, source updated Mar 24, 2017.'
+     *      'Perple_X version 6.7.7, source updated Apr 2, 2017.'
 
       end
 

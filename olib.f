@@ -792,7 +792,7 @@ c-----------------------------------------------------------------------
 
       integer k, id, isp, ins(nsp)
 
-      double precision omega, hpmelt, gmelt, gfluid, gzero, g, x1(5), 
+      double precision omega, hpmelt, gmelt, gfluid, gzero, g,
      *         dg, gex, slvmlt, gfesi, gcpd, gerk, gfecr1, ghybrid
 
       external gphase, omega, hpmelt, gmelt, gfluid, gzero, gex, slvmlt,
@@ -973,10 +973,9 @@ c                                 hybrid MRK ternary COH fluid
 c                                 MRK silicate vapor
             do k = 1, nstot(id) 
                g = g + gzero(jend(id,2+k)) * y(k)
-               x1(k) = y(k)
             end do 
 
-            g = g + gerk(x1)
+            g = g + gerk(y)
 
          else if (ksmod(id).eq.0) then 
 c                                 ------------------------------------
