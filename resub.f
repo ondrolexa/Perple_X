@@ -3092,7 +3092,7 @@ c                                 species Gibbs energies:
                g0(j) = gcpd (jend(i,2+j),.true.)
             end do 
 c                                 solvent Gibbs energies
-            do k = j, ns
+            do k = j, nqs
                g0(k) = g(jend(i,2+k))
             end do 
 c                                 generate compounds 

@@ -1885,6 +1885,11 @@ c---------------------------------------------------------------------
 
       integer idspe,ispec
       common/ cst19 /idspe(2),ispec
+
+      integer iaq, aqst, aqct
+      character aqnam*8
+      double precision aqcp
+      common/ cst336 /aqcp(k0,l9),aqnam(l9),iaq(l9),aqst,aqct
       
       integer iopt
       logical lopt
@@ -1973,7 +1978,6 @@ c                                 in ifp array, this is only used by gcpd.
          ifp(id) = 1
 
       end if 
-
 c                               load stoichiometry of components.
       do i = 1, icomp
          cp(i,id) = comp(ic(i))
@@ -1984,13 +1988,28 @@ c                               compositional array for frendly
             cp0(i,id) = comp(i)
          end do 
       end if 
-
 c                               and just mobile components
       do i = 1, jmct 
          vnumu(i,id) = comp(ic(i+jprct))
       end do 
 
       if (make) return
+c                               if aqueous solute species store name and 
+c                               compositional data in special arrays (in 
+c                               principle may need vnumu as well).                  
+      if (ieos.eq.15.or.ieos.eq.16) then
+
+         aqct = iphct - aqst 
+
+         if (aqct.gt.l9) call error (1,r,aqct,'l9 (max aq species)')
+
+         aqnam(aqct) = name
+
+         do k = 1, k0
+            aqcp(k,aqct) = comp(k)
+         end do 
+
+      end if
 c                               load elastic props if present
       if (iemod(id).ne.0) then 
 c                               kmod initialized 0 in main.
@@ -6425,7 +6444,7 @@ c---------------------------------------------------------------------
  
       character*10 tname, missin(m4)*8
 
-      integer imiss,im,idsol,i,j,h, ineg, ipos, local
+      integer imiss, im, idsol, i, j, h, ineg, ipos
  
       integer isoct
       common/ cst79 /isoct
@@ -6468,14 +6487,16 @@ c---------------------------------------------------------------------
       common/ cst146 /nu(m15,j4),y2p(m4,m15),mdep,jdep(m15),
      *                idep(m15,j4),ndph(m15)
 
-      integer iam
-      common/ cst4 /iam
-
-      integer aqct
-      common/ cst336 /aqct
+      integer iaq, aqst, aqct
+      character aqnam*8
+      double precision aqcp
+      common/ cst336 /aqcp(k0,l9),aqnam(l9),iaq(l9),aqst,aqct
 
       integer ikp
       common/ cst61 /ikp(k1)
+
+      integer iam
+      common/ cst4 /iam
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp  
@@ -6507,19 +6528,7 @@ c
 c                                 didn't find a match, read a new name:
          if (.not.ok) return 
 
-      end if 
-c                                 check that the endmembers match with data
-c                                 in the thermodynamic data file. set local
-c                                 to include/exclude solute species
-      if (jsmod.eq.20.and.iam.ne.4) then
-c                                 look through solute species 
-         local = aqct
-
-      else 
-c                                 or only real entities
-          local = ipoint
-
-      end if 
+      end if  
 
       do i = 1, istot
 
@@ -6543,20 +6552,16 @@ c                              is dependent endmember flag it by setting kdsol(i
 
          end if 
 
-         do h = 1, local
+         if (jsmod.eq.20.and.i.le.nn+nq) then
+c                                 aqueous solute, test against aqnam 
+            do h = 1, aqct 
 
-            if (names(h).eq.mname(i)) then
+               if (aqnam(h).eq.mname(i)) then
 c                                 got a valid endmember, count and                     
-               jstot = jstot + 1 
-               kstot = jstot
+                  jstot = jstot + 1 
+                  kstot = jstot
 c                                 create arrays of convenience, where j = 1, jstot
-               kdsol(i) = h                                 
-c                                 set kill flag: 
-c                                 don't reset ikp if it has been set for 
-c                                 another model.
-               if (iend(i).ne.0.and.ikp(h).eq.0) ikp(h) = -1
-
-               if (jsmod.eq.20) then 
+                  kdsol(i) = h                                 
 c                                 tests for aq solvent models
                   if (i.le.nq) then 
 c                                 must be a charged solute species
@@ -6572,51 +6577,56 @@ c                                 must be a charged solute species
                         ineg = ineg + 1
                      end if
 
-                     if (h.le.ipoint) then 
-                        write (*,*) names(h),' is not described by a '
-     *       ,'solute EoS remove it from the list of solute species in'
-     *                  ,'solution model:',tname
-                        call errpau
-                        stop
-                     end if 
-
-                  else if (i.gt.nq.and.i.le.nq+nn) then 
+                  else if (i.gt.nq) then 
 c                                  must be neutral species
                      if (thermo(6,h).ne.0) then
                         write (*,*) names(h),' is a charged species'
-     *                  ,'remove it from the list of neutral species in'
-     *                  ,'solution model:',tname
-                        call errpau
-                        stop
-                     end if
-
-                     if (h.le.ipoint) then 
-                        write (*,*) names(h),' is not described by a '
-     *       ,'solute EoS remove it from the list of solute species in'
-     *                  ,'solution model:',tname
-                        call errpau
-                        stop
-                     end if 
-
-                  else
-
-                     if (h.gt.ipoint) then 
-                        write (*,*) names(h),' is not described by a '
-     *       ,'solute EoS remove it from the list of solute species in'
-     *                  ,'solution model:',tname
+     *                            ,'remove it from the list of neutral'
+     *                            ,' species in solution model:',tname
                         call errpau
                         stop
                      end if
 
                   end if 
 
+                  exit 
+
                end if 
 
-               exit 
+            end do 
 
-            end if 
+         else
+c                                 must be a real enitity:
+            do h = 1, ipoint
 
-         end do
+               if (names(h).eq.mname(i)) then
+c                                 got a valid endmember, count and                     
+                  jstot = jstot + 1 
+                  kstot = jstot
+c                                 create arrays of convenience, where j = 1, jstot
+                  kdsol(i) = h                                 
+c                                 set kill flag: 
+c                                 don't reset ikp if it has been set for 
+c                                 another model.
+                  if (iend(i).ne.0.and.ikp(h).eq.0) ikp(h) = -1
+
+                  if (eos(h).eq.15.or.eos(h).eq.16) then 
+
+                  write (*,'(a,/,a)') names(h),' is not described by '//
+     *               'a solvent EoS remove it from the list of solvent',
+     *               'species in solution model:'//tname
+                     call errpau
+                     stop
+
+                  end if 
+
+                  exit 
+
+               end if 
+
+            end do
+            
+         end if 
 c                                 found all endmembers:
          if (jstot.eq.istot) exit
 
@@ -6636,6 +6646,7 @@ c                                 is possible
              jstot = 0 
 
          end if
+
       end if 
 
       call redep (0)
@@ -6843,6 +6854,7 @@ c---------------------------------------------------------------------
 c----------------------------------------------------------------------
 
       mdep = 0 
+      norder = 0 
       istot = 0
       ist(1) = 0 
 c DEBUG DEBUG
@@ -6943,8 +6955,6 @@ c                               and starting index
 c                               read endmember names:
       call readn (i,idim,tname)
 c                               compound formation models
-      norder = 0 
-
       if (order) then 
 c                               get the number of ordered species
          call readda (rnums,1,tname)    

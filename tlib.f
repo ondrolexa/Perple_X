@@ -350,6 +350,8 @@ c     iopt(28-30)                 reserved as debug options iop_28 - iop_30
 
 c                                 refinement_points_II
       iopt(31) = 5
+c                                 maximum number of aqueous species
+      iopt(32) = 100
 c                                 refinement_threshold
       nopt(32) = 1d4
       lopt(32) = .true.
@@ -572,6 +574,10 @@ c                                 seismic data output WERAMI/MEEMUM/FRENDLY
          else if (key.eq.'refinement_points_II') then 
 c                                 2nd stage refinement points
             read (strg,*) iopt(31)
+
+         else if (key.eq.'max_aqueous_species') then 
+c                                 2nd stage refinement points
+            read (strg,*) iopt(32)
 
          else if (key.eq.'refinement_threshold') then
 
@@ -2296,8 +2302,6 @@ c---------------------------------------------------------------------
      *        'To correct this error exclude either more or fewer ',a,
      *        'endmembers.',/)
 77    format (/,'**error ver077** ',a,/)
-c72    format (/,'**error ver072** UNSPLT found no completed segments',
-c     *          ' in folder/directory:'/,5x,'.',a,/)
 89    format (/,'**error ver089** SMPLX programming error. Change ',
      *        'minimnization method.',/)
 90    format (/,'**error ver090** SMPLX failed to converge within ', 

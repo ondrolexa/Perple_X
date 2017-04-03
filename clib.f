@@ -1109,8 +1109,10 @@ c----------------------------------------------------------------------
       integer ixct,ifact
       common/ cst37 /ixct,ifact 
 
-      integer aqct
-      common/ cst336 /aqct
+      integer iaq, aqst, aqct
+      character aqnam*8
+      double precision aqcp
+      common/ cst336 /aqcp(k0,l9),aqnam(l9),iaq(l9),aqst,aqct
 
       character*8 exname,afname
       common/ cst36 /exname(h8),afname(2)
@@ -1452,8 +1454,9 @@ c                                 store thermodynamic parameters:
          end do
 
       end if 
-c                                 read data for the remaining
-c                                 phases of appropriate composition.
+c                                 -------------------------------------
+c                                 real entities in the thermodynamic 
+c                                 composition space:
       istct = iphct + 1
 c                                 read till end of header
       call eohead (n2)
@@ -1475,8 +1478,9 @@ c                                 store thermodynamic parameters:
             call loadit (iphct,.false.,.true.)
          end if 
       end do 
-
-c                                 loop to load made entities
+c                                 -------------------------------------
+c                                 made entities (as opposed to the required
+c                                 data read later):
       do i = 1, nmak
 
          if (mksat(i)) cycle
@@ -1504,41 +1508,12 @@ c                                 pointer used for iemod.
          imak(i) = iphct
 
       end do 
-c                                 load thermodynamic data for solute species, at this
-c                                 point iphct points to the last real entity, save
-c                                 this value and restore it later.
+c                                 load thermodynamic data for make definitions and
+c                                 solute species, at this point iphct points to the 
+c                                 last real entity, save this value and restore it later.
       jphct = iphct
-c                                 read header
-      call eohead (n2)
-c                                 loop to load solute data:
-      do  
-    
-         call getphi (name,.true.,eof)
-
-         if (eof) exit
-c                                 skip non-solute standard state data
-         if (ieos.ne.15.and.ieos.ne.16) cycle
-c                                 check if valid species:
-         call chkphi (1,name,good)
-
-         if (good) then 
-c                                 acceptable data, count the phase:
-            iphct = iphct + 1
-c                                 for normalized composition, probably
-c                                 con't need this, but could be used to
-c                                 save molar wt or something like that:
-            ctot(iphct) = tot
-c                                 store thermodynamic parameters:
-            call loadit (iphct,.false.,.true.)
-
-         end if 
-
-      end do
-c                                 later aqct is used to determine
-c                                 the indices of aqueous species used
-c                                 in the calculation. 
-      aqct = iphct
-c                                 get/save data for makes, this
+c                                 -------------------------------------
+c                                 make definition data: this
 c                                 data is saved in the arrays thermo
 c                                 and cp by loadit, but are not counted,
 c                                 i.e., the counters ipoint and iphct
@@ -1548,8 +1523,6 @@ c                                 but thermo should not be affected. gmake
 c                                 then gets the data using the array 
 c                                 mkind. the names array will also be 
 c                                 overwritten.
-
-c                                 read header
       call eohead (n2)
 
       do 
@@ -1579,16 +1552,46 @@ c                                remake pointer array for makes
             end do
          end do 
       end do  
+c                                 -------------------------------------
+c                                 aqueous species, thermo data, as is the
+c                                 case for make data is loaded in thermo;
+c                                 names and composition loaded into 
+c                                 aqnam and aqcp.
+      aqct = iphct 
+c
+      call eohead (n2)
+c                                 loop to load solute data:
+      do  
+    
+         call getphi (name,.true.,eof)
+
+         if (eof) exit
+c                                 skip non-solute standard state data
+         if (ieos.ne.15.and.ieos.ne.16) cycle
+c                                 check if valid species:
+         call chkphi (1,name,good)
+
+         if (good) then 
+c                                 acceptable data, count the phase:
+            iphct = iphct + 1
+
+            if (iphct.gt.k1) call error (78,r,iopt(32),'t')
+c                                 for normalized composition, probably
+c                                 con't need this, but could be used to
+c                                 save molar wt or something like that:
+            ctot(iphct) = tot
+c                                 store thermodynamic parameters:
+            call loadit (iphct,.false.,.true.)
+
+         end if 
+
+      end do
 c                                reset ipoint counter, but do not 
 c                                reset iphct, because the compositions
 c                                of the make phases are necessary for
 c                                chemical potential variables.
-
-c                                really? then why was it reset here? this
-c                                IS going to wipe out the compositions of
-c                                aqueous species, so iphct is now set to
-c                                aqct (formerly it was jphct). Jan 6, 2017.
-      iphct = aqct
+c                                really? then why was it reset here? 
+      iphct = jphct
       ipoint = jphct
 
       do i = 1, nmak

@@ -4,7 +4,7 @@
       integer j3,j4,j5,j6,j9
       integer k0,k1,k2,k3,k4,k5,k7,k8,k9,k10,k13,k14,k15
       integer k16,k17,k18,k19,k20,k21,k22,k23,k24,kd2
-      integer l2,l3,l5,l6,l7,l8
+      integer l2,l3,l5,l6,l7,l8,l9
       integer m0,m1,m2,m3,m4,m6,m7,m8,m9,m10,m11,m12,m13,m14,m15
       integer m16,m17,m18
       integer msp,mst,mdim,ms1
@@ -98,8 +98,9 @@
 !                                 l7 - max number of grid points along an axis for
 !                                      constrained minimization on a 2-d grid. this
 !                                      array is not essential.  
-!                                 l8 - max number of levels for multilevel grids            
-      parameter (l2=5,l3=l2+2,l5=1000,l6=1000,l7=2048,l8=10)
+!                                 l8 - max number of levels for multilevel grids    
+!                                 l9 - max number of aqueous solute species in minimization programs.         
+      parameter (l2=5,l3=l2+2,l5=1000,l6=1000,l7=2048,l8=10,l9=100)
 !                                 m0 - max number of terms for a species site fraction?
 !                                 m1 - max number of terms in excess function
 !                                 m2 - max order of term in excess function
