@@ -325,7 +325,7 @@ c----------------------------------------------------------------------
       include 'perplex_parameters.h'
 c                                 -------------------------------------
 c                                 local variables
-      logical bad, first, keep
+      logical bad, first
 
       double precision xxnc, ysum, res0, gmin
 
@@ -411,32 +411,6 @@ c                                below.
          call getxy0 (ids,id)
 
       end if
-c DEBUG should be eq 3, to use this need a different iopt value, i.e., 
-c iopt(31) is the number of metastable iteration points for yclos2
-      if (.not.first.and.ids.eq.last.and.iopt(31).eq.99) then
-
-         keep = .false.
-c                                check if the point lies within the 
-c                                limits of the previous refinement point, 
-c                                if it does, then skip the point. 
-         do i = 1, istg(ids)
-
-            do j = 1, ndim(i,ids)
-
-               if (x(i,j).gt.xmx(i,j).or.x(i,j).lt.xmn(i,j)) then 
-                  keep = .true.
-                  exit
-               end if
-
-            end do
-           
-            if (keep) exit 
- 
-         end do
-
-         if (.not.keep) return 
-
-      end if 
 c                                load the subdivision limits into
 c                                temporary limit arrays:
       res0 = nopt(24)/nopt(21)**iter
@@ -490,7 +464,6 @@ c                                 1-d array zcoor
          jcoor(jphct) = jcoct - 1
          kcoct = jcoct + ncoor(ids)
 c                                 counter for number of non 0 or 1 compositions
-
          if (kcoct.gt.k20) call error (59,x(1,1),k20,'resub')
 
          l = (i-1)*mcoor(ids)
@@ -592,7 +565,7 @@ c-----------------------------------------------------------------------
 
       external deltag
 
-      integer i,j,id,iter
+      integer i, j, k, id, iter
       logical bad 
 
       double precision ctot2, deltag, dg, gmin
@@ -635,6 +608,14 @@ c DEBUG
       logical switch
       common/ debug1 /jcount(10),switch(10)
 
+      integer iaq, aqst, aqct
+      character aqnam*8
+      double precision aqcp, aqtot
+      common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
+
+      integer nq,nn,ns,nqs,nqs1,sn,qn,nq1
+      common/ cst337 /nq,nn,ns,nqs,nqs1,sn,qn,nq1
+
       integer iopt
       logical lopt
       double precision nopt
@@ -659,6 +640,30 @@ c                                 endmembers. p0a is constructed in function gso
             ctot2 = ctot2 + p0a(i)*ctot(jend(id,2+i))
          end do 
 
+      else if (ksmod(id).eq.20) then 
+
+         do i = 1, qn 
+
+            k = jend(id,2+i) - aqst
+
+            do j = 1, icp 
+               cp2(j,jphct) = cp2(j,jphct) + y(i) * aqcp(j,k)
+            end do 
+
+            ctot2 = ctot2 + y(i)*aqtot(k)
+
+         end do 
+
+         do i = qn + 1, nqs 
+
+            do j = 1, icp 
+               cp2(j,jphct) = cp2(j,jphct) + y(i) * cp(j,jend(id,2+i))
+            end do 
+
+            ctot2 = ctot2 + y(i)*ctot(jend(id,2+i))
+
+         end do 
+
       else 
 c                                 general case (y coordinates)
          do i = 1, mstot(id)
@@ -673,7 +678,6 @@ c                                 general case (y coordinates)
          
       end if
 c DEBUG DEBUG 
-
       bad = .false. 
 
       if (mus) then 
@@ -1460,6 +1464,8 @@ c                                 local variables:
       logical bad1, bad2, good, reach
 
       double precision num
+
+      character char8*8
 c                                 -------------------------------------
       double precision goodc, badc
       common/ cst20 /goodc(3),badc(3)
@@ -1507,6 +1513,17 @@ c DEBUG
       double precision xmng, xmxg, xncg, xmno, xmxo, reachg
       common/ cxt6r /xmng(h9,mst,msp),xmxg(h9,mst,msp),xncg(h9,mst,msp),
      *               xmno(h9,mst,msp),xmxo(h9,mst,msp),reachg(h9)
+
+      integer nq,nn,ns,nqs,nqs1,sn,qn,nq1
+      common/ cst337 /nq,nn,ns,nqs,nqs1,sn,qn,nq1
+
+      integer ncoor,mcoor,ndim
+      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
+
+      integer iaq, aqst, aqct
+      character aqnam*8
+      double precision aqcp, aqtot
+      common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
 c----------------------------------------------------------------------
       ibad1 = 0 
       ibad2 = 0 
@@ -1615,7 +1632,7 @@ c                                 solutions on internal limits
             write (n10,'(a)') fname(i)
 
             do j = 1, istg(i)
-               do k = 1, ispg(i,j)-1
+               do k = 1, ndim(j,i) 
                   write (n10,*) xlo(k,j,i),xhi(k,j,i)
                end do
             end do 
@@ -1627,22 +1644,49 @@ c                                 single site solution
             write (*,1020) fname(i)
             if (lopt(11)) write (n11,1020) fname(i)
 
-            do j = 1, ispg(i,1) - 1
+            if (ksmod(i).eq.20) then 
+c                                 charge balance model:
+               k = 0
+
+               do j = 1, ndim(1,i)
+ 
+                  k = k + 1 
+c                                 jump to 1st neutral species
+                  if (j.eq.nq) k = k + 1
+
+                  if (j.lt.qn) then
+                     char8 = aqnam(jend(i,2+k) - aqst)
+                  else 
+                     char8 = names(jend(i,2+k))
+                  end if 
+
+                  write (*,1030) char8, xlo(j,1,i), xhi(j,1,i)
+
+                  if (lopt(11)) write (n11,1030) char8, xlo(j,1,i),
+     *                           xhi(j,1,i)
+
+               end do     
+        
+            else 
+
+               do j = 1, ndim(1,i)  
             
-               if (ksmod(i).eq.5) then
+                  if (ksmod(i).eq.5) then
                
-                  write (*,1070) j,xlo(j,1,i),xhi(j,1,i)
+                     write (*,1070) j,xlo(j,1,i),xhi(j,1,i)
                                   
-               else
+                  else
                 
-                  write (*,1030) names(jend(i,2+j)),
-     *                           xlo(j,1,i),xhi(j,1,i)
-               end if
+                     write (*,1030) names(jend(i,2+j)),
+     *                              xlo(j,1,i),xhi(j,1,i)
+                  end if
                 
-               if (lopt(11)) write (n11,1030) 
-     *                       names(jend(i,2+j)),xlo(j,1,i),xhi(j,1,i)
+                  if (lopt(11)) write (n11,1030) 
+     *                          names(jend(i,2+j)),xlo(j,1,i),xhi(j,1,i)
      
-            end do 
+               end do
+
+            end if  
 
          else
 c                                 reciprocal solution
@@ -3123,6 +3167,7 @@ c                                 DH law activity coefficient factor:
 c                                 ionic solutes, Davies D-H extension
                do k = 1, nq 
 
+                  if (x(k).le.0d0) cycle
                   g(id) = g(id) + x(k) * (g0(k) + dlog(mo(k)) 
      *                  + lng0*q(k))
 
@@ -3130,12 +3175,14 @@ c                                 ionic solutes, Davies D-H extension
 c                                 neutral solutes, ideal
                do l = k, qn
 
+                  if (x(k).le.0d0) cycle
                   g(id) = g(id) + x(l) * (g0(l) + dlog(mo(l)))
 
                end do 
 c                                 solvent species, ideal 
                do k = l, nqs
 
+                  if (x(k).le.0d0) cycle
                   g(id) = g(id) + x(k) * (g0(k) + dlog(x(k)))
 
                end do 

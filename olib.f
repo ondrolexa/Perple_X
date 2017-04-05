@@ -159,7 +159,7 @@ c                                 species_ouput
 
             id = kkp(i) 
 
-            write (text,'(20(a,a,f7.5,a))')
+            write (text,'(20(a,a,g12.5,a))')
      *            (spnams(j,id),': ',ysp(j,i),', ', j =1,spct(id))
 
             call deblnk (text)
@@ -688,6 +688,8 @@ c----------------------------------------------------------------------
 c subroutine to convert geometric reciprocal solution compositions (x3(id,i,j))
 c to geometric endmember fractions (y) for solution model ids. replicate 
 c of subroutine xtoy, but for the x3 array (used only by getloc from meemum).
+
+c meemum calls x3toy for ALL solutions. 
 c----------------------------------------------------------------------
       implicit none 
 
@@ -714,21 +716,29 @@ c                                 x coordinate description
       double precision x3
       common/ cxt16 /x3(k21,mst,msp)
 c----------------------------------------------------------------------
+c      if (istg(ids).eq.1) then 
+c                                 april 5, 2017 added for electrolyte model,
+c                                 but assume generic, should check if knsp is necessary.
+        
 
-      do l = 1, mstot(ids)
+c      else 
+
+         do l = 1, mstot(ids)
 c                                 the endmembers may have been
 c                                 rearranged from the original order,
 c                                 use knsp(l,ids) to assure correct
 c                                 indexing
-         ld = knsp(l,ids) 
+            ld = knsp(l,ids) 
 
-         y(ld) = 1d0
+            y(ld) = 1d0
 
-         do m = 1, istg(ids)
-            y(ld) = y(ld)*x3(id,m,kmsol(ids,ld,m))
-         end do
+            do m = 1, istg(ids)
+               y(ld) = y(ld)*x3(id,m,kmsol(ids,ld,m))
+            end do
+ 
+         end do   
 
-      end do   
+c     end if 
 
       end 
 
@@ -790,13 +800,15 @@ c-----------------------------------------------------------------------
  
       include 'perplex_parameters.h'
 
-      integer k, id, isp, ins(nsp)
+      integer k, l, id, isp, ins(nsp)
 
-      double precision omega, hpmelt, gmelt, gfluid, gzero, g,
-     *         dg, gex, slvmlt, gfesi, gcpd, gerk, gfecr1, ghybrid
+      double precision mo(m4), lng0, is, dg, g, msol, q(m4)
+
+      double precision omega, hpmelt, gmelt, gfluid, gzero, 
+     *                 gex, slvmlt, gfesi, gcpd, gerk, gfecr1, ghybrid
 
       external gphase, omega, hpmelt, gmelt, gfluid, gzero, gex, slvmlt,
-     *         gfesi, gerk, gfecr1, ghybrid
+     *         gfesi, gerk, gfecr1, ghybrid, gcpd
 
       integer jend
       common/ cxt23 /jend(h9,m4)
@@ -819,6 +831,15 @@ c                                 model type
 
       integer jspec
       common/ cxt8 /jspec(h9,m4)
+
+      integer nq,nn,ns,nqs,nqs1,sn,qn,nq1
+      common/ cst337 /nq,nn,ns,nqs,nqs1,sn,qn,nq1
+
+      double precision vh2o, epsilo, adh
+      common/ cxt37 /vh2o, epsilo, adh
+
+      double precision thermo,uf,us
+      common/ cst1 /thermo(k4,k10),uf(2),us(h5)
 
       integer ideps,icase,nrct
       common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
@@ -890,6 +911,50 @@ c                                 get the dqf
 c                                 and excess contributions
             g = g - t * omega (id,p0a) + gex (id,p0a)
 
+         else if (ksmod(id).eq.20) then 
+
+c                                 electrolytic solution, assumes:
+c                                 1) molal electrolyte standard state
+c                                 2) water is the last species
+c                                 solvent mass, kg/mol compound
+            msol = y(nqs) * 0.001801528d0
+c                                 ionic strength 
+            is = 0d0 
+
+            do k = 1, qn
+c                                 ln molality of solutes
+               mo(k) = y(k)/msol
+               if (k.gt.nq) cycle 
+               q(k) = thermo(6,jend(id,2+k))**2
+               is = is + q(k) * mo(k)
+
+            end do 
+
+            is = is/2d0
+c                                 DH law activity coefficient factor:
+            lng0 = adh*dsqrt(is)/(1d0 + dsqrt(is)) + 0.2d0*is
+c                                 ionic solutes, Davies D-H extension
+            do k = 1, nq 
+
+               if (y(k).le.0d0) cycle
+               g = g + y(k) * (gcpd(jend(id,2+k),.true.) + dlog(mo(k))
+     *                                                   + lng0*q(k))
+
+            end do 
+c                                 neutral solutes, ideal
+            do l = k, qn
+
+               if (y(k).le.0d0) cycle
+               g = g + y(l) * (gcpd(jend(id,2+l),.true.) + dlog(mo(l)))
+
+            end do 
+c                                 solvent species, ideal 
+            do k = l, nqs
+
+               if (y(k).le.0d0) cycle
+               g = g + y(k) * (gcpd(jend(id,2+k),.true.) + dlog(y(k)))
+
+            end do 
 
          else if (ksmod(id).eq.24) then 
 c                                 -------------------------------------
@@ -1047,7 +1112,8 @@ c----------------------------------------------------------------------
             ysp(k,jd) = p0a(k)
          end do
 
-      else if (ksmod(id).eq.2.or.ksmod(id).eq.3.or.ksmod(id).ge.24.and.
+      else if (ksmod(id).eq.2.or.ksmod(id).eq.3.or.ksmod(id).eq.20.or.
+     *         ksmod(id).ge.24.and.
      *         ksmod(id).le.28.or.ksmod(id).eq.39) then 
 c                                 macroscopic formulation for normal solutions (2,3) and
 c                                 hp melt model (24)

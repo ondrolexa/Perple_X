@@ -1111,8 +1111,8 @@ c----------------------------------------------------------------------
 
       integer iaq, aqst, aqct
       character aqnam*8
-      double precision aqcp
-      common/ cst336 /aqcp(k0,l9),aqnam(l9),iaq(l9),aqst,aqct
+      double precision aqcp, aqtot
+      common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
 
       character*8 exname,afname
       common/ cst36 /exname(h8),afname(2)
@@ -1557,7 +1557,7 @@ c                                 aqueous species, thermo data, as is the
 c                                 case for make data is loaded in thermo;
 c                                 names and composition loaded into 
 c                                 aqnam and aqcp.
-      aqct = iphct 
+      aqst = iphct 
 c
       call eohead (n2)
 c                                 loop to load solute data:
@@ -1929,6 +1929,14 @@ c                                 pointer
       logical fulrnk
       double precision cptot,ctotal
       common/ cst78 /cptot(k19),ctotal,jdv(k19),npt,fulrnk
+
+      integer iaq, aqst, aqct
+      character aqnam*8
+      double precision aqcp, aqtot
+      common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
+
+      integer nq,nn,ns,nqs,nqs1,sn,qn,nq1
+      common/ cst337 /nq,nn,ns,nqs,nqs1,sn,qn,nq1
 c----------------------------------------------------------------------
 
       kkp(jd) = ids
@@ -1976,6 +1984,22 @@ c                                 the independent endmembers)
                   cp3(j,jd) = cp3(j,jd) + p0a(i) * cp(j,jend(ids,2+i))
                end do 
             end do          
+
+         else if (ksmod(ids).eq.20) then 
+c                                 electrolyte 
+            do i = 1, nq
+c                                 solute species 
+               do j = 1, icomp
+                  cp3(j,jd) = cp3(j,jd) 
+     *                      + y(i) * aqcp(j,jend(ids,2+i) - aqst)
+               end do
+            end do 
+c                                 solvent species 
+            do i = qn+1, nqs 
+               do j = 1, icomp
+                  cp3(j,jd) = cp3(j,jd) + y(i) * cp(j,jend(ids,2+i))
+               end do
+            end do
 
          else 
 c                                 solutions with no dependent endmembers:

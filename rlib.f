@@ -1888,8 +1888,8 @@ c---------------------------------------------------------------------
 
       integer iaq, aqst, aqct
       character aqnam*8
-      double precision aqcp
-      common/ cst336 /aqcp(k0,l9),aqnam(l9),iaq(l9),aqst,aqct
+      double precision aqcp, aqtot
+      common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
       
       integer iopt
       logical lopt
@@ -2004,9 +2004,11 @@ c                               principle may need vnumu as well).
          if (aqct.gt.l9) call error (1,r,aqct,'l9 (max aq species)')
 
          aqnam(aqct) = name
+         aqtot(aqct) = 0d0
 
-         do k = 1, k0
-            aqcp(k,aqct) = comp(k)
+         do k = 1, icomp
+            aqcp(k,aqct) = comp(ic(k))
+            if (k.lt.icp) aqtot(aqct) = aqtot(aqct) + comp(ic(k))
          end do 
 
       end if
@@ -6378,6 +6380,9 @@ c---------------------------------------------------------------------
      *      imd(msp,mst),insp(m4),ist(mst),isp(mst),rkord(m18),isite,
      *      iterm,iord,istot,jstot,kstot,xtyp
 
+      integer iorig,jnsp,iy2p
+      common / cst159 /iorig(m4),jnsp(m4),iy2p(m4)
+
       integer nq,nn,ns,nqs,nqs1,sn,qn,nq1
       common/ cst337 /nq,nn,ns,nqs,nqs1,sn,qn,nq1
 c----------------------------------------------------------------------
@@ -6390,6 +6395,7 @@ c----------------------------------------------------------------------
 
          if (kdsol(i).ne.0) then
             jq = jq + 1
+            iorig(jq) = i 
             kdsol(jq) = kdsol(i)
             xmn(1,jq) = xmn(1,i)
             xmx(1,jq) = xmx(1,i)
@@ -6403,6 +6409,7 @@ c----------------------------------------------------------------------
 
          if (kdsol(i).ne.0) then
             jn = jn + 1
+            iorig(jq+jn) = i 
             kdsol(jq+jn) = kdsol(i)
             xmn(1,jq+jn-1) = xmn(1,i)
             xmx(1,jq+jn-1) = xmx(1,i)
@@ -6416,6 +6423,7 @@ c----------------------------------------------------------------------
 
          if (kdsol(i).ne.0) then
             js = js + 1
+            iorig(jq+jn+js) = i 
             kdsol(jq+jn+js) = kdsol(i)
             xmn(1,jq+jn+js-1) = xmn(1,i-1)
             xmx(1,jq+jn+js-1) = xmx(1,i-1)
@@ -6489,8 +6497,8 @@ c---------------------------------------------------------------------
 
       integer iaq, aqst, aqct
       character aqnam*8
-      double precision aqcp
-      common/ cst336 /aqcp(k0,l9),aqnam(l9),iaq(l9),aqst,aqct
+      double precision aqcp, aqtot
+      common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
 
       integer ikp
       common/ cst61 /ikp(k1)
@@ -6552,7 +6560,7 @@ c                              is dependent endmember flag it by setting kdsol(i
 
          end if 
 
-         if (jsmod.eq.20.and.i.le.nn+nq) then
+         if (jsmod.eq.20.and.i.le.nq+nn) then
 c                                 aqueous solute, test against aqnam 
             do h = 1, aqct 
 
@@ -6561,17 +6569,17 @@ c                                 got a valid endmember, count and
                   jstot = jstot + 1 
                   kstot = jstot
 c                                 create arrays of convenience, where j = 1, jstot
-                  kdsol(i) = h                                 
+                  kdsol(i) = h + aqst                                 
 c                                 tests for aq solvent models
                   if (i.le.nq) then 
 c                                 must be a charged solute species
-                     if (thermo(6,h).eq.0) then
+                     if (thermo(6,h+aqst).eq.0) then
                         write (*,*) names(h),' is not a charged species'
      *                  ,'remove it from the list of charged species in'
      *                  ,'solution model:',tname
                         call errpau
                         stop
-                     else if (thermo(6,h).gt.0) then
+                     else if (thermo(6,h+aqst).gt.0) then
                         ipos = ipos + 1
                      else 
                         ineg = ineg + 1
@@ -6579,7 +6587,7 @@ c                                 must be a charged solute species
 
                   else if (i.gt.nq) then 
 c                                  must be neutral species
-                     if (thermo(6,h).ne.0) then
+                     if (thermo(6,h+aqst).ne.0) then
                         write (*,*) names(h),' is a charged species'
      *                            ,'remove it from the list of neutral'
      *                            ,' species in solution model:',tname
@@ -8380,6 +8388,7 @@ c                                 DH law activity coefficient factor:
 c                                 ionic solutes, Davies D-H extension
          do k = 1, nq 
 
+            if (y(k).le.0d0) cycle
             gg = gg + y(k) * (g(jend(id,2+k)) + dlog(mo(k))
      *                                           + lng0*q(k))
 
@@ -8387,19 +8396,17 @@ c                                 ionic solutes, Davies D-H extension
 c                                 neutral solutes, ideal
          do l = k, qn
 
+            if (y(k).le.0d0) cycle
             gg = gg + y(l) * (g(jend(id,2+l)) + dlog(mo(l)))
 
          end do 
 c                                 solvent species, ideal 
          do k = l, nqs
 
-            g(id) = g(id) + y(k) * (g(jend(id,2+k)) + dlog(y(k)))
+            if (y(k).le.0d0) cycle
+            gg = gg + y(k) * (g(jend(id,2+k)) + dlog(y(k)))
 
          end do 
-
-      else if (ksmod(id).eq.23) then 
-
-         write (*,*) 'toop samis model not coded'
 
       else if (ksmod(id).eq.25.or.ksmod(id).eq.24) then 
 c                                 -------------------------------------
@@ -9332,7 +9339,7 @@ c                                 charge balance models
          sn = nn + ns 
          qn = nn + nq
 
-         isp(1) = nqs1
+         isp(1) = nqs
 
          do i = 1, istot
             jmsol(i,1) = i
@@ -9375,7 +9382,13 @@ c                                 site ranges
 
          ispg(im,i) = isp(i)
          imlt(im,i) = ist(i)
-         ndim(i,im) = isp(i) - 1
+
+         if (ksmod(im).eq.20) then 
+            ndim(i,im) = nqs1
+         else 
+            ndim(i,im) = isp(i) - 1
+         end if 
+
          ncoor(im) = ncoor(im) + isp(i)
          mcoor(im) = mcoor(im) + ndim(i,im)
 
@@ -13147,10 +13160,18 @@ c                                 model type
       integer ineg
       common/ cst91 /ineg(h9,m15)
 
+      integer nq,nn,ns,nqs,nqs1,sn,qn,nq1
+      common/ cst337 /nq,nn,ns,nqs,nqs1,sn,qn,nq1
+
       logical badend
       integer ldsol
       double precision one, zero
       common/ cxt36 /one,zero,ldsol(m4,h9),badend(m4,h9)
+
+      integer iaq, aqst, aqct
+      character aqnam*8
+      double precision aqcp, aqtot
+      common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
 
       integer isec,icopt,ifull,imsg,io3p
       common/ cst103 /isec,icopt,ifull,imsg,io3p
@@ -13412,8 +13433,16 @@ c                               fractions of absent endmembers
          if (sxs(ixct).ne.0d0) then
 c                              composition vector
             do l = 1, icomp
-               cp(l,iphct) = cp(l,iphct) + sxs(ixct) * cp(l,id)
-               if (l.le.icp) ctotal = ctotal + sxs(ixct) * cp(l,id)
+
+               if (ksmod(im).eq.20.and.h.le.qn) then
+                  zpr = sxs(ixct) * aqcp(l,id-aqst)
+               else 
+                  zpr = sxs(ixct) * cp(l,id)
+               end if 
+
+               cp(l,iphct) = cp(l,iphct) + zpr
+               if (l.le.icp) ctotal = ctotal + zpr
+
             end do 
 c                              accumulate endmember configurational entropy
             esum = esum + sxs(ixct) * scoef(h,im)
