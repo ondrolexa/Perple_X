@@ -3966,7 +3966,7 @@ c----------------------------------------------------------------------
  
       include 'perplex_parameters.h'
 
-      integer i,j,k,id,ier,tictoc,ipvt(k8)
+      integer i, j, k, id, ier, tictoc, ipvt(k8), ic(k5), jc(k5), kcp
 
       logical static, bad
 
@@ -4154,7 +4154,28 @@ c                                  load the saturated phase composition
 
       if (usv.or.jpot.eq.0) then
 c                                 compute chemical potentials
-         if (npt-(jbulk-icp).ne.hcp) then 
+
+c                                 check for degeneracy
+         kcp = 0 
+
+         do i = 1, hcp 
+
+            if (cblk(i).ne.0d0) then 
+
+               kcp = kcp + 1
+               ic(kcp) = i
+               jc(i) = kcp
+               mu(kcp) = mu(i)
+
+            else 
+
+               jc(i) = 0
+
+            end if 
+
+         end do 
+                 
+         if (npt-(jbulk-icp).ne.kcp) then          
 c                                 not full rank
             do i = 1, hcp
                mu(i) = nopt(7)
@@ -4162,13 +4183,13 @@ c                                 not full rank
           
          else 
 
-            do i = 1, hcp
-               do j = 1, hcp 
-                  comp(i,j) = cp3(j,i)
+            do i = 1, kcp
+               do j = 1, kcp 
+                  comp(i,j) = cp3(ic(j),i)
                end do 
             end do 
 
-            call factor (comp,hcp,ipvt,ier)
+            call factor (comp,kcp,ipvt,ier)
 
             if (ier.eq.1) then 
 
@@ -4178,12 +4199,31 @@ c                                 not full rank
      
             else 
  
-               call subst (comp,ipvt,hcp,mu,ier)
+               call subst (comp,ipvt,kcp,mu,ier)
 
                if (ier.eq.1) then 
+
                   do i = 1, hcp
                      mu(i) = nopt(7)
                   end do
+             
+               else       
+
+                  if (kcp.ne.hcp) then          
+c                                 if degenerate, shift the mu's back to 
+c                                 the original positions
+                     do i = hcp, 1, -1
+
+                        if (jc(i).eq.0) then 
+                           mu(i) = nopt(7)
+                        else 
+                           mu(i) = mu(jc(i))
+                        end if 
+                                 
+                     end do
+
+                  end if                    
+
                end if 
              
             end if 

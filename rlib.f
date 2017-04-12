@@ -8184,13 +8184,13 @@ c                                 endmember concentrations.
 
       if (k.ne.0) then 
 c                                 reject pure independent endmember compositions. 
-         if (ldsol(k,ids).gt.0) then 
+c         if (ldsol(k,ids).gt.0) then 
             
-            bad = .true.
+c            bad = .true.
 
-            return
+c           return
   
-         end if 
+c         end if 
 
          y(k) = 1d0 
 
@@ -13224,7 +13224,7 @@ c                                 check for badly normalized compositions
 
       if (i.ne.0) then 
 c                                 reject pure independent endmembers
-         if (ldsol(i,im).gt.0) return 
+c         if (ldsol(i,im).gt.0) return 
 c                                 a pure endmember composition:
          y(i) = 1d0 
 
@@ -15366,12 +15366,15 @@ c                                 interval limits
                ylmn = yint(j,i,lsite,ids)
                ylmx = yint(j+1,i,lsite,ids)
 c                                 which interval are we starting from?
+c                                 in 6.7.7 this was ylmx - nopt(5), changed 4/10/17
                if (y(i,iy(i)).gt.ylmx-nopt(5)) cycle
 c
                dy = ylmx - ylmn
-c                                 pathological case y = ylmn
-               if (dabs(y(i,iy(i))-ylmn).lt.nopt(5))  
-     *                                y(i,iy(i)) = ylmn + nopt(5)
+c                                 pathological case y = ylmn, in 6.7.5 or 6.7.6
+c                                 added nopt(5) to ylmn, removing this seems to be a 
+c                                 source of instability.
+               if (dabs(y(i,iy(i))-ylmn).lt.nopt(5)) 
+     *                           y(i,iy(i)) = ylmn + nopt(5)
 
                if (res.eq.0d0) then 
 c                                 the current value is in interval j

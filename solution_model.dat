@@ -10719,7 +10719,7 @@ end_limits
 0 0 0  0                   | endmember flags
 
 0. .2 0.1 1                | subdivision range, X(pnt), imod = 1 -> assymetric
-0. .2 0.1 1                | subdivision range, X(geik), imod = 1 -> assymetric
+0. .2 0.1 0                | subdivision range, X(geik), imod = 1 -> assymetric
 0. 1. 0.1 0                | subdivision range, X(hem), imod = 0 -> cartesian subdivision
 
 
@@ -10743,5 +10743,80 @@ z(b,fe3+) = 1 hem
 z(b,fe2+) = 1/2 dilm
 
 end_of_model
-  
+
+begin_model        
+
+                    This is the brute force equivalent of Ilm(WPH).
+
+                    Ilmenite after White, RW, Powell, R, Holland, TJB & Worley, BA (2000, JMG), modified
+                    as described by White et al (2014).
+
+                    Green et al (2016) remark this modification "may be suspect" and use the original 2000 model, 
+                    i.e., that obtained by excluding geikielite.
+
+                                  Requires that the endmember ilm_nol be created from the endmember ilm
+                                  in the thermodynamic data file by eliminating the Landau transition from 
+                                  the ilm endmember, additionally the following make definitions must be
+                                  present in the thermodynamic file.
+
+                                  oilm = 1 ilm_nol 
+                                        | -13608 9.426 0 => the TC DQF coeffecients added to
+                                        | smax*tc0*(q0^2-1/3*q0^6), -smax*q0^2, vmax*q0^2, respectively, yields
+                                        | the un-landaued DQF coefficients for Perple_X
+                                         1443.57559 -1.59231967  .1836386612e-1 
+                     
+                                  dilm = 1 ilm_nol  
+                                        | 1993  -2.1 0 => the TC DQF coeffecients, the values below are
+                                        | oilm + {DH,R*ln(4),0} 
+                                         17043.57559 -13.11797099 .1836386612e-1 
+                                  
+                                  The ilm and ilm_nol endmembers should be excluded from calculations
+                                  to avoid conflicts with this model.
+
+Ilm(WPH0) 
+abbreviation Ilm
+full_name    ilmenite
+
+2                          | macroscopic
+
+5                          | 5 endmembers 
+pnt 
+geik
+hem      
+oilm      
+dilm     
+
+0 0 0 0  0                 | endmember flags
+
+0. 1. 0.1 0                | subdivision range, X(pnt), imod = 1 -> assymetric
+0. 1. 0.1 0                | subdivision range, X(geik), imod = 1 -> assymetric
+0. 1. 0.1 0                | subdivision range, X(hem), imod = 0 -> cartesian subdivision
+0. 1. 0.1 0                | subdivision range, X(oilm), imod = 0 -> cartesian subdivision
+
+begin_excess_function
+W(oilm dilm)    15.6d3  0.  0. 
+W(oilm hem)     26.6d3  0.  0.
+W(oilm geik)       2d3  0.  0.
+W(oilm pnt)        4d3  0.  0.
+W(dilm hem)       11d3  0.  0.
+W(dilm geik)       4d3  0.  0.
+W(dilm pnt)        2d3  0.  0.
+W(hem geik)       36d3  0.  0.
+W(hem pnt)        25d3  0.  0.
+W(geik pnt)        4d3  0.  0.
+end_excess_function
+
+2                          | 2 site model
+
+5 1.                       | A - Fe2+ Mn Fe3+ Mg Ti
+z(A,Mg)   = 1 geik
+z(A,mn)   = 1 pnt
+z(A,fe3+) = 1 hem
+z(A,ti)   = 1/2 dilm
+
+3 1.                       | B - Fe3+ Ti4+ Fe2+
+z(b,fe3+) = 1 hem
+z(b,fe2+) = 1/2 dilm
+
+end_of_model               
                      --------------------------------------------------------
