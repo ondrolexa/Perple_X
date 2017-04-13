@@ -4231,6 +4231,8 @@ c                                 the original positions
          end if 
 
       end if 
+c                                 DEBUG DEBUG TEST TEST
+      call aqrxdo
 c                                 test for solvi and average
 c                                 homogeneous phases.
       call avrger

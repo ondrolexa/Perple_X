@@ -347,7 +347,7 @@ c                                 HP Tait EoS, einstein thermal pressure
          v2 = 1d0 + (pr-pth)*thermo(17,id)
 
          if (v1.lt.0d0.or.v2.lt.0d0) then
-c                                 destabalize the phase
+c                                 destabilize the phase
             vdp = 1d4*p
 
             if (iwarn.le.50.and.oldid.ne.id) then 
