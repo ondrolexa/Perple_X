@@ -27,10 +27,11 @@ perplex_option.dat     | Perple_X option file
 
 begin thermodynamic component list
 H2O   1  3.00000      0.00000      0.00000     molar  amount
+MgO   1 1.000000      0.00000      0.00000     molar  amount
 O2    1  0.00000      0.00000      0.00000     molar  amount
 end thermodynamic component list
 
-MgO   1 1.000000      0.00000      0.00000     molar  amount14
+
 
 begin saturated component list
 end saturated component list

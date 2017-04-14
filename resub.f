@@ -3160,7 +3160,7 @@ c                                 ln molality of solutes
                end do 
 
                is = is/2d0
-c                                 DH law activity coefficient factor:
+c                                 DH law activity coefficient factor (ln[g] = lng0*q^2)
                lng0 = adh*dsqrt(is)/(1d0 + dsqrt(is)) + 0.2d0*is
 
                g(id) = 0d0

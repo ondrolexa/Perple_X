@@ -1715,7 +1715,7 @@ c                                 which corresponds to a balanced reaction
       else if (id.lt.0) then 
 c                                 properties of an aqueous species, turn
 c                                 off sign-based testing.
-          if (eos(-id).eq.15) rxn = .true.
+         if (eos(-id).eq.15.or.eos(-id).eq.16) rxn = .true.
       end if 
 
       if (iopt(2).eq.1) then 
