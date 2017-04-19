@@ -1,9 +1,9 @@
 dew13ver.dat     thermodynamic data file                                                                                                    
 print    | no_print suppresses print output
 plot     | no_plot suppresses plot output
-solution_aq.dat     | solution model file, blank = none                                                                                                                                                                                                         
+solution_aq1.dat     | solution model file, blank = none                                                                                                                                                                                                         
 plp                                                                                                                                                                                                                                                             
-perplex_option.dat     | Perple_X option file                                                                                                                                                                                                                   
+aq_perplex_option.dat     | Perple_X option file                                                                                                                                                                                                                   
     5 calculation type: 0 - composition, 1 - Schreinemakers, 3 - Mixed, 4 - swash, 5 - gridded min, 7 - 1d fract, 8 - gwash, 9 - 2d fract, 10 - 7 w/file input
     0 unused place holder, post 06
     0 unused place holder, post 06
@@ -47,6 +47,8 @@ end independent potential list
 
 begin excluded phase list
 HO2-
+H2,aq
+O2,aq
 end excluded phase list
 
 

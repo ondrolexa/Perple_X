@@ -832,14 +832,17 @@ c                                 model type
       integer jspec
       common/ cxt8 /jspec(h9,m4)
 
-      integer nq,nn,ns,nqs,nqs1,sn,qn,nq1
-      common/ cst337 /nq,nn,ns,nqs,nqs1,sn,qn,nq1
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
 
       double precision vh2o, epsilo, adh
       common/ cxt37 /vh2o, epsilo, adh
 
       double precision thermo,uf,us
       common/ cst1 /thermo(k4,k10),uf(2),us(h5)
+
+      double precision fwt
+      common/ cst338 /fwt(k10)
 
       integer ideps,icase,nrct
       common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
@@ -912,49 +915,51 @@ c                                 and excess contributions
             g = g - t * omega (id,p0a) + gex (id,p0a)
 
          else if (ksmod(id).eq.20) then 
-
 c                                 electrolytic solution, assumes:
 c                                 1) molal electrolyte standard state
-c                                 2) water is the last species
+c                                 for solutes.
+c                                 2) water is the last solvent species
+c                                 -------------------------------------
+c                                 compute solvent mass and gibbs energy:
+            msol = 0d0 
+
+            do k = 1, ns
 c                                 solvent mass, kg/mol compound
-            msol = y(nqs) * 0.001801528d0
-c                                 ionic strength 
-            is = 0d0 
-
-            do k = 1, qn
-c                                 ln molality of solutes
-               mo(k) = y(k)/msol
-               if (k.gt.nq) cycle 
-               q(k) = thermo(6,jend(id,2+k))**2
-               is = is + q(k) * mo(k)
-
-            end do 
-
-            is = is/2d0
-c                                 DH law activity coefficient factor:
-            lng0 = adh*dsqrt(is)/(1d0 + dsqrt(is)) + 0.2d0*is
-c                                 ionic solutes, Davies D-H extension
-            do k = 1, nq 
-
-               if (y(k).le.0d0) cycle
-               g = g + y(k) * (gcpd(jend(id,2+k),.true.) + dlog(mo(k))
-     *                                                   + lng0*q(k))
-
-            end do 
-c                                 neutral solutes, ideal
-            do l = k, qn
-
-               if (y(k).le.0d0) cycle
-               g = g + y(l) * (gcpd(jend(id,2+l),.true.) + dlog(mo(l)))
-
-            end do 
-c                                 solvent species, ideal 
-            do k = l, nqs
-
+               msol = msol + y(k) * fwt(jend(id,2+k))
+c                                 solvent gibbs energy 
                if (y(k).le.0d0) cycle
                g = g + y(k) * (gcpd(jend(id,2+k),.true.) + dlog(y(k)))
 
             end do 
+c                                 ionic strength 
+            is = 0d0 
+
+            do k = sn1, nqs
+c                                 ln molality of solutes
+               mo(k) = y(k)/msol
+               if (k.le.sn) cycle 
+               q(k) = thermo(6,jend(id,2+k))**2
+               is = is + q(k) * mo(k)
+
+            end do
+
+            is = is/2d0
+c                                 DH law activity coefficient factor:
+            lng0 = adh*dsqrt(is)/(1d0 + dsqrt(is)) + 0.2d0*is
+c                                 neutral solutes, ideal
+            do l = sn1, sn
+
+               if (y(l).le.0d0) cycle
+               g = g + y(l) * (gcpd(jend(id,2+l),.true.) + dlog(mo(l)))
+
+            end do
+c                                 ionic solutes, Davies D-H extension
+            do k = l, nqs 
+
+               if (y(k).le.0d0) cycle
+               g = g + y(k) * (gcpd(jend(id,2+k),.true.) + dlog(mo(k))
+     *                                                   + lng0*q(k))
+            end do
 
          else if (ksmod(id).eq.24) then 
 c                                 -------------------------------------

@@ -1935,8 +1935,8 @@ c                                 pointer
       double precision aqcp, aqtot
       common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
 
-      integer nq,nn,ns,nqs,nqs1,sn,qn,nq1
-      common/ cst337 /nq,nn,ns,nqs,nqs1,sn,qn,nq1
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
 c----------------------------------------------------------------------
 
       kkp(jd) = ids

@@ -1895,6 +1895,12 @@ c---------------------------------------------------------------------
       logical lopt
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      double precision atwt
+      common/ cst45 /atwt(k0)
+
+      double precision fwt
+      common/ cst338 /fwt(k10)
 c---------------------------------------------------------------------
 
       if (id+1.gt.k10) call error (1,0d0,id,'k10')
@@ -1979,9 +1985,14 @@ c                                 in ifp array, this is only used by gcpd.
 
       end if 
 c                               load stoichiometry of components.
+      fwt(id) = 0 
+
       do i = 1, icomp
          cp(i,id) = comp(ic(i))
-      end do 
+         fwt(id) = fwt(id) + cp(i,id)*atwt(i)
+      end do
+c                               convert to kg/mol
+      fwt(id) = fwt(id)/1d3
 c                               compositional array for frendly
       if (iam.eq.5.and.id.le.k5) then 
          do i = 1, k0
@@ -4922,7 +4933,7 @@ c                                 program.
 
       end if 
 
-      call chopit (ycum,jsp,ksite,ids) 
+      call chopit (ycum,0,jsp,ksite,ids) 
 
       end
 
@@ -6362,7 +6373,7 @@ c---------------------------------------------------------------------
 
       character*10 tname
 
-      integer i, jq, jn, js
+      integer i, j, jq, jn, js
 
       logical first
 
@@ -6383,52 +6394,54 @@ c---------------------------------------------------------------------
       integer iorig,jnsp,iy2p
       common / cst159 /iorig(m4),jnsp(m4),iy2p(m4)
 
-      integer nq,nn,ns,nqs,nqs1,sn,qn,nq1
-      common/ cst337 /nq,nn,ns,nqs,nqs1,sn,qn,nq1
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
 c----------------------------------------------------------------------
 
       jq = 0
       jn = 0
       js = 0 
 
-      do i = 1, nq
-
-         if (kdsol(i).ne.0) then
-            jq = jq + 1
-            iorig(jq) = i 
-            kdsol(jq) = kdsol(i)
-            xmn(1,jq) = xmn(1,i)
-            xmx(1,jq) = xmx(1,i)
-            xnc(1,jq) = xnc(1,i)
-            imd(jq,1) = imd(i,1)
-         end if
-
-      end do
-
-      do i = nq+1, nq+nn
-
-         if (kdsol(i).ne.0) then
-            jn = jn + 1
-            iorig(jq+jn) = i 
-            kdsol(jq+jn) = kdsol(i)
-            xmn(1,jq+jn-1) = xmn(1,i)
-            xmx(1,jq+jn-1) = xmx(1,i)
-            xnc(1,jq+jn-1) = xnc(1,i)
-            imd(jq+jn-1,1) = imd(i,1)
-         end if
-
-      end do
-
-      do i = nq+nn+1, nq+nn+ns
+      do i = 1, ns
 
          if (kdsol(i).ne.0) then
             js = js + 1
-            iorig(jq+jn+js) = i 
-            kdsol(jq+jn+js) = kdsol(i)
-            xmn(1,jq+jn+js-1) = xmn(1,i-1)
-            xmx(1,jq+jn+js-1) = xmx(1,i-1)
-            xnc(1,jq+jn+js-1) = xnc(1,i-1)
-            imd(jq+jn+js-1,1) = imd(i-1,1)
+            iorig(js) = i 
+            kdsol(js) = kdsol(i)
+            xmn(1,js) = xmn(1,i)
+            xmx(1,js) = xmx(1,i)
+            xnc(1,js) = xnc(1,i)
+            imd(js,1) = imd(i,1)
+         end if
+
+      end do
+
+      do i = ns+1, ns+nn
+
+         if (kdsol(i).ne.0) then
+            jn = jn + 1
+            iorig(js+jn) = i 
+            kdsol(js+jn) = kdsol(i)
+            xmn(1,js+jn-1) = xmn(1,i)
+            xmx(1,js+jn-1) = xmx(1,i)
+            xnc(1,js+jn-1) = xnc(1,i)
+            imd(js+jn-1,1) = imd(i,1)
+         end if
+
+      end do
+
+      j = nn + ns - 1
+
+      do i = ns+nn+1, ns+nn+nq
+
+         if (kdsol(i).ne.0) then
+            jq = jq + 1
+            iorig(js+jn+jq) = i 
+            kdsol(js+jn+jq) = kdsol(i)
+            xmn(2,jq) = xmn(2,i-j)
+            xmx(2,jq) = xmx(2,i-j)
+            xnc(2,jq) = xnc(2,i-j)
+            imd(jq,2) = imd(i-j,2)
          end if
 
       end do
@@ -6437,7 +6450,7 @@ c----------------------------------------------------------------------
       nn = jn
       ns = js
 
-      end 
+      end
 
       subroutine cmodel (im,idsol,tname,first)
 c---------------------------------------------------------------------
@@ -6509,8 +6522,8 @@ c---------------------------------------------------------------------
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp  
 
-      integer nq,nn,ns,nqs,nqs1,sn,qn,nq1
-      common/ cst337 /nq,nn,ns,nqs,nqs1,sn,qn,nq1
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
 c----------------------------------------------------------------------
       jstot = 0
       ineg = 0 
@@ -6560,7 +6573,7 @@ c                              is dependent endmember flag it by setting kdsol(i
 
          end if 
 
-         if (jsmod.eq.20.and.i.le.nq+nn) then
+         if (jsmod.eq.20.and.i.gt.ns) then
 c                                 aqueous solute, test against aqnam 
             do h = 1, aqct 
 
@@ -6571,10 +6584,11 @@ c                                 got a valid endmember, count and
 c                                 create arrays of convenience, where j = 1, jstot
                   kdsol(i) = h + aqst                                 
 c                                 tests for aq solvent models
-                  if (i.le.nq) then 
+                  if (i.gt.nn+ns) then 
 c                                 must be a charged solute species
                      if (thermo(6,h+aqst).eq.0) then
-                        write (*,*) names(h),' is not a charged species'
+                        write (*,*) aqnam(h),
+     *                  ' is not a charged species '
      *                  ,'remove it from the list of charged species in'
      *                  ,'solution model:',tname
                         call errpau
@@ -6647,9 +6661,9 @@ c                                 is possible
          if ((ipos.eq.0.and.ineg.gt.0).or.
      *       (ipos.gt.0.and.ineg.eq.0)) then 
  
-             write (*,*) 'solution models with charged species must',
-     *      ' include both postive and negative species',
-     *      ' solution model:',tname,' will be rejected'
+             write (*,*) 'solution models with charged species must ',
+     *      'include both postive and negative species ',
+     *      'solution model:',tname,' will be rejected'
   
              jstot = 0 
 
@@ -6857,10 +6871,9 @@ c---------------------------------------------------------------------
       double precision yin
       common/ cst50 /yin(ms1,mst)
 
-      integer nq,nn,ns,nqs,nqs1,sn,qn,nq1
-      common/ cst337 /nq,nn,ns,nqs,nqs1,sn,qn,nq1
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
 c----------------------------------------------------------------------
-
       mdep = 0 
       norder = 0 
       istot = 0
@@ -7200,30 +7213,30 @@ c---------------------------------------------------------------------
       integer iorig,jnsp,iy2p
       common / cst159 /iorig(m4),jnsp(m4),iy2p(m4)
 
-      integer nq,nn,ns,nqs,nqs1,sn,qn,nq1
-      common/ cst337 /nq,nn,ns,nqs,nqs1,sn,qn,nq1
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
 c----------------------------------------------------------------------
-c                               read number of charged species:
-      call readda (rnums,1,tname)
-      nq = idint(rnums(1))
-c                               read charged species names:
-      i = 0
-      if (nq.gt.0) call readn (i,nq,tname)
-c                               read number of neutral species:
-      call readda (rnums,1,tname)
-      nn = idint(rnums(1))
-c                               read neutral species names:
-      i = nq
-      if (nn.gt.0) call readn (i,nn,tname)
 c                               read number of solvent species:
       call readda (rnums,1,tname)
       ns = idint(rnums(1))
 c                               read solvent species names:
-      i = nq + nn
+      i = 0
       if (ns.gt.0) call readn (i,ns,tname)
+c                               read number of neutral species:
+      call readda (rnums,1,tname)
+      nn = idint(rnums(1))
+c                               read neutral species names:
+      i = ns
+      if (nn.gt.0) call readn (i,ns+nn,tname)
+c                               read number of charged species:
+      call readda (rnums,1,tname)
+      nq = idint(rnums(1))
+c                               read charged species names:
+      i = nn + ns
+      if (nq.gt.0) call readn (i,i+nq,tname)
 c                               read composition limits, subdivision type
-c                               for nq - 1 + (nn + ns) - 1 species
-      do j = 1, nq + nn + ns - 2
+c                               for (nn + ns) - 1 neutral species
+      do j = 1, nn + ns -1
 
          call readda (rnums,4,tname)
 
@@ -7233,6 +7246,20 @@ c                               for nq - 1 + (nn + ns) - 1 species
          imd(j,1) = idint(rnums(4))
 c                                 don't allow imod > 2
          if (imd(j,1).ge.3) call error (169,rnums(1),imd(j,1),tname)
+
+      end do
+c                               read composition limits, subdivision type
+c                               for nq - 1 charged species
+      do j = 1, nq -1
+
+         call readda (rnums,4,tname)
+
+         xmn(2,j) = rnums(1)
+         xmx(2,j) = rnums(2)
+         xnc(2,j) = rnums(3)
+         imd(j,2) = idint(rnums(4))
+c                                 don't allow imod > 2
+         if (imd(j,2).ge.3) call error (169,rnums(1),imd(j,2),tname)
 
       end do
 c                              look for van laar and/or dqf parameters
@@ -8267,11 +8294,14 @@ c                                 model type
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
-      integer nq,nn,ns,nqs,nqs1,sn,qn,nq1
-      common/ cst337 /nq,nn,ns,nqs,nqs1,sn,qn,nq1
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
 
       double precision vh2o, epsilo, adh
       common/ cxt37 /vh2o, epsilo, adh
+
+      double precision fwt
+      common/ cst338 /fwt(k10)
 
       double precision thermo,uf,us
       common/ cst1 /thermo(k4,k10),uf(2),us(h5)
@@ -8365,46 +8395,49 @@ c                                 internal fluid eos
       else if (ksmod(id).eq.20) then 
 c                                 electrolytic solution, assumes:
 c                                 1) molal electrolyte standard state
-c                                 2) water is the last species
-c                                 solvent mass, kg/mol compound
-         msol = y(nqs) * 0.001801528d0
-c                                 ionic strength 
-         is = 0d0 
+c                                 for solutes.
+c                                 2) water is the last solvent species
+c                                 -------------------------------------
+c                                 compute solvent mass and gibbs energy:
+         msol = 0d0
+         gg = 0d0
 
-         do k = 1, qn
+         do k = 1, ns
+c                                 solvent mass, kg/mol compound
+            msol = msol + y(k) * fwt(jend(id,2+k))
+c                                 solvent gibbs energy 
+            if (y(k).le.0d0) cycle
+            gg = gg + y(k) * (g(jend(id,2+k)) + dlog(y(k)))
+
+         end do
+c                                 ionic strength 
+         is = 0d0
+
+         do k = sn1, nqs
 c                                 ln molality of solutes
             mo(k) = y(k)/msol
-            if (k.gt.nq) cycle 
+            if (k.le.sn) cycle 
             q(k) = thermo(6,jend(id,2+k))**2
             is = is + q(k) * mo(k)
 
-         end do 
+         end do
 
          is = is/2d0
 c                                 DH law activity coefficient factor:
          lng0 = adh*dsqrt(is)/(1d0 + dsqrt(is)) + 0.2d0*is
+c                                 neutral solutes, ideal
+         do l = sn1, sn
 
-         gg = 0d0
+            if (mo(l).le.0d0) cycle
+            gg = gg + y(l) * (g(jend(id,2+l)) + dlog(mo(l)))
+
+         end do
 c                                 ionic solutes, Davies D-H extension
-         do k = 1, nq 
+         do k = l, nqs
 
             if (y(k).le.0d0) cycle
             gg = gg + y(k) * (g(jend(id,2+k)) + dlog(mo(k))
      *                                           + lng0*q(k))
-
-         end do 
-c                                 neutral solutes, ideal
-         do l = k, qn
-
-            if (y(k).le.0d0) cycle
-            gg = gg + y(l) * (g(jend(id,2+l)) + dlog(mo(l)))
-
-         end do 
-c                                 solvent species, ideal 
-         do k = l, nqs
-
-            if (y(k).le.0d0) cycle
-            gg = gg + y(k) * (g(jend(id,2+k)) + dlog(y(k)))
 
          end do 
 
@@ -9110,7 +9143,7 @@ c---------------------------------------------------------------------
 
       logical add, bad
 
-      integer im,nloc,i,j,ind,id,jd,k,l,itic,ii,imatch, killct,
+      integer im, nloc, i, j, ind, id, jd, k, l,itic,ii,imatch, killct,
      *        killid(20)
 
       double precision dinc,xsym,dzt,dx
@@ -9313,8 +9346,8 @@ c                                 model type
       integer iam
       common/ cst4 /iam
 
-      integer nq,nn,ns,nqs,nqs1,sn,qn,nq1
-      common/ cst337 /nq,nn,ns,nqs,nqs1,sn,qn,nq1
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
 c----------------------------------------------------------------------
 c                                 auto_refine changes
       if (refine) then
@@ -9336,26 +9369,34 @@ c                                 charge balance models
          nqs = nn + nq + ns
          nqs1 = nqs - 1
          nq1 = nq - 1
-         sn = nn + ns 
+         sn = nn + ns
+         ns1 = sn - 1
+         sn1 = ns + 1
          qn = nn + nq
 
-         isp(1) = nqs
+         isp(1) = nqs1
 
-         do i = 1, istot
+         j = 0 
+
+         do i = 1, nqs
+C            if (i.eq.ns) cycle
+C            j = j + 1
             jmsol(i,1) = i
          end do
 
+c         jmsol(nqs,1) = ns
+
       end if 
 
-      do i = 1, isite 
+      do i = 1, isite
 
          do j = 1, isp(i) - 1
 
             xlo(j,i,im) = 1d0
             xhi(j,i,im) = 0d0
 
-         end do 
-      end do  
+         end do
+      end do
 c                                 initialize compositional distances
       do i = 1, icp
          dcp(i,im) = 0d0
@@ -9382,12 +9423,7 @@ c                                 site ranges
 
          ispg(im,i) = isp(i)
          imlt(im,i) = ist(i)
-
-         if (ksmod(im).eq.20) then 
-            ndim(i,im) = nqs1
-         else 
-            ndim(i,im) = isp(i) - 1
-         end if 
+         ndim(i,im) = isp(i) - 1
 
          ncoor(im) = ncoor(im) + isp(i)
          mcoor(im) = mcoor(im) + ndim(i,im)
@@ -12555,8 +12591,8 @@ c-----------------------------------------------------------------------
       integer iam
       common/ cst4 /iam
 
-      integer nq,nn,ns,nqs,nqs1,sn
-      common/ cst337 /nq,nn,ns,nqs,nqs1,sn
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
 
       integer ncoor,mcoor,ndim
       common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
@@ -12660,25 +12696,25 @@ c                                 electrolyte model
                do h = 1, ntot
 c                                 load the composition into
 c                                 a the site fraction array:
-                  k = (h-1)*(nn + nq + ns - 1)
+                  k = (h-1)*nqs1
                   l = 0
 
                   zt = 0d0
 
-                  do j = 1, nqs1
+                  do j = 1, nqs
+                     if (j.eq.ns) cycle
                      l = l + 1
                      z(1,j) = prism(k+l)
                      zt = zt + z(1,j)
                   end do
 
-                  z(1,nqs) = 1d0 - zt
+                  z(1,ns) = 1d0 - zt
 c                                 generate the pseudocompound:
                   call soload (im,icoct,icpct,ixct,tname,icky,im)
 
                end do 
 
-
-            else 
+            else
 c                                 normal solutions
                do h = 1, ntot
 c                                 load the composition into
@@ -13056,7 +13092,7 @@ c--------------------------------------------------------------------------
  
       double precision zpr,hpmelt,slvmlt,gmelt,smix,esum,ctotal,omega,x
 
-      integer jtic,id,im,h,i,j,l,m,icpct,isoct,ixct,icky,index,icoct
+      integer id,im,h,i,j,l,m,icpct,isoct,ixct,icky,index,icoct
 
       double precision ctot
       common/ cst3   /ctot(k1)
@@ -13160,8 +13196,8 @@ c                                 model type
       integer ineg
       common/ cst91 /ineg(h9,m15)
 
-      integer nq,nn,ns,nqs,nqs1,sn,qn,nq1
-      common/ cst337 /nq,nn,ns,nqs,nqs1,sn,qn,nq1
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
 
       logical badend
       integer ldsol
@@ -13181,16 +13217,22 @@ c----------------------------------------------------------------------
 c                              compute end-member fractions
       do l = 1, mstot(im)
 
-         y(l) = 1d0
+         if (istg(im).gt.1) then 
 
-         do m = 1, istg(im)
+            y(l) = 1d0
+
+            do m = 1, istg(im)
 c                                 check for invalid compositions,
 c                                 necessary for conformal transformtions
-            x = z(m,jmsol(l,m)) 
+               y(l) = y(l)*z(m,jmsol(l,m)) 
 
-            y(l) = y(l)*x
+            end do
 
-         end do
+         else 
+
+            y(l) = z(1,l)
+
+         end if
 
          if (y(l).gt.0d0.and.badend(l,im)) then 
 c                                 reject non-zero dependent endmember 
@@ -13405,7 +13447,6 @@ c                                 initialize constants:
       end do 
 c                                 load constants:
       ctotal = 0d0
-      jtic = 0 
 c                                 load xcoors if reciprocal
       if (lrecip(im)) then 
 
@@ -13434,7 +13475,7 @@ c                               fractions of absent endmembers
 c                              composition vector
             do l = 1, icomp
 
-               if (ksmod(im).eq.20.and.h.le.qn) then
+               if (ksmod(im).eq.20.and.h.gt.ns) then
                   zpr = sxs(ixct) * aqcp(l,id-aqst)
                else 
                   zpr = sxs(ixct) * cp(l,id)
@@ -13446,8 +13487,6 @@ c                              composition vector
             end do 
 c                              accumulate endmember configurational entropy
             esum = esum + sxs(ixct) * scoef(h,im)
-
-            jtic = jtic + 1
 
          end if  
 
@@ -13483,7 +13522,11 @@ c                              composition vector
          if (cp(l,iphct).gt.-1d-8.and.cp(l,iphct).lt.0d0) then 
             cp(l,iphct) = 0d0 
          else if (cp(l,iphct).lt.0d0) then
-            call error (228,cp(l,iphct),l,tname)
+            if (ksmod(im).eq.20) then 
+               write (*,*) ' negative comp mass',iphct,l
+            else 
+               call error (228,cp(l,iphct),l,tname)
+            end if 
          end if 
       end do 
 c                                 check if the phase consists
@@ -15258,10 +15301,10 @@ c                                 and g the normalized g:
 
       end
 
-      subroutine chopit (ycum,jsp,lsite,ids)
+      subroutine chopit (ycum,jst,jsp,lsite,ids)
 c---------------------------------------------------------------------
 c subroutine to do cartesian or transform subdivision of species
-c jst through jsp on site k of solution ids. ycum is the smallest
+c jst+1 through jsp on site k of solution ids. ycum is the smallest
 c fraction possible (i.e., if the minimum bound for some species 
 c is > 0). the npair coordinate sets are loaded into xy(mdim,k1).
 c---------------------------------------------------------------------
@@ -15274,7 +15317,7 @@ c---------------------------------------------------------------------
       parameter (mres=12000)
 
       integer mode, ind(ms1), iy(ms1), jsp, lsite, indx, iexit, 
-     *        ieyit, i, j, ids
+     *        ieyit, i, j, k, ids, ico, jst
 
       double precision y(ms1,mres), ycum, ymax, dy, ync, res, ylmn,
      *                 ylmx, yloc, x, unstch, strtch, yreal
@@ -15305,19 +15348,30 @@ c                                 x coordinate description
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 c----------------------------------------------------------------------
+      if (ids.ne.20) then
+c                                 chopit always generates jsp coordinates
+         ico = jsp
+      else 
+c                                 but in the case of charge balance save 
+c                                 space for the dependent coordinate.
+         ico = jsp + 1
+      end if 
+
       do i = 1, jsp
+
+         k = jst + i
 c                                 generate coordinates for i'th component
          iy(i) = 1
-         y(i,1) = xmn(lsite,i)
-         ync = xnc(lsite,i)
+         y(i,1) = xmn(lsite,k)
+         ync = xnc(lsite,k)
 
          if (ync.eq.0d0) cycle
 
-         mode = imdg(i,lsite,ids)
+         mode = imdg(k,lsite,ids)
 c                                 avoid impossible compositions 'cause a min > 0
          if (i.gt.1) then 
 
-            ycum = ycum + xmn(lsite,i-1)
+            ycum = ycum + xmn(lsite,k-1)
 c                                 1-ycum is the smallest fraction possible
             if (1d0-ycum.lt.0d0) then 
 c                                 inconsistent limits
@@ -15326,11 +15380,11 @@ c                                 inconsistent limits
             else
 c                                 the smallest fraction possible is lt
 c                                 than xmax
-               ymax = xmx(lsite,i)
+               ymax = xmx(lsite,k)
 
             end if 
          else 
-            ymax = xmx(lsite,i)
+            ymax = xmx(lsite,k)
          end if 
 c                                 two means of extracting y-range, cartesian
 c                                 imod = 0 and transformation imod = 1
@@ -15363,8 +15417,8 @@ c                                 intervals to cycle through
 c                                 odd or even interval?
                odd = .not.odd
 c                                 interval limits              
-               ylmn = yint(j,i,lsite,ids)
-               ylmx = yint(j+1,i,lsite,ids)
+               ylmn = yint(j,k,lsite,ids)
+               ylmx = yint(j+1,k,lsite,ids)
 c                                 which interval are we starting from?
 c                                 in 6.7.7 this was ylmx - nopt(5), changed 4/10/17
                if (y(i,iy(i)).gt.ylmx-nopt(5)) cycle
@@ -15390,7 +15444,7 @@ c                                 convert to conformal x
 
                else
 c                                 have jumped from an earlier interval
-                  x = res - ync / yfrc(j-1,i,lsite,ids)
+                  x = res - ync / yfrc(j-1,k,lsite,ids)
 c                 if (x.lt.0d0) x = 0d0
 
                end if                 
@@ -15398,7 +15452,7 @@ c                                 now generate all compositions in
 c                                 local interval
                do while (x.le.1d0) 
 c                                 increment conformal x
-                  x = x + ync / yfrc(j,i,lsite,ids)
+                  x = x + ync / yfrc(j,k,lsite,ids)
 c                                 compute yreal
                   if (x.le.1d0) then 
                      if (odd) then 
@@ -15530,7 +15584,7 @@ c            ieyit = 1
          end if 
 
          npairs = npairs + 1
-         j = (npairs-1)*jsp
+         j = (npairs-1)*ico
 
          if (j+jsp.gt.k13) call error (180,ycum,k13,
      *                      'CARTES increase parameter k13')
@@ -15554,7 +15608,7 @@ c---------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i, j, k, l, ids, qpairs
+      integer i, j, k, l, m, n, ids, qpairs, np0
 
       double precision ycum, sum, q, ratio
 
@@ -15578,8 +15632,8 @@ c                                 x coordinate description
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
 
-      integer nq,nn,ns,nqs,nqs1,sn,qn,nq1
-      common/ cst337 /nq,nn,ns,nqs,nqs1,sn,qn,nq1
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
 
       integer ksmod, ksite, kmsol, knsp
       common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
@@ -15590,12 +15644,53 @@ c                                 x coordinate description
       integer jend
       common/ cxt23 /jend(h9,m4)
 c----------------------------------------------------------------------
-      if (nq.ne.0) then 
-c                                 do the first nq-1 species independently
+c                                 could save only nqs-2 coordinates, but 
+c                                 will try nqs-1 first.
+      ycum = 0d0
+
+      if (ns1.eq.0) then
+c                                  only solvent, test for no solvent has
+c                                  already been made in gmodel
+         do j = 1, nqs1
+            prism(j) = 0d0
+         end do
+
+         np0 = 1
+
+      else
+c                                 subdivision of neutral ns-1 species
+         call chopit (ycum,0,ns1,1,ids)
+
+         np0 = 0 
+
+         do i = 1, npairs
+
+            k = (i-1)*ns1
+            l = np0*nqs1
+
+            sum = 0d0
+
+            do j = 1, ns1
+               prism(l+j) = simp(k+j)
+               sum = sum + simp(k+j)
+            end do
+c                                 reject if the amount of species ns (h2o)
+c                                 is zero
+            if (sum.ge.1d0) cycle
+
+            np0 = np0 + 1
+            prism(l+nqs1) = sum
+
+         end do
+
+      end if
+
+      if (nq.ne.0) then
+c                                 do the nq-1 species independently
          ycum = 0d0
- 
-         call chopit (ycum,nq1,1,ids)
-c                                 at this point xy(mdim,k1) contains all 
+
+         call chopit (ycum,ns1,nq1,1,ids)
+c                                 at this point simp contains all 
 c                                 possible compositions of the nq-1 species,
 c                                 use charge balance to get the nqth species
          qpairs = 1 
@@ -15604,23 +15699,23 @@ c                                 use charge balance to get the nqth species
 
             q = 0d0
             sum = 0d0
-            k = (i-1)*nq1
-            l = (qpairs - 1)*nqs1
+
+            k = (i-1)*nq
+            l = (qpairs - 1)*nq
+            m = 2 + sn
 
             do j = 1, nq1
-               q = q + thermo(6,jend(ids,2+j))*simp(k+j)
+               q = q + thermo(6,jend(ids,m+j))*simp(k+j)
                sum = sum + simp(k+j)
-               prism(l+j) = simp(k+j)
+               simp(l+j) = simp(k+j)
             end do
 c                                 charge ratio
-            ratio = q/thermo(6,jend(ids,2+j))
+            ratio = q/thermo(6,jend(ids,m+j))
 c                                 the net charge has the same sign as the nqth
 c                                 species or its amount violates closure, reject:
             if (ratio.gt.0d0.or.sum-ratio.ge.1e0) cycle
 c                                 the amount of the species determined by charge balance
-            prism(l+nq) = -ratio
-c                                 the total moles of charged species
-c           prism(l+nq+1) = sum - ratio
+            simp(l+nq) = -ratio
 
             qpairs = qpairs + 1
 
@@ -15629,7 +15724,51 @@ c           prism(l+nq+1) = sum - ratio
          qpairs = qpairs - 1
 
       end if
+c                                 for every charged species composition
+c                                 load all neutral compositions that don't
+c                                 violate closure:
+      ntot = np0
 
-      ntot = qpairs
+      do i = 1, qpairs
+c                                 get the sum of the charged species
+         k = (i-1)*nq
+
+         sum = 0d0
+
+         do j = 1, nq 
+            sum = sum + simp(k+j)
+         end do
+c                                 now assemble full compositions:
+         do j = 1, np0
+
+            l = (j-1)*nqs1
+c                                 test for closure
+            if (prism(l+nqs1)+sum.ge.1d0) cycle
+c                                 acceptable composition
+            m = ntot * nqs1 
+            ntot = ntot + 1
+c                                 load neutral part
+            do n = 1, ns1
+               prism(m+n) = prism(l+n)
+            end do
+c                                 load charged part
+            do n = 1, nq
+               prism(m+ns1+n) = simp(k+n)
+            end do
+
+         end do
+
+      end do
+c                                  zero the charged species coordinates
+c                                  for the first np0 neutral compositions
+      do i = 1, np0
+
+         l = (i-1)*nqs1
+
+         do j = sn, nqs1
+            prism(l+j) = 0d0
+         end do
+
+      end do
 
       end

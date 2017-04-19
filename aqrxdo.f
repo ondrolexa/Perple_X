@@ -23,8 +23,8 @@ c-----------------------------------------------------------------------
       double precision thermo,uf,us
       common/ cst1 /thermo(k4,k10),uf(2),us(h5)
 
-      integer nq,nn,ns,nqs,nqs1,sn,qn,nq1
-      common/ cst337 /nq,nn,ns,nqs,nqs1,sn,qn,nq1
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
 
       double precision vh2o, epsilo, adh
       common/ cxt37 /vh2o, epsilo, adh
@@ -157,9 +157,8 @@ c                                 update coefficients
       end if
 
 1000  format (/,'Rock-dominated solvent solute speciation:',/,
-     *        /,'Ionic strength =',g12.6,' gamma/q^2 = ',g12.6,
-     *        /,'Permativity =',g12.6,//,
-     *        10x,'  molality ')
+     *        /,'Ionic strength = ',g12.6,' gamma/q^2 = ',g12.6,
+     *        'Permativity =',g12.6,//,10x,'  molality ')
 1010  format (a8,2x,g12.6)
 
       end 

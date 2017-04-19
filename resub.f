@@ -613,8 +613,8 @@ c DEBUG
       double precision aqcp, aqtot
       common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
 
-      integer nq,nn,ns,nqs,nqs1,sn,qn,nq1
-      common/ cst337 /nq,nn,ns,nqs,nqs1,sn,qn,nq1
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
 
       integer iopt
       logical lopt
@@ -642,7 +642,7 @@ c                                 endmembers. p0a is constructed in function gso
 
       else if (ksmod(id).eq.20) then 
 
-         do i = 1, qn 
+         do i = sn1, nqs
 
             k = jend(id,2+i) - aqst
 
@@ -654,7 +654,7 @@ c                                 endmembers. p0a is constructed in function gso
 
          end do 
 
-         do i = qn + 1, nqs 
+         do i = 1, ns 
 
             do j = 1, icp 
                cp2(j,jphct) = cp2(j,jphct) + y(i) * cp(j,jend(id,2+i))
@@ -1514,8 +1514,8 @@ c DEBUG
       common/ cxt6r /xmng(h9,mst,msp),xmxg(h9,mst,msp),xncg(h9,mst,msp),
      *               xmno(h9,mst,msp),xmxo(h9,mst,msp),reachg(h9)
 
-      integer nq,nn,ns,nqs,nqs1,sn,qn,nq1
-      common/ cst337 /nq,nn,ns,nqs,nqs1,sn,qn,nq1
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
 
       integer ncoor,mcoor,ndim
       common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
@@ -2936,6 +2936,9 @@ c-----------------------------------------------------------------------
       double precision thermo,uf,us 
       common/ cst1 /thermo(k4,k10),uf(2),us(h5)
 
+      double precision fwt
+      common/ cst338 /fwt(k10)
+
       integer ifct,idfl
       common/ cst208 /ifct,idfl
 
@@ -2980,8 +2983,8 @@ c                                 endmember names
       character names*8
       common/ cst8  /names(k1)
 
-      integer nq,nn,ns,nqs,nqs1,sn,qn,nq1
-      common/ cst337 /nq,nn,ns,nqs,nqs1,sn,qn,nq1
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
 
       double precision vh2o, epsilo, adh
       common/ cxt37 /vh2o, epsilo, adh
@@ -3130,30 +3133,39 @@ c                                 add the real excess energy
          else if (ksmod(i).eq.20) then 
 c                                 electrolytic solution, assumes:
 c                                 1) molal electrolyte standard state
+c                                 for solutes.
 c                                 2) water is the last species
-c                                 species Gibbs energies:
-            do j = 1, qn
-               g0(j) = gcpd (jend(i,2+j),.true.)
-            end do 
+c                                 solvent species Gibbs energies:
 c                                 solvent Gibbs energies
-            do k = j, nqs
+            do k = 1, ns
                g0(k) = g(jend(i,2+k))
             end do 
-c                                 generate compounds 
+
+            do j = k, qn
+               g0(j) = gcpd (jend(i,2+j),.true.)
+            end do 
+c                                 compute compound properties
             do j = 1, jend(i,2)
+c                                 solvent mass
+               msol = 0d0 
+               g(id) = 0d0
 
                do k = 1, nqs
-                  x(k) = sxs(ixp(id) + k) 
-               end do 
+                  x(k) = sxs(ixp(id) + k)
+                  if (k.gt.ns) cycle 
 c                                 solvent mass, kg/mol compound
-               msol = x(nqs) * 0.001801528d0
+                  msol = msol + x(k) * fwt(jend(i,2+k))
+c                                 solvent species, ideal
+                  if (x(k).eq.0d0) cycle 
+                  g(id) = g(id) + x(k) * (g0(k) + dlog(x(k)))
+               end do 
 c                                 ionic strength 
                is = 0d0 
 
-               do k = 1, qn
+               do k = sn1, nqs
 c                                 ln molality of solutes
                   mo(k) = x(k)/msol
-                  if (k.gt.nq) cycle 
+                  if (k.le.sn) cycle 
                   q(k) = thermo(6,jend(i,2+k))**2
                   is = is + q(k) * mo(k)
 
@@ -3162,30 +3174,20 @@ c                                 ln molality of solutes
                is = is/2d0
 c                                 DH law activity coefficient factor (ln[g] = lng0*q^2)
                lng0 = adh*dsqrt(is)/(1d0 + dsqrt(is)) + 0.2d0*is
+c                                 neutral solutes, ideal
+               do l = sn1, sn
 
-               g(id) = 0d0
+                  if (mo(l).le.0d0) cycle
+                  g(id) = g(id) + x(l) * (g0(l) + dlog(mo(l)))
+
+               end do 
 c                                 ionic solutes, Davies D-H extension
-               do k = 1, nq 
+               do k = l, nqs
 
                   if (x(k).le.0d0) cycle
                   g(id) = g(id) + x(k) * (g0(k) + dlog(mo(k)) 
      *                  + lng0*q(k))
-
-               end do 
-c                                 neutral solutes, ideal
-               do l = k, qn
-
-                  if (x(k).le.0d0) cycle
-                  g(id) = g(id) + x(l) * (g0(l) + dlog(mo(l)))
-
-               end do 
-c                                 solvent species, ideal 
-               do k = l, nqs
-
-                  if (x(k).le.0d0) cycle
-                  g(id) = g(id) + x(k) * (g0(k) + dlog(x(k)))
-
-               end do 
+               end do
 
                id = id + 1
 
