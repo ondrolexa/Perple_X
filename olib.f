@@ -355,13 +355,13 @@ c                                 chemical potentials variance
 1130  format (/,'Chemical Potentials (J/mol):',/,2x,20(4x,a,5x))
 1140  format (2x,20(1x,g13.6))
 1160  format (/,'Molar Properties and Density:'
-     *        /,20x,'N(g)',8x,'G(J)',6x,'S(J/K)',6x,'V(J/bar)',6x,
-     *         'Cp(J/K)',6x,'Alpha(1/K)',2x,'Beta(1/bar)',4x,'Cp/Cv',5x,
+     *        /,20x,'N(g)',10x,'G(J)',5x,'S(J/K)',5x,'V(J/bar)',6x,
+     *         'Cp(J/K)',7x,'Alpha(1/K)',2x,'Beta(1/bar)',4x,'Cp/Cv',4x,
      *         'Density(kg/m3)')
 1170  format (1x,a,1x,f9.2,3x,i12,1x,12(g12.5,1x),3x,f7.4)
 1190  format (/,'Seismic Properties:'
-     *        /,17x,'Gruneisen_T',7x,'Ks(bar)',7x,'Mu(bar)',
-     *        4x,'V0(km/s)',5x,'Vp(km/s)',5x,'Vs(km/s)',5x,
+     *        /,17x,'Gruneisen_T',6x,'Ks(bar)',6x,'Mu(bar)',
+     *        4x,'V0(km/s)',5x,'Vp(km/s)',5x,'Vs(km/s)',3x,
      *        'Poisson ratio')
 1200  format (1x,a,3x,12(g12.5,1x))
 1210  format (/,'Bulk Composition:')

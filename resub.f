@@ -394,6 +394,9 @@ c                                 option values
       double precision mu, gmax
       common/ cst330 /mu(k8),gmax,mus
 
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
+
       save last 
 c----------------------------------------------------------------------
 
@@ -414,38 +417,69 @@ c                                below.
 c                                load the subdivision limits into
 c                                temporary limit arrays:
       res0 = nopt(24)/nopt(21)**iter
-      
-      do i = 1, istg(ids)
 
-         do j = 1, ndim(i,ids)
+      if (ksmod(ids).ne.20) then 
+c                                normal models     
+         do i = 1, istg(ids)
 
-            xnc(i,j) = xncg(ids,i,j)*res0
-            xxnc = xnc(i,j)*reachg(ids)
+            do j = 1, ndim(i,ids)
 
-            if (imdg(j,i,ids).eq.0) then 
+               xnc(i,j) = xncg(ids,i,j)*res0
+               xxnc = xnc(i,j)*reachg(ids)
+
+               if (imdg(j,i,ids).eq.0) then 
 c                                 cartesian
-               xmn(i,j) = x(i,j) - xxnc
-               xmx(i,j) = x(i,j) + xxnc
+                  xmn(i,j) = x(i,j) - xxnc
+                  xmx(i,j) = x(i,j) + xxnc
+
+               else
+c                                 conformal
+                  xmn(i,j) = ydinc (x(i,j),-xxnc,imdg(j,i,ids),j,i,ids)
+                  xmx(i,j) = ydinc (x(i,j),xxnc,imdg(j,i,ids),j,i,ids)
+
+               end if 
+c                                 changed feb 6, 2012 from xmng/xmxg
+c                                 to allow hardlimits. JADC
+               if (xmn(i,j).lt.xmno(ids,i,j)) xmn(i,j) = xmno(ids,i,j)
+               if (xmx(i,j).gt.xmxo(ids,i,j)) xmx(i,j) = xmxo(ids,i,j)
+
+            end do 
+         end do
+
+      else 
+c                                 charge balance model
+         do j = 1, nqs1
+
+            if (j.eq.ns) cycle 
+
+            xnc(1,j) = xncg(ids,1,j)*res0
+            xxnc = xnc(1,j)*reachg(ids)
+
+            if (imdg(j,1,ids).eq.0) then 
+c                                 cartesian
+               xmn(1,j) = x(1,j) - xxnc
+               xmx(1,j) = x(1,j) + xxnc
 
             else
 c                                 conformal
-               xmn(i,j) = ydinc (x(i,j),-xxnc,imdg(j,i,ids),j,i,ids)
-               xmx(i,j) = ydinc (x(i,j),xxnc,imdg(j,i,ids),j,i,ids)
+               xmn(1,j) = ydinc (x(1,j),-xxnc,imdg(j,1,ids),j,1,ids)
+               xmx(1,j) = ydinc (x(1,j),xxnc,imdg(j,1,ids),j,1,ids)
 
             end if 
-c                                 changed feb 6, 2012 from xmng/xmxg
-c                                 to allow hardlimits. JADC
-            if (xmn(i,j).lt.xmno(ids,i,j)) xmn(i,j) = xmno(ids,i,j)
-            if (xmx(i,j).gt.xmxo(ids,i,j)) xmx(i,j) = xmxo(ids,i,j)
 
-         end do 
-      end do
+            if (xmn(1,j).lt.xmno(ids,1,j)) xmn(1,j) = xmno(ids,1,j)
+            if (xmx(1,j).gt.xmxo(ids,1,j)) xmx(1,j) = xmxo(ids,1,j)
+
+         end do
+
+      end if 
 
       gmin = 1d99 
 c                                  set solution model parameters for
 c                                  gsol1, don't call if the previous
 c                                  refinement point was the same solution.
       if (ids.ne.last) call ingsol (ids) 
+
 
       call subdiv (ids,.true.)
 
@@ -462,27 +496,62 @@ c                                 1-d array zcoor
          jkp(jphct) = ids
          hkp(jphct) = jd
          jcoor(jphct) = jcoct - 1
-         kcoct = jcoct + ncoor(ids)
+         kcoct = jcoct + mcoor(ids)
 c                                 counter for number of non 0 or 1 compositions
          if (kcoct.gt.k20) call error (59,x(1,1),k20,'resub')
 
          l = (i-1)*mcoor(ids)
          m = 0
+       
+         if (ksmod(ids).ne.20) then 
 
-         do j = 1, istg(ids)
+            do j = 1, istg(ids)
+
+               ysum = 0d0
+
+               do k = 1, ndim(j,ids)
+
+                  m = m + 1
+
+                  x(j,k) = prism(l+m)
+                  ysum = ysum + x(j,k)
+                  zcoor(jcoct) = x(j,k)
+ 
+                  if (x(j,k).lt.xmno(ids,j,k).and.
+     *                x(j,k).gt.xmxo(ids,j,k)) then 
+c                                 the composition is out of range
+                     jphct = jphct - 1
+                     jcoct = kcoct - ncoor(ids)
+                     goto 10
+
+                  end if
+
+                  jcoct = jcoct + 1
+
+               end do
+
+               x(j,ispg(ids,j)) = 1d0 - ysum
+
+            end do 
+
+         else 
 
             ysum = 0d0
 
-            do k = 1, ndim(j,ids)
+            do k = 1, nqs
+
+               if (k.eq.ns) cycle 
 
                m = m + 1
 
-               x(j,k) = prism(l+m)
-               ysum = ysum + x(j,k)
-               zcoor(jcoct) = x(j,k)
+               x(1,k) = prism(l+m)
+               ysum = ysum + x(1,k)
+               zcoor(kcoct-nqs+k) = x(1,k)
 
-               if (x(j,k).lt.xmno(ids,j,k).and.
-     *             x(j,k).gt.xmxo(ids,j,k)) then 
+
+ 
+               if (x(1,k).lt.xmno(ids,1,k).and.
+     *             x(1,k).gt.xmxo(ids,1,k)) then 
 c                                 the composition is out of range
                   jphct = jphct - 1
                   jcoct = kcoct - ncoor(ids)
@@ -490,15 +559,14 @@ c                                 the composition is out of range
 
                end if
 
-               jcoct = jcoct + 1
-
             end do
 
-            x(j,ispg(ids,j)) = 1d0 - ysum
-            zcoor(jcoct) = x(j,ispg(ids,j))
-            jcoct = jcoct + 1
+            x(1,ns) = 1d0 - ysum
 
-         end do 
+            zcoor(kcoct-qn) = x(1,ns)
+            jcoct = jcoct + nqs
+
+         end if 
 
          call xtoy (ids,bad)
 
@@ -805,6 +873,9 @@ c                                 x coordinate description
       integer istg, ispg, imlt, imdg
       common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
 
+      integer ncoor,mcoor,ndim
+      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
+
       integer npt,jdv
       logical fulrnk
       double precision cptot,ctotal
@@ -824,13 +895,17 @@ c                                 it's a solution:
          itic = 0
 
          do j = 1, istg(ids)
-            do k = 1, ispg(ids,j)
+
+            do k = 1, ndim(j,ids)
+
                itic = itic + 1
-               if (kcoct+itic.gt.k22) then 
-                  call error (60,ycoor(1),k22,'saver')
-               end if 
+
+               if (kcoct+itic.gt.k22) call error (60,ctotal,k22,'saver')
+
                ycoor(lcoor(i)+itic) = zcoor(jcoor(id)+itic)
-            end do 
+
+            end do
+
          end do 
 
          kcoct = kcoct + itic
@@ -849,6 +924,8 @@ c----------------------------------------------------------------------
       include 'perplex_parameters.h'
 
       integer i, j, jd, id, ids, icoor
+
+      double precision xt
 c                                 working arrays
       double precision z, pa, p0a, x, w, y, wl
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
@@ -863,15 +940,27 @@ c                                 adaptive x(i,j) coordinates
 c                                  xcoordinates for the final solution
       double precision x3
       common/ cxt16 /x3(k21,mst,msp)
+
+      integer ncoor,mcoor,ndim
+      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
 c----------------------------------------------------------------------
       icoor = jcoor(id)
 
       do i = 1, istg(ids)
-         do j = 1, ispg(ids,i)
+
+         xt = 0d0 
+
+         do j = 1, ndim(i,ids)
             icoor = icoor + 1
             x(i,j) = zcoor(icoor)
-            x3(jd,i,j) = x(i,j)
+            x3(jd,i,j) = zcoor(icoor)
+            xt = xt + zcoor(icoor)
          end do 
+
+         xt = 1d0 - xt 
+         x(i,j) = xt
+         x3(jd,i,j) = xt
+
       end do 
 
       end 

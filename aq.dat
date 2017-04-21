@@ -1,7 +1,7 @@
 dew13ver.dat     thermodynamic data file                                                                                                    
 print    | no_print suppresses print output
 plot     | no_plot suppresses plot output
-solution_aq1.dat     | solution model file, blank = none                                                                                                                                                                                                         
+solution_aq.dat     | solution model file, blank = none                                                                                                                                                                                                         
 plp                                                                                                                                                                                                                                                             
 aq_perplex_option.dat     | Perple_X option file                                                                                                                                                                                                                   
     5 calculation type: 0 - composition, 1 - Schreinemakers, 3 - Mixed, 4 - swash, 5 - gridded min, 7 - 1d fract, 8 - gwash, 9 - 2d fract, 10 - 7 w/file input
@@ -31,7 +31,7 @@ MgO   1 1.000000      0.00000      0.00000     molar  amount
 O2    1  0.00000      0.00000      0.00000     molar  amount
 end thermodynamic component list
 
-
+SiO2  1  1.0 
 
 begin saturated component list
 end saturated component list

@@ -50,6 +50,7 @@ c-----------------------------------------------------------------------
       output = .true. 
 c                                 free energies of aqueous species
       ichg = 0 
+      is = 0d0
 c DEBUG DEBUG
       gh2o = mu(1)
 
@@ -157,8 +158,8 @@ c                                 update coefficients
       end if
 
 1000  format (/,'Rock-dominated solvent solute speciation:',/,
-     *        /,'Ionic strength = ',g12.6,' gamma/q^2 = ',g12.6,
-     *        'Permativity =',g12.6,//,10x,'  molality ')
+     *        /,'Ionic strength = ',g12.6,'; gamma/q^2 = ',g12.6,
+     *        '; Permativity =',g12.6,//,10x,'  molality ')
 1010  format (a8,2x,g12.6)
 
       end 

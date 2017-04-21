@@ -1986,16 +1986,16 @@ c                                 the independent endmembers)
             end do          
 
          else if (ksmod(ids).eq.20) then 
-c                                 electrolyte 
-            do i = 1, nq
-c                                 solute species 
+c                                 electrolyte:
+c                                 solute species  
+            do i = sn1, nqs
                do j = 1, icomp
                   cp3(j,jd) = cp3(j,jd) 
      *                      + y(i) * aqcp(j,jend(ids,2+i) - aqst)
                end do
             end do 
 c                                 solvent species 
-            do i = qn+1, nqs 
+            do i = 1, ns 
                do j = 1, icomp
                   cp3(j,jd) = cp3(j,jd) + y(i) * cp(j,jend(ids,2+i))
                end do

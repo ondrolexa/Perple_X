@@ -6373,7 +6373,7 @@ c---------------------------------------------------------------------
 
       character*10 tname
 
-      integer i, j, jq, jn, js
+      integer i, j, jq, jn, js, lm, mm 
 
       logical first
 
@@ -6401,6 +6401,7 @@ c----------------------------------------------------------------------
       jq = 0
       jn = 0
       js = 0 
+      lm = 0 
 
       do i = 1, ns
 
@@ -6408,10 +6409,12 @@ c----------------------------------------------------------------------
             js = js + 1
             iorig(js) = i 
             kdsol(js) = kdsol(i)
-            xmn(1,js) = xmn(1,i)
-            xmx(1,js) = xmx(1,i)
-            xnc(1,js) = xnc(1,i)
-            imd(js,1) = imd(i,1)
+            if (i.eq.ns) cycle 
+            lm = lm + 1
+            xmn(1,lm) = xmn(1,i)
+            xmx(1,lm) = xmx(1,i)
+            xnc(1,lm) = xnc(1,i)
+            imd(lm,1) = imd(i,1)
          end if
 
       end do
@@ -6422,15 +6425,14 @@ c----------------------------------------------------------------------
             jn = jn + 1
             iorig(js+jn) = i 
             kdsol(js+jn) = kdsol(i)
-            xmn(1,js+jn-1) = xmn(1,i)
-            xmx(1,js+jn-1) = xmx(1,i)
-            xnc(1,js+jn-1) = xnc(1,i)
-            imd(js+jn-1,1) = imd(i,1)
+            lm = lm + 1
+            xmn(1,lm) = xmn(1,i)
+            xmx(1,lm) = xmx(1,i)
+            xnc(1,lm) = xnc(1,i)
+            imd(lm,1) = imd(i,1)
          end if
 
       end do
-
-      j = nn + ns - 1
 
       do i = ns+nn+1, ns+nn+nq
 
@@ -6438,17 +6440,47 @@ c----------------------------------------------------------------------
             jq = jq + 1
             iorig(js+jn+jq) = i 
             kdsol(js+jn+jq) = kdsol(i)
-            xmn(2,jq) = xmn(2,i-j)
-            xmx(2,jq) = xmx(2,i-j)
-            xnc(2,jq) = xnc(2,i-j)
-            imd(jq,2) = imd(i-j,2)
+
+            if (i.eq.ns+nn+nq) cycle 
+
+            xmn(2,jq) = xmn(1,i-1)
+            xmx(2,jq) = xmx(1,i-1)
+            xnc(2,jq) = xnc(1,i-1)
+            imd(jq,2) = imd(i-1,1)
+
          end if
 
       end do
+c                                  move the solvent/neutral limits
+      mm = 0 
 
-      nq = jq
-      nn = jn
+      do i = 1, lm + jq - 1
+
+         if (i.eq.js.and.js.lt.ns) cycle
+
+         mm = mm + 1
+
+         if (i.le.lm) then 
+
+            xmn(1,mm) = xmn(1,i)
+            xmx(1,mm) = xmx(1,i)
+            xnc(1,mm) = xnc(1,i)
+            imd(mm,1) = imd(i,1)     
+ 
+         else 
+
+            xmn(1,mm) = xmn(2,i-lm)
+            xmx(1,mm) = xmx(2,i-lm)
+            xnc(1,mm) = xnc(2,i-lm)
+            imd(mm,1) = imd(i-lm,2)  
+
+         end if 
+
+      end do 
+
       ns = js
+      nn = jn 
+      nq = jq 
 
       end
 
@@ -7235,8 +7267,8 @@ c                               read charged species names:
       i = nn + ns
       if (nq.gt.0) call readn (i,i+nq,tname)
 c                               read composition limits, subdivision type
-c                               for (nn + ns) - 1 neutral species
-      do j = 1, nn + ns -1
+c                               for (nn + ns + nq) - 2 species
+      do j = 1, nn + ns + nq - 2
 
          call readda (rnums,4,tname)
 
@@ -7246,20 +7278,6 @@ c                               for (nn + ns) - 1 neutral species
          imd(j,1) = idint(rnums(4))
 c                                 don't allow imod > 2
          if (imd(j,1).ge.3) call error (169,rnums(1),imd(j,1),tname)
-
-      end do
-c                               read composition limits, subdivision type
-c                               for nq - 1 charged species
-      do j = 1, nq -1
-
-         call readda (rnums,4,tname)
-
-         xmn(2,j) = rnums(1)
-         xmx(2,j) = rnums(2)
-         xnc(2,j) = rnums(3)
-         imd(j,2) = idint(rnums(4))
-c                                 don't allow imod > 2
-         if (imd(j,2).ge.3) call error (169,rnums(1),imd(j,2),tname)
 
       end do
 c                              look for van laar and/or dqf parameters
@@ -8180,11 +8198,19 @@ c----------------------------------------------------------------------
 
       do l = 1, mstot(ids)
 
-         y(l) = 1d0
+         if (istg(ids).eq.1) then
 
-         do m = 1, istg(ids)
-            y(l) = y(l)*x(m,kmsol(ids,l,m))
-         end do
+            y(l) = x(1,l)
+
+         else 
+
+            y(l) = 1d0
+
+            do m = 1, istg(ids)
+               y(l) = y(l)*x(m,kmsol(ids,l,m))
+            end do
+
+         end if
 
          if (badend(l,ids)) then 
 
@@ -9360,6 +9386,14 @@ c                                 initialize autorefine arrays
       stable(im) = .false.
       limit(im) = .false.
       relax(im) = .true.
+c                                 initialize compositional distances
+      do i = 1, icp
+         dcp(i,im) = 0d0
+      end do 
+c                                 check endmember counters:
+      if (im.gt.h9) call error (52,dq(1),idqf,'GMODEL')
+c                                 check for inconsistent model reformation
+      if (kstot+mdep.gt.jstot) call error (76,dq(1),idqf,tname)
 c                                 set up simple counters for
 c                                 charge balance models
       if (jsmod.eq.20) then
@@ -9374,7 +9408,7 @@ c                                 charge balance models
          sn1 = ns + 1
          qn = nn + nq
 
-         isp(1) = nqs1
+         isp(1) = nqs
 
          j = 0 
 
@@ -9387,24 +9421,6 @@ C            j = j + 1
 c         jmsol(nqs,1) = ns
 
       end if 
-
-      do i = 1, isite
-
-         do j = 1, isp(i) - 1
-
-            xlo(j,i,im) = 1d0
-            xhi(j,i,im) = 0d0
-
-         end do
-      end do
-c                                 initialize compositional distances
-      do i = 1, icp
-         dcp(i,im) = 0d0
-      end do 
-c                                 check endmember counters:
-      if (im.gt.h9) call error (52,dq(1),idqf,'GMODEL')
-c                                 check for inconsistent model reformation
-      if (kstot+mdep.gt.jstot) call error (76,dq(1),idqf,tname)
 c                                 number of dependent + independent - ordered endmembers
       mstot(im) = istot
 c                                 number of independent + ordered endmebers
@@ -9427,6 +9443,7 @@ c                                 site ranges
 
          ncoor(im) = ncoor(im) + isp(i)
          mcoor(im) = mcoor(im) + ndim(i,im)
+ 
 
          do j = 1, ndim(i,im)
 c                                 subdivision override (iopt(13))
@@ -9574,6 +9591,15 @@ c                                 four intervals
          end do 
 
       end do 
+c                                 initialize high/low ranges
+      do i = 1, isite
+         do j = 1, ndim(i,im)
+
+            xlo(j,i,im) = 1d0
+            xhi(j,i,im) = 0d0
+
+         end do
+      end do
 c                                 set reach factors
       if (.not.refine.and.iam.eq.1.and.iopt(20).ne.2.or.
      *                                 iopt(20).eq.0) then
@@ -12881,7 +12907,7 @@ c---------------------------------------------------------------------
 c---------------------------------------------------------------------
       if (ksmod(ids).eq.20) then
 c                                subdivision with charge balance
-         call carteq (ids)
+         call cartaq (ids)
 c                                assign to y()?
          return
 
@@ -15599,7 +15625,7 @@ c            ieyit = 1
 
       end 
 
-      subroutine carteq (ids)
+      subroutine cartaq (ids)
 c---------------------------------------------------------------------
 c subroutine to cartesian or transform subdivision on a single site
 c solution with charge balance. called by subdiv. 

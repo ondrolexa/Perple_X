@@ -104,10 +104,10 @@ c                                 v(1) is P(bar), v(2) is T(K) the pointer jv us
 c                                 for general problems but can be eliminated for calculations 
 c                                 simply as a f(P,T)       
          write (*,1070) (vname(jv(i)), i = 1, ipot)
-c         read (*,*,iostat=ier) (v(jv(i)), i = 1, ipot)
+c        read (*,*,iostat=ier) (v(jv(i)), i = 1, ipot)
 c         if (ier.ne.0) cycle
          v(1) = 5000.
-         v(2) = 700. 
+         v(2) = 1200. 
          if (v(jv(1)).eq.0d0) exit 
           
          if (bulk) then 
