@@ -448,27 +448,34 @@ c                                 to allow hardlimits. JADC
 
       else 
 c                                 charge balance model
+         i = 0
+
          do j = 1, nqs1
 
-            if (j.eq.ns) cycle 
+            if (j.eq.ns) cycle
 
-            xnc(1,j) = xncg(ids,1,j)*res0
-            xxnc = xnc(1,j)*reachg(ids)
+            i = i + 1
 
-            if (imdg(j,1,ids).eq.0) then 
+            xnc(1,i) = xncg(ids,1,i)*res0
+            xxnc = xnc(1,i)*reachg(ids)
+
+            if (imdg(i,1,ids).eq.0) then 
 c                                 cartesian
-               xmn(1,j) = x(1,j) - xxnc
-               xmx(1,j) = x(1,j) + xxnc
+               xmn(1,i) = x(1,j) - xxnc
+               xmx(1,i) = x(1,j) + xxnc
 
             else
 c                                 conformal
-               xmn(1,j) = ydinc (x(1,j),-xxnc,imdg(j,1,ids),j,1,ids)
-               xmx(1,j) = ydinc (x(1,j),xxnc,imdg(j,1,ids),j,1,ids)
+               xmn(1,i) = ydinc (x(1,j),-xxnc,imdg(i,1,ids),i,1,ids)
+               xmx(1,i) = ydinc (x(1,j),xxnc,imdg(i,1,ids),i,1,ids)
 
             end if 
 
-            if (xmn(1,j).lt.xmno(ids,1,j)) xmn(1,j) = xmno(ids,1,j)
-            if (xmx(1,j).gt.xmxo(ids,1,j)) xmx(1,j) = xmxo(ids,1,j)
+            if (xmn(1,i).lt.xmno(ids,1,i)) then
+               xmn(1,i) = xmno(ids,1,i)
+            else if (xmx(1,i).gt.xmxo(ids,1,i)) then 
+               xmx(1,i) = xmxo(ids,1,i)
+            end if 
 
          end do
 
@@ -521,7 +528,7 @@ c                                 counter for number of non 0 or 1 compositions
      *                x(j,k).gt.xmxo(ids,j,k)) then 
 c                                 the composition is out of range
                      jphct = jphct - 1
-                     jcoct = kcoct - ncoor(ids)
+                     jcoct = kcoct - mcoor(ids)
                      goto 10
 
                   end if
@@ -547,14 +554,12 @@ c                                 the composition is out of range
                x(1,k) = prism(l+m)
                ysum = ysum + x(1,k)
                zcoor(kcoct-nqs+k) = x(1,k)
-
-
  
                if (x(1,k).lt.xmno(ids,1,k).and.
      *             x(1,k).gt.xmxo(ids,1,k)) then 
 c                                 the composition is out of range
                   jphct = jphct - 1
-                  jcoct = kcoct - ncoor(ids)
+                  jcoct = kcoct - mcoor(ids)
                   goto 10
 
                end if
@@ -573,7 +578,7 @@ c                                 the composition is out of range
          if (bad) then 
 
             jphct = jphct - 1
-            jcoct = kcoct - ncoor(ids)
+            jcoct = kcoct - mcoor(ids)
             cycle
 
          else if (ksmod(ids).eq.5) then
@@ -586,7 +591,7 @@ c                                 do the subdivision properly.
      *             y(knsp(lstot(ids)+j,ids)).le.y(ineg(ids,j))) then
 c                                 reject composition 
                   jphct = jphct - 1
-                  jcoct = kcoct - ncoor(ids)
+                  jcoct = kcoct - mcoor(ids)
                   bad = .true. 
                   exit 
 
@@ -606,7 +611,7 @@ c                                 of the solution
 
          if (bad) then 
                jphct = jphct - 1
-               jcoct = jcoct - ncoor(ids)
+               jcoct = jcoct - mcoor(ids)
                cycle
          end if
 
@@ -975,6 +980,8 @@ c----------------------------------------------------------------------
       include 'perplex_parameters.h'
 
       integer i, j, id, ids, jcoor
+
+      double precision xt 
 c                                 working arrays
       double precision z, pa, p0a, x, w, y, wl
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
@@ -986,14 +993,24 @@ c                                 interim storage array
       integer lcoor,lkp
       double precision ycoor
       common/ cxt14 /ycoor(k22),lcoor(k19),lkp(k19)
+
+      integer ncoor,mcoor,ndim
+      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
 c----------------------------------------------------------------------
       jcoor = lcoor(id)
 
       do i = 1, istg(ids)
-         do j = 1, ispg(ids,i)
+
+         xt = 0d0 
+
+         do j = 1, ndim(i,ids)
             jcoor = jcoor + 1
             x(i,j) = ycoor(jcoor)
+            xt = xt + ycoor(jcoor)
          end do 
+
+         x(i,j) = 1d0 - xt
+
       end do 
 
       end 
@@ -1438,7 +1455,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer ids,i,j
+      integer ids, i, j, k, l, nlim
 
       double precision z, pa, p0a, x, w, y, wl
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
@@ -1469,16 +1486,34 @@ c                                 interval limits conformal transformation
 c----------------------------------------------------------------------
 c                                 set stable flag
       stable(ids) = .true.
+
+      k = 0
+
+      if (ksmod(ids).ne.20) then
+         nlim = ndim(i,ids)
+      else
+         nlim = nqs1
+      end if 
 c                                 check x-ranges
       do i = 1, istg(ids)
-         do j = 1, ispg(ids,i) - 1
-c                                 low limit:
-            if (x(i,j).lt.xlo(j,i,ids)) then
 
-               xlo(j,i,ids) = x(i,j)
+         do j = 1, nlim
+
+            if (ksmod(ids).eq.20) then 
+               if (j.eq.ns) then
+                  k = 1 
+                  cycle
+               end if 
+            end if 
+
+            l = j + k 
+c                                 low limit:
+            if (x(i,l).lt.xlo(j,i,ids)) then
+
+               xlo(j,i,ids) = x(i,l)
 c                                 check if solution is at an unnatural limit
-               if (x(i,j).gt.xmno(ids,i,j).and.
-     *            (x(i,j).le.xmng(ids,i,j).and..not.lopt(3))) then
+               if (x(i,l).gt.xmno(ids,i,j).and.
+     *            (x(i,l).le.xmng(ids,i,j).and..not.lopt(3))) then
 c                                 relax limits according to subdivsion model
                   if (imdg(j,i,ids).eq.0) then 
 c                                 cartesian
@@ -1504,11 +1539,11 @@ c                                 set xmn to prevent future warnings
                end if 
             end if 
 c                                 high limit:
-            if (x(i,j).gt.xhi(j,i,ids)) then
-               xhi(j,i,ids) = x(i,j)
+            if (x(i,l).gt.xhi(j,i,ids)) then
+               xhi(j,i,ids) = x(i,l)
 c                                 check if solution is at an unnatural limit
-               if (x(i,j).lt.xmxo(ids,i,j).and.
-     *            (x(i,j).ge.xmxg(ids,i,j).and..not.lopt(3))) then
+               if (x(i,l).lt.xmxo(ids,i,j).and.
+     *            (x(i,l).ge.xmxg(ids,i,j).and..not.lopt(3))) then
 c                                 relax limits according to subdivsion model
                   if (imdg(j,i,ids).eq.0) then 
 c                                 cartesian
@@ -2246,9 +2281,9 @@ c                                 phases, this list includes two compounds
 c                                 and the least metastable composition of
 c                                 each solution.      
       do 20 i = 1, jphct
-c DEBUG
-         if (is(i).ne.1.or.clamda(i).lt.wmach(3)) cycle 
-c        if (is(i).ne.1) cycle 
+c DEBUG why was this here? added ~6.7.6, removed april 21, 2017
+c         if (is(i).ne.1.or.clamda(i).lt.wmach(3)) cycle 
+         if (is(i).ne.1) cycle 
 
          id = i + inc 
          iam = ikp(id)
