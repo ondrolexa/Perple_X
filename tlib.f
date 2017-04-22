@@ -1536,12 +1536,12 @@ c----------------------------------------------------------------------
 
       integer lun, len, ier, iscan, i, iscnlt, ibeg, iend, ist
 
-      character card*240, key*22, val*3,
+      character card*lchar, key*22, val*3,
      *          nval1*12, nval2*12, nval3*12, strg*40, strg1*40
 
       integer length,iblank,icom
       character chars*1
-      common/ cst51 /length,iblank,icom,chars(240)
+      common/ cst51 /length,iblank,icom,chars(lchar)
  
       ier = 0 
       key = ' '
@@ -1553,16 +1553,16 @@ c----------------------------------------------------------------------
 
          if (card.ne.' ') then 
 
-            read (card,'(240a)') chars
+            read (card,'(400a)') chars
 c                                 find end of data marker '|'
-            len = iscan (1,240,'|') - 1
+            len = iscan (1,lchar,'|') - 1
 c                                 find a non blank character
             ibeg = iscnlt (1,len,' ')
 
             if (ibeg.ge.len) cycle
 c                                 for programs (actcor,ctransf) 
 c                                 that echo data read the full card
-            length = iscnlt (240,1,' ')
+            length = iscnlt (lchar,1,' ')
 
             exit 
 
@@ -1571,7 +1571,7 @@ c                                 that echo data read the full card
       end do 
 c                                 find end of keyword 
       iend = ibeg + 1
-      iend = iscan (iend,240,' ') - 1
+      iend = iscan (iend,lchar,' ') - 1
 
       if (iend-ibeg.gt.21) then 
          ier = 1
@@ -1584,9 +1584,9 @@ c                                 load chars into key
 c                                 now locate the value:
       ibeg = iscnlt (iend,len,' ')
 c                                 now find trailing blank
-      iend = iscan (ibeg,240,' ') 
+      iend = iscan (ibeg,lchar,' ') 
 c                                 return if just a keyword
-      if (iend.gt.240) return
+      if (iend.gt.lchar) return
 c                                 look if it contains a comment character
       ist = iscan (ibeg,iend,'|') 
       if (ist.lt.iend) iend = ist - 1
@@ -1605,7 +1605,7 @@ c                                 several numbers on certain options.
 
       write (val,'(3a1)') (chars(i), i = ibeg, ibeg + 2)
 c                                 look for a second value
-      ist = iscan (ibeg,240,' ')
+      ist = iscan (ibeg,lchar,' ')
       if (ist.gt.len) return
 
       ibeg = iscnlt (ist,len,' ')
@@ -1615,7 +1615,7 @@ c                                 look for a second value
       if (iend-ibeg.gt.11) iend = ibeg + 11 
       write (nval1,'(12a1)') (chars(i), i = ibeg, iend)
 c                                 look for a third value
-      ist = iscan (ibeg,240,' ')
+      ist = iscan (ibeg,lchar,' ')
       if (ist.gt.len) return 
 
       ibeg = iscnlt (ist,len,' ')
@@ -1625,7 +1625,7 @@ c                                 look for a third value
       if (iend-ibeg.gt.11) iend = ibeg + 11 
       write (nval2,'(12a1)') (chars(i), i = ibeg, iend) 
 c                                 look for a fourth value
-      ist = iscan (ibeg,240,' ')
+      ist = iscan (ibeg,lchar,' ')
       if (ist.gt.len) return
 
       ibeg = iscnlt (ist,len,' ')
@@ -1652,11 +1652,11 @@ c----------------------------------------------------------------------
 
       logical eof
 
-      character card*240, string(3)*8
+      character card*lchar, string(3)*8
 
       integer length,iblank,icom
       character chars*1
-      common/ cst51 /length,iblank,icom,chars(240)
+      common/ cst51 /length,iblank,icom,chars(lchar)
 c----------------------------------------------------------------------
 
       eof = .false.
@@ -1674,9 +1674,9 @@ c                                 error on read = eof
 
          else if (card.ne.' ') then 
 
-            read (card,'(240a)') chars
+            read (card,'(400a)') chars
 c                                 find end of data marker '|'
-            len = iscan (1,240,'|') - 1
+            len = iscan (1,lchar,'|') - 1
 
             if (len.eq.0) cycle 
 c                                 find a non blank character
@@ -1693,7 +1693,7 @@ c                                 we have a non-blank card
 
       do 
 c                                 find the end of the string
-         iend = iscan (ibeg,240,' ') - 1
+         iend = iscan (ibeg,lchar,' ') - 1
 
          if (iend-ibeg.gt.7) then
 
@@ -1947,7 +1947,7 @@ c---------------------------------------------------------------------
       else if (ier.eq.41) then
          write (*,41) char
          if (int.eq.0) then 
-            write (*,410) 
+            write (*,410)
          else if (int.eq.1) then 
             write (*,411)
          else if (int.eq.2) then 
@@ -2199,7 +2199,7 @@ c---------------------------------------------------------------------
      *           'for solutions in solution_model.dat')
 413   format (2x,'- simplify the calculation, e.g., eliminate ',
      *           'components and/or simplify solution models')
-414   format (2x,'- increase dimension k24 (',i7,') and recompile ',
+414   format (2x,'- increase dimension k24 (',i8,') and recompile ',
      *           'Perple_X')
 415   format (2x,'- restrict the compositional ranges of the solution ',
      *           'models')
@@ -2930,7 +2930,7 @@ c----------------------------------------------------------------------
 
       double precision rnum, nums(m3)
 
-      character tname*8, name*8, rec*240, tag*3
+      character tname*8, name*8, rec*lchar, tag*3
 
       double precision mcomp
       character mknam*8
@@ -2951,17 +2951,17 @@ c----------------------------------------------------------------------
 
       integer length,iblank,icom
       character chars*1
-      common/ cst51 /length,iblank,icom,chars(240)
+      common/ cst51 /length,iblank,icom,chars(lchar)
 c----------------------------------------------------------------------
 
       call readcd (n2,len,ier,.true.)
       if (ier.ne.0) goto 90 
 c                                 echo data for ctransf/actcor
-      if (iopt.gt.3) write (n8,'(240a1)') (chars(i),i=1,len)
+      if (iopt.gt.3) write (n8,'(400a)') (chars(i),i=1,len)
 
       nmak = 0 
 
-      write (rec,'(240a1)') chars
+      write (rec,'(400a)') chars
       read (rec,'(a3)') tag
 
       do while (tag.ne.'end')   
@@ -3008,7 +3008,7 @@ c                                 now the dqf
          call readcd (n2,len,ier,.true.)
          if (ier.ne.0) goto 90
 c                                 echo data for ctransf/actcor 
-         if (iopt.gt.3) write (n8,'(240a1)') (chars(i),i=1,len)
+         if (iopt.gt.3) write (n8,'(400a)') (chars(i),i=1,len)
 c                                 read the DQF coefficients
          ibeg = 1
          call redlpt (nums,ibeg,iend,len,ier) 
@@ -3019,10 +3019,10 @@ c                                 read the DQF coefficients
          end do 
 c                                 start next make definition
          call readcd (n2,len,ier,.true.)
-         write (rec,'(240a1)') chars
+         write (rec,'(400a)') chars
          read (rec,'(a3)') tag
 c                                 echo data for ctransf/actcor
-         if (iopt.gt.3) write (n8,'(240a1)') (chars(i),i=1,len)
+         if (iopt.gt.3) write (n8,'(400a)') (chars(i),i=1,len)
 
 c                                 reject excluded makes
          do i = 1, ixct
@@ -3041,7 +3041,7 @@ c                                 reject excluded makes
       
 1000  format (/,'**error ver200** READMK bad make definition in the',
      *        ' thermodynamic data file',/,'currently reading: ',/
-     *        ,240a)
+     *        ,400a)
 
 99    end 
 
@@ -3061,13 +3061,15 @@ c         name - word
 c-----------------------------------------------------------------------
       implicit none
 
+      include 'perplex_parameters.h'
+
       integer ibeg, iend, len, iscan, iscnlt, ier, i, imax
 
       character name*8
 
       integer length,iblank,icom
       character chars*1
-      common/ cst51 /length,iblank,icom,chars(240)
+      common/ cst51 /length,iblank,icom,chars(lchar)
 c----------------------------------------------------------------------
 
       ier = 0 
@@ -3103,15 +3105,17 @@ c characters if strip. ier = 1 no card found.
 c----------------------------------------------------------------------    
       implicit none
 
+      include 'perplex_parameters.h'
+
       logical strip
 
       integer len, ier, iscan, ict, i, iscnlt, ibeg, nloc
 
-      character card*240
+      character card*lchar
 
       integer length,iblank,icom
       character chars*1
-      common/ cst51 /length,iblank,icom,chars(240)
+      common/ cst51 /length,iblank,icom,chars(lchar)
 c----------------------------------------------------------------------
 
       ier = 0 
@@ -3128,9 +3132,9 @@ c----------------------------------------------------------------------
 
          if (card.ne.' ') then 
 
-            read (card,'(240a)') chars
+            read (card,'(400a)') chars
 c                                 find end of data marker '|'
-            len = iscan (1,240,'|') - 1
+            len = iscan (1,lchar,'|') - 1
 c                                 '|' in first column
             if (len.eq.0) cycle
 c                                 find a non blank character
@@ -3182,6 +3186,8 @@ c the result is returned as num
 c-----------------------------------------------------------------------
       implicit none
 
+      include 'perplex_parameters.h'
+
       double precision rnum, rnum1 
 
       integer ibeg, iend, len, iback, ier, iscan, iscnlt, i
@@ -3190,7 +3196,7 @@ c-----------------------------------------------------------------------
 
       integer length,iblank,icom
       character chars*1
-      common/ cst51 /length,iblank,icom,chars(240)
+      common/ cst51 /length,iblank,icom,chars(lchar)
 c----------------------------------------------------------------------
       ier = 0 
 c                                 now find start of a number
@@ -3245,6 +3251,8 @@ c expects ibeg/iend are known on input.
 c-----------------------------------------------------------------------
       implicit none
 
+      include 'perplex_parameters.h'
+
       double precision rnum, rnum1 
 
       integer ibeg, iend, iback, ier, iscan, i
@@ -3253,7 +3261,7 @@ c-----------------------------------------------------------------------
 
       integer length,iblank,icom
       character chars*1
-      common/ cst51 /length,iblank,icom,chars(240)
+      common/ cst51 /length,iblank,icom,chars(lchar)
 c----------------------------------------------------------------------
       ier = 0 
 
@@ -3577,7 +3585,7 @@ c----------------------------------------------------------------------
 
       integer length,iblank,icom
       character chars*1
-      common/ cst51 /length,iblank,icom,chars(240)
+      common/ cst51 /length,iblank,icom,chars(lchar)
 
       double precision thermo, uf, us
       common/ cst1 /thermo(k4,k10),uf(2),us(h5)
@@ -3805,11 +3813,11 @@ c----------------------------------------------------------------------
 
       integer lun, len, ier, iscan, i, iscnlt, ibeg, iend
 
-      character card*240, key*22, values*80, strg*80
+      character card*lchar, key*22, values*80, strg*80
 
       integer length,iblank,icom
       character chars*1
-      common/ cst51 /length,iblank,icom,chars(240)
+      common/ cst51 /length,iblank,icom,chars(lchar)
 c----------------------------------------------------------------------
 
       ier = 0 
@@ -3821,9 +3829,9 @@ c----------------------------------------------------------------------
 
          if (card.ne.' ') then 
 
-            read (card,'(240a)') chars
+            read (card,'(400a)') chars
 c                                 find end of data marker '|'
-            len = iscan (1,240,'|') - 1
+            len = iscan (1,lchar,'|') - 1
             icom = len
 c                                 find a non blank character
             ibeg = iscnlt (1,len,' ')
@@ -3832,7 +3840,7 @@ c                                 find the next blank
 c                                 len < ibeg => only comments
             if (ibeg.ge.len) cycle
 c                                 full record length
-            length = iscnlt (240,1,' ')
+            length = iscnlt (lchar,1,' ')
 
             exit 
 
@@ -3847,22 +3855,22 @@ c                                 full record length
       if (ier.eq.0) then 
 c                                 find end of keyword 
          iend = ibeg + 1
-         iend = iscan (iend,240,' ') - 1
+         iend = iscan (iend,lchar,' ') - 1
          if (iend.gt.22) iend = 22
 c                                 load chars into key
-         write (key,'(22a1)') (chars(i), i = ibeg, iend)
+         write (key,'(22a)') (chars(i), i = ibeg, iend)
 c                                 now the values
-         ibeg = iscnlt (iend+1,240,' ') 
+         ibeg = iscnlt (iend+1,lchar,' ') 
 
-         if (ibeg.lt.240) then 
+         if (ibeg.lt.lchar) then 
 
             iend = iscnlt (len,ibeg,' ')
             if (iend-ibeg.gt.79) iend = ibeg + 79
 c                                 load chars into value
-            write (values,'(80a1)') (chars(i), i = ibeg, iend)
+            write (values,'(80a)') (chars(i), i = ibeg, iend)
 c                                 load chars into strg
             if (iend.gt.80) iend = 80
-            write (strg,'(80a1)') (chars(i),i=1,iend)
+            write (strg,'(80a)') (chars(i),i=1,iend)
         
          else
 c                                 no values
@@ -3896,7 +3904,7 @@ c----------------------------------------------------------------------
 
       integer length,iblank,icom
       character chars*1
-      common/ cst51 /length,iblank,icom,chars(240)
+      common/ cst51 /length,iblank,icom,chars(lchar)
 
       character tcname*5,xcmpnt*5
       common/ csta9 /tcname(k0),xcmpnt(k0)
@@ -3910,7 +3918,7 @@ c-----------------------------------------------------------------------
       if (ier.ne.0) call error (23,0d0,i,strg)
 
       ibeg = 1
-      iend = iscan (ibeg,240,' ') - 1
+      iend = iscan (ibeg,lchar,' ') - 1
 
       do 
 c                                 find the "(" and ")"
@@ -4000,7 +4008,7 @@ c----------------------------------------------------------------------
 
       integer length,iblank,icom
       character chars*1
-      common/ cst51 /length,iblank,icom,chars(240)
+      common/ cst51 /length,iblank,icom,chars(lchar)
 
       double precision thermo, uf, us
       common/ cst1 /thermo(k4,k10),uf(2),us(h5)
@@ -4038,7 +4046,7 @@ c                                 name & EoS
          ibeg = ibeg + 80
       end if 
 
-      write (lun,'(240a1)') (chars(i), i = 1, ibeg)
+      write (lun,'(400a)') (chars(i), i = 1, ibeg)
 c                                 =====================================
 c                                 formula
       ibeg = 1
@@ -4085,7 +4093,7 @@ c                                 load number into chars
 
       end do 
 c                                 write the formula
-      write (lun,'(240a1)') (chars(i), i = 1, iend+1)
+      write (lun,'(400a)') (chars(i), i = 1, iend+1)
 c                                 =====================================
 c                                 thermo data
       ibeg = 1
@@ -4094,7 +4102,7 @@ c                                 thermo data
          call outthr (thermo(i,id),strgs(i),2,ibeg)
       end do
 c                                 write G,S,V
-      if (ibeg.gt.1) write (lun,'(240a1)') (chars(i), i = 1, ibeg)
+      if (ibeg.gt.1) write (lun,'(400a)') (chars(i), i = 1, ibeg)
 c                                 c1->c7 of thermo data
       ibeg = 1
  
@@ -4102,7 +4110,7 @@ c                                 c1->c7 of thermo data
          call outthr (thermo(i,id),strgs(i),2,ibeg)
       end do
 c                                 write c1->c7
-      if (ibeg.gt.1) write (lun,'(240a1)') (chars(i), i = 1, ibeg)
+      if (ibeg.gt.1) write (lun,'(400a)') (chars(i), i = 1, ibeg)
 c                                 b1->b8 of thermo data
       ibeg = 1
 
@@ -4110,7 +4118,7 @@ c                                 b1->b8 of thermo data
          call outthr (thermo(i,id),strgs(i),2,ibeg)
       end do
 c                                 write b1->b8
-      if (ibeg.gt.1) write (lun,'(240a1)') (chars(i), i = 1, ibeg)
+      if (ibeg.gt.1) write (lun,'(400a)') (chars(i), i = 1, ibeg)
 c                                 =====================================
 c                                 shear/bulk modulus
       ibeg = 1
@@ -4119,7 +4127,7 @@ c                                 shear/bulk modulus
          call outthr (emod(i,id),mstrg(i),2,ibeg)
       end do
 
-      if (ibeg.gt.1) write (lun,'(240a1)') (chars(i), i = 1, ibeg)
+      if (ibeg.gt.1) write (lun,'(400a)') (chars(i), i = 1, ibeg)
 c                                 =====================================
 c                                 disorder parameters
       if (idis(id).ne.0) then
@@ -4130,7 +4138,7 @@ c                                 disorder parameters
             call outthr (td(i),dstrg(i),2,ibeg)
          end do 
 
-         if (ibeg.gt.1) write (lun,'(240a1)') (chars(i), i = 1, ibeg)
+         if (ibeg.gt.1) write (lun,'(400a)') (chars(i), i = 1, ibeg)
 
       end if 
 c                                 =====================================
@@ -4147,7 +4155,7 @@ c                                 transition parameters
             call outthr (tm(j,i),tstrg(j),3,ibeg)
          end do 
 
-         if (ibeg.gt.1) write (lun,'(240a1)') (chars(j), j = 1, ibeg)
+         if (ibeg.gt.1) write (lun,'(400a)') (chars(j), j = 1, ibeg)
 
       end do 
 
@@ -4168,6 +4176,8 @@ c    ibeg - pointer to the location for the data in the output array (chars)
 c----------------------------------------------------------------------
       implicit none
 
+      include 'perplex_parameters.h'
+
       double precision num
 
       character strg*(*), text(14)*1
@@ -4176,7 +4186,7 @@ c----------------------------------------------------------------------
 
       integer length,iblank,icom
       character chars*1
-      common/ cst51 /length,iblank,icom,chars(240)
+      common/ cst51 /length,iblank,icom,chars(lchar)
 
       if (num.ne.0d0) then 
 c                                 pad with a left blank, if not at line begining
@@ -4471,7 +4481,7 @@ c----------------------------------------------------------------------
 
       integer length,iblank,icom
       character chars*1
-      common/ cst51 /length,iblank,icom,chars(240)
+      common/ cst51 /length,iblank,icom,chars(lchar)
 c----------------------------------------------------------------------
       do 
 
@@ -4555,7 +4565,7 @@ c----------------------------------------------------------------------
 
       integer length,iblank,icom
       character chars*1
-      common/ cst51 /length,iblank,icom,chars(240)
+      common/ cst51 /length,iblank,icom,chars(lchar)
 c----------------------------------------------------------------------
       read (tfname,'(100a)') (chars(i),i=1,100)
 c                                 find end of name ' '
@@ -4643,13 +4653,15 @@ c     output - text - character string
 c----------------------------------------------------------------------
       implicit none
 
+      include 'perplex_parameters.h'
+
       integer i, nchar1, nchar2, nblank
 
       character text*(*), text1*(*), text2*(*)
 
       integer length,iblank,icom
       character chars*1
-      common/ cst51 /length,iblank,icom,chars(240)
+      common/ cst51 /length,iblank,icom,chars(lchar)
 c----------------------------------------------------------------------
 c                                 strip leading blanks in text1 and
 c                                 get pointer to end of string
@@ -4678,8 +4690,8 @@ c                                 get pointer to end of string in chars
       call leblnk (text2,nchar1,nchar2)
 
       text = ' '
-      if (nchar2.gt.len(text)) call error (10,0d0,240,text2)
-      write (text,'(240a)') (chars(i), i = 1, nchar2)
+      if (nchar2.gt.len(text)) call error (10,0d0,lchar,text2)
+      write (text,'(400a)') (chars(i), i = 1, nchar2)
 
       end
 
@@ -4905,7 +4917,7 @@ c----------------------------------------------------------------------
 
       integer length,iblank,icom
       character chars*1
-      common/ cst51 /length,iblank,icom,chars(240)
+      common/ cst51 /length,iblank,icom,chars(lchar)
 
       integer idspe,ispec
       common/ cst19 /idspe(2),ispec
@@ -5238,9 +5250,11 @@ c             if unknown.
 c-------------------------------------------------------------------
       implicit none
 
+      include 'perplex_parameters.h'
+
       integer i,ict,nchar
 
-      character text*(*), bitsy(400)*1 
+      character text*(*), bitsy(lchar)*1 
 
       nchar = len(text)
  
@@ -5268,9 +5282,11 @@ c             if unknown.
 c----------------------------------------------------------------------
       implicit none
 
+      include 'perplex_parameters.h'
+
       integer i,ict,nchar
  
-      character text*(*), bitsy(400)*1 
+      character text*(*), bitsy(lchar)*1 
 
       nchar = len(text) 
       read (text,'(400a)') (bitsy(i), i = 1, nchar)
@@ -5334,11 +5350,13 @@ c subprogram to filter blanks from text
 
       implicit none
 
+      include 'perplex_parameters.h'
+
       integer ist,iend,i,itic,igot,jend
 
       integer length,iblank,icom
       character chars*1
-      common/ cst51 /length,iblank,icom,chars(240)
+      common/ cst51 /length,iblank,icom,chars(lchar)
 
       itic = ist - 1
       igot = 0
@@ -5379,7 +5397,9 @@ c leblnk - scan text and strip leading blanks load into chars from
 c position ibeg, nchar is the last non blank in char
 c non-blank character in stripped string
 c----------------------------------------------------------------------
-      implicit none 
+      implicit none
+
+      include 'perplex_parameters.h'
 
       integer i, ibeg, nchar, ist
  
@@ -5387,12 +5407,12 @@ c----------------------------------------------------------------------
 
       integer length,iblank,icom
       character chars*1
-      common/ cst51 /length,iblank,icom,chars(240)
+      common/ cst51 /length,iblank,icom,chars(lchar)
 c----------------------------------------------------------------------
       nchar = len(text) + ibeg -1 
-      if (nchar.gt.240) nchar = 240
+      if (nchar.gt.lchar) nchar = lchar
 
-      read (text,'(240a)') (chars(i), i = ibeg, nchar)
+      read (text,'(400a)') (chars(i), i = ibeg, nchar)
 c                                 find last non-blank   
       
       do i = ibeg, nchar
@@ -5434,13 +5454,15 @@ c for bad ranges
 c----------------------------------------------------------------------
       implicit none
 
+      include 'perplex_parameters.h'
+
       character char*1
 
       integer ibeg, iend
 
       integer length,iblank,icom
       character chars*1
-      common/ cst51 /length,iblank,icom,chars(240)
+      common/ cst51 /length,iblank,icom,chars(lchar)
 c----------------------------------------------------------------------
 
       do iscan = ibeg, iend
@@ -5458,13 +5480,15 @@ c found iscan is iend + inc
 c----------------------------------------------------------------------
       implicit none
 
+      include 'perplex_parameters.h'
+
       character char*1
 
       integer ibeg, iend, inc
 
       integer length,iblank,icom
       character chars*1
-      common/ cst51 /length,iblank,icom,chars(240)
+      common/ cst51 /length,iblank,icom,chars(lchar)
 c----------------------------------------------------------------------
       if (ibeg.gt.iend) then 
          inc = -1
@@ -5487,13 +5511,15 @@ c is greater than char. assuming ascii collating sequence +/- < 0 < a
 c----------------------------------------------------------------------
       implicit none
 
+      include 'perplex_parameters.h'
+
       character char*1
 
       integer ibeg, iend, inc
 
       integer length,iblank,icom
       character chars*1
-      common/ cst51 /length,iblank,icom,chars(240)
+      common/ cst51 /length,iblank,icom,chars(lchar)
 c----------------------------------------------------------------------
 
       if (ibeg.le.iend) then 
@@ -5565,7 +5591,9 @@ c     text - character string
 
 c no test is made for a blank string or a string of "+" signs.
 c----------------------------------------------------------------------
-      implicit none 
+      implicit none
+
+      include 'perplex_parameters.h'
 
       integer i, nchar
 
@@ -5575,7 +5603,7 @@ c----------------------------------------------------------------------
 
       integer ict,iblank,icom
       character bitsy*1
-      common/ cst51 /ict,iblank,icom,bitsy(240)
+      common/ cst51 /ict,iblank,icom,bitsy(lchar)
 c---------------------------------------------------------------------- 
       nchar = len(text) 
 
@@ -5667,7 +5695,7 @@ c                                 strip out new double blanks
       write (text,1000) (bitsy(i), i = 1, ict),
      *                  (' ',i = ict+1, len(text))
  
-1000  format (240a)
+1000  format (400a)
 
       end
 
@@ -5680,13 +5708,15 @@ c     text - character string
 
 c no test is made for a blank string or a string of "+" signs.
 c----------------------------------------------------------------------
-      implicit none 
+      implicit none
+
+      include 'perplex_parameters.h'
 
       integer i, ict, nchar
 
       logical strip
  
-      character text*(*), bitsy(400)*1 
+      character text*(*), bitsy(lchar)*1 
  
       nchar = len(text) 
 
@@ -5784,7 +5814,9 @@ c getstg - subroutine to get first non-blank string
 c          
 c     text - character string on input, first non-blank strg on output
 c----------------------------------------------------------------------
-      implicit none 
+      implicit none
+
+      include 'perplex_parameters.h'
 
       integer i, nchar, ist
  
@@ -5792,12 +5824,12 @@ c----------------------------------------------------------------------
 
       integer length,iblank,icom
       character chars*1
-      common/ cst51 /length,iblank,icom,chars(240)
+      common/ cst51 /length,iblank,icom,chars(lchar)
 c----------------------------------------------------------------------
       nchar = len(text) 
-      if (nchar.gt.240) nchar = 240
+      if (nchar.gt.lchar) nchar = lchar
 
-      read (text,'(240a)') (chars(i), i = 1, nchar)
+      read (text,'(400a)') (chars(i), i = 1, nchar)
 c                                 scan for blanks:
       ist = 1
 
@@ -5815,7 +5847,7 @@ c                                 scan for blanks:
 
       text = ' '
 
-      write (text,'(240a)') (chars(i), i = ist, nchar)
+      write (text,'(400a)') (chars(i), i = ist, nchar)
 
       end
 
@@ -5854,7 +5886,7 @@ c----------------------------------------------------------------------
 
       integer length,iblank,icom
       character chars*1
-      common/ cst51 /length,iblank,icom,chars(240)
+      common/ cst51 /length,iblank,icom,chars(lchar)
 c----------------------------------------------------------------------
       do i = 2, 3
          coeffs(i) = 0d0

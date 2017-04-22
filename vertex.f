@@ -1444,11 +1444,11 @@ c-----------------------------------------------------------------------
       common/ cst43 /comp(k0),tot,icout(k0),ikind,icmpn,ieos
 
       integer icomp,istct,iphct,icp
-      common/ cst6  /icomp,istct,iphct,icp  
+      common/ cst6  /icomp,istct,iphct,icp
 
-      integer ixp
-      double precision sxs,exces
-      common/ cst304 /sxs(k13),exces(m3,k1),ixp(k1)
+      double precision xco
+      integer ico,jco
+      common/ cxt10 /xco(k18),ico(k1),jco(k1)
 
       integer ikp
       common/ cst61 /ikp(k1)
@@ -1489,7 +1489,7 @@ c                                 now combine endmember props
          do j = 1, jend(ikp(jd),1)
 c                                 endmember index
             kd = jend(ikp(jd),2+j)
-            xkd = sxs(ixp(jd)+j) 
+            xkd = xco(jco(jd)+j) 
 c                                 test for mughnahan EoS
             if (thermo(18,kd).ne.0d0) then
                iwrn49 = 1 

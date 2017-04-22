@@ -24,9 +24,9 @@ c                                 global assemblage data
       integer iap,ibulk
       common/ cst74  /iap(k2),ibulk
 
-      double precision xcoor
-      integer icoor
-      common/ cxt10 /xcoor(k18),icoor(k1)
+      double precision xco
+      integer ico,jco
+      common/ cxt10 /xco(k18),ico(k1),jco(k1)
 
       double precision bg
       common/ cxt19 /bg(k5,k2)
@@ -86,7 +86,7 @@ c                                phase molar amounts
 
          if (ier.ne.0) exit
 
-         icoor(ibulk) = jxco
+         ico(ibulk) = jxco
 
          do i = 1, iavar(1,ias)
 
@@ -97,7 +97,7 @@ c                                phase molar amounts
 
             if (kxco.gt.k18) call error (61,0d0,k18,'BPLINP')
 
-            read (n5,*,iostat=ier) (xcoor(j), j = jxco, kxco)
+            read (n5,*,iostat=ier) (xco(j), j = jxco, kxco)
          
             jxco = kxco
 

@@ -48,9 +48,8 @@ c-----------------------------------------------------------------------
       double precision p,t,xco2,u1,u2,tr,pr,r,ps,dg
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 
-      integer ixp
-      double precision sxs,exces
-      common/ cst304 /sxs(k13),exces(m3,k1),ixp(k1)
+      double precision exces
+      common/ cst304 /exces(m3,k1)
 c-----------------------------------------------------------------------
       
       dg = exces(1,id) + t * exces(2,id) + p * exces(3,id)
@@ -109,9 +108,8 @@ c-----------------------------------------------------------------------
       integer iff,idss,ifug
       common/ cst10  /iff(2),idss(h5),ifug
 
-      integer ixp
-      double precision sxs,exces
-      common/ cst304 /sxs(k13),exces(m3,k1),ixp(k1)
+      double precision exces
+      common/ cst304 /exces(m3,k1)
 c-----------------------------------------------------------------------
 
       dg = exces(1,id) + t * exces(2,id) + p * exces(3,id)
@@ -2557,61 +2555,6 @@ c-----------------------------------------------------------------------
    
       end
 
-      subroutine toop (id,gex)
-c-----------------------------------------------------------------------
-c giulio, here is a dummy routine to serve as a template, be careful
-c of the type conventions that i use (i.e., all reals are implicit
-c double) and also not to change any of the variables in the common
-c blocks. you have to keep the three common blocks cts6, cst5 and cst12
-c for input, the variables that will concern you are 
-
-c on input:
-c           r - the gas constant, J/mol-K
-c           t - temperature (K)
-c           p - pressure (bar)
-c           tr - reference t, as in the thermodynamic data file header.
-c           pt - reference p, dido.
-c           icp - the number of components.
-c           id - a pointer to the phase composition
-c           cp(i,id) - the mol fraction of the ith component in composition id.
-c on output:
-c           gex - the excess free energy in J (i.e., in excess of a mechanical
-c                 mixture of the endmembers) per mol of components.
-
-c N.B. the components appear in the same order that they are entered in 
-c the input file and this must also be identical to the order in the 
-c solution model data file. i think build will always make SIO2 the 
-c first component, overriding your choice. so to be safe anywhere you
-c enter components expect SIO2 to be the 1st composition, then enter 
-c the remaining components in order of the cation atomic weight, e.g., 
-c cp(1,id) will always be X(SIO2) in the id'th composition, cp(2,id) will
-c be X(CA0) if there are no other components.
-c----------------------------------------------------------------------- 
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      integer i,id
-     
-      double precision gex
-
-      double precision cp
-      common/ cst12 /cp(k5,k1)
-
-      integer icomp,istct,iphct,icp
-      common/ cst6 /icomp,istct,iphct,icp
-
-      double precision p,t,xco2,u1,u2,tr,pr,r,ps
-      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
-
-      gex = 0d0
-
-      do i = 1, icp
-         if (cp(i,id).ne.0d0) gex = gex + r*t*cp(i,id)*log(cp(i,id))
-      end do 
-
-      end 
-         
       subroutine unlam (tm,id)
 c---------------------------------------------------------------------
       implicit none
@@ -2968,7 +2911,7 @@ c----------------------------------------------------------------------
 
       integer length,iblank,icom
       character chars*1
-      common/ cst51 /length,iblank,icom,chars(240)
+      common/ cst51 /length,iblank,icom,chars(lchar)
 c----------------------------------------------------------------------
       ier = 0 
 
@@ -3000,7 +2943,7 @@ c                                 find the name
       call errpau
       
 1000  format ('**error ver200** READN bad data, currently ',
-     *        'reading solution model: ',a,' data was:',/,240a,/,
+     *        'reading solution model: ',a,' data was:',/,400a,/,
      *        'last name read was: ',a,/)
 
       end 
@@ -3018,13 +2961,13 @@ c----------------------------------------------------------------------
 
       integer len, idim, kdim, jdim, i, isnum, ier
 
-      character tname*10, nums*240
+      character tname*10, nums*lchar
 
       double precision rnums(*)
 
       integer length,iblank,icom
       character chars*1
-      common/ cst51 /length,iblank,icom,chars(240)
+      common/ cst51 /length,iblank,icom,chars(lchar)
 c----------------------------------------------------------------------
 c                                 read card scans for non blank data
 c                                 card:
@@ -3078,7 +3021,7 @@ c                                 write numbers to string
       end if 
 
 1000  format ('**error ver209** READDA bad data, currently',
-     *        ' reading solution model: ',/,a,/,'data was:',/,240a)
+     *        ' reading solution model: ',/,a,/,'data was:',/,400a)
 1010  format ('**error ver210** READDA read to end of file',
      *        ' reading solution model: ',/,a)
 1020  format ('READDA was expecting numeric data.',/)
@@ -3119,7 +3062,7 @@ c----------------------------------------------------------------------
 
       integer length,iblank,icom
       character chars*1
-      common/ cst51 /length,iblank,icom,chars(240)
+      common/ cst51 /length,iblank,icom,chars(lchar)
 
       character*2 strgs*3, mstrg, dstrg, tstrg*3, wstrg*3, e16st*3
       common/ cst56 /strgs(32),mstrg(6),dstrg(m8),tstrg(11),wstrg(m16),
@@ -3275,7 +3218,7 @@ c                                 assign data
       call errpau
       
 1000  format ('**error ver200** READX bad data, currently ',
-     *        'reading solution model: ',a,' data was:',/,240a)
+     *        'reading solution model: ',a,' data was:',/,400a)
 1010  format ('last name read was: ',a,/,
      *        'usually this error is due to a mispelled ',
      *        'endmember name.',/)
@@ -3312,7 +3255,7 @@ c----------------------------------------------------------------------
 
       integer length,iblank,icom
       character chars*1
-      common/ cst51 /length,iblank,icom,chars(240)
+      common/ cst51 /length,iblank,icom,chars(lchar)
 
       integer indq,idqf
       double precision dqf
@@ -3369,7 +3312,7 @@ c                              read dqf data:
      *          ' keyword at end',' of solution model:',a,/)
       
 1010  format (/,' **error ver210** READOP bad data, currently',
-     *          ' reading solution model: ',a,' data was:',/,240a)
+     *          ' reading solution model: ',a,' data was:',/,400a)
 
 1020  format (/,' This error is most probably due to an out-of-date',
      *          ' solution model file.',//,
@@ -3400,7 +3343,7 @@ c----------------------------------------------------------------------
 
       integer length,iblank,icom
       character chars*1
-      common/ cst51 /length,iblank,icom,chars(240)
+      common/ cst51 /length,iblank,icom,chars(lchar)
 
       integer kstot,jend,i,ict,jsmod
       double precision vlaar
@@ -3456,7 +3399,7 @@ c                                 data found
       call errpau
       
 1000  format ('**error ver200** READVL bad data, currently ',
-     *        'reading solution model: ',a,' data was:',/,240a,/,
+     *        'reading solution model: ',a,' data was:',/,400a,/,
      *        'last number (or real equivalent) was: ',g12.6,/)
 
 1001  format (/,'usually this error is caused by a mispelled ',
@@ -3497,7 +3440,7 @@ c----------------------------------------------------------------------
 
       integer length,iblank,icom
       character chars*1
-      common/ cst51 /length,iblank,icom,chars(240)
+      common/ cst51 /length,iblank,icom,chars(lchar)
 
       integer jend,i,idqf,indq
       double precision dqf
@@ -3545,7 +3488,7 @@ c                                 data found
       call errpau
       
 1000  format ('**error ver200** READDQ bad data, currently',
-     *        'reading solution model: ',a,' data was:',/,240a,/,
+     *        'reading solution model: ',a,' data was:',/,400a,/,
      *        'last number (or real equivalent) was: ',g12.6,/)
 1001  format (/,'usually this error is caused by a mispelled ',
      *          'endmember name.',/)
@@ -3583,7 +3526,7 @@ c----------------------------------------------------------------------
 
       integer length,iblank,icom
       character chars*1
-      common/ cst51 /length,iblank,icom,chars(240)
+      common/ cst51 /length,iblank,icom,chars(lchar)
 c----------------------------------------------------------------------
       ier = 0 
 
@@ -3664,7 +3607,7 @@ c                                 is unexpected, write error
       call errpau
       
 1000  format ('**error ver200** READR bad data, currently ',
-     *        'reading solution model: ',a,' data was:',/,240a,
+     *        'reading solution model: ',a,' data was:',/,400a,
      *        'last name read was: ',a,/,
      *        'last number (or real equivalent) was: ',g12.6,/)
 
@@ -3692,7 +3635,7 @@ c----------------------------------------------------------------------
 
       integer length,iblank,icom
       character chars*1
-      common/ cst51 /length,iblank,icom,chars(240)
+      common/ cst51 /length,iblank,icom,chars(lchar)
 c----------------------------------------------------------------------
       ict = 0 
       do i = 1, k7
@@ -3737,7 +3680,7 @@ c                                 find the next non-blank chracter
 c                                 if it's text, then the expression
 c                                 has no constant, else save the 
 c                                 constant.
-      if (chars(iscnlt(iend+1,240,'/')).lt.'A') then
+      if (chars(iscnlt(iend+1,lchar,'/')).lt.'A') then
 c                                 assuming ascii collating sequence,
 c                                 the next character is numeric, so 
 c                                 the number read previously is the a0 constant
@@ -3819,9 +3762,9 @@ c                                 next find the delta
       call errpau
       
 1010  format (/,'**error ver201** invalid name: ',a,' in an expression',
-     *        ' for solution model: ',a,/,' data was:',/,240a)
+     *        ' for solution model: ',a,/,' data was:',/,400a)
 1000  format (/,'**error ver200** READZ bad data, currently',
-     *        ' reading solution model: ',a,' data was:',/,240a,/,
+     *        ' reading solution model: ',a,' data was:',/,400a,/,
      *        'last name read was: ',a,/,
      *        'last number (or real equivalent) was: ',g12.6,/)
 
@@ -4954,7 +4897,7 @@ c                                 scan for blanks:
          if (chars(nchar).gt.' ') exit
       end do 
 
-1000  format (400a1)
+1000  format (400a)
 
       end
 
@@ -7502,12 +7445,12 @@ c-----------------------------------------------------------------------
       integer ikp
       common/ cst61 /ikp(k1)
 
-      integer ixp
-      double precision sxs,exces
-      common/ cst304 /sxs(k13),exces(m3,k1),ixp(k1)
-
       integer jend
       common/ cxt23 /jend(h9,m4)
+
+      double precision xco
+      integer ico,jco
+      common/ cxt10 /xco(k18),ico(k1),jco(k1)
 c                                 working arrays
       double precision z, pa, p0a, x, w, y, wl
       common/ cxt7 /x(m4),y(m4),pa(m4),p0a(m4),z(mst,msp),w(m1),
@@ -7537,7 +7480,7 @@ c                                 -------------------------------------
 c                                 Nastia's version of BCC/FCC Fe-Si-C Lacaze and Sundman
 c                                 this model has to be called ahead of the standard models
 c                                 because it sets lrecip(id) = true.
-c          gph =  gfesic (sxs(ixp(id)+1),sxs(ixp(id)+3),sxs(ixp(id)+4),
+c          gph =  gfesic (xco(jco(id)+1),xco(jco(id)+3),xco(jco(id)+4),
 c     *                   gproj (jend(ids,3)), gproj (jend(ids,4)),
 c     *                   gproj (jend(ids,5)), gproj (jend(ids,6)),
 c     *                   ksmod(ids))
@@ -7547,7 +7490,7 @@ c                                 prismatic solution speciation model
 c                                 with nord order parameters
 c                                 load x's from sxs array.
          do k = 1, nstot(ids) 
-            p0a(k) = sxs(ixp(id)+k)
+            p0a(k) = xco(jco(id)+k)
             pa(k) = p0a(k)
          end do 
 c                                 compute margules coefficients
@@ -7574,7 +7517,7 @@ c                                 evaluate enthalpies of ordering
          call oenth (ids)
 c                                 get gmech
          do k = 1, lstot(ids)
-            p0a(k) = sxs(ixp(id)+k)
+            p0a(k) = xco(jco(id)+k)
             pa(k) = p0a(k)
             gph = gph + gproj(jend(ids,2+k)) * p0a(k)
          end do 
@@ -7589,19 +7532,19 @@ c                              and/or dqf corrections:
          call fexces (id,gph)
 c                              excess props don't include vdp:
          do k = 1, nstot(ids) 
-            gph = gph + gzero (jend(ids,2+k)) * sxs(ixp(id)+k)
+            gph = gph + gzero (jend(ids,2+k)) * xco(jco(id)+k)
          end do 
 
 c      else if (ksmod(ids).eq.29) then 
 c                                 -------------------------------------
 c                                 BCC Fe-Si Lacaze and Sundman
-c         gph = gfesi(sxs(ixp(id)+1), gproj (jend(ids,3)), 
+c         gph = gfesi(xco(jco(id)+1), gproj (jend(ids,3)), 
 c     *                               gproj (jend(ids,4)) )
 
 c      else if (ksmod(ids).eq.32) then 
 c                                 -------------------------------------
 c                                 BCC Fe-Cr Andersson and Sundman
-c         gph = gfecr1(sxs(ixp(id)+1), gproj (jend(ids,3)), 
+c         gph = gfecr1(xco(jco(id)+1), gproj (jend(ids,3)), 
 c     *                                gproj (jend(ids,4)) )
 
       else if (ksmod(ids).eq.40) then
@@ -7609,7 +7552,7 @@ c                                 si-o mrk fluid
          gph = 0d0 
 
          do k = 1, nstot(ids)
-            x1(k) = sxs(ixp(id)+k)
+            x1(k) = xco(jco(id)+k)
             gph = gph + gzero(jend(ids,2+k)) * x1(k)
          end do 
 
@@ -7622,12 +7565,12 @@ c                                 linear in p-t) and special models
 c                                 with normal gmech term
          if (ksmod(ids).eq.41) then
 c                                 ternary coh fluid deltag
-            call rkcoh6 (sxs(ixp(id)+2),sxs(ixp(id)+1),gph)
+            call rkcoh6 (xco(jco(id)+2),xco(jco(id)+1),gph)
 
          else if (ksmod(ids).eq.26) then
 
-            call hcneos (gph,sxs(ixp(id)+1),
-     *                       sxs(ixp(id)+2),sxs(ixp(id)+3))
+            call hcneos (gph,xco(jco(id)+1),
+     *                       xco(jco(id)+2),xco(jco(id)+3))
          else 
 c                                 get the excess and/or ideal mixing effect
 c                                 and/or dqf corrections:
@@ -7636,7 +7579,7 @@ c                                 and/or dqf corrections:
          end if 
 c                                 add gmech
          do k = 1, nstot(ids) 
-            gph = gph +  gproj (jend(ids,2+k)) * sxs(ixp(id)+k)
+            gph = gph +  gproj (jend(ids,2+k)) * xco(jco(id)+k)
          end do 
 c                                 for van laar get fancier excess function
          if (llaar(ids)) then
@@ -7840,10 +7783,6 @@ c-----------------------------------------------------------------------
       integer i,id,jd,i1,i2
 
       double precision phi(m4), tphi, dg
-
-      integer ixp
-      double precision sxs,exces
-      common/ cst304 /sxs(k13),exces(m3,k1),ixp(k1)
 c                                 excess energy variables
       integer jterm, jord, extyp, rko, jsub
       common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m18,h9),
@@ -7856,6 +7795,10 @@ c                                 excess energy variables
       double precision alpha,dt
       common/ cyt0  /alpha(m4),dt(j3)
 
+      double precision xco
+      integer ico,jco
+      common/ cxt10 /xco(k18),ico(k1),jco(k1)
+
       integer lstot,mstot,nstot,ndep,nord
       common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
 c-----------------------------------------------------------------------
@@ -7867,7 +7810,7 @@ c                                 first compute "volumes"
 
 c                                 these phi's are the numerator of
 c                                 holland & powells "phi's"
-         phi(i) =  alpha(i)* sxs(ixp(id)+i)
+         phi(i) =  alpha(i)* xco(jco(id)+i)
 c                                 tphi is the denominator of holland & powell's
 c                                 phi's
          tphi = tphi + phi(i) 
@@ -8094,13 +8037,15 @@ c                                 one species site.
       subroutine getolx (ids,id)
 c----------------------------------------------------------------------
 c subroutine to recover geometric reciprocal solution compositions (x(i,j))
-c from the xcoor (reciprocal) or sxs (single site) arrays loaded in soload
+c from the static xco array loaded in soload
 c----------------------------------------------------------------------
       implicit none
 
       include 'perplex_parameters.h'
 
-      integer i, j, id, ids, jcoor
+      integer i, j, id, ids, kcoor
+
+      double precision xt 
 c                                 working arrays
       double precision z, pa, p0a, x, w, y, wl
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
@@ -8109,13 +8054,12 @@ c                                 x coordinate description
       integer istg, ispg, imlt, imdg
       common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
 c                                 stored x coordinate
-      double precision xcoor
-      integer icoor
-      common/ cxt10 /xcoor(k18),icoor(k1)
-c                                 single site solution coordinates:
-      integer ixp
-      double precision sxs,exces
-      common/ cst304 /sxs(k13),exces(m3,k1),ixp(k1)
+      double precision xco
+      integer ico,jco
+      common/ cxt10 /xco(k18),ico(k1),jco(k1)
+
+      integer ncoor,mcoor,ndim
+      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
 
       integer lstot,mstot,nstot,ndep,nord
       common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
@@ -8125,13 +8069,20 @@ c                                 single site solution coordinates:
 c----------------------------------------------------------------------
       if (lrecip(ids)) then 
 
-         jcoor = icoor(id)
+         kcoor = ico(id)
 
          do i = 1, istg(ids)
-            do j = 1, ispg(ids,i)
-               jcoor = jcoor + 1
-               x(i,j) = xcoor(jcoor)
+
+            xt = 0d0 
+
+            do j = 1, ndim(i,ids)
+               kcoor = kcoor + 1
+               x(i,j) = xco(kcoor)
+               xt = xt + xco(kcoor)
             end do 
+
+            x(i,j) = 1d0 - xt 
+
          end do 
 
       else 
@@ -8144,9 +8095,14 @@ c                                 reciprocal solutions
             i = 2
          end if 
 
-         do j = 1, nstot(ids)
-            x(i,j) = sxs(ixp(id)+j) 
+         xt = 0d0 
+
+         do j = 1, nstot(ids) - 1
+            x(i,j) = xco(jco(id)+j)
+            xt = xt + x(i,j) 
          end do 
+
+         x(i,j) = 1d0 - xt 
 
       end if 
 
@@ -12391,7 +12347,7 @@ c---------------------------------------------------------------------
 
       integer length,iblank,icom
       character chars*1
-      common/ cst51 /length,iblank,icom,chars(240)
+      common/ cst51 /length,iblank,icom,chars(lchar)
 
       integer jsmod
       double precision vlaar
@@ -12508,7 +12464,7 @@ c                                 set number of terms to negative if constant bo
 1000  format ('**warning ver203** READLM missing or invalid format for '
      *       ,'stoichiometric limit of ordered species',/,'currently ',
      *        'reading (and rejecting) solution model: ',a,
-     *      /,'last record was:',/,240a1)
+     *      /,'last record was:',/,400a)
 1010  format (/,'This error may be due to an out-of-date '
      *         ,'solution model file.',/
      *         ,'The current version is: '
@@ -12585,10 +12541,6 @@ c-----------------------------------------------------------------------
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp  
 
-      integer ixp
-      double precision sxs,exces
-      common/ cst304 /sxs(k13),exces(m3,k1),ixp(k1)
-
       integer jend
       common/ cxt23 /jend(h9,m4)
 
@@ -12622,6 +12574,10 @@ c-----------------------------------------------------------------------
 
       integer ncoor,mcoor,ndim
       common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
+
+      double precision xco
+      integer ico,jco
+      common/ cxt10 /xco(k18),ico(k1),jco(k1)
 c-----------------------------------------------------------------------
 c                                 initialize counters
       ixct = 0 
@@ -12736,7 +12692,7 @@ c                                 a the site fraction array:
 
                   z(1,ns) = 1d0 - zt
 c                                 generate the pseudocompound:
-                  call soload (im,icoct,icpct,ixct,tname,icky,im)
+                  call soload (im,icoct,icpct,tname,icky,im)
 
                end do 
 
@@ -12762,7 +12718,7 @@ c                                 a the site fraction array:
 
                   end do
 c                                 generate the pseudocompound:
-                  call soload (im,icoct,icpct,ixct,tname,icky,im)
+                  call soload (im,icoct,icpct,tname,icky,im)
 
                end do
 
@@ -12792,7 +12748,7 @@ c                                 write reach_increment
 
                   do i = iphct-icpct+1, iphct
                      write (n8,1070) names(i),
-     *                            (sxs(ixp(i)+j), j = 1, lstot(im))
+     *                            (xco(jco(i)+j), j = 1, lstot(im))
                   end do
 
                   if (jsmod.eq.6) then 
@@ -13087,7 +13043,7 @@ c---------------------------------------------------------------------
 
       end
 
-      subroutine soload (isoct,icoct,icpct,ixct,tname,icky,im)
+      subroutine soload (isoct,icoct,icpct,tname,icky,im)
 c--------------------------------------------------------------------------
 c soload - loads/requires solution properties: 
 
@@ -13118,10 +13074,10 @@ c--------------------------------------------------------------------------
  
       double precision zpr,hpmelt,slvmlt,gmelt,smix,esum,ctotal,omega,x
 
-      integer id,im,h,i,j,l,m,icpct,isoct,ixct,icky,index,icoct
+      integer id,im,h,i,j,l,m,icpct,isoct,icky,index,icoct,icoct0
 
       double precision ctot
-      common/ cst3   /ctot(k1)
+      common/ cst3 /ctot(k1)
 
       logical refine
       common/ cxt26 /refine
@@ -13174,10 +13130,6 @@ c--------------------------------------------------------------------------
       integer ikp
       common/ cst61 /ikp(k1)
 
-      integer ixp
-      double precision sxs,exces
-      common/ cst304 /sxs(k13),exces(m3,k1),ixp(k1)
-
       logical depend,laar,order,fluid,macro,recip
       common/ cst160 /depend,laar,order,fluid,macro,recip
 
@@ -13185,9 +13137,9 @@ c--------------------------------------------------------------------------
       common/ cxt7 /y(m4),zp(m4),pa(m4),p0a(m4),z(mst,msp),w(m1),
      *              wl(m17,m18)
 
-      double precision xcoor
-      integer icoor
-      common/ cxt10 /xcoor(k18),icoor(k1)
+      double precision xco
+      integer ico,jco
+      common/ cxt10 /xco(k18),ico(k1),jco(k1)
 
       integer ksmod, ksite, kmsol, knsp
       common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
@@ -13237,6 +13189,12 @@ c                                 model type
 
       integer isec,icopt,ifull,imsg,io3p
       common/ cst103 /isec,icopt,ifull,imsg,io3p
+
+      integer ncoor,mcoor,ndim
+      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
+
+      double precision exces
+      common/ cst304 /exces(m3,k1)
 c----------------------------------------------------------------------
       zpr = 0d0 
       i = 0 
@@ -13365,7 +13323,6 @@ c                                 the composition is acceptable.
     
 
       ikp(iphct) = isoct
-      ixp(iphct) = ixct
 
       icky = 0 
 
@@ -13473,38 +13430,45 @@ c                                 initialize constants:
       end do 
 c                                 load constants:
       ctotal = 0d0
+      icoct0 = icoct
 c                                 load xcoors if reciprocal
       if (lrecip(im)) then 
 
-         icoor(iphct) = icoct 
+         ico(iphct) = icoct 
 
          do i = 1, istg(im)
-            do j = 1, ispg(im,i)
+            do j = 1, ndim(i,im)
                icoct = icoct + 1
-               xcoor(icoct) = z(i,j)
+               xco(icoct) = z(i,j)
             end do
          end do 
 
       end if 
+
+      jco(iphct) = icoct
 
       do h = 1, lstot(im)
 c                               do not count the mole
 c                               fractions of absent endmembers
          id = jend(im,2+h)
 
-         ixct = ixct + 1
-         if (ixct.gt.k13) call error (40,y(1),k13,'SOLOAD')
+         if (h.lt.lstot(im).or.order.and.depend) then 
 
-         sxs(ixct) = pa(h) 
+            icoct = icoct + 1
+            if (icoct.gt.k18) call error (40,y(1),k18,'SOLOAD')
 
-         if (sxs(ixct).ne.0d0) then
+            xco(icoct) = pa(h) 
+
+         end if 
+
+         if (pa(h).ne.0d0) then
 c                              composition vector
             do l = 1, icomp
 
                if (ksmod(im).eq.20.and.h.gt.ns) then
-                  zpr = sxs(ixct) * aqcp(l,id-aqst)
+                  zpr = pa(h) * aqcp(l,id-aqst)
                else 
-                  zpr = sxs(ixct) * cp(l,id)
+                  zpr = pa(h) * cp(l,id)
                end if 
 
                cp(l,iphct) = cp(l,iphct) + zpr
@@ -13512,7 +13476,7 @@ c                              composition vector
 
             end do 
 c                              accumulate endmember configurational entropy
-            esum = esum + sxs(ixct) * scoef(h,im)
+            esum = esum + pa(h) * scoef(h,im)
 
          end if  
 
@@ -13523,9 +13487,12 @@ c                              accumulate endmember configurational entropy
          do i = 1, norder 
 
             h = lstot(im) + i
-            ixct = ixct + 1
-            if (ixct.gt.k13) call error (40,y(1),k13,'SOLOAD')
-            sxs(ixct) = pa(h)
+
+            if (i.lt.norder) then 
+                icoct = icoct + 1
+                if (icoct.gt.k18) call error (40,y(1),k18,'SOLOAD')
+                xco(icoct) = pa(h)
+            end if 
 c                              split these fraction into the fractions of the
 c                              consituent disordered species:
             do j = 1, nr(i)
@@ -13565,6 +13532,7 @@ c                                 only allowed for unconstrained minimization
             call warn (55,cp(l,iphct),l,tname)
 
             iphct = iphct - 1
+            icoct = icoct0
 
             return
             

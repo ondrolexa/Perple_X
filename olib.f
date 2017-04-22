@@ -10,7 +10,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
  
-      character cprop*18, text*240
+      character cprop*18, text*lchar
 
       integer i,j,l,lu,id
 
@@ -94,7 +94,10 @@ c----------------------------------------------------------------------
 
       integer length,iblank,icom
       character chars*1
-      common/ cst51 /length,iblank,icom,chars(240)
+      common/ cst51 /length,iblank,icom,chars(lchar)
+
+      integer ksmod, ksite, kmsol, knsp
+      common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
 
       integer iam
       common/ cst4 /iam
@@ -159,12 +162,21 @@ c                                 species_ouput
 
             id = kkp(i) 
 
-            write (text,'(20(a,a,g12.5,a))')
-     *            (spnams(j,id),': ',ysp(j,i),', ', j =1,spct(id))
+            if (ksmod(id).ne.20) then 
+
+               write (text,'(20(a,a,f8.5,a))')
+     *               (spnams(j,id),': ',ysp(j,i),', ', j =1,spct(id))
+
+            else
+
+               write (text,'(20(a,a,g12.5,a))')
+     *               (spnams(j,id),': ',ysp(j,i),', ', j =1,spct(id))
+
+            end if 
 
             call deblnk (text)
 
-            write (lu,'(1x,a,4x,240a)') pname(i), 
+            write (lu,'(1x,a,4x,400a)') pname(i), 
      *                                 (chars(j), j = 1, length)
 
          end do 
@@ -185,7 +197,7 @@ c                                 species_ouput
 
             call deblnk (text)
 
-            write (lu,'(1x,a,4x,240a)') pname(i), 
+            write (lu,'(1x,a,4x,400a)') pname(i), 
      *                                 (chars(j), j = 1, length)
 
          end do
@@ -404,7 +416,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i,j,k,l,m,ids,jds,jd,kd,jcoor,kcoor,itri(4),jtri(4),ijpt
+      integer i,j,k,l,m,ids,jds,jd,kd,kcoor,itri(4),jtri(4),ijpt
 
       double precision wt(3), cst
 
@@ -437,9 +449,9 @@ c                                 global assemblage data
       integer igrd
       common/ cst311/igrd(l7,l7)
 
-      double precision xcoor
-      integer icoor
-      common/ cxt10 /xcoor(k18),icoor(k1)
+      double precision xco
+      integer ico,jco
+      common/ cxt10 /xco(k18),ico(k1),jco(k1)
 c                                 bookkeeping variables
       integer ksmod, ksite, kmsol, knsp
       common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
@@ -515,7 +527,7 @@ c                                 no data test
             kkp(i) = idasls(i,ias)
          end do 
 
-         jcoor = icoor(jd)
+         kcoor = ico(jd)
 c                                 get the dependent potentials
          if (jpot.ne.1) then
  
@@ -574,12 +586,12 @@ c                                 initialize system props/flags
  
                do j = 1, istg(ids)
                   do k = 1, ispg(ids,j)
-                     jcoor = jcoor + 1
+                     kcoor = kcoor + 1
                      cst = bg(i,jd)
 c                                 in case zero mode is not on, allow
 c                                 composition of zero phase
                      if (ijpt.eq.1.and.cst.eq.0d0) cst = 1d0
-                     x3(i,j,k) = wt(1)*cst*xcoor(jcoor)
+                     x3(i,j,k) = wt(1)*cst*xco(kcoor)
 
                   end do 
                end do 
@@ -613,7 +625,7 @@ c                                 now average in other assemblages
                kd = igrd(itri(j),jtri(j))
                ias = iap(kd)
 
-               kcoor = icoor(kd)
+               kcoor = ico(kd)
 
                do k = 1, i
 
@@ -629,7 +641,7 @@ c                                 this is done so as to count
 c                                 the coordinates as well as make
 c                                 the composition.   
                            x3(i,l,m) = x3(i,l,m) 
-     *                               + wt(j)*bg(k,kd)*xcoor(kcoor)
+     *                               + wt(j)*bg(k,kd)*xco(kcoor)
 
                         end do 
                      end do 

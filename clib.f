@@ -2028,9 +2028,11 @@ c     text - character string
 c----------------------------------------------------------------------
       implicit none
 
+      include 'perplex_parameters.h'
+
       integer i, nchar
  
-      character text*(*), bitsy(400)*1, char*1 
+      character text*(*), bitsy(lchar)*1, char*1 
 c----------------------------------------------------------------------
       nchar = len(text) 
       read (text,1000) (bitsy(i), i = 1, nchar)
@@ -2051,7 +2053,8 @@ c                                 character.
 
       write (text,1000) (bitsy(i), i = 1, nchar)
  
-1000  format (400a1)
+1000  format (400a)
+
       end
 
       subroutine matchj (unnown,itis)
@@ -2564,7 +2567,7 @@ c----------------------------------------------------------------------
 
       integer loopx,loopy,jinc,i,j,jst,kst,kd,ltic,iend
 
-      character string*240
+      character string*lchar
 
       integer igrd
       common/ cst311 /igrd(l7,l7)
@@ -2577,7 +2580,7 @@ c----------------------------------------------------------------------
 
       integer length,iblank,icom
       character chars*1
-      common/ cst51 /length,iblank,icom,chars(240)
+      common/ cst51 /length,iblank,icom,chars(lchar)
 c----------------------------------------------------------------------
 
       write (n4,*) loopx, loopy, jinc
@@ -2621,7 +2624,7 @@ c                                 write assemblages to print file
      *                         'by assemblage index:'
          do i = 1, iasct
             call psbtxt (i,string,iend)
-            write (n3,'(i4,a,240a)') i,' - ',(chars(j), j = 1, length)
+            write (n3,'(i4,a,400a)') i,' - ',(chars(j), j = 1, length)
          end do       
 
       end if 
@@ -2646,7 +2649,7 @@ c id identifies the assemblage
 
       integer length,iblank,icom
       character chars*1
-      common/ cst51 /length,iblank,icom,chars(240)
+      common/ cst51 /length,iblank,icom,chars(lchar)
 c----------------------------------------------------------------------
       iend = 0
 
@@ -2656,7 +2659,7 @@ c----------------------------------------------------------------------
       np = iavar(1,id)
       ntot = iavar(3,id)
 
-      do i = 1, 240
+      do i = 1, lchar
          chars(i) = ' '
       end do
 c                                 first solution names:
@@ -2668,13 +2671,13 @@ c                                 first solution names:
 
          ist = iend + 1
          iend = ist + 14
-         read (pname,'(400a1)') (chars(j),j=ist,iend)
+         read (pname,'(400a)') (chars(j),j=ist,iend)
 
          call ftext (ist,iend)
 
       end do 
 
-      write (string,'(400a1)') (chars(j),j=1,iend) 
+      write (string,'(400a)') (chars(j),j=1,iend) 
 
       length = iend
 

@@ -277,7 +277,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      character yes*1, text*240
+      character yes*1, text*lchar
 
       logical bad
 
@@ -838,7 +838,7 @@ c psgrd1 - subprogram draw 1d gridded minimization diagrams.
 
       include 'perplex_parameters.h'
 
-      character yes*1, text*240
+      character yes*1, text*lchar
 
       integer k, hfill, jop0,
      *        j, ipoly, idr(k5), iop5, iop6, jmin, jmax,

@@ -1483,19 +1483,29 @@ c                                 interval limits conformal transformation
       logical lopt
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
+
+      integer ncoor,mcoor,ndim
+      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
+
+      integer ksmod, ksite, kmsol, knsp
+      common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
 c----------------------------------------------------------------------
 c                                 set stable flag
       stable(ids) = .true.
 
       k = 0
-
-      if (ksmod(ids).ne.20) then
-         nlim = ndim(i,ids)
-      else
-         nlim = nqs1
-      end if 
 c                                 check x-ranges
       do i = 1, istg(ids)
+
+
+         if (ksmod(ids).ne.20) then
+            nlim = ndim(i,ids)
+         else
+            nlim = nqs1
+         end if 
 
          do j = 1, nlim
 
@@ -3075,10 +3085,6 @@ c-----------------------------------------------------------------------
       integer ids,isct,icp1,isat,io2
       common/ cst40 /ids(h5,h6),isct(h5),icp1,isat,io2
 
-      integer ixp
-      double precision sxs,exces
-      common/ cst304 /sxs(k13),exces(m3,k1),ixp(k1)
-
       integer jend
       common/ cxt23 /jend(h9,m4)
 
@@ -3112,6 +3118,10 @@ c                                 endmember names
 
       double precision vh2o, epsilo, adh
       common/ cxt37 /vh2o, epsilo, adh
+
+      double precision xco
+      integer ico,jco
+      common/ cxt10 /xco(k18),ico(k1),jco(k1)
 c-----------------------------------------------------------------------
 c                                 compute the chemical potential
 c                                 of the projected components.
@@ -3134,8 +3144,10 @@ c                                 initialize with excess energy, dqf,
 c                                 and configurational entropy terms
                call gexces (id,g(id))
 
+               call setp0a (i,id)
+
                do k = 1, lstot(i) 
-                  g(id) = g(id) + g(jend(i,2+k)) * sxs(ixp(id)+k)
+                  g(id) = g(id) + g(jend(i,2+k)) * p0a(k)
                end do 
 
                id = id + 1
@@ -3146,7 +3158,7 @@ c                                 and configurational entropy terms
 c                                 it's a fluid compound, the way 
 c                                 things are now it must have two
 c                                 components.
-            do j = 1, mstot(i)
+            do j = 1, lstot(i)
                g0(j) = gzero(jend(i,2+j))
             end do 
 
@@ -3154,8 +3166,10 @@ c                                 components.
 
                call fexces (id,gval)
 
-               g(id) = g0(1) * sxs(ixp(id)+1) + g0(2) * sxs(ixp(id)+2) 
-     *                                        + gval
+               call setp0a (i,id)
+
+               g(id) = g0(1) * p0a(1) + g0(2) * p0a(2) + gval
+
                id = id + 1
 
             end do 
@@ -3165,8 +3179,8 @@ c                                 call nastia's BCC/FCC model
 c                                 after Lacaze and Sundman
             do j = 1, jend(i,2)
 
-               g(id) = gfesic (sxs(ixp(id)+1),
-     *                         sxs(ixp(id)+3),sxs(ixp(id)+4),
+               g(id) = gfesic (xco(jco(id)+1),
+     *                         xco(jco(id)+3),xco(jco(id)+4),
      *                         g(jend(i,3)),g(jend(i,4)),
      *                         g(jend(i,5)),g(jend(i,6)),ksmod(i))
   
@@ -3183,10 +3197,7 @@ c                                 compute enthalpy of ordering
 c                                 now for each compound:
             do j = 1, jend(i,2)
 c                                 assign x's
-               do k = 1, nstot(i) 
-                  p0a(k) = sxs(ixp(id)+k)
-                  pa(k) = p0a(k)
-               end do 
+               call setp0a (i,id)
 c                                 get the speciation energy effect
                call specis (dg,i)
 c                                 and internal endmember dqf
@@ -3217,10 +3228,10 @@ c                                 for speciation models gexces
 c                                 evaluates only endmember sconf 
 c                                 and internal dqf's
                call gexces (id,g(id))
+
+               call setp0a (i,id)
 c                                 gmech
                do k = 1, lstot(i)
-                  p0a(k) = sxs(ixp(id)+k)
-                  pa(k) = p0a(k)
                   g(id) = g(id) + g(jend(i,2+k)) * p0a(k)
                end do
 
@@ -3243,12 +3254,13 @@ c                                 initialize with dqf,
 c                                 and configurational entropy terms
                call gexces (id,g(id))
 
+               call setp0a (i,id)
+
                do k = 1, lstot(i) 
-                  x(k) =  sxs(ixp(id)+k)
-                  g(id) = g(id) + g(jend(i,2+k)) * x(k)
+                  g(id) = g(id) + g(jend(i,2+k)) * p0a(k)
                end do 
 c                                 add the real excess energy
-               g(id) = g(id) + gex(i,x)
+               g(id) = g(id) + gex(i,p0a)
 
                id = id + 1
 
@@ -3274,21 +3286,22 @@ c                                 solvent mass
                msol = 0d0 
                g(id) = 0d0
 
-               do k = 1, nqs
-                  x(k) = sxs(ixp(id) + k)
-                  if (k.gt.ns) cycle 
+               call setp0a (i,id)
+
+               do k = 1, ns
 c                                 solvent mass, kg/mol compound
-                  msol = msol + x(k) * fwt(jend(i,2+k))
+                  msol = msol + p0a(k) * fwt(jend(i,2+k))
 c                                 solvent species, ideal
-                  if (x(k).eq.0d0) cycle 
-                  g(id) = g(id) + x(k) * (g0(k) + dlog(x(k)))
+                  if (p0a(k).eq.0d0) cycle 
+                  g(id) = g(id) + p0a(k) * (g0(k) + dlog(p0a(k)))
+
                end do 
 c                                 ionic strength 
                is = 0d0 
 
                do k = sn1, nqs
 c                                 ln molality of solutes
-                  mo(k) = x(k)/msol
+                  mo(k) = p0a(k)/msol
                   if (k.le.sn) cycle 
                   q(k) = thermo(6,jend(i,2+k))**2
                   is = is + q(k) * mo(k)
@@ -3302,44 +3315,31 @@ c                                 neutral solutes, ideal
                do l = sn1, sn
 
                   if (mo(l).le.0d0) cycle
-                  g(id) = g(id) + x(l) * (g0(l) + dlog(mo(l)))
+                  g(id) = g(id) + p0a(l) * (g0(l) + dlog(mo(l)))
 
                end do 
 c                                 ionic solutes, Davies D-H extension
                do k = l, nqs
 
-                  if (x(k).le.0d0) cycle
-                  g(id) = g(id) + x(k) * (g0(k) + dlog(mo(k)) 
+                  if (p0a(k).le.0d0) cycle
+                  g(id) = g(id) + p0a(k) * (g0(k) + dlog(mo(k)) 
      *                  + lng0*q(k))
                end do
 
                id = id + 1
 
-            end do 
-
-         else if (ksmod(i).eq.23) then
-c                                 toop melt:
-            do j = 1, nstot(i)
-               g0(j) = gzero (jend(i,2+j))
-            end do 
-
-            do j = 1, jend(i,2)
-               call toop (id,g(id))
-               do k = 1, nstot(i) 
-                  g(id) = g(id) + g(jend(i,2+k)) * sxs(ixp(id)+k)
-               end do 
-               id = id + 1
-            end do 
+            end do
 
          else if (ksmod(i).eq.26) then
 c                                 H2O-CO2-Salt:
             do j = 1, jend(i,2)
+
+               call setp0a (i,id)
         
-               call hcneos (g(id),sxs(ixp(id)+1),
-     *                      sxs(ixp(id)+2),sxs(ixp(id)+3))
+               call hcneos (g(id),p0a(1),p0a(2),p0a(3))
 
                do k = 1, nstot(i) 
-                  g(id) = g(id) + g(jend(i,2+k)) * sxs(ixp(id)+k)
+                  g(id) = g(id) + g(jend(i,2+k)) * p0a(k)
                end do 
 
                id = id + 1
@@ -3349,7 +3349,7 @@ c                                 H2O-CO2-Salt:
          else if (ksmod(i).eq.39) then
 c                                 generic hybrid EoS
 c                                 initialize pointer array
-            isp = mstot(i)
+            isp = lstot(i)
 
             do j = 1, isp
                ins(j) = jspec(i,j)
@@ -3361,13 +3361,13 @@ c                                 initialize pointer array
 
                do k = 1, isp
 c                                 load composition array and pointers 
-                  x(k) = sxs(ixp(id)+k)
+                  call setp0a (i,id)
 c                                 sum pure species g's
-                  g(id) = g(id) + g(jend(i,2+k)) * x(k)
+                  g(id) = g(id) + g(jend(i,2+k)) * p0a(k)
 
                end do
 c                                 compute and add in activities
-               g(id) = g(id) + ghybrid (x,ins,isp)
+               g(id) = g(id) + ghybrid (p0a,ins,isp)
 
                id = id + 1
 
@@ -3377,7 +3377,7 @@ c                                 compute and add in activities
  
             do j = 1, jend(i,2)
 c                                 BCC Fe-Si Lacaze and Sundman
-               g(id) = gfesi(sxs(ixp(id)+1),g(jend(i,3)),g(jend(i,4)))
+               g(id) = gfesi(xco(jco(id)+1),g(jend(i,3)),g(jend(i,4)))
   
                id = id + 1
 
@@ -3387,21 +3387,22 @@ c                                 BCC Fe-Si Lacaze and Sundman
  
             do j = 1, jend(i,2)
 c                                 BCC Fe-Cr Andersson and Sundman
-               g(id) = gfecr1 (sxs(ixp(id)+1),g(jend(i,3)),g(jend(i,4)))
+               g(id) = gfecr1 (xco(jco(id)+1),g(jend(i,3)),g(jend(i,4)))
 
                id = id + 1
 
-            end do  
-
+            end do
 
          else if (ksmod(i).eq.41) then 
 
             do j = 1, jend(i,2)
 c                                 hybrid MRK ternary COH fluid
-               call rkcoh6 (sxs(ixp(id)+2),sxs(ixp(id)+1),g(id)) 
+               call setp0a (i,id)
+
+               call rkcoh6 (p0a(2),p0a(1),g(id)) 
 
                do k = 1, 3 
-                  g(id) = g(id) + g(jend(i,2+k)) * sxs(ixp(id)+k)
+                  g(id) = g(id) + g(jend(i,2+k)) * p0a(k)
                end do 
 
                id = id + 1
@@ -3414,12 +3415,13 @@ c                                 hybrid MRK ternary COH fluid
 c                                 MRK silicate vapor
                g(id) = 0d0
 
-               do k = 1, nstot(i) 
-                  x(k) = sxs(ixp(id)+k)
-                  g(id) = g(id) + gzero(jend(i,2+k)) * x(k)
+               call setp0a (i,id)
+
+               do k = 1, lstot(i) 
+                  g(id) = g(id) + gzero(jend(i,2+k)) * p0a(k)
                end do 
 
-               g(id) = g(id) + gerk(x)
+               g(id) = g(id) + gerk(p0a)
 
                id = id + 1
 
@@ -3565,26 +3567,27 @@ c                                                  2 active, upper bound
 
       subroutine setx3 (ind,id,ids)
 c----------------------------------------------------------------------
-c subroutine to recover geometric reciprocal solution compositions (x(i,j))
-c from the xcoor (reciprocal) or sxs (single site) arrays loaded in soload
+c subroutine to recover prismatic solution compositions (x(i,j))
+c from the xco array loaded in soload
 c----------------------------------------------------------------------
       implicit none
 
       include 'perplex_parameters.h'
 
-      integer i, j, id, ids, jcoor, ind
+      integer i, j, id, ids, kcoor, ind
 c                                 x coordinate description
       integer istg, ispg, imlt, imdg
 
+      double precision xt
+
       common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
 c                                 stored x coordinate
-      double precision xcoor
-      integer icoor
-      common/ cxt10 /xcoor(k18),icoor(k1)
-c                                 single site solution coordinates:
-      integer ixp
-      double precision sxs,exces
-      common/ cst304 /sxs(k13),exces(m3,k1),ixp(k1)
+      double precision xco
+      integer ico,jco
+      common/ cxt10 /xco(k18),ico(k1),jco(k1)
+
+      integer ncoor,mcoor,ndim
+      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
 c                                  x-coordinates for the final solution
       double precision x3
       common/ cxt16 /x3(k21,mst,msp)
@@ -3599,28 +3602,44 @@ c----------------------------------------------------------------------
 c                                 a normal solution
          if (istg(ids).eq.1) then 
 c                                 one site solution
-            do j = 1, nstot(ids)
-               x3(ind,1,j) = sxs(ixp(id)+j) 
+            xt = 0d0 
+
+            do j = 1, nstot(ids) - 1
+               x3(ind,1,j) = xco(jco(id)+j) 
+               xt = xt + x3(ind,1,j)
             end do 
+
+            x3(ind,1,j) = 1d0 - xt 
 
          else if (ispg(ids,1).gt.1) then 
 c                                 multi-site solution
-            jcoor = icoor(id)
+            kcoor = ico(id)
 
             do i = 1, istg(ids)
-               do j = 1, ispg(ids,i)
-                  jcoor = jcoor + 1
-                  x3(ind,i,j) = xcoor(jcoor)
+
+               xt = 0d0 
+
+               do j = 1, ndim(i,ids)
+                  kcoor = kcoor + 1
+                  x3(ind,i,j) = xco(kcoor)
+                  xt = xt + xco(kcoor)
                end do 
+
+               x3(ind,i,j) = 1d0 - xt 
+
             end do 
 
          else 
 c                                 a dummy site
             x3(ind,1,1) = 1d0
-          
+            xt = 0d0 
+
             do j = 1, nstot(ids)
-               x3(ind,2,j) = sxs(ixp(id)+j) 
+               x3(ind,2,j) = xco(jco(id)+j) 
+               xt = xt + x3(ind,2,j)
             end do 
+
+            x3(ind,2,j) = 1d0 - xt 
 
          end if 
 
@@ -4358,7 +4377,7 @@ c                                 the original positions
 
       end if 
 c                                 DEBUG DEBUG TEST TEST
-      call aqrxdo
+c      call aqrxdo
 c                                 test for solvi and average
 c                                 homogeneous phases.
       call avrger

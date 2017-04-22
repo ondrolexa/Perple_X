@@ -91,7 +91,7 @@ c------------------------------------------------------------------------
 
       integer length,iblank,icom
       character chars*1
-      common/ cst51 /length,iblank,icom,chars(240)
+      common/ cst51 /length,iblank,icom,chars(lchar)
 
       double precision cp
       common/ cst12 /cp(k5,k1)

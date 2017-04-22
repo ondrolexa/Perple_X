@@ -221,3 +221,71 @@ c-----------------------------------------------------------------------
       solve = x
 
       end 
+
+      subroutine setp0a (ids,id)
+c-----------------------------------------------------------------------
+c for static pseudocompounds load the compositional coordinates from xco
+c into simple compositional arrays for compound id of solution ids. 
+c-----------------------------------------------------------------------
+      implicit none
+ 
+      include 'perplex_parameters.h'
+
+      integer ids, id, i
+
+      double precision xt
+c                                 working arrays
+      double precision z, pa, p0a, x, w, y, wl
+      common/ cxt7 /x(m4),y(m4),pa(m4),p0a(m4),z(mst,msp),w(m1),
+     *              wl(m17,m18)
+c                                 model type
+      logical lorder, lexces, llaar, lrecip
+      common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
+
+      integer lstot,mstot,nstot,ndep,nord
+      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
+
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
+
+      double precision xco
+      integer ico,jco
+      common/ cxt10 /xco(k18),ico(k1),jco(k1)
+c-----------------------------------------------------------------------
+
+      xt = 0d0 
+
+      if (lorder(ids).and.lrecip(ids)) then 
+
+         do i = 1, nstot(ids) - 1
+            p0a(i) = xco(jco(id)+i) 
+            pa(i) = p0a(i)
+            xt = xt + pa(i)
+         end do 
+
+         p0a(i) = 1d0 - xt  
+         pa(i) = p0a(i)
+  
+      else if (lorder(ids)) then
+
+         do i = 1, lstot(ids) - 1
+            p0a(i) = xco(jco(id)+i) 
+            pa(i) = p0a(i)
+            xt = xt + pa(i)
+         end do
+
+         p0a(i) = 1d0 - xt
+         pa(i) = p0a(i)
+
+      else 
+
+         do i = 1, lstot(ids)- 1
+            p0a(i) = xco(jco(id)+i) 
+            xt = xt + p0a(i)
+         end do
+
+         p0a(i) = 1d0 - xt
+
+       end if
+
+       end
