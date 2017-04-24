@@ -7417,7 +7417,7 @@ c                                 are allocated independent of ifct!
 
       recursive double precision function gphase (id)
 c-----------------------------------------------------------------------
-c gphase computes the gibbs free energy of a compound identified by index id.
+c gphase computes the gibbs free energy of static compound id.
 c gphase does not assume that the properties of a pseudocompound endmembers
 c are known (unlike gall) it is thus less efficient than gall.
 
@@ -7431,7 +7431,7 @@ c-----------------------------------------------------------------------
 
       integer k,id,ids
 
-      double precision gzero, dg, gerk, x1(5), gph, gproj, gcpd, gfesi,
+      double precision gzero, dg, gerk, gph, gproj, gcpd, gfesi,
      *                 gfecr1, gfesic
 
       external gzero, gerk, gproj, gcpd, gfesi, gfecr1, gfesic
@@ -7472,57 +7472,24 @@ c----------------------------------------------------------------------
       ids = ikp(id)
  
       if (id.le.ipoint) then
-c                                 phase is an endmember compound
+c                                 a pure compound
          gph = gcpd (id,.true.)
 
-c      else if (ksmod(ids).ge.30.and.ksmod(ids).le.31) then 
-c                                 -------------------------------------
-c                                 Nastia's version of BCC/FCC Fe-Si-C Lacaze and Sundman
-c                                 this model has to be called ahead of the standard models
-c                                 because it sets lrecip(id) = true.
-c          gph =  gfesic (xco(jco(id)+1),xco(jco(id)+3),xco(jco(id)+4),
-c     *                   gproj (jend(ids,3)), gproj (jend(ids,4)),
-c     *                   gproj (jend(ids,5)), gproj (jend(ids,6)),
-c     *                   ksmod(ids))
-
-      else if (lorder(ids).and.lrecip(ids)) then 
-c                                 prismatic solution speciation model 
-c                                 with nord order parameters
-c                                 load x's from sxs array.
-         do k = 1, nstot(ids) 
-            p0a(k) = xco(jco(id)+k)
-            pa(k) = p0a(k)
-         end do 
-c                                 compute margules coefficients
-         call setw (ids)
-c                                 evaluate enthalpies of ordering
-         call oenth (ids)
-c                                 get the speciation energy effect
-         call specis (gph,ids)
-c                                 get endmember dqf's
-         call gexces (id,dg) 
-
-         gph = gph + dg 
-c                                 get gmech
-         do k = 1, lstot(ids)
-            gph = gph + gproj (jend(ids,2+k)) * p0a(k) 
-         end do 
-
       else if (lorder(ids)) then
+c                                 get composition
+         call setxyp (ids,id)
 c                                 initialize gph and any dqf corrections
          call gexces (id,gph)
 c                                 compute margules coefficients
          call setw (ids)
 c                                 evaluate enthalpies of ordering
          call oenth (ids)
-c                                 get gmech
-         do k = 1, lstot(ids)
-            p0a(k) = xco(jco(id)+k)
-            pa(k) = p0a(k)
-            gph = gph + gproj(jend(ids,2+k)) * p0a(k)
-         end do 
 c                                 get the speciation energy effect     
          call specis (dg,ids)
+c                                 get gmech
+         do k = 1, lstot(ids)
+            gph = gph + gproj(jend(ids,2+k)) * p0a(k)
+         end do 
 
          gph = gph + dg
 
@@ -7530,47 +7497,63 @@ c                                 get the speciation energy effect
 c                              get the excess and/or ideal mixing effect
 c                              and/or dqf corrections:
          call fexces (id,gph)
+
+         call setxyp (ids,id)
 c                              excess props don't include vdp:
          do k = 1, nstot(ids) 
-            gph = gph + gzero (jend(ids,2+k)) * xco(jco(id)+k)
+            gph = gph + gzero (jend(ids,2+k)) * y(k)
          end do 
-
-c      else if (ksmod(ids).eq.29) then 
-c                                 -------------------------------------
-c                                 BCC Fe-Si Lacaze and Sundman
-c         gph = gfesi(xco(jco(id)+1), gproj (jend(ids,3)), 
-c     *                               gproj (jend(ids,4)) )
-
-c      else if (ksmod(ids).eq.32) then 
-c                                 -------------------------------------
-c                                 BCC Fe-Cr Andersson and Sundman
-c         gph = gfecr1(xco(jco(id)+1), gproj (jend(ids,3)), 
-c     *                                gproj (jend(ids,4)) )
 
       else if (ksmod(ids).eq.40) then
 c                                 si-o mrk fluid
          gph = 0d0 
 
+         call setxyp (ids,id)
+
          do k = 1, nstot(ids)
-            x1(k) = xco(jco(id)+k)
-            gph = gph + gzero(jend(ids,2+k)) * x1(k)
+            gph = gph + gzero(jend(ids,2+k)) * y(k)
          end do 
 
-         gph = gph + gerk (x1)
+         gph = gph + gerk (p0a)
+
+      else if (ksmod(ids).ge.29.and.ksmod(ids).le.32) then 
+c                                 nastia's models:
+          if (ksmod(ids).eq.29) then 
+c                                 BCC Fe-Si Lacaze and Sundman
+             gph = gfesi(xco(jco(id)+1), gproj (jend(ids,3)), 
+     *                                   gproj (jend(ids,4)) )
+
+          else if (ksmod(ids).eq.32) then 
+c                                 BCC Fe-Cr Andersson and Sundman
+             gph = gfecr1(xco(jco(id)+1), gproj (jend(ids,3)), 
+     *                                    gproj (jend(ids,4)) )
+
+          else  
+c                                 Nastia's version of BCC/FCC Fe-Si-C Lacaze and Sundman
+c                                 this model has to be called ahead of the standard models
+c                                 because it sets lrecip(id) = true.
+            gph =  gfesic (xco(jco(id)+1),xco(jco(id)+3),xco(jco(id)+4),
+     *                     gproj (jend(ids,3)), gproj (jend(ids,4)),
+     *                     gproj (jend(ids,5)), gproj (jend(ids,6)),
+     *                     ksmod(ids))
+
+          end if 
 
       else
 c                                 normal models (configurational 
 c                                 entropy fixed, excess function
 c                                 linear in p-t) and special models 
 c                                 with normal gmech term
+         call setxyp (ids,id)
+
          if (ksmod(ids).eq.41) then
 c                                 ternary coh fluid deltag
-            call rkcoh6 (xco(jco(id)+2),xco(jco(id)+1),gph)
+            call rkcoh6 (y(2),y(1),gph)
 
          else if (ksmod(ids).eq.26) then
 
-            call hcneos (gph,xco(jco(id)+1),
-     *                       xco(jco(id)+2),xco(jco(id)+3))
+            call hcneos (gph,y(1),y(2),y(3))
+
          else 
 c                                 get the excess and/or ideal mixing effect
 c                                 and/or dqf corrections:
@@ -7579,12 +7562,13 @@ c                                 and/or dqf corrections:
          end if 
 c                                 add gmech
          do k = 1, nstot(ids) 
-            gph = gph +  gproj (jend(ids,2+k)) * xco(jco(id)+k)
+            gph = gph +  gproj (jend(ids,2+k)) * y(k)
          end do 
 c                                 for van laar get fancier excess function
          if (llaar(ids)) then
 
-            call setw(ids) 
+            call setw (ids) 
+
             call gvlaar (ikp(id),id,gph)
 
          end if 
@@ -8235,7 +8219,7 @@ c-----------------------------------------------------------------------
 
       integer k, l, id, isp, ins(nsp)
 
-      double precision is, gg, dg, msol, mo(m4), q(m4), lng0
+      double precision is, gg, dg, msol, mo(m4), q(m4), lng0, rt
 
       double precision omega, hpmelt, slvmlt, gmelt, gfluid, gzero,
      *                 gex, gfesi, gfesic, gfecr1, gerk, ghybrid
@@ -8383,13 +8367,14 @@ c                                 -------------------------------------
 c                                 compute solvent mass and gibbs energy:
          msol = 0d0
          gg = 0d0
+         rt = r*t
 
          do k = 1, ns
 c                                 solvent mass, kg/mol compound
             msol = msol + y(k) * fwt(jend(id,2+k))
 c                                 solvent gibbs energy 
             if (y(k).le.0d0) cycle
-            gg = gg + y(k) * (g(jend(id,2+k)) + dlog(y(k)))
+            gg = gg + y(k) * (g(jend(id,2+k)) + rt*dlog(y(k)))
 
          end do
 c                                 ionic strength 
@@ -8411,15 +8396,15 @@ c                                 neutral solutes, ideal
          do l = sn1, sn
 
             if (mo(l).le.0d0) cycle
-            gg = gg + y(l) * (g(jend(id,2+l)) + dlog(mo(l)))
+            gg = gg + y(l) * (g(jend(id,2+l)) + rt*dlog(mo(l)))
 
          end do
 c                                 ionic solutes, Davies D-H extension
          do k = l, nqs
 
             if (y(k).le.0d0) cycle
-            gg = gg + y(k) * (g(jend(id,2+k)) + dlog(mo(k))
-     *                                           + lng0*q(k))
+            gg = gg + y(k) * (g(jend(id,2+k)) 
+     *                        + rt*(dlog(mo(k))+ lng0*q(k)))
 
          end do 
 
@@ -15337,12 +15322,15 @@ c                                 x coordinate description
       double precision xmn,xmx,xnc
       common/ cxt108 /xmn(mst,msp),xmx(mst,msp),xnc(mst,msp)
 
+      integer ksmod, ksite, kmsol, knsp
+      common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
+
       integer iopt
       logical lopt
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 c----------------------------------------------------------------------
-      if (ids.ne.20) then
+      if (ksmod(ids).ne.20) then
 c                                 chopit always generates jsp coordinates
          ico = jsp
       else 
@@ -15659,7 +15647,7 @@ c                                 subdivision of neutral ns-1 species
 
          do i = 1, npairs
 
-            k = (i-1)*ns1
+            k = (i-1)*sn
             l = np0*nqs1
 
             sum = 0d0

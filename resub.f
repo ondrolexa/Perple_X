@@ -542,7 +542,8 @@ c                                 the composition is out of range
             end do 
 
          else 
-
+c                                 charge balance models: a wierd shuffle to put
+c                                 the first nqs - 1 species in zcoor
             ysum = 0d0
 
             do k = 1, nqs
@@ -553,6 +554,9 @@ c                                 the composition is out of range
 
                x(1,k) = prism(l+m)
                ysum = ysum + x(1,k)
+
+               if (k.eq.nqs) cycle 
+
                zcoor(kcoct-nqs+k) = x(1,k)
  
                if (x(1,k).lt.xmno(ids,1,k).and.
@@ -569,7 +573,7 @@ c                                 the composition is out of range
             x(1,ns) = 1d0 - ysum
 
             zcoor(kcoct-qn) = x(1,ns)
-            jcoct = jcoct + nqs
+            jcoct = jcoct + nqs1
 
          end if 
 
@@ -2292,8 +2296,12 @@ c                                 and the least metastable composition of
 c                                 each solution.      
       do 20 i = 1, jphct
 c DEBUG why was this here? added ~6.7.6, removed april 21, 2017
-c         if (is(i).ne.1.or.clamda(i).lt.wmach(3)) cycle 
-         if (is(i).ne.1) cycle 
+c i think clamda(i).lt.0 allows degenerate compositions (and probably 
+c therefore the 6.7.6 version may be better, on the bright side with
+c it removed the solution composition gets refined (if endmember comps are
+c being allowed, see ldsol code); restored
+         if (is(i).ne.1.or.clamda(i).lt.wmach(3)) cycle 
+c        if (is(i).ne.1) cycle 
 
          id = i + inc 
          iam = ikp(id)
@@ -3046,8 +3054,8 @@ c-----------------------------------------------------------------------
 
       integer i, j, k, l, id, isp, ins(nsp)
 
-      double precision dg1, gval, dg, g0(m4), mo(m4), q(m4), is, 
-     *                 msol, lng0
+      double precision gval, dg, g0(m4), mo(m4), q(m4), is, 
+     *                 msol, lng0, rt
 
       double precision gex, gfesi, gfesic, gfecr1, gerk, gproj, 
      *                 ghybrid, gaq, gzero, gcpd
@@ -3144,10 +3152,10 @@ c                                 initialize with excess energy, dqf,
 c                                 and configurational entropy terms
                call gexces (id,g(id))
 
-               call setp0a (i,id)
+               call setxyp (i,id)
 
                do k = 1, lstot(i) 
-                  g(id) = g(id) + g(jend(i,2+k)) * p0a(k)
+                  g(id) = g(id) + g(jend(i,2+k)) * y(k)
                end do 
 
                id = id + 1
@@ -3166,52 +3174,9 @@ c                                 components.
 
                call fexces (id,gval)
 
-               call setp0a (i,id)
+               call setxyp (i,id)
 
-               g(id) = g0(1) * p0a(1) + g0(2) * p0a(2) + gval
-
-               id = id + 1
-
-            end do 
-
-         else if (ksmod(i).eq.30.or.ksmod(i).eq.31) then 
-c                                 call nastia's BCC/FCC model
-c                                 after Lacaze and Sundman
-            do j = 1, jend(i,2)
-
-               g(id) = gfesic (xco(jco(id)+1),
-     *                         xco(jco(id)+3),xco(jco(id)+4),
-     *                         g(jend(i,3)),g(jend(i,4)),
-     *                         g(jend(i,5)),g(jend(i,6)),ksmod(i))
-  
-               id = id + 1
-
-            end do
-
-         else if (lrecip(i).and.lorder(i)) then
-c                                 prismatic solution with ordering:
-c                                 compute margules coefficients
-            call setw (i)
-c                                 compute enthalpy of ordering
-            call oenth (i)
-c                                 now for each compound:
-            do j = 1, jend(i,2)
-c                                 assign x's
-               call setp0a (i,id)
-c                                 get the speciation energy effect
-               call specis (dg,i)
-c                                 and internal endmember dqf
-               call gexces (id,dg1)
-
-               g(id) = dg + dg1 
-c                                 add in g from real endmembers, this
-c                                 must include the g for the disordered equivalent
-c                                 of the ordered species
-               do k = 1, lstot(i)
-
-                  g(id) = g(id) + g(jend(i,2+k)) * p0a(k)
-
-               end do 
+               g(id) = g0(1) * y(1) + g0(2) * y(2) + gval
 
                id = id + 1
 
@@ -3229,13 +3194,17 @@ c                                 evaluates only endmember sconf
 c                                 and internal dqf's
                call gexces (id,g(id))
 
-               call setp0a (i,id)
-c                                 gmech
-               do k = 1, lstot(i)
-                  g(id) = g(id) + g(jend(i,2+k)) * p0a(k)
-               end do
+               call setxyp (i,id)
 
                call specis (dg,i)
+c                                 add in g from real endmembers, this
+c                                 must include the g for the disordered equivalent
+c                                 of the ordered species
+               do k = 1, lstot(i)
+
+                  g(id) = g(id) + g(jend(i,2+k)) * p0a(k)
+
+               end do 
 
                g(id) = g(id) + dg
 
@@ -3254,13 +3223,13 @@ c                                 initialize with dqf,
 c                                 and configurational entropy terms
                call gexces (id,g(id))
 
-               call setp0a (i,id)
+               call setxyp (i,id)
 
                do k = 1, lstot(i) 
-                  g(id) = g(id) + g(jend(i,2+k)) * p0a(k)
+                  g(id) = g(id) + g(jend(i,2+k)) * y(k)
                end do 
 c                                 add the real excess energy
-               g(id) = g(id) + gex(i,p0a)
+               g(id) = g(id) + gex(i,y)
 
                id = id + 1
 
@@ -3273,11 +3242,13 @@ c                                 for solutes.
 c                                 2) water is the last species
 c                                 solvent species Gibbs energies:
 c                                 solvent Gibbs energies
+            rt = r*t
+
             do k = 1, ns
                g0(k) = g(jend(i,2+k))
             end do 
 
-            do j = k, qn
+            do j = k, nqs
                g0(j) = gcpd (jend(i,2+j),.true.)
             end do 
 c                                 compute compound properties
@@ -3286,14 +3257,14 @@ c                                 solvent mass
                msol = 0d0 
                g(id) = 0d0
 
-               call setp0a (i,id)
+               call setxyp (i,id)
 
                do k = 1, ns
 c                                 solvent mass, kg/mol compound
-                  msol = msol + p0a(k) * fwt(jend(i,2+k))
+                  msol = msol + y(k) * fwt(jend(i,2+k))
 c                                 solvent species, ideal
-                  if (p0a(k).eq.0d0) cycle 
-                  g(id) = g(id) + p0a(k) * (g0(k) + dlog(p0a(k)))
+                  if (y(k).eq.0d0) cycle 
+                  g(id) = g(id) + y(k) * (g0(k) + rt*dlog(y(k)))
 
                end do 
 c                                 ionic strength 
@@ -3301,7 +3272,7 @@ c                                 ionic strength
 
                do k = sn1, nqs
 c                                 ln molality of solutes
-                  mo(k) = p0a(k)/msol
+                  mo(k) = y(k)/msol
                   if (k.le.sn) cycle 
                   q(k) = thermo(6,jend(i,2+k))**2
                   is = is + q(k) * mo(k)
@@ -3315,15 +3286,16 @@ c                                 neutral solutes, ideal
                do l = sn1, sn
 
                   if (mo(l).le.0d0) cycle
-                  g(id) = g(id) + p0a(l) * (g0(l) + dlog(mo(l)))
+                  g(id) = g(id) + y(l) * (g0(l) + rt*dlog(mo(l)))
 
                end do 
 c                                 ionic solutes, Davies D-H extension
                do k = l, nqs
 
-                  if (p0a(k).le.0d0) cycle
-                  g(id) = g(id) + p0a(k) * (g0(k) + dlog(mo(k)) 
-     *                  + lng0*q(k))
+                  if (y(k).le.0d0) cycle
+
+                  g(id) = g(id) + y(k) * (g0(k) 
+     *                                 + rt*(dlog(mo(k)) + lng0*q(k)))
                end do
 
                id = id + 1
@@ -3334,12 +3306,12 @@ c                                 ionic solutes, Davies D-H extension
 c                                 H2O-CO2-Salt:
             do j = 1, jend(i,2)
 
-               call setp0a (i,id)
+               call setxyp (i,id)
         
-               call hcneos (g(id),p0a(1),p0a(2),p0a(3))
+               call hcneos (g(id),y(1),y(2),y(3))
 
                do k = 1, nstot(i) 
-                  g(id) = g(id) + g(jend(i,2+k)) * p0a(k)
+                  g(id) = g(id) + g(jend(i,2+k)) * y(k)
                end do 
 
                id = id + 1
@@ -3361,34 +3333,38 @@ c                                 initialize pointer array
 
                do k = 1, isp
 c                                 load composition array and pointers 
-                  call setp0a (i,id)
+                  call setxyp (i,id)
 c                                 sum pure species g's
-                  g(id) = g(id) + g(jend(i,2+k)) * p0a(k)
+                  g(id) = g(id) + g(jend(i,2+k)) * y(k)
 
                end do
 c                                 compute and add in activities
-               g(id) = g(id) + ghybrid (p0a,ins,isp)
+               g(id) = g(id) + ghybrid (y,ins,isp)
 
                id = id + 1
 
             end do 
 
-         else if (ksmod(i).eq.29) then 
- 
+         else if (ksmod(i).ge.29.and.ksmod(i).le.32) then 
+c                                 nastia's models:
             do j = 1, jend(i,2)
+            
+               if (ksmod(i).eq.29) then 
 c                                 BCC Fe-Si Lacaze and Sundman
-               g(id) = gfesi(xco(jco(id)+1),g(jend(i,3)),g(jend(i,4)))
-  
-               id = id + 1
-
-            end do 
-
-         else if (ksmod(i).eq.32) then 
- 
-            do j = 1, jend(i,2)
+                  g(id) = gfesi(xco(jco(id)+1),g(jend(i,3)),
+     *                                         g(jend(i,4)))
+               else if (ksmod(i).eq.32) then 
 c                                 BCC Fe-Cr Andersson and Sundman
-               g(id) = gfecr1 (xco(jco(id)+1),g(jend(i,3)),g(jend(i,4)))
+                  g(id) = gfecr1 (xco(jco(id)+1),g(jend(i,3)),
+     *                                           g(jend(i,4)))
+               else 
 
+                  g(id) = gfesic (xco(jco(id)+1),
+     *                            xco(jco(id)+3),xco(jco(id)+4),
+     *                            g(jend(i,3)),g(jend(i,4)),
+     *                            g(jend(i,5)),g(jend(i,6)),ksmod(i))
+               end if 
+  
                id = id + 1
 
             end do
@@ -3397,12 +3373,12 @@ c                                 BCC Fe-Cr Andersson and Sundman
 
             do j = 1, jend(i,2)
 c                                 hybrid MRK ternary COH fluid
-               call setp0a (i,id)
+               call setxyp (i,id)
 
-               call rkcoh6 (p0a(2),p0a(1),g(id)) 
+               call rkcoh6 (y(2),y(1),g(id)) 
 
                do k = 1, 3 
-                  g(id) = g(id) + g(jend(i,2+k)) * p0a(k)
+                  g(id) = g(id) + g(jend(i,2+k)) * y(k)
                end do 
 
                id = id + 1
@@ -3415,13 +3391,13 @@ c                                 hybrid MRK ternary COH fluid
 c                                 MRK silicate vapor
                g(id) = 0d0
 
-               call setp0a (i,id)
+               call setxyp (i,id)
 
                do k = 1, lstot(i) 
-                  g(id) = g(id) + gzero(jend(i,2+k)) * p0a(k)
+                  g(id) = g(id) + gzero(jend(i,2+k)) * y(k)
                end do 
 
-               g(id) = g(id) + gerk(p0a)
+               g(id) = g(id) + gerk(y)
 
                id = id + 1
 
@@ -4377,7 +4353,7 @@ c                                 the original positions
 
       end if 
 c                                 DEBUG DEBUG TEST TEST
-c      call aqrxdo
+      call aqrxdo
 c                                 test for solvi and average
 c                                 homogeneous phases.
       call avrger
@@ -4387,3 +4363,323 @@ c                                 homogeneous phases.
      *   'calculations, this limitation can be removed upon request.')
 
       end
+
+      subroutine aqrxdo
+c-----------------------------------------------------------------------
+c given chemical potentials solve for rock dominated aqueous speciation
+c-----------------------------------------------------------------------
+      implicit none
+ 
+      include 'perplex_parameters.h'
+
+      integer i, j, k, l, ichg, ihy, jchg(l9), it
+
+      logical bad, output
+
+      double precision c(l9), q(l9), mo(l9), dg(l9), gh2o, ahy, xis,
+     *                 d(l9), q2(l9), lng0, is, gamm0, x, totm, g0(l9)
+
+      double precision gcpd, solve
+
+      external gcpd, solve
+
+      double precision r,tr,pr,ps,p,t,xco2,u1,u2
+      common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
+
+      double precision thermo,uf,us
+      common/ cst1 /thermo(k4,k10),uf(2),us(h5)
+
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
+
+      double precision vh2o, epsilo, adh
+      common/ cxt37 /vh2o, epsilo, adh
+
+      integer iaq, aqst, aqct
+      character aqnam*8
+      double precision aqcp, aqtot
+      common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
+
+      integer jbulk
+      double precision cblk
+      common/ cst300 /cblk(k5),jbulk
+
+      logical mus
+      double precision mu, gmax
+      common/ cst330 /mu(k8),gmax,mus
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+c-----------------------------------------------------------------------
+      output = .true. 
+c                                 free energies of aqueous species
+      ichg = 0 
+      is = 0d0
+c DEBUG DEBUG
+      gh2o = mu(1)
+
+      do i = 1, aqct 
+
+         k = aqst + i 
+
+         if (thermo(1,k).eq.0d0) then 
+c                                  find hyrdonium
+            ihy = i 
+            cycle 
+
+         end if 
+
+         q(i) = thermo(6,k)
+         q2(i) = q(i)*q(i)
+c                                 dg is the solvent oxide potentials - g
+         g0(i) = gcpd(k,.false.)
+         dg(i) = -g0(i)
+
+         do j = 1, jbulk 
+c                                 if oxide components, but no excess oxygen
+c                                 mu(O2) is a nan. 
+            if (isnan(mu(j))) cycle
+
+            dg(i) = dg(i) + aqcp(j,i) * mu(j)
+
+         end do 
+c                                 normalize by RT
+         dg(i) = (dg(i) - q(i)*gh2o/2d0)/r/t
+
+         if (q(i).ne.0d0) then 
+
+            ichg = ichg + 1
+            jchg(ichg) = i
+c                                  gh2o is the partial molar gibbs energy of
+c                                  water, don't use mu because we don't know 
+c                                  if h2o is a component. 
+c                                  this is now c(i)*a(H+)^(q(i)) = mol(i)*gamma(i)*q(i)
+            d(i) = q(i)*dexp(dg(i))
+            c(i) = d(i)
+
+         else 
+c                                  neutral species assumed to be ideal, molality is
+            mo(i) = dexp(dg(i))
+      
+         end if 
+
+      end do 
+
+      gamm0 = 1d0 
+      it = 0 
+      mo(ihy) = 1e-6
+c                                  iterative loop for ionic strength
+      do 
+c                                  solve charge balance for H+
+         mo(ihy) = solve(c,q,mo(ihy),jchg,ichg,bad)
+
+         if (bad) then 
+            write (*,*) 'bombed'
+            pause
+         end if 
+
+         ahy = mo(ihy)*gamm0
+c                                  back calculate charged species molalities
+c                                  and ionic strength
+         xis = is
+
+         is = 0d0
+
+         do i = 1, ichg 
+
+            j = jchg(i)
+            mo(j) = ahy**(q(j))*c(j)/q(j)
+            is = is + q2(j) * mo(j)
+
+         end do
+
+         is = is / 2d0 
+c                                 DH law activity coefficient factor (ln[g] = lng0*q^2)
+         lng0 = adh*dsqrt(is)/(1d0 + dsqrt(is)) + 0.2d0*is
+         gamm0 = dexp(lng0)
+c                                 check for convergence
+         if (dabs(xis-is)/is.lt.nopt(5)) then 
+            exit
+         else if (it.gt.iopt(21)) then 
+            bad = .true.
+         end if 
+
+         it = it + 1
+c                                 update coefficients
+         do i = 1, ichg 
+
+            j = jchg(i)
+            c(j) = d(j)*dexp(lng0*(1d0-q2(j)))
+
+         end do
+
+      end do
+
+      if (output) then
+c                                 compute mole fractions
+        totm = 1d3/18.015
+        do i = 1, aqct
+           totm = totm + mo(i)
+        end do
+
+         write (*,1000) dlog10(ahy),is,gamm0,epsilo
+
+         do i = 1, aqct
+            x = mo(i)/totm
+            write (*,1010) aqnam(i),mo(i),x,int(g0(i))
+         end do 
+
+      end if
+
+1000  format (/,'Rock-dominated solvent solute speciation:',/,
+     *        /,'pH = ',f7.3,
+     *        /,'Ionic strength = ',g12.6,'; gamma/q^2 = ',g12.6,
+     *        '; Permativity =',g12.6,//,13x,'molality',5x,
+     *        'mole fraction',3x,'G0,J/mole')
+1010  format (a8,3x,g12.6,3x,g12.6,5x,i8)
+
+      end 
+
+      double precision function solve (c,q,x,jchg,ichg,bad)
+c-----------------------------------------------------------------------
+c function solve for hydronium molality (x) from charge balance for aqrxdo.
+c-----------------------------------------------------------------------
+      implicit none
+ 
+      include 'perplex_parameters.h'
+
+      integer jchg(*), ichg, it, i, j
+
+      logical bad
+
+      double precision c(*), q(*), x, y, z, f, df, dx
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+c-----------------------------------------------------------------------
+
+      it = 0 
+
+      do
+
+         f = x
+         df = 1d0
+         it = it + 1
+
+         do i = 1, ichg 
+
+            j = jchg(i)
+
+            y = x**(q(j)) * c(j)
+            z = y*q(j)/x 
+
+            f = f + y
+            df = df + z
+
+         end do  
+
+         dx = -f/df
+
+         x = x + dx
+
+         if (dx/x.lt.nopt(5)) then 
+            bad = .false.
+            exit
+         else if (x.lt.0d0.or.it.gt.iopt(21)) then 
+            bad = .true.
+            exit
+         end if 
+
+      end do
+
+      solve = x
+
+      end 
+
+      subroutine setxyp (ids,id)
+c-----------------------------------------------------------------------
+c for static pseudocompounds load the compositional coordinates from xco
+c into simple compositional arrays for compound id of solution ids. 
+c-----------------------------------------------------------------------
+      implicit none
+ 
+      include 'perplex_parameters.h'
+
+      integer ids, id, i
+
+      double precision xt
+c                                 working arrays
+      double precision z, pa, p0a, x, w, y, wl
+      common/ cxt7 /x(m4),y(m4),pa(m4),p0a(m4),z(mst,msp),w(m1),
+     *              wl(m17,m18)
+c                                 model type
+      logical lorder, lexces, llaar, lrecip
+      common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
+
+      integer lstot,mstot,nstot,ndep,nord
+      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
+
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
+
+      double precision xco
+      integer ico,jco
+      common/ cxt10 /xco(k18),ico(k1),jco(k1)
+c-----------------------------------------------------------------------
+c                                 y's are primsatic 1-d coordinates
+c                                 x's are prismatic 2-d coordinates
+c                                 p0a's are independent 1-d endmember coordinates 
+c                                       of a fully disordered o/d model
+c                                 pa's are, ultimately, independent 1-d endmember 
+c                                       coordinates of the stably orderded configuration.
+
+c                                 y's are kept distinct form p0's because in the 
+c                                 adaptive phase of minimization the all compositions
+c                                 are stored in the x version. these are then converted
+c                                 to y's and o/d models subsequently convert
+c                                 these to p0a's. it is not clear whether the original
+c                                 y's are subsequently referenced
+
+c                                 currently the only models that use the x form are 
+c                                 nastia's alloy special cases ksmod 29-31. these should be
+c                                 checked.
+      xt = 0d0 
+
+      if (lorder(ids).and.lrecip(ids)) then 
+
+         do i = 1, nstot(ids) - 1
+            p0a(i) = xco(jco(id)+i) 
+            pa(i) = p0a(i)
+            xt = xt + pa(i)
+         end do 
+
+         p0a(i) = 1d0 - xt  
+         pa(i) = p0a(i)
+  
+      else if (lorder(ids)) then
+
+         do i = 1, lstot(ids) - 1
+            p0a(i) = xco(jco(id)+i) 
+            pa(i) = p0a(i)
+            xt = xt + pa(i)
+         end do
+
+         p0a(i) = 1d0 - xt
+         pa(i) = p0a(i)
+
+      else 
+
+         do i = 1, lstot(ids)- 1
+            y(i) = xco(jco(id)+i) 
+            xt = xt + y(i)
+         end do
+
+         y(i) = 1d0 - xt
+
+       end if
+
+       end

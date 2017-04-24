@@ -814,7 +814,7 @@ c-----------------------------------------------------------------------
 
       integer k, l, id, isp, ins(nsp)
 
-      double precision mo(m4), lng0, is, dg, g, msol, q(m4)
+      double precision mo(m4), lng0, is, dg, g, msol, q(m4), rt
 
       double precision omega, hpmelt, gmelt, gfluid, gzero, 
      *                 gex, slvmlt, gfesi, gcpd, gerk, gfecr1, ghybrid
@@ -934,13 +934,15 @@ c                                 2) water is the last solvent species
 c                                 -------------------------------------
 c                                 compute solvent mass and gibbs energy:
             msol = 0d0 
+            rt = r*t
 
             do k = 1, ns
 c                                 solvent mass, kg/mol compound
                msol = msol + y(k) * fwt(jend(id,2+k))
 c                                 solvent gibbs energy 
                if (y(k).le.0d0) cycle
-               g = g + y(k) * (gcpd(jend(id,2+k),.true.) + dlog(y(k)))
+               g = g + y(k) * (gcpd(jend(id,2+k),.true.) 
+     *                        + rt*dlog(y(k)))
 
             end do 
 c                                 ionic strength 
@@ -962,15 +964,16 @@ c                                 neutral solutes, ideal
             do l = sn1, sn
 
                if (y(l).le.0d0) cycle
-               g = g + y(l) * (gcpd(jend(id,2+l),.true.) + dlog(mo(l)))
+               g = g + y(l) * (gcpd(jend(id,2+l),.true.) 
+     *                        + rt*dlog(mo(l)))
 
             end do
 c                                 ionic solutes, Davies D-H extension
             do k = l, nqs 
 
                if (y(k).le.0d0) cycle
-               g = g + y(k) * (gcpd(jend(id,2+k),.true.) + dlog(mo(k))
-     *                                                   + lng0*q(k))
+               g = g + y(k) * (gcpd(jend(id,2+k),.true.) 
+     *                        + rt*(dlog(mo(k)) + lng0*q(k)))
             end do
 
          else if (ksmod(id).eq.24) then 
