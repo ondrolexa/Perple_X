@@ -7208,10 +7208,15 @@ c                               read number of charged species:
       nq = idint(rnums(1))
 c                               read charged species names:
       i = nn + ns
-      if (nq.gt.0) call readn (i,i+nq,tname)
+      if (nq.gt.0) then
+         call readn (i,i+nq,tname)
+         i = nn + ns + nq - 2
+      else 
+         i = nn + ns - 1
+      end if 
 c                               read composition limits, subdivision type
 c                               for (nn + ns + nq) - 2 species
-      do j = 1, nn + ns + nq - 2
+      do j = 1, i
 
          call readda (rnums,4,tname)
 
@@ -8233,6 +8238,9 @@ c-----------------------------------------------------------------------
       double precision g
       common/ cst2 /g(k1)
 
+      double precision aqg
+      common/ cxt2 /aqg(m4)
+
       double precision r,tr,pr,ps,p,t,xco2,u1,u2
       common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
 c                                 bookkeeping variables
@@ -8374,7 +8382,8 @@ c                                 solvent mass, kg/mol compound
             msol = msol + y(k) * fwt(jend(id,2+k))
 c                                 solvent gibbs energy 
             if (y(k).le.0d0) cycle
-            gg = gg + y(k) * (g(jend(id,2+k)) + rt*dlog(y(k)))
+
+            gg = gg + y(k) * (aqg(k) + rt*dlog(y(k)))
 
          end do
 c                                 ionic strength 
@@ -8383,7 +8392,9 @@ c                                 ionic strength
          do k = sn1, nqs
 c                                 ln molality of solutes
             mo(k) = y(k)/msol
+
             if (k.le.sn) cycle 
+
             q(k) = thermo(6,jend(id,2+k))**2
             is = is + q(k) * mo(k)
 
@@ -8396,15 +8407,16 @@ c                                 neutral solutes, ideal
          do l = sn1, sn
 
             if (mo(l).le.0d0) cycle
-            gg = gg + y(l) * (g(jend(id,2+l)) + rt*dlog(mo(l)))
+
+            gg = gg + y(l) * (aqg(l) + rt*dlog(mo(l)))
 
          end do
 c                                 ionic solutes, Davies D-H extension
          do k = l, nqs
 
             if (y(k).le.0d0) cycle
-            gg = gg + y(k) * (g(jend(id,2+k)) 
-     *                        + rt*(dlog(mo(k))+ lng0*q(k)))
+
+            gg = gg + y(k) * (aqg(k) + rt*(dlog(mo(k))+ lng0*q(k)))
 
          end do 
 
@@ -9523,6 +9535,8 @@ c                                 four intervals
 
                end if 
             end if 
+ 
+            if (jsmod.eq.20.and.j.eq.nqs1) cycle
 
             imdg(j,i,im) = imd(j,i)
             xmng(im,i,j) = xmn(i,j)
@@ -10018,21 +10032,25 @@ c                                 solution models
          end do 
 
       end if 
+
+      if (jsmod.ne.20) then 
 c                                 -------------------------------------
 c                                 create a y -> x array, this array is 
 c                                 to be used to convert endmember fractions (y's)
 c                                 back to geometric coordinates (x's).
-      do i = 1, isite
-         do j = 1, isp(i)
+         do i = 1, isite
+            do j = 1, isp(i)
 c                                 now find all endmembers with
 c                                 species j on site i, this method
 c                                 is inefficient but idependent of
 c                                 endmember order.   
-            do k = 1, istot
-               if (jmsol(k,i).eq.j) indx(im,i,j) = k
+               do k = 1, istot
+                  if (jmsol(k,i).eq.j) indx(im,i,j) = k
+               end do 
             end do 
          end do 
-      end do 
+
+      end if 
       
       if (istot+norder.gt.m4) call error (39,0d0,m4,'INPUT9')    
 
@@ -15704,6 +15722,10 @@ c                                 the amount of the species determined by charge
          end do
 
          qpairs = qpairs - 1
+
+      else 
+
+         qpairs = 0
 
       end if
 c                                 for every charged species composition

@@ -1590,7 +1590,7 @@ c                                reset ipoint counter, but do not
 c                                reset iphct, because the compositions
 c                                of the make phases are necessary for
 c                                chemical potential variables.
-c                                really? then why was it reset here? 
+c                                really? then why was it reset here?
       iphct = jphct
       ipoint = jphct
 

@@ -2299,7 +2299,7 @@ c DEBUG why was this here? added ~6.7.6, removed april 21, 2017
 c i think clamda(i).lt.0 allows degenerate compositions (and probably 
 c therefore the 6.7.6 version may be better, on the bright side with
 c it removed the solution composition gets refined (if endmember comps are
-c being allowed, see ldsol code); restored
+c being allowed, see ldsol code); restored again april 2017.
          if (is(i).ne.1.or.clamda(i).lt.wmach(3)) cycle 
 c        if (is(i).ne.1) cycle 
 
@@ -3072,6 +3072,9 @@ c-----------------------------------------------------------------------
       double precision g
       common/ cst2 /g(k1)
 
+      double precision aqg
+      common/ cxt2 /aqg(m4)
+
       double precision cp
       common/ cst12 /cp(k5,k1)
 
@@ -3245,11 +3248,11 @@ c                                 solvent Gibbs energies
             rt = r*t
 
             do k = 1, ns
-               g0(k) = g(jend(i,2+k))
+               aqg(k) = g(jend(i,2+k))
             end do 
 
             do j = k, nqs
-               g0(j) = gcpd (jend(i,2+j),.true.)
+               aqg(j) = gcpd (jend(i,2+j),.true.)
             end do 
 c                                 compute compound properties
             do j = 1, jend(i,2)
@@ -3264,7 +3267,7 @@ c                                 solvent mass, kg/mol compound
                   msol = msol + y(k) * fwt(jend(i,2+k))
 c                                 solvent species, ideal
                   if (y(k).eq.0d0) cycle 
-                  g(id) = g(id) + y(k) * (g0(k) + rt*dlog(y(k)))
+                  g(id) = g(id) + y(k) * (aqg(k) + rt*dlog(y(k)))
 
                end do 
 c                                 ionic strength 
@@ -3286,7 +3289,7 @@ c                                 neutral solutes, ideal
                do l = sn1, sn
 
                   if (mo(l).le.0d0) cycle
-                  g(id) = g(id) + y(l) * (g0(l) + rt*dlog(mo(l)))
+                  g(id) = g(id) + y(l) * (aqg(l) + rt*dlog(mo(l)))
 
                end do 
 c                                 ionic solutes, Davies D-H extension
@@ -3294,7 +3297,7 @@ c                                 ionic solutes, Davies D-H extension
 
                   if (y(k).le.0d0) cycle
 
-                  g(id) = g(id) + y(k) * (g0(k) 
+                  g(id) = g(id) + y(k) * (aqg(k) 
      *                                 + rt*(dlog(mo(k)) + lng0*q(k)))
                end do
 

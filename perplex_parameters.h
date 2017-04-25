@@ -28,7 +28,7 @@
 !                                 mst - max number of distinct identisites per solution
 !                                 mdim - hard constraint on max number of dimensions
 !                                        for a solution model composition space.
-      parameter (mst=2,mdim=8,msp=mdim+1,ms1=msp-1)
+      parameter (mst=2,mdim=8,msp=mdim+2,ms1=msp-1)
 !                                 h5 - max number of saturated components
 !                                 h6  - max number of saturated composants in any subcomposition
 !                                 h8  - max number of excluded phases
