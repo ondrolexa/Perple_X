@@ -4375,7 +4375,7 @@ c-----------------------------------------------------------------------
  
       include 'perplex_parameters.h'
 
-      integer i, j, k, l, ichg, ihy, jchg(l9), it
+      integer i, j, k, l, ichg, ihy, jchg(l9), it, ind(l9)
 
       logical bad, output
 
@@ -4384,7 +4384,7 @@ c-----------------------------------------------------------------------
 
       double precision gcpd, solve
 
-      external gcpd, solve
+      external gcpd, solve, ffirst
 
       double precision r,tr,pr,ps,p,t,xco2,u1,u2
       common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -4522,21 +4522,24 @@ c                                 update coefficients
 
       if (output) then
 c                                 compute mole fractions
-        totm = 1d3/18.015
-        do i = 1, aqct
-           totm = totm + mo(i)
-        end do
+         totm = 1d3/18.015
+         do i = 1, aqct
+            ind(i) = i 
+            totm = totm + mo(i)
+         end do
+
+         call rankem (mo,ind,aqct)
 
          write (*,1000) dlog10(ahy),is,gamm0,epsilo
 
          do i = 1, aqct
-            x = mo(i)/totm
-            write (*,1010) aqnam(i),mo(i),x,int(g0(i))
+            x = mo(ind(i))/totm
+            write (*,1010) aqnam(ind(i)),mo(ind(i)),x,int(g0(ind(i)))
          end do 
 
       end if
 
-1000  format (/,'Rock-dominated solvent solute speciation:',/,
+1000  format (/,'Back-calculated solute speciation in the solvent:',/,
      *        /,'pH = ',f7.3,
      *        /,'Ionic strength = ',g12.6,'; gamma/q^2 = ',g12.6,
      *        '; Permativity =',g12.6,//,13x,'molality',5x,
@@ -4544,6 +4547,46 @@ c                                 compute mole fractions
 1010  format (a8,3x,g12.6,3x,g12.6,5x,i8)
 
       end 
+
+      subroutine rankem (a,ind,r)
+c-----------------------------------------------------------------------
+c rank the values of array a(left:right) in array ind. assumes ind has 
+c been initialized (left:right). 
+c-----------------------------------------------------------------------
+      implicit none
+ 
+      include 'perplex_parameters.h'
+
+      integer i, j, imax, ind(*), l, r, left, right 
+
+      double precision a(*), amax
+c----------------------------------------------------------------------
+      left = 1
+      right = r
+
+      do 
+
+         amax = -1d99
+
+         do i = left, right 
+            if (a(ind(i)).gt.amax) then
+               imax = i
+               amax = a(ind(i))
+            end if 
+         end do 
+
+         j = ind(left)
+         ind(left) = ind(imax)
+         ind(imax) = j 
+
+         left = left + 1
+
+         if (left.eq.right) return
+
+      end do 
+
+      end 
+
 
       double precision function solve (c,q,x,jchg,ichg,bad)
 c-----------------------------------------------------------------------
