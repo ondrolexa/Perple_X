@@ -8378,14 +8378,18 @@ c                                 compute solvent mass and gibbs energy:
          rt = r*t
 
          do k = 1, ns
+c                                 set solvent hybrid EoS pointers
+            ins(k) = jspec(id,k)
 c                                 solvent mass, kg/mol compound
             msol = msol + y(k) * fwt(jend(id,2+k))
-c                                 solvent gibbs energy 
+c                                 solvent mechanical gibbs energy 
             if (y(k).le.0d0) cycle
 
-            gg = gg + y(k) * (aqg(k) + rt*dlog(y(k)))
+            gg = gg + y(k) * aqg(k) 
 
          end do
+c                                 compute and add in solvent activities
+         g(id) = g(id) + ghybrid (y,ins,ns)
 c                                 ionic strength 
          is = 0d0
 
@@ -10017,10 +10021,16 @@ c                                 fluid eos, make pointer to co2
             end if 
          end do 
 
-      else if (jsmod.eq.39) then
+      else if (jsmod.eq.39.or.jsmod.eq.20) then
 c                                 generic hybrid fluid EoS, convert endmember EoS
 c                                 flag to fluid species indices
-         do i = 1, istot 
+         if (jsmod.eq.20) then 
+            j = ns
+         else 
+            j = istot
+         end if 
+
+         do i = 1, j 
             jspec(im,i) = eos(kdsol(insp(i))) - 100
          end do
 

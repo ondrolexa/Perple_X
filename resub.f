@@ -1154,6 +1154,9 @@ c                                  x-coordinates for the final solution
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
      *              wl(m17,m18)
 
+      integer ksmod, ksite, kmsol, knsp
+      common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
+
       integer npt,jdv
       logical fulrnk
       double precision cptot,ctotal
@@ -1380,6 +1383,8 @@ c                                 set x's for global storage
 c                                 check composition against solution model ranges
 c                                 if auto_refine is on:
          call sollim (ids)
+c                                 DEBUG DEBUG
+         if (ksmod(ids).eq.20) call aqrxdo (ids)
 
       end do
 
@@ -3249,11 +3254,13 @@ c                                 solvent Gibbs energies
 
             do k = 1, ns
                aqg(k) = g(jend(i,2+k))
+c                                 set pointers for hybrid solvent EoS
+               ins(k) = jspec(i,k)
             end do 
 
             do j = k, nqs
                aqg(j) = gcpd (jend(i,2+j),.true.)
-            end do 
+            end do  
 c                                 compute compound properties
             do j = 1, jend(i,2)
 c                                 solvent mass
@@ -3265,11 +3272,12 @@ c                                 solvent mass
                do k = 1, ns
 c                                 solvent mass, kg/mol compound
                   msol = msol + y(k) * fwt(jend(i,2+k))
-c                                 solvent species, ideal
-                  if (y(k).eq.0d0) cycle 
-                  g(id) = g(id) + y(k) * (aqg(k) + rt*dlog(y(k)))
+c                                 mech mix term for hybrid EoS:
+                  g(id) = g(id) + aqg(k) * y(k)
 
                end do 
+c                                 compute and add in solvent activities
+               g(id) = g(id) + ghybrid (y,ins,ns) 
 c                                 ionic strength 
                is = 0d0 
 
@@ -3333,10 +3341,10 @@ c                                 initialize pointer array
             do j = 1, jend(i,2)
 
                g(id) = 0d0
+c                                 load composition array and pointers 
+               call setxyp (i,id)
 
                do k = 1, isp
-c                                 load composition array and pointers 
-                  call setxyp (i,id)
 c                                 sum pure species g's
                   g(id) = g(id) + g(jend(i,2+k)) * y(k)
 
@@ -4310,6 +4318,7 @@ c                                 not full rank
             do i = 1, kcp
                do j = 1, kcp 
                   comp(i,j) = cp3(ic(j),i)
+                  if (comp(i,j).lt.nopt(5)) comp(i,j) = 0d0
                end do 
             end do 
 
@@ -4355,8 +4364,6 @@ c                                 the original positions
          end if 
 
       end if 
-c                                 DEBUG DEBUG TEST TEST
-      call aqrxdo
 c                                 test for solvi and average
 c                                 homogeneous phases.
       call avrger
@@ -4367,7 +4374,7 @@ c                                 homogeneous phases.
 
       end
 
-      subroutine aqrxdo
+      subroutine aqrxdo (ids)
 c-----------------------------------------------------------------------
 c given chemical potentials solve for rock dominated aqueous speciation
 c-----------------------------------------------------------------------
@@ -4375,16 +4382,17 @@ c-----------------------------------------------------------------------
  
       include 'perplex_parameters.h'
 
-      integer i, j, k, l, ichg, ihy, jchg(l9), it, ind(l9)
+      integer i, j, k, l, ichg, ihy, jchg(l9), it, ind(l9), ids
 
       logical bad, output
 
-      double precision c(l9), q(l9), mo(l9), dg(l9), gh2o, ahy, xis,
-     *                 d(l9), q2(l9), lng0, is, gamm0, x, totm, g0(l9)
+      double precision c(l9), q(l9), mo(l9), dg(l9), ahy, xis, msol,
+     *                 d(l9), q2(l9), lng0, is, gamm0, totm, g0(l9),
+     *                 gso(nsp), mso(nsp), rt
 
       double precision gcpd, solve
 
-      external gcpd, solve, ffirst
+      external gcpd, solve
 
       double precision r,tr,pr,ps,p,t,xco2,u1,u2
       common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -4407,9 +4415,25 @@ c-----------------------------------------------------------------------
       double precision cblk
       common/ cst300 /cblk(k5),jbulk
 
+      double precision cp
+      common/ cst12 /cp(k5,k1)
+
+      double precision fwt
+      common/ cst338 /fwt(k10)
+
+      integer jend
+      common/ cxt23 /jend(h9,m4)
+
+      integer icomp,istct,iphct,icp
+      common/ cst6  /icomp,istct,iphct,icp  
+
       logical mus
       double precision mu, gmax
       common/ cst330 /mu(k8),gmax,mus
+
+      double precision z, pa, p0a, x, w, y, wl
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
+     *              wl(m17,m18)
 
       integer iopt
       logical lopt
@@ -4420,8 +4444,29 @@ c-----------------------------------------------------------------------
 c                                 free energies of aqueous species
       ichg = 0 
       is = 0d0
-c DEBUG DEBUG
-      gh2o = mu(1)
+      msol = 0d0
+      rt = r*t
+c                                 compute solvent formula weight and
+c                                 partial molar gibbs energies, assumes
+c                                 the solvent speciation has been set
+c                                 in the x array (e.g., by avrger)
+      do i = 1, ns 
+c                                 solvent mass, kg/mol compound
+         mso(i) = x(1,i) * fwt(jend(ids,2+i))
+
+         msol = msol + mso(i)
+
+         gso(i) = 0d0
+
+         do j = 1, icp
+
+            if (isnan(mu(j))) cycle 
+           
+            gso(i) = gso(i) + mu(j)*cp(j,jend(ids,2+i))
+
+         end do 
+
+      end do 
 
       do i = 1, aqct 
 
@@ -4449,16 +4494,13 @@ c                                 mu(O2) is a nan.
 
          end do 
 c                                 normalize by RT
-         dg(i) = (dg(i) - q(i)*gh2o/2d0)/r/t
+         dg(i) = (dg(i) - q(i)*gso(ns)/2d0)/rt
 
          if (q(i).ne.0d0) then 
 
             ichg = ichg + 1
-            jchg(ichg) = i
-c                                  gh2o is the partial molar gibbs energy of
-c                                  water, don't use mu because we don't know 
-c                                  if h2o is a component. 
-c                                  this is now c(i)*a(H+)^(q(i)) = mol(i)*gamma(i)*q(i)
+            jchg(ichg) = i 
+c                                  this is now c(i)*a(H+)^(q(i)) = mo(i)*gamma(i)*q(i)
             d(i) = q(i)*dexp(dg(i))
             c(i) = d(i)
 
@@ -4521,8 +4563,15 @@ c                                 update coefficients
       end do
 
       if (output) then
-c                                 compute mole fractions
-         totm = 1d3/18.015
+
+         totm = 0d0 
+c                                 compute mole fractions, total moles first
+         do i = 1, ns 
+c                                 solvent mass fraction/(kg/mol) 
+            totm = totm + mso(i)/msol/fwt(jend(ids,2+i))
+
+         end do        
+
          do i = 1, aqct
             ind(i) = i 
             totm = totm + mo(i)
@@ -4533,8 +4582,9 @@ c                                 compute mole fractions
          write (*,1000) dlog10(ahy),is,gamm0,epsilo
 
          do i = 1, aqct
-            x = mo(ind(i))/totm
-            write (*,1010) aqnam(ind(i)),mo(ind(i)),x,int(g0(ind(i)))
+
+            write (*,1010) aqnam(ind(i)),mo(ind(i)),mo(ind(i))/totm,
+     *                     int(g0(ind(i))),d(ind(i)),c(ind(i))
          end do 
 
       end if
@@ -4544,7 +4594,7 @@ c                                 compute mole fractions
      *        /,'Ionic strength = ',g12.6,'; gamma/q^2 = ',g12.6,
      *        '; Permativity =',g12.6,//,13x,'molality',5x,
      *        'mole fraction',3x,'G0,J/mole')
-1010  format (a8,3x,g12.6,3x,g12.6,5x,i8)
+1010  format (a8,3x,g12.6,3x,g12.6,5x,i8,5(2x,g12.6))
 
       end 
 

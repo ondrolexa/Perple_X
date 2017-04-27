@@ -937,14 +937,17 @@ c                                 compute solvent mass and gibbs energy:
             rt = r*t
 
             do k = 1, ns
+c                                 set pointers for hybrid solvent EoS
+               ins(k) = jspec(id,k)
 c                                 solvent mass, kg/mol compound
                msol = msol + y(k) * fwt(jend(id,2+k))
-c                                 solvent gibbs energy 
+c                                 solvent mech gibbs energy 
                if (y(k).le.0d0) cycle
-               g = g + y(k) * (gcpd(jend(id,2+k),.true.) 
-     *                        + rt*dlog(y(k)))
+               g = g + y(k) * gcpd(jend(id,2+k),.true.)
 
             end do 
+c                                 compute and add in solvent activities
+            g = g + ghybrid (y,ins,ns) 
 c                                 ionic strength 
             is = 0d0 
 

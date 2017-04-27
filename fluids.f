@@ -279,6 +279,7 @@ c        13 = SiO
 c        14 = SiO2
 c        15 = Si
 c        16 = C2H6
+c        17 = ideal dilutant
 
 c O2 should be replaced by SO3.
 c-----------------------------------------------------------------------

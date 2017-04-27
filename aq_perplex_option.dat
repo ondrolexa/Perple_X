@@ -24,7 +24,7 @@ dependent_potentials       on   | on or off
 efficiency                 3    | 1->5
 explicit_bulk_modulus      T    | T[rue] or F[alse], default is F; T => use explicit function for K if available
 fd_expansion_factor        2    | [2], nth order finite difference increment is increased by fd_expansion_factor^(n-1)
-final_resolution  2.5e-10 2.5e-10 | >0, <1, default 1e-3; exploratory and autorefine
+final_resolution  2.5e-8 2.5e-8 | >0, <1, default 1e-3; exploratory and autorefine
 finite_difference_p    1d4 1d-2 | threshold [1d4] and fraction [1d-2] for 1st order finite difference increment on pressure
 global_reach_increment      0   | >= 0; overridden by reach_factor specified in solution model file
 grid_levels                1 4  | exploratory and autorefine (grid parameters keyword group)

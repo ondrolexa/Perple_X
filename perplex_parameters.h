@@ -131,7 +131,7 @@
      *           m9=10,m10=6,m11=6,m12=4,m13=8,m14=2,m15=10,m16=5,m17=5,
      *           m18=6)
 !                                nsp - max number of species in fluid speciation routines 
-      parameter (nsp=16)
+      parameter (nsp=17)
 !                                 nx - number of x-grid nodes in a contour data grid
 !                                 ny - number of y-grid modes in a contour data grid
       parameter (nx=500,ny=500)
