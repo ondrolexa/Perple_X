@@ -8389,7 +8389,7 @@ c                                 solvent mechanical gibbs energy
 
          end do
 c                                 compute and add in solvent activities
-         g(id) = g(id) + ghybrid (y,ins,ns)
+         gg = gg + ghybrid (y,ins,ns)
 c                                 ionic strength 
          is = 0d0
 

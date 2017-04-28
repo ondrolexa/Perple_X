@@ -4120,12 +4120,11 @@ c                                 adaptive x(i,j) coordinates
       integer jcoct, jcoor, jkp
       double precision zcoor
       common/ cxt13 /zcoor(k20),jcoor(k21),jkp(k21),jcoct
-c                                 compositions of stable adaptive
-c                                 coordinates (and solution ids).
+
       integer kkp,np,ncpd,ntot
       double precision cp3,amt
       common/ cxt15 /cp3(k0,k19),amt(k19),kkp(k19),np,ncpd,ntot
-c                                 options from perplex_option.dat
+
       integer iopt
       logical lopt
       double precision nopt
@@ -4318,7 +4317,6 @@ c                                 not full rank
             do i = 1, kcp
                do j = 1, kcp 
                   comp(i,j) = cp3(ic(j),i)
-                  if (comp(i,j).lt.nopt(5)) comp(i,j) = 0d0
                end do 
             end do 
 
