@@ -814,7 +814,7 @@ c-----------------------------------------------------------------------
 
       integer k, l, id, isp, ins(nsp)
 
-      double precision mo(m4), lng0, is, dg, g, msol, q(m4), rt
+      double precision mo(m4), lng0, is, dg, g, msol
 
       double precision omega, hpmelt, gmelt, gfluid, gzero, 
      *                 gex, slvmlt, gfesi, gcpd, gerk, gfecr1, ghybrid
@@ -824,6 +824,10 @@ c-----------------------------------------------------------------------
 
       integer jend
       common/ cxt23 /jend(h9,m4)
+
+      integer jnd
+      double precision aqg,q2,rt
+      common/ cxt2 /aqg(m4),q2(m4),rt,jnd(m4)
 
       double precision r,tr,pr,ps,p,t,xco2,u1,u2
       common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -940,10 +944,10 @@ c                                 compute solvent mass and gibbs energy:
 c                                 set pointers for hybrid solvent EoS
                ins(k) = jspec(id,k)
 c                                 solvent mass, kg/mol compound
-               msol = msol + y(k) * fwt(jend(id,2+k))
+               msol = msol + y(k) * fwt(jnd(k))
 c                                 solvent mech gibbs energy 
                if (y(k).le.0d0) cycle
-               g = g + y(k) * gcpd(jend(id,2+k),.true.)
+               g = g + y(k) * gcpd(jnd(k),.true.)
 
             end do 
 c                                 compute and add in solvent activities
@@ -954,9 +958,7 @@ c                                 ionic strength
             do k = sn1, nqs
 c                                 ln molality of solutes
                mo(k) = y(k)/msol
-               if (k.le.sn) cycle 
-               q(k) = thermo(6,jend(id,2+k))**2
-               is = is + q(k) * mo(k)
+               is = is + q2(k) * mo(k)
 
             end do
 
@@ -967,16 +969,15 @@ c                                 neutral solutes, ideal
             do l = sn1, sn
 
                if (y(l).le.0d0) cycle
-               g = g + y(l) * (gcpd(jend(id,2+l),.true.) 
-     *                        + rt*dlog(mo(l)))
+               g = g + y(l) * (gcpd(jnd(l),.true.) + rt*dlog(mo(l)))
 
             end do
 c                                 ionic solutes, Davies D-H extension
             do k = l, nqs 
 
                if (y(k).le.0d0) cycle
-               g = g + y(k) * (gcpd(jend(id,2+k),.true.) 
-     *                        + rt*(dlog(mo(k)) + lng0*q(k)))
+               g = g + y(k) * (gcpd(jnd(k),.true.) 
+     *                        + rt*(dlog(mo(k)) + lng0*q2(k)))
             end do
 
          else if (ksmod(id).eq.24) then 

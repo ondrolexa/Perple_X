@@ -8224,7 +8224,7 @@ c-----------------------------------------------------------------------
 
       integer k, l, id, isp, ins(nsp)
 
-      double precision is, gg, dg, msol, mo(m4), q(m4), lng0, rt
+      double precision is, gg, dg, msol, mo(m4), lng0
 
       double precision omega, hpmelt, slvmlt, gmelt, gfluid, gzero,
      *                 gex, gfesi, gfesic, gfecr1, gerk, ghybrid
@@ -8238,8 +8238,9 @@ c-----------------------------------------------------------------------
       double precision g
       common/ cst2 /g(k1)
 
-      double precision aqg
-      common/ cxt2 /aqg(m4)
+      integer jnd
+      double precision aqg,q2,rt
+      common/ cxt2 /aqg(m4),q2(m4),rt,jnd(m4)
 
       double precision r,tr,pr,ps,p,t,xco2,u1,u2
       common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -8374,14 +8375,12 @@ c                                 2) water is the last solvent species
 c                                 -------------------------------------
 c                                 compute solvent mass and gibbs energy:
          msol = 0d0
-         gg = 0d0
-         rt = r*t
 
          do k = 1, ns
 c                                 set solvent hybrid EoS pointers
             ins(k) = jspec(id,k)
 c                                 solvent mass, kg/mol compound
-            msol = msol + y(k) * fwt(jend(id,2+k))
+            msol = msol + y(k) * fwt(jnd(k))
 c                                 solvent mechanical gibbs energy 
             if (y(k).le.0d0) cycle
 
@@ -8389,18 +8388,14 @@ c                                 solvent mechanical gibbs energy
 
          end do
 c                                 compute and add in solvent activities
-         gg = gg + ghybrid (y,ins,ns)
+         gg = gg + ghybrid (y)
 c                                 ionic strength 
          is = 0d0
 
          do k = sn1, nqs
 c                                 ln molality of solutes
             mo(k) = y(k)/msol
-
-            if (k.le.sn) cycle 
-
-            q(k) = thermo(6,jend(id,2+k))**2
-            is = is + q(k) * mo(k)
+            is = is + q2(k) * mo(k)
 
          end do
 
@@ -8420,7 +8415,7 @@ c                                 ionic solutes, Davies D-H extension
 
             if (y(k).le.0d0) cycle
 
-            gg = gg + y(k) * (aqg(k) + rt*(dlog(mo(k))+ lng0*q(k)))
+            gg = gg + y(k) * (aqg(k) + rt*(dlog(mo(k))+ lng0*q2(k)))
 
          end do 
 
@@ -8485,17 +8480,13 @@ c                                 BCC Fe-Cr Andersson and Sundman
 c                                 -------------------------------------
 c                                 generic hybrid EoS
 c                                 initialize pointer array
-         isp = mstot(id)
-
-         do k = 1, isp
-
-            ins(k) = jspec(id,k)
+         do k = 1, nstot(id)
 c                                 sum pure species g's
-            gg = gg + g(jend(id,2+k)) * y(k)
+            gg = gg + g(jnd(k)) * y(k)
 
          end do
 c                                 compute and add in activities
-         gg = gg + ghybrid (y,ins,isp)
+         gg = gg + ghybrid (y)
 
 
       else if (ksmod(id).eq.41) then 
@@ -8503,15 +8494,13 @@ c                                 hybrid MRK ternary COH fluid
          call rkcoh6 (y(2),y(1),gg) 
 
          do k = 1, 3 
-            gg = gg + g(jend(id,2+k)) * y(k)
+            gg = gg + g(jnd(k)) * y(k)
          end do 
 
       else if (ksmod(id).eq.40) then 
 c                                 MRK silicate vapor
-         gg = 0d0
-
          do k = 1, nstot(id) 
-            gg = gg + gzero (jend(id,2+k)) * y(k)
+            gg = gg + gzero (jnd(k)) * y(k)
          end do 
 
          gg = gg + gerk(y)
@@ -9114,7 +9103,7 @@ c                                 now assign endmember fractions
 
       end 
 
-      subroutine gmodel (im,tname)
+      subroutine gmodel (im,tname,wham)
 c---------------------------------------------------------------------
 c qmodel - stores ALL solution model parameters in global arrays
 c---------------------------------------------------------------------
@@ -9124,7 +9113,7 @@ c---------------------------------------------------------------------
 
       character tname*10, sname*10
 
-      logical add, bad
+      logical add, bad, wham
 
       integer im, nloc, i, j, ind, id, jd, k, l,itic,ii,imatch, killct,
      *        killid(20)
@@ -9370,12 +9359,8 @@ c                                 charge balance models
          j = 0 
 
          do i = 1, nqs
-C            if (i.eq.ns) cycle
-C            j = j + 1
             jmsol(i,1) = i
          end do
-
-c         jmsol(nqs,1) = ns
 
       end if 
 c                                 number of dependent + independent - ordered endmembers
@@ -10070,6 +10055,7 @@ c                                 endmember order.
 c                                 classify model as fluid/not fluid
       if ((jsmod.eq.24.or.jsmod.eq.25.or.jsmod.eq.27.or.jsmod.eq.28)
      *    .and.lopt(6)
+     *    .or.jsmod.eq.20
      *    .or.jsmod.eq.0.or.jsmod.eq.26.or.jsmod.eq.41) then 
 
          fp(im) = .true.
@@ -10186,23 +10172,15 @@ c                                 hard limits are off, set limits to 0/1
             end do 
          end do
       end if   
+c                                 routines that invoke fluid EoS, as currently 
+c                                 configured these will set ins/isp arrays only 
+c                                 once. therefore some parameters and indices 
+c                                 can be saved in simple arrays for 
+      if (ksmod(im).eq.0. or.ksmod(im).eq.20.or.ksmod(im).eq.39.or.
+     *    ksmod(im).eq.40.or.ksmod(im).eq.41) call setsol (im,wham) 
 c                                 set independent species names and counters for output
 c                                 special cases first:
       if (ksmod(im).eq.0.or.ksmod(im).eq.40.or.ksmod(im).eq.41) then
-c                                 model uses an internal speciation routine
-         if (ksmod(im).eq.0) then
-c                                 fluid eos specified via ifug 
-            call setins (ifug)
-
-         else if (ksmod(im).eq.40) then 
-c                                 MRK silicate vapor (40), EoS code 26
-            call setins (26)
-
-         else if (ksmod(im).eq.41) then 
-c                                 MRK COH fluid (41), EoS code 27
-            call setins (27)
-
-         end if 
 
          spct(im) = jsp
 
@@ -12498,7 +12476,7 @@ c-----------------------------------------------------------------------
 
       integer icoct,h,i,j,k,l,im,icky,id,icpct,idsol,ixct
 
-      logical output, first, bad, chksol
+      logical output, first, bad, chksol, wham
  
       character*10 tname, sname(h9), new*3, tn1*6, tn2*22
 
@@ -12598,6 +12576,9 @@ c                                 gloabl coordinate counter for xcoor (cxt10)
       icoct = 0  
 c                                 initialize model counter
       im = 0
+c                                 a flag to check if more than one solution model 
+c                                 references an internal molecular EoS.
+      wham = .false.
 c                                 no request for solutions
       if (io9.eq.1.or.isoct.eq.0) then 
 
@@ -12662,7 +12643,7 @@ c                                 long name
          lname(im) = tn2
 c                                 save found solutions in global solution 
 c                                 model arrays
-         call gmodel (im,tname)
+         call gmodel (im,tname,wham)
 c                                 generate pseudocompound compositions.
 c                                 subdiv returns the total
 c                                 number of pseudocompounds (ipcps) and 
@@ -15786,3 +15767,98 @@ c                                  for the first np0 neutral compositions
       end do
 
       end
+
+      subroutine setsol (ids, wham)
+c-----------------------------------------------------------------------
+c load species indices, charges, etc for aqueous model (ksmod = 20) into
+c simple arrays
+c-----------------------------------------------------------------------
+      implicit none
+
+      logical wham
+ 
+      include 'perplex_parameters.h'
+
+      integer i, ids
+
+      integer jend
+      common/ cxt23 /jend(h9,m4)
+
+      integer jspec
+      common/ cxt8 /jspec(h9,m4)
+
+      character specie*4
+      integer ins, isp
+      common/ cxt33 /isp,ins(nsp),specie(nsp)
+
+      integer iff,idss,ifug
+      common/ cst10  /iff(2),idss(h5),ifug
+
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
+
+      integer jnd
+      double precision aqg,q2,rt
+      common/ cxt2 /aqg(m4),q2(m4),rt,jnd(m4)
+
+      double precision thermo,uf,us 
+      common/ cst1 /thermo(k4,k10),uf(2),us(h5)
+
+      integer lstot,mstot,nstot,ndep,nord
+      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
+
+      integer ksmod, ksite, kmsol, knsp
+      common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
+c----------------------------------------------------------------------
+      if (wham) then 
+c                                 an internal molecular eos has already 
+c                                 been invoked 
+         call error (77,rt,i,'only one solution model may invoke an '//
+     *                       'internal molecular fluid EoS.')
+
+      else 
+
+         wham = .true.
+
+      end if 
+c                                 load endmember indices into a simple array
+      do i = 1, mstot(ids)
+         jnd(i) = jend(ids,2+i)
+      end do 
+c                                 model uses an internal speciation routine
+c                                 set the ins array and isp pointer
+      if (ksmod(ids).eq.0) then
+c                                 fluid eos specified via ifug 
+         call setins (ifug)
+
+      else if (ksmod(ids).eq.20) then 
+c                                 electrolyte
+         do i = 1, nqs
+            q2(i) = thermo(6,jnd(i))**2
+         end do 
+
+         isp = ns
+
+         do i = 1, isp
+            ins(i) = jspec(ids,i)
+         end do 
+
+      else if (ksmod(ids).eq.39) then
+c                                 hybrid molecular
+         isp = mstot(ids)
+
+         do i = 1, isp
+            ins(i) = jspec(ids,i)
+         end do
+
+      else if (ksmod(ids).eq.40) then 
+c                                 MRK silicate vapor (40), EoS code 26
+         call setins (26)
+
+      else if (ksmod(ids).eq.41) then 
+c                                 MRK COH fluid (41), EoS code 27
+         call setins (27)
+
+      end if 
+
+      end 

@@ -6857,7 +6857,7 @@ c                                 convert to j/bar from cm3, only for lv version
 
       end
 
-      double precision function ghybrid (x,ins,isp)
+      double precision function ghybrid (x)
 c----------------------------------------------------------------------
 c  generic hybrid EoS called for solution model type ksmod = 27.
 c  reads composition from solution model 
@@ -6868,9 +6868,13 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer ins(*), isp, k
+      integer k
 
       double precision gtemp, x(*)
+
+      character specie*4
+      integer ins, isp
+      common/ cxt33 /isp,ins(nsp),specie(nsp)
 
       double precision p,t,xo,u1,u2,tr,pr,r,ps
       common / cst5 /p,t,xo,u1,u2,tr,pr,r,ps

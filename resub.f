@@ -3057,10 +3057,10 @@ c-----------------------------------------------------------------------
  
       include 'perplex_parameters.h'
 
-      integer i, j, k, l, id, isp, ins(nsp)
+      integer i, j, k, l, id
 
       double precision gval, dg, g0(m4), mo(m4), q(m4), is, 
-     *                 msol, lng0, rt
+     *                 msol, lng0
 
       double precision gex, gfesi, gfesic, gfecr1, gerk, gproj, 
      *                 ghybrid, gaq, gzero, gcpd
@@ -3077,8 +3077,9 @@ c-----------------------------------------------------------------------
       double precision g
       common/ cst2 /g(k1)
 
-      double precision aqg
-      common/ cxt2 /aqg(m4)
+      integer jnd
+      double precision aqg,q2,rt
+      common/ cxt2 /aqg(m4),q2(m4),rt,jnd(m4)
 
       double precision cp
       common/ cst12 /cp(k5,k1)
@@ -3253,13 +3254,11 @@ c                                 solvent Gibbs energies
             rt = r*t
 
             do k = 1, ns
-               aqg(k) = g(jend(i,2+k))
-c                                 set pointers for hybrid solvent EoS
-               ins(k) = jspec(i,k)
+               aqg(k) = g(jnd(k))
             end do 
 
             do j = k, nqs
-               aqg(j) = gcpd (jend(i,2+j),.true.)
+               aqg(j) = gcpd (jnd(j),.true.)
             end do  
 c                                 compute compound properties
             do j = 1, jend(i,2)
@@ -3271,26 +3270,24 @@ c                                 solvent mass
 
                do k = 1, ns
 c                                 solvent mass, kg/mol compound
-                  msol = msol + y(k) * fwt(jend(i,2+k))
+                  msol = msol + y(k) * fwt(jnd(k))
 c                                 mech mix term for hybrid EoS:
                   g(id) = g(id) + aqg(k) * y(k)
 
                end do 
 c                                 compute and add in solvent activities
-               g(id) = g(id) + ghybrid (y,ins,ns) 
+               g(id) = g(id) + ghybrid (y) 
 c                                 ionic strength 
                is = 0d0 
 
                do k = sn1, nqs
 c                                 ln molality of solutes
                   mo(k) = y(k)/msol
-                  if (k.le.sn) cycle 
-                  q(k) = thermo(6,jend(i,2+k))**2
-                  is = is + q(k) * mo(k)
+                  is = is + q2(k) * mo(k)
 
                end do 
 
-               is = is/2d0
+               is = is/2d0 
 c                                 DH law activity coefficient factor (ln[g] = lng0*q^2)
                lng0 = adh*dsqrt(is)/(1d0 + dsqrt(is)) + 0.2d0*is
 c                                 neutral solutes, ideal
@@ -3306,7 +3303,7 @@ c                                 ionic solutes, Davies D-H extension
                   if (y(k).le.0d0) cycle
 
                   g(id) = g(id) + y(k) * (aqg(k) 
-     *                                 + rt*(dlog(mo(k)) + lng0*q(k)))
+     *                                 + rt*(dlog(mo(k)) + lng0*q2(k)))
                end do
 
                id = id + 1
@@ -3331,26 +3328,19 @@ c                                 H2O-CO2-Salt:
 
          else if (ksmod(i).eq.39) then
 c                                 generic hybrid EoS
-c                                 initialize pointer array
-            isp = lstot(i)
-
-            do j = 1, isp
-               ins(j) = jspec(i,j)
-            end do 
-
             do j = 1, jend(i,2)
 
                g(id) = 0d0
 c                                 load composition array and pointers 
                call setxyp (i,id)
 
-               do k = 1, isp
+               do k = 1, nstot(i)
 c                                 sum pure species g's
-                  g(id) = g(id) + g(jend(i,2+k)) * y(k)
+                  g(id) = g(id) + g(jnd(k)) * y(k)
 
                end do
 c                                 compute and add in activities
-               g(id) = g(id) + ghybrid (y,ins,isp)
+               g(id) = g(id) + ghybrid (y)
 
                id = id + 1
 
@@ -3389,7 +3379,7 @@ c                                 hybrid MRK ternary COH fluid
                call rkcoh6 (y(2),y(1),g(id)) 
 
                do k = 1, 3 
-                  g(id) = g(id) + g(jend(i,2+k)) * y(k)
+                  g(id) = g(id) + g(jnd(k)) * y(k)
                end do 
 
                id = id + 1
@@ -3405,7 +3395,7 @@ c                                 MRK silicate vapor
                call setxyp (i,id)
 
                do k = 1, lstot(i) 
-                  g(id) = g(id) + gzero(jend(i,2+k)) * y(k)
+                  g(id) = g(id) + gzero(jnd(k)) * y(k)
                end do 
 
                g(id) = g(id) + gerk(y)
@@ -4590,7 +4580,7 @@ c                                 solvent mass fraction/(kg/mol)
 1000  format (/,'Back-calculated solute speciation in the solvent:',/,
      *        /,'pH = ',f7.3,
      *        /,'Ionic strength = ',g12.6,'; gamma/q^2 = ',g12.6,
-     *        '; Permativity =',g12.6,//,13x,'molality',5x,
+     *        '; Permittivity =',g12.6,//,13x,'molality',5x,
      *        'mole fraction',3x,'G0,J/mole')
 1010  format (a8,3x,g12.6,3x,g12.6,5x,i8,5(2x,g12.6))
 
