@@ -4045,7 +4045,10 @@ c                                 adiabatic shear modulus
       double precision function ghkf (id)
 c-----------------------------------------------------------------------
 c ghkf computes apparent G for aqueous species HKF formulation
-c
+
+c assumes perimittivity (epsln) and HKF g-function (gf) have been computed
+c in common cxt37 (by slvnt2 or aqrxdo). 
+
 c HKF parameters are loaded into thermo as:
 
 c thermo(1 ,id) = G0
@@ -4072,10 +4075,7 @@ c-----------------------------------------------------------------------
 
       integer id
 
-      double precision ft, fp, omega, psi, theta, fh2o, cdh,
-     *                 epsh2o, duah2o, z, eta, gfunc, gf 
-
-      external duah2o, epsh2o, gfunc
+      double precision ft, fp, omega, psi, theta, z, eta
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -4083,12 +4083,11 @@ c-----------------------------------------------------------------------
       double precision thermo, uf, us
       common/ cst1 /thermo(k4,k10),uf(2),us(h5)
 
-      double precision vh2o, epsilo, adh
-      common/ cxt37 /vh2o, epsilo, adh
+      double precision gf, epsln, adh
+      common/ cxt37 /gf, epsln, adh
 
-      save psi, theta, eta, cdh
-      data psi, theta, eta, cdh/2600d0, 228d0, 694656.968d0, 
-     *                          -5661800.47810d0/
+      save psi, theta, eta
+      data psi, theta, eta/2600d0, 228d0, 694656.968d0/
 c-----------------------------------------------------------------------
       if (thermo(1,id).eq.0d0) then 
 c                                 assumes proton is the only species 
@@ -4097,18 +4096,12 @@ c                                 with zero G0, return G_H+(P,T) = 0.
          return 
 
       end if 
-c                                 vh2o J/bar 
-      vh2o = duah2o (fh2o)
-
-      epsilo = epsh2o (vh2o) 
-c                                 Debye-Hueckel factor, A[cgs] = -q^3*sqrt(NA)/(4*Pi*k^(3/2))
-c                                 *(NH2O/(10*vh2o))^(1/2)/(epsilon*T)^(3/2) for ln(gamma) = +A*....
-      adh = cdh/dsqrt(vh2o*(epsilo*t)**3)
-       
-c                                 shock et al 1992 g function
-      gf = gfunc (vh2o) 
 
       z = thermo(6,id)
+
+      if (gf.lt.-2.1d-3) then 
+c         write (*,*) 'bonk'
+      end if 
 
       if (z.ne.0d0) then 
 c                                 ionic species
@@ -4129,20 +4122,23 @@ c                                 neutral species
      *     + thermo(16,id)*ft 
      *     + thermo(7,id)*p + thermo(8,id)*fp 
      *     + (thermo(9,id)*p + thermo(10,id)*fp + thermo(15,id))/ft
-     *     + omega*(1d0/epsilo - 1d0) 
+     *     + omega*(1d0/epsln - 1d0) 
 
       end 
 
-      double precision function gfunc (v)
+      double precision function gfunc (rho)
 c----------------------------------------------------------------------
-c Shock et al 1992 dielectic g function, v is the molar volume of water 
-c in j/bar [HKF_g_function.mws]. g is in angstrom.
+c Shock et al 1992 dielectic g function [HKF_g_function.mws]. 
+c g is in angstrom. rho is the CGS solvent density. 
+
+c hacked to use solvent density, this will, at a minimum violate the
+c conditions based on p/t
 c----------------------------------------------------------------------
       implicit none 
 
       integer iwarn
 
-      double precision v, g, tf, psat2 
+      double precision g, tf, psat2, rho
 
       external psat2
 
@@ -4152,14 +4148,14 @@ c----------------------------------------------------------------------
       save iwarn
       data iwarn/0/
 c---------------------------------------------------------------------
-      if (v.le.1.8015d0) then
+      if (rho.gt.1d0) then
 c                                 region III, rho = 1 g/cm3, g = 0
          g = 0d0
 
       else 
 c                                 region I function
          g = ((-6.557892d-6*t + 9.3295764d-3)*t
-     *       -4.096745422)*((1d0 - 1.8015d0/v)) ** 
+     *       -4.096745422)*((1d0 - rho)) ** 
      *       ((1.268348e-5*t - 1.767275512e-2)*t + 9.98834792)
 
          if (t.gt.428.15.and.p.lt.1d3) then
@@ -4168,12 +4164,12 @@ c
 c                                 add region II perturbation term
             g  = g - 
      *           (tf**4.8d0 + 0.366666D-15*tf**16) 
-     *         * ((((5.01799d-14*p - 5.0224D-11)*p - 1.504074d-7)*p 
-     *               + 2.507672D-4)*p - 0.1003157d0)
+     *         * ((((5.01799d-14*p - 5.0224d-11)*p - 1.504074d-7)*p 
+     *               + 2.507672d-4)*p - 0.1003157d0)
 
          end if 
 c                                 check on physical conditions
-         if ((v.gt.5.1471.and.p.gt.500d0).or.
+         if ((rho.lt.0.35d0.and.p.gt.500d0).or.
      *       (t.gt.623.15.and.p.lt.500d0).or.
      *       (t.le.623.15.and.p.lt.psat2(t))) then 
 c                                 warn
@@ -4187,9 +4183,8 @@ c                                 warn
 
       gfunc = g 
 
-1000  format (/,'**warning ver277** T= ',f8.2,' K P=',f9.1,' bar',
-     *        /,'is beyond the HKF limits',/,'the HKF g function',
-     *        ' will be set to zero.',/)
+1000  format (/,'**warning ver277** T= ',f8.2,' K P=',f9.1,' bar ',
+     *       'is beyond the limits for',/,'the HKF g function.',/)
 
       end 
 
@@ -6316,7 +6311,7 @@ c---------------------------------------------------------------------
 
       character*10 tname
 
-      integer i, j, jq, jn, js, lm, mm 
+      integer i, jq, jn, js, lm, mm 
 
       logical first
 
@@ -7453,12 +7448,16 @@ c-----------------------------------------------------------------------
       integer jend
       common/ cxt23 /jend(h9,m4)
 
+      integer jnd
+      double precision aqg,q2,rt
+      common/ cxt2 /aqg(m4),q2(m4),rt,jnd(m4)
+
       double precision xco
       integer ico,jco
       common/ cxt10 /xco(k18),ico(k1),jco(k1)
 c                                 working arrays
       double precision z, pa, p0a, x, w, y, wl
-      common/ cxt7 /x(m4),y(m4),pa(m4),p0a(m4),z(mst,msp),w(m1),
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
      *              wl(m17,m18)
 c                                 new global arrays, 10/25/05:
 c                                 bookkeeping variables
@@ -7516,7 +7515,7 @@ c                                 si-o mrk fluid
          call setxyp (ids,id)
 
          do k = 1, nstot(ids)
-            gph = gph + gzero(jend(ids,2+k)) * y(k)
+            gph = gph + gzero(jnd(k)) * y(k)
          end do 
 
          gph = gph + gerk (p0a)
@@ -7686,7 +7685,7 @@ c----------------------------------------------------------------------
       double precision dlnz,dscon,zt,q,dzdy,z,dd
 c                                 working arrays
       double precision zz, pa, p0a, x, w, y, wl
-      common/ cxt7 /zz(m4),y(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
+      common/ cxt7 /y(m4),zz(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
      *              wl(m17,m18)
 c                                 configurational entropy variables:
       integer msite, ksp, lterm, ksub
@@ -8222,9 +8221,9 @@ c-----------------------------------------------------------------------
  
       include 'perplex_parameters.h'
 
-      integer k, l, id, isp, ins(nsp)
+      integer k, id
 
-      double precision is, gg, dg, msol, mo(m4), lng0
+      double precision gg, dg
 
       double precision omega, hpmelt, slvmlt, gmelt, gfluid, gzero,
      *                 gex, gfesi, gfesic, gfecr1, gerk, ghybrid
@@ -8268,15 +8267,6 @@ c                                 model type
       logical lopt
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
-      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
-      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
-
-      double precision vh2o, epsilo, adh
-      common/ cxt37 /vh2o, epsilo, adh
-
-      double precision fwt
-      common/ cst338 /fwt(k10)
 
       double precision thermo,uf,us
       common/ cst1 /thermo(k4,k10),uf(2),us(h5)
@@ -8364,60 +8354,12 @@ c                                 internal fluid eos
          gg = gfluid(y(jspec(id,1)))
             
          do k = 1, 2
-            gg = gg + gzero(jend(id,2+k))*y(k)
+            gg = gg + gzero(jnd(k))*y(k)
          end do 
 
       else if (ksmod(id).eq.20) then 
-c                                 electrolytic solution, assumes:
-c                                 1) molal electrolyte standard state
-c                                 for solutes.
-c                                 2) water is the last solvent species
-c                                 -------------------------------------
-c                                 compute solvent mass and gibbs energy:
-         msol = 0d0
-
-         do k = 1, ns
-c                                 set solvent hybrid EoS pointers
-            ins(k) = jspec(id,k)
-c                                 solvent mass, kg/mol compound
-            msol = msol + y(k) * fwt(jnd(k))
-c                                 solvent mechanical gibbs energy 
-            if (y(k).le.0d0) cycle
-
-            gg = gg + y(k) * aqg(k) 
-
-         end do
-c                                 compute and add in solvent activities
-         gg = gg + ghybrid (y)
-c                                 ionic strength 
-         is = 0d0
-
-         do k = sn1, nqs
-c                                 ln molality of solutes
-            mo(k) = y(k)/msol
-            is = is + q2(k) * mo(k)
-
-         end do
-
-         is = is/2d0
-c                                 DH law activity coefficient factor:
-         lng0 = adh*dsqrt(is)/(1d0 + dsqrt(is)) + 0.2d0*is
-c                                 neutral solutes, ideal
-         do l = sn1, sn
-
-            if (mo(l).le.0d0) cycle
-
-            gg = gg + y(l) * (aqg(l) + rt*dlog(mo(l)))
-
-         end do
-c                                 ionic solutes, Davies D-H extension
-         do k = l, nqs
-
-            if (y(k).le.0d0) cycle
-
-            gg = gg + y(k) * (aqg(k) + rt*(dlog(mo(k))+ lng0*q2(k)))
-
-         end do 
+c                                 electrolytic solution
+         call slvnt2 (gg) 
 
       else if (ksmod(id).eq.25.or.ksmod(id).eq.24) then 
 c                                 -------------------------------------
@@ -10871,7 +10813,7 @@ c----------------------------------------------------------------------
      *                 dsinf(j3),d2sinf(j3,j3)
 c                                 working arrays
       double precision zz, pa, p0a, x, w, y, wl
-      common/ cxt7 /zz(m4),y(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
+      common/ cxt7 /y(m4),zz(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
      *              wl(m17,m18)
 c                                 configurational entropy variables:
       integer msite, ksp, lterm, ksub
@@ -12090,7 +12032,7 @@ c----------------------------------------------------------------------
       double precision zt,dzdy,dzy,dzyy,zl,ds,d2s,zlnz,dsinf
 c                                 working arrays
       double precision zz, pa, p0a, x, w, y, wl
-      common/ cxt7 /zz(m4),y(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
+      common/ cxt7 /y(m4),zz(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
      *              wl(m17,m18)
 c                                 configurational entropy variables:
       integer msite, ksp, lterm, ksub

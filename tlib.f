@@ -351,7 +351,7 @@ c     iopt(28-30)                 reserved as debug options iop_28 - iop_30
 c                                 refinement_points_II
       iopt(31) = 5
 c                                 maximum number of aqueous species
-      iopt(32) = 100
+      iopt(32) = 20
 c                                 refinement_threshold
       nopt(32) = 1d4
       lopt(32) = .true.
@@ -575,7 +575,7 @@ c                                 seismic data output WERAMI/MEEMUM/FRENDLY
 c                                 2nd stage refinement points
             read (strg,*) iopt(31)
 
-         else if (key.eq.'max_aqueous_species') then 
+         else if (key.eq.'max_aq_species_out') then 
 c                                 2nd stage refinement points
             read (strg,*) iopt(32)
 

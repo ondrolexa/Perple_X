@@ -3057,15 +3057,14 @@ c-----------------------------------------------------------------------
  
       include 'perplex_parameters.h'
 
-      integer i, j, k, l, id
+      integer i, j, k, id
 
-      double precision gval, dg, g0(m4), mo(m4), q(m4), is, 
-     *                 msol, lng0
+      double precision gval, dg, g0(m4)
 
-      double precision gex, gfesi, gfesic, gfecr1, gerk, gproj, 
-     *                 ghybrid, gaq, gzero, gcpd
+      double precision gex, gfesi, gfesic, gerk, gproj, ghybrid, gzero,
+     *                 gfecr1, gcpd
 
-      external gerk, gzero, gex, gfesi, gfesic, gproj, ghybrid, gaq,
+      external gerk, gzero, gex, gfesi, gfesic, gproj, ghybrid, 
      *         gcpd
 
       integer icomp,istct,iphct,icp
@@ -3087,9 +3086,6 @@ c-----------------------------------------------------------------------
       double precision thermo,uf,us 
       common/ cst1 /thermo(k4,k10),uf(2),us(h5)
 
-      double precision fwt
-      common/ cst338 /fwt(k10)
-
       integer ifct,idfl
       common/ cst208 /ifct,idfl
 
@@ -3109,7 +3105,7 @@ c-----------------------------------------------------------------------
       common/ cxt8 /jspec(h9,m4)
 c                                 working arrays
       double precision z, pa, p0a, x, w, y, wl
-      common/ cxt7 /x(m4),y(m4),pa(m4),p0a(m4),z(mst,msp),w(m1),
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
      *              wl(m17,m18)
 c                                 model type
       logical lorder, lexces, llaar, lrecip
@@ -3132,9 +3128,6 @@ c                                 endmember names
 
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
-
-      double precision vh2o, epsilo, adh
-      common/ cxt37 /vh2o, epsilo, adh
 
       double precision xco
       integer ico,jco
@@ -3252,59 +3245,18 @@ c                                 2) water is the last species
 c                                 solvent species Gibbs energies:
 c                                 solvent Gibbs energies
             rt = r*t
+c                                 get pure species permittivity
+            call slvnt1
 
             do k = 1, ns
                aqg(k) = g(jnd(k))
             end do 
-
-            do j = k, nqs
-               aqg(j) = gcpd (jnd(j),.true.)
-            end do  
 c                                 compute compound properties
             do j = 1, jend(i,2)
-c                                 solvent mass
-               msol = 0d0 
-               g(id) = 0d0
-
+c                                 get the composition
                call setxyp (i,id)
-
-               do k = 1, ns
-c                                 solvent mass, kg/mol compound
-                  msol = msol + y(k) * fwt(jnd(k))
-c                                 mech mix term for hybrid EoS:
-                  g(id) = g(id) + aqg(k) * y(k)
-
-               end do 
-c                                 compute and add in solvent activities
-               g(id) = g(id) + ghybrid (y) 
-c                                 ionic strength 
-               is = 0d0 
-
-               do k = sn1, nqs
-c                                 ln molality of solutes
-                  mo(k) = y(k)/msol
-                  is = is + q2(k) * mo(k)
-
-               end do 
-
-               is = is/2d0 
-c                                 DH law activity coefficient factor (ln[g] = lng0*q^2)
-               lng0 = adh*dsqrt(is)/(1d0 + dsqrt(is)) + 0.2d0*is
-c                                 neutral solutes, ideal
-               do l = sn1, sn
-
-                  if (mo(l).le.0d0) cycle
-                  g(id) = g(id) + y(l) * (aqg(l) + rt*dlog(mo(l)))
-
-               end do 
-c                                 ionic solutes, Davies D-H extension
-               do k = l, nqs
-
-                  if (y(k).le.0d0) cycle
-
-                  g(id) = g(id) + y(k) * (aqg(k) 
-     *                                 + rt*(dlog(mo(k)) + lng0*q2(k)))
-               end do
+c                                 solution gibbs energy
+               call slvnt2 (g(id))
 
                id = id + 1
 
@@ -4370,17 +4322,17 @@ c-----------------------------------------------------------------------
  
       include 'perplex_parameters.h'
 
-      integer i, j, k, l, ichg, ihy, jchg(l9), it, ind(l9), ids
+      integer i, j, k, ichg, ihy, jchg(l9), it, ind(l9), ids
 
       logical bad, output
 
       double precision c(l9), q(l9), mo(l9), dg(l9), ahy, xis, msol,
      *                 d(l9), q2(l9), lng0, is, gamm0, totm, g0(l9),
-     *                 gso(nsp), mso(nsp), rt
+     *                 gso(nsp), mso(nsp), rt, cdh, vsol
 
-      double precision gcpd, solve
+      double precision gcpd, solve, gfunc
 
-      external gcpd, solve
+      external gcpd, solve, gfunc
 
       double precision r,tr,pr,ps,p,t,xco2,u1,u2
       common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -4391,8 +4343,12 @@ c-----------------------------------------------------------------------
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
 
-      double precision vh2o, epsilo, adh
-      common/ cxt37 /vh2o, epsilo, adh
+      double precision gf, epsln, adh
+      common/ cxt37 /gf, epsln, adh
+
+      character specie*4
+      integer isp, ins
+      common/ cxt33 /isp,ins(nsp),specie(nsp)
 
       integer iaq, aqst, aqct
       character aqnam*8
@@ -4427,13 +4383,25 @@ c-----------------------------------------------------------------------
       logical lopt
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      double precision xf,g,v,eps
+      common/ cstcoh /xf(nsp),g(nsp),v(nsp),eps(nsp)
+
+      save cdh 
+      data cdh/-42182668.74d0/
 c-----------------------------------------------------------------------
       output = .true. 
 c                                 free energies of aqueous species
       ichg = 0 
       is = 0d0
       msol = 0d0
+      vsol = 0d0 
+      epsln = 0d0 
+
       rt = r*t
+c                                 get the pure species permittivities, this
+c                                 assumes the volumes are set in cohhyb 
+      call slvnt1
 c                                 compute solvent formula weight and
 c                                 partial molar gibbs energies, assumes
 c                                 the solvent speciation has been set
@@ -4443,19 +4411,39 @@ c                                 solvent mass, kg/mol compound
          mso(i) = x(1,i) * fwt(jend(ids,2+i))
 
          msol = msol + mso(i)
+c                                 solvent mech mix volume
+         vsol = vsol + y(i) * v(ins(i))
 
          gso(i) = 0d0
 
          do j = 1, icp
 
             if (isnan(mu(j))) cycle 
-           
+
             gso(i) = gso(i) + mu(j)*cp(j,jend(ids,2+i))
 
          end do 
 
       end do 
+c                                  solvent permittivity, Looyenga
+c                                  mixing rule justified by Mountain & Harvey 2015
+      do i = 1, ns 
 
+         epsln = epsln + x(1,i)*v(ins(i))/vsol*eps(i)**(1d0/3d0)
+
+      end do 
+
+      epsln = epsln**3
+c                                 Debye-Hueckel factor, A[cgs] = -q^3*sqrt(NA)/(4*Pi*k^(3/2))
+c                                 *(msolg/(10*vh2o))^(1/2)/(epsilon*T)^(3/2) for ln(gamma) = +A*....
+c                                 A = cdh*(msolkg/(vh2ojbar))^(1/2)/(epsilon*T)^(3/2)
+c                                 this, like epslon, could be improved by using non-ideal 
+c                                 volumes
+      adh = cdh * dsqrt(msol/(vsol*(epsln*t)**3))
+c                                 shock et al 1992 g function (cgs solvent density),
+c                                 used by hkf
+      gf = gfunc (msol*1d2/vsol) 
+c                                 compute solute properties 
       do i = 1, aqct 
 
          k = aqst + i 
@@ -4468,7 +4456,7 @@ c                                  find hyrdonium
          end if 
 
          q(i) = thermo(6,k)
-         q2(i) = q(i)*q(i)
+         q2(i) = q(i)**2
 c                                 dg is the solvent oxide potentials - g
          g0(i) = gcpd(k,.false.)
          dg(i) = -g0(i)
@@ -4510,7 +4498,7 @@ c                                  solve charge balance for H+
 
          if (bad) then 
             write (*,*) 'bombed'
-            pause
+            exit
          end if 
 
          ahy = mo(ihy)*gamm0
@@ -4565,11 +4553,11 @@ c                                 solvent mass fraction/(kg/mol)
             totm = totm + mo(i)
          end do
 
-         call rankem (mo,ind,aqct)
+         call rankem (mo,ind,aqct,iopt(32))
 
-         write (*,1000) dlog10(ahy),is,gamm0,epsilo
+         write (*,1000) dlog10(ahy),is,gamm0,epsln
 
-         do i = 1, aqct
+         do i = 1, iopt(32)
 
             write (*,1010) aqnam(ind(i)),mo(ind(i)),mo(ind(i))/totm,
      *                     int(g0(ind(i))),d(ind(i)),c(ind(i))
@@ -4586,16 +4574,16 @@ c                                 solvent mass fraction/(kg/mol)
 
       end 
 
-      subroutine rankem (a,ind,r)
+      subroutine rankem (a,ind,r,n)
 c-----------------------------------------------------------------------
-c rank the values of array a(left:right) in array ind. assumes ind has 
+c rank the n largest values of array a(left:right) in array ind. assumes ind has 
 c been initialized (left:right). 
 c-----------------------------------------------------------------------
       implicit none
  
       include 'perplex_parameters.h'
 
-      integer i, j, imax, ind(*), l, r, left, right 
+      integer i, j, imax, ind(*), r, left, right, n
 
       double precision a(*), amax
 c----------------------------------------------------------------------
@@ -4619,7 +4607,7 @@ c----------------------------------------------------------------------
 
          left = left + 1
 
-         if (left.eq.right) return
+         if (left.eq.n) return
 
       end do 
 
@@ -4698,7 +4686,7 @@ c-----------------------------------------------------------------------
       double precision xt
 c                                 working arrays
       double precision z, pa, p0a, x, w, y, wl
-      common/ cxt7 /x(m4),y(m4),pa(m4),p0a(m4),z(mst,msp),w(m1),
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
      *              wl(m17,m18)
 c                                 model type
       logical lorder, lexces, llaar, lrecip

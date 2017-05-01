@@ -99,6 +99,10 @@ c----------------------------------------------------------------------
       integer ksmod, ksite, kmsol, knsp
       common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
 
+      integer jnd
+      double precision aqg,q2,rt
+      common/ cxt2 /aqg(m4),q2(m4),rt,jnd(m4)
+
       integer iam
       common/ cst4 /iam
 c---------------------------------------------------------------------- 
@@ -189,11 +193,24 @@ c                                 species_ouput
 
          do i = 1, np 
 
-            id = kkp(i) 
+            id = kkp(i)
 
-            write (text,'(20(a,a,i10,a))')
-     *            (spnams(j,id),': ',int(gcpd(jend(id,2+j),.true.)),
-     *                          ', ', j =1, lstot(id))
+            if (ksmod(id).ne.20) then 
+
+               write (text,'(20(a,a,i10,a))')
+     *         (spnams(j,id),': ',int(gcpd(jend(id,2+j),.true.)),
+     *                                           ', ', j =1, lstot(id))
+
+            else 
+c                                 electrolyte fluid is a special
+c                                 case because the electrolyte energies
+c                                 depend on the solvent properties
+              call solut0 (id)
+
+               write (text,'(20(a,a,i10,a))')
+     *         (spnams(j,id),': ',int(aqg(j)),', ', j =1, lstot(id))
+
+            end if 
 
             call deblnk (text)
 
@@ -812,9 +829,9 @@ c-----------------------------------------------------------------------
  
       include 'perplex_parameters.h'
 
-      integer k, l, id, isp, ins(nsp)
+      integer k, id
 
-      double precision mo(m4), lng0, is, dg, g, msol
+      double precision dg, g
 
       double precision omega, hpmelt, gmelt, gfluid, gzero, 
      *                 gex, slvmlt, gfesi, gcpd, gerk, gfecr1, ghybrid
@@ -851,14 +868,8 @@ c                                 model type
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
 
-      double precision vh2o, epsilo, adh
-      common/ cxt37 /vh2o, epsilo, adh
-
       double precision thermo,uf,us
       common/ cst1 /thermo(k4,k10),uf(2),us(h5)
-
-      double precision fwt
-      common/ cst338 /fwt(k10)
 
       integer ideps,icase,nrct
       common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
@@ -931,54 +942,21 @@ c                                 and excess contributions
             g = g - t * omega (id,p0a) + gex (id,p0a)
 
          else if (ksmod(id).eq.20) then 
-c                                 electrolytic solution, assumes:
-c                                 1) molal electrolyte standard state
-c                                 for solutes.
-c                                 2) water is the last solvent species
+c                                 electrolytic solution
 c                                 -------------------------------------
 c                                 compute solvent mass and gibbs energy:
-            msol = 0d0 
             rt = r*t
 
             do k = 1, ns
-c                                 set pointers for hybrid solvent EoS
-               ins(k) = jspec(id,k)
-c                                 solvent mass, kg/mol compound
-               msol = msol + y(k) * fwt(jnd(k))
-c                                 solvent mech gibbs energy 
+c                                 solvent species gibbs energy and volumes
                if (y(k).le.0d0) cycle
-               g = g + y(k) * gcpd(jnd(k),.true.)
+               aqg(k) = gcpd(jnd(k),.true.)
 
             end do 
-c                                 compute and add in solvent activities
-            g = g + ghybrid (y,ins,ns) 
-c                                 ionic strength 
-            is = 0d0 
-
-            do k = sn1, nqs
-c                                 ln molality of solutes
-               mo(k) = y(k)/msol
-               is = is + q2(k) * mo(k)
-
-            end do
-
-            is = is/2d0
-c                                 DH law activity coefficient factor:
-            lng0 = adh*dsqrt(is)/(1d0 + dsqrt(is)) + 0.2d0*is
-c                                 neutral solutes, ideal
-            do l = sn1, sn
-
-               if (y(l).le.0d0) cycle
-               g = g + y(l) * (gcpd(jnd(l),.true.) + rt*dlog(mo(l)))
-
-            end do
-c                                 ionic solutes, Davies D-H extension
-            do k = l, nqs 
-
-               if (y(k).le.0d0) cycle
-               g = g + y(k) * (gcpd(jnd(k),.true.) 
-     *                        + rt*(dlog(mo(k)) + lng0*q2(k)))
-            end do
+c                                 solvent endmember permittivities
+            call slvnt1
+c                                 solvent molar mass, gmech
+            call slvnt2 (g)
 
          else if (ksmod(id).eq.24) then 
 c                                 -------------------------------------
@@ -1038,30 +1016,26 @@ c                                 BCC Fe-Cr Andersson and Sundman
 c                                 -------------------------------------
 c                                 generic hybrid EoS
 c                                 initialize pointer array
-            isp = mstot(id)
-
-            do k = 1, isp
-
-               ins(k) = jspec(id,k)
+            do k = 1, mstot(id)
 c                                 sum pure species g's
-               g = g + gcpd(jend(id,2+k),.true.) * y(k)
+               g = g + gcpd(jnd(k),.true.) * y(k)
 
             end do
 c                                 compute and add in activities
-            g = g + ghybrid (y,ins,isp)
+            g = g + ghybrid (y)
 
          else if (ksmod(id).eq.41) then 
 c                                 hybrid MRK ternary COH fluid
             call rkcoh6 (y(2),y(1),g) 
 
             do k = 1, nstot(id) 
-               g = g + gcpd(jend(id,2+k),.true.) * y(k)
+               g = g + gcpd(jnd(k),.true.) * y(k)
             end do 
 
          else if (ksmod(id).eq.40) then 
 c                                 MRK silicate vapor
             do k = 1, nstot(id) 
-               g = g + gzero(jend(id,2+k)) * y(k)
+               g = g + gzero(jnd(k)) * y(k)
             end do 
 
             g = g + gerk(y)
@@ -1070,7 +1044,7 @@ c                                 MRK silicate vapor
 c                                 ------------------------------------
 c                                 internal fluid eos
             do k = 1, 2
-               g = g + gzero (jend(id,2+k))*y(k)
+               g = g + gzero (jnd(k))*y(k)
             end do 
 
             g = g + gfluid (y(jspec(id,1)))
@@ -1120,8 +1094,8 @@ c                                 model type
       integer isp, ins
       common/ cxt33 /isp,ins(nsp),specie(nsp)
 
-      double precision xs,g,v
-      common/ cstcoh /xs(nsp),g(nsp),v(nsp)
+      double precision xs,g,v,eps
+      common/ cstcoh /xs(nsp),g(nsp),v(nsp),eps(nsp)
 c----------------------------------------------------------------------
 
       if ((lrecip(id).and.lorder(id)).or.lorder(id)) then 
@@ -1676,8 +1650,8 @@ c----------------------------------------------------------------------
       logical sroot
       common/ rkroot /vrt,irt,sroot
 
-      double precision y,g,vsp
-      common / cstcoh /y(nsp),g(nsp),vsp(nsp)
+      double precision y,g,vsp,eps
+      common/ cstcoh /y(nsp),g(nsp),vsp(nsp),eps(nsp)
 
       integer iroots
       logical switch, rkmin, min

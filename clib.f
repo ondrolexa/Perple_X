@@ -1574,8 +1574,6 @@ c                                 check if valid species:
          if (good) then 
 c                                 acceptable data, count the phase:
             iphct = iphct + 1
-
-            if (iphct.gt.k1) call error (78,r,iopt(32),'t')
 c                                 for normalized composition, probably
 c                                 con't need this, but could be used to
 c                                 save molar wt or something like that:
@@ -1586,6 +1584,8 @@ c                                 store thermodynamic parameters:
          end if 
 
       end do
+c                                reset iopt(32) [# aq species output]
+      if (iopt(32).gt.aqct) iopt(32) = aqct
 c                                reset ipoint counter, but do not 
 c                                reset iphct, because the compositions
 c                                of the make phases are necessary for

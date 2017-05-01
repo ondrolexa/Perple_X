@@ -1,8 +1,8 @@
  
-      subroutine solvent (ins,isp)
+      subroutine slvnt1
 c-----------------------------------------------------------------------
-c compute the gibbs energies, densities and dielectric constants for the
-c pure molecular species of a solvent
+c computes dielectric constants for the pure molecular species of a solvent
+c assumes pure species volumes in cohhyb have been initialized.
 c-----------------------------------------------------------------------
       implicit none
 
@@ -10,17 +10,36 @@ c-----------------------------------------------------------------------
 
       integer i, j
 
-      double precision po(nsp,8), eps(k)
+      double precision po(nsp,8), pj, trt, rho
+
+      double precision epsh2o
+
+      external epsh2o
+
+      double precision p,t,xco2,u1,u2,tr,pr,r,ps
+      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
+
+      character specie*4
+      integer isp, ins
+      common/ cxt33 /isp,ins(nsp),specie(nsp)
+
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
+
+      double precision x,g,v,eps
+      common/ cstcoh /x(nsp),g(nsp),v(nsp),eps(nsp)
 c                                Harvey & Lemmon provide additional data for 
 c                                ethylene and long-chain hydrocarbons. A_mu
 c                                is zero for all species listed here, therefore
 c                                Eq 5 of H&L:
+
 c                                P/rho (cm3/mol) = A + A_mu/T + B*rho + C*rho^D
+
 c                                is simplified by dropping the second term the 
-c                                coefficients are a f(T) viz A = a0 + a1*(T/Tr - 1)....
-c                             
-c                                por(i,1:8) - a0, a1, A_mu, b0, b1, c0, c1, D
-      data por(i,j),j=1,8),i=1,nsp)/ 
+c                                coefficients are a f(T) viz A = a0 + a1*(T/Tr - 1)...
+
+c                                po(i,1:8) - a0, a1, A_mu, b0, b1, c0, c1, D
+      data ((po(i,j),j=1,8),i=1,nsp)/ 
 c                                1 - H2O
      *     0d0, 0d0, 0d0, 0d0, 0d0, 0d0, 0d0, 0d0, 
 c                                2 - CO2
@@ -49,327 +68,253 @@ c                                10 - N2
      *     4.3872d0, 2.26d-3, 0d0, 2.206d0, 1.135d0, -169d0, -35.83d0, 
      *     2.1d0,
 c                                11 - NH3 approximated by ?
-     *     0d0, 0d0, 0d0, 0d0, 0d0, 0d0, 0d0, 0d0
+     *     0d0, 0d0, 0d0, 0d0, 0d0, 0d0, 0d0, 0d0,
 c                                12-15 Si-O high T species
-     *     32*0d0
+     *     32*0d0,
 c                                16 - Ethane
      *     11.1552d0, 0.0112d0, 0d0, 36.759d0, 23.639d0, -808.03d0, 
-     *     -378.84d0, 1.75/
+     *     -378.84d0, 1.75d0,
+c                                17 - dilutant
+     *      8*0d0/
 
-      save por 
+      save po 
 c----------------------------------------------------------------------
-      rhoi = 1d0
+
       trt = t/tr - 1d0
 
       do i = 1, ns - 1
 
          j = ins(i)
+c                                 rho = 1/vcm3, v(j) is initialized by lnfpur
+c                                 in gcpd and is in j/bar/mol
+         rho = 0.1d0/v(j)
 c                                 Eq 5 of H&L 2005 for pj = polarization/rho
 c                                 for polar species need to add
-         pj = po(j,1) + po(j,2)*trt + (po(j,4) + po(j,5)*trt)*rhoi
-        *             + (po(j,6) + po(j,7)*trt)*rhoi**po(j,8)
+         pj = po(j,1) + po(j,2)*trt + (po(j,4) + po(j,5)*trt)*rho
+     *                + (po(j,6) + po(j,7)*trt)*rho**po(j,8)
+
+         if (po(j,3).eq.0d0) then 
 c                                 invert clausius-mosotti relation for dielectric
 c                                 constant (Eq 1) non-polar molecules
-         eps(i) = (rhoi - 2d0*pj) / (pj - rhoi)
-c                                 invert kirkwood relation for dielectric
-c                                 constant (Eq 2), this would be necessary
-c                                 if H2S were present.            
-c        eps(i) = (9d0*pj + rhoi 
-c     *          + 3d0*dsqrt(9d0*pj*pj+2d0*pj*rhoi+rhoi*rhoi)) / (9d0*pj)
+            eps(i) = (2d0*pj*rho + 1d0) / (1d0 - rho*pj)
+         else
+c                                 polarized species, currently none, but H2S...
+            pj = pj + po(j,3)
+
+            eps(i) = (9d0*pj*rho + 1d0 
+     *             + 3d0*dsqrt((3d0*pj*rho)**2+2*p*rho+1))/4d0
+
+         end if
 
       end do 
+c                                 and water:
+      eps(i) = epsh2o (v(ins(i))) 
 
       end 
 
-
-      subroutine aqrxdo
+      subroutine slvnt2 (gsolv)
 c-----------------------------------------------------------------------
-c given chemical potentials solve for rock dominated aqueous speciation
+c computes solvent p-t-composition dependent properties: permittivity (eps), 
+c molar mass (msol, this could be stored in thermo), debye-hueckel (adh).
+
+c assumes pure species volumes in cohhyb have been initialized. and that
+c the molar speciation is stored in y.
 c-----------------------------------------------------------------------
       implicit none
- 
+
       include 'perplex_parameters.h'
 
-      integer i, j, k, l, ichg, ihy, jchg(l9), it
+      integer i, l, k
 
-      logical bad, output
+      double precision gsolv, msol, vmech, cdh, mo(m4), lng0
 
-      double precision c(l9), q(l9), mo(l9), dg(l9), gh2o, ahy, xis,
-     *                 d(l9), q2(l9), lng0, is, gamm0
+      double precision gfunc, ghybrid, gcpd
 
-      double precision gcpd, solve
+      external gfunc, ghybrid, gcpd
 
-      external gcpd, solve
+      double precision p,t,xco2,u1,u2,tr,pr,r,ps
+      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 
-      double precision r,tr,pr,ps,p,t,xco2,u1,u2
-      common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
-
-      double precision thermo,uf,us
-      common/ cst1 /thermo(k4,k10),uf(2),us(h5)
+      character specie*4
+      integer isp, ins
+      common/ cxt33 /isp,ins(nsp),specie(nsp)
 
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
 
-      double precision vh2o, epsilo, adh
-      common/ cxt37 /vh2o, epsilo, adh
+      double precision xf,g,v,eps
+      common/ cstcoh /xf(nsp),g(nsp),v(nsp),eps(nsp)
 
-      integer iaq, aqst, aqct
-      character aqnam*8
-      double precision aqcp, aqtot
-      common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
-
-      integer jbulk
-      double precision cblk
-      common/ cst300 /cblk(k5),jbulk
-
-      logical mus
-      double precision mu, gmax
-      common/ cst330 /mu(k8),gmax,mus
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-c-----------------------------------------------------------------------
-      output = .true. 
-c                                 free energies of aqueous species
-      ichg = 0 
-      is = 0d0
-c DEBUG DEBUG
-      gh2o = mu(1)
-
-      do i = 1, aqct 
-
-         k = aqst + i 
-
-         if (thermo(1,k).eq.0d0) then 
-c                                  find hyrdonium
-            ihy = i 
-            cycle 
-
-         end if 
-
-         q(i) = thermo(6,k)
-         q2(i) = q(i)*q(i)
-c                                 dg is the solvent oxide potentials - g
-         dg(i) = -gcpd(k,.false.)
-
-         do j = 1, jbulk 
-c                                 if oxide components, but no excess oxygen
-c                                 mu(O2) is a nan. 
-            if (isnan(mu(j))) cycle
-
-            dg(i) = dg(i) + aqcp(j,i) * mu(j)
-
-         end do 
-c                                 normalize by RT
-         dg(i) = (dg(i) - q(i)*gh2o/2d0)/r/t
-
-         if (q(i).ne.0d0) then 
-
-            ichg = ichg + 1
-            jchg(ichg) = i
-c                                  gh2o is the partial molar gibbs energy of
-c                                  water, don't use mu because we don't know 
-c                                  if h2o is a component. 
-c                                  this is now c(i)*a(H+)^(q(i)) = mol(i)*gamma(i)*q(i)
-            d(i) = q(i)*dexp(dg(i))
-            c(i) = d(i)
-
-         else 
-c                                  neutral species assumed to be ideal, molality is
-            mo(i) = dexp(dg(i))
-      
-         end if 
-
-      end do 
-
-      gamm0 = 1d0 
-      it = 0 
-      mo(ihy) = 1e-6
-c                                  iterative loop for ionic strength
-      do 
-c                                  solve charge balance for H+
-         mo(ihy) = solve(c,q,mo(ihy),jchg,ichg,bad)
-
-         if (bad) then 
-            write (*,*) 'bombed'
-            pause
-         end if 
-
-         ahy = mo(ihy)*gamm0
-c                                  back calculate charged species molalities
-c                                  and ionic strength
-         xis = is
-
-         is = 0d0
-
-         do i = 1, ichg 
-
-            j = jchg(i)
-            mo(j) = ahy**(q(j))*c(j)/q(j)
-            is = is + q2(j) * mo(j)
-
-         end do
-
-         is = is / 2d0 
-c                                 DH law activity coefficient factor (ln[g] = lng0*q^2)
-         lng0 = adh*dsqrt(is)/(1d0 + dsqrt(is)) + 0.2d0*is
-         gamm0 = dexp(lng0)
-c                                 check for convergence
-         if (dabs(xis-is)/is.lt.nopt(5)) then 
-            exit
-         else if (it.gt.iopt(21)) then 
-            bad = .true.
-         end if 
-
-         it = it + 1
-c                                 update coefficients
-         do i = 1, ichg 
-
-            j = jchg(i)
-            c(j) = d(j)*dexp(lng0*(1d0-q2(j)))
-
-         end do
-
-      end do
-
-      if (output) then
-         write (*,1000) is,gamm0,epsilo
-         do i = 1, aqct
-            write (*,1010) aqnam(i),mo(i)
-         end do 
-      end if
-
-1000  format (/,'Rock-dominated solvent solute speciation:',/,
-     *        /,'Ionic strength = ',g12.6,'; gamma/q^2 = ',g12.6,
-     *        '; Permativity =',g12.6,//,10x,'  molality ')
-1010  format (a8,2x,g12.6)
-
-      end 
-
-      double precision function solve (c,q,x,jchg,ichg,bad)
-c-----------------------------------------------------------------------
-c function solve for hydronium molality (x) from charge balance for aqrxdo.
-c-----------------------------------------------------------------------
-      implicit none
- 
-      include 'perplex_parameters.h'
-
-      integer jchg(*), ichg, it, i, j
-
-      logical bad
-
-      double precision c(*), q(*), x, y, z, f, df, dx
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-c-----------------------------------------------------------------------
-
-      it = 0 
-
-      do
-
-         f = x
-         df = 1d0
-         it = it + 1
-
-         do i = 1, ichg 
-
-            j = jchg(i)
-
-            y = x**(q(j)) * c(j)
-            z = y*q(j)/x 
-
-            f = f + y
-            df = df + z
-
-         end do  
-
-         dx = -f/df
-
-         x = x + dx
-
-         if (dx/x.lt.nopt(5)) then 
-            bad = .false.
-            exit
-         else if (x.lt.0d0.or.it.gt.iopt(21)) then 
-            bad = .true.
-            exit
-         end if 
-
-      end do
-
-      solve = x
-
-      end 
-
-      subroutine setp0a (ids,id)
-c-----------------------------------------------------------------------
-c for static pseudocompounds load the compositional coordinates from xco
-c into simple compositional arrays for compound id of solution ids. 
-c-----------------------------------------------------------------------
-      implicit none
- 
-      include 'perplex_parameters.h'
-
-      integer ids, id, i
-
-      double precision xt
-c                                 working arrays
       double precision z, pa, p0a, x, w, y, wl
-      common/ cxt7 /x(m4),y(m4),pa(m4),p0a(m4),z(mst,msp),w(m1),
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
      *              wl(m17,m18)
-c                                 model type
-      logical lorder, lexces, llaar, lrecip
-      common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
 
-      integer lstot,mstot,nstot,ndep,nord
-      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
+      double precision fwt
+      common/ cst338 /fwt(k10)
+
+      integer jnd
+      double precision aqg,q2,rt
+      common/ cxt2 /aqg(m4),q2(m4),rt,jnd(m4)
+
+      double precision gf, epsln, adh
+      common/ cxt37 /gf, epsln, adh
+
+      save cdh 
+      data cdh/-42182668.74d0/
+c----------------------------------------------------------------------
+      gsolv = 0d0 
+      msol  = 0d0
+      vmech = 0d0
+      epsln = 0d0
+      lng0  = 0d0 
+
+      do i = 1, ns
+c                                 solvent mass, kg/mol compound
+         msol = msol + y(i) * fwt(jnd(i))
+c                                 g mech mix term for solvent:
+         gsolv = gsolv + aqg(i) * y(i)
+c                                 v mech for solvent permittivity
+         vmech = vmech + y(i) * v(ins(i))
+
+      end do
+c                                 compute and add in solvent activities
+      gsolv = gsolv + ghybrid (y)
+c                                  solvent permittivity, Looyenga
+c                                  mixing rule justified by Mountain & Harvey 2015
+      do i = 1, ns 
+
+         epsln = epsln + y(i)*v(ins(i))/vmech*eps(i)**(1d0/3d0)
+
+      end do 
+
+      epsln = epsln**3
+c                                 Debye-Hueckel factor, A[cgs] = -q^3*sqrt(NA)/(4*Pi*k^(3/2))
+c                                 *(msolg/(10*vh2o))^(1/2)/(epsilon*T)^(3/2) for ln(gamma) = +A*....
+c                                 A = cdh*(msolkg/(vh2ojbar))^(1/2)/(epsilon*T)^(3/2)
+c                                 this, like epslon, could be improved by using non-ideal 
+c                                 volumes
+      adh = cdh * dsqrt(msol/(vmech*(epsln*t)**3))
+c                                 shock et al 1992 g function (cgs solvent density),
+c                                 used by hkf
+      gf = gfunc (msol*1d2/vmech) 
+c                                 molalities and ionic strength
+      do k = sn1, nqs
+c                                 ln molality of solutes
+         mo(k) = y(k)/msol
+         lng0 = lng0 + q2(k) * mo(k)
+
+      end do 
+c                                 at this point lng0 is ionic strength
+      lng0 = lng0/2d0 
+c                                 DH law activity coefficient factor (ln[g] = lng0*q^2)
+c                                 Davies extension.
+      lng0 = adh*dsqrt(lng0)/(1d0 + dsqrt(lng0)) + 0.2d0*lng0
+c                                 add in the solute gibbs energies
+c                                 neutral solutes, ideal
+      do l = sn1, sn
+
+         if (mo(l).le.0d0) cycle
+         gsolv = gsolv + y(l) * (gcpd(jnd(l),.true.) + rt*dlog(mo(l)))
+
+      end do
+c                                 ionic solutes, Davies D-H extension
+      do k = l, nqs
+
+         if (y(k).le.0d0) cycle
+         gsolv = gsolv + y(k) * (gcpd(jnd(k),.true.)
+     *                        + rt*(dlog(mo(k))+ lng0*q2(k)))
+
+      end do 
+
+      end
+
+      subroutine solut0 (id)
+c-----------------------------------------------------------------------
+c computes solute endmember g's for aqueous solutions, used only for 
+c output purposes by routine calpr0.
+c-----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer i, id
+
+      double precision msol, vmech
+
+      double precision gfunc, gcpd
+
+      external gfunc, gcpd
+
+      double precision p,t,xco2,u1,u2,tr,pr,r,ps
+      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
+
+      character specie*4
+      integer isp, ins
+      common/ cxt33 /isp,ins(nsp),specie(nsp)
 
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
 
-      double precision xco
-      integer ico,jco
-      common/ cxt10 /xco(k18),ico(k1),jco(k1)
-c-----------------------------------------------------------------------
+      double precision xf,g,v,eps
+      common/ cstcoh /xf(nsp),g(nsp),v(nsp),eps(nsp)
 
-      xt = 0d0 
+      double precision z, pa, p0a, x, w, y, wl
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
+     *              wl(m17,m18)
 
-      if (lorder(ids).and.lrecip(ids)) then 
+      double precision fwt
+      common/ cst338 /fwt(k10)
 
-         do i = 1, nstot(ids) - 1
-            p0a(i) = xco(jco(id)+i) 
-            pa(i) = p0a(i)
-            xt = xt + pa(i)
-         end do 
+      integer jnd
+      double precision aqg,q2,rt
+      common/ cxt2 /aqg(m4),q2(m4),rt,jnd(m4)
 
-         p0a(i) = 1d0 - xt  
-         pa(i) = p0a(i)
-  
-      else if (lorder(ids)) then
+      double precision gf, epsln, adh
+      common/ cxt37 /gf, epsln, adh
 
-         do i = 1, lstot(ids) - 1
-            p0a(i) = xco(jco(id)+i) 
-            pa(i) = p0a(i)
-            xt = xt + pa(i)
-         end do
+      integer spct
+      double precision ysp
+      character spnams*8
+      common/ cxt34 /ysp(m4,k5),spct(h9),spnams(m4,h9)
+c----------------------------------------------------------------------
+      rt = r*t 
 
-         p0a(i) = 1d0 - xt
-         pa(i) = p0a(i)
+      msol  = 0d0
+      vmech = 0d0
+      epsln = 0d0
 
-      else 
+      do i = 1, ns
 
-         do i = 1, lstot(ids)- 1
-            p0a(i) = xco(jco(id)+i) 
-            xt = xt + p0a(i)
-         end do
+         y(i) = ysp(i,id)
+c                                 solvent endmember gibbs energy
+         aqg(i) = gcpd(jnd(i),.true.)
+c                                 solvent mass, kg/mol compound
+         msol = msol + y(i) * fwt(jnd(i))
+c                                 v mech for solvent permittivity
+         vmech = vmech + y(i) * v(ins(i))
 
-         p0a(i) = 1d0 - xt
+      end do
+c                                  solvent permittivity, Looyenga
+c                                  mixing rule justified by Mountain & Harvey 2015
+      do i = 1, ns 
 
-       end if
+         epsln = epsln + y(i)*v(ins(i))/vmech*eps(i)**(1d0/3d0)
 
-       end
+      end do 
+
+      epsln = epsln**3
+
+      epsln = eps(1)
+      vmech = 2.85356788671013d0
+c                                 shock et al 1992 g function (cgs solvent density),
+c                                 used by hkf
+      gf = gfunc (msol*1d2/vmech) 
+
+c                                 solute gibbs energies
+      do i = sn1, nqs
+
+         aqg(i) = gcpd(jnd(i),.true.)
+
+      end do 
+
+      end

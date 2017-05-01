@@ -319,8 +319,8 @@ c-----------------------------------------------------------------------
       double precision p,t,xo,u
       common/ cst5 /p,t,xo,u(6)
 
-      double precision xs,g,v
-      common/ cstcoh /xs(nsp),g(nsp),v(nsp)
+      double precision xs,g,v,eps
+      common/ cstcoh /xs(nsp),g(nsp),v(nsp),eps(nsp)
 
       character specie*4
       integer ins
@@ -1302,8 +1302,8 @@ c----------------------------------------------------------------------
 
       double precision nc,no,nh,nn,ns,nsi
 
-      double precision y,g,v
-      common/ cstcoh /y(nsp),g(nsp),v(nsp)
+      double precision y,g,v,eps
+      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp)
 c----------------------------------------------------------------------
       ns = y(6) + y(8) + y(9) 
       no = y(1) + y(2)*2d0 + y(3) + y(7)*2d0 + y(12)
