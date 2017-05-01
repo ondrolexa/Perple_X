@@ -26,8 +26,8 @@ c-----------------------------------------------------------------------
       double precision f
       common/ cst11 /f(3)
 
-      double precision xs,g,v,eps
-      common/ cstcoh /xs(nsp),g(nsp),v(nsp),eps(nsp)
+      double precision xs,g,v,eps,eps0
+      common/ cstcoh /xs(nsp),g(nsp),v(nsp),eps(nsp),eps0(nsp)
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -658,8 +658,8 @@ c----------------------------------------------------------------------
       double precision gh,vh,g0
       common/ csthyb /gh(nsp),vh(nsp),g0(nsp) 
 
-      double precision y,g,v,eps
-      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp)
+      double precision y,g,v,eps,eps0
+      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),eps0(nsp)
 
       double precision eqk
       common / csteqk /eqk(nsp)
@@ -1442,8 +1442,8 @@ c----------------------------------------------------------------------
       double precision gh,vh,g0
       common/ csthyb /gh(nsp),vh(nsp),g0(nsp) 
 
-      double precision y,g,v,eps
-      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp)
+      double precision y,g,v,eps,eps0
+      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),eps0(nsp)
 
       double precision p,t,xo,u1,u2,tr,pr,r,ps
       common / cst5 /p,t,xo,u1,u2,tr,pr,r,ps
@@ -1569,8 +1569,8 @@ c-----------------------------------------------------------------------
       double precision gh,vh,g0
       common/ csthyb /gh(nsp),vh(nsp),g0(nsp) 
 
-      double precision y,g,v,eps
-      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp)
+      double precision y,g,v,eps,eps0
+      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),eps0(nsp)
 
       double precision p,t,xo,u1,u2,tr,pr,r,ps
       common / cst5 /p,t,xo,u1,u2,tr,pr,r,ps
@@ -1708,8 +1708,8 @@ c-----------------------------------------------------------------------
       double precision gh,vh,g0
       common/ csthyb /gh(nsp),vh(nsp),g0(nsp) 
 
-      double precision y,g,v,eps
-      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp)
+      double precision y,g,v,eps,eps0
+      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),eps0(nsp)
 
       double precision vol
       common/ cst26 /vol
@@ -1860,8 +1860,8 @@ c----------------------------------------------------------------------
       double precision gh,vh,g0
       common/ csthyb /gh(nsp),vh(nsp),g0(nsp) 
 
-      double precision y,g,v,eps
-      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp)
+      double precision y,g,v,eps,eps0
+      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),eps0(nsp)
 
       integer iopt
       logical lopt
@@ -1920,8 +1920,8 @@ c---------------------------------------------------------------------
       double precision gh,vh,g0
       common/ csthyb /gh(nsp),vh(nsp),g0(nsp) 
 
-      double precision x,g,v,eps
-      common/ cstcoh /x(nsp),g(nsp),v(nsp),eps(nsp)
+      double precision y,g,v,eps,eps0
+      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),eps0(nsp)
 c----------------------------------------------------------------------
       call mrkmix (ins, isp, imix)
 
@@ -1953,8 +1953,8 @@ c----------------------------------------------------------------------
       double precision vol
       common/ cst26 /vol 
 
-      double precision y,g,v,eps
-      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp)
+      double precision y,g,v,eps,eps0
+      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),eps0(nsp)
 
       double precision fh2o,fco2,funk
       common/ cst11 /fh2o,fco2,funk
@@ -2225,8 +2225,8 @@ c-----------------------------------------------------------------------
       double precision fg
       common/ cst11 /fg(3) 
 
-      double precision x,g,v,eps
-      common/ cstcoh /x(nsp),g(nsp),v(nsp),eps(nsp)
+      double precision x,g,v,eps,eps0
+      common/ cstcoh /x(nsp),g(nsp),v(nsp),eps(nsp),eps0(nsp)
 
       double precision vol
       common/ cst26 /vol
@@ -2720,8 +2720,8 @@ c-----------------------------------------------------------------------
       double precision fg
       common/ cst11 /fg(3) 
  
-      double precision x,g,v,eps
-      common/ cstcoh /x(nsp),g(nsp),v(nsp),eps(nsp)
+      double precision x,g,v,eps,eps0
+      common/ cstcoh /x(nsp),g(nsp),v(nsp),eps(nsp),eps0(nsp)
 
       double precision a, b
       common/ rkab /a(nsp),b(nsp)
@@ -2857,8 +2857,8 @@ c-----------------------------------------------------------------------
       double precision fg
       common/ cst11 /fg(3) 
 
-      double precision x,g,v,eps
-      common/ cstcoh /x(nsp),g(nsp),v(nsp),eps(nsp)
+      double precision x,g,v,eps,eps0
+      common/ cstcoh /x(nsp),g(nsp),v(nsp),eps(nsp),eps0(nsp)
 
       double precision vol
       common/ cst26 /vol
@@ -3410,8 +3410,8 @@ c---------------------------------------------------------------------
       double precision p,t,xc,u1,u2,tr,pr,r,ps
       common / cst5 /p,t,xc,u1,u2,tr,pr,r,ps
 
-      double precision y,g,v,eps
-      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp)
+      double precision y,g,v,eps,eps0
+      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),eps0(nsp)
 
       double precision fh2o,fco2,funk
       common/ cst11 /fh2o,fco2,funk
@@ -3466,8 +3466,8 @@ c---------------------------------------------------------------------
       double precision fh2o,fco2,funk
       common/ cst11 /fh2o,fco2,funk
 
-      double precision y,g,v,eps
-      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp)
+      double precision y,g,v,eps,eps0
+      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),eps0(nsp)
  
       save bw, bc, rr
       data bw, bc, rr/ 29d0, 58d0, 83.144126d0/
@@ -3609,8 +3609,8 @@ c-----------------------------------------------------------------------
       double precision gh,vh,g0
       common/ csthyb /gh(nsp),vh(nsp),g0(nsp) 
 
-      double precision y,g,v,eps
-      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp)
+      double precision y,g,v,eps,eps0
+      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),eps0(nsp)
 
       double precision p,t,xc,u1,u2,tr,pr,rcal,ps
       common/ cst5 /p,t,xc,u1,u2,tr,pr,rcal,ps
@@ -3955,8 +3955,8 @@ c----------------------------------------------------------------------
       double precision fo2,t2,t3,x2,x3,d6,d36,d67,df,xt,d678x,x,tx,
      *                 rad,eq9,dxnh3,deq9,dxh2o,sign,c1,c2,c3,c4,c5
 
-      double precision y,g,v,eps
-      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp)
+      double precision y,g,v,eps,eps0
+      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),eps0(nsp)
 
       double precision fh2o,fco2,funk
       common/ cst11 /fh2o,fco2,funk
@@ -4611,8 +4611,8 @@ c----------------------------------------------------------------------
       double precision c1,c2,rat,rp1,rm1,r2m1,oldy,a0,a1,a2,
      *                 vmin,vmax,x(3),lnk2,lnk3
 
-      double precision y,g,v,eps
-      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp)
+      double precision y,g,v,eps,eps0
+      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),eps0(nsp)
 
       double precision fh2o,fco2,funk
       common/ cst11 /fh2o,fco2,funk
@@ -4793,8 +4793,8 @@ c----------------------------------------------------------------------
 
       external dquart
 
-      double precision y,g,v,eps
-      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp)
+      double precision y,g,v,eps,eps0
+      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),eps0(nsp)
 
       double precision p,t,xc,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xc,u1,u2,tr,pr,r,ps
@@ -5101,8 +5101,8 @@ c----------------------------------------------------------------------
 c      double precision go2, go, gsi, gsio, gsio2, gzero
 c      external gzero
 
-      double precision y,g,v,eps
-      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp)
+      double precision y,g,v,eps,eps0
+      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),eps0(nsp)
 
       double precision fh2o,fco2,funk
       common/ cst11 /fh2o,fco2,funk
@@ -5350,8 +5350,8 @@ c----------------------------------------------------------------------
 
       external dquart
 
-      double precision y,g,v,eps
-      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp)
+      double precision y,g,v,eps,eps0
+      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),eps0(nsp)
 
       double precision p,t,xc,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xc,u1,u2,tr,pr,r,ps
@@ -5669,8 +5669,8 @@ c----------------------------------------------------------------------
 
       external dquart 
 
-      double precision y,g,v,eps
-      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp)
+      double precision y,g,v,eps,eps0
+      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),eps0(nsp)
 
       double precision fh2o,fco2,funk
       common/ cst11 /fh2o,fco2,funk
@@ -6172,8 +6172,8 @@ c----------------------------------------------------------------------
 
       double precision c1,rat,rp1,rm1,vmin,vmax,x(3),oldy,lnk2,lnk3
 
-      double precision y,g,v,eps
-      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp)
+      double precision y,g,v,eps,eps0
+      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),eps0(nsp)
 
       double precision fh2o,fco2,funk
       common/ cst11 /fh2o,fco2,funk
@@ -6325,8 +6325,8 @@ c-----------------------------------------------------------------------
       double precision p,t,xco2,u1,u2,tr,pr,rbar,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,rbar,ps
 
-      double precision x,g,v,eps
-      common/ cstcoh /x(nsp),g(nsp),v(nsp),eps(nsp)
+      double precision y,g,v,eps,eps0
+      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),eps0(nsp)
 
       double precision a, b
       common/ rkab /a(nsp),b(nsp)
@@ -6397,8 +6397,8 @@ c----------------------------------------------------------------------
       double precision c1,rat,rp1,rm1,vmin,vmax,x(3),
      *                 lnk2,lnk3
 
-      double precision y,g,v,eps
-      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp)
+      double precision y,g,v,eps,eps0
+      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),eps0(nsp)
 
       double precision fh2o,fco2,funk
       common/ cst11 /fh2o,fco2,funk
@@ -6504,8 +6504,8 @@ c----------------------------------------------------------------------
 
       double precision c1,oldy,a0,a1
 
-      double precision y,g,v,eps
-      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp)
+      double precision y,g,v,eps,eps0
+      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),eps0(nsp)
 
       double precision fh2o,fco2,funk
       common/ cst11 /fh2o,fco2,funk
@@ -6579,8 +6579,8 @@ c----------------------------------------------------------------------
 
       external d32 
 
-      double precision y,g,v,eps
-      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp)
+      double precision y,g,v,eps,eps0
+      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),eps0(nsp)
 
       double precision fh2o,fco2,funk
       common/ cst11 /fh2o,fco2,funk
@@ -6818,8 +6818,8 @@ c----------------------------------------------------------------------
 
       double precision x(*)
 
-      double precision y,g,v,eps
-      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp)
+      double precision y,g,v,eps,eps0
+      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),eps0(nsp)
 
       double precision p,t,xc,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xc,u1,u2,tr,pr,r,ps
@@ -6875,8 +6875,8 @@ c----------------------------------------------------------------------
       double precision gh,vh,g0
       common/ csthyb /gh(nsp),vh(nsp),g0(nsp) 
 
-      double precision y,g,v,eps
-      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp)
+      double precision y,g,v,eps,eps0
+      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),eps0(nsp)
 c----------------------------------------------------------------------
       call zeroys
 c                                 load the solution model y's into the
@@ -6932,8 +6932,8 @@ c----------------------------------------------------------------------
       double precision gh,vh,g0
       common/ csthyb /gh(nsp),vh(nsp),g0(nsp) 
 
-      double precision y,g,v,eps
-      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp)
+      double precision y,g,v,eps,eps0
+      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),eps0(nsp)
 
       double precision fh2o,fco2,funk
       common/ cst11 /fh2o,fco2,funk
@@ -7242,8 +7242,8 @@ c---------------------------------------------------------------------
 
       integer i
 
-      double precision y,g,v,eps
-      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp)
+      double precision y,g,v,eps,eps0
+      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),eps0(nsp)
 c---------------------------------------------------------------------
       do i = 1, nsp
          y(i) = 0d0
@@ -7312,8 +7312,8 @@ c----------------------------------------------------------------------
       double precision vol
       common/ cst26 /vol
 
-      double precision y,g,v,eps
-      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp)
+      double precision y,g,v,eps,eps0
+      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),eps0(nsp)
 
       double precision gh,vh,g0
       common/ csthyb /gh(nsp),vh(nsp),g0(nsp) 
@@ -7735,8 +7735,8 @@ c---------------------------------------------------------------------
       double precision gh,vh,g0
       common/ csthyb /gh(nsp),vh(nsp),g0(nsp) 
 
-      double precision y,g,v,eps
-      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp)
+      double precision y,g,v,eps,eps0
+      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),eps0(nsp)
 
       double precision p,t,xc,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xc,u1,u2,tr,pr,r,ps
@@ -7863,8 +7863,8 @@ c---------------------------------------------------------------------
       double precision gh,vh,g0
       common/ csthyb /gh(nsp),vh(nsp),g0(nsp) 
 
-      double precision y,g,v,eps
-      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp)
+      double precision y,g,v,eps,eps0
+      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),eps0(nsp)
 
       double precision p,t,xc,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xc,u1,u2,tr,pr,r,ps

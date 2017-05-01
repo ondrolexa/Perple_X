@@ -9062,6 +9062,10 @@ c---------------------------------------------------------------------
 
       double precision dinc,xsym,dzt,dx
 
+      double precision gcpd
+
+      external gcpd
+
       double precision z, pa, p0a, x, w, y, wl
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
      *              wl(m17,m18)
@@ -9238,6 +9242,13 @@ c                                 model type
       integer grid
       double precision rid 
       common/ cst327 /grid(6,2),rid(5,2)
+
+      double precision xf,g,v,eps,eps0
+      common/ cstcoh /xf(nsp),g(nsp),v(nsp),eps(nsp),eps0(nsp)
+
+      integer jnd
+      double precision aqg,q2,rt
+      common/ cxt2 /aqg(m4),q2(m4),rt,jnd(m4)
 
       integer spct
       double precision ysp
@@ -10114,12 +10125,37 @@ c                                 hard limits are off, set limits to 0/1
             end do 
          end do
       end if   
+
+      if (ksmod(im).eq.0. or.ksmod(im).eq.20.or.ksmod(im).eq.39.or.
+     *    ksmod(im).eq.40.or.ksmod(im).eq.41) then
 c                                 routines that invoke fluid EoS, as currently 
 c                                 configured these will set ins/isp arrays only 
 c                                 once. therefore some parameters and indices 
-c                                 can be saved in simple arrays for 
-      if (ksmod(im).eq.0. or.ksmod(im).eq.20.or.ksmod(im).eq.39.or.
-     *    ksmod(im).eq.40.or.ksmod(im).eq.41) call setsol (im,wham) 
+c                                 can be saved in simple arrays
+         call setsol (im,wham) 
+
+         if (ksmod(im).eq.20) then 
+c                                 compute endmember reference permittivities 
+c                                 for HKF electrolyte model
+           p = pr
+           t = tr
+c                                 this is just to set the volumes
+           do i = 1, ns - 1
+c              dzt = gcpd(jnd(i),.true.)
+              v(ins(i)) = r*t/p
+           end do 
+
+           v(ins(ns)) = 1.80685d0
+
+           call slvnt1
+
+           do i = 1, ns
+              eps0(i) = eps(i)
+           end do 
+
+         end if 
+
+      end if 
 c                                 set independent species names and counters for output
 c                                 special cases first:
       if (ksmod(im).eq.0.or.ksmod(im).eq.40.or.ksmod(im).eq.41) then

@@ -1094,8 +1094,8 @@ c                                 model type
       integer isp, ins
       common/ cxt33 /isp,ins(nsp),specie(nsp)
 
-      double precision xs,g,v,eps
-      common/ cstcoh /xs(nsp),g(nsp),v(nsp),eps(nsp)
+      double precision xs,g,v,eps,eps0
+      common/ cstcoh /xs(nsp),g(nsp),v(nsp),eps(nsp),eps0(nsp)
 c----------------------------------------------------------------------
 
       if ((lrecip(id).and.lorder(id)).or.lorder(id)) then 
@@ -1110,9 +1110,9 @@ c----------------------------------------------------------------------
             ysp(k,jd) = p0a(k)
          end do
 
-      else if (ksmod(id).eq.2.or.ksmod(id).eq.3.or.ksmod(id).eq.20.or.
-     *         ksmod(id).ge.24.and.
-     *         ksmod(id).le.28.or.ksmod(id).eq.39) then 
+      else if (ksmod(id).eq.2 .or. ksmod(id).eq.3 .or.ksmod(id).eq.20
+     *     .or.ksmod(id).ge.24.and.ksmod(id).le.28.or.ksmod(id).eq.39) 
+     *                                                              then 
 c                                 macroscopic formulation for normal solutions (2,3) and
 c                                 hp melt model (24)
 c                                 ghiorso melt model (25)
@@ -1650,8 +1650,8 @@ c----------------------------------------------------------------------
       logical sroot
       common/ rkroot /vrt,irt,sroot
 
-      double precision y,g,vsp,eps
-      common/ cstcoh /y(nsp),g(nsp),vsp(nsp),eps(nsp)
+      double precision y,g,vsp,eps,eps0
+      common/ cstcoh /y(nsp),g(nsp),vsp(nsp),eps(nsp),eps0(nsp)
 
       integer iroots
       logical switch, rkmin, min

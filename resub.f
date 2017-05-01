@@ -4384,8 +4384,8 @@ c-----------------------------------------------------------------------
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
-      double precision xf,g,v,eps
-      common/ cstcoh /xf(nsp),g(nsp),v(nsp),eps(nsp)
+      double precision xf,g,v,eps,eps0
+      common/ cstcoh /xf(nsp),g(nsp),v(nsp),eps(nsp),eps0(nsp)
 
       save cdh 
       data cdh/-42182668.74d0/

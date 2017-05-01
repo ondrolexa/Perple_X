@@ -26,8 +26,8 @@ c-----------------------------------------------------------------------
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
 
-      double precision x,g,v,eps
-      common/ cstcoh /x(nsp),g(nsp),v(nsp),eps(nsp)
+      double precision x,g,v,eps,eps0
+      common/ cstcoh /x(nsp),g(nsp),v(nsp),eps(nsp),eps0(nsp)
 c                                Harvey & Lemmon provide additional data for 
 c                                ethylene and long-chain hydrocarbons. A_mu
 c                                is zero for all species listed here, therefore
@@ -80,7 +80,7 @@ c                                17 - dilutant
       save po 
 c----------------------------------------------------------------------
 
-      trt = t/tr - 1d0
+      trt = t/273.16d0 - 1d0
 
       do i = 1, ns - 1
 
@@ -142,8 +142,8 @@ c-----------------------------------------------------------------------
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
 
-      double precision xf,g,v,eps
-      common/ cstcoh /xf(nsp),g(nsp),v(nsp),eps(nsp)
+      double precision xf,g,v,eps,eps0
+      common/ cstcoh /xf(nsp),g(nsp),v(nsp),eps(nsp),eps0(nsp)
 
       double precision z, pa, p0a, x, w, y, wl
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
@@ -255,8 +255,8 @@ c-----------------------------------------------------------------------
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
 
-      double precision xf,g,v,eps
-      common/ cstcoh /xf(nsp),g(nsp),v(nsp),eps(nsp)
+      double precision xf,g,v,eps,eps0
+      common/ cstcoh /xf(nsp),g(nsp),v(nsp),eps(nsp),eps0(nsp)
 
       double precision z, pa, p0a, x, w, y, wl
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
