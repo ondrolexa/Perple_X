@@ -296,7 +296,7 @@ c-----------------------------------------------------------------------
 
       double precision nc, nh, no, ns, nn, nsi, tentoe, fo2, fs2, fh2,
      *                 ag, tot, totx, var(l2), f, prop(40), vdif,
-     *                 vpar(nsp), xxs(nsp), xg(nsp)
+     *                 vpar(nsp), xy(nsp), xg(nsp)
 
       double precision fhc
       common / cst11 /fhc(3)
@@ -319,8 +319,8 @@ c-----------------------------------------------------------------------
       double precision p,t,xo,u
       common/ cst5 /p,t,xo,u(6)
 
-      double precision xs,g,v,eps
-      common/ cstcoh /xs(nsp),g(nsp),v(nsp),eps(nsp)
+      double precision y,g,v,eps,v0,eps0
+      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),v0(nsp),eps0(nsp)
 
       character specie*4
       integer ins
@@ -816,18 +816,18 @@ c                                 species fractions/fugacities
                   if (ifug.le.5 .or.ifug.eq.14.or.ifug.eq.21.or.
      *                ifug.eq.22.or.ifug.eq.25) then 
 c                                 xco2 EoS's 
-                     xs(ins(1)) = 1d0 - xo
-                     xs(ins(2)) = xo
+                     y(ins(1)) = 1d0 - xo
+                     y(ins(2)) = xo
 
                      do k = 1, 2
 
                         f = dexp(fhc(k))
 
                         if (log) then 
-                           prop(ipot+1+k) = dlog10(xs(ins(k)))
+                           prop(ipot+1+k) = dlog10(y(ins(k)))
                            prop(ipot+isp+1+nel+k) = dlog10(f)
                         else 
-                           prop(ipot+1+k) = xs(k)
+                           prop(ipot+1+k) = y(k)
                            prop(ipot+isp+1+nel+k) = f
                         end if
 
@@ -840,16 +840,16 @@ c                                 xco2 EoS's
 c                                 assume multispecies fluids                
                      do k = 1, isp
 
-                        f = xs(ins(k))*p*g(ins(k))
+                        f = y(ins(k))*p*g(ins(k))
 
                         if (log.and.f.le.0d0) then  
                            prop(ipot+1+k) = nopt(7)
                            prop(ipot+isp+1+nel+k) = nopt(7)
                         else if (log) then 
-                           prop(ipot+1+k) = dlog10(xs(ins(k)))
+                           prop(ipot+1+k) = dlog10(y(ins(k)))
                            prop(ipot+isp+1+nel+k) = dlog10(f)
                         else 
-                           prop(ipot+1+k) = xs(ins(k))
+                           prop(ipot+1+k) = y(ins(k))
                            prop(ipot+isp+1+nel+k) = f
                         end if
 
@@ -865,7 +865,7 @@ c                                 atomic fractions
                   tot = 0d0 
 
                   do k = 1, isp
-                     tot = tot + xs(ins(k))
+                     tot = tot + y(ins(k))
                   end do 
 
                   if (dabs(tot-1d0).gt.nopt(5)+0.5d0) then
@@ -914,7 +914,7 @@ c                                 compute volume by finite difference
 
                      do k = 1, isp
                         vpar(k) = 0d0
-                        xxs(ins(k)) = xs(ins(k))
+                        xy(ins(k)) = y(ins(k))
                      end do 
 
                      p = var(1) + 0.5d0
@@ -925,11 +925,11 @@ c                                 compute volume by finite difference
                         call cfluid (fo2,fs2)
 
                         do k = 1, isp
-                           if (g(ins(k))*p*xxs(ins(k)).eq.0d0) cycle
+                           if (g(ins(k))*p*xy(ins(k)).eq.0d0) cycle
                            vpar(k) = vpar(k) +  
-     *                         83.14d0*t*f*dlog(g(ins(k))*p*xxs(ins(k)))
+     *                         83.14d0*t*f*dlog(g(ins(k))*p*xy(ins(k)))
                            vdif = vdif + 
-     *                       f*xxs(ins(k))*dlog(g(ins(k))*p*xxs(ins(k)))
+     *                       f*xy(ins(k))*dlog(g(ins(k))*p*xy(ins(k)))
                         end do 
 
                         f = -1d0
@@ -1152,19 +1152,19 @@ c                                  routine cfluid returns ln(fs2)/2
                   else if (ifug.eq.27) then 
 c                                   ac, fo2, fh2 computed from major
 c                                   species, and direct values:
-                     if (xs(7).eq.0d0.or.xs(4).eq.0d0.or.
-     *                                   xs(3).eq.0d0) then
-                        fh2 = dlog(p*xs(5)*g(5))
-                        fo2 = 2d0*(dlog(p*xs(1)*g(1)) - eqk(1) - fh2)
-                        ag  = p*xs(2)*g(2)*dexp(-fo2 - eqk(2))
-                     else if (xs(5).eq.0d0) then 
-                        fo2 = dlog(p*xs(7)*g(7))
-                        fh2 = dlog(p*xs(1)*g(1)) - eqk(1) - fo2/2d0
-                        ag  = p*xs(2)*g(2)*dexp(-fo2 - eqk(2))
-                     else if (xs(1).eq.0d0.or.xs(2).eq.0d0) then
-                        fh2 = dlog(p*xs(5)*g(5))
-                        fo2 = dlog(p*xs(7)*g(7))
-                        ag  = p*xs(3)*g(3)*dexp(-fo2/2d0 - eqk(3))
+                     if (y(7).eq.0d0.or.y(4).eq.0d0.or.
+     *                                   y(3).eq.0d0) then
+                        fh2 = dlog(p*y(5)*g(5))
+                        fo2 = 2d0*(dlog(p*y(1)*g(1)) - eqk(1) - fh2)
+                        ag  = p*y(2)*g(2)*dexp(-fo2 - eqk(2))
+                     else if (y(5).eq.0d0) then 
+                        fo2 = dlog(p*y(7)*g(7))
+                        fh2 = dlog(p*y(1)*g(1)) - eqk(1) - fo2/2d0
+                        ag  = p*y(2)*g(2)*dexp(-fo2 - eqk(2))
+                     else if (y(1).eq.0d0.or.y(2).eq.0d0) then
+                        fh2 = dlog(p*y(5)*g(5))
+                        fo2 = dlog(p*y(7)*g(7))
+                        ag  = p*y(3)*g(3)*dexp(-fo2/2d0 - eqk(3))
                      end if 
 
                      write (*,1110) ag,fo2/tentoe,fh2/tentoe
@@ -1180,9 +1180,9 @@ c                                  save old speciation and initialize for fd
                   totx = 0d0
 
                   do k = 1, isp
-                     totx = totx + xs(ins(k))
+                     totx = totx + y(ins(k))
                      vpar(k) = 0d0
-                     xxs(ins(k)) = xs(ins(k))
+                     xy(ins(k)) = y(ins(k))
                      xg(ins(k)) = g(ins(k))
                   end do 
 c                                  volumes by finite difference
@@ -1195,10 +1195,10 @@ c                                  volumes by finite difference
 
                      do k = 1, isp
 
-                        if (g(ins(k))*p*xs(ins(k)).eq.0d0) cycle
+                        if (g(ins(k))*p*y(ins(k)).eq.0d0) cycle
 
                         vpar(k) = vpar(k) +  
-     *                       83.14d0*t*f*dlog(g(ins(k))*p*xs(ins(k)))
+     *                       83.14d0*t*f*dlog(g(ins(k))*p*y(ins(k)))
 
                      end do 
 
@@ -1214,9 +1214,9 @@ c                                  output speciation:
                      if (kmax.gt.isp) kmax = isp
                      write (*,1180) (specie(ins(k)), k = j, kmax)
                      write (*,1190) ' x    ',
-     *                            (xxs(ins(k)), k = j, kmax)
+     *                            (xy(ins(k)), k = j, kmax)
                      write (*,1190) ' f,bar',
-     *                            (xg(ins(k))*p*xxs(ins(k)), k = j,kmax)
+     *                            (xg(ins(k))*p*xy(ins(k)), k = j,kmax)
                      write (*,1190) ' v,cm3',
      *                             (vpar(k), k = j,kmax)
                      write (*,'(/)')
@@ -1302,8 +1302,8 @@ c----------------------------------------------------------------------
 
       double precision nc,no,nh,nn,ns,nsi
 
-      double precision y,g,v,eps
-      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp)
+      double precision y,g,v,eps,v0,eps0
+      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),v0(nsp),eps0(nsp)
 c----------------------------------------------------------------------
       ns = y(6) + y(8) + y(9) 
       no = y(1) + y(2)*2d0 + y(3) + y(7)*2d0 + y(12)

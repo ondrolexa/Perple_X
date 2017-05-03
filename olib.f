@@ -953,9 +953,9 @@ c                                 solvent species gibbs energy and volumes
                aqg(k) = gcpd(jnd(k),.true.)
 
             end do 
-c                                 solvent endmember permittivities
-            call slvnt1
-c                                 solvent molar mass, gmech
+c                                 solvent properties
+            call slvnt1 (g)
+c                                 add in solute properties
             call slvnt2 (g)
 
          else if (ksmod(id).eq.24) then 
@@ -1094,8 +1094,8 @@ c                                 model type
       integer isp, ins
       common/ cxt33 /isp,ins(nsp),specie(nsp)
 
-      double precision xs,g,v,eps,eps0
-      common/ cstcoh /xs(nsp),g(nsp),v(nsp),eps(nsp),eps0(nsp)
+      double precision yf,g,v,eps,v0,eps0
+      common/ cstcoh /yf(nsp),g(nsp),v(nsp),eps(nsp),v0(nsp),eps0(nsp)
 c----------------------------------------------------------------------
 
       if ((lrecip(id).and.lorder(id)).or.lorder(id)) then 
@@ -1138,7 +1138,7 @@ c                                 fluid speciation with known routines:
 c                                 MRK silicate vapor (40) 
 c                                 hybrid MRK ternary COH fluid (41)
          do k = 1, spct(id) 
-            ysp(k,jd) = xs(ins(k))
+            ysp(k,jd) = yf(ins(k))
          end do          
 
       end if 
@@ -1650,8 +1650,8 @@ c----------------------------------------------------------------------
       logical sroot
       common/ rkroot /vrt,irt,sroot
 
-      double precision y,g,vsp,eps,eps0
-      common/ cstcoh /y(nsp),g(nsp),vsp(nsp),eps(nsp),eps0(nsp)
+      double precision y,g,vf,eps,v0,eps0
+      common/ cstcoh /y(nsp),g(nsp),vf(nsp),eps(nsp),v0(nsp),eps0(nsp)
 
       integer iroots
       logical switch, rkmin, min

@@ -26,8 +26,8 @@ c-----------------------------------------------------------------------
       double precision f
       common/ cst11 /f(3)
 
-      double precision xs,g,v,eps,eps0
-      common/ cstcoh /xs(nsp),g(nsp),v(nsp),eps(nsp),eps0(nsp)
+      double precision y,g,v,eps,v0,eps0
+      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),v0(nsp),eps0(nsp)
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -658,8 +658,8 @@ c----------------------------------------------------------------------
       double precision gh,vh,g0
       common/ csthyb /gh(nsp),vh(nsp),g0(nsp) 
 
-      double precision y,g,v,eps,eps0
-      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),eps0(nsp)
+      double precision y,g,v,eps,v0,eps0
+      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),v0(nsp),eps0(nsp)
 
       double precision eqk
       common / csteqk /eqk(nsp)
@@ -1442,8 +1442,8 @@ c----------------------------------------------------------------------
       double precision gh,vh,g0
       common/ csthyb /gh(nsp),vh(nsp),g0(nsp) 
 
-      double precision y,g,v,eps,eps0
-      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),eps0(nsp)
+      double precision y,g,v,eps,v0,eps0
+      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),v0(nsp),eps0(nsp)
 
       double precision p,t,xo,u1,u2,tr,pr,r,ps
       common / cst5 /p,t,xo,u1,u2,tr,pr,r,ps
@@ -1569,8 +1569,8 @@ c-----------------------------------------------------------------------
       double precision gh,vh,g0
       common/ csthyb /gh(nsp),vh(nsp),g0(nsp) 
 
-      double precision y,g,v,eps,eps0
-      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),eps0(nsp)
+      double precision y,g,v,eps,v0,eps0
+      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),v0(nsp),eps0(nsp)
 
       double precision p,t,xo,u1,u2,tr,pr,r,ps
       common / cst5 /p,t,xo,u1,u2,tr,pr,r,ps
@@ -1708,8 +1708,8 @@ c-----------------------------------------------------------------------
       double precision gh,vh,g0
       common/ csthyb /gh(nsp),vh(nsp),g0(nsp) 
 
-      double precision y,g,v,eps,eps0
-      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),eps0(nsp)
+      double precision y,g,v,eps,v0,eps0
+      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),v0(nsp),eps0(nsp)
 
       double precision vol
       common/ cst26 /vol
@@ -1860,8 +1860,8 @@ c----------------------------------------------------------------------
       double precision gh,vh,g0
       common/ csthyb /gh(nsp),vh(nsp),g0(nsp) 
 
-      double precision y,g,v,eps,eps0
-      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),eps0(nsp)
+      double precision y,g,v,eps,v0,eps0
+      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),v0(nsp),eps0(nsp)
 
       integer iopt
       logical lopt
@@ -1920,8 +1920,8 @@ c---------------------------------------------------------------------
       double precision gh,vh,g0
       common/ csthyb /gh(nsp),vh(nsp),g0(nsp) 
 
-      double precision y,g,v,eps,eps0
-      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),eps0(nsp)
+      double precision y,g,v,eps,v0,eps0
+      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),v0(nsp),eps0(nsp)
 c----------------------------------------------------------------------
       call mrkmix (ins, isp, imix)
 
@@ -1953,8 +1953,8 @@ c----------------------------------------------------------------------
       double precision vol
       common/ cst26 /vol 
 
-      double precision y,g,v,eps,eps0
-      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),eps0(nsp)
+      double precision y,g,v,eps,v0,eps0
+      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),v0(nsp),eps0(nsp)
 
       double precision fh2o,fco2,funk
       common/ cst11 /fh2o,fco2,funk
@@ -2217,7 +2217,8 @@ c-----------------------------------------------------------------------
       logical max
  
       double precision f(nsp),aj2(nsp),ev(3),c1,c2,ax,dv,ch,bx,aij,pdv,
-     *                 c3,vmin,vmax,d1,d2,d3,d6,rt,dsqrtt,r
+     *                 c3,vmin,vmax,d1,d2,d3,d4,d5,d6,d7,rt,dsqrtt,r,
+     *                 vpb, vmb
 
       double precision p,t,xco2,u1,u2,tr,pr,rbar,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,rbar,ps
@@ -2225,8 +2226,8 @@ c-----------------------------------------------------------------------
       double precision fg
       common/ cst11 /fg(3) 
 
-      double precision x,g,v,eps,eps0
-      common/ cstcoh /x(nsp),g(nsp),v(nsp),eps(nsp),eps0(nsp)
+      double precision y,g,v,eps,vf,eps0
+      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),vf(nsp),eps0(nsp)
 
       double precision vol
       common/ cst26 /vol
@@ -2259,7 +2260,7 @@ c----------------------------------------------------------------------
          i = ins(k)
 
          aj2(i) = 0d0
-         bx = bx + b(i)*x(i)
+         bx = bx + b(i)*y(i)
 
       end do 
  
@@ -2275,8 +2276,8 @@ c----------------------------------------------------------------------
             j = ins(l)
  
             if (i.eq.1.and.j.eq.2.or.i.eq.2.and.j.eq.1) then
-               aij = aij + x(i)*x(j)*ch/2d0
-               aj2(i) = aj2(i) + x(j)*ch
+               aij = aij + y(i)*y(j)*ch/2d0
+               aj2(i) = aj2(i) + y(j)*ch
             else 
 
                if (i.eq.14.and.j.eq.15.or.i.eq.15.and.j.eq.14) then
@@ -2293,8 +2294,8 @@ c                                 harmonic mean mixing rule
                   ax = 2d0/(1d0/a(i) + 1d0/a(j))
                end if 
 
-               aij = aij + x(i)*x(j)*ax
-               aj2(i) = aj2(i) + 2d0*x(j)*ax
+               aij = aij + y(i)*y(j)*ax
+               aj2(i) = aj2(i) + 2d0*y(j)*ax
 
             end if
 
@@ -2378,23 +2379,33 @@ c                                 computations, save the root
       end if 
 
       iroot = iroots
-c                                 compute fugacities:
+c                                 compute fugacities and pmvs:
+      vpb = vol + bx
+      vmb = vol - bx
       d1 = rt*dsqrtt*bx
-      d2 = dlog((vol + bx)/vol)/d1
-      d3 = aij * (d2/bx - 1d0/(bx + vol)/d1) + 1d0/(vol - bx) 
-      d6 = dlog(rt/(vol - bx))
- 
+      d2 = dlog(vpb/vol)/d1
+      d3 = aij*d2/bx - aij/vpb/d1 + 1d0/vmb 
+      d6 = dlog(rt/vmb)
+c                                 pmv constants
+      d4 = vmb**2/vpb/(rt*dsqrtt)/vol
+      d5 = aij*d4*(1d0/vol+1d0/vpb) - 1d0
+      d7 = -d4*aij/vpb
+
       do i = 1, isp
 
          l = ins(i)
           
-         if (x(l).gt.0d0) then
-            f(l) = dlog(x(l)) + b(l)*d3 - aj2(l)*d2 + d6
-            g(l) = dexp(f(l)-dlog(p*x(l)))
+         if (y(l).gt.0d0) then
+            f(l) = dlog(y(l)) + b(l)*d3 - aj2(l)*d2 + d6
+            g(l) = dexp(f(l)-dlog(p*y(l)))
          else 
             g(l) = 1d0
             f(l) = dlog(1d4*p)
          end if 
+c                                 pmv
+         v(l) = (d4*aj2(l) - b(l) - vmb + d7*b(l)) / d5
+c                                 vfractions
+         vf(l) = y(l)*v(l)/vol
 
          if (l.lt.3) fg(l) = f(l)
 
@@ -2720,14 +2731,14 @@ c-----------------------------------------------------------------------
       double precision fg
       common/ cst11 /fg(3) 
  
-      double precision x,g,v,eps,eps0
-      common/ cstcoh /x(nsp),g(nsp),v(nsp),eps(nsp),eps0(nsp)
+      double precision y,g,v,eps,v0,eps0
+      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),v0(nsp),eps0(nsp)
 
       double precision a, b
       common/ rkab /a(nsp),b(nsp)
 
       save r 
-      data r /83.1441/
+      data r /83.1441d0/
 c----------------------------------------------------------------------
       t2 = t*t
       dsqrtt = dsqrt(t)
@@ -2753,7 +2764,7 @@ c                             composition dependent mrk-terms
       do k = 1, isp
          i = ins(k)
          aj2(i) = 0d0
-         bx = bx + b(i)*x(i)
+         bx = bx + b(i)*y(i)
       end do 
  
       do k = 1, isp
@@ -2762,11 +2773,11 @@ c                             composition dependent mrk-terms
             j = ins(l)
  
             if (i.eq.1.and.j.eq.2.or.i.eq.2.and.j.eq.1) then
-               aij = aij + x(i)*x(j)*ch/2d0
-               aj2(i) = aj2(i) + x(j)*ch
+               aij = aij + y(i)*y(j)*ch/2d0
+               aj2(i) = aj2(i) + y(j)*ch
             else
-               aij12 = x(j)*dsqrt(a(i)*a(j))
-               aij = aij + x(i)*aij12
+               aij12 = y(j)*dsqrt(a(i)*a(j))
+               aij = aij + y(i)*aij12
                aj2(i) = aj2(i) + 2d0*aij12
             end if
          end do 
@@ -2796,12 +2807,12 @@ c                                 fugacities.
 
          l = ins(i)
  
-         if (x(l).gt.0d0) goto 80
+         if (y(l).gt.0d0) goto 80
          f(l) = 0d0
          g(l) = 1d0
          goto 75
-80       f(l) = dlog(x(l))+b(l)/d4-aj2(l)/d1*d2+b(l)*d5+d6
-         g(l) = dexp(f(l))/p/x(l)
+80       f(l) = dlog(y(l))+b(l)/d4-aj2(l)/d1*d2+b(l)*d5+d6
+         g(l) = dexp(f(l))/p/y(l)
 75       if (l.lt.3) fg(l) = f(l)
 70    continue
   
@@ -2857,8 +2868,8 @@ c-----------------------------------------------------------------------
       double precision fg
       common/ cst11 /fg(3) 
 
-      double precision x,g,v,eps,eps0
-      common/ cstcoh /x(nsp),g(nsp),v(nsp),eps(nsp),eps0(nsp)
+      double precision y,g,v,eps,v0,eps0
+      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),v0(nsp),eps0(nsp)
 
       double precision vol
       common/ cst26 /vol
@@ -3410,8 +3421,8 @@ c---------------------------------------------------------------------
       double precision p,t,xc,u1,u2,tr,pr,r,ps
       common / cst5 /p,t,xc,u1,u2,tr,pr,r,ps
 
-      double precision y,g,v,eps,eps0
-      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),eps0(nsp)
+      double precision y,g,v,eps,v0,eps0
+      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),v0(nsp),eps0(nsp)
 
       double precision fh2o,fco2,funk
       common/ cst11 /fh2o,fco2,funk
@@ -3466,8 +3477,8 @@ c---------------------------------------------------------------------
       double precision fh2o,fco2,funk
       common/ cst11 /fh2o,fco2,funk
 
-      double precision y,g,v,eps,eps0
-      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),eps0(nsp)
+      double precision y,g,v,eps,v0,eps0
+      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),v0(nsp),eps0(nsp)
  
       save bw, bc, rr
       data bw, bc, rr/ 29d0, 58d0, 83.144126d0/
@@ -3609,8 +3620,8 @@ c-----------------------------------------------------------------------
       double precision gh,vh,g0
       common/ csthyb /gh(nsp),vh(nsp),g0(nsp) 
 
-      double precision y,g,v,eps,eps0
-      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),eps0(nsp)
+      double precision y,g,v,eps,v0,eps0
+      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),v0(nsp),eps0(nsp)
 
       double precision p,t,xc,u1,u2,tr,pr,rcal,ps
       common/ cst5 /p,t,xc,u1,u2,tr,pr,rcal,ps
@@ -3955,8 +3966,8 @@ c----------------------------------------------------------------------
       double precision fo2,t2,t3,x2,x3,d6,d36,d67,df,xt,d678x,x,tx,
      *                 rad,eq9,dxnh3,deq9,dxh2o,sign,c1,c2,c3,c4,c5
 
-      double precision y,g,v,eps,eps0
-      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),eps0(nsp)
+      double precision y,g,v,eps,v0,eps0
+      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),v0(nsp),eps0(nsp)
 
       double precision fh2o,fco2,funk
       common/ cst11 /fh2o,fco2,funk
@@ -4611,8 +4622,8 @@ c----------------------------------------------------------------------
       double precision c1,c2,rat,rp1,rm1,r2m1,oldy,a0,a1,a2,
      *                 vmin,vmax,x(3),lnk2,lnk3
 
-      double precision y,g,v,eps,eps0
-      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),eps0(nsp)
+      double precision y,g,v,eps,v0,eps0
+      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),v0(nsp),eps0(nsp)
 
       double precision fh2o,fco2,funk
       common/ cst11 /fh2o,fco2,funk
@@ -4793,8 +4804,8 @@ c----------------------------------------------------------------------
 
       external dquart
 
-      double precision y,g,v,eps,eps0
-      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),eps0(nsp)
+      double precision y,g,v,eps,v0,eps0
+      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),v0(nsp),eps0(nsp)
 
       double precision p,t,xc,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xc,u1,u2,tr,pr,r,ps
@@ -5101,8 +5112,8 @@ c----------------------------------------------------------------------
 c      double precision go2, go, gsi, gsio, gsio2, gzero
 c      external gzero
 
-      double precision y,g,v,eps,eps0
-      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),eps0(nsp)
+      double precision y,g,v,eps,v0,eps0
+      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),v0(nsp),eps0(nsp)
 
       double precision fh2o,fco2,funk
       common/ cst11 /fh2o,fco2,funk
@@ -5350,8 +5361,8 @@ c----------------------------------------------------------------------
 
       external dquart
 
-      double precision y,g,v,eps,eps0
-      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),eps0(nsp)
+      double precision y,g,v,eps,v0,eps0
+      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),v0(nsp),eps0(nsp)
 
       double precision p,t,xc,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xc,u1,u2,tr,pr,r,ps
@@ -5669,8 +5680,8 @@ c----------------------------------------------------------------------
 
       external dquart 
 
-      double precision y,g,v,eps,eps0
-      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),eps0(nsp)
+      double precision y,g,v,eps,v0,eps0
+      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),v0(nsp),eps0(nsp)
 
       double precision fh2o,fco2,funk
       common/ cst11 /fh2o,fco2,funk
@@ -5897,9 +5908,23 @@ c      end if
          b(i) = brk(i)
 
          if (i.eq.1) then 
+
+            if (t.gt.3d2) then 
 c                                 MRK dispersion term for H2O
-            a(1) = .1452535403d8 + t*(306893.3587d0 + t*(-307.9995871d0
+               a(1) = .1452535403d8 
+     *                          + t*(306893.3587d0 + t*(-307.9995871d0
      *                          + t*(.09226256008d0 -.2930106337d-5*t)))
+            else 
+c                                 this is a gimmick to make the MRK predict
+c                                 liquid water at the reference 298 K, these 
+c                                 parameters give a molar voume of 18.0686 cm3/mol
+c                                 at 298.15 and would give a boiling point ~370 K.
+c                                 see mrk_water.mws. 
+              b(1) = 16d0
+              a(1) = 127354240d0
+
+            end if 
+
          else if (i.eq.2) then 
 c                                 MRK dispersion term for CO2
             a(2) =  92935540d0 + t*(-82130.73d0 + 21.29d0*t)
@@ -6172,8 +6197,8 @@ c----------------------------------------------------------------------
 
       double precision c1,rat,rp1,rm1,vmin,vmax,x(3),oldy,lnk2,lnk3
 
-      double precision y,g,v,eps,eps0
-      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),eps0(nsp)
+      double precision y,g,v,eps,v0,eps0
+      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),v0(nsp),eps0(nsp)
 
       double precision fh2o,fco2,funk
       common/ cst11 /fh2o,fco2,funk
@@ -6325,8 +6350,8 @@ c-----------------------------------------------------------------------
       double precision p,t,xco2,u1,u2,tr,pr,rbar,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,rbar,ps
 
-      double precision y,g,v,eps,eps0
-      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),eps0(nsp)
+      double precision y,g,v,eps,v0,eps0
+      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),v0(nsp),eps0(nsp)
 
       double precision a, b
       common/ rkab /a(nsp),b(nsp)
@@ -6397,8 +6422,8 @@ c----------------------------------------------------------------------
       double precision c1,rat,rp1,rm1,vmin,vmax,x(3),
      *                 lnk2,lnk3
 
-      double precision y,g,v,eps,eps0
-      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),eps0(nsp)
+      double precision y,g,v,eps,v0,eps0
+      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),v0(nsp),eps0(nsp)
 
       double precision fh2o,fco2,funk
       common/ cst11 /fh2o,fco2,funk
@@ -6504,8 +6529,8 @@ c----------------------------------------------------------------------
 
       double precision c1,oldy,a0,a1
 
-      double precision y,g,v,eps,eps0
-      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),eps0(nsp)
+      double precision y,g,v,eps,v0,eps0
+      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),v0(nsp),eps0(nsp)
 
       double precision fh2o,fco2,funk
       common/ cst11 /fh2o,fco2,funk
@@ -6579,8 +6604,8 @@ c----------------------------------------------------------------------
 
       external d32 
 
-      double precision y,g,v,eps,eps0
-      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),eps0(nsp)
+      double precision y,g,v,eps,v0,eps0
+      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),v0(nsp),eps0(nsp)
 
       double precision fh2o,fco2,funk
       common/ cst11 /fh2o,fco2,funk
@@ -6818,8 +6843,8 @@ c----------------------------------------------------------------------
 
       double precision x(*)
 
-      double precision y,g,v,eps,eps0
-      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),eps0(nsp)
+      double precision y,g,v,eps,v0,eps0
+      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),v0(nsp),eps0(nsp)
 
       double precision p,t,xc,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xc,u1,u2,tr,pr,r,ps
@@ -6875,8 +6900,8 @@ c----------------------------------------------------------------------
       double precision gh,vh,g0
       common/ csthyb /gh(nsp),vh(nsp),g0(nsp) 
 
-      double precision y,g,v,eps,eps0
-      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),eps0(nsp)
+      double precision y,g,v,eps,v0,eps0
+      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),v0(nsp),eps0(nsp)
 c----------------------------------------------------------------------
       call zeroys
 c                                 load the solution model y's into the
@@ -6932,8 +6957,8 @@ c----------------------------------------------------------------------
       double precision gh,vh,g0
       common/ csthyb /gh(nsp),vh(nsp),g0(nsp) 
 
-      double precision y,g,v,eps,eps0
-      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),eps0(nsp)
+      double precision y,g,v,eps,v0,eps0
+      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),v0(nsp),eps0(nsp)
 
       double precision fh2o,fco2,funk
       common/ cst11 /fh2o,fco2,funk
@@ -7242,8 +7267,8 @@ c---------------------------------------------------------------------
 
       integer i
 
-      double precision y,g,v,eps,eps0
-      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),eps0(nsp)
+      double precision y,g,v,eps,v0,eps0
+      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),v0(nsp),eps0(nsp)
 c---------------------------------------------------------------------
       do i = 1, nsp
          y(i) = 0d0
@@ -7312,8 +7337,8 @@ c----------------------------------------------------------------------
       double precision vol
       common/ cst26 /vol
 
-      double precision y,g,v,eps,eps0
-      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),eps0(nsp)
+      double precision y,g,v,eps,v0,eps0
+      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),v0(nsp),eps0(nsp)
 
       double precision gh,vh,g0
       common/ csthyb /gh(nsp),vh(nsp),g0(nsp) 
@@ -7735,8 +7760,8 @@ c---------------------------------------------------------------------
       double precision gh,vh,g0
       common/ csthyb /gh(nsp),vh(nsp),g0(nsp) 
 
-      double precision y,g,v,eps,eps0
-      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),eps0(nsp)
+      double precision y,g,v,eps,v0,eps0
+      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),v0(nsp),eps0(nsp)
 
       double precision p,t,xc,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xc,u1,u2,tr,pr,r,ps
@@ -7863,8 +7888,8 @@ c---------------------------------------------------------------------
       double precision gh,vh,g0
       common/ csthyb /gh(nsp),vh(nsp),g0(nsp) 
 
-      double precision y,g,v,eps,eps0
-      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),eps0(nsp)
+      double precision y,g,v,eps,v0,eps0
+      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps(nsp),v0(nsp),eps0(nsp)
 
       double precision p,t,xc,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xc,u1,u2,tr,pr,r,ps

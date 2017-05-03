@@ -3245,8 +3245,6 @@ c                                 2) water is the last species
 c                                 solvent species Gibbs energies:
 c                                 solvent Gibbs energies
             rt = r*t
-c                                 get pure species permittivity
-            call slvnt1
 
             do k = 1, ns
                aqg(k) = g(jnd(k))
@@ -3255,7 +3253,9 @@ c                                 compute compound properties
             do j = 1, jend(i,2)
 c                                 get the composition
                call setxyp (i,id)
-c                                 solution gibbs energy
+c                                 solvent properties
+               call slvnt1 (g(id))
+c                                 add in solute properties
                call slvnt2 (g(id))
 
                id = id + 1
@@ -4322,13 +4322,13 @@ c-----------------------------------------------------------------------
  
       include 'perplex_parameters.h'
 
-      integer i, j, k, ichg, ihy, jchg(l9), it, ind(l9), ids
+      integer i, j, k, ichg, jchg(l9), it, ind(l9), ids
 
       logical bad, output
 
-      double precision c(l9), q(l9), mo(l9), dg(l9), ahy, xis, msol,
+      double precision c(l9), q(l9), mo(l9), dg(l9), ahy, xis, 
      *                 d(l9), q2(l9), lng0, is, gamm0, totm, g0(l9),
-     *                 gso(nsp), mso(nsp), rt, cdh, vsol
+     *                 gso(nsp), ysum
 
       double precision gcpd, solve, gfunc
 
@@ -4343,8 +4343,9 @@ c-----------------------------------------------------------------------
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
 
-      double precision gf, epsln, adh
-      common/ cxt37 /gf, epsln, adh
+      integer ihy
+      double precision gf, epsln, epsln0, adh, msol
+      common/ cxt37 /gf, epsln, epsln0, adh, msol, ihy
 
       character specie*4
       integer isp, ins
@@ -4384,35 +4385,41 @@ c-----------------------------------------------------------------------
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
-      double precision xf,g,v,eps,eps0
-      common/ cstcoh /xf(nsp),g(nsp),v(nsp),eps(nsp),eps0(nsp)
+      double precision yf,g,v,eps,v0,eps0
+      common/ cstcoh /yf(nsp),g(nsp),v(nsp),eps(nsp),v0(nsp),eps0(nsp)
 
-      save cdh 
-      data cdh/-42182668.74d0/
+      integer jnd
+      double precision aqg,qq,rt
+      common/ cxt2 /aqg(m4),qq(m4),rt,jnd(m4)
+
+      character names*8
+      common/ cst8  /names(k1)
 c-----------------------------------------------------------------------
       output = .true. 
-c                                 free energies of aqueous species
+
       ichg = 0 
-      is = 0d0
-      msol = 0d0
-      vsol = 0d0 
-      epsln = 0d0 
+      is   = 0d0
+      rt   = r*t
+      ysum = 0d0 
+c                                 get the solvent permittivities,
+c                                 call mrkmix to get solvent volumetric props
+      do i = 1, ns
+ 
+         ysum = ysum + x(1,i)
 
-      rt = r*t
-c                                 get the pure species permittivities, this
-c                                 assumes the volumes are set in cohhyb 
-      call slvnt1
-c                                 compute solvent formula weight and
-c                                 partial molar gibbs energies, assumes
-c                                 the solvent speciation has been set
-c                                 in the x array (e.g., by avrger)
+      end do
+
+      do i = 1, ns
+c                                 load normalized molecular fluid composition
+         yf(ins(i)) = x(1,i)/ysum
+
+      end do 
+         
+      call mrkmix (ins,isp,1)
+c                                  ysum is just a dummy at this point. 
+      call slvnt1 (ysum)
+
       do i = 1, ns 
-c                                 solvent mass, kg/mol compound
-         mso(i) = x(1,i) * fwt(jend(ids,2+i))
-
-         msol = msol + mso(i)
-c                                 solvent mech mix volume
-         vsol = vsol + y(i) * v(ins(i))
 
          gso(i) = 0d0
 
@@ -4420,29 +4427,11 @@ c                                 solvent mech mix volume
 
             if (isnan(mu(j))) cycle 
 
-            gso(i) = gso(i) + mu(j)*cp(j,jend(ids,2+i))
+            gso(i) = gso(i) + mu(j)*cp(j,jnd(i))
 
          end do 
 
       end do 
-c                                  solvent permittivity, Looyenga
-c                                  mixing rule justified by Mountain & Harvey 2015
-      do i = 1, ns 
-
-         epsln = epsln + x(1,i)*v(ins(i))/vsol*eps(i)**(1d0/3d0)
-
-      end do 
-
-      epsln = epsln**3
-c                                 Debye-Hueckel factor, A[cgs] = -q^3*sqrt(NA)/(4*Pi*k^(3/2))
-c                                 *(msolg/(10*vh2o))^(1/2)/(epsilon*T)^(3/2) for ln(gamma) = +A*....
-c                                 A = cdh*(msolkg/(vh2ojbar))^(1/2)/(epsilon*T)^(3/2)
-c                                 this, like epslon, could be improved by using non-ideal 
-c                                 volumes
-      adh = cdh * dsqrt(msol/(vsol*(epsln*t)**3))
-c                                 shock et al 1992 g function (cgs solvent density),
-c                                 used by hkf
-      gf = gfunc (msol*1d2/vsol) 
 c                                 compute solute properties 
       do i = 1, aqct 
 
@@ -4544,7 +4533,7 @@ c                                 update coefficients
 c                                 compute mole fractions, total moles first
          do i = 1, ns 
 c                                 solvent mass fraction/(kg/mol) 
-            totm = totm + mso(i)/msol/fwt(jend(ids,2+i))
+            totm = totm + x(1,i)/msol
 
          end do        
 
@@ -4559,8 +4548,20 @@ c                                 solvent mass fraction/(kg/mol)
 
          do i = 1, iopt(32)
 
-            write (*,1010) aqnam(ind(i)),mo(ind(i)),mo(ind(i))/totm,
-     *                     int(g0(ind(i))),d(ind(i)),c(ind(i))
+            k = ind(i)
+
+            write (*,1010) aqnam(k),int(thermo(6,k+aqst)),
+     *                     mo(k),mo(k)/totm,
+     *                     int(g0(k)),d(k),c(k)
+         end do 
+
+         write (*,1020)
+
+         do i = 1, ns 
+
+            write (*,1030) names(jnd(i)),x(1,i)/msol,x(1,i),int(gso(i)),
+     *                      v(ins(i)),eps(i),v0(ins(i)),eps0(i)
+
          end do 
 
       end if
@@ -4568,9 +4569,15 @@ c                                 solvent mass fraction/(kg/mol)
 1000  format (/,'Back-calculated solute speciation in the solvent:',/,
      *        /,'pH = ',f7.3,
      *        /,'Ionic strength = ',g12.6,'; gamma/q^2 = ',g12.6,
-     *        '; Permittivity =',g12.6,//,13x,'molality',5x,
+     *        '; Permittivity =',g12.6,//,
+     *        10x,'charge',3x,'molality',5x,
      *        'mole fraction',3x,'G0,J/mole')
-1010  format (a8,3x,g12.6,3x,g12.6,5x,i8,5(2x,g12.6))
+1010  format (a8,4x,i2,3x,g12.6,3x,g12.6,5x,i8,5(2x,g12.6))
+1020  format (/,'Solvent endmember properties:',//,
+     *         9x,'molality',2x,'mole fraction',2x,'mu,J/mole',
+     *         3x,'v,J/bar',2x,'permittivity',
+     *         4x,'v0,J/bar',3x,'permitivity0')
+1030  format (a8,2x,f7.4,5x,f7.5,5x,i8,2x,f9.4,4x,f8.5,5x,f9.4,5x,f8.5)     
 
       end 
 

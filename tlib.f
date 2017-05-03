@@ -2817,13 +2817,12 @@ c     *          ' (SWASH, see program documentation Eq 2.3)',/)
      *        'plot file output.',/,' You will not be able to process',
      *        ' the results of the requested calculation.',//)
 90    format (/,'**warning ver090** optimization failed. '
-     *        'Probable cause: the possible ',
-     *        'phases do not span the systems composition',/,3x,
-     *        'To avoid this problem add phases or modify the bulk ',
-     *        'composition.',/,'Alternatively, although less ',
+     *        'Most probably, the possible ',
+     *        'phases do not span',/,'the systems composition.',
+     *        'In this case, add phases or modify the bulk ',
+     *        'composition.',/,'Less ',
      *        'probably, increasing parameter L6 in perplex_',
-     *        'parameters.h',/,
-     *        'and recompiling VERTEX permit SMPLEX to converge.',/)
+     *        'parameters.h may permit convergence.',/)
 91    format (/,'**warning ver091** optimization failed. Change ',
      *        'minimnization method',/)
 92    format (/,'**warning ver092** you have requested ',i4,

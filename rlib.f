@@ -919,8 +919,10 @@ c        b2 = -s + c1*dlog(tr) + c1 + w*yr + dlog(tr/(tr-theta))*c2/theta**2 => 
          b3 = -s + b1*dlog(tr) + b1 + b*yr 
      *            + dlog(tr/(tr-theta))*b2/theta**2
 c        b3 = (-w*yr-c1+s)*tr + (-1/epsilonr+1)*w - a1*pr - a2*ln(psi+pr) + g + c2/theta => b9
-         b4 = (-b*yr-b1+s)*tr + (-1d0/epsr+1d0)*b - d*pr -e*dlog(psi+pr) 
-     *                         + g + b2/theta
+c        may 2, 2017 modified to:
+c        b3 = (-w*yr-c1+s)*tr + w - a1*pr - a2*ln(psi+pr) + g + c2/theta => b9
+         b4 = (-b*yr-b1+s)*tr + b - d*pr 
+     *                        - e*dlog(psi+pr) + g + b2/theta
 c        b4 = -a3*pr-a4*ln(psi+pr) => b10
          b5 = -f*pr - gg*dlog(psi+pr)
 c        b5 = -c2/(tr-theta)/theta => b11
@@ -931,6 +933,8 @@ c        b7 = -c1-c2/theta^2
          b8 = -(b1+b7)
 c                                 the reference condition born radius (thermo 19) 
          b9 = 5d9 * eta * c**2 / (1.622323167d9 * eta * c + 5d9 * b)
+c                                 q^2 for activity calculations
+         b10 = -b/epsr
 
          return 
 c                                 remaining standard forms have caloric polynomial
@@ -4062,12 +4066,13 @@ c thermo(10,id) = a4
 c thermo(11,id) = c1
 c thermo(12,id) = c2
 c thermo(13,id) = -s + c1*dlog(tr) + c1 + w*yr + dlog(tr/(tr-theta))*c2/theta**2 => b8 in HKF_G.mws
-c thermo(14,id) = (-w*yr-c1+s)*tr + (-1/epsilonr+1)*w - a1*pr - a2*ln(psi+pr) + g + c2/theta => b9 
+c thermo(14,id) = (-w*yr-c1+s)*tr + w - a1*pr - a2*ln(psi+pr) + g + c2/theta => b9 
 c thermo(15,id) = -a3*pr-a4*ln(psi+pr) => b10
 c thermo(16,id) = -c2/(tr-theta)/theta => b11
 c thermo(17,id) = c2/theta^2 => b12
 c thermo(18,id) = -c1-c2/theta^2
 c thermo(19,id) = reference born radius 5d10*eta*q^2/(1622323167*eta*q+5d10*omega0)
+c thermo(20,id) = q^2
 c-----------------------------------------------------------------------
       implicit none 
 
@@ -4083,8 +4088,9 @@ c-----------------------------------------------------------------------
       double precision thermo, uf, us
       common/ cst1 /thermo(k4,k10),uf(2),us(h5)
 
-      double precision gf, epsln, adh
-      common/ cxt37 /gf, epsln, adh
+      integer ihy
+      double precision gf, epsln, epsln0, adh, msol
+      common/ cxt37 /gf, epsln, epsln0, adh, msol, ihy
 
       save psi, theta, eta
       data psi, theta, eta/2600d0, 228d0, 694656.968d0/
@@ -4098,10 +4104,6 @@ c                                 with zero G0, return G_H+(P,T) = 0.
       end if 
 
       z = thermo(6,id)
-
-      if (gf.lt.-2.1d-3) then 
-c         write (*,*) 'bonk'
-      end if 
 
       if (z.ne.0d0) then 
 c                                 ionic species
@@ -4122,7 +4124,13 @@ c                                 neutral species
      *     + thermo(16,id)*ft 
      *     + thermo(7,id)*p + thermo(8,id)*fp 
      *     + (thermo(9,id)*p + thermo(10,id)*fp + thermo(15,id))/ft
-     *     + omega*(1d0/epsln - 1d0) 
+     *     + omega*(1d0/epsln - 1d0) - thermo(5,id)/epsln0
+
+      if (epsln0.lt.60d0) then
+
+         epsln0 = dsqrt(epsln0)**2
+        
+      end if 
 
       end 
 
@@ -8359,6 +8367,8 @@ c                                 internal fluid eos
 
       else if (ksmod(id).eq.20) then 
 c                                 electrolytic solution
+         call slvnt1 (gg)
+
          call slvnt2 (gg) 
 
       else if (ksmod(id).eq.25.or.ksmod(id).eq.24) then 
@@ -9243,8 +9253,8 @@ c                                 model type
       double precision rid 
       common/ cst327 /grid(6,2),rid(5,2)
 
-      double precision xf,g,v,eps,eps0
-      common/ cstcoh /xf(nsp),g(nsp),v(nsp),eps(nsp),eps0(nsp)
+      double precision yf,g,v,eps,v0,eps0
+      common/ cstcoh /yf(nsp),g(nsp),v(nsp),eps(nsp),v0(nsp),eps0(nsp)
 
       integer jnd
       double precision aqg,q2,rt
@@ -10133,27 +10143,6 @@ c                                 configured these will set ins/isp arrays only
 c                                 once. therefore some parameters and indices 
 c                                 can be saved in simple arrays
          call setsol (im,wham) 
-
-         if (ksmod(im).eq.20) then 
-c                                 compute endmember reference permittivities 
-c                                 for HKF electrolyte model
-           p = pr
-           t = tr
-c                                 this is just to set the volumes
-           do i = 1, ns - 1
-c              dzt = gcpd(jnd(i),.true.)
-              v(ins(i)) = r*t/p
-           end do 
-
-           v(ins(ns)) = 1.80685d0
-
-           call slvnt1
-
-           do i = 1, ns
-              eps0(i) = eps(i)
-           end do 
-
-         end if 
 
       end if 
 c                                 set independent species names and counters for output
