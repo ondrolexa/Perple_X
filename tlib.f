@@ -3407,7 +3407,7 @@ c                                 interval limits conformal transformation
 
       character*2 strgs*3, mstrg, dstrg, tstrg*3, wstrg*3, e16st*3
       common/ cst56 /strgs(32),mstrg(6),dstrg(m8),tstrg(11),wstrg(m16),
-     *               e16st(12)
+     *               e16st(13)
 
       character*80 com
       common/delet/com 
@@ -3451,7 +3451,7 @@ c                                 tags for thermo data i/o
       data tstrg/'t1 ','t2 ','t3 ','t4 ','t5 ','t6 ','t7 ','t8 ','t9 ',
      *           't10','t11'/
       data e16st/'G0 ','S0 ','V0 ','Cp0','w ','q ','a1 ','a2 ','a3 ',
-     *           'a4 ','c1 ','c2 '/
+     *           'a4 ','c1 ','c2 ','HOH'/
 c     data estrg/'eG0','eS0','eV0','ec1','ec2','ec3','ec4','ec5','ec6',
 c    *           'ec7','eb1','eb2','eb3','eb4','eb5','eb6','eb7','eb8'/
 c                                 tags for interaction coefficients (Redlich-Kister polynomial)
@@ -3591,7 +3591,7 @@ c----------------------------------------------------------------------
 
       character*2 strgs*3, mstrg, dstrg, tstrg*3, wstrg*3, e16st*3
       common/ cst56 /strgs(32),mstrg(6),dstrg(m8),tstrg(11),wstrg(m16),
-     *               e16st(12)
+     *               e16st(13)
 
       save ic2p
       data ic2p/0,0,22,1,2,3,4,5,6,7,12,13,14,15,16,17,18,19,20,21,8,
@@ -3698,7 +3698,7 @@ c                                 calphad format
 
             else if (ieos.eq.16) then 
 c                                 DEW/HKF aqueous data
-               do i = 1, 12
+               do i = 1, 13
                   if (key.eq.e16st(i)) then 
                      read (values,*,iostat=ier) thermo(i,k10)
                      if (ier.ne.0) call error (23,tot,ier,key) 
@@ -4029,7 +4029,7 @@ c----------------------------------------------------------------------
 
       character*2 strgs*3, mstrg, dstrg, tstrg*3, wstrg*3, e16st*3
       common/ cst56 /strgs(32),mstrg(6),dstrg(m8),tstrg(11),wstrg(m16),
-     *               e16st(12)
+     *               e16st(13)
 c-----------------------------------------------------------------------
 c                                 =====================================
 c                                 name & EoS
@@ -5584,7 +5584,7 @@ c----------------------------------------------------------------------
 c deblnk - scan text and delete multiple blank characters, strip
 c out sequential + - or - + operators, trailing -/+ operators, 
 c leading blanks, and leading + operators. also deletes blanks
-c preceding punctuation (',' and ':').
+c preceding punctuation (',' and ':' and ';').
  
 c     text - character string 
 
@@ -5646,117 +5646,9 @@ c                                 shift everything right
 c                                 strip out double blanks
          if ((bitsy(i).eq.' '.and.bitsy(i+1).eq.' ').or.
      *       (bitsy(i).eq.' '.and.bitsy(i+1).eq.':').or.
+     *       (bitsy(i).eq.' '.and.bitsy(i+1).eq.';').or.
      *       (bitsy(i).eq.' '.and.bitsy(i+1).eq.',').or.
      *       (bitsy(i).eq.' '.and.bitsy(i+1).eq.')')) cycle 
-         ict = ict + 1
-         bitsy(ict) = bitsy(i)
-
-      end do
-
-      nchar = ict      
-c                                 strip put + - and - + strings
-      strip = .false.
-
-      do i = 1, nchar - 2
-
-         if (bitsy(i).eq.'+'.and.bitsy(i+1).eq.'-'.or.
-     *       bitsy(i).eq.'-'.and.bitsy(i+1).eq.'+') then
-
-             bitsy(i) = '-'
-             bitsy(i+1) = ' '
-             strip = .true.
-
-         else if (bitsy(i).eq.'+'.and.bitsy(i+2).eq.'-'.or.
-     *            bitsy(i).eq.'-'.and.bitsy(i+2).eq.'+') then
-
-             bitsy(i) = '-'
-             bitsy(i+2) = ' '
-             strip = .true.
-
-         end if 
-
-      end do 
-
-      if (strip) then 
-c                                 strip out new double blanks
-         ict = 1
-
-         do i = 2, nchar
-
-            if (bitsy(i).eq.' '.and.bitsy(i-1).eq.' ') cycle 
-            ict = ict + 1
-            bitsy(ict) = bitsy(i)
-
-         end do 
-
-      end if 
-
-      write (text,1000) (bitsy(i), i = 1, ict),
-     *                  (' ',i = ict+1, len(text))
- 
-1000  format (400a)
-
-      end
-
-      subroutine peblnk (text)
-c----------------------------------------------------------------------
-c deblnk - scan text and delete multiple blank characters and blanks
-c preceding punctuation (',' and ':').
- 
-c     text - character string 
-
-c no test is made for a blank string or a string of "+" signs.
-c----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      integer i, ict, nchar
-
-      logical strip
- 
-      character text*(*), bitsy(lchar)*1 
- 
-      nchar = len(text) 
-
-      read (text,1000) (bitsy(i), i = 1, nchar)
-c                                find last non-blank
-      ict = 1 
-      
-      do i = 1, nchar
-         if (bitsy(i).gt.' ') ict = i
-      end do  
-
-      nchar = ict          
-c                                 kill any trailing +/-
-      if (bitsy(nchar).eq.'+'.or.bitsy(nchar).eq.'-') nchar = nchar - 1
-         
-c                                 scan for first non blank/+ character:
-      ict = 0 
-      
-      do i = 1, nchar
-         if (bitsy(i).eq.' '.or.bitsy(i).eq.'+') cycle
-         ict = i
-         exit 
-      end do 
-c                                 shift everything right
-      if (ict.gt.1) then 
-
-         ict = ict - 1
-         
-         do i = ict+1, nchar
-            bitsy(i-ict) = bitsy(i)
-         end do 
-
-         nchar = nchar - ict
-
-      end if 
-
-      ict = 1
-      
-      do i = 2, nchar
-c                                 strip out double blanks
-         if (bitsy(i).eq.' '.and.bitsy(i-1).eq.' ') cycle 
          ict = ict + 1
          bitsy(ict) = bitsy(i)
 

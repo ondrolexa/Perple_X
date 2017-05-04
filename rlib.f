@@ -907,6 +907,9 @@ c                                 and load into thermo(10-14) => (gg,c8,b1,b2,b3
          return 
  
       else if (ieos.eq.16) then 
+c                                 coming in b3 is a flag (HOH) for H+, OH-, returned 
+c                                 as b11 (thermo(21))
+        b11 = b3 
 c                                 DEW/HKF aqueous species
 c                                 psi, theta, epsr, yr are generic parameters. 
 c                                 coming in HKF species parameters loaded as:
@@ -1888,6 +1891,10 @@ c---------------------------------------------------------------------
       integer idspe,ispec
       common/ cst19 /idspe(2),ispec
 
+      integer ihy, ioh
+      double precision gf, epsln, epsln0, adh, msol
+      common/ cxt37 /gf, epsln, epsln0, adh, msol, ihy, ioh
+
       integer iaq, aqst, aqct
       character aqnam*8
       double precision aqcp, aqtot
@@ -2022,7 +2029,14 @@ c                               principle may need vnumu as well).
          do k = 1, icomp
             aqcp(k,aqct) = comp(ic(k))
             if (k.lt.icp) aqtot(aqct) = aqtot(aqct) + comp(ic(k))
-         end do 
+         end do
+c                               locate H+/OH-, at this point HOH is in thermo(13), after
+c                               conver it's in thermo(21)
+         if (thermo(13,k10).eq.1d0) then 
+            ihy = aqct
+         else if (thermo(13,k10).eq.2d0) then 
+            ioh = aqct
+         end if 
 
       end if
 c                               load elastic props if present
@@ -3070,7 +3084,7 @@ c----------------------------------------------------------------------
 
       character*2 strgs*3, mstrg, dstrg, tstrg*3, wstrg*3, e16st*3
       common/ cst56 /strgs(32),mstrg(6),dstrg(m8),tstrg(11),wstrg(m16),
-     *               e16st(12)
+     *               e16st(13)
 c----------------------------------------------------------------------
 
       iterm = 0
@@ -9253,8 +9267,8 @@ c                                 model type
       double precision rid 
       common/ cst327 /grid(6,2),rid(5,2)
 
-      double precision yf,g,v,eps,v0,eps0
-      common/ cstcoh /yf(nsp),g(nsp),v(nsp),eps(nsp),v0(nsp),eps0(nsp)
+      double precision yf,g,v,vf
+      common/ cstcoh /yf(nsp),g(nsp),v(nsp),vf(nsp)
 
       integer jnd
       double precision aqg,q2,rt

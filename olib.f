@@ -12,7 +12,7 @@ c----------------------------------------------------------------------
  
       character cprop*18, text*lchar
 
-      integer i,j,l,lu,id
+      integer i,j,k,l,lu,id,inc
 
       double precision poiss, gcpd
  
@@ -166,22 +166,50 @@ c                                 species_ouput
 
             id = kkp(i) 
 
-            if (ksmod(id).ne.20) then 
+            if (ksmod(id).eq.20.and.spct(id).gt.5) then
 
-               write (text,'(20(a,a,f8.5,a))')
-     *               (spnams(j,id),': ',ysp(j,i),', ', j =1,spct(id))
+               inc = 5
 
-            else
+            else if (spct(id).gt.7) then 
 
-               write (text,'(20(a,a,g12.5,a))')
-     *               (spnams(j,id),': ',ysp(j,i),', ', j =1,spct(id))
+                inc = 7
+
+            else 
+
+                inc = spct(id)
 
             end if 
 
-            call deblnk (text)
+            do k = 1, spct(id), inc
 
-            write (lu,'(1x,a,4x,400a)') pname(i), 
-     *                                 (chars(j), j = 1, length)
+               l = k + inc - 1
+               if (l.gt.spct(id)) l = spct(id)
+
+               if (ksmod(id).ne.20) then 
+
+                  write (text,'(20(a,a,f8.5,a))')
+     *                  (spnams(j,id),': ',ysp(j,i),', ', j = k, l)
+
+               else
+
+                  write (text,'(20(a,a,g12.5,a))')
+     *                  (spnams(j,id),': ',ysp(j,i),', ', j = k, l)
+
+               end if 
+
+               call deblnk (text)
+
+               if (k.eq.1) then 
+
+                  write (lu,'(1x,a,4x,400a)') pname(i), 
+     *                                        (chars(j), j = 1, length)
+               else 
+
+                  write (lu,'(19x,400a)') (chars(j), j = 1, length)
+
+               end if 
+
+            end do 
 
          end do 
 
@@ -190,32 +218,56 @@ c                                 species_ouput
       if (lopt(24)) then 
 
          write (lu,'(/,a,/)') 'Pure species molar Gibbs energies*:'
+c                                 electrolyte fluid is a special
+c                                 case because the electrolyte energies
+c                                 depend on the solvent properties
+         if (ksmod(id).eq.20) call solut0 (id)
 
          do i = 1, np 
 
             id = kkp(i)
 
-            if (ksmod(id).ne.20) then 
+            if (ksmod(id).eq.20.and.spct(id).gt.5) then
 
-               write (text,'(20(a,a,i10,a))')
-     *         (spnams(j,id),': ',int(gcpd(jend(id,2+j),.true.)),
-     *                                           ', ', j =1, lstot(id))
+               inc = 6
 
-            else 
-c                                 electrolyte fluid is a special
-c                                 case because the electrolyte energies
-c                                 depend on the solvent properties
-              call solut0 (id)
+            else if (spct(id).gt.7) then 
 
-               write (text,'(20(a,a,i10,a))')
-     *         (spnams(j,id),': ',int(aqg(j)),', ', j =1, lstot(id))
+                inc = 7
 
             end if 
 
-            call deblnk (text)
+            do k = 1, lstot(id), inc
 
-            write (lu,'(1x,a,4x,400a)') pname(i), 
-     *                                 (chars(j), j = 1, length)
+               l = k + inc - 1
+               if (l.gt.lstot(id)) l = lstot(id)
+
+               if (ksmod(id).ne.20) then 
+
+                  write (text,'(20(a,a,i10,a))')
+     *            (spnams(j,id),': ',int(gcpd(jend(id,2+j),.true.)),
+     *                                           ', ', j = k, l)  
+
+               else
+
+                  write (text,'(20(a,a,i10,a))')
+     *            (spnams(j,id),': ',int(aqg(j)),', ', j = k, l)
+
+               end if 
+
+               call deblnk (text)
+
+               if (k.eq.1) then 
+
+                  write (lu,'(1x,a,4x,400a)') pname(i), 
+     *                                        (chars(j), j = 1, length)
+               else 
+
+                  write (lu,'(19x,400a)') (chars(j), j = 1, length)
+
+               end if 
+
+            end do
 
          end do
 
@@ -1094,8 +1146,8 @@ c                                 model type
       integer isp, ins
       common/ cxt33 /isp,ins(nsp),specie(nsp)
 
-      double precision yf,g,v,eps,v0,eps0
-      common/ cstcoh /yf(nsp),g(nsp),v(nsp),eps(nsp),v0(nsp),eps0(nsp)
+      double precision yf,g,v,vf
+      common/ cstcoh /yf(nsp),g(nsp),v(nsp),vf(nsp)
 c----------------------------------------------------------------------
 
       if ((lrecip(id).and.lorder(id)).or.lorder(id)) then 
@@ -1650,8 +1702,8 @@ c----------------------------------------------------------------------
       logical sroot
       common/ rkroot /vrt,irt,sroot
 
-      double precision y,g,vf,eps,v0,eps0
-      common/ cstcoh /y(nsp),g(nsp),vf(nsp),eps(nsp),v0(nsp),eps0(nsp)
+      double precision y,g,pmv,vf
+      common/ cstcoh /y(nsp),g(nsp),pmv(nsp),vf(nsp)
 
       integer iroots
       logical switch, rkmin, min

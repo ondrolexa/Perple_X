@@ -4314,7 +4314,7 @@ c                                 homogeneous phases.
 
       end
 
-      subroutine aqrxdo (ids)
+      subroutine aqrxdo (id)
 c-----------------------------------------------------------------------
 c given chemical potentials solve for rock dominated aqueous speciation
 c-----------------------------------------------------------------------
@@ -4322,13 +4322,16 @@ c-----------------------------------------------------------------------
  
       include 'perplex_parameters.h'
 
-      integer i, j, k, ichg, jchg(l9), it, ind(l9), ids
+      integer i, j, k, l, ichg, jchg(l9), it, ind(l9), id
 
       logical bad, output
 
-      double precision c(l9), q(l9), mo(l9), dg(l9), ahy, xis, 
+      character text*200
+
+      double precision c(l9), q(l9), mo(l9), dg(l9), ahy, xis, blk(k5),
      *                 d(l9), q2(l9), lng0, is, gamm0, totm, g0(l9),
-     *                 gso(nsp), ysum
+     *                 gso(nsp), ysum, ph0, v0(nsp), vf0(nsp), tmass,
+     *                 tsmas, tsmol, smol(k5), dn
 
       double precision gcpd, solve, gfunc
 
@@ -4343,9 +4346,12 @@ c-----------------------------------------------------------------------
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
 
-      integer ihy
+      character cname*5
+      common/ csta4  /cname(k5)
+
+      integer ihy, ioh
       double precision gf, epsln, epsln0, adh, msol
-      common/ cxt37 /gf, epsln, epsln0, adh, msol, ihy
+      common/ cxt37 /gf, epsln, epsln0, adh, msol, ihy, ioh
 
       character specie*4
       integer isp, ins
@@ -4366,6 +4372,9 @@ c-----------------------------------------------------------------------
       double precision fwt
       common/ cst338 /fwt(k10)
 
+      double precision atwt
+      common/ cst45 /atwt(k0)
+
       integer jend
       common/ cxt23 /jend(h9,m4)
 
@@ -4380,13 +4389,16 @@ c-----------------------------------------------------------------------
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
      *              wl(m17,m18)
 
+      integer ksmod, ksite, kmsol, knsp
+      common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
+
       integer iopt
       logical lopt
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
-      double precision yf,g,v,eps,v0,eps0
-      common/ cstcoh /yf(nsp),g(nsp),v(nsp),eps(nsp),v0(nsp),eps0(nsp)
+      double precision yf,g,v,vf
+      common/ cstcoh /yf(nsp),g(nsp),v(nsp),vf(nsp)
 
       integer jnd
       double precision aqg,qq,rt
@@ -4394,6 +4406,10 @@ c-----------------------------------------------------------------------
 
       character names*8
       common/ cst8  /names(k1)
+
+      integer length,iblank,icom
+      character chars*1
+      common/ cst51 /length,iblank,icom,chars(lchar)
 c-----------------------------------------------------------------------
       output = .true. 
 
@@ -4416,6 +4432,11 @@ c                                 load normalized molecular fluid composition
       end do 
          
       call mrkmix (ins,isp,1)
+c                                  save pmv's and v fractions for output
+      do i = 1, ns
+         vf0(ins(i)) = vf(ins(i))
+         v0(ins(i)) = v(ins(i))
+      end do 
 c                                  ysum is just a dummy at this point. 
       call slvnt1 (ysum)
 
@@ -4425,7 +4446,7 @@ c                                  ysum is just a dummy at this point.
 
          do j = 1, icp
 
-            if (isnan(mu(j))) cycle 
+            if (isnan(mu(j))) cycle
 
             gso(i) = gso(i) + mu(j)*cp(j,jnd(i))
 
@@ -4435,14 +4456,9 @@ c                                  ysum is just a dummy at this point.
 c                                 compute solute properties 
       do i = 1, aqct 
 
+         if (i.eq.ihy) cycle
+
          k = aqst + i 
-
-         if (thermo(1,k).eq.0d0) then 
-c                                  find hyrdonium
-            ihy = i 
-            cycle 
-
-         end if 
 
          q(i) = thermo(6,k)
          q2(i) = q(i)**2
@@ -4528,56 +4544,199 @@ c                                 update coefficients
       end do
 
       if (output) then
+c                                 neutral pH
+         ph0 = (g0(ihy)+g0(ioh)-gso(ns))/2d0/rt/2.302585d0
 
-         totm = 0d0 
+         totm = 0d0
+
+         do i = 1, icp
+            blk(i) = 0d0
+         end do  
 c                                 compute mole fractions, total moles first
          do i = 1, ns 
-c                                 solvent mass fraction/(kg/mol) 
+c                                 moles/kg-solvent 
             totm = totm + x(1,i)/msol
 
-         end do        
+            do j = 1, icp 
+               blk(j) = blk(j) + x(1,i)*cp(j,jnd(i))/msol
+            end do 
+
+         end do
+c                                 convert the above bulks from mol/mol to mol/ks
+         do j = 1, icp
+            blk(j) = blk(j)/msol
+         end do 
 
          do i = 1, aqct
             ind(i) = i 
             totm = totm + mo(i)
          end do
 
+         do i = 1, aqct
+
+            do j = 1, icp
+               blk(j) = blk(j) + mo(i)*aqcp(j,i)
+            end do 
+
+         end do
+
          call rankem (mo,ind,aqct,iopt(32))
 
-         write (*,1000) dlog10(ahy),is,gamm0,epsln
+         write (*,1000)
+
+         write (text,1050) -dlog10(ahy),ph0,is,gamm0
+         call deblnk (text)
+         write (*,'(400a)') (chars(j), j = 1, length)
+         write (text,1070) epsln,epsln0
+         call deblnk (text)
+         write (*,'(400a)') (chars(j), j = 1, length)
+
+         if (ksmod(id).eq.20) then
+
+            write (*,1100)
+
+         else
+
+            write (*,1040)
+
+         end if 
 
          do i = 1, iopt(32)
 
             k = ind(i)
 
-            write (*,1010) aqnam(k),int(thermo(6,k+aqst)),
-     *                     mo(k),mo(k)/totm,
-     *                     int(g0(k)),d(k),c(k)
+            if (ksmod(id).eq.20) then 
+c                                 check if the species is the solution model
+               l = 0
+
+               do j = sn1, nqs
+                  if (jnd(j)-aqst.eq.k) then
+                     l = j
+                     exit
+                  end if 
+               end do
+
+               if (l.ne.0) then 
+                  write (*,1080) aqnam(k),int(thermo(6,k+aqst)),
+     *                           mo(k),mo(k)/totm,x(1,l),
+     *                           int(g0(k)+rt*(dlog(mo(k))+lng0*q2(k))),
+     *                           int(g0(k))
+               else
+                  write (*,1090) aqnam(k),int(thermo(6,k+aqst)),
+     *                           mo(k),mo(k)/totm,
+     *                           int(g0(k)+rt*(dlog(mo(k))+lng0*q2(k))),
+     *                           int(g0(k))
+               end if 
+
+            else 
+
+               write (*,1010) aqnam(k),int(thermo(6,k+aqst)),
+     *                        mo(k),mo(k)/totm,
+     *                        int(g0(k)+rt*(dlog(mo(k))+lng0*q2(k))),
+     *                        int(g0(k))
+
+            end if 
          end do 
 
          write (*,1020)
 
          do i = 1, ns 
 
-            write (*,1030) names(jnd(i)),x(1,i)/msol,x(1,i),int(gso(i)),
-     *                      v(ins(i)),eps(i),v0(ins(i)),eps0(i)
-
+            write (*,1030) names(jnd(i)),x(1,i)/msol,x(1,i),vf0(ins(i)),
+     *                 v0(ins(i)), int(gso(i)), int(gcpd(jnd(i),.true.))
          end do 
+
+         write (*,1060)
+c                                 bulk fluid composition 
+         tmass = 0d0
+         totm = 0d0 
+
+         do i = 1, icp
+            totm = totm + blk(i)
+            tmass = tmass + atwt(i)*blk(i)
+         end do 
+
+         if (ksmod(id).eq.20) then 
+
+            tsmol = 0d0
+            tsmas = tsmol
+ 
+            do i = 1, icp
+               smol(i) = 0d0
+            end do 
+
+            do i = 1, nqs
+               
+               k = jnd(i)
+
+               do j = 1, icp
+
+                  if (i.lt.sn1) then 
+                     dn =  x(1,i) * cp(j,k)
+                  else 
+                     dn = x(1,i) * aqcp(j,k-aqst)
+                  end if 
+
+                  smol(j) = smol(j) + dn
+                  tsmol = tsmol + dn
+                  tsmas = tsmas + dn*atwt(j)
+
+               end do
+
+            end do 
+
+            write (*,1130)
+
+            do i = 1, icp
+               write (*,1110) cname(i),blk(i)/totm*1d2,
+     *                                 smol(i)/tsmol*1d2,
+     *                                 blk(i)*atwt(i)/tmass*1d2,
+     *                                 smol(i)*atwt(i)/tsmas*1d2
+            end do
+
+         else 
+
+            write (*,1120)
+
+            do i = 1, icp
+               write (*,1110) cname(i),blk(i)/totm*1d2,
+     *                                 blk(i)*atwt(i)/tmass*1d2
+            end do
+
+         end if 
 
       end if
 
-1000  format (/,'Back-calculated solute speciation in the solvent:',/,
-     *        /,'pH = ',f7.3,
-     *        /,'Ionic strength = ',g12.6,'; gamma/q^2 = ',g12.6,
-     *        '; Permittivity =',g12.6,//,
-     *        10x,'charge',3x,'molality',5x,
-     *        'mole fraction',3x,'G0,J/mole')
+1000  format (/,'Back-calculated solute speciation in the solvent:',/)
 1010  format (a8,4x,i2,3x,g12.6,3x,g12.6,5x,i8,5(2x,g12.6))
 1020  format (/,'Solvent endmember properties:',//,
-     *         9x,'molality',2x,'mole fraction',2x,'mu,J/mole',
-     *         3x,'v,J/bar',2x,'permittivity',
-     *         4x,'v0,J/bar',3x,'permitivity0')
-1030  format (a8,2x,f7.4,5x,f7.5,5x,i8,2x,f9.4,4x,f8.5,5x,f9.4,5x,f8.5)     
+     *        9x,'molality',3x,'mol_fraction',2x,'vol_fraction',
+     *        2x,'v,cm3/mol*',2x,'g,J/mol*',3x,'g0,J/mol***')
+1030  format (a8,2x,f7.4,5x,f7.5,8x,f7.5,5x,f7.3,3x,i8,4x,i8)
+1040  format (/,'Solute endmember properties:',//,10x,'charge',3x,
+     *       'molality',5x,'mol_fraction',6x,'g,J/mol*',5x,'g0,J/mol**')
+1050  format ('pH = ',f6.3,'; neutral_pH = ',f6.3,'; ionic_strength = ',
+     *        g10.4,'; gamma/q^2 = ', g10.4)
+1060  format (/,'*partial molar, **molal ref. state, ***molar ref. ',
+     *        'state.',/)
+1070  format ('permittivity =', g10.4,
+     *        '; reference_state_permittivity(Pr,Tr) =',g10.4)
+1080  format (a8,4x,i2,3x,g12.6,3x,g12.6,3x,g12.6,5x,i8,5(2x,g12.6))
+1090  format (a8,4x,i2,3x,g12.6,3x,g12.6,20x,i8,5(2x,g12.6))
+1100  format (/,'Solute endmember properties:',/,
+     *        48x,'optimized',/,10x,'charge',3x,
+     *       'molality',5x,'mol_fraction',3x,'mol_fraction',6x,
+     *       'g,J/mol*',5x,'g0,J/mol**')
+1110  format (1x,a8,2x,4(g12.6,3x))
+1120  format (/,'Back-calculated fluid bulk composition:',//,
+     *        13x,'mol %',11x,'wt %')
+1130  format (/,'Back-calculated vs optimized fluid bulk composition:',
+     *        //,26x,'optimized',20x,'optimized',/,
+     *        13x,'mol %',10x,'mol %',10x,'wt %',11x,'wt %')
+c            write (*,1030) names(jnd(i)),x(1,i)/msol,x(1,i),int(gso(i)),
+c     *                      v(ins(i)),eps(i),v0(ins(i)),eps0(i)
+c1030  format (a8,2x,f7.4,5x,f7.5,5x,i8,2x,f9.4,4x,f8.5,5x,f9.4,5x,f8.5)
+
 
       end 
 

@@ -25,8 +25,8 @@ c-----------------------------------------------------------------------
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
 
-      double precision yf,g,v,eps,vf,eps0
-      common/ cstcoh /yf(nsp),g(nsp),v(nsp),eps(nsp),vf(nsp),eps0(nsp)
+      double precision yf,g,v,vf
+      common/ cstcoh /yf(nsp),g(nsp),v(nsp),vf(nsp)
 
       double precision z, pa, p0a, x, w, y, wl
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
@@ -39,9 +39,9 @@ c-----------------------------------------------------------------------
       double precision aqg,q2,rt
       common/ cxt2 /aqg(m4),q2(m4),rt,jnd(m4)
 
-      integer ihy
+      integer ihy, ioh
       double precision gf, epsln, epsln0, adh, msol
-      common/ cxt37 /gf, epsln, epsln0, adh, msol, ihy
+      common/ cxt37 /gf, epsln, epsln0, adh, msol, ihy, ioh
 
       double precision vol
       common/ cst26 /vol
@@ -137,9 +137,9 @@ c-----------------------------------------------------------------------
       double precision aqg,q2,rt
       common/ cxt2 /aqg(m4),q2(m4),rt,jnd(m4)
 
-      integer ihy
+      integer ihy, ioh
       double precision gf, epsln, epsln0, adh, msol
-      common/ cxt37 /gf, epsln, epsln0, adh, msol, ihy
+      common/ cxt37 /gf, epsln, epsln0, adh, msol, ihy, ioh
 c---------------------------------------------------------------------- 
       lng0 = 0d0 
 c                                 molalities and ionic strength
@@ -200,8 +200,8 @@ c-----------------------------------------------------------------------
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
 
-      double precision yf,g,v,eps,v0,eps0
-      common/ cstcoh /yf(nsp),g(nsp),v(nsp),eps(nsp),v0(nsp),eps0(nsp)
+      double precision yf,g,v,vf
+      common/ cstcoh /yf(nsp),g(nsp),v(nsp),vf(nsp)
 
       double precision z, pa, p0a, x, w, y, wl
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
@@ -214,9 +214,9 @@ c-----------------------------------------------------------------------
       double precision aqg,q2,rt
       common/ cxt2 /aqg(m4),q2(m4),rt,jnd(m4)
 
-      integer ihy
+      integer ihy, ioh
       double precision gf, epsln, epsln0, adh, msol
-      common/ cxt37 /gf, epsln, epsln0, adh, msol, ihy
+      common/ cxt37 /gf, epsln, epsln0, adh, msol, ihy, ioh
 
       integer spct
       double precision ysp
@@ -280,8 +280,8 @@ c-----------------------------------------------------------------------
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
 
-      double precision y,g,v,eps1,vf,eps0
-      common/ cstcoh /y(nsp),g(nsp),v(nsp),eps1(nsp),vf(nsp),eps0(nsp)
+      double precision y,g,v,vf
+      common/ cstcoh /y(nsp),g(nsp),v(nsp),vf(nsp)
 c                                Harvey & Lemmon provide additional data for 
 c                                ethylene and long-chain hydrocarbons. A_mu
 c                                is zero for all species listed here, therefore
