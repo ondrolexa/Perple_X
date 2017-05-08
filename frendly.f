@@ -1280,14 +1280,14 @@ c-----------------------------------------------------------------------
 
             call unver (
 c                                 g0, s0, v0
-     *            thermo(1,id),thermo(2,id),thermo(3,id),
+     *      thermo(1,id),thermo(2,id),thermo(3,id),
 c                                 c1-c8
-     *            thermo(4,id),thermo(5,id),thermo(6,id),thermo(7,id),
+     *      thermo(4,id),thermo(5,id),thermo(6,id),thermo(7,id),
      *            thermo(8,id),thermo(9,id),thermo(10,id),thermo(24,id),
-c                                 b1-b8 (skips b3)
-     *            thermo(11,id),thermo(12,id),thermo(14,id),
-     *            thermo(15,id),thermo(16,id),thermo(17,id),
-     *            thermo(18,id),
+c                                 b1-b11
+     *      thermo(11,id),thermo(12,id),thermo(13,id),thermo(14,id),
+     *      thermo(15,id),thermo(16,id),thermo(17,id),thermo(18,id),
+     *      thermo(19,id),thermo(20,id),thermo(21,id),
 c                                 ref stuff
      *            tr,pr,eos(id))
 c                                 add in activity correction
@@ -1423,17 +1423,16 @@ c                                    test for Murghnahan EoS
 
             call unver (
 c                                 g0,s0, v0
-     *            thermo(1,id),thermo(2,id),thermo(3,id),
+     *      thermo(1,id),thermo(2,id),thermo(3,id),
 c                                 c1-c8
-     *            thermo(4,id),thermo(5,id),thermo(6,id),
-     *            thermo(7,id),thermo(8,id),thermo(9,id),
-     *            thermo(10,id),thermo(24,id),
-c                                 b1-b8 (skips b3)
-     *            thermo(11,id),thermo(12,id),thermo(14,id),
-     *            thermo(15,id),thermo(16,id),thermo(17,id),
-     *            thermo(18,id),
+     *      thermo(4,id),thermo(5,id),thermo(6,id),thermo(7,id),
+     *      thermo(8,id),thermo(9,id),thermo(10,id),thermo(24,id),
+c                                 b1-b11 
+     *      thermo(11,id),thermo(12,id),thermo(13,id),thermo(14,id),
+     *      thermo(15,id),thermo(16,id),thermo(17,id),thermo(18,id),
+     *      thermo(19,id),thermo(20,id),thermo(21,id),
 c                                 ref stuff
-     *            tr,pr,eos(id))
+     *      tr,pr,eos(id))
 
 c                                 add in activity correction
             thermo(1,k10) = thermo(1,id)
@@ -1546,10 +1545,11 @@ c                                 c1-c8
      *            thermo(4,id),thermo(5,id),thermo(6,id),
      *            thermo(7,id),thermo(8,id),thermo(9,id),
      *            thermo(10,id),thermo(24,id),
-c                                 b1-b8 (skips b3)
-     *            thermo(11,id),thermo(12,id),thermo(14,id),
-     *            thermo(15,id),thermo(16,id),thermo(17,id),
-     *            thermo(18,id),
+c                                 b1-b11
+     *            thermo(11,id),thermo(12,id),thermo(13,id),
+     *            thermo(14,id),thermo(15,id),thermo(16,id),
+     *            thermo(17,id),thermo(18,id),thermo(19,id),
+     *            thermo(20,id),thermo(21,id),
 c                                 ref stuff
      *            tr,pr,eos(id))
 

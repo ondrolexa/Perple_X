@@ -4095,29 +4095,59 @@ c                                 write the formula
       write (lun,'(400a)') (chars(i), i = 1, iend+1)
 c                                 =====================================
 c                                 thermo data
-      ibeg = 1
+      if (eos(id).eq.16) then 
+c                                 HKF aqueous electrolyte data (13 values)
+         ibeg = 1
  
-      do i = 1, 3
-         call outthr (thermo(i,id),strgs(i),2,ibeg)
-      end do
-c                                 write G,S,V
-      if (ibeg.gt.1) write (lun,'(400a)') (chars(i), i = 1, ibeg)
-c                                 c1->c7 of thermo data
-      ibeg = 1
- 
-      do i = 4, 10
-         call outthr (thermo(i,id),strgs(i),2,ibeg)
-      end do
-c                                 write c1->c7
-      if (ibeg.gt.1) write (lun,'(400a)') (chars(i), i = 1, ibeg)
-c                                 b1->b8 of thermo data
-      ibeg = 1
+         do i = 1, 5
+            call outthr (thermo(i,id),e16st(i),3,ibeg)
+         end do
 
-      do i = 11, 18
-         call outthr (thermo(i,id),strgs(i),2,ibeg)
-      end do
+         if (ibeg.gt.1) write (lun,'(400a)') (chars(i), i = 1, ibeg)
+
+         ibeg = 1
+ 
+         do i = 6, 11
+            call outthr (thermo(i,id),e16st(i),3,ibeg)
+         end do
+
+         if (ibeg.gt.1) write (lun,'(400a)') (chars(i), i = 1, ibeg)
+
+         ibeg = 1
+ 
+         do i = 11, 13
+            call outthr (thermo(i,id),e16st(i),3,ibeg)
+         end do
+
+         if (ibeg.gt.1) write (lun,'(400a)') (chars(i), i = 1, ibeg)
+
+      else 
+
+         ibeg = 1
+ 
+         do i = 1, 3
+            call outthr (thermo(i,id),strgs(i),2,ibeg)
+         end do
+c                                 write G,S,V
+         if (ibeg.gt.1) write (lun,'(400a)') (chars(i), i = 1, ibeg)
+c                                 c1->c7 of thermo data
+         ibeg = 1
+  
+         do i = 4, 10
+            call outthr (thermo(i,id),strgs(i),2,ibeg)
+         end do
+c                                 write c1->c7
+         if (ibeg.gt.1) write (lun,'(400a)') (chars(i), i = 1, ibeg)
+c                                 b1->b8 of thermo data
+         ibeg = 1
+
+         do i = 11, 18
+            call outthr (thermo(i,id),strgs(i),2,ibeg)
+         end do
 c                                 write b1->b8
-      if (ibeg.gt.1) write (lun,'(400a)') (chars(i), i = 1, ibeg)
+         if (ibeg.gt.1) write (lun,'(400a)') (chars(i), i = 1, ibeg)
+
+      end if 
 c                                 =====================================
 c                                 shear/bulk modulus
       ibeg = 1
@@ -4785,7 +4815,7 @@ c                                 get the identities of the other
 c                                 components in the new component:
 70       itrans = itrans + 1
          ict = 1
-         if (itrans.gt.k5) call error (999,atwt(1),ict,'GETTRN')
+         if (itrans.gt.k0) call error (999,atwt(1),ict,'GETTRN')
        
          write (*,4050) k5-1,pname
 30       read (*,'(a)') rname

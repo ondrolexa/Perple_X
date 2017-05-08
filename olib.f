@@ -103,6 +103,10 @@ c----------------------------------------------------------------------
       double precision aqg,q2,rt
       common/ cxt2 /aqg(m4),q2(m4),rt,jnd(m4)
 
+      integer idaq, jdaq
+      logical laq
+      common/ cxt3 /idaq,jdaq,laq
+
       integer iam
       common/ cst4 /iam
 c---------------------------------------------------------------------- 
@@ -215,7 +219,7 @@ c                                 species_ouput
 
       end if 
 
-      if (lopt(24)) then 
+      if (lopt(24).and.np.gt.0) then 
 
          write (lu,'(/,a,/)') 'Pure species molar Gibbs energies*:'
 c                                 electrolyte fluid is a special
@@ -408,6 +412,16 @@ c                                 chemical potentials variance
          write (lu,1070) 2, jbulk - ntot + 2 
       end if 
 
+      if (laq) then 
+
+         do i = 1, ntot
+            
+            if (kkp(i).eq.idaq) call aqrxdo (lu)
+
+         end do 
+
+      end if 
+
 1000  format (/,40('-'),//,'Stable phases at:')
 1020  format (/,'Phase Compositions (',a,'):',
      *        /,19x,'wt %',6x,'vol %',5x,'mol %',5x,'mol  ',
@@ -572,6 +586,10 @@ c                                 bookkeeping variables
       integer hs2p
       double precision hsb
       common/ cst84 /hsb(i8,4),hs2p(6)
+
+      integer idaq, jdaq
+      logical laq
+      common/ cxt3 /idaq,jdaq,laq
 c----------------------------------------------------------------------
 c                                 logarithmic_p option
 10    if (lopt(14)) p = 1d1**p 
@@ -641,6 +659,10 @@ c                                 initialize system props/flags
       do i = 1, ntot
 
          ids = kkp(i)
+c                                 this is outside the solution
+c                                 conditional to allow pure H2O
+c                                 solvent
+         if (ids.eq.idaq) laq = .true.
 
          if (i.le.np) then 
 
@@ -652,7 +674,7 @@ c                                 initialize system props/flags
             end if
 
             if (iam.ne.2) then
- 
+c                                 werami
                do j = 1, istg(ids)
                   do k = 1, ispg(ids,j)
                      kcoor = kcoor + 1
@@ -3178,11 +3200,17 @@ c----------------------------------------------------------------------
       integer hs2p
       double precision hsb
       common/ cst84 /hsb(i8,4),hs2p(6)
+
+      integer idaq, jdaq, kdaq
+      logical laq
+      common/ cxt3 /idaq,jdaq,kdaq,laq
 c----------------------------------------------------------------------
 c                                 assemblage flags
 c                                 ----------------
 c                                 aflu   = T if a fluid is present
       aflu   = .false.
+c                                 laq    = T aqueous or pure solvent is present
+      laq    = .false.
 c                                 shear  = T if shear modulus can be computed
       shear  = .true.
 c                                 volume = T if volume and bulk modulus can be computed

@@ -1384,7 +1384,7 @@ c                                 check composition against solution model range
 c                                 if auto_refine is on:
          call sollim (ids)
 c                                 DEBUG DEBUG
-         if (ksmod(ids).eq.20) call aqrxdo (ids)
+c         if (ksmod(ids).eq.20) call aqrxdo (ids)
 
       end do
 
@@ -4314,7 +4314,7 @@ c                                 homogeneous phases.
 
       end
 
-      subroutine aqrxdo (id)
+      subroutine aqrxdo (lu)
 c-----------------------------------------------------------------------
 c given chemical potentials solve for rock dominated aqueous speciation
 c-----------------------------------------------------------------------
@@ -4322,7 +4322,7 @@ c-----------------------------------------------------------------------
  
       include 'perplex_parameters.h'
 
-      integer i, j, k, l, ichg, jchg(l9), it, ind(l9), id
+      integer i, j, k, l, ichg, jchg(l9), it, ind(l9), id, lu
 
       logical bad, output
 
@@ -4410,6 +4410,10 @@ c-----------------------------------------------------------------------
       integer length,iblank,icom
       character chars*1
       common/ cst51 /length,iblank,icom,chars(lchar)
+
+      integer idaq, jdaq
+      logical laq
+      common/ cxt3 /idaq,jdaq,laq
 c-----------------------------------------------------------------------
       output = .true. 
 
@@ -4501,27 +4505,27 @@ c                                  iterative loop for ionic strength
 c                                  solve charge balance for H+
          mo(ihy) = solve(c,q,mo(ihy),jchg,ichg,bad)
 
-         if (bad) then 
-            write (*,*) 'bombed'
-            exit
-         end if 
-
          ahy = mo(ihy)*gamm0
 c                                  back calculate charged species molalities
 c                                  and ionic strength
          xis = is
-
          is = 0d0
 
          do i = 1, ichg 
-
             j = jchg(i)
             mo(j) = ahy**(q(j))*c(j)/q(j)
+            if (mo(j).gt.1d0) then
+               write (lu,*) aqnam(j), mo(j), q(j)
+            end if 
             is = is + q2(j) * mo(j)
-
          end do
 
          is = is / 2d0 
+
+         if (bad) then 
+            write (lu,*) 'bombed'
+            exit
+         end if 
 c                                 DH law activity coefficient factor (ln[g] = lng0*q^2)
          lng0 = adh*dsqrt(is)/(1d0 + dsqrt(is)) + 0.2d0*is
          gamm0 = dexp(lng0)
@@ -4535,10 +4539,8 @@ c                                 check for convergence
          it = it + 1
 c                                 update coefficients
          do i = 1, ichg 
-
             j = jchg(i)
             c(j) = d(j)*dexp(lng0*(1d0-q2(j)))
-
          end do
 
       end do
@@ -4547,57 +4549,48 @@ c                                 update coefficients
 c                                 neutral pH
          ph0 = (g0(ihy)+g0(ioh)-gso(ns))/2d0/rt/2.302585d0
 
-         totm = 0d0
-
          do i = 1, icp
             blk(i) = 0d0
          end do  
 c                                 compute mole fractions, total moles first
          do i = 1, ns 
 c                                 moles/kg-solvent 
-            totm = totm + x(1,i)/msol
-
             do j = 1, icp 
                blk(j) = blk(j) + x(1,i)*cp(j,jnd(i))/msol
             end do 
-
          end do
-c                                 convert the above bulks from mol/mol to mol/ks
-         do j = 1, icp
-            blk(j) = blk(j)/msol
-         end do 
 
          do i = 1, aqct
             ind(i) = i 
-            totm = totm + mo(i)
-         end do
-
-         do i = 1, aqct
-
             do j = 1, icp
                blk(j) = blk(j) + mo(i)*aqcp(j,i)
             end do 
-
          end do
+
+         totm = 0d0
+
+         do i = 1, icp 
+            totm = totm + blk(i)
+         end do 
 
          call rankem (mo,ind,aqct,iopt(32))
 
-         write (*,1000)
+         write (lu,1000)
 
          write (text,1050) -dlog10(ahy),ph0,is,gamm0
          call deblnk (text)
-         write (*,'(400a)') (chars(j), j = 1, length)
+         write (lu,'(400a)') (chars(j), j = 1, length)
          write (text,1070) epsln,epsln0
          call deblnk (text)
-         write (*,'(400a)') (chars(j), j = 1, length)
+         write (lu,'(400a)') (chars(j), j = 1, length)
 
-         if (ksmod(id).eq.20) then
+         if (jdaq.eq.20) then
 
-            write (*,1100)
+            write (lu,1100)
 
          else
 
-            write (*,1040)
+            write (lu,1040)
 
          end if 
 
@@ -4605,7 +4598,7 @@ c                                 convert the above bulks from mol/mol to mol/ks
 
             k = ind(i)
 
-            if (ksmod(id).eq.20) then 
+            if (jdaq.eq.20) then 
 c                                 check if the species is the solution model
                l = 0
 
@@ -4617,36 +4610,37 @@ c                                 check if the species is the solution model
                end do
 
                if (l.ne.0) then 
-                  write (*,1080) aqnam(k),int(thermo(6,k+aqst)),
-     *                           mo(k),mo(k)/totm,x(1,l),
+                  write (lu,1080) aqnam(k),int(thermo(6,k+aqst)),
+     *                            mo(k),mo(k)/totm,x(1,l),
      *                           int(g0(k)+rt*(dlog(mo(k))+lng0*q2(k))),
      *                           int(g0(k))
                else
-                  write (*,1090) aqnam(k),int(thermo(6,k+aqst)),
-     *                           mo(k),mo(k)/totm,
+                  write (lu,1090) aqnam(k),int(thermo(6,k+aqst)),
+     *                            mo(k),mo(k)/totm,
      *                           int(g0(k)+rt*(dlog(mo(k))+lng0*q2(k))),
      *                           int(g0(k))
                end if 
 
             else 
 
-               write (*,1010) aqnam(k),int(thermo(6,k+aqst)),
-     *                        mo(k),mo(k)/totm,
-     *                        int(g0(k)+rt*(dlog(mo(k))+lng0*q2(k))),
-     *                        int(g0(k))
+               write (lu,1010) aqnam(k),int(thermo(6,k+aqst)),
+     *                         mo(k),mo(k)/totm,
+     *                         int(g0(k)+rt*(dlog(mo(k))+lng0*q2(k))),
+     *                         int(g0(k))
 
             end if 
          end do 
 
-         write (*,1020)
+         write (lu,1020)
 
          do i = 1, ns 
 
-            write (*,1030) names(jnd(i)),x(1,i)/msol,x(1,i),vf0(ins(i)),
-     *                 v0(ins(i)), int(gso(i)), int(gcpd(jnd(i),.true.))
+            write (lu,1030) names(jnd(i)), x(1,i)/msol, x(1,i),
+     *                      vf0(ins(i)), v0(ins(i)), 
+     *                      int(gso(i)), int(gcpd(jnd(i),.true.))
          end do 
 
-         write (*,1060)
+         write (lu,1060)
 c                                 bulk fluid composition 
          tmass = 0d0
          totm = 0d0 
@@ -4656,10 +4650,10 @@ c                                 bulk fluid composition
             tmass = tmass + atwt(i)*blk(i)
          end do 
 
-         if (ksmod(id).eq.20) then 
+         if (jdaq.eq.20) then 
 
             tsmol = 0d0
-            tsmas = tsmol
+            tsmas = 0d0
  
             do i = 1, icp
                smol(i) = 0d0
@@ -4672,12 +4666,13 @@ c                                 bulk fluid composition
                do j = 1, icp
 
                   if (i.lt.sn1) then 
-                     dn =  x(1,i) * cp(j,k)
+                     dn = x(1,i) * cp(j,k)
                   else 
                      dn = x(1,i) * aqcp(j,k-aqst)
                   end if 
 
                   smol(j) = smol(j) + dn
+
                   tsmol = tsmol + dn
                   tsmas = tsmas + dn*atwt(j)
 
@@ -4685,22 +4680,22 @@ c                                 bulk fluid composition
 
             end do 
 
-            write (*,1130)
+            write (lu,1130)
 
             do i = 1, icp
-               write (*,1110) cname(i),blk(i)/totm*1d2,
-     *                                 smol(i)/tsmol*1d2,
-     *                                 blk(i)*atwt(i)/tmass*1d2,
-     *                                 smol(i)*atwt(i)/tsmas*1d2
+               write (lu,1110) cname(i),blk(i)/totm*1d2,
+     *                                  smol(i)/tsmol*1d2,
+     *                                  blk(i)*atwt(i)/tmass*1d2,
+     *                                  smol(i)*atwt(i)/tsmas*1d2
             end do
 
          else 
 
-            write (*,1120)
+            write (lu,1120)
 
             do i = 1, icp
-               write (*,1110) cname(i),blk(i)/totm*1d2,
-     *                                 blk(i)*atwt(i)/tmass*1d2
+               write (lu,1110) cname(i),blk(i)/totm*1d2,
+     *                                  blk(i)*atwt(i)/tmass*1d2
             end do
 
          end if 
@@ -4731,7 +4726,7 @@ c                                 bulk fluid composition
 1120  format (/,'Back-calculated fluid bulk composition:',//,
      *        13x,'mol %',11x,'wt %')
 1130  format (/,'Back-calculated vs optimized fluid bulk composition:',
-     *        //,26x,'optimized',20x,'optimized',/,
+     *        //,26x,'optimized',21x,'optimized',/,
      *        13x,'mol %',10x,'mol %',10x,'wt %',11x,'wt %')
 c            write (*,1030) names(jnd(i)),x(1,i)/msol,x(1,i),int(gso(i)),
 c     *                      v(ins(i)),eps(i),v0(ins(i)),eps0(i)

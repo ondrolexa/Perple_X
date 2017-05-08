@@ -1937,6 +1937,10 @@ c                                 pointer
 
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
+
+      integer jnd
+      double precision aqg,qq,rt
+      common/ cxt2 /aqg(m4),qq(m4),rt,jnd(m4)
 c----------------------------------------------------------------------
 
       kkp(jd) = ids
@@ -1990,14 +1994,13 @@ c                                 electrolyte:
 c                                 solute species  
             do i = sn1, nqs
                do j = 1, icomp
-                  cp3(j,jd) = cp3(j,jd) 
-     *                      + y(i) * aqcp(j,jend(ids,2+i) - aqst)
+                  cp3(j,jd) = cp3(j,jd) + y(i) * aqcp(j,jnd(i) - aqst)
                end do
             end do 
 c                                 solvent species 
             do i = 1, ns 
                do j = 1, icomp
-                  cp3(j,jd) = cp3(j,jd) + y(i) * cp(j,jend(ids,2+i))
+                  cp3(j,jd) = cp3(j,jd) + y(i) * cp(j,jnd(i))
                end do
             end do
 

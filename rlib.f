@@ -936,8 +936,6 @@ c        b7 = -c1-c2/theta^2
          b8 = -(b1+b7)
 c                                 the reference condition born radius (thermo 19) 
          b9 = 5d9 * eta * c**2 / (1.622323167d9 * eta * c + 5d9 * b)
-c                                 q^2 for activity calculations
-         b10 = -b/epsr
 
          return 
 c                                 remaining standard forms have caloric polynomial
@@ -2342,8 +2340,8 @@ c                                 range, refine iv increment.
 30    ier = 2
       end
 
-      subroutine unver (g,s,v,a,b,c,d,e,f,gg,c8,
-     *                  b1,b2,b4,b5,b6,b7,b8,tr,pr,ieos)
+      subroutine unver (g,s,v,a,b,c,d,e,f,gg,c8,b1,b2,b3,b4,b5,b6,b7,b8,
+     *                  b9,b10,b11,tr,pr,ieos)
 c----------------------------------------------------------------------
 c convert thermodynamic equation of state from a 0-0 reference state
 c to a pr-tr reference state.
@@ -2358,18 +2356,29 @@ c----------------------------------------------------------------------
       include 'perplex_parameters.h'
 
       double precision v,gg,a,b,c,d,e,f,g,b1,b2,b4,b5,b6,b7,b8,pr,tr,s,
-     *                 c8
+     *                 c8,b3,b9,b10,b11
 c----------------------------------------------------------------------
 c                               Stixrude's EoS, Aq, CALPHAD exit without
 c                               doing anything
       if (ieos.eq. 5.or.ieos.eq. 6.or.ieos.eq.11.or.ieos.eq.12.or.
-     *    ieos.eq.14) return
+     *    ieos.eq.14.or.ieos.eq.15) then 
+          
+          return
+
+      else if (ieos.eq.16) then 
+c                                 HKF electrolyte model. 
+          b3 = b11
+          return
+
+      end if 
 
       c8 = 12d0 * c8
       gg = 6d0 * gg
       e  = e / 4d0
       d  = 6d0 * d
       c  = 2d0 * c
+
+
 
       if (b8.eq.0d0) then 
 c                                normal vdp term:
@@ -2581,7 +2590,7 @@ c---------------------------------------------------------------------
 
       integer ilam,id,jd,i,j,k
   
-      double precision tm(m7,m6), z(9), g1, g0, s0, gcpd
+      double precision tm(m7,m6), z(12), g1, g0, s0, gcpd
 
       external gcpd
 
@@ -2674,8 +2683,8 @@ c                                 c1-c8
      *                  tm(4,i),tm(5,i),tm(6,i),tm(7,i),
      *                  tm(8,i),tm(9,i),tm(10,i),tm(13,i),
 c                                 dummies 
-     *                  z(2),z(3),z(5),
-     *                  z(6),z(7),z(8),z(9),
+     *                  z(1),z(2),z(3),z(5),z(6),z(7),z(8),z(9),z(10),
+     *                  z(11),z(12),
 c                                 ref stuff
      *                  tm(1,i),pr,eos(id)) 
 
@@ -6354,8 +6363,8 @@ c---------------------------------------------------------------------
       integer iorig,jnsp,iy2p
       common / cst159 /iorig(m4),jnsp(m4),iy2p(m4)
 
-      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
-      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
+      integer nq,nn,ns
+      common/ cxt337 /nq,nn,ns
 c----------------------------------------------------------------------
 
       jq = 0
@@ -6514,8 +6523,8 @@ c---------------------------------------------------------------------
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp  
 
-      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
-      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
+      integer nq,nn,ns
+      common/ cxt337 /nq,nn,ns
 c----------------------------------------------------------------------
       jstot = 0
       ineg = 0 
@@ -6863,8 +6872,8 @@ c---------------------------------------------------------------------
       double precision yin
       common/ cst50 /yin(ms1,mst)
 
-      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
-      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
+      integer nq,nn,ns
+      common/ cxt337 /nq,nn,ns
 c----------------------------------------------------------------------
       mdep = 0 
       norder = 0 
@@ -7205,8 +7214,8 @@ c---------------------------------------------------------------------
       integer iorig,jnsp,iy2p
       common / cst159 /iorig(m4),jnsp(m4),iy2p(m4)
 
-      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
-      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
+      integer nq,nn,ns
+      common/ cxt337 /nq,nn,ns
 c----------------------------------------------------------------------
 c                               read number of solvent species:
       call readda (rnums,1,tname)
@@ -9118,6 +9127,10 @@ c---------------------------------------------------------------------
       double precision vlaar
       common/ cst221 /vlaar(m3,m4),jsmod
 
+      integer idaq, jdaq
+      logical laq
+      common/ cxt3 /idaq,jdaq,laq
+
       integer nsub,nttyp,nterm,nspm1,nsite
       double precision acoef,smult,a0
       common/ cst107 /a0(m10,m11),acoef(m10,m11,m0),smult(m10),
@@ -9295,6 +9308,9 @@ c                                 model type
       integer iam
       common/ cst4 /iam
 
+      integer tnq,tnn,tns
+      common/ cxt337 /tnq,tnn,tns
+
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
 c----------------------------------------------------------------------
@@ -9322,6 +9338,13 @@ c                                 charge balance models
       if (jsmod.eq.20) then
 
          isite = 1
+
+         nq = tnq
+         ns = tns 
+         nn = tnn 
+
+         idaq = im
+         jdaq = jsmod
 
          nqs = nn + nq + ns
          nqs1 = nqs - 1
@@ -12547,6 +12570,10 @@ c-----------------------------------------------------------------------
       integer ncoor,mcoor,ndim
       common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
 
+      integer idaq, jdaq
+      logical laq
+      common/ cxt3 /idaq,jdaq,laq
+
       double precision xco
       integer ico,jco
       common/ cxt10 /xco(k18),ico(k1),jco(k1)
@@ -12560,6 +12587,8 @@ c                                 initialize model counter
 c                                 a flag to check if more than one solution model 
 c                                 references an internal molecular EoS.
       wham = .false.
+c                                 pointer to aq solution model
+      idaq = 0
 c                                 no request for solutions
       if (io9.eq.1.or.isoct.eq.0) then 
 
