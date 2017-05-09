@@ -24,7 +24,7 @@ dependent_potentials       on   | on or off
 efficiency                 3    | 1->5
 explicit_bulk_modulus      T    | T[rue] or F[alse], default is F; T => use explicit function for K if available
 fd_expansion_factor        2    | [2], nth order finite difference increment is increased by fd_expansion_factor^(n-1)
-final_resolution  2.5e-8 2.5e-8 | >0, <1, default 1e-3; exploratory and autorefine
+final_resolution  2.5e-7 2.5e-7 | >0, <1, default 1e-3; exploratory and autorefine
 finite_difference_p    1d4 1d-2 | threshold [1d4] and fraction [1d-2] for 1st order finite difference increment on pressure
 global_reach_increment      0   | >= 0; overridden by reach_factor specified in solution model file
 grid_levels                1 4  | exploratory and autorefine (grid parameters keyword group)
@@ -63,7 +63,7 @@ species_output              T   | T[rue] or F[alse], T => output phase speciatio
 species_Gibbs_energies      T   | T[rue] or F[alse], T => output species Gibbs energies in MEEMUM/WERAMI mode 1 output
 spreadsheet                 T   | T[rue] or F[alse], T => include independent variable values in werami tab output files 
 stretch_factor            0.016 | >0, <1
-subdivision_override       off  | off, linear, or stretch
+subdivision_override     off  linear  | off, linear, or stretch
 T_melt                     873. | melt solution model endmember temperature (K) cut off
 T_stop                       0. | equilibration temperature (K) cut off
 variance                  1 99  | 1->99; exploratory and autorefine

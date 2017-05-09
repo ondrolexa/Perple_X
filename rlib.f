@@ -2026,7 +2026,7 @@ c                               principle may need vnumu as well).
 
          do k = 1, icomp
             aqcp(k,aqct) = comp(ic(k))
-            if (k.lt.icp) aqtot(aqct) = aqtot(aqct) + comp(ic(k))
+            if (k.le.icp) aqtot(aqct) = aqtot(aqct) + comp(ic(k))
          end do
 c                               locate H+/OH-, at this point HOH is in thermo(13), after
 c                               conver it's in thermo(21)

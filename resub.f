@@ -690,6 +690,10 @@ c DEBUG
       double precision aqcp, aqtot
       common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
 
+      integer jnd
+      double precision aqg,qq,rt
+      common/ cxt2 /aqg(m4),qq(m4),rt,jnd(m4)
+
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
 
@@ -721,7 +725,7 @@ c                                 endmembers. p0a is constructed in function gso
 
          do i = sn1, nqs
 
-            k = jend(id,2+i) - aqst
+            k = jnd(i) - aqst
 
             do j = 1, icp 
                cp2(j,jphct) = cp2(j,jphct) + y(i) * aqcp(j,k)
@@ -734,10 +738,10 @@ c                                 endmembers. p0a is constructed in function gso
          do i = 1, ns 
 
             do j = 1, icp 
-               cp2(j,jphct) = cp2(j,jphct) + y(i) * cp(j,jend(id,2+i))
+               cp2(j,jphct) = cp2(j,jphct) + y(i) * cp(j,jnd(i))
             end do 
 
-            ctot2 = ctot2 + y(i)*ctot(jend(id,2+i))
+            ctot2 = ctot2 + y(i)*ctot(jnd(i))
 
          end do 
 
@@ -3714,9 +3718,9 @@ c----------------------------------------------------------------------
       external ffirst
 
       integer i, is(*), id, jmin(k19), kmin(k19), opt, kpt, mpt, iter, 
-     *        tic
+     *        tic, imin
 
-      double precision clamda(*), clam(k19), x(*)
+      double precision clamda(*), clam(k19), x(*), clamin
 
       logical stable(k19)
 
@@ -3780,14 +3784,17 @@ c                                 id indicates the original refinement
 c                                 point.
          id = hkp(i)
 c                                 check the stability of all points 
-         if (is(i).ne.1.and.x(i).gt.0d0) then 
+c DEBUG                           5/9/2017 removed the x(i)>0 conditional
+c                                 to get chemical potentials.
+c         if (is(i).ne.1.and.x(i).gt.0d0) then
+         if (is(i).ne.1) then  
 c                                 a stable point, add to list
             npt = npt + 1
             jdv(npt) = i
             stable(id) = .true.
 
          else if (clamda(i).lt.clam(id)) then
-c DEBUG
+c DEBUG wish i wrote was this is about, but it may be in yclos0/1
             if (clamda(i).lt.wmach(3)) cycle 
 
             if (jkp(id).gt.0) then
@@ -3808,6 +3815,29 @@ c                                 as they hardly cost anything.
          end if 
 
       end do
+
+      if (npt.lt.0*hcp.and.iter.gt.iopt(10)) then 
+c                                  
+         clamin = 1d99
+
+         do i = 1, jphct 
+
+            if (is(i).ne.1) cycle
+
+            if (clamda(i).lt.clamin) then
+
+               imin = i
+               clamin = clamda(i)
+
+            end if 
+
+         end do
+
+         npt = npt + 1
+         jdv(npt) = imin
+         stable(hkp(imin)) = .true.
+
+      end if  
 
 c DEBUG DEBUG
 
@@ -4227,7 +4257,7 @@ c                                  load the saturated phase composition
 
       if (usv.or.jpot.eq.0) then
 c                                 compute chemical potentials
-
+         mus = .true.
 c                                 check for degeneracy
          kcp = 0 
 
@@ -4253,7 +4283,9 @@ c                                 not full rank
             do i = 1, hcp
                mu(i) = nopt(7)
             end do
-          
+            
+            mus = .false.
+
          else 
 
             do i = 1, kcp
@@ -4269,6 +4301,8 @@ c                                 not full rank
                do i = 1, hcp
                   mu(i) = nopt(7)
                end do
+
+               mus = .false.
      
             else 
  
@@ -4279,6 +4313,8 @@ c                                 not full rank
                   do i = 1, hcp
                      mu(i) = nopt(7)
                   end do
+
+                  mus = .false.
              
                else       
 
@@ -4322,7 +4358,7 @@ c-----------------------------------------------------------------------
  
       include 'perplex_parameters.h'
 
-      integer i, j, k, l, ichg, jchg(l9), it, ind(l9), id, lu
+      integer i, j, k, l, ichg, jchg(l9), it, ind(l9), id, lu, iexp
 
       logical bad, output
 
@@ -4331,7 +4367,7 @@ c-----------------------------------------------------------------------
       double precision c(l9), q(l9), mo(l9), dg(l9), ahy, xis, blk(k5),
      *                 d(l9), q2(l9), lng0, is, gamm0, totm, g0(l9),
      *                 gso(nsp), ysum, ph0, v0(nsp), vf0(nsp), tmass,
-     *                 tsmas, tsmol, smol(k5), dn
+     *                 tsmas, tsmol, smol(k5), dn, xdn
 
       double precision gcpd, solve, gfunc
 
@@ -4414,7 +4450,12 @@ c-----------------------------------------------------------------------
       integer idaq, jdaq
       logical laq
       common/ cxt3 /idaq,jdaq,laq
-c-----------------------------------------------------------------------
+c----------------------------------------------------------------------
+      if (.not.mus) then 
+         write (lu,*) ' no mus, cannot back calculate speciation'
+         return
+      end if 
+
       output = .true. 
 
       ichg = 0 
@@ -4499,7 +4540,9 @@ c                                  neutral species assumed to be ideal, molality
 
       gamm0 = 1d0 
       it = 0 
-      mo(ihy) = 1e-6
+      mo(ihy) = 1e-10
+      xdn = 1d0
+      iexp = 0
 c                                  iterative loop for ionic strength
       do 
 c                                  solve charge balance for H+
@@ -4514,13 +4557,24 @@ c                                  and ionic strength
          do i = 1, ichg 
             j = jchg(i)
             mo(j) = ahy**(q(j))*c(j)/q(j)
-            if (mo(j).gt.1d0) then
-               write (lu,*) aqnam(j), mo(j), q(j)
+            if (mo(j).gt.10d0) then
+c               write (lu,*) aqnam(j), mo(j), q(j)
             end if 
             is = is + q2(j) * mo(j)
          end do
 
          is = is / 2d0 
+
+         dn = is - xis
+
+         if (dabs(dn).gt.1d0/2d0**iexp) then 
+            dn = dn/dabs(dn)/2d0**iexp 
+            if (dn*xdn.lt.0d0) iexp = iexp + 1
+         end if 
+
+         is = xis + dn
+
+         xdn = dn 
 
          if (bad) then 
             write (lu,*) 'bombed'
@@ -4715,7 +4769,7 @@ c                                 bulk fluid composition
 1060  format (/,'*partial molar, **molal ref. state, ***molar ref. ',
      *        'state.',/)
 1070  format ('permittivity =', g10.4,
-     *        '; reference_state_permittivity(Pr,Tr) =',g10.4)
+     *        '; reference_state_permittivity =',g10.4)
 1080  format (a8,4x,i2,3x,g12.6,3x,g12.6,3x,g12.6,5x,i8,5(2x,g12.6))
 1090  format (a8,4x,i2,3x,g12.6,3x,g12.6,20x,i8,5(2x,g12.6))
 1100  format (/,'Solute endmember properties:',/,
