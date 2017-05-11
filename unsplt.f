@@ -84,7 +84,7 @@ c                                 solution model names
 
       double precision xco
       integer ico,jco
-      common/ cxt10 /xcoor(k18),ico(k1),jco(k1)
+      common/ cxt10 /xco(k18),ico(k1),jco(k1)
 
       double precision bg
       common/ cxt19 /bg(k5,k2)

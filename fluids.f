@@ -290,7 +290,7 @@ c-----------------------------------------------------------------------
 
       logical log, bad
 
-      character y*1, n4name*100, title*100, tags(33)*14
+      character yes*1, n4name*100, title*100, tags(33)*14
 
       integer ier, igo, i, isp, j, k, l, kmax, count, nel
 
@@ -382,7 +382,7 @@ c                                 of independent variable
          write (*,'(/,a)') 'Tabulate properties (y/n)?'
          read (*,'(a)') y
 
-         if (y.eq.'y'.or.y.eq.'Y') then 
+         if (yes.eq.'y'.or.yes.eq.'Y') then 
 c                                 tabulated properties
             if (ifug.le.3.or.ifug.eq.13..or.ifug.eq.14.or.
      *               ifug.eq.17.or.ifug.eq.25) then 
@@ -573,7 +573,7 @@ c                                 query for title
      *           'species fractions and fugacities (y/n)?'
             read (*,'(a)') y
 
-            if (y.eq.'y'.or.y.eq.'Y') then 
+            if (yes.eq.'y'.or.yes.eq.'Y') then 
                log = .true.
             else 
                log = .false.
@@ -1224,7 +1224,7 @@ c                                  output speciation:
                   end do 
 
                   write (*,1370) totx
-                  if (dabs(totx-1d0).gt.1d-3) call warn (177,p,i,y)
+                  if (dabs(totx-1d0).gt.1d-3) call warn (177,p,i,yes)
 c                                  output bulk properties and V:
                   write (*,1240)
 
@@ -1251,7 +1251,7 @@ c                                  output bulk properties and V:
 
          write (*,'(/,a)') 'More calculations (y/n)?'
          read (*,'(a)') y
-         if (y.ne.'y'.and.y.ne.'Y') exit
+         if (yes.ne.'y'.and.yes.ne.'Y') exit
 
       end do 
 1110  format (/,10x,'a(gph/dia) = ',g12.5,

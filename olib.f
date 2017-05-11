@@ -46,8 +46,9 @@ c----------------------------------------------------------------------
       character vnm*8
       common/ cxt18a /vnm(l3)  
 
-      double precision atwt
-      common/ cst45 /atwt(k0)
+      logical hsccon
+      double precision atwt, sel
+      common/ cst45 /atwt(k0), sel(k0), hsccon
 
       logical gflu,aflu,fluid,shear,lflu,volume,rxn
       common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume,rxn
@@ -1695,8 +1696,9 @@ c----------------------------------------------------------------------
       integer iam
       common/ cst4 /iam
 
-      double precision atwt
-      common/ cst45 /atwt(k0)
+      logical hsccon
+      double precision atwt, sel
+      common/ cst45 /atwt(k0), sel(k0), hsccon
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp

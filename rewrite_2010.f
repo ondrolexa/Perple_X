@@ -40,10 +40,10 @@ c                                 iam is a flag indicating the Perple_X program
       do i = 1, k5
          ic(i) = i
       end do 
-c                               assign data files
+c                                 assign data files
       call sopen 
-c                               Read THERMODYNAMIC DATA file (N2):
-c                               read the data base header
+c                                 Read THERMODYNAMIC DATA file (N2):
+c                                 read the data base header
       call otopn2 (4)
 
       icomp = icmpn
@@ -386,7 +386,7 @@ c----------------------------------------------------------------------
       double precision delt,dtol,utol,ptol
       common/ cst87 /delt(l2),dtol,utol,ptol
 
-      double precision p,t,xco2,u1,u2,tr,pr,r,ps,v(l2)
+      double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5  /p,t,xco2,u1,u2,tr,pr,r,ps
 
       integer io3,io4,io9
@@ -415,8 +415,9 @@ c----------------------------------------------------------------------
       character tcname*5,xcmpnt*5
       common/ csta9 /tcname(k0),xcmpnt(k0)
 
-      double precision atwt
-      common/ cst45 /atwt(k0)
+      logical hsccon
+      double precision atwt, sel
+      common/ cst45 /atwt(k0), sel(k0), hsccon
 
       integer idspe,ispec
       common/ cst19 /idspe(2),ispec
@@ -463,11 +464,6 @@ c                               or co2 dummy values
 c                               must be included in the file (ne. 0).
       read (n2,*,end=90) idspe(1), idspe(2)
 
-      v(1) = pr
-      v(2) = tr
-      v(3) = 0d0
-      v(4) = 0d0
-      v(5) = 0d0
       vname(4) = 'mu(C1)'
       vname(5) = 'mu(C2)'
 

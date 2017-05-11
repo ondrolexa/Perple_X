@@ -22,6 +22,9 @@ c----------------------------------------------------------------------
       double precision comp,tot
       common/ cst43 /comp(k0),tot,icout(k0),ikind,icmpn,ieos
 
+      integer icomp,istct,iphct,icp
+      common/ cst6 /icomp,istct,iphct,icp
+
       integer ic
       common/ cst42 /ic(k0)
 
@@ -50,6 +53,8 @@ c                                 mock pointers
       do i = 1, icmpn
          ic(i) = i
       end do
+
+      icomp = icmpn
 c                                 read and echo data cards with
 c                                 component conversion
       do 

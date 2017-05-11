@@ -1036,7 +1036,7 @@ c----------------------------------------------------------------------
  
       character*5 mnames(k16*k17)*8
 
-      double precision twt(k5),cst
+      double precision twt(k5),tsel(k5),cst
  
       integer i,j,im, ict, k, ifer,inames, jphct, imak(k16)
  
@@ -1094,8 +1094,9 @@ c----------------------------------------------------------------------
       integer ids,isct,icp1,isat,io2
       common/ cst40 /ids(h5,h6),isct(h5),icp1,isat,io2
 
-      double precision atwt
-      common/ cst45 /atwt(k0)
+      logical hsccon
+      double precision atwt, sel
+      common/ cst45 /atwt(k0), sel(k0), hsccon
 
       integer iemod,kmod
       logical smod,pmod
@@ -1230,6 +1231,7 @@ c                               initialize icout(i) = 0
             if (cname(i).eq.cmpnt(j)) then 
 
                twt(i) = atwt(j)
+               tsel(i) = sel(j)
                ic(i) = j
                icout(j) = 1
 
@@ -1271,9 +1273,10 @@ c                                 mobile component otherwise idfl = 0.
       else 
          idfl = 0
       end if
-c                                 load atwts in updated order
+c                                 load atwts, sel in updated order
       do i = 1, icomp
          atwt(i) = twt(i)
+         sel(i) = tsel(i)
       end do 
 c                                 convert weight to molar amounts
       if (jbulk.ne.0) then 

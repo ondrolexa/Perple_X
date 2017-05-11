@@ -19,7 +19,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a)') 
-     *      'Perple_X version 6.7.7, source updated Apr 28, 2017.'
+     *      'Perple_X version 6.7.7, source updated May 11, 2017.'
 
       end
 
@@ -3571,6 +3571,9 @@ c----------------------------------------------------------------------
 
       logical ok
 
+      double precision p,t,xco2,u1,u2,tr,pr,r,ps
+      common/ cst5  /p,t,xco2,u1,u2,tr,pr,r,ps
+
       integer ikind,icmpn,icout,ieos
       double precision comp,tot
       common/ cst43 /comp(k0),tot,icout(k0),ikind,icmpn,ieos
@@ -3592,6 +3595,16 @@ c----------------------------------------------------------------------
       character*2 strgs*3, mstrg, dstrg, tstrg*3, wstrg*3, e16st*3
       common/ cst56 /strgs(32),mstrg(6),dstrg(m8),tstrg(11),wstrg(m16),
      *               e16st(13)
+
+      logical hsccon
+      double precision atwt, sel
+      common/ cst45 /atwt(k0), sel(k0), hsccon
+
+      integer ic
+      common/ cst42 /ic(k0)
+
+      integer icomp,istct,iphct,icp
+      common/ cst6 /icomp,istct,iphct,icp
 
       save ic2p
       data ic2p/0,0,22,1,2,3,4,5,6,7,12,13,14,15,16,17,18,19,20,21,8,
@@ -3710,12 +3723,28 @@ c                                 DEW/HKF aqueous data
             else 
 c                                 generic thermo data 
                do i = 1, 21
+
                   if (key.eq.strgs(i)) then 
+
                      read (values,*,iostat=ier) thermo(i,k10)
                      if (ier.ne.0) call error (23,tot,ier,strg) 
                      ok = .true.
-                     exit 
+                     exit
+
+                  else if (key.eq.'GH') then
+
+                     read (values,*,iostat=ier) thermo(1,k10)
+                     if (ier.ne.0) call error (23,tot,ier,strg)
+c                                 convert HSC G0 to SUP G0
+                     do j = 1, icomp
+                        thermo(1,k10) = thermo(1,k10) 
+     *                                + tr*comp(ic(j))*sel(j)
+                     end do 
+                     ok = .true.
+                     exit
+
                   end if 
+
                end do 
 
             end if 
@@ -3974,7 +4003,7 @@ c----------------------------------------------------------------------
 
       character text(14)*1
 
-      double precision var
+      double precision var, dg
 
       double precision cp
       common/ cst12 /cp(k5,k1)
@@ -4024,6 +4053,13 @@ c----------------------------------------------------------------------
       character*8 names
       common/ cst8 /names(k1)
 
+      double precision p,t,xco2,u1,u2,tr,pr,r,ps
+      common/ cst5  /p,t,xco2,u1,u2,tr,pr,r,ps
+
+      logical hsccon
+      double precision atwt, sel
+      common/ cst45 /atwt(k0), sel(k0), hsccon
+
       character*80 com
       common/delet/com 
 
@@ -4056,7 +4092,9 @@ c                                 formula
       else 
           jcomp = icmpn
       end if 
-      
+
+      dg = 0d0 
+
       do i = 1, jcomp
 
          if (option.eq.0) then
@@ -4082,7 +4120,9 @@ c                                 load number into chars
 
             do j = ibeg, iend
                chars(j) = text(j-ibeg+1)
-            end do 
+            end do
+c                                get the delta g HSC correction
+            dg = dg + var*sel(i)
 
             chars(j) = ')'
  
@@ -4124,8 +4164,18 @@ c                                 HKF aqueous electrolyte data (13 values)
       else 
 
          ibeg = 1
+
+         if (hsccon) then
+c                                 convert to HSC apparent G
+            call outthr (thermo(1,id) - tr*dg,'GH',2,ibeg)
+
+         else
+
+            call outthr (thermo(1,id),strgs(1),2,ibeg)
+
+         end if 
  
-         do i = 1, 3
+         do i = 2, 3
             call outthr (thermo(i,id),strgs(i),2,ibeg)
          end do
 c                                 write G,S,V
@@ -4192,7 +4242,7 @@ c                                 transition parameters
 
 1000  format ('end',/)
 
-      end 
+      end
 
       subroutine outthr (num,strg,len,ibeg)
 c----------------------------------------------------------------------
@@ -4750,8 +4800,9 @@ c----------------------------------------------------------------------
       character cmpnt*5, dname*80
       common/ csta5 /cl(k0),cmpnt(k0),dname
 
-      double precision atwt
-      common/ cst45 /atwt(k0)
+      logical hsccon
+      double precision atwt, sel
+      common/ cst45 /atwt(k0), sel(k0), hsccon
 
       integer ikind,icmpn,icout,ieos
       double precision comp,tot
@@ -4900,11 +4951,11 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
  
-      character tag*3, string*140, key*22, values*80, strg*80
+      character tag*4, string*140, key*22, values*80, strg*80
 
       integer option, i, j, ier, iscan
 
-      double precision sum
+      double precision sum, ssum
 
       integer iopt
       logical lopt
@@ -4941,8 +4992,9 @@ c----------------------------------------------------------------------
       character tcname*5,xcmpnt*5
       common/ csta9 /tcname(k0),xcmpnt(k0)
 
-      double precision atwt
-      common/ cst45 /atwt(k0)
+      logical hsccon
+      double precision atwt, sel
+      common/ cst45 /atwt(k0), sel(k0), hsccon
 
       integer length,iblank,icom
       character chars*1
@@ -5008,9 +5060,24 @@ c                                 utol must be smaller than -utol
 c                                 ptol must be > 2*-dtol
       utol = -dtol/1d1
       ptol = -dtol*3d0 
-c                                 component names & formula weights
-c                                 read "begin"
+c                                 component names, formula weights, and, optionally, 3rd law s_elements
       call getkey (n2,ier,key,values,strg)
+c                                 look for optional HSC_conversion key
+      if (key.eq.'HSC_conversion') then 
+
+         hsccon = .true.
+c                                 read "begin"
+         call getkey (n2,ier,key,values,strg)
+
+      else 
+
+         hsccon = .false.
+         do i = 1, k0
+            sel(i) = 0d0
+         end do 
+
+      end if 
+
 
       icmpn = 0 
 
@@ -5026,7 +5093,11 @@ c                                 read "begin"
 c                                 get component string length
          cl(icmpn) = iscan(1,length,' ') - 1
 
-         read (values,*) atwt(icmpn)
+         if (hsccon) then 
+            read (values,*) atwt(icmpn), sel(icmpn)
+         else 
+            read (values,*) atwt(icmpn)
+         end if 
 
       end do
 c                                 save old names for component transformations
@@ -5096,12 +5167,15 @@ c                                 and compute the new formula wieghts
             cmpnt(ictr(i)) = tcname(i)
 
             sum = 0d0
+            ssum = 0d0 
 
             do j = 1, icmpn
-               sum = sum + ctrans(j,i) * atwt(j)
+               sum =  sum  + ctrans(j,i) * atwt(j)
+               ssum = ssum + ctrans(j,i) * sel(j)
             end do
  
             atwt(ictr(i)) = sum
+            sel(ictr(i))  = ssum
 
          end do 
 
@@ -5122,9 +5196,25 @@ c                                 echo formatted header data for ctransf/actcor:
 
          write (n8,'(a,g6.1E1,a,/)') 'tolerance  ',dtol,
      *         '  |<= DTOL for unconstrained minimization, energy units'
-         write (n8,'(a,a)') 'begin_components |<= name (<5 characters),'
-     *                      ,' molar weight (g)'
-         write (n8,'(a5,1x,f9.4)') (cmpnt(i),atwt(i), i = 1, icmpn)
+
+         if (hsccon) then
+            write (n8,'(a,//,a)') 'HSC_conversion |<= tag enabling HSC '
+     *                          //'to SUP apparent energy conversion, '
+     *                          //'requires elemental entropies in the '
+     *                          //'component list below',
+     *                         'begin_components | < 6 chars, '//
+     *                         'molar weight (g), elemental entropy (R)'
+            write (n8,'(a5,2x,f9.4,3x,f9.4)') (cmpnt(i),atwt(i),sel(i),
+     *                                        i = 1, icmpn)
+
+         else 
+
+            write (n8,'(a)') 'begin_components | < 6 chars, '//
+     *                       'molar weight (g)'
+            write (n8,'(a5,1x,f9.4)') (cmpnt(i),atwt(i), i = 1, icmpn)
+
+         end if 
+
          write (n8,'(a,/)') 'end_components'
 
          if (lopt(7)) then 
@@ -5142,9 +5232,13 @@ c                                 read and echo unformatted comments and make da
          read (n2,'(a)',iostat=ier) string
          if (ier.ne.0) call error (21,r,i,dname)
          read (string,'(a)') tag
-         if (option.gt.3) write (n8,'(a)') string
 
-         if (string.eq.'begin_makes') then
+         if (option.gt.3) then
+            call mytrim (string)
+            write (n8,'(400a)') chars(1:length)
+         end if 
+
+         if (string.eq.'begin_makes'.and.option.lt.4) then
  
             call rmakes (option)
 
@@ -5154,9 +5248,9 @@ c                                 read and echo unformatted comments and make da
 
             cycle
 
-         else 
+         else
 
-            exit       
+            exit
 
          end if
 
@@ -5268,6 +5362,7 @@ c
 c evntually all such rountines will be in one block or file, this is
 c not the case now. 6/20/2011. 
 c-------------------------------------------------------------------
+
 
       subroutine unblnk (text)
 c------------------------------------------------------------------- 
@@ -5609,6 +5704,34 @@ c----------------------------------------------------------------------
 
       end 
 
+      subroutine mytrim (text)
+c----------------------------------------------------------------------
+c mytrim - scan text and delete trailing blank characters.
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer i, nchar
+ 
+      character text*(*)
+
+      integer ict,iblank,icom
+      character bitsy*1
+      common/ cst51 /ict,iblank,icom,bitsy(lchar)
+c---------------------------------------------------------------------- 
+      nchar = len(text) 
+
+      read (text,'(400a)') (bitsy(i), i = 1, nchar)
+c                                find last non-blank
+      ict = 1 
+      
+      do i = 1, nchar
+         if (bitsy(i).gt.' ') ict = i
+      end do
+
+      end 
+
       subroutine deblnk (text)
 c----------------------------------------------------------------------
 c deblnk - scan text and delete multiple blank characters, strip
@@ -5699,6 +5822,8 @@ c                                 strip put + - and - + strings
 
          else if (bitsy(i).eq.'+'.and.bitsy(i+2).eq.'-'.or.
      *            bitsy(i).eq.'-'.and.bitsy(i+2).eq.'+') then
+c                                allow +/- or -/+
+             if (bitsy(i+1).eq.'/') cycle 
 
              bitsy(i) = '-'
              bitsy(i+2) = ' '

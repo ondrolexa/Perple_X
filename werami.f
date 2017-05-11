@@ -1304,8 +1304,9 @@ c----------------------------------------------------------------
 
       double precision prop, r, gtcomp, mode(3)
 
-      double precision atwt
-      common/ cst45 /atwt(k0)
+      logical hsccon
+      double precision atwt, sel
+      common/ cst45 /atwt(k0), sel(k0), hsccon
 
       double precision gtot,fbulk,gtot1,fbulk1
       common/ cxt81 /gtot,fbulk(k0),gtot1,fbulk1(k0)
@@ -3036,8 +3037,9 @@ c----------------------------------------------------------------
       integer idstab,nstab,istab
       common/ cst34 /idstab(i11),nstab(i11),istab
 
-      double precision atwt
-      common/ cst45 /atwt(k0)
+      logical hsccon
+      double precision atwt, sel
+      common/ cst45 /atwt(k0), sel(k0), hsccon
 c----------------------------------------------------------------------
       if (kop(1).eq.38) then 
 c                                 custom property choices

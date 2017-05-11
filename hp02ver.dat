@@ -488,7 +488,8 @@ MgCl+(aq)                  MgCl
 FeCl(aq)                   FeCl2                                                                                                            
 Aqueous silica             aqSi            SiO2                                                                                             
                                                                                                                                             
-the following "end" card marks the end of the header section of the data file                                                               
+the following "end" card marks the end of the header section of the data file 
+                                                           
                                                                                                                                             
 end                                                                                                                                         
  

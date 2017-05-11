@@ -1898,8 +1898,9 @@ c----------------------------------------------------------------------
       double precision props,psys,psys1,pgeo,pgeo1
       common/ cxt22 /props(i8,k5),psys(i8),psys1(i8),pgeo(i8),pgeo1(i8)
 
-      double precision atwt
-      common/ cst45 /atwt(k0)
+      logical hsccon
+      double precision atwt, sel
+      common/ cst45 /atwt(k0), sel(k0), hsccon
 
       integer ipot,jv,iv
       common/ cst24 /ipot,jv(l2),iv(l2)
@@ -1915,6 +1916,23 @@ c----------------------------------------------------------------------
 c-----------------------------------------------------------------------
 
       call topn2 (1)
+
+      jcmpn = icmpn
+      icomp = icmpn
+c                                 component pointers
+      do i = 1, icmpn
+         ic(i) = i
+      end do
+c                              this check is here to avoid
+c                              redimensioning comps, but cause
+c                              the maximum number of components
+c                              counted by frendly to be k5, if you
+c                              want as many components in frendly as
+c                              in the data base you must set k0 = k5.
+      if (icmpn.gt.k5) then
+         icomp = k5
+         jcmpn = k5
+      end if 
 
       if (first) then
 
@@ -1932,23 +1950,6 @@ c-----------------------------------------------------------------------
 
          if (icmpn.gt.k5) write (*,3020) k5
 
-      end if 
-c                              this check is here to avoid
-c                              redimensioning comps, but cause
-c                              the maximum number of components
-c                              counted by frendly to be k5, if you
-c                              want as many components in frendly as
-c                              in the data base you must set k0 = k5.
-      jcmpn = icmpn
-      icomp = icmpn
-c                                 component pointers
-      do i = 1, icmpn
-         ic(i) = i
-      end do
-
-      if (icmpn.gt.k5) then
-         icomp = k5
-         jcmpn = k5
       end if 
 c                               list database phases:
       write (*,1030)
