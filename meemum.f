@@ -80,7 +80,7 @@ c                                 initialization, read files etc.
       call iniprp
 
       write (*,1000) 
-c      read (*,'(a)') yes
+      read (*,'(a)') yes
 
       if (yes.eq.'y'.or.yes.eq.'Y') then 
 c                                 bulk is true, user enters composition and p-t conditions
@@ -105,10 +105,8 @@ c                                 v(1) is P(bar), v(2) is T(K) the pointer jv us
 c                                 for general problems but can be eliminated for calculations 
 c                                 simply as a f(P,T)       
          write (*,1070) (vname(jv(i)), i = 1, ipot)
-c         read (*,*,iostat=ier) (v(jv(i)), i = 1, ipot)
-c         if (ier.ne.0) cycle
-         v(1) = 5000.
-         v(2) = 1200. 
+         read (*,*,iostat=ier) (v(jv(i)), i = 1, ipot)
+         if (ier.ne.0) cycle
          if (v(jv(1)).eq.0d0) exit 
           
          if (bulk) then 

@@ -1414,7 +1414,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer ids, i, j, k, l, nlim
+      integer ids, i, j
 
       double precision z, pa, p0a, x, w, y, wl
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
@@ -1454,44 +1454,34 @@ c                                 interval limits conformal transformation
 c----------------------------------------------------------------------
 c                                 set stable flag
       stable(ids) = .true.
-
-      k = 0
 c                                 check x-ranges
       do i = 1, istg(ids)
 
-
-         if (ksmod(ids).ne.20) then
-            nlim = ndim(i,ids)
-         else
-            nlim = nqs1
-         end if 
-
-         do j = 1, nlim
+         do j = 1, ndim(i,ids)
 
             if (ksmod(ids).eq.20) then 
-               if (j.eq.ns) then
-                  k = 1 
-                  cycle
-               end if 
+               if (j.eq.ns) cycle 
             end if 
-
-            l = j + k 
 c                                 low limit:
-            if (x(i,l).lt.xlo(j,i,ids)) then
+            if (x(i,j).lt.xlo(j,i,ids)) then
 
-               xlo(j,i,ids) = x(i,l)
+               xlo(j,i,ids) = x(i,j)
 c                                 check if solution is at an unnatural limit
-               if (x(i,l).gt.xmno(ids,i,j).and.
-     *            (x(i,l).le.xmng(ids,i,j).and..not.lopt(3))) then
+               if (x(i,j).gt.xmno(ids,i,j).and.
+     *            (x(i,j).le.xmng(ids,i,j).and..not.lopt(3))) then
 c                                 relax limits according to subdivsion model
                   if (imdg(j,i,ids).eq.0) then 
 c                                 cartesian
-                     xmng(ids,i,j) = xmng(ids,i,j) - nopt(10)
+                     xmng(ids,i,j) = xmng(ids,i,j) - xncg(ids,i,j)
                      if (xmng(ids,i,j).lt.0d0) xmng(ids,i,j) = 0d0
 
                   else if (imdg(j,i,ids).eq.1.or.imdg(j,i,ids).eq.4)then
-c                                 assymmetric stretching towards xmin
-                     yint(1,j,i,ids) = yint(1,j,i,ids) - nopt(10)
+c                                 assymmetric stretching towards xmin, this
+c                                 probably isn't even correct for imd = 1, but
+c                                 only a lunatic would use this not going from 
+c                                 zero. 
+                     yint(1,j,i,ids) = yint(1,j,i,ids) - xncg(ids,i,j)
+     *                                   *(xmxg(ids,i,j)-xmng(ids,i,j))
                      if (yint(1,j,i,ids).lt.0d0) yint(1,j,i,ids) = 0d0
                      xmng(ids,i,j) =  yint(1,j,i,ids)
 
@@ -1508,20 +1498,26 @@ c                                 set xmn to prevent future warnings
                end if 
             end if 
 c                                 high limit:
-            if (x(i,l).gt.xhi(j,i,ids)) then
-               xhi(j,i,ids) = x(i,l)
+            if (x(i,j).gt.xhi(j,i,ids)) then
+               xhi(j,i,ids) = x(i,j)
 c                                 check if solution is at an unnatural limit
-               if (x(i,l).lt.xmxo(ids,i,j).and.
-     *            (x(i,l).ge.xmxg(ids,i,j).and..not.lopt(3))) then
+               if (x(i,j).lt.xmxo(ids,i,j).and.
+     *            (x(i,j).ge.xmxg(ids,i,j).and..not.lopt(3))) then
 c                                 relax limits according to subdivsion model
                   if (imdg(j,i,ids).eq.0) then 
 c                                 cartesian
-                     xmxg(ids,i,j) = xmxg(ids,i,j) + nopt(10)
+                     xmxg(ids,i,j) = xmxg(ids,i,j) + xncg(ids,i,j)
                      if (xmxg(ids,i,j).gt.1d0) xmxg(ids,i,j) = 1d0
 
                   else if (imdg(j,i,ids).eq.1.or.imdg(j,i,ids).eq.4)then
-c                                 assymmetric stretching
-                     yint(2,j,i,ids) = yint(2,j,i,ids) + nopt(10)
+c                                 assymmetric stretching, this is probably
+c                                 only correct for imd = 1. by not changing
+c                                 the relative increment, expanding the limits
+c                                 lowers the resolution?
+                     yint(2,j,i,ids) = yint(2,j,i,ids) + xncg(ids,i,j)
+     *                                   *(xmxg(ids,i,j)-xmng(ids,i,j))
+                     xncg(ids,i,j) = 1d0/(1d0/xncg(ids,i,j) + 1d0)
+c                    yint(2,j,i,ids) = 2d0 * yint(2,j,i,ids)
                      if (yint(2,j,i,ids).gt.1d0) yint(2,j,i,ids) = 1d0
                      xmxg(ids,i,j) = yint(2,j,i,ids)
 
@@ -1743,24 +1739,20 @@ c                                 single site solution
 
             if (ksmod(i).eq.20) then 
 c                                 charge balance model:
-               k = 0
-
                do j = 1, ndim(1,i)
- 
-                  k = k + 1 
-c                                 jump to 1st neutral species
-                  if (j.eq.ns) k = k + 1
 
                   if (j.lt.ns) then
-                     char8 = aqnam(jnd(k))
+                     char8 = names(jnd(j))
+                  else if (j.eq.ns) then
+                     cycle 
                   else 
-                     char8 = names(jnd(k)  - aqst)
+                     char8 = aqnam(jnd(j)  - aqst)
                   end if 
 
                   write (*,1030) char8, xlo(j,1,i), xhi(j,1,i)
 
                   if (lopt(11)) write (n11,1030) char8, xlo(j,1,i),
-     *                           xhi(j,1,i)
+     *                                                  xhi(j,1,i)
 
                end do     
         
@@ -1859,10 +1851,10 @@ c    *                     ,names(jend(i,2+indx(i,j,k)))
      *        /,'if executing in auto_refine mode inrease auto_refine',
      *          '_slop in perplex_option.dat):',/)
 1020  format (/,'Endmember compositional ranges for model: ',a,//,5x,
-     *        'Endmember   Minimum   Maximum')
-1030  format (5x,a8,4x,f7.5,3x,f7.5)
+     *        'Endmember   Minimum     Maximum')
+1030  format (5x,a8,4x,g9.5e1,3x,g9.5e1)
 1040  format (/,'Site fraction ranges for multisite model: ',a)
-1050  format (/,'  Site ',i1,/,5x,'Species   Minimum   Maximum   ')
+1050  format (/,'  Site ',i1,/,5x,'Species   Minimum    Maximum   ')
 c     *          'Endmember with this species')
 1060  format (8x,'Dummy site generated by model reformulation',/)
 1070  format (8x,i1,6x,f7.5,3x,f7.5,3x,12(a8,1x))

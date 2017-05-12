@@ -3335,17 +3335,17 @@ c                              read dqf data:
 
       end do  
 
-1000  format (/,' **error ver200** READOP missing "end_of_model"',
+1000  format (/,'**error ver200** READOP missing "end_of_model"',
      *          ' keyword at end',' of solution model:',a,/)
       
-1010  format (/,' **error ver210** READOP bad data, currently',
+1010  format (/,'**error ver210** READOP bad data, currently',
      *          ' reading solution model: ',a,' data was:',/,400a)
 
-1020  format (/,' This error is most probably due to an out-of-date',
-     *          ' solution model file.',//,
-     *          ' Copy the current version from:',//,
-     *          ' www.perplex.ethz.ch/perplex/datafiles/',
-     *           'solution_model.dat',//)
+1020  format (/,'This error is most probably due to an out-of-date ',
+     *          'solution model file.',//,
+     *          'Copy the current version from:',//,
+     *          'www.perplex.ethz.ch/perplex/datafiles/',
+     *          'solution_model.dat',//)
 
       end 
 
@@ -6342,7 +6342,7 @@ c---------------------------------------------------------------------
 
       character*10 tname
 
-      integer i, jq, jn, js, lm, mm 
+      integer i, jq, jn, js, lm
 
       logical first
 
@@ -6378,7 +6378,6 @@ c----------------------------------------------------------------------
             js = js + 1
             iorig(js) = i 
             kdsol(js) = kdsol(i)
-            if (i.eq.ns) cycle 
             lm = lm + 1
             xmn(1,lm) = xmn(1,i)
             xmx(1,lm) = xmx(1,i)
@@ -6411,41 +6410,15 @@ c----------------------------------------------------------------------
             kdsol(js+jn+jq) = kdsol(i)
 
             if (i.eq.ns+nn+nq) cycle 
-
-            xmn(2,jq) = xmn(1,i-1)
-            xmx(2,jq) = xmx(1,i-1)
-            xnc(2,jq) = xnc(1,i-1)
-            imd(jq,2) = imd(i-1,1)
+            lm = lm + 1
+            xmn(1,lm) = xmn(1,i)
+            xmx(1,lm) = xmx(1,i)
+            xnc(1,lm) = xnc(1,i)
+            imd(lm,1) = imd(i,1)
 
          end if
 
       end do
-c                                  move the solvent/neutral limits
-      mm = 0 
-
-      do i = 1, lm + jq - 1
-
-         if (i.eq.js.and.js.lt.ns) cycle
-
-         mm = mm + 1
-
-         if (i.le.lm) then 
-
-            xmn(1,mm) = xmn(1,i)
-            xmx(1,mm) = xmx(1,i)
-            xnc(1,mm) = xnc(1,i)
-            imd(mm,1) = imd(i,1)     
- 
-         else 
-
-            xmn(1,mm) = xmn(2,i-lm)
-            xmx(1,mm) = xmx(2,i-lm)
-            xnc(1,mm) = xnc(2,i-lm)
-            imd(mm,1) = imd(i-lm,2)  
-
-         end if 
-
-      end do 
 
       ns = js
       nn = jn 
@@ -7234,15 +7207,20 @@ c                               read number of charged species:
       nq = idint(rnums(1))
 c                               read charged species names:
       i = nn + ns
-      if (nq.gt.0) then
-         call readn (i,i+nq,tname)
-         i = nn + ns + nq - 2
-      else 
-         i = nn + ns - 1
-      end if 
+      if (nq.gt.0) call readn (i,i+nq,tname)
 c                               read composition limits, subdivision type
 c                               for (nn + ns + nq) - 2 species
-      do j = 1, i
+      if (i+nq.eq.2) i = i + 1
+c
+      do j = 1, i + nq - 1
+c                               dummy for the ns'th species
+         if (j.eq.ns) then 
+
+            xmn(1,j) = 0d0
+            xmx(1,j) = 1d0
+            cycle
+
+         end if 
 
          call readda (rnums,4,tname)
 
@@ -9385,7 +9363,6 @@ c                                 site ranges
 
          ncoor(im) = ncoor(im) + isp(i)
          mcoor(im) = mcoor(im) + ndim(i,im)
- 
 
          do j = 1, ndim(i,im)
 c                                 subdivision override (iopt(13))
@@ -9524,8 +9501,6 @@ c                                 four intervals
 
                end if 
             end if 
- 
-            if (jsmod.eq.20.and.j.eq.nqs1) cycle
 
             imdg(j,i,im) = imd(j,i)
             xmng(im,i,j) = xmn(i,j)
@@ -15333,6 +15308,8 @@ c---------------------------------------------------------------------
       double precision y(ms1,mres), ycum, ymax, dy, ync, res, ylmn,
      *                 ylmx, yloc, x, unstch, strtch, yreal
 
+      external unstch, strtch
+
       logical odd
 
       integer ntot,npairs
@@ -15705,7 +15682,7 @@ c                                 is zero
 c                                 do the nq-1 species independently
          ycum = 0d0
 
-         call chopit (ycum,ns1,nq1,1,ids)
+         call chopit (ycum,ns,nq1,1,ids)
 c                                 at this point simp contains all 
 c                                 possible compositions of the nq-1 species,
 c                                 use charge balance to get the nqth species
@@ -16513,7 +16490,7 @@ c                                 update coefficients
 
       end do
 
-      if (output) then
+      if (output.and..not.bad) then
 c                                 neutral pH
          ph0 = (g0(ihy)+g0(ioh)-gso(ns))/2d0/rt/2.302585d0
 

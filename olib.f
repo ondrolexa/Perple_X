@@ -409,6 +409,14 @@ c                                 chemical potentials variance
          write (lu,1130) (cname(i), i = 1, jbulk)
          write (lu,1140) (mu(i), i = 1, jbulk)
          write (lu,1071) 2, jbulk - ntot + 2 
+c                                 test for non-NaN chemical potentials
+         mus = .false.
+         do i = 1, jbulk
+            if (.not.isnan(mu(i))) then
+               mus = .true.
+               exit 
+            end if 
+         end do 
       else 
          write (lu,1070) 2, jbulk - ntot + 2 
       end if 
