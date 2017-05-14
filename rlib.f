@@ -9388,7 +9388,18 @@ c                                 compositional degeneracies.
                   xnc(i,j) = nopt(13)
                end if
 
-            end if  
+            end if
+
+            if (xnc(i,j).gt.xmx(i,j)) then
+c                                 check on xnc, this is really only necessary 
+c                                 for imd > 0, nopt13 = 0 or jsmod = 20
+               write (*,'(a,i1,a,i2,/,a,g10.5e1)') 
+     *                           'wugga wugga, xnc > xmx solution '
+     *                            //tname//' site ',i,' species ',j,
+     *                            'set xnc = xmx = ',xmx(i,j)
+               xnc(i,j) = xmx(i,j)
+
+            end if 
 c                                 save solution model values as hard limits for 
             xmno(im,i,j) = xmn(i,j)
             xmxo(im,i,j) = xmx(i,j)
@@ -13345,7 +13356,7 @@ c                                during debugging.
          if (h.eq.100) then 
             pnm(j) = '**'
          else 
-            write (pnm(j),'(i2.2)') h 
+            write (pnm(j),'(i2)') h 
          end if 
 
 c use mname array to flag retained absent endmembers
@@ -13508,7 +13519,7 @@ c                              composition vector
             cp(l,iphct) = 0d0 
          else if (cp(l,iphct).lt.0d0) then
             if (ksmod(im).eq.20) then 
-               write (*,*) ' negative comp mass',iphct,l
+               write (*,*) ' negative comp mass',iphct,l,cp(l,iphct)
             else 
                call error (228,cp(l,iphct),l,tname)
             end if 
@@ -15334,6 +15345,9 @@ c                                 x coordinate description
       integer ksmod, ksite, kmsol, knsp
       common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
 
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
+
       integer iopt
       logical lopt
       double precision nopt
@@ -15351,6 +15365,13 @@ c                                 space for the dependent coordinate.
       do i = 1, jsp
 
          k = jst + i
+
+         if (ksmod(ids).eq.20) then 
+c                                 electrolyte model skip limit on ns'th
+c                                 species
+            if (k.eq.ns) k = k + 1
+
+         end if 
 c                                 generate coordinates for i'th component
          iy(i) = 1
          y(i,1) = xmn(lsite,k)
@@ -15648,18 +15669,16 @@ c                                  already been made in gmodel
             prism(j) = 0d0
          end do
 
-         np0 = 1
+         npairs = 1
 
       else
-c                                 subdivision of neutral ns-1 species
+c                                 subdivision of neutral ns+nn-1 species
          call chopit (ycum,0,ns1,1,ids)
-
-         np0 = 0 
 
          do i = 1, npairs
 
             k = (i-1)*sn
-            l = np0*nqs1
+            l = (i-1)*nqs1
 
             sum = 0d0
 
@@ -15667,22 +15686,22 @@ c                                 subdivision of neutral ns-1 species
                prism(l+j) = simp(k+j)
                sum = sum + simp(k+j)
             end do
-c                                 reject if the amount of species ns (h2o)
-c                                 is zero
-            if (sum.ge.1d0) cycle
 
-            np0 = np0 + 1
-            prism(l+nqs1) = sum
+            if (nq.gt.0) prism(l+nqs1) = sum
 
          end do
 
       end if
 
+      ntot = npairs
+
       if (nq.ne.0) then
+
+         np0 = npairs
 c                                 do the nq-1 species independently
          ycum = 0d0
 
-         call chopit (ycum,ns,nq1,1,ids)
+         call chopit (ycum,sn,nq1,1,ids)
 c                                 at this point simp contains all 
 c                                 possible compositions of the nq-1 species,
 c                                 use charge balance to get the nqth species
@@ -15715,60 +15734,54 @@ c                                 the amount of the species determined by charge
          end do
 
          qpairs = qpairs - 1
-
-      else 
-
-         qpairs = 0
-
-      end if
 c                                 for every charged species composition
 c                                 load all neutral compositions that don't
 c                                 violate closure:
-      ntot = np0
-
-      do i = 1, qpairs
+         do i = 1, qpairs
 c                                 get the sum of the charged species
-         k = (i-1)*nq
+            k = (i-1)*nq
 
-         sum = 0d0
+            sum = 0d0
 
-         do j = 1, nq 
-            sum = sum + simp(k+j)
-         end do
+            do j = 1, nq 
+               sum = sum + simp(k+j)
+            end do
 c                                 now assemble full compositions:
-         do j = 1, np0
+            do j = 1, np0
 
-            l = (j-1)*nqs1
+               l = (j-1)*nqs1
 c                                 test for closure
-            if (prism(l+nqs1)+sum.ge.1d0) cycle
+               if (prism(l+nqs1)+sum.ge.1d0) cycle
 c                                 acceptable composition
-            m = ntot * nqs1 
-            if (m+nqs1.gt.k24) call errk24 (resub) 
+               m = ntot * nqs1 
+               if (m+nqs1.gt.k24) call errk24 (resub) 
 
-            ntot = ntot + 1
+               ntot = ntot + 1
 c                                 load neutral part
-            do n = 1, ns1
-               prism(m+n) = prism(l+n)
-            end do
+               do n = 1, ns1
+                  prism(m+n) = prism(l+n)
+               end do
 c                                 load charged part
-            do n = 1, nq
-               prism(m+ns1+n) = simp(k+n)
+               do n = 1, nq
+                  prism(m+ns1+n) = simp(k+n)
+               end do
+
             end do
 
          end do
-
-      end do
 c                                  zero the charged species coordinates
 c                                  for the first np0 neutral compositions
-      do i = 1, np0
+         do i = 1, np0
 
-         l = (i-1)*nqs1
+            l = (i-1)*nqs1
 
-         do j = sn, nqs1
-            prism(l+j) = 0d0
+            do j = sn, nqs1
+               prism(l+j) = 0d0
+            end do
+
          end do
 
-      end do
+      end if 
 
       end
 

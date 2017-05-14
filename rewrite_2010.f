@@ -386,8 +386,8 @@ c----------------------------------------------------------------------
       double precision delt,dtol,utol,ptol
       common/ cst87 /delt(l2),dtol,utol,ptol
 
-      double precision p,t,xco2,u1,u2,tr,pr,r,ps
-      common/ cst5  /p,t,xco2,u1,u2,tr,pr,r,ps
+      double precision v,tr,pr,r,ps
+      common/ cst5  /v(l5),tr,pr,r,ps
 
       integer io3,io4,io9
       common/ cst41 /io3,io4,io9
@@ -530,7 +530,7 @@ c                                 read and echo unformatted comments and make da
 9020  format (8(g9.2,1x))
 9030  format (i2,1x,8(g12.6,1x))
 
-99    t = tr
-      p = pr
+99    v(2) = tr
+      v(1) = pr
 
       end 

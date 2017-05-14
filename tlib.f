@@ -2221,10 +2221,10 @@ c---------------------------------------------------------------------
      *        ' increase parameter m1 (',i2,').',/)
 49    format (/,'**error ver049** the order of solution model ',a,
      *        ' is too high, increase parameter m2 (',i2,').',/)
-50    format (/,'**error ver050** requested compositional resolution ',
-     *          '(',f6.0,') for a component in',
-     *          'solution model: ',a,/,'exceeds 1/MRES (MRES=',i4,') ',
-     *          'reduce requested resolution or inrease parameter',/,
+50    format (/,'**error ver050** requested resolution ',
+     *          '(',f6.0,') for a component in solution:',a,/,
+     *          'exceeds 1/MRES (MRES=',i5,') ',
+     *          'reduce requested resolution or inrease',/,
      *          'MRES in routine CARTES',/)
 51    format (/,'**error ver051** DUMMY1 could not find the auxilliary'
      *         ,' input file:',/,a,/,'required for open system model ',

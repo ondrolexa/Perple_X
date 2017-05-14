@@ -434,26 +434,24 @@ c                                 to allow hardlimits. JADC
 
       else 
 c                                 charge balance model
-         i = 0
+         j = -1
 
-         do j = 1, nqs1
+         do i = 1, nqs1
 
-            if (j.eq.ns) cycle
-
-            i = i + 1
+            if (i.eq.ns) cycle
 
             xnc(1,i) = xncg(ids,1,i)*res0
             xxnc = xnc(1,i)*reachg(ids)
 
             if (imdg(i,1,ids).eq.0) then 
 c                                 cartesian
-               xmn(1,i) = x(1,j) - xxnc
-               xmx(1,i) = x(1,j) + xxnc
+               xmn(1,i) = x(1,i) - xxnc
+               xmx(1,i) = x(1,i) + xxnc
 
             else
 c                                 conformal
-               xmn(1,i) = ydinc (x(1,j),-xxnc,imdg(i,1,ids),i,1,ids)
-               xmx(1,i) = ydinc (x(1,j),xxnc,imdg(i,1,ids),i,1,ids)
+               xmn(1,i) = ydinc (x(1,i),-xxnc,imdg(i,1,ids),i,1,ids)
+               xmx(1,i) = ydinc (x(1,i),xxnc,imdg(i,1,ids),i,1,ids)
 
             end if 
 

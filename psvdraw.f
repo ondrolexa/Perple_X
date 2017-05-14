@@ -1882,13 +1882,13 @@ c----------------------------------------------------------------------
       end
 c----------------------------------------------------------------------
       subroutine psalbl (x,y,ipr,ivar,ird,ityp,rline,iop9)
-
-      include 'perplex_parameters.h'
  
 c psalbl - subroutine to output reaction(ityp=0) or ip(ityp=1)
 c          name label.
 
       implicit none
+
+      include 'perplex_parameters.h'
 
       character*6 lnms, pnms, string*lchar
 
