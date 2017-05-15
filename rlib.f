@@ -4204,6 +4204,7 @@ c                                 check on physical conditions
      *       (t.gt.623.15.and.p.lt.500d0).or.
      *       (t.le.623.15.and.p.lt.psat2(t))) then 
 c                                 warn
+
             if (iwarn.lt.10) then
                write (*,1000) t, p
                iwarn = iwarn + 1
@@ -9105,10 +9106,6 @@ c---------------------------------------------------------------------
       double precision vlaar
       common/ cst221 /vlaar(m3,m4),jsmod
 
-      integer idaq, jdaq
-      logical laq
-      common/ cxt3 /idaq,jdaq,laq
-
       integer nsub,nttyp,nterm,nspm1,nsite
       double precision acoef,smult,a0
       common/ cst107 /a0(m10,m11),acoef(m10,m11,m0),smult(m10),
@@ -9320,9 +9317,6 @@ c                                 charge balance models
          nq = tnq
          ns = tns 
          nn = tnn 
-
-         idaq = im
-         jdaq = jsmod
 
          nqs = nn + nq + ns
          nqs1 = nqs - 1
@@ -12579,6 +12573,9 @@ c                                 no request for solutions
       if (io9.eq.1.or.isoct.eq.0) then 
 
          isoct = 0 
+c                                 identify the fluid for aqrxdo
+         call aqidst
+
          return 
 
       end if 
@@ -12787,9 +12784,11 @@ c                               reset ikp
             fname(i) = sname(i)
          end do 
 
-      end if 
+      end if
 
       isoct = im
+c                              identify the fluid for aqrxdo
+      call aqidst
 c                              close pseudocompound list
       if (output.and.lopt(10)) close (n8)
 c                              close solution model file
@@ -15863,6 +15862,8 @@ c                                 electrolyte
       else if (ksmod(ids).eq.39) then
 c                                 hybrid molecular
          isp = mstot(ids)
+c                                 set ns in case of aqrxdo
+         ns = isp 
 
          do i = 1, isp
             ins(i) = jspec(ids,i)
@@ -16366,42 +16367,54 @@ c----------------------------------------------------------------------
       is   = 0d0
       rt   = r*t
       ysum = 0d0 
+
+      if (jdaq.ne.0) then
+c                                 a multi species solvent is present: 
 c                                 get the solvent permittivities,
 c                                 call mrkmix to get solvent volumetric props
-      do i = 1, ns
+         do i = 1, ns
  
-         ysum = ysum + x(1,i)
+            ysum = ysum + x(1,i)
 
-      end do
+         end do
 
-      do i = 1, ns
+         do i = 1, ns
 c                                 load normalized molecular fluid composition
-         yf(ins(i)) = x(1,i)/ysum
-
-      end do 
-         
-      call mrkmix (ins,isp,1)
-c                                  save pmv's and v fractions for output
-      do i = 1, ns
-         vf0(ins(i)) = vf(ins(i))
-         v0(ins(i)) = v(ins(i))
-      end do 
-c                                  ysum is just a dummy at this point. 
-      call slvnt1 (ysum)
-
-      do i = 1, ns 
-
-         gso(i) = 0d0
-
-         do j = 1, icp
-
-            if (isnan(mu(j))) cycle
-
-            gso(i) = gso(i) + mu(j)*cp(j,jnd(i))
+            yf(ins(i)) = x(1,i)/ysum
 
          end do 
+         
+         call mrkmix (ins,isp,1)
+c                                  save pmv's and v fractions for output
+         do i = 1, ns
+            vf0(ins(i)) = vf(ins(i))
+            v0(ins(i)) = v(ins(i))
+         end do 
+c                                  ysum is just a dummy at this point. 
+         call slvnt1 (ysum)
 
-      end do 
+         do i = 1, ns 
+
+            gso(i) = 0d0
+
+            do j = 1, icp
+
+               if (isnan(mu(j))) cycle
+
+               gso(i) = gso(i) + mu(j)*cp(j,jnd(i))
+
+            end do 
+
+         end do
+
+      else 
+c                                 solvent is pure water 
+         call slvnt0 (gso(1),v0(1))
+
+         x(1,1) = 1d0
+         vf(1) = 1d0
+
+      end if 
 c                                 compute solute properties 
       do i = 1, aqct 
 
@@ -16879,3 +16892,123 @@ c                                 checked.
        end if
 
        end
+
+      subroutine aqidst
+c-----------------------------------------------------------------------
+c identify the aqueous phase for aqrxdo 
+c-----------------------------------------------------------------------
+      implicit none
+ 
+      include 'perplex_parameters.h'
+
+      integer i
+
+      integer ksmod, ksite, kmsol, knsp
+      common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
+
+      integer isoct
+      common/ cst79 /isoct
+
+      integer idaq, jdaq
+      logical laq
+      common/ cxt3 /idaq,jdaq,laq
+
+      integer eos
+      common/ cst303 /eos(k10)
+
+      integer ipoint,kphct,imyn
+      common/ cst60 /ipoint,kphct,imyn
+
+      character specie*4
+      integer ins, isp
+      common/ cxt33 /isp,ins(nsp),specie(nsp)
+
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
+
+      integer jnd
+      double precision aqg,q2,rt
+      common/ cxt2 /aqg(m4),q2(m4),rt,jnd(m4)
+c-----------------------------------------------------------------------
+c                                 look among solutions:
+      do i = 1, isoct
+
+         if (ksmod(i).eq.20.or.ksmod(i).eq.39) then 
+            idaq = i
+            jdaq = ksmod(i)
+            return
+          end if 
+
+      end do 
+c                                 else look for H2O
+      do i = 1, ipoint
+
+         if (eos(i).eq.101) then
+            idaq = -i
+            jnd(1) = i
+c                                 set solvent/species pointers on the
+c                                 off chance they will be used
+            ns = 1
+            ins(1) = 1
+            isp = 1
+            return
+         end if 
+
+      end do 
+
+      end 
+
+       subroutine slvnt0 (gsolv,vsolv)
+c-----------------------------------------------------------------------
+c sets solvent p-t dependent properties for pure water: permittivity (eps), 
+c molar mass, debye-hueckel (adh), and gHKF function.
+c-----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      double precision cdh, gsolv, vsolv
+
+      double precision gfunc, gcpd, epsh2o
+
+      external gfunc, gcpd, epsh2o
+
+      double precision vol
+      common/ cst26 /vol
+
+      double precision p,t,xco2,u1,u2,tr,pr,r,ps
+      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
+
+      integer jnd
+      double precision aqg,q2,rt
+      common/ cxt2 /aqg(m4),q2(m4),rt,jnd(m4)
+
+      integer ihy, ioh
+      double precision gf, epsln, epsln0, adh, msol
+      common/ cxt37 /gf, epsln, epsln0, adh, msol, ihy, ioh
+
+      integer idaq, jdaq
+      logical laq
+      common/ cxt3 /idaq,jdaq,laq
+
+      save cdh
+      data cdh/-5661800.47810d0/
+c-----------------------------------------------------------------------
+      gsolv  = gcpd(-idaq,.true.)
+c                                 calling gcpd will get the molar volume (cm3/mol) 
+c                                 in cst26 as vol
+      vsolv = vol 
+      msol   = 18.01528d-3
+      epsln0 = 78.47d0
+      epsln0 = 81.39d0
+      epsln  = epsh2o (vol/1d1)
+c                                 Debye-Hueckel factor, A[cgs] = -q^3*sqrt(NA)/(4*Pi*k^(3/2))
+c                                 *(NH2O/(10*vh2o))^(1/2)/(epsilon*T)^(3/2) for ln(gamma) = +A*....
+c                                 for reasons of stupidity this is set up for v in j/bar
+      adh = cdh/dsqrt(vol/1d1*(epsln*t)**3)
+c                                 shock et al 1992 g function (cgs solvent density),
+c                                 used by hkf
+      gf = gfunc (msol*1d3/vol)
+c
+
+      end
