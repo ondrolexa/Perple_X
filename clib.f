@@ -1587,8 +1587,6 @@ c                                 store thermodynamic parameters:
          end if 
 
       end do
-c                                reset iopt(32) [# aq species output]
-      if (iopt(32).gt.aqct) iopt(32) = aqct
 c                                reset ipoint counter, but do not 
 c                                reset iphct, because the compositions
 c                                of the make phases are necessary for

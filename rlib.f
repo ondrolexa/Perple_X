@@ -16708,7 +16708,6 @@ c            write (*,1030) names(jnd(i)),x(1,i)/msol,x(1,i),int(gso(i)),
 c     *                      v(ins(i)),eps(i),v0(ins(i)),eps0(i)
 c1030  format (a8,2x,f7.4,5x,f7.5,5x,i8,2x,f9.4,4x,f8.5,5x,f9.4,5x,f8.5)
 
-
       end 
 
       subroutine rankem (a,ind,r,n)
@@ -16893,6 +16892,114 @@ c                                 checked.
 
        end
 
+      subroutine aqname 
+c----------------------------------------------------------------
+c makes a list of porperty names for and saves then in dname(iprop)
+c called only by chsprp for back-calculated aqueous speciation
+c----------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer i, icx, jprop
+
+      character spec(5)*14
+
+      integer inv
+      character dname*14, title*162
+      common/ cst76 /inv(i11),dname(i11),title
+
+      character cname*5
+      common/ csta4  /cname(k5)
+
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
+
+      integer ihy, ioh
+      double precision gf, epsln, epsln0, adh, msol
+      common/ cxt37 /gf, epsln, epsln0, adh, msol, ihy, ioh
+
+      character specie*4
+      integer isp, ins
+      common/ cxt33 /isp,ins(nsp),specie(nsp)
+
+      integer iaq, aqst, aqct
+      character aqnam*8
+      double precision aqcp, aqtot
+      common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
+
+      integer icomp,istct,iphct,icp
+      common/ cst6  /icomp,istct,iphct,icp  
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      integer jnd
+      double precision aqg,qq,rt
+      common/ cxt2 /aqg(m4),qq(m4),rt,jnd(m4)
+
+      character names*8
+      common/ cst8  /names(k1)
+
+      save spec 
+      data spec/'delta_pH','pH','permittivity','I,m','total_molality'/
+c----------------------------------------------------------------------
+c                                 bulk composition, wt% or mol 
+      do i = i, icp 
+
+         if (lopt(23)) then
+            write (dname(i),'(a,a)') cname(i),',wt%     '
+         else 
+            write (dname(i),'(a,a)') cname(i),',mol     '
+         end if
+
+         call unblnk(dname(i))  
+
+      end do
+
+      jprop = icp 
+c                                 solvent composition, mol or molal
+      do i = 1, ns 
+
+         jprop = jprop + 1
+
+         if (lopt(26)) then
+c                                 mole fraction
+            write (dname(jprop),'(a,a)') 'y_',names(jnd(i))
+         else 
+c                                 molality
+            write (dname(jprop),'(a,a)') 'm_',names(jnd(i))
+         end if  
+
+         call unblnk(dname(jprop))   
+
+       end do    
+c                                 solute composition, mol or molal
+      do i = 1, aqct 
+
+         jprop = jprop + 1
+
+         if (lopt(27)) then
+c                                 mole fraction
+            write (dname(jprop),'(a,a)') 'y_',names(jnd(i))
+         else 
+c                                 molality
+            write (dname(jprop),'(a,a)') 'm_',names(jnd(i))
+         end if  
+
+         call unblnk(dname(jprop))   
+
+      end do 
+c                                 special variables
+      do i = 1, 5 
+         jprop = jprop + 1
+         dname(jprop) = spec(i)
+      end do 
+
+      end  
+
       subroutine aqidst
 c-----------------------------------------------------------------------
 c identify the aqueous phase for aqrxdo 
@@ -16926,10 +17033,42 @@ c-----------------------------------------------------------------------
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
 
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      integer jtest,jpot
+      common/ debug /jtest,jpot
+
       integer jnd
       double precision aqg,q2,rt
       common/ cxt2 /aqg(m4),q2(m4),rt,jnd(m4)
 c-----------------------------------------------------------------------
+c                                 set option flags if necessary
+      if (lopt(25)) then 
+
+         if (aqct.eq.0) then 
+
+            call warn (99,0d0,0,' no data for aqueous species, '//
+     *                          'aqueous_output set = F (AQIDST)')
+
+         else if (jpot.ne.0) then 
+
+            call warn (99,0d0,0,' aqueous_output is T, but '//
+     *                          'dependent_potentials is off, '//
+     *                'dependent_potentials set = on (AQIDST)')
+
+         end if 
+c                                reset iopt(32) [# aq species output]
+         if (iopt(32).gt.aqct) iopt(32) = aqct
+
+      else
+
+         aqct = 0
+         iopt(32) = 0
+
+      end if 
 c                                 look among solutions:
       do i = 1, isoct
 

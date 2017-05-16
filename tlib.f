@@ -19,7 +19,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a)') 
-     *      'Perple_X version 6.7.7, source updated May 11, 2017.'
+     *      'Perple_X version 6.7.7, source updated May 16, 2017.'
 
       end
 
@@ -352,6 +352,8 @@ c                                 refinement_points_II
       iopt(31) = 5
 c                                 maximum number of aqueous species
       iopt(32) = 20
+c                                 output back-calculated solute speciation
+      lopt(25) = .true.
 c                                 refinement_threshold
       nopt(32) = 1d4
       lopt(32) = .true.
@@ -424,6 +426,14 @@ c                                 phase composition key
                iopt(2) = 0
             end if 
             valu(2) = val
+
+         else if (key.eq.'aqueous_species') then
+
+            read (strg,*) iopt(32)
+
+         else if (key.eq.'aqueous_output') then
+
+            if (val.ne.'T') lopt(25) = .false. 
 
          else if (key.eq.'hybrid_EoS_H2O') then
 
@@ -1310,7 +1320,8 @@ c                                 logarithmic_p, bad_number
 
       if (iam.eq.3) then 
 c                                 WERAMI input/output options
-         write (n,1230) lopt(15),lopt(14),nopt(7),lopt(22),valu(2),
+         write (n,1230) lopt(25),iopt(32),l9,valu(26),valu(27),
+     *                  lopt(15),lopt(14),nopt(7),lopt(22),valu(2),
      *                  valu(21),valu(3),valu(4),lopt(6),valu(22),
      *                  lopt(21),lopt(24),valu(14),lopt(19),lopt(20)
 c                                 WERAMI info file options
@@ -1321,7 +1332,8 @@ c                                 WERAMI thermodynamic options
 
       else if (iam.eq.2) then 
 c                                 MEEMUM input/output options
-         write (n,1231) lopt(14),nopt(7),lopt(22),valu(2),
+         write (n,1231) lopt(25),iopt(32),l9,lopt(14),nopt(7),lopt(22),
+     *                  valu(2),
      *                  valu(21),valu(3),lopt(6),valu(22),lopt(21),
      *                  lopt(24),valu(14),lopt(19),lopt(20)
 
@@ -1466,6 +1478,12 @@ c                                 thermo options for frendly
 1220  format (/,2x,'Composition options:',//,
      *        4x,'closed_c_space         ',l1,10x,'F [T]')
 1230  format (/,2x,'Input/Output options:',//,
+     *        4x,'aqueous_output         ',l1,10x,'[F] T',/
+     *        4x,'aqeuous_species        ',i3,8x,'[20] 0-',i3,/,
+     *        4x,'aqueous_solvent_conc   ',a3,8x,'[y] m: y -> '//
+     *                               'mol fraction, m - molality',
+     *        4x,'aqueous_solute_conc    ',a3,8x,'[y] m: y -> '//
+     *                               'mol fraction, m - molality',
      *        4x,'spreadsheet            ',l1,10x,'[F] T',/,
      *        4x,'logarithmic_p          ',l1,10x,'[F] T',/,
      *        4x,'bad_number         ',f7.1,8x,'[0.0]',/,
@@ -2545,6 +2563,8 @@ c----------------------------------------------------------------------
          write (*,91)
       else if (ier.eq.92) then 
          write (*,92) int, l7, char, (l7 - 1)/2**(grid(3,2)-1) + 1
+      else if (ier.eq.99) then
+         write (*,99)
       else if (ier.eq.106) then
          write (*,106) char
       else if (ier.eq.108) then
@@ -2833,6 +2853,7 @@ c     *          ' (SWASH, see program documentation Eq 2.3)',/)
      *        'perplex_option.dat',/,'The program will continue ',
      *        'with an effective grid resolution of ',i4,
      *        ' points.')
+99    format ('**warning ver099** ',a)
 106   format ('**warning ver106** programming error in ',a)
 108   format (/,'**warning ver108** wway, a phase field with the '
      *         ,'following',/,' reaction is stable on both ',

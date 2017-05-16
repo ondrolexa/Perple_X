@@ -5,6 +5,8 @@
         | For documentation refer to:
         |         www.perplex.ethz.ch/perplex_options.html
 |----------------------------------------------------------------------
+aqueous_output             T    | T[rue] or F[alse], output back-calculated solute chemistry when electrolyte data is available
+aqueous_species            20   | maximum number of solute species output (ranked by concentration)
 1d_path                  40 150 | exploratory and autorefine (grid parameters keyword group)
 approx_alpha               T    | use approximation exp(x)~1+x to evaluate expansivity effect on volume
 Anderson-Gruneisen         F    | Anderson-Gruneisen parameter correction for polythermal Murnaghan and Birch-Murnaghan

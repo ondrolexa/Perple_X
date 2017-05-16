@@ -421,7 +421,7 @@ c                                 test for non-NaN chemical potentials
          write (lu,1070) 2, jbulk - ntot + 2 
       end if 
 
-      if (laq) then 
+      if (laq.and.lopt(25)) then 
 
          do i = 1, ntot
             

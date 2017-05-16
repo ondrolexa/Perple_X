@@ -3466,6 +3466,7 @@ c 36                All properties of a phase or the system
 c 37                Absolute amounts
 c 38                Multiple property grid for system and phases
 c 39                heat capacity ratio (cp/cv)
+c 40                Back-calculated aqueous solute chemistry
 c----------------------------------------------------------------
       implicit none
 
@@ -3473,7 +3474,7 @@ c----------------------------------------------------------------
 
       integer i, j, icx, kprop, ier, lop, komp, mprop
 
-      parameter (kprop=39)
+      parameter (kprop=40)
 
       character propty(kprop)*60, y*1, pname*10
 
@@ -3509,6 +3510,10 @@ c----------------------------------------------------------------
 
       integer hcp,idv
       common/ cst52  /hcp,idv(k7) 
+
+      integer idaq, jdaq
+      logical laq
+      common/ cxt3 /idaq,jdaq,laq
 
       integer inv
       character dname*14, title*162
@@ -3559,7 +3564,8 @@ c----------------------------------------------------------------
      *            'All phase &/or system properties',
      *            'Absolute amount (Vol, Mol, or Wt) of a phase',
      *            'Multiple property output',
-     *            'Heat capacity ratio (Cp/Cv)'/
+     *            'Heat capacity ratio (Cp/Cv)',
+     *            'Back-calculated aqueous solute chemistry'/
 c----------------------------------------------------------------------
       do i = 1, istab
 
@@ -3640,7 +3646,29 @@ c                                 write blurb about units
                 write (*,1080)
              else if (lop.eq.37) then 
                 write (*,1090)
-             end if 
+             end if
+
+         else if (lop.eq.40) then 
+
+            if (iprop.gt.1) then 
+c                                eject if other props already chosen:
+               call warn (54,nopt(1),icx,'CHSPRP')
+               cycle
+
+            else if (.not.lopt(25)) then 
+c                                 eject if no aqueous species
+               call warn (99,0d0,0,'missing data for back-'//
+     *                             'calculation of solute speciation')
+               cycle
+
+            else if (.not.gflu) then 
+c                                 eject if no fluid phase
+               call warn (99,0d0,0,'no stable fluid phase was '//
+     *                             'identified in this calculation')
+               cycle
+            end if 
+c                                 identify the solvent
+            icx = idaq
              
          else if (lop.eq.25) then 
 c                                eject if other props already chosen:
@@ -3823,7 +3851,7 @@ c                                 get phase name
 
          end if 
 c                                 make dependent variable names:
-         if (lop.eq.25.or.lop.eq.36.or.lop.eq.38) then
+         if (lop.eq.25.or.lop.eq.36.or.lop.eq.38.or.lop.eq.40) then
 c                                 multi prop options, only allowed as 
 c                                 single choices.
             kop(1) = lop
@@ -3860,6 +3888,10 @@ c                                 kop(1) = 38
                do i = 1, iprop
                   call gtname (kop(i+1),icx,i,komp,pname)
                end do 
+
+            else if (lop.eq.40) then 
+
+               call aqnams
 
             end if 
 
