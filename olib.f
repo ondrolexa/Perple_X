@@ -425,13 +425,16 @@ c                                 test for non-NaN chemical potentials
 
          do i = 1, ntot
             
-            if (kkp(i).eq.idaq) call aqrxdo (lu)
+            if (kkp(i).eq.idaq) call aqrxdo (i,lu)
 
          end do 
 
       end if 
 
+      write (lu,1010)
+
 1000  format (/,40('-'),//,'Stable phases at:')
+1010  format (/,40('-'),/)
 1020  format (/,'Phase Compositions (',a,'):',
      *        /,19x,'wt %',6x,'vol %',5x,'mol %',5x,'mol  ',
      *          5x,20(1x,a,3x))
@@ -444,8 +447,8 @@ c                                 test for non-NaN chemical potentials
      *          ' Specific Entropy (J/K/m3) = ',g12.6,/,
      *          ' Heat Capacity (J/K/kg) = ',g12.6,/,
      *          ' Specific Heat Capacity (J/K/m3) = ',g12.6,/)
-1070  format ('Variance (c-p+',i1,') = ',i2,//,40('-'),/)
-1071  format (/,'Variance (c-p+',i1,') = ',i2,//,40('-'),/)
+1070  format ('Variance (c-p+',i1,') = ',i2,/)
+1071  format (/,'Variance (c-p+',i1,') = ',i2,/)
 1080  format (/,16x,'Complete Assemblage',15x,'Solid+Melt Only',
      *        /,14x,'mol',7x,' mol %',6x,'wt %',9x,' mol %',6x,'wt %')
 1100  format (/,' Solid Enthalpy (J/kg) = ',g12.6,/,
@@ -626,7 +629,7 @@ c                                 no data test
          kcoor = ico(jd)
 c                                 get the dependent potentials
          if (jpot.ne.1) then
- 
+
             do i = 1, jbulk
                mu(i) = 0d0
             end do 
@@ -639,6 +642,15 @@ c                                 get the dependent potentials
                   mu(j) = mu(j) + wt(i) * mus(j,kd)
                end do 
 
+            end do 
+
+            lmu = .false.
+
+            do i = 1, jbulk
+               if (.not.isnan(mu(i))) then 
+                  lmu = .true.
+                  exit  
+               end if  
             end do 
 
          end if

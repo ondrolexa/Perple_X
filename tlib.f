@@ -19,7 +19,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a)') 
-     *      'Perple_X version 6.7.7, source updated May 16, 2017.'
+     *      'Perple_X version 6.7.8, source updated May 18, 2017.'
 
       end
 
@@ -35,7 +35,7 @@ c----------------------------------------------------------------------
 
       if (new.eq.'008'.or.new.eq.'011'.or.new.eq.'670'.or.
      *    new.eq.'672'.or.new.eq.'673'.or.new.eq.'674'.or.
-     *    new.eq.'675'.or.new.eq.'676') then 
+     *    new.eq.'675'.or.new.eq.'676'.or.new.eq.'678') then 
 
          chksol = .true.
 
@@ -147,10 +147,10 @@ c                                 precision stuff used in lpnag
       integer iam
       common/ cst4 /iam
 
-      logical badend
+      logical badend, sitchk
       integer ldsol
       double precision one, zero
-      common/ cxt36 /one,zero,ldsol(m4,h9),badend(m4,h9)
+      common/ cxt36 /one,zero,ldsol(m4,h9),badend(m4,h9),sitchk(h9)
 
       logical mus
       double precision mu, gmax
@@ -354,6 +354,12 @@ c                                 maximum number of aqueous species
       iopt(32) = 20
 c                                 output back-calculated solute speciation
       lopt(25) = .true.
+c                                 aq_solvent_composition (true = molar)
+      lopt(26) = .true.
+      valu(26) = 'y'
+c                                 aq_solute_composition (true = molal)
+      lopt(27) = .true.
+      valu(27) = 'm'
 c                                 refinement_threshold
       nopt(32) = 1d4
       lopt(32) = .true.
@@ -433,7 +439,21 @@ c                                 phase composition key
 
          else if (key.eq.'aqueous_output') then
 
-            if (val.ne.'T') lopt(25) = .false. 
+            if (val.ne.'T') lopt(25) = .false.
+
+         else if (key.eq.'aq_solvent_composition') then
+
+            if (val.ne.'y') then
+               lopt(25) = .false.
+               valu(25) = 'm'
+            end if 
+
+         else if (key.eq.'aq_solute_composition') then
+
+            if (val.ne.'m') then
+               lopt(26) = .false.
+               valu(26) = 'y'
+            end if 
 
          else if (key.eq.'hybrid_EoS_H2O') then
 
@@ -1332,8 +1352,8 @@ c                                 WERAMI thermodynamic options
 
       else if (iam.eq.2) then 
 c                                 MEEMUM input/output options
-         write (n,1231) lopt(25),iopt(32),l9,lopt(14),nopt(7),lopt(22),
-     *                  valu(2),
+         write (n,1231) lopt(25),iopt(32),l9,valu(26),valu(27),
+     *                  lopt(14),nopt(7),lopt(22),valu(2),
      *                  valu(21),valu(3),lopt(6),valu(22),lopt(21),
      *                  lopt(24),valu(14),lopt(19),lopt(20)
 
@@ -1480,10 +1500,10 @@ c                                 thermo options for frendly
 1230  format (/,2x,'Input/Output options:',//,
      *        4x,'aqueous_output         ',l1,10x,'[F] T',/
      *        4x,'aqeuous_species        ',i3,8x,'[20] 0-',i3,/,
-     *        4x,'aqueous_solvent_conc   ',a3,8x,'[y] m: y -> '//
-     *                               'mol fraction, m - molality',
-     *        4x,'aqueous_solute_conc    ',a3,8x,'[y] m: y -> '//
-     *                               'mol fraction, m - molality',
+     *        4x,'aqueous_solvent_conc   ',a3,8x,'[y] m: y => '//
+     *                               'mol fraction, m => molality',
+     *        4x,'aqueous_solute_conc    ',a3,8x,'y [m]: y => '//
+     *                               'mol fraction, m => molality',
      *        4x,'spreadsheet            ',l1,10x,'[F] T',/,
      *        4x,'logarithmic_p          ',l1,10x,'[F] T',/,
      *        4x,'bad_number         ',f7.1,8x,'[0.0]',/,
@@ -1501,6 +1521,12 @@ c                                 thermo options for frendly
      *        4x,'pause_on_error         ',l1,10x,'[T] F',/,
      *        4x,'poisson_test           ',l1,10x,'[F] T')
 1231  format (/,2x,'Input/Output options:',//,
+     *        4x,'aqueous_output         ',l1,10x,'[F] T',/
+     *        4x,'aqeuous_species        ',i3,8x,'[20] 0-',i3,/,
+     *        4x,'aqueous_solvent_conc   ',a3,8x,'[y] m: y => '//
+     *                               'mol fraction, m => molality',
+     *        4x,'aqueous_solute_conc    ',a3,8x,'y [m]: y => '//
+     *                               'mol fraction, m => molality',
      *        4x,'logarithmic_p          ',l1,10x,'[F] T',/,
      *        4x,'bad_number         ',f7.1,8x,'[0.0]',/,
      *        4x,'composition_constant   ',l1,10x,'[F] T',/,
@@ -2539,6 +2565,11 @@ c----------------------------------------------------------------------
          write (*,58)
       else if (ier.eq.59) then
          write (*,59) char
+         if (int.eq.0) then 
+            write (*,590)
+         else 
+            write (*,591)
+         end if 
       else if (ier.eq.60) then
          write (*,60) char
       else if (ier.eq.63) then
@@ -2564,7 +2595,7 @@ c----------------------------------------------------------------------
       else if (ier.eq.92) then 
          write (*,92) int, l7, char, (l7 - 1)/2**(grid(3,2)-1) + 1
       else if (ier.eq.99) then
-         write (*,99)
+         write (*,99) char
       else if (ier.eq.106) then
          write (*,106) char
       else if (ier.eq.108) then
@@ -2803,8 +2834,12 @@ c     *          ' (SWASH, see program documentation Eq 2.3)',/)
      *         ,'following reaction',/,' is inconsistent with the ',
      *          'invariant equilibrium.',/)
 59    format (/,'**warning ver059** endmember ',a,
-     *        ' has invalid site population.',/,'It will be retained',
+     *        ' has invalid site population.')
+590   format ('It will be retained',
      *        ' as a place-holder with zero concentration',/)
+591   format ('It will be retained and allowed finite concentration ',
+     *        'because site_check_override',/,'specified for this ',
+     *        'solution model',/)
 60    format (/,'**warning ver060** non-fatal programming error ',
      *          'routine:',a,/)
 63    format (/,'**warning ver063** wway, invariant point on an edge?',

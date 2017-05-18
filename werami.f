@@ -1008,7 +1008,7 @@ c-----------------------------------------------------------------------
 
       integer itri(4), jtri(4), ijpt, lop, icx, komp, i, dim
 
-      double precision wt(3)
+      double precision wt(3), mode
 
       integer iopt
       logical lopt
@@ -1083,6 +1083,18 @@ c                                 no need to call triang/getlow
                   call xy2ij (itri(1),jtri(1),nodata)
 
                   prop(i) = iap(igrd(itri(1),jtri(1)))
+           
+               else if (lop.eq.40) then 
+c                                 back calculated solute chemistry, call
+c                                 getprp (mode computation) to check if the
+c                                 solvent is stable, and to decide which phase (komp)
+c                                 is to be used in the case of immiscibility.
+                  call getprp (mode,7,icx,komp,.false.) 
+c                                 do the speciation and output, -1 signals 
+c                                 tab file output.  
+                  call aqrxdo (komp,-1)
+
+                  exit 
 
                else 
 c                                 general properties
@@ -1233,6 +1245,8 @@ c   lop  - flag indicating the property chosen
 c   icx  - if lop = 6, the component chosen
 c   icx  - if the identity of the phase chosen
 c          icx = 0 if bulk properties requested.
+c   komp - if lop = 7, output pointer to the phase in assemblage
+c          if lop = 8, input pointer to component
 
 c   icps - if lop = 8, the indices of the components. 
 c   
@@ -1520,6 +1534,7 @@ c                                 compressibility
 c                                 mode (%)
                    call gtmode (mode,id)
                    prop = mode(iopt(3)+1)
+                   komp = id 
                else if (lop.eq.8) then 
 c                                 composition (external function)
                   prop = gtcomp(id,icx,komp)
@@ -3669,6 +3684,8 @@ c                                 eject if no fluid phase
             end if 
 c                                 identify the solvent
             icx = idaq
+            kop(1) = lop
+            kcx(1) = icx
              
          else if (lop.eq.25) then 
 c                                eject if other props already chosen:
@@ -3891,7 +3908,7 @@ c                                 kop(1) = 38
 
             else if (lop.eq.40) then 
 
-               call aqnams
+               call aqname
 
             end if 
 
@@ -4236,5 +4253,117 @@ c-----------------------------------------------------------------------
          end do 
 
       end if 
+
+      end
+
+      subroutine aqname 
+c----------------------------------------------------------------
+c makes a list of porperty names for and saves then in dname(iprop)
+c called only by chsprp for back-calculated aqueous speciation
+c----------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer i
+
+      character spec(6)*14
+
+      integer inv
+      character dname*14, title*162
+      common/ cst76 /inv(i11),dname(i11),title
+
+      character cname*5
+      common/ csta4  /cname(k5)
+
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
+
+      character specie*4
+      integer isp, ins
+      common/ cxt33 /isp,ins(nsp),specie(nsp)
+
+      integer iaq, aqst, aqct
+      character aqnam*8
+      double precision aqcp, aqtot
+      common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
+
+      integer icomp,istct,iphct,icp
+      common/ cst6  /icomp,istct,iphct,icp  
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      character*14 tname
+      integer kop,kcx,k2c,iprop
+      logical kfl
+      double precision prop,prmx,prmn
+      common/ cst77 /prop(i11),prmx(i11),prmn(i11),kop(i11),kcx(i11),
+     *               k2c(i11),iprop,kfl(i11),tname
+
+      integer jnd
+      double precision aqg,q2,rt
+      common/ cxt2 /aqg(m4),q2(m4),rt,jnd(m4)
+
+      character names*8
+      common/ cst8  /names(k1)
+
+      save spec 
+      data spec/'pH-neutral_pH','pH','error_pH','permittivity','I,m',
+     *          'tot_solute_m'/
+c----------------------------------------------------------------------
+c                                 bulk composition, wt% or mol 
+      do i = 1, icp 
+
+         if (lopt(23)) then
+            write (dname(i),'(a,a)') cname(i),',wt%     '
+         else 
+            write (dname(i),'(a,a)') cname(i),',mol     '
+         end if
+
+         call unblnk(dname(i))  
+
+      end do
+
+      iprop = icp 
+c                                 solvent composition, mol or molal
+      do i = 1, ns 
+
+         iprop = iprop + 1
+
+         if (lopt(26)) then
+c                                 mole fraction
+            write (dname(iprop),'(a,a)') 'y_',names(jnd(i))
+         else 
+c                                 molality
+            write (dname(iprop),'(a,a)') 'm_',names(jnd(i))
+         end if  
+
+         call unblnk(dname(iprop))   
+
+       end do    
+c                                 solute composition, mol or molal
+      do i = 1, aqct 
+
+         iprop = iprop + 1
+
+         if (lopt(27)) then
+c                                 mole fraction
+            write (dname(iprop),'(a,a)') 'm_',names(jnd(i))
+         else 
+c                                 molality
+            write (dname(iprop),'(a,a)') 'y_',names(jnd(i))
+         end if  
+
+         call unblnk(dname(iprop))   
+
+      end do 
+c                                 special variables
+      do i = 1, 6 
+         iprop = iprop + 1
+         dname(iprop) = spec(i)
+      end do 
 
       end

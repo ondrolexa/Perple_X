@@ -130,12 +130,13 @@ c-----------------------------------------------------------------------
       character cmpnt*5, dname*80
       common/ csta5 /cl(k0),cmpnt(k0),dname
 
+      logical sitck
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
      *        kstot,rkord,xtyp
       double precision wg,wk,reach
-      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),
-     *      reach,iend(m4),isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),
-     *      isp(mst),rkord(m18),isite,iterm,iord,istot,jstot,kstot,xtyp
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),reach,iend(m4),
+     *      isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),isp(mst),
+     *      rkord(m18),isite,iterm,iord,istot,jstot,kstot,xtyp,sitck
 
       integer jsmod
       double precision vlaar

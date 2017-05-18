@@ -3079,13 +3079,13 @@ c----------------------------------------------------------------------
 
       external iscnlt, iscan
 
+      logical sitck
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
      *        kstot,rkord,xtyp
       double precision wg,wk,reach
-      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),
-     *      reach,iend(m4),isub(m1,m2,2),
-     *      imd(msp,mst),insp(m4),ist(mst),isp(mst),rkord(m18),isite,
-     *      iterm,iord,istot,jstot,kstot,xtyp
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),reach,iend(m4),
+     *      isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),isp(mst),
+     *      rkord(m18),isite,iterm,iord,istot,jstot,kstot,xtyp,sitck
 
       integer length,iblank,icom
       character chars*1
@@ -3252,7 +3252,7 @@ c                                 assign data
 
       end 
 
-      subroutine readop (idim,jlaar,kstot,reach,tname)
+      subroutine readop (idim,jlaar,kstot,reach,sitck,tname)
 c----------------------------------------------------------------------
 c readop - tail of solution model to find optional dqf,
 c          van laar size parameters, or reach_increment
@@ -3273,6 +3273,8 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
+      logical sitck
+
       double precision reach 
 
       integer ier, idim, jlaar, kstot, i
@@ -3291,7 +3293,8 @@ c----------------------------------------------------------------------
 
       jlaar = 0 
       idqf = 0 
-      reach = 0d0 
+      reach = 0d0
+      sitck = .true.  
 
       do 
 
@@ -3323,6 +3326,10 @@ c                              read dqf data:
 
             read (val,*) i
             reach = dfloat(i)
+
+         else if (key.eq.'site_check_override') then 
+
+            sitck = .false.
 
          else 
 
@@ -3821,13 +3828,13 @@ c-----------------------------------------------------------------
      *      nsite,nspm1(m10),nterm(m10,m11),nsub(m10,m11,m0,m12),
      *      nttyp(m10,m11,m0)
 
+      logical sitck
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
      *        kstot,rkord,xtyp
       double precision wg,wk,reach
-      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),
-     *      reach,iend(m4),isub(m1,m2,2),
-     *      imd(msp,mst),insp(m4),ist(mst),isp(mst),rkord(m18),isite,
-     *      iterm,iord,istot,jstot,kstot,xtyp
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),reach,iend(m4),
+     *      isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),isp(mst),
+     *      rkord(m18),isite,iterm,iord,istot,jstot,kstot,xtyp,sitck
 c-----------------------------------------------------------------
 
       if (nsite.gt.m10) call error (1,a0(1,1),nsite,'m10')
@@ -5574,13 +5581,13 @@ c---------------------------------------------------------------------
       double precision vlaar
       common/ cst221 /vlaar(m3,m4),jsmod
 
+      logical sitck
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
      *        kstot,rkord,xtyp
       double precision wg,wk,reach
-      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),
-     *      reach,iend(m4),isub(m1,m2,2),
-     *      imd(msp,mst),insp(m4),ist(mst),isp(mst),rkord(m18),isite,
-     *      iterm,iord,istot,jstot,kstot,xtyp
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),reach,iend(m4),
+     *      isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),isp(mst),
+     *      rkord(m18),isite,iterm,iord,istot,jstot,kstot,xtyp,sitck
 c----------------------------------------------------------------------
 
       if (jsmod.eq.20) then
@@ -5711,13 +5718,13 @@ c                                 local input variables
       common/ cst141 /depnu(j4,j3),denth(j3,3),iddeps(j4,j3),norder,
      *      nr(j3)
 
+      logical sitck
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
      *        kstot,rkord,xtyp
       double precision wg,wk,reach
       common/ cst108 /wg(m1,m3),wk(m16,m17,m18),reach,iend(m4),
-     *      isub(m1,m2,2),
-     *      imd(msp,mst),insp(m4),ist(mst),isp(mst),rkord(m18),isite,
-     *      iterm,iord,istot,jstot,kstot,xtyp
+     *      isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),isp(mst),
+     *      rkord(m18),isite,iterm,iord,istot,jstot,kstot,xtyp,sitck
 
       double precision xmn,xmx,xnc
       common/ cxt108 /xmn(mst,msp),xmx(mst,msp),xnc(mst,msp)
@@ -5829,13 +5836,13 @@ c                                 local input variables
      *      nsite,nspm1(m10),nterm(m10,m11),nsub(m10,m11,m0,m12),
      *      nttyp(m10,m11,m0)
 
+      logical sitck
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
      *        kstot,rkord,xtyp
       double precision wg,wk,reach
-      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),
-     *      reach,iend(m4),isub(m1,m2,2),
-     *      imd(msp,mst),insp(m4),ist(mst),isp(mst),rkord(m18),isite,
-     *      iterm,iord,istot,jstot,kstot,xtyp
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),reach,iend(m4),
+     *      isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),isp(mst),
+     *      rkord(m18),isite,iterm,iord,istot,jstot,kstot,xtyp,sitck
 
       double precision xmn,xmx,xnc
       common/ cxt108 /xmn(mst,msp),xmx(mst,msp),xnc(mst,msp)
@@ -6353,13 +6360,13 @@ c---------------------------------------------------------------------
       double precision xmn,xmx,xnc
       common/ cxt108 /xmn(mst,msp),xmx(mst,msp),xnc(mst,msp)
 
+      logical sitck
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
      *        kstot,rkord,xtyp
       double precision wg,wk,reach
-      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),
-     *      reach,iend(m4),isub(m1,m2,2),
-     *      imd(msp,mst),insp(m4),ist(mst),isp(mst),rkord(m18),isite,
-     *      iterm,iord,istot,jstot,kstot,xtyp
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),reach,iend(m4),
+     *      isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),isp(mst),
+     *      rkord(m18),isite,iterm,iord,istot,jstot,kstot,xtyp,sitck
 
       integer iorig,jnsp,iy2p
       common / cst159 /iorig(m4),jnsp(m4),iy2p(m4)
@@ -6470,13 +6477,13 @@ c---------------------------------------------------------------------
       character mname*8
       common/ cst18a /mname(m4)
 
+      logical sitck
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
      *        kstot,rkord,xtyp
       double precision wg,wk,reach
       common/ cst108 /wg(m1,m3),wk(m16,m17,m18),reach,iend(m4),
-     *      isub(m1,m2,2),
-     *      imd(msp,mst),insp(m4),ist(mst),isp(mst),rkord(m18),isite,
-     *      iterm,iord,istot,jstot,kstot,xtyp
+     *      isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),isp(mst),
+     *      rkord(m18),isite,iterm,iord,istot,jstot,kstot,xtyp,sitck
 
       integer mdep,idep,jdep,ndph
       double precision nu,y2p
@@ -6699,13 +6706,13 @@ c----------------------------------------------------------------------
       double precision vlaar
       common/ cst221 /vlaar(m3,m4),jsmod
 
+      logical sitck
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
      *        kstot,rkord,xtyp
       double precision wg,wk,reach
-      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),
-     *      reach,iend(m4),isub(m1,m2,2),
-     *      imd(msp,mst),insp(m4),ist(mst),isp(mst),rkord(m18),isite,
-     *      iterm,iord,istot,jstot,kstot,xtyp
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),reach,iend(m4),
+     *      isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),isp(mst),
+     *      rkord(m18),isite,iterm,iord,istot,jstot,kstot,xtyp,sitck
 
       integer iddeps,norder,nr 
       double precision depnu,denth
@@ -6816,13 +6823,13 @@ c---------------------------------------------------------------------
      *      nsite,nspm1(m10),nterm(m10,m11),nsub(m10,m11,m0,m12),
      *      nttyp(m10,m11,m0)
 
+      logical sitck
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
      *        kstot,rkord,xtyp
       double precision wg,wk,reach
       common/ cst108 /wg(m1,m3),wk(m16,m17,m18),reach,iend(m4),
-     *      isub(m1,m2,2),
-     *      imd(msp,mst),insp(m4),ist(mst),isp(mst),rkord(m18),isite,
-     *      iterm,iord,istot,jstot,kstot,xtyp
+     *      isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),isp(mst),
+     *      rkord(m18),isite,iterm,iord,istot,jstot,kstot,xtyp,sitck
 
       double precision xmn,xmx,xnc
       common/ cxt108 /xmn(mst,msp),xmx(mst,msp),xnc(mst,msp)
@@ -7139,7 +7146,7 @@ c                                 old versions:
       end do 
 c                              look for van laar and/or dqf parameters
 c                              or the end of model marker
-      call readop (idim,jlaar,istot-mdep,reach,tname)
+      call readop (idim,jlaar,istot-mdep,reach,sitck,tname)
 
       if (jlaar.ne.0) then
 
@@ -7177,13 +7184,13 @@ c---------------------------------------------------------------------
       double precision xmn,xmx,xnc
       common/ cxt108 /xmn(mst,msp),xmx(mst,msp),xnc(mst,msp)
 
+      logical sitck
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
      *        kstot,rkord,xtyp
       double precision wg,wk,reach
-      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),
-     *      reach,iend(m4),isub(m1,m2,2),
-     *      imd(msp,mst),insp(m4),ist(mst),isp(mst),rkord(m18),isite,
-     *      iterm,iord,istot,jstot,kstot,xtyp
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),reach,iend(m4),
+     *      isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),isp(mst),
+     *      rkord(m18),isite,iterm,iord,istot,jstot,kstot,xtyp,sitck
 
       integer iorig,jnsp,iy2p
       common / cst159 /iorig(m4),jnsp(m4),iy2p(m4)
@@ -7235,7 +7242,7 @@ c                                 don't allow imod > 2
       end do
 c                              look for van laar and/or dqf parameters
 c                              or the end of model marker
-      call readop (j,j,j,reach,tname)
+      call readop (j,j,j,reach,sitck,tname)
 
       do i = 1, nq+nn+ns
          iorig(i) = i 
@@ -7257,13 +7264,13 @@ c---------------------------------------------------------------------
       logical depend,laar,order,fluid,macro,recip
       common/ cst160 /depend,laar,order,fluid,macro,recip
 
+      logical sitck
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
      *        kstot,rkord,xtyp
       double precision wg,wk,reach
-      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),
-     *      reach,iend(m4),isub(m1,m2,2),
-     *      imd(msp,mst),insp(m4),ist(mst),isp(mst),rkord(m18),isite,
-     *      iterm,iord,istot,jstot,kstot,xtyp
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),reach,iend(m4),
+     *      isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),isp(mst),
+     *      rkord(m18),isite,iterm,iord,istot,jstot,kstot,xtyp,sitck
 
       integer jmsol,kdsol
       common/ cst142 /jmsol(m4,mst),kdsol(m4)
@@ -8135,10 +8142,10 @@ c                                 x coordinate description
       integer ksmod, ksite, kmsol, knsp
       common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
 
-      logical badend
+      logical badend, sitchk
       integer ldsol
       double precision one, zero
-      common/ cxt36 /one,zero,ldsol(m4,h9),badend(m4,h9)
+      common/ cxt36 /one,zero,ldsol(m4,h9),badend(m4,h9),sitchk(h9)
 
       integer iopt
       logical lopt
@@ -8166,7 +8173,7 @@ c----------------------------------------------------------------------
 
          end if
 
-         if (badend(l,ids)) then 
+         if (badend(l,ids).and.sitchk(ids)) then 
 
             if (y(l).lt.zero) then 
 
@@ -9085,10 +9092,10 @@ c---------------------------------------------------------------------
       integer ineg
       common/ cst91 /ineg(h9,m15)
 
-      logical badend
+      logical badend, sitchk
       integer ldsol
       double precision one, zero
-      common/ cxt36 /one,zero,ldsol(m4,h9),badend(m4,h9)
+      common/ cxt36 /one,zero,ldsol(m4,h9),badend(m4,h9),sitchk(h9)
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp  
@@ -9112,13 +9119,13 @@ c---------------------------------------------------------------------
      *      nsite,nspm1(m10),nterm(m10,m11),nsub(m10,m11,m0,m12),
      *      nttyp(m10,m11,m0)
 
+      logical sitck
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
      *        kstot,rkord,xtyp
       double precision wg,wk,reach
-      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),
-     *      reach,iend(m4),isub(m1,m2,2),
-     *      imd(msp,mst),insp(m4),ist(mst),isp(mst),rkord(m18),isite,
-     *      iterm,iord,istot,jstot,kstot,xtyp
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),reach,iend(m4),
+     *      isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),isp(mst),
+     *      rkord(m18),isite,iterm,iord,istot,jstot,kstot,xtyp,sitck
 
       integer iddeps,norder,nr 
       double precision depnu,denth
@@ -9181,7 +9188,7 @@ c                                 x coordinate description
       integer istg, ispg, imlt, imdg
       double precision xmng, xmxg, xncg, xmno, xmxo, reachg
       common/ cxt6r /xmng(h9,mst,msp),xmxg(h9,mst,msp),xncg(h9,mst,msp),
-     *               xmno(h9,mst,msp),xmxo(h9,mst,msp),reachg(h9)
+     *           xmno(h9,mst,msp),xmxo(h9,mst,msp),reachg(h9)
       common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
 
       double precision xmn,xmx,xnc
@@ -9343,6 +9350,8 @@ c                                 number of independent disordered endmembers
       lstot(im) = kstot 
 c                                 chemical mixing sites
       istg(im) = isite
+c                                 site check override
+      sitchk(im) = sitck
 c                                 number of ordered species
       nord(im) = norder 
 c                                 number of species and multiplicity and
@@ -9384,16 +9393,16 @@ c                                 compositional degeneracies.
 
             end if
 
-            if (xnc(i,j).gt.xmx(i,j)) then
+c            if (xnc(i,j).gt.xmx(i,j)) then
 c                                 check on xnc, this is really only necessary 
 c                                 for imd > 0, nopt13 = 0 or jsmod = 20
-               write (*,'(a,i1,a,i2,/,a,g10.5e1)') 
-     *                           'wugga wugga, xnc > xmx solution '
-     *                            //tname//' site ',i,' species ',j,
-     *                            'set xnc = xmx = ',xmx(i,j)
-               xnc(i,j) = xmx(i,j)
-
-            end if 
+c               write (*,'(a,i1,a,i2,/,a,g10.5e1)') 
+c     *                           'wugga wugga, xnc > xmx solution '
+c     *                            //tname//' site ',i,' species ',j,
+c     *                            'set xnc = xmx = ',xmx(i,j)
+c               xnc(i,j) = xmx(i,j)
+c
+c            end if 
 c                                 save solution model values as hard limits for 
             xmno(im,i,j) = xmn(i,j)
             xmxo(im,i,j) = xmx(i,j)
@@ -9709,9 +9718,16 @@ c                                 implemented).
             call zchk (pa,im,bad)
 
             if (bad) then
+
+               i = 1
+
+               if (sitck) i = 0
+
                call warn (59,y(1),i,mname(iorig(knsp(lstot(im)+j,im)))
      *             //' in solution model '//tname)
+
                badend(knsp(lstot(im)+j,im),im) = bad
+
             end if 
 
          end do
@@ -12307,13 +12323,13 @@ c---------------------------------------------------------------------
       common/ cxt30 /limc(j6+2,j5,j3),limid(m0,j5,j3),jimid(j3,j5,j3),
      *               limn(j3),limt(j5,j3),jimc(j3,j5,j3),jimt(j5,j3)
 
+      logical sitck
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
      *        kstot,rkord,xtyp
       double precision wg,wk,reach
-      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),
-     *      reach,iend(m4),isub(m1,m2,2),
-     *      imd(msp,mst),insp(m4),ist(mst),isp(mst),rkord(m18),isite,
-     *      iterm,iord,istot,jstot,kstot,xtyp
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),reach,iend(m4),
+     *      isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),isp(mst),
+     *      rkord(m18),isite,iterm,iord,istot,jstot,kstot,xtyp,sitck
 
       integer iddeps,norder,nr 
       double precision depnu,denth
@@ -12487,13 +12503,13 @@ c-----------------------------------------------------------------------
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
 
+      logical sitck
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
      *        kstot,rkord,xtyp
       double precision wg,wk,reach
-      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),
-     *      reach,iend(m4),isub(m1,m2,2),
-     *      imd(msp,mst),insp(m4),ist(mst),isp(mst),rkord(m18),isite,
-     *      iterm,iord,istot,jstot,kstot,xtyp
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),reach,iend(m4),
+     *      isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),isp(mst),
+     *      rkord(m18),isite,iterm,iord,istot,jstot,kstot,xtyp,sitck
 
       character mname*8
       common/ cst18a /mname(m4)
@@ -12857,13 +12873,13 @@ c---------------------------------------------------------------------
       double precision simp,prism
       common/ cxt86 /simp(k13),prism(k24)
 
+      logical sitck
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
      *        kstot,rkord,xtyp
       double precision wg,wk,reach
-      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),
-     *      reach,iend(m4),isub(m1,m2,2),
-     *      imd(msp,mst),insp(m4),ist(mst),isp(mst),rkord(m18),isite,
-     *      iterm,iord,istot,jstot,kstot,xtyp
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),reach,iend(m4),
+     *      isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),isp(mst),
+     *      rkord(m18),isite,iterm,iord,istot,jstot,kstot,xtyp,sitck
 
       integer istg, ispg, imlt, imdg
       common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
@@ -13179,10 +13195,10 @@ c                                 model type
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
 
-      logical badend
+      logical badend, sitchk
       integer ldsol
       double precision one, zero
-      common/ cxt36 /one,zero,ldsol(m4,h9),badend(m4,h9)
+      common/ cxt36 /one,zero,ldsol(m4,h9),badend(m4,h9),sitchk(h9)
 
       integer iaq, aqst, aqct
       character aqnam*8
@@ -13220,7 +13236,7 @@ c                                 necessary for conformal transformtions
 
          end if
 
-         if (y(l).gt.0d0.and.badend(l,im)) then 
+         if (y(l).gt.0d0.and.badend(l,im).and.sitchk(im)) then 
 c                                 reject non-zero dependent endmember 
 c                                 compositions. 
             if (y(l).lt.zero) then 
@@ -15631,13 +15647,13 @@ c---------------------------------------------------------------------
       double precision simp,prism
       common/ cxt86 /simp(k13),prism(k24)
 
+      logical sitck
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
      *        kstot,rkord,xtyp
       double precision wg,wk,reach
-      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),
-     *      reach,iend(m4),isub(m1,m2,2),
-     *      imd(msp,mst),insp(m4),ist(mst),isp(mst),rkord(m18),isite,
-     *      iterm,iord,istot,jstot,kstot,xtyp
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),reach,iend(m4),
+     *      isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),isp(mst),
+     *      rkord(m18),isite,iterm,iord,istot,jstot,kstot,xtyp,sitck
 c                                 x coordinate description
       integer istg, ispg, imlt, imdg
       common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
@@ -16254,15 +16270,19 @@ c                                  add in water (ns^th species)
 
       end 
 
-      subroutine aqrxdo (lu)
+      subroutine aqrxdo (jd,lu)
 c-----------------------------------------------------------------------
 c given chemical potentials solve for rock dominated aqueous speciation
+
+c   jd - is the pointer to the solvent in the local assemblage 
+c   lu - is the LUN for output, also signals type of output, console
+c        vs tab (<0).
 c-----------------------------------------------------------------------
       implicit none
  
       include 'perplex_parameters.h'
 
-      integer i, j, k, l, ichg, jchg(l9), it, ind(l9), id, lu, iexp
+      integer i, j, k, l, ichg, jchg(l9), it, ind(l9), lu, iexp, jd
 
       logical bad, output
 
@@ -16271,7 +16291,7 @@ c-----------------------------------------------------------------------
       double precision c(l9), q(l9), mo(l9), dg(l9), ahy, xis, blk(k5),
      *                 d(l9), q2(l9), lng0, is, gamm0, totm, g0(l9),
      *                 gso(nsp), ysum, ph0, v0(nsp), vf0(nsp), tmass,
-     *                 tsmas, tsmol, smol(k5), dn, xdn, errkw
+     *                 tsmas, tsmol, smol(k5), dn, xdn, errkw, smo
 
       double precision gcpd, solve, gfunc
 
@@ -16355,10 +16375,26 @@ c-----------------------------------------------------------------------
       integer idaq, jdaq
       logical laq
       common/ cxt3 /idaq,jdaq,laq
+
+      character*14 tname
+      integer kop,kcx,k2c,iprop
+      logical kfl
+      double precision prop,prmx,prmn
+      common/ cst77 /prop(i11),prmx(i11),prmn(i11),kop(i11),kcx(i11),
+     *               k2c(i11),iprop,kfl(i11),tname
 c----------------------------------------------------------------------
-      if (.not.mus) then 
-         write (lu,*) ' no mus, cannot back calculate speciation'
+      if (.not.mus.or.jd.eq.0) then 
+
+         if (.not.mus) call warn (99,0d0,0,
+     *       'no chemical potentials, cannot back calculate solute '//
+     *       'speciation')
+
+         do i = 1, iprop
+            prop(i) = nopt(7)
+         end do 
+ 
          return
+
       end if 
 
       output = .true. 
@@ -16374,13 +16410,13 @@ c                                 get the solvent permittivities,
 c                                 call mrkmix to get solvent volumetric props
          do i = 1, ns
  
-            ysum = ysum + x(1,i)
+            ysum = ysum + x(jd,i)
 
          end do
 
          do i = 1, ns
 c                                 load normalized molecular fluid composition
-            yf(ins(i)) = x(1,i)/ysum
+            yf(ins(i)) = x(jd,i)/ysum
 
          end do 
          
@@ -16411,7 +16447,7 @@ c                                  ysum is just a dummy at this point.
 c                                 solvent is pure water 
          call slvnt0 (gso(1),v0(1))
 
-         x(1,1) = 1d0
+         x(jd,1) = 1d0
          vf(1) = 1d0
 
       end if 
@@ -16493,10 +16529,7 @@ c               write (lu,*) aqnam(j), mo(j), q(j)
 
          xdn = dn 
 
-         if (bad) then 
-            write (lu,*) 'bombed'
-            exit
-         end if 
+         if (bad) exit
 c                                 DH law activity coefficient factor (ln[g] = lng0*q^2)
          lng0 = adh*dsqrt(is)/(1d0 + dsqrt(is)) + 0.2d0*is
          gamm0 = dexp(lng0)
@@ -16515,46 +16548,119 @@ c                                 update coefficients
          end do
 
       end do
+c                                 back calculated bulk composition
+      if (bad) then 
 
-      if (output.and..not.bad) then
+         call warn (99,0d0,0,'AQRXDO did not converge on solute '//
+     *                       'speciation')
+
+         do i = 1, iprop
+            prop(i) = nopt(7)
+         end do 
+ 
+         return
+
+      end if 
 c                                 neutral pH
-         ph0 = (g0(ihy)+g0(ioh)-gso(ns))/2d0/rt/2.302585d0
+      ph0 = (g0(ihy)+g0(ioh)-gso(ns))/2d0/rt/2.302585d0
 
-         do i = 1, icp
-            blk(i) = 0d0
-         end do  
+      do i = 1, icp
+         blk(i) = 0d0
+      end do  
 c                                 compute mole fractions, total moles first
-         do i = 1, ns 
+      do i = 1, ns 
 c                                 moles/kg-solvent 
-            do j = 1, icp 
-               blk(j) = blk(j) + x(1,i)*cp(j,jnd(i))/msol
-            end do 
+         do j = 1, icp 
+            blk(j) = blk(j) + x(jd,i)*cp(j,jnd(i))/msol
+         end do 
+      end do
+
+      smo = 0d0 
+
+      do i = 1, aqct
+c                                  total solute molality
+         smo = smo + mo(i)
+         ind(i) = i 
+
+         do j = 1, icp
+            blk(j) = blk(j) + mo(i)*aqcp(j,i)
+         end do 
+      end do
+c                                 bulk fluid composition 
+      tmass = 0d0
+      totm = 0d0 
+
+      do i = 1, icp
+         totm = totm + blk(i)
+         tmass = tmass + atwt(i)*blk(i)
+      end do 
+c                                error in log10(K_w)
+      errkw = ((g0(ioh)-gso(ns))/rt + dlog(mo(ihy)*mo(ioh)*gamm0**2
+     *             ))/2.302585d0
+
+      if (output.and.lu.lt.0) then
+c                                 WERAMI props on a grid
+         do i = 1, icp
+c                                 bulk composition
+            if (lopt(23)) then
+
+               prop(i) = blk(i)/totm*1d2
+
+            else 
+
+               prop(i) = blk(i)*atwt(i)/tmass*1d2
+
+            end if 
+
          end do
 
-         do i = 1, aqct
-            ind(i) = i 
-            do j = 1, icp
-               blk(j) = blk(j) + mo(i)*aqcp(j,i)
-            end do 
-         end do
+         k = icp
 
-         totm = 0d0
+         do i = 1, ns 
+c                                 solvent speciation
+            k = k + 1
 
-         do i = 1, icp 
-            totm = totm + blk(i)
+            if (lopt(26)) then
+c                                 mole fraction
+               prop(k) = x(jd,i)
+            else 
+c                                 molality
+               prop(k) = x(jd,i)/msol
+            end if  
+
          end do 
 
+         do i = 1, aqct 
+c                                 solute speciation
+            k = k + 1
+
+            if (lopt(27)) then
+c                                 mole fraction
+               prop(k) = mo(i)
+            else 
+c                                 molality
+               prop(k) = mo(i)/totm
+            end if  
+
+         end do 
+c                                  other properties
+         prop(k+1) = -dlog10(ahy) - ph0
+         prop(k+2) = -dlog10(ahy)
+         prop(k+3) = dabs(errkw)
+         prop(k+4) = epsln
+         prop(k+5) = is
+         prop(k+6) = smo
+
+      else if (output) then 
+c                                 WERAMI/MEEMUM console output 
          call rankem (mo,ind,aqct,iopt(32))
 
          write (lu,1000)
 
-         errkw = ((g0(ioh)-gso(ns))/rt + dlog(mo(ihy)*mo(ioh)*gamm0**2
-     *             ))/2.302585d0
-
          write (text,1050) -dlog10(ahy),dabs(errkw),ph0,is,gamm0
          call deblnk (text)
          write (lu,'(400a)') (chars(j), j = 1, length)
-         write (text,1070) epsln,epsln0,msol*1d3
+         write (text,1070) epsln,epsln0,msol*1d3,smo
          call deblnk (text)
          write (lu,'(400a)') (chars(j), j = 1, length)
 
@@ -16585,7 +16691,7 @@ c                                 check if the species is the solution model
 
                if (l.ne.0) then 
                   write (lu,1080) aqnam(k),int(thermo(6,k+aqst)),
-     *                            mo(k),mo(k)/totm,x(1,l),
+     *                            mo(k),mo(k)/totm,x(jd,l),
      *                           int(g0(k)+rt*(dlog(mo(k))+lng0*q2(k))),
      *                           int(g0(k))
                else
@@ -16609,20 +16715,12 @@ c                                 check if the species is the solution model
 
          do i = 1, ns 
 
-            write (lu,1030) names(jnd(i)), x(1,i)/msol, x(1,i),
+            write (lu,1030) names(jnd(i)), x(jd,i)/msol, x(jd,i),
      *                      vf0(ins(i)), v0(ins(i)), 
      *                      int(gso(i)), int(gcpd(jnd(i),.true.))
          end do 
 
          write (lu,1060)
-c                                 bulk fluid composition 
-         tmass = 0d0
-         totm = 0d0 
-
-         do i = 1, icp
-            totm = totm + blk(i)
-            tmass = tmass + atwt(i)*blk(i)
-         end do 
 
          if (jdaq.eq.20) then 
 
@@ -16640,9 +16738,9 @@ c                                 bulk fluid composition
                do j = 1, icp
 
                   if (i.lt.sn1) then 
-                     dn = x(1,i) * cp(j,k)
+                     dn = x(jd,i) * cp(j,k)
                   else 
-                     dn = x(1,i) * aqcp(j,k-aqst)
+                     dn = x(jd,i) * aqcp(j,k-aqst)
                   end if 
 
                   smol(j) = smol(j) + dn
@@ -16691,7 +16789,8 @@ c                                 bulk fluid composition
      *        'state.',/)
 1070  format ('permittivity = ', g10.4,
      *        '; reference state permittivity = ',g10.4
-     *        '; solvent molar mass, g/mol = ',f8.4)
+     *        '; solvent molar mass, g/mol = ',f8.4,
+     *        '; total solute molality =',g10.4)
 1080  format (a8,4x,i2,3x,g12.6,3x,g12.6,3x,g12.6,5x,i8,5(2x,g12.6))
 1090  format (a8,4x,i2,3x,g12.6,3x,g12.6,20x,i8,5(2x,g12.6))
 1100  format (/,'Solute endmember properties:',/,
@@ -16888,115 +16987,7 @@ c                                 checked.
 
          y(i) = 1d0 - xt
 
-       end if
-
-       end
-
-      subroutine aqname 
-c----------------------------------------------------------------
-c makes a list of porperty names for and saves then in dname(iprop)
-c called only by chsprp for back-calculated aqueous speciation
-c----------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      integer i, icx, jprop
-
-      character spec(5)*14
-
-      integer inv
-      character dname*14, title*162
-      common/ cst76 /inv(i11),dname(i11),title
-
-      character cname*5
-      common/ csta4  /cname(k5)
-
-      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
-      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
-
-      integer ihy, ioh
-      double precision gf, epsln, epsln0, adh, msol
-      common/ cxt37 /gf, epsln, epsln0, adh, msol, ihy, ioh
-
-      character specie*4
-      integer isp, ins
-      common/ cxt33 /isp,ins(nsp),specie(nsp)
-
-      integer iaq, aqst, aqct
-      character aqnam*8
-      double precision aqcp, aqtot
-      common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
-
-      integer icomp,istct,iphct,icp
-      common/ cst6  /icomp,istct,iphct,icp  
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
-      integer jnd
-      double precision aqg,qq,rt
-      common/ cxt2 /aqg(m4),qq(m4),rt,jnd(m4)
-
-      character names*8
-      common/ cst8  /names(k1)
-
-      save spec 
-      data spec/'delta_pH','pH','permittivity','I,m','total_molality'/
-c----------------------------------------------------------------------
-c                                 bulk composition, wt% or mol 
-      do i = i, icp 
-
-         if (lopt(23)) then
-            write (dname(i),'(a,a)') cname(i),',wt%     '
-         else 
-            write (dname(i),'(a,a)') cname(i),',mol     '
-         end if
-
-         call unblnk(dname(i))  
-
-      end do
-
-      jprop = icp 
-c                                 solvent composition, mol or molal
-      do i = 1, ns 
-
-         jprop = jprop + 1
-
-         if (lopt(26)) then
-c                                 mole fraction
-            write (dname(jprop),'(a,a)') 'y_',names(jnd(i))
-         else 
-c                                 molality
-            write (dname(jprop),'(a,a)') 'm_',names(jnd(i))
-         end if  
-
-         call unblnk(dname(jprop))   
-
-       end do    
-c                                 solute composition, mol or molal
-      do i = 1, aqct 
-
-         jprop = jprop + 1
-
-         if (lopt(27)) then
-c                                 mole fraction
-            write (dname(jprop),'(a,a)') 'y_',names(jnd(i))
-         else 
-c                                 molality
-            write (dname(jprop),'(a,a)') 'm_',names(jnd(i))
-         end if  
-
-         call unblnk(dname(jprop))   
-
-      end do 
-c                                 special variables
-      do i = 1, 5 
-         jprop = jprop + 1
-         dname(jprop) = spec(i)
-      end do 
+      end if
 
       end  
 
@@ -17012,6 +17003,11 @@ c-----------------------------------------------------------------------
 
       integer ksmod, ksite, kmsol, knsp
       common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
+
+      integer iaq, aqst, aqct
+      character aqnam*8
+      double precision aqcp, aqtot
+      common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
 
       integer isoct
       common/ cst79 /isoct
@@ -17097,7 +17093,7 @@ c                                 off chance they will be used
 
       end 
 
-       subroutine slvnt0 (gsolv,vsolv)
+      subroutine slvnt0 (gsolv,vsolv)
 c-----------------------------------------------------------------------
 c sets solvent p-t dependent properties for pure water: permittivity (eps), 
 c molar mass, debye-hueckel (adh), and gHKF function.

@@ -371,7 +371,7 @@ c                                  add in water (ns^th species)
 
       end 
 
-      subroutine aqrxdo (lu)
+      subroutine aqrxdo (jd,lu)
 c-----------------------------------------------------------------------
 c given chemical potentials solve for rock dominated aqueous speciation
 c-----------------------------------------------------------------------

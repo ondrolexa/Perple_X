@@ -321,7 +321,7 @@ c                                 -------------------------------------
 c                                 local variables
       logical bad, first
 
-      double precision xxnc, ysum, res0, gmin
+      double precision xxnc, ysum, res0
 
       integer i, j, k, l, m, ids, id, jd, iter, kcoct, iref, last 
 c                                 -------------------------------------
@@ -464,14 +464,14 @@ c                                 conformal
          end do
 
       end if 
-
-      gmin = 1d99 
 c                                  set solution model parameters for
 c                                  gsol1, don't call if the previous
 c                                  refinement point was the same solution.
       if (ids.ne.last) call ingsol (ids) 
 
       call subdiv (ids,.true.)
+
+      write (*,*) 'iter ids id ntot ',iter,ids,id,ntot
 
       do 10 i = 1, ntot
 
@@ -3707,8 +3707,8 @@ c                                 point.
 c                                 check the stability of all points 
 c DEBUG                           5/9/2017 removed the x(i)>0 conditional
 c                                 to get chemical potentials.
-c         if (is(i).ne.1.and.x(i).gt.0d0) then
-         if (is(i).ne.1) then  
+         if (is(i).ne.1.and.x(i).gt.0d0) then
+c        if (is(i).ne.1) then  
 c                                 a stable point, add to list
             npt = npt + 1
             jdv(npt) = i
