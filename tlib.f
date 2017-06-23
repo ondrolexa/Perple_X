@@ -19,7 +19,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a)') 
-     *      'Perple_X version 6.7.8, source updated June 15, 2017.'
+     *      'Perple_X version 6.7.8, source updated June 20, 2017.'
 
       end
 
@@ -443,6 +443,10 @@ c                                 phase composition key
          else if (key.eq.'aqueous_output') then
 
             if (val.ne.'T') lopt(25) = .false.
+
+         else if (key.eq.'lagged_aq_speciation') then 
+
+            if (val.ne.'T') lopt(32) = .false. 
 
          else if (key.eq.'aq_solvent_composition') then
 
@@ -1313,7 +1317,7 @@ c                                 pc-perturbation
 c                                 generic thermo parameters:
          write (n,1012) nval1,nopt(12),nopt(20),valu(17),
      *                  lopt(8),lopt(4),nopt(5),iopt(21),
-     *                  iopt(25),iopt(26),iopt(27)
+     *                  iopt(25),iopt(26),iopt(27),lopt(32)
 c                                 for meemum add fd stuff
          if (iam.eq.2) write (n,1017) nopt(31),nopt(26),nopt(27)
 
@@ -1403,7 +1407,8 @@ c                                 generic thermo options
      *        4x,'speciation_max_it      ',i4,7x,'[100]',/,
      *        4x,'hybrid_EoS_H2O         ',i4,7x,'[4] 0-2, 4-5',/,
      *        4x,'hybrid_EoS_CO2         ',i4,7x,'[4] 0-4',/,
-     *        4x,'hybrid_EoS_CH4         ',i4,7x,'[1] 0-1')
+     *        4x,'hybrid_EoS_CH4         ',i4,7x,'[1] 0-1',/,
+     *        4x,'lagged_aq_speciation   ',l1,10x,'[T] F')
 1013  format (/,2x,'Input/Output options:',//,
      *        4x,'dependent_potentials   ',a3,8x,'off [on]',/,
      *        4x,'pause_on_error         ',l1,10x,'[T] F')

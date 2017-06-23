@@ -637,6 +637,9 @@ c-----------------------------------------------------------------------
 
       double precision ctot
       common/ cst3  /ctot(k1)
+
+      double precision p,t,xco2,u1,u2,tr,pr,r,ps
+      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 c                                 adaptive coordinates
       integer jphct
       double precision g2, cp2
@@ -731,12 +734,23 @@ c                                 general case (y coordinates)
          end do 
          
       end if
+c                                  a phase with a null composition may appear
+c                                  as an endmember of a solution in a calculation
+c                                  with mobile components:
+      if (ctot2.ne.0d0) then 
 c                                  normalize the composition and free energy
-      g2(jphct) = g2(jphct)/ctot2
+         g2(jphct) = g2(jphct)/ctot2
 
-      do j = 1, icp 
-         cp2(j,jphct) = cp2(j,jphct)/ctot2
-      end do  
+         do j = 1, icp 
+            cp2(j,jphct) = cp2(j,jphct)/ctot2
+         end do
+
+      else 
+
+         g2(jphct) = 1d4*p
+         cp(1,jphct) = 1d0
+
+      end if   
 
       end 
 

@@ -732,25 +732,43 @@ c                               lagged speciation
 
                end if
 
+            else 
+c                                 MEEMUM, molar amount
+               props(16,i) = amt(i)
+c                                 convert x3 to y for calls to gsol
+               if (ids.gt.0) call x3toy (i,ids)
+ 
             end if 
 
          else 
-c                                 MEEMUM
+c                                 a compound:
             if (ifp(-ids).gt.0.or.ifp(-ids).lt.0.and.lopt(6)) then 
                aflu = .true.
                fluid(i) = .true.
             else 
                fluid(i) = .false.
             end if
-c                                 molar amount
-            props(16,i) = amt(i)
-c                                 convert x3 to y for calls to gsol
-            if (ids.gt.0) call x3toy (i,ids)
+
+            if (iam.ne.2) then 
+c                                 WERAMI
+               cst = bg(i,jd)
+c                                 in case zero mode is not on, allow
+c                                 composition of zero phase
+               if (ijpt.eq.1.and.cst.eq.0d0) cst = 1d0
+c                                 weighted molar amount
+               props(16,i) = wt(1)*cst
+
+            else 
+c                                 MEEMUM, molar amount
+               props(16,i) = amt(i)
+ 
+            end if
 
          end if
 
          if (iam.ne.2) then 
 c                                 WERAMI; need to average in other assemblages
+
             do j = 2, ijpt
             
                kd = igrd(itri(j),jtri(j))
@@ -954,7 +972,7 @@ c-----------------------------------------------------------------------
  
       include 'perplex_parameters.h'
 
-      integer k, id
+      integer i, k, id
 
       double precision dg, g, gso(nsp), gamm0
 
@@ -1180,14 +1198,18 @@ c                                 solvent species (caq => mole fraction)
 c                                 solute species (caq => molality)
                do k = ns + 1, aqct
 
-                  if (q2(k).eq.0d0) then
+                  i = k - ns 
+
+                  if (q2(i).eq.0d0) then
 c                                 neutral
                      g = g + caq(jd,k)/tmolal(jd) *
-     *                   (gcpd(aqst+k,.false.) + rt*dlog(caq(jd,k)))
+     *                   (gcpd(aqst+i,.false.) + rt*dlog(caq(jd,k)))
                   else 
+c                                 charged
                      g = g + caq(jd,k)/tmolal(jd) 
-     *                  * (gcpd(aqst+k,.false.) 
-     *                  + rt*dlog(caq(jd,k)*q2(k)*gamm0))
+     *                  * (gcpd(aqst+i,.false.) 
+     *                  + rt*dlog(caq(jd,k)*q2(i)*gamm0))
+
                   end if 
 
                end do 
@@ -1859,6 +1881,10 @@ c----------------------------------------------------------------------
       integer eos
       common/ cst303 /eos(k10)
 
+      integer kd
+      double precision x3, caq, ionst, tmolal
+      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),ionst(k5),tmolal(k5),kd
+
       save dt
       data dt /.5d0/
 
@@ -1868,6 +1894,8 @@ c----------------------------------------------------------------------
       sick(jd) = .false.
       pois     = .false.
       lshear   = .false.
+c                                 pointer copy for lagged aq calculations in gsol 
+      kd = jd 
 c                                 make name and composition, 
 c                                 redundant for frendly
       call getnam (pname(jd),id)

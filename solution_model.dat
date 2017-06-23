@@ -9848,13 +9848,18 @@ abbreviation F
 full_name    fluid
 
 39                          | model type: Generic Hybrid EoS
-3
+5
 CO2
 CH4
+H2S
+SO2
 H2O 
 
-  0  0  0                              endmember flags
 
+  0  0  0  0  0            | endmember flags
+
+0.0 1.0 0.1       0        | subdivision ranges, imod = 0 -> cartesian subdivision
+0.0 1.0 0.1       0        | subdivision ranges, imod = 0 -> cartesian subdivision
 0.0 1.0 0.1       0        | subdivision ranges, imod = 0 -> cartesian subdivision
 0.0 1.0 0.1       0        | subdivision ranges, imod = 0 -> cartesian subdivision
 

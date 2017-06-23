@@ -16927,6 +16927,8 @@ c                                 set option flags if necessary
      *                          'dependent_potentials is off, '//
      *                'dependent_potentials set = on (AQIDST)')
 
+            jpot = 0
+
          end if 
 c                                reset iopt(32) [# aq species output]
          if (iopt(32).gt.aqct) iopt(32) = aqct
@@ -16937,6 +16939,9 @@ c                                reset iopt(32) [# aq species output]
          iopt(32) = 0
 
       end if 
+c                                 no aqueous data, shut off 
+c                                 lagged speciation
+      if (aqct.eq.0) lopt(32) = .false.
 c                                 look among solutions:
       do i = 1, isoct
 
