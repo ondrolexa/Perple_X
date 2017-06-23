@@ -12987,7 +12987,7 @@ c--------------------------------------------------------------------------
  
       double precision zpr,hpmelt,slvmlt,gmelt,smix,esum,ctotal,omega,x
 
-      integer id,im,h,i,j,l,m,icpct,isoct,icky,index,icoct,icoct0
+      integer id,im,h,i,j,l,m,icpct,isoct,icky,index,icoct,icoct0,i228
 
       double precision ctot
       common/ cst3 /ctot(k1)
@@ -13108,6 +13108,9 @@ c                                 model type
 
       double precision exces
       common/ cst304 /exces(m3,k1)
+
+      save i228
+      data i228/0/
 c----------------------------------------------------------------------
       zpr = 0d0 
       i = 0 
@@ -13232,8 +13235,7 @@ c                                 the composition is acceptable.
          else 
             call error (41,pa(1),0,'SOLOAD')
          end if 
-      end if             
-    
+      end if
 
       ikp(iphct) = isoct
 
@@ -13427,7 +13429,8 @@ c                              composition vector
       do l = 1, icomp
          if (cp(l,iphct).gt.-nopt(5).and.cp(l,iphct).lt.0d0) then 
             cp(l,iphct) = 0d0 
-         else if (cp(l,iphct).lt.0d0) then
+         else if (cp(l,iphct).lt.0d0.and.im.ne.i228) then
+            i228 = im
             call warn (228,cp(l,iphct),l,tname)
          end if 
       end do 

@@ -1904,19 +1904,7 @@ c                                 new point, add to list
       end do 
 c DEBUG DEBUG:
 c                                 get mus for lagged speciation
-      if (lopt(32)) then
-
-         if (npt.eq.icp) then 
-
-            call getmus (1)
-
-         else
-
-            mus = .false. 
-
-         end if
-
-      end if 
+      if (lopt(32)) call getmus (1)
 
       ldv1 = 0
       ldv2 = 0 
@@ -2364,7 +2352,9 @@ c                                                  2 active, upper bound
             amt(npt) = x(i)
  
       end do
-    
+
+      call getmus (1)
+
       end 
 
       subroutine setx3 (ind,id,ids)
@@ -2687,19 +2677,7 @@ c                                 as they hardly cost anything.
 
 c DEBUG DEBUG
 c                                 get mu's for lagged speciation
-      if (lopt(32)) then 
-
-         if (npt.eq.hcp) then 
-
-            call getmus (iter)
-
-         else
-
-           mus = .false. 
-
-         end if
-
-      end if 
+      if (lopt(32)) call getmus (iter)
 
       if (npt.lt.0*hcp.and.iter.gt.iopt(10)) then 
 c                                  
@@ -2806,18 +2784,17 @@ c upon successful completion of an optimization with either static or
 c dynamic pseudocompounds rebulk:
 c     1) loads the generic arrays cp3, cptot, ctot3, kkp and x3
 c     2) computes the amounts of saturated component phases.
-c     3) computes the dependent potentials.
 c     4) checks for solvi and homogenizes miscible phases.
 c----------------------------------------------------------------------
       implicit none
  
       include 'perplex_parameters.h'
 
-      integer i, j, k, id, ier, tictoc, ipvt(k8), ic(k5), jc(k5), kcp
+      integer i, j, k, id, tictoc
 
       logical static, bad
 
-      double precision c(k5),u,comp(k8,k8)
+      double precision c(k5),u
 
       integer iff,idss,ifug
       common/ cst10  /iff(2),idss(h5),ifug
@@ -2858,13 +2835,6 @@ c                                 hcp is different from icp only if usv
       integer hcp,idv
       common/ cst52  /hcp,idv(k7) 
 
-      logical mus
-      double precision mu
-      common/ cst330 /mu(k8),mus
-
-      integer jtest,jpot
-      common/ debug /jtest,jpot
-
       integer ids,isct,icp1,isat,io2
       common/ cst40 /ids(h5,h6),isct(h5),icp1,isat,io2
 
@@ -2881,12 +2851,9 @@ c                                 hcp is different from icp only if usv
       double precision thermo,uf,us
       common/ cst1 /thermo(k4,k10),uf(2),us(h5)
 
-      double precision g
-      common/ cst2 /g(k1)
-
-      integer jphct
-      double precision g2, cp2
-      common/ cxt12 /g2(k21),cp2(k5,k21),jphct
+      logical mus
+      double precision mu
+      common/ cst330 /mu(k8),mus
 
       save tictoc
       data tictoc/0/
@@ -2904,9 +2871,7 @@ c                                 set identifier flag
             end if 
 
             cptot(i) = ctot(id)
-c                                 save g for potential calculation
-            mu(i) = g(id)
-           
+
             do j = 1, icomp
                if (j.gt.icp.and.usv) exit
                cp3(j,i) = cp(j,id)
@@ -2927,16 +2892,11 @@ c                                 only static optimization
          else 
 c                                 getcmp assigns cp3, cptot, x3, and kkp
             call getcmp (i,jdv(i),jkp(jdv(i)))
-c                                 convert normalized g's to molar g's,
-c                                 before 3/5/2015 this was outside the
-c                                 if construction. JADC.
-            mu(i) = g2(jdv(i))*cptot(i)
 
-         end if          
+         end if
 c                                 convert normalized amounts to molar 
 c                                 amounts
          amt(i) = ctotal*amt(i)/cptot(i)
-
 
       end do 
 
@@ -2945,7 +2905,7 @@ c                                 get the amounts of the saturated phases:
          do i = icp+1, jbulk
 c                                 k is the saturated component pointer
             k = i - icp
-c                                 initialize bulk                                 
+c                                 initialize bulk
             c(k) = cblk(i)
 c                                 save chemical potentials from gproj
             mu(i) = us(k)
@@ -2996,92 +2956,6 @@ c                                  load the saturated phase composition
       end if 
 
       ntot = npt
-
-      if (usv.or.jpot.eq.0) then
-c                                 compute chemical potentials
-         mus = .true.
-c                                 check for degeneracy
-         kcp = 0 
-
-         do i = 1, hcp 
-
-            if (cblk(i).ne.0d0) then 
-
-               kcp = kcp + 1
-               ic(kcp) = i
-               jc(i) = kcp
-               mu(kcp) = mu(i)
-
-            else 
-
-               jc(i) = 0
-
-            end if 
-
-         end do 
-                 
-         if (npt-(jbulk-icp).ne.kcp) then          
-c                                 not full rank
-            do i = 1, hcp
-               mu(i) = nopt(7)
-            end do
-            
-            mus = .false.
-
-         else 
-
-            do i = 1, kcp
-               do j = 1, kcp 
-                  comp(i,j) = cp3(ic(j),i)
-               end do 
-            end do 
-
-            call factor (comp,kcp,ipvt,ier)
-
-            if (ier.eq.1) then 
-
-               do i = 1, hcp
-                  mu(i) = nopt(7)
-               end do
-
-               mus = .false.
-     
-            else 
- 
-               call subst (comp,ipvt,kcp,mu,ier)
-
-               if (ier.eq.1) then 
-
-                  do i = 1, hcp
-                     mu(i) = nopt(7)
-                  end do
-
-                  mus = .false.
-             
-               else       
-
-                  if (kcp.ne.hcp) then          
-c                                 if degenerate, shift the mu's back to 
-c                                 the original positions
-                     do i = hcp, 1, -1
-
-                        if (jc(i).eq.0) then 
-                           mu(i) = nopt(7)
-                        else 
-                           mu(i) = mu(jc(i))
-                        end if 
-                                 
-                     end do
-
-                  end if                    
-
-               end if 
-             
-            end if 
-
-         end if 
-
-      end if 
 c                                 test for solvi and average
 c                                 homogeneous phases.
       call avrger
@@ -3098,11 +2972,11 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i, j, id, ier, ipvt(k8), iter
+      integer i, j, id, ier, ipvt(k8), iter, ic(k5), jc(k5), kcp
 
       double precision comp(k8,k8)
 
-      integer hcp,idv
+      integer hcp, idv
       common/ cst52  /hcp,idv(k7) 
 
       integer jphct
@@ -3116,6 +2990,15 @@ c----------------------------------------------------------------------
       double precision mu
       common/ cst330 /mu(k8),mus
 
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      integer jbulk
+      double precision cblk
+      common/ cst300 /cblk(k5),jbulk
+
       integer npt,jdv
       logical fulrnk
       double precision cptot,ctotal
@@ -3124,42 +3007,119 @@ c----------------------------------------------------------------------
 
        mus = .false.
 
-       if (iter.gt.1) then 
+      if (npt.eq.hcp) then 
 
          do i = 1, hcp
 
             id = jdv(i) 
 
-            do j = 1, hcp 
-               comp(i,j) = cp2(j,id)
-            end do 
+            if (iter.gt.1) then
 
-            mu(i) = g2(id)
+               do j = 1, hcp 
+                  comp(i,j) = cp2(j,id)
+               end do 
+
+               mu(i) = g2(id)
+
+            else 
+
+               do j = 1, hcp 
+                  comp(i,j) = a(j,id)
+               end do 
+
+               mu(i) = c(id)
+
+            end if 
+
 
          end do
 
-      else
+         call factor (comp,hcp,ipvt,ier)
 
-         do i = 1, hcp
+         if (ier.ne.0) call subst (comp,ipvt,hcp,mu,ier)
 
-            id = jdv(i) 
+      else 
+c                                 npt < hcp, look for a zero component
+         kcp = 0 
 
-            do j = 1, hcp 
-               comp(i,j) = a(j,id)
-            end do 
+         do i = 1, hcp 
 
-            mu(i) = c(id)
+            if (cblk(i).ne.0d0) then 
+
+               kcp = kcp + 1
+               ic(kcp) = i
+               jc(i) = kcp
+
+            else 
+
+               jc(i) = 0
+
+            end if
 
          end do
+
+         if (npt.eq.kcp) then
+c                                 try to salvage by elimating the zero
+c                                 component 
+            do i = 1, kcp
+
+               id = jdv(i) 
+
+               if (iter.gt.1) then
+
+                  do j = 1, kcp 
+                     comp(i,j) = cp2(ic(j),id)
+                  end do 
+
+                  mu(i) = g2(id)
+
+               else 
+
+                  do j = 1, kcp 
+                     comp(i,j) = a(ic(j),id)
+                  end do 
+
+                  mu(i) = c(id)
+
+               end if 
+
+            end do
+
+            call factor (comp,kcp,ipvt,ier)
+
+            if (ier.ne.0) call subst (comp,ipvt,kcp,mu,ier)
+
+         else
+c                                 hopeless, well it could be done, but i won't now. 
+            ier = 1
+
+         end if
 
       end if 
 
-      call factor (comp,hcp,ipvt,ier)
+      if (ier.eq.0) then 
 
-      if (ier.ne.0) return
+         mus = .true.
 
-      call subst (comp,ipvt,hcp,mu,ier)
+         if (npt.eq.hcp) return
+c                                 degenerate, shift the mu's back to 
+c                                 the original positions
+         do i = hcp, 1, -1
 
-      if (ier.eq.0) mus = .true. 
+            if (jc(i).eq.0) then 
+               mu(i) = nopt(7)
+            else 
+               mu(i) = mu(jc(i))
+            end if 
 
-      end 
+         end do
+
+      else 
+c                                 failed
+         do i = 1, hcp
+            mu(i) = nopt(7)
+         end do
+
+      end if
+
+      end

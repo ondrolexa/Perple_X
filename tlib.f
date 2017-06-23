@@ -2612,7 +2612,7 @@ c----------------------------------------------------------------------
       else if (ier.eq.209) then
          write (*,209) int
       else if (ier.eq.228) then 
-         write (*,228) char, realv, int
+         write (*,228) char, realv, int, char
       else
          write (*,999) ier, char, realv, int
       end if
@@ -2931,7 +2931,9 @@ c     *          ' (SWASH, see program documentation Eq 2.3)',/)
 228   format (/,'**warning ver228** in solution model ',a,' negative ',
      *          'composition (',g12.6,') for component ',i2,/,
      *          'this may indicate an incorrect stoichiometric ',
-     *          'dependent endmember definition.',/)
+     *          'dependent endmember definition.',//,
+     *          'This warning is issued only for the first negative ',
+     *          'composition of ',a,/)
 900   format (' the calculation may be incomplete !!!!',/)
 999   format (/,'**warning unspecified** ier =',i3,' routine ',a6
      *         ,' r = ',g12.6,' int = ',i9,/)
