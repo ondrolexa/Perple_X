@@ -534,9 +534,6 @@ c                                 new version, read icopt
          read (n1,*,err=998) icopt
 
       end if 
-c                                 if meemum, override whatever computational option
-c                                 is set in the input file. 
-      if (iam.eq.2) icopt = 5
 c                                 if fractionation path from data 
 c                                 file, get name:
       fileio = .false.
@@ -555,6 +552,9 @@ c                                 file, get name:
          end if 
 
       end if 
+c                                 if meemum, override whatever computational option
+c                                 is set in the input file. 
+      if (iam.eq.2) icopt = 5
 c                                 dummy variable place holders
       read (n1,*,err=998) idum
       read (n1,*,err=998) idum 

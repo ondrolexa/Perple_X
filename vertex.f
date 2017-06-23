@@ -1413,7 +1413,7 @@ c-----------------------------------------------------------------------
 
       integer i,j,k,idead
 
-      logical there(k5), warn, output
+      logical there(k23), warn, output
  
       character*8 vname,xname
       common/ csta2  /xname(k5),vname(l2)
@@ -1450,6 +1450,9 @@ c-----------------------------------------------------------------------
 c                                 fractionation effects:
       do i = 1, jbulk
          dcomp(i) = 0d0
+      end do 
+      
+      do i = 1, k23
          there(i) = .false.
       end do 
 
