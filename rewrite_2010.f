@@ -91,7 +91,7 @@ c------------------------------------------------------------------------
 
       integer length,iblank,icom
       character chars*1
-      common/ cst51 /length,iblank,icom,chars(lchar)
+      common/ cst51 /length,iblank,icom,chars(240)
 
       double precision cp
       common/ cst12 /cp(k5,k1)
@@ -100,7 +100,7 @@ c------------------------------------------------------------------------
       common/ cst1 /thermo(k4,k10),uf(2),us(h5)
 
       do 
-
+c                                 need to eliminate hsc conversion.
          call ogtphi (name,eof)
 
          if (eof) exit

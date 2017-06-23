@@ -19,7 +19,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a)') 
-     *      'Perple_X version 6.7.7, source updated Apr 28, 2017.'
+     *      'Perple_X version 6.7.8, source updated June 20, 2017.'
 
       end
 
@@ -35,7 +35,7 @@ c----------------------------------------------------------------------
 
       if (new.eq.'008'.or.new.eq.'011'.or.new.eq.'670'.or.
      *    new.eq.'672'.or.new.eq.'673'.or.new.eq.'674'.or.
-     *    new.eq.'675'.or.new.eq.'676') then 
+     *    new.eq.'675'.or.new.eq.'676'.or.new.eq.'678') then 
 
          chksol = .true.
 
@@ -105,7 +105,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer ier, jer, i, loopx, loopy
+      integer ier, jer, i, loopx, loopy, ibeg, iend
 
       logical output
 
@@ -147,14 +147,18 @@ c                                 precision stuff used in lpnag
       integer iam
       common/ cst4 /iam
 
-      logical badend
+      logical badend, sck, nrf
       integer ldsol
       double precision one, zero
-      common/ cxt36 /one,zero,ldsol(m4,h9),badend(m4,h9)
+      common/ cxt36 /one,zero,ldsol(m4,h9),badend(m4,h9),sck(h9),nrf(h9)
+
+      integer length,iblank,icom
+      character chars*1
+      common/ cst51 /length,iblank,icom,chars(lchar)
 
       logical mus
-      double precision mu, gmax
-      common/ cst330 /mu(k8),gmax,mus
+      double precision mu
+      common/ cst330 /mu(k8),mus
 c----------------------------------------------------------------------
 c                                 periodic fractions
       r13 = 1d0/3d0
@@ -271,7 +275,7 @@ c                                 final resolution, exploratory stage
 c                                 global reach factor
       nopt(23) = 0d0
 c                                 solvus_tolerance_II
-      nopt(25) = 0.25d0       
+      nopt(25) = 0.2d0       
 c                                 finite_difference_p threshold for finite difference estimates
       nopt(26) = 1d4
 c                                 finite_difference_p fraction for first order difference estimates
@@ -283,7 +287,7 @@ c                                 quench temperature (K)
       nopt(12) = 0d0
 c                                 initial resolution for adaptive 
 c                                 refinement
-      nopt(13) = 0.067d0
+      nopt(13) = 1d0/15d0
 c                                 perturbation to eliminate pseudocompound
 c                                 degeneracies
       nopt(15) = 5d-3
@@ -352,10 +356,17 @@ c                                 refinement_points_II
       iopt(31) = 5
 c                                 maximum number of aqueous species
       iopt(32) = 20
-c                                 refinement_threshold
-      nopt(32) = 1d4
-      lopt(32) = .true.
-c                                 initialize mus flag for refinement threshold
+c                                 output back-calculated solute speciation
+      lopt(25) = .true.
+c                                 aq_solvent_composition (true = molar)
+      lopt(26) = .true.
+      valu(26) = 'y'
+c                                 aq_solute_composition (true = molal)
+      lopt(27) = .true.
+      valu(27) = 'm'
+c                                 lagged speciation
+      lopt(32) = .false.
+c                                 initialize mus flag lagged speciation
       mus = .false.
 c                                 -------------------------------------
 c                                 werami output options:
@@ -424,6 +435,28 @@ c                                 phase composition key
                iopt(2) = 0
             end if 
             valu(2) = val
+
+         else if (key.eq.'aqueous_species') then
+
+            read (strg,*) iopt(32)
+
+         else if (key.eq.'aqueous_output') then
+
+            if (val.ne.'T') lopt(25) = .false.
+
+         else if (key.eq.'aq_solvent_composition') then
+
+            if (val.ne.'y') then
+               lopt(25) = .false.
+               valu(25) = 'm'
+            end if 
+
+         else if (key.eq.'aq_solute_composition') then
+
+            if (val.ne.'m') then
+               lopt(26) = .false.
+               valu(26) = 'y'
+            end if 
 
          else if (key.eq.'hybrid_EoS_H2O') then
 
@@ -527,13 +560,14 @@ c                                 zero_mode key
 
          else if (key.eq.'iteration') then
 c                                 max iteration key
-            read (val,*) i
-            nopt(21) = dfloat(i)
+            read (val,*) nopt(21)
             read (nval1,*) iopt(12)
 
          else if (key.eq.'initial_resolution') then
 c                                 initial_resolution key 
-            read (strg,*) nopt(13)
+            read (strg,'(40a)') chars(1:40)
+            ibeg = 1
+            call readfr (nopt(13),ibeg,iend,40,ier)
 
          else if (key.eq.'final_resolution') then
 c                                 final_resolution keys 
@@ -578,11 +612,6 @@ c                                 2nd stage refinement points
          else if (key.eq.'max_aq_species_out') then 
 c                                 2nd stage refinement points
             read (strg,*) iopt(32)
-
-         else if (key.eq.'refinement_threshold') then
-
-            read (strg,*) nopt(32)
-            if (nopt(32).gt.1d4) lopt(32) = .false.
 
          else if (key.eq.'reach_increment_switch') then 
 c                                 reach_increment_switch
@@ -1216,16 +1245,6 @@ c                                 solvus tolerance text
            write (nval1,'(14a)') (text(i),i=1,len)
 
          end if 
-c                                 refine threshold text
-         if (lopt(32)) then 
-
-           write (strg,'(g8.2)') nopt(32)
-
-         else 
-
-           strg = '     off'
-
-         end if 
 
          if (iam.eq.1) write (n,1015) valu(6)
 c                                 context specific parameters:
@@ -1310,7 +1329,8 @@ c                                 logarithmic_p, bad_number
 
       if (iam.eq.3) then 
 c                                 WERAMI input/output options
-         write (n,1230) lopt(15),lopt(14),nopt(7),lopt(22),valu(2),
+         write (n,1230) lopt(25),iopt(32),l9,valu(26),valu(27),
+     *                  lopt(15),lopt(14),nopt(7),lopt(22),valu(2),
      *                  valu(21),valu(3),valu(4),lopt(6),valu(22),
      *                  lopt(21),lopt(24),valu(14),lopt(19),lopt(20)
 c                                 WERAMI info file options
@@ -1321,7 +1341,8 @@ c                                 WERAMI thermodynamic options
 
       else if (iam.eq.2) then 
 c                                 MEEMUM input/output options
-         write (n,1231) lopt(14),nopt(7),lopt(22),valu(2),
+         write (n,1231) lopt(25),iopt(32),l9,valu(26),valu(27),
+     *                  lopt(14),nopt(7),lopt(22),valu(2),
      *                  valu(21),valu(3),lopt(6),valu(22),lopt(21),
      *                  lopt(24),valu(14),lopt(19),lopt(20)
 
@@ -1362,7 +1383,7 @@ c                                 resolution blurb
      *          '[default]:')
 1010  format (/,2x,'Solution subdivision options:',//,
      *        4x,'initial_resolution     ',f5.3,6x,
-     *           '0->1 [0.067], 0 => off',/,
+     *           '0->1 [1/15], 0 => off',/,
      *        4x,'stretch_factor         ',f5.3,6x,'>0 [0.0164]',/,
      *        4x,'subdivision_override   ',a3,8x,'[off] lin str',/,
      *        4x,'hard_limits            ',a3,8x,'[off] on')
@@ -1432,12 +1453,12 @@ c                                 thermo options for frendly
      *        4x,'  auto-refine stage    ',g8.2,3x,
      *           '[2.5e-4], target value, see actual values below',/,
      *        4x,'resolution factor      ',i2,9x,
-     *           '>2 [3]; iteration keyword value 1',/,
+     *           '>1 [3]; iteration keyword value 1',/,
      *        4x,'refinement points      ',i2,9x,
      *           '1->',i2,' [4]; iteration keyword value 2',/,
      *        4x,'refinement_points_II   ',i2,9x,'1->',i2,' [5]',/,
      *        4x,'refinement_threshold   ',a,3x,'>0, [1e4] J',/,
-     *        4x,'solvus_tolerance_II    ',f4.2,7x,'0->1 [0.25]',/,
+     *        4x,'solvus_tolerance_II    ',f4.2,7x,'0->1 [0.2]',/,
      *        4x,'global_reach_increment ',i2,9x,'>= 0 [0]',/,
      *        4x,'reach_increment_switch ',a3,8x,'[on] off all',/,
      *        4x,'zero_mode              ',e7.1,4x,
@@ -1466,6 +1487,12 @@ c                                 thermo options for frendly
 1220  format (/,2x,'Composition options:',//,
      *        4x,'closed_c_space         ',l1,10x,'F [T]')
 1230  format (/,2x,'Input/Output options:',//,
+     *        4x,'aqueous_output         ',l1,10x,'[F] T',/
+     *        4x,'aqeuous_species        ',i3,8x,'[20] 0-',i3,/,
+     *        4x,'aq_solvent_composition ',a3,8x,
+     *        '[y] m: y => mol fraction, m => molality',/,
+     *        4x,'aq_solute_composition  ',a3,8x,
+     *        'y [m]: y => mol fraction, m => molality',/,
      *        4x,'spreadsheet            ',l1,10x,'[F] T',/,
      *        4x,'logarithmic_p          ',l1,10x,'[F] T',/,
      *        4x,'bad_number         ',f7.1,8x,'[0.0]',/,
@@ -1483,6 +1510,12 @@ c                                 thermo options for frendly
      *        4x,'pause_on_error         ',l1,10x,'[T] F',/,
      *        4x,'poisson_test           ',l1,10x,'[F] T')
 1231  format (/,2x,'Input/Output options:',//,
+     *        4x,'aqueous_output         ',l1,10x,'[F] T',/
+     *        4x,'aqeuous_species        ',i3,8x,'[20] 0-',i3,/,
+     *        4x,'aq_solvent_composition ',a3,8x,
+     *        '[y] m: y => mol fraction, m => molality',/,
+     *        4x,'aq_solute_composition  ',a3,8x,
+     *        'y [m]: y => mol fraction, m => molality',/,
      *        4x,'logarithmic_p          ',l1,10x,'[F] T',/,
      *        4x,'bad_number         ',f7.1,8x,'[0.0]',/,
      *        4x,'composition_constant   ',l1,10x,'[F] T',/,
@@ -1536,7 +1569,7 @@ c----------------------------------------------------------------------
 
       integer lun, len, ier, iscan, i, iscnlt, ibeg, iend, ist
 
-      character card*lchar, key*22, val*3,
+      character card*(lchar), key*22, val*3,
      *          nval1*12, nval2*12, nval3*12, strg*40, strg1*40
 
       integer length,iblank,icom
@@ -1652,7 +1685,7 @@ c----------------------------------------------------------------------
 
       logical eof
 
-      character card*lchar, string(3)*8
+      character card*(lchar), string(3)*8
 
       integer length,iblank,icom
       character chars*1
@@ -2072,7 +2105,7 @@ c---------------------------------------------------------------------
       else if (ier.eq.183) then
          write (*,183) k2,char
       else if (ier.eq.197) then
-         write (*,197) k5,char
+         write (*,197) int, k5, char
       else if (ier.eq.200) then
          write (*,200)
       else if (ier.eq.204) then
@@ -2085,12 +2118,8 @@ c---------------------------------------------------------------------
          write (*,208) char
       else if (ier.eq.227) then
          write (*,227) char, int
-      else if (ier.eq.228) then 
-         write (*,228) char, realv, int
-      else if (ier.eq.323) then
-         write (*,323)
       else
-         write (*,999) ier,realv,int,char
+         write (*,999) ier, realv, int, char
       end if
  
       call errpau
@@ -2146,7 +2175,7 @@ c---------------------------------------------------------------------
      *        ' solution model file',/,' increase parameter i9 (',
      *        i3,')')
 25    format (/,'**error ver025** too many solution models ',
-     *        ' increase parameter h9 (',i3,')')
+     *          'increase parameter h9 (',i3,')')
 26    format (/,'**error ver026** the number of fixed components (',
      *        i2,') in ',a,/,' is >= the number of components ',/)
 27    format (/,'**error ver027** Error reading the Perple_X',
@@ -2221,10 +2250,10 @@ c---------------------------------------------------------------------
      *        ' increase parameter m1 (',i2,').',/)
 49    format (/,'**error ver049** the order of solution model ',a,
      *        ' is too high, increase parameter m2 (',i2,').',/)
-50    format (/,'**error ver050** requested compositional resolution ',
-     *          '(',f6.0,') for a component in',
-     *          'solution model: ',a,/,'exceeds 1/MRES (MRES=',i4,') ',
-     *          'reduce requested resolution or inrease parameter',/,
+50    format (/,'**error ver050** requested resolution ',
+     *          '(',f6.0,') for a component in solution:',a,/,
+     *          'exceeds 1/MRES (MRES=',i5,') ',
+     *          'reduce requested resolution or inrease',/,
      *          'MRES in routine CARTES',/)
 51    format (/,'**error ver051** DUMMY1 could not find the auxilliary'
      *         ,' input file:',/,a,/,'required for open system model ',
@@ -2286,7 +2315,7 @@ c---------------------------------------------------------------------
 71    format (/,'**error ver071** format error or EOF reading the: ',a,
      *        /,'probably VERTEX is still running or was terminated by '
      *         ,'an error.',/)
-72    format (/,'**error ver072** ',a)
+72    format (/,'**error ver072** ',a,/)
 73    format (/,'**error ver073** the thermodynamic data file has ', 
      *          'more than one entity named: ',a,/,'delete or rename ',
      *          'the entities, this error is often caused by make ',
@@ -2374,12 +2403,6 @@ c---------------------------------------------------------------------
      *          'correction is specified for endmember: ',i2,/,
      *          'DQF corrections can only be made on the idependent ',
      *          'endmembers of a solution model',/)
-228   format (/,'**error ver228** in solution model ',a,' negative ',
-     *          'composition (',g12.6,') for component ',i2,/,
-     *          'probable cause is an incorrect stoichiometric ',
-     *          'definition for a dependent endmember.',/)
-323   format (/,'**error ver323** prime9, imd(i)=0 is the only',/,
-     *        'subdivision scheme permitted for this version' )
 999   format (/,'**error vertex** unspecified error ier=',i3,/,
      *        ' real=',g15.7,/,' i=',i12,/,' char=',a)
       end
@@ -2521,6 +2544,11 @@ c----------------------------------------------------------------------
          write (*,58)
       else if (ier.eq.59) then
          write (*,59) char
+         if (int.eq.0) then 
+            write (*,590)
+         else 
+            write (*,591)
+         end if 
       else if (ier.eq.60) then
          write (*,60) char
       else if (ier.eq.63) then
@@ -2545,6 +2573,8 @@ c----------------------------------------------------------------------
          write (*,91)
       else if (ier.eq.92) then 
          write (*,92) int, l7, char, (l7 - 1)/2**(grid(3,2)-1) + 1
+      else if (ier.eq.99) then
+         write (*,99) char
       else if (ier.eq.106) then
          write (*,106) char
       else if (ier.eq.108) then
@@ -2576,6 +2606,8 @@ c----------------------------------------------------------------------
          write (*,208) int
       else if (ier.eq.209) then
          write (*,209) int
+      else if (ier.eq.228) then 
+         write (*,228) char, realv, int
       else
          write (*,999) ier, char, realv, int
       end if
@@ -2624,8 +2656,7 @@ c----------------------------------------------------------------------
      *          ' with dp/dT < 0 and may not be treated ',/,
      *          ' correctly')
 13    format (/,'**warning ver013** ',a,' has null or negative ',
-     *          'composition and will be ',/,'rejected from the ',
-     *          'composition space.')
+     *          'composition')
 14    format (/,'**warning ver014** You can not redefine the ',
      *          'saturated phase component:',a,/,'To circumvent this ',
      *          'restriction use CTRANSF to make a data base with the',/
@@ -2783,8 +2814,12 @@ c     *          ' (SWASH, see program documentation Eq 2.3)',/)
      *         ,'following reaction',/,' is inconsistent with the ',
      *          'invariant equilibrium.',/)
 59    format (/,'**warning ver059** endmember ',a,
-     *        ' has invalid site population.',/,'It will be retained',
+     *        ' has an invalid site population.')
+590   format ('It will be retained',
      *        ' as a place-holder with zero concentration',/)
+591   format ('It will be retained and allowed finite concentration ',
+     *        'because site_check_override is',/,'specified for this ',
+     *        'solution model',/)
 60    format (/,'**warning ver060** non-fatal programming error ',
      *          'routine:',a,/)
 63    format (/,'**warning ver063** wway, invariant point on an edge?',
@@ -2833,6 +2868,7 @@ c     *          ' (SWASH, see program documentation Eq 2.3)',/)
      *        'perplex_option.dat',/,'The program will continue ',
      *        'with an effective grid resolution of ',i4,
      *        ' points.')
+99    format (/,'**warning ver099** ',a,/)
 106   format ('**warning ver106** programming error in ',a)
 108   format (/,'**warning ver108** wway, a phase field with the '
      *         ,'following',/,' reaction is stable on both ',
@@ -2859,13 +2895,13 @@ c     *          ' (SWASH, see program documentation Eq 2.3)',/)
      *          ' not converge ',/,' possibly due to graphite super-',
      *          'saturation. ier = ',i1,' real = ',g16.5,/)
 176   format (/,'**warning ver176** fluid equation of state routine ',
-     *        a,' did not converge.',/,' If execution continues this ',
-     *        'may lead to incorrect results.',/,' To avoid this ',
+     *        a,' did not converge.',/,'If execution continues this ',
+     *        'may lead to incorrect results. To avoid this ',/,
      *        'problem increase speciation_max_it (',i4,') in ',
-     *        'perplex_option.dat',/,' or ',
-     *        'choose a different equation of state.',/,
+     *        'perplex_option.dat or choose',/,
+     *        'a different equation of state.',//,
      *        'NOTE: at compositional extremes fluid speciation ' 
-     *        'calculations, may converge ',/,'only after many ',
+     *        'calculations may require ',/,
      *        'thousands of iterations',/)
 177   format (/,'**warning ver177** Invalid fluid speciation. ',
      *          'Reducing speciation tolerance (',g14.6,') in ',
@@ -2887,6 +2923,10 @@ c     *          ' (SWASH, see program documentation Eq 2.3)',/)
      *        'degenerate (ier=',i3,').')
 209   format ('**warning ver209** the assemblage you input does not'
      *       ,' span the specified bulk composition (ier=',i3,').')
+228   format (/,'**warning ver228** in solution model ',a,' negative ',
+     *          'composition (',g12.6,') for component ',i2,/,
+     *          'this may indicate an incorrect stoichiometric ',
+     *          'dependent endmember definition.',/)
 900   format (' the calculation may be incomplete !!!!',/)
 999   format (/,'**warning unspecified** ier =',i3,' routine ',a6
      *         ,' r = ',g12.6,' int = ',i9,/)
@@ -2929,7 +2969,7 @@ c----------------------------------------------------------------------
 
       double precision rnum, nums(m3)
 
-      character tname*8, name*8, rec*lchar, tag*3
+      character tname*8, name*8, rec*(lchar), tag*3
 
       double precision mcomp
       character mknam*8
@@ -3110,7 +3150,7 @@ c----------------------------------------------------------------------
 
       integer len, ier, iscan, ict, i, iscnlt, ibeg, nloc
 
-      character card*lchar
+      character card*(lchar)
 
       integer length,iblank,icom
       character chars*1
@@ -3180,7 +3220,7 @@ c                                 scan backwards to the last non-blank
       subroutine readfr (rnum,ibeg,iend,len,ier)
 c----------------------------------------------------------------------
 c readfr looks for a number or two numbers separated by a backslash / in
-c that array chars(iend:ibeg), the latter case is interpreted as a ratio. 
+c array elements chars(iend:ibeg), the latter case is interpreted as a ratio. 
 c the result is returned as num
 c-----------------------------------------------------------------------
       implicit none
@@ -3487,7 +3527,7 @@ c----------------------------------------------------------------------
 
       integer ictr, itrans
       double precision ctrans
-      common/ cst207 /ctrans(k0,k5),ictr(k5),itrans
+      common/ cst207 /ctrans(k0,k0),ictr(k0),itrans
 
       integer idspe,ispec
       common/ cst19 /idspe(2),ispec
@@ -3571,6 +3611,9 @@ c----------------------------------------------------------------------
 
       logical ok
 
+      double precision p,t,xco2,u1,u2,tr,pr,r,ps
+      common/ cst5  /p,t,xco2,u1,u2,tr,pr,r,ps
+
       integer ikind,icmpn,icout,ieos
       double precision comp,tot
       common/ cst43 /comp(k0),tot,icout(k0),ikind,icmpn,ieos
@@ -3593,6 +3636,19 @@ c----------------------------------------------------------------------
       common/ cst56 /strgs(32),mstrg(6),dstrg(m8),tstrg(11),wstrg(m16),
      *               e16st(13)
 
+      double precision atwt
+      common/ cst45 /atwt(k0)
+
+      double precision sel
+      logical hsccon, hsc
+      common/ cxt45 /sel(k0),hsccon,hsc(k1)
+
+      integer ic
+      common/ cst42 /ic(k0)
+
+      integer icomp,istct,iphct,icp
+      common/ cst6 /icomp,istct,iphct,icp
+
       save ic2p
       data ic2p/0,0,22,1,2,3,4,5,6,7,12,13,14,15,16,17,18,19,20,21,8,
      *          9,10,11,23,24,25,26,27,28,29,30/
@@ -3606,6 +3662,8 @@ c                                 counter of mock-lambda transitions
       jlam = 0 
 c                                 flag for shear moduli
       ikind = 0 
+c                                 hsc conversion 
+      hsc(k10) = .false.
 c                                 standard thermo parameters
       do i = 1, k4
          thermo(i,k10) = 0d0
@@ -3710,12 +3768,33 @@ c                                 DEW/HKF aqueous data
             else 
 c                                 generic thermo data 
                do i = 1, 21
+
                   if (key.eq.strgs(i)) then 
+
                      read (values,*,iostat=ier) thermo(i,k10)
                      if (ier.ne.0) call error (23,tot,ier,strg) 
                      ok = .true.
-                     exit 
+                     exit
+
+                  else if (key.eq.'GH') then
+
+                     read (values,*,iostat=ier) thermo(1,k10)
+                     if (ier.ne.0) call error (23,tot,ier,strg)
+                     hsc(k10) = .true.
+
+                     if (hsccon) then 
+c                                 convert HSC G0 to SUP G0
+                        do j = 1, icomp
+                           thermo(1,k10) = thermo(1,k10) 
+     *                                   + tr*comp(ic(j))*sel(j)
+                        end do
+                     end if 
+ 
+                     ok = .true.
+                     exit
+
                   end if 
+
                end do 
 
             end if 
@@ -3812,7 +3891,7 @@ c----------------------------------------------------------------------
 
       integer lun, len, ier, iscan, i, iscnlt, ibeg, iend
 
-      character card*lchar, key*22, values*80, strg*80
+      character card*(lchar), key*22, values*80, strg*80
 
       integer length,iblank,icom
       character chars*1
@@ -3974,7 +4053,7 @@ c----------------------------------------------------------------------
 
       character text(14)*1
 
-      double precision var
+      double precision var, dg
 
       double precision cp
       common/ cst12 /cp(k5,k1)
@@ -4024,6 +4103,16 @@ c----------------------------------------------------------------------
       character*8 names
       common/ cst8 /names(k1)
 
+      double precision p,t,xco2,u1,u2,tr,pr,r,ps
+      common/ cst5  /p,t,xco2,u1,u2,tr,pr,r,ps
+
+      double precision atwt
+      common/ cst45 /atwt(k0)
+
+      double precision sel
+      logical hsccon, hsc
+      common/ cxt45 /sel(k0),hsccon,hsc(k1)
+
       character*80 com
       common/delet/com 
 
@@ -4056,7 +4145,9 @@ c                                 formula
       else 
           jcomp = icmpn
       end if 
-      
+
+      dg = 0d0 
+
       do i = 1, jcomp
 
          if (option.eq.0) then
@@ -4082,7 +4173,9 @@ c                                 load number into chars
 
             do j = ibeg, iend
                chars(j) = text(j-ibeg+1)
-            end do 
+            end do
+c                                get the delta g HSC correction
+            dg = dg + var*sel(i)
 
             chars(j) = ')'
  
@@ -4095,29 +4188,73 @@ c                                 write the formula
       write (lun,'(400a)') (chars(i), i = 1, iend+1)
 c                                 =====================================
 c                                 thermo data
-      ibeg = 1
+      if (eos(id).eq.16) then 
+c                                 HKF aqueous electrolyte data (13 values)
+         ibeg = 1
  
-      do i = 1, 3
-         call outthr (thermo(i,id),strgs(i),2,ibeg)
-      end do
-c                                 write G,S,V
-      if (ibeg.gt.1) write (lun,'(400a)') (chars(i), i = 1, ibeg)
-c                                 c1->c7 of thermo data
-      ibeg = 1
- 
-      do i = 4, 10
-         call outthr (thermo(i,id),strgs(i),2,ibeg)
-      end do
-c                                 write c1->c7
-      if (ibeg.gt.1) write (lun,'(400a)') (chars(i), i = 1, ibeg)
-c                                 b1->b8 of thermo data
-      ibeg = 1
+         do i = 1, 5
+            call outthr (thermo(i,id),e16st(i),3,ibeg)
+         end do
 
-      do i = 11, 18
-         call outthr (thermo(i,id),strgs(i),2,ibeg)
-      end do
+         if (ibeg.gt.1) write (lun,'(400a)') (chars(i), i = 1, ibeg)
+
+         ibeg = 1
+ 
+         do i = 6, 10
+            call outthr (thermo(i,id),e16st(i),3,ibeg)
+         end do
+
+         if (ibeg.gt.1) write (lun,'(400a)') (chars(i), i = 1, ibeg)
+
+         ibeg = 1
+ 
+         do i = 11, 13
+            call outthr (thermo(i,id),e16st(i),3,ibeg)
+         end do
+
+         if (ibeg.gt.1) write (lun,'(400a)') (chars(i), i = 1, ibeg)
+
+      else 
+
+         ibeg = 1
+
+         if (hsccon.and.hsc(id)) then
+c                                 convert back to HSC apparent G
+            call outthr (thermo(1,id) - tr*dg,'GH',2,ibeg)
+
+         else if (hsc(id)) then 
+c                                 direct output of HSC apparent G
+            call outthr (thermo(1,id),'GH',2,ibeg)
+
+         else
+
+            call outthr (thermo(1,id),strgs(1),2,ibeg)
+
+         end if
+ 
+         do i = 2, 3
+            call outthr (thermo(i,id),strgs(i),2,ibeg)
+         end do
+c                                 write G,S,V
+         if (ibeg.gt.1) write (lun,'(400a)') (chars(i), i = 1, ibeg)
+c                                 c1->c7 of thermo data
+         ibeg = 1
+  
+         do i = 4, 10
+            call outthr (thermo(i,id),strgs(i),2,ibeg)
+         end do
+c                                 write c1->c7
+         if (ibeg.gt.1) write (lun,'(400a)') (chars(i), i = 1, ibeg)
+c                                 b1->b8 of thermo data
+         ibeg = 1
+
+         do i = 11, 18
+            call outthr (thermo(i,id),strgs(i),2,ibeg)
+         end do
 c                                 write b1->b8
-      if (ibeg.gt.1) write (lun,'(400a)') (chars(i), i = 1, ibeg)
+         if (ibeg.gt.1) write (lun,'(400a)') (chars(i), i = 1, ibeg)
+
+      end if 
 c                                 =====================================
 c                                 shear/bulk modulus
       ibeg = 1
@@ -4162,7 +4299,7 @@ c                                 transition parameters
 
 1000  format ('end',/)
 
-      end 
+      end
 
       subroutine outthr (num,strg,len,ibeg)
 c----------------------------------------------------------------------
@@ -4707,11 +4844,11 @@ c----------------------------------------------------------------------
  
       character*5 pname, rname, y*1
 
-      double precision sum
+      double precision sum, ssum
 
       integer ictr, itrans
       double precision ctrans
-      common/ cst207 /ctrans(k0,k5),ictr(k5),itrans
+      common/ cst207 /ctrans(k0,k0),ictr(k0),itrans
 
       character tcname*5,xcmpnt*5
       common/ csta9 /tcname(k0),xcmpnt(k0)
@@ -4722,6 +4859,10 @@ c----------------------------------------------------------------------
 
       double precision atwt
       common/ cst45 /atwt(k0)
+
+      double precision sel
+      logical hsccon, hsc
+      common/ cxt45 /sel(k0),hsccon,hsc(k1)
 
       integer ikind,icmpn,icout,ieos
       double precision comp,tot
@@ -4785,7 +4926,7 @@ c                                 get the identities of the other
 c                                 components in the new component:
 70       itrans = itrans + 1
          ict = 1
-         if (itrans.gt.k5) call error (999,atwt(1),ict,'GETTRN')
+         if (itrans.gt.k0) call error (999,atwt(1),ict,'GETTRN')
        
          write (*,4050) k5-1,pname
 30       read (*,'(a)') rname
@@ -4814,10 +4955,13 @@ c                                 get the component stoichiometries:
  
          if (y.eq.'y'.or.y.eq.'Y') then
             sum = 0d0
+            ssum = 0d0             
             do i = 1, ict
                sum = sum + ctrans(icout(i),itrans) * atwt(icout(i))
+               ssum = ssum + ctrans(icout(i),itrans) * sel(icout(i))
             end do 
             atwt(icout(1)) = sum
+            sel(icout(1)) = ssum
             cmpnt(icout(1)) = pname
             cl(icout(1)) = jscan(1,5,' ',pname) - 1
             tcname(itrans) = pname
@@ -4870,11 +5014,11 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
  
-      character tag*3, string*140, key*22, values*80, strg*80
+      character tag*4, string*140, key*22, values*80, strg*80
 
       integer option, i, j, ier, iscan
 
-      double precision sum
+      double precision sum, ssum
 
       integer iopt
       logical lopt
@@ -4890,9 +5034,9 @@ c----------------------------------------------------------------------
       double precision v,tr,pr,r,ps
       common/ cst5  /v(l2),tr,pr,r,ps
 
+      integer ictr, itrans
       double precision ctrans
-      integer ictr,itrans
-      common/ cst207 /ctrans(k0,k5),ictr(k5),itrans
+      common/ cst207 /ctrans(k0,k0),ictr(k0),itrans
 
       integer iff,idss,ifug
       common/ cst10 /iff(2),idss(h5),ifug
@@ -4913,6 +5057,10 @@ c----------------------------------------------------------------------
 
       double precision atwt
       common/ cst45 /atwt(k0)
+
+      double precision sel
+      logical hsccon, hsc
+      common/ cxt45 /sel(k0),hsccon,hsc(k1)
 
       integer length,iblank,icom
       character chars*1
@@ -4978,9 +5126,24 @@ c                                 utol must be smaller than -utol
 c                                 ptol must be > 2*-dtol
       utol = -dtol/1d1
       ptol = -dtol*3d0 
-c                                 component names & formula weights
-c                                 read "begin"
+c                                 component names, formula weights, and, optionally, 3rd law s_elements
       call getkey (n2,ier,key,values,strg)
+c                                 look for optional HSC_conversion key
+      if (key.eq.'HSC_conversion') then 
+
+         hsccon = .true.
+c                                 read "begin"
+         call getkey (n2,ier,key,values,strg)
+
+      else 
+
+         hsccon = .false.
+         do i = 1, k0
+            sel(i) = 0d0
+         end do 
+
+      end if 
+
 
       icmpn = 0 
 
@@ -4996,7 +5159,11 @@ c                                 read "begin"
 c                                 get component string length
          cl(icmpn) = iscan(1,length,' ') - 1
 
-         read (values,*) atwt(icmpn)
+         if (hsccon) then 
+            read (values,*) atwt(icmpn), sel(icmpn)
+         else 
+            read (values,*) atwt(icmpn)
+         end if 
 
       end do
 c                                 save old names for component transformations
@@ -5060,18 +5227,22 @@ c                                 check special components
 
       else if (option.ne.2) then 
 c                                 substitute transformed component names
-c                                 and compute the new formula wieghts
+c                                 and compute the new formula wieghts, this
+c                                 is done in gettrns for ioption 3/5.
          do i = 1, itrans
 
             cmpnt(ictr(i)) = tcname(i)
 
             sum = 0d0
+            ssum = 0d0 
 
             do j = 1, icmpn
-               sum = sum + ctrans(j,i) * atwt(j)
+               sum =  sum  + ctrans(j,i) * atwt(j)
+               ssum = ssum + ctrans(j,i) * sel(j)
             end do
  
             atwt(ictr(i)) = sum
+            sel(ictr(i))  = ssum
 
          end do 
 
@@ -5092,9 +5263,25 @@ c                                 echo formatted header data for ctransf/actcor:
 
          write (n8,'(a,g6.1E1,a,/)') 'tolerance  ',dtol,
      *         '  |<= DTOL for unconstrained minimization, energy units'
-         write (n8,'(a,a)') 'begin_components |<= name (<5 characters),'
-     *                      ,' molar weight (g)'
-         write (n8,'(a5,1x,f9.4)') (cmpnt(i),atwt(i), i = 1, icmpn)
+
+         if (hsccon) then
+            write (n8,'(a,//,a)') 'HSC_conversion |<= tag enabling HSC '
+     *                          //'to SUP apparent energy conversion, '
+     *                          //'requires elemental entropies in the '
+     *                          //'component list below',
+     *                         'begin_components | < 6 chars, '//
+     *                         'molar weight (g), elemental entropy (R)'
+            write (n8,'(a5,2x,f9.4,3x,f9.4)') (cmpnt(i),atwt(i),sel(i),
+     *                                        i = 1, icmpn)
+
+         else 
+
+            write (n8,'(a)') 'begin_components | < 6 chars, '//
+     *                       'molar weight (g)'
+            write (n8,'(a5,1x,f9.4)') (cmpnt(i),atwt(i), i = 1, icmpn)
+
+         end if 
+
          write (n8,'(a,/)') 'end_components'
 
          if (lopt(7)) then 
@@ -5112,9 +5299,13 @@ c                                 read and echo unformatted comments and make da
          read (n2,'(a)',iostat=ier) string
          if (ier.ne.0) call error (21,r,i,dname)
          read (string,'(a)') tag
-         if (option.gt.3) write (n8,'(a)') string
 
-         if (string.eq.'begin_makes') then
+         if (option.gt.3) then
+            call mytrim (string)
+            write (n8,'(400a)') chars(1:length)
+         end if 
+
+         if (string.eq.'begin_makes'.and.option.lt.4) then
  
             call rmakes (option)
 
@@ -5124,9 +5315,9 @@ c                                 read and echo unformatted comments and make da
 
             cycle
 
-         else 
+         else
 
-            exit       
+            exit
 
          end if
 
@@ -5238,6 +5429,7 @@ c
 c evntually all such rountines will be in one block or file, this is
 c not the case now. 6/20/2011. 
 c-------------------------------------------------------------------
+
 
       subroutine unblnk (text)
 c------------------------------------------------------------------- 
@@ -5579,6 +5771,34 @@ c----------------------------------------------------------------------
 
       end 
 
+      subroutine mytrim (text)
+c----------------------------------------------------------------------
+c mytrim - scan text and delete trailing blank characters.
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer i, nchar
+ 
+      character text*(*)
+
+      integer ict,iblank,icom
+      character bitsy*1
+      common/ cst51 /ict,iblank,icom,bitsy(lchar)
+c---------------------------------------------------------------------- 
+      nchar = len(text) 
+
+      read (text,'(400a)') (bitsy(i), i = 1, nchar)
+c                                find last non-blank
+      ict = 1 
+      
+      do i = 1, nchar
+         if (bitsy(i).gt.' ') ict = i
+      end do
+
+      end 
+
       subroutine deblnk (text)
 c----------------------------------------------------------------------
 c deblnk - scan text and delete multiple blank characters, strip
@@ -5669,6 +5889,8 @@ c                                 strip put + - and - + strings
 
          else if (bitsy(i).eq.'+'.and.bitsy(i+2).eq.'-'.or.
      *            bitsy(i).eq.'-'.and.bitsy(i+2).eq.'+') then
+c                                allow +/- or -/+
+             if (bitsy(i+1).eq.'/') cycle 
 
              bitsy(i) = '-'
              bitsy(i+2) = ' '

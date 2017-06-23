@@ -1241,7 +1241,7 @@ c---------------------------------------------------------------------
 
       character*2 strgs*3, mstrg, dstrg, tstrg*3, wstrg*3, e16st*3
       common/ cst56 /strgs(32),mstrg(6),dstrg(m8),tstrg(11),wstrg(m16),
-     *               e16st(13)
+     *               e16st(12)
 
       integer eos
       common/ cst303 /eos(k10)
@@ -1284,10 +1284,11 @@ c                                 g0, s0, v0
 c                                 c1-c8
      *            thermo(4,id),thermo(5,id),thermo(6,id),thermo(7,id),
      *            thermo(8,id),thermo(9,id),thermo(10,id),thermo(24,id),
-c                                 b1-b8 (skips b3)
-     *            thermo(11,id),thermo(12,id),thermo(14,id),
-     *            thermo(15,id),thermo(16,id),thermo(17,id),
-     *            thermo(18,id),
+c                                 b1-b11 
+     *            thermo(11,id),thermo(12,id),thermo(13,id),
+     *            thermo(14,id),thermo(15,id),thermo(16,id),
+     *            thermo(17,id),thermo(18,id),thermo(19,id),
+     *            thermo(20,id),thermo(21,id),
 c                                 ref stuff
      *            tr,pr,eos(id))
 c                                 add in activity correction
@@ -1428,10 +1429,11 @@ c                                 c1-c8
      *            thermo(4,id),thermo(5,id),thermo(6,id),
      *            thermo(7,id),thermo(8,id),thermo(9,id),
      *            thermo(10,id),thermo(24,id),
-c                                 b1-b8 (skips b3)
-     *            thermo(11,id),thermo(12,id),thermo(14,id),
-     *            thermo(15,id),thermo(16,id),thermo(17,id),
-     *            thermo(18,id),
+c                                 b1-b11 
+     *            thermo(11,id),thermo(12,id),thermo(13,id),
+     *            thermo(14,id),thermo(15,id),thermo(16,id),
+     *            thermo(17,id),thermo(18,id),thermo(19,id),
+     *            thermo(20,id),thermo(21,id),
 c                                 ref stuff
      *            tr,pr,eos(id))
 
@@ -1546,10 +1548,11 @@ c                                 c1-c8
      *            thermo(4,id),thermo(5,id),thermo(6,id),
      *            thermo(7,id),thermo(8,id),thermo(9,id),
      *            thermo(10,id),thermo(24,id),
-c                                 b1-b8 (skips b3)
-     *            thermo(11,id),thermo(12,id),thermo(14,id),
-     *            thermo(15,id),thermo(16,id),thermo(17,id),
-     *            thermo(18,id),
+c                                 b1-b11 
+     *            thermo(11,id),thermo(12,id),thermo(13,id),
+     *            thermo(14,id),thermo(15,id),thermo(16,id),
+     *            thermo(17,id),thermo(18,id),thermo(19,id),
+     *            thermo(20,id),thermo(21,id),
 c                                 ref stuff
      *            tr,pr,eos(id))
 
@@ -1681,7 +1684,7 @@ c----------------------------------------------------------------------
 
       character*2 strgs*3, mstrg, dstrg, tstrg*3, wstrg*3, e16st*3
       common/ cst56 /strgs(32),mstrg(6),dstrg(m8),tstrg(11),wstrg(m16),
-     *               e16st(13)
+     *               e16st(12)
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps

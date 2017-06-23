@@ -130,12 +130,13 @@ c-----------------------------------------------------------------------
       character cmpnt*5, dname*80
       common/ csta5 /cl(k0),cmpnt(k0),dname
 
+      logical sitck
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
      *        kstot,rkord,xtyp
       double precision wg,wk,reach
-      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),
-     *      reach,iend(m4),isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),
-     *      isp(mst),rkord(m18),isite,iterm,iord,istot,jstot,kstot,xtyp
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),reach,iend(m4),
+     *      isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),isp(mst),
+     *      rkord(m18),isite,iterm,iord,istot,jstot,kstot,xtyp,sitck
 
       integer jsmod
       double precision vlaar
@@ -157,6 +158,11 @@ c-----------------------------------------------------------------------
 
       integer iam
       common/ cst4 /iam
+
+      integer iaq, aqst, aqct
+      character aqnam*8
+      double precision aqcp, aqtot
+      common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
 
       integer iopt
       logical lopt
@@ -205,9 +211,10 @@ c                                 initialization:
  
       iv(5) = 3
       idum = 0
+      aqst = -1
       ixct = 0
       ifugy = 0
-      isat=0
+      isat = 0
       jmct = 0
       ifct = 0
       io3 = 1
@@ -358,6 +365,7 @@ c                                 mobile components:
          do 
 c                                 write prompt
             write (*,2050) 
+            if (jmct.eq.1) write (*,2055)
             write (*,1040) (qname(i),i=1,jcmpn)
             read (*,3000) char5 
             if (char5.eq.blank) exit 
@@ -562,6 +570,9 @@ c                                 mobile or a saturated component:
             if (.not.good) cycle
 c                                  good name, count and save index
             icp = icp + 1
+
+            if (icp.gt.k5) call error (197,0d0,icp,'BUILD')
+
             ic(icp) = igood
             bname(icp) = char5    
 
@@ -1424,10 +1435,9 @@ c                                 coordinate file name if necessary
       write (n1,1010) idum,'unused place holder, post 05'
 c                                 output saturated phase eos choice:
       write (n1,1010) ifug,'ifug EoS for saturated phase'
-
-      if (ifug.eq.11.or.ifug.eq.12.or.ifug.eq.16.or.ifug.eq.17.or.
-     *    ifug.eq.24.or.ifug.eq.24.or.ifug.eq.25)  write (n1,1330) ibuf,
-     *                                             hu, dlnfo2, elag,
+      if (ifug.eq.8 .or.ifug.eq.10.or.ifug.eq.12.or.ifug.eq.16.or.
+     *    ifug.eq.17.or.ifug.eq.19.or.ifug.eq.20.or.ifug.eq.24.or.
+     *    ifug.eq.25)  write (n1,1330) ibuf, hu, dlnfo2, elag,
      *              'ibuf, ipro, choice dependent parameter, ln(ag)'
       if (ibuf.eq.5) write (n1,4020) buf,'a-e'
 
@@ -1636,6 +1646,8 @@ c                                 diagrams:
 2050  format (/,'Specify a component whose chemical potential, activi',
      *       'ty or fugacity is',/,'to be independent, ',
      *       'press <enter> to finish:')
+2055  format (/,'In other words, if you only want one mobile component',
+     *       ', then press <enter>',/)
 2060  format (/,'Component ',a,' is to be characterized by:',//,
      *       5x,'1 - chemical potential [default]',/,
      *       5x,'2 - log10(fugacity)',/,
@@ -1687,7 +1699,7 @@ c                                 diagrams:
      *        'set to ',i3,' and ',i3,' points for the exploratory ',
      *        'and autorefine cycles.')
 3110  format (/,'**warning ver110** in this mode Perple_X  will not che'
-     *        'ck whether conditions are',//,'supersaturated with resp',
+     *        'ck whether conditions are',/,'supersaturated with resp',
      *        'ect to mobile components.',//,
      *        'To compute saturation surfaces:'
      *     ,/,'  1) use convex hull optimization and do not use ',
@@ -1715,14 +1727,6 @@ c                                 diagrams:
      *       'permits use of its compositional variable: ',a,'.',/) 
       end
  
-      subroutine grxn (g)
-c--------------------------------------------------------------------
-c a dummy routine to allow rk to be linked with rlib.f
-c--------------------------------------------------------------------
-      double precision g
-      g = g
-      end
-
       subroutine depend (ivct,idep,iind,iord,c,dtext)
 c---------------------------------------------------------------------------
 c subroutine to reset variable flags and counters if one variable is

@@ -1,4 +1,4 @@
-676 DO NOT DELETE THIS LINE
+678 DO NOT DELETE THIS LINE
 
                              FOR MODEL DEFINITIONS AND REFERENCES REFER TO THE GLOSSARY AT:
 
@@ -19,7 +19,7 @@
 
                              Special models:
 
-                             23    - Toops-Samis melt model
+                             20    - Electrolyte model
                              24    - Holland & Powell Haplogranite melt model 
                              25    - Ghirso pMELTS/MELTS model
                              26    - Haefner H2O-CO2-NaCl
@@ -37,11 +37,84 @@
                              example) excess functions. The format of model type 1 is described in detail in the Perple_X 
                              program documentation (vdoc.pdf).
                            
-                             The format for all other model types is not yet documented, but may be deduced from the commentary
+                             The format for all other model types is not documented, but may be deduced from the commentary
                              within the models included herein. Character data is format free in all models except model type 1.
 
                              comments can be placed between models provided, nothing is written in the first 10 columns. Comments 
                              may be placed after data if it is separated from the data by a '|' marker.
+                      --------------------------------------------------------
+begin_model
+
+                                                                        
+Aq_solvent
+abbreviation Aq
+full_name    electrolytic_fluid
+
+20                          | model type: electrolytic fluid
+
+1                           | = ns = number of solvent species
+H2O
+1                           | = nn = number of neutral species
+SiO2,aq
+5                           | = nq = number of charged species
+H+
+HSiO3-
+Mg+2
+MgOH+
+OH-
+
+                            | ranges on the first ns-1 = 0 species 
+
+                            | ranges (mol fraction) on the nn neutral solute species
+0.0    1e-2 1e-3         1   
+                            | ranges (mol fraction) on the first nq-1 charged solute species 
+0.0    2e-6 1e-7         1   
+0.0    1e-9 1e-10        1   
+0.0    6e-8 1e-9         1   
+0.0    3e-6 1e-7         1   
+
+end_of_model
+
+
+Aq_solven0
+abbreviation Aq
+full_name    electrolytic_fluid
+
+20                          | model type: electrolytic fluid
+
+3                           | = ns = number of solvent species, water must be the last solvent species.
+
+CO2
+CH4
+H2O
+
+2                           | = nn = number of neutral solute species
+
+SiO2,aq
+Si2O4,aq
+
+5                           | = nq = number of charged species
+
+HCO3-
+Mg(HCO3)
+OH-
+HSiO3-
+Mg(HSiO3
+
+
+                            | ranges on the first ns-1 species
+0    0.05  0.02        1
+0    0.05  0.02        1
+                            | ranges (mol fraction) on the nn neutral solute species
+0    0.8d-2  2d-3      1
+0    0.8d-2  2d-3      1
+                            | ranges (mol fraction) on the first nq-1 charged solute species 
+0    1e-6 2e-7         1
+0    1e-6 2e-7         1
+0    1e-6 2e-7         1
+0    1e-6 2e-7         1 
+
+end_of_model
                       --------------------------------------------------------
 begin_model
                       Green et al (JMG, 2016) Augite model.
@@ -2403,6 +2476,8 @@ z(t1,al)   = 1/2 + 1/2 east + 1/2 fbit
 
 z(h,o)     = 1 tbit
 
+site_check_override
+
 end_of_model    
                     --------------------------------------------------------  
 begin_model                         
@@ -2882,6 +2957,8 @@ z(mg,m4) = 1 afchl
 
 2 2.                            |2 species on 2 T2 sites 
 z(al,T2)= 1 ames + 1/2 clin + 1/2 daph + 1/2 mnchl
+
+site_check_override
 
 end_of_model  
                               --------------------------------------------------------
@@ -3911,6 +3988,8 @@ z(t2,al) = 1/2 tats
 z(m2,mg) = 1 ta 
 z(fe,m2) = 1 fta
 
+site_check_override
+
 end_of_model               
 
                       --------------------------------------------------------
@@ -4361,6 +4440,8 @@ begin_dqf_corrections
 dqf(ts) 10000 0 0 
 end_dqf_corrections
 
+site_check_override
+
 end_of_model             
                       --------------------------------------------------------
 begin_model               
@@ -4455,6 +4536,8 @@ dqf(ts) 10000
 end_dqf_corrections
 
 reach_increment 1
+
+site_check_override
 
 end_of_model               
                       --------------------------------------------------------
@@ -4578,6 +4661,8 @@ dqf(gl)   5d3 0 0
 dqf(ts)   1d4 0 0 
 dqf(parg) 15d3 0 0 
 end_dqf_corrections
+
+site_check_override
 
 end_of_model              
                       --------------------------------------------------------
@@ -6336,6 +6421,8 @@ z(fe,m2) = 1 fatg
 
 reach_increment 0
 
+site_check_override
+
 end_of_model
                       --------------------------------------------------------
 begin_model
@@ -6357,42 +6444,7 @@ ideal
 2 1.                       | 2 species, 1 site pfu
 z(mg) = 1 br
 
-end_of_model               
-                      --------------------------------------------------------
-begin_model
-
-                           dummy model to produce pseudocompounds for the Toop-Samis
-                           model, the first endmember must be sio2, the remaining 
-                           endmembers must be entered in order of increasing at wt of
-                           the cation, i.e. na, mg, al....., with the present format
-                           you are going to be limited to 4 component melts, dum1 and
-                           dum2 will be ignored by vertex (i.e., if it doesn't find 
-                           the endmember in the thermodynamic data file it will eliminate
-                           the component from the model. 
-
-Toop-Melt
-abbreviation Melt
-full_name    liquid
-
-23                                    model type: Toop internal EoS
-
-4                                     number of endmembers
-SIO2     CAO      DUM1              | endmember names
-DUM2  
-  0  0  0  0                          endmember flags
-  0. 1. 0.1 0 
-  0. 1. 0.1 0 
-  0. 1. 0.1 0  subdivision ranges and model
-
-ideal
-
-1                                     3 site entropy model
-4 3.                                  4 species, multiplicity = 3
-z(Ca) = 1 CAO
-z(Si) = 1 SIO2
-z(DUM1) = 1 DUM1
-
-end_of_model         
+end_of_model                      
                       --------------------------------------------------------
 begin_model                
                              Ternary feldspars (Holland and Powell, 2003, CMP, p.492-501) 
@@ -7568,6 +7620,8 @@ z(m1,mg) = 1 gl
 
 z(m2,fe3+) = 1 rieb
 
+site_check_override
+
 end_of_model 
 
 begin_model                
@@ -8459,6 +8513,8 @@ z(m4,na) = 0 + 1 gl
 begin_dqf_corrections
 dqf(ts) 10000 0 0 
 end_dqf_corrections
+
+site_check_override
 
 end_of_model              
                       --------------------------------------------------------
@@ -9787,6 +9843,32 @@ end_of_model
                       --------------------------------------------------------
 begin_model                
                                                                         
+COH-Fluid 
+abbreviation F
+full_name    fluid
+
+39                          | model type: Generic Hybrid EoS
+3
+CO2
+CH4
+H2O 
+
+  0  0  0                              endmember flags
+
+0.0 1.0 0.1       0        | subdivision ranges, imod = 0 -> cartesian subdivision
+0.0 1.0 0.1       0        | subdivision ranges, imod = 0 -> cartesian subdivision
+
+ideal
+
+0
+
+reach_increment 3 
+
+end_of_model              
+
+                      --------------------------------------------------------
+begin_model                
+                                                                        
 C-H-Fluid 
 abbreviation F
 full_name    fluid
@@ -10741,6 +10823,8 @@ z(A,ti)   = 1/2 dilm
 3 1.                       | B - Fe3+ Ti4+ Fe2+
 z(b,fe3+) = 1 hem
 z(b,fe2+) = 1/2 dilm
+
+refine_endmembers
 
 end_of_model
 

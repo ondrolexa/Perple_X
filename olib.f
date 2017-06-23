@@ -10,9 +10,10 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
  
-      character cprop*18, text*lchar
+      character cprop*18, text*(lchar)
 
       integer i,j,k,l,lu,id,inc
+
 
       double precision poiss, gcpd
  
@@ -63,8 +64,8 @@ c----------------------------------------------------------------------
       common / cst24 /ipot,jv(l2),iv(l2)
 
       logical mus
-      double precision mu, gmax
-      common/ cst330 /mu(k8),gmax,mus
+      double precision mu
+      common/ cst330 /mu(k8),mus
 
       integer hcp,idv
       common/ cst52  /hcp,idv(k7) 
@@ -102,6 +103,10 @@ c----------------------------------------------------------------------
       integer jnd
       double precision aqg,q2,rt
       common/ cxt2 /aqg(m4),q2(m4),rt,jnd(m4)
+
+      integer idaq, jdaq
+      logical laq
+      common/ cxt3 /idaq,jdaq,laq
 
       integer iam
       common/ cst4 /iam
@@ -215,7 +220,7 @@ c                                 species_ouput
 
       end if 
 
-      if (lopt(24)) then 
+      if (lopt(24).and.np.gt.0) then 
 
          write (lu,'(/,a,/)') 'Pure species molar Gibbs energies*:'
 c                                 electrolyte fluid is a special
@@ -404,11 +409,36 @@ c                                 chemical potentials variance
          write (lu,1130) (cname(i), i = 1, jbulk)
          write (lu,1140) (mu(i), i = 1, jbulk)
          write (lu,1071) 2, jbulk - ntot + 2 
+c                                 test for non-NaN chemical potentials
+         mus = .false.
+         do i = 1, jbulk
+            if (.not.isnan(mu(i))) then
+               mus = .true.
+               exit 
+            end if 
+         end do 
       else 
          write (lu,1070) 2, jbulk - ntot + 2 
       end if 
 
+      if (laq.and.lopt(25)) then 
+
+         do i = 1, ntot
+            
+            if (kkp(i).eq.idaq) then
+
+               call aqrxdo (i,lu)
+
+            end if 
+
+         end do 
+
+      end if 
+
+      write (lu,1010)
+
 1000  format (/,40('-'),//,'Stable phases at:')
+1010  format (/,40('-'),/)
 1020  format (/,'Phase Compositions (',a,'):',
      *        /,19x,'wt %',6x,'vol %',5x,'mol %',5x,'mol  ',
      *          5x,20(1x,a,3x))
@@ -421,8 +451,8 @@ c                                 chemical potentials variance
      *          ' Specific Entropy (J/K/m3) = ',g12.6,/,
      *          ' Heat Capacity (J/K/kg) = ',g12.6,/,
      *          ' Specific Heat Capacity (J/K/m3) = ',g12.6,/)
-1070  format ('Variance (c-p+',i1,') = ',i2,//,40('-'),/)
-1071  format (/,'Variance (c-p+',i1,') = ',i2,//,40('-'),/)
+1070  format ('Variance (c-p+',i1,') = ',i2,/)
+1071  format (/,'Variance (c-p+',i1,') = ',i2,/)
 1080  format (/,16x,'Complete Assemblage',15x,'Solid+Melt Only',
      *        /,14x,'mol',7x,' mol %',6x,'wt %',9x,' mol %',6x,'wt %')
 1100  format (/,' Solid Enthalpy (J/kg) = ',g12.6,/,
@@ -491,8 +521,9 @@ c----------------------------------------------------------------------
 
       logical sick(i8), nodata, ssick, ppois, bulkg, bsick, bad
 c                                 x-coordinates for the assemblage solutions
-      double precision x3
-      common/ cxt16 /x3(k21,mst,msp)
+      integer ld
+      double precision x3, caq, ionst, tmolal
+      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),ionst(k5),tmolal(k5),ld
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -546,8 +577,8 @@ c                                 bookkeeping variables
       common/ cst48 /mus(k8,k2)
 
       logical lmu
-      double precision mu, gmax
-      common/ cst330 /mu(k8),gmax,lmu
+      double precision mu
+      common/ cst330 /mu(k8),lmu
 
       integer jtest,jpot
       common/ debug /jtest,jpot
@@ -563,6 +594,14 @@ c                                 bookkeeping variables
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
 
+      integer iaq, aqst, aqct
+      character aqnam*8
+      double precision aqcp, aqtot
+      common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
+
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
+
       integer iam
       common/ cst4 /iam
 
@@ -572,6 +611,10 @@ c                                 bookkeeping variables
       integer hs2p
       double precision hsb
       common/ cst84 /hsb(i8,4),hs2p(6)
+
+      integer idaq, jdaq
+      logical laq
+      common/ cxt3 /idaq,jdaq,laq
 c----------------------------------------------------------------------
 c                                 logarithmic_p option
 10    if (lopt(14)) p = 1d1**p 
@@ -579,7 +622,7 @@ c                                 logarithmic_p option
       nodata = .false. 
 
       if (iam.ne.2) then 
-
+c                                 WERAMI:
          jd = igrd(itri(1),jtri(1))
          ias = iap(jd)
 c                                 no data test
@@ -595,11 +638,9 @@ c                                 no data test
          do i = 1, ntot
             kkp(i) = idasls(i,ias)
          end do 
-
-         kcoor = ico(jd)
 c                                 get the dependent potentials
          if (jpot.ne.1) then
- 
+
             do i = 1, jbulk
                mu(i) = 0d0
             end do 
@@ -612,6 +653,15 @@ c                                 get the dependent potentials
                   mu(j) = mu(j) + wt(i) * mus(j,kd)
                end do 
 
+            end do 
+
+            lmu = .false.
+
+            do i = 1, jbulk
+               if (.not.isnan(mu(i))) then 
+                  lmu = .true.
+                  exit  
+               end if  
             end do 
 
          end if
@@ -641,6 +691,10 @@ c                                 initialize system props/flags
       do i = 1, ntot
 
          ids = kkp(i)
+c                                 this is outside the solution
+c                                 conditional to allow pure H2O
+c                                 solvent
+         if (ids.eq.idaq) laq = .true.
 
          if (i.le.np) then 
 
@@ -652,23 +706,42 @@ c                                 initialize system props/flags
             end if
 
             if (iam.ne.2) then
- 
+c                                 WERAMI
+               cst = bg(i,jd)
+c                                 in case zero mode is not on, allow
+c                                 composition of zero phase
+               if (ijpt.eq.1.and.cst.eq.0d0) cst = 1d0
+c                                 weighted molar amount
+               props(16,i) = wt(1)*cst
+
+               kcoor = ico(jd)
+
                do j = 1, istg(ids)
                   do k = 1, ispg(ids,j)
                      kcoor = kcoor + 1
-                     cst = bg(i,jd)
-c                                 in case zero mode is not on, allow
-c                                 composition of zero phase
-                     if (ijpt.eq.1.and.cst.eq.0d0) cst = 1d0
                      x3(i,j,k) = wt(1)*cst*xco(kcoor)
-
                   end do 
-               end do 
+               end do
 
+               if (lopt(32).and.ksmod(ids).eq.39) then 
+c                               lagged speciation
+                  do k = 1, ns + aqct
+                     kcoor = kcoor + 1
+                     caq(i,k) = wt(1)*cst*xco(kcoor)
+                  end do
+
+               end if
+
+            else 
+c                                 MEEMUM, molar amount
+               props(16,i) = amt(i)
+c                                 convert x3 to y for calls to gsol
+               if (ids.gt.0) call x3toy (i,ids)
+ 
             end if 
 
          else 
-
+c                                 a compound:
             if (ifp(-ids).gt.0.or.ifp(-ids).lt.0.and.lopt(6)) then 
                aflu = .true.
                fluid(i) = .true.
@@ -676,19 +749,26 @@ c                                 composition of zero phase
                fluid(i) = .false.
             end if
 
+            if (iam.ne.2) then 
+c                                 WERAMI
+               cst = bg(i,jd)
+c                                 in case zero mode is not on, allow
+c                                 composition of zero phase
+               if (ijpt.eq.1.and.cst.eq.0d0) cst = 1d0
+c                                 weighted molar amount
+               props(16,i) = wt(1)*cst
+
+            else 
+c                                 MEEMUM, molar amount
+               props(16,i) = amt(i)
+ 
+            end if
+
          end if
-c                                 molar amounts
-         if (iam.eq.2) then 
 
-            props(16,i) = amt(i)
-c                                 convert x3 to y for calls to gsol            
-            if (ids.gt.0) call x3toy (i,ids)
+         if (iam.ne.2) then 
+c                                 WERAMI; need to average in other assemblages
 
-         else 
-c                                 if werami with interpolation, average
-c                                 compositions:
-            props(16,i) = wt(1)*bg(i,jd)
-c                                 now average in other assemblages
             do j = 2, ijpt
             
                kd = igrd(itri(j),jtri(j))
@@ -705,15 +785,28 @@ c                                 now average in other assemblages
                      do l = 1, istg(jds)
                         do m = 1, ispg(jds,l)
                            kcoor = kcoor + 1
-                           if (k.lt.i) cycle
 c                                 this is done so as to count
 c                                 the coordinates as well as make
-c                                 the composition.   
+c                                 the composition.  
+                           if (k.lt.i) cycle
                            x3(i,l,m) = x3(i,l,m) 
      *                               + wt(j)*bg(k,kd)*xco(kcoor)
 
                         end do 
                      end do 
+
+                    if (lopt(32).and.ksmod(ids).eq.39) then 
+c                               lagged speciation
+                       do l = 1, ns + aqct
+                          kcoor = kcoor + 1
+c                               this cycle is lazy counting, in the
+c                               case of aq models the number of species
+c                               is known. 
+                          if (k.lt.i) cycle
+                          caq(i,l) = caq(i,l) 
+     *                               + wt(j)*bg(k,kd)*xco(kcoor)
+                       end do 
+                    end if 
 
                   end if 
 
@@ -727,17 +820,21 @@ c                                 molar amounts
 c                                 renormalize the composition
             if (i.le.np) then 
 
+               cst = props(16,i)
+               if (cst.eq.0d0) cst = 1d0
+
                do l = 1, istg(ids)
                   do m = 1, ispg(ids,l)    
-                     cst = props(16,i)
-                     if (cst.eq.0d0) cst = 1d0    
                      x3(i,l,m) = x3(i,l,m)/cst
                   end do 
                end do 
 
-            end if
-             
-            if (ids.gt.0) then 
+               if (lopt(32).and.ksmod(ids).eq.39) then 
+c                               lagged speciation
+                  do k = 1, ns + aqct
+                     caq(i,k) = caq(i,k)/cst
+                  end do 
+               end if 
 c                                 revover x from x3, 2nd arg has no meaning.
                call getxz (i,i,ids)
 c                                 convert x to y for calls to gsol
@@ -747,14 +844,7 @@ c                                 convert x to y for calls to gsol
 
          end if 
 c                                 get and sum phase properties
-         call getphp (ids,i,sick,ssick,ppois,bulkg,bsick)   
-
-c         if ((ssick.or.bsick.or.sick(i)).and.ijpt.gt.1) then 
-c            wt(1) = 1d0
-c            ijpt = 1
-c            write (*,*) 'turned off at :', t, p, dlog10(p)
-c            goto 10 
-c         end if  
+         call getphp (ids,i,sick,ssick,ppois,bulkg,bsick)
 
       end do 
 c                                 compute aggregate properties:
@@ -794,8 +884,9 @@ c                                 x coordinate description
       integer lstot,mstot,nstot,ndep,nord
       common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
 
-      double precision x3
-      common/ cxt16 /x3(k21,mst,msp)
+      integer jd
+      double precision x3, caq, ionst, tmolal
+      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),ionst(k5),tmolal(k5),jd
 c----------------------------------------------------------------------
 c      if (istg(ids).eq.1) then 
 c                                 april 5, 2017 added for electrolyte model,
@@ -883,7 +974,7 @@ c-----------------------------------------------------------------------
 
       integer k, id
 
-      double precision dg, g
+      double precision dg, g, gso(nsp), gamm0
 
       double precision omega, hpmelt, gmelt, gfluid, gzero, 
      *                 gex, slvmlt, gfesi, gcpd, gerk, gfecr1, ghybrid
@@ -917,11 +1008,36 @@ c                                 model type
       integer jspec
       common/ cxt8 /jspec(h9,m4)
 
+      double precision yf,gh,v,vf
+      common/ cstcoh /yf(nsp),gh(nsp),v(nsp),vf(nsp)
+
+      integer jd
+      double precision x3, caq, ionst, tmolal
+      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),ionst(k5),tmolal(k5),jd
+
+      integer iaq, aqst, aqct
+      character aqnam*8
+      double precision aqcp, aqtot
+      common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
+
+      integer ihy, ioh
+      double precision gf, epsln, epsln0, adh, msol
+      common/ cxt37 /gf, epsln, epsln0, adh, msol, ihy, ioh
+
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
 
       double precision thermo,uf,us
       common/ cst1 /thermo(k4,k10),uf(2),us(h5)
+
+      character specie*4
+      integer isp, ins
+      common/ cxt33 /isp,ins(nsp),specie(nsp)
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       integer ideps,icase,nrct
       common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
@@ -1067,14 +1183,44 @@ c                                 BCC Fe-Cr Andersson and Sundman
          else if (ksmod(id).eq.39) then
 c                                 -------------------------------------
 c                                 generic hybrid EoS
-c                                 initialize pointer array
-            do k = 1, mstot(id)
-c                                 sum pure species g's
-               g = g + gcpd(jnd(k),.true.) * y(k)
+            if (lopt(32)) then 
+c                                 lagged speciation
+               call slvnt3 (gso)
+c                                 DH law activity coefficient factor (ln[g] = lng0*q^2)
+               gamm0 = adh*dsqrt(ionst(jd))/(1d0 + dsqrt(ionst(jd))) 
+     *              + 0.2d0*ionst(jd)
 
-            end do
+               gamm0 = dexp(gamm0)
+c                                 solvent species (caq => mole fraction)
+               do k = 1, ns
+                  g = g + caq(jd,k) * (gso(k) + rt * dlog(caq(jd,k)))
+               end do 
+c                                 solute species (caq => molality)
+               do k = ns + 1, aqct
+
+                  if (q2(k).eq.0d0) then
+c                                 neutral
+                     g = g + caq(jd,k)/tmolal(jd) *
+     *                   (gcpd(aqst+k,.false.) + rt*dlog(caq(jd,k)))
+                  else 
+                     g = g + caq(jd,k)/tmolal(jd) 
+     *                  * (gcpd(aqst+k,.false.) 
+     *                  + rt*dlog(caq(jd,k)*q2(k)*gamm0))
+                  end if 
+
+               end do 
+
+            else 
+
+               do k = 1, mstot(id)
+c                                 sum pure species g's
+                  g = g + gcpd(jnd(k),.true.) * y(k)
+
+               end do
 c                                 compute and add in activities
-            g = g + ghybrid (y)
+               g = g + ghybrid (y)
+
+            end if
 
          else if (ksmod(id).eq.41) then 
 c                                 hybrid MRK ternary COH fluid
@@ -1094,12 +1240,22 @@ c                                 MRK silicate vapor
 
          else if (ksmod(id).eq.0) then 
 c                                 ------------------------------------
-c                                 internal fluid eos
+c                                 internal fluid eos. hardwired to special
+c                                 component choices
             do k = 1, 2
-               g = g + gzero (jnd(k))*y(k)
-            end do 
 
-            g = g + gfluid (y(jspec(id,1)))
+               g = g + gzero (jnd(k))*y(k)
+
+            end do 
+c                                 don't know whether it's a speciation routine
+c                                 so set the fluid species fractions just in case,
+c                                 this is only necessay for species output by 
+c                                 WERAMI/MEEMUM, these will be reset if it actually
+c                                 is a speciation routine.
+            yf(2) = y(jspec(id,1))
+            yf(1) = 1d0 - yf(2)
+c
+            g = g + gfluid (yf(2))
 
          else 
 
@@ -1184,11 +1340,12 @@ c                                 need to correct routines to give o/d
             ysp(k,jd) = 0d0
          end do 
 
-      else if (ksmod(id).eq.40.or.ksmod(id).eq.41.or.ksmod(id).eq.0) 
-     *        then 
+      else if (ksmod(id).eq. 0.or.ksmod(id).eq.40.or.
+     *         ksmod(id).eq.41) then 
 c                                 fluid speciation with known routines:
 c                                 MRK silicate vapor (40) 
 c                                 hybrid MRK ternary COH fluid (41)
+c                                 hardwired binary/pseudo-binary (0)
          do k = 1, spct(id) 
             ysp(k,jd) = yf(ins(k))
          end do          
@@ -1637,7 +1794,7 @@ c----------------------------------------------------------------------
       include 'perplex_parameters.h'
 
       logical ok, sick(i8), ssick, pois, ppois, bulk, bulkg, bsick, 
-     *        lshear, fow
+     *        lshear, fow, ok1
 
       integer id, jd, iwarn1, iwarn2, iwarn3, j, itemp, m
 
@@ -1690,6 +1847,10 @@ c----------------------------------------------------------------------
       double precision vnu
       common/ cst25 /vnu(k7),idr(k7),ivct
 
+      integer ihy, ioh
+      double precision gf, epsln, epsln0, adh, msol
+      common/ cxt37 /gf, epsln, epsln0, adh, msol, ihy, ioh
+
       integer hs2p
       double precision hsb
       common/ cst84 /hsb(i8,4),hs2p(6)
@@ -1716,6 +1877,10 @@ c----------------------------------------------------------------------
       integer eos
       common/ cst303 /eos(k10)
 
+      integer kd
+      double precision x3, caq, ionst, tmolal
+      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),ionst(k5),tmolal(k5),kd
+
       save dt
       data dt /.5d0/
 
@@ -1725,6 +1890,8 @@ c----------------------------------------------------------------------
       sick(jd) = .false.
       pois     = .false.
       lshear   = .false.
+c                                 pointer copy for lagged aq calculations in gsol 
+      kd = jd 
 c                                 make name and composition, 
 c                                 redundant for frendly
       call getnam (pname(jd),id)
@@ -1813,10 +1980,45 @@ c                                 thermodynamic properties
       end if 
 
       dt0 = dt
+
+      ok1 = .true.
+
+      if (-id.eq.ihy) then 
+
+         if (eos(-id).eq.15.or.eos(-id).eq.16) then 
+c                                 hydronium in frendly
+            v = 0d0
+            e = 0d0
+            cp = 0d0 
+            alpha = 0d0
+            beta = 0d0
+            s = 0d0
+
+            props(2,jd) = e
+            props(11,jd) = g0 
+            props(12,jd) = cp
+            props(15,jd) = s
+            props(1,jd) = v
+            props(13,jd) = alpha
+            props(14,jd) = beta 
+
+            if (iwarn1.eq.0) then 
+               call warn (99,0d0,0,
+     *                 ' H+ properties are zero by convention.')
+               iwarn1 = 1
+            end if
+
+            ok1 = .false.
+
+         end if 
+
+      end if 
+
+      if (rxn.and.ok1) then
 c                                 if a reaction, cannot use sign to 
 c                                 test behavior, just run through the
 c                                 whole list
-      if (rxn) then 
+
 c                                 use sign of s and v and second derivatives
 c                                 to refine difference increments
          call getdpt (g0,dp0,dp1,dp2,dt0,dt1,dt2,v,gpp,s,gtt,gpt,id,fow,
@@ -1837,7 +2039,7 @@ c                                  for reactions:
          props(13,jd) = alpha
          props(14,jd) = beta 
 
-      else 
+      else if (ok1) then 
 c                                 real phase, use sign of s and v and second derivatives
 c                                 to refine difference increments
          call getdpt (g0,dp0,dp1,dp2,dt0,dt1,dt2,v,gpp,s,gtt,gpt,id,fow,
@@ -2192,7 +2394,7 @@ c                                 check for negative poisson ratio
 
          end if  
 
-      else 
+      else
 
          do j = 3, 9
             props(j,jd) = nopt(7)
@@ -3178,11 +3380,17 @@ c----------------------------------------------------------------------
       integer hs2p
       double precision hsb
       common/ cst84 /hsb(i8,4),hs2p(6)
+
+      integer idaq, jdaq, kdaq
+      logical laq
+      common/ cxt3 /idaq,jdaq,kdaq,laq
 c----------------------------------------------------------------------
 c                                 assemblage flags
 c                                 ----------------
 c                                 aflu   = T if a fluid is present
       aflu   = .false.
+c                                 laq    = T aqueous or pure solvent is present
+      laq    = .false.
 c                                 shear  = T if shear modulus can be computed
       shear  = .true.
 c                                 volume = T if volume and bulk modulus can be computed

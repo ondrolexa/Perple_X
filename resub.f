@@ -60,9 +60,8 @@ c                                 solution model counter
       common/ cst54 /pindex,tindex,usv
 
       integer npt,jdv
-      logical fulrnk
       double precision cptot,ctotal
-      common/ cst78 /cptot(k19),ctotal,jdv(k19),npt,fulrnk
+      common/ cst78 /cptot(k19),ctotal,jdv(k19),npt
 
       save ax, x, clamda, w, is, iw
 c-----------------------------------------------------------------------
@@ -195,13 +194,8 @@ c                                 adaptive x(i,j) coordinates
       common/ cst60 /ipoint,kphct,imyn
 
       integer npt,jdv
-      logical fulrnk
       double precision cptot,ctotal
-      common/ cst78 /cptot(k19),ctotal,jdv(k19),npt,fulrnk
-
-      logical mus
-      double precision mu, gmax
-      common/ cst330 /mu(k8),gmax,mus
+      common/ cst78 /cptot(k19),ctotal,jdv(k19),npt
 c-----------------------------------------------------------------------
 c                                 the pseudocompounds to be refined
 c                                 are identified in jdv(1..npt)
@@ -327,7 +321,7 @@ c                                 -------------------------------------
 c                                 local variables
       logical bad, first
 
-      double precision xxnc, ysum, res0, gmin
+      double precision xxnc, ysum, res0
 
       integer i, j, k, l, m, ids, id, jd, iter, kcoct, iref, last 
 c                                 -------------------------------------
@@ -386,18 +380,10 @@ c                                 option values
       integer ineg
       common/ cst91 /ineg(h9,m15)
 
-      integer jcount
-      logical switch
-      common/ debug1 /jcount(10),switch(10)
-
-      logical mus
-      double precision mu, gmax
-      common/ cst330 /mu(k8),gmax,mus
-
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
 
-      save last 
+      save last
 c----------------------------------------------------------------------
 
       if (iter.eq.1) then
@@ -448,26 +434,24 @@ c                                 to allow hardlimits. JADC
 
       else 
 c                                 charge balance model
-         i = 0
+         j = -1
 
-         do j = 1, nqs1
+         do i = 1, nqs1
 
-            if (j.eq.ns) cycle
-
-            i = i + 1
+            if (i.eq.ns) cycle
 
             xnc(1,i) = xncg(ids,1,i)*res0
             xxnc = xnc(1,i)*reachg(ids)
 
             if (imdg(i,1,ids).eq.0) then 
 c                                 cartesian
-               xmn(1,i) = x(1,j) - xxnc
-               xmx(1,i) = x(1,j) + xxnc
+               xmn(1,i) = x(1,i) - xxnc
+               xmx(1,i) = x(1,i) + xxnc
 
             else
 c                                 conformal
-               xmn(1,i) = ydinc (x(1,j),-xxnc,imdg(i,1,ids),i,1,ids)
-               xmx(1,i) = ydinc (x(1,j),xxnc,imdg(i,1,ids),i,1,ids)
+               xmn(1,i) = ydinc (x(1,i),-xxnc,imdg(i,1,ids),i,1,ids)
+               xmx(1,i) = ydinc (x(1,i),xxnc,imdg(i,1,ids),i,1,ids)
 
             end if 
 
@@ -480,13 +464,10 @@ c                                 conformal
          end do
 
       end if 
-
-      gmin = 1d99 
 c                                  set solution model parameters for
 c                                  gsol1, don't call if the previous
 c                                  refinement point was the same solution.
       if (ids.ne.last) call ingsol (ids) 
-
 
       call subdiv (ids,.true.)
 
@@ -606,18 +587,22 @@ c                                 reject composition
             if (bad) cycle 
 
          end if
+
+         if (lopt(32).and.ksmod(ids).eq.39) then 
+
+            call aqlagd (1,bad)
+
+            if (bad) cycle 
+
+         else 
 c                                 call gsol to get g of the solution, gsol also
 c                                 computes the p compositional coordinates
-         g2(jphct) = gsol1(ids)
+            g2(jphct) = gsol1(ids)
 c                                 use the coordinates to compute the composition 
 c                                 of the solution
-         call csol (ids,iter,bad,gmin)
+            call csol (ids)
 
-         if (bad) then 
-               jphct = jphct - 1
-               jcoct = jcoct - mcoor(ids)
-               cycle
-         end if
+         end if 
 
          iref = iref + 1
 
@@ -629,7 +614,7 @@ c                                 of the solution
 
       end 
 
-      subroutine csol (id,iter,bad,gmin)
+      subroutine csol (id)
 c-----------------------------------------------------------------------
 c csol computes chemical composition of solution id from the macroscopic
 c endmember fraction array y or p0a (cxt7), these arrays are prepared by a prior
@@ -640,14 +625,10 @@ c-----------------------------------------------------------------------
  
       include 'perplex_parameters.h'
 
-      external deltag
+      integer i, j, k, id
 
-      integer i, j, k, id, iter
-      logical bad 
+      double precision ctot2
 
-      double precision ctot2, deltag, dg, gmin
-c                                 -------------------------------------
-c                                 global variables:
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
 
@@ -656,6 +637,9 @@ c                                 global variables:
 
       double precision ctot
       common/ cst3  /ctot(k1)
+
+      double precision p,t,xco2,u1,u2,tr,pr,r,ps
+      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 c                                 adaptive coordinates
       integer jphct
       double precision g2, cp2
@@ -677,18 +661,14 @@ c                                 working arrays
       integer lstot,mstot,nstot,ndep,nord
       common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
 
-      logical mus
-      double precision mu, gmax
-      common/ cst330 /mu(k8),gmax,mus
-c DEBUG 
-      integer jcount
-      logical switch
-      common/ debug1 /jcount(10),switch(10)
-
       integer iaq, aqst, aqct
       character aqnam*8
       double precision aqcp, aqtot
       common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
+
+      integer jnd
+      double precision aqg,qq,rt
+      common/ cxt2 /aqg(m4),qq(m4),rt,jnd(m4)
 
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
@@ -721,7 +701,7 @@ c                                 endmembers. p0a is constructed in function gso
 
          do i = sn1, nqs
 
-            k = jend(id,2+i) - aqst
+            k = jnd(i) - aqst
 
             do j = 1, icp 
                cp2(j,jphct) = cp2(j,jphct) + y(i) * aqcp(j,k)
@@ -734,10 +714,10 @@ c                                 endmembers. p0a is constructed in function gso
          do i = 1, ns 
 
             do j = 1, icp 
-               cp2(j,jphct) = cp2(j,jphct) + y(i) * cp(j,jend(id,2+i))
+               cp2(j,jphct) = cp2(j,jphct) + y(i) * cp(j,jnd(i))
             end do 
 
-            ctot2 = ctot2 + y(i)*ctot(jend(id,2+i))
+            ctot2 = ctot2 + y(i)*ctot(jnd(i))
 
          end do 
 
@@ -754,28 +734,23 @@ c                                 general case (y coordinates)
          end do 
          
       end if
-c DEBUG DEBUG 
-      bad = .false. 
-
-      if (mus) then 
-
-         dg = deltag(jphct,iter)/ctot2
-
-         if (dg.lt.gmin.or.dg.lt.nopt(32)) then 
-            jcount(4) = jcount(4) + 1 
-            if (dg.lt.gmin) gmin = dg
-         else 
-            bad = .true.
-            jcount(3) = jcount(3) + 1
-         end if 
-
-      end if 
+c                                  a phase with a null composition may appear
+c                                  as an endmember of a solution in a calculation
+c                                  with mobile components:
+      if (ctot2.ne.0d0) then 
 c                                  normalize the composition and free energy
-      g2(jphct) = g2(jphct)/ctot2
+         g2(jphct) = g2(jphct)/ctot2
 
-      do j = 1, icp 
-         cp2(j,jphct) = cp2(j,jphct)/ctot2
-      end do  
+         do j = 1, icp 
+            cp2(j,jphct) = cp2(j,jphct)/ctot2
+         end do
+
+      else 
+
+         g2(jphct) = 1d4*p
+         cp(1,jphct) = 1d0
+
+      end if   
 
       end 
 
@@ -790,10 +765,9 @@ c-----------------------------------------------------------------------
       integer i, j, imin
 
       integer npt,jdv
-      logical fulrnk
       double precision cptot,ctotal
-      common/ cst78 /cptot(k19),ctotal,jdv(k19),npt,fulrnk
-
+      common/ cst78 /cptot(k19),ctotal,jdv(k19),npt
+c----------------------------------------------------------------------
       do j = 1, npt-1
 
          imin = jdv(j)
@@ -886,9 +860,8 @@ c                                 x coordinate description
       common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
 
       integer npt,jdv
-      logical fulrnk
       double precision cptot,ctotal
-      common/ cst78 /cptot(k19),ctotal,jdv(k19),npt,fulrnk
+      common/ cst78 /cptot(k19),ctotal,jdv(k19),npt
 c----------------------------------------------------------------------
       kcoct = 0
 
@@ -918,57 +891,6 @@ c                                 it's a solution:
          end do 
 
          kcoct = kcoct + itic
-
-      end do 
-
-      end 
-
-      subroutine getxz (jd,id,ids)
-c----------------------------------------------------------------------
-c subroutine to recover geometric reciprocal solution compositions (x(i,j))
-c from the zcoor array loaded in resub.
-c----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      integer i, j, jd, id, ids, icoor
-
-      double precision xt
-c                                 working arrays
-      double precision z, pa, p0a, x, w, y, wl
-      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
-     *              wl(m17,m18)
-c                                 x coordinate description
-      integer istg, ispg, imlt, imdg
-      common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
-c                                 adaptive x(i,j) coordinates
-      integer jcoct, jcoor, jkp
-      double precision zcoor
-      common/ cxt13 /zcoor(k20),jcoor(k21),jkp(k21),jcoct
-c                                  xcoordinates for the final solution
-      double precision x3
-      common/ cxt16 /x3(k21,mst,msp)
-
-      integer ncoor,mcoor,ndim
-      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
-c----------------------------------------------------------------------
-      icoor = jcoor(id)
-
-      do i = 1, istg(ids)
-
-         xt = 0d0 
-
-         do j = 1, ndim(i,ids)
-            icoor = icoor + 1
-            x(i,j) = zcoor(icoor)
-            x3(jd,i,j) = zcoor(icoor)
-            xt = xt + zcoor(icoor)
-         end do 
-
-         xt = 1d0 - xt 
-         x(i,j) = xt
-         x3(jd,i,j) = xt
 
       end do 
 
@@ -1111,14 +1033,15 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical solvs1, check
+      logical solvs1, check, bad
 c                                 -------------------------------------
 c                                 local variables
       integer idsol(k5),kdsol(k5,k5),ids,isite,xidsol,xkdsol,irep,
      *        i,j,jdsol(k5,k5),jd,k,l,nkp(k5),xjdsol(k5)
 
-      double precision bsol(k5,k5),cpnew(k5,k5),xx,xb(k5), 
-     *                 bnew(k5),xnew(k21,mst,msp)
+      double precision bsol(k5,k5),cpnew(k5,k5),xx,xb(k5),nionst(k5),
+     *                 bnew(k5),xnew(k5,mst,msp),ncaq(k5,nsp+l9),
+     *                 ntmola(k5)
 c                                 -------------------------------------
 c                                 global variables:
 c                                 x coordinate description
@@ -1136,8 +1059,17 @@ c                                 for final adaptive solution
       double precision cp3,amt
       common/ cxt15 /cp3(k0,k19),amt(k19),kkp(k19),np,ncpd,ntot
 c                                  x-coordinates for the final solution
-      double precision x3
-      common/ cxt16 /x3(k21,mst,msp)
+      integer kd
+      double precision x3, caq, ionst, tmolal
+      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),ionst(k5),tmolal(k5),kd
+
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
+
+      integer iaq, aqst, aqct
+      character aqnam*8
+      double precision aqcp, aqtot
+      common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
 
       integer ikp
       common/ cst61 /ikp(k1)
@@ -1158,9 +1090,8 @@ c                                  x-coordinates for the final solution
       common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
 
       integer npt,jdv
-      logical fulrnk
       double precision cptot,ctotal
-      common/ cst78 /cptot(k19),ctotal,jdv(k19),npt,fulrnk
+      common/ cst78 /cptot(k19),ctotal,jdv(k19),npt
 
       logical usv
       integer pindex,tindex
@@ -1216,6 +1147,18 @@ c                                 the pseudocompound is a true compound
 
          else 
 
+            if (lopt(32).and.ksmod(nkp(i)).eq.39) then 
+c                                 get lagged speciation
+c                                 loaded into caq(i,1:ns+aqct)
+               do k = 1, ns
+                  y(k) = x3(i,1,k) 
+               end do 
+
+               call aqlagd (i,bad)
+
+            end if 
+
+
             do j = 1, np
 c                                 compare the compound to the np solutions 
 c                                 identfied so far:        
@@ -1232,7 +1175,7 @@ c                                 found earlier.
                      
                   end if
  
-            end if 
+               end if
 
             end do
 c                                 the pseudocompound is a new solution 
@@ -1306,19 +1249,29 @@ c                                 the everage composition
       do i = 1, np 
 c                                 initialize
          bnew(i) = 0d0
+         ids = kdsol(i,1)
+         isite = istg(ids)
 
          do j = 1, icomp
             cpnew(j,i) = 0d0
          end do 
 
-         ids = kdsol(i,1)
-         isite = istg(ids)
-
          do j = 1, isite
             do k = 1, ispg(ids,j)
                xnew(i,j,k) = 0d0
             end do 
-         end do 
+         end do
+
+         if (lopt(32).and.ksmod(ids).eq.39) then 
+c                               lagged speciation
+            do k = 1, ns + aqct
+               ncaq(i,k) = 0d0
+            end do 
+
+            ntmola(i) = 0d0
+            nionst(i) = 0d0 
+
+         end if 
 
          do j = 1, idsol(i)
             bnew(i) = bnew(i) + amt(jdsol(i,j))
@@ -1332,28 +1285,31 @@ c                                is off:
             if (bnew(i).gt.0d0) then 
 
                xx =  amt(jd)/bnew(i)
-c                                save the new compositions
-               do k = 1, icomp
-                  cpnew(k,i) = cpnew(k,i) + xx*cp3(k,jd)
-               end do 
 
-               do k = 1, isite
-                  do l = 1, ispg(ids,k)
-                     xnew(i,k,l) = xnew(i,k,l) + xx*x3(jd,k,l)
-                  end do 
-               end do 
-            
             else 
-c                               
-               do k = 1, icomp
-                  cpnew(k,i) = cp3(k,jd)
+
+               xx = 1d0
+
+            end if
+c                                save the new compositions
+            do k = 1, icomp
+               cpnew(k,i) = cpnew(k,i) + xx*cp3(k,jd)
+            end do 
+
+            do k = 1, isite
+               do l = 1, ispg(ids,k)
+                  xnew(i,k,l) = xnew(i,k,l) + xx*x3(jd,k,l)
+               end do 
+            end do 
+
+            if (lopt(32).and.ksmod(ids).eq.39) then 
+c                               lagged speciation
+               do k = 1, ns + aqct
+                  ncaq(i,k) = ncaq(i,k) + xx*caq(jd,k)
                end do 
 
-               do k = 1, isite
-                  do l = 1, ispg(ids,k)
-                     xnew(i,k,l) = x3(jd,k,l)
-                  end do 
-               end do 
+              ntmola(i) = ntmola(i) + xx*tmolal(jd)
+              nionst(i) = nionst(i) + xx*ionst(jd)
 
             end if 
 
@@ -1379,12 +1335,21 @@ c                                 set x's for global storage
                x3(i,j,k) = x(j,k) 
 
             end do 
-         end do 
+         end do
+
+         if (lopt(32).and.ksmod(ids).eq.39) then 
+c                               lagged speciation
+            do k = 1, ns + aqct
+               caq(i,k) = ncaq(i,k)
+            end do 
+
+            tmolal(i) = ntmola(i)
+            ionst(i) = nionst(i)
+
+         end if 
 c                                 check composition against solution model ranges
 c                                 if auto_refine is on:
          call sollim (ids)
-c                                 DEBUG DEBUG
-         if (ksmod(ids).eq.20) call aqrxdo (ids)
 
       end do
 
@@ -1464,7 +1429,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer ids, i, j, k, l, nlim
+      integer ids, i, j
 
       double precision z, pa, p0a, x, w, y, wl
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
@@ -1504,44 +1469,34 @@ c                                 interval limits conformal transformation
 c----------------------------------------------------------------------
 c                                 set stable flag
       stable(ids) = .true.
-
-      k = 0
 c                                 check x-ranges
       do i = 1, istg(ids)
 
-
-         if (ksmod(ids).ne.20) then
-            nlim = ndim(i,ids)
-         else
-            nlim = nqs1
-         end if 
-
-         do j = 1, nlim
+         do j = 1, ndim(i,ids)
 
             if (ksmod(ids).eq.20) then 
-               if (j.eq.ns) then
-                  k = 1 
-                  cycle
-               end if 
+               if (j.eq.ns) cycle 
             end if 
-
-            l = j + k 
 c                                 low limit:
-            if (x(i,l).lt.xlo(j,i,ids)) then
+            if (x(i,j).lt.xlo(j,i,ids)) then
 
-               xlo(j,i,ids) = x(i,l)
+               xlo(j,i,ids) = x(i,j)
 c                                 check if solution is at an unnatural limit
-               if (x(i,l).gt.xmno(ids,i,j).and.
-     *            (x(i,l).le.xmng(ids,i,j).and..not.lopt(3))) then
+               if (x(i,j).gt.xmno(ids,i,j).and.
+     *            (x(i,j).le.xmng(ids,i,j).and..not.lopt(3))) then
 c                                 relax limits according to subdivsion model
                   if (imdg(j,i,ids).eq.0) then 
 c                                 cartesian
-                     xmng(ids,i,j) = xmng(ids,i,j) - nopt(10)
+                     xmng(ids,i,j) = xmng(ids,i,j) - xncg(ids,i,j)
                      if (xmng(ids,i,j).lt.0d0) xmng(ids,i,j) = 0d0
 
                   else if (imdg(j,i,ids).eq.1.or.imdg(j,i,ids).eq.4)then
-c                                 assymmetric stretching towards xmin
-                     yint(1,j,i,ids) = yint(1,j,i,ids) - nopt(10)
+c                                 assymmetric stretching towards xmin, this
+c                                 probably isn't even correct for imd = 1, but
+c                                 only a lunatic would use this not going from 
+c                                 zero. 
+                     yint(1,j,i,ids) = yint(1,j,i,ids) - xncg(ids,i,j)
+     *                                   *(xmxg(ids,i,j)-xmng(ids,i,j))
                      if (yint(1,j,i,ids).lt.0d0) yint(1,j,i,ids) = 0d0
                      xmng(ids,i,j) =  yint(1,j,i,ids)
 
@@ -1558,20 +1513,35 @@ c                                 set xmn to prevent future warnings
                end if 
             end if 
 c                                 high limit:
-            if (x(i,l).gt.xhi(j,i,ids)) then
-               xhi(j,i,ids) = x(i,l)
+            if (x(i,j).gt.xhi(j,i,ids)) then
+               xhi(j,i,ids) = x(i,j)
 c                                 check if solution is at an unnatural limit
-               if (x(i,l).lt.xmxo(ids,i,j).and.
-     *            (x(i,l).ge.xmxg(ids,i,j).and..not.lopt(3))) then
+               if (x(i,j).lt.xmxo(ids,i,j).and.
+     *            (x(i,j).ge.xmxg(ids,i,j).and..not.lopt(3))) then
 c                                 relax limits according to subdivsion model
                   if (imdg(j,i,ids).eq.0) then 
 c                                 cartesian
-                     xmxg(ids,i,j) = xmxg(ids,i,j) + nopt(10)
+                     xmxg(ids,i,j) = xmxg(ids,i,j) + xncg(ids,i,j)
                      if (xmxg(ids,i,j).gt.1d0) xmxg(ids,i,j) = 1d0
 
                   else if (imdg(j,i,ids).eq.1.or.imdg(j,i,ids).eq.4)then
-c                                 assymmetric stretching
+c                                 assymmetric stretching, this is probably
+c                                 only correct for imd = 1. 
+
+c                                 by not changing
+c                                 the relative increment, expanding the limits
+c                                 lowers the resolution?
+
+c                                 for aq electrolytes i had this, because i was
+c                                 worried it was expanding the limit and decreasing 
+c                                 resolution. this needs to be checked out. 5/17
+
+c                     yint(2,j,i,ids) = yint(2,j,i,ids) + xncg(ids,i,j)
+c     *                                   *(xmxg(ids,i,j)-xmng(ids,i,j))
+c                     xncg(ids,i,j) = 1d0/(1d0/xncg(ids,i,j) + 1d0)
+c                                  revert to the original form. 5/17
                      yint(2,j,i,ids) = yint(2,j,i,ids) + nopt(10)
+
                      if (yint(2,j,i,ids).gt.1d0) yint(2,j,i,ids) = 1d0
                      xmxg(ids,i,j) = yint(2,j,i,ids)
 
@@ -1592,346 +1562,6 @@ c                                 set xmx to prevent future warnings
 
       end 
 
-      subroutine outlim 
-c----------------------------------------------------------------------
-c subroutine to extract compositional range of endmembers in stable phases
-c for auto_refine option.
-c----------------------------------------------------------------------
-      implicit none 
-
-      include 'perplex_parameters.h'
-c                                 -------------------------------------
-c                                 local variables:
-      integer i, j, k, ibad1, ibad2, ibad3, igood
-
-      logical bad1, bad2, good, reach
-
-      double precision num
-
-      character char8*8
-c                                 -------------------------------------
-      double precision goodc, badc
-      common/ cst20 /goodc(3),badc(3)
-c                                 global variables:
-c                                 working arrays
-c                                 x coordinate description
-      integer istg, ispg, imlt, imdg
-      common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
-c                                 solution limits and stability
-      logical stable,limit,relax
-      double precision xlo,xhi
-      common/ cxt11 /xlo(m4,mst,h9),xhi(m4,mst,h9),stable(h9),limit(h9),
-     *               relax(h9)
-c                                 solution model counter
-      integer isoct
-      common/ cst79 /isoct
-c                                 solution model names
-      character fname*10, aname*6, lname*22
-      common/ csta7 /fname(h9),aname(h9),lname(h9)
-c                                 endmember pointers
-      integer jend
-      common/ cxt23 /jend(h9,m4)
-c                                 endmember names
-      character names*8
-      common/ cst8  /names(k1)
-
-      logical refine
-      common/ cxt26 /refine
-
-      integer isec,icopt,ifull,imsg,io3p
-      common/ cst103 /isec,icopt,ifull,imsg,io3p
-c DEBUG 
-      integer jcount
-      logical switch
-      common/ debug1 /jcount(10),switch(10)
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-      
-      integer ksmod, ksite, kmsol, knsp
-      common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
-
-      double precision xmng, xmxg, xncg, xmno, xmxo, reachg
-      common/ cxt6r /xmng(h9,mst,msp),xmxg(h9,mst,msp),xncg(h9,mst,msp),
-     *               xmno(h9,mst,msp),xmxo(h9,mst,msp),reachg(h9)
-
-      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
-      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
-
-      integer ncoor,mcoor,ndim
-      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
-
-      integer iaq, aqst, aqct
-      character aqnam*8
-      double precision aqcp, aqtot
-      common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
-c----------------------------------------------------------------------
-      ibad1 = 0 
-      ibad2 = 0 
-      ibad3 = 0 
-      igood = 0 
-      rewind (n10)
-      if (lopt(11)) rewind (n11)
-
-      if (isoct.eq.0) goto 99
-
-      bad1 = .false.
-      bad2 = .false.
-      good = .false.
-
-      do i = 1, isoct
-
-         if (.not.stable(i)) then
-            bad1 = .true.
-            ibad1 = ibad1 + 1
-         else
-            good = .true.
-            igood = igood + 1
-         end if
- 
-         if (limit(i)) then 
-            bad2 = .true.
-            if (relax(i)) then 
-               ibad2 = ibad2 + 1
-            else 
-               ibad3 = ibad3 + 1
-            end if 
-         end if 
-
-      end do 
-
-      if (.not.refine) write (n10,*) ibad1,0,igood
-c                                 write solutions present that are 
-c                                 not stable
-      if (bad1) then 
-
-         write (*,1000)
-         if (lopt(11)) write (n11,1000)
-     
-         do i = 1, isoct
-            if (.not.stable(i)) then 
-               write (*,'(5x,a)') fname(i) 
-               if (.not.refine) write (n10,'(a)') fname(i)
-               if (lopt(11)) write (n11,'(5x,a)') fname(i) 
-            end if 
-         end do
-      end if 
-
-      if (.not.good) goto 99
-c                                 write solutions that are on an internal
-c                                 limit
-      if (bad2.and.icopt.gt.3) then 
-c                                 adaptive minimization
-         if (ibad2.gt.0) then 
-c                                 solutions whose limits could be relaxed
-            write (*,1080) 
-            if (lopt(11)) write (n11,1080) 
-            do i = 1, isoct
-               if (limit(i).and.relax(i)) then
-                  write (*,'(5x,a)') fname(i) 
-                  if (lopt(11)) write (n11,'(5x,a)') fname(i)
-               end if  
-            end do
-         end if
-
-         if (ibad3.gt.0) then 
-c                                 solutions whose limits could NOT be relaxed
-            write (*,1090) 
-            if (lopt(11)) write (n11,1090) 
-            do i = 1, isoct
-               if (limit(i).and.(.not.relax(i))) then
-                  write (*,'(5x,a)') fname(i) 
-                  if (lopt(11)) write (n11,'(5x,a)') fname(i)
-               end if  
-            end do
-         end if
-
-      else if (bad2) then 
-c                                 non-adaptive minimization,
-c                                 solutions on internal limits 
-         write (*,1010) 
-         if (lopt(11)) write (n11,1010) 
-         do i = 1, isoct
-            if (limit(i)) then
-               write (*,'(5x,a)') fname(i) 
-               if (lopt(11)) write (n11,'(5x,a)') fname(i)
-            end if  
-         end do
-
-      end if 
-
-      reach = .false.
-
-      do i = 1, isoct
-
-         if (int(reachg(i)*2d0/nopt(21)-1d0).gt.0) reach = .true.
-
-         if (.not.stable(i)) cycle
-
-         if (.not.refine) then
-
-            write (n10,'(a)') fname(i)
-
-            do j = 1, istg(i)
-               do k = 1, ndim(j,i) 
-                  write (n10,*) xlo(k,j,i),xhi(k,j,i)
-               end do
-            end do 
-
-         end if 
-
-         if (istg(i).eq.1) then 
-c                                 single site solution
-            write (*,1020) fname(i)
-            if (lopt(11)) write (n11,1020) fname(i)
-
-            if (ksmod(i).eq.20) then 
-c                                 charge balance model:
-               k = 0
-
-               do j = 1, ndim(1,i)
- 
-                  k = k + 1 
-c                                 jump to 1st neutral species
-                  if (j.eq.nq) k = k + 1
-
-                  if (j.lt.qn) then
-                     char8 = aqnam(jend(i,2+k) - aqst)
-                  else 
-                     char8 = names(jend(i,2+k))
-                  end if 
-
-                  write (*,1030) char8, xlo(j,1,i), xhi(j,1,i)
-
-                  if (lopt(11)) write (n11,1030) char8, xlo(j,1,i),
-     *                           xhi(j,1,i)
-
-               end do     
-        
-            else 
-
-               do j = 1, ndim(1,i)  
-            
-                  if (ksmod(i).eq.5) then
-               
-                     write (*,1070) j,xlo(j,1,i),xhi(j,1,i)
-                                  
-                  else
-                
-                     write (*,1030) names(jend(i,2+j)),
-     *                              xlo(j,1,i),xhi(j,1,i)
-                  end if
-                
-                  if (lopt(11)) write (n11,1030) 
-     *                          names(jend(i,2+j)),xlo(j,1,i),xhi(j,1,i)
-     
-               end do
-
-            end if  
-
-         else
-c                                 reciprocal solution
-            write (*,1040) fname(i)
-            if (lopt(11)) write (n11,1040) fname(i)
-
-            do j = 1, istg(i)
-               
-               write (*,1050) j
-               if (lopt(11)) write (n11,1050) j
-
-               if (ispg(i,j).eq.1) then 
-
-                  write (*,1060)
-                  if (lopt(11)) write (n11,1060) 
-
-               else
-
-                  do k = 1, ispg(i,j) - 1
-                     write (*,1070) k,xlo(k,j,i),xhi(k,j,i)
-c    *                     ,names(jend(i,2+indx(i,j,k)))
-                     if (lopt(11)) write (n11,1070) 
-     *                              k,xlo(k,j,i),xhi(k,j,i)
-c    *                     ,names(jend(i,2+indx(i,j,k)))
-                  end do 
-
-               end if 
-
-            end do
-
-         end if 
-
-      end do 
-
-      if (reach) then 
-
-         write (*,1100)
-
-         do i = 1, isoct
-            if (int(reachg(i)*2d0/nopt(21)-1d0).eq.0) cycle
-            write (*,1110) fname(i), int(reachg(i)*2d0/nopt(21)-1d0)
-         end do 
-
-      end if 
-
-99    if (goodc(1)+badc(1).gt.0d0) then
-         num = badc(1)/(badc(1)+goodc(1))*1d2
-         write (*,1120) num, badc(1) + goodc(1)
-         if (num.gt.1d-1) call warn (53,num,i,'OUTLIM')
-         write (*,1140) dfloat(jcount(1))/(badc(1)+goodc(1))
-         goodc(1) = 0d0
-         badc(1) = 0d0 
-      end if 
-
-      if (lopt(32).and.jcount(4)+jcount(3).gt.0) then 
-         write (*,1130) 1d2*jcount(3)/(jcount(4)+jcount(3))
-      else
-         write (*,'(/,a,/)') 'Metastability filtering is off.'
-      end if 
-
-      jcount(3) = 0
-      jcount(4) = 0
-      jcount(1) = 0
-
-      close (n10)
-      if (lopt(11)) close (n11)
-
-1000  format (/,'WARNING: The following solutions were input, but are',
-     *          ' not stable:',/)
-1010  format (/,'WARNING: The following solutions have compositions on',
-     *          ' an internal limit (i.e., 0<x<1)',/,'(see ranges ',
-     *          'below to determine which limits should be relaxed or',
-     *        /,'if executing in auto_refine mode inrease auto_refine',
-     *          '_slop in perplex_option.dat):',/)
-1020  format (/,'Endmember compositional ranges for model: ',a,//,5x,
-     *        'Endmember   Minimum   Maximum')
-1030  format (5x,a8,4x,f7.5,3x,f7.5)
-1040  format (/,'Site fraction ranges for multisite model: ',a)
-1050  format (/,'  Site ',i1,/,5x,'Species   Minimum   Maximum   ')
-c     *          'Endmember with this species')
-1060  format (8x,'Dummy site generated by model reformulation',/)
-1070  format (8x,i1,6x,f7.5,3x,f7.5,3x,12(a8,1x))
-1080  format (/,'WARNING: The compositions of the following solutions ',
-     *        'reached internal limits',/,'that were automatically ',
-     *        'relaxed.',/)
-1090  format (/,'WARNING: The compositions of the following solutions ',
-     *        'reached internal limits',/,'that could not be ',
-     *        'automatically relaxed. To avoid this problem change',/,
-     *        'the subdivision mode for ',
-     *        'the solutions or increase auto_refine_slop.',/)
-1100  format (/,'The following solution models have non-zero reach_',
-     *          'increment:',//,t30,'reach_increment')
-1110  format (4x,a,t35,i2)
-1120  format (/,'The failure rate during speciation (order-disorder) ',
-     *        'calculations is ',f7.3,'%',/,'out of a total of ',f12.0,
-     *        ' calculations.',/)
-1130  format (/,'Metastability filtering eliminated ',f7.3,'% of the ',
-     *        'trial compositions prior',/,'to optimization.',/)
-1140  format (/,'Average number of iterations per speciation ',
-     *          'calculation:',f5.1,/)
-      end 
-
       subroutine sorter (kdbulk,ico,jco,output)
 c----------------------------------------------------------------------
 c sorter compares assemblages to those already defined and reorders 
@@ -1947,8 +1577,9 @@ c----------------------------------------------------------------------
 
       double precision cpt(k5,k5),xt(k5,mst,msp),bt(k5)
 c                                 x-coordinates for the final solution
-      double precision x3
-      common/ cxt16 /x3(k21,mst,msp)
+      integer jd
+      double precision x3, caq, ionst, tmolal
+      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),ionst(k5),tmolal(k5),jd
 
       integer iap,ibulk
       common/ cst74  /iap(k2),ibulk
@@ -1968,9 +1599,8 @@ c                                 x coordinate description
       common/ cst6  /icomp,istct,iphct,icp
 
       integer npt,jdv
-      logical fulrnk
       double precision cptot,ctotal
-      common/ cst78 /cptot(k19),ctotal,jdv(k19),npt,fulrnk
+      common/ cst78 /cptot(k19),ctotal,jdv(k19),npt
 c----------------------------------------------------------------------
 c                                 look for a match with known assemblages
       match = .false.
@@ -2135,8 +1765,9 @@ c                                 for final adaptive solution
       double precision cp3,amt
       common/ cxt15 /cp3(k0,k19),amt(k19),kkp(k19),np,ncpd,ntot
 c                                 x-coordinates for the final solution
-      double precision x3
-      common/ cxt16 /x3(k21,mst,msp)
+      integer jd
+      double precision x3, caq, ionst, tmolal
+      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),ionst(k5),tmolal(k5),jd
 c                                 x coordinate description
       integer istg, ispg, imlt, imdg
       common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
@@ -2145,8 +1776,8 @@ c                                 i/o
       common / cst41 /io3,io4,io9
 
       logical mus
-      double precision mu, gmax
-      common/ cst330 /mu(k8),gmax,mus
+      double precision mu
+      common/ cst330 /mu(k8),mus
 
       integer jtest,jpot
       common/ debug /jtest,jpot
@@ -2220,13 +1851,12 @@ c----------------------------------------------------------------------
       common/ cxt15 /cp3(k0,k19),amt(k19),kkp(k19),np,ncpd,ntot
 
       integer npt,jdv
-      logical fulrnk
       double precision cptot,ctotal
-      common/ cst78 /cptot(k19),ctotal,jdv(k19),npt,fulrnk
+      common/ cst78 /cptot(k19),ctotal,jdv(k19),npt
 
       logical mus
-      double precision mu, gmax
-      common/ cst330 /mu(k8),gmax,mus
+      double precision mu
+      common/ cst330 /mu(k8),mus
 c----------------------------------------------------------------------
       npt = 0 
       nsol = 0
@@ -2271,8 +1901,9 @@ c                                 new point, add to list
 
          end if 
 
-      end do
-c DEBUG DEBUG 
+      end do 
+c DEBUG DEBUG:
+c                                 get mus for lagged speciation
       if (lopt(32)) then
 
          if (npt.eq.icp) then 
@@ -2496,80 +2127,6 @@ c                                 swap a(right) with a(pivot)
 
       end 
 
-      subroutine subst (a,ipvt,n,b,ier)
-c-----------------------------------------------------------------------
-c subst uses the lu decomposition of the matrix 'a' contained
-c in the array 'a' to solve ax = b for x. subst is modified from the
-c the subroutine of the same name listed by conte and de boor
-c in 'elementary numerical analysis', mcgraw-hill, 1980.
-c factor uses scaled partial pivoting.
- 
-c input     a- an n by n array containing the non-zero elements of
-c              the u and l decompositions of a, as output by factor.
-c           n- the dimension of the matrix a.
-c        ipvt- a vector indicating that row ipvt(k) was used to
-c              eliminate the coefficient a(n,k).
-c           b- the vector b.
-c output    b- the solution vector x.
-c----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
- 
-      double precision a(k8,k8),b(k8),x(k8),sum
-
-      integer ipvt(k8),ip,i,j,n,ii,ier
-c----------------------------------------------------------------------
-c                                 solve ly = b for y:
-      ip = ipvt(1)
-      x(1) = b(ip)
-      do i = 2, n
-
-         sum = 0d0
-
-         do j = 1, i - 1
-            sum = a(i,j)*x(j)+sum
-         end do 
-
-         ip = ipvt(i)
-         x(i) = b(ip)-sum
-
-      end do 
-c                                 solve ux = y for x:
-      if (a(n,n).eq.0d0) then
-c                                 this check should be superfluous,
-c                                 but reopt requires it. should check
-c                                 what's with factor. 
-         ier = 1
-         goto 99
-      end if 
-
-      x(n) = x(n)/a(n,n)
-
-      do ii = 1, n - 1
-
-         i = n-ii
-
-         sum = 0d0
-
-         do j = i + 1, n
-            sum = a(i,j)*x(j)+sum
-         end do 
-
-         if (a(i,i).eq.0d0) then
-c                                 as above.
-            ier = 1
-            goto 99
-         end if 
-
-         x(i) = (x(i)-sum)/a(i,i)
-         b(i) = x(i)
-
-      end do 
-      b(n) = x(n)
- 
-99    end
-
       subroutine subst1 (n)
 c-----------------------------------------------------------------------
 c subst uses the lu decomposition of the matrix 'a' contained
@@ -2630,286 +2187,6 @@ c                            solve ux = y for x:
  
       end
 
-      subroutine factr1 (n,ier)
-c-----------------------------------------------------------------------
-c factr1 is a subroutine which calculates the triangular
-c decompositions of the matrix 'a'. factor is modified from
-c the subroutine of the same name given by conte and de boor
-c in 'elementary numerical analysis', mcgraw-hill, 1980.
-c factor uses scaled partial pivoting.
-c
-c input     a- an n by n array containing the elements of matrix a.
-c           n- the dimension of the matrix a.
-c output    a- an n by n array containing the upper, u, and lower, l,
-c              triangular decompositions of input matrix a.
-c        ipvt- a vector indicating that row ipvt(k) was used to
-c              eliminate the a(n,k).
-c         ier- a flag, zero if a is of rank = n, and 1 if a is of
-c              lower rank.
-c-----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      integer i,j,k,n,ip1,istr,ier
-
-      double precision temp,ratio,tmax,rmax
-
-      integer ipvt
-      double precision a,d,x(k5)
-      common/ cst301 /a(k5,k5),d(k5),ipvt(k5)
-c-----------------------------------------------------------------------
-      ier = 0
-c                            initialize ipvt,d
-      do i = 1, n
-         ipvt(i) = i
-         rmax = 0d0
-         do j = 1,n
-            rmax = dmax1(rmax,dabs(a(i,j)))
-         end do 
-c                            ax = b is singular if rmax = 0
-         if (dabs(rmax).lt.1d-5) goto 9000
-         x(i) = rmax
-      end do 
-c                            begin decomposition:
-      do i = 1, n - 1
-c                            determine pivot row (istr).
-         rmax = dabs(a(i,i))/x(i)
-         istr = i
-         ip1 = i + 1
-
-         do j = ip1, n
-            tmax = dabs(a(j,i))/x(j)
-            if (tmax.le.rmax) cycle
-            rmax = tmax
-            istr = j
-         end do 
-
-         if (dabs(rmax).lt.1d-5) goto 9000
-c                            if istr gt i, make i the pivot row
-c                            by interchanging it with row istr.
-         if (istr.gt.i) then 
-            j = ipvt(istr)
-            ipvt(istr) = ipvt(i)
-            ipvt(i) = j
-            temp = x(istr)
-            x(istr) = x(i)
-            x(i) = temp
-            do j = 1, n
-               temp = a(istr,j)
-               a(istr,j) = a(i,j)
-               a(i,j) = temp
-            end do 
-         end if 
-c                            eliminate x(k) from rows k+1,...,n.
-         do j = ip1,n
-            a(j,i) = a(j,i)/a(i,i)
-            ratio = a(j,i)
-            do k = ip1, n
-               a(j,k) = a(j,k)-ratio*a(i,k)
-            end do 
-         end do 
- 
-      end do 
-     
-      if (dabs(a(n,n)).lt.1d-5) ier = 1
-
-      return
-c                           algoritmic singularity.
-9000  ier = 1
- 
-      end
-
-      subroutine ufluid (fo2)
-c----------------------------------------------------------------------
-c subroutine ufluid computes the potential of the components
-c of a saturated fluid phase. if the mole fraction of a component is les
-c less than 1.d-38 the chemical potential is set to -9.9d09.
-c ufluid may call one of three molecular fluid equations of state, or
-c alternatively users may supply their own routines, however,
-c the routines currently in use return the log of a components fugacity
-c which is then added to the reference state potential computed by the
-c function gphase.
-c----------------------------------------------------------------------
-      implicit none
- 
-      include 'perplex_parameters.h'
-
-      integer i
- 
-      double precision xf(2), fo2, fs2, gcpd, gzero 
-
-      external gcpd, gzero
-
-      double precision thermo,uf,us 
-      common/ cst1 /thermo(k4,k10),uf(2),us(h5)
-
-      double precision p,t,xco2,u1,u2,tr,pr,r,ps
-      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
-
-      double precision f
-      common/ cst11 /f(3)
-
-      integer ifct,idfl
-      common/ cst208 /ifct,idfl
-
-      integer iff,idss,ifug
-      common/ cst10  /iff(2),idss(h5),ifug
-c-----------------------------------------------------------------------
-c                           compute the chemical potentials of
-c                           fluid components in fluid saturated
-c                           systems.
-      call cfluid (fo2,fs2)
-
-      if (idfl.ne.0) then
-   
-         uf(idfl) = gcpd (idfl,.false.) + r * t * f(idfl)
-
-      else
-
-         xf(1) = 1d0 - xco2
-         xf(2) = xco2
- 
-         do i = 1, 2
-
-            if (iff(i).ne.0) then 
-
-               if (xf(i).lt.1d-38) then 
-
-                  uf(i) = -1d10
-
-               else 
-
-                  uf(i) = gzero (i) + r * t * f(i)
-
-               end if
-
-            end if 
-
-         end do
-
-      end if 
- 
-      end
-
-      subroutine uproj
-c----------------------------------------------------------------------
-c subroutine uproj computes the potentials of saturated phase components
-c and saturated components.
-  
-c the energies of saturated components are projected through
-c saturated volatile components.
-c----------------------------------------------------------------------
-      implicit none
- 
-      include 'perplex_parameters.h'
- 
-      integer i,j,k,l,ict,ll,i1,id
-
-      double precision uss(h6), fo2, gph, u, gphase
-
-      external gphase
-
-      double precision g
-      common/ cst2 /g(k1)
-
-      double precision cp
-      common/ cst12 /cp(k5,k1)
-
-      double precision thermo,uf,us 
-      common/ cst1 /thermo(k4,k10),uf(2),us(h5)
-
-      integer ifct,idfl
-      common/ cst208 /ifct,idfl
-
-      integer iff,idss,ifug
-      common/ cst10  /iff(2),idss(h5),ifug
-
-      integer icomp,istct,iphct,icp
-      common/ cst6  /icomp,istct,iphct,icp  
-
-      integer ids,isct,icp1,isat,io2
-      common/ cst40 /ids(h5,h6),isct(h5),icp1,isat,io2
-
-      double precision p,t,xco2,u1,u2,tr,pr,r,ps
-      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
-c-----------------------------------------------------------------------
-      fo2 = 0d0
-c                                 compute the chemical potentials of
-c                                 saturated phase components.
-      if (ifct.gt.0) call ufluid (fo2)
-
-      do i = 1, isat
-c                                 determine stable saturated composants
-c                                 and the corresponding chemical potentials
-         ict = isct(i)
-
-         ll = icp+i
-
-         do j = 1, ict
-
-            k = ids(i,j)
-            gph = gphase (k)
-            
-            if (ifct.gt.0) then 
-               do l = 1, 2
-c                                 legendre transform for saturated phase
-c                                 component potentials
-                  if (iff(l).ne.0) gph = gph - cp(iff(l),k)*uf(l)
-               end do 
-            end if 
-
-            uss(j) = gph 
-
-            if (i.gt.1) then 
-c                                 if multiple component saturation constraints
-c                                 apply saturation hierarchy legendre transform:
-               i1 = i-1
-               do l = 1, i1
-                  uss(j) = uss(j)-cp(icp+l,k)*us(l)
-               end do
-            end if 
-
-            g(k) = uss(j)
-            uss(j) = uss(j)/cp(ll,k)
-         end do 
-c                                 if O2, check if fo2 has been 
-c                                 determined by a fluid phase routine,
-c                                 if so, add the transform:
-         if (io2.eq.i) then 
-            do j = 1, ict 
-               uss(j) = uss(j) + r*t*fo2
-            end do 
-         end if 
-c                           now find stable "composant":
-
-         u = uss(1)
-
-         id = 1
-
-         if (ict.ne.1) then 
-            do j = 2, ict
-               if (uss(j).gt.u) cycle  
-               id = j
-               u = uss(j)
-            end do 
-         end if 
-c                               save the id of the stable composant.
-         idss(i) = ids(i,id)
-c                               and its chemical potential.
-         us(i) = u
-c                               in case a phase in the component
-c                               saturation space is an endmember of
-c                               a solution transform the endmember G's:
-         do j = 1, ict
-            k = ids(i,j)
-            g(k) = g(k) - cp(icp+i,k)*u
-         end do 
-
-      end do 
-
-      end
-
       subroutine initlp 
 c--------------------------------------------------------------------
 c initialize arrays and constants for lp minimizarion
@@ -2957,9 +2234,8 @@ c---------------------------------------------------------------------
       common/ cst55 /iam(k1),jam(k1),tloop,ploop
 
       integer npt,jdv
-      logical fulrnk
       double precision cptot,ctotal
-      common/ cst78 /cptot(k19),ctotal,jdv(k19),npt,fulrnk
+      common/ cst78 /cptot(k19),ctotal,jdv(k19),npt
 
       integer ipoint,kphct,imyn
       common/ cst60  /ipoint,kphct,imyn
@@ -3049,408 +2325,6 @@ c                                 cold start istart = 0
 
       end 
 
-      subroutine gall 
-c-----------------------------------------------------------------------
-c subroutine gall computes molar free energies of all static compounds.
-c-----------------------------------------------------------------------
-      implicit none
- 
-      include 'perplex_parameters.h'
-
-      integer i, j, k, id
-
-      double precision gval, dg, g0(m4)
-
-      double precision gex, gfesi, gfesic, gerk, gproj, ghybrid, gzero,
-     *                 gfecr1, gcpd
-
-      external gerk, gzero, gex, gfesi, gfesic, gproj, ghybrid, 
-     *         gcpd
-
-      integer icomp,istct,iphct,icp
-      common/ cst6 /icomp,istct,iphct,icp
-
-      integer ipoint,kphct,imyn
-      common/ cst60 /ipoint,kphct,imyn
-
-      double precision g
-      common/ cst2 /g(k1)
-
-      integer jnd
-      double precision aqg,q2,rt
-      common/ cxt2 /aqg(m4),q2(m4),rt,jnd(m4)
-
-      double precision cp
-      common/ cst12 /cp(k5,k1)
-
-      double precision thermo,uf,us 
-      common/ cst1 /thermo(k4,k10),uf(2),us(h5)
-
-      integer ifct,idfl
-      common/ cst208 /ifct,idfl
-
-      integer iff,idss,ifug
-      common/ cst10  /iff(2),idss(h5),ifug
-
-      integer isoct
-      common/ cst79 /isoct
-
-      integer ids,isct,icp1,isat,io2
-      common/ cst40 /ids(h5,h6),isct(h5),icp1,isat,io2
-
-      integer jend
-      common/ cxt23 /jend(h9,m4)
-
-      integer jspec
-      common/ cxt8 /jspec(h9,m4)
-c                                 working arrays
-      double precision z, pa, p0a, x, w, y, wl
-      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
-     *              wl(m17,m18)
-c                                 model type
-      logical lorder, lexces, llaar, lrecip
-      common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
-
-      integer lstot,mstot,nstot,ndep,nord
-      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
-
-      double precision p,t,xco2,u1,u2,tr,pr,r,ps
-      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
-
-      integer ksmod, ksite, kmsol, knsp
-      common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
-
-      integer ideps,icase,nrct
-      common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
-c                                 endmember names
-      character names*8
-      common/ cst8  /names(k1)
-
-      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
-      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
-
-      double precision xco
-      integer ico,jco
-      common/ cxt10 /xco(k18),ico(k1),jco(k1)
-c-----------------------------------------------------------------------
-c                                 compute the chemical potential
-c                                 of the projected components.
-      call uproj
-c                                 first do the endmembers:
-      do id = kphct+1, ipoint
-
-         g(id) = gproj (id) 
-
-      end do 
-c                                 now do solutions:
-      do i = 1, isoct
-c                                 check if normal solution:
-         if (.not.llaar(i).and.(ksmod(i).eq.7.or.ksmod(i).eq.5.or.
-     *       ksmod(i).eq.2.or.ksmod(i).eq.24.or.ksmod(i).eq.25.or.
-     *       ksmod(i).eq.28)) then 
-c                                 it's normal margules or ideal:
-            do j = 1, jend(i,2)
-c                                 initialize with excess energy, dqf,
-c                                 and configurational entropy terms
-               call gexces (id,g(id))
-
-               call setxyp (i,id)
-
-               do k = 1, lstot(i) 
-                  g(id) = g(id) + g(jend(i,2+k)) * y(k)
-               end do 
-
-               id = id + 1
-
-            end do 
-
-         else if (ksmod(i).eq.0) then
-c                                 it's a fluid compound, the way 
-c                                 things are now it must have two
-c                                 components.
-            do j = 1, lstot(i)
-               g0(j) = gzero(jend(i,2+j))
-            end do 
-
-            do j = 1, jend(i,2)
-
-               call fexces (id,gval)
-
-               call setxyp (i,id)
-
-               g(id) = g0(1) * y(1) + g0(2) * y(2) + gval
-
-               id = id + 1
-
-            end do 
-
-         else if (lorder(i)) then
-c                                 compute margules coefficients
-            call setw (i)
-c                                 compute enthalpy of ordering
-            call oenth (i)
-c                                 now for each compound:
-            do j = 1, jend(i,2)
-c                                 for speciation models gexces
-c                                 evaluates only endmember sconf 
-c                                 and internal dqf's
-               call gexces (id,g(id))
-
-               call setxyp (i,id)
-
-               call specis (dg,i)
-c                                 add in g from real endmembers, this
-c                                 must include the g for the disordered equivalent
-c                                 of the ordered species
-               do k = 1, lstot(i)
-
-                  g(id) = g(id) + g(jend(i,2+k)) * p0a(k)
-
-               end do 
-
-               g(id) = g(id) + dg
-
-               id = id + 1
-
-            end do 
-
-         else if (llaar(i)) then 
-c                                 compute margules coefficients
-            call setw (i)
-c                                 because the hp van laar may have p-t
-c                                 dependent volumes, the full expression
-c                                 must be evaluated here:                   
-            do j = 1, jend(i,2)
-c                                 initialize with dqf,
-c                                 and configurational entropy terms
-               call gexces (id,g(id))
-
-               call setxyp (i,id)
-
-               do k = 1, lstot(i) 
-                  g(id) = g(id) + g(jend(i,2+k)) * y(k)
-               end do 
-c                                 add the real excess energy
-               g(id) = g(id) + gex(i,y)
-
-               id = id + 1
-
-            end do 
-
-         else if (ksmod(i).eq.20) then 
-c                                 electrolytic solution, assumes:
-c                                 1) molal electrolyte standard state
-c                                 for solutes.
-c                                 2) water is the last species
-c                                 solvent species Gibbs energies:
-c                                 solvent Gibbs energies
-            rt = r*t
-
-            do k = 1, ns
-               aqg(k) = g(jnd(k))
-            end do 
-c                                 compute compound properties
-            do j = 1, jend(i,2)
-c                                 get the composition
-               call setxyp (i,id)
-c                                 solvent properties
-               call slvnt1 (g(id))
-c                                 add in solute properties
-               call slvnt2 (g(id))
-
-               id = id + 1
-
-            end do
-
-         else if (ksmod(i).eq.26) then
-c                                 H2O-CO2-Salt:
-            do j = 1, jend(i,2)
-
-               call setxyp (i,id)
-        
-               call hcneos (g(id),y(1),y(2),y(3))
-
-               do k = 1, nstot(i) 
-                  g(id) = g(id) + g(jend(i,2+k)) * y(k)
-               end do 
-
-               id = id + 1
-
-            end do
-
-         else if (ksmod(i).eq.39) then
-c                                 generic hybrid EoS
-            do j = 1, jend(i,2)
-
-               g(id) = 0d0
-c                                 load composition array and pointers 
-               call setxyp (i,id)
-
-               do k = 1, nstot(i)
-c                                 sum pure species g's
-                  g(id) = g(id) + g(jnd(k)) * y(k)
-
-               end do
-c                                 compute and add in activities
-               g(id) = g(id) + ghybrid (y)
-
-               id = id + 1
-
-            end do 
-
-         else if (ksmod(i).ge.29.and.ksmod(i).le.32) then 
-c                                 nastia's models:
-            do j = 1, jend(i,2)
-            
-               if (ksmod(i).eq.29) then 
-c                                 BCC Fe-Si Lacaze and Sundman
-                  g(id) = gfesi(xco(jco(id)+1),g(jend(i,3)),
-     *                                         g(jend(i,4)))
-               else if (ksmod(i).eq.32) then 
-c                                 BCC Fe-Cr Andersson and Sundman
-                  g(id) = gfecr1 (xco(jco(id)+1),g(jend(i,3)),
-     *                                           g(jend(i,4)))
-               else 
-
-                  g(id) = gfesic (xco(jco(id)+1),
-     *                            xco(jco(id)+3),xco(jco(id)+4),
-     *                            g(jend(i,3)),g(jend(i,4)),
-     *                            g(jend(i,5)),g(jend(i,6)),ksmod(i))
-               end if 
-  
-               id = id + 1
-
-            end do
-
-         else if (ksmod(i).eq.41) then 
-
-            do j = 1, jend(i,2)
-c                                 hybrid MRK ternary COH fluid
-               call setxyp (i,id)
-
-               call rkcoh6 (y(2),y(1),g(id)) 
-
-               do k = 1, 3 
-                  g(id) = g(id) + g(jnd(k)) * y(k)
-               end do 
-
-               id = id + 1
-
-            end do 
-
-         else if (ksmod(i).eq.40) then 
-
-            do j = 1, jend(i,2)
-c                                 MRK silicate vapor
-               g(id) = 0d0
-
-               call setxyp (i,id)
-
-               do k = 1, lstot(i) 
-                  g(id) = g(id) + gzero(jnd(k)) * y(k)
-               end do 
-
-               g(id) = g(id) + gerk(y)
-
-               id = id + 1
-
-            end do  
-
-         end if 
-
-      end do 
-
-      end
-
-      logical function solvus (id1,id2,ids)
-c-----------------------------------------------------------------------
-c function to test if a solvus separates two static pseudocompounds of
-c solution ids.
-c-----------------------------------------------------------------------
-      implicit none
- 
-      include 'perplex_parameters.h'
-
-      integer i, id1, id2, ids
-
-      integer icomp,istct,iphct,icp
-      common/ cst6 /icomp,istct,iphct,icp 
-
-      double precision cp
-      common/ cst12 /cp(k5,k1)
-
-      double precision dcp,soltol
-      common/ cst57 /dcp(k5,k19),soltol
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-c-----------------------------------------------------------------------
-      solvus = .false.
-
-      do i = 1, icp
-
-         if (dcp(i,ids).eq.0d0) cycle 
-
-         if (dabs(cp(i,id1)-cp(i,id2))/dcp(i,ids).gt.soltol) then 
-            solvus = .true.
-            exit
-         end if 
-
-      end do 
-
-      end 
-
-      subroutine grxn (gval) 
-c-----------------------------------------------------------------------
-c grxn computes the free energy of univariant equilibria
-c defined by the data in commonn block cst21 which is initialized
-c in the subprogram balanc.  grxn is partially redundant with
-c the function gphase but because of the frequency that these
-c these routines are used a significant increase in efficiency is
-c gained by maintaining separate functions.
-c-----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      integer j
-
-      double precision gval, gproj
-
-      external gproj
-
-      integer iffr,isr
-      double precision vuf,vus
-      common/ cst201 /vuf(2),vus(h5),iffr,isr
-
-      integer idr,ivct
-      double precision vnu
-      common/ cst25 /vnu(k7),idr(k7),ivct
-c-----------------------------------------------------------------------
-c                                 compute potentials of saturated phases
-c                                 and components, note that in this
-c                                 version of vertex the stoichiometry of
-c                                 such components may vary.
-
-c                                 no saturated phase components and no
-c                                 saturated components:
-      if (iffr.eq.1.and.isr.eq.1) goto 10
-c                                 note that this call to uproj makes a
-c                                 subsequent call in gall redundant if
-c                                 sfol1 is used to trace a univariant
-c                                 curve.
-      call uproj
-c                                 compute free energy change of the rxn
-10    gval = 0d0
-
-      do j = 1, ivct
-         gval = gval + vnu(j) * gproj (idr(j))
-      end do 
-
-      end
-
       subroutine yclos0 (x,is,jphct)
 c----------------------------------------------------------------------
 c subroutine to save optimization results for non-iterative refinement
@@ -3469,9 +2343,8 @@ c                                 coordinates (and solution ids).
       common/ cxt15 /cp3(k0,k19),amt(k19),kkp(k19),np,ncpd,ntot
 
       integer npt,jdv
-      logical fulrnk
       double precision cptot,ctotal
-      common/ cst78 /cptot(k19),ctotal,jdv(k19),npt,fulrnk
+      common/ cst78 /cptot(k19),ctotal,jdv(k19),npt
 
       integer iopt
       logical lopt
@@ -3518,8 +2391,9 @@ c                                 stored x coordinate
       integer ncoor,mcoor,ndim
       common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
 c                                  x-coordinates for the final solution
-      double precision x3
-      common/ cxt16 /x3(k21,mst,msp)
+      integer jd
+      double precision x3, caq, ionst, tmolal
+      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),ionst(k5),tmolal(k5),jd
 
       integer ipoint,kphct,imyn
       common/ cst60 /ipoint,kphct,imyn
@@ -3714,9 +2588,9 @@ c----------------------------------------------------------------------
       external ffirst
 
       integer i, is(*), id, jmin(k19), kmin(k19), opt, kpt, mpt, iter, 
-     *        tic
+     *        tic, imin
 
-      double precision clamda(*), clam(k19), x(*)
+      double precision clamda(*), clam(k19), x(*), clamin
 
       logical stable(k19)
 
@@ -3724,8 +2598,8 @@ c----------------------------------------------------------------------
       common/ cst52  /hcp,idv(k7)
 
       logical mus
-      double precision mu, gmax
-      common/ cst330 /mu(k8),gmax,mus
+      double precision mu
+      common/ cst330 /mu(k8),mus
 
       double precision wmach(9)
       common /ax02za/wmach
@@ -3743,9 +2617,8 @@ c----------------------------------------------------------------------
       common/ cst6  /icomp,istct,iphct,icp
 
       integer npt,jdv
-      logical fulrnk
       double precision cptot,ctotal
-      common/ cst78 /cptot(k19),ctotal,jdv(k19),npt,fulrnk
+      common/ cst78 /cptot(k19),ctotal,jdv(k19),npt
 
       integer hkp,mkp
       common/ cst72 /hkp(k21),mkp(k19)
@@ -3780,14 +2653,17 @@ c                                 id indicates the original refinement
 c                                 point.
          id = hkp(i)
 c                                 check the stability of all points 
-         if (is(i).ne.1.and.x(i).gt.0d0) then 
+c DEBUG                           5/9/2017 removed the x(i)>0 conditional
+c                                 to get chemical potentials.
+         if (is(i).ne.1.and.x(i).gt.0d0) then
+c        if (is(i).ne.1) then  
 c                                 a stable point, add to list
             npt = npt + 1
             jdv(npt) = i
             stable(id) = .true.
 
          else if (clamda(i).lt.clam(id)) then
-c DEBUG
+c DEBUG wish i wrote was this is about, but it may be in yclos0/1
             if (clamda(i).lt.wmach(3)) cycle 
 
             if (jkp(id).gt.0) then
@@ -3810,7 +2686,7 @@ c                                 as they hardly cost anything.
       end do
 
 c DEBUG DEBUG
-
+c                                 get mu's for lagged speciation
       if (lopt(32)) then 
 
          if (npt.eq.hcp) then 
@@ -3824,6 +2700,29 @@ c DEBUG DEBUG
          end if
 
       end if 
+
+      if (npt.lt.0*hcp.and.iter.gt.iopt(10)) then 
+c                                  
+         clamin = 1d99
+
+         do i = 1, jphct 
+
+            if (is(i).ne.1) cycle
+
+            if (clamda(i).lt.clamin) then
+
+               imin = i
+               clamin = clamda(i)
+
+            end if 
+
+         end do
+
+         npt = npt + 1
+         jdv(npt) = imin
+         stable(hkp(imin)) = .true.
+
+      end if  
 
       if (iter.le.iopt(10)) then
 c                                 if not done iterating, add the metastable
@@ -3897,135 +2796,9 @@ c                                 check zero modes the amounts
 
          end do 
 
-         if (npt.ne.icp) then
- 
-            fulrnk = .false.
-         
-         else 
-
-            fulrnk = .true.
-
-         end if 
-
       end if 
 
       end
-
-      subroutine getmus (iter) 
-c----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      integer i, j, id, ier, ipvt(k8), iter
-
-      double precision comp(k8,k8)
-
-      integer hcp,idv
-      common/ cst52  /hcp,idv(k7) 
-
-      integer jphct
-      double precision g2, cp2
-      common/ cxt12 /g2(k21),cp2(k5,k21),jphct
-
-      double precision a,b,c
-      common/ cst313 /a(k5,k1),b(k5),c(k1)
-
-      logical mus
-      double precision mu, gmax
-      common/ cst330 /mu(k8),gmax,mus
-
-      integer npt,jdv
-      logical fulrnk
-      double precision cptot,ctotal
-      common/ cst78 /cptot(k19),ctotal,jdv(k19),npt,fulrnk
-c----------------------------------------------------------------------
-
-       mus = .false.
-
-       if (iter.gt.1) then 
-
-         do i = 1, hcp
-
-            id = jdv(i) 
-
-            do j = 1, hcp 
-               comp(i,j) = cp2(j,id)
-            end do 
-
-            mu(i) = g2(id)
-
-         end do
-
-      else
-
-         do i = 1, hcp
-
-            id = jdv(i) 
-
-            do j = 1, hcp 
-               comp(i,j) = a(j,id)
-            end do 
-
-            mu(i) = c(id)
-
-         end do
-
-      end if 
-
-      call factor (comp,hcp,ipvt,ier)
-
-      if (ier.ne.0) return
-
-      call subst (comp,ipvt,hcp,mu,ier)
-
-      if (ier.eq.0) mus = .true. 
-
-      end 
-
-      double precision function deltag (id,iter)
-c----------------------------------------------------------------------
-c return the difference g phase id - g current solution, i.e., < 0 phase
-c id is metastable. 
-c----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      integer i, id, iter
-
-      integer hcp,idv
-      common/ cst52  /hcp,idv(k7) 
-
-      integer jphct
-      double precision g2, cp2
-      common/ cxt12 /g2(k21),cp2(k5,k21),jphct
-
-      double precision a,b,c
-      common/ cst313 /a(k5,k1),b(k5),c(k1)
-
-      logical mus
-      double precision mu, gmax
-      common/ cst330 /mu(k8),gmax,mus
-
-      integer npt,jdv
-      logical fulrnk
-      double precision cptot,ctotal
-      common/ cst78 /cptot(k19),ctotal,jdv(k19),npt,fulrnk
-c----------------------------------------------------------------------
-      if (iter.gt.0) then 
-
-         deltag = g2(id)
-
-         do i = 1, hcp
-
-            deltag = deltag - cp2(i,id)*mu(i)
-
-         end do
-
-      end if
- 
-      end 
 
       subroutine rebulk (static)
 c----------------------------------------------------------------------
@@ -4076,9 +2849,8 @@ c                                 adaptive x(i,j) coordinates
       common/ cst61 /ikp(k1)
 
       integer npt,jdv
-      logical fulrnk
       double precision cptot,ctotal
-      common/ cst78 /cptot(k19),ctotal,jdv(k19),npt,fulrnk
+      common/ cst78 /cptot(k19),ctotal,jdv(k19),npt
 
       integer iam,jam,tloop,ploop
       common/ cst55 /iam(k1),jam(k1),tloop,ploop
@@ -4087,8 +2859,8 @@ c                                 hcp is different from icp only if usv
       common/ cst52  /hcp,idv(k7) 
 
       logical mus
-      double precision mu, gmax
-      common/ cst330 /mu(k8),gmax,mus
+      double precision mu
+      common/ cst330 /mu(k8),mus
 
       integer jtest,jpot
       common/ debug /jtest,jpot
@@ -4227,7 +2999,7 @@ c                                  load the saturated phase composition
 
       if (usv.or.jpot.eq.0) then
 c                                 compute chemical potentials
-
+         mus = .true.
 c                                 check for degeneracy
          kcp = 0 
 
@@ -4253,7 +3025,9 @@ c                                 not full rank
             do i = 1, hcp
                mu(i) = nopt(7)
             end do
-          
+            
+            mus = .false.
+
          else 
 
             do i = 1, kcp
@@ -4269,6 +3043,8 @@ c                                 not full rank
                do i = 1, hcp
                   mu(i) = nopt(7)
                end do
+
+               mus = .false.
      
             else 
  
@@ -4279,6 +3055,8 @@ c                                 not full rank
                   do i = 1, hcp
                      mu(i) = nopt(7)
                   end do
+
+                  mus = .false.
              
                else       
 
@@ -4314,610 +3092,74 @@ c                                 homogeneous phases.
 
       end
 
-      subroutine aqrxdo (id)
-c-----------------------------------------------------------------------
-c given chemical potentials solve for rock dominated aqueous speciation
-c-----------------------------------------------------------------------
+      subroutine getmus (iter) 
+c----------------------------------------------------------------------
       implicit none
- 
+
       include 'perplex_parameters.h'
 
-      integer i, j, k, l, ichg, jchg(l9), it, ind(l9), id
+      integer i, j, id, ier, ipvt(k8), iter
 
-      logical bad, output
+      double precision comp(k8,k8)
 
-      character text*200
+      integer hcp,idv
+      common/ cst52  /hcp,idv(k7) 
 
-      double precision c(l9), q(l9), mo(l9), dg(l9), ahy, xis, blk(k5),
-     *                 d(l9), q2(l9), lng0, is, gamm0, totm, g0(l9),
-     *                 gso(nsp), ysum, ph0, v0(nsp), vf0(nsp), tmass,
-     *                 tsmas, tsmol, smol(k5), dn
+      integer jphct
+      double precision g2, cp2
+      common/ cxt12 /g2(k21),cp2(k5,k21),jphct
 
-      double precision gcpd, solve, gfunc
-
-      external gcpd, solve, gfunc
-
-      double precision r,tr,pr,ps,p,t,xco2,u1,u2
-      common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
-
-      double precision thermo,uf,us
-      common/ cst1 /thermo(k4,k10),uf(2),us(h5)
-
-      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
-      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
-
-      character cname*5
-      common/ csta4  /cname(k5)
-
-      integer ihy, ioh
-      double precision gf, epsln, epsln0, adh, msol
-      common/ cxt37 /gf, epsln, epsln0, adh, msol, ihy, ioh
-
-      character specie*4
-      integer isp, ins
-      common/ cxt33 /isp,ins(nsp),specie(nsp)
-
-      integer iaq, aqst, aqct
-      character aqnam*8
-      double precision aqcp, aqtot
-      common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
-
-      integer jbulk
-      double precision cblk
-      common/ cst300 /cblk(k5),jbulk
-
-      double precision cp
-      common/ cst12 /cp(k5,k1)
-
-      double precision fwt
-      common/ cst338 /fwt(k10)
-
-      double precision atwt
-      common/ cst45 /atwt(k0)
-
-      integer jend
-      common/ cxt23 /jend(h9,m4)
-
-      integer icomp,istct,iphct,icp
-      common/ cst6  /icomp,istct,iphct,icp  
+      double precision a,b,c
+      common/ cst313 /a(k5,k1),b(k5),c(k1)
 
       logical mus
-      double precision mu, gmax
-      common/ cst330 /mu(k8),gmax,mus
-
-      double precision z, pa, p0a, x, w, y, wl
-      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
-     *              wl(m17,m18)
-
-      integer ksmod, ksite, kmsol, knsp
-      common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
-      double precision yf,g,v,vf
-      common/ cstcoh /yf(nsp),g(nsp),v(nsp),vf(nsp)
-
-      integer jnd
-      double precision aqg,qq,rt
-      common/ cxt2 /aqg(m4),qq(m4),rt,jnd(m4)
-
-      character names*8
-      common/ cst8  /names(k1)
-
-      integer length,iblank,icom
-      character chars*1
-      common/ cst51 /length,iblank,icom,chars(lchar)
-c-----------------------------------------------------------------------
-      output = .true. 
-
-      ichg = 0 
-      is   = 0d0
-      rt   = r*t
-      ysum = 0d0 
-c                                 get the solvent permittivities,
-c                                 call mrkmix to get solvent volumetric props
-      do i = 1, ns
- 
-         ysum = ysum + x(1,i)
-
-      end do
-
-      do i = 1, ns
-c                                 load normalized molecular fluid composition
-         yf(ins(i)) = x(1,i)/ysum
-
-      end do 
-         
-      call mrkmix (ins,isp,1)
-c                                  save pmv's and v fractions for output
-      do i = 1, ns
-         vf0(ins(i)) = vf(ins(i))
-         v0(ins(i)) = v(ins(i))
-      end do 
-c                                  ysum is just a dummy at this point. 
-      call slvnt1 (ysum)
-
-      do i = 1, ns 
-
-         gso(i) = 0d0
-
-         do j = 1, icp
-
-            if (isnan(mu(j))) cycle
-
-            gso(i) = gso(i) + mu(j)*cp(j,jnd(i))
-
-         end do 
-
-      end do 
-c                                 compute solute properties 
-      do i = 1, aqct 
-
-         if (i.eq.ihy) cycle
-
-         k = aqst + i 
-
-         q(i) = thermo(6,k)
-         q2(i) = q(i)**2
-c                                 dg is the solvent oxide potentials - g
-         g0(i) = gcpd(k,.false.)
-         dg(i) = -g0(i)
-
-         do j = 1, jbulk 
-c                                 if oxide components, but no excess oxygen
-c                                 mu(O2) is a nan. 
-            if (isnan(mu(j))) cycle
-
-            dg(i) = dg(i) + aqcp(j,i) * mu(j)
-
-         end do 
-c                                 normalize by RT
-         dg(i) = (dg(i) - q(i)*gso(ns)/2d0)/rt
-
-         if (q(i).ne.0d0) then 
-
-            ichg = ichg + 1
-            jchg(ichg) = i 
-c                                  this is now c(i)*a(H+)^(q(i)) = mo(i)*gamma(i)*q(i)
-            d(i) = q(i)*dexp(dg(i))
-            c(i) = d(i)
-
-         else 
-c                                  neutral species assumed to be ideal, molality is
-            mo(i) = dexp(dg(i))
-      
-         end if 
-
-      end do 
-
-      gamm0 = 1d0 
-      it = 0 
-      mo(ihy) = 1e-6
-c                                  iterative loop for ionic strength
-      do 
-c                                  solve charge balance for H+
-         mo(ihy) = solve(c,q,mo(ihy),jchg,ichg,bad)
-
-         if (bad) then 
-            write (*,*) 'bombed'
-            exit
-         end if 
-
-         ahy = mo(ihy)*gamm0
-c                                  back calculate charged species molalities
-c                                  and ionic strength
-         xis = is
-
-         is = 0d0
-
-         do i = 1, ichg 
-
-            j = jchg(i)
-            mo(j) = ahy**(q(j))*c(j)/q(j)
-            is = is + q2(j) * mo(j)
-
-         end do
-
-         is = is / 2d0 
-c                                 DH law activity coefficient factor (ln[g] = lng0*q^2)
-         lng0 = adh*dsqrt(is)/(1d0 + dsqrt(is)) + 0.2d0*is
-         gamm0 = dexp(lng0)
-c                                 check for convergence
-         if (dabs(xis-is)/is.lt.nopt(5)) then 
-            exit
-         else if (it.gt.iopt(21)) then 
-            bad = .true.
-         end if 
-
-         it = it + 1
-c                                 update coefficients
-         do i = 1, ichg 
-
-            j = jchg(i)
-            c(j) = d(j)*dexp(lng0*(1d0-q2(j)))
-
-         end do
-
-      end do
-
-      if (output) then
-c                                 neutral pH
-         ph0 = (g0(ihy)+g0(ioh)-gso(ns))/2d0/rt/2.302585d0
-
-         totm = 0d0
-
-         do i = 1, icp
-            blk(i) = 0d0
-         end do  
-c                                 compute mole fractions, total moles first
-         do i = 1, ns 
-c                                 moles/kg-solvent 
-            totm = totm + x(1,i)/msol
-
-            do j = 1, icp 
-               blk(j) = blk(j) + x(1,i)*cp(j,jnd(i))/msol
-            end do 
-
-         end do
-c                                 convert the above bulks from mol/mol to mol/ks
-         do j = 1, icp
-            blk(j) = blk(j)/msol
-         end do 
-
-         do i = 1, aqct
-            ind(i) = i 
-            totm = totm + mo(i)
-         end do
-
-         do i = 1, aqct
-
-            do j = 1, icp
-               blk(j) = blk(j) + mo(i)*aqcp(j,i)
-            end do 
-
-         end do
-
-         call rankem (mo,ind,aqct,iopt(32))
-
-         write (*,1000)
-
-         write (text,1050) -dlog10(ahy),ph0,is,gamm0
-         call deblnk (text)
-         write (*,'(400a)') (chars(j), j = 1, length)
-         write (text,1070) epsln,epsln0
-         call deblnk (text)
-         write (*,'(400a)') (chars(j), j = 1, length)
-
-         if (ksmod(id).eq.20) then
-
-            write (*,1100)
-
-         else
-
-            write (*,1040)
-
-         end if 
-
-         do i = 1, iopt(32)
-
-            k = ind(i)
-
-            if (ksmod(id).eq.20) then 
-c                                 check if the species is the solution model
-               l = 0
-
-               do j = sn1, nqs
-                  if (jnd(j)-aqst.eq.k) then
-                     l = j
-                     exit
-                  end if 
-               end do
-
-               if (l.ne.0) then 
-                  write (*,1080) aqnam(k),int(thermo(6,k+aqst)),
-     *                           mo(k),mo(k)/totm,x(1,l),
-     *                           int(g0(k)+rt*(dlog(mo(k))+lng0*q2(k))),
-     *                           int(g0(k))
-               else
-                  write (*,1090) aqnam(k),int(thermo(6,k+aqst)),
-     *                           mo(k),mo(k)/totm,
-     *                           int(g0(k)+rt*(dlog(mo(k))+lng0*q2(k))),
-     *                           int(g0(k))
-               end if 
-
-            else 
-
-               write (*,1010) aqnam(k),int(thermo(6,k+aqst)),
-     *                        mo(k),mo(k)/totm,
-     *                        int(g0(k)+rt*(dlog(mo(k))+lng0*q2(k))),
-     *                        int(g0(k))
-
-            end if 
-         end do 
-
-         write (*,1020)
-
-         do i = 1, ns 
-
-            write (*,1030) names(jnd(i)),x(1,i)/msol,x(1,i),vf0(ins(i)),
-     *                 v0(ins(i)), int(gso(i)), int(gcpd(jnd(i),.true.))
-         end do 
-
-         write (*,1060)
-c                                 bulk fluid composition 
-         tmass = 0d0
-         totm = 0d0 
-
-         do i = 1, icp
-            totm = totm + blk(i)
-            tmass = tmass + atwt(i)*blk(i)
-         end do 
-
-         if (ksmod(id).eq.20) then 
-
-            tsmol = 0d0
-            tsmas = tsmol
- 
-            do i = 1, icp
-               smol(i) = 0d0
-            end do 
-
-            do i = 1, nqs
-               
-               k = jnd(i)
-
-               do j = 1, icp
-
-                  if (i.lt.sn1) then 
-                     dn =  x(1,i) * cp(j,k)
-                  else 
-                     dn = x(1,i) * aqcp(j,k-aqst)
-                  end if 
-
-                  smol(j) = smol(j) + dn
-                  tsmol = tsmol + dn
-                  tsmas = tsmas + dn*atwt(j)
-
-               end do
-
-            end do 
-
-            write (*,1130)
-
-            do i = 1, icp
-               write (*,1110) cname(i),blk(i)/totm*1d2,
-     *                                 smol(i)/tsmol*1d2,
-     *                                 blk(i)*atwt(i)/tmass*1d2,
-     *                                 smol(i)*atwt(i)/tsmas*1d2
-            end do
-
-         else 
-
-            write (*,1120)
-
-            do i = 1, icp
-               write (*,1110) cname(i),blk(i)/totm*1d2,
-     *                                 blk(i)*atwt(i)/tmass*1d2
-            end do
-
-         end if 
-
-      end if
-
-1000  format (/,'Back-calculated solute speciation in the solvent:',/)
-1010  format (a8,4x,i2,3x,g12.6,3x,g12.6,5x,i8,5(2x,g12.6))
-1020  format (/,'Solvent endmember properties:',//,
-     *        9x,'molality',3x,'mol_fraction',2x,'vol_fraction',
-     *        2x,'v,cm3/mol*',2x,'g,J/mol*',3x,'g0,J/mol***')
-1030  format (a8,2x,f7.4,5x,f7.5,8x,f7.5,5x,f7.3,3x,i8,4x,i8)
-1040  format (/,'Solute endmember properties:',//,10x,'charge',3x,
-     *       'molality',5x,'mol_fraction',6x,'g,J/mol*',5x,'g0,J/mol**')
-1050  format ('pH = ',f6.3,'; neutral_pH = ',f6.3,'; ionic_strength = ',
-     *        g10.4,'; gamma/q^2 = ', g10.4)
-1060  format (/,'*partial molar, **molal ref. state, ***molar ref. ',
-     *        'state.',/)
-1070  format ('permittivity =', g10.4,
-     *        '; reference_state_permittivity(Pr,Tr) =',g10.4)
-1080  format (a8,4x,i2,3x,g12.6,3x,g12.6,3x,g12.6,5x,i8,5(2x,g12.6))
-1090  format (a8,4x,i2,3x,g12.6,3x,g12.6,20x,i8,5(2x,g12.6))
-1100  format (/,'Solute endmember properties:',/,
-     *        48x,'optimized',/,10x,'charge',3x,
-     *       'molality',5x,'mol_fraction',3x,'mol_fraction',6x,
-     *       'g,J/mol*',5x,'g0,J/mol**')
-1110  format (1x,a8,2x,4(g12.6,3x))
-1120  format (/,'Back-calculated fluid bulk composition:',//,
-     *        13x,'mol %',11x,'wt %')
-1130  format (/,'Back-calculated vs optimized fluid bulk composition:',
-     *        //,26x,'optimized',20x,'optimized',/,
-     *        13x,'mol %',10x,'mol %',10x,'wt %',11x,'wt %')
-c            write (*,1030) names(jnd(i)),x(1,i)/msol,x(1,i),int(gso(i)),
-c     *                      v(ins(i)),eps(i),v0(ins(i)),eps0(i)
-c1030  format (a8,2x,f7.4,5x,f7.5,5x,i8,2x,f9.4,4x,f8.5,5x,f9.4,5x,f8.5)
-
-
-      end 
-
-      subroutine rankem (a,ind,r,n)
-c-----------------------------------------------------------------------
-c rank the n largest values of array a(left:right) in array ind. assumes ind has 
-c been initialized (left:right). 
-c-----------------------------------------------------------------------
-      implicit none
- 
-      include 'perplex_parameters.h'
-
-      integer i, j, imax, ind(*), r, left, right, n
-
-      double precision a(*), amax
+      double precision mu
+      common/ cst330 /mu(k8),mus
+
+      integer npt,jdv
+      logical fulrnk
+      double precision cptot,ctotal
+      common/ cst78 /cptot(k19),ctotal,jdv(k19),npt,fulrnk
 c----------------------------------------------------------------------
-      left = 1
-      right = r
 
-      do 
+       mus = .false.
 
-         amax = -1d99
+       if (iter.gt.1) then 
 
-         do i = left, right 
-            if (a(ind(i)).gt.amax) then
-               imax = i
-               amax = a(ind(i))
-            end if 
-         end do 
+         do i = 1, hcp
 
-         j = ind(left)
-         ind(left) = ind(imax)
-         ind(imax) = j 
+            id = jdv(i) 
 
-         left = left + 1
+            do j = 1, hcp 
+               comp(i,j) = cp2(j,id)
+            end do 
 
-         if (left.eq.n) return
+            mu(i) = g2(id)
 
-      end do 
-
-      end 
-
-
-      double precision function solve (c,q,x,jchg,ichg,bad)
-c-----------------------------------------------------------------------
-c function solve for hydronium molality (x) from charge balance for aqrxdo.
-c-----------------------------------------------------------------------
-      implicit none
- 
-      include 'perplex_parameters.h'
-
-      integer jchg(*), ichg, it, i, j
-
-      logical bad
-
-      double precision c(*), q(*), x, y, z, f, df, dx
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-c-----------------------------------------------------------------------
-
-      it = 0 
-
-      do
-
-         f = x
-         df = 1d0
-         it = it + 1
-
-         do i = 1, ichg 
-
-            j = jchg(i)
-
-            y = x**(q(j)) * c(j)
-            z = y*q(j)/x 
-
-            f = f + y
-            df = df + z
-
-         end do  
-
-         dx = -f/df
-
-         x = x + dx
-
-         if (dx/x.lt.nopt(5)) then 
-            bad = .false.
-            exit
-         else if (x.lt.0d0.or.it.gt.iopt(21)) then 
-            bad = .true.
-            exit
-         end if 
-
-      end do
-
-      solve = x
-
-      end 
-
-      subroutine setxyp (ids,id)
-c-----------------------------------------------------------------------
-c for static pseudocompounds load the compositional coordinates from xco
-c into simple compositional arrays for compound id of solution ids. 
-c-----------------------------------------------------------------------
-      implicit none
- 
-      include 'perplex_parameters.h'
-
-      integer ids, id, i
-
-      double precision xt
-c                                 working arrays
-      double precision z, pa, p0a, x, w, y, wl
-      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
-     *              wl(m17,m18)
-c                                 model type
-      logical lorder, lexces, llaar, lrecip
-      common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
-
-      integer lstot,mstot,nstot,ndep,nord
-      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
-
-      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
-      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
-
-      double precision xco
-      integer ico,jco
-      common/ cxt10 /xco(k18),ico(k1),jco(k1)
-c-----------------------------------------------------------------------
-c                                 y's are primsatic 1-d coordinates
-c                                 x's are prismatic 2-d coordinates
-c                                 p0a's are independent 1-d endmember coordinates 
-c                                       of a fully disordered o/d model
-c                                 pa's are, ultimately, independent 1-d endmember 
-c                                       coordinates of the stably orderded configuration.
-
-c                                 y's are kept distinct form p0's because in the 
-c                                 adaptive phase of minimization the all compositions
-c                                 are stored in the x version. these are then converted
-c                                 to y's and o/d models subsequently convert
-c                                 these to p0a's. it is not clear whether the original
-c                                 y's are subsequently referenced
-
-c                                 currently the only models that use the x form are 
-c                                 nastia's alloy special cases ksmod 29-31. these should be
-c                                 checked.
-      xt = 0d0 
-
-      if (lorder(ids).and.lrecip(ids)) then 
-
-         do i = 1, nstot(ids) - 1
-            p0a(i) = xco(jco(id)+i) 
-            pa(i) = p0a(i)
-            xt = xt + pa(i)
-         end do 
-
-         p0a(i) = 1d0 - xt  
-         pa(i) = p0a(i)
-  
-      else if (lorder(ids)) then
-
-         do i = 1, lstot(ids) - 1
-            p0a(i) = xco(jco(id)+i) 
-            pa(i) = p0a(i)
-            xt = xt + pa(i)
          end do
 
-         p0a(i) = 1d0 - xt
-         pa(i) = p0a(i)
+      else
 
-      else 
+         do i = 1, hcp
 
-         do i = 1, lstot(ids)- 1
-            y(i) = xco(jco(id)+i) 
-            xt = xt + y(i)
+            id = jdv(i) 
+
+            do j = 1, hcp 
+               comp(i,j) = a(j,id)
+            end do 
+
+            mu(i) = c(id)
+
          end do
 
-         y(i) = 1d0 - xt
+      end if 
 
-       end if
+      call factor (comp,hcp,ipvt,ier)
 
-       end
+      if (ier.ne.0) return
+
+      call subst (comp,ipvt,hcp,mu,ier)
+
+      if (ier.eq.0) mus = .true. 
+
+      end 
