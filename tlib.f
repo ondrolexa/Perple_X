@@ -19,7 +19,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a)') 
-     *      'Perple_X version 6.7.8, source updated June 20, 2017.'
+     *      'Perple_X version 6.7.8, source updated June 15, 2017.'
 
       end
 
@@ -365,7 +365,7 @@ c                                 aq_solute_composition (true = molal)
       lopt(27) = .true.
       valu(27) = 'm'
 c                                 lagged speciation
-      lopt(32) = .false.
+      lopt(32) = .true.
 c                                 initialize mus flag lagged speciation
       mus = .false.
 c                                 -------------------------------------

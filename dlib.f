@@ -874,9 +874,11 @@ c                                 working arrays
 c                                 x coordinate description
       integer istg, ispg, imlt, imdg
       common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
-c                                 xcoordinates for the final solution
-      double precision x3
-      common/ cxt16 /x3(k21,mst,msp)
+c                                 xcoordinates for the final solution, a
+c                                 leetle witz.
+      integer jd
+      double precision x3, caq, ionst, tmolal
+      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),ionst(k5),tmolal(k5),jd
 c----------------------------------------------------------------------
 
       do i = 1, istg(ids)

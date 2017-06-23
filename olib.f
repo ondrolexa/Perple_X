@@ -732,43 +732,25 @@ c                               lagged speciation
 
                end if
 
-            else 
-c                                 MEEMUM, molar amount
-               props(16,i) = amt(i)
-c                                 convert x3 to y for calls to gsol
-               if (ids.gt.0) call x3toy (i,ids)
- 
             end if 
 
          else 
-c                                 a compound:
+c                                 MEEMUM
             if (ifp(-ids).gt.0.or.ifp(-ids).lt.0.and.lopt(6)) then 
                aflu = .true.
                fluid(i) = .true.
             else 
                fluid(i) = .false.
             end if
-
-            if (iam.ne.2) then 
-c                                 WERAMI
-               cst = bg(i,jd)
-c                                 in case zero mode is not on, allow
-c                                 composition of zero phase
-               if (ijpt.eq.1.and.cst.eq.0d0) cst = 1d0
-c                                 weighted molar amount
-               props(16,i) = wt(1)*cst
-
-            else 
-c                                 MEEMUM, molar amount
-               props(16,i) = amt(i)
- 
-            end if
+c                                 molar amount
+            props(16,i) = amt(i)
+c                                 convert x3 to y for calls to gsol
+            if (ids.gt.0) call x3toy (i,ids)
 
          end if
 
          if (iam.ne.2) then 
 c                                 WERAMI; need to average in other assemblages
-
             do j = 2, ijpt
             
                kd = igrd(itri(j),jtri(j))
@@ -1877,10 +1859,6 @@ c----------------------------------------------------------------------
       integer eos
       common/ cst303 /eos(k10)
 
-      integer kd
-      double precision x3, caq, ionst, tmolal
-      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),ionst(k5),tmolal(k5),kd
-
       save dt
       data dt /.5d0/
 
@@ -1890,8 +1868,6 @@ c----------------------------------------------------------------------
       sick(jd) = .false.
       pois     = .false.
       lshear   = .false.
-c                                 pointer copy for lagged aq calculations in gsol 
-      kd = jd 
 c                                 make name and composition, 
 c                                 redundant for frendly
       call getnam (pname(jd),id)
