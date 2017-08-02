@@ -1650,7 +1650,16 @@ c                                write summary and checks
                write (*,1030) (aqnam(j),int(thermo(6,j+aqst)),j=i,k)
             end do 
             write (*,'(//)')
-         end if  
+         end if
+
+      else if (lopt(32).or.lopt(25)) then 
+
+         if (first) call warn (99,0d0,0,' no data for aqueous species, '
+     *    //'aqueous_output and lagged_aq_speciation disabled.')
+
+         lopt(32) = .false.
+         lopt(25) = .false.
+  
       end if 
 c                                reset ipoint counter, but do not 
 c                                reset iphct, because the compositions
@@ -1957,9 +1966,11 @@ c-----------------------------------------------------------------------
  
       include 'perplex_parameters.h'
 
-      integer i,j,id,jd,ids
+      integer i, j, k, id, jd, ids
 
       logical bad
+
+      double precision xx
 c                                 -------------------------------------
 c                                 global variables:
       integer icomp,istct,iphct,icp
@@ -2008,8 +2019,8 @@ c                                 pointer
       double precision aqcp, aqtot
       common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
 
-      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
-      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
 
       integer jnd
       double precision aqg,qq,rt
@@ -2023,6 +2034,10 @@ c                                 pointer
       logical lopt
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      integer kd, na1, na2, na3, na4
+      double precision x3, caq
+      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),na1,na2,na3,na4,kd
 c----------------------------------------------------------------------
 
       kkp(jd) = ids
@@ -2066,9 +2081,35 @@ c                                 geometric y coordinates
 
          if (lopt(32).and.ksmod(ids).eq.39) then 
 
-            do j = 1, icomp 
-               cp3(j,jd) = cp2(j,id)
+            if (iam.ne.3) then 
+c                                 MEEMUM:
+c                                 cp2 works for meemum/vertex, but not werami
+c                                 the id index on cp2 is intentional.
+             do j = 1, icomp 
+                cp3(j,jd) = cp2(j,id)
+             end do 
+
+            else  
+c                                  WERAMI:
+            do i = 1, ns
+               do j = 1, icomp 
+                  cp3(j,jd) = cp3(j,jd) + caq(jd,i) * cp(j,jnd(i))
+               end do 
             end do 
+
+            do i = sn1, nsa
+
+               k = i - ns
+c                                 convert molality to mole fraction (xx)
+               xx = caq(jd,i)/caq(jd,na2)
+
+               do j = 1, icomp
+                  cp3(j,jd) = cp3(j,jd) + xx * aqcp(j,k)  
+               end do  
+             
+            end do
+
+            end if  
 
          else if (lrecip(ids)) then
 c                                 get the p' coordinates (amounts of 

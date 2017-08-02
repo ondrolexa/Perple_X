@@ -53,27 +53,21 @@ COMP77 = gfortran
 # FFLAGS =  -O3 -static-libgfortran
 
 FFLAGS = -O3
-LQMDIR = /usr/local/lib
-FLINK = -static-libgfortran -m64 -lgfortran -lgcc -lSystem -lm -nodefaultlibs ${LQMDIR}/libquadmath.a
+FLINK = -static-libgfortran -m64 -lgfortran -lgcc -lm
 
 # WFM Added 2007Sep05, PAPPEL 2010SEPT08: for 6.6.0
-MYOBJ = getxz1 dumlib convex actcor build fluids ctransf frendly htog meemum pstable pspts psvdraw pssect pt2curv vertex werami unsplt nlib rlib resub flib tlib clib dlib
-
-all:  $(MYOBJ)
+MYOBJ = actcor build fluids ctransf frendly meemum unsplt convex pstable pspts psvdraw pssect pt2curv vertex werami htog
+all: $(MYOBJ)
 
 clean: 
 	rm -f *.o $(MYOBJ)
-
 ###################### TARGETS FOR FORTRAN PROGRAMS #########################   
 # 
-actcor: actcor.o tlib.o 
+actcor: actcor.o tlib.o dumlib.o
 	$(COMP77) $(FFLAGS) $(FLINK) $@.o tlib.o dumlib.o -o $@
 
-build: build.o tlib.o rlib.o flib.o 
+build: build.o tlib.o rlib.o flib.o dumlib.o
 	$(COMP77) $(FFLAGS) $(FLINK) build.o tlib.o rlib.o flib.o dumlib.o -o $@ 
-
-convex: convex.o 
-	$(COMP77) $(FFLAGS) $(FLINK) $@.o getzx1.o rlib.o tlib.o flib.o clib.o -o $@
 
 fluids: fluids.o tlib.o flib.o 
 	$(COMP77) $(FFLAGS) $(FLINK) $@.o tlib.o flib.o -o $@
@@ -88,9 +82,9 @@ frendly: frendly.o tlib.o rlib.o flib.o olib.o clib.o dlib.o
 #	$(COMP77) $(FFLAGS) $@.o -o $@
 
 htog: htog.o
-	$(COMP77) $(FFLAGS) $(FLINK) $@.o -o $@
+	$(COMP77) $(FFLAGS) $@.o -o $@
 
-meemum: meemum.o resub.o nlib.o 
+meemum: meemum.o resub.o nlib.o getxz1.o
 	$(COMP77) $(FFLAGS) $(FLINK) $@.o getxz1.o dumlib.o rlib.o tlib.o flib.o olib.o clib.o resub.o nlib.o -o $@   
 
 pstable: pstable.o pslib.o pscom.o  tlib.o cont_lib.o 
@@ -108,14 +102,17 @@ pssect: psect.o pscom.o pslib.o tlib.o rlib.o flib.o clib.o  dlib.o
 pt2curv: pt2curv.o tlib.o
 	$(COMP77) $(FFLAGS) $(FLINK) $@.o tlib.o -o $@
 
-unsplt: unsplt.o tlib.o rlib.o flib.o clib.o dlib.o
-	$(COMP77) $(FFLAGS) $(FLINK) $@.o dumlib.o rlib.o tlib.o flib.o clib.o dlib.o -o $@
-
-vertex: vertex.o 
+vertex: vertex.o getxz1.o rlib.o tlib.o flib.o clib.o resub.o nlib.o
 	$(COMP77) $(FFLAGS) $(FLINK) $@.o getxz1.o rlib.o tlib.o flib.o clib.o resub.o nlib.o -o $@
 
-werami: werami.o 
+werami: werami.o dumlib.o rlib.o tlib.o flib.o olib.o clib.o dlib.o
 	$(COMP77) $(FFLAGS) $(FLINK) $@.o dumlib.o rlib.o tlib.o flib.o olib.o clib.o dlib.o -o $@
+
+unsplt: unsplt.o rlib.o tlib.o flib.o clib.o dlib.o dumlib.o
+	$(COMP77) $(FFLAGS) $(FLINK) $@.o rlib.o tlib.o flib.o clib.o dlib.o dumlib.o -o $@
+
+convex: convex.o getxz1.o rlib.o tlib.o flib.o clib.o
+	$(COMP77) $(FFLAGS) $(FLINK) $@.o getxz1.o rlib.o tlib.o flib.o clib.o -o $@
 
 # targets missing from '07:
 #rk: rk.o flib.o tlib.o
@@ -166,10 +163,13 @@ pspts.o: pspts.f
 	$(COMP77) $(FFLAGS) -c pspts.f
 pstable.o: pstable.f
 	$(COMP77) $(FFLAGS) -c pstable.f
+
+# NEXT LINE MODIFIED BY pappel (PA@MIN.UNI-KIEL.DE) 2010SEPT08: CHANGED ptcurv.o TO pt2curv.o	
+
 pt2curv.o: pt2curv.f
 	$(COMP77) $(FFLAGS) -c pt2curv.f
-rk.o: rk.f
-	$(COMP77) $(FFLAGS) -c rk.f
+resub.o: resub.f
+	$(COMP77) $(FFLAGS) -c resub.f
 meemum.o: meemum.f
 	$(COMP77) $(FFLAGS) -c meemum.f
 unsplt.o: unsplt.f
@@ -186,8 +186,6 @@ flib.o: flib.f
 	$(COMP77) $(FFLAGS) -c flib.f
 pslib.o: pslib.f
 	$(COMP77) $(FFLAGS) -c pslib.f
-resub.o: resub.f
-	$(COMP77) $(FFLAGS) -c resub.f
 nlib.o: nlib.f
 	$(COMP77) $(FFLAGS) -c nlib.f
 rlib.o: rlib.f

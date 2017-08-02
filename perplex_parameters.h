@@ -87,8 +87,8 @@
       parameter (k7=k5+1,k8=k5+2) 
       parameter (k9=30,k10=400,k14=18,k15=6,k16=70)
       parameter (k17=7,k18=29*k1)
-      parameter (k19=2*k5+2,k21=2000000,k20=(mdim+3)*k21)
-      parameter (k22=mdim*k19,k23=5)
+      parameter (k19=3*k5,k21=2000000,k20=(mdim+3)*k21)
+      parameter (k22=mdim*k19,k23=25)
       parameter (k13=mdim*k21,k24=k13*mst)
 !                                 l2 - max number of independent potential variables
 !                                 l3 - max number of variables for gridded min and graphics (l2+2)
@@ -101,9 +101,10 @@
 !                                      array is not essential.  
 !                                 l8 - max number of levels for multilevel grids    
 !                                 l9 - max number of aqueous solute species in minimization programs.         
+!                                l10 - max number of parameters stored in caq for each phase.
 !                                nsp - max number of species in fluid speciation routines 
       parameter (l2=5,l3=l2+2,l5=1000,l6=1000,l7=2048,l8=10,l9=100,
-     *           nsp=17,l10=nsp+l9)
+     *           nsp=17,l10=nsp+l9+4)
 !                                 m0 - max number of terms for a species site fraction?
 !                                 m1 - max number of terms in excess function
 !                                 m2 - max order of term in excess function

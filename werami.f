@@ -1085,10 +1085,10 @@ c                                 no need to call triang/getlow
                   prop(i) = iap(igrd(itri(1),jtri(1)))
            
                else if (lop.eq.40) then 
-c                                 back calculated solute chemistry, call
-c                                 getprp (mode computation) to check if the
-c                                 solvent is stable, and to decide which phase (komp)
-c                                 is to be used in the case of immiscibility.
+c                                 solute chemistry, call getprp (mode computation) 
+c                                 to check if the solvent is stable, and to decide 
+c                                 which phase (komp) is to be used in the case of 
+c                                 immiscibility.
                   call getprp (mode,7,icx,komp,.false.) 
 c                                 do the speciation and output, -1 signals 
 c                                 tab file output.  
@@ -1686,7 +1686,7 @@ c ------------------------------------------------------------------
       integer spct
       double precision ysp
       character*8 spnams
-      common/ cxt34 /ysp(m4,k5),spct(h9),spnams(m4,h9)
+      common/ cxt34 /ysp(l10,k5),spct(h9),spnams(l10,h9)
 c----------------------------------------------------------------------
       if (icx.eq.kds(jcomp)) then 
 
@@ -3472,7 +3472,7 @@ c 36                All properties of a phase or the system
 c 37                Absolute amounts
 c 38                Multiple property grid for system and phases
 c 39                heat capacity ratio (cp/cv)
-c 40                Back-calculated aqueous solute chemistry
+c 40                Lagged or Back-calculated aqueous solute chemistry
 c----------------------------------------------------------------
       implicit none
 
@@ -3571,7 +3571,7 @@ c----------------------------------------------------------------
      *            'Absolute amount (Vol, Mol, or Wt) of a phase',
      *            'Multiple property output',
      *            'Heat capacity ratio (Cp/Cv)',
-     *            'Back-calculated aqueous solute chemistry'/
+     *            'Lagged or back-calculated aqueous solute chemistry'/
 c----------------------------------------------------------------------
       do i = 1, istab
 
@@ -3656,15 +3656,11 @@ c                                 write blurb about units
 
          else if (lop.eq.40) then 
 
+            kfl(1) = .false.
+
             if (iprop.gt.1) then 
 c                                eject if other props already chosen:
                call warn (54,nopt(1),icx,'CHSPRP')
-               cycle
-
-            else if (.not.lopt(25)) then 
-c                                 eject if no aqueous species
-               call warn (99,0d0,0,'missing data for back-'//
-     *                             'calculation of solute speciation')
                cycle
 
             else if (.not.gflu) then 
@@ -3672,6 +3668,23 @@ c                                 eject if no fluid phase
                call warn (99,0d0,0,'no stable fluid phase was '//
      *                             'identified in this calculation')
                cycle
+
+            else if (lopt(32).and.lopt(25)) then 
+c                                  ask which result is to be output
+               write (*,1160)
+               read (*,'(a)') y
+               if (y.eq.'y'.or.y.eq.'Y') kfl(1) = .true.
+
+            else if (.not.lopt(25)) then 
+c                                 eject if no aqueous species
+               call warn (99,0d0,0,'missing data for back-'//
+     *                             'calculation of solute speciation')
+               cycle
+
+            else                  
+c                                 back-calculated is the only option
+               kfl(1) = .true. 
+
             end if 
 c                                 identify the solvent
             icx = idaq
@@ -3864,10 +3877,11 @@ c                                 multi prop options, only allowed as
 c                                 single choices.
             kop(1) = lop
             kcx(1) = icx
-            kfl(1) = lflu
 c                                 assign property names
 c                                 lop = 25 -> all mode names are assigned above
             if (lop.eq.36) then 
+
+               kfl(1) = lflu
 c                                 "all" prop option
                mprop = i8 + 3
 c                                 basic props
@@ -3888,6 +3902,8 @@ c                                 chemical potentials, lop = 23
                end do 
 
             else if (lop.eq.38) then 
+
+               kfl(1) = lflu
 c                                 "custom" prop option, kop
 c                                 pointer is offset because 
 c                                 kop(1) = 38
@@ -3952,6 +3968,9 @@ c                                 it in array dname
 1140  format (/,'Hey cowboy, that warnt no solution, try again.',/)
 1150  format (/,'Specify a property to be computed from the ',
      *          'list above [0 to end]')
+1160  format (/,'This calculation was done with lagged speciation, but',
+     *        ' back-calculated',/,'speciation calculations are also',
+     *        ' enabled. Output the back-calculated',/,'results (y/n)?')
   
       end
 
@@ -4267,8 +4286,8 @@ c----------------------------------------------------------------
       character cname*5
       common/ csta4  /cname(k5)
 
-      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
-      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
 
       character specie*4
       integer isp, ins
@@ -4358,3 +4377,142 @@ c                                 special variables
       end do 
 
       end
+
+      subroutine aqlgot (jd)
+c-----------------------------------------------------------------------
+c output lagged aqueous speciation for 2d tab output by werami.  
+c-----------------------------------------------------------------------
+      implicit none
+ 
+      include 'perplex_parameters.h'
+
+      integer i, k, jd
+
+      double precision tmass, gso(nsp), gamm0
+
+      double precision gcpd
+
+      external gcpd
+
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+
+      integer iaq, aqst, aqct
+      character aqnam*8
+      double precision aqcp, aqtot
+      common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
+
+      integer ihy, ioh
+      double precision gf, epsln, epsln0, adh, msol
+      common/ cxt37 /gf, epsln, epsln0, adh, msol, ihy, ioh
+
+      double precision atwt
+      common/ cst45 /atwt(k0) 
+
+      integer icomp,istct,iphct,icp
+      common/ cst6  /icomp,istct,iphct,icp  
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      integer jnd
+      double precision aqg,qq,rt
+      common/ cxt2 /aqg(m4),qq(m4),rt,jnd(m4)
+
+      character*14 tname
+      integer kop,kcx,k2c,iprop
+      logical kfl
+      double precision prop,prmx,prmn
+      common/ cst77 /prop(i11),prmx(i11),prmn(i11),kop(i11),kcx(i11),
+     *               k2c(i11),iprop,kfl(i11),tname
+
+      integer kd, na1, na2, na3, na4
+      double precision x3, caq
+      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),na1,na2,na3,na4,kd
+
+      integer kkp,np,ncpd,ntot
+      double precision cp3,amt
+      common/ cxt15 /cp3(k0,k19),amt(k19),kkp(k19),np,ncpd,ntot
+c----------------------------------------------------------------------
+      if (jd.eq.0) then 
+
+         do i = 1, iprop
+            prop(i) = nopt(7)
+         end do 
+ 
+         return
+
+      end if 
+
+      if (lopt(23)) then
+c                                 molar bulk composition
+         do i = 1, icp
+            prop(i) = cp3(i,jd)*1d2
+         end do 
+
+      else 
+c                                 mass bulk composition
+         tmass = 0d0
+
+         do i = 1, icp
+            tmass = tmass + atwt(i)*cp3(i,jd)
+         end do 
+
+         do i = 1, icp
+            prop(i) = cp3(i,jd)*atwt(i)/tmass*1d2
+         end do 
+
+      end if 
+
+      k = icp
+
+      do i = 1, nsa 
+
+         k = k + 1
+
+         if (i.lt.sn1) then 
+c                                 solvent speciation
+            if (lopt(26)) then
+c                                 mole fraction
+               prop(k) = caq(jd,i)
+            else 
+c                                 molality
+               prop(k) = caq(jd,i)/caq(jd,na3)
+            end if  
+
+         else 
+c                                 solute speciation
+            if (lopt(27)) then
+c                                 molality
+               prop(k) = caq(jd,i)
+            else 
+c                                 mole fraction
+               prop(k) = caq(jd,i)/caq(jd,na2)
+            end if 
+
+         end if  
+
+      end do 
+
+      call slvnt3 (gso)
+c                                 DH law activity coefficient factor (ln[g] = lng0*q^2)
+      gamm0 = dexp(adh*dsqrt(caq(jd,na1))/(1d0 + dsqrt(caq(jd,na1))) 
+     *             + 0.2d0*caq(jd,na1))
+c                                 other properties:
+c                                 pH
+      prop(k+2) = -dlog10(caq(jd,ns+ihy)*gamm0)
+c                                 pH - pH0
+      prop(k+1) = prop(k+2) + (gso(ns)-gcpd(aqst+ioh,.false.))/rt/2d0/
+     *            2.302585d0
+c                                 err_log10(K_w)
+      prop(k+3) = dabs(caq(jd,na4))
+c                                 dielectric constant
+      prop(k+4) = epsln
+c                                 ionic strength
+      prop(k+5) = caq(jd,na1)
+c                                 solute molality?
+      prop(k+6) = caq(jd,na2)
+
+      end 

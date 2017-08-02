@@ -19,7 +19,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a)') 
-     *      'Perple_X version 6.7.8, source updated June 20, 2017.'
+     *      'Perple_X version 6.7.9, source updated Aug 2, 2017.'
 
       end
 
@@ -35,7 +35,8 @@ c----------------------------------------------------------------------
 
       if (new.eq.'008'.or.new.eq.'011'.or.new.eq.'670'.or.
      *    new.eq.'672'.or.new.eq.'673'.or.new.eq.'674'.or.
-     *    new.eq.'675'.or.new.eq.'676'.or.new.eq.'678') then 
+     *    new.eq.'675'.or.new.eq.'676'.or.new.eq.'678'.or.
+     *    new.eq.'679') then 
 
          chksol = .true.
 
@@ -366,6 +367,8 @@ c                                 aq_solute_composition (true = molal)
       valu(27) = 'm'
 c                                 lagged speciation
       lopt(32) = .true.
+c                                 output_iteration_g
+      lopt(33) = .false.
 c                                 initialize mus flag lagged speciation
       mus = .false.
 c                                 -------------------------------------
@@ -448,18 +451,22 @@ c                                 phase composition key
 
             if (val.ne.'T') lopt(32) = .false. 
 
+         else if (key.eq.'output_iteration_G') then 
+
+            if (val.eq.'T') lopt(33) = .true. 
+
          else if (key.eq.'aq_solvent_composition') then
 
             if (val.ne.'y') then
-               lopt(25) = .false.
-               valu(25) = 'm'
+               lopt(26) = .false.
+               valu(26) = 'm'
             end if 
 
          else if (key.eq.'aq_solute_composition') then
 
             if (val.ne.'m') then
-               lopt(26) = .false.
-               valu(26) = 'y'
+               lopt(27) = .false.
+               valu(27) = 'y'
             end if 
 
          else if (key.eq.'hybrid_EoS_H2O') then
@@ -5906,6 +5913,12 @@ c                                allow +/- or -/+
          end if 
 
       end do 
+c                                 special cases:
+      if (bitsy(nchar).eq.'*'.and.bitsy(nchar-1).eq.' '.and.
+     *    bitsy(nchar-2).eq.',') then
+          bitsy(nchar-2) = '*'
+          bitsy(nchar) = ' '
+      end if 
 
       if (strip) then 
 c                                 strip out new double blanks

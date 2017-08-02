@@ -1,4 +1,4 @@
-678 DO NOT DELETE THIS LINE
+679 DO NOT DELETE THIS LINE
 
                              FOR MODEL DEFINITIONS AND REFERENCES REFER TO THE GLOSSARY AT:
 
@@ -1944,7 +1944,7 @@ begin_model
 
                              tbi = 1 phl - 1 br + 1 ru           
                              55e3 0 0 
-                             fbi = 1 east - 1/2 andr + 1 gr    
+                             fbi = 1 east - 1/2 gr + 1/2 andr   
                              -3e3 0 0
 
 
@@ -9869,8 +9869,25 @@ ideal
 
 reach_increment 3 
 
-end_of_model              
+end_of_model           
+                      --------------------------------------------------------
+begin_model                
+                                                                        
+WADDAH 
+abbreviation Aq
+full_name aqueous_electrolyte
 
+39                          | model type: Generic Hybrid EoS
+1
+H2O 
+
+0                           | endmember flags
+
+ideal
+
+0                           | ideal configurational entropy
+
+end_of_model                 
                       --------------------------------------------------------
 begin_model                
                                                                         
@@ -9891,7 +9908,7 @@ H2
 
 ideal
 
-0
+0                          | ideal configurational entropy
 
 reach_increment 3 
 
@@ -9911,15 +9928,15 @@ SO2
 H2O
 H2 
 
-  0  0  0  0                            endmember flags
+  0  0  0  0                | endmember flags
 
-0.0 1.0 0.1       0        | subdivision ranges, imod = 0 -> cartesian subdivision
-0.0 1.0 0.1       0        | subdivision ranges, imod = 0 -> cartesian subdivision
-0.0 1.0 0.1       0        | subdivision ranges, imod = 0 -> cartesian subdivision
+0.0 1.0 0.1       0         | subdivision ranges, imod = 0 -> cartesian subdivision
+0.0 1.0 0.1       0         | subdivision ranges, imod = 0 -> cartesian subdivision
+0.0 1.0 0.1       0         | subdivision ranges, imod = 0 -> cartesian subdivision
 
 ideal
 
-0
+0                           | ideal configurational entropy
 
 reach_increment 3 
 

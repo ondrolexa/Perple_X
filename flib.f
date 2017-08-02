@@ -2107,7 +2107,7 @@ c on return v is the HSMRK volume of species i
 c---------------------------------------------------------------------
       implicit none
 
-      include 'perplex_parameters.h'
+      logical bad
 
       integer i
 
@@ -2143,13 +2143,17 @@ c----------------------------------------------------------------------
          e = -2.3322d11 + 6.738d8 * t + 3.179d5 * t2
       end if
 
-      call nurap (bm,c,d,e,yz,v,t12,rr)
+      call nurap (bm,c,d,e,yz,v,t12,rr,bad)
 
-      hsmrkf = dlog(p) + fugp (rtt,bm,yz,c,d,e,v)
+      if (bad) then 
+         hsmrkf = dlog(1d4*p)
+      else 
+         hsmrkf = dlog(p) + fugp (rtt,bm,yz,c,d,e,v)
+      end if
 
       end 
 
-      subroutine nurap (b,c,d,e,yz,vi,t12,r)
+      subroutine nurap (b,c,d,e,yz,vi,t12,r,bad)
 c----------------------------------------------------------------------
 c newton-raphson iteration to solve for hsmrk volume, my
 c idea here was to evaluate all the constants outside of 
@@ -2160,6 +2164,10 @@ c                                 jadc, july 96.
 c----------------------------------------------------------------------
       implicit none
 
+      include 'perplex_parameters.h'
+
+      logical bad 
+
       integer k
 
       double precision b,c,d,e,yz,vi,s1,s2,s3,p0,b2,q0,q1,q2,q3,q4,q5,
@@ -2167,6 +2175,11 @@ c----------------------------------------------------------------------
 
       double precision p,t,xc,u1,u2,tr,pr,r0,ps
       common/ cst5 /p,t,xc,u1,u2,tr,pr,r0,ps
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       double precision vol
       common/ cst26 /vol
@@ -2195,13 +2208,28 @@ c----------------------------------------------------------------------
       p7 = 2d0*b**4*(d*b-22d0*e)
       p8 = 3d0*q9
 
-      do k = 1, 50
+      k = 0
+      bad = .false.
+
+      do 
 
          cor = ((((((((((q0*vi+q1)*vi+q2)*vi+q3)*vi+q4)*vi+q5)*vi
      *         +q6)*vi+q7)*vi+q8)*vi+q9)*vi)/((((((((p0*vi+p1)*vi
      *         +p2)*vi+p3)*vi+p4)*vi+p5)*vi+p6)*vi+p7)*vi+p8)
          vi = vi + cor
-         if (dabs(cor).lt.1d-2) exit
+
+         if (dabs(cor/vi).lt.nopt(5)) then
+            exit
+         else if (vi.lt.0d0) then 
+            bad = .true.
+            exit 
+         else 
+            k = k + 1
+            if (k.le.iopt(21)) cycle
+            bad = .true.
+            exit 
+         end if
+
       end do 
  
       yz = vi * p/r/t
@@ -2420,7 +2448,7 @@ c                                 pmv constants
           
          if (y(l).gt.0d0) then
             f(l) = dlog(y(l)) + b(l)*d3 - aj2(l)*d2 + d6
-            g(l) = dexp(f(l)-dlog(p*y(l)))
+            g(l) = dexp(f(l))/p/y(l)
          else 
             g(l) = 1d0
             f(l) = dlog(1d4*p)
@@ -7781,7 +7809,7 @@ c                                 compositions.
 c---------------------------------------------------------------------
 c set up routine for hybrid fluid EoS calculations. computes the 
 c (unecessay?) delta volumes and pure fluid fugacity coefficient 
-c rations used to convert the mrk fugacities to hybrid fugacities.
+c ratios used to convert the mrk fugacities to hybrid fugacities.
 
 c the choice of the pure fluid eos are specified by the perplex_option
 c keywords hybrid_EoS_H2O (iopt(24)), hybrid_EoS_CO2 (iopt(25)), and
@@ -7912,11 +7940,6 @@ c                                 methane hsmrk kerrick and jacobs 1981.
                call errpau
 
             end if
-
-         else
-
-            write (*,*) 'invalid species in hybeos'
-            call errpau
 
          end if 
 c                                 the hybrid delta volume (hyb-mrk), it's 

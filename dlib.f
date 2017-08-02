@@ -24,9 +24,9 @@ c                                 global assemblage data
       integer iap,ibulk
       common/ cst74  /iap(k2),ibulk
 
-      double precision xcoor
-      integer icoor
-      common/ cxt10 /xcoor(k18),icoor(k1)
+      double precision xco
+      integer ico,jco
+      common/ cxt10 /xco(k18),ico(k1),jco(k1)
 
       double precision bg
       common/ cxt19 /bg(k5,k2)
@@ -52,6 +52,12 @@ c                                 global assemblage data
 
       integer iam
       common/ cst4 /iam
+
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+
+      integer ksmod, ksite, kmsol, knsp
+      common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
 
       integer iopt
       logical lopt
@@ -86,7 +92,7 @@ c                                phase molar amounts
 
          if (ier.ne.0) exit
 
-         icoor(ibulk) = jxco
+         ico(ibulk) = jxco
 
          do i = 1, iavar(1,ias)
 
@@ -97,7 +103,18 @@ c                                phase molar amounts
 
             if (kxco.gt.k18) call error (61,0d0,k18,'BPLINP')
 
-            read (n5,*,iostat=ier) (xcoor(j), j = jxco, kxco)
+            read (n5,*,iostat=ier) (xco(j), j = jxco, kxco)
+
+            if (lopt(32).and.ksmod(ids).eq.39) then 
+c                                lagged speciation
+               jxco = kxco + 1
+               kxco = kxco + nsa + 3  
+
+               if (kxco.gt.k18) call error (61,0d0,k18,'BPLINP')
+
+               read (n5,*,iostat=ier) (xco(j), j = jxco, kxco)
+
+            end if  
          
             jxco = kxco
 
@@ -548,7 +565,7 @@ c----------------------------------------------------------------
       integer spct
       double precision ysp
       character*8 spnams
-      common/ cxt34 /ysp(m4,k5),spct(h9),spnams(m4,h9)
+      common/ cxt34 /ysp(l10,k5),spct(h9),spnams(l10,h9)
 c----------------------------------------------------------------------
 c                                choose components vs species
       write (*,1000) fname(ids)
@@ -876,9 +893,9 @@ c                                 x coordinate description
       common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
 c                                 xcoordinates for the final solution, a
 c                                 leetle witz.
-      integer kd
-      double precision x3, caq, ionst, tmolal
-      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),ionst(k5),tmolal(k5),kd
+      integer kd, na1, na2, na3, na4
+      double precision x3, caq
+      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),na1,na2,na3,na4,kd
 c----------------------------------------------------------------------
 
       do i = 1, istg(ids)

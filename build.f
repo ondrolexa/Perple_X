@@ -73,7 +73,7 @@ c-----------------------------------------------------------------------
  
       integer ictr, itrans
       double precision ctrans
-      common/ cst207 /ctrans(k0,k5),ictr(k5),itrans
+      common/ cst207 /ctrans(k0,k0),ictr(k0),itrans
 
       integer ipoint,kphct,imyn
       common/ cst60 /ipoint,kphct,imyn

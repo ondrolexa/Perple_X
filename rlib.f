@@ -8910,9 +8910,9 @@ c                                 x coordinate description
       integer jend
       common/ cxt23 /jend(h9,m4)
 
-      integer kd
-      double precision x3, caq, ionst, tmolal
-      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),ionst(k5),tmolal(k5),kd
+      integer kd, na1, na2, na3, na4
+      double precision x3, caq
+      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),na1,na2,na3,na4,kd
 
       integer ksmod, ksite, kmsol, knsp
       common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
@@ -9141,7 +9141,7 @@ c                                 model type
       integer spct
       double precision ysp
       character spnams*8
-      common/ cxt34 /ysp(m4,k5),spct(h9),spnams(m4,h9)
+      common/ cxt34 /ysp(l10,k5),spct(h9),spnams(l10,h9)
 
       character specie*4
       integer jsp, ins
@@ -9162,8 +9162,8 @@ c                                 model type
       integer tnq,tnn,tns
       common/ cxt337 /tnq,tnn,tns
 
-      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
-      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
 c----------------------------------------------------------------------
 c                                 auto_refine changes
       if (refine) then
@@ -12445,8 +12445,8 @@ c-----------------------------------------------------------------------
       integer iam
       common/ cst4 /iam
 
-      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
-      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
 
       integer ncoor,mcoor,ndim
       common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
@@ -12516,13 +12516,19 @@ c                                 -------------------------------------
 c                                 check the solution model:
          call cmodel (im,idsol,tname,first)
 
-         if (jstot.lt.2) cycle 
+         if (jstot.eq.1.and.jsmod.eq.39.and.lopt(32)) then 
+c                                  lagged aqueous speciaton with a pure water solvent.
+         else 
+c                                  normal solution. 
+            if (jstot.lt.2) cycle 
 c                                 -------------------------------------
 c                                 reformulate the model so that it has 
 c                                 no missing endmembers:
-         if (jstot.lt.istot) call reform (tname,im,first)
+            if (jstot.lt.istot) call reform (tname,im,first)
 
-         if (istot.lt.2) cycle  
+            if (istot.lt.2) cycle  
+
+         end if 
 c                                 -------------------------------------
 c                                 make various book keeping arrays (y2p,
 c                                 jmsol, dydz, .....)
@@ -12531,7 +12537,7 @@ c                                 check that the name has not already been found
 c                                 that the name is duplicated in the solution model file
          if (first) then
             do i = 1, im - 1
-               if (tname.eq.sname(i)) call error (75,0d0,i,tname)
+                  if (tname.eq.sname(i)) call error (75,0d0,i,tname)
             end do
          end if
 c                                 save solution name
@@ -13087,8 +13093,8 @@ c                                 model type
       integer ineg
       common/ cst91 /ineg(h9,m15)
 
-      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
-      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
 
       logical badend, sck, nrf
       integer ldsol
@@ -15254,8 +15260,8 @@ c                                 x coordinate description
       integer ksmod, ksite, kmsol, knsp
       common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
 
-      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
-      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
 
       integer iopt
       logical lopt
@@ -15551,8 +15557,8 @@ c---------------------------------------------------------------------
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
 
-      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
-      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
 
       integer ksmod, ksite, kmsol, knsp
       common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
@@ -15716,8 +15722,17 @@ c-----------------------------------------------------------------------
       integer iff,idss,ifug
       common/ cst10  /iff(2),idss(h5),ifug
 
-      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
-      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+
+      integer iaq, aqst, aqct
+      character aqnam*8
+      double precision aqcp, aqtot
+      common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
+
+      integer kd, na1, na2, na3, na4
+      double precision x3, caq
+      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),na1,na2,na3,na4,kd
 
       integer jnd
       double precision aqg,q2,rt
@@ -15768,8 +15783,15 @@ c                                 electrolyte
       else if (ksmod(ids).eq.39) then
 c                                 hybrid molecular
          isp = mstot(ids)
-c                                 set ns in case of aqrxdo
+c                                 set ns in case of aqrxdo or aqlagd
          ns = isp 
+         ns1 = ns - 1
+         sn1 = ns + 1
+         nsa = ns + aqct
+         na1 = nsa + 1
+         na2 = nsa + 2
+         na3 = nsa + 3
+         na4 = nsa + 4
 
          do i = 1, isp
             ins(i) = jspec(ids,i)
@@ -15791,6 +15813,8 @@ c                                 MRK COH fluid (41), EoS code 27
 c-----------------------------------------------------------------------
 c computes solvent p-t-composition dependent properties: dielectric cst (eps), 
 c molar mass, debye-hueckel (adh), and gHKF function.
+c
+c expects solvent mole fractions to be in y[cxt7]
 c-----------------------------------------------------------------------
       implicit none
 
@@ -15811,8 +15835,8 @@ c-----------------------------------------------------------------------
       integer isp, ins
       common/ cxt33 /isp,ins(nsp),specie(nsp)
 
-      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
-      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
 
       double precision yf,g,v,vf
       common/ cstcoh /yf(nsp),g(nsp),v(nsp),vf(nsp)
@@ -15904,8 +15928,8 @@ c-----------------------------------------------------------------------
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 
-      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
-      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
 
       double precision z, pa, p0a, x, w, y, wl
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
@@ -15975,8 +15999,8 @@ c-----------------------------------------------------------------------
       integer isp, ins
       common/ cxt33 /isp,ins(nsp),specie(nsp)
 
-      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
-      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
 
       double precision yf,g,v,vf
       common/ cstcoh /yf(nsp),g(nsp),v(nsp),vf(nsp)
@@ -15999,7 +16023,7 @@ c-----------------------------------------------------------------------
       integer spct
       double precision ysp
       character spnams*8
-      common/ cxt34 /ysp(m4,k5),spct(h9),spnams(m4,h9)
+      common/ cxt34 /ysp(l10,k5),spct(h9),spnams(l10,h9)
 c----------------------------------------------------------------------
       rt = r*t 
       ysum = 0d0 
@@ -16055,8 +16079,8 @@ c-----------------------------------------------------------------------
       integer isp, ins
       common/ cxt33 /isp,ins(nsp),specie(nsp)
 
-      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
-      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
 
       double precision y,g,v,vf
       common/ cstcoh /y(nsp),g(nsp),v(nsp),vf(nsp)
@@ -16166,7 +16190,7 @@ c-----------------------------------------------------------------------
  
       include 'perplex_parameters.h'
 
-      integer i, j, k, l, it, ind(l9), lu, iexp, jd
+      integer i, j, k, l, it, ind(l9), lu, iexp, jd, badct
 
       logical bad, output
 
@@ -16175,7 +16199,7 @@ c-----------------------------------------------------------------------
       double precision c(l9), mo(l9), dg(l9), xis, blk(k5), dn,
      *                 d(l9), lng0, is, gamm0, totm, g0(l9), lnkw,
      *                 gso(nsp), ysum, ph0, v0(nsp), vf0(nsp), tmass, 
-     *                 tsmas, tsmol, smol(k5), errkw, smo, xdn
+     *                 tsmas, tsmol, smol(k5), errkw, smo, xdn, yt(nsp)
 
       double precision gcpd, solve, gfunc
 
@@ -16191,8 +16215,8 @@ c-----------------------------------------------------------------------
       double precision thermo,uf,us
       common/ cst1 /thermo(k4,k10),uf(2),us(h5)
 
-      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
-      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
 
       character cname*5
       common/ csta4  /cname(k5)
@@ -16266,10 +16290,21 @@ c-----------------------------------------------------------------------
       common/ cst77 /prop(i11),prmx(i11),prmn(i11),kop(i11),kcx(i11),
      *               k2c(i11),iprop,kfl(i11),tname
 
+      double precision z, pa, p0a, x, w, y, wl
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
+     *              wl(m17,m18)
+
+      integer kd, na1, na2, na3, na4
+      double precision x3, caq
+      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),na1,na2,na3,na4,kd
+
       integer spct
       double precision ysp
       character spnams*8
-      common/ cxt34 /ysp(m4,k5),spct(h9),spnams(m4,h9)
+      common/ cxt34 /ysp(l10,k5),spct(h9),spnams(l10,h9)
+
+      save badct
+      data badct/0/
 c----------------------------------------------------------------------
       if (.not.mus.or.jd.eq.0) then 
 
@@ -16304,6 +16339,10 @@ c                                 call mrkmix to get solvent volumetric props
          do i = 1, ns
 c                                 load normalized molecular fluid composition
             yf(ins(i)) = ysp(i,jd)/ysum
+c                                 these are necessary for the call to slvnt1
+            y(i) = ysp(i,jd)/ysum
+c                                 an array for output.
+            yt(i) = ysp(i,jd)
 
          end do 
          
@@ -16313,7 +16352,7 @@ c                                  save pmv's and v fractions for output
             vf0(ins(i)) = vf(ins(i))
             v0(ins(i)) = v(ins(i))
          end do 
-c                                  ysum is just a dummy at this point. 
+c                                  ysum is just a dummy. 
          call slvnt1 (ysum)
 
          do i = 1, ns 
@@ -16330,12 +16369,25 @@ c                                  ysum is just a dummy at this point.
 
          end do
 
+         if (lopt(32)) then 
+c                                 doing lagged speciation, set the 
+c                                 solvent mole fractions to the true 
+c                                 values
+             do i = 1, ns
+
+                yt(i) = caq(jd,i)
+
+             end do 
+
+          end if 
+
       else 
 c                                 solvent is pure water 
          call slvnt0 (gso(1),v0(1))
 
          vf(1) = 1d0
          ysp(1,jd) = 1d0 
+         yt(1) = 1d0
 
       end if 
 
@@ -16428,8 +16480,16 @@ c                                 update coefficients
 c                                 back calculated bulk composition
       if (bad) then 
 
-         call warn (99,0d0,0,'AQRXDO did not converge on solute '//
-     *                       'speciation')
+         if (badct.lt.11) then 
+
+            badct = badct + 1 
+
+            call warn (99,0d0,0,'AQRXDO did not converge on solute '//
+     *                          'speciation')
+
+            if (badct.eq.10) call warn (49,0d0,99,'AQRXDO')
+
+         end if 
 
          do i = 1, iprop
             prop(i) = nopt(7)
@@ -16448,7 +16508,7 @@ c                                 compute mole fractions, total moles first
       do i = 1, ns 
 c                                 moles/kg-solvent 
          do j = 1, icp 
-            blk(j) = blk(j) + ysp(i,jd)*cp(j,jnd(i))/msol
+            blk(j) = blk(j) + yt(i)*cp(j,jnd(i))/msol
          end do 
       end do
 
@@ -16462,6 +16522,7 @@ c                                  total solute molality
          do j = 1, icp
             blk(j) = blk(j) + mo(i)*aqcp(j,i)
          end do 
+
       end do
 c                                 bulk fluid composition 
       tmass = 0d0
@@ -16499,10 +16560,10 @@ c                                 solvent speciation
 
             if (lopt(26)) then
 c                                 mole fraction
-               prop(k) = ysp(i,jd)
+               prop(k) = yt(i)
             else 
 c                                 molality
-               prop(k) = ysp(i,jd)/msol
+               prop(k) = yt(i)/msol
             end if  
 
          end do 
@@ -16512,10 +16573,10 @@ c                                 solute speciation
             k = k + 1
 
             if (lopt(27)) then
-c                                 mole fraction
+c                                 molality
                prop(k) = mo(i)
             else 
-c                                 molality
+c                                 mole fraction
                prop(k) = mo(i)/totm
             end if  
 
@@ -16542,7 +16603,7 @@ c                                 WERAMI/MEEMUM console output
          call deblnk (text)
          write (lu,'(400a)') (chars(j), j = 1, length)
 
-         if (jdaq.eq.20) then
+         if (jdaq.eq.20.or.lopt(32).and.jdaq.eq.39) then
 
             write (lu,1100)
 
@@ -16557,6 +16618,7 @@ c                                 WERAMI/MEEMUM console output
             k = ind(i)
 
             if (jdaq.eq.20) then 
+c                                 compare to forward speciation:
 c                                 check if the species is the solution model
                l = 0
 
@@ -16568,19 +16630,28 @@ c                                 check if the species is the solution model
                end do
 
                if (l.ne.0) then 
+
                   write (lu,1080) aqnam(k),int(thermo(6,k+aqst)),
      *                            mo(k),mo(k)/totm,ysp(l,jd),
      *                           int(g0(k)+rt*(dlog(mo(k))+lng0*q2(k))),
      *                           int(g0(k))
                else
+
                   write (lu,1090) aqnam(k),int(thermo(6,k+aqst)),
      *                            mo(k),mo(k)/totm,
      *                           int(g0(k)+rt*(dlog(mo(k))+lng0*q2(k))),
      *                           int(g0(k))
                end if 
 
-            else 
+            else if (lopt(32)) then
+c                                 compare to lagged speciation:
+                  write (lu,1080) aqnam(k),int(thermo(6,k+aqst)),
+     *                        mo(k),mo(k)/totm,caq(jd,k+ns)/caq(jd,na2),
+     *                        int(g0(k)+rt*(dlog(mo(k))+lng0*q2(k))),
+     *                        int(g0(k))
 
+            else 
+c                                 only back-calculated result:
                write (lu,1010) aqnam(k),int(thermo(6,k+aqst)),
      *                         mo(k),mo(k)/totm,
      *                         int(g0(k)+rt*(dlog(mo(k))+lng0*q2(k))),
@@ -16589,18 +16660,49 @@ c                                 check if the species is the solution model
             end if 
          end do 
 
-         write (lu,1020)
+         if (lopt(32)) then 
+c                               lagged
+            write (lu,1140)
 
-         do i = 1, ns 
+            do i = 1, ns 
 
-            write (lu,1030) names(jnd(i)), ysp(i,jd)/msol, ysp(i,jd),
-     *                      vf0(ins(i)), v0(ins(i)), 
-     *                      int(gso(i)), int(gcpd(jnd(i),.true.))
-         end do 
+               write (lu,1150) names(jnd(i)), yt(i)/msol, yt(i),
+     *                         yt(i),vf0(ins(i)), v0(ins(i)), 
+     *                         int(gso(i)), int(gcpd(jnd(i),.true.))
 
-         write (lu,1060)
+            end do
 
-         if (jdaq.eq.20) then 
+         else 
+
+            if (jdaq.eq.20) then 
+c                               direct 
+               write (lu,1020)
+            else 
+c                               back-calculated, indicate normalized
+               write (lu,1160) 
+            end if 
+
+            do i = 1, ns 
+
+               write (lu,1030) names(jnd(i)), ysp(i,jd)/msol, ysp(i,jd),
+     *                         vf0(ins(i)), v0(ins(i)), 
+     *                         int(gso(i)), int(gcpd(jnd(i),.true.))
+
+            end do 
+
+         end if 
+c                                 footnotes:
+         if (lopt(32).or.jdaq.eq.20) then 
+
+            write (lu,1170)
+
+         else 
+
+            write (lu,1060)
+
+         end if 
+c                                 bulk chemistry:
+         if (jdaq.eq.20.or.lopt(32)) then 
 
             tsmol = 0d0
             tsmas = 0d0
@@ -16609,26 +16711,51 @@ c                                 check if the species is the solution model
                smol(i) = 0d0
             end do 
 
-            do i = 1, nqs
+            if (lopt(32)) then
+c                                 lagged model
+               do i = 1, nsa
+
+                  do j = 1, icp
+
+                     if (i.lt.sn1) then 
+                        dn = caq(jd,i)/caq(jd,na3) * cp(j,jnd(i))
+                     else 
+                        dn = caq(jd,i) * aqcp(j,i-ns)
+                     end if 
+
+                     smol(j) = smol(j) + dn
+
+                     tsmol = tsmol + dn
+                     tsmas = tsmas + dn*atwt(j)
+
+                  end do
+
+               end do 
+
+            else 
+c                                 forward model
+               do i = 1, nqs
                
-               k = jnd(i)
+                  k = jnd(i)
 
-               do j = 1, icp
+                  do j = 1, icp
 
-                  if (i.lt.sn1) then 
-                     dn = ysp(i,jd) * cp(j,k)
-                  else 
-                     dn = ysp(i,jd) * aqcp(j,k-aqst)
-                  end if 
+                     if (i.lt.sn1) then 
+                        dn = ysp(i,jd) * cp(j,k)
+                     else 
+                        dn = ysp(i,jd) * aqcp(j,k-aqst)
+                     end if 
 
-                  smol(j) = smol(j) + dn
+                     smol(j) = smol(j) + dn
 
-                  tsmol = tsmol + dn
-                  tsmas = tsmas + dn*atwt(j)
+                     tsmol = tsmol + dn
+                     tsmas = tsmas + dn*atwt(j)
 
-               end do
+                  end do
 
-            end do 
+               end do 
+
+            end if 
 
             write (lu,1130)
 
@@ -16655,8 +16782,8 @@ c                                 check if the species is the solution model
 1000  format (/,'Back-calculated solute speciation in the solvent:',/)
 1010  format (a8,4x,i2,3x,g12.6,3x,g12.6,5x,i8,5(2x,g12.6))
 1020  format (/,'Solvent endmember properties:',//,
-     *        9x,'molality',3x,'mol_fraction',2x,'vol_fraction',
-     *        2x,'v,cm3/mol*',2x,'g,J/mol*',3x,'g0,J/mol***')
+     *        9x,'molality',3x,'mol_fraction',2x,'vol_fraction#',
+     *        1x,'v,cm3/mol*',2x,'g,J/mol*',3x,'g0,J/mol***')
 1030  format (a8,2x,f7.4,5x,f7.5,8x,f7.5,5x,f7.3,3x,i8,4x,i8)
 1040  format (/,'Solute endmember properties:',//,10x,'charge',3x,
      *       'molality',5x,'mol_fraction',6x,'g,J/mol*',5x,'g0,J/mol**')
@@ -16680,7 +16807,16 @@ c                                 check if the species is the solution model
 1130  format (/,'Back-calculated vs optimized fluid bulk composition:',
      *        //,26x,'optimized',21x,'optimized',/,
      *        13x,'mol %',10x,'mol %',10x,'wt %',11x,'wt %')
-
+1140  format (/,'Solvent endmember properties:',//,
+     *        9x,'molality',3x,'mol_fraction',2x,'opt_mol_frac',
+     *        2x,'vol_fraction# v,cm3/mol*',2x,'g,J/mol*',
+     *        3x,'g0,J/mol***')
+1150  format (a8,2x,f7.4,5x,2(f7.5,8x),f7.5,5x,f7.3,3x,i8,4x,i8)
+1160  format (/,'Normalized solvent endmember properties:',//,
+     *        9x,'molality',3x,'mol_fraction',2x,'vol_fraction',
+     *        1x,'v,cm3/mol*',2x,'g,J/mol*',3x,'g0,J/mol***')
+1170  format (/,'#normalized, *partial molar, **molal ref. state, ',
+     *        '***molar ref. state.',/)
       end 
 
       subroutine rankem (a,ind,r,n)
@@ -16803,8 +16939,8 @@ c                                 model type
       integer lstot,mstot,nstot,ndep,nord
       common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
 
-      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
-      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
 
       double precision xco
       integer ico,jco
@@ -16901,8 +17037,8 @@ c-----------------------------------------------------------------------
       integer ins, isp
       common/ cxt33 /isp,ins(nsp),specie(nsp)
 
-      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
-      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
 
       integer iopt
       logical lopt
@@ -16919,12 +17055,7 @@ c-----------------------------------------------------------------------
 c                                 set option flags if necessary
       if (lopt(25)) then 
 
-         if (aqct.eq.0.and.first) then 
-
-            call warn (99,0d0,0,' no data for aqueous species, '//
-     *                          'aqueous_output set = F (AQIDST)')
-
-         else if (jpot.ne.0.and.first) then 
+         if (jpot.ne.0.and.first) then 
 
             call warn (99,0d0,0,' aqueous_output is T, but '//
      *                          'dependent_potentials is off, '//
@@ -16942,9 +17073,6 @@ c                                reset iopt(32) [# aq species output]
          iopt(32) = 0
 
       end if 
-c                                 no aqueous data, shut off 
-c                                 lagged speciation
-      if (aqct.eq.0) lopt(32) = .false.
 c                                 look among solutions:
       do i = 1, isoct
 
@@ -17014,7 +17142,7 @@ c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
       if (iam.ne.5) then 
 c                                 not frendly
-         gsolv  = gcpd(-idaq,.true.)
+         gsolv  = gcpd(jnd(1),.true.)
 
       else 
 c                                 frendly
@@ -17627,8 +17755,8 @@ c                                 endmember names
       character names*8
       common/ cst8  /names(k1)
 
-      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
-      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
 
       double precision xco
       integer ico,jco
@@ -18001,8 +18129,8 @@ c DEBUG
       common/ cxt6r /xmng(h9,mst,msp),xmxg(h9,mst,msp),xncg(h9,mst,msp),
      *               xmno(h9,mst,msp),xmxo(h9,mst,msp),reachg(h9)
 
-      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
-      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
 
       integer ncoor,mcoor,ndim
       common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
@@ -18381,5 +18509,435 @@ c-----------------------------------------------------------------------
          end if 
 
       end do 
+
+      end 
+
+      subroutine aqlagd (id,bad,recalc)
+c-----------------------------------------------------------------------
+c given chemical potentials solve for rock dominated aqueous speciation
+c configured to be called from resub with output to the (molar normalized)
+c arrays g2/cp2, if recalc is true then aqlagd is being used to recover 
+c speciation and arrays g2/cp2 are not loaded.
+c-----------------------------------------------------------------------
+      implicit none
+ 
+      include 'perplex_parameters.h'
+
+      integer i, j, k, it, iexp, id, badct
+
+      logical bad, recalc
+
+      double precision c(l9), mo(l9), dg, xis, blk(k5), dn,
+     *                 d(l9), lng0, is, gamm0, totm, g0(l9), 
+     *                 gso(nsp), lnkw,
+     *                 gtot, smo, xdn, slvmo(nsp)
+
+      double precision gcpd, solve, gfunc
+
+      external gcpd, solve, gfunc
+
+      integer ion, ichg, jchg
+      double precision q, q2, qr, dcp
+      common/ cstaq /q(l9),q2(l9),qr(l9),dcp(k5,l9),jchg(l9),ichg,ion
+
+      double precision r,tr,pr,ps,p,t,xco2,u1,u2
+      common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
+c                                 adaptive coordinates
+      integer jphct
+      double precision g2, cp2
+      common/ cxt12 /g2(k21),cp2(k5,k21),jphct
+
+      double precision thermo,uf,us
+      common/ cst1 /thermo(k4,k10),uf(2),us(h5)
+
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+
+      character cname*5
+      common/ csta4  /cname(k5)
+
+      integer ihy, ioh
+      double precision gf, epsln, epsln0, adh, msol
+      common/ cxt37 /gf, epsln, epsln0, adh, msol, ihy, ioh
+
+      character specie*4
+      integer isp, ins
+      common/ cxt33 /isp,ins(nsp),specie(nsp)
+
+      integer iaq, aqst, aqct
+      character aqnam*8
+      double precision aqcp, aqtot
+      common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
+
+      integer jbulk
+      double precision cblk
+      common/ cst300 /cblk(k5),jbulk
+
+      double precision cp
+      common/ cst12 /cp(k5,k1)
+
+      double precision fwt
+      common/ cst338 /fwt(k10)
+
+      double precision atwt
+      common/ cst45 /atwt(k0) 
+
+      integer icomp,istct,iphct,icp
+      common/ cst6  /icomp,istct,iphct,icp  
+
+      logical mus
+      double precision mu
+      common/ cst330 /mu(k8),mus
+
+      integer ksmod, ksite, kmsol, knsp
+      common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      double precision yf,g,v,vf
+      common/ cstcoh /yf(nsp),g(nsp),v(nsp),vf(nsp)
+
+      double precision gh,vh,gp
+      common/ csthyb /gh(nsp),vh(nsp),gp(nsp) 
+
+      integer jnd
+      double precision aqg,qq,rt
+      common/ cxt2 /aqg(m4),qq(m4),rt,jnd(m4)
+
+      character names*8
+      common/ cst8  /names(k1)
+
+      integer length,iblank,icom
+      character chars*1
+      common/ cst51 /length,iblank,icom,chars(lchar)
+
+      integer idaq, jdaq
+      logical laq
+      common/ cxt3 /idaq,jdaq,laq
+
+      integer kd, na1, na2, na3, na4
+      double precision x3, caq
+      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),na1,na2,na3,na4,kd
+
+      double precision z, pa, p0a, x, w, y, wl
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
+     *              wl(m17,m18)
+
+      save badct
+      data badct/0/
+c----------------------------------------------------------------------
+      if (.not.mus) then 
+
+         bad = .true.
+ 
+         return
+
+      else 
+
+         bad = .false.
+
+      end if 
+
+      is   = 0d0
+
+      call slvnt3 (gso)
+
+      g0(ion) = gcpd(aqst+ion,.false.)
+c                                 compute solute properties 
+      do i = 1, aqct 
+
+         k = aqst + i
+c                                 dg is the solvent oxide potentials - g
+         g0(i) = gcpd(k,.false.)
+         dg = -g0(i) + qr(i)*g0(ion)
+
+         do j = 1, jbulk 
+c                                 if oxide components, but no excess oxygen
+c                                 mu(O2) is a nan. 
+            if (isnan(mu(j))) cycle
+
+            dg = dg + dcp(j,i) * mu(j)
+
+         end do 
+c                                 normalize by RT
+         dg = dg/rt
+
+         if (dabs(dg).gt.22d0) dg = 22d0*dabs(dg)/dg
+
+         dg = dexp(dg)
+
+         if (q(i).ne.0d0) then 
+c                                  this is now c(i)*a(ion)^(q(i)) = mo(i)*gamma(i)*q(i)
+c                                  the rhs q(i) is because the eq to be solved will be
+c                                  sum (q(i)*m(i)) = 0. 
+            d(i) = q(i)*dg
+            c(i) = d(i)
+
+         else 
+c                                  neutral species assumed to be ideal, molality is
+            mo(i) = dg
+      
+         end if 
+
+      end do 
+
+      gamm0 = 1d0 
+      it = 0
+      lnkw = (gso(ns)-g0(ioh))/rt
+      if (dabs(lnkw).gt.2d1) then
+         bad = .true.
+         goto 99
+      end if 
+
+      mo(ion) = dexp(lnkw/2d0)
+      xdn = 1d0
+      iexp = 0
+c                                  iterative loop for ionic strength, this is the achilles 
+c                                  heel cause the solute g's are based only on the previous
+c                                  chemical potentials.
+      do 
+c                                  solve charge balance for H+
+         mo(ion) = solve(c,qr,mo(ion),jchg,ichg,bad)
+c                                  back calculate charged species molalities
+c                                  and ionic strength
+         xis = is
+         is = 0d0
+
+         do i = 1, ichg 
+            j = jchg(i)
+            mo(j) = c(j) * mo(ion)**qr(j) / q(j)
+            is = is + q2(j) * mo(j)
+         end do
+
+         is = is / 2d0 
+
+         dn = is - xis
+
+         if (dabs(dn).gt.1d0/2d0**iexp) then 
+            dn = dn/dabs(dn)/2d0**iexp 
+            if (dn*xdn.lt.0d0) iexp = iexp + 1
+         end if 
+
+         is = xis + dn
+
+         xdn = dn 
+
+         if (bad) exit
+c                                 DH law activity coefficient factor (ln[g] = lng0*q^2)
+         lng0 = adh*dsqrt(is)/(1d0 + dsqrt(is)) + 0.2d0*is
+         gamm0 = dexp(lng0)
+c                                 check for convergence
+         if (dabs(xis-is)/is.lt.nopt(5)) then 
+            exit
+         else if (it.gt.iopt(21)) then 
+            bad = .true.
+            exit 
+         end if 
+
+         it = it + 1
+c                                 update coefficients
+         do i = 1, ichg 
+            j = jchg(i)
+            c(j) = d(j)*(gamm0*q2(ion))**qr(j)/(gamm0*q2(j))
+         end do
+
+      end do
+c                                 back calculated bulk composition
+99    if (bad) then 
+
+         badct = badct + 1
+
+         if (badct.lt.11) 
+     *        call warn (99,0d0,0,'AQLAGD did not converge on solute '//
+     *                       'speciation')
+
+         if (badct.eq.10) call warn (49,0d0,99,'AQLAGD')
+ 
+         return
+
+      end if 
+
+      do j = 1, icp
+         blk(j) = 0d0
+      end do  
+
+      smo = 0d0 
+      gtot = 0d0
+c                                 everything on a molal basis
+c                                 first the solutes
+      do i = 1, aqct
+
+         if (mo(i).eq.0d0) cycle
+c                                 total g
+         if (q2(i).ne.0d0) then 
+            gtot = gtot + mo(i) * (g0(i) + rt*dlog(mo(i)*gamm0*q2(i)))
+         else 
+            gtot = gtot + mo(i) * (g0(i) + rt*dlog(mo(i)))
+         end if 
+c                                  total molality
+         smo = smo + mo(i)
+c                                 accumulate component moles
+         do j = 1, icp
+            blk(j) = blk(j) + mo(i)*aqcp(j,i)
+         end do 
+
+      end do
+c                                 for the solvent mole fractions
+c                                 need to accumulate total
+c                                 molality first
+      do i = 1, ns 
+c                                 solvent molality is
+         slvmo(i) = yf(ins(i))/msol
+c                                 total molality
+         smo = smo + slvmo(i)
+c                                 moles/kg-solvent 
+         do j = 1, icp 
+            blk(j) = blk(j) + slvmo(i)*cp(j,jnd(i))
+         end do
+
+      end do
+
+      do i = 1, ns
+         caq(id,i) = slvmo(i)/smo
+         if (caq(id,i).eq.0d0) cycle
+         gtot = gtot + slvmo(i) * (gso(i) + rt*dlog(caq(id,i)))
+      end do 
+c                                 bulk fluid composition 
+      totm = 0d0 
+
+      do j = 1, icp
+         totm = totm + blk(j)
+      end do
+
+      if (recalc) then
+c                                 stuff needed for output:
+         do i = 1, aqct 
+            caq(id,ns+i) = mo(i)
+         end do 
+c                                 ionic strength
+         caq(id,na1) = is
+c                                 total molality
+         caq(id,na2) = smo
+c                                 solvent mass
+         caq(id,na3) = msol
+c                                 error in log10(Kw)
+         caq(id,na4) = (-lnkw + dlog(mo(ihy)*mo(ioh)*gamm0**2
+     *                 ))/2.302585d0
+
+         do j = 1, icp
+            cp2(j,id) = blk(j)/totm
+         end do
+
+      else 
+c                                 stuff need for optimization:
+c                                 load into molar normalized arrays 
+c                                 used by resub
+         g2(jphct) = gtot/totm
+
+         do j = 1, icp
+            cp2(j,jphct) = blk(j)/totm
+         end do
+
+      end if 
+
+      end
+
+      subroutine slvnt3 (gso)
+c-----------------------------------------------------------------------
+c for lagged speciation calculations get solvent properties
+c-----------------------------------------------------------------------
+      implicit none
+ 
+      include 'perplex_parameters.h'
+
+      integer i, k
+
+      double precision gso(nsp), dum
+
+      double precision gcpd
+
+      external gcpd
+
+      double precision r,tr,pr,ps,p,t,xco2,u1,u2
+      common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
+
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+
+      character specie*4
+      integer isp, ins
+      common/ cxt33 /isp,ins(nsp),specie(nsp)
+
+      integer icomp,istct,iphct,icp
+      common/ cst6  /icomp,istct,iphct,icp  
+
+      double precision yf,g,v,vf
+      common/ cstcoh /yf(nsp),g(nsp),v(nsp),vf(nsp)
+
+      double precision gh,vh,gp
+      common/ csthyb /gh(nsp),vh(nsp),gp(nsp) 
+
+      integer jnd
+      double precision aqg,qq,rt
+      common/ cxt2 /aqg(m4),qq(m4),rt,jnd(m4)
+
+      integer idaq, jdaq
+      logical laq
+      common/ cxt3 /idaq,jdaq,laq
+
+      double precision z, pa, p0a, x, w, y, wl
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
+     *              wl(m17,m18)
+c----------------------------------------------------------------------
+      rt   = r*t
+c                                 doing lagged aqueous speciation
+      if (ns.gt.1) then
+c                                 the incoming pure solvent fractions from 
+c                                 resub are in y(spec) cxt7 and load
+c                                 into the fluid species indexed array yf
+         do i = 1, ns
+            yf(ins(i)) = y(i)
+         end do 
+c                                 a multi species solvent is present: 
+c                                 get solvent dielectric constants,
+c                                 call mrkmix to get solvent volumetric props
+
+c                                 for now, don't know if the pure species have
+c                                 been computed (this will be the case in production)
+         do k = 1, ns
+            gso(k) = gcpd(jnd(k),.false.)
+         end do
+c                                  next get the activity coefficient ratios for the
+c                                  hybrid eos (csthyb gh(i) = phi0(EoS)/phi0(MRK)
+         call hybeos (ins,ns)  
+c                                  now get the hybrid fugacity coefficients 
+c                                  calculate hybrid fugacity coefficients
+         call mrkmix (ins, ns, 1)
+c
+         do k = 1, ns
+c                                  now add in the pure solvent fugacities
+c                                  at this point, assuming the fugacity coeff 
+c                                  is independent of speciation then the partial
+c                                  g of a solvent species will be 
+c                                  g(i) = gs0(i) + RT ln x(i)
+c                                  where sumsol is the sum of the solute
+c                                  mole fractions. 
+            i = ins(k)
+            gso(k) = gso(k) + rt * dlog(g(i)/gp(i))
+
+         end do 
+c                                  ysum is just a dummy.
+         call slvnt1 (dum)
+
+      else 
+c                                 solvent is pure water 
+         call slvnt0 (gso(1),dum)
+
+         yf(ins(1)) = y(1)
+
+      end if 
 
       end 

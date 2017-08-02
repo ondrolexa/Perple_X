@@ -10,10 +10,9 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
  
-      character cprop*18, text*(lchar)
+      character cprop*18, text*(lchar), tag*1, tag1*29
 
-      integer i,j,k,l,lu,id,inc
-
+      integer i, j, k, l, m, lu, id, inc, ct
 
       double precision poiss, gcpd
  
@@ -85,7 +84,11 @@ c----------------------------------------------------------------------
       integer spct
       double precision ysp
       character spnams*8
-      common/ cxt34 /ysp(m4,k5),spct(h9),spnams(m4,h9)
+      common/ cxt34 /ysp(l10,k5),spct(h9),spnams(l10,h9)
+
+      integer ld, na1, na2, na3, na4
+      double precision x3, caq
+      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),na1,na2,na3,na4,ld
 
       integer lstot,mstot,nstot,ndep,nord
       common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
@@ -107,6 +110,14 @@ c----------------------------------------------------------------------
       integer idaq, jdaq
       logical laq
       common/ cxt3 /idaq,jdaq,laq
+
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+
+      integer iaq, aqst, aqct
+      character aqnam*8
+      double precision aqcp, aqtot
+      common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
 
       integer iam
       common/ cst4 /iam
@@ -185,19 +196,108 @@ c                                 species_ouput
 
             end if 
 
-            do k = 1, spct(id), inc
+            if (ksmod(id).eq.39.and.lopt(32)) then 
+            
+               ct = na4
+               inc = 5
+
+            else 
+
+               ct = spct(id)
+
+            end if 
+
+            do k = 1, ct, inc
 
                l = k + inc - 1
-               if (l.gt.spct(id)) l = spct(id)
+               if (l.gt.ct) l = ct
 
-               if (ksmod(id).ne.20) then 
-
-                  write (text,'(20(a,a,f8.5,a))')
+               if (ksmod(id).eq.20) then 
+c                                 forward aqueous model
+                  write (text,'(20(a,a,g12.5,a))')
      *                  (spnams(j,id),': ',ysp(j,i),', ', j = k, l)
 
-               else
+               else if (ksmod(id).eq.39.and.lopt(32)) then
+
+                  m = 1 
+                  tag = ' '
+
+                  do j = k, l
+                     
+                     if (j.le.ns) then 
+c                                 solvent species
+                        spnams(ns+m,id) = spnams(j,id) 
+                        
+                        if (lopt(26)) then
+c                                 mole fraction
+                            ysp(ns+m,i) = caq(i,j)
+                        else 
+c                                 molality             
+                            ysp(ns+m,i) = caq(i,j)/caq(i,na3)
+                        end if   
+
+                     else if (j.le.nsa) then 
+c                                 solute species
+                        spnams(ns+m,id) = aqnam(j-ns)
+                        
+                        if (lopt(27)) then
+c                                 molality       
+                            ysp(ns+m,i) = caq(i,j)
+                        else 
+c                                 mole fraction      
+                            ysp(ns+m,i) = caq(i,j)/caq(i,na2)
+                        end if
+
+                     else 
+c                                 special properties
+                         if (j.eq.na1) then 
+                            spnams(ns+m,id) = 'ionic_st'
+                         else if (j.eq.na2) then 
+                            spnams(ns+m,id) = 'tot_mola'
+                         else if (j.eq.na3) then
+                            spnams(ns+m,id) = 'solv_mas'
+                         else 
+                            spnams(ns+m,id) = 'err_lgKw'
+                         end if 
+
+                          ysp(ns+m,i) = caq(i,j)
+
+                     end if 
+
+                     m = m + 1
+
+                  end do 
+
+                  if (j.gt.na4) then 
+
+                     if (lopt(26).and.lopt(27)) then 
+c                                 molar solvent
+c                                 molal solute
+                        tag = '*'
+                        tag1 ='*molar solvent, molal solute '
+
+                     else if (lopt(27).and..not.lopt(26)) then 
+c                                  all molal
+                        tag = '*'
+                        tag1 ='*molal '
+
+                     else if (.not.lopt(26).and..not.lopt(27)) then 
+c                                   molal solvent
+c                                   molar solute
+                         tag = '*'
+                         tag1 ='*molal solvent, molar solute '
+
+                      end if 
+
+                  end if 
 
                   write (text,'(20(a,a,g12.5,a))')
+     *                  (spnams(ns+j,id),': ',ysp(ns+j,i),', ',
+     *                   j = 1, m - 1), tag
+
+               else 
+
+                  write (text,'(20(a,a,f8.5,a))')
      *                  (spnams(j,id),': ',ysp(j,i),', ', j = k, l)
 
                end if 
@@ -217,6 +317,12 @@ c                                 species_ouput
             end do 
 
          end do 
+
+         if (laq.and.lopt(32).and.tag.ne.' ') then 
+            write (text,'(a)') tag1//'concentrations.'
+            call deblnk (text)
+            write (lu,'(/,1x,400a)') chars(1:length)
+         end if 
 
       end if 
 
@@ -463,7 +569,7 @@ c                                 test for non-NaN chemical potentials
      *          ' Solid Specific Heat Capacity (J/K/m3) (1) = ',g12.6,/)
 1110  format (1x,a8,2x,f8.3,5x,2(f6.2,4x),5x,2(f6.2,4x))
 1120  format (29x,a8,' = ',g12.6)
-1130  format (/,'Chemical Potentials (J/mol):',/,2x,20(4x,a,5x))
+1130  format (/,'Chemical Potentials (J/mol):',//,2x,20(4x,a,5x))
 1140  format (2x,20(1x,g13.6))
 1160  format (/,'Molar Properties and Density:'
      *        /,20x,'N(g)',10x,'G(J)',5x,'S(J/K)',5x,'V(J/bar)',6x,
@@ -515,15 +621,15 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i,j,k,l,m,ids,jds,jd,kd,kcoor,itri(4),jtri(4),ijpt
+      integer i,j,k,l,m,ids,jd,kd,lco(3),itri(4),jtri(4),ijpt
 
       double precision wt(3), cst
 
       logical sick(i8), nodata, ssick, ppois, bulkg, bsick, bad
 c                                 x-coordinates for the assemblage solutions
-      integer ld
-      double precision x3, caq, ionst, tmolal
-      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),ionst(k5),tmolal(k5),ld
+      integer ld, na1, na2, na3, na4
+      double precision x3, caq
+      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),na1,na2,na3,na4,ld
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -548,6 +654,9 @@ c                                 global assemblage data
 
       integer igrd
       common/ cst311/igrd(l7,l7)
+
+      integer ncoor,mcoor,ndim
+      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
 
       double precision xco
       integer ico,jco
@@ -599,8 +708,8 @@ c                                 bookkeeping variables
       double precision aqcp, aqtot
       common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
 
-      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
-      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
 
       integer iam
       common/ cst4 /iam
@@ -622,14 +731,18 @@ c                                 logarithmic_p option
       nodata = .false. 
 
       if (iam.ne.2) then 
-c                                 WERAMI:
-         jd = igrd(itri(1),jtri(1))
-         ias = iap(jd)
+c                                 WERAMI: 
+         ias = iap(igrd(itri(1),jtri(1)))
+c                                 load the assemblage phase composition
+c                                 starting coordinates
+         do i = 1, ijpt
+            lco(i) = ico(igrd(itri(i),jtri(i)))
+         end do 
 c                                 no data test
          if (ias.eq.k3) then 
             nodata = .true.
             goto 99 
-         end if 
+         end if
 
          np = iavar(1,ias)
          ncpd = iavar(2,ias)
@@ -706,31 +819,75 @@ c                                 solvent
             end if
 
             if (iam.ne.2) then
-c                                 WERAMI
-               cst = bg(i,jd)
-c                                 in case zero mode is not on, allow
-c                                 composition of zero phase
-               if (ijpt.eq.1.and.cst.eq.0d0) cst = 1d0
-c                                 weighted molar amount
-               props(16,i) = wt(1)*cst
-
-               kcoor = ico(jd)
+c                                 WERAMI, initialize
+               props(16,i) = 0d0
 
                do j = 1, istg(ids)
                   do k = 1, ispg(ids,j)
-                     kcoor = kcoor + 1
-                     x3(i,j,k) = wt(1)*cst*xco(kcoor)
+                     x3(i,j,k) = 0d0
                   end do 
-               end do
+               end do 
 
                if (lopt(32).and.ksmod(ids).eq.39) then 
 c                               lagged speciation
-                  do k = 1, ns + aqct
-                     kcoor = kcoor + 1
-                     caq(i,k) = wt(1)*cst*xco(kcoor)
+                  do k = 1, na4            
+                     caq(i,k) = 0d0
                   end do
 
                end if
+c                                 start of the assemblage compositional 
+c                                 coordinates in xco is in lco(l):
+               do l = 1, ijpt
+
+                  kd = igrd(itri(l),jtri(l))
+
+                  cst = wt(l)*bg(i,kd)
+c                                 in case zero mode is not on, allow
+c                                 composition of zero phase
+                  if (ijpt.eq.1.and.cst.eq.0d0) cst = 1d0
+c                                 weighted molar amount
+                  props(16,i) = props(16,i) + cst
+
+                  do j = 1, istg(ids)
+                     do k = 1, ispg(ids,j)
+                        lco(l) = lco(l) + 1
+                        x3(i,j,k) = x3(i,j,k) + cst*xco(lco(l))
+                     end do 
+                  end do
+
+                  if (lopt(32).and.ksmod(ids).eq.39) then 
+c                               lagged speciation
+                     do k = 1, na4
+                        lco(l) = lco(l) + 1
+                        caq(i,k) = caq(i,k) + cst*xco(lco(l))
+                     end do
+
+                     lco(l) = lco(l) + 4
+
+                  end if
+
+               end do
+c                                 renormalize the composition
+               cst = props(16,i)
+               if (cst.eq.0d0) cst = 1d0
+
+               do l = 1, istg(ids)
+                  do m = 1, ispg(ids,l)    
+                     x3(i,l,m) = x3(i,l,m)/cst
+                  end do 
+               end do 
+
+               if (lopt(32).and.ksmod(ids).eq.39) then 
+c                               lagged speciation
+                  do k = 1, na4
+                     caq(i,k) = caq(i,k)/cst
+                  end do 
+
+               end if 
+c                                 revover x from x3, 2nd arg has no meaning.
+               call getxz (i,i,ids)
+c                                 convert x to y for calls to gsol
+               call xtoy (ids,bad)
 
             else 
 c                                 MEEMUM, molar amount
@@ -750,13 +907,15 @@ c                                 a compound:
             end if
 
             if (iam.ne.2) then 
-c                                 WERAMI
-               cst = bg(i,jd)
-c                                 in case zero mode is not on, allow
-c                                 composition of zero phase
-               if (ijpt.eq.1.and.cst.eq.0d0) cst = 1d0
-c                                 weighted molar amount
-               props(16,i) = wt(1)*cst
+c                                 WERAMI compund:
+               props(16,i) = 0d0 
+
+               do l = 1, ijpt
+
+                  props(16,i) = props(16,i) 
+     *                        + wt(l)*bg(i,igrd(itri(l),jtri(l)))
+
+               end do 
 
             else 
 c                                 MEEMUM, molar amount
@@ -765,84 +924,6 @@ c                                 MEEMUM, molar amount
             end if
 
          end if
-
-         if (iam.ne.2) then 
-c                                 WERAMI; need to average in other assemblages
-
-            do j = 2, ijpt
-            
-               kd = igrd(itri(j),jtri(j))
-               ias = iap(kd)
-
-               kcoor = ico(kd)
-
-               do k = 1, i
-
-                  jds = idasls(k,ias)
-
-                  if (k.le.np) then 
-
-                     do l = 1, istg(jds)
-                        do m = 1, ispg(jds,l)
-                           kcoor = kcoor + 1
-c                                 this is done so as to count
-c                                 the coordinates as well as make
-c                                 the composition.  
-                           if (k.lt.i) cycle
-                           x3(i,l,m) = x3(i,l,m) 
-     *                               + wt(j)*bg(k,kd)*xco(kcoor)
-
-                        end do 
-                     end do 
-
-                    if (lopt(32).and.ksmod(ids).eq.39) then 
-c                               lagged speciation
-                       do l = 1, ns + aqct
-                          kcoor = kcoor + 1
-c                               this cycle is lazy counting, in the
-c                               case of aq models the number of species
-c                               is known. 
-                          if (k.lt.i) cycle
-                          caq(i,l) = caq(i,l) 
-     *                               + wt(j)*bg(k,kd)*xco(kcoor)
-                       end do 
-                    end if 
-
-                  end if 
-
-                  if (k.lt.i) cycle 
-c                                 molar amounts
-                  props(16,i) = props(16,i) + wt(j)*bg(k,kd)
-
-               end do  
-
-            end do
-c                                 renormalize the composition
-            if (i.le.np) then 
-
-               cst = props(16,i)
-               if (cst.eq.0d0) cst = 1d0
-
-               do l = 1, istg(ids)
-                  do m = 1, ispg(ids,l)    
-                     x3(i,l,m) = x3(i,l,m)/cst
-                  end do 
-               end do 
-
-               if (lopt(32).and.ksmod(ids).eq.39) then 
-c                               lagged speciation
-                  do k = 1, ns + aqct
-                     caq(i,k) = caq(i,k)/cst
-                  end do 
-               end if 
-c                                 revover x from x3, 2nd arg has no meaning.
-               call getxz (i,i,ids)
-c                                 convert x to y for calls to gsol
-               call xtoy (ids,bad)
-
-            end if 
-
-         end if 
 c                                 get and sum phase properties
          call getphp (ids,i,sick,ssick,ppois,bulkg,bsick)
 
@@ -884,9 +965,9 @@ c                                 x coordinate description
       integer lstot,mstot,nstot,ndep,nord
       common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
 
-      integer jd
-      double precision x3, caq, ionst, tmolal
-      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),ionst(k5),tmolal(k5),jd
+      integer kd, na1, na2, na3, na4
+      double precision x3, caq
+      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),na1,na2,na3,na4,kd
 c----------------------------------------------------------------------
 c      if (istg(ids).eq.1) then 
 c                                 april 5, 2017 added for electrolyte model,
@@ -986,8 +1067,8 @@ c-----------------------------------------------------------------------
       common/ cxt23 /jend(h9,m4)
 
       integer jnd
-      double precision aqg,q2,rt
-      common/ cxt2 /aqg(m4),q2(m4),rt,jnd(m4)
+      double precision aqg,q2s,rt
+      common/ cxt2 /aqg(m4),q2s(m4),rt,jnd(m4)
 
       double precision r,tr,pr,ps,p,t,xco2,u1,u2
       common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -1011,21 +1092,25 @@ c                                 model type
       double precision yf,gh,v,vf
       common/ cstcoh /yf(nsp),gh(nsp),v(nsp),vf(nsp)
 
-      integer jd
-      double precision x3, caq, ionst, tmolal
-      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),ionst(k5),tmolal(k5),jd
+      integer jd, na1, na2, na3, na4
+      double precision x3, caq
+      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),na1,na2,na3,na4,jd
 
       integer iaq, aqst, aqct
       character aqnam*8
       double precision aqcp, aqtot
       common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
 
+      integer ion, ichg, jchg
+      double precision q, q2, qr, dcp
+      common/ cstaq /q(l9),q2(l9),qr(l9),dcp(k5,l9),jchg(l9),ichg,ion
+
       integer ihy, ioh
       double precision gf, epsln, epsln0, adh, msol
       common/ cxt37 /gf, epsln, epsln0, adh, msol, ihy, ioh
 
-      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
-      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
 
       double precision thermo,uf,us
       common/ cst1 /thermo(k4,k10),uf(2),us(h5)
@@ -1187,26 +1272,29 @@ c                                 generic hybrid EoS
 c                                 lagged speciation
                call slvnt3 (gso)
 c                                 DH law activity coefficient factor (ln[g] = lng0*q^2)
-               gamm0 = adh*dsqrt(ionst(jd))/(1d0 + dsqrt(ionst(jd))) 
-     *              + 0.2d0*ionst(jd)
+               gamm0 = adh*dsqrt(caq(jd,na1))/(1d0 + dsqrt(caq(jd,na1))) 
+     *              + 0.2d0*caq(jd,na1)
 
                gamm0 = dexp(gamm0)
 c                                 solvent species (caq => mole fraction)
                do k = 1, ns
+                  if (caq(jd,k).eq.0d0) cycle
                   g = g + caq(jd,k) * (gso(k) + rt * dlog(caq(jd,k)))
                end do 
 c                                 solute species (caq => molality)
-               do k = ns + 1, aqct
+               do k = sn1, nsa 
 
-                  i = k - ns 
+                  i = k - ns
+
+                  if (caq(jd,k).eq.0d0) cycle
 
                   if (q2(i).eq.0d0) then
 c                                 neutral
-                     g = g + caq(jd,k)/tmolal(jd) *
+                     g = g + caq(jd,k)/caq(jd,na2) *
      *                   (gcpd(aqst+i,.false.) + rt*dlog(caq(jd,k)))
                   else 
 c                                 charged
-                     g = g + caq(jd,k)/tmolal(jd) 
+                     g = g + caq(jd,k)/caq(jd,na2)
      *                  * (gcpd(aqst+i,.false.) 
      *                  + rt*dlog(caq(jd,k)*q2(i)*gamm0))
 
@@ -1296,7 +1384,7 @@ c                                 model type
       integer spct
       double precision ysp
       character spnams*8
-      common/ cxt34 /ysp(m4,k5),spct(h9),spnams(m4,h9)
+      common/ cxt34 /ysp(l10,k5),spct(h9),spnams(l10,h9)
 
       double precision z, pa, p0a, x, w, y, wl
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
@@ -1881,9 +1969,9 @@ c----------------------------------------------------------------------
       integer eos
       common/ cst303 /eos(k10)
 
-      integer kd
-      double precision x3, caq, ionst, tmolal
-      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),ionst(k5),tmolal(k5),kd
+      integer kd, na1, na2, na3, na4
+      double precision x3, caq
+      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),na1,na2,na3,na4,kd
 
       save dt
       data dt /.5d0/
@@ -3385,9 +3473,9 @@ c----------------------------------------------------------------------
       double precision hsb
       common/ cst84 /hsb(i8,4),hs2p(6)
 
-      integer idaq, jdaq, kdaq
+      integer idaq, jdaq
       logical laq
-      common/ cxt3 /idaq,jdaq,kdaq,laq
+      common/ cxt3 /idaq,jdaq,laq
 c----------------------------------------------------------------------
 c                                 assemblage flags
 c                                 ----------------
