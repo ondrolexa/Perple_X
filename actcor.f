@@ -30,6 +30,10 @@ c-----------------------------------------------------------------------
       integer iam
       common/ cst4 /iam
 
+      double precision sel
+      logical hsccon, hsc
+      common/ cxt45 /sel(k0),hsccon,hsc(k1)
+
       logical eof
            
       data blank8/' '/ 
@@ -44,6 +48,8 @@ c                                 open files
       call sopen 
 c                                 read and echo file header
       call topn2 (4)
+c                                 disable HSC conversion
+      hsccon = .false. 
 c                                 mock pointers
       do i = 1, icmpn
          ic(i) = i
@@ -109,12 +115,6 @@ c                             read and modify individual entries
 1300  format (/,'NO is the default answer to all prompts',/)           
 
 999   end 
-
-
-      subroutine grxn (g)
-      implicit none
-      double precision g
-      end
 
       subroutine gotcha (name)
 c----------------------------------------------------------------------

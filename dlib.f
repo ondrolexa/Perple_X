@@ -53,6 +53,12 @@ c                                 global assemblage data
       integer iam
       common/ cst4 /iam
 
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+
+      integer ksmod, ksite, kmsol, knsp
+      common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
+
       integer iopt
       logical lopt
       double precision nopt
@@ -98,6 +104,17 @@ c                                phase molar amounts
             if (kxco.gt.k18) call error (61,0d0,k18,'BPLINP')
 
             read (n5,*,iostat=ier) (xco(j), j = jxco, kxco)
+
+            if (lopt(32).and.ksmod(ids).eq.39) then 
+c                                lagged speciation
+               jxco = kxco + 1
+               kxco = kxco + nsa + 3  
+
+               if (kxco.gt.k18) call error (61,0d0,k18,'BPLINP')
+
+               read (n5,*,iostat=ier) (xco(j), j = jxco, kxco)
+
+            end if  
          
             jxco = kxco
 
@@ -548,7 +565,7 @@ c----------------------------------------------------------------
       integer spct
       double precision ysp
       character*8 spnams
-      common/ cxt34 /ysp(m4,k5),spct(h9),spnams(m4,h9)
+      common/ cxt34 /ysp(l10,k5),spct(h9),spnams(l10,h9)
 c----------------------------------------------------------------------
 c                                choose components vs species
       write (*,1000) fname(ids)
@@ -585,7 +602,7 @@ c                                zero the constant
   
       do 
 
-         write (*,1030) what,'numerator',k5+1
+         write (*,1030) 'numerator',k5+1
          read (*,*,iostat=ier) jcx(jcomp)
 
          if (ier.ne.0.or.jcx(jcomp).lt.1) then
@@ -634,7 +651,7 @@ c                                define the numerator
 c                                define the denominator
       do 
 
-         write (*,1030) what,'denominator',k5+1-jcx(jcomp)
+         write (*,1030) 'denominator',k5+1-jcx(jcomp)
          write (*,1140)
          read (*,*,iostat=ier) jcx1(jcomp)
 
@@ -665,7 +682,7 @@ c                                define the denominator
      *                                 i = jcx(jcomp)+1, jcx1(jcomp))
 
             do i = jcx(jcomp)+1, jcx1(jcomp)
-               if (icps(i,jcomp).lt.1.or.icps(i,jcomp).gt.count) then
+               if (icps(i,jcomp).lt.1.or.icps(i,jcomp).gt.icomp) then
                   ier = 1
                   exit 
                end if 
@@ -789,7 +806,7 @@ c                                show the user the composition:
      *          'composition keyword in',/,'perplex_option.dat.')
 1010  format (2x,i2,' - ',a)
 1020  format (/,'Invalid input, try again:',/)
-1030  format (/,'How many ',a,' in the ',a,' of the',
+1030  format (/,'How many components in the ',a,' of the',
      *          ' composition (<',i2,')?')
 1040  format (/,'Enter ',a,' indices and weighting factors for the '
      *        ,a,':')
@@ -874,9 +891,11 @@ c                                 working arrays
 c                                 x coordinate description
       integer istg, ispg, imlt, imdg
       common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
-c                                 xcoordinates for the final solution
-      double precision x3
-      common/ cxt16 /x3(k21,mst,msp)
+c                                 xcoordinates for the final solution, a
+c                                 leetle witz.
+      integer kd, na1, na2, na3, na4
+      double precision x3, caq
+      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),na1,na2,na3,na4,kd
 c----------------------------------------------------------------------
 
       do i = 1, istg(ids)

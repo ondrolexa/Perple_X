@@ -415,9 +415,9 @@ c-----------------------------------------------------------------------
       double precision dlnfo2,elag,gz,gy,gx
       common/ cst100 /dlnfo2,elag,gz,gy,gx,ibuf,hu,hv,hw,hx
 
+      integer ictr, itrans
       double precision ctrans
-      integer ictr,itrans
-      common/ cst207 /ctrans(k0,k5),ictr(k5),itrans
+      common/ cst207 /ctrans(k0,k0),ictr(k0),itrans
 
       integer iff,idss,ifug
       common/ cst10  /iff(2),idss(h5),ifug
@@ -534,9 +534,6 @@ c                                 new version, read icopt
          read (n1,*,err=998) icopt
 
       end if 
-c                                 if meemum, override whatever computational option
-c                                 is set in the input file. 
-      if (iam.eq.2) icopt = 5
 c                                 if fractionation path from data 
 c                                 file, get name:
       fileio = .false.
@@ -555,6 +552,9 @@ c                                 file, get name:
          end if 
 
       end if 
+c                                 if meemum, override whatever computational option
+c                                 is set in the input file. 
+      if (iam.eq.2) icopt = 5
 c                                 dummy variable place holders
       read (n1,*,err=998) idum
       read (n1,*,err=998) idum 
@@ -582,11 +582,22 @@ c                                 dummy variable place holders
 c                                 read code for choice of fluid equation
 c                                 of state from terminal. 
       read (n1,*,err=998) ifug
-      if (ifug.ge.7.and.ifug.le.12.and.ifug.ne.9.and.ifug.ne.14.or.
-     *    ifug.eq.19.or.ifug.eq.16.or.ifug.eq.17.or.ifug.eq.24.or.
-     *    ifug.eq.20.or.ifug.eq.25) 
-     *                  read (n1,*,err=998) ibuf,hu,dlnfo2,elag
-      if (ibuf.eq.5) read (n1,*,err=998) buf     
+      
+      if (ifug.eq.8 .or.ifug.eq.10.or.ifug.eq.12.or.ifug.eq.16.or.
+     *    ifug.eq.17.or.ifug.eq.19.or.ifug.eq.20.or.ifug.eq.24.or.
+     *    ifug.eq.25) then
+
+         read (n1,*,err=998) ibuf,hu,dlnfo2,elag
+
+      else if (ifug.eq.6 .or.ifug.eq.7 .or.ifug.eq.11.or.ifug.eq.18.or.
+     *         ifug.eq.21.or.ifug.eq.22.or.ifug.eq.23) then
+
+        call error (77,0d0,0,' the input file specifies a disabled '//
+     *                       'or ivalid internal fluid EoS')
+
+      end if 
+
+      if (ibuf.eq.5) read (n1,*,err=998) buf
 
       if (hu.eq.1) then 
 c                                 hardwired fluid EoS endmember names
@@ -651,7 +662,7 @@ c                                 finished, could check for no components
  
             cycle 
 
-         else if (rname.eq.'V'.or.rname.eq.'S') then
+         else if (rname.eq.'Volume'.or.rname.eq.'Entropy') then
 
             usv = .true.
 
@@ -1094,9 +1105,8 @@ c----------------------------------------------------------------------
       integer ids,isct,icp1,isat,io2
       common/ cst40 /ids(h5,h6),isct(h5),icp1,isat,io2
 
-      logical hsccon
-      double precision atwt, sel
-      common/ cst45 /atwt(k0), sel(k0), hsccon
+      double precision atwt
+      common/ cst45 /atwt(k0) 
 
       integer iemod,kmod
       logical smod,pmod
@@ -1114,6 +1124,10 @@ c----------------------------------------------------------------------
       character aqnam*8
       double precision aqcp, aqtot
       common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
+
+      integer ion, ichg, jchg
+      double precision q, q2, qr, dcp
+      common/ cstaq /q(l9),q2(l9),qr(l9),dcp(k5,l9),jchg(l9),ichg,ion
 
       character*8 exname,afname
       common/ cst36 /exname(h8),afname(2)
@@ -1144,11 +1158,22 @@ c----------------------------------------------------------------------
       integer eos
       common/ cst303 /eos(k10)
 
+      double precision sel
+      logical hsccon, hsc
+      common/ cxt45 /sel(k0),hsccon,hsc(k1)
+
       integer ikp
       common/ cst61 /ikp(k1)
 
       double precision vnumu
       common/ cst44 /vnumu(i6,k10)
+
+      integer ihy, ioh
+      double precision gf, epsln, epsln0, adh, msol
+      common/ cxt37 /gf, epsln, epsln0, adh, msol, ihy, ioh
+
+      double precision thermo,uf,us
+      common/ cst1 /thermo(k4,k10),uf(2),us(h5)
 
       integer iopt
       logical lopt
@@ -1587,6 +1612,55 @@ c                                 store thermodynamic parameters:
          end if 
 
       end do
+c                                write summary and checks
+      if (aqct.gt.0) then 
+
+         ion = ihy
+
+         if (lopt(25).and.(ihy.eq.0.or.ioh.eq.0)) then 
+            call warn (99,0d0,0,'missing H+ or OH- species, '//
+     *                          'aqueous_output set = F (INPUT2)')
+         end if 
+
+         ichg = 0
+         q(ion) = thermo(6, aqst+ion)
+         
+         do i = 1, aqct 
+
+            q(i) = thermo(6, aqst + i)
+            qr(i) = q(i)/q(ion)
+            q2(i) = q(i)**2
+            
+            do j = 1, jbulk 
+               dcp(j,i) = aqcp(j,i) - qr(i)*aqcp(j,ion)
+            end do 
+
+            if (q(i).ne.0d0) then 
+               ichg = ichg + 1
+               jchg(ichg) = i 
+            end if
+
+         end do 
+
+         if (first) then 
+            write (*,1020)
+            do i = 1, aqct, 6
+               k = i + 5
+               if (k.gt.aqct) k = aqct
+               write (*,1030) (aqnam(j),int(thermo(6,j+aqst)),j=i,k)
+            end do 
+            write (*,'(//)')
+         end if
+
+      else if (lopt(32).or.lopt(25)) then 
+
+         if (first) call warn (99,0d0,0,' no data for aqueous species, '
+     *    //'aqueous_output and lagged_aq_speciation disabled.')
+
+         lopt(32) = .false.
+         lopt(25) = .false.
+  
+      end if 
 c                                reset ipoint counter, but do not 
 c                                reset iphct, because the compositions
 c                                of the make phases are necessary for
@@ -1612,6 +1686,9 @@ c                                endmembers:
      *        'phases:',/,5(a,1x))
 1010  format ('needed to define an independent fugacity/activity ',
      *    'variable is missing from the',/,'thermodynamic data file',/)
+1020  format (/,'Summary of aqueous solute species:',//,
+     *        6('name     chg   ')) 
+1030  format (6(a8,2x,i2,3x))
 1230  format ('**error ver013** ',a,' is an incorrect component'
      *       ,' name, valid names are:',/,12(1x,a))
 1240  format ('check for upper/lower case matches or extra blanks',/)
@@ -1870,7 +1947,7 @@ c                                 initialize potentials
 c                                 set dependent potential, if it exists
       call incdp0
 
-      end 
+      end
 
       subroutine getcmp (jd,id,ids)
 c-----------------------------------------------------------------------
@@ -1880,14 +1957,20 @@ c  if ids > 0, id points to the composition of a solution defined in terms
 c              on endmember fractions defined and saved by routine resub
 c              in array zcoor.
 c the composition is saved in arrays cp3 and x3, entry jd
+
+c getcmp is called by both WERAMI and MEEMUM/VERTEX
+
+c this is an attempt to use the compositions stored in cp2....
 c-----------------------------------------------------------------------
       implicit none
  
       include 'perplex_parameters.h'
 
-      integer i,j,id,jd,ids
+      integer i, j, k, id, jd, ids
 
       logical bad
+
+      double precision xx
 c                                 -------------------------------------
 c                                 global variables:
       integer icomp,istct,iphct,icp
@@ -1936,12 +2019,25 @@ c                                 pointer
       double precision aqcp, aqtot
       common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
 
-      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
-      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
 
       integer jnd
       double precision aqg,qq,rt
       common/ cxt2 /aqg(m4),qq(m4),rt,jnd(m4)
+
+      integer jphct
+      double precision g2, cp2
+      common/ cxt12 /g2(k21),cp2(k5,k21),jphct
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      integer kd, na1, na2, na3, na4
+      double precision x3, caq
+      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),na1,na2,na3,na4,kd
 c----------------------------------------------------------------------
 
       kkp(jd) = ids
@@ -1963,23 +2059,59 @@ c                                 frendly
                cp3(i,jd) = cp0(i,-ids)
             end do 
 
-         end if 
+         end if
 
-      else
+      else 
 c                                 solutions, initialize
          do i = 1, icomp
             cp3(i,jd) = 0d0
          end do
-c                                 get the x(i,j) coordinates for the
-c                                 composition from the zcoor array,
-c                                 this routine also saves a copy of the
-c                                 xcoordinates in x3(jd,i,j)
+c                                 if getcmp is being called by WERAMI:
+c                                 GETXZ (dlib.f) gets the x(i,j) coordinates for the
+c                                 composition from the x3(jd,i,j) array and
+c                                 the id argument is irrelevamt. 
+c                                 if getcmp is being called by MEEMUM/VERTEX:
+c                                 GETXZ (getxz1.f) gets both the x(i,j) and 
+c                                 x3(jd,i,j) compositional coordinates from the
+c                                 zcoor array.
          call getxz (jd,id,ids)
 c                                 convert the x(i,j) coordinates to the
 c                                 geometric y coordinates
          call xtoy (ids,bad)
 
-         if (lrecip(ids)) then
+         if (lopt(32).and.ksmod(ids).eq.39) then 
+
+            if (iam.ne.3) then 
+c                                 MEEMUM:
+c                                 cp2 works for meemum/vertex, but not werami
+c                                 the id index on cp2 is intentional.
+             do j = 1, icomp 
+                cp3(j,jd) = cp2(j,id)
+             end do 
+
+            else  
+c                                  WERAMI:
+            do i = 1, ns
+               do j = 1, icomp 
+                  cp3(j,jd) = cp3(j,jd) + caq(jd,i) * cp(j,jnd(i))
+               end do 
+            end do 
+
+            do i = sn1, nsa
+
+               k = i - ns
+c                                 convert molality to mole fraction (xx)
+               xx = caq(jd,i)/caq(jd,na2)
+
+               do j = 1, icomp
+                  cp3(j,jd) = cp3(j,jd) + xx * aqcp(j,k)  
+               end do  
+             
+            end do
+
+            end if  
+
+         else if (lrecip(ids)) then
 c                                 get the p' coordinates (amounts of 
 c                                 the independent endmembers)     
             call getpp (ids) 
@@ -2571,7 +2703,7 @@ c----------------------------------------------------------------------
 
       integer loopx,loopy,jinc,i,j,jst,kst,kd,ltic,iend
 
-      character string*lchar
+      character string*(lchar)
 
       integer igrd
       common/ cst311 /igrd(l7,l7)

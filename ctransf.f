@@ -22,9 +22,6 @@ c----------------------------------------------------------------------
       double precision comp,tot
       common/ cst43 /comp(k0),tot,icout(k0),ikind,icmpn,ieos
 
-      integer icomp,istct,iphct,icp
-      common/ cst6 /icomp,istct,iphct,icp
-
       integer ic
       common/ cst42 /ic(k0)
 
@@ -37,6 +34,13 @@ c----------------------------------------------------------------------
 
       integer iam
       common/ cst4 /iam
+
+      double precision sel
+      logical hsccon, hsc
+      common/ cxt45 /sel(k0),hsccon,hsc(k1)
+
+      integer icomp,istct,iphct,icp
+      common/ cst6 /icomp,istct,iphct,icp
 c----------------------------------------------------------------------- 
 c                                 iam is a flag indicating the Perple_X program
       iam = 6
@@ -49,11 +53,13 @@ c                                 assign data files
 c                                 Read THERMODYNAMIC DATA file (N2):
 c                                 read the data base header
       call topn2 (5)
+c                                 disable HSC conversion
+      hsccon = .false. 
 c                                 mock pointers
       do i = 1, icmpn
          ic(i) = i
       end do
-
+c                                 this is necessary for getphi to transform GH = G0
       icomp = icmpn
 c                                 read and echo data cards with
 c                                 component conversion

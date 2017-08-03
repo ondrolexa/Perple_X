@@ -1031,15 +1031,13 @@ c     jchar - length of character string, 0 if unknown.
 
       implicit none
 
-      include 'perplex_parameters.h'
-
       double precision x,y,x0,y0,xtr,ytr
 
       integer jchar,nchar,i,ict
  
       character*(*) text
  
-      character*1 itsy(lchar),ifonts(13)*33,bitsy(lchar)
+      character*1 itsy(400),ifonts(13)*33,bitsy(400)
  
       character font*40
       common/ myfont /font
@@ -1138,7 +1136,7 @@ c                                 warning.
      *        '/',a,' 14 SetF',/,
      *        '%I t',/,'[',6(g9.3,1x),'] concat',/,
      *        '%I',/,'[')
-1020  format (400a)
+1020  format (400a1)
 1030  format ('] Text',/,'End',/)
       end
 c-------------------------------------------------------------------

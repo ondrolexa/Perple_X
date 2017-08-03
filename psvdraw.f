@@ -1172,7 +1172,7 @@ c psmixd - subroutine to draw binary mixed variable diagrams
 
       integer icp,ipoint,ifct,isat,ipot,i,ird,ivar
   
-      character*8 title*162, string*lchar, y*1, tname(5),xname(k5)
+      character*8 title*162, string*(lchar), y*1, tname(5),xname(k5)
   
       integer idss(10),idf(3),jphi(k1),igo,jop0,iop1,iop2,iop3,jb,
      *        jplus,jminus,isum,idif,j,i1,id1,it,i2,id2,jt,itot,
@@ -1890,7 +1890,7 @@ c          name label.
 
       include 'perplex_parameters.h'
 
-      character*6 lnms, pnms, string*lchar
+      character*6 lnms, pnms, string*(lchar)
 
       integer ipr,ivar,ird,ityp,iop9,imid,i,iend
 

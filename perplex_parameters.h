@@ -1,10 +1,11 @@
 
+
       integer h5,h6,h8,h9
       integer i6,i7,i8,i9,i10,i11
       integer j3,j4,j5,j6,j9
       integer k0,k1,k2,k3,k4,k5,k7,k8,k9,k10,k13,k14,k15
       integer k16,k17,k18,k19,k20,k21,k22,k23,k24,kd2
-      integer l2,l3,l5,l6,l7,l8,l9,lchar
+      integer l2,l3,l5,l6,l7,l8,l9,l10,lchar
       integer m0,m1,m2,m3,m4,m6,m7,m8,m9,m10,m11,m12,m13,m14,m15
       integer m16,m17,m18
       integer msp,mst,mdim,ms1
@@ -82,12 +83,12 @@
 !                                 k23 - max number of phases to be fractionated.
 !                                 k24 - max number of coordinates for the pseudocompounds of a 
 !                                       prismatic solution.
-      parameter (k0=25,k1=900000,k2=100000,k3=500,k4=32,k5=12)
+      parameter (k0=25,k1=1500000,k2=100000,k3=500,k4=32,k5=12)
       parameter (k7=k5+1,k8=k5+2) 
-      parameter (k9=30,k10=350,k14=18,k15=6,k16=70)
+      parameter (k9=30,k10=400,k14=18,k15=6,k16=70)
       parameter (k17=7,k18=29*k1)
-      parameter (k19=2*k5+2,k21=1700000,k20=(mdim+3)*k21)
-      parameter (k22=mdim*k19,k23=5)
+      parameter (k19=3*k5,k21=2000000,k20=(mdim+3)*k21)
+      parameter (k22=mdim*k19,k23=25)
       parameter (k13=mdim*k21,k24=k13*mst)
 !                                 l2 - max number of independent potential variables
 !                                 l3 - max number of variables for gridded min and graphics (l2+2)
@@ -100,7 +101,10 @@
 !                                      array is not essential.  
 !                                 l8 - max number of levels for multilevel grids    
 !                                 l9 - max number of aqueous solute species in minimization programs.         
-      parameter (l2=5,l3=l2+2,l5=1000,l6=1000,l7=2048,l8=10,l9=100)
+!                                l10 - max number of parameters stored in caq for each phase.
+!                                nsp - max number of species in fluid speciation routines 
+      parameter (l2=5,l3=l2+2,l5=1000,l6=1000,l7=2048,l8=10,l9=100,
+     *           nsp=17,l10=nsp+l9+4)
 !                                 m0 - max number of terms for a species site fraction?
 !                                 m1 - max number of terms in excess function
 !                                 m2 - max order of term in excess function
@@ -130,8 +134,6 @@
       parameter (m0=8,m1=60,m2=8,m3=3,m4=20,m6=5,m7=15,m8=9,
      *           m9=10,m10=6,m11=6,m12=4,m13=8,m14=2,m15=10,m16=5,m17=5,
      *           m18=6)
-!                                nsp - max number of species in fluid speciation routines 
-      parameter (nsp=17)
 !                                 nx - number of x-grid nodes in a contour data grid
 !                                 ny - number of y-grid modes in a contour data grid
       parameter (nx=500,ny=500)

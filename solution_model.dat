@@ -1,4 +1,4 @@
-678 DO NOT DELETE THIS LINE
+679 DO NOT DELETE THIS LINE
 
                              FOR MODEL DEFINITIONS AND REFERENCES REFER TO THE GLOSSARY AT:
 
@@ -19,7 +19,7 @@
 
                              Special models:
 
-                             23    - Toops-Samis melt model
+                             20    - Electrolyte model
                              24    - Holland & Powell Haplogranite melt model 
                              25    - Ghirso pMELTS/MELTS model
                              26    - Haefner H2O-CO2-NaCl
@@ -37,11 +37,84 @@
                              example) excess functions. The format of model type 1 is described in detail in the Perple_X 
                              program documentation (vdoc.pdf).
                            
-                             The format for all other model types is not yet documented, but may be deduced from the commentary
+                             The format for all other model types is not documented, but may be deduced from the commentary
                              within the models included herein. Character data is format free in all models except model type 1.
 
                              comments can be placed between models provided, nothing is written in the first 10 columns. Comments 
                              may be placed after data if it is separated from the data by a '|' marker.
+                      --------------------------------------------------------
+begin_model
+
+                                                                        
+Aq_solvent
+abbreviation Aq
+full_name    electrolytic_fluid
+
+20                          | model type: electrolytic fluid
+
+1                           | = ns = number of solvent species
+H2O
+1                           | = nn = number of neutral species
+SiO2,aq
+5                           | = nq = number of charged species
+H+
+HSiO3-
+Mg+2
+MgOH+
+OH-
+
+                            | ranges on the first ns-1 = 0 species 
+
+                            | ranges (mol fraction) on the nn neutral solute species
+0.0    1e-2 1e-3         1   
+                            | ranges (mol fraction) on the first nq-1 charged solute species 
+0.0    2e-6 1e-7         1   
+0.0    1e-9 1e-10        1   
+0.0    6e-8 1e-9         1   
+0.0    3e-6 1e-7         1   
+
+end_of_model
+
+
+Aq_solven0
+abbreviation Aq
+full_name    electrolytic_fluid
+
+20                          | model type: electrolytic fluid
+
+3                           | = ns = number of solvent species, water must be the last solvent species.
+
+CO2
+CH4
+H2O
+
+2                           | = nn = number of neutral solute species
+
+SiO2,aq
+Si2O4,aq
+
+5                           | = nq = number of charged species
+
+HCO3-
+Mg(HCO3)
+OH-
+HSiO3-
+Mg(HSiO3
+
+
+                            | ranges on the first ns-1 species
+0    0.05  0.02        1
+0    0.05  0.02        1
+                            | ranges (mol fraction) on the nn neutral solute species
+0    0.8d-2  2d-3      1
+0    0.8d-2  2d-3      1
+                            | ranges (mol fraction) on the first nq-1 charged solute species 
+0    1e-6 2e-7         1
+0    1e-6 2e-7         1
+0    1e-6 2e-7         1
+0    1e-6 2e-7         1 
+
+end_of_model
                       --------------------------------------------------------
 begin_model
                       Green et al (JMG, 2016) Augite model.
@@ -1871,7 +1944,7 @@ begin_model
 
                              tbi = 1 phl - 1 br + 1 ru           
                              55e3 0 0 
-                             fbi = 1 east - 1/2 andr + 1 gr    
+                             fbi = 1 east - 1/2 gr + 1/2 andr   
                              -3e3 0 0
 
 
@@ -2403,6 +2476,8 @@ z(t1,al)   = 1/2 + 1/2 east + 1/2 fbit
 
 z(h,o)     = 1 tbit
 
+site_check_override
+
 end_of_model    
                     --------------------------------------------------------  
 begin_model                         
@@ -2882,6 +2957,8 @@ z(mg,m4) = 1 afchl
 
 2 2.                            |2 species on 2 T2 sites 
 z(al,T2)= 1 ames + 1/2 clin + 1/2 daph + 1/2 mnchl
+
+site_check_override
 
 end_of_model  
                               --------------------------------------------------------
@@ -3910,6 +3987,8 @@ z(t2,al) = 1/2 tats
 
 z(m2,mg) = 1 ta 
 z(fe,m2) = 1 fta
+
+site_check_override
 
 end_of_model               
 
@@ -9769,13 +9848,18 @@ abbreviation F
 full_name    fluid
 
 39                          | model type: Generic Hybrid EoS
-3
+5
 CO2
 CH4
+H2S
+SO2
 H2O 
 
-  0  0  0                              endmember flags
 
+  0  0  0  0  0            | endmember flags
+
+0.0 1.0 0.1       0        | subdivision ranges, imod = 0 -> cartesian subdivision
+0.0 1.0 0.1       0        | subdivision ranges, imod = 0 -> cartesian subdivision
 0.0 1.0 0.1       0        | subdivision ranges, imod = 0 -> cartesian subdivision
 0.0 1.0 0.1       0        | subdivision ranges, imod = 0 -> cartesian subdivision
 
@@ -9785,8 +9869,25 @@ ideal
 
 reach_increment 3 
 
-end_of_model              
+end_of_model           
+                      --------------------------------------------------------
+begin_model                
+                                                                        
+WADDAH 
+abbreviation Aq
+full_name aqueous_electrolyte
 
+39                          | model type: Generic Hybrid EoS
+1
+H2O 
+
+0                           | endmember flags
+
+ideal
+
+0                           | ideal configurational entropy
+
+end_of_model                 
                       --------------------------------------------------------
 begin_model                
                                                                         
@@ -9807,7 +9908,7 @@ H2
 
 ideal
 
-0
+0                          | ideal configurational entropy
 
 reach_increment 3 
 
@@ -9827,15 +9928,15 @@ SO2
 H2O
 H2 
 
-  0  0  0  0                            endmember flags
+  0  0  0  0                | endmember flags
 
-0.0 1.0 0.1       0        | subdivision ranges, imod = 0 -> cartesian subdivision
-0.0 1.0 0.1       0        | subdivision ranges, imod = 0 -> cartesian subdivision
-0.0 1.0 0.1       0        | subdivision ranges, imod = 0 -> cartesian subdivision
+0.0 1.0 0.1       0         | subdivision ranges, imod = 0 -> cartesian subdivision
+0.0 1.0 0.1       0         | subdivision ranges, imod = 0 -> cartesian subdivision
+0.0 1.0 0.1       0         | subdivision ranges, imod = 0 -> cartesian subdivision
 
 ideal
 
-0
+0                           | ideal configurational entropy
 
 reach_increment 3 
 
@@ -10744,6 +10845,8 @@ z(A,ti)   = 1/2 dilm
 3 1.                       | B - Fe3+ Ti4+ Fe2+
 z(b,fe3+) = 1 hem
 z(b,fe2+) = 1/2 dilm
+
+refine_endmembers
 
 end_of_model
 

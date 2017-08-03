@@ -1241,7 +1241,7 @@ c---------------------------------------------------------------------
 
       character*2 strgs*3, mstrg, dstrg, tstrg*3, wstrg*3, e16st*3
       common/ cst56 /strgs(32),mstrg(6),dstrg(m8),tstrg(11),wstrg(m16),
-     *               e16st(13)
+     *               e16st(12)
 
       integer eos
       common/ cst303 /eos(k10)
@@ -1280,14 +1280,15 @@ c-----------------------------------------------------------------------
 
             call unver (
 c                                 g0, s0, v0
-     *      thermo(1,id),thermo(2,id),thermo(3,id),
+     *            thermo(1,id),thermo(2,id),thermo(3,id),
 c                                 c1-c8
-     *      thermo(4,id),thermo(5,id),thermo(6,id),thermo(7,id),
+     *            thermo(4,id),thermo(5,id),thermo(6,id),thermo(7,id),
      *            thermo(8,id),thermo(9,id),thermo(10,id),thermo(24,id),
-c                                 b1-b11
-     *      thermo(11,id),thermo(12,id),thermo(13,id),thermo(14,id),
-     *      thermo(15,id),thermo(16,id),thermo(17,id),thermo(18,id),
-     *      thermo(19,id),thermo(20,id),thermo(21,id),
+c                                 b1-b11 
+     *            thermo(11,id),thermo(12,id),thermo(13,id),
+     *            thermo(14,id),thermo(15,id),thermo(16,id),
+     *            thermo(17,id),thermo(18,id),thermo(19,id),
+     *            thermo(20,id),thermo(21,id),
 c                                 ref stuff
      *            tr,pr,eos(id))
 c                                 add in activity correction
@@ -1423,16 +1424,18 @@ c                                    test for Murghnahan EoS
 
             call unver (
 c                                 g0,s0, v0
-     *      thermo(1,id),thermo(2,id),thermo(3,id),
+     *            thermo(1,id),thermo(2,id),thermo(3,id),
 c                                 c1-c8
-     *      thermo(4,id),thermo(5,id),thermo(6,id),thermo(7,id),
-     *      thermo(8,id),thermo(9,id),thermo(10,id),thermo(24,id),
+     *            thermo(4,id),thermo(5,id),thermo(6,id),
+     *            thermo(7,id),thermo(8,id),thermo(9,id),
+     *            thermo(10,id),thermo(24,id),
 c                                 b1-b11 
-     *      thermo(11,id),thermo(12,id),thermo(13,id),thermo(14,id),
-     *      thermo(15,id),thermo(16,id),thermo(17,id),thermo(18,id),
-     *      thermo(19,id),thermo(20,id),thermo(21,id),
+     *            thermo(11,id),thermo(12,id),thermo(13,id),
+     *            thermo(14,id),thermo(15,id),thermo(16,id),
+     *            thermo(17,id),thermo(18,id),thermo(19,id),
+     *            thermo(20,id),thermo(21,id),
 c                                 ref stuff
-     *      tr,pr,eos(id))
+     *            tr,pr,eos(id))
 
 c                                 add in activity correction
             thermo(1,k10) = thermo(1,id)
@@ -1545,7 +1548,7 @@ c                                 c1-c8
      *            thermo(4,id),thermo(5,id),thermo(6,id),
      *            thermo(7,id),thermo(8,id),thermo(9,id),
      *            thermo(10,id),thermo(24,id),
-c                                 b1-b11
+c                                 b1-b11 
      *            thermo(11,id),thermo(12,id),thermo(13,id),
      *            thermo(14,id),thermo(15,id),thermo(16,id),
      *            thermo(17,id),thermo(18,id),thermo(19,id),
@@ -1681,7 +1684,7 @@ c----------------------------------------------------------------------
 
       character*2 strgs*3, mstrg, dstrg, tstrg*3, wstrg*3, e16st*3
       common/ cst56 /strgs(32),mstrg(6),dstrg(m8),tstrg(11),wstrg(m16),
-     *               e16st(13)
+     *               e16st(12)
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -1898,9 +1901,8 @@ c----------------------------------------------------------------------
       double precision props,psys,psys1,pgeo,pgeo1
       common/ cxt22 /props(i8,k5),psys(i8),psys1(i8),pgeo(i8),pgeo1(i8)
 
-      logical hsccon
-      double precision atwt, sel
-      common/ cst45 /atwt(k0), sel(k0), hsccon
+      double precision atwt
+      common/ cst45 /atwt(k0)
 
       integer ipot,jv,iv
       common/ cst24 /ipot,jv(l2),iv(l2)
@@ -1916,23 +1918,6 @@ c----------------------------------------------------------------------
 c-----------------------------------------------------------------------
 
       call topn2 (1)
-
-      jcmpn = icmpn
-      icomp = icmpn
-c                                 component pointers
-      do i = 1, icmpn
-         ic(i) = i
-      end do
-c                              this check is here to avoid
-c                              redimensioning comps, but cause
-c                              the maximum number of components
-c                              counted by frendly to be k5, if you
-c                              want as many components in frendly as
-c                              in the data base you must set k0 = k5.
-      if (icmpn.gt.k5) then
-         icomp = k5
-         jcmpn = k5
-      end if 
 
       if (first) then
 
@@ -1950,6 +1935,23 @@ c                              in the data base you must set k0 = k5.
 
          if (icmpn.gt.k5) write (*,3020) k5
 
+      end if 
+c                              this check is here to avoid
+c                              redimensioning comps, but cause
+c                              the maximum number of components
+c                              counted by frendly to be k5, if you
+c                              want as many components in frendly as
+c                              in the data base you must set k0 = k5.
+      jcmpn = icmpn
+      icomp = icmpn
+c                                 component pointers
+      do i = 1, icmpn
+         ic(i) = i
+      end do
+
+      if (icmpn.gt.k5) then
+         icomp = k5
+         jcmpn = k5
       end if 
 c                               list database phases:
       write (*,1030)

@@ -40,10 +40,10 @@ c                                 iam is a flag indicating the Perple_X program
       do i = 1, k5
          ic(i) = i
       end do 
-c                                 assign data files
+c                               assign data files
       call sopen 
-c                                 Read THERMODYNAMIC DATA file (N2):
-c                                 read the data base header
+c                               Read THERMODYNAMIC DATA file (N2):
+c                               read the data base header
       call otopn2 (4)
 
       icomp = icmpn
@@ -91,7 +91,7 @@ c------------------------------------------------------------------------
 
       integer length,iblank,icom
       character chars*1
-      common/ cst51 /length,iblank,icom,chars(lchar)
+      common/ cst51 /length,iblank,icom,chars(240)
 
       double precision cp
       common/ cst12 /cp(k5,k1)
@@ -100,7 +100,7 @@ c------------------------------------------------------------------------
       common/ cst1 /thermo(k4,k10),uf(2),us(h5)
 
       do 
-
+c                                 need to eliminate hsc conversion.
          call ogtphi (name,eof)
 
          if (eof) exit
@@ -386,8 +386,8 @@ c----------------------------------------------------------------------
       double precision delt,dtol,utol,ptol
       common/ cst87 /delt(l2),dtol,utol,ptol
 
-      double precision v,tr,pr,r,ps
-      common/ cst5  /v(l5),tr,pr,r,ps
+      double precision p,t,xco2,u1,u2,tr,pr,r,ps,v(l2)
+      common/ cst5  /p,t,xco2,u1,u2,tr,pr,r,ps
 
       integer io3,io4,io9
       common/ cst41 /io3,io4,io9
@@ -415,9 +415,8 @@ c----------------------------------------------------------------------
       character tcname*5,xcmpnt*5
       common/ csta9 /tcname(k0),xcmpnt(k0)
 
-      logical hsccon
-      double precision atwt, sel
-      common/ cst45 /atwt(k0), sel(k0), hsccon
+      double precision atwt
+      common/ cst45 /atwt(k0)
 
       integer idspe,ispec
       common/ cst19 /idspe(2),ispec
@@ -464,6 +463,11 @@ c                               or co2 dummy values
 c                               must be included in the file (ne. 0).
       read (n2,*,end=90) idspe(1), idspe(2)
 
+      v(1) = pr
+      v(2) = tr
+      v(3) = 0d0
+      v(4) = 0d0
+      v(5) = 0d0
       vname(4) = 'mu(C1)'
       vname(5) = 'mu(C2)'
 
@@ -530,7 +534,7 @@ c                                 read and echo unformatted comments and make da
 9020  format (8(g9.2,1x))
 9030  format (i2,1x,8(g12.6,1x))
 
-99    v(2) = tr
-      v(1) = pr
+99    t = tr
+      p = pr
 
       end 

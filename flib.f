@@ -119,33 +119,56 @@ c---------------------------------------------------------------------
       save rkname 
 
       data (rkname(i), i = 0, 11)/
+c 0
      *'X(CO2) H2O-CO2 Modified Redlich-Kwong (MRK) DeSantis et al 74',
+c 1
      *'X(CO2) H2O-CO2 HSMRK Kerrick & Jacobs 81',
+c 2
      *'X(CO2) H2O-CO2 MRK hybrid-EoS*',
+c 3
      *'Disabled Eos',
+c 4
      *'Disabled Eos',
+c 5
      *'X(CO2) H2O-CO2 CORK Holland & Powell 91, 98',
+c 6-7
      *'Disabled Eos',
      *'Disabled Eos',
+c 8
      *'f(O2/CO2) C-buffered COH MRK hybrid-EoS*',
+c 9
      *'Disabled Eos',
+c 10
      *'X(O) C-buffered COH MRK hybrid-EoS Connolly & Cesare 93*',
+c 11
      *'Disabled Eos'/
 
       data (rkname(i), i = 12, nrk)/
+c 12
      *'X(O)-f(S2) C-buffered COHS MRK hybrid-EoS Connolly & Cesare 93*',
+c 13
      *'X(H2) H2O-H2 MRK hybrid-EoS*',
+c 14
      *'X(CO2) H2O-CO2 Pitzer & Sterner 94; Holland & Powell mixing 03',
+c 15
      *'X(H2) H2O-H2 low T MRK hybrid-EoS*',
+c 16
      *'X(O) H-O MRK hybrid-EoS*',
+c 17
      *'X(O)-f(S2) H-O-S MRK hybrid-EoS*',
+c 18
      *'Disabled Eos',
+c 19
      *'X(O)-X(S) C-buffered COHS MRK hybrid-EoS Connolly & Cesare 93*',
+c 20
      *'X(O)-X(C) COHS MRK hybrid-EoS Connolly & Cesare 93*',
+c 21-23
      *'Disabled Eos',
      *'Disabled Eos',
      *'Disabled EoS',
+c 24
      *'f(O2/CO2)-N/C C-buffered COHN MRK hybrid-EoS*',
+c 25
      *'X(CO2)-X(NaCl) H2O-CO2-NaCl Aranovich et al 10',
      *'X(O) O-Si MRK Connolly 16',
      *'X(O)-X(C) C-O-H MRK hybrid-EoS*'/
@@ -480,11 +503,11 @@ c----------------------------------------------------------------------
       end if
 
 1000  format (/,'*Hybrid EoS use the following pure species EoS, ',
-     *      'to change these associations',/,' modify the hybrid_EoS ',
-     *      'keyword in the perplex_option file:')
+     *      'to change these associations',/,'modify the hybrid_EoS ',
+     *      'keywords in the perplex_option file:',/)
 1010  format (/,'*This hybrid EoS uses the following pure species EoS,',
-     *      ' to change these associations',/,' modify the hybrid_EoS ',
-     *      'keyword in the perplex_option file:')
+     *      ' to change these associations',/,'modify the hybrid_EoS ',
+     *      'keywords in the perplex_option file:',/)
 1020  format (7x,a,' - ',a)
 
       end 
@@ -2084,7 +2107,7 @@ c on return v is the HSMRK volume of species i
 c---------------------------------------------------------------------
       implicit none
 
-      include 'perplex_parameters.h'
+      logical bad
 
       integer i
 
@@ -2120,13 +2143,17 @@ c----------------------------------------------------------------------
          e = -2.3322d11 + 6.738d8 * t + 3.179d5 * t2
       end if
 
-      call nurap (bm,c,d,e,yz,v,t12,rr)
+      call nurap (bm,c,d,e,yz,v,t12,rr,bad)
 
-      hsmrkf = dlog(p) + fugp (rtt,bm,yz,c,d,e,v)
+      if (bad) then 
+         hsmrkf = dlog(1d4*p)
+      else 
+         hsmrkf = dlog(p) + fugp (rtt,bm,yz,c,d,e,v)
+      end if
 
       end 
 
-      subroutine nurap (b,c,d,e,yz,vi,t12,r)
+      subroutine nurap (b,c,d,e,yz,vi,t12,r,bad)
 c----------------------------------------------------------------------
 c newton-raphson iteration to solve for hsmrk volume, my
 c idea here was to evaluate all the constants outside of 
@@ -2137,6 +2164,10 @@ c                                 jadc, july 96.
 c----------------------------------------------------------------------
       implicit none
 
+      include 'perplex_parameters.h'
+
+      logical bad 
+
       integer k
 
       double precision b,c,d,e,yz,vi,s1,s2,s3,p0,b2,q0,q1,q2,q3,q4,q5,
@@ -2144,6 +2175,11 @@ c----------------------------------------------------------------------
 
       double precision p,t,xc,u1,u2,tr,pr,r0,ps
       common/ cst5 /p,t,xc,u1,u2,tr,pr,r0,ps
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       double precision vol
       common/ cst26 /vol
@@ -2172,13 +2208,28 @@ c----------------------------------------------------------------------
       p7 = 2d0*b**4*(d*b-22d0*e)
       p8 = 3d0*q9
 
-      do k = 1, 50
+      k = 0
+      bad = .false.
+
+      do 
 
          cor = ((((((((((q0*vi+q1)*vi+q2)*vi+q3)*vi+q4)*vi+q5)*vi
      *         +q6)*vi+q7)*vi+q8)*vi+q9)*vi)/((((((((p0*vi+p1)*vi
      *         +p2)*vi+p3)*vi+p4)*vi+p5)*vi+p6)*vi+p7)*vi+p8)
          vi = vi + cor
-         if (dabs(cor).lt.1d-2) exit
+
+         if (dabs(cor/vi).lt.nopt(5)) then
+            exit
+         else if (vi.lt.0d0) then 
+            bad = .true.
+            exit 
+         else 
+            k = k + 1
+            if (k.le.iopt(21)) cycle
+            bad = .true.
+            exit 
+         end if
+
       end do 
  
       yz = vi * p/r/t
@@ -2397,7 +2448,7 @@ c                                 pmv constants
           
          if (y(l).gt.0d0) then
             f(l) = dlog(y(l)) + b(l)*d3 - aj2(l)*d2 + d6
-            g(l) = dexp(f(l)-dlog(p*y(l)))
+            g(l) = dexp(f(l))/p/y(l)
          else 
             g(l) = 1d0
             f(l) = dlog(1d4*p)
@@ -4751,8 +4802,7 @@ c                                 get new gamma's
     
          if (iwarn.eq.100) call warn (49,t,0,'RKSI4')
 
-         fh2o = dlog(1d4*p)
-         fco2 = dlog(1d4*p)
+         call setbad (fh2o)
 
          return 
 
@@ -5238,8 +5288,7 @@ c                                 use a liquid like starting guess
 
                ibad = ibad + 1 
 
-               fh2o = dlog(1d4*p)
-               fco2 = dlog(1d4*p)
+               call setbad (fh2o)
 
             else 
 
@@ -5283,8 +5332,7 @@ c                                 use a liquid like starting guess
 
             ibad = ibad + 1 
 
-            fh2o = dlog(1d4*p)
-            fco2 = dlog(1d4*p)
+            call setbad (fh2o)
 
          else 
 
@@ -5794,8 +5842,7 @@ c                                 closure => sio2:
 
          ibad = ibad + 1 
 
-         fh2o = dlog(1d4*p)
-         fco2 = dlog(1d4*p)
+         call setbad (fh2o)
          return 
 
       end if 
@@ -6309,8 +6356,8 @@ c                                 get new gamma's
 
           end if 
 
-         fh2o = dlog(1d4*p)
-         fco2 = dlog(1d4*p)
+          call setbad (fh2o)
+
       else 
 
          fh2o = dlog(p*g(i2)*y(i2))
@@ -6494,8 +6541,7 @@ c                                 closure => sio2:
          write (*,'(a,5(g12.6,1x))') 
      *            'ugga wugga not valid solution T,P:',t,p,xc
 
-         fh2o = dlog(1d4*p)
-         fco2 = dlog(1d4*p)
+         call setbad (fh2o)
 
       else 
 
@@ -6806,8 +6852,8 @@ c         iwarn = iwarn + 1
 
 c         if (iwarn.eq.100) call warn (49,t,0,'RKSI4a')
 
-         fh2o = dlog(1d4*p)
-         fco2 = dlog(1d4*p)
+         call setbad (fh2o)
+
          return 
 
       end if 
@@ -6922,6 +6968,34 @@ c                                 compute hybrid activity effect
 
       end
 
+      subroutine setbad (fo2)
+c----------------------------------------------------------------------
+c set standard fugacities to "bad" values if fluid routine speciation
+c routine fails. 5/17, JADC
+c----------------------------------------------------------------------
+      implicit none
+
+      double precision fo2
+
+      double precision p,t,xo,u1,u2,tr,pr,r,ps
+      common / cst5 /p,t,xo,u1,u2,tr,pr,r,ps
+
+      double precision vol
+      common/ cst26 /vol
+
+      double precision f
+      common/ cst11 /f(3)
+c----------------------------------------------------------------------
+      vol = 0d0
+      f(1) = dlog(1e4*p)
+      f(2) = f(1)
+c                                 it's not at all clear to me that f(3)
+c                                 is ever used, it ought to be deleted
+c                                 to reduce confusion. 
+      f(3) = f(1)
+      fo2 = f(1)
+      end 
+
       subroutine gcohx6 (fo2)
 c----------------------------------------------------------------------
 c  program to calculate GCOH fluid properties as a function of XO 
@@ -6995,7 +7069,10 @@ c                                 compute hybrid pure fluid props
 
       call zeroys
 
-      if (limit) return 
+      if (limit) then 
+         call setbad (fo2)
+         return
+      end if
 
       c1 = dexp (eqk(4)) * p
       c2 = dexp (2d0*eqk(16) - 3d0*eqk(4)) * p
@@ -7005,12 +7082,12 @@ c                                 initial guess, assume near binary
       x = 1d0 + xo 
       rat = xo/(1d0-xo) 
 
-      if (xo.gt.r13) then
-         y3 = dsqrt((c3*x*(3d0*xo - 1d0)))/c3/x
-         y5 = 2d0 * (1d0 - xo)/c4/y3/x
-      else if (xo.eq.r13) then 
+      if (dabs(xo-r13).lt.nopt(5)) then 
          y3 = 1d0/dsqrt(c4)
          y5 = y3 
+      else if (xo.gt.r13) then
+         y3 = dsqrt((c3*x*(3d0*xo - 1d0)))/c3/x
+         y5 = 2d0 * (1d0 - xo)/c4/y3/x
       else 
          y5 = dsqrt((c1*x*(1d0 - 3d0*xo)))/c1/x
          y3 = 4d0*xo/c4/y5/x
@@ -7072,7 +7149,7 @@ c                                 do better than this
          if (dabs(y5-oy5).lt.nopt(5)*y5) exit
 c                                 check if iteration count exceeded
          if (nit.gt.iopt(21)) then 
-            call warn (176,y5,nit,'HOCNIK')
+            call warn (176,y5,nit,'GCOHX6')
             bad = .true.
             exit
          end if
@@ -7088,13 +7165,10 @@ c                                 calculate new fugacity coefficients
 
       end do 
 
-      if (bad) then 
+      if (bad) then
 
-         vol  = 0d0 
-         fh2o = dlog(p*1d4)
-         fco2 = fh2o
-         fo2  = fh2o
-         
+         call setbad (fo2)
+
       else 
 
          if (hu.eq.0) then 
@@ -7299,7 +7373,7 @@ c                                reset if necessary
       if (x.le.0d0) then
          x = 0d0
          limit = .true.
-      else if (x.gt.1d0) then
+      else if (x.ge.1d0) then
          x = 1d0
          limit = .true.
       else
@@ -7735,7 +7809,7 @@ c                                 compositions.
 c---------------------------------------------------------------------
 c set up routine for hybrid fluid EoS calculations. computes the 
 c (unecessay?) delta volumes and pure fluid fugacity coefficient 
-c rations used to convert the mrk fugacities to hybrid fugacities.
+c ratios used to convert the mrk fugacities to hybrid fugacities.
 
 c the choice of the pure fluid eos are specified by the perplex_option
 c keywords hybrid_EoS_H2O (iopt(24)), hybrid_EoS_CO2 (iopt(25)), and
@@ -7745,6 +7819,8 @@ c the routine mrkpur must be called prior to hybeos to set initial
 c guesses for volume. 
 
 c 11/2016 JADC
+
+c modified to return fh2o and fco2 in special fugacity cst11. 5/2017.
 c---------------------------------------------------------------------
       implicit none
 
@@ -7752,7 +7828,7 @@ c---------------------------------------------------------------------
 
       integer i,j,jns(*),jsp
 
-      double precision hsmrkf,fg(nsp)
+      double precision hsmrkf
 
       external hsmrkf
  
@@ -7764,6 +7840,12 @@ c---------------------------------------------------------------------
 
       double precision p,t,xc,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xc,u1,u2,tr,pr,r,ps
+
+      double precision f
+      common/ cst11 /f(3)
+
+      double precision vol
+      common/ cst26 /vol
 
       integer iopt
       logical lopt
@@ -7780,22 +7862,24 @@ c----------------------------------------------------------------------
          if (j.eq.1) then 
 c                                 water
             if (iopt(25).eq.0) then 
-c                                 mrk
+c                                 mrk, already called
+               f(j) = dlog(p*g(j))
+
             else if (iopt(25).eq.1) then 
 c                                 hsmrk
-               fg(j) = hsmrkf (v(j),j)
+               f(j) = hsmrkf (v(j),j)
 
             else if (iopt(25).eq.2) then
 c                                 cork
-               call crkh2o (p,t,v(j),fg(j))
+               call crkh2o (p,t,v(j),f(j))
 
             else if (iopt(25).eq.4) then
 c                                 pseos, pitzer & sterner 1994
-               call pseos (v(j),fg(j),j)
+               call pseos (v(j),f(j),j)
 
             else if (iopt(25).eq.5) then
 c                                 haar, haar et el. 1982
-               call haar (v(j),fg(j))
+               call haar (v(j),f(j))
 
             else 
 
@@ -7803,26 +7887,33 @@ c                                 haar, haar et el. 1982
                call errpau
 
             end if 
+c                                 the fugacity coefficient of the pure gas
+            g(j) = dexp(f(j))/p
+c                                 vol is set in case of a call by fluids for
+c                                 the pure species. 
+            vol = v(j)
 
          else if (j.eq.2) then 
 c                                CO2
             if (iopt(26).eq.0) then 
-c                                 mrk
+c                                 mrk, already called
+               f(j) = dlog(p*g(j))
+
             else if (iopt(25).eq.1) then 
 c                                 hsmrk
-               fg(j) = hsmrkf (v(j),j)
+               f(j) = hsmrkf (v(j),j)
 
             else if (iopt(26).eq.2) then
 c                                 cork
-               call crkco2 (p,t,v(j),fg(j))
+               call crkco2 (p,t,v(j),f(j))
 
             else if (iopt(26).eq.3) then
 c                                 brmrk, bottinga & richet 1981
-               call brmrk (v(j),fg(j))
+               call brmrk (v(j),f(j))
 
             else if (iopt(26).eq.4) then
 c                                 pseos, pitzer & sterner 1994
-               call pseos (v(j),fg(j),j)
+               call pseos (v(j),f(j),j)
 
             else 
 
@@ -7830,14 +7921,18 @@ c                                 pseos, pitzer & sterner 1994
                call errpau
 
             end if
+c                                 the fugacity coefficient of the pure gas
+            g(j) = dexp(f(j))/p
+
+            vol = v(j)
 
          else if (j.eq.4) then
 c                                CH4
             if (iopt(27).eq.0) then 
-c                                 mrk
+c                                 mrk, already called, do nothing
             else if (iopt(27).eq.1) then 
-c                                 methane hsmrk kerrick and jacobs 191.
-               fg(j) = hsmrkf (v(j),j)
+c                                 methane hsmrk kerrick and jacobs 1981.
+               g(j) = dexp(hsmrkf (v(j),j))/p
 
             else 
 
@@ -7846,14 +7941,7 @@ c                                 methane hsmrk kerrick and jacobs 191.
 
             end if
 
-         else
-
-            write (*,*) 'invalid species in hybeos'
-            call errpau
-
          end if 
-c                                 the fugacity coefficient of the pure gas
-         g(j) = dexp(fg(j))/p
 c                                 the hybrid delta volume (hyb-mrk), it's 
 c                                 doubtful this thing is really used, if it 
 c                                 is it must be in fluids.
