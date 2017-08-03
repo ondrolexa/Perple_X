@@ -12,7 +12,7 @@ aqueous_output             T    | T[rue] or F[alse], output back-calculated solu
 aqueous_species            20   | maximum number of solute species output (ranked by concentration)
 aq_solvent_composition     y    | y -> mole fractions, m -> molality; default y
 aq_solute_composition      m    | y -> mole fractions, m -> molality; default m
-auto_refine                man  | auto, manual, or off (auto_refine keyword group)
+auto_refine                aut  | auto, manual, or off (auto_refine keyword group)
 auto_refine_factor_I       2    | refine factor for gridded minimization and phase fractionation (auto_refine keyword group)
 auto_refine_factor_II      6    | refine factor for composition and mixed variable diagrams (auto_refine keyword group)
 auto_refine_factor_III     2    | refine factor for Schreinemakers diagrams (auto_refine keyword group)
