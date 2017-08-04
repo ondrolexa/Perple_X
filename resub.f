@@ -2819,7 +2819,7 @@ c                                  done pre-july 3, 2017.
 
          end do 
 
-         if (npt.lt.icp) write (*,*) 'now too few', npt, icp, iter
+c        if (npt.lt.icp) write (*,*) 'now too few', npt, icp, iter
 
       end if 
 c                                 get mu's for lagged speciation
