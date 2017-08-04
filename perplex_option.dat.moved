@@ -46,7 +46,7 @@ logarithmic_p              F    | T[rue] or F[alse], default is F
 melt_is_fluid              F    | T[rue] or F[alse], default is F
 option_list_files          T    | T[rue] or F[alse], T => echo run-time options to my_project_PROGRAM_options.txt
 order_check                on   | on or off, on => compare order-disorder solutions with fully ordered and disordered states
-output_iteration_G         F    | T[rue] or F[alse], T => print iteration G to monitor convergence during optimization
+output_iteration_G         T    | T[rue] or F[alse], T => print iteration G to monitor convergence during optimization
 pause_on_error              T   | T[rue] or F[alse], T => wait for user response after errors
 pc_perturbation           5d-3  | pseudo-compound composition perturbation for convexhull optimization
 poisson_ratio        on   0.35  | value 1: on, off or all; value 2: 0->0.5; poisson ratio estimates for shear moduli
