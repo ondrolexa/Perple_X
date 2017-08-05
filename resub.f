@@ -2723,6 +2723,9 @@ c----------------------------------------------------------------------
       double precision zcoor
       common/ cxt13 /zcoor(k20),jcoor(k21),jkp(k21),jcoct
 
+      double precision p,t,xco2,u1,u2,tr,pr,r,ps
+      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
+
       save tic
       data tic/0/
 c----------------------------------------------------------------------
@@ -2819,7 +2822,10 @@ c                                  done pre-july 3, 2017.
 
          end do 
 
-c        if (npt.lt.icp) write (*,*) 'now too few', npt, icp, iter
+        if (npt.lt.icp) then 
+c           write (*,*) 'now too few', npt, icp, iter
+c           write (*,*) p, t
+        end if 
 
       end if 
 c                                 get mu's for lagged speciation
