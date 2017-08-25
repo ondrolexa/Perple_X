@@ -1030,6 +1030,9 @@ c-----------------------------------------------------------------------
 
       integer igrd
       common/ cst311/igrd(l7,l7)
+
+      integer ksmod, ksite, kmsol, knsp
+      common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
 c----------------------------------------------------------------------
 c                                 set variables to x-y value
       call setval
@@ -1090,9 +1093,21 @@ c                                 to check if the solvent is stable, and to deci
 c                                 which phase (komp) is to be used in the case of 
 c                                 immiscibility.
                   call getprp (mode,7,icx,komp,.false.) 
-c                                 do the speciation and output, -1 signals 
-c                                 tab file output.  
-                  call aqrxdo (komp,-1)
+c                                 decide whether to output lagged or back-calculated
+c                                 speciation into props:
+                  if (ksmod(icx).eq.39.and.lopt(32).and..not.kfl(1)) 
+     *                                                              then
+c                                  output back-calculated result, load props
+c                                  at the p-t of interest
+                     call lagprp (komp) 
+
+                  else
+c                                  do the lagged speciation calculation and output
+c                                  the result to props, -1 signals prepare
+c                                  tab file output.  
+                     call aqrxdo (komp,-1)
+
+                  end if 
 
                   exit 
 
@@ -1201,18 +1216,18 @@ c----------------------------------------------------------------------
 c----------------------------------------------------------------------
       if (kcx(1).eq.999) then 
 c                                 write phemgp format
-         write (n5,'(a14,1x,7x,i2,6x,200(g14.7,1x))') tname,ntot,
+         write (n5,'(a14,1x,7x,i2,6x,200(g15.7,1x))') tname,ntot,
      *                                               (var(i),i=1,ivar), 
      *                                               (prop(i),i=1,iprop)
 
       else if (lopt(15).or.dim.eq.1) then 
 c                                 write spreadsheet tab format
-         write (n5,'(200(g14.7,1x))') (var(i),i=1,ivar), 
+         write (n5,'(200(g15.7,1x))') (var(i),i=1,ivar), 
      *                                (prop(i),i=1,iprop)
 
       else 
 c                                 write compact tab format
-         write (n5,'(200(g14.7,1x))') (prop(i),i=1,iprop)
+         write (n5,'(200(g15.7,1x))') (prop(i),i=1,iprop)
       end if 
 c                                 check property ranges       
       do i = 1, iprop
@@ -4516,3 +4531,109 @@ c                                 solute molality?
       prop(k+6) = caq(jd,na2)
 
       end 
+
+      subroutine lagprp (jd)
+c-----------------------------------------------------------------------
+c load interpolated lagged aqueous speciation results into props array 
+c for WERAMI 
+
+c   jd - is the pointer to the phase in the local assemblage 
+c-----------------------------------------------------------------------
+      implicit none
+ 
+      include 'perplex_parameters.h'
+
+      integer i, k, jd
+
+      double precision smo
+
+      double precision r,tr,pr,ps,p,t,xco2,u1,u2
+      common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
+
+      integer icomp,istct,iphct,icp
+      common/ cst6  /icomp,istct,iphct,icp  
+
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+
+      character*14 tname
+      integer kop,kcx,k2c,iprop
+      logical kfl
+      double precision prop,prmx,prmn
+      common/ cst77 /prop(i11),prmx(i11),prmn(i11),kop(i11),kcx(i11),
+     *               k2c(i11),iprop,kfl(i11),tname
+
+      integer kd, na1, na2, na3, na4
+      double precision x3, caq
+      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),na1,na2,na3,na4,kd
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      double precision pcomp
+      common/ cst324 /pcomp(k0,k5)
+c----------------------------------------------------------------------
+      if (jd.eq.0) then 
+c                                 no solvent phase stable
+         do i = 1, iprop
+            prop(i) = nopt(7)
+         end do 
+ 
+      else 
+c                                 bulk composition
+         do i = 1, icp
+            prop(i) = pcomp(i,jd)
+         end do
+
+         k = icp
+
+         do i = 1, ns 
+c                                 solvent speciation
+            k = k + 1
+
+            if (lopt(26)) then
+c                                 mole fraction
+               prop(k) = caq(jd,i)
+            else 
+c                                 molality
+               prop(k) = caq(jd,i)/caq(jd,na3)
+            end if  
+
+         end do 
+
+         smo = 0d0 
+
+         do i = sn1, nsa 
+c                                 solute speciation
+            k = k + 1
+
+            smo = smo + caq(jd,i)
+
+            if (lopt(27)) then
+c                                 molality
+               prop(k) = caq(jd,i)
+            else 
+c                                 mole fraction
+               prop(k) = caq(jd,i)/caq(i,na2)
+            end if  
+
+         end do 
+c                                  other properties:
+c                                  ph
+         prop(k+2) = nopt(7)
+c                                  ph - ph0
+         prop(k+1) = nopt(7)
+c                                  err lgKw
+         prop(k+3) = caq(jd,na4)
+c                                  epsilon
+         prop(k+4) = nopt(7)
+c                                  ionic strength
+         prop(k+5) = caq(jd,na2)
+c                                  solute molality
+         prop(k+6) = smo
+
+      end if
+
+      end  

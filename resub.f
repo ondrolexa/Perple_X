@@ -92,7 +92,7 @@ c                                 optimize by nag
 
       if (idead.gt.0) then
 c                                 look for severe errors                                            
-         call lpwarn (idead,'LPOPT ')
+         call lpwarn (idead,0,'LPOPT ')
 c                                 on severe error do a cold start.
 c                                 necessary?
          istart = 0
@@ -234,7 +234,11 @@ c                                 hkp indicates which refinement point
             hkp(jphct) = i
 c                                 flag for h2o if lagged speciation
             if (lopt(32)) then
-               if (id.eq.jnd(ns)) wad1 = .true.
+               if (id.eq.jnd(ns)) then 
+                  wad1 = .true.
+                  jphct = jphct - 1
+                  cycle 
+               end if 
             end if 
 
             g2(jphct) = g(id)/ctot(id)
@@ -270,7 +274,7 @@ c                                 do the optimization
 c                                 warn if severe error
          if (idead.gt.0) then
 
-            call lpwarn (idead,'REOPT ')
+            call lpwarn (idead,iter-1,'REOPT ')
             exit
 
          end if 
@@ -285,8 +289,6 @@ c                                 the xcoor array.
          if (iter.gt.iopt(10)) exit 
 
          jphct = 0
-         wad1 = .false.
-         wad2 = .true.
          iref = 0
          jcoct = 1
 
@@ -355,7 +357,8 @@ c                                 local variables
 
       double precision xxnc, ysum, res0
 
-      integer i, j, k, l, m, ids, id, jd, iter, kcoct, iref, last 
+      integer i, j, k, l, m, ids, id, jd, iter, kcoct, iref, last, j0, 
+     *        j1 
 c                                 -------------------------------------
 c                                 functions
       double precision gsol1, ydinc
@@ -503,6 +506,8 @@ c                                  refinement point was the same solution.
 
       call subdiv (ids,.true.)
 
+      j0 = jphct + 1
+
       do 10 i = 1, ntot
 
          jphct = jphct + 1
@@ -622,7 +627,7 @@ c                                 reject composition
 
          if (lopt(32).and.ksmod(ids).eq.39) then
 
-            quack1 = .false.
+            quack1 = .true.
             quack2 = .true.
 
             if (quack1) then 
@@ -655,12 +660,25 @@ c                                 a solute cpd
                jcoct = kcoct - mcoor(ids)
                cycle
 
-            end if  
+            end if
+
+            do j = j0, jphct - 1
+
+               if (g2(j).eq.g2(jphct)) then 
+                  write (*,*) (cp2(j1,j),j1=1,10),j,iter
+                  write (*,*) (cp2(j1,jphct),j1=1,10),jphct
+c                  write (*,*) p,t
+               end if 
+            end do 
 
             end if
 
-            if (wad1.and.wad2) then 
+            if (wad1.and.wad2) then
 c                                 make water, ha ha
+c                                 wad1 is set to true by reopt if pure water
+c                                 is a compound, wad2 is initialized to true
+c                                 in reopt and set false here to prevent more
+c                                 than one water compound.
                wad2 = .false.
 
                jphct = jphct + 1
@@ -882,7 +900,7 @@ c----------------------------------------------------------------------
 
       end 
 
-      subroutine lpwarn (idead,char)
+      subroutine lpwarn (idead,iter,char)
 c----------------------------------------------------------------------
 c write warning messages from lpnag as called by routine 'char',
 c set flags ier and idead, the optimization is a total fail if
@@ -890,11 +908,14 @@ c idead set to 1.
 c----------------------------------------------------------------------
       implicit none
 
-      integer idead, iwarn91, iwarn42, iwarn90
+      integer idead, iwarn91, iwarn42, iwarn90, iter
 
       character*6 char     
 
       double precision c
+
+      double precision p,t,xco2,u1,u2,tr,pr,r,ps
+      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 
       save iwarn91, iwarn42, iwarn90
 
@@ -923,6 +944,9 @@ c                                             solution.
          if (iwarn90.eq.5) call warn (49,c,90,'LPWARN')
 
       end if
+
+         write (*,*) p,t,iter
+
 
       end 
 
@@ -2823,8 +2847,8 @@ c                                  done pre-july 3, 2017.
          end do 
 
         if (npt.lt.icp) then 
-c           write (*,*) 'now too few', npt, icp, iter
-c           write (*,*) p, t
+           write (*,*) 'now too few', npt, icp, iter
+           write (*,*) p, t
         end if 
 
       end if 

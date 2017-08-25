@@ -862,8 +862,6 @@ c                               lagged speciation
                         caq(i,k) = caq(i,k) + cst*xco(lco(l))
                      end do
 
-                     lco(l) = lco(l) + 4
-
                   end if
 
                end do
@@ -2663,7 +2661,7 @@ c----------------------------------------------------------------------
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 
       save fac
-      data fac/1d-3/
+      data fac/1d-4/
 c----------------------------------------------------------------------
 c                                 pressure increments
       if (.not.rxn) then 
@@ -2680,25 +2678,30 @@ c                                 pressure increments
                call getgpp (g0,dp0,dp1,dp2,v,gpp,id,fow)
 
                if (v.gt.0d0.and.gpp.lt.0d0.and.gpp.gt.-v) then
+
                   okt = .true.
                   exit
+
                end if 
 
                if (i.eq.1) then 
-                  dp0 = dp0 * nopt(31)
+                  dp0 = xdp * nopt(31) ** j
                else 
-                  dp0 = dp0 / nopt(31)
+                  dp0 = xdp / nopt(31) ** (j+1)
                end if 
  
             end do 
 
             if (okt) exit
 
-            dp0 = dp0/nopt(31)**4
+            dp0 = xdp / nopt(31)
 
          end do
 
          if (okt) then 
+            if (dp0/dabs(fac*v/gpp).lt.1d-1) then 
+            write (*,*) 'pp',dp0/dabs(fac*v/gpp),dp0,p,t,id
+            end if 
             dp0 = dabs(fac*v/gpp)
          else 
 c                                 negative compressibility?
@@ -2725,27 +2728,30 @@ c                                 temperature increments
 
                call getgtt (g0,dt0,dt1,dt2,s,gtt,id)
 
-               if (s.gt.0d0.and.gtt.lt.0) then
-                    okt = .true.
-                    exit 
+               if (s.gt.0d0.and.gtt.lt.0.and.t-2d0*dt2.gt.0d0) then
+                  okt = .true.
+                  exit 
                end if 
 
                if (i.eq.1) then 
-                  dt0 = dt0 * nopt(31)
+                  dt0 = xdt * nopt(31) ** j
                   if (dt0.gt.t) exit 
                else
-                  dt0 = dt0 / nopt(31)
+                  dt0 = xdt / nopt(31) ** (j+1)
                end if 
 
             end do 
 
             if (okt) exit
 
-            dt0 = dt0/nopt(31)**4
+            dt0 = xdt / nopt(31)
 
          end do
 
          if (okt) then 
+            if (dt0/dabs(fac*s/gtt).lt.1d-1) then
+            write (*,*) 'tt',dt0/dabs(fac*s/gtt),dt0,p,t,id
+            end if 
             dt0 = dabs(fac*s/gtt)
          else 
 c                                 something has gone horribly wrong! 
@@ -2760,6 +2766,14 @@ c                                 something has gone horribly wrong!
       end if  
 c                                 final values
       call getgtt (g0,dt0,dt1,dt2,s,gtt,id)
+c                                 emergency check on increments
+      if (t-2d0*dt2.lt.0d0) then 
+
+         dt2 = t / 4d0
+         dt1 = dt2 / nopt(31)
+         dt0 = dt1 / nopt(31)
+
+      end if 
 
       if (v.gt.0d0.or.rxn) then 
 c                                 get the cross derivative gpt for expansivity
@@ -2852,7 +2866,7 @@ c----------------------------------------------------------------------
       dp1 = dp0 * nopt(31)
       dp2 = dp1 * nopt(31)
 
-      if (p-dp2.le.0d0) then
+      if (p-2d0*dp2.le.0d0) then
          fow = .true.
       else 
          fow = .false.

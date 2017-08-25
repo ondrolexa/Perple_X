@@ -10702,6 +10702,9 @@ end_excess_function
 1                          |one site entropy model
 2 1.                       |two end-members mixing on one site and site multiplicity
 z(Fe) = 1 Feliq            |site fraction of Fe on this site in terms of end-members
+
+reach_increment 10
+
 end_of_model
                            --------------------------------------------------------
 begin_model 
@@ -10722,6 +10725,9 @@ end_excess_function
 1
 2 1.
 z(C) = 1 FeCA1
+
+reach_increment 10
+
 end_of_model
                            --------------------------------------------------------
 begin_model

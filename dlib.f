@@ -107,8 +107,9 @@ c                                phase molar amounts
 
             if (lopt(32).and.ksmod(ids).eq.39) then 
 c                                lagged speciation
+
                jxco = kxco + 1
-               kxco = kxco + nsa + 3  
+               kxco = kxco + nsa + 4  
 
                if (kxco.gt.k18) call error (61,0d0,k18,'BPLINP')
 

@@ -2427,6 +2427,10 @@ c                                 computations, save the root
          irt = iroots
          vrt = vol
 
+      end if
+
+      if (vol.lt.0d0) then
+         write (*,*) 'rats II'
       end if 
 
       iroot = iroots

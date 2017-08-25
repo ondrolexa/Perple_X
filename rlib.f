@@ -9594,8 +9594,10 @@ c                                 implemented).
 
                if (stck) i = 0
 
-               call warn (59,y(1),i,mname(iorig(knsp(lstot(im)+j,im)))
-     *             //' in solution model '//tname)
+               if (iam.lt.3.or.iam.eq.4) 
+     *            call warn (59,y(1),i,
+     *            mname(iorig(knsp(lstot(im)+j,im)))
+     *            //' in solution model '//tname)
 
                badend(knsp(lstot(im)+j,im),im) = bad
 
@@ -16331,7 +16333,10 @@ c                                 a multi species solvent is present:
 c                                 get solvent dielectric constants,
 c                                 call mrkmix to get solvent volumetric props
          do i = 1, ns
- 
+c                                 doing lagged speciation, set the 
+c                                 solvent mole fractions to the true 
+c                                 values
+            if (lopt(32)) ysp(i,jd) = caq(jd,i) 
             ysum = ysum + ysp(i,jd)
 
          end do
@@ -16368,18 +16373,6 @@ c                                  ysum is just a dummy.
             end do 
 
          end do
-
-         if (lopt(32)) then 
-c                                 doing lagged speciation, set the 
-c                                 solvent mole fractions to the true 
-c                                 values
-             do i = 1, ns
-
-                yt(i) = caq(jd,i)
-
-             end do 
-
-          end if 
 
       else 
 c                                 solvent is pure water 
@@ -16467,6 +16460,7 @@ c                                 check for convergence
             exit
          else if (it.gt.iopt(21)) then 
             bad = .true.
+            exit 
          end if 
 
          it = it + 1
@@ -18523,13 +18517,13 @@ c-----------------------------------------------------------------------
  
       include 'perplex_parameters.h'
 
-      integer i, j, k, it, iexp, id, badct
+      integer i, j, k, it, jt, iexp, id, badct
 
       logical bad, recalc
 
       double precision c(l9), mo(l9), dg, xis, blk(k5), dn,
-     *                 d(l9), lng0, is, gamm0, totm, g0(l9), 
-     *                 gso(nsp), lnkw,
+     *                 d(l9), is, gamm0, totm, g0(l9), 
+     *                 gso(nsp), lnkw, dix, xdix, 
      *                 gtot, smo, xdn, slvmo(nsp)
 
       double precision gcpd, solve, gfunc
@@ -18684,17 +18678,20 @@ c                                  neutral species assumed to be ideal, molality
 
       end do 
 
-      gamm0 = 1d0 
-      it = 0
       lnkw = (gso(ns)-g0(ioh))/rt
-      if (dabs(lnkw).gt.2d1) then
+
+      if (dabs(lnkw).gt.5d1.or.epsln.lt.3d0) then
          bad = .true.
-         goto 99
+         return
       end if 
 
       mo(ion) = dexp(lnkw/2d0)
       xdn = 1d0
-      iexp = 0
+      iexp = 1
+      gamm0 = 1d0 
+      it = 0
+      jt = 0
+      xdix = 1d99
 c                                  iterative loop for ionic strength, this is the achilles 
 c                                  heel cause the solute g's are based only on the previous
 c                                  chemical potentials.
@@ -18719,23 +18716,44 @@ c                                  and ionic strength
          if (dabs(dn).gt.1d0/2d0**iexp) then 
             dn = dn/dabs(dn)/2d0**iexp 
             if (dn*xdn.lt.0d0) iexp = iexp + 1
+            is = xis + dn
+         else if (dabs(dn/xdn).gt.1d0) then
+c            is = (xis + is)/2d0
          end if 
-
-         is = xis + dn
-
-         xdn = dn 
 
          if (bad) exit
 c                                 DH law activity coefficient factor (ln[g] = lng0*q^2)
-         lng0 = adh*dsqrt(is)/(1d0 + dsqrt(is)) + 0.2d0*is
-         gamm0 = dexp(lng0)
+         gamm0 = dexp(adh*dsqrt(is)/(1d0 + dsqrt(is)) + 0.2d0*is)
 c                                 check for convergence
-         if (dabs(xis-is)/is.lt.nopt(5)) then 
+
+         dix = dabs(xis-is)/is
+
+         if (dix.lt.nopt(5)) then
+
             exit
-         else if (it.gt.iopt(21)) then 
-            bad = .true.
-            exit 
-         end if 
+
+         else if (it.gt.iopt(21)) then
+
+            if (xdix.gt.dix.and.jt.lt.10) then
+c                                 try again?
+               it = 0
+               jt = jt + 1
+               xdix = dix
+
+            else if (dix.lt.1d-1) then
+c                                 take a bad solution
+               exit 
+
+            else 
+c                                 diverging
+               bad = .true.
+               exit
+
+            end if
+
+         end if
+
+         xdn = dn 
 
          it = it + 1
 c                                 update coefficients
