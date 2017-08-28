@@ -1100,8 +1100,8 @@ c                                 model type
       common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
 
       integer ion, ichg, jchg
-      double precision q, q2, qr, dcp
-      common/ cstaq /q(l9),q2(l9),qr(l9),dcp(k5,l9),jchg(l9),ichg,ion
+      double precision q, q2, qr
+      common/ cstaq /q(l9),q2(l9),qr(l9),jchg(l9),ichg,ion
 
       integer ihy, ioh
       double precision gf, epsln, epsln0, adh, msol

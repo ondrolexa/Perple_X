@@ -627,7 +627,7 @@ c                                 reject composition
 
          if (lopt(32).and.ksmod(ids).eq.39) then
 
-            quack1 = .true.
+            quack1 = .false.
             quack2 = .true.
 
             if (quack1) then 
@@ -662,16 +662,9 @@ c                                 a solute cpd
 
             end if
 
-            do j = j0, jphct - 1
-
-               if (g2(j).eq.g2(jphct)) then 
-                  write (*,*) (cp2(j1,j),j1=1,10),j,iter
-                  write (*,*) (cp2(j1,jphct),j1=1,10),jphct
-c                  write (*,*) p,t
-               end if 
-            end do 
-
             end if
+
+            wad2 = .false.
 
             if (wad1.and.wad2) then
 c                                 make water, ha ha
@@ -861,10 +854,10 @@ c                                  normalize the composition and free energy
 
       else 
 
-         g2(jphct) = 1d4*p
-         cp(1,jphct) = 1d0
+         g2(jphct) = 1d12*p
+         cp2(1,jphct) = 1d0
 
-      end if   
+      end if
 
       end 
 

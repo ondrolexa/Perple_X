@@ -1847,7 +1847,7 @@ c                                 inner iteration loop:
 
       return 
 
-99    f(1) = dlog(1d4*p)
+99    f(1) = dlog(1d12*p)
       f(2) = f(1)
 
       end 
@@ -2146,7 +2146,7 @@ c----------------------------------------------------------------------
       call nurap (bm,c,d,e,yz,v,t12,rr,bad)
 
       if (bad) then 
-         hsmrkf = dlog(1d4*p)
+         hsmrkf = dlog(1d12*p)
       else 
          hsmrkf = dlog(p) + fugp (rtt,bm,yz,c,d,e,v)
       end if
@@ -2455,7 +2455,7 @@ c                                 pmv constants
             g(l) = dexp(f(l))/p/y(l)
          else 
             g(l) = 1d0
-            f(l) = dlog(1d4*p)
+            f(l) = dlog(1d12*p)
          end if 
 c                                 pmv
          v(l) = (d4*aj2(l) - b(l) - vmb + d7*b(l)) / d5
@@ -3435,12 +3435,12 @@ c----------------------------------------------------------------------
       if (xco2.eq.1d0) then
  
          call crkco2 (pbars,t,vco2,fco2) 
-         fh2o = dlog(1d4*p)
+         fh2o = dlog(1d12*p)
 
       else if (xco2.eq.0d0) then
  
          call crkh2o (pbars,t,vol,fh2o) 
-         fco2 = dlog(1d4*p)
+         fco2 = dlog(1d12*p)
 
       else
 
@@ -3489,14 +3489,14 @@ c----------------------------------------------------------------------
 
          ins(1) = 2
          call mrkpur (ins, 1)
-         fh2o = dlog(1d4*p)
+         fh2o = dlog(1d12*p)
          return
         
       else if (xc.eq.0d0) then
 
          ins(1) = 1
          call mrkpur (ins, 1)
-         fco2 = dlog(1d4*p)
+         fco2 = dlog(1d12*p)
          return 
 
       end if
@@ -3543,7 +3543,7 @@ c----------------------------------------------------------------------
          ins(1) = 2
          call mrkpur (ins,1)
          fco2 = hsmrkf (v(2),2)
-         fh2o = dlog(1d4*p)
+         fh2o = dlog(1d12*p)
          return 
          
       else if (xc.eq.0d0) then
@@ -3551,7 +3551,7 @@ c----------------------------------------------------------------------
          ins(1) = 1
          call mrkpur (ins,1)
          fh2o = hsmrkf (v(1),1)
-         fco2 = dlog(1d4*p)
+         fco2 = dlog(1d12*p)
          return
 
       end if
@@ -3696,10 +3696,10 @@ c                                 compute hybrid pure fluid props
       call hybeos (jns,2)
 
       if (xc.eq.1d0) then 
-         f(1) = dlog(1d4*p)
+         f(1) = dlog(1d12*p)
          return
       else if (xc.eq.0d0) then 
-         f(2) = dlog(1d4*p)
+         f(2) = dlog(1d12*p)
          return
       end if 
 
@@ -4627,12 +4627,12 @@ c----------------------------------------------------------------------
       if (xco2.eq.1d0) then
  
          call pseos (w,fco2,2) 
-         fh2o = dlog(1d4*p)
+         fh2o = dlog(1d12*p)
 
       else if (xco2.eq.0d0) then
  
          call pseos (w,fh2o,1) 
-         fco2 = dlog(1d4*p)
+         fco2 = dlog(1d12*p)
 
       else
 
@@ -5201,8 +5201,8 @@ c                                 of SiO2(g)
 c                                 a more elegant solution would be to 
 c                                 look at the actual solution and reject
 c                                 if it's the dense phase at T < ~2400.
-         fh2o = dlog(1d4*p)
-         fco2 = dlog(1d4*p)
+         fh2o = dlog(1d12*p)
+         fco2 = dlog(1d12*p)
          return
 
       end if 
@@ -5240,7 +5240,7 @@ c            lnk1 = (2d0*go - go2)/r/t
             if (c1.gt.1d0/nopt(5)) then 
 c                                assume pure O2
                fh2o = (dlog(p*g(i4)) - lnk1)/2d0
-               fco2 = dlog(1d4*p)
+               fco2 = dlog(1d12*p)
                y(i4) = 1d0 
 
             else 
@@ -5379,11 +5379,6 @@ c                                 convert to g-atom vol
       n = 3d0*y(14) + 2d0*y(13) + 2d0*y(7) + y(12) + y(15)
 c                                 convert to "molar amounts"         
       vol = vol/n/1d1
-
-      if (itic.gt.200000) then 
-         itic = 0 
-         write (*,*) 'good,bad:',igood,ibad,t,p
-      end if 
 
       end 
 
@@ -6620,7 +6615,7 @@ c                                 get new gamma's
 
       end do 
 
-      fco2 = dlog(1d4*p)
+      fco2 = dlog(1d12*p)
       fh2o = dlog(p*g(i3)*y(i3))
 
       end
@@ -6815,8 +6810,8 @@ c                                 this does help!
 c                                 get new gamma's
          if (v(14).lt.0*1d2.and.xc.gt.0.326.and.xc.lt.0.340) then
 
-            fh2o = dlog(1d4*p)
-            fco2 = dlog(1d4*p)
+            fh2o = dlog(1d12*p)
+            fco2 = dlog(1d12*p)
             return
 
          else 

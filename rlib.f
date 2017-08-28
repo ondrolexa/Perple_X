@@ -346,7 +346,7 @@ c                                 HP Tait EoS, einstein thermal pressure
 
          if (v1.lt.0d0.or.v2.lt.0d0) then
 c                                 destabilize the phase
-            vdp = 1d4*p
+            vdp = 1d12*p
 
             if (iwarn.le.50.and.oldid.ne.id) then 
                call warn (46,t,id,names(id)) 
@@ -440,7 +440,7 @@ c                                 temperature
      *               call warn (49,t,46,'GCPD_Murnaghan')
                end if 
 c                                 destabalize the phase
-               gcpd = 1d4*p
+               gcpd = 1d12*p
 
                return 
 
@@ -497,7 +497,7 @@ c                                 temperature
                if (iwarn.eq.50) call warn (49,t,46,'GCPD_BM3')
             end if 
 c                                 destabilize the phase
-            vdp = 1d4*p
+            vdp = 1d12*p
 
          else
 
@@ -4060,7 +4060,7 @@ c                                 if we get here, failed to converge
          if (izap.eq.10) call warn (49,r,369,'GETLOC')
       end if 
 c                                 destabilize the phase:
-      gsixtr = 1d4*p
+      gsixtr = 1d12*p
 
       return 
          
@@ -4518,7 +4518,7 @@ c                                 if we get here, failed to converge
             if (izap.eq.10) call warn (49,r,369,'GSTXLQ')
          end if 
 c                                 destabilize the phase.
-         gstxlq  = 1d4*p
+         gstxlq  = 1d12*p
 
       else 
 c                                 everything ok, final f:
@@ -4733,7 +4733,7 @@ c                                 if we get here, failed to converge
             if (izap.eq.10) call warn (49,r,369,'GSTX')
          end if 
 c                                 destabilize the phase.
-         gstxgi  = 1d4*p
+         gstxgi  = 1d12*p
 
       else 
 
@@ -4864,7 +4864,7 @@ c                                 initial guess for volume:
                if (jerk.eq.10) call warn (49,r,369,'VDPBM3')
             end if 
  
-            vdpbm3 = 1d4*p
+            vdpbm3 = 1d12*p
 
             return
 
@@ -8253,7 +8253,7 @@ c                                 -------------------------------------
 c                                 hp and ghiorso pmelt models 
          if (t.lt.nopt(20)) then 
 c                                 t < t_melt, destabilize the melt
-            gg = 1d4*p
+            gg = 1d12*p
 
          else
 
@@ -16192,24 +16192,24 @@ c-----------------------------------------------------------------------
  
       include 'perplex_parameters.h'
 
-      integer i, j, k, l, it, ind(l9), lu, iexp, jd, badct
+      integer i, j, k, l, ind(l9), lu, jd, badct
 
       logical bad, output
 
       character text*200
 
-      double precision c(l9), mo(l9), dg(l9), xis, blk(k5), dn,
-     *                 d(l9), lng0, is, gamm0, totm, g0(l9), lnkw,
+      double precision mo(l9), blk(k5), dn,
+     *                 lng0, is, gamm0, totm, g0(l9), lnkw,
      *                 gso(nsp), ysum, ph0, v0(nsp), vf0(nsp), tmass, 
-     *                 tsmas, tsmol, smol(k5), errkw, smo, xdn, yt(nsp)
+     *                 tsmas, tsmol, smol(k5), errkw, smo, yt(nsp)
 
-      double precision gcpd, solve, gfunc
+      double precision gcpd
 
-      external gcpd, solve, gfunc
+      external gcpd
 
       integer ion, ichg, jchg
-      double precision q, q2, qr, dcp
-      common/ cstaq /q(l9),q2(l9),qr(l9),dcp(k5,l9),jchg(l9),ichg,ion
+      double precision q, q2, qr
+      common/ cstaq /q(l9),q2(l9),qr(l9),jchg(l9),ichg,ion
 
       double precision r,tr,pr,ps,p,t,xco2,u1,u2
       common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -16308,16 +16308,12 @@ c-----------------------------------------------------------------------
       save badct
       data badct/0/
 c----------------------------------------------------------------------
-      if (.not.mus.or.jd.eq.0) then 
+      if (.not.mus) then 
 
-         if (.not.mus) call warn (99,0d0,0,
+         call warn (99,0d0,0,
      *       'no chemical potentials, cannot back calculate solute '//
      *       'speciation')
 
-         do i = 1, iprop
-            prop(i) = nopt(7)
-         end do 
- 
          return
 
       end if 
@@ -16383,92 +16379,16 @@ c                                 solvent is pure water
          yt(1) = 1d0
 
       end if 
+c                                 iterate on speciation
+      ion = ioh
 
-      g0(ion) = gcpd(aqst+ion,.false.)
-c                                 compute solute properties 
-      do i = 1, aqct 
-c                                 dg is the solvent oxide potentials - g
-         g0(i) = gcpd(aqst + i, .false.)
-         dg(i) = -g0(i) + qr(i)*g0(ion)
+      do i = 1, 2
+c                                 first try ioh, if it fails
+         call aqsolv (mo,is,gamm0,lnkw,bad)
 
-         do j = 1, jbulk 
-c                                 if oxide components, but no excess oxygen
-c                                 mu(O2) is a nan. 
-            if (isnan(mu(j))) cycle
+         if (.not.bad) exit
 
-            dg(i) = dg(i) + dcp(j,i) * mu(j)
-
-         end do 
-c                                 normalize by RT
-         dg(i) = dg(i)/rt
-
-         if (q(i).ne.0d0) then 
-c                                  this is now c(i)*a(ion)^(q(i)) = mo(i)*gamma(i)*q(i)
-c                                  the rhs q(i) is because the eq to be solved will be
-c                                  sum (q(i)*m(i)) = 0. 
-            d(i) = q(i)*dexp(dg(i))
-            c(i) = d(i)
-
-         else 
-c                                  neutral species assumed to be ideal, molality is
-            mo(i) = dexp(dg(i))
-      
-         end if 
-
-      end do 
-
-      gamm0 = 1d0 
-      it = 0 
-      lnkw = (gso(ns)-g0(ioh))/rt
-      mo(ion) = dexp(lnkw/2d0)
-      xdn = 1d0
-      iexp = 0
-c                                  iterative loop for ionic strength
-      do 
-c                                  solve charge balance for H+
-         mo(ion) = solve(c,qr,mo(ion),jchg,ichg,bad)
-c                                  back calculate charged species molalities
-c                                  and ionic strength
-         xis = is
-         is = 0d0
-
-         do i = 1, ichg 
-            j = jchg(i)
-            mo(j) = c(j) * mo(ion)**qr(j) / q(j)
-            is = is + q2(j) * mo(j)
-         end do
-
-         is = is / 2d0 
-
-         dn = is - xis
-
-         if (dabs(dn).gt.1d0/2d0**iexp) then 
-            dn = dn/dabs(dn)/2d0**iexp 
-            if (dn*xdn.lt.0d0) iexp = iexp + 1
-         end if 
-
-         is = xis + dn
-
-         xdn = dn 
-
-         if (bad) exit
-c                                 DH law activity coefficient factor (ln[g] = lng0*q^2)
-         lng0 = adh*dsqrt(is)/(1d0 + dsqrt(is)) + 0.2d0*is
-         gamm0 = dexp(lng0)
-c                                 check for convergence
-         if (dabs(xis-is)/is.lt.nopt(5)) then 
-            exit
-         else if (it.gt.iopt(21)) then 
-            bad = .true.
-            exit 
-         end if 
-
-         it = it + 1
-c                                 update coefficients
-         do i = 1, ichg 
-            j = jchg(i)
-            c(j) = d(j)*(gamm0*q2(ion))**qr(j)/(gamm0*q2(j))
-         end do
+         ion = ihy
 
       end do
 c                                 back calculated bulk composition
@@ -18517,22 +18437,16 @@ c-----------------------------------------------------------------------
  
       include 'perplex_parameters.h'
 
-      integer i, j, k, it, jt, iexp, id, badct
+      integer i, j, id, badct
 
       logical bad, recalc
 
-      double precision c(l9), mo(l9), dg, xis, blk(k5), dn,
-     *                 d(l9), is, gamm0, totm, g0(l9), 
-     *                 gso(nsp), lnkw, dix, xdix, 
-     *                 gtot, smo, xdn, slvmo(nsp)
-
-      double precision gcpd, solve, gfunc
-
-      external gcpd, solve, gfunc
+      double precision mo(l9), blk(k5), is, gamm0, totm, g0(l9), 
+     *                 gso(nsp), lnkw, gtot, smo, slvmo(nsp)
 
       integer ion, ichg, jchg
-      double precision q, q2, qr, dcp
-      common/ cstaq /q(l9),q2(l9),qr(l9),dcp(k5,l9),jchg(l9),ichg,ion
+      double precision q, q2, qr
+      common/ cstaq /q(l9),q2(l9),qr(l9),jchg(l9),ichg,ion
 
       double precision r,tr,pr,ps,p,t,xco2,u1,u2
       common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -18635,135 +18549,20 @@ c----------------------------------------------------------------------
 
       end if 
 
-      is   = 0d0
-
       call slvnt3 (gso)
+c                                 iterate on speciation
+      ion = ioh
 
-      g0(ion) = gcpd(aqst+ion,.false.)
-c                                 compute solute properties 
-      do i = 1, aqct 
+      do i = 1, 2
+c                                 first try ioh, if it fails
+         call aqsolv (mo,is,gamm0,lnkw,bad)
 
-         k = aqst + i
-c                                 dg is the solvent oxide potentials - g
-         g0(i) = gcpd(k,.false.)
-         dg = -g0(i) + qr(i)*g0(ion)
+         if (.not.bad) exit
 
-         do j = 1, jbulk 
-c                                 if oxide components, but no excess oxygen
-c                                 mu(O2) is a nan. 
-            if (isnan(mu(j))) cycle
-
-            dg = dg + dcp(j,i) * mu(j)
-
-         end do 
-c                                 normalize by RT
-         dg = dg/rt
-
-         if (dabs(dg).gt.22d0) dg = 22d0*dabs(dg)/dg
-
-         dg = dexp(dg)
-
-         if (q(i).ne.0d0) then 
-c                                  this is now c(i)*a(ion)^(q(i)) = mo(i)*gamma(i)*q(i)
-c                                  the rhs q(i) is because the eq to be solved will be
-c                                  sum (q(i)*m(i)) = 0. 
-            d(i) = q(i)*dg
-            c(i) = d(i)
-
-         else 
-c                                  neutral species assumed to be ideal, molality is
-            mo(i) = dg
-      
-         end if 
-
-      end do 
-
-      lnkw = (gso(ns)-g0(ioh))/rt
-
-      if (dabs(lnkw).gt.5d1.or.epsln.lt.3d0) then
-         bad = .true.
-         return
-      end if 
-
-      mo(ion) = dexp(lnkw/2d0)
-      xdn = 1d0
-      iexp = 1
-      gamm0 = 1d0 
-      it = 0
-      jt = 0
-      xdix = 1d99
-c                                  iterative loop for ionic strength, this is the achilles 
-c                                  heel cause the solute g's are based only on the previous
-c                                  chemical potentials.
-      do 
-c                                  solve charge balance for H+
-         mo(ion) = solve(c,qr,mo(ion),jchg,ichg,bad)
-c                                  back calculate charged species molalities
-c                                  and ionic strength
-         xis = is
-         is = 0d0
-
-         do i = 1, ichg 
-            j = jchg(i)
-            mo(j) = c(j) * mo(ion)**qr(j) / q(j)
-            is = is + q2(j) * mo(j)
-         end do
-
-         is = is / 2d0 
-
-         dn = is - xis
-
-         if (dabs(dn).gt.1d0/2d0**iexp) then 
-            dn = dn/dabs(dn)/2d0**iexp 
-            if (dn*xdn.lt.0d0) iexp = iexp + 1
-            is = xis + dn
-         else if (dabs(dn/xdn).gt.1d0) then
-c            is = (xis + is)/2d0
-         end if 
-
-         if (bad) exit
-c                                 DH law activity coefficient factor (ln[g] = lng0*q^2)
-         gamm0 = dexp(adh*dsqrt(is)/(1d0 + dsqrt(is)) + 0.2d0*is)
-c                                 check for convergence
-
-         dix = dabs(xis-is)/is
-
-         if (dix.lt.nopt(5)) then
-
-            exit
-
-         else if (it.gt.iopt(21)) then
-
-            if (xdix.gt.dix.and.jt.lt.10) then
-c                                 try again?
-               it = 0
-               jt = jt + 1
-               xdix = dix
-
-            else if (dix.lt.1d-1) then
-c                                 take a bad solution
-               exit 
-
-            else 
-c                                 diverging
-               bad = .true.
-               exit
-
-            end if
-
-         end if
-
-         xdn = dn 
-
-         it = it + 1
-c                                 update coefficients
-         do i = 1, ichg 
-            j = jchg(i)
-            c(j) = d(j)*(gamm0*q2(ion))**qr(j)/(gamm0*q2(j))
-         end do
+         ion = ihy
 
       end do
-c                                 back calculated bulk composition
+
 99    if (bad) then 
 
          badct = badct + 1
@@ -18776,8 +18575,8 @@ c                                 back calculated bulk composition
  
          return
 
-      end if 
-
+      end if
+c                                 back calculated bulk composition
       do j = 1, icp
          blk(j) = 0d0
       end do  
@@ -18957,5 +18756,182 @@ c                                 solvent is pure water
          yf(ins(1)) = y(1)
 
       end if 
+
+      end 
+
+      subroutine aqsolv (mo,is,gamm0,lnkw,bad)
+c-----------------------------------------------------------------------
+c-----------------------------------------------------------------------
+      implicit none
+ 
+      include 'perplex_parameters.h'
+
+      integer i, j, it, jt, iexp
+
+      logical bad
+
+      double precision c(l9), mo(l9), dg, xis, dn, xdix, 
+     *                 d(l9), is, gamm0, g0(l9), lnkw, dix,
+     *                 gso(nsp), xdn
+
+      double precision gcpd, solve
+
+      external gcpd, solve
+
+      integer ion, ichg, jchg
+      double precision q, q2, qr
+      common/ cstaq /q(l9),q2(l9),qr(l9),jchg(l9),ichg,ion
+
+      double precision thermo,uf,us
+      common/ cst1 /thermo(k4,k10),uf(2),us(h5)
+
+      integer ihy, ioh
+      double precision gf, epsln, epsln0, adh, msol
+      common/ cxt37 /gf, epsln, epsln0, adh, msol, ihy, ioh
+
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+
+      integer iaq, aqst, aqct
+      character aqnam*8
+      double precision aqcp, aqtot
+      common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
+
+      integer jbulk
+      double precision cblk
+      common/ cst300 /cblk(k5),jbulk
+
+      logical mus
+      double precision mu
+      common/ cst330 /mu(k8),mus
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      integer jnd
+      double precision aqg,qq,rt
+      common/ cxt2 /aqg(m4),qq(m4),rt,jnd(m4)
+c----------------------------------------------------------------------
+c                                 set up coefficients for mo(ion) equation
+      g0(ion) = gcpd(aqst+ion,.false.) 
+c                                 compute solute properties 
+      do i = 1, aqct 
+c                                 dg is the solvent oxide potentials - g
+         g0(i) = gcpd(aqst + i, .false.)
+         qr(i) = q(i)/q(ion)
+         dg = -g0(i) + qr(i)*g0(ion)
+
+         do j = 1, jbulk 
+c                                 if oxide components, but no excess oxygen
+c                                 mu(O2) is a nan. 
+            if (isnan(mu(j))) cycle
+
+            dg = dg + (aqcp(j,i) - qr(i)*aqcp(j,ion)) * mu(j)
+
+         end do 
+c                                 normalize by RT
+         dg = dexp(dg/rt)
+
+         if (q(i).ne.0d0) then 
+c                                  this is now c(i)*a(ion)^(q(i)) = mo(i)*gamma(i)*q(i)
+c                                  the rhs q(i) is because the eq to be solved will be
+c                                  sum (q(i)*m(i)) = 0. 
+            d(i) = q(i)*dg
+            c(i) = d(i)
+
+         else 
+c                                  neutral species assumed to be ideal, molality is
+            mo(i) = dg
+      
+         end if 
+
+      end do 
+c                                  initialize iteration loop
+      lnkw = (gso(ns)-g0(ioh))/rt
+
+      if (dabs(lnkw).gt.5d1.or.epsln.lt.3d0) then
+         bad = .true.
+         return
+      end if 
+
+      mo(ion) = dexp(lnkw/2d0)
+      gamm0 = 1d0 
+      is = 0d0 
+
+      xdn = 1d0
+      iexp = 1
+      it = 0
+      jt = 0
+      xdix = 1d99
+      bad = .false.
+c                                  iteration loop for ionic strength
+      do 
+c                                  solve charge balance for H+
+         mo(ion) = solve(c,qr,mo(ion),jchg,ichg,bad)
+
+         if (bad) exit
+c                                  back calculate charged species molalities
+c                                  and ionic strength
+         xis = is
+         is = 0d0
+
+         do i = 1, ichg 
+            j = jchg(i)
+            mo(j) = c(j) * mo(ion)**qr(j) / q(j)
+            is = is + q2(j) * mo(j)
+         end do
+
+         is = is / 2d0 
+
+         dn = is - xis
+
+         if (dabs(dn).gt.1d0/2d0**iexp) then 
+            dn = dn/dabs(dn)/2d0**iexp 
+            if (dn*xdn.lt.0d0) iexp = iexp + 1
+            is = xis + dn
+         end if 
+c                                 DH law activity coefficient factor (ln[g] = lng0*q^2)
+         gamm0 = dexp(adh*dsqrt(is)/(1d0 + dsqrt(is)) + 0.2d0*is)
+c                                 check for convergence
+
+         dix = dabs(xis-is)/is
+
+         if (dix.lt.nopt(5)) then
+
+            exit
+
+         else if (it.gt.iopt(21)) then
+
+            if (xdix.gt.dix.and.jt.lt.10) then
+c                                 try again?
+               it = 0
+               jt = jt + 1
+               xdix = dix
+
+            else if (dix.lt.1d-1) then
+c                                 take a bad solution
+               exit 
+
+            else 
+c                                 diverging
+               bad = .true.
+               exit
+
+            end if
+
+         end if
+
+         xdn = dn 
+
+         it = it + 1
+c                                 update coefficients
+         do i = 1, ichg 
+            j = jchg(i)
+            c(j) = d(j)*(gamm0*q2(ion))**qr(j)/(gamm0*q2(j))
+         end do
+
+      end do
 
       end 

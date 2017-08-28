@@ -1006,7 +1006,7 @@ c-----------------------------------------------------------------------
 
       logical nodata
 
-      integer itri(4), jtri(4), ijpt, lop, icx, komp, i, dim
+      integer itri(4), jtri(4), ijpt, lop, icx, komp, i, j, dim
 
       double precision wt(3), mode
 
@@ -1095,15 +1095,20 @@ c                                 immiscibility.
                   call getprp (mode,7,icx,komp,.false.) 
 c                                 decide whether to output lagged or back-calculated
 c                                 speciation into props:
-                  if (ksmod(icx).eq.39.and.lopt(32).and..not.kfl(1)) 
-     *                                                              then
-c                                  output back-calculated result, load props
-c                                  at the p-t of interest
+                  if (icx.eq.0) then
+c                                 phase not stable
+
+                     do j = 1, iprop
+                        prop(j) = nopt(7)
+                     end do
+
+                  else if (lopt(32).and..not.kfl(1)) then 
+c                                  do the lagged speciation calculation and output
+c                                  the result to prop.
                      call lagprp (komp) 
 
                   else
-c                                  do the lagged speciation calculation and output
-c                                  the result to props, -1 signals prepare
+c                                  output back-calculated result to props, -1 signals
 c                                  tab file output.  
                      call aqrxdo (komp,-1)
 
@@ -1216,18 +1221,18 @@ c----------------------------------------------------------------------
 c----------------------------------------------------------------------
       if (kcx(1).eq.999) then 
 c                                 write phemgp format
-         write (n5,'(a14,1x,7x,i2,6x,200(g15.7,1x))') tname,ntot,
+         write (n5,'(a14,1x,7x,i2,6x,200(g16.6e3,1x))') tname,ntot,
      *                                               (var(i),i=1,ivar), 
      *                                               (prop(i),i=1,iprop)
 
       else if (lopt(15).or.dim.eq.1) then 
 c                                 write spreadsheet tab format
-         write (n5,'(200(g15.7,1x))') (var(i),i=1,ivar), 
+         write (n5,'(200(g14.6e3,1x))') (var(i),i=1,ivar), 
      *                                (prop(i),i=1,iprop)
 
       else 
 c                                 write compact tab format
-         write (n5,'(200(g15.7,1x))') (prop(i),i=1,iprop)
+         write (n5,'(200(g14.6e3,1x))') (prop(i),i=1,iprop)
       end if 
 c                                 check property ranges       
       do i = 1, iprop
@@ -4170,9 +4175,9 @@ c----------------------------------------------------------------
 c----------------------------------------------------------------------
 c                                 write data ranges
       write (*,1090) nopt(7)
-      write (*,'(5x,200(g14.7,1x))') (dname(i),i=1,iprop)
-      write (*,'(a3,2x,200(g14.7,1x))') 'min',(prmn(i),i=1,iprop)
-      write (*,'(a3,2x,200(g14.7,1x))') 'max',(prmx(i),i=1,iprop)      
+      write (*,'(5x,200(a,1x))') (dname(i),i=1,iprop)
+      write (*,'(a3,2x,200(g14.6E3,1x))') 'min',(prmn(i),i=1,iprop)
+      write (*,'(a3,2x,200(g14.6E3,1x))') 'max',(prmx(i),i=1,iprop)      
 
       if (kop(1).eq.25) then 
 c                                 create plt format file for "all

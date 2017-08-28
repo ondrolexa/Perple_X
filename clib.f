@@ -1126,8 +1126,8 @@ c----------------------------------------------------------------------
       common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
 
       integer ion, ichg, jchg
-      double precision q, q2, qr, dcp
-      common/ cstaq /q(l9),q2(l9),qr(l9),dcp(k5,l9),jchg(l9),ichg,ion
+      double precision q, q2, qr
+      common/ cstaq /q(l9),q2(l9),qr(l9),jchg(l9),ichg,ion
 
       character*8 exname,afname
       common/ cst36 /exname(h8),afname(2)
@@ -1615,25 +1615,17 @@ c                                 store thermodynamic parameters:
 c                                write summary and checks
       if (aqct.gt.0) then 
 
-         ion = ihy
-
          if (lopt(25).and.(ihy.eq.0.or.ioh.eq.0)) then 
             call warn (99,0d0,0,'missing H+ or OH- species, '//
      *                          'aqueous_output set = F (INPUT2)')
          end if 
 
          ichg = 0
-         q(ion) = thermo(6, aqst+ion)
          
          do i = 1, aqct 
 
             q(i) = thermo(6, aqst + i)
-            qr(i) = q(i)/q(ion)
             q2(i) = q(i)**2
-            
-            do j = 1, jbulk 
-               dcp(j,i) = aqcp(j,i) - qr(i)*aqcp(j,ion)
-            end do 
 
             if (q(i).ne.0d0) then 
                ichg = ichg + 1
