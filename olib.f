@@ -1270,10 +1270,9 @@ c                                 generic hybrid EoS
 c                                 lagged speciation
                call slvnt3 (gso)
 c                                 DH law activity coefficient factor (ln[g] = lng0*q^2)
-               gamm0 = adh*dsqrt(caq(jd,na1))/(1d0 + dsqrt(caq(jd,na1))) 
-     *              + 0.2d0*caq(jd,na1)
-
-               gamm0 = dexp(gamm0)
+               gamm0 = dexp(
+     *                 adh*dsqrt(caq(jd,na1))/(1d0 + dsqrt(caq(jd,na1)))
+     *                 + 0.2d0*caq(jd,na1))
 c                                 solvent species (caq => mole fraction)
                do k = 1, ns
                   if (caq(jd,k).eq.0d0) cycle
@@ -1286,17 +1285,8 @@ c                                 solute species (caq => molality)
 
                   if (caq(jd,k).eq.0d0) cycle
 
-                  if (q2(i).eq.0d0) then
-c                                 neutral
-                     g = g + caq(jd,k)/caq(jd,na2) *
-     *                   (gcpd(aqst+i,.false.) + rt*dlog(caq(jd,k)))
-                  else 
-c                                 charged
-                     g = g + caq(jd,k)/caq(jd,na2)
-     *                  * (gcpd(aqst+i,.false.) 
-     *                  + rt*dlog(caq(jd,k)*q2(i)*gamm0))
-
-                  end if 
+                  g = g + caq(jd,k)/caq(jd,na2) * (gcpd(aqst+i,.false.) 
+     *                  + rt*dlog(caq(jd,k)*gamm0**q2(i)))
 
                end do 
 

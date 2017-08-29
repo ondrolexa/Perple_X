@@ -627,7 +627,7 @@ c                                 reject composition
 
          if (lopt(32).and.ksmod(ids).eq.39) then
 
-            quack1 = .false.
+            quack1 = .true.
             quack2 = .true.
 
             if (quack1) then 
@@ -664,7 +664,7 @@ c                                 a solute cpd
 
             end if
 
-            wad2 = .false.
+c           wad2 = .false.
 
             if (wad1.and.wad2) then
 c                                 make water, ha ha

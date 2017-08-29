@@ -16199,7 +16199,7 @@ c-----------------------------------------------------------------------
       character text*200
 
       double precision mo(l9), blk(k5), dn,
-     *                 lng0, is, gamm0, totm, g0(l9), lnkw,
+     *                 is, gamm0, totm, g0(l9), lnkw,
      *                 gso(nsp), ysum, ph0, v0(nsp), vf0(nsp), tmass, 
      *                 tsmas, tsmol, smol(k5), errkw, smo, yt(nsp)
 
@@ -16384,13 +16384,17 @@ c                                 iterate on speciation
 
       do i = 1, 2
 c                                 first try ioh, if it fails
-         call aqsolv (mo,is,gamm0,lnkw,bad)
+         call aqsolv (g0,gso,mo,is,gamm0,lnkw,bad)
 
          if (.not.bad) exit
 
          ion = ihy
 
       end do
+
+      if (.not.bad.and.ion.eq.ihy) then 
+         write (*,*) 'switched',p,t
+      end if 
 c                                 back calculated bulk composition
       if (bad) then 
 
@@ -16546,29 +16550,29 @@ c                                 check if the species is the solution model
                if (l.ne.0) then 
 
                   write (lu,1080) aqnam(k),int(thermo(6,k+aqst)),
-     *                            mo(k),mo(k)/totm,ysp(l,jd),
-     *                           int(g0(k)+rt*(dlog(mo(k))+lng0*q2(k))),
-     *                           int(g0(k))
+     *                        mo(k),mo(k)/totm,ysp(l,jd),
+     *                        int(g0(k)+rt*(dlog(mo(k)*gamm0**q2(k)))),
+     *                        int(g0(k))
                else
 
                   write (lu,1090) aqnam(k),int(thermo(6,k+aqst)),
-     *                            mo(k),mo(k)/totm,
-     *                           int(g0(k)+rt*(dlog(mo(k))+lng0*q2(k))),
-     *                           int(g0(k))
+     *                        mo(k),mo(k)/totm,
+     *                        int(g0(k)+rt*(dlog(mo(k)*gamm0**q2(k)))),
+     *                        int(g0(k))
                end if 
 
             else if (lopt(32)) then
 c                                 compare to lagged speciation:
                   write (lu,1080) aqnam(k),int(thermo(6,k+aqst)),
      *                        mo(k),mo(k)/totm,caq(jd,k+ns)/caq(jd,na2),
-     *                        int(g0(k)+rt*(dlog(mo(k))+lng0*q2(k))),
+     *                        int(g0(k)+rt*(dlog(mo(k)*gamm0**q2(k)))),
      *                        int(g0(k))
 
             else 
 c                                 only back-calculated result:
                write (lu,1010) aqnam(k),int(thermo(6,k+aqst)),
      *                         mo(k),mo(k)/totm,
-     *                         int(g0(k)+rt*(dlog(mo(k))+lng0*q2(k))),
+     *                         int(g0(k)+rt*(dlog(mo(k)*gamm0**q2(k)))),
      *                         int(g0(k))
 
             end if 
@@ -18555,7 +18559,7 @@ c                                 iterate on speciation
 
       do i = 1, 2
 c                                 first try ioh, if it fails
-         call aqsolv (mo,is,gamm0,lnkw,bad)
+         call aqsolv (g0,gso,mo,is,gamm0,lnkw,bad)
 
          if (.not.bad) exit
 
@@ -18563,7 +18567,11 @@ c                                 first try ioh, if it fails
 
       end do
 
-99    if (bad) then 
+      if (.not.bad.and.ion.eq.ihy) then 
+         write (*,*) 'switched',p,t
+      end if 
+
+      if (bad) then 
 
          badct = badct + 1
 
@@ -18589,11 +18597,7 @@ c                                 first the solutes
 
          if (mo(i).eq.0d0) cycle
 c                                 total g
-         if (q2(i).ne.0d0) then 
-            gtot = gtot + mo(i) * (g0(i) + rt*dlog(mo(i)*gamm0*q2(i)))
-         else 
-            gtot = gtot + mo(i) * (g0(i) + rt*dlog(mo(i)))
-         end if 
+         gtot = gtot + mo(i) * (g0(i) + rt*dlog(mo(i)*gamm0**q2(i)))
 c                                  total molality
          smo = smo + mo(i)
 c                                 accumulate component moles
@@ -18759,7 +18763,7 @@ c                                 solvent is pure water
 
       end 
 
-      subroutine aqsolv (mo,is,gamm0,lnkw,bad)
+      subroutine aqsolv (g0,gso,mo,is,gamm0,lnkw,bad)
 c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
       implicit none
@@ -18770,9 +18774,9 @@ c-----------------------------------------------------------------------
 
       logical bad
 
-      double precision c(l9), mo(l9), dg, xis, dn, xdix, 
-     *                 d(l9), is, gamm0, g0(l9), lnkw, dix,
-     *                 gso(nsp), xdn
+      double precision c(l9), mo(*), dg, xis, dn, xdix, 
+     *                 d(l9), is, gamm0, g0(*), lnkw, dix,
+     *                 gso(*), xdn, qb(l9)
 
       double precision gcpd, solve
 
@@ -18810,6 +18814,9 @@ c-----------------------------------------------------------------------
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
+      double precision r,tr,pr,ps,p,t,xco2,u1,u2
+      common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
+
       integer jnd
       double precision aqg,qq,rt
       common/ cxt2 /aqg(m4),qq(m4),rt,jnd(m4)
@@ -18821,6 +18828,7 @@ c                                 compute solute properties
 c                                 dg is the solvent oxide potentials - g
          g0(i) = gcpd(aqst + i, .false.)
          qr(i) = q(i)/q(ion)
+         qb(i) = (q(ion)-q(i))*q(i)
          dg = -g0(i) + qr(i)*g0(ion)
 
          do j = 1, jbulk 
@@ -18849,7 +18857,7 @@ c                                  neutral species assumed to be ideal, molality
 
       end do 
 c                                  initialize iteration loop
-      lnkw = (gso(ns)-g0(ioh))/rt
+      lnkw = (gso(ns) - g0(ioh))/rt
 
       if (dabs(lnkw).gt.5d1.or.epsln.lt.3d0) then
          bad = .true.
@@ -18871,7 +18879,10 @@ c                                  iteration loop for ionic strength
 c                                  solve charge balance for H+
          mo(ion) = solve(c,qr,mo(ion),jchg,ichg,bad)
 
-         if (bad) exit
+         if (bad) then 
+            xis = is 
+            exit
+         end if 
 c                                  back calculate charged species molalities
 c                                  and ionic strength
          xis = is
@@ -18879,7 +18890,7 @@ c                                  and ionic strength
 
          do i = 1, ichg 
             j = jchg(i)
-            mo(j) = c(j) * mo(ion)**qr(j) / q(j)
+            mo(j) = c(j) / q(j) * mo(ion)**qr(j) 
             is = is + q2(j) * mo(j)
          end do
 
@@ -18892,10 +18903,9 @@ c                                  and ionic strength
             if (dn*xdn.lt.0d0) iexp = iexp + 1
             is = xis + dn
          end if 
-c                                 DH law activity coefficient factor (ln[g] = lng0*q^2)
+c                                 DH law activity coefficient factor (gamma = gamm0^(q^2))
          gamm0 = dexp(adh*dsqrt(is)/(1d0 + dsqrt(is)) + 0.2d0*is)
 c                                 check for convergence
-
          dix = dabs(xis-is)/is
 
          if (dix.lt.nopt(5)) then
@@ -18910,13 +18920,14 @@ c                                 try again?
                jt = jt + 1
                xdix = dix
 
-            else if (dix.lt.1d-1) then
+c            else if (dix.lt.1d-1) then
 c                                 take a bad solution
-               exit 
+c               exit 
 
             else 
 c                                 diverging
                bad = .true.
+               write (*,*) 'flopped',ion,jt,dix,xdix,p,t
                exit
 
             end if
@@ -18929,7 +18940,7 @@ c                                 diverging
 c                                 update coefficients
          do i = 1, ichg 
             j = jchg(i)
-            c(j) = d(j)*(gamm0*q2(ion))**qr(j)/(gamm0*q2(j))
+            c(j) = d(j)*gamm0**qb(j)
          end do
 
       end do
