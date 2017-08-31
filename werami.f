@@ -4410,9 +4410,9 @@ c-----------------------------------------------------------------------
 
       double precision tmass, gso(nsp), gamm0
 
-      double precision gcpd
+      double precision gcpd, aqact
 
-      external gcpd
+      external gcpdm, aqact
 
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
@@ -4518,8 +4518,7 @@ c                                 mole fraction
 
       call slvnt3 (gso)
 c                                 DH law activity coefficient factor (ln[g] = lng0*q^2)
-      gamm0 = dexp(adh*dsqrt(caq(jd,na1))/(1d0 + dsqrt(caq(jd,na1))) 
-     *             + 0.2d0*caq(jd,na1))
+      gamm0 = aqact(caq(jd,na1))
 c                                 other properties:
 c                                 pH
       prop(k+2) = -dlog10(caq(jd,ns+ihy)*gamm0)

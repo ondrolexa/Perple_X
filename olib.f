@@ -1055,11 +1055,11 @@ c-----------------------------------------------------------------------
 
       double precision dg, g, gso(nsp), gamm0
 
-      double precision omega, hpmelt, gmelt, gfluid, gzero, 
+      double precision omega, hpmelt, gmelt, gfluid, gzero, aqact,
      *                 gex, slvmlt, gfesi, gcpd, gerk, gfecr1, ghybrid
 
       external gphase, omega, hpmelt, gmelt, gfluid, gzero, gex, slvmlt,
-     *         gfesi, gerk, gfecr1, ghybrid, gcpd
+     *         gfesi, gerk, gfecr1, ghybrid, gcpd, aqact
 
       integer jend
       common/ cxt23 /jend(h9,m4)
@@ -1102,10 +1102,6 @@ c                                 model type
       integer ion, ichg, jchg
       double precision q, q2, qr
       common/ cstaq /q(l9),q2(l9),qr(l9),jchg(l9),ichg,ion
-
-      integer ihy, ioh
-      double precision gf, epsln, epsln0, adh, msol
-      common/ cxt37 /gf, epsln, epsln0, adh, msol, ihy, ioh
 
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
@@ -1270,9 +1266,7 @@ c                                 generic hybrid EoS
 c                                 lagged speciation
                call slvnt3 (gso)
 c                                 DH law activity coefficient factor (ln[g] = lng0*q^2)
-               gamm0 = dexp(
-     *                 adh*dsqrt(caq(jd,na1))/(1d0 + dsqrt(caq(jd,na1)))
-     *                 + 0.2d0*caq(jd,na1))
+               gamm0 = aqact(caq(jd,na1))
 c                                 solvent species (caq => mole fraction)
                do k = 1, ns
                   if (caq(jd,k).eq.0d0) cycle

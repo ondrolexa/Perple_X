@@ -15919,13 +15919,13 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer l, k
+      integer k
 
-      double precision gsolv, mo(m4), lng0
+      double precision gsolv, mo(m4), lng0, is
 
-      double precision gcpd
+      double precision gcpd, aqact
 
-      external gcpd
+      external gcpd, aqact
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -15945,33 +15945,23 @@ c-----------------------------------------------------------------------
       double precision gf, epsln, epsln0, adh, msol
       common/ cxt37 /gf, epsln, epsln0, adh, msol, ihy, ioh
 c---------------------------------------------------------------------- 
-      lng0 = 0d0 
+      is = 0d0 
 c                                 molalities and ionic strength
       do k = sn1, nqs
 c                                 ln molality of solutes
          mo(k) = y(k)/msol
-         lng0 = lng0 + q2(k) * mo(k)
+         is = is + q2(k) * mo(k)
 
-      end do 
-c                                 at this point lng0 is ionic strength
-      lng0 = lng0/2d0 
+      end do     
 c                                 DH law activity coefficient factor (ln[g] = lng0*q^2)
 c                                 Davies extension.
-      lng0 = adh*dsqrt(lng0)/(1d0 + dsqrt(lng0)) + 0.2d0*lng0
+      lng0 = dlog(aqact(is/2d0))
 c                                 add in the solute gibbs energies
-c                                 neutral solutes, ideal
-      do l = sn1, sn
-
-         if (mo(l).le.0d0) cycle
-         gsolv = gsolv + y(l) * (gcpd(jnd(l),.true.) + rt*dlog(mo(l)))
-
-      end do
-c                                 ionic solutes, Davies D-H extension
-      do k = l, nqs
+      do k = sn1, nqs
 
          if (y(k).le.0d0) cycle
          gsolv = gsolv + y(k) * (gcpd(jnd(k),.true.)
-     *                        + rt*(dlog(mo(k))+ lng0*q2(k)))
+     *                        + rt*(dlog(mo(k)) + lng0*q2(k)))
 
       end do 
 
@@ -18778,9 +18768,9 @@ c-----------------------------------------------------------------------
      *                 d(l9), is, gamm0, g0(*), lnkw, dix,
      *                 gso(*), xdn, qb(l9)
 
-      double precision gcpd, solve
+      double precision gcpd, solve, aqact
 
-      external gcpd, solve
+      external gcpd, solve, aqact
 
       integer ion, ichg, jchg
       double precision q, q2, qr
@@ -18789,12 +18779,12 @@ c-----------------------------------------------------------------------
       double precision thermo,uf,us
       common/ cst1 /thermo(k4,k10),uf(2),us(h5)
 
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+
       integer ihy, ioh
       double precision gf, epsln, epsln0, adh, msol
       common/ cxt37 /gf, epsln, epsln0, adh, msol, ihy, ioh
-
-      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
-      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
 
       integer iaq, aqst, aqct
       character aqnam*8
@@ -18904,7 +18894,7 @@ c                                  and ionic strength
             is = xis + dn
          end if 
 c                                 DH law activity coefficient factor (gamma = gamm0^(q^2))
-         gamm0 = dexp(adh*dsqrt(is)/(1d0 + dsqrt(is)) + 0.2d0*is)
+         gamm0 = aqact(is)
 c                                 check for convergence
          dix = dabs(xis-is)/is
 
@@ -18920,9 +18910,9 @@ c                                 try again?
                jt = jt + 1
                xdix = dix
 
-c            else if (dix.lt.1d-1) then
+            else if (dix.lt.1d-1) then
 c                                 take a bad solution
-c               exit 
+               exit 
 
             else 
 c                                 diverging
@@ -18944,5 +18934,25 @@ c                                 update coefficients
          end do
 
       end do
+
+      end 
+
+      double precision function aqact (is)
+c-----------------------------------------------------------------------
+c compute Debye-Hueckel-type activity coefficient factor
+c-----------------------------------------------------------------------
+      implicit none
+ 
+      include 'perplex_parameters.h'
+
+      double precision is
+
+      integer ihy, ioh
+      double precision gf, epsln, epsln0, adh, msol
+      common/ cxt37 /gf, epsln, epsln0, adh, msol, ihy, ioh
+c----------------------------------------------------------------------
+      aqact = dexp(adh*dsqrt(is)/(1d0 + dsqrt(is)) + 0.2d0*is)
+
+      aqact = 1d0
 
       end 
