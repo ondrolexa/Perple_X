@@ -4412,7 +4412,7 @@ c-----------------------------------------------------------------------
 
       double precision gcpd, aqact
 
-      external gcpdm, aqact
+      external gcpd, aqact
 
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa

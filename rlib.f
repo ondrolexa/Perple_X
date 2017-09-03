@@ -18910,9 +18910,9 @@ c                                 try again?
                jt = jt + 1
                xdix = dix
 
-            else if (dix.lt.1d-1) then
+c           else if (dix.lt.1d-1) then
 c                                 take a bad solution
-               exit 
+c              exit 
 
             else 
 c                                 diverging
@@ -18953,6 +18953,6 @@ c-----------------------------------------------------------------------
 c----------------------------------------------------------------------
       aqact = dexp(adh*dsqrt(is)/(1d0 + dsqrt(is)) + 0.2d0*is)
 
-      aqact = 1d0
+c     aqact = 1d0
 
       end 

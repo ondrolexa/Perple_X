@@ -142,7 +142,7 @@ c-----------------------------------------------------------------------
       integer liw, lw, iter, iref, i, j, id, idead, ids, jstart, inc, 
      *        opt
 
-      logical first, wad1,wad2
+      logical first, wad1, wad2, bad
 
       parameter (liw=2*k21+3,lw=2*(k5+1)**2+7*k21+5*k5)  
 
@@ -150,6 +150,8 @@ c-----------------------------------------------------------------------
 
       integer is(k21+k5), iw(liw)
 c                                 -------------------------------------
+      double precision r,tr,pr,ps,p,t,xco2,u1,u2
+      common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
 c                                 global variables
 c                                 adaptive coordinates
       integer jphct
@@ -279,7 +281,14 @@ c                                 warn if severe error
 
          end if 
 c                                 analyze solution, get refinement points
-         call yclos2 (clamda,x,is,iter,opt)
+         call yclos2 (clamda,x,is,iter,opt,bad)
+c                                 check for solute free compound in 
+c                                 lagged speciation
+         if (bad) then
+            idead = 99
+            write (*,*) 'lagged spec failed',p,t
+            exit 
+          end if 
 c                                 save the id and compositions
 c                                 of the refinement points, this
 c                                 is necessary because resub rewrites
@@ -368,6 +377,9 @@ c                                 adaptive g and compositions
       integer jphct
       double precision g2, cp2
       common/ cxt12 /g2(k21),cp2(k5,k21),jphct
+
+      logical quack
+      common/ cxt1 /quack(k21)
 c                                 adaptive z coordinates
       integer jcoct, jcoor, jkp
       double precision zcoor
@@ -632,37 +644,44 @@ c                                 reject composition
 
             if (quack1) then 
 c                                 solute free cpd
-            g2(jphct) = gsol1(ids)
-            call csol (ids)
+               g2(jphct) = gsol1(ids)
+               call csol (ids)
+
+               quack(jphct) = .true.
 c                                 now pad out counters for 
 c                                 a solute cpd
-            jphct = jphct + 1
-            jkp(jphct) = ids
-            hkp(jphct) = jd
-            jcoor(jphct) = jcoct - 1
+               jphct = jphct + 1
 
-            do j = 1, mcoor(ids)
-               zcoor(jcoct) = zcoor(jcoct-mcoor(ids))
-               jcoct = jcoct + 1
-            end do 
+               jkp(jphct) = ids
+               hkp(jphct) = jd
+               jcoor(jphct) = jcoct - 1
 
-            kcoct = kcoct + mcoor(ids)
+               do j = 1, mcoor(ids)
+                  zcoor(jcoct) = zcoor(jcoct-mcoor(ids))
+                  jcoct = jcoct + 1
+               end do 
+
+               kcoct = kcoct + mcoor(ids)
 
             end if 
 
             if (quack2) then 
 
-            call aqlagd (1,bad,.false.)
+               call aqlagd (1,bad,.false.)
 
-            if (bad) then
+               if (bad) then
 
-               jphct = jphct - 1
-               jcoct = kcoct - mcoor(ids)
-               cycle
+                  jphct = jphct - 1
+                  jcoct = kcoct - mcoor(ids)
+                  cycle
 
-            end if
+               else
+ 
+                  quack(jphct) = .false.
 
-            end if
+               end if
+
+            end if 
 
 c           wad2 = .false.
 
@@ -696,6 +715,10 @@ c                                 than one water compound.
                   jphct = jphct - 1
                   jcoct = kcoct - mcoor(ids)
                   cycle
+
+               else
+ 
+                  quack(jphct) = .true.
 
                end if
 
@@ -2685,7 +2708,7 @@ c----------------------------------------------------------------------
 
       end 
 
-      subroutine yclos2 (clamda,x,is,iter,opt)
+      subroutine yclos2 (clamda,x,is,iter,opt,bad)
 c----------------------------------------------------------------------
 c subroutine to identify pseudocompounds close to the solution for 
 c subsequent refinement, for iteration > 1. 
@@ -2705,7 +2728,15 @@ c----------------------------------------------------------------------
 
       integer hcp,idv
       common/ cst52  /hcp,idv(k7)
+c                                 added for quack test:
+      logical bad
 
+      logical quack
+      common/ cxt1 /quack(k21)
+
+      integer ksmod, ksite, kmsol, knsp
+      common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
+c                                 ------------
       logical mus
       double precision mu
       common/ cst330 /mu(k8),mus
@@ -2758,6 +2789,7 @@ c                                 solution.
 
       npt = 0 
       kpt = 0
+      bad = .false.
 
       do i = 1, jphct
 c                                 id indicates the original refinement
@@ -2913,8 +2945,21 @@ c                                 check zero modes the amounts
 
             if (x(jdv(i)).ge.nopt(9)) then 
                npt = npt + 1
+c                                 -----------------
+c                                 check for pure solvent if lagged
+c                                 speciation:
+               id = jkp(jdv(i))
+               if (id.gt.0) then 
+               if (ksmod(id).eq.39.and.lopt(32)) then
+                  if (quack(jdv(i))) then
+                     bad = .true.
+                  end if 
+               end if
+               end if 
+c                                 -----------------
                amt(npt) = x(jdv(i))
                jdv(npt) = jdv(i)
+
             else if (lopt(13).and.x(jdv(i)).lt.-nopt(9)
      *                             .and.tic.lt.5) then 
 
