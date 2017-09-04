@@ -4625,16 +4625,16 @@ c                                 mole fraction
 
          end do 
 c                                  other properties:
-c                                  ph
-         prop(k+2) = nopt(7)
 c                                  ph - ph0
          prop(k+1) = nopt(7)
+c                                  ph
+         prop(k+2) = nopt(7)
 c                                  err lgKw
          prop(k+3) = caq(jd,na4)
 c                                  epsilon
          prop(k+4) = nopt(7)
 c                                  ionic strength
-         prop(k+5) = caq(jd,na2)
+         prop(k+5) = caq(jd,na1)
 c                                  solute molality
          prop(k+6) = smo
 

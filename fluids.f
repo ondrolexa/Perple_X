@@ -1106,26 +1106,18 @@ c                                  output results:
                if (ifug.le.2.or.ifug.eq.5.or.ifug.eq.14) then
 
                   write (*,1130) fhc(1), fhc(2)
-
-                  if (ifug.eq.5.or.ifug.eq.14) then 
 c                                  finite difference estimate of volume:
-                     vdif = 0d0
-                     p = p + 0.5d0
-                     f = 1d0 
-                     do l = 1, 2
-                        call cfluid (fo2,fs2)
-                        vdif = vdif + f*((1d0-xo)*fhc(1) + xo*fhc(2))
-                        f = -1d0
-                        p = p - 1d0
-                     end do 
+                  vdif = 0d0
+                  p = p + 0.5d0
+                  f = 1d0 
+                  do l = 1, 2
+                     call cfluid (fo2,fs2)
+                     vdif = vdif + f*((1d0-xo)*fhc(1) + xo*fhc(2))
+                     f = -1d0
+                     p = p - 1d0
+                  end do 
 
-                     write (*,1300) 83.14d0*t*vdif
-
-                  else 
-
-                     write (*,1300) vol
-
-                  end if 
+                  write (*,1300) 83.14d0*t*vdif
 
                else if (ifug.eq.13.or.ifug.eq.15) then
 

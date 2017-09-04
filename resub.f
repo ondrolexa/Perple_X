@@ -1596,6 +1596,13 @@ c                                 interval limits conformal transformation
 c----------------------------------------------------------------------
 c                                 set stable flag
       stable(ids) = .true.
+
+      if (ksmod(ids).eq.39) then 
+         j = 1
+         if (x(1,2).gt.0.1) then 
+            j = 2
+         end if 
+      end if 
 c                                 check x-ranges
       do i = 1, istg(ids)
 

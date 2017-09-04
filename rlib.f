@@ -16382,9 +16382,6 @@ c                                 first try ioh, if it fails
 
       end do
 
-      if (.not.bad.and.ion.eq.ihy) then 
-         write (*,*) 'switched',p,t
-      end if 
 c                                 back calculated bulk composition
       if (bad) then 
 
@@ -18441,9 +18438,6 @@ c-----------------------------------------------------------------------
       integer ion, ichg, jchg
       double precision q, q2, qr
       common/ cstaq /q(l9),q2(l9),qr(l9),jchg(l9),ichg,ion
-
-      double precision r,tr,pr,ps,p,t,xco2,u1,u2
-      common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
 c                                 adaptive coordinates
       integer jphct
       double precision g2, cp2
@@ -18534,10 +18528,19 @@ c----------------------------------------------------------------------
       if (.not.mus) then 
 
          bad = .true.
- 
          return
 
       else 
+
+         call slvnt3 (gso)
+
+         if (epsln.lt.1d0) then
+c                                 eos is predicting vapor phase 
+c                                 solvent densities
+            bad = .true.
+            return
+            
+         end if 
 
          bad = .false.
 
@@ -18556,10 +18559,6 @@ c                                 first try ioh, if it fails
          ion = ihy
 
       end do
-
-      if (.not.bad.and.ion.eq.ihy) then 
-         write (*,*) 'switched',p,t
-      end if 
 
       if (bad) then 
 
@@ -18917,7 +18916,7 @@ c              exit
             else 
 c                                 diverging
                bad = .true.
-               write (*,*) 'flopped',ion,jt,dix,xdix,p,t
+c               write (*,*) 'flopped',ion,jt,dix,xdix,p,t
                exit
 
             end if

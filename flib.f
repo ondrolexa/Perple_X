@@ -3807,9 +3807,13 @@ c -----the values (t/t0)**i are stored in the array taui(i)
      1     0.63684256d0/taui(4)
 c
       ps = 220.55d0
-      if (t .le. 647.25d0) ps = psat2(t)
 
-      rhn = 1d0/vh2o * amh2o
+      if (t .le. 647.25d0) then 
+         ps = psat2(t)
+         if (p.gt.ps) vh2o = 18d0
+      end if 
+
+      rhn = amh2o/vh2o 
  
 c -----find the true(?) rh(t,p)
 c -----note: pr = pressure corresponding to guessed rh
