@@ -10,7 +10,7 @@
 
  | for Harrison & Sverjensky's comments on the DEW data refer to the individual entries in DEW13ver.dat
 
-Harrison & Sverjensky DEW '13, Holland & Powell JMG '11 (TC-DS622)    |<= data base title
+Harrison & Sverjensky HKF '13, Holland & Powell JMG '11 (TC-DS622)    |<= data base title
 
 begin_standard_variables |<= name (<9 characters), reference value, tolerance
 P(bar)      1.00   0.1E-3
