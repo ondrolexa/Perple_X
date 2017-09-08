@@ -452,9 +452,11 @@ c-----------------------------------------------------------------------
 
       parameter (maxbox=1760,maxlay=6) 
 
-      integer i,j,k,idead
+      character*100 n6name, n5name
 
-      double precision gblk(maxbox,k5),dz,p0
+      integer i,j,k,idead,two(2),lun
+
+      double precision gblk(maxbox,k5),dz,p0,cdcomp(k5)
 
       logical output
 
@@ -503,6 +505,12 @@ c-----------------------------------------------------------------------
       logical fileio
       integer ncol, nrow
       common/ cst226 /ncol,nrow,fileio
+
+      character vnm*8
+      common/ cxt18a /vnm(l3)  
+
+      character cname*5
+      common/ csta4  /cname(k5) 
 
       logical first
 
@@ -585,6 +593,21 @@ c                                 initialize path variables
       call setvar 
 
       dv(jv(1)) = (vmax(jv(1)) - vmin(jv(1)))/(nrow-1)
+
+      two(1) = nrow
+      vnm(1) = 'P0'
+      do i = 1, icp
+         cdcomp(i) = 0d0
+      end do 
+
+      lun = n0 + 100
+
+      call tabhed (lun,vmin(1),dv(1),two,1,n5name,n6name)
+c                                 number of variables in table
+      write (lun,*) 2*icp + 1 
+c                                 variable names
+      write (lun,'(60(a,1x))') 'P0',(cname(i),i=1,icp),
+     *                             ('cum_'//cname(i),i=1,icp)
 c                                 nrow is the number of steps along the subduction
 c                                 path:
       do j = 1, nrow
@@ -638,8 +661,15 @@ c                                 and add it to the overlying composition
                       write (*,*) 'bulk < 0, at k,i',k,i,gblk(k,i)
                       gblk(k,i) = 0d0
                    end if 
+               else 
+                  cdcomp(i) = cdcomp(i) + dcomp(i)
                end if 
             end do
+            
+            if (k.eq.ncol) then 
+               write (lun,'(60(g13.6,1x))') (dcomp(i),i=1,icp),
+     *                                      (cdcomp(i),i=1,icp)
+            end if       
 c                                 reset initialize top layer if gloopy = 999
             if (gloopy.eq.999.and.k.gt.ncol-irep(ilay)) then 
                do i = 1, icp

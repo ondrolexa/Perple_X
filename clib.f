@@ -2077,29 +2077,33 @@ c                                 geometric y coordinates
 c                                 MEEMUM:
 c                                 cp2 works for meemum/vertex, but not werami
 c                                 the id index on cp2 is intentional.
-             do j = 1, icomp 
-                cp3(j,jd) = cp2(j,id)
-             end do 
+               do j = 1, icomp 
+                  cp3(j,jd) = cp2(j,id)
+               end do 
 
             else  
 c                                  WERAMI:
-            do i = 1, ns
-               do j = 1, icomp 
-                  cp3(j,jd) = cp3(j,jd) + caq(jd,i) * cp(j,jnd(i))
+               do i = 1, ns
+                  do j = 1, icomp 
+                     cp3(j,jd) = cp3(j,jd) + caq(jd,i) * cp(j,jnd(i))
+                  end do 
                end do 
-            end do 
 
-            do i = sn1, nsa
+               if (caq(jd,na1).gt.0d0) then
 
-               k = i - ns
+                  do i = sn1, nsa
+
+                     k = i - ns
 c                                 convert molality to mole fraction (xx)
-               xx = caq(jd,i)/caq(jd,na2)
+                     xx = caq(jd,i)/caq(jd,na2)
 
-               do j = 1, icomp
-                  cp3(j,jd) = cp3(j,jd) + xx * aqcp(j,k)  
-               end do  
+                     do j = 1, icomp
+                        cp3(j,jd) = cp3(j,jd) + xx * aqcp(j,k)  
+                     end do  
              
-            end do
+                  end do
+
+               end if 
 
             end if  
 

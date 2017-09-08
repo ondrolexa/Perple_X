@@ -245,7 +245,7 @@ c         tmax(i) = tmax(i) - (tmax(i)-tmin(i))*1d-6
          dx(i) = (tmax(i)-tmin(i))/dfloat(nxy(i)-1)
       end do 
 
-      call tabhed (tmin,dx,nxy,dim,n5name,n6name)
+      call tabhed (n5,tmin,dx,nxy,dim,n5name,n6name)
 
       do j = 1, nxy(2)
 
@@ -2289,7 +2289,7 @@ c                                 ind could be set by getind
 c                                 select properties
       call chsprp 
 c                                 write file header
-      call tabhed (dxy,dxy,k,dim,n5name,n6name)
+      call tabhed (n5,dxy,dxy,k,dim,n5name,n6name)
 c                                 compute properties
       do i = 1, ipts
 
@@ -2421,7 +2421,7 @@ c                                 set up counters, pointers:
 c                                 select properties:
       call chsprp
 c                                 name and open plot file, write header 
-      call tabhed (xyp,xyp,k,1,n5name,n6name)
+      call tabhed (n5,xyp,xyp,k,1,n5name,n6name)
 
       do i = 1, ipts
 
@@ -2521,7 +2521,7 @@ c                                 ixy
 c                                 select properties
          call chsprp 
 c                                 write plot file header
-         call tabhed (r,r,k,dim,n5name,n6name)
+         call tabhed (n5,r,r,k,dim,n5name,n6name)
 
          do 
 
@@ -2596,7 +2596,7 @@ c                                   points from a data file:
 c                                 select properties            
          call chsprp
 c                                 write plot file header
-         call tabhed (r,r,k,dim,n5name,n6name)
+         call tabhed (n5,r,r,k,dim,n5name,n6name)
 
          do i = 1, icoors, inc
 
@@ -3236,177 +3236,6 @@ c                                 chemical potentials
       end if 
 
 99    end 
-
-      subroutine fopenn (n,dim,n5name,n6name)
-c----------------------------------------------------------------------
-c decide on file name and type for werami output files, open n5name on 
-c LUN n, n6name is opened if necessary by prphed or modhed
-c dim - integer 1 = 1d, 2 = 2d, 0 = text echo
-c----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      integer i, ier, dim, n
-
-      character*100 n5name, n6name, num*4
-
-      character*14 tname
-      integer kop,kcx,k2c,iprop
-      logical kfl
-      double precision prop,prmx,prmn
-      common/ cst77 /prop(i11),prmx(i11),prmn(i11),kop(i11),kcx(i11),
-     *               k2c(i11),iprop,kfl(i11),tname
-
-      character*100 prject,tfname
-      common/ cst228 /prject,tfname
-c----------------------------------------------------------------------
-c                                 make plot file
-      do i = 1, 1000
-c                                 loop to find an unused name made of 
-c                                 project + "i"
-         write (num,'(a1,i3)') '_',i
-
-         call unblnk (num) 
-
-         call mertxt (tfname,prject,num,0)
- 
-         if ((kop(1).eq.36.or.kop(1).eq.38).and.kcx(1).eq.999) then 
-c                                 phemgp format
-            call mertxt (n5name,tfname,'.phm',0)
-
-         else
-
-            if (dim.eq.0) then 
-               call mertxt (n5name,tfname,'.txt',0)
-            else
-               call mertxt (n5name,tfname,'.tab',0)
-            end if 
-
-            if (kop(1).eq.25) call mertxt (n6name,tfname,'.plt',0) 
-
-         end if 
-           
-         open (n, file=n5name, status='new', iostat=ier)
-c                                 presume error means a file with name
-c                                 n5name already exists
-         if (ier.eq.0) exit 
- 
-         if (i.gt.999) call error (999,0d0,i,tfname)
-
-      end do
-
-      if (dim.eq.0) write (*,1000) n5name
-
-1000  format (/,'Console output will be echoed in file: ',a,/)
-
-      end 
-
-      subroutine tabhed (vmn,dv,nv,nvar,n5name,n6name)
-c----------------------------------------------------------------------
-c  write header for nvar-dimensional table output
-c     vmn - minimum values of the indendpendent variables
-c      dv - the increments
-c      nv - number of nodes
-c     lop - werami option
-c    nvar - number of independent variables
-c----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      integer i, nv(2), nvar, ivar
-
-      double precision vmn(2), dv(2)
-
-      character*100 n6name, n5name, vname(l3)*14
-
-      integer inv
-      character dname*14, title*162
-      common/ cst76 /inv(i11),dname(i11),title
-
-      character*14 tname
-      integer kop,kcx,k2c,iprop
-      logical kfl
-      double precision prop,prmx,prmn
-      common/ cst77 /prop(i11),prmx(i11),prmn(i11),kop(i11),kcx(i11),
-     *               k2c(i11),iprop,kfl(i11),tname
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
-      integer isec,icopt,ifull,imsg,io3p
-      common/ cst103 /isec,icopt,ifull,imsg,io3p
-
-      character vnm*8
-      common/ cxt18a /vnm(l3)  
-
-      logical fileio
-      integer ncol, nrow
-      common/ cst226 /ncol,nrow,fileio
-c------------------------------------------------------------------------
-c                                 generate a file name and
-c                                 open the file on n5
-      call fopenn (n5,nvar,n5name,n6name)
-c                                 ctr file tab format header
-      write (n5,'(a)') '|6.6.6'
-c                                 a title
-      write (n5,'(a)') n5name
-c                                 number of indepedent variables
-      write (n5,*) nvar
-c                                 independent variable names, 
-c                                 value, increment & nodes
-      do i = 1, nvar
-         write (n5,'(a)') vnm(i)
-         write (n5,*) vmn(i)
-         write (n5,*) dv(i)
-         write (n5,*) nv(i)
-      end do 
-c                                 number of pseudo-dependent variables,
-      ivar = 2
-      if (icopt.eq.7.and.fileio) ivar = 3
-c                                 convert a8 names to a14
-      do i = 1, ivar
-         vname(i) = vnm(i)
-         call unblnk (vname(i))
-      end do 
-c                                 output the dependent variable counter and list
-      if (kcx(1).eq.999) then 
-c                                  phemgp file
-         write (n5,*) ivar + iprop + 2
-         write (n5,'(200(a14,1x))') 'Name','Counter',
-     *                              (vname(i), i = 1, ivar),
-     *                              (dname(i),i = 1, iprop)
-
-      else 
-c                                  tab file
-         if (lopt(15).or.nvar.eq.1) then
-
-            if (.not.lopt(29)) then
-c                                  with pseudo-dependent variables 
-               write (n5,*) ivar + iprop 
-               write (n5,'(200(a14,1x))') (vname(i), i = 1,ivar),
-     *                                    (dname(i), i = 1,iprop)
-            else 
-               write (n5,*) ivar + iprop + 5
-
-               write (n5,'(200(a14,1x))') (vname(i), i = 1,ivar),
-     *                                    (dname(i), i = 1,iprop),
-     *         'y_SiO2','y_SiO','y_O','y_O2','y_Si'
-            end if 
-
-         else 
-c                                  terse format
-            write (n5,*) iprop 
-            write (n5,'(200(a14,1x))') (dname(i), i = 1,iprop)
-          
-         end if 
-
-      end if
-
-      end 
 
       subroutine getind
 c----------------------------------------------------------------

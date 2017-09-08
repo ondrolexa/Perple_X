@@ -603,7 +603,12 @@ c                                zero the constant
   
       do 
 
-         write (*,1030) 'numerator',k5+1
+         if (spec(jcomp)) then 
+            write (*,1030) what,'numerator',k5+1
+         else 
+            write (*,1030) what//'s','numerator',k5+1
+         end if 
+
          read (*,*,iostat=ier) jcx(jcomp)
 
          if (ier.ne.0.or.jcx(jcomp).lt.1) then
@@ -652,7 +657,12 @@ c                                define the numerator
 c                                define the denominator
       do 
 
-         write (*,1030) 'denominator',k5+1-jcx(jcomp)
+         if (spec(jcomp)) then 
+            write (*,1030) what,'denominator',k5+1-jcx(jcomp)
+         else 
+            write (*,1030) what//'s','denominator',k5+1-jcx(jcomp)
+         end if 
+
          write (*,1140)
          read (*,*,iostat=ier) jcx1(jcomp)
 
@@ -807,7 +817,7 @@ c                                show the user the composition:
      *          'composition keyword in',/,'perplex_option.dat.')
 1010  format (2x,i2,' - ',a)
 1020  format (/,'Invalid input, try again:',/)
-1030  format (/,'How many components in the ',a,' of the',
+1030  format (/,'How many ',a,' in the ',a,' of the',
      *          ' composition (<',i2,')?')
 1040  format (/,'Enter ',a,' indices and weighting factors for the '
      *        ,a,':')

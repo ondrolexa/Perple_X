@@ -196,7 +196,7 @@ c                                 species_ouput
 
             end if 
 
-            if (ksmod(id).eq.39.and.lopt(32)) then 
+            if (ksmod(id).eq.39.and.lopt(32).and.caq(i,na1).gt.0d0) then 
             
                ct = na4
                inc = 5

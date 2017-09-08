@@ -1188,6 +1188,9 @@ c                                 x coordinate description
 
       double precision dcp,soltol
       common/ cst57 /dcp(k5,k19),soltol
+c
+      logical quack
+      common/ cxt1 /quack(k21)
 c                                 composition and model flags
 c                                 for final adaptive solution
       integer kkp,np,ncpd,ntot
@@ -1289,7 +1292,21 @@ c                                 loaded into caq(i,1:ns+aqct)
                   y(k) = x3(i,1,k)
                end do 
 
-               call aqlagd (i,bad,.true.)
+               if (quack(i)) then 
+c                                 pure solvent phase
+                  do k = 1, ns
+                     caq(i,k) = y(k)
+                  end do 
+
+                  do k = sn1, na4
+                     caq(i,k) = 0d0
+                  end do 
+
+               else
+c                                 impure solvent, get speciation
+                  call aqlagd (i,bad,.true.)
+
+               end if 
 
             end if
 
@@ -2952,13 +2969,14 @@ c                                 speciation:
                if (id.gt.0) then 
                if (ksmod(id).eq.39.and.lopt(32)) then
                   if (quack(jdv(i))) then
-                     bad = .true.
+c                     bad = .true.
                   end if 
                end if
                end if 
 c                                 -----------------
                amt(npt) = x(jdv(i))
                jdv(npt) = jdv(i)
+               quack(npt) = quack(jdv(i))
 
             else if (lopt(13).and.x(jdv(i)).lt.-nopt(9)
      *                             .and.tic.lt.5) then 
