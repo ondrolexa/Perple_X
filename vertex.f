@@ -450,13 +450,13 @@ c-----------------------------------------------------------------------
 
       integer maxbox,maxlay
 
-      parameter (maxbox=1760,maxlay=6) 
+      parameter (maxbox=1760,maxlay=6)
 
       character*100 n6name, n5name
 
-      integer i,j,k,idead,two(2),lun
+      integer i,j,k,idead,two(2),lun,iox
 
-      double precision gblk(maxbox,k5),dz,p0,cdcomp(k5)
+      double precision gblk(maxbox,k5),dz,p0,cdcomp(k5,maxlay),vox(k5)
 
       logical output
 
@@ -509,12 +509,23 @@ c-----------------------------------------------------------------------
       character vnm*8
       common/ cxt18a /vnm(l3)  
 
+      integer inv
+      character dname*14, title*162
+      common/ cst76 /inv(i11),dname(i11),title
+
+      character*14 tname
+      integer kop,kcx,k2c,iprop
+      logical kfl
+      double precision prop,prmx,prmn
+      common/ cst77 /prop(i11),prmx(i11),prmn(i11),kop(i11),kcx(i11),
+     *               k2c(i11),iprop,kfl(i11),tname
+
       character cname*5
       common/ csta4  /cname(k5) 
 
       logical first
 
-      save first
+      save first, vox, iox
 
       data first/.true./
 c-----------------------------------------------------------------------
@@ -552,8 +563,40 @@ c                                 check for consistent input if fileio
 c                                 jlow set by 1dpath keyword in perplex_option.dat
             nrow = jlow
 
-         end if 
+         end if
+c                                 work out the oxide stoichiometries for excess O 
+c                                 computation
+         iox = 0 
 
+         do i = 1, icp
+            if (cname(i).eq.'C') then 
+               vox(i) = 1d0
+            else if (cname(i).eq.'H2') then 
+               vox(i) = 0.5d0
+            else if (cname(i).eq.'Si') then 
+               vox(i) = 1d0
+            else if (cname(i).eq.'Al') then 
+               vox(i) = 0.75d0
+            else if (cname(i).eq.'Fe') then 
+               vox(i) = 1d0
+            else if (cname(i).eq.'Mg') then 
+               vox(i) = 1d0
+            else if (cname(i).eq.'Ca') then 
+               vox(i) = 1d0
+            else if (cname(i).eq.'Na') then 
+               vox(i) = 0.25d0
+            else if (cname(i).eq.'K') then 
+               vox(i) = 0.25d0
+            else if (cname(i).eq.'S2') then 
+               vox(i) = 2d0
+            else if (cname(i).eq.'O2') then 
+               vox(i) = 0d0
+               iox = i
+            else 
+               write (*,*) 'Unidentified component for O deficit ',
+     *                     'computation: ',cname(i)
+            end if 
+         end do 
       else 
 c                                 NOTE if not fileio, then jlow must not change
          if (.not.fileio)  nrow = jlow
@@ -581,7 +624,9 @@ c                                 check resolution dependent dimensions
 
             do k = 1, icp 
                gblk(ncol,k) = iblk(i,k)
-            end do 
+            end do
+
+            itop(i) = ncol
 
          end do
 
@@ -593,21 +638,34 @@ c                                 initialize path variables
       call setvar 
 
       dv(jv(1)) = (vmax(jv(1)) - vmin(jv(1)))/(nrow-1)
-
+c                                 ---------------------------
+c                                 set up stuff for subduction model
       two(1) = nrow
       vnm(1) = 'P0'
-      do i = 1, icp
-         cdcomp(i) = 0d0
+c                                 number of variables in table
+      icp1 = icp+1 
+      iprop = 2*icp1
+      
+      do j = 1, icp 
+         write (dname(j),'(a14)') cname(j)
+         write (dname(j+icp1),'(a14)') 'cum_'//cname(j)
       end do 
 
-      lun = n0 + 100
+      dname(icp1) = 'O2_def'
+      dname(2*icp1) = 'cum_O2_def'
 
-      call tabhed (lun,vmin(1),dv(1),two,1,n5name,n6name)
-c                                 number of variables in table
-      write (lun,*) 2*icp + 1 
-c                                 variable names
-      write (lun,'(60(a,1x))') 'P0',(cname(i),i=1,icp),
-     *                             ('cum_'//cname(i),i=1,icp)
+      lun = n0 + 100
+c                                 initialization for the top of
+c                                 each layer
+      do j = 1, ilay
+
+         do i = 1, icp1
+            cdcomp(i,j) = 0d0
+         end do 
+
+         call tabhed (lun + i,vmin(1),dv(1),two,1,n5name,n6name)
+
+      end do 
 c                                 nrow is the number of steps along the subduction
 c                                 path:
       do j = 1, nrow
@@ -626,8 +684,8 @@ c                                 array into the local array and get the total
 c                                 number of moles (ctotal)
             ctotal = 0d0
 c                                 get total moles to compute mole fractions             
-            do i = 1, icp
-               dcomp(i) = 0 
+            do i = 1, icp+1
+               dcomp(i) = 0d0
                cblk(i) = gblk(k,i)
                ctotal = ctotal + cblk(i)
             end do
@@ -646,7 +704,9 @@ c                                 at this point we've computed the stable
 c                                 assemblage at each point in our column
 c                                 and could do mass transfer, etc etc 
 c                                 here we'll simply fractionate the fluid 
-c                                 phase 
+c                                 phase
+            if (iox.ne.0) dcomp(icp+1) = dcomp(iox)
+
             do i = 1, icp 
 c                                 subtract the fluid from the current composition
                gblk(k,i) = gblk(k,i) - dcomp(i) 
@@ -660,16 +720,28 @@ c                                 and add it to the overlying composition
                    if (gblk(k,i).lt.0d0) then
                       write (*,*) 'bulk < 0, at k,i',k,i,gblk(k,i)
                       gblk(k,i) = 0d0
-                   end if 
-               else 
-                  cdcomp(i) = cdcomp(i) + dcomp(i)
+                   end if
                end if 
+c                                 oxygen deficit and cumulative change
+               if (iox.ne.0d0) dcomp(icp1) = dcomp(icp1) 
+     *                                     - vox(i)*dcomp(i)
+c                                 save layer specific results
+               do l = 1, ilay
+c                                 cumulative change
+                  if (k.eq.itop(l)) cdcomp(i,l) = cdcomp(i,l) + dcomp(i)
+               end do
+
             end do
-            
-            if (k.eq.ncol) then 
-               write (lun,'(60(g13.6,1x))') (dcomp(i),i=1,icp),
-     *                                      (cdcomp(i),i=1,icp)
-            end if       
+
+            do l = 1, ilay
+c                                 cumulative change
+               if (k.eq.itop(l)) then 
+                  cdcomp(icp1,l) = cdcomp(icp1,l) + dcomp(icp1)
+                  write (lun + l,'(200(g13.6,1x))') 
+     *                                   p0,(dcomp(i),i=1,icp1),
+     *                                      (cdcomp(i,l),i=1,icp1)
+               end if
+            end do
 c                                 reset initialize top layer if gloopy = 999
             if (gloopy.eq.999.and.k.gt.ncol-irep(ilay)) then 
                do i = 1, icp

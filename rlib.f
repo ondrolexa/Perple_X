@@ -18995,7 +18995,10 @@ c----------------------------------------------------------------------
       common/ cst103 /isec,icopt,ifull,imsg,io3p
 
       character vnm*8
-      common/ cxt18a /vnm(l3)  
+      common/ cxt18a /vnm(l3)
+
+      integer iam
+      common/ cst4 /iam
 
       logical fileio
       integer ncol, nrow
@@ -19020,7 +19023,13 @@ c                                 value, increment & nodes
       end do 
 c                                 number of pseudo-dependent variables,
       ivar = 2
-      if (icopt.eq.7.and.fileio) ivar = 3
+      if (icopt.eq.7.and.fileio) then
+         ivar = 3
+      else if (icopt.eq.9.and.iam.eq.1) then 
+         ivar = 1
+      else 
+         ivar = 2
+      end if 
 c                                 convert a8 names to a14
       do i = 1, ivar
          vname(i) = vnm(i)
