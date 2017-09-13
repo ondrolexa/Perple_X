@@ -9,7 +9,7 @@
 Anderson-Gruneisen         F    | Anderson-Gruneisen parameter correction for polythermal Murnaghan and Birch-Murnaghan
 approx_alpha               T    | use approximation exp(x)~1+x to evaluate expansivity effect on volume
 aqueous_output             T    | T[rue] or F[alse], output back-calculated solute chemistry when electrolyte data is available
-aqueous_species            20   | maximum number of solute species output (ranked by concentration)
+aqueous_species            40   | maximum number of solute species output (ranked by concentration)
 aq_solvent_composition     y    | y -> mole fractions, m -> molality; default y
 aq_solute_composition      m    | y -> mole fractions, m -> molality; default m
 auto_refine                aut  | auto, manual, or off (auto_refine keyword group)
@@ -33,7 +33,7 @@ finite_difference_p    1d4 1d-2 | threshold [1d4] and fraction [1d-2] for 1st or
 global_reach_increment      0   | >= 0; overridden by reach_factor specified in solution model file
 grid_levels                1 4  | exploratory and autorefine (grid parameters keyword group)
 hard_limits                off  | on or off; on => use compositional limits specified in solution model
-hybrid_EoS_H2O            5     | [4] 0-2, 4-5 => 0 - MRK, 1 HSMRK, 2 - CORK, 4 - PSEoS, 5 - Haar
+hybrid_EoS_H2O            4     | [4] 0-2, 4-5 => 0 - MRK, 1 HSMRK, 2 - CORK, 4 - PSEoS, 5 - Haar
 hybrid_EoS_CO2            4     | [4] 0-4 => 0 - MRK, 1 HSMRK, 2 - CORK, 3- Bottinga, 4 - PSEoS
 hybrid_EoS_CH4            1     | [1] 0-1  => 0 - MRK, 1 HSMRK
 increment             0.1 0.025 | 0, <1; exploratory and autorefine

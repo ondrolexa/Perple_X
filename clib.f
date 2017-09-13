@@ -2338,11 +2338,12 @@ c-----------------------------------------------------------------------
       integer jlow,jlev,loopx,loopy,jinc
       common/ cst312 /jlow,jlev,loopx,loopy,jinc 
 
+      logical pzfunc
       integer gloopy,ilay,irep
       double precision a0,a1,a2,a3,b0,b1,b2,b3,c0,c1,c2,c3,dv1dz,
      *               zbox,iblk
-      common/ cst66 /a0,a1,a2,a3,b0,b1,b2,b3,c0,c1,c2,c3,dv1dz,
-     *               zbox,iblk(maxlay,k5),gloopy,ilay,irep(maxlay)
+      common/ cst66 /a0,a1,a2,a3,b0,b1,b2,b3,c0,c1,c2,c3,dv1dz,zbox,
+     *               iblk(maxlay,k5),gloopy,ilay,irep(maxlay),pzfunc
 
       logical fileio
       integer ncol, nrow
@@ -2392,6 +2393,12 @@ c                                 c(z0) = c0 + c1*z0 + c2*z0^2 + c3*z0^3 + ...
       read (n8,*) a0, a1, a2, a3
       read (n8,*) b0, b1, b2, b3
       read (n8,*) c0, c1, c2, c3
+c                                 use a0 value as flag for internal pzfunc
+      if (a0.eq.0d0) then
+         pzfunc = .true.
+      else 
+         pzfunc = .false.
+      end if 
 c                                 get the initial global composition array
 c                                 consisting of ibox compositions defined 
 c                                 in terms of icp components. this read
@@ -2487,13 +2494,15 @@ c----------------------------------------------------------------------
 
       parameter (maxlay=6) 
 
-      double precision p0, z0, dz
+      double precision p0, z0, dz, z2, z3, z4, z5, z6, t0, t1, t2, a, b,
+     *                 c
 
+      logical pzfunc
       integer gloopy,ilay,irep
       double precision a0,a1,a2,a3,b0,b1,b2,b3,c0,c1,c2,c3,dv1dz,
      *               zbox,iblk
-      common/ cst66 /a0,a1,a2,a3,b0,b1,b2,b3,c0,c1,c2,c3,dv1dz,
-     *               zbox,iblk(maxlay,k5),gloopy,ilay,irep(maxlay)
+      common/ cst66 /a0,a1,a2,a3,b0,b1,b2,b3,c0,c1,c2,c3,dv1dz,zbox,
+     *               iblk(maxlay,k5),gloopy,ilay,irep(maxlay),pzfunc
 
       integer irct,ird
       double precision vn
@@ -2517,6 +2526,50 @@ c                                values
 
          v(1) = vn((i-1)*ncol + j, 1)
          v(2) = vn((i-1)*ncol + j, 2)
+
+      else if (pzfunc) then 
+c                                 this could be made a lot more efficient by
+c                                 making the quadratic coeffs once for each column
+         z0 = p0/dv1dz
+         z2 = z0*z0
+         z3 = z2*z0
+         z4 = z3*z0
+         z5 = z4*z0
+         z6 = z5*z0
+
+         t2 = -0.1099312D-6*z4 +0.5065153D-4*z3 -0.3902580D-2*z2 
+     *        +0.3024415D0 *z0 +0.8107985D3
+
+          if (z0.lt.75d0) then
+c                                t0, t1 shallow
+             t0 = 0.1255734D-5*z5 -0.2000554D-3*z4 +0.1180485D-1*z3 
+     *           -0.3163565D0 *z2 +0.6026698D1 *z0 + 0.276185544D3
+             t1 = 0.1409099D-4*z4 -0.1603057D-2*z3 + 0.5553760D-1*z2 
+     *           +0.2762566D0 *z0 +0.4401928241D3
+          else if (z0.lt.78.99d0) then
+c                                t0 deep
+             t0 = -0.2059655D-9*z6 +0.2323113D-6*z5 - 0.1076535D-3*z4 
+     *            +0.2625959D-1*z3 -0.3566382D1 *z2 + 0.2582593D3 *z0 
+     *            -0.6916326D4
+c                                t1 shallow
+             t1 = 0.1409099D-4*z4 -0.1603057D-2*z3 + 0.5553760D-1*z2 
+     *           +0.2762566D0 *z0 +0.4401928241D3
+          else
+c                                t0, t1 deep
+             t0 = -0.2059655D-9*z6 +0.2323113D-6*z5 - 0.1076535D-3*z4 
+     *            +0.2625959D-1*z3 -0.3566382D1 *z2 + 0.2582593D3 *z0 
+     *            -0.6916326D4
+
+             t1 = -0.3998088D-6*z4 +0.3672092D-3*z3 - 0.1290587D0*z2 
+     *            +0.2181334D2 *z0 -0.5161647D3
+          end if
+
+         a = -t1 / 272d0 + t2 / 850d0 + t0 / 400d0
+         b = -dsqrt(2d0) * (64d0*t2 - 625d0*t1 + 561d0*t0)/6800d0
+
+         v(1) = p0 + dz * dv1dz
+
+         v(2) = a*dz**2 + b*dz + t0
 
       else 
 c                                 convert to depth at top of column

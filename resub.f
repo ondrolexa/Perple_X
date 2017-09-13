@@ -961,8 +961,7 @@ c                                             solution.
 
       end if
 
-         write (*,*) p,t,iter
-
+c         write (*,*) p,t,iter
 
       end 
 
@@ -2886,18 +2885,11 @@ c                                  solution composition, don't save the phase
 c                                  in the list of metastable phases (as was 
 c                                  done pre-july 3, 2017.
 
-         end do 
-
-        if (npt.lt.icp) then 
-           write (*,*) 'now too few', npt, icp, iter
-           write (*,*) p, t
-        end if 
+         end do
 
       end if 
 c                                 get mu's for lagged speciation
-      call getmus (iter,iter-1,.false.)  
-
-c      write (*,*) 'npt opt kpt', npt, opt, kpt     
+      call getmus (iter,iter-1,.false.)
 
       if (iter.le.iopt(10)) then
 c                                 if not done iterating, add the metastable
@@ -2991,8 +2983,6 @@ c                                 -----------------
          end do 
 
       end if 
-
-c      write (*,*) 'npt opt ', npt, opt
 
       end
 

@@ -454,7 +454,7 @@ c-----------------------------------------------------------------------
 
       character*100 n6name, n5name
 
-      integer i,j,k,idead,two(2),lun,iox
+      integer i,j,k,l,idead,two(2),lun,iox,itop(maxlay),icp1
 
       double precision gblk(maxbox,k5),dz,p0,cdcomp(k5,maxlay),vox(k5)
 
@@ -496,11 +496,12 @@ c-----------------------------------------------------------------------
       integer iap,ibulk
       common/ cst74 /iap(k2),ibulk
 
+      logical pzfunc
       integer gloopy,ilay,irep
       double precision a0,a1,a2,a3,b0,b1,b2,b3,c0,c1,c2,c3,dv1dz,
      *               zbox,iblk
-      common/ cst66 /a0,a1,a2,a3,b0,b1,b2,b3,c0,c1,c2,c3,dv1dz,
-     *               zbox,iblk(maxlay,k5),gloopy,ilay,irep(maxlay)
+      common/ cst66 /a0,a1,a2,a3,b0,b1,b2,b3,c0,c1,c2,c3,dv1dz,zbox,
+     *               iblk(maxlay,k5),gloopy,ilay,irep(maxlay),pzfunc
 
       logical fileio
       integer ncol, nrow

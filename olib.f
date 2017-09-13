@@ -2684,7 +2684,7 @@ c                                 pressure increments
 
          if (okt) then 
             if (dp0/dabs(fac*v/gpp).lt.1d-1) then 
-            write (*,*) 'pp',dp0/dabs(fac*v/gpp),dp0,p,t,id
+c            write (*,*) 'pp',dp0/dabs(fac*v/gpp),dp0,p,t,id
             end if 
             dp0 = dabs(fac*v/gpp)
          else 
@@ -2734,7 +2734,7 @@ c                                 temperature increments
 
          if (okt) then 
             if (dt0/dabs(fac*s/gtt).lt.1d-1) then
-            write (*,*) 'tt',dt0/dabs(fac*s/gtt),dt0,p,t,id
+c            write (*,*) 'tt',dt0/dabs(fac*s/gtt),dt0,p,t,id
             end if 
             dt0 = dabs(fac*s/gtt)
          else 
