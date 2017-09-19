@@ -396,7 +396,7 @@ ftts_d  = 1 tts   + 1 grun   - 1 a
 grk_d   = 1 mrbG  + 1 ts    + 1 cumm   - 1 gl - 1 tr
 fgrk_d  = 1 mrbG  + 1 ts    - 1 gl     - 1 tr + 1 b
 
-1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 | endmember flags
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | endmember flags
 
                              | imod = 0 -> cartesian subdivision
                              | imod = 1 -> assymetric stretching subdivision
@@ -2837,6 +2837,44 @@ z(x,Mg) = 1 py
 3 2.                              |2 species, site multiplicity 2
 z(y,al) = 1 alm + 1 py + 1 gr
 z(y,cr) = 1 knor
+
+end_of_model 
+
+                      -------------------------------------------------------- 
+begin_model
+                             ad hoc pumpellyite, assumes fe-mg occupy two 
+                             octahedral (M1) sites and al-fe3 occupy 5 (M2). 
+                                                       JADC, Sep 17, 2017
+
+Pu
+abbreviation Pu
+full_name    pumpellyite
+    
+7                                 | model type: Margules with dependent endmembers
+2                                 | number of independent mixing sites, reciprocal solution
+2  2                              | 2 species on site M1, 2 species on site M2.                                                                          
+
+mpm  fpm                          | endmembers 
+mjgd jgd
+
+1                                 | number of dependent endmembers 
+
+mjgd  = 1 jgd  + 1 mpm - 1 fpm
+
+0  0  0  0                        | endmember flags
+
+0. 1.   0.1 0                     | imod = 0 -> cartesian subdivision (xfe) on M1
+0. 1.   0.1 0                     | imod = 0 -> cartesian subdivision (xmg) on M1
+
+ideal
+
+2                                 |2 site entropy model
+
+2 1.                              |2 species, M1 site multiplicity 1
+z(M1,Mg) = 1 mpm
+
+2 5.                              |2 species, M2 site multiplicity 5
+z(M2,Fe3) = 1 jgd
 
 end_of_model 
                       --------------------------------------------------------
@@ -5435,6 +5473,31 @@ end_excess_function
 
 z(mg) = 1 fo
 z(fe) = 1 fa 
+
+end_of_model              
+                                  --------------------------------------------------------
+begin_model                
+                                      ad hoc stilpnomelane
+
+Stlp                     
+abbreviation Stlp
+full_name    stilpnomelane
+                                                          
+2                                     model type: Margules, macroscopic
+
+2                                     endmembers
+mstp fstp    
+0  0                                | endmember flags
+
+0.0 1.0  0.1   0                    | range and resolution for X(Mg), imod = 0 -> cartesian subdivision
+
+ideal
+
+1                                     1 site entropy model
+
+2 5.                                  3 species, site multiplicity = 2.
+
+z(mg) = 1 mstp
 
 end_of_model              
                                   --------------------------------------------------------
@@ -9207,7 +9270,7 @@ fts   = 1 ts_dqf   + 1 grun    - 1 cammo1
 grk   = 1 mrb      + 1 ts_dqf  + 1 cumm   - 1 gl_dqf - 1 tr
 fgrk  = 1 mrb      + 1 ts_dqf  - 1 gl_dqf - 1 tr + 1 cammo2
 
-1 1 1 1 1 1 1 1 1 1 1 1 1 1   | endmember flags.
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0    | endmember flags.
 
 0. 1.  .1  0               | range and resolution for X(Mg) on site 1, imod = 0 -> cartesian subdivision
 
@@ -9848,16 +9911,18 @@ abbreviation F
 full_name    fluid
 
 39                          | model type: Generic Hybrid EoS
-5
+6
 CO2
 CH4
 H2S
 SO2
-H2O 
+H2
+H2O
 
 
-  0  0  0  0  0            | endmember flags
+  0  0  0  0  0  0          | endmember flags
 
+0.0 1.0 0.1       0        | subdivision ranges, imod = 0 -> cartesian subdivision
 0.0 1.0 0.1       0        | subdivision ranges, imod = 0 -> cartesian subdivision
 0.0 1.0 0.1       0        | subdivision ranges, imod = 0 -> cartesian subdivision
 0.0 1.0 0.1       0        | subdivision ranges, imod = 0 -> cartesian subdivision

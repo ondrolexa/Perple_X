@@ -2019,8 +2019,8 @@ c                                 pointer
       common/ cxt2 /aqg(m4),qq(m4),rt,jnd(m4)
 
       integer jphct
-      double precision g2, cp2
-      common/ cxt12 /g2(k21),cp2(k5,k21),jphct
+      double precision g2, cp2, caqtot
+      common/ cxt12 /g2(k21),cp2(k5,k21),caqtot(k21),jphct
 
       integer iopt
       logical lopt
@@ -2078,8 +2078,10 @@ c                                 MEEMUM:
 c                                 cp2 works for meemum/vertex, but not werami
 c                                 the id index on cp2 is intentional.
                do j = 1, icomp 
-                  cp3(j,jd) = cp2(j,id)
-               end do 
+                  cp3(j,jd) = cp2(j,id)*caqtot(id)
+               end do
+
+               cptot(jd) = caqtot(id)
 
             else  
 c                                  WERAMI:
@@ -2103,9 +2105,9 @@ c                                 convert molality to mole fraction (xx)
              
                   end do
 
-               end if 
+               end if
 
-            end if  
+            end if
 
          else if (lrecip(ids)) then
 c                                 get the p' coordinates (amounts of 
@@ -2357,6 +2359,9 @@ c                                 of type aux
       call mertxt (name,prject,'.aux',0)
       open (n8,file=name,status='old',iostat=ier)
 
+      call mertxt (name,prject,'.fld',0)
+      open (n12,file=name)
+
       if (ier.ne.0) call error (51,zbox,gloopy,name) 
 c                                 set the number of independent variables
 c                                 to 1 (the independent path variable must
@@ -2530,7 +2535,7 @@ c                                values
       else if (pzfunc) then 
 c                                 this could be made a lot more efficient by
 c                                 making the quadratic coeffs once for each column
-         z0 = p0/dv1dz
+         z0 = p0/dv1dz/1d3
          z2 = z0*z0
          z3 = z2*z0
          z4 = z3*z0
@@ -2569,7 +2574,7 @@ c                                t0, t1 deep
 
          v(1) = p0 + dz * dv1dz
 
-         v(2) = a*dz**2 + b*dz + t0
+         v(2) = a*(dz/1d3)**2 + b*(dz/1d3) + t0
 
       else 
 c                                 convert to depth at top of column

@@ -155,8 +155,8 @@ c                                 -------------------------------------
 c                                 global variables
 c                                 adaptive coordinates
       integer jphct
-      double precision g2, cp2
-      common/ cxt12 /g2(k21),cp2(k5,k21),jphct
+      double precision g2, cp2, caqtot
+      common/ cxt12 /g2(k21),cp2(k5,k21),caqtot(k21),jphct
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
@@ -375,8 +375,8 @@ c                                 -------------------------------------
 c                                 global variables:
 c                                 adaptive g and compositions
       integer jphct
-      double precision g2, cp2
-      common/ cxt12 /g2(k21),cp2(k5,k21),jphct
+      double precision g2, cp2, caqtot
+      common/ cxt12 /g2(k21),cp2(k5,k21),caqtot(k21),jphct
 
       logical quack
       common/ cxt1 /quack(k21)
@@ -772,8 +772,8 @@ c-----------------------------------------------------------------------
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 c                                 adaptive coordinates
       integer jphct
-      double precision g2, cp2
-      common/ cxt12 /g2(k21),cp2(k5,k21),jphct
+      double precision g2, cp2, caqtot
+      common/ cxt12 /g2(k21),cp2(k5,k21),caqtot(k21),jphct
 c                                 bookkeeping variables
       integer ksmod, ksite, kmsol, knsp
       common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
@@ -1136,8 +1136,8 @@ c-----------------------------------------------------------------------
       common/ cst57 /dcp(k5,k19),soltol
 
       integer jphct
-      double precision g2, cp2
-      common/ cxt12 /g2(k21),cp2(k5,k21),jphct
+      double precision g2, cp2, caqtot
+      common/ cxt12 /g2(k21),cp2(k5,k21),caqtot(k21),jphct
 c-----------------------------------------------------------------------
       solvs2 = .false.
 
@@ -2766,8 +2766,8 @@ c                                 ------------
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       integer jphct
-      double precision g2, cp2
-      common/ cxt12 /g2(k21),cp2(k5,k21),jphct
+      double precision g2, cp2, caqtot
+      common/ cxt12 /g2(k21),cp2(k5,k21),caqtot(k21),jphct
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
@@ -3197,8 +3197,8 @@ c----------------------------------------------------------------------
       common/ cst52  /hcp,idv(k7) 
 
       integer jphct
-      double precision g2, cp2
-      common/ cxt12 /g2(k21),cp2(k5,k21),jphct
+      double precision g2, cp2, caqtot
+      common/ cxt12 /g2(k21),cp2(k5,k21),caqtot(k21),jphct
 
       double precision a,b,c
       common/ cst313 /a(k5,k1),b(k5),c(k1)

@@ -454,7 +454,8 @@ c-----------------------------------------------------------------------
 
       character*100 n6name, n5name
 
-      integer i,j,k,l,idead,two(2),lun,iox,itop(maxlay),icp1
+      integer i,j,k,l,idead,two(2),lun,iox,itop(maxlay),icp1,
+     *        layer(maxbox)
 
       double precision gblk(maxbox,k5),dz,p0,cdcomp(k5,maxlay),vox(k5)
 
@@ -522,7 +523,10 @@ c-----------------------------------------------------------------------
      *               k2c(i11),iprop,kfl(i11),tname
 
       character cname*5
-      common/ csta4  /cname(k5) 
+      common/ csta4  /cname(k5)
+
+      double precision v,tr,pr,r,ps
+      common/ cst5  /v(l2),tr,pr,r,ps
 
       logical first
 
@@ -623,6 +627,8 @@ c                                 check resolution dependent dimensions
 
             ncol = ncol + 1
 
+            layer(ncol) = i
+
             do k = 1, icp 
                gblk(ncol,k) = iblk(i,k)
             end do
@@ -664,12 +670,14 @@ c                                 each layer
             cdcomp(i,j) = 0d0
          end do 
 
-         call tabhed (lun + i,vmin(1),dv(1),two,1,n5name,n6name)
+         call tabhed (lun + j,vmin(1),dv(1),two,1,n5name,n6name)
 
       end do 
 c                                 nrow is the number of steps along the subduction
 c                                 path:
       do j = 1, nrow
+
+         write (*,*) 'Column ',j,' of ',nrow
 c                                 j loop varies the pressure at the top of the 
 c                                 column (p0), set p0:
          p0 = vmin(1) + (j-1)*dv(1)
@@ -699,6 +707,18 @@ c                                 the results to the print file.
             if (io3.eq.0) write (n3,*) 'step ',j,' on path, box ',k
 
             call lpopt (j,k,idead,output)
+
+            if (idead.ne.0) then 
+c                                 write failure info to fld file:
+               write (n12,2000) p0,dz,layer(k),k,j,v(1),v(2),
+     *                          (gblk(k,i),i=1,icp)
+               write (n12,2010) (itop(i),i=1,ilay)
+
+               write (*,2000) p0,dz,layer(k),k,j,v(1),v(2),
+     *                        (gblk(k,i),i=1,icp)
+               write (*,2010) (itop(i),i=1,ilay)
+
+            end if 
 
             call fractr (idead,output)
 c                                 at this point we've computed the stable
@@ -754,7 +774,11 @@ c                                 end of the k index loop
 c                                 end of j index loop
       end do 
 
-      if (output.and.io4.eq.0) call outgrd (nrow,ncol,1) 
+      if (output.and.io4.eq.0) call outgrd (nrow,ncol,1)
+
+2000  format (/,' failed at p0-dz = ',2(g14.7,1x),' layer ',i1,' node '
+     *       ,i3,' column ',i3,/,' p-t-c ',2(g14.7,1x),/,12(g14.7,1x))
+2010  format (' layer boundaries are ',5(i3,1x))
 
       end 
 
@@ -1685,7 +1709,10 @@ c----------------------------------------------------------------------
 
       integer iam, jfrct, i
 
-      character phase(k23)*10, fname*14, y*1
+      character phase(k23)*10, fname*14, y*1, name*100
+
+      character*100 prject,tfname
+      common/ cst228 /prject,tfname
 
       integer ifrct,ifr
       logical gone
@@ -1751,17 +1778,17 @@ c                                 initialize "gone" flags
          gone(i) = .false.
       end do 
 c                                 open fractionation files
-      open (n0,file='fractionated_bulk.dat',status='unknown')
+      call mertxt (name,prject,'_fractionated_bulk.dat',0)
+      open (n0,file=name,status='unknown')
       write (*,1050)
 
       do i = 1, ifrct 
 
-         write (fname,'(a,a)') phase(i),'.dat'
-         call unblnk (fname)
+         call mertxt (name,prject,'_'//phase(i)//'.dat',0)
 
-         write (*,1010) phase(i), fname
+         write (*,1010) phase(i), name
 
-         open (n0+i,file=fname,status='unknown')
+         open (n0+i,file=name,status='unknown')
 
       end do 
 

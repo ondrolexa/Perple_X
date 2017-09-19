@@ -18440,8 +18440,8 @@ c-----------------------------------------------------------------------
       common/ cstaq /q(l9),q2(l9),qr(l9),jchg(l9),ichg,ion
 c                                 adaptive coordinates
       integer jphct
-      double precision g2, cp2
-      common/ cxt12 /g2(k21),cp2(k5,k21),jphct
+      double precision g2, cp2, caqtot
+      common/ cxt12 /g2(k21),cp2(k5,k21),caqtot(k21),jphct
 
       double precision thermo,uf,us
       common/ cst1 /thermo(k4,k10),uf(2),us(h5)
@@ -18616,11 +18616,21 @@ c                                 moles/kg-solvent
          gtot = gtot + slvmo(i) * (gso(i) + rt*dlog(caq(id,i)))
       end do 
 c                                 bulk fluid composition 
-      totm = 0d0 
+      totm = 0d0
 
       do j = 1, icp
+c                                totm is the total number of moles of the
+c                                components in a solution of smo moles of 
+c                                species
          totm = totm + blk(j)
       end do
+c                                caqtot is the number of moles of the 
+c                                components in a solution with 1 mole of
+c                                species, this is needed for consistent
+c                                ouput (i.e., a mol of the phase is per
+c                                mol of species rather than per mole of 
+c                                components). at the cost of k21 real vars...
+      caqtot(id) = totm/smo
 
       if (recalc) then
 c                                 stuff needed for output:
@@ -18638,7 +18648,7 @@ c                                 error in log10(Kw)
      *                 ))/2.302585d0
 
          do j = 1, icp
-            cp2(j,id) = blk(j)/totm
+            cp2(j,id) = blk(j)/smo
          end do
 
       else 

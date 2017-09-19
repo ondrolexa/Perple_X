@@ -2366,6 +2366,14 @@ c1 = 47.4  c2 = .1024E-1  c3 = 615900  c5 = -397.8
 b5 = 141.7566  
 end
 
+
+SO2      EoS = 108 | SO2,g    SUPCRT DATA       SULFUR-DIOXIDE            ref:6,8       
+O2(1)S2(.5)
+G0 = -300194. S0 = 248.237  
+c1 = 46.1914 c2 = .786592E-2 c3 = -769856  
+end
+
+
  
 syvL      EoS = 9  
 K(1)Cl2(.5)
