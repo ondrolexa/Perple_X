@@ -16,7 +16,7 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer liw,lw,k,idead,inc
+      integer liw,lw,k,idead,inc,kphct
 
       parameter (liw=2*k1+3,lw=2*(k5+1)**2+7*k1+5*k5)  
 
@@ -63,9 +63,21 @@ c                                 solution model counter
       double precision cptot,ctotal
       common/ cst78 /cptot(k19),ctotal,jdv(k19),npt
 
+      integer idegen, idg(k5)
+      common/ cst315 /idegen, idg
+
       save ax, x, clamda, w, is, iw
 c-----------------------------------------------------------------------
+      idegen = 0
+
       if (.not.usv) then 
+c                                 degeneracy test
+         do k = 1, icp 
+            if (b(k).eq.0d0) then 
+               idegen = idegen + 1
+               idg(idegen) = k
+            end if 
+         end do
 
          inc = istct - 1
 
@@ -92,7 +104,7 @@ c                                 optimize by nag
 
       if (idead.gt.0) then
 c                                 look for severe errors                                            
-         call lpwarn (idead,0,'LPOPT ')
+         call lpwarn (idead,'LPOPT ')
 c                                 on severe error do a cold start.
 c                                 necessary?
          istart = 0
@@ -104,6 +116,9 @@ c                                 final processing, .true. indicates static
          call rebulk (.true.)
 
       else
+c                                 save kphct to recover static solution if
+c                                 no refinement 
+         kphct = jphct 
 c                                 find discretization points
 c                                 for refinement
          call yclos1 (clamda,x,is,jphct,quit)
@@ -116,10 +131,20 @@ c                                 final processing, .true. indicates static
 c                                 reoptimize with refinement
             call reopt (idead)
 c                                 final processing, .false. indicates dynamic
-            if (idead.eq.0) call rebulk (.false.) 
+            if (idead.eq.0) then 
+               call rebulk (.false.)
+            else if (idead.eq.-1) then
+c                                 hail mary
+               jphct = kphct
+               idead = 0
+
+               call yclos0 (x,is,jphct) 
+               call rebulk (.true.)
+
+            end if 
 
          end if 
-         
+
       end if 
      
       if (.not.usv) then 
@@ -254,12 +279,19 @@ c                                 the point is a pseudocompound, refine it
             call resub (i,id,ikp(id),iref,iter,first,wad1,wad2)
 
          end if
-c                                 reset jdv in case of exit
+c                                 reset jdv in case of exit, this isn't 
+c                                 gonna work cause npt > icp and the vertices
+c                                 are not ordered. 
          jdv(i) = jphct
 
       end do 
 
-      if (iref.eq.0) return
+      if (iref.eq.0) then
+c                                 if nothing to refine, set idead 
+c                                 to recover previous solution
+         idead = -1
+         return
+      end if 
  
       do 
 c                                 iter is incremented before the operations,
@@ -276,7 +308,7 @@ c                                 do the optimization
 c                                 warn if severe error
          if (idead.gt.0) then
 
-            call lpwarn (idead,iter-1,'REOPT ')
+            call lpwarn (idead,'REOPT ')
             exit
 
          end if 
@@ -362,12 +394,11 @@ c----------------------------------------------------------------------
       include 'perplex_parameters.h'
 c                                 -------------------------------------
 c                                 local variables
-      logical bad, first, quack1, quack2, quack3, wad1, wad2, wad3
+      logical bad, first, quack1, quack2, wad1, wad2
 
       double precision xxnc, ysum, res0
 
-      integer i, j, k, l, m, ids, id, jd, iter, kcoct, iref, last, j0, 
-     *        j1 
+      integer i, j, k, l, m, ids, id, jd, iter, kcoct, iref, last, j0
 c                                 -------------------------------------
 c                                 functions
       double precision gsol1, ydinc
@@ -645,8 +676,16 @@ c                                 reject composition
             if (quack1) then 
 c                                 solute free cpd
                g2(jphct) = gsol1(ids)
-               call csol (ids)
 
+               call csol (ids,bad)
+
+               if (bad) then 
+                  jphct = jphct - 1
+                  jcoct = kcoct - mcoor(ids)
+                  cycle
+               end if 
+
+               caqtot(jphct) = 0d0 
                quack(jphct) = .true.
 c                                 now pad out counters for 
 c                                 a solute cpd
@@ -683,7 +722,7 @@ c                                 a solute cpd
 
             end if 
 
-c           wad2 = .false.
+            wad2 = .true.
 
             if (wad1.and.wad2) then
 c                                 make water, ha ha
@@ -730,7 +769,13 @@ c                                 computes the p compositional coordinates
             g2(jphct) = gsol1(ids)
 c                                 use the coordinates to compute the composition 
 c                                 of the solution
-            call csol (ids)
+            call csol (ids,bad)
+
+            if (bad) then 
+               jphct = jphct - 1
+               jcoct = kcoct - mcoor(ids)
+               cycle
+            end if 
 
          end if 
 
@@ -744,7 +789,7 @@ c                                 of the solution
 
       end 
 
-      subroutine csol (id)
+      subroutine csol (id,bad)
 c-----------------------------------------------------------------------
 c csol computes chemical composition of solution id from the macroscopic
 c endmember fraction array y or p0a (cxt7), these arrays are prepared by a prior
@@ -752,12 +797,17 @@ c call to function gsol. the composition is loaded into the array cp2 at
 c position jphct.
 c-----------------------------------------------------------------------
       implicit none
- 
+
       include 'perplex_parameters.h'
 
       integer i, j, k, id
 
+      logical bad
+
       double precision ctot2
+
+      integer idegen, idg(k5)
+      common/ cst315 /idegen, idg
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
@@ -867,18 +917,32 @@ c                                 general case (y coordinates)
 c                                  a phase with a null composition may appear
 c                                  as an endmember of a solution in a calculation
 c                                  with mobile components:
-      if (ctot2.ne.0d0) then 
+
+c                                  sept 22 2017: previously null compositions were
+c                                  given unstable properties, bad flag added this 
+c                                  date along with degeneracy check. 
+      bad = .false.
+
+      if (ctot2.ne.0d0) then
 c                                  normalize the composition and free energy
          g2(jphct) = g2(jphct)/ctot2
 
-         do j = 1, icp 
+         do j = 1, icp
+
             cp2(j,jphct) = cp2(j,jphct)/ctot2
+
+            do i = 1, idegen
+               if (cp2(idg(i),jphct).eq.0d0) then 
+                  bad = .true.
+                  return
+               end if 
+            end do
+
          end do
 
       else 
 
-         g2(jphct) = 1d12*p
-         cp2(1,jphct) = 1d0
+         bad = .true.
 
       end if
 
@@ -916,7 +980,7 @@ c----------------------------------------------------------------------
 
       end 
 
-      subroutine lpwarn (idead,iter,char)
+      subroutine lpwarn (idead,char)
 c----------------------------------------------------------------------
 c write warning messages from lpnag as called by routine 'char',
 c set flags ier and idead, the optimization is a total fail if
@@ -924,7 +988,7 @@ c idead set to 1.
 c----------------------------------------------------------------------
       implicit none
 
-      integer idead, iwarn91, iwarn42, iwarn90, iter
+      integer idead, iwarn91, iwarn42, iwarn90
 
       character*6 char     
 
@@ -1162,7 +1226,7 @@ c     ncpd - is the number of true compounds
 c     ntot - np+ncpd
 
 c this routine is unecessarily complicated, because it assumes
-c pseudocompounds are not ordered by solution (but they are
+c pseudocompounds are not ordered by solution (but they are)
 c----------------------------------------------------------------------
       implicit none
 
@@ -2736,7 +2800,7 @@ c----------------------------------------------------------------------
       external ffirst
 
       integer i, is(*), id, jmin(k19), kmin(k19), opt, kpt, mpt, iter, 
-     *        tic
+     *        tic, j
 
       double precision clamda(*), clam(k19), x(*)
 
@@ -2822,6 +2886,15 @@ c                                 a stable point, add to list
             npt = npt + 1
             jdv(npt) = i
             stable(id) = .true.
+            if (jkp(i).gt.0) then 
+            if (ksmod(jkp(i)).eq.39) then
+               write (*,'(a,12(g14.6,1x))') 'stable ',g2(i)
+               write (*,'(a,12(g14.6,1x))') '       ',cp2(1,i),
+     *                    cp2(2,i),cp2(3,i),cp2(8,i),cp2(10,i)
+c               write (*,'(a,12(g14.6,1x))') '       ',(cp2(1,i),j=1,5)
+c               write (*,'(a,12(g14.6,1x))') '       ',(cp2(j,i),j=6,icp)
+            end if
+            end if 
 
          else if (clamda(i).lt.clam(id)) then
 c DEBUG wish i wrote was this is about, but it may be in yclos0/1
@@ -2832,7 +2905,7 @@ c                                 it's a solution, keep the
 c                                 least metastable point
                jmin(id) = i
                clam(id) = clamda(i)
-  
+
             else 
 c                                 it's a compound, keep all 
 c                                 as they hardly cost anything. 
@@ -2897,6 +2970,13 @@ c                                 phases, first the compounds:
          do i = 1, kpt
             npt = npt + 1 
             jdv(npt) = kmin(i)
+            if (jkp(kmin(i)).gt.0) then 
+            if (ksmod(jkp(kmin(i))).eq.39) then
+               write (*,'(a,12(g14.6,1x))') 'unstab ',
+     *                   (cp2(j,i),j=1,icp)
+            end if
+            end if 
+
          end do 
 c                                 make a list of the solutions
          kpt = 0 

@@ -18433,7 +18433,7 @@ c-----------------------------------------------------------------------
       logical bad, recalc
 
       double precision mo(l9), blk(k5), is, gamm0, totm, g0(l9), 
-     *                 gso(nsp), lnkw, gtot, smo, slvmo(nsp)
+     *                 gso(nsp), lnkw, gtot, smo, slvmo(nsp), nexp
 
       integer ion, ichg, jchg
       double precision q, q2, qr
@@ -18522,8 +18522,8 @@ c                                 adaptive coordinates
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
      *              wl(m17,m18)
 
-      save badct
-      data badct/0/
+      save badct, nexp
+      data badct, nexp/0,2d0/
 c----------------------------------------------------------------------
       if (.not.mus) then 
 
@@ -18586,7 +18586,12 @@ c                                 first the solutes
 
          if (mo(i).eq.0d0) cycle
 c                                 total g
+         if (q2(i).ne.0d0) then
          gtot = gtot + mo(i) * (g0(i) + rt*dlog(mo(i)*gamm0**q2(i)))
+         else 
+         gtot = gtot + mo(i) * (g0(i) + rt*dlog(mo(i)*
+     *                        (1+mo(i)**nexp) ) )
+         end if
 c                                  total molality
          smo = smo + mo(i)
 c                                 accumulate component moles
@@ -18624,13 +18629,6 @@ c                                components in a solution of smo moles of
 c                                species
          totm = totm + blk(j)
       end do
-c                                caqtot is the number of moles of the 
-c                                components in a solution with 1 mole of
-c                                species, this is needed for consistent
-c                                ouput (i.e., a mol of the phase is per
-c                                mol of species rather than per mole of 
-c                                components). at the cost of k21 real vars...
-      caqtot(id) = totm/smo
 
       if (recalc) then
 c                                 stuff needed for output:
@@ -18660,6 +18658,13 @@ c                                 used by resub
          do j = 1, icp
             cp2(j,jphct) = blk(j)/totm
          end do
+c                                caqtot is the number of moles of the 
+c                                components in a solution with 1 mole of
+c                                species, this is needed for consistent
+c                                ouput (i.e., a mol of the phase is per
+c                                mol of species rather than per mole of 
+c                                components). at the cost of k21 real vars...
+         caqtot(jphct) = totm/smo
 
       end if 
 
@@ -18771,7 +18776,7 @@ c-----------------------------------------------------------------------
 
       integer i, j, it, jt, iexp
 
-      logical bad
+      logical bad, kill
 
       double precision c(l9), mo(*), dg, xis, dn, xdix, 
      *                 d(l9), is, gamm0, g0(*), lnkw, dix,
@@ -18829,17 +18834,38 @@ c                                 dg is the solvent oxide potentials - g
          qr(i) = q(i)/q(ion)
          qb(i) = (q(ion)-q(i))*q(i)
          dg = -g0(i) + qr(i)*g0(ion)
+         kill = .false.
 
          do j = 1, jbulk 
 c                                 if oxide components, but no excess oxygen
 c                                 mu(O2) is a nan. 
-            if (isnan(mu(j))) cycle
+            if (isnan(mu(j))) then
+
+               if (aqcp(j,i).ne.0d0) then 
+                  kill = .true.
+                  exit
+               else
+                  cycle
+               end if 
+
+            end if 
+
+            if (cblk(j).eq.0d0) then 
+               if (aqcp(j,i).ne.0d0) then 
+                  kill = .true.
+                  exit
+               end if 
+            end if 
 
             dg = dg + (aqcp(j,i) - qr(i)*aqcp(j,ion)) * mu(j)
 
          end do 
 c                                 normalize by RT
-         dg = dexp(dg/rt)
+         if (kill) then 
+            dg = 0d0 
+         else 
+            dg = dexp(dg/rt)
+         end if 
 
          if (q(i).ne.0d0) then 
 c                                  this is now c(i)*a(ion)^(q(i)) = mo(i)*gamma(i)*q(i)
@@ -18848,10 +18874,16 @@ c                                  sum (q(i)*m(i)) = 0.
             d(i) = q(i)*dg
             c(i) = d(i)
 
-         else 
+         else if (dg.ne.0d0) then
 c                                  neutral species assumed to be ideal, molality is
             mo(i) = dg
-      
+            dix = (108d0*dg + dsqrt(11664*dg*dg + 1728d0)) **(1d0/3d0)
+            mo(i) = dix/6d0 - 2d0/dix
+
+            if (mo(i).lt.0) then 
+               write (*,*) 'oink'
+            end if
+
          end if 
 
       end do 
@@ -18961,8 +18993,6 @@ c-----------------------------------------------------------------------
       common/ cxt37 /gf, epsln, epsln0, adh, msol, ihy, ioh
 c----------------------------------------------------------------------
       aqact = dexp(adh*dsqrt(is)/(1d0 + dsqrt(is)) + 0.2d0*is)
-
-c     aqact = 1d0
 
       end 
 

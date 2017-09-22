@@ -737,7 +737,7 @@ c                                 check for compositional constraints
             jbulk = jbulk + 1
             read (strg,*,err=998) j, (dblk(i,jbulk), i = 1, icont)    
 c                                 override variance flag choice, why here?
-            isudo = 0    
+
          end if  
 
          isat = isat + 1
@@ -2075,13 +2075,26 @@ c                                 geometric y coordinates
 
             if (iam.ne.3) then 
 c                                 MEEMUM:
+               if (caqtot(id).ne.0d0) then 
+c                                 not pure solvent:
 c                                 cp2 works for meemum/vertex, but not werami
 c                                 the id index on cp2 is intentional.
-               do j = 1, icomp 
-                  cp3(j,jd) = cp2(j,id)*caqtot(id)
-               end do
+                  do j = 1, icomp 
+                     cp3(j,jd) = cp2(j,id)*caqtot(id)
+                  end do
 
-               cptot(jd) = caqtot(id)
+                  cptot(jd) = caqtot(id)
+
+               else 
+c                                 pure solvent
+                  do i = 1, mstot(ids)
+                     do j = 1, icomp
+                        cp3(j,jd) = cp3(j,jd) 
+     *                            + y(i) * cp(j,jend(ids,2+i))
+                     end do
+                  end do
+
+               end if 
 
             else  
 c                                  WERAMI:
@@ -2499,8 +2512,7 @@ c----------------------------------------------------------------------
 
       parameter (maxlay=6) 
 
-      double precision p0, z0, dz, z2, z3, z4, z5, z6, t0, t1, t2, a, b,
-     *                 c
+      double precision p0, z0, dz, z2, z3, z4, z5, z6, t0, t1, t2, a, b
 
       logical pzfunc
       integer gloopy,ilay,irep

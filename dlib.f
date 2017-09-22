@@ -353,9 +353,6 @@ c----------------------------------------------------------------------
       integer idasls,iavar,iasct,ias
       common/ cst75 /idasls(k5,k3),iavar(3,k3),iasct,ias
 
-      integer jcont
-      common/ cst315 /jcont
-
       integer isec,icopt,ifull,imsg,io3p
       common/ cst103 /isec,icopt,ifull,imsg,io3p
 
@@ -382,15 +379,20 @@ c----------------------------------------------------------------------
       common/ cst38/idsol(k5,k3),nrep(k5,k3),nph(k3)
 c----------------------------------------------------------------------
       err = .false.
-
-      if (jcont.ne.0) then 
+c                                 sep 22, 2017: interpolation should 
+c                                 be turned off for calculations in which
+c                                 the bulk composition changes; however
+c                                 jcont (as read in input1) was not the
+c                                 flag for this condition. this needs to 
+c                                 be corrected. 
+c     if (icont.ne.0) then 
 c                                 turn interpolation off for
 c                                 fractionation calcs or compositional
 c                                 variables, this could be optional.
-         iopt(4) = 0
-         write (*,3000) 
+c        iopt(4) = 0
+c        write (*,3000) 
 
-      end if 
+c     end if 
 c                                 top of plot file
       read (n4,*,iostat=ier) loopx, loopy, jinc
       if (ier.ne.0) goto 99

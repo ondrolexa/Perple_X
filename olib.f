@@ -211,16 +211,17 @@ c                                 species_ouput
 
                l = k + inc - 1
                if (l.gt.ct) l = ct
+               tag = ' '
 
                if (ksmod(id).eq.20) then 
 c                                 forward aqueous model
                   write (text,'(20(a,a,g12.5,a))')
      *                  (spnams(j,id),': ',ysp(j,i),', ', j = k, l)
 
-               else if (ksmod(id).eq.39.and.lopt(32)) then
+               else if (ksmod(id).eq.39.and.lopt(32)
+     *                                 .and.caq(i,na1).gt.0d0) then
 
                   m = 1 
-                  tag = ' '
 
                   do j = k, l
                      
@@ -1262,7 +1263,7 @@ c                                 BCC Fe-Cr Andersson and Sundman
          else if (ksmod(id).eq.39) then
 c                                 -------------------------------------
 c                                 generic hybrid EoS
-            if (lopt(32)) then 
+            if (lopt(32).and.caq(jd,na1).ne.0d0) then 
 c                                 lagged speciation
                call slvnt3 (gso)
 c                                 DH law activity coefficient factor (ln[g] = lng0*q^2)
