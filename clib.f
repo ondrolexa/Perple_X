@@ -2083,9 +2083,7 @@ c                                 the id index on cp2 is intentional.
                      cp3(j,jd) = cp2(j,id)*caqtot(id)
                   end do
 
-                  cptot(jd) = caqtot(id)
-
-               else 
+               else
 c                                 pure solvent
                   do i = 1, mstot(ids)
                      do j = 1, icomp

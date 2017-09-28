@@ -33,9 +33,9 @@ finite_difference_p    1d4 1d-2 | threshold [1d4] and fraction [1d-2] for 1st or
 global_reach_increment      0   | >= 0; overridden by reach_factor specified in solution model file
 grid_levels                1 4  | exploratory and autorefine (grid parameters keyword group)
 hard_limits                off  | on or off; on => use compositional limits specified in solution model
-hybrid_EoS_H2O            4     | [4] 0-2, 4-5 => 0 - MRK, 1 HSMRK, 2 - CORK, 4 - PSEoS, 5 - Haar
+hybrid_EoS_H2O            5     | [4] 0-2, 4-5 => 0 - MRK, 1 HSMRK, 2 - CORK, 4 - PSEoS, 5 - Haar
 hybrid_EoS_CO2            4     | [4] 0-4 => 0 - MRK, 1 HSMRK, 2 - CORK, 3- Bottinga, 4 - PSEoS
-hybrid_EoS_CH4            1     | [1] 0-1  => 0 - MRK, 1 HSMRK
+hybrid_EoS_CH4            0     | [1] 0-1  => 0 - MRK, 1 HSMRK
 increment             0.1 0.025 | 0, <1; exploratory and autorefine
 initial_resolution        1/15  | >0, <1, [1/15]
 interpolation           on   2  | value 1: on or off [on]; value 2, 1->99 [2]

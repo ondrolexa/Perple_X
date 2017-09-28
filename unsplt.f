@@ -92,8 +92,8 @@ c                                 solution model names
       integer icog,jcog
       common/ cxt17 /icog(k2),jcog(k2)
 
-      double precision mus
-      common/ cst48 /mus(k8,k2)
+      double precision amu
+      common/ cst48 /amu(k8,k2)
 c----------------------------------------------------------------------- 
 c                                 iam is a flag indicating the Perple_X program
       iam = 13
@@ -485,7 +485,7 @@ c                                 if error on read most probably its
 c                                 because of NaN's for the chemical 
 c                                 potentials
                   do m = 1, jbulk
-                     gmus(m,gbulk) = mus(m,l)
+                     gmus(m,gbulk) = amu(m,l)
                   end do 
   
                end if 
@@ -605,7 +605,7 @@ c                                 and the blk file:
             jxco = kxco
          end do 
 
-         if (jpot.ne.1) write (n5,1010) (mus(j,i), j = 1, jbulk)
+         if (jpot.ne.1) write (n5,1010) (amu(j,i), j = 1, jbulk)
 
       end do 
 

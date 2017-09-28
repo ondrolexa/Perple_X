@@ -683,12 +683,12 @@ c                                 bookkeeping variables
       double precision props,psys,psys1,pgeo,pgeo1
       common/ cxt22 /props(i8,k5),psys(i8),psys1(i8),pgeo(i8),pgeo1(i8)
 
-      double precision mus
-      common/ cst48 /mus(k8,k2)
+      double precision amu
+      common/ cst48 /amu(k8,k2)
 
-      logical lmu
+      logical mus
       double precision mu
-      common/ cst330 /mu(k8),lmu
+      common/ cst330 /mu(k8),mus
 
       integer jtest,jpot
       common/ debug /jtest,jpot
@@ -764,19 +764,19 @@ c                                 get the dependent potentials
                kd = igrd(itri(i),jtri(i))
 
                do j = 1, jbulk
-                  mu(j) = mu(j) + wt(i) * mus(j,kd)
+                  mu(j) = mu(j) + wt(i) * amu(j,kd)
                end do 
 
             end do 
 
-            lmu = .false.
+            mus = .false.
 
             do i = 1, jbulk
                if (.not.isnan(mu(i))) then 
-                  lmu = .true.
-                  exit  
-               end if  
-            end do 
+                  mus = .true.
+                  exit
+               end if
+            end do
 
          end if
 c                                 if s/v independent variables, 

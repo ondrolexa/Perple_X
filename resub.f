@@ -63,12 +63,13 @@ c                                 solution model counter
       double precision cptot,ctotal
       common/ cst78 /cptot(k19),ctotal,jdv(k19),npt
 
-      integer idegen, idg(k5)
+      integer idegen, idg(k5), jcp, jin(k5)
       common/ cst315 /idegen, idg
 
       save ax, x, clamda, w, is, iw
 c-----------------------------------------------------------------------
       idegen = 0
+c      jcp = 0
 
       if (.not.usv) then 
 c                                 degeneracy test
@@ -76,6 +77,9 @@ c                                 degeneracy test
             if (b(k).eq.0d0) then 
                idegen = idegen + 1
                idg(idegen) = k
+            else 
+c               jcp = jcp + 1
+c               jin(hcp) = k
             end if 
          end do
 
@@ -690,6 +694,7 @@ c                                 solute free cpd
 c                                 now pad out counters for 
 c                                 a solute cpd
                jphct = jphct + 1
+               if (jphct.gt.k21) call error (58,x(1,1),k21,'resub')
 
                jkp(jphct) = ids
                hkp(jphct) = jd
@@ -722,7 +727,7 @@ c                                 a solute cpd
 
             end if 
 
-            wad2 = .true.
+c            wad2 = .true.
 
             if (wad1.and.wad2) then
 c                                 make water, ha ha
@@ -733,6 +738,7 @@ c                                 than one water compound.
                wad2 = .false.
 
                jphct = jphct + 1
+               if (jphct.gt.k21) call error (58,x(1,1),k21,'resub')
                jkp(jphct) = ids
                hkp(jphct) = jd
                jcoor(jphct) = jcoct - 1
@@ -932,9 +938,10 @@ c                                  normalize the composition and free energy
             cp2(j,jphct) = cp2(j,jphct)/ctot2
 
             do i = 1, idegen
-               if (cp2(idg(i),jphct).eq.0d0) then 
+               if (cp2(idg(i),jphct).ne.0d0) then 
                   bad = .true.
                   return
+c                  ctot2 = 0
                end if 
             end do
 
@@ -942,6 +949,7 @@ c                                  normalize the composition and free energy
 
       else 
 
+         write (*,*) 'ctot2?', ctot2
          bad = .true.
 
       end if
@@ -1238,7 +1246,7 @@ c                                 local variables
       integer idsol(k5),kdsol(k5,k5),ids,isite,xidsol,xkdsol,irep,
      *        i,j,jdsol(k5,k5),jd,k,l,nkp(k5),xjdsol(k5)
 
-      double precision bsol(k5,k5),cpnew(k5,k5),xx,xb(k5),
+      double precision bsol(k5,k5),cpnew(k5,k5),xx,xb(k5),msol,
      *                 bnew(k5),xnew(k5,mst,msp),ncaq(k5,l10)
 c                                 -------------------------------------
 c                                 global variables:
@@ -1267,10 +1275,17 @@ c                                  x-coordinates for the final solution
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
 
+      double precision fwt
+      common/ cst338 /fwt(k10)
+
       integer iaq, aqst, aqct
       character aqnam*8
       double precision aqcp, aqtot
       common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
+
+      integer jnd
+      double precision aqg,q2,rt
+      common/ cxt2 /aqg(m4),q2(m4),rt,jnd(m4)
 
       integer ikp
       common/ cst61 /ikp(k1)
@@ -1357,13 +1372,22 @@ c                                 loaded into caq(i,1:ns+aqct)
 
                if (quack(i)) then 
 c                                 pure solvent phase
+                  msol = 0d0
+
                   do k = 1, ns
+
                      caq(i,k) = y(k)
+c                                 solvent molar weight
+                     msol = msol + y(k) * fwt(jnd(k))
+
                   end do 
 
                   do k = sn1, na4
                      caq(i,k) = 0d0
-                  end do 
+                  end do
+c                                 total molality
+                  caq(i,na2) = 1d0/msol
+                  caq(i,na3) = msol
 
                else
 c                                 impure solvent, get speciation
@@ -2887,12 +2911,13 @@ c                                 a stable point, add to list
             jdv(npt) = i
             stable(id) = .true.
             if (jkp(i).gt.0) then 
-            if (ksmod(jkp(i)).eq.39) then
-               write (*,'(a,12(g14.6,1x))') 'stable ',g2(i)
-               write (*,'(a,12(g14.6,1x))') '       ',cp2(1,i),
-     *                    cp2(2,i),cp2(3,i),cp2(8,i),cp2(10,i)
-c               write (*,'(a,12(g14.6,1x))') '       ',(cp2(1,i),j=1,5)
-c               write (*,'(a,12(g14.6,1x))') '       ',(cp2(j,i),j=6,icp)
+            if (ksmod(jkp(i)).eq.390) then
+               write (*,'(a,i5,1x,12(g14.6,1x))')
+     *               'stable i, g, amt ',i,g2(i),x(i)
+c               write (*,'(a,12(g14.6,1x))') '       ',cp2(1,i),
+c     *                    cp2(2,i),cp2(3,i),cp2(8,i),cp2(10,i)
+               write (*,'(a,12(g14.6,1x))') '       ',(cp2(j,i),j=1,5)
+               write (*,'(a,12(g14.6,1x))') '       ',(cp2(j,i),j=6,icp)
             end if
             end if 
 
@@ -3121,7 +3146,7 @@ c                                 adaptive x(i,j) coordinates
       common/ cst55 /iam(k1),jam(k1),tloop,ploop
 c                                 hcp is different from icp only if usv
       integer hcp,idv
-      common/ cst52  /hcp,idv(k7) 
+      common/ cst52  /hcp,idv(k7)
 
       integer ids,isct,icp1,isat,io2
       common/ cst40 /ids(h5,h6),isct(h5),icp1,isat,io2
@@ -3305,14 +3330,14 @@ c----------------------------------------------------------------------
       common/ debug /jtest,jpot
 c----------------------------------------------------------------------
 
-      mus = .false.
-
       if (.not.lopt(32)) then
  
          if ((iter.lt.iopt(10).or.quit).and.jpot.ne.0) return
 
-      end if 
-         
+      end if
+
+      mus = .false.
+
       if (npt.eq.hcp) then 
 
          do i = 1, hcp

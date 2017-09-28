@@ -10,6 +10,8 @@ function [] = function_for_perple_x_plots (x,y,a,xname,yname,zname,nvar,mvar,nro
 
 figure(1);
 
+clf
+
 if nvar == 1 % two cases: 1d - table -> 2d plot
     
     [kvar, ok] = listdlg('PromptString','Select the INDEPENDENT (X) variable:','ListSize',[240 500],'SelectionMode','single','ListString',dnames{1});

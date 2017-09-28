@@ -16188,7 +16188,7 @@ c-----------------------------------------------------------------------
 
       character text*200
 
-      double precision mo(l9), blk(k5), dn,
+      double precision mo(l9), blk(k5), dn, smot,
      *                 is, gamm0, totm, g0(l9), lnkw,
      *                 gso(nsp), ysum, ph0, v0(nsp), vf0(nsp), tmass, 
      *                 tsmas, tsmol, smol(k5), errkw, smo, yt(nsp)
@@ -16365,7 +16365,8 @@ c                                 solvent is pure water
          call slvnt0 (gso(1),v0(1))
 
          vf(1) = 1d0
-         ysp(1,jd) = 1d0 
+         ysp(1,jd) = 1d0
+         y(1) = 1d0
          yt(1) = 1d0
 
       end if 
@@ -16374,7 +16375,7 @@ c                                 iterate on speciation
 
       do i = 1, 2
 c                                 first try ioh, if it fails
-         call aqsolv (g0,gso,mo,is,gamm0,lnkw,bad)
+         call aqsolv (g0,gso,mo,mu,is,gamm0,lnkw,bad)
 
          if (.not.bad) exit
 
@@ -16408,13 +16409,18 @@ c                                 neutral pH
 
       do i = 1, icp
          blk(i) = 0d0
-      end do  
+      end do
+c                                 total molality
+      smot = 0d0
 c                                 compute mole fractions, total moles first
       do i = 1, ns 
 c                                 moles/kg-solvent 
          do j = 1, icp 
-            blk(j) = blk(j) + yt(i)*cp(j,jnd(i))/msol
-         end do 
+            blk(j) = blk(j) + y(i)*cp(j,jnd(i))/msol
+         end do
+
+        smot = smot + y(i)/msol
+
       end do
 
       smo = 0d0 
@@ -16429,6 +16435,8 @@ c                                  total solute molality
          end do 
 
       end do
+
+      smot = smot + smo
 c                                 bulk fluid composition 
       tmass = 0d0
       totm = 0d0 
@@ -16465,10 +16473,10 @@ c                                 solvent speciation
 
             if (lopt(26)) then
 c                                 mole fraction
-               prop(k) = yt(i)
+               prop(k) = y(i)/msol/smot
             else 
 c                                 molality
-               prop(k) = yt(i)/msol
+               prop(k) = y(i)/msol
             end if  
 
          end do 
@@ -16482,7 +16490,7 @@ c                                 molality
                prop(k) = mo(i)
             else 
 c                                 mole fraction
-               prop(k) = mo(i)/totm
+               prop(k) = mo(i)/smot 
             end if  
 
          end do 
@@ -16537,13 +16545,13 @@ c                                 check if the species is the solution model
                if (l.ne.0) then 
 
                   write (lu,1080) aqnam(k),int(thermo(6,k+aqst)),
-     *                        mo(k),mo(k)/totm,ysp(l,jd),
+     *                        mo(k),mo(k)/smot,ysp(l,jd),
      *                        int(g0(k)+rt*(dlog(mo(k)*gamm0**q2(k)))),
      *                        int(g0(k))
                else
 
                   write (lu,1090) aqnam(k),int(thermo(6,k+aqst)),
-     *                        mo(k),mo(k)/totm,
+     *                        mo(k),mo(k)/smot,
      *                        int(g0(k)+rt*(dlog(mo(k)*gamm0**q2(k)))),
      *                        int(g0(k))
                end if 
@@ -16551,14 +16559,14 @@ c                                 check if the species is the solution model
             else if (lopt(32)) then
 c                                 compare to lagged speciation:
                   write (lu,1080) aqnam(k),int(thermo(6,k+aqst)),
-     *                        mo(k),mo(k)/totm,caq(jd,k+ns)/caq(jd,na2),
+     *                        mo(k),mo(k)/smot,caq(jd,k+ns)/caq(jd,na2),
      *                        int(g0(k)+rt*(dlog(mo(k)*gamm0**q2(k)))),
      *                        int(g0(k))
 
             else 
 c                                 only back-calculated result:
                write (lu,1010) aqnam(k),int(thermo(6,k+aqst)),
-     *                         mo(k),mo(k)/totm,
+     *                         mo(k),mo(k)/smot,
      *                         int(g0(k)+rt*(dlog(mo(k)*gamm0**q2(k)))),
      *                         int(g0(k))
 
@@ -16571,7 +16579,7 @@ c                               lagged
 
             do i = 1, ns 
 
-               write (lu,1150) names(jnd(i)), yt(i)/msol, yt(i),
+               write (lu,1150) names(jnd(i)), y(i)/msol, y(i)/msol/smot,
      *                         yt(i),vf0(ins(i)), v0(ins(i)), 
      *                         int(gso(i)), int(gcpd(jnd(i),.true.))
 
@@ -16623,7 +16631,7 @@ c                                 lagged model
                   do j = 1, icp
 
                      if (i.lt.sn1) then 
-                        dn = caq(jd,i)/caq(jd,na3) * cp(j,jnd(i))
+                        dn = y(i)/caq(jd,na3) * cp(j,jnd(i))
                      else 
                         dn = caq(jd,i) * aqcp(j,i-ns)
                      end if 
@@ -18430,10 +18438,11 @@ c-----------------------------------------------------------------------
 
       integer i, j, id, badct
 
-      logical bad, recalc
+      logical bad, recalc, lmus
 
-      double precision mo(l9), blk(k5), is, gamm0, totm, g0(l9), 
-     *                 gso(nsp), lnkw, gtot, smo, slvmo(nsp), nexp
+      double precision mo(l9), blk(k5), gamm0, totm, g0(l9), lmu(k8),
+     *                 tmu(k8),
+     *                 is, gso(nsp), lnkw, gtot, smo, slvmo(nsp), nexp
 
       integer ion, ichg, jchg
       double precision q, q2, qr
@@ -18522,15 +18531,34 @@ c                                 adaptive coordinates
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
      *              wl(m17,m18)
 
-      save badct, nexp
+      save badct, nexp, lmu, lmus
       data badct, nexp/0,2d0/
 c----------------------------------------------------------------------
-      if (.not.mus) then 
+      if ((.not.mus .and..not.recalc).or.
+     *    (.not.lmus.and.recalc)) then 
 
+         lmus = .false.
          bad = .true.
          return
 
       else 
+
+         if (recalc) then 
+c                                 use lagged chemical potentials
+            do i = 1, icp 
+               tmu(i) = lmu(i)
+            end do 
+
+         else 
+
+            lmus = .true.
+
+            do i = 1, icp
+               lmu(i) = mu(i)
+               tmu(i) = mu(i)
+            end do
+
+         end if 
 
          call slvnt3 (gso)
 
@@ -18544,15 +18572,13 @@ c                                 solvent densities
 
          bad = .false.
 
-      end if 
-
-      call slvnt3 (gso)
+      end if
 c                                 iterate on speciation
       ion = ioh
 
       do i = 1, 2
 c                                 first try ioh, if it fails
-         call aqsolv (g0,gso,mo,is,gamm0,lnkw,bad)
+         call aqsolv (g0,gso,mo,tmu,is,gamm0,lnkw,bad)
 
          if (.not.bad) exit
 
@@ -18589,8 +18615,8 @@ c                                 total g
          if (q2(i).ne.0d0) then
          gtot = gtot + mo(i) * (g0(i) + rt*dlog(mo(i)*gamm0**q2(i)))
          else 
-         gtot = gtot + mo(i) * (g0(i) + rt*dlog(mo(i)*
-     *                        (1+mo(i)**nexp) ) )
+         gtot = gtot + mo(i) * (g0(i) + rt*dlog(mo(i) ))
+c     *                       * (1+mo(i)**nexp) ) )
          end if
 c                                  total molality
          smo = smo + mo(i)
@@ -18604,7 +18630,7 @@ c                                 for the solvent mole fractions
 c                                 need to accumulate total
 c                                 molality first
       do i = 1, ns 
-c                                 solvent molality is
+c                                 solvent molality:
          slvmo(i) = yf(ins(i))/msol
 c                                 total molality
          smo = smo + slvmo(i)
@@ -18616,6 +18642,7 @@ c                                 moles/kg-solvent
       end do
 
       do i = 1, ns
+c                                 solvent bulk mole fraction:
          caq(id,i) = slvmo(i)/smo
          if (caq(id,i).eq.0d0) cycle
          gtot = gtot + slvmo(i) * (gso(i) + rt*dlog(caq(id,i)))
@@ -18644,7 +18671,7 @@ c                                 solvent mass
 c                                 error in log10(Kw)
          caq(id,na4) = (-lnkw + dlog(mo(ihy)*mo(ioh)*gamm0**2
      *                 ))/2.302585d0
-
+c                                  bulk composition per mole of species
          do j = 1, icp
             cp2(j,id) = blk(j)/smo
          end do
@@ -18652,10 +18679,11 @@ c                                 error in log10(Kw)
       else 
 c                                 stuff need for optimization:
 c                                 load into molar normalized arrays 
-c                                 used by resub
+c                                 used by resub, g per mole of components
          g2(jphct) = gtot/totm
 
          do j = 1, icp
+c                                 bulk composition per mole of components
             cp2(j,jphct) = blk(j)/totm
          end do
 c                                caqtot is the number of moles of the 
@@ -18663,7 +18691,7 @@ c                                components in a solution with 1 mole of
 c                                species, this is needed for consistent
 c                                ouput (i.e., a mol of the phase is per
 c                                mol of species rather than per mole of 
-c                                components). at the cost of k21 real vars...
+c                                components). at the cost of k21 real vars
          caqtot(jphct) = totm/smo
 
       end if 
@@ -18767,7 +18795,7 @@ c                                 solvent is pure water
 
       end 
 
-      subroutine aqsolv (g0,gso,mo,is,gamm0,lnkw,bad)
+      subroutine aqsolv (g0,gso,mo,mu,is,gamm0,lnkw,bad)
 c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
       implicit none
@@ -18778,7 +18806,7 @@ c-----------------------------------------------------------------------
 
       logical bad, kill
 
-      double precision c(l9), mo(*), dg, xis, dn, xdix, 
+      double precision c(l9), mo(*), mu(*), dg, xis, dn, xdix, 
      *                 d(l9), is, gamm0, g0(*), lnkw, dix,
      *                 gso(*), xdn, qb(l9)
 
@@ -18808,10 +18836,6 @@ c-----------------------------------------------------------------------
       integer jbulk
       double precision cblk
       common/ cst300 /cblk(k5),jbulk
-
-      logical mus
-      double precision mu
-      common/ cst330 /mu(k8),mus
 
       integer iopt
       logical lopt
@@ -18874,11 +18898,12 @@ c                                  sum (q(i)*m(i)) = 0.
             d(i) = q(i)*dg
             c(i) = d(i)
 
-         else if (dg.ne.0d0) then
+         else 
 c                                  neutral species assumed to be ideal, molality is
             mo(i) = dg
-            dix = (108d0*dg + dsqrt(11664*dg*dg + 1728d0)) **(1d0/3d0)
-            mo(i) = dix/6d0 - 2d0/dix
+c            dix = (108d0*dg + dsqrt(11664*dg*dg + 1728d0)) **(1d0/3d0)
+c            mo(i) = dix/6d0 - 2d0/dix
+            if (dg.eq.0d0) mo(i) = 0d0
 
             if (mo(i).lt.0) then 
                write (*,*) 'oink'

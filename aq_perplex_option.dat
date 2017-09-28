@@ -40,6 +40,7 @@ increment             0.1 0.025 | 0, <1; exploratory and autorefine
 initial_resolution        1/15  | >0, <1, [1/15]
 interpolation           on   2  | value 1: on or off [on]; value 2, 1->99 [2]
 iteration                  3  4 | value 1: 2->99 [2]; value 2: 1->7 [4]
+lagged_aq_speciation       T    | T[rue] or F[alse], default is T
 linear_model               on   | on or off
 logarithmic_p              F    | T[rue] or F[alse], default is F
 melt_is_fluid              F    | T[rue] or F[alse], default is F

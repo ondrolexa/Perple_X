@@ -629,6 +629,8 @@ c                                 set third variable if unused:
                end do 
 
                vmax(iv(3)) = vmin(iv(3))
+               dv(iv(3)) = 0d0
+               inc(iv(3)) = 1
 
             end if 
 
@@ -648,10 +650,9 @@ c                                 increments or counters:
       else 
 
          do i = 1, jpot
-            inc(i) = 100
-            delv(i) = vmax(i)-vmin(i) 
-            dv(i) = delv(i) / dfloat(inc(i))
-            delv(i) = vmax(i)-vmin(i)
+            inc(iv(i)) = 100
+            delv(iv(i)) = vmax(iv(i))-vmin(iv(i)) 
+            dv(iv(i)) = delv(iv(i)) / dfloat(inc(iv(i)))
          end do 
 c                                 set convergence criteria for univeq:
          call concrt
@@ -756,7 +757,8 @@ c                                 write version flag
 2150  format (/,'Enter minimum and maximum values for ',a,':')
 2110  format (/,'Select the second independent (y) variable:',/)
 2180  format (/,'Specify the value for: ',a)
-2160  format (/,'Calculate sections as a function of ',a,' (y/n)?')
+2160  format (/,'Calculate multiple sections as a function of ',a,
+     *          ' (y/n)?')
  
       end 
 

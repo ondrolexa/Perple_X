@@ -40,8 +40,8 @@ c                                 global assemblage data
       integer jtest,jpot
       common/ debug /jtest,jpot
 
-      double precision mus
-      common/ cst48 /mus(k8,k2)
+      double precision amu
+      common/ cst48 /amu(k8,k2)
 
       integer jbulk
       double precision cblk
@@ -127,14 +127,14 @@ c                                lagged speciation
 c                                 read mu's if available
          if (jpot.ne.1) then
  
-            read (n5,*,iostat=ier) (mus(i,ibulk), i = 1, jbulk)
+            read (n5,*,iostat=ier) (amu(i,ibulk), i = 1, jbulk)
 
             if (ier.ne.0) then 
 c                                 if error on read most probably its
 c                                 because of NaN's for the chemical 
 c                                 potentials
                do i = 1, jbulk
-                  mus(i,ibulk) = nopt(7)
+                  amu(i,ibulk) = nopt(7)
                end do 
  
                ier = 0 
