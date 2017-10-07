@@ -528,6 +528,11 @@ c-----------------------------------------------------------------------
       double precision v,tr,pr,r,ps
       common/ cst5  /v(l2),tr,pr,r,ps
 
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
       logical first
 
       save first, vox, iox
@@ -677,7 +682,9 @@ c                                 nrow is the number of steps along the subducti
 c                                 path:
       do j = 1, nrow
 
-         write (*,*) 'Column ',j,' of ',nrow
+         write (*,*) '##########################################'
+         write (*,'(/,a,i4,a,i4/)') 'Column ',j,' of ',nrow
+         write (*,*) '##########################################'
 c                                 j loop varies the pressure at the top of the 
 c                                 column (p0), set p0:
          p0 = vmin(1) + (j-1)*dv(1)
@@ -696,7 +703,13 @@ c                                 get total moles to compute mole fractions
             do i = 1, icp+1
                dcomp(i) = 0d0
                cblk(i) = gblk(k,i)
+c                                 apply the zero_bulk filter only to the working 
+c                                 composition, this allows near zero components to 
+c                                 accumulate without destabilizing the optimization
+               if (cblk(i).lt.nopt(11)) cblk(i) = 0d0
+
                ctotal = ctotal + cblk(i)
+
             end do
 
             do i = 1, icp 
@@ -730,19 +743,13 @@ c                                 phase
 
             do i = 1, icp 
 c                                 subtract the fluid from the current composition
-               gblk(k,i) = gblk(k,i) - dcomp(i) 
-               if (gblk(k,i).lt.0d0) then
-                  write (*,*) 'negative - bulk at k,i',k,i,gblk(k,i)
-                   gblk(k,i) = 0d0
-               end if 
+               gblk(k,i) = gblk(k,i) - dcomp(i)
+c                                 by not applying the zero_bulk threshold to the 
+c                                 global array near zero components may accumulate
+c                                 to become significant
+               if (gblk(k,i).lt.0d0) gblk(k,i) = 0d0
 c                                 and add it to the overlying composition
-               if (k.lt.ncol) then
-                   gblk(k+1,i) = gblk(k+1,i) + dcomp(i) 
-                   if (gblk(k,i).lt.0d0) then
-                      write (*,*) 'bulk < 0, at k,i',k,i,gblk(k,i)
-                      gblk(k,i) = 0d0
-                   end if
-               end if 
+               if (k.lt.ncol) gblk(k+1,i) = gblk(k+1,i) + dcomp(i)
 c                                 oxygen deficit and cumulative change
                if (iox.ne.0d0) dcomp(icp1) = dcomp(icp1) 
      *                                     - vox(i)*dcomp(i)
