@@ -16815,11 +16815,11 @@ c-----------------------------------------------------------------------
 
          x = x + dx
 
-         if (dx/x.lt.nopt(5)) then 
-            bad = .false.
-            exit
-         else if (x.lt.0d0.or.it.gt.iopt(21)) then 
+         if (x.le.0d0.or.it.gt.iopt(21)) then 
             bad = .true.
+            exit
+         else if (dx/x.lt.nopt(5)) then 
+            bad = .false.
             exit
          end if 
 
@@ -18556,6 +18556,23 @@ c                                 use lagged chemical potentials
             do i = 1, icp
                lmu(i) = mu(i)
                tmu(i) = mu(i)
+
+               if (cblk(i).eq.0d0) then 
+c                                 check that the solvent does not contain
+c                                 the absent component
+                  do j = 1, ns 
+
+                     if (yf(ins(j)).gt.0d0.and.cp(i,jnd(j)).gt.0d0) then
+
+                        bad = .true.
+                        return
+
+                     end if 
+
+                  end do
+
+               end if 
+
             end do
 
          end if 
@@ -19198,5 +19215,60 @@ c                                 n5name already exists
       if (dim.eq.0) write (*,1000) n5name
 
 1000  format (/,'Console output will be echoed in file: ',a,/)
+
+      end
+
+      subroutine dumper (iclos,id,hkp,jkp,amt,lambda) 
+c----------------------------------------------------------------------
+c dump phase data from yclos routines:
+c     iclos = 0 => yclos0 etc
+c     hkp refinement point
+c     jkp solution model
+c     amt - amount
+c     lambda - lambda
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer i, iclos, id, hkp, jkp
+
+      double precision amt, lambda
+
+      character name*14
+
+      integer jphct
+      double precision g2, cp2, caqtot
+      common/ cxt12 /g2(k21),cp2(k5,k21),caqtot(k21),jphct
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      integer jbulk
+      double precision cblk
+      common/ cst300 /cblk(k5),jbulk
+
+      double precision a,b,c
+      common/ cst313 /a(k5,k1),b(k5),c(k1)
+
+      integer npt,jdv
+      logical fulrnk
+      double precision cptot,ctotal
+      common/ cst78 /cptot(k19),ctotal,jdv(k19),npt,fulrnk
+c----------------------------------------------------------------------
+      call getnam (name,jkp)
+
+      if (iclos.eq.1) then
+c                                 static
+         write (*,1000) id,hkp,jkp,name,amt,lambda,c(id),
+     *                  (a(i,id),i=1,jbulk)
+      else
+c                                 dynamic 
+         write (*,1000) id,hkp,jkp,name,amt,lambda,g2(id),
+     *                  (cp2(i,id),i=1,jbulk)
+      end if 
+1000  format (i5,1x,2(i3,1x),a,20(g14.6,1x))
 
       end 

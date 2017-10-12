@@ -724,11 +724,11 @@ c                                 the results to the print file.
             if (idead.ne.0) then 
 c                                 write failure info to fld file:
                write (n12,2000) p0,dz,layer(k),k,j,v(1),v(2),
-     *                          (gblk(k,i),i=1,icp)
+     *                          (cblk(i),i=1,icp)
                write (n12,2010) (itop(i),i=1,ilay)
 
                write (*,2000) p0,dz,layer(k),k,j,v(1),v(2),
-     *                        (gblk(k,i),i=1,icp)
+     *                        (cblk(i),i=1,icp)
                write (*,2010) (itop(i),i=1,ilay)
 
             end if 

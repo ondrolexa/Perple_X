@@ -19,7 +19,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a)') 
-     *      'Perple_X version 6.7.9, source updated Sep 28, 2017.'
+     *      'Perple_X version 6.7.9, source updated Oct 8, 2017.'
 
       end
 
@@ -180,7 +180,7 @@ c                                 for nag)
          r1 = r1/2d0
       end do 
 
-      r2 = 1d1 * r2
+      r2 = 1d2 * r2
 
       wmach(3) = r2
       wmach(5) = 1d0 + r2
