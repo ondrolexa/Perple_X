@@ -2018,9 +2018,9 @@ c                                 pointer
       double precision aqg,qq,rt
       common/ cxt2 /aqg(m4),qq(m4),rt,jnd(m4)
 
-      integer jphct
+      integer jphct, jpt
       double precision g2, cp2, caqtot
-      common/ cxt12 /g2(k21),cp2(k5,k21),caqtot(k21),jphct
+      common/ cxt12 /g2(k21),cp2(k5,k21),caqtot(k21),jphct,jpt
 
       integer iopt
       logical lopt

@@ -63,6 +63,10 @@ c                                 solution model counter
       double precision cptot,ctotal
       common/ cst78 /cptot(k19),ctotal,jdv(k19),npt
 
+      integer tphct, jpt
+      double precision g2, cp2, caqtot
+      common/ cxt12 /g2(k21),cp2(k5,k21),caqtot(k21),tphct,jpt
+
       integer idegen, idg(k5), jcp, jin(k5)
       common/ cst315 /idegen, idg, jcp, jin 
 
@@ -105,6 +109,10 @@ c                                t_stop option
          do k = 1, jphct
             c(k) = g(k+inc)/ctot(k+inc)
          end do
+c                                load the adaptive refinement cpd g's
+         do k = 1, jpt 
+            g2(k) = c(k)
+         end do 
 
       end if 
 c                                 idead = -1 tells lpnag to save parameters
@@ -177,12 +185,12 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer liw, lw, iter, iref, i, j, id, idead, ids, jstart, inc, 
+      integer liw, lw, iter, iref, i, id, idead, ids, jstart, inc, 
      *        opt, kter
 
-      logical first, wad1, wad2, bad
+      logical first, wad1, wad2, kterat
 
-      parameter (liw=2*k21+3,lw=2*(k5+1)**2+7*k21+5*k5)  
+      parameter (liw=2*k21+3,lw=2*(k5+1)**2+7*k21+5*k5)
 
       double precision  ax(k5), x(k21), clamda(k21+k5), w(lw)
 
@@ -192,9 +200,9 @@ c                                 -------------------------------------
       common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
 c                                 global variables
 c                                 adaptive coordinates
-      integer jphct
+      integer jphct, jpt
       double precision g2, cp2, caqtot
-      common/ cxt12 /g2(k21),cp2(k5,k21),caqtot(k21),jphct
+      common/ cxt12 /g2(k21),cp2(k5,k21),caqtot(k21),jphct,jpt
 
       integer ksmod, ksite, kmsol, knsp
       common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
@@ -210,15 +218,6 @@ c                                 adaptive coordinates
 
       integer hkp,mkp
       common/ cst72 /hkp(k21),mkp(k19)
-
-      double precision g
-      common/ cst2  /g(k1)
-
-      double precision cp
-      common/ cst12 /cp(k5,k1)
-
-      double precision ctot
-      common/ cst3  /ctot(k1)
 c                                 adaptive x(i,j) coordinates
       integer jcoct, jcoor, jkp
       double precision zcoor
@@ -250,13 +249,14 @@ c-----------------------------------------------------------------------
 c                                 the pseudocompounds to be refined
 c                                 are identified in jdv(1..npt)
       iter = 1
-      jphct = 0
       iref = 0
       wad1 = .false.
       wad2 = .true.
       jcoct = 1
       inc = istct - 1
       opt = npt
+      kterat = .false.
+      jphct = jpt
 c                                 --------------------------------------
 c                                 first iteration
       first = .true.
@@ -264,68 +264,32 @@ c                                 first iteration
       do i = 1, npt
 
          id = jdv(i) + inc
-
-
-c         if (ikp(id).eq.0) then #refine endmember change
-
-         if (id.le.ipoint) then
-c                                 the point is a true compound
-            jphct = jphct + 1
-c                                 jkp indicates which phase a point is associated with
-            jkp(jphct) = -id
-c                                 hkp indicates which refinement point
-            hkp(jphct) = i
-c                                 flag for h2o if lagged speciation
-            if (lopt(32)) then
-               if (id.eq.jnd(ns)) then 
-                  wad1 = .true.
-                  jphct = jphct - 1
-                  cycle 
-               end if 
-            end if 
-
-            g2(jphct) = g(id)/ctot(id)
-
-            do j = 1, icp
-               cp2(j,jphct) = cp(j,id)/ctot(id)
-            end do 
-
-         else 
 c                                 the point is a pseudocompound, refine it
+         if (id.gt.ipoint) then
             call resub (i,id,ikp(id),iref,iter,first,wad1,wad2)
-
+            if (lopt(32).and.iopt(28).gt.0) then
+c               if (ksmod(ikp(id)).eq.39) kterat = .true.
+            end if
          end if
-c                                 reset jdv in case of exit, this isn't 
-c                                 gonna work cause npt > icp and the vertices
-c                                 are not ordered. 
-         jdv(i) = jphct
 
-      end do 
+      end do
 
       if (iref.eq.0) then
 c                                 if nothing to refine, set idead 
 c                                 to recover previous solution
          idead = -1
          return
+
       end if 
 
       kter = 0
-      iter = iter + 1
+c                                 for reasons of stupidity:
+      iter = 2
 
       do 
 c                                 iter is incremented before the operations,
 c                                 i.e., on the nth iteration, iter is n+1
-c         iter = iter + 1
-         kter = kter + 1
 
-         if (kter.gt.6) then 
-            iter = iter + 1
-            kter = 0
-          end if
-
-         if (lopt(28)) then 
-            write (*,*) 'kter, iter ',kter,iter
-         end if 
 c                                 cold start
          jstart = 0 
 c                                 set idead = 0 to prevent lpnag from
@@ -342,23 +306,39 @@ c                                 warn if severe error
 
          end if 
 c                                 analyze solution, get refinement points
-         call yclos2 (clamda,x,is,iter,opt,bad)
-c                                 check for solute free compound in 
-c                                 lagged speciation
-         if (bad) then
-            idead = 99
-            write (*,*) 'lagged spec failed',p,t
-            exit 
-          end if 
+         call yclos2 (clamda,x,is,iter,opt)
+c                                 iterate without refining solution compositions
+         if (kterat) then
+
+            kter = kter + 1
+
+            if (kter.gt.iopt(28)) then 
+               iter = iter + 1
+               kter = 0
+            end if
+
+            cycle 
+
+         else 
+
+            iter = iter + 1
+
+         end if 
+
+         if (lopt(28)) then 
+            write (*,*) 'kter, iter ',kter,iter
+         end if 
 c                                 save the id and compositions
 c                                 of the refinement points, this
 c                                 is necessary because resub rewrites
 c                                 the xcoor array.
-         call saver 
+         call saver
+c                                 uncomment if refining on kterations
+c         if (iter.gt.iopt(10).and.kter.ge.iopt(28)) exit 
 
-         if (iter.gt.iopt(10).and.kter.ge.6) exit 
+         if (iter.gt.iopt(10)) exit 
 
-         jphct = 0
+         jphct = jpt
          iref = 0
          jcoct = 1
 
@@ -367,49 +347,14 @@ c                                 generate new pseudocompounds
          do i = 1, npt
 
             ids = lkp(i)
-
-            if (ids.lt.0) then 
-c                                 the point is a true compound
-               jphct = jphct + 1
-               jkp(jphct) = ids
-               hkp(jphct) = mkp(i)
-               ids = -ids
-               if (lopt(32)) then
-                  if (ids.eq.jnd(ns)) wad1 = .true.
-               end if 
-
-               g2(jphct) = g(ids)/ctot(ids)
-
-               do j = 1, icp
-                  cp2(j,jphct) = cp(j,ids)/ctot(ids)
-               end do 
-
-            else if (ksmod(ids).eq.39) then
-
-               call resub (mkp(i),i,ids,iref,iter,first,wad1,wad2)
-
-            else
 c                                 the point is a pseudocompound 
-               call resub (mkp(i),i,ids,iref,iter,first,wad1,wad2)
+            if (ids.gt.0)
+     *         call resub (mkp(i),i,ids,iref,iter,first,wad1,wad2)
+c                                 reset jdv in case of exit, there 
+c                                 doesn't seem to be an exit possible here.
+            jdv(i) = i
 
-            end if
-c                                 reset jdv in case of exit
-            jdv(i) = i 
-
-         end do 
-
-         if (jphct.lt.icp) then 
-c                                 something weird, could recover the
-c                                 last good solution instead of setting 
-c                                 idead.
-            call warn (99,0d0,0,'something has gone terribly wrong'//
-     *                    ', not enough refinement points in reopt')
-
-            idead = 99
-
-            exit 
-
-         end if 
+         end do
 
       end do 
 
@@ -438,9 +383,9 @@ c                                 functions
 c                                 -------------------------------------
 c                                 global variables:
 c                                 adaptive g and compositions
-      integer jphct
+      integer jphct, jpt
       double precision g2, cp2, caqtot
-      common/ cxt12 /g2(k21),cp2(k5,k21),caqtot(k21),jphct
+      common/ cxt12 /g2(k21),cp2(k5,k21),caqtot(k21),jphct,jpt
 
       logical quack
       common/ cxt1 /quack(k21)
@@ -856,9 +801,9 @@ c-----------------------------------------------------------------------
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 c                                 adaptive coordinates
-      integer jphct
+      integer jphct, jpt
       double precision g2, cp2, caqtot
-      common/ cxt12 /g2(k21),cp2(k5,k21),caqtot(k21),jphct
+      common/ cxt12 /g2(k21),cp2(k5,k21),caqtot(k21),jphct,jpt
 c                                 bookkeeping variables
       integer ksmod, ksite, kmsol, knsp
       common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
@@ -1095,6 +1040,12 @@ c                                 x coordinate description
       integer ncoor,mcoor,ndim
       common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
 
+      integer icomp,istct,iphct,icp
+      common/ cst6  /icomp,istct,iphct,icp
+
+      integer ipoint,kphct,imyn
+      common/ cst60 /ipoint,kphct,imyn
+
       integer npt,jdv
       double precision cptot,ctotal
       common/ cst78 /cptot(k19),ctotal,jdv(k19),npt
@@ -1104,6 +1055,12 @@ c----------------------------------------------------------------------
       do i = 1, npt
 
          id = jdv(i)
+
+         if (id.lt.ipoint-(istct-1)) then 
+            lkp(i) = 0
+            cycle
+         end if 
+
          ids = jkp(id)
          lkp(i) = ids
 c                                 cycle on a compound
@@ -1175,6 +1132,11 @@ c----------------------------------------------------------------------
 
       end do 
 
+      if (xt-1d0.gt.1d-6) then 
+         write (*,*) ' wonga wonga '
+         pause
+      end if 
+
       end 
 
       logical function solvs1 (id1,id2,ids)
@@ -1236,9 +1198,9 @@ c-----------------------------------------------------------------------
       double precision dcp,soltol
       common/ cst57 /dcp(k5,k19),soltol
 
-      integer jphct
+      integer jphct, jpt
       double precision g2, cp2, caqtot
-      common/ cxt12 /g2(k21),cp2(k5,k21),caqtot(k21),jphct
+      common/ cxt12 /g2(k21),cp2(k5,k21),caqtot(k21),jphct,jpt
 c-----------------------------------------------------------------------
       solvs2 = .false.
 
@@ -2089,14 +2051,13 @@ c----------------------------------------------------------------------
       include 'perplex_parameters.h'
 
       integer jphct, i, j, k, is(*), idsol(k5), kdv(h9), nsol, 
-     *        mpt, iam, id, inc, jdsol(k5,k5), ldv1, ldv2,
-     *        kdsol(k5), max, mcpd
+     *        mpt, iam, id, inc, jdsol(k5,k5), kdsol(k5), max
 
       external ffirst
 
       logical solvus, quit
 
-      double precision clamda(*), x(*),  slam(h9), clam
+      double precision clamda(*), x(*), slam(h9)
 
       integer ipoint,kphct,imyn
       common/ cst60 /ipoint,kphct,imyn
@@ -2121,6 +2082,10 @@ c----------------------------------------------------------------------
       integer ikp
       common/ cst61 /ikp(k1)
 
+      integer tphct, jpt
+      double precision g2, cp2, caqtot
+      common/ cxt12 /g2(k21),cp2(k5,k21),caqtot(k21),tphct,jpt
+
       integer kkp,np,ncpd,ntot
       double precision cp3,amt
       common/ cxt15 /cp3(k0,k19),amt(k19),kkp(k19),np,ncpd,ntot
@@ -2133,7 +2098,7 @@ c----------------------------------------------------------------------
       double precision mu
       common/ cst330 /mu(k8),mus
 c----------------------------------------------------------------------
-      npt = 0 
+      npt = 0
       nsol = 0
       inc = istct - 1
       quit = .true.
@@ -2188,85 +2153,46 @@ c                                 new point, add to list
 c                                 get mus for lagged speciation
       call getmus (1,0,.false.)
 
-      ldv1 = 0
-      ldv2 = 0 
-      clam = 1d99
-
       do i = 1, isoct
          slam(i) = 1d99
-         kdv(i) = 0 
+         kdv(i) = 0
       end do 
-c                                 perp 6.6.3, make a list of metastable
-c                                 phases, this list includes two compounds
-c                                 and the least metastable composition of
-c                                 each solution.      
-      do 20 i = 1, jphct
+c                                 perp 6.6.3, make a list of the least 
+c                                 metastable composition of each solution.
+      do 20 i = jpt+1, jphct
 c DEBUG why was this here? added ~6.7.6, removed april 21, 2017
 c i think clamda(i).lt.0 allows degenerate compositions (and probably 
 c therefore the 6.7.6 version may be better, on the bright side with
 c it removed the solution composition gets refined (if endmember comps are
 c being allowed, see ldsol code); restored again april 2017.
          if (is(i).ne.1.or.clamda(i).lt.wmach(3)) cycle 
-c        if (is(i).ne.1) cycle 
 
          id = i + inc 
          iam = ikp(id)
-c                                modified to allow endmembers, Mar 4, 2015. JADC
-c        if (iam.ne.0.and.id.gt.0*ipoint) then   #refine endmember change
-         if (iam.ne.0.and.id.gt.ipoint) then  
 
-            if (clamda(i).lt.slam(iam)) then
+         if (clamda(i).lt.slam(iam)) then
 c                                the composition is more stable
 c                                than the previous composition 
 c                                of the solution. check if it's 
 c                                one of the stable solutions                               
-               do j = 1, nsol
-                  if (iam.eq.idsol(j)) then
+            do j = 1, nsol
+                if (iam.eq.idsol(j)) then
 c                                it's already stable, only accept
 c                                it if its further than the solvus
 c                                tolerance from any of the stable
 c                                compositions.
-                     do k = 1, kdsol(j)
-                        if (.not.solvus(jdsol(k,j),id,iam)) goto 20
-                     end do 
-                  end if
-               end do
+                  do k = 1, kdsol(j)
+                     if (.not.solvus(jdsol(k,j),id,iam)) goto 20
+                  end do 
+               end if
+            end do
 c                                the composition is acceptable
-               slam(iam) = clamda(i)
-               kdv(iam) = i
+            slam(iam) = clamda(i)
+            kdv(iam) = i
 
-            end if
-
-         else 
-c                                a compound, save lowest 2, changed from 1
-c                                march 4, 2015, JADC
-            if (clamda(i).lt.clam) then 
-c                                put the old min into ldv2
-               ldv2 = ldv1
-c                                and save the current in ldv1
-               ldv1 = i
-
-               clam = clamda(i)
-
-            end if 
- 
-         end if 
+         end if
 
 20    continue
-c                                 load the metastable compounds directly
-c                                 into jdv
-      if (ldv2.ne.0) then 
-         npt = npt + 2
-         jdv(npt-1) = ldv2
-         jdv(npt) = ldv1
-         mcpd = 2
-      else if (ldv1.ne.0) then 
-         npt = npt + 1
-         jdv(npt) = ldv1
-         mcpd = 1
-      else 
-         mcpd = 0 
-      end if 
 c                                 load the metastable solutions into kdv
       mpt = 0 
 
@@ -2276,6 +2202,7 @@ c                                 load the metastable solutions into kdv
          mpt = mpt + 1
          kdv(mpt) = kdv(i)
          slam(mpt) = slam(i)
+         quit = .false.
 
       end do 
 
@@ -2296,22 +2223,20 @@ c                                 find the most stable iopt(12) points
       do i = 1, max
 
          jdv(npt+i) = kdv(i)
-c                                 a metastable solution to be refined
-c        if (kdv(i)+inc.gt.ipoint) quit = .false.
-         if (ikp(kdv(i)+inc).ne.0) quit = .false.
+
       end do
 
       if (quit) then 
 c                                 zero mode filter and 
 c                                 save amounts for final processing
-         mpt = npt - mcpd 
-         npt = 0 
+         mpt = npt
+         npt = 0
 
          do i = 1, mpt
             if (x(jdv(i)).lt.nopt(9)) cycle 
             npt = npt + 1
             jdv(npt) = jdv(i)
-            amt(npt) = x(jdv(i)) 
+            amt(npt) = x(jdv(i))
          end do 
 
       else 
@@ -2319,7 +2244,24 @@ c                                 save amounts for final processing
          npt = npt + max
 c                                 sort the phases, why? don't know, but it's 
 c                                 necessary
-         call sortin 
+         call sortin
+
+            if (lopt(28)) then
+
+            write (*,*) ' fart'
+            do i = 1, npt
+
+               id = jdv(i)
+
+               if (ikp(id).ne.0) then 
+                  call dumper (1,id,0,ikp(id),x(id),clamda(id))
+               else 
+                  call dumper (1,id,0,-id,x(id),clamda(id))
+               end if 
+
+            end do 
+
+            end if 
 
       end if 
 
@@ -2459,7 +2401,7 @@ c                            solve ux = y for x:
 
       subroutine initlp 
 c--------------------------------------------------------------------
-c initialize arrays and constants for lp minimizarion
+c initialize arrays and constants for lp minimization
 c---------------------------------------------------------------------
       implicit none
 
@@ -2509,6 +2451,17 @@ c---------------------------------------------------------------------
 
       integer ipoint,kphct,imyn
       common/ cst60  /ipoint,kphct,imyn
+
+      integer tphct, jpt
+      double precision g2, cp2, caqtot
+      common/ cxt12 /g2(k21),cp2(k5,k21),caqtot(k21),tphct,jpt
+
+      integer hkp,mkp
+      common/ cst72 /hkp(k21),mkp(k19)
+
+      integer jcoct, jcoor, jkp
+      double precision zcoor
+      common/ cxt13 /zcoor(k20),jcoor(k21),jkp(k21),jcoct
 c-----------------------------------------------------------------------
       inc = istct - 1
 
@@ -2518,6 +2471,7 @@ c-----------------------------------------------------------------------
       dv(2) = (vmax(2)-vmin(2))/(tloop-1)
 c                                 load arrays for lp solution
       jphct = iphct - inc
+      jpt = ipoint - inc
 
       if (.not.usv) then
 c                                 pressure and temperature are allowed 
@@ -2531,7 +2485,7 @@ c                                 composition constraint
          do i = 1, icp
             b(i) = cblk(i)/ctotal
          end do 
-
+c                                 static composition array
          do i = 1, jphct
             id = i + inc
             iam(i) = id
@@ -2539,6 +2493,20 @@ c                                 composition constraint
                a(j,i) = cp(j,id)/ctot(id)
             end do
          end do
+c                                 load all compounds into the 
+c                                 the dynamic composition array
+         do id = istct, ipoint
+
+            i = id - inc 
+c                                 jkp indicates which phase a point is associated with
+            jkp(i) = -id
+            hkp(i) = 0
+
+            do j = 1, icp
+               cp2(j,i) = a(j,i)
+            end do
+
+         end do 
 
          ldt = icp + 1
          ldq = icp + 1
@@ -2848,7 +2816,7 @@ c----------------------------------------------------------------------
 
       end 
 
-      subroutine yclos2 (clamda,x,is,iter,opt,bad)
+      subroutine yclos2 (clamda,x,is,iter,opt)
 c----------------------------------------------------------------------
 c subroutine to identify pseudocompounds close to the solution for 
 c subsequent refinement, for iteration > 1. 
@@ -2859,8 +2827,7 @@ c----------------------------------------------------------------------
 
       external ffirst
 
-      integer i, is(*), id, jmin(k19), kmin(k19), opt, kpt, mpt, iter, 
-     *        tic, j
+      integer i, id, is(*), jmin(k19), opt, kpt, mpt, iter, tic
 
       double precision clamda(*), clam(k19), x(*)
 
@@ -2868,8 +2835,6 @@ c----------------------------------------------------------------------
 
       integer hcp,idv
       common/ cst52  /hcp,idv(k7)
-c                                 added for quack test:
-      logical bad
 
       logical quack
       common/ cxt1 /quack(k21)
@@ -2886,9 +2851,9 @@ c                                 added for quack test:
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
-      integer jphct
+      integer jphct, jpt
       double precision g2, cp2, caqtot
-      common/ cxt12 /g2(k21),cp2(k5,k21),caqtot(k21),jphct
+      common/ cxt12 /g2(k21),cp2(k5,k21),caqtot(k21),jphct,jpt
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
@@ -2926,106 +2891,42 @@ c                                 solution.
 
       npt = 0 
       kpt = 0
-      bad = .false.
 
       do i = 1, jphct
 c                                 id indicates the original refinement
 c                                 point.
          id = hkp(i)
-c                                 check the stability of all points 
-c DEBUG                           5/9/2017 removed the x(i)>0 conditional
-c                                 to get chemical potentials. unfortunately
-c                                 i forgot why removing it is a bad idea.
-c                                 so we'll try it one more time (july 3, 2017): 
-c        if (is(i).ne.1.and.x(i).gt.0d0) then
+
          if (is(i).ne.1) then  
 c                                 a stable point, add to list
             npt = npt + 1
             jdv(npt) = i
             amt(npt) = x(i)
-            stable(id) = .true.
+            if (id.gt.0) stable(id) = .true.
 
             if (lopt(28)) call dumper (2,i,hkp(i),jkp(i),x(i),clamda(i))
 
-         else if (clamda(i).lt.clam(id)) then
+         else if (id.gt.0) then 
+c                                 a metastable solution cpd
+            if (clamda(i).lt.clam(id)) then
 c DEBUG wish i wrote was this is about, but it may be in yclos0/1
-            if (clamda(i).lt.wmach(3)) cycle 
-
-            if (jkp(id).gt.0) then
-c                                 it's a solution, keep the  
-c                                 least metastable point
+               if (clamda(i).lt.wmach(3)) cycle 
+c                                 keep the least metastable point
                jmin(id) = i
                clam(id) = clamda(i)
 
-            else 
-c                                 it's a compound, keep all 
-c                                 as they hardly cost anything. 
-               kpt = kpt + 1
-               kmin(kpt) = i
+            end if
 
-            end if 
-
-         end if 
+         end if
 
       end do
-
-c      write (*,*) 'npt opt kpt', npt, opt, kpt
-
-      if (npt.gt.icp) then 
-
-c         write (*,*) 'too many', npt, icp, iter
-c         do i = 1, npt
-c            write (*,*) jdv(i),hkp(jdv(i)),jkp(idv(i)),
-c     *                  x(jdv(i)),clamda(jdv(i)),is(jdv(i))
-c         end do 
-c                                 july 10, 2017. 
-c                                 too many stable points, see if there
-c                                 is a zero-mode stable phase. attempt
-c                                 to recover pre-july 3, 2017 behavior;
-c                                 actually there is only a small chance 
-c                                 that npt > icp cause's getmus to fail, 
-c                                 and if it did this could be solved by 
-c                                 reordering the stable phases until a 
-c                                 non-degenerate case is found... comment again
-         mpt = npt
-         npt = 0 
-
-         do i = 1, mpt
-            stable(i) = .false.
-         end do
-
-         do i = 1, mpt
-
-            if (x(jdv(i)).gt.0d0) then
-
-               npt = npt + 1
-               jdv(npt) = jdv(i)
-               amt(npt) = x(jdv(i))
-               stable(hkp(jdv(i))) = .true.
-
-            end if 
-c                                  because i expect that this is occurring 
-c                                  when the endmember is identical to the 
-c                                  solution composition, don't save the phase
-c                                  in the list of metastable phases (as was 
-c                                  done pre-july 3, 2017.
-
-         end do
-
-      end if 
 c                                 get mu's for lagged speciation
       call getmus (iter,iter-1,.false.)
 
       if (iter.le.iopt(10)) then
-c                                 if not done iterating, add the metastable
-c                                 phases, first the compounds:
-         do i = 1, kpt
-            npt = npt + 1 
-            jdv(npt) = kmin(i)
-         end do 
+c                                 if not done iterating, add metastable solutions
+         kpt = 0
 c                                 make a list of the solutions
-         kpt = 0 
-
          do i = 1, opt
 
             if (jmin(i).eq.0) then
@@ -3044,11 +2945,9 @@ c                                 overlap fogs the lp.
             clam(kpt) = clam(i)
 
          end do
-c DEBUG DEBUG 
-c should be gt 0
+
          if (kpt.gt.iopt(31)) then 
 c                                 sort if too many
-
             kpt = iopt(31)
 
             call ffirst (clam,jmin,1,kpt,iopt(31),k19,ffirst)
@@ -3060,7 +2959,7 @@ c                                 sort if too many
            npt = npt + 1
            jdv(npt) = jmin(i)
 
-         end do 
+         end do
 c                                 sort the phases, this is only necessary if
 c                                 metastable phases have been added
          call sortin
@@ -3068,31 +2967,27 @@ c                                 make a pointer to the original refinement
 c                                 point
          do i = 1, npt
             mkp(i) = hkp(jdv(i))
-         end do 
+         end do
+
+            if (lopt(28)) then 
+         do i = 1, npt 
+            
+
+                id = jdv(i)
+                call dumper (2,id,hkp(id),jkp(id),x(id),clamda(id))
+          end do 
+          end if  
 
       else  
   
-         mpt = npt 
-         npt = 0  
+         mpt = npt
+         npt = 0
 c                                 check zero modes the amounts
          do i = 1, mpt
 
-            if (x(jdv(i)).ge.nopt(9)) then 
+            if (x(jdv(i)).ge.nopt(9)) then
+
                npt = npt + 1
-c                                 -----------------
-c                                 this was a filter to throw out 
-c                                 pure solvent results:
-c                                 check for pure solvent if lagged
-c                                 speciation:
-c               id = jkp(jdv(i))
-c               if (id.gt.0) then 
-c               if (ksmod(id).eq.39.and.lopt(32)) then
-c                  if (quack(jdv(i))) then
-c                     bad = .true.
-c                  end if 
-c               end if
-c               end if 
-c                                 -----------------
                amt(npt) = x(jdv(i))
                jdv(npt) = jdv(i)
                quack(npt) = quack(jdv(i))
@@ -3315,9 +3210,9 @@ c----------------------------------------------------------------------
 
       double precision lc(k8,k8), lg(k8)
 
-      integer jphct
+      integer jphct, jpt
       double precision g2, cp2, caqtot
-      common/ cxt12 /g2(k21),cp2(k5,k21),caqtot(k21),jphct
+      common/ cxt12 /g2(k21),cp2(k5,k21),caqtot(k21),jphct,jpt
 
       double precision a,b,c
       common/ cst313 /a(k5,k1),b(k5),c(k1)
@@ -3369,7 +3264,7 @@ c----------------------------------------------------------------------
 
       logical quit, bad
 
-      integer i, j, id, ier, ipvt(k8), iter, jter, imu(k8), kcp, lcp, 
+      integer i, j, ier, ipvt(k8), iter, jter, imu(k8), kcp, lcp, 
      *        inp(k8)
 
       double precision comp(k8,k8), g, lc(k8,k8), lg(k8)
@@ -3431,7 +3326,7 @@ c                                 avoid a myriad of conditionals
 
          do i = 1, npt
 c                                 check if the phase contains a
-c                                 degerate component
+c                                 degenerate component
             bad = .false.
 
             do j = 1, idegen
@@ -3501,10 +3396,6 @@ c                                 then NaN the missing values
                   mu(idg(i)) = nopt(7)
                end do
 
-            else 
-
-               write (*,*) 'wonk'
-
             end if
 
          else
@@ -3517,17 +3408,11 @@ c                                 then NaN the missing values
 
       if (idegen.gt.0.and.ier.eq.0) then
 c                                 noot
-      else if (npt.eq.hcp) then 
+      else if (npt.ge.hcp) then 
 
-         if (idegen.ne.0) then
+         do i = 1, npt
 
-            write (*,*) 'we have a problem houston',kcp,jcp
-
-         end if 
-
-         do i = 1, hcp
-
-            do j = 1, hcp 
+            do j = 1, hcp
                comp(i,j) = lc(i,j)
             end do 
 
@@ -3535,9 +3420,50 @@ c                                 noot
 
          end do
 
+         if (npt.gt.hcp) then
+
+            lcp = 0
+
+            do i = 1, npt
+
+               if (amt(i).lt.zero) cycle
+
+               lcp = lcp + 1
+
+               mu(lcp) = mu(i)
+
+               do j = 1, jcp 
+                  comp(lcp,j) = comp(i,j)
+               end do 
+
+            end do
+
+            if (lcp.ne.hcp) then
+
+               write (*,*) 'we have a problem houston #3',lcp,hcp,npt
+
+            end if
+
+         end if 
+
          call factor (comp,hcp,ipvt,ier)
 
          if (ier.eq.0) call subst (comp,ipvt,hcp,mu,ier)
+
+         if (idegen.ne.0) then 
+
+            if (ier.ne.0) then
+
+                write (*,*) 'we have a problem houston, and should'
+
+            else 
+
+                write (*,*) 'we have no problem houston, but should'
+
+            end if 
+
+         end if 
+
 
       else
 

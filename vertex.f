@@ -733,6 +733,8 @@ c                                 write failure info to fld file:
 
             end if 
 
+            pause
+
             call fractr (idead,output)
 c                                 at this point we've computed the stable
 c                                 assemblage at each point in our column

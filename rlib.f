@@ -15302,9 +15302,17 @@ c                                 avoid impossible compositions 'cause a min > 0
 
             ycum = ycum + xmn(lsite,k-1)
 c                                 1-ycum is the smallest fraction possible
-            if (1d0-ycum.lt.0d0) then 
+            if (ycum.gt.1d0) then 
 c                                 inconsistent limits
-               call error (999,ycum,jsp,'cartes')
+               write (*,'(/,a,/)') '#########BOOM WACKA BOOM###########'
+               write (*,*) ids,ksmod(ids),lsite,k,i,mode
+               write (*,*) xmn
+               write (*,*) xmx
+               write (*,*) xnc
+               write (*,*) iy 
+               call warn (999,ycum,jsp,'cartes')
+
+               cycle
 
             else
 c                                 the smallest fraction possible is lt
@@ -18918,13 +18926,6 @@ c                                  sum (q(i)*m(i)) = 0.
          else 
 c                                  neutral species assumed to be ideal, molality is
             mo(i) = dg
-c            dix = (108d0*dg + dsqrt(11664*dg*dg + 1728d0)) **(1d0/3d0)
-c            mo(i) = dix/6d0 - 2d0/dix
-            if (dg.eq.0d0) mo(i) = 0d0
-
-            if (mo(i).lt.0) then 
-               write (*,*) 'oink'
-            end if
 
          end if 
 
@@ -19237,9 +19238,9 @@ c----------------------------------------------------------------------
 
       character name*14
 
-      integer jphct
+      integer jphct, jpt
       double precision g2, cp2, caqtot
-      common/ cxt12 /g2(k21),cp2(k5,k21),caqtot(k21),jphct
+      common/ cxt12 /g2(k21),cp2(k5,k21),caqtot(k21),jphct,jpt
 
       integer iopt
       logical lopt
@@ -19269,6 +19270,6 @@ c                                 dynamic
          write (*,1000) id,hkp,jkp,name,amt,lambda,g2(id),
      *                  (cp2(i,id),i=1,jbulk)
       end if 
-1000  format (i5,1x,2(i3,1x),a,20(g14.6,1x))
+1000  format (i5,1x,2(i4,1x),a,20(g14.6,1x))
 
       end 
