@@ -87,14 +87,6 @@ c                                 degeneracy test
             end if 
          end do
 
-         if (idegen.eq.1) then 
-            idegen = 1
-         else if (idegen.eq.2) then 
-            idegen = 2
-         else if (idegen.gt.2) then 
-            write (*,*) 'oink ',idegen
-         end if 
-
          inc = istct - 1
 
          oldt = t
@@ -186,9 +178,9 @@ c-----------------------------------------------------------------------
       include 'perplex_parameters.h'
 
       integer liw, lw, iter, iref, i, id, idead, ids, jstart, inc, 
-     *        opt, kter
+     *        opt, kter, kitmax
 
-      logical first, wad1, wad2, kterat
+      logical first, wad1, wad2, kterat, quit
 
       parameter (liw=2*k21+3,lw=2*(k5+1)**2+7*k21+5*k5)
 
@@ -256,6 +248,8 @@ c                                 are identified in jdv(1..npt)
       inc = istct - 1
       opt = npt
       kterat = .false.
+      kitmax = 0
+      kter = 0 
       jphct = jpt
 c                                 --------------------------------------
 c                                 first iteration
@@ -266,10 +260,13 @@ c                                 first iteration
          id = jdv(i) + inc
 c                                 the point is a pseudocompound, refine it
          if (id.gt.ipoint) then
+
             call resub (i,id,ikp(id),iref,iter,first,wad1,wad2)
+
             if (lopt(32).and.iopt(28).gt.0) then
-c               if (ksmod(ikp(id)).eq.39) kterat = .true.
+               if (ksmod(ikp(id)).eq.39) kterat = .true.
             end if
+
          end if
 
       end do
@@ -280,16 +277,24 @@ c                                 to recover previous solution
          idead = -1
          return
 
+      end if
+
+      if (kterat) then 
+         kitmax = iopt(28)
+         iter = 2
       end if 
 
-      kter = 0
-c                                 for reasons of stupidity:
-      iter = 2
-
-      do 
+      do
 c                                 iter is incremented before the operations,
 c                                 i.e., on the nth iteration, iter is n+1
-
+         if (kter.eq.kitmax) then 
+            iter = iter + 1
+            kter = 0
+         else 
+            kter = kter + 1
+         end if
+c                                 set quit flag
+         if (iter.gt.iopt(10).and.kter.eq.kitmax) quit = .true.
 c                                 cold start
          jstart = 0 
 c                                 set idead = 0 to prevent lpnag from
@@ -304,39 +309,20 @@ c                                 warn if severe error
             call lpwarn (idead,'REOPT ')
             exit
 
-         end if 
-c                                 analyze solution, get refinement points
-         call yclos2 (clamda,x,is,iter,opt)
-c                                 iterate without refining solution compositions
-         if (kterat) then
-
-            kter = kter + 1
-
-            if (kter.gt.iopt(28)) then 
-               iter = iter + 1
-               kter = 0
-            end if
-
-            cycle 
-
-         else 
-
-            iter = iter + 1
-
-         end if 
+         end if
 
          if (lopt(28)) then 
             write (*,*) 'kter, iter ',kter,iter
-         end if 
+         end if
+c                                 analyze solution, get refinement points
+         call yclos2 (clamda,x,is,iter,opt,quit)
 c                                 save the id and compositions
 c                                 of the refinement points, this
 c                                 is necessary because resub rewrites
 c                                 the xcoor array.
          call saver
-c                                 uncomment if refining on kterations
-c         if (iter.gt.iopt(10).and.kter.ge.iopt(28)) exit 
 
-         if (iter.gt.iopt(10)) exit 
+         if (quit) exit
 
          jphct = jpt
          iref = 0
@@ -2816,10 +2802,11 @@ c----------------------------------------------------------------------
 
       end 
 
-      subroutine yclos2 (clamda,x,is,iter,opt)
+      subroutine yclos2 (clamda,x,is,iter,opt,quit)
 c----------------------------------------------------------------------
 c subroutine to identify pseudocompounds close to the solution for 
-c subsequent refinement, for iteration > 1. 
+c subsequent refinement, for iteration > 1. quit is true for final
+c iteration.
 c----------------------------------------------------------------------
       implicit none
 
@@ -2831,7 +2818,7 @@ c----------------------------------------------------------------------
 
       double precision clamda(*), clam(k19), x(*)
 
-      logical stable(k19)
+      logical stable(k19), quit
 
       integer hcp,idv
       common/ cst52  /hcp,idv(k7)
@@ -2923,7 +2910,7 @@ c                                 keep the least metastable point
 c                                 get mu's for lagged speciation
       call getmus (iter,iter-1,.false.)
 
-      if (iter.le.iopt(10)) then
+      if (.not.quit) then
 c                                 if not done iterating, add metastable solutions
          kpt = 0
 c                                 make a list of the solutions
@@ -3519,8 +3506,8 @@ c                                 failed
 
       end if
 
-1000  format (/,'Iteration',4x,'G(J/mol)',7x,20(4x,a))
-1010  format (3x,i2,4x,f15.4,6x,20(i8,1x))
+1000  format (/,'Iteration',4x,'G(J/mol)',7x,20(5x,a))
+1010  format (3x,i2,4x,f15.4,6x,20(i9,1x))
 1020  format (3x,i2,4x,'chemical potential back-calculation failed.')
 
       end

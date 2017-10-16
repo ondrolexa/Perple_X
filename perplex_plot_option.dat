@@ -17,7 +17,7 @@ page_size              612 792  | For PerplexPDF.
                                 | small bounding boxes may cause clipping
 
 field_fill               T      | variance based field fill for gridded minimization results
-field_label              F      | label fields in gridded minimization results
+field_label              T      | label fields in gridded minimization results
 field_label_scale      0.75     | relative scale for field labels
 
 font               Helvetica    | any fontname recognized by your plotting program (e.g., Illustrator, Corel, etc.)
