@@ -731,6 +731,11 @@ c                                 write failure info to fld file:
      *                        (cblk(i),i=1,icp)
                write (*,2010) (itop(i),i=1,ilay)
 
+            else 
+
+               write (n12,2000) p0,dz,layer(k),k,j,v(1),v(2),
+     *                          (cblk(i),i=1,icp)
+
             end if 
 
             call fractr (idead,output)
@@ -786,6 +791,8 @@ c                                 end of j index loop
 2000  format (/,' failed at p0-dz = ',2(g14.7,1x),' layer ',i1,' node '
      *       ,i3,' column ',i3,/,' p-t-c ',2(g14.7,1x),/,12(g14.7,1x))
 2010  format (' layer boundaries are ',5(i3,1x))
+2020  format (/,' did not fail at p0-dz = ',2(g14.7,1x),' l ',i1,' n '
+     *       ,i3,' column ',i3,/,' p-t-c ',2(g14.7,1x),/,12(g14.7,1x))
 
       end 
 

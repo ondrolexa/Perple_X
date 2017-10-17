@@ -2096,13 +2096,21 @@ c                                 pure solvent
 
             else  
 c                                  WERAMI:
-               do i = 1, ns
-                  do j = 1, icomp 
-                     cp3(j,jd) = cp3(j,jd) + caq(jd,i) * cp(j,jnd(i))
-                  end do 
-               end do 
+               if (caq(jd,na1).eq.0d0) then
+c                                  pure solvent, use the y array to be safe
+                  do i = 1, ns
+                     do j = 1, icomp 
+                        cp3(j,jd) = cp3(j,jd) + y(i) * cp(j,jnd(i))
+                     end do 
+                  end do
 
-               if (caq(jd,na1).gt.0d0) then
+               else 
+c                                  impure solvent
+                  do i = 1, ns
+                     do j = 1, icomp 
+                        cp3(j,jd) = cp3(j,jd) + caq(jd,i) * cp(j,jnd(i))
+                     end do 
+                  end do
 
                   do i = sn1, nsa
 

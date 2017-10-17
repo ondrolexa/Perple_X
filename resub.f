@@ -279,6 +279,7 @@ c                                 to recover previous solution
 
       end if
 
+
       if (kterat) then 
          kitmax = iopt(28)
          iter = 2
@@ -2036,12 +2037,12 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer jphct, i, j, k, is(*), idsol(k5), kdv(h9), nsol, 
+      integer jphct, i, j, k, is(*), idsol(k5), kdv(h9), nsol, ids,
      *        mpt, iam, id, inc, jdsol(k5,k5), kdsol(k5), max
 
       external ffirst
 
-      logical solvus, quit
+      logical solvus, quit, news
 
       double precision clamda(*), x(*), slam(h9)
 
@@ -2103,26 +2104,36 @@ c                                 to identify a refineable point
 
 c                                 modified 3/4/2015 to refine endmember compositions. JADC
 c           if (ikp(id).ne.0) then  #refine endmember change
-            if (ikp(id).ne.0.and.id.gt.ipoint) then
+
+            ids = ikp(id) 
+
+            if (ids.ne.0.and.id.gt.ipoint) then 
 
                quit = .false.
+               news = .true.
 
                do j = 1, nsol
-                  if (ikp(id).eq.idsol(j)) then 
-                     kdsol(j) = kdsol(j) + 1
-                     jdsol(kdsol(j),j) = id
-                     goto 10
-                  end if 
+
+                  if (ids.ne.idsol(j)) cycle 
+                  kdsol(j) = kdsol(j) + 1
+                  jdsol(kdsol(j),j) = id
+                  news = .false.
+                  exit 
+
                end do
+
+               if (news) then 
 c                                 new phase, add to list
-               nsol = nsol + 1
-               idsol(nsol) = ikp(id)
-               jdsol(1,nsol) = id
-               kdsol(nsol) = 1
+                  nsol = nsol + 1
+                  idsol(nsol) = ids
+                  jdsol(1,nsol) = id
+                  kdsol(nsol) = 1
+
+               end if
 
             end if 
 c                                 new point, add to list
-10          npt = npt + 1
+            npt = npt + 1
             jdv(npt) = i
             amt(npt) = x(i)
 
@@ -2132,7 +2143,8 @@ c                                 new point, add to list
                else 
                   call dumper (1,i,0,-id,x(i),clamda(i))
                end if 
-            end if 
+            end if
+
          end if 
 
       end do 

@@ -18697,9 +18697,9 @@ c                                 error in log10(Kw)
          caq(id,na4) = (-lnkw + dlog(mo(ihy)*mo(ioh)*gamm0**2
      *                 ))/2.302585d0
 c                                  bulk composition per mole of species
-         do j = 1, icp
-            cp2(j,id) = blk(j)/smo
-         end do
+c         do j = 1, icp
+c            cp2(j,id) = blk(j)/smo
+c          end do
 
       else 
 c                                 stuff need for optimization:
