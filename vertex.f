@@ -731,10 +731,10 @@ c                                 write failure info to fld file:
      *                        (cblk(i),i=1,icp)
                write (*,2010) (itop(i),i=1,ilay)
 
-            else 
+c            else 
 
-               write (n12,2000) p0,dz,layer(k),k,j,v(1),v(2),
-     *                          (cblk(i),i=1,icp)
+c               write (n12,2020) p0,dz,layer(k),k,j,v(1),v(2),
+c     *                          (cblk(i),i=1,icp)
 
             end if 
 
@@ -1555,6 +1555,11 @@ c-----------------------------------------------------------------------
       integer i,j,k,idead
 
       logical there(k23), warn, output
+
+      double precision mass(k23), tmass, x
+
+      double precision atwt
+      common/ cst45 /atwt(k0)
  
       character*8 vname,xname
       common/ csta2  /xname(k5),vname(l2)
@@ -1592,41 +1597,107 @@ c                                 fractionation effects:
       do i = 1, jbulk
          dcomp(i) = 0d0
       end do 
-      
-      do i = 1, k23
+
+      do i = 1, ifrct
          there(i) = .false.
       end do 
 
       if (idead.eq.0) then 
 c                                 optimization suceeded
-         do i = 1, ifrct
-
+         if (lopt(35)) then 
+c                                 threshold based fractionation:
+            tmass = 0d0 
+c                                 get mass fractions:
             do j = 1, ntot
 
-               if (kkp(j).eq.ifr(i)) then 
+               mass(j) = 0d0
+
+               do k = 1, jbulk 
+                  mass(j) = mass(j) + amt(j)*cp3(k,j)*atwt(k)
+               end do
+
+               tmass = tmass + mass(j)
+
+            end do
+
+            do j = 1, ntot
+               mass(k) = mass(k)/tmass
+            end do
+c                                do fractionation
+            do i = 1, ifrct
+
+               do j = 1, ntot
+
+                  if (kkp(j).eq.ifr(i)) then 
 c                                 the phase to be fractionated
 c                                 is present, remove from bulk
-                  there(i) = .true.
+                     there(i) = .true.
 
-                  if (amt(j).lt.0d0) amt(j) = 0d0
+                     if (amt(j).lt.0d0) amt(j) = 0d0
 
-                  do k = 1, jbulk 
-                     dcomp(k) = dcomp(k) + amt(j)*cp3(k,j)
-                  end do
+                     if (mass(j).gt.nopt(33)) then 
+c                                 mass fraction exceeds upper threshold
+                        x = (mass(j) - nopt(32))/mass(j)
+
+                        do k = 1, jbulk 
+                           dcomp(k) = dcomp(k) + x*amt(j)*cp3(k,j)
+                        end do
 c                                 write to console
-                  write (*,1185) vname(iv(2)),v(iv(2)),
-     *                           vname(iv(1)),v(iv(1))
+                        write (*,1185) vname(iv(2)),v(iv(2)),
+     *                                 vname(iv(1)),v(iv(1))
 
-                  write (*,1190) amt(j),gname(ifr(i)),
-     *                           (amt(j)*cp3(k,j),k=1,jbulk)
+                        write (*,1190) amt(j),gname(ifr(i)),
+     *                                 (amt(j)*cp3(k,j),k=1,jbulk)
 c                                 write to file
-                  if (output) write (n0+i,1200) v,amt(j),
-     *                                       (amt(j)*cp3(k,j),k=1,jbulk) 
-               end if
+                        if (output) write (n0+i,1200) v,amt(j),
+     *                                    (amt(j)*cp3(k,j),k=1,jbulk)
+                     else 
+c                                 write to console
+                        write (*,1185) vname(iv(2)),v(iv(2)),
+     *                                 vname(iv(1)),v(iv(1))
 
-            end do 
+                        write (*,1180) gname(ifr(i)),mass(j),nopt(33)
+
+                     end if 
+
+                  end if
+
+               end do 
  
-         end do
+            end do
+
+         else
+
+            do i = 1, ifrct
+
+               do j = 1, ntot
+
+                  if (kkp(j).eq.ifr(i)) then 
+c                                 the phase to be fractionated
+c                                 is present, remove from bulk
+                     there(i) = .true.
+
+                     if (amt(j).lt.0d0) amt(j) = 0d0
+
+                     do k = 1, jbulk 
+                        dcomp(k) = dcomp(k) + amt(j)*cp3(k,j)
+                     end do
+c                                 write to console
+                     write (*,1185) vname(iv(2)),v(iv(2)),
+     *                              vname(iv(1)),v(iv(1))
+
+                     write (*,1190) amt(j),gname(ifr(i)),
+     *                              (amt(j)*cp3(k,j),k=1,jbulk)
+c                                 write to file
+                     if (output) write (n0+i,1200) v,amt(j),
+     *                                 (amt(j)*cp3(k,j),k=1,jbulk) 
+                  end if
+
+               end do 
+ 
+            end do
+
+         end if 
 c                                 write output for fractionated phases 
 c                                 that are NOT stable
          do i = 1, ifrct
@@ -1697,7 +1768,9 @@ c                                 warn on complete depletion of a component
      *        'the fractionation path with the current molar bulk ', 
      *        'composition:',/)
 1010  format (4x,a,2x,g12.6)  
-1030  format (/,'optimization failed at:',//,5(1x,a8,'=',g12.6))     
+1030  format (/,'optimization failed at:',//,5(1x,a8,'=',g12.6))
+1180  format (a,' is stable, but its mass fraction (',f5.3,') is below',
+     *        ' the upper fractionation threshold (',f5.3,').')
 1185  format (/,'At ',a,'=',g12.6,' and ',a,'=',g12.6)
 1190  format ('fractionating ',g12.6,' moles of ',a,'; changes bulk by:'
      *        ,/,15(1x,g12.6))
@@ -1723,7 +1796,7 @@ c----------------------------------------------------------------------
 
       integer iam, jfrct, i
 
-      character phase(k23)*10, fname*14, y*1, name*100
+      character phase(k23)*10, y*1, name*100
 
       character*100 prject,tfname
       common/ cst228 /prject,tfname

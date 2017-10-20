@@ -1617,7 +1617,7 @@ c                                write summary and checks
 
          if (lopt(25).and.(ihy.eq.0.or.ioh.eq.0)) then 
             call warn (99,0d0,0,'missing H+ or OH- species, '//
-     *                          'aqueous_output set = F (INPUT2)')
+     *                          'aq_output set = F (INPUT2)')
          end if 
 
          ichg = 0
@@ -1647,7 +1647,7 @@ c                                write summary and checks
       else if (lopt(32).or.lopt(25)) then 
 
          if (first) call warn (99,0d0,0,' no data for aqueous species, '
-     *    //'aqueous_output and lagged_aq_speciation disabled.')
+     *    //'aq_output and aq_lagged_speciation disabled.')
 
          lopt(32) = .false.
          lopt(25) = .false.
@@ -2027,15 +2027,14 @@ c                                 pointer
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
-      integer kd, na1, na2, na3, na4
+      integer kd, na1, na2, na3, nat
       double precision x3, caq
-      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),na1,na2,na3,na4,kd
+      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),na1,na2,na3,nat,kd
 c----------------------------------------------------------------------
-
       kkp(jd) = ids
       cptot(jd) = 0d0
 
-      if (ids.lt.0) then 
+      if (ids.lt.0) then
 c                                 simple compounds
          if (iam.ne.5) then
 c                                 all programs except frendly 

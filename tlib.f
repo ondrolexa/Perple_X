@@ -1,5 +1,5 @@
 c----------------------------------------------------------------------
-  
+
 c TLIB - a library of subprograms called by the PERPLEX programs.
 
 c Copyright (c) 1998 by James A. D. Connolly, Institute for Mineralogy
@@ -19,7 +19,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a)') 
-     *      'Perple_X version 6.7.9, source updated Oct 8, 2017.'
+     *      'Perple_X version 6.8.0, source updated Oct 20, 2017.'
 
       end
 
@@ -315,6 +315,10 @@ c                                 increase in resolution for Schreinemakers diag
       nopt(19) = 3d0 
 c                                 T_melt cutoff 
       nopt(20) = 873d0
+c                                 fractionation_lower_threshold
+      nopt(32) = 0d0
+c                                 fractionation_upper_threshold
+      nopt(33) = 0d0
 c                                 hard_limits for solution model refinement
       valu(16) = 'off'
       lopt(3) = .false.
@@ -349,7 +353,7 @@ c                                 hyb_h2o - eos to be used for pure h2o, 0-2, 4-
 c                                 hyb_co2 - eos to be used for pure co2, 0-4
       iopt(26) = 4
 c                                 hyb_ch4 - eos to be used for pure ch4, 0-1
-      iopt(27) = 1   
+      iopt(27) = 1
 c                                 
 c     iopt(28-30)                 reserved as debug options iop_28 - iop_30
 
@@ -357,6 +361,8 @@ c                                 refinement_points_II
       iopt(31) = 5
 c                                 maximum number of aqueous species
       iopt(32) = 20
+c                                 aq_lagged_iterations
+      iopt(33) = 0
 c                                 output back-calculated solute speciation
       lopt(25) = .true.
 c                                 aq_solvent_composition (true = molar)
@@ -366,9 +372,17 @@ c                                 aq_solute_composition (true = molal)
       lopt(27) = .true.
       valu(27) = 'm'
 c                                 lagged speciation
-      lopt(32) = .true.
+      lopt(32) = .false.
 c                                 output_iteration_g
       lopt(33) = .false.
+c                                 output_iteration_details
+      lopt(34) = .false.
+c                                 fractionation threshold, set by nopt(32)/nopt(33)
+      lopt(35) = .false.
+c                                 aq_oxide_components
+      lopt(36) = .false.
+c                                 allow null phases
+      lopt(37) = .false.
 c                                 initialize mus flag lagged speciation
       mus = .false.
 c                                 -------------------------------------
@@ -439,21 +453,37 @@ c                                 phase composition key
             end if 
             valu(2) = val
 
-         else if (key.eq.'aqueous_species') then
+         else if (key.eq.'aq_species') then
 
             read (strg,*) iopt(32)
 
-         else if (key.eq.'aqueous_output') then
+         else if (key.eq.'aq_lagged_iterations') then
+
+            read (strg,*) iopt(33)
+
+         else if (key.eq.'aq_output') then
 
             if (val.ne.'T') lopt(25) = .false.
 
-         else if (key.eq.'lagged_aq_speciation') then 
+         else if (key.eq.'aq_lagged_speciation') then 
 
-            if (val.ne.'T') lopt(32) = .false. 
+            if (val.eq.'T') lopt(32) = .true.
+
+         else if (key.eq.'aq_oxide_components') then 
+
+            if (val.eq.'T') lopt(36) = .true.
+
+         else if (key.eq.'null_phases') then 
+
+            if (val.eq.'T') lopt(37) = .true.
 
          else if (key.eq.'output_iteration_G') then 
 
-            if (val.eq.'T') lopt(33) = .true. 
+            if (val.eq.'T') lopt(33) = .true.
+
+         else if (key.eq.'output_iteration_details') then 
+
+            if (val.eq.'T') lopt(34) = .true. 
 
          else if (key.eq.'aq_solvent_composition') then
 
@@ -797,6 +827,14 @@ c                                 equilibrium cutoff T (K)
 c                                 cutoff T (K) for melt endmember stability    
             read (strg,*) nopt(20)
 
+         else if (key.eq.'fractionation_hi_limit') then 
+c                                 upper fractionation threshold
+            read (strg,*) nopt(33)
+
+         else if (key.eq.'fractionation_lo_limit') then 
+c                                 lower fractionation threshold
+            read (strg,*) nopt(32)
+
          else if (key.eq.'order_check') then 
 c                                 compare local and max disorder state for o-d models
             if (val.eq.'off') then 
@@ -992,6 +1030,9 @@ c                                 computational options this is redundant
       end if 
 c                                 -------------------------------------
 c                                 dependent parameters and error traps:
+c                                 fractionation theshold flag
+      if (nopt(33).gt.nopt(32)) lopt(35) = .true. 
+
       if (nopt(21).le.1d0) then 
          write (*,1040)
          nopt(21) = 2d0
@@ -1415,7 +1456,7 @@ c                                 generic thermo options
      *        4x,'hybrid_EoS_H2O         ',i4,7x,'[4] 0-2, 4-5',/,
      *        4x,'hybrid_EoS_CO2         ',i4,7x,'[4] 0-4',/,
      *        4x,'hybrid_EoS_CH4         ',i4,7x,'[1] 0-1',/,
-     *        4x,'lagged_aq_speciation   ',l1,10x,'[T] F')
+     *        4x,'aq_lagged_speciation   ',l1,10x,'[T] F')
 1013  format (/,2x,'Input/Output options:',//,
      *        4x,'dependent_potentials   ',a3,8x,'off [on]',/,
      *        4x,'pause_on_error         ',l1,10x,'[T] F')
@@ -1522,8 +1563,8 @@ c                                 thermo options for frendly
      *        4x,'pause_on_error         ',l1,10x,'[T] F',/,
      *        4x,'poisson_test           ',l1,10x,'[F] T')
 1231  format (/,2x,'Input/Output options:',//,
-     *        4x,'aqueous_output         ',l1,10x,'[F] T',/
-     *        4x,'aqeuous_species        ',i3,8x,'[20] 0-',i3,/,
+     *        4x,'aq_output              ',l1,10x,'[F] T',/
+     *        4x,'aq_species             ',i3,8x,'[20] 0-',i3,/,
      *        4x,'aq_solvent_composition ',a3,8x,
      *        '[y] m: y => mol fraction, m => molality',/,
      *        4x,'aq_solute_composition  ',a3,8x,
@@ -5846,9 +5887,9 @@ c                                find last non-blank
       
       do i = 1, nchar
          if (bitsy(i).gt.' ') ict = i
-      end do  
+      end do
 
-      nchar = ict          
+      nchar = ict
 c                                 kill any trailing +/- or ','
       if (bitsy(nchar).eq.'+'.or.bitsy(nchar).eq.'-'.or.
      *    bitsy(nchar).eq.',') nchar = nchar - 1
@@ -5888,7 +5929,9 @@ c                                 strip out double blanks
 
       end do
 
-      nchar = ict      
+      nchar = ict
+
+      if (nchar.eq.1) return
 c                                 strip put + - and - + strings
       strip = .false.
 

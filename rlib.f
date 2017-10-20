@@ -1169,6 +1169,10 @@ c                               otherwise rejected.
 c                               reject a null phase if it contains only 
 c                               saturated components, since these phases
 c                               are already saved in the sat list.
+
+c                               null phase option over-ride
+         if (.not.lopt(37)) goto 90
+
          tot = 0d0
 
          do j = icp + 1, icp + ifct
@@ -5607,7 +5611,7 @@ c----------------------------------------------------------------------
 
       if (jsmod.eq.20) then
 
-         call reaqus (sname,first)
+         call reaqus (sname)
          kstot = jstot
          istot = jstot
          return
@@ -6354,7 +6358,7 @@ c                                 indices:
 
       end
 
-      subroutine reaqus (tname,first)
+      subroutine reaqus (tname)
 c---------------------------------------------------------------------
 c reaqus - reformulates aqueous solution models to eliminate missing 
 c endmembers and shift ranges.
@@ -6366,8 +6370,6 @@ c---------------------------------------------------------------------
       character*10 tname
 
       integer i, jq, jn, js, lm
-
-      logical first
 
       integer jmsol,kdsol
       common/ cst142 /jmsol(m4,mst),kdsol(m4)
@@ -8910,9 +8912,9 @@ c                                 x coordinate description
       integer jend
       common/ cxt23 /jend(h9,m4)
 
-      integer kd, na1, na2, na3, na4
+      integer kd, na1, na2, na3, nat
       double precision x3, caq
-      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),na1,na2,na3,na4,kd
+      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),na1,na2,na3,nat,kd
 
       integer ksmod, ksite, kmsol, knsp
       common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
@@ -15740,9 +15742,9 @@ c-----------------------------------------------------------------------
       double precision aqcp, aqtot
       common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
 
-      integer kd, na1, na2, na3, na4
+      integer kd, na1, na2, na3, nat
       double precision x3, caq
-      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),na1,na2,na3,na4,kd
+      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),na1,na2,na3,nat,kd
 
       integer jnd
       double precision aqg,q2,rt
@@ -15788,7 +15790,9 @@ c                                 electrolyte
 
          do i = 1, isp
             ins(i) = jspec(ids,i)
-         end do 
+         end do
+
+         na1 = 1
 
       else if (ksmod(ids).eq.39) then
 c                                 hybrid molecular
@@ -15801,7 +15805,7 @@ c                                 set ns in case of aqrxdo or aqlagd
          na1 = nsa + 1
          na2 = nsa + 2
          na3 = nsa + 3
-         na4 = nsa + 4
+         nat = nsa + 8
 
          do i = 1, isp
             ins(i) = jspec(ids,i)
@@ -16294,9 +16298,9 @@ c-----------------------------------------------------------------------
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
      *              wl(m17,m18)
 
-      integer kd, na1, na2, na3, na4
+      integer kd, na1, na2, na3, nat
       double precision x3, caq
-      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),na1,na2,na3,na4,kd
+      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),na1,na2,na3,nat,kd
 
       integer spct
       double precision ysp
@@ -16516,8 +16520,8 @@ c                                 WERAMI/MEEMUM console output
 
          write (lu,1000)
 
-         write (text,1050) -dlog10(mo(ihy)*gamm0),dabs(errkw),ph0,is,
-     *                     gamm0
+         write (text,1050) -dlog10(mo(ihy)*gamm0),dabs(errkw),
+     *                     -dlog10(mo(ihy)*gamm0)-ph0,is,gamm0
          call deblnk (text)
          write (lu,'(400a)') (chars(j), j = 1, length)
          write (text,1070) epsln,msol*1d3,smo
@@ -16709,13 +16713,13 @@ c                                 forward model
 1040  format (/,'Solute endmember properties:',//,10x,'charge',3x,
      *       'molality',5x,'mol_fraction',6x,'g,J/mol*',5x,'g0,J/mol**')
 1050  format ('pH = ',f6.3,'+/-',f5.3,
-     *        '; neutral_pH = ',f6.3,'; ionic_strength = ',
+     *        '; Delta_pH = ',f6.3,'; ionic_strength = ',
      *        g10.4,'; gamma/q^2 = ', g10.4)
 1060  format (/,'*partial molar, **molal ref. state, ***molar ref. ',
      *        'state.',/)
 1070  format ('dielectric constant = ', g10.4,
      *        '; solvent molar mass, g/mol = ',f8.4,
-     *        '; total solute molality = ',g10.4)
+     *        '; solute molality = ',g10.4)
 1080  format (a8,4x,i2,3x,g12.6,3x,g12.6,3x,g12.6,5x,i8,5(2x,g12.6))
 1090  format (a8,4x,i2,3x,g12.6,3x,g12.6,20x,i8,5(2x,g12.6))
 1100  format (/,'Solute endmember properties:',/,
@@ -16978,7 +16982,7 @@ c                                 set option flags if necessary
 
          if (jpot.ne.0.and.first) then 
 
-            call warn (99,0d0,0,' aqueous_output is T, but '//
+            call warn (99,0d0,0,' aq_output is T, but '//
      *                          'dependent_potentials is off, '//
      *                'dependent_potentials set = on (AQIDST)')
 
@@ -18449,8 +18453,8 @@ c-----------------------------------------------------------------------
       logical bad, recalc, lmus
 
       double precision mo(l9), blk(k5), gamm0, totm, g0(l9), lmu(k8),
-     *                 tmu(k8),
-     *                 is, gso(nsp), lnkw, gtot, smo, slvmo(nsp), nexp
+     *                 tmu(k8),is, gso(nsp), lnkw, gtot, smo, 
+     *                 slvmo(nsp), solmol
 
       integer ion, ichg, jchg
       double precision q, q2, qr
@@ -18531,16 +18535,16 @@ c                                 adaptive coordinates
       logical laq
       common/ cxt3 /idaq,jdaq,laq
 
-      integer kd, na1, na2, na3, na4
+      integer kd, na1, na2, na3, nat
       double precision x3, caq
-      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),na1,na2,na3,na4,kd
+      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),na1,na2,na3,nat,kd
 
       double precision z, pa, p0a, x, w, y, wl
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
      *              wl(m17,m18)
 
-      save badct, nexp, lmu, lmus
-      data badct, nexp/0,2d0/
+      save badct, lmu, lmus
+      data badct/0/
 c----------------------------------------------------------------------
       if ((.not.mus .and..not.recalc).or.
      *    (.not.lmus.and.recalc)) then 
@@ -18651,6 +18655,8 @@ c                                 accumulate component moles
          end do 
 
       end do
+
+      solmol = smo
 c                                 for the solvent mole fractions
 c                                 need to accumulate total
 c                                 molality first
@@ -18694,12 +18700,16 @@ c                                 total molality
 c                                 solvent mass
          caq(id,na3) = msol
 c                                 error in log10(Kw)
-         caq(id,na4) = (-lnkw + dlog(mo(ihy)*mo(ioh)*gamm0**2
-     *                 ))/2.302585d0
-c                                  bulk composition per mole of species
-c         do j = 1, icp
-c            cp2(j,id) = blk(j)/smo
-c          end do
+         caq(id,na3+1) = (-lnkw + dlog(mo(ihy)*mo(ioh)*gamm0**2
+     *                    ))/2.302585d0
+c                                  pH
+         caq(id,na3+2) = -dlog10(mo(ihy)*gamm0)
+c                                  Delta_pH
+         caq(id,na3+3) = caq(id,na3+2) + lnkw/4.605170d0
+c                                  solute molality
+         caq(id,na3+4) = solmol
+c                                  dielectric cst
+         caq(id,nat) = epsln
 
       else 
 c                                 stuff need for optimization:
@@ -18890,7 +18900,7 @@ c                                 if oxide components, but no excess oxygen
 c                                 mu(O2) is a nan. 
             if (isnan(mu(j))) then
 
-               if (aqcp(j,i).ne.0d0) then 
+               if (aqcp(j,i).ne.0d0.and..not.lopt(36)) then 
                   kill = .true.
                   exit
                else
@@ -18899,7 +18909,7 @@ c                                 mu(O2) is a nan.
 
             end if 
 
-            if (cblk(j).eq.0d0) then 
+            if (cblk(j).eq.0d0.and..not.lopt(36)) then 
                if (aqcp(j,i).ne.0d0) then 
                   kill = .true.
                   exit
@@ -19271,5 +19281,511 @@ c                                 dynamic
      *                  (cp2(i,id),i=1,jbulk)
       end if 
 1000  format (i5,1x,2(i4,1x),a,20(g14.6,1x))
+
+      end 
+
+      double precision function ginc (dt,dp,id)
+c-----------------------------------------------------------------------
+      implicit none
+
+      double precision dt,dp,gee,gsol,gfrnd
+
+      integer id
+
+      double precision p,t,xco2,u1,u2,tr,pr,r,ps
+      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
+
+      integer iam
+      common/ cst4 /iam
+c----------------------------------------------------------------------
+c                                 put NaN check to prevent a NaN increment 
+c                                 from setting p/t to a NaN, this should only 
+c                                 happen if a phase has no volumetric and/or 
+c                                 caloric EoS. JADC 9/18/2016.
+      if (isnan(dp)) dp = 0d0
+      if (isnan(dt)) dt = 0d0
+
+      p = p + dp 
+      t = t + dt 
+
+      if (iam.eq.5) then 
+c                                 frendly 
+         gee = gfrnd(-id)
+
+      else 
+c                                 meemum/werami
+         gee = gsol(id)
+
+      end if 
+
+      p = p - dp 
+      t = t - dt
+
+      ginc = gee 
+
+      end 
+
+      subroutine volume (v,ids,jd,ok)
+c-----------------------------------------------------------------------
+c id - phase ids
+c jd - pointer in assemblage 
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      logical ok
+
+      integer ids, jd
+
+      double precision v, dp, ginc
+
+      external ginc
+
+      double precision p,t,xco2,u1,u2,tr,pr,r,ps
+      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+c----------------------------------------------------------------------
+      if (p.gt.nopt(26)) then 
+         dp = nopt(27) * p / 2d0
+      else 
+         dp = nopt(27) * nopt(26) / 2d0
+      end if 
+
+      if (ids.gt.0) call x3toy (jd,ids)
+
+      v = (ginc(dp,0d0,ids) - ginc(-dp,0d0,ids)) / 2d0 / dp
+
+      if (v.gt.0d0) then 
+         ok = .true.
+      else
+         ok = .false.
+      end if 
+
+      end
+
+      double precision function gsol (id)
+c-----------------------------------------------------------------------
+c gsol computes the total (excess+ideal) free energy of solution 
+c for a solution identified by index ids and composition y(m4) input
+c from cxt7, the composition y is the independent endmember fractions
+c for all model types except reciprocal solutions, in which case it is 
+c the y's for the full reciprocal model.
+
+c gsol assumes the endmember g's have not been calculated by gall and is
+c      only called by WERAMI.
+c gsol1 is identical to gsol but can only been called after gall and is 
+c      only called by VERTEX and MEEMUM. 
+c-----------------------------------------------------------------------
+      implicit none
+ 
+      include 'perplex_parameters.h'
+
+      integer i, k, id
+
+      double precision dg, g, gso(nsp), gamm0
+
+      double precision omega, hpmelt, gmelt, gfluid, gzero, aqact,
+     *                 gex, slvmlt, gfesi, gcpd, gerk, gfecr1, ghybrid
+
+      external gphase, omega, hpmelt, gmelt, gfluid, gzero, gex, slvmlt,
+     *         gfesi, gerk, gfecr1, ghybrid, gcpd, aqact
+
+      integer jend
+      common/ cxt23 /jend(h9,m4)
+
+      integer jnd
+      double precision aqg,q2s,rt
+      common/ cxt2 /aqg(m4),q2s(m4),rt,jnd(m4)
+
+      double precision r,tr,pr,ps,p,t,xco2,u1,u2
+      common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
+c                                 bookkeeping variables
+      integer ksmod, ksite, kmsol, knsp
+      common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
+
+      integer lstot,mstot,nstot,ndep,nord
+      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
+c                                 working arrays
+      double precision z, pa, p0a, x, w, y, wl
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
+     *              wl(m17,m18)
+c                                 model type
+      logical lorder, lexces, llaar, lrecip
+      common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
+
+      integer jspec
+      common/ cxt8 /jspec(h9,m4)
+
+      double precision yf,gh,v,vf
+      common/ cstcoh /yf(nsp),gh(nsp),v(nsp),vf(nsp)
+
+      integer jd, na1, na2, na3, nat
+      double precision x3, caq
+      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),na1,na2,na3,nat,jd
+
+      integer iaq, aqst, aqct
+      character aqnam*8
+      double precision aqcp, aqtot
+      common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
+
+      integer ion, ichg, jchg
+      double precision q, q2, qr
+      common/ cstaq /q(l9),q2(l9),qr(l9),jchg(l9),ichg,ion
+
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+
+      double precision thermo,uf,us
+      common/ cst1 /thermo(k4,k10),uf(2),us(h5)
+
+      character specie*4
+      integer isp, ins
+      common/ cxt33 /isp,ins(nsp),specie(nsp)
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      integer ideps,icase,nrct
+      common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
+c----------------------------------------------------------------------
+      if (id.lt.0) then 
+
+         gsol = gcpd (-id,.true.)
+
+      else 
+
+         g = 0d0
+c                                 initialize p-t dependent coefficients
+         call ingsol (id)
+
+         if (ksmod(id).eq.2.or.ksmod(id).eq.3) then 
+c                                 -------------------------------------
+c                                 macroscopic formulation for normal solutions.
+            call gdqf (id,g,y) 
+c                                 add entropy and excess contributions
+            g = g - t * omega (id,y) + gex (id,y)
+c                                 get mechanical mixture contribution
+            do k = 1, mstot(id) 
+               g = g + y(k) * gcpd (jend(id,2+k),.true.)
+            end do 
+
+         else if (lrecip(id).and.lorder(id)) then 
+c                                 -------------------------------------
+c                                 convert y coordinates to independent p coordinates
+            call y2p0 (id)
+c                                 get the speciation, excess and entropy effects.
+            call specis (g,id)
+
+            do k = 1, lstot(id) 
+c                                 compute mechanical g from these z's, 
+c                                 specip adds a correction for the ordered species.
+               g = g + gcpd (jend(id,2+k),.true.) * p0a(k)
+            end do 
+c                                 get the dqf, this assumes the independent reactants
+c                                 are not dqf'd. gex not neccessary as computed in specip
+            call gdqf (id,g,p0a)
+
+         else if (lorder(id)) then 
+c                                 -------------------------------------
+c                                 non-reciprocal speciation.
+            do k = 1, lstot(id)  
+               pa(k) = y(k)
+               p0a(k) = y(k)
+               g = g + y(k) * gcpd (jend(id,2+k),.true.)
+            end do 
+
+            call specis (dg,id)
+
+            g = g + dg 
+c                                 get dqf corrections
+            call gdqf (id,g,p0a)
+
+         else if (lrecip(id)) then 
+c                                 -------------------------------------
+c                                 macroscopic reciprocal solution w/o order-disorder
+
+c                                 convert y's to p's (p0a here).
+            call y2p0 (id)
+
+            do k = 1, lstot(id)
+               g = g + gcpd (jend(id,2+k),.true.) * p0a(k) 
+            end do 
+c                                 get the dqf
+            call gdqf (id,g,p0a)
+c                                 and excess contributions
+            g = g - t * omega (id,p0a) + gex (id,p0a)
+
+         else if (ksmod(id).eq.20) then 
+c                                 electrolytic solution
+c                                 -------------------------------------
+c                                 compute solvent mass and gibbs energy:
+            rt = r*t
+
+            do k = 1, ns
+c                                 solvent species gibbs energy and volumes
+               if (y(k).le.0d0) cycle
+               aqg(k) = gcpd(jnd(k),.true.)
+
+            end do 
+c                                 solvent properties
+            call slvnt1 (g)
+c                                 add in solute properties
+            call slvnt2 (g)
+
+         else if (ksmod(id).eq.24) then 
+c                                 -------------------------------------
+c                                 hp melt model         
+            call gdqf (id,g,y) 
+
+            g = g - t * hpmelt (id,y) + gex (id,y)
+c                                 get mechanical mixture contribution
+            do k = 1, mstot(id)  
+               g = g + y(k) * gcpd (jend(id,2+k),.true.)
+            end do 
+
+         else if (ksmod(id).eq.25) then 
+c                                 -------------------------------------
+c                                 ghiorso pmelt model  
+            call gdqf (id,g,y) 
+
+            g = g - t * gmelt (id) + gex (id,y)
+c                                 get mechanical mixture contribution
+            do k = 1, mstot(id)  
+               g = g + y(k) * gcpd (jend(id,2+k),.true.)
+            end do 
+
+         else if (ksmod(id).eq.26) then 
+c                                 ------------------------------------
+c                                 andreas salt model
+            call hcneos (g,y(1),y(2),y(3))
+
+            do k = 1, 3
+               g = g + y(k) * gcpd (jend(id,2+k),.true.)
+            end do 
+
+         else if (ksmod(id).eq.28) then 
+c                                 -------------------------------------
+c                                 high T fo-fa-sio2 model  
+            call gdqf (id,g,y) 
+
+            g = g - t * slvmlt() + gex(id,y)
+c                                 get mechanical mixture contribution
+            do k = 1, mstot(id)  
+               g = g + y(k) * gcpd (jend(id,2+k),.true.)
+            end do 
+
+         else if (ksmod(id).eq.29) then 
+c                                 -------------------------------------
+c                                 BCC Fe-Si Lacaze and Sundman
+            g = gfesi(y(1), gcpd (jend(id,3),.true.), 
+     *                      gcpd (jend(id,4),.true.) )
+
+         else if (ksmod(id).eq.32) then 
+c                                 -------------------------------------
+c                                 BCC Fe-Cr Andersson and Sundman
+            g =  gfecr1(y(1), gcpd (jend(id,3),.true.), 
+     *                        gcpd (jend(id,4),.true.) )
+
+         else if (ksmod(id).eq.39) then
+c                                 -------------------------------------
+c                                 generic hybrid EoS
+            if (lopt(32).and.caq(jd,na1).ne.0d0) then 
+c                                 lagged speciation
+               call slvnt3 (gso)
+c                                 DH law activity coefficient factor (ln[g] = lng0*q^2)
+               gamm0 = aqact(caq(jd,na1))
+c                                 solvent species (caq => mole fraction)
+               do k = 1, ns
+                  if (caq(jd,k).eq.0d0) cycle
+                  g = g + caq(jd,k) * (gso(k) + rt * dlog(caq(jd,k)))
+               end do 
+c                                 solute species (caq => molality)
+               do k = sn1, nsa 
+
+                  i = k - ns
+
+                  if (caq(jd,k).eq.0d0) cycle
+
+                  g = g + caq(jd,k)/caq(jd,na2) * (gcpd(aqst+i,.false.) 
+     *                  + rt*dlog(caq(jd,k)*gamm0**q2(i)))
+
+               end do 
+
+            else 
+
+               do k = 1, mstot(id)
+c                                 sum pure species g's
+                  g = g + gcpd(jnd(k),.true.) * y(k)
+
+               end do
+c                                 compute and add in activities
+               g = g + ghybrid (y)
+
+            end if
+
+         else if (ksmod(id).eq.41) then 
+c                                 hybrid MRK ternary COH fluid
+            call rkcoh6 (y(2),y(1),g) 
+
+            do k = 1, nstot(id) 
+               g = g + gcpd(jnd(k),.true.) * y(k)
+            end do 
+
+         else if (ksmod(id).eq.40) then 
+c                                 MRK silicate vapor
+            do k = 1, nstot(id) 
+               g = g + gzero(jnd(k)) * y(k)
+            end do 
+
+            g = g + gerk(y)
+
+         else if (ksmod(id).eq.0) then 
+c                                 ------------------------------------
+c                                 internal fluid eos. hardwired to special
+c                                 component choices
+            do k = 1, 2
+
+               g = g + gzero (jnd(k))*y(k)
+
+            end do 
+c                                 don't know whether it's a speciation routine
+c                                 so set the fluid species fractions just in case,
+c                                 this is only necessay for species output by 
+c                                 WERAMI/MEEMUM, these will be reset if it actually
+c                                 is a speciation routine.
+            yf(2) = y(jspec(id,1))
+            yf(1) = 1d0 - yf(2)
+c
+            g = g + gfluid (yf(2))
+
+         else 
+
+            write (*,*) 'what the **** am i doing here?'
+            stop
+
+         end if 
+
+         gsol = g 
+
+      end if 
+
+      end
+
+
+      double precision function gfrnd (id)
+c-----------------------------------------------------------------------
+c function to get g's for frendly. differs from gphase in that it checks
+c for special components O2, H2O, CO2. sloppy but who cares?
+c-----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer id
+
+      double precision gee, fo2, fs2, gcpd
+ 
+      external gcpd
+
+      double precision fh2o,fco2,funk
+      common/ cst11 /fh2o,fco2,funk
+
+      integer idf
+      double precision act
+      common/ cst205 /act(k7),idf(3)
+
+      double precision p,t,xco2,u1,u2,tr,pr,r,ps
+      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
+
+      integer eos
+      common/ cst303 /eos(k10)
+
+      integer ifct,idfl
+      common/ cst208 /ifct,idfl
+c-----------------------------------------------------------------------
+
+      gee = gcpd (id,.false.) + r * t * dlog(act(id))
+
+      if (ifct.gt.0.and.eos(id).lt.100) then 
+c                                 this is a quick fix that will
+c                                 call the fluid routine way more 
+c                                 than necessary.
+         call cfluid (fo2,fs2)
+
+         if (id.eq.idf(3)) then 
+
+            gee = gee + r*t*fo2
+
+         else if (id.eq.idf(1)) then 
+        
+            gee = gee + r*t*fh2o
+         
+         else if (id.eq.idf(2)) then 
+        
+            gee = gee + r*t*fco2
+
+         end if
+ 
+      end if 
+
+      gfrnd = gee
+
+      end 
+
+      subroutine x3toy (id,ids)
+c----------------------------------------------------------------------
+c subroutine to convert geometric reciprocal solution compositions (x3(id,i,j))
+c to geometric endmember fractions (y) for solution model ids. replicate 
+c of subroutine xtoy, but for the x3 array (used only by getloc from meemum).
+
+c meemum calls x3toy for ALL solutions. 
+c----------------------------------------------------------------------
+      implicit none 
+
+      include 'perplex_parameters.h'
+c                                 -------------------------------------
+c                                 local variables:
+      integer ids, l, m, ld, id
+c                                 -------------------------------------
+c                                 global variables:
+c                                 bookkeeping variables
+      integer ksmod, ksite, kmsol, knsp
+      common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
+c                                 working arrays
+      double precision z, pa, p0a, x, w, y, wl
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
+     *              wl(m17,m18)
+c                                 x coordinate description
+      integer istg, ispg, imlt, imdg
+      common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
+
+      integer lstot,mstot,nstot,ndep,nord
+      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
+
+      integer kd, na1, na2, na3, nat
+      double precision x3, caq
+      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),na1,na2,na3,nat,kd
+c----------------------------------------------------------------------
+      do l = 1, mstot(ids)
+c                                 the endmembers may have been
+c                                 rearranged from the original order,
+c                                 use knsp(l,ids) to assure correct
+c                                 indexing
+         ld = knsp(l,ids)
+
+         y(ld) = 1d0
+
+         do m = 1, istg(ids)
+            y(ld) = y(ld)*x3(id,m,kmsol(ids,ld,m))
+         end do
+
+      end do
 
       end 

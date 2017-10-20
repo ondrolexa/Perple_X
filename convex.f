@@ -2290,7 +2290,14 @@ c                                 follow the equilibrium
       jflg = 0
       call sfol1 (ivd,ivi,ier,div,ikwk,irend,output)
 c                                 sfol1 returns ier = 1
-      if (ier.eq.1.or.ier.eq.2) goto 70
+      if (ier.eq.1.or.ier.eq.2) then 
+         goto 70
+      else if (ier.eq.3) then
+c                                 failed to locate the invariant 
+c                                 point.
+         iflag = 0 
+         goto 9999
+      end if 
 
       ivi = iovi
       ivd = iovd
@@ -4137,7 +4144,7 @@ c----------------------------------------------------------------------
 
       integer ikwk,irend,ivd,ivi,iswtch,jswtch,ier,jer,ip
 
-      logical output
+      logical output, fail
 
       integer irchk
       common/ cst801 /irchk(k2)
@@ -4254,8 +4261,13 @@ c                                 an invariant equilibrium:
 
 c                                 iterate independent variable to refine
 c                                 the conditions of the invariant point:
-            call findjp (ivi,ivd,dv,ip,ird)
+            call findjp (ivi,ivd,dv,ip,ird,fail)
 
+            if (fail) then 
+               if (output) call outrxn (ip,ier)
+               ier = 3
+               goto 999
+            end if 
 
          else if (iflag.eq.2) then   
 c                                 iflag=2 metastable to > 1 phase:
@@ -5770,7 +5782,7 @@ c                                 if here, it's a new phase
 
       end 
 
-      subroutine findjp (ivi,ivd,odv,ip,ird)
+      subroutine findjp (ivi,ivd,odv,ip,ird,fail)
 c----------------------------------------------------------------------
 c findjp - called by sfol1 to iteratitvely refine the location of 
 c an invariant point, the invariant point is located within an 
@@ -5838,6 +5850,7 @@ c                                 previous to march 7, 2017, if univeq failed
 c                                 reptx was called and the last coordinates 
 c                                 were saved as the IP with warning. 
             fail = .true.
+
             exit 
 
          end if  
@@ -5915,6 +5928,8 @@ c                                 check if in range
       else 
       
          call warn (47,ptol,ird,'FINDJP')
+
+         if (inside) call assptx
 
       end if 
 

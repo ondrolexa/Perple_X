@@ -1,5 +1,5 @@
 |----------------------------------------------------------------------
-        | Run-time Perple_X 6.7.8 options:
+        | Run-time Perple_X 6.8.0 options:
         | Comments must be preceeded by the "|" character.
         | Keywords and values are case sensitive!
         | For documentation refer to:
@@ -8,10 +8,15 @@
 1d_path                  40 150 | exploratory and autorefine (grid parameters keyword group)
 Anderson-Gruneisen         F    | Anderson-Gruneisen parameter correction for polythermal Murnaghan and Birch-Murnaghan
 approx_alpha               T    | use approximation exp(x)~1+x to evaluate expansivity effect on volume
-aqueous_output             T    | T[rue] or F[alse], output back-calculated solute chemistry when electrolyte data is available
-aqueous_species            20   | maximum number of solute species output (ranked by concentration)
+
+aq_output                  T    | T[rue] or F[alse], output back-calculated solute chemistry when electrolyte data is available
+aq_species                 20   | maximum number of solute species output (ranked by concentration)
+aq_lagged_iterations       0    | >= 0, default 0; number of internal iterations for lagged speciation.
+aq_lagged_speciation       F    | T[rue] or F[alse], default is T
 aq_solvent_composition     y    | y -> mole fractions, m -> molality; default y
 aq_solute_composition      m    | y -> mole fractions, m -> molality; default m
+aq_oxide_components        T    | T[rue] or F[alse], default is F, allow oxide components
+
 auto_refine                aut  | auto, manual, or off (auto_refine keyword group)
 auto_refine_factor_I       2    | refine factor for gridded minimization and phase fractionation (auto_refine keyword group)
 auto_refine_factor_II      6    | refine factor for composition and mixed variable diagrams (auto_refine keyword group)
@@ -40,7 +45,6 @@ increment             0.1 0.025 | 0, <1; exploratory and autorefine
 initial_resolution        1/15  | >0, <1, [1/15]
 interpolation           on   2  | value 1: on or off [on]; value 2, 1->99 [2]
 iteration                  3  4 | value 1: 2->99 [2]; value 2: 1->7 [4]
-lagged_aq_speciation       T    | T[rue] or F[alse], default is T
 linear_model               on   | on or off
 logarithmic_p              F    | T[rue] or F[alse], default is F
 melt_is_fluid              F    | T[rue] or F[alse], default is F

@@ -25,9 +25,9 @@ c                                 adaptive x(i,j) coordinates
       double precision zcoor
       common/ cxt13 /zcoor(k20),jcoor(k21),jkp(k21),jcoct
 c                                  xcoordinates for the final solution
-      integer kd, na1, na2, na3, na4
+      integer kd, na1, na2, na3, nat
       double precision x3, caq
-      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),na1,na2,na3,na4,kd
+      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),na1,na2,na3,nat,kd
 
       integer ncoor,mcoor,ndim
       common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
@@ -45,7 +45,7 @@ c----------------------------------------------------------------------
             xt = xt + zcoor(icoor)
          end do 
 
-         xt = 1d0 - xt 
+         xt = 1d0 - xt
          x(i,j) = xt
          x3(jd,i,j) = xt
 

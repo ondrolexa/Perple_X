@@ -906,15 +906,15 @@ c                                 x coordinate description
       common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
 c                                 xcoordinates for the final solution, a
 c                                 leetle witz.
-      integer kd, na1, na2, na3, na4
+      integer kd, na1, na2, na3, nat
       double precision x3, caq
-      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),na1,na2,na3,na4,kd
+      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),na1,na2,na3,nat,kd
 c----------------------------------------------------------------------
 
       do i = 1, istg(ids)
          do j = 1, ispg(ids,i)
-            x(i,j) = x3(jd,i,j) 
-         end do 
-      end do 
+            x(i,j) = x3(jd,i,j)
+         end do
+      end do
 
-      end 
+      end

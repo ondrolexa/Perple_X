@@ -263,7 +263,7 @@ c                                 the point is a pseudocompound, refine it
 
             call resub (i,id,ikp(id),iref,iter,first,wad1,wad2)
 
-            if (lopt(32).and.iopt(28).gt.0) then
+            if (lopt(32).and.iopt(33).gt.0) then
                if (ksmod(ikp(id)).eq.39) kterat = .true.
             end if
 
@@ -279,20 +279,15 @@ c                                 to recover previous solution
 
       end if
 
-
-      if (kterat) then 
-         kitmax = iopt(28)
-         iter = 2
-      end if 
+      if (kterat) kitmax = iopt(33)
+      iter = 2
 
       do
 c                                 iter is incremented before the operations,
 c                                 i.e., on the nth iteration, iter is n+1
-         if (kter.eq.kitmax) then 
+         if (kter.gt.kitmax) then 
             iter = iter + 1
             kter = 0
-         else 
-            kter = kter + 1
          end if
 c                                 set quit flag
          if (iter.gt.iopt(10).and.kter.eq.kitmax) quit = .true.
@@ -312,9 +307,7 @@ c                                 warn if severe error
 
          end if
 
-         if (lopt(28)) then 
-            write (*,*) 'kter, iter ',kter,iter
-         end if
+         kter = kter + 1
 c                                 analyze solution, get refinement points
          call yclos2 (clamda,x,is,iter,opt,quit)
 c                                 save the id and compositions
@@ -1246,9 +1239,9 @@ c                                 for final adaptive solution
       double precision cp3,amt
       common/ cxt15 /cp3(k0,k19),amt(k19),kkp(k19),np,ncpd,ntot
 c                                  x-coordinates for the final solution
-      integer kd, na1, na2, na3, na4
+      integer kd, na1, na2, na3, nat
       double precision x3, caq
-      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),na1,na2,na3,na4,kd
+      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),na1,na2,na3,nat,kd
 
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
@@ -1360,7 +1353,7 @@ c                                 solvent molar weight
 
                   end do 
 
-                  do k = sn1, na4
+                  do k = sn1, nat
                      caq(i,k) = 0d0
                   end do
 c                                 total molality
@@ -1480,7 +1473,7 @@ c                                 initialize
 
          if (lopt(32).and.ksmod(ids).eq.39) then 
 c                               lagged speciation
-            do k = 1, na4
+            do k = 1, nat
                ncaq(i,k) = 0d0
             end do 
 
@@ -1518,7 +1511,8 @@ c                                save the new compositions
             if (lopt(32).and.ksmod(ids).eq.39) then 
 c                               lagged speciation (1:nsa), ionic strength (na1), total
 c                               molality (na2), solvent mass (na3), err_log_kw (na4)
-               do k = 1, na4
+c                               pH, Delta_pH, solute molality, epsilon (nat)
+               do k = 1, nat
                   ncaq(i,k) = ncaq(i,k) + xx*caq(jd,k)
                end do
 
@@ -1551,7 +1545,7 @@ c                                 set x's for global storage
          if (lopt(32).and.ksmod(ids).eq.39) then 
 c                               lagged speciation, ionic strength, tot molality
 c                               and solvent mass.
-            do k = 1, na4
+            do k = 1, nat
                caq(i,k) = ncaq(i,k)
             end do 
 
@@ -1786,9 +1780,9 @@ c----------------------------------------------------------------------
 
       double precision cpt(k5,k5),xt(k5,mst,msp),bt(k5)
 c                                 x-coordinates for the final solution
-      integer kd, na1, na2, na3, na4
+      integer kd, na1, na2, na3, nat
       double precision x3, caq
-      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),na1,na2,na3,na4,kd
+      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),na1,na2,na3,nat,kd
 
       integer iap,ibulk
       common/ cst74  /iap(k2),ibulk
@@ -1974,9 +1968,9 @@ c                                 for final adaptive solution
       double precision cp3,amt
       common/ cxt15 /cp3(k0,k19),amt(k19),kkp(k19),np,ncpd,ntot
 c                                 x-coordinates for the final solution
-      integer kd, na1, na2, na3, na4
+      integer kd, na1, na2, na3, nat
       double precision x3, caq
-      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),na1,na2,na3,na4,kd
+      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),na1,na2,na3,nat,kd
 c                                 x coordinate description
       integer istg, ispg, imlt, imdg
       common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
@@ -2017,7 +2011,7 @@ c                                solution phase compositions
          write (n5,1010) ((x3(i,j,k),k=1,ispg(ids,j)),j=1,istg(ids))
 c                                lagged speciation
          if (ksmod(ids).eq.39.and.lopt(32)) write (n5,1010) 
-     *                                            (caq(i,j),j=1,na4)
+     *                                            (caq(i,j),j=1,nat)
 
       end do 
 c                                dependent potentials
@@ -2244,9 +2238,9 @@ c                                 sort the phases, why? don't know, but it's
 c                                 necessary
          call sortin
 
-            if (lopt(28)) then
+            if (lopt(34)) then
 
-            write (*,*) ' fart'
+            write (*,*) ' all points: '
             do i = 1, npt
 
                id = jdv(i)
@@ -2588,7 +2582,7 @@ c                                 coordinates (and solution ids).
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 c----------------------------------------------------------------------
 
-      npt = 0 
+      npt = 0
 
       do i = 1, jphct
 
@@ -2596,14 +2590,14 @@ c----------------------------------------------------------------------
 c                                 acceptable cases 0 active, between bounds
 c                                                  2 active, upper bound 
             npt = npt + 1
-            jdv(npt) = i 
+            jdv(npt) = i
             amt(npt) = x(i)
  
       end do
 
       call getmus (1,0,.true.)
 
-      end 
+      end
 
       subroutine setx3 (ind,id,ids)
 c----------------------------------------------------------------------
@@ -2629,9 +2623,9 @@ c                                 stored x coordinate
       integer ncoor,mcoor,ndim
       common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
 c                                  x-coordinates for the final solution
-      integer kd, na1, na2, na3, na4
+      integer kd, na1, na2, na3, nat
       double precision x3, caq
-      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),na1,na2,na3,na4,kd
+      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),na1,na2,na3,nat,kd
 
       integer ipoint,kphct,imyn
       common/ cst60 /ipoint,kphct,imyn
@@ -2903,7 +2897,7 @@ c                                 a stable point, add to list
             amt(npt) = x(i)
             if (id.gt.0) stable(id) = .true.
 
-            if (lopt(28)) call dumper (2,i,hkp(i),jkp(i),x(i),clamda(i))
+            if (lopt(34)) call dumper (2,i,hkp(i),jkp(i),x(i),clamda(i))
 
          else if (id.gt.0) then 
 c                                 a metastable solution cpd
@@ -2968,7 +2962,7 @@ c                                 point
             mkp(i) = hkp(jdv(i))
          end do
 
-            if (lopt(28)) then 
+            if (lopt(34)) then 
          do i = 1, npt 
             
 

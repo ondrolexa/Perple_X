@@ -4277,9 +4277,9 @@ c-----------------------------------------------------------------------
       common/ cst77 /prop(i11),prmx(i11),prmn(i11),kop(i11),kcx(i11),
      *               k2c(i11),iprop,kfl(i11),tname
 
-      integer kd, na1, na2, na3, na4
+      integer kd, na1, na2, na3, nat
       double precision x3, caq
-      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),na1,na2,na3,na4,kd
+      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),na1,na2,na3,nat,kd
 
       integer kkp,np,ncpd,ntot
       double precision cp3,amt
@@ -4339,29 +4339,24 @@ c                                 molality
             else 
 c                                 mole fraction
                prop(k) = caq(jd,i)/caq(jd,na2)
-            end if 
+            end if
 
-         end if  
+         end if
 
-      end do 
-
-      call slvnt3 (gso)
-c                                 DH law activity coefficient factor (ln[g] = lng0*q^2)
-      gamm0 = aqact(caq(jd,na1))
+      end do
 c                                 other properties:
 c                                 pH
-      prop(k+2) = -dlog10(caq(jd,ns+ihy)*gamm0)
+      prop(k+2) = caq(jd,na3+2)
 c                                 pH - pH0
-      prop(k+1) = prop(k+2) + (gso(ns)-gcpd(aqst+ioh,.false.))/rt/2d0/
-     *            2.302585d0
+      prop(k+1) = caq(jd,na3+3)
 c                                 err_log10(K_w)
-      prop(k+3) = dabs(caq(jd,na4))
+      prop(k+3) = caq(jd,na3+1)
 c                                 dielectric constant
-      prop(k+4) = epsln
+      prop(k+4) = caq(jd,nat)
 c                                 ionic strength
       prop(k+5) = caq(jd,na1)
-c                                 solute molality?
-      prop(k+6) = caq(jd,na2)
+c                                 solute molality
+      prop(k+6) = caq(jd,nat-1)
 
       end 
 
@@ -4396,9 +4391,9 @@ c-----------------------------------------------------------------------
       common/ cst77 /prop(i11),prmx(i11),prmn(i11),kop(i11),kcx(i11),
      *               k2c(i11),iprop,kfl(i11),tname
 
-      integer kd, na1, na2, na3, na4
+      integer kd, na1, na2, na3, nat
       double precision x3, caq
-      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),na1,na2,na3,na4,kd
+      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),na1,na2,na3,nat,kd
 
       integer iopt
       logical lopt
@@ -4454,19 +4449,19 @@ c                                 mole fraction
 
          end do 
 c                                  other properties:
-c                                  ph - ph0
-         prop(k+1) = nopt(7)
-c                                  ph
-         prop(k+2) = nopt(7)
-c                                  err lgKw
-         prop(k+3) = caq(jd,na4)
-c                                  epsilon
-         prop(k+4) = nopt(7)
-c                                  ionic strength
+c                                 pH - pH0
+         prop(k+1) = caq(jd,na3+3)
+c                                 pH
+         prop(k+2) = caq(jd,na3+2)
+c                                 err_log10(K_w)
+         prop(k+3) = caq(jd,na3+1)
+c                                 dielectric constant
+         prop(k+4) = caq(jd,nat)
+c                                 ionic strength
          prop(k+5) = caq(jd,na1)
-c                                  solute molality
-         prop(k+6) = smo
+c                                 solute molality
+         prop(k+6) = caq(jd,nat-1)
 
       end if
 
-      end  
+      end

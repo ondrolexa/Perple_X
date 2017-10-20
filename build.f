@@ -632,22 +632,6 @@ c                                 and ranges
 c                                 get choice
       call rdnumb (c(0),0d0,icopt,2,.false.)
       if (icopt.lt.1.or.icopt.gt.5) icopt = 2
-c                                 warn about the use of chemical potentials
-c                                 in different types of calculations
-      if (jmct.gt.0) then 
-
-         if (icopt.eq.2.or.icopt.eq.3.or.icopt.eq.5.or.
-     *       icopt.eq.1.and.jmuct.ne.jmct) then 
-
-            write (*,3110)
-
-         else if (icopt.eq.1) then 
-
-            write (*,3111)
-
-         end if 
-
-      end if 
 c                                 reorder for oned flag
       if (icopt.eq.3.or.icopt.eq.5) then 
          oned = .true.
@@ -869,7 +853,7 @@ c                                  inform the user of the grid settings:
 
          write (*,3090) opname
 
-      else if (icopt.eq.1) then    
+      else if (icopt.eq.1) then
 c                                  =========================
 c                                  Normal computational mode
          write (*,1500)
@@ -1052,7 +1036,30 @@ c                                 open c-space
                call rerror (ier,*6041)
             end do 
          end if 
-      end if 
+      end if
+
+c                                 warn about the use of chemical potentials
+c                                 in different types of calculations
+      if (jmct.gt.0) then 
+c                                 count variables
+         j = 0
+         do i = 1, 2
+            if (iv(i).gt.3) j = j + 1
+         end do
+
+         if (icopt.eq.0.or.icopt.eq.5.or.
+     *       (j.eq.0.and.icopt.eq.1.or.icopt.eq.3)) then 
+
+            write (*,3110)
+
+         else if (icopt.eq.1.or.icopt.eq.3) then 
+c                                 an spd or mixed variable diagram as
+c                                 a function of chemical potentials
+            write (*,3111)
+
+         end if
+
+      end if
 c                                  ================================
 c                                  ask if the user wants print output,
 c                                  graphical output is automatic. 
@@ -1701,17 +1708,17 @@ c                                 diagrams:
 3110  format (/,'**warning ver110** in this mode Perple_X  will not che'
      *        'ck whether conditions are',/,'supersaturated with resp',
      *        'ect to mobile components.',//,
-     *        'To compute saturation surfaces:'
-     *     ,/,'  1) use convex hull optimization and do not use ',
+     *        'To explicitly compute saturation surfaces:',/,
+     *        '  1) use convex hull optimization and do not use ',
      *        'activities or fugacities as',/,
      *        '     independent variables',/,
      *        '  2) or compute the saturation surface with FLUIDS or ',
      *        'FRENDLY.',/)
-3111  format (/,'**warning ver111** in this mode Perple_X  will fail if'
-     *        'the minimum value of a chemical',/,'potential is above ',
-     *        'its saturation value, if such a problem emerges lower ',/
-     *       ,'the specified value by trial and error or check the ',
-     *        'saturation values with FRENDLY.',/)
+3111  format (/,'**warning ver111** before running this calculation ',
+     *        'understand the null_phase',/,
+     *        'perplex option. If null_phase is true and the initial ',
+     *        'condition for a calculation',/,
+     *        'is supersaturated, then CONVEX will fail.',/)
 4020  format (2(g11.5,1x),f10.8,1x,2(g11.5,1x),a)
 5000  format (a,'_',a)
 6020  format (/,'Specify values for:',/,(10x,5(a,2x)))
