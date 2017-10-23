@@ -628,7 +628,7 @@ c                                 reject composition
 
          if (lopt(32).and.ksmod(ids).eq.39) then
 
-            quack1 = .true.
+            quack1 = .false.
             quack2 = .true.
 
             if (quack1) then 
@@ -681,7 +681,7 @@ c                                 a solute cpd
 
             end if 
 c                                 i am pretty sure this is redundant.
-c            wad2 = .false.
+            wad2 = .false.
 
             if (wad1.and.wad2) then
 c                                 make water, ha ha
@@ -717,7 +717,7 @@ c                                 than one water compound.
 
                else
  
-                  quack(jphct) = .true.
+                  quack(jphct) = .false.
 
                end if
 
@@ -1113,7 +1113,11 @@ c----------------------------------------------------------------------
       end do 
 
       if (xt-1d0.gt.1d-6) then 
-         write (*,*) ' wonga wonga '
+         write (*,*) ' wonga wonga ',ids
+         do i = 1, istg(ids)
+            write (*,*) ndim(i,ids)
+            write (*,*) (x(i,j),j=1, ndim(i,ids))
+         end do
          pause
       end if 
 
@@ -3296,10 +3300,8 @@ c----------------------------------------------------------------------
       integer idegen, idg(k5), jcp, jin(k5)
       common/ cst315 /idegen, idg, jcp, jin
 
-      logical badend, sck, nrf
-      integer ldsol
-      double precision one, zero
-      common/ cxt36 /one,zero,ldsol(m4,h9),badend(m4,h9),sck(h9),nrf(h9)
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 c----------------------------------------------------------------------
 
       if (.not.lopt(32)) then
@@ -3449,9 +3451,9 @@ c                                 noot
 
                 write (*,*) 'we have a problem houston, and should'
 
-            else 
+c            else 
 
-                write (*,*) 'we have no problem houston, but should'
+c                write (*,*) 'we have no problem houston, but should'
 
             end if 
 

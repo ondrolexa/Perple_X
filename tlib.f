@@ -19,7 +19,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a)') 
-     *      'Perple_X version 6.8.0, source updated Oct 20, 2017.'
+     *      'Perple_X version 6.8.0, source updated Oct 22, 2017.'
 
       end
 
@@ -113,7 +113,7 @@ c----------------------------------------------------------------------
       character*3 key*22, val, valu(i10), nval1*12, nval2*12,
      *            nval3*12,opname*100,strg*40,strg1*40
 
-      double precision dnan, res0 
+      double precision dnan, res0, r2
 
       integer jtest,jpot
       common/ debug /jtest,jpot
@@ -142,16 +142,15 @@ c                                 precision stuff used in lpnag
       double precision wmach(9)
       common /ax02za/wmach
 
-      double precision units, r13, r23, r43, r59, r1, r2
-      common/ cst59 /units, r13, r23, r43, r59, r1, r2
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 
       integer iam
       common/ cst4 /iam
 
       logical badend, sck, nrf
       integer ldsol
-      double precision one, zero
-      common/ cxt36 /one,zero,ldsol(m4,h9),badend(m4,h9),sck(h9),nrf(h9)
+      common/ cxt36 /ldsol(m4,h9),badend(m4,h9),sck(h9),nrf(h9)
 
       integer length,iblank,icom
       character chars*1

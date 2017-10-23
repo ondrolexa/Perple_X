@@ -631,10 +631,10 @@ c----------------------------------------------------------------------
 
       double precision z
 
-      double precision units, r13, r23, r43, r59, r1, r2
-      common/ cst59 /units, r13, r23, r43, r59, r1, r2
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 c----------------------------------------------------------------------
-      if (z.gt.-r2.and.z.le.r1) then
+      if (z.gt.-zero.and.z.le.r1) then
          badz = .false.
       else 
          badz = .true.         
@@ -3945,8 +3945,8 @@ c-----------------------------------------------------------------------
       double precision emod
       common/ cst319 /emod(k15,k10),smod(h9),pmod(k10),iemod(k10),kmod
 
-      double precision units, r13, r23, r43, r59, r1, r2
-      common/ cst59 /units, r13, r23, r43, r59, r1, r2
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 
       save izap
       data izap /0/
@@ -4460,8 +4460,8 @@ c-----------------------------------------------------------------------
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 
-      double precision units, r13, r23, r43, r59, r1, r2
-      common/ cst59 /units, r13, r23, r43, r59, r1, r2
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 
       save izap
       data izap /0/
@@ -4594,8 +4594,8 @@ c-----------------------------------------------------------------------
       double precision emod
       common/ cst319 /emod(k15,k10),smod(h9),pmod(k10),iemod(k10),kmod
 
-      double precision units, r13, r23, r43, r59, r1, r2
-      common/ cst59 /units, r13, r23, r43, r59, r1, r2
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 
       save izap
       data izap /0/
@@ -4829,8 +4829,8 @@ c-----------------------------------------------------------------------
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 
-      double precision units, r13, r23, r43, r59, r1, r2
-      common/ cst59 /units, r13, r23, r43, r59, r1, r2
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 
       save jerk 
       data jerk /0/
@@ -8012,10 +8012,12 @@ c                                 x coordinate description
       integer ksmod, ksite, kmsol, knsp
       common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
 
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+
       logical badend, sck, nrf
       integer ldsol
-      double precision one, zero
-      common/ cxt36 /one,zero,ldsol(m4,h9),badend(m4,h9),sck(h9),nrf(h9)
+      common/ cxt36 /ldsol(m4,h9),badend(m4,h9),sck(h9),nrf(h9)
 
       integer iopt
       logical lopt
@@ -8965,8 +8967,7 @@ c---------------------------------------------------------------------
 
       logical badend, sck, nrf
       integer ldsol
-      double precision one, zero
-      common/ cxt36 /one,zero,ldsol(m4,h9),badend(m4,h9),sck(h9),nrf(h9)
+      common/ cxt36 /ldsol(m4,h9),badend(m4,h9),sck(h9),nrf(h9)
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp  
@@ -9155,8 +9156,8 @@ c                                 model type
       character mname*8
       common/ cst18a /mname(m4)
 
-      double precision units, r13, r23, r43, r59, r1, r2
-      common/ cst59 /units, r13, r23, r43, r59, r1, r2
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 
       integer iam
       common/ cst4 /iam
@@ -9818,12 +9819,12 @@ c                                 count in evaluating derivatives.
                dzt = 0d0 
 
                do j = 1, ksp(i,im) 
-                  if (dabs(sdzdp(k,j,i,im)).lt.r2) 
+                  if (dabs(sdzdp(k,j,i,im)).lt.zero) 
      *                     sdzdp(k,j,i,im) = 0d0
                   dzt = dzt + sdzdp(k,j,i,im)
                end do 
 
-               if (dabs(dzt).lt.r2) dzt = 0d0
+               if (dabs(dzt).lt.zero) dzt = 0d0
                sdzdp(k,j,i,im) = -dzt
 
             end do 
@@ -10788,8 +10789,12 @@ c                                 configurational entropy variables:
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
-      double precision units, r13, r23, r43, r59, r1, r2
-      common/ cst59 /units, r13, r23, r43, r59, r1, r2
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+
+      logical badend, sck, nrf
+      integer ldsol
+      common/ cxt36 /ldsol(m4,h9),badend(m4,h9),sck(h9),nrf(h9)
 c DEBUG
       double precision r,tr,pr,ps,p,t,xco2,u1,u2
       common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -10903,11 +10908,11 @@ c                                 cross term * infinity
          do k = 1, nord(id)
 
             if (.not.pin(k)) cycle 
-            if (dabs(dsinf(k)).gt.r2) dsy(k) = 1d4*dsinf(k)
+            if (dabs(dsinf(k)).gt.zero) dsy(k) = 1d4*dsinf(k)
 
             do l = k, nord(id)
                if (.not.pin(l)) cycle 
-               if (dabs(d2sinf(l,k)).gt.r2) 
+               if (dabs(d2sinf(l,k)).gt.zero) 
      *                                  dsyy(l,k) = 1d5*d2sinf(l,k)
             end do  
  
@@ -11996,8 +12001,8 @@ c                                 configurational entropy variables:
       integer lstot,mstot,nstot,ndep,nord
       common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
 
-      double precision units, r13, r23, r43, r59, r1, r2
-      common/ cst59 /units, r13, r23, r43, r59, r1, r2
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 
       double precision dvnu,deph,dydy
       common/ cxt3r /dvnu(m4,j3,h9),deph(3,j3,h9),dydy(m4,j3,h9)
@@ -12080,7 +12085,7 @@ c                                 derivative may be +/-infinite
 
          end if 
 
-         if (dabs(dsinf).lt.r2) then 
+         if (dabs(dsinf).lt.zero) then 
             ds = ds + qmult(i,id)*dzy
             d2s = d2s + qmult(i,id)*dzyy
          else 
@@ -12461,8 +12466,7 @@ c-----------------------------------------------------------------------
 
       logical badend, sck, nrf
       integer ldsol
-      double precision one, zero
-      common/ cxt36 /one,zero,ldsol(m4,h9),badend(m4,h9),sck(h9),nrf(h9)
+      common/ cxt36 /ldsol(m4,h9),badend(m4,h9),sck(h9),nrf(h9)
 
       double precision xco
       integer ico,jco
@@ -13102,8 +13106,10 @@ c                                 model type
 
       logical badend, sck, nrf
       integer ldsol
-      double precision one, zero
-      common/ cxt36 /one,zero,ldsol(m4,h9),badend(m4,h9),sck(h9),nrf(h9)
+      common/ cxt36 /ldsol(m4,h9),badend(m4,h9),sck(h9),nrf(h9)
+
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 
       integer iaq, aqst, aqct
       character aqnam*8
@@ -16933,7 +16939,7 @@ c-----------------------------------------------------------------------
  
       include 'perplex_parameters.h'
 
-      integer i
+      integer i, j
 
       logical first
 
@@ -16976,6 +16982,9 @@ c-----------------------------------------------------------------------
       integer jnd
       double precision aqg,q2,rt
       common/ cxt2 /aqg(m4),q2(m4),rt,jnd(m4)
+
+      logical quack
+      common/ cxt1 /quack(k21)
 c-----------------------------------------------------------------------
 c                                 set option flags if necessary
       if (lopt(25)) then 
@@ -17001,13 +17010,23 @@ c                                reset iopt(32) [# aq species output]
 c                                 look among solutions:
       do i = 1, isoct
 
-         if (ksmod(i).eq.20.or.ksmod(i).eq.39) then 
+         if (ksmod(i).eq.20.or.ksmod(i).eq.39) then
             idaq = i
             jdaq = ksmod(i)
-            return
-          end if 
 
-      end do 
+            if (lopt(32)) then 
+c                                 set quack flag so the pure endmembers
+c                                 won't be speciated by aqlagd
+               do j = 1, ns
+                  quack(jnd(j)) = .true.
+               end do
+            end if
+
+            return
+
+          end if
+
+      end do
 c                                 else look for H2O
       do i = 1, ipoint
 
@@ -18837,7 +18856,7 @@ c-----------------------------------------------------------------------
  
       include 'perplex_parameters.h'
 
-      integer i, j, it, jt, iexp
+      integer i, j, it, jt, iexp, ions
 
       logical bad, kill
 
@@ -18880,6 +18899,9 @@ c-----------------------------------------------------------------------
       double precision r,tr,pr,ps,p,t,xco2,u1,u2
       common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
 
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+
       integer jnd
       double precision aqg,qq,rt
       common/ cxt2 /aqg(m4),qq(m4),rt,jnd(m4)
@@ -18894,6 +18916,7 @@ c                                 dg is the solvent oxide potentials - g
          qb(i) = (q(ion)-q(i))*q(i)
          dg = -g0(i) + qr(i)*g0(ion)
          kill = .false.
+         ions = 0
 
          do j = 1, jbulk 
 c                                 if oxide components, but no excess oxygen
@@ -18946,6 +18969,10 @@ c                                  initialize iteration loop
       if (dabs(lnkw).gt.5d1.or.epsln.lt.3d0) then
          bad = .true.
          return
+      else if (c(ioh).eq.0d0) then
+c                                 no hydrogen or no oxygen
+         bad = .true.
+         return 
       end if 
 
       mo(ion) = dexp(lnkw/2d0)
@@ -18963,9 +18990,11 @@ c                                  iteration loop for ionic strength
 c                                  solve charge balance for H+
          mo(ion) = solve(c,qr,mo(ion),jchg,ichg,bad)
 
-         if (bad) then 
-            xis = is 
+         if (bad) then
+            xis = is
             exit
+         else if (mo(ion).lt.zero) then
+            pause
          end if 
 c                                  back calculate charged species molalities
 c                                  and ionic strength

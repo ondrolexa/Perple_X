@@ -1469,8 +1469,8 @@ c----------------------------------------------------------------------
       double precision hsb
       common/ cst84 /hsb(i8,4),hs2p(6)
 
-      double precision units, r13, r23, r43, r59, r1, r2
-      common/ cst59 /units, r13, r23, r43, r59, r1, r2
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 
       double precision vrt
       integer irt
@@ -2489,8 +2489,8 @@ c-----------------------------------------------------------------------
       integer iam
       common/ cst4 /iam
 
-      double precision units, r13, r23, r43, r59, r1, r2
-      common/ cst59 /units, r13, r23, r43, r59, r1, r2
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 
       save iwarn
       data iwarn/0/

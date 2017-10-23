@@ -11,7 +11,7 @@ approx_alpha               T    | use approximation exp(x)~1+x to evaluate expan
 aq_output                  T    | T[rue] or F[alse], output back-calculated solute chemistry when electrolyte data is available
 aq_oxide_components        F    | T[rue] or F[alse], default is F, allow oxide components
 aq_species                 20   | >= 0, default 20; maximum number of solute species output (ranked by concentration)
-aq_lagged_iterations       1    | >= 0, default 0; number of internal iterations for lagged speciation.
+aq_lagged_iterations       0    | >= 0, default 0; number of internal iterations for lagged speciation.
 aq_lagged_speciation       T    | T[rue] or F[alse], default is T
 aq_solvent_composition     y    | y -> mole fractions, m -> molality; default y
 aq_solute_composition      m    | y -> mole fractions, m -> molality; default m

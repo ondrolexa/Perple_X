@@ -1601,8 +1601,8 @@ c-----------------------------------------------------------------------
       double precision f
       common/ cst11 /f(3)
 
-      double precision units, r13, r23, r43, r59, r1, r2
-      common/ cst59 /units, r13, r23, r43, r59, r1, r2
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 
       integer iopt
       logical lopt
@@ -1743,8 +1743,8 @@ c-----------------------------------------------------------------------
       double precision f
       common/ cst11 /f(3)
 
-      double precision units, r13, r23, r43, r59, r1, r2
-      common/ cst59 /units, r13, r23, r43, r59, r1, r2
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 
       integer iopt
       logical lopt
@@ -2482,8 +2482,8 @@ c-----------------------------------------------------------------------
 
       integer iroots, i, ineg, ipos
 
-      double precision units, r13, r23, r43, r59, r1, r2
-      common/ cst59 /units, r13, r23, r43, r59, r1, r2
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 
       save b,r,p0
       data b,r,p0 /1.465d0,8.314d-3,2d0/
@@ -7048,8 +7048,8 @@ c----------------------------------------------------------------------
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
-      double precision units, r13, r23, r43, r59, r1, r2
-      common/ cst59 /units, r13, r23, r43, r59, r1, r2
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 
       double precision eqk
       common / csteqk /eqk(nsp)
