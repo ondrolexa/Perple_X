@@ -64,8 +64,8 @@ c                                 solution model counter
       common/ cst78 /cptot(k19),ctotal,jdv(k19),npt
 
       integer tphct, jpt
-      double precision g2, cp2, caqtot
-      common/ cxt12 /g2(k21),cp2(k5,k21),caqtot(k21),tphct,jpt
+      double precision g2, cp2, c2tot
+      common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),tphct,jpt
 
       integer idegen, idg(k5), jcp, jin(k5)
       common/ cst315 /idegen, idg, jcp, jin 
@@ -193,8 +193,8 @@ c                                 -------------------------------------
 c                                 global variables
 c                                 adaptive coordinates
       integer jphct, jpt
-      double precision g2, cp2, caqtot
-      common/ cxt12 /g2(k21),cp2(k5,k21),caqtot(k21),jphct,jpt
+      double precision g2, cp2, c2tot
+      common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),jphct,jpt
 
       integer ksmod, ksite, kmsol, knsp
       common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
@@ -364,8 +364,8 @@ c                                 -------------------------------------
 c                                 global variables:
 c                                 adaptive g and compositions
       integer jphct, jpt
-      double precision g2, cp2, caqtot
-      common/ cxt12 /g2(k21),cp2(k5,k21),caqtot(k21),jphct,jpt
+      double precision g2, cp2, c2tot
+      common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),jphct,jpt
 
       logical quack
       common/ cxt1 /quack(k21)
@@ -643,7 +643,7 @@ c                                 solute free cpd
                   cycle
                end if 
 
-               caqtot(jphct) = 0d0 
+               c2tot(jphct) = 0d0 
                quack(jphct) = .true.
 c                                 now pad out counters for 
 c                                 a solute cpd
@@ -782,8 +782,8 @@ c-----------------------------------------------------------------------
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 c                                 adaptive coordinates
       integer jphct, jpt
-      double precision g2, cp2, caqtot
-      common/ cxt12 /g2(k21),cp2(k5,k21),caqtot(k21),jphct,jpt
+      double precision g2, cp2, c2tot
+      common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),jphct,jpt
 c                                 bookkeeping variables
       integer ksmod, ksite, kmsol, knsp
       common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
@@ -886,6 +886,7 @@ c                                  date along with degeneracy check.
       if (ctot2.ne.0d0) then
 c                                  normalize the composition and free energy
          g2(jphct) = g2(jphct)/ctot2
+         c2tot(jphct) = ctot2
 
          do j = 1, icp
 
@@ -895,8 +896,7 @@ c                                  normalize the composition and free energy
                if (cp2(idg(i),jphct).ne.0d0) then 
                   bad = .true.
                   return
-c                  ctot2 = 0
-               end if 
+               end if
             end do
 
          end do
@@ -1183,8 +1183,8 @@ c-----------------------------------------------------------------------
       common/ cst57 /dcp(k5,k19),soltol
 
       integer jphct, jpt
-      double precision g2, cp2, caqtot
-      common/ cxt12 /g2(k21),cp2(k5,k21),caqtot(k21),jphct,jpt
+      double precision g2, cp2, c2tot
+      common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),jphct,jpt
 c-----------------------------------------------------------------------
       solvs2 = .false.
 
@@ -1222,7 +1222,7 @@ c                                 local variables
      *        i,j,jdsol(k5,k5),jd,k,l,nkp(k5),xjdsol(k5)
 
       double precision bsol(k5,k5),cpnew(k5,k5),xx,xb(k5),msol,
-     *                 bnew(k5),xnew(k5,mst,msp),ncaq(k5,l10)
+     *                 bnew(k5),xnew(k5,mst,msp),ncaq(k5,l10),ximp
 c                                 -------------------------------------
 c                                 global variables:
 c                                 x coordinate description
@@ -1234,7 +1234,10 @@ c                                 x coordinate description
 
       double precision dcp,soltol
       common/ cst57 /dcp(k5,k19),soltol
-c
+
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+
       logical quack
       common/ cxt1 /quack(k21)
 c                                 composition and model flags
@@ -1485,7 +1488,10 @@ c                               lagged speciation
 
          do j = 1, idsol(i)
             bnew(i) = bnew(i) + amt(jdsol(i,j))
-         end do 
+         end do
+c                                in case pure and impure solvent is going to be averaged
+c                                count fraction of impure solvent
+         ximp = 0d0
 
          do j = 1, idsol(i)
 
@@ -1513,9 +1519,11 @@ c                                save the new compositions
             end do
 
             if (lopt(32).and.ksmod(ids).eq.39) then 
-c                               lagged speciation (1:nsa), ionic strength (na1), total
-c                               molality (na2), solvent mass (na3), err_log_kw (na4)
-c                               pH, Delta_pH, solute molality, epsilon (nat)
+
+               if (caq(jd,na1).ne.0) ximp = ximp + xx
+c                                lagged speciation (1:nsa), ionic strength (na1), total
+c                                molality (na2), solvent mass (na3), err_log_kw (na4)
+c                                pH, Delta_pH, solute molality, epsilon (nat)
                do k = 1, nat
                   ncaq(i,k) = ncaq(i,k) + xx*caq(jd,k)
                end do
@@ -1524,8 +1532,18 @@ c                               pH, Delta_pH, solute molality, epsilon (nat)
 
          end do
 
+         if (lopt(32).and.ksmod(ids).eq.39.and.
+     *       ximp.lt.one.and.ximp.gt.0d0) then
+c                                 renomalize err_log_kw, pH, Delta_pH, epsilon
+            ncaq(i,na3+1) = ncaq(i,na3+1)/ximp
+            ncaq(i,na3+2) = ncaq(i,na3+2)/ximp
+            ncaq(i,na3+3) = ncaq(i,na3+3)/ximp
+            ncaq(i,nat) = ncaq(i,nat)/ximp
+
+         end if
+
       end do
-c                                now reform the arrays kdv and b
+c                                 now reform the arrays kdv and b
       do i = 1, np
 
          amt(i) = bnew(i)
@@ -2068,8 +2086,8 @@ c----------------------------------------------------------------------
       common/ cst61 /ikp(k1)
 
       integer tphct, jpt
-      double precision g2, cp2, caqtot
-      common/ cxt12 /g2(k21),cp2(k5,k21),caqtot(k21),tphct,jpt
+      double precision g2, cp2, c2tot
+      common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),tphct,jpt
 
       integer kkp,np,ncpd,ntot
       double precision cp3,amt
@@ -2449,8 +2467,8 @@ c---------------------------------------------------------------------
       common/ cst60  /ipoint,kphct,imyn
 
       integer tphct, jpt
-      double precision g2, cp2, caqtot
-      common/ cxt12 /g2(k21),cp2(k5,k21),caqtot(k21),tphct,jpt
+      double precision g2, cp2, c2tot
+      common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),tphct,jpt
 
       integer hkp,mkp
       common/ cst72 /hkp(k21),mkp(k19)
@@ -2849,8 +2867,8 @@ c----------------------------------------------------------------------
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       integer jphct, jpt
-      double precision g2, cp2, caqtot
-      common/ cxt12 /g2(k21),cp2(k5,k21),caqtot(k21),jphct,jpt
+      double precision g2, cp2, c2tot
+      common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),jphct,jpt
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
@@ -3208,8 +3226,8 @@ c----------------------------------------------------------------------
       double precision lc(k8,k8), lg(k8)
 
       integer jphct, jpt
-      double precision g2, cp2, caqtot
-      common/ cxt12 /g2(k21),cp2(k5,k21),caqtot(k21),jphct,jpt
+      double precision g2, cp2, c2tot
+      common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),jphct,jpt
 
       double precision a,b,c
       common/ cst313 /a(k5,k1),b(k5),c(k1)

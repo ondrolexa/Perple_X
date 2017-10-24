@@ -18480,8 +18480,8 @@ c-----------------------------------------------------------------------
       common/ cstaq /q(l9),q2(l9),qr(l9),jchg(l9),ichg,ion
 c                                 adaptive coordinates
       integer jphct
-      double precision g2, cp2, caqtot
-      common/ cxt12 /g2(k21),cp2(k5,k21),caqtot(k21),jphct
+      double precision g2, cp2, c2tot
+      common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),jphct
 
       double precision thermo,uf,us
       common/ cst1 /thermo(k4,k10),uf(2),us(h5)
@@ -18740,13 +18740,13 @@ c                                 used by resub, g per mole of components
 c                                 bulk composition per mole of components
             cp2(j,jphct) = blk(j)/totm
          end do
-c                                caqtot is the number of moles of the 
+c                                c2tot is the number of moles of the 
 c                                components in a solution with 1 mole of
 c                                species, this is needed for consistent
 c                                ouput (i.e., a mol of the phase is per
 c                                mol of species rather than per mole of 
 c                                components). at the cost of k21 real vars
-         caqtot(jphct) = totm/smo
+         c2tot(jphct) = totm/smo
 
       end if 
 
@@ -19278,8 +19278,8 @@ c----------------------------------------------------------------------
       character name*14
 
       integer jphct, jpt
-      double precision g2, cp2, caqtot
-      common/ cxt12 /g2(k21),cp2(k5,k21),caqtot(k21),jphct,jpt
+      double precision g2, cp2, c2tot
+      common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),jphct,jpt
 
       integer iopt
       logical lopt

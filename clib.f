@@ -2019,8 +2019,8 @@ c                                 pointer
       common/ cxt2 /aqg(m4),qq(m4),rt,jnd(m4)
 
       integer jphct, jpt
-      double precision g2, cp2, caqtot
-      common/ cxt12 /g2(k21),cp2(k5,k21),caqtot(k21),jphct,jpt
+      double precision g2, cp2, c2tot
+      common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),jphct,jpt
 
       integer iopt
       logical lopt
@@ -2072,28 +2072,15 @@ c                                 geometric y coordinates
 
          if (lopt(32).and.ksmod(ids).eq.39) then 
 
-            if (iam.ne.3) then 
+            if (iam.ne.3) then
 c                                 MEEMUM:
-               if (caqtot(id).ne.0d0) then 
-c                                 not pure solvent:
 c                                 cp2 works for meemum/vertex, but not werami
 c                                 the id index on cp2 is intentional.
-                  do j = 1, icomp 
-                     cp3(j,jd) = cp2(j,id)*caqtot(id)
-                  end do
+               do j = 1, icomp 
+                  cp3(j,jd) = cp2(j,id)*c2tot(id)
+               end do
 
-               else
-c                                 pure solvent
-                  do i = 1, mstot(ids)
-                     do j = 1, icomp
-                        cp3(j,jd) = cp3(j,jd) 
-     *                            + y(i) * cp(j,jend(ids,2+i))
-                     end do
-                  end do
-
-               end if 
-
-            else  
+            else
 c                                  WERAMI:
                if (caq(jd,na1).eq.0d0) then
 c                                  pure solvent, use the y array to be safe
@@ -2118,9 +2105,9 @@ c                                 convert molality to mole fraction (xx)
                      xx = caq(jd,i)/caq(jd,na2)
 
                      do j = 1, icomp
-                        cp3(j,jd) = cp3(j,jd) + xx * aqcp(j,k)  
+                        cp3(j,jd) = cp3(j,jd) + xx * aqcp(j,k)
                      end do  
-             
+
                   end do
 
                end if

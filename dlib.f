@@ -56,6 +56,10 @@ c                                 global assemblage data
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
 
+      integer kd, na1, na2, na3, nat
+      double precision x3, caq
+      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),na1,na2,na3,nat,kd
+
       integer ksmod, ksite, kmsol, knsp
       common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
 
@@ -109,7 +113,7 @@ c                                phase molar amounts
 c                                lagged speciation
 
                jxco = kxco + 1
-               kxco = kxco + nsa + 4  
+               kxco = kxco + nat
 
                if (kxco.gt.k18) call error (61,0d0,k18,'BPLINP')
 

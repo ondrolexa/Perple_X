@@ -4237,7 +4237,7 @@ c-----------------------------------------------------------------------
 
       integer i, k, jd
 
-      double precision tmass, gso(nsp), gamm0
+      double precision tmass
 
       double precision gcpd, aqact
 
