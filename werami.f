@@ -1764,7 +1764,7 @@ c-------------------------------------------------------------------
 
       logical max
 
-      integer jdsol(k5), choice, index, kdsol(k5), isol, i, j, icx, 
+      integer choice, index, kdsol(k5), isol, i, j, icx, 
      *        jsol, ier, phase, mode
 
       double precision cmin(k5) ,cmax(k5), tcomp, gtcomp
@@ -1774,6 +1774,9 @@ c-------------------------------------------------------------------
 
       character*5 cname
       common/ csta4 /cname(k5)
+
+      integer javg,jdsol
+      common/ cxt5 /javg,jdsol(k5)
 
       integer iopt
       logical lopt
@@ -1797,7 +1800,10 @@ c-------------------------------------------------------------------
 
       save cprop, cmin, cmax, mode, max
 c----------------------------------------------------------------------
-      isol = 0 
+      isol = 0
+c                                 flag indicating whether lagged aq speciation
+c                                 is to be averaged:
+      javg = 0 
 c                                 how many times does the phase occur?
       do i = 1, iavar(3,ias)
          if (icx.eq.idasls(i,ias)) then
@@ -1840,6 +1846,9 @@ c                                choose action
 c                                 average the compositions, turn 
 c                                 solvus testing off
             mode = 0
+            call warn (99,nopt(8),i,'averaging is molar weighted, '//
+     *              'this is incorrect for volumetric properties, '//
+     *              'e.g., density and moduli')
 
          else
 c                                 savg is a flag used only by 
@@ -1917,6 +1926,8 @@ c                                 the extremal variable
       if (mode.eq.0) then 
 c                                 average immiscible compositions/props
          call avgcmp (isol,jdsol)
+c                                 set javg = the number of occurences
+         javg = isol
 
       else if (mode.eq.1) then 
 c                                 min/max
@@ -2623,7 +2634,7 @@ c                                 write plot file header
 
       end
 
-      subroutine avgcmp (isol,jdsol)  
+      subroutine avgcmp (isol,jdsol)
 c-------------------------------------------------------------------
 c makes the average composition and properties of from isol compositions
 c of the phase indexed by the array jdsol
@@ -2641,6 +2652,9 @@ c-------------------------------------------------------------------
 
       double precision props,psys,psys1,pgeo,pgeo1
       common/ cxt22 /props(i8,k5),psys(i8),psys1(i8),pgeo(i8),pgeo1(i8)
+
+      integer ksmod, ksite, kmsol, knsp
+      common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
@@ -2667,8 +2681,8 @@ c                                 set composition
          end do 
       end do 
 c                                 set physical properties assuming molar
-c                                 weighting (this is probably wrong for 
-c                                 some). 
+c                                 weighting (this is wrong for volumetric
+c                                 properties!!!). 
       do j = 1, 17
 
          if (j.eq.16) cycle
@@ -2679,7 +2693,9 @@ c                                 some).
             props(j,index) = props(j,index) + x(i)*props(j,jdsol(i))
          end do 
 
-      end do 
+      end do
+
+      props(16,index) = ntot
 
       end
 
@@ -4227,156 +4243,32 @@ c                                 special variables
 
       end
 
-      subroutine aqlgot (jd)
-c-----------------------------------------------------------------------
-c output lagged aqueous speciation for 2d tab output by werami.  
-c-----------------------------------------------------------------------
-      implicit none
- 
-      include 'perplex_parameters.h'
-
-      integer i, k, jd
-
-      double precision tmass
-
-      double precision gcpd, aqact
-
-      external gcpd, aqact
-
-      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
-      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
-
-      integer iaq, aqst, aqct
-      character aqnam*8
-      double precision aqcp, aqtot
-      common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
-
-      integer ihy, ioh
-      double precision gf, epsln, epsln0, adh, msol
-      common/ cxt37 /gf, epsln, epsln0, adh, msol, ihy, ioh
-
-      double precision atwt
-      common/ cst45 /atwt(k0) 
-
-      integer icomp,istct,iphct,icp
-      common/ cst6  /icomp,istct,iphct,icp  
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
-      integer jnd
-      double precision aqg,qq,rt
-      common/ cxt2 /aqg(m4),qq(m4),rt,jnd(m4)
-
-      character*14 tname
-      integer kop,kcx,k2c,iprop
-      logical kfl
-      double precision prop,prmx,prmn
-      common/ cst77 /prop(i11),prmx(i11),prmn(i11),kop(i11),kcx(i11),
-     *               k2c(i11),iprop,kfl(i11),tname
-
-      integer kd, na1, na2, na3, nat
-      double precision x3, caq
-      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),na1,na2,na3,nat,kd
-
-      integer kkp,np,ncpd,ntot
-      double precision cp3,amt
-      common/ cxt15 /cp3(k0,k19),amt(k19),kkp(k19),np,ncpd,ntot
-c----------------------------------------------------------------------
-      if (jd.eq.0) then 
-
-         do i = 1, iprop
-            prop(i) = nopt(7)
-         end do 
- 
-         return
-
-      end if 
-
-      if (lopt(23)) then
-c                                 molar bulk composition
-         do i = 1, icp
-            prop(i) = cp3(i,jd)*1d2
-         end do 
-
-      else 
-c                                 mass bulk composition
-         tmass = 0d0
-
-         do i = 1, icp
-            tmass = tmass + atwt(i)*cp3(i,jd)
-         end do 
-
-         do i = 1, icp
-            prop(i) = cp3(i,jd)*atwt(i)/tmass*1d2
-         end do 
-
-      end if 
-
-      k = icp
-
-      do i = 1, nsa 
-
-         k = k + 1
-
-         if (i.lt.sn1) then 
-c                                 solvent speciation
-            if (lopt(26)) then
-c                                 mole fraction
-               prop(k) = caq(jd,i)
-            else 
-c                                 molality
-               prop(k) = caq(jd,i)/caq(jd,na3)
-            end if  
-
-         else 
-c                                 solute speciation
-            if (lopt(27)) then
-c                                 molality
-               prop(k) = caq(jd,i)
-            else 
-c                                 mole fraction
-               prop(k) = caq(jd,i)/caq(jd,na2)
-            end if
-
-         end if
-
-      end do
-c                                 other properties:
-c                                 pH
-      prop(k+2) = caq(jd,na3+2)
-c                                 pH - pH0
-      prop(k+1) = caq(jd,na3+3)
-c                                 err_log10(K_w)
-      prop(k+3) = caq(jd,na3+1)
-c                                 dielectric constant
-      prop(k+4) = caq(jd,nat)
-c                                 ionic strength
-      prop(k+5) = caq(jd,na1)
-c                                 solute molality
-      prop(k+6) = caq(jd,nat-1)
-
-      end 
-
       subroutine lagprp (jd)
 c-----------------------------------------------------------------------
-c load interpolated lagged aqueous speciation results into props array 
+c load interpolated lagged aqueous speciation results into the prop array 
 c for WERAMI 
 
-c   jd - is the pointer to the phase in the local assemblage 
+c   jd - is the pointer to the phase in the local assemblage if only 
+c        one phase is to be loaded
+c javg - counter for the jdsol pointer array if multiple phases are 
+c        to be averaged. 
 c-----------------------------------------------------------------------
       implicit none
  
       include 'perplex_parameters.h'
 
-      integer i, k, jd
+      integer i, k, l, ld, jd
 
-      double precision smo
+      double precision ntot, x, ximp
+
+      integer javg,jdsol
+      common/ cxt5 /javg,jdsol(k5)
 
       double precision r,tr,pr,ps,p,t,xco2,u1,u2
       common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
+
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp  
@@ -4402,6 +4294,9 @@ c-----------------------------------------------------------------------
 
       double precision pcomp
       common/ cst324 /pcomp(k0,k5)
+
+      double precision props,psys,psys1,pgeo,pgeo1
+      common/ cxt22 /props(i8,k5),psys(i8),psys1(i8),pgeo(i8),pgeo1(i8)
 c----------------------------------------------------------------------
       if (jd.eq.0) then 
 c                                 no solvent phase stable
@@ -4409,7 +4304,8 @@ c                                 no solvent phase stable
             prop(i) = nopt(7)
          end do 
  
-      else 
+      else if (javg.le.1) then 
+c                                 only one phase:
 c                                 bulk composition
          do i = 1, icp
             prop(i) = pcomp(i,jd)
@@ -4429,22 +4325,18 @@ c                                 molality
                prop(k) = caq(jd,i)/caq(jd,na3)
             end if  
 
-         end do 
-
-         smo = 0d0 
+         end do
 
          do i = sn1, nsa 
 c                                 solute speciation
             k = k + 1
-
-            smo = smo + caq(jd,i)
 
             if (lopt(27)) then
 c                                 molality
                prop(k) = caq(jd,i)
             else 
 c                                 mole fraction
-               prop(k) = caq(jd,i)/caq(i,na2)
+               prop(k) = caq(jd,i)/caq(jd,na2)
             end if  
 
          end do 
@@ -4461,6 +4353,87 @@ c                                 ionic strength
          prop(k+5) = caq(jd,na1)
 c                                 solute molality
          prop(k+6) = caq(jd,nat-1)
+
+      else 
+c                                 averaging multiple phases:
+
+c                                 bulk composition has already been 
+c                                 averaged by avgcmp, load into prop:
+c                                 bulk composition
+         do i = 1, icp
+            prop(i) = pcomp(i,jd)
+         end do
+c                                 initialize remaining prop values
+         do i = icp+1, icp+nat
+            prop(i) = 0d0
+         end do
+c                                 get molar proportions:
+         ntot = 0d0
+         ximp = 0d0
+
+         do i = 1, javg
+            ntot = ntot + props(16,jdsol(i))
+         end do 
+
+         do l = 1, javg
+
+            ld = jdsol(l)
+            x = props(16,ld)/ntot
+            if (caq(ld,na1).ne.0d0) ximp = ximp + x
+
+            k = icp
+
+            do i = 1, ns 
+c                                 solvent speciation
+               k = k + 1
+
+               if (lopt(26)) then
+c                                 mole fraction
+                  prop(k) = prop(k) + x * caq(ld,i)
+               else 
+c                                 molality
+                  prop(k) = prop(k) + x * caq(ld,i)/caq(ld,na3)
+               end if
+
+            end do
+
+            do i = sn1, nsa
+c                                 solute speciation
+               k = k + 1
+
+               if (lopt(27)) then
+c                                 molality
+                  prop(k) = prop(k) + x * caq(ld,i)
+               else 
+c                                 mole fraction
+                  prop(k) = prop(k) + x * caq(ld,i)/caq(ld,na2)
+               end if
+
+            end do 
+c                                 other properties:
+c                                 pH - pH0
+            prop(k+1) = prop(k+1) + x * caq(ld,na3+3)
+c                                 pH
+            prop(k+2) = prop(k+2) + x * caq(ld,na3+2)
+c                                 err_log10(K_w)
+            prop(k+3) = prop(k+3) + x * caq(ld,na3+1)
+c                                 dielectric constant
+            prop(k+4) = prop(k+4) + x * caq(ld,nat)
+c                                 ionic strength
+            prop(k+5) = prop(k+5) + x * caq(ld,na1)
+c                                 solute molality
+            prop(k+6) = prop(k+6) + x * caq(ld,nat-1)
+
+         end do
+
+         if (ximp.lt.one.and.ximp.gt.0d0) then
+c                                 renomalize err_log_kw, pH, Delta_pH, epsilon
+            prop(k+1) = prop(k+1)/ximp
+            prop(k+2) = prop(k+2)/ximp
+            prop(k+3) = prop(k+3)/ximp
+            prop(k+4) = prop(k+4)/ximp
+
+          end if
 
       end if
 

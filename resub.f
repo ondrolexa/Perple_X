@@ -1520,7 +1520,7 @@ c                                save the new compositions
 
             if (lopt(32).and.ksmod(ids).eq.39) then 
 
-               if (caq(jd,na1).ne.0) ximp = ximp + xx
+               if (caq(jd,na1).ne.0d0) ximp = ximp + xx
 c                                lagged speciation (1:nsa), ionic strength (na1), total
 c                                molality (na2), solvent mass (na3), err_log_kw (na4)
 c                                pH, Delta_pH, solute molality, epsilon (nat)
