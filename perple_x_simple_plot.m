@@ -4,7 +4,7 @@
 
 %clear all; 
 
-clf;
+%clf(fig1);
 
 [x,y,a,xname,yname,zname,nvar,mvar,nrow,dnames,titl] = function_to_get_perple_x_file; %open the Perple_X file
 

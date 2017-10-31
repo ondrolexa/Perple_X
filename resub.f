@@ -1110,16 +1110,7 @@ c----------------------------------------------------------------------
 
          x(i,j) = 1d0 - xt
 
-      end do 
-
-      if (xt-1d0.gt.1d-6) then 
-         write (*,*) ' wonga wonga ',ids
-         do i = 1, istg(ids)
-            write (*,*) ndim(i,ids)
-            write (*,*) (x(i,j),j=1, ndim(i,ids))
-         end do
-         pause
-      end if 
+      end do
 
       end 
 
@@ -1139,11 +1130,6 @@ c-----------------------------------------------------------------------
 
       double precision dcp,soltol
       common/ cst57 /dcp(k5,k19),soltol
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 c                                 composition and model flags
 c                                 for final adaptive solution
       integer kkp,np,ncpd,ntot
@@ -1193,8 +1179,52 @@ c-----------------------------------------------------------------------
          if (dabs(cp2(i,id1) - cp2(i,id2)).gt.soltol) then
             solvs2 = .true.
             exit
-         end if  
+         end if
 
+      end do 
+
+      end 
+
+      logical function solvs4 (id1,id2)
+c-----------------------------------------------------------------------
+c function to test if a solvus separates two pseudocompounds of a lagged
+c aqueous solution based 
+
+c ids, called only for final solution vales by avrger.
+c-----------------------------------------------------------------------
+      implicit none
+ 
+      include 'perplex_parameters.h'
+
+      integer i, id1, id2
+
+      integer icomp,istct,iphct,icp
+      common/ cst6  /icomp,istct,iphct,icp
+
+      integer kd, na1, na2, na3, nat
+      double precision x3, caq
+      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),na1,na2,na3,nat,kd
+
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      double precision dcp,soltol
+      common/ cst57 /dcp(k5,k19),soltol
+c-----------------------------------------------------------------------
+      solvs4 = .false.
+
+      do i = 1, ns
+
+         if (dabs(x3(id1,1,i) - x3(id2,1,i)).gt.soltol) then 
+            solvs4 = .true.
+            exit 
+         end if 
+         
       end do 
 
       end 
@@ -1215,14 +1245,16 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical solvs1, check, bad
-c                                 -------------------------------------
-c                                 local variables
+      logical check, bad, quit, notaq
+
       integer idsol(k5),kdsol(k5,k5),ids,isite,xidsol,xkdsol,irep,
      *        i,j,jdsol(k5,k5),jd,k,l,nkp(k5),xjdsol(k5)
 
       double precision bsol(k5,k5),cpnew(k5,k5),xx,xb(k5),msol,
      *                 bnew(k5),xnew(k5,mst,msp),ncaq(k5,l10),ximp
+
+      logical solvs1, solvs4
+      external solvs1, solvs4
 c                                 -------------------------------------
 c                                 global variables:
 c                                 x coordinate description
@@ -1329,7 +1361,7 @@ c                                are present:
 c                                solvus_tolerance
       soltol = nopt(8)
 
-      do 30 i = 1, ntot
+      do i = 1, ntot
           
          if (nkp(i).lt.0) then
 c                                 the pseudocompound is a true compound
@@ -1341,7 +1373,9 @@ c                                 the pseudocompound is a true compound
 
          else 
 
-            if (lopt(32).and.ksmod(nkp(i)).eq.39) then 
+            if (lopt(32).and.ksmod(nkp(i)).eq.39) then
+
+               notaq = .false.
 c                                 get lagged speciation
 c                                 loaded into caq(i,1:ns+aqct)
                do k = 1, ns
@@ -1371,29 +1405,41 @@ c                                 total molality
 c                                 impure solvent, get speciation
                   call aqlagd (i,bad,.true.)
 
-               end if 
+               end if
+
+            else
+
+               notaq = .true.
 
             end if
+
+            quit = .false.
 
             do j = 1, np
 c                                 compare the compound to the np solutions 
 c                                 identfied so far:        
                if (kdsol(j,1).eq.nkp(i)) then 
 c                                 if match check for a solvus
-                  if (.not.solvs1(i,jdsol(j,idsol(j)),nkp(i))) then
+                  if (notaq) then 
+                     if (solvs1(i,jdsol(j,idsol(j)),nkp(i))) cycle
+                  else
+c                                  special solvus test based on solvent 
+c                                  speciation for lagged aq model. 
+                     if (solvs4(i,jdsol(j,idsol(j)))) cycle 
+                  end if 
 c                                 the pseudocompound matches a solution
 c                                 found earlier.
-                     idsol(j) = idsol(j) + 1
-                     bsol(j,idsol(j)) = amt(i)
-                     jdsol(j,idsol(j)) = i
-                     
-                     goto 30
-                     
-                  end if
- 
+                  idsol(j) = idsol(j) + 1
+                  bsol(j,idsol(j)) = amt(i)
+                  jdsol(j,idsol(j)) = i
+                  quit = .true.
+                  exit
+
                end if
 
             end do
+
+            if (quit) cycle 
 c                                 the pseudocompound is a new solution 
 c                                 phase.
             np = np + 1
@@ -1402,9 +1448,9 @@ c                                 phase.
             jdsol(np,1) = i
             bsol(np,1) = amt(i)
 
-         end if    
+         end if
 
-30    continue  
+      end do
 c                                 check if a solution occurs more than once
 c                                 but the occurences are not sequential (this
 c                                 can only occur if an endmember is immiscible 
@@ -2974,6 +3020,9 @@ c                                 sort if too many
            npt = npt + 1
            jdv(npt) = jmin(i)
 
+           if (lopt(34)) call dumper (2,jdv(npt),hkp(jdv(npt)),
+     *                       jkp(jdv(npt)),x(jdv(npt)),clamda(jdv(npt)))
+
          end do
 c                                 sort the phases, this is only necessary if
 c                                 metastable phases have been added
@@ -2984,16 +3033,7 @@ c                                 point
             mkp(i) = hkp(jdv(i))
          end do
 
-            if (lopt(34)) then 
-         do i = 1, npt 
-            
-
-                id = jdv(i)
-                call dumper (2,id,hkp(id),jkp(id),x(id),clamda(id))
-          end do 
-          end if  
-
-      else  
+      else
   
          mpt = npt
          npt = 0

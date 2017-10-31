@@ -18993,9 +18993,7 @@ c                                  solve charge balance for H+
          if (bad) then
             xis = is
             exit
-         else if (mo(ion).lt.zero) then
-            pause
-         end if 
+         end if
 c                                  back calculate charged species molalities
 c                                  and ionic strength
          xis = is
@@ -19128,7 +19126,14 @@ c----------------------------------------------------------------------
 c------------------------------------------------------------------------
 c                                 generate a file name and
 c                                 open the file on n5
-      call fopenn (n,nvar,n5name,n6name)
+      if (iam.eq.1) then 
+c                                 frac2d file names: on input n5name
+c                                 contains the string to be appended 
+c                                 to the project name
+         call fopenv (n,n5name)
+      else 
+         call fopenn (n,nvar,n5name,n6name)
+      end if 
 c                                 ctr file tab format header
       write (n,'(a)') '|6.6.6'
 c                                 a title
@@ -19255,6 +19260,35 @@ c                                 n5name already exists
       if (dim.eq.0) write (*,1000) n5name
 
 1000  format (/,'Console output will be echoed in file: ',a,/)
+
+      end
+
+      subroutine fopenv (n,string)
+c----------------------------------------------------------------------
+c decide on file name and type for werami output files, open n5name on 
+c LUN n, n6name is opened if necessary by prphed or modhed
+c dim - integer 1 = 1d, 2 = 2d, 0 = text echo
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer i, ier, n
+
+      character string*(*)
+
+      character*100 prject,tfname
+      common/ cst228 /prject,tfname
+c----------------------------------------------------------------------
+
+      call mertxt (tfname,prject,string,0)
+
+      call mertxt (string,tfname,'.tab',0)
+
+      open (n, file=string, status='replace', iostat=ier)
+
+      if (ier.ne.0) call error (999,0d0,i,
+     *             'file '//tfname//' is in use by another application')
 
       end
 

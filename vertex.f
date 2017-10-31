@@ -454,12 +454,16 @@ c-----------------------------------------------------------------------
 
       character*100 n6name, n5name
 
-      integer i,j,k,l,idead,two(2),lun,iox,itop(maxlay),icp1,
+      integer i,j,k,l,m,idead,two(2),lun,iox,itop(maxlay),icp1,
      *        layer(maxbox)
 
-      double precision gblk(maxbox,k5),dz,p0,cdcomp(k5,maxlay),vox(k5)
+      double precision gblk(maxbox,k5),dz,p0,cdcomp(k5,maxlay),vox(k5),
+     *                 tot,lcomp(k5,maxlay)
 
-      logical output
+      logical output, anneal
+
+      double precision atwt
+      common/ cst45 /atwt(k0)
 
       integer npt,jdv
       logical fulrnk
@@ -611,7 +615,7 @@ c                                 computation
 c                                 NOTE if not fileio, then jlow must not change
          if (.not.fileio)  nrow = jlow
 
-      end if        
+      end if
 c                                 check resolution dependent dimensions
       if (nrow*ncol.gt.k2) then
          write (*,*) ' parameter k2 must be >= ncol*nrow'
@@ -669,18 +673,118 @@ c                                 number of variables in table
       lun = n0 + 100
 c                                 initialization for the top of
 c                                 each layer
+      write (*,'(/)')
+
       do j = 1, ilay
 
          do i = 1, icp1
+            lcomp(i,j) = 0d0 
             cdcomp(i,j) = 0d0
          end do 
 
+         write (*,'(a,i1,a,f9.3)') 'The top of layer ',j,
+     *                 ' is at z(m) = ',(ncol - itop(j)) * zbox
+
+         write (n5name,'(a,i1)') '_cumulative_change_layer_',j
          call tabhed (lun + j,vmin(1),dv(1),two,1,n5name,n6name)
 
-      end do 
+      end do
+
+c                                 number of variables in table
+      iprop = icp
+
+      do j = 1, ilay
+         write (n5name,'(a,i1)') '_average_comp_layer_',j
+         call tabhed (lun + ilay + j,vmin(1),dv(1),two,1,n5name,n6name)
+      end do
+
+      write (*,'(/)')
+
+      anneal = .true.
+
+      if (anneal) then 
+
+         p0 = vmin(1)
+
+         do k = 1, ncol
+c                                 k-loop varies depth within the column (dz)
+            dz = (ncol - k) * zbox  
+c                                 set the p-t conditions
+            call fr2dpt (p0,dz)
+c                                 now put the bulk composition from the global
+c                                 array into the local array and get the total
+c                                 number of moles (ctotal)
+            ctotal = 0d0
+c                                 get total moles to compute mole fractions             
+            do i = 1, icp+1
+               dcomp(i) = 0d0
+               cblk(i) = gblk(k,i)
+               if (cblk(i).lt.nopt(11)) cblk(i) = 0d0
+               ctotal = ctotal + cblk(i)
+            end do
+
+            do i = 1, icp 
+               b(i) = cblk(i)/ctotal
+            end do
+
+            call lpopt (j,k,idead,output)
+
+            if (idead.ne.0) then 
+               write (*,2000) p0,dz,layer(k),k,j,v(1),v(2),
+     *                        (cblk(i),i=1,icp)
+               write (*,2010) (itop(i),i=1,ilay)
+               pause 
+            end if 
+
+            call fractr (idead,.false.)
+
+            do i = 1, icp 
+c                                 subtract the fluid from the current composition
+               gblk(k,i) = gblk(k,i) - dcomp(i)
+c                                 by not applying the zero_bulk threshold to the 
+c                                 global array near zero components may accumulate
+c                                 to become significant
+               if (gblk(k,i).lt.0d0) gblk(k,i) = 0d0
+
+            end do
+c                                 reset carbon
+            gblk(k,2) = iblk(layer(k),2)
+c                                 get the mass of the intial composition and
+c                                 renormalize
+            tot = 0d0 
+
+            do i = 1, icp 
+c                                 local mass
+               tot = tot + gblk(k,i)*atwt(i)
+            end do
+c
+            do i = 1, icp 
+c                                 reset to 1000 g.
+               gblk(k,i) = gblk(k,i)*1d3/tot
+               lcomp(i,layer(k)) = lcomp(i,layer(k))
+     *                           + gblk(k,i)/dfloat(irep(layer(k)))
+            end do
+
+            write (*,'(12(f10.3,1x))') dz,(gblk(k,i),i=1,icp)
+
+         end do
+
+         write (*,'(/)')
+
+         do i = 1, ilay
+            write (*,'(i1,1x,12(f10.3,1x))') i,(lcomp(j,i),j=1,icp)
+         end do
+
+      end if
 c                                 nrow is the number of steps along the subduction
 c                                 path:
       do j = 1, nrow
+c                                 initialize avg layer comp
+         do l = 1, ilay
+            do m = 1, icp
+               lcomp(m,l) = 0d0
+            end do
+         end do
 
          write (*,*) '##########################################'
          write (*,'(/,a,i4,a,i4/)') 'Column ',j,' of ',nrow
@@ -692,7 +796,7 @@ c                                 for each box in our column compute phase
 c                                 relations
          do k = 1, ncol
 c                                 k-loop varies depth within the column (dz)
-            dz = (ncol - k) * zbox  
+            dz = (ncol - k) * zbox
 c                                 set the p-t conditions
             call fr2dpt (p0,dz)
 c                                 now put the bulk composition from the global
@@ -758,6 +862,9 @@ c                                 and add it to the overlying composition
 c                                 oxygen deficit and cumulative change
                if (iox.ne.0d0) dcomp(icp1) = dcomp(icp1) 
      *                                     - vox(i)*dcomp(i)
+c                                 average layer comp
+               lcomp(i,layer(k)) = lcomp(i,layer(k)) + gblk(k,i)/
+     *                             dfloat(irep(layer(k)))
 c                                 save layer specific results
                do l = 1, ilay
 c                                 cumulative change
@@ -774,6 +881,7 @@ c                                 cumulative change
      *                                   p0,(dcomp(i),i=1,icp1),
      *                                      (cdcomp(i,l),i=1,icp1)
                end if
+
             end do
 c                                 reset initialize top layer if gloopy = 999
             if (gloopy.eq.999.and.k.gt.ncol-irep(ilay)) then 
@@ -783,8 +891,22 @@ c                                 reset initialize top layer if gloopy = 999
             end if 
 c                                 end of the k index loop
          end do 
+
+         do l = 1, ilay
+c                                 average layer compositions
+            write (lun + ilay + l,'(200(g13.6,1x))') 
+     *                                p0,(lcomp(i,l),i=1,icp)
+            write (*,'(i1,1x,12(f10.3,1x))') l,(lcomp(i,l),i=1,icp)
+
+         end do
+
+         write (*,'(/)')
 c                                 end of j index loop
       end do 
+
+      do j = 1, 2*ilay
+         close (lun + j)
+      end do
 
       if (output.and.io4.eq.0) call outgrd (nrow,ncol,1)
 

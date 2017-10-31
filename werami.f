@@ -1792,6 +1792,13 @@ c-------------------------------------------------------------------
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
 
+      double precision r,tr,pr,ps,p,t,xco2,u1,u2
+      common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
+
+      integer jvar
+      double precision var,dvr,vmn,vmx
+      common/ cxt18 /var(l3),dvr(l3),vmn(l3),vmx(l3),jvar
+
       integer icps, jcx, jcx1, kds
       logical stol, savg, spec
       double precision rcps, a0
@@ -1801,7 +1808,7 @@ c-------------------------------------------------------------------
       save cprop, cmin, cmax, mode, max
 c----------------------------------------------------------------------
       isol = 0
-c                                 flag indicating whether lagged aq speciation
+c                                 flag indicating whether phase speciation
 c                                 is to be averaged:
       javg = 0 
 c                                 how many times does the phase occur?
@@ -1821,6 +1828,19 @@ c                                 the phase doesn't occur or occurs once
       if (isol.lt.2) return 
 
       phase = idasls(index,ias)
+
+      if (lopt(34)) then
+c                                 debug dump
+         write (*,*) var(1),var(2)
+
+         write (*,*) p,t
+         write (*,1000) isol, fname(phase), cprop
+         write (*,1040) (cname(i), i = 1, icomp)
+         do i = 1, isol 
+            write (*,1050) (pcomp(j,jdsol(i)), j = 1, icomp)
+         end do
+
+      end if 
 c                                 if here, the phase must be a solution
 10    if (.not.stol(phase)) then
 c                                 immisicible phases are present (isol>1)
@@ -1846,9 +1866,14 @@ c                                choose action
 c                                 average the compositions, turn 
 c                                 solvus testing off
             mode = 0
+
             call warn (99,nopt(8),i,'averaging is molar weighted, '//
      *              'this is incorrect for volumetric properties, '//
      *              'e.g., density and moduli')
+
+            call warn (99,nopt(8),i,'phase speciation is averaged '//
+     *                            'incorrectly except in the case of '//
+     *                            'lagged-aqueous phase speciation')
 
          else
 c                                 savg is a flag used only by 

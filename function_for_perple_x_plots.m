@@ -8,9 +8,7 @@ function [] = function_for_perple_x_plots (x,y,a,xname,yname,zname,nvar,mvar,nro
 %   axes applied to all plots. 
 %                                               Philippe Goncalves, 2/2012. 
 
-figure(1);
-
-clf
+fig1 = figure(1);
 
 if nvar == 1 % two cases: 1d - table -> 2d plot
     
