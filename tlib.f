@@ -19,7 +19,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a)') 
-     *      'Perple_X version 6.8.0, source updated Oct 31, 2017.'
+     *      'Perple_X version 6.8.0, source updated Nov 4, 2017.'
 
       end
 
@@ -480,9 +480,9 @@ c                                 phase composition key
 
             if (val.eq.'T') lopt(33) = .true.
 
-         else if (key.eq.'output_iteration_details') then 
+         else if (key.eq.'output_iteration_detai') then 
 
-            if (val.eq.'T') lopt(34) = .true. 
+            if (val.eq.'T') lopt(34) = .true.
 
          else if (key.eq.'aq_solvent_composition') then
 
@@ -1619,7 +1619,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer lun, len, ier, iscan, i, iscnlt, ibeg, iend, ist
+      integer lun, len, ier, iscan, i, iscnlt, ibeg, iend, ist, lend
 
       character card*(lchar), key*22, val*3,
      *          nval1*12, nval2*12, nval3*12, strg*40, strg1*40
@@ -1658,12 +1658,15 @@ c                                 find end of keyword
       iend = ibeg + 1
       iend = iscan (iend,lchar,' ') - 1
 
-      if (iend-ibeg.gt.21) then 
-         ier = 1
-         return
-      end if
+c      if (iend-ibeg.gt.21) call error (77,0d0,ier,'invalid keyword in '
+c     *   //'REDCD1, keywords must be < 23 characters.')
+      if (iend-ibeg.gt.21) then
+         lend = ibeg + 21
+      else 
+         lend = iend
+      end if 
 c                                 load chars into key
-      write (key,'(22a1)') (chars(i), i = ibeg, iend)
+      write (key,'(22a1)') (chars(i), i = ibeg, lend)
 
       iend = iend + 1
 c                                 now locate the value:

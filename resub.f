@@ -629,7 +629,6 @@ c                                 reject composition
          if (lopt(32).and.ksmod(ids).eq.39) then
 
             quack1 = .false.
-            quack2 = .true.
 
             if (quack1) then 
 c                                 solute free cpd
@@ -663,7 +662,7 @@ c                                 a solute cpd
 
             end if 
 
-            if (quack2) then 
+            if (lopt(28)) then 
 
                call aqlagd (1,bad,.false.)
 
@@ -1245,10 +1244,10 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical check, bad, quit, notaq
+      logical check, bad, quit, notaq, q1, qq2
 
       integer idsol(k5),kdsol(k5,k5),ids,isite,xidsol,xkdsol,irep,
-     *        i,j,jdsol(k5,k5),jd,k,l,nkp(k5),xjdsol(k5)
+     *        i,j,jdsol(k5,k5),jd,k,l,nkp(k5),xjdsol(k5),kk
 
       double precision bsol(k5,k5),cpnew(k5,k5),xx,xb(k5),msol,
      *                 bnew(k5),xnew(k5,mst,msp),ncaq(k5,l10),ximp
@@ -1508,6 +1507,10 @@ c                                 swap phase at i+1 with the one at j
 c                                 if a solution is represented by
 c                                 more than one pseudocompound get
 c                                 the everage composition
+         kk = 0
+         q1 = .true.
+         qq2 = .true.
+
       do i = 1, np 
 c                                 initialize
          bnew(i) = 0d0
@@ -1529,6 +1532,14 @@ c                               lagged speciation
             do k = 1, nat
                ncaq(i,k) = 0d0
             end do 
+
+            if (quack(i).and.q1)  then 
+               kk = kk + 1 
+               q1 = .false.
+           else if (.not.quack(i).and.qq2) then 
+               kk = kk + 1 
+               qq2 = .false.
+            end if 
 
          end if 
 
@@ -1564,7 +1575,7 @@ c                                save the new compositions
                end do
             end do
 
-            if (lopt(32).and.ksmod(ids).eq.39) then 
+            if (lopt(32).and.ksmod(ids).eq.39) then
 
                if (caq(jd,na1).ne.0d0) ximp = ximp + xx
 c                                lagged speciation (1:nsa), ionic strength (na1), total
@@ -1577,6 +1588,10 @@ c                                pH, Delta_pH, solute molality, epsilon (nat)
             end if
 
          end do
+
+c         if (lopt(32).and.ksmod(ids).eq.39.and.kk.gt.1) then
+c            write (*,*) 'got one'
+c         end if 
 
          if (lopt(32).and.ksmod(ids).eq.39.and.
      *       ximp.lt.one.and.ximp.gt.0d0) then
@@ -2199,7 +2214,7 @@ c                                 new point, add to list
             jdv(npt) = i
             amt(npt) = x(i)
 
-            if (lopt(28)) then
+            if (lopt(34)) then
                if (ikp(id).ne.0) then 
                   call dumper (1,i,0,ikp(i),x(i),clamda(i))
                else 
@@ -2284,6 +2299,18 @@ c                                 find the most stable iopt(12) points
 
          jdv(npt+i) = kdv(i)
 
+         if (lopt(34)) then
+
+            id = kdv(i)
+
+            if (ikp(id).ne.0) then 
+               call dumper (1,id,0,ikp(id),x(id),clamda(id))
+            else 
+               call dumper (1,id,0,-id,x(id),clamda(id))
+            end if 
+
+         end if
+
       end do
 
       if (quit) then 
@@ -2305,23 +2332,6 @@ c                                 save amounts for final processing
 c                                 sort the phases, why? don't know, but it's 
 c                                 necessary
          call sortin
-
-            if (lopt(34)) then
-
-            write (*,*) ' all points: '
-            do i = 1, npt
-
-               id = jdv(i)
-
-               if (ikp(id).ne.0) then 
-                  call dumper (1,id,0,ikp(id),x(id),clamda(id))
-               else 
-                  call dumper (1,id,0,-id,x(id),clamda(id))
-               end if 
-
-            end do 
-
-            end if 
 
       end if 
 

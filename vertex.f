@@ -733,7 +733,6 @@ c                                 get total moles to compute mole fractions
                write (*,2000) p0,dz,layer(k),k,j,v(1),v(2),
      *                        (cblk(i),i=1,icp)
                write (*,2010) (itop(i),i=1,ilay)
-               pause 
             end if 
 
             call fractr (idead,.false.)
@@ -835,10 +834,12 @@ c                                 write failure info to fld file:
      *                        (cblk(i),i=1,icp)
                write (*,2010) (itop(i),i=1,ilay)
 
-c            else 
+             else 
 
-c               write (n12,2020) p0,dz,layer(k),k,j,v(1),v(2),
-c     *                          (cblk(i),i=1,icp)
+               write (n12,*) 'good'
+               write (n12,2000) p0,dz,layer(k),k,j,v(1),v(2),
+     *                          (cblk(i),i=1,icp)
+               write (n12,2010) (itop(i),i=1,ilay)
 
             end if 
 
