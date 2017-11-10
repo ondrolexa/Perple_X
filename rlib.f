@@ -7933,6 +7933,9 @@ c                                 stored x coordinate
       integer ico,jco
       common/ cxt10 /xco(k18),ico(k1),jco(k1)
 
+c      integer ksmod, ksite, kmsol, knsp
+c      common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
+
       integer ncoor,mcoor,ndim
       common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
 
@@ -7964,6 +7967,12 @@ c----------------------------------------------------------------------
 c                                 the use if istg(ids) as the site
 c                                 index is a hack for reformulated
 c                                 reciprocal solutions
+
+c                                 this conditional is not necessary
+c                                 for 1-species models cause it will
+c                                 never look at the array for composition
+c                                 in any case???
+c         if (ispg(ids,1).gt.1.or.ksmod(ids).eq.39) then 
          if (ispg(ids,1).gt.1) then 
             i = 1
          else 
@@ -18613,8 +18622,11 @@ c                                 the absent component
          if (epsln.lt.1d0) then
 c                                 eos is predicting vapor phase 
 c                                 solvent densities
-            bad = .true.
-            return
+c            bad = .true.
+c            return
+
+            write (*,*) 'b'
+            pause
             
          end if 
 
@@ -18967,8 +18979,10 @@ c                                  initialize iteration loop
       lnkw = (gso(ns) - g0(ioh))/rt
 
       if (dabs(lnkw).gt.5d1.or.epsln.lt.3d0) then
-         bad = .true.
-         return
+         write (*,*) 'a'
+
+c         bad = .true.
+c         return
       else if (c(ioh).eq.0d0) then
 c                                 no hydrogen or no oxygen
          bad = .true.
@@ -19343,7 +19357,7 @@ c                                 dynamic
          write (*,1000) id,hkp,jkp,name,amt,lambda,g2(id),
      *                  (cp2(i,id),i=1,jbulk)
       end if 
-1000  format (i5,1x,2(i4,1x),a,20(g14.6,1x))
+1000  format (i6,1x,i3,1x,i4,1x,a,20(g14.6,1x))
 
       end 
 

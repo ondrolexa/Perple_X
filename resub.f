@@ -180,7 +180,7 @@ c-----------------------------------------------------------------------
       integer liw, lw, iter, iref, i, id, idead, ids, jstart, inc, 
      *        opt, kter, kitmax
 
-      logical first, wad1, wad2, kterat, quit
+      logical first, wad1, wad2, kterat, quit, refine
 
       parameter (liw=2*k21+3,lw=2*(k5+1)**2+7*k21+5*k5)
 
@@ -258,8 +258,15 @@ c                                 first iteration
       do i = 1, npt
 
          id = jdv(i) + inc
+
+         refine = .false.
+c                                 if its a compound check if it's a generic fluid 
+c                                 model:
+         if (id.le.ipoint.and.ikp(id).gt.0d0) then
+            if (ksmod(ikp(id)).eq.39) refine = .true.
+         end if
 c                                 the point is a pseudocompound, refine it
-         if (id.gt.ipoint) then
+         if (id.gt.ipoint.or.refine) then
 
             call resub (i,id,ikp(id),iref,iter,first,wad1,wad2)
 
@@ -628,9 +635,7 @@ c                                 reject composition
 
          if (lopt(32).and.ksmod(ids).eq.39) then
 
-            quack1 = .false.
-
-            if (quack1) then 
+            if (lopt(28)) then 
 c                                 solute free cpd
                g2(jphct) = gsol1(ids)
 
@@ -662,25 +667,22 @@ c                                 a solute cpd
 
             end if 
 
-            if (lopt(28)) then 
+            call aqlagd (1,bad,.false.)
 
-               call aqlagd (1,bad,.false.)
+            if (bad) then
 
-               if (bad) then
+               jphct = jphct - 1
+               jcoct = kcoct - mcoor(ids)
+               cycle
 
-                  jphct = jphct - 1
-                  jcoct = kcoct - mcoor(ids)
-                  cycle
-
-               else
+            else
  
-                  quack(jphct) = .false.
+               quack(jphct) = .false.
 
-               end if
-
-            end if 
+            end if
 c                                 i am pretty sure this is redundant.
-            wad2 = .false.
+            wad2 = .true.
+            wad1 = .true.
 
             if (wad1.and.wad2) then
 c                                 make water, ha ha
@@ -2154,6 +2156,9 @@ c----------------------------------------------------------------------
       double precision cp3,amt
       common/ cxt15 /cp3(k0,k19),amt(k19),kkp(k19),np,ncpd,ntot
 
+      integer ksmod, ksite, kmsol, knsp
+      common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
+
       integer npt,jdv
       double precision cptot,ctotal
       common/ cst78 /cptot(k19),ctotal,jdv(k19),npt
@@ -2178,35 +2183,36 @@ c                                 currently endmember compositions are not
 c                                 refined (this is probably a mistake, but 
 c                                 seems to work fine), so use id > ipoint
 c                                 to identify a refineable point
-
-c                                 modified 3/4/2015 to refine endmember compositions. JADC
-c           if (ikp(id).ne.0) then  #refine endmember change
-
             ids = ikp(id) 
 
-            if (ids.ne.0.and.id.gt.ipoint) then 
+            if (ids.ne.0) then 
 
-               quit = .false.
-               news = .true.
+               if (id.gt.ipoint.or.
+     *             ksmod(ids).eq.39.and.lopt(32)) then 
+c                                 a pseudocompound
+                  quit = .false.
+                  news = .true.
 
-               do j = 1, nsol
+                  do j = 1, nsol
 
-                  if (ids.ne.idsol(j)) cycle 
-                  kdsol(j) = kdsol(j) + 1
-                  jdsol(kdsol(j),j) = id
-                  news = .false.
-                  exit 
+                     if (ids.ne.idsol(j)) cycle 
+                     kdsol(j) = kdsol(j) + 1
+                     jdsol(kdsol(j),j) = id
+                     news = .false.
+                     exit 
 
-               end do
+                  end do
 
-               if (news) then 
+                  if (news) then 
 c                                 new phase, add to list
-                  nsol = nsol + 1
-                  idsol(nsol) = ids
-                  jdsol(1,nsol) = id
-                  kdsol(nsol) = 1
+                     nsol = nsol + 1
+                     idsol(nsol) = ids
+                     jdsol(1,nsol) = id
+                     kdsol(nsol) = 1
 
-               end if
+                  end if
+
+               end if 
 
             end if 
 c                                 new point, add to list
@@ -2215,6 +2221,8 @@ c                                 new point, add to list
             amt(npt) = x(i)
 
             if (lopt(34)) then
+
+               if (npt.eq.1) write (*,'(/,a,i2)') 'iteration ',0
                if (ikp(id).ne.0) then 
                   call dumper (1,i,0,ikp(i),x(i),clamda(i))
                else 
@@ -2975,7 +2983,10 @@ c                                 a stable point, add to list
             amt(npt) = x(i)
             if (id.gt.0) stable(id) = .true.
 
-            if (lopt(34)) call dumper (2,i,hkp(i),jkp(i),x(i),clamda(i))
+            if (lopt(34)) then
+               if (npt.eq.1) write (*,'(/,a,i2)') 'iteration ',iter-1
+               call dumper (2,i,hkp(i),jkp(i),x(i),clamda(i))
+            end if 
 
          else if (id.gt.0) then 
 c                                 a metastable solution cpd
