@@ -15,8 +15,8 @@ aq_lagged_iterations       0    | >= 0, default 0; number of internal iterations
 aq_lagged_speciation       T    | T[rue] or F[alse], default is T
 aq_solvent_composition     y    | y -> mole fractions, m -> molality; default y
 aq_solute_composition      m    | y -> mole fractions, m -> molality; default m
-auto_refine                aut  | auto, manual, or off (auto_refine keyword group)
-auto_refine_factor_I       2    | refine factor for gridded minimization and phase fractionation (auto_refine keyword group)
+auto_refine               off   | auto, manual, or off (auto_refine keyword group)
+auto_refine_factor_I       1    | refine factor for gridded minimization and phase fractionation (auto_refine keyword group)
 auto_refine_factor_II      6    | refine factor for composition and mixed variable diagrams (auto_refine keyword group)
 auto_refine_factor_III     2    | refine factor for Schreinemakers diagrams (auto_refine keyword group)
 auto_refine_file           F    | echo auto-refine data to my_project_auto_refine.txt
@@ -24,14 +24,14 @@ bad_number                 NaN  | any number or NaN (not-a-number)
 bounds                     VRH  | [VRH] HS; Voigt-Reuss-Hill or Hashin-Shtrikman, see vrh/hs_averaging
 closed_c_space             T    | T[rue] or F[alse], default is T => closed composition space for gridded minimization 
 composition_constant       F    | T[rue] or F[alse], default is F; allows constants in composition expressions
-composition_phase          mol  | mol or wt; phase compositions in WERAMI output
+composition_phase          wt   | mol or wt; phase compositions in WERAMI output
 composition_system         wt   | mol or wt; system composition in WERAMI mode 2-4 output
 console_messages           on   | on or off
 dependent_potentials       on   | on or off
 efficiency                 3    | 1->5
 explicit_bulk_modulus      T    | T[rue] or F[alse], default is F; T => use explicit function for K if available
 fd_expansion_factor        2    | [2], nth order finite difference increment is increased by fd_expansion_factor^(n-1)
-final_resolution  2.5e-4 2.5e-4 | >0, <1, default 1e-3; exploratory and autorefine
+final_resolution  2.5e-3 2.5e-3 | >0, <1, default 1e-3; exploratory and autorefine
 finite_difference_p    1d4 1d-2 | threshold [1d4] and fraction [1d-2] for 1st order finite difference increment on pressure
 fractionation_hi_limit       0  | 0-1, [0], upper fractionation threshold, mass fraction
 fractionation_lo_limit       0  | 0-1, [0], lower fractionation threshold, mass fraction
@@ -51,7 +51,7 @@ melt_is_fluid              F    | T[rue] or F[alse], default is F
 null_phase                 F    | T[rue] or F[alse], default is F, include null phases in convexhull optimization with mobile components
 option_list_files          T    | T[rue] or F[alse], T => echo run-time options to my_project_PROGRAM_options.txt
 order_check                on   | on or off, on => compare order-disorder solutions with fully ordered and disordered states
-output_iteration_details   F    | T[rue] or F[alse], default F; output intermediate adaptive optimization information
+output_iteration_detai     F    | T[rue] or F[alse], default F; output intermediate adaptive optimization information
 output_iteration_G         F    | T[rue] or F[alse], T => print iteration G to monitor convergence during optimization
 pause_on_error              T   | T[rue] or F[alse], T => wait for user response after errors
 pc_perturbation           5d-3  | pseudo-compound composition perturbation for convexhull optimization
@@ -59,7 +59,7 @@ poisson_ratio        on   0.35  | value 1: on, off or all; value 2: 0->0.5; pois
 poisson_test               F    | T[rue] or F[alse], default is F, T => use poisson ratio to check for valid results
 proportions               vol   | vol or wt; phase proportions
 pseudocompound_file        F    | echo static pseudocompound compositions to my_project_pseudocompound_list.txt
-reach_increment_switch     on   | all, on, off; default is on; all consumes more resources
+reach_increment_switch     off   | all, on, off; default is on; all consumes more resources
 reaction_format        minimum  | minimum, full, stoich, S+V, or everything
 reaction_list             off   | on or off
 refinement_points_II        5   | > 0, # of metstable refinement points retained during 2nd phase of adaptive minimization
@@ -81,5 +81,6 @@ variance                  1 99  | 1->99; exploratory and autorefine
 vrh/hs_weighting           0.5  | 0->1, weighting factor for the stiff average in VRH/HS averaging (see bounds)
 x_nodes                   40 60 | exploratory and autorefine (grid parameters keyword group)
 y_nodes                   40 60 | exploratory and autorefine (grid parameters keyword group)
+zonkabbabble
 zero_mode                 1e-6  | 0->1
 zero_bulk                 1e-6  | 0->1

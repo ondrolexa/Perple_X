@@ -348,21 +348,39 @@ c                                 find node associated with condition
       res = var(1)-vmn(1)
       j = int(res/dvr(1))
       res = res - j*dvr(1)
+c                                 modified for negative dvr possibility
+c                                 nov 12, 2017. JADC
+      if (dvr(1).gt.0) then
+c                                 positive number line
+         if (res.lt.0d0) then
+            left = .true.
+         else 
+            left = .false.
+         end if 
 
-      if (res.lt.0d0) then
-         left = .true.
-      else 
-         left = .false.
-      end if 
+         if (res.gt.0.5d0*dvr(1)) then
+            j = j + 1
+            left = .true.
+         end if
 
-      if (res.gt.0.5d0*dvr(1)) then
-         j = j + 1
-         left = .true.
+      else
+c                                 negative number line 
+         if (res.lt.0d0) then
+            left = .false.
+         else 
+            left = .true.
+         end if 
+
+         if (res.lt.0.5d0*dvr(1)) then
+            j = j + 1
+            left = .true.
+         end if
+
       end if 
 
       j = j + 1
-       
-      end 
+
+      end
 
       subroutine amiin2 (i,j)
 c----------------------------------------------------------------------
@@ -3767,11 +3785,11 @@ c                                 multi prop options, only allowed as
 c                                 single choices.
             kop(1) = lop
             kcx(1) = icx
+            kfl(1) = lflu
 c                                 assign property names
 c                                 lop = 25 -> all mode names are assigned above
             if (lop.eq.36) then 
 
-               kfl(1) = lflu
 c                                 "all" prop option
                mprop = i8 + 3
 c                                 basic props
@@ -3792,8 +3810,6 @@ c                                 chemical potentials, lop = 23
                end do 
 
             else if (lop.eq.38) then 
-
-               kfl(1) = lflu
 c                                 "custom" prop option, kop
 c                                 pointer is offset because 
 c                                 kop(1) = 38
@@ -3911,13 +3927,13 @@ c                                 10-12
 c                                 13-15
      *      'alpha,1/K     ','beta,1/bar    ','S,J/K/mol     ',
 c                                 16-18
-     *      'n,mol         ','N,g           ','Ks_T,bar/K    ',
+     *      'n,mol         ','N,g           ','Ks_{T},bar/K  ',
 c                                 19-21
-     *      'Gs_T,bar/K    ','Ks_P          ','Gs_P          ',
+     *      'Gs_{T},bar/K  ','Ks_{P}        ','Gs_P          ',
 c                                 22-24
-     *      'v0_T          ','vp_T          ','vs_T          ',
+     *      'v0_{T}        ','vp_{T}        ','vs_{T}        ',
 c                                 25-27
-     *      'v0_P          ','vp_P          ','vs_P          ',
+     *      'v0_{P}        ','vp_P          ','vs_{P}        ',
 c                                 28
      *      'cp/cv         ',
 c                                 29-31
@@ -3946,35 +3962,35 @@ c                                 make property name
       if (lop.eq.6) then
 c                                 wt% or mol component icx
          if (lopt(23)) then
-            write (dname(jprop),'(a,a)') cname(icx),',wt%     '
+            dname(jprop) = cname(icx)//',wt%     '
          else 
-            write (dname(jprop),'(a,a)') cname(icx),',mol     '
+            dname(jprop) = cname(icx)//',mol     '
          end if
 
       else if (lop.eq.7) then
 c                                 mode of a phase
          if (iopt(3).eq.0) then 
 c                                 vol%
-            write (dname(jprop),'(a,a)') pname,',vo%'
+            dname(jprop) = pname//',vo%'
 
          else if (iopt(3).eq.1) then 
 c                                 wt%
-            write (dname(jprop),'(a,a)') pname,',wt%'
+            dname(jprop) = pname//',wt%'
 
          else  
 c                                 mol%
-            write (dname(jprop),'(a,a)') pname,',mo%'
+            dname(jprop) = pname//',mo%'
 
          end if 
 
       else if (lop.eq.8) then 
 c                                phase composition
-          write (dname(jprop),'(a,i1,a,a)') 'C',komp,pname
-          write (*,1000) dname(jprop)
+        write (dname(jprop),'(a,i1,a)') 'C_{',komp,pname//'}'
+        write (*,1000) dname(jprop)
 
       else if (lop.eq.23) then 
 c                                chemical potential of a component
-         write (dname(jprop),'(a,a,a)') 'mu_',cname(icx),',J/mol'
+        dname(jprop) = 'mu_{'//cname(icx)//'},J/mol'
 
       else if (lop.eq.36) then 
 c                                allprp option, lop points directly
@@ -3985,15 +4001,15 @@ c                                to prmame
 c                                extent of a phase
          if (iopt(3).eq.0) then 
 c                                volume
-            write (dname(jprop),'(a,a)') pname,',m3 '
+            dname(jprop) = pname//',m3 '
 
          else if (iopt(3).eq.1) then 
 c                                 mass
-            write (dname(jprop),'(a,a)') pname,',kg '
+            dname(jprop) = pname//',kg '
 
          else  
 c                                 mol
-            write (dname(jprop),'(a,a)') pname,',mol'
+            dname(jprop) = pname//',mol'
 
          end if   
 
@@ -4211,16 +4227,16 @@ c----------------------------------------------------------------
       common/ cst8  /names(k1)
 
       save spec 
-      data spec/'pH-neutral_pH','pH','error_pH','permittivity','I,m',
+      data spec/'pH-pH_0','pH','error_pH','permittivity','I,m',
      *          'tot_solute_m'/
 c----------------------------------------------------------------------
 c                                 bulk composition, wt% or mol 
       do i = 1, icp 
 
          if (lopt(23)) then
-            write (dname(i),'(a,a)') cname(i),',wt%     '
+            dname(i) = cname(i)//',wt%     '
          else 
-            write (dname(i),'(a,a)') cname(i),',mol     '
+            dname(i) = cname(i)//',mol     '
          end if
 
          call unblnk(dname(i))  
@@ -4235,10 +4251,10 @@ c                                 solvent composition, mol or molal
 
          if (lopt(26)) then
 c                                 mole fraction
-            write (dname(iprop),'(a,a)') 'y_',names(jnd(i))
+            dname(iprop) = 'y_{'//names(jnd(i))//'}'
          else 
 c                                 molality
-            write (dname(iprop),'(a,a)') 'm_',names(jnd(i))
+            dname(iprop) = 'm_{'//names(jnd(i))//'}'
          end if  
 
          call unblnk(dname(iprop))   
@@ -4251,10 +4267,10 @@ c                                 solute composition, mol or molal
 
          if (lopt(27)) then
 c                                 mole fraction
-            write (dname(iprop),'(a,a)') 'm_',aqnam(i)
+            dname(iprop) = 'm_{'//aqnam(i)//'}'
          else 
 c                                 molality
-            write (dname(iprop),'(a,a)') 'y_',aqnam(i)
+            dname(iprop) = 'y_{'//aqnam(i)//'}'
          end if  
 
          call unblnk(dname(iprop))   

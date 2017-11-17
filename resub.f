@@ -16,7 +16,7 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer liw,lw,k,idead,inc,kphct
+      integer i,liw,lw,k,idead,inc,lphct
 
       parameter (liw=2*k1+3,lw=2*(k5+1)**2+7*k1+5*k5)  
 
@@ -32,7 +32,10 @@ c                                 options from perplex_option.dat
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       integer hcp,idv
-      common/ cst52  /hcp,idv(k7)  
+      common/ cst52  /hcp,idv(k7)
+
+      integer ipoint,kphct,imyn
+      common/ cst60 /ipoint,kphct,imyn
 
       double precision ctot
       common/ cst3  /ctot(k1)
@@ -66,6 +69,9 @@ c                                 solution model counter
       integer tphct, jpt
       double precision g2, cp2, c2tot
       common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),tphct,jpt
+
+      integer hkp,mkp
+      common/ cst72 /hkp(k21),mkp(k19)
 
       integer idegen, idg(k5), jcp, jin(k5)
       common/ cst315 /idegen, idg, jcp, jin 
@@ -128,9 +134,9 @@ c                                 final processing, .true. indicates static
          call rebulk (.true.)
 
       else
-c                                 save kphct to recover static solution if
+c                                 save lphct to recover static solution if
 c                                 no refinement 
-         kphct = jphct 
+         lphct = jphct 
 c                                 find discretization points
 c                                 for refinement
 
@@ -141,6 +147,10 @@ c                                 final processing, .true. indicates static
             call rebulk (.true.)
 
          else
+c                                 initialize refinement point pointers
+            do i = 1, ipoint
+               hkp(i) = 0 
+            end do 
 c                                 reoptimize with refinement
             call reopt (idead)
 c                                 final processing, .false. indicates dynamic
@@ -148,7 +158,7 @@ c                                 final processing, .false. indicates dynamic
                call rebulk (.false.)
             else if (idead.eq.-1) then
 c                                 hail mary
-               jphct = kphct
+               jphct = lphct
                idead = 0
 
                call yclos0 (x,is,jphct) 
@@ -227,6 +237,9 @@ c                                 adaptive x(i,j) coordinates
       integer ipoint,kphct,imyn
       common/ cst60 /ipoint,kphct,imyn
 
+      integer jpoint, jstct
+      common/ cxt60 /jpoint,jstct
+
       integer npt,jdv
       double precision cptot,ctotal
       common/ cst78 /cptot(k19),ctotal,jdv(k19),npt
@@ -260,11 +273,23 @@ c                                 first iteration
          id = jdv(i) + inc
 
          refine = .false.
+
+         if (id.le.ipoint) then 
+            if (ikp(id).gt.0) then 
+               if (ksmod(ikp(id)).eq.39) then 
+c                                 associate it with a solution refinement point,
+c                                 this could be general, but then resub needs a
+c                                 routine to recover endmember compositions
+                  hkp(jdv(i)) = i
+                  refine = .true.
+               end if 
+            end if
+         end if 
 c                                 if its a compound check if it's a generic fluid 
 c                                 model:
-         if (id.le.ipoint.and.ikp(id).gt.0d0) then
-            if (ksmod(ikp(id)).eq.39) refine = .true.
-         end if
+c         if (id.le.ipoint.and.ikp(id).gt.0d0) then
+c            if (ksmod(ikp(id)).eq.39) refine = .true.
+c         end if
 c                                 the point is a pseudocompound, refine it
          if (id.gt.ipoint.or.refine) then
 
@@ -334,8 +359,21 @@ c                                 generate new pseudocompounds
          do i = 1, npt
 
             ids = lkp(i)
-c                                 the point is a pseudocompound 
-            if (ids.gt.0)
+            refine = .false.
+
+            if (ids.lt.0) then 
+               if (ikp(-ids).gt.0) then 
+                  if (ksmod(ikp(-ids)).eq.39) then 
+c                                 associate it with a solution refinement point,
+c                                 this could be general, but then resub needs a
+c                                 routine to recover endmember compositions
+                     ids = ikp(-ids)
+                     refine = .true.
+                  end if 
+               end if
+            end if 
+c                                 a refinement point:
+            if (ids.gt.0.or.refine)
      *         call resub (mkp(i),i,ids,iref,iter,first,wad1,wad2)
 c                                 reset jdv in case of exit, there 
 c                                 doesn't seem to be an exit possible here.
@@ -666,8 +704,30 @@ c                                 a solute cpd
                kcoct = kcoct + mcoor(ids)
 
             end if 
+c                                  hydronium 
+            call aqlagd (1,bad,.false.,0)
 
-            call aqlagd (1,bad,.false.)
+            if (bad) then
+
+               jphct = jphct - 1
+               jcoct = kcoct - mcoor(ids)
+c DEBUG DEBUG DANGER DANGER commented cycle
+c               cycle
+
+            else
+ 
+               quack(jphct) = .false.
+
+            end if
+c DEBUG DEBUG DANGER DANGER 
+         jphct = jphct + 1
+         if (jphct.gt.k21) call error (58,x(1,1),k21,'resub')
+         jkp(jphct) = ids
+         hkp(jphct) = jd
+         jcoor(jphct) = jcoct - 1
+         kcoct = jcoct + mcoor(ids)
+c                                  hydroxyl 
+            call aqlagd (1,bad,.false.,1)
 
             if (bad) then
 
@@ -682,7 +742,7 @@ c                                 a solute cpd
             end if
 c                                 i am pretty sure this is redundant.
             wad2 = .true.
-            wad1 = .true.
+            wad1 = .false.
 
             if (wad1.and.wad2) then
 c                                 make water, ha ha
@@ -708,7 +768,7 @@ c                                 than one water compound.
 
                kcoct = kcoct + mcoor(ids)
 
-               call aqlagd (1,bad,.false.)
+               call aqlagd (1,bad,.false.,0)
 
                if (bad) then
 
@@ -1027,6 +1087,9 @@ c                                 x coordinate description
       integer ipoint,kphct,imyn
       common/ cst60 /ipoint,kphct,imyn
 
+      integer jpoint, jstct
+      common/ cxt60 /jpoint,jstct
+
       integer npt,jdv
       double precision cptot,ctotal
       common/ cst78 /cptot(k19),ctotal,jdv(k19),npt
@@ -1037,8 +1100,8 @@ c----------------------------------------------------------------------
 
          id = jdv(i)
 
-         if (id.lt.ipoint-(istct-1)) then 
-            lkp(i) = 0
+         if (id.lt.jpoint) then 
+            lkp(i) = -(id + jstct)
             cycle
          end if 
 
@@ -1327,6 +1390,11 @@ c-----------------------------------------------------------------------
 c                                first check if solution endmembers are
 c                                among the stable compounds:
       do i = 1, ntot
+c                                initialize kdsol, this was not done 
+c                                before nov 17, 2017; god only knows
+c                                how it worked...
+         kdsol(1,i) = 0
+c                                locate solution endmembers:
          if (kkp(i).lt.0) then 
             if (ikp(-kkp(i)).ne.0) then 
 c                                we have an endmember
@@ -1404,7 +1472,7 @@ c                                 total molality
 
                else
 c                                 impure solvent, get speciation
-                  call aqlagd (i,bad,.true.)
+                  call aqlagd (i,bad,.true.,0)
 
                end if
 
@@ -1801,7 +1869,8 @@ c                                 set xmn to prevent future warnings
                end if 
             end if 
 c                                 high limit:
-            if (x(i,j).gt.xhi(j,i,ids)) then
+c DEBUG DANGER DANGER
+            if (x(i,j).gt.xhi(j,i,ids).and.i.gt.0) then
                xhi(j,i,ids) = x(i,j)
 c                                 check if solution is at an unnatural limit
                if (x(i,j).lt.xmxo(ids,i,j).and.
@@ -2530,6 +2599,9 @@ c---------------------------------------------------------------------
       integer ipoint,kphct,imyn
       common/ cst60  /ipoint,kphct,imyn
 
+      integer jpoint, jstct
+      common/ cxt60 /jpoint,jstct
+
       integer tphct, jpt
       double precision g2, cp2, c2tot
       common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),tphct,jpt
@@ -2584,7 +2656,11 @@ c                                 jkp indicates which phase a point is associate
                cp2(j,i) = a(j,i)
             end do
 
-         end do 
+         end do
+c                                 locate last point in dynamic arrays and set increment
+c                                 to static array
+         jpoint = ipoint - inc
+         jstct = inc 
 
          ldt = icp + 1
          ldq = icp + 1
@@ -3596,5 +3672,128 @@ c                                 failed
 1000  format (/,'Iteration',4x,'G(J/mol)',7x,20(5x,a))
 1010  format (3x,i2,4x,f15.4,6x,20(i9,1x))
 1020  format (3x,i2,4x,'chemical potential back-calculation failed.')
+
+      end
+
+      subroutine meemum (bad)
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer i, idead
+
+      logical nodata, bad
+
+      integer itri(4),jtri(4),ijpt
+
+      double precision wt(3)
+
+      double precision v,tr,pr,r,ps
+      common/ cst5  /v(l2),tr,pr,r,ps
+
+      integer ipot,jv,iv
+      common / cst24 /ipot,jv(l2),iv(l2)
+
+      character*8 vname,xname
+      common/ csta2  /xname(k5),vname(l2)
+
+      character*5 cname
+      common/ csta4 /cname(k5)
+
+      integer jbulk
+      double precision cblk
+      common/ cst300 /cblk(k5),jbulk
+
+      double precision a,b,c
+      common/ cst313 /a(k5,k1),b(k5),c(k1)
+
+      logical gflu,aflu,fluid,shear,lflu,volume,rxn
+      common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume,rxn
+
+      integer npt,jdv
+      logical fulrnk
+      double precision cptot,ctotal
+      common/ cst78 /cptot(k19),ctotal,jdv(k19),npt,fulrnk
+
+      integer icomp,istct,iphct,icp
+      common/ cst6  /icomp,istct,iphct,icp
+
+      integer iam
+      common/ cst4 /iam
+c----------------------------------------------------------------------- 
+c                                 initialization
+      rxn = .false.
+c                                 normalize the composition vector, this 
+c                                 is necessary for reasons of stupidity (lpopt0). 
+      ctotal = 0d0
+
+      do i = 1, icp
+          ctotal = ctotal + cblk(i)
+      end do 
+
+      do i = 1, icp
+         b(i) = cblk(i)/ctotal
+      end do
+c                                 set dependent variables
+      call incdp0
+c                                 lpopt does the minimization and outputs
+c                                 the results to the print file.
+      call lpopt0 (idead)
+
+      if (idead.eq.0) then
+c                                 compute derivative properties
+         call getloc (itri,jtri,ijpt,wt,nodata)
+
+         bad = .false.
+
+      else 
+
+         bad = .true.
+
+      end if
+
+      end 
+
+      subroutine iniprp
+c----------------------------------------------------------------------
+c iniprp - read data files and initialization for meemum
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      logical first, output, err 
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      integer iemod,kmod
+      logical smod,pmod
+      double precision emod
+      common/ cst319 /emod(k15,k10),smod(h9),pmod(k10),iemod(k10),kmod
+c----------------------------------------------------------------------- 
+      first = .true.
+      output = .false.
+      err = .false.
+c                                 elastic modulii flag
+      kmod = 0 
+c                                 -------------------------------------------
+c                                 open statements for units n1-n5 and n9
+c                                 are in subroutine input1
+      call input1 (first,output,err)
+c                                 for meemum turn auto_refine OFF
+      iopt(6) = 0 
+c                                 read thermodynamic data on unit n2:
+      call input2 (first)
+c                                 allow reading of auto-refine data 
+      call setau1 (output)
+c                                 read data for solution phases on n9:
+      call input9 (first,output)
+c                                 call initlp to initialize arrays 
+c                                 for optimization.
+      call initlp     
 
       end

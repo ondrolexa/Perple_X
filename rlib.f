@@ -4715,11 +4715,15 @@ c                                 thermal part derivatives:
 
          dv = f1/df1
 
-         if (dabs(dv).gt.1d-2) dv = 1d-2*dv/dabs(dv)
+c         if (dabs(dv).gt.1d-2) dv = 1d-2*dv/dabs(dv)
+c                                 the above trap was probably to avoid negative 
+c                                 volume, but causes problems at super-earth pressure
+c                                 replaced below nov 17, 2017.
+         if (v - dv.lt.0d0) dv = v/2d0
 
          v = v - dv
 
-         if (v.le.0d0.or.itic.gt.100.or.dabs(f1).gt.1d40) then 
+         if (itic.gt.100.or.dabs(f1).gt.1d40) then 
             bad = .true.
             exit 
          else if (dabs(f1).lt.tol) then
@@ -12514,7 +12518,7 @@ c                                 format test line
 c                                 check version compatability
       if (.not.chksol(new)) call error (3,zt,im,new)
 
-      do 
+      do while (im.lt.isoct) 
 c                                 -------------------------------------
 c                                 read the solution name
          call rmodel (tname,tn1,tn2,bad)
@@ -12683,8 +12687,6 @@ c                                 indicate site_check_override and refine endmem
             jend(im,2) = icpct
 
          end if 
-
-         if (im.eq.isoct) exit 
 c                               read next solution
       end do 
 
@@ -15322,11 +15324,11 @@ c                                 1-ycum is the smallest fraction possible
             if (ycum.gt.1d0) then 
 c                                 inconsistent limits
                write (*,'(/,a,/)') '#########BOOM WACKA BOOM###########'
-               write (*,*) ids,ksmod(ids),lsite,k,i,mode
-               write (*,*) xmn
-               write (*,*) xmx
-               write (*,*) xnc
-               write (*,*) iy 
+               write (*,*) ycum,ids,ksmod(ids),lsite,k,i,mode
+               write (*,*) (xmx(1,j),j=1,jsp)
+               write (*,*) (xmn(1,j),j=1,jsp)
+               write (*,*) (xnc(1,j),j=1,jsp)
+               write (*,*) (iy(j),j=1,jsp)
                call warn (999,ycum,jsp,'cartes')
 
                cycle
@@ -18465,7 +18467,7 @@ c-----------------------------------------------------------------------
 
       end 
 
-      subroutine aqlagd (id,bad,recalc)
+      subroutine aqlagd (id,bad,recalc,which)
 c-----------------------------------------------------------------------
 c given chemical potentials solve for rock dominated aqueous speciation
 c configured to be called from resub with output to the (molar normalized)
@@ -18476,9 +18478,9 @@ c-----------------------------------------------------------------------
  
       include 'perplex_parameters.h'
 
-      integer i, j, id, badct
+      integer i, j, id, badct, which
 
-      logical bad, recalc, lmus
+      logical bad, recalc, lmus, switch 
 
       double precision mo(l9), blk(k5), gamm0, totm, g0(l9), lmu(k8),
      *                 tmu(k8),is, gso(nsp), lnkw, gtot, smo, 
@@ -18618,23 +18620,30 @@ c                                 the absent component
          end if 
 
          call slvnt3 (gso)
-
-         if (epsln.lt.1d0) then
+c DEBUG 
+c         if (epsln.lt.1d0) then
 c                                 eos is predicting vapor phase 
 c                                 solvent densities
 c            bad = .true.
 c            return
 
-            write (*,*) 'b'
-            pause
+c            write (*,*) 'b'
+c            pause
             
-         end if 
+c         end if 
 
          bad = .false.
 
       end if
 c                                 iterate on speciation
-      ion = ioh
+      ion = ihy
+      switch = .false.
+
+      if (which.eq.0) then 
+         ion = ihy
+      else 
+         ion = ioh
+      end if
 
       do i = 1, 2
 c                                 first try ioh, if it fails
@@ -18642,7 +18651,14 @@ c                                 first try ioh, if it fails
 
          if (.not.bad) exit
 
-         ion = ihy
+c DEBUG DEBUG DANGER DANGER 
+         switch = .true.
+
+         if (which.eq.0) then 
+            ion = ioh
+         else 
+            ion = ihy
+         end if 
 
       end do
 
@@ -18657,6 +18673,10 @@ c                                 first try ioh, if it fails
          if (badct.eq.10) call warn (49,0d0,99,'AQLAGD')
  
          return
+
+      else if (switch) then 
+c DEBUG DEBUG DANGER DANGER 
+         write (*,*) 'switched to:',ion,'which/ihy are ',which,ihy
 
       end if
 c                                 back calculated bulk composition
@@ -18676,7 +18696,6 @@ c                                 total g
          gtot = gtot + mo(i) * (g0(i) + rt*dlog(mo(i)*gamm0**q2(i)))
          else 
          gtot = gtot + mo(i) * (g0(i) + rt*dlog(mo(i) ))
-c     *                       * (1+mo(i)**nexp) ) )
          end if
 c                                  total molality
          smo = smo + mo(i)
@@ -18752,6 +18771,8 @@ c                                 used by resub, g per mole of components
 c                                 bulk composition per mole of components
             cp2(j,jphct) = blk(j)/totm
          end do
+c DEBUG DEBUG DANGER
+         cp2(k5,jphct) = ion 
 c                                c2tot is the number of moles of the 
 c                                components in a solution with 1 mole of
 c                                species, this is needed for consistent
@@ -18979,7 +19000,7 @@ c                                  initialize iteration loop
       lnkw = (gso(ns) - g0(ioh))/rt
 
       if (dabs(lnkw).gt.5d1.or.epsln.lt.3d0) then
-         write (*,*) 'a'
+c         write (*,*) 'a'
 
 c         bad = .true.
 c         return
@@ -19345,6 +19366,9 @@ c----------------------------------------------------------------------
       logical fulrnk
       double precision cptot,ctotal
       common/ cst78 /cptot(k19),ctotal,jdv(k19),npt,fulrnk
+c DEBUG DEBUG DANGER DANGER 
+      integer ksmod, ksite, kmsol, knsp
+      common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
 c----------------------------------------------------------------------
       call getnam (name,jkp)
 
@@ -19356,6 +19380,10 @@ c                                 static
 c                                 dynamic 
          write (*,1000) id,hkp,jkp,name,amt,lambda,g2(id),
      *                  (cp2(i,id),i=1,jbulk)
+c DEBUG DEBUG DANGER DANGER 
+         if (jkp.gt.0) then 
+            if (ksmod(jkp).eq.39) write (*,*) 'ion = ',cp2(k5,id)
+         end if 
       end if 
 1000  format (i6,1x,i3,1x,i4,1x,a,20(g14.6,1x))
 

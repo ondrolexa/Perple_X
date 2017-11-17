@@ -15,15 +15,13 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i,ier,idead
+      integer i, ier
 
-      logical nodata, bulk
+      logical bulk, bad
 
       character amount*6, yes*1
 
-      integer itri(4),jtri(4),ijpt
-
-      double precision wt(3), num
+      double precision num
 
       integer iwt
       common/ cst209 /iwt
@@ -74,8 +72,7 @@ c                                 iam is a flag indicating the Perple_X program
       iam = 2
 c                                 version info
       call vrsion (6)
-c                                 initialization, read files etc. 
-      rxn = .false.
+c                                 initialization, read files etc.
       call iniprp
 
       write (*,1000) 
@@ -126,28 +123,13 @@ c                                 convert mass to molar
                end do 
 
             end if
-c                                 normalize the composition vector, this 
-c                                 is necessary for reasons of stupidity (lpopt0). 
-            ctotal = 0d0
-
-            do i = 1, icp
-               ctotal = ctotal + cblk(i)
-            end do 
-
-            do i = 1, icp
-               b(i) = cblk(i)/ctotal
-            end do
 
          end if 
-c                                 set dependent variables
-         call incdp0
-c                                 lpopt does the minimization and outputs
+c                                 meemum does the minimization and outputs
 c                                 the results to the print file.
-         call lpopt0 (idead)
+         call meemum (bad)
 
-         if (idead.eq.0) then
-c                                 compute derivative properties
-            call getloc (itri,jtri,ijpt,wt,nodata)
+         if (.not.bad) then
 c                                 print summary to LUN 6
             call calpr0 (6)
 
@@ -171,46 +153,3 @@ c                                 print summary to LUN 6
 1070  format (/,'Enter (zeroes to quit) ',7(a,1x))
 
       end 
-    
-      subroutine iniprp
-c----------------------------------------------------------------------
-c iniprp - read data files and initialization for meemum
-c----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      logical first, output, err 
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
-      integer iemod,kmod
-      logical smod,pmod
-      double precision emod
-      common/ cst319 /emod(k15,k10),smod(h9),pmod(k10),iemod(k10),kmod
-c----------------------------------------------------------------------- 
-      first = .true.
-      output = .false.
-      err = .false.
-c                                 elastic modulii flag
-      kmod = 0 
-c                                 -------------------------------------------
-c                                 open statements for units n1-n5 and n9
-c                                 are in subroutine input1
-      call input1 (first,output,err)
-c                                 for meemum turn auto_refine OFF
-      iopt(6) = 0 
-c                                 read thermodynamic data on unit n2:
-      call input2 (first)
-c                                 allow reading of auto-refine data 
-      call setau1 (output)
-c                                 read data for solution phases on n9:
-      call input9 (first,output)
-c                                 call initlp to initialize arrays 
-c                                 for optimization.
-      call initlp     
-
-      end

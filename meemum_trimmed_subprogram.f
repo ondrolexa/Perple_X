@@ -8,9 +8,9 @@ c this is a main program to illustrate how meemum can be called as a subroutine
 c                                 some local variables:
       logical bad
 
-      integer i, j, l, ier
+      integer i, l
 
-      character cprop*18, amount*6
+      character cprop*18
 c----------------------------------------------------------------------
 c                                 these common blocks are necessary to 
 c                                 communicate between the MAIN program
@@ -102,51 +102,45 @@ c----------------------------------------------------------------------
       iam = 2
 c                                 initialization, read files etc. 
       call iniprp
-c                                 iwt is set by input, it is only used below to determine
-c                                 whether to convert weight compositions to molar. the 
-c                                 computations are done solely in molar units. 
-      if (iwt.eq.1) then 
-         amount = 'weight'
-      else 
-         amount = 'molar '
-      end if
-c                                 computational loop
-      do 
-c                                 get physical conditions
-         write (*,'(10a)') 'Enter ',(vname(jv(i)), i = 1, ipot)
-         read (*,*,iostat=ier) (v(jv(i)), i = 1, ipot)
-c                                 get chemical composition
-         do 
-             write (*,1060) amount
-             write (*,'(12(a,1x))') (cname(i),i=1,jbulk)
-c             read (*,*,iostat=ier) (cblk(i),i=1,jbulk)
-             if (ier.eq.0) exit
-         end do  
-         
-         if (iwt.eq.1) then 
+
+c      v(1) = p_bar 
+c      v(2) = T_K
+
+      v(1) = 9000
+      v(2) = 1000
+
+c      cblk(1:jbulk) = components in mass
+
+      cblk(9) = 45.0000    
+      cblk(2) =  1.10000      
+      cblk(3) =  15.2600     
+      cblk(4) =  9.84000    
+      cblk(5) = 6.54000     
+      cblk(6) = 12.6600     
+      cblk(7) = 2.03000      
+      cblk(8) = 0.550000     
+      cblk(1) = 2.63000   
+      cblk(10) = 2.90000   
+      cblk(11) = 0.01 
 c                                 convert mass to molar composition
-            do i = 1, jbulk
-c               cblk(i) = cblk(i)/atwt(i)
-            end do 
-
-         end if
+      do i = 1, jbulk
+         cblk(i) = cblk(i)/atwt(i)
+      end do 
 c                                 do the optimization
-         call meemum (bad)
+      call meemum (bad)
 
-         if (bad) then
-            write (*,*) 'optimization failed'
-            cycle
-         end if 
+      if (bad) write (*,*) 'optimization failed'
+
 c                                 do some output
-         if (iopt(2).eq.0) then 
-            cprop = 'molar  proportions'
-         else
-            cprop = 'weight percentages'
-         end if
+      if (iopt(2).eq.0) then 
+         cprop = 'molar  proportions'
+      else
+         cprop = 'weight percentages'
+      end if
 
-         write (*,1020) cprop, (cname(i), i = 1, jbulk)
+       write (*,1020) cprop, (cname(i), i = 1, jbulk)
 c                           phase proportions and compositions
-         do i = 1, ntot
+       do i = 1, ntot
 
             write (*,'(1x,a,3x,3(f6.2,4x),g9.3,1x,20(f8.5,1x))') 
      *                      pname(i), 
@@ -160,21 +154,9 @@ c                                 mol
      *                      props(16,i),
 c                                 wieght or molar composition
      *                      (pcomp(l,i), l = 1, jbulk)
-         end do
-c                           phase/system elementary properties
-         do i = 1, ntot
-c                                 N, G, S, V, Cp, alpha, beta, density
-            write (*,1170) pname(i),props(17,i),int(props(11,i)),
-     *                      props(15,i),
-     *                      props(1,i),(props(j,i),j=12,14),props(28,i),
-     *                      props(10,i)
-         end do
-
-         write (*,1170) 'System        ',psys(17),int(psys(11)),
-     *                                   psys(15),psys(1),
-     *                               (psys(j),j=12,14),psys(28),psys(10)
-
-      end do 
+      end do
+c                           phase density is props(10,1:ntot)
+c                           system density is psys(10)
 
 1020  format (/,'Phase Compositions (',a,'):',
      *        /,19x,'wt %',6x,'vol %',5x,'mol %',5x,'mol  ',

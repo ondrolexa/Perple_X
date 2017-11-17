@@ -19,7 +19,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a)') 
-     *      'Perple_X version 6.8.0, source updated Nov 4, 2017.'
+     *      'Perple_X version 6.8.0, source updated Nov 17, 2017.'
 
       end
 
@@ -4676,6 +4676,7 @@ c----------------------------------------------------------------------
       character chars*1
       common/ cst51 /length,iblank,icom,chars(lchar)
 c----------------------------------------------------------------------
+
       do 
 
          read (*,'(a)') prject

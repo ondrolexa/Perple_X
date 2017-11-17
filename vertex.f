@@ -664,11 +664,11 @@ c                                 number of variables in table
       
       do j = 1, icp 
          write (dname(j),'(a14)') cname(j)
-         write (dname(j+icp1),'(a14)') 'cum_'//cname(j)
+         write (dname(j+icp1),'(a14)') 'cum_{'//cname(j)//'}'
       end do 
 
-      dname(icp1) = 'O2_def'
-      dname(2*icp1) = 'cum_O2_def'
+      dname(icp1) = 'O2_{def}'
+      dname(2*icp1) = 'cum_O2_{def}'
 
       lun = n0 + 100
 c                                 initialization for the top of
@@ -763,7 +763,7 @@ c                                 reset to 1000 g.
                lcomp(i,layer(k)) = lcomp(i,layer(k))
      *                           + gblk(k,i)/dfloat(irep(layer(k)))
             end do
-
+c DEBUG
             write (*,'(12(f10.3,1x))') dz,(gblk(k,i),i=1,icp)
 
          end do
@@ -1419,7 +1419,7 @@ c----------------------------------------------------------------------
       logical output
 
       integer kinc,jinc(l8),i,j,k,klast,kmax,kd,idead,jtic,jmin,
-     *        jmax,klev,klow
+     *        jmax,klev,klow,ltic 
 
       integer ipot,jv,iv1,iv2,iv3,iv4,iv5
       common/ cst24 /ipot,jv(l2),iv1,iv2,iv3,iv4,iv5
@@ -1473,7 +1473,10 @@ c                                initialize grid vars
       j = 1
       jmax = 1 
       jmin = 0
-      jtic = 0 
+      jtic = 0
+      ltic = 0 
+
+      write (*,'(/,a,/)') 'Starting optimization loop...'
 
       do while (j.le.loopy) 
 
@@ -1483,7 +1486,14 @@ c                                at end of loop), april 5, 2006. JADC
             call setvr0 (j,1)
             call lpopt (i,j,idead,output)
             jtic = jtic + 1
-         end if 
+c                                progress information
+            ltic = ltic + 1
+            if (ltic.eq.100) then 
+               write (*,'(i5,a)') jtic,' optimizations done...'
+               ltic = 0
+            end if
+
+         end if
 
          kd = iap(igrd(i,j))
 c                                jmax should always be the last known node
@@ -1565,11 +1575,13 @@ c                                must be > level 1
 10       j = j + kinc
 
          if (j.lt.jmin+1) then 
-            j = j - kinc 
+            j = j - kinc
             klev = klev + 1
             kinc = -jinc(klev)
             goto 10 
-         end if 
+         end if
+        
+
 
       end do 
 c                                 output graphics data

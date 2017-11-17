@@ -102,8 +102,8 @@ pssect: psect.o pscom.o pslib.o tlib.o rlib.o flib.o clib.o  dlib.o
 pt2curv: pt2curv.o tlib.o
 	$(COMP77) $(FFLAGS) $(FLINK) $@.o tlib.o -o $@
 
-vertex: vertex.o getxz1.o rlib.o tlib.o flib.o clib.o resub.o nlib.o
-	$(COMP77) $(FFLAGS) $(FLINK) $@.o getxz1.o rlib.o tlib.o flib.o clib.o resub.o nlib.o -o $@
+vertex: vertex.o getxz1.o rlib.o tlib.o flib.o clib.o resub.o nlib.o olib.o
+	$(COMP77) $(FFLAGS) $(FLINK) $@.o getxz1.o rlib.o tlib.o flib.o clib.o resub.o nlib.o olib.o -o $@
 
 werami: werami.o dumlib.o rlib.o tlib.o flib.o olib.o clib.o dlib.o
 	$(COMP77) $(FFLAGS) $(FLINK) $@.o dumlib.o rlib.o tlib.o flib.o olib.o clib.o dlib.o -o $@

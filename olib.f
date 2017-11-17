@@ -12,6 +12,8 @@ c----------------------------------------------------------------------
  
       character cprop*18, text*(lchar), tag*1, tag1*29
 
+      logical aqph
+
       integer i, j, k, l, m, lu, id, inc, ct
 
       double precision poiss, gcpd
@@ -181,6 +183,12 @@ c                                 species_ouput
          do i = 1, np 
 
             id = kkp(i) 
+c                                 check for aqueous phase output
+            aqph = .false.
+
+            if (ksmod(id).eq.39.and.lopt(32)) then 
+               if (caq(i,na1).gt.0d0) aqph = .true.
+            end if
 
             if (ksmod(id).eq.20.and.spct(id).gt.5) then
 
@@ -196,7 +204,7 @@ c                                 species_ouput
 
             end if 
 
-            if (ksmod(id).eq.39.and.lopt(32).and.caq(i,na1).gt.0d0) then
+            if (aqph) then
             
                ct = nat
                inc = 5
@@ -218,8 +226,7 @@ c                                 forward aqueous model
                   write (text,'(20(a,a,g12.5,a))')
      *                  (spnams(j,id),': ',ysp(j,i),', ', j = k, l)
 
-               else if (ksmod(id).eq.39.and.lopt(32)
-     *                                 .and.caq(i,na1).gt.0d0) then
+               else if (aqph) then
 
                   m = 1 
 

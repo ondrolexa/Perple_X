@@ -2080,6 +2080,14 @@ c                                 the id index on cp2 is intentional.
                   cp3(j,jd) = cp2(j,id)*c2tot(id)
                end do
 
+               if (cp2(k5,id).gt.1d1) then
+                  write (*,*) 'BAZORK'
+                  write (*,*) 'BAZORK'
+                  write (*,*) 'hydroxyl solution stable ',cp2(k5,id)
+                  write (*,*) 'BAZORK'
+                  write (*,*) 'BAZORK'
+               end if 
+
             else
 c                                  WERAMI:
                if (caq(jd,na1).eq.0d0) then
