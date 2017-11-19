@@ -18772,7 +18772,7 @@ c                                 bulk composition per mole of components
             cp2(j,jphct) = blk(j)/totm
          end do
 c DEBUG DEBUG DANGER
-         cp2(k5,jphct) = ion 
+c         cp2(k5,jphct) = ion 
 c                                c2tot is the number of moles of the 
 c                                components in a solution with 1 mole of
 c                                species, this is needed for consistent
@@ -19382,7 +19382,7 @@ c                                 dynamic
      *                  (cp2(i,id),i=1,jbulk)
 c DEBUG DEBUG DANGER DANGER 
          if (jkp.gt.0) then 
-            if (ksmod(jkp).eq.39) write (*,*) 'ion = ',cp2(k5,id)
+c            if (ksmod(jkp).eq.39) write (*,*) 'ion = ',cp2(k5,id)
          end if 
       end if 
 1000  format (i6,1x,i3,1x,i4,1x,a,20(g14.6,1x))

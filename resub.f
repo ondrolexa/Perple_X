@@ -2328,6 +2328,7 @@ c                                than the previous composition
 c                                of the solution. check if it's 
 c                                one of the stable solutions                               
             do j = 1, nsol
+
                 if (iam.eq.idsol(j)) then
 c                                it's already stable, only accept
 c                                it if its further than the solvus
@@ -3044,8 +3045,7 @@ c                                 solution.
          stable(i) = .false.
       end do 
 
-      npt = 0 
-      kpt = 0
+      npt = 0
 
       do i = 1, jphct
 c                                 id indicates the original refinement
@@ -3082,7 +3082,7 @@ c                                 get mu's for lagged speciation
       call getmus (iter,iter-1,.false.)
 
       if (.not.quit) then
-c                                 if not done iterating, add metastable solutions
+c                                 if not done iterating:
          kpt = 0
 c                                 make a list of the solutions
          do i = 1, opt
