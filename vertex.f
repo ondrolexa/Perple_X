@@ -516,7 +516,7 @@ c-----------------------------------------------------------------------
       common/ cxt18a /vnm(l3)  
 
       integer inv
-      character dname*14, title*162
+      character dname*20, title*162
       common/ cst76 /inv(i11),dname(i11),title
 
       character*14 tname
@@ -663,8 +663,8 @@ c                                 number of variables in table
       iprop = 2*icp1
       
       do j = 1, icp 
-         write (dname(j),'(a14)') cname(j)
-         write (dname(j+icp1),'(a14)') 'cum_{'//cname(j)//'}'
+         write (dname(j),'(a20)') cname(j)
+         write (dname(j+icp1),'(a20)') 'cum_{'//cname(j)//'}'
       end do 
 
       dname(icp1) = 'O2_{def}'

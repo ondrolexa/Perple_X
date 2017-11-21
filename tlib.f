@@ -1658,8 +1658,13 @@ c                                 find end of keyword
       iend = ibeg + 1
       iend = iscan (iend,lchar,' ') - 1
 
-c      if (iend-ibeg.gt.21) call error (77,0d0,ier,'invalid keyword in '
-c     *   //'REDCD1, keywords must be < 23 characters.')
+      if (iend-ibeg.gt.21) then
+         call warn (99,0d0,ier,'invalid keyword in '
+     *   //'REDCD1, keywords must be < 23 characters.')
+         ier = 1
+         return 
+      end if 
+
       if (iend-ibeg.gt.21) then
          lend = ibeg + 21
       else 

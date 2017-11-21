@@ -19131,7 +19131,7 @@ c----------------------------------------------------------------------
       character*100 n6name, n5name, vname(l3)*14
 
       integer inv
-      character dname*14, title*162
+      character dname*20, title*162
       common/ cst76 /inv(i11),dname(i11),title
 
       character*14 tname
@@ -19201,7 +19201,7 @@ c                                 output the dependent variable counter and list
       if (kcx(1).eq.999) then 
 c                                  phemgp file
          write (n,*) ivar + iprop + 2
-         write (n,'(200(a14,1x))') 'Name','Counter',
+         write (n,'(200(a20,1x))') 'Name','Counter',
      *                             (vname(i), i = 1, ivar),
      *                             (dname(i),i = 1, iprop)
 
@@ -19212,12 +19212,12 @@ c                                  tab file
             if (.not.lopt(29)) then
 c                                  with pseudo-dependent variables 
                write (n,*) ivar + iprop 
-               write (n,'(200(a14,1x))') (vname(i), i = 1,ivar),
+               write (n,'(200(a20,1x))') (vname(i), i = 1,ivar),
      *                                   (dname(i), i = 1,iprop)
             else 
                write (n,*) ivar + iprop + 5
 
-               write (n,'(200(a14,1x))') (vname(i), i = 1,ivar),
+               write (n,'(200(a20,1x))') (vname(i), i = 1,ivar),
      *                                   (dname(i), i = 1,iprop),
      *         'y_SiO2','y_SiO','y_O','y_O2','y_Si'
             end if 
@@ -19225,7 +19225,7 @@ c                                  with pseudo-dependent variables
          else 
 c                                  terse format
             write (n,*) iprop 
-            write (n,'(200(a14,1x))') (dname(i), i = 1,iprop)
+            write (n,'(200(a20,1x))') (dname(i), i = 1,iprop)
           
          end if 
 
