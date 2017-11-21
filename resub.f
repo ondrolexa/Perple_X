@@ -712,27 +712,6 @@ c                                  hydronium
                jphct = jphct - 1
                jcoct = kcoct - mcoor(ids)
 c DEBUG DEBUG DANGER DANGER commented cycle
-c               cycle
-
-            else
- 
-               quack(jphct) = .false.
-
-            end if
-c DEBUG DEBUG DANGER DANGER 
-         jphct = jphct + 1
-         if (jphct.gt.k21) call error (58,x(1,1),k21,'resub')
-         jkp(jphct) = ids
-         hkp(jphct) = jd
-         jcoor(jphct) = jcoct - 1
-         kcoct = jcoct + mcoor(ids)
-c                                  hydroxyl 
-            call aqlagd (1,bad,.false.,1)
-
-            if (bad) then
-
-               jphct = jphct - 1
-               jcoct = kcoct - mcoor(ids)
                cycle
 
             else
@@ -740,49 +719,27 @@ c                                  hydroxyl
                quack(jphct) = .false.
 
             end if
-c                                 i am pretty sure this is redundant.
-            wad2 = .true.
-            wad1 = .false.
+c DEBUG DEBUG DANGER DANGER 
+c         jphct = jphct + 1
+c         if (jphct.gt.k21) call error (58,x(1,1),k21,'resub')
+c         jkp(jphct) = ids
+c         hkp(jphct) = jd
+c         jcoor(jphct) = jcoct - 1
+c         kcoct = jcoct + mcoor(ids)
+cc                                  hydroxyl 
+c            call aqlagd (1,bad,.false.,1)
 
-            if (wad1.and.wad2) then
-c                                 make water, ha ha
-c                                 wad1 is set to true by reopt if pure water
-c                                 is a compound, wad2 is initialized to true
-c                                 in reopt and set false here to prevent more
-c                                 than one water compound.
-               wad2 = .false.
+c            if (bad) then
 
-               jphct = jphct + 1
-               if (jphct.gt.k21) call error (58,x(1,1),k21,'resub')
-               jkp(jphct) = ids
-               hkp(jphct) = jd
-               jcoor(jphct) = jcoct - 1
+c               jphct = jphct - 1
+c               jcoct = kcoct - mcoor(ids)
+c               cycle
 
-               do j = 1, mcoor(ids)
-                  zcoor(jcoct) = 0d0
-                  y(j) = 0d0
-                  jcoct = jcoct + 1
-               end do 
-
-               y(ns) = 1d0
-
-               kcoct = kcoct + mcoor(ids)
-
-               call aqlagd (1,bad,.false.,0)
-
-               if (bad) then
-
-                  jphct = jphct - 1
-                  jcoct = kcoct - mcoor(ids)
-                  cycle
-
-               else
+c            else
  
-                  quack(jphct) = .false.
+c               quack(jphct) = .false.
 
-               end if
-
-            end if 
+c            end if
 
          else 
 c                                 call gsol to get g of the solution, gsol also
@@ -1493,8 +1450,10 @@ c                                 if match check for a solvus
                      if (solvs1(i,jdsol(j,idsol(j)),nkp(i))) cycle
                   else
 c                                  special solvus test based on solvent 
-c                                  speciation for lagged aq model. 
-                     if (solvs4(i,jdsol(j,idsol(j)))) cycle 
+c                                  speciation for lagged aq model.
+c DEBUG DANGER
+c                     if (solvs4(i,jdsol(j,idsol(j)))) cycle 
+                     cycle
                   end if 
 c                                 the pseudocompound matches a solution
 c                                 found earlier.

@@ -166,7 +166,7 @@ c---------------------------------------------------------------------
       common/ dim1  /zt(nx,ny)
 
       integer inv
-      character dname*20, title*162
+      character dname*14, title*162
       common/ cst76 /inv(i11),dname(i11),title
 
       double precision zmin,zmax
@@ -325,7 +325,7 @@ c---------------------------------------------------------------------
       common/ dim   /z(nx,ny),ix,iy,mvar
 
       integer inv
-      character dname*20, title*162
+      character dname*14, title*162
       common/ cst76 /inv(i11),dname(i11),title
 
       logical spline, half, tenth, grid, fill, label

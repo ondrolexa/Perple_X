@@ -701,7 +701,7 @@ c----------------------------------------------------------------------
       common/ cxt18a /vnm(l3)  
 
       integer inv
-      character dname*20, title*162
+      character dname*14, title*162
       common/ cst76 /inv(i11),dname(i11),title
 
       integer ix,iy,mvar

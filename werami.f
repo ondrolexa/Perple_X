@@ -191,7 +191,7 @@ c----------------------------------------------------------------------
      *               k2c(i11),iprop,kfl(i11),tname
 
       integer inv
-      character dname*20, title*162
+      character dname*14, title*162
       common/ cst76 /inv(i11),dname(i11),title
 
       integer ivar,ind,ichem
@@ -1848,6 +1848,7 @@ c                                 the phase doesn't occur or occurs once
       phase = idasls(index,ias)
 
       if (lopt(34)) then
+c                                 DEBUG DEBUG DANGER 
 c                                 debug dump
          write (*,*) var(1),var(2)
 
@@ -2924,7 +2925,7 @@ c----------------------------------------------------------------
       common/ cst83 /ivar,ind,ichem
 
       integer inv
-      character dname*20, titl1*162
+      character dname*14, titl1*162
       common/ cst76 /inv(i11),dname(i11),titl1
 
       character*14 tname
@@ -3430,7 +3431,7 @@ c----------------------------------------------------------------
       common/ cxt3 /idaq,jdaq,laq
 
       integer inv
-      character dname*20, title*162
+      character dname*14, title*162
       common/ cst76 /inv(i11),dname(i11),title
 
       integer icps, jcx, jcx1, kds
@@ -3904,7 +3905,7 @@ c----------------------------------------------------------------
      *               k2c(i11),iprop,kfl(i11),tname
 
       integer inv
-      character dname*20, title*162
+      character dname*14, title*162
       common/ cst76 /inv(i11),dname(i11),title
 
       character cname*5
@@ -3985,11 +3986,11 @@ c                                 mol%
 
       else if (lop.eq.8) then 
 c                                phase composition
-        write (temp,'(a,i2,a)') 'C_{'//pname,komp,'}'
+        write (temp,'(a,i2,a)') 'C['//pname,komp,']'
 
       else if (lop.eq.23) then 
 c                                chemical potential of a component
-        temp = 'mu_{'//cname(icx)//'},J/mol'
+        temp = 'mu['//cname(icx)//'],J/mol'
 
       else if (lop.eq.36) then 
 c                                allprp option, lop points directly
@@ -4024,7 +4025,7 @@ c                                 custom prop (phemgp)
 
       call unblnk(temp)
 
-      dname(jprop) = temp
+      read (temp,'(a14)') dname(jprop)
 
       if (lop.eq.8) write (*,1000) dname(jprop)
 
@@ -4047,7 +4048,7 @@ c----------------------------------------------------------------
       character*100 n5name,n6name
 
       integer inv
-      character dname*20, titl1*162
+      character dname*14, titl1*162
       common/ cst76 /inv(i11),dname(i11),titl1
 
       integer iopt
@@ -4189,7 +4190,7 @@ c----------------------------------------------------------------
       character spec(6)*14
 
       integer inv
-      character dname*20, title*162
+      character dname*14, title*162
       common/ cst76 /inv(i11),dname(i11),title
 
       character cname*5

@@ -19131,7 +19131,7 @@ c----------------------------------------------------------------------
       character*100 n6name, n5name, vname(l3)*14
 
       integer inv
-      character dname*20, title*162
+      character dname*14, title*162
       common/ cst76 /inv(i11),dname(i11),title
 
       character*14 tname
@@ -19212,12 +19212,12 @@ c                                  tab file
             if (.not.lopt(29)) then
 c                                  with pseudo-dependent variables 
                write (n,*) ivar + iprop 
-               write (n,'(200(a20,1x))') (vname(i), i = 1,ivar),
+               write (n,'(200(a14,1x))') (vname(i), i = 1,ivar),
      *                                   (dname(i), i = 1,iprop)
             else 
                write (n,*) ivar + iprop + 5
 
-               write (n,'(200(a20,1x))') (vname(i), i = 1,ivar),
+               write (n,'(200(a14,1x))') (vname(i), i = 1,ivar),
      *                                   (dname(i), i = 1,iprop),
      *         'y_SiO2','y_SiO','y_O','y_O2','y_Si'
             end if 
@@ -19225,7 +19225,7 @@ c                                  with pseudo-dependent variables
          else 
 c                                  terse format
             write (n,*) iprop 
-            write (n,'(200(a20,1x))') (dname(i), i = 1,iprop)
+            write (n,'(200(a14,1x))') (dname(i), i = 1,iprop)
           
          end if 
 
@@ -19382,7 +19382,9 @@ c                                 dynamic
      *                  (cp2(i,id),i=1,jbulk)
 c DEBUG DEBUG DANGER DANGER 
          if (jkp.gt.0) then 
-c            if (ksmod(jkp).eq.39) write (*,*) 'ion = ',cp2(k5,id)
+            if (ksmod(jkp).eq.39.and.cp2(k5,id).gt.8) then 
+               write (*,*) 'ion = ',cp2(k5,id)
+            end if 
          end if 
       end if 
 1000  format (i6,1x,i3,1x,i4,1x,a,20(g14.6,1x))

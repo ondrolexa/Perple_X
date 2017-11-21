@@ -39,7 +39,7 @@ C----------------------------------------------------------------
       common/ stuff /zmax,zmin
 
       integer inv
-      character dname*20, title*162
+      character dname*14, title*162
       common/ cst76 /inv(i11),dname(i11),title
 
       double precision xmin,xmax,ymin,ymax,dcx,dcy,xlen,ylen
