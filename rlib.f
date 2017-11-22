@@ -18726,7 +18726,9 @@ c                                 moles/kg-solvent
 c                                 solvent bulk mole fraction:
          caq(id,i) = slvmo(i)/smo
          if (caq(id,i).eq.0d0) cycle
-         gtot = gtot + slvmo(i) * (gso(i) + rt*dlog(caq(id,i)))
+c DEBUG DEBUG DANGER 
+c        gtot = gtot + slvmo(i) * (gso(i) + rt*dlog(caq(id,i)))
+         gtot = gtot + slvmo(i) * (gso(i) + rt*dlog(yf(ins(i))))
       end do 
 c                                 bulk fluid composition 
       totm = 0d0
