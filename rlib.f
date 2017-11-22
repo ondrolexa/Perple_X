@@ -16199,6 +16199,49 @@ c                                  add in water (ns^th species)
 
       end 
 
+      subroutine slvntg (gso,mu)
+c-----------------------------------------------------------------------
+c given chemical potentials compute solvent species partial molar gibbs
+c energies for aqrxdo/aqrxlg
+c-----------------------------------------------------------------------
+      implicit none
+ 
+      include 'perplex_parameters.h'
+
+      integer i, j
+
+      double precision gso(nsp), mu(k8)
+
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+
+      double precision cp
+      common/ cst12 /cp(k5,k1)
+
+      integer jnd
+      double precision aqg,qq,rt
+      common/ cxt2 /aqg(m4),qq(m4),rt,jnd(m4)
+
+      integer icomp,istct,iphct,icp
+      common/ cst6  /icomp,istct,iphct,icp  
+c-----------------------------------------------------------------------
+
+         do i = 1, ns 
+
+            gso(i) = 0d0
+
+            do j = 1, icp
+
+               if (isnan(mu(j))) cycle
+
+               gso(i) = gso(i) + mu(j)*cp(j,jnd(i))
+
+            end do 
+
+         end do
+
+      end 
+
       subroutine aqrxdo (jd,lu)
 c-----------------------------------------------------------------------
 c given chemical potentials solve for rock dominated aqueous speciation
@@ -16375,19 +16418,7 @@ c                                  save pmv's and v fractions for output
 c                                  ysum is just a dummy. 
          call slvnt1 (ysum)
 
-         do i = 1, ns 
 
-            gso(i) = 0d0
-
-            do j = 1, icp
-
-               if (isnan(mu(j))) cycle
-
-               gso(i) = gso(i) + mu(j)*cp(j,jnd(i))
-
-            end do 
-
-         end do
 
       else 
 c                                 solvent is pure water 
@@ -16399,16 +16430,18 @@ c                                 solvent is pure water
          yt(1) = 1d0
 
       end if 
+c                                 slvnt0-3 doing needless gso calculation
+      call slvntg (gso,mu)
 c                                 iterate on speciation
-      ion = ioh
+      ion = ihy
 
       do i = 1, 2
-c                                 first try ioh, if it fails
+c                                 first try ihy, if it fails ioh
          call aqsolv (g0,gso,mo,mu,is,gamm0,lnkw,bad)
 
          if (.not.bad) exit
 
-         ion = ihy
+         ion = ioh
 
       end do
 
@@ -18635,6 +18668,8 @@ c         end if
          bad = .false.
 
       end if
+c                                 slvnt0-3 doing needless gso calculation
+      call slvntg (gso,tmu)
 c                                 iterate on speciation
       ion = ihy
       switch = .false.

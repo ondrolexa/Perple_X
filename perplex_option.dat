@@ -38,7 +38,7 @@ fractionation_lo_limit       0  | 0-1, [0], lower fractionation threshold, mass 
 global_reach_increment       0  | >= 0; overridden by reach_factor specified in solution model file
 grid_levels                1 4  | exploratory and autorefine (grid parameters keyword group)
 hard_limits                off  | on or off; on => use compositional limits specified in solution model
-hybrid_EoS_H2O            4     | [4] 0-2, 4-5 => 0 - MRK, 1 HSMRK, 2 - CORK, 4 - PSEoS, 5 - Haar
+hybrid_EoS_H2O            5     | [4] 0-2, 4-5 => 0 - MRK, 1 HSMRK, 2 - CORK, 4 - PSEoS, 5 - Haar
 hybrid_EoS_CO2            4     | [4] 0-4 => 0 - MRK, 1 HSMRK, 2 - CORK, 3- Bottinga, 4 - PSEoS
 hybrid_EoS_CH4            1     | [1] 0-1  => 0 - MRK, 1 HSMRK
 increment             0.1 0.025 | 0, <1; exploratory and autorefine
@@ -51,8 +51,8 @@ melt_is_fluid              F    | T[rue] or F[alse], default is F
 null_phase                 F    | T[rue] or F[alse], default is F, include null phases in convexhull optimization with mobile components
 option_list_files          T    | T[rue] or F[alse], T => echo run-time options to my_project_PROGRAM_options.txt
 order_check                on   | on or off, on => compare order-disorder solutions with fully ordered and disordered states
-output_iteration_detai     F    | T[rue] or F[alse], default F; output intermediate adaptive optimization information
-output_iteration_G         F    | T[rue] or F[alse], T => print iteration G to monitor convergence during optimization
+output_iteration_detai     T    | T[rue] or F[alse], default F; output intermediate adaptive optimization information
+output_iteration_G         T    | T[rue] or F[alse], T => print iteration G to monitor convergence during optimization
 pause_on_error              T   | T[rue] or F[alse], T => wait for user response after errors
 pc_perturbation           5d-3  | pseudo-compound composition perturbation for convexhull optimization
 poisson_ratio        on   0.35  | value 1: on, off or all; value 2: 0->0.5; poisson ratio estimates for shear moduli
