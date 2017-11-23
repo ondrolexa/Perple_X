@@ -3701,9 +3701,9 @@ c----------------------------------------------------------------------
       double precision atwt
       common/ cst45 /atwt(k0)
 
-      double precision sel
-      logical hsccon, hsc
-      common/ cxt45 /sel(k0),hsccon,hsc(k1)
+      double precision sel, cox
+      logical hscon, hsc, oxchg
+      common/ cxt45 /sel(k0),cox(k0),hscon,oxchg,hsc(k1)
 
       integer ic
       common/ cst42 /ic(k0)
@@ -3844,7 +3844,7 @@ c                                 generic thermo data
                      if (ier.ne.0) call error (23,tot,ier,strg)
                      hsc(k10) = .true.
 
-                     if (hsccon) then 
+                     if (hscon) then 
 c                                 convert HSC G0 to SUP G0
                         do j = 1, icomp
                            thermo(1,k10) = thermo(1,k10) 
@@ -4171,9 +4171,9 @@ c----------------------------------------------------------------------
       double precision atwt
       common/ cst45 /atwt(k0)
 
-      double precision sel
-      logical hsccon, hsc
-      common/ cxt45 /sel(k0),hsccon,hsc(k1)
+      double precision sel, cox
+      logical hscon, hsc, oxchg
+      common/ cxt45 /sel(k0),cox(k0),hscon,oxchg,hsc(k1)
 
       character*80 com
       common/delet/com 
@@ -4280,7 +4280,7 @@ c                                 HKF aqueous electrolyte data (13 values)
 
          ibeg = 1
 
-         if (hsccon.and.hsc(id)) then
+         if (hscon.and.hsc(id)) then
 c                                 convert back to HSC apparent G
             call outthr (thermo(1,id) - tr*dg,'GH',2,ibeg)
 
@@ -4923,9 +4923,9 @@ c----------------------------------------------------------------------
       double precision atwt
       common/ cst45 /atwt(k0)
 
-      double precision sel
-      logical hsccon, hsc
-      common/ cxt45 /sel(k0),hsccon,hsc(k1)
+      double precision sel, cox
+      logical hscon, hsc, oxchg
+      common/ cxt45 /sel(k0),cox(k0),hscon,oxchg,hsc(k1)
 
       integer ikind,icmpn,icout,ieos
       double precision comp,tot
@@ -5121,9 +5121,9 @@ c----------------------------------------------------------------------
       double precision atwt
       common/ cst45 /atwt(k0)
 
-      double precision sel
-      logical hsccon, hsc
-      common/ cxt45 /sel(k0),hsccon,hsc(k1)
+      double precision sel, cox
+      logical hscon, hsc, oxchg
+      common/ cxt45 /sel(k0),cox(k0),hscon,oxchg,hsc(k1)
 
       integer length,iblank,icom
       character chars*1
@@ -5189,23 +5189,39 @@ c                                 utol must be smaller than -utol
 c                                 ptol must be > 2*-dtol
       utol = -dtol/1d1
       ptol = -dtol*3d0 
+
+      hscon = .false.
+      oxchg = .false.
+
+      do i = 1, k0
+         sel(i) = 0d0
+         cox(i) = 0d0
+      end do
+
+      do
 c                                 component names, formula weights, and, optionally, 3rd law s_elements
-      call getkey (n2,ier,key,values,strg)
-c                                 look for optional HSC_conversion key
-      if (key.eq.'HSC_conversion') then 
-
-         hsccon = .true.
-c                                 read "begin"
          call getkey (n2,ier,key,values,strg)
+c                                 look for optional HSC_conversion key
+         if (key.eq.'HSC_conversion') then 
 
-      else 
+            hscon = .true.
 
-         hsccon = .false.
-         do i = 1, k0
-            sel(i) = 0d0
-         end do 
+         else if (key.eq.'reference_oxidation_st') then
 
-      end if 
+            oxchg = .true.
+
+         else if (key.eq.'begin_components') then 
+
+            exit 
+
+         else
+
+            call error (77,utol,i,'invalid thermodynamic data file '//
+     *                             'keyword '//key)
+
+         end if
+
+      end do 
 
 
       icmpn = 0 
@@ -5222,7 +5238,9 @@ c                                 read "begin"
 c                                 get component string length
          cl(icmpn) = iscan(1,length,' ') - 1
 
-         if (hsccon) then 
+         if (hscon.and.oxchg) then
+            read (values,*) atwt(icmpn), sel(icmpn), cox(icmpn)
+         else if (hscon) then 
             read (values,*) atwt(icmpn), sel(icmpn)
          else 
             read (values,*) atwt(icmpn)
@@ -5327,7 +5345,7 @@ c                                 echo formatted header data for ctransf/actcor:
          write (n8,'(a,g6.1E1,a,/)') 'tolerance  ',dtol,
      *         '  |<= DTOL for unconstrained minimization, energy units'
 
-         if (hsccon) then
+         if (hscon) then
             write (n8,'(a,//,a)') 'HSC_conversion |<= tag enabling HSC '
      *                          //'to SUP apparent energy conversion, '
      *                          //'requires elemental entropies in the '

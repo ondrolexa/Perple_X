@@ -281,6 +281,8 @@ c                                 associate it with a solution refinement point,
 c                                 this could be general, but then resub needs a
 c                                 routine to recover endmember compositions
                   hkp(jdv(i)) = i
+c                                 raise the gibbs energy of the endmember to 
+c                                 break the degeneracy of back-calculation
                   refine = .true.
                end if 
             end if
@@ -302,6 +304,11 @@ c                                 the point is a pseudocompound, refine it
          end if
 
       end do
+
+      do i = 1, ns
+c                                 DANGER DANGER DEBUG
+                  g2(jnd(i)) = g2(jnd(i)) + 1d2
+      end do 
 
       if (iref.eq.0) then
 c                                 if nothing to refine, set idead 
@@ -704,14 +711,13 @@ c                                 a solute cpd
                kcoct = kcoct + mcoor(ids)
 
             end if 
-c                                  hydronium 
-            call aqlagd (1,bad,.false.,0)
+c                                  solute-bearing compound
+            call aqlagd (1,bad,.false.)
 
             if (bad) then
 
                jphct = jphct - 1
                jcoct = kcoct - mcoor(ids)
-c DEBUG DEBUG DANGER DANGER commented cycle
                cycle
 
             else
@@ -719,27 +725,6 @@ c DEBUG DEBUG DANGER DANGER commented cycle
                quack(jphct) = .false.
 
             end if
-c DEBUG DEBUG DANGER DANGER 
-c         jphct = jphct + 1
-c         if (jphct.gt.k21) call error (58,x(1,1),k21,'resub')
-c         jkp(jphct) = ids
-c         hkp(jphct) = jd
-c         jcoor(jphct) = jcoct - 1
-c         kcoct = jcoct + mcoor(ids)
-cc                                  hydroxyl 
-c            call aqlagd (1,bad,.false.,1)
-
-c            if (bad) then
-
-c               jphct = jphct - 1
-c               jcoct = kcoct - mcoor(ids)
-c               cycle
-
-c            else
- 
-c               quack(jphct) = .false.
-
-c            end if
 
          else 
 c                                 call gsol to get g of the solution, gsol also
@@ -1429,7 +1414,7 @@ c                                 total molality
 
                else
 c                                 impure solvent, get speciation
-                  call aqlagd (i,bad,.true.,0)
+                  call aqlagd (i,bad,.true.)
 
                end if
 

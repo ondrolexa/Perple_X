@@ -30,9 +30,9 @@ c-----------------------------------------------------------------------
       integer iam
       common/ cst4 /iam
 
-      double precision sel
-      logical hsccon, hsc
-      common/ cxt45 /sel(k0),hsccon,hsc(k1)
+      double precision sel, cox
+      logical hscon, hsc, oxchg
+      common/ cxt45 /sel(k0),cox(k0),hscon,oxchg,hsc(k1)
 
       logical eof
            
@@ -49,7 +49,7 @@ c                                 open files
 c                                 read and echo file header
       call topn2 (4)
 c                                 disable HSC conversion
-      hsccon = .false. 
+      hscon = .false. 
 c                                 mock pointers
       do i = 1, icmpn
          ic(i) = i

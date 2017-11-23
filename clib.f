@@ -1047,9 +1047,9 @@ c----------------------------------------------------------------------
  
       character*5 mnames(k16*k17)*8
 
-      double precision twt(k5),tsel(k5),cst
+      double precision twt(k5),tsel(k5),tcox(k5),cst,qchg
  
-      integer i,j,im, ict, k, ifer,inames, jphct, imak(k16)
+      integer i,j,im, ict, k, ifer,inames, jphct, imak(k16), iox
  
       logical eof, good, first
 
@@ -1158,9 +1158,9 @@ c----------------------------------------------------------------------
       integer eos
       common/ cst303 /eos(k10)
 
-      double precision sel
-      logical hsccon, hsc
-      common/ cxt45 /sel(k0),hsccon,hsc(k1)
+      double precision sel, cox
+      logical hscon, hsc, oxchg
+      common/ cxt45 /sel(k0),cox(k0),hscon,oxchg,hsc(k1)
 
       integer ikp
       common/ cst61 /ikp(k1)
@@ -1257,6 +1257,8 @@ c                               initialize icout(i) = 0
 
                twt(i) = atwt(j)
                tsel(i) = sel(j)
+               tcox(i) = cox(j)
+
                ic(i) = j
                icout(j) = 1
 
@@ -1301,7 +1303,9 @@ c                                 mobile component otherwise idfl = 0.
 c                                 load atwts, sel in updated order
       do i = 1, icomp
          atwt(i) = twt(i)
-         sel(i) = tsel(i)
+         sel(i)  = tsel(i)
+         cox(i)  = tcox(i)
+         if (cox(i).lt.0d0) iox = i 
       end do 
 c                                 convert weight to molar amounts
       if (jbulk.ne.0) then 
@@ -1598,6 +1602,21 @@ c                                 skip non-solute standard state data
          if (ieos.ne.15.and.ieos.ne.16) cycle
 c                                 check if valid species:
          call chkphi (1,name,good)
+c                                 check for oxidation state of aqueous
+c                                 data if aq_oxides is set:
+         if (good.and.lopt(36).and.oxchg) then
+
+            qchg = thermo(6,k10)
+
+            if (qchg.eq.0d0.and.comp(ic(iox)).ne.0d0) then 
+               write (*,*) 'rejecting ',name
+               good = .false.
+            else if (qchg-cox(iox)*comp(ic(iox)).ne.0d0) then 
+               write (*,*) 'rejecting ',name
+               good = .false.
+            end if
+
+         end if 
 
          if (good) then 
 c                                 acceptable data, count the phase:

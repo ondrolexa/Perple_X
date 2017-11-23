@@ -20,30 +20,32 @@ mu(C1)      0.00   0.1E-2
 mu(C2)      0.00   0.1E-2
 end_standard_variables
 
-tolerance  -.1E-2  |<= DTOL for unconstrained minimization, energy units
+tolerance  -.1E-2         |<= DTOL for unconstrained minimization, energy units
 
-HSC_conversion     |<= tag enabling HSC to SUP apparent energy conversion, requires elemental entropies in the component list below
+HSC_conversion            |<= tag enabling HSC to SUP apparent energy conversion, requires elemental entropies in the component list below
+
+reference_oxidation_state |<= tag enables specification of a reference oxidation state for components in the list below. 
 
 begin_components   | < 6 chars, molar weight (g), elemental entropy (R)
-Na2O    61.9790    205.175
-MgO     40.3040    135.255
-Al2O3  101.9610    364.425
-SiO2    60.0840    223.96
-K2O     94.1960    231.935
-CaO     56.0770    144.205
-TiO2    79.8660    235.87
-MnO     70.9370    134.795
-FeO     71.8440    129.855
-NiO     74.6930    132.375
-ZrO2   123.2200    244.33
-Cl2     70.9060    223.08 
-O2      31.9990    205.15
-H2O     18.0150    233.255
-CO2     44.0100    210.89
-CuO     79.5450    135.725
-Cr2O3  151.9900    358.811
-S2      32.0650     64.14
-F2      37.9968    202.79
+Na2O    61.9790    205.175     0
+MgO     40.3040    135.255     0
+Al2O3  101.9610    364.425     0
+SiO2    60.0840    223.96      0
+K2O     94.1960    231.935     0
+CaO     56.0770    144.205     0
+TiO2    79.8660    235.87      0
+MnO     70.9370    134.795     0
+FeO     71.8440    129.855     0
+NiO     74.6930    132.375     0
+ZrO2   123.2200    244.33      0
+Cl2     70.9060    223.08      0
+O2      31.9990    205.15      -4
+H2O     18.0150    233.255     0
+CO2     44.0100    210.89      0
+CuO     79.5450    135.725     0
+Cr2O3  151.9900    358.811     0
+S2      32.0650     64.14      0
+F2      37.9968    202.79      0
 end_components
                                                                                                                                             
 begin_makes                                                                                                                                 
