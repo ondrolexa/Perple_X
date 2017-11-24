@@ -19,7 +19,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a)') 
-     *      'Perple_X version 6.8.0, source updated Nov 21, 2017.'
+     *      'Perple_X version 6.8.0, source updated Nov 24, 2017.'
 
       end
 
@@ -382,6 +382,9 @@ c                                 aq_oxide_components
       lopt(36) = .false.
 c                                 allow null phases
       lopt(37) = .false.
+c                                 failed default file name option, to implement 
+c                                 this option in the calling program
+      lopt(38) = .false. 
 c                                 initialize mus flag lagged speciation
       mus = .false.
 c                                 -------------------------------------
@@ -4557,6 +4560,11 @@ c------------------------------------------------------------------------
       character*100 prject,tfname
       common/ cst228 /prject,tfname
 
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
       integer iam
       common/ cst4 /iam
 
@@ -4571,15 +4579,24 @@ c                                 except if unsplt-local
             if (iam.eq.4) then 
 c                                 BUILD
                write (*,1040)
+c                                 readrt loads the root into prject
+               call readrt
 
             else  
-c                                 VERTEX, MEEMUM
-               write (*,1030) 
+c                                 VERTEX, MEEMUM, and plotting programs
+               if (.not.lopt(38)) then 
+c                                 interactive input 
+                  write (*,1030) 
+                  call readrt
+
+               else 
+
+                  write (*,1090) prject
+
+               end if
 
             end if 
-c                                 readrt loads the root into prject
-            call readrt
- 
+
          end if 
 c                                 make the problem definition file name
          call mertxt (n1name,prject,'.dat',0)
@@ -4612,6 +4629,11 @@ c                                 VERTEX, MEEMUM, UNSPLT
             open (n1,file=n1name,iostat=ierr,status='old')
 
             if (ierr.ne.0) then
+
+               if (lopt(38)) then
+                  write (*,1100) n1name
+                  call errpau
+               end if 
 c                                 name does not exist
                write (*,1080) n1name
                read (*,'(a)') y
@@ -4662,6 +4684,12 @@ c               if (ierr.ne.0) call error (12,0d0,ierr,tfname)
 1080  format (/,'**warning ver191** no problem definition file named: ',
      *       a,/,'Run BUILD to create the file or change project names.'
      *       ,//,'Enter a different project name (y/n)?')
+1090  format (/,'The use_default_file option is set to T',/,
+     *        /,'The default_input_file name is:',a)
+1100  format (/,'**error ver191** no problem definition file named: ',
+     *       a,/,'check spelling and any path information specified by',
+     *           'default_input_file',/)
+
       end 
 
       subroutine readrt
@@ -4726,7 +4754,7 @@ c                                 look for illegal " " character
                cycle
             end if 
 
-         else 
+         else
 
             prject = 'my_project'
 

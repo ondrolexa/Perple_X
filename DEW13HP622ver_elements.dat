@@ -16,30 +16,32 @@ mu(C1)      0.00   0.1E-2
 mu(C2)      0.00   0.1E-2
 end_standard_variables
 
-tolerance  -.1E-2  |<= DTOL for unconstrained minimization, energy units
+tolerance  -.1E-2         |<= DTOL for unconstrained minimization, energy units
 
-HSC_conversion |<= tag enabling HSC to SUP apparent energy conversion, requires elemental entropies in the component list below
+HSC_conversion            |<= tag enabling HSC to SUP apparent energy conversion, requires elemental entropies in the component list below
 
-begin_components | < 6 chars, molar weight (g), elemental entropy (R)
-Na       22.9898     51.3000
-Mg       24.3045     32.6800
-Al       26.9812     28.3500
-Si       28.0850     18.8100
-K        39.0983     64.6800
-Ca       40.0775     41.6300
-Ti       47.8670     30.7200
-Mn       54.9375     32.2200
-Fe       55.8445     27.2800
-Ni       58.6935     29.8000
-Zr       91.2210     39.1800
-Cl2      70.9060    223.0800
-O2       31.9990    205.1500
-H2        2.0155    130.6800
-C        12.0110      5.7400
-Cu       63.5455     33.1500
-Cr       51.9958     25.5430
-S2       32.0650     64.1400
-F2       37.9968    202.7900
+reference_oxidation_state |<= tag enables specification of a reference oxidation state for components in the list below. 
+
+begin_components | < 6 chars, molar weight (g), elemental entropy (R), reference oxidation state
+Na       22.9898     51.3000     1
+Mg       24.3045     32.6800     2
+Al       26.9812     28.3500     3
+Si       28.0850     18.8100     4
+K        39.0983     64.6800     1
+Ca       40.0775     41.6300     2
+Ti       47.8670     30.7200     4
+Mn       54.9375     32.2200     2
+Fe       55.8445     27.2800     2
+Ni       58.6935     29.8000     2
+Zr       91.2210     39.1800     4
+Cl2      70.9060    223.0800    -2
+O2       31.9990    205.1500    -4
+H2        2.0155    130.6800     2
+C        12.0110      5.7400     4
+Cu       63.5455     33.1500     2
+Cr       51.9958     25.5430     3
+S2       32.0650     64.1400    -1
+F2       37.9968    202.7900    -2
 end_components
 
 begin_makes

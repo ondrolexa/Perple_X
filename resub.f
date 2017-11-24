@@ -255,7 +255,7 @@ c                                 the pseudocompounds to be refined
 c                                 are identified in jdv(1..npt)
       iter = 1
       iref = 0
-      wad1 = .false.
+      quit = .false.
       wad2 = .true.
       jcoct = 1
       inc = istct - 1
@@ -287,11 +287,6 @@ c                                 break the degeneracy of back-calculation
                end if 
             end if
          end if 
-c                                 if its a compound check if it's a generic fluid 
-c                                 model:
-c         if (id.le.ipoint.and.ikp(id).gt.0d0) then
-c            if (ksmod(ikp(id)).eq.39) refine = .true.
-c         end if
 c                                 the point is a pseudocompound, refine it
          if (id.gt.ipoint.or.refine) then
 
@@ -307,7 +302,7 @@ c                                 the point is a pseudocompound, refine it
 
       do i = 1, ns
 c                                 DANGER DANGER DEBUG
-                  g2(jnd(i)) = g2(jnd(i)) + 1d2
+c         g2(jnd(i)) = g2(jnd(i)) + 1d2
       end do 
 
       if (iref.eq.0) then
@@ -1813,8 +1808,8 @@ c                                 set xmn to prevent future warnings
                end if 
             end if 
 c                                 high limit:
-c DEBUG DANGER DANGER
-            if (x(i,j).gt.xhi(j,i,ids).and.i.gt.0) then
+            if (x(i,j).gt.xhi(j,i,ids)) then
+
                xhi(j,i,ids) = x(i,j)
 c                                 check if solution is at an unnatural limit
                if (x(i,j).lt.xmxo(ids,i,j).and.

@@ -27,6 +27,7 @@ composition_constant       F    | T[rue] or F[alse], default is F; allows consta
 composition_phase          wt   | mol or wt; phase compositions in WERAMI output
 composition_system         wt   | mol or wt; system composition in WERAMI mode 2-4 output
 console_messages           on   | on or off
+default_file_name    my_project | default file name root for input/output, this may include path information
 dependent_potentials       on   | on or off
 efficiency                 3    | 1->5
 explicit_bulk_modulus      T    | T[rue] or F[alse], default is F; T => use explicit function for K if available
@@ -77,6 +78,7 @@ stretch_factor            0.016 | >0, <1
 subdivision_override       off  | off, linear, or stretch
 T_melt                     873. | melt solution model endmember temperature (K) cut off
 T_stop                       0. | equilibration temperature (K) cut off
+use_default_file             F  | use default_input_file automatically as root for file names
 variance                  1 99  | 1->99; exploratory and autorefine
 vrh/hs_weighting           0.5  | 0->1, weighting factor for the stiff average in VRH/HS averaging (see bounds)
 x_nodes                   40 60 | exploratory and autorefine (grid parameters keyword group)

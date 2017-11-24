@@ -1847,19 +1847,19 @@ c                                 the phase doesn't occur or occurs once
 
       phase = idasls(index,ias)
 
-      if (lopt(34)) then
+c      if (lopt(34)) then
 c                                 DEBUG DEBUG DANGER 
 c                                 debug dump
-         write (*,*) var(1),var(2)
+c         write (*,*) var(1),var(2)
 
-         write (*,*) p,t
-         write (*,1000) isol, fname(phase), cprop
-         write (*,1040) (cname(i), i = 1, icomp)
-         do i = 1, isol 
-            write (*,1050) (pcomp(j,jdsol(i)), j = 1, icomp)
-         end do
+c         write (*,*) p,t
+c         write (*,1000) isol, fname(phase), cprop
+c         write (*,1040) (cname(i), i = 1, icomp)
+c         do i = 1, isol 
+c            write (*,1050) (pcomp(j,jdsol(i)), j = 1, icomp)
+c         end do
 
-      end if 
+c      end if 
 c                                 if here, the phase must be a solution
 10    if (.not.stol(phase)) then
 c                                 immisicible phases are present (isol>1)
