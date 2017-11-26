@@ -15,7 +15,7 @@ aq_lagged_iterations       0    | >= 0, default 0; number of internal iterations
 aq_lagged_speciation       T    | T[rue] or F[alse], default is T
 aq_solvent_composition     y    | y -> mole fractions, m -> molality; default y
 aq_solute_composition      m    | y -> mole fractions, m -> molality; default m
-auto_refine               off   | auto, manual, or off (auto_refine keyword group)
+auto_refine               auto   | auto, manual, or off (auto_refine keyword group)
 auto_refine_factor_I       1    | refine factor for gridded minimization and phase fractionation (auto_refine keyword group)
 auto_refine_factor_II      6    | refine factor for composition and mixed variable diagrams (auto_refine keyword group)
 auto_refine_factor_III     2    | refine factor for Schreinemakers diagrams (auto_refine keyword group)
@@ -27,7 +27,6 @@ composition_constant       F    | T[rue] or F[alse], default is F; allows consta
 composition_phase          wt   | mol or wt; phase compositions in WERAMI output
 composition_system         wt   | mol or wt; system composition in WERAMI mode 2-4 output
 console_messages           on   | on or off
-default_file_name    my_project | default file name root for input/output, this may include path information
 dependent_potentials       on   | on or off
 efficiency                 3    | 1->5
 explicit_bulk_modulus      T    | T[rue] or F[alse], default is F; T => use explicit function for K if available
@@ -81,8 +80,8 @@ T_stop                       0. | equilibration temperature (K) cut off
 use_default_file             F  | use default_input_file automatically as root for file names
 variance                  1 99  | 1->99; exploratory and autorefine
 vrh/hs_weighting           0.5  | 0->1, weighting factor for the stiff average in VRH/HS averaging (see bounds)
-x_nodes                   40 60 | exploratory and autorefine (grid parameters keyword group)
-y_nodes                   40 60 | exploratory and autorefine (grid parameters keyword group)
+x_nodes                   20 60 | exploratory and autorefine (grid parameters keyword group)
+y_nodes                   20 60 | exploratory and autorefine (grid parameters keyword group)
 zonkabbabble
 zero_mode                 1e-6  | 0->1
 zero_bulk                 1e-6  | 0->1

@@ -190,7 +190,7 @@ c-----------------------------------------------------------------------
       integer liw, lw, iter, iref, i, id, idead, ids, jstart, inc, 
      *        opt, kter, kitmax
 
-      logical first, wad1, wad2, kterat, quit, refine
+      logical first, wad1, wad2, kterat, quit, refine, abort 
 
       parameter (liw=2*k21+3,lw=2*(k5+1)**2+7*k21+5*k5)
 
@@ -256,7 +256,6 @@ c                                 are identified in jdv(1..npt)
       iter = 1
       iref = 0
       quit = .false.
-      wad2 = .true.
       jcoct = 1
       inc = istct - 1
       opt = npt
@@ -300,10 +299,10 @@ c                                 the point is a pseudocompound, refine it
 
       end do
 
-      do i = 1, ns
+c      do i = 1, ns
 c                                 DANGER DANGER DEBUG
 c         g2(jnd(i)) = g2(jnd(i)) + 1d2
-      end do 
+c      end do 
 
       if (iref.eq.0) then
 c                                 if nothing to refine, set idead 
@@ -343,11 +342,16 @@ c                                 warn if severe error
 
          kter = kter + 1
 c                                 analyze solution, get refinement points
-         call yclos2 (clamda,x,is,iter,opt,quit)
+         call yclos2 (clamda,x,is,iter,opt,quit,abort)
 c                                 save the id and compositions
 c                                 of the refinement points, this
 c                                 is necessary because resub rewrites
 c                                 the xcoor array.
+         if (abort) then 
+            idead = 101
+            exit
+         end if
+
          call saver
 
          if (quit) exit
@@ -415,7 +419,8 @@ c                                 adaptive g and compositions
       common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),jphct,jpt
 
       logical quack
-      common/ cxt1 /quack(k21)
+      integer solc, isolc
+      common/ cxt1 /solc(k5),isolc,quack(k21)
 c                                 adaptive z coordinates
       integer jcoct, jcoor, jkp
       double precision zcoor
@@ -1272,7 +1277,8 @@ c                                 x coordinate description
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 
       logical quack
-      common/ cxt1 /quack(k21)
+      integer solc, isolc
+      common/ cxt1 /solc(k5),isolc,quack(k21)
 c                                 composition and model flags
 c                                 for final adaptive solution
       integer kkp,np,ncpd,ntot
@@ -1431,9 +1437,7 @@ c                                 if match check for a solvus
                   else
 c                                  special solvus test based on solvent 
 c                                  speciation for lagged aq model.
-c DEBUG DANGER
-c                     if (solvs4(i,jdsol(j,idsol(j)))) cycle 
-                     cycle
+                     if (solvs4(i,jdsol(j,idsol(j)))) cycle 
                   end if 
 c                                 the pseudocompound matches a solution
 c                                 found earlier.
@@ -2910,7 +2914,7 @@ c----------------------------------------------------------------------
 
       end 
 
-      subroutine yclos2 (clamda,x,is,iter,opt,quit)
+      subroutine yclos2 (clamda,x,is,iter,opt,quit,abort)
 c----------------------------------------------------------------------
 c subroutine to identify pseudocompounds close to the solution for 
 c subsequent refinement, for iteration > 1. quit is true for final
@@ -2922,17 +2926,19 @@ c----------------------------------------------------------------------
 
       external ffirst
 
-      integer i, id, is(*), jmin(k19), opt, kpt, mpt, iter, tic
+      integer i, j, k, id, is(*), jmin(k19), opt, kpt, mpt, iter, tic, 
+     *        islv, jslv, idslv(k5), jdslv(k5)
 
-      double precision clamda(*), clam(k19), x(*)
+      double precision clamda(*), clam(k19), x(*), stot
 
-      logical stable(k19), quit
+      logical stable(k19), quit, abort
 
       integer hcp,idv
       common/ cst52  /hcp,idv(k7)
 
       logical quack
-      common/ cxt1 /quack(k21)
+      integer solc, isolc
+      common/ cxt1 /solc(k5),isolc,quack(k21)
 
       logical mus
       double precision mu
@@ -2971,6 +2977,17 @@ c----------------------------------------------------------------------
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 
+      integer idaq, jdaq
+      logical laq
+      common/ cxt3 /idaq,jdaq,laq
+
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+
+      integer jnd
+      double precision aqg,q2,rt
+      common/ cxt2 /aqg(m4),q2(m4),rt,jnd(m4)
+
       save tic
       data tic/0/
 c----------------------------------------------------------------------
@@ -2984,6 +3001,9 @@ c                                 solution.
          stable(i) = .false.
       end do 
 
+      abort = .false.
+      islv = 0
+      jslv = 0 
       npt = 0
 
       do i = 1, jphct
@@ -2998,7 +3018,49 @@ c                                 a stable point, add to list
             amt(npt) = x(i)
             if (id.gt.0) stable(id) = .true.
 
+            if (lopt(32)) then 
+c                                 set aqueos flag
+c               if (jkp(i).eq.idaq) then 
+c                                 since this uses jkp, it's not going to 
+c                                 count solvent species, but that doesn't matter
+c                  abort = .true.
+c                  islv = islv + 1
+c                  idslv(islv) = i
+c               else 
+c                  jslv = jslv + 1
+c                  jdslv(jslv) = i
+c               end if 
+               if (jkp(i).lt.0) then
+c                                quack is only true for pure solvent, but not reliably...
+c                                so check against endmembers...
+                  do j = 1, ns
+                     if (-jkp(i).eq.jnd(j)) then 
+                        islv = islv + 1
+                        idslv(islv) = i
+                        exit 
+                     end if 
+                  end do
+c               if (i.lt.jpt) then 
+c                               check against endmembers
+c                  do j = 1, ns
+c                     if (-jkp(i).eq.jnd(j)) then 
+c                        islv = islv + 1
+c                        idslv(islv) = i
+c                     end if 
+c                  end do 
+c               else if (jkp(i).eq.idaq) then
+c                   islv = islv + 1
+c                   idslv(islv) = i
+c                end if 
+               else if (jkp(i).eq.idaq) then
+                  jslv = jslv + 1
+                  jdslv(jslv) = i
+               end if 
+
+            end if 
+
             if (lopt(34)) then
+c                                 dump iteration details
                if (npt.eq.1) write (*,'(/,a,i2)') 'iteration ',iter-1
                call dumper (2,i,hkp(i),jkp(i),x(i),clamda(i))
             end if 
@@ -3017,6 +3079,44 @@ c                                 keep the least metastable point
          end if
 
       end do
+
+      if (islv.gt.0.and.jslv.gt.0) then 
+         abort = .true.
+         return
+       end if 
+
+c      if (abort.and..not.quit) then 
+c         abort = .false.
+c      if (abort) then 
+c                                for  lagged aqueous speciation:
+c                                check that a solute component has
+c                                not entirely dissolved into the fluid
+c         do j = 1, isolc
+
+c            stot = 0d0
+c            k = solc(j)
+
+c            do i = 1, islv
+c               stot = stot +  x(idslv(i))*cp2(k,idslv(i))
+c            end do
+
+c            if (stot.eq.0d0) cycle
+c            stot = 0d0 
+
+c            do i = 1, jslv
+c               stot = stot +  x(jdslv(i))*cp2(k,jdslv(i))
+c            end do
+
+c            if (stot.eq.0d0) then 
+c               write (*,*) 'mission aborted, component ',j
+c               return
+c            end if
+
+c         end do
+
+c         abort = .false.
+
+c      end if 
 c                                 get mu's for lagged speciation
       call getmus (iter,iter-1,.false.)
 
@@ -3404,18 +3504,60 @@ c----------------------------------------------------------------------
 
       end if
 
-      ier = 0
+      ier = 1
 c                                 load c and g into a local array to 
 c                                 avoid a myriad of conditionals
       call getgc (lc,lg,iter)
+c                                 look for a general solution if npt > icp
+      if (npt.ge.hcp) then 
 
-      if (idegen.ne.0) then
+         do i = 1, npt
 
+            do j = 1, hcp
+               comp(i,j) = lc(i,j)
+            end do 
+
+            mu(i) = lg(i)
+
+         end do
+
+         ier = 0 
+
+         if (npt.gt.hcp) then
+c                                try filtering out zero mode phases
+            lcp = 0
+
+            do i = 1, npt
+
+               if (amt(i).lt.zero) cycle
+
+               lcp = lcp + 1
+
+               mu(lcp) = mu(i)
+
+               do j = 1, jcp 
+                  comp(lcp,j) = comp(i,j)
+               end do 
+
+            end do
+
+            if (lcp.ne.hcp) ier = 2
+
+         end if 
+
+         if (ier.eq.0) call factor (comp,hcp,ipvt,ier)
+
+         if (ier.eq.0) call subst (comp,ipvt,hcp,mu,ier)
+
+      end if 
+c                                 ier ne 0 => look for degenerate solution
+      if (idegen.gt.0.and.ier.ne.0) then
+
+         ier = 0 
          kcp = 0
 
          do i = 1, npt
-c                                 check if the phase contains a
-c                                 degenerate component
+c                                 check if the phase contains a degenerate component
             bad = .false.
 
             do j = 1, idegen
@@ -3458,17 +3600,15 @@ c                                 phases present in zero amount
 
             end do
 
-            if (lcp.ne.jcp) then
+            if (lcp.ne.jcp) ier = 2
 
-               write (*,*) 'we have a problem houston #2',lcp,kcp,jcp
+         else if (kcp.lt.jcp) then
 
-            end if
-
-            kcp = lcp
+            ier = 3
 
          end if
 
-         if (kcp.eq.jcp) then 
+         if (ier.eq.0) then 
 
             call factor (comp,jcp,ipvt,ier)
 
@@ -3480,90 +3620,19 @@ c                                 into their correct positions
                do i = jcp, 1, -1
                   mu(jin(i)) = mu(i)
                end do 
-c                                 then NaN the missing values
+c                                 and NaN the missing values
                do i = 1, idegen
                   mu(idg(i)) = nopt(7)
                end do
 
             end if
 
-         else
-
-            ier = 1
-
          end if 
-
-      end if 
-
-      if (idegen.gt.0.and.ier.eq.0) then
-c                                 noot
-      else if (npt.ge.hcp) then 
-
-         do i = 1, npt
-
-            do j = 1, hcp
-               comp(i,j) = lc(i,j)
-            end do 
-
-            mu(i) = lg(i)
-
-         end do
-
-         if (npt.gt.hcp) then
-
-            lcp = 0
-
-            do i = 1, npt
-
-               if (amt(i).lt.zero) cycle
-
-               lcp = lcp + 1
-
-               mu(lcp) = mu(i)
-
-               do j = 1, jcp 
-                  comp(lcp,j) = comp(i,j)
-               end do 
-
-            end do
-
-            if (lcp.ne.hcp) then
-
-               write (*,*) 'we have a problem houston #3',lcp,hcp,npt
-
-            end if
-
-         end if 
-
-         call factor (comp,hcp,ipvt,ier)
-
-         if (ier.eq.0) call subst (comp,ipvt,hcp,mu,ier)
-
-         if (idegen.ne.0) then 
-
-            if (ier.ne.0) then
-
-                write (*,*) 'we have a problem houston, and should'
-
-c            else 
-
-c                write (*,*) 'we have no problem houston, but should'
-
-            end if 
-
-         end if 
-
-
-      else
-
-         write (*,*) 'we have a problem houston #1',npt,jcp,kcp,hcp
-
-         ier = 1
 
       end if 
 
       if (ier.eq.0) then 
-
+c                                 output as requested:
          mus = .true. 
 
          if (lopt(33)) then 
