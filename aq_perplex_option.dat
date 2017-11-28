@@ -15,7 +15,7 @@ aq_lagged_iterations       0    | >= 0, default 0; number of internal iterations
 aq_lagged_speciation       F    | T[rue] or F[alse], default is T
 aq_solvent_composition     y    | y -> mole fractions, m -> molality; default y
 aq_solute_composition      m    | y -> mole fractions, m -> molality; default m
-aq_oxide_components        T    | T[rue] or F[alse], default is F, allow oxide components
+aq_oxide_components        F    | T[rue] or F[alse], default is F, allow oxide components
 
 auto_refine                aut  | auto, manual, or off (auto_refine keyword group)
 auto_refine_factor_I       2    | refine factor for gridded minimization and phase fractionation (auto_refine keyword group)

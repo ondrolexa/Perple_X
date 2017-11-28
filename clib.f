@@ -1608,12 +1608,15 @@ c                                 data if aq_oxides is set:
 
             qchg = thermo(6,k10)
 
-            if (qchg.eq.0d0.and.comp(ic(iox)).ne.0d0) then 
-               write (*,*) 'rejecting ',name
+            if (qchg.eq.0d0.and.comp(ic(iox)).ne.0d0.or.
+     *          qchg-cox(iox)*comp(ic(iox)).ne.0d0) then 
+
+               call warn (100,r,102,
+     *              name//' has been rejected; to retain '//name//
+     *              ' set aq_oxide_components to false.')
+
                good = .false.
-            else if (qchg-cox(iox)*comp(ic(iox)).ne.0d0) then 
-               write (*,*) 'rejecting ',name
-               good = .false.
+
             end if
 
          end if 

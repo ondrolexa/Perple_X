@@ -727,7 +727,7 @@ c                                 get total moles to compute mole fractions
                b(i) = cblk(i)/ctotal
             end do
 
-            call lpopt (j,k,idead,output)
+            call lpopt (1,k,idead,output)
 
             if (idead.ne.0) then 
                write (*,2000) p0,dz,layer(k),k,j,v(1),v(2),

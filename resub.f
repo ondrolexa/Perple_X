@@ -343,15 +343,18 @@ c                                 warn if severe error
          kter = kter + 1
 c                                 analyze solution, get refinement points
          call yclos2 (clamda,x,is,iter,opt,quit,abort)
+
+         if (abort) then
+c                                 bad solution (lagged speciation) identified
+c                                 in yclos2
+            call lpwarn (101,'REOPT ')
+            exit
+
+         end if
 c                                 save the id and compositions
 c                                 of the refinement points, this
 c                                 is necessary because resub rewrites
 c                                 the xcoor array.
-         if (abort) then 
-            idead = 101
-            exit
-         end if
-
          call saver
 
          if (quit) exit
@@ -905,7 +908,7 @@ c                                  normalize the composition and free energy
          end do
 
       else 
-
+c                 DANGER DEBUG 
          write (*,*) 'ctot2?', ctot2
          bad = .true.
 
@@ -953,20 +956,17 @@ c idead set to 1.
 c----------------------------------------------------------------------
       implicit none
 
-      integer idead, iwarn91, iwarn42, iwarn90
+      integer idead, iwarn91, iwarn42, iwarn90, iwarn01
 
-      character*6 char     
+      character*6 char
 
       double precision c
 
-      double precision p,t,xco2,u1,u2,tr,pr,r,ps
-      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
+      save iwarn91, iwarn42, iwarn90, iwarn01
 
-      save iwarn91, iwarn42, iwarn90
-
-      data iwarn91, iwarn42, iwarn90/0,0,0/
+      data iwarn91, iwarn42, iwarn90, iwarn01/4*0/
 c----------------------------------------------------------------------
-c                                             look for errors                                            
+c                                             look for errors
       if (idead.eq.2.or.idead.gt.4.and.iwarn91.lt.6) then 
 c                                             unbounded solution, or
 c                                             other programming error.
@@ -988,9 +988,14 @@ c                                             solution.
          iwarn90 = iwarn90 + 1
          if (iwarn90.eq.5) call warn (49,c,90,'LPWARN')
 
-      end if
+      else if (idead.eq.101.and.iwarn01.lt.100) then
 
-c         write (*,*) p,t,iter
+          iwarn01 = iwarn01 + 1
+          call warn (100,c,101,'optimization unstable due to an under'//
+     *              'saturated component during lagged speciation')
+          if (iwarn01.eq.100) call warn (49,c,90,'LPWARN')
+
+      end if
 
       end 
 
@@ -2926,10 +2931,10 @@ c----------------------------------------------------------------------
 
       external ffirst
 
-      integer i, j, k, id, is(*), jmin(k19), opt, kpt, mpt, iter, tic, 
+      integer i, j, id, is(*), jmin(k19), opt, kpt, mpt, iter, tic, 
      *        islv, jslv, idslv(k5), jdslv(k5)
 
-      double precision clamda(*), clam(k19), x(*), stot
+      double precision clamda(*), clam(k19), x(*)
 
       logical stable(k19), quit, abort
 

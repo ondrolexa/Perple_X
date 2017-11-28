@@ -19,7 +19,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a)') 
-     *      'Perple_X version 6.8.0, source updated Nov 24, 2017.'
+     *      'Perple_X version 6.8.0, source updated Nov 28, 2017.'
 
       end
 
@@ -318,6 +318,8 @@ c                                 fractionation_lower_threshold
       nopt(32) = 0d0
 c                                 fractionation_upper_threshold
       nopt(33) = 0d0
+c                                 aq_vapor_epsilon
+      nopt(34) = 1d0 
 c                                 hard_limits for solution model refinement
       valu(16) = 'off'
       lopt(3) = .false.
@@ -382,9 +384,8 @@ c                                 aq_oxide_components
       lopt(36) = .false.
 c                                 allow null phases
       lopt(37) = .false.
-c                                 failed default file name option, to implement 
-c                                 this option in the calling program
-      lopt(38) = .false. 
+c                                 aq_bad_results 
+      lopt(38) = .false.
 c                                 initialize mus flag lagged speciation
       mus = .false.
 c                                 -------------------------------------
@@ -486,6 +487,10 @@ c                                 phase composition key
          else if (key.eq.'output_iteration_detai') then 
 
             if (val.eq.'T') lopt(34) = .true.
+
+         else if (key.eq.'aq_bad_results') then 
+
+            if (val.eq.'T') lopt(38) = .true.
 
          else if (key.eq.'aq_solvent_composition') then
 
@@ -595,6 +600,10 @@ c                                 bad number key
          else if (key.eq.'zero_bulk') then
 c                                 zero_bulk key
             read (strg,*) nopt(11)
+
+         else if (key.eq.'aq_vapor_epsilon') then
+c                                 zero_bulk key
+            read (strg,*) nopt(34)
 
          else if (key.eq.'zero_mode') then
 c                                 zero_mode key
@@ -2473,6 +2482,13 @@ c---------------------------------------------------------------------
       subroutine warn (ier,realv,int,char)
 c---------------------------------------------------------------------
 c write warning message and continue execution
+
+c generic warnings:
+
+c 49  - future instances of warning int will not be repeated.
+c 99  - just dump char
+c 100 - use int (i3) as error number and dump char.
+c 999 - unspecified real, int, char dump.
 c---------------------------------------------------------------------
       implicit none
 
@@ -2638,6 +2654,8 @@ c----------------------------------------------------------------------
          write (*,92) int, l7, char, (l7 - 1)/2**(grid(3,2)-1) + 1
       else if (ier.eq.99) then
          write (*,99) char
+      else if (ier.eq.100) then
+         write (*,100) int, char
       else if (ier.eq.106) then
          write (*,106) char
       else if (ier.eq.108) then
@@ -2932,6 +2950,7 @@ c     *          ' (SWASH, see program documentation Eq 2.3)',/)
      *        'with an effective grid resolution of ',i4,
      *        ' points.')
 99    format (/,'**warning ver099** ',a,/)
+100   format (/,'**warning ver',i3,'** ',a,/)
 106   format ('**warning ver106** programming error in ',a)
 108   format (/,'**warning ver108** wway, a phase field with the '
      *         ,'following',/,' reaction is stable on both ',
@@ -4584,16 +4603,8 @@ c                                 readrt loads the root into prject
 
             else  
 c                                 VERTEX, MEEMUM, and plotting programs
-               if (.not.lopt(38)) then 
-c                                 interactive input 
-                  write (*,1030) 
-                  call readrt
-
-               else 
-
-                  write (*,1090) prject
-
-               end if
+               write (*,1030) 
+               call readrt
 
             end if 
 
@@ -4629,11 +4640,6 @@ c                                 VERTEX, MEEMUM, UNSPLT
             open (n1,file=n1name,iostat=ierr,status='old')
 
             if (ierr.ne.0) then
-
-               if (lopt(38)) then
-                  write (*,1100) n1name
-                  call errpau
-               end if 
 c                                 name does not exist
                write (*,1080) n1name
                read (*,'(a)') y

@@ -180,6 +180,8 @@ c                                 weight composition
 c                                 species_ouput
          write (lu,'(/,a,/)') 'Phase speciation (molar proportions):'
 
+         tag = ' '
+
          do i = 1, np 
 
             id = kkp(i) 
@@ -219,7 +221,6 @@ c                                 check for aqueous phase output
 
                l = k + inc - 1
                if (l.gt.ct) l = ct
-               tag = ' '
 
                if (ksmod(id).eq.20) then 
 c                                 forward aqueous model
