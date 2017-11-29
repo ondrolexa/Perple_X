@@ -10,6 +10,7 @@ c SWITZERLAND. All rights reserved.
 c Please do not distribute this source.
 
 c-----------------------------------------------------------------------
+
       character*10 function gname (id)
 c-----------------------------------------------------------------------
       implicit none
@@ -8971,6 +8972,9 @@ c---------------------------------------------------------------------
 
       external gcpd
 
+      character fname*10, aname*6, lname*22
+      common/ csta7 /fname(h9),aname(h9),lname(h9)
+
       double precision z, pa, p0a, x, w, y, wl
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
      *              wl(m17,m18)
@@ -9925,7 +9929,17 @@ c                                 solution models
             jspec(im,i) = iorig(i)
          end do 
 
-      end if 
+      end if
+c                                  set fluid flags for non-special case melts
+      if (lname(im).eq.'liquid'.or.lname(im).eq.'fluid') then 
+c                                  set ifp for t_melt and melt_is_fluid
+         do i = 1, mstot(im)
+c                                 of endmember i in the solution model input:
+            ifp(kdsol(knsp(i,im))) = -1
+
+         end do
+
+      end if
 
       if (jsmod.ne.20) then 
 c                                 -------------------------------------
@@ -9952,9 +9966,9 @@ c                                 endmember order.
       pmod(im) = .true.
       killct = 0 
 c                                 classify model as fluid/not fluid
-      if ((jsmod.eq.24.or.jsmod.eq.25.or.jsmod.eq.27.or.jsmod.eq.28)
-     *    .and.lopt(6)
-     *    .or.jsmod.eq.20
+      if ((jsmod.eq.24.or.jsmod.eq.25.or.jsmod.eq.27.or.jsmod.eq.28
+     *    .or.lname(im).eq.'liquid'.or.lname(im).eq.'fluid').and.lopt(6)
+     *    .or.jsmod.eq.20.or.jsmod.eq.39
      *    .or.jsmod.eq.0.or.jsmod.eq.26.or.jsmod.eq.41) then 
 
          fp(im) = .true.

@@ -274,16 +274,18 @@ c                                 first iteration
          refine = .false.
 
          if (id.le.ipoint) then 
-            if (ikp(id).gt.0) then 
-               if (ksmod(ikp(id)).eq.39) then 
+            if (ikp(id).gt.0) then
+               refine = .true. 
+c               if (ksmod(ikp(id)).eq.39) then 
 c                                 associate it with a solution refinement point,
 c                                 this could be general, but then resub needs a
 c                                 routine to recover endmember compositions
+c                                  is hkp necessary?
                   hkp(jdv(i)) = i
 c                                 raise the gibbs energy of the endmember to 
 c                                 break the degeneracy of back-calculation
-                  refine = .true.
-               end if 
+c                  refine = .true.
+c               end if 
             end if
          end if 
 c                                 the point is a pseudocompound, refine it
@@ -367,23 +369,30 @@ c                                 the xcoor array.
 c                                 generate new pseudocompounds
          do i = 1, npt
 
-            ids = lkp(i)
+            id = lkp(i)
+
             refine = .false.
 
-            if (ids.lt.0) then 
-               if (ikp(-ids).gt.0) then 
-                  if (ksmod(ikp(-ids)).eq.39) then 
+            if (id.lt.0) then 
+               if (ikp(-id).gt.0) then 
+c                  if (ksmod(ikp(-ids)).eq.39) then 
 c                                 associate it with a solution refinement point,
 c                                 this could be general, but then resub needs a
 c                                 routine to recover endmember compositions
-                     ids = ikp(-ids)
+c                     ids = ikp(-ids)
+c                                 is mkp necessary??
+                     mkp(i) = i
                      refine = .true.
-                  end if 
+                     
+                     ids = ikp(-id)
+c                  end if 
                end if
+            else 
+               ids = id
             end if 
 c                                 a refinement point:
-            if (ids.gt.0.or.refine)
-     *         call resub (mkp(i),i,ids,iref,iter,first,wad1,wad2)
+            if (id.gt.0.or.refine)
+     *         call resub (mkp(i),id,ids,iref,iter,first,wad1,wad2)
 c                                 reset jdv in case of exit, there 
 c                                 doesn't seem to be an exit possible here.
             jdv(i) = i
@@ -471,24 +480,34 @@ c                                 option values
       integer ineg
       common/ cst91 /ineg(h9,m15)
 
+      integer ipoint,kphct,imyn
+      common/ cst60 /ipoint,kphct,imyn
+
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
 
       save last
 c----------------------------------------------------------------------
-
       if (iter.eq.1) then
 c                                first iteration id array points to 
 c                                original compound arrays:
-         call getolx (ids,id)
+         if (id.gt.ipoint) then 
+            call getolx (ids,id)
+         else
+            call endmmx (id,ids,iter)
+         end if 
 
       else
 c                                on subsequent iterations get the y's
 c                                stored in the ycoor array by routine 
 c                                saver, these are reindexed copies of the
 c                                coordinates originally saved in zcoor
-c                                below. 
-         call getxy0 (ids,id)
+c                                below.
+         if (id.gt.jpt) then 
+            call getxy0 (ids,id)
+         else 
+            call endmmx (id,ids,iter)
+         end if
 
       end if
 c                                load the subdivision limits into
@@ -753,7 +772,71 @@ c                                 of the solution
 
       last = ids 
 
-      end 
+      end
+
+      subroutine endmmx (id,ids,iter)
+c----------------------------------------------------------------------
+c generate compositional coordinates (x(i,j) array) for endmembers 
+c during outrefine. if iter = 1, id is the static array index of the
+c endmember, else iter is the dynamic array index. ids is the solution
+c model index. 
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer i, j, id, ids, jd, kd, iter 
+
+      integer ipoint,kphct,imyn
+      common/ cst60 /ipoint,kphct,imyn
+
+      integer icomp,istct,iphct,icp
+      common/ cst6  /icomp,istct,iphct,icp
+
+      integer jend
+      common/ cxt23 /jend(h9,m4)
+
+      double precision z, pa, p0a, x, w, y, wl
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
+     *              wl(m17,m18)
+
+      integer tphct, jpt
+      double precision g2, cp2, c2tot
+      common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),tphct,jpt
+
+      integer istg, ispg, imlt, imdg
+      common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
+
+      integer lstot,mstot,nstot,ndep,nord
+      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
+
+      integer ksmod, ksite, kmsol, knsp
+      common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
+c----------------------------------------------------------------------
+      if (iter.eq.1) then 
+         jd = id
+      else 
+         jd = id + istct - 1
+      end if
+c                                locate the endmember in the solution
+      do i = 1, mstot(ids)
+         if (jend(ids,2+i).eq.jd) then
+            kd = i
+            exit
+         end if 
+      end do 
+c                                initialize all x's
+      do i = 1, istg(ids)
+         do j = 1, ispg(ids,i)
+            x(i,j) = 0d0
+         end do
+      end do
+c                                 assign endmember x's
+      do i = 1, istg(ids)
+         x(i,kmsol(ids,kd,i)) = 1d0
+      end do 
+
+      end
 
       subroutine csol (id,bad)
 c-----------------------------------------------------------------------
