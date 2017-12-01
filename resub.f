@@ -187,27 +187,19 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer liw, lw, iter, iref, i, id, idead, ids, jstart, inc, 
-     *        opt, kter, kitmax
+      integer liw, lw, iter, idead, jstart, opt, kter, kitmax 
 
-      logical first, wad1, wad2, kterat, quit, refine, abort 
+      logical quit, abort, kterat 
 
       parameter (liw=2*k21+3,lw=2*(k5+1)**2+7*k21+5*k5)
 
       double precision  ax(k5), x(k21), clamda(k21+k5), w(lw)
 
       integer is(k21+k5), iw(liw)
-c                                 -------------------------------------
-      double precision r,tr,pr,ps,p,t,xco2,u1,u2
-      common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
-c                                 global variables
-c                                 adaptive coordinates
+
       integer jphct, jpt
       double precision g2, cp2, c2tot
       common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),jphct,jpt
-
-      integer ksmod, ksite, kmsol, knsp
-      common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
@@ -215,98 +207,29 @@ c                                 adaptive coordinates
       double precision xa,b,xc
       common/ cst313 /xa(k5,k1),b(k5),xc(k1)
 
-      integer ikp
-      common/ cst61 /ikp(k1)
-
-      integer hkp,mkp
-      common/ cst72 /hkp(k21),mkp(k19)
-c                                 adaptive x(i,j) coordinates
-      integer jcoct, jcoor, jkp
-      double precision zcoor
-      common/ cxt13 /zcoor(k20),jcoor(k21),jkp(k21),jcoct
-
       integer iopt
       logical lopt
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
-      integer lcoor,lkp
-      double precision ycoor
-      common/ cxt14 /ycoor(k22),lcoor(k19),lkp(k19)
-
-      integer ipoint,kphct,imyn
-      common/ cst60 /ipoint,kphct,imyn
-
-      integer jpoint, jstct
-      common/ cxt60 /jpoint,jstct
-
       integer npt,jdv
       double precision cptot,ctotal
       common/ cst78 /cptot(k19),ctotal,jdv(k19),npt
-
-      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
-      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
-
-      integer jnd
-      double precision aqg,q2,rt
-      common/ cxt2 /aqg(m4),q2(m4),rt,jnd(m4)
 c-----------------------------------------------------------------------
 c                                 the pseudocompounds to be refined
 c                                 are identified in jdv(1..npt)
-      iter = 1
-      iref = 0
       quit = .false.
-      jcoct = 1
-      inc = istct - 1
       opt = npt
       kterat = .false.
       kitmax = 0
       kter = 0 
-      jphct = jpt
+
 c                                 --------------------------------------
 c                                 first iteration
-      first = .true.
+      call resub (1,kterat)
 
-      do i = 1, npt
 
-         id = jdv(i) + inc
-
-         refine = .false.
-
-         if (id.le.ipoint) then 
-            if (ikp(id).gt.0) then
-               refine = .true. 
-c               if (ksmod(ikp(id)).eq.39) then 
-c                                 associate it with a solution refinement point,
-c                                 this could be general, but then resub needs a
-c                                 routine to recover endmember compositions
-c                                  is hkp necessary?
-                  hkp(jdv(i)) = i
-c                                 raise the gibbs energy of the endmember to 
-c                                 break the degeneracy of back-calculation
-c                  refine = .true.
-c               end if 
-            end if
-         end if 
-c                                 the point is a pseudocompound, refine it
-         if (id.gt.ipoint.or.refine) then
-
-            call resub (i,id,ikp(id),iref,iter,first,wad1,wad2)
-
-            if (lopt(32).and.iopt(33).gt.0) then
-               if (ksmod(ikp(id)).eq.39) kterat = .true.
-            end if
-
-         end if
-
-      end do
-
-c      do i = 1, ns
-c                                 DANGER DANGER DEBUG
-c         g2(jnd(i)) = g2(jnd(i)) + 1d2
-c      end do 
-
-      if (iref.eq.0) then
+      if (jphct.eq.jpt) then
 c                                 if nothing to refine, set idead 
 c                                 to recover previous solution
          idead = -1
@@ -337,7 +260,7 @@ c                                 do the optimization
 c                                 warn if severe error
          if (idead.gt.0) then
 
-            call lpwarn (idead,'REOPT ')
+            call lpwarn (idead,'REOPT')
             exit
 
          end if
@@ -349,7 +272,8 @@ c                                 analyze solution, get refinement points
          if (abort) then
 c                                 bad solution (lagged speciation) identified
 c                                 in yclos2
-            call lpwarn (101,'REOPT ')
+            idead = 101 
+            call lpwarn (idead,'REOPT')
             exit
 
          end if
@@ -360,417 +284,142 @@ c                                 the xcoor array.
          call saver
 
          if (quit) exit
-
-         jphct = jpt
-         iref = 0
-         jcoct = 1
-
-         first = .true.
 c                                 generate new pseudocompounds
-         do i = 1, npt
+         call resub (iter,kterat)
 
-            id = lkp(i)
-
-            refine = .false.
-
-            if (id.lt.0) then 
-               if (ikp(-id).gt.0) then 
-c                  if (ksmod(ikp(-ids)).eq.39) then 
-c                                 associate it with a solution refinement point,
-c                                 this could be general, but then resub needs a
-c                                 routine to recover endmember compositions
-c                     ids = ikp(-ids)
-c                                 is mkp necessary??
-                     mkp(i) = i
-                     refine = .true.
-                     
-                     ids = ikp(-id)
-c                  end if 
-               end if
-            else 
-               ids = id
-            end if 
-c                                 a refinement point:
-            if (id.gt.0.or.refine)
-     *         call resub (mkp(i),id,ids,iref,iter,first,wad1,wad2)
-c                                 reset jdv in case of exit, there 
-c                                 doesn't seem to be an exit possible here.
-            jdv(i) = i
-
-         end do
-
-      end do 
+      end do
 
       end
 
-      subroutine resub (jd,id,ids,iref,iter,first,wad1,wad2)
+      subroutine resub (iter,kterat)
 c----------------------------------------------------------------------
-c subroutine to generate new pseudocompound compositions around the
-c pseudocompound id of solution ids in iteration iter. ifst is the 
-c pointer to the first pseudocompound of the solution ids and ilst
-c points to the last. 
+c subroutine to generate new pseudocompounds around each refinenent 
+c point during adaptive optimization. 
 c----------------------------------------------------------------------
       implicit none 
 
       include 'perplex_parameters.h'
-c                                 -------------------------------------
-c                                 local variables
-      logical bad, first, quack1, quack2, wad1, wad2
 
-      double precision xxnc, ysum, res0
+      logical bad, kterat
 
-      integer i, j, k, l, m, ids, id, jd, iter, kcoct, iref, last, j0
-c                                 -------------------------------------
-c                                 functions
-      double precision gsol1, ydinc
-c                                 -------------------------------------
-c                                 global variables:
-c                                 adaptive g and compositions
-      integer jphct, jpt
-      double precision g2, cp2, c2tot
-      common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),jphct,jpt
+      integer i, ids, lds, id, kd, iter
 
-      logical quack
-      integer solc, isolc
-      common/ cxt1 /solc(k5),isolc,quack(k21)
-c                                 adaptive z coordinates
-      integer jcoct, jcoor, jkp
-      double precision zcoor
-      common/ cxt13 /zcoor(k20),jcoor(k21),jkp(k21),jcoct
-c                                 working arrays
-      double precision z, pa, p0a, x, w, y, wl
-      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
-     *              wl(m17,m18)
-c                                 x coordinate description
-      integer istg, ispg, imlt, imdg
-      double precision xmng, xmxg, xncg, xmno, xmxo, reachg
-      common/ cxt6r /xmng(h9,mst,msp),xmxg(h9,mst,msp),xncg(h9,mst,msp),
-     *               xmno(h9,mst,msp),xmxo(h9,mst,msp),reachg(h9)
-      common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
-c                                 temporary subdivision limits:
-      double precision xmn,xmx,xnc
-      common/ cxt108 /xmn(mst,msp),xmx(mst,msp),xnc(mst,msp)
-c                                 coordinates output by subdiv
-      integer ntot,npairs
-      common/ cst86 /ntot,npairs
-
-      double precision simp,prism
-      common/ cxt86 /simp(k13),prism(k24)
-
-      integer ncoor,mcoor,ndim
-      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
+      double precision res0
 
       integer ksmod, ksite, kmsol, knsp
       common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
 
+      integer icomp,istct,iphct,icp
+      common/ cst6  /icomp,istct,iphct,icp
+
       integer hkp,mkp
       common/ cst72 /hkp(k21),mkp(k19)
-c                                 model type
-      logical lorder, lexces, llaar, lrecip
-      common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
-c                                 option values
+
+      integer ikp
+      common/ cst61 /ikp(k1)
+
       integer iopt
       logical lopt
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
-      integer lstot,mstot,nstot,ndep,nord
-      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
+      integer ntot,npairs
+      common/ cst86 /ntot,npairs
 
-      integer ineg
-      common/ cst91 /ineg(h9,m15)
+      integer npt,jdv
+      double precision cptot,ctotal
+      common/ cst78 /cptot(k19),ctotal,jdv(k19),npt
+
+      integer lcoor,lkp
+      double precision ycoor
+      common/ cxt14 /ycoor(k22),lcoor(k19),lkp(k19)
+
+      integer jphct, jpt
+      double precision g2, cp2, c2tot
+      common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),jphct,jpt
+
+      integer jcoct, jcoor, jkp
+      double precision zcoor
+      common/ cxt13 /zcoor(k20),jcoor(k21),jkp(k21),jcoct
 
       integer ipoint,kphct,imyn
       common/ cst60 /ipoint,kphct,imyn
-
-      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
-      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
-
-      save last
 c----------------------------------------------------------------------
-      if (iter.eq.1) then
-c                                first iteration id array points to 
-c                                original compound arrays:
-         if (id.gt.ipoint) then 
-            call getolx (ids,id)
-         else
-            call endmmx (id,ids,iter)
-         end if 
-
-      else
-c                                on subsequent iterations get the y's
-c                                stored in the ycoor array by routine 
-c                                saver, these are reindexed copies of the
-c                                coordinates originally saved in zcoor
-c                                below.
-         if (id.gt.jpt) then 
-            call getxy0 (ids,id)
-         else 
-            call endmmx (id,ids,iter)
-         end if
-
-      end if
-c                                load the subdivision limits into
-c                                temporary limit arrays:
+c                                 iteration dependent resolution
       res0 = nopt(24)/nopt(21)**iter
+c                                 set dynamic array counters:
+      jphct = jpt
+      jcoct = 1
+c                                 loop on previous stable phases
+c                                 refine as necessay:
+      lds = 0 
 
-      if (ksmod(ids).ne.20) then 
-c                                normal models     
-         do i = 1, istg(ids)
+      do kd = 1, npt
 
-            do j = 1, ndim(i,ids)
+         if (iter.eq.1) then 
+c                                 static array pointer is
+            id = jdv(kd) + istct - 1
+c                                 solution model pointer is
+            ids = ikp(id)
+c                                 refine if a solution
+            if (ids.eq.0) cycle 
+c                                 special (pointless) iterations?
+            if (lopt(32).and.iopt(33).gt.0) then
+               if (ksmod(ikp(id)).eq.39) kterat = .true.
+            end if
+c                                 get the refinement point composition
+            if (id.gt.ipoint) then 
+               call getolx (ids,id)
+            else
+               call endmmx (id,ids,iter)
+            end if
 
-               xnc(i,j) = xncg(ids,i,j)*res0
-               xxnc = xnc(i,j)*reachg(ids)
+         else
+c                                 use pointer array lkp this uses 
+c                                 negative values to index static
+c                                 compounds and positive values to
+c                                 point to solution models
+            id = lkp(kd)
 
-               if (imdg(j,i,ids).eq.0) then 
-c                                 cartesian
-                  xmn(i,j) = x(i,j) - xxnc
-                  xmx(i,j) = x(i,j) + xxnc
+            if (id.lt.0) then
 
-               else
-c                                 conformal
-                  xmn(i,j) = ydinc (x(i,j),-xxnc,imdg(j,i,ids),j,i,ids)
-                  xmx(i,j) = ydinc (x(i,j),xxnc,imdg(j,i,ids),j,i,ids)
-
-               end if 
-c                                 changed feb 6, 2012 from xmng/xmxg
-c                                 to allow hardlimits. JADC
-               if (xmn(i,j).lt.xmno(ids,i,j)) xmn(i,j) = xmno(ids,i,j)
-               if (xmx(i,j).gt.xmxo(ids,i,j)) xmx(i,j) = xmxo(ids,i,j)
-
-            end do 
-         end do
-
-      else 
-c                                 charge balance model
-         j = -1
-
-         do i = 1, nqs1
-
-            if (i.eq.ns) cycle
-
-            xnc(1,i) = xncg(ids,1,i)*res0
-            xxnc = xnc(1,i)*reachg(ids)
-
-            if (imdg(i,1,ids).eq.0) then 
-c                                 cartesian
-               xmn(1,i) = x(1,i) - xxnc
-               xmx(1,i) = x(1,i) + xxnc
+               ids = ikp(-id)
+               if (ids.eq.0) cycle
+c                                 endmember refinement point:
+c                                 get refine point composition
+               call endmmx (-id,ids,iter)
 
             else
-c                                 conformal
-               xmn(1,i) = ydinc (x(1,i),-xxnc,imdg(i,1,ids),i,1,ids)
-               xmx(1,i) = ydinc (x(1,i),xxnc,imdg(i,1,ids),i,1,ids)
+
+               ids = id
+c                                 solution refinement point:
+               call getxy0 (ids,kd)
 
             end if 
 
-            if (xmn(1,i).lt.xmno(ids,1,i)) then
-               xmn(1,i) = xmno(ids,1,i)
-            else if (xmx(1,i).gt.xmxo(ids,1,i)) then 
-               xmx(1,i) = xmxo(ids,1,i)
-            end if 
-
-         end do
-
-      end if 
+         end if 
+c                                  get the subdivision limits:
+         call sublim (ids,res0)
+c                                  do the subdivision
+         call subdiv (ids,.true.)
 c                                  set solution model parameters for
 c                                  gsol1, don't call if the previous
 c                                  refinement point was the same solution.
-      if (ids.ne.last) call ingsol (ids) 
+         if (ids.ne.lds) call ingsol (ids)
 
-      call subdiv (ids,.true.)
+         lds = ids
 
-      j0 = jphct + 1
+         do i = 1, ntot
+c                                   increment jphct, 
+c                                   load jkp[ids], hkp[i], local
+c                                   and global composition arrays
+            call loadgx (kd,i,ids,bad)
 
-      do 10 i = 1, ntot
+            if (bad) cycle
 
-         jphct = jphct + 1
+         end do
 
-         if (jphct.gt.k21) call error (58,x(1,1),k21,'resub')
-c                                 convert to compositional corrdinates 
-c                                 required by routine gsol, y coordinates
-c                                 are placed in first array of cxt7,
-c                                 store a copy of x coordinates in 
-c                                 1-d array zcoor
-         jkp(jphct) = ids
-         hkp(jphct) = jd
-         jcoor(jphct) = jcoct - 1
-         kcoct = jcoct + mcoor(ids)
-c                                 counter for number of non 0 or 1 compositions
-         if (kcoct.gt.k20) call error (59,x(1,1),k20,'resub')
-
-         l = (i-1)*mcoor(ids)
-         m = 0
-       
-         if (ksmod(ids).ne.20) then 
-
-            do j = 1, istg(ids)
-
-               ysum = 0d0
-
-               do k = 1, ndim(j,ids)
-
-                  m = m + 1
-
-                  x(j,k) = prism(l+m)
-                  ysum = ysum + x(j,k)
-                  zcoor(jcoct) = x(j,k)
- 
-                  if (x(j,k).lt.xmno(ids,j,k).and.
-     *                x(j,k).gt.xmxo(ids,j,k)) then 
-c                                 the composition is out of range
-                     jphct = jphct - 1
-                     jcoct = kcoct - mcoor(ids)
-                     goto 10
-
-                  end if
-
-                  jcoct = jcoct + 1
-
-               end do
-
-               x(j,ispg(ids,j)) = 1d0 - ysum
-
-            end do 
-
-         else 
-c                                 charge balance models: a wierd shuffle to put
-c                                 the first nqs - 1 species in zcoor
-            ysum = 0d0
-
-            do k = 1, nqs
-
-               if (k.eq.ns) cycle 
-
-               m = m + 1
-
-               x(1,k) = prism(l+m)
-               ysum = ysum + x(1,k)
-
-               if (k.eq.nqs) cycle 
-
-               zcoor(kcoct-nqs+k) = x(1,k)
- 
-               if (x(1,k).lt.xmno(ids,1,k).and.
-     *             x(1,k).gt.xmxo(ids,1,k)) then 
-c                                 the composition is out of range
-                  jphct = jphct - 1
-                  jcoct = kcoct - mcoor(ids)
-                  goto 10
-
-               end if
-
-            end do
-
-            x(1,ns) = 1d0 - ysum
-
-            zcoor(kcoct-qn) = x(1,ns)
-            jcoct = jcoct + nqs1
-
-         end if 
-
-         call xtoy (ids,bad)
-
-         if (bad) then 
-
-            jphct = jphct - 1
-            jcoct = kcoct - mcoor(ids)
-            cycle
-
-         else if (ksmod(ids).eq.5) then
-c                                 this is an el cheapo filter for redundant
-c                                 compositions, a better method would be to
-c                                 do the subdivision properly.
-            do j = 1, ndep(ids)
-
-               if (y(knsp(lstot(ids)+j,ids)).gt.0d0.and.
-     *             y(knsp(lstot(ids)+j,ids)).le.y(ineg(ids,j))) then
-c                                 reject composition 
-                  jphct = jphct - 1
-                  jcoct = kcoct - mcoor(ids)
-                  bad = .true. 
-                  exit 
-
-               end if 
-
-            end do 
-      
-            if (bad) cycle 
-
-         end if
-
-         if (lopt(32).and.ksmod(ids).eq.39) then
-
-            if (lopt(28)) then 
-c                                 solute free cpd
-               g2(jphct) = gsol1(ids)
-
-               call csol (ids,bad)
-
-               if (bad) then 
-                  jphct = jphct - 1
-                  jcoct = kcoct - mcoor(ids)
-                  cycle
-               end if 
-
-               c2tot(jphct) = 0d0 
-               quack(jphct) = .true.
-c                                 now pad out counters for 
-c                                 a solute cpd
-               jphct = jphct + 1
-               if (jphct.gt.k21) call error (58,x(1,1),k21,'resub')
-
-               jkp(jphct) = ids
-               hkp(jphct) = jd
-               jcoor(jphct) = jcoct - 1
-
-               do j = 1, mcoor(ids)
-                  zcoor(jcoct) = zcoor(jcoct-mcoor(ids))
-                  jcoct = jcoct + 1
-               end do 
-
-               kcoct = kcoct + mcoor(ids)
-
-            end if 
-c                                  solute-bearing compound
-            call aqlagd (1,bad,.false.)
-
-            if (bad) then
-
-               jphct = jphct - 1
-               jcoct = kcoct - mcoor(ids)
-               cycle
-
-            else
- 
-               quack(jphct) = .false.
-
-            end if
-
-         else 
-c                                 call gsol to get g of the solution, gsol also
-c                                 computes the p compositional coordinates
-            g2(jphct) = gsol1(ids)
-c                                 use the coordinates to compute the composition 
-c                                 of the solution
-            call csol (ids,bad)
-
-            if (bad) then 
-               jphct = jphct - 1
-               jcoct = kcoct - mcoor(ids)
-               cycle
-            end if 
-
-         end if 
-
-         iref = iref + 1
-
-10    continue
-
-      first = .false.
-
-      last = ids 
+      end do
 
       end
 
@@ -819,7 +468,7 @@ c----------------------------------------------------------------------
          jd = id + istct - 1
       end if
 c                                locate the endmember in the solution
-      do i = 1, mstot(ids)
+      do i = 1, lstot(ids)
          if (jend(ids,2+i).eq.jd) then
             kd = i
             exit
@@ -1050,7 +699,8 @@ c----------------------------------------------------------------------
       data iwarn91, iwarn42, iwarn90, iwarn01/4*0/
 c----------------------------------------------------------------------
 c                                             look for errors
-      if (idead.eq.2.or.idead.gt.4.and.iwarn91.lt.6) then 
+      if (idead.eq.2.or.idead.gt.4.and.idead.lt.100
+     *                            .and.iwarn91.lt.6) then 
 c                                             unbounded solution, or
 c                                             other programming error.
          call warn (91,c,idead,char) 
@@ -3891,5 +3541,345 @@ c                                 read data for solution phases on n9:
 c                                 call initlp to initialize arrays 
 c                                 for optimization.
       call initlp     
+
+      end
+
+      subroutine sublim (ids,res0) 
+c----------------------------------------------------------------------
+      implicit none 
+
+      include 'perplex_parameters.h'
+
+      integer i, j, ids
+
+      double precision res0, xxnc, ydinc
+
+      external ydinc 
+
+      integer ncoor,mcoor,ndim
+      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
+
+      integer ksmod, ksite, kmsol, knsp
+      common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
+
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+c                                 x coordinate description
+      integer istg, ispg, imlt, imdg
+      double precision xmng, xmxg, xncg, xmno, xmxo, reachg
+      common/ cxt6r /xmng(h9,mst,msp),xmxg(h9,mst,msp),xncg(h9,mst,msp),
+     *               xmno(h9,mst,msp),xmxo(h9,mst,msp),reachg(h9)
+      common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
+c                                 temporary subdivision limits:
+      double precision xmn,xmx,xnc
+      common/ cxt108 /xmn(mst,msp),xmx(mst,msp),xnc(mst,msp)
+
+      double precision z, pa, p0a, x, w, y, wl
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
+     *              wl(m17,m18)
+c----------------------------------------------------------------------
+      if (ksmod(ids).ne.20) then 
+c                                normal models     
+         do i = 1, istg(ids)
+
+            do j = 1, ndim(i,ids)
+
+               xnc(i,j) = xncg(ids,i,j)*res0
+               xxnc = xnc(i,j)*reachg(ids)
+
+               if (imdg(j,i,ids).eq.0) then 
+c                                 cartesian
+                  xmn(i,j) = x(i,j) - xxnc
+                  xmx(i,j) = x(i,j) + xxnc
+
+               else
+c                                 conformal
+                  xmn(i,j) = ydinc (x(i,j),-xxnc,imdg(j,i,ids),j,i,ids)
+                  xmx(i,j) = ydinc (x(i,j),xxnc,imdg(j,i,ids),j,i,ids)
+
+               end if 
+c                                 changed feb 6, 2012 from xmng/xmxg
+c                                 to allow hardlimits. JADC
+               if (xmn(i,j).lt.xmno(ids,i,j)) xmn(i,j) = xmno(ids,i,j)
+               if (xmx(i,j).gt.xmxo(ids,i,j)) xmx(i,j) = xmxo(ids,i,j)
+
+            end do 
+         end do
+
+      else 
+c                                 charge balance model
+         j = -1
+
+         do i = 1, nqs1
+
+            if (i.eq.ns) cycle
+
+            xnc(1,i) = xncg(ids,1,i)*res0
+            xxnc = xnc(1,i)*reachg(ids)
+
+            if (imdg(i,1,ids).eq.0) then 
+c                                 cartesian
+               xmn(1,i) = x(1,i) - xxnc
+               xmx(1,i) = x(1,i) + xxnc
+
+            else
+c                                 conformal
+               xmn(1,i) = ydinc (x(1,i),-xxnc,imdg(i,1,ids),i,1,ids)
+               xmx(1,i) = ydinc (x(1,i),xxnc,imdg(i,1,ids),i,1,ids)
+
+            end if 
+
+            if (xmn(1,i).lt.xmno(ids,1,i)) then
+               xmn(1,i) = xmno(ids,1,i)
+            else if (xmx(1,i).gt.xmxo(ids,1,i)) then 
+               xmx(1,i) = xmxo(ids,1,i)
+            end if 
+
+         end do
+
+      end if
+
+      end 
+
+      subroutine loadgx (kd,i,ids,bad) 
+c----------------------------------------------------------------------
+      implicit none 
+
+      include 'perplex_parameters.h'
+
+      integer i, j, k, l, m, kd, ids, kcoct
+
+      logical bad
+
+      double precision ysum, gsol1
+
+      external gsol1
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      integer jphct, jpt
+      double precision g2, cp2, c2tot
+      common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),jphct,jpt
+
+      integer jcoct, jcoor, jkp
+      double precision zcoor
+      common/ cxt13 /zcoor(k20),jcoor(k21),jkp(k21),jcoct
+
+      double precision simp,prism
+      common/ cxt86 /simp(k13),prism(k24)
+
+      integer ncoor,mcoor,ndim
+      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
+
+      integer ksmod, ksite, kmsol, knsp
+      common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
+
+      integer hkp,mkp
+      common/ cst72 /hkp(k21),mkp(k19)
+
+      logical quack
+      integer solc, isolc
+      common/ cxt1 /solc(k5),isolc,quack(k21)
+
+      integer ineg
+      common/ cst91 /ineg(h9,m15)
+
+      double precision z, pa, p0a, x, w, y, wl
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
+     *              wl(m17,m18)
+
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+
+      integer istg, ispg, imlt, imdg
+      double precision xmng, xmxg, xncg, xmno, xmxo, reachg
+      common/ cxt6r /xmng(h9,mst,msp),xmxg(h9,mst,msp),xncg(h9,mst,msp),
+     *               xmno(h9,mst,msp),xmxo(h9,mst,msp),reachg(h9)
+      common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
+
+      integer lstot,mstot,nstot,ndep,nord
+      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
+c----------------------------------------------------------------------
+      jphct = jphct + 1
+
+      if (jphct.gt.k21) call error (58,x(1,1),k21,'resub')
+
+      bad = .false.
+      jkp(jphct) = ids
+      hkp(jphct) = kd
+
+      jcoor(jphct) = jcoct - 1
+      kcoct = jcoct + mcoor(ids)
+c                                 counter for number of non 0 or 1 compositions
+      if (kcoct.gt.k20) call error (59,x(1,1),k20,'resub')
+
+      l = (i-1)*mcoor(ids)
+      m = 0
+       
+      if (ksmod(ids).ne.20) then 
+
+         do j = 1, istg(ids)
+
+            ysum = 0d0
+
+            do k = 1, ndim(j,ids)
+
+               m = m + 1
+
+               x(j,k) = prism(l+m)
+               ysum = ysum + x(j,k)
+               zcoor(jcoct) = x(j,k)
+ 
+               if (x(j,k).lt.xmno(ids,j,k).and.
+     *             x(j,k).gt.xmxo(ids,j,k)) then 
+c                                 the composition is out of range
+                  jphct = jphct - 1
+                  jcoct = kcoct - mcoor(ids)
+                  bad = .true.
+                  return
+
+               end if
+
+               jcoct = jcoct + 1
+
+            end do
+
+            x(j,ispg(ids,j)) = 1d0 - ysum
+
+         end do 
+
+      else 
+c                                 charge balance models: a wierd shuffle to put
+c                                 the first nqs - 1 species in zcoor
+         ysum = 0d0
+
+         do k = 1, nqs
+
+            if (k.eq.ns) cycle 
+
+            m = m + 1
+
+            x(1,k) = prism(l+m)
+            ysum = ysum + x(1,k)
+
+            if (k.eq.nqs) cycle 
+
+            zcoor(kcoct-nqs+k) = x(1,k)
+
+            if (x(1,k).lt.xmno(ids,1,k).and.
+     *          x(1,k).gt.xmxo(ids,1,k)) then 
+c                                 the composition is out of range
+               jphct = jphct - 1
+               jcoct = kcoct - mcoor(ids)
+
+               bad = .true.
+               return
+
+            end if
+
+         end do
+
+         x(1,ns) = 1d0 - ysum
+
+         zcoor(kcoct-qn) = x(1,ns)
+         jcoct = jcoct + nqs1
+
+      end if
+
+      call xtoy (ids,bad)
+
+      if (bad) then 
+
+         jphct = jphct - 1
+         jcoct = kcoct - mcoor(ids)
+         return 
+
+      else if (ksmod(ids).eq.5) then
+c                                 this is an el cheapo filter for redundant
+c                                 compositions, a better method would be to
+c                                 do the subdivision properly.
+         do j = 1, ndep(ids)
+
+            if (y(knsp(lstot(ids)+j,ids)).gt.0d0.and.
+     *          y(knsp(lstot(ids)+j,ids)).le.y(ineg(ids,j))) then
+c                                 reject composition 
+               jphct = jphct - 1
+               jcoct = kcoct - mcoor(ids)
+               bad = .true. 
+               return
+
+            end if 
+
+         end do
+
+      end if
+c                                 
+      if (lopt(32).and.ksmod(ids).eq.39) then
+
+         if (lopt(28)) then 
+c                                 solute free cpd
+            g2(jphct) = gsol1(ids)
+
+           call csol (ids,bad)
+
+            if (bad) then 
+               jphct = jphct - 1
+               jcoct = kcoct - mcoor(ids)
+               return 
+            end if 
+
+            c2tot(jphct) = 0d0 
+            quack(jphct) = .true.
+c                                 now pad out counters for 
+c                                 a solute cpd
+            jphct = jphct + 1
+            if (jphct.gt.k21) call error (58,x(1,1),k21,'resub')
+
+            jkp(jphct) = ids
+            hkp(jphct) = kd
+
+            jcoor(jphct) = jcoct - 1
+
+            do j = 1, mcoor(ids)
+               zcoor(jcoct) = zcoor(jcoct-mcoor(ids))
+               jcoct = jcoct + 1
+            end do 
+
+            kcoct = kcoct + mcoor(ids)
+
+         end if 
+c                                  solute-bearing compound
+         call aqlagd (1,bad,.false.)
+
+         if (bad) then
+
+            jphct = jphct - 1
+            jcoct = kcoct - mcoor(ids)
+            return
+
+         else
+ 
+            quack(jphct) = .false.
+
+         end if
+
+      else 
+c                                 call gsol to get g of the solution, gsol also
+c                                 computes the p compositional coordinates
+         g2(jphct) = gsol1(ids)
+c                                 use the coordinates to compute the composition 
+c                                 of the solution
+         call csol (ids,bad)
+
+         if (bad) then 
+            jphct = jphct - 1
+            jcoct = kcoct - mcoor(ids)
+            return
+         end if 
+
+      end if 
 
       end
