@@ -409,8 +409,8 @@ fgrk_d  = 1 mrbG  + 1 ts    - 1 gl     - 1 tr + 1 b
 0. 1.  .1  0                 | range and resolution for X(cumm) on site 2, imod = 0
 0. 1.  .1  0                 | range and resolution for X(mrb)  on site 2, imod = 1
 0. .1  .1  0                 | range and resolution for X(kprg) on site 2, imod = 1
-0. .1  .1  0                 | range and resolution for X(tts)  on site 2, imod = 1
-0. .1  .1  0                 | range and resolution for X(fug)  on site 2, imod = 1
+0. .2  .1  0                 | range and resolution for X(tts)  on site 2, imod = 1
+0. .2  .1  0                 | range and resolution for X(fug)  on site 2, imod = 1
 
 begin_excess_function   
 
@@ -2030,7 +2030,7 @@ mtbi   = 1 tbi   + 2/3 mnbi - 2/3 phl
 
                              | subdivision model for (quinary) site 2 (Fe3+-Al-Ti-Si)
 0. .2  .1  1                 | range and resolution of X(Fe3+)
-0. .2  .1  1                 | range and resolution of X(Ti)
+0. .3  .1  1                 | range and resolution of X(Ti)
 0. 1.  .1  0                 | range and resolution of X(Al)              
                              
 begin_excess_function
