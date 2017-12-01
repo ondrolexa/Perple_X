@@ -9935,7 +9935,11 @@ c                                  set fluid flags for non-special case melts
 c                                  set ifp for t_melt and melt_is_fluid
          do i = 1, mstot(im)
 c                                 of endmember i in the solution model input:
-            ifp(kdsol(knsp(i,im))) = -1
+            if (lname(im).eq.'liquid') then 
+               ifp(kdsol(knsp(i,im))) = -1
+            else 
+               ifp(kdsol(knsp(i,im))) = 1
+            end if 
 
          end do
 
