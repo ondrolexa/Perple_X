@@ -1408,8 +1408,6 @@ c                                 -sdt
 c-----------------------------------------------------------------------
 c gclpht computes the reference pressure free energy of a compound 
 c aboves its jth transition (SGTE data type)
-
-c therlm(13-15,i,id) are never assigned/used so far as i can tell, JADC 23//2/2015.
 c---------------------------------------------------------------------
       implicit none
  
@@ -1426,11 +1424,13 @@ c---------------------------------------------------------------------
       gclpht = therlm(5,j,id) + therlm(6,j,id)*t + 
      *         therlm(7,j,id)*t*dlog(t) + therlm(8,j,id)/t + 
      *         therlm(9,j,id)/t**2 + therlm(10,j,id)/t**3 + 
-     *         therlm(11,j,id)/t**9 + therlm(12,j,id)*t**2 
-
-c            + 
-c     *        therlm(13,j,id)*t**3 + therlm(14,j,id)*t**4 + 
-c     *        therlm(15,j,id)*t**7 
+     *         therlm(11,j,id)/t**9 + therlm(12,j,id)*t**2
+c                                 added terms for eleanor, for SGTE 1st therlm indices > 3
+c                                 are incremented by 1 relative to input array tm index
+c                                 parameters are otherwise unmodified. thus therlm(13...)
+c                                 is tm(12...) = t12. JADC, 12/3/2017.
+     *        + therlm(13,j,id)*t**3 + therlm(14,j,id)*dsqrt(t)
+     *        + therlm(15,j,id)*dlog(t) 
      
       end   
 
@@ -1534,8 +1534,8 @@ c---------------------------------------------------------------------
  
       include 'perplex_parameters.h'
 
-      integer ld,lct,i,jtran
-      double precision t,g,gclpht 
+      integer ld, lct, i, jtran
+      double precision t, g, gclpht 
 
       external gclpht
  
@@ -2229,10 +2229,15 @@ c                              load into therlm:
               therlm(1,k,lamin) = tm(1,k)
               therlm(2,k,lamin) = tm(2,k)
 
-              do j = 4, 11
+              do j = 4, 14
 c                              nastia originally had t12-t15 here, but there
 c                              doesn't appear to be any data with more than
 c                              the first 11 parameters
+c                              ----------------------------------------------
+c                              added t12 (t^3), t13 (sqrt(t)), t14 (ln(t)) for eleanor.
+c                              note these DO NOT (and DID NOT) correspond to the coefficients
+c                              in Eq 4 as currently stated the thermo data file html. 
+c                              JADC, 12/3/2017.
                  therlm(j+1,k,lamin) = tm(j,k)
 
               end do 
@@ -3106,7 +3111,7 @@ c----------------------------------------------------------------------
       common/ cst51 /length,iblank,icom,chars(lchar)
 
       character*2 strgs*3, mstrg, dstrg, tstrg*3, wstrg*3, e16st*3
-      common/ cst56 /strgs(32),mstrg(6),dstrg(m8),tstrg(11),wstrg(m16),
+      common/ cst56 /strgs(32),mstrg(6),dstrg(m8),tstrg(m7),wstrg(m16),
      *               e16st(13)
 c----------------------------------------------------------------------
 
@@ -9968,20 +9973,19 @@ c                                 endmember order.
 
       smod(im) = .true.
       pmod(im) = .true.
-      killct = 0 
-c                                 classify model as fluid/not fluid
-      if ((jsmod.eq.24.or.jsmod.eq.25.or.jsmod.eq.27.or.jsmod.eq.28
-     *    .or.lname(im).eq.'liquid'.or.lname(im).eq.'fluid').and.lopt(6)
-     *    .or.jsmod.eq.20.or.jsmod.eq.39
-     *    .or.jsmod.eq.0.or.jsmod.eq.26.or.jsmod.eq.41) then 
-
+      killct = 0
+c                                 set fluid flag from the full name of the 
+c                                 phase:
+      if (lname(im).eq.'fluid') then 
          fp(im) = .true.
-
       else 
-
          fp(im) = .false.
-
       end if 
+c                                 classify liquid model as fluid/not fluid
+c                                 according to the melt_is_fluid option, this
+c                                 is only relevant for WERAMI
+      if (lname(im).eq.'liquid'.and.iam.eq.3.and.lopt(6))
+     *                                                 fp(im) = .true.
 
       do i = 1, kstot
 c                                 pointer to endmember
@@ -14568,6 +14572,32 @@ c EOS after Brosh et al., 2007, 2008:
 c v0 volume at pr,tr; nn number of atoms; gam0 Grüneisen parameter;
 c tet0 Enstein temperature; b1,dd1,b0,dd0 fitting coefficients;
 c Bo bulk modulus; Bpo pressure derivative of bulk modulus
+c                                 -------------------------------
+c in terms of coefficient tags nastia's polynomial is 
+
+c g = c1 + c2*T + c3*T*lnT + c4/T + c5/T**2 + c6/T**3 + c7/T**9 + 
+c         c8*T**2 + c9*T**3 + c10*T**4 + c11*T**7
+
+c to accomodate saxena & eriksson (2015, Fe-S) with minimal effort
+c for eleanor i use the G0 and S0 tags for the sqrt(T) and ln(T)
+c SGTE terms. creating a set of tags specifically for SGTE would 
+c be preferable, but require rewriting nastia's data (which might, 
+c or might not, be worthless), so the SGTE polynomial is now
+c
+c g = c1 + c2*T + c3*T*lnT + c4/T + c5/T**2 + c6/T**3 + c7/T**9  
+c        + c8*T**2 + c9*T**3 + c10*T**4 + c11*T**7 + G0*sqrt(T)
+c        + S0*ln(T)
+c
+c G0 and S0 are loaded into thermo(31...) and thermo(32...) via
+c the ic2p pointer array.
+
+c i didn't follow the cp/s/h stuff through the contorted 'cst1'
+c 'cst2' mess to see if it's ever relevant, if it is then the
+c code must be modified to include the appropriate G0/S0 terms.
+c if that stuff really is necessary it's probably better to clean
+c this up rather than to apply more plasters. 
+
+c                                           JADC, 12/3/2017
 c-----------------------------------------------------------------
       implicit none
       include 'perplex_parameters.h'
@@ -14632,8 +14662,9 @@ c                           additional Grueneisen parameter and Einstein tempera
       tet02 = thermo(30,id)
 
 c                          read SGTE data 
-      gsgte = a + b*t + c*t*dlog(t) + d/t + e/t**2 + f/t**3 + 
-     *                  g/t**9 + h*t**2 + i*t**3 + j*t**4 + k*t**7    
+      gsgte = a + b*t + c*t*dlog(t) + d/t + e/t**2 + f/t**3 
+     *                + g/t**9 + h*t**2 + i*t**3 + j*t**4 + k*t**7
+     *                + thermo(31,id)*dsqrt(t) + thermo(32,id)*dlog(t)
 c                          check for transitions:
       if (ltyp(id).ne.0) call calpht (t,gsgte,lmda(id),lct(id))
         
