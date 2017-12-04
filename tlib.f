@@ -386,6 +386,8 @@ c                                 allow null phases
       lopt(37) = .false.
 c                                 aq_bad_results 
       lopt(38) = .false.
+c                                 refine_endmembers
+      lopt(39) = .false.
 c                                 initialize mus flag lagged speciation
       mus = .false.
 c                                 -------------------------------------
@@ -491,6 +493,10 @@ c                                 phase composition key
          else if (key.eq.'aq_bad_results') then 
 
             if (val.eq.'T') lopt(38) = .true.
+
+         else if (key.eq.'refine_endmembers') then 
+
+            if (val.eq.'T') lopt(39) = .true.
 
          else if (key.eq.'aq_solvent_composition') then
 
