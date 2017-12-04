@@ -371,7 +371,8 @@ c                                 get the refinement point composition
             if (id.gt.ipoint) then 
                call getolx (ids,id)
             else
-               if (lopt(39)) call endmmx (id,ids,iter)
+               if (.not.lopt(39)) cycle
+               call endmmx (id,ids,iter)
             end if
 
          else
@@ -384,10 +385,10 @@ c                                 point to solution models
             if (id.lt.0) then
 
                ids = ikp(-id)
-               if (ids.eq.0) cycle
+               if (ids.eq.0.or..not.lopt(39)) cycle
 c                                 endmember refinement point:
 c                                 get refine point composition
-               if (lopt(39)) call endmmx (-id,ids,iter)
+               call endmmx (-id,ids,iter)
 
             else
 
