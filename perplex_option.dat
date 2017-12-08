@@ -31,7 +31,7 @@ dependent_potentials       on   | on or off
 efficiency                 3    | 1->5
 explicit_bulk_modulus      T    | T[rue] or F[alse], default is F; T => use explicit function for K if available
 fd_expansion_factor        2    | [2], nth order finite difference increment is increased by fd_expansion_factor^(n-1)
-final_resolution  2.5e-3 2.5e-3 | >0, <1, default 1e-3; exploratory and autorefine
+final_resolution  2.5e-3 2.5e-4 | >0, <1, default 1e-3; exploratory and autorefine
 finite_difference_p    1d4 1d-2 | threshold [1d4] and fraction [1d-2] for 1st order finite difference increment on pressure
 fractionation_hi_limit       0  | 0-1, [0], upper fractionation threshold, mass fraction
 fractionation_lo_limit       0  | 0-1, [0], lower fractionation threshold, mass fraction
@@ -62,7 +62,8 @@ pseudocompound_file        F    | echo static pseudocompound compositions to my_
 reach_increment_switch     off   | all, on, off; default is on; all consumes more resources
 reaction_format        minimum  | minimum, full, stoich, S+V, or everything
 reaction_list             off   | on or off
-refinement_points_II        5   | > 0, # of metstable refinement points retained during 2nd phase of adaptive minimization
+refine_endmembers           T
+refinement_points_II        10  | > 0, # of metstable refinement points retained during 2nd phase of adaptive minimization
 seismic_output            some  | all, some, none
 short_print                on   | on or off
 solution_names             mod  | mod[el], abb[reviation], ful[l] 

@@ -24,7 +24,7 @@ c-----------------------------------------------------------------------
 
       integer is(k1+k5),iw(liw)
 
-      logical quit
+      logical quit, abort
 c                                 options from perplex_option.dat
       integer iopt
       logical lopt
@@ -131,7 +131,7 @@ c                                 necessary?
 c                                 no refinement, find the answer
          call yclos0 (x,is,jphct) 
 c                                 final processing, .true. indicates static
-         call rebulk (.true.)
+         call rebulk (.true.,abort)
 
       else
 c                                 save lphct to recover static solution if
@@ -144,7 +144,7 @@ c                                 for refinement
 c                                 returns quit if nothing to refine
          if (quit) then 
 c                                 final processing, .true. indicates static
-            call rebulk (.true.)
+            call rebulk (.true.,abort)
 
          else
 c                                 initialize refinement point pointers
@@ -155,14 +155,24 @@ c                                 reoptimize with refinement
             call reopt (idead)
 c                                 final processing, .false. indicates dynamic
             if (idead.eq.0) then 
-               call rebulk (.false.)
+
+               call rebulk (.false.,abort)
+
+               if (abort) then
+c                                 bad solution (lagged speciation) identified
+c                                 in avrger
+                  idead = 101 
+                  call lpwarn (idead,'LPOPT0')
+
+               end if
+
             else if (idead.eq.-1) then
 c                                 hail mary
                jphct = lphct
                idead = 0
 
                call yclos0 (x,is,jphct) 
-               call rebulk (.true.)
+               call rebulk (.true.,abort)
 
             end if 
 
@@ -189,7 +199,7 @@ c-----------------------------------------------------------------------
 
       integer liw, lw, iter, idead, jstart, opt, kter, kitmax 
 
-      logical quit, abort, kterat 
+      logical quit, kterat
 
       parameter (liw=2*k21+3,lw=2*(k5+1)**2+7*k21+5*k5)
 
@@ -267,16 +277,7 @@ c                                 warn if severe error
 
          kter = kter + 1
 c                                 analyze solution, get refinement points
-         call yclos2 (clamda,x,is,iter,opt,quit,abort)
-
-         if (abort) then
-c                                 bad solution (lagged speciation) identified
-c                                 in yclos2
-            idead = 101 
-            call lpwarn (idead,'REOPT')
-            exit
-
-         end if
+         call yclos2 (clamda,x,is,iter,opt,quit)
 c                                 save the id and compositions
 c                                 of the refinement points, this
 c                                 is necessary because resub rewrites
@@ -974,7 +975,7 @@ c-----------------------------------------------------------------------
 
       end 
 
-      subroutine avrger 
+      subroutine avrger (abort)
 c----------------------------------------------------------------------
 c avrger combines discretization points into a single solution
 c composition. on output
@@ -990,7 +991,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical check, bad, quit, notaq, q1, qq2
+      logical check, bad, quit, notaq, abort
 
       integer idsol(k5),kdsol(k5,k5),ids,isite,xidsol,xkdsol,irep,
      *        i,j,jdsol(k5,k5),jd,k,l,nkp(k5),xjdsol(k5),kk
@@ -1069,6 +1070,7 @@ c                                  x-coordinates for the final solution
       integer pindex,tindex
       common/ cst54 /pindex,tindex,usv
 c-----------------------------------------------------------------------
+      abort = .false.
 c                                first check if solution endmembers are
 c                                among the stable compounds:
       do i = 1, ntot
@@ -1169,14 +1171,27 @@ c                                 impure solvent, get speciation
             do j = 1, np
 c                                 compare the compound to the np solutions 
 c                                 identfied so far:        
-               if (kdsol(j,1).eq.nkp(i)) then 
+               if (kdsol(j,1).eq.nkp(i)) then
+
+                  kk = jdsol(j,idsol(j))
 c                                 if match check for a solvus
                   if (notaq) then 
-                     if (solvs1(i,jdsol(j,idsol(j)),nkp(i))) cycle
+                     if (solvs1(i,kk,nkp(i))) cycle
                   else
 c                                  special solvus test based on solvent 
 c                                  speciation for lagged aq model.
-                     if (solvs4(i,jdsol(j,idsol(j)))) cycle 
+                     if (solvs4(i,kk)) cycle
+
+                     if (caq(i,na1).eq.0d0.and.caq(kk,na1).ne.0d0.or.
+     *                   caq(i,na1).ne.0d0.and.caq(kk,na1).eq.0d0) then 
+c                                  pure solvent and impure solvent coexist
+                        if (.not.lopt(38)) then 
+                           abort = .true.
+                           return
+                        end if
+
+                     end if 
+
                   end if 
 c                                 the pseudocompound matches a solution
 c                                 found earlier.
@@ -1259,10 +1274,6 @@ c                                 swap phase at i+1 with the one at j
 c                                 if a solution is represented by
 c                                 more than one pseudocompound get
 c                                 the everage composition
-         kk = 0
-         q1 = .true.
-         qq2 = .true.
-
       do i = 1, np 
 c                                 initialize
          bnew(i) = 0d0
@@ -1284,14 +1295,6 @@ c                               lagged speciation
             do k = 1, nat
                ncaq(i,k) = 0d0
             end do 
-
-            if (quack(i).and.q1)  then 
-               kk = kk + 1 
-               q1 = .false.
-           else if (.not.quack(i).and.qq2) then 
-               kk = kk + 1 
-               qq2 = .false.
-            end if 
 
          end if 
 
@@ -1341,12 +1344,7 @@ c                                pH, Delta_pH, solute molality, epsilon (nat)
 
          end do
 
-c         if (lopt(32).and.ksmod(ids).eq.39.and.kk.gt.1) then
-c            write (*,*) 'got one'
-c         end if 
-
-         if (lopt(32).and.ksmod(ids).eq.39.and.
-     *       ximp.lt.one.and.ximp.gt.0d0) then
+         if (lopt(32).and.ksmod(ids).eq.39.and.ximp.gt.0d0) then
 c                                 renomalize err_log_kw, pH, Delta_pH, epsilon
             ncaq(i,na3+1) = ncaq(i,na3+1)/ximp
             ncaq(i,na3+2) = ncaq(i,na3+2)/ximp
@@ -2653,7 +2651,7 @@ c----------------------------------------------------------------------
 
       end 
 
-      subroutine yclos2 (clamda,x,is,iter,opt,quit,abort)
+      subroutine yclos2 (clamda,x,is,iter,opt,quit)
 c----------------------------------------------------------------------
 c subroutine to identify pseudocompounds close to the solution for 
 c subsequent refinement, for iteration > 1. quit is true for final
@@ -2665,12 +2663,11 @@ c----------------------------------------------------------------------
 
       external ffirst
 
-      integer i, j, id, is(*), jmin(k19), opt, kpt, mpt, iter, tic, 
-     *        islv, jslv, idslv(k5), jdslv(k5)
+      integer i, id, is(*), jmin(k19), opt, kpt, mpt, iter, tic
 
       double precision clamda(*), clam(k19), x(*)
 
-      logical stable(k19), quit, abort
+      logical stable(k19), quit
 
       integer hcp,idv
       common/ cst52  /hcp,idv(k7)
@@ -2740,9 +2737,6 @@ c                                 solution.
          stable(i) = .false.
       end do 
 
-      abort = .false.
-      islv = 0
-      jslv = 0 
       npt = 0
 
       do i = 1, jphct
@@ -2757,51 +2751,11 @@ c                                 a stable point, add to list
             amt(npt) = x(i)
             if (id.gt.0) stable(id) = .true.
 
-            if (lopt(32)) then 
-c                                 set aqueos flag
-c               if (jkp(i).eq.idaq) then 
-c                                 since this uses jkp, it's not going to 
-c                                 count solvent species, but that doesn't matter
-c                  abort = .true.
-c                  islv = islv + 1
-c                  idslv(islv) = i
-c               else 
-c                  jslv = jslv + 1
-c                  jdslv(jslv) = i
-c               end if 
-               if (jkp(i).lt.0) then
-c                                quack is only true for pure solvent, but not reliably...
-c                                so check against endmembers...
-                  do j = 1, ns
-                     if (-jkp(i).eq.jnd(j)) then 
-                        islv = islv + 1
-                        idslv(islv) = i
-                        exit 
-                     end if 
-                  end do
-c               if (i.lt.jpt) then 
-c                               check against endmembers
-c                  do j = 1, ns
-c                     if (-jkp(i).eq.jnd(j)) then 
-c                        islv = islv + 1
-c                        idslv(islv) = i
-c                     end if 
-c                  end do 
-c               else if (jkp(i).eq.idaq) then
-c                   islv = islv + 1
-c                   idslv(islv) = i
-c                end if 
-               else if (jkp(i).eq.idaq) then
-                  jslv = jslv + 1
-                  jdslv(jslv) = i
-               end if 
-
-            end if 
-
             if (lopt(34)) then
 c                                 dump iteration details
                if (npt.eq.1) write (*,'(/,a,i2)') 'iteration ',iter-1
                call dumper (2,i,hkp(i),jkp(i),x(i),clamda(i))
+
             end if 
 
          else if (id.gt.0) then 
@@ -2818,44 +2772,6 @@ c                                 keep the least metastable point
          end if
 
       end do
-
-      if (islv.gt.0.and.jslv.gt.0) then 
-         abort = .true.
-         return
-       end if 
-
-c      if (abort.and..not.quit) then 
-c         abort = .false.
-c      if (abort) then 
-c                                for  lagged aqueous speciation:
-c                                check that a solute component has
-c                                not entirely dissolved into the fluid
-c         do j = 1, isolc
-
-c            stot = 0d0
-c            k = solc(j)
-
-c            do i = 1, islv
-c               stot = stot +  x(idslv(i))*cp2(k,idslv(i))
-c            end do
-
-c            if (stot.eq.0d0) cycle
-c            stot = 0d0 
-
-c            do i = 1, jslv
-c               stot = stot +  x(jdslv(i))*cp2(k,jdslv(i))
-c            end do
-
-c            if (stot.eq.0d0) then 
-c               write (*,*) 'mission aborted, component ',j
-c               return
-c            end if
-
-c         end do
-
-c         abort = .false.
-
-c      end if 
 c                                 get mu's for lagged speciation
       call getmus (iter,iter-1,.false.)
 
@@ -2920,7 +2836,6 @@ c                                 check zero modes the amounts
                npt = npt + 1
                amt(npt) = x(jdv(i))
                jdv(npt) = jdv(i)
-               quack(npt) = quack(jdv(i))
 
             else if (lopt(13).and.x(jdv(i)).lt.-nopt(9)
      *                             .and.tic.lt.5) then 
@@ -2938,7 +2853,7 @@ c                                 check zero modes the amounts
 
       end
 
-      subroutine rebulk (static)
+      subroutine rebulk (static,abort)
 c----------------------------------------------------------------------
 c upon successful completion of an optimization with either static or
 c dynamic pseudocompounds rebulk:
@@ -2952,7 +2867,7 @@ c----------------------------------------------------------------------
 
       integer i, j, k, id, tictoc
 
-      logical static, bad
+      logical static, bad, abort
 
       double precision c(k5),u
 
@@ -3118,7 +3033,7 @@ c                                  load the saturated phase composition
       ntot = npt
 c                                 test for solvi and average
 c                                 homogeneous phases.
-      call avrger
+      call avrger (abort)
       
 1000  format (/,'**error ver901** solutions not allowed in saturated ',
      *   'component composition space',/,'in adaptive optimization ',
@@ -3832,7 +3747,6 @@ c                                 solute free cpd
                return 
             end if 
 
-            c2tot(jphct) = 0d0 
             quack(jphct) = .true.
 c                                 now pad out counters for 
 c                                 a solute cpd

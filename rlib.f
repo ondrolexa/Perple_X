@@ -19110,11 +19110,20 @@ c                                 is not fail-safe].
                   exit
                else
                   cycle
-               end if 
+               end if
 
-            end if 
-c                                 species that includes a degenerate
-c                                 component. 
+            else if (cblk(j).eq.0d0.and..not.lopt(36)) then
+c                                 this check is necessary because lp may
+c                                 give a zero-amount solution for the chemical
+c                                 potential of an absent component. the test
+c                                 cannot be made with oxide components.
+               if (aqcp(j,i).ne.0d0) then 
+                  kill = .true.
+                  exit
+               end if
+
+            end if
+
             dg = dg + dn * mu(j)
 
          end do 
