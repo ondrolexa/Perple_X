@@ -19143,6 +19143,11 @@ c                                  sum (q(i)*m(i)) = 0.
 
          else 
 c                                  neutral species assumed to be ideal, molality is
+            if (dg.gt.1d2) then 
+               write (*,*) ' rejecting species ',aqnam(i),'molality ',dg
+               dg = 0d0 
+            end if 
+
             mo(i) = dg
 
          end if 

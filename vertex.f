@@ -729,7 +729,11 @@ c                                 get total moles to compute mole fractions
 
             call lpopt (1,k,idead,output)
 
-            if (idead.ne.0) then 
+            if (idead.eq.101) then 
+
+               write (*,*) 'orca pa duddle'
+
+            else if (idead.ne.0) then 
                write (*,2000) p0,dz,layer(k),k,j,v(1),v(2),
      *                        (cblk(i),i=1,icp)
                write (*,2010) (itop(i),i=1,ilay)
@@ -824,7 +828,11 @@ c                                 the results to the print file.
 
             call lpopt (j,k,idead,output)
 
-            if (idead.ne.0) then 
+            if (idead.eq.101) then 
+
+               write (*,*) 'orca pa duddle ',j,k
+
+            else if (idead.ne.0) then 
 c                                 write failure info to fld file:
                write (n12,2000) p0,dz,layer(k),k,j,v(1),v(2),
      *                          (cblk(i),i=1,icp)
@@ -1737,7 +1745,7 @@ c                                 fractionation effects:
          there(i) = .false.
       end do 
 
-      if (idead.eq.0) then 
+      if (idead.eq.0.or.idead.eq.101) then 
 c                                 optimization suceeded
          if (lopt(35)) then 
 c                                 threshold based fractionation:

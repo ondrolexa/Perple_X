@@ -199,7 +199,7 @@ c-----------------------------------------------------------------------
 
       integer liw, lw, iter, idead, jstart, opt, kter, kitmax 
 
-      logical quit, kterat
+      logical quit, kterat, abort
 
       parameter (liw=2*k21+3,lw=2*(k5+1)**2+7*k21+5*k5)
 
@@ -277,7 +277,16 @@ c                                 warn if severe error
 
          kter = kter + 1
 c                                 analyze solution, get refinement points
-         call yclos2 (clamda,x,is,iter,opt,quit)
+         call yclos2 (clamda,x,is,iter,opt,quit,abort)
+
+         if (abort) then
+c                                 bad solution (lagged speciation) identified
+c                                 in yclos2
+            idead = 101 
+            call lpwarn (idead,'REOPT')
+            exit
+
+         end if
 c                                 save the id and compositions
 c                                 of the refinement points, this
 c                                 is necessary because resub rewrites
@@ -351,6 +360,10 @@ c                                 iteration dependent resolution
 c                                 set dynamic array counters:
       jphct = jpt
       jcoct = 1
+c                                 reset refinement point flags
+      do i = 1, jpt
+         hkp(i) = 0
+      end do 
 c                                 loop on previous stable phases
 c                                 refine as necessay:
       lds = 0 
@@ -373,7 +386,7 @@ c                                 get the refinement point composition
                call getolx (ids,id)
             else
                if (.not.lopt(39)) cycle
-               call endmmx (id,ids,iter)
+               call endmmx (kd,id,ids,iter)
             end if
 
          else
@@ -389,7 +402,7 @@ c                                 point to solution models
                if (ids.eq.0.or..not.lopt(39)) cycle
 c                                 endmember refinement point:
 c                                 get refine point composition
-               call endmmx (-id,ids,iter)
+               call endmmx (kd,-id,ids,iter)
 
             else
 
@@ -425,7 +438,7 @@ c                                   and global composition arrays
 
       end
 
-      subroutine endmmx (id,ids,iter)
+      subroutine endmmx (ld,id,ids,iter)
 c----------------------------------------------------------------------
 c generate compositional coordinates (x(i,j) array) for endmembers 
 c during outrefine. if iter = 1, id is the static array index of the
@@ -436,7 +449,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i, j, id, ids, jd, kd, iter 
+      integer i, j, id, ids, jd, kd, ld, iter 
 
       integer ipoint,kphct,imyn
       common/ cst60 /ipoint,kphct,imyn
@@ -463,12 +476,17 @@ c----------------------------------------------------------------------
 
       integer ksmod, ksite, kmsol, knsp
       common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
+
+      integer hkp,mkp
+      common/ cst72 /hkp(k21),mkp(k19)
 c----------------------------------------------------------------------
       if (iter.eq.1) then 
          jd = id
       else 
          jd = id + istct - 1
       end if
+c                                set refinement point index
+      hkp(jd) = ld 
 c                                locate the endmember in the solution
       do i = 1, lstot(ids)
          if (jend(ids,2+i).eq.jd) then
@@ -1135,7 +1153,7 @@ c                                 loaded into caq(i,1:ns+aqct)
                   y(k) = x3(i,1,k)
                end do 
 
-               if (quack(i)) then 
+               if (quack(jdv(i))) then 
 c                                 pure solvent phase
                   msol = 0d0
 
@@ -1187,7 +1205,7 @@ c                                  speciation for lagged aq model.
 c                                  pure solvent and impure solvent coexist
                         if (.not.lopt(38)) then 
                            abort = .true.
-                           return
+c                           return
                         end if
 
                      end if 
@@ -1870,7 +1888,7 @@ c----------------------------------------------------------------------
 
       external ffirst
 
-      logical solvus, quit, news
+      logical solvus, quit, news, solvnt(1)
 
       double precision clamda(*), x(*), slam(h9)
 
@@ -1983,7 +2001,7 @@ c                                 new point, add to list
 
       end do 
 c                                 get mus for lagged speciation
-      call getmus (1,0,.false.)
+      call getmus (1,0,solvnt,.false.)
 
       do i = 1, isoct
          slam(i) = 1d99
@@ -2408,6 +2426,8 @@ c----------------------------------------------------------------------
 
       integer i,jphct,is(*)
 
+      logical solvnt(1)
+
       double precision x(*)
 c                                 compositions of stable adaptive
 c                                 coordinates (and solution ids).
@@ -2438,7 +2458,7 @@ c                                                  2 active, upper bound
  
       end do
 
-      call getmus (1,0,.true.)
+      call getmus (1,0,solvnt,.true.)
 
       end
 
@@ -2651,7 +2671,7 @@ c----------------------------------------------------------------------
 
       end 
 
-      subroutine yclos2 (clamda,x,is,iter,opt,quit)
+      subroutine yclos2 (clamda,x,is,iter,opt,quit,abort)
 c----------------------------------------------------------------------
 c subroutine to identify pseudocompounds close to the solution for 
 c subsequent refinement, for iteration > 1. quit is true for final
@@ -2667,7 +2687,7 @@ c----------------------------------------------------------------------
 
       double precision clamda(*), clam(k19), x(*)
 
-      logical stable(k19), quit
+      logical stable(k19), solvnt(k19), quit, abort
 
       integer hcp,idv
       common/ cst52  /hcp,idv(k7)
@@ -2735,7 +2755,9 @@ c                                 solution.
          jmin(i) = 0 
          clam(i) = 1d99
          stable(i) = .false.
-      end do 
+      end do
+
+      abort = .false.
 
       npt = 0
 
@@ -2750,6 +2772,22 @@ c                                 a stable point, add to list
             jdv(npt) = i
             amt(npt) = x(i)
             if (id.gt.0) stable(id) = .true.
+
+            if (lopt(32)) then 
+c                                 classify as solvent/solid
+               if (jkp(i).lt.0) then 
+                  if (ikp(-jkp(i).eq.idaq) then
+                     solvnt(npt) = .true.
+                  else 
+                     solvnt(npt) = .false.
+                  end if 
+               else if (jkp(i).eq.idaq) then 
+                  solvnt(npt) = .true.
+               else 
+                  solvnt(npt) = .false.
+               end if 
+
+            end if 
 
             if (lopt(34)) then
 c                                 dump iteration details
@@ -2773,7 +2811,7 @@ c                                 keep the least metastable point
 
       end do
 c                                 get mu's for lagged speciation
-      call getmus (iter,iter-1,.false.)
+      call getmus (iter,iter-1,solvnt,.false.)
 
       if (.not.quit) then
 c                                 if not done iterating:
@@ -3070,6 +3108,31 @@ c----------------------------------------------------------------------
       double precision cptot,ctotal
       common/ cst78 /cptot(k19),ctotal,jdv(k19),npt,fulrnk
 c----------------------------------------------------------------------
+
+      if (test) then 
+
+         do i = 1, hcp
+            cslut(i) = .false.
+            cslvt(i) = .false.
+         end do 
+
+         do i = 1, npt
+            do j = 1, hcp
+               lc(i,j) = cp2(j,id)
+               if (solvnt(i)) then 
+                  if (lc(i,j).ne.0d0) cslvt(i) = .true.
+               else 
+                  if (lc(i,j).ne.0d0) cslut(i) = .true.
+               end if 
+            end do
+
+            lg(i) = g2(id)
+
+
+
+      end if 
+
+
       do i = 1, npt
 
          id = jdv(i) 
@@ -3097,7 +3160,7 @@ c----------------------------------------------------------------------
       end 
 
 
-      subroutine getmus (iter,jter,quit) 
+      subroutine getmus (iter,jter,solvnt,quit) 
 c----------------------------------------------------------------------
 c iter is a flag indicating where the compositions are and is sort of 
 c      related to the iteration count during optimization.
@@ -3107,7 +3170,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical quit, bad
+      logical solvnt(*), quit, bad
 
       integer i, j, ier, ipvt(k8), iter, jter, imu(k8), kcp, lcp, 
      *        inp(k8)
