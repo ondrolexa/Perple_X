@@ -279,7 +279,7 @@ c                                 warn if severe error
 c                                 analyze solution, get refinement points
          call yclos2 (clamda,x,is,iter,opt,quit,abort)
 
-         if (abort) then
+         if (abort.and..not.lopt(38)) then
 c                                 bad solution (lagged speciation) identified
 c                                 in yclos2
             idead = 101 
@@ -710,7 +710,7 @@ c----------------------------------------------------------------------
 
       integer idead, iwarn91, iwarn42, iwarn90, iwarn01
 
-      character*6 char
+      character char*(*)
 
       double precision c
 
@@ -2775,12 +2775,16 @@ c                                 a stable point, add to list
 
             if (lopt(32)) then 
 c                                 classify as solvent/solid
-               if (jkp(i).lt.0) then 
-                  if (ikp(-jkp(i).eq.idaq) then
-                     solvnt(npt) = .true.
-                  else 
-                     solvnt(npt) = .false.
+               if (jkp(i).lt.0) then
+
+                  if (quack(-jkp(i))) then
+                     if (.not.lopt(38)) abort = .true.
                   end if 
+c                  if (ikp(-jkp(i)).eq.idaq) then
+c                     solvnt(npt) = .true.
+c                  else 
+c                     solvnt(npt) = .false.
+c                  end if 
                else if (jkp(i).eq.idaq) then 
                   solvnt(npt) = .true.
                else 
@@ -2875,8 +2879,7 @@ c                                 check zero modes the amounts
                amt(npt) = x(jdv(i))
                jdv(npt) = jdv(i)
 
-            else if (lopt(13).and.x(jdv(i)).lt.-nopt(9)
-     *                             .and.tic.lt.5) then 
+            else if (x(jdv(i)).lt.-nopt(9).and.tic.lt.5) then 
 
                call warn (2,x(jdv(i)),i,'YCLOS2')
                tic = tic + 1
@@ -3108,30 +3111,6 @@ c----------------------------------------------------------------------
       double precision cptot,ctotal
       common/ cst78 /cptot(k19),ctotal,jdv(k19),npt,fulrnk
 c----------------------------------------------------------------------
-
-      if (test) then 
-
-         do i = 1, hcp
-            cslut(i) = .false.
-            cslvt(i) = .false.
-         end do 
-
-         do i = 1, npt
-            do j = 1, hcp
-               lc(i,j) = cp2(j,id)
-               if (solvnt(i)) then 
-                  if (lc(i,j).ne.0d0) cslvt(i) = .true.
-               else 
-                  if (lc(i,j).ne.0d0) cslut(i) = .true.
-               end if 
-            end do
-
-            lg(i) = g2(id)
-
-
-
-      end if 
-
 
       do i = 1, npt
 

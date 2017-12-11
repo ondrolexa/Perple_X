@@ -19,7 +19,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a)') 
-     *      'Perple_X version 6.8.0, source updated Dec 8, 2017.'
+     *      'Perple_X version 6.8.0, source updated Dec 11, 2017.'
 
       end
 
@@ -87,7 +87,7 @@ c lopt(9)  - automatic solvus tolerance -> T
 c lopt(10) - pseudocompound_glossary
 c lopt(11) - auto_refine_file
 c lopt(12) - option_list_files
-c lopt(13) - true if user set finite zero mode check
+c lopt(13) - unused
 c lopt(14) - logarithmic_p
 c lopt(15) - spreadsheet format -> T = explicit output of independent variables 
 c lopt(16) - bounds, T -> VRH averaging, F -> HS
@@ -218,8 +218,6 @@ c                                 auto_refine_file
       lopt(11) = .false.
 c                                 option_list_files
       lopt(12) = .false.
-c                                 user set finite zero mode
-      lopt(13) = .false.
 c                                 logarithimic P
       lopt(14) = .false.
 c                                 spreadsheet format
@@ -614,7 +612,6 @@ c                                 zero_bulk key
          else if (key.eq.'zero_mode') then
 c                                 zero_mode key
             read (strg,*) nopt(9)
-            if (nopt(9).gt.0d0) lopt(13) = .true.
 
          else if (key.eq.'iteration') then
 c                                 max iteration key
@@ -2703,8 +2700,8 @@ c----------------------------------------------------------------------
      *       ,' < 0, this indicates that',/,'the specified amount of a '
      *       ,'saturated component is inadequate to saturate the system'
      *       ,/)
-2     format (/,'**warning ver002** the amount of a phase is < ',g12.3,
-     *        '(-zero_mode) this may be',/,'indicative of numeric ',
+2     format (/,'**warning ver002** the amount of a phase is <',g12.3,
+     *        ' (-zero_mode) this may be',/,'indicative of numeric ',
      *        'instability',/)
 3     format (/,'**warning ver003** the solution model file is ',
      *         'in a format that is inconsistent with ',/,
