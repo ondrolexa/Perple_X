@@ -18923,7 +18923,7 @@ c                                 output bad result point to n13
                write (n13,'(i3,1x,4(g14.6,1x),a,9(1x,f7.5))')
      *                                i, p0, dz, t, p, aqnam(i),
      *                                epsln,(yf(ins(j)),j=1, ns)
-               write (*,'(i3,1x,4(g14.6,1x),a,9(f7.5,a))') 
+               write (*,'(i3,1x,4(g14.6,1x),a,9(1x,f9.5))') 
      *                                i, p0, dz, t, p, aqnam(i),
      *                                epsln,(yf(ins(j)),j=1, ns)
 
