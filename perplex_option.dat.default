@@ -14,6 +14,7 @@ aq_oxide_components        F    | T[rue] or F[alse], default is F, allow oxide c
 aq_species                 20   | >= 0, default 20; maximum number of solute species output (ranked by concentration)
 aq_lagged_iterations       0    | >= 0, default 0; number of internal iterations for lagged speciation.
 aq_lagged_speciation       T    | T[rue] or F[alse], default is T
+aq_max_molality            5    | default 5, maximum molality permitted for neutral solute species
 aq_solvent_composition     y    | y -> mole fractions, m -> molality; default y
 aq_solute_composition      m    | y -> mole fractions, m -> molality; default m
 aq_vapor_epsilon           1    | default 1, dielectric constant threshold used to identify vapor

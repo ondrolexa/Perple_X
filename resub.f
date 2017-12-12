@@ -158,13 +158,13 @@ c                                 final processing, .false. indicates dynamic
 
                call rebulk (.false.,abort)
 
-               if (abort) then
+c               if (abort) then
 c                                 bad solution (lagged speciation) identified
 c                                 in avrger
-                  idead = 101 
-                  call lpwarn (idead,'LPOPT0')
+c                  idead = 101 
+c                  call lpwarn (idead,'LPOPT0')
 
-               end if
+c               end if
 
             else if (idead.eq.-1) then
 c                                 hail mary
@@ -199,7 +199,7 @@ c-----------------------------------------------------------------------
 
       integer liw, lw, iter, idead, jstart, opt, kter, kitmax 
 
-      logical quit, kterat, abort
+      logical quit, kterat
 
       parameter (liw=2*k21+3,lw=2*(k5+1)**2+7*k21+5*k5)
 
@@ -277,16 +277,7 @@ c                                 warn if severe error
 
          kter = kter + 1
 c                                 analyze solution, get refinement points
-         call yclos2 (clamda,x,is,iter,opt,quit,abort)
-
-         if (abort.and..not.lopt(38)) then
-c                                 bad solution (lagged speciation) identified
-c                                 in yclos2
-            idead = 101 
-            call lpwarn (idead,'REOPT')
-            exit
-
-         end if
+         call yclos2 (clamda,x,is,iter,opt,quit)
 c                                 save the id and compositions
 c                                 of the refinement points, this
 c                                 is necessary because resub rewrites
@@ -1888,7 +1879,7 @@ c----------------------------------------------------------------------
 
       external ffirst
 
-      logical solvus, quit, news, solvnt(1)
+      logical solvus, quit, news, solvnt(1), degen
 
       double precision clamda(*), x(*), slam(h9)
 
@@ -1933,6 +1924,12 @@ c----------------------------------------------------------------------
       logical mus
       double precision mu
       common/ cst330 /mu(k8),mus
+
+      double precision a,b,c
+      common/ cst313 /a(k5,k1),b(k5),c(k1)
+
+      integer idegen, idg(k5), jcp, jin(k5)
+      common/ cst315 /idegen, idg, jcp, jin 
 c----------------------------------------------------------------------
       npt = 0
       nsol = 0
@@ -1944,6 +1941,15 @@ c                                 solvus_tolerance_II, 0.25
       do i = 1, jphct
 
          if (is(i).ne.1) then 
+
+         degen = .false.
+         do j = 1, idegen
+            if (a(idg(j),i).gt.0d0) then
+               degen = .true.
+               exit  
+             end if 
+         end do
+         if (degen) cycle 
 c                                 make a list of found phases:
             id = i + inc
 c                                 currently endmember compositions are not 
@@ -2001,7 +2007,7 @@ c                                 new point, add to list
 
       end do 
 c                                 get mus for lagged speciation
-      call getmus (1,0,solvnt,.false.)
+      call getmus (1,0,solvnt,.false.,.false.)
 
       do i = 1, isoct
          slam(i) = 1d99
@@ -2458,7 +2464,7 @@ c                                                  2 active, upper bound
  
       end do
 
-      call getmus (1,0,solvnt,.true.)
+      call getmus (1,0,solvnt,.false.,.true.)
 
       end
 
@@ -2671,7 +2677,7 @@ c----------------------------------------------------------------------
 
       end 
 
-      subroutine yclos2 (clamda,x,is,iter,opt,quit,abort)
+      subroutine yclos2 (clamda,x,is,iter,opt,quit)
 c----------------------------------------------------------------------
 c subroutine to identify pseudocompounds close to the solution for 
 c subsequent refinement, for iteration > 1. quit is true for final
@@ -2683,11 +2689,11 @@ c----------------------------------------------------------------------
 
       external ffirst
 
-      integer i, id, is(*), jmin(k19), opt, kpt, mpt, iter, tic
+      integer i, j, id, is(*), jmin(k19), opt, kpt, mpt, iter, tic
 
       double precision clamda(*), clam(k19), x(*)
 
-      logical stable(k19), solvnt(k19), quit, abort
+      logical stable(k19), solvnt(k19), quit, abort, degen
 
       integer hcp,idv
       common/ cst52  /hcp,idv(k7)
@@ -2744,6 +2750,12 @@ c----------------------------------------------------------------------
       double precision aqg,q2,rt
       common/ cxt2 /aqg(m4),q2(m4),rt,jnd(m4)
 
+      integer idegen, idg(k5), jcp, jin(k5)
+      common/ cst315 /idegen, idg, jcp, jin
+
+      integer ikp
+      common/ cst61 /ikp(k1)
+
       save tic
       data tic/0/
 c----------------------------------------------------------------------
@@ -2766,32 +2778,49 @@ c                                 id indicates the original refinement
 c                                 point.
          id = hkp(i)
 
-         if (is(i).ne.1) then  
+         if (is(i).ne.1) then
+
+         degen = .false.
+         do j = 1, idegen
+            if (cp2(idg(j),i).gt.0d0) then 
+               degen = .true.
+               exit  
+             end if 
+         end do
+
+         if (degen) cycle 
+
 c                                 a stable point, add to list
             npt = npt + 1
             jdv(npt) = i
             amt(npt) = x(i)
             if (id.gt.0) stable(id) = .true.
 
-            if (lopt(32)) then 
+            if (lopt(32)) then
+c                                 for lagged aq speciation
 c                                 classify as solvent/solid
                if (jkp(i).lt.0) then
+c                                 setting abort to true signals 
+c                                 test in getmus:
+                  if (quack(-jkp(i))) abort = .true.
 
-                  if (quack(-jkp(i))) then
-                     if (.not.lopt(38)) abort = .true.
-                  end if 
-c                  if (ikp(-jkp(i)).eq.idaq) then
-c                     solvnt(npt) = .true.
-c                  else 
-c                     solvnt(npt) = .false.
-c                  end if 
-               else if (jkp(i).eq.idaq) then 
+                  if (ikp(-jkp(i)).eq.idaq) then
+                     solvnt(npt) = .true.
+                  else 
+                     solvnt(npt) = .false.
+                  end if
+
+               else if (jkp(i).eq.idaq) then
+
                   solvnt(npt) = .true.
-               else 
-                  solvnt(npt) = .false.
-               end if 
 
-            end if 
+               else
+
+                  solvnt(npt) = .false.
+
+               end if
+
+            end if
 
             if (lopt(34)) then
 c                                 dump iteration details
@@ -2815,7 +2844,9 @@ c                                 keep the least metastable point
 
       end do
 c                                 get mu's for lagged speciation
-      call getmus (iter,iter-1,solvnt,.false.)
+      call getmus (iter,iter-1,solvnt,abort,.false.)
+
+      if (.not.lopt(38).and.abort) quit = .true.
 
       if (.not.quit) then
 c                                 if not done iterating:
@@ -3139,7 +3170,7 @@ c----------------------------------------------------------------------
       end 
 
 
-      subroutine getmus (iter,jter,solvnt,quit) 
+      subroutine getmus (iter,jter,solvnt,abort,quit) 
 c----------------------------------------------------------------------
 c iter is a flag indicating where the compositions are and is sort of 
 c      related to the iteration count during optimization.
@@ -3149,7 +3180,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical solvnt(*), quit, bad
+      logical solvnt(*), quit, bad, abort, cslut(k19), cslvt(k19)
 
       integer i, j, ier, ipvt(k8), iter, jter, imu(k8), kcp, lcp, 
      *        inp(k8)
@@ -3158,6 +3189,12 @@ c----------------------------------------------------------------------
 
       character cname*5
       common/ csta4  /cname(k5)
+
+      double precision p,t,xco2,u1,u2,tr,pr,r,ps
+      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
+
+      double precision p0, dz
+      common/ cxt46 /p0, dz
 
       integer hcp, idv
       common/ cst52  /hcp,idv(k7) 
@@ -3204,6 +3241,45 @@ c----------------------------------------------------------------------
 c                                 load c and g into a local array to 
 c                                 avoid a myriad of conditionals
       call getgc (lc,lg,iter)
+c                                 for lagged speciation 
+      if (abort) then
+
+         abort = .false.
+
+         do j = 1, hcp
+            cslut(j) = .false.
+            cslvt(j) = .false.
+         end do 
+
+         do i = 1, npt
+            do j = 1, hcp
+               if (lc(i,j).eq.0d0) cycle
+               if (solvnt(i)) then 
+                  cslvt(j) = .true.
+               else 
+                  cslut(j) = .true. 
+               end if 
+            end do
+         end do
+
+         do j = 1, hcp
+            if (cslvt(j).and..not.cslut(j)) then 
+c                                 a component is present only in the solvent
+c                                 iteration will become unstable
+               abort = .true.
+
+               write (n13,'(i4,1x,4(g14.6,1x),a)') 1000+j, p0, dz, t, p,
+     *                                             'disolved_component'
+
+                write (*,'(i4,1x,4(g14.6,1x),a)') 1000+j, p0, dz, t, p,
+     *                                          'disolved_component'
+
+               exit
+
+            end if
+         end do 
+
+      end if 
 c                                 look for a general solution if npt > icp
       if (npt.ge.hcp) then 
 

@@ -9,7 +9,7 @@
       integer m0,m1,m2,m3,m4,m6,m7,m8,m9,m10,m11,m12,m13,m14,m15
       integer m16,m17,m18
       integer msp,mst,mdim,ms1
-      integer n0,n1,n2,n3,n4,n5,n6,n7,n8,n9,n10,n11,n12,nsp,nx,ny
+      integer n0,n1,n2,n3,n4,n5,n6,n7,n8,n9,n10,n11,n12,n13,nsp,nx,ny
 !                                 n0  - starting LUN-1 for fractionation files, these files may 
 !                                       have LUNs from n0+1 up to n0+k23
 !                                 n1  - problem definition file.
@@ -23,8 +23,10 @@
 !                                 n9  - solution model file 
 !                                 n10 - autorefine file 1
 !                                 n11 - autorefine file 2
+!                                 n12 - failed result file (fld)
+!                                 n13 - aq error file (pts)
       parameter (n10=7,n11=8,n1=11,n2=12,n3=13,n4=14,n5=15,n6=16,n7=17)
-      parameter (n8=18,n9=19,n12=20,n0=30)
+      parameter (n8=18,n9=19,n12=20,n13=21,n0=30)
 !                                 msp - max number of species on a solution identisite
 !                                 mst - max number of distinct identisites per solution
 !                                 mdim - hard constraint on max number of dimensions

@@ -19,7 +19,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a)') 
-     *      'Perple_X version 6.8.0, source updated Dec 11, 2017.'
+     *      'Perple_X version 6.8.0, source updated Dec 12, 2017.'
 
       end
 
@@ -317,7 +317,9 @@ c                                 fractionation_lower_threshold
 c                                 fractionation_upper_threshold
       nopt(33) = 0d0
 c                                 aq_vapor_epsilon
-      nopt(34) = 1d0 
+      nopt(34) = 1d0
+c                                 aq_max_molality
+      nopt(35) = 5d0
 c                                 hard_limits for solution model refinement
       valu(16) = 'off'
       lopt(3) = .false.
@@ -386,6 +388,8 @@ c                                 aq_bad_results
       lopt(38) = .false.
 c                                 refine_endmembers
       lopt(39) = .false.
+c                                 aq bad points file, set in aqist
+      lopt(40) = .false.
 c                                 initialize mus flag lagged speciation
       mus = .false.
 c                                 -------------------------------------
@@ -606,8 +610,12 @@ c                                 zero_bulk key
             read (strg,*) nopt(11)
 
          else if (key.eq.'aq_vapor_epsilon') then
-c                                 zero_bulk key
+c                                 "vapor" threshold
             read (strg,*) nopt(34)
+
+         else if (key.eq.'aq_max_molality') then
+c                                 "vapor" threshold
+            read (strg,*) nopt(35)
 
          else if (key.eq.'zero_mode') then
 c                                 zero_mode key

@@ -457,13 +457,16 @@ c-----------------------------------------------------------------------
       integer i,j,k,l,m,idead,two(2),lun,iox,itop(maxlay),icp1,
      *        layer(maxbox)
 
-      double precision gblk(maxbox,k5),dz,p0,cdcomp(k5,maxlay),vox(k5),
+      double precision gblk(maxbox,k5),cdcomp(k5,maxlay),vox(k5),
      *                 tot,lcomp(k5,maxlay)
 
       logical output, anneal
 
       double precision atwt
       common/ cst45 /atwt(k0)
+
+      double precision p0, dz
+      common/ cxt46 /p0, dz
 
       integer npt,jdv
       logical fulrnk
@@ -569,9 +572,9 @@ c                                 check for consistent input if fileio
      *         'number of z increments (',jlow,
      *        ')specified in the aux file.'
               
-              stop 
-      
-            end if 
+              stop
+
+            end if
 
          else 
 c                                 jlow set by 1dpath keyword in perplex_option.dat

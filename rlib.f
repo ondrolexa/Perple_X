@@ -17040,9 +17040,14 @@ c-----------------------------------------------------------------------
 
       integer i, j, k
 
-      logical first
+      logical first, lagged
 
       double precision tot
+
+      character name*100
+
+      character prject*100, tfname*100
+      common/ cst228 /prject,tfname
 
       integer ksmod, ksite, kmsol, knsp
       common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
@@ -17093,6 +17098,9 @@ c-----------------------------------------------------------------------
 
       double precision cp
       common/ cst12 /cp(k5,k1)
+
+      integer iam
+      common/ cst4 /iam
 c-----------------------------------------------------------------------
 c                                 set option flags if necessary
       if (lopt(25)) then 
@@ -17115,6 +17123,9 @@ c                                reset iopt(32) [# aq species output]
          iopt(32) = 0
 
       end if 
+
+      jdaq = 0
+      lagged = .false.
 c                                 look among solutions:
       do i = 1, isoct
 
@@ -17123,7 +17134,7 @@ c                                 look among solutions:
             idaq = i
             jdaq = ksmod(i)
 
-            if (lopt(32)) then 
+            if (lopt(32)) then
 
                do j = 1, ns
 c                                 set quack flag so the pure endmembers
@@ -17147,32 +17158,47 @@ c                                 identify non-solvent components
                   isolc = isolc + 1
                   solc(isolc) = j
 
-               end do 
+               end do
+
+               lagged =.true.
 
             end if
-
-            return
 
           end if
 
       end do
-c                                 turn off lagged speciation just to be sure
-      lopt(32) = .false. 
-c                                 else look for H2O
-      do i = 1, ipoint
 
-         if (eos(i).eq.101) then
-            idaq = -i
-            jnd(1) = i
+      if (jdaq.eq.0) then
+c                                 no solution model found:
+c                                 turn off lagged speciation just to be sure
+         lopt(32) = .false. 
+c                                 else look for H2O
+         do i = 1, ipoint
+
+            if (eos(i).eq.101) then
+               idaq = -i
+               jnd(1) = i
 c                                 set solvent/species pointers on the
 c                                 off chance they will be used
-            ns = 1
-            ins(1) = 1
-            isp = 1
-            return
-         end if 
+               ns = 1
+               ins(1) = 1
+               isp = 1
+               return
+            end if
+         end do
 
-      end do 
+      end if
+c                                open a bad point file for lagged and
+c                                back-calculated speciation calculations
+      if ((lagged.and.iam.le.2).or.
+c                                meemum/vertex
+     *    (.not.lagged.and.iam.eq.3.and.lopt(25))) then 
+c                                werami back-calc
+          call mertxt (name,prject,'.pts',0)
+          open (n13,file=name)
+          lopt(40) = .true. 
+
+      end if 
 
       end 
 
@@ -18699,6 +18725,12 @@ c                                 adaptive coordinates
       logical hscon, hsc, oxchg
       common/ cxt45 /sel(k0),cox(k0),hscon,oxchg,hsc(k1)
 
+      double precision p,t,xco2,u1,u2,tr,pr,r,ps
+      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
+
+      double precision p0, dz
+      common/ cxt46 /p0, dz
+
       save badct, lmu, lmus
       data badct/0/
 c----------------------------------------------------------------------
@@ -18885,6 +18917,18 @@ c                                species
 c                                 stuff needed for output:
          do i = 1, aqct 
             caq(id,ns+i) = mo(i)
+c                                 output bad result point to n13
+            if (mo(i).ge.nopt(35).and.q(i).eq.0d0) then
+
+               write (n13,'(i3,1x,4(g14.6,1x),a,9(1x,f7.5))')
+     *                                i, p0, dz, t, p, aqnam(i),
+     *                                epsln,(yf(ins(j)),j=1, ns)
+               write (*,'(i3,1x,4(g14.6,1x),a,9(f7.5,a))') 
+     *                                i, p0, dz, t, p, aqnam(i),
+     *                                epsln,(yf(ins(j)),j=1, ns)
+
+            end if
+
          end do 
 c                                 ionic strength
          caq(id,na1) = is
@@ -19080,6 +19124,11 @@ c-----------------------------------------------------------------------
       double precision aqg,qq,rt
       common/ cxt2 /aqg(m4),qq(m4),rt,jnd(m4)
 c----------------------------------------------------------------------
+      if (epsln.lt.nopt(34)) then
+c                                  vapor, same as checking lnkw
+         bad = .true.
+         return
+       end if 
 c                                 set up coefficients for mo(ion) equation
       g0(ion) = gcpd(aqst+ion,.false.) 
 c                                 compute solute properties 
@@ -19143,9 +19192,8 @@ c                                  sum (q(i)*m(i)) = 0.
 
          else 
 c                                  neutral species assumed to be ideal, molality is
-            if (dg.gt.1d2) then 
-               write (*,*) ' rejecting species ',aqnam(i),'molality ',dg
-               dg = 0d0 
+            if (dg.gt.nopt(35)) then 
+               dg = nopt(35)
             end if 
 
             mo(i) = dg
@@ -19156,12 +19204,7 @@ c                                  neutral species assumed to be ideal, molality
 c                                  initialize iteration loop
       lnkw = (gso(ns) - g0(ioh))/rt
 
-      if (epsln.lt.nopt(35)) then
-c                                  vapor, same as checking lnkw
-         bad = .true.
-         return 
-
-      else if (c(ioh).eq.0d0) then
+      if (c(ioh).eq.0d0) then
 c                                 no hydrogen or no oxygen
          bad = .true.
          return

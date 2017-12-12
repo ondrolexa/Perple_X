@@ -20,7 +20,7 @@ c----------------------------------------------------------------------
 
       integer ibad2,ibad1,igood,i,j,ierr
 
-      character*100 n10nam,n11nam,n12nam
+      character*100 n10nam,n11nam,n8nam
 
       character*100 prject,tfname
       common/ cst228 /prject,tfname
@@ -66,13 +66,13 @@ c                                 are present and it is requested.
          call mertxt (n10nam,prject,'.arf',0)
          open (n10, file = n10nam, iostat = ierr, status = 'old')
 
-         call mertxt (n12nam,prject,'.tof',0)
+         call mertxt (n8nam,prject,'.tof',0)
 
          if (iam.eq.1.or.iam.eq.2) then
 c                                 VERTEX or MEEMUM:
             if (iam.eq.1) then 
 
-               open (n8, file = n12nam, status = 'unknown')
+               open (n8, file = n8nam, status = 'unknown')
 c                                 user friendly text version 
                if (lopt(11)) then 
                   call mertxt (n11nam,prject,'_auto_refine.txt',0)
@@ -167,7 +167,7 @@ c                                 speciation tolerance
          else 
 c                                 werami/pssect if refine, get the 
 c                                 solution models to be rejected
-            open (n8, file = n12nam, iostat=ierr, status = 'old')
+            open (n8, file = n8nam, iostat=ierr, status = 'old')
         
             if (ierr.eq.0) then 
 c                                 write a flag to indicate if auto-refine
