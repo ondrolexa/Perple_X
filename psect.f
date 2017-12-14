@@ -655,7 +655,7 @@ c                                  far enough apart:
 
                if (bad) cycle
 
-               call pselip (x,y, 0.25d0*dcx, 0.25d0*dcy, 1d0,0d0,0)
+               call pselip (x,y, 0.25d0*dcx, 0.25d0*dcy, 1d0,0d0,0,0,1)
                call pssctr (ifont,ascale,ascale, 0d0)
                call pstext (x+dcx*ascale,y+.7d0*dcy*ascale,
      *                      text,nblen(text))
@@ -725,7 +725,7 @@ c                                 igrd to zero allows this?
 
          end if 
 c                                 call label routine:
-50       call pselip (x,y, 0.25d0*dcx, 0.25d0*dcy,1d0,0d0,0) 
+50       call pselip (x,y, 0.25d0*dcx, 0.25d0*dcy,1d0,0d0,0,0,1) 
          call psbtxt (ipoint, text, iend)
          call pssctr (ifont,ascale,ascale, 0d0)
          call pstext (x+dcx*ascale,y+.7d0*dcy*ascale,
@@ -961,7 +961,7 @@ c                                 place a label on the field
             jj = (jmin+jmax)/2
             xl = xmin + (jj-1)*dx
 
-            call pselip (xl,y,0.25d0*dcx,0.25d0*dcy,1d0,0d0,0) 
+            call pselip (xl,y,0.25d0*dcx,0.25d0*dcy,1d0,0d0,0,0,1) 
             call psbtxt (ipoly, text, iend)
             call pssctr (ifont, ascale, ascale, 90d0)
             call pstext (xl-0.7*dcx*ascale,y+3.5*dcy*ascale,

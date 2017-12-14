@@ -9,14 +9,14 @@ c Petrography, Swiss Federal Insitute of Technology, CH-8092 Zurich,
 c SWITZERLAND. All rights reserved.
  
 c----------------------------------------------------------------
-      subroutine pselip (xor,yor,dx,dy,rline,width,ifill)
+      subroutine pselip (xor,yor,dx,dy,rline,width,ifill,ifg,ibg)
 
       implicit none
  
 c pselip - subroutine to generate ellipse primitives.
 
       double precision rline,xor,yor,dy,dx,width
-      integer ifill,ixor,iyor
+      integer ifill,ixor,iyor,ifg,ibg
 
       integer nps
       double precision xscale,yscale,xmn,ymn
@@ -25,7 +25,7 @@ c pselip - subroutine to generate ellipse primitives.
       write (nps,1030)
  
       call psolin (rline,width)
-      call psoclr
+      call psocfg (ifg,ibg)
       call psofil (ifill)
       call psotrn
  
@@ -389,6 +389,56 @@ c psoclr - subroutine to output red color.
  
 1000  format ('%I cfg Red',/,'1 0 0 SetCFg',/,'%I cbg Red',/,
      *        '1 0 0 SetCBg')
+ 
+      end
+
+      subroutine psocfg (ifg,ibg)
+ 
+c psoclr - subroutine to output color fore/back-ground.
+ 
+      implicit none
+
+      integer nps, j, ifg, ibg
+
+      real col(0:12,3)
+
+      double precision xscale,yscale,xmn,ymn
+      common/ scales /xscale,yscale,xmn,ymn,nps
+
+      save col
+
+      data col/
+c                                 0 - black 
+     *          0., 0., 0.,
+c                                 1 - white 
+     *          1., 1., 1.,
+c                                 2 - red 
+     *          1., 0., 0.,
+c                                 3 - green
+     *          0., 1., 0.,
+c                                 4 - blue
+     *          0., 0., 1.,
+c                                 5 - purple
+     *          0., 1., 1.,
+c                                 6 - yellow
+     *          1., 1., 0.,
+c                                 7 - brown
+     *          1., 0., 1.,
+c                                 8 - orange
+     *          1., .5, 0.,
+c                                 9 - dark blue
+     *          0., 0., .5,
+c                                 10 - dark red
+     *          .5, .0, .0,
+c                                 11 - dark green
+     *          0., .5, 0.,
+c                                 12 - dark yellow
+     *          0.5, 0.5, 0./
+ 
+      write (nps,1000) (col(ifg,j),j=1,3),(col(ibg,j),j=1,3)
+ 
+1000  format ('%I cfg Red',/,3(F3.1,1x),'SetCFg',/,'%I cbg Red',/,
+     *        3(F3.1,1x),' SetCBg')
  
       end
 c----------------------------------------------------------------
