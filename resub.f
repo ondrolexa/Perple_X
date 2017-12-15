@@ -301,7 +301,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical bad, kterat
+      logical bad, kterat, abort 
 
       integer i, ids, lds, id, kd, iter
 
@@ -419,11 +419,15 @@ c                                  refinement point was the same solution.
 c                                   increment jphct, 
 c                                   load jkp[ids], hkp[i], local
 c                                   and global composition arrays
-            call loadgx (kd,i,ids,bad)
+            call loadgx (kd,i,ids,bad,abort)
+
+            if (abort) exit
 
             if (bad) cycle
 
          end do
+
+         if (abort) exit 
 
       end do
 
@@ -3675,7 +3679,7 @@ c                                 conformal
 
       end 
 
-      subroutine loadgx (kd,i,ids,bad) 
+      subroutine loadgx (kd,i,ids,bad,abort) 
 c----------------------------------------------------------------------
       implicit none 
 
@@ -3683,7 +3687,7 @@ c----------------------------------------------------------------------
 
       integer i, j, k, l, m, kd, ids, kcoct
 
-      logical bad
+      logical bad, abort
 
       double precision ysum, gsol1
 
@@ -3736,10 +3740,23 @@ c----------------------------------------------------------------------
 
       integer lstot,mstot,nstot,ndep,nord
       common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
+
+      integer icomp,istct,iphct,icp
+      common/ cst6  /icomp,istct,iphct,icp
 c----------------------------------------------------------------------
       jphct = jphct + 1
+      abort = .false.
 
-      if (jphct.gt.k21) call error (58,x(1,1),k21,'resub')
+      if (jphct.gt.k21) then 
+
+         if (kd.lt.icp+2) then 
+            call error (58,x(1,1),k21,'loadgx')
+         else 
+            abort = .true.
+            call warn (61,x(1,1),kd,'loadgx')
+         end if
+
+      end if
 
       bad = .false.
       jkp(jphct) = ids

@@ -19,7 +19,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a)') 
-     *      'Perple_X version 6.8.0, source updated Dec 13, 2017.'
+     *      'Perple_X version 6.8.1, source updated Dec 15, 2017.'
 
       end
 
@@ -60,47 +60,11 @@ c                                 2 - meemum
 c                                 3 - werami
 c                                 all other values no output
 
-c current max values:
-
-c                lopt(18)
-c                iopt(27)
-c                nopt(27)
-
-c lower unused values may be available.
-
 c special internal values for lopt, iopt, nopt
 
 c               lop_28-30 
 c               iop_28-30
 c               nop_28-30
-
-c option variables - keyword associations
-
-c lopt(1)  - closed_c_space -> T = closed compositional variables
-c lopt(2)  - set in getprp -> T = cumulative modes 
-c lopt(3)  - hard_limits -> T = on
-c lopt(4)  - Anderson-Gruneisen -> Helffrich Murnaghan correction
-c lopt(6)  - melt_is_fluid -> T = classify melts as fluids in output
-c lopt(7)  - saturated phase in data base, set by topN2
-c lopt(8)  - approx_alpha -> T = approx exp(x)=1+x in volume integral
-c lopt(9)  - automatic solvus tolerance -> T
-c lopt(10) - pseudocompound_glossary
-c lopt(11) - auto_refine_file
-c lopt(12) - option_list_files
-c lopt(13) - unused
-c lopt(14) - logarithmic_p
-c lopt(15) - spreadsheet format -> T = explicit output of independent variables 
-c lopt(16) - bounds, T -> VRH averaging, F -> HS
-c lopt(17) - explicit_bulk_modulus, T-> use if available.
-c lopt(18) - refine_bad_nodes
-c lopt(19) - pause_on_error
-c lopt(20) - poisson_test
-c lopt(21) - species_output
-c lopt(22) - composition_constant
-c lopt(23) - composition_system
-c nopt(5)  - speciation_factor, ultimately speciation precision. 
-c nopt(8)  - solvus_tolerance
-c nopt(20) - T_melt - kill melt endmembers at T < nopt(20)
 c----------------------------------------------------------------------
       implicit none
 
@@ -248,7 +212,7 @@ c                                 porportions
       iopt(3) = 0 
       valu(3) = 'vol'
 c                                 interpolation keyword
-      iopt(4) = 0
+      iopt(4) = 2
       valu(4) = 'on '
 c                                 vrh_weighting keyword
       nopt(6) = 0.5d0
@@ -256,6 +220,8 @@ c                                 bad_number keyword
       nopt(7) = 0d0
 c                                 zero_mode (<0 off)
       nopt(9) = 1d-6
+c                                 set zero threshold for fractionations calculations
+      if (icopt.eq.7.or.icopt.eq.9) nopt(9) = 0d0
 c                                 tolerance below which a component is considered to 
 c                                 be zero during fractionation
       nopt(11) = 1d-6
@@ -269,7 +235,7 @@ c                                 active points
 c                                 final resolution, auto-refine stage
       rid(2,2) = 2.5d-4
 c                                 final resolution, exploratory stage
-      rid(2,1) = 1d-2
+      rid(2,1) = 1d-3
 c                                 global reach factor
       nopt(23) = 0d0
 c                                 solvus_tolerance_II
@@ -333,13 +299,18 @@ c                                 averaging scheme
       valu(19) = 'VRH'
       lopt(16) = .true.
 c                                 use explicit bulk modulus when available
-      lopt(17) = .false.
+      lopt(17) = .true.
 c                                 seismic data output for WERAMI/MEEMUM, 0 - none, 1 - some, 2 - all
       iopt(14) = 1
       valu(14) = 'som'
 c                                 reach_increment_switch 0 - off, 1 - on (for auto-refine), 2 - all
       iopt(20) = 1 
       valu(20) = 'on'
+c                                 conditional for MEEMUM
+      if (iam.eq.2) then 
+         valu(20) = 'all'
+         iopt(20) = 2
+      end if 
 c                                 speciation_max_it - for speciation calculations
       iopt(21) = 100
 c                                 reaction_max_it - for A(V,T) and fluid EoS
@@ -388,8 +359,8 @@ c                                 aq_bad_results
       lopt(38) = .false.
 c                                 refine_endmembers
       lopt(39) = .false.
-c                                 aq bad points file, set in aqist
-      lopt(40) = .false.
+c                                 automatic specification of refinement_points_II
+      lopt(40) = .true.
 c                                 initialize mus flag lagged speciation
       mus = .false.
 c                                 -------------------------------------
@@ -401,16 +372,16 @@ c     iopt(15) = 0
 c                                 -------------------------------------
 c                                 for gridded minimization:
 c                                 # nodes in i direction
-      grid(1,1) = 20 
+      grid(1,1) = 40 
       grid(1,2) = 40
 c                                 # nodes in j direction
-      grid(2,1) = 20 
+      grid(2,1) = 40 
       grid(2,2) = 40
 c                                 # of levels
       grid(3,1) = 1
       grid(3,2) = 4
 c                                 1d fractionation path
-      grid(4,1) = 20 
+      grid(4,1) = 40 
       grid(4,2) = 150
 c                                 -------------------------------------
 c                                 for schreinemakers etc:
@@ -447,18 +418,18 @@ c                                 option file
       do while (ier.eq.0) 
 
          call redcd1 (n8,ier,key,val,nval1,nval2,nval3,strg,strg1)
-c                                 ier ne 0 bad record or eof
+c                                 ier ne 0 = eof
          if (ier.ne.0) exit 
+c                                 cycle on default specification
+         if (strg.eq.'default') cycle
 c                                 if here we should have a keyword and
 c                                 value
          if (key.eq.'composition'.or.key.eq.'composition_phase') then 
 c                                 phase composition key
             if (val.eq.'wt') then
                iopt(2) = 1
-            else 
-               iopt(2) = 0
+               valu(2) = val 
             end if 
-            valu(2) = val
 
          else if (key.eq.'aq_species') then
 
@@ -543,21 +514,23 @@ c                                 phase composition key
 
          else if (key.eq.'proportions') then 
 c                                 phase proportion key
+c                                 volume is default
             if (val.eq.'wt') then
                iopt(3) = 1
             else if (val.eq.'mol') then 
                iopt(3) = 2 
-            else 
-c                                 volume is default
-               iopt(3) = 0
-            end if 
+            end if
+ 
             valu(3) = val
 
          else if (key.eq.'interpolation') then 
 c                                 interpolation key
-            if (val.eq.'off') iopt(4) = 0
-            valu(4) = val
-            if (val.eq.'on ') read (nval1,*) iopt(4)
+            if (val.ne.'on ') then
+               iopt(4) = 0
+               valu(4) = val
+            else 
+               read (nval1,*) iopt(4)
+            end if 
 
          else if (key.eq.'bounds') then 
 c                                 
@@ -668,9 +641,12 @@ c                                 seismic data output WERAMI/MEEMUM/FRENDLY
                valu(14) = 'som'
             end if
 
-         else if (key.eq.'refinement_points_II') then 
+         else if (key.eq.'refinement_points_II') then
 c                                 2nd stage refinement points
-            read (strg,*) iopt(31)
+            if (val.ne.'aut') then 
+               read (strg,*) iopt(31)
+               lopt(40) = .false.
+            end if 
 
          else if (key.eq.'max_aq_species_out') then 
 c                                 2nd stage refinement points
@@ -700,8 +676,6 @@ c                                 subdivision overide key
                iopt(13) = 1
             else if (val.eq.'str') then
                iopt(13) = 2
-            else 
-               iopt(13) = 0 
             end if 
 
          else if (key.eq.'auto_refine') then
@@ -734,14 +708,6 @@ c
          else if (key.eq.'speciation_max_it') then
 c   
             read (strg,*) iopt(21)
-
-         else if (key.eq.'reaction_max_it') then
-c   
-            read (strg,*) iopt(22)
-
-         else if (key.eq.'volume_max_it') then
-c   
-            read (strg,*) iopt(23)
 
          else if (key.eq.'x_nodes') then
 c                                 number of x nodes at level 1 before autorefine
@@ -791,8 +757,6 @@ c                                 default autorefine relative increment
                ifull = 3
             else if (val.eq.'eve') then
                ifull = 4
-            else 
-               valu(7) = 'min'
             end if 
   
          else if (key.eq.'console_messages') then 
@@ -800,8 +764,6 @@ c                                 default autorefine relative increment
             if (val.eq.'off') then 
                valu(8) = val
                imsg = 1
-            else 
-               valu(8) = 'on '
             end if 
 
          else if (key.eq.'reaction_list') then
@@ -809,8 +771,6 @@ c                                 default autorefine relative increment
             if (val.eq.'on ') then 
                valu(9) = val
                jtest = 3 
-            else 
-               valu(9) = 'off'
             end if
 
          else if (key.eq.'efficiency') then 
@@ -837,8 +797,7 @@ c                                 default autorefine relative increment
 
             if (val.eq.'on ') then 
                lopt(3) = .true.
-            else 
-               valu(16) = 'off'
+               valu(16) = 'on'
             end if
 
          else if (key.eq.'T_stop') then 
@@ -940,7 +899,7 @@ c                                 perturbation to eliminate pseudocompound degen
 
          else if (key.eq.'explicit_bulk_modulus') then 
 
-            if (val.eq.'T') lopt(17) = .true.
+            if (val.eq.'F') lopt(17) = .false.
 
          else if (key.eq.'poisson_ratio') then 
 c                                 handle missing shear moduli
@@ -2641,6 +2600,8 @@ c----------------------------------------------------------------------
          end if 
       else if (ier.eq.60) then
          write (*,60) char
+      else if (ier.eq.61) then 
+         write (*,61) int, k21
       else if (ier.eq.63) then
          write (*,63)
       else if (ier.eq.68) then
@@ -2914,6 +2875,24 @@ c     *          ' (SWASH, see program documentation Eq 2.3)',/)
      *        'solution model',/)
 60    format (/,'**warning ver060** non-fatal programming error ',
      *          'routine:',a,/)
+61    format (/,'**warning ver61** exhausted memory (k21) during'
+     *         ,' adaptive optimization',/,'currently refining '
+     *         ,'metastable refinement point ',i2,' execution will',/
+     *         ,' continue but may lead to low quality results. This' 
+     *         ,' problem can usually be',/,'mitigated by one of the '
+     *         ,'following actions (best listed first):',/,
+     *        2x,'- reduce refinement_points_II keyword ',
+     *           'in perplex_option.dat',/,
+     *        2x,'- reduce the 1st value of the iteration keyword ',
+     *           'in perplex_option.dat',/,
+     *        2x,'- reduce the 2nd value of the iteration keyword ',
+     *           'in perplex_option.dat',/,
+     *        2x,'- reduce the reach_increment (if any) specified ',
+     *           'for solutions in solution_model.dat',/,
+     *        2x,'- simplify the calculation, e.g., eliminate ',
+     *           'components and/or simplify solution models',/,
+     *        2x,'- increase dimension k21 (',i7,') and recompile ',
+     *           'Perple_X',/)
 63    format (/,'**warning ver063** wway, invariant point on an edge?',
      *        /)
 68    format (/,'**warning ver068** degenerate initial assemblage in ',

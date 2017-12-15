@@ -53,12 +53,6 @@ c                                 solution model names
       common/ cst4 /iam
 c-----------------------------------------------------------------------
       refine = .false.
-c                                 set various computation style dependent options
-      if (icopt.eq.7.or.icopt.eq.9) then 
-c                                 turn off zero mode option
-         nopt(9) = 0d0
-
-      end if 
 c                                 only use autorefine if solutions
 c                                 are present and it is requested.
       if (isoct.ne.0) then 

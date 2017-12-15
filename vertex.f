@@ -2017,7 +2017,11 @@ c                                 open fractionation files
 
       do i = 1, ifrct 
 
-         call mertxt (name,prject,'_'//phase(i)//'.dat',0)
+         name = '_'//phase(i)//'.dat'
+
+         call unblnk (name)
+
+         call mertxt (name,prject,name,0)
 
          write (*,1010) phase(i), name
 

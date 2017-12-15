@@ -9118,7 +9118,7 @@ c                                 dqf parameters
       integer isec,icopt,ifull,imsg,io3p
       common/ cst103 /isec,icopt,ifull,imsg,io3p
 c                                 temporary stretching coordinate
-c                                 paramters
+c                                 parameters
       double precision yin
       common/ cst50 /yin(ms1,mst)
 c                                 parameters for autorefine
@@ -9242,6 +9242,8 @@ c                                 number of independent + ordered endmebers
       nstot(im) = kstot + norder 
 c                                 number of independent disordered endmembers
       lstot(im) = kstot 
+c                                 automatic selection of refinement_points_II
+      if (lopt(40).and.kstot.gt.iopt(31)) iopt(31) = kstot
 c                                 chemical mixing sites
       istg(im) = isite
 c                                 site check override
@@ -17190,13 +17192,19 @@ c                                 off chance they will be used
       end if
 c                                open a bad point file for lagged and
 c                                back-calculated speciation calculations
-      if ((lagged.and.iam.le.2).or.
+      if (lagged.and.iam.le.2) then
+
+         if (iam.eq.1) then 
+            call mertxt (name,prject,'.pts',0)
+         else 
+            call mertxt (name,prject,'_MEEMUM.pts',0)
+         end if 
+         open (n13,file=name)
 c                                meemum/vertex
-     *    (.not.lagged.and.iam.eq.3.and.lopt(25))) then 
+       else if (.not.lagged.and.iam.eq.3.and.lopt(25)) then 
 c                                werami back-calc
-          call mertxt (name,prject,'.pts',0)
+          call mertxt (name,prject,'_WERAMI.pts',0)
           open (n13,file=name)
-          lopt(40) = .true. 
 
       end if 
 
