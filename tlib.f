@@ -19,7 +19,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a)') 
-     *      'Perple_X version 6.8.1, source updated Dec 15, 2017.'
+     *      'Perple_X version 6.8.1, source updated Dec 18, 2017.'
 
       end
 
@@ -123,6 +123,9 @@ c                                 precision stuff used in lpnag
       logical mus
       double precision mu
       common/ cst330 /mu(k8),mus
+
+      integer icomp,istct,iphct,icp
+      common/ cst6 /icomp,istct,iphct,icp
 c----------------------------------------------------------------------
 c                                 periodic fractions
       r13 = 1d0/3d0
@@ -233,7 +236,7 @@ c                                 be refined in addition to
 c                                 active points
       iopt(12) = 4
 c                                 final resolution, auto-refine stage
-      rid(2,2) = 2.5d-4
+      rid(2,2) = 1d-3
 c                                 final resolution, exploratory stage
       rid(2,1) = 1d-3
 c                                 global reach factor
@@ -313,10 +316,6 @@ c                                 conditional for MEEMUM
       end if 
 c                                 speciation_max_it - for speciation calculations
       iopt(21) = 100
-c                                 reaction_max_it - for A(V,T) and fluid EoS
-      iopt(22) = 40
-c                                 volume_max_it - for schreinemakers
-      iopt(23) = 40              
 c                                 solution_names 0 - model, 1 - abbreviation, 2 - full
       iopt(24) = 0
       valu(22) = 'mod'
@@ -943,6 +942,11 @@ c                                 reserved values for debugging, etc
     
       close (n8)
 c                                 -------------------------------------
+c                                 computation dependent options
+c                                 -------------------------------------
+c                                 automatic specification of metastable
+c                                 refinement points
+      if (lopt(40)) iopt(31) = icp + 2
 c                                 write and optional file choices
       if (iam.ne.14) then 
          if (jer.ne.0) then 

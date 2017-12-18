@@ -1025,9 +1025,6 @@ c                                 read auxilliary input for 2d fractionation
 c                                 get runtime parameters
       if (first.or.(.not.first).and.(.not.output)) 
      *   call redop1 (first,tfname)
-c                                 reset number of metastable iteration points
-c                                 for yclos2 if greater than icp
-      if (icp+2.lt.iopt(31)) iopt(31) = icp + 2
 
       goto 999
 c                                 archaic error trap

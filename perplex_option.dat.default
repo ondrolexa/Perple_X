@@ -42,7 +42,7 @@ dependent_potentials      default | [off] on => compute dependent thermodynamic 
 efficiency                default | [3] 1->5, only relevant for CONVEX
 explicit_bulk_modulus     default | [T] T => use explicit function for bulk modulii if available
 fd_expansion_factor       default | [2] nth order finite difference increment is increased by fd_expansion_factor^(n-1)
-final_resolution          default | [1d-3 2.5d-4] >0, <1, exploratory and autorefine target resolution
+final_resolution          default | [1d-2 1d-3] >0, <1, exploratory and autorefine target resolution
 finite_difference_p       default | [1d4 1d-2] threshold and fraction for 1st order finite difference increment on pressure
 fractionation_hi_limit    default | [0.] 0-1, upper fractionation threshold, mass fraction
 fractionation_lo_limit    default | [0.] 0-1, lower fractionation threshold, mass fraction

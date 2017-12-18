@@ -9242,8 +9242,6 @@ c                                 number of independent + ordered endmebers
       nstot(im) = kstot + norder 
 c                                 number of independent disordered endmembers
       lstot(im) = kstot 
-c                                 automatic selection of refinement_points_II
-      if (lopt(40).and.kstot.gt.iopt(31)) iopt(31) = kstot
 c                                 chemical mixing sites
       istg(im) = isite
 c                                 site check override

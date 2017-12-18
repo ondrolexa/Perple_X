@@ -1358,7 +1358,7 @@ c gets properties of phase id and saves them in props(1:i8,i);
 c if called by werami/meemum id is a general phase pointer; if 
 c called by frendly id is an endmember pointer. 
 
-c the properties are saved prop as follows
+c the properties are saved in array prop as follows
 
 c 1  - molar volume
 c 2  - molar enthalpy
