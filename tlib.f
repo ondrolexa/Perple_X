@@ -19,7 +19,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a)') 
-     *      'Perple_X version 6.8.1, source updated Dec 18, 2017.'
+     *      'Perple_X version 6.8.1, source updated Dec 20, 2017.'
 
       end
 
@@ -236,7 +236,7 @@ c                                 be refined in addition to
 c                                 active points
       iopt(12) = 4
 c                                 final resolution, auto-refine stage
-      rid(2,2) = 1d-3
+      rid(2,2) = 1d-2
 c                                 final resolution, exploratory stage
       rid(2,1) = 1d-3
 c                                 global reach factor
@@ -1489,12 +1489,13 @@ c                                 thermo options for frendly
      *        4x,'  exploratory stage    ',g8.2,3x,
      *           '[1e-2], target value, see actual values below',/,
      *        4x,'  auto-refine stage    ',g8.2,3x,
-     *           '[2.5e-4], target value, see actual values below',/,
+     *           '[1e-3], target value, see actual values below',/,
      *        4x,'resolution factor      ',i2,9x,
      *           '>1 [3]; iteration keyword value 1',/,
      *        4x,'refinement points      ',i2,9x,
      *           '1->',i2,' [4]; iteration keyword value 2',/,
-     *        4x,'refinement_points_II   ',i2,9x,'1->',i2,' [5]',/,
+     *        4x,'refinement_points_II   ',i2,9x,'[aut] or 1->',i2,
+     *           '; aut = automatic',/,
      *        4x,'refinement_threshold   ',a,3x,'>0, [1e4] J',/,
      *        4x,'solvus_tolerance_II    ',f4.2,7x,'0->1 [0.2]',/,
      *        4x,'global_reach_increment ',i2,9x,'>= 0 [0]',/,
