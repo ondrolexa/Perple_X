@@ -19,7 +19,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a)') 
-     *      'Perple_X version 6.8.1, source updated Dec 20, 2017.'
+     *      'Perple_X version 6.8.1, source updated Dec 23, 2017.'
 
       end
 
@@ -355,7 +355,10 @@ c                                 aq_oxide_components
 c                                 allow null phases
       lopt(37) = .false.
 c                                 aq_bad_results 
-      lopt(38) = .false.
+c                                       0 - err - treat as bad result (optimization error)
+c                                       1 - ret - accept first bad result and cease iteration
+c                                       2 - ign - ignore and continue iteration.
+      iopt(22) = 0
 c                                 refine_endmembers
       lopt(39) = .false.
 c                                 automatic specification of refinement_points_II
@@ -464,7 +467,13 @@ c                                 phase composition key
 
          else if (key.eq.'aq_bad_results') then 
 
-            if (val.eq.'T') lopt(38) = .true.
+            if (val.eq.'101') then 
+               iopt(22) = 1
+            else if (val.eq.'102') then 
+               iopt(22) = 2
+            else if (val.eq.'ign') then 
+               iopt(22) = 3
+            end if 
 
          else if (key.eq.'refine_endmembers') then 
 
@@ -1682,8 +1691,14 @@ c                                 several numbers on certain options.
       if (iend-ibeg.gt.39) iend = ibeg+39
       write (strg,'(40a1)') (chars(i), i = ibeg, iend)
       write (strg1,'(40a1)') (chars(i), i = ibeg, ibeg+39)
+c                                 read value:
+      if (ibeg+2.gt.iend) then 
+         ist = iend
+      else 
+         ist = ibeg + 2
+      end if 
 
-      write (val,'(3a1)') (chars(i), i = ibeg, ibeg + 2)
+      write (val,'(3a1)') (chars(i), i = ibeg, ist)
 c                                 look for a second value
       ist = iscan (ibeg,lchar,' ')
       if (ist.gt.len) return

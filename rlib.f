@@ -17103,9 +17103,9 @@ c-----------------------------------------------------------------------
       common/ cst4 /iam
 c-----------------------------------------------------------------------
 c                                 set option flags if necessary
-      if (lopt(25)) then 
+      if (lopt(25).or.lopt(32)) then 
 
-         if (jpot.ne.0.and.first) then 
+         if (jpot.ne.0) then 
 
             call warn (99,0d0,0,' aq_output is T, but '//
      *                          'dependent_potentials is off, '//
@@ -17117,7 +17117,10 @@ c                                 set option flags if necessary
 c                                reset iopt(32) [# aq species output]
          if (iopt(32).gt.aqct) iopt(32) = aqct
 
-      else
+      end if 
+
+
+      if (.not.lopt(25)) then 
 
          aqct = 0
          iopt(32) = 0
@@ -17204,7 +17207,7 @@ c                                werami back-calc
           call mertxt (name,prject,'_WERAMI.pts',0)
           open (n13,file=name)
 
-      end if 
+      end if
 
       end 
 
