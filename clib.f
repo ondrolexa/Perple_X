@@ -1601,22 +1601,22 @@ c                                 check if valid species:
          call chkphi (1,name,good)
 c                                 check for oxidation state of aqueous
 c                                 data if aq_oxides is set:
-         if (good.and.lopt(36).and.oxchg) then
+c         if (good.and.lopt(36).and.oxchg) then
 
-            qchg = thermo(6,k10)
+c            qchg = thermo(6,k10)
 
-            if (qchg.eq.0d0.and.comp(ic(iox)).ne.0d0.or.
-     *          qchg-cox(iox)*comp(ic(iox)).ne.0d0) then 
+c            if (qchg.eq.0d0.and.comp(ic(iox)).ne.0d0.or.
+c     *          qchg-cox(iox)*comp(ic(iox)).ne.0d0) then 
 
-               call warn (100,r,102,
-     *              name//' has been rejected; to retain '//name//
-     *              ' set aq_oxide_components to false.')
+c               call warn (100,r,102,
+c     *              name//' has been rejected; to retain '//name//
+c     *              ' set aq_oxide_components to false.')
 
-               good = .false.
+c               good = .false.
 
-            end if
+c            end if
 
-         end if 
+c         end if 
 
          if (good) then 
 c                                 acceptable data, count the phase:
