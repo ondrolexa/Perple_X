@@ -1044,7 +1044,7 @@ c----------------------------------------------------------------------
  
       character*5 mnames(k16*k17)*8
 
-      double precision twt(k5),tsel(k5),tcox(k5),cst,qchg
+      double precision twt(k5),tsel(k5),tcox(k5),cst
  
       integer i,j,im, ict, k, ifer,inames, jphct, imak(k16), iox
  

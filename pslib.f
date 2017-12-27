@@ -25,7 +25,8 @@ c pselip - subroutine to generate ellipse primitives.
       write (nps,1030)
  
       call psolin (rline,width)
-      call psocfg (ifg,ibg)
+c      call psocfg (ifg,ibg)
+      call psoclr
       call psofil (ifill)
       call psotrn
  
