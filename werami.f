@@ -267,7 +267,7 @@ c                                 round off tests:
 
             var(1) = tmin(1) + dx(1)*dfloat(i-1)
 
-            call polprp (dim)
+            call polprp (dim,i)
  
          end do
  
@@ -1016,7 +1016,7 @@ c                                 find normalized distance
 
       end   
 
-      subroutine polprp (dim)
+      subroutine polprp (dim,index)
 c-----------------------------------------------------------------------
       implicit none
 
@@ -1024,7 +1024,7 @@ c-----------------------------------------------------------------------
 
       logical nodata
 
-      integer itri(4), jtri(4), ijpt, lop, icx, komp, i, j, dim
+      integer itri(4), jtri(4), ijpt, lop, icx, komp, i, j, dim, index
 
       double precision wt(3), mode
 
@@ -1086,7 +1086,7 @@ c                                 compute all properties
 c                                 get the properties of interest
                if (lop.eq.25) then 
 c                                 get all modes
-                  call allmod
+                  call allmod (index)
 
                   exit 
 
@@ -1113,7 +1113,7 @@ c                                 immiscibility.
                   call getprp (mode,7,icx,komp,.false.) 
 c                                 decide whether to output lagged or back-calculated
 c                                 speciation into props:
-                  if (icx.eq.0) then
+                  if (komp.eq.0) then
 c                                 phase not stable
 
                      do j = 1, iprop
@@ -2371,7 +2371,7 @@ c                                 compute properties
  
          end if 
 
-         call polprp (dim)
+         call polprp (dim,i)
 
       end do 
 
@@ -2482,7 +2482,7 @@ c                                 name and open plot file, write header
 
          var(1) = xyp(1) + dfloat(i-1)*d
 
-         call polprp (dim)
+         call polprp (dim,i)
 
       end do 
 
@@ -2577,6 +2577,8 @@ c                                 select properties
          call chsprp 
 c                                 write plot file header
          call tabhed (n5,r,r,k,dim,n5name,n6name)
+c                                 set counter for cumulative modes
+         i = 1
 
          do 
 
@@ -2594,7 +2596,9 @@ c                                 condition is in bounds
                      var(2) = x 
                   end if 
 
-                  call polprp (dim) 
+                  call polprp (dim,i)
+c                                 this is only for cumulative modes
+                  i = 2
 
                end if 
 
@@ -2658,7 +2662,7 @@ c                                 write plot file header
             var(1) = xx(i)
             var(2) = yy(i)
 
-            call polprp (dim)
+            call polprp (dim,i)
 
          end do  
 
@@ -2773,7 +2777,7 @@ c                                 could get fancy and record up/left here
 
       end 
 
-      subroutine allmod 
+      subroutine allmod (index)
 c----------------------------------------------------------------
 c computes modes of all stable phases, i.e., over the entire range
 c of physical conditions. 
@@ -2782,9 +2786,11 @@ c----------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i, j, k, id, jk
+      integer i, j, k, id, jk, index, ind(i11), nsol, msol, ksol
 
-      double precision mode(3)
+      logical stable(i11), quit
+
+      double precision mode(3), smode(i11), dinc 
 
       character*14 tname
       integer kop,kcx,k2c,iprop
@@ -2806,20 +2812,26 @@ c----------------------------------------------------------------
 
       integer idsol,nrep,nph
       common/ cst38/idsol(k5,k3),nrep(k5,k3),nph(k3)
+
+      save ind, stable, ksol, nsol
 c----------------------------------------------------------------------
       do i = 1, iprop
-         prop(i) = 0d0
+         prop(i) = nopt(7)
+         smode(i) = 0d0
       end do 
 
-      id = 0 
+      id = 0
+      msol = 0
 
       do i = 1, nph(ias)
 
-         jk = 0 
+         jk = 0
 
          do j = 1, istab
 
-            if (idstab(j).eq.idsol(i,ias)) then 
+            if (idstab(j).eq.idsol(i,ias)) then
+
+               msol = msol + 1
 
                do k = 1, nrep(i,ias)
 
@@ -2827,6 +2839,7 @@ c----------------------------------------------------------------------
 
                   call gtmode (mode,id)
                   prop(jk+k) = mode(iopt(3)+1)
+                  smode(j) = smode(j) + prop(jk+k)
 
                end do 
 
@@ -2839,10 +2852,104 @@ c                                mode column pointer
       end do
 
       if (lopt(2)) then
+
+         if (index.eq.1) then
+
+            do i = 1, istab
+               ind(i) = i
+            end do 
+
+            call rankem (smode,ind,istab,msol)
+
+            nsol = msol
+
+         else
+
+            do i = 1, istab
+
+               if (.not.stable(i).and.smode(i).gt.0d0) then
+c                                 check if it's already in ind:
+                 quit = .false.
+
+                 do j = 1, nsol
+                    if (ind(j).eq.i) then
+                       quit = .true.
+                       exit
+                    end if
+                 end do 
+
+                 if (quit) cycle 
+
+                 if (msol.eq.ksol) then
+c                                 probably univariant, find the phase that
+c                                 was stable, but isn't anymore
+                    do j = 1, nsol
+
+                       if (stable(ind(j)).and.
+     *                     smode(ind(j)).gt.0d0) cycle
+c                                 shift all higher indices up
+                       do k = nsol, j, -1
+                          ind(k+1) = ind(k)
+                       end do
+
+                       ind(j) = i
+                       nsol = nsol + 1
+
+                       exit 
+
+                    end do
+
+                 else
+c                                 probably low variance
+                    nsol = nsol + 1
+                    ind(nsol) = i
+
+                  end if
+
+                  stable(i) = .true.
+
+               end if 
+
+            end do
+c                                 set modes of phase that have dissappeared
+c                                 to real zeros (not nopt(7)).
+            do i = 1, nsol
+
+               if (stable(i).and.smode(i).gt.0) cycle
+
+               do j = 1, nstab(i)
+                  prop(i-1+j) = 0d0
+               end do 
+
+            end do 
+
+         end if
+
+         do i = 1, istab
+            if (smode(i).eq.0d0) then 
+               stable(i) = .false.
+            else 
+               stable(i) = .true.
+            end if
+         end do
+
+         ksol = msol
 c                                 convert to cumulative modes if
 c                                 requested
-         do j = 2, iprop
-            prop(j) = prop(j) + prop(j-1)
+         if (isnan(prop(ind(nsol)))) then
+            dinc = 0d0
+         else
+            dinc = prop(ind(nsol))
+         end if 
+
+         do j = nsol-1, 1, -1
+
+            if (isnan(prop(ind(j)))) cycle 
+
+            dinc = prop(ind(j)) + dinc
+
+            prop(ind(j)) = dinc 
+
          end do
 
       end if

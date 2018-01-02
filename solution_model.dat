@@ -4744,7 +4744,7 @@ z(Ca) = 1 an
 2 2.                       | 2 species on T-site, 2. sites per formula (al-avoidance model)
 z(Al) = 1/2 + 1/2 an 
 
-reach_increment 6         
+reach_increment 3         
 
 end_of_model        
                       --------------------------------------------------------
@@ -9701,6 +9701,8 @@ z(m1a,fe3+) = 1 acm + 1 jac
 begin_dqf_corrections
 dqf(acm)     -4000 0. 0.
 end_dqf_corrections
+
+reach_increment 3
 
 end_of_model        
                       --------------------------------------------------------

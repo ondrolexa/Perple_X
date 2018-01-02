@@ -16849,7 +16849,7 @@ c                                 forward model
      *        '***molar ref. state.',/)
       end 
 
-      subroutine rankem (a,ind,r,n)
+      subroutine rankem (a,ind,right,n)
 c-----------------------------------------------------------------------
 c rank the n largest values of array a(left:right) in array ind. assumes ind has 
 c been initialized (left:right). 
@@ -16858,12 +16858,11 @@ c-----------------------------------------------------------------------
  
       include 'perplex_parameters.h'
 
-      integer i, j, imax, ind(*), r, left, right, n
+      integer i, j, imax, ind(*), left, right, n
 
       double precision a(*), amax
 c----------------------------------------------------------------------
       left = 1
-      right = r
 
       do 
 

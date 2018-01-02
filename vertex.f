@@ -987,14 +987,10 @@ c                                 the molar amounts of the phases are in amt.
 
       else 
  
-c         if (idead.ne.2) write (*,1000) i,j
          igrd(i,j) = k2
          iap(k2) = k3
 
       end if  
-
-c1000  format (/,'WARNING: minimization failed at node i=',i6,' j= ',i6,/
-c     *         'the null assemblage will be assigned to this node',/)
 
       end 
 

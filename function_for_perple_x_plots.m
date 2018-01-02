@@ -1,4 +1,4 @@
-function [] = function_for_perple_x_plots (x,y,a,xname,yname,zname,nvar,mvar,nrow,dnames,titl)
+function [] = function_for_perple_x_plots (x,y,a,xname,yname,zname,nvar,mvar,nrow,dnames,LineSpec,titl)
 % Generic function to make 2- and 3-d plots from Perple_X tab format files.
 %                                               JADC, 5/2011.
 %                                                                
@@ -27,7 +27,7 @@ if nvar == 1 % two cases: 1d - table -> 2d plot
     
     hold all
     
-    for i = 1:jvar,plot(a(kvar,1:nrow),a(dvar(i),1:nrow)),end
+    for i = 1:jvar,plot(a(kvar,1:nrow),a(dvar(i),1:nrow),LineSpec),end
     
     legend(dnames{1}{dvar},'Location','Best'); axis square; axis tight; xlabel(dnames{1}{kvar}); title(titl);
     

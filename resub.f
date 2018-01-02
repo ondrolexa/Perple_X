@@ -1649,7 +1649,7 @@ c----------------------------------------------------------------------
 
       logical output, reord, match, nomtch, ok 
 
-      double precision cpt(k5,k5),xt(k5,mst,msp),bt(k5)
+      double precision cpt(k5,k5),xt(k5,mst,msp),bt(k5),caqt(k5,l10)
 c                                 x-coordinates for the final solution
       integer kd, na1, na2, na3, nat
       double precision x3, caq
@@ -1675,6 +1675,14 @@ c                                 x coordinate description
       integer npt,jdv
       double precision cptot,ctotal
       common/ cst78 /cptot(k19),ctotal,jdv(k19),npt
+
+      integer ksmod, ksite, kmsol, knsp
+      common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 c----------------------------------------------------------------------
 c                                 look for a match with known assemblages
       match = .false.
@@ -1738,21 +1746,32 @@ c                                 occurence:
 
                do k = 1, ntot
 
-                  if (kkp(k).eq.idasls(j,i)) then
-c                                 load temporary array
-                  bt(j) = amt(k)
+                  ids = kkp(k)
 
-                     if (kkp(k).gt.0) then 
+                  if (ids.eq.idasls(j,i)) then
+c                                 load temporary array
+                     bt(j) = amt(k)
+
+                     if (ids.gt.0) then 
 
                         do l = 1, icomp
                            cpt(l,j) = cp3(l,k)
                         end do
 
-                        do l = 1, istg(kkp(k))
-                           do m = 1, ispg(kkp(k),l)
+                        do l = 1, istg(ids)
+                           do m = 1, ispg(ids,l)
                               xt(j,l,m) = x3(k,l,m) 
                            end do 
-                        end do 
+                        end do
+
+                        if (lopt(32).and.ksmod(ids).eq.39) then 
+
+                           do l = 1, nat
+                              caqt(j,l) = caq(k,l)
+                           end do 
+
+                        end if
+
                      end if 
 c                                 this eliminates immiscible phases
                      kkp(k) = 0
@@ -1781,7 +1800,16 @@ c                                 reload final arrays from temporary
                      do l = 1, ispg(ids,k)
                         x3(j,k,l) = xt(j,k,l) 
                      end do 
-                  end do 
+                  end do
+
+                 if (lopt(32).and.ksmod(ids).eq.39) then 
+
+                     do l = 1, nat
+                        caq(j,l) = caqt(j,l)
+                     end do 
+
+                  end if
+
                end if 
             end do 
 
@@ -3726,7 +3754,7 @@ c----------------------------------------------------------------------
 
       integer i, j, k, l, m, kd, ids, kcoct
 
-      logical bad, abort
+      logical bad, abort, recalc
 
       double precision ysum, gsol1
 
@@ -3782,9 +3810,13 @@ c----------------------------------------------------------------------
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
+
+      save recalc
+      data recalc/.false./
 c----------------------------------------------------------------------
       jphct = jphct + 1
       abort = .false.
+      recalc = .false.
 
       if (jphct.gt.k21) then 
 
@@ -3941,7 +3973,7 @@ c                                 a solute cpd
 
          end if 
 c                                  solute-bearing compound
-         call aqlagd (1,bad,.false.)
+         call aqlagd (1,bad,recalc)
 
          if (bad) then
 

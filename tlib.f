@@ -19,7 +19,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a)') 
-     *      'Perple_X version 6.8.1, source updated Dec 23, 2017.'
+     *      'Perple_X version 6.8.1, source updated Jan 2, 2018.'
 
       end
 
@@ -220,7 +220,7 @@ c                                 interpolation keyword
 c                                 vrh_weighting keyword
       nopt(6) = 0.5d0
 c                                 bad_number keyword
-      nopt(7) = 0d0
+      nopt(7) = dnan()
 c                                 zero_mode (<0 off)
       nopt(9) = 1d-6
 c                                 set zero threshold for fractionations calculations
@@ -618,10 +618,7 @@ c                                 final_resolution keys
             read (strg,*) rid(2,1)
             read (nval1,*,iostat=ier) rid(2,2)
 c                                 ier check for the 666/667 transition             
-            if (ier.ne.0.or.rid(2,2).eq.0d0) then 
-               rid(2,1) = 2d-2
-               read (strg,*) rid(2,2)
-            end if 
+            if (ier.ne.0.or.rid(2,2).eq.0d0) rid(2,2) = rid(2,1) 
 
          else if (key.eq.'fd_expansion_factor') then 
 
@@ -694,11 +691,6 @@ c                                 autorefine
                iopt(6) = 0
             else if (val.eq.'man') then
                iopt(6) = 1
-            end if 
-
-            if (nval1.gt.'0') then 
-               write (*,1100) nval1
-               stop
             end if 
 
          else if (key.eq.'auto_refine_factor_I') then
@@ -2338,7 +2330,7 @@ c---------------------------------------------------------------------
 57    format (/,'**error ver057** failed on an accepted make definition'
      *         ,' for ',a,/,'routine INPUT2'/)
 58    format (/,'**error ver058** too many pseudocompounds generated ',
-     *          'during adaptive minimization, routine:',a,/
+     *          'during adaptive minimization, routine: ',a,/
      *        /,'this error can usually be eliminated by one of the ',
      *        /,'following actions (best listed first):',/)
 580   format (2x,'- increase dimension k21 (',i7,') and recompile ',
