@@ -2786,7 +2786,8 @@ c----------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i, j, k, id, jk, index, ind(i11), nsol, msol, ksol
+      integer i, j, k, id, jk, index, ind(i11), jnd(i11), nsol, msol, 
+     *        ksol
 
       logical stable(i11), quit
 
@@ -2832,6 +2833,9 @@ c----------------------------------------------------------------------
             if (idstab(j).eq.idsol(i,ias)) then
 
                msol = msol + 1
+c                               jnd points to the column before 
+c                               the j'th solution
+               jnd(j) = jk
 
                do k = 1, nrep(i,ias)
 
@@ -2878,7 +2882,10 @@ c                                 check if it's already in ind:
                     end if
                  end do 
 
-                 if (quit) cycle 
+                 if (quit) then 
+                    stable(i) = .true.
+                    cycle 
+                 end if 
 
                  if (msol.eq.ksol) then
 c                                 probably univariant, find the phase that
@@ -2918,7 +2925,7 @@ c                                 to real zeros (not nopt(7)).
                if (stable(i).and.smode(i).gt.0) cycle
 
                do j = 1, nstab(i)
-                  prop(i-1+j) = 0d0
+                  prop(jnd(i)+j) = 0d0
                end do 
 
             end do 
@@ -2936,19 +2943,22 @@ c                                 to real zeros (not nopt(7)).
          ksol = msol
 c                                 convert to cumulative modes if
 c                                 requested
-         if (isnan(prop(ind(nsol)))) then
-            dinc = 0d0
-         else
-            dinc = prop(ind(nsol))
-         end if 
+         dinc = 0d0
 
-         do j = nsol-1, 1, -1
+         do j = nsol, 1, -1
 
-            if (isnan(prop(ind(j)))) cycle 
+            i = ind(j)
+c                                 in case of multiple occurences run
+c                                 over all the occurrences of ind(j):
+            do k = 1, nstab(i)
 
-            dinc = prop(ind(j)) + dinc
+               if (isnan(prop(jnd(i)+k))) exit
 
-            prop(ind(j)) = dinc 
+               dinc = prop(jnd(i)+k) + dinc
+
+               prop(jnd(i)+k) = dinc
+
+            end do 
 
          end do
 

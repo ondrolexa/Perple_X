@@ -17106,9 +17106,9 @@ c                                 set option flags if necessary
 
          if (jpot.ne.0) then 
 
-            call warn (99,0d0,0,' aq_output is T, but '//
-     *                          'dependent_potentials is off, '//
-     *                'dependent_potentials set = on (AQIDST)')
+            call warn (99,0d0,0,'aq_output or aq_lagged_speciation is T'
+     *                        //', but dependent_potentials is off, '//
+     *                         'dependent_potentials set = on (AQIDST)')
 
             jpot = 0
 
@@ -17116,13 +17116,11 @@ c                                 set option flags if necessary
 c                                reset iopt(32) [# aq species output]
          if (iopt(32).gt.aqct) iopt(32) = aqct
 
-      end if 
-
-
-      if (.not.lopt(25)) then 
+      else 
 
          aqct = 0
          iopt(32) = 0
+         return 
 
       end if 
 
@@ -17174,6 +17172,9 @@ c                                 identify non-solvent components
 c                                 no solution model found:
 c                                 turn off lagged speciation just to be sure
          lopt(32) = .false. 
+
+        if (.not.lopt(25)) aqct = 0
+
 c                                 else look for H2O
          do i = 1, ipoint
 
