@@ -234,7 +234,7 @@ c-----------------------------------------------------------------------
 
       logical output
 
-      integer i,j,idead,ier
+      integer i, j, idead, ier, it
 
       character y*1
 
@@ -296,7 +296,8 @@ c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
 
       iasct = 0
-      ibulk = 0  
+      ibulk = 0
+      it = 0  
 
       loopy = jlow
 c                                 get phases to be fractionated
@@ -320,6 +321,7 @@ c                                 file, else analytical path function
             if (ier.ne.0) exit
 
             j = j + 1
+            it = it + 1 
 
             ctotal = 0d0
 c                                 get total moles to compute mole fractions             
@@ -335,6 +337,11 @@ c                                 the results to the print file.
             call lpopt (1,j,idead,output)
 c                                 fractionate the composition:
             call fractr (idead,output)
+
+            if (it.gt.99) then 
+               write (*,'(i5,a)') j,' optimizations completed...'
+               it = 0
+            end if 
 
          end do 
 
@@ -408,6 +415,13 @@ c                                 the results to the print file.
                call lpopt (1,j,idead,output)
 c                                 fractionate the composition:
                call fractr (idead,output)
+
+               it = it + 1
+
+               if (it.gt.99) then 
+                  write (*,'(i5,a)') j,' optimizations completed...'
+                  it = 0
+               end if 
  
             end do 
 

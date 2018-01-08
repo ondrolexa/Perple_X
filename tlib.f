@@ -19,7 +19,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a)') 
-     *      'Perple_X version 6.8.1, source updated Jan 5, 2018.'
+     *      'Perple_X version 6.8.1, source updated Jan 8, 2018.'
 
       end
 
@@ -236,9 +236,9 @@ c                                 be refined in addition to
 c                                 active points
       iopt(12) = 4
 c                                 final resolution, auto-refine stage
-      rid(2,2) = 1d-2
+      rid(2,2) = 1d-3
 c                                 final resolution, exploratory stage
-      rid(2,1) = 1d-3
+      rid(2,1) = 1d-2
 c                                 global reach factor
       nopt(23) = 0d0
 c                                 solvus_tolerance_II
