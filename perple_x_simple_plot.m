@@ -24,7 +24,7 @@
 % end
 
 
-LineWidth = 2.0
+LineWidth = 1.0
 FontSize = 14.0
 LineSpec = '-'
 
@@ -35,4 +35,4 @@ function_for_perple_x_plots (x,y,a,xname,yname,zname,nvar,mvar,nrow,dnames,LineS
 
 set (gca, 'PlotBoxAspectRatio', [1 0.5 1],...
     'FontSize',14.,...
-    'LineWidth',2.0)
+    'LineWidth',1.0)

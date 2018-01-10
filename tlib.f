@@ -19,7 +19,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a)') 
-     *      'Perple_X version 6.8.1, source updated Jan 8, 2018.'
+     *      'Perple_X version 6.8.1, source updated Jan 10, 2018.'
 
       end
 
@@ -2824,8 +2824,8 @@ c----------------------------------------------------------------------
      *          4x,'In the 2nd case: ',
      *          'change the bulk composition or add phases.',/)
 43    format (/,'**warning ver043** ',i2,' solutions referenced ',
-     *          'in your input',/,'were not found in the solution ',
-     *          'model file, routine:',a,/)
+     *          'in your input were not found in the solution ',
+     *          'model file.',/)
 44    format ('**warning ver044** a solution model has destabilized',
      *        ' the endmember: ',a,' (iend=2).')
 45    format (/,'**warning ver045** the entity involves ',

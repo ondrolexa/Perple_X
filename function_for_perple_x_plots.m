@@ -29,7 +29,10 @@ if nvar == 1 % two cases: 1d - table -> 2d plot
     
     for i = 1:jvar,plot(a(kvar,1:nrow),a(dvar(i),1:nrow),LineSpec,'LineWidth',LineWidth),end
     
-    legend(dnames{1}{dvar},'Location','Best','FontSize',FontSize); axis square; axis tight; xlabel(dnames{1}{kvar},'FontSize',FontSize); title(titl,'FontSize',FontSize);
+    legend(dnames{1}{dvar},'Location','EastOutside'); 
+    %axis square; 
+    legend HIDE
+    axis tight; xlabel(dnames{1}{kvar},'FontSize',FontSize); title(titl,'FontSize',FontSize);
     
 elseif nvar == 2 % 2d - table -> 2/3d plot
     

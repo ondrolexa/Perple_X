@@ -287,7 +287,7 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical log, bad
+      logical log, bad, fileio
 
       character y*1, n4name*100, title*100, tags(33)*14
 
@@ -469,6 +469,28 @@ c                                X(O)-X(C) COH
                write (*,'(/,a)') 
      *               'How many independent variables, 1 or 2?'
                call rdnumb (p,0d0,jpot,1,.false.)
+
+               if (jpot.eq.5) then 
+c                                 hidden file p-t input option
+                  jpot = 1
+                  fileio = .true.
+c                                 special file output
+                  do 
+                     write (*,*) 'Enter P-T file name '
+                     read (*,*) title
+                     open (666,file=title,status='old',iostat=ier)
+                     if (ier.ne.0) cycle
+                     exit
+                  end do 
+
+                  exit
+
+               else
+
+                  fileio = .false.
+
+               end if 
+
                if (jpot.gt.0.and.jpot.lt.3) exit
 
             end do 
@@ -805,6 +827,8 @@ c                                 assign values to local variables
 
 c                                 calculate properties
                   bad = .false.
+
+                  if (fileio) read (666,*,iostat=ier) p, t
 
                   call cfluid (fo2, fs2)    
 c                                 variables

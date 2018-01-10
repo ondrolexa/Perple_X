@@ -77,7 +77,7 @@ refinement_points_II      default | [auto] or an integer > 0, the number of meta
 refine_endmembers         default | [F] accept endmember compositions as refinement points
 seismic_output            default | [some] all, some, none
 short_print               default | [on] suppress output of equilibrium coordinates to the print file, only relevant for CONVEX
-solution_names            dedault | [mod] mod, abb or ful; use the model, abbreviation, or full name for solution models for output
+solution_names            default | [mod] mod, abb or ful; use the model, abbreviation, or full name for solution models for output
 solvus_tolerance          default | [auto] auto or 0->1, should be > initial_resolution/auto_refine_factor
 solvus_tolerance_II       default | [0.2] 0->1 
 speciation_factor         default | [100] >1, speciation precision = final resolution/speciation factor

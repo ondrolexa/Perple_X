@@ -32,6 +32,9 @@ c      include 'flib.f'
 
       double precision coef(0:10)
 
+      double precision gcpd
+      external gcpd
+
       double precision props,psys,psys1,pgeo,pgeo1
       common/ cxt22 /props(i8,k5),psys(i8),psys1(i8),pgeo(i8),pgeo1(i8)
 
@@ -213,6 +216,33 @@ c
                end do 
 
             end if 
+
+         else if (icopt.eq.5) then 
+c                                 special file output
+             do 
+                write (*,*) 'Enter P-T file name '
+                read (*,*) opname
+                open (666,file=opname,status='old',iostat=ier)
+                if (ier.ne.0) cycle
+                exit
+             end do
+
+             do 
+                write (*,*) 'Enter output file name '
+                read (*,*) opname
+                open (667,file=opname,status='new',iostat=ier)
+                if (ier.ne.0) cycle
+                exit
+             end do 
+
+             do 
+                read (666,*,iostat=ier) v(1), v(2)
+                if (ier.ne.0) exit
+                write (667,'(3(g14.6,1x))') gcpd(1,.false.), v(1), v(2)
+             end do
+
+             close (666)
+             close (667)
 
          else if (icopt.eq.3) then
 c                                 create a new data base entry

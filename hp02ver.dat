@@ -96,6 +96,13 @@ begin_makes
  | qfm = 2 mt + 3 q  -3 fa         | qfm O2 buffer
  | 0 0 0                        
 
+ | qfm = 2 mt +3 q  -3 fa - 1 O2          | qfm fo2 for output with frendly
+ | 0 0 0 
+
+ | cco = -1 O2 - 1 gph + 1 CO2           | cco fo2 for output with frendly
+ | 0 0 0 
+
+
  |emog = -1 fo - 2 gph + 1 mag + 1/2 en | EMOG O2 buffer
  |0 0 0 
 
