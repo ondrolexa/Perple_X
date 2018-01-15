@@ -538,10 +538,11 @@ c-----------------------------------------------------------------------
 
       character*14 tname
       integer kop,kcx,k2c,iprop
-      logical kfl
+      logical kfl, tirst
       double precision prop,prmx,prmn
-      common/ cst77 /prop(i11),prmx(i11),prmn(i11),kop(i11),kcx(i11),
-     *               k2c(i11),iprop,kfl(i11),tname
+      common/ cst77 /prop(i11),prmx(i11),prmn(i11),
+     *               kop(i11),kcx(i11),k2c(i11),iprop,
+     *               tirst,kfl(i11),tname
 
       character cname*5
       common/ csta4  /cname(k5)

@@ -363,14 +363,12 @@ c                                 refine_endmembers
       lopt(39) = .false.
 c                                 automatic specification of refinement_points_II
       lopt(40) = .true.
+c                                 absolute amounts
+      lopt(41) = .false.
+c                                 cumulative amounts
+      lopt(42) = .false.
 c                                 initialize mus flag lagged speciation
       mus = .false.
-c                                 -------------------------------------
-c                                 werami output options:
-
-c                                 cumulative_modes
-c     valu(15) = 'off'
-c     iopt(15) = 0
 c                                 -------------------------------------
 c                                 for gridded minimization:
 c                                 # nodes in i direction
@@ -478,6 +476,14 @@ c                                 phase composition key
          else if (key.eq.'refine_endmembers') then 
 
             if (val.eq.'T') lopt(39) = .true.
+
+         else if (key.eq.'absolute') then 
+
+            if (val.eq.'T') lopt(41) = .true.
+
+         else if (key.eq.'cumulative') then 
+
+            if (val.eq.'T') lopt(42) = .true.
 
          else if (key.eq.'aq_solvent_composition') then
 
@@ -2576,7 +2582,7 @@ c----------------------------------------------------------------------
       else if (ier.eq.42) then
          write (*,42)     
       else if (ier.eq.43) then
-         write (*,43) int, char
+         write (*,43) int
       else if (ier.eq.44) then
          write (*,44) char
       else if (ier.eq.45) then

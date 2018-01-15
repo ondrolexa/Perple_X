@@ -185,10 +185,11 @@ c----------------------------------------------------------------------
 
       character*14 tname
       integer kop,kcx,k2c,iprop
-      logical kfl
+      logical kfl, first
       double precision prop,prmx,prmn
-      common/ cst77 /prop(i11),prmx(i11),prmn(i11),kop(i11),kcx(i11),
-     *               k2c(i11),iprop,kfl(i11),tname
+      common/ cst77 /prop(i11),prmx(i11),prmn(i11),
+     *               kop(i11),kcx(i11),k2c(i11),iprop,
+     *               first,kfl(i11),tname
 
       integer inv
       character dname*14, title*162
@@ -267,7 +268,7 @@ c                                 round off tests:
 
             var(1) = tmin(1) + dx(1)*dfloat(i-1)
 
-            call polprp (dim,i)
+            call polprp (dim)
  
          end do
  
@@ -1016,7 +1017,7 @@ c                                 find normalized distance
 
       end   
 
-      subroutine polprp (dim,index)
+      subroutine polprp (dim)
 c-----------------------------------------------------------------------
       implicit none
 
@@ -1024,7 +1025,7 @@ c-----------------------------------------------------------------------
 
       logical nodata
 
-      integer itri(4), jtri(4), ijpt, lop, icx, komp, i, j, dim, index
+      integer itri(4), jtri(4), ijpt, lop, icx, komp, i, j, dim
 
       double precision wt(3), mode
 
@@ -1041,10 +1042,11 @@ c-----------------------------------------------------------------------
 
       character*14 tname
       integer kop,kcx,k2c,iprop
-      logical kfl
+      logical kfl, first
       double precision prop,prmx,prmn
-      common/ cst77 /prop(i11),prmx(i11),prmn(i11),kop(i11),kcx(i11),
-     *               k2c(i11),iprop,kfl(i11),tname
+      common/ cst77 /prop(i11),prmx(i11),prmn(i11),
+     *               kop(i11),kcx(i11),k2c(i11),iprop,
+     *               first,kfl(i11),tname
 
       integer igrd
       common/ cst311/igrd(l7,l7)
@@ -1086,7 +1088,7 @@ c                                 compute all properties
 c                                 get the properties of interest
                if (lop.eq.25) then 
 c                                 get all modes
-                  call allmod (index)
+                  call allmod
 
                   exit 
 
@@ -1166,10 +1168,11 @@ c----------------------------------------------------------------
 
       character*14 tname
       integer kop,kcx,k2c,iprop
-      logical kfl
+      logical kfl, first
       double precision prop,prmx,prmn
-      common/ cst77 /prop(i11),prmx(i11),prmn(i11),kop(i11),kcx(i11),
-     *               k2c(i11),iprop,kfl(i11),tname
+      common/ cst77 /prop(i11),prmx(i11),prmn(i11),
+     *               kop(i11),kcx(i11),k2c(i11),iprop,
+     *               first,kfl(i11),tname
 
       integer iopt
       logical lopt
@@ -1216,10 +1219,11 @@ c----------------------------------------------------------------------
 
       character*14 tname
       integer kop,kcx,k2c,iprop
-      logical kfl
+      logical kfl, first
       double precision prop,prmx,prmn
-      common/ cst77 /prop(i11),prmx(i11),prmn(i11),kop(i11),kcx(i11),
-     *               k2c(i11),iprop,kfl(i11),tname
+      common/ cst77 /prop(i11),prmx(i11),prmn(i11),
+     *               kop(i11),kcx(i11),k2c(i11),iprop,
+     *               first,kfl(i11),tname
 
       integer iopt
       logical lopt
@@ -1246,7 +1250,7 @@ c                                 write phemgp format
       else if (lopt(15).or.dim.eq.1) then 
 c                                 write spreadsheet tab format
          write (n5,'(200(g14.6e3,1x))') (var(i),i=1,ivar), 
-     *                                (prop(i),i=1,iprop)
+     *                                  (prop(i),i=1,iprop)
 
       else 
 c                                 write compact tab format
@@ -2198,10 +2202,11 @@ c----------------------------------------------------------------------
 
       character*14 tname
       integer kop,kcx,k2c,iprop
-      logical kfl
+      logical kfl, first
       double precision prop,prmx,prmn
-      common/ cst77 /prop(i11),prmx(i11),prmn(i11),kop(i11),kcx(i11),
-     *               k2c(i11),iprop,kfl(i11),tname
+      common/ cst77 /prop(i11),prmx(i11),prmn(i11),
+     *               kop(i11),kcx(i11),k2c(i11),iprop,
+     *               first,kfl(i11),tname
 
       character vnm*8
       common/ cxt18a /vnm(l3)  
@@ -2371,7 +2376,7 @@ c                                 compute properties
  
          end if 
 
-         call polprp (dim,i)
+         call polprp (dim)
 
       end do 
 
@@ -2421,10 +2426,11 @@ c----------------------------------------------------------------------
 
       character*14 tname
       integer kop,kcx,k2c,iprop
-      logical kfl
+      logical kfl, first
       double precision prop,prmx,prmn
-      common/ cst77 /prop(i11),prmx(i11),prmn(i11),kop(i11),kcx(i11),
-     *               k2c(i11),iprop,kfl(i11),tname
+      common/ cst77 /prop(i11),prmx(i11),prmn(i11),
+     *               kop(i11),kcx(i11),k2c(i11),iprop,
+     *               first,kfl(i11),tname
 
       integer ivar,ind,ichem
       common/ cst83 /ivar,ind,ichem
@@ -2482,7 +2488,7 @@ c                                 name and open plot file, write header
 
          var(1) = xyp(1) + dfloat(i-1)*d
 
-         call polprp (dim,i)
+         call polprp (dim)
 
       end do 
 
@@ -2521,10 +2527,11 @@ c----------------------------------------------------------------------
 
       character*14 tname
       integer kop,kcx,k2c,iprop
-      logical kfl
+      logical kfl, first
       double precision prop,prmx,prmn
-      common/ cst77 /prop(i11),prmx(i11),prmn(i11),kop(i11),kcx(i11),
-     *               k2c(i11),iprop,kfl(i11),tname
+      common/ cst77 /prop(i11),prmx(i11),prmn(i11),
+     *               kop(i11),kcx(i11),k2c(i11),iprop,
+     *               first,kfl(i11),tname
 
       logical oned
       common/ cst82 /oned
@@ -2596,9 +2603,7 @@ c                                 condition is in bounds
                      var(2) = x 
                   end if 
 
-                  call polprp (dim,i)
-c                                 this is only for cumulative modes
-                  i = 2
+                  call polprp (dim)
 
                end if 
 
@@ -2662,7 +2667,7 @@ c                                 write plot file header
             var(1) = xx(i)
             var(2) = yy(i)
 
-            call polprp (dim,i)
+            call polprp (dim)
 
          end do  
 
@@ -2777,7 +2782,7 @@ c                                 could get fancy and record up/left here
 
       end 
 
-      subroutine allmod (index)
+      subroutine allmod
 c----------------------------------------------------------------
 c computes modes of all stable phases, i.e., over the entire range
 c of physical conditions. 
@@ -2786,8 +2791,7 @@ c----------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i, j, k, id, jk, index, ind(i11), jnd(i11), nsol, msol, 
-     *        ksol
+      integer i, j, k, id, jk, ind(i11), jnd(i11), nsol, msol, ksol
 
       logical stable(i11), quit
 
@@ -2795,10 +2799,11 @@ c----------------------------------------------------------------
 
       character*14 tname
       integer kop,kcx,k2c,iprop
-      logical kfl
+      logical kfl, first
       double precision prop,prmx,prmn
-      common/ cst77 /prop(i11),prmx(i11),prmn(i11),kop(i11),kcx(i11),
-     *               k2c(i11),iprop,kfl(i11),tname
+      common/ cst77 /prop(i11),prmx(i11),prmn(i11),
+     *               kop(i11),kcx(i11),k2c(i11),iprop,
+     *               first,kfl(i11),tname
 
       integer iopt
       logical lopt
@@ -2857,7 +2862,7 @@ c                                mode column pointer
 
       if (lopt(2)) then
 
-         if (index.eq.1) then
+         if (first) then
 
             do i = 1, istab
                ind(i) = i
@@ -2866,6 +2871,8 @@ c                                mode column pointer
             call rankem (smode,ind,istab,msol)
 
             nsol = msol
+
+            first = .false.
 
          else
 
@@ -3047,10 +3054,11 @@ c----------------------------------------------------------------
 
       character*14 tname
       integer kop,kcx,k2c,iprop
-      logical kfl
+      logical kfl, first
       double precision prop,prmx,prmn
-      common/ cst77 /prop(i11),prmx(i11),prmn(i11),kop(i11),kcx(i11),
-     *               k2c(i11),iprop,kfl(i11),tname
+      common/ cst77 /prop(i11),prmx(i11),prmn(i11),
+     *               kop(i11),kcx(i11),k2c(i11),iprop,
+     *               first,kfl(i11),tname
 
       integer iopt
       logical lopt
@@ -3198,9 +3206,9 @@ c----------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i, j, id, dim  
+      integer i, j, id, dim
 
-      double precision mode(3)
+      double precision mode(3), fwt, cprp(i11)
 
       double precision gtot,fbulk,gtot1,fbulk1
       common/ cxt81 /gtot,fbulk(k0),gtot1,fbulk1(k0)
@@ -3242,16 +3250,23 @@ c----------------------------------------------------------------
 
       character*14 tname
       integer kop,kcx,k2c,iprop
-      logical kfl
+      logical kfl, first
       double precision prop,prmx,prmn
-      common/ cst77 /prop(i11),prmx(i11),prmn(i11),kop(i11),kcx(i11),
-     *               k2c(i11),iprop,kfl(i11),tname
+      common/ cst77 /prop(i11),prmx(i11),prmn(i11),
+     *               kop(i11),kcx(i11),k2c(i11),iprop,
+     *               first,kfl(i11),tname
 
       integer idstab,nstab,istab
       common/ cst34 /idstab(i11),nstab(i11),istab
 
       double precision atwt
       common/ cst45 /atwt(k0)
+
+      double precision sel, cox
+      logical hscon, hsc, oxchg
+      common/ cxt45 /sel(k0),cox(k0),hscon,oxchg,hsc(k1)
+
+      save cprp
 c----------------------------------------------------------------------
       if (kop(1).eq.38) then 
 c                                 custom property choices
@@ -3293,6 +3308,16 @@ c                                 properties of phases
 
       else
 c                                 "all property" option, lop.eq.36
+         if (first) then 
+c                                 initialize cumulative props
+            do i = 1, iprop
+               cprp(i) = 0d0
+            end do 
+
+            first = .false.
+
+         end if
+
          if (kcx(1).eq.999.or.kcx(1).eq.0) then 
 c                                 only system properties requested:
             if (aflu.and.lflu.or.(.not.aflu)) then 
@@ -3300,26 +3325,14 @@ c                                 normal properties
                do i = 1, i8
                   prop(i) = psys(i)
                end do 
-c                                 modes
-               do i = i8+1, i8+3
-                  prop(i) = 1d2
-               end do 
-c                                 bulk composition 
+c                                 bulk composition and excess charge
+               fwt = psys(17)
+
                do i = i8+4, i8+3+icomp
-                  if (lopt(23)) then 
-                     prop(i) = fbulk(i-i8-3)*atwt(i-i8-3)/psys(17)*1d2
-                  else 
-                     prop(i) = fbulk(i-i8-3)
-                  end if
+c                                 absolute molar bulk composition
+                  prop(i) = fbulk(i-i8-3)
+
                end do 
-c                                 chemical potentials
-               do i = i8+icomp+4, i8+3+icomp+ichem
-                  prop(i) = mu(i-i8-3-icomp)
-               end do
-
-               tname = 'system        '
-
-               call outprp (dim)
 
             else
 c                                 exclude fluid:
@@ -3327,28 +3340,59 @@ c                                 normal properties
                do i = 1, i8
                   prop(i) = psys1(i)
                end do 
-c                                 modes
-               do i = i8+1, i8+3
-                  prop(i) = 1d2
-               end do 
 c                                 bulk composition 
+               fwt = psys1(17)
+
                do i = i8+4, i8+3+icomp
-                  if (lopt(23)) then 
-                     prop(i) = fbulk1(i-i8-3)*atwt(i-i8-3)/psys1(17)*1d2
-                  else 
-                     prop(i) = fbulk1(i-i8-3)
-                  end if
+                  prop(i) = fbulk1(i-i8-3)
                end do 
+
+            end if
 c                                 chemical potentials
-               do i = i8+icomp+4, iprop
-                  prop(i) = mu(i-i8-3-icomp)
-               end do 
+            do i = i8+icomp+4, i8+2*icomp+3
+               prop(i) = mu(i-i8-3-icomp)
+            end do 
 
-               tname = 'system        '
+c                                 dummy modes
+            do i = i8+1, i8+3
+               prop(i) = 1d2
+            end do 
+c                                 convert bulk composition if necessary
+            if (lopt(23)) then 
 
-               call outprp (dim)
+               if (oxchg) then 
+c                                 net nominal oxidation state 
+                  prop(iprop) = 0d0
 
-            end if 
+                  do i = i8+4, i8+3+icomp
+
+                     prop(iprop) = prop(iprop) + cox(i-i8-3) * prop(i)
+
+                  end do
+
+               else 
+
+                  prop(iprop) = nopt(7) 
+
+               end if
+
+               do i = i8+4, i8+3+icomp
+c                                 convert to mass:
+                  if (lopt(41)) then
+c                                 absolute mass
+                     prop(i) = prop(i)*atwt(i-i8-3)
+                  else 
+c                                 relative (%)
+                     prop(i) = prop(i)*atwt(i-i8-3)/fwt*1d2
+                  end if
+
+               end do
+
+            end if
+
+            tname = 'system        '
+
+            call outprp (dim)
 
          end if 
 
@@ -3391,16 +3435,62 @@ c                                 compute modes
                do i = 1, 3
                   prop(i8+i) = mode(i)
                end do 
-c                                 bulk composition 
+c                                 bulk phase compositions are wt% if iopt(2) = 1 
+c                                 and molar if iopt(2) = 0.
                do i = i8+4, i8+3+icomp
                   prop(i) = pcomp(i-i8-3,id)
                end do 
+
+               if (oxchg.and.iopt(2).eq.0) then 
+c                                 net nominal oxidation state 
+                  prop(iprop) = 0d0
+
+                  do i = i8+4, i8+3+icomp
+
+                     prop(iprop) = prop(iprop) + cox(i-i8-3) * prop(i)
+
+                  end do
+
+                  prop(iprop) = prop(iprop) * prop(16)
+
+               else
+
+                  prop(iprop) = nopt(7)
+
+               end if
+c                                 convert to absolute mol/mass if requested
+               if (lopt(41)) then 
+
+                  do i = i8+4, i8+3+icomp
+c                                 prop(16) is the molar amount of the phase
+                     prop(i) = prop(i) * prop(16)
+c                                 mass ammount, undo percent
+                     if (iopt(2).eq.1) prop(i) = prop(i)/2d2 
+                  end do
+
+               end if 
 c                                 chemical potentials
-               do i = i8+icomp+4, iprop
+               do i = i8+icomp+4, i8+2*icomp+3
                   prop(i) = mu(i-i8-3-icomp)
                end do 
 
                tname = pname(id)
+c                                 convert if absolute amounts requested 
+
+c                                 convert compositions to cumulative, this only
+c                                 makes sense for absolute amounts of a fractionated
+c                                 phase
+               if (lopt(42).and.kcx(1).ne.999) then
+
+                  do i = i8+4, i8+3+icomp
+                     prop(i) = cprp(i) + prop(i)
+                     cprp(i) = prop(i)
+                  end do
+
+                  prop(iprop) = cprp(iprop) + prop(iprop)
+                  cprp(iprop) = prop(iprop)
+
+               end if 
 
                call outprp (dim) 
 
@@ -3408,7 +3498,7 @@ c                                 chemical potentials
 
             end do
 
-         end if 
+         end if
 
       end if 
 
@@ -3532,10 +3622,11 @@ c----------------------------------------------------------------
 
       character*14 tname
       integer kop,kcx,k2c,iprop
-      logical kfl
+      logical kfl, first
       double precision prop,prmx,prmn
-      common/ cst77 /prop(i11),prmx(i11),prmn(i11),kop(i11),kcx(i11),
-     *               k2c(i11),iprop,kfl(i11),tname
+      common/ cst77 /prop(i11),prmx(i11),prmn(i11),
+     *               kop(i11),kcx(i11),k2c(i11),iprop,
+     *               first,kfl(i11),tname
 
       integer idstab,nstab,istab
       common/ cst34 /idstab(i11),nstab(i11),istab
@@ -3834,7 +3925,7 @@ c                                 get phase index
 
             if (lop.eq.36) then 
 
-               iprop = i8 + 3 + icomp + ichem
+               iprop = i8 + 3 + icomp + ichem + 1
                if (iprop.gt.i11) call error (1,0d0,iprop,'I11')
 
             else 
@@ -3922,10 +4013,12 @@ c                                 bulk compositions, lop = 6
                   call gtname (6,i-mprop,i,komp,pname)
                end do 
 
-               do i = mprop + icomp + 1, iprop
+               do i = mprop + icomp + 1, i8 + 3 + icomp + ichem
 c                                 chemical potentials, lop = 23
                   call gtname (23,i-mprop-icomp,i,komp,pname)
                end do 
+
+               dname(iprop) = 'nom_ox'
 
             else if (lop.eq.38) then 
 c                                 "custom" prop option, kop
@@ -4016,10 +4109,11 @@ c----------------------------------------------------------------
 
       character*14 tname
       integer kop,kcx,k2c,iprop
-      logical kfl
+      logical kfl, first
       double precision prop,prmx,prmn
-      common/ cst77 /prop(i11),prmx(i11),prmn(i11),kop(i11),kcx(i11),
-     *               k2c(i11),iprop,kfl(i11),tname
+      common/ cst77 /prop(i11),prmx(i11),prmn(i11),
+     *               kop(i11),kcx(i11),k2c(i11),iprop,
+     *               first,kfl(i11),tname
 
       integer inv
       character dname*14, title*162
@@ -4175,10 +4269,11 @@ c----------------------------------------------------------------
 
       character*14 tname
       integer kop,kcx,k2c,iprop
-      logical kfl
+      logical kfl, first
       double precision prop,prmx,prmn
-      common/ cst77 /prop(i11),prmx(i11),prmn(i11),kop(i11),kcx(i11),
-     *               k2c(i11),iprop,kfl(i11),tname  
+      common/ cst77 /prop(i11),prmx(i11),prmn(i11),
+     *               kop(i11),kcx(i11),k2c(i11),iprop,
+     *               first,kfl(i11),tname
 c----------------------------------------------------------------------
 c                                 write data ranges
       write (*,1090) nopt(7)
@@ -4335,10 +4430,11 @@ c----------------------------------------------------------------
 
       character*14 tname
       integer kop,kcx,k2c,iprop
-      logical kfl
+      logical kfl, first
       double precision prop,prmx,prmn
-      common/ cst77 /prop(i11),prmx(i11),prmn(i11),kop(i11),kcx(i11),
-     *               k2c(i11),iprop,kfl(i11),tname
+      common/ cst77 /prop(i11),prmx(i11),prmn(i11),
+     *               kop(i11),kcx(i11),k2c(i11),iprop,
+     *               first,kfl(i11),tname
 
       integer jnd
       double precision aqg,q2,rt
@@ -4440,10 +4536,11 @@ c-----------------------------------------------------------------------
 
       character*14 tname
       integer kop,kcx,k2c,iprop
-      logical kfl
+      logical kfl, first
       double precision prop,prmx,prmn
-      common/ cst77 /prop(i11),prmx(i11),prmn(i11),kop(i11),kcx(i11),
-     *               k2c(i11),iprop,kfl(i11),tname
+      common/ cst77 /prop(i11),prmx(i11),prmn(i11),
+     *               kop(i11),kcx(i11),k2c(i11),iprop,
+     *               first,kfl(i11),tname
 
       integer kd, na1, na2, na3, nat
       double precision x3, caq
