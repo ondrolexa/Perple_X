@@ -4447,6 +4447,7 @@ c----------------------------------------------------------------
       data spec/'pH-pH_0','pH','error_pH','permittivity','I,m',
      *          'tot_solute_m'/
 c----------------------------------------------------------------------
+      if (icp+ns+aqct+6.gt.i11) call error (1,rt,icp+ns+aqct+6,'i11')
 c                                 bulk composition, wt% or mol 
       do i = 1, icp 
 
