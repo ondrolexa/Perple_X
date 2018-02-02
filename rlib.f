@@ -8971,7 +8971,7 @@ c---------------------------------------------------------------------
       integer im, nloc, i, j, ind, id, jd, k, l,itic,ii,imatch, killct,
      *        killid(20)
 
-      double precision dinc,xsym,dzt,dx
+      double precision dinc,dzt,dx
 
       double precision gcpd
 
@@ -9276,31 +9276,25 @@ c                                 make all stretch (if not already)
             end if 
 c                                 for aqueous solutions always use
 c                                 model specified increments
-            if (jsmod.ne.20) then 
+            if (jsmod.ne.20.and.nopt(13).gt.0d0) then 
 c                                 otherwise:
-               if (nopt(13).gt.0d0.and.icopt.le.3) then 
-c                                 use default initial resolution, perturbed
-c                                 by a per-mil scale increment to reduce 
-c                                 compositional degeneracies. 
-                  xnc(i,j) = (1d0 + nopt(15)*float(im-5)) * nopt(13)
-c DEBUG DEBUG
-c               else if (nopt(13).gt.0d0.and.imd(j,i).eq.0) then
-               else if (nopt(13).gt.0d0) then
-                  xnc(i,j) = nopt(13)
+               if (imd(j,i).eq.0) then 
+c                                 cartesian
+
+                     xnc(i,j) = nopt(13)
+
+               else 
+c                                 conformal
+                  xnc(i,j) = 1d0/nopt(13)
+c                                 and perturb xmin
+
                end if
 
             end if
-
-c            if (xnc(i,j).gt.xmx(i,j)) then
-c                                 check on xnc, this is really only necessary 
-c                                 for imd > 0, nopt13 = 0 or jsmod = 20
-c               write (*,'(a,i1,a,i2,/,a,g10.5e1)') 
-c     *                           'wugga wugga, xnc > xmx solution '
-c     *                            //tname//' site ',i,' species ',j,
-c     *                            'set xnc = xmx = ',xmx(i,j)
-c               xnc(i,j) = xmx(i,j)
-c
-c            end if 
+c                                 perturb xmn by a per-mil scale increment to 
+c                                 reduce compositional degeneracies. 
+            if (icopt.le.3.and.nopt(13).gt.0d0) 
+     *         xmn(i,j) = (1d0 + nopt(15)*float(im-5)) * xmn(i,j)
 c                                 save solution model values as hard limits for 
             xmno(im,i,j) = xmn(i,j)
             xmxo(im,i,j) = xmx(i,j)
@@ -9331,105 +9325,26 @@ c                                 widen the range by the exploratory resolution
                xmn(i,j) = xmn(i,j) - dinc
 
                if (xmx(i,j).gt.1d0) xmx(i,j) = 1d0
-               if (xmn(i,j).lt.0d0) xmn(i,j) = 0d0 
+               if (xmn(i,j).lt.0d0) xmn(i,j) = 0d0
  
-            end if 
+            end if
 c                                 -------------------------------------
 c                                 stretching stuff
-            if (imd(j,i).gt.0) then 
+            if (imd(j,i).gt.0) then
 c                                 check for old subdivision schemes
-               if (imd(j,i).gt.0) then
-                  if (xnc(i,j).le.0d0.or.xnc(i,j).gt.1d0)
-     *               call error (62,nopt(13),imd(j,i),tname)
-               end if
+               if (imd(j,i).gt.1.or.xnc(i,j).lt.1d0) 
+     *            call error (62,nopt(13),imd(j,i),tname)
 
-               xsym = (xmxo(im,i,j)+xmno(im,i,j))/2d0
-
-               dinc = xmx(i,j) - xmn(i,j)
-c                                 rescale the increment if the limits 
-c                                 are reduced
-               xnc(i,j) = xnc(i,j)/(xmxo(im,i,j) - xmno(im,i,j))
-c DEBUG DEBUG
-c                                 changed to use inc specified in the solution
-c                                 model, 1/inc is the number of points used to
-c                                 resolve the solution over the limits. here 
-c                                 the number of points is reduced if the original
-c                                 range is larger than the autorefine range
-c               xnc(i,j) = xnc(i,j) * (xmxo(im,i,j) - xmno(im,i,j))/dinc
-c              if (xnc(i,j).gt.1d0) xnc(i,j) = 1d0
-c                                 get the intervals
-               yint(1,j,i,im) = xmn(i,j)    
-   
-               if (imd(j,i).eq.1.or.imd(j,i).eq.4) then 
-c                                 one interval
-                  yfrc(1,j,i,im) = 1d0
-
-                  yint(2,j,i,im) = xmx(i,j)
-
-               else if (imd(j,i).eq.2.and.(.not.refine)) then 
-c                                 two intervals, symmetry 
-c                                 at (xmx(i,j) + xmn(i,j))/2d0.
-                  yfrc(1,j,i,im) = (xsym-xmno(im,i,j))/dinc
-                  yfrc(2,j,i,im) = 1d0 - yfrc(1,j,i,im)
-
-                  yint(2,j,i,im) = xsym                 
-                  yint(3,j,i,im) = xmx(i,j)
-
-               else if (imd(j,i).eq.2) then 
-c                                 in autorefine cycle, check if limits 
-c                                 are on one-side of original symmetry 
-c                                 axis:
-                  if (xmx(i,j).le.xsym) then 
-c                                 change to assymetric stretch toward xmax
-                     imd(j,i) = 1
-                     yfrc(1,j,i,im) = 1d0
-                     yint(2,j,i,im) = xmx(i,j)
-
-                  else if (xmn(i,j).ge.xsym) then 
-c                                 change to assymetric stretch toward xmin
-                     imd(j,i) = 4
-                     yfrc(1,j,i,im) = 1d0
-                     yint(2,j,i,im) = xmx(i,j)
-
-                  else 
-c                                 compositions span axis, recompute 
-c                                 fractional lengths of intervals:
-c                                 modified from:
-c                    yfrc(1,j,i,im) = (xsym-xmno(im,i,j))/dinc
-c                    yfrc(2,j,i,im) = 1d0 - yfrc(1,j,i,im)  
-c                                 10/20/08
-
-                     yfrc(1,j,i,im) =(xsym-xmn(i,j))/(xsym-xmno(im,i,j))
-                     yfrc(2,j,i,im) =(xmx(i,j)-xsym)/(xmxo(im,i,j)-xsym) 
- 
-                     yint(2,j,i,im) = xsym
-                     yint(3,j,i,im) = xmx(i,j)
-
-                  end if 
-
-               else 
-c                                 four intervals
-                  yint(3,j,i,im) = yin(ms1,mst)
-                  yint(5,j,i,im) = xmx(i,j)
-                  yint(2,j,i,im) = (yint(1,j,i,im)+yint(3,j,i,im))/2d0
-                  yint(4,j,i,im) = (yint(5,j,i,im)+yint(3,j,i,im))/2d0
-
-                  yfrc(1,j,i,im) = (yint(3,j,i,im)-yint(1,j,i,im))/2d0
-                  yfrc(2,j,i,im) = yfrc(1,j,i,im) 
-                  yfrc(3,j,i,im) = (yint(5,j,i,im)-yint(3,j,i,im))/2d0
-                  yfrc(4,j,i,im) = yfrc(3,j,i,im)
-
-               end if 
-            end if 
+            end if
 
             imdg(j,i,im) = imd(j,i)
             xmng(im,i,j) = xmn(i,j)
             xmxg(im,i,j) = xmx(i,j)
             xncg(im,i,j) = xnc(i,j)
 
-         end do 
+         end do
 
-      end do 
+      end do
 c                                 initialize high/low ranges
       do i = 1, isite
          do j = 1, ndim(i,im)
@@ -9443,10 +9358,10 @@ c                                 set reach factors
       if (.not.refine.and.iam.eq.1.and.iopt(20).ne.2.or.
      *                                 iopt(20).eq.0) then
 c                                 if vertex and not in the refine stage
-c                                 shut of reach increments
-          reachg(im) = nopt(21)/2d0          
+c                                 shut off reach increments
+         reachg(im) = nopt(21)/2d0
 
-      else if (reach.le.nopt(23)) then 
+      else if (reach.le.nopt(23)) then
 
          reachg(im) = nopt(21)*(1d0 + nopt(23))/2d0
 
@@ -10178,129 +10093,7 @@ c----------------------------------------------------------------------
 
       unstch = 1d0 - dlog((bp1-x)/(bm1+x))/lbpm
 
-      end 
-
-      double precision function ydinc (y0,xinc,mode,i,ksite,ids)
-c----------------------------------------------------------------------
-c get the new value of the stretched coordinate (y) from an
-c increment in the cartesian coordinate (xinc)
-c----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      integer ids, i, j, mode, ksite
-
-      double precision x, xinc, strtch, yreal, yloc, unstch, dy, ylmn,
-     *                 ylmx,y0,y
-    
-      logical odd
-c                                 interval limits conformal transformation
-      integer intv
-      double precision yint, yfrc
-      common/ cst47 /yint(5,ms1,mst,h9),yfrc(4,ms1,mst,h9),intv(4)
-c----------------------------------------------------------------------
-c                                 use a local y value to avoid changing
-c                                 the input coordinate
-      y = y0 
-c                                 y is the real coordinate.
-      if (mode.lt.4) then 
-         odd = .false.
-      else
-         odd = .true. 
-      end if 
-c                                 there are as many as intv(mode)
-c                                 intervals to cycle through
-      do j = 1, intv(mode)
-c                                 odd or even interval?
-         odd = .not.odd
-c                                 interval limits              
-         ylmx = yint(j+1,i,ksite,ids)
-         ylmn = yint(j,i,ksite,ids)
-c                                 which interval are we starting from?
-         if (y.gt.ylmx.and.j.lt.intv(mode)) then 
-            cycle
-         else if (y.gt.ylmx) then  
-c                                 somehow y is out of bounds, assume
-c                                 numerical reset y to max
-            y = ylmx
-
-         else if (y.lt.ylmn) then
-
-            y = ylmn 
-
-         end if 
-
-
-         dy = ylmx - ylmn
-c                                 the current value is in interval j
-c                                 convert to raw y (varies from 0 ->1 
-c                                 over the local interval)
-         if (dy.ne.0d0) then 
-            yloc = (y-ylmn) / dy
-         else 
-            yloc = y 
-         end if 
-c                                 convert to cartesian x and add increment
-
-         if (odd) then 
-            x = unstch(yloc) + xinc/yfrc(j,i,ksite,ids)
-         else
-            x = 1d0 - unstch(1d0-yloc) + xinc/yfrc(j,i,ksite,ids)
-         end if 
-
-         if (x.gt.1d0) then
-c                                 jumped to next interval
-            if (j.lt.intv(mode)) then
-c                                 add the residual (opposite odd)
-               x = (x - 1d0)*yfrc(j,i,ksite,ids)/yfrc(j+1,i,ksite,ids)
-               ylmn = ylmx
-               ylmx = yint(j+2,i,ksite,ids)
-               dy = ylmx - ylmn
-
-               if (odd) then 
-                  yreal = ylmx - strtch(1d0-x) * dy
-               else
-                  yreal = ylmx + strtch(x) * dy 
-               end if 
-            else 
-               yreal = ylmx
-            end if 
-
-         else if (x.ge.0d0) then
-c                                 within interval j
-            if (odd) then 
-               yreal = ylmn + strtch(x) * dy 
-            else
-               yreal = ylmx - strtch(1d0-x) * dy 
-            end if               
-
-         else
-c                                 jumped to an earlier interval
-            if (j.gt.1) then
-c                                 add the residual (opposite odd)
-               x = (x + 1d0)*yfrc(j,i,ksite,ids)/yfrc(j-1,i,ksite,ids)
-               ylmx = ylmn
-               ylmn = yint(j-1,i,ksite,ids)
-               dy = ylmx - ylmn
-
-               if (odd) then 
-                  yreal = ylmx - strtch(1d0-x) * dy
-               else
-                  yreal = ylmn + strtch(x) * dy 
-               end if 
-            else 
-               yreal = ylmn
-            end if 
-         end if
-
-         exit 
- 
-      end do 
-
-      ydinc = yreal 
-         
-      end 
+      end
 
       subroutine factor (a,n,ipvt,ier)
 c-----------------------------------------------------------------------
@@ -15311,22 +15104,16 @@ c---------------------------------------------------------------------
       integer mode, ind(ms1), iy(ms1), jsp, lsite, indx, iexit, 
      *        ieyit, i, j, k, ids, ico, jst
 
-      double precision y(ms1,mres), ycum, ymax, dy, ync, res, ylmn,
-     *                 ylmx, yloc, x, unstch, strtch, yreal, delt
+      double precision y(ms1,mres), ycum, ymax, dy, ync, 
+     *                 x, unstch, strtch, delt, dx
 
       external unstch, strtch
-
-      logical odd
 
       integer ntot,npairs
       common/ cst86 /ntot,npairs
 
       double precision simp,prism
       common/ cxt86 /simp(k13),prism(k24)
-c                                 interval limits conformal transformation
-      integer intv
-      double precision yint, yfrc
-      common/ cst47 /yint(5,ms1,mst,h9),yfrc(4,ms1,mst,h9),intv(4)
 c                                 x coordinate description
       integer istg, ispg, imlt, imdg
       common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
@@ -15372,6 +15159,7 @@ c                                 species
 c                                 generate coordinates for i'th component
          iy(i) = 1
          y(i,1) = xmn(lsite,k)
+
          ync = xnc(lsite,k)
 
          if (ync.eq.0d0) cycle
@@ -15407,118 +15195,48 @@ c                                 two means of extracting y-range, cartesian
 c                                 imod = 0 and transformation imod = 1
          if (mode.eq.0) then 
 c                                 cartesian
-            do while (y(i,iy(i)).lt.ymax)
+            do
+
                iy(i) = iy(i) + 1
                if (iy(i).gt.mres) call error (50,ync,mres,fname(ids))
+
                y(i,iy(i)) = y(i,iy(i)-1) + ync
-               if (dabs(y(i,iy(i))-ymax).lt.delt) then
+
+               if (dabs(y(i,iy(i))-ymax).lt.delt.or.
+     *             y(i,iy(i)).gt.ymax) then
                   y(i,iy(i)) = ymax
-               else if (y(i,iy(i)).gt.ymax) then
-                  y(i,iy(i)) = ymax
-               end if 
+                  exit 
+               end if
+
             end do
 
          else 
-c                                 conformal x is the cartesian coordinate
-c                                 y is the real coordinate.
-            if (mode.lt.4) then 
-               odd = .false.
-            else
-               odd = .true.
-            end if 
+c                                 see 6.8.0 for old multiple interval conformal transformation
+c                                 y is the non-linear cartesian coordinate
+c                                 x is the linear conformal coordinate.
+            x = unstch (xmn(lsite,k))
+            dx = 1d0/ync
 
-            res = 0d0
-c                                 there are as many as intv(mode)
-c                                 intervals to cycle through
-            do j = 1, intv(mode)
-c                                 odd or even interval?
-               odd = .not.odd
-c                                 interval limits              
-               ylmn = yint(j,k,lsite,ids)
-               ylmx = yint(j+1,k,lsite,ids)
-c                                 which interval are we starting from?
-c                                 in 6.7.7 this was ylmx - nopt(5), changed 4/10/17
-               if (y(i,iy(i)).gt.ylmx-delt) cycle
-c
-               dy = ylmx - ylmn
-c                                 pathological case y = ylmn, in 6.7.5 or 6.7.6
-c                                 added nopt(5) to ylmn, removing this seems to be a 
-c                                 source of instability.
-               if (dabs(y(i,iy(i))-ylmn).lt.delt) 
-     *                           y(i,iy(i)) = ylmn + delt
+            do
 
-               if (res.eq.0d0) then 
-c                                 the current value is in interval j
-c                                 convert to raw y (varies from 0 ->1 
-c                                 over the local interval)
-                  yloc = (y(i,iy(i))-ylmn) / dy
-c                                 convert to conformal x
-                  if (odd) then 
-                     x = unstch(yloc)
-                  else 
-                     x = 1d0 - unstch(1d0-yloc)
-                  end if 
+               iy(i) = iy(i) + 1
+               if (iy(i).gt.mres) call error (50,ync,mres,fname(ids))
 
-               else
-c                                 have jumped from an earlier interval
-                  x = res - ync / yfrc(j-1,k,lsite,ids)
-c                 if (x.lt.0d0) x = 0d0
+               x = x + dx 
+               y(i,iy(i)) = strtch (x)
 
-               end if                 
-c                                 now generate all compositions in
-c                                 local interval
-               do while (x.le.1d0) 
-c                                 increment conformal x
-                  x = x + ync / yfrc(j,k,lsite,ids)
-c                                 compute yreal
-                  if (x.le.1d0) then 
-                     if (odd) then 
-                        yreal = ylmn + strtch(x) * dy
-                     else
-                        yreal = ylmx - strtch(1d0-x) * dy
-                     end if 
- 
-                     iy(i) = iy(i) + 1
-                     if (iy(i).gt.mres) 
-     *                  call error (50,ync,mres,fname(ids))
-c                                 check if in bounds
-                     if (dabs(yreal-ymax).lt.delt.or.
-     *                                     yreal.gt.ymax) then
-                        res = 0d0
-                        y(i,iy(i)) = ymax
-                        exit
-                     else 
-                        y(i,iy(i)) = yreal
-                     end if 
+               if (dabs(y(i,iy(i))-ymax).lt.delt.or.
+     *             y(i,iy(i)).gt.ymax) then
 
-                  else if (x.gt.1d0.and.j.eq.intv(mode)) then
-c                                 at the last interval
-                     iy(i) = iy(i) + 1
-                     y(i,iy(i)) = ymax                
-                     exit
+                  y(i,iy(i)) = ymax
+                  exit
 
-                  else 
-c                                the point is in the next interval
-                     res = x - 1d0 
-                     exit 
+               end if
 
-                  end if 
-c                                 coordinate generating end do 
-               end do 
-c                                 if y is at ymax exit
-               if (y(i,iy(i)).ge.ymax) exit
-c                                 interval loop end do 
-            end do 
+            end do
 
-         end if 
-c                                 add last point if necessary, can it be? 
-c                                 certainly not for conformal. 
-         if (y(i,iy(i)).lt.ymax) then
-            iy(i) = iy(i) + 1
-            if (iy(i).gt.mres) call error (50,ync,mres,'I dunno')
-            y(i,iy(i)) = ymax
-         end if          
- 
+         end if
+
       end do
 c                                 the first coordinate
       npairs = 1

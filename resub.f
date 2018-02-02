@@ -3673,9 +3673,9 @@ c----------------------------------------------------------------------
 
       integer i, j, ids
 
-      double precision res0, xxnc, ydinc
+      double precision res0, xxnc, strtch, unstch 
 
-      external ydinc 
+      external strtch, unstch
 
       integer ncoor,mcoor,ndim
       common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
@@ -3705,18 +3705,20 @@ c                                normal models
 
             do j = 1, ndim(i,ids)
 
-               xnc(i,j) = xncg(ids,i,j)*res0
-               xxnc = xnc(i,j)*reachg(ids)
-
                if (imdg(j,i,ids).eq.0) then 
 c                                 cartesian
+                  xnc(i,j) = xncg(ids,i,j)*res0
+                  xxnc = xnc(i,j)*reachg(ids)
                   xmn(i,j) = x(i,j) - xxnc
                   xmx(i,j) = x(i,j) + xxnc
 
                else
-c                                 conformal
-                  xmn(i,j) = ydinc (x(i,j),-xxnc,imdg(j,i,ids),j,i,ids)
-                  xmx(i,j) = ydinc (x(i,j),xxnc,imdg(j,i,ids),j,i,ids)
+c                                 conformal, xnc is the number 
+c                                 of intervals for 0->1 resolution
+                  xnc(i,j) = xncg(ids,i,j)/res0
+                  xxnc = unstch (x(i,j)) 
+                  xmn(i,j) = strtch (xxnc - reachg(ids)/xnc(i,j))
+                  xmx(i,j) = strtch (xxnc + reachg(ids)/xnc(i,j))
 
                end if 
 c                                 changed feb 6, 2012 from xmng/xmxg
@@ -3729,24 +3731,23 @@ c                                 to allow hardlimits. JADC
 
       else 
 c                                 charge balance model
-         j = -1
-
          do i = 1, nqs1
 
             if (i.eq.ns) cycle
 
-            xnc(1,i) = xncg(ids,1,i)*res0
-            xxnc = xnc(1,i)*reachg(ids)
-
             if (imdg(i,1,ids).eq.0) then 
 c                                 cartesian
+               xnc(1,i) = xncg(ids,1,i)*res0
+               xxnc = xnc(1,i)*reachg(ids)
                xmn(1,i) = x(1,i) - xxnc
                xmx(1,i) = x(1,i) + xxnc
 
             else
 c                                 conformal
-               xmn(1,i) = ydinc (x(1,i),-xxnc,imdg(i,1,ids),i,1,ids)
-               xmx(1,i) = ydinc (x(1,i),xxnc,imdg(i,1,ids),i,1,ids)
+               xnc(1,i) = xncg(ids,1,i)/res0
+               xxnc = unstch (x(1,i)) 
+               xmn(1,i) = strtch (xxnc - reachg(ids)*xnc(1,i))
+               xmx(1,i) = strtch (xxnc + reachg(ids)*xnc(1,i))
 
             end if 
 
