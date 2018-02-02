@@ -716,15 +716,16 @@ c idead set to 1.
 c----------------------------------------------------------------------
       implicit none
 
-      integer idead, iwarn91, iwarn42, iwarn90, iwarn01, iwarn02
+      integer idead, iwarn91, iwarn42, iwarn90, iwarn01, iwarn02, 
+     *        iwarn03
 
       character char*(*)
 
       double precision c
 
-      save iwarn91, iwarn42, iwarn90, iwarn01, iwarn02
+      save iwarn91, iwarn42, iwarn90, iwarn01, iwarn02, iwarn03
 
-      data iwarn91, iwarn42, iwarn90, iwarn01, iwarn02/5*0/
+      data iwarn91, iwarn42, iwarn90, iwarn01, iwarn02, iwarn03/6*0/
 c----------------------------------------------------------------------
 c                                             look for errors
       if (idead.eq.2.or.idead.gt.4.and.idead.lt.100
@@ -762,6 +763,13 @@ c                                             solution.
           call warn (100,c,102,'pure and impure solvent phases '//
      *              'coexist within within solvus_tolerance. ')
           if (iwarn02.eq.10) call warn (49,c,102,'LPWARN')
+
+      else if (idead.eq.103.and.iwarn03.lt.10) then
+
+          iwarn03 = iwarn03 + 1
+          call warn (100,c,103,'pure and impure solvent phases '//
+     *              'coexist. ')
+          if (iwarn03.eq.10) call warn (49,c,103,'LPWARN')
 
       end if
 
@@ -2905,13 +2913,21 @@ c                                 keep the least metastable point
 
       end do
 c                                 get mu's for lagged speciation
-      call getmus (iter,iter-1,solvnt,abort,.false.)
+      if (abort.and.iopt(22).eq.3) then 
 
-      if (abort) then 
+          quit = .true.
+          idead = 103
 
-         quit = .true.
-         if (iopt(22).eq.0.or.iopt(22).eq.2) idead = 101
+      else 
 
+         call getmus (iter,iter-1,solvnt,abort,.false.)
+
+         if (abort) then 
+
+            quit = .true.
+            if (iopt(22).eq.0.or.iopt(22).eq.2) idead = 101
+
+         end if
       end if 
 
       if (.not.quit) then

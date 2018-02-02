@@ -19,7 +19,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a)') 
-     *      'Perple_X version 6.8.1, source updated Jan 10, 2018.'
+     *      'Perple_X version 6.8.1, source updated Jan 28, 2018.'
 
       end
 
@@ -367,6 +367,8 @@ c                                 absolute amounts
       lopt(41) = .false.
 c                                 cumulative amounts
       lopt(42) = .false.
+c                                 don't output data when phase mode is zero
+      lopt(43) = .false. 
 c                                 initialize mus flag lagged speciation
       mus = .false.
 c                                 -------------------------------------
@@ -466,11 +468,16 @@ c                                 phase composition key
          else if (key.eq.'aq_bad_results') then 
 
             if (val.eq.'101') then 
+c                                 continue on solute undersaturation (unwise)
                iopt(22) = 1
             else if (val.eq.'102') then 
+c                                 continue if pure solvent coexists with immiscible impure solvent
                iopt(22) = 2
-            else if (val.eq.'ign') then 
+            else if (val.eq.'103') then
+c                                 abort if pure solvent is stable
                iopt(22) = 3
+            else if (val.eq.'ign') then 
+               iopt(22) = 99
             end if 
 
          else if (key.eq.'refine_endmembers') then 
@@ -484,6 +491,10 @@ c                                 phase composition key
          else if (key.eq.'cumulative') then 
 
             if (val.eq.'T') lopt(42) = .true.
+
+         else if (key.eq.'no_zero_mode') then 
+
+            if (val.eq.'T') lopt(43) = .true.
 
          else if (key.eq.'aq_solvent_composition') then
 

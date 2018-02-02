@@ -125,7 +125,9 @@ c----------------------------------------------------------------------
       common/ cst4 /iam
 c---------------------------------------------------------------------- 
                                     
-      write (lu,1000)  
+      write (lu,1000)
+
+      lopt(24) = .true. 
 
       if (iam.eq.2) then 
          write (lu,1120) (vname(jv(i)),v(jv(i)), i = 1, ipot)
@@ -172,9 +174,21 @@ c                                 mol
 c                                 weight composition
      *                      (pcomp(l,i), l = 1, icomp)
 
-         end if 
+         end if
+
+         if (lopt(24)) then
+
+            do l = 1, icomp
+              write (*,666) 
+     *          cname(l),pcomp(l,i)*props(16,i)/props(17,i)*1d3,
+     *          cname(l),atwt(l)*pcomp(l,i)*props(16,i)/props(17,i)*1d3
+            end do
+
+         end if
 
       end do 
+
+666   format ('cm[',a,'] := ',g14.6,'; cw[',a,'] := ',g14.6,';')
 
       if (lopt(21).and.np.gt.0) then 
 c                                 species_ouput
@@ -496,7 +510,7 @@ c                                 fluid is present
 
             write (lu,1110) cname(i),fbulk(i),fbulk(i)/gtot*1d2,
      *               fbulk(i)*atwt(i)/psys(17)*1d2,fbulk1(i)/gtot1*1d2,
-     *               fbulk1(i)*atwt(i)/psys1(17)*1d2          
+     *               fbulk1(i)*atwt(i)/psys1(17)*1d2 
          end do
 
          write (lu,1220)
@@ -525,6 +539,22 @@ c                                 cp, specific cp
      *                   psys1(12)/psys1(1)*1d5
 
          write (lu,1230) 
+
+      end if
+
+      if (lopt(24)) then
+
+667   format ('sm[',a,'] := ',g14.6,'; sw[',a,'] := ',g14.6,';',
+     *        'sms[',a,'] := ',g14.6,'; sws[',a,'] := ',g14.6,';')
+
+         do i = 1, icomp
+
+            write (*,667) cname(i),fbulk(i)/psys(17)*1d3,
+     *                    cname(i),fbulk(i)*atwt(i)/psys(17)*1d3,
+     *                    cname(i),fbulk1(i)/psys1(17)*1d3,
+     *                    cname(i),fbulk1(i)*atwt(i)/psys1(17)*1d3
+
+         end do
 
       end if 
 c                                 chemical potentials variance

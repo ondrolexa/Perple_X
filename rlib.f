@@ -9283,7 +9283,9 @@ c                                 use default initial resolution, perturbed
 c                                 by a per-mil scale increment to reduce 
 c                                 compositional degeneracies. 
                   xnc(i,j) = (1d0 + nopt(15)*float(im-5)) * nopt(13)
-               else if (nopt(13).gt.0d0) then 
+c DEBUG DEBUG
+c               else if (nopt(13).gt.0d0.and.imd(j,i).eq.0) then
+               else if (nopt(13).gt.0d0) then
                   xnc(i,j) = nopt(13)
                end if
 
@@ -9347,6 +9349,14 @@ c                                 check for old subdivision schemes
 c                                 rescale the increment if the limits 
 c                                 are reduced
                xnc(i,j) = xnc(i,j)/(xmxo(im,i,j) - xmno(im,i,j))
+c DEBUG DEBUG
+c                                 changed to use inc specified in the solution
+c                                 model, 1/inc is the number of points used to
+c                                 resolve the solution over the limits. here 
+c                                 the number of points is reduced if the original
+c                                 range is larger than the autorefine range
+c               xnc(i,j) = xnc(i,j) * (xmxo(im,i,j) - xmno(im,i,j))/dinc
+c              if (xnc(i,j).gt.1d0) xnc(i,j) = 1d0
 c                                 get the intervals
                yint(1,j,i,im) = xmn(i,j)    
    
@@ -9392,8 +9402,8 @@ c                                 10/20/08
                      yfrc(1,j,i,im) =(xsym-xmn(i,j))/(xsym-xmno(im,i,j))
                      yfrc(2,j,i,im) =(xmx(i,j)-xsym)/(xmxo(im,i,j)-xsym) 
  
-                     yint(2,j,i,im) = xsym          
-                     yint(3,j,i,im) = xmx(i,j)                     
+                     yint(2,j,i,im) = xsym
+                     yint(3,j,i,im) = xmx(i,j)
 
                   end if 
 
@@ -12523,7 +12533,7 @@ c                                 no request for solutions
 
          isoct = 0 
 c                                 identify the fluid for aqrxdo
-         call aqidst (first)
+         call aqidst
 
          return 
 
@@ -12744,7 +12754,7 @@ c                               reset ikp
 
       isoct = im
 c                              identify the fluid for aqrxdo
-      call aqidst (first)
+      call aqidst
 c                              close pseudocompound list
       if (output.and.lopt(10)) close (n8)
 c                              close solution model file
@@ -15302,7 +15312,7 @@ c---------------------------------------------------------------------
      *        ieyit, i, j, k, ids, ico, jst
 
       double precision y(ms1,mres), ycum, ymax, dy, ync, res, ylmn,
-     *                 ylmx, yloc, x, unstch, strtch, yreal
+     *                 ylmx, yloc, x, unstch, strtch, yreal, delt
 
       external unstch, strtch
 
@@ -15345,7 +15355,9 @@ c                                 chopit always generates jsp coordinates
 c                                 but in the case of charge balance save 
 c                                 space for the dependent coordinate.
          ico = jsp + 1
-      end if 
+      end if
+
+      delt = nopt(5)
 
       do i = 1, jsp
 
@@ -15399,7 +15411,7 @@ c                                 cartesian
                iy(i) = iy(i) + 1
                if (iy(i).gt.mres) call error (50,ync,mres,fname(ids))
                y(i,iy(i)) = y(i,iy(i)-1) + ync
-               if (dabs(y(i,iy(i))-ymax).lt.nopt(5)) then
+               if (dabs(y(i,iy(i))-ymax).lt.delt) then
                   y(i,iy(i)) = ymax
                else if (y(i,iy(i)).gt.ymax) then
                   y(i,iy(i)) = ymax
@@ -15426,14 +15438,14 @@ c                                 interval limits
                ylmx = yint(j+1,k,lsite,ids)
 c                                 which interval are we starting from?
 c                                 in 6.7.7 this was ylmx - nopt(5), changed 4/10/17
-               if (y(i,iy(i)).gt.ylmx-nopt(5)) cycle
+               if (y(i,iy(i)).gt.ylmx-delt) cycle
 c
                dy = ylmx - ylmn
 c                                 pathological case y = ylmn, in 6.7.5 or 6.7.6
 c                                 added nopt(5) to ylmn, removing this seems to be a 
 c                                 source of instability.
-               if (dabs(y(i,iy(i))-ylmn).lt.nopt(5)) 
-     *                           y(i,iy(i)) = ylmn + nopt(5)
+               if (dabs(y(i,iy(i))-ylmn).lt.delt) 
+     *                           y(i,iy(i)) = ylmn + delt
 
                if (res.eq.0d0) then 
 c                                 the current value is in interval j
@@ -15470,7 +15482,7 @@ c                                 compute yreal
                      if (iy(i).gt.mres) 
      *                  call error (50,ync,mres,fname(ids))
 c                                 check if in bounds
-                     if (dabs(yreal-ymax).lt.nopt(5).or.
+                     if (dabs(yreal-ymax).lt.delt.or.
      *                                     yreal.gt.ymax) then
                         res = 0d0
                         y(i,iy(i)) = ymax
@@ -15565,7 +15577,7 @@ c                                 over the top
                cycle
 
             else if ( y(indx,ind(indx)) - y(indx,ind(indx)-1)
-     *               - ycum + 1d0    .gt. nopt(5) ) then
+     *               - ycum + 1d0    .gt. delt ) then
 c                                 the excess (ycum-1) is less then the 
 c                                 amount the variable was previously incremented
 c                                 so it's possible to back off the composition
@@ -17030,7 +17042,7 @@ c                                 checked.
 
       end  
 
-      subroutine aqidst (first)
+      subroutine aqidst
 c-----------------------------------------------------------------------
 c identify the aqueous phase for aqrxdo/aqlagd
 c-----------------------------------------------------------------------
@@ -17040,7 +17052,7 @@ c-----------------------------------------------------------------------
 
       integer i, j, k
 
-      logical first, lagged
+      logical lagged
 
       double precision tot
 
