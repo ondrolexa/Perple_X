@@ -1512,6 +1512,10 @@ c----------------------------------------------------------------------
 
       integer ids, i, j
 
+      double precision stinc
+
+      external stinc 
+
       double precision z, pa, p0a, x, w, y, wl
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
      *              wl(m17,m18)
@@ -1529,10 +1533,6 @@ c                                 solution limits and stability
 
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
-c                                 interval limits conformal transformation
-      integer intv
-      double precision yint, yfrc
-      common/ cst47 /yint(5,ms1,mst,h9),yfrc(4,ms1,mst,h9),intv(4)
 
       integer iopt
       logical lopt
@@ -1569,29 +1569,20 @@ c                                 relax limits according to subdivsion model
                   if (imdg(j,i,ids).eq.0) then 
 c                                 cartesian
                      xmng(ids,i,j) = xmng(ids,i,j) - xncg(ids,i,j)
-                     if (xmng(ids,i,j).lt.0d0) xmng(ids,i,j) = 0d0
-
-                  else if (imdg(j,i,ids).eq.1.or.imdg(j,i,ids).eq.4)then
-c                                 assymmetric stretching towards xmin, this
-c                                 probably isn't even correct for imd = 1, but
-c                                 only a lunatic would use this not going from 
-c                                 zero. 
-                     yint(1,j,i,ids) = yint(1,j,i,ids) - xncg(ids,i,j)
-     *                                   *(xmxg(ids,i,j)-xmng(ids,i,j))
-                     if (yint(1,j,i,ids).lt.0d0) yint(1,j,i,ids) = 0d0
-                     xmng(ids,i,j) =  yint(1,j,i,ids)
 
                   else 
-c                                 symmetric modes, don't reset, but
-c                                 set xmn to prevent future warnings
-                     xmng(ids,i,j) = 0d0 
-                     relax(ids) = .false.
+c                                 assymmetric stretching towards xmin
+                     xmng(ids,i,j) = 
+     *                   stinc (x(i,j),-1d0/xncg(ids,i,j),ids,i,j)
 
-                  end if 
+                  end if
+
+                  if (xmng(ids,i,j).lt.0d0) xmng(ids,i,j) = 0d0
 
                   limit(ids) = .true.
 
-               end if 
+               end if
+
             end if 
 c                                 high limit:
             if (x(i,j).gt.xhi(j,i,ids)) then
@@ -1604,43 +1595,24 @@ c                                 relax limits according to subdivsion model
                   if (imdg(j,i,ids).eq.0) then 
 c                                 cartesian
                      xmxg(ids,i,j) = xmxg(ids,i,j) + xncg(ids,i,j)
-                     if (xmxg(ids,i,j).gt.1d0) xmxg(ids,i,j) = 1d0
-
-                  else if (imdg(j,i,ids).eq.1.or.imdg(j,i,ids).eq.4)then
-c                                 assymmetric stretching, this is probably
-c                                 only correct for imd = 1. 
-
-c                                 by not changing
-c                                 the relative increment, expanding the limits
-c                                 lowers the resolution?
-
-c                                 for aq electrolytes i had this, because i was
-c                                 worried it was expanding the limit and decreasing 
-c                                 resolution. this needs to be checked out. 5/17
-
-c                     yint(2,j,i,ids) = yint(2,j,i,ids) + xncg(ids,i,j)
-c     *                                   *(xmxg(ids,i,j)-xmng(ids,i,j))
-c                     xncg(ids,i,j) = 1d0/(1d0/xncg(ids,i,j) + 1d0)
-c                                  revert to the original form. 5/17
-                     yint(2,j,i,ids) = yint(2,j,i,ids) + nopt(10)
-
-                     if (yint(2,j,i,ids).gt.1d0) yint(2,j,i,ids) = 1d0
-                     xmxg(ids,i,j) = yint(2,j,i,ids)
 
                   else 
-c                                 symmetric modes, don't reset
-c                                 set xmx to prevent future warnings
-                     xmxg(ids,i,j) = 1d0 
-                     relax(ids) = .false.
+c                                 assymmetric stretching 
+                     xmxg(ids,i,j) = 
+     *                   stinc (x(i,j),1d0/xncg(ids,i,j),ids,i,j)
 
                   end if 
 
+                  if (xmxg(ids,i,j).gt.1d0) xmxg(ids,i,j) = 1d0
                   limit(ids) = .true.
 
-               end if 
-            end if 
-         end do 
-      end do  
+               end if
+
+            end if
+
+         end do
+
+      end do
 
       end 
 
@@ -3673,9 +3645,9 @@ c----------------------------------------------------------------------
 
       integer i, j, ids
 
-      double precision res0, xxnc, strtch, unstch 
+      double precision res0, xxnc, stinc
 
-      external strtch, unstch
+      external stinc
 
       integer ncoor,mcoor,ndim
       common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
@@ -3716,9 +3688,11 @@ c                                 cartesian
 c                                 conformal, xnc is the number 
 c                                 of intervals for 0->1 resolution
                   xnc(i,j) = xncg(ids,i,j)/res0
-                  xxnc = unstch (x(i,j)) 
-                  xmn(i,j) = strtch (xxnc - reachg(ids)/xnc(i,j))
-                  xmx(i,j) = strtch (xxnc + reachg(ids)/xnc(i,j))
+
+                  xxnc = reachg(ids)/xnc(i,j)
+
+                  xmn(i,j) = stinc (x(i,j),-xxnc,ids,i,j)
+                  xmx(i,j) = stinc (x(i,j),xxnc,ids,i,j)
 
                end if 
 c                                 changed feb 6, 2012 from xmng/xmxg
@@ -3745,9 +3719,11 @@ c                                 cartesian
             else
 c                                 conformal
                xnc(1,i) = xncg(ids,1,i)/res0
-               xxnc = unstch (x(1,i)) 
-               xmn(1,i) = strtch (xxnc - reachg(ids)*xnc(1,i))
-               xmx(1,i) = strtch (xxnc + reachg(ids)*xnc(1,i))
+
+               xxnc = reachg(ids)/xnc(1,i)
+
+               xmn(1,i) = stinc (x(1,i),-xxnc,ids,1,i)
+               xmx(1,i) = stinc (x(1,i), xxnc,ids,1,i)
 
             end if 
 

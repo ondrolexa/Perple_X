@@ -9925,9 +9925,9 @@ H2O
 
 0 0 0 0 0 0 0              | endmember flags
 
-0   1    .1       0        | subdivision ranges, imod = 0 -> cartesian subdivision
-0   1    .1       0        | subdivision ranges, imod = 0 -> cartesian subdivision
-0   1    .1       1        | subdivision ranges, imod = 0 -> cartesian subdivision
+1d-4   .1    .1       1        | subdivision ranges, imod = 0 -> cartesian subdivision
+1d-6   .001    .1       1        | subdivision ranges, imod = 0 -> cartesian subdivision
+1d-5   .01    .1       1        | subdivision ranges, imod = 0 -> cartesian subdivision
 0   1    .1       1        | subdivision ranges, imod = 0 -> cartesian subdivision
 0   1    .1       1        | subdivision ranges, imod = 0 -> cartesian subdivision
 0   1    .1       1        | subdivision ranges, imod = 0 -> cartesian subdivision

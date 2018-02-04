@@ -19,7 +19,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a)') 
-     *      'Perple_X version 6.8.1, source updated Feb 2, 2018.'
+     *      'Perple_X version 6.8.1, source updated Feb 3, 2018.'
 
       end
 
@@ -3543,10 +3543,6 @@ c-----------------------------------------------------------------------
 
       logical gflu,aflu,fluid,shear,lflu,volume,rxn
       common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume,rxn
-c                                 interval limits conformal transformation
-      integer intv
-      double precision yint, yfrc
-      common/ cst47 /yint(5,ms1,mst,h9),yfrc(4,ms1,mst,h9),intv(4)
 
       character*2 strgs*3, mstrg, dstrg, tstrg*3, wstrg*3, e16st*3
       common/ cst56 /strgs(32),mstrg(6),dstrg(m8),tstrg(m7),wstrg(m16),
@@ -3582,8 +3578,6 @@ c
       data gflu, sroot/ 2*.false./
 
       data com/' '/
-
-      data intv/1,2,4,1/
 c                                 tags for thermo data i/o
       data strgs/'G0 ','S0 ','V0 ','c1 ','c2 ','c3 ','c4 ','c5 ','c6 ',
      *           'c7 ','b1 ','b2 ','b3 ','b4 ','b5 ','b6 ','b7 ','b8 ',

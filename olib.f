@@ -127,8 +127,6 @@ c----------------------------------------------------------------------
                                     
       write (lu,1000)
 
-      lopt(24) = .true. 
-
       if (iam.eq.2) then 
          write (lu,1120) (vname(jv(i)),v(jv(i)), i = 1, ipot)
          write (lu,1120) (vname(jv(i)),v(jv(i)), i = 3, ipot)

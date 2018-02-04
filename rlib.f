@@ -9129,10 +9129,6 @@ c                                 parameters for autorefine
 
       logical refine
       common/ cxt26 /refine
-c                                 interval limits conformal transformation
-      integer intv
-      double precision yint, yfrc
-      common/ cst47 /yint(5,ms1,mst,h9),yfrc(4,ms1,mst,h9),intv(4)
 c                                 model type
       logical lorder, lexces, llaar, lrecip
       common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
@@ -9186,6 +9182,12 @@ c                                 model type
 
       integer tnq,tnn,tns
       common/ cxt337 /tnq,tnn,tns
+
+      double precision stch
+      common/ cst47 /stch(h9,mst,msp,4)
+
+      double precision bp1,bm1,bpm,lbpm
+      common/ cst46 /bp1,bm1,bpm,lbpm
 
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
@@ -9271,7 +9273,7 @@ c                                 make linear
 
             else if (iopt(13).eq.2) then 
 c                                 make all stretch (if not already)
-               if (imd(j,i).eq.0) imd(j,i) = 2
+               if (imd(j,i).eq.0) imd(j,i) = 1
 
             end if 
 c                                 for aqueous solutions always use
@@ -9280,13 +9282,11 @@ c                                 model specified increments
 c                                 otherwise:
                if (imd(j,i).eq.0) then 
 c                                 cartesian
-
-                     xnc(i,j) = nopt(13)
+                  xnc(i,j) = nopt(13)
 
                else 
 c                                 conformal
                   xnc(i,j) = 1d0/nopt(13)
-c                                 and perturb xmin
 
                end if
 
@@ -9298,6 +9298,28 @@ c                                 reduce compositional degeneracies.
 c                                 save solution model values as hard limits for 
             xmno(im,i,j) = xmn(i,j)
             xmxo(im,i,j) = xmx(i,j)
+c                                 set stretch parameters according to xmn specified 
+c                                 in the solution model:
+            if (imd(j,i).ne.0) then
+
+               if (xmn(i,j).eq.0) then
+
+                  stch(im,i,j,1) = bm1
+                  stch(im,i,j,2) = bp1
+                  stch(im,i,j,3) = bpm
+                  stch(im,i,j,4) = lbpm
+
+               else 
+c                                 this makes smallest increment comparable, but less 
+c                                 than, xmn. they become equal in the limit xmn->0.
+                  stch(im,i,j,1) = xmn(i,j)
+                  stch(im,i,j,2) = xmn(i,j) + 2
+                  stch(im,i,j,3) = stch(im,i,j,2)/stch(im,i,j,1)
+                  stch(im,i,j,4) = dlog(stch(im,i,j,3))
+
+               end if
+
+            end if 
 c                                 set initial resolution
 c                                 ------------------------------------
 c                                 auto_refine segment
@@ -15134,6 +15156,10 @@ c                                 x coordinate description
       logical lopt
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      double precision xmng, xmxg, xncg, xmno, xmxo, reachg
+      common/ cxt6r /xmng(h9,mst,msp),xmxg(h9,mst,msp),xncg(h9,mst,msp),
+     *               xmno(h9,mst,msp),xmxo(h9,mst,msp),reachg(h9)
 c----------------------------------------------------------------------
       if (ksmod(ids).ne.20) then
 c                                 chopit always generates jsp coordinates
@@ -15143,8 +15169,6 @@ c                                 but in the case of charge balance save
 c                                 space for the dependent coordinate.
          ico = jsp + 1
       end if
-
-      delt = nopt(5)
 
       do i = 1, jsp
 
@@ -15195,6 +15219,8 @@ c                                 two means of extracting y-range, cartesian
 c                                 imod = 0 and transformation imod = 1
          if (mode.eq.0) then 
 c                                 cartesian
+            delt = nopt(5)
+
             do
 
                iy(i) = iy(i) + 1
@@ -15214,6 +15240,11 @@ c                                 cartesian
 c                                 see 6.8.0 for old multiple interval conformal transformation
 c                                 y is the non-linear cartesian coordinate
 c                                 x is the linear conformal coordinate.
+            call setstc (ids,lsite,k)
+
+            delt = xmno(ids,lsite,k)
+            if (delt.gt.nopt(5)) delt = nopt(5)
+
             x = unstch (xmn(lsite,k))
             dx = 1d0/ync
 
@@ -19828,4 +19859,61 @@ c                                 indexing
 
       end do
 
-      end 
+      end
+
+      subroutine setstc (ids,i,j) 
+c----------------------------------------------------------------------
+c set stretching transformation for the site i, species j, of solution ids,
+c it seems doubtful this is worth the effort, functions strtch and unstch
+c could just use the stch array directly.
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer ids,i,j
+
+      double precision stch
+      common/ cst47 /stch(h9,mst,msp,4)
+
+      double precision bp1,bm1,bpm,lbpm
+      common/ cst46 /bp1,bm1,bpm,lbpm
+c----------------------------------------------------------------------
+      bm1  = stch(ids,i,j,1)
+      bp1  = stch(ids,i,j,2)
+      bpm  = stch(ids,i,j,3)
+      lbpm = stch(ids,i,j,4)
+
+      end
+
+      double precision function stinc (x,dy,ids,i,j) 
+c----------------------------------------------------------------------
+c stinc increments cartesian x by the conformal increment dy for solution 
+c ids, site i, species j. this is used to set limits for the conformal
+c y in terms of the cartesian x.
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer ids,i,j
+
+      double precision x, dy, strtch, unstch
+
+      external strtch, unstch
+
+      double precision stch
+      common/ cst47 /stch(h9,mst,msp,4)
+
+      double precision bp1,bm1,bpm,lbpm
+      common/ cst46 /bp1,bm1,bpm,lbpm
+c----------------------------------------------------------------------
+c                                 set stretching parameters
+      call setstc (ids,i,j) 
+c                                 unstretch x and decrement/increment it
+c                                 by +/- one conformal increament, then 
+c                                 restretch.
+      stinc = strtch ( unstch (x) + dy )
+
+      end
+
