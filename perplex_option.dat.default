@@ -11,6 +11,17 @@
         | 4) Default keyword values are indicated in square brackets in the comment following each keyword.
         | 5) For keyword documentation refer to: www.perplex.ethz.ch/perplex_options.html
 
+        | To change the value of an option from "default" the word "default" 
+        | must be replaced with the desired value. For example, to change the 
+        | x-grid resolution from its default values [40 and 40] to 20 and 60, the 
+        | keyword must be changed from 
+
+        |  x_nodes default ...
+
+        |   to 
+
+        | x_nodes 20 60 ...
+
 |----------------------------------------------------------------------
 
 1d_path                   default | [40 150] exploratory and autorefine (grid parameters keyword group)

@@ -598,13 +598,13 @@ oanL = 1 woL + 1 silL        Delta(enthalpy)   = -40000  - 0.25 * P
 
 1 1 1 1 1 1 1 1                     | endmember flags.  
 
-0.0 0.8  0.1 0                      | range and resolution of X(h2o), 0 => cartesian subdivision  
-0.0 0.2  0.1 1                      | range and resolution of X(fo),  1 => asymmetric subdivision   
-0.0 0.3  0.1 1                      | range and resolution of X(fa),  1 => asymmetric subdivision   
-0.0 0.8  0.1 0                      | range and resolution of X(ab),  0 => cartesian subdivision   
-0.0 0.4  0.1 1                      | range and resolution of X(sil), 1 => asymmetric subdivision  
-0.0 0.6  0.1 0                      | range and resolution of X(ksp), 1 => asymmetric subdivision   
-0.0 0.4  0.1 0                      | range and resolution of X(wo),  1 => asymmetric subdivision
+0.0 0.8  0.1  0                      | range and resolution of X(h2o), 0 => cartesian subdivision  
+0.0 0.2  0.1  0                      | range and resolution of X(fo),  1 => asymmetric subdivision   
+0.0 0.3  0.1  0                      | range and resolution of X(fa),  1 => asymmetric subdivision   
+0.0 0.8  0.1  0                      | range and resolution of X(ab),  0 => cartesian subdivision   
+0.0 0.4  0.1  0                      | range and resolution of X(sil), 1 => asymmetric subdivision  
+0.0 0.6  0.1  0                      | range and resolution of X(ksp), 1 => asymmetric subdivision   
+0.0 0.4  0.1  0                      | range and resolution of X(wo),  1 => asymmetric subdivision
 
 begin_excess_function 
 
@@ -1410,11 +1410,11 @@ fmn_i  = 1 kho1  + 1 spss -1 py
 
 0  0  0  0  0  0  0  0            | endmember flags
 
-0. .2   0.1 1                     | imod = 0 -> cartesian subdivision (xmn) on X
-0. 1.   0.1 0                     | imod = 0 -> cartesian subdivision (xfe) on X
-0. 1.   0.1 0                     | imod = 0 -> cartesian subdivision (xmg) on X
+0. .2   0.1  0                     | imod = 0 -> cartesian subdivision (xmn) on X
+0. 1.   0.1  0                     | imod = 0 -> cartesian subdivision (xfe) on X
+0. 1.   0.1  0                     | imod = 0 -> cartesian subdivision (xmg) on X
 
-0. 1.   0.1 0                     | imod = 0 -> cartesian subdivision x(fe3+) on Y
+0. 1.   0.1  0                     | imod = 0 -> cartesian subdivision x(fe3+) on Y
 
 begin_excess_function
 W(py  alm)               2.5d3           0         0         | as given by Green et al 2016.
@@ -1517,10 +1517,10 @@ kspL     q8L
  0 0 0 0 0 0 0 0 0                  | endmember flags.  
 
 0.0 1.0  0.1 0                      | range and resolution of X(h2o), 0 => cartesian subdivision  
-0.0 0.1  0.1 1                      | range and resolution of X(fo),  1 => asymmetric subdivision   
-0.0 0.1  0.1 1                      | range and resolution of X(fa),  1 => asymmetric subdivision   
+0.0 0.1  0.1 0                      | range and resolution of X(fo),  1 => asymmetric subdivision   
+0.0 0.1  0.1 0                      | range and resolution of X(fa),  1 => asymmetric subdivision   
 0.0 0.4  0.1 0                      | range and resolution of X(ab),  0 => cartesian subdivision   
-0.0 0.2  0.1 1                      | range and resolution of X(sil), 1 => asymmetric subdivision  
+0.0 0.2  0.1 0                      | range and resolution of X(sil), 1 => asymmetric subdivision  
 0.0 1.0  0.1 0                      | range and resolution of X(an),  1 => asymmetric subdivision   
 0.0 0.4  0.1 0                      | range and resolution of X(ksp), 0 => cartesian subdivision
 
@@ -1678,7 +1678,7 @@ ctdo    fctd     mctd
 
                            | Note restricted range on X(Mn)
               
-0. .2 0.1 1                | range and resolution for X(Fe3), imod = 1 -> asymmetric transform subdivision
+0. .2 0.1 0                | range and resolution for X(Fe3), imod = 1 -> asymmetric transform subdivision
 0. 1. 0.1 0                | range and resolution for X(Fe), imod = 0 -> cartesian subdivision
 
 begin_excess_function 
@@ -1727,10 +1727,10 @@ mstt   msto    fst    mnst   mst
 
   0  0  0  0  0            | endmember flags
 
-0. 0.1 0.1 1               | range and resolution for X(Ti),  imod = 1 -> asymmetric transform subdivision
-0. 0.1 0.1 1               | range and resolution for X(Fe3), imod = 1 -> asymmetric transform subdivision
-0. 1. 0.1 0                | range and resolution for X(Fe),  imod = 0 -> cartesian subdivision
-0. 1. 0.1 0                | range and resolution for X(Mn),  imod = 0 -> cartesian subdivision 
+0. 0.1 0.1  0               | range and resolution for X(Ti),  imod = 1 -> asymmetric transform subdivision
+0. 0.1 0.1  0               | range and resolution for X(Fe3), imod = 1 -> asymmetric transform subdivision
+0. 1. 0.1   0                | range and resolution for X(Fe),  imod = 0 -> cartesian subdivision
+0. 1. 0.1   0                | range and resolution for X(Mn),  imod = 0 -> cartesian subdivision 
 
 begin_excess_function 
 W(mst fst)                16d3           0         0
@@ -1870,13 +1870,13 @@ mdi    = 1 di    + 1/2 mnopx - 1/2 en
 0 0 0 0 0 0 0 0 0 0 0 0    | endmember flags, indicate if endmember is part of the solution (i.e. iend = 0).
 
                            | subdivision model for (ternary) site 1:
-0. .2 .1   1               | range and resolution of X(Mn), subdivision scheme: imod = 1 -> assymetric transform 
+0. .2 .1   0               | range and resolution of X(Mn), subdivision scheme: imod = 1 -> assymetric transform 
 0. 1. .1   0               | range and resolution of X(Mg), subdivision scheme: imod = 0 -> cartesian 
 
                            | subdivision model for (quaternary) site 2 
-0. .2 .1   1               | range and resolution of X(Fe3+),  subdivision scheme: imod = 1 -> assymetric transform   
-0. .2 .1   1               | range and resolution of X(un-Ts), subdivision scheme: imod = 1 -> assymetric transform     
-0. .2 .1   1               | range and resolution of X(Ts),    subdivision scheme: imod = 1 -> assymetric transform     
+0. .2 .1   0               | range and resolution of X(Fe3+),  subdivision scheme: imod = 1 -> assymetric transform   
+0. .2 .1   0               | range and resolution of X(un-Ts), subdivision scheme: imod = 1 -> assymetric transform     
+0. .2 .1   0               | range and resolution of X(Ts),    subdivision scheme: imod = 1 -> assymetric transform     
 
 
 begin_excess_function                
@@ -2025,12 +2025,12 @@ mtbi   = 1 tbi   + 2/3 mnbi - 2/3 phl
 0 0 0 0 0 0 0 0 0 0 0 0      | endmember flags: if 0 the endmember is considered to be part of the solution.
                    
                              | subdivision model for site 1 (Fe-Mg-Mn):
-0. .2  .1  1                 | range and resolution of X(Mn)
+0. .2  .1  0                 | range and resolution of X(Mn)
 0. 1.  .1  0                 | range and resolution of X(Fe)
 
                              | subdivision model for (quinary) site 2 (Fe3+-Al-Ti-Si)
-0. .2  .1  1                 | range and resolution of X(Fe3+)
-0. .3  .1  1                 | range and resolution of X(Ti)
+0. .2  .1  0                 | range and resolution of X(Fe3+)
+0. .3  .1  0                 | range and resolution of X(Ti)
 0. 1.  .1  0                 | range and resolution of X(Al)              
                              
 begin_excess_function
@@ -2134,7 +2134,7 @@ hmncrd_i = 1 hcrd + 1 mncrd - 1 crd
 
                            | Note restricted range on X(Mn)
  
-0. .2 .1  1                | range and resolution for X(Mn) on M site, imod = 1 -> asymmetric transform subdivision
+0. .2 .1  0                | range and resolution for X(Mn) on M site, imod = 1 -> asymmetric transform subdivision
 0. 1. .1  0                | range and resolution for X(Fe) on M site, imod = 0 -> cartesian subdivision
 
 0. 1.  .1 0                | range and resolution for 1-X(H2O) on H site, imod = 0 -> cartesian subdivision  
@@ -2437,11 +2437,11 @@ ftbit   = 1 tbit + 1/2 ann  + 1/2 obi - 1 phl
  
 0 0 0 0 0 0 0 0 0 0 0 0      | endmember flags
                    
-0. .5 .1  1                  | range and resolution of X(Mn, M2), mod = 1 -> assymetric subdivision                             
+0. .5 .1  0                  | range and resolution of X(Mn, M2), mod = 1 -> assymetric subdivision                             
 0. 1. .1  0                  | range and resolution of X(Mg, M2), mod = 0 -> cartesian subdivision  
 
-0. 1. .1  1                  | range and resolution of X(Fe3+,*), mod = 0 -> cartesian subdivision    
-0. .5 .1  1                  | range and resolution of X(Ti,  *), mod = 1 -> assymetric subdivision  
+0. 1. .1  0                  | range and resolution of X(Fe3+,*), mod = 0 -> cartesian subdivision    
+0. .5 .1  0                  | range and resolution of X(Ti,  *), mod = 1 -> assymetric subdivision  
 0. 1. .1  0                  | range and resolution of X(Al,  *), mod = 0 -> cartesian subdivision           
 
 begin_excess_function
@@ -2555,8 +2555,8 @@ ftbi_i = 1 tbi1  + 1 ann - 1 obi
 0. 1.  .1  0                 | range and resolution of X(Fe)
 
                              | subdivision model for (quinary) site 2 (M1)
-0. 0.2 .1  1                 | range and resolution of X(Fe3+,M1)
-0. 0.2 .1  1                 | range and resolution of X(Ti,M1)
+0. 0.2 .1  0                 | range and resolution of X(Fe3+,M1)
+0. 0.2 .1  0                 | range and resolution of X(Ti,M1)
 0. 1. .1   0                 | range and resolution of X(Al,M1)              
 
 begin_excess_function
@@ -2745,7 +2745,7 @@ fuv_d = 1 alm +  1 knor  - 1 py
 0. 1. .1   0                | range and resolution for  XCa on A
 0. 1. .1   0                | range and resolution for  XFe on A
 
-0. 1. .1   1                | range and resolution for  XCr on B
+0. 1. .1   0                | range and resolution for  XCr on B
 
 begin_excess_function 
 w(py gr) 33d3 0. 0.
@@ -2962,7 +2962,7 @@ mafchl_i = 1 afchl  + 6/5 mnchl - 6/5 clin
 0. 1. .1 0                   | range and resolution of X(Al_Al), imod = 0 -> cartesian subdivision
                              | subdivision model for (ternary) site 2 (M2)
 
-0. .2  .1 1                  | range and resolution of X(Mn), imod = 1 => asymmetric subdivision
+0. .2  .1 0                  | range and resolution of X(Mn), imod = 1 => asymmetric subdivision
 0. 1.  .1 0                  | range and resolution of X(Fe), imod = 0 -> cartesian subdivision 
 
 begin_excess_function
@@ -3182,11 +3182,11 @@ kspL     zr8L     q8L
                                     | for pelite melting.
 
 0.0 0.8  0.1 0                      | range and resolution of X(h2o), 0 => cartesian subdivision  
-0.0 0.1  0.1 1                      | range and resolution of X(fo),  1 => asymmetric subdivision   
-0.0 0.1  0.1 1                      | range and resolution of X(fa),  1 => asymmetric subdivision   
+0.0 0.1  0.1 0                      | range and resolution of X(fo),  1 => asymmetric subdivision   
+0.0 0.1  0.1 0                      | range and resolution of X(fa),  1 => asymmetric subdivision   
 0.0 0.4  0.1 0                      | range and resolution of X(ab),  0 => cartesian subdivision   
 0.0 0.2  0.1 0                      | range and resolution of X(sil), 1 => asymmetric subdivision  
-0.0 0.1  0.1 1                      | range and resolution of X(an),  1 => asymmetric subdivision   
+0.0 0.1  0.1 0                      | range and resolution of X(an),  1 => asymmetric subdivision   
 0.0 0.4  0.1 0                      | range and resolution of X(ksp), 0 => cartesian subdivision
 0.0 0.2  0.1 0                      | range and resolution of X(zr),  0 => cartesian subdivision
 
@@ -3913,8 +3913,8 @@ gah      herc     sp                  endmember names - this order implies: x(1)
 
 0  0  0                               endmember flags
 
-0.0 0.2 0.1 1            | range and resolution for X(Zn), imod = 1 -> asymmetric transform subdivision
-0.0 1.  0.1 0            | range and resolution for X(Fe), imod = 0 -> cartesian subdivision
+0.0 0.2 0.1  0            | range and resolution for X(Zn), imod = 1 -> asymmetric transform subdivision
+0.0 1.  0.1  0            | range and resolution for X(Fe), imod = 0 -> cartesian subdivision
 
 begin_excess_function 
 w(gah herc) -3800. 0. 0.   
@@ -4100,8 +4100,8 @@ mnst     fst      mst
   1  0  0                  | endmember flags
 
               
-0. 1. 0.1 1                | range and resolution for X(Mn), imod = 1 -> asymmetric transform subdivision
-0. 1. 0.1 0                | range and resolution for X(Fe), imod = 0 -> cartesian subdivision
+0. 1. 0.1  0                | range and resolution for X(Mn), imod = 1 -> asymmetric transform subdivision
+0. 1. 0.1  0                | range and resolution for X(Fe), imod = 0 -> cartesian subdivision
 
 begin_excess_function 
 w(mst fst) -8d3 0. 0. 
@@ -4130,8 +4130,8 @@ mnctd    fctd     mctd
 
                            | Note restricted range on X(Mn)
               
-0. .2 0.1 1                | range and resolution for X(Mn), imod = 1 -> asymmetric transform subdivision
-0. 1. 0.1 0                | range and resolution for X(Fe), imod = 0 -> cartesian subdivision
+0. .2 0.1  0                | range and resolution for X(Mn), imod = 1 -> asymmetric transform subdivision
+0. 1. 0.1  0                | range and resolution for X(Fe), imod = 0 -> cartesian subdivision
 
 begin_excess_function 
 w(mctd fctd) 1000. 0. 0. 
@@ -4205,7 +4205,7 @@ hmncrd_i = 1 hcrd + 1 mncrd - 1 crd
 
                            | Note restricted range on X(Mn)
  
-0. .2 .1  1                | range and resolution for X(Mn) on M site, imod = 1 -> asymmetric transform subdivision
+0. .2 .1  0                | range and resolution for X(Mn) on M site, imod = 1 -> asymmetric transform subdivision
 0. 1. .1  0                | range and resolution for X(Fe) on M site, imod = 0 -> cartesian subdivision
 
 0. 1.  .1 0                | range and resolution for 1-X(H2O) on H site, imod = 0 -> cartesian subdivision  
@@ -5138,8 +5138,8 @@ cftip = 1 tip + 1 fcel - 1 cel + 1 ma - 1 mu
                              | subdivision model, site 2 (M2)
 0. .8   .1   0               | range and resolution of X(MgAl,M2)
 0. .5   .1   0               | range and resolution of X(FeAl,M2)
-0. .5   .1   1               | range and resolution of X(MgTi,M2)
-0. .3   .1   1               | range and resolution of X(FeTi,M2)
+0. .5   .1   0               | range and resolution of X(MgTi,M2)
+0. .3   .1   0               | range and resolution of X(FeTi,M2)
 
 begin_excess_function
 
@@ -5255,13 +5255,13 @@ full_name    white-mica
 mu pa ma cel tip fcel        | prl phl
 
 0 0 0 0 0 0 0 0              | endmember flags
-                   
-                             | subdivision model
-0. 1.   .1 0                 | range and resolution of X(mu),  imod = 0 -> cartesian subdivision
-0. 1.   .1 0                 | range and resolution of X(pa),  imod = 0 -> cartesian subdivision
-0. 1.   .1 0                 | range and resolution of X(ma),  imod = 0 -> cartesian subdivision
-0. 1.   .1 0                 | range and resolution of X(cel), imod = 0 -> cartesian subdivision
-0. 0.3  .1 1                 | range and resolution of X(tip), imod = 1 -> asymmetric transform subdivision
+
+                              | subdivision model
+0. 1.   .1  0                 | range and resolution of X(mu),  imod = 0 -> cartesian subdivision
+0. 1.   .1  0                 | range and resolution of X(pa),  imod = 0 -> cartesian subdivision
+0. 1.   .1  0                 | range and resolution of X(ma),  imod = 0 -> cartesian subdivision
+0. 1.   .1  0                 | range and resolution of X(cel), imod = 0 -> cartesian subdivision
+0. 0.3  .1  0                 | range and resolution of X(tip), imod = 1 -> asymmetric transform subdivision
 
 begin_excess_function
 
@@ -5383,12 +5383,12 @@ mu pa ma cel tip prl fcel    | phl
 0 0 0 0 0 0 0 0              | endmember flags
 
                              | subdivision model
-0. 1.   .1 0                 | range and resolution of X(mu),  imod = 0 -> cartesian subdivision
-0. 1.   .1 0                 | range and resolution of X(pa),  imod = 0 -> cartesian subdivision
-0. 1.   .1 0                 | range and resolution of X(ma),  imod = 0 -> cartesian subdivision
-0. 1.   .1 0                 | range and resolution of X(cel), imod = 0 -> cartesian subdivision
-0. 0.3  .1 1                 | range and resolution of X(tip), imod = 1 -> asymmetric transform subdivision
-0. 0.3  .1 1                 | range and resolution of X(prl), imod = 1 -> asymmetric transform subdivision
+0. 1.   .1  0                 | range and resolution of X(mu),  imod = 0 -> cartesian subdivision
+0. 1.   .1  0                 | range and resolution of X(pa),  imod = 0 -> cartesian subdivision
+0. 1.   .1  0                 | range and resolution of X(ma),  imod = 0 -> cartesian subdivision
+0. 1.   .1  0                 | range and resolution of X(cel), imod = 0 -> cartesian subdivision
+0. 0.3  .1  0                 | range and resolution of X(tip), imod = 1 -> asymmetric transform subdivision
+0. 0.3  .1  0                 | range and resolution of X(prl), imod = 1 -> asymmetric transform subdivision
 
 begin_excess_function
 
@@ -5460,7 +5460,7 @@ teph     fo       fa
 
                                     | NOTE restricted compositional range for Mn 
 
-0.0 1.0  0.1   1                    | range and resolution for X(Mn), imod = 1 -> asymmetric transform subdivision
+0.0 1.0  0.1   0                    | range and resolution for X(Mn), imod = 1 -> asymmetric transform subdivision
 0.0 1.0  0.1   0                    | range and resolution for X(Mg), imod = 0 -> cartesian subdivision
 
 begin_excess_function
@@ -5726,7 +5726,7 @@ rhc    mag     sid                    endmember names
 
   0  0  0                        | endmember flags
 
-0. 1. 0.1  1                       | range X(Mn), imod = 1 -> asymmetric transform subdivision
+0. 1. 0.1  0                       | range X(Mn), imod = 1 -> asymmetric transform subdivision
 0. 1. 0.1  0                       | range X(Fe), imod = 0 -> cartesian subdivision               
 
 begin_excess_function
@@ -6002,7 +6002,7 @@ pnt      geik     ilm
 
                            | restricted mn range! 
 
-0. .2 0.1    1             | imod = 1 -> asymmetric transform subdivision
+0. .2 0.1    0             | imod = 1 -> asymmetric transform subdivision
 0. 1. 0.1    0             | imod = 0 -> cartesian subdivision
 ideal
 
@@ -6192,7 +6192,7 @@ spss     alm      py       gr         endmember names
 
   1  0  0  0                        | endmember flags
 
-0. 0.2  0.1 1              | imod = 1 -> asymmetric transform subdivision
+0. 0.2  0.1 0              | imod = 1 -> asymmetric transform subdivision
 0. 1.   0.1 0              | imod = 0 -> cartesian subdivision
 0. 1.   0.1 0              | imod = 0 -> cartesian subdivision
                            | NOTE restricted subdivision range on Mn (Species 1)!
@@ -6309,7 +6309,7 @@ kho_i = 1 andr + 1 py -1 gr
 
 0  0  0  0  0  0  0  0            | endmember flags
 
-0. .2   0.1 1                     | imod = 0 -> cartesian subdivision (xmn) on X
+0. .2   0.1 0                     | imod = 0 -> cartesian subdivision (xmn) on X
 0. 1.   0.1 0                     | imod = 0 -> cartesian subdivision (xfe) on X
 0. 1.   0.1 0                     | imod = 0 -> cartesian subdivision (xmg) on X
 
@@ -6392,7 +6392,7 @@ full_name    alphabet-phase
 2
 phA      fphA      
   0  0                                endmember flags
- 0.  1.  0.1  1            | subdivision range, imod = 1 -> asymmetric transform subdivision
+ 0.  1.  0.1  0            | subdivision range, imod = 1 -> asymmetric transform subdivision
 
 ideal 
 
@@ -6412,7 +6412,7 @@ full_name    clinohumite
 2
 chum     fchum     
   0  0                                endmember flags
- 0.  1.  0.1   1           | subdivision range, imod = 1 -> asymmetric transform subdivision
+ 0.  1.  0.1   0           | subdivision range, imod = 1 -> asymmetric transform subdivision
 
 ideal 
 
@@ -6499,7 +6499,7 @@ full_name    brucite
 2                                isp(1)
 br       fbr      
   0  0                                endmember flags
- 0.  1. 0.1  1             | subdivision range, imod = 1 -> asymmetric transform subdivision
+ 0.  1. 0.1  0             | subdivision range, imod = 1 -> asymmetric transform subdivision
 
 ideal 
 
@@ -7388,11 +7388,11 @@ di
 0 0  0  0  0  0  0              | endmember flags
 
                              | NOTE RESTRICTED RANGES:
-0. 1.  .1  1                 | range and resolution of X(esn): imod = 1 -> assymmetric stretching
-0. 1.  .1  1                 | range and resolution of X(ccrts): imod = 1 -> assymmetric stretching
-0. 1.  .1  1                 | range and resolution of X(cats): imod = 1 -> assymmetric stretching 
+0. 1.  .1  0                 | range and resolution of X(esn): imod = 1 -> assymmetric stretching
+0. 1.  .1  0                 | range and resolution of X(ccrts): imod = 1 -> assymmetric stretching
+0. 1.  .1  0                 | range and resolution of X(cats): imod = 1 -> assymmetric stretching 
 0. 1.  .1  0                 | range and resolution of X(jd)
-0. 1.  .1  1                 | range and resolution of X(acm): imod = 1 -> assymmetric stretching
+0. 1.  .1  0                 | range and resolution of X(acm): imod = 1 -> assymmetric stretching
 0. 1.  .1  0                 | range and resolution of X(hed)
 
 begin_excess_function
@@ -7968,8 +7968,8 @@ di
 
                              | NOTE RESTRICTED RANGES
 
-0. 1.  .1  1                 | range and resolution of X(en): imod = 1 -> assymmetric stretching
-0. 1.  .1  1                 | range and resolution of X(cats): imod = 1 -> assymmetric stretching 
+0. 1.  .1  0                 | range and resolution of X(en): imod = 1 -> assymmetric stretching
+0. 1.  .1  0                 | range and resolution of X(cats): imod = 1 -> assymmetric stretching 
 
 begin_excess_function
 w(en cats)   24d3 0. 0.
@@ -8752,11 +8752,11 @@ ftbi_i = 1 tbi  + 1/2 ann - 1/2 obi
                    
                              | subdivision model for (ternary) site 1 (M2):
 
-0. .2  .1  1                 | range and resolution of X(Mn)
+0. .2  .1  0                 | range and resolution of X(Mn)
 0. 1.  .1  0                 | range and resolution of X(Fe)
 
                              | subdivision model for (ternary) site 2 (M1)
-0. 1. .1   1                 | range and resolution of X(Ti,M1)
+0. 1. .1   0                 | range and resolution of X(Ti,M1)
 0. 1. .1   0                 | range and resolution of X(Al,M1)                        
 
                              | the foregoing lines define the pseudocompound compositions generated
@@ -8896,7 +8896,7 @@ mu pa ma_dqf cel fmu fcel
 0. 1.   .1 0                 | range and resolution of X(pa),      imod = 0 -> cartesian subdivision
 0. 1.   .1 0                 | range and resolution of X(ma_dqf),  imod = 0 -> cartesian subdivision
 0. 1.   .1 0                 | range and resolution of X(cel),     imod = 0 -> cartesian subdivision
-0. 0.3  .1 1                 | range and resolution of X(fmu),     imod = 1 -> asymmetric transform subdivision
+0. 0.3  .1 0                 | range and resolution of X(fmu),     imod = 1 -> asymmetric transform subdivision
 
 begin_excess_function
 
@@ -9134,7 +9134,7 @@ fmn_i  = 1 kho  + 1 spss -1 py
 
 0  0  0  0  0  0  0  0            | endmember flags
 
-0. .2   0.1 1                     | imod = 0 -> cartesian subdivision (xmn) on X
+0. .2   0.1 0                     | imod = 0 -> cartesian subdivision (xmn) on X
 0. 1.   0.1 0                     | imod = 0 -> cartesian subdivision (xfe) on X
 0. 1.   0.1 0                     | imod = 0 -> cartesian subdivision (xmg) on X
 
@@ -9925,12 +9925,12 @@ H2O
 
 0 0 0 0 0 0 0              | endmember flags
 
-0   .1    .05       1        | subdivision ranges, imod = 0 -> cartesian subdivision
-0   .001  .05       1        | subdivision ranges, imod = 0 -> cartesian subdivision
-0   .001  .05       1        | subdivision ranges, imod = 0 -> cartesian subdivision
-0   .001  .05       1        | subdivision ranges, imod = 0 -> cartesian subdivision
-0   .02   .2       1        | subdivision ranges, imod = 0 -> cartesian subdivision
-0   .02   .2       1        | subdivision ranges, imod = 0 -> cartesian subdivision
+0   1    .1       0        | subdivision ranges, imod = 0 -> cartesian subdivision
+0   1    .1       0        | subdivision ranges, imod = 0 -> cartesian subdivision
+0   1    .1       1        | subdivision ranges, imod = 0 -> cartesian subdivision
+0   1    .1       1        | subdivision ranges, imod = 0 -> cartesian subdivision
+0   1    .1       1        | subdivision ranges, imod = 0 -> cartesian subdivision
+0   1    .1       1        | subdivision ranges, imod = 0 -> cartesian subdivision
 
 ideal
 
@@ -10028,7 +10028,7 @@ maj     alm      py       gr         endmember names
 
   1  0  0  0                        | endmember flags
 
-0. 0.2  0.1 1              | imod = 1 -> asymmetric transform subdivision
+0. 0.2  0.1 0              | imod = 1 -> asymmetric transform subdivision
 0. 1.   0.1 0              | imod = 0 -> cartesian subdivision
 0. 1.   0.1 0              | imod = 0 -> cartesian subdivision
                            | NOTE restricted subdivision range on Mn (Species 1)!
@@ -10404,7 +10404,7 @@ full_name    liquid
 2                                     |number of endmembers
 MGCO3L FECO3L
   0  0                                |endmember flags
-0. 1. 0.1  1                          |range and increments on X(Fe) 
+0. 1. 0.1  0                          |range and increments on X(Fe) 
 
 begin_excess_function
 W(FECO3L MGCO3L MGCO3L)      -7600. 0. 0. |W_sid-mag = W12
@@ -10428,8 +10428,8 @@ full_name    liquid
 3                                     |number of endmembers
 CACO3L MGCO3L FECO3L
   0  0  0                             |endmember flags
-0. 1. 0.1  1 
-0. 1. 0.1  1                          | range and increments on X(cc)
+0. 1. 0.1  0 
+0. 1. 0.1  0                          | range and increments on X(cc)
 
 begin_excess_function
 W(CACO3L CACO3L FECO3L)  -65000 0. 0.
@@ -10563,7 +10563,7 @@ xFe(g)
 0.0 1.0  0.1 0                      | range and resolution of X(CO2), 0 => cartesian subdivision/1 => asymmetric subdivision   
 0.0 1.0  0.1 0                      | range and resolution of X(CO)  
 0.0 0.5  0.1 1                      | range and resolution of X(O2)  
-| 0.0 0.5  0.1 1                      | range and resolution of X(O)   
+|0.0 0.5  0.1 1                      | range and resolution of X(O)   
 0.0 0.5  0.1 1                      | range and resolution of X(MgO)
 0.0 0.5  0.1 1                      | range and resolution of X(Mg)
 0.0 0.5  0.1 1                      | range and resolution of X(FeO)
@@ -10897,7 +10897,7 @@ end_limits
 
 0 0 0  0                   | endmember flags
 
-0. .2 0.1 1                | subdivision range, X(pnt), imod = 1 -> assymetric
+0. .2 0.1 0                | subdivision range, X(pnt), imod = 1 -> assymetric
 0. .2 0.1 0                | subdivision range, X(geik), imod = 1 -> assymetric
 0. 1. 0.1 0                | subdivision range, X(hem), imod = 0 -> cartesian subdivision
 
