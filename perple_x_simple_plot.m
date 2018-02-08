@@ -26,7 +26,7 @@
 
 LineWidth = 1.0
 FontSize = 14.0
-LineSpec = '-d'
+LineSpec = '-'
 
 [x,y,a,xname,yname,zname,nvar,mvar,nrow,dnames,titl] = function_to_get_perple_x_file; %open the Perple_X file
 

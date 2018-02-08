@@ -162,7 +162,7 @@ c                                 final processing, .false. indicates dynamic
 c                                 bad solution (lagged speciation) identified
 c                                 in avrger
                   call lpwarn (102,'LPOPT0')
-                  if (iopt(22).eq.0.or.iopt(22).eq.1) idead = 102
+                  if (iopt(22).lt.2) idead = 102
 
                end if
 
@@ -753,22 +753,23 @@ c                                             solution.
       else if (idead.eq.101.and.iwarn01.lt.10) then
 
           iwarn01 = iwarn01 + 1
-          call warn (100,c,101,'optimization unstable due to an under'//
-     *              'saturated component during lagged speciation')
+          call warn (100,c,101,'under-saturated solute-component.'
+     *              //' To output result set aq_bad_result to 102')
           if (iwarn01.eq.10) call warn (49,c,101,'LPWARN')
 
       else if (idead.eq.102.and.iwarn02.lt.10) then
 
           iwarn02 = iwarn02 + 1
           call warn (100,c,102,'pure and impure solvent phases '//
-     *              'coexist within within solvus_tolerance. ')
+     *              'coexist within solvus_tolerance. '//
+     *              'To output result set aq_bad_result to 101')
           if (iwarn02.eq.10) call warn (49,c,102,'LPWARN')
 
       else if (idead.eq.103.and.iwarn03.lt.10) then
 
           iwarn03 = iwarn03 + 1
           call warn (100,c,103,'pure and impure solvent phases '//
-     *              'coexist. ')
+     *              'coexist. To output result set aq_bad_result.')
           if (iwarn03.eq.10) call warn (49,c,103,'LPWARN')
 
       end if
@@ -2730,7 +2731,7 @@ c----------------------------------------------------------------------
 
       double precision clamda(*), clam(k19), x(*)
 
-      logical stable(k19), solvnt(k19), quit, abort, degen
+      logical stable(k19), solvnt(k19), quit, abort, degen, test
 
       integer hcp,idv
       common/ cst52  /hcp,idv(k7)
@@ -2807,6 +2808,7 @@ c                                 solution.
       end do
 
       abort = .false.
+      test = .false.
 
       npt = 0
 
@@ -2847,6 +2849,7 @@ c                                 test in getmus:
 
                   if (ikp(-jkp(i)).eq.idaq) then
                      solvnt(npt) = .true.
+                     test = .true.
                   else 
                      solvnt(npt) = .false.
                   end if
@@ -2854,6 +2857,7 @@ c                                 test in getmus:
                else if (jkp(i).eq.idaq) then
 
                   solvnt(npt) = .true.
+                  test = .true.
 
                else
 
@@ -2885,21 +2889,30 @@ c                                 keep the least metastable point
 
       end do
 c                                 get mu's for lagged speciation
-      if (abort.and.iopt(22).eq.3) then 
+      if (abort.and.iopt(22).eq.0) then 
 
           quit = .true.
           idead = 103
 
       else 
 
+         if (test) abort = .true.
+
          call getmus (iter,iter-1,solvnt,abort,.false.)
 
          if (abort) then 
-
+c                                 undersaturated solute component
             quit = .true.
-            if (iopt(22).eq.0.or.iopt(22).eq.2) idead = 101
+c                                 don't set idead if iopt =1, this
+c                                 allows output of the result.
+            if (iopt(22).ne.1) then 
+               idead = 101
+            else 
+               call lpwarn (101,'YCLOS2')
+            end if 
 
          end if
+
       end if 
 
       if (.not.quit) then

@@ -9316,6 +9316,7 @@ c                                 than, xmn. they become equal in the limit xmn-
                   stch(im,i,j,2) = xmn(i,j) + 2
                   stch(im,i,j,3) = stch(im,i,j,2)/stch(im,i,j,1)
                   stch(im,i,j,4) = dlog(stch(im,i,j,3))
+                  xmn(i,j) = 0d0
 
                end if
 

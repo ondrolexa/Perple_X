@@ -174,12 +174,12 @@ c                                 weight composition
 
          end if
 
-         if (lopt(24)) then
+         if (lopt(28)) then
 
             do l = 1, icomp
               write (*,666) 
-     *          cname(l),pcomp(l,i)*props(16,i)/props(17,i)*1d3,
-     *          cname(l),atwt(l)*pcomp(l,i)*props(16,i)/props(17,i)*1d3
+     *          cname(l),pcomp(l,i)/props(17,i)*1d3,
+     *          cname(l),atwt(l)*pcomp(l,i)/props(17,i)*1d3
             end do
 
          end if
@@ -540,7 +540,7 @@ c                                 cp, specific cp
 
       end if
 
-      if (lopt(24)) then
+      if (lopt(28)) then
 
 667   format ('sm[',a,'] := ',g14.6,'; sw[',a,'] := ',g14.6,';',
      *        'sms[',a,'] := ',g14.6,'; sws[',a,'] := ',g14.6,';')

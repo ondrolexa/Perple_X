@@ -95,3 +95,4 @@ x_nodes                   default | [40 40] exploratory and autorefine (grid par
 y_nodes                   default | [40 40] exploratory and autorefine (grid parameters keyword group), lowest-level y grid resolution
 zero_mode                 default | [1e-6] 0->1, threshold below which the molar mode of a phase is set to 0; defaults to zero for fractionation calculations
 zero_bulk                 default | [1e-6] 0->1, threshold below which the molar amount of a component in a system is set to zero
+

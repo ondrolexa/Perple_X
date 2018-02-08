@@ -19,7 +19,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a)') 
-     *      'Perple_X version 6.8.1, source updated Feb 3, 2018.'
+     *      'Perple_X version 6.8.1, source updated Feb 8, 2018.'
 
       end
 
@@ -950,11 +950,13 @@ c                                 reserved values for debugging, etc
             read (strg,*) nopt(29) 
          else if (key.eq.'nop_30') then
             read (strg,*) nopt(30) 
-         else if (key.ne.'|') then 
+         else if (key.ne.'|') then
 
-            write (*,1110) key
+            call error (77,nopt(1),iopt(1),key//' is not a valid perpl'
+     *                 //'e_X option file keyword and must be deleted '
+     *                 //'or corrected')
 
-         end if 
+         end if
 
       end do 
     

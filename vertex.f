@@ -200,6 +200,10 @@ c                                 optimization on a 2-d grid.
 c                                 fractionation on a 1-d path.
             call frac1d (output)
 
+         else if (icopt.eq.99) then 
+
+            call titrat (output)
+
          else if (icopt.eq.9) then 
 c                                 fractionation on a 2-d path (space-time) 
             call frac2d (output)
@@ -427,6 +431,160 @@ c                                 fractionate the composition:
 
          end if 
       end if 
+c                                 output 
+      if (output) then 
+
+        if (io4.eq.0) call outgrd (1,loopy,1) 
+c                                 close fractionation data files
+         do i = 1, ifrct
+            close (n0+i)
+         end do
+
+         close (n0)
+
+      end if 
+
+1000  format (/,'Composition is now:',/)
+1010  format (1x,a,1x,g14.6)
+1020  format (/,'Enter molar amounts of the components to be added ',
+     *        '(ordered as above:')
+1050  format (a)
+1060  format (/,'Modify composition (y/n)?')
+1070  format (/,'Enter (zeroes to quit) ',7(a,1x))
+
+      end 
+
+
+      subroutine titrat (output)
+c-----------------------------------------------------------------------
+c a main program template to illustrate how to call the minimization 
+c procedure. the example here is 1d fractionation.
+c-----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      logical output
+
+      integer i, j, idead, it, ih2o
+
+      double precision dh2o, delt
+
+      integer npt,jdv
+      logical fulrnk
+      double precision cptot,ctotal
+      common/ cst78 /cptot(k19),ctotal,jdv(k19),npt,fulrnk
+
+      character cname*5
+      common/ csta4 /cname(k5)
+
+      character*8 xname, vname
+      common/ csta2 /xname(k5),vname(l2)
+
+      integer icomp,istct,iphct,icp
+      common/ cst6  /icomp,istct,iphct,icp
+
+      character*100 prject,tfname
+      common/ cst228 /prject,tfname
+
+      character*100 cfname
+      common/ cst227 /cfname
+
+      double precision v,tr,pr,r,ps
+      common/ cst5  /v(l2),tr,pr,r,ps
+
+      integer io3,io4,io9
+      common / cst41 /io3,io4,io9
+
+      logical fileio
+      integer ncol, nrow
+      common/ cst226 /ncol,nrow,fileio
+
+      double precision dcomp
+      common/ frct2 /dcomp(k5)
+
+      double precision a,b,c
+      common/ cst313 /a(k5,k1),b(k5),c(k1)
+
+      integer ipot,jv,iv
+      common/ cst24 /ipot,jv(l2),iv(l2)
+
+      integer jbulk
+      double precision cblk
+      common/ cst300 /cblk(k5),jbulk
+
+      integer jlow,jlev,loopx,loopy,jinc
+      common/ cst312 /jlow,jlev,loopx,loopy,jinc
+
+      integer idasls,iavar,iasct,ias
+      common/ cst75  /idasls(k5,k3),iavar(3,k3),iasct,ias
+
+      integer iap,ibulk
+      common/ cst74 /iap(k2),ibulk
+
+      integer ifrct,ifr
+      logical gone
+      common/ frct1 /ifrct,ifr(k23),gone(k5)
+c-----------------------------------------------------------------------
+
+      iasct = 0
+      ibulk = 0
+      it = 0  
+
+      loopy = jlow
+c                                 get phases to be fractionated
+      call frname 
+c                                 call initlp to initialize arrays 
+c                                 for optimization.
+      call initlp 
+c                                 two cases fileio: input from
+c                                 file, else analytical path function
+
+      write (*,*) 'dh2o increment'
+      v(1) = 43001.
+      v(2) = 946.477
+      dh2o = 80.
+      delt = 0.1
+c      read (*,*,iostat=ier) dh2o,delt
+
+      ih2o = int(dh2o/delt) + 1
+
+      j = 0
+
+         do while (j.lt.ih2o) 
+
+            j = j + 1
+            it = it + 1 
+
+            ctotal = 0d0
+c                                 get total moles to compute mole fractions             
+            do i = 1, icp
+               ctotal = ctotal + cblk(i)
+            end do
+
+            do i = 1, icp 
+               b(i) = cblk(i)/ctotal
+            end do
+c                                 lpopt does the minimization and outputs
+c                                 the results to the print file.
+            call lpopt (1,j,idead,output)
+c                                 fractionate the composition:
+            call fractr (idead,output)
+
+            cblk(1) = cblk(1) + delt
+            cblk(10) = cblk(10) + delt/2d0
+
+            if (it.gt.99) then 
+               write (*,'(i5,a)') j,' optimizations completed...'
+               it = 0
+            end if 
+
+         end do 
+
+         close (n8)
+
+         loopy = j 
+
 c                                 output 
       if (output) then 
 
