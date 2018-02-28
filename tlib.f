@@ -19,7 +19,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a)') 
-     *      'Perple_X version 6.8.1, source updated Feb 8, 2018.'
+     *      'Perple_X version 6.8.1, source updated Feb 27, 2018.'
 
       end
 
@@ -2869,7 +2869,7 @@ c49    format (/,'**warning ver049** some pseudocompound data has not',
 c     *          ' been output because',/' the bulk modulus pressure ',
 c     *          'derivative is not constant for all endmembers ',/,
 c     *          ' (SWASH, see program documentation Eq 2.3)',/)
-50    format (/,'**warning ver050** reformulating reciprocal ',
+50    format (/,'**warning ver050** reformulating prismatic ',
      *          'solution: ',a,' because of missing endmembers. ',
      *        /,'(reformulation can be controlled explicitly ',
      *          'by excluding additional endmembers).',/)

@@ -624,7 +624,68 @@ c                                 mobile components
          xinc = 1d0       
       end if
 
-      end 
+      end
+
+      logical function zbad (pa,ids)
+c----------------------------------------------------------------------
+c check for bad site fractions, currently no provision is made for 
+c variable multiplicity models (see function omega). this routine 
+c is only called for prismatic solutions with an invalid endmember.
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer i,j,k,ids
+
+      double precision z,zt,pa(*)
+
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+c                                 configurational entropy variables:
+      integer msite, ksp, lterm, ksub
+      common/ cxt1i /msite(h9),ksp(m10,h9),lterm(m11,m10,h9),
+     *               ksub(m0,m11,m10,h9)
+
+      double precision qmult, d0, dcoef, scoef      
+      common/ cxt1r /qmult(m10,h9),d0(m11,m10,h9),dcoef(m0,m11,m10,h9),
+     *               scoef(m4,h9)
+c----------------------------------------------------------------------
+c                                 for each site
+      do i = 1, msite(ids)
+
+         zt = 0d0
+c                                 standard model with fixed site multiplicity
+c                                 get site fractions
+         do j = 1, ksp(i,ids)
+
+            z = d0(j,i,ids) 
+c                                 for each term:
+            do k = 1, lterm(j,i,ids)
+               z = z + dcoef(k,j,i,ids) * pa(ksub(k,j,i,ids))
+            end do
+
+            if (z.lt.-zero.or.z.gt.r1) then 
+               zbad = .true.
+               return
+            end if 
+
+            zt = zt + z
+
+         end do 
+
+         z = 1d0 - zt
+
+         if (z.lt.-zero.or.z.gt.r1) then 
+            zbad = .true.
+            return
+         end if
+
+      end do 
+
+      zbad = .false.
+
+      end
 
       logical function badz (z)
 c----------------------------------------------------------------------
@@ -638,7 +699,7 @@ c----------------------------------------------------------------------
       if (z.gt.-zero.and.z.le.r1) then
          badz = .false.
       else 
-         badz = .true.         
+         badz = .true.
       end if
 
       end 
@@ -8004,7 +8065,7 @@ c         if (ispg(ids,1).gt.1.or.ksmod(ids).eq.39) then
 
       subroutine xtoy (ids,bad)
 c----------------------------------------------------------------------
-c subroutine to convert geometric reciprocal solution compositions (x(i,j))
+c subroutine to convert prismatic solution compositions (x(i,j))
 c to geometric endmember fractions (y) for solution model ids.
 c----------------------------------------------------------------------
       implicit none 
@@ -8014,17 +8075,17 @@ c                                 -------------------------------------
 c                                 local variables:
       integer ids, k, l, m
 
-      logical bad
-c                                 -------------------------------------
-c                                 global variables:
-c                                 bookkeeping variables
+      logical bad, zap, zbad
+
+      external zbad
+
       integer lstot,mstot,nstot,ndep,nord
       common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
-c                                 working arrays
+
       double precision z, pa, p0a, x, w, y, wl
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
      *              wl(m17,m18)
-c                                 x coordinate description
+
       integer istg, ispg, imlt, imdg
       common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
 
@@ -8045,6 +8106,8 @@ c                                 x coordinate description
 c----------------------------------------------------------------------
 
       bad = .false.
+
+      zap = .false.
 
       k = 0
 
@@ -8073,9 +8136,7 @@ c----------------------------------------------------------------------
             else 
 c                                 reject compositions with non-zero dependent
 c                                 endmember concentrations. 
-               bad = .true.
-
-               return 
+               zap = .true.
 
             end if 
 
@@ -8106,6 +8167,16 @@ c                                 reject pure independent endmember compositions
             y(l) = 0d0
 
          end do
+
+      end if
+c                                 invalid dependent endmember
+      if (zap) then 
+c                                 convert y's to p's
+         call y2p0(ids)
+c                                 check for bad z's
+         if (zbad(pa,ids)) then 
+            bad = .true.
+         end if 
 
       end if 
 
@@ -12862,6 +12933,10 @@ c--------------------------------------------------------------------------
 
       integer id,im,h,i,j,l,m,icpct,isoct,icky,index,icoct,icoct0,i228
 
+      logical zap, zbad
+
+      external zbad
+
       double precision ctot
       common/ cst3 /ctot(k1)
 
@@ -12989,6 +13064,7 @@ c                                 model type
 c----------------------------------------------------------------------
       zpr = 0d0 
       i = 0 
+      zap = .false.
 c                              compute end-member fractions
       do l = 1, mstot(im)
 
@@ -13015,7 +13091,7 @@ c                                 compositions.
             if (y(l).lt.zero) then 
                y(l) = 0d0
             else 
-               return
+               zap = .true.
             end if
  
          end if 
@@ -13079,7 +13155,15 @@ c                                 convert y's to p's
             do j = 1, ndep(im)
                pa(h) = pa(h) + y2pg(j,h,im) * y(knsp(lstot(im)+j,im))
             end do 
-         end do          
+         end do
+
+         if (zap) then
+c                                 check site fractions
+            if (zbad(pa,im)) then 
+               return
+            end if 
+
+         end if
 
       end if 
 
@@ -13089,6 +13173,10 @@ c                                 zero fractions of ordered species
             pa(h) = 0d0
          end do 
       end if 
+
+      if (pa(2).ge.0d0.and.pa(3).gt.0d0) then
+         write (*,'(8(g12.4,1x))') (pa(h),h=1,6)
+      end if  
 
       if (order.and.depend) then 
 c                                 compute the fraction of the i'th ordered species
@@ -13103,6 +13191,11 @@ c                                 disordered species:
 c                                 the composition is acceptable.
       iphct = iphct + 1
       icpct = icpct + 1 
+
+      if (pa(2).gt.0d0.and.pa(3).gt.0d0) then
+         write (*,'(8(g12.4,1x))') (pa(h),h=1,6)
+      end if  
+
 
       if (iphct.gt.k1) then
          if (refine) then 
