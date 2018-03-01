@@ -13174,10 +13174,6 @@ c                                 zero fractions of ordered species
          end do 
       end if 
 
-      if (pa(2).ge.0d0.and.pa(3).gt.0d0) then
-         write (*,'(8(g12.4,1x))') (pa(h),h=1,6)
-      end if  
-
       if (order.and.depend) then 
 c                                 compute the fraction of the i'th ordered species
 c                                 required by the decomposition of the dependent 
@@ -13191,11 +13187,6 @@ c                                 disordered species:
 c                                 the composition is acceptable.
       iphct = iphct + 1
       icpct = icpct + 1 
-
-      if (pa(2).gt.0d0.and.pa(3).gt.0d0) then
-         write (*,'(8(g12.4,1x))') (pa(h),h=1,6)
-      end if  
-
 
       if (iphct.gt.k1) then
          if (refine) then 

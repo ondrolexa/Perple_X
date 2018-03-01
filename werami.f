@@ -4330,24 +4330,28 @@ c                                 modes" output option
      *      /,5x,'PERPLE_X_PLOT - a Matlab plotting script',
      *      /,5x,'spread-sheet programs, e.g., EXCEL',//,
      *       'for details on tab format refer to:',/,5x,
-     *       'www.perplex.ethz.ch/faq/perple_x_tab_file_format.txt',/)
+     *       'perplex.ethz.ch/perplex/faq/Perple_X_tab_file_format',
+     *       '.txt',/)
 1030  format (/,'plt format files can be plotted with:',//,
      *       5x,'PSVDRAW')
 1040  format (/,'Output has been written to the ',i1,
      *          'd ',a,' format file: ',a)
 1060  format (5x,'PSTABLE - a Perple_X plotting program',
      *      /,5x,'PERPLE_X_PLOT - a MATLAB plotting script',
-     *      /,5x,'PYWERAMI - petrol.natur.cuni.cz/~ondro/pywerami:home',
+     *      /,5x,'PYWERAMI - github.com/ondrolexa/pywerami',
      *      /,5x,'spread-sheet programs, e.g., EXCEL',//,
      *       'for details on tab format refer to:',
-     *      /,5x,'perplex.ethz.ch/faq/perple_x_tab_file_format.txt',/)
+     *      /,5x,'perplex.ethz.ch/perplex/faq/Perple_X_tab_file_format',
+     *       '.txt',/)
 1070  format (5x,'spread-sheet programs, e.g., EXCEL',//,
      *       'for details on phm format refer to:',
-     *      /,5x,'perplex.ethz.ch/faq/perple_x_phm_file_format.txt',/)
+     *      /,5x,'perplex.ethz.ch/perplex/faq/Perple_X_phm_file_format',
+     *           '.txt',/)
 1080  format (5x,'PHEMGP - perplex.ethz.ch/phemgp',
      *      /,5x,'spread-sheet programs, e.g., EXCEL',//,
      *       'for details on phm format refer to:',
-     *      /,5x,'perplex.ethz.ch/faq/perple_x_phm_file_format.txt',/)
+     *      /,5x,'perplex.ethz.ch/perplex/faq/Perple_X_phm_file_format',
+     *           '.txt',/)
 1090  format (/,'Data ranges excluding values equal to bad_number ',
      *       '(',g10.3,') specified in perplex_option.dat:',/)
       end  

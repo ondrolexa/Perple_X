@@ -19,7 +19,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a)') 
-     *      'Perple_X version 6.8.1, source updated Feb 27, 2018.'
+     *      'Perple_X version 6.8.1, source updated Mar 1, 2018.'
 
       end
 
@@ -952,9 +952,9 @@ c                                 reserved values for debugging, etc
             read (strg,*) nopt(30) 
          else if (key.ne.'|') then
 
-            call error (77,nopt(1),iopt(1),key//' is not a valid perpl'
+            call error (77,nopt(1),iopt(1),key//' is not a valid Perpl'
      *                 //'e_X option file keyword and must be deleted '
-     *                 //'or corrected')
+     *                 //'or corrected.')
 
          end if
 
@@ -5535,11 +5535,12 @@ c                                 1d - tab format
 1000  format (/,'The tabulated data from this calculation can be ',
      *          'plotted with:',/)
 1010  format (5x,'PSTABLE - a Perple_X plotting program',
-     *      /,5x,'PYWERAMI - petrol.natur.cuni.cz/~ondro/pywerami:home',
+     *      /,5x,'PYWERAMI - github.com/ondrolexa/pywerami',
      *      /,5x,'PERPLE_X_PLOT - a MATLAB plotting script',
      *      /,5x,'spread-sheet programs, e.g., EXCEL',//,
      *           'for details of the table format refer to:',/,
-     *      /,5x,'perplex.ethz.ch/faq/Perple_X_tab_file_format.txt',/)
+     *      /,5x,'perplex.ethz.ch/perplex/faq/Perple_X_tab_file_format',
+     *           '.txt',/)
 1020  format (/,'The output from this calculation can be plotted with ',
      *          'PSVDRAW',/)
 1030  format (/,'The output from this calculation can be plotted with ',
@@ -5549,7 +5550,8 @@ c                                 1d - tab format
      *      /,5x,'perple_x_plot - a Matlab plotting script',
      *      /,5x,'spread-sheet programs, e.g., Excel',//,
      *          'for details of the table format refer to:',/,
-     *      /,5x,'perplex.ethz.ch/faq/Perple_X_tab_file_format.txt',/)
+     *      /,5x,'perplex.ethz.ch/perplex/faq/Perple_X_tab_file_format',
+     *           '.txt',/)
 
       end
 

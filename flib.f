@@ -427,7 +427,7 @@ c                                get the salt content (elag):
 56    format (/,'**warning ver056** C-O-H hybrid cannot be specified ',
      *          'for saturated components',/,'or a saturated phase. To',
      *          'use this EoS see:',/,
-     *          'www.perplex.ethz.ch/perplex/faq/calculations_with_un',
+     *          'perplex.ethz.ch/perplex/faq/calculations_with_un',
      *          'buffered_COH_fluids.txt',/)
 
       end 

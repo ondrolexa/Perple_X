@@ -886,11 +886,12 @@ begin_model
 
                              Changed to fake T site multiplicity (1/4) with true Al site fraction, JADC 6/16
 
+                             Changed to fake T site multiplicity (1/2) with true Al site fraction, Bob Myhill, 2/18
 
                                                       M1      M2     T  
                                                      ____________________
 
-                                      Mutliplicity    1       1     1/4  <- fake multiplicity
+                                      Mutliplicity    1       1     1/2  <- fake multiplicity
                                                      ____________________
 
                                       1 di            ca      mg    SiSi
@@ -1230,7 +1231,10 @@ begin_model
                              T-site mixing corrected for a false multiplicity of 1/4,
                              with the fully disordered tetrahedral Al site fraction. 
                              JADC, 6/10/15
-             
+
+                             Changed to fake T site multiplicity (1/2) 
+                             with true Al site fraction. Bob Myhill, 2/18
+
                                                       M1      M2     T 
                                                      _____________________
 
@@ -2476,7 +2480,7 @@ z(t1,al)   = 1/2 + 1/2 east + 1/2 fbit
 
 z(h,o)     = 1 tbit
 
-site_check_override
+| site_check_override
 
 end_of_model    
                     --------------------------------------------------------  
@@ -2996,7 +3000,7 @@ z(mg,m4) = 1 afchl
 2 2.                            |2 species on 2 T2 sites 
 z(al,T2)= 1 ames + 1/2 clin + 1/2 daph + 1/2 mnchl
 
-site_check_override
+| site_check_override
 
 end_of_model  
                               --------------------------------------------------------
@@ -4026,7 +4030,7 @@ z(t2,al) = 1/2 tats
 z(m2,mg) = 1 ta 
 z(fe,m2) = 1 fta
 
-site_check_override
+| site_check_override
 
 end_of_model               
 
@@ -4478,7 +4482,7 @@ begin_dqf_corrections
 dqf(ts) 10000 0 0 
 end_dqf_corrections
 
-site_check_override
+| site_check_override
 
 end_of_model             
                       --------------------------------------------------------
@@ -4575,9 +4579,9 @@ end_dqf_corrections
 
 reach_increment 1
 
-site_check_override
+| site_check_override
 
-end_of_model               
+end_of_model
                       --------------------------------------------------------
 begin_model                
                              Dale et al, JMG 2005 23:771-791 amphibole model.
@@ -4700,7 +4704,7 @@ dqf(ts)   1d4 0 0
 dqf(parg) 15d3 0 0 
 end_dqf_corrections
 
-site_check_override
+| site_check_override
 
 end_of_model              
                       --------------------------------------------------------
@@ -6484,7 +6488,7 @@ z(fe,m2) = 1 fatg
 
 reach_increment 0
 
-site_check_override
+| site_check_override
 
 end_of_model
                       --------------------------------------------------------
@@ -7683,7 +7687,7 @@ z(m1,mg) = 1 gl
 
 z(m2,fe3+) = 1 rieb
 
-site_check_override
+| site_check_override
 
 end_of_model 
 
@@ -8577,7 +8581,7 @@ begin_dqf_corrections
 dqf(ts) 10000 0 0 
 end_dqf_corrections
 
-site_check_override
+| site_check_override
 
 end_of_model              
                       --------------------------------------------------------
