@@ -9539,37 +9539,41 @@ c                                 save y -> p array
          end do
 c                                 check for invalid dependent endmembers, these
 c                                 are occasionally used as place holders:
-         bad = .false.
+         if (stck) then
+ 
+            bad = .false.
 
-         do j = 1, mdep
+            do j = 1, mdep
 
 
-            do i = 1, mstot(im)
-               y(i) = 0d0
-            end do 
+               do i = 1, mstot(im)
+                  y(i) = 0d0
+               end do 
 
-            y(knsp(lstot(im)+j,im)) = 1d0 
+               y(knsp(lstot(im)+j,im)) = 1d0 
 
-            call y2p0 (im)
+               call y2p0 (im)
 c                                 check for invalid site fractions, this is only necessary
 c                                 for H&P models that assume equipartition (which is not 
 c                                 implemented). 
-            if (zbad(pa,im)) then
+               if (zbad(pa,im)) then
 
-               bad = .true.
+                  bad = .true.
 
-               if (iam.lt.3.or.iam.eq.4) 
-     *            call warn (59,y(1),i,
-     *            mname(iorig(knsp(lstot(im)+j,im)))
-     *            //' in solution model '//tname)
+                 if (iam.lt.3.or.iam.eq.4) 
+     *               call warn (59,y(1),i,
+     *               mname(iorig(knsp(lstot(im)+j,im)))
+     *               //' in solution model '//tname)
 
-               badend(knsp(lstot(im)+j,im),im) = .true.
+                  badend(knsp(lstot(im)+j,im),im) = .true.
 
-            end if
+               end if
 
-         end do
+            end do
 
-         if (bad.and.stck) call error (78,y(1),i,tname)
+            if (bad) call error (78,y(1),i,tname)
+
+         end if 
 
       end if 
 c                                 -------------------------------------
