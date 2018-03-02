@@ -26,7 +26,7 @@ aq_max_molality           default | [5.] maximum molality permitted for neutral 
 aq_solvent_composition    default | [y] y => mole fractions, m => molality
 aq_solute_composition     default | [m] y => mole fractions, m => molality
 aq_vapor_epsilon          default | [1.] dielectric constant threshold used to identify vapor
-auto_refine               man default | [auto] auto, manual, or off (auto_refine keyword group)
+auto_refine               default | [auto] auto, manual, or off (auto_refine keyword group)
 auto_refine_factor_I      default | [3.] refine factor for gridded minimization and phase fractionation (auto_refine keyword group)
 auto_refine_factor_II     default | [10.] refine factor for composition and mixed variable diagrams (auto_refine keyword group)
 auto_refine_factor_III    default | [3.] refine factor for Schreinemakers diagrams (auto_refine keyword group)
@@ -59,6 +59,7 @@ iteration                 default | [3 4] value 1: 2->99 [3]; value 2: 1->7 [4]
 linear_model              default | [on] on or off, relevant for 2d gridded minimization
 logarithmic_p             default | [F] replace pressure variable with log(pressure)
 melt_is_fluid             default | [F] identify melt (liquid) as fluid in WERAMI output
+reject_negative_sites     default | [T] rejects compositions with negative site populations
 null_phase                default | [F] include null phases in convexhull optimization with mobile components
 option_list_files         default | [F] T => echo run-time options to my_project_PROGRAM_options.txt
 order_check               default | [on] on => compare order-disorder solutions with fully ordered and disordered states

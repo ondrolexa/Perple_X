@@ -626,67 +626,6 @@ c                                 mobile components
 
       end
 
-      logical function zbad (pa,ids)
-c----------------------------------------------------------------------
-c check for bad site fractions, currently no provision is made for 
-c variable multiplicity models (see function omega). this routine 
-c is only called for prismatic solutions with an invalid endmember.
-c----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      integer i,j,k,ids
-
-      double precision z,zt,pa(*)
-
-      double precision units, r13, r23, r43, r59, zero, one, r1
-      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-c                                 configurational entropy variables:
-      integer msite, ksp, lterm, ksub
-      common/ cxt1i /msite(h9),ksp(m10,h9),lterm(m11,m10,h9),
-     *               ksub(m0,m11,m10,h9)
-
-      double precision qmult, d0, dcoef, scoef      
-      common/ cxt1r /qmult(m10,h9),d0(m11,m10,h9),dcoef(m0,m11,m10,h9),
-     *               scoef(m4,h9)
-c----------------------------------------------------------------------
-c                                 for each site
-      do i = 1, msite(ids)
-
-         zt = 0d0
-c                                 standard model with fixed site multiplicity
-c                                 get site fractions
-         do j = 1, ksp(i,ids)
-
-            z = d0(j,i,ids) 
-c                                 for each term:
-            do k = 1, lterm(j,i,ids)
-               z = z + dcoef(k,j,i,ids) * pa(ksub(k,j,i,ids))
-            end do
-
-            if (z.lt.-zero.or.z.gt.r1) then 
-               zbad = .true.
-               return
-            end if 
-
-            zt = zt + z
-
-         end do 
-
-         z = 1d0 - zt
-
-         if (z.lt.-zero.or.z.gt.r1) then 
-            zbad = .true.
-            return
-         end if
-
-      end do 
-
-      zbad = .false.
-
-      end
-
       logical function badz (z)
 c----------------------------------------------------------------------
       implicit none
@@ -8076,7 +8015,7 @@ c                                 local variables:
       integer ids, k, l, m
 
       logical bad, zap, zbad
-
+ 
       external zbad
 
       integer lstot,mstot,nstot,ndep,nord
@@ -8106,8 +8045,7 @@ c                                 local variables:
 c----------------------------------------------------------------------
 
       bad = .false.
-
-      zap = .false.
+      zap = bad
 
       k = 0
 
@@ -8127,24 +8065,9 @@ c----------------------------------------------------------------------
 
          end if
 
-         if (badend(l,ids).and.sck(ids)) then 
+         if (badend(l,ids).and.y(l).gt.zero) zap = .true.
 
-            if (y(l).lt.zero) then 
-
-               y(l) = 0d0
-
-            else 
-c                                 reject compositions with non-zero dependent
-c                                 endmember concentrations. 
-               zap = .true.
-
-            end if 
-
-         else if (y(l).gt.one) then
-
-            k = l
-
-         end if 
+         if (y(l).gt.one) k = l
 
       end do
 
@@ -8169,14 +8092,13 @@ c                                 reject pure independent endmember compositions
          end do
 
       end if
+
 c                                 invalid dependent endmember
-      if (zap) then 
+      if (lopt(43).and.zap) then 
 c                                 convert y's to p's
          call y2p0(ids)
 c                                 check for bad z's
-         if (zbad(pa,ids)) then 
-            bad = .true.
-         end if 
+         if (zbad(pa,ids)) bad = .true.
 
       end if 
 
@@ -8461,7 +8383,7 @@ c                                 evaluate enthalpies of ordering
 
       end
 
-      subroutine zchk (y,ids,bad)
+      logical function zbad (y,ids)
 c----------------------------------------------------------------------
 c subroutine to site fractions computed from equations entered by 
 c user for configurational entropy (macroscopic form).
@@ -8470,14 +8392,17 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical bad, badz
+      logical badz
 
       external badz
 
       double precision y(m4),z,zt,n(m10)
 
       integer i,j,k,ids
-c                                 configurational entropy variables:
+
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+
       integer msite, ksp, lterm, ksub
       common/ cxt1i /msite(h9),ksp(m10,h9),lterm(m11,m10,h9),
      *               ksub(m0,m11,m10,h9)
@@ -8486,7 +8411,6 @@ c                                 configurational entropy variables:
       common/ cxt1r /qmult(m10,h9),d0(m11,m10,h9),dcoef(m0,m11,m10,h9),
      *               scoef(m4,h9)
 c----------------------------------------------------------------------
-      bad = .false.
 c                                 for each site
       do i = 1, msite(ids)
 
@@ -8534,7 +8458,7 @@ c                                 if site exists, check fractions
             
                end do
 
-            else if (zt.lt.0d0) then 
+            else if (zt.lt.-zero) then 
 c                                 negative site?
                goto 90
 
@@ -8542,11 +8466,13 @@ c                                 negative site?
 
          end if 
 
-      end do 
+      end do
+
+      zbad = .false.
 
       return
 
-90    bad = .true.
+90    zbad = .true.
 
       end
 
@@ -8659,13 +8585,13 @@ c------------------------------------------------------------------------
 
       character*10 tname
 
-      logical bad
+      logical zbad
 
       integer h,id,j
 
       double precision omega
 
-      external omega
+      external omega, zbad
 c                                 working arrays
       double precision z, pa, p0a, x, w, y, wl
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
@@ -8687,10 +8613,8 @@ c                                 zero y-array
          end do
 
          y(h) = 1d0        
-c                                 check y's
-         call zchk (y,id,bad)
-
-         if (bad) call error (125,z(1),1,tname)
+c                                 check for valid site fractions
+         if (zbad(y,id)) call error (125,z(1),1,tname)
 c                                 evaluate S
          scoef(h,id) = omega(id,y)
 
@@ -9037,16 +8961,14 @@ c---------------------------------------------------------------------
 
       character tname*10, sname*10
 
-      logical add, bad, wham
+      logical add, bad, wham, zbad
 
       integer im, nloc, i, j, ind, id, jd, k, l,itic,ii,imatch, killct,
      *        killid(20)
 
-      double precision dinc,dzt,dx
+      double precision dinc,dzt,dx,gcpd
 
-      double precision gcpd
-
-      external gcpd
+      external gcpd, zbad
 
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
@@ -9617,6 +9539,8 @@ c                                 save y -> p array
          end do
 c                                 check for invalid dependent endmembers, these
 c                                 are occasionally used as place holders:
+         bad = .false.
+
          do j = 1, mdep
 
 
@@ -9630,24 +9554,22 @@ c                                 are occasionally used as place holders:
 c                                 check for invalid site fractions, this is only necessary
 c                                 for H&P models that assume equipartition (which is not 
 c                                 implemented). 
-            call zchk (pa,im,bad)
+            if (zbad(pa,im)) then
 
-            if (bad) then
-
-               i = 1
-
-               if (stck) i = 0
+               bad = .true.
 
                if (iam.lt.3.or.iam.eq.4) 
      *            call warn (59,y(1),i,
      *            mname(iorig(knsp(lstot(im)+j,im)))
      *            //' in solution model '//tname)
 
-               badend(knsp(lstot(im)+j,im),im) = bad
+               badend(knsp(lstot(im)+j,im),im) = .true.
 
-            end if 
+            end if
 
          end do
+
+         if (bad.and.stck) call error (78,y(1),i,tname)
 
       end if 
 c                                 -------------------------------------
@@ -12931,9 +12853,9 @@ c--------------------------------------------------------------------------
  
       double precision zpr,hpmelt,slvmlt,gmelt,smix,esum,ctotal,omega,x
 
-      integer id,im,h,i,j,l,m,icpct,isoct,icky,index,icoct,icoct0,i228
-
       logical zap, zbad
+
+      integer id,im,h,i,j,l,m,icpct,isoct,icky,index,icoct,icoct0,i228
 
       external zbad
 
@@ -13063,7 +12985,7 @@ c                                 model type
       data i228/0/
 c----------------------------------------------------------------------
       zpr = 0d0 
-      i = 0 
+      i = 0
       zap = .false.
 c                              compute end-member fractions
       do l = 1, mstot(im)
@@ -13085,26 +13007,9 @@ c                                 necessary for conformal transformtions
 
          end if
 
-         if (badend(l,im).and.sck(im)) then 
-c                                 reject non-zero dependent endmember 
-c                                 compositions. 
-            if (y(l).lt.zero) then 
-               y(l) = 0d0
-            else 
-               zap = .true.
-            end if
- 
-         end if 
-
-         if (y(l).gt.one) then
+         if (badend(l,im).and.y(l).gt.zero) zap = .true.
 c                                 the pure endmember index is 
-            i = l       
-
-c         else if (y(l).lt.zero) then
-c                                cancelled nov 24, 2016, back march 2017.
-c           y(l) = 0d0
-
-         end if 
+         if (y(l).gt.one) i = l       
 c                                 y is the mole fraction of endmember l
          zpr = zpr + y(l) 
 
@@ -13157,13 +13062,7 @@ c                                 convert y's to p's
             end do 
          end do
 
-         if (zap) then
-c                                 check site fractions
-            if (zbad(pa,im)) then 
-               return
-            end if 
-
-         end if
+         if (lopt(43).and.zap.and.zbad(pa,im)) return
 
       end if 
 

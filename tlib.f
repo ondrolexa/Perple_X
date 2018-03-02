@@ -19,7 +19,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a)') 
-     *      'Perple_X version 6.8.1, source updated Mar 1, 2018.'
+     *      'Perple_X version 6.8.1, source updated Mar 2, 2018.'
 
       end
 
@@ -367,8 +367,8 @@ c                                 absolute amounts
       lopt(41) = .false.
 c                                 cumulative amounts
       lopt(42) = .false.
-c                                 don't output data when phase mode is zero
-      lopt(43) = .false. 
+c                                 reject_negative_sites
+      lopt(43) = .true. 
 c                                 initialize mus flag lagged speciation
       mus = .false.
 c                                 -------------------------------------
@@ -492,9 +492,9 @@ c                                 abort if pure solvent is stable
 
             if (val.eq.'T') lopt(42) = .true.
 
-         else if (key.eq.'no_zero_mode') then 
+         else if (key.eq.'reject_negative_sites') then 
 
-            if (val.eq.'T') lopt(43) = .true.
+            if (val.eq.'F') lopt(43) = .false.
 
          else if (key.eq.'aq_solvent_composition') then
 
@@ -2137,6 +2137,8 @@ c---------------------------------------------------------------------
          write (*,76) char, char, char
       else if (ier.eq.77) then 
          write (*,77) char
+      else if (ier.eq.78) then 
+         write (*,78) char,char
       else if (ier.eq.89) then
          write (*,89) 
       else if (ier.eq.90) then
@@ -2404,6 +2406,10 @@ c---------------------------------------------------------------------
      *        'To correct this error exclude either more or fewer ',a,
      *        'endmembers.',/)
 77    format (/,'**error ver077** ',a,/)
+78    format (/,'**error ver078** ',a,' has dependent endmebers with ',
+     *        'invalid site populations',/,'it cannot be used unless ',
+     *        'it is corrected or the site_check_override keyword is',/,
+     *        'specified at the end of the ',a,' model.',/)
 89    format (/,'**error ver089** SMPLX programming error. Change ',
      *        'minimnization method.',/)
 90    format (/,'**error ver090** SMPLX failed to converge within ', 
@@ -2624,11 +2630,6 @@ c----------------------------------------------------------------------
          write (*,58)
       else if (ier.eq.59) then
          write (*,59) char
-         if (int.eq.0) then 
-            write (*,590)
-         else 
-            write (*,591)
-         end if 
       else if (ier.eq.60) then
          write (*,60) char
       else if (ier.eq.61) then 
@@ -2898,12 +2899,7 @@ c     *          ' (SWASH, see program documentation Eq 2.3)',/)
      *         ,'following reaction',/,' is inconsistent with the ',
      *          'invariant equilibrium.',/)
 59    format (/,'**warning ver059** endmember ',a,
-     *        ' has an invalid site population.')
-590   format ('It will be retained',
-     *        ' as a place-holder with zero concentration',/)
-591   format ('It will be retained and allowed finite concentration ',
-     *        'because site_check_override is',/,'specified for this ',
-     *        'solution model',/)
+     *        ' has an invalid site population.',/)
 60    format (/,'**warning ver060** non-fatal programming error ',
      *          'routine:',a,/)
 61    format (/,'**warning ver61** exhausted memory (k21) during'

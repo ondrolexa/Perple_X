@@ -205,7 +205,7 @@ ocats = -2 + 1 cats                              delta = 2 zAlT1
 
 end_limits
 
-10                           | 10 dependent endmembers
+10                            | 10 dependent endmembers
 
 hed  = 1 di   + 1 cfsg - 1 fmc 
 cacm = 1 acm  + 1 cats - 1 jd 
@@ -215,8 +215,18 @@ macm = 1 cats + 1 cenh - 1 di   + 1 acm - 1 jd
 ffmc = 1 fmc
 fats = 1 cats - 1 di   + 1 fmc
 facm = 1 cats - 1 di   + 1 fmc  + 1 acm - 1 jd
-ndi  = 1 di   + 1 jd   - 1 cats
-nhed = 1 di   + 1 jd   - 1 cats + 1 cfsg - 1 fmc 
+
+ | assigning ndi = nhed = jd is a [bad] way to make this model work.
+ | ndi = nhed = jd_dqf where 
+ | jd_dqf is made in thermodynamic data file header as:
+
+ | jd_dqf = 1 jd
+ |   DQF = 5000
+
+ | MIGHT speed calculations and reduce numerical instability.
+
+ndi  = 1 jd | 1 di   + 1 jd   - 1 cats 
+nhed = 1 jd | di   + 1 jd   - 1 cats + 1 cfsg - 1 fmc 
 
 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | endmember flags
 
@@ -2480,7 +2490,7 @@ z(t1,al)   = 1/2 + 1/2 east + 1/2 fbit
 
 z(h,o)     = 1 tbit
 
-| site_check_override
+site_check_override
 
 end_of_model    
                     --------------------------------------------------------  
@@ -3000,7 +3010,7 @@ z(mg,m4) = 1 afchl
 2 2.                            |2 species on 2 T2 sites 
 z(al,T2)= 1 ames + 1/2 clin + 1/2 daph + 1/2 mnchl
 
-| site_check_override
+site_check_override
 
 end_of_model  
                               --------------------------------------------------------
@@ -4030,7 +4040,7 @@ z(t2,al) = 1/2 tats
 z(m2,mg) = 1 ta 
 z(fe,m2) = 1 fta
 
-| site_check_override
+site_check_override
 
 end_of_model               
 
@@ -4482,7 +4492,7 @@ begin_dqf_corrections
 dqf(ts) 10000 0 0 
 end_dqf_corrections
 
-| site_check_override
+site_check_override
 
 end_of_model             
                       --------------------------------------------------------
@@ -4579,7 +4589,7 @@ end_dqf_corrections
 
 reach_increment 1
 
-| site_check_override
+site_check_override
 
 end_of_model
                       --------------------------------------------------------
@@ -4704,7 +4714,7 @@ dqf(ts)   1d4 0 0
 dqf(parg) 15d3 0 0 
 end_dqf_corrections
 
-| site_check_override
+site_check_override
 
 end_of_model              
                       --------------------------------------------------------
@@ -6488,7 +6498,7 @@ z(fe,m2) = 1 fatg
 
 reach_increment 0
 
-| site_check_override
+site_check_override
 
 end_of_model
                       --------------------------------------------------------
@@ -7687,7 +7697,7 @@ z(m1,mg) = 1 gl
 
 z(m2,fe3+) = 1 rieb
 
-| site_check_override
+site_check_override
 
 end_of_model 
 
@@ -8581,7 +8591,7 @@ begin_dqf_corrections
 dqf(ts) 10000 0 0 
 end_dqf_corrections
 
-| site_check_override
+site_check_override
 
 end_of_model              
                       --------------------------------------------------------
