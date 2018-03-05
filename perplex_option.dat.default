@@ -86,6 +86,7 @@ reaction_format           default | [minimum] minimum, full, stoich, S+V, or eve
 reaction_list             default | [off] on or off
 refinement_points_II      default | [auto] or an integer > 0, the number of metastable refinement points retained during 2nd phase of adaptive minimization
 refine_endmembers         default | [F] accept endmember compositions as refinement points
+reject_negative_sites     default | [T] reject compositions with negative site populations
 seismic_output            default | [some] all, some, none
 short_print               default | [on] suppress output of equilibrium coordinates to the print file, only relevant for CONVEX
 solution_names            default | [mod] mod, abb or ful; use the model, abbreviation, or full name for solution models for output
