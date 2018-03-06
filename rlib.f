@@ -9145,8 +9145,8 @@ c                                 model type
       double precision rid 
       common/ cst327 /grid(6,2),rid(5,2)
 
-      double precision yf,g,v,vf
-      common/ cstcoh /yf(nsp),g(nsp),v(nsp),vf(nsp)
+      double precision yf,g,v
+      common/ cstcoh /yf(nsp),g(nsp),v(nsp)
 
       integer jnd
       double precision aqg,q2,rt
@@ -15663,8 +15663,8 @@ c-----------------------------------------------------------------------
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
 
-      double precision yf,g,v,vf
-      common/ cstcoh /yf(nsp),g(nsp),v(nsp),vf(nsp)
+      double precision yf,g,v
+      common/ cstcoh /yf(nsp),g(nsp),v(nsp)
 
       double precision z, pa, p0a, x, w, y, wl
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
@@ -15707,13 +15707,12 @@ c                                 gibbs energy for ideal solute concentration
          ysolv(i) = y(i)/ysum
          
       end do
-c                                 compute and add in solvent activities
+c                                 compute and add in solvent activities, this 
+c                                 unnecessarily calls mrkmix
       gsolv = gsolv + ysum*( ghybrid (ysolv) + rt*dlog(ysum) )
-c                                 the call to ghybrid loads the partial 
-c                                 molar volumes (cstcoh) and total volume (cst26)
-c                                 from routine mrkmix
+
       vsolv = ysum * vol
-c                                 get dielectric cst based on mrk volumetric properties
+c                                 get dielectric cst based on hybrid volumetric properties
       call geteps (epsln)
 c                                 set reference dielectric cst, quick fix for mistake
 c                                 of having made it composition dependent,
@@ -15732,11 +15731,9 @@ c                                 used by hkf
 
       subroutine slvnt2 (gsolv)
 c-----------------------------------------------------------------------
-c computes solvent p-t-composition dependent properties: dielectric cst (eps), 
-c molar mass (msol, this could be stored in thermo), debye-hueckel (adh).
-
-c assumes pure species volumes in cohhyb have been initialized. and that
-c the molar speciation is stored in y.
+c computes: debye-hueckel (adh) and solute contribution of the fluid 
+c gibbs energy. assumes the molar speciation is stored in y. called 
+c only for solution model type 20. 
 c-----------------------------------------------------------------------
       implicit none
 
@@ -15817,8 +15814,8 @@ c-----------------------------------------------------------------------
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
 
-      double precision yf,g,v,vf
-      common/ cstcoh /yf(nsp),g(nsp),v(nsp),vf(nsp)
+      double precision yf,g,v
+      common/ cstcoh /yf(nsp),g(nsp),v(nsp)
 
       double precision z, pa, p0a, x, w, y, wl
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
@@ -15897,8 +15894,11 @@ c-----------------------------------------------------------------------
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
 
-      double precision y,g,v,vf
-      common/ cstcoh /y(nsp),g(nsp),v(nsp),vf(nsp)
+      double precision y,g,v
+      common/ cstcoh /y(nsp),g(nsp),v(nsp)
+
+      double precision vhyb0,vmrk0,vhyb,vf
+      common/ cxt38 /vhyb0(nsp),vmrk0(nsp),vhyb(nsp),vf(nsp)
 c                                Harvey & Lemmon provide additional data for 
 c                                ethylene and long-chain hydrocarbons. A_mu
 c                                is zero for all species listed here, therefore
@@ -15959,7 +15959,7 @@ c----------------------------------------------------------------------
          j = ins(i)
 c                                 rho = 1/vcm3, v(j) is initialized by lnfpur
 c                                 in gcpd and is in cm3/mol
-         rho = 1d0/v(j)
+         rho = 1d0/vhyb(j)
 c                                 Eq 5 of H&L 2005 for  polarization/rho
 c                                 for polar species need to add po(j,3)
          eps = po(j,1) + po(j,2)*trt + (po(j,4) + po(j,5)*trt)*rho
@@ -15967,7 +15967,7 @@ c                                 for polar species need to add po(j,3)
 
          if (j.eq.6) then 
 c                                 fake for h2s = 1/3 h2o
-            eps = epsh2o (v(j)/1d1) / 3d0
+            eps = epsh2o (vhyb(j)/1d1) / 3d0
 
          else if (po(j,3).eq.0d0) then 
 c                                 invert clausius-mosotti relation for dielectric
@@ -15987,7 +15987,7 @@ c                                  computed from partial molar volumes.
 
       end do 
 c                                  add in water (ns^th species)
-      epsln  = epsln + vf(ins(i)) * epsh2o (v(ins(i))/1d1)**(1d0/3d0)
+      epsln  = epsln + vf(ins(i)) * epsh2o (vhyb(ins(i))/1d1)**(1d0/3d0)
 
       epsln  = epsln **3
 
@@ -16123,8 +16123,8 @@ c-----------------------------------------------------------------------
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
-      double precision yf,g,v,vf
-      common/ cstcoh /yf(nsp),g(nsp),v(nsp),vf(nsp)
+      double precision yf,g,v
+      common/ cstcoh /yf(nsp),g(nsp),v(nsp)
 
       integer jnd
       double precision aqg,qq,rt
@@ -16212,8 +16212,6 @@ c                                  save pmv's and v fractions for output
          end do 
 c                                  ysum is just a dummy. 
          call slvnt1 (ysum)
-
-
 
       else 
 c                                 solvent is pure water 
@@ -18447,8 +18445,8 @@ c                                 adaptive coordinates
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
-      double precision yf,g,v,vf
-      common/ cstcoh /yf(nsp),g(nsp),v(nsp),vf(nsp)
+      double precision yf,g,v
+      common/ cstcoh /yf(nsp),g(nsp),v(nsp)
 
       double precision gh,vh,gp
       common/ csthyb /gh(nsp),vh(nsp),gp(nsp) 
@@ -18754,11 +18752,11 @@ c-----------------------------------------------------------------------
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp  
 
-      double precision yf,g,v,vf
-      common/ cstcoh /yf(nsp),g(nsp),v(nsp),vf(nsp)
+      double precision yf,g,v
+      common/ cstcoh /yf(nsp),g(nsp),v(nsp)
 
       double precision gh,vh,gp
-      common/ csthyb /gh(nsp),vh(nsp),gp(nsp) 
+      common/ csthyb /gh(nsp),vh(nsp),gp(nsp)
 
       integer jnd
       double precision aqg,qq,rt
@@ -18771,6 +18769,9 @@ c-----------------------------------------------------------------------
       double precision z, pa, p0a, x, w, y, wl
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
      *              wl(m17,m18)
+
+      double precision vhyb0, vmrk0, vhyb
+      common/ cxt38 /vhyb0(nsp),vmrk0(nsp),vhyb(nsp)
 c----------------------------------------------------------------------
       rt   = r*t
 c                                 doing lagged aqueous speciation
@@ -18790,12 +18791,17 @@ c                                 been computed (this will be the case in produc
          do k = 1, ns
             gso(k) = gcpd(jnd(k),.false.)
          end do
+c                                  call to gcpd will put the pure species molar
+c                                  volumes arrays vhyb0 and vmrk0 (cxt38).
+
 c                                  next get the activity coefficient ratios for the
 c                                  hybrid eos (csthyb gh(i) = phi0(EoS)/phi0(MRK)
-         call hybeos (ins,ns)  
+         call hybeos (ins,ns)
 c                                  now get the hybrid fugacity coefficients 
 c                                  calculate hybrid fugacity coefficients
          call mrkmix (ins, ns, 1)
+
+         vol = 0d0 
 c
          do k = 1, ns
 c                                  now add in the pure solvent fugacities
@@ -18806,7 +18812,19 @@ c                                  g(i) = gs0(i) + RT ln x(i)
 c                                  where sumsol is the sum of the solute
 c                                  mole fractions. 
             i = ins(k)
+
             gso(k) = gso(k) + rt * dlog(g(i)/gp(i))
+c                                  and compute the hybrid partial molar volumes
+            vhyb(i) = vhyb0(i) + v(i) - vmrk0(i)
+
+            vol = vol + y(k) * vhyb(i)
+
+         end do 
+c                                  volume fractions
+         do k = 1, ns
+            
+            i = ins(k)
+            vf(k) = vhyb(k)/vol
 
          end do 
 c                                  ysum is just a dummy.
@@ -19476,8 +19494,8 @@ c                                 model type
       integer jspec
       common/ cxt8 /jspec(h9,m4)
 
-      double precision yf,gh,v,vf
-      common/ cstcoh /yf(nsp),gh(nsp),v(nsp),vf(nsp)
+      double precision yf,gh,v
+      common/ cstcoh /yf(nsp),gh(nsp),v(nsp)
 
       integer jd, na1, na2, na3, nat
       double precision x3, caq

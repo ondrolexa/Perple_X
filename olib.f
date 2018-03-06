@@ -1011,8 +1011,8 @@ c                                 model type
       integer isp, ins
       common/ cxt33 /isp,ins(nsp),specie(nsp)
 
-      double precision yf,g,v,vf
-      common/ cstcoh /yf(nsp),g(nsp),v(nsp),vf(nsp)
+      double precision yf,g,v
+      common/ cstcoh /yf(nsp),g(nsp),v(nsp)
 c----------------------------------------------------------------------
 
       if ((lrecip(id).and.lorder(id)).or.lorder(id)) then 
@@ -1513,8 +1513,8 @@ c----------------------------------------------------------------------
       logical sroot
       common/ rkroot /vrt,irt,sroot
 
-      double precision y,g,pmv,vf
-      common/ cstcoh /y(nsp),g(nsp),pmv(nsp),vf(nsp)
+      double precision y,g,pmv
+      common/ cstcoh /y(nsp),g(nsp),pmv(nsp)
 
       integer iroots
       logical switch, rkmin, min
