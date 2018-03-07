@@ -2459,8 +2459,6 @@ c                                 pmv constants
          end if 
 c                                 pmv
          v(l) = (d4*aj2(l) - b(l) - vmb + d7*b(l)) / d5
-c                                 vfractions
-         vf(l) = y(l)*v(l)/vol
 
          if (l.lt.3) fg(l) = f(l)
 
@@ -7978,8 +7976,8 @@ c---------------------------------------------------------------------
       double precision vol
       common/ cst26 /vol
 
-      double precision gh,vh,g0
-      common/ csthyb /gh(nsp),vh(nsp),g0(nsp) 
+      double precision gh,dvhy,gmrk0
+      common/ csthyb /gh(nsp),dvhy(nsp),gmrk0(nsp) 
 
       double precision y,g,v
       common/ cstcoh /y(nsp),g(nsp),v(nsp)
@@ -8006,7 +8004,7 @@ c                                save the pure mrk molar volume
       ftemp = dlog(g(j)*p)
 c                                for the generic hybrid eos solution model
 c                                save the pure mix_EoS fugacity
-      g0(j) = g(j)
+      gmrk0(j) = g(j)
 c                                then check if hyb_EoS indicates another
 c                                EoS:
       if (j.eq.1) then 
@@ -8073,5 +8071,6 @@ c                                 with anything.
 c                                           JADC, march 6 2018
       vol = v(j)
       vhyb0(j) = vol
+      dvhy(j) = vol - vmrk0(j)
 
       end

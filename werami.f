@@ -2194,7 +2194,7 @@ c----------------------------------------------------------------------
 
       double precision coef(0:10), dxy(2), xyp(2,2), s, d
 
-      character*100 n5name, n6name, yes*1, text*200
+      character*100 n5name, n6name, yes*1, text*320
 
       integer jvar
       double precision var,dvr,vmn,vmx
@@ -2397,7 +2397,7 @@ c                                 compute properties
 1330  format (/,'Your polynomial does not yield conditions within',
      *          'computational coordinate frame.',/)
 1340  format (/,'Your polynomial is:',/,a)
-1350  format (a,'=',5('+(',g12.6,')','*',a,'^',i1))
+1350  format (a,'=',11('+(',g12.6,')*',a,'^',i1))
 
       end 
 

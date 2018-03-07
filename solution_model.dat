@@ -9188,16 +9188,19 @@ begin_model
                          6/08   z(m1,mg) corrected to include mrb, second limit
                                 equations for cammo1 and cammo2 corrected accordingly.   
                                 corrected enthalpies for cammo1 and cammo2.    
-                       8/31/11 2011 DP odel revisions entered by MJC, Oct 31, 2011.
-                       1/24/17 fgrk-grk exchange added Jan 24, 2017.
+                       8/31/11 2011 DP model revisions entered by MJC.
+                       1/24/17 fgrk-grk exchange added
+                       3/ 8/18 dqfs for cumm and grun moved from model to data file
                       --------------------------------------------------------
 
                       NOTE to use this model the following endmembers must be specified with make 
                       definitions in the thermodynamic data file
 
-                          ts_dqf   = dqf(ts)    10000. 0. 0.  
-                          parg_dqf = dqf(parg)  15000. 0. 0.
-                          gl_dqf   = dqf(gl)    3000. 0. 0.
+                          ts_dqf 
+                          parg_dqf
+                          gl_dqf
+                          cumm_dqf
+                          grun_dqf
 
                        additionally the following endmembers should be excluded in the 
                        computational option file:
@@ -9246,42 +9249,42 @@ full_name    clinoamphibole
 parg_dqf   fparg  
 ts_dqf     fts  
 gl_dqf     fgl 
-cumm       grun 
+cumm_dqf   grun_dqf 
 mrb        frb
 grk        fgrk
 tr         ftr
 
 2                            | 2 ordered species:
 
-cammo1 = 3/7 cumm + 4/7 grun   enthalpy_of_ordering = -9.5d3   
-cammo2 = 2/7 cumm + 5/7 grun   enthalpy_of_ordering = -11.7d3    | these enthalpies differ from the published values
-                                                                 | becuase Thermocalc reactions are specified in terms of the 
-                                                                 | endmember without "DQF" corrections, while in Perple_X
-                                                                 | endmember include any DQF corrections. 
+cammo1 = 3/7 cumm_dqf + 4/7 grun_dqf   enthalpy_of_ordering = -9.5d3   
+cammo2 = 2/7 cumm_dqf + 5/7 grun_dqf   enthalpy_of_ordering = -11.7d3    | these enthalpies differ from the published values
+                                                                         | becuase Thermocalc reactions are specified in terms of the 
+                                                                         | endmember without "DQF" corrections, while in Perple_X
+                                                                         | endmember include any DQF corrections. 
 
 begin_limits
 
-cammo1 = -7/3 grun - 4/3 cammo1 + 5/3 cammo2 - 5/3 cammo2                               delta = 7/3 z(M2,Fe)       
-cammo1 = -7/4 + 7/4 grun + 1  cammo1 + 1/2 cammo2 + 5/4 cammo2                          delta = 7/4 z(M1,Fe)
-cammo1 = -7/3 + 7/3 tr + 7/6 parg_dqf + 7/3 cumm + 1 cammo1 + 5/3 cammo2 + 2/3 cammo2   delta = 7/3 z(M2,Mg)
-cammo1 = -7/3 + 7/3 cumm + 1 cammo1 - 2/3 cammo2 + 2/3 cammo2                           delta = 7/3 z(M4,Mg)
-cammo1 = -7/3 grun - 4/3 cammo1 - 2/3 cammo2 - 5/3 cammo2                               delta = 7/3 z(M4,Fe)
+cammo1 = -7/3 grun_dqf - 4/3 cammo1 + 5/3 cammo2 - 5/3 cammo2                               delta = 7/3 z(M2,Fe)       
+cammo1 = -7/4 + 7/4 grun_dqf + 1  cammo1 + 1/2 cammo2 + 5/4 cammo2                          delta = 7/4 z(M1,Fe)
+cammo1 = -7/3 + 7/3 tr + 7/6 parg_dqf + 7/3 cumm_dqf + 1 cammo1 + 5/3 cammo2 + 2/3 cammo2   delta = 7/3 z(M2,Mg)
+cammo1 = -7/3 + 7/3 cumm_dqf + 1 cammo1 - 2/3 cammo2 + 2/3 cammo2                           delta = 7/3 z(M4,Mg)
+cammo1 = -7/3 grun_dqf - 4/3 cammo1 - 2/3 cammo2 - 5/3 cammo2                               delta = 7/3 z(M4,Fe)
 
-cammo2 = -7/5 + 7/5 grun + 3/5 cammo1 + 4/5 cammo1 + 1 cammo2                           delta = 7/5 z(M2,Fe)
-cammo2 = -7/2 grun + 2 cammo1 - 2 cammo1 - 5/2 cammo2                                   delta = 7/2 z(M1,Fe)
-cammo2 = -7/5 tr - 7/10 parg_dqf - 7/5 cumm + 3/5 cammo1 - 3/5 cammo1 - 2/5 cammo2      delta = 7/5
-cammo2 = -7/2 + 7/2 cumm - 3/2 cammo1 + 3/2 cammo1 + 1 cammo2                           delta = 7/2
-cammo2 = -7/2 grun - 3/2 cammo1  - 2 cammo1 - 5/2 cammo2                                delta = 7/2
+cammo2 = -7/5 + 7/5 grun_dqf + 3/5 cammo1 + 4/5 cammo1 + 1 cammo2                           delta = 7/5 z(M2,Fe)
+cammo2 = -7/2 grun_dqf + 2 cammo1 - 2 cammo1 - 5/2 cammo2                                   delta = 7/2 z(M1,Fe)
+cammo2 = -7/5 tr - 7/10 parg_dqf - 7/5 cumm_dqf + 3/5 cammo1 - 3/5 cammo1 - 2/5 cammo2      delta = 7/5
+cammo2 = -7/2 + 7/2 cumm_dqf - 3/2 cammo1 + 3/2 cammo1 + 1 cammo2                           delta = 7/2
+cammo2 = -7/2 grun_dqf - 3/2 cammo1  - 2 cammo1 - 5/2 cammo2                                delta = 7/2
 end_limits
 
 7                            | # of dependent endmembers 
 
-ftr   = 1 tr       + 2 grun    - 1 cammo1 - 1 cammo2
-fparg = 1 parg_dqf + 3/2 grun  - 1 cammo1 - 1/2 cammo2
-fgl   = 1 gl_dqf   +  1 grun   - 1 cammo1
-frb   = 1 mrb      + 1 grun    - 1 cammo1
-fts   = 1 ts_dqf   + 1 grun    - 1 cammo1
-grk   = 1 mrb      + 1 ts_dqf  + 1 cumm   - 1 gl_dqf - 1 tr
+ftr   = 1 tr       + 2 grun_dqf    - 1 cammo1 - 1 cammo2
+fparg = 1 parg_dqf + 3/2 grun_dqf  - 1 cammo1 - 1/2 cammo2
+fgl   = 1 gl_dqf   +  1 grun_dqf   - 1 cammo1
+frb   = 1 mrb      + 1 grun_dqf    - 1 cammo1
+fts   = 1 ts_dqf   + 1 grun_dqf    - 1 cammo1
+grk   = 1 mrb      + 1 ts_dqf  + 1 cumm_dqf   - 1 gl_dqf - 1 tr
 fgrk  = 1 mrb      + 1 ts_dqf  - 1 gl_dqf - 1 tr + 1 cammo2
 
 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0    | endmember flags.
@@ -9300,8 +9303,8 @@ w(mrb tr)          52e3   0. 0.
 w(mrb ts_dqf)      20e3   0. 0. 
 w(mrb parg_dqf)        40e3   0. 0. 
 
-w(mrb cumm)        80e3   0. 0. 
-w(mrb grun)        91e3   0. 0. 
+w(mrb cumm_dqf)        80e3   0. 0. 
+w(mrb grun_dqf)        91e3   0. 0. 
 w(mrb cammo1)      80e3   0. 0.
 w(mrb cammo2)      90e3   0. 0.
  
@@ -9309,27 +9312,27 @@ w(cammo2 tr)          63e3   0. 0.
 w(cammo2 ts_dqf)     72.5e3  0. 0.    
 w(cammo2 parg_dqf)   94.8e3  0. 0. 
 w(cammo2 gl_dqf)   111.2e3   0. 0. 
-w(cammo2 cumm)        23e3   0. 0. 
-w(cammo2 grun)         8e3   0. 0. 
+w(cammo2 cumm_dqf)        23e3   0. 0. 
+w(cammo2 grun_dqf)         8e3   0. 0. 
 w(cammo2 cammo1)      20e3   0. 0.
 
 w(cammo1 tr)         57e3   0. 0.
 w(cammo1 ts_dqf)     70e3   0. 0.
 w(cammo1 parg_dqf)  94.8e3  0. 0.
 w(cammo1 gl_dqf)    100e3   0. 0.
-w(cammo1 cumm)       18e3   0. 0.
-w(cammo1 grun)       12e3   0. 0.
+w(cammo1 cumm_dqf)       18e3   0. 0.
+w(cammo1 grun_dqf)       12e3   0. 0.
 
-w(grun tr)          75e3   0. 0.
-w(grun ts_dqf)      80e3   0. 0.
-w(grun parg_dqf)  106.7e3  0. 0.
-w(grun gl_dqf)   113.5e3   0. 0.
-w(grun cumm)        33e3   0. 0.
+w(grun_dqf tr)          75e3   0. 0.
+w(grun_dqf ts_dqf)      80e3   0. 0.
+w(grun_dqf parg_dqf)  106.7e3  0. 0.
+w(grun_dqf gl_dqf)   113.5e3   0. 0.
+w(grun_dqf cumm_dqf)        33e3   0. 0.
 
-w(cumm tr)          45e3   0. 0.
-w(cumm ts_dqf)      70e3   0. 0.
-w(cumm parg_dqf)     90e3  0. 0.
-w(cumm gl_dqf)     100e3   0. 0.
+w(cumm_dqf tr)          45e3   0. 0.
+w(cumm_dqf ts_dqf)      70e3   0. 0.
+w(cumm_dqf parg_dqf)     90e3  0. 0.
+w(cumm_dqf gl_dqf)     100e3   0. 0.
 
 w(gl_dqf tr)        65e3   0. 0.
 w(gl_dqf ts_dqf)    25e3   0. 0.
@@ -9347,47 +9350,32 @@ end_excess_function
 z(A,Na) =    1 parg_dqf  
               
 2 3.                       | 2 species on M1, 3 sites per formula unit
-z(M1,fe)   = 1 grun + 1 cammo2
+z(M1,fe)   = 1 grun_dqf + 1 cammo2
 
 4 2.                       | 4 species on M2, 2 sites pfu
-z(M2,fe)   = 1 grun + 1 cammo1
+z(M2,fe)   = 1 grun_dqf + 1 cammo1
 z(m2,al) =   1 ts_dqf + 1/2 parg_dqf + 1 gl_dqf 
 z(m2,fe3+) = 1 mrb 
 
 4 2.                       | 4 species on M4, 2 sites pfu
 z(m4,na) =   1 gl_dqf + 1 mrb 
-z(m4,mg) =   1 cumm
-z(m4,fe) =   1 grun + 1 cammo1 + 1 cammo2  
+z(m4,mg) =   1 cumm_dqf
+z(m4,fe) =   1 grun_dqf + 1 cammo1 + 1 cammo2  
 
 2 1.                       | 2 species on T1, fake site multiplicity of 1.
 z(T1,Al) =   1/2 ts_dqf  + 1/2 parg_dqf  
 
-begin_van_laar_sizes                        
-alpha(tr)       1.0 
+begin_van_laar_sizes
+alpha(tr)       1.0
 alpha(parg_dqf) 1.7
 alpha(ts_dqf)   1.5
 alpha(gl_dqf)   0.8
-alpha(cumm)     1.0
-alpha(grun)     1.0
+alpha(cumm_dqf) 1.0
+alpha(grun_dqf) 1.0
 alpha(cammo1)   1.0
 alpha(cammo2)   1.0
 alpha(mrb)      0.8
 end_van_laar_sizes
-
-begin_dqf_corrections
-              
-              | Perple_X, in contrast to THERMOCALC, automatically considers all endmembers
-              | present in the thermodynamic data base. This behavior creates a potential 
-              | problem with THERMOCALC models that specify positive DQF corrections because
-              | the DQF'd endmember is always less stable than the real endmember. For example
-              | here the solution will always be metastable at compositions near to the ts and 
-              | parg_dqf endmember compositions. To avoid this problem, DQF corrected endmembers
-              | (ts_dqf, gl_dqf and parg_dqf) must be specified in the thermodynamic data file and the
-              | true ts, gl and parg_dqf endmembers must be excluded from calculations.  
-
-dqf(cumm) -6400.
-dqf(grun) -5000.
-end_dqf_corrections
 
 end_of_model
                       --------------------------------------------------------
@@ -9485,7 +9473,7 @@ ammo2 =      - 7/2 fanth_dq - 3/2 ammo1 - 2 ammo1 - 5/2 ammo2                   
 ammo2 = -7/5 + 7/5 fanth_dq + 3/5 ammo1 + 4/5 ammo1 + 1 ammo2                               delta = 7/5
 end_limits
 
-5                            | 5 dependent endmembers 
+5                            | number of dependent endmembers 
 
 ftr   = 1 tr + 2 fanth_dq - 1 ammo1 - 1 ammo2
 fpa   = 1 mpa  + 1/2 fanth_dq + 1/2 ammo2 - 1 anth
@@ -9504,22 +9492,22 @@ frb   = 1 omrb_dqf + 1 fanth_dq - 1 ammo1
 0. 1.  .1  0               | range and resolution for X(anth) on site 2, imod = 0 -> cartesian subdivision
 
 begin_excess_function
-W(anth ged_dqf )      25d3  0  0
-W(anth mpa )          25d3  0  0
-W(anth ogl_dqf)       65d3  0  0
-W(anth tr)            45d3  0  0
-W(anth fanth_dq)      33d3  0  0
-W(anth omrb_dqf)      52d3  0  0 
-W(anth ammo1)         18d3  0  0
-W(anth ammo2)         23d3  0  0
+W(anth ged_dqf )      25d3
+W(anth mpa )          25d3
+W(anth ogl_dqf)       65d3
+W(anth tr)            45d3
+W(anth fanth_dq)      33d3
+W(anth omrb_dqf)      52d3
+W(anth ammo1)         18d3
+W(anth ammo2)         23d3
 
-W(ged_dqf  mpa )          -40d3  0  0
-W(ged_dqf  ogl_dqf)        25d3  0  0
-W(ged_dqf  tr)             70d3  0  0
-W(ged_dqf  fanth_dq)     38.5d3  0  0
-W(ged_dqf  omrb_dqf)       20d3  0  0 
-W(ged_dqf  ammo1)          29d3  0  0
-W(ged_dqf  ammo2)        34.6d3  0  0
+W(ged_dqf  mpa )          -40d3
+W(ged_dqf  ogl_dqf)        25d3
+W(ged_dqf  tr)             70d3
+W(ged_dqf  fanth_dq)     38.5d3
+W(ged_dqf  omrb_dqf)       20d3
+W(ged_dqf  ammo1)          29d3
+W(ged_dqf  ammo2)        34.6d3
 
 W(mpa  ogl_dqf)       50d3  0  0
 W(mpa  tr)            90d3  0  0
@@ -9587,10 +9575,18 @@ begin_model
                                       Green, ECR, Holland, TJB & Powell, R (2007) An order-disorder model for
                                       omphacitic pyroxenes in the system jadeite-diopside-hedenbergite-acmite,
                                       with applications to eclogite rocks. American Mineralogist, 92, 1181-1189.
-                                      
-                                      Diener & Powell's (2011) modifications entered by MJC, Oct 31, 2011.
 
-                                      requires use of acm = acm - 4000 J/mol (NOT IN ORIGINAL GHP MODEL)
+                                      Originally this model had no DQF corrections.
+
+                                      To use this model with ds5 versions (pre-2011) of the THERMOCALC data base, the 
+                                      DQF on acmite should be -4000 J/mol as specified by Diener & Powell (2011), entered by MJC, Oct 31, 2011.
+
+                                      To use this model with ds6 versions (2011+) of the THERMOCALC data base, the 
+                                      DQF [specified at the end of this model] on acmite should be -7000 J/mol
+                                      as specified by Green et al (2016) and noted by Felix Gervais. 
+
+                                      The DQF specification for acm moved from this solution model to the
+                                      thermodynamic data file. March 7, 2018. JADC.
                                       ---------------------------------------------
 
                                       WARNING: The choice of independent ordered species (here, cfm, om, jac)
@@ -9630,36 +9626,36 @@ full_name    clinopyroxene
 
 di       
 jd   
-acm
+acm_dqf
 hed
 
 3                            | number of ordered species 
 
-om   = 1/2 jd + 1/2 di   enthalpy_of_ordering  =  -2.9d3 
-cfm  = 1/2 di + 1/2 hed  enthalpy_of_ordering  =  -1.5d3
-jac  = 1/2 jd + 1/2 acm  enthalpy_of_ordering  =  -1d3      | this differs from the published value of -3d3 J/mol
+om   = 1/2 jd + 1/2 di       enthalpy_of_ordering  =  -2.9d3 
+cfm  = 1/2 di + 1/2 hed      enthalpy_of_ordering  =  -1.5d3
+jac  = 1/2 jd + 1/2 acm_dqf  enthalpy_of_ordering  =  -1d3      | this differs from the published value of -3d3 J/mol
                                                             | because Thermocalc reactions are specified in terms of the 
                                                             | endmember without "DQF" corrections, while in Perple_X
                                                             | endmember include any DQF corrections. 
 
 begin_limits
 om = -2 + 2 di + 2 hed   delta = 2
-om = -2 + 2 jd + 2 acm   delta = 2 
+om = -2 + 2 jd + 2 acm_dqf   delta = 2 
 om = -2 + 2 di + 1 cfm   delta = 2 
 om = -2 + 2 jd + 1 jac   delta = 2 
-om = -2 + 2 acm + 2 jd + 2 hed + 1 cfm delta = 2
-om = -2 + 2 acm + 2 di + 2 hed + 1 jac delta = 2
+om = -2 + 2 acm_dqf + 2 jd + 2 hed + 1 cfm delta = 2
+om = -2 + 2 acm_dqf + 2 di + 2 hed + 1 jac delta = 2
 
 
 cfm = -2 di + 1 om       delta = 2
 cfm = -2 + 2 hed         delta = 2
 cfm = -2 hed             delta = 2
-cfm = -2 jd - 2 hed - 2 acm + 1 om      delta = 2
+cfm = -2 jd - 2 hed - 2 acm_dqf + 1 om      delta = 2
 
-jac = -2 acm             delta = 2
+jac = -2 acm_dqf             delta = 2
 jac = -2 jd + 1 om       delta = 2
-jac = -2 + 2 acm         delta = 2
-jac = -2 acm - 2 di - 2 hed + 1 om      delta = 2
+jac = -2 + 2 acm_dqf         delta = 2
+jac = -2 acm_dqf - 2 di - 2 hed + 1 om      delta = 2
 end_limits
  
 
@@ -9670,27 +9666,27 @@ end_limits
 0. 1. 0.1  0                 | range and resolution of X(acm) 
 
 begin_excess_function   
-W(jd di)       26d3  0  0 
-W(jd hed)      24d3  0  0 
-W(jd acm)       5d3  0  0
-W(jd om)     15.5d3  0  0 
-W(jd cfm)    25.2d3  0  0       
-W(jd jac)       3d3  0  0
-W(di hed)       4d3  0  0 
-W(di acm)      21d3  0  0
-W(di om)    15.75d3  0  0 
-W(di cfm)       2d3  0  0 
-W(di jac)   24.65d3  0  0
-W(hed acm)   20.8d3  0  0
-W(hed om)    17.2d3  0  0       
-W(hed cfm)      2d3  0  0 
-W(hed jac)   24.6d3  0  0
-W(acm om)    16.4d3  0  0
-W(acm cfm)   22.2d3  0  0
-W(acm jac)      3d3  0  0
-W(om cfm)   18.45d3  0  0 
-W(om jac)    19.5d3  0  0
-W(cfm jac)  24.55d3  0  0
+W(jd di)       26d3
+W(jd hed)      24d3
+W(jd acm_dqf)  5d3
+W(jd om)       15.5d3
+W(jd cfm)      25.2d3
+W(jd jac)      3d3
+W(di hed)      4d3
+W(di acm_dqf)  21d3
+W(di om)       15.75d3
+W(di cfm)      2d3
+W(di jac)      24.65d3
+W(hed acm_dqf) 20.8d3
+W(hed om)      17.2d3
+W(hed cfm)     2d3
+W(hed jac)     24.6d3
+W(acm_dqf om)  16.4d3
+W(acm_dqf cfm) 22.2d3
+W(acm_dqf jac) 3d3
+W(om cfm)      18.45d3
+W(om jac)      19.5d3
+W(cfm jac)     24.55d3
 
 end_excess_function
 
@@ -9699,22 +9695,18 @@ end_excess_function
 4 0.5                               | 4 species on m1b, mult = 1/2
 z(m1b,al)   = 1 jd + 1 jac 
 z(m1b,fe2+) = 1 hed + 1 cfm 
-z(m1b,fe3+) = 1 acm 
+z(m1b,fe3+) = 1 acm_dqf 
 
 2 0.5                               | 2 species on m2a, mutiplicity = 1/2
 z(m2a,ca)   = 1 di + 1 hed + 1 cfm
 
 2 0.5                               | 2 species on m2b, mult. = 1/2
-z(m2b,na)   = 1 jd + 1 acm + 1 jac 
+z(m2b,na)   = 1 jd + 1 acm_dqf + 1 jac 
 
 4 0.5                               | 4 species on m1a, mult = 1/2
 z(m1a,mg)   = 1 di + 1 cfm 
 z(m1a,fe2+) = 1 hed 
-z(m1a,fe3+) = 1 acm + 1 jac 
-
-begin_dqf_corrections
-dqf(acm)     -4000 0. 0.
-end_dqf_corrections
+z(m1a,fe3+) = 1 acm_dqf + 1 jac 
 
 reach_increment 3
 

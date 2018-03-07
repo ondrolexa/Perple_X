@@ -8259,7 +8259,9 @@ c                                 internal fluid eos
          end do 
 
       else if (ksmod(id).eq.20) then 
-c                                 electrolytic solution
+c                                 electrolytic solution, need to check
+c                                 that this thing is getting the right 
+c                                 partial molar volumes. 
          call slvnt1 (gg)
 
          call slvnt2 (gg) 
@@ -15772,7 +15774,7 @@ c                                 ln molality of solutes
          mo(k) = y(k)/msol
          is = is + q2(k) * mo(k)
 
-      end do     
+      end do
 c                                 DH law activity coefficient factor (ln[g] = lng0*q^2)
 c                                 Davies extension.
       lng0 = dlog(aqact(is/2d0))
@@ -15798,11 +15800,9 @@ c-----------------------------------------------------------------------
 
       integer i, id
 
-      double precision gunk, ysum
+      double precision gso(nsp), gcpd
 
-      double precision gfunc, gcpd
-
-      external gfunc, gcpd
+      external gcpd
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -15828,35 +15828,13 @@ c-----------------------------------------------------------------------
       double precision aqg,q2,rt
       common/ cxt2 /aqg(m4),q2(m4),rt,jnd(m4)
 
-      integer ihy, ioh
-      double precision gf, epsln, epsln0, adh, msol
-      common/ cxt37 /gf, epsln, epsln0, adh, msol, ihy, ioh
-
       integer spct
       double precision ysp
       character spnams*8
       common/ cxt34 /ysp(l10,k5),spct(h9),spnams(l10,h9)
 c----------------------------------------------------------------------
-      rt = r*t 
-      ysum = 0d0 
-
-      do i = 1, ns
- 
-         ysum = ysum + ysp(i,id)
-c                                 solvent endmember gibbs energy
-         aqg(i) = gcpd(jnd(i),.true.)
-
-      end do
-c                                 call mrkmix to get solvent volumetric
-      do i = 1, ns
-c                                 load normalized molecular fluid composition
-         yf(ins(i)) = ysp(i,id)/ysum
-
-      end do 
-         
-      call mrkmix (ins,isp,1)
 c                                 solvent properties
-      call slvnt1 (gunk)
+      call slvnt3 (gso,.true.,.true.,id)
 c                                 solute gibbs energies
       do i = sn1, nqs
 
@@ -16054,12 +16032,9 @@ c-----------------------------------------------------------------------
 
       character text*200
 
-      double precision mo(l9), blk(k5), dn, smot, err,
-     *                 is, gamm0, totm, g0(l9), lnkw,
-     *                 gso(nsp), ysum, ph0, v0(nsp), vf0(nsp), tmass, 
-     *                 tsmas, tsmol, smol(k5), errkw, smo, yt(nsp)
-
-      double precision gcpd
+      double precision mo(l9), blk(k5), dn, smot, err, is, gamm0, totm,
+     *                 g0(l9), lnkw, gso(nsp), ph0, tmass, tsmas, tsmol,
+     *                 smol(k5), errkw, smo, gcpd
 
       external gcpd
 
@@ -16126,6 +16101,9 @@ c-----------------------------------------------------------------------
       double precision yf,g,v
       common/ cstcoh /yf(nsp),g(nsp),v(nsp)
 
+      double precision vhyb0,vmrk0,vhyb,vf
+      common/ cxt38 /vhyb0(nsp),vmrk0(nsp),vhyb(nsp),vf(nsp)
+
       integer jnd
       double precision aqg,qq,rt
       common/ cxt2 /aqg(m4),qq(m4),rt,jnd(m4)
@@ -16175,55 +16153,22 @@ c----------------------------------------------------------------------
 
       end if 
 
-      output = .true. 
+      output = .true.
 
-      is   = 0d0
-      rt   = r*t
-      ysum = 0d0 
-
-      if (jdaq.ne.0) then
+      if (jdaq.ne.0.and.lopt(32)) then
 c                                 a multi species solvent is present: 
-c                                 get solvent dielectric constants,
-c                                 call mrkmix to get solvent volumetric props
          do i = 1, ns
 c                                 doing lagged speciation, set the 
 c                                 solvent mole fractions to the true 
 c                                 values
-            if (lopt(32)) ysp(i,jd) = caq(jd,i) 
-            ysum = ysum + ysp(i,jd)
+            ysp(i,jd) = caq(jd,i) 
 
          end do
 
-         do i = 1, ns
-c                                 load normalized molecular fluid composition
-            yf(ins(i)) = ysp(i,jd)/ysum
-c                                 these are necessary for the call to slvnt1
-            y(i) = ysp(i,jd)/ysum
-c                                 an array for output.
-            yt(i) = ysp(i,jd)
+      end if
 
-         end do 
-         
-         call mrkmix (ins,isp,1)
-c                                  save pmv's and v fractions for output
-         do i = 1, ns
-            vf0(ins(i)) = vf(ins(i))
-            v0(ins(i)) = v(ins(i))
-         end do 
-c                                  ysum is just a dummy. 
-         call slvnt1 (ysum)
-
-      else 
-c                                 solvent is pure water 
-         call slvnt0 (gso(1),v0(1))
-
-         vf(1) = 1d0
-         ysp(1,jd) = 1d0
-         y(1) = 1d0
-         yt(1) = 1d0
-
-      end if 
-c                                 slvnt0-3 doing needless gso calculation
+      call slvnt3 (gso,.true.,.false.,jd)
+c                                 slvnt3 doing lots needless calculations
       call slvntg (gso,mu)
 c                                 iterate on speciation
       ion = ihy
@@ -16441,7 +16386,7 @@ c                               lagged
             do i = 1, ns 
 
                write (lu,1150) names(jnd(i)), y(i)/msol, y(i)/msol/smot,
-     *                         yt(i),vf0(ins(i)), v0(ins(i)), 
+     *                         ysp(i,jd), vf(ins(i)), vhyb(ins(i)), 
      *                         int(gso(i)), int(gcpd(jnd(i),.true.))
 
             end do
@@ -16459,7 +16404,7 @@ c                               back-calculated, indicate normalized
             do i = 1, ns 
 
                write (lu,1030) names(jnd(i)), ysp(i,jd)/msol, ysp(i,jd),
-     *                         vf0(ins(i)), v0(ins(i)), 
+     *                         vf(ins(i)), vhyb(ins(i)), 
      *                         int(gso(i)), int(gcpd(jnd(i),.true.))
 
             end do 
@@ -18381,7 +18326,7 @@ c-----------------------------------------------------------------------
 
       integer i, j, id, badct
 
-      logical bad, recalc, lmus
+      logical bad, recalc, lmus, feos
 
       double precision mo(l9), blk(k5), gamm0, totm, g0(l9), lmu(k8),
      *                 tmu(k8),is, gso(nsp), lnkw, gtot, smo, err,
@@ -18448,8 +18393,8 @@ c                                 adaptive coordinates
       double precision yf,g,v
       common/ cstcoh /yf(nsp),g(nsp),v(nsp)
 
-      double precision gh,vh,gp
-      common/ csthyb /gh(nsp),vh(nsp),gp(nsp) 
+      double precision gh,dvhy,g0mrk
+      common/ csthyb /gh(nsp),dvhy(nsp),g0mrk(nsp) 
 
       integer jnd
       double precision aqg,qq,rt
@@ -18501,6 +18446,9 @@ c                                 use lagged chemical potentials
             do i = 1, icp 
                tmu(i) = lmu(i)
             end do 
+c                                 set flag so slvnt3 evaluates pure 
+c                                 fluid eos (not clear if this is necessary).
+            feos = .true.
 
          else 
 
@@ -18524,13 +18472,15 @@ c                                 the absent component
 
                   end do
 
-               end if 
+               end if
+
+               feos = .false.
 
             end do
 
          end if 
 
-         call slvnt3 (gso)
+         call slvnt3 (gso,.false.,feos,id)
 
          if (epsln.lt.nopt(34)) then
 c                                 eos is predicting vapor phase 
@@ -18723,19 +18673,21 @@ c                                components). at the cost of k21 real vars
 
       end
 
-      subroutine slvnt3 (gso)
+      subroutine slvnt3 (gso,whysp,feos,id)
 c-----------------------------------------------------------------------
-c for lagged speciation calculations get solvent properties
+c for back and lagged speciation calculations get solvent properties.
+c   if whysp -> take the fluid fractions from ysp(:,id) and renormalize.
+c   if feos -> call fluid eos (i.e., pure g's haven't been calculated).
 c-----------------------------------------------------------------------
       implicit none
- 
+
       include 'perplex_parameters.h'
 
-      integer i, k
+      logical whysp, feos
 
-      double precision gso(nsp), dum
+      integer i, k, id
 
-      double precision gcpd
+      double precision gso(nsp), dum, gcpd, vol, ysum
 
       external gcpd
 
@@ -18755,8 +18707,8 @@ c-----------------------------------------------------------------------
       double precision yf,g,v
       common/ cstcoh /yf(nsp),g(nsp),v(nsp)
 
-      double precision gh,vh,gp
-      common/ csthyb /gh(nsp),vh(nsp),gp(nsp)
+      double precision gh,dvhy,gmrk0
+      common/ csthyb /gh(nsp),dvhy(nsp),gmrk0(nsp)
 
       integer jnd
       double precision aqg,qq,rt
@@ -18770,73 +18722,88 @@ c-----------------------------------------------------------------------
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
      *              wl(m17,m18)
 
-      double precision vhyb0, vmrk0, vhyb
-      common/ cxt38 /vhyb0(nsp),vmrk0(nsp),vhyb(nsp)
+      integer spct
+      double precision ysp
+      character spnams*8
+      common/ cxt34 /ysp(l10,k5),spct(h9),spnams(l10,h9)
+
+      double precision vhyb0, vmrk0, vhyb, vf
+      common/ cxt38 /vhyb0(nsp),vmrk0(nsp),vhyb(nsp),vf(nsp)
 c----------------------------------------------------------------------
-      rt   = r*t
-c                                 doing lagged aqueous speciation
-      if (ns.gt.1) then
-c                                 the incoming pure solvent fractions from 
-c                                 resub are in y(spec) cxt7 and load
-c                                 into the fluid species indexed array yf
+      rt  = r*t
+
+      if (whysp) then 
+
+         ysum = 0d0
+
+         do i = 1, ns 
+            y(i) = ysp(i,id)
+            ysum = ysum + y(i)
+         end do 
+c                                 renormalize
+         do i = 1, ns 
+            y(i) = y(i)/ysum
+            yf(ins(i)) = y(i)
+         end do 
+
+      else 
+
          do i = 1, ns
             yf(ins(i)) = y(i)
          end do 
+
+      end if 
+c                                 doing lagged aqueous speciation
+      if (ns.gt.1) then
 c                                 a multi species solvent is present: 
-c                                 get solvent dielectric constants,
-c                                 call mrkmix to get solvent volumetric props
+         if (feos) then
 
-c                                 for now, don't know if the pure species have
-c                                 been computed (this will be the case in production)
-         do k = 1, ns
-            gso(k) = gcpd(jnd(k),.false.)
-         end do
-c                                  call to gcpd will put the pure species molar
-c                                  volumes arrays vhyb0 and vmrk0 (cxt38).
+            do k = 1, ns
+c                                 call to gcpd will put the pure species molar
+c                                 volumes arrays vhyb0 and vmrk0 (cxt38) and 
+c                                 the mrk pure fugacity coeff in gp.
+               aqg(k) = gcpd(jnd(k),.false.)
 
-c                                  next get the activity coefficient ratios for the
-c                                  hybrid eos (csthyb gh(i) = phi0(EoS)/phi0(MRK)
-         call hybeos (ins,ns)
-c                                  now get the hybrid fugacity coefficients 
-c                                  calculate hybrid fugacity coefficients
+            end do
+
+         end if 
+c                                 get the impure MRK fugacity coefficients
          call mrkmix (ins, ns, 1)
 
-         vol = 0d0 
+         vol = 0d0
 c
          do k = 1, ns
-c                                  now add in the pure solvent fugacities
-c                                  at this point, assuming the fugacity coeff 
-c                                  is independent of speciation then the partial
-c                                  g of a solvent species will be 
-c                                  g(i) = gs0(i) + RT ln x(i)
-c                                  where sumsol is the sum of the solute
-c                                  mole fractions. 
+c                                 add in the pure solvent fugacities
+c                                 at this point, assuming the fugacity coeff 
+c                                 is independent of speciation then the partial
+c                                 g of a solvent species will be 
+c                                 g(i) = gs0(i) + RT ln x(i)
+c                                 where sumsol is the sum of the solute
+c                                 mole fractions. 
             i = ins(k)
 
-            gso(k) = gso(k) + rt * dlog(g(i)/gp(i))
+            gso(k) = aqg(k) + rt * dlog(g(i)/gmrk0(i))
 c                                  and compute the hybrid partial molar volumes
-            vhyb(i) = vhyb0(i) + v(i) - vmrk0(i)
+            vhyb(i) = dvhy(i) + v(i)
 
-            vol = vol + y(k) * vhyb(i)
+            vol = vol + yf(i) * vhyb(i)
 
          end do 
 c                                  volume fractions
          do k = 1, ns
-            
+
             i = ins(k)
-            vf(k) = vhyb(k)/vol
+            vf(i) = yf(i) * vhyb(i) / vol
 
          end do 
-c                                  ysum is just a dummy.
+c                                  dum is just a dummy.
          call slvnt1 (dum)
 
-      else 
-c                                 solvent is pure water 
+      else
+c                                  solvent is pure water
          call slvnt0 (gso(1),dum)
 
-         yf(ins(1)) = y(1)
-
-      end if 
+      end if
 
       end 
 
@@ -19671,7 +19638,7 @@ c                                 -------------------------------------
 c                                 generic hybrid EoS
             if (lopt(32).and.caq(jd,na1).ne.0d0) then 
 c                                 lagged speciation
-               call slvnt3 (gso)
+               call slvnt3 (gso,.false.,.true.,id)
 c                                 DH law activity coefficient factor (ln[g] = lng0*q^2)
                gamm0 = aqact(caq(jd,na1))
 c                                 solvent species (caq => mole fraction)
