@@ -15641,7 +15641,9 @@ c-----------------------------------------------------------------------
 c computes solvent p-t-composition dependent properties: dielectric cst (eps), 
 c molar mass, debye-hueckel (adh), and gHKF function.
 c
-c expects solvent mole fractions to be in y[cxt7]
+c expects solvent mole fractions to be in y [cxt7].
+
+c calling routine must set hyvol and vf [cxt38].
 c-----------------------------------------------------------------------
       implicit none
 
@@ -15686,6 +15688,9 @@ c-----------------------------------------------------------------------
       double precision vol
       common/ cst26 /vol
 
+      double precision vhyb0, vmrk0, vhyb, vf, hyvol
+      common/ cxt38 /vhyb0(nsp),vmrk0(nsp),vhyb(nsp),vf(nsp),hyvol
+
       save cdh 
       data cdh/-42182668.74d0/
 c----------------------------------------------------------------------
@@ -15713,17 +15718,15 @@ c                                 compute and add in solvent activities, this
 c                                 unnecessarily calls mrkmix
       gsolv = gsolv + ysum*( ghybrid (ysolv) + rt*dlog(ysum) )
 
-      vsolv = ysum * vol
+      vsolv = ysum * hyvol
 c                                 get dielectric cst based on hybrid volumetric properties
       call geteps (epsln)
 c                                 set reference dielectric cst, quick fix for mistake
 c                                 of having made it composition dependent,
       epsln0 = 78.47d0
 c                                 Debye-Hueckel factor, A[cgs] = -q^3*sqrt(NA)/(4*Pi*k^(3/2))
-c                                 *(msolg/(10*vh2o))^(1/2)/(epsilon*T)^(3/2) for ln(gamma) = +A*....
-c                                 A = cdh*(msolkg/(vh2ojbar))^(1/2)/(epsilon*T)^(3/2)
-c                                 this, like epslon, could be improved by using non-ideal 
-c                                 volumes
+c                                 *(msolg/(10*vsoljbar))^(1/2)/(epsilon*T)^(3/2) for ln(gamma) = +A*....
+c                                 A = cdh*(msolkg/(vsoljbar))^(1/2)/(epsilon*T)^(3/2)
       adh = cdh * dsqrt(1d1*msol/vsolv/(epsln*t)**3)
 c                                 shock et al 1992 g function (cgs solvent density),
 c                                 used by hkf
@@ -15875,8 +15878,9 @@ c-----------------------------------------------------------------------
       double precision y,g,v
       common/ cstcoh /y(nsp),g(nsp),v(nsp)
 
-      double precision vhyb0,vmrk0,vhyb,vf
-      common/ cxt38 /vhyb0(nsp),vmrk0(nsp),vhyb(nsp),vf(nsp)
+      double precision vhyb0, vmrk0, vhyb, vf, hyvol
+      common/ cxt38 /vhyb0(nsp),vmrk0(nsp),vhyb(nsp),vf(nsp),hyvol
+c----------------------------------------------------------------------
 c                                Harvey & Lemmon provide additional data for 
 c                                ethylene and long-chain hydrocarbons. A_mu
 c                                is zero for all species listed here, therefore
@@ -16101,8 +16105,8 @@ c-----------------------------------------------------------------------
       double precision yf,g,v
       common/ cstcoh /yf(nsp),g(nsp),v(nsp)
 
-      double precision vhyb0,vmrk0,vhyb,vf
-      common/ cxt38 /vhyb0(nsp),vmrk0(nsp),vhyb(nsp),vf(nsp)
+      double precision vhyb0, vmrk0, vhyb, vf, hyvol
+      common/ cxt38 /vhyb0(nsp),vmrk0(nsp),vhyb(nsp),vf(nsp),hyvol
 
       integer jnd
       double precision aqg,qq,rt
@@ -18455,6 +18459,7 @@ c                                 fluid eos (not clear if this is necessary).
             lmus = .true.
 
             do i = 1, icp
+
                lmu(i) = mu(i)
                tmu(i) = mu(i)
 
@@ -18463,7 +18468,7 @@ c                                 check that the solvent does not contain
 c                                 the absent component
                   do j = 1, ns 
 
-                     if (yf(ins(j)).gt.0d0.and.cp(i,jnd(j)).gt.0d0) then
+                     if (y(j).gt.0d0.and.cp(i,jnd(j)).gt.0d0) then
 
                         bad = .true.
                         return
@@ -18687,7 +18692,7 @@ c-----------------------------------------------------------------------
 
       integer i, k, id
 
-      double precision gso(nsp), dum, gcpd, vol, ysum
+      double precision gso(nsp), dum, gcpd, ysum
 
       external gcpd
 
@@ -18727,8 +18732,8 @@ c-----------------------------------------------------------------------
       character spnams*8
       common/ cxt34 /ysp(l10,k5),spct(h9),spnams(l10,h9)
 
-      double precision vhyb0, vmrk0, vhyb, vf
-      common/ cxt38 /vhyb0(nsp),vmrk0(nsp),vhyb(nsp),vf(nsp)
+      double precision vhyb0, vmrk0, vhyb, vf, hyvol
+      common/ cxt38 /vhyb0(nsp),vmrk0(nsp),vhyb(nsp),vf(nsp),hyvol
 c----------------------------------------------------------------------
       rt  = r*t
 
@@ -18770,7 +18775,7 @@ c                                 the mrk pure fugacity coeff in gp.
 c                                 get the impure MRK fugacity coefficients
          call mrkmix (ins, ns, 1)
 
-         vol = 0d0
+         hyvol = 0d0
 c
          do k = 1, ns
 c                                 add in the pure solvent fugacities
@@ -18786,14 +18791,14 @@ c                                 mole fractions.
 c                                  and compute the hybrid partial molar volumes
             vhyb(i) = dvhy(i) + v(i)
 
-            vol = vol + yf(i) * vhyb(i)
+            hyvol = hyvol + yf(i) * vhyb(i)
 
          end do 
 c                                  volume fractions
          do k = 1, ns
 
             i = ins(k)
-            vf(i) = yf(i) * vhyb(i) / vol
+            vf(i) = yf(i) * vhyb(i) / hyvol
 
          end do 
 c                                  dum is just a dummy.

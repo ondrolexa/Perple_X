@@ -7985,8 +7985,8 @@ c---------------------------------------------------------------------
       double precision p,t,xc,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xc,u1,u2,tr,pr,r,ps
 
-      double precision vhyb0, vmrk0, vhyb
-      common/ cxt38 /vhyb0(nsp),vmrk0(nsp),vhyb(nsp)
+      double precision vhyb0, vmrk0, vhyb, vf, hyvol
+      common/ cxt38 /vhyb0(nsp),vmrk0(nsp),vhyb(nsp),vf(nsp), hyvol
 
       integer iopt
       logical lopt

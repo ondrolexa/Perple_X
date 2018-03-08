@@ -3951,7 +3951,7 @@ c
 c                                 solute free cpd
             g2(jphct) = gsol1(ids)
 
-           call csol (ids,bad)
+            call csol (ids,bad)
 
             if (bad) then 
                jphct = jphct - 1
