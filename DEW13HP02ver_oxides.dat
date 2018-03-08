@@ -175,31 +175,34 @@ fa8L = 2 faL                    | fa8L is dqf corrected in the melt(HP) solution
 q8L = 4 qL                      | q8L has no dqf correction 
 -20 0 0 
 
+
+                                | endmembers for Green et al (2007) omph model, ds5 databases
+acm_dqf = 1 acm
+       DQF(J/mol) = -4000
                                 | endmembers for the Diener et al. (JMG, 2007) amphibole models
-mrb = 1 gl - 2 jd +2 acm        | magnesio riebekite, stoichiometry corrected 3/30/08 JADC
-8d3 0. 0. 
+mrb = 1 gl - 2 jd +2 acm        | magnesioriebekite, stoichiometry corrected 3/30/08 JADC
+       DQF(J/mol) = 8d3
 ts_dqf = 1 ts                   | tschermakite
-10000. 0. 0.  
+       DQF(J/mol) = 10000
 parg_dqf = 1 parg               | pargasite, Corrected from 10 kJ, 10/14/11, JADC
-15000. 0. 0.
+       DQF(J/mol) = 15000
 gl_dqf = 1 gl                   | glaucophane, Corrected from 15 kJ, 10/14/11, MJC
-3000. 0. 0.
+       DQF(J/mol) = 3000
 mpa = 1 parg -1 tr +1 anth      | ortho-pargasite, stoichiometry corrected 3/30/08 JADC
-27d3 0. 0.
+       DQF(J/mol) = 27d3
 ged_dqf = 1 ged                 | gedrite 
-22000. 0. 0.
+       DQF(J/mol) = 22000
 ogl_dqf = 1 gl                  | ortho-glaucophane
-15000. 0. 0.
+       DQF(J/mol) = 15000
 fanth_dq = 1 fanth              | ferro-anthophyllite
-7000. 0. 0.
+       DQF(J/mol) = 7000
 omrb_dqf = 1 gl -2 jd +2 acm    | ortho-magnesio riebekite (mrb dqf + 25000 J/mol), stoichiometry corrected 3/30/08 JADC
-33000. 0. 0. 
-                                | Make definitions for the revised (Diener et al, JMG 2011 25:631-656)
-                                | ortho-amphibole model.   Oct 31, 2011.
-mpa2      = 1 parg - 1 tr +1 anth 
-25d3 0. 0.
-ged_dqf2  = 1 ged
-20000. 0. 0.                            
+       DQF(J/mol) = 33000
+cumm_dqf = 1 cumm
+       DQF(J/mol) = -6400
+grun_dqf = 1 grun
+       DQF(J/mol) = -5000
+
                                 | make definition for coma of the unpublished
                                 | thermocalc scapolite model
 coma = 3 ab + 1 cc

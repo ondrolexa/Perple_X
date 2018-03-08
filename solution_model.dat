@@ -66,12 +66,12 @@ OH-
                             | ranges on the first ns-1 = 0 species 
 
                             | ranges (mol fraction) on the nn neutral solute species
-0.0    1e-2 1e-3         1   
+1e-3    1e-2   0.1      1   
                             | ranges (mol fraction) on the first nq-1 charged solute species 
-0.0    2e-6 1e-7         1   
-0.0    1e-9 1e-10        1   
-0.0    6e-8 1e-9         1   
-0.0    3e-6 1e-7         1   
+1e-7    2e-6   0.1      1   
+1e-10   1e-9   0.1      1   
+1e-9    6e-8   0.1      1   
+1e-7    3e-6   0.1      1   
 
 end_of_model
 
@@ -103,16 +103,16 @@ Mg(HSiO3
 
 
                             | ranges on the first ns-1 species
-0    0.05  0.02        1
-0    0.05  0.02        1
+1e-2   0.05    0.1      1
+1e-2   0.05    0.1      1
                             | ranges (mol fraction) on the nn neutral solute species
-0    0.8d-2  2d-3      1
-0    0.8d-2  2d-3      1
+1e-3   0.8d-2  0.1      1
+1e-3   0.8d-2  0.1      1
                             | ranges (mol fraction) on the first nq-1 charged solute species 
-0    1e-6 2e-7         1
-0    1e-6 2e-7         1
-0    1e-6 2e-7         1
-0    1e-6 2e-7         1 
+1e-7   1e-6    0.1      1
+1e-7   1e-6    0.1      1
+1e-7   1e-6    0.1      1
+1e-7   1e-6    0.1      1
 
 end_of_model
                       --------------------------------------------------------

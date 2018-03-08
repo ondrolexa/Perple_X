@@ -9285,6 +9285,10 @@ c                                 conformal
 
                end if
 
+            else if (jsmod.eq.20) then 
+
+               if (imd(j,i).eq.1) xnc(i,j) = 1d0/xnc(i,j)
+
             end if
 c                                 perturb xmn by a per-mil scale increment to 
 c                                 reduce compositional degeneracies. 
@@ -15641,17 +15645,15 @@ c-----------------------------------------------------------------------
 c computes solvent p-t-composition dependent properties: dielectric cst (eps), 
 c molar mass, debye-hueckel (adh), and gHKF function.
 c
-c expects solvent mole fractions to be in y [cxt7].
-
-c calling routine must set hyvol and vf [cxt38].
+c assumes pure species volumes and fugacity coefficients have been calculated.
 c-----------------------------------------------------------------------
       implicit none
 
       include 'perplex_parameters.h'
 
-      integer i
+      integer i, k
 
-      double precision gsolv, vsolv, cdh, ysum, ysolv(nsp)  
+      double precision gsolv, vsolv, cdh, ysum, ysolv(nsp), hyvol
 
       double precision gfunc, ghybrid, gcpd
 
@@ -15666,9 +15668,6 @@ c-----------------------------------------------------------------------
 
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
-
-      double precision yf,g,v
-      common/ cstcoh /yf(nsp),g(nsp),v(nsp)
 
       double precision z, pa, p0a, x, w, y, wl
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
@@ -15688,15 +15687,21 @@ c-----------------------------------------------------------------------
       double precision vol
       common/ cst26 /vol
 
-      double precision vhyb0, vmrk0, vhyb, vf, hyvol
-      common/ cxt38 /vhyb0(nsp),vmrk0(nsp),vhyb(nsp),vf(nsp),hyvol
+      double precision yf,gmrk,v
+      common/ cstcoh /yf(nsp),gmrk(nsp),v(nsp)
+
+      double precision gh,dvhy,gmrk0
+      common/ csthyb /gh(nsp),dvhy(nsp),gmrk0(nsp)
+
+      double precision vmrk0, vhyb, vf
+      common/ cxt38 /vmrk0(nsp),vhyb(nsp),vf(nsp)
 
       save cdh 
       data cdh/-42182668.74d0/
 c----------------------------------------------------------------------
-      gsolv  = 0d0 
+      gsolv  = 0d0
       msol   = 0d0
-      ysum   = 0d0 
+      ysum   = 0d0
 
       do i = 1, ns
 c                                 solvent mass, kg/mol compound
@@ -15714,9 +15719,29 @@ c                                 gibbs energy for ideal solute concentration
          ysolv(i) = y(i)/ysum
          
       end do
-c                                 compute and add in solvent activities, this 
-c                                 unnecessarily calls mrkmix
+c                                 compute and add in solvent activities by calling
+c                                 mrkmix ghybrid gets pmvs for hybrid volume calculation
       gsolv = gsolv + ysum*( ghybrid (ysolv) + rt*dlog(ysum) )
+c                                 compute pmvs required for dielectric constant 
+      hyvol = 0d0
+
+      do k = 1, ns
+
+         i = ins(k)
+c                                 hybrid pmv 
+         vhyb(i) = dvhy(i) + v(i)
+c                                 hybrid total volume
+         hyvol = hyvol + yf(i) * vhyb(i)
+
+      end do 
+
+      do k = 1, ns
+
+         i = ins(k)
+c                                 volume fractions
+         vf(i) = yf(i) * vhyb(i) / hyvol
+
+      end do
 
       vsolv = ysum * hyvol
 c                                 get dielectric cst based on hybrid volumetric properties
@@ -15732,7 +15757,7 @@ c                                 shock et al 1992 g function (cgs solvent densi
 c                                 used by hkf
       gf = gfunc (msol*1d3/vsolv) 
 
-      end 
+      end
 
       subroutine slvnt2 (gsolv)
 c-----------------------------------------------------------------------
@@ -15785,8 +15810,9 @@ c                                 add in the solute gibbs energies
       do k = sn1, nqs
 
          if (y(k).le.0d0) cycle
-         gsolv = gsolv + y(k) * (gcpd(jnd(k),.true.)
-     *                        + rt*(dlog(mo(k)) + lng0*q2(k)))
+
+         gsolv = gsolv + y(k) * 
+     *           (gcpd(jnd(k),.true.) + rt*(dlog(mo(k)) + lng0*q2(k)))
 
       end do 
 
@@ -15878,8 +15904,8 @@ c-----------------------------------------------------------------------
       double precision y,g,v
       common/ cstcoh /y(nsp),g(nsp),v(nsp)
 
-      double precision vhyb0, vmrk0, vhyb, vf, hyvol
-      common/ cxt38 /vhyb0(nsp),vmrk0(nsp),vhyb(nsp),vf(nsp),hyvol
+      double precision vmrk0, vhyb, vf
+      common/ cxt38 /vmrk0(nsp),vhyb(nsp),vf(nsp)
 c----------------------------------------------------------------------
 c                                Harvey & Lemmon provide additional data for 
 c                                ethylene and long-chain hydrocarbons. A_mu
@@ -16105,8 +16131,8 @@ c-----------------------------------------------------------------------
       double precision yf,g,v
       common/ cstcoh /yf(nsp),g(nsp),v(nsp)
 
-      double precision vhyb0, vmrk0, vhyb, vf, hyvol
-      common/ cxt38 /vhyb0(nsp),vmrk0(nsp),vhyb(nsp),vf(nsp),hyvol
+      double precision vmrk0, vhyb, vf
+      common/ cxt38 /vmrk0(nsp),vhyb(nsp),vf(nsp)
 
       integer jnd
       double precision aqg,qq,rt
@@ -16150,7 +16176,7 @@ c----------------------------------------------------------------------
       if (.not.mus) then 
 
          call warn (99,0d0,0,
-     *       'no chemical potentials, cannot back calculate solute '//
+     *       'no chemical potentials, cannot back-calculate solute '//
      *       'speciation')
 
          return
@@ -16165,13 +16191,15 @@ c                                 a multi species solvent is present:
 c                                 doing lagged speciation, set the 
 c                                 solvent mole fractions to the true 
 c                                 values
-            ysp(i,jd) = caq(jd,i) 
+            ysp(i,jd) = caq(jd,i)
 
          end do
 
       end if
-
-      call slvnt3 (gso,.true.,.false.,jd)
+c                                 set feos = .true. because can't be 
+c                                 sure that the last solvent calculation was
+c                                 at the present p-t condition.
+      call slvnt3 (gso,.true.,.true.,jd)
 c                                 slvnt3 doing lots needless calculations
       call slvntg (gso,mu)
 c                                 iterate on speciation
@@ -18610,8 +18638,6 @@ c         write (*,*) 'err, posox+negox1',err,posox+negox
 
       end if 
 
-
-
       do j = 1, icp
 c                                zero bulk compositions below chg balance error
          if (blk(j).lt.err) blk(j) = 0d0 
@@ -18709,8 +18735,11 @@ c-----------------------------------------------------------------------
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp  
 
-      double precision yf,g,v
-      common/ cstcoh /yf(nsp),g(nsp),v(nsp)
+      double precision yf,gmrk,v
+      common/ cstcoh /yf(nsp),gmrk(nsp),v(nsp)
+
+      double precision g
+      common/ cst2 /g(k1)
 
       double precision gh,dvhy,gmrk0
       common/ csthyb /gh(nsp),dvhy(nsp),gmrk0(nsp)
@@ -18731,9 +18760,6 @@ c-----------------------------------------------------------------------
       double precision ysp
       character spnams*8
       common/ cxt34 /ysp(l10,k5),spct(h9),spnams(l10,h9)
-
-      double precision vhyb0, vmrk0, vhyb, vf, hyvol
-      common/ cxt38 /vhyb0(nsp),vmrk0(nsp),vhyb(nsp),vf(nsp),hyvol
 c----------------------------------------------------------------------
       rt  = r*t
 
@@ -18744,20 +18770,13 @@ c----------------------------------------------------------------------
          do i = 1, ns 
             y(i) = ysp(i,id)
             ysum = ysum + y(i)
-         end do 
+         end do
 c                                 renormalize
          do i = 1, ns 
             y(i) = y(i)/ysum
-            yf(ins(i)) = y(i)
-         end do 
+         end do
 
-      else 
-
-         do i = 1, ns
-            yf(ins(i)) = y(i)
-         end do 
-
-      end if 
+      end if
 c                                 doing lagged aqueous speciation
       if (ns.gt.1) then
 c                                 a multi species solvent is present: 
@@ -18771,38 +18790,28 @@ c                                 the mrk pure fugacity coeff in gp.
 
             end do
 
-         end if 
-c                                 get the impure MRK fugacity coefficients
-         call mrkmix (ins, ns, 1)
+         else 
 
-         hyvol = 0d0
-c
-         do k = 1, ns
-c                                 add in the pure solvent fugacities
-c                                 at this point, assuming the fugacity coeff 
-c                                 is independent of speciation then the partial
-c                                 g of a solvent species will be 
-c                                 g(i) = gs0(i) + RT ln x(i)
-c                                 where sumsol is the sum of the solute
-c                                 mole fractions. 
-            i = ins(k)
+            do k = 1, ns
+c                                 use previously computed g
+               aqg(k) = g(jnd(k))
 
-            gso(k) = aqg(k) + rt * dlog(g(i)/gmrk0(i))
-c                                  and compute the hybrid partial molar volumes
-            vhyb(i) = dvhy(i) + v(i)
+            end do
 
-            hyvol = hyvol + yf(i) * vhyb(i)
-
-         end do 
-c                                  volume fractions
-         do k = 1, ns
-
-            i = ins(k)
-            vf(i) = yf(i) * vhyb(i) / hyvol
-
-         end do 
+         end if
 c                                  dum is just a dummy.
          call slvnt1 (dum)
+
+         do k = 1, ns
+c                                 add in the solvent species activity coefficients
+c                                 under the assumption that these are independent of the 
+c                                 solute speciation the partial g of a solvent species will be 
+c                                 g(i) = gs0(i) + RT ln x(i).
+            i = ins(k)
+
+            gso(k) = aqg(k) + rt * dlog(gmrk(i)/gmrk0(i))
+
+         end do
 
       else
 c                                  solvent is pure water

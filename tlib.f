@@ -19,7 +19,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a)') 
-     *      'Perple_X version 6.8.1, source updated Mar 7, 2018.'
+     *      'Perple_X version 6.8.1, source updated Mar 8, 2018.'
 
       end
 
@@ -2365,8 +2365,8 @@ c---------------------------------------------------------------------
 62    format (/,'**error ver062** solution model ',a,' specifies non-',
      *          'Cartesian subdivision (',i1,')',/,' and must be refor',
      *          'mulated for adapative minimization, but VERTEX cannot',
-     *        /,'do the reformulation because the initial_reolution ',
-     *          'keyword specified in',/,'perplex_option.dat (',f5.2,
+     *        /,' do the reformulation because the initial_reolution ',
+     *          'keyword specified in',/,' perplex_option.dat (',f5.2,
      *          ') is invalid',/)
 63    format (/,'**error ver063** inconsistent auto-refine data.',
      *        ' Suppress or reinitialize auto-refinement.',/) 
@@ -2899,7 +2899,7 @@ c     *          ' (SWASH, see program documentation Eq 2.3)',/)
      *         ,'following reaction',/,' is inconsistent with the ',
      *          'invariant equilibrium.',/)
 59    format (/,'**warning ver059** endmember ',a,
-     *        ' has an invalid site population.',/)
+     *        ' has invalid site populations.',/)
 60    format (/,'**warning ver060** non-fatal programming error ',
      *          'routine:',a,/)
 61    format (/,'**warning ver61** exhausted memory (k21) during'

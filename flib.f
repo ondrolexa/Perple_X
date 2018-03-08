@@ -7985,8 +7985,8 @@ c---------------------------------------------------------------------
       double precision p,t,xc,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xc,u1,u2,tr,pr,r,ps
 
-      double precision vhyb0, vmrk0, vhyb, vf, hyvol
-      common/ cxt38 /vhyb0(nsp),vmrk0(nsp),vhyb(nsp),vf(nsp), hyvol
+      double precision vmrk0, vhyb, vf
+      common/ cxt38 /vmrk0(nsp),vhyb(nsp),vf(nsp)
 
       integer iopt
       logical lopt
@@ -8070,7 +8070,6 @@ c                                 hopefully this doesn't interfere
 c                                 with anything.
 c                                           JADC, march 6 2018
       vol = v(j)
-      vhyb0(j) = vol
       dvhy(j) = vol - vmrk0(j)
 
       end
