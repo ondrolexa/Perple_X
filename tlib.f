@@ -19,7 +19,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a)') 
-     *      'Perple_X version 6.8.1, source updated Mar 8, 2018.'
+     *      'Perple_X version 6.8.1, source updated Mar 9, 2018.'
 
       end
 
@@ -363,12 +363,16 @@ c                                 refine_endmembers
       lopt(39) = .false.
 c                                 automatic specification of refinement_points_II
       lopt(40) = .true.
-c                                 absolute amounts
+c                                 absolute (amounts)
       lopt(41) = .false.
-c                                 cumulative amounts
+c                                 cumulative (amounts)
       lopt(42) = .false.
 c                                 reject_negative_sites
       lopt(43) = .true. 
+c                                 aq_ion_H+ 
+      lopt(44) = .true.
+c                                 fancy_cumulative_modes
+      lopt(45) = .true.
 c                                 initialize mus flag lagged speciation
       mus = .false.
 c                                 -------------------------------------
@@ -452,6 +456,14 @@ c                                 phase composition key
          else if (key.eq.'aq_oxide_components') then 
 
             if (val.eq.'T') lopt(36) = .true.
+
+         else if (key.eq.'aq_ion_H+') then 
+
+             if (val.eq.'F') lopt(44) = .false.
+
+         else if (key.eq.'fancy_cumulative_modes') then 
+
+             if (val.eq.'F') lopt(45) = .false.
 
          else if (key.eq.'null_phases') then 
 

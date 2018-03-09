@@ -42,12 +42,7 @@ c                                 get input file
 
          call readrt
          call mertxt (tfname,prject,'.tab',0)
-          
-c        read (*,'(a)') tfname
-c                                 use getrt to enter full file names
-c                                 extract the root
-c        call getrt
-         
+
          open (n4,iostat=ier,file=tfname,status='old')
 
          if (ier.eq.0) exit

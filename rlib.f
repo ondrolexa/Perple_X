@@ -16203,18 +16203,7 @@ c                                 at the present p-t condition.
 c                                 slvnt3 doing lots needless calculations
       call slvntg (gso,mu)
 c                                 iterate on speciation
-      ion = ihy
-
-      do i = 1, 2
-c                                 first try ihy, if it fails ioh
-         call aqsolv (g0,gso,mo,mu,is,gamm0,lnkw,bad)
-
-         if (.not.bad) exit
-
-         ion = ioh
-
-      end do
-
+      call aqsolv (g0,gso,mo,mu,is,gamm0,lnkw,bad)
 c                                 back calculated bulk composition
       if (bad) then 
 
@@ -18526,17 +18515,7 @@ c                                 solvent densities
 
       end if
 c                                 iterate on speciation
-      ion = ihy
-
-      do i = 1, 2
-c                                 first try ioh, if it fails
-         call aqsolv (g0,gso,mo,tmu,is,gamm0,lnkw,bad)
-
-         if (.not.bad) exit
-
-         ion = ioh 
-
-      end do
+      call aqsolv (g0,gso,mo,tmu,is,gamm0,lnkw,bad)
 
       if (bad) then 
 
@@ -18828,7 +18807,7 @@ c-----------------------------------------------------------------------
  
       include 'perplex_parameters.h'
 
-      integer i, j, it, jt, iexp
+      integer i, j, k, it, jt, iexp
 
       logical bad, kill
 
@@ -18882,166 +18861,183 @@ c----------------------------------------------------------------------
 c                                  vapor, same as checking lnkw
          bad = .true.
          return
-       end if 
+      end if
+c                                  set default charge balance ion (aq_ion_H+, lopt(44)
+      if (lopt(44)) then 
+         ion = ihy
+      else 
+         ion = ioh
+      end if 
+c                                  if default choice fails switch to back-up choice
+      do k = 1, 2
 c                                 set up coefficients for mo(ion) equation
-      g0(ion) = gcpd(aqst+ion,.false.) 
+         g0(ion) = gcpd(aqst+ion,.false.) 
 c                                 compute solute properties 
-      do i = 1, aqct 
+         do i = 1, aqct 
 c                                 dg is the solvent oxide potentials - g
-         g0(i) = gcpd(aqst + i, .false.)
-         qr(i) = q(i)/q(ion)
-         qb(i) = (q(ion)-q(i))*q(i)
-         dg = -g0(i) + qr(i)*g0(ion)
+            g0(i) = gcpd(aqst + i, .false.)
+            qr(i) = q(i)/q(ion)
+            qb(i) = (q(ion)-q(i))*q(i)
+            dg = -g0(i) + qr(i)*g0(ion)
 
-         kill = .false.
+            kill = .false.
 
-         do j = 1, jbulk 
+            do j = 1, jbulk 
 
-            dn = aqcp(j,i) - qr(i)*aqcp(j,ion)
+               dn = aqcp(j,i) - qr(i)*aqcp(j,ion)
 
-            if (dn.eq.0d0) cycle
+               if (dn.eq.0d0) cycle
 
-            if (isnan(mu(j))) then 
+               if (isnan(mu(j))) then 
 c                                 kill any species that depends on
 c                                 an undetermined chemical potential
 c                                 unless NOT lopt(36), this allows
 c                                 oxide components without redox because
 c                                 g(H+) is not a function of mu(O2) [but
 c                                 is not fail-safe].
-               if (aqcp(j,i).ne.0d0.and..not.lopt(36)) then 
-                  kill = .true.
-                  exit
-               else
-                  cycle
-               end if
+                  if (aqcp(j,i).ne.0d0.and..not.lopt(36)) then 
+                     kill = .true.
+                     exit
+                  else
+                     cycle
+                  end if
 
-            else if (cblk(j).eq.0d0.and..not.lopt(36)) then
+               else if (cblk(j).eq.0d0.and..not.lopt(36)) then
 c                                 this check is necessary because lp may
 c                                 give a zero-amount solution for the chemical
 c                                 potential of an absent component. the test
 c                                 cannot be made with oxide components.
-               if (aqcp(j,i).ne.0d0) then 
-                  kill = .true.
+                  if (aqcp(j,i).ne.0d0) then 
+                     kill = .true.
+                     exit
+                  end if
+
+               end if
+
+               dg = dg + dn * mu(j)
+
+            end do 
+c                                 normalize by RT
+            if (kill) then 
+               dg = 0d0 
+            else 
+               dg = dexp(dg/rt)
+            end if 
+
+            if (q(i).ne.0d0) then 
+c                                  this is now c(i)*a(ion)^(q(i)) = mo(i)*gamma(i)*q(i)
+c                                  the rhs q(i) is because the eq to be solved will be
+c                                  sum (q(i)*m(i)) = 0. 
+               d(i) = q(i)*dg
+               c(i) = d(i)
+
+            else 
+c                                  neutral species assumed to be ideal, molality is
+               if (dg.gt.nopt(35)) then 
+                  dg = nopt(35)
+               end if 
+
+               mo(i) = dg
+
+            end if 
+
+         end do 
+c                                  initialize iteration loop
+         lnkw = (gso(ns) - g0(ioh))/rt
+
+         if (c(ioh).eq.0d0) then
+c                                 no hydrogen or no oxygen
+            bad = .true.
+            return
+
+         end if
+
+         mo(ion) = dexp(lnkw/2d0)
+         gamm0 = 1d0 
+         is = 0d0 
+
+         xdn = 1d0
+         iexp = 1
+         it = 0
+         jt = 0
+         xdix = 1d99
+         bad = .false.
+c                                  iteration loop for ionic strength
+         do 
+c                                  solve charge balance for ion
+            mo(ion) = solve(c,qr,mo(ion),jchg,ichg,bad)
+
+            if (bad) then
+               xis = is
+               exit
+            end if
+c                                  back calculate charged species molalities
+c                                  and ionic strength
+            xis = is
+            is = 0d0
+
+            do i = 1, ichg 
+               j = jchg(i)
+               mo(j) = c(j) / q(j) * mo(ion)**qr(j) 
+               is = is + q2(j) * mo(j)
+            end do
+
+            is = is / 2d0 
+
+            dn = is - xis
+
+            if (dabs(dn).gt.1d0/2d0**iexp) then 
+               dn = dn/dabs(dn)/2d0**iexp 
+               if (dn*xdn.lt.0d0) iexp = iexp + 1
+               is = xis + dn
+            end if 
+c                                 DH law activity coefficient factor (gamma = gamm0^(q^2))
+            gamm0 = aqact(is)
+c                                 check for convergence
+            dix = dabs(xis-is)/is
+
+            if (dix.lt.nopt(5)) then
+c                                 converged
+               return
+
+            else if (it.gt.iopt(21)) then
+
+               if (xdix.gt.dix.and.jt.lt.10) then
+c                                 try again?
+                  it = 0
+                  jt = jt + 1
+                  xdix = dix
+
+               else 
+c                                 diverging
+                  bad = .true.
                   exit
+
                end if
 
             end if
 
-            dg = dg + dn * mu(j)
+            xdn = dn 
 
-         end do 
-c                                 normalize by RT
-         if (kill) then 
-            dg = 0d0 
-         else 
-            dg = dexp(dg/rt)
-         end if 
-
-         if (q(i).ne.0d0) then 
-c                                  this is now c(i)*a(ion)^(q(i)) = mo(i)*gamma(i)*q(i)
-c                                  the rhs q(i) is because the eq to be solved will be
-c                                  sum (q(i)*m(i)) = 0. 
-            d(i) = q(i)*dg
-            c(i) = d(i)
-
-         else 
-c                                  neutral species assumed to be ideal, molality is
-            if (dg.gt.nopt(35)) then 
-               dg = nopt(35)
-            end if 
-
-            mo(i) = dg
-
-         end if 
-
-      end do 
-c                                  initialize iteration loop
-      lnkw = (gso(ns) - g0(ioh))/rt
-
-      if (c(ioh).eq.0d0) then
-c                                 no hydrogen or no oxygen
-         bad = .true.
-         return
-
-      end if
-
-      mo(ion) = dexp(lnkw/2d0)
-      gamm0 = 1d0 
-      is = 0d0 
-
-      xdn = 1d0
-      iexp = 1
-      it = 0
-      jt = 0
-      xdix = 1d99
-      bad = .false.
-c                                  iteration loop for ionic strength
-      do 
-c                                  solve charge balance for H+
-         mo(ion) = solve(c,qr,mo(ion),jchg,ichg,bad)
-
-         if (bad) then
-            xis = is
-            exit
-         end if
-c                                  back calculate charged species molalities
-c                                  and ionic strength
-         xis = is
-         is = 0d0
-
-         do i = 1, ichg 
-            j = jchg(i)
-            mo(j) = c(j) / q(j) * mo(ion)**qr(j) 
-            is = is + q2(j) * mo(j)
-         end do
-
-         is = is / 2d0 
-
-         dn = is - xis
-
-         if (dabs(dn).gt.1d0/2d0**iexp) then 
-            dn = dn/dabs(dn)/2d0**iexp 
-            if (dn*xdn.lt.0d0) iexp = iexp + 1
-            is = xis + dn
-         end if 
-c                                 DH law activity coefficient factor (gamma = gamm0^(q^2))
-         gamm0 = aqact(is)
-c                                 check for convergence
-         dix = dabs(xis-is)/is
-
-         if (dix.lt.nopt(5)) then
-
-            exit
-
-         else if (it.gt.iopt(21)) then
-
-            if (xdix.gt.dix.and.jt.lt.10) then
-c                                 try again?
-               it = 0
-               jt = jt + 1
-               xdix = dix
-
-            else 
-c                                 diverging
-               bad = .true.
-               exit
-
-            end if
-
-         end if
-
-         xdn = dn 
-
-         it = it + 1
+            it = it + 1
 c                                 update coefficients
-         do i = 1, ichg 
-            j = jchg(i)
-            c(j) = d(j)*gamm0**qb(j)
+            do i = 1, ichg 
+               j = jchg(i)
+               c(j) = d(j)*gamm0**qb(j)
+            end do
+
          end do
+c                                 switch to the backup ion
+         if (lopt(44)) then
+            ion = ioh
+         else 
+            ion = ihy
+         end if
 
       end do
 
-      end 
+      end
+
 
       double precision function aqact (is)
 c-----------------------------------------------------------------------

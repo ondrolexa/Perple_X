@@ -2894,7 +2894,7 @@ c                                 check if it's already in ind:
                     cycle 
                  end if 
 
-                 if (msol.eq.ksol) then
+                 if (msol.eq.ksol.and.lopt(45)) then
 c                                 probably univariant, find the phase that
 c                                 was stable, but isn't anymore
                     do j = 1, nsol
