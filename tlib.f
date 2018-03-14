@@ -19,7 +19,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a)') 
-     *      'Perple_X version 6.8.1, source updated Mar 9, 2018.'
+     *      'Perple_X version 6.8.1, source updated Mar 13, 2018.'
 
       end
 
@@ -188,7 +188,7 @@ c                                 option_list_files
 c                                 logarithimic P
       lopt(14) = .false.
 c                                 spreadsheet format
-      lopt(15) = .false.
+      lopt(15) = .true.
 c                                 refine_bad_nodes -> not used
       lopt(18) = .true. 
 c                                 pause_on_error
@@ -888,15 +888,15 @@ c                                 assume linear boundaries within a cell during 
 
          else if (key.eq.'species_Gibbs_energies') then
  
-            if (val.ne.'F') lopt(24) = .true. 
+            if (val.ne.'F') lopt(24) = .true.
 
          else if (key.eq.'logarithmic_p') then
  
-            if (val.eq.'T') lopt(14) = .true. 
+            if (val.eq.'T') lopt(14) = .true.
 
          else if (key.eq.'spreadsheet') then
  
-            if (val.eq.'T') lopt(15) = .true. 
+            if (val.eq.'F') lopt(15) = .false.
 
          else if (key.eq.'Anderson-Gruneisen') then
 
