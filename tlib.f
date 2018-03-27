@@ -19,7 +19,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a)') 
-     *      'Perple_X version 6.8.1, source updated Mar 13, 2018.'
+     *      'Perple_X version 6.8.1, source updated Mar 21, 2018.'
 
       end
 
@@ -641,13 +641,16 @@ c                                 initial_resolution key
             read (strg,'(40a)') chars(1:40)
             ibeg = 1
             call readfr (nopt(13),ibeg,iend,40,ier)
+            if (ier.ne.0) call error (77,nopt(1),iopt(1),key//
+     *                                 'has an invalid value.')
 
          else if (key.eq.'final_resolution') then
 c                                 final_resolution keys 
             read (strg,*) rid(2,1)
             read (nval1,*,iostat=ier) rid(2,2)
-c                                 ier check for the 666/667 transition             
-            if (ier.ne.0.or.rid(2,2).eq.0d0) rid(2,2) = rid(2,1) 
+c                                 ier check for the 666/667 transition
+            if (ier.ne.0.or.rid(2,2).eq.0d0) rid(2,2) = rid(2,1)
+            ier = 0
 
          else if (key.eq.'fd_expansion_factor') then 
 
@@ -1260,7 +1263,7 @@ c----------------------------------------------------------------------
 
       integer i, len, n
 
-      character*3 valu(i10), nval1*12, text(14)*1,strg*8
+      character*3 valu(i10), nval1*12, text(14)*1
 
       integer iopt
       logical lopt
@@ -1345,8 +1348,7 @@ c                                 for meemum
             if (iopt(6).ne.0) write (n,1170) nopt(17)
 c                                 adaptive optimization
             write (n,1180) rid(2,1),rid(2,2),int(nopt(21)),iopt(12),k5,
-     *                     iopt(31),k5,strg,
-     *                     nopt(25),int(nopt(23)),valu(20),
+     *                     iopt(31),k5,nopt(25),int(nopt(23)),valu(20),
      *                     nopt(9),nopt(11)
 c                                 gridding parameters
             if (iam.eq.1.and.icopt.eq.5.and.oned) then
@@ -1528,7 +1530,6 @@ c                                 thermo options for frendly
      *           '1->',i2,' [4]; iteration keyword value 2',/,
      *        4x,'refinement_points_II   ',i2,9x,'[aut] or 1->',i2,
      *           '; aut = automatic',/,
-     *        4x,'refinement_threshold   ',a,3x,'>0, [1e4] J',/,
      *        4x,'solvus_tolerance_II    ',f4.2,7x,'0->1 [0.2]',/,
      *        4x,'global_reach_increment ',i2,9x,'>= 0 [0]',/,
      *        4x,'reach_increment_switch ',a3,8x,'[on] off all',/,

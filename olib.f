@@ -324,6 +324,8 @@ c                                   molar solute
      *                  (spnams(ns+j,id),': ',ysp(ns+j,i),', ',
      *                   j = 1, m - 1), tag
 
+                  tag = ' '
+
                else 
 
                   write (text,'(20(a,a,f8.5,a))')

@@ -16419,7 +16419,8 @@ c                               direct
                write (lu,1020)
             else 
 c                               back-calculated, indicate normalized
-               write (lu,1160) 
+               write (lu,1160)
+
             end if 
 
             do i = 1, ns 
@@ -16954,6 +16955,12 @@ c-----------------------------------------------------------------------
       logical laq
       common/ cxt3 /idaq,jdaq,laq
 
+      double precision yf,gmrk,v
+      common/ cstcoh /yf(nsp),gmrk(nsp),v(nsp)
+
+      double precision vmrk0, vhyb, vf
+      common/ cxt38 /vmrk0(nsp),vhyb(nsp),vf(nsp)
+
       integer iam
       common/ cst4 /iam
 
@@ -16983,7 +16990,10 @@ c                                 for reasons of stupidity this is set up for v 
 c                                 shock et al 1992 g function (cgs solvent density),
 c                                 used by hkf
       gf = gfunc (msol*1d3/vol)
-c
+
+      yf(1) = 1d0
+      vf(1) = 1d0 
+
       end
 
       subroutine outtit
@@ -18742,23 +18752,23 @@ c-----------------------------------------------------------------------
 c----------------------------------------------------------------------
       rt  = r*t
 
-      if (whysp) then 
-
-         ysum = 0d0
-
-         do i = 1, ns 
-            y(i) = ysp(i,id)
-            ysum = ysum + y(i)
-         end do
-c                                 renormalize
-         do i = 1, ns 
-            y(i) = y(i)/ysum
-         end do
-
-      end if
-c                                 doing lagged aqueous speciation
       if (ns.gt.1) then
 c                                 a multi species solvent is present: 
+         if (whysp) then 
+
+            ysum = 0d0
+
+            do i = 1, ns 
+               y(i) = ysp(i,id)
+               ysum = ysum + y(i)
+            end do
+c                                 renormalize
+            do i = 1, ns 
+               y(i) = y(i)/ysum
+            end do
+
+         end if
+
          if (feos) then
 
             do k = 1, ns
@@ -18794,6 +18804,9 @@ c                                 g(i) = gs0(i) + RT ln x(i).
 
       else
 c                                  solvent is pure water
+         y(1) = 1d0
+         ysp(1,id) = 1d0
+
          call slvnt0 (gso(1),dum)
 
       end if

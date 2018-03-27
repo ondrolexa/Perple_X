@@ -2101,6 +2101,8 @@ dqf(ann)  -3000  0 0
 dqf(mnbi) -7890  0 0
 end_dqf_corrections
 
+site_check_override
+
 end_of_model
                      --------------------------------------------------------
 begin_model
@@ -9931,8 +9933,8 @@ H2O
 
 0 0 0 0 0 0 0              | endmember flags
 
-1e-2   2.5e-2    .1       1        | subdivision ranges, imod = 0 -> cartesian subdivision
-1e-2   2e-4    .1       1        | subdivision ranges, imod = 0 -> cartesian subdivision
+1e-2   5e-2    .1       1        | subdivision ranges, imod = 0 -> cartesian subdivision
+1e-2   2e-4      .1       1        | subdivision ranges, imod = 0 -> cartesian subdivision
 1e-5   2.5e-5    .1       1        | subdivision ranges, imod = 0 -> cartesian subdivision
 0   1    .1       1        | subdivision ranges, imod = 0 -> cartesian subdivision
 0   1    .1       1        | subdivision ranges, imod = 0 -> cartesian subdivision
