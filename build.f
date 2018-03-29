@@ -631,10 +631,13 @@ c                                 and ranges
       write (*,1490)
 c                                 get choice
       call rdnumb (c(0),0d0,icopt,2,.false.)
-      if (icopt.lt.1.or.icopt.gt.5) icopt = 2
+
+      if (icopt.lt.1.or.icopt.gt.6) icopt = 2
 c                                 reorder for oned flag
-      if (icopt.eq.3.or.icopt.eq.5) then 
+      if (icopt.eq.3.or.icopt.eq.5) then
+ 
          oned = .true.
+
          if (icopt.eq.5.and.icp.eq.1) call error (53,r,i,'BUILD')
 c                                 fractionation from a file
          write (*,1090) 
@@ -646,15 +649,21 @@ c                                 fractionation from a file
             write (*,2010) 'coordinate','coor.dat'
             read (*,'(a)') cfname
             if (cfname.eq.blank) cfname = 'coor.dat'
+
             open (n8,file=cfname,iostat=ierr,status='old')
             if (ierr.ne.0) then 
                write (*,1140) cfname
             end if 
+
             close (n8)
+
             icopt = 10
+
             oned = .false.
             icont = 1
+
          end if 
+
       else 
          oned = .false.
       end if 
@@ -663,10 +672,9 @@ c                                 fractionation from a file
 c                                 ====================================
 c                                 ask if p = f(T) or vice versa for all
 c                                 phase diagram calculations:
-c                                
 5102  idep = 0
 
-      if (icopt.ne.3.and.icopt.ne.10) then 
+      if (icopt.ne.3.and.icopt.ne.10.and.icopt.ne.6) then 
 
          write (*,1050) vname(1),vname(2)
          if (icopt.eq.4) write (*,1160) 
@@ -728,6 +736,26 @@ c                                  set the icopt flag to its final value
          if (icopt.eq.2) then
 c                                  1-d minimization
             icopt = 5
+
+         else if (icopt.eq.6) then 
+
+            icopt = 12
+
+            icont = 1
+
+            write (*,3120)
+
+3120  format (/,'For zero-dimensional infiltration calculations:',/,
+     *        3x,' - the fluid must be described by a hybrid EoS ',
+     *           'solution model',/,
+     *        3x,' - the fluid components must be specified as '
+     *           'thermodynamic components',/,
+     *          'Additionally, to account for electrolyte fluid ',
+     *           'chemistry:'
+     *         3x,' - select a thermodynamic data file that includes ',
+     *            'electrolyte data',/,
+     *         3x,' - set aq_lagged_speciation, refine_endmembers to ', 
+     *            ' true (T)',//)
 
          else 
 c                                  fractionation, also write the grid blurb
@@ -1617,7 +1645,8 @@ c                                 diagrams:
      *    5x,'2 - Constrained minimization on a 2d grid [default]',/,
      *    5x,'3 - Constrained minimization on a 1d grid',/,
      *    5x,'4 - Output pseudocompound data',/,
-     *    5x,'5 - Phase fractionation calculations',//,
+     *    5x,'5 - 1-d Phase fractionation calculations',/,
+     *    5x,'6 - 0-d water infiltration calculations',//,
      *        'Use Convex-Hull minimization for Schreinemakers ',
      *        'projections or phase diagrams',/,
      *        'with > 2 independent variables. ',

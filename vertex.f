@@ -294,9 +294,9 @@ c-----------------------------------------------------------------------
       integer iap,ibulk
       common/ cst74 /iap(k2),ibulk
 
-      integer ifrct,ifr
+      integer fmode,ifrct,ifr
       logical gone
-      common/ frct1 /ifrct,ifr(k23),gone(k5)
+      common/ frct1 /fmode,ifrct,ifr(k23),gone(k5)
 c-----------------------------------------------------------------------
 
       iasct = 0
@@ -309,6 +309,8 @@ c                                 get phases to be fractionated
 c                                 call initlp to initialize arrays 
 c                                 for optimization.
       call initlp 
+
+      open (n0-1,status='scratch')
 c                                 two cases fileio: input from
 c                                 file, else analytical path function
       if (fileio) then 
@@ -322,6 +324,9 @@ c                                 file, else analytical path function
          do 
 
             read (n8,*,iostat=ier) (v(jv(i)), i = 1, ipot)
+c                                 echo to scratch
+            write (n0-1,*) v
+
             if (ier.ne.0) exit
 
             j = j + 1
@@ -364,6 +369,9 @@ c                                 mode, otherwise traverse on
 
                write (*,1070) (vname(jv(i)), i = 1, ipot)
                read (*,*) (v(jv(i)), i = 1, ipot)
+c                                 echo to scratch
+               write (n0-1,*) v
+
                if (v(jv(1)).eq.0d0) exit
 c                                 the systems molar composition is in 
 c                                 the array cblk.
@@ -413,7 +421,9 @@ c                                 get total moles to compute mole fractions
                   b(i) = cblk(i)/ctotal
                end do
 
-               call setvr0 (j,j)  
+               call setvr0 (j,j) 
+c                                 echo to scratch
+               write (n0-1,*) v 
 c                                 lpopt does the minimization and outputs
 c                                 the results to the print file.
                call lpopt (1,j,idead,output)
@@ -432,17 +442,11 @@ c                                 fractionate the composition:
          end if 
       end if 
 c                                 output 
-      if (output) then 
-
-        if (io4.eq.0) call outgrd (1,loopy,1) 
+      if (output.and.io4.eq.0) call outgrd (1,loopy,1) 
 c                                 close fractionation data files
-         do i = 1, ifrct
-            close (n0+i)
-         end do
-
-         close (n0)
-
-      end if 
+      do i = -1, ifrct
+         close (n0+i)
+      end do
 
 1000  format (/,'Composition is now:',/)
 1010  format (1x,a,1x,g14.6)
@@ -452,8 +456,7 @@ c                                 close fractionation data files
 1060  format (/,'Modify composition (y/n)?')
 1070  format (/,'Enter (zeroes to quit) ',7(a,1x))
 
-      end 
-
+      end
 
       subroutine titrat (output)
 c-----------------------------------------------------------------------
@@ -522,9 +525,9 @@ c-----------------------------------------------------------------------
       integer iap,ibulk
       common/ cst74 /iap(k2),ibulk
 
-      integer ifrct,ifr
+      integer fmode,ifrct,ifr
       logical gone
-      common/ frct1 /ifrct,ifr(k23),gone(k5)
+      common/ frct1 /fmode,ifrct,ifr(k23),gone(k5)
 c-----------------------------------------------------------------------
 
       iasct = 0
@@ -1855,7 +1858,159 @@ c                                 for true boundaries.
          end do
       end do 
      
-      end  
+      end 
+
+      subroutine frname 
+c----------------------------------------------------------------------
+c frname - prompt for names of phases to be fractionated
+
+c          ifrct - number of phases to be fractionated
+c          ifr(ifract) - 0 if cpd, else ikp (solution pointer)
+c          jfr(ifract) - cpd pointer
+c----------------------------------------------------------------------
+
+      implicit none
+ 
+      include 'perplex_parameters.h'
+
+      logical first 
+
+      integer iam, jfrct, i
+
+      double precision numb
+
+      character phase(k23)*10, y*1, name*100
+
+      character*100 prject,tfname
+      common/ cst228 /prject,tfname
+
+      integer fmode,ifrct,ifr
+      logical gone
+      common/ frct1 /fmode,ifrct,ifr(k23),gone(k5)
+ 
+      save first, phase
+
+      data first/.true./
+c----------------------------------------------------------------------
+
+      if (first) then 
+
+         first = .false.
+c                                 choose mode: 0 - don't fractionate
+c                                              1 - specified phases
+c                                              2 - all solids
+         write (*,1030)
+         call rdnumb (numb,numb,fmode,1,.false.)
+
+         if (fmode.eq.1) then 
+c                                 get phases to be fractionated 
+            ifrct = 1
+
+            do 
+
+               write (*,1040)
+               read (*,'(a)') phase(ifrct)
+
+               if (phase(ifrct).eq.' ') exit
+
+               call matchj (phase(ifrct),ifr(ifrct))
+
+               if (ifr(ifrct).eq.0) then
+                  write (*,1100) phase(ifrct)
+                  cycle 
+               end if
+
+               ifrct = ifrct + 1
+
+               if (ifrct.gt.k23) call error (1,0d0,ifrct,'k23')
+
+            end do 
+
+            ifrct = ifrct - 1
+
+         else
+
+            ifrct = 0 
+
+         end if 
+
+      else if (fmode.eq.1) then 
+c                                 must be in autorefine cycle, make
+c                                 new phase list from old list:
+         jfrct = ifrct
+         ifrct = 0  
+         
+         do i = 1, jfrct 
+
+            call matchj (phase(i),iam)
+
+            if (iam.eq.0) cycle 
+       
+            ifrct = ifrct + 1
+            ifr(ifrct) = iam 
+
+         end do
+
+      else
+
+         ifrct = 0 
+
+      end if 
+c                                 initialize "gone" flags
+      do i = 1, k5
+         gone(i) = .false.
+      end do 
+c                                 open fractionation files
+      call mertxt (name,prject,'_fractionated_bulk.dat',0)
+      open (n0,file=name,status='unknown')
+      write (*,1050)
+
+      do i = 1, ifrct 
+
+         call fropen (i,phase(i))
+
+      end do 
+
+1030  format (/,'Choose computational mode:',/,
+     *       5x,'0 - no fractionation [default]',/,
+     *       5x,'1 - fractionate specified phases',/,
+     *       5x,'2 - fractionate all phases other than liquid'/)
+1040  format (/,'Enter the name of a phase to be fractionated',
+     *        /,'(left justified, <cr> to finish): ')
+1050  format (/,'The fractionated bulk composition will be ',
+     *          'written to file: fractionated_bulk.dat',/)
+1100  format (/,'No such entity as ',a,', try again: ')
+
+99    end 
+
+      subroutine fropen (i,phase)
+c-----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer i
+
+      character phase*10
+
+      character*100 prject,tfname
+      common/ cst228 /prject,tfname
+c-----------------------------------------------------------------------
+ 
+      tfname = '_'//phase//'.dat'
+
+      call unblnk (tfname)
+
+      call mertxt (tfname,prject,tfname,0)
+
+      write (*,1010) phase, tfname
+
+      open (n0+i,file=tfname,status='unknown')
+
+1010  format (/,'The fractionated amount and composition of ',a,/,
+     *          'will be written to file: ',a,/)
+
+      end
 
       subroutine fractr (idead,output)  
 c-----------------------------------------------------------------------
@@ -1863,13 +2018,13 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
  
-      character gname*10
+      character gname*10, lgname*22, phase*14
 
-      external gname
+      external gname, lgname
 
-      integer i,j,k,idead
+      integer i,j,k,idead,ier
 
-      logical there(k23), warn, output
+      logical there(k23), warn, output, quit, liquid
 
       double precision mass(k23), tmass, x
 
@@ -1882,9 +2037,9 @@ c-----------------------------------------------------------------------
       double precision dcomp
       common/ frct2 /dcomp(k5)
 
-      integer ifrct,ifr
+      integer fmode,ifrct,ifr
       logical gone
-      common/ frct1 /ifrct,ifr(k23),gone(k5)
+      common/ frct1 /fmode,ifrct,ifr(k23),gone(k5)
  
       integer ipot,jv,iv
       common/ cst24 /ipot,jv(l2),iv(l2)
@@ -1919,26 +2074,95 @@ c                                 fractionation effects:
 
       if (idead.eq.0.or.idead.eq.101) then 
 c                                 optimization suceeded
-         if (lopt(35)) then 
+c                                 compute mass fractions in case
 c                                 threshold based fractionation:
-            tmass = 0d0 
+         tmass = 0d0 
 c                                 get mass fractions:
+         do j = 1, ntot
+
+            mass(j) = 0d0
+
+            do k = 1, jbulk 
+               mass(j) = mass(j) + amt(j)*cp3(k,j)*atwt(k)
+            end do
+
+            tmass = tmass + mass(j)
+
+         end do
+
+         do j = 1, ntot
+            mass(k) = mass(k)/tmass
+         end do
+
+         if (fmode.eq.2) then 
+c                               check if liquid is stable
+            liquid = .false.
+
             do j = 1, ntot
 
-               mass(j) = 0d0
+               if (lgname(phase,kkp(j)).eq.'liquid') then 
+                  liquid = .true. 
+                  exit
+               end if
 
-               do k = 1, jbulk 
-                  mass(j) = mass(j) + amt(j)*cp3(k,j)*atwt(k)
+            end do
+
+            if (liquid) then 
+c                               check if the solids are already
+c                               in the fractionation list
+               do j = 1, ntot
+
+                  if (lgname(phase,kkp(j)).eq.'liquid') cycle
+
+                  quit = .false.
+
+                  do i = 1, ifrct
+
+                     if (ifr(i).eq.kkp(j)) then
+                        quit = .true.
+                        exit 
+                     end if
+
+                  end do
+
+                  if (quit) exit 
+c                                else open a new file
+                  ifrct = ifrct + 1
+
+                  ifr(ifrct) = kkp(j)
+    
+                  call fropen (ifrct,phase)
+c                                paste in previous coordinates
+                  rewind (n0-1)
+
+                  do 
+c                                the danger in doing this is that 
+c                                v may not be written to scratch with 
+c                                full precision
+                     read (n0-1,*,iostat=ier) v
+
+                     if (ier.ne.0) then 
+c                               presumably eof
+                        backspace (n0+ifrct)
+                        exit 
+
+                     else 
+
+                        write (n0+i,1200) (v(jv(i)),i=1,ipot),nopt(7),
+     *                                    (nopt(7),k=1,jbulk)
+
+                     end if
+
+                  end do
+
                end do
 
-               tmass = tmass + mass(j)
+            end if
 
-            end do
+         end if
 
-            do j = 1, ntot
-               mass(k) = mass(k)/tmass
-            end do
-c                                do fractionation
+         if (fmode.eq.1.or.fmode.eq.2.and.liquid) then 
+c                                 do fractionation
             do i = 1, ifrct
 
                do j = 1, ntot
@@ -1958,18 +2182,18 @@ c                                 mass fraction exceeds upper threshold
                            dcomp(k) = dcomp(k) + x*amt(j)*cp3(k,j)
                         end do
 c                                 write to console
-                        write (*,1185) vname(iv(2)),v(iv(2)),
-     *                                 vname(iv(1)),v(iv(1))
+                        write (*,1185) (vname(iv(k)),v(iv(k)),k=1,ipot)
+
 
                         write (*,1190) amt(j),gname(ifr(i)),
-     *                                 (amt(j)*cp3(k,j),k=1,jbulk)
+     *                                (amt(j)*cp3(k,j),k=1,jbulk)
 c                                 write to file
-                        if (output) write (n0+i,1200) v,amt(j),
-     *                                    (amt(j)*cp3(k,j),k=1,jbulk)
+                        if (output) write (n0+i,1200) 
+     *                                       (v(jv(k)),k=1,ipot),amt(j),
+     *                                       (amt(j)*cp3(k,j),k=1,jbulk)
                      else 
 c                                 write to console
-                        write (*,1185) vname(iv(2)),v(iv(2)),
-     *                                 vname(iv(1)),v(iv(1))
+                        write (*,1185) (vname(iv(k)),v(iv(k)),k=1,ipot)
 
                         write (*,1180) gname(ifr(i)),mass(j),nopt(33)
 
@@ -1977,40 +2201,9 @@ c                                 write to console
 
                   end if
 
-               end do 
- 
-            end do
+               end do
 
-         else
-
-            do i = 1, ifrct
-
-               do j = 1, ntot
-
-                  if (kkp(j).eq.ifr(i)) then 
-c                                 the phase to be fractionated
-c                                 is present, remove from bulk
-                     there(i) = .true.
-
-                     if (amt(j).lt.0d0) amt(j) = 0d0
-
-                     do k = 1, jbulk 
-                        dcomp(k) = dcomp(k) + amt(j)*cp3(k,j)
-                     end do
-c                                 write to console
-                     write (*,1185) vname(iv(2)),v(iv(2)),
-     *                              vname(iv(1)),v(iv(1))
-
-                     write (*,1190) amt(j),gname(ifr(i)),
-     *                              (amt(j)*cp3(k,j),k=1,jbulk)
-c                                 write to file
-                     if (output) write (n0+i,1200) v,amt(j),
-     *                                 (amt(j)*cp3(k,j),k=1,jbulk) 
-                  end if
-
-               end do 
- 
-            end do
+            end do 
 
          end if 
 c                                 write output for fractionated phases 
@@ -2020,16 +2213,27 @@ c                                 that are NOT stable
             if (.not.there(i)) then 
 c                                 console output:
 c                                 write to console
-               write (*,1185) vname(iv(2)),v(iv(2)),
-     *                        vname(iv(1)),v(iv(1))
-               write (*,1210) gname(ifr(i))
+               if (fmode.eq.1) then 
+
+                  write (*,1185) (vname(iv(k)),v(iv(k)),k=1,ipot)
+                  write (*,1210) gname(ifr(i))
+
+               end if 
 c                                 write to file
-               if (output) write (n0+i,1200) v,nopt(7),
-     *                                       (nopt(7),k=1,jbulk) 
+               if (output) write (n0+i,1200) (v(iv(k)),k=1,ipot),
+     *                                nopt(7),(nopt(7),k=1,jbulk) 
 
             end if 
 
          end do
+
+         if (fmode.eq.2.and..not.liquid) then 
+
+            write (*,1185) (vname(iv(k)),v(iv(k)),k=1,ipot)
+
+            write (*,'(a)') 'liquid not stable, no phases will be '//
+     *                      'fractionated'
+         end if 
 
       else 
 c                                 optimization failed
@@ -2037,7 +2241,7 @@ c                                 optimization failed
 c                                 
          do i = 1, ifrct
 c                                 write bad_number to fractionation file
-            if (output) write (n0+i,1200) v,nopt(7),
+            if (output) write (n0+i,1200) (v(iv(k)),k=1,ipot),nopt(7),
      *                                    (nopt(7),k=1,jbulk)
          end do
 
@@ -2065,7 +2269,7 @@ c                                 warn on complete depletion of a component
       end do
 
       if (output.and.ifrct.gt.0) 
-     *   write (n0,1200) v(iv(1)),(cblk(k),k=1,jbulk)
+     *   write (n0,1200) (v(iv(i)), i = 1, ipot), (cblk(k),k=1,jbulk)
  
       if (warn) then 
          do i = 1, jbulk 
@@ -2074,11 +2278,10 @@ c                                 warn on complete depletion of a component
       end if  
 
 1000  format (3(/,5('*** WARNING ***')),
-     *     //,'Fractionation has completely'
-     *       ,' depleted ',a,' from the bulk composition.',//,
-     *        'This ',
-     *        'depletion may destabilize the minimization algorithm ',
-     *        'if excessive',/,'minimization errors occur, restart the',
+     *     //,'Fractionation has eliminated ',a,' from the bulk ',
+     *        'composition.',//,
+     *        'This may destabilize the minimization algorithm. ',
+     *        'If excessive',/,'minimization errors occur, restart the',
      *        'fractionation calculation at the',/,'current point on ',
      *        'the fractionation path with the current molar bulk ', 
      *        'composition:',/)
@@ -2086,7 +2289,7 @@ c                                 warn on complete depletion of a component
 1030  format (/,'optimization failed at:',//,5(1x,a8,'=',g12.6))
 1180  format (a,' is stable, but its mass fraction (',f5.3,') is below',
      *        ' the upper fractionation threshold (',f5.3,').')
-1185  format (/,'At ',a,'=',g12.6,' and ',a,'=',g12.6)
+1185  format (/,'At ',5(a,'=',g12.6,' '))
 1190  format ('fractionating ',g12.6,' moles of ',a,'; changes bulk by:'
      *        ,/,15(1x,g12.6))
 1200  format (21(1x,g12.6))
@@ -2094,120 +2297,39 @@ c                                 warn on complete depletion of a component
 
       end 
 
-      subroutine frname 
+      character*22 function lgname (pname,ids)
 c----------------------------------------------------------------------
-c frname - prompt for names of phases to be fractionated
-
-c          ifrct - number of phases to be fractionated
-c          ifr(ifract) - 0 if cpd, else ikp (solution pointer)
-c          jfr(ifract) - cpd pointer
-c----------------------------------------------------------------------
-
       implicit none
  
       include 'perplex_parameters.h'
 
-      logical first 
+      character pname*14
 
-      integer iam, jfrct, i
+      integer ids
 
-      character phase(k23)*10, y*1, name*100
+      integer ikp
+      common/ cst61 /ikp(k1)
 
-      character*100 prject,tfname
-      common/ cst228 /prject,tfname
-
-      integer ifrct,ifr
-      logical gone
-      common/ frct1 /ifrct,ifr(k23),gone(k5)
- 
-      save first,phase
-
-      data first/.true./
+      character fname*10, aname*6, lname*22
+      common/ csta7 /fname(h9),aname(h9),lname(h9)
 c----------------------------------------------------------------------
+      call getnam (pname,ids)
 
-      if (first) then 
+      if (ids.lt.0) then 
 
-         first = .false.
-
-         write (*,1030) 
-         read (*,'(a)') y
-         if (y.ne.'y'.and.y.ne.'Y') goto 99 
-
-         ifrct = 1
-
-         do 
-
-            write (*,1040)
-            read (*,'(a)') phase(ifrct)
-
-            if (phase(ifrct).eq.' ') exit
-
-            call matchj (phase(ifrct),ifr(ifrct))
-
-            if (ifr(ifrct).eq.0) then
-               write (*,1100) phase(ifrct)
-               cycle 
-            end if
-
-            ifrct = ifrct + 1
-
-            if (ifrct.gt.k23) call error (1,0d0,ifrct,'k23')
-
-         end do 
-
-         ifrct = ifrct - 1
+         if (ikp(-ids).gt.0) then 
+            lgname = lname(ikp(-ids))
+         else if (ids.gt.0) then 
+            lgname = pname
+         end if 
 
       else 
-c                                 must be in autorefine cycle, make
-c                                 new phase list from old list:
-         jfrct = ifrct
-         ifrct = 0  
-         
-         do i = 1, jfrct 
 
-            call matchj (phase(i),iam)
-
-            if (iam.eq.0) cycle 
-       
-            ifrct = ifrct + 1
-            ifr(ifrct) = iam 
-
-         end do 
+         lgname = lname(ids)
 
       end if 
-c                                 initialize "gone" flags
-      do i = 1, k5
-         gone(i) = .false.
-      end do 
-c                                 open fractionation files
-      call mertxt (name,prject,'_fractionated_bulk.dat',0)
-      open (n0,file=name,status='unknown')
-      write (*,1050)
 
-      do i = 1, ifrct 
-
-         name = '_'//phase(i)//'.dat'
-
-         call unblnk (name)
-
-         call mertxt (name,prject,name,0)
-
-         write (*,1010) phase(i), name
-
-         open (n0+i,file=name,status='unknown')
-
-      end do 
-
-1010  format (/,'The fractionated amount and composition of ',a,/,
-     *          'will be written to file: ',a,/)
-1030  format ('Fractionate phases (y/n)?')
-1040  format (/,'Enter the name of a phase to be fractionated',
-     *        /,'(left justified, <cr> to finish): ')
-1050  format (/,'The fractionated bulk composition will be ',
-     *          'written to file: fractionated_bulk.dat',/)
-1100  format (/,'No such entity as ',a,', try again: ')
-
-99    end 
+      end 
 
       subroutine grxn (g)
       implicit none
