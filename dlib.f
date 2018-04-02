@@ -225,6 +225,14 @@ c---------------------------------------------------------------------
 
       integer jlow,jlev,loopx,loopy,jinc
       common/ cst312 /jlow,jlev,loopx,loopy,jinc
+
+      double precision v,tr,pr,r,ps
+      common/ cst5  /v(l2),tr,pr,r,ps
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 c----------------------------------------------------------------------
 
       if (icopt.eq.7.and.fileio) then 
@@ -321,7 +329,32 @@ c                                 switch loopx and loopy
 
          do i = 3, 4
             vnm(i) = vname(jv(i-2))
-         end do  
+         end do
+
+      else if (icopt.eq.12) then 
+
+         vnm(1) = 'n(H2O)     '
+         vnm(2) = 'node#      '
+
+         vmn(2) = 1d0
+         vmx(2) = dfloat(iopt(36)) + 1d0
+         var(2) = 1d0
+ 
+         vmn(1) = 0d0
+         vmx(1) = nopt(36)*dfloat(iopt(36))
+         var(1) = 0d0
+
+         v(1) = vmin(1)
+         v(2) = vmin(2)
+
+         jvar = ipot + 2
+
+         do i = 3, jvar
+            vnm(i) = vname(jv(i-2))
+            vmx(i) = vmax(jv(i-2))
+            vmn(i) = vmin(jv(i-2))
+            var(i) = vmin(jv(i-2))
+         end do
 
       end if 
 

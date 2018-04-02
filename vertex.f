@@ -200,7 +200,7 @@ c                                 optimization on a 2-d grid.
 c                                 fractionation on a 1-d path.
             call frac1d (output)
 
-         else if (icopt.eq.99) then 
+         else if (icopt.eq.12) then 
 
             call titrat (output)
 
@@ -471,12 +471,21 @@ c-----------------------------------------------------------------------
 
       integer i, j, idead, it, ih2o
 
-      double precision dh2o, delt
+      double precision delt, iblk(k5)
 
       integer npt,jdv
       logical fulrnk
       double precision cptot,ctotal
       common/ cst78 /cptot(k19),ctotal,jdv(k19),npt,fulrnk
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      integer icont
+      double precision dblk,cx
+      common/ cst314 /dblk(3,k5),cx(2),icont
 
       character cname*5
       common/ csta4 /cname(k5)
@@ -531,67 +540,59 @@ c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
 
       iasct = 0
-      ibulk = 0
-      it = 0  
 
-      loopy = jlow
+      ibulk = 0
+      it = 0
+
+      do i = 1, icp
+c                                 the molar composition of the infiltrant
+         iblk(i) = dblk(2,i)
+
+      end do
 c                                 get phases to be fractionated
       call frname 
 c                                 call initlp to initialize arrays 
 c                                 for optimization.
       call initlp 
-c                                 two cases fileio: input from
-c                                 file, else analytical path function
 
-      write (*,*) 'dh2o increment'
-      v(1) = 43001.
-      v(2) = 946.477
-      dh2o = 80.
-      delt = 0.1
-c      read (*,*,iostat=ier) dh2o,delt
+      ih2o = iopt(36) + 1
+      delt = nopt(36)
 
-      ih2o = int(dh2o/delt) + 1
+      do j = 1, ih2o 
 
-      j = 0
+         it = it + 1 
 
-         do while (j.lt.ih2o) 
-
-            j = j + 1
-            it = it + 1 
-
-            ctotal = 0d0
+         ctotal = 0d0
 c                                 get total moles to compute mole fractions             
-            do i = 1, icp
-               ctotal = ctotal + cblk(i)
-            end do
+         do i = 1, icp
+            ctotal = ctotal + cblk(i)
+         end do
 
-            do i = 1, icp 
-               b(i) = cblk(i)/ctotal
-            end do
+         do i = 1, icp 
+            b(i) = cblk(i)/ctotal
+         end do
 c                                 lpopt does the minimization and outputs
 c                                 the results to the print file.
-            call lpopt (1,j,idead,output)
+         call lpopt (1,j,idead,output)
 c                                 fractionate the composition:
-            call fractr (idead,output)
-
-            cblk(1) = cblk(1) + delt
-            cblk(10) = cblk(10) + delt/2d0
-
-            if (it.gt.99) then 
-               write (*,'(i5,a)') j,' optimizations completed...'
-               it = 0
-            end if 
-
+         call fractr (idead,output)
+c                                  add the infiltrant
+         do i = 1, icp 
+            cblk(i) = cblk(i) + delt*iblk(i)
          end do 
 
-         close (n8)
+         if (it.gt.99) then 
+            write (*,'(i5,a)') j,' optimizations completed...'
+            it = 0
+         end if 
 
-         loopy = j 
+      end do 
 
+      close (n8)
 c                                 output 
       if (output) then 
 
-        if (io4.eq.0) call outgrd (1,loopy,1) 
+        if (io4.eq.0) call outgrd (1,ih2o,1) 
 c                                 close fractionation data files
          do i = 1, ifrct
             close (n0+i)
@@ -599,7 +600,7 @@ c                                 close fractionation data files
 
          close (n0)
 
-      end if 
+      end if
 
 1000  format (/,'Composition is now:',/)
 1010  format (1x,a,1x,g14.6)

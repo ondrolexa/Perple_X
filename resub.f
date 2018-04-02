@@ -446,7 +446,7 @@ c DEBUG DEBUG
 
       end
 
-      subroutine endmmx (ld,id,ids,iter)
+      subroutine endmmx (ld,jd,ids,iter)
 c----------------------------------------------------------------------
 c generate compositional coordinates (x(i,j) array) for endmembers 
 c during outrefine. if iter = 1, id is the static array index of the
@@ -457,7 +457,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i, j, id, ids, jd, kd, ld, iter 
+      integer i, j, ids, jd, kd, ld, iter 
 
       integer ipoint,kphct,imyn
       common/ cst60 /ipoint,kphct,imyn
@@ -488,11 +488,6 @@ c----------------------------------------------------------------------
       integer hkp,mkp
       common/ cst72 /hkp(k21),mkp(k19)
 c----------------------------------------------------------------------
-      if (iter.eq.1) then 
-         jd = id
-      else 
-         jd = id + istct - 1
-      end if
 c                                set refinement point index
       hkp(jd) = ld 
 c                                locate the endmember in the solution

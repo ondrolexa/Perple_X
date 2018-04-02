@@ -350,7 +350,7 @@ c-----------------------------------------------------------------------
       character*100 blank*1,string(3)*8,rname*5,name*8,strg*80,n2name,
      *              n9name,y*1,sname*10,prt*3,plt*3
 
-      integer idum,nstrg,i,j,ierr,icmpn,jcont,kct
+      integer idum, nstrg, i, j, k, ierr, icmpn, jcont, kct
 
       double precision dip
 
@@ -681,10 +681,16 @@ c                                 unblank the name
          end if 
 c                                 check for compositional constraints
          read (strg,*,err=998) icont
-c                                 for meemum override icont
-         if (icont.ne.0.or.iam.eq.2) then 
+
+         if (icopt.eq.12) then 
+            k = 2
+         else 
+            k = icont
+         end if 
+
+         if (k.ne.0) then 
             jbulk = jbulk + 1
-            read (strg,*,err=998) j, (dblk(i,jbulk), i = 1, icont)    
+            read (strg,*,err=998) j, (dblk(i,jbulk), i = 1, k)
          end if 
 
       end do           
@@ -735,10 +741,8 @@ c                                 check for compositional constraints
 
          if (jcont.ne.0) then 
             jbulk = jbulk + 1
-            read (strg,*,err=998) j, (dblk(i,jbulk), i = 1, icont)    
-c                                 override variance flag choice, why here?
-
-         end if  
+            read (strg,*,err=998) j, (dblk(i,jbulk), i = 1, jcont)
+         end if
 
          isat = isat + 1
          if (isat.gt.h5) call error (15,r,i,'BUILD')
@@ -1013,7 +1017,15 @@ c                                 if dependent variable add to jv list, could
 c                                 increment ipot, but maybe it's better not to.
       if (idep.ne.0) jv(ipot+1) = idep
 c                                 set convergence criteria for routine univeq
-      if (icopt.le.3) call concrt
+      if (icopt.le.3) then 
+
+         call concrt
+
+      else if (icopt.eq.12) then 
+c                                 0-d infiltration
+         read (n1,*,err=998) iopt(36), nopt(36)
+
+      end if 
 
       if (icopt.ne.0) close (n1)
 c                                 open files requested in input
@@ -1884,6 +1896,11 @@ c---------------------------------------------------------------------
       logical fileio
       integer ncol, nrow
       common/ cst226 /ncol,nrow,fileio
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 c----------------------------------------------------------------------
 
       rloopy = dfloat(loopy-1)
@@ -1899,7 +1916,13 @@ c                                 for 1d calculations
 
       if (icopt.eq.7.and.fileio) then 
 c                                using nodal coordinate system
-         dvr(1) = 1
+         dvr(1) = 1d0
+
+      else if (icopt.eq.12) then 
+
+         dvr(1) = nopt(36)
+         loopx = iopt(36)
+         rloopx = dfloat(loopx)
 
       else if (icont.eq.1) then 
 c                                v(iv1) on x, v(iv2) on y

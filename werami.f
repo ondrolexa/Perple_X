@@ -474,6 +474,10 @@ c----------------------------------------------------------------------
           var(2) = v(jv(1))
           var(3) = v(jv(2))
 
+      else if (icopt.eq.12) then 
+
+c                                 what you see is what you got.
+
       else if (icopt.eq.9) then 
 c                                 change sign on dz because of downward
 c                                 directed depth coordinate.
@@ -575,6 +579,7 @@ c----------------------------------------------------------------------
 
             write (*,1020) vnm(1)
             read (*,*) var(1)
+
 
             if (var(1).eq.999d0) quit = .true.
 
@@ -1933,9 +1938,13 @@ c                                 just range criteria
                   call mkcomp (i+k5,phase)
 c                                 get the range for the compositional
 c                                 variable:
-5020              write (*,1020) i
-                  read (*,*,iostat=ier) cmin(i), cmax(i)
-                  call rerror (ier,*5020)
+                  do 
+                     write (*,1020) i
+                     read (*,*,iostat=ier) cmin(i), cmax(i)
+                     if (ier.eq.0) exit
+                     call rerr
+                  end do 
+
 
                end do 
 
@@ -1948,10 +1957,13 @@ c                                 a combination of a range and a min/max
                write (*,1008)
 c                                 the range variable 
                call mkcomp (1+k5,phase)
-
-5030           write (*,1020) 1
-               read (*,*,iostat=ier) cmin(1), cmax(1)
-               call rerror (ier,*5030)
+               
+               do 
+                  write (*,1020) 1
+                  read (*,*,iostat=ier) cmin(1), cmax(1)
+                  if (ier.eq.0) exit
+                  call rerr
+               end do 
 c                                 the extremal variable
                write (*,1007) 
                call mkcomp (2+k5,phase)
@@ -3851,20 +3863,27 @@ c                                 warn if no potentials
 
             end if 
 c                                 get component to be contoured
-5010        write (*,1000)
+            do
 
-            if (lop.eq.23) then 
+                write (*,1000)
 
-               write (*,1010) (i, cname(i), i = 1, ichem)
+               if (lop.eq.23) then 
 
-            else 
+                  write (*,1010) (i, cname(i), i = 1, ichem)
 
-               write (*,1010) (i, cname(i), i = 1, icomp)
+               else 
 
-            end if 
+                  write (*,1010) (i, cname(i), i = 1, icomp)
 
-            read (*,*,iostat=ier) icx
-            call rerror (ier,*5010)   
+               end if 
+
+               read (*,*,iostat=ier) icx
+
+               if (ier.eq.0) exit
+
+               call rerr
+
+            end do 
 c                                 ask if fluids included
             if (gflu.and.lop.eq.6) then 
 

@@ -19,7 +19,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a)') 
-     *      'Perple_X version 6.8.1, source updated Mar 21, 2018.'
+     *      'Perple_X version 6.8.1, source updated Apr 2, 2018.'
 
       end
 
@@ -173,6 +173,8 @@ c                                 closed or open compositional space
       lopt(1) = .true.
 c                                 Anderson-Gruneisen correction
       lopt(4) = .false.
+c                                 auto_exclude 
+      lopt(5) = .true.
 c                                 melt_is_fluid
       lopt(6) = .false.
 c                                 approx_alpha
@@ -2560,7 +2562,7 @@ c----------------------------------------------------------------------
       else if (ier.eq.15) then
          write (*,15)
       else if (ier.eq.16) then
-         write (*,16)
+         write (*,16) char
       else if (ier.eq.17) then
          write (*,17)
       else if (ier.eq.18) then
@@ -2763,9 +2765,10 @@ c----------------------------------------------------------------------
      *          'component, then the order you',/,'enter the ',
      *          'components determines the saturation heirarchy and may'
      *          ,' effect your',/,'results (see Connolly 1990).',/)
-16    format (/,'**warning ver016** you are going to treat a saturate',
-     *        'd (fluid) phase component',/,'as a thermodynamic ',
-     *        'component, this may not be what you want to do.',/)
+16    format (/,'**warning ver016** ',a,' has been rejected because it',
+     *       ' has no associated volumetric EoS.',/,'To override this ',
+     *        'behavior either set auto_exclude to false or add an ',
+     *        'association.',/)
 17    format (/,'**warning ver017** you gotta be kidding, either ',
      *          ' 1 or 2 components, try again:',/)
 18    format (/,'**warning ver018** the value of the default dependen',
@@ -3644,6 +3647,9 @@ c----------------------------------------------------------------------
       double precision comp,tot
       common/ cst43 /comp(k0),tot,icout(k0),ikind,icmpn,ieos
 
+      double precision thermo, uf, us
+      common/ cst1 /thermo(k4,k10),uf(2),us(h5)
+
       integer iam
       common/ cst4 /iam
 c----------------------------------------------------------------------
@@ -3696,10 +3702,16 @@ c                                 component is in the phase.
          end if
 
          if (.not.aq.and.(ieos.eq.15.or.ieos.eq.16)) cycle
+
+         if (ieos.gt.0.and.ieos.lt.5.and.thermo(3,k10).eq.0d0) then 
+c                                 standard form with no volumetric EoS, 
+c                                 reset ieos internally:
+            ieos = 0
+         end if 
  
          exit 
 
-      end do 
+      end do
 
       end
 
@@ -3958,9 +3970,9 @@ c                                 mock-lambda transition data
 
          end do
 
-      end do 
-                                 
-      end  
+      end do
+
+      end
 
       subroutine getkey (n,ier,key,values,strg)
 c----------------------------------------------------------------------
@@ -5066,8 +5078,12 @@ c                                 no match, try again message
 c                                 get the component stoichiometries:
 80       write (*,4030) (cmpnt(icout(i)),i=1,ict)
          write (*,4040) pname
-90       read (*,*,iostat=ier) (ctrans(icout(i),itrans), i= 1, ict)
-         call rerror (ier,*90)
+
+         do 
+            read (*,*,iostat=ier) (ctrans(icout(i),itrans), i= 1, ict)
+            if (ier.eq.0) exit
+            call rerr
+         end do 
  
          write (*,1100) pname,(ctrans(icout(i),itrans),
      *                      cmpnt(icout(i)), i = 1, ict)

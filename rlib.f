@@ -1098,6 +1098,13 @@ c-----------------------------------------------------------------------
       double precision comp,tot
       common/ cst43 /comp(k0),tot,icout(k0),ikind,icmpn,ieos
 
+      integer idspe,ispec
+      common/ cst19 /idspe(2),ispec
+
+      integer cl
+      character cmpnt*5, dname*80
+      common/ csta5 /cl(k0),cmpnt(k0),dname
+
       integer iopt
       logical lopt
       double precision nopt
@@ -1135,17 +1142,48 @@ c                               use ichk to avoid multiple messages
       if (tot.eq.0d0) goto 90 
 c                               do a check to make sure that the phase does
 c                               not consist of just mobile components
-      if (jmct.gt.0.and.ichk.ne.4) then
+      tot = 0d0
 
-         tot = 0d0
+      do j = 1, icp + isat + ifct
+         tot = tot + comp(ic(j))
+      end do  
 
-         do j = 1, icp + isat + ifct
-            tot = tot + comp(ic(j))
-         end do  
+      if (jmct.gt.0.and.ichk.ne.4.and.tot.eq.0d0) goto 90
 
-          if (tot.eq.0d0) goto 90
+      if (lopt(5).and.iam.ne.5.and.iam.ne.6) then 
+c                               auto_exclude any phase without a pressure EoS from the 
+c                               thermodynamic-saturated component data space, the 
+c                               more general exclusion would preclude the use of such data
+c                               unless it is explicitly identified as the basis for a fugacity
+c                               variable. 
+          if (tot.gt.0d0.and.ieos.eq.0) then
+c                               got a bad operator, check that it doesn't match a 
+c                               special component
+             good = .false.
 
-      end if 
+             if (lopt(7)) then
+
+                do i = 1, ispec
+                   if (name.eq.cmpnt(idspe(i))) then 
+                      good = .true.
+                      exit
+                   end if 
+                end do 
+
+             end if
+
+             if (.not.good) then
+
+                if (ichk.eq.1.and.iam.eq.1.or.iam.eq.2.or.iam.eq.4) 
+     *             call warn (16,tot,j,name)
+
+                goto 90
+
+             end if 
+
+          end if 
+
+       end if 
 c                               the following is not executed by build:
 c                               if ichk ne 0 reject phases that consist entirely
 c                               of saturated components: 
@@ -12242,7 +12280,7 @@ c-----------------------------------------------------------------------
       double precision vlaar
       common/ cst221 /vlaar(m3,m4),jsmod
 
-      character*100 prject,tfname
+      character prject*100,tfname*100
       common/ cst228 /prject,tfname
 
       integer jmsol,kdsol
