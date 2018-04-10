@@ -1880,7 +1880,7 @@ c----------------------------------------------------------------------
 
       double precision numb
 
-      character phase(k23)*10, y*1, name*100
+      character phase(k23)*10, name*100
 
       character*100 prject,tfname
       common/ cst228 /prject,tfname

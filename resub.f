@@ -386,7 +386,7 @@ c                                 get the refinement point composition
                call getolx (ids,id)
             else
                if (.not.lopt(39)) cycle
-               call endmmx (kd,id,ids,iter)
+               call endmmx (kd,id,ids)
             end if
 
          else
@@ -402,7 +402,7 @@ c                                 point to solution models
                if (ids.eq.0.or..not.lopt(39)) cycle
 c                                 endmember refinement point:
 c                                 get refine point composition
-               call endmmx (kd,-id,ids,iter)
+               call endmmx (kd,-id,ids)
 
             else
 
@@ -446,7 +446,7 @@ c DEBUG DEBUG
 
       end
 
-      subroutine endmmx (ld,jd,ids,iter)
+      subroutine endmmx (ld,jd,ids)
 c----------------------------------------------------------------------
 c generate compositional coordinates (x(i,j) array) for endmembers 
 c during outrefine. if iter = 1, id is the static array index of the
@@ -457,7 +457,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i, j, ids, jd, kd, ld, iter 
+      integer i, j, ids, jd, kd, ld
 
       integer ipoint,kphct,imyn
       common/ cst60 /ipoint,kphct,imyn
@@ -1349,17 +1349,8 @@ c                                count fraction of impure solvent
          do j = 1, idsol(i)
 
             jd = jdsol(i,j)
-c                                conditional in case zero mode
-c                                is off:
-            if (bnew(i).gt.0d0) then 
 
-               xx =  amt(jd)/bnew(i)
-
-            else 
-
-               xx = 1d0
-
-            end if
+            xx =  amt(jd)/bnew(i)
 c                                save the new compositions
             do k = 1, icomp
                cpnew(k,i) = cpnew(k,i) + xx*cp3(k,jd)
@@ -2134,7 +2125,7 @@ c                                 save amounts for final processing
          npt = 0
 
          do i = 1, mpt
-            if (x(jdv(i)).lt.nopt(9)) cycle 
+            if (x(jdv(i)).lt.nopt(9).or.x(jdv(i)).le.0d0) cycle 
             npt = npt + 1
             jdv(npt) = jdv(i)
             amt(npt) = x(jdv(i))
@@ -2487,7 +2478,7 @@ c----------------------------------------------------------------------
 
       do i = 1, jphct
 
-         if (is(i).eq.1.or.x(i).lt.nopt(9)) cycle  
+         if (is(i).eq.1.or.x(i).lt.nopt(9).or.x(i).le.0d0) cycle  
 c                                 acceptable cases 0 active, between bounds
 c                                                  2 active, upper bound 
             npt = npt + 1
@@ -2966,7 +2957,7 @@ c                                 point
 c                                 check zero modes the amounts
          do i = 1, mpt
 
-            if (x(jdv(i)).ge.nopt(9)) then
+            if (x(jdv(i)).ge.nopt(9).and.x(jdv(i)).gt.0d0) then
 
                npt = npt + 1
                amt(npt) = x(jdv(i))
