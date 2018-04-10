@@ -672,6 +672,9 @@ c                                 global assemblage data
       logical oned
       common/ cst82 /oned
 
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+
       save warned, pi
       data warned/.false./
       data pi/1, 2, 3, 4, 1, 2, 4, 3, 1, 3, 4, 2, 2, 3, 4, 1/
@@ -807,6 +810,8 @@ c                                 compute weights of the interpolation points
    
          wt(1) = (x1-x)/(x1-x0)
          wt(2) = 1d0 - wt(1)
+
+         if (wt(2).le.zero) ijpt = 1
 
          return
 

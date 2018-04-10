@@ -2288,8 +2288,8 @@ c                                 warn on complete depletion of a component
      *        'composition:',/)
 1010  format (4x,a,2x,g12.6)  
 1030  format (/,'optimization failed at:',//,5(1x,a8,'=',g12.6))
-1180  format (a,' is stable, but its mass fraction (',f5.3,') is below',
-     *        ' the upper fractionation threshold (',f5.3,').')
+1180  format (a,' is stable, but its mass fraction (',f5.3,') is below '
+     *      ,'or at the upper fractionation threshold (',f5.3,').')
 1185  format (/,'At ',5(a,'=',g12.6,' '))
 1190  format ('fractionating ',g12.6,' moles of ',a,'; changes bulk by:'
      *        ,/,15(1x,g12.6))

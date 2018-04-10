@@ -1349,8 +1349,13 @@ c                                count fraction of impure solvent
          do j = 1, idsol(i)
 
             jd = jdsol(i,j)
-
-            xx =  amt(jd)/bnew(i)
+c                                conditional for zero-mode stable phases
+            if (bnew(i).gt.0d0) then 
+               xx =  amt(jd)/bnew(i)
+            else 
+c                                this is gonna be a disaster if idsol(i) > 1
+               xx = 1d0
+            end if 
 c                                save the new compositions
             do k = 1, icomp
                cpnew(k,i) = cpnew(k,i) + xx*cp3(k,jd)
@@ -2125,7 +2130,7 @@ c                                 save amounts for final processing
          npt = 0
 
          do i = 1, mpt
-            if (x(jdv(i)).lt.nopt(9).or.x(jdv(i)).le.0d0) cycle 
+            if (x(jdv(i)).lt.nopt(9)) cycle 
             npt = npt + 1
             jdv(npt) = jdv(i)
             amt(npt) = x(jdv(i))
@@ -2478,7 +2483,7 @@ c----------------------------------------------------------------------
 
       do i = 1, jphct
 
-         if (is(i).eq.1.or.x(i).lt.nopt(9).or.x(i).le.0d0) cycle  
+         if (is(i).eq.1.or.x(i).lt.nopt(9)) cycle  
 c                                 acceptable cases 0 active, between bounds
 c                                                  2 active, upper bound 
             npt = npt + 1
@@ -2957,7 +2962,7 @@ c                                 point
 c                                 check zero modes the amounts
          do i = 1, mpt
 
-            if (x(jdv(i)).ge.nopt(9).and.x(jdv(i)).gt.0d0) then
+            if (x(jdv(i)).ge.nopt(9)) then
 
                npt = npt + 1
                amt(npt) = x(jdv(i))

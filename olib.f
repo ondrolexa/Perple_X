@@ -910,9 +910,12 @@ c                                 coordinates in xco is in lco(l):
                   cst = wt(l)*bg(i,kd)
 c                                 in case zero mode is not on, allow
 c                                 composition of zero phase
-                  if (ijpt.eq.1.and.cst.eq.0d0) cst = 1d0
+                  if (ijpt.eq.1.and.cst.eq.0d0) then 
+                     cst = 1d0
+                  else 
 c                                 weighted molar amount
-                  props(16,i) = props(16,i) + cst
+                     props(16,i) = props(16,i) + cst
+                  end if 
 
                   do j = 1, istg(ids)
                      do k = 1, ispg(ids,j)
