@@ -2040,7 +2040,7 @@ c---------------------------------------------------------------------
       else if (ier.eq.26) then
          write (*,26) int, char
       else if (ier.eq.27) then
-         write (*,27) 
+         write (*,27) char
       else if (ier.eq.28) then 
          write (*,28) int, char
       else if (ier.eq.29) then 
@@ -2268,8 +2268,9 @@ c---------------------------------------------------------------------
      *          'increase parameter h9 (',i3,')')
 26    format (/,'**error ver026** the number of fixed components (',
      *        i2,') in ',a,/,' is >= the number of components ',/)
-27    format (/,'**error ver027** Error reading the Perple_X',
-     *        ' option file.',//,'Probable cause: You are using an ',
+27    format (/,'**error ver027** Error reading the problem',
+     *        ' definition file:',//,a,//,
+     *        'Probable cause: You are using an ',
      *        'input file created by an out-of-date',/,
      *        '                version of BUILD, or you have',
      *        ' incorrectly edited the',/'                input file',

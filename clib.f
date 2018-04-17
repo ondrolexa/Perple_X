@@ -1040,7 +1040,8 @@ c                                 get runtime parameters
 
       goto 999
 c                                 archaic error trap
-998   call error (27,r,i,n2name)
+998   call mertxt (n2name,prject,'.dat',0)
+      call error (27,r,i,n2name)
 
 999   end
 
