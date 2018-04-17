@@ -3817,11 +3817,17 @@ c----------------------------------------------------------------------
 
       if (jphct.gt.k21) then 
 
-         if (kd.lt.icp+2) then 
+         if (kd.lt.icp+2) then
+
             call error (58,x(1,1),k21,'loadgx')
+
          else 
+
             abort = .true.
             call warn (61,x(1,1),kd,'loadgx')
+            jphct = jphct - 1
+            return 
+
          end if
 
       end if

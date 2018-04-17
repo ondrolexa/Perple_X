@@ -5644,6 +5644,9 @@ c---------------------------------------------------------------------
       integer jmsol,kdsol
       common/ cst142 /jmsol(m4,mst),kdsol(m4)
 
+      integer ostot
+      common/ junk /ostot
+
       integer jsmod
       double precision vlaar
       common/ cst221 /vlaar(m3,m4),jsmod
@@ -5761,6 +5764,13 @@ c                                 the ordered species.
 c                                 eliminate sites with only one
 c                                 species
       if (isite.gt.1) call dedsit
+
+      if (jsmod.eq.9) then 
+         write (*,*) 'wonk reform'
+         stop
+      else
+         ostot = istot
+      end if 
 
       end 
 
@@ -7020,7 +7030,7 @@ c                                 correct jsmod for old versions
       if (jsmod.eq.1) call error (68,enth(1),jsmod,tname)
       if (jsmod.eq.6.or.jsmod.eq.8.or.jsmod.eq.9.or.
      *                                jsmod.eq.27) order = .true.
-      if (jsmod.eq.5.or.jsmod.ge.8.and.jsmod.le.9) depend = .true.
+      if (jsmod.eq.5.or.jsmod.ge.7.and.jsmod.le.9) depend = .true.
       if (jsmod.ge.7.and.jsmod.le.9) recip = .true.
 c                                 assign non-default props to 
 c                                 special models:
