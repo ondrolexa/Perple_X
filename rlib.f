@@ -6583,6 +6583,9 @@ c---------------------------------------------------------------------
       integer iam
       common/ cst4 /iam
 
+      integer ostot
+      common/ junk /ostot
+
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp  
 
@@ -6615,7 +6618,7 @@ c                                 didn't find a match, read a new name:
 
       end if  
 
-      do i = 1, istot
+      do i = 1, ostot
 
          kdsol(i) = 0
          ok = .false.
@@ -6899,6 +6902,9 @@ c---------------------------------------------------------------------
       integer jmsol,kdsol
       common/ cst142 /jmsol(m4,mst),kdsol(m4)
 
+      integer ostot
+      common/ junk /ostot
+
       integer jsmod
       double precision vlaar
       common/ cst221 /vlaar(m3,m4),jsmod
@@ -6945,6 +6951,7 @@ c----------------------------------------------------------------------
       mdep = 0 
       norder = 0 
       istot = 0
+      ostot = 0 
       ist(1) = 0 
 c DEBUG DEBUG
       do i = 1, m4
@@ -7002,6 +7009,7 @@ c                                 aqueous model reads to different
 c                                 arrays
          call raqmod (tname)
          istot = nq + nn + ns
+         ostot = istot
 
          return
 
@@ -7010,9 +7018,10 @@ c                                 correct jsmod for old versions
       if (jsmod.eq.3) jsmod = 2  
       if (jsmod.eq.0) fluid = .true.
       if (jsmod.eq.1) call error (68,enth(1),jsmod,tname)
-      if (jsmod.eq.6.or.jsmod.eq.8.or.jsmod.eq.27) order = .true.
-      if (jsmod.eq.5.or.jsmod.eq.7.or.jsmod.eq.8) depend = .true. 
-      if (jsmod.eq.7.or.jsmod.eq.8) recip = .true.
+      if (jsmod.eq.6.or.jsmod.eq.8.or.jsmod.eq.9.or.
+     *                                jsmod.eq.27) order = .true.
+      if (jsmod.eq.5.or.jsmod.ge.8.and.jsmod.le.9) depend = .true.
+      if (jsmod.ge.7.and.jsmod.le.9) recip = .true.
 c                                 assign non-default props to 
 c                                 special models:
       if (jsmod.ge.30.and.jsmod.le.31) recip = .true.
@@ -7032,12 +7041,22 @@ c                               total number of endmembers:
       istot = 1
       do i = 1, isite
          istot = istot*isp(i)
-      end do 
+      end do
+
+      if (jsmod.eq.9) then 
+c                               read the number of orphan site endmembers
+         call readda (rnums,1,tname)
+         isp(isite+1) = idint(rnums(1))
+         ostot = isp(isite+1)
+
+      end if
+
+      ostot = istot + ostot
 c                               counter for character read routines
 c                               and starting index
-      idim = istot
+      idim = ostot
 
-      if (istot.gt.m4) call error (1,rnums(1),idim,
+      if (ostot.gt.m4) call error (1,rnums(1),idim,
      *                 'm4 (maximum number of endmembers)')
 
       i = 0
@@ -7075,7 +7094,7 @@ c                               of ordered species:
          end do  
 c                               read the limit equations for the 
 c                               amount of the ordered endmembers
-         call readlm (tname,bad)
+         call readlm (idim,tname,bad)
 
       end if 
 c                               read dependent endmembers
@@ -7100,12 +7119,13 @@ c                               nreact is returned by readr
                idep(i,j) = inds(j+1)
             end do 
 
-         end do 
-      end if 
-c                               read endmember flags:
-      call readda (rnums,istot,tname)  
+         end do
 
-      do i = 1, istot
+      end if
+c                               read endmember flags:
+      call readda (rnums,ostot,tname)  
+
+      do i = 1, ostot
          iend(i) = idint(rnums(i))
       end do 
 c                               read composition limits, subdivision type:
@@ -7114,7 +7134,7 @@ c                               read composition limits, subdivision type:
       do i = 1, isite
 c                               number of ranges to be read
          m = m + isp(i) - 1
-      end do 
+      end do
 c                               get the numbers
       do i = 1, isite
          
@@ -7127,17 +7147,26 @@ c                               get the numbers
             xnc(i,j) = rnums(3)
             imd(j,i) = idint(rnums(4))
 
-            if (imd(j,i).eq.3) then
-c                                 read extra parm
-               call readda (rnums,1,tname)
-               yin(j,i) = rnums(1)
-            else if (imd(j,i).gt.4) then
-               call error (169,rnums(1),imd(j,i),tname)
-            end if 
-
          end do 
 
       end do
+c                                read the orphan vertex subdivision data 
+      if (jsmod.eq.9) then
+
+         i = 3
+
+         do j = 1, isp(i)
+
+            call readda (rnums,4,tname)
+
+            xmn(i,j) = rnums(1)
+            xmx(i,j) = rnums(2)
+            xnc(i,j) = rnums(3)
+            imd(j,i) = idint(rnums(4))
+
+         end do
+
+      end if
 c                                create bragg-williams indexes
       do i = 2, isite
          ijk(i) = 1
@@ -7232,7 +7261,7 @@ c                                 old versions:
       end do 
 c                              look for van laar and/or dqf parameters
 c                              or the end of model marker
-      call readop (idim,jlaar,istot-mdep,reach,stck,norf,tname)
+      call readop (idim,jlaar,ostot-mdep,reach,stck,norf,tname)
 
       if (jlaar.ne.0) then
 
@@ -7247,7 +7276,7 @@ c                                 re-set jsmod flag only for jsmod 2
 c                                 save original indices, need this for 
 c                                 melt models etc that have species specific
 c                                 equations of state.
-      do i = 1, istot + norder
+      do i = 1, ostot + norder
          iorig(i) = i 
       end do
 
@@ -7350,6 +7379,9 @@ c---------------------------------------------------------------------
       logical depend,laar,order,fluid,macro,recip
       common/ cst160 /depend,laar,order,fluid,macro,recip
 
+      integer ostot
+      common/ junk /ostot
+
       logical stck, norf
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
      *        kstot,rkord,xtyp
@@ -7387,27 +7419,27 @@ c                                 iy2p points from an endmember in the y
 c                                 array (1..istot+norder) to the endmember
 c                                 in the p array (1..kstot+norder)
 
-      if (depend) then       
+      if (depend) then
 
          itic = 0 
 
-         do i = 1, istot
+         do i = 1, ostot
             if (kdsol(i).gt.0) then 
                itic = itic + 1
                insp(itic) = i 
                jnsp(itic) = i 
                iy2p(i) = itic
             end if 
-         end do 
+         end do
 
          do i = 1, mdep 
             insp(itic+i) = jdep(i)
          end do 
 
          do i = 1, norder 
-            insp(istot+i) = istot + i
-            jnsp(itic+i) = istot + i 
-            iy2p(istot+i) = itic + i 
+            insp(ostot+i) = ostot + i
+            jnsp(itic+i) = ostot + i 
+            iy2p(ostot+i) = itic + i 
          end do 
 
       else 
@@ -12094,7 +12126,7 @@ c----------------------------------------------------------------------
 
       end  
 
-      subroutine readlm (tname,bad)
+      subroutine readlm (idim,tname,bad)
 c---------------------------------------------------------------------
 c readlm - reads stoichiometric limits on ordered species concentrations
 c---------------------------------------------------------------------
@@ -12102,7 +12134,7 @@ c---------------------------------------------------------------------
   
       include 'perplex_parameters.h'
 
-      integer j,k,l,jd,len,inds(k7),ier,ict 
+      integer j,k,l,jd,len,inds(k7),ier,ict, idim
 
       double precision coeffs(k7)
 
@@ -12155,7 +12187,7 @@ c                               initialize limit counter
          do 
 c                                 read the limit equations for the 
 c                                 amounts of the ordered endmembers
-            call readz (coeffs,inds,ict,istot+norder,tname,tag)
+            call readz (coeffs,inds,ict,idim,tname,tag)
 
             if (tag.eq.'end') then 
                exit 
@@ -12352,6 +12384,9 @@ c-----------------------------------------------------------------------
       integer iam
       common/ cst4 /iam
 
+      integer ostot
+      common/ junk /ostot
+
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
 
@@ -12409,8 +12444,8 @@ c                                 read the solution name
          call rmodel (tname,tn1,tn2,bad)
 
          if (bad) cycle 
-c                                 istot is zero, if eof: 
-         if (istot.eq.0.and.isoct-im.gt.0) then 
+c                                 ostot is zero, if eof: 
+         if (ostot.eq.0.and.isoct-im.gt.0) then 
 c                                 then at least one solution phase referenced
 c                                 in the input is not present in the
 c                                 solution phase data file, write warning:

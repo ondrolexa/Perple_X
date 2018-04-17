@@ -2919,10 +2919,10 @@ c     *          ' (SWASH, see program documentation Eq 2.3)',/)
      *        ' has invalid site populations.',/)
 60    format (/,'**warning ver060** non-fatal programming error ',
      *          'routine:',a,/)
-61    format (/,'**warning ver61** exhausted memory (k21) during'
+61    format (/,'**warning ver061** exhausted memory (k21) during'
      *         ,' adaptive optimization',/,'currently refining '
      *         ,'metastable refinement point ',i2,' execution will',/
-     *         ,' continue but may lead to low quality results. This' 
+     *         ,'continue but may lead to low quality results. This' 
      *         ,' problem can usually be',/,'mitigated by one of the '
      *         ,'following actions (best listed first):',/,
      *        2x,'- reduce refinement_points_II keyword ',
