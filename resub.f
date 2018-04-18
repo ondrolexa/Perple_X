@@ -430,11 +430,7 @@ c                                   load jkp[ids], hkp[i], local
 c                                   and global composition arrays
             call loadgx (kd,i,ids,bad,abort)
 
-            if (abort) then 
-c DEBUG DEBUG 
-               write (*,*) 'WONK'
-               exit
-            end if 
+            if (abort) exit
 
             if (bad) cycle
 
@@ -3817,16 +3813,13 @@ c----------------------------------------------------------------------
 
       if (jphct.gt.k21) then 
 
-         if (kd.lt.icp+2) then
-
+         if (kd.lt.icp+2) then 
             call error (58,x(1,1),k21,'loadgx')
-
          else 
-
             abort = .true.
             call warn (61,x(1,1),kd,'loadgx')
             jphct = jphct - 1
-            return 
+            return
 
          end if
 
