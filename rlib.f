@@ -9613,22 +9613,15 @@ c                                 save y -> p array
          ndep(im) = mdep
 
          do i = 1, nstot(im)
-
             do j = 1, mdep
-
                y2pg(j,i,im) = y2p(i,j)
-               if (jsmod.eq.5.and.y2p(i,j).lt.0d0) 
-     *                                         ineg(im,j) = knsp(i,im)
-
             end do
-
          end do
 c                                 check for invalid dependent endmembers, these
 c                                 are occasionally used as place holders:
          bad = .false.
 
          do j = 1, mdep
-
 
             do i = 1, mstot(im)
                y(i) = 0d0
