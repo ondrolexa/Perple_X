@@ -5644,6 +5644,9 @@ c---------------------------------------------------------------------
       integer jmsol,kdsol
       common/ cst142 /jmsol(m4,mst),kdsol(m4)
 
+      integer ostot
+      common/ junk /ostot
+
       integer jsmod
       double precision vlaar
       common/ cst221 /vlaar(m3,m4),jsmod
@@ -5761,6 +5764,13 @@ c                                 the ordered species.
 c                                 eliminate sites with only one
 c                                 species
       if (isite.gt.1) call dedsit
+
+      if (jsmod.eq.9) then 
+         write (*,*) 'wonk reform'
+         stop
+      else
+         ostot = istot
+      end if 
 
       end 
 
@@ -6583,6 +6593,9 @@ c---------------------------------------------------------------------
       integer iam
       common/ cst4 /iam
 
+      integer ostot
+      common/ junk /ostot
+
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp  
 
@@ -6615,12 +6628,12 @@ c                                 didn't find a match, read a new name:
 
       end if  
 
-      do i = 1, istot
+      do i = 1, ostot
 
          kdsol(i) = 0
          ok = .false.
 
-         if (jsmod.eq.5.or.jsmod.eq.7.or.jsmod.eq.8) then
+         if (jsmod.ge.7.and.jsmod.le.9) then
 c                              solution with dependent endmembers, if endmember i
 c                              is dependent endmember flag it by setting kdsol(i) = -2
             do j = 1, mdep
@@ -6717,7 +6730,7 @@ c                                 another model.
             
          end if 
 c                                 found all endmembers:
-         if (jstot.eq.istot) exit
+         if (jstot.eq.ostot) exit
 
       end do
 
@@ -6741,7 +6754,7 @@ c                                 is possible
 
       call redep (0)
 c                                done if nothing is missing:
-      if (jstot.eq.istot) return
+      if (jstot.eq.ostot) return
 c                                missing endmember warnings:
       if (jstot.lt.2) then
 
@@ -6753,7 +6766,7 @@ c                                missing endmember warnings:
 
          imiss = 0
 
-         do i = 1, istot
+         do i = 1, ostot
             if (kdsol(i).eq.0) then
                imiss = imiss + 1
                missin(imiss) = mname(i)
@@ -6857,20 +6870,7 @@ c                                dependent endmember is ok
 
          mdep = ndep
 
-         if (mdep.eq.0) then
-
-            depend = .false.
-c                                 june 5, 2014 => jsmod used to be changed to 
-c                                 non-reciprocal case if mdep = 0. now unchanged
-c                                 but hopefully caught by dedsit?
-c            if (jsmod.eq.7.or.jsmod.eq.5) then
-c               jsmod = 2
-c               if (laar) jsmod = 3
-c            else 
-c               jsmod = 6
-c            end if 
-
-         end if  
+         if (mdep.eq.0) depend = .false.
 
       end if 
 
@@ -6898,6 +6898,9 @@ c---------------------------------------------------------------------
 
       integer jmsol,kdsol
       common/ cst142 /jmsol(m4,mst),kdsol(m4)
+
+      integer ostot
+      common/ junk /ostot
 
       integer jsmod
       double precision vlaar
@@ -6945,6 +6948,7 @@ c----------------------------------------------------------------------
       mdep = 0 
       norder = 0 
       istot = 0
+      ostot = 0 
       ist(1) = 0 
 c DEBUG DEBUG
       do i = 1, m4
@@ -7002,17 +7006,18 @@ c                                 aqueous model reads to different
 c                                 arrays
          call raqmod (tname)
          istot = nq + nn + ns
+         ostot = istot
 
          return
 
        end if
 c                                 correct jsmod for old versions    
-      if (jsmod.eq.3) jsmod = 2  
       if (jsmod.eq.0) fluid = .true.
       if (jsmod.eq.1) call error (68,enth(1),jsmod,tname)
-      if (jsmod.eq.6.or.jsmod.eq.8.or.jsmod.eq.27) order = .true.
-      if (jsmod.eq.5.or.jsmod.eq.7.or.jsmod.eq.8) depend = .true. 
-      if (jsmod.eq.7.or.jsmod.eq.8) recip = .true.
+      if (jsmod.eq.6.or.jsmod.eq.8.or.jsmod.eq.9.or.
+     *                                jsmod.eq.27) order = .true.
+      if (jsmod.ge.7.and.jsmod.le.9) depend = .true.
+      if (jsmod.ge.7.and.jsmod.le.9) recip = .true.
 c                                 assign non-default props to 
 c                                 special models:
       if (jsmod.ge.30.and.jsmod.le.31) recip = .true.
@@ -7032,12 +7037,22 @@ c                               total number of endmembers:
       istot = 1
       do i = 1, isite
          istot = istot*isp(i)
-      end do 
+      end do
+
+      if (jsmod.eq.9) then 
+c                               read the number of orphan site endmembers
+         call readda (rnums,1,tname)
+         isp(isite+1) = idint(rnums(1))
+         ostot = isp(isite+1)
+
+      end if
+
+      ostot = istot + ostot
 c                               counter for character read routines
 c                               and starting index
-      idim = istot
+      idim = ostot
 
-      if (istot.gt.m4) call error (1,rnums(1),idim,
+      if (ostot.gt.m4) call error (1,rnums(1),idim,
      *                 'm4 (maximum number of endmembers)')
 
       i = 0
@@ -7075,7 +7090,7 @@ c                               of ordered species:
          end do  
 c                               read the limit equations for the 
 c                               amount of the ordered endmembers
-         call readlm (tname,bad)
+         call readlm (idim,tname,bad)
 
       end if 
 c                               read dependent endmembers
@@ -7100,12 +7115,13 @@ c                               nreact is returned by readr
                idep(i,j) = inds(j+1)
             end do 
 
-         end do 
-      end if 
-c                               read endmember flags:
-      call readda (rnums,istot,tname)  
+         end do
 
-      do i = 1, istot
+      end if
+c                               read endmember flags:
+      call readda (rnums,ostot,tname)  
+
+      do i = 1, ostot
          iend(i) = idint(rnums(i))
       end do 
 c                               read composition limits, subdivision type:
@@ -7114,7 +7130,7 @@ c                               read composition limits, subdivision type:
       do i = 1, isite
 c                               number of ranges to be read
          m = m + isp(i) - 1
-      end do 
+      end do
 c                               get the numbers
       do i = 1, isite
          
@@ -7127,17 +7143,26 @@ c                               get the numbers
             xnc(i,j) = rnums(3)
             imd(j,i) = idint(rnums(4))
 
-            if (imd(j,i).eq.3) then
-c                                 read extra parm
-               call readda (rnums,1,tname)
-               yin(j,i) = rnums(1)
-            else if (imd(j,i).gt.4) then
-               call error (169,rnums(1),imd(j,i),tname)
-            end if 
-
          end do 
 
       end do
+c                                read the orphan vertex subdivision data 
+      if (jsmod.eq.9) then
+
+         i = 3
+
+         do j = 1, isp(i)
+
+            call readda (rnums,4,tname)
+
+            xmn(i,j) = rnums(1)
+            xmx(i,j) = rnums(2)
+            xnc(i,j) = rnums(3)
+            imd(j,i) = idint(rnums(4))
+
+         end do
+
+      end if
 c                                create bragg-williams indexes
       do i = 2, isite
          ijk(i) = 1
@@ -7232,7 +7257,7 @@ c                                 old versions:
       end do 
 c                              look for van laar and/or dqf parameters
 c                              or the end of model marker
-      call readop (idim,jlaar,istot-mdep,reach,stck,norf,tname)
+      call readop (idim,jlaar,ostot-mdep,reach,stck,norf,tname)
 
       if (jlaar.ne.0) then
 
@@ -7240,14 +7265,12 @@ c                              or the end of model marker
 c                                 high order terms not allowed for
 c                                 van laar.
          if (iord.gt.2.and.laar) call error (999,coeffs(1),800,'RMODEL')
-c                                 re-set jsmod flag only for jsmod 2
-         if (jsmod.eq.2) jsmod = 3
 
       end if 
 c                                 save original indices, need this for 
 c                                 melt models etc that have species specific
 c                                 equations of state.
-      do i = 1, istot + norder
+      do i = 1, ostot + norder
          iorig(i) = i 
       end do
 
@@ -7350,6 +7373,9 @@ c---------------------------------------------------------------------
       logical depend,laar,order,fluid,macro,recip
       common/ cst160 /depend,laar,order,fluid,macro,recip
 
+      integer ostot
+      common/ junk /ostot
+
       logical stck, norf
       integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
      *        kstot,rkord,xtyp
@@ -7387,27 +7413,27 @@ c                                 iy2p points from an endmember in the y
 c                                 array (1..istot+norder) to the endmember
 c                                 in the p array (1..kstot+norder)
 
-      if (depend) then       
+      if (depend) then
 
          itic = 0 
 
-         do i = 1, istot
+         do i = 1, ostot
             if (kdsol(i).gt.0) then 
                itic = itic + 1
                insp(itic) = i 
                jnsp(itic) = i 
                iy2p(i) = itic
             end if 
-         end do 
+         end do
 
          do i = 1, mdep 
             insp(itic+i) = jdep(i)
          end do 
 
          do i = 1, norder 
-            insp(istot+i) = istot + i
-            jnsp(itic+i) = istot + i 
-            iy2p(istot+i) = itic + i 
+            insp(ostot+i) = ostot + i
+            jnsp(itic+i) = ostot + i 
+            iy2p(ostot+i) = itic + i 
          end do 
 
       else 
@@ -9004,7 +9030,7 @@ c---------------------------------------------------------------------
       logical add, bad, wham, zbad
 
       integer im, nloc, i, j, ind, id, jd, k, l,itic,ii,imatch, killct,
-     *        killid(20)
+     *        killid(20), inc
 
       double precision dinc,dzt,dx,gcpd
 
@@ -9016,9 +9042,6 @@ c---------------------------------------------------------------------
       double precision z, pa, p0a, x, w, y, wl
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
      *              wl(m17,m18)
-
-      integer ineg
-      common/ cst91 /ineg(h9,m15)
 
       logical badend, sck, nrf
       integer ldsol
@@ -9181,6 +9204,12 @@ c                                 model type
       logical fp
       common/ cxt32 /ifp(k10), fp(h9)
 
+      integer ostot
+      common/ junk /ostot
+
+      integer pstot
+      common/ junk1 /pstot(h9)
+
       integer grid
       double precision rid 
       common/ cst327 /grid(6,2),rid(5,2)
@@ -9272,11 +9301,15 @@ c                                 charge balance models
 
       end if 
 c                                 number of dependent + independent - ordered endmembers
+c                                 prismatic space
       mstot(im) = istot
+c                                 number of dependent + independent - ordered endmembers
+c                                 prismatic space + orphans
+      pstot(im) = ostot
 c                                 number of independent + ordered endmebers
-      nstot(im) = kstot + norder 
+      nstot(im) = kstot + norder
 c                                 number of independent disordered endmembers
-      lstot(im) = kstot 
+      lstot(im) = kstot
 c                                 chemical mixing sites
       istg(im) = isite
 c                                 site check override
@@ -9287,15 +9320,24 @@ c                                 number of ordered species
       nord(im) = norder 
 c                                 number of species and multiplicity and
 c                                 site ranges
-      ncoor(im) = 0 
+      ncoor(im) = 0
+      mcoor(im) = 0
+      inc = 0
 
-      do i = 1, isite 
+      if (jsmod.eq.9) inc = 1
+
+      do i = 1, isite + inc
 
          ispg(im,i) = isp(i)
          imlt(im,i) = ist(i)
-         ndim(i,im) = isp(i) - 1
-
          ncoor(im) = ncoor(im) + isp(i)
+
+         if (i.le.isite) then 
+            ndim(i,im) = isp(i) - 1
+         else 
+            ndim(i,im) = isp(i)
+         end if
+
          mcoor(im) = mcoor(im) + ndim(i,im)
 
          do j = 1, ndim(i,im)
@@ -9488,7 +9530,7 @@ c                                 term may be of order < iord
       end do 
 
 
-      do i = 1, mstot(im)
+      do i = 1, pstot(im)
 c                                 initialize invalid speciation flag
          badend(i,im) = .false.
 c                                 save global copy of kdsol
@@ -9498,7 +9540,7 @@ c                                 of endmember i in the solution model input:
          knsp(i,im) = insp(i)
 c                                 kmsol points to the species on the j'th site
 c                                 of the i'th endmember, used for the xtoy
-c                                 conversion      
+c                                 conversion
          do j = 1, isite
             kmsol(im,i,j) = jmsol(i,j)
          end do 
@@ -9915,7 +9957,7 @@ c                                 flag to fluid species indices
       else 
 c                                 save original endmember indexes for hard-wired 
 c                                 solution models
-         do i = 1, istot
+         do i = 1, ostot
             jspec(im,i) = iorig(i)
          end do 
 
@@ -9923,7 +9965,7 @@ c                                 solution models
 c                                  set fluid flags for non-special case melts
       if (lname(im).eq.'liquid'.or.lname(im).eq.'fluid') then 
 c                                  set ifp for t_melt and melt_is_fluid
-         do i = 1, mstot(im)
+         do i = 1, lstot(im)
 c                                 of endmember i in the solution model input:
             if (lname(im).eq.'liquid') then 
                ifp(kdsol(knsp(i,im))) = -1
@@ -9954,7 +9996,7 @@ c                                 endmember order.
 
       end if 
       
-      if (istot+norder.gt.m4) call error (39,0d0,m4,'INPUT9')    
+      if (ostot+norder.gt.m4) call error (39,0d0,m4,'INPUT9')    
 
       smod(im) = .true.
       pmod(im) = .true.
@@ -10032,12 +10074,7 @@ c                                 by use of logical classification variables,
 c                                 in which case, why is it here????
       if (laar) then 
 
-         if (recip) ksmod(im) = 7 
-
-         if (iterm.eq.0) then 
-            if (ksmod(im).eq.3) ksmod(im) = 2
-            laar = .false.
-         end if 
+         if (iterm.eq.0) laar = .false.
 
       end if 
 c                                 set type flags, presently no provision for 
@@ -12094,7 +12131,7 @@ c----------------------------------------------------------------------
 
       end  
 
-      subroutine readlm (tname,bad)
+      subroutine readlm (idim,tname,bad)
 c---------------------------------------------------------------------
 c readlm - reads stoichiometric limits on ordered species concentrations
 c---------------------------------------------------------------------
@@ -12102,7 +12139,7 @@ c---------------------------------------------------------------------
   
       include 'perplex_parameters.h'
 
-      integer j,k,l,jd,len,inds(k7),ier,ict 
+      integer j,k,l,jd,len,inds(k7),ier,ict, idim
 
       double precision coeffs(k7)
 
@@ -12155,7 +12192,7 @@ c                               initialize limit counter
          do 
 c                                 read the limit equations for the 
 c                                 amounts of the ordered endmembers
-            call readz (coeffs,inds,ict,istot+norder,tname,tag)
+            call readz (coeffs,inds,ict,idim,tname,tag)
 
             if (tag.eq.'end') then 
                exit 
@@ -12352,6 +12389,9 @@ c-----------------------------------------------------------------------
       integer iam
       common/ cst4 /iam
 
+      integer ostot
+      common/ junk /ostot
+
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
 
@@ -12409,8 +12449,8 @@ c                                 read the solution name
          call rmodel (tname,tn1,tn2,bad)
 
          if (bad) cycle 
-c                                 istot is zero, if eof: 
-         if (istot.eq.0.and.isoct-im.gt.0) then 
+c                                 ostot is zero, if eof: 
+         if (ostot.eq.0.and.isoct-im.gt.0) then 
 c                                 then at least one solution phase referenced
 c                                 in the input is not present in the
 c                                 solution phase data file, write warning:
@@ -12667,7 +12707,9 @@ c---------------------------------------------------------------------
 
       logical resub
 
-      integer last,i,j,np1,h,index,ids, k, l, n
+      integer last,i,j,np1,h,index,ids, k, l, m, n
+
+      double precision sum
 
       logical refine
       common/ cxt26 /refine
@@ -12744,8 +12786,8 @@ c                                 this could be an invalid compostion for
 c                                 a 3 site model.
             prism(j+i) = simp(i)
 
-         end do 
-      end do 
+         end do
+      end do
 
       do h = 2, npairs
 c                                 for each site 2 composition,
@@ -12772,12 +12814,72 @@ c                                 put in the new site 2 compositions:
             end do
 
          end do
-      end do 
-c                                 do the third site:
-c                                 this hardwires the array dimensions to "mst"
-      if (istg(ids).eq.2) return
+      end do
 
-      np1 = (npairs-1) * np1
+      np1 = ntot
+c                                 do the third site:
+      if (ksmod(ids).eq.9) then
+c                                 prism + orphan vertices (the prism is treated
+c                                 as a vertex of the simplex including the orphans)
+c                                 do the orphan site:
+
+c                                 zero the orphan concentrations in the
+c                                 ntot prismatic coordinates generated so far:
+         m = ndim(1,ids) + ndim(2,ids)
+
+         do i = 1, ntot
+
+            k = (i-1)*mcoor(ids) + m + 1
+            l = i*mcoor(ids)
+
+            do j = k, l
+               prism(j) = 0d0
+            end do
+
+         end do
+c                                 get the npair simplicial coordinates for the 
+c                                 orphan site
+         call cartes (3,ids)
+c                                 for each simplicial coordinate (skipping the 
+c                                 origin) make ntot prismatic compositions, for
+c                                 a grand total of ntot*(npair-1) compositions
+         do i = 2, npairs
+
+            sum = 1d0
+c                                 starting point in simp
+            n = (i-1)*ndim(3,ids)
+
+            do j = 1, ndim(3,ids)
+               sum = sum - simp(n+j)
+            end do 
+
+            do h = 1, np1
+
+               ntot = ntot + 1
+c                                 the starting position of the pure prism is
+               l = (h-1) * mcoor(ids) 
+c                                 the starting position in the final array is
+               k = (ntot -1) * mcoor(ids) 
+
+               if (k+mcoor(ids).gt.k24) call errk24 (resub)
+c                                 load the diluted prism coordinates
+               do j =  1, m
+                  prism(k+j) = prism(l+j)*sum
+               end do 
+c                                 and the simplicial coordinates
+               do j = 1, ndim(3,ids)
+                  prism(k+m+j) = simp(n+j)
+               end do 
+
+            end do
+
+         end do 
+
+         return 
+
+      end if
+
+      if (istg(ids).eq.2) return
 
       call cartes (3,ids)
 c                                 the use of "index" is necessary to avoid
@@ -12998,9 +13100,6 @@ c                                 model type
       integer istg, ispg, imlt, imdg
       common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
 
-      integer ineg
-      common/ cst91 /ineg(h9,m15)
-
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
 
@@ -13089,16 +13188,6 @@ c                                 only by independent disordered endmembers:
       end do
 
       if (depend) then
-
-         if (ksmod(im).eq.5) then
-c                                 for stx special case, reject excess comps
-            do j = 1, ndep(im) 
-
-               if (y(knsp(lstot(im)+j,im)).gt.0d0.and.
-     *             y(knsp(lstot(im)+j,im)).le.y(ineg(im,j))) return
-
-            end do 
-         end if 
 c                                 convert y's to p's
          do h = 1, lstot(im)
             do j = 1, ndep(im)
@@ -18154,18 +18243,12 @@ c                                 charge balance model:
         
             else 
 
-               do j = 1, ndim(1,i)  
-            
-                  if (ksmod(i).eq.5) then
-               
-                     write (*,1070) j,xlo(j,1,i),xhi(j,1,i)
-                                  
-                  else
-                
-                     write (*,1030) names(jend(i,2+j)),
+               do j = 1, ndim(1,i)
+
+                  write (*,1030) names(jend(i,2+j)),
      *                              xlo(j,1,i),xhi(j,1,i)
-                  end if
-                
+
+
                   if (lopt(11)) write (n11,1030) 
      *                          names(jend(i,2+j)),xlo(j,1,i),xhi(j,1,i)
      

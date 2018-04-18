@@ -430,9 +430,11 @@ c                                   load jkp[ids], hkp[i], local
 c                                   and global composition arrays
             call loadgx (kd,i,ids,bad,abort)
 
-            if (abort) exit
-
-            if (bad) cycle
+            if (abort) then 
+               exit
+            else if (bad) then 
+               cycle
+            end if
 
          end do
 
@@ -3782,9 +3784,6 @@ c----------------------------------------------------------------------
       integer solc, isolc
       common/ cxt1 /solc(k5),isolc,quack(k21)
 
-      integer ineg
-      common/ cst91 /ineg(h9,m15)
-
       double precision z, pa, p0a, x, w, y, wl
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
      *              wl(m17,m18)
@@ -3813,13 +3812,16 @@ c----------------------------------------------------------------------
 
       if (jphct.gt.k21) then 
 
-         if (kd.lt.icp+2) then 
+         if (kd.lt.icp+2) then
+
             call error (58,x(1,1),k21,'loadgx')
+
          else 
+
             abort = .true.
             call warn (61,x(1,1),kd,'loadgx')
             jphct = jphct - 1
-            return
+            return 
 
          end if
 
@@ -3914,24 +3916,6 @@ c                                 the composition is out of range
          jphct = jphct - 1
          jcoct = kcoct - mcoor(ids)
          return 
-
-      else if (ksmod(ids).eq.5) then
-c                                 this is an el cheapo filter for redundant
-c                                 compositions, a better method would be to
-c                                 do the subdivision properly.
-         do j = 1, ndep(ids)
-
-            if (y(knsp(lstot(ids)+j,ids)).gt.0d0.and.
-     *          y(knsp(lstot(ids)+j,ids)).le.y(ineg(ids,j))) then
-c                                 reject composition 
-               jphct = jphct - 1
-               jcoct = kcoct - mcoor(ids)
-               bad = .true. 
-               return
-
-            end if 
-
-         end do
 
       end if
 c                                 
