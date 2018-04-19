@@ -31,7 +31,7 @@
 !                                 mst - max number of distinct identisites per solution
 !                                 mdim - hard constraint on max number of dimensions
 !                                        for a solution model composition space.
-      parameter (mst=2,mdim=8,msp=mdim+2,ms1=msp-1)
+      parameter (mst=3,mdim=8,msp=mdim+2,ms1=msp-1)
 !                                 h5 - max number of saturated components
 !                                 h6  - max number of saturated composants in any subcomposition
 !                                 h8  - max number of excluded phases
@@ -91,7 +91,7 @@
       parameter (k17=7,k18=29*k1)
       parameter (k19=3*k5,k21=2000000,k20=(mdim+3)*k21)
       parameter (k22=mdim*k19,k23=25)
-      parameter (k13=mdim*k21,k24=k13*mst)
+      parameter (k13=mdim*k21,k24=k13*(mst-1))
 !                                 l2 - max number of independent potential variables
 !                                 l3 - max number of variables for gridded min and graphics (l2+2)
 !                                 l5 - max number of coordinates along a univariant curve                

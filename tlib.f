@@ -19,7 +19,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a)') 
-     *      'Perple_X version 6.8.1, source updated Apr 18, 2018.'
+     *      'Perple_X version 6.8.1, source updated Apr 19, 2018.'
 
       end
 
@@ -2366,8 +2366,8 @@ c---------------------------------------------------------------------
      *         ,', increase parameter K17 (',i2,') and recompile.',/)
 57    format (/,'**error ver057** failed on an accepted make definition'
      *         ,' for ',a,/,'routine INPUT2'/)
-58    format (/,'**error ver058** too many pseudocompounds generated ',
-     *          'during adaptive minimization, routine: ',a,/
+58    format (/,'**error ver058** exhausted memory ',
+     *          'in adaptive minimization, routine: ',a,/
      *        /,'this error can usually be eliminated by one of the ',
      *        /,'following actions (best listed first):',/)
 580   format (2x,'- increase dimension k21 (',i7,') and recompile ',
@@ -2648,8 +2648,6 @@ c----------------------------------------------------------------------
          write (*,59) char
       else if (ier.eq.60) then
          write (*,60) char
-      else if (ier.eq.61) then 
-         write (*,61) int, k21
       else if (ier.eq.63) then
          write (*,63)
       else if (ier.eq.68) then
@@ -2919,24 +2917,6 @@ c     *          ' (SWASH, see program documentation Eq 2.3)',/)
      *        ' has invalid site populations.',/)
 60    format (/,'**warning ver060** non-fatal programming error ',
      *          'routine:',a,/)
-61    format (/,'**warning ver061** exhausted memory (k21) during'
-     *         ,' adaptive optimization',/,'currently refining '
-     *         ,'metastable refinement point ',i2,' execution will',/
-     *         ,'continue but may lead to low quality results. This' 
-     *         ,' problem can usually be',/,'mitigated by one of the '
-     *         ,'following actions (best listed first):',/,
-     *        2x,'- reduce refinement_points_II keyword ',
-     *           'in perplex_option.dat',/,
-     *        2x,'- reduce the 1st value of the iteration keyword ',
-     *           'in perplex_option.dat',/,
-     *        2x,'- reduce the 2nd value of the iteration keyword ',
-     *           'in perplex_option.dat',/,
-     *        2x,'- reduce the reach_increment (if any) specified ',
-     *           'for solutions in solution_model.dat',/,
-     *        2x,'- simplify the calculation, e.g., eliminate ',
-     *           'components and/or simplify solution models',/,
-     *        2x,'- increase dimension k21 (',i7,') and recompile ',
-     *           'Perple_X',/)
 63    format (/,'**warning ver063** wway, invariant point on an edge?',
      *        /)
 68    format (/,'**warning ver068** degenerate initial assemblage in ',
