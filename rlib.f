@@ -19805,7 +19805,7 @@ c----------------------------------------------------------------------
 
       logical bad, dynam
 
-      double precision ysum
+      double precision ysum, sum
 
       integer jcoct, jcoor, jkp
       double precision zcoor
@@ -19830,11 +19830,6 @@ c----------------------------------------------------------------------
 
       integer ksmod, ksite, kmsol, knsp
       common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       double precision z, pa, p0a, x, w, y, wl
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
@@ -19864,6 +19859,20 @@ c                                 counter for number of non 0 or 1 compositions
       m = 0
        
       if (ksmod(ids).ne.20) then 
+
+         sum = 1d0
+
+         if (ksmod(ids).eq.9) then 
+c                                 sum the fractions of the independent vertics
+            sum = 1d0
+            k = l + ndim(1,ids) + ndim(2,ids)
+c                                 starting point in simp
+            do j = 1, ndim(3,ids)
+               x(3,j) = prism(k+j)
+               sum = sum - x(3,j)
+            end do 
+
+         end if
 
          do j = 1, istg(ids)
 
@@ -19896,7 +19905,7 @@ c                                 the composition is out of range
 
             end do
 
-            x(j,ispg(ids,j)) = 1d0 - ysum
+            x(j,ispg(ids,j)) = sum - ysum
 
          end do 
 
