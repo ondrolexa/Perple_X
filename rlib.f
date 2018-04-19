@@ -8066,108 +8066,6 @@ c         if (ispg(ids,1).gt.1.or.ksmod(ids).eq.39) then
 
       end 
 
-      subroutine xtoy (ids,bad)
-c----------------------------------------------------------------------
-c subroutine to convert prismatic solution compositions (x(i,j))
-c to geometric endmember fractions (y) for solution model ids.
-c----------------------------------------------------------------------
-      implicit none 
-
-      include 'perplex_parameters.h'
-c                                 -------------------------------------
-c                                 local variables:
-      integer ids, k, l, m
-
-      logical bad, zap, zbad
- 
-      external zbad
-
-      integer lstot,mstot,nstot,ndep,nord
-      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
-
-      double precision z, pa, p0a, x, w, y, wl
-      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
-     *              wl(m17,m18)
-
-      integer istg, ispg, imlt, imdg
-      common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
-
-      integer ksmod, ksite, kmsol, knsp
-      common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
-
-      double precision units, r13, r23, r43, r59, zero, one, r1
-      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-
-      logical badend, sck, nrf
-      integer ldsol
-      common/ cxt36 /ldsol(m4,h9),badend(m4,h9),sck(h9),nrf(h9)
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-c----------------------------------------------------------------------
-
-      bad = .false.
-      zap = bad
-
-      k = 0
-
-      do l = 1, mstot(ids)
-
-         if (istg(ids).eq.1) then
-
-            y(l) = x(1,l)
-
-         else 
-
-            y(l) = 1d0
-
-            do m = 1, istg(ids)
-               y(l) = y(l)*x(m,kmsol(ids,l,m))
-            end do
-
-         end if
-
-         if (badend(l,ids).and.y(l).gt.zero) zap = .true.
-
-         if (y(l).gt.one) k = l
-
-      end do
-
-      if (k.ne.0) then 
-c                                 reject pure independent endmember compositions. 
-         if (ldsol(k,ids).gt.0.and.nrf(ids)) then 
-            
-            bad = .true.
-
-            return
-  
-         end if 
-
-         y(k) = 1d0 
-
-         do l = 1, mstot(ids)
-            
-            if (l.eq.k) cycle
-            
-            y(l) = 0d0
-
-         end do
-
-      end if
-
-c                                 invalid dependent endmember
-      if (lopt(43).and.zap) then 
-c                                 convert y's to p's
-         call y2p0(ids)
-c                                 check for bad z's
-         if (zbad(pa,ids)) bad = .true.
-
-      end if 
-
-      end 
-
       double precision function gsol1 (id)
 c-----------------------------------------------------------------------
 c gsol computes the total (excess+ideal) free energy of solution 
@@ -10318,7 +10216,7 @@ c                                 initialize ordered species
       do k = 1, nstot(id)
 c                                 initialize the independent species
 c                                 other then the ordered species
-         if (k.le.lstot(id)) p0a(k) =  y(knsp(k,id))
+         if (k.le.lstot(id)) p0a(k) = y(knsp(k,id))
 c                                 convert the dependent species to
 c                                 idependent species
          do l = 1, ndep(id)
@@ -12296,7 +12194,7 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer icoct,h,i,j,k,l,im,icky,id,icpct,idsol,ixct
+      integer icoct,h,i,j,im,icky,id,icpct,idsol,ixct
 
       logical output, first, bad, chksol, wham
  
@@ -12339,9 +12237,6 @@ c-----------------------------------------------------------------------
       integer ntot,npairs
       common/ cst86 /ntot,npairs
 
-      double precision simp,prism
-      common/ cxt86 /simp(k13),prism(k24)
-
       integer iorig,jnsp,iy2p
       common / cst159 /iorig(m4),jnsp(m4),iy2p(m4)
 
@@ -12363,10 +12258,6 @@ c-----------------------------------------------------------------------
       integer ksmod, ksite, kmsol, knsp
       common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
 
-      double precision pa, p0a, xx, w, yy, z, wl
-      common/ cxt7 /yy(m4),xx(m4),pa(m4),p0a(m4),z(mst,msp),w(m1),
-     *              wl(m17,m18)
-
       integer lstot,mstot,nstot,ndep,nord
       common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
 
@@ -12384,9 +12275,6 @@ c-----------------------------------------------------------------------
 
       integer ostot
       common/ junk /ostot
-
-      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
-      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
 
       integer ncoor,mcoor,ndim
       common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
@@ -12511,56 +12399,17 @@ c                                 global pseudo-cpd counter for sxs
 
             end do
 
-            if (ksmod(im).eq.20) then 
-c                                 electrolyte model
-               do h = 1, ntot
-c                                 load the composition into
-c                                 a the site fraction array:
-                  k = (h-1)*nqs1
-                  l = 0
-
-                  zt = 0d0
-
-                  do j = 1, nqs
-                     if (j.eq.ns) cycle
-                     l = l + 1
-                     z(1,j) = prism(k+l)
-                     zt = zt + z(1,j)
-                  end do
-
-                  z(1,ns) = 1d0 - zt
-c                                 generate the pseudocompound:
-                  call soload (im,icoct,icpct,tname,icky,im)
-
-               end do 
-
-            else
 c                                 normal solutions
-               do h = 1, ntot
-c                                 load the composition into
-c                                 a the site fraction array:
-                  k = (h-1)*mcoor(im)
-                  l = 0 
+            do h = 1, ntot
+c                                 load the composition into the
+c                                 the simple prismatic arrays x,y:
+               call prs2xy (h,im,.false.,bad)
 
-                  do i = 1, isite
-
-                     zt = 0d0
-
-                     do j = 1, ndim(i,im)
-                        l = l + 1
-                        z(i,j) = prism(k+l)
-                        zt = zt + z(i,j)
-                     end do
-
-                     z(i,isp(i)) = 1d0 - zt
-
-                  end do
+               if (bad) cycle
 c                                 generate the pseudocompound:
-                  call soload (im,icoct,icpct,tname,icky,im)
+               call soload (im,icoct,icpct,tname,icky,im)
 
-               end do
-
-            end if 
+            end do
 
             if (icpct.gt.0) then 
 c                                 write pseudocompound count
@@ -12992,9 +12841,9 @@ c--------------------------------------------------------------------------
  
       double precision zpr,hpmelt,slvmlt,gmelt,smix,esum,ctotal,omega,x
 
-      logical zap, zbad
+      logical zbad
 
-      integer id,im,h,i,j,l,m,icpct,isoct,icky,index,icoct,icoct0,i228
+      integer id,im,h,i,j,l,icpct,isoct,icky,index,icoct,icoct0,i228
 
       external zbad
 
@@ -13120,96 +12969,15 @@ c                                 model type
       save i228
       data i228/0/
 c----------------------------------------------------------------------
-      zpr = 0d0 
-      i = 0
-      zap = .false.
-c                              compute end-member fractions
-      do l = 1, mstot(im)
-
-         if (istg(im).gt.1) then 
-
-            y(l) = 1d0
-
-            do m = 1, istg(im)
-c                                 check for invalid compositions,
-c                                 necessary for conformal transformtions
-               y(l) = y(l)*z(m,jmsol(l,m)) 
-
-            end do
-
-         else 
-
-            y(l) = z(1,l)
-
-         end if
-
-         if (badend(l,im).and.y(l).gt.zero) zap = .true.
-c                                 the pure endmember index is 
-         if (y(l).gt.one) i = l       
-c                                 y is the mole fraction of endmember l
-         zpr = zpr + y(l) 
-
-      end do
-c                                 DEBUG DEBUG
-c                                 check for badly normalized compositions
-      if (dabs(1d0-zpr).gt.zero) then 
-         write (*,*) 'got a bad un, ysum =',zpr,' tol is ',zero,nopt(5)
-      end if 
-
-      if (i.ne.0) then 
-c                                 reject pure independent endmembers
-         if (ldsol(i,im).gt.0.and.nrf(im)) return 
-c                                 a pure endmember composition:
-         y(i) = 1d0 
-
-         do l = 1, mstot(im)
-
-            if (l.eq.i) cycle 
-
-            y(l) = 0d0
-
-         end do    
-
-      end if 
-c                                 reject special cases:
+c                                 reject special case:
 c                                 ternary coh fluids above the CH4-CO join
       if (ksmod(im).eq.41.and.y(1).ge.1d0/3d0+y(2)) return
-c                                 move site fractions into array indexed 
-c                                 only by independent disordered endmembers:
-      do i = 1, lstot(im)
-         pa(i) = y(knsp(i,im))
-      end do
+c                                 move site fractions into p0a = pa arrays indexed 
+c                                 only by independent disordered endmembers, this is 
+c                                 done even for models without disorder so the pa
+c                                 array can be used for all solutions. 
+      call y2p0 (im)
 
-      if (depend) then
-c                                 convert y's to p's
-         do h = 1, lstot(im)
-            do j = 1, ndep(im)
-               pa(h) = pa(h) + y2pg(j,h,im) * y(knsp(lstot(im)+j,im))
-            end do 
-         end do
-
-         if (lopt(43).and.zap.and.zbad(pa,im)) return
-
-      end if 
-
-      if (order) then 
-c                                 zero fractions of ordered species
-         do h = lstot(im)+1, nstot(im)
-            pa(h) = 0d0
-         end do 
-      end if 
-
-      if (order.and.depend) then 
-c                                 compute the fraction of the i'th ordered species
-c                                 required by the decomposition of the dependent 
-c                                 disordered species:
-         do h = lstot(im)+1, nstot(im) 
-            do j = 1, ndep(im)
-               pa(h) = pa(h) + y2pg(j,h,im) * y(knsp(lstot(im)+j,im))
-            end do 
-         end do  
-      end if 
-c                                 the composition is acceptable.
       iphct = iphct + 1
       icpct = icpct + 1 
 
@@ -13340,9 +13108,9 @@ c                                 load xcoors if reciprocal
                icoct = icoct + 1
                xco(icoct) = z(i,j)
             end do
-         end do 
+         end do
 
-      end if 
+      end if
 
       jco(iphct) = icoct
 
@@ -13356,7 +13124,7 @@ c                               fractions of absent endmembers
             icoct = icoct + 1
             if (icoct.gt.k18) call error (40,y(1),k18,'SOLOAD')
 
-            xco(icoct) = pa(h) 
+            xco(icoct) = pa(h)
 
          end if 
 
@@ -13366,9 +13134,9 @@ c                              composition vector
 
                if (ksmod(im).eq.20.and.h.gt.ns) then
                   zpr = pa(h) * aqcp(l,id-aqst)
-               else 
+               else
                   zpr = pa(h) * cp(l,id)
-               end if 
+               end if
 
                cp(l,iphct) = cp(l,iphct) + zpr
                if (l.le.icp) ctotal = ctotal + zpr
@@ -13377,9 +13145,9 @@ c                              composition vector
 c                              accumulate endmember configurational entropy
             esum = esum + pa(h) * scoef(h,im)
 
-         end if  
+         end if
 
-      end do  
+      end do
 
       if (order.and.depend) then 
 
@@ -13391,7 +13159,7 @@ c                              accumulate endmember configurational entropy
                 icoct = icoct + 1
                 if (icoct.gt.k18) call error (40,y(1),k18,'SOLOAD')
                 xco(icoct) = pa(h)
-            end if 
+            end if
 c                              split these fraction into the fractions of the
 c                              consituent disordered species:
             do j = 1, nr(i)
@@ -13504,9 +13272,7 @@ c                              dqf corrections are also be saved in the
 c                              exces array this implies that speciation
 c                              does not effect the amount of the dqf'd
 c                              endmembers.
-      do i = 1, nstot(im)
-         p0a(i) = pa(i)
-      end do
+
 c                              p0dord converts the p0 of any ordered species
 c                              to it's disordered equivalents, as necessary
 c                              for the dqf.
@@ -20023,4 +19789,269 @@ c                                 restretch.
 
       end
 
+      subroutine prs2xy (i,ids,dynam,bad)
+c----------------------------------------------------------------------
+c convert the raw compositional coorinates stored for the ith entry
+c of prism to the prismatic compositional array x and convert the x
+c array to y.
 
+c if dynam then store the prismatic coordinates in the the zcoor array/
+c----------------------------------------------------------------------
+      implicit none 
+
+      include 'perplex_parameters.h'
+
+      integer i, j, k, l, m, ids, kcoct
+
+      logical bad, dynam
+
+      double precision ysum
+
+      integer jcoct, jcoor, jkp
+      double precision zcoor
+      common/ cxt13 /zcoor(k20),jcoor(k21),jkp(k21),jcoct
+
+      integer jphct
+      double precision g2, cp2, c2tot
+      common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),jphct
+
+      double precision xco
+      integer ico,jco
+      common/ cxt10 /xco(k18),ico(k1),jco(k1)
+
+      double precision simp,prism
+      common/ cxt86 /simp(k13),prism(k24)
+
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+
+      integer ncoor,mcoor,ndim
+      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
+
+      integer ksmod, ksite, kmsol, knsp
+      common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      double precision z, pa, p0a, x, w, y, wl
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
+     *              wl(m17,m18)
+
+      integer istg, ispg, imlt, imdg
+      double precision xmng, xmxg, xncg, xmno, xmxo, reachg
+      common/ cxt6r /xmng(h9,mst,msp),xmxg(h9,mst,msp),xncg(h9,mst,msp),
+     *               xmno(h9,mst,msp),xmxo(h9,mst,msp),reachg(h9)
+      common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
+
+      integer lstot,mstot,nstot,ndep,nord
+      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
+c----------------------------------------------------------------------
+      bad = .false.
+
+      if (dynam) then
+
+         jcoor(jphct) = jcoct - 1
+         kcoct = jcoct + mcoor(ids)
+c                                 counter for number of non 0 or 1 compositions
+         if (kcoct.gt.k20) call error (59,x(1,1),k20,'resub')
+
+      end if 
+
+      l = (i-1)*mcoor(ids)
+      m = 0
+       
+      if (ksmod(ids).ne.20) then 
+
+         do j = 1, istg(ids)
+
+            ysum = 0d0
+
+            do k = 1, ndim(j,ids)
+
+               m = m + 1
+
+               x(j,k) = prism(l+m)
+               ysum = ysum + x(j,k)
+
+               if (dynam) then 
+
+                  zcoor(jcoct) = x(j,k)
+ 
+                  if (x(j,k).lt.xmno(ids,j,k).and.
+     *                x(j,k).gt.xmxo(ids,j,k)) then 
+c                                 the composition is out of range
+                     jphct = jphct - 1
+                     jcoct = kcoct - mcoor(ids)
+                     bad = .true.
+                     return
+
+                  end if
+
+                  jcoct = jcoct + 1
+
+               end if 
+
+            end do
+
+            x(j,ispg(ids,j)) = 1d0 - ysum
+
+         end do 
+
+      else 
+c                                 charge balance models: a wierd shuffle to put
+c                                 the first nqs - 1 species in zcoor
+         ysum = 0d0
+
+         do k = 1, nqs
+
+            if (k.eq.ns) cycle 
+
+            m = m + 1
+
+            x(1,k) = prism(l+m)
+            ysum = ysum + x(1,k)
+
+            if (k.eq.nqs) exit
+
+            if (dynam) then 
+
+               zcoor(kcoct-nqs+k) = x(1,k)
+
+               if (x(1,k).lt.xmno(ids,1,k).and.
+     *             x(1,k).gt.xmxo(ids,1,k)) then 
+c                                 the composition is out of range
+                  jphct = jphct - 1
+                  jcoct = kcoct - mcoor(ids)
+
+                  bad = .true.
+                  return
+
+               end if
+
+            end if
+
+         end do
+
+         x(1,ns) = 1d0 - ysum
+
+         if (dynam) then 
+            zcoor(kcoct-qn) = x(1,ns)
+            jcoct = jcoct + nqs1
+         end if
+
+      end if
+
+      call xtoy (ids,bad)
+
+      if (bad.and.dynam) then 
+
+         jphct = jphct - 1
+         jcoct = kcoct - mcoor(ids)
+
+      end if
+
+      end
+
+      subroutine xtoy (ids,bad)
+c----------------------------------------------------------------------
+c subroutine to convert prismatic solution compositions (x(i,j))
+c to geometric endmember fractions (y) for solution model ids.
+c----------------------------------------------------------------------
+      implicit none 
+
+      include 'perplex_parameters.h'
+c                                 -------------------------------------
+c                                 local variables:
+      integer ids, k, l, m
+
+      logical bad, zap, zbad
+ 
+      external zbad
+
+      integer lstot,mstot,nstot,ndep,nord
+      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
+
+      double precision z, pa, p0a, x, w, y, wl
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
+     *              wl(m17,m18)
+
+      integer istg, ispg, imlt, imdg
+      common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
+
+      integer ksmod, ksite, kmsol, knsp
+      common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
+
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+
+      logical badend, sck, nrf
+      integer ldsol
+      common/ cxt36 /ldsol(m4,h9),badend(m4,h9),sck(h9),nrf(h9)
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+c----------------------------------------------------------------------
+
+      bad = .false.
+      zap = bad
+
+      k = 0
+
+      do l = 1, mstot(ids)
+
+         if (istg(ids).eq.1) then
+
+            y(l) = x(1,l)
+
+         else 
+
+            y(l) = 1d0
+
+            do m = 1, istg(ids)
+               y(l) = y(l)*x(m,kmsol(ids,l,m))
+            end do
+
+         end if
+
+         if (badend(l,ids).and.y(l).gt.zero) zap = .true.
+
+         if (y(l).gt.one) k = l
+
+      end do
+
+      if (k.ne.0) then 
+c                                 reject pure independent endmember compositions. 
+         if (ldsol(k,ids).gt.0.and.nrf(ids)) then 
+            
+            bad = .true.
+
+            return
+  
+         end if 
+
+         y(k) = 1d0 
+
+         do l = 1, mstot(ids)
+            
+            if (l.eq.k) cycle
+            
+            y(l) = 0d0
+
+         end do
+
+      end if
+c                                 invalid dependent endmember
+      if (lopt(43).and.zap) then 
+c                                 convert y's to p's
+         call y2p0 (ids)
+c                                 check for bad z's
+         if (zbad(pa,ids)) bad = .true.
+
+      end if 
+
+      end 
