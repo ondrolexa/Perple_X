@@ -1150,7 +1150,7 @@ c                                 find index in uname array
 
       subroutine compch (ivct,feos,mname,pname,oname)
 c---------------------------------------------------------------------------
-c interactively shoose components for build.
+c interactively choose components for build.
 c---------------------------------------------------------------------------
       implicit none
 
