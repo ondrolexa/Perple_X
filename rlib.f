@@ -4977,7 +4977,7 @@ c                                 program.
 
       end if 
 
-      call chopit (ycum,0,jsp,ksite,ids) 
+      call chopit (ycum,1d0,0,jsp,ksite,ids,.false.) 
 
       end
 
@@ -14984,12 +14984,15 @@ c                                 and g the normalized g:
 
       end
 
-      subroutine chopit (ycum,jst,jsp,lsite,ids)
+      subroutine chopit (ycum,fac,jst,jsp,lsite,ids,extra)
 c---------------------------------------------------------------------
 c subroutine to do cartesian or transform subdivision of species
 c jst+1 through jsp on site k of solution ids. ycum is the smallest
 c fraction possible (i.e., if the minimum bound for some species 
-c is > 0). the npair coordinate sets are loaded into xy(mdim,k1).
+c is > 0). the fractions are loaded into simp.
+
+c extra - save the dependent fraction (closure).
+c fac   - factor to modify default resolution (1, except ksmod 9).
 c---------------------------------------------------------------------
       implicit none
 
@@ -14999,11 +15002,13 @@ c---------------------------------------------------------------------
  
       parameter (mres=12000)
 
+      logical extra
+
       integer mode, ind(ms1), iy(ms1), jsp, lsite, indx, iexit, 
      *        ieyit, i, j, k, ids, ico, jst
 
       double precision y(ms1,mres), ycum, ymax, dy, ync, 
-     *                 x, unstch, strtch, delt, dx
+     *                 x, unstch, strtch, delt, dx, fac
 
       external unstch, strtch
 
@@ -15299,7 +15304,7 @@ c                                 already been made in reform
 
       else
 c                                 subdivision of neutral ns+nn-1 species
-         call chopit (ycum,0,ns1,1,ids)
+         call chopit (ycum,1d0,0,ns1,1,ids,.true.)
 
          do i = 1, npairs
 
@@ -15327,7 +15332,7 @@ c                                 subdivision of neutral ns+nn-1 species
 c                                 do the nq-1 species independently
          ycum = 0d0
 
-         call chopit (ycum,sn,nq1,1,ids)
+         call chopit (ycum,1d0,sn,nq1,1,ids,.true.)
 c                                 at this point simp contains all 
 c                                 possible compositions of the nq-1 species,
 c                                 use charge balance to get the nqth species

@@ -29,7 +29,7 @@ c-----------------------------------------------------------------------
       double precision c(0:4)
 
       character mnames(k16*k17)*8, n9name*100, dsol*100, opname*100,
-     *          mname(k5)*5, nname(k5)*5, oname(k5)*5, pname(k5)*5, 
+     *          mname(k5)*5, oname(k5)*5, pname(k5)*5, 
      *          uname(k0)*5, group*28, aname(i9)*6, amount*5, new*3, 
      *          text*256, dtext*200, title*162, y*1, lname(i9)*22,
      *          blah*10, sname(i9)*10, tn1*6, tn2*22, fname(i9)*10
@@ -669,12 +669,12 @@ c                                 output component data:
 
       write (n1,3060) 'saturated component list'
 
-      do i = 1, isat
+      do i = icp + 1, icp + isat
 
          if (i+icp.gt.jcth) then 
-            write (n1,3000) nname(i),0,0.,0.,0.,'unconstrained'
+            write (n1,3000) pname(i),0,0.,0.,0.,'unconstrained'
          else 
-            write (n1,3000) nname(i),icont,(dblk(j,i+icp),j=1,3),amount
+            write (n1,3000) pname(i),icont,(dblk(j,i),j=1,3),amount
          end if
 
       end do 
@@ -1150,7 +1150,7 @@ c                                 find index in uname array
 
       subroutine compch (ivct,feos,mname,pname,oname)
 c---------------------------------------------------------------------------
-c interatctively shoose components for build.
+c interactively shoose components for build.
 c---------------------------------------------------------------------------
       implicit none
 
