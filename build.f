@@ -29,7 +29,7 @@ c-----------------------------------------------------------------------
       double precision c(0:4)
 
       character mnames(k16*k17)*8, n9name*100, dsol*100, opname*100,
-     *          mname(k5)*5, oname(k5)*5, pname(k5)*5, 
+     *          mname(k5)*5, oname(k5)*5, pname(k5)*5,
      *          uname(k0)*5, group*28, aname(i9)*6, amount*5, new*3, 
      *          text*256, dtext*200, title*162, y*1, lname(i9)*22,
      *          blah*10, sname(i9)*10, tn1*6, tn2*22, fname(i9)*10
@@ -218,7 +218,7 @@ c                                 initialization:
 c                                 Read THERMODYNAMIC DATA file header
       call topn2 (3)
 
-      call compch (ivct,feos,mname,pname,oname)
+      call compch (ivct,feos,mname,pname,oname,uname)
 c                                 ====================================
 c                                 next problem class and variable choice
 c                                 and ranges
@@ -1148,7 +1148,7 @@ c                                 find index in uname array
      *        ', and do not use leading blanks. Try again:',/)
       end
 
-      subroutine compch (ivct,feos,mname,pname,oname)
+      subroutine compch (ivct,feos,mname,pname,oname,uname)
 c---------------------------------------------------------------------------
 c interactively choose components for build.
 c---------------------------------------------------------------------------
@@ -1160,7 +1160,7 @@ c---------------------------------------------------------------------------
 
       logical satflu, mobflu, good, findph, eof, quit, feos
 
-      character mname(*)*5, qname(k0)*5, char5*5, uname(k0)*5,
+      character mname(*)*5, qname(k0)*5, char5*5, uname(*)*5,
      *          y*1, oname(*)*5, nname(k5)*5, char6*6, 
      *          pname(*)*5, fugact(3)*8
 

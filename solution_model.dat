@@ -183,7 +183,7 @@ full_name    clinopyroxene
 4 4                         | both simplices are quaternary
                             | 4 * 4 = 16 endmembers that define the vertices of the compositional prism
 
-hed_d cats  cacm  di 
+hed   cats  cacm  di 
 cfsg  fats  facm  ffmc
 nhed  jd    acm   ndi 
 mfc   mats  macm  cenh 
@@ -207,14 +207,14 @@ end_limits
 
 10                            | 10 dependent endmembers
 
-hed_d = 1 di   + 1 cfsg - 1 fmc 
-cacm  = 1 acm  + 1 cats - 1 jd 
-mfc   = 1 cenh + 1 cfsg - 1 fmc 
-mats  = 1 cats + 1 cenh - 1 di
-macm  = 1 cats + 1 cenh - 1 di   + 1 acm - 1 jd
-ffmc  = 1 fmc
-fats  = 1 cats - 1 di   + 1 fmc
-facm  = 1 cats - 1 di   + 1 fmc  + 1 acm - 1 jd
+hed  = 1 di   + 1 cfsg - 1 fmc 
+cacm = 1 acm  + 1 cats - 1 jd 
+mfc  = 1 cenh + 1 cfsg - 1 fmc 
+mats = 1 cats + 1 cenh - 1 di
+macm = 1 cats + 1 cenh - 1 di   + 1 acm - 1 jd
+ffmc = 1 fmc
+fats = 1 cats - 1 di   + 1 fmc
+facm = 1 cats - 1 di   + 1 fmc  + 1 acm - 1 jd
 
  | assigning ndi = nhed = jd is a [bad] way to make this model work.
  | ndi = nhed = jd_dqf where 
@@ -827,8 +827,6 @@ z(al,T2)    = 1 ames + 1/2 clin + 1/2 daph + 1/2 f3clin + 1/2 mnchl
 begin_dqf_corrections
 dqf(mnchl) -13030  0 0
 end_dqf_corrections
-
-site_check_override
 
 end_of_model  
                       --------------------------------------------------------

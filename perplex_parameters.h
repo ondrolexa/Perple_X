@@ -4,7 +4,7 @@
       integer i6,i7,i8,i9,i10,i11
       integer j3,j4,j5,j6,j9
       integer k0,k1,k2,k3,k4,k5,k7,k8,k9,k10,k13,k14,k15
-      integer k16,k17,k18,k19,k20,k21,k22,k23,k24,kd2
+      integer k16,k17,k18,k19,k20,k21,k22,k23,k24,k25,kd2
       integer l2,l3,l5,l6,l7,l8,l9,l10,lchar
       integer m0,m1,m2,m3,m4,m6,m7,m8,m9,m10,m11,m12,m13,m14,m15
       integer m16,m17,m18
@@ -31,7 +31,7 @@
 !                                 mst - max number of distinct identisites per solution
 !                                 mdim - hard constraint on max number of dimensions
 !                                        for a solution model composition space.
-      parameter (mst=2,mdim=8,msp=mdim+2,ms1=msp-1)
+      parameter (mst=3,mdim=8,msp=mdim+2,ms1=msp-1)
 !                                 h5 - max number of saturated components
 !                                 h6  - max number of saturated composants in any subcomposition
 !                                 h8  - max number of excluded phases
@@ -91,7 +91,7 @@
       parameter (k17=7,k18=29*k1)
       parameter (k19=3*k5,k21=2000000,k20=(mdim+3)*k21)
       parameter (k22=mdim*k19,k23=25)
-      parameter (k13=mdim*k21,k24=k13*mst)
+      parameter (k13=mdim*k21,k24=k13*(mst-1),k25=k21)
 !                                 l2 - max number of independent potential variables
 !                                 l3 - max number of variables for gridded min and graphics (l2+2)
 !                                 l5 - max number of coordinates along a univariant curve                
