@@ -12585,6 +12585,12 @@ c                                subdivision with charge balance
 c                                assign to y()?
          return
 
+      else if (ksmod(ids).eq.9) then 
+
+         call oddprs (ids,resub)
+
+         return
+
       end if 
 c                                 do the first site:
 
@@ -20115,7 +20121,7 @@ c                                 the subdivision resolution of the prism so
 c                                 that the renormalized resolution remains constant
       do i = 1, np0
 c                                 starting point in simp
-         n = (i-1)*ndim(3,ids)
+         n = (i-1)*nco
 c                                  sum is the factor by which the resolution
 c                                  on the prismatic site is changed, i.e., 
 c                                  inc = inc0/sum
@@ -20125,7 +20131,7 @@ c                                  inc = inc0/sum
             sum = sum - simp(n+j)
          end do
 
-         simp(n+ncO) = sum
+         simp(n+nco) = sum
 
          ycum = 0d0
 c                                  first simplex of prism
