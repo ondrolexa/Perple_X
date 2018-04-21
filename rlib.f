@@ -1156,7 +1156,7 @@ c                               thermodynamic-saturated component data space, th
 c                               more general exclusion would preclude the use of such data
 c                               unless it is explicitly identified as the basis for a fugacity
 c                               variable. 
-          if (tot.gt.0d0.and.ieos.eq.0) then
+          if (tot.ne.0d0.and.ieos.eq.0) then
 c                               got a bad operator, check that it doesn't match a 
 c                               special component
              good = .false.
