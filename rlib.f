@@ -9219,10 +9219,10 @@ c                                 number of ordered species
 c                                 number of species and multiplicity and
 c                                 site ranges
       ncoor(im) = 0
-      mcoor(im) = 0
-      inc = 0
 
+      inc = 0
       if (jsmod.eq.9) inc = 1
+      mcoor(im) = inc
 
       do i = 1, isite + inc
 
@@ -9518,6 +9518,16 @@ c                                 save y -> p array
 c                                 check for invalid dependent endmembers, these
 c                                 are occasionally used as place holders:
          bad = .false.
+
+         if (ksmod(im).eq.9) then 
+
+            do j = 1, ndim(3,im)
+               x(3,j) = 0d0
+            end do 
+
+            x(3,j) = 1d0
+
+         end if 
 
          do j = 1, mdep
 
@@ -10193,6 +10203,13 @@ c-----------------------------------------------------------------------
       include 'perplex_parameters.h'
 
       integer id,k,l
+c DEBUG DEBUG
+      logical zbad
+      external zbad
+      double precision s1,s2,s3
+
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 
       double precision y2pg
       common/ cxt4  /y2pg(m15,m4,h9)
@@ -10206,12 +10223,17 @@ c-----------------------------------------------------------------------
 
       integer ksmod, ksite, kmsol, knsp
       common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
+
+      integer ncoor,mcoor,ndim
+      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
 c-----------------------------------------------------------------------
 c                                 convert y's to p's
 c                                 initialize ordered species
       do k = 1, nord(id)
          p0a(lstot(id)+k) = 0d0
-      end do        
+      end do
+
+      s1 = 0d0
 
       do k = 1, nstot(id)
 c                                 initialize the independent species
@@ -10224,8 +10246,59 @@ c                                 idependent species
          end do 
 
          pa(k) = p0a(k)
+         s1 = s1 + p0a(k)
 
       end do
+
+      if (dabs(s1-1d0).gt.zero) then 
+         write (*,*) 's1 wonka wonaa'
+      end if 
+
+         if (zbad(pa,id)) then 
+         write (*,*) 'z1 wonka wonaa'
+         end if 
+
+
+      if (ksmod(id).eq.9) then
+
+         s2 = 0d0
+c                                 orphan vertex model
+         do k = 1, nstot(id)
+c                                 renormalize the prismatic endmembers
+            p0a(k) = p0a(k)*x(3,ndim(3,id)+1)
+            pa(k) = p0a(k)
+            s2 = s2 + p0a(k)
+         end do 
+
+
+         if (zbad(pa,id)) then 
+         write (*,*) 'z2 wonka wonaa'
+         end if 
+         if (dabs(s2-x(3,ndim(3,id)+1)).gt.zero) then 
+            write (*,*) 's2 wonka wonak'
+         end if 
+
+         s3 = 0d0 
+
+         do k = 1, ndim(3,id)
+c                                 add the orphan fractions
+            l = lstot(id) - ndim(3,id) + k 
+            p0a(l) = p0a(l) + x(3,k)
+            pa(l) = p0a(l)
+         end do
+
+         do k = 1, nstot(id)
+            s3 = s3 + p0a(k)
+         end do
+
+         if (dabs(s3-1d0).gt.zero) then 
+            write (*,*) 's3 wonka wonaa'
+         end if 
+         if (zbad(pa,id)) then 
+         write (*,*) 'z3 wonka wonaa'
+         end if 
+
+      end if 
 
       end 
 
@@ -12064,6 +12137,9 @@ c---------------------------------------------------------------------
       double precision vlaar
       common/ cst221 /vlaar(m3,m4),jsmod
 
+      integer ostot
+      common/ junk /ostot
+
       integer iam
       common/ cst4 /iam
 c----------------------------------------------------------------------
@@ -12094,7 +12170,7 @@ c               exit
             end if 
 c                                 convert the endmember index to the 
 c                                 ordered species index
-            jd = inds(1) - istot
+            jd = inds(1) - ostot
             limn(jd) = limn(jd) + 1
             k = limn(jd) 
             if (k.gt.j5) call error (999,coeffs(1),k,tname)
@@ -12983,6 +13059,15 @@ c                                 only by independent disordered endmembers, thi
 c                                 done even for models without disorder so the pa
 c                                 array can be used for all solutions. 
       call y2p0 (im)
+
+c DEBUG DEBUG
+      x = 0
+      do i = 1, nstot(im)
+         x = x + pa(i)
+      end do 
+      if (dabs(x-1d0).gt.zero) then 
+         write (*,*) 'soload 2'
+      end if 
 
       iphct = iphct + 1
       icpct = icpct + 1 
@@ -19876,8 +19961,6 @@ c                                 counter for number of non 0 or 1 compositions
        
       if (ksmod(ids).ne.20) then 
 
-         sum = 1d0
-
          if (ksmod(ids).eq.9) then 
 c                                 sum the fractions of the independent vertics
             sum = 1d0
@@ -19886,7 +19969,13 @@ c                                 starting point in simp
             do j = 1, ndim(3,ids)
                x(3,j) = prism(k+j)
                sum = sum - x(3,j)
-            end do 
+            end do
+
+            x(3,j) = prism(k+j)
+c DEBUG DEBUG
+            if (sum.ne.prism(k+j)) then 
+               write (*,*) 'oinky poinky'
+            end if 
 
          end if
 
@@ -19921,7 +20010,7 @@ c                                 the composition is out of range
 
             end do
 
-            x(j,ispg(ids,j)) = sum - ysum
+            x(j,ispg(ids,j)) = 1d0 - ysum
 
          end do 
 
@@ -20122,9 +20211,10 @@ c                                 that the renormalized resolution remains const
       do i = 1, np0
 c                                 starting point in simp
          n = (i-1)*nco
-c                                  sum is the factor by which the resolution
-c                                  on the prismatic site is changed, i.e., 
-c                                  inc = inc0/sum
+c                                 sum is the factor by which the resolution
+c                                 on the prismatic site is changed, i.e., 
+c                                 inc = inc0/sum [sum is the fraction of the
+c                                 prism vertex]
          sum = 1d0
 
          do j = 1, ndim(3,ids)
@@ -20133,45 +20223,66 @@ c                                  inc = inc0/sum
 
          simp(n+nco) = sum
 
-         ycum = 0d0
-c                                  first simplex of prism
-         call chopit (ycum,sum,0,ndim(1,ids),1,ids,nst1,.false.)
+         if (sum.ne.0d0) then 
+c                                 the prism vertex fraction is > 0
+            ycum = 0d0
+c                                 first simplex of prism
+            call chopit (ycum,sum,0,ndim(1,ids),1,ids,nst1,.false.)
 
-         np1 = npairs
-         nst2 = nst1 + np1*ndim(1,ids)
-c                                  second simplex of prism
-         call chopit (ycum,sum,0,ndim(2,ids),2,ids,nst2,.false.)
+            np1 = npairs
+            nst2 = nst1 + np1*ndim(1,ids)
 
-         np2 = npairs
-c                                  ready to rock
-         do j = 1, np1 
-c                                  site 1 coordinate starting point in simp
-            m = nst1 + (j-1)*ndim(1,ids)
+            ycum = 0d0
+c                                 second simplex of prism
+            call chopit (ycum,sum,0,ndim(2,ids),2,ids,nst2,.false.)
+
+            np2 = npairs
+c                                 ready to rock
+            do j = 1, np1 
+c                                 site 1 coordinate starting point in simp
+               m = nst1 + (j-1)*ndim(1,ids)
 c                                  for each population on site 1
-            do k = 1, np2
-c                                  site 2 coordinate starting point in simp
-               l = nst2 + (k-1)*ndim(2,ids)
+               do k = 1, np2
+c                                 site 2 coordinate starting point in simp
+                  l = nst2 + (k-1)*ndim(2,ids)
 c                                  count the coordinate
-               ntot = ntot + 1
-c                                  starting point of the coordinate
-               h = (ntot-1)*mcoor(ids)
+                  ntot = ntot + 1
+c                                 starting point of the coordinate
+                  h = (ntot-1)*mcoor(ids)
 
-               if (h+mcoor(ids).gt.k24) call errk24 (resub)
-c                                  load the coordinate
-               do i1 = 1, ndim(1,ids)
-                  prism(h+i1) = simp(l+i1)
+                  if (h+mcoor(ids).gt.k24) call errk24 (resub)
+c                                 load the coordinate
+                  do i1 = 1, ndim(1,ids)
+                     prism(h+i1) = simp(m+i1)
+                  end do
+
+                  do i1 = 1, ndim(2,ids)
+                     prism(h+ndim(1,ids)+i1) = simp(l+i1)
+                  end do
+
+                  do i1 = 1, nco
+                     prism(h+ndim(1,ids)+ndim(2,ids)+i1) = simp(n+i1)
+                  end do 
+
                end do
-
-               do i1 = 1, ndim(2,ids)
-                  prism(h+ndim(1,ids)+i1) = simp(m+i1)
-               end do
-
-               do i1 = 1, nco
-                  prism(h+ndim(1,ids)+ndim(2,ids)+i1) = simp(n+i1)
-               end do 
-
             end do
-         end do 
+
+         else
+c                                 the prism vertex is zero, load only the
+c                                 fractions of the orphans, the other 
+c                                 fractions will not be used.
+
+c                                 count the coordinate
+            ntot = ntot + 1
+c                                 starting point of the coordinate
+            h = (ntot-1)*mcoor(ids)
+
+            do i1 = 1, nco
+               prism(h+ndim(1,ids)+ndim(2,ids)+i1) = simp(n+i1)
+            end do 
+
+         end if
+
       end do 
 
       end
