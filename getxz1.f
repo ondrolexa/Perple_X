@@ -31,14 +31,17 @@ c                                  xcoordinates for the final solution
 
       integer ncoor,mcoor,ndim
       common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
+
+      integer pstot,qstot,ostg,odim,nsum
+      common/ junk1 /pstot(h9),qstot(h9),ostg(h9),odim(mst,h9),nsum(h9)
 c----------------------------------------------------------------------
       icoor = jcoor(id)
 
-      do i = 1, istg(ids)
+      do i = 1, ostg(ids)
 
          xt = 0d0 
 
-         do j = 1, ndim(i,ids)
+         do j = 1, odim(i,ids)
             icoor = icoor + 1
             x(i,j) = zcoor(icoor)
             x3(jd,i,j) = zcoor(icoor)

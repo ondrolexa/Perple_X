@@ -2111,7 +2111,7 @@ c                                 zcoor array.
          call getxz (jd,id,ids)
 c                                 convert the x(i,j) coordinates to the
 c                                 geometric y coordinates
-         call xtoy (ids,bad)
+         call xtoy (ids,jd,.true.,bad)
 
          if (lopt(32).and.ksmod(ids).eq.39) then 
 

@@ -802,6 +802,9 @@ c                                 x coordinate description
       integer npt,jdv
       double precision cptot,ctotal
       common/ cst78 /cptot(k19),ctotal,jdv(k19),npt
+
+      integer pstot,qstot,ostg,odim,nsum
+      common/ junk1 /pstot(h9),qstot(h9),ostg(h9),odim(mst,h9),nsum(h9)
 c----------------------------------------------------------------------
       kcoct = 0
 
@@ -822,9 +825,9 @@ c                                 it's a solution:
          lcoor(i) = kcoct
          itic = 0
 
-         do j = 1, istg(ids)
+         do j = 1, ostg(ids)
 
-            do k = 1, ndim(j,ids)
+            do k = 1, odim(j,ids)
 
                itic = itic + 1
 
@@ -834,7 +837,7 @@ c                                 it's a solution:
 
             end do
 
-         end do 
+         end do
 
          kcoct = kcoct + itic
 
@@ -866,12 +869,15 @@ c                                 interim storage array
       double precision ycoor
       common/ cxt14 /ycoor(k22),lcoor(k19),lkp(k19)
 
+      integer pstot,qstot,ostg,odim,nsum
+      common/ junk1 /pstot(h9),qstot(h9),ostg(h9),odim(mst,h9),nsum(h9)
+
       integer ncoor,mcoor,ndim
       common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
 c----------------------------------------------------------------------
       jcoor = lcoor(id)
 
-      do i = 1, istg(ids)
+      do i = 1, ostg(ids)
 
          xt = 0d0 
 

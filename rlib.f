@@ -8136,7 +8136,7 @@ c                                 model type
 c----------------------------------------------------------------------
       gg = 0d0
 
-      if (ksmod(id).eq.2.or.ksmod(id).eq.3) then 
+      if (ksmod(id).eq.2) then 
 c                                 -------------------------------------
 c                                 macroscopic formulation for normal solutions.
          call gdqf (id,gg,y) 
@@ -8903,15 +8903,16 @@ c                                 figure out which endmember we
 c                                 are looking at:
       do h = 1, mstot(ids)
          if (id.eq.jend(ids,2+h)) exit
-      end do          
+      end do
 c                                 zero x-array
       do i = 1, istg(ids)
          do j = 1, ispg(ids,i)
             x3(jd,i,j) = 0d0
          end do
 c                                 now assign endmember fractions
-         x3(jd,i,kmsol(ids,knsp(h,ids),i)) = 1d0 
-      end do   
+         x3(jd,i,kmsol(ids,knsp(h,ids),i)) = 1d0
+
+      end do
 
       end 
 
@@ -9105,8 +9106,8 @@ c                                 model type
       integer ostot
       common/ junk /ostot
 
-      integer pstot
-      common/ junk1 /pstot(h9)
+      integer pstot,qstot,ostg,odim,nsum
+      common/ junk1 /pstot(h9),qstot(h9),ostg(h9),odim(mst,h9),nsum(h9)
 
       integer grid
       double precision rid 
@@ -9204,6 +9205,9 @@ c                                 prismatic space
 c                                 number of dependent + independent - ordered endmembers
 c                                 prismatic space + orphans
       pstot(im) = ostot
+c                                 number of dependent + independent - ordered endmembers
+c                                 prismatic space - orphans
+      qstot(im) = ostot
 c                                 number of independent + ordered endmebers
       nstot(im) = kstot + norder
 c                                 number of independent disordered endmembers
@@ -9218,24 +9222,30 @@ c                                 number of ordered species
       nord(im) = norder 
 c                                 number of species and multiplicity and
 c                                 site ranges
-      ncoor(im) = 0
-
       inc = 0
       if (jsmod.eq.9) inc = 1
+
+      ostg(im) = isite + inc
       mcoor(im) = inc
+      ncoor(im) = inc
+      nsum(im) = 0
 
-      do i = 1, isite + inc
+      do i = 1, ostg(im)
 
-         ispg(im,i) = isp(i)
          imlt(im,i) = ist(i)
-         ncoor(im) = ncoor(im) + isp(i)
 
-         if (i.le.isite) then 
+         if (i.le.isite) then
             ndim(i,im) = isp(i) - 1
+            nsum(im) = nsum(im) + ndim(i,im)
+            odim(i,im) = ndim(i,im)
+            ispg(im,i) = isp(i)
          else 
             ndim(i,im) = isp(i)
+            odim(i,im) = isp(i) + 1
+            ispg(i,im) = odim(i,im) 
          end if
 
+         ncoor(im) = ncoor(im) + isp(i)
          mcoor(im) = mcoor(im) + ndim(i,im)
 
          do j = 1, ndim(i,im)
@@ -9889,7 +9899,9 @@ c                                 now find all endmembers with
 c                                 species j on site i, this method
 c                                 is inefficient but idependent of
 c                                 endmember order.   
-               do k = 1, istot
+
+c DEBUG DEBUG just patched in ostot.
+               do k = 1, ostot
                   if (jmsol(k,i).eq.j) indx(im,i,j) = k
                end do 
             end do 
@@ -10251,7 +10263,7 @@ c                                 idependent species
       end do
 
       if (dabs(s1-1d0).gt.zero) then 
-         write (*,*) 's1 wonka wonaa'
+         write (*,*) 's1 wonka wonaa',dabs(s1-1d0)
       end if 
 
          if (zbad(pa,id)) then 
@@ -10275,7 +10287,7 @@ c                                 renormalize the prismatic endmembers
          write (*,*) 'z2 wonka wonaa'
          end if 
          if (dabs(s2-x(3,ndim(3,id)+1)).gt.zero) then 
-            write (*,*) 's2 wonka wonak'
+            write (*,*) 's2 wonka wonak',dabs(s2-x(3,ndim(3,id)+1))
          end if 
 
          s3 = 0d0 
@@ -10292,7 +10304,7 @@ c                                 add the orphan fractions
          end do
 
          if (dabs(s3-1d0).gt.zero) then 
-            write (*,*) 's3 wonka wonaa'
+            write (*,*) 's3 wonka wonaa',dabs(s3-1d0)
          end if 
          if (zbad(pa,id)) then 
          write (*,*) 'z3 wonka wonaa'
@@ -12177,15 +12189,15 @@ c                                 ordered species index
                    
             limt(k,jd) = 0
             jimt(k,jd) = 0 
-
+c DEBUG DEBUG just patched in ostot
             do l = 2, ict
 c                                 four cases
-               if (    (inds(l).le.istot) 
-     *             .or.(inds(l) - istot.eq.jd.and.
+               if (    (inds(l).le.ostot) 
+     *             .or.(inds(l) - ostot.eq.jd.and.
      *                  inds(l+1).ne.inds(l))
      *             .or.(inds(l).eq.inds(l-1).and.
-     *                  inds(l).gt.istot.and.
-     *                  inds(l) - istot.ne.jd)) then
+     *                  inds(l).gt.ostot.and.
+     *                  inds(l) - ostot.ne.jd)) then
 c                                 1) disordered species go in p0 array
 c                                 2) the species is limit species, the 
 c                                    species must be in the p0 array.
@@ -12198,8 +12210,8 @@ c                                    and it's the second occurence
                   limid(j,k,jd) = inds(l)
                   limc(j,k,jd) = coeffs(l)
 
-               else if (inds(l).gt.istot.and.
-     *                  inds(l) - istot.ne.jd) then
+               else if (inds(l).gt.ostot.and.
+     *                  inds(l) - ostot.ne.jd) then
 c                                 4) is an ordered species p-term
 c                                    if the coefficient is zero it's just
 c                                    a place holder and can be skipped.
@@ -12625,7 +12637,7 @@ c---------------------------------------------------------------------
 
       logical resub
 
-      integer last,i,j,np1,h,index,ids, k, l, m, n
+      integer last,i,j,np1,h,index,ids, k, l, n
 
       double precision sum
 
@@ -12651,6 +12663,9 @@ c---------------------------------------------------------------------
 
       integer ncoor,mcoor,ndim
       common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
+
+      integer pstot,qstot,ostg,odim,nsum
+      common/ junk1 /pstot(h9),qstot(h9),ostg(h9),odim(mst,h9),nsum(h9)
 
       integer ksmod, ksite, kmsol, knsp
       common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
@@ -12749,11 +12764,9 @@ c                                 do the orphan site:
 
 c                                 zero the orphan concentrations in the
 c                                 ntot prismatic coordinates generated so far:
-         m = ndim(1,ids) + ndim(2,ids)
-
          do i = 1, ntot
 
-            k = (i-1)*mcoor(ids) + m + 1
+            k = (i-1)*mcoor(ids) + nsum(ids) + 1
             l = i*mcoor(ids)
 
             do j = k, l
@@ -12787,12 +12800,12 @@ c                                 the starting position in the final array is
 
                if (k+mcoor(ids).gt.k24) call errk24 (resub)
 c                                 load the diluted prism coordinates
-               do j =  1, m
+               do j =  1, nsum(ids)
                   prism(k+j) = prism(l+j)*sum
                end do 
 c                                 and the simplicial coordinates
                do j = 1, ndim(3,ids)
-                  prism(k+m+j) = simp(n+j)
+                  prism(k+nsum(ids)+j) = simp(n+j)
                end do 
 
             end do
@@ -12815,7 +12828,7 @@ c                                 copy the first site 3 distribution
 c                                 into the first np1*np2 compositions:
       do h = 1, ntot
 
-         j = (h-1) * mcoor(ids) + ndim(1,ids) + ndim(2,ids)
+         j = (h-1) * mcoor(ids) + nsum(ids)
 
          do i = 1, last
             prism(j+i) = simp(i)
@@ -19367,49 +19380,6 @@ c                                 meemum/werami
 
       ginc = gee 
 
-      end 
-
-      subroutine volume (v,ids,jd,ok)
-c-----------------------------------------------------------------------
-c id - phase ids
-c jd - pointer in assemblage 
-c----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      logical ok
-
-      integer ids, jd
-
-      double precision v, dp, ginc
-
-      external ginc
-
-      double precision p,t,xco2,u1,u2,tr,pr,r,ps
-      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-c----------------------------------------------------------------------
-      if (p.gt.nopt(26)) then 
-         dp = nopt(27) * p / 2d0
-      else 
-         dp = nopt(27) * nopt(26) / 2d0
-      end if 
-
-      if (ids.gt.0) call x3toy (jd,ids)
-
-      v = (ginc(dp,0d0,ids) - ginc(-dp,0d0,ids)) / 2d0 / dp
-
-      if (v.gt.0d0) then 
-         ok = .true.
-      else
-         ok = .false.
-      end if 
-
       end
 
       double precision function gsol (id)
@@ -19421,9 +19391,9 @@ c for all model types except reciprocal solutions, in which case it is
 c the y's for the full reciprocal model.
 
 c gsol assumes the endmember g's have not been calculated by gall and is
-c      only called by WERAMI.
+c      called by WERAMI and MEEMUM.
 c gsol1 is identical to gsol but can only been called after gall and is 
-c      only called by VERTEX and MEEMUM. 
+c      called by VERTEX and MEEMUM. 
 c-----------------------------------------------------------------------
       implicit none
  
@@ -19509,7 +19479,7 @@ c----------------------------------------------------------------------
 c                                 initialize p-t dependent coefficients
          call ingsol (id)
 
-         if (ksmod(id).eq.2.or.ksmod(id).eq.3) then 
+         if (ksmod(id).eq.2) then 
 c                                 -------------------------------------
 c                                 macroscopic formulation for normal solutions.
             call gdqf (id,g,y) 
@@ -19783,57 +19753,6 @@ c                                 than necessary.
 
       end 
 
-      subroutine x3toy (id,ids)
-c----------------------------------------------------------------------
-c subroutine to convert geometric reciprocal solution compositions (x3(id,i,j))
-c to geometric endmember fractions (y) for solution model ids. replicate 
-c of subroutine xtoy, but for the x3 array (used only by getloc from meemum).
-
-c meemum calls x3toy for ALL solutions. 
-c----------------------------------------------------------------------
-      implicit none 
-
-      include 'perplex_parameters.h'
-c                                 -------------------------------------
-c                                 local variables:
-      integer ids, l, m, ld, id
-c                                 -------------------------------------
-c                                 global variables:
-c                                 bookkeeping variables
-      integer ksmod, ksite, kmsol, knsp
-      common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
-c                                 working arrays
-      double precision z, pa, p0a, x, w, y, wl
-      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
-     *              wl(m17,m18)
-c                                 x coordinate description
-      integer istg, ispg, imlt, imdg
-      common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
-
-      integer lstot,mstot,nstot,ndep,nord
-      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
-
-      integer kd, na1, na2, na3, nat
-      double precision x3, caq
-      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),na1,na2,na3,nat,kd
-c----------------------------------------------------------------------
-      do l = 1, mstot(ids)
-c                                 the endmembers may have been
-c                                 rearranged from the original order,
-c                                 use knsp(l,ids) to assure correct
-c                                 indexing
-         ld = knsp(l,ids)
-
-         y(ld) = 1d0
-
-         do m = 1, istg(ids)
-            y(ld) = y(ld)*x3(id,m,kmsol(ids,ld,m))
-         end do
-
-      end do
-
-      end
-
       subroutine setstc (ids,i,j) 
 c----------------------------------------------------------------------
 c set stretching transformation for the site i, species j, of solution ids,
@@ -19906,7 +19825,7 @@ c----------------------------------------------------------------------
 
       logical bad, dynam
 
-      double precision ysum, sum
+      double precision ysum
 
       integer jcoct, jcoor, jkp
       double precision zcoor
@@ -19944,6 +19863,9 @@ c----------------------------------------------------------------------
 
       integer lstot,mstot,nstot,ndep,nord
       common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
+
+      integer pstot,qstot,ostg,odim,nsum
+      common/ junk1 /pstot(h9),qstot(h9),ostg(h9),odim(mst,h9),nsum(h9)
 c----------------------------------------------------------------------
       bad = .false.
 
@@ -19959,31 +19881,13 @@ c                                 counter for number of non 0 or 1 compositions
       l = (i-1)*mcoor(ids)
       m = 0
        
-      if (ksmod(ids).ne.20) then 
+      if (ksmod(ids).ne.20) then
 
-         if (ksmod(ids).eq.9) then 
-c                                 sum the fractions of the independent vertics
-            sum = 1d0
-            k = l + ndim(1,ids) + ndim(2,ids)
-c                                 starting point in simp
-            do j = 1, ndim(3,ids)
-               x(3,j) = prism(k+j)
-               sum = sum - x(3,j)
-            end do
-
-            x(3,j) = prism(k+j)
-c DEBUG DEBUG
-            if (sum.ne.prism(k+j)) then 
-               write (*,*) 'oinky poinky'
-            end if 
-
-         end if
-
-         do j = 1, istg(ids)
+         do j = 1, ostg(ids)
 
             ysum = 0d0
 
-            do k = 1, ndim(j,ids)
+            do k = 1, odim(j,ids)
 
                m = m + 1
 
@@ -20010,9 +19914,9 @@ c                                 the composition is out of range
 
             end do
 
-            x(j,ispg(ids,j)) = 1d0 - ysum
+            x(j,k) = 1d0 - ysum
 
-         end do 
+         end do
 
       else 
 c                                 charge balance models: a wierd shuffle to put
@@ -20058,7 +19962,7 @@ c                                 the composition is out of range
 
       end if
 
-      call xtoy (ids,bad)
+      call xtoy (ids,ids,.true.,bad)
 
       if (bad.and.dynam) then 
 
@@ -20069,19 +19973,21 @@ c                                 the composition is out of range
 
       end
 
-      subroutine xtoy (ids,bad)
+      subroutine xtoy (ids,id,usex,bad)
 c----------------------------------------------------------------------
 c subroutine to convert prismatic solution compositions (x(i,j))
 c to geometric endmember fractions (y) for solution model ids.
+
+c usex - use x3 coordinates of phase id, this is only done by getloc
+c        when called by meemum.
 c----------------------------------------------------------------------
       implicit none 
 
       include 'perplex_parameters.h'
-c                                 -------------------------------------
-c                                 local variables:
-      integer ids, k, l, m
 
-      logical bad, zap, zbad
+      integer ids, id, ld, k, l, m
+
+      logical bad, zap, zbad, usex
  
       external zbad
 
@@ -20105,29 +20011,54 @@ c                                 local variables:
       integer ldsol
       common/ cxt36 /ldsol(m4,h9),badend(m4,h9),sck(h9),nrf(h9)
 
+      integer pstot,qstot,ostg,odim,nsum
+      common/ junk1 /pstot(h9),qstot(h9),ostg(h9),odim(mst,h9),nsum(h9)
+
       integer iopt
       logical lopt
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      integer ncoor,mcoor,ndim
+      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
+
+      integer kd, na1, na2, na3, nat
+      double precision x3, caq
+      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),na1,na2,na3,nat,kd
 c----------------------------------------------------------------------
 
       bad = .false.
       zap = bad
 
       k = 0
+c                                 NOTE x3toy was set up to use knsp with
+c                                 the following comment:
+
+c                                 the endmembers may have been
+c                                 rearranged from the original order,
+c                                 use knsp(l,ids) to assure correct
+c                                 indexing
+
+c                                 I can't see how that would happen, 5/2018
 
       do l = 1, mstot(ids)
 
-         if (istg(ids).eq.1) then
-
-            y(l) = x(1,l)
-
-         else 
+         if (usex) then
 
             y(l) = 1d0
 
             do m = 1, istg(ids)
                y(l) = y(l)*x(m,kmsol(ids,l,m))
+            end do
+
+         else
+
+            ld = knsp(l,ids) 
+
+            y(l) = 1d0 
+
+            do m = 1, istg(ids)
+               y(l) = y(l)*x3(id,m,kmsol(ids,l,m))
             end do
 
          end if
@@ -20138,35 +20069,56 @@ c----------------------------------------------------------------------
 
       end do
 
-      if (k.ne.0) then 
-c                                 reject pure independent endmember compositions. 
-         if (ldsol(k,ids).gt.0.and.nrf(ids)) then 
-            
-            bad = .true.
+      if (ksmod(ids).eq.9) then
 
-            return
-  
-         end if 
-
-         y(k) = 1d0 
-
-         do l = 1, mstot(ids)
-            
-            if (l.eq.k) cycle
-            
+         do l = mstot(ids) + 1, pstot(ids)
             y(l) = 0d0
-
          end do
 
-      end if
-c                                 invalid dependent endmember
-      if (lopt(43).and.zap) then 
-c                                 convert y's to p's
-         call y2p0 (ids)
-c                                 check for bad z's
-         if (zbad(pa,ids)) bad = .true.
+         if (.not.usex) then
+c                                 load the orphan fractions into local x
+c                                 for y2p0
+            do l = 1, odim(ostg(ids),ids)
+               x(ostg(ids),l) = x3(id,ostg(ids),l)
+            end do 
 
-      end if 
+         end if
+
+      end if
+
+      if (usex) then
+
+         if (k.ne.0) then 
+c                                 reject pure independent endmember compositions. 
+            if (ldsol(k,ids).gt.0.and.nrf(ids)) then 
+
+               bad = .true.
+
+               return
+
+            end if 
+
+            y(k) = 1d0 
+
+            do l = 1, mstot(ids)
+            
+               if (l.eq.k) cycle
+            
+               y(l) = 0d0
+
+            end do
+
+         end if
+c                                 invalid dependent endmember
+         if (lopt(43).and.zap) then 
+c                                 convert y's to p's
+            call y2p0 (ids)
+c                                 check for bad z's
+            if (zbad(pa,ids)) bad = .true.
+
+         end if
+
+      end if
 
       end 
 
@@ -20193,6 +20145,9 @@ c---------------------------------------------------------------------
 
       integer ncoor,mcoor,ndim
       common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
+
+      integer pstot,qstot,ostg,odim,nsum
+      common/ junk1 /pstot(h9),qstot(h9),ostg(h9),odim(mst,h9),nsum(h9)
 c---------------------------------------------------------------------
 c                                 get the npair simplicial coordinates for the 
 c                                 orphan site:
@@ -20201,7 +20156,7 @@ c                                 orphan site:
       call chopit (ycum,1d0,0,ndim(3,ids),3,ids,0,.true.)
 
       np0 = npairs
-      nco = ndim(3,ids) + 1
+      nco = odim(ostg(ids),ids)
       nst1 = nco * np0
       ntot = 0
 c                                 for each simplicial coordinate (skipping the 
@@ -20217,7 +20172,7 @@ c                                 inc = inc0/sum [sum is the fraction of the
 c                                 prism vertex]
          sum = 1d0
 
-         do j = 1, ndim(3,ids)
+         do j = 1, ndim(ostg(ids),ids)
             sum = sum - simp(n+j)
          end do
 
@@ -20261,7 +20216,7 @@ c                                 load the coordinate
                   end do
 
                   do i1 = 1, nco
-                     prism(h+ndim(1,ids)+ndim(2,ids)+i1) = simp(n+i1)
+                     prism(h+nsum(ids)+i1) = simp(n+i1)
                   end do 
 
                end do
@@ -20278,7 +20233,7 @@ c                                 starting point of the coordinate
             h = (ntot-1)*mcoor(ids)
 
             do i1 = 1, nco
-               prism(h+ndim(1,ids)+ndim(2,ids)+i1) = simp(n+i1)
+               prism(h+nsum(ids)+i1) = simp(n+i1)
             end do 
 
          end if

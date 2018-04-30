@@ -954,14 +954,14 @@ c                               lagged speciation
 c                                 revover x from x3, 2nd arg has no meaning.
                call getxz (i,i,ids)
 c                                 convert x to y for calls to gsol
-               call xtoy (ids,bad)
+               call xtoy (ids,ids,.true.,bad)
 
             else 
 c                                 MEEMUM, molar amount
                props(16,i) = amt(i)
 c                                 convert x3 to y for calls to gsol
-               if (ids.gt.0) call x3toy (i,ids)
- 
+               if (ids.gt.0) call xtoy (ids,i,.false.,bad)
+
             end if 
 
          else 
@@ -1051,9 +1051,8 @@ c----------------------------------------------------------------------
             ysp(k,jd) = p0a(k)
          end do
 
-      else if (ksmod(id).eq.2 .or. ksmod(id).eq.3 .or.ksmod(id).eq.20
-     *     .or.ksmod(id).ge.24.and.ksmod(id).le.28.or.ksmod(id).eq.39) 
-     *                                                              then 
+      else if (ksmod(id).eq.2.or.ksmod(id).eq.20.or.ksmod(id).ge.24.and.
+     *         ksmod(id).le.28.or.ksmod(id).eq.39) then
 c                                 macroscopic formulation for normal solutions (2,3) and
 c                                 hp melt model (24)
 c                                 ghiorso melt model (25)

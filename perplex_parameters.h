@@ -18,7 +18,7 @@
 !                                 n4  - plot output file 1
 !                                 n5  - plot output file 2 (bplot)
 !                                 n6  - reaction list file
-!                                 n7  - unused [a trick for bazaar]
+!                                 n7  - unused
 !                                 n8  - locally opened and closed files
 !                                 n9  - solution model file 
 !                                 n10 - autorefine file 1
