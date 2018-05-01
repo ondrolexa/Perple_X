@@ -469,6 +469,9 @@ c----------------------------------------------------------------------
       integer istg, ispg, imlt, imdg
       common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
 
+      integer pstot,qstot,ostg,odim,nsum
+      common/ junk1 /pstot(h9),qstot(h9),ostg(h9),odim(mst,h9),nsum(h9)
+
       integer lstot,mstot,nstot,ndep,nord
       common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
 
@@ -488,15 +491,25 @@ c                                locate the endmember in the solution
          end if 
       end do 
 c                                initialize all x's
-      do i = 1, istg(ids)
+      do i = 1, ostg(ids)
          do j = 1, ispg(ids,i)
             x(i,j) = 0d0
          end do
       end do
 c                                 assign endmember x's
-      do i = 1, istg(ids)
-         x(i,kmsol(ids,kd,i)) = 1d0
-      end do 
+      if (kd.le.mstot(ids)) then 
+c                                 normal simplex/prism
+         do i = 1, istg(ids)
+            x(i,kmsol(ids,kd,i)) = 1d0
+         end do 
+
+      else 
+c                                 simplex with a prismatic vertex
+        x(ostg(ids),kd-mstot(ids)) = 1d0 
+        write (*,*) 'groink ',x(ostg(ids),kd-mstot(ids))
+        pause
+
+      end if
 
       end
 
@@ -827,7 +840,7 @@ c                                 it's a solution:
 
          do j = 1, ostg(ids)
 
-            do k = 1, odim(j,ids)
+            do k = 1, ndim(j,ids)
 
                itic = itic + 1
 
@@ -1026,7 +1039,7 @@ c----------------------------------------------------------------------
 
       logical check, bad, quit, notaq, abort
 
-      integer idsol(k5),kdsol(k5,k5),ids,isite,xidsol,xkdsol,irep,
+      integer idsol(k5),kdsol(k5,k5),ids,xidsol,xkdsol,irep,
      *        i,j,jdsol(k5,k5),jd,k,l,nkp(k5),xjdsol(k5),kk
 
       double precision bsol(k5,k5),cpnew(k5,k5),xx,xb(k5),msol,
@@ -1039,6 +1052,9 @@ c                                 global variables:
 c                                 x coordinate description
       integer istg, ispg, imlt, imdg
       common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
+
+      integer pstot,qstot,ostg,odim,nsum
+      common/ junk1 /pstot(h9),qstot(h9),ostg(h9),odim(mst,h9),nsum(h9)
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
@@ -1315,13 +1331,12 @@ c                                 the everage composition
 c                                 initialize
          bnew(i) = 0d0
          ids = kdsol(i,1)
-         isite = istg(ids)
 
          do j = 1, icomp
             cpnew(j,i) = 0d0
          end do 
 
-         do j = 1, isite
+         do j = 1, ostg(ids)
             do k = 1, ispg(ids,j)
                xnew(i,j,k) = 0d0
             end do 
@@ -1357,7 +1372,7 @@ c                                save the new compositions
                cpnew(k,i) = cpnew(k,i) + xx*cp3(k,jd)
             end do
 
-            do k = 1, isite
+            do k = 1, ostg(ids)
                do l = 1, ispg(ids,k)
                   xnew(i,k,l) = xnew(i,k,l) + xx*x3(jd,k,l)
                end do
@@ -1398,7 +1413,7 @@ c                                 now reform the arrays kdv and b
             cp3(j,i) = cpnew(j,i)
          end do
 
-         do j = 1, istg(ids)
+         do j = 1, ostg(ids)
             do k = 1, ispg(ids,j)
 c                                 set x's for sollim
                x(j,k) = xnew(i,j,k)
@@ -1863,6 +1878,9 @@ c                                 i/o
       integer ksmod, ksite, kmsol, knsp
       common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
 
+      integer pstot,qstot,ostg,odim,nsum
+      common/ junk1 /pstot(h9),qstot(h9),ostg(h9),odim(mst,h9),nsum(h9)
+
       integer jbulk
       double precision cblk
       common/ cst300 /cblk(k5),jbulk
@@ -1875,7 +1893,7 @@ c                                phase molar amounts
 c                                solution phase compositions
       do i = 1, np
          ids = kkp(i)
-         write (n5,1010) ((x3(i,j,k),k=1,ispg(ids,j)),j=1,istg(ids))
+         write (n5,1010) ((x3(i,j,k),k=1,ispg(ids,j)),j=1,ostg(ids))
 c                                lagged speciation
          if (ksmod(ids).eq.39.and.lopt(32)) write (n5,1010) 
      *                                            (caq(i,j),j=1,nat)
@@ -2502,20 +2520,22 @@ c----------------------------------------------------------------------
       include 'perplex_parameters.h'
 
       integer i, j, id, ids, kcoor, ind
-c                                 x coordinate description
-      integer istg, ispg, imlt, imdg
 
       double precision xt
 
+      integer istg, ispg, imlt, imdg
       common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
-c                                 stored x coordinate
+
+      integer pstot,qstot,ostg,odim,nsum
+      common/ junk1 /pstot(h9),qstot(h9),ostg(h9),odim(mst,h9),nsum(h9)
+
       double precision xco
       integer ico,jco
       common/ cxt10 /xco(k18),ico(k1),jco(k1)
 
       integer ncoor,mcoor,ndim
       common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
-c                                  x-coordinates for the final solution
+
       integer kd, na1, na2, na3, nat
       double precision x3, caq
       common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),na1,na2,na3,nat,kd
@@ -2543,7 +2563,7 @@ c                                 one site solution
 c                                 multi-site solution
             kcoor = ico(id)
 
-            do i = 1, istg(ids)
+            do i = 1, ostg(ids)
 
                xt = 0d0 
 

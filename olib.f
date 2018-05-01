@@ -787,6 +787,9 @@ c                                 bookkeeping variables
       double precision hsb
       common/ cst84 /hsb(i8,4),hs2p(6)
 
+      integer pstot,qstot,ostg,odim,nsum
+      common/ junk1 /pstot(h9),qstot(h9),ostg(h9),odim(mst,h9),nsum(h9)
+
       integer idaq, jdaq
       logical laq
       common/ cxt3 /idaq,jdaq,laq
@@ -888,7 +891,7 @@ c                                 solvent
 c                                 WERAMI, initialize
                props(16,i) = 0d0
 
-               do j = 1, istg(ids)
+               do j = 1, ostg(ids)
                   do k = 1, ispg(ids,j)
                      x3(i,j,k) = 0d0
                   end do 
@@ -917,7 +920,7 @@ c                                 weighted molar amount
                      props(16,i) = props(16,i) + cst
                   end if 
 
-                  do j = 1, istg(ids)
+                  do j = 1, ostg(ids)
                      do k = 1, ispg(ids,j)
                         lco(l) = lco(l) + 1
                         x3(i,j,k) = x3(i,j,k) + cst*xco(lco(l))
@@ -938,7 +941,7 @@ c                                 renormalize the composition
                cst = props(16,i)
                if (cst.eq.0d0) cst = 1d0
 
-               do l = 1, istg(ids)
+               do l = 1, ostg(ids)
                   do m = 1, ispg(ids,l)    
                      x3(i,l,m) = x3(i,l,m)/cst
                   end do 
@@ -1001,7 +1004,6 @@ c                                 compute aggregate properties:
 99    if (lopt(14)) p = dlog10(p)
 
       end
-
 
       subroutine getspc (id,jd)
 c-----------------------------------------------------------------------

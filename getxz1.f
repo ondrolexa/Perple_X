@@ -41,7 +41,7 @@ c----------------------------------------------------------------------
 
          xt = 0d0 
 
-         do j = 1, odim(i,ids)
+         do j = 1, ndim(i,ids)
             icoor = icoor + 1
             x(i,j) = zcoor(icoor)
             x3(jd,i,j) = zcoor(icoor)

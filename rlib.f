@@ -7011,9 +7011,11 @@ c                                 arrays
          return
 
        end if
-c                                 correct jsmod for old versions    
+c                                 check for disabled model types
+      if (jsmod.eq.1.or.jsmod.eq.3.or.jsmod.eq.5) 
+     *                        call error (68,enth(1),jsmod,tname)
+
       if (jsmod.eq.0) fluid = .true.
-      if (jsmod.eq.1) call error (68,enth(1),jsmod,tname)
       if (jsmod.eq.6.or.jsmod.eq.8.or.jsmod.eq.9.or.
      *                                jsmod.eq.27) order = .true.
       if (jsmod.ge.7.and.jsmod.le.9) depend = .true.
@@ -9226,8 +9228,8 @@ c                                 site ranges
       if (jsmod.eq.9) inc = 1
 
       ostg(im) = isite + inc
-      mcoor(im) = inc
-      ncoor(im) = inc
+      mcoor(im) = 0
+      ncoor(im) = 0
       nsum(im) = 0
 
       do i = 1, ostg(im)
@@ -9236,16 +9238,14 @@ c                                 site ranges
 
          if (i.le.isite) then
             ndim(i,im) = isp(i) - 1
-            nsum(im) = nsum(im) + ndim(i,im)
-            odim(i,im) = ndim(i,im)
             ispg(im,i) = isp(i)
+            nsum(im) = nsum(im) + ndim(i,im)
          else 
             ndim(i,im) = isp(i)
-            odim(i,im) = isp(i) + 1
-            ispg(i,im) = odim(i,im) 
+            ispg(im,i) = isp(i) + 1 
          end if
 
-         ncoor(im) = ncoor(im) + isp(i)
+         ncoor(im) = ncoor(im) + ispg(im,i)
          mcoor(im) = mcoor(im) + ndim(i,im)
 
          do j = 1, ndim(i,im)
@@ -10238,6 +10238,9 @@ c DEBUG DEBUG
 
       integer ncoor,mcoor,ndim
       common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
+
+      integer pstot,qstot,ostg,odim,nsum
+      common/ junk1 /pstot(h9),qstot(h9),ostg(h9),odim(mst,h9),nsum(h9)
 c-----------------------------------------------------------------------
 c                                 convert y's to p's
 c                                 initialize ordered species
@@ -10277,7 +10280,7 @@ c                                 idependent species
 c                                 orphan vertex model
          do k = 1, nstot(id)
 c                                 renormalize the prismatic endmembers
-            p0a(k) = p0a(k)*x(3,ndim(3,id)+1)
+            p0a(k) = p0a(k)*x(ostg(id),ndim(ostg(id),id)+1)
             pa(k) = p0a(k)
             s2 = s2 + p0a(k)
          end do 
@@ -10292,10 +10295,10 @@ c                                 renormalize the prismatic endmembers
 
          s3 = 0d0 
 
-         do k = 1, ndim(3,id)
+         do k = 1, ndim(ostg(id),id)
 c                                 add the orphan fractions
-            l = lstot(id) - ndim(3,id) + k 
-            p0a(l) = p0a(l) + x(3,k)
+            l = lstot(id) - ndim(ostg(id),id) + k 
+            p0a(l) = p0a(l) + x(ostg(id),k)
             pa(l) = p0a(l)
          end do
 
@@ -17604,7 +17607,7 @@ c                                 first do the endmembers:
 c                                 now do solutions:
       do i = 1, isoct
 c                                 check if normal solution:
-         if (.not.llaar(i).and.(ksmod(i).eq.7.or.ksmod(i).eq.5.or.
+         if (.not.llaar(i).and.(ksmod(i).eq.7.or.
      *       ksmod(i).eq.2.or.ksmod(i).eq.24.or.ksmod(i).eq.25.or.
      *       ksmod(i).eq.28)) then 
 c                                 it's normal margules or ideal:
@@ -19887,7 +19890,7 @@ c                                 counter for number of non 0 or 1 compositions
 
             ysum = 0d0
 
-            do k = 1, odim(j,ids)
+            do k = 1, ndim(j,ids)
 
                m = m + 1
 
@@ -19978,14 +19981,14 @@ c----------------------------------------------------------------------
 c subroutine to convert prismatic solution compositions (x(i,j))
 c to geometric endmember fractions (y) for solution model ids.
 
-c usex - use x3 coordinates of phase id, this is only done by getloc
-c        when called by meemum.
+c usex - use x coordinates, otherwise use x3 coordinates (only done by getloc
+c        when called by meemum).
 c----------------------------------------------------------------------
       implicit none 
 
       include 'perplex_parameters.h'
 
-      integer ids, id, ld, k, l, m
+      integer ids, id, k, l, m
 
       logical bad, zap, zbad, usex
  
@@ -20029,48 +20032,34 @@ c----------------------------------------------------------------------
 
       bad = .false.
       zap = bad
-
       k = 0
-c                                 NOTE x3toy was set up to use knsp with
-c                                 the following comment:
 
-c                                 the endmembers may have been
-c                                 rearranged from the original order,
-c                                 use knsp(l,ids) to assure correct
-c                                 indexing
+      if (usex) then
 
-c                                 I can't see how that would happen, 5/2018
-
-      do l = 1, mstot(ids)
-
-         if (usex) then
-
+         do l = 1, mstot(ids)
             y(l) = 1d0
-
             do m = 1, istg(ids)
                y(l) = y(l)*x(m,kmsol(ids,l,m))
             end do
 
-         else
+            if (badend(l,ids).and.y(l).gt.zero) zap = .true.
+            if (y(l).gt.one) k = l
 
-            ld = knsp(l,ids) 
+         end do
 
-            y(l) = 1d0 
+      else
 
+         do l = 1, mstot(ids)
+            y(l) = 1d0
             do m = 1, istg(ids)
                y(l) = y(l)*x3(id,m,kmsol(ids,l,m))
             end do
+         end do
 
-         end if
-
-         if (badend(l,ids).and.y(l).gt.zero) zap = .true.
-
-         if (y(l).gt.one) k = l
-
-      end do
+      end if
 
       if (ksmod(ids).eq.9) then
-
+c                                 necessary? probably none of this is. 
          do l = mstot(ids) + 1, pstot(ids)
             y(l) = 0d0
          end do
@@ -20078,45 +20067,41 @@ c                                 I can't see how that would happen, 5/2018
          if (.not.usex) then
 c                                 load the orphan fractions into local x
 c                                 for y2p0
-            do l = 1, odim(ostg(ids),ids)
+            do l = 1, ispg(ids,ostg(ids))
                x(ostg(ids),l) = x3(id,ostg(ids),l)
             end do 
 
          end if
 
       end if
-
-      if (usex) then
-
-         if (k.ne.0) then 
+c                                 checks for x array compositions:
+      if (k.ne.0) then 
 c                                 reject pure independent endmember compositions. 
-            if (ldsol(k,ids).gt.0.and.nrf(ids)) then 
+         if (ldsol(k,ids).gt.0.and.nrf(ids)) then 
 
-               bad = .true.
+            bad = .true.
 
-               return
+            return
 
-            end if 
+         end if 
 
-            y(k) = 1d0 
+         y(k) = 1d0 
 
-            do l = 1, mstot(ids)
+         do l = 1, mstot(ids)
             
-               if (l.eq.k) cycle
+            if (l.eq.k) cycle
             
-               y(l) = 0d0
+            y(l) = 0d0
 
-            end do
+         end do
 
-         end if
+      end if
 c                                 invalid dependent endmember
-         if (lopt(43).and.zap) then 
+      if (lopt(43).and.zap) then 
 c                                 convert y's to p's
-            call y2p0 (ids)
+         call y2p0 (ids)
 c                                 check for bad z's
-            if (zbad(pa,ids)) bad = .true.
-
-         end if
+         if (zbad(pa,ids)) bad = .true.
 
       end if
 
@@ -20148,15 +20133,20 @@ c---------------------------------------------------------------------
 
       integer pstot,qstot,ostg,odim,nsum
       common/ junk1 /pstot(h9),qstot(h9),ostg(h9),odim(mst,h9),nsum(h9)
+
+      integer istg, ispg, imlt, imdg
+      common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
 c---------------------------------------------------------------------
 c                                 get the npair simplicial coordinates for the 
 c                                 orphan site:
       ycum = 0d0
 
-      call chopit (ycum,1d0,0,ndim(3,ids),3,ids,0,.true.)
+      call chopit (ycum,1d0,0,ndim(ostg(ids),ids),ostg(ids),ids,0,
+     *             .true.)
 
       np0 = npairs
-      nco = odim(ostg(ids),ids)
+c                                 save an extra coordinate for prismatic vertex (sum)
+      nco = ispg(ids,ostg(ids))
       nst1 = nco * np0
       ntot = 0
 c                                 for each simplicial coordinate (skipping the 
@@ -20215,7 +20205,7 @@ c                                 load the coordinate
                      prism(h+ndim(1,ids)+i1) = simp(l+i1)
                   end do
 
-                  do i1 = 1, nco
+                  do i1 = 1, ndim(3,ids)
                      prism(h+nsum(ids)+i1) = simp(n+i1)
                   end do 
 
@@ -20232,7 +20222,7 @@ c                                 count the coordinate
 c                                 starting point of the coordinate
             h = (ntot-1)*mcoor(ids)
 
-            do i1 = 1, nco
+            do i1 = 1, ndim(3,ids)
                prism(h+nsum(ids)+i1) = simp(n+i1)
             end do 
 

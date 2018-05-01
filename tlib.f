@@ -2395,10 +2395,10 @@ c---------------------------------------------------------------------
 67    format (/,'**error ver067** file ',a,/,
      *        'is not formatted correctly for PSVDRAW.',/)
 68    format (/,'**error ver068** solution model: ',a,
-     *          ' is in microscopic format.',/,'Perple_X 6.6+ does not',
-     *          ' support this format.',/,'Use a more recent solution ',
-     *          'model file, e.g., copy the current version from: ',
-     *        'www.perplex.ethz.ch/datafiles/solution_model.dat',/)
+     *          ' is in a format that is no longer supported',/,
+     *          'Use a more recent solution model file, e.g., copy ',
+     *          'the current version from: ',//,
+     *          'www.perplex.ethz.ch/datafiles/solution_model.dat',/)
 69    format (/,'**error ver069** too many points (',a,'), increase ',
      *          'parameter L5',/)
 70    format (/,'**error ver070** delete file: ',a,/,
