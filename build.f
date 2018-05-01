@@ -173,6 +173,10 @@ c                                 iam is a flag indicating the Perple_X program
       iam = 4
 c                                 version info
       call vrsion (6)
+c                                 initialize strings (necessary for some OS). 
+      opname = ' '
+      n9name = ' '
+      title = ' '
 
       write (*,7020)
 c                                 name and open computational option file (unit n1)      
@@ -183,10 +187,8 @@ c                                 get computational option file name
       write (*,1170) 
       read (*,'(a)') opname
  
-      if (opname.eq.'') opname = 'perplex_option.dat'
+      if (opname.eq.' ') opname = 'perplex_option.dat'
 c                                 initialization:
-      n9name = ''
-
       do i = 1, l2
          iv(i) = i
          vmin(i) = 0d0
@@ -311,14 +313,16 @@ c                                 Excluded phases:
          read (*,'(a)') y
  
          if (y.ne.'y'.and.y.ne.'Y') then
+
             name = 'b'
+
             write (*,2021)
  
-            do while (ixct.lt.h8.and.name.ne.'') 
+            do while (ixct.lt.h8.and.name.ne.' ') 
 
                read (*,'(a)') name
 
-               if (name.eq.'') exit 
+               if (name.eq.' ') exit 
 
                good = .false.
  
@@ -415,7 +419,7 @@ c                                 get the file containing the solution models
  
             write (*,3010)
             read (*,'(a)') n9name
-            if (n9name.eq.'') n9name = dsol
+            if (n9name.eq.' ') n9name = dsol
             write (*,*) 
             open (n9,file=n9name,iostat=ier,status='old')
  
@@ -536,12 +540,12 @@ c                                 just one group
             write (*,1180) 
 c                                 initialize blah, because reading a 
 c                                 null record may not do that. 
-            blah = ''
+            blah = ' '
 
             do 
 
                read (*,'(a)') blah
-               if (blah.eq.'') exit
+               if (blah.eq.' ') exit
 c                                 check if same name entered twice
                do i = 1, isoct
                   if (blah.eq.sname(i)) cycle
@@ -1225,7 +1229,7 @@ c---------------------------------------------------------------------------
       satflu = .false.
       mobflu = .false.
       feos = .false.
-      char5 = ''
+      char5 = ' '
 c                                 Component stuff first:
       do i = 1, icmpn
          uname(i) = cmpnt(i)
@@ -1250,7 +1254,7 @@ c                                   write blurb
 
                read (*,3000) char5 
 
-               if (char5.ne.'') then
+               if (char5.ne.' ') then
 c                                 check choice 
                   call chknam (igood,jcmpn,1,good,char5,qname,uname)
 
@@ -1298,7 +1302,7 @@ c                                 saturated components
 
             read (*,3000) char5 
 
-            if (char5.ne.'') then
+            if (char5.ne.' ') then
 c                                 check if it's a saturated phase component:
                good = .false.
 
@@ -1360,7 +1364,7 @@ c                                 write prompt
             if (jmct.eq.1) write (*,2055)
             write (*,'(12(1x,a))') (qname(i),i=1,jcmpn)
             read (*,3000) char5 
-            if (char5.eq.'') exit 
+            if (char5.eq.' ') exit 
 c                                 check if it's a saturated phase component,
 c                                 or a saturated component:
             good = .false.
@@ -1461,7 +1465,7 @@ c                                 names contains the list of candidates
             else
 
                ima = 1
-               afname(jmct) = ''
+               afname(jmct) = ' '
 
             end if
 c                                 now make the variable name
@@ -1530,7 +1534,7 @@ c                                 Thermodynamic components:
 
          read (*,3000) char5
 
-         if (char5.ne.'') then 
+         if (char5.ne.' ') then 
 c                                 check if it's a saturated phase component,
 c                                 mobile or a saturated component:
             if (ifct.gt.0.or.satflu.or.mobflu) then 
@@ -1758,7 +1762,8 @@ c-----------------------------------------------------------------------
       iwt = 0
       jcth = 0
       amount = 'molar '
-      dtext = ''
+      dtext = ' '
+      tfname = ' '
  
       if (icopt.lt.1.or.icopt.gt.6) icopt = 2
 c                                 reorder for oned flag
@@ -1776,7 +1781,7 @@ c                                 fractionation from a file
             write (*,'(/)')
             write (*,2010) 'coordinate','coor.dat'
             read (*,'(a)') tfname
-            if (tfname.eq.'') tfname = 'coor.dat'
+            if (tfname.eq.' ') tfname = 'coor.dat'
 
             open (n8,file=tfname,iostat=ier,status='old')
             if (ier.ne.0) write (*,1140) tfname

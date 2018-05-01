@@ -1088,7 +1088,7 @@ c                                 hardwired binary/pseudo-binary (0)
 
       end
 
-      recursive subroutine shearm (mu,mut,mup,ks,kst,ksp,id)
+      recursive subroutine shearm (mu,mut,mup,ks,kst,ksp,id,ok)
 c-----------------------------------------------------------------------
 c shearm returns a linear model for the adiabatic shear/bulk modulus
 c relative to the current pressure and temperature.
@@ -1105,6 +1105,8 @@ c-----------------------------------------------------------------------
       implicit none
 
       include 'perplex_parameters.h'
+
+      logical ok
 
       integer id
 
@@ -1130,10 +1132,11 @@ c-----------------------------------------------------------------------
       save dt,dp
       data dt,dp/5d0,50d0/
 c-----------------------------------------------------------------------
+      ok = .true.
 
       if (make(id).ne.0) then 
 
-         call makmod (id,mu,mut,mup,ks,kst,ksp)
+         call makmod (id,mu,mut,mup,ks,kst,ksp,ok)
 
       else if (eos(id).eq.5.or.eos(id).eq.6) then 
 c                                 by calling ginc a call to
@@ -1176,11 +1179,15 @@ c                                 centered pressure derivative
          kst = emod(6,id)
          ksp = emod(5,id)
 
-      end if          
+      else 
+
+         ok = .false.
+
+      end if
 
       end 
 
-      subroutine makmod (id,mu,mut,mup,ks,kst,ksp)
+      subroutine makmod (id,mu,mut,mup,ks,kst,ksp,ok)
 c-----------------------------------------------------------------------
 c gmake computes and sums the component g's for a make definition.
 c the component g's may be calculated redundantly because gmake is
@@ -1192,6 +1199,8 @@ c-----------------------------------------------------------------------
       include 'perplex_parameters.h'
 
       integer i, id, jd
+
+      logical ok 
 
       double precision mu, pmu, mut, pmut, mup, pmup, 
      *                 ks, pks, kst, pkst, ksp, pksp
@@ -1218,7 +1227,9 @@ c-----------------------------------------------------------------------
 c                                compute the sum of the component g's
       do i = 1, mknum(jd)
 
-         call shearm (pmu,pmut,pmup,pks,pkst,pksp,mkind(jd,i))
+         call shearm (pmu,pmut,pmup,pks,pkst,pksp,mkind(jd,i),ok)
+
+         if (.not.ok) return
 
          mu = mu + mkcoef(jd,i) * pmu
          mut = mut + mkcoef(jd,i) * pmut
@@ -1289,15 +1300,7 @@ c-----------------------------------------------------------------------
 
       if (ids.le.0) then 
 
-         if (iemod(-ids).ne.0) then
-
-            call shearm (mu,mut,mup,ks,kst,ksp,-ids)
-
-         else
-
-            ok = .false.
-
-         end if 
+         call shearm (mu,mut,mup,ks,kst,ksp,-ids,ok)
 
       else 
 
@@ -1311,7 +1314,9 @@ c                                 the independent disordered endmembers)
                do i = 1, lstot(ids)
 
                   call shearm (pmu,pmut,pmup,
-     *                         pks,pkst,pksp,jend(ids,2+i))
+     *                         pks,pkst,pksp,jend(ids,2+i),ok)
+
+                  if (.not.ok) exit 
 
                   mu = mu + p0a(i) * pmu
                   mut = mut + p0a(i) * pmut
@@ -1339,7 +1344,9 @@ c                                 speciation model using stixrude's EoS).
                do i = 1, mstot(ids)
 
                   call shearm (pmu,pmut,pmup,
-     *                         pks,pkst,pksp,jend(ids,2+i))
+     *                         pks,pkst,pksp,jend(ids,2+i),ok)
+
+                  if (.not.ok) exit 
 
                   mu  = mu + y(i) * pmu
                   mut = mut + y(i) * pmut
@@ -1379,8 +1386,6 @@ c                                 speciation model using stixrude's EoS).
       end if  
 
       end
-
-
 
       double precision function poiss (vp,vs)
  

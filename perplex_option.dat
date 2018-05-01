@@ -30,11 +30,11 @@ Anderson-Gruneisen        default | [F] Anderson-Gruneisen parameter correction 
 approx_alpha              default | [T] use approximation exp(x) ~ 1+x to evaluate expansivity effect on volume
 aq_bad_results            default | [error] 101 102 or ignore => response to suspect lagged speciation results 
 aq_ion_H+                 default | [T] use H+ ion for charge balance computation, otherwise OH-
-aq_output                 T default | [T] output back-calculated solute chemistry when electrolyte data is available
+aq_output                 F default | [T] output back-calculated solute chemistry when electrolyte data is available
 aq_oxide_components       default | [F] accomodate oxide components in aqueous speciation calculations
 aq_species                default | [20] maximum number of solute species output (ranked by concentration) for back-calculated results
 aq_lagged_iterations      default | [0] number of internal iterations for lagged speciation.
-aq_lagged_speciation      T default | [F] do lagged solute chemistry when electrolyte data is available
+aq_lagged_speciation      F default | [F] do lagged solute chemistry when electrolyte data is available
 aq_max_molality           1000 default | [5.] maximum molality permitted for neutral solute species
 aq_solvent_composition    default | [y] y => mole fractions, m => molality
 aq_solute_composition     default | [m] y => mole fractions, m => molality
