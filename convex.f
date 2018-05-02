@@ -200,9 +200,9 @@ c                                 diagram
 
          else if (icopt.eq.4) then 
 c                                 generate pseudo-compound file
-            write (*,'(/,a,/)) 'SWASH is gone'
+            call swash 
 
-            call errpau
+            exit 
 
          else if (icopt.eq.8) then 
 c                                 a g-x data output format for manual optimization
@@ -964,6 +964,205 @@ c----------------------------------------------------------------------
 
       end
 
+      subroutine swash 
+c-----------------------------------------------------------------------
+c swash outputs thermodynamic data for pseudocompounds. 
+c-----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer iwarn9,iwrn48,iwrn49,jd,id,jdis,i,j,klam,ld,k,kd,h
+
+      double precision tm(m7,m6),xkd
+
+      double precision thermo,uf,us
+      common/ cst1 /thermo(k4,k10),uf(2),us(h5)
+
+      double precision p,t,xco2,u1,u2,tr,pr,r,ps
+      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
+
+      double precision therdi,therlm      
+      common/ cst203 /therdi(m8,m9),therlm(m7,m6,k9)
+
+      integer ltyp,lct,lmda,idis
+      common/ cst204 /ltyp(k10),lct(k10),lmda(k10),idis(k10)
+
+      character*8 names
+      common/ cst8 /names(k1)
+
+      integer ipoint,kphct,imyn
+      common/ cst60 /ipoint,kphct,imyn
+
+      integer ic
+      common/ cst42 /ic(k0)
+
+      double precision cp
+      common/ cst12 /cp(k5,k1)
+
+      integer ikind,icmpn,icout,ieos
+      double precision comp,tot
+      common/ cst43 /comp(k0),tot,icout(k0),ikind,icmpn,ieos
+
+      integer icomp,istct,iphct,icp
+      common/ cst6  /icomp,istct,iphct,icp  
+
+      integer ixp
+      double precision sxs,exces
+      common/ cst304 /sxs(k13),exces(m3,k1),ixp(k1)
+
+      integer ikp
+      common/ cst61 /ikp(k1)
+
+      integer jend
+      common/ cxt23 /jend(h9,m4)
+
+      integer eos
+      common/ cst303 /eos(k10)
+c----------------------------------------------------------------------
+      open (n2,file='swash.dat')
+
+      iwarn9 = 0
+      iwrn49 = 0 
+      iwrn48 = 0
+      
+      do 10 jd = ipoint + 1, iphct
+c                              create mock-entry iphct + 1 for output
+c                              initialize parameters
+         id = k10
+         idis(k10) = 0
+         ltyp(k10) = 0
+         lct(k10)  = 0 
+         jdis = 0
+         klam = 0
+         names(k10) = names(jd)  
+         eos(k10) = eos(jd)
+ 
+         do i = 1, k4
+            thermo(i,k10) = 0d0
+         end do 
+
+         do i = 1, k0
+            comp(i) = 0d0  
+         end do 
+c                                 now combine endmember props
+
+         do j = 1, jend(ikp(jd),1)
+c                                 endmember index
+            kd = jend(ikp(jd),2+j)
+            xkd = sxs(ixp(jd)+j) 
+c                                 test for mughnahan EoS
+            if (thermo(18,kd).ne.0d0) then
+               iwrn49 = 1 
+               goto 10
+            end if             
+
+            do i = 1, 18
+               thermo(i,k10) = thermo(i,k10) + xkd * thermo(i,kd)
+            end do 
+
+            do i = 1, icomp
+               comp(ic(i)) = comp(ic(i)) + xkd * cp(i,kd)
+            end do 
+
+            if (idis(kd).ne.0) then
+
+               idis(k10) = m9
+               jdis = jdis + 1
+               ld = idis(kd) 
+
+               if (jdis.gt.1) goto 91
+
+               do i = 1, 7      
+                  therdi(i,m9) = xkd * therdi(i,ld)
+               end do 
+
+               therdi(8,m9) = therdi(8,ld)
+               therdi(9,m9) = therdi(9,ld)
+
+            end if
+
+            if (ltyp(k10).ne.0) then
+
+               ltyp(k10) = ltyp(kd)
+               lct(k10)   = lct(kd)
+               lmda(k10) = k9
+               ld = lmda(kd)
+
+               if (ltyp(kd).eq.4) then
+
+                  therlm(1,klam,k9) = therlm(1,1,ld)
+                  therlm(2,klam,k9) = xkd * therlm(2,1,ld)
+
+               else if (ltyp(kd).eq.1) then
+
+                  do i = 1, lct(kd)
+                     therlm(1,i,k9) = xkd * therlm(1,i,ld)
+                     therlm(2,i,k9) = xkd * therlm(2,i,ld)
+                     therlm(5,i,k9) = xkd * therlm(5,i,ld)
+                     therlm(6,i,k9) = xkd * therlm(6,i,ld)
+                     therlm(3,i,k9) = therlm(3,i,ld)
+                     therlm(4,i,k9) = therlm(4,i,ld)
+                     therlm(7,i,k9) = therlm(7,i,ld)
+                     therlm(8,i,k9) = therlm(8,i,ld)
+                  end do
+
+               else if (ltyp(kd).lt.3) then
+
+                  do k = 1, lct(kd)
+
+                     therlm(1,k,k9) = therlm(1,k,ld)
+                     therlm(2,k,k9) = therlm(2,k,ld)
+
+                     do h = 3, 12
+                        therlm(h,k,k9) = xkd * therlm(h,k,ld) 
+                     end do
+                  end do 
+               end if
+            else 
+               goto 91 
+            end if
+         end do
+
+         call unlam (tm,id)
+
+         call unver (
+c                                 g0, s0, v0
+     *               thermo(1,k10),thermo(2,k10),thermo(3,k10),
+c                                 c1-c8
+     *               thermo(4,k10),thermo(5,k10),thermo(6,k10),
+     *               thermo(7,k10),thermo(8,k10),
+     *               thermo(9,k10),thermo(10,k10),thermo(24,k10),
+c                                 b1-b11 
+     *               thermo(11,k10),thermo(12,k10),thermo(13,k10),
+     *               thermo(14,k10),thermo(15,k10),thermo(16,k10),
+     *               thermo(17,k10),thermo(18,k10),thermo(19,k10),
+     *               thermo(20,k10),thermo(21,k10),
+c                                 ref-stuff
+     *               tr,pr,eos(k10))
+c                                 output the data
+c                                 this needs to be corrected so
+c                                 that the output data is in thermo
+c                                 and NOT therm
+         call outdat (n2,k10,1) 
+
+         goto 10 
+
+91       iwarn9 = 1
+
+10    continue  
+
+      if (iwrn49.eq.1) call warn (49,thermo(18,kd),iphct,names(kd))
+
+      if (iwrn48.eq.1) call warn (48,thermo(18,kd),iphct,names(kd))
+
+      if (iwarn9.eq.1) call warn (9,t,i,names(k10))
+
+      close (n2)
+
+      stop
+
+      end
 
       subroutine abload (*)
 c---------------------------------------------------------------------

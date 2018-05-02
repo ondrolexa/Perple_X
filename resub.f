@@ -430,6 +430,8 @@ c                                   load jkp[ids], hkp[i], local
 c                                   and global composition arrays
             call loadgx (kd,i,ids,bad)
 
+            if (bad) cycle
+
          end do
 
       end do
@@ -469,9 +471,6 @@ c----------------------------------------------------------------------
       integer istg, ispg, imlt, imdg
       common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
 
-      integer pstot,qstot,ostg,odim,nsum
-      common/ junk1 /pstot(h9),qstot(h9),ostg(h9),odim(mst,h9),nsum(h9)
-
       integer lstot,mstot,nstot,ndep,nord
       common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
 
@@ -491,25 +490,15 @@ c                                locate the endmember in the solution
          end if 
       end do 
 c                                initialize all x's
-      do i = 1, ostg(ids)
+      do i = 1, istg(ids)
          do j = 1, ispg(ids,i)
             x(i,j) = 0d0
          end do
       end do
 c                                 assign endmember x's
-      if (kd.le.mstot(ids)) then 
-c                                 normal simplex/prism
-         do i = 1, istg(ids)
-            x(i,kmsol(ids,kd,i)) = 1d0
-         end do 
-
-      else 
-c                                 simplex with a prismatic vertex
-        x(ostg(ids),kd-mstot(ids)) = 1d0 
-        write (*,*) 'groink ',x(ostg(ids),kd-mstot(ids))
-        pause
-
-      end if
+      do i = 1, istg(ids)
+         x(i,kmsol(ids,kd,i)) = 1d0
+      end do 
 
       end
 
@@ -815,9 +804,6 @@ c                                 x coordinate description
       integer npt,jdv
       double precision cptot,ctotal
       common/ cst78 /cptot(k19),ctotal,jdv(k19),npt
-
-      integer pstot,qstot,ostg,odim,nsum
-      common/ junk1 /pstot(h9),qstot(h9),ostg(h9),odim(mst,h9),nsum(h9)
 c----------------------------------------------------------------------
       kcoct = 0
 
@@ -838,7 +824,7 @@ c                                 it's a solution:
          lcoor(i) = kcoct
          itic = 0
 
-         do j = 1, ostg(ids)
+         do j = 1, istg(ids)
 
             do k = 1, ndim(j,ids)
 
@@ -850,7 +836,7 @@ c                                 it's a solution:
 
             end do
 
-         end do
+         end do 
 
          kcoct = kcoct + itic
 
@@ -882,15 +868,12 @@ c                                 interim storage array
       double precision ycoor
       common/ cxt14 /ycoor(k22),lcoor(k19),lkp(k19)
 
-      integer pstot,qstot,ostg,odim,nsum
-      common/ junk1 /pstot(h9),qstot(h9),ostg(h9),odim(mst,h9),nsum(h9)
-
       integer ncoor,mcoor,ndim
       common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
 c----------------------------------------------------------------------
       jcoor = lcoor(id)
 
-      do i = 1, ostg(ids)
+      do i = 1, istg(ids)
 
          xt = 0d0 
 
@@ -1039,7 +1022,7 @@ c----------------------------------------------------------------------
 
       logical check, bad, quit, notaq, abort
 
-      integer idsol(k5),kdsol(k5,k5),ids,xidsol,xkdsol,irep,
+      integer idsol(k5),kdsol(k5,k5),ids,isite,xidsol,xkdsol,irep,
      *        i,j,jdsol(k5,k5),jd,k,l,nkp(k5),xjdsol(k5),kk
 
       double precision bsol(k5,k5),cpnew(k5,k5),xx,xb(k5),msol,
@@ -1052,9 +1035,6 @@ c                                 global variables:
 c                                 x coordinate description
       integer istg, ispg, imlt, imdg
       common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
-
-      integer pstot,qstot,ostg,odim,nsum
-      common/ junk1 /pstot(h9),qstot(h9),ostg(h9),odim(mst,h9),nsum(h9)
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
@@ -1331,12 +1311,13 @@ c                                 the everage composition
 c                                 initialize
          bnew(i) = 0d0
          ids = kdsol(i,1)
+         isite = istg(ids)
 
          do j = 1, icomp
             cpnew(j,i) = 0d0
          end do 
 
-         do j = 1, ostg(ids)
+         do j = 1, isite
             do k = 1, ispg(ids,j)
                xnew(i,j,k) = 0d0
             end do 
@@ -1372,7 +1353,7 @@ c                                save the new compositions
                cpnew(k,i) = cpnew(k,i) + xx*cp3(k,jd)
             end do
 
-            do k = 1, ostg(ids)
+            do k = 1, isite
                do l = 1, ispg(ids,k)
                   xnew(i,k,l) = xnew(i,k,l) + xx*x3(jd,k,l)
                end do
@@ -1413,7 +1394,7 @@ c                                 now reform the arrays kdv and b
             cp3(j,i) = cpnew(j,i)
          end do
 
-         do j = 1, ostg(ids)
+         do j = 1, istg(ids)
             do k = 1, ispg(ids,j)
 c                                 set x's for sollim
                x(j,k) = xnew(i,j,k)
@@ -1878,9 +1859,6 @@ c                                 i/o
       integer ksmod, ksite, kmsol, knsp
       common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
 
-      integer pstot,qstot,ostg,odim,nsum
-      common/ junk1 /pstot(h9),qstot(h9),ostg(h9),odim(mst,h9),nsum(h9)
-
       integer jbulk
       double precision cblk
       common/ cst300 /cblk(k5),jbulk
@@ -1893,7 +1871,7 @@ c                                phase molar amounts
 c                                solution phase compositions
       do i = 1, np
          ids = kkp(i)
-         write (n5,1010) ((x3(i,j,k),k=1,ispg(ids,j)),j=1,ostg(ids))
+         write (n5,1010) ((x3(i,j,k),k=1,ispg(ids,j)),j=1,istg(ids))
 c                                lagged speciation
          if (ksmod(ids).eq.39.and.lopt(32)) write (n5,1010) 
      *                                            (caq(i,j),j=1,nat)
@@ -2520,22 +2498,20 @@ c----------------------------------------------------------------------
       include 'perplex_parameters.h'
 
       integer i, j, id, ids, kcoor, ind
+c                                 x coordinate description
+      integer istg, ispg, imlt, imdg
 
       double precision xt
 
-      integer istg, ispg, imlt, imdg
       common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
-
-      integer pstot,qstot,ostg,odim,nsum
-      common/ junk1 /pstot(h9),qstot(h9),ostg(h9),odim(mst,h9),nsum(h9)
-
+c                                 stored x coordinate
       double precision xco
       integer ico,jco
       common/ cxt10 /xco(k18),ico(k1),jco(k1)
 
       integer ncoor,mcoor,ndim
       common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
-
+c                                  x-coordinates for the final solution
       integer kd, na1, na2, na3, nat
       double precision x3, caq
       common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),na1,na2,na3,nat,kd
@@ -2563,7 +2539,7 @@ c                                 one site solution
 c                                 multi-site solution
             kcoor = ico(id)
 
-            do i = 1, ostg(ids)
+            do i = 1, istg(ids)
 
                xt = 0d0 
 
@@ -3506,10 +3482,8 @@ c                                 output iteration bulk G and mu's
 
             end do
 
-            if (jter.eq.0.or.lopt(34)) 
-     *                    write (*,1000) (cname(i), i = 1, hcp)
+            if (jter.eq.0) write (*,1000) (cname(i), i = 1, hcp)
             write (*,1010) jter, g/ctotal, (imu(i), i = 1, hcp)
-            if (lopt(34)) write (*,'(/)') 
 
          end if
 
@@ -3519,10 +3493,8 @@ c                                 output iteration bulk G and mu's
 
          if (lopt(33)) then 
 c                                 output failure msg
-            if (jter.eq.0.or.lopt(34)) 
-     *                    write (*,1000) (cname(i), i = 1, hcp)
+            if (jter.eq.0) write (*,1000) (cname(i), i = 1, hcp)
             write (*,1020) jter
-            if (lopt(34)) write (*,'(/)') 
 
          end if
 c                                 failed
@@ -3769,11 +3741,11 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i, j, kd, ids, kcoct
+      integer i, j, k, l, m, kd, ids, kcoct
 
       logical bad, recalc
 
-      double precision gsol1
+      double precision ysum, gsol1
 
       external gsol1
 
@@ -3790,6 +3762,9 @@ c----------------------------------------------------------------------
       double precision zcoor
       common/ cxt13 /zcoor(k20),jcoor(k21),jkp(k21),jcoct
 
+      double precision simp,prism
+      common/ cxt86 /simp(k13),prism(k24)
+
       integer ncoor,mcoor,ndim
       common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
 
@@ -3803,6 +3778,25 @@ c----------------------------------------------------------------------
       integer solc, isolc
       common/ cxt1 /solc(k5),isolc,quack(k21)
 
+      integer ineg
+      common/ cst91 /ineg(h9,m15)
+
+      double precision z, pa, p0a, x, w, y, wl
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
+     *              wl(m17,m18)
+
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+
+      integer istg, ispg, imlt, imdg
+      double precision xmng, xmxg, xncg, xmno, xmxo, reachg
+      common/ cxt6r /xmng(h9,mst,msp),xmxg(h9,mst,msp),xncg(h9,mst,msp),
+     *               xmno(h9,mst,msp),xmxo(h9,mst,msp),reachg(h9)
+      common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
+
+      integer lstot,mstot,nstot,ndep,nord
+      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
+
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
 
@@ -3812,15 +3806,118 @@ c----------------------------------------------------------------------
       jphct = jphct + 1
       recalc = .false.
 
-      if (jphct.gt.k21) call error (58,1d0,k21,'loadgx')
+      if (jphct.gt.k21) call error (58,x(1,1),k21,'loadgx')
 
+      bad = .false.
       jkp(jphct) = ids
       hkp(jphct) = kd
 
-      call prs2xy (i,ids,.true.,bad)
+      jcoor(jphct) = jcoct - 1
+      kcoct = jcoct + mcoor(ids)
+c                                 counter for number of non 0 or 1 compositions
+      if (kcoct.gt.k20) call error (59,x(1,1),k20,'resub')
 
-      if (bad) return
+      l = (i-1)*mcoor(ids)
+      m = 0
+       
+      if (ksmod(ids).ne.20) then 
 
+         do j = 1, istg(ids)
+
+            ysum = 0d0
+
+            do k = 1, ndim(j,ids)
+
+               m = m + 1
+
+               x(j,k) = prism(l+m)
+               ysum = ysum + x(j,k)
+               zcoor(jcoct) = x(j,k)
+ 
+               if (x(j,k).lt.xmno(ids,j,k).and.
+     *             x(j,k).gt.xmxo(ids,j,k)) then 
+c                                 the composition is out of range
+                  jphct = jphct - 1
+                  jcoct = kcoct - mcoor(ids)
+                  bad = .true.
+                  return
+
+               end if
+
+               jcoct = jcoct + 1
+
+            end do
+
+            x(j,ispg(ids,j)) = 1d0 - ysum
+
+         end do 
+
+      else 
+c                                 charge balance models: a wierd shuffle to put
+c                                 the first nqs - 1 species in zcoor
+         ysum = 0d0
+
+         do k = 1, nqs
+
+            if (k.eq.ns) cycle 
+
+            m = m + 1
+
+            x(1,k) = prism(l+m)
+            ysum = ysum + x(1,k)
+
+            if (k.eq.nqs) cycle 
+
+            zcoor(kcoct-nqs+k) = x(1,k)
+
+            if (x(1,k).lt.xmno(ids,1,k).and.
+     *          x(1,k).gt.xmxo(ids,1,k)) then 
+c                                 the composition is out of range
+               jphct = jphct - 1
+               jcoct = kcoct - mcoor(ids)
+
+               bad = .true.
+               return
+
+            end if
+
+         end do
+
+         x(1,ns) = 1d0 - ysum
+
+         zcoor(kcoct-qn) = x(1,ns)
+         jcoct = jcoct + nqs1
+
+      end if
+
+      call xtoy (ids,bad)
+
+      if (bad) then 
+
+         jphct = jphct - 1
+         jcoct = kcoct - mcoor(ids)
+         return 
+
+      else if (ksmod(ids).eq.5) then
+c                                 this is an el cheapo filter for redundant
+c                                 compositions, a better method would be to
+c                                 do the subdivision properly.
+         do j = 1, ndep(ids)
+
+            if (y(knsp(lstot(ids)+j,ids)).gt.0d0.and.
+     *          y(knsp(lstot(ids)+j,ids)).le.y(ineg(ids,j))) then
+c                                 reject composition 
+               jphct = jphct - 1
+               jcoct = kcoct - mcoor(ids)
+               bad = .true. 
+               return
+
+            end if 
+
+         end do
+
+      end if
+c                                 
       if (lopt(32).and.ksmod(ids).eq.39) then
 
          if (lopt(28)) then 
@@ -3839,7 +3936,7 @@ c                                 solute free cpd
 c                                 now pad out counters for 
 c                                 a solute cpd
             jphct = jphct + 1
-            if (jphct.gt.k21) call error (58,1d0,k21,'resub')
+            if (jphct.gt.k21) call error (58,x(1,1),k21,'resub')
 
             jkp(jphct) = ids
             hkp(jphct) = kd

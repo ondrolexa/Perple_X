@@ -615,7 +615,7 @@ c                                 test for non-NaN chemical potentials
      *          5x,20(1x,a,3x))
 1030  format (1x,a,3x,3(f6.2,4x),g9.3,1x,20(f8.5,1x))
 1031  format (1x,a,3x,3(f6.2,4x),g9.3,1x,20(f8.3,1x))
-1040  format (/,14x,'mol',8x,'g',8x,'wt %',5x,'mol/kg')
+1040  format (/,13x,'mol',8x,'g',8x,'wt %',5x,'mol/kg')
 1060  format (/,' Enthalpy (J/kg) = ',g12.6,/,
      *          ' Specific Enthalpy (J/m3) = ',g12.6,/,
      *          ' Entropy (J/K/kg) = ',g12.6,/,
@@ -625,7 +625,7 @@ c                                 test for non-NaN chemical potentials
 1070  format ('Variance (c-p+',i1,') = ',i2,/)
 1071  format (/,'Variance (c-p+',i1,') = ',i2,/)
 1080  format (/,21x,'Complete Assemblage',28x,'Solid+Melt Only',
-     *        /,14x,'mol',8x,'g',8x,'wt %',5x,'mol/kg',
+     *        /,13x,'mol',8x,'g',8x,'wt %',5x,'mol/kg',
      *          10x,'mol',8x,'g',8x,'wt %',5x,'mol/kg')
 1100  format (/,' Solid Enthalpy (J/kg) = ',g12.6,/,
      *          ' Solid Secific Enthalpy (J/m3) (2) = ',g12.6,/,
@@ -633,7 +633,7 @@ c                                 test for non-NaN chemical potentials
      *          ' Solid Specific Entropy (J/K/m3) = ',g12.6,/,
      *          ' Solid Heat Capacity (J/K/kg) (1) = ',g12.6,/,
      *          ' Solid Specific Heat Capacity (J/K/m3) (1) = ',g12.6,/)
-1110  format (1x,a8,2x,4(f8.3,2x),5x,4(f8.3,2x))
+1110  format (1x,a8,2x,4(f7.3,3x),5x,4(f7.3,3x))
 1120  format (29x,a8,' = ',g12.6)
 1130  format (/,'Chemical Potentials (J/mol):',//,2x,20(4x,a,5x))
 1140  format (2x,20(1x,g13.6))
@@ -787,9 +787,6 @@ c                                 bookkeeping variables
       double precision hsb
       common/ cst84 /hsb(i8,4),hs2p(6)
 
-      integer pstot,qstot,ostg,odim,nsum
-      common/ junk1 /pstot(h9),qstot(h9),ostg(h9),odim(mst,h9),nsum(h9)
-
       integer idaq, jdaq
       logical laq
       common/ cxt3 /idaq,jdaq,laq
@@ -891,7 +888,7 @@ c                                 solvent
 c                                 WERAMI, initialize
                props(16,i) = 0d0
 
-               do j = 1, ostg(ids)
+               do j = 1, istg(ids)
                   do k = 1, ispg(ids,j)
                      x3(i,j,k) = 0d0
                   end do 
@@ -920,7 +917,7 @@ c                                 weighted molar amount
                      props(16,i) = props(16,i) + cst
                   end if 
 
-                  do j = 1, ostg(ids)
+                  do j = 1, istg(ids)
                      do k = 1, ispg(ids,j)
                         lco(l) = lco(l) + 1
                         x3(i,j,k) = x3(i,j,k) + cst*xco(lco(l))
@@ -941,7 +938,7 @@ c                                 renormalize the composition
                cst = props(16,i)
                if (cst.eq.0d0) cst = 1d0
 
-               do l = 1, ostg(ids)
+               do l = 1, istg(ids)
                   do m = 1, ispg(ids,l)    
                      x3(i,l,m) = x3(i,l,m)/cst
                   end do 
@@ -957,14 +954,14 @@ c                               lagged speciation
 c                                 revover x from x3, 2nd arg has no meaning.
                call getxz (i,i,ids)
 c                                 convert x to y for calls to gsol
-               call xtoy (ids,ids,.true.,bad)
+               call xtoy (ids,bad)
 
             else 
 c                                 MEEMUM, molar amount
                props(16,i) = amt(i)
 c                                 convert x3 to y for calls to gsol
-               if (ids.gt.0) call xtoy (ids,i,.false.,bad)
-
+               if (ids.gt.0) call x3toy (i,ids)
+ 
             end if 
 
          else 
@@ -1004,6 +1001,7 @@ c                                 compute aggregate properties:
 99    if (lopt(14)) p = dlog10(p)
 
       end
+
 
       subroutine getspc (id,jd)
 c-----------------------------------------------------------------------
@@ -1053,8 +1051,9 @@ c----------------------------------------------------------------------
             ysp(k,jd) = p0a(k)
          end do
 
-      else if (ksmod(id).eq.2.or.ksmod(id).eq.20.or.ksmod(id).ge.24.and.
-     *         ksmod(id).le.28.or.ksmod(id).eq.39) then
+      else if (ksmod(id).eq.2 .or. ksmod(id).eq.3 .or.ksmod(id).eq.20
+     *     .or.ksmod(id).ge.24.and.ksmod(id).le.28.or.ksmod(id).eq.39) 
+     *                                                              then 
 c                                 macroscopic formulation for normal solutions (2,3) and
 c                                 hp melt model (24)
 c                                 ghiorso melt model (25)
@@ -1088,7 +1087,7 @@ c                                 hardwired binary/pseudo-binary (0)
 
       end
 
-      recursive subroutine shearm (mu,mut,mup,ks,kst,ksp,id,ok)
+      recursive subroutine shearm (mu,mut,mup,ks,kst,ksp,id)
 c-----------------------------------------------------------------------
 c shearm returns a linear model for the adiabatic shear/bulk modulus
 c relative to the current pressure and temperature.
@@ -1105,8 +1104,6 @@ c-----------------------------------------------------------------------
       implicit none
 
       include 'perplex_parameters.h'
-
-      logical ok
 
       integer id
 
@@ -1132,11 +1129,10 @@ c-----------------------------------------------------------------------
       save dt,dp
       data dt,dp/5d0,50d0/
 c-----------------------------------------------------------------------
-      ok = .true.
 
       if (make(id).ne.0) then 
 
-         call makmod (id,mu,mut,mup,ks,kst,ksp,ok)
+         call makmod (id,mu,mut,mup,ks,kst,ksp)
 
       else if (eos(id).eq.5.or.eos(id).eq.6) then 
 c                                 by calling ginc a call to
@@ -1179,15 +1175,11 @@ c                                 centered pressure derivative
          kst = emod(6,id)
          ksp = emod(5,id)
 
-      else 
-
-         ok = .false.
-
-      end if
+      end if          
 
       end 
 
-      subroutine makmod (id,mu,mut,mup,ks,kst,ksp,ok)
+      subroutine makmod (id,mu,mut,mup,ks,kst,ksp)
 c-----------------------------------------------------------------------
 c gmake computes and sums the component g's for a make definition.
 c the component g's may be calculated redundantly because gmake is
@@ -1199,8 +1191,6 @@ c-----------------------------------------------------------------------
       include 'perplex_parameters.h'
 
       integer i, id, jd
-
-      logical ok 
 
       double precision mu, pmu, mut, pmut, mup, pmup, 
      *                 ks, pks, kst, pkst, ksp, pksp
@@ -1227,9 +1217,7 @@ c-----------------------------------------------------------------------
 c                                compute the sum of the component g's
       do i = 1, mknum(jd)
 
-         call shearm (pmu,pmut,pmup,pks,pkst,pksp,mkind(jd,i),ok)
-
-         if (.not.ok) return
+         call shearm (pmu,pmut,pmup,pks,pkst,pksp,mkind(jd,i))
 
          mu = mu + mkcoef(jd,i) * pmu
          mut = mut + mkcoef(jd,i) * pmut
@@ -1300,7 +1288,15 @@ c-----------------------------------------------------------------------
 
       if (ids.le.0) then 
 
-         call shearm (mu,mut,mup,ks,kst,ksp,-ids,ok)
+         if (iemod(-ids).ne.0) then
+
+            call shearm (mu,mut,mup,ks,kst,ksp,-ids)
+
+         else
+
+            ok = .false.
+
+         end if 
 
       else 
 
@@ -1314,9 +1310,7 @@ c                                 the independent disordered endmembers)
                do i = 1, lstot(ids)
 
                   call shearm (pmu,pmut,pmup,
-     *                         pks,pkst,pksp,jend(ids,2+i),ok)
-
-                  if (.not.ok) exit 
+     *                         pks,pkst,pksp,jend(ids,2+i))
 
                   mu = mu + p0a(i) * pmu
                   mut = mut + p0a(i) * pmut
@@ -1344,9 +1338,7 @@ c                                 speciation model using stixrude's EoS).
                do i = 1, mstot(ids)
 
                   call shearm (pmu,pmut,pmup,
-     *                         pks,pkst,pksp,jend(ids,2+i),ok)
-
-                  if (.not.ok) exit 
+     *                         pks,pkst,pksp,jend(ids,2+i))
 
                   mu  = mu + y(i) * pmu
                   mut = mut + y(i) * pmut
@@ -1386,6 +1378,8 @@ c                                 speciation model using stixrude's EoS).
       end if  
 
       end
+
+
 
       double precision function poiss (vp,vs)
  
