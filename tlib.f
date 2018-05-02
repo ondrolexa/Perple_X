@@ -19,7 +19,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a)') 
-     *      'Perple_X version 6.8.2, source updated Apr 30, 2018.'
+     *      'Perple_X version 6.8.2, source updated May 2, 2018.'
 
       end
 
@@ -4913,6 +4913,7 @@ c----------------------------------------------------------------------
       character chars*1
       common/ cst51 /length,iblank,icom,chars(lchar)
 c----------------------------------------------------------------------
+      chars(1:lchar) = ' '
 c                                 strip leading blanks in text1 and
 c                                 get pointer to end of string
       call leblnk (text1,1,nchar1)
@@ -4921,13 +4922,11 @@ c                                 get pointer to end of string
 c                                 text1 is blank
          nchar1 = 40
 
-         do i = 1, nchar1 + nblank
-            chars(i) = ' '
-         end do 
-
       else 
 c                                 put nblank blanks between 1st and 
-c                                 2nd strings
+c                                 2nd strings, this is necessary despite
+c                                 initialization because leblnk may 
+c                                 shift strings left.
          do i = nchar1+1, nchar1 + nblank
             chars(i) = ' '
          end do 
@@ -4940,8 +4939,10 @@ c                                 get pointer to end of string in chars
       call leblnk (text2,nchar1,nchar2)
 
       text = ' '
+
       if (nchar2.gt.len(text)) call error (10,0d0,lchar,text2)
-      write (text,'(400a)') (chars(i), i = 1, nchar2)
+
+      write (text,'(400a)') chars(1:nchar2)
 
       end
 
@@ -5741,7 +5742,7 @@ c----------------------------------------------------------------------
       nchar = len(text) + ibeg -1 
       if (nchar.gt.lchar) nchar = lchar
 
-      read (text,'(400a)') (chars(i), i = ibeg, nchar)
+      read (text,'(400a)') chars(ibeg:nchar)
 c                                 find last non-blank   
       
       do i = ibeg, nchar

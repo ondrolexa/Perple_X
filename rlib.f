@@ -5673,7 +5673,7 @@ c----------------------------------------------------------------------
 
       if (first.and.isite.gt.1) call warn (50,wg(1,1),isite,sname)
 
-      do 
+      do
 
          do i = 1, isite
             ksp(i) = 1
@@ -5734,7 +5734,7 @@ c                                 this is more than before (kill1)
                   end if 
                end do 
             end if 
-         end do      
+         end do
 c                                 kill the species jkill on site ikill
 c                                 and reformulate the model (this is 
 c                                 inefficient, but we don't care here). 
@@ -5882,7 +5882,7 @@ c---------------------------------------------------------------------
 
       logical skip, bad, dead
 
-      integer jsp,jtic,morder,
+      integer jsp,jtic,morder,jst,jend,jnc,
      *        i,j,ikill,jkill,kill,kdep,jdqf,ktic,jold,
      *        iwas(m4),i2ni(m4),kwas(m4),
      *        k,l,itic,ijkill(m4),
@@ -5903,6 +5903,9 @@ c                                 local input variables
       integer jsmod
       double precision vlaar
       common/ cst221 /vlaar(m3,m4),jsmod
+
+      integer ostot
+      common/ junk /ostot
 
       integer jmsol,kdsol
       common/ cst142 /jmsol(m4,mst),kdsol(m4)
@@ -5940,7 +5943,17 @@ c                                 local input variables
       common/ cxt30 /limc(j6+2,j5,j3),limid(m0,j5,j3),jimid(j3,j5,j3),
      *               limn(j3),limt(j5,j3),jimc(j3,j5,j3),jimt(j5,j3)
 c----------------------------------------------------------------------
-      do i = 1, isite
+      if (jsmod.eq.9.and.ikill.gt.isite) then
+         jst = ikill
+         jend = ikill
+         jnc = 1
+      else 
+         jst = 1
+         jend = ikill
+         jnc = 0
+      end if 
+
+      do i = jst, jend 
 
          if (i.ne.ikill) then
 c                                 nothing happens  
@@ -5984,14 +5997,14 @@ c                              now shift subdivision ranges
             else 
                xmn(i,j) = 1d0
                xmx(i,j) = 1d0
-               xnc(i,j) = 1d0                 
+               xnc(i,j) = 1d0
             end if
          end if 
       end do 
 
       kdep = 0 
 
-      do i = 1, istot
+      do i = 1, ostot
 
          if (depend.and.kdsol(i).eq.-2) then 
 c                                create an array which gives the
@@ -7201,9 +7214,14 @@ c                                lower site counters to first index,
                end if 
 
                goto 20
+
             end if
          end do 
-20    continue 
+20    continue
+c                              orphan vertex models
+      do l = istot + 1, ostot
+         jmsol(l,isite+1) = l - istot 
+      end do
 c                              read excess function
       call readx (idim,tname)
 c                              expansion for S(configurational)
@@ -12442,7 +12460,9 @@ c                                  normal solution.
 c                                 -------------------------------------
 c                                 reformulate the model so that it has 
 c                                 no missing endmembers:
-            if (jstot.lt.istot) call reform (tname,im,first)
+            if (jsmod.eq.9) call kill01 (isite+1,im)
+
+            if (jstot.lt.ostot) call reform (tname,im,first)
 
             if (istot.lt.2) cycle  
 
