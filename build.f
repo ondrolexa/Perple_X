@@ -175,6 +175,8 @@ c                                 version info
       call vrsion (6)
 c                                 initialize strings (necessary for some OS). 
       opname = ' '
+      n9name = ' '
+      title = ' '
 
       write (*,7020)
 c                                 name and open computational option file (unit n1)      
@@ -408,8 +410,6 @@ c                               got one, get the EoS
 
       end if 
 c                                read solution phases.
-      n9name = ' '
-
       write (*,2500)
       read (*,'(a)') y
  
@@ -571,7 +571,6 @@ c                                 check if name in list
          end if
       end if 
 c                                 get title
-      title = ' '
       write (*,7070) 
       read (*,'(a)') title
 c                                 output options etc:

@@ -19,7 +19,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a)') 
-     *      'Perple_X version 6.8.1, source updated May 2, 2018.'
+     *      'Perple_X version 6.8.2, source updated May 3, 2018.'
 
       end
 
@@ -36,7 +36,7 @@ c----------------------------------------------------------------------
       if (new.eq.'008'.or.new.eq.'011'.or.new.eq.'670'.or.
      *    new.eq.'672'.or.new.eq.'673'.or.new.eq.'674'.or.
      *    new.eq.'675'.or.new.eq.'676'.or.new.eq.'678'.or.
-     *    new.eq.'679') then 
+     *    new.eq.'679'.or.new.eq.'682') then 
 
          chksol = .true.
 
@@ -976,7 +976,7 @@ c                                 reserved values for debugging, etc
          end if
 
       end do 
-    
+
       close (n8)
 c                                 -------------------------------------
 c                                 computation dependent options
@@ -984,6 +984,8 @@ c                                 -------------------------------------
 c                                 automatic specification of metastable
 c                                 refinement points
       if (lopt(40)) iopt(31) = icp + 2
+c                                 always allow null phases if not CONVEX
+      if (iam.eq.15) lopt(37) = .true. 
 c                                 write and optional file choices
       if (iam.ne.14) then 
          if (jer.ne.0) then 
@@ -993,7 +995,7 @@ c                                 write and optional file choices
          end if
       end if 
 
-      if (iam.eq.1) then 
+      if (iam.eq.1.or.iam.eq.15) then 
 c                                 vertex only files:
          if (icopt.eq.1.or.icopt.eq.3) then 
 
@@ -1022,7 +1024,7 @@ c                                 auto refine summary
  
       end if 
 c                                 pseudocompound glossary
-      if (io9.eq.0.and.iam.lt.3) then
+      if (io9.eq.0.and.(iam.lt.3.or.iam.eq.15)) then
  
          if (lopt(10)) then 
             call mertxt (tfname,prject,'_pseudocompound_glossary.txt',0)
@@ -1034,7 +1036,7 @@ c                                 pseudocompound glossary
 
       end if 
 c                                 computational options this is redundant
-      if (iam.lt.4) then 
+      if (iam.lt.4.or.iam.eq.15) then 
          if (lopt(12)) then 
             if (iam.eq.1) then           
                call mertxt (tfname,prject,'_VERTEX_options.txt',0)
@@ -1042,7 +1044,9 @@ c                                 computational options this is redundant
                call mertxt (tfname,prject,'_MEEMUM_options.txt',0)
             else if (iam.eq.3) then 
                call mertxt (tfname,prject,'_WERAMI_options.txt',0)
-            end if 
+            else if (iam.eq.15) then 
+               call mertxt (tfname,prject,'_CONVEX_options.txt',0)
+            end if
          else 
             tfname = 'not requested'
          end if 
@@ -1185,9 +1189,9 @@ c                                  speciation tolerance, later set to nopt(5)
       end do 
 c                                 --------------------------------------
 c                                 output
-      if ((iam.eq.1.and.output).or.iam.eq.2
-     *                         .or.iam.eq.3
-     *                         .or.iam.eq.5) then
+      if (((iam.eq.1.or.iam.eq.15).and.output).or.iam.eq.2
+     *                                        .or.iam.eq.3
+     *                                        .or.iam.eq.5) then
 c                                 console
          call outopt (6,valu)
 
@@ -1199,6 +1203,8 @@ c                                 file version, create the file name
                call mertxt (tfname,prject,'_MEEMUM_options.txt',0)
             else if (iam.eq.3) then 
                call mertxt (tfname,prject,'_WERAMI_options.txt',0)
+            else if (iam.eq.15) then 
+               call mertxt (tfname,prject,'_CONVEX_options.txt',0)
             end if 
 
             open (n8, file = tfname)
@@ -1302,10 +1308,12 @@ c                                 generic blurb
       else if (iam.eq.3) then 
          write (n,1000) 'WERAMI'
       else if (iam.eq.5) then 
-         write (n,1000) 'FRENDLY' 
+         write (n,1000) 'FRENDLY'
+      else if (iam.eq.15) then 
+         write (n,1000) 'CONVEX'
       end if 
 
-      if (iam.le.2) then 
+      if (iam.le.2.or.iam.eq.15) then 
 c                                 VERTEX/MEEMUM:
 c                                 solvus tolerance text
          if (lopt(9)) then 
@@ -1320,9 +1328,9 @@ c                                 solvus tolerance text
 
          end if 
 
-         if (iam.eq.1) write (n,1015) valu(6)
+         if (iam.eq.1.or.iam.eq.15) write (n,1015) valu(6)
 c                                 context specific parameters:
-         if (icopt.le.3.and.iam.eq.1) then 
+         if (icopt.le.3.and.(iam.eq.1.or.iam.eq.15)) then 
 c                                 non-adaptive calculations
             if (iopt(6).ne.0) then
 c                                 auto refine
@@ -1382,7 +1390,7 @@ c                                 closed or open composition space
 c                                 generic subdivision parameters:      
          write (n,1010) nopt(13),bm1,valu(13),valu(16)
 c                                 pc-perturbation
-         if (iam.eq.1.and.icopt.le.3) write (n,1011) nopt(15)
+         if (iam.eq.15) write (n,1011) nopt(15)
 c                                 generic thermo parameters:
          write (n,1012) nval1,nopt(12),nopt(20),valu(17),
      *                  lopt(8),lopt(4),nopt(5),iopt(21),
@@ -1390,11 +1398,11 @@ c                                 generic thermo parameters:
 c                                 for meemum add fd stuff
          if (iam.eq.2) write (n,1017) nopt(31),nopt(26),nopt(27)
 
-         if (iam.eq.1.and.icopt.ne.1) then 
+         if ((iam.eq.1.or.iam.eq.15).and.icopt.ne.1) then 
 c                                 vertex output options, dependent potentials
             write (n,1013) valu(11),lopt(19)
 c                                 logarithmic_p, bad_number
-            if (icopt.gt.3) write (n,1014) lopt(14),nopt(7)
+            if (iam.eq.1) write (n,1014) lopt(14),nopt(7)
 
          end if 
 
@@ -1438,11 +1446,11 @@ c                                 FRENDLY thermo options
       if (iam.le.2) then 
 c                                 info file options
          write (n,1240) lopt(12),lopt(10)
-         if (iam.eq.1) write (n,1250) lopt(11)
+         if (iam.eq.1.or.iam.eq.15) write (n,1250) lopt(11)
 
       end if 
 c                                 resolution blurb
-      if (iam.le.2.and.nopt(13).gt.0d0) then
+      if ((iam.le.2.or.iam.eq.15).and.nopt(13).gt.0d0) then
 
          write (n,1090) rid(4,1),rid(4,2)
          write (n,1100) grid(6,1),grid(6,2)
@@ -2366,8 +2374,8 @@ c---------------------------------------------------------------------
      *         ,', increase parameter K17 (',i2,') and recompile.',/)
 57    format (/,'**error ver057** failed on an accepted make definition'
      *         ,' for ',a,/,'routine INPUT2'/)
-58    format (/,'**error ver058** too many pseudocompounds generated ',
-     *          'during adaptive minimization, routine: ',a,/
+58    format (/,'**error ver058** exhausted memory ',
+     *          'in adaptive minimization, routine: ',a,/
      *        /,'this error can usually be eliminated by one of the ',
      *        /,'following actions (best listed first):',/)
 580   format (2x,'- increase dimension k21 (',i7,') and recompile ',
@@ -2395,10 +2403,10 @@ c---------------------------------------------------------------------
 67    format (/,'**error ver067** file ',a,/,
      *        'is not formatted correctly for PSVDRAW.',/)
 68    format (/,'**error ver068** solution model: ',a,
-     *          ' is in microscopic format.',/,'Perple_X 6.6+ does not',
-     *          ' support this format.',/,'Use a more recent solution ',
-     *          'model file, e.g., copy the current version from: ',
-     *        'www.perplex.ethz.ch/datafiles/solution_model.dat',/)
+     *          ' is in a format that is no longer supported',/,
+     *          'Use a more recent solution model file, e.g., copy ',
+     *          'the current version from: ',//,
+     *          'www.perplex.ethz.ch/datafiles/solution_model.dat',/)
 69    format (/,'**error ver069** too many points (',a,'), increase ',
      *          'parameter L5',/)
 70    format (/,'**error ver070** delete file: ',a,/,
@@ -2648,8 +2656,6 @@ c----------------------------------------------------------------------
          write (*,59) char
       else if (ier.eq.60) then
          write (*,60) char
-      else if (ier.eq.61) then 
-         write (*,61) int, k21
       else if (ier.eq.63) then
          write (*,63)
       else if (ier.eq.68) then
@@ -2919,24 +2925,6 @@ c     *          ' (SWASH, see program documentation Eq 2.3)',/)
      *        ' has invalid site populations.',/)
 60    format (/,'**warning ver060** non-fatal programming error ',
      *          'routine:',a,/)
-61    format (/,'**warning ver061** exhausted memory (k21) during'
-     *         ,' adaptive optimization',/,'currently refining '
-     *         ,'metastable refinement point ',i2,' execution will',/
-     *         ,'continue but may lead to low quality results. This' 
-     *         ,' problem can usually be',/,'mitigated by one of the '
-     *         ,'following actions (best listed first):',/,
-     *        2x,'- reduce refinement_points_II keyword ',
-     *           'in perplex_option.dat',/,
-     *        2x,'- reduce the 1st value of the iteration keyword ',
-     *           'in perplex_option.dat',/,
-     *        2x,'- reduce the 2nd value of the iteration keyword ',
-     *           'in perplex_option.dat',/,
-     *        2x,'- reduce the reach_increment (if any) specified ',
-     *           'for solutions in solution_model.dat',/,
-     *        2x,'- simplify the calculation, e.g., eliminate ',
-     *           'components and/or simplify solution models',/,
-     *        2x,'- increase dimension k21 (',i7,') and recompile ',
-     *           'Perple_X',/)
 63    format (/,'**warning ver063** wway, invariant point on an edge?',
      *        /)
 68    format (/,'**warning ver068** degenerate initial assemblage in ',

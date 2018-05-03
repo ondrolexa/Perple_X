@@ -1,4 +1,4 @@
-678 DO NOT DELETE THIS LINE
+682 DO NOT DELETE THIS LINE
 
                              FOR MODEL DEFINITIONS AND REFERENCES REFER TO THE GLOSSARY AT:
 
@@ -10,12 +10,11 @@
                              Solution model type flags are:
 
                              0  - internal (fluid) EoS
-                             1  - simple microscopic formulation (bragg-williams fractions)
                              2  - simple macroscopic formulation (endmember fractions)
-                             5  - simple macroscopic formulation plus 1 arbitrary dependent endmember
                              6  - macroscopic formulation with speciation.
                              7  - macroscopic formulation reciprocal solution with dependent endmembers.
-                             8  - macroscopic formulation reciprocal solution with dependent endmembers and speciation.
+                             8  - macroscopic formulation prismatic solution with dependent endmembers and speciation.
+                             9  - 8 + orphan vertices (irregular prism)
 
                              Special models:
 
@@ -150,6 +149,196 @@ begin_model
                                       Mutliplicity      1      1     1      1   
                                                      ____________________________________
 
+                                        Prism        ____________________________________
+
+                                        Diopside        Mg     Ca    Si     Si
+                                        hed             Fe     Ca    Si     Si  dependent
+                                        Cats            Al     Ca   AlSi   AlSi
+                                        cacm            Fe3    Ca   AlSi   AlSi dependent
+
+                                        cEnstatite      Mg     Mg    Si     Si
+                                        mfc             Fe     Mg    Si     Si  dependent
+                                        Mats            Al     Mg   AlSi   AlSi dependent 
+                                        macm            Fe3    Mg   AlSi   AlSi dependent 
+                            Species: 
+                                        fmc             Mg     Fe    Si     Si  independent ordered species
+                                        cferrosilite    Fe     Fe    Si     Si
+                                        fats            Al     Fe   AlSi   AlSi dependent 
+                                        facm            Fe3    Fe   AlSi   AlSi dependent
+
+                                        Orphans       ___________________________________
+
+                                        Jadeite         Al     Na    Si     Si
+                                        Acmite          Fe3+   Na    Si     Si
+                                                      ___________________________________
+
+                    Ordered species:    oCaTs           Al     Ca     Si    Al
+                                        fmc             Mg     Fe     Si    Si
+
+Augite(G)
+abbreviation Cpx
+full_name    clinopyroxene
+
+9                            | model type: prism + orphan vertices
+
+2                            | prism: two simplicies with a common vertex
+4 3                          | ternary (Ca-Fe-Mg on M2) + quaternary (Mg-Fe-Al-Fe3 on M1)
+2                            | number of independent vertices
+
+                             | endmembers on the prism vertices
+hed_d cats  cacm  di 
+cfsg  fats  facm  ffmc
+mfc   mats  macm  cenh
+
+                             | endmembers on orphan vertices
+jd    acm
+
+2                            | number of ordered species 
+
+ocats = 1 cats              enthalpy_of_ordering  =  -3800  + 2.8816 * T  -0.01  * P | this undoes the DQF on cats
+fmc   = 1/2 cenh + 1/2 cfsg enthalpy_of_ordering  =  -4400 | DQF(fmc) - (DQF(cenh) + DQF(cfs))/2
+
+begin_limits
+
+fmc = -2 + 2 cfsg + 1 fmc                        delta = 2 zm1fe
+fmc =  0 - 2 di - 2 cenh - 1 fmc                 delta = 2 zm1mg
+fmc =  0 - 2 cfsg - 1 fmc                        delta = 2 zm2fe
+fmc = -2 + 2 cenh + 1 fmc                        delta = 2 zm2mg
+
+ocats =  0 - 1 cats                              delta = 2 zAlT2 | these assume p0_ocats = 0 as is true for the model as configured
+ocats = -2 + 1 cats                              delta = 2 zAlT1
+
+end_limits
+
+8                            | 10 dependent endmembers
+
+hed_d = 1 di   + 1 cfsg - 1 fmc 
+cacm  = 1 acm  + 1 cats - 1 jd 
+mfc   = 1 cenh + 1 cfsg - 1 fmc 
+mats  = 1 cats + 1 cenh - 1 di
+macm  = 1 cats + 1 cenh - 1 di   + 1 acm - 1 jd
+ffmc  = 1 fmc
+fats  = 1 cats - 1 di   + 1 fmc
+facm  = 1 cats - 1 di   + 1 fmc  + 1 acm - 1 jd
+
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | endmember flags
+
+                             | First (3d) simplex of the prism
+0. 1. 0.1  0                 | range and resolution of X(Fe,M1)
+0. 1. 0.1  0                 | range and resolution of X(Al,M1)
+0. 1. 0.1  0                 | range and resolution of X(Fe3+,M1)
+
+                             | Second (2d) simplex of the prism
+0. 1. 0.1  0                 | range and resolution of X(Ca,M2)
+0. 1. 0.1  0                 | range and resolution of X(Fe,M2)
+
+                             | Independent (2d) simplex
+0. 1. 0.1  0                 | range of jd
+0. 1. 0.1  0                 | range of acm
+
+begin_excess_function
+W(di cenh)                29.8d3   -0.03 * p
+W(di cfsg)                25.8d3   -0.03 * p
+W(di jd)                  26d3
+W(di acm)                 21d3
+W(di ocats)               12.3d3   -0.01 * p
+W(di cats)                12.3d3   -0.01 * p
+W(di fmc)                 20.6d3   -0.03 * p
+W(cenh cfsg)              2.3d3
+W(cenh jd)                50d3
+W(cenh acm)               62d3
+W(cenh ocats)             45.7d3   -0.29 * p
+W(cenh cats)              45.7d3   -0.29 * p
+W(cenh fmc)               4d3
+W(cfsg jd)                60d3
+W(cfsg acm)               58d3
+W(cfsg ocats)             48d3
+W(cfsg cats)              48d3
+W(cfsg fmc)               3.5d3
+W(jd acm)                 5d3
+W(jd ocats)               40d3
+W(jd cats)                40d3
+W(jd fmc)                 40d3
+W(acm ocats)              35d3
+W(acm cats)               35d3
+W(acm fmc)                60d3
+W(ocats cats)             3.8d3   + 0.01 * p
+W(ocats fmc)              50d3
+W(cats fmc)               50d3
+end_excess_function
+
+4                                   | 4 site entropy model (M1, M2, T1, T2)
+
+4 1                                 | 4 species on m1, mult = 1
+z(m1,fe)   = 1 cfsg
+z(m1,mg)   = 1 di + 1 fmc + 1 cenh
+z(m1,fe3+) = 1 acm 
+
+4 1                                 | 4 species on m2, mult. = 1
+z(m2,na)   = 1 acm  + 1 jd
+z(m2,mg)   = 1 cenh
+z(m2,fe)   = 1 fmc  + 1 cfsg
+
+2 0.25                               | 2 species on T1, effective mult. = 1/4
+z(Al,T1) = 1/2 cats
+
+2 0.25                               | 2 species on T2, effective mult. = 1/4
+z(Al,T2) = 1/2 cats + 1 ocats
+
+begin_van_laar_sizes
+alpha(di)          1.2
+alpha(cenh)        1
+alpha(cfsg)        1
+alpha(jd)          1.2
+alpha(acm)         1.2
+alpha(ocats)       1.9
+alpha(cats)        1.9
+alpha(fmc)         1.0
+end_van_laar_sizes
+
+begin_dqf_corrections
+dqf(jd)   =  2000
+dqf(acm)  = -5000
+dqf(cats) =  3800  - 2.8816 * T  + 0.01  * P
+end_dqf_corrections
+
+end_of_model
+                      --------------------------------------------------------
+                      --------------------------------------------------------
+begin_model
+                      old Green et al (JMG, 2016) Augite model.
+
+                      This model should not be used for Na-rich compositions.
+
+                      NOTE: to use this the following endmembers must be specified with make 
+                      definitions in the thermodynamic data file
+
+                      cenh  = 1 en
+                            DQF = 3500 - 2 * T + 0.048 * P 
+                      cfsg  = 1 fs
+                            DQF = 2100 - 2 * T + 0.045 * P
+
+                      to avoid cluttering thermodynamic data files with the new plague of TC 
+                      DQF "corrections", the following simple DQF's are specified in the
+                      make_definition section at the end of this model:
+
+                      dqf(jd)   =  2000
+                      dqf(acm)  = -5000
+                      dqf(cats) =  3800  - 2.8816 * T  + 0.01  * P
+
+                      For (nonsensical, but common) positive DFQ's this approach may lead to 
+                      interference between the phase relations of the solution model and the 
+                      un-DQF'd endmember. If such interference occurs: the DQF'd endmember must
+                      be renamed; its definition placed in the thermodynamic data file;
+                      and the un-DQF'd endmember excluded from the calculation.
+
+                                                                Sites 
+                                                       M1     M2    T1    T2
+                                                     ____________________________________
+
+                                      Mutliplicity      1      1     1      1   
+                                                     ____________________________________
+
                                         Diopside        Mg     Ca    Si     Si
                                         hed             Fe     Ca    Si     Si  dependent
                                         Cats            Al     Ca   AlSi   AlSi
@@ -174,7 +363,7 @@ begin_model
                     Ordered species:    oCaTs           Al     Ca     Si    Al
                                         fmc             Mg     Fe     Si    Si
 
-Augite(G)
+xAugite(G)
 abbreviation Cpx
 full_name    clinopyroxene
   
@@ -183,7 +372,7 @@ full_name    clinopyroxene
 4 4                         | both simplices are quaternary
                             | 4 * 4 = 16 endmembers that define the vertices of the compositional prism
 
-hed_d cats  cacm  di 
+hed   cats  cacm  di 
 cfsg  fats  facm  ffmc
 nhed  jd    acm   ndi 
 mfc   mats  macm  cenh 
@@ -207,14 +396,14 @@ end_limits
 
 10                            | 10 dependent endmembers
 
-hed_d = 1 di   + 1 cfsg - 1 fmc 
-cacm  = 1 acm  + 1 cats - 1 jd 
-mfc   = 1 cenh + 1 cfsg - 1 fmc 
-mats  = 1 cats + 1 cenh - 1 di
-macm  = 1 cats + 1 cenh - 1 di   + 1 acm - 1 jd
-ffmc  = 1 fmc
-fats  = 1 cats - 1 di   + 1 fmc
-facm  = 1 cats - 1 di   + 1 fmc  + 1 acm - 1 jd
+hed  = 1 di   + 1 cfsg - 1 fmc 
+cacm = 1 acm  + 1 cats - 1 jd 
+mfc  = 1 cenh + 1 cfsg - 1 fmc 
+mats = 1 cats + 1 cenh - 1 di
+macm = 1 cats + 1 cenh - 1 di   + 1 acm - 1 jd
+ffmc = 1 fmc
+fats = 1 cats - 1 di   + 1 fmc
+facm = 1 cats - 1 di   + 1 fmc  + 1 acm - 1 jd
 
  | assigning ndi = nhed = jd is a [bad] way to make this model work.
  | ndi = nhed = jd_dqf where 
@@ -827,8 +1016,6 @@ z(al,T2)    = 1 ames + 1/2 clin + 1/2 daph + 1/2 f3clin + 1/2 mnchl
 begin_dqf_corrections
 dqf(mnchl) -13030  0 0
 end_dqf_corrections
-
-site_check_override
 
 end_of_model  
                       --------------------------------------------------------
