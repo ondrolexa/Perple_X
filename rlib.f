@@ -5740,7 +5740,7 @@ c                                 this is more than before (kill1)
 c                                 kill the species jkill on site ikill
 c                                 and reformulate the model (this is 
 c                                 inefficient, but we don't care here). 
-         call killsp (ikill,jkill)
+         call nkillsp (ikill,jkill)
 c                                 check exit conditions
          if (istot.lt.2) then
 c                                 failed, rejected too many endmembers
@@ -5873,7 +5873,7 @@ c                                 reset the species pointers (jmsol)
 
       end
 
-      subroutine killsp (ikill,jkill)
+      subroutine nkillsp (ikill,jkill)
 c---------------------------------------------------------------------
 c killsp - eliminates species jkill from site ikill in a solution model
 c and reformulates the model accordingly
@@ -5884,7 +5884,7 @@ c---------------------------------------------------------------------
 
       logical skip, bad, dead
 
-      integer jsp,jtic,morder,jst,jend,jnc,kst,
+      integer jsp,jtic,morder,jst,jend,jnc,kst,ldep,
      *        i,j,ikill,jkill,kill,kdep,jdqf,ktic,jold,
      *        iwas(m4),i2ni(m4),kwas(m4),
      *        k,l,itic,ijkill(m4),
@@ -5950,11 +5950,13 @@ c----------------------------------------------------------------------
          jend = ikill
          jnc = 1
          kst = istot + 1
+         ldep = ostot
       else 
          jst = 1
-         jend = ikill
+         jend = isite
          jnc = 0
          kst = 1
+         ldep = istot
       end if 
 c                                 was 1,.site
       do i = jst, isite + jnc 
@@ -6034,7 +6036,7 @@ c                                 to be deleted:
          if (jmsol(i,ikill).eq.jkill) kdsol(i) = -3
       end do
 c                                 check for dependent endmembers
-      call redep (-3)
+      call redep (-3,ldep)
 c                                 at this point all ordered endmembers to 
 c                                 be killed are flagged by kdsol = -3.
 
@@ -6120,26 +6122,29 @@ c                                 kill records the killed endmembers
          end if
 
       end do
-c !!!!!!!!!!!!!!!!!!!!!!! uses ITIC
-      do i = kst, ostot
-c                                 reset the species pointers (jmsol)
-         if (kdsol(i).ge.-2) then 
-            do j = jst, jend
-               if (j.eq.ikill) then
-                  jmsol(itic,j) = j2nj(jmsol(i,j))
-               else
-                  jmsol(itic,j) = jmsol(i,j)
-               end if 
-            end do
-         end if
-
-      end do 
-c                                reset total and present counters
-      ostot = itic - morder
 
       istot = ktic
 
       jstot = istot - jtic
+
+      do i = 1, itic
+
+         if (i2oi(i).gt.ostot) cycle
+c                                 reset the species pointers (jmsol)
+         do j = jst, jend
+            if (j.eq.ikill) then
+               jmsol(i,j) = j2nj(jmsol(i2oi(i),j))
+            else
+               jmsol(i,j) = jmsol(i2oi(i),j)
+            end if 
+         end do
+      end do 
+c                                reset total and present counters
+      if (kst.gt.1) then 
+         ostot = itic + istot
+      else 
+         ostot = istot
+      end if 
 c                                --------------------------------------
 c                                excess terms:
       itic = 0 
@@ -6791,7 +6796,7 @@ c                                 is possible
 
       end if 
 
-      call redep (0)
+      call redep (0,ostot)
 c                                done if nothing is missing:
       if (jstot.eq.ostot) return
 c                                missing endmember warnings:
@@ -6821,7 +6826,7 @@ c                                missing endmember warnings:
 
       end
 
-      subroutine redep (jkill)
+      subroutine redep (jkill,ict)
 c----------------------------------------------------------------------
 c redep does reordering of dependent endmembers
 
@@ -6832,7 +6837,7 @@ c----------------------------------------------------------------------
   
       include 'perplex_parameters.h'
 
-      integer i,j,l,ndep,k,jkill
+      integer i,j,l,ndep,k,jkill,ict
 
       logical depend,laar,order,fluid,macro,recip
       common/ cst160 /depend,laar,order,fluid,macro,recip
@@ -6874,7 +6879,7 @@ c                                check for dependent endmembers, necessary?
 
             do j = 1, ndph(i)
 
-               if (idep(i,j).le.ostot) then
+               if (idep(i,j).le.ict) then
 c                                looking for a dependent endmember component: 
                   if (kdsol(idep(i,j)).eq.jkill.and.
      *                kdsol(jdep(i)).ne.-3) then
@@ -7087,11 +7092,13 @@ c                               total number of endmembers:
 c                               read the number of orphan site endmembers
          call readda (rnums,1,tname)
          isp(isite+1) = idint(rnums(1))
-         ostot = isp(isite+1)
+         ostot = istot + isp(isite+1)
+
+      else 
+
+         ostot = istot 
 
       end if
-
-      ostot = istot + ostot
 c                               counter for character read routines
 c                               and starting index
       idim = ostot
@@ -7108,7 +7115,7 @@ c                               get the number of ordered species
          call readda (rnums,1,tname)    
          norder = idint(rnums(1))
 
-         if (istot+norder.gt.m4) call error (1,rnums(1),istot+norder,
+         if (ostot+norder.gt.m4) call error (1,rnums(1),istot+norder,
      *                           'm4 (maximum number of endmembers)')
 
          if (norder.gt.j3) call error (5,rnums(1),norder,tname)

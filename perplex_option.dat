@@ -77,8 +77,8 @@ melt_is_fluid             default | [F] identify melt (liquid) as fluid in WERAM
 null_phase                default | [F] include null phases in convexhull optimization with mobile components
 option_list_files         default | [F] T => echo run-time options to my_project_PROGRAM_options.txt
 order_check               default | [on] on => compare order-disorder solutions with fully ordered and disordered states
-output_iteration_details  T default | [F] T => output intermediate adaptive optimization information
-output_iteration_G        T default | [F] T => print iteration G to monitor convergence during optimization
+output_iteration_details  default | [F] T => output intermediate adaptive optimization information
+output_iteration_G        default | [F] T => print iteration G to monitor convergence during optimization
 pause_on_error            default | [T] T => wait for user response after errors
 pc_perturbation           default | [5d-3] pseudo-compound composition perturbation; only relevant for CONVEX
 poisson_ratio             default | [on 0.35] value 1: on, off or all; value 2: 0->0.5; controls use of poisson ratio estimates for shear moduli
