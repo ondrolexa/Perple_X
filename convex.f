@@ -201,7 +201,7 @@ c                                 diagram
 
          else if (icopt.eq.4) then 
 c                                 generate pseudo-compound file
-            write (*,'(/,a,/)) 'SWASH is gone'
+            write (*,'(/,a,/)') 'SWASH is gone'
 
             call errpau
 

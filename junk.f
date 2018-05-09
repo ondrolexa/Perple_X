@@ -42,7 +42,7 @@ c                                 missing on site
          do i = 1, isp(site)
             if (kdsol(istot+i).eq.0) then 
                ksp = ksp + 1
-               call killsp (site,i)
+               call nkillsp (site,i)
                exit 
             end if 
          end do
