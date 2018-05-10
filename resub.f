@@ -1537,6 +1537,9 @@ c                                 solution limits and stability
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
 
+      integer pstot,qstot,ostg,odim,nsum
+      common/ junk1 /pstot(h9),qstot(h9),ostg(h9),odim(mst,h9),nsum(h9)
+
       integer iopt
       logical lopt
       double precision nopt
@@ -1554,7 +1557,7 @@ c----------------------------------------------------------------------
 c                                 set stable flag
       stable(ids) = .true.
 c                                 check x-ranges
-      do i = 1, istg(ids)
+      do i = 1, ostg(ids)
 
          do j = 1, ndim(i,ids)
 

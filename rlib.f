@@ -5100,14 +5100,22 @@ c                                 find valid makes:
 
             do k = 1, inames
 
-               if (mnames(k).eq.mknam(i,j).and.(.not.inph(k))) then 
+               if (mnames(k).eq.mknam(i,j).and.(.not.inph(k))) then
+
                   inmk(i) = .false.
-                  if (iam.ne.3.and.iam.lt.6.or.iam.eq.15) 
-     *               call warn (51,tot,icmpn,mknam(i,mknum(i)+1))
-                  exit 
-               else if (mnames(k).eq.mknam(i,j)) then 
+
+                  if (first) then 
+                     if (iam.ne.3.and.iam.lt.6.or.iam.eq.15) 
+     *                  call warn (51,tot,icmpn,mknam(i,mknum(i)+1))
+                  end if 
+
+                  exit
+
+               else if (mnames(k).eq.mknam(i,j)) then
+
                   mkind(i,j) = k
                   meos(i) = mmeos(k)
+
                end if 
 
             end do
@@ -5214,11 +5222,14 @@ c                                get list of used components
       end do  
 
       jct = 0 
+
       do j = 1, icmpn
+
          if (incomp(j).ne.0) then 
             jct = jct + 1
             incomp(jct) = incomp(j)
          end if
+
       end do 
 
       nmak = ict
@@ -5767,7 +5778,7 @@ c                                 eliminate sites with only one
 c                                 species
       if (isite.gt.1) call dedsit
 
-      if (jsmod.eq.9) then 
+      if (jsmod.eq.9.or.jsmod.eq.10) then 
          write (*,*) 'wonk reform'
          stop
       else
@@ -5945,7 +5956,7 @@ c                                 local input variables
       common/ cxt30 /limc(j6+2,j5,j3),limid(m0,j5,j3),jimid(j3,j5,j3),
      *               limn(j3),limt(j5,j3),jimc(j3,j5,j3),jimt(j5,j3)
 c----------------------------------------------------------------------
-      if (jsmod.eq.9.and.ikill.gt.isite) then
+      if ((jsmod.eq.9.or.jsmod.eq.10).and.ikill.gt.isite) then
          jst = ikill
          jend = ikill
          jnc = 1
@@ -6457,7 +6468,13 @@ c                                 indices:
 
       end if
 
-      if (jsmod.eq.9.and.istot.eq.ostot) jsmod = 8
+      if (istot.eq.ostot) then 
+         if (jsmod.eq.9) then 
+            jsmod = 8
+         else if (jsmod.eq.10) then 
+            jsmod = 7 
+         end if
+      end if 
 
       end
 
@@ -7108,8 +7125,8 @@ c                                 check for disabled model types
       if (jsmod.eq.0) fluid = .true.
       if (jsmod.eq.6.or.jsmod.eq.8.or.jsmod.eq.9.or.
      *                                jsmod.eq.27) order = .true.
-      if (jsmod.ge.7.and.jsmod.le.9) depend = .true.
-      if (jsmod.ge.7.and.jsmod.le.9) recip = .true.
+      if (jsmod.ge.7.and.jsmod.le.10) depend = .true.
+      if (jsmod.ge.7.and.jsmod.le.10) recip = .true.
 c                                 assign non-default props to 
 c                                 special models:
       if (jsmod.ge.30.and.jsmod.le.31) recip = .true.
@@ -7131,7 +7148,7 @@ c                               total number of endmembers:
          istot = istot*isp(i)
       end do
 
-      if (jsmod.eq.9) then 
+      if (jsmod.eq.9.or.jsmod.eq.10) then 
 c                               read the number of orphan site endmembers
          call readda (rnums,1,tname)
          isp(isite+1) = idint(rnums(1))
@@ -7241,7 +7258,7 @@ c                               get the numbers
 
       end do
 c                                read the orphan vertex subdivision data 
-      if (jsmod.eq.9) then
+      if (jsmod.eq.9.or.jsmod.eq.10) then
 
          i = 3
 
@@ -9322,7 +9339,7 @@ c                                 number of ordered species
 c                                 number of species and multiplicity and
 c                                 site ranges
       inc = 0
-      if (jsmod.eq.9) inc = 1
+      if (jsmod.eq.9.or.jsmod.eq.10) inc = 1
 
       ostg(im) = isite + inc
       mcoor(im) = 0
@@ -9626,7 +9643,7 @@ c                                 check for invalid dependent endmembers, these
 c                                 are occasionally used as place holders:
          bad = .false.
 
-         if (ksmod(im).eq.9) then 
+         if (ksmod(im).eq.9.or.ksmod(im).eq.10) then 
 
             do j = 1, ndim(3,im)
                x(3,j) = 0d0
@@ -10371,7 +10388,7 @@ c                                 idependent species
          end if 
 
 
-      if (ksmod(id).eq.9) then
+      if (ksmod(id).eq.9.or.ksmod(id).eq.10) then
 
          s2 = 0d0
 c                                 orphan vertex model
@@ -12540,11 +12557,11 @@ c                                  normal solution.
 c                                 -------------------------------------
 c                                 reformulate the model so that it has 
 c                                 no missing endmembers:
-            if (jsmod.eq.9) call kill01 (isite+1)
+            if (jsmod.eq.9.or.jsmod.eq.10) call kill01 (isite+1)
 
             if (jstot.lt.ostot) call reform (tname,im,first)
 
-            if (istot.lt.2) cycle
+            if (ostot.lt.2) cycle
 
          end if 
 c                                 -------------------------------------
@@ -12780,7 +12797,7 @@ c                                subdivision with charge balance
 c                                assign to y()?
          return
 
-      else if (ksmod(ids).eq.9) then 
+      else if (ksmod(ids).eq.9.or.ksmod(ids).eq.10) then 
 
          call oddprs (ids,resub)
 
@@ -12861,7 +12878,7 @@ c                                 put in the new site 2 compositions:
 
       np1 = ntot
 c                                 do the third site:
-      if (ksmod(ids).eq.9) then
+      if (ksmod(ids).eq.9.or.ksmod(ids).eq.10) then
 c                                 prism + orphan vertices (the prism is treated
 c                                 as a vertex of the simplex including the orphans)
 c                                 do the orphan site:
@@ -17708,7 +17725,7 @@ c                                 first do the endmembers:
 c                                 now do solutions:
       do i = 1, isoct
 c                                 check if normal solution:
-         if (.not.llaar(i).and.(ksmod(i).eq.7.or.
+         if (.not.llaar(i).and.(ksmod(i).eq.7.or.ksmod(i).eq.10.or.
      *       ksmod(i).eq.2.or.ksmod(i).eq.24.or.ksmod(i).eq.25.or.
      *       ksmod(i).eq.28)) then 
 c                                 it's normal margules or ideal:
@@ -18008,7 +18025,7 @@ c----------------------------------------------------------------------
       include 'perplex_parameters.h'
 c                                 -------------------------------------
 c                                 local variables:
-      integer i, j, k, ibad1, ibad2, ibad3, igood
+      integer i, j, k, l, ibad1, ibad2, ibad3, igood
 
       logical bad1, bad2, good, reach
 
@@ -18051,6 +18068,9 @@ c DEBUG
       logical switch
       common/ debug1 /jcount(10),switch(10)
 
+      integer pstot,qstot,ostg,odim,nsum
+      common/ junk1 /pstot(h9),qstot(h9),ostg(h9),odim(mst,h9),nsum(h9)
+
       integer iopt
       logical lopt
       double precision nopt
@@ -18068,6 +18088,9 @@ c DEBUG
 
       integer ncoor,mcoor,ndim
       common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
+
+      integer lstot,mstot,nstot,ndep,nord
+      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
 
       integer jnd
       double precision aqg,q2,rt
@@ -18184,7 +18207,7 @@ c                                 solutions on internal limits
 
             write (n10,'(a)') fname(i)
 
-            do j = 1, istg(i)
+            do j = 1, ostg(i)
                do k = 1, ndim(j,i) 
                   write (n10,*) xlo(k,j,i),xhi(k,j,i)
                end do
@@ -18231,12 +18254,23 @@ c                                 charge balance model:
      
                end do
 
-            end if  
+            end if
 
-         else
-c                                 reciprocal solution
-            write (*,1040) fname(i)
-            if (lopt(11)) write (n11,1040) fname(i)
+         else 
+
+            if (ostg(i).eq.istg(i)) then
+c                                 prismatic 
+               write (*,1040) 'prismatic model: '//fname(i)
+               if (lopt(11)) write (n11,1040) 
+     *                        'prismatic model: '//fname(i)
+
+            else 
+c                                 prismatic + orphan vertices
+               write (*,1040) 'prism + orphan model: '//fname(i)
+               if (lopt(11)) write (n11,1040)
+     *                        'prism + orphan model: '//fname(i)
+
+            end if 
 
             do j = 1, istg(i)
                
@@ -18251,20 +18285,39 @@ c                                 reciprocal solution
                else
 
                   do k = 1, ispg(i,j) - 1
+
                      write (*,1070) k,xlo(k,j,i),xhi(k,j,i)
-c    *                     ,names(jend(i,2+indx(i,j,k)))
                      if (lopt(11)) write (n11,1070) 
      *                              k,xlo(k,j,i),xhi(k,j,i)
-c    *                     ,names(jend(i,2+indx(i,j,k)))
+
                   end do 
 
                end if 
 
             end do
 
-         end if 
+            if (ostg(i).gt.istg(i)) then
+c                                 prismatic + orphan vertices
+               l = ostg(i)
 
-      end do 
+               write (*,1150)
+               if (lopt(11)) write (n11,1150)
+
+               do j = 1, ndim(l,i)
+
+                  k = 2 + lstot(i) - ndim(l,i) + j
+
+                  write (*,1030) names(jend(i,k)),xlo(j,l,i),xhi(j,l,i)
+                  if (lopt(11)) write (n11,1030) 
+     *                           names(jend(i,k)),xlo(j,l,i),xhi(j,l,i)
+
+               end do
+
+            end if
+
+         end if
+
+      end do
 
       if (reach) then 
 
@@ -18302,12 +18355,13 @@ c    *                     ,names(jend(i,2+indx(i,j,k)))
      *        /,'if executing in auto_refine mode inrease auto_refine',
      *          '_slop in perplex_option.dat):',/)
 1020  format (/,'Endmember fractions for model: ',a,//,5x,
-     *        'Endmember     Minimum       Maximum')
+     *          'Endmember     Minimum         Maximum')
 1030  format (5x,a8,4x,g12.5,4x,g12.5)
-1040  format (/,'Species fractions for prismatic model: ',a)
-1050  format (/,'  Simplex ',i1,/,5x,'Species   Minimum    Maximum')
+1040  format (/,'Compositions for ',a)
+1050  format (/,'  Simplex ',i1,/,5x,
+     *               'Composition   Minimum         Maximum')
 1060  format (8x,'Dummy site generated by model reformulation',/)
-1070  format (8x,i1,7x,f7.5,2x,f7.5,3x,12(a8,1x))
+1070  format (8x,i1,8x,g12.5,4x,g12.5)
 1080  format (/,'**warning ver993** The compositions of the following',
      *        ' solutions reached internal',/,
      *        'limits that were automatically relaxed:',/)
@@ -18326,6 +18380,9 @@ c    *                     ,names(jend(i,2+indx(i,j,k)))
      *        'trial compositions prior',/,'to optimization.',/)
 1140  format (/,'Average number of iterations per speciation ',
      *          'calculation:',f5.1,/)
+1150  format (/,2x,'Orphans',/,5x,
+     *          'Endmember     Minimum         Maximum')
+
       end 
 
       subroutine subst (a,ipvt,n,b,ier)
@@ -20159,7 +20216,7 @@ c----------------------------------------------------------------------
 
       end if
 
-      if (ksmod(ids).eq.9) then
+      if (ksmod(ids).eq.9.or.ksmod(ids).eq.10) then
 c                                 necessary? probably none of this is. 
          do l = mstot(ids) + 1, pstot(ids)
             y(l) = 0d0

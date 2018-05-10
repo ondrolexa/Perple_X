@@ -60,18 +60,19 @@ end excluded phase list
 
 
 begin solution phase list
-cAmph(G)
-Augite(G) 
-melt(G)   
-Ep(HP11)  
-Gt(W)     
-Opx(W)    
-Mica(W)   
-Bi(W)     
-Ilm(WPH)
-Sp(WPC)
-Fsp(C1)
-Chl(W)
+ cAmph(G)
+ Augite(G) 
+ melt(G)   
+ Ep(HP11)  
+ Gt(W)     
+ Opx(W)    
+ Mica(W)   
+ Bi(W)     
+ Ilm(WPH)
+ Sp(WPC)
+ Fsp(C1)
+ Chl(W)
+Chl(HP)
 end solution phase list
 
  10000.     1323.0     0.00000000  0.0000      0.0000     max p, t, xco2, u1, u2

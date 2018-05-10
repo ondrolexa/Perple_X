@@ -1,0 +1,730 @@
+
+ | for domcumentation of Perple_X thermodynamic data file structure and content refer to:
+
+ | www.perplex.ethz.ch/perplex_thermodynamic_data_file.html
+
+ | comments are indicated by the | character.
+ | check for warnings at the end of the header section.
+ | make definition formats used in this file can only be read by Perple_X 6.7.3+
+
+Holland & Powell, JMG 2011 (TC-DS622)                           => data base name |<= data base title
+
+begin_standard_variables |<= name (<9 characters), reference value, tolerance
+P(bar)      1.00   0.1E-3
+T(K)      298.15   0.1E-4
+Y(CO2)      0.00   0.1E-6
+mu(C1)      0.00   0.1E-2
+mu(C2)      0.00   0.1E-2
+end_standard_variables
+
+tolerance  -.1E-2  |<= DTOL for unconstrained minimization, energy units
+
+HSC_conversion     |<= tag enabling HSC to SUP apparent energy conversion, requires elemental entropies in the component list below
+
+begin_components   | < 6 chars, molar weight (g), elemental entropy (R)
+Na2O    61.9790    205.175
+MgO     40.3040    135.255
+Al2O3  101.9610    364.425
+SiO2    60.0840    223.96
+K2O     94.1960    231.935
+CaO     56.0770    144.205
+TiO2    79.8660    235.87
+MnO     70.9370    134.795
+FeO     71.8440    129.855
+NiO     74.6930    132.375
+ZrO2   123.2200    244.33
+Cl2     70.9060    223.08 
+O2      31.9990    205.15
+H2O     18.0150    233.255
+CO2     44.0100    210.89
+CuO     79.5450    135.725
+Cr2O3  151.9900    358.811
+S2      32.0650     64.14
+F2      37.9968    202.79
+end_components
+
+begin_special_components
+H2O
+CO2
+end_special_components 
+
+begin_makes             
+                                | the make definitions segment of the thermodynamic
+                                | data file is preceeded by the "begin_makes" keyword,
+                                | and terminated by the "end_makes" keyword. Within 
+                                | this segment comments must be preceeded by a "|" 
+                                | character. 
+
+                                | the make definitions define new thermodynamic entities
+                                | (e.g., fO2 buffers, endmembers etc) as a linear combination of 
+                                | the "real" entities in the thermodynamic file. the definition
+                                | includes a "DQF" correction that is used to increment the 
+                                | G of the linearly combined G's as a function of pressure and
+                                | temperature, i.e., the total G computed for a made entity is
+                                | the G of the right-hand-side of the make reaction + Gdqf. 
+
+                                | the format assumes data on one line of less than 240 characters, 
+                                | the expected format is
+
+                                | name = num_1 * name_1 + num_2 * name_2 ....+ num_int * name_int
+                                | dnum_1 dnum_2 dnum_3
+
+                                | where i num_j is a number or fraction (i.e., two numbers separated 
+                                | by a '/') and name_j are the names of the j existing entities. 
+                                | and the dqf correction to the entity 'name' is 
+                                | Gdqf(J/mol) = dnum_1 + T[K]*dnum_2 + P[bar]*dnum_3
+
+                                | made entities are excluded from calculations in vertex if they
+                                | are included in the excluded phase list in the computational option
+                                | file (e.g., "in"); however, real entities to the right of the equals
+                                | sign in a make definition are not effected by the excluded phase list.
+                                | for example, if qL (liquid silica) is excluded, the make definition
+                                | q8L = 4 qL 
+                                | will function, but qL will not be considered as a possible phase in 
+                                | the vertex calculation. 
+ 
+ |                                kyco silica buffer
+ | kyco = 1 ky - 1 cor
+ | 0 0 0 
+ |                                sphene + cc + ru + q CO2 buffer
+ | tcrq = 1 cc + 1 ru + 1 q - 1 sph
+ | 0. 0. 0. 
+                                | Ti phengite endmember for Auzanneau et al. (CMP 159:1-24, 2010) mica model
+                                | Gdqf corrected from -482876. to -13469.8 J/mol, D. Dolejs, Mar 6, 2010.
+ | tip = 1 fcel + 1 geik - 1/2 fs
+ | -13469.8  -14.694 .84
+                                                
+ | mthm = 6 hem - 4 mt             | mthm O2 buffer
+ | 0 0 0                        
+
+ | qfm = 2 mt + 3 q  -3 fa         | qfm O2 buffer
+ | 0 0 0                        
+
+ |emog = -1 fo - 2 gph + 1 mag + 1/2 en | EMOG O2 buffer
+ |0 0 0 
+
+ |ffm = -6 fa + 3 fs + 2 mt        | ffm O2 buffer
+ |0 0 0 
+
+ |fff = 2 fa - 2 iron - 1 fs         | iron fa fs O2 buffer
+ |0 0 0 
+
+ | tbi = 1 phl - 1 fo + 1 ru + 1 q | Ti-biotite endmember for TiBio(HP) model
+ | 45e3 0 0 
+
+ | tbi1 = 1 phl - 1 br + 1 ru      | Ti-biotite endmember for TiBio(WPH) model
+ | 78e3 0 0                        | L Tajcamanova, 5/11/2006.
+
+ | fbi = 1 east - 1/2 cor + 1/2 hem  | Fe3+-biotite endmember for TiBio(WPH) model, definition corrected for
+ |                                   | presumed typo in the WPH (JMG, 2007) paper by L Tajcamanova, 5/11/2007.
+ | 13.45e3 0 0                       | fbi = 1 east - 1/2 cor + 1 hem, 8/10/2007, L Tajcamanova               
+
+                                | Fe endmembers for ultramafic mineral solution
+                                | models, based on the talc Fe-Mg exchange.
+fbr = 1 br - 1/3 ta + 1/3 fta
+DQF(J/mol) = 0
+
+fchum = 1 chum - 3 ta + 3 fta
+DQF(J/mol) = 0
+
+fphA = 1 phA - 7/3 ta + 7/3 fta
+DQF(J/mol) = 0
+
+fatg = 1 atg - 16 ta + 16 fta
+DQF(J/mol) = 0
+
+atgts = 4 clin + 9/17 atg - 24/17 br      | Tshermaks antigorite for Atg(PN) model (Padrón-Navarta et al., 2013, Lithos)
+DQF = -2e3 + 46.1*T_K
+
+| ettore's makes:
+| odo = 1/2 mag 1/2 cc 
+| -1000. 0 0 
+| oank = 1/4 sid 1/2 cc 1/4 mag 
+|  -750 0 0 
+
+| odo = 1/2 mag + 1/2 cc          | ordered dolmite species for H&P dolomite model
+| -13.5d3 0 0
+
+                                | Green et al (2007) omph model, ds6 
+acm_dqf = 1 acm
+       DQF(J/mol) = -7000
+                                | Diener et al. (JMG, 2007) clinoamphibole model
+mrb = 1 gl - 2 jd +2 acm        | magnesio riebekite, ds6, 3/7/18 JADC
+       DQF(J/mol) = 0
+ts_dqf = 1 ts                   | tschermakite
+       DQF(J/mol) = 10000
+parg_dqf = 1 parg               | pargasite, ds6, 3/7/18 JADC
+       DQF(J/mol) = -10000
+gl_dqf = 1 gl                   | glaucophane, ds6, 3/7/18 JADC
+       DQF(J/mol) = -3000
+cumm_dqf = 1 cumm               | ds6, 3/7/18 JADC
+       DQF(J/mol) = 0
+grun_dqf = 1 grun               | ds6, 3/7/18 JADC
+       DQF(J/mol) = -3000
+
+                                | revised (Diener et al, JMG 2011 25:631-656) ortho-amphibole model.   Oct 31, 2011.
+
+ogl_dqf = 1 gl                  | ortho-glaucophane
+       DQF(J/mol) = 15000.
+fanth_dq = 1 fanth              | ferro-anthophyllite
+       DQF(J/mol) = 7000
+omrb_dqf = 1 gl -2 jd +2 acm    | ortho-magnesio riebekite (mrb dqf + 25000 J/mol), stoichiometry corrected 3/30/08 JADC
+       DQF(J/mol) = 33000
+mpa      = 1 parg - 1 tr +1 anth 
+       DQF(J/mol) = 25d3
+ged_dqf   = 1 ged
+       DQF(J/mol) = 20000
+                                | make definition for coma of the unpublished
+                                | thermocalc scapolite model
+coma = 3 ab + 1 cc
+       DQF(J/mol) = 25000.  
+
+tbit = 1 phl - 1 br + 1 ru      |Ti-Fe3+ Biotite after Tajcmanova et al. (2009)
+       DQF(J/mol) = 84e3 -11.5 0                    |Model entered by Lucie Tajcmanova, September, 2008.
+
+fbit = 1 east - 1/2 cor + 1/2 hem  |Ti-Fe3+ Biotite after Tajcmanova et al. (2009)
+       DQF(J/mol) = 6e3 0 0     
+                               | Make definitions for the Smye et al (JMG, 2011, 28:753-768)
+                               | models for Mica, Carpholite and Chloritoid, to use these 
+                               | make definitions delete the leading "|" comment characters:
+ocar  = 1 fcar + 1/2 hem - 1/2 cor
+      DQF(J/mol) = 45d3 
+mncar = 1 mcar + 1 mang - 1 per | corrected from 1 mcar + 1 mang - 1/2 cor, G Hoschek, 10/24/11.
+      DQF(J/mol) = 30d3  
+ma_dqf = 1 ma
+      DQF(J/mol) = 3d3 
+                                | Make definition for the White et al (JMG, 2005) garnet, Gt(WPPH), JADC, 10/24/11.
+kho = 1 py - 1 gr + 1 andr
+      DQF(J/mol) = 40d3 0 0  
+                                | Make definitions for the White et al (JMG, 2000) ilmenite, Ilm(WHP), JADC, 10/29/11.
+                                | Corrected coeffiecients for TC un-landau, formerly, the TC DQF was used without
+                                | modification. NOTE: the ilm and ilm_nol endmembers must be excluded from calculations 
+                                | with the Ilm(WPH) model and the ilm_nol, oilm and dilm must be excluded from calculations 
+                                | without the Ilm(WPH) model. JADC, 6/19/11. 
+dilm = 1 ilm_nol  
+                                | 1993  -2.1 0 => the TC DQF coeffecients, the values below are
+                                | oilm + {DH,R*ln(4),0} 
+       DQF(J/mol) = 17043.57559 -13.11797099 .1836386612e-1 
+
+                                | Make definitions for Kelsey & Powell (JMG, 2011) Zr melting relations. JADC, 2/6/12
+zr8L = 2 zrc                    | Zr-melt endmember
+       DQF(J/mol) = 69e3  
+zrg  = 1 gr + 3 zrc - 6 q       | Zr garnet endmember
+       DQF(J/mol) = 96e3 0.165e3 2.7
+zrru = 1 bdy                    | Zr rutile endmember
+       52.84e3 -0.01829e3 -0.074
+mots = 1 mgts - 1/2 cor + 1/2 hem | ferric opx endmember MgFe3+AlSiO6 for Opx(HP)
+       22d3 0 0 
+                                 | Make definitions for White et al. (JMG 32:261-286, 2014) models
+f3clin = 1 clin - 1/2 gr + 1/2 andr
+       DQF(J/mol) = 2d3 0 0  
+kho1 = 1 py - 1 gr + 1 andr
+       DQF(J/mol) = 27d3  
+sil8L = 8/5 silL               
+       DQF(J/mol) = -23d3  
+fo8L = 2 foL                    
+       DQF(J/mol) = -10d3 
+fa8L = 2 faL                              
+       DQF(J/mol) = -9d3 0 -1.3 
+q8L = 4 qL    
+       DQF(J/mol) = -20                           | a small DQF is added to stabilize q8L relative to qL
+fmu = 1 mu + 1/2 andr - 1/2 gr
+       DQF(J/mol) = 25d3
+ma1_dqf = 1 ma
+       DQF(J/mol) = 6.5d3 
+ctdo = 1 mctd + 1/4 andr - 1/4 gr
+       DQF(J/mol) = 25d3 
+msto   = 1 andr  -1 gr  + 1 mst  
+       DQF(J/mol) = 9d3 
+mstt   = 1 mst - 1 cor   +3/2   ru 
+       DQF(J/mol) = 13d3 
+mots1    = 1 mgts + 1/2  andr  - 1/2 gr
+       DQF(J/mol) = 2d3  
+
+tbi = 1 phl - 1 br + 1 ru         | Ti-biotite endmember for Bi(W) model
+       DQF(J/mol) = 55e3                        
+                                
+fbi = 1 east - 1/2 gr + 1/2 andr  | Fe3+-biotite endmember for Bi(W) model                                   
+       DQF(J/mol) = -3e3 
+
+ospr = 1/2 andr - 1/2 gr + 1 spr5
+       DQF(J/mol) = -16d3     
+
+mnopx = 2 pxmn                    | Mn endmember for Opx(W) model
+       DQF(J/mol) = 6680 
+                                  | Make definitions for Jennings and Holland, J Pet, 56:869-892, 2015 Cpx
+cfs = 1 fs
+       DQF(J/mol) = 3.8d3 -3 0.03
+crdi = 1 cats + 1 kos - 1 jd
+       DQF(J/mol) = -3d3 
+cess = 1 cats + 1 acm - 1 jd
+       DQF(J/mol) = -6d3 
+cenjh = 1 en
+       DQF(J/mol) = 3.5d3 - 2 * T_K  + 0.048 * p_bar
+                                  | Make definitions for Jennings and Holland, J Pet, 56:869-892, 2015 Opx
+cren  = 1 mgts + 1 kos - 1 jd
+       DQF(J/mol) = 3d3 
+oen   = 1 mgts + 1 acm - 1 jd
+       DQF(J/mol) = -15d3 + 0.15 * p_bar
+odi   = 1 di
+       DQF(J/mol) = -0.1d3 2.11 0.005
+                                  | Make definitions for Jennings and Holland, J Pet, 56:869-892, 2015 melt
+qjL = 2 qL
+       DQF(J/mol) = 4d3     - 0.43 * p_bar 
+dijL = 1 diL
+       DQF(J/mol) = -6.7d3  + 0.17 * p_bar   
+jdjL = 1 abL - 1 qL               | corrected 3/18/16, Oliver Shortle
+       DQF(J/mol) = 18.7d3  - 0.16 * p_bar 
+ctjL = 1 anL - 1 qL               | corrected 3/18/16, Oliver Shortle
+       DQF(J/mol) = 2.5d3   + 0.29 * p_bar   
+fojL = 1 foL
+       DQF(J/mol) = 2d3     - 0.03 * p_bar 
+fajL = 1 faL
+       DQF(J/mol) = -2.5d3  + 0.18 * p_bar 
+hmjL = 0.5 hemL
+       DQF(J/mol) = 0       +  0.20 * p_bar  
+ekjL = 0.5 eskL
+       DQF(J/mol) = 21d3     
+                                  | Make definitions for Green et al., JMG, 2016 melt
+foTL = 2 foL
+   dqf = -4d3 
+faTL = 2 faL
+   dqf = -8.2d3  - 1.4 * P
+                                  | Make definitions for Green et al., JMG, 2016 clinoamphibole
+mrbG  = 1 gl - 1 gr + 1 andr
+   DQF = 0
+kprg  = 1 mu - 1 pa + 1 parg  
+   DQF = -7060 + 20 * T_K
+tts   = -2 dsp + 2 ru + 1 ts    
+   DQF =   95000
+                                  | Make definitions for Green et al., JMG, 2016 augite (clinopyroxene)
+cenh  = 1 en
+   DQF = 3500 - 2 * T + 0.048 * P 
+cfsg  = 1 fs
+   DQF = 2100 - 2 * T + 0.045 * P
+                                  | Make definitions for Holland et al., 2013; dx.doi.org/10.1093/petrology/egt035
+                                  | mantle mineralogical model.
+nacfb = 1 nacf
+       DQF(J/mol) = -9000 0 0
+mfpv = 1 fpv
+       DQF(J/mol) = -9500 0 0
+mcpv = 1 cpv
+       DQF(J/mol) = 60000 0 0
+mnpv = 1 npv
+       DQF(J/mol) = 16000 0 0
+cmpv = 1 mpv
+       DQF(J/mol) = 35000 0 0
+cfpv = 1 fpv
+       DQF(J/mol) = 24000 0 0
+capv = 1 apv
+       DQF(J/mol) = 45000 0 0
+cnpv = 1 npv
+       DQF(J/mol) = 25000 0 0
+fcor = 1 mcor + 1 fak - 1 mak   | FeSi corundum 
+       DQF(J/mol) = -15d3 0 0
+hodi  = 1 di
+       DQF(J/mol) = -100 + 0.211 * T_K + 0.005 * P_bar
+hmgts  = 1 mgts + 1 hen - 1 en
+       DQF(J/mol) = -1d3 0 0
+
+end_makes
+
+Notation (incomplete and NOT alphabetical!)
+
+Entity                     Symbol          Formula
+forsterite 		   fo		   Mg2SiO4
+fayalite		   fa		   Fe2SiO4
+magnesium wadsleyite	   mwd		   Mg2SiO4
+iron wadsleyite		   fwd		   Fe2SiO4
+magnesium ringwoodite	   mrw		   Mg2SiO4
+iron ringwoodite	   frw		   Fe2SiO4
+magnesium perovskite	   mpv		   MgSiO3
+iron perovskite		   fpv		   FeSiO3
+aluminium perovskite	   apv		   Al2O3
+sodium perovskite 	   npv		   Na0.5Al0.5SiO3
+calcium perovskite	   cpv		   CaSiO3
+magnesium akimotoite	   mak		   MgSiO3
+iron akimotoite		   fak		   FeSiO3
+majorite		   maj		   Mg4Si4O12
+sodium majorite		   nagt		   Mg2NaAlSi4O12
+pyrope 			   py		   Mg3Al2Si3O12
+almandine		   alm		   Fe3Al2Si3O12
+grossular		   gr		   Ca3Al2Si3O12
+enstatite		   en		   Mg2Si2O6
+clinoenstatite		   cen		   Mg2Si2O6
+high clinoenstatite	   hen		   Mg2Si2O6
+high ferrosilite	   hfs		   Fe2Si2O6
+ferrosilite		   fs		   Fe2Si2O6
+magnesium tschermaks	   mgts		   MgAl2SiO6
+diopside  		   di		   CaMgSi2O6
+hedenbergite		   hed		   CaFeSi2O6
+jadeite			   jd		   NaAlSi2O6
+calcium tschermaks	   cats		   CaAl2SiO6
+stishovite		   stv		   SiO2
+Mg-Al CF phase 		   macf		   MgAl2O4
+Mg-Si CF phase		   mscf		   Mg2SiO4
+Fe-Si CF phase		   fscf		   Fe2SiO4
+Na CF phase		   nacf		   NaAlSiO4
+Ca CF phase		   cacf		   CaAl2O4
+Mg NAL phase		   manal	   Mg3Al6O12
+Na NAL phase		   nanal	   NaMg2SiAl5O12
+MgSi NAL phase		   msnal	   Mg6Si3O12
+FeSi NAL phase		   fsnal	   Fe6Si3O12
+Ca NAL phase		   canal	   CaMg2Al6O12
+periclase		   per		   MgO
+ferropericlase		   fper		   FeO
+corundum		   cor		   Al2O3
+MgSi corundum 		   mcor		   MgSiO3
+coesite 		   coe		   SiO2
+end
+
+fo       EoS = 8 | H= -2172450. 
+MgO(2)SiO2(1)
+GH = -2200804 S0 = 95.1 V0 = 4.366
+c1 = 233.3 c2 = 0.001494 c3 = -603800.0 c5 = -1869.7
+b1 = 2.85e-05 b5 = 531.1171 b6 = 1285000 b7 = -3e-06 b8 = 3.84
+end
+
+
+fa       EoS = 8 | H= -1477740. 
+FeO(2)SiO2(1)
+GH = -1522761 S0 = 151.0 V0 = 4.631
+c1 = 201.1 c2 = 0.01733 c3 = -1960600.0 c5 = -900.9
+b1 = 2.82e-05 b5 = 379.7022 b6 = 1256000 b7 = -3.7e-06 b8 = 4.68
+end
+
+
+mwd      EoS = 8 | H= -2138080. 
+MgO(2)SiO2(1)
+GH = -2166076 S0 = 93.9 V0 = 4.051
+c1 = 208.7 c2 = 0.003942 c3 = -1709500.0 c5 = -1302.8
+b1 = 2.37e-05 b5 = 535.7030 b6 = 1726000 b7 = -2.2e-06 b8 = 3.84
+end
+
+
+fwd      EoS = 8 | H= -1467920. 
+FeO(2)SiO2(1)
+GH = -1511450 S0 = 146.0 V0 = 4.321
+c1 = 201.1 c2 = 0.01733 c3 = -1960600.0 c5 = -900.9
+b1 = 2.73e-05 b5 = 389.6378 b6 = 1690000 b7 = -2.6e-06 b8 = 4.35
+end
+
+
+mrw      EoS = 8 | H= -2126840. 
+MgO(2)SiO2(1)
+GH = -2153674 S0 = 90.0 V0 = 3.949
+c1 = 213.3 c2 = 0.00269 c3 = -1410400.0 c5 = -1495.9
+b1 = 2.01e-05 b5 = 551.1697 b6 = 1781000 b7 = -2.4e-06 b8 = 4.35
+end
+
+
+frw      EoS = 8 | H= -1471760. 
+FeO(2)SiO2(1)
+GH = -1513501 S0 = 140.0 V0 = 4.203
+c1 = 166.8 c2 = 0.04261 c3 = -1705400.0 c5 = -541.4
+b1 = 2.22e-05 b5 = 402.2693 b6 = 1977000 b7 = -2.5e-06 b8 = 4.92
+end
+
+
+mpv      EoS = 8 | H= -1442310. 
+MgO(1)SiO2(1)
+GH = -1460974 S0 = 62.6 V0 = 2.445
+c1 = 149.3 c2 = 0.002918 c3 = -2983000.0 c5 = -799.1
+b1 = 1.87e-05 b5 = 560.9705 b6 = 2510000 b7 = -1.6e-06 b8 = 4.14
+end
+
+
+fpv      EoS = 8 | H= -1082910. 
+FeO(1)SiO2(1)
+GH = -1111234 S0 = 95.0 V0 = 2.534
+c1 = 133.2 c2 = 0.01083 c3 = -3661400.0 c5 = -314.7
+b1 = 1.87e-05 b5 = 418.0818 b6 = 2810000 b7 = -1.6e-06 b8 = 4.14
+end
+
+
+apv      EoS = 8 | H= -1619990. 
+Al2O3(1)
+GH = -1635434 S0 = 51.8 V0 = 2.54
+c1 = 139.5 c2 = 0.00589 c3 = -2460600.0 c5 = -589.2
+b1 = 1.8e-05 b5 = 633.0952 b6 = 2030000 b7 = -2e-06 b8 = 4.0
+end
+
+
+npv      EoS = 8 | H= -1365000. 
+Na2O(0.25)Al2O3(0.25)SiO2(1)
+GH = -1383783 S0 = 63.0 V0 = 2.334
+c1 = 135.0 c2 = 0.00846 c3 = -1850300.0 c5 = -600.8
+b1 = 1.8e-05 b5 = 558.6134 b6 = 2030000 b7 = -2e-06 b8 = 4.0
+end
+
+
+cpv      EoS = 8 | H= -1533590. 
+CaO(1)SiO2(1)
+GH = -1555802 S0 = 74.5 V0 = 2.745
+c1 = 159.3 c2 = 0.0 c3 = -967300.0 c5 = -1075.4
+b1 = 2e-05 b5 = 498.4067 b6 = 2360000 b7 = -1.6e-06 b8 = 3.9
+end
+
+
+mak      EoS = 8 | H= -1489610. 
+MgO(1)SiO2(1)
+GH = -1507290 S0 = 59.3 V0 = 2.635
+c1 = 147.8 c2 = 0.002015 c3 = -2395000.0 c5 = -801.8
+b1 = 2.12e-05 b5 = 581.2022 b6 = 2110000 b7 = -2.2e-06 b8 = 4.55
+end
+
+
+fak      EoS = 8 | H= -1142130. 
+FeO(1)SiO2(1)
+GH = -1169411 S0 = 91.5 V0 = 2.76
+c1 = 100.3 c2 = 0.013328 c3 = -4364900.0 c5 = 419.8
+b1 = 2.12e-05 b5 = 429.9111 b6 = 2180000 b7 = -2.2e-06 b8 = 4.55
+end
+
+
+maj      EoS = 8 | H= -6041550. 
+MgO(4)SiO2(4)
+GH = -6119129 S0 = 260.2 V0 = 11.457
+c1 = 713.6 c2 = -0.000997 c3 = -1158200.0 c5 = -6622.3
+b1 = 1.83e-05 b5 = 546.8380 b6 = 1600000 b7 = -2.8e-06 b8 = 4.56
+end
+
+
+nagt     EoS = 8 | H= -5985000. 
+MgO(2)Na2O(0.5)Al2O3(0.5)SiO2(4)
+GH = -6062698 S0 = 260.6 V0 = 11.09
+c1 = 620.8 c2 = 0.0112 c3 = -3755900.0 c5 = -4421.3
+b1 = 2.1e-05 b5 = 546.2763 b6 = 1700000 b7 = -2.3e-06 b8 = 4.0
+end
+
+
+py       EoS = 8 | H= -6281770. 
+MgO(3)Al2O3(1)SiO2(3)
+GH = -6362121 S0 = 269.5 V0 = 11.313
+c1 = 633.5 c2 = 0.0 c3 = -5196100.0 c5 = -4315.2
+b1 = 2.37e-05 b5 = 534.0698 b6 = 1743000 b7 = -2.3e-06 b8 = 4.05
+end
+
+
+alm      EoS = 8 | H= -5260750. 
+FeO(3)Al2O3(1)SiO2(3)
+GH = -5362717 S0 = 342.0 V0 = 11.525
+c1 = 677.3 c2 = 0.0 c3 = -3772700.0 c5 = -5044.0
+b1 = 2.12e-05 b5 = 451.8267 b6 = 1900000 b7 = -1.6e-06 b8 = 2.98
+end
+
+
+gr       EoS = 8 | H= -6643050. 
+CaO(3)Al2O3(1)SiO2(3)
+GH = -6719078 S0 = 255.0 V0 = 12.535
+c1 = 626.0 c2 = 0.0 c3 = -5779200.0 c5 = -4002.9
+b1 = 2.2e-05 b5 = 554.2470 b6 = 1720000 b7 = -3.2e-06 b8 = 5.53
+end
+
+
+en       EoS = 8 | H= -3090100. 
+MgO(2)SiO2(2)
+GH = -3129605 S0 = 132.5 V0 = 6.262
+c1 = 356.2 c2 = -0.00299 c3 = -596900.0 c5 = -3185.3
+b1 = 2.27e-05 b5 = 540.1727 b6 = 1059000 b7 = -8.2e-06 b8 = 8.65
+end
+
+
+cen      EoS = 8 | H= -3090990. 
+MgO(2)SiO2(2)
+GH = -3130346 S0 = 132.0 V0 = 6.264
+c1 = 306.0 c2 = -0.003793 c3 = -3041700.0 c5 = -1852.1
+b1 = 2.11e-05 b5 = 541.5479 b6 = 1059000 b7 = -8.2e-06 b8 = 8.65
+end
+
+
+hen      EoS = 8 | H= -3082610. 
+MgO(2)SiO2(2)
+GH = -3121876 S0 = 131.7 V0 = 6.099
+c1 = 356.2 c2 = -0.00299 c3 = -596900.0 c5 = -3185.3
+b1 = 2.26e-05 b5 = 542.3763 b6 = 1500000 b7 = -3.6e-06 b8 = 5.5
+end
+
+
+hfs      EoS = 8 | H= -2380810. 
+FeO(2)SiO2(2)
+GH = -2437160 S0 = 189.0 V0 = 6.405
+c1 = 398.7 c2 = -0.006579 c3 = 1290100.0 c5 = -4058.0
+b1 = 2.37e-05 b5 = 419.7316 b6 = 1500000 b7 = -3.6e-06 b8 = 5.5
+end
+
+
+fs       EoS = 8 | H= -2388760. 
+FeO(2)SiO2(2)
+GH = -2445379 S0 = 189.9 V0 = 6.592
+c1 = 398.7 c2 = -0.006579 c3 = 1290100.0 c5 = -4058.0
+b1 = 3.26e-05 b5 = 418.2462 b6 = 1010000 b7 = -4e-06 b8 = 4.08
+end
+
+
+mgts     EoS = 8 | H= -3196600. 
+MgO(1)Al2O3(1)SiO2(1)
+GH = -3235658 S0 = 131.0 V0 = 6.05
+c1 = 371.4 c2 = -0.004082 c3 = -398400.0 c5 = -3547.1
+b1 = 2.17e-05 b5 = 544.3193 b6 = 1028000 b7 = -8.3e-06 b8 = 8.55
+end
+
+
+di       EoS = 8 | H= -3201820. 
+CaO(1)MgO(1)SiO2(2)
+GH = -3244426 S0 = 142.9 V0 = 6.619
+c1 = 314.5 c2 = 4.1e-05 c3 = -2745900.0 c5 = -2020.1
+b1 = 2.73e-05 b5 = 513.0728 b6 = 1192000 b7 = -4.4e-06 b8 = 5.19
+end
+
+
+hed      EoS = 8 | H= -2842120. 
+CaO(1)FeO(1)SiO2(2)
+GH = -2894296 S0 = 175.0 V0 = 6.795
+c1 = 340.2 c2 = 0.000812 c3 = -1047800.0 c5 = -2646.7
+b1 = 2.38e-05 b5 = 444.2774 b6 = 1192000 b7 = -3.3e-06 b8 = 3.97
+end
+
+
+jd       EoS = 8 | H= -3025290. 
+Na2O(0.5)Al2O3(0.5)SiO2(2)
+GH = -3065093 S0 = 133.5 V0 = 6.04
+c1 = 319.4 c2 = 0.003616 c3 = -1173900.0 c5 = -2469.5
+b1 = 2.1e-05 b5 = 537.4432 b6 = 1281000 b7 = -3e-06 b8 = 3.81
+end
+
+
+cats     EoS = 8 | H= -3310110. 
+CaO(1)Al2O3(1)SiO2(1)
+GH = -3350360 S0 = 135.0 V0 = 6.356
+c1 = 347.6 c2 = -0.006974 c3 = -1781600.0 c5 = -2757.5
+b1 = 2.08e-05 b5 = 533.4002 b6 = 1192000 b7 = -4.4e-06 b8 = 5.19
+end
+
+
+stv      EoS = 8 | H= -876820. 
+SiO2(1)
+GH = -883976 S0 = 24.0 V0 = 1.401
+c1 = 68.1 c2 = 0.00601 c3 = -1978200.0 c5 = -82.1
+b1 = 1.58e-05 b5 = 736.5651 b6 = 3090000 b7 = -1.5e-06 b8 = 4.6
+end
+
+
+macf     EoS = 8 | H= -2246420. 
+MgO(1)Al2O3(1)
+GH = -2270272 S0 = 80.0 V0 = 3.614
+c1 = 200.0 c2 = 0.006252 c3 = -2996400.0 c5 = -888.4
+b1 = 1.93e-05 b5 = 595.2350 b6 = 2120000 b7 = -1.7e-06 b8 = 4.0
+end
+
+
+mscf     EoS = 8 | H= -2061130. 
+MgO(2)SiO2(1)
+GH = -2087218 S0 = 87.5 V0 = 3.649
+c1 = 213.3 c2 = 0.00269 c3 = -1410400.0 c5 = -1495.9
+b1 = 2.01e-05 b5 = 561.5628 b6 = 1850000 b7 = -1.7e-06 b8 = 4.0
+end
+
+
+fscf     EoS = 8 | H= -1405500. 
+FeO(2)SiO2(1)
+GH = -1448255 S0 = 143.4 V0 = 3.914
+c1 = 181.1 c2 = 0.018526 c3 = -2767200.0 c5 = -527.1
+b1 = 2.01e-05 b5 = 395.0127 b6 = 1850000 b7 = -1.7e-06 b8 = 4.0
+end
+
+
+nacf     EoS = 8 | H= -1965550. 
+Na2O(0.5)Al2O3(0.5)SiO2(1)
+GH = -1998346 S0 = 110.0 V0 = 3.631
+c1 = 272.7 c2 = -0.012398 c3 = 0.0 c5 = -2763.1
+b1 = 2.1e-05 b5 = 480.0877 b6 = 1850000 b7 = -2.5e-06 b8 = 4.6
+end
+
+
+cacf     EoS = 8 | H= -2325600. 
+CaO(1)Al2O3(1)
+GH = -2351718 S0 = 87.6 V0 = 3.976
+c1 = 191.9 c2 = 0.009563 c3 = -3211300.0 c5 = -640.2
+b1 = 1.93e-05 b5 = 561.1396 b6 = 1900000 b7 = -2.1e-06 b8 = 4.0
+end
+
+
+manal    EoS = 8 | H= -6796630. 
+MgO(3)Al2O3(3)
+GH = -6871168 S0 = 250.0 V0 = 11.166
+c1 = 600.0 c2 = 0.018756 c3 = -8989200.0 c5 = -2665.2
+b1 = 1.93e-05 b5 = 579.7840 b6 = 1840000 b7 = -2.2e-06 b8 = 4.0
+end
+
+
+nanal    EoS = 8 | H= -6610270. 
+Na2O(0.5)MgO(2)SiO2(1)Al2O3(2.5)
+GH = -6693752 S0 = 280.0 V0 = 11.322
+c1 = 672.7 c2 = 0.000106 c3 = -5992800.0 c5 = -4539.9
+b1 = 2.01e-05 b5 = 537.8962 b6 = 1840000 b7 = -2.2e-06 b8 = 4.0
+end
+
+
+msnal    EoS = 8 | H= -6172380. 
+MgO(6)SiO2(3)
+GH = -6253626 S0 = 272.5 V0 = 11.061
+c1 = 639.9 c2 = 0.00807 c3 = -4231200.0 c5 = -4487.7
+b1 = 2.1e-05 b5 = 547.7903 b6 = 1850000 b7 = -2.2e-06 b8 = 4.0
+end
+
+
+fsnal    EoS = 8 | H= -4146000. 
+FeO(6)SiO2(3)
+GH = -4277246 S0 = 440.2 V0 = 11.856
+c1 = 543.3 c2 = 0.055578 c3 = -8301600.0 c5 = -1581.3
+b1 = 2.1e-05 b5 = 388.1482 b6 = 1850000 b7 = -2.2e-06 b8 = 4.0
+end
+
+
+canal    EoS = 8 | H= -6840000. 
+CaO(1)MgO(2)Al2O3(3)
+GH = -6916803 S0 = 257.6 V0 = 11.159
+c1 = 591.9 c2 = 0.022067 c3 = -9204100.0 c5 = -2417.0
+b1 = 1.93e-05 b5 = 568.5674 b6 = 1770000 b7 = -2.2e-06 b8 = 4.0
+end
+
+
+per      EoS = 8 | H= -601570. 
+MgO(1)
+GH = -609471 S0 = 26.5 V0 = 1.125
+c1 = 60.5 c2 = 0.000362 c3 = -535800.0 c5 = -299.2
+b1 = 3.11e-05 b5 = 540.1727 b6 = 1616000 b7 = -2.4e-06 b8 = 3.95
+end
+
+
+fper     EoS = 8 | H= -262240. 
+FeO(1)
+GH = -279712 S0 = 58.6 V0 = 1.206
+c1 = 44.4 c2 = 0.00828 c3 = -1214200.0 c5 = 185.2
+b1 = 3.22e-05 b5 = 297.5937 b6 = 1520000 b7 = -3.2e-06 b8 = 4.9
+end
+
+
+cor      EoS = 8 | H= -1675250. 
+Al2O3(1)
+GH = -1690426 S0 = 50.9 V0 = 2.558
+c1 = 139.5 c2 = 0.00589 c3 = -2460600.0 c5 = -589.2
+b1 = 1.8e-05 b5 = 639.9519 b6 = 2540000 b7 = -1.7e-06 b8 = 4.34
+end
+
+
+mcor     EoS = 8 | H= -1468000. 
+MgO(1)SiO2(1)
+GH = -1485680 S0 = 59.3 V0 = 2.635
+c1 = 147.8 c2 = 0.002015 c3 = -2395000.0 c5 = -801.8
+b1 = 2.12e-05 b5 = 581.2022 b6 = 2110000 b7 = -2.2e-06 b8 = 4.55
+end
+
+
+coe       EoS = 8 | H=  -907000.0  
+SiO2(1)
+GH = -918806.7  S0 = 39.6  V0 = 2.064  
+c1 = 107.8  c2 = -.3279E-2  c3 = -190300  c5 = -1041.6  
+b1 = .123E-4  b5 = 541.5479  b6 = 979000  b7 = -.43E-5  b8 = 4.19  
+end
