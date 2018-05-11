@@ -309,8 +309,6 @@ kprg  = 1 mu - 1 pa + 1 parg
 tts   = -2 dsp + 2 ru + 1 ts    
    DQF =   95000
                                   | Make definitions for Green et al., JMG, 2016 augite (clinopyroxene)
-cenh  = 1 en
-   DQF = 3500 - 2 * T + 0.048 * P 
 cfsg  = 1 fs
    DQF = 2100 - 2 * T + 0.045 * P
                                   | Make definitions for Holland et al., 2013; dx.doi.org/10.1093/petrology/egt035

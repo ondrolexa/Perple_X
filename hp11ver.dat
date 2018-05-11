@@ -175,7 +175,7 @@ zrg  = 1 gr + 3 zrc - 6 q       | Zr garnet endmember
 zrru = 1 bdy                    | Zr rutile endmember
        52.84e3 -0.01829e3 -0.074
 
-	                            | Make definitions for White et al. (JMG 32:261-286, 2014) models
+                                | Make definitions for White et al. (JMG 32:261-286, 2014) models
 f3clin = 1 clin - 1/2 gr + 1/2 andr
        DQF(J/mol) = 2d3 0 0  
 kho1 = 1 py - 1 gr + 1 andr

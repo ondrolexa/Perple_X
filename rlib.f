@@ -8075,7 +8075,6 @@ c                                 working arrays
 
 c                                 x coordinate description
       integer istg, ispg, imlt, imdg
-
       common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
 c----------------------------------------------------------------------
       do i = 1, istg(ids)
@@ -10332,7 +10331,6 @@ c-----------------------------------------------------------------------
 c DEBUG DEBUG
       logical zbad
       external zbad
-      double precision s1,s2,s3
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
@@ -10353,16 +10351,22 @@ c DEBUG DEBUG
       integer ncoor,mcoor,ndim
       common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
 
+      integer istg, ispg, imlt, imdg
+      common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
+
       integer pstot,qstot,ostg,odim,nsum
       common/ junk1 /pstot(h9),qstot(h9),ostg(h9),odim(mst,h9),nsum(h9)
 c-----------------------------------------------------------------------
+c                                 for orphan vertex models could check
+c                                 that the prismatic fraction is > 0 
+c                                 first, this would save setting/resetting
+c                                 p0a's as currently done here/
+c                                 --------------------------------------
 c                                 convert y's to p's
 c                                 initialize ordered species
       do k = 1, nord(id)
          p0a(lstot(id)+k) = 0d0
       end do
-
-      s1 = 0d0
 
       do k = 1, nstot(id)
 c                                 initialize the independent species
@@ -10375,39 +10379,20 @@ c                                 idependent species
          end do 
 
          pa(k) = p0a(k)
-         s1 = s1 + p0a(k)
 
       end do
 
-      if (dabs(s1-1d0).gt.zero) then 
-         write (*,*) 's1 wonka wonaa',dabs(s1-1d0)
-      end if 
-
-         if (zbad(pa,id)) then 
-         write (*,*) 'z1 wonka wonaa'
-         end if 
-
-
       if (ksmod(id).eq.9.or.ksmod(id).eq.10) then
-
-         s2 = 0d0
 c                                 orphan vertex model
          do k = 1, nstot(id)
 c                                 renormalize the prismatic endmembers
-            p0a(k) = p0a(k)*x(ostg(id),ndim(ostg(id),id)+1)
+            p0a(k) = p0a(k)*x(ostg(id),ispg(id,ostg(id)))
             pa(k) = p0a(k)
-            s2 = s2 + p0a(k)
          end do 
-
 
          if (zbad(pa,id)) then 
          write (*,*) 'z2 wonka wonaa'
-         end if 
-         if (dabs(s2-x(3,ndim(3,id)+1)).gt.zero) then 
-            write (*,*) 's2 wonka wonak',dabs(s2-x(3,ndim(3,id)+1))
-         end if 
-
-         s3 = 0d0 
+         end if
 
          do k = 1, ndim(ostg(id),id)
 c                                 add the orphan fractions
@@ -10416,13 +10401,6 @@ c                                 add the orphan fractions
             pa(l) = p0a(l)
          end do
 
-         do k = 1, nstot(id)
-            s3 = s3 + p0a(k)
-         end do
-
-         if (dabs(s3-1d0).gt.zero) then 
-            write (*,*) 's3 wonka wonaa',dabs(s3-1d0)
-         end if 
          if (zbad(pa,id)) then 
          write (*,*) 'z3 wonka wonaa'
          end if 
@@ -15296,10 +15274,6 @@ c                                 generate coordinates for i'th component
          if (ync.eq.0d0) cycle
 
          mode = imdg(k,lsite,ids)
-
-         if (mode.eq.0.and.ync.gt.1d0.or.mode.eq.1) then
-            write (*,*) 'wonkeroni'
-         end if 
 c                                 avoid impossible compositions 'cause a min > 0
          if (i.gt.1) then 
 

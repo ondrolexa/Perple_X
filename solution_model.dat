@@ -117,7 +117,7 @@ begin_model
                       NOTE: to use this the following endmembers must be specified with make 
                       definitions in the thermodynamic data file
 
-                      cenh  = 1 en
+                      cenjh = 1 en
                             DQF = 3500 - 2 * T + 0.048 * P 
                       cfsg  = 1 fs
                             DQF = 2100 - 2 * T + 0.045 * P
@@ -169,7 +169,7 @@ begin_model
                     Ordered species:    oCaTs           Al     Ca     Si    Al
                                         fmc             Mg     Fe     Si    Si
 
-Augite(G)
+Augit0(G)
 abbreviation Cpx
 full_name    clinopyroxene
 
@@ -180,37 +180,37 @@ full_name    clinopyroxene
 2                            | number of independent vertices
 
                              | endmembers on the prism vertices
-hed_d cats  cacm  di 
-cfsg  fats  facm  ffmc
-mfc   mats  macm  cenh
+hed_d  cats  cacm  di 
+cfsg   fats  facm  ffmc
+mfc    mats  macm  cenjh
 
                              | endmembers on orphan vertices
 jd    acm
 
-2                            | number of ordered species 
+2                            | number of ordered species and definitions
 
-ocats = 1 cats              enthalpy_of_ordering  =  -3800  + 2.8816 * T  -0.01  * P | this undoes the DQF on cats
-fmc   = 1/2 cenh + 1/2 cfsg enthalpy_of_ordering  =  -4400 | DQF(fmc) - (DQF(cenh) + DQF(cfs))/2
+ocats = 1 cats               enthalpy_of_ordering  =  -3800  + 2.8816 * T  -0.01  * P | this undoes the DQF on cats
+fmc   = 1/2 cenjh + 1/2 cfsg enthalpy_of_ordering  =  -4400 | DQF(fmc) - (DQF(cenjh) + DQF(cfs))/2
 
 begin_limits
 
 fmc = -2 + 2 cfsg + 1 fmc                        delta = 2 zm1fe
-fmc =  0 - 2 di - 2 cenh - 1 fmc                 delta = 2 zm1mg
+fmc =  0 - 2 di - 2 cenjh - 1 fmc                delta = 2 zm1mg
 fmc =  0 - 2 cfsg - 1 fmc                        delta = 2 zm2fe
-fmc = -2 + 2 cenh + 1 fmc                        delta = 2 zm2mg
+fmc = -2 + 2 cenjh + 1 fmc                       delta = 2 zm2mg
 
 ocats =  0 - 1 cats                              delta = 2 zAlT2 | these assume p0_ocats = 0 as is true for the model as configured
 ocats = -2 + 1 cats                              delta = 2 zAlT1
 
 end_limits
 
-8                            | 10 dependent endmembers
+8                            | number of dependent endmembers and definitions
 
-hed_d = 1 di   + 1 cfsg - 1 fmc 
-cacm  = 1 acm  + 1 cats - 1 jd 
-mfc   = 1 cenh + 1 cfsg - 1 fmc 
-mats  = 1 cats + 1 cenh - 1 di
-macm  = 1 cats + 1 cenh - 1 di   + 1 acm - 1 jd
+hed_d = 1 di    + 1 cfsg - 1 fmc 
+cacm  = 1 acm   + 1 cats - 1 jd 
+mfc   = 1 cenjh + 1 cfsg - 1 fmc 
+mats  = 1 cats  + 1 cenjh - 1 di
+macm  = 1 cats  + 1 cenjh - 1 di   + 1 acm - 1 jd
 ffmc  = 1 fmc
 fats  = 1 cats - 1 di   + 1 fmc
 facm  = 1 cats - 1 di   + 1 fmc  + 1 acm - 1 jd
@@ -231,19 +231,19 @@ facm  = 1 cats - 1 di   + 1 fmc  + 1 acm - 1 jd
 0. 1. 0.1  0                 | range of acm
 
 begin_excess_function
-W(di cenh)                29.8d3   -0.03 * p
+W(di cenjh)               29.8d3   -0.03 * p
 W(di cfsg)                25.8d3   -0.03 * p
 W(di jd)                  26d3
 W(di acm)                 21d3
 W(di ocats)               12.3d3   -0.01 * p
 W(di cats)                12.3d3   -0.01 * p
 W(di fmc)                 20.6d3   -0.03 * p
-W(cenh cfsg)              2.3d3
-W(cenh jd)                50d3
-W(cenh acm)               62d3
-W(cenh ocats)             45.7d3   -0.29 * p
-W(cenh cats)              45.7d3   -0.29 * p
-W(cenh fmc)               4d3
+W(cenjh cfsg)             2.3d3
+W(cenjh jd)               50d3
+W(cenjh acm)              62d3
+W(cenjh ocats)            45.7d3   -0.29 * p
+W(cenjh cats)             45.7d3   -0.29 * p
+W(cenjh fmc)              4d3
 W(cfsg jd)                60d3
 W(cfsg acm)               58d3
 W(cfsg ocats)             48d3
@@ -265,23 +265,23 @@ end_excess_function
 
 4 1                                 | 4 species on m1, mult = 1
 z(m1,fe)   = 1 cfsg
-z(m1,mg)   = 1 di + 1 fmc + 1 cenh
+z(m1,mg)   = 1 di + 1 fmc + 1 cenjh
 z(m1,fe3+) = 1 acm 
 
 4 1                                 | 4 species on m2, mult. = 1
 z(m2,na)   = 1 acm  + 1 jd
-z(m2,mg)   = 1 cenh
+z(m2,mg)   = 1 cenjh
 z(m2,fe)   = 1 fmc  + 1 cfsg
 
-2 0.25                               | 2 species on T1, effective mult. = 1/4
+2 0.25                              | 2 species on T1, effective mult. = 1/4
 z(Al,T1) = 1/2 cats
 
-2 0.25                               | 2 species on T2, effective mult. = 1/4
+2 0.25                              | 2 species on T2, effective mult. = 1/4
 z(Al,T2) = 1/2 cats + 1 ocats
 
 begin_van_laar_sizes
 alpha(di)          1.2
-alpha(cenh)        1
+alpha(cenjh)       1
 alpha(cfsg)        1
 alpha(jd)          1.2
 alpha(acm)         1.2
@@ -298,16 +298,15 @@ end_dqf_corrections
 
 end_of_model
                       --------------------------------------------------------
-                      --------------------------------------------------------
 begin_model
-                      old Green et al (JMG, 2016) Augite model.
+                      Green et al (JMG, 2016) Augite model.
 
                       This model should not be used for Na-rich compositions.
 
                       NOTE: to use this the following endmembers must be specified with make 
                       definitions in the thermodynamic data file
 
-                      cenh  = 1 en
+                      cenjh = 1 en
                             DQF = 3500 - 2 * T + 0.048 * P 
                       cfsg  = 1 fs
                             DQF = 2100 - 2 * T + 0.045 * P
@@ -333,108 +332,85 @@ begin_model
                                       Mutliplicity      1      1     1      1   
                                                      ____________________________________
 
+                                   Prism             ____________________________________
+
                                         Diopside        Mg     Ca    Si     Si
                                         hed             Fe     Ca    Si     Si  dependent
-                                        Cats            Al     Ca   AlSi   AlSi
-                                        cacm            Fe3    Ca   AlSi   AlSi dependent
-
                                         cEnstatite      Mg     Mg    Si     Si
-                                        mfc             Fe     Mg    Si     Si  dependent
-                                        Mats            Al     Mg   AlSi   AlSi dependent 
-                                        macm            Fe3    Mg   AlSi   AlSi dependent 
-                            Species: 
-                                        fmc             Mg     Fe    Si     Si  independent ordered species
                                         cferrosilite    Fe     Fe    Si     Si
-                                        fats            Al     Fe   AlSi   AlSi dependent 
-                                        facm            Fe3    Fe   AlSi   AlSi dependent
 
-                                        ndi             Mg     Na               dependent => illegitimate [Si_1.5 Al_-.5]
-                                        nhed            Fe     Na               dependent => ditto, using these is a huge waste of space
+                                   Orphans            ___________________________________
+
                                         Jadeite         Al     Na    Si     Si
                                         Acmite          Fe3+   Na    Si     Si
+                                        Cats            Al     Ca   AlSi   AlSi
                                                       ___________________________________
 
                     Ordered species:    oCaTs           Al     Ca     Si    Al
                                         fmc             Mg     Fe     Si    Si
 
-xAugite(G)
+Augite(G)
 abbreviation Cpx
 full_name    clinopyroxene
-  
-8                           | model type: order-disorder with prismatic composition space
-2                           | prismatic space defined by the conjunction of 2 simplicies
-4 4                         | both simplices are quaternary
-                            | 4 * 4 = 16 endmembers that define the vertices of the compositional prism
 
-hed   cats  cacm  di 
-cfsg  fats  facm  ffmc
-nhed  jd    acm   ndi 
-mfc   mats  macm  cenh 
+9                            | model type: prism + orphan vertices
+
+2                            | prism: two simplicies with a common vertex
+2 2                          | ternary (Ca-Fe-Mg on M2) + quaternary (Mg-Fe-Al-Fe3 on M1)
+3                            | number of independent vertices
+
+                             | endmembers on the prism vertices
+hed_d   di 
+cfsg    cenjh
+                             | endmembers on orphan vertices
+jd    acm    cats
 
 2                            | number of ordered species 
 
 ocats = 1 cats              enthalpy_of_ordering  =  -3800  + 2.8816 * T  -0.01  * P | this undoes the DQF on cats
-fmc   = 1/2 cenh + 1/2 cfsg enthalpy_of_ordering  =  -4400 | DQF(fmc) - (DQF(cenh) + DQF(cfs))/2
+fmc   = 1/2 cenjh + 1/2 cfsg enthalpy_of_ordering  =  -4400 | DQF(fmc) - (DQF(cenjh) + DQF(cfs))/2
 
 begin_limits
 
 fmc = -2 + 2 cfsg + 1 fmc                        delta = 2 zm1fe
-fmc =  0 - 2 di - 2 cenh - 1 fmc                 delta = 2 zm1mg
+fmc =  0 - 2 di - 2 cenjh - 1 fmc                delta = 2 zm1mg
 fmc =  0 - 2 cfsg - 1 fmc                        delta = 2 zm2fe
-fmc = -2 + 2 cenh + 1 fmc                        delta = 2 zm2mg
+fmc = -2 + 2 cenjh + 1 fmc                       delta = 2 zm2mg
 
 ocats =  0 - 1 cats                              delta = 2 zAlT2 | these assume p0_ocats = 0 as is true for the model as configured
 ocats = -2 + 1 cats                              delta = 2 zAlT1
 
 end_limits
 
-10                            | 10 dependent endmembers
+1                            | number of dependent endmembers
 
-hed  = 1 di   + 1 cfsg - 1 fmc 
-cacm = 1 acm  + 1 cats - 1 jd 
-mfc  = 1 cenh + 1 cfsg - 1 fmc 
-mats = 1 cats + 1 cenh - 1 di
-macm = 1 cats + 1 cenh - 1 di   + 1 acm - 1 jd
-ffmc = 1 fmc
-fats = 1 cats - 1 di   + 1 fmc
-facm = 1 cats - 1 di   + 1 fmc  + 1 acm - 1 jd
+hed_d = 1 di   + 1 cfsg - 1 fmc 
 
- | assigning ndi = nhed = jd is a [bad] way to make this model work.
- | ndi = nhed = jd_dqf where 
- | jd_dqf is made in thermodynamic data file header as:
+0 0 0 0 0 0 0 | endmember flags
 
- | jd_dqf = 1 jd
- |   DQF = 5000
+                             | 2x2 prism
+0. 1. 0.1  0                 | range and resolution of X(Fe)
+0. 1. 0.1  0                 | range and resolution of X(Ca)
 
- | MIGHT speed calculations and reduce numerical instability.
-
-ndi  = 1 jd | 1 di   + 1 jd   - 1 cats 
-nhed = 1 jd | di   + 1 jd   - 1 cats + 1 cfsg - 1 fmc 
-
-0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | endmember flags
-
-0. 1. 0.1  0                 | range and resolution of X(Fe,M1)
-0. 1. 0.1  0                 | range and resolution of X(Al,M1)
-0. 1. 0.1  0                 | range and resolution of X(Fe3+,M1)
-
-0. 1. 0.1  0                 | range and resolution of X(Ca,M2)
-0. 1. 0.1  0                 | range and resolution of X(Fe,M2)
-0. 1. 0.1  0                 | range and resolution of X(Na,M2)
+                             | orphan simplex
+0. .2 0.1  0                 | range of jd
+0. .5 0.1  0                 | range of acm
+0. .5 0.1  0                 | range of cats
 
 begin_excess_function
-W(di cenh)                29.8d3   -0.03 * p
+W(di cenjh)               29.8d3   -0.03 * p
 W(di cfsg)                25.8d3   -0.03 * p
 W(di jd)                  26d3
 W(di acm)                 21d3
 W(di ocats)               12.3d3   -0.01 * p
 W(di cats)                12.3d3   -0.01 * p
 W(di fmc)                 20.6d3   -0.03 * p
-W(cenh cfsg)              2.3d3
-W(cenh jd)                50d3
-W(cenh acm)               62d3
-W(cenh ocats)             45.7d3   -0.29 * p
-W(cenh cats)              45.7d3   -0.29 * p
-W(cenh fmc)               4d3
+W(cenjh cfsg)             2.3d3
+W(cenjh jd)               50d3
+W(cenjh acm)              62d3
+W(cenjh ocats)            45.7d3   -0.29 * p
+W(cenjh cats)             45.7d3   -0.29 * p
+W(cenjh fmc)              4d3
 W(cfsg jd)                60d3
 W(cfsg acm)               58d3
 W(cfsg ocats)             48d3
@@ -456,12 +432,12 @@ end_excess_function
 
 4 1                                 | 4 species on m1, mult = 1
 z(m1,fe)   = 1 cfsg
-z(m1,mg)   = 1 di + 1 fmc + 1 cenh
+z(m1,mg)   = 1 di + 1 fmc + 1 cenjh
 z(m1,fe3+) = 1 acm 
 
 4 1                                 | 4 species on m2, mult. = 1
 z(m2,na)   = 1 acm  + 1 jd
-z(m2,mg)   = 1 cenh
+z(m2,mg)   = 1 cenjh
 z(m2,fe)   = 1 fmc  + 1 cfsg
 
 2 0.25                               | 2 species on T1, effective mult. = 1/4
@@ -472,7 +448,7 @@ z(Al,T2) = 1/2 cats + 1 ocats
 
 begin_van_laar_sizes
 alpha(di)          1.2
-alpha(cenh)        1
+alpha(cenjh)       1
 alpha(cfsg)        1
 alpha(jd)          1.2
 alpha(acm)         1.2
@@ -488,107 +464,6 @@ dqf(cats) =  3800  - 2.8816 * T  + 0.01  * P
 end_dqf_corrections
 
 end_of_model
-                      --------------------------------------------------------
-begin_model
-
-Augite0(G)
-abbreviation Cpx
-full_name    clinopyroxene
-  
-8                           | model type: order-disorder with prismatic composition space
-2                           | prismatic space defined by the conjunction of 2 simplicies
-3 3                         | both simplices are quaternary
-                            | 4 * 4 = 16 endmembers that define the vertices of the compositional prism
-
-hed   cats  di 
-cfsg  fats  ffmc
-mfc   mats  cenh 
-
-2                            | number of ordered species 
-
-ocats = 1 cats              enthalpy_of_ordering  =  -3800  + 2.8816 * T  -0.01  * P | this undoes the DQF on cats
-fmc   = 1/2 cenh + 1/2 cfsg enthalpy_of_ordering  =  -4400 | DQF(fmc) - (DQF(cenh) + DQF(cfs))/2
-
-begin_limits
-
-fmc = -2 + 2 cfsg + 1 fmc                        delta = 2 zm1fe
-fmc =  0 - 2 di - 2 cenh - 1 fmc                 delta = 2 zm1mg
-fmc =  0 - 2 cfsg - 1 fmc                        delta = 2 zm2fe
-fmc = -2 + 2 cenh + 1 fmc                        delta = 2 zm2mg
-
-ocats =  0 - 1 cats                              delta = 2 zAlT2 | these assume p0_ocats = 0 as is true for the model as configured
-ocats = -2 + 1 cats                              delta = 2 zAlT1
-
-end_limits
-
-5                            | 10 dependent endmembers
-
-hed  = 1 di   + 1 cfsg - 1 fmc 
-mfc  = 1 cenh + 1 cfsg - 1 fmc 
-mats = 1 cats + 1 cenh - 1 di
-ffmc = 1 fmc
-fats = 1 cats - 1 di   + 1 fmc
-
-0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | endmember flags
-
-0. 1. 0.1  0                 | range and resolution of X(Fe,M1)
-0. 1. 0.1  0                 | range and resolution of X(Al,M1)
-
-0. 1. 0.1  0                 | range and resolution of X(Ca,M2)
-0. 1. 0.1  0                 | range and resolution of X(Fe,M2)
-
-
-begin_excess_function
-W(di cenh)                29.8d3   -0.03 * p
-W(di cfsg)                25.8d3   -0.03 * p
-W(di ocats)               12.3d3   -0.01 * p
-W(di cats)                12.3d3   -0.01 * p
-W(di fmc)                 20.6d3   -0.03 * p
-W(cenh cfsg)              2.3d3
-W(cenh ocats)             45.7d3   -0.29 * p
-W(cenh cats)              45.7d3   -0.29 * p
-W(cenh fmc)               4d3
-W(cfsg ocats)             48d3
-W(cfsg cats)              48d3
-W(cfsg fmc)               3.5d3
-W(ocats cats)             3.8d3   + 0.01 * p
-W(ocats fmc)              50d3
-W(cats fmc)               50d3
-end_excess_function
-
-4                                   | 4 site entropy model (M1, M2, T1, T2)
-
-3 1                                 | 4 species on m1, mult = 1
-z(m1,fe)   = 1 cfsg
-z(m1,mg)   = 1 di + 1 fmc + 1 cenh
-
-
-3 1                                 | 4 species on m2, mult. = 1
-
-z(m2,mg)   = 1 cenh
-z(m2,fe)   = 1 fmc  + 1 cfsg
-
-2 0.25                               | 2 species on T1, effective mult. = 1/4
-z(Al,T1) = 1/2 cats
-
-2 0.25                               | 2 species on T2, effective mult. = 1/4
-z(Al,T2) = 1/2 cats + 1 ocats
-
-begin_van_laar_sizes
-alpha(di)          1.2
-alpha(cenh)        1
-alpha(cfsg)        1
-alpha(ocats)       1.9
-alpha(cats)        1.9
-alpha(fmc)         1.0
-end_van_laar_sizes
-
-begin_dqf_corrections
-dqf(cats) =  3800  - 2.8816 * T  + 0.01  * P
-end_dqf_corrections
-
-end_of_model
-                      --------------------------------------------------------
                       --------------------------------------------------------
 begin_model
                       Green, ECR, et al. (JMG, 2016). 
@@ -11515,13 +11390,13 @@ full_name    New aluminous phase
 
 8                            | model type: reciprocal, margules, two ordering parameters
 2                            | 2 site reciprocal solution
-2 8                          | 1 binary and 1 heptary (not including ordered endmembers)
+2 7                          | 1 binary and 1 heptary (not including ordered endmembers)
 nanal    nfnal_d
 canal    cfnal_d
 manal    mfanal_d
 fmanal_d fanal_d
 msnal    mfmnal_d
-o1nal_d  o2nal_d
+| o1nal_d  o2nal_d
 mmfnal_d mffnal_d
 fmfnal_d fsnal
 
@@ -11544,7 +11419,7 @@ o2nal = - 2 msnal - 1/3 o1nal - 5/3 o1nal - 1 o2nal                    delta = 4
 o2nal = -4 + 2 fsnal - 1/3 o1nal + 1/3 o1nal + 1 o2nal                 delta = 4 (limits for Fe on M1)
 end_limits
 
-11                            | number of dependent endmembers 
+9                            | number of dependent endmembers 
 
 nfnal_d   = 1 nanal - 1 o1nal + 1 o2nal     | NM - FM + FF = NF
 cfnal_d   = 1 canal - 1 o1nal + 1 o2nal     | CM - FM + FF = CF
@@ -11555,8 +11430,8 @@ mfmnal_d  = 1 msnal - 1 o1nal + 1 o2nal     | MMM - FMM + FFM = FMM
 mmfnal_d  = 1 fsnal - 1 o2nal + 1 msnal     | FFF - FFM + MMM = MMF
 mffnal_d  = 1 fsnal - 1 o1nal + 1 msnal     | FFF - FMM + MMM = MFF
 fmfnal_d  = 1 fsnal - 1 o2nal + 1 o1nal     | FFF - FFM + FMM = FMF
-o1nal_d   = 1 o1nal
-o2nal_d   = 1 o2nal
+| o1nal_d   = 1 o1nal
+| o2nal_d   = 1 o2nal
 
 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0      | endmember flags
 
@@ -11567,7 +11442,7 @@ o2nal_d   = 1 o2nal
 0. 1.  .1  0              | range and resolution for X(manal) on site 2, imod = 0 -> cartesian subdivision
 0. 1.  .1  0              | range and resolution for X(fanal) on site 2, imod = 0 -> cartesian subdivision 
 0. 1.  .1  0              | range and resolution for X(msnal) on site 2, imod = 0 -> cartesian subdivision
-0. 1.  .1  0              | range and resolution for X(o2nal) on site 2, imod = 0 -> cartesian subdivision
+| 0. 1.  .1  0              | range and resolution for X(o2nal) on site 2, imod = 0 -> cartesian subdivision
 0. 1.  .1  0              | range and resolution for X(mfsnal) on site 2, imod = 0 -> cartesian subdivision 
 
 begin_excess_function
