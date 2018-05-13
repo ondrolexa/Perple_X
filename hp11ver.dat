@@ -175,7 +175,7 @@ zrg  = 1 gr + 3 zrc - 6 q       | Zr garnet endmember
 zrru = 1 bdy                    | Zr rutile endmember
        52.84e3 -0.01829e3 -0.074
 
-                                | Make definitions for White et al. (JMG 32:261-286, 2014) models
+	                            | Make definitions for White et al. (JMG 32:261-286, 2014) models
 f3clin = 1 clin - 1/2 gr + 1/2 andr
        DQF(J/mol) = 2d3 0 0  
 kho1 = 1 py - 1 gr + 1 andr
@@ -226,7 +226,7 @@ cren  = 1 mgts + 1 kos - 1 jd
        DQF(J/mol) = 3d3 
 oen   = 1 mgts + 1 acm - 1 jd
        DQF(J/mol) = -15d3 + 0.15 * p_bar
-odi  = 1 di
+odijh = 1 di
        DQF(J/mol) = -0.1d3 2.11 0.005
                                   | Make definitions for Jennings and Holland, J Pet, 56:869-892, 2015 melt
 qjL = 2 qL
@@ -245,31 +245,7 @@ hmjL = 0.5 hemL
        DQF(J/mol) = 0       +  0.20 * p_bar  
 ekjL = 0.5 eskL
        DQF(J/mol) = 21d3     
-                                  | Make definitions for Holland et al., 2013; dx.doi.org/10.1093/petrology/egt035
-                                  | mantle mineralogical model.
-nacfb = 1 nacf
-       DQF(J/mol) = -9000 0 0
-mfpv = 1 fpv
-       DQF(J/mol) = -9500 0 0
-mcpv = 1 cpv
-       DQF(J/mol) = 60000 0 0
-mnpv = 1 npv
-       DQF(J/mol) = 16000 0 0
-cmpv = 1 mpv
-       DQF(J/mol) = 35000 0 0
-cfpv = 1 fpv
-       DQF(J/mol) = 24000 0 0
-capv = 1 apv
-       DQF(J/mol) = 45000 0 0
-cnpv = 1 npv
-       DQF(J/mol) = 25000 0 0
-fcor = 1 mcor + 1 fak - 1 mak   | FeSi corundum 
-       DQF(J/mol) = -15d3 0 0
-hodi  = 1 di
-       DQF(J/mol) = -100 + 0.211 * T_K + 0.005 * P_bar
-hmgts  = 1 mgts + 1 hen - 1 en
-       DQF(J/mol) = -1d3 0 0
-
+                                  
 end_makes 
 
 tc-ds61.txt produced at 8.42 on Sun 13 Nov,2011 (sigfit =   1.038)
@@ -2373,4 +2349,5 @@ G0 = -1263107 S0 = 109.5 V0 = 3.169
 c1 = 138.9 c2 = .5081E-2 c3 = -1288800 c5 = -463.7  
 b1 = .24E-4 b5 = 375.2999 b6 = 1700000 b7 = -.49E-5 b8 = 8.3  
 end
+
 

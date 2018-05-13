@@ -5,9 +5,6 @@ c Copyright (c) 1998 by James A. D. Connolly, Institute for Mineralogy
 c & Petrography, Swiss Federal Insitute of Technology, CH-8092 Zurich,
 c SWITZERLAND. All rights reserved.
 
-c compiling with include statements causes run-time crash with Intel 
-c compiler optimized code.
-    
 c      include 'nlib.f'
 c      include 'clib.f'
 c      include 'resub.f'
@@ -15,7 +12,7 @@ c      include 'rlib.f'
 c      include 'tlib.f'
 c      include 'flib.f'
 
-      program convex        
+      program vertx        
 c----------------------------------------------------------------------
 c                       ************************
 c                       *                      *
@@ -86,24 +83,14 @@ c-----------------------------------------------------------------------
       integer jtest,jpot
       common/ debug /jtest,jpot
 
-      integer ipoint,kphct,imyn
-      common/ cst60 /ipoint,kphct,imyn
-
-      integer icomp,istct,iphct,icp
-      common/ cst6  /icomp,istct,iphct,icp
-
-      integer jfct,jmct,jprct,jmuct
-      common/ cst307 /jfct,jmct,jprct,jmuct
-
       save err,first,output,pots
       data err,output,first/.false.,.false.,.true./
-c DEBUG
-      integer jcount
-      logical switch
-      common/ debug1 /jcount(10),switch(10)
 
       integer iam
       common/ cst4 /iam
+
+      logical homo
+      common/ homo / homo
 c----------------------------------------------------------------------- 
 c                                 iam is a flag indicating the Perple_X program
 c                                    iam = 1  - vertex
@@ -116,21 +103,19 @@ c                                    iam = 7  - pssect
 c                                    iam = 8  - psvdraw
 c                                    iam = 9  - actcor
 c                                    iam = 10 - rewrite 
-c                                    iam = 11 - fluids
+c                                    iam = 11 - cohsrk
+c                                    iam = 12 - species
 c                                    iam = 13 - unsplt (global)
 c                                    iam = 14 - unsplt (local)
       iam = 1
+      homo = .false. 
 c                                 version info
-      call vrsion (6)
+      call vrsion
 c                                 elastic modulii flag
       kmod = 0 
 c                                 this do loop is a cheap strategy to automate
 c                                 "auto_refine"
       do
-c DEBUG 
-         jcount(1) = 0
-         jcount(3) = 0 
-         jcount(4) = 0
 c                                 -------------------------------------
 c                                 open statements for units n1-n6 and n9
 c                                 are in subroutine input1
@@ -191,11 +176,9 @@ c                                 calculate composition phase diagrams
 c                                 calculations and remaining output
             call chmcal (output)
 
-         else if (icopt.eq.1.or.icopt.eq.3) then                     
+         else if (icopt.eq.1.or.icopt.eq.3) then                            
 c                                 phase diagram projection or mixed variable
 c                                 diagram 
-            if (jmct.gt.0) istct = kphct + 1
-
             call newhld (output)
 
          else if (icopt.eq.4) then 
@@ -203,17 +186,24 @@ c                                 generate pseudo-compound file
             call swash 
 
             exit 
+ 
+         else if (icopt.eq.5) then 
+c                                 optimization on a 2-d grid.
+            call wav2d1 (output)
+
+         else if (icopt.eq.7) then 
+c                                 fractionation on a 1-d path.
+            call frac1d (output)
 
          else if (icopt.eq.8) then 
 c                                 a g-x data output format for manual optimization
             call gwash 
 
             exit 
- 
-         else if (icopt.ge.5.and.icopt.le.9) then 
 
-            call error (72,0d0,0,'you must run VERTEX for this type '//
-     *                           'of calculation')
+         else if (icopt.eq.9) then 
+c                                 fractionation on a 2-d path (space-time) 
+            call frac2d (output)
 
          else      
 c                                 disabled stability field calculation
@@ -262,6 +252,442 @@ c                              computing chemography or mixed-var.
       end if 
 c                              title page for print file:
       if (io3.ne.1) call outtit
+
+      end 
+
+      subroutine frac1d (output)
+c-----------------------------------------------------------------------
+c a main program template to illustrate how to call the minimization 
+c procedure. the example here is 1d fractionation.
+c-----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      logical output
+
+      integer i,j,idead,ier
+
+      character y*1
+
+      integer npt,jdv
+      logical fulrnk
+      double precision cptot,ctotal
+      common/ cst78 /cptot(k5),ctotal,jdv(k19),npt,fulrnk
+
+      character cname*5
+      common/ csta4 /cname(k5)
+
+      character*8 xname, vname
+      common/ csta2 /xname(k5),vname(l2)
+
+      integer icomp,istct,iphct,icp
+      common/ cst6  /icomp,istct,iphct,icp
+
+      character*100 prject,tfname
+      common/ cst228 /prject,tfname
+
+      character*100 cfname
+      common/ cst227 /cfname
+
+      double precision v,tr,pr,r,ps
+      common/ cst5  /v(l2),tr,pr,r,ps
+
+      integer io3,io4,io9
+      common / cst41 /io3,io4,io9
+
+      logical fileio
+      integer ncol, nrow
+      common/ cst226 /ncol,nrow,fileio
+
+      double precision dcomp
+      common/ frct2 /dcomp(k5)
+
+      double precision a,b,c
+      common/ cst313 /a(k5,k1),b(k5),c(k1)
+
+      integer ipot,jv,iv
+      common/ cst24 /ipot,jv(l2),iv(l2)
+
+      integer jbulk
+      double precision cblk
+      common/ cst300 /cblk(k5),jbulk
+
+      integer jlow,jlev,loopx,loopy,jinc
+      common/ cst312 /jlow,jlev,loopx,loopy,jinc
+
+      integer idasls,iavar,iasct,ias
+      common/ cst75  /idasls(k5,k3),iavar(3,k3),iasct,ias
+
+      integer iap,ibulk
+      common/ cst74 /iap(k2),ibulk
+
+      integer ifrct,ifr
+      logical gone
+      common/ frct1 /ifrct,ifr(k23),gone(k5)
+c-----------------------------------------------------------------------
+
+      iasct = 0
+      ibulk = 0  
+
+      loopy = jlow
+c                                 get phases to be fractionated
+      call frname 
+c                                 call initlp to initialize arrays 
+c                                 for optimization.
+      call initlp 
+c                                 two cases fileio: input from
+c                                 file, else analytical path function
+      if (fileio) then 
+
+         open (n8,file=cfname,status='old',iostat=ier)
+
+         if (ier.ne.0) call error (6,v(1),i,cfname)
+
+         j = 0 
+
+         do 
+
+            read (n8,*,iostat=ier) (v(jv(i)), i = 1, ipot)
+            if (ier.ne.0) exit
+
+            j = j + 1
+
+            ctotal = 0d0
+c                                 get total moles to compute mole fractions             
+            do i = 1, icp
+               ctotal = ctotal + cblk(i)
+            end do
+
+            do i = 1, icp 
+               b(i) = cblk(i)/ctotal
+            end do
+c                                 lpopt does the minimization and outputs
+c                                 the results to the print file.
+            call lpopt (1,j,idead,output)
+c                                 fractionate the composition:
+            if (idead.eq.0) call fractr (output)
+
+         end do 
+
+         close (n8)
+
+         loopy = j 
+
+      else
+c                                 initialize sectioning variables
+         call setvar 
+c                                 loopx = 99 indicates interactive
+c                                 mode, otherwise traverse on  
+         if (loopx.eq.99) then 
+
+            do 
+
+               write (*,1070) (vname(jv(i)), i = 1, ipot)
+               read (*,*) (v(jv(i)), i = 1, ipot)
+               if (v(jv(1)).eq.0d0) exit
+c                                 the systems molar composition is in 
+c                                 the array cblk.
+               ctotal = 0d0
+c                                 get total moles to compute mole fractions             
+               do i = 1, icp
+                  ctotal = ctotal + cblk(i)
+               end do
+
+               do i = 1, icp 
+                  b(i) = cblk(i)/ctotal
+               end do
+c                                 lpopt does the minimization and outputs
+c                                 the results to the print file.
+               call lpopt (1,j,idead,output)
+
+               write (*,1000)
+               do i = 1, jbulk
+                  write (*,1010) cname(i), cblk(i)
+               end do 
+c                                 the bulk composition can be modified here, 
+c                                 e.g., to add back previously fractionated
+c                                 phases.
+               write (*,1060) 
+               read (*,1050) y
+               if (y.eq.'y'.or.y.eq.'Y') then 
+                  write (*,1020) 
+                  read (*,*) (dcomp(i), i = 1, jbulk)
+                  do i = 1, jbulk
+                     cblk(i) = cblk(i) + dcomp(i)
+                  end do 
+               end if 
+
+            end do
+
+         else
+c                                 automated mode:
+            do j = 1, loopy
+
+               ctotal = 0d0
+c                                 get total moles to compute mole fractions             
+               do i = 1, icp
+                  ctotal = ctotal + cblk(i)
+               end do
+
+               do i = 1, icp 
+                  b(i) = cblk(i)/ctotal
+               end do
+
+               call setvr0 (j,j)  
+c                                 lpopt does the minimization and outputs
+c                                 the results to the print file.
+               call lpopt (1,j,idead,output)
+c                                 fractionate the composition:
+               if (idead.eq.0) then
+                  call fractr (output)
+               else
+                  write (*,1030) (vname(jv(i)),v(jv(i)), i = 1, ipot)
+               end if 
+            end do 
+
+         end if 
+      end if 
+c                                 output 
+      if (output) then 
+
+        if (io4.eq.0) call outgrd (1,loopy,1) 
+c                                 close fractionation data files
+         do i = 1, ifrct
+            close (n0+i)
+         end do
+
+         close (n0)
+
+      end if 
+
+1000  format (/,'Composition is now:',/)
+1010  format (1x,a,1x,g14.6)
+1020  format (/,'Enter molar amounts of the components to be added ',
+     *        '(ordered as above:')
+1030  format (/,'optimization failed at:',//,5(1x,a8,'=',g12.6))
+1050  format (a)
+1060  format (/,'Modify composition (y/n)?')
+1070  format (/,'Enter (zeroes to quit) ',7(a,1x))
+
+      end 
+
+      subroutine frac2d (output)
+c-----------------------------------------------------------------------
+c a subprogram template to illustrate how to do 2-d (space-time) 
+c fractionation. 
+
+c modified oct 15, 2005 for more rational input and variable gradients.
+c modified oct 19, 2011 for file input
+c-----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer maxbox,maxlay
+
+      parameter (maxbox=1760,maxlay=6) 
+
+      integer i,j,k,idead
+
+      double precision gblk(maxbox,k5),dz,p0
+
+      logical output
+
+      integer npt,jdv
+      logical fulrnk
+      double precision cptot,ctotal
+      common/ cst78 /cptot(k5),ctotal,jdv(k19),npt,fulrnk
+
+      integer icomp,istct,iphct,icp
+      common/ cst6  /icomp,istct,iphct,icp
+
+      integer io3,io4,io9
+      common / cst41 /io3,io4,io9
+
+      double precision a,b,c
+      common/ cst313 /a(k5,k1),b(k5),c(k1)
+
+      double precision dcomp
+      common/ frct2 /dcomp(k5)
+
+      integer idasls,iavar,iasct,ias
+      common/ cst75  /idasls(k5,k3),iavar(3,k3),iasct,ias
+
+      integer ipot,jv,iv
+      common/ cst24 /ipot,jv(l2),iv(l2)
+
+      double precision vmax,vmin,dv
+      common/ cst9  /vmax(l2),vmin(l2),dv(l2)  
+
+      integer jbulk
+      double precision cblk
+      common/ cst300 /cblk(k5),jbulk
+
+      integer jlow,jlev,loopx,loopy,jinc
+      common/ cst312 /jlow,jlev,loopx,loopy,jinc 
+
+      integer iap,ibulk
+      common/ cst74 /iap(k2),ibulk
+
+      integer gloopy,ilay,irep
+      double precision a0,a1,a2,a3,b0,b1,b2,b3,c0,c1,c2,c3,dv1dz,
+     *               zbox,iblk
+      common/ cst66 /a0,a1,a2,a3,b0,b1,b2,b3,c0,c1,c2,c3,dv1dz,
+     *               zbox,iblk(maxlay,k5),gloopy,ilay,irep(maxlay)
+
+      logical fileio
+      integer ncol, nrow
+      common/ cst226 /ncol,nrow,fileio
+
+      logical first
+
+      save first
+
+      data first/.true./
+c-----------------------------------------------------------------------
+c                                 initialization
+      iasct = 0 
+      ibulk = 0 
+c                                 set the number of independent variables
+c                                 to 1 (the independent path variable must
+c                                 be variable jv(1), and the dependent path
+c                                 variable must be jv(2), the path variables
+c                                 can only be pressure and temperature
+      ipot = 1
+
+      if (first) then 
+c                                 set first to prevent re-reading of the 
+c                                 input in auto_refine                                
+         first = .false.
+c                                 get the phase to be fractionated
+         call frname 
+c                                 check for consistent input if fileio
+         if (fileio) then 
+
+            if (jlow.ne.nrow) then 
+               write (*,'(2(/,a,i4,a,a))') 
+     *         '** error ** the number of columns (',nrow,
+     *         ') specified in the coordinate file must equal the',
+     *         'number of z increments (',jlow,
+     *        ')specified in the aux file.'
+              
+              stop 
+      
+            end if 
+
+         else 
+c                                 jlow set by 1dpath keyword in perplex_option.dat
+            nrow = jlow
+
+         end if 
+
+      else 
+c                                 NOTE if not fileio, then jlow must not change
+         if (.not.fileio)  nrow = jlow
+
+      end if        
+c                                 check resolution dependent dimensions
+      if (nrow*ncol.gt.k2) then
+         write (*,*) ' parameter k2 must be >= ncol*nrow'
+         write (*,*) ' increase parameter k2 for routine DUMMY1'
+         write (*,*) ' or increase box size (zbox) or decrease'
+         write (*,*) ' number of path increments (nrow) or try'
+         write (*,*) ' the large parameter version of VERTEX'
+         write (*,*) ' k2 = ',k2 
+         write (*,*) ' ncol * nrow = ',ncol*nrow
+         stop
+      end if 
+
+      ncol = 0 
+
+      do i = 1, ilay
+
+         do j = 1, irep(i)
+
+            ncol = ncol + 1
+
+            do k = 1, icp 
+               gblk(ncol,k) = iblk(i,k)
+            end do 
+
+         end do
+
+      end do
+c                                 call initlp to initialize arrays 
+c                                 for optimization.
+      call initlp 
+c                                 initialize path variables
+      call setvar 
+
+      dv(jv(1)) = (vmax(jv(1)) - vmin(jv(1)))/(nrow-1)
+c                                 nrow is the number of steps along the subduction
+c                                 path:
+      do j = 1, nrow
+c                                 j loop varies the pressure at the top of the 
+c                                 column (p0), set p0:
+         p0 = vmin(1) + (j-1)*dv(1)
+c                                 for each box in our column compute phase 
+c                                 relations
+         do k = 1, ncol
+c                                 k-loop varies depth within the column (dz)
+            dz = (ncol - k) * zbox  
+c                                 set the p-t conditions
+            call fr2dpt (p0,dz)
+c                                 now put the bulk composition from the global
+c                                 array into the local array and get the total
+c                                 number of moles (ctotal)
+            ctotal = 0d0
+c                                 get total moles to compute mole fractions             
+            do i = 1, icp
+               dcomp(i) = 0 
+               cblk(i) = gblk(k,i)
+               ctotal = ctotal + cblk(i)
+            end do
+
+            do i = 1, icp 
+               b(i) = cblk(i)/ctotal
+            end do
+c                                 lpopt does the minimization and outputs
+c                                 the results to the print file.
+            if (io3.eq.0) write (n3,*) 'step ',j,' on path, box ',k
+
+            call lpopt (j,k,idead,output)
+
+            call fractr (output)
+c                                 at this point we've computed the stable
+c                                 assemblage at each point in our column
+c                                 and could do mass transfer, etc etc 
+c                                 here we'll simply fractionate the fluid 
+c                                 phase 
+            do i = 1, icp 
+c                                 subtract the fluid from the current composition
+               gblk(k,i) = gblk(k,i) - dcomp(i) 
+               if (gblk(k,i).lt.0d0) then
+                  write (*,*) 'negative - bulk at k,i',k,i,gblk(k,i)
+                   gblk(k,i) = 0d0
+               end if 
+c                                 and add it to the overlying composition
+               if (k.lt.ncol) then
+                   gblk(k+1,i) = gblk(k+1,i) + dcomp(i) 
+                   if (gblk(k,i).lt.0d0) then
+                      write (*,*) 'bulk < 0, at k,i',k,i,gblk(k,i)
+                      gblk(k,i) = 0d0
+                   end if 
+               end if 
+            end do
+c                                 reset initialize top layer if gloopy = 999
+            if (gloopy.eq.999.and.k.gt.ncol-irep(ilay)) then 
+               do i = 1, icp
+                  gblk(k,i) = iblk(ilay,i)
+               end do 
+            end if 
+c                                 end of the k index loop
+         end do 
+c                                 end of j index loop
+      end do 
+
+      if (output.and.io4.eq.0) call outgrd (nrow,ncol,1) 
 
       end 
 
@@ -324,11 +750,11 @@ c-------------------------------------------------------------------
 
       integer i,j
 
-      integer iasmbl
-      common/ cst27  /iasmbl(j9)
+      integer jasmbl,iasmbl
+      common/ cst27  /jasmbl(j9),iasmbl(j9)
 
-      integer ipoint,kphct,imyn
-      common/ cst60 /ipoint,kphct,imyn
+      integer ipoint,imyn
+      common/ cst60 /ipoint,imyn
 
       character*8 vname,xname
       common/ csta2  /xname(k5),vname(l2)
@@ -336,8 +762,8 @@ c-------------------------------------------------------------------
       character*8 names
       common/ cst8 /names(k1)
 
-      integer iff,idss,ifug
-      common/ cst10  /iff(2),idss(h5),ifug
+      integer iff,idss,ifug,ifyn,isyn
+      common/ cst10  /iff(2),idss(h5),ifug,ifyn,isyn
 
       integer idcf,icfct
       common/ cst96 /idcf(k5,j9),icfct
@@ -387,7 +813,7 @@ c                             output quaternary chemographies:
       end if 
 c                             output phases consistent with component
 c                             saturation constraints:
-      if (isat.eq.0) goto 9000
+      if (isyn.eq.1) goto 9000
 
       write (n3,6000)
       write (n3,2030) (names(idss(i)), i = 1, isat)
@@ -440,8 +866,8 @@ c-----------------------------------------------------------------------
       double precision ctot
       common/ cst3   /ctot(k1)
 
-      integer ipoint,kphct,imyn
-      common/ cst60 /ipoint,kphct,imyn
+      integer ipoint,imyn
+      common/ cst60 /ipoint,imyn
 
       character*8 vname,xname
       common/ csta2  /xname(k5),vname(l2)
@@ -449,11 +875,14 @@ c-----------------------------------------------------------------------
       character*8 names
       common/ cst8 /names(k1)
 
-      character fname*10, aname*6, lname*22
-      common/ csta7 /fname(h9),aname(h9),lname(h9)
+      character fname*10
+      common/ csta7 /fname(h9)
 
       double precision cp
       common/ cst12 /cp(k5,k1)
+
+      integer iff,idss,ifug,ifyn,isyn
+      common/ cst10  /iff(2),idss(h5),ifug,ifyn,isyn
 
       integer isoct
       common/ cst79 /isoct
@@ -466,12 +895,6 @@ c-----------------------------------------------------------------------
 
       integer ikp
       common/ cst61 /ikp(k1)
-
-      integer ifct,idfl
-      common/ cst208 /ifct,idfl
-
-      integer ids,isct,icp1,isat,io2
-      common/ cst40 /ids(h5,h6),isct(h5),icp1,isat,io2
 c-----------------------------------------------------------------------
 c                             number of components, phase counters,
 c                             assemblage counter, fluid saturation flag,
@@ -479,7 +902,7 @@ c                             component saturation flag, ipot = number
 c                             of independent potential variables:
       write (n4,*) icopt
 c
-      write (n4,*) icp,istct,iphct,ipoint,ifct,isat,ipot,isoct
+      write (n4,*) icp,istct,iphct,ipoint,ifyn,isyn,ipot,isoct
 c                             write graphics code variable names:
       write (n4,'(a)') (vname(jv(i)), i = 1, ipot)
 c                             write a blank record as left caption
@@ -504,9 +927,12 @@ c-----------------------------------------------------------------------
       include 'perplex_parameters.h'
 
       integer i,j
+ 
+      integer iff,idss,ifug,ifyn,isyn
+      common/ cst10  /iff(2),idss(h5),ifug,ifyn,isyn
 
-      integer iasmbl
-      common/ cst27  /iasmbl(j9)
+      integer jasmbl,iasmbl
+      common/ cst27  /jasmbl(j9),iasmbl(j9)
 
       integer idcf,icfct
       common/ cst96 /idcf(k5,j9),icfct
@@ -522,9 +948,6 @@ c-----------------------------------------------------------------------
 
       integer ipot,jv,iv
       common/ cst24 /ipot,jv(l2),iv(l2)
-
-      integer iff,idss,ifug
-      common/ cst10  /iff(2),idss(h5),ifug
 c-----------------------------------------------------------------------
 c                             stable configurations, phases are
 c                             labelled by the index 'i' in the
@@ -543,7 +966,7 @@ c                             binary is a special case (1-d)
          write (n4,*) (idcf(1,j), j = 1, icfct),idcf(2,icfct)
 
       else if (icp.eq.1) then 
-         goto 10
+         goto 99
       else 
 c                             higher order:
          write (n4,*) ((idcf(j,i), j = 1, icp), i = 1, icfct)
@@ -551,12 +974,12 @@ c                             higher order:
 c                             write assemblage flags
       if (icp.gt.2) write (n4,*) (iasmbl(j), j = 1, icfct)
 
-10    if (isat.eq.0) return
+      if (isyn.eq.1) goto 99
 
       write (n4,*) isat
       write (n4,*) (idss(i), i = 1, isat)
 
-      end
+99    end
  
       subroutine prtpot
 c---------------------------------------------------------------------
@@ -657,8 +1080,8 @@ c-----------------------------------------------------------------------
       common/ cst23 /a(k8,k8),b(k8),ipvt(k8),idv(k8),
      *               iophi,idphi,iiphi,iflg1
 
-      integer iff,idss,ifug
-      common/ cst10  /iff(2),idss(h5),ifug
+      integer iff,idss,ifug,ifyn,isyn
+      common/ cst10  /iff(2),idss(h5),ifug,ifyn,isyn
 
       integer irct,ird
       double precision vn
@@ -737,7 +1160,7 @@ c                                 constraints:
          end if
 c                                 write saturated and buffered
 c                                 component names:
-         if (isat.gt.0) write (n3,1200) (cname(i+icp), i= 1, isat)
+         if (isyn.eq.0) write (n3,1200) (cname(i+icp), i= 1, isat)
 c                                 write dependent extensities blurb
          write (n3,1210)
          write (n3,1230) vname(ivfl)
@@ -746,11 +1169,8 @@ c                                 write dependent extensities blurb
 
          if (io3p.eq.1) then
             write (n3,1240)
-         else 
-            write (n3,1250)
+            write (n3,1160)
          end if
-
-         write (n3,1160)
 
       end if 
 c                                 initialize start parms:
@@ -878,11 +1298,9 @@ c                                 summarize print and graphics output
      *        ' assemblages remaining to be tested.')
 1230  format (/,'Reaction equations are written such that the high ',
      *          a,/,'assemblage is on the right of the = sign',/)
-1240  format (//,'To list equilibrium conditions set short_print ',
-     *           'to off in perplex_option.dat.',//)
-1250  format (//,'To suppress equilibrium coordinates set short_print ',
-     *           'to on in perplex_option.dat.',//)
-
+1240  format (//,'You have chosen the short form print file. ',/,
+     *           'If you want equilibrium coordinates output select',
+     *           /,'the long form when you run BUILD.',//)
       end
 
       subroutine gwash 
@@ -902,8 +1320,8 @@ c-----------------------------------------------------------------------
       character*8 names
       common/ cst8 /names(k1)
 
-      character fname*10, aname*6, lname*22
-      common/ csta7 /fname(h9),aname(h9),lname(h9)
+      character fname*10
+      common/ csta7 /fname(h9)
 
       double precision g
       common/ cst2 /g(k1)
@@ -991,8 +1409,8 @@ c-----------------------------------------------------------------------
       character*8 names
       common/ cst8 /names(k1)
 
-      integer ipoint,kphct,imyn
-      common/ cst60 /ipoint,kphct,imyn
+      integer ipoint,imyn
+      common/ cst60 /ipoint,imyn
 
       integer ic
       common/ cst42 /ic(k0)
@@ -1007,6 +1425,9 @@ c-----------------------------------------------------------------------
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp  
 
+      integer ifp
+      common/ cxt32 /ifp(k1)
+
       integer ixp
       double precision sxs,exces
       common/ cst304 /sxs(k13),exces(m3,k1),ixp(k1)
@@ -1015,10 +1436,7 @@ c-----------------------------------------------------------------------
       common/ cst61 /ikp(k1)
 
       integer jend
-      common/ cxt23 /jend(h9,m4)
-
-      integer eos
-      common/ cst303 /eos(k10)
+      common/ cxt23 /jend(h9,k12)
 c----------------------------------------------------------------------
       open (n2,file='swash.dat')
 
@@ -1027,6 +1445,8 @@ c----------------------------------------------------------------------
       iwrn48 = 0
       
       do 10 jd = ipoint + 1, iphct
+c                              skip fluid cpds
+         if (ifp(jd).eq.1) iwrn48 = 1
 c                              create mock-entry iphct + 1 for output
 c                              initialize parameters
          id = k10
@@ -1036,7 +1456,6 @@ c                              initialize parameters
          jdis = 0
          klam = 0
          names(k10) = names(jd)  
-         eos(k10) = eos(jd)
  
          do i = 1, k4
             thermo(i,k10) = 0d0
@@ -1126,20 +1545,13 @@ c                                 test for mughnahan EoS
 
          call unlam (tm,id)
 
-         call unver (
-c                                 g0, s0, v0
-     *               thermo(1,k10),thermo(2,k10),thermo(3,k10),
-c                                 c1-c8
-     *               thermo(4,k10),thermo(5,k10),thermo(6,k10),
-     *               thermo(7,k10),thermo(8,k10),
-     *               thermo(9,k10),thermo(10,k10),thermo(24,k10),
-c                                 b1-b11 
-     *               thermo(11,k10),thermo(12,k10),thermo(13,k10),
-     *               thermo(14,k10),thermo(15,k10),thermo(16,k10),
-     *               thermo(17,k10),thermo(18,k10),thermo(19,k10),
-     *               thermo(20,k10),thermo(21,k10),
-c                                 ref-stuff
-     *               tr,pr,eos(k10))
+c         call unver (thermo(1,k10),thermo(2,k10),thermo(3,k10),
+c     *               thermo(4,k10),thermo(5,k10),thermo(6,k10),
+c     *               thermo(7,k10),thermo(8,k10),
+c     *               thermo(9,k10),thermo(10,k10),thermo(11,k10),
+c     *               thermo(12,k10),thermo(14,k10),
+c     *               thermo(15,k10),thermo(16,k10),thermo(17,k10),
+c     *               thermo(18,k10),tr,pr)
 c                                 output the data
 c                                 this needs to be corrected so
 c                                 that the output data is in thermo
@@ -1224,8 +1636,6 @@ c-----------------------------------------------------------------------
 
       integer i,j,ier
 
-      logical bad
-
       double precision delt,dtol,utol,ptol,gphi,dg
 
       common/ cst87 /delt(l2),dtol,utol,ptol
@@ -1257,16 +1667,12 @@ c
 c                                 test phases against the
 c                                 assemblage idv
       do 20 i = istct, iphct
-
          gphi = 0d0
-
          do j = 1, icp
             gphi = gphi + cp(j,i) * b(j)
          end do 
-
          dg = g(i) - gphi
-
-         if (dg.gt.dtol) cycle
+         if (dg.gt.dtol) goto 20
 c                                check that a phase is not metastable
 c                                with respect to itself, this
 c                                could be remedied by changing the 
@@ -1274,12 +1680,6 @@ c                                value of dtol.
          do j = 1, icp
             if (idv(j).eq.i) goto 20
          end do 
-c                                do not test against null phases unless
-c                                the null phase contains a mobile component,
-c                                could have an array to flag this, but hopefully
-c                                this is unusual.
-         call nullck (i,bad)
-         if (bad) cycle
 c                                assemblage is metastable with respect
 c                                to phase idphi.
          iflag = iflag + 1
@@ -1288,59 +1688,10 @@ c                                this would force a refinement
 c                                of condtions by the calling
 c                                routine. since utol << dtol
 c        if (dabs(dg).gt.utol) iflag = iflag + 1
-         if (iflag.gt.1) exit
-
+         if (iflag.gt.1) goto 99
 20    continue
 
 99    end
-
-      subroutine nullck (i,bad)
-c-----------------------------------------------------------------------
-c eliminate null phases from thermodynamic stability tests (schk, lchk, 
-c nschk) unless they contain mobile components. could have an array to flag 
-c this, but hopefully it's unusual.
-c-----------------------------------------------------------------------
-      implicit none
- 
-      include 'perplex_parameters.h'
-
-      integer i,j
-
-      logical bad
-
-      double precision cp
-      common/ cst12 /cp(k5,k1)
-
-      double precision ctot
-      common/ cst3   /ctot(k1)
-
-      integer jfct,jmct,jprct,jmuct
-      common/ cst307 /jfct,jmct,jprct,jmuct
-c-----------------------------------------------------------------------
-c                                do not test against null phases unless
-c                                the null phase contains a mobile component,
-c                                could have an array to flag this, but hopefully
-c                                this is unusual.
-      bad = .false.
-
-      if (ctot(i).eq.0d0) then
-
-         bad = .true.
-
-         if (jmct.eq.0) return
-
-         do j = 1, jmct
-
-            if (cp(jprct+j,i).ne.0d0) then 
-               bad = .false.
-               return
-            end if 
-
-         end do
-
-      end if 
-
-      end 
 
       subroutine assir (bad)
 c----------------------------------------------------------------------
@@ -1582,8 +1933,8 @@ c-----------------------------------------------------------------------
       double precision cp
       common/ cst12 /cp(k5,k1)
 
-      integer iff,idss,ifug
-      common/ cst10  /iff(2),idss(h5),ifug
+      integer iff,idss,ifug,ifyn,isyn
+      common/ cst10  /iff(2),idss(h5),ifug,ifyn,isyn
 
       integer idr,ivct
       double precision vnu
@@ -1639,6 +1990,8 @@ c                                 eliminate phases with vnu= 0
          end if 
 
       end do 
+
+      if (isyn.eq.1) goto 40
 c                                determine stoichiometric coefficients
 c                                of saturated components:
 c                                (these aren't used for anything real)
@@ -1648,14 +2001,15 @@ c                                (these aren't used for anything real)
          do i = 1, ivct
             vus(j) = vus(j) + vnu(i) * cp(icp+j,idr(i))
          end do 
-         if (vus(j).ne.0d0) isr = 0
+c                                flag isr is not used.
+         if (vus(j).ne.0d0) isr = 0   
       end do 
 c                                ok, now vus has the total deltas
    
 c                                determine stoichiometric coefficients
 c                                of saturated phase components:
       iffr = 1
-      do j = 1, 2
+40    do j = 1, 2
          vuf(j) = 0d0
          if (iff(j).ne.0d0) then 
             do i = 1, ivct
@@ -1689,8 +2043,8 @@ c----------------------------------------------------------------------------
       integer hcp,id
       common/ cst52 /hcp,id(k7)
 
-      integer ipoint,kphct,imyn
-      common/ cst60 /ipoint,kphct,imyn
+      integer ipoint,imyn
+      common/ cst60 /ipoint,imyn
 
       double precision cp
       common/ cst12 /cp(k5,k1)
@@ -1865,8 +2219,8 @@ c-----------------------------------------------------------------------
 
       logical solvs1
  
-      integer iasmbl
-      common/ cst27 /iasmbl(j9)
+      integer jasmbl,iasmbl
+      common/ cst27 /jasmbl(j9),iasmbl(j9)
 
       integer ht,id
       common/ cst52 /ht,id(k7)
@@ -1899,7 +2253,7 @@ c                             matches earlier assemblage, return.
 c                             unique (and bounding) assemblage:   
       icfct = icfct + 1
       if (icfct.gt.j9) call error (204,0d0,j9,'ASSDC')
-
+      jasmbl(icfct) = 0
       icase = 1
 c                             assign the assemblage:
       isol = 0  
@@ -1946,9 +2300,8 @@ c                                 local variables:
 c                                 -------------------------------------
 c                                 global variables:
 c                                 working arrays
-      double precision z, pa, p0a, x, w, y, wl
-      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
-     *              wl(m17,m18)
+      double precision z, pa, p0a, x, w, y
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1)
 c                                 x coordinate description
       integer istg, ispg, imlt, imdg
       double precision xmng, xmxg, xncg, xmno, xmxo, reachg
@@ -1961,14 +2314,14 @@ c                                 solution limits and stability
       common/ cxt11 /xlo(m4,mst,h9),xhi(m4,mst,h9),stable(h9),limit(h9),
      *               relax(h9)
 
-      character fname*10, aname*6, lname*22
-      common/ csta7 /fname(h9),aname(h9),lname(h9)
+      character fname*10
+      common/ csta7 /fname(h9)
 
       integer ikp
       common/ cst61 /ikp(k1)
 
-      integer ipoint, imyn, kphct
-      common/ cst60 /ipoint,kphct,imyn
+      integer ipoint, imyn
+      common/ cst60 /ipoint,imyn
 c----------------------------------------------------------------------
       do k = 1, ntot
 
@@ -2195,11 +2548,8 @@ c-----------------------------------------------------------------------
 
       integer isec,icopt,ifull,imsg,io3p
       common/ cst103 /isec,icopt,ifull,imsg,io3p
-
-      integer io3,io4,io9
-      common / cst41 /io3,io4,io9
 c-----------------------------------------------------------------------
-      ivi = iovi
+      ivi = iovi                                                  
       ivd = iovd
       jflg = 1
       quit = .false.
@@ -2211,7 +2561,7 @@ c                                 singular concentration matrix
          quit = .true.
          return
       end if 
-
+         
 c                                 call newass to define new (pseudo-)
 c                                 divariant assemblages generated by
 c                                 the reaction defined by balanc:
@@ -2290,14 +2640,7 @@ c                                 follow the equilibrium
       jflg = 0
       call sfol1 (ivd,ivi,ier,div,ikwk,irend,output)
 c                                 sfol1 returns ier = 1
-      if (ier.eq.1.or.ier.eq.2) then 
-         goto 70
-      else if (ier.eq.3) then
-c                                 failed to locate the invariant 
-c                                 point.
-         iflag = 0 
-         goto 9999
-      end if 
+      if (ier.eq.1.or.ier.eq.2) goto 70
 
       ivi = iovi
       ivd = iovd
@@ -2352,13 +2695,15 @@ c                                 error in univeq:
       if (output) call outrxn (ipct,2)
       ibug(irct) = 1
 
-9999  iflg1= 0
+9999  iflg1= 0 
 
-      if (io3.eq.0.and.io3p.eq.0.and.jflg.eq.0) write (n3,1020) 
+      if (jflg.eq.1.or.io3p.eq.1) goto 999
+
+      write (n3,1020) 
       
 1020  format ('Network traced, resuming boundary search.',/)
 
-      end
+999   end
 
       subroutine delvar (dv,iflag,iflg1)
 c-----------------------------------------------------------------------
@@ -2423,10 +2768,7 @@ c-----------------------------------------------------------------------
      *               iophi,idphi,iiphi,iflg1
 
       integer icomp,istct,iphct,icp
-      common/ cst6  /icomp,istct,iphct,icp
-
-      integer jfct,jmct,jprct,jmuct
-      common/ cst307 /jfct,jmct,jprct,jmuct
+      common/ cst6  /icomp,istct,iphct,icp  
 
       double precision vmax,vmin,dv
       common/ cst9  /vmax(l2),vmin(l2),dv(l2)
@@ -2434,17 +2776,11 @@ c-----------------------------------------------------------------------
 c                                 initialization
       call gall 
       call asschk
-
-      if (iflag.ne.0.and.v(ivd).eq.vst.and.ist.eq.inow) then
-c                                 by allowing null phases it is possible that the initial
-c                                 assemblage is metastable (i.e., the system is supersaturated).
-         if (jmct.gt.0) write (*,1000) 
-c                                 change 90 to 20 to
+c                                 the goto 20 is a dummy to avoid
+c                                 compiler errors, change 90 to 20 to
 c                                 get backup search, ha ha
-         goto 90
+      if (iflag.ne.0.and.v(ivd).eq.vst.and.ist.eq.inow) goto 90
 
-      end if 
- 
       goto (10,20,20),iflag
 c                                 the assemblage is stable, return
       jer = 0
@@ -2515,15 +2851,7 @@ c                                 next traverse.
 c                                 write warning message:
 9000  write (n3,1010) ivd,dv(ivd),(names(idv(j)),j = 1, icp)
 90    jer = 2
-
-1000  format (/,'**warning ver099** FLIPIT: most probably the initial ',
-     *          'condition for this calculation',/,'is supersaturated ',
-     *          'with respect to a phase that consists entirely of ',/,
-     *          'mobile components. If this calculation is a function ',
-     *          'of fugacity/activity,',/,'then eliminate extraneous ',
-     *          'null phases; otherwise lower the independent chemical',
-     *        /,'potentials to obtain an undersaturated initial ',
-     *          'condition.',/)
+c                                 done:
 1010  format (/,'**warning ver045** FLIPIT: > 1 equilibrium',
      *          ' occurs within the',/,'minimum search increment for',
      *          ' variable: ',i1,', this often occurs as YCO2 => 1',
@@ -2559,15 +2887,15 @@ c-----------------------------------------------------------------------
       double precision vuf,vus
       common/ cst201 /vuf(2),vus(h5),iffr,isr
 
-      integer jfct,jmct,jprct,jmuct
-      common/ cst307 /jfct,jmct,jprct,jmuct
+      integer jfct,jmct,jprct
+      common/ cst307 /jfct,jmct,jprct
 
       integer jds,ifr
       double precision du,dv
       common/ cst21 /du(2),dv(2),jds(h5),ifr
 
-      integer iff,idss,ifug
-      common/ cst10  /iff(2),idss(h5),ifug
+      integer iff,idss,ifug,ifyn,isyn
+      common/ cst10  /iff(2),idss(h5),ifug,ifyn,isyn
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp  
@@ -2575,21 +2903,18 @@ c-----------------------------------------------------------------------
       integer ids,isct,icp1,isat,io2
       common/ cst40 /ids(h5,h6),isct(h5),icp1,isat,io2
 
-      integer ifct,idfl
-      common/ cst208 /ifct,idfl
-
       save exten 
 c                                 this is a bullshit trick and
 c                                 will cause errors of someone
 c                                 uses a function other than G.
       data exten/'-V(j/b)','S(j/k)'/
 c                                 composant stoichiometry:
-c----------------------------------------------------------------------
+ 
       do i = 1, isat 
          write (n3,1000) cname(icp+i),vus(i),names(jds(i))
       end do 
 c                                 fluid stoichiometry:
-      if (ifct.gt.0) then 
+      if (ifyn.eq.0) then 
          do i = 1, 2
             if (iff(i).ne.0) write (n3,1010) names(i),vuf(i)
          end do 
@@ -2643,8 +2968,8 @@ c-----------------------------------------------------------------------
       double precision vuf,vus
       common/ cst201 /vuf(2),vus(h5),iffr,isr
 
-      integer jfct,jmct,jprct,jmuct
-      common/ cst307 /jfct,jmct,jprct,jmuct
+      integer jfct,jmct,jprct
+      common/ cst307 /jfct,jmct,jprct
 
       double precision cp
       common/ cst12 /cp(k5,k1)
@@ -2656,8 +2981,8 @@ c-----------------------------------------------------------------------
       double precision du,dv
       common/ cst21 /du(2),dv(2),jds(h5),ifr
 
-      integer iff,idss,ifug
-      common/ cst10  /iff(2),idss(h5),ifug
+      integer iff,idss,ifug,ifyn,isyn
+      common/ cst10  /iff(2),idss(h5),ifug,ifyn,isyn
 
       integer idr,ivct
       double precision vnu
@@ -2810,8 +3135,11 @@ c-----------------------------------------------------------------------
       character*8 names
       common/ cst8 /names(k1)
 
-      character fname*10, aname*6, lname*22
-      common/ csta7 /fname(h9),aname(h9),lname(h9)
+      character fname*10
+      common/ csta7 /fname(h9)
+
+      integer iff,idss,ifug,ifyn,isyn
+      common/ cst10  /iff(2),idss(h5),ifug,ifyn,isyn
 
       integer ipot,jv,iv1,iv2,iv3,iv4,iv5
       common/ cst24 /ipot,jv(l2),iv1,iv2,iv3,iv4,iv5
@@ -2827,19 +3155,13 @@ c-----------------------------------------------------------------------
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp  
-
-      integer ifct,idfl
-      common/ cst208 /ifct,idfl
-
-      integer ids,isct,icp1,isat,io2
-      common/ cst40 /ids(h5,h6),isct(h5),icp1,isat,io2
 c-----------------------------------------------------------------------
 c                              value to be read as icopt
       write (n4,*) icopt
 c                              phase and solution count:
       write (n4,*) iphct, iso
 c                              component and volatile counters:
-      if (ifct.gt.0.or.isat.gt.0) then 
+      if (ifyn.eq.0.or.isyn.eq.0) then 
          write (n4,*) 1, icp
       else
          write (n4,*) 0, icp
@@ -2894,8 +3216,6 @@ c-----------------------------------------------------------------------
 
       double precision gproj, gphi
 
-      external gproj
-
       double precision g
       common/ cst2 /g(k1)
 
@@ -2913,17 +3233,15 @@ c-----------------------------------------------------------------------
       call uproj
 
       do i = 1, icp
-        b(i) = gproj (idv(i))
+        b(i) = gproj(idv(i))
       end do 
 
-      g(lphi) = gproj (lphi)
-
+      g(lphi) = gproj(lphi)
       lchkl = 0
 
       call subst (a,ipvt,icp,b,ier)
 
       gphi = 0d0
-
       do j = 1, icp
          gphi = gphi + cp(j,lphi) * b(j)
       end do
@@ -3120,29 +3438,23 @@ c                                 n4:
       end if 
 c                                 write ip names and locations to
 c                                 units n6 and n3.
-      if (ipct.gt.0.and.io3.eq.0) then
-
+      if (ipct.gt.0.and.io3.ne.1) then 
          write (n3,1050)
          write (n3,1030)
-
-         if (io3p.eq.0) then
-
+         if (io3p.ne.1) then 
             do j = 1, ipct
          
                call iptext (text,iend,j)
                write (n3,1080) j, ivarip(j), (text(i), i= 1, iend)
                write (n3,1020)
                write (n3,1040) (vname(jv(i)), vip(jv(i),j), i= 1, ipot)
-
             end do 
-
          end if 
-
       end if
 c                                 originally outier allowed output of multiple
 c                                 sections, the lines below would have to be 
 c                                 moved out to recover this functionality.
-      if (io3.eq.0.and.icopt.eq.1) then
+      if (io3.ne.1.and.icopt.eq.1) then
 
          write (n3,1160)
 c                                 output cumulative equilibrium lists
@@ -3207,18 +3519,17 @@ c                             write invariant reactions:
          j = ir(i)
 c                             the index on these two guys used to be j
 c                             must be wrong? if so why did it work 
-c                             before?
+c                             before? changed to i. you know sometimes
+c                             i'm so stupid, i just can't believe it.
          k = irv(j)
          l = ivarrx(j)
-
-         if (io3.eq.0) then
+         if (io3.ne.1) then 
 c                             output to print file:
             if (l.eq.1) then
                write (n3,1030) j, l, rxnstr(j)
             else
                write (n3,1040) j, l, rxnstr(j)
-            end if
-
+            end if 
             write (n3,1070) vname(iv1), vip(iv1,j), vname(iv2), 
      *                                  vip(iv2,j)
             write (n3,1160)
@@ -3276,6 +3587,8 @@ c----------------------------------------------------------------------
       integer ivarrx,ivarip,isudo,ivar
       common/ cst62 /ivarrx(k2),ivarip(k2),isudo,ivar
 c------------------------------------------------------------------------
+c                             printing to n4 is suppressed for the
+c                             erlanger system 
       jbug = 0
 
       do i = 1, irct
@@ -3291,7 +3604,7 @@ c------------------------------------------------------------------------
          write (*,1160)
       end if 
 
-      if (io3.eq.1) return
+      if (io3.eq.1) goto 99
 c                             invariant point lists:
       if (ipct.ne.0) then 
 c                             output print file heading:
@@ -3313,11 +3626,7 @@ c                              equilibria to units n3 and n4.
       end do    
 c                              if itic= 0 no equilibria were identified
 c                              goto 9000 to write no eq mess.
-      if (irct.eq.0) then
-c                              write no equilibrium messages:
-         write (n3,1180)
-         return
-      end if 
+      if (irct.eq.0) goto 9000
 
       write (n3,1160)
 c                              jbug ne 0, one or more equilibria
@@ -3332,6 +3641,10 @@ c                              list of possible failures:
          write (n3,1160)
       end if 
 
+      goto 99
+c                              write no equilibrium messages:
+9000  write (n3,1180)
+
 1000  format (' (',i6,'-',i1,') ',a)
 1030  format ('(pseudo-) invariant points are summarized below:',/)
 1070  format ('(pseudo-) univariant equilibria are summarized ',
@@ -3342,7 +3655,7 @@ c                              list of possible failures:
 1190  format ('WARNING!! The stability fields of the following',
      *        ' equilibria may',/,'have been entirely or',
      *        ' partially skipped in the calculation: ',/)
-      end
+99    end
 
       subroutine iptext (text,iend,jp)
 c-----------------------------------------------------------------------
@@ -3359,8 +3672,8 @@ c-----------------------------------------------------------------------
       character*8 names
       common/ cst8  /names(k1)
 
-      character fname*10, aname*6, lname*22
-      common/ csta7 /fname(h9),aname(h9),lname(h9)
+      character fname*10
+      common/ csta7 /fname(h9)
 
       integer icp2
       common/ cst81 /icp2
@@ -3415,7 +3728,7 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      character text(*)*1,alpha(*)*1,string*(kd2)
+      character*8 text(*)*1,alpha(*)*1,string*(kd2)
 
       integer iplus(k5),iminus(k5),jplus(k5),jminus(k5),ip,im,i,j,ist,
      *        ione(k7),jone(k7),iend,jst,is,jend,id
@@ -3426,8 +3739,8 @@ c-----------------------------------------------------------------------
       character*8 names
       common/ cst8 /names(k1)
 
-      character fname*10, aname*6, lname*22
-      common/ csta7 /fname(h9),aname(h9),lname(h9)
+      character fname*10
+      common/ csta7 /fname(h9)
 
       integer irct,ird
       double precision vn
@@ -3586,7 +3899,7 @@ c-----------------------------------------------------------------------
 c----------------------------------------------------------------------
 
       do i = 1, ivct 
-         if (ikp(idr(i)).lt.0) return
+         if (ikp(idr(i)).lt.0) goto 99
       end do 
 c                                set bug flag to indicate that
 c                                the equilibrium was at least 
@@ -3602,57 +3915,49 @@ c                                reaction_list.dat
          call fultxt (iend,text)
       end if 
 
-      if (icopt.eq.3) return
+      if (icopt.eq.3) goto 99
          
       if (imsg.eq.0) write (*,1110) ird,(text(i),i = 1, iend)
 
-      if (io3p.eq.0) then
+      if (io3p.eq.1) goto 10
 
-         write (n3,1120) ird,ivarrx(ird),(text(i),i = 1, iend)
+      write (n3,1120) ird,ivarrx(ird),(text(i),i = 1, iend)
 
-         if (ifull.eq.0) then 
+      if (ifull.ne.0) goto 80
 
-            write (n3,'(/,10x,90a)') (alpha(i),i = 1,jend)
+      write (n3,'(/,10x,90a)') (alpha(i),i = 1,jend)
 
-            if (ipt2.lt.3) then 
-               write (n3,*)
-               return 
-            end if 
-
-            call outdel 
-
-         end if 
-
+      if (ipt2.lt.3) then 
          write (n3,*)
-         write (n3,'(3(2x,g12.6,1x,g12.6))') (ptx(i), i = 1, ipt2)
-         write (n3,*)
-
-         if (ier.ne.0) goto 10
-
-         if (iflag.eq.1) then 
-
-            write (n3,1070) ip
-            write (n3,'(/)')
-
-         end if 
-
+         goto 99
       end if 
 
-10    if (io4.eq.0) then 
+      call outdel 
 
-         write (n4,*) ipt2,ird,ivar,ivct,(idr(i),i=1,ivct)
-         write (n4,*) (vnu(i),i = 1, ivct)
-         write (n4,*) (ptx(i),i = 1, ipt2)
+80    write (n3,*)
+      write (n3,'(3(2x,g12.6,1x,g12.6))') (ptx(i), i = 1, ipt2)
+      write (n3,*)
 
-      end if 
+      if (ier.ne.0) goto 10
+      if (iflag.eq.1) goto 40 
+      goto 10
+
+40    write (n3,1070) ip        
+      write (n3,'(/)')
+
+10    if (io4.eq.1) goto 99
+
+      write (n4,*) ipt2,ird,ivar,ivct,(idr(i),i=1,ivct)
+      write (n4,*) (vnu(i),i = 1, ivct)
+      write (n4,*) (ptx(i),i = 1, ipt2)
 
 1070  format ('the equilibrium extends to invariant point (',i6,')')
 1110  format ('finished with equilibrium (',i6,') ',434a1)
 1120  format (' (',i6,'-',i1,') ',434a1)
 
-      end
+99    end
 
-      subroutine pchk (igo)
+      subroutine pchk (dg,igo)
 c-----------------------------------------------------------------------
 c a subprogram which returns the difference in free energy
 c beteen a g-x plane, defined by the assemblage idv, and a phase lphi.
@@ -3663,9 +3968,7 @@ c-----------------------------------------------------------------------
 
       integer igo,i,j,ier
 
-      double precision gproj, dg
-
-      external gproj
+      double precision gproj,dg
 
       double precision delt,dtol,utol,ptol
       common/ cst87 /delt(l2),dtol,utol,ptol
@@ -3690,38 +3993,30 @@ c                                 compute energies:
       call uproj
 
       do i = 1, icp
-         b(i) = gproj (idv(i))
+         b(i) = gproj(idv(i))
       end do 
 
-      dg = gproj (idphi)
-c                                solve for chemical potentials:
+      dg = gproj(idphi)
+c                                 solve for chemical potentials:
       call subst (a,ipvt,icp,b,ier)
-c                                compute energy difference:
+c                                 compute energy difference:
       do j = 1, icp
          dg = dg - cp(j,idphi)*b(j)
       end do 
 
       if (dabs(dg).lt.ptol) then
-
         igo = 1
+        iflag = 1
 
-        call ssaptx
-
+        call ssaptx 
       else
-
-        if (dg.gt.0d0) then
-c                                 prior to march 9, 2017, this was
-c                                 dg > dtol (and dtol was < 0).
+        if (dg.gt.dtol) then
           iflag= 0
 
           call ssaptx
-
         else
-
           iflag= 1
-
         end if
-
       end if
 
       end
@@ -3766,13 +4061,11 @@ c-----------------------------------------------------------------------
 
       integer i,lphi,j,ier
 
-      logical bad
-
       double precision dg
 
-      double precision a,b
+      double precision a,u
       integer ipvt,idv,iophi,idphi,iiphi,iflg1
-      common/ cst23  /a(k8,k8),b(k8),ipvt(k8),idv(k8),iophi,idphi,
+      common/ cst23  /a(k8,k8),u(k8),ipvt(k8),idv(k8),iophi,idphi,
      *                iiphi,iflg1
 
 
@@ -3793,47 +4086,37 @@ c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
 c                                 determine chemical potentials
       iflag = 0
-
       do i = 1, icp
-         b(i) = g(idv(i))
+         u(i) = g(idv(i))
       end do 
 
-      call subst (a,ipvt,icp,b,ier)
+      call subst (a,ipvt,icp,u,ier)
 c                                 test phases, not=iophi, against the
 c                                 assemblage idv(i),i = 1, icp
-      do i = istct, iphct
-
-         if (i.eq.iophi.or.i.eq.lphi) cycle
-
+      do 20 i = istct, iphct
+         if (i.eq.iophi.or.i.eq.lphi) goto 20
          dg = g(i)
 
          do j = 1, icp
-            dg = dg - cp(j,i) * b(j)
+            dg = dg - cp(j,i) * u(j)
          end do 
 
-         if (dg.gt.dtol) cycle
+         if (dg.gt.dtol) goto 20
 c                                check that a phase is not metastable
 c                                with respect to itself, this
 c                                could be remedied by changing the 
 c                                value of dtol.
          do j = 1, icp
-            if (idv(j).eq.i) exit
+            if (idv(j).eq.i) goto 20
          end do 
-
-         if (j.le.icp) cycle
-
-         call nullck (i,bad)
-
-         if (bad) cycle
 
          iflag = iflag + 1
          idphi = i
+         goto (20,40,40), iflag
 
-         if (iflag.gt.1) exit
+20    continue
 
-      end do 
-
-      end
+40    end
 
       subroutine nschk 
 c-----------------------------------------------------------------------
@@ -3842,8 +4125,6 @@ c-----------------------------------------------------------------------
       include 'perplex_parameters.h'
 
       integer i,j,ier
-
-      logical bad
 
       double precision blim, ulim, dg
       common/ cxt62 /blim(l2),ulim(l2),dg
@@ -3898,10 +4179,6 @@ c                                value of dtol.
          end do 
 
          if (j.le.icp) cycle
-
-         call nullck (i,bad)
-
-         if (bad) cycle
 
          iflag = iflag + 1
          idphi = i
@@ -4070,11 +4347,7 @@ c                                 phase indexed by idphi.
 c                                 iflag=2 metastable with respect to
 c                                 multiple phases refine the
 c                                 search increment.
-         if (iflag.eq.1) then
-c                                 added 7/13/2014
-            if (v(ivd).ge.vmax(ivd)) v(ivd) = v(ivd) - ddv
-            goto 99
-         end if 
+         if (iflag.eq.1) goto 99
 c                                 check if search is in range:
          if (i.lt.3) then 
             if (v(ivd).ge.vmax(ivd).and.iflag.eq.0) cycle
@@ -4120,8 +4393,8 @@ c                                 next traverse.
 
       ier = 1
 
-1000  format ('**warning ver066** Metastable assemblage into FLIPIT: ',
-     *        /,4x,12(1x,a))
+1000  format ('Metastable assemblage in FLIPIT, ',
+     *        'the assemblage is:',/,4x,12(1x,a))
 1010  format ('v =',5(g12.6,1x))
 1020  format (/,'**warning ver047** SEARCH: > 1 equilibrium',
      *         ' occurs within the minimum search',/,'increment for',
@@ -4144,7 +4417,7 @@ c----------------------------------------------------------------------
 
       integer ikwk,irend,ivd,ivi,iswtch,jswtch,ier,jer,ip
 
-      logical output, fail
+      logical output
 
       integer irchk
       common/ cst801 /irchk(k2)
@@ -4261,13 +4534,8 @@ c                                 an invariant equilibrium:
 
 c                                 iterate independent variable to refine
 c                                 the conditions of the invariant point:
-            call findjp (ivi,ivd,dv,ip,ird,fail)
+            call findjp (ivi,ivd,dv,ip)
 
-            if (fail) then 
-               if (output) call outrxn (ip,ier)
-               ier = 3
-               goto 999
-            end if 
 
          else if (iflag.eq.2) then   
 c                                 iflag=2 metastable to > 1 phase:
@@ -4374,18 +4642,16 @@ c-----------------------------------------------------------------------
       ivi = iovi
       ivd = iovd
 
-      if (io3.eq.0.and.io3p.eq.0) then
+      goto (150), io3
+      goto (150), io3p
 
-         call iptext (text,iend,ip)
+      call iptext (text,iend,ip)
 
-         write (n3,1040)
-         write (n3,1020) ip, (text(i),i = 1, iend)
-         write (n3,1050)
+      write (n3,1040)
+      write (n3,1020) ip, (text(i),i = 1, iend)
+      write (n3,1050)
 
-      end if 
-
-      do j = 2, icp2
-
+150   do j = 2, icp2
          jtic = 0
          idno  = icp3 - j
          lphi  = ipid(ip,idno)
@@ -4482,7 +4748,7 @@ c                                 set the bug flag:
       end do 
 
       if (jchk.eq.0) call warn (74,v(ivi),ivi,'SFOL2 ')
-      if (io3.eq.0.and.io3p.eq.0) write (n3,1040)
+      if (io3p.eq.0) write (n3,1040)
 
 1020  format ('equilibria about invariant point (',i6,'):',//,
      *        3x,200a1)
@@ -4715,8 +4981,6 @@ c-----------------------------------------------------------------------
       integer l,ikwk,isign,lchkl,i,iv,jfail,ier,ivi,
      *        ivd,icter,lphi,jswit,ifail
 
-      logical fail 
-
       character*8 names
       common/ cst8 /names(k1)
 
@@ -4745,94 +5009,57 @@ c-----------------------------------------------------------------------
       double precision v,tr,pr,r,ps
       common/ cst5  /v(l2),tr,pr,r,ps
 c-----------------------------------------------------------------------
-
-      iophi = idphi
+      iophi =idphi
       ikwk = 0
-
+      icter = 0
+      ier = 0
       vo(iv1) = v(iv1)
       vo(iv2) = v(iv2)
 c                                 first try iv1 as the iv
       ivi = iv2
       ivd = iv1
 
-      fail = .false.
+      ifail= 0
 
-      do 
+5     call univeq (ivd,ier)
 
-         call univeq (ivd,ier)
-
-         if (ier.eq.0) then
+      if (ier.eq.0) then
 c                                 is the equilibrium condition
 c                                 for this reaction consistent
 c                                 with the invariant point?
-            if ( dabs( (v(ivd)-vo(ivd))/dv(ivd) ).gt.0.1d0) then 
-               vo(iv1) = v(iv1)
-               vo(iv2) = v(iv2)
-               call warn (18,v(ivd),ird,'WWAY')
-            end if
+         if ( dabs( (v(ivd)-vo(ivd))/dv(ivd) ).gt.0.1d0) then 
+            vo(iv1) = v(iv1)
+            vo(iv2) = v(iv2)
+            call warn (18,v(ivd),ird,'WWAY')
+         end if 
 
-            exit 
-
-         else
-
-            if (fail) then
-
-               call warn (58,dv(1),ier,'WWAY')
-
-               if (ivct.lt.5) then 
-
-                 write (*,1050) ird,(vnu(l),names(idr(l)), l= 1, ivct)
- 
-               else 
-
-                  write (*,1050) ird,(vnu(l),names(idr(l)), l= 1, 4)
-                  write (*,1060) (vnu(l),names(idr(l)), l= 5, ivct)
-
-               end if 
-
-               write (n3,*)
-
-               return
- 
-            end if 
-
-            ivi = iv1
-            ivd = iv2
+      else
+         goto (9800),ifail
+         ivi = iv1
+         ivd = iv2
 c                                 added april 2001 without check!!
-            div = dv(ivi)
+         div = dv(ivi)
 
-            v(iv1) = vo(iv1)
-            v(iv2) = vo(iv2)
-            call incdp0
+         v(iv1) = vo(iv1)
+         v(iv2) = vo(iv2)
+         call incdp0
 
-            fail = .true.
-
-         end if
-
-      end do 
+         ifail = ifail + 1
+         goto 5
+      end if
 c                                 test that the ip isn't on an edge
       if (v(iv1).eq.vmin(iv1).or.v(iv1).eq.vmax(iv1).or.
-     *    v(iv2).eq.vmin(iv2).or.v(iv2).eq.vmax(iv2)) then 
-
-         call warn  (63,dv(1),ivi,'WWAY')
-         ier = 1
-
-         return
-
-      end if 
+     *    v(iv2).eq.vmin(iv2).or.v(iv2).eq.vmax(iv2)) goto 9600
 
       jswit = 0
 
 190   order = 1d0
-
 c                                 set iv increment
-      do
+60    div = dv(ivi) / order
 
-         div = dv(ivi) / order
+      ifail = 0
 
-         ifail = 0
-
-         do i = 1, 2
+      do i = 1, 2
 c                                 because of numerical slop 
 c                                 an equilibrium may appear stable
 c                                 on its metastable extension close to
@@ -4843,71 +5070,64 @@ c                                 conditions on both sides of an ip
 c                                 the increment is decreased and if this
 c                                 fails the independent and dependent
 c                                 variables are switched.
-            jfail = 0
+         jfail = 0
 
-            do 
-
-               v(ivi) = vo(ivi) + div
+15       v(ivi) = vo(ivi) + div
 c                                 check if the increment is too large
-               if (v(ivi).gt.vmax(ivi)) then
-                  v(ivi) = vmax(ivi)
-               else if (v(ivi).lt.vmin(ivi)) then 
-                  v(ivi) = vmin(ivi)
-              end if 
+         if (v(ivi).gt.vmax(ivi)) then
+            v(ivi) = vmax(ivi)
+         else if (v(ivi).lt.vmin(ivi)) then 
+            v(ivi) = vmin(ivi)
+         end if 
 c                                 set the dependent variable to ip:
-               v(ivd) = vo(ivd)
+         v(ivd) = vo(ivd)
 
-               call incdp0 
+         call incdp0 
 c                                 solve for the equilibrium
-               call univeq (ivd,ier)
+         call univeq (ivd,ier)
 
-               if (jfail.le.5.and.ier.eq.0.and.(v(ivd).gt.vmax(ivd)
-     *            .or.v(ivd).lt.vmin(ivd))) then
+         if (jfail.le.5.and.ier.eq.0.and.(v(ivd).gt.vmax(ivd)
+     *       .or.v(ivd).lt.vmin(ivd))) then
 c                                 increment to big:
-                  div = div / 1d1
-                  jfail = jfail + 1
-                  cycle
+            div = div / 1d1
+            jfail = jfail + 1
+            goto 15
   
-               else if (jswit.eq.0.and.ier.gt.0) then 
+         else if (jswit.eq.0.and.ier.gt.0) then 
 c                                 on error switch dependent and
 c                                 independent variables
-                  iv  = ivi
-                  ivi = ivd
-                  ivd = iv
-                  jswit = 1
+            iv  = ivi
+            ivi = ivd
+            ivd = iv
+            jswit = 1
 
-                  goto 190
+            goto 190
 
-               else if (jswit.gt.0.and.ier.gt.0) then
+         else if (jswit.gt.0.and.ier.gt.0) then
 
-                  call warn (999,dv(1),ivi,'WWAY')
+            call warn (999,dv(1),ivi,'WWAY')
+            ier = 1
+            return
 
-                  return
+         end if 
 
-               end if
-
-               exit 
-
-            end do 
-
-            vvi(i) = v(ivi)
-            vvd(i) = v(ivd)
-            ddv(i) = div
+         vvi(i) = v(ivi)
+         vvd(i) = v(ivd)
+         ddv(i) = div
 c                                 determine if the equilibrium is
 c                                 metastable with respect to lphi
 c                                 (lchkl=1):
-            call lchk (lphi,lchkl)
-            if (lchkl.eq.0) then
-               ifail = ifail + 1
-               isign = i
-            end if
+         call lchk (lphi,lchkl)
+         if (lchkl.eq.0) then
+            ifail = ifail + 1
+            isign = i
+         end if
 c                                 end of looop
-            div = -div
-
-         end do 
+         div = -div
+      end do 
 c                                 at this stage there are three
 c                                 possibilities indicated by ifail
-         if (ifail.eq.1) exit 
+      if (ifail.eq.1) goto 50
 c                                 ifail= 0 or 2 the equilibrium was stable
 c                                 or metastable on both sides, the most 
 c                                 plausible scenario is the increment is
@@ -4920,29 +5140,28 @@ c                                 increment is too small to cross the border.
 c                                 
 c                                 so first decrease the increment:
          if (order.ge.1d0) then 
-            order = order * 1d1 
+            order = order * 10d0 
 c                                 stop decreasing after four orders 
 c                                 of magnitude, and try increasing
 c                                 increment:
             if (order.gt.1d4) order = 1d-1
          else 
-            order = order / 1d1
+            order = order / 10d0
 c                                 stop increasing after two orders 
 c                                 of magnitude, cause there should 
 c                                 never be a default increment much less 
 c                                 than 1 % of the variable range.
             if (order.lt.1d-2) goto 9500
-
          end if 
 c                                 why the **** was this here?
-c        ivi = iv1
-c        ivd = iv2
+c         ivi = iv1
+c         ivd = iv2
 
-      end do 
+      goto 60
 c                                 ifail=1, stable extension identified.
 c                                 determine the sign of the increment
 c                                 and its magnitude:
-      if (isign.eq.1) then
+50    if (isign.eq.1) then
          div = dv(ivi)
          del= vmax(ivi)-vo(ivi)
          if (del.lt.div) div = del/3.d0
@@ -4954,58 +5173,40 @@ c                                 and its magnitude:
 c                                 reset variable values and save
       v(ivi) = vvi(isign)
       v(ivd) = vvd(isign)
-
       call incdp0
+  
+      odiv = ddv(isign)
+      icter = 0
 c                                 now check the stability with respect
 c                                 to all phases
       order = 1d0
-      odiv = ddv(isign)
-      fail = .false.
-      icter = 0 
-
-      do
-
-         call gall 
-         call schk (lphi)
+70    call gall 
+      call schk (lphi)
 c                                 stable if iflag= 0 from schk
 c                                 now check if dependent variable is in
 c                                 range.
-         if (iflag.eq.0) exit 
+      if (iflag.eq.0) goto 9999
 c                                 metastable try refining the increment
-         order = order * 5d0
-         div = div / order
+      order = order * 5.d0
+      div = div / order
 
-         v(ivi) = vo(ivi) + div
-         v(ivd) = vo(ivd)
-
-         call incdp0
-
-         do 
+      v(ivi) = vo(ivi) + div
+      v(ivd) = vo(ivd)
+      call incdp0
  
-            call univeq (ivd,ier)
+100   call univeq (ivd,ier)
 
-            if (ier.eq.0) exit
+      if (ier.eq.0) goto 90
 c                                 error from univeq, more than once quit
-            if (fail) then
-
-               call warn (87,dv(1),ivi,'WWAY')
-
-               return
-
-            end if 
-
-            div =odiv
-            icter = icter + 1
-            fail = .true.
-
-         end do 
-
-         if (order.gt.1d6) goto 9500
-
-      end do 
+      goto (9400), icter
+      div =odiv
+      icter = icter + 1
+      goto 100
+c                                 no error from univeq
+90    if (order.gt.10.d6) goto 9500
+      goto 70
 c                                 all systems go
-      call assptx
-
+9999  call assptx
       if (dabs(div).lt.dv(ivi)) then
          div = dv(ivi)*div/dabs(div)
       end if 
@@ -5017,8 +5218,25 @@ c                                 all systems go
 
       return
 
+9400  call warn (87,dv(1),ivi,'WWAY')
+      ier = 1
+      return  
+       
 9500  call warn (24,dv(ivi)/order,ivi,'WWAY')
+      ier = 1
+      return
 
+9600  call warn  (63,dv(1),ivi,'WWAY')     
+      ier = 1
+      return
+  
+9800  call warn (58,dv(1),ier,'WWAY')
+      if (ivct.gt.4) goto 9820
+      write (n3,1050) ird,(vnu(l),names(idr(l)), l= 1, ivct)
+      goto 9830
+9820  write (n3,1050) ird,(vnu(l),names(idr(l)), l= 1, 4)
+      write (n3,1060) (vnu(l),names(idr(l)), l= 5, ivct)
+9830  write (n3,*) 
       ier = 1
 
 1050  format (1x,'(',i6,')',4(1x,g9.3,1x,a))
@@ -5033,8 +5251,8 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      character text(kd2,2)*1, rtxt(kd2)*1, ppart(k8)*34, char8*8, 
-     *          mpart(k8)*34, exten(2)*8, ptext*(kd2), mtext*(kd2)
+      character*8 text(kd2,2)*1, rtxt(kd2)*1, ppart(k8)*31, char8, 
+     *            mpart(k8)*31, exten(2)*8, ptext*(kd2), mtext*(kd2)
 
       integer jchar(2),ip,im,i,id,j,nchar
 
@@ -5051,14 +5269,11 @@ c-----------------------------------------------------------------------
       double precision vuf,vus
       common/ cst201 /vuf(2),vus(h5),iffr,isr
 
-      integer jfct,jmct,jprct,jmuct
-      common/ cst307 /jfct,jmct,jprct,jmuct
+      integer jfct,jmct,jprct
+      common/ cst307 /jfct,jmct,jprct
 
-      integer ifct,idfl
-      common/ cst208 /ifct,idfl
-
-      integer iff,idss,ifug
-      common/ cst10  /iff(2),idss(h5),ifug
+      integer iff,idss,ifug,ifyn,isyn
+      common/ cst10  /iff(2),idss(h5),ifug,ifyn,isyn
 
       integer idr,ivct
       double precision vnu
@@ -5080,12 +5295,14 @@ c-----------------------------------------------------------------------
 
       integer ids,isct,icp1,isat,io2
       common/ cst40 /ids(h5,h6),isct(h5),icp1,isat,io2
+c----------------------------------------------------------------------
 
       save exten 
-c                                 this will cause errors if someone
+c                                 this is a bullshit trick and
+c                                 will cause errors if someone
 c                                 uses a function other than G.
       data exten/'-V(j/b) ','S(j/k) '/
-c---------------------------------------------------------------------
+
       ip = 0 
       im = 0
 
@@ -5116,7 +5333,7 @@ c                             composant stoichiometry:
          end if 
       end do 
 c                                 fluid stoichiometry:
-      if (ifct.gt.0) then 
+      if (ifyn.eq.0) then 
          do i = 1, 2
             if (iff(i).ne.0) then
                if (vuf(i).gt.0d0) then
@@ -5141,28 +5358,26 @@ c                                 mobile components:
          end if
       end do
 
-      if (ifull.eq.3.or.ifull.eq.4) then 
+      if (ifull.eq.1.or.ifull.eq.3) goto 55
 
-         do i = 1, 2
-            if (dv(i).gt.0d0) then
-               im = im + 1
-               call wrpart (dv(i),0,exten(i),mpart(im))
-            else if (dv(i).lt.0d0) then
-               ip = ip + 1
-               call wrpart (-dv(i),0,exten(i),ppart(ip))
-            end if
-         end do 
+      do i = 1, 2
+         if (dv(i).gt.0d0) then
+            im = im + 1
+            call wrpart (dv(i),0,exten(i),mpart(im))
+         else if (dv(i).lt.0d0) then
+            ip = ip + 1
+            call wrpart (-dv(i),0,exten(i),ppart(ip))
+         end if
+      end do 
 
-      end if 
-
-      if (ip.gt.k8.or.im.gt.k8) call error (997,du(1),ip,'FULTXT')
+55    if (ip.gt.k8.or.im.gt.k8) call error (997,du(1),ip,'FULTXT')
 
       write (ptext,'(14(a,1x))') (ppart(i), i = 1, ip)
       write (mtext,'(14(a,1x))') (mpart(i), i = 1, im)
 
-      jchar(1) = im * 35
+      jchar(1) = im * 31
       read (mtext,'(434a)') (text(i,1), i = 1, jchar(1))
-      jchar(2) = ip * 35
+      jchar(2) = ip * 31
       read (ptext,'(434a)') (text(i,2), i = 1, jchar(2))
 c                             filter out blanks:
       do i = 1, 2
@@ -5184,7 +5399,7 @@ c                             filter out blanks before parentheses:
          jchar(i) = nchar
       end do
 c                             concatenate parts into rxnstr:
-      if (jchar(1)+jchar(2).gt.(k8)*35-3) 
+      if (jchar(1)+jchar(2).gt.(k8)*31-3) 
      *                    call error (208,du(1),ip,'FULTXT')
  
       nchar = 0 
@@ -5231,15 +5446,15 @@ c-----------------------------------------------------------------------
       double precision vuf,vus
       common/ cst201 /vuf(2),vus(h5),iffr,isr
 
-      integer jfct,jmct,jprct,jmuct
-      common/ cst307 /jfct,jmct,jprct,jmuct
+      integer jfct,jmct,jprct
+      common/ cst307 /jfct,jmct,jprct
 
       integer jds,ifr
       double precision du,dv
       common/ cst21 /du(2),dv(2),jds(h5),ifr
 
-      integer ifct,idfl
-      common/ cst208 /ifct,idfl
+      integer iff,idss,ifug,ifyn,isyn
+      common/ cst10  /iff(2),idss(h5),ifug,ifyn,isyn
 
       integer idr,ivct
       double precision vnu
@@ -5255,15 +5470,11 @@ c-----------------------------------------------------------------------
       integer ids,isct,icp1,isat,io2
       common/ cst40 /ids(h5,h6),isct(h5),icp1,isat,io2
 
-      integer iff,idss,ifug
-      common/ cst10  /iff(2),idss(h5),ifug
-
       save exten 
 c                                 this is a bullshit trick and
 c                                 will cause errors if someone
 c                                 uses a function other than G.
       data exten/'-V(j/b) ','S(j/k) '/
-c----------------------------------------------------------------------
 c                                 ouput data as follows
 c                                 V, S, mobile components, fluid components, 
 c                                 saturated component, thermodynamic components
@@ -5282,7 +5493,7 @@ c                                 mobile components:
 
       ict = ict + jmct
 c                                 saturated phase components:
-      if (ifct.gt.0) then 
+      if (ifyn.eq.0) then 
          do i = 1, 2
             if (iff(i).ne.0) then
                ict = ict + 1
@@ -5322,29 +5533,26 @@ c-----------------------------------------------------------------------
 
       double precision vnu
 
-      character*8 name, part*34, solnam*14
+      character*8 name, part*30
+
+      character fname*10
+      common/ csta7 /fname(h9)
 
       integer isec,icopt,ifull,imsg,io3p
       common/ cst103 /isec,icopt,ifull,imsg,io3p
 c-----------------------------------------------------------------------
       if (ikp.eq.0) then
-
-         if (ifull.gt.1) then  
+         if (ifull.gt.2) then  
             write (part,'(g9.3,1x,a)') vnu,name
          else 
             write (part,'(a)') name
          end if 
-
       else 
-
-         call getnam(solnam,ikp)
-
-         if (ifull.gt.1) then 
-            write (part,1010) vnu,solnam,name
+         if (ifull.gt.2) then 
+            write (part,1010) vnu,fname(ikp),name
          else 
-            write (part,2010) solnam,name
+            write (part,2010) fname(ikp),name
          end if 
-
       end if 
 
 1010  format (g9.3,1x,a,'(',a,')')
@@ -5389,6 +5597,8 @@ c                                factor the matrix
       call factr1 (icp,ier)
 
       end 
+
+
 
       subroutine money
 c----------------------------------------------------------------------
@@ -5498,6 +5708,153 @@ c                                respect to phase j
  
 99    end
 
+      subroutine outtit
+c-----------------------------------------------------------------------
+c outtit writes title information and a brief description of the
+c chemical system for each calculation requested.
+c-----------------------------------------------------------------------
+      implicit none
+ 
+      include 'perplex_parameters.h'
+ 
+      integer i,j,itot,ic11
+
+      character*162 title
+      common/ csta8 /title(4)
+ 
+      integer jasmbl,iasmbl
+      common/ cst27  /jasmbl(j9),iasmbl(j9)
+
+      double precision ctot
+      common/ cst3   /ctot(k1)
+
+      character*8 vname,xname
+      common/ csta2  /xname(k5),vname(l2)
+
+      character cname*5
+      common/ csta4  /cname(k5) 
+
+      character*8 names
+      common/ cst8 /names(k1)
+
+      integer cl
+      character cmpnt*5, dname*80
+      common/ csta5 /cl(k0),cmpnt(k0),dname
+
+      integer ixct,iexyn,ifact
+      common/ cst37 /ixct,iexyn,ifact 
+
+      character*8 exname,afname
+      common/ cst36 /exname(h8),afname(2)
+
+      double precision cp
+      common/ cst12 /cp(k5,k1)
+
+      integer ifct,idfl
+      common/ cst208 /ifct,idfl
+
+      integer iff,idss,ifug,ifyn,isyn
+      common/ cst10  /iff(2),idss(h5),ifug,ifyn,isyn
+
+      integer ipot,jv,iv1,iv2,iv3,iv4,iv5
+      common/ cst24 /ipot,jv(l2),iv1,iv2,iv3,iv4,iv5
+
+      integer icomp,istct,iphct,icp
+      common/ cst6  /icomp,istct,iphct,icp  
+
+      integer ids,isct,icp1,isat,io2
+      common/ cst40 /ids(h5,h6),isct(h5),icp1,isat,io2
+
+      logical gflu,aflu,fluid,shear,lflu,volume,rxn
+      common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume,rxn
+c----------------------------------------------------------------------
+      write (n3,1000)
+c                          title:
+      write (n3,1190) title(1)
+c                          data base
+      write (n3,1210) dname
+c                          fluid
+      if (ifyn.eq.0.or.gflu) call rfluid (2,ifug) 
+c                          independent potentials:
+      write (n3,1070) (vname(jv(j)), j = 1, ipot)
+c                          saturated phase components:
+      if (ifyn.eq.0) then 
+         j = icp + isat
+         write (n3,1200) (cname(j+i), i = 1, ifct)
+      end if 
+c                          saturated components:
+      if (isyn.eq.0) then 
+         j = icp + isat
+         write (n3,1180) (cname(i), i = icp1, j)
+      end if 
+c                          unconstrained components
+      write (n3,1080) (cname(i), i = 1, icp)
+c                          phases
+      if (icp.gt.3) then 
+         write (n3,1150) (cname(i), i = 1, icp)
+         do i = istct, iphct
+            write (n3,'(3x,a,12(1x,f5.3,1x))') 
+     *            names(i), (cp(j,i)/ctot(i), j = 1, icp)
+         end do 
+      else if (icp.eq.3) then 
+         write (n3,1090) (cname(i), i = 2, 3)
+         write (n3,'(3(1x,a,2x,f5.3,2x,f5.3,5x))') 
+     *         (names(i), cp(2,i)/ctot(i), cp(3,i)/ctot(i),
+     *                                             i = istct, iphct)
+      else if (icp.eq.2) then 
+         write (n3,1040) cname(2)
+         write (n3,'(4(2x,a,1x,f5.3))') 
+     *         (names(i), cp(2,i)/ctot(i), i = istct, iphct)
+      else if (icp.eq.1) then 
+         write (n3,1130)
+         write (n3,'(7(1x,a,1x))') (names(i), i = istct, iphct)
+      end if 
+c                          saturation composant phases,
+c                          load the indexes into iasmbl:
+      if (isat.gt.0) then 
+         itot = 0
+         do i = 1, isat
+            ic11 = isct(i)
+c                          do a check that there is at least
+c                          one composant for each saturated component:
+c                          why here? well, why not?
+            if (ic11.eq.0) call error (279,cp(1,1),i,'OUTTIT')
+ 
+            do j = 1, ic11
+               iasmbl(itot+j) = ids(i,j)
+            end do 
+            itot = itot+ic11
+         end do 
+ 
+         write (n3,1170)
+         write (n3,'(7(1x,a,1x))') (names(iasmbl(i)), i = 1, itot)
+      end if 
+c                          excluded phases
+      if (iexyn.eq.0) then 
+         write (n3,1140)
+         write (n3,'(7(1x,a,1x))') (exname(i), i = 1, ixct)
+      end if 
+ 
+      write (n3,1000)
+ 
+1000  format (/,80('-'),/)
+1040  format (/,'Phases and (projected) mol fraction ',a,':',/)
+1070  format (/,'Independently constrained potentials:',//,3x,8(a,1x))
+1080  format (/,'Components with unconstrained potent'
+     *       ,'ials:',//,3x,10(a5,3x))
+1090  format (/,'Phases and (projected) composition with respect to '
+     *         ,a5,' and ',a5,':',/)
+1130  format (/,'Phases:',/)
+1140  format (/,'Excluded phases:',/)
+1150  format (/,'Phases and (projected) compositions:',//,
+     *        11x,12(1x,a5,1x),/)
+1170  format (/,'Phases on saturation and buffering surfaces:',/)
+1180  format (/,'Saturated or buffered components:',//,3x,7(a,3x))
+1190  format (/,'Problem title: ',a,/)
+1200  format (/,'Saturated phase components:',//,3x,5(a,3x))
+1210  format ('Thermodynamic data base from: ',a)
+      end
+
       subroutine findas
 c----------------------------------------------------------------------
       implicit none
@@ -5529,13 +5886,10 @@ c----------------------------------------------------------------------
       common/ cst6  /icomp,istct,iphct,icp  
 c----------------------------------------------------------------------
       do i = istct, iphct
-
-         kmax(i) = 0
 c                                 sort phases into subcompositions
          do j = 1, icp
             if (cp(j,i).gt.1d-5) kmax(i) = j
          end do
-
       end do
 
       do hcp = 1, icp
@@ -5544,12 +5898,10 @@ c                             formerly ic(hcp) = hcp, 9/27/08.
 c                             make the first guess for the
 c                             stable hcp component phase:
          do i = istct, iphct
-
             if (kmax(i).eq.hcp) then
                id(hcp) = i
                goto 20
             end if
-
          end do
 c                             missing composant error
          call error (15,r,i,cname(hcp))
@@ -5557,9 +5909,7 @@ c
 20       call abload (*992)
 c                             start test loop:
          do j = istct, iphct 
-
-            if (kmax(j).gt.hcp.or.kmax(j).eq.0) cycle
-
+            if (kmax(j).gt.hcp) cycle
             dg = g(j)
 
             do i = 1, hcp
@@ -5588,6 +5938,7 @@ c                                 counter in ABLOAD via cst52.
 
 99    end 
          
+
       subroutine checkd (jd)
 c----------------------------------------------------------------------
       implicit none
@@ -5684,8 +6035,6 @@ c----------------------------------------------------------------------
       include 'perplex_parameters.h'
 
       logical solvs1, solvus 
-
-      external solvus
 c                                 -------------------------------------
 c                                 local variables
       integer idsol(k8,k8),jdsol(k8),ids,np,np1,np2,ncpd,idim,
@@ -5700,29 +6049,24 @@ c                                 local variables
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       double precision dcp,soltol
-      common/ cst57 /dcp(k5,k19),soltol
+      common/ cst57 /dcp(k5,h8),soltol
 c-----------------------------------------------------------------------
       np = 0   
       ncpd = 0 
       solvs1 = .false.
 c                                 solvus tolerance, miscib 1.2
       if (lopt(9)) then 
-         soltol = 1.8d0*nopt(8)
+         soltol = 1.2d0*nopt(8)
       else 
          soltol = nopt(8)
       end if 
 
       do 10 i = 1, ntot
-
          ids = ikp(id(i))
-
          if (ids.le.0) then 
-
             ncpd = ncpd + 1
             cycle
-
          else   
-
             do j = 1, np
                if (ikp(idsol(1,j)).eq.ids) then
                   jdsol(j) = jdsol(j) + 1
@@ -5730,13 +6074,10 @@ c                                 solvus tolerance, miscib 1.2
                   goto 10 
                end if 
             end do                   
-
             np = np + 1
             jdsol(np) = 1
             idsol(1,np) = id(i)
-
          end if
-
 10    continue  
 c                                now check if the np solutions
 c                                are homogeneous
@@ -5782,7 +6123,7 @@ c                                 if here, it's a new phase
 
       end 
 
-      subroutine findjp (ivi,ivd,odv,ip,ird,fail)
+      subroutine findjp (ivi,ivd,odv,ip)
 c----------------------------------------------------------------------
 c findjp - called by sfol1 to iteratitvely refine the location of 
 c an invariant point, the invariant point is located within an 
@@ -5792,11 +6133,9 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer iwarn,ier,ip,ivi,ivd,igo,ird
+      integer iwarn,ier,ip,ivi,ivd,igo
 
-      logical fail, inside
-
-      double precision odv
+      double precision odv,dg
 
       double precision delt,dtol,utol,ptol
       common/ cst87 /delt(l2),dtol,utol,ptol 
@@ -5816,124 +6155,41 @@ c                                 the conditions of the invariant point:
       ier = 0 
       ip = 0
 c                                 step back to stable condition
-      call reptx
-c                                 check if the point is already known, 
-c                                 based on identities and whether the 
-c                                 current coordinate twice the default
-c                                 increment (prior to 2017, one increment). 
+20    call reptx
+      odv = odv / 2d0
+c                                 check if the point is already known
       call sameip (ip)
 
-      if (ip.ne.0) return
+      if (ip.ne.0) goto 99
 
-      odv = odv / 2d0
+      if (dabs(odv).lt.delt(ivi)) goto 30
  
-      fail = .false. 
-      inside = .true.
+10    v(ivi) = v(ivi) + odv 
+      call incdep (ivi)   
 
-      do
-c                                 unidirectional search to find ip, moved 
-c                                 call to ssaptx call from pchk
-         v(ivi) = v(ivi) + odv 
+      call univeq (ivd,ier)
+      if (ier.ne.0) goto 30 
 
-         if (v(ivi).gt.vmax(ivi)) then 
-            v(ivi) = vmax(ivi)
-         else if (v(ivi).lt.vmin(ivi)) then 
-            v(ivi) = vmin(ivi)
-         end if 
-            
-         call incdep (ivi)   
+      call pchk (dg,igo)
 
-         call univeq (ivd,ier)
-
-         if (ier.ne.0) then
-c                                 previous to march 7, 2017, if univeq failed
-c                                 reptx was called and the last coordinates 
-c                                 were saved as the IP with warning. 
-            fail = .true.
-
-            exit 
-
-         end if  
-
-         call pchk (igo)
-
-         if (igo.eq.1) then
-c                                 pchk returns igo = 1 if the ip assemblage 
-c                                 is within ptol
-            if (v(ivd).lt.vmin(ivd).or.v(ivd).gt.vmax(ivd)) 
-     *         inside = .false.
-
-            exit  
-
-         else if (iflag.eq.1) then
-c                                 the independent variable increment is too 
-c                                 large and the search has jumped to the metastable
-c                                 side of the ip
-            call reptx
-            odv = odv / 2d0
-c                                 step back to stable condition
-            if (dabs(odv).lt.delt(ivi)) then 
-               fail = .true.
-               exit
-            end if 
-
-            cycle 
-
-         else
-c                                 still stable and on the edge
-            if (v(ivi).eq.vmax(ivi).or.v(ivi).eq.vmin(ivi)) then
-
-               inside = .false.
-               exit 
-
-            end if 
-
-            cycle
-
-         end if 
-
-      end do 
-c                                 assign the invariant assemblage:
-      if (.not.fail) then
-
-c                                 check if in range
-         if (inside) then
-
-            call assip (ip)
-
-         else 
-
-            call reptx
-
-            if (v(ivd).gt.vmax(ivd)) then 
-
-               v(ivd) = vmax(ivd) 
-
-            else if (v(ivd).lt.vmin(ivd)) then
-
-               v(ivd) = vmax(ivd) 
-
-            end if 
-
-            call incdep (ivd)
-
-            call univeq (ivd,ier)
-
-            if (ier.ne.0)  return
-
-            call assptx 
-
-         end if 
-
-      else 
-      
-         call warn (47,ptol,ird,'FINDJP')
-
-         if (inside) call assptx
-
+      if (igo.eq.1) then
+         goto 40 
+      else if (iflag.eq.1) then
+         goto 20
+      else  
+         if (v(ivi).gt.vmax(ivi).or.v(ivi).lt.vmin(ivi)) goto 30
+         goto 10
       end if 
+c                                 univeq blew up, assign ip with 
+c                                 warning:
+30    call reptx 
+      iwarn = 1 
+c                                 assign the invariant assemblage:
+40    call assip (ip)
+      
+      if (iwarn.eq.1) call warn (47,ptol,ip,'FINDJP')
 
-      end 
+99    end 
 
       subroutine ssaptx
 c---------------------------------------------------------------------
@@ -6109,8 +6365,8 @@ c                                 to the ith ip already found
 c                      the new ip assemblage is equivalent to one found 
 c                      earlier, check if the conditions match:
          do j = 1, 5
-            if (dabs(vip(j,i)-v(j)).gt.2d0*ddv(j).and.
-     *                                     ddv(j).ne.0d0) then
+            if (dabs(vip(j,i)-v(j)).gt.ddv(j).and.
+     *                                 ddv(j).ne.0d0) then
                if (i.lt.ipct) then 
                   jps = i + 1
                   goto 5
@@ -6132,6 +6388,74 @@ c                                 anything stupid
 10    continue
 
 99    end
+
+      subroutine lpopt (i,j,idead,output)
+c-----------------------------------------------------------------------
+c lpopt - is a shell to maintain backwards compatibility used for gridded
+c minimization calculations. it calls lpopt0 to do a minimization, then 
+c does some minor bookkeeping for node i,j. 
+c-----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      logical output
+
+      integer i,j,k,idead
+
+      integer igrd
+      common/ cst311 /igrd(l7,l7)
+
+      double precision a,b,c
+      common/ cst313 /a(k5,k1),b(k5),c(k1)
+
+      integer iap,ibulk
+      common/ cst74  /iap(k2),ibulk
+
+      integer hcp,idv
+      common/ cst52  /hcp,idv(k7)  
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+c-----------------------------------------------------------------------
+c                                 check for positive bulk
+      idead = 0 
+
+      do k = 1, hcp
+         if (b(k).gt.0d0) then 
+            cycle
+         else if (dabs(b(k)).lt.nopt(11)) then
+            b(k) = 0d0
+         else 
+            idead = 2
+            exit 
+         end if 
+      end do 
+
+      if (idead.eq.0) call lpopt0 (idead)
+c                                 if idead = 0 optimization was ok
+      if (idead.eq.0) then 
+c                                 at this point the compositions of
+c                                 the np solutions are in cp3, ctot3, x3 indexed
+c                                 by np and the original indices of the 
+c                                 ncpd compounds are -kkp(np+1..ntot), and
+c                                 the molar amounts of the phases are in amt.
+         call sorter (igrd(i,j),i,j,output)
+
+      else 
+ 
+c         if (idead.ne.2) write (*,1000) i,j
+         igrd(i,j) = k2
+         iap(k2) = k3
+
+      end if  
+
+c1000  format (/,'WARNING: minimization failed at node i=',i6,' j= ',i6,/
+c     *         'the null assemblage will be assigned to this node',/)
+
+      end 
 
       subroutine outdt0
 c----------------------------------------------------------------------------
@@ -6182,51 +6506,912 @@ c----------------------------------------------------------------------------
       stop
       end 
 
-      subroutine grxn (gval) 
-c-----------------------------------------------------------------------
-c grxn computes the free energy of univariant equilibria
-c defined by the data in commonn block cst21 which is initialized
-c in the subprogram balanc.  grxn is partially redundant with
-c the function gphase but because of the frequency that these
-c these routines are used a significant increase in efficiency is
-c gained by maintaining separate functions.
-c-----------------------------------------------------------------------
+      subroutine amihot (i,j,jhot,jinc)
+c----------------------------------------------------------------------
+c check if cell with lower left corner at node ij is homogeneous
+c----------------------------------------------------------------------
       implicit none
 
       include 'perplex_parameters.h'
 
-      integer j
+      integer jinc, i, j, jhot
 
-      double precision gval, gproj
+      integer iap,ibulk
+      common/ cst74 /iap(k2),ibulk
 
-      external gproj
+      integer igrd
+      common/ cst311 /igrd(l7,l7)
 
-      integer iffr,isr
-      double precision vuf,vus
-      common/ cst201 /vuf(2),vus(h5),iffr,isr
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+c----------------------------------------------------------------------
+      jhot = 1
 
-      integer idr,ivct
-      double precision vnu
-      common/ cst25 /vnu(k7),idr(k7),ivct
-c-----------------------------------------------------------------------
-c                                 compute potentials of saturated phases
-c                                 and components, note that in this
-c                                 version of vertex the stoichiometry of
-c                                 such components may vary.
+      if (iap(igrd(i,j)).eq.iap(igrd(i,j+jinc)).and.
+     *    iap(igrd(i,j)).eq.iap(igrd(i+jinc,j+jinc)).and.
+     *    iap(igrd(i,j)).eq.iap(igrd(i+jinc,j))) jhot = 0
 
-c                                 no saturated phase components and no
-c                                 saturated components:
-      if (iffr.eq.1.and.isr.eq.1) goto 10
-c                                 note that this call to uproj makes a
-c                                 subsequent call in gall redundant if
-c                                 sfol1 is used to trace a univariant
-c                                 curve.
-      call uproj
-c                                 compute free energy change of the rxn
-10    gval = 0d0
+c     if (lopt(18).and.iap(igrd(i,j)).eq.k3) jhot = 1
+     
+      end  
 
-      do j = 1, ivct
-         gval = gval + vnu(j) * gproj (idr(j))
+      subroutine filler (i,j,kinc)
+c--------------------------------------------------------------------
+c fill nodes between identical edges or diagonals, this could
+c be modified to a less biased (symmetrical) strategy as in 
+c routine aminot. 
+c---------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer kinc, i, j, ii, jj, k
+
+      integer igrd
+      common/ cst311 /igrd(l7,l7)
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+c----------------------------------------------------------------------
+      if (kinc.eq.1) return 
+
+      if (igrd(i,j).eq.igrd(i+kinc,j+kinc)) then
+c                                right diagonal
+c        if (igrd(i,j).ne.k2.or.(.not.lopt(18))) then 
+         do k = 1, kinc-1
+c                                the conditional prevents 
+c                                overwriting of identities if 
+c                                compression is off and searching
+c                                for true boundaries.
+            if (igrd(i+k,j+k).eq.0) igrd(i+k,j+k) = igrd(i,j)
+         end do
+c        end if  
+
+      else if (igrd(i+kinc,j).eq.igrd(i,j+kinc)) then
+c                                left diagonal
+c        if (igrd(i+kinc,j).ne.k2.or.(.not.lopt(18))) then 
+         do k = 1, kinc-1
+c                                the conditional prevents 
+c                                overwriting of identities if 
+c                                compression is off and searching
+c                                for true boundaries.
+            if (igrd(i+k,j+kinc-k).eq.0) 
+     *          igrd(i+k,j+kinc-k) = igrd(i,j+kinc)
+         end do 
+c        end if 
+
+      end if
+c                                bottom and top edge
+      do jj = j, j+kinc, kinc
+c        if (lopt(18).and.igrd(i,jj).eq.k2) then 
+c           cycle 
+         if (igrd(i,jj).eq.igrd(i+kinc,jj)) then 
+            do k = 1, kinc-1
+c                                the conditional prevents 
+c                                overwriting of identities if 
+c                                compression is off and searching
+c                                for true boundaries.
+               if (igrd(i+k,jj).eq.0) igrd(i+k,jj) = igrd(i,jj)
+            end do 
+         end if
+      end do 
+c                                left and right edges
+      do ii = i, i+kinc, kinc
+         if (igrd(ii,j).eq.igrd(ii,j+kinc)) then 
+            do k = 1, kinc-1
+c                                the conditional prevents 
+c                                overwriting of identities if 
+c                                compression is off and searching
+c                                for true boundaries.
+               if (igrd(ii,j+k).eq.0)  igrd(ii,j+k) = igrd(ii,j)
+            end do 
+         end if
       end do 
 
-      end      
+      end
+
+      subroutine wav2d1 (output)
+c--------------------------------------------------------------------
+c wav2d does constrained minimization on a 2 dimensional multilevel
+c grid (ith column of a 2-d grid), lowest resolution is the default, 
+c and phase boundaries are located at the highest level
+
+c the phase assemblage at node(i,j) of the grid is identified by the 
+c pointer to a phase assemblage.
+
+c the compound grid data igrd is output to the "plot" file.
+c---------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      logical output 
+
+      integer kinc, jinc(l8), iind(4), jind(4), iiind(4,2),htic,
+     *        jjind(4,2), hotij(l7*l7,2), kotij(l7*l7,2), icind(4),
+     *        jcind(4), lhot(4), ieind(5), jeind(5),i,ihot,
+     *        iil,jjl,ll,je,ie,icell,
+     *        ii,jj,kk,hh,hhot,jcent,icent,jjc,iic,h,jtic,khot,k,
+     *        ktic,j,jhot,klow,kinc2,kinc21,idead
+
+      integer ipot,jv,iv1,iv2,iv3,iv4,iv5
+      common/ cst24 /ipot,jv(l2),iv1,iv2,iv3,iv4,iv5
+
+      double precision v,tr,pr,r,ps
+      common/ cst5  /v(l2),tr,pr,r,ps
+
+      integer igrd
+      common/ cst311 /igrd(l7,l7)
+
+      integer iap,ibulk
+      common/ cst74 /iap(k2),ibulk
+
+      integer jlow,jlev,loopx,loopy,jinc1
+      common/ cst312 /jlow,jlev,loopx,loopy,jinc1
+
+      integer idasls,iavar,iasct,ias
+      common/ cst75  /idasls(k5,k3),iavar(3,k3),iasct,ias
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      save iind, jind, iiind, jjind, icind, jcind
+
+      data iind, jind   /0,0,1,1, 0,1,1,0/
+      data iiind, jjind /0,0,1,1,1,1,2,2, 1,1,2,0,0,2,1,1/
+      data icind, jcind /0,1,2,1, 1,2,1,0/
+      data ieind, jeind /0,0,2,2,0, 0,2,2,0,0/
+c-----------------------------------------------------------------------
+c                               initialize assemblage counter
+      iasct = 0 
+      ibulk = 0 
+c                               call old routine for 1d grid
+      if (loopx.eq.1) then
+         call wavgrd (output)
+         return
+      end if 
+c                               load arrays for lp solution
+      call initlp 
+c                               jlow is the number of nodes
+c                               at the lowest level, the number of
+c                               nodes is
+      klow = jlow - 1
+c                               first level:
+      loopy = klow * 2**(jlev-1) + 1 
+
+      loopx = (loopx-1) * 2**(jlev-1) + 1 
+
+      write (*,'(/)')
+
+      if (loopy.gt.l7) then
+         call warn (92,v(iv1),loopy,'y_node')
+         klow = (l7 - 1)/2**(jlev-1)
+         loopy = klow * 2**(jlev-1) + 1 
+      end if          
+
+      if (loopx.gt.l7) then
+         call warn (92,v(iv1),loopx,'x_node')
+         loopx = l7
+      end if  
+c                               initialize igrd (this is critical 
+c                               for auto_refine).
+      do j = 1, loopy
+         do i = 1, loopx
+            igrd(i,j) = 0
+         end do 
+      end do 
+c                               could check here if loopx*loopy, the
+c                               theoretical max number of assemblages
+c                               is > k2, but in practice the number of
+c                               assemblages << k2, so only test when 
+c                               actually set.
+      do j = 1, k2
+         iap(j) = 0 
+      end do 
+c                               increments at each level
+      do j = 1, jlev
+         jinc(j) = 2**(jlev-j)
+      end do 
+
+      kinc = jinc(1)
+      jinc1 = kinc
+
+      call setvar 
+c                               do all points on lowest level
+      do i = 1, loopx, kinc
+         do j = 1, loopy, kinc
+            call setvr0 (i,j)
+            call lpopt (i,j,idead,output)
+         end do
+c                               progress info
+         write (*,1030) dfloat(i)/dfloat(loopx)*1d2
+      end do 
+c                               get hot points
+      ihot = 0 
+      kinc2 = kinc/2
+      kinc21 = kinc2 + 1
+
+      do i = 1, loopx-1, kinc
+         do j = 1, loopy-1, kinc
+            call amihot (i,j,jhot,kinc)
+            if (jhot.ne.0) then 
+               ihot = ihot + 1
+               hotij(ihot,1) = i
+               hotij(ihot,2) = j 
+c                               cell is heterogeneous
+c                               fill in homogeneous diagonals
+c                               and edges
+               if (iopt(18).ne.0.and.kinc.gt.1) call filler (i,j,kinc)
+            else 
+c                               cell is homogeneous
+c                               fill in entire cell
+               if (kinc.gt.1) call aminot (i,j,kinc,kinc2,kinc21)
+            end if 
+         end do 
+      end do
+
+      if (ihot.eq.0) goto 10 
+
+      ktic = (loopx/kinc+1)*(loopy/kinc+1)
+
+      if (jlev.gt.1) write (*,1050) 
+
+      htic = 0 
+c                              now refine on all higher levels:
+      do k = 2, jlev
+c                              set new hot cell counter
+         khot = 0 
+         jtic = 0 
+c                              now working on new level
+         kinc = jinc(k)
+         kinc2 = kinc/2
+c
+         write (*,1060) ihot,k
+c                              compute assemblages at refinement
+c                              points
+         do h = 1, ihot
+c                              cell corner
+            iic = hotij(h,1) 
+            jjc = hotij(h,2)
+c                              first compute the central node of
+c                              the hot cell
+            icent = iic + kinc
+            jcent = jjc + kinc
+            if (igrd(icent,jcent).eq.0) then 
+               call setvr0 (icent,jcent)
+               call lpopt (icent,jcent,idead,output)
+               jtic = jtic + 1
+               htic = htic + 1
+            end if 
+c                              now determine which of the diagonals
+c                              has a change
+            hhot = 0 
+
+            do hh = 1, 4
+            
+               i = iic + iind(hh)*2*kinc
+               j = jjc + jind(hh)*2*kinc
+               lhot(hh) = 0 
+
+               if (iap(igrd(i,j)).ne.iap(igrd(icent,jcent))) then 
+c                              cell is hot
+                  khot = khot + 1
+                  hhot = hhot + 1
+                  kotij(khot,1) = iic + iind(hh)*kinc
+                  kotij(khot,2) = jjc + jind(hh)*kinc
+                  lhot(hh) = 1
+c                              compute assemblages at new nodes
+                  do kk = 1, 2
+                     ii = iic + iiind(hh,kk)*kinc
+                     jj = jjc + jjind(hh,kk)*kinc
+                     if (igrd(ii,jj).eq.0) then 
+                        call setvr0 (ii,jj)
+                        call lpopt (ii,jj,idead,output)
+                        jtic = jtic + 1
+                        htic = htic + 1
+                     end if 
+                  end do 
+               end if 
+            end do 
+c                              if less than 3 hot sub-cells check
+c                              edges
+            if (hhot.lt.4.and.hhot.gt.1) then 
+
+               do hh = 1, 4
+c                              index the edge node
+                  ii = iic + icind(hh)*kinc
+                  jj = jjc + jcind(hh)*kinc
+                  if (igrd(ii,jj).ne.0) then 
+c                              could have a second hot cell, check
+c                              both corners
+                     icell = hh
+
+                     do kk = 1, 2
+                        ie = iic + ieind(hh+kk-1)*kinc
+                        je = jjc + jeind(hh+kk-1)*kinc
+                        icell = icell + kk - 1
+                        if (icell.gt.4) icell = 1
+                        
+                        if (iap(igrd(ii,jj)).ne.iap(igrd(ie,je)).and.
+     *                     lhot(icell).eq.0) then 
+c                               new cell
+                           khot = khot + 1
+                           hhot = hhot + 1
+                           lhot(icell) = 1
+c                                cell index is 
+                           ii = iic + iind(icell)*kinc
+                           jj = jjc + jind(icell)*kinc
+                           kotij(khot,1) = ii
+                           kotij(khot,2) = jj
+c                                compute assemblage at cell nodes
+                           do ll = 1, 4
+                              iil = ii + iind(ll)*kinc
+                              jjl = jj + jind(ll)*kinc
+                              if (igrd(iil,jjl).eq.0) then              
+                                 call setvr0 (iil,jjl)
+                                 call lpopt (iil,jjl,idead,output)
+                                 jtic = jtic + 1
+                                 htic = htic + 1
+                              end if 
+                           end do  
+                        end if
+                     end do 
+                  end if 
+               end do 
+            end if      
+
+            do hh = 1, 4
+
+               i = iic + iind(hh)*kinc
+               j = jjc + jind(hh)*kinc
+               if (i.lt.loopx.and.j.lt.loopy) then 
+                  if (lhot(hh).eq.0) then 
+c                                fill cold cells
+                     call aminot1 (icent,jcent,i,j,kinc)
+                  else 
+c                                fill hot cells
+                     if (iopt(18).ne.0) call filler (i,j,kinc)
+                  end if 
+               end if 
+            end do 
+         
+            if (htic.gt.500) then 
+               write (*,1090) jtic
+               htic = 0 
+            end if
+ 
+         end do
+
+         write (*,1070) k,jtic
+         ktic = ktic + jtic
+ 
+         write (*,1080) ktic,(loopx/kinc+1)*(loopy/kinc+1)
+
+         if (khot.eq.0.or.k.eq.jlev) exit 
+c                             now switch new and old hot list
+         ihot = khot
+         do i = 1, khot
+            hotij(i,1) = kotij(i,1)
+            hotij(i,2) = kotij(i,2)
+         end do 
+
+      end do 
+c                                 ouput grid data
+10    if (output) call outgrd (loopx,loopy,jinc(1))    
+
+1030  format (f5.1,'% done with low level grid.')
+1050  format (/,'Beginning grid refinement stage.',/)
+1060  format (i6,' grid cells to be refined at grid level ',i1)
+1070  format (7x,'refinement at level ',i1,' involved ',i6,
+     *        ' minimizations')
+1080  format (i6,' minimizations required of the ',
+     *        'theoretical limit of ',i6)
+1090  format (7x,'...working (',i6,' minimizations done)')
+
+      end 
+
+      subroutine wavgrd (output)
+c----------------------------------------------------------------------
+c wavgrd does constrained minimization on a 1 dimensional multilevel
+c grid (ith column of a 2-d grid), lowest resolution is the default, 
+c and phase boundaries are located at the highest level
+
+c the phase assemblage at node(i,j) of the grid is identified by the 
+c pointer igrd(i,j), igrd is a pointer to a phase assemblage.
+c the compound grid data igrd is output to the "plot" file.
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      logical output
+
+      integer kinc,jinc(l8),i,j,k,klast,kmax,kd,idead,jtic,jmin,
+     *        jmax,klev,klow
+
+      integer ipot,jv,iv1,iv2,iv3,iv4,iv5
+      common/ cst24 /ipot,jv(l2),iv1,iv2,iv3,iv4,iv5
+
+      double precision v,tr,pr,r,ps
+      common/ cst5  /v(l2),tr,pr,r,ps
+
+      integer igrd
+      common/ cst311 /igrd(l7,l7)
+
+      integer iap,ibulk
+      common/ cst74 /iap(k2),ibulk
+
+      integer jlow,jlev,loopx,loopy,jinc1
+      common/ cst312 /jlow,jlev,loopx,loopy,jinc1
+c-----------------------------------------------------------------------
+c                               load arrays for lp solution
+      call initlp
+c                               jlow is the number of nodes
+c                               at the lowest level, the number of
+c                               nodes is
+      klow = jlow - 1
+c                               first level:
+      loopy = klow * 2**(jlev-1) + 1 
+
+      if (loopy.gt.l7) then
+         call warn (92,v(iv1),loopy,'WAVGRD')
+         klow = (l7 - 1)/2**(jlev-1)
+         loopy = klow * 2**(jlev-1) + 1 
+      end if        
+c                               initialize igrd/iap (this is critical 
+c                               for auto_refine).
+      do j = 1, loopy
+         igrd(1,j) = 0
+         iap(j) = 0 
+      end do        
+c                                increments
+      do j = 1, jlev
+         jinc(j) = 2**(jlev-j)
+      end do 
+
+      jinc1 = jinc(1)
+c                                initialize variables
+      call setvar 
+c                                initialize grid vars
+      kinc = jinc(1)
+      klev = 1
+
+      i = 1
+
+      j = 1
+      jmax = 1 
+      jmin = 0
+      jtic = 0 
+
+      do while (j.le.loopy) 
+
+         if (igrd(i,j).eq.0) then
+c                                call to incvr2 moved here (formerly
+c                                at end of loop), april 5, 2006. JADC
+            call setvr0 (j,1)
+            call lpopt (i,j,idead,output)
+            jtic = jtic + 1
+         end if 
+
+         kd = iap(igrd(i,j))
+c                                jmax should always be the last known node
+c                                at lowest level of resolution
+         if (j.gt.jmax) then 
+            jmax = j
+            jmin = j - jinc(1) 
+            kmax = kd
+         end if 
+
+         if (j.eq.1) then
+ 
+            klast = kd
+               
+         else if (kd.ne.klast.and.klev.ne.jlev) then
+c                                crossed a boundary and not
+c                                at max resolution, increment resolution
+            klev = klev + 1
+            kinc = -jinc(klev)
+
+         else if (kd.eq.klast.and.klev.ne.jlev) then 
+c                                backed into field?
+            if (kd.eq.kmax) then
+c                                go to next low res node
+               kinc = jinc(1)
+               j = jmax
+               klev = 1
+               goto 10
+            end if 
+            
+            klev = klev + 1
+            kinc = jinc(klev)
+
+         else if (klev.eq.jlev) then
+c                                boundary has been located at max
+c                                resolution
+              
+c                                jmin is the minimum value at which 
+c                                subsequent searchs can go
+            do k = j, jmax - 1
+               if (igrd(i,k).eq.0) then 
+                  jmin = k - 1
+                  goto 20 
+               end if 
+            end do 
+          
+20          klast = iap(igrd(i,jmin))
+c                                check if there is a grid point with
+c                                this assemblage at a higher level
+            do k = jmin, jmax - 1
+
+               if (igrd(i,k).eq.0) cycle
+               if (iap(igrd(i,k)).eq.klast) jmin = k
+
+            end do 
+
+            if (klast.eq.kmax.or.j.eq.jmax-1) then
+c                                the grid can be filled in between j and jmax
+c                                go on to the next low level grid point:
+               klast = iap(igrd(i,jmax))
+               kinc = jinc(1)
+               klev = 1
+               j = jmax
+                  
+            else 
+c                                find the level to search for next boundary
+c                                must be > level 1
+               do k = 2, jlev
+                  if (jmax-jmin.gt.jinc(k)) then
+                     j = jmax
+                     klev = k
+                     kinc = -jinc(k)
+                     goto 10 
+                  end if
+               end do 
+            end if 
+         end if 
+
+10       j = j + kinc
+
+         if (j.lt.jmin+1) then 
+            j = j - kinc 
+            klev = klev + 1
+            kinc = -jinc(klev)
+            goto 10 
+         end if 
+
+      end do 
+c                                 output graphics data
+      if (output) call outgrd (i,loopy,jinc(1))
+
+      end 
+
+      subroutine aminot (i,j,kinc,kinc2,kinc21)
+c--------------------------------------------------------------------
+c fill in nodes of a homogeneous cell, called only for lowest level
+c grid, aminot1 is called for higher level cells. kinc is always
+c even and > 1. modfied to fill from each corner if kinc > 2 in case
+c compression is off. JADC sept '04. 
+
+c kinc   - the current grid increment
+c kinc2  - kinc/2 (integer division)
+c kinc21 - kinc2 + 1
+c---------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer i, j, kinc, ii, jj, kinc2, kinc21
+
+      integer igrd
+      common/ cst311 /igrd(l7,l7)
+c                                 the commented version fills
+c                                 with just assemblage i,j this
+c                                 would be fine if compression is
+c                                 on, but is biased otherwise
+c      do ii = i, i + kinc - 1
+c         do jj = j, j + kinc - 1
+c                                 the conditional prevents 
+c                                 overwriting of identities if 
+c                                 compression is off and searching
+c                                 for true boundaries.
+c            if (igrd(ii,jj).eq.0) igrd(ii,jj) = igrd(i,j)
+c         end do
+c      end do 
+c                                 first fill from lower left (i,j)
+      do ii = i, i + kinc2 
+         do jj = j, j + kinc2
+            if (igrd(ii,jj).eq.0) igrd(ii,jj) = igrd(i,j)
+         end do
+      end do
+c                                 then from lower right (i+kinc,j)
+      do ii = i + kinc21, i + kinc
+         do jj = j, j + kinc2
+            if (igrd(ii,jj).eq.0) igrd(ii,jj) = igrd(i+kinc,j)
+         end do
+      end do
+c                                 then from upper left (i,j+kinc)
+      do ii = i, i + kinc2
+         do jj = j + kinc21, j + kinc
+            if (igrd(ii,jj).eq.0) igrd(ii,jj) = igrd(i,j+kinc)
+         end do
+      end do
+c                                 then from upper right (i+kinc,j+kinc)
+      do ii = i + kinc21, i + kinc
+         do jj = j + kinc2 + 1, j + kinc
+            if (igrd(ii,jj).eq.0) igrd(ii,jj) = igrd(i+kinc,j+kinc)
+         end do
+      end do
+     
+      end  
+
+      subroutine aminot1 (icent,jcent,i,j,kinc)
+c--------------------------------------------------------------------
+c fill in nodes of a homogeneous cell, called only for high level
+c grids, aminot is called for lowest level cells. kinc is always
+c even and > 1.  JADC sept '04. 
+
+c kinc   - the current grid increment
+c---------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer i, j, ii, jcent, icent, jj, kinc
+
+      integer igrd
+      common/ cst311 /igrd(l7,l7)
+
+      do ii = i, i + kinc
+         do jj = j, j + kinc
+c                                 the conditional prevents 
+c                                 overwriting of identities if 
+c                                 compression is off and searching
+c                                 for true boundaries.
+            if (igrd(ii,jj).eq.0) igrd(ii,jj) = igrd(icent,jcent)
+         end do
+      end do 
+     
+      end  
+
+      subroutine fractr (output)  
+c-----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+ 
+      character gname*10
+
+      integer i,j,k
+
+      logical there, warn, output
+ 
+      character*8 vname,xname
+      common/ csta2  /xname(k5),vname(l2)
+
+      double precision dcomp
+      common/ frct2 /dcomp(k5)
+
+      integer ifrct,ifr
+      logical gone
+      common/ frct1 /ifrct,ifr(k23),gone(k5)
+ 
+      integer ipot,jv,iv
+      common/ cst24 /ipot,jv(l2),iv(l2)
+
+      double precision v,tr,pr,r,ps
+      common/ cst5  /v(l2),tr,pr,r,ps
+
+      integer jbulk
+      double precision cblk
+      common/ cst300 /cblk(k5),jbulk
+
+      character*5 cname
+      common/ csta4 /cname(k5)
+
+      integer kkp, np, ncpd, ntot
+      double precision cp3, amt
+      common/ cxt15 /cp3(k0,k5),amt(k5),kkp(k5),np,ncpd,ntot
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+c----------------------------------------------------------------------- 
+c                                 fractionation effects:
+      do i = 1, jbulk
+         dcomp(i) = 0d0
+      end do 
+
+      do i = 1, ifrct
+
+         there = .false.
+
+         do j = 1, ntot
+
+            if (kkp(j).eq.ifr(i).and.amt(j).ge.0d0) then 
+
+               there = .true.
+c                                 the phase to be fractionated
+c                                 is present
+               do k = 1, jbulk 
+                  dcomp(k) = dcomp(k) + amt(j)*cp3(k,j)
+               end do 
+c                                 write to console
+               write (*,1185) vname(iv(2)),v(iv(2)),
+     *                        vname(iv(1)),v(iv(1))
+               write (*,1190) amt(j),gname(ifr(i)),
+     *                        (amt(j)*cp3(k,j),k=1,jbulk)
+c                                 write to file
+               if (output) write (n0+i,1200) v(iv(1)),amt(j),
+     *                     gname(ifr(i)),(amt(j)*cp3(k,j),k=1,jbulk)
+         
+            end if
+
+         end do 
+
+         if (.not.there) then
+            write (*,1185) vname(iv(2)),v(iv(2)),vname(iv(1)),v(iv(1))
+            write (*,1210) gname(ifr(i))
+         end if 
+ 
+      end do   
+
+      warn = .false.     
+
+      do i = 1, jbulk
+         cblk(i) = cblk(i) - dcomp(i)
+
+         if (cblk(i).le.nopt(11)) then 
+
+            if (.not.gone(i)) then
+               warn = .true.
+               gone(i) = .true. 
+               write (*,1000) cname(i)
+            end if 
+
+            if (cblk(i).lt.nopt(11)) cblk(i) = 0d0
+
+         end if 
+
+      end do
+
+      if (output.and.ifrct.gt.0) 
+     *   write (n0,1220) v(iv(1)),(cblk(k),k=1,jbulk)
+ 
+      if (warn) then 
+         do i = 1, jbulk 
+            if (.not.gone(i)) write (*,1010) cname(i),cblk(i)
+         end do
+      end if  
+
+1000  format (3(/,5('*** WARNING ***')),
+     *     //,'Fractionation has completely'
+     *       ,' depleted ',a,' from the bulk composition.',//,
+     *        'This ',
+     *        'depletion may destabilize the minimization algorithm ',
+     *        'if excessive',/,'minimization errors occur, restart the',
+     *        'fractionation calculation at the',/,'current point on ',
+     *        'the fractionation path with the current molar bulk ', 
+     *        'composition:',/)
+1010  format (4x,a,2x,g12.6)       
+1185  format (/,'At ',a,'=',g12.6,' and ',a,'=',g12.6)
+1190  format ('fractionating ',g12.6,' moles of ',a,'; changes bulk by:'
+     *        ,/,15(1x,g12.6))
+1200  format (g12.6,1x,g12.6,1x,a,15(1x,g12.6))
+1210  format (a,' is not stable.')
+1220  format (17(g12.6,1x))
+      end 
+
+      subroutine frname 
+c----------------------------------------------------------------------
+c frname - prompt for names of phases to be fractionated
+
+c          ifrct - number of phases to be fractionated
+c          ifr(ifract) - 0 if cpd, else ikp (solution pointer)
+c          jfr(ifract) - cpd pointer
+c----------------------------------------------------------------------
+
+      implicit none
+ 
+      include 'perplex_parameters.h'
+
+      logical first 
+
+      integer iam, jfrct, i
+
+      character*10 phase(k23), fname*14, y*1
+
+      integer ifrct,ifr
+      logical gone
+      common/ frct1 /ifrct,ifr(k23),gone(k5)
+ 
+      save first,phase
+
+      data first/.true./
+c----------------------------------------------------------------------
+
+      if (first) then 
+
+         first = .false.
+
+         write (*,1030) 
+         read (*,'(a)') y
+         if (y.ne.'y'.and.y.ne.'Y') goto 99 
+
+         ifrct = 1
+
+         do 
+
+            write (*,1040)
+            read (*,'(a)') phase(ifrct)
+
+            if (phase(ifrct).eq.' ') exit
+
+            call matchj (phase(ifrct),ifr(ifrct))
+
+            if (ifr(ifrct).eq.0) then
+               write (*,1100) phase(ifrct)
+               cycle 
+            end if
+
+            ifrct = ifrct + 1
+
+            if (ifrct.gt.k23) call error (1,0d0,ifrct,'k23')
+
+         end do 
+
+         ifrct = ifrct - 1
+
+      else 
+c                                 must be in autorefine cycle, make
+c                                 new phase list from old list:
+         jfrct = ifrct
+         ifrct = 0  
+         
+         do i = 1, jfrct 
+
+            call matchj (phase(i),iam)
+
+            if (iam.eq.0) cycle 
+       
+            ifrct = ifrct + 1
+            ifr(ifrct) = iam 
+
+         end do 
+
+      end if 
+c                                 initialize "gone" flags
+      do i = 1, k5
+         gone(i) = .false.
+      end do 
+c                                 open fractionation files
+      open (n0,file='fractionated_bulk.dat',status='unknown')
+      write (*,1050)
+
+      do i = 1, ifrct 
+
+         write (fname,'(a,a)') phase(i),'.dat'
+         call unblnk (fname)
+
+         write (*,1010) phase(i), fname
+
+         open (n0+i,file=fname,status='unknown')
+
+      end do 
+
+1010  format (/,'The fractionated amount and composition of ',a,/,
+     *          'will be written to file: ',a,/)
+1030  format ('Fractionate phases (y/n)?')
+1040  format (/,'Enter the name of a phase to be fractionated',
+     *        /,'(left justified, <cr> to finish): ')
+1050  format (/,'The fractionated bulk composition will be ',
+     *          'written to file: fractionated_bulk.dat',/)
+1100  format (/,'No such entity as ',a,', try again: ')
+
+99    end 

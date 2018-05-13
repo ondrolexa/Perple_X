@@ -279,7 +279,7 @@ cren  = 1 mgts + 1 kos - 1 jd
        DQF(J/mol) = 3d3 
 oen   = 1 mgts + 1 acm - 1 jd
        DQF(J/mol) = -15d3 + 0.15 * p_bar
-odi   = 1 di
+odijh = 1 di
        DQF(J/mol) = -0.1d3 2.11 0.005
                                   | Make definitions for Jennings and Holland, J Pet, 56:869-892, 2015 melt
 qjL = 2 qL
@@ -311,32 +311,10 @@ kprg  = 1 mu - 1 pa + 1 parg
 tts   = -2 dsp + 2 ru + 1 ts    
    DQF =   95000
                                   | Make definitions for Green et al., JMG, 2016 augite (clinopyroxene)
+cenh  = 1 en
+   DQF = 3500 - 2 * T + 0.048 * P 
 cfsg  = 1 fs
    DQF = 2100 - 2 * T + 0.045 * P
-                                  | Make definitions for Holland et al., 2013; dx.doi.org/10.1093/petrology/egt035
-                                  | mantle mineralogical model.
-nacfb = 1 nacf
-       DQF(J/mol) = -9000 0 0
-mfpv = 1 fpv
-       DQF(J/mol) = -9500 0 0
-mcpv = 1 cpv
-       DQF(J/mol) = 60000 0 0
-mnpv = 1 npv
-       DQF(J/mol) = 16000 0 0
-cmpv = 1 mpv
-       DQF(J/mol) = 35000 0 0
-cfpv = 1 fpv
-       DQF(J/mol) = 24000 0 0
-capv = 1 apv
-       DQF(J/mol) = 45000 0 0
-cnpv = 1 npv
-       DQF(J/mol) = 25000 0 0
-fcor = 1 mcor + 1 fak - 1 mak   | FeSi corundum 
-       DQF(J/mol) = -15d3 0 0
-hodi  = 1 di
-       DQF(J/mol) = -100 + 0.211 * T_K + 0.005 * P_bar
-hmgts  = 1 mgts + 1 hen - 1 en
-       DQF(J/mol) = -1d3 0 0
 
 end_makes
 

@@ -24,9 +24,9 @@ c                                 global assemblage data
       integer iap,ibulk
       common/ cst74  /iap(k2),ibulk
 
-      double precision xco
-      integer ico,jco
-      common/ cxt10 /xco(k18),ico(k1),jco(k1)
+      double precision xcoor
+      integer icoor
+      common/ cxt10 /xcoor(k18),icoor(k1)
 
       double precision bg
       common/ cxt19 /bg(k5,k2)
@@ -40,28 +40,18 @@ c                                 global assemblage data
       integer jtest,jpot
       common/ debug /jtest,jpot
 
-      double precision amu
-      common/ cst48 /amu(k8,k2)
+      double precision mus
+      common/ cst48 /mus(k8,k2)
 
       integer jbulk
       double precision cblk
       common/ cst300 /cblk(k5),jbulk
 
-      integer ncoor,mcoor,ndim
-      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
+      integer ncoor
+      common/ cxt24 /ncoor(h9)
 
       integer iam
       common/ cst4 /iam
-
-      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
-      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
-
-      integer kd, na1, na2, na3, nat
-      double precision x3, caq
-      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),na1,na2,na3,nat,kd
-
-      integer ksmod, ksite, kmsol, knsp
-      common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
 
       integer iopt
       logical lopt
@@ -96,7 +86,7 @@ c                                phase molar amounts
 
          if (ier.ne.0) exit
 
-         ico(ibulk) = jxco
+         icoor(ibulk) = jxco
 
          do i = 1, iavar(1,ias)
 
@@ -107,19 +97,7 @@ c                                phase molar amounts
 
             if (kxco.gt.k18) call error (61,0d0,k18,'BPLINP')
 
-            read (n5,*,iostat=ier) (xco(j), j = jxco, kxco)
-
-            if (lopt(32).and.ksmod(ids).eq.39) then 
-c                                lagged speciation
-
-               jxco = kxco + 1
-               kxco = kxco + nat
-
-               if (kxco.gt.k18) call error (61,0d0,k18,'BPLINP')
-
-               read (n5,*,iostat=ier) (xco(j), j = jxco, kxco)
-
-            end if  
+            read (n5,*,iostat=ier) (xcoor(j), j = jxco, kxco)
          
             jxco = kxco
 
@@ -131,14 +109,14 @@ c                                lagged speciation
 c                                 read mu's if available
          if (jpot.ne.1) then
  
-            read (n5,*,iostat=ier) (amu(i,ibulk), i = 1, jbulk)
+            read (n5,*,iostat=ier) (mus(i,ibulk), i = 1, jbulk)
 
             if (ier.ne.0) then 
 c                                 if error on read most probably its
 c                                 because of NaN's for the chemical 
 c                                 potentials
                do i = 1, jbulk
-                  amu(i,ibulk) = nopt(7)
+                  mus(i,ibulk) = nopt(7)
                end do 
  
                ier = 0 
@@ -225,14 +203,6 @@ c---------------------------------------------------------------------
 
       integer jlow,jlev,loopx,loopy,jinc
       common/ cst312 /jlow,jlev,loopx,loopy,jinc
-
-      double precision v,tr,pr,r,ps
-      common/ cst5  /v(l2),tr,pr,r,ps
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 c----------------------------------------------------------------------
 
       if (icopt.eq.7.and.fileio) then 
@@ -329,32 +299,7 @@ c                                 switch loopx and loopy
 
          do i = 3, 4
             vnm(i) = vname(jv(i-2))
-         end do
-
-      else if (icopt.eq.12) then 
-
-         vnm(1) = 'n(H2O)     '
-         vnm(2) = 'node#      '
-
-         vmn(2) = 1d0
-         vmx(2) = dfloat(iopt(36)) + 1d0
-         var(2) = 1d0
- 
-         vmn(1) = 0d0
-         vmx(1) = nopt(36)*dfloat(iopt(36))
-         var(1) = 0d0
-
-         v(1) = vmin(1)
-         v(2) = vmin(2)
-
-         jvar = ipot + 2
-
-         do i = 3, jvar
-            vnm(i) = vname(jv(i-2))
-            vmx(i) = vmax(jv(i-2))
-            vmn(i) = vmin(jv(i-2))
-            var(i) = vmin(jv(i-2))
-         end do
+         end do  
 
       end if 
 
@@ -390,6 +335,9 @@ c----------------------------------------------------------------------
       integer idasls,iavar,iasct,ias
       common/ cst75 /idasls(k5,k3),iavar(3,k3),iasct,ias
 
+      integer jcont
+      common/ cst315 /jcont
+
       integer isec,icopt,ifull,imsg,io3p
       common/ cst103 /isec,icopt,ifull,imsg,io3p
 
@@ -416,20 +364,15 @@ c----------------------------------------------------------------------
       common/ cst38/idsol(k5,k3),nrep(k5,k3),nph(k3)
 c----------------------------------------------------------------------
       err = .false.
-c                                 sep 22, 2017: interpolation should 
-c                                 be turned off for calculations in which
-c                                 the bulk composition changes; however
-c                                 jcont (as read in input1) was not the
-c                                 flag for this condition. this needs to 
-c                                 be corrected. 
-c     if (icont.ne.0) then 
+
+      if (jcont.ne.0) then 
 c                                 turn interpolation off for
 c                                 fractionation calcs or compositional
 c                                 variables, this could be optional.
-c        iopt(4) = 0
-c        write (*,3000) 
+         iopt(4) = 0
+         write (*,3000) 
 
-c     end if 
+      end if 
 c                                 top of plot file
       read (n4,*,iostat=ier) loopx, loopy, jinc
       if (ier.ne.0) goto 99
@@ -578,9 +521,9 @@ c----------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      character*5 y*1, units*13, text*195, what*9, sym*1
+      character*5 y*1, units*15, text*195
 
-      integer jcomp, ier, i, ids, count
+      integer jcomp, ier, i, ids
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
@@ -593,61 +536,24 @@ c----------------------------------------------------------------
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
-      character fname*10, aname*6, lname*22
-      common/ csta7 /fname(h9),aname(h9),lname(h9)
-
       integer icps, jcx, jcx1, kds
-      logical stol, savg, spec
-      double precision rcps, a0
-      common/ comps /rcps(k7,2*k5),a0(k7,2),icps(k7,2*k5),jcx(2*k5),
-     *               jcx1(2*k5),kds(2*k5),stol(i11),savg(i11),spec(2*k5)
-
-      integer spct
-      double precision ysp
-      character*8 spnams
-      common/ cxt34 /ysp(l10,k5),spct(h9),spnams(l10,h9)
+      logical stol, savg
+      double precision rcps
+      common/ comps /rcps(k7,2*k5),icps(k7,2*k5),jcx(2*k5),jcx1(2*k5),
+     *               kds(2*k5),stol(i11),savg(i11)
 c----------------------------------------------------------------------
-c                                choose components vs species
-      write (*,1000) fname(ids)
-      read (*,'(a)') y
-
-      if (y.eq.'y'.or.y.eq.'Y') then 
-         spec(jcomp) = .true.
-         what = ' species'
-      else
-         spec(jcomp) = .false.
-         what = 'component'
-      end if 
-c                                set units for composition
-      if (spec(jcomp)) then
-         units = 'mole fraction'
-         sym = 'y'
-      else if (iopt(2).eq.0) then
-         units = 'molar amount '
-         sym = 'n'
+c                                choose units for composition
+      if (iopt(2).eq.0) then
+         units = 'mole proportion'
       else 
-         units = ' mass amount '
-         sym = 'm'
+         units = 'weight fraction'
       end if 
 c                                get the composition to be contoured
-10    if (lopt(22)) then
-c                                with moronic constant 
-         write (*,1100) sym, sym, units, what, what
-      else 
-         write (*,1110) sym, sym, units, what, what
-c                                zero the constant
-         a0(jcomp,1) = 0d0
-         a0(jcomp,2) = a0(jcomp,1)
-      end if 
+10    write (*,1100) units
   
       do 
 
-         if (spec(jcomp)) then 
-            write (*,1030) what,'numerator',k5+1
-         else 
-            write (*,1030) what//'s','numerator',k5+1
-         end if 
-
+         write (*,1030) 'numerator',k5+1
          read (*,*,iostat=ier) jcx(jcomp)
 
          if (ier.ne.0.or.jcx(jcomp).lt.1) then
@@ -661,20 +567,12 @@ c                                zero the constant
 c                                define the numerator
       do 
 
-         write (*,1040) what,'numerator'
-
-         if (spec(jcomp)) then
-            write (*,1010) (i,spnams(i,ids), i = 1, spct(ids))
-            count = spct(ids)
-         else 
-            write (*,1010) (i,cname(i), i = 1, icomp)
-            count = icomp
-         end if 
-
+         write (*,1040) 'numerator'
+         write (*,1010) (i,cname(i),i = 1, icomp)
          read (*,*,iostat=ier) (icps(i,jcomp),rcps(i,jcomp), 
      *                                     i = 1, jcx(jcomp))
          do i = 1, jcx(jcomp)
-            if (icps(i,jcomp).lt.1.or.icps(i,jcomp).gt.count) then
+            if (icps(i,jcomp).lt.1.or.icps(i,jcomp).gt.icomp) then
                ier = 1
                exit 
             end if 
@@ -688,20 +586,11 @@ c                                define the numerator
          exit 
 
       end do  
-
-      if (lopt(22)) then 
-         write (*,1050) 'a1'
-         call rdnumb (a0(jcomp,1),0d0,i,0,.true.)
-      end if 
 c                                define the denominator
+  
       do 
 
-         if (spec(jcomp)) then 
-            write (*,1030) what,'denominator',k5+1-jcx(jcomp)
-         else 
-            write (*,1030) what//'s','denominator',k5+1-jcx(jcomp)
-         end if 
-
+         write (*,1030) 'denominator',k5+1-jcx(jcomp)
          write (*,1140)
          read (*,*,iostat=ier) jcx1(jcomp)
 
@@ -720,14 +609,8 @@ c                                define the denominator
 
          do 
 
-            write (*,1040) what,'denominator'
-
-            if (spec(jcomp)) then
-               write (*,1010) (i,spnams(i,ids), i = 1, spct(ids))
-            else 
-               write (*,1010) (i,cname(i), i = 1, icomp)
-            end if 
-
+            write (*,1040) 'denominator'
+            write (*,1010) (i,cname(i),i = 1, icomp)
             read (*,*,iostat=ier) (icps(i,jcomp),rcps(i,jcomp), 
      *                                 i = jcx(jcomp)+1, jcx1(jcomp))
 
@@ -742,68 +625,16 @@ c                                define the denominator
                write (*,1020)
                cycle 
             end if 
-
-            if (lopt(22)) then 
-
-               write (*,1050) 'a2'
-               call rdnumb (a0(jcomp,2),0d0,i,0,.true.)
 c                                show the user the composition: 
-               write (*,1070)   
-
-               if (spec(jcomp)) then
-                  write (text,1120) a0(jcomp,1),(rcps(i,jcomp),
-     *                               spnams(icps(i,jcomp),ids),
-     *                               i = 1, jcx(jcomp))
-               else           
-                  write (text,1130) a0(jcomp,1),
-     *                         (rcps(i,jcomp),cname(icps(i,jcomp)), 
-     *                                          i = 1, jcx(jcomp))
-               end if 
-
-            else 
-
-               write (*,1070)  
-
-               if (spec(jcomp)) then
-                  write (text,1120) (rcps(i,jcomp),
-     *                               spnams(icps(i,jcomp),ids),
-     *                               i = 1, jcx(jcomp))
-               else          
-                  write (text,1120) (rcps(i,jcomp),cname(icps(i,jcomp)),
-     *                                            i = 1, jcx(jcomp))
-               end if 
-
-            end if  
-
+            write (*,1070)           
+            write (text,1130) (rcps(i,jcomp),cname(icps(i,jcomp)), 
+     *                                      i = 1, jcx(jcomp))
             call deblnk (text)
-            write (*,1150) text    
+            write (*,1150) text 
             write (*,*) '   divided by '
 
-            if (lopt(22)) then 
-
-               if (spec(jcomp)) then
-                  write (text,1130) a0(jcomp,1),(rcps(i,jcomp),
-     *                               spnams(icps(i,jcomp),ids),
-     *                               i = jcx(jcomp)+1, jcx1(jcomp))
-               else  
-                  write (text,1130) a0(jcomp,2),
-     *                        (rcps(i,jcomp),cname(icps(i,jcomp)), 
-     *                               i = jcx(jcomp)+1, jcx1(jcomp))
-               end if 
-
-            else
-
-               if (spec(jcomp)) then
-                  write (text,1120) (rcps(i,jcomp),
-     *                               spnams(icps(i,jcomp),ids),
-     *                               i = jcx(jcomp)+1, jcx1(jcomp))
-               else  
-                  write (text,1120) (rcps(i,jcomp),cname(icps(i,jcomp)),
-     *                               i = jcx(jcomp)+1, jcx1(jcomp))
-               end if 
-
-            end if 
-
+            write (text,1130) (rcps(i,jcomp),cname(icps(i,jcomp)), 
+     *                                 i = jcx(jcomp)+1, jcx1(jcomp))
             call deblnk (text)
             write (*,1150) text 
 
@@ -813,31 +644,8 @@ c                                show the user the composition:
 
       else 
 
-         if (lopt(22)) then 
-
-            if (spec(jcomp)) then
-               write (text,1130) a0(jcomp,1),(rcps(i,jcomp),
-     *                           spnams(icps(i,jcomp),ids),
-     *                           i = 1, jcx(jcomp))
-            else  
-               write (text,1130) a0(jcomp,1),
-     *                           (rcps(i,jcomp),cname(icps(i,jcomp)), 
-     *                           i = 1, jcx(jcomp))
-            end if 
-
-         else
-
-            if (spec(jcomp)) then
-               write (text,1120) (rcps(i,jcomp),
-     *                           spnams(icps(i,jcomp),ids),
-     *                           i = 1, jcx(jcomp))
-            else  
-               write (text,1120) (rcps(i,jcomp),cname(icps(i,jcomp)), 
-     *                                       i = 1, jcx(jcomp))
-            end if 
-
-         end if  
-
+         write (text,1130) (rcps(i,jcomp),cname(icps(i,jcomp)), 
+     *                                    i = 1, jcx(jcomp))
          call deblnk (text)
          write (*,1080) text 
 
@@ -849,50 +657,36 @@ c                                show the user the composition:
 
       kds(jcomp) = ids
 
-1000  format (/,'Define the composition in terms of the species/endmem',
-     *          'bers of ',a,'(y/n)?',//,'Answer no to define a ',
-     *          'composition in terms of the systems components.',/,
-     *          'Units (mass or molar) are controlled by the ',
-     *          'composition keyword in',/,'perplex_option.dat.')
-1010  format (2x,i2,' - ',a)
+1010  format (2x,i2,' - ',a5)
 1020  format (/,'Invalid input, try again:',/)
-1030  format (/,'How many ',a,' in the ',a,' of the',
+1030  format (/,'How many components in the ',a,' of the',
      *          ' composition (<',i2,')?')
-1040  format (/,'Enter ',a,' indices and weighting factors for the '
+1040  format (/,'Enter component indices and weighting factors for the '
      *        ,a,':')
-1050  format (/,'Enter the optional constant ',a,' [defaults to 0]:')
 1070  format (/,'The compositional variable is:')
 1080  format (/,'The compositional variable is: ',a,/)
 1090  format ('Change it (y/n)?')
 1100  format (/,'Compositions are defined as a ratio of the form:',/,
-     *        4x,'[a1 + Sum {w(i)*n(i), i = 1, c1}] / [a2 + Sum {w(i)*',
-     *        a,'(i), i = c2, c3}]',/,15x,
-     *        a,'(j)   = ',a,' of ',a,' j',/,15x,
-     *        'w(j)   = weighting factor of ',a,' j (usually 1)',/,
-     *    15x,'a1, a2 = optional constants (usually 0)')
-1110  format (/,'Compositions are defined as a ratio of the form:',/,
-     *        4x,' Sum {w(i)*n(i), i = 1, c1} / Sum {w(i)*',
-     *        a,'(i), i = c2, c3}',/,15x,
-     *        a,'(j)   = ',a,' of ',a,' j',/,15x,
-     *        'w(j)   = weighting factor of ',a,' j (usually 1)')
-1120  format (15('+',1x,f4.1,1x,a5,1x))
-1130  format (f4.1,1x,15('+',1x,f4.1,1x,a5,1x))
+     *        4x,' Sum {w(i)*n(i), i = 1, c1} / Sum {w(i)*n(i), i',
+     *        ' = c2, c3}',/,15x,
+     *        ' n(j) = ',a,' of component j',/,15x,
+     *        ' w(j) = weighting factor of component j (usually 1)')
+1130  format (15('+',1x,f4.1,1x,a5,1x))
 1140  format ('Enter zero to use the numerator as a composition.')
 1150  format (/,a,/)  
 
       end
 
-      subroutine rnam1 (iex,xnam,what)
+      subroutine rnam1 (iex,xnam)
 c----------------------------------------------------------------------
-c read a solution name (what = 0) compound name (what = 1) or either
-c (what = 2) from console, return
+c read a solution/compound name from console, return
 c iex = -id if a compound
 c iex = ikp if a solution
 c iex = 0 if invalid choice
 c----------------------------------------------------------------------
       implicit none
 
-      integer iex, what
+      integer iex
 
       character*10 xnam
 c----------------------------------------------------------------------
@@ -900,14 +694,7 @@ c----------------------------------------------------------------------
 
       do 
 
-         if (what.eq.0) then 
-            write (*,1040) 'solution' 
-         else if (what.eq.1) then 
-            write (*,1040) 'compound' 
-         else 
-            write (*,1040) 'solution or compound' 
-         end if  
-
+         write (*,1040) 
          read (*,'(a)') xnam
 
          call matchj (xnam,iex)
@@ -917,7 +704,7 @@ c----------------------------------------------------------------------
 
       end do 
 
-1040  format (/,'Enter ',a,' (left justified): ')
+1040  format (/,'Enter solution or compound name (left justified): ')
 1100  format (/,'No such entity as ',a,', try again: ')
 
       end
@@ -935,23 +722,20 @@ c----------------------------------------------------------------------
 
       integer i, j, id, jd, ids
 c                                 working arrays
-      double precision z, pa, p0a, x, w, y, wl
-      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
-     *              wl(m17,m18)
+      double precision z, pa, p0a, x, w, y
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1)
 c                                 x coordinate description
       integer istg, ispg, imlt, imdg
       common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
-c                                 xcoordinates for the final solution, a
-c                                 leetle witz.
-      integer kd, na1, na2, na3, nat
-      double precision x3, caq
-      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),na1,na2,na3,nat,kd
+c                                 xcoordinates for the final solution
+      double precision x3
+      common/ cxt16 /x3(k21,mst,msp)
 c----------------------------------------------------------------------
 
       do i = 1, istg(ids)
          do j = 1, ispg(ids,i)
-            x(i,j) = x3(jd,i,j)
-         end do
-      end do
+            x(i,j) = x3(jd,i,j) 
+         end do 
+      end do 
 
-      end
+      end 

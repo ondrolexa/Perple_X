@@ -20,7 +20,7 @@ c----------------------------------------------------------------------
 
       integer ibad2,ibad1,igood,i,j,ierr
 
-      character*100 n10nam,n11nam,n8nam
+      character*100 n10nam,n11nam,n12nam
 
       character*100 prject,tfname
       common/ cst228 /prject,tfname
@@ -28,8 +28,8 @@ c                                 solution model counter
       integer isoct
       common/ cst79 /isoct
 c                                 solution model names
-      character fname*10, aname*6, lname*22
-      common/ csta7 /fname(h9),aname(h9),lname(h9)
+      character*10 fname
+      common/ csta7 /fname(h9)
 
       integer isec,icopt,ifull,imsg,io3p
       common/ cst103 /isec,icopt,ifull,imsg,io3p
@@ -40,14 +40,14 @@ c                                 solution model names
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       double precision dcp,soltol
-      common/ cst57 /dcp(k5,k19),soltol
+      common/ cst57 /dcp(k5,h8),soltol
 
       logical refine
       common/ cxt26 /refine
 
       integer grid
       double precision rid 
-      common/ cst327 /grid(6,2),rid(5,2)
+      common/ cst327 /grid(6,2),rid(4,2)
 
       integer iam
       common/ cst4 /iam
@@ -60,13 +60,13 @@ c                                 are present and it is requested.
          call mertxt (n10nam,prject,'.arf',0)
          open (n10, file = n10nam, iostat = ierr, status = 'old')
 
-         call mertxt (n8nam,prject,'.tof',0)
+         call mertxt (n12nam,prject,'.tof',0)
 
          if (iam.eq.1.or.iam.eq.2) then
 c                                 VERTEX or MEEMUM:
             if (iam.eq.1) then 
 
-               open (n8, file = n8nam, status = 'unknown')
+               open (n8, file = n12nam, status = 'unknown')
 c                                 user friendly text version 
                if (lopt(11)) then 
                   call mertxt (n11nam,prject,'_auto_refine.txt',0)
@@ -153,15 +153,20 @@ c                                 solvus tolerance
 c                                 number of iterations
             iopt(10) = grid(6,i)
 c                                 bound relaxation rate
+            if (i.eq.1) then 
 c                                 the initial resolution of the exploratory stage
-            nopt(10) = rid(3,i) 
-c                                 speciation tolerance
-            nopt(5) = rid(5,i)
+               nopt(10) = rid(3,1) * nopt(29)
+           
+            else 
+c                                 the final resolution of the exploratory stage   
+               nopt(10) = rid(4,1) * nopt(29)
+
+            end if 
 
          else 
 c                                 werami/pssect if refine, get the 
 c                                 solution models to be rejected
-            open (n8, file = n8nam, iostat=ierr, status = 'old')
+            open (n8, file = n12nam, iostat=ierr, status = 'old')
         
             if (ierr.eq.0) then 
 c                                 write a flag to indicate if auto-refine
@@ -254,7 +259,7 @@ c                                 solution model counter
 
       integer grid
       double precision rid 
-      common/ cst327 /grid(6,2),rid(5,2)
+      common/ cst327 /grid(6,2),rid(4,2)
 
       integer ipot,jv,iv
       common/ cst24 /ipot,jv(l2),iv(l2)
@@ -297,8 +302,8 @@ c                                 gridded minimization
             jlow = grid(4,index)
             loopx = 1
          else 
-            jlow = grid(2,index)
-            loopx = grid(1,index) 
+            jlow = grid(1,index)
+            loopx = grid(2,index) 
          end if
 
          jlev = grid(3,index) 
@@ -350,7 +355,7 @@ c-----------------------------------------------------------------------
       character*100 blank*1,string(3)*8,rname*5,name*8,strg*80,n2name,
      *              n9name,y*1,sname*10,prt*3,plt*3
 
-      integer idum, nstrg, i, j, k, ierr, icmpn, jcont, kct
+      integer idum,nstrg,i,j,ierr,icmpn,jcont,kct
 
       double precision dip
 
@@ -373,8 +378,8 @@ c-----------------------------------------------------------------------
       double precision vmax,vmin,dv
       common/ cst9 /vmax(l2),vmin(l2),dv(l2)
 
-      character fname*10, aname*6, lname*22
-      common/ csta7 /fname(h9),aname(h9),lname(h9)
+      character*10 fname
+      common/ csta7 /fname(h9) 
 
       character*8 xname,vname
       common/ csta2 /xname(k5),vname(l2)
@@ -400,8 +405,8 @@ c-----------------------------------------------------------------------
       integer ivfl
       common/ cst102 /ivfl
 
-      integer jfct,jmct,jprct,jmuct
-      common/ cst307 /jfct,jmct,jprct,jmuct
+      integer jfct,jmct,jprct
+      common/ cst307 /jfct,jmct,jprct
 
       integer iind, idep
       double precision c0,c1,c2,c3,c4,c5
@@ -415,12 +420,12 @@ c-----------------------------------------------------------------------
       double precision dlnfo2,elag,gz,gy,gx
       common/ cst100 /dlnfo2,elag,gz,gy,gx,ibuf,hu,hv,hw,hx
 
-      integer ictr, itrans
       double precision ctrans
-      common/ cst207 /ctrans(k0,k0),ictr(k0),itrans
+      integer ictr,itrans
+      common/ cst207 /ctrans(k0,k5),ictr(k5),itrans
 
-      integer iff,idss,ifug
-      common/ cst10  /iff(2),idss(h5),ifug
+      integer iff,idss,ifug,ifyn,isyn
+      common/ cst10  /iff(2),idss(h5),ifug,ifyn,isyn
 
       integer isoct
       common/ cst79 /isoct
@@ -434,8 +439,8 @@ c-----------------------------------------------------------------------
       integer ifct,idfl
       common/ cst208 /ifct,idfl
 
-      integer ixct,ifact
-      common/ cst37 /ixct,ifact 
+      integer ixct,iexyn,ifact
+      common/ cst37 /ixct,iexyn,ifact 
 
       character*100 prject,tfname
       common/ cst228 /prject,tfname
@@ -474,14 +479,6 @@ c-----------------------------------------------------------------------
 
       character*8 eoscmp
       common/ cst98 /eoscmp(2)
-
-      integer iam
-      common/ cst4 /iam
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       save blank
       data blank/' '/
@@ -552,9 +549,6 @@ c                                 file, get name:
          end if 
 
       end if 
-c                                 if meemum, override whatever computational option
-c                                 is set in the input file. 
-      if (iam.eq.2) icopt = 5
 c                                 dummy variable place holders
       read (n1,*,err=998) idum
       read (n1,*,err=998) idum 
@@ -582,22 +576,11 @@ c                                 dummy variable place holders
 c                                 read code for choice of fluid equation
 c                                 of state from terminal. 
       read (n1,*,err=998) ifug
-      
-      if (ifug.eq.8 .or.ifug.eq.10.or.ifug.eq.12.or.ifug.eq.16.or.
-     *    ifug.eq.17.or.ifug.eq.19.or.ifug.eq.20.or.ifug.eq.24.or.
-     *    ifug.eq.25) then
-
-         read (n1,*,err=998) ibuf,hu,dlnfo2,elag
-
-      else if (ifug.eq.6 .or.ifug.eq.7 .or.ifug.eq.11.or.ifug.eq.18.or.
-     *         ifug.eq.21.or.ifug.eq.22.or.ifug.eq.23) then
-
-        call error (77,0d0,0,' the input file specifies a disabled '//
-     *                       'or ivalid internal fluid EoS')
-
-      end if 
-
-      if (ibuf.eq.5) read (n1,*,err=998) buf
+      if (ifug.ge.7.and.ifug.le.12.and.ifug.ne.9.and.ifug.ne.14.or.
+     *    ifug.eq.19.or.ifug.eq.16.or.ifug.eq.17.or.ifug.eq.24.or.
+     *    ifug.eq.20.or.ifug.eq.25) 
+     *                  read (n1,*,err=998) ibuf,hu,dlnfo2,elag
+      if (ibuf.eq.5) read (n1,*,err=998) buf     
 
       if (hu.eq.1) then 
 c                                 hardwired fluid EoS endmember names
@@ -662,7 +645,7 @@ c                                 finished, could check for no components
  
             cycle 
 
-         else if (rname.eq.'Volume'.or.rname.eq.'Entropy') then
+         else if (rname.eq.'V'.or.rname.eq.'S') then
 
             usv = .true.
 
@@ -682,15 +665,9 @@ c                                 unblank the name
 c                                 check for compositional constraints
          read (strg,*,err=998) icont
 
-         if (icopt.eq.12) then 
-            k = 2
-         else 
-            k = icont
-         end if 
-
-         if (k.ne.0) then 
+         if (icont.ne.0) then 
             jbulk = jbulk + 1
-            read (strg,*,err=998) j, (dblk(i,jbulk), i = 1, k)
+            read (strg,*,err=998) j, (dblk(i,jbulk), i = 1, icont)    
          end if 
 
       end do           
@@ -712,7 +689,9 @@ c                                 check for compositional constraints
 
       end if 
 c                                 decode saturated components    
-c                                 isat is the saturated component counter
+c                                 isat is the saturated component counter,
+c                                 isyn = 1 if isat = 0, else isyn = 0
+      isyn = 1
       isat = 0
       io2  = 0 
 
@@ -728,6 +707,7 @@ c                                 isat is the saturated component counter
 
          if (rname.eq.'end s') then 
 
+            if (isat.ne.0) isyn = 0
             icomp = icp + isat
             exit 
 
@@ -741,8 +721,10 @@ c                                 check for compositional constraints
 
          if (jcont.ne.0) then 
             jbulk = jbulk + 1
-            read (strg,*,err=998) j, (dblk(i,jbulk), i = 1, jcont)
-         end if
+            read (strg,*,err=998) j, (dblk(i,jbulk), i = 1, icont)    
+c                                 override variance flag choice, why here?
+            isudo = 0    
+         end if  
 
          isat = isat + 1
          if (isat.gt.h5) call error (15,r,i,'BUILD')
@@ -755,7 +737,9 @@ c                                 decode saturated phase components
          read (n1,'(a)',end=998) rname
          if (rname.eq.'begin') exit
       end do 
-c                                 ifct is the saturated phase component counter
+c                                 ifct is the fluid component counter,
+c                                 ifyn = 1 if ifct = 0.
+      ifyn = 1
       ifct = 0
 
       do 
@@ -763,6 +747,7 @@ c                                 ifct is the saturated phase component counter
          read (n1,'(a)') rname
 
          if (rname.eq.'end s') then 
+            if (ifct.ne.0) ifyn = 0
             icomp = icomp + ifct
             exit 
          else if (rname.eq.blank) then 
@@ -779,8 +764,7 @@ c                                 for use in input2.
 c                                  decode mobile components
 c                                  jmct - mobile component counter
       jmct = 0 
-      ifact = 0
-      jmuct = 0 
+      ifact = 0 
 
       do 
 
@@ -810,7 +794,6 @@ c                                  jmct - mobile component counter
 c                                 old format, create variable name
                write (vname(3+jmct),'(a,a)') 'mu_',rname
                imaf(jmct) = 1
-               jmuct = jmuct + 1
 
             else 
 c                                 new format
@@ -821,7 +804,6 @@ c                                 new format
                if (y.eq.'m') then 
 c                                 chemical potential
                   imaf(jmct) = 1
-                  jmuct = jmuct + 1
 
                else if (y.eq.'f') then 
 
@@ -846,6 +828,7 @@ c                             is in the thermodynamic composition space.
 c                             jprct+1..icomp -> (jmct.ne.0) mobile components 
       jprct = icomp - jmct 
 c                             excluded phases
+      iexyn = 1
       ixct = 0
 c                             decode excluded phases
       do 
@@ -857,9 +840,10 @@ c                             decode excluded phases
 
         read (n1,'(a)') name
 
-         if (name.eq.'end excl') then
+         if (name.eq.'end excl') then 
+            if (ixct.ne.0) iexyn = 0 
             exit
-         else if (name.eq.blank) then
+         else if (name.eq.blank) then 
             cycle 
          end if 
 
@@ -909,59 +893,30 @@ c                             dependent, independent, and secondary
 c                             independent intensive variables, p = 1,
 c                             t = 2, and xco2 = 3, respectively.
       read (n1,*,err=998) (iv(i), i = 1, 5)
-c                             check variable ranges are consistent,
-c                             variable iv(1):
-      if (icopt.ne.0.and.icopt.ne.4.and.iam.ne.2) then
-
-         if (iv(1).eq.3.and.ifct.eq.0) call error (110,r,i,'I')
-
+c                             check to make sure input requests are
+c                             consistent:
+      if (icopt.ne.0.and.icopt.ne.4) then
+c                             first check iv(1):
+         if (iv(1).eq.3.and.ifyn.eq.1) call error (110,r,i,'I')
          if (iv(1).eq.3.and.ifct.eq.1) then 
-
             if (icopt.ne.7.and.iv(2).ne.3) call error (111,r,i,'I')
-
          end if 
 
-         if (vmin(iv(1)).ge.vmax(iv(1)).and.icopt.lt.5) then 
-
-            call error (112,r,i,'less than or equal')
-
-         else if (vmin(iv(1)).eq.vmax(iv(1)).and.
-     *            icopt.eq.5.and.icont.lt.3) then
-
-            call error (112,r,i,'equal')
-
-         end if 
-
+         if (vmin(iv(1)).ge.vmax(iv(1)).and.icopt.lt.5) 
+     *                                 call error (112,r,i,'I') 
          if (vname(iv(1)).eq.blank) call error (116,dip,i,'I')
-
       end if
-c                             variable iv(2):
-      if (iam.ne.2.and.(icopt.eq.1.or.
-     *                  (icopt.eq.5.and.icont.eq.1.and..not.oned))) then
-
-         if (iv(2).eq.3.and.ifct.eq.0) call error (110,r,i,'INPUT1')
-
+c                             now check iv(2):
+      if (icopt.eq.1) then
+         if (iv(2).eq.3.and.ifyn.eq.1) call error (110,r,i,'INPUT1')
          if (iv(2).eq.3.and.ifct.eq.1) call error (111,r,i,'INPUT1')
-
-         if (icopt.eq.1) then 
-
-            if (vmin(iv(2)).ge.vmax(iv(2))) call error (112,r,i,
-     *                                            'less than or equal')
-
-         else 
-
-            if (vmin(iv(2)).eq.vmax(iv(2))) call error (112,r,i,'equal')
-
-         end if 
-
+         if (vmin(iv(2)).ge.vmax(iv(2))) call error (112,r,i,'I')
          if (vname(iv(2)).eq.blank) call error (116,r,i,'INPUT1')
-
       end if
 c                             if a chemical potential is specified as an
 c                             independent variable (iv(1-3)), check if
 c                             the variable is defined:
       kct = 0
-
       do i = 1, 3
          if (iv(i).gt.3) kct = kct + 1
       end do 
@@ -985,7 +940,7 @@ c                             no P or T, choose independent V
          end if
       end if
 c                             ok, now find out which variables are
-c                             dummies and store the indexes of the
+c                             dummies and story the indexes of the
 c                             non-dummy variables in jv.
       ipot = 0
 
@@ -996,8 +951,8 @@ c                             only dummies if idep is set.
      *       (iv(i).eq.1.or.iv(i).eq.2)) then
             ipot = ipot+1
             jv(ipot) = iv(i)
-c                             variable v(3) is a dummy if ifct = 0:
-         else if ((iv(i).eq.3).and.ifct.gt.0) then
+c                             variable v(3) is a dummy if ifyn = 1:
+         else if ((iv(i).eq.3).and.(ifyn.eq.0)) then
             ipot = ipot+1
             jv(ipot) = iv(i)
 c                             variables v(4) and v(4) are dummies if
@@ -1011,21 +966,12 @@ c                             imyn = 1:
                jv(ipot) = iv(i)
             end if
          end if
-
       end do 
 c                                 if dependent variable add to jv list, could
 c                                 increment ipot, but maybe it's better not to.
       if (idep.ne.0) jv(ipot+1) = idep
 c                                 set convergence criteria for routine univeq
-      if (icopt.le.3) then 
-
-         call concrt
-
-      else if (icopt.eq.12) then 
-c                                 0-d infiltration
-         read (n1,*,err=998) iopt(36), nopt(36)
-
-      end if 
+      if (icopt.le.3) call concrt
 
       if (icopt.ne.0) close (n1)
 c                                 open files requested in input
@@ -1040,8 +986,7 @@ c                                 get runtime parameters
 
       goto 999
 c                                 archaic error trap
-998   call mertxt (n2name,prject,'.dat',0)
-      call error (27,r,i,n2name)
+998   call error (27,r,i,n2name)
 
 999   end
 
@@ -1057,14 +1002,14 @@ c----------------------------------------------------------------------
  
       character*5 mnames(k16*k17)*8
 
-      double precision twt(k5),tsel(k5),tcox(k5),cst
+      double precision twt(k5),cst
  
-      integer i,j,im, ict, k, ifer,inames, jphct, imak(k16), iox
+      integer i,j,im, ict, k, ifer,inames, jphct, imak(k16)
  
       logical eof, good, first
 
-      integer iff,idss,ifug
-      common / cst10 /iff(2),idss(h5),ifug
+      integer iff,idss,ifug,ifyn,isyn
+      common / cst10 /iff(2),idss(h5),ifug,ifyn,isyn
 
       double precision ctot
       common/ cst3  /ctot(k1)
@@ -1116,7 +1061,7 @@ c----------------------------------------------------------------------
       common/ cst40 /ids(h5,h6),isct(h5),icp1,isat,io2
 
       double precision atwt
-      common/ cst45 /atwt(k0) 
+      common/ cst45 /atwt(k0)
 
       integer iemod,kmod
       logical smod,pmod
@@ -1127,26 +1072,17 @@ c----------------------------------------------------------------------
       double precision cblk
       common/ cst300 /cblk(k5),jbulk
 
-      integer ixct,ifact
-      common/ cst37 /ixct,ifact 
-
-      integer iaq, aqst, aqct
-      character aqnam*8
-      double precision aqcp, aqtot
-      common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
-
-      integer ion, ichg, jchg
-      double precision q, q2, qr
-      common/ cstaq /q(l9),q2(l9),qr(l9),jchg(l9),ichg,ion
+      integer ixct,iexyn,ifact
+      common/ cst37 /ixct,iexyn,ifact 
 
       character*8 exname,afname
       common/ cst36 /exname(h8),afname(2)
 
-      integer ipoint,kphct,imyn
-      common/ cst60 /ipoint,kphct,imyn
+      integer ipoint,imyn
+      common/ cst60 /ipoint,imyn
 
-      integer jfct,jmct,jprct,jmuct
-      common/ cst307 /jfct,jmct,jprct,jmuct
+      integer jfct,jmct,jprct
+      common/ cst307 /jfct,jmct,jprct
 
       integer imaf,idaf
       common/ cst33 /imaf(i6),idaf(i6)
@@ -1158,9 +1094,9 @@ c----------------------------------------------------------------------
       common / cst333 /mcomp(k16,k0),nmak,mksat(k16),mknam(k16,k17)
 
       double precision mkcoef, mdqf
-      integer mknum, mkind, meos
+      integer mknum, mkind
       common / cst334 /mkcoef(k16,k17),mdqf(k16,k17),mkind(k16,k17),
-     *                 mknum(k16),meos(k16)
+     *                 mknum(k16)
 
       integer make
       common / cst335 /make(k10)
@@ -1168,22 +1104,11 @@ c----------------------------------------------------------------------
       integer eos
       common/ cst303 /eos(k10)
 
-      double precision sel, cox
-      logical hscon, hsc, oxchg
-      common/ cxt45 /sel(k0),cox(k0),hscon,oxchg,hsc(k1)
-
       integer ikp
       common/ cst61 /ikp(k1)
 
       double precision vnumu
       common/ cst44 /vnumu(i6,k10)
-
-      integer ihy, ioh
-      double precision gf, epsln, epsln0, adh, msol
-      common/ cxt37 /gf, epsln, epsln0, adh, msol, ihy, ioh
-
-      double precision thermo,uf,us
-      common/ cst1 /thermo(k4,k10),uf(2),us(h5)
 
       integer iopt
       logical lopt
@@ -1197,7 +1122,6 @@ c                               initialization for each data set
 c                               for k10 endmembers
       do i = 1, k10
          make(i) = 0 
-         names(i) = ' '
       end do
 c                               for k1 phases:
       do i = 1, k1
@@ -1250,7 +1174,7 @@ c                               present
 
       end if  
 c                              load the old cbulk array
-      if (ifct.gt.0) iphct = 2
+      if (ifyn.ne.1) iphct = 2
 c                               identify nonzero components.
 c                               initialize icout(i) = 0
       do i = 1, icmpn
@@ -1266,9 +1190,6 @@ c                               initialize icout(i) = 0
             if (cname(i).eq.cmpnt(j)) then 
 
                twt(i) = atwt(j)
-               tsel(i) = sel(j)
-               tcox(i) = cox(j)
-
                ic(i) = j
                icout(j) = 1
 
@@ -1310,12 +1231,9 @@ c                                 mobile component otherwise idfl = 0.
       else 
          idfl = 0
       end if
-c                                 load atwts, sel in updated order
+c                                 load atwts in updated order
       do i = 1, icomp
          atwt(i) = twt(i)
-         sel(i)  = tsel(i)
-         cox(i)  = tcox(i)
-         if (cox(i).lt.0d0) iox = i 
       end do 
 c                                 convert weight to molar amounts
       if (jbulk.ne.0) then 
@@ -1348,7 +1266,7 @@ c                                 rewind and read 'til end of header
 
          do
 
-            call getphi (name,.false.,eof)
+            call getphi (name,eof)
 
             if (eof) then 
 
@@ -1369,7 +1287,7 @@ c                                 got a match, count
 
                   idaf(i) = iphct
 c                                 store thermodynamic parameters:
-                  call loadit (iphct,.false.,.true.)
+                  call loadit (iphct,.false.)
 c                                 zero the component
                   vnumu(i,iphct) = 0d0
 
@@ -1381,7 +1299,7 @@ c                                 gphase from calling the EoS.
                   else if (lopt(7)) then 
 c                                 check for special component names
 c                                 this is necessary because loadit 
-c                                 will not set isfp if ifct > 0.
+c                                 will not set isfp if ifyn = 0.
                      do k = 1, ispec
                         if (name.ne.cmpnt(idspe(k))) cycle
                         eos(iphct) = 100 + k 
@@ -1410,7 +1328,7 @@ c                                 tagged entries
       end if 
 c                                 begin first read loop for data on
 c                                 saturated components.
-      if (isat.eq.0.and.ifct.eq.0) goto 40
+      if (isyn.ne.0.and.ifyn.ne.0) goto 40
 c                                 read 'til end of header
       call eohead (n2)
 c                                 loop to read real saturated
@@ -1419,7 +1337,7 @@ c                                 entities:
 
       do 
 
-         call getphi (name,.false.,eof)
+         call getphi (name,eof)
 
          if (eof) exit
  
@@ -1442,8 +1360,6 @@ c                                 redundant check:
          call chkphi (2,name,good)
 c                               
          if (.not.good) call error (57,comp(1),iphct,name)
-c                                 set eos flag
-         ieos = meos(i)
 
          call sattst (ifer,good)
 
@@ -1456,56 +1372,22 @@ c                                 pointer used for iemod.
       end do 
 c                                 check that there is data for
 c                                 every fluid component.
-      if (ifct.gt.0.and.ifer.ne.ifct) call error (36,r,i,'INPUT2')
+      if (ifyn.eq.0.and.ifer.ne.ifct) call error (36,r,i,'INPUT2')
 c                                 check that there is one phase
 c                                 for each saturation constraint
 40    do i = 1, isat
          if (isct(i).lt.1) call error (15,r,i,cname(icp+i))
       end do
-c                                 save endmembers that consist entirely 
-c                                 of saturated phase or mobile components:
-      kphct = iphct 
-
-      if (ifct+jmct.gt.0) then 
-
-         call eohead (n2)
-
-         do 
-
-            call getphi (name,.false.,eof)
-
-            if (eof) exit
-
-            call chkphi (4,name,good)
-
-            if (.not.good) cycle 
-c                                 reject phases already in the list
-            do i = 1, kphct
-               if (names(i).eq.name) then
-                  good = .false.
-                  exit
-               end if 
-            end do 
-
-            if (.not.good) cycle             
-c                                 matched a name
-            iphct = iphct + 1
-c                                 store thermodynamic parameters:
-            call loadit (iphct,.false.,.true.)
-
-         end do
-
-      end if 
-c                                 -------------------------------------
-c                                 real entities in the thermodynamic 
-c                                 composition space:
+c                                 read data for the remaining
+c                                 phases of appropriate composition.
       istct = iphct + 1
 c                                 read till end of header
       call eohead (n2)
-c                                 loop to load normal thermodynamic data:
+c                                 begin second read loop:
+
       do  
     
-         call getphi (name,.false.,eof)
+         call getphi (name,eof)
 
          if (eof) exit 
 c                                 check if valid phase:
@@ -1517,12 +1399,11 @@ c                                 acceptable data, count the phase:
 c                                 for normalized composition:
             ctot(iphct) = tot
 c                                 store thermodynamic parameters:
-            call loadit (iphct,.false.,.true.)
+            call loadit (iphct,.false.)
          end if 
       end do 
-c                                 -------------------------------------
-c                                 made entities (as opposed to the required
-c                                 data read later):
+
+c                                 loop to load made entities
       do i = 1, nmak
 
          if (mksat(i)) cycle
@@ -1541,21 +1422,16 @@ c
          ctot(iphct) = tot
 c                                 set ieos flag to that of the first
 c                                 real entity in the make definition
-         ieos = meos(i)
+         ieos = eos(mkind(i,1))
 
-         call loadit (iphct,.true.,.true.)
+         call loadit (iphct,.true.)
 
          make(iphct) = i
-c                                 pointer used for iemod.
+c                                pointer used for iemod.
          imak(i) = iphct
 
       end do 
-c                                 load thermodynamic data for make definitions and
-c                                 solute species, at this point iphct points to the 
-c                                 last real entity, save this value and restore it later.
-      jphct = iphct
-c                                 -------------------------------------
-c                                 make definition data: this
+c                                 get/save data for makes, this
 c                                 data is saved in the arrays thermo
 c                                 and cp by loadit, but are not counted,
 c                                 i.e., the counters ipoint and iphct
@@ -1565,11 +1441,13 @@ c                                 but thermo should not be affected. gmake
 c                                 then gets the data using the array 
 c                                 mkind. the names array will also be 
 c                                 overwritten.
+      jphct = iphct
+c                                 read header
       call eohead (n2)
 
       do 
 
-         call getphi (name,.true.,eof)
+         call getphi (name,eof)
 
          if (eof) exit
 
@@ -1579,9 +1457,9 @@ c                                 overwritten.
 c                                 matched a name
             iphct = iphct + 1
 c                                 store thermodynamic parameters:
-            call loadit (iphct,.false.,.false.)
+            call loadit (iphct,.false.)
 
-         end do
+         end do 
 
       end do 
 
@@ -1594,103 +1472,11 @@ c                                remake pointer array for makes
             end do
          end do 
       end do  
-c                                 -------------------------------------
-c                                 aqueous species, thermo data, as is the
-c                                 case for make data is loaded in thermo;
-c                                 names and composition loaded into 
-c                                 aqnam and aqcp.
-      aqst = iphct 
-c
-      call eohead (n2)
-c                                 loop to load solute data:
-      do  
-    
-         call getphi (name,.true.,eof)
-
-         if (eof) exit
-c                                 skip non-solute standard state data
-         if (ieos.ne.15.and.ieos.ne.16) cycle
-c                                 check if valid species:
-         call chkphi (1,name,good)
-c                                 check for oxidation state of aqueous
-c                                 data if aq_oxides is set:
-c         if (good.and.lopt(36).and.oxchg) then
-
-c            qchg = thermo(6,k10)
-
-c            if (qchg.eq.0d0.and.comp(ic(iox)).ne.0d0.or.
-c     *          qchg-cox(iox)*comp(ic(iox)).ne.0d0) then 
-
-c               call warn (100,r,102,
-c     *              name//' has been rejected; to retain '//name//
-c     *              ' set aq_oxide_components to false.')
-
-c               good = .false.
-
-c            end if
-
-c         end if 
-
-         if (good) then 
-c                                 acceptable data, count the phase:
-            iphct = iphct + 1
-c                                 for normalized composition, probably
-c                                 con't need this, but could be used to
-c                                 save molar wt or something like that:
-            ctot(iphct) = tot
-c                                 store thermodynamic parameters:
-            call loadit (iphct,.false.,.true.)
-
-         end if 
-
-      end do
-c                                write summary and checks
-      if (aqct.gt.0) then 
-
-         if (lopt(25).and.(ihy.eq.0.or.ioh.eq.0)) then 
-            call warn (99,0d0,0,'missing H+ or OH- species, '//
-     *                          'aq_output set = F (INPUT2)')
-         end if 
-
-         ichg = 0
-         
-         do i = 1, aqct 
-
-            q(i) = thermo(6, aqst + i)
-            q2(i) = q(i)**2
-
-            if (q(i).ne.0d0) then 
-               ichg = ichg + 1
-               jchg(ichg) = i 
-            end if
-
-         end do 
-
-         if (first) then 
-            write (*,1020)
-            do i = 1, aqct, 6
-               k = i + 5
-               if (k.gt.aqct) k = aqct
-               write (*,1030) (aqnam(j),int(thermo(6,j+aqst)),j=i,k)
-            end do 
-            write (*,'(//)')
-         end if
-
-      else if (lopt(32).or.lopt(25)) then 
-
-         if (first) call warn (99,0d0,0,' no data for aqueous species, '
-     *    //'aq_output and aq_lagged_speciation disabled.')
-
-         lopt(32) = .false.
-         lopt(25) = .false.
-  
-      end if 
 c                                reset ipoint counter, but do not 
 c                                reset iphct, because the compositions
 c                                of the make phases are necessary for
-c                                chemical potential variables.
-c                                really? then why was it reset here?
-      iphct = jphct
+c                                chemical potential variables. 
+      iphct = jphct 
       ipoint = jphct
 
       do i = 1, nmak
@@ -1710,9 +1496,6 @@ c                                endmembers:
      *        'phases:',/,5(a,1x))
 1010  format ('needed to define an independent fugacity/activity ',
      *    'variable is missing from the',/,'thermodynamic data file',/)
-1020  format (/,'Summary of aqueous solute species:',//,
-     *        6('name     chg   ')) 
-1030  format (6(a8,2x,i2,3x))
 1230  format ('**error ver013** ',a,' is an incorrect component'
      *       ,' name, valid names are:',/,12(1x,a))
 1240  format ('check for upper/lower case matches or extra blanks',/)
@@ -1795,7 +1578,7 @@ c-----------------------------------------------------------------------
       integer npt,jdv
       logical fulrnk
       double precision cptot,ctotal
-      common/ cst78 /cptot(k19),ctotal,jdv(k19),npt,fulrnk
+      common/ cst78 /cptot(k5),ctotal,jdv(k19),npt,fulrnk
 
       double precision a,b,c
       common/ cst313 /a(k5,k1),b(k5),c(k1)
@@ -1897,11 +1680,6 @@ c---------------------------------------------------------------------
       logical fileio
       integer ncol, nrow
       common/ cst226 /ncol,nrow,fileio
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 c----------------------------------------------------------------------
 
       rloopy = dfloat(loopy-1)
@@ -1917,13 +1695,7 @@ c                                 for 1d calculations
 
       if (icopt.eq.7.and.fileio) then 
 c                                using nodal coordinate system
-         dvr(1) = 1d0
-
-      else if (icopt.eq.12) then 
-
-         dvr(1) = nopt(36)
-         loopx = iopt(36)
-         rloopx = dfloat(loopx)
+         dvr(1) = 1
 
       else if (icont.eq.1) then 
 c                                v(iv1) on x, v(iv2) on y
@@ -1982,7 +1754,7 @@ c                                 initialize potentials
 c                                 set dependent potential, if it exists
       call incdp0
 
-      end
+      end 
 
       subroutine getcmp (jd,id,ids)
 c-----------------------------------------------------------------------
@@ -1992,20 +1764,12 @@ c  if ids > 0, id points to the composition of a solution defined in terms
 c              on endmember fractions defined and saved by routine resub
 c              in array zcoor.
 c the composition is saved in arrays cp3 and x3, entry jd
-
-c getcmp is called by both WERAMI and MEEMUM/VERTEX
-
-c this is an attempt to use the compositions stored in cp2....
 c-----------------------------------------------------------------------
       implicit none
  
       include 'perplex_parameters.h'
 
-      integer i, j, k, id, jd, ids
-
-      logical bad
-
-      double precision xx
+      integer i,j,id,jd,ids
 c                                 -------------------------------------
 c                                 global variables:
       integer icomp,istct,iphct,icp
@@ -2020,17 +1784,16 @@ c                                 bookkeeping variables
       integer lstot,mstot,nstot,ndep,nord
       common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
 c                                 working arrays
-      double precision z, pa, p0a, x, w, y, wl
-      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
-     *              wl(m17,m18)
+      double precision z, pa, p0a, x, w, y
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1)
 c                                 single site solution coordinates:
       integer jend
-      common/ cxt23 /jend(h9,m4)
+      common/ cxt23 /jend(h9,k12)
 c                                 refined compositions and solution 
 c                                 pointer
       integer kkp,np,ncpd,ntot
       double precision cp3,amt
-      common/ cxt15 /cp3(k0,k19),amt(k19),kkp(k19),np,ncpd,ntot
+      common/ cxt15 /cp3(k0,k5),amt(k5),kkp(k5),np,ncpd,ntot
 
       logical lorder, lexces, llaar, lrecip
       common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
@@ -2047,37 +1810,13 @@ c                                 pointer
       integer npt,jdv
       logical fulrnk
       double precision cptot,ctotal
-      common/ cst78 /cptot(k19),ctotal,jdv(k19),npt,fulrnk
-
-      integer iaq, aqst, aqct
-      character aqnam*8
-      double precision aqcp, aqtot
-      common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
-
-      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
-      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
-
-      integer jnd
-      double precision aqg,qq,rt
-      common/ cxt2 /aqg(m4),qq(m4),rt,jnd(m4)
-
-      integer jphct, jpt
-      double precision g2, cp2, c2tot
-      common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),jphct,jpt
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
-      integer kd, na1, na2, na3, nat
-      double precision x3, caq
-      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),na1,na2,na3,nat,kd
+      common/ cst78 /cptot(k5),ctotal,jdv(k19),npt,fulrnk
 c----------------------------------------------------------------------
+
       kkp(jd) = ids
       cptot(jd) = 0d0
 
-      if (ids.lt.0) then
+      if (ids.lt.0) then 
 c                                 simple compounds
          if (iam.ne.5) then
 c                                 all programs except frendly 
@@ -2093,79 +1832,23 @@ c                                 frendly
                cp3(i,jd) = cp0(i,-ids)
             end do 
 
-         end if
+         end if 
 
-      else 
+      else
 c                                 solutions, initialize
          do i = 1, icomp
             cp3(i,jd) = 0d0
          end do
-c                                 if getcmp is being called by WERAMI:
-c                                 GETXZ (dlib.f) gets the x(i,j) coordinates for the
-c                                 composition from the x3(jd,i,j) array and
-c                                 the id argument is irrelevamt. 
-c                                 if getcmp is being called by MEEMUM/VERTEX:
-c                                 GETXZ (getxz1.f) gets both the x(i,j) and 
-c                                 x3(jd,i,j) compositional coordinates from the
-c                                 zcoor array.
+c                                 get the x(i,j) coordinates for the
+c                                 composition from the zcoor array,
+c                                 this routine also saves a copy of the
+c                                 xcoordinates in x3(jd,i,j)
          call getxz (jd,id,ids)
 c                                 convert the x(i,j) coordinates to the
 c                                 geometric y coordinates
-         call xtoy (ids,bad)
+         call xtoy (ids)
 
-         if (lopt(32).and.ksmod(ids).eq.39) then 
-
-            if (iam.ne.3) then
-c                                 MEEMUM:
-c                                 cp2 works for meemum/vertex, but not werami
-c                                 the id index on cp2 is intentional.
-               do j = 1, icomp 
-                  cp3(j,jd) = cp2(j,id)*c2tot(id)
-               end do
-
-               if (cp2(k5,id).gt.1d1) then
-                  write (*,*) 'BAZORK'
-                  write (*,*) 'BAZORK'
-                  write (*,*) 'hydroxyl solution stable ',cp2(k5,id)
-                  write (*,*) 'BAZORK'
-                  write (*,*) 'BAZORK'
-               end if 
-
-            else
-c                                  WERAMI:
-               if (caq(jd,na1).eq.0d0) then
-c                                  pure solvent, use the y array to be safe
-                  do i = 1, ns
-                     do j = 1, icomp 
-                        cp3(j,jd) = cp3(j,jd) + y(i) * cp(j,jnd(i))
-                     end do 
-                  end do
-
-               else 
-c                                  impure solvent
-                  do i = 1, ns
-                     do j = 1, icomp 
-                        cp3(j,jd) = cp3(j,jd) + caq(jd,i) * cp(j,jnd(i))
-                     end do 
-                  end do
-
-                  do i = sn1, nsa
-
-                     k = i - ns
-c                                 convert molality to mole fraction (xx)
-                     xx = caq(jd,i)/caq(jd,na2)
-
-                     do j = 1, icomp
-                        cp3(j,jd) = cp3(j,jd) + xx * aqcp(j,k)
-                     end do  
-
-                  end do
-
-               end if
-
-            end if
-
-         else if (lrecip(ids)) then
+         if (lrecip(ids)) then
 c                                 get the p' coordinates (amounts of 
 c                                 the independent endmembers)     
             call getpp (ids) 
@@ -2175,21 +1858,6 @@ c                                 the independent endmembers)
                   cp3(j,jd) = cp3(j,jd) + p0a(i) * cp(j,jend(ids,2+i))
                end do 
             end do          
-
-         else if (ksmod(ids).eq.20) then 
-c                                 electrolyte:
-c                                 solute species  
-            do i = sn1, nqs
-               do j = 1, icomp
-                  cp3(j,jd) = cp3(j,jd) + y(i) * aqcp(j,jnd(i) - aqst)
-               end do
-            end do 
-c                                 solvent species 
-            do i = 1, ns 
-               do j = 1, icomp
-                  cp3(j,jd) = cp3(j,jd) + y(i) * cp(j,jnd(i))
-               end do
-            end do
 
          else 
 c                                 solutions with no dependent endmembers:
@@ -2218,11 +1886,9 @@ c     text - character string
 c----------------------------------------------------------------------
       implicit none
 
-      include 'perplex_parameters.h'
-
       integer i, nchar
  
-      character text*(*), bitsy(lchar)*1, char*1 
+      character text*(*), bitsy(400)*1, char*1 
 c----------------------------------------------------------------------
       nchar = len(text) 
       read (text,1000) (bitsy(i), i = 1, nchar)
@@ -2243,8 +1909,7 @@ c                                 character.
 
       write (text,1000) (bitsy(i), i = 1, nchar)
  
-1000  format (400a)
-
+1000  format (400a1)
       end
 
       subroutine matchj (unnown,itis)
@@ -2274,14 +1939,14 @@ c----------------------------------------------------------------------
       character names*8
       common/ cst8 /names(k1)
 
-      character fname*10, aname*6, lname*22
-      common/ csta7 /fname(h9),aname(h9),lname(h9)
+      character sname*10
+      common/ csta7 /sname(h9)
 c---------------------------------------------------------------------- 
  
       itis = 0
 
       do i = 1, isoct
-         if (unnown.eq.fname(i)) then
+         if (unnown.eq.sname(i)) then
              itis = i
              goto 99
          end if
@@ -2327,8 +1992,8 @@ c-----------------------------------------------------------------------
       integer isec,icopt,ifull,imsg,io3p
       common/ cst103 /isec,icopt,ifull,imsg,io3p
 
-      integer iff,idss,ifug
-      common/ cst10  /iff(2),idss(h5),ifug
+      integer iff,idss,ifug,ifyn,isyn
+      common/ cst10  /iff(2),idss(h5),ifug,ifyn,isyn
 
       integer ids,isct,icp1,isat,io2
       common/ cst40 /ids(h5,h6),isct(h5),icp1,isat,io2
@@ -2340,7 +2005,7 @@ c-----------------------------------------------------------------------
          title(i) = ' '
       end do                              
 c                               saturated and buffered component names:
-      if (isat.gt.0) then 
+      if (isyn.eq.0) then 
          write (title(2),1070) (cname(i+icp), i= 1, isat)
       else 
          write (title(2),1000) ' '
@@ -2396,12 +2061,11 @@ c-----------------------------------------------------------------------
       integer jlow,jlev,loopx,loopy,jinc
       common/ cst312 /jlow,jlev,loopx,loopy,jinc 
 
-      logical pzfunc
       integer gloopy,ilay,irep
       double precision a0,a1,a2,a3,b0,b1,b2,b3,c0,c1,c2,c3,dv1dz,
      *               zbox,iblk
-      common/ cst66 /a0,a1,a2,a3,b0,b1,b2,b3,c0,c1,c2,c3,dv1dz,zbox,
-     *               iblk(maxlay,k5),gloopy,ilay,irep(maxlay),pzfunc
+      common/ cst66 /a0,a1,a2,a3,b0,b1,b2,b3,c0,c1,c2,c3,dv1dz,
+     *               zbox,iblk(maxlay,k5),gloopy,ilay,irep(maxlay)
 
       logical fileio
       integer ncol, nrow
@@ -2414,9 +2078,6 @@ c                                 look for input data from a file
 c                                 of type aux
       call mertxt (name,prject,'.aux',0)
       open (n8,file=name,status='old',iostat=ier)
-
-      call mertxt (name,prject,'.fld',0)
-      open (n12,file=name)
 
       if (ier.ne.0) call error (51,zbox,gloopy,name) 
 c                                 set the number of independent variables
@@ -2454,12 +2115,6 @@ c                                 c(z0) = c0 + c1*z0 + c2*z0^2 + c3*z0^3 + ...
       read (n8,*) a0, a1, a2, a3
       read (n8,*) b0, b1, b2, b3
       read (n8,*) c0, c1, c2, c3
-c                                 use a0 value as flag for internal pzfunc
-      if (a0.eq.0d0) then
-         pzfunc = .true.
-      else 
-         pzfunc = .false.
-      end if 
 c                                 get the initial global composition array
 c                                 consisting of ibox compositions defined 
 c                                 in terms of icp components. this read
@@ -2555,14 +2210,13 @@ c----------------------------------------------------------------------
 
       parameter (maxlay=6) 
 
-      double precision p0, z0, dz, z2, z3, z4, z5, z6, t0, t1, t2, a, b
+      double precision p0, z0, dz
 
-      logical pzfunc
       integer gloopy,ilay,irep
       double precision a0,a1,a2,a3,b0,b1,b2,b3,c0,c1,c2,c3,dv1dz,
      *               zbox,iblk
-      common/ cst66 /a0,a1,a2,a3,b0,b1,b2,b3,c0,c1,c2,c3,dv1dz,zbox,
-     *               iblk(maxlay,k5),gloopy,ilay,irep(maxlay),pzfunc
+      common/ cst66 /a0,a1,a2,a3,b0,b1,b2,b3,c0,c1,c2,c3,dv1dz,
+     *               zbox,iblk(maxlay,k5),gloopy,ilay,irep(maxlay)
 
       integer irct,ird
       double precision vn
@@ -2586,50 +2240,6 @@ c                                values
 
          v(1) = vn((i-1)*ncol + j, 1)
          v(2) = vn((i-1)*ncol + j, 2)
-
-      else if (pzfunc) then 
-c                                 this could be made a lot more efficient by
-c                                 making the quadratic coeffs once for each column
-         z0 = p0/dv1dz/1d3
-         z2 = z0*z0
-         z3 = z2*z0
-         z4 = z3*z0
-         z5 = z4*z0
-         z6 = z5*z0
-
-         t2 = -0.1099312D-6*z4 +0.5065153D-4*z3 -0.3902580D-2*z2 
-     *        +0.3024415D0 *z0 +0.8107985D3
-
-          if (z0.lt.75d0) then
-c                                t0, t1 shallow
-             t0 = 0.1255734D-5*z5 -0.2000554D-3*z4 +0.1180485D-1*z3 
-     *           -0.3163565D0 *z2 +0.6026698D1 *z0 + 0.276185544D3
-             t1 = 0.1409099D-4*z4 -0.1603057D-2*z3 + 0.5553760D-1*z2 
-     *           +0.2762566D0 *z0 +0.4401928241D3
-          else if (z0.lt.78.99d0) then
-c                                t0 deep
-             t0 = -0.2059655D-9*z6 +0.2323113D-6*z5 - 0.1076535D-3*z4 
-     *            +0.2625959D-1*z3 -0.3566382D1 *z2 + 0.2582593D3 *z0 
-     *            -0.6916326D4
-c                                t1 shallow
-             t1 = 0.1409099D-4*z4 -0.1603057D-2*z3 + 0.5553760D-1*z2 
-     *           +0.2762566D0 *z0 +0.4401928241D3
-          else
-c                                t0, t1 deep
-             t0 = -0.2059655D-9*z6 +0.2323113D-6*z5 - 0.1076535D-3*z4 
-     *            +0.2625959D-1*z3 -0.3566382D1 *z2 + 0.2582593D3 *z0 
-     *            -0.6916326D4
-
-             t1 = -0.3998088D-6*z4 +0.3672092D-3*z3 - 0.1290587D0*z2 
-     *            +0.2181334D2 *z0 -0.5161647D3
-          end if
-
-         a = -t1 / 272d0 + t2 / 850d0 + t0 / 400d0
-         b = -dsqrt(2d0) * (64d0*t2 - 625d0*t1 + 561d0*t0)/6800d0
-
-         v(1) = p0 + dz * dv1dz
-
-         v(2) = a*(dz/1d3)**2 + b*(dz/1d3) + t0
 
       else 
 c                                 convert to depth at top of column
@@ -2810,22 +2420,13 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer loopx,loopy,jinc,i,j,jst,kst,kd,ltic,iend
-
-      character string*(lchar)
+      integer loopx,loopy,jinc,i,j,jst,kst,kd,ltic
 
       integer igrd
       common/ cst311 /igrd(l7,l7)
 
-      integer io3,io4,io9
-      common / cst41 /io3,io4,io9
-
       integer idasls,iavar,iasct,ias
       common/ cst75  /idasls(k5,k3),iavar(3,k3),iasct,ias
-
-      integer length,iblank,icom
-      character chars*1
-      common/ cst51 /length,iblank,icom,chars(lchar)
 c----------------------------------------------------------------------
 
       write (n4,*) loopx, loopy, jinc
@@ -2862,68 +2463,5 @@ c                                 write assemblage list
          write (n4,*) iavar(1,i),iavar(2,i),iavar(3,i)
          write (n4,*) (idasls(j,i), j = 1, iavar(3,i))
       end do 
-c                                 write assemblages to print file
-      if (io3.eq.0) then 
-
-         write (n3,'(/,1x,a,a,/)') 'Stable assemblages identified ',
-     *                         'by assemblage index:'
-         do i = 1, iasct
-            call psbtxt (i,string,iend)
-            write (n3,'(i4,a,400a)') i,' - ',(chars(j), j = 1, length)
-         end do       
-
-      end if 
-
-      end 
-
-      subroutine psbtxt (id,string,iend)
-c----------------------------------------------------------------------
-c subprogram to write a text labels for bulk composition output 
-c id identifies the assemblage
-
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      character string*(*), pname*14
-
-      integer i, j, ist, iend, id, np, ntot, ids
-
-      integer idasls,iavar,iasct,ias
-      common/ cst75  /idasls(k5,k3),iavar(3,k3),iasct,ias
-
-      integer length,iblank,icom
-      character chars*1
-      common/ cst51 /length,iblank,icom,chars(lchar)
-c----------------------------------------------------------------------
-      iend = 0
-
-      string = ' '
-
-      ist = 1
-      np = iavar(1,id)
-      ntot = iavar(3,id)
-
-      do i = 1, lchar
-         chars(i) = ' '
-      end do
-c                                 first solution names:
-      do i = 1, ntot
-             
-         ids = idasls(i,id)
-
-         call getnam (pname,ids) 
-
-         ist = iend + 1
-         iend = ist + 14
-         read (pname,'(400a)') (chars(j),j=ist,iend)
-
-         call ftext (ist,iend)
-
-      end do 
-
-      write (string,'(400a)') (chars(j),j=1,iend) 
-
-      length = iend
 
       end 

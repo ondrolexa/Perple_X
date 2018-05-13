@@ -18,7 +18,7 @@
 !                                 n4  - plot output file 1
 !                                 n5  - plot output file 2 (bplot)
 !                                 n6  - reaction list file
-!                                 n7  - unused
+!                                 n7  - unused 
 !                                 n8  - locally opened and closed files
 !                                 n9  - solution model file 
 !                                 n10 - autorefine file 1
@@ -31,7 +31,7 @@
 !                                 mst - max number of distinct identisites per solution
 !                                 mdim - hard constraint on max number of dimensions
 !                                        for a solution model composition space.
-      parameter (mst=3,mdim=8,msp=mdim+2,ms1=msp-1)
+      parameter (mst=2,mdim=8,msp=mdim+2,ms1=msp-1)
 !                                 h5 - max number of saturated components
 !                                 h6  - max number of saturated composants in any subcomposition
 !                                 h8  - max number of excluded phases
@@ -87,11 +87,11 @@
 !                                       prismatic solution.
       parameter (k0=25,k1=1500000,k2=100000,k3=2000,k4=32,k5=12)
       parameter (k7=k5+1,k8=k5+2) 
-      parameter (k9=30,k10=400,k14=18,k15=6,k16=100)
+      parameter (k9=30,k10=400,k14=18,k15=6,k16=70)
       parameter (k17=7,k18=29*k1)
       parameter (k19=3*k5,k21=2000000,k20=(mdim+3)*k21)
       parameter (k22=mdim*k19,k23=25)
-      parameter (k13=mdim*k21,k24=k13*(mst-1))
+      parameter (k13=mdim*k21,k24=k13*mst)
 !                                 l2 - max number of independent potential variables
 !                                 l3 - max number of variables for gridded min and graphics (l2+2)
 !                                 l5 - max number of coordinates along a univariant curve                
@@ -134,7 +134,7 @@
 !                                m17 - max order of redlich-kistler expansion
 !                                m18 - max number of pairwise terms in a redlich-kistler expansion
       parameter (m0=8,m1=60,m2=8,m3=3,m4=20,m6=5,m7=15,m8=9,
-     *           m9=10,m10=6,m11=6,m12=4,m13=8,m14=2,m15=12,m16=5,m17=5,
+     *           m9=10,m10=6,m11=6,m12=4,m13=8,m14=2,m15=10,m16=5,m17=5,
      *           m18=6)
 !                                 nx - number of x-grid nodes in a contour data grid
 !                                 ny - number of y-grid modes in a contour data grid

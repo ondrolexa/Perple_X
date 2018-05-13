@@ -10,15 +10,15 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
  
-      character cprop*18, text*(lchar), tag*1, tag1*29
+      character cprop*18
 
-      logical aqph
+      integer i,j,l,lu
 
-      integer i, j, k, l, m, lu, id, inc, ct
+      double precision poiss, cn(k5), cnsys
 
-      double precision poiss, gcpd
- 
-      external gcpd
+      integer idspec
+      double precision spec
+      common/ tspec /spec(nsp,k5),idspec
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
@@ -37,9 +37,9 @@ c----------------------------------------------------------------------
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
-      integer kkp,np,ncpd,ntot
-      double precision cp3,amt
-      common/ cxt15 /cp3(k0,k19),amt(k19),kkp(k19),np,ncpd,ntot
+      integer kkp, np, ncpd, ntot
+      double precision cp3, amt
+      common/ cxt15 /cp3(k0,k5),amt(k5),kkp(k5),np,ncpd,ntot
 
       integer jvar
       double precision var,dvr,vmn,vmx
@@ -64,9 +64,8 @@ c----------------------------------------------------------------------
       integer ipot,jv,iv
       common / cst24 /ipot,jv(l2),iv(l2)
 
-      logical mus
       double precision mu
-      common/ cst330 /mu(k8),mus
+      common/ cst330 /mu(k8)
 
       integer hcp,idv
       common/ cst52  /hcp,idv(k7) 
@@ -83,49 +82,11 @@ c----------------------------------------------------------------------
       character pname*14
       common/ cxt21a /pname(k5)
 
-      integer spct
-      double precision ysp
-      character spnams*8
-      common/ cxt34 /ysp(l10,k5),spct(h9),spnams(l10,h9)
-
-      integer ld, na1, na2, na3, nat
-      double precision x3, caq
-      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),na1,na2,na3,nat,ld
-
-      integer lstot,mstot,nstot,ndep,nord
-      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
-
-      integer jend
-      common/ cxt23 /jend(h9,m4)
-
-      integer length,iblank,icom
-      character chars*1
-      common/ cst51 /length,iblank,icom,chars(lchar)
-
-      integer ksmod, ksite, kmsol, knsp
-      common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
-
-      integer jnd
-      double precision aqg,q2,rt
-      common/ cxt2 /aqg(m4),q2(m4),rt,jnd(m4)
-
-      integer idaq, jdaq
-      logical laq
-      common/ cxt3 /idaq,jdaq,laq
-
-      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
-      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
-
-      integer iaq, aqst, aqct
-      character aqnam*8
-      double precision aqcp, aqtot
-      common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
-
       integer iam
       common/ cst4 /iam
 c---------------------------------------------------------------------- 
                                     
-      write (lu,1000)
+      write (lu,1000)  
 
       if (iam.eq.2) then 
          write (lu,1120) (vname(jv(i)),v(jv(i)), i = 1, ipot)
@@ -133,6 +94,8 @@ c----------------------------------------------------------------------
       else 
          write (lu,1120) (vnm(i), var(i), i = 1, jvar)
       end if 
+
+      write (lu,1120) 'pressure',1d1**v(1),'density',psys(10)
 
       if (iopt(2).eq.0) then 
          cprop = 'molar  proportions'
@@ -155,8 +118,9 @@ c                                 mol %
      *                      props(16,i)/psys(16)*1d2,
 c                                 mol
      *                      props(16,i),
-c                                 molar composition
-     *                      (pcomp(l,i), l = 1, icomp)
+c                                 molar or weight composition
+     *                      (pcomp(l,i), l = 1, icomp), pcomp(1,i)
+     *                                  /(pcomp(2,i) + pcomp(1,i))
 
          else 
 
@@ -169,270 +133,47 @@ c                                 mol %
      *                      props(16,i)/psys(16)*1d2,
 c                                 mol
      *                      props(16,i),
-c                                 weight composition
-     *                      (pcomp(l,i), l = 1, icomp)
+c                                 molar or weight composition
+     *                      (pcomp(l,i), l = 1, icomp), pcomp(1,i)
+     *                                  /(pcomp(2,i) + pcomp(1,i))
 
-         end if
-
-         if (lopt(28)) then
-
-            do l = 1, icomp
-              write (*,666) 
-     *          cname(l),pcomp(l,i)/props(17,i)*1d3,
-     *          cname(l),atwt(l)*pcomp(l,i)/props(17,i)*1d3
-            end do
-
-         end if
-
-      end do 
-
-666   format ('cm[',a,'] := ',g14.6,'; cw[',a,'] := ',g14.6,';')
-
-      if (lopt(21).and.np.gt.0) then 
-c                                 species_ouput
-         write (lu,'(/,a,/)') 'Phase speciation (molar proportions):'
-
-         tag = ' '
-
-         do i = 1, np 
-
-            id = kkp(i) 
-c                                 check for aqueous phase output
-            aqph = .false.
-
-            if (ksmod(id).eq.39.and.lopt(32)) then 
-               if (caq(i,na1).gt.0d0) aqph = .true.
-            end if
-
-            if (ksmod(id).eq.20.and.spct(id).gt.5) then
-
-               inc = 5
-
-            else if (spct(id).gt.7) then 
-
-                inc = 7
-
-            else 
-
-                inc = spct(id)
-
-            end if 
-
-            if (aqph) then
-            
-               ct = nat
-               inc = 5
-
-            else 
-
-               ct = spct(id)
-
-            end if 
-
-            do k = 1, ct, inc
-
-               l = k + inc - 1
-               if (l.gt.ct) l = ct
-
-               if (ksmod(id).eq.20) then 
-c                                 forward aqueous model
-                  write (text,'(20(a,a,g12.5,a))')
-     *                  (spnams(j,id),': ',ysp(j,i),', ', j = k, l)
-
-               else if (aqph) then
-
-                  m = 1 
-
-                  do j = k, l
-                     
-                     if (j.le.ns) then 
-c                                 solvent species
-                        spnams(ns+m,id) = spnams(j,id) 
-                        
-                        if (lopt(26)) then
-c                                 mole fraction
-                            ysp(ns+m,i) = caq(i,j)
-                        else 
-c                                 molality             
-                            ysp(ns+m,i) = caq(i,j)/caq(i,na3)
-                        end if   
-
-                     else if (j.le.nsa) then 
-c                                 solute species
-                        spnams(ns+m,id) = aqnam(j-ns)
-                        
-                        if (lopt(27)) then
-c                                 molality       
-                            ysp(ns+m,i) = caq(i,j)
-                        else 
-c                                 mole fraction      
-                            ysp(ns+m,i) = caq(i,j)/caq(i,na2)
-                        end if
-
-                     else 
-c                                 special properties
-                         if (j.eq.na1) then 
-                            spnams(ns+m,id) = 'ionic_st'
-                         else if (j.eq.na2) then 
-                            spnams(ns+m,id) = 'tot_mola'
-                         else if (j.eq.na3) then
-                            spnams(ns+m,id) = 'solv_mas'
-                         else if (j.eq.na3+1) then
-                            spnams(ns+m,id) = 'err_lgKw'
-                         else if (j.eq.na3+2) then
-                            spnams(ns+m,id) = 'pH'
-                         else if (j.eq.na3+3) then
-                            spnams(ns+m,id) = 'Delta_pH'
-                         else if (j.eq.na3+4) then
-                            spnams(ns+m,id) = 'solute_m'
-                         else if (j.eq.nat) then
-                            spnams(ns+m,id) = 'epsilon'
-                         end if 
-
-                          ysp(ns+m,i) = caq(i,j)
-
-                     end if 
-
-                     m = m + 1
-
-                  end do 
-
-                  if (j.gt.nat) then 
-
-                     if (lopt(26).and.lopt(27)) then 
-c                                 molar solvent
-c                                 molal solute
-                        tag = '*'
-                        tag1 ='*molar solvent, molal solute '
-
-                     else if (lopt(27).and..not.lopt(26)) then 
-c                                  all molal
-                        tag = '*'
-                        tag1 ='*molal '
-
-                     else if (.not.lopt(26).and..not.lopt(27)) then 
-c                                   molal solvent
-c                                   molar solute
-                         tag = '*'
-                         tag1 ='*molal solvent, molar solute '
-
-                      end if 
-
-                  end if 
-
-                  write (text,'(20(a,a,g12.5,a))')
-     *                  (spnams(ns+j,id),': ',ysp(ns+j,i),', ',
-     *                   j = 1, m - 1), tag
-
-                  tag = ' '
-
-               else 
-
-                  write (text,'(20(a,a,f8.5,a))')
-     *                  (spnams(j,id),': ',ysp(j,i),', ', j = k, l)
-
-               end if 
-
-               call deblnk (text)
-
-               if (k.eq.1) then 
-
-                  write (lu,'(1x,a,4x,400a)') pname(i), 
-     *                                        (chars(j), j = 1, length)
-               else 
-
-                  write (lu,'(19x,400a)') (chars(j), j = 1, length)
-
-               end if 
-
-            end do 
-
-         end do 
-
-         if (laq.and.lopt(32).and.tag.ne.' ') then 
-            write (text,'(a)') tag1//'concentrations.'
-            call deblnk (text)
-            write (lu,'(/,1x,400a)') chars(1:length)
          end if 
 
-      end if 
-
-      if (lopt(24).and.np.gt.0) then 
-
-         write (lu,'(/,a,/)') 'Pure species molar Gibbs energies*:'
-c                                 electrolyte fluid is a special
-c                                 case because the electrolyte energies
-c                                 depend on the solvent properties
-         if (ksmod(id).eq.20) call solut0 (id)
-
-         do i = 1, np 
-
-            id = kkp(i)
-
-            if (ksmod(id).eq.20.and.spct(id).gt.5) then
-
-               inc = 6
-
-            else if (spct(id).gt.7) then 
-
-                inc = 7
-
-            end if 
-
-            do k = 1, lstot(id), inc
-
-               l = k + inc - 1
-               if (l.gt.lstot(id)) l = lstot(id)
-
-               if (ksmod(id).ne.20) then 
-
-                  write (text,'(20(a,a,i10,a))')
-     *            (spnams(j,id),': ',int(gcpd(jend(id,2+j),.true.)),
-     *                                           ', ', j = k, l)  
-
-               else
-
-                  write (text,'(20(a,a,i10,a))')
-     *            (spnams(j,id),': ',int(aqg(j)),', ', j = k, l)
-
-               end if 
-
-               call deblnk (text)
-
-               if (k.eq.1) then 
-
-                  write (lu,'(1x,a,4x,400a)') pname(i), 
-     *                                        (chars(j), j = 1, length)
-               else 
-
-                  write (lu,'(19x,400a)') (chars(j), j = 1, length)
-
-               end if 
-
-            end do
-
-         end do
-
-         write (lu,'(/,a,/)') '*these do not include internal DQFs'
-
-      end if 
+      end do 
 
       write (lu,1160)
 c                                 phase/system summary, normal thermo:
       do i = 1, ntot
-c                                 N, G, S, V, Cp, alpha, beta, density
-         write (lu,1170) pname(i),props(17,i),int(props(11,i)),
-     *                   props(15,i),
+c                                 N, H, S, V, Cp, alpha, beta, density
+         write (lu,1170) pname(i),props(17,i),props(2,i),props(15,i),
      *                   props(1,i),(props(j,i),j=12,14),props(28,i),
      *                   props(10,i)
       end do
 
-      write (lu,1170) 'System        ',psys(17),int(psys(11)),psys(15),
+      write (lu,1170) 'System        ',psys(17),psys(2),psys(15),
      *                psys(1),(psys(j),j=12,14),psys(28),psys(10)
-      if (aflu) write (lu,1170) 'System - fluid',psys1(17),
-     *                int(psys1(11)),
+      if (aflu) write (lu,1170) 'System - fluid',psys1(17),psys1(2),
      *                psys1(15),psys1(1),(psys1(j),j=12,14),psys1(28),
      *                psys1(10)
+
+
+
+      write (lu,'(/,a,/)') 'speciation and Si-O CN'
+
+      cnsys = 0 
+
+      do i = 1, ntot
+c                                 
+         cn(i) = (spec(1,i)*2d0 + spec(2,i))
+     *         / (spec(1,i) + spec(2,i))
+         write (lu,'(15(g14.6,1x))') (spec(j,i),j=1,5),cn(i)
+
+         cnsys = cnsys + props(16,i)*pcomp(2,i)/fbulk(2) * cn(i)
+
+      end do 
+
+      write (lu,'(/,a,g12.6,/)') 'Bulk Si-O CN = ', cnsys
+      
 
 
       if (iopt(14).gt.0) then 
@@ -483,16 +224,8 @@ c                                 entirely of fluid (psys1(1)=0):
 
          do i = 1, icomp
 
-            write (lu,1110) cname(i),
-c                                 absolute mol
-     *                      fbulk(i),
-c                                 absolute mass
-     *                      fbulk(i)*atwt(i),
-c                                 mass fraction, %
-     *                      fbulk(i)*atwt(i)/psys(17)*1d2,
-c                                 mol/kg
-     *                      fbulk(i)/psys(17)*1d3
-
+            write (lu,1110) cname(i),fbulk(i), fbulk(i)/gtot*1d2,
+     *                      fbulk(i)*atwt(i)/psys(17)*1d2
          end do
 
          write (lu,1220)
@@ -516,19 +249,9 @@ c                                 fluid is present
 
          do i = 1, icomp
 
-            write (lu,1110) cname(i),
-c                                 true bulk
-     *                      fbulk(i),fbulk(i)*atwt(i),
-     *                      fbulk(i)*atwt(i)/psys(17)*1d2,
-c                                 mol/kg
-     *                      fbulk(i)/psys(17)*1d3,
-c                                 fluid-absent bulk
-     *                      fbulk1(i),
-     *                      fbulk1(i)*atwt(i),
-     *                      fbulk1(i)*atwt(i)/psys1(17)*1d2,
-c                                 mol/kg 
-     *                      fbulk1(i)/psys1(17)*1d3
-
+            write (lu,1110) cname(i),fbulk(i),fbulk(i)/gtot*1d2,
+     *               fbulk(i)*atwt(i)/psys(17)*1d2,fbulk1(i)/gtot1*1d2,
+     *               fbulk1(i)*atwt(i)/psys1(17)*1d2          
          end do
 
          write (lu,1220)
@@ -558,93 +281,51 @@ c                                 cp, specific cp
 
          write (lu,1230) 
 
-      end if
-
-      if (lopt(28)) then
-
-667   format ('sm[',a,'] := ',g14.6,'; sw[',a,'] := ',g14.6,';',
-     *        'sms[',a,'] := ',g14.6,'; sws[',a,'] := ',g14.6,';')
-
-         do i = 1, icomp
-
-            write (*,667) cname(i),fbulk(i)/psys(17)*1d3,
-     *                    cname(i),fbulk(i)*atwt(i)/psys(17)*1d3,
-     *                    cname(i),fbulk1(i)/psys1(17)*1d3,
-     *                    cname(i),fbulk1(i)*atwt(i)/psys1(17)*1d3
-
-         end do
-
       end if 
 c                                 chemical potentials variance
       if (jpot.ne.1) then 
          write (lu,1130) (cname(i), i = 1, jbulk)
          write (lu,1140) (mu(i), i = 1, jbulk)
          write (lu,1071) 2, jbulk - ntot + 2 
-c                                 test for non-NaN chemical potentials
-         mus = .false.
-         do i = 1, jbulk
-            if (.not.isnan(mu(i))) then
-               mus = .true.
-               exit 
-            end if 
-         end do 
       else 
          write (lu,1070) 2, jbulk - ntot + 2 
       end if 
 
-      if (laq.and.lopt(25)) then 
-
-         do i = 1, ntot
-            
-            if (kkp(i).eq.idaq) then
-
-               call aqrxdo (i,lu)
-
-            end if 
-
-         end do 
-
-      end if 
-
-      write (lu,1010)
-
 1000  format (/,40('-'),//,'Stable phases at:')
-1010  format (/,40('-'),/)
 1020  format (/,'Phase Compositions (',a,'):',
      *        /,19x,'wt %',6x,'vol %',5x,'mol %',5x,'mol  ',
      *          5x,20(1x,a,3x))
-1030  format (1x,a,3x,3(f6.2,4x),g9.3,1x,20(f8.5,1x))
+1030  format (1x,a,3x,3(f6.2,4x),g9.3,1x,20(f9.7,1x))
 1031  format (1x,a,3x,3(f6.2,4x),g9.3,1x,20(f8.3,1x))
-1040  format (/,13x,'mol',8x,'g',8x,'wt %',5x,'mol/kg')
+1040  format (/,14x,'mol',7x,'mol %',6x,'wt %')
 1060  format (/,' Enthalpy (J/kg) = ',g12.6,/,
      *          ' Specific Enthalpy (J/m3) = ',g12.6,/,
      *          ' Entropy (J/K/kg) = ',g12.6,/,
      *          ' Specific Entropy (J/K/m3) = ',g12.6,/,
      *          ' Heat Capacity (J/K/kg) = ',g12.6,/,
      *          ' Specific Heat Capacity (J/K/m3) = ',g12.6,/)
-1070  format ('Variance (c-p+',i1,') = ',i2,/)
-1071  format (/,'Variance (c-p+',i1,') = ',i2,/)
-1080  format (/,21x,'Complete Assemblage',28x,'Solid+Melt Only',
-     *        /,13x,'mol',8x,'g',8x,'wt %',5x,'mol/kg',
-     *          10x,'mol',8x,'g',8x,'wt %',5x,'mol/kg')
+1070  format ('Variance (c-p+',i1,') = ',i2,//,40('-'),/)
+1071  format (/,'Variance (c-p+',i1,') = ',i2,//,40('-'),/)
+1080  format (/,16x,'Complete Assemblage',15x,'Solid+Melt Only',
+     *        /,14x,'mol',7x,' mol %',6x,'wt %',9x,' mol %',6x,'wt %')
 1100  format (/,' Solid Enthalpy (J/kg) = ',g12.6,/,
      *          ' Solid Secific Enthalpy (J/m3) (2) = ',g12.6,/,
      *          ' Solid Entropy (J/K/kg) = ',g12.6,/,
      *          ' Solid Specific Entropy (J/K/m3) = ',g12.6,/,
      *          ' Solid Heat Capacity (J/K/kg) (1) = ',g12.6,/,
      *          ' Solid Specific Heat Capacity (J/K/m3) (1) = ',g12.6,/)
-1110  format (1x,a8,2x,4(f7.3,3x),5x,4(f7.3,3x))
+1110  format (1x,a8,2x,f8.3,5x,2(f6.2,4x),5x,2(f6.2,4x))
 1120  format (29x,a8,' = ',g12.6)
-1130  format (/,'Chemical Potentials (J/mol):',//,2x,20(4x,a,5x))
+1130  format (/,'Chemical Potentials (J/mol):',/,2x,20(4x,a,5x))
 1140  format (2x,20(1x,g13.6))
 1160  format (/,'Molar Properties and Density:'
-     *        /,20x,'N(g)',10x,'G(J)',5x,'S(J/K)',5x,'V(J/bar)',6x,
-     *         'Cp(J/K)',7x,'Alpha(1/K)',2x,'Beta(1/bar)',4x,'Cp/Cv',4x,
+     *        /,20x,'N(g)',8x,'H(J)',6x,'S(J/K)',6x,'V(J/bar)',6x,
+     *         'Cp(J/K)',6x,'Alpha(1/K)',2x,'Beta(1/bar)',4x,'Cp/Cv',5x,
      *         'Density(kg/m3)')
-1170  format (1x,a,1x,f9.2,3x,i12,1x,12(g12.5,1x),3x,f7.4)
+1170  format (1x,a,1x,f9.2,3x,13(g12.5,1x),3x,f7.4)
 1190  format (/,'Seismic Properties:'
-     *        /,17x,'Gruneisen_T',6x,'Ks(bar)',6x,'Mu(bar)',
-     *        4x,'V0(km/s)',5x,'Vp(km/s)',5x,'Vs(km/s)',3x,
+     *        /,17x,'Gruneisen_T',7x,'Ks(bar)',7x,'Mu(bar)',
+     *        4x,'V0(km/s)',5x,'Vp(km/s)',5x,'Vs(km/s)',5x,
      *        'Poisson ratio')
 1200  format (1x,a,3x,12(g12.5,1x))
 1210  format (/,'Bulk Composition:')
@@ -687,27 +368,25 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i,j,k,l,m,ids,kd,lco(3),itri(4),jtri(4),ijpt
+      integer i,j,k,l,m,ids,jds,jd,kd,jcoor,kcoor,itri(4),jtri(4),ijpt
 
       double precision wt(3), cst
 
-      logical sick(i8), nodata, ssick, ppois, bulkg, bsick, bad
+      logical sick(i8), nodata, ssick, ppois, bulkg, bsick
 c                                 x-coordinates for the assemblage solutions
-      integer ld, na1, na2, na3, nat
-      double precision x3, caq
-      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),na1,na2,na3,nat,ld
+      double precision x3
+      common/ cxt16 /x3(k21,mst,msp)
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 c                                 
       integer ifp
-      logical fp
-      common/ cxt32 /ifp(k10), fp(h9)
+      common/ cxt32 /ifp(k1)
 c                                 composition and model flags
 c                                 for final adaptive solution
-      integer kkp,np,ncpd,ntot
-      double precision cp3,amt
-      common/ cxt15 /cp3(k0,k19),amt(k19),kkp(k19),np,ncpd,ntot
+      integer kkp, np, ncpd, ntot
+      double precision cp3, amt
+      common/ cxt15 /cp3(k0,k5),amt(k5),kkp(k5),np,ncpd,ntot
 c                                 x coordinate description
       integer istg, ispg, imlt, imdg
       common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
@@ -721,12 +400,9 @@ c                                 global assemblage data
       integer igrd
       common/ cst311/igrd(l7,l7)
 
-      integer ncoor,mcoor,ndim
-      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
-
-      double precision xco
-      integer ico,jco
-      common/ cxt10 /xco(k18),ico(k1),jco(k1)
+      double precision xcoor
+      integer icoor
+      common/ cxt10 /xcoor(k18),icoor(k1)
 c                                 bookkeeping variables
       integer ksmod, ksite, kmsol, knsp
       common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
@@ -748,12 +424,11 @@ c                                 bookkeeping variables
       double precision props,psys,psys1,pgeo,pgeo1
       common/ cxt22 /props(i8,k5),psys(i8),psys1(i8),pgeo(i8),pgeo1(i8)
 
-      double precision amu
-      common/ cst48 /amu(k8,k2)
+      double precision mus
+      common/ cst48 /mus(k8,k2)
 
-      logical mus
       double precision mu
-      common/ cst330 /mu(k8),mus
+      common/ cst330 /mu(k8)
 
       integer jtest,jpot
       common/ debug /jtest,jpot
@@ -769,14 +444,6 @@ c                                 bookkeeping variables
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
 
-      integer iaq, aqst, aqct
-      character aqnam*8
-      double precision aqcp, aqtot
-      common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
-
-      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
-      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
-
       integer iam
       common/ cst4 /iam
 
@@ -786,29 +453,21 @@ c                                 bookkeeping variables
       integer hs2p
       double precision hsb
       common/ cst84 /hsb(i8,4),hs2p(6)
-
-      integer idaq, jdaq
-      logical laq
-      common/ cxt3 /idaq,jdaq,laq
 c----------------------------------------------------------------------
 c                                 logarithmic_p option
-10    if (lopt(14)) p = 1d1**p 
+      if (lopt(14)) p = 1d1**p 
 
       nodata = .false. 
 
       if (iam.ne.2) then 
-c                                 WERAMI: 
-         ias = iap(igrd(itri(1),jtri(1)))
-c                                 load the assemblage phase composition
-c                                 starting coordinates
-         do i = 1, ijpt
-            lco(i) = ico(igrd(itri(i),jtri(i)))
-         end do 
+
+         jd = igrd(itri(1),jtri(1))
+         ias = iap(jd)
 c                                 no data test
          if (ias.eq.k3) then 
             nodata = .true.
             goto 99 
-         end if
+         end if 
 
          np = iavar(1,ias)
          ncpd = iavar(2,ias)
@@ -817,9 +476,11 @@ c                                 no data test
          do i = 1, ntot
             kkp(i) = idasls(i,ias)
          end do 
+
+         jcoor = icoor(jd)
 c                                 get the dependent potentials
          if (jpot.ne.1) then
-
+ 
             do i = 1, jbulk
                mu(i) = 0d0
             end do 
@@ -829,19 +490,10 @@ c                                 get the dependent potentials
                kd = igrd(itri(i),jtri(i))
 
                do j = 1, jbulk
-                  mu(j) = mu(j) + wt(i) * amu(j,kd)
+                  mu(j) = mu(j) + wt(i) * mus(j,kd)
                end do 
 
             end do 
-
-            mus = .false.
-
-            do i = 1, jbulk
-               if (.not.isnan(mu(i))) then 
-                  mus = .true.
-                  exit
-               end if
-            end do
 
          end if
 c                                 if s/v independent variables, 
@@ -865,19 +517,15 @@ c                                 then set p and t
 
       end if 
 c                                 initialize system props/flags
-      call insysp (ssick,ppois,bulkg,bsick)
+10    call insysp (ssick,ppois,bulkg,bsick)
 
       do i = 1, ntot
 
          ids = kkp(i)
-c                                 this is outside the solution
-c                                 conditional to allow pure H2O
-c                                 solvent
-         if (ids.eq.idaq) laq = .true.
 
          if (i.le.np) then 
 
-            if (fp(ids)) then 
+            if (ksmod(ids).eq.0.or.ksmod(ids).gt.20.and.lopt(6)) then 
                aflu = .true.
                fluid(i) = .true.
             else 
@@ -885,114 +533,109 @@ c                                 solvent
             end if
 
             if (iam.ne.2) then
-c                                 WERAMI, initialize
-               props(16,i) = 0d0
-
+ 
                do j = 1, istg(ids)
                   do k = 1, ispg(ids,j)
-                     x3(i,j,k) = 0d0
-                  end do 
-               end do 
-
-               if (lopt(32).and.ksmod(ids).eq.39) then 
-c                               lagged speciation
-                  do k = 1, nat
-                     caq(i,k) = 0d0
-                  end do
-
-               end if
-c                                 start of the assemblage compositional 
-c                                 coordinates in xco is in lco(l):
-               do l = 1, ijpt
-
-                  kd = igrd(itri(l),jtri(l))
-
-                  cst = wt(l)*bg(i,kd)
+                     jcoor = jcoor + 1
+                     cst = bg(i,jd)
 c                                 in case zero mode is not on, allow
 c                                 composition of zero phase
-                  if (ijpt.eq.1.and.cst.eq.0d0) then 
-                     cst = 1d0
-                  else 
-c                                 weighted molar amount
-                     props(16,i) = props(16,i) + cst
-                  end if 
+                     if (ijpt.eq.1.and.cst.eq.0d0) cst = 1d0
+                     x3(i,j,k) = wt(1)*cst*xcoor(jcoor)
 
-                  do j = 1, istg(ids)
-                     do k = 1, ispg(ids,j)
-                        lco(l) = lco(l) + 1
-                        x3(i,j,k) = x3(i,j,k) + cst*xco(lco(l))
-                     end do 
-                  end do
-
-                  if (lopt(32).and.ksmod(ids).eq.39) then 
-c                               lagged speciation
-                     do k = 1, nat
-                        lco(l) = lco(l) + 1
-                        caq(i,k) = caq(i,k) + cst*xco(lco(l))
-                     end do
-
-                  end if
-
-               end do
-c                                 renormalize the composition
-               cst = props(16,i)
-               if (cst.eq.0d0) cst = 1d0
-
-               do l = 1, istg(ids)
-                  do m = 1, ispg(ids,l)    
-                     x3(i,l,m) = x3(i,l,m)/cst
                   end do 
                end do 
 
-               if (lopt(32).and.ksmod(ids).eq.39) then 
-c                               lagged speciation
-                  do k = 1, nat
-                     caq(i,k) = caq(i,k)/cst
-                  end do 
-
-               end if 
-c                                 revover x from x3, 2nd arg has no meaning.
-               call getxz (i,i,ids)
-c                                 convert x to y for calls to gsol
-               call xtoy (ids,bad)
-
-            else 
-c                                 MEEMUM, molar amount
-               props(16,i) = amt(i)
-c                                 convert x3 to y for calls to gsol
-               if (ids.gt.0) call x3toy (i,ids)
- 
             end if 
 
          else 
-c                                 a compound:
-            if (ifp(-ids).gt.0.or.ifp(-ids).lt.0.and.lopt(6)) then 
+
+            if (ifp(-ids).eq.1) then 
                aflu = .true.
                fluid(i) = .true.
             else 
                fluid(i) = .false.
             end if
 
-            if (iam.ne.2) then 
-c                                 WERAMI compund:
-               props(16,i) = 0d0 
+         end if
+c                                 molar amounts
+         if (iam.eq.2) then 
 
-               do l = 1, ijpt
+            props(16,i) = amt(i)
+c                                 convert x3 to y for calls to gsol            
+            if (ids.gt.0) call x3toy (i,ids)
 
-                  props(16,i) = props(16,i) 
-     *                        + wt(l)*bg(i,igrd(itri(l),jtri(l)))
+         else 
+c                                 if werami with interpolation, average
+c                                 compositions:
+            props(16,i) = wt(1)*bg(i,jd)
+c                                 now average in other assemblages
+            do j = 2, ijpt
+            
+               kd = igrd(itri(j),jtri(j))
+               ias = iap(kd)
 
+               kcoor = icoor(kd)
+
+               do k = 1, i
+
+                  jds = idasls(k,ias)
+
+                  if (k.le.np) then 
+
+                     do l = 1, istg(jds)
+                        do m = 1, ispg(jds,l)
+                           kcoor = kcoor + 1
+                           if (k.lt.i) cycle
+c                                 this is done so as to count
+c                                 the coordinates as well as make
+c                                 the composition.   
+                           x3(i,l,m) = x3(i,l,m) 
+     *                               + wt(j)*bg(k,kd)*xcoor(kcoor)
+
+                        end do 
+                     end do 
+
+                  end if 
+
+                  if (k.lt.i) cycle 
+c                                 molar amounts
+                  props(16,i) = props(16,i) + wt(j)*bg(k,kd)
+
+               end do  
+
+            end do
+c                                 renormalize the composition
+            if (i.le.np) then 
+
+               do l = 1,  istg(ids)
+                  do m = 1, ispg(ids,l)    
+                     cst = props(16,i)
+                     if (cst.eq.0d0) cst = 1d0    
+                     x3(i,l,m) = x3(i,l,m)/cst
+                  end do 
                end do 
 
-            else 
-c                                 MEEMUM, molar amount
-               props(16,i) = amt(i)
- 
             end if
+             
+            if (ids.gt.0) then 
+c                                 revover x from x3, 2nd arg has no meaning.
+               call getxz (i,i,ids)
+c                                 convert x to y for calls to gsol
+               call xtoy (ids)
 
-         end if
+            end if 
+
+         end if 
 c                                 get and sum phase properties
-         call getphp (ids,i,sick,ssick,ppois,bulkg,bsick)
+         call getphp (ids,i,sick,ssick,ppois,bulkg,bsick)  
+
+         if ((ssick.or.bsick.or.sick(i)).and.ijpt.gt.1) then 
+            wt(1) = 1d0
+            ijpt = 1
+            write (*,*) 'turned off at :', t, p, dlog10(p)
+            goto 10 
+         end if   
 
       end do 
 c                                 compute aggregate properties:
@@ -1002,92 +645,299 @@ c                                 compute aggregate properties:
 
       end
 
+      subroutine x3toy (id,ids)
+c----------------------------------------------------------------------
+c subroutine to convert geometric reciprocal solution compositions (x3(id,i,j))
+c to geometric endmember fractions (y) for solution model ids. replicate 
+c of subroutine xtoy, but for the x3 array (used only by getloc from meemum).
+c----------------------------------------------------------------------
+      implicit none 
 
-      subroutine getspc (id,jd)
+      include 'perplex_parameters.h'
+c                                 -------------------------------------
+c                                 local variables:
+      integer ids, l, m, ld, id
+c                                 -------------------------------------
+c                                 global variables:
+c                                 bookkeeping variables
+      integer ksmod, ksite, kmsol, knsp
+      common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
+c                                 working arrays
+      double precision z, pa, p0a, x, w, y
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1)
+c                                 x coordinate description
+      integer istg, ispg, imlt, imdg
+      common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
+
+      integer lstot,mstot,nstot,ndep,nord
+      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
+
+      double precision x3
+      common/ cxt16 /x3(k21,mst,msp)
+c----------------------------------------------------------------------
+
+      do l = 1, mstot(ids)
+c                                 the endmembers may have been
+c                                 rearranged from the original order,
+c                                 use knsp(l,ids) to assure correct
+c                                 indexing
+         ld = knsp(l,ids) 
+
+         y(ld) = 1d0
+
+         do m = 1, istg(ids)
+            y(ld) = y(ld)*x3(id,m,kmsol(ids,ld,m))
+         end do
+
+      end do   
+
+      end 
+
+      double precision function ginc (dt,dp,id)
 c-----------------------------------------------------------------------
-c getspc loads independent endmember fractions of a solution id into a 
-c single compositional array y(m4). it is used only for output and 
-c must be called after function gsol (id) and routine setspc (id).
-c jd is the local phase counter from the calling routine. 
+      implicit none
+
+      double precision dt,dp,gee,gsol,gfrnd
+
+      integer id
+
+      double precision p,t,xco2,u1,u2,tr,pr,r,ps
+      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
+
+      integer iam
+      common/ cst4 /iam
+c----------------------------------------------------------------------
+
+      p = p + dp 
+      t = t + dt 
+
+      if (iam.eq.5) then 
+c                                 frendly 
+         gee = gfrnd(-id)
+
+      else 
+c                                 meemum/werami
+         gee = gsol(id)
+
+      end if 
+
+      p = p - dp 
+      t = t - dt
+
+      ginc = gee 
+
+      end 
+
+      double precision function gsol (id)
+c-----------------------------------------------------------------------
+c gsol computes the total (excess+ideal) free energy of solution 
+c for a solution identified by index ids and composition y(m4) input
+c from cxt7, the composition y is the independent endmember fractions
+c for all model types except reciprocal solutions, in which case it is 
+c the y's for the full reciprocal model.
+
+c gsol assumes the endmember g's have not been calculated by gall and is
+c      only called by WERAMI.
+c gsol1 is identical to gsol but can only been called after gall and is 
+c      only called by VERTEX and MEEMUM. 
 c-----------------------------------------------------------------------
       implicit none
  
       include 'perplex_parameters.h'
 
-      integer k, id, jd
+      integer k,id
+
+      double precision omega, gproj, hpmelt, gmelt, gfluid, gzero, g, 
+     *                 dg, gex, slvmlt, gfesi, x1(5), gerk
+
+      external omega, gproj, hpmelt, gmelt, gfluid, gzero, 
+     *                 slvmlt, gfesi, gerk
+
+      integer jend
+      common/ cxt23 /jend(h9,k12)
+
+      double precision r,tr,pr,ps,p,t,xco2,u1,u2
+      common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
 c                                 bookkeeping variables
       integer ksmod, ksite, kmsol, knsp
       common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
+
+      integer lstot,mstot,nstot,ndep,nord
+      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
+c                                 working arrays
+      double precision z, pa, p0a, x, w, y
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1)
 c                                 model type
       logical lorder, lexces, llaar, lrecip
       common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
 
-      integer spct
-      double precision ysp
-      character spnams*8
-      common/ cxt34 /ysp(l10,k5),spct(h9),spnams(l10,h9)
-
-      double precision z, pa, p0a, x, w, y, wl
-      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
-     *              wl(m17,m18)
-
-      character specie*4
-      integer isp, ins
-      common/ cxt33 /isp,ins(nsp),specie(nsp)
-
-      double precision yf,g,v
-      common/ cstcoh /yf(nsp),g(nsp),v(nsp)
+      integer jspec
+      common/ cxt8 /jspec(h9,m4)
 c----------------------------------------------------------------------
+      if (id.lt.0) then 
 
-      if ((lrecip(id).and.lorder(id)).or.lorder(id)) then 
+         call gphase (-id,g)
+         gsol = g
 
-         do k = 1, spct(id) 
-            ysp(k,jd) = pa(k)
-         end do 
+      else 
 
-      else if (lrecip(id)) then 
+         g = 0d0
+c                                 evaluate dqf coefficients
+         call setdqf (id)
 
-         do k = 1, spct(id) 
-            ysp(k,jd) = p0a(k)
-         end do
+         call setw (id) 
 
-      else if (ksmod(id).eq.2 .or. ksmod(id).eq.3 .or.ksmod(id).eq.20
-     *     .or.ksmod(id).ge.24.and.ksmod(id).le.28.or.ksmod(id).eq.39) 
-     *                                                              then 
-c                                 macroscopic formulation for normal solutions (2,3) and
-c                                 hp melt model (24)
-c                                 ghiorso melt model (25)
-c                                 andreas salt model (26)
-c                                 high T melt model (28)
-c                                 generic hybrid fluid (39)
-         do k = 1, spct(id)
-            ysp(k,jd) = y(k)
-         end do
+         if (ksmod(id).eq.2.or.ksmod(id).eq.3) then 
+c                                 -------------------------------------
+c                                 macroscopic formulation for normal solutions.
+            call gdqf (id,g,y) 
+c                                 add entropy and excess contributions
+            g = g - t * omega(id,y) + gex(id,y)
+c                                 get mechanical mixture contribution
+            do k = 1, mstot(id) 
+               g = g + y(k) * gproj (jend(id,2+k))
+            end do 
 
-      else if (ksmod(id).eq.29.or.ksmod(id).eq.32) then 
-c                                 BCC Fe-Si Lacaze and Sundman (29) 
-c                                 BCC Fe-Cr Andersson and Sundman (32)
-         spct(id) = 4
-c                                 need to correct routines to give o/d
-         do k = 1, spct(id) 
-            ysp(k,jd) = 0d0
-         end do 
+         else if (lrecip(id).and.lorder(id)) then 
+c                                 -------------------------------------
+c                                 convert y coordinates to independent p coordinates
+            call y2p0 (id)
+c                                 get the speciation, excess and entropy effects.
+            call specis (g,id)
 
-      else if (ksmod(id).eq. 0.or.ksmod(id).eq.40.or.
-     *         ksmod(id).eq.41) then 
-c                                 fluid speciation with known routines:
-c                                 MRK silicate vapor (40) 
-c                                 hybrid MRK ternary COH fluid (41)
-c                                 hardwired binary/pseudo-binary (0)
-         do k = 1, spct(id) 
-            ysp(k,jd) = yf(ins(k))
-         end do          
+            do k = 1, lstot(id) 
+c                                 compute mechanical g from these z's, 
+c                                 specip adds a correction for the ordered species.
+               g = g + gproj(jend(id,2+k)) * p0a(k)
+            end do 
+c                                 get the dqf, this assumes the independent reactants
+c                                 are not dqf'd. gex not neccessary as computed in specip
+            call gdqf (id,g,p0a)
+
+         else if (lorder(id)) then 
+c                                 -------------------------------------
+c                                 non-reciprocal speciation.
+            do k = 1, lstot(id)  
+               pa(k) = y(k)
+               p0a(k) = y(k)
+               g = g + y(k) * gproj (jend(id,2+k))
+            end do 
+c                                 get the speciation energy effect
+            call specis (dg,id)
+
+            g = g + dg 
+c                                 get dqf corrections
+            call gdqf (id,g,p0a) 
+ 
+         else if (lrecip(id)) then 
+c                                 -------------------------------------
+c                                 macroscopic reciprocal solution w/o order-disorder
+
+c                                 convert y's to p's (p0a here).
+            call y2p0 (id)
+
+            do k = 1, lstot(id)
+               g = g + gproj (jend(id,2+k)) * p0a(k) 
+            end do 
+c                                 get the dqf
+            call gdqf (id,g,p0a)
+c                                 and excess contributions
+            g = g - t * omega(id,p0a) + gex(id,p0a)
+
+         else if (ksmod(id).eq.23) then 
+
+             write (*,*) 'toop samis model not coded'
+
+         else if (ksmod(id).eq.24) then 
+c                                 -------------------------------------
+c                                 hp melt model         
+            call gdqf (id,g,y) 
+
+            g = g - t * hpmelt(id) + gex(id,y)
+c                                 get mechanical mixture contribution
+            do k = 1, mstot(id)  
+               g = g + y(k) * gproj (jend(id,2+k))
+            end do 
+
+         else if (ksmod(id).eq.25) then 
+c                                 -------------------------------------
+c                                 ghiorso pmelt model  
+            call gdqf (id,g,y) 
+
+            g = g - t * gmelt(id) + gex(id,y)
+c                                 get mechanical mixture contribution
+            do k = 1, mstot(id)  
+               g = g + y(k) * gproj (jend(id,2+k))
+            end do 
+
+         else if (ksmod(id).eq.26) then 
+c                                 ------------------------------------
+c                                 andreas salt model
+            call hcneos (g,y(1),y(2),y(3))
+
+            do k = 1, 3
+               g = g + y(k) * gproj (jend(id,2+k))
+            end do 
+
+         else if (ksmod(id).eq.27) then 
+
+            do k = 1, mstot(id)
+               if (y(k).gt.0d0)   
+     *            g = g + (gproj(jend(id,2+k))+r*t*dlog(y(k)))*y(k) 
+            end do 
+
+         else if (ksmod(id).eq.28) then 
+c                                 -------------------------------------
+c                                 high T fo-fa-sio2 model  
+            call gdqf (id,g,y) 
+
+            g = g - t * slvmlt() + gex(id,y)
+c                                 get mechanical mixture contribution
+            do k = 1, mstot(id)  
+               g = g + y(k) * gproj (jend(id,2+k))
+            end do 
+
+         else if (ksmod(id).eq.29) then 
+c                                 -------------------------------------
+c                                 BCC Fe-Si Lacaze and Sundman
+            g = gfesi(y(1),gproj(jend(id,3)),gproj(jend(id,4)))
+
+         else if (ksmod(id).eq.40) then 
+
+c                                 MRK silicate vapor
+            g = 0d0
+
+            do k = 1, nstot(id) 
+               g = g + gzero(jend(id,2+k)) * y(k)
+               x1(k) = y(k)
+            end do 
+
+            g = g + gerk(x1)
+
+
+         else if (ksmod(id).eq.0) then 
+c                                 ------------------------------------
+c                                 internal fluid eos
+            do k = 1, 2
+               g = g + gzero(jend(id,2+k))*y(k)
+            end do 
+
+            g = g + gfluid(y(jspec(id,1)))
+
+         else 
+
+            write (*,*) 'what the **** am i doing here?'
+            stop
+
+         end if 
+
+      gsol = g 
 
       end if 
 
       end
 
-      recursive subroutine shearm (mu,mut,mup,ks,kst,ksp,id)
+      subroutine shearm (mu,mut,mup,ks,kst,ksp,id)
 c-----------------------------------------------------------------------
 c shearm returns a linear model for the adiabatic shear/bulk modulus
 c relative to the current pressure and temperature.
@@ -1197,9 +1047,9 @@ c-----------------------------------------------------------------------
 
       double precision mkcoef, mdqf
 
-      integer mknum, mkind, meos
+      integer mknum, mkind
       common / cst334 /mkcoef(k16,k17),mdqf(k16,k17),mkind(k16,k17),
-     *                 mknum(k16),meos(k16)
+     *                 mknum(k16)
 
       integer make
       common / cst335 /make(k10)
@@ -1224,8 +1074,9 @@ c                                compute the sum of the component g's
          mup = mup + mkcoef(jd,i) * pmup
 
          ks = ks + mkcoef(jd,i) * pks
-         kst = kst + mkcoef(jd,i) * pkst
-         ksp = ksp + mkcoef(jd,i) * pksp
+         mut = kst + mkcoef(jd,i) * pkst
+         mup = ksp + mkcoef(jd,i) * pksp
+
 
       end do 
 
@@ -1256,7 +1107,7 @@ c                                 bookkeeping variables
       common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
 
       integer jend
-      common/ cxt23 /jend(h9,m4)
+      common/ cxt23 /jend(h9,k12)
 
       logical lorder, lexces, llaar, lrecip
       common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
@@ -1266,9 +1117,8 @@ c                                 bookkeeping variables
       double precision emod
       common/ cst319 /emod(k15,k10),smod(h9),pmod(k10),iemod(k10),kmod
 
-      double precision z, pa, p0a, x, w, y, wl
-      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
-     *              wl(m17,m18)
+      double precision z, pa, p0a, x, w, y
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1)
 
       integer iopt
       logical lopt
@@ -1380,6 +1230,64 @@ c                                 speciation model using stixrude's EoS).
       end
 
 
+      double precision function gfrnd (id)
+c-----------------------------------------------------------------------
+c function to get g's for frendly. differs from gphase in that it checks
+c for special components O2, H2O, CO2. sloppy but who cares?
+c-----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer id
+
+      double precision gee, fo2, fs2
+
+      integer iff,idss,ifug,ifyn,isyn
+      common/ cst10 /iff(2),idss(h5),ifug,ifyn,isyn
+
+      double precision fh2o,fco2
+      common/ cst11 /fh2o,fco2
+
+      integer idf
+      double precision act
+      common/ cst205 /act(k7),idf(3)
+
+      double precision p,t,xco2,u1,u2,tr,pr,r,ps
+      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
+
+      integer eos
+      common/ cst303 /eos(k10)
+c-----------------------------------------------------------------------
+      call gphase (id,gee)
+
+      gee = gee + r * t * dlog(act(id))
+
+      if (ifyn.eq.0.and.eos(id).lt.100) then 
+c                                 this is a quick fix that will
+c                                 call the fluid routine way more 
+c                                 than necessary.
+         call cfluid (fo2,fs2)
+
+         if (id.eq.idf(3)) then 
+
+            gee = gee + r*t*fo2
+
+         else if (id.eq.idf(1)) then 
+        
+            gee = gee + r*t*fh2o
+         
+         else if (id.eq.idf(2)) then 
+        
+            gee = gee + r*t*fco2
+
+         end if
+ 
+      end if 
+
+      gfrnd = gee
+
+      end 
 
       double precision function poiss (vp,vs)
  
@@ -1410,7 +1318,7 @@ c gets properties of phase id and saves them in props(1:i8,i);
 c if called by werami/meemum id is a general phase pointer; if 
 c called by frendly id is an endmember pointer. 
 
-c the properties are saved in array prop as follows
+c the properties are saved prop as follows
 
 c 1  - molar volume
 c 2  - molar enthalpy
@@ -1468,18 +1376,16 @@ c----------------------------------------------------------------------
       include 'perplex_parameters.h'
 
       logical ok, sick(i8), ssick, pois, ppois, bulk, bulkg, bsick, 
-     *        lshear, fow, ok1
+     *        lshear, okt, fow
 
-      integer id, jd, iwarn1, iwarn2, iwarn3, j, itemp, m
+      integer id, jd, iwarn1, iwarn2, i, j, itemp, m
 
-      character*14 wname1, wname2, wname3
+      character*14 wname1, wname2
 
-      double precision dt0, dt1, dt2, g0, gpt, gpp, dp0, dp1, dp2, e, 
-     *                 alpha, v, ginc, dt,
+      double precision dt0, dt1, dt2, g0, gpt, gpt1, vrk, err,
+     *                 gpt2, gpp, dp0, dp1, dp2, e, alpha, v, ginc, dt,
      *                 beta, cp, s, rho, gtt, g1, g2, g3, g4, g5,
-     *                 g7, gppp, gppt, gptt, gttt, mols, root, poiss
-
-      external poiss, ginc
+     *                 g7, gppp, gppt, gptt, gttt, mols, root
 
       double precision props,psys,psys1,pgeo,pgeo1
       common/ cxt22 /props(i8,k5),psys(i8),psys1(i8),pgeo(i8),pgeo1(i8)
@@ -1510,9 +1416,9 @@ c----------------------------------------------------------------------
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
 
-      integer kkp,np,ncpd,ntot
-      double precision cp3,amt
-      common/ cxt15 /cp3(k0,k19),amt(k19),kkp(k19),np,ncpd,ntot
+      integer kkp, np, ncpd, ntot
+      double precision cp3, amt
+      common/ cxt15 /cp3(k0,k5),amt(k5),kkp(k5),np,ncpd,ntot
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -1521,51 +1427,56 @@ c----------------------------------------------------------------------
       double precision vnu
       common/ cst25 /vnu(k7),idr(k7),ivct
 
-      integer ihy, ioh
-      double precision gf, epsln, epsln0, adh, msol
-      common/ cxt37 /gf, epsln, epsln0, adh, msol, ihy, ioh
-
       integer hs2p
       double precision hsb
       common/ cst84 /hsb(i8,4),hs2p(6)
 
-      double precision units, r13, r23, r43, r59, zero, one, r1
-      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+      double precision units, r13, r23, r43, r59, r1, r2
+      common/ cst59 /units, r13, r23, r43, r59, r1, r2
 
-      double precision vrt
-      integer irt
-      logical sroot
-      common/ rkroot /vrt,irt,sroot
+      integer idspec
+      double precision spec
+      common/ tspec /spec(nsp,k5),idspec
 
-      double precision y,g,pmv
-      common/ cstcoh /y(nsp),g(nsp),pmv(nsp)
+      double precision y,g,vsp
+      common / cstcoh /y(nsp),g(nsp),vsp(nsp)
 
+      double precision pv, pvv
       integer iroots
       logical switch, rkmin, min
-      common/ rkdivs /iroots,switch,rkmin,min
+      common/ rkdivs /pv,pvv,iroots,switch,rkmin,min
+
+      double precision vol
+      common/ cst26 /vol
 
       double precision vp,vvp
       integer rooti
       common/ srkdiv /vp(3),vvp(3),rooti(3)
 
-      integer eos
-      common/ cst303 /eos(k10)
+      double precision rhoc
+      common/ rcrt /rhoc
 
-      integer kd, na1, na2, na3, nat
-      double precision x3, caq
-      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),na1,na2,na3,nat,kd
+      double precision vrt
+      integer irt
+      logical sroot, nospe
+      common/ rkroot /vrt,irt,sroot,nospe
+
+      double precision ga, gb, gc, gd, ge, gf, 
+     *                 va, vb, vc, vd, ve, vf
+
+      integer ins(5)
+      save ins 
+      data ins/14, 13, 12, 7, 15/
 
       save dt
       data dt /.5d0/
 
-      save iwarn1, iwarn2, iwarn3, wname1, wname2, wname3
-      data iwarn1, iwarn2, iwarn3, wname1, wname2, wname3 /3*0,3*' '/
+      save iwarn1, iwarn2, wname1, wname2
+      data iwarn1, iwarn2, wname1, wname2 /2*0,2*'              '/
 c----------------------------------------------------------------------
       sick(jd) = .false.
       pois     = .false.
       lshear   = .false.
-c                                 pointer copy for lagged aq calculations in gsol 
-      kd = jd 
 c                                 make name and composition, 
 c                                 redundant for frendly
       call getnam (pname(jd),id)
@@ -1601,13 +1512,7 @@ c                                 molar phase composition
 c                                 an entity with no mass signals that 
 c                                 frendly is using a make definition
 c                                 which corresponds to a balanced reaction
-      if (gtot.eq.0d0) then 
-         rxn = .true.
-      else if (id.lt.0) then 
-c                                 properties of an aqueous species, turn
-c                                 off sign-based testing.
-         if (eos(-id).eq.15.or.eos(-id).eq.16) rxn = .true.
-      end if 
+      if (gtot.eq.0d0) rxn = .true.
 
       if (iopt(2).eq.1) then 
 c                                 convert molar phase composition to 
@@ -1641,121 +1546,177 @@ c                                 explicit bulk modulus is allowed and used
       end if   
             
       g0 = ginc(0d0,0d0,id)
-c                                 get speciation 
-      if (id.gt.0) call getspc (id,jd)
+c                                 speciation trick
+
+         do j = 1, 5
+            spec(j,jd) = y(ins(j))
+         end do 
+
 c                                 set flag for multiple root eos's
       sroot = .true.
-c                                 compute g-derivatives for isostatic 
-c                                 thermodynamic properties
-      if (p.gt.nopt(26)) then 
-         dp0 = nopt(27) * p
-      else 
-         dp0 = nopt(27) * nopt(26)
-      end if 
+      nospe = lopt(28)
 
-      dt0 = dt
+      idspec = jd
 
-      ok1 = .true.
+c      g0 = ginc(0d0,0d0,id)
+c                                 save derivative for cp search
+      rooti(jd) = iroots
+      vrk = vol
+      vrt = vrk
+      irt = iroots
 
-      if (-id.eq.ihy) then 
 
-         if (eos(-id).eq.15.or.eos(-id).eq.16) then 
-c                                 hydronium in frendly
-            v = 0d0
-            e = 0d0
-            cp = 0d0 
-            alpha = 0d0
-            beta = 0d0
-            s = 0d0
-
-            props(2,jd) = e
-            props(11,jd) = g0 
-            props(12,jd) = cp
-            props(15,jd) = s
-            props(1,jd) = v
-            props(13,jd) = alpha
-            props(14,jd) = beta 
-
-            if (iwarn1.eq.0) then 
-               call warn (99,0d0,0,
-     *                 ' H+ properties are zero by convention.')
-               iwarn1 = 1
-            end if
-
-            ok1 = .false.
-
-         end if 
-
-      end if 
-
-      if (rxn.and.ok1) then
 c                                 if a reaction, cannot use sign to 
 c                                 test behavior, just run through the
 c                                 whole list
+      if (rxn) then 
 
-c                                 use sign of s and v and second derivatives
-c                                 to refine difference increments
-         call getdpt (g0,dp0,dp1,dp2,dt0,dt1,dt2,v,gpp,s,gtt,gpt,id,fow,
-     *                rxn)
+      else 
+c                                 real phase, use sign of s and v to check
+c                                 difference increments
+         v = vrk
+         if (v.le.0d0) then 
+            write (*,*) 'wonk?',p,t
+         end if 
+c                                 100 converts g/(J/bar) to kg/m3
+         rho = props(17,jd)/v*1d2
 
-         e = g0 + t * s
+         if (rho.gt.rhoc) then
+            fow = .false.
+         else 
+            fow = .true.
+         end if 
+c                                 real phase, use sign of s and v to check
+c                                 difference increments
+         okt = .false.
 
-         cp = -t*gtt
-c                                  these are the only properties output
-c                                  for reactions:
-         alpha = gpt/v
-         beta = -gpp/v
-         props(2,jd) = e
-         props(11,jd) = g0 
-         props(12,jd) = cp
-         props(15,jd) = s
-         props(1,jd) = v
-         props(13,jd) = alpha
-         props(14,jd) = beta 
+         dp0 = 1d0
+         if (p-nopt(31)*dp0.lt.0d0) dp0 = p/nopt(31)
 
-      else if (ok1) then 
-c                                 real phase, use sign of s and v and second derivatives
-c                                 to refine difference increments
-         call getdpt (g0,dp0,dp1,dp2,dt0,dt1,dt2,v,gpp,s,gtt,gpt,id,fow,
-     *                rxn)
+         do i = 1, 10
+
+            if (.not.fow) then 
+               vc = (ginc(0d0,dp0,id) - g0)/dp0
+            else             
+               vc = (g0 - ginc(0d0,-dp0,id))/dp0
+            end if 
+
+            if (dabs(vrk-vc)/vrk.lt.1d-4) exit 
+
+            dp0 = dp0 / nopt(31)
+
+         end do
+c!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+c          dp0 = 1d0
+c          v = (g0 - ginc(0d0,-dp0,id))/dp0
+c                 rho = props(17,jd)/v*1d2
+
+         dp1 = dp0 * nopt(31)
+         dp2 = dp1 * nopt(31)
+
+         if (p-2d0*dp2.le.0d0) dp2 = p/4d0 
+
+         gc = ginc(0d0,-dp0,id)
+         vc = vol
+         gd = ginc(0d0,dp0,id)
+         vd = vol
+
+         if (.not.fow) then
+            gpp = (vd - vrk)/dp0
+            ge = ginc(0d0,2d0*dp0,id)
+            ve = vol
+            gppp = (ve + vrk - 2d0*vd)/dp0**2
+         else 
+            gpp = (vrk - vc)/dp0
+            ge = ginc(0d0,-2d0*dp0,id)
+            ve = vol
+            gppp = (ve + vrk - 2d0*vc)/dp0**2
+         end if 
+
+            dt = 15d3/t
+            dt0 = dt
+            okt = .false.
+
+            do i = 1, 10
+
+               if (fow) then
+
+                  gb = ginc( dt0,0d0,id)
+                  vb = vol
+                  s = -(gb - g0)/dt0
+                  gtt = ((ginc(2d0*dt0,0d0,id) - gb)/dt0 + s)/dt0
+
+                else 
+
+                  ga = ginc(-dt0,0d0,id)
+                  va = vol
+                  s = -(g0 - ga)/dt0
+                  gtt = (-s - (ga - ginc(-2d0*dt0,0d0,id))/dt0)/dt0
+
+               end if 
+
+               if (gtt.lt.0d0.and.-t*gtt.lt.1d5) then
+                  okt = .true. 
+                  exit
+               end if 
+ 
+               if (i.le.6) then 
+                  dt0 = dt0/nopt(31)
+               else if (i.eq.7) then
+                  dt0 = dt*nopt(31)
+               else
+                  dt0 = dt0*nopt(31)
+                  if (dt0.gt.t) exit
+               end if 
+
+            end do 
+
+            if (.not.okt) then 
+               dt0 = dt 
+               dt1 = dt
+               dt2 = dt
+            else 
+               dt1 = dt0 * nopt(31)
+               dt2 = dt1 * nopt(31)
+               if (2d0*dt2.gt.t) then 
+                  dt2 = t/4d0
+                  dt1 = dt2/nopt(31)
+               end if 
+            end if 
+
+                  ga = ginc(-dt0,0d0,id)
+                  va = vol
+                  gb = ginc( dt0,0d0,id)
+                  vb = vol
+
+
 c                                 enthalpy
          e = g0 + t * s
-c                                 heat capacity
+
          cp = -t*gtt
-c                                 volumetric properties only if v is ok:
-         if (v.gt.0d0) then 
+ 
+         if (fow) then
+            gpt = (vb-v)/dt0
+         else
+            gpt = (v-va)/dt0
+         end if 
 c                                 third order derivatives, only need for
 c                                 derivatives of seismic props.
-            if (fow) then 
-
-               g1 = ginc(-dt2,0d0,id)
-               g2 = ginc( dt2,2d0*dp2,id)
-               g3 = ginc( dt2,0d0,id)
-               g4 = ginc(-dt2,2d0*dp2,id)
-               g5 = ginc(0d0,dp2,id)
-               g7 = g1 - g3
-
-               gppp = ((ginc(0d0,4d0*dp2,id) - g0)/2d0
-     *                 - ginc(0d0,3d0*dp2,id) + g5)/dp2**3
-               gppt = (g2 + g3 + 2d0*(ginc(-dt2, dp2,id)
-     *                -ginc(dt2,dp2,id)) -g4 - g1)/dp2/dp2/dt2/2d0
-               gptt = (g2 + g4  + 2d0*(g0 - ginc(0d0,2d0*dp2,id))
-     *                 -g3 - g1)/2d0/dp2/dt2/dt2
-
-            else 
-
                g1 = ginc(-dt2,-dp2,id) - ginc( dt2,dp2,id)
                g3 = ginc( dt2,-dp2,id)
                g4 = ginc(-dt2,dp2,id)
                g5 = ginc(0d0,dp2,id) - ginc(0d0,-dp2,id)
                g7 = ginc(-dt2,0d0,id) - ginc(dt2, 0d0,id)
-   
-               gppp = ((ginc(0d0,2d0*dp2,id) 
-     *                - ginc(0d0,-2d0*dp2,id))/2d0  - g5)/dp2**3
-               gppt = (g3 - g4 + 2d0*g7 - g1)/dp2/dp2/dt2/2d0
-               gptt = (g4 - g3 - 2d0*g5 - g1)/2d0/dp2/dt2/dt2
+c                                  vpt
+            gppt = (g3 - g4 + 2d0*g7 - g1)/dp2/dp2/dt2/2d0
+            ge = ginc(-dt0,-dp0,id)
+            ve = vol
+            gf = ginc(-dt0,dp0,id)
+            vf = vol
 
-            end if 
+            gppt = (gpp - (vf - ve)/2d0/dp0)/dt0
+c                                  vtt
+            gptt = (vb + va - 2d0*vrk)/dt0**2
 
             gttt = ((ginc(dt2*2d0,0d0,id) - ginc(-dt2*2d0,0d0,id))/2d0 
      *              + g7)/dt2**3
@@ -1771,6 +1732,7 @@ c                                 pressure derivative of the adiabatic bulk modu
                props(20,jd) = (((v*gppp-gpp**2)*gtt
      *                      +(gpt*gpp-2d0*v*gppt)*gpt)*gtt
      *                      +v*gptt*gpt**2)/g7
+
             else if (bulk) then 
 
                props(18,jd) = nopt(7)
@@ -1779,38 +1741,12 @@ c                                 pressure derivative of the adiabatic bulk modu
 
             end if 
 
-         else 
-c                                 no volume, zero second derivatives
-            gpp = 0d0
-            gpt = 0d0    
-      
-         end if 
-
-         if (v.le.0d0) then 
-
-            if (v.lt.0d0.or.(v.eq.0d0.and.iam.ne.5)) then 
-c                                 allow zero volume for 1 bar gas reference state 
-c                                 in frendly
-               sick(jd) = .true.
-               v = nopt(7)
-               beta = nopt(7)
-               alpha = nopt(7)
-               rho = nopt(7)
-         
-            else 
-
-               beta = 0d0
-               alpha = 0d0
-               rho = 0d0 
-      
-            end if 
-
-         else 
-
             beta = -gpp/v
             alpha = gpt/v
-            rho = props(17,jd)/v*1d2
+            vp(jd) = 1d0/beta
+            vvp(jd) = gppp
 
+            rho = props(17,jd)/v*1d2
 c                                 ideal gas beta = 1/p           
             if (beta.gt.v.or.beta.lt.0d0) then
                beta = nopt(7)
@@ -1823,8 +1759,6 @@ c                                 transition models. ideal gas alpha = 1/t
                alpha = nopt(7)
                sick(jd) = .true.
             end if 
-
-         end if  
 
          if (cp.gt.1d9.or.cp.lt.0d0) then
             cp = nopt(7)
@@ -1842,7 +1776,7 @@ c                                 transition models. ideal gas alpha = 1/t
          props(14,jd) = beta 
          props(10,jd) = rho  
 
-      end if 
+      end if
 
       if (.not.sick(jd).and..not.rxn.and.v.gt.0d0) then
 c                                 heat capacity ratio (cp/cv)
@@ -1924,9 +1858,13 @@ c                                 bulk is true if bulk modulus is computed therm
 c                                 volume is false only if sick and .not.bulk
 
 c                                 seismic properties
-      if (volume.and..not.rxn) then
+      if (volume) then
 
          if (props(5,jd).gt.0d0.or.fluid(jd)) lshear = .true.
+
+      end if 
+
+      if (volume) then
 c                                 sound velocity
          root = props(4,jd)/rho
 
@@ -1993,66 +1931,6 @@ c                                 vp/vs
             else
                props(9,jd) = nopt(7)
             end if 
-c                                 check for negative poisson ratio
-            if (poiss(props(7,jd),props(8,jd)).lt.0d0) then
-
-               if (iwarn3.lt.11.and.pname(jd).ne.wname3) then 
-
-                 write (*,1050) t,p,pname(jd)
-
-                 if (lopt(20)) then 
-                    write (*,1070)
-                 else 
-                    write (*,1060)
-                 end if 
-
-                 iwarn3 = iwarn3 + 1
-                 wname3 = pname(jd)
-                 if (iwarn3.eq.11) call warn (49,r,180,'GETPHP') 
-
-               end if
-
-               if (lopt(20)) then 
-
-                  sick(jd) = .true.
-                  bsick = .true.
-                  ssick = .true.
-                  volume = .false.
-                  shear = .false.
-
-                  v = nopt(7)
-                  beta = nopt(7)
-                  alpha = nopt(7)
-                  rho = nopt(7)
-
-                  props(13,jd) = nopt(7)
-                  props(14,jd) = nopt(7) 
-                  props(10,jd) = nopt(7) 
-
-                  props(5,jd) = nopt(7)
-                  props(19,jd) = nopt(7)    
-                  props(21,jd) = nopt(7)
-
-                  props(1,jd) = nopt(7)
-                  props(3,jd) = nopt(7)
-                  props(4,jd) = nopt(7)
-
-                  props(6,jd)  = nopt(7)
-                  props(22,jd) = nopt(7)
-                  props(25,jd) = nopt(7)
-
-                  props(7,jd)  = nopt(7)
-                  props(23,jd) = nopt(7)
-                  props(26,jd) = nopt(7)
-
-                  props(8,jd) = nopt(7)
-                  props(24,jd) = nopt(7)
-                  props(27,jd) = nopt(7)
-
-                  props(28,jd) = nopt(7)
-               end if 
-
-            end if 
 
          else
 
@@ -2068,7 +1946,7 @@ c                                 check for negative poisson ratio
 
          end if  
 
-      else
+      else 
 
          do j = 3, 9
             props(j,jd) = nopt(7)
@@ -2121,7 +1999,7 @@ c                                 max solid prop
 c                                 check and warn if necessary for negative
 c                                 expansivity
       if (.not.sick(jd).and.v.gt.0d0.and.alpha.le.0d0.and.iwarn1.lt.11
-     *    .and.pname(jd).ne.wname1.and..not.rxn) then
+     *    .and.pname(jd).ne.wname1) then
 
          write (*,1030) t,p,pname(jd)
          iwarn1 = iwarn1 + 1
@@ -2186,7 +2064,8 @@ c                                 solid only totals:
 
       end if 
 
-      sroot = .false. 
+      sroot = .false.
+      nospe = .false.  
 
 1030  format (/,'**warning ver179** at T(K)=',g12.4,' P(bar)=',g12.4,1x,
      *        'the effective expansivity of: ',a,/,'is negative. ',
@@ -2194,317 +2073,13 @@ c                                 solid only totals:
      *        'model. The Gruneisen',/,'thermal parameter and seismic',
      *        ' speeds for this phase should be considered ',
      *        'with caution.',/)
+
 1040  format (/,'**warning ver178** at T(K)=',g12.4,' P(bar)=',g12.4,1x,
-     *        /,'the shear modulus of: ',a,/,'is missing or invalid ',
+     *        'the shear modulus of: ',a,/,'is missing or invalid ',
      *        'and has been estimated from the default poisson ',
-     *        'ratio',/)
-1050  format (/,'**warning ver180** at T(K)=',g12.4,' P(bar)=',g12.4,1x,
-     *        /,'the poisson ratio of: ',a,' is negative.')
-1060  format (/,'the suspect data will be output and used to ',
-     *        'compute aggregate properties.',/,'to prevent this set ',
-     *        'poisson_check to true in perplex_option.dat',/)
-1070  format (/,'the suspect data will be rejected and aggregate ',
-     *        'properties will not be output.',/,'to prevent this set',
-     *        'poisson_check to false in perplex_option.dat',/)
+     *        'ratio ',/)
 
       end
-
-      subroutine getdpt (g0,dp0,dp1,dp2,dt0,dt1,dt2,v,gpp,s,gtt,gpt,
-     *                   id,fow,rxn)
-c----------------------------------------------------------------------
-c getdpt computes finite difference increments for phase id based on finite
-c difference estimates of v, gpp (dv/dp), s, gtt (ds/dt) and initial guesses 
-c for dp0 and dt0. if rxn = .true. no assumptions can be made about the 
-c sign of s and v and getdpt will use input values of dp0 and dt0.   
-
-c  returns:
-c    v, gpp (dv/dp), s, gtt (ds/dt)  - finite difference estimates
-c    dp0, dp1, dp2 - increments for 1st, 2nd and 3rd order p finite differences
-c    dt0, dt1, dt2 - increments for 1st, 2nd and 3rd order p finite differences
-c    fow - if true, forward differences are needed on p, otherwise centered.
-c----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      logical fow, okt, rxn
-
-      integer i, j, id
-
-      double precision g0, dp0, dp1, dp2, v, gpp, ginc, gpt, gpt1, gpt2,
-     *                 s, gtt, dt0, dt1, dt2, xdp, xdt, fac
-
-      external ginc
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
-      double precision p,t,xco2,u1,u2,tr,pr,r,ps
-      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
-
-      save fac
-      data fac/1d-4/
-c----------------------------------------------------------------------
-c                                 pressure increments
-      if (.not.rxn) then 
-
-         okt = .false.
-
-         xdp = dp0
-         xdt = dt0
-
-         do i = 1, 2
-
-            do j = 1, 3 
-
-               call getgpp (g0,dp0,dp1,dp2,v,gpp,id,fow)
-
-               if (v.gt.0d0.and.gpp.lt.0d0.and.gpp.gt.-v) then
-
-                  okt = .true.
-                  exit
-
-               end if 
-
-               if (i.eq.1) then 
-                  dp0 = xdp * nopt(31) ** j
-               else 
-                  dp0 = xdp / nopt(31) ** (j+1)
-               end if 
- 
-            end do 
-
-            if (okt) exit
-
-            dp0 = xdp / nopt(31)
-
-         end do
-
-         if (okt) then 
-            if (dp0/dabs(fac*v/gpp).lt.1d-1) then 
-c            write (*,*) 'pp',dp0/dabs(fac*v/gpp),dp0,p,t,id
-            end if 
-            dp0 = dabs(fac*v/gpp)
-         else 
-c                                 negative compressibility?
-            dp0 = xdp
-         end if
-
-      else 
-
-         call getgpp (g0,dp0,dp1,dp2,v,gpp,id,fow)
-         dp0 = dabs(fac*v/gpp)
-
-      end if  
-c                                 final values
-      call getgpp (g0,dp0,dp1,dp2,v,gpp,id,fow)
-c                                 -------------------------------------
-c                                 temperature increments
-      if (.not.rxn) then 
-
-         okt = .false.
-
-         do i = 1, 2
-
-            do j = 1, 3
-
-               call getgtt (g0,dt0,dt1,dt2,s,gtt,id)
-
-               if (s.gt.0d0.and.gtt.lt.0.and.t-2d0*dt2.gt.0d0) then
-                  okt = .true.
-                  exit 
-               end if 
-
-               if (i.eq.1) then 
-                  dt0 = xdt * nopt(31) ** j
-                  if (dt0.gt.t) exit 
-               else
-                  dt0 = xdt / nopt(31) ** (j+1)
-               end if 
-
-            end do 
-
-            if (okt) exit
-
-            dt0 = xdt / nopt(31)
-
-         end do
-
-         if (okt) then 
-            if (dt0/dabs(fac*s/gtt).lt.1d-1) then
-c            write (*,*) 'tt',dt0/dabs(fac*s/gtt),dt0,p,t,id
-            end if 
-            dt0 = dabs(fac*s/gtt)
-         else 
-c                                 something has gone horribly wrong! 
-            dt0 = xdt
-         end if
-
-      else 
-
-         call getgtt (g0,dt0,dt1,dt2,s,gtt,id)
-         dt0 = dabs(fac*s/gtt)  
-
-      end if  
-c                                 final values
-      call getgtt (g0,dt0,dt1,dt2,s,gtt,id)
-c                                 emergency check on increments
-      if (t-2d0*dt2.lt.0d0) then 
-
-         dt2 = t / 4d0
-         dt1 = dt2 / nopt(31)
-         dt0 = dt1 / nopt(31)
-
-      end if 
-
-      if (v.gt.0d0.or.rxn) then 
-c                                 get the cross derivative gpt for expansivity
-         if (fow) then 
-
-            gpt = ( ginc( dt1,dp1,id) - ginc( dt1,0d0,id)
-     *             -ginc(-dt1,dp1,id) + ginc(-dt1,0d0,id))/dt1/dp1/2d0
-
-            if (.not.rxn) then 
-
-               if (gpt.gt.v.or.gpt.le.0d0)
-c                                 expand increment if invalid alpha
-     *            gpt = ( ginc( dt2,dp2,id) - ginc( dt2,0d0,id)
-     *                   -ginc(-dt2,dp2,id) + ginc(-dt2,0d0,id))
-     *                   /dp2/dt2/2d0
-
-               if (gpt.gt.v.or.gpt.le.0d0)
-c                                 shrink increment if invalid alpha
-     *            gpt = ( ginc( dt0,dp0,id) - ginc( dt0,0d0,id)
-     *                   -ginc(-dt0,dp0,id) + ginc(-dt0,0d0,id))
-     *                  /dp0/dt0/2d0
-            end if 
-
-         else
-
-            gpt = ( ginc( dt1,dp1,id) - ginc( dt1,-dp1,id)
-     *             -ginc(-dt1,dp1,id) + ginc(-dt1,-dp1,id))/dt1/dp1/4d0
-
-            if (.not.rxn) then 
-
-               if (gpt.gt.v.or.gpt.le.0d0) then 
-c                                 expand increment if invalid alpha
-                  gpt1 = ( ginc( dt2,dp2,id) - ginc( dt2,-dp2,id)
-     *                   - ginc(-dt2,dp2,id) 
-     *                        + ginc(-dt2,-dp2,id))/dp2/dt2/4d0
-
-                  if (gpt1.gt.v.or.gpt1.le.0d0) then
-c                                 shrink increment if invalid alpha
-                     gpt2 = ( ginc( dt0,dp0,id) - ginc( dt0,-dp0,id)
-     *                       -ginc(-dt0,dp0,id) + ginc(-dt0,-dp0,id))
-     *                        /dp0/dt0/4d0
-
-                     if (gpt2.lt.v.and.gpt2.ge.0d0) then 
-                        gpt = gpt2
-                     end if 
-
-                  else 
-
-                     gpt = gpt1
-
-                  end if
-
-               end if  
-
-            end if  
-
-         end if  
-
-      end if 
-
-      end 
-
-      subroutine getgpp (g0,dp0,dp1,dp2,v,gpp,id,fow)
-c----------------------------------------------------------------------
-c for phase id getgpp computes:
-c    v, gpp (dv/dp) by finite difference
-c    dp1, dp2 - increments for 2nd and 3rd order p finite differences
-c    fow - if true, forward differences needed, otherwise centered.
-c----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      logical fow
-
-      integer id 
-
-      double precision g0,dp0,dp1,dp2,v,gpp, ginc
-
-      external ginc
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
-      double precision p,t,xco2,u1,u2,tr,pr,r,ps
-      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
-c----------------------------------------------------------------------
-      dp1 = dp0 * nopt(31)
-      dp2 = dp1 * nopt(31)
-
-      if (p-2d0*dp2.le.0d0) then
-         fow = .true.
-      else 
-         fow = .false.
-      end if  
-
-      if (fow) then 
-
-         v = (ginc(0d0,dp0,id) - g0)/dp0
-         gpp = (ginc(0d0,2d0*dp1,id) + g0 
-     *                  - 2d0*ginc(0d0,dp1,id))/dp1/dp1
-
-      else             
-
-         v = (ginc(0d0,dp0,id) - ginc(0d0,-dp0,id))/dp0/2d0
-         gpp = (ginc(0d0,dp1,id) + ginc(0d0,-dp1,id) - 2d0*g0)/dp1/dp1
-
-      end if 
-
-      end 
-
-      subroutine getgtt (g0,dt0,dt1,dt2,s,gtt,id)
-c----------------------------------------------------------------------
-c for phase id getgtt computes:
-c    s, gtt (ds/dt) by finite difference
-c    dt1, dt2 - increments for 2nd and 3rd order t finite differences
-c----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      integer id 
-
-      double precision g0,dt0,dt1,dt2,s,gtt, ginc
-
-      external ginc
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
-      double precision p,t,xco2,u1,u2,tr,pr,r,ps
-      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
-c----------------------------------------------------------------------
-
-      if (nopt(31)**2*dt0.ge.t) dt0 = t/nopt(31)**2*dt0*0.9d0
-
-      dt1 = dt0 * nopt(31)
-      dt2 = dt1 * nopt(31)
-
-      s = (ginc(-dt0,0d0,id) - ginc(dt0,0d0,id))/dt0/2d0
-      gtt = (ginc(dt1,0d0,id) + ginc(-dt1,0d0,id) - 2d0*g0)/dt1/dt1
-
-      end 
 
       subroutine gtsysp (sick,ssick,bulkg,bsick)
 c-----------------------------------------------------------------------
@@ -2542,15 +2117,15 @@ c-----------------------------------------------------------------------
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
-      integer kkp,np,ncpd,ntot
-      double precision cp3,amt
-      common/ cxt15 /cp3(k0,k19),amt(k19),kkp(k19),np,ncpd,ntot
+      integer kkp, np, ncpd, ntot
+      double precision cp3, amt
+      common/ cxt15 /cp3(k0,k5),amt(k5),kkp(k5),np,ncpd,ntot
 
       integer iam
       common/ cst4 /iam
 
-      double precision units, r13, r23, r43, r59, zero, one, r1
-      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+      double precision units, r13, r23, r43, r59, r1, r2
+      common/ cst59 /units, r13, r23, r43, r59, r1, r2
 
       save iwarn
       data iwarn/0/
@@ -2592,7 +2167,7 @@ c                                 frendly but not a reaction
 
       end if 
 
-c     if (.not.volume) shear = .false.
+      if (.not.volume) shear = .false.
 c                                 not so bad....
       solid = .true.
 c                                 weighting used to compute average
@@ -3070,17 +2645,11 @@ c----------------------------------------------------------------------
       integer hs2p
       double precision hsb
       common/ cst84 /hsb(i8,4),hs2p(6)
-
-      integer idaq, jdaq
-      logical laq
-      common/ cxt3 /idaq,jdaq,laq
 c----------------------------------------------------------------------
 c                                 assemblage flags
 c                                 ----------------
 c                                 aflu   = T if a fluid is present
       aflu   = .false.
-c                                 laq    = T aqueous or pure solvent is present
-      laq    = .false.
 c                                 shear  = T if shear modulus can be computed
       shear  = .true.
 c                                 volume = T if volume and bulk modulus can be computed
