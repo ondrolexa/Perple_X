@@ -3694,13 +3694,16 @@ c                                 temporary subdivision limits:
       double precision xmn,xmx,xnc
       common/ cxt108 /xmn(mst,msp),xmx(mst,msp),xnc(mst,msp)
 
+      integer pstot,qstot,ostg,odim,nsum
+      common/ junk1 /pstot(h9),qstot(h9),ostg(h9),odim(mst,h9),nsum(h9)
+
       double precision z, pa, p0a, x, w, y, wl
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
      *              wl(m17,m18)
 c----------------------------------------------------------------------
       if (ksmod(ids).ne.20) then 
 c                                normal models     
-         do i = 1, istg(ids)
+         do i = 1, ostg(ids)
 
             do j = 1, ndim(i,ids)
 

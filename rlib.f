@@ -20353,7 +20353,12 @@ c                                 count the coordinate
             ntot = ntot + 1
 c                                 starting point of the coordinate
             h = (ntot-1)*mcoor(ids)
-
+c                                 there is no need to zero the unused
+c                                 prismatic coodinate because they are 
+c                                 irrelevant through closure, this implies 
+c                                 that a composition with the prismatic 
+c                                 vertex = 0 cannot be refined to include 
+c                                 a non-zero prismatic vertex.
             do i1 = 1, ndim(3,ids)
                prism(h+nsum(ids)+i1) = simp(n+i1)
             end do 

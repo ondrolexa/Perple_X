@@ -675,7 +675,7 @@ c                                 output component data:
 
       do i = icp + 1, icp + isat
 
-         if (i+icp.gt.jcth) then 
+         if (i.gt.jcth) then 
             write (n1,3000) pname(i),0,0.,0.,0.,'unconstrained'
          else 
             write (n1,3000) pname(i),icont,(dblk(j,i),j=1,3),amount
