@@ -3,7 +3,7 @@ c routines common to all programs? could be in tlib.f?
       subroutine setau1 (output)
 c----------------------------------------------------------------------
 c setau1 sets autorefine dependent parameters. called by vertex, werami,
-c pssect and meemum.
+c pssect, convex, and meemum.
 
 c output is set to false if autorefine mode is not auto (i.e., iopt(6) = 2) 
 c or it is auto and in the second cycle.
@@ -14,9 +14,7 @@ c----------------------------------------------------------------------
 
       logical output
  
-      character*8 y*1
-
-      character*10 badnam(h9)
+      character y*1, badnam(h9)*10
 
       integer ibad2,ibad1,igood,i,j,ierr
 
@@ -62,9 +60,9 @@ c                                 are present and it is requested.
 
          call mertxt (n8nam,prject,'.tof',0)
 
-         if (iam.eq.1.or.iam.eq.2) then
-c                                 VERTEX or MEEMUM:
-            if (iam.eq.1) then 
+         if (iam.eq.1.or.iam.eq.2.or.iam.eq.15) then
+c                                 VERTEX, MEEMUM, or CONVEX:
+            if (iam.eq.1.or.iam.eq.15) then 
 
                open (n8, file = n8nam, status = 'unknown')
 c                                 user friendly text version 
@@ -77,12 +75,12 @@ c                                 user friendly text version
 
             ibad1 = 0 
 
-            if (ierr.ne.0.and.iam.eq.1) then 
+            if (ierr.ne.0.and.(iam.eq.1.or.iam.eq.15)) then 
 c                                 no auto_refine data
                write (*,1020) n10nam
                open (n10, file = n10nam, status = 'unknown')
 
-            else if (ierr.eq.0.and.iam.eq.1) then 
+            else if (ierr.eq.0.and.(iam.eq.1.or.iam.eq.15)) then 
                    
                read (n10,*,iostat=ierr) ibad1, ibad2, igood
                if (ibad1.gt.0) read (n10,'(a)') (badnam(i),i=1,ibad1)
@@ -195,7 +193,7 @@ c                                 that depend on refinement
 
             do j = 1, ibad1
                if (fname(i).eq.badnam(j)) then
-                  if (iam.eq.1) write (*,1070) fname(i)
+                  if (iam.eq.1.or.iam.eq.15) write (*,1070) fname(i)
                   goto 50
                end if 
             end do 
@@ -2111,7 +2109,7 @@ c                                 zcoor array.
          call getxz (jd,id,ids)
 c                                 convert the x(i,j) coordinates to the
 c                                 geometric y coordinates
-         call xtoy (ids,bad)
+         call xtoy (ids,jd,.true.,bad)
 
          if (lopt(32).and.ksmod(ids).eq.39) then 
 
@@ -2703,7 +2701,7 @@ c----------------------------------------------------------------------
 c                                 open thermodynamic data file
       call fopen2 (0,n2name) 
 
-      if (iam.gt.2.and.iam.ne.13) then 
+      if (iam.gt.2.and.iam.ne.13.and.iam.ne.15) then 
 c                                 perplex programs other than
 c                                 meemum and vertex only open
 c                                 exisiting files:

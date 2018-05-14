@@ -2319,7 +2319,7 @@ c                                 open c-space
 1420  format (/,'Specify component amounts by mass (Y/N)?')
 1430  format ('Constrain component ',a,' (Y/N)?')
 1450  format (/,'All thermodynamic components must be ',
-     *         'constrained,',/'constrain ',
+     *         'constrained,',/'specify ',
      *         'saturated components also (Y/N)?')
 1460  format (/,'The next prompts are for the saturated',
      *        ' component constraints.',/,
