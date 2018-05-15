@@ -169,7 +169,7 @@ begin_model
                     Ordered species:    oCaTs           Al     Ca     Si    Al
                                         fmc             Mg     Fe     Si    Si
 
-Augit0(G)
+Augite(G)
 abbreviation Cpx
 full_name    clinopyroxene
 
@@ -299,7 +299,12 @@ end_dqf_corrections
 end_of_model
                       --------------------------------------------------------
 begin_model
-                      Green et al (JMG, 2016) Augite model.
+                      Green et al (JMG, 2016) Augite model, this model differs
+                      from the Augite(G) model in that it does not account for 
+                      Mg- or Fe-Tschermaks substitution. This simplification 
+                      reduces the model composition space from 7-dimensions to 
+                      5-dimensions and reduces computational cost with minor 
+                      consequences for phase equilibria.
 
                       This model should not be used for Na-rich compositions.
 
@@ -349,7 +354,7 @@ begin_model
                     Ordered species:    oCaTs           Al     Ca     Si    Al
                                         fmc             Mg     Fe     Si    Si
 
-Augite(G)
+Aug(G)
 abbreviation Cpx
 full_name    clinopyroxene
 
@@ -1034,109 +1039,174 @@ z(al,m3) = 1 cz
 
 end_of_model               
                       --------------------------------------------------------
-begin_model  
-                             Jennings and Holland, J Pet, 56:869-892, 2015
-                             Mantle Melt Model, intended for pressures of 0-60 GPa
+begin_model
+                      Jennings and Holland, J Pet, 56:869-892, 2015
+                      Mantle Melt Model, intended for pressures of 0-60 GPa
 
-                             NOTE: this implementation does not span the full composition space of the
-                             model as formulated by J&H (2015), notably in the Ca-Mg-Si limit cpx 
-                             compositions are confined to the di-en-fs simplex (i.e., hedenbergite is
-                             not a possible composition). this restriction is probably reasonable for
-                             mantle applications. to cover the full composition space the model must
-                             be reformulated to include dependent endmembers that correspond to the 
-                             vertices of the composition space (see, e.g., Augite(G)). 
+                      The Cr/Fe3+-free version of this model is from Holland et al., 2013 or 
+                      Green et al., 2012?
+ 
+                      Pierre Bouilhol & JADC, 12/16/15 
 
-                             Pierre Bouilhol & JADC, 12/16/15 
+                      Changed to true T site multiplicity, Oliver Shorttle, 3/16
 
-                             Changed to true T site multiplicity, Oliver Shorttle, 3/16
+                      Changed to fake T site multiplicity (1/4) with true Al site fraction, JADC 6/16
 
-                             Changed to fake T site multiplicity (1/4) with true Al site fraction, JADC 6/16
+                      Changed to fake T site multiplicity (1/2) with true Al site fraction, Bob Myhill, 2/18
 
-                             Changed to fake T site multiplicity (1/2) with true Al site fraction, Bob Myhill, 2/18
+                      Formatted as prismatic model w/o Cr & Fe3+. Bob Myhill, 2/18
 
-                                                      M1      M2     T  
-                                                     ____________________
+                      Reformatted as a prismatic + orphan vertex model. JADC, 5/18
 
-                                      Mutliplicity    1       1     1/2  <- fake multiplicity
-                                                     ____________________
+                      NOTES: 
 
-                                      1 di            ca      mg    SiSi
-                                      2 cfs           Fe      Fe    SiSi
-                                      3 cats          ca      al    AlSi     
-                                      4 crdi          ca      cr    AlSi
-                                      5 cess          ca     fe3    AlSi
-                                      6 jd            na      al    SiSi
-                                      7 cenjh         mg      mg    SiSi
+                      to use this the following endmembers must be specified with make 
+                      definitions in the thermodynamic data file
 
-                                      8 cfm           fe      mg    SiSi  
+                      odi  = 1 di
+                            DQF = -100 + 0.211 * T + 0.005 * P | NOTE entropy term incorrect in some perplex files?
+                      cenjh  = 1 en
+                            DQF = 3500 - 2 * T + 0.048 * P 
+                      cfs  = 1 fs
+                            DQF = 3800 - 3 * T + 0.03 * P
 
-                                                      M1      M2     T  
-                                                     ____________________
+
+                                                        M1     M2     T
+                                                     ____________________________________
+
+                                      Multiplicity      1      1     1/2 <- fake T multiplicity
+                                                     ____________________________________
+                      Prism species:
+                                        di              Mg     Ca    Si    independent
+                                        hed_d           Fe     Ca    Si    dependent
+                                        cats            Al     Ca   AlSi   independent
+                                        crdi            Cr     Ca   AlSi   independent
+                                        mcess_d         Fe3+   Ca   AlSi   dependent
+
+                                        cenjh           Mg     Mg    Si    independent
+                                        mfc_d           Fe     Mg    Si    dependent
+                                        mats_d          Al     Mg   AlSi   dependent 
+                                        cren_d          Cr     Mg   AlSi   dependent 
+                                        cess            Fe3+   Mg   AlSi   independent
+
+                                        cfm_d           Mg     Fe    Si    dependent (=cfm)
+                                        cfs             Fe     Fe    Si    independent
+                                        fats_d          Al     Fe   AlSi   dependent
+                                        crfs_d          Cr     Fe   AlSi   dependent
+                                        fcess_d         Fe3+   Fe   AlSi   dependent
+                                                      ___________________________________
+                    Orphan species:
+                                        jd              Al     Na    Si    independent (orphan)
+                                                      ___________________________________
+
+                    Ordered species:    cfm             Mg     Fe     Si
+
+
 Cpx(JH)
 abbreviation Cpx
-full_name    clinopyroxene 
+full_name    clinopyroxene
+  
+9                               | model type: prismatic + orphan vertex, O/D
+                                                                       
+2                               | number of simplexes comprising the prism
+5 3                             | number of simplex vertexes
+1                               | number of orphan vertexes
+                                | endmembers on the prismatic vertex
+di      hed_d   cats    crdi    mcess_d
+cenjh   mfc_d   mats_d  cren_d  cess
+cfm_d   cfs     fats_d  crfs_d  fcess_d
+                                | endmembers on the orphan vertex
+jd
 
-6                            | model type: order-disorder, simplicial composition space
-7
-cfs  cats  crdi  cess jd    cenjh  di 
+1                               | number of ordered species and definitions 
 
-1                            | number of ordered species 
-cfm   = 1/2 cfs + 1/2 cenjh   enthalpy_of_ordering     =  - 6653 + .25d-2 * p_bar - .39e-1 * T_K  | corrected from -3653, OS 3/16
- 
-0 0  0  0  0  0   0          | endmember flags
+cfm   = 1/2 cenjh + 1/2 cfs enthalpy_of_ordering  =  -6.65d3  2.5 - 0.039 | DQF(cfm) - (DQF(ceng) + DQF(cfs))/2
+                                                           | -3.0 - (3.5 - 2T + 0.048P + 3.8 - 3T + 0.03)/2
+                                                           | = -6.65 + 2.5T - 0.039P 
 
-0. 1.  .1  0                  
-0. 1.  .1  0                  
-0. 1.  .1  0                  
-0. 1.  .1  0                  
-0. 1.  .1  0                  
-0. 1.  .1  0                 
+begin_limits
+
+cfm = -2 + 2 cfs + 1 cfm                           delta = 2 zm1fe
+cfm =  0 - 2 di - 2 cenjh - 1 cfm                  delta = 2 zm1mg
+cfm =  0 - 2 cfs - 1 cfm                           delta = 2 zm2fe
+cfm = -2 + 2 cenjh + 1 cfm                         delta = 2 zm2mg
+
+end_limits
+
+9                           | number of dependent endmembers and definitions
+
+hed_d  = 1 di    + 1 cfs - 1 cfm
+mfc_d  = 1 cenjh + 1 cfs - 1 cfm
+mats_d = 1 cats  + 1 cenjh - 1 di
+cfm_d  = 1 cfm
+fats_d = 1 cats  - 1 di   + 1 cfm
+
+cren_d = 1 cenjh + 1 crdi - 1 di
+crfs_d = 1 cfm   + 1 crdi - 1 di 
+
+mcess_d = 1 cess + 1 di  - 1 cenjh
+fcess_d = 1 cess + 1 cfm - 1 cenjh
+
+
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0    | endmember flags
+
+0. 1. 0.1  0                 | range and resolution of X(Mg,M1)
+0. 1. 0.1  0                 | range and resolution of X(Fe,M1)
+0. 1. 0.1  0                 | range and resolution of X(Al,M1)
+0. 1. 0.1  0                 | range and resolution of X(Cr,M1)
+
+0. 1. 0.1  0                 | range and resolution of X(Ca,M2)
+0. 1. 0.1  0                 | range and resolution of X(Mg,M2)
+
+0. 1. 0.1  0                 | range and resolution of jd
+
 
 begin_excess_function
-W(di cfs) 20d3             | corrected from 21d3, 3/18/16, Oliver Shorttle
-W(di cats) = 123d2 -0.1*p_bar
+W(di cfs)       20d3  0   0  
+W(di cats)     12.3d3  0  -0.1
+W(di jd)         26d3  0   0    
+W(di cenjh)     29.8d3  0  -0.03
+W(di cfm)        18d3  0   0  
+W(cfs cats)     25d3  0  -0.1
+W(cfs jd)       36d3  0   0 
+W(cfs cenjh)      7d3  0   0  
+W(cfs cfm)       4d3  0   0  
+W(cats jd)        6d3  0   0  
+W(cats cenjh)   45.7d3  0  -0.29
+W(cats cfm)      27d3  0  -0.1
+W(jd cenjh)       40d3  0   0
+W(jd cfm)        40d3  0   0
+W(cenjh cfm)       4d3  0   0
+
 W(di crdi)     8d3  
-W(di cess)     8d3  
-W(di jd)      26d3  
-W(di cenjh) =  29.8d3  -0.03*p_bar
-W(di cfm)     18d3  
-W(cfs cats)   25d3  0  -0.1
-W(cfs crdi)   34d3  
-W(cfs cess)   34d3  
-W(cfs jd)     24d3  
-W(cfs cenjh)     7d3 
-W(cfs cfm)     4d3  
+W(di cess)     8d3
+W(cfs crdi)    34d3  
+W(cfs cess)    34d3
 W(cats crdi)   2d3 
-W(cats cess)   2d3  
-W(cats jd)     6d3  
-W(cats cenjh) 45.7d3  0  -0.29
-W(cats cfm)   27d3  0  -0.1
+W(cats cess)   2d3
 W(crdi cess)   2d3  
 W(crdi jd)     3d3  
-W(crdi cenjh)   48d3  
-W(crdi cfm)   36d3  
+W(crdi cenjh)  48d3  
+W(crdi cfm)    36d3  
 W(cess jd)     3d3  
-W(cess cenjh)   58d3  
-W(cess cfm)   36d3  
-W(jd cenjh)     40d3  
-W(jd cfm)     40d3  
-W(cenjh cfm)     4d3  
+W(cess cenjh)  58d3  
+W(cess cfm)    36d3  
 end_excess_function
 
-3                             | 3 site (M1, M2, T1) configurational entropy model
+3                                   | 3 site entropy model (M1, M2, T)
 
-4 1.                          | 5 species on M1, 1 site per formula unit.
-z(m1,fe) = 1 cfs + 1 cfm
-z(m1,na) = 1 jd 
-z(m1,mg) = 1 cenjh 
+5 1                                 | 3 species on m1, mult = 1
+z(m1,fe)   = 1 cfs
+z(m1,al)   = 1 cats + 1 jd
+z(m1,fe3) = 1 cess
+z(m1,cr)  = 1 crdi
 
-5 1.                          | 2 species on M2, 1 site per formula unit.
-z(m2,fe3) = 1 cess
-z(m2,cr)  = 1 crdi
-z(m2,al)  = 1 cats + 1 jd 
-z(m2,fe)  = 1 cfs
+4 1                                 | 4 species on m2, mult. = 1
+z(m2,na)   = 1 jd
+z(m2,mg)   = 1 cenjh
+z(m2,fe)   = 1 cfs  + 1 cfm
 
-2 0.25                        | fake multiplicity -> 0.25, fractions -> 1/2
+2 0.5                               | 2 species on T, effective mult. = 1/2
 z(t1,al) = 1/2 cats + 1/2 cess + 1/2 crdi
 
 begin_van_laar_sizes
@@ -1151,7 +1221,7 @@ alpha(cfm)   =  1.0
 end_van_laar_sizes
 
 end_of_model
-                      -------------------------------------------------------- 
+                      --------------------------------------------------------
 begin_model
                              Jennings and Holland, J Pet, 56:869-892, 2015
                              Mantle Melt Model, intended for pressures of 0-60 GPa
@@ -1389,6 +1459,11 @@ end_of_model
                       -------------------------------------------------------- 
 begin_model                
                              Jennings and Holland, J Pet, 56:869-892, 2015
+
+                             originally from 
+
+                             Holland et al., 2013; dx.doi.org/10.1093/petrology/egt035
+
                              Mantle Melt Model, intended for pressures of 0-60 GPa
 
                              Pierre Bouilhol & JADC, 12/16/15 
@@ -1399,8 +1474,15 @@ begin_model
                              with the fully disordered tetrahedral Al site fraction. 
                              JADC, 6/10/15
 
-                             Changed to fake T site multiplicity (1/2) 
+                             Changed fake T site multiplicity from 1/4 to 1/2 
                              with true Al site fraction. Bob Myhill, 2/18
+
+                      NOTE: to use this the following endmembers must be specified with make 
+                      definitions in the thermodynamic data file
+
+                      odi  = 1 di
+                            DQF = -100 + 0.211 * T + 0.005 * P | NOTE entropy term incorrect in some perplex files
+
 
                                                       M1      M2     T 
                                                      _____________________
@@ -1508,7 +1590,7 @@ z(m1,al)   = 1 mgts
 z(m2,ca) = 1 odi
 z(m2,fe) = 1 fs + 1 opx
 
-2 0.25                     | 2 species on "1/4" T sites with true site fraction.
+2 0.5                      | 2 species on "1/2" T sites with true site fraction.
 z(t,al) = 1/2 mgts + 1/2 cren + 1/2 oen
 
 
@@ -11537,46 +11619,13 @@ end_of_model
                       --------------------------------------------------------
 begin_model
 
-        Olivine
-
-        Holland et al., 2013; dx.doi.org/10.1093/petrology/egt035      
-        [Bob Myhill, 2018/02/13]
-
-        Notes:
-        This is the same as all of the Holland/Powell binary olivine models
-        and consists of symmetric mixing of Mg-Fe on 1 site with a multiplicity of 2
-
-Ol(H) 
-abbreviation Ol
-full_name    olivine 
-
-2                                     model type: Margules, macroscopic
-2                                     2 endmembers
-fo       fa            
-0  0                                | endmember flags
-
-0.0 1.0  0.1   0                    | range and resolution for X(Mg), imod = 0 -> cartesian subdivision
-
-begin_excess_function
-W(fo fa) 9000. 0. 0.                 
-end_excess_function 
-
-1                                     1 site entropy model
-
-2 2.                                  2 species, site multiplicity = 2.
-z(fe) = 1 fa 
-
-end_of_model             
-                      --------------------------------------------------------
-begin_model
-
         Wadsleyite
 
         Holland et al., 2013; dx.doi.org/10.1093/petrology/egt035   
         [Bob Myhill, 2018/02/13]   
 
         Notes:
-        This model consists of symmetric mixing of Mg-Fe on 1 site with a multiplicity of 2
+        mixing of Mg-Fe on 1 site with a multiplicity of 2
 
 Wad(H) 
 abbreviation Wad
@@ -11608,7 +11657,7 @@ begin_model
         [Bob Myhill, 2018/02/13]
 
         Notes:
-        This model consists mixing of Mg-Fe on 1 site with a multiplicity of 2
+        mixing of Mg-Fe on 1 site with a multiplicity of 2
 
 Ring(H) 
 abbreviation Ring
@@ -11631,261 +11680,6 @@ end_excess_function
 z(fe) = 1 frw 
                                             
 end_of_model
-                           --------------------------------------------------------
-begin_model
-                      Green et al., 2012 clinopyroxene model; is this reference correct? looks 
-                      more like J&H.
-
-                      in any case, used in Holland et al., 2013; dx.doi.org/10.1093/petrology/egt035     
-                      [Bob Myhill, 2018/02/13]
-
-                             reformulated as a prismatic + orphan vertex model.
-
-                             JADC, 10/5/2018
-
-                      This model should not be used for Na-rich compositions.
-
-                      NOTE: to use this the following endmembers must be specified with make 
-                      definitions in the thermodynamic data file
-
-                      cenjh  = 1 en
-                            DQF = 3500 - 2 * T + 0.048 * P 
-                      cfs  = 1 fs
-                            DQF = 3800 - 3 * T + 0.03 * P
-
-                      Thus, cfm (which = 0.5 en + 0.5 fs - 3 kJ/mol)
-                            has a DQF of 6650 - 2.5 * T_K + 0.036 * P_bar
-
-                                                                Sites 
-                                                       M1     M2    T
-                                                     ____________________________________
-
-                                      Multiplicity      1      1    0.5(2)    
-                                                     ____________________________________
-
-                                        di              Mg     Ca    Si    independent
-                                        hed_d           Fe     Ca    Si    dependent
-                                        cats            Al     Ca   AlSi   independent
-
-                                        cenjh           Mg     Mg    Si    independent
-                                        mfc_d           Fe     Mg    Si    dependent
-                                        mats_d          Al     Mg   AlSi   dependent 
-                            Species: 
-                                        cfm_d           Mg     Fe    Si    ordered species (duplicate)
-                                        cfs             Fe     Fe    Si    independent
-                                        fats_d          Al     Fe   AlSi   dependent 
-
-                                        jd              Al     Na    Si    independent (orphan)
-                                                      ___________________________________
-
-                    Ordered species:    cfm             Mg     Fe     Si    (same as cfm_d above)
-
-Cpx(H)
-abbreviation Cpx
-full_name    clinopyroxene
-  
-9                               | model type: prismatic + orphan vertex, O/D
-                                                                       
-2                               | number of simplexes comprising the prism
-3 3                             | simplex dimensions
-1                               | number of orphan vertices
-                                | endmembers on the prismatic vertex
-di      hed_d   cats
-cenjh   mfc_d   mats_d
-cfm_d   cfs     fats_d
-                                | endmembers on the orphan vertex
-jd
-
-1                               | number of ordered species and definitions 
-
-cfm   = 1/2 cenjh + 1/2 cfs enthalpy_of_ordering  =  -6.65d3  2.5 - 0.039 | DQF(cfm) - (DQF(ceng) + DQF(cfs))/2
-                                                           | -3.0 - (3.5 - 2T + 0.048P + 3.8 - 3T + 0.03)/2
-                                                           | = -6.65 + 2.5T - 0.039P 
-
-begin_limits
-
-cfm = -2 + 2 cfs + 1 cfm                           delta = 2 zm1fe
-cfm =  0 - 2 di - 2 cenjh - 1 cfm                  delta = 2 zm1mg
-cfm =  0 - 2 cfs - 1 cfm                           delta = 2 zm2fe
-cfm = -2 + 2 cenjh + 1 cfm                         delta = 2 zm2mg
-
-end_limits
-
-5                           | number of dependent endmembers and definitions
-
-hed_d  = 1 di  + 1 cfs - 1 cfm
-mfc_d  = 1 cenjh + 1 cfs - 1 cfm
-mats_d = 1 cats + 1 cenjh - 1 di
-cfm_d = 1 cfm
-fats_d = 1 cats - 1 di   + 1 cfm
-
-0 0 0 0 0 0 0 0 0 0      | endmember flags
-
-0. 1. 0.1  0                 | range and resolution of X(Mg,M1)
-0. 1. 0.1  0                 | range and resolution of X(Fe,M1)
-
-0. 1. 0.1  0                 | range and resolution of X(Ca,M2)
-0. 1. 0.1  0                 | range and resolution of X(Mg,M2)
-0. 1. 0.1  0                 | range and resolution of X(Fe,M2)
-
-begin_excess_function
-W(di cfs)       20d3  0   0  
-W(di cats)     12.3d3  0  -0.1
-W(di jd)         26d3  0   0    
-W(di cenjh)     29.8d3  0  -0.03
-W(di cfm)        18d3  0   0  
-W(cfs cats)     25d3  0  -0.1
-W(cfs jd)       36d3  0   0 
-W(cfs cenjh)      7d3  0   0  
-W(cfs cfm)       4d3  0   0  
-W(cats jd)        6d3  0   0  
-W(cats cenjh)   45.7d3  0  -0.29
-W(cats cfm)      27d3  0  -0.1
-W(jd cenjh)       40d3  0   0
-W(jd cfm)        40d3  0   0
-W(cenjh cfm)       4d3  0   0
-end_excess_function
-
-3                                   | 3 site entropy model (M1, M2, T)
-
-3 1                                 | 3 species on m1, mult = 1
-z(m1,fe)   = 1 cfs
-z(m1,al)   = 1 cats + 1 jd
-
-4 1                                 | 4 species on m2, mult. = 1
-z(m2,na)   = 1 jd
-z(m2,mg)   = 1 cenjh
-z(m2,fe)   = 1 cfs  + 1 cfm
-
-2 0.5                               | 2 species on T, effective mult. = 1/2
-z(Al,T1) = 1/2 cats
-
-begin_van_laar_sizes
-alpha(di)          1.2
-alpha(cfs)        1.0
-alpha(cats)        1.9
-alpha(jd)          1.2
-alpha(cenjh)        1.0
-alpha(cfm)         1.0
-end_van_laar_sizes
-
-end_of_model
-                      --------------------------------------------------------
-begin_model
-                      Green et al., 2012 orthopyroxene model; is this reference correct?
-
-                      in any case, used in Holland et al., 2013; dx.doi.org/10.1093/petrology/egt035     
-                      [Bob Myhill, 2018/02/13]
-
-                      NOTE: to use this the following endmembers must be specified with make 
-                      definitions in the thermodynamic data file
-
-                      odi  = 1 di
-                            DQF = -100 + 0.211 * T + 0.005 * P | NOTE entropy term incorrect in some perplex files
-                             
-             
-                                                      M1      M2     T 
-                                                     _____________________
-
-                                      Multiplicity    1       1      1/2
-                                                     ______________________
-
-                                        en            Mg      Mg     SiSi      independent
-                                        mf_d          Fe      Mg     SiSi      dependent
-                                        mgts          Al      Mg     SiAl      independent
-
-                                        fm_d          Mg      Fe     SiSi      ordered endmember
-                            Species:    fs            Fe      Fe     SiSi      independent
-                                        tsfs_d        Al      Fe     SiAl      dependent
-
-                            Species:    odi           Mg      Ca     SiSi      independent
-                                        ofdi_d        Fe      Ca     SiSi      dependent
-                                        tsdi_d        Al      Ca     SiAl      dependent
-                                                      _____________
-
-                           Internal:    fm            Mg      Fe     SiSi         
-
-Opx(H)
-abbreviation Opx
-full_name    orthopyroxene 
-
-8                          | model type: Reciprocal with speciation
-
-2                          | 2 independent composition spaces
-3 3                        | 3 dimensions on first space, 3 on second
-
-                           | endmembers: 
-en      mf_d   odi
-fm_d    fs     ofdi_d    
-mgts    tsfs_d tsdi_d 
-
-1                          | ordered species definition
-
-fm = 1/2 en + 1/2  fs  Delta(enthalpy) = -6d3          
-
-begin_limits
-fm =     - 2 fs - 1 fm                delta = 2 z(M2,Fe)
-fm =  -2 + 2 fs + 1 fm                delta = 2 z(M1,Fe)
-fm =     - 2 en - 1 fm                delta = 2 z(M1,Mg)
-end_limits   
-
-5                          | 5 dependent endmembers
-
-mf_d   = 1 en + 1 fs - 1 fm 
-fm_d   = 1 fm
-ofdi_d = 1 odi + 1 fs - 1 fm
-tsfs_d = 1 mgts   + 1 fm - 1 en
-tsdi_d = 1 odi  + 1 mgts - 1 en 
-
-
-                                               
-0 0 0 0 0 0 0 0 0    | endmember flags, indicate if endmember is part of the solution (i.e. iend = 0).
-     
-0. 1. .1   0                | subdivision model for (ternary) site 1 (M1):
-0. 1. .1   0
-                          
-0. 1. .1   0                | subdivision model for (quaternary) site 2 (M2):
-0. 1. .1   0
-
-begin_excess_function                
-W(en fs)        5.2d3  0   0
-W(en fm)          4d3  0   0
-W(en odi)      32.2d3  0   0.12 
-W(en mgts)       13d3  0  -0.15
-
-W(fs fm)          4d3  0   0
-W(fs odi)        24d3  0   0
-W(fs mgts)        7d3  0  -0.15
-
-W(fm odi)        18d3  0   0
-W(fm mgts)        2d3  0  -0.15
-
-W(odi mgts)    75.4d3  0  -0.94
-end_excess_function 
-
-3                          | 3 site (M1, M2, T) configurational entropy model
-
-3 1.                       | 3 species on M1, 1 site per formula unit.
-z(m1,fe)   = 1 fs 
-z(m1,al)   = 1 mgts 
-
-3 1.                       | 3 species on M2, 1 site per formula unit. 
-z(m2,ca) = 1 odi
-z(m2,fe) = 1 fs + 1 fm
-
-2 0.5                     | 2 species on 0.5 T sites (true multiplicity = 2)
-z(t,al) = 1/2 mgts 
-
-
-begin_van_laar_sizes
-alpha(en)     1.0  0  0
-alpha(fs)     1.0  0  0
-alpha(fm)     1.0  0  0
-alpha(odi)    1.2  0  0
-alpha(mgts)   1.0  0  0
-end_van_laar_sizes
-
-end_of_model
                       --------------------------------------------------------
 begin_model
 
@@ -11900,7 +11694,7 @@ begin_model
 
                       hmgts  = 1 mgts + 1 hen - 1 en
                             DQF = -1000
-                      hodi  = 1 di
+                      odi  = 1 di
                             DQF = -100 + 0.211 * T_K + 0.005 * P_bar
 
                                                       M1      M2     T 
@@ -11917,7 +11711,7 @@ begin_model
                             Species:    hfs           Fe      Fe     SiSi      independent
                                         tsfs_d        Al      Fe     SiAl      dependent
 
-                            Species:    hodi          Mg      Ca     SiSi      independent
+                            Species:    odi           Mg      Ca     SiSi      independent
                                         ofdi_d        Fe      Ca     SiSi      dependent
                                         tsdi_d        Al      Ca     SiAl      dependent
                                                       _____________
@@ -11934,7 +11728,7 @@ full_name    HP_clinopyroxene
 3 3                        | 3 dimensions on first space, 3 on second
 
                            | endmembers: 
-hen      hmf_d   hodi
+hen      hmf_d   odi
 hfm_d    hfs     ofdi_d    
 hmgts    tsfs_d  tsdi_d 
 
@@ -11952,9 +11746,9 @@ end_limits
 
 hmf_d   = 1 hen   + 1 hfs   - 1 hfm 
 hfm_d   = 1 hfm
-ofdi_d  = 1 hodi  + 1 hfs   - 1 hfm
+ofdi_d  = 1 odi   + 1 hfs   - 1 hfm
 tsfs_d  = 1 hmgts + 1 hfm   - 1 hen
-tsdi_d  = 1 hodi  + 1 hmgts - 1 hen 
+tsdi_d  = 1 odi   + 1 hmgts - 1 hen 
 
                                  
 0 0 0 0 0 0 0 0 0    | endmember flags, indicate if endmember is part of the solution (i.e. iend = 0).
@@ -11968,17 +11762,17 @@ tsdi_d  = 1 hodi  + 1 hmgts - 1 hen
 begin_excess_function                
 W(hen hfs)        5.2d3  0   0
 W(hen hfm)          4d3  0   0
-W(hen hodi)      32.2d3  0   0.12 
+W(hen odi)       32.2d3  0   0.12 
 W(hen hmgts)       13d3  0  -0.15
 
 W(hfs hfm)          4d3  0   0
-W(hfs hodi)        24d3  0   0
+W(hfs odi)         24d3  0   0
 W(hfs hmgts)        7d3  0  -0.15
 
-W(hfm hodi)        18d3  0   0
+W(hfm odi)         18d3  0   0
 W(hfm hmgts)        2d3  0  -0.15
 
-W(hodi hmgts)    75.4d3  0  -0.94
+W(odi hmgts)    75.4d3  0  -0.94
 end_excess_function 
 
 3                          | 3 site (M1, M2, T) configurational entropy model
@@ -11988,7 +11782,7 @@ z(m1,fe)   = 1 hfs
 z(m1,al)   = 1 hmgts 
 
 3 1.                       | 3 species on M2, 1 site per formula unit. 
-z(m2,ca) = 1 hodi
+z(m2,ca) = 1 odi
 z(m2,fe) = 1 hfs + 1 hfm
 
 2 0.5                      | 2 species on 0.5 T sites (true multiplicity = 2)
@@ -11999,7 +11793,7 @@ begin_van_laar_sizes
 alpha(hen)     1.0  0  0
 alpha(hfs)     1.0  0  0
 alpha(hfm)     1.0  0  0
-alpha(hodi)    1.2  0  0
+alpha(odi)    1.2  0  0
 alpha(hmgts)   1.0  0  0
 end_van_laar_sizes
 

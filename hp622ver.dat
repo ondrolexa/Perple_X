@@ -313,30 +313,27 @@ tts   = -2 dsp + 2 ru + 1 ts
                                   | Make definitions for Green et al., JMG, 2016 augite (clinopyroxene)
 cfsg  = 1 fs
    DQF = 2100 - 2 * T + 0.045 * P
-                                  | Make definitions for Holland et al., 2013; dx.doi.org/10.1093/petrology/egt035
-                                  | mantle mineralogical model.
+
 nacfb = 1 nacf
-       DQF(J/mol) = -9000 0 0
+       DQF(J/mol) = -9000
 mfpv = 1 fpv
-       DQF(J/mol) = -9500 0 0
+       DQF(J/mol) = -9500
 mcpv = 1 cpv
-       DQF(J/mol) = 60000 0 0
+       DQF(J/mol) = 60000
 mnpv = 1 npv
-       DQF(J/mol) = 16000 0 0
+       DQF(J/mol) = 16000
 cmpv = 1 mpv
-       DQF(J/mol) = 35000 0 0
+       DQF(J/mol) = 35000
 cfpv = 1 fpv
-       DQF(J/mol) = 24000 0 0
+       DQF(J/mol) = 24000
 capv = 1 apv
-       DQF(J/mol) = 45000 0 0
+       DQF(J/mol) = 45000
 cnpv = 1 npv
-       DQF(J/mol) = 25000 0 0
+       DQF(J/mol) = 25000 
 fcor = 1 mcor + 1 fak - 1 mak   | FeSi corundum 
-       DQF(J/mol) = -15d3 0 0
-hodi  = 1 di
-       DQF(J/mol) = -100 + 0.211 * T_K + 0.005 * P_bar
+       DQF(J/mol) = -15d3 
 hmgts  = 1 mgts + 1 hen - 1 en
-       DQF(J/mol) = -1d3 0 0
+       DQF(J/mol) = -1d3 
 
 end_makes
 

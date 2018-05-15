@@ -5776,14 +5776,12 @@ c                                 the ordered species.
       end do 
 c                                 eliminate sites with only one
 c                                 species
-      if (isite.gt.1) call dedsit
-
-      if (jsmod.eq.9.or.jsmod.eq.10) then 
+      if (isite.gt.1) then 
+         call dedsit
+      else if (jsmod.eq.9.or.jsmod.eq.10) then 
          write (*,*) 'wonk reform'
          stop
-      else
-         ostot = istot
-      end if 
+      end if
 
       end 
 
@@ -9286,7 +9284,7 @@ c                                 initialize compositional distances
 c                                 check endmember counters:
       if (im.gt.h9) call error (52,dq(1),idqf,'GMODEL')
 c                                 check for inconsistent model reformation
-      if (kstot+mdep.gt.jstot) call error (76,dq(1),idqf,tname)
+      if (kstot+mdep.gt.ostot) call error (76,dq(1),idqf,tname)
 c                                 set up simple counters for
 c                                 charge balance models
       if (jsmod.eq.20) then
@@ -13177,12 +13175,12 @@ c                                 array can be used for all solutions.
       call y2p0 (im)
 
 c DEBUG DEBUG
-      x = 0
+      x = 0d0
       do i = 1, nstot(im)
          x = x + pa(i)
       end do 
       if (dabs(x-1d0).gt.zero) then 
-         write (*,*) 'soload 2'
+         write (*,*) 'soload 2',dabs(x-1d0)
       end if 
 
       iphct = iphct + 1
