@@ -505,9 +505,10 @@ c                                 normal simplex/prism
 
       else 
 c                                 simplex with a prismatic vertex
-        x(ostg(ids),kd-mstot(ids)) = 1d0 
-        write (*,*) 'groink ',x(ostg(ids),kd-mstot(ids))
-        pause
+c DEBUG DEBUG
+         x(ostg(ids),kd-mstot(ids)) = 1d0 
+c       write (*,*) 'groink ',x(ostg(ids),kd-mstot(ids))
+c       pause
 
       end if
 

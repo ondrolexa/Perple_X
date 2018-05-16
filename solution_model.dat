@@ -1220,6 +1220,8 @@ alpha(cenjh) =  1.0
 alpha(cfm)   =  1.0 
 end_van_laar_sizes
 
+reach_increment 2
+
 end_of_model
                       --------------------------------------------------------
 begin_model
