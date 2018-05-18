@@ -1,4 +1,4 @@
-011 DO NOT DELETE THIS LINE
+682 DO NOT DELETE THIS LINE
 
 | Solution models consistent with:
 
@@ -309,73 +309,57 @@ end_of_model
 begin_model                
                                       Garnet solution with Fe-majorite (Fe3MgSiSi3O12) and
                                       Ca-majorite (Ca3MgSiSi3O12), the use of these endmembers
-                                      is necessary to reproduce the calculations in Stixrude
-                                      & Lithgow-Bertelloni (2011). But these endmembers slow
-                                      calculations substantially and do not result in
-                                      significantly different velocity profiles.                                 
+                                      appear to be necessary to reproduce the Stixrude
+                                      & Lithgow-Bertelloni (2011) calculations. 
 
-Gt_maj                                                                               
-5                                     model type: Margules, 1 dependent endmember
-7                                     # of endmembers
-cmaj fmaj   gr   alm  maj  py jmaj  
+                                      reformulated as an irregular prismatic model, JADC, 5/18
 
-2                          | dependent endmembers 
+                                                      M1           M2   
+                                                     ____________
+
+                                      Multiplicity    3            2
+                                                     ___________________
+                   prismatic vertex:
+                                        py            Mg           AlAl   independent   
+                                        alm           Fe           AlAl   independent     
+                                        gr            Ca           AlAl   independent
+
+                                        maj           Mg           MgSi   independent   
+                                        fmaj          Fe           MgSi   dependent   
+                                        cmaj          Ca           MgSi   dependent   
+                   orphan vertex:
+                                        jmaj          Na2/3Al1/3   AlSi   independent (orphan)
+
+Gt_maj
+10                              | model type: irregular prismatic compostion space
+
+2                               | number of simplexes comprising the prism
+3 2                             | simplex dimensions
+1                               | number of orphan vertices 
+                                | endmembers on the prismatic vertex
+cmaj   fmaj   gr
+alm    maj    py
+                                | endmembers on the orphan vertex
+jmaj
+
+2                               | dependent endmembers 
 fmaj = 1 maj + 1 alm - 1 py
 cmaj = 1 maj + 1 gr  - 1 py
-        
+
 0  0  0  0  0  0  0        | endmember flags
-0. .4 .1   0               | X(cmaj)
-0. .4 .1   0               | X(fmaj)
-0. 1. .1   0               | range and resolution for X(gr), imod = 0 -> cartesian subdivision
-0. 1. .1   0               | range and resolution for X(alm), imod = 0 -> cartesian subdivision
-0. 1. .1   0               | range and resolution for X(maj), imod = 0 -> cartesian subdivision
-0. 1. .1   0               | range and resolution for X(py), imod = 0 -> cartesian subdivision
 
-begin_excess_function                                                
-W(gr maj)  58d3   0. 0. 
-W(gr py)   30d3   0. 0. 
-W(py maj)  21.3d3 0. 0.
-end_excess_function 
+0. 1. .1   0               | range and resolution for X(Ca,A), imod = 0 -> cartesian subdivision
+0. 1. .1   0               | range and resolution for X(Fe,A), imod = 0 -> cartesian subdivision
 
-3                                 | 3 sites for configurational entropy model
+0. 1. .1   0               | range and resolution for X(1-Ts,B), imod = 0 -> cartesian subdivision
 
-5 3.                              | A-site, 5 independent species,
-z(A,ca) = 1 gr
-z(A,fe) = 1 alm
-z(A,na) = 2/3 jmaj
-z(A,mg) = 1 py + 1 maj
+0. 1. .1   0               | range and resolution for X(jmaj), imod = 0 -> cartesian subdivision
 
-2 1.                              | 2 species, B1 site multiplicity 1
-z(B1,Mg) = 1 maj 
-
-2 1.                              | 2 species, B2 site multiplicity 1
-z(B1,Si) = 1 maj + 1 jmaj 
-
-end_of_model   
-                      --------------------------------------------------------
-begin_model                
-                                      Garnet solution with Ca-majorite (Ca3MgSiSi3O12)                                  
-
-Gt_cmaj                                                                               
-5                                     model type: Margules, 1 dependent endmember
-6                                     # of endmembers
-cmaj   gr   alm  maj  py jmaj  
-
-1                          | 1 dependent endmember 
-cmaj = 1 maj + 1 gr - 1 py
-        
-0  0  0  0  0  0           | endmember flags
-0. 1. .1   0               | X(cmaj)
-0. 1. .1   0               | range and resolution for X(gr), imod = 0 -> cartesian subdivision
-0. 1. .1   0               | range and resolution for X(alm), imod = 0 -> cartesian subdivision
-0. 1. .1   0               | range and resolution for X(maj), imod = 0 -> cartesian subdivision
-0. 1. .1   0               | range and resolution for X(py), imod = 0 -> cartesian subdivision
-
-begin_excess_function                                                
-W(gr maj)  58d3   0. 0. 
-W(gr py)   30d3   0. 0. 
-W(py maj)  21.3d3 0. 0.
-end_excess_function 
+begin_excess_function
+W(gr maj)  58d3
+W(gr py)   30d3
+W(py maj)  21.3d3
+end_excess_function
 
 3                                 | 3 sites for configurational entropy model
 
@@ -391,7 +375,7 @@ z(B1,Mg) = 1 maj
 2 1.                              | 2 species, B2 site multiplicity 1
 z(B1,Si) = 1 maj + 1 jmaj 
 
-end_of_model       
+end_of_model
                       --------------------------------------------------------     
 begin_model                
 

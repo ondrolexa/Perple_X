@@ -6084,8 +6084,11 @@ c                                 add species to the kill list
 c                                figure out which dependent endmembers have
 c                                been killed:
       if (depend) then 
-
-         if (kdep.ne.mdep) call error (54,dqf(1,1),mdep,'KILLSP')
+c DEBUG DEBUG
+c                                not sure why the ostot > istot case needs
+c                                to be excepted, but it does...
+         if (kdep.ne.mdep.and.ostot.eq.istot) 
+     *      call error (54,dqf(1,1),mdep,'KILLSP')
 
          mdep = 0 
 
