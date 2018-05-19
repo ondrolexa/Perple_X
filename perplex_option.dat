@@ -68,7 +68,7 @@ hybrid_EoS_H2O            default | [4] 0-2, 4-5 => 0 - MRK, 1 HSMRK, 2 - CORK, 
 hybrid_EoS_CO2            default | [4] 0-4 => 0 - MRK, 1 HSMRK, 2 - CORK, 3- Bottinga, 4 - PSEoS
 hybrid_EoS_CH4            default | [1] 0-1  => 0 - MRK, 1 HSMRK
 increment                 default | [0.1 0.025] >0, < 1, fractional independent variable increments [exploratory and autorefine], only relevant for CONVEX
-initial_resolution        default | [1/15] >0, <1
+initial_resolution        1/10 default | [1/15] >0, <1
 interpolation             default | [on 2] value 1: on or off [on]; value 2, 1->99 [2]; only relevant for WERAMI
 iteration                 default | [3 4] value 1: 2->99 [3]; value 2: 1->7 [4]
 linear_model              default | [on] on or off, relevant for 2d gridded minimization
@@ -107,7 +107,7 @@ T_melt                    default | [873.] melt solution model endmember tempera
 T_stop                    default | [0.] equilibration temperature (K) cut off
 variance                  default | [1 99] exploratory and autorefine; maximum variance of traced equilibria; only relevant for CONVEX
 vrh/hs_weighting          default | [0.5] 0->1, weighting factor for the stiff average in VRH/HS averaging (see bounds)
-x_nodes                   default | [40 40] exploratory and autorefine (grid parameters keyword group), lowest-level x grid resolution 
-y_nodes                   default | [40 40] exploratory and autorefine (grid parameters keyword group), lowest-level y grid resolution
+x_nodes                   4 4 default | [40 40] exploratory and autorefine (grid parameters keyword group), lowest-level x grid resolution 
+y_nodes                   4 4 default | [40 40] exploratory and autorefine (grid parameters keyword group), lowest-level y grid resolution
 zero_mode                 default | [1e-6] 0->1, threshold below which the molar mode of a phase is set to 0; defaults to zero for fractionation calculations
 zero_bulk                 default | [1e-6] 0->1, threshold below which the molar amount of a component in a system is set to zero

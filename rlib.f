@@ -5776,12 +5776,7 @@ c                                 the ordered species.
       end do 
 c                                 eliminate sites with only one
 c                                 species
-      if (isite.gt.1) then 
-         call dedsit
-      else if (jsmod.eq.9.or.jsmod.eq.10) then 
-         write (*,*) 'wonk reform'
-         stop
-      end if
+      if (isite.gt.1) call dedsit
 
       end 
 
@@ -6087,7 +6082,7 @@ c                                been killed:
 c DEBUG DEBUG
 c                                not sure why the ostot > istot case needs
 c                                to be excepted, but it does...
-         if (kdep.ne.mdep.and.ostot.eq.istot) 
+         if (kdep.ne.mdep.and.jnc.eq.1) 
      *      call error (54,dqf(1,1),mdep,'KILLSP')
 
          mdep = 0 
@@ -9323,7 +9318,7 @@ c                                 prismatic space + orphans
       pstot(im) = ostot
 c                                 number of dependent + independent - ordered endmembers
 c                                 prismatic space - orphans
-      qstot(im) = ostot
+c
 c                                 number of independent + ordered endmebers
       nstot(im) = kstot + norder
 c                                 number of independent disordered endmembers
@@ -9655,7 +9650,7 @@ c                                 are occasionally used as place holders:
 
          do j = 1, mdep
 
-            do i = 1, mstot(im)
+            do i = 1, pstot(im)
                y(i) = 0d0
             end do 
 
@@ -9682,7 +9677,11 @@ c                                 implemented).
 
          if (bad.and.stck) call error (78,y(1),i,tname)
 
-      end if 
+      else 
+
+         ndep(im) = 0
+
+      end if
 c                                 -------------------------------------
 c                                 dqf parameters
       jdqf(im) = idqf
@@ -9935,7 +9934,7 @@ c                                 h2o and fo absent, fa (in hp) is first endmemb
             jspec(im,3) = 1
          end if
 c                                 set the ifp flag for t_melt option
-         do i = 1, mstot(im)
+         do i = 1, pstot(im)
 c                                 insp points to the original position 
 c                                 of endmember i in the solution model input:
             ifp(kdsol(knsp(i,im))) = -1
