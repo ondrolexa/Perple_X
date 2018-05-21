@@ -6079,13 +6079,10 @@ c                                 add species to the kill list
 c                                figure out which dependent endmembers have
 c                                been killed:
       if (depend) then 
-c DEBUG DEBUG
-c                                not sure why the ostot > istot case needs
-c                                to be excepted, but it does...
-         if (kdep.ne.mdep.and.jnc.eq.1) 
-     *      call error (54,dqf(1,1),mdep,'KILLSP')
 
-         mdep = 0 
+         if (kdep.ne.mdep) call error (54,dqf(1,1),mdep,'KILLSP')
+
+         mdep = 0
 
          do i = 1, kdep
             if (kdsol(iwas(i)).ne.-3) then 
@@ -6733,7 +6730,7 @@ c                                 didn't find a match, read a new name:
          kdsol(i) = 0
          ok = .false.
 
-         if (jsmod.ge.7.and.jsmod.le.9) then
+         if (jsmod.ge.7.and.jsmod.le.10) then
 c                              solution with dependent endmembers, if endmember i
 c                              is dependent endmember flag it by setting kdsol(i) = -2
             do j = 1, mdep

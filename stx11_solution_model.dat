@@ -337,8 +337,8 @@ Gt_maj
 3 2                             | simplex dimensions
 1                               | number of orphan vertices 
                                 | endmembers on the prismatic vertex
-cmaj   fmaj   gr
-alm    maj    py
+cmaj   fmaj   maj
+gr     alm    py
                                 | endmembers on the orphan vertex
 jmaj
 
