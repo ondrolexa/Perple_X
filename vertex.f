@@ -422,9 +422,9 @@ c                                 get total moles to compute mole fractions
                   b(i) = cblk(i)/ctotal
                end do
 
-               call setvr0 (j,j) 
+               call setvr0 (j,j)
 c                                 echo to scratch
-               write (n0-1,*) v 
+               write (n0-1,*) v
 c                                 lpopt does the minimization and outputs
 c                                 the results to the print file.
                call lpopt (1,j,idead,output)
@@ -440,7 +440,8 @@ c                                 fractionate the composition:
  
             end do 
 
-         end if 
+         end if
+
       end if 
 c                                 output 
       if (output.and.io4.eq.0) call outgrd (1,loopy,1) 
@@ -2129,10 +2130,10 @@ c                               in the fractionation list
 
                   if (quit) exit 
 c                                else open a new file
-                  ifrct = ifrct + 1
+                  ifrct = i
 
                   ifr(ifrct) = kkp(j)
-    
+
                   call fropen (ifrct,phase)
 c                                paste in previous coordinates
                   rewind (n0-1)
@@ -2144,13 +2145,17 @@ c                                full precision
                      read (n0-1,*,iostat=ier) v
 
                      if (ier.ne.0) then 
-c                               presumably eof
+c                               presumably eof, reset the file pointers
                         backspace (n0+ifrct)
+
+                        backspace (n0-1)
+
                         exit 
 
                      else 
 
-                        write (n0+i,1200) (v(jv(i)),i=1,ipot),nopt(7),
+                        write (n0+ifrct,1200) 
+     *                                    (v(jv(i)),i=1,ipot),nopt(7),
      *                                    (nopt(7),k=1,jbulk)
 
                      end if
