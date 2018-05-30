@@ -237,11 +237,11 @@ c---------------------------------------------------------------------
 
       double precision ialpha, vt, trv, pth, vdp, ndu, vdpbm3, gsixtr, 
      *                 gstxgi, fs2, fo2, kt, gval, gmake, gkomab, kp,
-     *                 a, b, c, gstxlq, glacaz, v1, v2, gmet, gterm2, 
-     *                 km, kmk, lnfpur, gaq, ghkf
+     *                 a, b, c, gstxlq, glacaz, v1, v2, gmet, gmet2,
+     *                 gterm2, km, kmk, lnfpur, gaq, ghkf
 
       external vdpbm3, gsixtr, gstxgi, gmake, gkomab, gstxlq, glacaz, 
-     *         gaq,    lnfpur, gmet, gterm2, ghkf
+     *         gaq,    lnfpur, gmet, gmet2, gterm2, ghkf
 
       integer ltyp,lct,lmda,idis
       common/ cst204 /ltyp(k10),lct(k10),lmda(k10),idis(k10)
@@ -308,7 +308,8 @@ c                                 stixrude EPSL '09 Liquid Eos
          goto 999
 
       else if (eos(id).eq.12) then
-c                                read SGTE data and evaluate EOS after Brosh '07,'08
+c                                read SGTE data and evaluate EOS after Brosh '07,'08:
+c                                Nastia's implementation; see also eos(id) 17
          gval = gmet (id)
          goto 999
 
@@ -326,6 +327,13 @@ c                                Anderson density extrapolation aqueous species 
       else if (eos(id).eq.16) then 
 c                                DEW/HKF aqueous species formulation
          gval = ghkf (id)
+         goto 999
+
+      else if (eos(id).eq.17) then
+c                                read SGTE data and evaluate EOS after Brosh '07,'08:
+c                                ecrg's implementation after Saxena & Eriksson 2015
+c                                (quasi-harmonic terms are dodgy)
+         gval = gmet2 (id)
          goto 999
 
       end if 
@@ -890,7 +898,7 @@ c                                b2 = ln(v0)
 
          return
 
-      else if (ieos.eq.12.or.ieos.eq.14) then 
+      else if (ieos.eq.12.or.ieos.eq.14.or.ieos.eq.17) then 
 c                                 calphad format, don't do anything.
          return 
 
@@ -2420,7 +2428,7 @@ c----------------------------------------------------------------------
 c                               Stixrude's EoS, Aq, CALPHAD exit without
 c                               doing anything
       if (ieos.eq. 5.or.ieos.eq. 6.or.ieos.eq.11.or.ieos.eq.12.or.
-     *    ieos.eq.14.or.ieos.eq.15) then 
+     *    ieos.eq.14.or.ieos.eq.15.or.ieos.eq.17) then 
           
           return
 
@@ -8197,10 +8205,10 @@ c-----------------------------------------------------------------------
       double precision gg, dg
 
       double precision omega, hpmelt, slvmlt, gmelt, gfluid, gzero,
-     *                 gex, gfesi, gfesic, gfecr1, gerk, ghybrid
+     *                 gex, gfesi, gfesic, gfecr1, gerk, ghybrid, gfes
 
       external omega, hpmelt, slvmlt, gmelt, gfluid, gzero, gex, gfesi, 
-     *         gfesic, gfecr1, gerk, ghybrid
+     *         gfesic, gfecr1, gerk, ghybrid, gfes
 
       integer jend
       common/ cxt23 /jend(h9,m4)
@@ -8421,6 +8429,12 @@ c                                 MRK silicate vapor
          end do 
 
          gg = gg + gerk(y)
+
+      else if (ksmod(id).eq.42) then 
+c                                 ------------------------------------
+c                                 Fe-S fluid (Saxena & Eriksson 2015)
+c         print *, 'gsol1: y: ', y(2)
+         gg =  gfes(y(2),g(jend(id,3)),g(jend(id,4)))
 
       else 
 
@@ -8800,7 +8814,8 @@ c                                 redlich kistler is a special case
                if (wkl(3,j,i,id).eq.0d0.or.wkl(4,j,i,id).eq.0d0.or.
      *             wkl(5,j,i,id).eq.0d0) then
 
-                   wl(j,i) = wkl(1,j,i,id) + t*wkl(2,j,i,id)
+                   wl(j,i) = wkl(1,j,i,id) + t*wkl(2,j,i,id) + 
+     *                                wkl(6,j,i,id)*p
                else
                    wl(j,i) = wkl(1,j,i,id) + t*wkl(2,j,i,id) + 
      *                   4d0*((-1d0*wkl(5,j,i,id) - 
@@ -14813,6 +14828,258 @@ c                             allocate coefficients for 2nd term in EoS
       gterm2 = b20*thermo(1,id)/(b2-1d0)*((t1+b2*p/b20)**t2 - t1**t2)
 
       end function gterm2
+      
+      
+      double precision function gmet2 (id)
+c----------------------------------------------------------------
+c EOS of Saxena & Eriksson (2015)a on Fe-S. 
+c
+c This is a variant of Brosh et al., 2007, 2008; 
+c      see Saxena & Eriksson (2015)b on the pure Fe system. 
+c BUT in S&E (2015)a, the quasi-harmonic terms omit N (a.p.f.u.).
+c This makes no theoretical sense, but lets us reproduce the 
+c results of the Fe-S models. 
+c
+c For the cold compression part, I've used only coefficient
+c c4, not the full c2-c5 formulation. This should make no 
+c significant difference for Earth pressures (Fei & Brosh 2014,
+c confirmed by ecrg in Mathematica). To implement the full version 
+c (Brosh et al 2007 App A), would need to provide atomic numbers.
+c
+c Coded by Eleanor CR Green (ecrg) April 2018.
+c                                 -------------------------------
+c
+c function reads SGTE data format for reference Gibbs free energy
+c and evaluates thermal and pressure EoS
+c
+c to accomodate saxena & eriksson (2015, Fe-S) with minimal effort
+c for eleanor i use the G0 and S0 tags for the sqrt(T) and ln(T)
+c SGTE terms. creating a set of tags specifically for SGTE would 
+c be preferable, but require rewriting nastia's data (which might, 
+c or might not, be worthless), so the SGTE polynomial is now
+c
+c g = c1 + c2*T + c3*T*lnT + c4/T + c5/T**2 + c6/T**3 + c7/T**9  
+c        + c8*T**2 + c9*T**3 + c10*T**4 + c11*T**7 + G0*sqrt(T)
+c        + S0*ln(T)
+c
+c G0 and S0 are loaded into thermo(31...) and thermo(32...) via
+c the ic2p pointer array.
+
+c v0 volume at pr,tr; nn number of atoms; gam0 Grüneisen parameter;
+c tet0 Enstein temperature; b1,dd1,b0,dd0 fitting coefficients;
+c Bo bulk modulus; Bpo pressure derivative of bulk modulus
+
+c                                           JADC, 12/3/2017
+c-----------------------------------------------------------------
+      implicit none
+      include 'perplex_parameters.h'
+
+      double precision thermo,uf,us
+      common/ cst1 /thermo(k4,k10),uf(2),us(h5)
+
+      integer ltyp,lct,lmda,idis
+      common/ cst204 /ltyp(k10),lct(k10),lmda(k10),idis(k10)
+
+      double precision p,t,xco2,u1,u2,tr,pr,r,ps
+      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
+
+      integer id, nn, cc, ndum, cqh
+
+      double precision a,b,c,d,e,f,g,h,i,j,k,l,m
+      double precision v0,gam0,tet0,b1,dd1,b0,dd0,Bo,Bpo,beta,pp,tc
+      double precision x4t,gamNx,gamN1,ccc,gc,x2t,gqh,tet
+      double precision ib,ifunc
+      double precision gmagn,tau,ff,dterm     
+      double precision gsgte,gsgte0,sr,hr,cpr
+      double precision gqhp0,sqhr,hqhr,cpqhr,difc
+      double precision xn,gamN
+      
+
+c----------------------------------------------------------------------
+
+c                             allocate coefficients for EoS
+c                             and magnetic term
+      gam0 = thermo(12,id)
+      nn = thermo(13,id)
+      tet0 = thermo(14,id)
+      b0 = thermo(15,id)
+      dd0 = thermo(16,id)
+      b1 = thermo(17,id)
+      dd1 = thermo(18,id)
+      Bo = thermo(19,id)
+      Bpo = thermo(20,id)
+      v0 = thermo(22,id)
+      tc = thermo(23,id)
+      beta = thermo(24,id)
+      pp = thermo(25,id)
+      
+c --------------------------------
+
+c                             cold compression term (c4 only)
+      cc = 4
+      x4t = xn (cc,Bo,Bpo,p)
+      gamNx = gamN (cc,x4t,Bpo)
+      gamN1 = gamN (cc,1d0,Bpo)
+      ccc = gamNx - gamN1
+      gc = Bo*v0*ccc
+
+c -----------
+c                             quasi-harmonic term
+      ndum = 1    ! dummy a.p.f.u.: S&E15 use n0=1 for all end-members
+      cqh = 2   ! coefft in Brosh et al (2007) Xn function 
+      x2t = xn (cqh,Bo/(1d0+dd0),b0,p)
+      gamNx = gamN (cqh,x2t,b0)
+      gamN1 = gamN (cqh,1d0,b0)
+      tet = tet0 * dexp( gam0/(1d0 + dd0) * (gamNx - gamN1) )
+      gqh = 3d0*ndum*r*t*dlog(1d0 - dexp(-tet/t))
+
+
+c -----------
+c                             interpolating function:
+c                             interpolate between SGTE cp at 1atm 
+c                             and QH model at high P.
+      ib = dsqrt(1d0 + 2d0*b1*(1d0 + dd1)*p/Bo)
+      ifunc = 1d0/(1d0+b1) * (b1+ib) * dexp( (1d0-ib) / b1 )      
+      
+c -----------
+c                             Inden-Hillert-Jarl magnetic contribution 
+c                                          (I assume; S&E15 don't say)
+      if (tc.eq.0D0.or.pp.eq.0D0) then
+c                             no magnetic contribution
+          gmagn = 0D0
+      else if (tc.lt.0D0) then 
+          gmagn = 0D0
+c               neglect magnetic contribution: small at T of interest,
+c               avoids -ve Log      
+      else                
+          tau = t/tc
+          dterm = 0.4604444444d0 + 0.7318935837d0*(1d0/pp - 1d0)
+          if (tau.lt.1D0) then
+            ff = 1d0 - (79d0/(140d0*tau*pp) + 0.9537223340*(1d0/pp-1d0)*
+     *               (tau**3/6d0 + tau**9/135d0 + tau**15/600d0))/dterm
+          else
+            ff = -(1d-1/tau**5 + 3.1746031746d-3/tau**(15) +
+     *                  6.6666666666d-4/tau**(25))/dterm                  
+          end if     
+          gmagn = r*t*dlog(beta+1D0)*ff                   
+      end if
+
+c -----------
+c                             (Gqh(t,p0) - Gsgte(t,p0)) component
+ 
+c                             allocate polynomial coeffiecients for
+c                             reference Gibbs free energy function
+      a = thermo(1,id)
+      b = thermo(2,id)
+      c = thermo(3,id)
+      d = thermo(4,id)
+      e = thermo(5,id)
+      f = thermo(6,id)
+      g = thermo(7,id)
+      h = thermo(8,id)
+      i = thermo(9,id)
+      j = thermo(10,id)
+      k = thermo(11,id)
+      l = thermo(31,id)
+      m = thermo(32,id)
+ 
+c                          read SGTE data 
+      gsgte = a + b*t + c*t*dlog(t) + d/t + e/t**2 + f/t**3 
+     *                + g/t**9 + h*t**2 + i*t**3 + j*t**4 + k*t**7
+     *                + l*dsqrt(t) + m*dlog(t)
+c                          check for transitions:
+      if (ltyp(id).ne.0) call calpht (t,gsgte,lmda(id),lct(id)) 
+      
+c                    sgte g,h,s,cp values at reference T
+      gsgte0 = a + b*tr + c*tr*dlog(tr) + d/tr + e/tr**2 + f/tr**3 +
+     *            g/tr**9 + h*tr**2 + i*tr**3 + j*tr**4 + k*tr**7
+     *           + l*dsqrt(tr) + m*dlog(tr)
+      sr = -b - c*dlog(tr) - c + d/tr**2 + 2d0*e/tr**3 + 
+     *            3d0*f/tr**4 + 0.9D1*g/tr**10 - 2d0*h*tr - 
+     *            3d0*i*tr**2 - 0.4D1*j*tr**3 - 0.7D1*k*tr**6 -
+     *            m/tr - 0.5D0/dsqrt(tr)
+      hr = gsgte0 + tr*sr
+      cpr = -c - 2d0*d/tr**2 - 6d0*e/tr**3 - 12d0*f/tr**4 - 9d1*g/tr**10
+     *        - 2d0*h*tr - 6d0*i*tr**2 - 12d0*j*tr**3 - 42d0*k*tr**6
+     *        + m/tr + 0.25d0/dsqrt(tr)
+
+c                    quasi-harmonic model values           
+      gqhp0 = 3d0*ndum*r*t*dlog(1d0 - dexp(-tet0/t))  ! at t,p0
+      sqhr = 3d0*ndum*r*tet0/tr/(dexp(tet0/tr) - 1d0) - 
+     *                     3d0*ndum*r*dlog(1d0 - dexp(-tet0/tr))
+      hqhr = 3d0*ndum*r*tet0/(dexp(tet0/tr) - 1d0)
+      cpqhr = 3d0*ndum*r*tet0**2/tr**2*dexp(-tet0/tr)/
+     *                    (1d0 - dexp(-tet0/tr))**2
+     
+      if (t.lt.tr) then
+             difc = t**2/(2D0*tr)*(cpr - cpqhr)        
+      else          
+             difc = -(gsgte - hr + t*sr) + (gqhp0 - hqhr + t*sqhr) 
+     *                + (t-tr/2D0)*(cpr-cpqhr)
+      end if      
+
+c -----------
+c                             assemble G
+      gmet2 = gc + gqh + gsgte - gqhp0 + difc*(1d0 - ifunc) + gmagn 
+ 
+      end function gmet2
+c----------------------------------------------------------------------
+
+c----------------------------------------------------------------------    
+      double precision function gamN (n,xt,Bpo)
+c----------------------------------------------------------------
+c     Used in the Brosh et al (2007) equation of state.      
+
+      implicit none
+      integer n,k,bin(n+1)
+      double precision xt,Bpo,an,kk(n+1),kr,bnk,dk
+c -----------  
+c                             binomial coeffts for n=2->n=5
+      if (n.eq.2) then
+            bin = (/ 1,2,1 /)
+      else if (n.eq.3) then      
+            bin = (/ 1,3,3,1 /)
+      else if (n.eq.4) then 
+            bin = (/ 1,4,6,4,1 /)
+      else if (n.eq.5) then     
+            bin = (/ 1,5,10,10,5,1 /)
+      else
+            write (*,*) 'rlib:gamN: illegal n'
+            stop      
+      end if 
+      
+      an = (real(n)-1d0)/(3d0*Bpo-1d0)
+      
+      do k = 0, n
+          kr = real(k)
+          bnk = real(bin(k+1))
+          if (k.eq.3) then
+                dk = -3d0*dlog(xt)
+          else
+                dk = xt**(3d0-kr) * kr/(kr-3d0)      
+          end if
+          kk(k+1) = bnk * (an - 1d0)**(n-k) * dk
+      end do      
+
+      gamN = 3d0 / (an**(n-1) * real(n)) * sum(kk)
+          
+      end function gamN
+c----------------------------------------------------------------------
+
+c----------------------------------------------------------------------    
+      double precision function xn (n,Bo,Bpo,p)
+c----------------------------------------------------------------
+c     Used in the Brosh et al (2007) equation of state.      
+
+      implicit none
+      double precision an,Bo,Bpo,p
+      integer n
+c -----------     
+      an = (n-1d0)/(3d0*Bpo-1d0)
+      xn = 1d0/(1d0 - an + an*(1d0 + n/(3*an) * p/Bo)**(1d0/real(n)))
+      end function xn
+c----------------------------------------------------------------------
+      
 
       subroutine gpmelt (g,id)
 c----------------------------------------------------------------------
@@ -17245,9 +17512,9 @@ c-----------------------------------------------------------------------
       integer k,id,ids
 
       double precision gzero, dg, gerk, gph, gproj, gcpd, gfesi,
-     *                 gfecr1, gfesic
+     *                 gfecr1, gfesic, gfes
 
-      external gzero, gerk, gproj, gcpd, gfesi, gfecr1, gfesic
+      external gzero, gerk, gproj, gcpd, gfesi, gfecr1, gfesic, gfes
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -17355,7 +17622,12 @@ c                                 because it sets lrecip(id) = true.
      *                     ksmod(ids))
 
           end if 
-
+          
+      else if (ksmod(ids).eq.42) then 
+c                                 Fe-S fluid (Saxena & Eriksson 2015)
+            gph = gfes(xco(jco(id)+1), gproj (jend(ids,3)), 
+     *                                 gproj (jend(ids,4)) )
+     
       else
 c                                 normal models (configurational 
 c                                 entropy fixed, excess function
@@ -17617,10 +17889,10 @@ c-----------------------------------------------------------------------
       double precision gval, dg, g0(m4)
 
       double precision gex, gfesi, gfesic, gerk, gproj, ghybrid, gzero,
-     *                 gfecr1, gcpd
+     *                 gfecr1, gcpd, gfes
 
       external gerk, gzero, gex, gfesi, gfesic, gproj, ghybrid, 
-     *         gcpd
+     *         gcpd, gfes
 
       integer icomp,istct,iphct,icp
       common/ cst6 /icomp,istct,iphct,icp
@@ -17910,6 +18182,18 @@ c                                 MRK silicate vapor
                id = id + 1
 
             end do  
+
+         else if (ksmod(i).eq.42) then 
+c                                 Fe-S fluid (Saxena & Eriksson 2015)
+c           print *, 'gall: y: ', (1-xco(jco(id)+1))
+            do j = 1, jend(i,2)
+            
+               g(id) = gfes((1-xco(jco(id)+1)),g(jend(i,3)),
+     *                                         g(jend(i,4)))
+  
+               id = id + 1
+
+            end do
 
          end if 
 
@@ -19540,10 +19824,11 @@ c-----------------------------------------------------------------------
       double precision dg, g, gso(nsp), gamm0
 
       double precision omega, hpmelt, gmelt, gfluid, gzero, aqact,
-     *                 gex, slvmlt, gfesi, gcpd, gerk, gfecr1, ghybrid
+     *                 gex, slvmlt, gfesi, gcpd, gerk, gfecr1, ghybrid,
+     *                 gfes
 
       external gphase, omega, hpmelt, gmelt, gfluid, gzero, gex, slvmlt,
-     *         gfesi, gerk, gfecr1, ghybrid, gcpd, aqact
+     *         gfesi, gerk, gfecr1, ghybrid, gcpd, aqact, gfes
 
       integer jend
       common/ cxt23 /jend(h9,m4)
@@ -19795,6 +20080,12 @@ c                                 MRK silicate vapor
             end do 
 
             g = g + gerk(y)
+
+         else if (ksmod(id).eq.42) then 
+c                                 ------------------------------------
+c                                 Fe-S fluid (Saxena & Eriksson 2015)
+            g = gfes(y(2), gcpd (jend(id,3),.true.), 
+     *                      gcpd (jend(id,4),.true.) )
 
          else if (ksmod(id).eq.0) then 
 c                                 ------------------------------------
@@ -20376,3 +20667,273 @@ c                                 a non-zero prismatic vertex.
       end do 
 
       end
+      
+           
+      
+      double precision function gfes (y,g1,g2)
+c-----------------------------------------------------------------------
+c gfes returns the Gibbs free energy for Fe-S fluid after 
+c Saxena & Eriksson 2015. 
+
+c coded by ecrg Dec 2017 with cribbing from the Fe-Si models
+
+c    y   - the bulk S mole fraction
+c    g1 - free energy of S liq
+c    g2 - free energy of Fe liq
+
+c-----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      logical done
+
+      integer itic 
+
+      double precision g1, g2, y, x, g00, g01, g02, g04, g10, g20, g30,
+     *                 rt, xmin, xmax, dg, d2g, dx, gfes0, g0
+
+      double precision p,t,xco2,u1,u2,tr,pr,r,ps
+      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+c----------------------------------------------------------------------
+
+      if (y.le.nopt(5).or.y.ge.1d0-nopt(5)) then 
+c                          endmember compositions, no order possible
+         gfes =  y*g2 + (1d0 - y)*g1
+         return
+      end if 
+
+
+      g00 = -104888.1d0 + 3.3884608d-1*t + 9.489d-2*p 
+     *                                      + 3.4769476d-5*t*p
+c                       or   + 1.7687597d-1*p - 8.5431919d-6*t*p in green2.dat   
+      g01 = -8626.2578d0 
+      g02 = 72954.295d0 - 26.1780d0*t 
+      g04 = 25106d0
+      g10 = 35043.323d0 - 9.880908d0*t - 5.1303766d-1*p
+     *                                      - 2.5038372d-7*t*p
+      g20 = -23972.273d0
+      g30 = 30436.822d0
+
+      rt  = r*t
+
+c                          max/min concentrations of ordered species.
+c                          for y=b/(a+b) and a-b formation limited
+c                          by b, 
+c                          xmax = (2 y Zab Zba)/
+c                                   (Zaa Zab - y Zaa Zab - y Zaa Zba + 2 y Zab Zba);
+c                          the case below is for ZFeFe = ZSS = 6;  ZFeS = ZSFe = 2 
+      xmin = nopt(5)
+
+      if (y.lt.0.5d0) then 
+         xmax = 2.d0*y/(3d0 - 4d0*y) - nopt(5)
+      else
+         xmax = 2d0*(1d0-y)/(3d0 - 4d0*(1d0-y)) - nopt(5)
+      end if      
+       
+c                                 get 1st and 2nd derivatives
+      x = xmax 
+
+      call dgfes (dg,d2g,y,x,rt,g00,g01,g02,g04,g10,g20,g30)
+
+      done = .false.
+c                                 find starting point for newton-raphson
+c                                 search
+      if (dg.gt.0d0) then 
+c                                 max ordered concentration
+         dx = -dg/d2g
+
+      else 
+c                                 most disordered concentration
+         x = xmin
+
+         call dgfes (dg,d2g,y,x,rt,g00,g01,g02,g04,g10,g20,g30)         
+
+         if (d2g.gt.0d0) then 
+c                                 sanity check
+            dx = -dg/d2g
+            
+         else                
+c                                 full disordered - shouldn't be in here
+            done = .true.            
+
+         end if
+
+      end if 
+c                                 iteration loop
+      if (.not.done) then                   
+c                                 increment and check bounds 
+         call pcheck (x,xmin,xmax,dx,done)
+c                                 iteration counter 
+         itic = 0
+
+         do
+
+            call dgfes (dg,d2g,y,x,rt,g00,g01,g02,g04,g10,g20,g30)
+
+            dx = -dg/d2g 
+
+            call pcheck (x,xmin,xmax,dx,done)
+
+            if (done) then 
+
+               exit
+
+            else 
+
+               itic = itic + 1
+               if (itic.gt.iopt(21)) exit
+
+            end if
+
+         end do 
+
+      end if 
+
+      gfes = gfes0 (y,x,g1,g2,rt,g00,g01,g02,g04,g10,g20,g30)
+
+      if (iopt(17).ne.0) then 
+c                                 if order_check is on, compare to
+c                                 max order g
+         g0 = gfes0 (y,xmax,g1,g2,rt,g00,g01,g02,g04,g10,g20,g30)
+         if (gfes.gt.g0) gfes = g0 
+c                                 min order g
+         g0 = gfes0 (y,xmin,g1,g2,rt,g00,g01,g02,g04,g10,g20,g30)
+         if (gfes.gt.g0) gfes = g0 
+
+      end if 
+
+      end 
+      
+      
+      
+      subroutine dgfes (dg,d2g,y,x,rt,g00,g01,g02,g04,g10,g20,g30)
+c-----------------------------------------------------------------------
+c dgfes first and second derivatives of gfes with respect to the ordered
+c species concentration (x). 
+
+c The expressions for dg and d2g are unwieldy, mainly due to the 
+c composition-dependent coordination in the modified QC model. 
+c To (greatly) reduce the length of the expressions I've directly 
+c incorporated model values of coordination numbers, viz:
+c   ZFeFe = ZSS = 6;  ZFeS = ZSFe = 2
+
+c    y  - the bulk Fe mole fraction
+c-----------------------------------------------------------------------
+      implicit none
+
+      double precision y, x, rt, pre, pre2, lgt, bod, bod2, frcs, dg, 
+     *                 d2g, g00, g01, g02, g04, g10, g20, g30
+c-----------------------------------------------------------------------
+
+      pre = 3d0/(32d0*(1d0 + 2d0*x)**2d0) 
+            
+      
+      lgt = -48d0*rt*dlog( (2d0 + x - 2d0*y - 4d0*x*y)/  
+     *                              (2d0*(1d0 + x - y - 2d0*x*y)**2d0) )
+     *        + 32d0*rt*dlog( -1d0*x/(2d0*(-1d0 - x + y + 2d0*x*y)*
+     *                                             (y - x + 2d0*x*y)) )
+     *        - 48d0*rt*dlog( (-3d0*x + 2d0*y + 4d0*x*y)/
+     *                                      (2d0*(y - x + 2*x*y)**2d0) ) 
+      
+                                                
+      bod = 16d0*(g00 + g10 + g20 + g30 + g01*y - g10*y - 2d0*g20*y 
+     *             - 3d0*g30*y + g02*y**2 + g20*y**2 + 3d0*g30*y**2 
+     *             - g30*y**3 + g04*y**4)
+     *       + 16d0*x*(g10 + 2d0*g20 + 3d0*g30 - 6d0*g02*y - 4d0*g10*y 
+     *           - 10d0*g20*y - 18d0*g30*y + 8d0*g02*y**2 + 8d0*g20*y**2 
+     *           + 27d0*g30*y**2 - 12d0*g04*y**3 - 12d0*g30*y**3 
+     *           + 16d0*g04*y**4 + g01*(4d0*y - 3d0))
+     *       + (4d0*x**2)*(4d0*g10 + 11d0*g20 + 21d0*g30 - 16d0*g10*y 
+     *           - 64d0*g20*y - 153d0*g30*y  + 162d0*g04*y**2 
+     *           + 8d1*g20*y**2 + 324d0*g30*y**2 - 48d1*g04*y**3 
+     *           - 192d0*g30*y**3 + 352d0*g04*y**4 
+     *           + 4d0*g01*(-3d0+4d0*y) + g02*(27d0-96d0*y+8d1*y**2))
+     *       + (8d0*x**3)*(7d0*g30 + 2d0*g20*(1d0 - 4d0*y)**2 
+     *           + 2d0*g02*(3d0 - 4d0*y)**2 - 108d0*g04*y - 66d0*g30*y 
+     *           + 54d1*g04*y**2 + 192d0*g30*y**2 - 864d0*g04*y**3 
+     *           - 16d1*g30*y**3 + 448d0*g04*y**4)
+     *       + (x**4)*(-12d0*g30*(-1d0 + 4d0*y)**3 
+     *                     + (g04*(-3d0 + 4d0*y)**3d0)*(-15d0 + 68d0*y))
+     *       + (8d0*g04*x**5)*(3d0 - 4d0*y)**4
+      
+      dg = pre*(bod + lgt)  
+      
+      
+      pre2 = 3d0/(32d0*(1d0 + 2d0*x)**3d0)  
+      
+      frcs = 3d0*(3d0 + x - (7d0 + 6d0*x)*y + (4d0 + 8d0*x)*y**2)/ 
+     *                 ((-1d0 - x + y + 2d0*x*y)*(-2 - x + (2 + 4*x)*y))
+     *      + 3d0*(3d0*x - (1d0 + 1d1*x)*y + (4d0 + 8d0*x)*y**2)/
+     *                   ((-x + y + 2d0*x*y)*(-3d0*x + (2d0 + 4d0*x)*y))
+     *      - 2d0*(x**2 + y - 4d0*y*x**2 + (4d0*x**2 - 1d0)*y**2)/
+     *                    (x*(-1d0 - x + y + 2d0*x*y)*(y - x + 2d0*x*y))
+    
+      bod2 = -16d0*(4d0*g00 + 3d0*g01 + 3d0*g10 + 2d0*g20 + g30 
+     *                                          + 6d0*g02*y + 2d0*g20*y 
+     *              + 6d0*g30*y - 4d0*g02*y**2 - 4d0*g20*y**2 
+     *                                                  - 15d0*g30*y**2
+     *              + 12d0*g04*y**3 + 8d0*g30*y**3 - 12d0*g04*y**4) 
+     *       + 24d0*x*(g20*(1d0 - 4d0*y)**2 + g02*(3d0 - 4d0*y)**2 
+     *              + 6d0*g04*((3d0 - 4d0*y)**2)*y**2
+     *                           - 3d0*g30*((1d0 - 4d0*y)**2)*(y - 1d0))
+     *       + 24d0*(x**2)*(7d0*g30 + 2d0*g20*(1d0 - 4d0*y)**2 
+     *                                      + 2d0*g02*(3d0 - 4d0*y)**2 
+     *              - 108d0*g04*y - 66d0*g30*y + 54d1*g04*y**2 
+     *                                                + 192d0*g30*y**2 
+     *              - 864d0*g04*y**3 - 16d1*g30*y**3 + 448d0*g04*y**4)
+     *       + 4d0*(x**3)*(8d0*g02*(3d0 - 4d0*y)**2 
+     *            + 8d0*((1d0 - 4d0*y)**2)*(g20 + 5d0*g30 - 11d0*g30*y)
+     *              + 3d0*g04*((3d0 - 4d0*y)**2)*
+     *                                   (15d0 - 104d0*y + 128d0*y**2))
+     *       + 12d0*(x**4)*(3d0*g04*((4d0*y - 3d0)**3)*(12d0*y - 5d0) 
+     *                                      - 4d0*g30*(4d0*y - 1d0)**3)
+     *       + 48d0*g04*(x**5)*(3d0 - 4d0*y)**4
+    
+      d2g = pre2*(bod2 + 16d0*(1d0 + 2d0*x)*rt*frcs - 4d0*lgt)
+
+      end 
+  
+  
+      double precision function 
+     *              gfes0 (y,x,g1,g2,rt,g00,g01,g02,g04,g10,g20,g30)
+c-----------------------------------------------------------------------
+c Called by gfes
+
+      implicit none 
+
+      double precision y, x, g1, g2, rt, g00, g01, g02, g04, g10, 
+     *                 g20, g30, gmech, tdscnf, gex
+c-----------------------------------------------------------------------
+
+      gmech = y*g2 + (1d0 - y)*g1
+      
+      tdscnf =  (rt/(2d0 + 4d0*x)) *   
+     *            (2d0*(1d0 + 2d0*x)*(y - 1d0)*dlog(1d0 - y) - 2d0*
+     *                                          (1d0 + 2d0*x)*y*dlog(y) 
+     *             - 6d0*x*dlog(-(x/(2d0*(-1d0-x+y+2d0*x*y)*
+     *                                                (-x+y+2d0*x*y)))) 
+     *             + 3d0*(-2d0-x+(2d0+4d0*x)*y)*
+     *                    dlog((2d0+x-2d0*(1d0+2d0*x)*y)/
+     *                                      (2d0*(1d0+x-y-2d0*x*y)**2)) 
+     *             - 3d0*(-3d0*x+(2d0+4d0*x)*y)*
+     *                    dlog((-3d0*x+(2d0+4d0*x)*y)/
+     *                                       (2d0*(-x+y+2d0*x*y)**2)))
+     
+      gex = ( 3d0*x/(4d0*(8d0 + 16d0*x)) ) *  
+     *            (16d0*g00 + 8d0*g10*(2d0 + x - 2d0*(1d0 + 2d0*x)*y) 
+     *             + 4d0*g20*(2d0 + x - 2d0*(1d0 + 2d0*x)*y)**2 
+     *                              + 8d0*g01*((2d0 + 4d0*x)*y - 3d0*x) 
+     *             + 4d0*g02*((2d0 + 4d0*x)*y - 3d0*x)**2 
+     *                               + g04*((2d0 + 4d0*x)*y - 3d0*x)**4 
+     *             - 2d0*g30*((2d0 + 4d0*x)*y - x - 2d0)**3)
+     
+      gfes0 = gmech - tdscnf + gex
+
+      end         

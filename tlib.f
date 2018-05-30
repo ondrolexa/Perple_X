@@ -19,7 +19,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a)') 
-     *      'Perple_X version 6.8.2, source updated May 24, 2018.'
+     *      'Perple_X version 6.8.3, source updated May 30, 2018.'
 
       end
 
@@ -36,7 +36,7 @@ c----------------------------------------------------------------------
       if (new.eq.'008'.or.new.eq.'011'.or.new.eq.'670'.or.
      *    new.eq.'672'.or.new.eq.'673'.or.new.eq.'674'.or.
      *    new.eq.'675'.or.new.eq.'676'.or.new.eq.'678'.or.
-     *    new.eq.'679'.or.new.eq.'682') then 
+     *    new.eq.'679'.or.new.eq.'682'.or.new.eq.'683') then 
 
          chksol = .true.
 
@@ -3595,7 +3595,7 @@ c                                 tags for thermo data i/o
 c     data estrg/'eG0','eS0','eV0','ec1','ec2','ec3','ec4','ec5','ec6',
 c    *           'ec7','eb1','eb2','eb3','eb4','eb5','eb6','eb7','eb8'/
 c                                 tags for interaction coefficients (Redlich-Kister polynomial)
-      data wstrg/'w0 ','wT ','wP ','wP1','wP2'/
+      data wstrg/'w0 ','wT ','wP ','wP1','wP2','wP0'/
 c                                 fluid eos species
       data specie /
      *      'H2O ','CO2 ','CO  ','CH4 ','H2  ','H2S ','O2  ',
@@ -3852,7 +3852,7 @@ c                                 assign data
             ok = .false.
 c                                 =====================================
 c                                 thermo data 
-            if (ieos.eq.12.or.ieos.eq.14) then
+            if (ieos.eq.12.or.ieos.eq.14.or.ieos.eq.17) then
 c                                 calphad format
                do i = 1, k4
                   if (key.eq.strgs(i)) then 

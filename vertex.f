@@ -2130,7 +2130,7 @@ c                               in the fractionation list
 
                   if (quit) exit 
 c                                else open a new file
-                  ifrct = i
+                  ifrct = ifrct + 1
 
                   ifr(ifrct) = kkp(j)
 

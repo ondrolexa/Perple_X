@@ -1,4 +1,4 @@
-682 DO NOT DELETE THIS LINE
+683 DO NOT DELETE THIS LINE
 
                              FOR MODEL DEFINITIONS AND REFERENCES READ THE MODEL COMMENTARY OR REFER TO 
                              THE GLOSSARY AT:
@@ -31,6 +31,7 @@
                              39    - generic hybrid fluid EoS
                              40    - Silicate fluid (MRK)
                              41    - COH fluid (hybrid MRK)
+                             42    - FeS liquid (modified QC), Saxena & Eriksson 2015 with ECRG corrections
 
                              Character data is format free.
 
@@ -11649,7 +11650,7 @@ end_excess_function
 2 2.                                  2 species, site multiplicity = 2.
 z(fe) = 1 fwd 
 
-end_of_model             
+end_of_model
                       --------------------------------------------------------
 begin_model
 
@@ -11801,4 +11802,50 @@ end_van_laar_sizes
 
 end_of_model
                       --------------------------------------------------------
+begin_model
+                              Pyrrhotite, Saxena & Eriksson 2015
+                              ECRG, 5/2018
 
+Po(SE)                       | solution name.
+abbreviation Po
+full_name    hT-pyrrhotite
+
+2                            | model type: Compound energy formalism
+2                            | number of endmembers
+APyrr 
+SVa
+0 0                          | endmember flags
+0. 1. .1 0                   | subdivision range, imod = 0 -> cartesian subdivision
+begin_excess_function
+Wk(APyrr SVa) 
+w0 = -225830.67  wT = 26.357836  wP0 = -0.400228
+end_excess_function 
+                             | wP0 is a coefft of P
+1                            | 1 site entropy model 
+2 1.                         | 2 species, site multiplicity of 1
+z(SVa) = 1 SVa
+end_of_model
+                      --------------------------------------------------------
+begin_model                
+                              FeS-S fluid, Saxena & Eriksson 2015
+                              ECRG, 5/2018
+FeS_liq
+abbreviation Melt
+full_name    liquid
+
+42                          | model type: modified QC with composition-dependent coordination, binary only.
+2                                 | no. independent end-members
+FeLiq SLiq                        | endmember names
+
+0 0                          | endmember flags
+
+0. 1. .1 0                   | subdivision range, imod = 0 -> cartesian subdivision
+
+                             | dummy excess function
+begin_excess_function
+w(FeLiq SLiq) 0. 0. 0.
+end_excess_function 
+
+0                               0 site entropy model    | entropy function is hard-wired
+
+end_of_model

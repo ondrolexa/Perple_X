@@ -79,7 +79,7 @@ c                                 component conversion
 
          if (eof) exit
 
-         if (ieos.eq.12.or.ieos.eq.14) then 
+         if (ieos.eq.12.or.ieos.eq.14.or.ieos.eq.17) then 
             write (*,1010) name
             cycle
          end if 

@@ -1065,9 +1065,11 @@ c                                 generic hybrid fluid (39)
             ysp(k,jd) = y(k)
          end do
 
-      else if (ksmod(id).eq.29.or.ksmod(id).eq.32) then 
+      else if (ksmod(id).eq.29.or.ksmod(id).eq.32.or.
+     *                                    ksmod(id).eq.42) then 
 c                                 BCC Fe-Si Lacaze and Sundman (29) 
 c                                 BCC Fe-Cr Andersson and Sundman (32)
+c                                 Fe-S fluid Saxena & Eriksson (42)
          spct(id) = 4
 c                                 need to correct routines to give o/d
          do k = 1, spct(id) 
