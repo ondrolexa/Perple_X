@@ -23,7 +23,7 @@ c----------------------------------------------------------------------
 
       character gprjct*100, dir*100, gname(h9)*10
 
-      double precision gbg(k5,k2), gmus(k5,k2), gxcoor(k18),
+      double precision gbg(k5,k2), gmus(k5,k2), gxcoor(k1),
      *                 xt(k5,mst*msp), bt(k5)
 
       logical oned
@@ -465,7 +465,7 @@ c                                 solution compositions
                   jxco = jxco + 1
                   kxco = jxco + gcoor(ids) - 1
 
-                  if (kxco.gt.k18) call error (61,0d0,k18,'UNSPLT')
+                  if (kxco.gt.k1) call error (61,0d0,k1,'UNSPLT')
 
                   o = 0 
 
