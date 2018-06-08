@@ -3838,6 +3838,8 @@ c----------------------------------------------------------------------
       call prs2xy (i,ids,.true.,bad)
 
       if (bad) return
+c                                June 8, 2018
+      kcoct = jcoct + mcoor(ids)
 
       if (lopt(32).and.ksmod(ids).eq.39) then
 
