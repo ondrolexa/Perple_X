@@ -2,7 +2,7 @@ c   program to read the original hp2010 thermodynamic datafile
 
       program trans
 
-      open (9, file='hp62.dat', status= 'old')
+      open (9, file='tc-ds633.txt', status= 'old')
       open (10,file='junk.dat')
 
       call rdin

@@ -5,7 +5,10 @@ c from before May 2010 to the current format.
 c to run this code you must temporarily modify perplex_parameters such that:
 
 c k5 = max number of components in the data base (<=k0)
-c m7 = number of parameters in a transition (was formerly m7 = 12)
+c m7 = number of parameters in a transition (reduce to value in the data 
+c      base to be translated and modify initialization of tstrg in block data)
+
+c additionally, use/suppress hsc conversion if desired. 
 
 c----------------------------------------------------------------------
 
@@ -44,7 +47,10 @@ c                               assign data files
       call sopen 
 c                               Read THERMODYNAMIC DATA file (N2):
 c                               read the data base header
-      call otopn2 (4)
+c old format top
+c      call otopn2 (4)
+c new format top
+      call topn2 (4)
 
       icomp = icmpn
 c                               lenght of component names

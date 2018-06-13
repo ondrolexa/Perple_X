@@ -5963,12 +5963,14 @@ c----------------------------------------------------------------------
          jnc = 1
          kst = istot + 1
          ldep = ostot
+         ltic = 0
       else 
          jst = 1
          jend = isite
          jnc = 0
          kst = 1
          ldep = istot
+         ltic = ostot - istot 
       end if 
 c                                 was 1,.site
       do i = jst, isite + jnc 
@@ -6042,7 +6044,7 @@ c                                reorder the y2p array:
 
       end if
 
-      do i = kst, ostot
+      do i = kst, ostot - ltic 
 c                                 kill endmembers with the species
 c                                 to be deleted:
          if (jmsol(i,ikill).eq.jkill) kdsol(i) = -3
@@ -6107,7 +6109,6 @@ c                                 value of the dependent endmember counter
       itic = 0
       jtic = 0
       ktic = 0 
-      ltic = 0 
       kill = 0
       
       do i = 1, ostot + norder 
@@ -6117,7 +6118,7 @@ c                                 replacement for istot (itic)
             itic = itic + 1
             if (i.le.istot) then 
                ktic = ktic + 1
-            else if (i.le.ostot) then 
+            else if (i.le.ostot.and.jnc.eq.1) then
                ltic = ltic + 1 
             end if 
 c                                 pointers from new to old endmember index (i2oi)
@@ -6157,7 +6158,7 @@ c                                 reset the species pointers (jmsol)
          end do
       end do 
 
-      ostot = ktic + ltic
+      ostot = istot + ltic
 c                                --------------------------------------
 c                                excess terms:
       itic = 0 

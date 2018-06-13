@@ -531,9 +531,6 @@ c-----------------------------------------------------------------------
 
       double precision ctot2
 
-      integer idegen, idg(k5), jcp, jin(k5)
-      common/ cst315 /idegen, idg, jcp, jin 
-
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
 
@@ -654,16 +651,7 @@ c                                  normalize the composition and free energy
          c2tot(jphct) = ctot2
 
          do j = 1, icp
-
             cp2(j,jphct) = cp2(j,jphct)/ctot2
-
-            do i = 1, idegen
-               if (cp2(idg(i),jphct).ne.0d0) then 
-                  bad = .true.
-                  return
-               end if
-            end do
-
          end do
 
       else 
@@ -1925,7 +1913,7 @@ c----------------------------------------------------------------------
 
       external ffirst
 
-      logical solvus, quit, news, solvnt(1), degen
+      logical solvus, quit, news, solvnt(1)
 
       double precision clamda(*), x(*), slam(h9)
 
@@ -1973,9 +1961,6 @@ c----------------------------------------------------------------------
 
       double precision a,b,c
       common/ cst313 /a(k5,k1),b(k5),c(k1)
-
-      integer idegen, idg(k5), jcp, jin(k5)
-      common/ cst315 /idegen, idg, jcp, jin 
 c----------------------------------------------------------------------
       npt = 0
       nsol = 0
@@ -1987,15 +1972,6 @@ c                                 solvus_tolerance_II, 0.25
       do i = 1, jphct
 
          if (is(i).ne.1) then 
-
-         degen = .false.
-         do j = 1, idegen
-            if (a(idg(j),i).gt.0d0) then
-               degen = .true.
-               exit  
-             end if 
-         end do
-         if (degen) cycle 
 c                                 make a list of found phases:
             id = i + inc
 c                                 currently endmember compositions are not 
@@ -2737,12 +2713,12 @@ c----------------------------------------------------------------------
 
       external ffirst
 
-      integer i, j, id, is(*), jmin(k19), opt, kpt, mpt, iter, tic, 
+      integer i, id, is(*), jmin(k19), opt, kpt, mpt, iter, tic, 
      *        idead
 
       double precision clamda(*), clam(k19), x(*)
 
-      logical stable(k19), solvnt(k19), quit, abort, degen, test
+      logical stable(k19), solvnt(k19), quit, abort, test
 
       integer hcp,idv
       common/ cst52  /hcp,idv(k7)
@@ -2799,9 +2775,6 @@ c----------------------------------------------------------------------
       double precision aqg,q2,rt
       common/ cxt2 /aqg(m4),q2(m4),rt,jnd(m4)
 
-      integer idegen, idg(k5), jcp, jin(k5)
-      common/ cst315 /idegen, idg, jcp, jin
-
       integer ikp
       common/ cst61 /ikp(k1)
 
@@ -2829,19 +2802,6 @@ c                                 point.
          id = hkp(i)
 
          if (is(i).ne.1) then
-c                                 if the system is degenerate, eliminate
-c                                 any points that contain the missing 
-c                                 component, is this helpful?
-            degen = .false.
-
-            do j = 1, idegen
-               if (cp2(idg(j),i).gt.0d0) then 
-                  degen = .true.
-                  exit  
-                end if 
-            end do
-
-            if (degen) cycle 
 c                                 a stable point, add to list
             npt = npt + 1
             jdv(npt) = i

@@ -19,6 +19,10 @@ Holland & Powell, JMG 2011 (TC-DS622)           |<= data base title
 | nta - Na-talc
 | tap - talc-pyrophyllite
 | mic - microcline
+| tan - an unknown variant on the talc endmember
+
+| Additionally the "fact" (ferro-actinolite) endmember has been renamed 
+| "ftr" to maintain consistency with ds5 data files.
 
 |                                                       JADC, March 5, 2018.
 
@@ -110,8 +114,8 @@ begin_makes
  | mthm = 6 hem - 4 mt             | mthm O2 buffer
  | 0 0 0                        
 
- | qfm = 2 mt + 3 q  -3 fa         | qfm O2 buffer
- | 0 0 0                        
+qfm = 2 mt + 3 q  -3 fa         | qfm O2 buffer
+0 0 0                        
 
  |emog = -1 fo - 2 gph + 1 mag + 1/2 en | EMOG O2 buffer
  |0 0 0 
@@ -1470,12 +1474,12 @@ b1 = .328E-4 b5 = 509.0324 b6 = 513000 b7 = -.143E-4 b8 = 7.33
 end
 
  
-tan      EoS = 8 | H= -5900140. 
-MgO(3)SiO2(4)H2O(1)
-GH = -5977361 S0 = 259 V0 = 13.665  
-c1 = 622.2 c3 = -6385500 c5 = -3916.3  
-b1 = .18E-4 b5 = 566.5483 b6 = 430000 b7 = -.144E-4 b8 = 6.17  
-end
+|tan      EoS = 8 | H= -5900140. 
+|MgO(3)SiO2(4)H2O(1)
+|GH = -5977361 S0 = 259 V0 = 13.665  
+|c1 = 622.2 c3 = -6385500 c5 = -3916.3  
+|b1 = .18E-4 b5 = 566.5483 b6 = 430000 b7 = -.144E-4 b8 = 6.17  
+|end
 
  
 clin     EoS = 8 | H= -8908710. 
