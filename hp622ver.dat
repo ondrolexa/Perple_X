@@ -114,8 +114,8 @@ begin_makes
  | mthm = 6 hem - 4 mt             | mthm O2 buffer
  | 0 0 0                        
 
-qfm = 2 mt + 3 q  -3 fa         | qfm O2 buffer
-0 0 0                        
+ | qfm = 2 mt + 3 q  -3 fa         | qfm O2 buffer
+ | 0 0 0                        
 
  |emog = -1 fo - 2 gph + 1 mag + 1/2 en | EMOG O2 buffer
  |0 0 0 

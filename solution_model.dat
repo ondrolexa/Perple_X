@@ -1083,13 +1083,13 @@ begin_model
                                         hed_d           Fe     Ca    Si    dependent
                                         cats            Al     Ca   AlSi   independent
                                         crdi            Cr     Ca   AlSi   independent
-                                        mcess_d         Fe3+   Ca   AlSi   dependent
+                                        cess            Fe3+   Ca   AlSi   independent
 
                                         cenjh           Mg     Mg    Si    independent
                                         mfc_d           Fe     Mg    Si    dependent
                                         mats_d          Al     Mg   AlSi   dependent 
                                         cren_d          Cr     Mg   AlSi   dependent 
-                                        cess            Fe3+   Mg   AlSi   independent
+                                        mcess_d         Fe3+   Mg   AlSi   dependent
 
                                         cfm_d           Mg     Fe    Si    dependent (=cfm)
                                         cfs             Fe     Fe    Si    independent
@@ -1114,8 +1114,8 @@ full_name    clinopyroxene
 5 3                             | number of simplex vertexes
 1                               | number of orphan vertexes
                                 | endmembers on the prismatic vertex
-di      hed_d   cats    crdi    mcess_d
-cenjh   mfc_d   mats_d  cren_d  cess
+di      hed_d   cats    crdi    cess
+cenjh   mfc_d   mats_d  cren_d  mcess_d
 cfm_d   cfs     fats_d  crfs_d  fcess_d
                                 | endmembers on the orphan vertex
 jd
@@ -1146,8 +1146,8 @@ fats_d = 1 cats  - 1 di   + 1 cfm
 cren_d = 1 cenjh + 1 crdi - 1 di
 crfs_d = 1 cfm   + 1 crdi - 1 di 
 
-mcess_d = 1 cess + 1 di  - 1 cenjh
-fcess_d = 1 cess + 1 cfm - 1 cenjh
+mcess_d = 1 cess - 1 di  + 1 cenjh
+fcess_d = 1 cess - 1 di  + 1 cfm 
 
 
 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0    | endmember flags
@@ -1200,8 +1200,8 @@ end_excess_function
 5 1                                 | 3 species on m1, mult = 1
 z(m1,fe)   = 1 cfs
 z(m1,al)   = 1 cats + 1 jd
-z(m1,fe3) = 1 cess
-z(m1,cr)  = 1 crdi
+z(m1,fe3)  = 1 cess
+z(m1,cr)   = 1 crdi
 
 4 1                                 | 4 species on m2, mult. = 1
 z(m2,na)   = 1 jd
