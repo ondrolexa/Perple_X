@@ -56,6 +56,8 @@ elseif nvar == 2 % 2d - table -> 2/3d plot
             c = inputdlg(prompt,dlg,num_lines,def);
             helpdlg('Carefully select contours for labeling. When done, press RETURN while the Graph window is the active window.');
             contours = [str2num(c{1}):str2num(c{3}):str2num(c{2})];
+            % contours = [0.0001, 0.0005, 0.001, 0.005, 0.01, 0.5, 1, 2, 5,
+            % 10, 15, 20, 30, 40]
             [C,h]= contour(x,y,a,contours);clabel(C,h,'manual'); d2 = 1;
  
     end

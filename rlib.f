@@ -4289,14 +4289,18 @@ c                                 warn
                write (*,1000) t, p
                iwarn = iwarn + 1
                if (iwarn.eq.10) call warn (49,r,277,'GFUNC')
-            end if 
+            end if
+
+            g = 0d0 
+
          end if 
       end if 
 
       gfunc = g 
 
 1000  format (/,'**warning ver277** T= ',f8.2,' K P=',f9.1,' bar ',
-     *       'is beyond the limits for',/,'the HKF g function.',/)
+     *       'is beyond the limits for',/,'the HKF g function. The ',
+     *       'function will be zeroed.',/)
 
       end 
 
@@ -17266,6 +17270,17 @@ c                                 off chance they will be used
          end do
 
       end if
+
+      if (lagged.and..not.lopt(39)) then 
+c                                lagged speciation, set 
+c                                refine_endmembers to true.
+            lopt(39) = .true.
+
+            call warn (99,0d0,0,'aq_lagged_speciation is T, but '
+     *                        //'refine_endmembers is F, '//
+     *                          'refine_endmembers set = T (AQIDST)')
+
+      end if 
 c                                open a bad point file for lagged and
 c                                back-calculated speciation calculations
       if (lagged.and.iam.le.2) then

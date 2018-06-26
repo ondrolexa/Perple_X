@@ -1060,6 +1060,8 @@ begin_model
 
                       Reformatted as a prismatic + orphan vertex model. JADC, 5/18
 
+                      Corrected cess composition assumed in the model (mess was assumed previously). JADC, 6/18
+
                       NOTES: 
 
                       to use this the following endmembers must be specified with make 
