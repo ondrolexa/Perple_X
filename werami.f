@@ -1259,7 +1259,8 @@ c                                 write phemgp format
 
       else if (lopt(15).or.dim.eq.1) then 
 c                                 write spreadsheet tab format
-c         prop(5) = prop(6)+prop(8)*2d0+ prop(9)
+         prop(5) = prop(6)+prop(8)*2d0+ prop(9)
+         prop(5) = prop(12)+ prop(13)
 
          write (n5,'(200(g14.6e3,1x))') (var(i),i=1,ivar), 
      *                                  (prop(i),i=1,iprop)
