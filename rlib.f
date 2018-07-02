@@ -135,7 +135,7 @@ c----------------------------------------------------------------------
 
       integer id, j
 
-      double precision g, ndu, vdp
+      double precision g, vdp
 
       double precision thermo,uf,us
       common/ cst1 /thermo(k4,k10),uf(2),us(h5)
@@ -166,15 +166,14 @@ c                                 -sdt
      *      - (thermo(6,id) + thermo(10,id) / t) / t
      *      + thermo(8,id) * dsqrt(t) + thermo(9,id)*dlog(t)
  
-      do j = 1, jmct      
-c                                 -ndu   
+      do j = 1, jmct
+c                                 -ndu
          g = g - vnumu(j,id) * mu(j)
       end do
 c                                 transitions
       vdp = 0d0
-      ndu = 0d0 
 
-      if (lct(id).ne.0) call mtrans (g,vdp,ndu,id)
+      if (lct(id).ne.0) call mtrans (g,vdp,id)
 
       gzero = g
 
@@ -235,7 +234,7 @@ c---------------------------------------------------------------------
 
       logical proj
 
-      double precision ialpha, vt, trv, pth, vdp, ndu, vdpbm3, gsixtr, 
+      double precision ialpha, vt, trv, pth, vdp, vdpbm3, gsixtr, 
      *                 gstxgi, fs2, fo2, kt, gval, gmake, gkomab, kp,
      *                 a, b, c, gstxlq, glacaz, v1, v2, gmet, gmet2,
      *                 gterm2, km, kmk, lnfpur, gaq, ghkf
@@ -524,7 +523,7 @@ c                                 gottschalk.
       gval = gval + vdp
 
 c                                 check for transitions:
-      if (ltyp(id).ne.0) call mtrans (gval,vdp,ndu,id)
+      if (ltyp(id).ne.0) call mtrans (gval,vdp,id)
 
 c                                 check for temperature dependent
 c                                 order/disorder:
@@ -1220,7 +1219,7 @@ c                               saturated components, since these phases
 c                               are already saved in the sat list.
 
 c                               null phase option over-ride
-         if (.not.lopt(37)) goto 90
+c         if (.not.lopt(37)) goto 90
 
          tot = 0d0
 
@@ -1621,7 +1620,7 @@ c                                    SGTE data format
  
       end
  
-      subroutine lamqtz (p,t,g,ndu,ld,id)
+      subroutine lamqtz (p,t,g,ld,id)
 c---------------------------------------------------------------------
 c     calculate the extra energy of a lamdba transition using model
 c     of helgeson et al 1978 (AJS). eq. (114) (corrected for the
@@ -1652,7 +1651,7 @@ c---------------------------------------------------------------------
 
       integer id,ld
 
-      double precision p,t,ps,g,ndu,pdv
+      double precision p,t,ps,g,pdv
  
       double precision thermo,uf,us
       common/ cst1 /thermo(k4,k10),uf(2),us(h5)
@@ -1693,7 +1692,7 @@ c                                 is already in:
      *      + s * (ba + aa*ca*s) * (t-tr)
      *                           * dlog ((aa+p/s) / (aa + ps/s))
  
-      g = g + pdv + ndu
+      g = g + pdv
  
       end
  
@@ -4256,9 +4255,17 @@ c----------------------------------------------------------------------
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 
+      logical abort1
+      common/ cstabo /abort1
+
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+
       save iwarn
       data iwarn/0/
 c---------------------------------------------------------------------
+      abort1 = .false.
+
       if (rho.gt.1d0) then
 c                                 region III, rho = 1 g/cm3, g = 0
          g = 0d0
@@ -4291,9 +4298,12 @@ c                                 warn
                if (iwarn.eq.10) call warn (49,r,277,'GFUNC')
             end if
 
-            g = 0d0 
+            if (ns.eq.1) abort1 = .true.
 
-         end if 
+            g = 0d0
+
+         end if
+
       end if 
 
       gfunc = g 
@@ -4302,8 +4312,7 @@ c                                 warn
      *       'is beyond the limits for',/,'the HKF g function. The ',
      *       'function will be zeroed.',/)
 
-      end 
-
+      end
 
 
       double precision function epsh2o (v)
@@ -13417,7 +13426,7 @@ c                                 only allowed for unconstrained minimization
          if (icopt.ge.5.or.
      *       jmct.gt.0.and.jmuct.lt.jmct) then 
 
-            call warn (55,cp(l,iphct),l,tname)
+            call warn (55,cp(l-1,iphct),l-1,tname)
 
             iphct = iphct - 1
             icoct = icoct0
@@ -14015,7 +14024,7 @@ c-----------------------------------------------------------------------
 
       end 
 
-      subroutine mtrans (gval,vdp,ndu,id)
+      subroutine mtrans (gval,vdp,id)
 c----------------------------------------------------------------------
 c mtrans sorts through and evaluates transition functions
 c----------------------------------------------------------------------
@@ -14025,7 +14034,7 @@ c----------------------------------------------------------------------
 
       integer id
 
-      double precision gval, dg, vdp, ndu, tc, b, pee, gmags
+      double precision gval, dg, vdp, tc, b, pee, gmags
 
       external gmags
 
@@ -14052,7 +14061,7 @@ c                                 standard transitions
 
          else if (ltyp(id).eq.3) then
 c                                 supcrt q/coe lambda transition
-            call lamqtz (p,t,gval,ndu,lmda(id),id)
+            call lamqtz (p,t,gval,lmda(id),id)
  
          else if (ltyp(id).eq.4) then
 
@@ -18890,6 +18899,9 @@ c                                 adaptive coordinates
       double precision p0, dz
       common/ cxt46 /p0, dz
 
+      logical abort
+      common/ cstabo /abort
+
       save badct, lmu, lmus
       data badct/0/
 c----------------------------------------------------------------------
@@ -18944,11 +18956,12 @@ c                                 the absent component
 
          call slvnt3 (gso,.false.,feos,id)
 
-         if (epsln.lt.nopt(34)) then
+         if (epsln.lt.nopt(34).or.abort) then
 c                                 eos is predicting vapor phase 
 c                                 solvent densities
             bad = .true.
             return
+
          end if 
 
          bad = .false.
@@ -19299,11 +19312,15 @@ c-----------------------------------------------------------------------
       integer jnd
       double precision aqg,qq,rt
       common/ cxt2 /aqg(m4),qq(m4),rt,jnd(m4)
+
+      logical abort
+      common/ cstabo /abort
 c----------------------------------------------------------------------
-      if (epsln.lt.nopt(34)) then
+      if (epsln.lt.nopt(34).or.abort) then
 c                                  vapor, same as checking lnkw
          bad = .true.
          return
+
       end if
 c                                  set default charge balance ion (aq_ion_H+, lopt(44)
       if (lopt(44)) then 

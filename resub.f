@@ -74,7 +74,10 @@ c                                 solution model counter
       common/ cst72 /hkp(k21),mkp(k19)
 
       integer idegen, idg(k5), jcp, jin(k5)
-      common/ cst315 /idegen, idg, jcp, jin 
+      common/ cst315 /idegen, idg, jcp, jin
+
+      logical abort1
+      common/ cstabo /abort1
 
       save ax, x, clamda, w, is, iw
 c-----------------------------------------------------------------------
@@ -163,6 +166,12 @@ c                                 bad solution (lagged speciation) identified
 c                                 in avrger
                   call lpwarn (102,'LPOPT0')
                   if (iopt(22).lt.2) idead = 102
+
+               end if 
+
+               if (abort1) then 
+
+                  idead = 104
 
                end if
 
@@ -1107,6 +1116,9 @@ c                                  x-coordinates for the final solution
       logical usv
       integer pindex,tindex
       common/ cst54 /pindex,tindex,usv
+
+      logical abort1
+      common/ cstabo /abort1
 c-----------------------------------------------------------------------
       abort = .false.
 c                                first check if solution endmembers are
@@ -1172,6 +1184,12 @@ c                                 loaded into caq(i,1:ns+aqct)
                do k = 1, ns
                   y(k) = x3(i,1,k)
                end do 
+
+               if (abort1) then 
+                  quit = .true.
+                  abort = .true.
+                  cycle 
+               end if 
 
                if (quack(jdv(i))) then 
 c                                 pure solvent phase

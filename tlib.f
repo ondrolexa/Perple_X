@@ -2,11 +2,23 @@ c----------------------------------------------------------------------
 
 c TLIB - a library of subprograms called by the PERPLEX programs.
 
-c Copyright (c) 1998 by James A. D. Connolly, Institute for Mineralogy
-c & Petrography, Swiss Federal Insitute of Technology, CH-8092 Zurich,
-c SWITZERLAND. All rights reserved.
- 
-c Please do not distribute this source.
+c Copyright (C) 2018 James A D Connolly
+
+c This file is part of Perple_X.
+
+c Perple_X is free software; you can redistribute it and/or modify
+c it under the terms of the GNU General Public License as published by
+c the Free Software Foundation; either version 2, or (at your option)
+c any later version.
+
+c Perple_X is distributed in the hope that it will be useful,
+c but without any warranty; without even the implied warranty of
+c merchantability or fitness for a particular purpose.  See the
+c GNU General Public License for more details.
+
+c You should have received a copy of the GNU General Public License
+c along with Perple_X (file license.txt). If not see
+c <http://www.gnu.org/licenses/>.
 
 c----------------------------------------------------------------------
 
@@ -18,8 +30,10 @@ c----------------------------------------------------------------------
 
       integer n
 
-      write (n,'(/,a)') 
-     *      'Perple_X version 6.8.3, source updated June 26, 2018.'
+      write (n,'(/,a,//,a)') 
+     *      'Perple_X version 6.8.3, source updated June 26, 2018.',
+     *      'Copyright (C) 2018 James A D Connolly. '//
+     *      'www.perplex.ethz/Perple_X_copyright.html'
 
       end
 
@@ -443,6 +457,10 @@ c                                 phase composition key
 
             read (strg,*) iopt(32)
 
+         else if (key.eq.'auto_exclude') then 
+
+            if (val.ne.'T') lopt(5) = .false.
+
          else if (key.eq.'aq_lagged_iterations') then
 
             read (strg,*) iopt(33)
@@ -467,7 +485,7 @@ c                                 phase composition key
 
              if (val.eq.'F') lopt(45) = .false.
 
-         else if (key.eq.'null_phases') then 
+         else if (key.eq.'null_phase') then 
 
             if (val.eq.'T') lopt(37) = .true.
 
