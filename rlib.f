@@ -9035,6 +9035,11 @@ c                                 x coordinate description
 
       integer ksmod, ksite, kmsol, knsp
       common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
+
+      integer pstot,qstot,ostg,odim,nsum
+      common/ junk1 /pstot(h9),qstot(h9),ostg(h9),odim(mst,h9),nsum(h9)
+
+
 c----------------------------------------------------------------------
 c                                 figure out which endmember we
 c                                 are looking at:
@@ -9042,12 +9047,18 @@ c                                 are looking at:
          if (id.eq.jend(ids,2+h)) exit
       end do
 c                                 zero x-array
-      do i = 1, istg(ids)
+      do i = 1, ostg(ids)
+
          do j = 1, ispg(ids,i)
             x3(jd,i,j) = 0d0
          end do
 c                                 now assign endmember fractions
-         x3(jd,i,kmsol(ids,knsp(h,ids),i)) = 1d0
+         if (i.le.istg(ids)) then
+            x3(jd,i,kmsol(ids,knsp(h,ids),i)) = 1d0
+         else
+c                                 orphan endmember
+            x3(jd,i,knsp(h,ids)-mstot(ids)) = 1d0
+         end if
 
       end do
 

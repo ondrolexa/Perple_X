@@ -318,13 +318,15 @@ c                                   molar solute
 
                       end if 
 
+                  else 
+
+                     tag = ' '
+
                   end if 
 
                   write (text,'(20(a,a,g12.5,a))')
      *                  (spnams(ns+j,id),': ',ysp(ns+j,i),', ',
      *                   j = 1, m - 1), tag
-
-                  tag = ' '
 
                else 
 
@@ -689,7 +691,7 @@ c----------------------------------------------------------------------
 
       integer i,j,k,l,m,ids,kd,lco(3),itri(4),jtri(4),ijpt
 
-      double precision wt(3), cst
+      double precision wt(3), cst, xt 
 
       logical sick(i8), nodata, ssick, ppois, bulkg, bsick, bad
 c                                 x-coordinates for the assemblage solutions
@@ -942,9 +944,20 @@ c                                 renormalize the composition
                if (cst.eq.0d0) cst = 1d0
 
                do l = 1, ostg(ids)
-                  do m = 1, ispg(ids,l)    
+                  
+                  xt = 0d0
+
+                  do m = 1, ispg(ids,l)
                      x3(i,l,m) = x3(i,l,m)/cst
-                  end do 
+                     xt = xt + x3(i,l,m)
+                  end do
+
+                  if (xt.ne.1d0.and.xt.ne.0d0) then 
+                     do m = 1, ispg(ids,l)
+                        x3(i,l,m) = x3(i,l,m)/xt
+                     end do
+                  end if
+
                end do 
 
                if (lopt(32).and.ksmod(ids).eq.39) then 
