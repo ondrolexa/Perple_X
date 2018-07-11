@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.8.3, source updated July 6, 2018.',
+     *      'Perple_X version 6.8.3, source updated July 11, 2018.',
 
      *      'Copyright (C) 1986-2018 James A D Connolly '//
      *      '<www.perplex.ethz/copyright.html>.'
@@ -4783,16 +4783,21 @@ c                                 look for path characters / or \
                cycle
             end if 
 c                                 check if directory is valid
-            if (icom.ne.0) then 
+            if (icom.ne.0) then
+
                write (tfname,'(100a)') (chars(i),i=1,icom)
                call mertxt (tfname,tfname,'delete_me',0)
+
                open (n1,file=tfname,iostat = ierr)
+
                if (ierr.ne.0) then 
                   write (*,1040)
                   cycle 
                end if  
+c                                 mertxt uses chars, so re-read chars
+               read (prject,'(100a)') (chars(i),i=1,100)
 
-            end if 
+            end if
 c                                 look for illegal "." character
             if (kscan(icom+1,length,'.').lt.length) then 
                write (*,1000)
@@ -4818,7 +4823,7 @@ c                                 look for illegal " " character
      *          'try again',/)
 1010  format (/,'file/project names must be < 91 characters, '
      *         ,'try again',/)
-1020  format (/,'tfile/project names cannot include blanks, ',
+1020  format (/,'file/project names cannot include blanks, ',
      *          'try again',/)
 1030  format (/,'file/project names cannot end with a / or \ character',
      *        ', try again',/)
