@@ -1077,22 +1077,22 @@ c----------------------------------------------------------------------
          end do
 
       else if (ksmod(id).eq.2.or.ksmod(id).eq.20.or.ksmod(id).ge.24.and.
-     *         ksmod(id).le.28.or.ksmod(id).eq.39) then
+     *         ksmod(id).le.28.or.ksmod(id).eq.39.or.ksmod(id).eq.42) 
+     *        then
 c                                 macroscopic formulation for normal solutions (2,3) and
 c                                 hp melt model (24)
 c                                 ghiorso melt model (25)
 c                                 andreas salt model (26)
 c                                 high T melt model (28)
 c                                 generic hybrid fluid (39)
+c                                 Fe-S fluid Saxena & Eriksson (42)
          do k = 1, spct(id)
             ysp(k,jd) = y(k)
          end do
 
-      else if (ksmod(id).eq.29.or.ksmod(id).eq.32.or.
-     *                                    ksmod(id).eq.42) then 
+      else if (ksmod(id).eq.29.or.ksmod(id).eq.32) then 
 c                                 BCC Fe-Si Lacaze and Sundman (29) 
 c                                 BCC Fe-Cr Andersson and Sundman (32)
-c                                 Fe-S fluid Saxena & Eriksson (42)
          spct(id) = 4
 c                                 need to correct routines to give o/d
          do k = 1, spct(id) 

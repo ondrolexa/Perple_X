@@ -10191,7 +10191,6 @@ c                                 can be saved in simple arrays
 c                                 set independent species names and counters for output
 c                                 special cases first:
       if (ksmod(im).eq.0.or.ksmod(im).eq.40.or.ksmod(im).eq.41) then
-
          spct(im) = jsp
 
          do i = 1, jsp
