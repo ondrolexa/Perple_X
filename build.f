@@ -1076,7 +1076,7 @@ c                                 potential
       subroutine chknam (igood,jcmpn,iflu,good,char5,qname,uname)
 c----------------------------------------------------------------------
 c chknam - looks for a match between string char5 and the jcmpn strings in 
-c array qname. if the match is found goof = .true, index is the index of
+c array qname. if the match is found good = .true, index is the index of
 c the string in uname, and the string is eliminated from uname and jcmpn
 c decremented. igood is the index of the equivalent string in the uname
 c array.
@@ -1109,8 +1109,8 @@ c----------------------------------------------------------------------
          go = .true.
 
          do i = 1, ispec
-             if (char5.ne.uname(idspe(i))) cycle
-             go = .false.
+            if (char5.ne.uname(idspe(i))) cycle
+            go = .false.
          end do 
 c                                 special check for saturated phase
 c                                 components. 
@@ -1125,7 +1125,7 @@ c                                 components.
          if (qname(i).eq.char5) then 
 c                                  eliminate used components
             do j = i+1, jcmpn
-                qname(j-1) = qname(j)
+               qname(j-1) = qname(j)
             end do 
             good = .true.
             exit 
@@ -1160,7 +1160,7 @@ c---------------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i, j, jcmpn, ivct, igood, ier, jsat(h5), ima, jspec
+      integer i, j, jcmpn, ivct, igood, ier, jsat(h5), ima, jspec, jc(2)
 
       logical satflu, mobflu, good, findph, eof, quit, feos
 
@@ -1260,7 +1260,8 @@ c                                 check choice
 
                   if (.not.good) cycle
 c                                 count component
-                  ifct = ifct + 1  
+                  ifct = ifct + 1
+                  jc(ifct) = igood
                   mname(ifct) = char5
 
                   if (ifct.eq.2) then 
@@ -1645,6 +1646,10 @@ c                                 also pad out ic array with saturated
 c                                 component pointers for chkphi
       do i = 1, isat 
          ic(icp+i) = jsat(i)
+      end do
+
+      do i = 1, ifct 
+         ic(icp+isat+i) = jc(i)
       end do 
 
 1000  format ('Are you sure you want to do this (y/n)?')
