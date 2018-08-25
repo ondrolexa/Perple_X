@@ -569,6 +569,11 @@ c                                 check if name in list
 
             end do  
          end if
+
+      else 
+
+         n9name = ' '
+
       end if 
 c                                 get title
       write (*,7070) 
