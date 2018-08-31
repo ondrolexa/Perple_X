@@ -853,6 +853,10 @@ c                                 a ordinate counter (ipt) of 1.
          if (ipr.gt.l5*2) call error (1,xfac,l5,'L5 (PSCURV)')
  
          read (n4,*) (x(i),y(i),i=1,ipr)
+c                                 do NaNchk
+         do i = 1, ipr
+            call nanchk (x(i),y(i),'PSCURV/PSVDRAW')
+         end do
 c                                 variance restrictions:
          if (jop4.ne.0) then 
             if (jop4.eq.1.and.ivar.gt.iop4-1) then 
@@ -1105,7 +1109,7 @@ c psipts - subprogram to output invariant points.
       common/ cxt18 /var(l3),dvr(l3),vmn(l3),vmx(l3),jvar
 
       data iop9/0/
-
+c----------------------------------------------------------------------
       do i = 1, 3
         ict(i) = 0
       end do 
@@ -1120,6 +1124,9 @@ c psipts - subprogram to output invariant points.
 
          x(1) = var(1)
          y(1) = var(2)
+
+         call nanchk (x(1),y(1),'PSCURV/PSVDRAW')
+
 c                                 variance restrictions:
          if (jop4.ne.0) then 
             if (jop4.eq.1.and.ipvar.gt.iop4-1) then 

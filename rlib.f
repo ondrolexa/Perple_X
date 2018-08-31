@@ -16272,7 +16272,7 @@ c-----------------------------------------------------------------------
 
       integer i, j
 
-      double precision po(nsp,8), trt, rho, epsln, eps
+      double precision po(nsp,11), trt, rho, epsln, eps
 
       double precision epsh2o
 
@@ -16294,10 +16294,12 @@ c-----------------------------------------------------------------------
       double precision vmrk0, vhyb, vf
       common/ cxt38 /vmrk0(nsp),vhyb(nsp),vf(nsp)
 c----------------------------------------------------------------------
+c                                non-polar, A_mu = C_alpha = 0:
+
 c                                Harvey & Lemmon provide additional data for 
-c                                ethylene and long-chain hydrocarbons. A_mu
-c                                is zero for all species listed here, therefore
-c                                Eq 5 of H&L:
+c                                ethylene and long-chain hydrocarbons. 
+
+c                                Eq 5 of H&L 2005:
 
 c                                P/rho (cm3/mol) = A + A_mu/T + B*rho + C*rho^D
 
@@ -16305,43 +16307,56 @@ c                                is simplified by dropping the second term the
 c                                coefficients are a f(T) viz A = a0 + a1*(T/Tr - 1)...
 
 c                                po(i,1:8) - a0, a1, A_mu, b0, b1, c0, c1, D
-      data ((po(i,j),j=1,8),i=1,nsp)/ 
+
+c                                polar Harvey & Mountain 2017:
+
+c                                rho *(C_alpha + g(rho,T)*A_mu(T)/T)
+
+c                                expanded as [see dielectric_harvey.mws]:
+
+c                                rho*(po(i,3)+po(i,2)*(po(i,1)*exp(po(i,4)*T^po(i,5))*
+c                                (1-exp(po(i,6)*rho^po(i,7)))+1)*(po(i,8)+po(i,9)*
+c                                exp(po(i,10)*rho^po(i,11)))^2/T)
+
+      data ((po(i,j),j=1,11),i=1,nsp)/ 
 c                                1 - H2O
-     *     0d0, 0d0, 0d0, 0d0, 0d0, 0d0, 0d0, 0d0, 
-c                                2 - CO2
+     *     11*0d0,
+c                                2 - CO2, H&L 2005
      *     7.3455d0, 3.35d-3, 0d0, 83.93d0, 145.1d0, -578.8d0, -1012d0, 
-     *     1.55d0,
+     *     1.55d0, 3*0d0,
 c                                3 - CO approximated by O2
      *     3.9578d0, 6.5d-3, 0d0, 0.575d0, 1.028d0, -8.96d0, -5.15d0, 
-     *     1.5d0,
-c                                4 - CH4
+     *     1.5d0, 3*0d0,
+c                                4 - CH4, H&L 2005
      *     6.5443d0, 1.33d-2, 0d0,8.4578d0, 3.7196d0, -352.97d0, 
-     *     -100.65d0, 2d0,
-c                                5 - H2
-     *     2.0306d0, 5.6d-3, 0d0, 0.181d0, 0.021d0, -7.4d0, 0d0, 2d0,
-c                                6 - H2S approximate by ?
-     *     0d0, 0d0, 0d0, 0d0, 0d0, 0d0, 0d0, 0d0, 
-c                                7 - O2
+     *     -100.65d0, 2d0, 3*0d0,
+c                                5 - H2, H&L 2005
+     *     2.0306d0, 5.6d-3, 0d0, 0.181d0, 0.021d0, -7.4d0, 0d0, 2d0, 
+     *     3*0d0,
+c                                6 - H2S, H&M 2017
+     *     1.18d0, 5829.059676d0, 9.232464738d0, -.1213537391d-1, .9d0,
+     *     -453374.7482d0, 3.5d0, 1.241d0, -.241d0, -16.61833221d0, 
+     *     .5d0,
+c                                7 - O2, H&L 2005
      *     3.9578d0, 6.5d-3, 0d0, 0.575d0, 1.028d0, -8.96d0, -5.15d0, 
-     *     1.5d0,
-c                                8 - SO2 approximated by CO2
-     *     7.3455d0, 3.35d-3, 0d0, 83.93d0, 145.1d0, -578.8d0, -1012d0, 
-     *     1.55d0,
+     *     1.5d0, 3*0d0,
+c                                8 - SO2, H&M 2017
+     *     1.18d0, 5829.059676d0, 9.232464738d0, -.1213537391d-1, .9d0,
+     *     -453374.7482d0, 3.5d0, 1.241d0, -.241d0, -16.61833221d0, 
+     *     .5d0,
 c                                9 - COS approximated by CO2
      *     7.3455d0, 3.35d-3, 0d0, 83.93d0, 145.1d0, -578.8d0, -1012d0, 
-     *     1.55d0,
-c                                10 - N2
+     *     1.55d0, 3*0d0,
+c                                10 - N2, H&L 2005
      *     4.3872d0, 2.26d-3, 0d0, 2.206d0, 1.135d0, -169d0, -35.83d0, 
-     *     2.1d0,
-c                                11 - NH3 approximated by ?
-     *     0d0, 0d0, 0d0, 0d0, 0d0, 0d0, 0d0, 0d0,
-c                                12-15 Si-O high T species
-     *     32*0d0,
-c                                16 - Ethane
+     *     2.1d0, 3*0d0,
+c                                11 - NH3 and 12-15 Si-O high T species
+     *     55*0d0,
+c                                16 - Ethane, H&L 2005
      *     11.1552d0, 0.0112d0, 0d0, 36.759d0, 23.639d0, -808.03d0, 
-     *     -378.84d0, 1.75d0,
+     *     -378.84d0, 1.75d0, 3*0d0,
 c                                17 - dilutant
-     *      8*0d0/
+     *      11*0d0/
 
       save po 
 c----------------------------------------------------------------------
@@ -16357,20 +16372,24 @@ c                                 in gcpd and is in cm3/mol
          rho = 1d0/vhyb(j)
 c                                 Eq 5 of H&L 2005 for  polarization/rho
 c                                 for polar species need to add po(j,3)
-         eps = po(j,1) + po(j,2)*trt + (po(j,4) + po(j,5)*trt)*rho
-     *                + (po(j,6) + po(j,7)*trt)*rho**po(j,8)
-
-         if (j.eq.6) then 
-c                                 fake for h2s = 1/3 h2o
-            eps = epsh2o (vhyb(j)/1d1) / 3d0
-
-         else if (po(j,3).eq.0d0) then 
+         if (po(j,3).eq.0d0) then 
 c                                 invert clausius-mosotti relation for dielectric
 c                                 constant (Eq 1) non-polar molecules
+            eps = po(j,1) + po(j,2)*trt + (po(j,4) + po(j,5)*trt)*rho
+     *                + (po(j,6) + po(j,7)*trt)*rho**po(j,8)
+
             eps = (2d0*eps*rho + 1d0) / (1d0 - rho*eps)
 
          else
-c                                 polarized species, currently none, but H2S...
+c                                 polarized species
+
+
+            eps = rho*(po(i,3) + po(i,2) 
+     *                         * (po(i,1)*dexp(po(i,4)*t**po(i,5))
+     *                         * (1d0-dexp(po(i,6)*rho**po(i,7))) + 1d0)
+     *                         * (po(i,8) + po(i,9)*
+     *                            dexp(po(i,10)*rho**po(i,11)))**2/T)
+
             eps = po(j,3) + (9d0*eps*rho + 1d0 
      *          + 3d0*dsqrt((3d0*eps*rho)**2 + 2d0*eps*rho + 1d0))/4d0
 

@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.8.3, source updated August 25, 2018.',
+     *      'Perple_X version 6.8.3, source updated August 31, 2018.',
 
      *      'Copyright (C) 1986-2018 James A D Connolly '//
      *      '<www.perplex.ethz/copyright.html>.'
@@ -2675,6 +2675,8 @@ c----------------------------------------------------------------------
          write (*,59) char
       else if (ier.eq.60) then
          write (*,60) char
+      else if (ier.eq.61) then
+         write (*,61) char
       else if (ier.eq.63) then
          write (*,63)
       else if (ier.eq.68) then
@@ -2944,6 +2946,12 @@ c     *          ' (SWASH, see program documentation Eq 2.3)',/)
      *        ' has invalid site populations.',/)
 60    format (/,'**warning ver060** non-fatal programming error ',
      *          'routine:',a,/)
+61    format (/,'**warning ver061** the data includes NaN values, '
+     *      ,'probably because bad_number',/,'in perplex_option.dat = '
+     *      ,'NaN, these values will be replaced by zeros. To avoid ',/,
+     *       'this behavior set bad_number to a numeric value or use a',
+     *       ' plotting program capable',/,'of handling NaNs, e.g., ',
+     *       'MatLab or PYWERAMI.',//,'program/routine: ',a,/)
 63    format (/,'**warning ver063** wway, invariant point on an edge?',
      *        /)
 68    format (/,'**warning ver068** degenerate initial assemblage in ',
@@ -4937,7 +4945,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i, nchar1, nchar2, nblank
+      integer nchar1, nchar2, nblank
 
       character text*(*), text1*(*), text2*(*)
 
@@ -4959,9 +4967,7 @@ c                                 put nblank blanks between 1st and
 c                                 2nd strings, this is necessary despite
 c                                 initialization because leblnk may 
 c                                 shift strings left.
-         do i = nchar1+1, nchar1 + nblank
-            chars(i) = ' '
-         end do 
+         chars(nchar1+1:nchar1 + nblank) = ' '
 
       end if
 c                                 nchar1 points to the first empty char
@@ -6239,5 +6245,39 @@ c                                 swap indexes
       end if 
 c                                 read the second tag
       call readfr (coeffs(i),ibeg,iend,len,ier)
+
+      end 
+
+      subroutine nanchk (x,y,text)
+c----------------------------------------------------------------------
+c nanchk - check x-y coordinate pair for bad_number and resets to 0.
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      logical warn1
+
+      character*(*) text
+
+      double precision x, y
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      save warn1
+      data warn1/.true./
+c----------------------------------------------------------------------
+      if (warn1.and.(isnan(x).or.isnan(y))) then 
+c                                 
+         call warn (61,x,1,text)
+         warn1 = .false.
+
+      end if 
+
+      if (isnan(x)) x = 0d0
+      if (isnan(y)) y = 0d0
 
       end 
