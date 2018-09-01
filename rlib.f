@@ -13204,7 +13204,7 @@ c                                 model type
 c----------------------------------------------------------------------
 c                                 reject special case:
 c                                 ternary coh fluids above the CH4-CO join
-      if (ksmod(im).eq.41.and.y(1).ge.1d0/3d0+y(2)) return
+      if (ksmod(im).eq.41.and.y(1).ge.r13+y(2)) return
 c                                 move site fractions into p0a = pa arrays indexed 
 c                                 only by independent disordered endmembers, this is 
 c                                 done even for models without disorder so the pa
@@ -16003,7 +16003,6 @@ c                                 hybrid molecular
          isp = mstot(ids)
 c                                 set ns in case of aqrxdo or aqlagd
          ns = isp 
-         ns1 = ns - 1
          sn1 = ns + 1
          nsa = ns + aqct
          na1 = nsa + 1
@@ -16281,6 +16280,9 @@ c-----------------------------------------------------------------------
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+
       character specie*4
       integer isp, ins
       common/ cxt33 /isp,ins(nsp),specie(nsp)
@@ -16341,9 +16343,9 @@ c                                7 - O2, H&L 2005
      *     3.9578d0, 6.5d-3, 0d0, 0.575d0, 1.028d0, -8.96d0, -5.15d0, 
      *     1.5d0, 3*0d0,
 c                                8 - SO2, H&M 2017
-     *     1.18d0, 5829.059676d0, 9.232464738d0, -.1213537391d-1, .9d0,
-     *     -453374.7482d0, 3.5d0, 1.241d0, -.241d0, -16.61833221d0, 
-     *     .5d0,
+     *     2.516d0, 16242.2847d0, 10.31715322d0, -.225289526d-2, .98d0,
+     *     -44.03397284d0, 1.2d0, 1.335d0, .335d0, -16.19171204d0, 
+     *     .75d0,
 c                                9 - COS approximated by CO2
      *     7.3455d0, 3.35d-3, 0d0, 83.93d0, 145.1d0, -578.8d0, -1012d0, 
      *     1.55d0, 3*0d0,
@@ -16381,29 +16383,27 @@ c                                 constant (Eq 1) non-polar molecules
             eps = (2d0*eps*rho + 1d0) / (1d0 - rho*eps)
 
          else
-c                                 polarized species
-
-
-            eps = rho*(po(i,3) + po(i,2) 
-     *                         * (po(i,1)*dexp(po(i,4)*t**po(i,5))
-     *                         * (1d0-dexp(po(i,6)*rho**po(i,7))) + 1d0)
-     *                         * (po(i,8) + po(i,9)*
-     *                            dexp(po(i,10)*rho**po(i,11)))**2/T)
-
-            eps = po(j,3) + (9d0*eps*rho + 1d0 
-     *          + 3d0*dsqrt((3d0*eps*rho)**2 + 2d0*eps*rho + 1d0))/4d0
+c                                 polarized species H&L 2017
+            eps = rho*(po(j,3) + po(j,2) 
+     *                         * (po(j,1)*dexp(po(j,4)*t**po(j,5))
+     *                         * (1d0-dexp(po(j,6)*rho**po(j,7))) + 1d0)
+     *                         * (po(j,8) + po(j,9)*
+     *                            dexp(po(j,10)*rho**po(j,11)))**2/t)
+c                                 invert Kirkwood relation
+            eps = 2.25d0*eps + 0.25d0 
+     *            + dsqrt((5.0625d0*eps + 1.125d0)*eps+ .5625d0)
 
          end if
 c                                  Looyenga mixing rule justified by Mountain &
 c                                  Harvey 2015, modified here to use volume fraction
 c                                  computed from partial molar volumes.
-         epsln  = epsln  + vf(j) * eps**(1d0/3d0)
+         epsln  = epsln  + vf(j) * eps**r13
 
       end do 
 c                                  add in water (ns^th species)
-      epsln  = epsln + vf(ins(i)) * epsh2o (vhyb(ins(i))/1d1)**(1d0/3d0)
+      epsln  = epsln + vf(ins(i)) * epsh2o (vhyb(ins(i))/1d1)**r13
 
-      epsln  = epsln **3
+      epsln  = epsln**3
 
       end 
 
