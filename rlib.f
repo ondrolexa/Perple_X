@@ -15633,7 +15633,7 @@ c                                 x is the linear conformal coordinate.
                x = x + dx 
                y(i,iy(i)) = strtch (x)
 
-               if (dabs(y(i,iy(i))-ymax).lt.delt.or.
+               if (dabs(y(i,iy(i))-ymax).le.delt.or.
      *             y(i,iy(i)).gt.ymax) then
 
                   y(i,iy(i)) = ymax
