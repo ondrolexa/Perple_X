@@ -31,7 +31,7 @@ if nvar == 1 % two cases: 1d - table -> 2d plot
     
     legend(dnames{1}{dvar},'Location','EastOutside'); 
     %axis square; 
-    legend HIDE
+    %legend HIDE
     axis tight; xlabel(dnames{1}{kvar},'FontSize',FontSize); title(titl,'FontSize',FontSize);
     
 elseif nvar == 2 % 2d - table -> 2/3d plot

@@ -25,6 +25,7 @@
 |----------------------------------------------------------------------
 
 1d_path                   default | [40 150] exploratory and autorefine (grid parameters keyword group)
+absolute                  default | [F] WERAMI - output absolute component amounts
 Anderson-Gruneisen        default | [F] Anderson-Gruneisen parameter correction for polythermal Murnaghan and Birch-Murnaghan
 approx_alpha              default | [T] use approximation exp(x) ~ 1+x to evaluate expansivity effect on volume
 aq_bad_results            default | [error] 101 102 or ignore => response to suspect lagged speciation results 
@@ -33,7 +34,6 @@ aq_oxide_components       default | [F] accomodate oxide components in aqueous s
 aq_species                default | [20] maximum number of solute species output (ranked by concentration) for back-calculated results
 aq_lagged_iterations      default | [0] number of internal iterations for lagged speciation.
 aq_lagged_speciation      default | [F] do lagged solute chemistry when electrolyte data is available
-aq_max_molality           default | [5.] maximum molality permitted for neutral solute species
 aq_solvent_composition    default | [y] y => mole fractions, m => molality
 aq_solute_composition     default | [m] y => mole fractions, m => molality
 aq_vapor_epsilon          default | [1.] dielectric constant threshold used to identify vapor
@@ -49,6 +49,7 @@ composition_constant      default | [F] allow constants in composition expressio
 composition_phase         default | [mol] mol or wt (mass) phase compositions in WERAMI output
 composition_system        default | [wt] mol or wt; system composition in WERAMI mode 2-4 output
 console_messages          default | [on] off => suppresses most console messages (warnings, errors, etc)
+cumulative                default | [F] WERAMI - output cumulative component amounts (for fractionation problems)
 dependent_potentials      default | [off] on => compute dependent thermodynamic potentials (usually chemical potentials)
 efficiency                default | [3] 1->5, only relevant for CONVEX
 explicit_bulk_modulus     default | [T] T => use explicit function for bulk modulii if available
@@ -66,7 +67,7 @@ hybrid_EoS_CH4            default | [1] 0-1  => 0 - MRK, 1 HSMRK
 increment                 default | [0.1 0.025] >0, < 1, fractional independent variable increments [exploratory and autorefine], only relevant for CONVEX
 initial_resolution        default | [1/15] >0, <1
 interpolation             default | [on 2] value 1: on or off [on]; value 2, 1->99 [2]; only relevant for WERAMI
-iteration                 default | [3 4] value 1: 2->99 [3]; value 2: 1->7 [4]
+iteration                 default | [2 4] value 1: 2->99 [3]; value 2: 1->7 [4]
 linear_model              default | [on] on or off, relevant for 2d gridded minimization
 logarithmic_p             default | [F] replace pressure variable with log(pressure)
 melt_is_fluid             default | [F] identify melt (liquid) as fluid in WERAMI output

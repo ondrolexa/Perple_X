@@ -1641,7 +1641,7 @@ c                                 off sign-based testing.
       end if 
 
       if (iopt(2).eq.1) then 
-c                                 convert molar phase composition to 
+c                                 convert molar phase composition to
 c                                 mass % composition:
          do j = 1, itemp
             pcomp(j,jd) = pcomp(j,jd)*atwt(j)*1d2/props(17,jd)

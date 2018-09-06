@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.8.3, source updated September 3, 2018.',
+     *      'Perple_X version 6.8.3, source updated September 6, 2018.',
 
      *      'Copyright (C) 1986-2018 James A D Connolly '//
      *      '<www.perplex.ethz/copyright.html>.'
@@ -246,7 +246,7 @@ c                                 tolerance below which a component is considere
 c                                 be zero during fractionation
       nopt(11) = 1d-6
 c                                 iteration keyword 1
-      nopt(21) = 3d0
+      nopt(21) = 2d0
 c                                 iteration keyword 2
 c                                 max number of points to 
 c                                 be refined in addition to 
@@ -304,8 +304,6 @@ c                                 fractionation_upper_threshold
       nopt(33) = 0d0
 c                                 aq_vapor_epsilon
       nopt(34) = 1d0
-c                                 aq_max_molality
-      nopt(35) = 5d0
 c                                 hard_limits for solution model refinement
       valu(16) = 'off'
       lopt(3) = .false.
@@ -645,8 +643,8 @@ c                                 "vapor" threshold
             read (strg,*) nopt(34)
 
          else if (key.eq.'aq_max_molality') then
-c                                 "vapor" threshold
-            read (strg,*) nopt(35)
+
+c             obsolete
 
          else if (key.eq.'zero_mode') then
 c                                 zero_mode key

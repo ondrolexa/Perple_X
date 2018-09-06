@@ -1903,7 +1903,7 @@ c                                 choose mode: 0 - don't fractionate
 c                                              1 - specified phases
 c                                              2 - all solids
          write (*,1030)
-         call rdnumb (numb,numb,fmode,1,.false.)
+         call rdnumb (numb,numb,fmode,0,.false.)
 
          if (fmode.eq.1) then 
 c                                 get phases to be fractionated 
@@ -1958,21 +1958,26 @@ c                                 new phase list from old list:
 
          ifrct = 0 
 
-      end if 
+      end if
+
+      if (fmode.ne.0) then 
 c                                 initialize "gone" flags
-      do i = 1, k5
-         gone(i) = .false.
-      end do 
+         do i = 1, k5
+            gone(i) = .false.
+         end do 
+
 c                                 open fractionation files
-      call mertxt (name,prject,'_fractionated_bulk.dat',0)
-      open (n0,file=name,status='unknown')
-      write (*,1050)
+         call mertxt (name,prject,'_fractionated_bulk.dat',0)
+         open (n0,file=name,status='unknown')
+         write (*,1050)
 
-      do i = 1, ifrct 
+         do i = 1, ifrct 
 
-         call fropen (i,phase(i))
+            call fropen (i,phase(i))
 
-      end do 
+         end do
+
+      end if 
 
 1030  format (/,'Choose computational mode:',/,
      *       5x,'0 - no fractionation [default]',/,

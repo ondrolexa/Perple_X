@@ -9463,19 +9463,33 @@ c                                 new values from autorefine file
 
                if (icopt.lt.4) then 
 c                                 set slop to the initial spacing
-                  dinc = xnc(i,j)
-                
-                  xnc(i,j) = xnc(i,j)/nopt(17)
+                  if (imd(j,i).eq.0) then
 
-               else 
+                     dinc = xnc(i,j)
+
+                  else
+
+                     dinc = 1d0/xnc(i,j)
+
+                  end if
+
+               else
 c                                 adaptive minimization:
 c                                 set slop to the final compositional
 c                                 resolution of the exploratory stage
                   dinc = rid(4,1)
-c                                 adaptive use refine factor I
-                  xnc(i,j) = xnc(i,j)/nopt(17) 
 
                end if 
+
+               if (imd(j,i).eq.0) then
+
+                  xnc(i,j) = xnc(i,j)/nopt(17)
+
+               else
+
+                  xnc(i,j) = xnc(i,j)*nopt(17)
+
+               end if
 c                                 widen the range by the exploratory resolution
                xmx(i,j) = xmx(i,j) + dinc
                xmn(i,j) = xmn(i,j) - dinc
@@ -9530,7 +9544,7 @@ c                                 -------------------------------------
 c                                 classify the model
       ksmod(im) = jsmod
 c                                 -------------------------------------
-c                                 save the excess terms.                              
+c                                 save the excess terms
       jterm(im) = iterm
       jord(im) = iord
       extyp(im) = xtyp
@@ -19081,22 +19095,6 @@ c                                check on charge imbalance
 
          blk(i) = blk(i) - (posox+negox)/cox(i)
 
-c         write (*,*) 'err, posox+negox0',err,posox+negox
-
-         posox = 0d0
-         negox = 0d0 
-
-         do j = 1, icp
-            if (cox(j).gt.0) then
-               posox = posox + cox(j)*blk(j)
-            else
-               i = j
-               negox = negox + cox(j)*blk(j)
-            end if
-         end do
-
-c         write (*,*) 'err, posox+negox1',err,posox+negox
-
       end if 
 
       do j = 1, icp
@@ -19112,18 +19110,6 @@ c                                species
 c                                 stuff needed for output:
          do i = 1, aqct 
             caq(id,ns+i) = mo(i)
-c                                 output bad result point to n13
-            if (mo(i).ge.nopt(35).and.q(i).eq.0d0) then
-
-               write (n13,'(i3,1x,4(g14.6,1x),a,9(1x,f9.5))')
-     *                                i, p0, dz, t, p, aqnam(i),
-     *                                epsln,(yf(ins(j)),j=1, ns)
-               write (*,'(i3,1x,4(g14.6,1x),a,9(1x,f9.5))') 
-     *                                i, p0, dz, t, p, aqnam(i),
-     *                                epsln,(yf(ins(j)),j=1, ns)
-
-            end if
-
          end do 
 c                                 ionic strength
          caq(id,na1) = is
@@ -19422,9 +19408,6 @@ c                                  sum (q(i)*m(i)) = 0.
 
             else 
 c                                  neutral species assumed to be ideal, molality is
-               if (dg.gt.nopt(35)) then 
-                  dg = nopt(35)
-               end if 
 
                mo(i) = dg
 

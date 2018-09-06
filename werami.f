@@ -2462,13 +2462,13 @@ c                                 get the independent output variable
 c                                 path endpoints
 30    do i = 1, 2
 
-20       if (i.eq.1) then 
-            write (*,1130) vnm(1)
+20       if (i.eq.1) then
+            write (*,1130) vnm(1),vmn(1)
+            call rdnumb (xyp(1),vmn(1),ier,0,.true.)
          else
-            write (*,1140) vnm(1)
-         end if 
-
-         read (*,*,err=20) xyp(i)
+            write (*,1140) vnm(1),vmx(1)
+            call rdnumb (xyp(2),vmx(1),ier,0,.true.)
+         end if
 
          if (vmn(1).lt.vmx(1)) then 
             if (xyp(i).lt.vmn(1).or.xyp(i).gt.vmx(1)) then  
@@ -2491,12 +2491,9 @@ c                                 path endpoints
          goto 30
       end if   
 c                                 set up counters, pointers:
-      do 
-         write (*,1150) 
-         read (*,*,iostat=ier) ipts
-         if (ipts.lt.2) ipts = 2
-         if (ier.eq.0) exit 
-      end do
+      write (*,1150) int(vmx(1))
+      call rdnumb (vmx(1),vmx(1),ipts,int(vmx(1)),.false.)
+      if (ipts.lt.2) ipts = 2
 
       d = dxy/dfloat(ipts - 1)
 c                                 select properties:
@@ -2514,13 +2511,14 @@ c                                 name and open plot file, write header
 
       call finprp (dim,n5name,n6name,node) 
 
-1010  format (/,'The plot file range for ',a,' is ',g12.4,' - ',g12.4,
+1010  format (/,'The range for ',a,' is ',g12.4,' - ',g12.4,
      *        /,'Try again:',/)
-1130  format (/,'Enter the ',a,' coordinate at the beginning of',
-     *          ' the profile:')
-1140  format (/,'Enter the ',a,' coordinate at the end of',
-     *          ' the profile:')
-1150  format (/,'How many points along the profile?')
+1130  format (/,'Enter the first ',a,' coordinate for',
+     *          ' the profile [',g14.6,']:')
+1140  format (/,'Enter the last ',a,' coordinate for',
+     *          ' the profile [',g14.6,']:')
+1150  format (/,'Enter the number points along the profile [',
+     *           i4,']:')
 
       end 
 
@@ -3485,7 +3483,8 @@ c                                 convert to absolute mol/mass if requested
 c                                 prop(16) is the molar amount of the phase
                      prop(i) = prop(i) * prop(16)
 c                                 mass ammount, undo percent
-                     if (iopt(2).eq.1) prop(i) = prop(i)/2d2 
+                     if (iopt(2).eq.1) prop(i) = prop(i)/2d2
+
                   end do
 
                end if 
@@ -3675,9 +3674,9 @@ c----------------------------------------------------------------
      *            'Specific heat capacity (J/K/m3)',
      *            'Expansivity (1/K, for volume)',
      *            'Compressibility (1/bar, for volume)',
-     *            'Composition (Mol or Wt%) of the system',
+     *            'Composition (Mol, Mass, or Wt%) of the system',
      *            'Mode (Vol, Mol, or Wt proportion) of a phase',
-     *            'Composition (Mol or Wt%) of a solution phase',
+     *            'Composition (Mol, Mass, or Wt%) of a solution phase',
      *            'Grueneisen thermal ratio',
      *            'Adiabatic bulk modulus (bar)',
      *            'Adiabatic shear modulus (bar)',
@@ -3838,10 +3837,20 @@ c                                 all modes
              write (*,1070)
              read (*,'(a)') y
 
-             if (y.eq.'y'.or.y.eq.'Y') then 
+             if (y.eq.'y'.or.y.eq.'Y') then
+c                                 warn about fancy_cumulative_modes
+                if (lopt(45)) then 
+                   write (*,1170)
+                else 
+                   write (*,1180)
+                end if 
+
                 lopt(2) = .true.
+
              else
+
                 lopt(2) = .false.
+
              end if 
 c                                 ask if fluid should be included:
              if (gflu) then 
@@ -4109,12 +4118,18 @@ c                                 it in array dname
      *         ,'PSPLOT, PYWERAMI or MatLab.',/,'Output for '
      *         ,'option 3 can only be plotted with PHEMGP.',//
      *         ,'Select an option [default = 1]:')
-1140  format (/,'Hey cowboy, that warnt no solution, try again.',/)
+1140  format (/,'Hey cowboy, that warn''t no solution, try again.',/)
 1150  format (/,'Specify a property to be computed from the ',
      *          'list above [0 to end]')
 1160  format (/,'This calculation was done with lagged speciation, but',
      *        ' back-calculated',/,'speciation calculations are also',
      *        ' enabled. Output the back-calculated',/,'results (y/n)?')
+1170  format (/,'**warning ver210** the fancy_cumulative_modes option '
+     *       ,'(perplex_option.dat) is T.',/,'This option may lead to '
+     *       ,'inconsistent curves for coarsely sampled profiles.',/)
+1180  format (/,'**warning ver210** the fancy_cumulative_modes option '
+     *       ,'(perplex_option.dat) is F.',/,'Set this option to obtain'
+     *       ,'more easily read plots of modal abundance.',/)
   
       end
 
@@ -4201,9 +4216,27 @@ c                                 make property name
       if (lop.eq.6) then
 c                                 wt% or mol component icx
          if (lopt(23)) then
-            temp = cname(icx)//',wt%     '
-         else 
+
+            if (iopt(2).eq.0) write (*,1010) 'mole','mass','mole'
+
+            if (lopt(41)) then
+c                                 absolute mass, units hardwired here, but
+c                                 are actually determined by component formula 
+c                                 mass specified in the thermodynamic data file.
+               temp = cname(icx)//',g       '
+
+            else
+c                                 mass fraction (%)
+               temp = cname(icx)//',wt%     '
+
+            end if
+
+         else
+
+            if (iopt(2).eq.1) write (*,1010) 'mass','mole','mass'
+c                                 
             temp = cname(icx)//',mol     '
+
          end if
 
       else if (lop.eq.7) then
@@ -4268,8 +4301,13 @@ c                                 custom prop (phemgp)
       if (lop.eq.8) write (*,1000) dname(jprop)
 
 1000  format (/,'This composition will be designated: ',a,/)
+1010  format (/,'**warning ver069** composition_phase is ',a,' but '
+     *       ,'composition_system is ',a,'. As ',/, 
+     *        'only one unit can be output for property choice 36 '
+     *        'system units will be',/,'indicated; the ',
+     *        'true units for phase compositions are ',a,/)
 
-      end  
+      end
 
       subroutine finprp (dim,n5name,n6name,node)
 c----------------------------------------------------------------
@@ -4482,10 +4520,33 @@ c----------------------------------------------------------------------
 c                                 bulk composition, wt% or mol 
       do i = 1, icp 
 
-         if (lopt(23)) then
-            dname(i) = cname(i)//',wt%     '
-         else 
-            dname(i) = cname(i)//',mol     '
+
+         if (iopt(2).eq.1) then
+
+            if (lopt(41)) then
+c                                 absolute mass, units hardwired here, but
+c                                 are actually determined by component formula 
+c                                 mass specified in the thermodynamic data file.
+               dname(i) = cname(i)//',g       '
+
+            else
+c                                 mass fraction (%)
+               dname(i) = cname(i)//',wt%     '
+
+            end if
+
+         else
+
+            if (lopt(41)) then
+
+               dname(i) = cname(i)//',mol_abs '
+
+            else 
+
+               dname(i) = cname(i)//',mol_pfu '
+
+            end if
+
          end if
 
          call unblnk(dname(i))  
@@ -4598,8 +4659,16 @@ c                                 no solvent phase stable
       else if (javg.le.1) then 
 c                                 only one phase:
 c                                 bulk composition
+         if (lopt(41)) then
+c                                 absolute composition
+            x = props(16,jd)
+         else
+c                                 relative composition
+            x = 1d0
+         end if 
+
          do i = 1, icp
-            prop(i) = pcomp(i,jd)
+            prop(i) = pcomp(i,jd) * x
          end do
 
          k = icp
@@ -4651,8 +4720,16 @@ c                                 averaging multiple phases:
 c                                 bulk composition has already been 
 c                                 averaged by avgcmp, load into prop:
 c                                 bulk composition
+         if (lopt(41)) then
+c                                 absolute composition
+            x = props(16,jd)
+         else
+c                                 relative composition
+            x = 1d0
+         end if 
+
          do i = 1, icp
-            prop(i) = pcomp(i,jd)
+            prop(i) = pcomp(i,jd)*x
          end do
 c                                 initialize remaining prop values
          do i = icp+1, icp+nat
@@ -4718,13 +4795,13 @@ c                                 solute molality
          end do
 
          if (ximp.lt.one.and.ximp.gt.0d0) then
-c                                 renomalize err_log_kw, pH, Delta_pH, epsilon
+c                                renomalize err_log_kw, pH, Delta_pH, epsilon
             prop(k+1) = prop(k+1)/ximp
             prop(k+2) = prop(k+2)/ximp
             prop(k+3) = prop(k+3)/ximp
             prop(k+4) = prop(k+4)/ximp
 
-          end if
+         end if
 
       end if
 

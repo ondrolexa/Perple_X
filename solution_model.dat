@@ -5182,7 +5182,7 @@ z(t,al) = 1/2 mu + 1/2 pa
 2 1.                       | 2 species on A, 1 site per formula unit.
 z(a,k) = 1 mu + 1 cel + 1 fcel
 
-reach_increment 3 
+reach_increment 0 3 
 
 end_of_model               
                       --------------------------------------------------------
@@ -9758,7 +9758,7 @@ z(m1a,mg)   = 1 di + 1 cfm
 z(m1a,fe2+) = 1 hed 
 z(m1a,fe3+) = 1 acm_dqf + 1 jac 
 
-reach_increment 3
+reach_increment 0 3
 
 end_of_model        
                       --------------------------------------------------------
@@ -9992,7 +9992,7 @@ ideal
 
 0
 
-reach_increment 3 
+reach_increment 0 3 
 
 end_of_model           
                       --------------------------------------------------------
