@@ -82,6 +82,8 @@ c                                 indicates the number of thermodynamic variable
 c                                 don't allow users to do anything
 c                                 other than gridded min
       if (icopt.lt.5) call error (4,1d0,icopt,'PSVDRAW')
+c                                 titration/0-d fractionation
+      if (icopt.eq.12) oned = .true.
 c                                 read thermodynamic data on unit n2:
       call input2 (fake)
 c                                 read autorefine lists
@@ -4235,7 +4237,15 @@ c                                 mass fraction (%)
 
             if (iopt(2).eq.1) write (*,1010) 'mass','mole','mass'
 c                                 
-            temp = cname(icx)//',mol     '
+            if (lopt(41)) then
+
+               temp = cname(icx)//',mol_abs '
+
+            else
+
+               temp = cname(icx)//',mol_pfu '
+
+            end if 
 
          end if
 

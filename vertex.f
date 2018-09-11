@@ -202,7 +202,7 @@ c                                 fractionation on a 1-d path.
             call frac1d (output)
 
          else if (icopt.eq.12) then 
-
+c                                 0-d fractionation/titration
             call titrat (output)
 
          else if (icopt.eq.9) then 

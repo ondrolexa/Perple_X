@@ -1,6 +1,6 @@
 |----------------------------------------------------------------------
 
-        | Run-time Perple_X 6.8.1 options:
+        | Run-time Perple_X 6.8.3 options:
 
         | Comments must be preceeded by the "|" character.
 
@@ -28,7 +28,7 @@
 absolute                  default | [F] WERAMI - output absolute component amounts
 Anderson-Gruneisen        default | [F] Anderson-Gruneisen parameter correction for polythermal Murnaghan and Birch-Murnaghan
 approx_alpha              default | [T] use approximation exp(x) ~ 1+x to evaluate expansivity effect on volume
-aq_bad_results            default | [error] 101 102 or ignore => response to suspect lagged speciation results 
+aq_bad_results            default | [error] 101 102 103 or ignore => response to suspect lagged speciation results 
 aq_output                 default | [T] output back-calculated solute chemistry when electrolyte data is available
 aq_oxide_components       default | [F] accomodate oxide components in aqueous speciation calculations
 aq_species                default | [20] maximum number of solute species output (ranked by concentration) for back-calculated results
@@ -49,7 +49,7 @@ composition_constant      default | [F] allow constants in composition expressio
 composition_phase         default | [mol] mol or wt (mass) phase compositions in WERAMI output
 composition_system        default | [wt] mol or wt; system composition in WERAMI mode 2-4 output
 console_messages          default | [on] off => suppresses most console messages (warnings, errors, etc)
-cumulative                default | [F] WERAMI - output cumulative component amounts (for fractionation problems)
+cumulative                default | [F] WERAMI property choice #36 only!- cumulative component amounts (for fractionation problems)
 dependent_potentials      default | [off] on => compute dependent thermodynamic potentials (usually chemical potentials)
 efficiency                default | [3] 1->5, only relevant for CONVEX
 explicit_bulk_modulus     default | [T] T => use explicit function for bulk modulii if available

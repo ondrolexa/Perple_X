@@ -536,9 +536,11 @@ c-----------------------------------------------------------------------
 
       integer i, j, k, id
 
-      logical bad
+      logical bad, degen
 
       double precision ctot2
+
+      external degen
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
@@ -662,6 +664,11 @@ c                                  normalize the composition and free energy
          do j = 1, icp
             cp2(j,jphct) = cp2(j,jphct)/ctot2
          end do
+c                                  degeneracy test
+         if (degen(jphct,2)) then 
+            bad = .true.
+            return
+         end if 
 
       else 
 c                 DANGER DEBUG 
@@ -1929,9 +1936,9 @@ c----------------------------------------------------------------------
       integer jphct, i, j, k, is(*), idsol(k5), kdv(h9), nsol, ids,
      *        mpt, iam, id, inc, jdsol(k5,k5), kdsol(k5), max
 
-      external ffirst
+      external ffirst, degen 
 
-      logical solvus, quit, news, solvnt(1)
+      logical degen, solvus, quit, news, solvnt(1)
 
       double precision clamda(*), x(*), slam(h9)
 
@@ -1989,7 +1996,9 @@ c                                 solvus_tolerance_II, 0.25
 
       do i = 1, jphct
 
-         if (is(i).ne.1) then 
+         if (is(i).ne.1) then
+c                                 degeneracy test
+            if (degen(i,1)) cycle 
 c                                 make a list of found phases:
             id = i + inc
 c                                 currently endmember compositions are not 
@@ -2729,14 +2738,14 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      external ffirst
+      external ffirst, degen
 
       integer i, id, is(*), jmin(k19), opt, kpt, mpt, iter, tic, 
      *        idead
 
       double precision clamda(*), clam(k19), x(*)
 
-      logical stable(k19), solvnt(k19), quit, abort, test
+      logical stable(k19), solvnt(k19), quit, abort, test, degen
 
       integer hcp,idv
       common/ cst52  /hcp,idv(k7)
@@ -2820,6 +2829,8 @@ c                                 point.
          id = hkp(i)
 
          if (is(i).ne.1) then
+c                                 degeneracy test
+            if (degen(i,2)) cycle 
 c                                 a stable point, add to list
             npt = npt + 1
             jdv(npt) = i
@@ -2894,10 +2905,11 @@ c                                 undersaturated solute component
             quit = .true.
 c                                 don't set idead if iopt =1, this
 c                                 allows output of the result.
-            if (iopt(22).ne.1) then 
+            if (iopt(22).ne.1.and.iopt(22).ne.99) then 
                idead = 101
             else 
                call lpwarn (101,'YCLOS2')
+               lopt(34) = .true. 
             end if 
 
          end if
@@ -3884,3 +3896,47 @@ c                                 of the solution
       end if 
 
       end
+
+      logical function degen (index,array)
+c----------------------------------------------------------------------
+c check compounds for degeneracy
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer i, index, array
+
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+
+      double precision a,b,c
+      common/ cst313 /a(k5,k1),b(k5),c(k1)
+
+      integer idegen, idg(k5), jcp, jin(k5)
+      common/ cst315 /idegen, idg, jcp, jin 
+
+      integer jphct, jpt
+      double precision g2, cp2, c2tot
+      common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),jphct,jpt
+c----------------------------------------------------------------------
+
+      degen = .false.
+
+      do i = 1, idegen
+
+         if (array.eq.1) then 
+            if (a(idg(i),index).gt.zero) then
+               degen = .true.
+               exit
+            end if
+         else if (array.eq.2) then 
+            if (cp2(idg(i),index).gt.zero) then
+               degen = .true.
+               exit
+            end if
+         end if 
+
+      end do
+
+      end 
