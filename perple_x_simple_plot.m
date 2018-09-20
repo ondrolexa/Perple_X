@@ -5,7 +5,7 @@
 %clear all;
 
 %clf(fig1);
-%
+
 % c(1) = 'r'
 % c(2) = 'g'
 % c(3) = 'b'
@@ -23,6 +23,9 @@
 %     end
 % end
 
+%set (gca, 'PlotBoxAspectRatio', [1 0.5 1],...
+%    'FontSize',14.,...
+%    'LineWidth',1.0)
 
 LineWidth = 1.0
 FontSize = 14.0
@@ -33,7 +36,3 @@ Marker = 'none'
 
 function_for_perple_x_plots (x,y,a,xname,yname,zname,nvar,mvar,nrow,dnames,LineSpec,LineWidth,Marker,FontSize,titl);
 
-
-set (gca, 'PlotBoxAspectRatio', [1 0.5 1],...
-    'FontSize',14.,...
-    'LineWidth',1.0)

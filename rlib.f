@@ -9533,11 +9533,11 @@ c                                 shut off reach increments
 
       else if (reach.le.nopt(23)) then
 
-         reachg(im) = nopt(21)*(1d0 + nopt(23))/2d0
+         reachg(im) = nopt(21)/2d0 + nopt(23)
 
       else 
 
-         reachg(im) = nopt(21)*(1d0 + reach)/2d0
+         reachg(im) = nopt(21)/2d0 + reach
 
       end if 
 c                                 -------------------------------------
@@ -20287,7 +20287,7 @@ c convert the raw compositional coorinates stored for the ith entry
 c of prism to the prismatic compositional array x and convert the x
 c array to y.
 
-c if dynam then store the prismatic coordinates in the the zcoor array/
+c if dynam then store the prismatic coordinates in the the zcoor array.
 c----------------------------------------------------------------------
       implicit none 
 

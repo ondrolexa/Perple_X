@@ -321,7 +321,7 @@ c----------------------------------------------------------------------
 
       logical bad, kterat
 
-      integer i, ids, lds, id, kd, iter
+      integer i, ids, lds, id, kd, iter, igood
 
       double precision res0
 
@@ -360,6 +360,12 @@ c----------------------------------------------------------------------
       integer jcoct, jcoor, jkp
       double precision zcoor
       common/ cxt13 /zcoor(k20),jcoor(k21),jkp(k21),jcoct
+
+      integer ncoor,mcoor,ndim
+      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
+
+      double precision simp,prism
+      common/ cxt86 /simp(k13),prism(k24)
 
       integer ipoint,kphct,imyn
       common/ cst60 /ipoint,kphct,imyn
@@ -433,13 +439,32 @@ c                                  refinement point was the same solution.
 
          lds = ids
 
+         igood = 0 
+
          do i = 1, ntot
 c                                   increment jphct, 
 c                                   load jkp[ids], hkp[i], local
 c                                   and global composition arrays
             call loadgx (kd,i,ids,bad)
 
+            if (bad) cycle
+
+            igood = igood + 1
+
          end do
+c                                    special call to make H2O for
+c                                    lagged speciation, this is necessary
+c                                    because non-linear stretching can prevent
+c                                    fluid composition from reaching pure water.
+         if (igood.ne.0.and.ksmod(ids).eq.39) then 
+c                                    load prism with water coordinate
+            do i = 1, ndim(1,ids)
+               prism(i) = 0d0
+            end do 
+
+            call loadgx (kd,1,ids,bad)
+
+         end if
 
       end do
 
@@ -666,7 +691,7 @@ c                                  normalize the composition and free energy
          end do
 c                                  degeneracy test
          if (degen(jphct,2)) then 
-            bad = .true.
+c            bad = .true.
             return
          end if 
 
@@ -1986,6 +2011,9 @@ c----------------------------------------------------------------------
 
       double precision a,b,c
       common/ cst313 /a(k5,k1),b(k5),c(k1)
+
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 c----------------------------------------------------------------------
       npt = 0
       nsol = 0
@@ -1997,8 +2025,10 @@ c                                 solvus_tolerance_II, 0.25
       do i = 1, jphct
 
          if (is(i).ne.1) then
+
+c            if (x(i).lt.zero) cycle
 c                                 degeneracy test
-            if (degen(i,1)) cycle 
+c            if (degen(i,1)) cycle 
 c                                 make a list of found phases:
             id = i + inc
 c                                 currently endmember compositions are not 
@@ -2065,12 +2095,16 @@ c                                 get mus for lagged speciation
 c                                 perp 6.6.3, make a list of the least 
 c                                 metastable composition of each solution.
       do 20 i = jpt+1, jphct
+
 c DEBUG why was this here? added ~6.7.6, removed april 21, 2017
 c i think clamda(i).lt.0 allows degenerate compositions (and probably 
 c therefore the 6.7.6 version may be better, on the bright side with
 c it removed the solution composition gets refined (if endmember comps are
-c being allowed, see ldsol code); restored again april 2017.
-         if (is(i).ne.1.or.clamda(i).lt.wmach(3)) cycle 
+c being allowed, see ldsol code); restored again april 2017. removed sep 2018.
+
+         if (is(i).ne.1) cycle
+
+         if (degen(i,1)) cycle
 
          id = i + inc 
          iam = ikp(id)
@@ -2079,7 +2113,7 @@ c being allowed, see ldsol code); restored again april 2017.
 c                                the composition is more stable
 c                                than the previous composition 
 c                                of the solution. check if it's 
-c                                one of the stable solutions                               
+c                                one of the stable solutions
             do j = 1, nsol
 
                 if (iam.eq.idsol(j)) then
@@ -2089,7 +2123,7 @@ c                                tolerance from any of the stable
 c                                compositions.
                   do k = 1, kdsol(j)
                      if (.not.solvus(jdsol(k,j),id,iam)) goto 20
-                  end do 
+                  end do
                end if
             end do
 c                                the composition is acceptable
@@ -2112,15 +2146,15 @@ c                                 load the metastable solutions into kdv
 
       end do 
 
-      if (mpt.le.iopt(12)) then 
+      if (mpt.le.iopt(31)) then 
 c                                 less metastable refinement points than
-c                                 iopt(12)
+c                                 iopt(31)
          max = mpt
 
       else 
 c                                 sort the metastable points to
-c                                 find the most stable iopt(12) points
-         max = iopt(12)
+c                                 find the most stable iopt(31) points
+         max = iopt(31)
 
          call ffirst (slam,kdv,1,mpt,max,h9,ffirst)
 
@@ -2738,14 +2772,14 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      external ffirst, degen
+      external ffirst
 
       integer i, id, is(*), jmin(k19), opt, kpt, mpt, iter, tic, 
-     *        idead
+     *        idead, j, k
 
       double precision clamda(*), clam(k19), x(*)
 
-      logical stable(k19), solvnt(k19), quit, abort, test, degen
+      logical stable(k19), solvnt(k19), quit, abort, test, good, bad
 
       integer hcp,idv
       common/ cst52  /hcp,idv(k7)
@@ -2805,6 +2839,9 @@ c----------------------------------------------------------------------
       integer ikp
       common/ cst61 /ikp(k1)
 
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+
       save tic
       data tic/0/
 c----------------------------------------------------------------------
@@ -2829,8 +2866,12 @@ c                                 point.
          id = hkp(i)
 
          if (is(i).ne.1) then
+c                                 these tests destabilize chemical potential
+c                                 back-calculation.
 c                                 degeneracy test
-            if (degen(i,2)) cycle 
+c           if (degen(i,2)) cycle
+c                                 mode test
+c           if (x(i).lt.zero) cycle
 c                                 a stable point, add to list
             npt = npt + 1
             jdv(npt) = i
@@ -2877,8 +2918,11 @@ c                                 dump iteration details
          else if (id.gt.0) then 
 c                                 a metastable solution cpd
             if (clamda(i).lt.clam(id)) then
-c DEBUG wish i wrote was this is about, but it may be in yclos0/1
-               if (clamda(i).lt.wmach(3)) cycle 
+c DEBUG DEBUG DEBUG               this is a cheap way of eliminating
+c                                 compositionally redundant refinement 
+c                                 points, the problem is that the critical 
+c                                 value of clamda is problem/machine dependent. 
+c              if (clamda(i).lt.1d-7) cycle 
 c                                 keep the least metastable point
                jmin(id) = i
                clam(id) = clamda(i)
@@ -2909,7 +2953,6 @@ c                                 allows output of the result.
                idead = 101
             else 
                call lpwarn (101,'YCLOS2')
-               lopt(34) = .true. 
             end if 
 
          end if
@@ -2929,13 +2972,51 @@ c                                 contrary to what you might expect, this
 c                                 definitely improves quality, presumably because
 c                                 the metastable point will always be the closest
 c                                 composition to the stable point and the resulting
-c                                 overlap fogs the lp. 
-               cycle 
+c                                 overlap fogs the lp.
+
+c                                 sep 18, nah it stops the list from being clogged
+c                                 up with one phase
+               cycle
+
+            else
+c                                 delete compositionally degenerate refinement points
+               bad = .false. 
+
+               do j = 1, npt + kpt 
+
+                  if (jkp(jdv(j)).ne.jkp(jmin(i))) cycle
+
+                  good = .false.
+c                                 metastable point matches a refinement point, 
+c                                 check composition
+                  do k = 1, icp
+
+                     if (dabs(cp2(k,jdv(j))-cp2(k,jmin(i))).gt.nopt(5))
+     *                                                              then
+                        good = .true.
+                        exit
+
+                     end if
+
+                  end do
+
+                  if (good) cycle
+
+                  bad = .true.
+
+                  exit
+
+               end do
+
+               if (bad) cycle
+
             end if 
 
             kpt = kpt + 1
             jmin(kpt) = jmin(i)
             clam(kpt) = clam(i)
+c                                 temporarily use jdv(i>npt) for degeneracy test
+            jdv(npt+kpt) = jmin(i)
 
          end do
 
@@ -3651,7 +3732,7 @@ c                                 read data for solution phases on n9:
       call input9 (first,output)
 c                                 call initlp to initialize arrays 
 c                                 for optimization.
-      call initlp     
+      call initlp
 
       end
 
@@ -3833,7 +3914,8 @@ c                                June 8, 2018
 
       if (lopt(32).and.ksmod(ids).eq.39) then
 
-         if (lopt(28)) then 
+         if (lopt(46)) then
+c                                 set as aq_solvent_solvus:
 c                                 solute free cpd
             g2(jphct) = gsol1(ids)
 
@@ -3919,9 +4001,18 @@ c----------------------------------------------------------------------
       integer jphct, jpt
       double precision g2, cp2, c2tot
       common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),jphct,jpt
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 c----------------------------------------------------------------------
 
       degen = .false.
+c                                 turn test off if aq_oxide_components, 
+c                                 in principle this would allow disproportionation
+c                                 for non-elemental components
+      if (lopt(36)) return
 
       do i = 1, idegen
 

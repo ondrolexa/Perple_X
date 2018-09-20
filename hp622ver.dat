@@ -284,7 +284,7 @@ cren  = 1 mgts + 1 kos - 1 jd
 oen   = 1 mgts + 1 acm - 1 jd
        DQF(J/mol) = -15d3 + 0.15 * p_bar
 odi   = 1 di
-       DQF(J/mol) = -0.1d3 2.11 0.005
+       DQF(J/mol) = -0.1d3 0.211 0.005 | dqf_T corrected from 2.11, ECRG 9/18
                                   | Make definitions for Jennings and Holland, J Pet, 56:869-892, 2015 melt
 qjL = 2 qL
        DQF(J/mol) = 4d3     - 0.43 * p_bar 

@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.8.3, source updated Sept 11, 2018.',
+     *      'Perple_X version 6.8.4, source updated Sept 20, 2018.',
 
      *      'Copyright (C) 1986-2018 James A D Connolly '//
      *      '<www.perplex.ethz/copyright.html>.'
@@ -240,18 +240,13 @@ c                                 bad_number keyword
       nopt(7) = dnan()
 c                                 zero_mode (<0 off)
       nopt(9) = 1d-6
-c                                 set zero threshold for fractionations calculations
-      if (icopt.eq.7.or.icopt.eq.9) nopt(9) = 0d0
+c                                 set zero threshold for fractionation calculations
+      if (icopt.eq.7.or.icopt.eq.9.or.icopt.eq.12) nopt(9) = 0d0
 c                                 tolerance below which a component is considered to 
 c                                 be zero during fractionation
       nopt(11) = 1d-6
 c                                 iteration keyword 1
       nopt(21) = 2d0
-c                                 iteration keyword 2
-c                                 max number of points to 
-c                                 be refined in addition to 
-c                                 active points
-      iopt(12) = 4
 c                                 final resolution, auto-refine stage
       rid(2,2) = 1d-3
 c                                 final resolution, exploratory stage
@@ -271,7 +266,7 @@ c                                 quench temperature (K)
       nopt(12) = 0d0
 c                                 initial resolution for adaptive 
 c                                 refinement
-      nopt(13) = 1d0/15d0
+      nopt(13) = 1d0/16d0
 c                                 perturbation to eliminate pseudocompound
 c                                 degeneracies
       nopt(15) = 5d-3
@@ -343,13 +338,13 @@ c                                 hyb_ch4 - eos to be used for pure ch4, 0-1
 c                                 
 c     iopt(28-30)                 reserved as debug options iop_28 - iop_30
 
-c                                 refinement_points_II
+c                                 refinement_points_II renamed refinement_points
       iopt(31) = 5
 c                                 maximum number of aqueous species
       iopt(32) = 20
 c                                 aq_lagged_iterations
       iopt(33) = 0
-c                                 output back-calculated solute speciation
+c                                 aq_output output back-calculated solute speciation
       lopt(25) = .true.
 c                                 aq_solvent_composition (true = molar)
       lopt(26) = .true.
@@ -357,7 +352,7 @@ c                                 aq_solvent_composition (true = molar)
 c                                 aq_solute_composition (true = molal)
       lopt(27) = .true.
       valu(27) = 'm'
-c                                 lagged speciation
+c                                 aq_lagged_speciation
       lopt(32) = .false.
 c                                 output_iteration_g
       lopt(33) = .false.
@@ -371,9 +366,17 @@ c                                 allow null phases
       lopt(37) = .false.
 c                                 aq_bad_results 
 c                                       0 - err - treat as bad result (optimization error)
-c                                       1 - ret - accept first bad result and cease iteration
-c                                       2 - ign - ignore and continue iteration.
+c                                       1 - 101 - cease iteration at solute component saturation
+c                                       2 - 102
+c                                       3 - 103
+c                                      99 - ign - ignore 102/103 conditions and cease as in 101.
       iopt(22) = 0
+      valu(5) = 'err'
+c                                 for infiltration calculations set default to 101
+      if (icopt.eq.12) then 
+         iopt(22) = 1
+         valu(5) = '101'
+      end if 
 c                                 refine_endmembers
       lopt(39) = .false.
 c                                 automatic specification of refinement_points_II
@@ -387,7 +390,7 @@ c                                 reject_negative_sites
 c                                 aq_ion_H+ 
       lopt(44) = .true.
 c                                 fancy_cumulative_modes
-      lopt(45) = .true.
+      lopt(45) = .false.
 c                                 initialize mus flag lagged speciation
       mus = .false.
 c                                 -------------------------------------
@@ -482,7 +485,7 @@ c                                 phase composition key
 
          else if (key.eq.'fancy_cumulative_modes') then 
 
-             if (val.eq.'F') lopt(45) = .false.
+             if (val.eq.'T') lopt(45) = .true.
 
          else if (key.eq.'null_phase') then 
 
@@ -498,7 +501,10 @@ c                                 phase composition key
 
          else if (key.eq.'aq_bad_results') then 
 
-            if (val.eq.'101') then 
+            if (val.eq.'err') then 
+c                                 abort on any hint of trouble
+               iopt(22) = 0
+            else if (val.eq.'101') then 
 c                                 continue on solute undersaturation (unwise)
                iopt(22) = 1
             else if (val.eq.'102') then 
@@ -509,7 +515,9 @@ c                                 abort if pure solvent is stable
                iopt(22) = 3
             else if (val.eq.'ign') then 
                iopt(22) = 99
-            end if 
+            end if
+
+            valu(5) = val
 
          else if (key.eq.'refine_endmembers') then 
 
@@ -646,14 +654,18 @@ c                                 "vapor" threshold
 
 c             obsolete
 
+         else if (key.eq.'aq_solvent_solvus') then
+c                                  allow for solvent immiscisibiliy
+              lopt(46) = .true.
+
          else if (key.eq.'zero_mode') then
 c                                 zero_mode key
             read (strg,*) nopt(9)
 
-         else if (key.eq.'iteration') then
-c                                 max iteration key
+         else if (key.eq.'iteration'.or.
+     *            key.eq.'resolution_factor') then
+c                                 how fast resolution improves with iteration
             read (val,*) nopt(21)
-            read (nval1,*) iopt(12)
 
          else if (key.eq.'initial_resolution') then
 c                                 initial_resolution key 
@@ -697,15 +709,17 @@ c                                 seismic data output WERAMI/MEEMUM/FRENDLY
                valu(14) = 'som'
             end if
 
-         else if (key.eq.'refinement_points_II') then
-c                                 2nd stage refinement points
+         else if (key.eq.'refinement_points_II'.or.
+     *            key.eq.'refinement_points') then
+c                                 refinement points
             if (val.ne.'aut') then 
                read (strg,*) iopt(31)
                lopt(40) = .false.
             end if 
 
          else if (key.eq.'max_aq_species_out') then 
-c                                 2nd stage refinement points
+c                                 max number of aq species output for
+c                                 back-calculated and lagged speciation
             read (strg,*) iopt(32)
 
          else if (key.eq.'reach_increment_switch') then 
@@ -1079,11 +1093,11 @@ c                                 fractionation theshold flag
       if (nopt(21).le.1d0) then 
          write (*,1040)
          nopt(21) = 2d0
-      end if 
+      end if
 
-      if (iopt(12).gt.k5.or.iopt(12).lt.1) then 
+      if (iopt(31).gt.k5+2.or.iopt(31).lt.1) then 
          write (*,1090)
-         iopt(12) = 4
+         iopt(31) = icp + 2
       end if 
 c                                 initial resolution
       if (nopt(13).ge.1d0.or.nopt(13).lt.0d0) then 
@@ -1245,8 +1259,8 @@ c                                 proportionality constant for shear modulus
       nopt(16) = 1.5d0*(1d0-2d0*nopt(16))/(1d0+nopt(16))
 
 1000  format ('Context specific options are echoed in: ',a,/)
-1040  format (/,'Warning: value1 of the iteration keyword must be ',
-     *         ' > 1',/,'value1 will be',
+1040  format (/,'Warning: iteration keyword value must be ',
+     *         ' > 1',/,'iteration will be',
      *         ' assigned its default value [2].',/)
 1050  format (/,'Warning: initial_resolution keyword must be ',
      *         '< 1',/,'the keyword will be',
@@ -1256,8 +1270,8 @@ c                                 proportionality constant for shear modulus
 1070  format (/,'Warning: auto_refine_factors must be ',
      *         '> 1',/,'the keyword will be',
      *         ' assigned its default value (',i2,').',/)
-1090  format (/,'Warning: value2 of the iteration keyword must be ',
-     *         ' >1 and <8',/,'value2 will be',
+1090  format (/,'Warning: refinement_points must be ',
+     *         ' >1 and <8',/,'refinement_points will be',
      *         ' assigned its default value [4].',/)
 1100  format (/,'Error: data (',a
      *       ,') follows the auto_refine keyword value '
@@ -1367,14 +1381,14 @@ c                                 reaction format and lists
                write (n,1160) grid(5,1),grid(5,2),rid(1,1),rid(1,2), 
      *                        isec,valu(7),valu(9),valu(8),valu(10)
 
-            end if                     
+            end if
 
          else 
 c                                 iopt(6) is automatically off
 c                                 for meemum             
             if (iopt(6).ne.0) write (n,1170) nopt(17)
 c                                 adaptive optimization
-            write (n,1180) rid(2,1),rid(2,2),int(nopt(21)),iopt(12),k5,
+            write (n,1180) rid(2,1),rid(2,2),int(nopt(21)),
      *                     iopt(31),k5,nopt(25),int(nopt(23)),valu(20),
      *                     nopt(9),nopt(11)
 c                                 gridding parameters
@@ -1411,16 +1425,19 @@ c                                 pc-perturbation
 c                                 generic thermo parameters:
          write (n,1012) nval1,nopt(12),nopt(20),valu(17),
      *                  lopt(8),lopt(4),nopt(5),iopt(21),
-     *                  iopt(25),iopt(26),iopt(27),lopt(32)
+     *                  iopt(25),iopt(26),iopt(27),valu(5),
+     *                  lopt(32),lopt(44),lopt(46),nopt(34)
 c                                 for meemum add fd stuff
          if (iam.eq.2) write (n,1017) nopt(31),nopt(26),nopt(27)
 
          if ((iam.eq.1.or.iam.eq.15).and.icopt.ne.1) then 
 c                                 vertex output options, dependent potentials
             write (n,1013) valu(11),lopt(19)
-c                                 logarithmic_p, bad_number
-            if (iam.eq.1) write (n,1014) lopt(14),nopt(7)
-
+c                                 logarithmic_p, bad_number, auto_exclude
+            if (iam.eq.1) then 
+               write (n,1014) lopt(14),nopt(7)
+               write (n,1234) lopt(5)
+            end if 
          end if 
 
       end if
@@ -1429,8 +1446,10 @@ c                                 logarithmic_p, bad_number
 c                                 WERAMI input/output options
          write (n,1230) lopt(25),iopt(32),l9,valu(26),valu(27),
      *                  lopt(15),lopt(14),nopt(7),lopt(22),valu(2),
-     *                  valu(21),valu(3),valu(4),lopt(6),valu(22),
+     *                  valu(21),valu(3),lopt(41),lopt(42),lopt(45),
+     *                  valu(4),lopt(6),valu(22),
      *                  lopt(21),lopt(24),valu(14),lopt(19),lopt(20)
+         write (n,1234) lopt(5)
 c                                 WERAMI info file options
          write (n,1241) lopt(12)       
 c                                 WERAMI thermodynamic options
@@ -1443,6 +1462,7 @@ c                                 MEEMUM input/output options
      *                  lopt(14),nopt(7),lopt(22),valu(2),
      *                  valu(21),valu(3),lopt(6),valu(22),lopt(21),
      *                  lopt(24),valu(14),lopt(19),lopt(20)
+         write (n,1234) lopt(5)
 
       else if (iam.eq.5) then 
 c                                 FRENDLY input/output options
@@ -1481,7 +1501,7 @@ c                                 resolution blurb
      *          '[default]:')
 1010  format (/,2x,'Solution subdivision options:',//,
      *        4x,'initial_resolution     ',f5.3,6x,
-     *           '0->1 [1/15], 0 => off',/,
+     *           '0->1 [1/16], 0 => off',/,
      *        4x,'stretch_factor         ',f5.3,6x,'>0 [0.0164]',/,
      *        4x,'subdivision_override   ',a3,8x,'[off] lin str',/,
      *        4x,'hard_limits            ',a3,8x,'[off] on')
@@ -1502,12 +1522,18 @@ c                                 generic thermo options
      *        4x,'hybrid_EoS_H2O         ',i4,7x,'[4] 0-2, 4-5',/,
      *        4x,'hybrid_EoS_CO2         ',i4,7x,'[4] 0-4',/,
      *        4x,'hybrid_EoS_CH4         ',i4,7x,'[1] 0-1',/,
-     *        4x,'aq_lagged_speciation   ',l1,10x,'[T] F')
+     *        4x,'aq_bad_results         ',a3,8x,'[err] 101, 102, 103,',
+     *                                           ' ignore',/,
+     *        4x,'aq_lagged_speciation   ',l1,10x,'[F] T',/,
+     *        4x,'aq_ion_H+              ',l1,10x,'[T] F => use OH-',/,
+     *        4x,'aq_oxide_components    ',l1,10x,'[F] T',/,
+     *        4x,'aq_solvent_solvus      ',l1,10x,'[F] T',/,
+     *        4x,'aq_vapor_epsilon       ',f3.1,8x,'[1.]')
 1013  format (/,2x,'Input/Output options:',//,
      *        4x,'dependent_potentials   ',a3,8x,'off [on]',/,
      *        4x,'pause_on_error         ',l1,10x,'[T] F')
 1014  format (4x,'logarithmic_p          ',l1,10x,'[F] T',/,
-     *        4x,'bad_number          ',f7.1,7x,'[0.0]')
+     *        4x,'bad_number          ',f7.1,7x,'[NaN]')
 1015  format (/,2x,'Auto-refine options:',//,
      *        4x,'auto_refine            ',a3,8x,'off manual [auto]')
 c                                 thermo options for frendly
@@ -1519,13 +1545,13 @@ c                                 thermo options for frendly
      *        4x,'hybrid_EoS_CH4         ',i4,7x,'[1] 0-1')
 1017  format (4x,'fd_expansion_factor    ',f3.1,8x,'>0 [2.]',/,
      *        4x,'finite_difference_p    ',d7.1,4x,'>0 [1d4]; ',
-     *           'fraction = ',d7.1,1x,'[1d-2]')
+     *           'fraction = ',d7.1,3x,'[1d-2]')
 1020  format (/,'To change these options see: ',
-     *        'www.perplex.ethz.ch/perplex_options.html',/)      
+     *        'www.perplex.ethz.ch/perplex_options.html',/)
 1090  format (/,2x,
      *        'Worst case (Cartesian) compositional resolution (mol)',
-     *        ': ',//,4x,'Exploratory stage: ',g12.3,/,
-     *                4x,'Auto-refine stage: ',g12.3)
+     *        ': ',//,4x,'Exploratory stage: ',g11.3E1,/,
+     *                4x,'Auto-refine stage: ',g11.3E1)
 1100  format (/,2x,'Adapative minimization will be done with: ',
      *        //,3x,i2,' iterations in the exploratory stage',/,
      *           3x,i2,' iterations in the auto-refine stage')
@@ -1547,22 +1573,19 @@ c                                 thermo options for frendly
 1170  format (4x,'auto_refine_factor_I   ',f4.1,7x,'>=1 [3]')
 1180  format (/,2x,'Free energy minimization options:',//,
      *        4x,'final_resolution:      ',/,
-     *        4x,'  exploratory stage    ',g8.2,3x,
+     *        4x,'  exploratory stage    ',g7.1E1,4x,
      *           '[1e-2], target value, see actual values below',/,
-     *        4x,'  auto-refine stage    ',g8.2,3x,
+     *        4x,'  auto-refine stage    ',g7.1E1,4x,
      *           '[1e-3], target value, see actual values below',/,
-     *        4x,'resolution factor      ',i2,9x,
-     *           '>1 [3]; iteration keyword value 1',/,
-     *        4x,'refinement points      ',i2,9x,
-     *           '1->',i2,' [4]; iteration keyword value 2',/,
-     *        4x,'refinement_points_II   ',i2,9x,'[aut] or 1->',i2,
+     *        4x,'resolution_factor      ',i2,9x,'[2]',/,
+     *        4x,'refinement_points       ',i2,8x,'[aut] or 1->',i2,
      *           '; aut = automatic',/,
-     *        4x,'solvus_tolerance_II    ',f4.2,7x,'0->1 [0.2]',/,
+     *        4x,'solvus_tolerance_II     ',f4.2,6x,'0->1 [0.2]',/,
      *        4x,'global_reach_increment ',i2,9x,'>= 0 [0]',/,
-     *        4x,'reach_increment_switch ',a3,8x,'[on] off all',/,
-     *        4x,'zero_mode              ',e7.1,4x,
+     *        4x,'reach_increment_switch  ',a3,7x,'[on] off all',/,
+     *        4x,'zero_mode              ',e7.1E1,4x,
      *           '0->1 [1e-6]; < 0 => off',/,
-     *        4x,'zero_bulk              ',e7.1,4x,
+     *        4x,'zero_bulk              ',e7.1e1,4x,
      *           '0->1 [1e-6]; < 0 => off')
 1190  format (/,2x,'1D grid options:',//,
      *        4x,'y_nodes               ',i3,' /',i3,4x,'[20/40], >0, '
@@ -1594,11 +1617,14 @@ c                                 thermo options for frendly
      *        'y [m]: y => mol fraction, m => molality',/,
      *        4x,'spreadsheet            ',l1,10x,'[F] T',/,
      *        4x,'logarithmic_p          ',l1,10x,'[F] T',/,
-     *        4x,'bad_number         ',f7.1,8x,'[0.0]',/,
+     *        4x,'bad_number         ',f7.1,8x,'[NaN]',/,
      *        4x,'composition_constant   ',l1,10x,'[F] T',/,
      *        4x,'composition_phase      ',a3,8x,'[mol] wt',/,
      *        4x,'composition_system     ',a3,8x,'[wt] mol',/,
      *        4x,'proportions            ',a3,8x,'[vol] wt mol',/,
+     *        4x,'absolute               ',l1,10x,'[F] T',/,
+     *        4x,'cumulative             ',l1,10x,'[F] T',/,
+     *        4x,'fancy_cumulative_modes ',l1,10x,'[F] T',/,
      *        4x,'interpolation          ',a3,8x,'[on] off ',/,
      *        4x,'melt_is_fluid          ',l1,10x,'[F] T',/,
      *        4x,'solution_names         ',a3,8x,'[model] abbreviation',
@@ -1609,14 +1635,14 @@ c                                 thermo options for frendly
      *        4x,'pause_on_error         ',l1,10x,'[T] F',/,
      *        4x,'poisson_test           ',l1,10x,'[F] T')
 1231  format (/,2x,'Input/Output options:',//,
-     *        4x,'aq_output              ',l1,10x,'[F] T',/
+     *        4x,'aq_output              ',l1,10x,'[T] F',/
      *        4x,'aq_species             ',i3,8x,'[20] 0-',i3,/,
      *        4x,'aq_solvent_composition ',a3,8x,
      *        '[y] m: y => mol fraction, m => molality',/,
      *        4x,'aq_solute_composition  ',a3,8x,
      *        'y [m]: y => mol fraction, m => molality',/,
      *        4x,'logarithmic_p          ',l1,10x,'[F] T',/,
-     *        4x,'bad_number         ',f7.1,8x,'[0.0]',/,
+     *        4x,'bad_number         ',f7.1,8x,'[NaN]',/,
      *        4x,'composition_constant   ',l1,10x,'[F] T',/,
      *        4x,'composition_phase      ',a3,8x,'[mol] wt',/,
      *        4x,'composition_system     ',a3,8x,'[wt] mol',/,
@@ -1631,7 +1657,7 @@ c                                 thermo options for frendly
 1232  format (/,2x,'Input/Output options:',//,
      *        4x,'spreadsheet            ',l1,10x,'[F] T',/,
      *        4x,'logarithmic_p          ',l1,10x,'[F] T',/,
-     *        4x,'bad_number          ',f7.1,7x,'[0.0]',/,
+     *        4x,'bad_number          ',f7.1,7x,'[NaN]',/,
      *        4x,'melt_is_fluid          ',l1,10x,'[F] T',/,
      *        4x,'seismic_output         ',a3,8x,'[some] none all',/,
      *        4x,'pause_on_error         ',l1,10x,'[T] F',/,
@@ -1642,6 +1668,7 @@ c                                 thermo options for frendly
      *        4x,'explicit_bulk_modulus  ',l1,10x,'[F] T',/,
      *        4x,'poisson_ratio          ',a3,8x,'[on] all off; ',
      *        'Poisson ratio = ',f4.2)
+1234  format (4x,'auto_exclude           ',l1,10x,'[T] F')
 1240  format (/,2x,'Information file output options:',//,
      *        4x,'option_list_files      ',l1,10x,'[F] T; ',
      *           'echo computational options',/,
@@ -2334,7 +2361,7 @@ c---------------------------------------------------------------------
      *           'perplex_option.dat')
 411   format (2x,'- reduce the auto_refine_factor_I keyword in ',
      *           'perplex_option.dat')
-412   format (2x,'- reduce refinement_points_II keyword ',
+412   format (2x,'- reduce refinement_points keyword ',
      *           'in perplex_option.dat',/,
      *        2x,'- reduce the 1st value of the iteration keyword ',
      *           'in perplex_option.dat',/,
@@ -2589,8 +2616,6 @@ c----------------------------------------------------------------------
          write (*,15)
       else if (ier.eq.16) then
          write (*,16) char
-      else if (ier.eq.17) then
-         write (*,17)
       else if (ier.eq.18) then
          write (*,18) realv
       else if (ier.eq.19) then
@@ -2671,8 +2696,6 @@ c----------------------------------------------------------------------
          write (*,58)
       else if (ier.eq.59) then
          write (*,59) char
-      else if (ier.eq.60) then
-         write (*,60) char
       else if (ier.eq.61) then
          write (*,61) char
       else if (ier.eq.63) then
@@ -2726,12 +2749,6 @@ c----------------------------------------------------------------------
       else if (ier.eq.205) then
          write (*,205) int
          write (*,900)
-      else if (ier.eq.207) then
-         write (*,207) int
-      else if (ier.eq.208) then
-         write (*,208) int
-      else if (ier.eq.209) then
-         write (*,209) int
       else if (ier.eq.228) then 
          write (*,228) char, realv, int, char
       else
@@ -2746,8 +2763,8 @@ c----------------------------------------------------------------------
      *        ' (-zero_mode) this may be',/,'indicative of numeric ',
      *        'instability',/)
 3     format (/,'**warning ver003** the solution model file is ',
-     *         'in a format that is inconsistent with ',/,
-     *         'this version of Perple_X.',/,'Update the file and/or '
+     *         ' inconsistent with this',/,
+     *         'this version of Perple_X. Update the file and/or '
      *         'Perple_X',/)
 4     format (/,'**warning ver004** the data includes ',a,' values, '
      *      ,'probably because bad_number',/,'in perplex_option.dat = '
@@ -2793,16 +2810,14 @@ c----------------------------------------------------------------------
      *          ,' effect your',/,'results (see Connolly 1990).',/)
 16    format (/,'**warning ver016** ',a,' has been rejected because it',
      *       ' has no associated volumetric EoS.',/,'To override this ',
-     *        'behavior either set auto_exclude to false or add an ',
+     *        'behavior set auto_exclude to false or add an ',
      *        'association.',/)
-17    format (/,'**warning ver017** you gotta be kidding, either ',
-     *          ' 1 or 2 components, try again:',/)
 18    format (/,'**warning ver018** the value of the default dependen',
      *         't variable (',g14.6,') for the following',/,
      *         'equilibrium was inconsistent with the an earlier ',
      *         'determination of the invariant condition',/,
      *         'and will be reset. This may cause the curve to ',
-     *         'look kinked near the invariant point',/)
+     *         'kink near the invariant point',/)
 19    format ('**warning ver019** you must specify at least ',
      *        'one thermodynamic component, try again',/)
 20    format ('**warning ver020** sfol2')
@@ -2875,10 +2890,9 @@ c----------------------------------------------------------------------
      *          'or because the phases of the system do not span ',
      *          'its bulk composition.',//,
      *          4x,'In the 1st case:',/,
-     *          8x,'increase final_resolution and/or',/,
-     *          8x,'increase refinement_threshold and/or',/,
-     *          8x,'increase value 2 of iteration and/or',/,
-     *          8x,'increase refine_points_II and/or',/,
+     *          8x,'increase (sic) final_resolution and/or',/,
+     *          8x,'increase resolution_factor and/or',/,
+     *          8x,'increase reach_increment and/or',/,
      *          8x,'increase speciation_factor and/or',/,
      *          8x,'increase speciation_max_it and/or',/,
      *          4x,'see: www.perplex.ch/perplex_options.html for ',
@@ -2908,18 +2922,13 @@ c----------------------------------------------------------------------
 49    format (/,'**warning ver049** warning ',i3,' will not be repeated'
      *         ,' for future instances of this problem.',/,
      *          'currently in routine: ',a,//)
-c49    format (/,'**warning ver049** some pseudocompound data has not',
-c     *          ' been output because',/' the bulk modulus pressure ',
-c     *          'derivative is not constant for all endmembers ',/,
-c     *          ' (SWASH, see program documentation Eq 2.3)',/)
 50    format (/,'**warning ver050** reformulating prismatic ',
      *          'solution: ',a,' because of missing endmembers. ',
      *        /,'(reformulation can be controlled explicitly ',
      *          'by excluding additional endmembers).',/)
 51    format (/,'**warning ver051** cannot make ',a,' because of ',
-     *          'missing data or'
-     *       ,/,'an invalid definition in the thermodynamic data file.'
-     *       ,/)
+     *          'missing data or an'
+     *       ,/,'invalid definition in the thermodynamic data file.',/)
 52    format (/,'**warning ver052** rejecting ',a,'; excluded or '
      *       ,'invalid composition.',/)
 53    format (/,'**warning ver053** the failure rate during speciation',
@@ -2938,12 +2947,10 @@ c     *          ' (SWASH, see program documentation Eq 2.3)',/)
      *         'saturation constraints',/,'or use unconstrained free ',
      *         'energy minimization.',/)
 58    format (/,'**warning ver058** wway, the equilibrium of the '
-     *         ,'following reaction',/,' is inconsistent with the ',
+     *         ,'following reaction',/,'is inconsistent with the ',
      *          'invariant equilibrium.',/)
 59    format (/,'**warning ver059** endmember ',a,
      *        ' has invalid site populations.',/)
-60    format (/,'**warning ver060** non-fatal programming error ',
-     *          'routine:',a,/)
 61    format (/,'**warning ver061** the data includes NaN values, '
      *      ,'probably because bad_number',/,'in perplex_option.dat = '
      *      ,'NaN, these values will be replaced by zeros. To avoid ',/,
@@ -2954,7 +2961,7 @@ c     *          ' (SWASH, see program documentation Eq 2.3)',/)
      *        /)
 68    format (/,'**warning ver068** degenerate initial assemblage in ',
      *          'COFACE, this should never occur',/,'if you see this ',
-     *          'message more than once, please report the problem',/)
+     *          'message please report the problem',/)
 73    format (/,'**warning ver073** an invariant point has been ',
      *          'skipped, routine: ',a,/,
      *          'decreasing DTOL (',g9.3,') in the thermodynamic ', 
@@ -3014,7 +3021,7 @@ c     *          ' (SWASH, see program documentation Eq 2.3)',/)
      *        'perplex_option.dat] must be > 0, but is ',i2,
      *        '. Set to 1 for the current calculation',/)
 114   format (/,'**warning ver114** the default increment of an ',
-     *        'independent variable is <',/,' 1 percent of ',
+     *        'independent variable is <',/,'1 percent of ',
      *        'its range, this is usually inefficient',/)
 172   format (/,'**warning ver172** you cannot use this equation of',
      *          ' state with Y(CO2)',/,' as an indepedent variable, ',
@@ -3044,21 +3051,15 @@ c     *          ' (SWASH, see program documentation Eq 2.3)',/)
      *        'parameters.h',/,3x,
      *        'and recompiling VERTEX permit SMPLEX to converge.',/)
 205   format (/,'**error ver205** too many new phase assemblages, ',
-     *        'found by routine newhld',/,' increase dimension j9 (',
+     *        'found by routine newhld',/,'increase dimension j9 (',
      *        i8,')',/)
-207   format ('**warning ver207** the assemblage you input is ',
-     *        'metastable (ier=',i3,').')
-208   format ('**warning ver208** the assemblage you input is ',
-     *        'degenerate (ier=',i3,').')
-209   format ('**warning ver209** the assemblage you input does not'
-     *       ,' span the specified bulk composition (ier=',i3,').')
 228   format (/,'**warning ver228** in solution model ',a,' negative ',
      *          'composition (',g12.6,') for component ',i2,/,
      *          'this may indicate an incorrect stoichiometric ',
      *          'dependent endmember definition.',//,
      *          'This warning is issued only for the first negative ',
      *          'composition of ',a,/)
-900   format (' the calculation may be incomplete !!!!',/)
+900   format ('the calculation may be incomplete !!!!',/)
 999   format (/,'**warning unspecified** ier =',i3,' routine ',a6
      *         ,' r = ',g12.6,' int = ',i9,/)
       end

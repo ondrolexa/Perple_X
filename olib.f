@@ -174,15 +174,15 @@ c                                 weight composition
 
          end if
 
-         if (lopt(28)) then
+c         if (lopt(28)) then
 
-            do l = 1, icomp
-              write (*,666) 
-     *          cname(l),pcomp(l,i)/props(17,i)*1d3,
-     *          cname(l),atwt(l)*pcomp(l,i)/props(17,i)*1d3
-            end do
+c            do l = 1, icomp
+c              write (*,666) 
+c     *          cname(l),pcomp(l,i)/props(17,i)*1d3,
+c     *          cname(l),atwt(l)*pcomp(l,i)/props(17,i)*1d3
+c            end do
 
-         end if
+c         end if
 
       end do 
 
@@ -562,21 +562,21 @@ c                                 cp, specific cp
 
       end if
 
-      if (lopt(28)) then
+c      if (lopt(28)) then
 
-667   format ('sm[',a,'] := ',g14.6,'; sw[',a,'] := ',g14.6,';',
-     *        'sms[',a,'] := ',g14.6,'; sws[',a,'] := ',g14.6,';')
+c667   format ('sm[',a,'] := ',g14.6,'; sw[',a,'] := ',g14.6,';',
+c     *        'sms[',a,'] := ',g14.6,'; sws[',a,'] := ',g14.6,';')
 
-         do i = 1, icomp
+c         do i = 1, icomp
 
-            write (*,667) cname(i),fbulk(i)/psys(17)*1d3,
-     *                    cname(i),fbulk(i)*atwt(i)/psys(17)*1d3,
-     *                    cname(i),fbulk1(i)/psys1(17)*1d3,
-     *                    cname(i),fbulk1(i)*atwt(i)/psys1(17)*1d3
+c            write (*,667) cname(i),fbulk(i)/psys(17)*1d3,
+c     *                    cname(i),fbulk(i)*atwt(i)/psys(17)*1d3,
+c     *                    cname(i),fbulk1(i)/psys1(17)*1d3,
+c     *                    cname(i),fbulk1(i)*atwt(i)/psys1(17)*1d3
 
-         end do
+c         end do
 
-      end if 
+c      end if 
 c                                 chemical potentials variance
       if (jpot.ne.1) then 
          write (lu,1130) (cname(i), i = 1, jbulk)

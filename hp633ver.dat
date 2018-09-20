@@ -67,104 +67,104 @@ CO2
 end_special_components
 
  
-begin_makes
+begin_makes             
                                 | the make definitions segment of the thermodynamic
                                 | data file is preceeded by the "begin_makes" keyword,
-                                | and terminated by the "end_makes" keyword. Within
-                                | this segment comments must be preceeded by a "|"
-                                | character.
- 
+                                | and terminated by the "end_makes" keyword. Within 
+                                | this segment comments must be preceeded by a "|" 
+                                | character. 
+
                                 | the make definitions define new thermodynamic entities
-                                | (e.g., fO2 buffers, endmembers etc) as a linear combination of
+                                | (e.g., fO2 buffers, endmembers etc) as a linear combination of 
                                 | the "real" entities in the thermodynamic file. the definition
-                                | includes a "DQF" correction that is used to increment the
+                                | includes a "DQF" correction that is used to increment the 
                                 | G of the linearly combined G's as a function of pressure and
                                 | temperature, i.e., the total G computed for a made entity is
-                                | the G of the right-hand-side of the make reaction + Gdqf.
- 
-                                | the format assumes data on one line of less than 240 characters,
+                                | the G of the right-hand-side of the make reaction + Gdqf. 
+
+                                | the format assumes data on one line of less than 240 characters, 
                                 | the expected format is
- 
+
                                 | name = num_1 * name_1 + num_2 * name_2 ....+ num_int * name_int
                                 | dnum_1 dnum_2 dnum_3
- 
-                                | where i num_j is a number or fraction (i.e., two numbers separated
-                                | by a '/') and name_j are the names of the j existing entities.
-                                | and the dqf correction to the entity 'name' is
+
+                                | where i num_j is a number or fraction (i.e., two numbers separated 
+                                | by a '/') and name_j are the names of the j existing entities. 
+                                | and the dqf correction to the entity 'name' is 
                                 | Gdqf(J/mol) = dnum_1 + T[K]*dnum_2 + P[bar]*dnum_3
- 
+
                                 | made entities are excluded from calculations in vertex if they
                                 | are included in the excluded phase list in the computational option
                                 | file (e.g., "in"); however, real entities to the right of the equals
                                 | sign in a make definition are not effected by the excluded phase list.
                                 | for example, if qL (liquid silica) is excluded, the make definition
-                                | q8L = 4 qL
-                                | will function, but qL will not be considered as a possible phase in
-                                | the vertex calculation.
+                                | q8L = 4 qL 
+                                | will function, but qL will not be considered as a possible phase in 
+                                | the vertex calculation. 
  
  |                                kyco silica buffer
  | kyco = 1 ky - 1 cor
- | 0 0 0
+ | 0 0 0 
  |                                sphene + cc + ru + q CO2 buffer
  | tcrq = 1 cc + 1 ru + 1 q - 1 sph
- | 0. 0. 0.
+ | 0. 0. 0. 
                                 | Ti phengite endmember for Auzanneau et al. (CMP 159:1-24, 2010) mica model
                                 | Gdqf corrected from -482876. to -13469.8 J/mol, D. Dolejs, Mar 6, 2010.
  | tip = 1 fcel + 1 geik - 1/2 fs
  | -13469.8  -14.694 .84
- 
+        
  | mthm = 6 hem - 4 mt             | mthm O2 buffer
- | 0 0 0
- 
-qfm = 2 mt + 3 q  -3 fa         | qfm O2 buffer
-0 0 0
- 
+ | 0 0 0                        
+
+ | qfm = 2 mt + 3 q  -3 fa         | qfm O2 buffer
+ | 0 0 0                        
+
  |emog = -1 fo - 2 gph + 1 mag + 1/2 en | EMOG O2 buffer
- |0 0 0
- 
+ |0 0 0 
+
  |ffm = -6 fa + 3 fs + 2 mt        | ffm O2 buffer
- |0 0 0
- 
+ |0 0 0 
+
  |fff = 2 fa - 2 iron - 1 fs         | iron fa fs O2 buffer
- |0 0 0
- 
+ |0 0 0 
+
  | tbi = 1 phl - 1 fo + 1 ru + 1 q | Ti-biotite endmember for TiBio(HP) model
- | 45e3 0 0
- 
+ | 45e3 0 0 
+
  | tbi1 = 1 phl - 1 br + 1 ru      | Ti-biotite endmember for TiBio(WPH) model
  | 78e3 0 0                        | L Tajcamanova, 5/11/2006.
- 
+
  | fbi = 1 east - 1/2 cor + 1/2 hem  | Fe3+-biotite endmember for TiBio(WPH) model, definition corrected for
  |                                   | presumed typo in the WPH (JMG, 2007) paper by L Tajcamanova, 5/11/2007.
- | 13.45e3 0 0                       | fbi = 1 east - 1/2 cor + 1 hem, 8/10/2007, L Tajcamanova
- 
+ | 13.45e3 0 0                       | fbi = 1 east - 1/2 cor + 1 hem, 8/10/2007, L Tajcamanova               
+
                                 | Fe endmembers for ultramafic mineral solution
                                 | models, based on the talc Fe-Mg exchange.
 fbr = 1 br - 1/3 ta + 1/3 fta
 DQF(J/mol) = 0
- 
+
 fchum = 1 chum - 3 ta + 3 fta
 DQF(J/mol) = 0
- 
+
 fphA = 1 phA - 7/3 ta + 7/3 fta
 DQF(J/mol) = 0
- 
+
 fatg = 1 atg - 16 ta + 16 fta
 DQF(J/mol) = 0
- 
+
 atgts = 4 clin + 9/17 atg - 24/17 br      | Tshermaks antigorite for Atg(PN) model (Padrón-Navarta et al., 2013, Lithos)
 DQF = -2e3 + 46.1*T_K
- 
+
 | ettore's makes:
-| odo = 1/2 mag 1/2 cc
-| -1000. 0 0
-| oank = 1/4 sid 1/2 cc 1/4 mag
-|  -750 0 0
- 
+| odo = 1/2 mag 1/2 cc 
+| -1000. 0 0 
+| oank = 1/4 sid 1/2 cc 1/4 mag 
+|  -750 0 0 
+
 | odo = 1/2 mag + 1/2 cc          | ordered dolmite species for H&P dolomite model
-| -13.5d3 0 0
- 
-                                | Green et al (2007) omph model, ds6
+| -13.5d3 0 0 
+
+                                | Green et al (2007) omphacite model, ds6 
 acm_dqf = 1 acm
        DQF(J/mol) = -7000
                                 | Diener et al. (JMG, 2007) clinoamphibole model
@@ -180,146 +180,153 @@ cumm_dqf = 1 cumm               | ds6, 3/7/18 JADC
        DQF(J/mol) = 0
 grun_dqf = 1 grun               | ds6, 3/7/18 JADC
        DQF(J/mol) = -3000
- 
+
                                 | revised (Diener et al, JMG 2011 25:631-656) ortho-amphibole model.   Oct 31, 2011.
- 
+
 ogl_dqf = 1 gl                  | ortho-glaucophane
        DQF(J/mol) = 15000.
 fanth_dq = 1 fanth              | ferro-anthophyllite
        DQF(J/mol) = 7000
 omrb_dqf = 1 gl -2 jd +2 acm    | ortho-magnesio riebekite (mrb dqf + 25000 J/mol), stoichiometry corrected 3/30/08 JADC
        DQF(J/mol) = 33000
-mpa      = 1 parg - 1 tr +1 anth
+mpa      = 1 parg - 1 tr +1 anth 
        DQF(J/mol) = 25d3
 ged_dqf   = 1 ged
        DQF(J/mol) = 20000
+
                                 | make definition for coma of the unpublished
                                 | thermocalc scapolite model
 coma = 3 ab + 1 cc
-       DQF(J/mol) = 25000.
- 
+       DQF(J/mol) = 25000.  
+
 tbit = 1 phl - 1 br + 1 ru      |Ti-Fe3+ Biotite after Tajcmanova et al. (2009)
        DQF(J/mol) = 84e3 -11.5 0                    |Model entered by Lucie Tajcmanova, September, 2008.
- 
+
 fbit = 1 east - 1/2 cor + 1/2 hem  |Ti-Fe3+ Biotite after Tajcmanova et al. (2009)
-       DQF(J/mol) = 6e3 0 0
+       DQF(J/mol) = 6e3 0 0     
                                | Make definitions for the Smye et al (JMG, 2011, 28:753-768)
-                               | models for Mica, Carpholite and Chloritoid, to use these
+                               | models for Mica, Carpholite and Chloritoid, to use these 
                                | make definitions delete the leading "|" comment characters:
 ocar  = 1 fcar + 1/2 hem - 1/2 cor
-      DQF(J/mol) = 45d3
+      DQF(J/mol) = 45d3 
 mncar = 1 mcar + 1 mang - 1 per | corrected from 1 mcar + 1 mang - 1/2 cor, G Hoschek, 10/24/11.
-      DQF(J/mol) = 30d3
+      DQF(J/mol) = 30d3  
 ma_dqf = 1 ma
-      DQF(J/mol) = 3d3
+      DQF(J/mol) = 3d3 
                                 | Make definition for the White et al (JMG, 2005) garnet, Gt(WPPH), JADC, 10/24/11.
 kho = 1 py - 1 gr + 1 andr
-      DQF(J/mol) = 40d3 0 0
+      DQF(J/mol) = 40d3 0 0  
                                 | Make definitions for the White et al (JMG, 2000) ilmenite, Ilm(WHP), JADC, 10/29/11.
                                 | Corrected coeffiecients for TC un-landau, formerly, the TC DQF was used without
-                                | modification. NOTE: the ilm and ilm_nol endmembers must be excluded from calculations
-                                | with the Ilm(WPH) model and the ilm_nol, oilm and dilm must be excluded from calculations
+                                | modification. NOTE: the ilm and ilm_nol endmembers must be excluded from calculations 
+                                | with the Ilm(WPH) model and the ilm_nol, oilm and dilm must be excluded from calculations 
                                 | without the Ilm(WPH) model. JADC, 6/19/11.
-dilm = 1 ilm_nol
+dilm = 1 ilm_nol  
                                 | 1993  -2.1 0 => the TC DQF coeffecients, the values below are
-                                | oilm + {DH,R*ln(4),0}
+                                | oilm + {DH,R*ln(4),0} 
        DQF(J/mol) = 17043.57559 -13.11797099 .1836386612e-1
- 
+
+oilm = 1 ilm_nol 
+                                | -13608 9.426 0 => the TC DQF coeffecients added to
+                                | smax*tc0*(q0^2-1/3*q0^6), -smax*q0^2, vmax*q0^2, respectively, yields
+                                | the un-landaued DQF coefficients for Perple_X
+       DQF(J/mol) = 1443.57559 -1.59231967  .1836386612e-1    
                                 | Make definitions for Kelsey & Powell (JMG, 2011) Zr melting relations. JADC, 2/6/12
 zr8L = 2 zrc                    | Zr-melt endmember
-       DQF(J/mol) = 69e3
+       DQF(J/mol) = 69e3  
 zrg  = 1 gr + 3 zrc - 6 q       | Zr garnet endmember
        DQF(J/mol) = 96e3 0.165e3 2.7
 zrru = 1 bdy                    | Zr rutile endmember
        52.84e3 -0.01829e3 -0.074
 mots = 1 mgts - 1/2 cor + 1/2 hem | ferric opx endmember MgFe3+AlSiO6 for Opx(HP)
-       22d3 0 0
+       22d3 0 0 
                                  | Make definitions for White et al. (JMG 32:261-286, 2014) models
 f3clin = 1 clin - 1/2 gr + 1/2 andr
-       DQF(J/mol) = 2d3 0 0
+       DQF(J/mol) = 2d3 0 0  
 kho1 = 1 py - 1 gr + 1 andr
-       DQF(J/mol) = 27d3
-sil8L = 8/5 silL
-       DQF(J/mol) = -23d3
-fo8L = 2 foL
-       DQF(J/mol) = -10d3
-fa8L = 2 faL
-       DQF(J/mol) = -9d3 0 -1.3
-q8L = 4 qL
+       DQF(J/mol) = 27d3  
+sil8L = 8/5 silL               
+       DQF(J/mol) = -23d3  
+fo8L = 2 foL                    
+       DQF(J/mol) = -10d3 
+fa8L = 2 faL                              
+       DQF(J/mol) = -9d3 0 -1.3 
+q8L = 4 qL    
        DQF(J/mol) = -20                           | a small DQF is added to stabilize q8L relative to qL
 fmu = 1 mu + 1/2 andr - 1/2 gr
        DQF(J/mol) = 25d3
 ma1_dqf = 1 ma
-       DQF(J/mol) = 6.5d3
+       DQF(J/mol) = 6.5d3 
 ctdo = 1 mctd + 1/4 andr - 1/4 gr
-       DQF(J/mol) = 25d3
-msto   = 1 andr  -1 gr  + 1 mst
-       DQF(J/mol) = 9d3
-mstt   = 1 mst - 1 cor   +3/2   ru
-       DQF(J/mol) = 13d3
+       DQF(J/mol) = 25d3 
+msto   = 1 andr  -1 gr  + 1 mst  
+       DQF(J/mol) = 9d3 
+mstt   = 1 mst - 1 cor   +3/2   ru 
+       DQF(J/mol) = 13d3 
 mots1    = 1 mgts + 1/2  andr  - 1/2 gr
-       DQF(J/mol) = 2d3
- 
+       DQF(J/mol) = 2d3  
+
 tbi = 1 phl - 1 br + 1 ru         | Ti-biotite endmember for Bi(W) model
-       DQF(J/mol) = 55e3
- 
-fbi = 1 east - 1/2 gr + 1/2 andr  | Fe3+-biotite endmember for Bi(W) model
-       DQF(J/mol) = -3e3
- 
+       DQF(J/mol) = 55e3                        
+                                
+fbi = 1 east - 1/2 gr + 1/2 andr  | Fe3+-biotite endmember for Bi(W) model                                   
+       DQF(J/mol) = -3e3 
+
 ospr = 1/2 andr - 1/2 gr + 1 spr5
-       DQF(J/mol) = -16d3
- 
+       DQF(J/mol) = -16d3     
+
 mnopx = 2 pxmn                    | Mn endmember for Opx(W) model
-       DQF(J/mol) = 6680
+       DQF(J/mol) = 6680 
                                   | Make definitions for Jennings and Holland, J Pet, 56:869-892, 2015 Cpx
 cfs = 1 fs
        DQF(J/mol) = 3.8d3 -3 0.03
 crdi = 1 cats + 1 kos - 1 jd
-       DQF(J/mol) = -3d3
+       DQF(J/mol) = -3d3 
 cess = 1 cats + 1 acm - 1 jd
-       DQF(J/mol) = -6d3
+       DQF(J/mol) = -6d3 
 cenjh = 1 en
        DQF(J/mol) = 3.5d3 - 2 * T_K  + 0.048 * p_bar
                                   | Make definitions for Jennings and Holland, J Pet, 56:869-892, 2015 Opx
 cren  = 1 mgts + 1 kos - 1 jd
-       DQF(J/mol) = 3d3
+       DQF(J/mol) = 3d3 
 oen   = 1 mgts + 1 acm - 1 jd
        DQF(J/mol) = -15d3 + 0.15 * p_bar
 odi   = 1 di
-       DQF(J/mol) = -0.1d3 2.11 0.005
+       DQF(J/mol) = -0.1d3 0.211 0.005 | dqf_T corrected from 2.11, ECRG 9/18
                                   | Make definitions for Jennings and Holland, J Pet, 56:869-892, 2015 melt
 qjL = 2 qL
-       DQF(J/mol) = 4d3     - 0.43 * p_bar
+       DQF(J/mol) = 4d3     - 0.43 * p_bar 
 dijL = 1 diL
-       DQF(J/mol) = -6.7d3  + 0.17 * p_bar
+       DQF(J/mol) = -6.7d3  + 0.17 * p_bar   
 jdjL = 1 abL - 1 qL               | corrected 3/18/16, Oliver Shortle
-       DQF(J/mol) = 18.7d3  - 0.16 * p_bar
+       DQF(J/mol) = 18.7d3  - 0.16 * p_bar 
 ctjL = 1 anL - 1 qL               | corrected 3/18/16, Oliver Shortle
-       DQF(J/mol) = 2.5d3   + 0.29 * p_bar
+       DQF(J/mol) = 2.5d3   + 0.29 * p_bar   
 fojL = 1 foL
-       DQF(J/mol) = 2d3     - 0.03 * p_bar
+       DQF(J/mol) = 2d3     - 0.03 * p_bar 
 fajL = 1 faL
-       DQF(J/mol) = -2.5d3  + 0.18 * p_bar
+       DQF(J/mol) = -2.5d3  + 0.18 * p_bar 
 hmjL = 0.5 hemL
-       DQF(J/mol) = 0       +  0.20 * p_bar
+       DQF(J/mol) = 0       +  0.20 * p_bar  
 ekjL = 0.5 eskL
-       DQF(J/mol) = 21d3
+       DQF(J/mol) = 21d3     
                                   | Make definitions for Green et al., JMG, 2016 melt
 foTL = 2 foL
-   dqf = -4d3
+   dqf = -4d3 
 faTL = 2 faL
    dqf = -8.2d3  - 1.4 * P
                                   | Make definitions for Green et al., JMG, 2016 clinoamphibole
 mrbG  = 1 gl - 1 gr + 1 andr
    DQF = 0
-kprg  = 1 mu - 1 pa + 1 parg
+kprg  = 1 mu - 1 pa + 1 parg  
    DQF = -7060 + 20 * T_K
-tts   = -2 dsp + 2 ru + 1 ts
+tts   = -2 dsp + 2 ru + 1 ts    
    DQF =   95000
                                   | Make definitions for Green et al., JMG, 2016 augite (clinopyroxene)
 cfsg  = 1 fs
    DQF = 2100 - 2 * T + 0.045 * P
- 
+                                  | Make definitions for Holland et al., 2013; dx.doi.org/10.1093/petrology/egt035
+                                  | mantle mineralogical model.
 nacfb = 1 nacf
        DQF(J/mol) = -9000
 mfpv = 1 fpv
@@ -335,12 +342,12 @@ cfpv = 1 fpv
 capv = 1 apv
        DQF(J/mol) = 45000
 cnpv = 1 npv
-       DQF(J/mol) = 25000
-fcor = 1 mcor + 1 fak - 1 mak   | FeSi corundum
-       DQF(J/mol) = -15d3
+       DQF(J/mol) = 25000 
+fcor = 1 mcor + 1 fak - 1 mak   | FeSi corundum 
+       DQF(J/mol) = -15d3 
 hmgts  = 1 mgts + 1 hen - 1 en
-       DQF(J/mol) = -1d3
- 
+       DQF(J/mol) = -1d3 
+
 end_makes
  
 Notation (incomplete and NOT alphabetical!)

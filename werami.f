@@ -433,8 +433,6 @@ c---------------------------------------------------------------------
 
       integer ind, j
 
-      double precision wt 
-
       double precision v,tr,pr,r,ps
       common/ cst5  /v(l2),tr,pr,r,ps
 
@@ -460,25 +458,31 @@ c---------------------------------------------------------------------
       integer ncol, nrow
       common/ cst226 /ncol,nrow,fileio
 
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
       integer isec,icopt,ifull,imsg,io3p
       common/ cst103 /isec,icopt,ifull,imsg,io3p
 c----------------------------------------------------------------------
       if (icopt.eq.7.and.fileio) then
-
+c                                 fractionation from a coodinate file
+c                                 only exact nodal coordinates allowed
           ind = idint(var(1))
-          wt = var(1) - dfloat(ind)
 
           do j = 1, ipot
-             v(jv(j)) = vip(j,ind)*(1d0-wt)
-             if (wt.gt.0d0) v(jv(j)) = v(jv(j)) + vip(j,ind+1)*wt
+             v(jv(j)) = vip(j,ind)
           end do 
 
           var(2) = v(jv(1))
           var(3) = v(jv(2))
 
       else if (icopt.eq.12) then 
-
-c                                 what you see is what you got.
+c                                 0-d infiltration, var(2) is the
+c                                 number of aliquots added. var(1)
+c                                 is the cumulative moles of aliquot.
+          var(1) = (var(2)-1d0) * nopt(36)
 
       else if (icopt.eq.9) then 
 c                                 change sign on dz because of downward
@@ -2433,18 +2437,15 @@ c----------------------------------------------------------------------
 
       logical node
 
-      integer i, ipts, ier, k(2), dim 
-
-      double precision dxy, xyp(2), d
+      integer i, ipts, k(2), dim 
 
       character*100 n5name, n6name
+
+      double precision xy(2)
 
       integer jvar
       double precision var,dvr,vmn,vmx
       common/ cxt18 /var(l3),dvr(l3),vmn(l3),vmx(l3),jvar
-
-      character vnm*8
-      common/ cxt18a /vnm(l3)  
 
       character*14 tname
       integer kop,kcx,k2c,iprop
@@ -2456,71 +2457,44 @@ c----------------------------------------------------------------------
 
       integer ivar,ind,ichem
       common/ cst83 /ivar,ind,ichem
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      integer isec,icopt,ifull,imsg,io3p
+      common/ cst103 /isec,icopt,ifull,imsg,io3p
 c----------------------------------------------------------------------
       node = .false.
       dim = 1
-c                                 get the independent output variable
-      call getind
-c                                 path endpoints
-30    do i = 1, 2
-
-20       if (i.eq.1) then
-            write (*,1130) vnm(1),vmn(1)
-            call rdnumb (xyp(1),vmn(1),ier,0,.true.)
-         else
-            write (*,1140) vnm(1),vmx(1)
-            call rdnumb (xyp(2),vmx(1),ier,0,.true.)
-         end if
-
-         if (vmn(1).lt.vmx(1)) then 
-            if (xyp(i).lt.vmn(1).or.xyp(i).gt.vmx(1)) then  
-               write (*,1010) vnm(1),vmn(1),vmx(1)
-               goto 20
-            end if 
-         else
-            if (xyp(i).lt.vmx(1).or.xyp(i).gt.vmn(1)) then  
-               write (*,1010) vnm(1),vmn(1),vmx(1)
-               goto 20
-            end if 
-         end if 
-
-      end do 
-
-      dxy = xyp(2) - xyp(1)
-
-      if (dxy.eq.0d0) then
-         write (*,*) 'initial and final coordinates cannot be identical'
-         goto 30
-      end if   
-c                                 set up counters, pointers:
-      write (*,1150) int(vmx(1))
-      call rdnumb (vmx(1),vmx(1),ipts,int(vmx(1)),.false.)
-      if (ipts.lt.2) ipts = 2
-
-      d = dxy/dfloat(ipts - 1)
 c                                 select properties:
       call chsprp
+c                                 see pre-6.8.4 for limited range 
+c                                 plotting. here assume only two 
+c                                 cases icopt = 12 = nodal coordinate
+c                                 is the second variable, and other-
+c                                 wise the nodal coordinate is 
+c                                 get the independent output variable
+      if (icopt.eq.12) then 
+         ind = 2
+         ipts = iopt(36) + 1
+      else 
+         ind = 1
+         ipts = int(vmx(ind))
+      end if 
 c                                 name and open plot file, write header 
-      call tabhed (n5,xyp,xyp,k,1,n5name,n6name)
+      call tabhed (n5,xy,xy,k,dim,n5name,n6name)
 
       do i = 1, ipts
 
-         var(1) = xyp(1) + dfloat(i-1)*d
+         var(ind) = dfloat(i)
 
          call polprp (dim)
 
       end do 
 
       call finprp (dim,n5name,n6name,node) 
-
-1010  format (/,'The range for ',a,' is ',g12.4,' - ',g12.4,
-     *        /,'Try again:',/)
-1130  format (/,'Enter the first ',a,' coordinate for',
-     *          ' the profile [',g14.6,']:')
-1140  format (/,'Enter the last ',a,' coordinate for',
-     *          ' the profile [',g14.6,']:')
-1150  format (/,'Enter the number points along the profile [',
-     *           i4,']:')
 
       end 
 
@@ -3501,7 +3475,7 @@ c                                 convert if absolute amounts requested
 c                                 convert compositions to cumulative, this only
 c                                 makes sense for absolute amounts of a fractionated
 c                                 phase
-               if (lopt(42).and.kcx(1).ne.999) then
+               if (lopt(42).and.kcx(1).ne.999.and.dim.eq.1) then
 
                   do i = i8+4, i8+3+icomp
                      prop(i) = cprp(i) + prop(i)

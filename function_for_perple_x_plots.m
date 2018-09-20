@@ -44,7 +44,7 @@ elseif nvar == 2 % 2d - table -> 2/3d plot
         
         case '3D Surface';
             surf(x,y,a); d2 = 0; light; shading interp; lighting phong; zlabel(zname); 
-            %colorbar; %uncomment for colorbar
+            colorbar; %uncomment for colorbar
         case 'Auto-Contour';
             [C,h]=contour(x,y,a); clabel(C,h); d2 = 1;
         case 'Contour';

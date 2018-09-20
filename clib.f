@@ -644,7 +644,7 @@ c                                 count (icp) and save names (cname)
          read (n1,'(a,a)') rname,strg
 
          if (rname.eq.'end t') then 
-c                                 finished, could check for no components
+c                                 finished, check for no components
             if (icp.eq.0) then
                write (*,*) 'No thermodynamic components'
                goto 998
@@ -709,7 +709,7 @@ c                                 check for compositional constraints
          hcp = icp
 
       end if 
-c                                 decode saturated components    
+c                                 decode saturated components
 c                                 isat is the saturated component counter
       isat = 0
       io2  = 0 

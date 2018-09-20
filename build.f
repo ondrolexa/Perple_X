@@ -833,7 +833,7 @@ c                                 diagrams:
      *        'perplex option. If null_phase is true and the initial ',
      *        'condition for a calculation',/,
      *        'is supersaturated, then CONVEX will fail.',/)
-4020  format (2(g11.5,1x),f10.8,1x,2(g11.5,1x),a)
+4020  format (5(g14.6,1x),a)
 6020  format (/,'Specify values for:',/,(10x,5(a,2x)))
 6010  format ('For calculation ',i2,', enter zeros to finish.')
 7020  format (//,'NO is the default (blank) answer to all Y/N prompts',

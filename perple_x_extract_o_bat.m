@@ -12,7 +12,7 @@
 
 % JADC June 26, 2011
 
-%clear all; clf;
+clear all; clf;
 
 [x,y,a,xname,yname,zname,nvar,mvar,nrow,dnames,titl] = function_to_get_perple_x_file; %open the Perple_X file
 

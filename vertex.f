@@ -471,9 +471,9 @@ c-----------------------------------------------------------------------
 
       logical output
 
-      integer i, j, idead, it, ih2o
+      integer i, j, idead, it
 
-      double precision delt, iblk(k5)
+      double precision iblk(k5)
 
       integer npt,jdv
       logical fulrnk
@@ -542,7 +542,6 @@ c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
 
       iasct = 0
-
       ibulk = 0
       it = 0
 
@@ -555,14 +554,13 @@ c                                 get phases to be fractionated
       call frname 
 c                                 call initlp to initialize arrays 
 c                                 for optimization.
-      call initlp 
+      call initlp
 
-      ih2o = iopt(36) + 1
-      delt = nopt(36)
-
-      do j = 1, ih2o 
+      do j = 1, iopt(36) + 1
 
          it = it + 1 
+
+         write (*,'(/,a,i3,/)') 'aliquot ',j - 1
 
          ctotal = 0d0
 c                                 get total moles to compute mole fractions             
@@ -580,7 +578,7 @@ c                                 fractionate the composition:
          call fractr (idead,output)
 c                                  add the infiltrant
          do i = 1, icp 
-            cblk(i) = cblk(i) + delt*iblk(i)
+            cblk(i) = cblk(i) + nopt(36) * iblk(i)
          end do 
 
          if (it.gt.99) then 
@@ -594,7 +592,7 @@ c                                  add the infiltrant
 c                                 output 
       if (output) then 
 
-        if (io4.eq.0) call outgrd (1,ih2o,1) 
+        if (io4.eq.0) call outgrd (1, iopt(36) + 1, 1)
 c                                 close fractionation data files
          do i = 1, ifrct
             close (n0+i)

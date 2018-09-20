@@ -1,6 +1,6 @@
 |----------------------------------------------------------------------
 
-        | Run-time Perple_X 6.8.3 options:
+        | Run-time Perple_X 6.8.4 options:
 
         | Comments must be preceeded by the "|" character.
 
@@ -34,9 +34,11 @@ aq_oxide_components       default | [F] accomodate oxide components in aqueous s
 aq_species                default | [20] maximum number of solute species output (ranked by concentration) for back-calculated results
 aq_lagged_iterations      default | [0] number of internal iterations for lagged speciation.
 aq_lagged_speciation      default | [F] do lagged solute chemistry when electrolyte data is available
-aq_solvent_composition    default | [y] y => mole fractions, m => molality
 aq_solute_composition     default | [m] y => mole fractions, m => molality
+aq_solvent_composition    default | [y] y => mole fractions, m => molality
+aq_solvent_solvus         default | [F] allow solvent phase separation without aq_bad_results error trigger
 aq_vapor_epsilon          default | [1.] dielectric constant threshold used to identify vapor
+auto_exclude              default | [T] exclude phases or species with no associated P-V EoS
 auto_refine               default | [auto] auto, manual, or off (auto_refine keyword group)
 auto_refine_factor_I      default | [3.] refine factor for gridded minimization and phase fractionation (auto_refine keyword group)
 auto_refine_factor_II     default | [10.] refine factor for composition and mixed variable diagrams (auto_refine keyword group)
@@ -49,10 +51,11 @@ composition_constant      default | [F] allow constants in composition expressio
 composition_phase         default | [mol] mol or wt (mass) phase compositions in WERAMI output
 composition_system        default | [wt] mol or wt; system composition in WERAMI mode 2-4 output
 console_messages          default | [on] off => suppresses most console messages (warnings, errors, etc)
-cumulative                default | [F] WERAMI property choice #36 only!- cumulative component amounts (for fractionation problems)
+cumulative                default | [F] WERAMI, computational mode 3, property choice #36 only!- cumulative component amounts (for fractionation problems)
 dependent_potentials      default | [off] on => compute dependent thermodynamic potentials (usually chemical potentials)
 efficiency                default | [3] 1->5, only relevant for CONVEX
 explicit_bulk_modulus     default | [T] T => use explicit function for bulk modulii if available
+fancy_cumulative_modes    default | [F] T => order cumulative modes to account for univariant reactions (WERAMI, mode 3, property 25)
 fd_expansion_factor       default | [2] nth order finite difference increment is increased by fd_expansion_factor^(n-1)
 final_resolution          default | [1d-2 1d-3] >0, <1, exploratory and autorefine target resolution
 finite_difference_p       default | [1d4 1d-2] threshold and fraction for 1st order finite difference increment on pressure
@@ -67,7 +70,7 @@ hybrid_EoS_CH4            default | [1] 0-1  => 0 - MRK, 1 HSMRK
 increment                 default | [0.1 0.025] >0, < 1, fractional independent variable increments [exploratory and autorefine], only relevant for CONVEX
 initial_resolution        default | [1/15] >0, <1
 interpolation             default | [on 2] value 1: on or off [on]; value 2, 1->99 [2]; only relevant for WERAMI
-iteration                 default | [2 4] value 1: 2->99 [3]; value 2: 1->7 [4]
+iteration                 default | [2] real > 2, improves resolution
 linear_model              default | [on] on or off, relevant for 2d gridded minimization
 logarithmic_p             default | [F] replace pressure variable with log(pressure)
 melt_is_fluid             default | [F] identify melt (liquid) as fluid in WERAMI output
@@ -85,7 +88,7 @@ pseudocompound_file       default | [F] echo static pseudocompound compositions 
 reach_increment_switch    default | [on] all, on, off; VERTEX => on activates reach_increments only during auto_refine; MEEMUM default is [all]
 reaction_format           default | [minimum] minimum, full, stoich, S+V, or everything
 reaction_list             default | [off] on or off
-refinement_points_II      default | [auto] or an integer > 0, the number of metastable refinement points retained during 2nd phase of adaptive minimization
+refinement_points         default | [auto] or an integer > 0, max number of metastable refinement points retained during adaptive minimization
 refine_endmembers         default | [F] accept endmember compositions as refinement points
 reject_negative_sites     default | [T] reject compositions with negative site populations
 seismic_output            default | [some] all, some, none
