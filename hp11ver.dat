@@ -32,7 +32,7 @@ H2O     18.0150
 CO2     44.0100
 CUO     79.5450
 CR2O3  151.9900
-S2      32.0650
+S2      64.1300 | Corrected 9/21/2018, Jilei Li. This value is twice g-formula wt of monatomic sulfur. Formerly the monatomic molar wt was used with the diatomic formula.
 F2      37.9968
 end_components
 

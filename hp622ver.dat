@@ -56,7 +56,7 @@ H2O     18.0150    233.255
 CO2     44.0100    210.89
 CuO     79.5450    135.725
 Cr2O3  151.9900    358.811
-S2      32.0650     64.14
+S2      64.1300     64.1    | Corrected 9/21/2018, Jilei Li. These values are twice the properties of monatomic sulfur. Formerly the monatomic molar mass was used with the diatomic formula.
 F2      37.9968    202.79
 end_components
 

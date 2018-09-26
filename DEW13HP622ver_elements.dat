@@ -40,7 +40,7 @@ H2        2.0155    130.6800     2
 C        12.0110      5.7400     4
 Cu       63.5455     33.1500     2
 Cr       51.9958     25.5430     3
-S2       32.0650     64.1400    -1
+S2       64.1300     64.1       -1 | Corrected 9/21/2018, Jilei Li. These values are twice the properties of monatomic sulfur. Formerly the monatomic molar wt was used with the diatomic formula.
 F2       37.9968    202.7900    -2
 end_components
 
