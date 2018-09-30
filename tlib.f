@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.8.4, source updated Sept 20, 2018.',
+     *      'Perple_X version 6.8.4, source updated Sept 30, 2018.',
 
      *      'Copyright (C) 1986-2018 James A D Connolly '//
      *      '<www.perplex.ethz/copyright.html>.'
@@ -251,6 +251,8 @@ c                                 final resolution, auto-refine stage
       rid(2,2) = 1d-3
 c                                 final resolution, exploratory stage
       rid(2,1) = 1d-2
+c                                 if meemum set auto-refine vale
+      if (iam.eq.2) rid(2,2) = rid(2,1)
 c                                 global reach factor
       nopt(23) = 0d0
 c                                 solvus_tolerance_II
