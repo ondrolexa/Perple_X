@@ -11331,10 +11331,6 @@ c----------------------------------------------------------------------
 
       double precision goodc, badc
       common/ cst20 /goodc(3),badc(3)
-c DEBUG 
-      integer jcount
-      logical switch
-      common/ debug1 /jcount(10),switch(10)
 c----------------------------------------------------------------------
 c                                 number of reactants to form ordered species k
       nr = nrct(k,id)
@@ -11423,7 +11419,7 @@ c                                 or dp < tolerance.
             if (done) then
 
                goodc(1) = goodc(1) + 1d0
-               jcount(1) = jcount(1) + itic 
+               goodc(2) = goodc(2) + dfloat(itic)
 c                                 use the last increment
                call pincs (pa(jd)-p0a(jd),dy,ind,jd,nr)
 
@@ -11438,8 +11434,8 @@ c                                 apply the increment
                if (itic.le.iopt(21)) cycle
 c                                 failed to converge. exit
                error = .true.
-               badc(1) = badc(1) + 1
-               jcount(1) = jcount(1) + itic 
+               badc(1) = badc(1) + 1d0
+               goodc(2) = goodc(2) + dfloat(itic)
 
                exit
 
@@ -11489,10 +11485,6 @@ c----------------------------------------------------------------------
       logical lopt
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
-c DEBUG 
-      integer jcount
-      logical switch
-      common/ debug1 /jcount(10),switch(10)
 c----------------------------------------------------------------------
 c                                 get initial p values
       call pinc0 (id,lord)
@@ -11517,7 +11509,7 @@ c                                 lord is the number of possible species
             call gderiv (id,g,dp,error)
 
             if (error) then
-               badc(1) = badc(1) + 1
+               badc(1) = badc(1) + 1d0
                exit
             end if 
 
@@ -11539,7 +11531,7 @@ c                                 g > gold, itic > 2
      *          itic.gt.2.and.gold.le.g) then
 
                goodc(1) = goodc(1) + 1d0
-               jcount(1) = jcount(1) + itic
+               goodc(2) = goodc(2) + dfloat(itic)
                exit
 
             end if 
@@ -11555,8 +11547,8 @@ c                                 if g > gold (i.e., diverging).
 c                                 not converging, under the assumption that 
 c                                 this happens at low T use pinc0 to set an ordered
 c                                 composition and exit
-               badc(1) = badc(1) + 1
-               jcount(1) = jcount(1) + itic 
+               badc(1) = badc(1) + 1d0
+               goodc(2) = goodc(2) + dfloat(itic)
                error = .false.
                call pinc0 (id,lord)
                exit 
@@ -15180,10 +15172,6 @@ c----------------------------------------------------------------------
 
       double precision goodc, badc
       common/ cst20 /goodc(3),badc(3)
-c DEBUG 
-      integer jcount
-      logical switch
-      common/ debug1 /jcount(10),switch(10)
 c----------------------------------------------------------------------
       i1 = ideps(1,1,id)
       i2 = ideps(2,1,id)
@@ -15248,7 +15236,7 @@ c                                 done is just a flag to quit
             if (done) then
 
                goodc(1) = goodc(1) + 1d0
-               jcount(1) = jcount(1) + itic 
+               goodc(2) = goodc(2) + dfloat(itic)
 c                                 in principle the p's could be incremented
 c                                 here and g evaluated for the last update.
                return
@@ -15260,8 +15248,8 @@ c                                 here and g evaluated for the last update.
             if (itic.gt.iopt(21)) then
 c                                 fails to converge.
                error = .true.
-               badc(1) = badc(1) + 1
-               jcount(1) = jcount(1) + itic
+               badc(1) = badc(1) + 1d0
+               goodc(2) = goodc(2) + dfloat(itic)
                exit
 
             end if 
@@ -18390,10 +18378,6 @@ c                                 endmember names
 
       integer isec,icopt,ifull,imsg,io3p
       common/ cst103 /isec,icopt,ifull,imsg,io3p
-c DEBUG 
-      integer jcount
-      logical switch
-      common/ debug1 /jcount(10),switch(10)
 
       integer pstot,qstot,ostg,odim,nsum
       common/ junk1 /pstot(h9),qstot(h9),ostg(h9),odim(mst,h9),nsum(h9)
@@ -18658,17 +18642,13 @@ c                                 prismatic + orphan vertices
       end if 
 
 99    if (goodc(1)+badc(1).gt.0d0) then
+
          num = badc(1)/(badc(1)+goodc(1))*1d2
          write (*,1120) num, badc(1) + goodc(1)
          if (num.gt.1d-1) call warn (53,num,i,'OUTLIM')
-         write (*,1140) dfloat(jcount(1))/(badc(1)+goodc(1))
-         goodc(1) = 0d0
-         badc(1) = 0d0 
-      end if 
+         write (*,1140) goodc(2)/(badc(1)+goodc(1))
 
-      jcount(3) = 0
-      jcount(4) = 0
-      jcount(1) = 0
+      end if
 
       close (n10)
       if (lopt(11)) close (n11)

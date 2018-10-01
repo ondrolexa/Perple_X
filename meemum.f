@@ -138,10 +138,10 @@ c                                 print summary to LUN 6
          end if 
 
          if (goodc(1)+badc(1).gt.0d0) then
+
             num = badc(1)/(badc(1)+goodc(1))*1d2
             if (num.gt.1d-1) call warn (53,num,i,'MEEMUM')
-            goodc(1) = 0d0
-            badc(1) = 0d0 
+
          end if 
 
       end do
