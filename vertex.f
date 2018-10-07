@@ -593,7 +593,7 @@ c                                  add the infiltrant
 c                                 output 
       if (output) then 
 
-        if (io4.eq.0) call outgrd (1, iopt(36) + 1, 1,n4,0,0)
+        call outgrd (1, iopt(36) + 1, 1,n4,0,0)
 c                                 close fractionation data files
          do i = 1, ifrct
             close (n0+i)
@@ -1098,7 +1098,7 @@ c                                 end of j index loop
          close (lun + j)
       end do
 
-      if (output.and.io4.eq.0) call outgrd (nrow,ncol,1,n4,0,0)
+      if (output) call outgrd (nrow,ncol,1,n4,0,0)
 
 2000  format (/,' failed at p0-dz = ',2(g14.7,1x),' layer ',i1,' node '
      *       ,i3,' column ',i3,/,' p-t-c ',2(g14.7,1x),/,12(g14.7,1x))

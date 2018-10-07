@@ -204,7 +204,6 @@ c                                 initialization:
       jmct = 0
       ifct = 0
       io3 = 1
-      io4 = 1
       ivct = 2
       icont = 0
       iphct = 0

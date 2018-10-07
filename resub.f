@@ -1869,7 +1869,7 @@ c                                 the assemblage is new:
 
       end if 
                                 
-      if (output) call outbl1 (ico,jco)
+      if (output.or.lopt(47)) call outbl1 (ico,jco)
      
       end 
 
@@ -1898,9 +1898,6 @@ c                                 x-coordinates for the final solution
 c                                 x coordinate description
       integer istg, ispg, imlt, imdg
       common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
-c                                 i/o
-      integer io3,io4,io9
-      common / cst41 /io3,io4,io9
 
       integer iopt
       logical lopt
@@ -1927,7 +1924,6 @@ c                                 i/o
       double precision cblk
       common/ cst300 /cblk(k5),jbulk
 c----------------------------------------------------------------------
-      if (io4.eq.1) return
 c                                graphics output  
       write (n5,'(3(i8,1x))') ico,jco,iap(ibulk)
 c                                phase molar amounts

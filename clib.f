@@ -222,7 +222,7 @@ c                                 stage
 
       if (.not.(iopt(6).eq.2.and.refine).and.lopt(47)) then
 c                                  initialize intermediate results file 
-         call mertxt (n11nam,prject,'.iof',0)
+         call mertxt (n11nam,prject,'.irf',0)
          open (1000, file = n11nam, iostat=ier, status = 'old')
          if (ier.eq.0) close (1000,status = 'delete')
          open (1000, file = n11nam, status = 'new')
@@ -1042,7 +1042,7 @@ c                                 0-d infiltration
 
       if (icopt.ne.0) close (n1)
 c                                 open files requested in input
-      call fopen (n2name,prt,plt,n9name,jbulk,icp,err)
+      call fopen (n2name,prt,n9name,err)
 c                                 err only set for unsplt (iam.eq.14)
       if (err) return
 c                                 read auxilliary input for 2d fractionation
@@ -2681,7 +2681,7 @@ c                                  decompose ordered species
 
       end
 
-      subroutine fopen (n2name,prt,plt,n9name,jbulk,icp,err)
+      subroutine fopen (n2name,prt,n9name,err)
 c-----------------------------------------------------------------------
 c open files for subroutine input1.
 c-----------------------------------------------------------------------
@@ -2689,11 +2689,11 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical first, err
+      logical first, err, tic 
 
       integer ierr,jbulk,icp
 
-      character blank*1, n2name*100, prt*3, plt*3, name*100, n9name*100
+      character n2name*100, prt*3, name*100, n9name*100
 
       integer io3,io4,io9
       common / cst41 /io3,io4,io9
@@ -2709,32 +2709,21 @@ c-----------------------------------------------------------------------
       integer iam
       common/ cst4 /iam
 
-      save first,blank
+      save first
 
-      data first,blank/.true.,' '/
+      data first/.true./
 c----------------------------------------------------------------------
 c                                 open thermodynamic data file
-      call fopen2 (0,n2name) 
+      call fopen2 (0,n2name)
+
+      tic = .false.
 
       if (iam.eq.3.or.iam.eq.7.or.iam.eq.14) then
-c                                 open existing files
+c                                 use existing plt/blk files
 c                                 iam -  3 - werami 
 c                                 iam -  7 - pssect 
 c                                 iam - 14 - unsplt (local)
-c                                 open solution model file
-         if (n9name.ne.blank) then
 
-            io9 = 0 
-
-            open (n9,file = n9name,iostat = ierr,status = 'old')
-
-            if (ierr.ne.0) call error (120,0d0,n9,n9name)
-
-         else
-
-            io9 = 1
-
-         end if
 c                                 plt/blk files for werami/pssect opened 
 c                                 later by redplt to allow interim results
          if (iam.eq.14) then 
@@ -2758,12 +2747,53 @@ c                                 open assemblage file
 
          return
 
-      end if 
+      else if (iam.eq.1.or.iam.eq.2.or.iam.eq.13.or.iam.eq.15) then 
+c                                 iam -  1 - vertex
+c                                 iam -  2 - meemum
+c                                 iam - 13 - unsplt (local)
+c                                 iam - 15 - convex
 
-      if (first) then 
-         call mertxt (name,prject,'.dat',0)
-         write (*,1160) name
-         write (*,1170) n2name
+         if (first) then
+            tic = .true
+            call mertxt (name,prject,'.dat',0)
+            write (*,1160) name
+            write (*,1170) n2name
+         end if
+c                                 open print/plot files if requested
+         if (prt.ne.' '.and.prt.ne.'no_'.and.iam.ne.13) then 
+
+            io3 = 0 
+            call mertxt (name,prject,'.prn',0)
+            open (n3, file = name)
+
+         else
+
+            io3 = 1
+            name = 'none requested'
+
+         end if
+
+         if (first.and.iam.ne.13) write (*,1180) name
+c                                 blk output file
+         io4 = 0
+         call mertxt (name,prject,'.plt',0)
+         open (n4, file = name, position = 'rewind')
+
+         if (first) write (*,1190) name
+
+         if (iam.ne.15) then 
+c                                 blk output file
+            call mertxt (name,prject,'.blk',0)
+            open (n5, file = name, position = 'rewind')
+
+            if (first) write (*,1220) name
+
+         end if
+
+      else
+
+         call error (999,0d0,n9,'oops fopen')
+
       end if 
 
       if (n9name.ne.blank) then
@@ -2773,46 +2803,12 @@ c                                 open solution model file
          open (n9,file = n9name,iostat = ierr,status = 'old')
          if (ierr.ne.0) call error (120,0d0,n9,n9name)
 
-         if (first) write (*,1210) n9name
+         if (tic) write (*,1210) n9name
 
       else
 
          io9 = 1
-         if (first) write (*,1210) 'not requested'
-
-      end if
-c                                 open print/plot files if requested
-      if (prt.ne.blank.and.prt.ne.'no_'.and.iam.ne.13) then 
-         io3 = 0 
-         call mertxt (name,prject,'.prn',0)
-         open (n3, file = name)
-      else
-         io3 = 1
-         name = 'none requested'
-      end if
-
-      if (first.and.iam.ne.13) write (*,1180) name
-
-      if (plt.ne.blank.and.plt.ne.'no_') then
-         io4 = 0
-         call mertxt (name,prject,'.plt',0)
-         open (n4, file = name)
-      else
-         io4 = 1
-         name = 'none requested'
-      end if
-
-      if (first) write (*,1190) name
-
-      if (jbulk.ge.icp.and.io4.ne.1) then
-c                                 create special plot output file
-         call mertxt (name,prject,'.blk',0)
-         open (n5, file = name)
-         if (first) write (*,1220) name
-
-      else if (jbulk.ge.icp.and.io4.eq.1) then 
-
-         if (first) write (*,1220) 'none requested'
+         if (tic) write (*,1210) 'not requested'
 
       end if
 
@@ -2823,7 +2819,7 @@ c                                 create special plot output file
 1180  format ('Writing print output to file: ',a)
 1190  format ('Writing plot output to file: ',a)
 1210  format ('Reading solution models from file: ',a)
-1220  format ('Writing bulk composition plot output to file: ',a)
+1220  format ('Writing phase assemblage data to file: ',a)
 
       end
 
@@ -2870,6 +2866,8 @@ c                                 writing interim blk file
          call mertxt (name,name,'.blk',0)
 
          open (lun, file = name)
+
+         flush (n5)
 
          rewind (n5)
 c                                 the length of text should be able to 
