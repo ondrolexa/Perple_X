@@ -16,7 +16,7 @@ c----------------------------------------------------------------------
  
       character y*1, badnam(h9)*10
 
-      integer ibad2,ibad1,igood,i,j,ierr
+      integer ibad2, ibad1, igood, i, j, ier
 
       character*100 n10nam,n11nam,n8nam
 
@@ -56,7 +56,7 @@ c                                 are present and it is requested.
       if (isoct.ne.0) then 
 
          call mertxt (n10nam,prject,'.arf',0)
-         open (n10, file = n10nam, iostat = ierr, status = 'old')
+         open (n10, file = n10nam, iostat = ier, status = 'old')
 
          call mertxt (n8nam,prject,'.tof',0)
 
@@ -75,14 +75,14 @@ c                                 user friendly text version
 
             ibad1 = 0 
 
-            if (ierr.ne.0.and.(iam.eq.1.or.iam.eq.15)) then 
+            if (ier.ne.0.and.(iam.eq.1.or.iam.eq.15)) then 
 c                                 no auto_refine data
                write (*,1020) n10nam
                open (n10, file = n10nam, status = 'unknown')
 
-            else if (ierr.eq.0.and.(iam.eq.1.or.iam.eq.15)) then 
-                   
-               read (n10,*,iostat=ierr) ibad1, ibad2, igood
+            else if (ier.eq.0.and.(iam.eq.1.or.iam.eq.15)) then 
+
+               read (n10,*,iostat=ier) ibad1, ibad2, igood
                if (ibad1.gt.0) read (n10,'(a)') (badnam(i),i=1,ibad1)
 
                if (iopt(6).ne.2.or.output) write (*,1030) n10nam
@@ -113,7 +113,7 @@ c                                 second cycle of automated mode
 
                write (n8,*) refine
           
-            else if (ierr.eq.0.and.iam.eq.2) then 
+            else if (ier.eq.0.and.iam.eq.2) then 
 c                                 MEEMUM, ask the user if he wants
 c                                 to use the data 
                write (*,'(/,a,a,/,a)') 'Auto-refine data exists from a',
@@ -128,7 +128,7 @@ c                                 to use the data
                else 
 
                   refine = .true.  
-                  read (n10,*,iostat=ierr) ibad1, ibad2, igood
+                  read (n10,*,iostat=ier) ibad1, ibad2, igood
                   if (ibad1.gt.0) read (n10,'(a)') (badnam(i),i=1,ibad1)
                   iopt(6) = 1
                   write (*,1030) n10nam
@@ -159,17 +159,17 @@ c                                 speciation tolerance
          else 
 c                                 werami/pssect if refine, get the 
 c                                 solution models to be rejected
-            open (n8, file = n8nam, iostat=ierr, status = 'old')
+            open (n8, file = n8nam, iostat=ier, status = 'old')
         
-            if (ierr.eq.0) then 
+            if (ier.eq.0) then 
 c                                 write a flag to indicate if auto-refine
 c                                 has been used, this is necessary so that other
 c                                 perplex programs know whether to reject the
 c                                 badnam phases:
-               read (n8,*,iostat=ierr) refine
+               read (n8,*,iostat=ier) refine
 c                                 read phases to be rejected if in auto-refine
                if (refine) then 
-                  read (n10,*,iostat=ierr) ibad1, ibad2, igood
+                  read (n10,*,iostat=ier) ibad1, ibad2, igood
                   if (ibad1.gt.0) read (n10,'(a)') (badnam(i),i=1,ibad1)
                end if 
 
@@ -209,11 +209,26 @@ c                                 that depend on refinement
 
       end if
 
-      if (iopt(6).eq.2.and..not.refine) then 
+      if (iopt(6).eq.2.and..not.refine) then
+c                                 this means it must be in the exploratory
+c                                 stage
          output = .false.
+
       else
+
          output = .true.
-      end if 
+
+      end if
+
+      if (.not.(iopt(6).eq.2.and.refine).and.lopt(47)) then
+c                                  initialize intermediate results file 
+         call mertxt (n11nam,prject,'.iof',0)
+         open (1000, file = n11nam, iostat=ier, status = 'old')
+         if (ier.eq.0) close (1000,status = 'delete')
+         open (1000, file = n11nam, status = 'new')
+         close (1000)
+
+      end if
 
 1020  format (/,'Writing data for auto-refinement to file: ',a,/)
 1030  format (/,'Reading data for auto-refinement from file: ',a,/)
@@ -547,7 +562,7 @@ c                                 file, get name:
             icopt = 7
          else 
             icopt = 9
-         end if 
+         end if
 
       end if 
 c                                 if meemum, override whatever computational option
@@ -2671,14 +2686,14 @@ c-----------------------------------------------------------------------
 c open files for subroutine input1.
 c-----------------------------------------------------------------------
       implicit none
- 
+
       include 'perplex_parameters.h'
 
       logical first, err
 
       integer ierr,jbulk,icp
- 
-      character*100 blank*1,n2name,prt*3,plt*3,name,n9name
+
+      character blank*1, n2name*100, prt*3, plt*3, name*100, n9name*100
 
       integer io3,io4,io9
       common / cst41 /io3,io4,io9
@@ -2701,33 +2716,45 @@ c----------------------------------------------------------------------
 c                                 open thermodynamic data file
       call fopen2 (0,n2name) 
 
-      if (iam.gt.2.and.iam.ne.13.and.iam.ne.15) then 
-c                                 perplex programs other than
-c                                 meemum and vertex only open
-c                                 exisiting files:
-c                                 open the plot file
-         call mertxt (name,prject,'.plt',0)
-         open (n4, file = name, iostat = ierr, status = 'old')
-         if (ierr.ne.0) then
-            if (iam.eq.14) then
-               err = .true.
-               return
-            else 
-               call error (122,0d0,n4,name)
-            end if
-         end if 
+      if (iam.eq.3.or.iam.eq.7.or.iam.eq.14) then
+c                                 open existing files
+c                                 iam -  3 - werami 
+c                                 iam -  7 - pssect 
+c                                 iam - 14 - unsplt (local)
 c                                 open solution model file
          if (n9name.ne.blank) then
+
             io9 = 0 
+
             open (n9,file = n9name,iostat = ierr,status = 'old')
+
             if (ierr.ne.0) call error (120,0d0,n9,n9name)
+
          else
+
             io9 = 1
+
          end if
+c                                 plt/blk files for werami/pssect opened 
+c                                 later by redplt to allow interim results
+         if (iam.eq.14) then 
+c                                 open the plot file
+            call mertxt (name,prject,'.plt',0)
+
+            open (n4, file = name, iostat = ierr, status = 'old')
+
+            if (ierr.ne.0) then
+               err = .true.
+               return
+            end if 
 c                                 open assemblage file
-         call mertxt (name,prject,'.blk',0)
-         open (n5, file = name, iostat = ierr, status = 'old')
-         if (ierr.ne.0) call error (122,0d0,n4,name)
+            call mertxt (name,prject,'.blk',0)
+
+            open (n5, file = name, iostat = ierr, status = 'old')
+
+            if (ierr.ne.0) call error (122,0d0,n4,name)
+
+         end if
 
          return
 
@@ -2798,9 +2825,9 @@ c                                 create special plot output file
 1210  format ('Reading solution models from file: ',a)
 1220  format ('Writing bulk composition plot output to file: ',a)
 
-      end 
+      end
 
-      subroutine outgrd (loopx,loopy,jinc)
+      subroutine outgrd (loopx,loopy,jinc,lun,ind1,ind2)
 c----------------------------------------------------------------------
 c output grid data to the plot file
 c----------------------------------------------------------------------
@@ -2808,9 +2835,10 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer loopx,loopy,jinc,i,j,jst,kst,kd,ltic,iend
+      integer loopx,loopy,jinc,i,j,jst,kst,kd,ltic,iend,lun,jgrd(l7),
+     *        ind1, ind2
 
-      character string*(lchar)
+      character string*(lchar), name*170, text*3
 
       integer igrd
       common/ cst311 /igrd(l7,l7)
@@ -2824,55 +2852,109 @@ c----------------------------------------------------------------------
       integer length,iblank,icom
       character chars*1
       common/ cst51 /length,iblank,icom,chars(lchar)
-c----------------------------------------------------------------------
 
-      write (n4,*) loopx, loopy, jinc
+      character*100 prject,tfname
+      common/ cst228 /prject,tfname
+c----------------------------------------------------------------------
+      if (lun.ne.n4) then 
+c                                 write interim result file list
+         call mertxt (name,prject,'.irf',0)
+         open (lun, file = name, position = 'append')
+
+         write (lun,*) ind1, ind2
+
+         close (lun)
+c                                 writing interim blk file
+         write (text,'(a,i1,i1)') '_',ind1, ind2
+         call mertxt (name,prject,text,0)
+         call mertxt (name,name,'.blk',0)
+
+         open (lun, file = name)
+
+         rewind (n5)
+c                                 the length of text should be able to 
+c                                 handle format 1010 in outbl1
+         do
+
+            read (n5,'(a)',end=99) name
+            write (lun,'(a)') name
+
+         end do
+
+99       close (lun)
+c                                 and the interim plt file
+         call mertxt (name,prject,text,0)
+         call mertxt (name,name,'.plt',0)
+         open (lun, file = name)
+
+      end if
+
+      write (lun,*) loopx, loopy, jinc
 c                                 fill in grid
       do i = 1, loopx
 
-         if (i.ne.1.and.igrd(i,1).eq.0) igrd(i,1) = igrd(i-1,1)
+         if (i.ne.1.and.igrd(i,1).eq.0) then 
+            jgrd(1) = igrd(i-1,1)
+         else 
+            jgrd(1) = igrd(i,1)
+         end if 
 
          kst = 1
 
 20       jst = kst
-         if (i.ne.1.and.igrd(i,jst).eq.0) igrd(i,jst) = igrd(i-1,jst)
-         kd = igrd(i,jst)
+
+         if (i.ne.1.and.igrd(i,jst).eq.0) then
+            jgrd(jst) = igrd(i-1,jst)
+         else 
+            jgrd(jst) = igrd(i,jst)
+         end if 
+
+         kd = jgrd(jst)
+
          ltic = -1
 
          do j = jst, loopy
 
-            if (i.ne.1.and.igrd(i,j).eq.0) igrd(i,j) = igrd(i-1,j)
-
-            if (igrd(i,j).eq.0.or.igrd(i,j).eq.kd) then
-               ltic = ltic + 1
-               if (j.eq.loopy) write (n4,*) ltic,kd
+            if (i.ne.1.and.igrd(i,j).eq.0) then 
+               jgrd(j) = igrd(i-1,j)
             else 
-               write (n4,*) ltic,kd
+               jgrd(j) = igrd(i,j)
+            end if 
+
+            if (jgrd(j).eq.0.or.jgrd(j).eq.kd) then
+               ltic = ltic + 1
+               if (j.eq.loopy) write (lun,*) ltic,kd
+            else 
+               write (lun,*) ltic,kd
                kst = j
-               goto 20 
+               goto 20
             end if 
          end do 
       end do         
 c                                 write assemblage list
-      write (n4,*) iasct
+      write (lun,*) iasct
 
       do i = 1, iasct
-         write (n4,*) iavar(1,i),iavar(2,i),iavar(3,i)
-         write (n4,*) (idasls(j,i), j = 1, iavar(3,i))
+         write (lun,*) iavar(1,i),iavar(2,i),iavar(3,i)
+         write (lun,*) (idasls(j,i), j = 1, iavar(3,i))
       end do 
-c                                 write assemblages to print file
-      if (io3.eq.0) then 
 
+      if (lun.ne.n4) then
+c                                 close interim plt file
+         close (lun)
+
+      else if (io3.eq.0) then 
+c                                 write assemblages to print file
          write (n3,'(/,1x,a,a,/)') 'Stable assemblages identified ',
      *                         'by assemblage index:'
          do i = 1, iasct
             call psbtxt (i,string,iend)
             write (n3,'(i4,a,400a)') i,' - ',(chars(j), j = 1, length)
-         end do       
+         end do
 
-      end if 
+      end if
 
-      end 
+      end
 
       subroutine psbtxt (id,string,iend)
 c----------------------------------------------------------------------

@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.8.4, source updated Sept 30, 2018.',
+     *      'Perple_X version 6.8.5, source updated Oct 6, 2018.',
 
      *      'Copyright (C) 1986-2018 James A D Connolly '//
      *      '<www.perplex.ethz/copyright.html>.'
@@ -393,6 +393,10 @@ c                                 aq_ion_H+
       lopt(44) = .true.
 c                                 fancy_cumulative_modes
       lopt(45) = .false.
+c                                 aq_solvent_solvus
+      lopt(46) = .false.
+c                                 output_interim_plots
+      lopt(47) = .true.
 c                                 initialize mus flag lagged speciation
       mus = .false.
 c                                 -------------------------------------
@@ -658,7 +662,11 @@ c             obsolete
 
          else if (key.eq.'aq_solvent_solvus') then
 c                                  allow for solvent immiscisibiliy
-              lopt(46) = .true.
+            if (val.eq.'T') lopt(46) = .true.
+
+         else if (key.eq.'output_interim_plots') then
+c                                  allow for solvent immiscisibiliy
+            if (val.eq.'T') lopt(47) = .true.
 
          else if (key.eq.'zero_mode') then
 c                                 zero_mode key
@@ -1098,7 +1106,7 @@ c                                 fractionation theshold flag
       end if
 
       if (iopt(31).gt.k5+2.or.iopt(31).lt.1) then 
-         write (*,1090)
+         write (*,1090) icp + 2
          iopt(31) = icp + 2
       end if 
 c                                 initial resolution
@@ -1273,8 +1281,8 @@ c                                 proportionality constant for shear modulus
      *         '> 1',/,'the keyword will be',
      *         ' assigned its default value (',i2,').',/)
 1090  format (/,'Warning: refinement_points must be ',
-     *         ' >1 and <8',/,'refinement_points will be',
-     *         ' assigned its default value [4].',/)
+     *         ' >1 and <k5+2',/,'refinement_points will be',
+     *         ' assigned its default value [',i2,'].',/)
 1100  format (/,'Error: data (',a
      *       ,') follows the auto_refine keyword value '
      *       ,'most probably',/,'you are using an obsolete copy of ',
@@ -4727,7 +4735,7 @@ c               read (n8,*,iostat=ierr) xn, yn
 c               if (ierr.ne.0) call error (12,0d0,ierr,tfname)
 
             end if
-         end if 
+         end if
 
          exit 
 
@@ -4798,6 +4806,7 @@ c                                 check if directory is valid
                call mertxt (tfname,tfname,'delete_me',0)
 
                open (n1,file=tfname,iostat = ierr)
+               close (n1,status='delete')
 
                if (ierr.ne.0) then 
                   write (*,1040)

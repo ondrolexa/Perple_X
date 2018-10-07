@@ -958,3 +958,118 @@ c----------------------------------------------------------------------
       end do
 
       end
+
+      subroutine redplt
+c-----------------------------------------------------------------------
+c open/read plt/blk files for PSSECT and WERAMI.
+c-----------------------------------------------------------------------
+      implicit none
+ 
+      include 'perplex_parameters.h'
+
+      character yes*1, text*3, name*100
+
+      integer ier, jnd(6,2), i, ind1, ind2
+
+      logical err
+
+      character*100 prject,tfname
+      common/ cst228 /prject,tfname
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      integer iam
+      common/ cst4 /iam
+c----------------------------------------------------------------------
+      name = prject
+      err = .false.
+
+      if (lopt(47)) then
+
+         write (*,'(a)') 'Do you want to plot/analyze interim '//
+     *                     'results (Y/N)?'
+         read (*,'(a)') yes
+
+         if (yes.eq.'y'.or.yes.eq.'Y') then 
+c                                 open list
+            call mertxt (tfname,prject,'.irf',0)
+            open (1000, file = tfname, status = 'old', iostat = ier)
+
+            if (ier.ne.0) then
+
+               write (*,'(/,a,/)') '**warning ver081** no IRF file: '//
+     *                          'intermediate results cannot be plotted'
+
+               err = .true.
+            end if
+c                                 let user choose
+            if (.not.err) then
+
+               err = .false.
+
+               write (*,'(/,a,/)') 'Choose from the following interim'//
+     *                             ' results [default is the last]:'
+
+               i = 1
+
+               do
+
+                  read (1000,*,iostat=ier) jnd(i,1),jnd(i,2)
+
+                  if (ier.ne.0) then 
+                     if (i.eq.1) then
+                        write (*,'(/,a,/)') '**warning ver082** empty '
+     *                              //'IRF file: intermediate results '
+     *                              //'cannot be plotted'
+                        err = .true.
+                     else
+                        exit
+                     end if
+                  end if
+
+                  if (jnd(i,1).eq.0) then 
+                     write (*,'(i1,a,i1)') i,
+     *                         ' - exploratory stage, grid level ',
+     *                                     jnd(i,2)
+                  else
+                     write (*,'(i1,a,i1)') i,
+     *                         ' - auto-refine stage, grid level ',
+     *                                      jnd(i,2)
+                  end if
+
+                  i = i + 1
+
+               end do
+
+               if (.not.err) then 
+c                                 use intermediate results
+                  call rdnumb (nopt(1),0d0,i,i-1,.false.)
+
+                  ind1 = jnd(i,1)
+                  ind2 = jnd(i,2)
+
+                  write (text,'(a,i1,i1)') '_',ind1, ind2
+                  call mertxt (name,prject,text,0)
+
+               end if
+            end if
+         end if
+
+      end if
+c                                 open the plot file
+      call mertxt (tfname,name,'.plt',0)
+      open (n4, file = tfname, iostat = ier, status = 'old')
+      if (ier.ne.0) call error (122,0d0,n4,tfname)
+c                                 open assemblage file
+      call mertxt (tfname,name,'.blk',0)
+      open (n5, file = tfname, iostat = ier, status = 'old')
+      if (ier.ne.0) call error (122,0d0,n4,tfname)
+c                                 read grid data:
+      call plinp (err)
+c                                 read bulk composition data:
+      call bplinp (err)
+
+      end

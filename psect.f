@@ -56,12 +56,10 @@ c                                 read data for solution phases on n9:
       call input9 (first,output)
 
       call setau2 (output)
-c                                 read the plot file for grid info
-      call plinp (err)
-c                                 read bulk composition data:
-      call bplinp (err)
+c                                 read the plot/blk files
+      call redplt
 c                                 organize variables 
-      call getvar  
+      call getvar
 c                                 initialize the grid parameters
       call setvar  
 c                                 read plot option file, set

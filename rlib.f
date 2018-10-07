@@ -7164,7 +7164,8 @@ c                               total number of endmembers:
       end do
 
       if (jsmod.eq.9.or.jsmod.eq.10) then 
-c                               read the number of orphan site endmembers
+c                               read the number of independent and 
+c                               dependent orphan endmembers
          call readda (rnums,1,tname)
          isp(isite+1) = idint(rnums(1))
          ostot = istot + isp(isite+1)

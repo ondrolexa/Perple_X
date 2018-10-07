@@ -1944,7 +1944,7 @@ c                                lagged speciation
 c                                dependent potentials
       if (jpot.ne.1) write (n5,1010) (mu(i),i=1,jbulk)
 
-1010  format (20(g16.8,1x))
+1010  format (10(g16.8,1x))
 
       end 
 

@@ -65,7 +65,7 @@ c parameters are assigned in "perplex_parameter.h"
 c-----------------------------------------------------------------------
       include 'perplex_parameters.h'
 
-      logical output, first, pots, err  
+      logical output, first, pots, err
 
       integer io3,io4,io9
       common / cst41 /io3,io4,io9
@@ -100,6 +100,8 @@ c-----------------------------------------------------------------------
 
       integer iam
       common/ cst4 /iam
+
+      integer ind1
 c----------------------------------------------------------------------- 
 c                                 iam is a flag indicating the Perple_X program
 c                                    iam = 1  - vertex
@@ -140,6 +142,12 @@ c                                 it would be logical to output context specific
 c                                 parameter settings here instead of the generic 
 c                                 blurb dumped by redop1
          call setau1 (output)
+c                                 set index for interim output
+         if (first) then 
+            ind1 = 0
+         else 
+            ind1 = 1
+         end if 
 c                                 read data for solution phases on n9:
          call input9 (first,output)
 
@@ -177,8 +185,7 @@ c                                 (these flags are reset by input1).
 
             jpot = 1
 
-         end if 
-            
+         end if
 
          if (icopt.ge.0.and.icopt.le.4.or.icopt.eq.8) then
 
@@ -187,7 +194,7 @@ c                                 (these flags are reset by input1).
 
          else if (icopt.eq.5) then 
 c                                 optimization on a 2-d grid.
-            call wav2d1 (output)
+            call wav2d1 (output,ind1)
 
          else if (icopt.eq.7) then 
 c                                 fractionation on a 1-d path.
@@ -436,11 +443,13 @@ c                                 fractionate the composition:
 
       end if 
 c                                 output 
-      if (output.and.io4.eq.0) call outgrd (1,loopy,1) 
+      if (output.and.io4.eq.0) call outgrd (1,loopy,1,n4,0,0)
 c                                 close fractionation data files
       do i = -1, ifrct
          close (n0+i)
       end do
+
+      close (n0-1,status='delete')
 
 1000  format (/,'Composition is now:',/)
 1010  format (1x,a,1x,g14.6)
@@ -584,7 +593,7 @@ c                                  add the infiltrant
 c                                 output 
       if (output) then 
 
-        if (io4.eq.0) call outgrd (1, iopt(36) + 1, 1)
+        if (io4.eq.0) call outgrd (1, iopt(36) + 1, 1,n4,0,0)
 c                                 close fractionation data files
          do i = 1, ifrct
             close (n0+i)
@@ -1089,7 +1098,7 @@ c                                 end of j index loop
          close (lun + j)
       end do
 
-      if (output.and.io4.eq.0) call outgrd (nrow,ncol,1)
+      if (output.and.io4.eq.0) call outgrd (nrow,ncol,1,n4,0,0)
 
 2000  format (/,' failed at p0-dz = ',2(g14.7,1x),' layer ',i1,' node '
      *       ,i3,' column ',i3,/,' p-t-c ',2(g14.7,1x),/,12(g14.7,1x))
@@ -1271,7 +1280,7 @@ c                                for true boundaries.
 
       end
 
-      subroutine wav2d1 (output)
+      subroutine wav2d1 (output,ind1)
 c--------------------------------------------------------------------
 c wav2d does constrained minimization on a 2 dimensional multilevel
 c grid (ith column of a 2-d grid), lowest resolution is the default, 
@@ -1290,8 +1299,8 @@ c---------------------------------------------------------------------
 
       integer kinc, jinc(l8), iind(4), jind(4), iiind(4,2),htic,
      *        jjind(4,2), hotij(l7*l7,2), kotij(l7*l7,2), icind(4),
-     *        jcind(4), lhot(4), ieind(5), jeind(5),i,ihot,
-     *        iil,jjl,ll,je,ie,icell,
+     *        jcind(4), lhot(4), ieind(5), jeind(5), i, ihot, ind1,
+     *        iil, jjl, ll, je, ie, icell,
      *        ii,jj,kk,hh,hhot,jcent,icent,jjc,iic,h,jtic,khot,k,
      *        ktic,j,jhot,klow,kinc2,kinc21,idead
 
@@ -1391,7 +1400,9 @@ c                               progress info
 c                               flush stdout for paralyzer
          flush (6)
 
-      end do 
+      end do
+c                               output interim plt file
+      if (lopt(47)) call outgrd (loopx,loopy,jinc(1),1000,ind1,1)
 c                               get hot points
       ihot = 0 
       kinc2 = kinc/2
@@ -1561,11 +1572,13 @@ c                             now switch new and old hot list
          do i = 1, khot
             hotij(i,1) = kotij(i,1)
             hotij(i,2) = kotij(i,2)
-         end do 
+         end do
+c                               output interim plt file
+         if (lopt(47)) call outgrd (loopx,loopy,jinc(1),1000,ind1,k)
 
-      end do 
+      end do
 c                                 ouput grid data
-10    if (output) call outgrd (loopx,loopy,jinc(1))    
+10    if (output) call outgrd (loopx,loopy,jinc(1),n4,ind1,0)
 
 1030  format (f5.1,'% done with low level grid.')
 1050  format (/,'Beginning grid refinement stage.',/)
@@ -1756,12 +1769,10 @@ c                                must be > level 1
             kinc = -jinc(klev)
             goto 10 
          end if
-        
 
-
-      end do 
+      end do
 c                                 output graphics data
-      if (output) call outgrd (i,loopy,jinc(1))
+      if (output) call outgrd (i,loopy,jinc(1),n4,0,0)
 
       end 
 

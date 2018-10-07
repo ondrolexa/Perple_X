@@ -170,7 +170,7 @@ begin_model
                     Ordered species:    oCaTs           Al     Ca     Si    Al
                                         fmc             Mg     Fe     Si    Si
 
-Augite(G)
+old_Aug(G)
 abbreviation Cpx
 full_name    clinopyroxene
 
@@ -300,12 +300,7 @@ end_dqf_corrections
 end_of_model
                       --------------------------------------------------------
 begin_model
-                      Green et al (JMG, 2016) Augite model, this model differs
-                      from the Augite(G) model in that it does not account for 
-                      Mg- or Fe-Tschermaks substitution. This simplification 
-                      reduces the model composition space from 7-dimensions to 
-                      5-dimensions and reduces computational cost with minor 
-                      consequences for phase equilibria.
+                      Green et al (JMG, 2016) Augite model.
 
                       This model should not be used for Na-rich compositions.
 
@@ -338,42 +333,52 @@ begin_model
                                       Mutliplicity      1      1     1      1   
                                                      ____________________________________
 
-                                   Prism             ____________________________________
+                                        Prism        ____________________________________
 
                                         Diopside        Mg     Ca    Si     Si
-                                        hed             Fe     Ca    Si     Si  dependent
                                         cEnstatite      Mg     Mg    Si     Si
+                                        Mats            Al     Mg   AlSi   AlSi dependent
+                                        macm            Fe3    Mg   AlSi   AlSi dependent
+                            Species:
+                                        hed             Fe     Ca    Si     Si  dependent
                                         cferrosilite    Fe     Fe    Si     Si
+                                        fats            Al     Fe   AlSi   AlSi dependent
+                                        facm            Fe3    Fe   AlSi   AlSi dependent
 
-                                   Orphans            ___________________________________
+                                        Orphans       ___________________________________
 
                                         Jadeite         Al     Na    Si     Si
                                         Acmite          Fe3+   Na    Si     Si
                                         Cats            Al     Ca   AlSi   AlSi
+                                        cacm            Fe3    Ca   AlSi   AlSi dependent
                                                       ___________________________________
 
                     Ordered species:    oCaTs           Al     Ca     Si    Al
                                         fmc             Mg     Fe     Si    Si
-
-Aug(G)
+Augite(G)
 abbreviation Cpx
 full_name    clinopyroxene
 
 9                            | model type: prism + orphan vertices
 
 2                            | prism: two simplicies with a common vertex
-2 2                          | ternary (Ca-Fe-Mg on M2) + quaternary (Mg-Fe-Al-Fe3 on M1)
-3                            | number of independent vertices
+2 4                          | binary (Fe-Mg) + quaternary (di-en-mats-macm)
+3                            | number of independent orphan vertices
 
                              | endmembers on the prism vertices
-hed_d   di 
-cfsg    cenjh
-                             | endmembers on orphan vertices
-jd    acm    cats
+cfsg      cenjh
+fats      mats
+facm      macm
+hed_d     di
 
-2                            | number of ordered species 
+                             | independent endmembers on orphan vertices
+jd
+acm
+cats
 
-ocats = 1 cats              enthalpy_of_ordering  =  -3800  + 2.8816 * T  -0.01  * P | this undoes the DQF on cats
+2                            | number of ordered species and definitions
+
+ocats = 1 cats               enthalpy_of_ordering  =  -3800  + 2.8816 * T  -0.01  * P | this undoes the DQF on cats
 fmc   = 1/2 cenjh + 1/2 cfsg enthalpy_of_ordering  =  -4400 | DQF(fmc) - (DQF(cenjh) + DQF(cfs))/2
 
 begin_limits
@@ -388,20 +393,31 @@ ocats = -2 + 1 cats                              delta = 2 zAlT1
 
 end_limits
 
-1                            | number of dependent endmembers
+5                            | number of dependent endmembers and definitions
 
-hed_d = 1 di   + 1 cfsg - 1 fmc 
+hed_d = 1 di    + 1 cfsg - 1 fmc 
+mats  = 1 cats  + 1 cenjh - 1 di
+macm  = 1 cats  + 1 cenjh - 1 di   + 1 acm - 1 jd
+fats  = 1 cats - 1 di   + 1 fmc
+facm  = 1 cats - 1 di   + 1 fmc  + 1 acm - 1 jd
 
-0 0 0 0 0 0 0 | endmember flags
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | endmember flags
 
-                             | 2x2 prism
-0. 1. 0.1  0                 | range and resolution of X(Fe)
-0. 1. 0.1  0                 | range and resolution of X(Ca)
+                             | First (1d) simplex of the prism
 
-                             | orphan simplex
-0. .2 0.1  0                 | range of jd
-0. .5 0.1  0                 | range of acm
-0. .5 0.1  0                 | range of cats
+0. 1. 0.1  0                 | range and resolution of X(Mg)
+
+                             | Second (3d) simplex of the prism
+
+0. 1. 0.1  0                 | range and resolution of X("en")
+0. 1. 0.1  0                 | range and resolution of X("ts")
+0. 1. 0.1  0                 | range and resolution of X("acm")
+
+                             | Independent (4d) simplex of prism + orphans
+
+0. 1. 0.1  0                 | range of jd
+0. 1. 0.1  0                 | range of acm
+0. 1. 0.1  0                 | range of cats
 
 begin_excess_function
 W(di cenjh)               29.8d3   -0.03 * p
@@ -446,10 +462,10 @@ z(m2,na)   = 1 acm  + 1 jd
 z(m2,mg)   = 1 cenjh
 z(m2,fe)   = 1 fmc  + 1 cfsg
 
-2 0.25                               | 2 species on T1, effective mult. = 1/4
+2 0.25                              | 2 species on T1, effective mult. = 1/4
 z(Al,T1) = 1/2 cats
 
-2 0.25                               | 2 species on T2, effective mult. = 1/4
+2 0.25                              | 2 species on T2, effective mult. = 1/4
 z(Al,T2) = 1/2 cats + 1 ocats
 
 begin_van_laar_sizes
@@ -585,7 +601,7 @@ fgrk_d  = 1 mrbG  + 1 ts    - 1 gl     - 1 tr + 1 b
 0. 1.  .1  0                 | range and resolution for X(mrb)  on site 2, imod = 1
 0. .1  .1  0                 | range and resolution for X(kprg) on site 2, imod = 1
 0. .2  .1  0                 | range and resolution for X(tts)  on site 2, imod = 1
-0. .2  .1  0                 | range and resolution for X(fug)  on site 2, imod = 1
+0. .4  .1  0                 | range and resolution for X(fug)  on site 2, imod = 1
 
 begin_excess_function   
 
@@ -1713,17 +1729,17 @@ begin_model
                                       This model requires the following make definitions in the
                                       thermodynamic data file make_definitions section:
 
-                                      sil8L = 8/5 silL               
+                                      sil8L = 8/5 silL
                                       -23d3 0 0 
 
-                                      fo8L = 2 foL                    
+                                      fo8L = 2 foL
                                       -10d3 0 0 
 
-                                      fa8L = 2 faL                              
-                                      -9d3 0 0 
+                                      fa8L = 2 faL
+                                      -9d3 0 -1.3
 
-                                      q8L = 4 qL    
-                                      0 0 0                
+                                      q8L = 4 qL
+                                      0 0 0
 
                                       WARNING 1: This model can only be used for hydrous systems  
                                       if H2O is specified as a thermodynamic component or as a
@@ -2915,10 +2931,10 @@ full_name    orthopyroxene
 2                          | 2 independent composition spaces
 2 4                        | 2 dimensions on first space, 3 on second
                            | endmembers: 
-crts     fcrts_d  
-mgts     fets_d   
-en       fs 
-mots     feots 
+crts     fcrts_d
+mgts     fets_d
+en       fs
+mots     feots
 
 1                          | ordered species definition
 
@@ -2962,12 +2978,14 @@ end_excess_function
 5 1.                       | 5 species on M1, 1 site per formula unit.
 
 z(m1,fe)   = 1 fs 
-z(m1,al)   = 1 mgts + 1 fets_d  
+z(m1,al)   = 1 mgts
 z(m1,fe3+) = 1 mots
 z(m1,cr)   = 1 crts
 
 2 1.                       | 2 species on M2, 1 site per formula unit.
 z(m2,mg) = 1 en + 1 mgts + 1 mots + 1 crts
+
+site_check_override
 
 end_of_model
                       --------------------------------------------------------
