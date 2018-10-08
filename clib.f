@@ -2691,7 +2691,7 @@ c-----------------------------------------------------------------------
 
       logical first, err, tic 
 
-      integer ierr,jbulk,icp
+      integer ierr
 
       character n2name*100, prt*3, name*100, n9name*100
 
@@ -2745,8 +2745,6 @@ c                                 open assemblage file
 
          end if
 
-         return
-
       else if (iam.eq.1.or.iam.eq.2.or.iam.eq.13.or.iam.eq.15) then 
 c                                 iam -  1 - vertex
 c                                 iam -  2 - meemum
@@ -2754,7 +2752,7 @@ c                                 iam - 13 - unsplt (local)
 c                                 iam - 15 - convex
 
          if (first) then
-            tic = .true
+            tic = .true.
             call mertxt (name,prject,'.dat',0)
             write (*,1160) name
             write (*,1170) n2name
@@ -2773,20 +2771,29 @@ c                                 open print/plot files if requested
 
          end if
 
-         if (first.and.iam.ne.13) write (*,1180) name
+
+         if (first) then
+c                                 plt output file
+            io4 = 0
+            call mertxt (name,prject,'.plt',0)
+            if (iam.ne.13) write (*,1180) name
+
+            open (n4, file = name, position = 'rewind')
+
+            write (*,1190) name
+
+            if (iam.ne.15) then 
 c                                 blk output file
-         io4 = 0
-         call mertxt (name,prject,'.plt',0)
-         open (n4, file = name, position = 'rewind')
+               call mertxt (name,prject,'.blk',0)
+               open (n5, file = name, position = 'rewind')
 
-         if (first) write (*,1190) name
+               write (*,1220) name
 
-         if (iam.ne.15) then 
-c                                 blk output file
-            call mertxt (name,prject,'.blk',0)
-            open (n5, file = name, position = 'rewind')
+            end if
 
-            if (first) write (*,1220) name
+         else if (iam.ne.15) then 
+
+            rewind (n5)
 
          end if
 
@@ -2796,7 +2803,7 @@ c                                 blk output file
 
       end if 
 
-      if (n9name.ne.blank) then
+      if (n9name.ne.' ') then
 
          io9 = 0 
 c                                 open solution model file
@@ -2867,8 +2874,6 @@ c                                 writing interim blk file
 
          open (lun, file = name)
 
-         flush (n5)
-
          rewind (n5)
 c                                 the length of text should be able to 
 c                                 handle format 1010 in outbl1
@@ -2889,10 +2894,10 @@ c                                 and the interim plt file
 
       write (lun,*) loopx, loopy, jinc
 c                                 fill in grid
-      do i = 1, loopx
+      do i = 1, loopx, jinc
 
          if (i.ne.1.and.igrd(i,1).eq.0) then 
-            jgrd(1) = igrd(i-1,1)
+            jgrd(1) = igrd(i-jinc,1)
          else 
             jgrd(1) = igrd(i,1)
          end if 
@@ -2902,7 +2907,7 @@ c                                 fill in grid
 20       jst = kst
 
          if (i.ne.1.and.igrd(i,jst).eq.0) then
-            jgrd(jst) = igrd(i-1,jst)
+            jgrd(jst) = igrd(i-jinc,jst)
          else 
             jgrd(jst) = igrd(i,jst)
          end if 
@@ -2914,7 +2919,7 @@ c                                 fill in grid
          do j = jst, loopy
 
             if (i.ne.1.and.igrd(i,j).eq.0) then 
-               jgrd(j) = igrd(i-1,j)
+               jgrd(j) = igrd(i-jinc,j)
             else 
                jgrd(j) = igrd(i,j)
             end if 
@@ -2928,7 +2933,7 @@ c                                 fill in grid
                goto 20
             end if 
          end do 
-      end do         
+      end do
 c                                 write assemblage list
       write (lun,*) iasct
 

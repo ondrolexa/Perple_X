@@ -434,7 +434,7 @@ c                                 top of plot file
       read (n4,*,iostat=ier) loopx, loopy, jinc
       if (ier.ne.0) goto 99
 c                                 decompress the grid data
-      do i = 1, loopx
+      do i = 1, loopx, jinc
          jst = 1
          do while (jst.le.loopy)
             read (n4,*,iostat=ier) irep, kd

@@ -347,7 +347,7 @@ c                                 true phase assemblage counter
       rline = 2d0
       cwidth = 0
 
-      do i = 1, loopx
+      do i = 1, loopx, jinc
 
          x = xmin + (i-1)*dx 
 
@@ -445,8 +445,8 @@ c                                 use pattern fills
          end do 
 
       end do 
-c                                 now let's draw the edges
-      do i = 1, loopx
+c                                 now draw the edges
+      do i = 1, loopx, jinc
 
          x = xmin + (i-1)*dx 
 
@@ -455,7 +455,7 @@ c                                 now let's draw the edges
             if (igrd(i,j).eq.0) cycle 
 
             y = ymin + (j-1)*dy 
-c                                 ok, we're going to draw something
+c                                 ok, ready to draw something
             call getxy (i,j,x,y,x1,y1,x2,y2)
 c                                 only draw boundaries that separate
 c                                 true phase assemblages.                 
@@ -1156,7 +1156,7 @@ c getxy - get coordinates for grid node volume
       common/ cst312 /jlow,jlev,loopx,loopy,jinc
 c----------------------------------------------------------------------
 
-      dx = dvr(1)
+      dx = dvr(1)*jinc
       dy = dvr(2)
 
       if (i.gt.1.and.i.lt.loopx.and.j.gt.1.and.j.lt.loopy) then
@@ -1232,18 +1232,18 @@ c----------------------------------------------------------------------
 
       if (i.eq.1) then
          im1 = id
-      else if (igrd(i-1,j).eq.0) then 
+      else if (igrd(i-jinc,j).eq.0) then 
          im1 = 0
       else
-         im1 = iap(igrd(i-1,j))
+         im1 = iap(igrd(i-jinc,j))
       end if
 
       if (i.eq.loopx) then 
          ip1 = id
-      else if (igrd(i+1,j).eq.0) then 
+      else if (igrd(i+jinc,j).eq.0) then 
          ip1 = 0
       else
-         ip1 = iap(igrd(i+1,j))
+         ip1 = iap(igrd(i+jinc,j))
       end if  
 
       if (j.eq.1) then 

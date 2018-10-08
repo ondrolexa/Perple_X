@@ -1402,7 +1402,7 @@ c                               flush stdout for paralyzer
 
       end do
 c                               output interim plt file
-      if (lopt(47)) call outgrd (loopx,loopy,jinc(1),1000,ind1,1)
+      if (lopt(47)) call outgrd (loopx,loopy,kinc,1000,ind1,1)
 c                               get hot points
       ihot = 0 
       kinc2 = kinc/2
@@ -1574,11 +1574,11 @@ c                             now switch new and old hot list
             hotij(i,2) = kotij(i,2)
          end do
 c                               output interim plt file
-         if (lopt(47)) call outgrd (loopx,loopy,jinc(1),1000,ind1,k)
+         if (lopt(47)) call outgrd (loopx,loopy,kinc,1000,ind1,k)
 
       end do
 c                                 ouput grid data
-10    if (output) call outgrd (loopx,loopy,jinc(1),n4,ind1,0)
+10    if (output) call outgrd (loopx,loopy,1,n4,ind1,0)
 
 1030  format (f5.1,'% done with low level grid.')
 1050  format (/,'Beginning grid refinement stage.',/)
