@@ -404,12 +404,12 @@ c                                 find node associated with condition
       res = (var(1)-vmn(1))/dvr(1) + 1d0
       i = int(res) 
 
-      if (res-dfloat(i).gt.0.5d0) i = i + 1
+      if (res-dfloat(i).gt.0.5d0) i = i + jinc
 
       res = (var(2)-vmn(2))/dvr(2) + 1d0
       j = int(res)
 
-      if (res-dfloat(j).gt.0.5d0) j = j + 1
+      if (res-dfloat(j).gt.0.5d0) j = j + jinc 
 
       end 
 

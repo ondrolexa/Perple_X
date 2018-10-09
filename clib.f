@@ -1883,6 +1883,9 @@ c---------------------------------------------------------------------
       double precision v,tr,pr,r,ps
       common/ cst5  /v(l2),tr,pr,r,ps
 
+      integer jlow,jlev,loopx,loopy,jinc
+      common/ cst312 /jlow,jlev,loopx,loopy,jinc 
+
       double precision vmax,vmin,dv
       common/ cst9  /vmax(l2),vmin(l2),dv(l2)
 
@@ -1916,9 +1919,10 @@ c---------------------------------------------------------------------
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 c----------------------------------------------------------------------
-
-      rloopy = dfloat(loopy-1)
-      rloopx = dfloat(loopx-1)
+c                                 jinc will only be ~= 1 only for 
+c                                 2d intermediate grid results
+      rloopy = dfloat((loopy-1)/jinc)
+      rloopx = dfloat((loopx-1)/jinc)
 c                                 for 1d calculations
       if (rloopx.eq.0) rloopx = rloopy
 
