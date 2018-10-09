@@ -1896,9 +1896,6 @@ c---------------------------------------------------------------------
       double precision cblk
       common/ cst300 /cblk(k5),jbulk
 
-      integer jlow,jlev,loopx,loopy,jinc
-      common/ cst312 /jlow,jlev,loopx,loopy,jinc
-
       integer jvar
       double precision var,dvr,vmn,vmx
       common/ cxt18 /var(l3),dvr(l3),vmn(l3),vmx(l3),jvar

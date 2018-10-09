@@ -2468,7 +2468,7 @@ c                                 pmv
 
       subroutine crkh2o (pbar,t,vol,fh2o)
 c-----------------------------------------------------------------------
-c compute ln(f[h2o], bar) and volume h2o (kj/bar) from CORK EoS Holland 
+c compute ln(f[h2o], bar) and volume h2o (cm3/mol) from CORK EoS Holland 
 c & Powell CMP 109:265-273. Input pbar - pressure (bars); tk - temp (K).
 c                                 J.A.D. Connolly, 1992.
 c-----------------------------------------------------------------------
@@ -2595,6 +2595,8 @@ c                                 could check that there really are three real r
      *         - gam2 + gam
 
       end if 
+c                                 convert volume from j/bar to cm3/mol 
+      vol = vol*1d1
 
       fh2o = gam + dlog(pbar)
 
@@ -2602,7 +2604,7 @@ c                                 could check that there really are three real r
 
       subroutine crkco2 (pbar,t,vol,fco2)
 c-----------------------------------------------------------------------
-c compute ln(f[co2], bar) and volume co2 (kj/bar) from CORK EoS Holland 
+c compute ln(f[co2], bar) and volume co2 (cm3/mol) from CORK EoS Holland 
 c & Powell CMP 109:265-273. Input pbar - pressure (bars); tk - temp (K).
 c                                 J.A.D. Connolly, 1992.
 c-----------------------------------------------------------------------
@@ -2670,7 +2672,9 @@ c     *               + d/2d0*dp*dp)/rt
      *          + dp*((0.1967099672d-2 - 14.28899046d0/t)*dsqrt(dp)
      *          + (0.3252201107d0/t - 0.9564950686d-4)*dp)
 
-      end if 
+      end if
+c                                 convert volume from j/bar to cm3/mol 
+      vol = vol*1d1
 
       end
 
