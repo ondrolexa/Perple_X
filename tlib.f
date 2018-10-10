@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.8.5, source updated Oct 10, 2018.',
+     *      'Perple_X version 6.8.5, source updated Oct 11, 2018.',
 
      *      'Copyright (C) 1986-2018 James A D Connolly '//
      *      '<www.perplex.ethz/copyright.html>.'
@@ -1442,7 +1442,7 @@ c                                 generic thermo parameters:
          write (n,1012) nval1,nopt(12),nopt(20),valu(17),
      *                  lopt(8),lopt(4),nopt(5),iopt(21),
      *                  iopt(25),iopt(26),iopt(27),valu(5),
-     *                  lopt(32),lopt(44),lopt(46),nopt(34)
+     *                  lopt(32),lopt(44),lopt(36),lopt(46),nopt(34)
 c                                 for meemum add fd stuff
          if (iam.eq.2) write (n,1017) nopt(31),nopt(26),nopt(27)
 

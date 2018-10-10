@@ -284,8 +284,8 @@ c                                 get grid spacing
          call rdnumb (nopt(1),0d0,j,j,.false.)
          write (*,'(/)')
 
-         nxy(1) = (loopx - 1)/ 2**(grid(3,2)-j-1) + 1
-         nxy(2) = (loopy - 1)/ 2**(grid(3,2)-j-1) + 1
+         nxy(1) = (loopx - 1)/ 2**(grid(3,2)-j) + 1
+         nxy(2) = (loopy - 1)/ 2**(grid(3,2)-j) + 1
 
       else
 c                                 arbitrary number of grid points
@@ -787,8 +787,13 @@ c                                 duplicate assignment because ias is in common
       itri(1) = iloc
       jtri(1) = jloc
       wt(1) = 1d0 
+
+      if (icog(jd).eq.iloc.and.jcog(jd).eq.jloc.and.ongrid) then 
+c                                 landed right on a node with data 
+          return
+       end if 
 c                                 exit if interpolation is off
-      if (iopt(4).eq.0.or.ongrid) return
+      if (iopt(4).eq.0) return
 c                                 check for solvus
       if (solvs3(iam,np)) then 
 c                                 a solvus, turn interpolation off, warn and return
@@ -997,7 +1002,7 @@ c                                 load the best choice
       end do
 
       if (ijpt.eq.3) then 
-c                                 compute iterpolation coefficients
+c                                 2d iterpolation coefficients
          div = px(2)*py(3)-px(1)*py(3)-px(2)*py(1)+
      *         px(3)*py(1)-px(3)*py(2)+px(1)*py(2)
 c                                 z[1] coef
@@ -1010,8 +1015,20 @@ c                                 z[3] coef
          wt(3) = (x*(py(1)-py(2))+px(1)*py(2)-px(2)*py(1)
      *           +y*(px(2)-px(1)))/div
 
+         jmin = 0
+
+         do j = 1, ijpt
+            if (wt(j).lt.zero) cycle 
+            jmin = jmin + 1
+            itri(jmin) = itri(j)
+            jtri(jmin) = jtri(j)
+            wt(jmin) = wt(j)
+         end do 
+
+         ijpt = jmin 
+
       else if (ijpt.eq.2) then
-c                                 compute iterpolation coefficients
+c                                 1d iterpolation coefficients
          wt(2) = dsqrt(((x-px(1))**2+(y-py(1))**2)/(px(2)-px(1))**2)
          wt(1) = 1d0 - wt(2)
 

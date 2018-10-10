@@ -1911,15 +1911,27 @@ c---------------------------------------------------------------------
       integer ncol, nrow
       common/ cst226 /ncol,nrow,fileio
 
+      integer iam
+      common/ cst4 /iam
+
       integer iopt
       logical lopt
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 c----------------------------------------------------------------------
+      if (iam.eq.3) then 
+c                                 WERAMI, PSSECT:
 c                                 jinc will only be ~= 1 only for 
 c                                 2d intermediate grid results
-      rloopy = dfloat((loopy-1)/jinc)
-      rloopx = dfloat((loopx-1)/jinc)
+         rloopy = dfloat((loopy-1)/jinc)
+         rloopx = dfloat((loopx-1)/jinc)
+
+      else
+
+         rloopy = dfloat(loopy-1)
+         rloopx = dfloat(loopx-1)
+
+      end if 
 c                                 for 1d calculations
       if (rloopx.eq.0) rloopx = rloopy
 
