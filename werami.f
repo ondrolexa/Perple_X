@@ -171,7 +171,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical node
+      logical node, change
 
       integer i, j, nxy(2), dim
 
@@ -183,6 +183,9 @@ c----------------------------------------------------------------------
       double precision var,dvr,vmn,vmx
       common/ cxt18 /var(l3),dvr(l3),vmn(l3),vmx(l3),jvar
 
+      integer jlow,jlev,loopx,loopy,jinc
+      common/ cst312 /jlow,jlev,loopx,loopy,jinc
+
       character*14 tname
       integer kop,kcx,k2c,iprop
       logical kfl, first
@@ -190,6 +193,10 @@ c----------------------------------------------------------------------
       common/ cst77 /prop(i11),prmx(i11),prmn(i11),
      *               kop(i11),kcx(i11),k2c(i11),iprop,
      *               first,kfl(i11),tname
+
+      integer grid
+      double precision rid 
+      common/ cst327 /grid(6,2),rid(5,2)
 
       integer inv
       character dname*14, title*162
@@ -222,27 +229,72 @@ c                                 allow restricted plot limits
 
       if (yes.eq.'y'.or.yes.eq.'Y') then 
 
+         change = .false.
+
          do i = 1, 2
 30          write (*,1060) vnm(i),vmn(i),vmx(i)
             read (*,*,err=30) tmin(i),tmax(i)
-         end do 
+            if (tmin(i).ne.vmn(i).or.tmax(i).ne.vmx(i)) change = .true.
+         end do
 
-      else 
+         if (lopt(48)) then 
+            write (*,'(/,a,/)') '**warning ver084** sample_on_grid is '
+     *                        //'disabled for arbitrary limits'
+            lopt(48) = .false.
+         end if
+
+      else
 
          tmin(1) = vmn(1)
          tmin(2) = vmn(2)
          tmax(1) = vmx(1)
          tmax(2) = vmx(2)
 
-      end if 
-c                                 number of grid points
-      write (*,1080) vnm(1),vnm(2)
-      read (*,*) nxy
-         
+      end if
+
+      if (lopt(48)) then 
+c                                 sample on a grid, this is awkward
+c                                 since it's not known if auto-refine
+c                                 or exploratory
+
+         write (*,'(/,a)') 'Select the grid resolution (to use an '//
+     *                     'arbitrary grid set sample_on_grid to F):'
+
+         do j = 1, grid(3,2)
+
+            nxy(1) = (grid(1,2)-1) * 2**(j-1) + 1
+            nxy(2) = (grid(2,2)-1) * 2**(j-1) + 1
+
+            if (nxy(1).ge.loopx.or.nxy(2).ge.loopy.or.
+     *         2**(grid(3,2)-j).eq.jinc) then
+
+               write (*,'(4x,i1,a,2(i4,a))') j,' - ',loopx,' x ',loopy,
+     *                                      ' nodes [default]'
+               exit
+
+            else
+
+               write (*,'(4x,i1,a,2(i4,a))') j,' - ',nxy(1),
+     *                                      ' x ',nxy(2),' nodes'
+
+            end if
+
+         end do
+c                                 get grid spacing
+         call rdnumb (nopt(1),0d0,j,j,.false.)
+         write (*,'(/)')
+
+         nxy(1) = (loopx - 1)/ 2**(grid(3,2)-j-1) + 1
+         nxy(2) = (loopy - 1)/ 2**(grid(3,2)-j-1) + 1
+
+      else
+c                                 arbitrary number of grid points
+         write (*,1080) vnm(1),vnm(2)
+         read (*,*) nxy
+
+      end if
+
       do i = 1, 2
-c                                 earlier solution to round-off:
-c         tmin(i) = tmin(i) + (tmax(i)-tmin(i))*1d-6
-c         tmax(i) = tmax(i) - (tmax(i)-tmin(i))*1d-6
          dx(i) = (tmax(i)-tmin(i))/dfloat(nxy(i)-1)
       end do 
 
@@ -326,7 +378,7 @@ c----------------------------------------------------------------------
 
       end 
 
-      subroutine amiin1 (j,left)
+      subroutine amiin1 (j,left,ongrid)
 c----------------------------------------------------------------------
 c amiin1 - identifies the grid point associated with coordinate x and
 c          indicates if x is left of the nodal coordinate.        
@@ -337,7 +389,7 @@ c----------------------------------------------------------------------
 
       integer j
 
-      logical left 
+      logical left, ongrid
 
       double precision res
 
@@ -349,14 +401,17 @@ c                                 find node associated with condition
       res = var(1)-vmn(1)
       j = int(res/dvr(1))
       res = res - j*dvr(1)
+      ongrid = .true.
 c                                 modified for negative dvr possibility
 c                                 nov 12, 2017. JADC
-      if (dvr(1).gt.0) then
+      if (dvr(1).gt.0d0) then
 c                                 positive number line
-         if (res.lt.0d0) then
+         if (res.lt.-1d-3) then
             left = .true.
-         else 
+            ongrid = .false.
+         else if (res.gt.1d-3) then 
             left = .false.
+            ongrid = .false.
          end if 
 
          if (res.gt.0.5d0*dvr(1)) then
@@ -366,10 +421,12 @@ c                                 positive number line
 
       else
 c                                 negative number line 
-         if (res.lt.0d0) then
+         if (res.lt.-1d-3) then
             left = .false.
-         else 
+            ongrid = .false.
+         else if (res.gt.1d-3) then 
             left = .true.
+            ongrid = .false.
          end if 
 
          if (res.lt.0.5d0*dvr(1)) then
@@ -383,7 +440,7 @@ c                                 negative number line
 
       end
 
-      subroutine amiin2 (i,j)
+      subroutine amiin2 (i,j,ongrid)
 c----------------------------------------------------------------------
 c amiin - identifies the grid point associated with coordinate x-y 
 c         and the sector of the x-y coordinate relative the nodal point        
@@ -394,22 +451,45 @@ c----------------------------------------------------------------------
 
       integer i, j
 
+      logical ongrid
+
       double precision res
 
       integer jvar
       double precision var,dvr,vmn,vmx
       common/ cxt18 /var(l3),dvr(l3),vmn(l3),vmx(l3),jvar
+
+      integer jlow,jlev,loopx,loopy,jinc
+      common/ cst312 /jlow,jlev,loopx,loopy,jinc
 c----------------------------------------------------------------------
 c                                 find node associated with condition
-      res = (var(1)-vmn(1))/dvr(1) + 1d0
-      i = int(res) 
+      res = (var(1)-vmn(1))/dvr(1) 
+      i = int(res)
+      res = res-dfloat(i)
 
-      if (res-dfloat(i).gt.0.5d0) i = i + jinc
+      if (dabs(res).gt.1d-3) then 
+         ongrid = .false.
+      else
+         ongrid = .true.
+      end if 
 
-      res = (var(2)-vmn(2))/dvr(2) + 1d0
+      if (res.gt.0.5d0) then 
+         i = (i+1)*jinc + 1
+      else 
+         i = i*jinc + 1
+      end if 
+
+      res = (var(2)-vmn(2))/dvr(2)
       j = int(res)
+      res = res-dfloat(j)
 
-      if (res-dfloat(j).gt.0.5d0) j = j + jinc 
+      if (dabs(res).gt.1d-3) ongrid = .false.
+
+      if (res.gt.0.5d0) then 
+         j = (j+1)*jinc + 1
+      else 
+         j = j*jinc + 1
+      end if 
 
       end 
 
@@ -645,7 +725,7 @@ c----------------------------------------------------------------------
      *        itri(4), jtri(4), ijpt, iam, jam, kinc, jmin, 
      *        imin, imax, ktri(4), ltri(4), ibest
 
-      logical rinsid, isok, warned, left, solvs3
+      logical rinsid, isok, warned, left, solvs3, ongrid
 
       integer pi(4,4)
 
@@ -687,7 +767,7 @@ c----------------------------------------------------------------------
       x = var(1)
       y = var(2)
 c                                 get nodal coordinate   
-      call xy2ij (iloc,jloc,left)
+      call xy2ij (iloc,jloc,left,ongrid)
 c                                 identify the assemblage    
       jd = igrd(iloc,jloc)
 c                                 the iap(jd) check works if k2 is inconsistent
@@ -708,7 +788,7 @@ c                                 duplicate assignment because ias is in common
       jtri(1) = jloc
       wt(1) = 1d0 
 c                                 exit if interpolation is off
-      if (iopt(4).eq.0) return   
+      if (iopt(4).eq.0.or.ongrid) return
 c                                 check for solvus
       if (solvs3(iam,np)) then 
 c                                 a solvus, turn interpolation off, warn and return
@@ -734,7 +814,7 @@ c                                 find a real point with the same assemblage to
 c                                 the left
          jmin = 0
 
-         do j = jloc - 1, jloc - iopt(4)*jinc, -1   
+         do j = jloc - jinc, jloc - iopt(4)*jinc, -jinc
     
             if (j.lt.1) exit 
 
@@ -755,7 +835,7 @@ c                                  ran into a new assemblage
 c                                  find a real point to the right
          jmax = 0 
 
-         do j = jloc + 1, jloc + iopt(4)*jinc
+         do j = jloc + jinc, jloc + iopt(4)*jinc, jinc
 
             if (j.gt.loopy) exit
 
@@ -809,8 +889,8 @@ c                                 allowed.
 
          if (ijpt.eq.1) return
 c                                 compute weights of the interpolation points   
-         x1 = vmn(1) + dfloat(jtri(2)-1)*dvr(1) 
-         x0 = vmn(1) + dfloat(jtri(1)-1)*dvr(1)    
+         x1 = vmn(1) + dfloat(jtri(2)/jinc-1)*dvr(1) 
+         x0 = vmn(1) + dfloat(jtri(1)/jinc-1)*dvr(1)    
    
          wt(1) = (x1-x)/(x1-x0)
          wt(2) = 1d0 - wt(1)
@@ -819,7 +899,9 @@ c                                 compute weights of the interpolation points
 
          return
 
-      end if 
+      end if
+c                                 2d search:
+
 c                                 make a spiral-like search outward
 c                                 from the node to find interpolation
 c                                 points
@@ -832,14 +914,14 @@ c                                 the search area.
          jmin = jloc - kinc
          jmax = jloc + kinc 
 
-         do j = jmin, jmax
+         do j = jmin, jmax, jinc
 c                                 skip out of bounds points           
             if (j.lt.1.or.j.gt.loopy) cycle
 
             imin = iloc - kinc
             imax = iloc + kinc
 
-            do i = imin, imax
+            do i = imin, imax, jinc
 c                                 skip out of bounds points           
                if (i.lt.1.or.i.gt.loopx) cycle
 c                                 skip interior points (this is sloppy)
@@ -903,16 +985,18 @@ c                                 load the best choice
             end do 
          end do 
 
-         kinc = kinc + 1
+         kinc = kinc + jinc
 
-      end do 
-  
+      end do
+
+      if (ijpt.eq.1) return
+
+      do j = 1, ijpt
+         px(j) = vmn(1) + (itri(j)-1)/jinc*dvr(1)
+         py(j) = vmn(2) + (jtri(j)-1)/jinc*dvr(2)
+      end do
+
       if (ijpt.eq.3) then 
-
-         do j = 1, 3
-            px(j) = vmn(1) + (itri(j)-1)*dvr(1)
-            py(j) = vmn(2) + (jtri(j)-1)*dvr(2)
-         end do
 c                                 compute iterpolation coefficients
          div = px(2)*py(3)-px(1)*py(3)-px(2)*py(1)+
      *         px(3)*py(1)-px(3)*py(2)+px(1)*py(2)
@@ -926,11 +1010,12 @@ c                                 z[3] coef
          wt(3) = (x*(py(1)-py(2))+px(1)*py(2)-px(2)*py(1)
      *           +y*(px(2)-px(1)))/div
 
-      else 
+      else if (ijpt.eq.2) then
+c                                 compute iterpolation coefficients
+         wt(2) = dsqrt(((x-px(1))**2+(y-py(1))**2)/(px(2)-px(1))**2)
+         wt(1) = 1d0 - wt(2)
 
-         ijpt = 1 
-
-      end if 
+      end if
 
 1000  format (/,'**warning ver637** Immiscibility occurs in one or ',
      *          'more phases ',/,'interpolation will be turned off ',
@@ -1037,7 +1122,7 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical nodata
+      logical nodata, ongrid
 
       integer itri(4), jtri(4), ijpt, lop, icx, komp, i, j, dim
 
@@ -1117,7 +1202,7 @@ c                                 assemblage index request, lots
 c                                 of redundant calc, but should be 
 c                                 moved to getptp.
 c                                 no need to call triang/getlow
-                  call xy2ij (itri(1),jtri(1),nodata)
+                  call xy2ij (itri(1),jtri(1),nodata,ongrid)
 
                   prop(i) = iap(igrd(itri(1),jtri(1)))
            
@@ -2744,7 +2829,7 @@ c                                 properties!!!).
 
       end
 
-      subroutine xy2ij (iloc,jloc,left)
+      subroutine xy2ij (iloc,jloc,left,ongrid)
 c----------------------------------------------------------------------
 c given the current x-y coordinates (loaded in var), return the nodal
 c coordinates
@@ -2753,7 +2838,7 @@ c----------------------------------------------------------------------
 
       integer jloc, iloc
 
-      logical left
+      logical left, ongrid
 
       logical oned
       common/ cst82 /oned
@@ -2763,12 +2848,12 @@ c----------------------------------------------------------------------
 c                                 get the nodal coordinate and find if the
 c                                 real coordinate lies to the left or right 
 c                                 of the nodal coordinate.                             
-         call amiin1 (jloc,left)
+         call amiin1 (jloc,left,ongrid)
          iloc = 1
 
       else
 c                                 could get fancy and record up/left here
-         call amiin2 (iloc,jloc) 
+         call amiin2 (iloc,jloc,ongrid) 
 
       end if 
 

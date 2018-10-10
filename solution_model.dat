@@ -170,7 +170,7 @@ begin_model
                     Ordered species:    oCaTs           Al     Ca     Si    Al
                                         fmc             Mg     Fe     Si    Si
 
-old_Aug(G)
+Aug(G)
 abbreviation Cpx
 full_name    clinopyroxene
 
@@ -296,6 +296,8 @@ dqf(jd)   =  2000
 dqf(acm)  = -5000
 dqf(cats) =  3800  - 2.8816 * T  + 0.01  * P
 end_dqf_corrections
+
+reach_increment 1
 
 end_of_model
                       --------------------------------------------------------
@@ -484,6 +486,8 @@ dqf(jd)   =  2000
 dqf(acm)  = -5000
 dqf(cats) =  3800  - 2.8816 * T  + 0.01  * P
 end_dqf_corrections
+
+reach_increment 1
 
 end_of_model
                       --------------------------------------------------------

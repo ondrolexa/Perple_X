@@ -1031,11 +1031,11 @@ c                                 let user choose
                   end if
 
                   if (jnd(i,1).eq.0) then 
-                     write (*,'(i1,a,i1)') i,
+                     write (*,'(4x,i1,a,i1)') i,
      *                         ' - exploratory stage, grid level ',
      *                                     jnd(i,2)
                   else
-                     write (*,'(i1,a,i1)') i,
+                     write (*,'(4x,i1,a,i1)') i,
      *                         ' - auto-refine stage, grid level ',
      *                                      jnd(i,2)
                   end if
@@ -1047,6 +1047,7 @@ c                                 let user choose
                if (.not.err) then 
 c                                 use intermediate results
                   call rdnumb (nopt(1),0d0,i,i-1,.false.)
+                  write (*,'(/)')
 
                   ind1 = jnd(i,1)
                   ind2 = jnd(i,2)

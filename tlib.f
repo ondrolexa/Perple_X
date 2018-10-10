@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.8.5, source updated Oct 9, 2018.',
+     *      'Perple_X version 6.8.5, source updated Oct 10, 2018.',
 
      *      'Copyright (C) 1986-2018 James A D Connolly '//
      *      '<www.perplex.ethz/copyright.html>.'
@@ -395,8 +395,10 @@ c                                 fancy_cumulative_modes
       lopt(45) = .false.
 c                                 aq_solvent_solvus
       lopt(46) = .false.
-c                                 output_interim_plots
+c                                 output_interim_results
       lopt(47) = .true.
+c                                 sample_on_grid 
+      lopt(48) = .true. 
 c                                 initialize mus flag lagged speciation
       mus = .false.
 c                                 -------------------------------------
@@ -664,9 +666,13 @@ c             obsolete
 c                                  allow for solvent immiscisibiliy
             if (val.eq.'T') lopt(46) = .true.
 
-         else if (key.eq.'output_interim_plots') then
-c                                  allow for solvent immiscisibiliy
-            if (val.eq.'T') lopt(47) = .true.
+         else if (key.eq.'output_interim_results') then
+c                                  output interim results (VERTEX/PSSECT/WERAMI)
+            if (val.eq.'F') lopt(47) = .true.
+
+         else if (key.eq.'sample_on_grid') then
+c                                  sample on computational grid (WERAMI)
+            if (val.eq.'F') lopt(48) = .false.
 
          else if (key.eq.'zero_mode') then
 c                                 zero_mode key
