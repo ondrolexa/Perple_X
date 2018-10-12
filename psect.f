@@ -87,7 +87,7 @@ c                                 rest of plot file, draw data
 
       subroutine psdplt (jop0)
 c----------------------------------------------------------------
-c psdplt - subroutine to plot bulk compositions
+c psdplt - subroutine to plot gridded minimization sections
 
       implicit none
 
@@ -341,17 +341,17 @@ c                                 true phase assemblage counter
          bctr(2,i) = 0d0
       end do 
 
-      dx = dvr(1)
-      dy = dvr(2)
+      dx = dvr(1)*jinc
+      dy = dvr(2)*jinc
 
       rline = 2d0
       cwidth = 0
 
       do i = 1, loopx, jinc
 
-         x = xmin + (i-1)*dx 
+         x = xmin + (i-1)/jinc*dx 
 
-         do j = 1, loopy
+         do j = 1, loopy, jinc
 
             ipoly = iap(igrd(i,j))
             ntot = iavar(3,ipoly)
@@ -384,7 +384,7 @@ c                                 calculate barycenter
             rline = 0d0
             cwidth = 0d0 
 
-            y = ymin + (j-1)*dy
+            y = ymin + (j-1)/jinc*dy
 c                                 ok, we're going to draw something
             call getxy (i,j,x,y,x1,y1,x2,y2)
 
@@ -448,13 +448,13 @@ c                                 use pattern fills
 c                                 now draw the edges
       do i = 1, loopx, jinc
 
-         x = xmin + (i-1)*dx 
+         x = xmin + (i-1)/jinc*dx 
 
-         do j = 1, loopy
+         do j = 1, loopy, jinc
 
             if (igrd(i,j).eq.0) cycle 
 
-            y = ymin + (j-1)*dy 
+            y = ymin + (j-1)/jinc*dy
 c                                 ok, ready to draw something
             call getxy (i,j,x,y,x1,y1,x2,y2)
 c                                 only draw boundaries that separate
@@ -484,13 +484,13 @@ c                                 test that it's ok
 
          if (ipoly.eq.lex(k)) then
 
-            x = xmin + (i-1)*dx
-            y = ymin + (j-1)*dy
+            x = xmin + (i-1)/jinc*dx
+            y = ymin + (j-1)/jinc*dy
             ipoint = iap(igrd(i,j))
 
          else 
 
-            if (rlabel.lt.1d0) then 
+            if (rlabel.lt.1d0.and.jinc.eq.1) then 
 c                                 ---------begin georges block-----------
             call psbtxt (lex(k), text, iend)
 c                                  scan the range to find a node
@@ -500,8 +500,8 @@ c                                  with the assemblage
 
             ipoly = lex(k)
 
-            do ii = iran(1,k),iran(2,k)
-               do jj = jran(1,k),jran(2,k)
+            do ii = iran(1,k),iran(2,k),jinc
+               do jj = jran(1,k),jran(2,k),jinc
                   if (iap(igrd(ii,jj)).eq.ipoly) then
 c                                  add i,j indices to list used
                      call iasadd(ii,nax(1),iax(1,1))
@@ -519,13 +519,13 @@ c                                  of i- and j-indices.  the breaks will
 c                                  mark group edges.
             ii = 1
 
-            do i = 2,nax(1)
+            do i = 2,nax(1),jinc
                if (iax(i,1)-iax(i-1,1) .gt. 1) ii = ii + 1
             end do
 
             jj = 1
 
-            do i = 2,nax(2)
+            do i = 2,nax(2),jinc
                if (iax(i,2)-iax(i-1,2) .gt. 1) jj = jj + 1
             end do
 
@@ -605,11 +605,11 @@ c                                  extent for label.
                   jend = jran(2,k)
                end if
 
-               do ii=ibeg,iend
-                  do jj=jbeg,jend
+               do ii=ibeg,iend,jinc
+                  do jj=jbeg,jend,jinc
 
                      if (iap(igrd(ii,jj)).eq.ipoly) then
-                        i = i + 1
+                        i = i + jinc
                         x = x + dfloat(ii)
                         y = y + dfloat(jj)
                      end if
@@ -671,7 +671,7 @@ c                                 with the assemblage
 c                                 first try to find one at an i-value 
 c                                 at half the j-range
                jj = jran(2,k)/2
-               do ii = iran(1,k), iran(2,k)
+               do ii = iran(1,k), iran(2,k), jinc
 
                   if (igrd(ii,jj).eq.0) cycle
 
@@ -688,7 +688,7 @@ c                                 at half the j-range
 c                                 next try to find one at an j-value 
 c                                 at half the i-range
                ii = iran(2,k)/2
-               do jj = jran(1,k), jran(2,k)
+               do jj = jran(1,k), jran(2,k), jinc
 
                   if (igrd(ii,jj).eq.0) cycle
 
@@ -702,8 +702,8 @@ c                                 at half the i-range
             end if 
 c                                 last try, scan the range to find a node 
 c                                 with the assemblage
-            do ii = iran(1,k), iran(2,k)
-               do jj = jran(1,k), jran(2,k)
+            do ii = iran(1,k), iran(2,k), jinc
+               do jj = jran(1,k), jran(2,k), jinc 
 
                   if (igrd(ii,jj).eq.0) cycle
 
@@ -726,8 +726,7 @@ c                                 call label routine:
 50       call pselip (x,y, 0.25d0*dcx, 0.25d0*dcy,1d0,0d0,0,0,1) 
          call psbtxt (ipoint, text, iend)
          call pssctr (ifont,ascale,ascale, 0d0)
-         call pstext (x+dcx*ascale,y+.7d0*dcy*ascale,
-     *                text, iend)
+         call pstext (x+dcx*ascale,y+.7d0*dcy*ascale,text, iend)
 
       end do 
 
@@ -1157,7 +1156,7 @@ c getxy - get coordinates for grid node volume
 c----------------------------------------------------------------------
 
       dx = dvr(1)*jinc
-      dy = dvr(2)
+      dy = dvr(2)*jinc
 
       if (i.gt.1.and.i.lt.loopx.and.j.gt.1.and.j.lt.loopy) then
 
@@ -1363,16 +1362,16 @@ c----------------------------------------------------------------------
 
       if (j.eq.loopy) then
          ijp1 = iap(igrd(i,j))
-      else if (igrd(i,j+1).ne.0) then 
-         ijp1 = iap(igrd(i,j+1))
+      else if (igrd(i,j+jinc).ne.0) then 
+         ijp1 = iap(igrd(i,j+jinc))
       else 
          ijp1 = 0
       end if 
 
       if (j.eq.1) then 
          ijm1 = iap(igrd(i,j))
-      else if (igrd(i,j-1).ne.0) then 
-         ijm1 = iap(igrd(i,j-1))
+      else if (igrd(i,j-jinc).ne.0) then 
+         ijm1 = iap(igrd(i,j-jinc))
       else 
          ijm1 = 0
       end if 
@@ -1396,7 +1395,7 @@ c----------------------------------------------------------------------
       else 
          iend = 0
       end if 
-                          
+
       end 
 
       subroutine rname (iw,prompt)

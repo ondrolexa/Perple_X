@@ -502,11 +502,11 @@ c-----------------------------------------------------------------------
 c                             output = .false. then in 1st cycle of
 c                             autorefine.
       if (.not.output) then 
-c                                 read computational option file 
-         call fopen1 
+c                                 read computational option file
+         call fopen1
       
       else 
-c                                 create the file name           
+c                                 create the file name
          call mertxt (tfname,prject,'.dat',0)
          open (n1, file = tfname, iostat = ierr, status = 'old')
          if (ierr.ne.0) call error (120,r,n1,tfname)
@@ -1920,7 +1920,7 @@ c---------------------------------------------------------------------
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 c----------------------------------------------------------------------
       if (iam.eq.3) then 
-c                                 WERAMI, PSSECT:
+c                                 WERAMI (3), PSSECT (7):
 c                                 jinc will only be ~= 1 only for 
 c                                 2d intermediate grid results
          rloopy = dfloat((loopy-1)/jinc)

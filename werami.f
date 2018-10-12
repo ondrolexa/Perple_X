@@ -252,30 +252,44 @@ c                                 allow restricted plot limits
 
       end if
 
-      if (lopt(48)) then 
+      if (lopt(48)) then
+c                                 work out if exploratory or auto-refine grid
+c                                 parameters are to be used:
+         i = 0
+
+         do j = 1, 2
+
+            if (loopx.eq.(grid(1,j)-1) * 2**(grid(3,j)-1) + 1) then
+               i = j
+               exit
+            end if
+
+         end do
+
+         if (i.eq.0) call error (999,0d0,i,'user changed grid parms?')
 c                                 sample on a grid, this is awkward
 c                                 since it's not known if auto-refine
 c                                 or exploratory
-
          write (*,'(/,a)') 'Select the grid resolution (to use an '//
      *                     'arbitrary grid set sample_on_grid to F):'
 
-         do j = 1, grid(3,2)
+         do j = 1, grid(3,i)
 
-            nxy(1) = (grid(1,2)-1) * 2**(j-1) + 1
-            nxy(2) = (grid(2,2)-1) * 2**(j-1) + 1
+            nxy(1) = (grid(1,i)-1) * 2**(j-1) + 1
+            nxy(2) = (grid(2,i)-1) * 2**(j-1) + 1
 
             if (nxy(1).ge.loopx.or.nxy(2).ge.loopy.or.
-     *         2**(grid(3,2)-j).eq.jinc) then
+     *         2**(grid(3,i)-j).eq.jinc) then
 
-               write (*,'(4x,i1,a,2(i4,a))') j,' - ',loopx,' x ',loopy,
-     *                                      ' nodes [default]'
+               write (*,'(4x,i1,a,2(i4,a))') j,' - ',(loopx-1)/jinc + 1,
+     *                                         ' x ',(loopy-1)/jinc + 1,
+     *                                         ' nodes [default]'
                exit
 
             else
 
                write (*,'(4x,i1,a,2(i4,a))') j,' - ',nxy(1),
-     *                                      ' x ',nxy(2),' nodes'
+     *                                         ' x ',nxy(2),' nodes'
 
             end if
 
@@ -284,8 +298,8 @@ c                                 get grid spacing
          call rdnumb (nopt(1),0d0,j,j,.false.)
          write (*,'(/)')
 
-         nxy(1) = (loopx - 1)/ 2**(grid(3,2)-j) + 1
-         nxy(2) = (loopy - 1)/ 2**(grid(3,2)-j) + 1
+         nxy(1) = (loopx - 1)/ 2**(grid(3,i)-j) + 1
+         nxy(2) = (loopy - 1)/ 2**(grid(3,i)-j) + 1
 
       else
 c                                 arbitrary number of grid points
@@ -721,13 +735,13 @@ c----------------------------------------------------------------------
 
       double precision x, y, wt(3), px(3), py(3), div, dst(4), x0, x1
 
-      integer jloc, iloc, j, i, k, l, jmax, np, jd, j0,
-     *        itri(4), jtri(4), ijpt, iam, jam, kinc, jmin, 
-     *        imin, imax, ktri(4), ltri(4), ibest
+      integer jloc, iloc, j, i, k, l, jmax, np, jd, j0, linc,
+     *        itri(4), jtri(4), ijpt, iam, jam, kinc, jmin, getqud,
+     *        imin, imax, ktri(4), ltri(4), ibest, quad(2), pi(4,4)
 
-      logical rinsid, isok, warned, left, solvs3, ongrid
+      logical rinsid, isok, warned, left, solvs3, ongrid, jok 
 
-      integer pi(4,4)
+      external getqud, isok, rinsid, solvs3, jok 
 
       integer jvar
       double precision var,dvr,vmn,vmx
@@ -786,7 +800,8 @@ c                                 duplicate assignment because ias is in common
       ijpt = 1
       itri(1) = iloc
       jtri(1) = jloc
-      wt(1) = 1d0 
+      wt(1) = 1d0
+      linc = 2**(jlev - 1)
 
       if (icog(jd).eq.iloc.and.jcog(jd).eq.jloc.and.ongrid) then 
 c                                 landed right on a node with data 
@@ -819,8 +834,8 @@ c                                 find a real point with the same assemblage to
 c                                 the left
          jmin = 0
 
-         do j = jloc - jinc, jloc - iopt(4)*jinc, -jinc
-    
+         do j = jloc - 1, jloc - iopt(4)*linc, -1
+
             if (j.lt.1) exit 
 
             if (iap(igrd(1,j)).eq.ias) then 
@@ -840,7 +855,7 @@ c                                  ran into a new assemblage
 c                                  find a real point to the right
          jmax = 0 
 
-         do j = jloc + jinc, jloc + iopt(4)*jinc, jinc
+         do j = jloc + 1, jloc + iopt(4)*linc, 1
 
             if (j.gt.loopy) exit
 
@@ -910,28 +925,31 @@ c                                 2d search:
 c                                 make a spiral-like search outward
 c                                 from the node to find interpolation
 c                                 points
-      kinc = 0       
+      kinc = 0
 c                                 the multiplier on jinc (the increment
 c                                 for the lowest level grid) controls
-c                                 the search area. 
-      do while (kinc.le.iopt(4)*jinc)
+c                                 the search area.
+      do while (kinc.le.iopt(4)*linc)
 
          jmin = jloc - kinc
          jmax = jloc + kinc 
 
-         do j = jmin, jmax, jinc
-c                                 skip out of bounds points           
+         do j = jmin, jmax, 1
+c                                 skip out of bounds points
             if (j.lt.1.or.j.gt.loopy) cycle
 
             imin = iloc - kinc
             imax = iloc + kinc
 
-            do i = imin, imax, jinc
+            do i = imin, imax, 1
 c                                 skip out of bounds points           
                if (i.lt.1.or.i.gt.loopx) cycle
 c                                 skip interior points (this is sloppy)
-               if (j.ne.jmin.and.j.ne.jmax.and.
-     *             i.ne.imin.and.i.ne.imax) cycle 
+               if (j.ne.jmin.and.j.ne.jmax) then
+                  if (i.ne.imin.and.i.ne.imax) cycle
+               else if (i.ne.imin.and.i.ne.imax) then 
+                   if (j.ne.jmin.and.j.ne.jmax) cycle
+               end if 
 c                                 is the point the same assemblage?
                if (iap(igrd(i,j)).ne.ias) cycle
 c                                 pointer to reference node
@@ -945,6 +963,7 @@ c                                 always take the two points
                   ijpt = ijpt + 1
                   itri(ijpt) = i
                   jtri(ijpt) = j
+                  quad(ijpt) = getqud(itri(ijpt),jtri(ijpt),iloc,jloc)
 
                else if (ijpt.eq.2) then 
 
@@ -952,14 +971,31 @@ c                                 always take the two points
                   jtri(3) = j      
 c                                 check if on line of previous
 c                                 points
-                  if (isok(itri,jtri).and.rinsid(itri,x,jtri,y,dst(1)))
-     *               ijpt = 3
+                  if (isok(itri,jtri).and.rinsid(itri,x,jtri,y,dst(1))) 
+     *               then
+c                                 the point is bounded
+                        ijpt = 3
 
-               else if (ijpt.eq.3) then 
+                  else if (quad(1).ne.0.and.quad(1).eq.quad(2)) then 
+
+                     j0 = getqud(itri(3),jtri(3),iloc,jloc)
+
+                     if (j0.ne.0.and.j0.ne.quad(1)) then
+c                                 swap the 2nd interpolation point if it's
+c                                 in a different quadrant than the first:
+                        itri(2) = i
+                        jtri(2) = j
+                        quad(1) = 0
+
+                     end if
+
+                  end if
+
+               else if (ijpt.eq.3) then
 c                                 four permutations are possible
 c                                 check all 
                   itri(4) = i
-                  jtri(4) = j 
+                  jtri(4) = j
                   ibest = 1
      
                   do k = 2, 4
@@ -990,7 +1026,7 @@ c                                 load the best choice
             end do 
          end do 
 
-         kinc = kinc + jinc
+         kinc = kinc + 1
 
       end do
 
@@ -1028,9 +1064,23 @@ c                                 z[3] coef
          ijpt = jmin 
 
       else if (ijpt.eq.2) then
+c                                 check that the original point is
+c                                 on a line between the iterpolation points:
+         itri(3) = iloc
+         jtri(3) = jloc
+c                                 check if on line of previous
+c                                 points
+         if (jok(itri,jtri)) then 
 c                                 1d iterpolation coefficients
-         wt(2) = dsqrt(((x-px(1))**2+(y-py(1))**2)/(px(2)-px(1))**2)
-         wt(1) = 1d0 - wt(2)
+            wt(2) = dsqrt(   ((x - px(1))**2 + (y - py(1))**2)
+     *                     / ((px(2) - px(1))**2 + (py(2) - py(1))**2) )
+            wt(1) = 1d0 - wt(2)
+
+         else
+
+            ijpt = 1
+
+         end if
 
       end if
 
@@ -1779,13 +1829,77 @@ c                                 cp/cv
  
       end 
 
+      integer function getqud (itri,jtri,iloc,jloc)
+c----------------------------------------------------------------------
+c locate quadrant of vertex itri-jtri relative to iloc, jloc
+
+      implicit none 
+
+      integer itri, jtri, iloc, jloc
+c----------------------------------------------------------------------
+      if (itri.eq.iloc.or.jtri.eq.jloc) then
+         getqud = 0
+      else if (jtri.lt.jloc) then
+         if (itri.lt.iloc) then
+            getqud = 1
+         else
+            getqud = 2
+         end if
+      else
+         if (itri.lt.iloc) then
+            getqud = 3
+         else
+            getqud = 4
+         end if
+      end if 
+
+      end
+
+      logical function jok (itri,jtri)
+c----------------------------------------------------------------------
+c check if 3rd vertex lies on a line between 1 and 2
+
+      implicit none 
+
+      integer itri(*), jtri(*)
+      double precision m, b, di
+c----------------------------------------------------------------------
+
+      jok = .false.
+
+      if (itri(1).eq.itri(2).and.itri(1).eq.itri(3)) then 
+         if ((jtri(1)-jtri(3))*(jtri(2)-jtri(3)).lt.0) then
+            jok = .true.
+         end if 
+      else if (jtri(1).eq.jtri(2).and.jtri(1).eq.jtri(3)) then 
+         if ((itri(1)-itri(3))*(itri(2)-itri(3)).lt.0) then
+            jok = .true.
+         end if
+      else if ((jtri(1)-jtri(3))*(jtri(2)-jtri(3)).lt.0) then 
+c                          if the points are not on the same
+c                          row, then they may all be on a 
+c                          diagonal
+         di = itri(1) - itri(2)
+         m = (-jtri(2)+jtri(1))/di
+         b = -(jtri(1)*itri(2)-itri(1)*jtri(2))/di
+
+         di = m*itri(3)+b
+
+         if (dabs(jtri(3)-di).lt.1d-3) then
+            jok = .true.
+         end if
+
+      end if
+
+      end 
+
       logical function isok (itri,jtri)
 c----------------------------------------------------------------------
 c check if vertices itri-jtri define a triangle
 
       implicit none 
 
-      integer itri(4), jtri(4)
+      integer itri(*), jtri(*)
       double precision m, b, di
 c----------------------------------------------------------------------
       if (itri(1).eq.itri(2).and.itri(1).eq.itri(3).or.
