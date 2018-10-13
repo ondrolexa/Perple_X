@@ -969,7 +969,7 @@ c-----------------------------------------------------------------------
 
       character yes*1, text*3, name*100
 
-      integer ier, jnd(6,2), i, ind1, ind2
+      integer ier, jnd(12,2), i, ind1, ind2
 
       logical err
 

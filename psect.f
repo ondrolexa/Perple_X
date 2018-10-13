@@ -490,7 +490,7 @@ c                                 test that it's ok
 
          else 
 
-            if (rlabel.lt.1d0.and.jinc.eq.1) then 
+            if (rlabel.lt.1d0) then 
 c                                 ---------begin georges block-----------
             call psbtxt (lex(k), text, iend)
 c                                  scan the range to find a node
@@ -519,13 +519,13 @@ c                                  of i- and j-indices.  the breaks will
 c                                  mark group edges.
             ii = 1
 
-            do i = 2,nax(1),jinc
+            do i = 2,nax(1)
                if (iax(i,1)-iax(i-1,1) .gt. 1) ii = ii + 1
             end do
 
             jj = 1
 
-            do i = 2,nax(2),jinc
+            do i = 2,nax(2)
                if (iax(i,2)-iax(i-1,2) .gt. 1) jj = jj + 1
             end do
 
@@ -609,16 +609,18 @@ c                                  extent for label.
                   do jj=jbeg,jend,jinc
 
                      if (iap(igrd(ii,jj)).eq.ipoly) then
-                        i = i + jinc
-                        x = x + dfloat(ii)
-                        y = y + dfloat(jj)
+                        i = i + 1
+                        x = x + dfloat(ii/jinc)
+                        y = y + dfloat(jj/jinc)
                      end if
 
                   end do
                end do
-
-               ii = max(1,nint(x/i))
-               jj = max(1,nint(y/i))
+c                                 george had ii = max(1,nint(x/i)) for 
+c                                 grid spacing 1, changed 10/13/2018
+c                                 for grid spacing jinc. JADC
+               ii = 1 + nint(x/i) * jinc
+               jj = 1 + nint(y/i) * jinc
 c                                  in the money this time -- agrees?
                ipoint = iap(igrd(ii,jj))
 
@@ -627,8 +629,8 @@ c                                  in the money this time -- agrees?
      *              ' for ',text(1:nblen(text)),' region ',kk,' missed'
                else 
                   ictr = ictr + 1
-                  cctr(1,ictr)  = xmin + dfloat(ii-1)*dx
-                  cctr(2,ictr)  = ymin + dfloat(jj-1)*dy
+                  cctr(1,ictr)  = xmin + dfloat((ii-1)/jinc)*dx
+                  cctr(2,ictr)  = ymin + dfloat((jj-1)/jinc)*dy
                   if (ictr.gt.k3) exit
                end if 
 
@@ -670,15 +672,15 @@ c                                 with the assemblage
             if (jran(2,k).gt.2) then
 c                                 first try to find one at an i-value 
 c                                 at half the j-range
-               jj = jran(2,k)/2
+               jj = 1 + ((jran(2,k)-1)/jinc/2)*jinc
                do ii = iran(1,k), iran(2,k), jinc
 
                   if (igrd(ii,jj).eq.0) cycle
 
                   if (iap(igrd(ii,jj)).eq.ipoly) then
                      ipoint = iap(igrd(ii,jj))
-                     x = xmin + (ii-1)*dx
-                     y = ymin + (jj-1)*dy
+                     x = xmin + (ii-1)/jinc*dx
+                     y = ymin + (jj-1)/jinc*dy
                      goto 50
                   end if 
                end do 
@@ -687,15 +689,16 @@ c                                 at half the j-range
             if (iran(2,k).gt.2) then 
 c                                 next try to find one at an j-value 
 c                                 at half the i-range
-               ii = iran(2,k)/2
+               ii = 1 + ((iran(2,k)-1)/jinc/2)*jinc
+
                do jj = jran(1,k), jran(2,k), jinc
 
                   if (igrd(ii,jj).eq.0) cycle
 
                   if (iap(igrd(ii,jj)).eq.ipoly) then
                      ipoint = iap(igrd(ii,jj))
-                     x = xmin + (ii-1)*dx
-                     y = ymin + (jj-1)*dy
+                     x = xmin + (ii-1)/jinc*dx
+                     y = ymin + (jj-1)/jinc*dy
                      goto 50
                   end if 
                end do 
@@ -703,17 +706,20 @@ c                                 at half the i-range
 c                                 last try, scan the range to find a node 
 c                                 with the assemblage
             do ii = iran(1,k), iran(2,k), jinc
-               do jj = jran(1,k), jran(2,k), jinc 
+
+               do jj = jran(1,k), jran(2,k), jinc
 
                   if (igrd(ii,jj).eq.0) cycle
 
                   if (iap(igrd(ii,jj)).eq.ipoly) then
                      ipoint = iap(igrd(ii,jj))
-                     x = xmin + (ii-1)*dx
-                     y = ymin + (jj-1)*dy
+                     x = xmin + (ii-1)/jinc*dx
+                     y = ymin + (jj-1)/jinc*dy
                      goto 50
-                  end if 
-               end do 
+                  end if
+
+               end do
+
             end do 
 c                                 no grid point found for the 
 c                                 assemblage, perhaps the resetting of
@@ -1247,21 +1253,21 @@ c----------------------------------------------------------------------
 
       if (j.eq.1) then 
          jm1 = id
-      else if (igrd(i,j-1).eq.0) then 
+      else if (igrd(i,j-jinc).eq.0) then 
          jm1 = 0
       else
-         jm1 = iap(igrd(i,j-1))
+         jm1 = iap(igrd(i,j-jinc))
       end if 
 
       if (j.eq.loopy) then 
          jp1 = id
-      else if (igrd(i,j+1).eq.0) then 
+      else if (igrd(i,j+jinc).eq.0) then 
          jp1 = 0
       else
-         jp1 = iap(igrd(i,j+1))
+         jp1 = iap(igrd(i,j+jinc))
       end if 
-                          
-      if (i.ne.1.and.im1.ne.id) 
+
+      if (i.ne.1.and.im1.ne.id)
      *    call psline (x1,y1,x1,y2,rline,width)
       if (j.ne.loopy.and.jp1.ne.id)
      *    call psline (x1,y2,x2,y2,rline,width)
@@ -1308,18 +1314,18 @@ c----------------------------------------------------------------------
 
       if (j.eq.1) then 
          jm1 = id
-      else if (igrd(1,j-1).eq.0) then 
+      else if (igrd(1,j-jinc).eq.0) then 
          jm1 = 0
       else
-         jm1 = iap(igrd(1,j-1))
+         jm1 = iap(igrd(1,j-jinc))
       end if 
 
       if (j.eq.loopy) then 
          jp1 = id
-      else if (igrd(1,j+1).eq.0) then 
+      else if (igrd(1,j+jinc).eq.0) then 
          jp1 = 0
       else
-         jp1 = iap(igrd(1,j+1))
+         jp1 = iap(igrd(1,j+jinc))
       end if 
                           
       if (j.ne.loopy.and.jp1.ne.id)
