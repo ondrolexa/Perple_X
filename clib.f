@@ -112,7 +112,7 @@ c                                 second cycle of automated mode
                end if  
 
                write (n8,*) refine
-          
+
             else if (ier.eq.0.and.iam.eq.2) then 
 c                                 MEEMUM, ask the user if he wants
 c                                 to use the data 
@@ -3023,3 +3023,613 @@ c                                 first solution names:
       length = iend
 
       end 
+
+      subroutine redplt (name,err)
+c-----------------------------------------------------------------------
+c open/read plt/blk files for PSSECT and WERAMI.
+c-----------------------------------------------------------------------
+      implicit none
+ 
+      include 'perplex_parameters.h'
+
+      character name*100
+
+      integer ier
+
+      logical err
+
+      character*100 prject,tfname
+      common/ cst228 /prject,tfname
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      integer iam
+      common/ cst4 /iam
+c----------------------------------------------------------------------
+      err = .false.
+c                                 open the plot file
+      call mertxt (tfname,name,'.plt',0)
+      open (n4, file = tfname, iostat = ier, status = 'old')
+      if (ier.ne.0) call error (122,0d0,n4,tfname)
+c                                 open assemblage file
+      call mertxt (tfname,name,'.blk',0)
+      open (n5, file = tfname, iostat = ier, status = 'old')
+      if (ier.ne.0) call error (122,0d0,n4,tfname)
+c                                 read grid data:
+      call plinp (err)
+c                                 read bulk composition data:
+      call bplinp (err)
+
+      end
+
+      subroutine interm (finish,err)
+c-----------------------------------------------------------------------
+c if finish (only vertex) close plt/blk and delete interim results else 
+c if ~finish open/read plt/blk files for PSSECT, UNSPLT, and WERAMI.
+c-----------------------------------------------------------------------
+      implicit none
+ 
+      include 'perplex_parameters.h'
+
+      character yes*1, text*3, name*100
+
+      integer ier, jnd(12,2), i, j, ind1, ind2
+
+      logical err, finish
+
+      character*100 prject,tfname
+      common/ cst228 /prject,tfname
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      integer isec,icopt,ifull,imsg,io3p
+      common/ cst103 /isec,icopt,ifull,imsg,io3p
+
+      logical refine
+      common/ cxt26 /refine
+
+      integer iam
+      common/ cst4 /iam
+c----------------------------------------------------------------------
+      if (finish) then
+
+         close (n4)
+         close (n5)
+
+         if (iopt(34).eq.2) then 
+c                                 delete interim results
+            call mertxt (tfname,prject,'.irf',0)
+            open (1000, file = tfname, status = 'old', iostat = ier)
+            if (ier.ne.0) return
+
+            do
+
+               read (1000,*,iostat=ier) jnd(i,1),jnd(i,2)
+c                                 file is in use?
+               if (ier.ne.0) exit 
+c                                 make the root
+               write (text,'(a,i1,i1)') '_',jnd(i,1),jnd(i,2)
+               call mertxt (name,prject,text,0)
+
+               call mertxt (tfname,name,'.plt',0)
+               open (1001, file = tfname, status = 'old', iostat = ier)
+               if (ier.ne.0) exit 
+               close (1001, status = 'delete')
+
+               call mertxt (tfname,name,'.blk',0)
+               open (1001, file = tfname, status = 'old', iostat = ier)
+               if (ier.ne.0) exit 
+               close (1001, status = 'delete')
+
+            end do
+
+            close (1000, status = 'delete')
+
+         end if 
+
+         return
+
+      end if 
+
+      if (iopt(34).ne.2.or.icopt.ne.5.or.iam.eq.14) then 
+c                                 for all calculations other than 2d gridded 
+c                                 min OR if interim_results (iopt(34)) < 2
+c                                 try to open final plt and blk files
+         name = prject
+
+         call redplt (name,err)
+
+         if (err) then
+
+            if (iam.eq.14) then
+
+               return
+
+            else if (icopt.ne.5.or.iopt(34).eq.0) then 
+
+               call error (72,nopt(1),i,'missing/corrupt plt/blk files '
+     *                     //' VERTEX may still be running or the files'
+     *                     //' are locked by another program')
+
+            end if
+
+         else 
+
+            return
+
+         end if
+
+      end if
+c                                 only hope is interim results:
+      call mertxt (tfname,prject,'.irf',0)
+      open (1000, file = tfname, status = 'old', iostat = ier)
+
+      if (ier.ne.0) call error (72,nopt(1),i,'no IRF file: interim '//
+     *                                   'results are not available')
+
+      i = 1
+c                                 make a list of the result files
+      do
+
+         read (1000,*,iostat=ier) jnd(i,1),jnd(i,2)
+
+         if (ier.ne.0) then
+
+            if (i.eq.1) then
+
+               call error (72,nopt(1),i,'empty IRF file: interim '//
+     *                                  'results are not available')
+
+            else
+
+               i = i - 1
+               exit
+
+            end if
+
+         end if
+
+         i = i + 1
+
+      end do
+
+      if (iopt(34).eq.1) then 
+c                                 interim_results is auto, and the final results
+c                                 are not available, find/use last interim result:
+         write (*,'(a)') 'VERTEX has not completed the calculation, '//
+     *                  'continue with the latest interim result (Y/N)?'
+
+         if (refine.and.jnd(i,1).eq.0) write (*,'(/,a,/,a)')
+     *            'WARNING: VERTEX is currently in the '//
+     *            'auto-refine stage, but the latest interim result ',
+     *            'is from the exploratory stage, the result may be '//
+     *            'inconsistent or unreadable.'
+
+         read (*,'(a)') yes
+
+         if (yes.ne.'y'.and.yes.ne.'Y') stop
+
+         write (text,'(a,i1,i1)') '_',jnd(i,1),jnd(i,2)
+         call mertxt (name,prject,text,0)
+
+      else
+
+         write (*,'(a)') 'Do you want to plot/analyze interim '//
+     *                     'results (Y/N)?'
+         read (*,'(a)') yes
+
+         if (yes.eq.'y'.or.yes.eq.'Y') then
+c                                 use intermediate results
+            write (*,'(/,a,/)') 'Choose from the following interim'//
+     *                          ' results [default is the last]:'
+
+            do j = 1, i 
+
+               if (jnd(j,1).eq.0) then
+
+                  write (*,'(4x,i1,a,i1)') j,
+     *                  ' - exploratory stage, grid level ',jnd(j,2)
+               else
+
+                  write (*,'(4x,i1,a,i1)') j,
+     *                     ' - auto-refine stage, grid level ',jnd(j,2)
+
+               end if
+
+            end do
+
+            call rdnumb (nopt(1),0d0,i,i,.false.)
+            write (*,'(/)')
+
+            ind1 = jnd(i,1)
+            ind2 = jnd(i,2)
+
+            if (refine.and.ind1.eq.0) write (*,'(a,/,a,/)')
+     *            'WARNING: VERTEX is in, or has completed, the '//
+     *            'auto-refine stage, interim results ',
+     *            'from the exploratory stage may be '//
+     *            'inconsistent or unreadable.'
+
+            write (text,'(a,i1,i1)') '_',ind1, ind2
+            call mertxt (name,prject,text,0)
+
+         else
+c                                 use final results
+             name = prject
+
+         end if
+
+      end if
+
+      call redplt (name,err)
+
+      if (err) call error (72,nopt(1),i,'corrupt interim results, '//
+     *                             'use auto-refine stage results.')
+
+      end
+
+      subroutine bplinp (err)
+c-----------------------------------------------------------------------
+c read the b-plot file that contains the information on the assemblages
+c stable at each grid node
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      logical err
+
+      integer jxco, kxco, i, j, ids, ier
+c                                 -------------------------------------
+c                                 global variables
+c                                 x coordinate description
+      integer istg, ispg, imlt, imdg
+      common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
+c                                 global assemblage data
+      integer icog,jcog
+      common/ cxt17 /icog(k2),jcog(k2)
+
+      integer iap,ibulk
+      common/ cst74  /iap(k2),ibulk
+
+      double precision xco
+      integer ico,jco
+      common/ cxt10 /xco(k18),ico(k1),jco(k1)
+
+      double precision bg
+      common/ cxt19 /bg(k5,k2)
+
+      integer idasls,iavar,iasct,ias
+      common/ cst75  /idasls(k5,k3),iavar(3,k3),iasct,ias
+
+      integer icomp,istct,iphct,icp
+      common/ cst6  /icomp,istct,iphct,icp
+
+      integer jtest,jpot
+      common/ debug /jtest,jpot
+
+      double precision amu
+      common/ cst48 /amu(k8,k2)
+
+      integer jbulk
+      double precision cblk
+      common/ cst300 /cblk(k5),jbulk
+
+      integer ncoor,mcoor,ndim
+      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
+
+      integer iam
+      common/ cst4 /iam
+
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+
+      integer kd, na1, na2, na3, nat
+      double precision x3, caq
+      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),na1,na2,na3,nat,kd
+
+      integer ksmod, ksite, kmsol, knsp
+      common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+c----------------------------------------------------------------------
+c                                 assemblage counter
+      ibulk = 0
+c                                 pointer to solution compositional coordinates
+      jxco = 0 
+      kxco = 0
+
+      err = .false. 
+
+      do 
+
+         ibulk = ibulk + 1
+
+         if (ibulk.gt.k2) call error (183,0d0,k2,'BLINP')
+
+         read (n5,*,end=99) icog(ibulk),jcog(ibulk),iap(ibulk)
+
+         ias = iap(ibulk)
+c                                if ias = 0, probably reading 
+c                                an inconsistent blk file in unsplt
+         if (ias.le.0) then 
+            ier = 1
+            exit 
+         end if 
+c                                phase molar amounts
+         read (n5,*,iostat=ier) (bg(i,ibulk),i=1,iavar(3,ias))
+         if (ier.ne.0) exit
+
+         ico(ibulk) = jxco
+
+         do i = 1, iavar(1,ias)
+
+            ids = idasls(i,ias)     
+
+            kxco = jxco + ncoor(ids) 
+            jxco = jxco + 1
+
+            if (kxco.gt.k18) call error (61,0d0,k18,'BPLINP')
+
+            read (n5,*,iostat=ier) (xco(j), j = jxco, kxco)
+            if (ier.ne.0) exit
+
+            if (lopt(32).and.ksmod(ids).eq.39) then 
+c                                lagged speciation
+
+               jxco = kxco + 1
+               kxco = kxco + nat
+
+               if (kxco.gt.k18) call error (61,0d0,k18,'BPLINP')
+
+               read (n5,*,iostat=ier) (xco(j), j = jxco, kxco)
+               if (ier.ne.0) exit
+
+            end if  
+         
+            jxco = kxco
+
+         end do 
+
+         if (ier.ne.0) exit 
+
+         jxco = kxco  
+c                                 read mu's if available
+         if (jpot.ne.1) then
+ 
+            read (n5,*,iostat=ier) (amu(i,ibulk), i = 1, jbulk)
+
+            if (ier.ne.0) then 
+c                                 if error on read most probably its
+c                                 because of NaN's for the chemical 
+c                                 potentials
+               do i = 1, jbulk
+                  amu(i,ibulk) = nopt(7)
+               end do 
+ 
+               ier = 0 
+
+            end if 
+         end if 
+
+      end do
+
+99    ibulk = ibulk - 1
+
+      if (ier.ne.0) err = .true.
+
+      end
+
+
+      subroutine plinp (err)
+c---------------------------------------------------------------------- 
+c plinp - subroutine to read assemblage info for gridded min calculations.
+c if icopt = 7 and fileio also reads nodal coordinates.
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer i, j, k, jst, irep, kd, jend, ier
+
+      logical count, err 
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      integer igrd
+      common/ cst311/igrd(l7,l7)
+
+      integer iam
+      common/ cst4 /iam
+
+      integer jlow,jlev,loopx,loopy,jinc
+      common/ cst312 /jlow,jlev,loopx,loopy,jinc
+
+      integer idasls,iavar,iasct,ias
+      common/ cst75 /idasls(k5,k3),iavar(3,k3),iasct,ias
+
+      integer isec,icopt,ifull,imsg,io3p
+      common/ cst103 /isec,icopt,ifull,imsg,io3p
+
+      integer iap,ibulk
+      common/ cst74 /iap(k2),ibulk
+
+      integer ipot,jv,iv
+      common / cst24 /ipot,jv(l2),iv(l2)
+
+      double precision vip
+      common/ cst28 /vip(l2,k2)
+
+      character*100 cfname
+      common/ cst227 /cfname
+
+      logical fileio
+      integer ncol, nrow
+      common/ cst226 /ncol,nrow,fileio
+
+      integer idstab,nstab,istab
+      common/ cst34 /idstab(i11),nstab(i11),istab
+
+      integer idsol,nrep,nph
+      common/ cst38/idsol(k5,k3),nrep(k5,k3),nph(k3)
+c----------------------------------------------------------------------
+      err = .false.
+c                                 sep 22, 2017: interpolation should 
+c                                 be turned off for calculations in which
+c                                 the bulk composition changes; however
+c                                 jcont (as read in input1) was not the
+c                                 flag for this condition. this needs to 
+c                                 be corrected. 
+c     if (icont.ne.0) then 
+c                                 turn interpolation off for
+c                                 fractionation calcs or compositional
+c                                 variables, this could be optional.
+c        iopt(4) = 0
+c        write (*,3000) 
+
+c     end if 
+c                                 top of plot file
+      read (n4,*,iostat=ier) loopx, loopy, jinc
+c                                 prior to 6.8.5 vertex did not write 
+c                                 the final value of jinc to the plot 
+c                                 file, reset it here for back-compatibility
+      if (loopx.eq.1.or.loopy.eq.1) jinc = 1
+
+      if (ier.ne.0) goto 99
+c                                 decompress the grid data
+      do i = 1, loopx, jinc
+         jst = 1
+         do while (jst.le.loopy)
+            read (n4,*,iostat=ier) irep, kd
+            if (ier.ne.0) goto 99
+            if (kd.eq.0) write (*,*) 'bad un at i, j',i,j
+            jend = jst + irep 
+            do j = jst, jend
+               if (j.gt.l7) call error (2,nopt(1),j,
+     *                      'coordinates (routine PLINP), increase L7')
+               igrd(i,j) = kd
+            end do 
+            jst = jend + 1
+         end do 
+      end do 
+c                                 read assemblages
+      read (n4,*,iostat=ier) iasct
+      if (ier.ne.0) goto 99
+
+      istab = 0 
+
+      do i = 1, iasct
+         read (n4,*,iostat=ier) iavar(1,i),iavar(2,i),iavar(3,i)
+         read (n4,*,iostat=ier) (idasls(j,i), j = 1, iavar(3,i))
+         if (ier.ne.0) goto 99
+c                                 make a cumulative list of stable phases
+c                                 first get the number of occurrences of 
+c                                 each phase in the assemblage
+         nph(i) = 0
+         do j = 1, k5
+            idsol(j,i) = 0
+            nrep(j,i) = 0
+         end do 
+
+         do j = 1, iavar(3,i) 
+
+            count = .true.
+
+            if (j.le.iavar(1,i)) then 
+
+               do k = 1, nph(i)
+                  if (idsol(k,i).eq.idasls(j,i)) then 
+                     count = .false.
+                     nrep(k,i) = nrep(k,i) + 1
+                     exit 
+                  end if 
+               end do
+ 
+            end if 
+
+            if (count) then
+               nph(i) = nph(i) + 1
+               idsol(nph(i),i) = idasls(j,i)
+               nrep(nph(i),i) = 1
+            end if
+
+         end do  
+c                                 make an array in which each id 
+c                                 occurs only once
+         
+c                                 next compare to the existing list
+         do k = 1, nph(i)  
+
+            count = .true.
+
+            do j = 1, istab
+
+               if (idsol(k,i).eq.idstab(j)) then 
+                  if (nrep(k,i).gt.nstab(j)) nstab(j) = nrep(k,i)
+                  count = .false.
+                  exit
+               end if 
+
+            end do 
+
+            if (count) then 
+               istab = istab + 1
+               if (istab.gt.k10) call error (999,0d0,istab,'ISTAB ')
+               nstab(istab) = nrep(k,i)
+               idstab(istab) = idsol(k,i)
+            end if 
+
+         end do 
+
+      end do 
+c                                 make the "null" assemblage
+      iap(k2) = k3
+      iavar(1,k3) = 0
+      iavar(2,k3) = 0 
+      iavar(3,k3) = 0 
+
+      if (icopt.eq.7.and.fileio) then 
+c                                 if coodinates from a file, read
+c                                 coordinate file.
+         open (n8,file=cfname,status='old',iostat=ier)
+         if (ier.ne.0) call error (6,vip(1,1),i,cfname)
+         if (loopy.gt.k2) call error (1,vip(1,1),loopy,'k2')
+         do j = 1, loopy
+            read (n8,*,iostat=ier) (vip(i,j), i = 1, ipot)
+            if (ier.ne.0) then 
+               write (*,1000) cfname
+               stop
+            end if 
+         end do 
+         close (n8)
+
+      end if 
+
+99    if (ier.ne.0) then 
+
+         if (iam.ne.14) then
+            call error (71,vip(1,1),i,' plot (*.plt) file')
+         else 
+            err = .true.
+         end if
+
+      end if
+
+1000  format (/,'**error ver635** Coordinate file ',a,/,
+     *       'is inconsistent with plot file, re-run VERTEX.',/)
+3000  format (/,'**warning ver636** For this computational mode ',
+     *          'interpolation of physical',/,'properties has been ',
+     *          'turned OFF.',/)
+      end

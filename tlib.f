@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.8.5, source updated Oct 12, 2018.',
+     *      'Perple_X version 6.8.5, source updated Oct 21, 2018.',
 
      *      'Copyright (C) 1986-2018 James A D Connolly '//
      *      '<www.perplex.ethz/copyright.html>.'
@@ -331,12 +331,12 @@ c                                 speciation_max_it - for speciation calculation
 c                                 solution_names 0 - model, 1 - abbreviation, 2 - full
       iopt(24) = 0
       valu(22) = 'mod'
-c                                 hyb_h2o - eos to be used for pure h2o, 0-2, 4-5
+c                                 hyb_h2o - eos to be used for pure h2o, 0-2, 4-5, 6-7
       iopt(25) = 4
-c                                 hyb_co2 - eos to be used for pure co2, 0-4
+c                                 hyb_co2 - eos to be used for pure co2, 0-4, 6-7
       iopt(26) = 4
-c                                 hyb_ch4 - eos to be used for pure ch4, 0-1
-      iopt(27) = 1
+c                                 hyb_ch4 - eos to be used for pure ch4, 0-1, 6-7
+      iopt(27) = 0
 c                                 
 c     iopt(28-30)                 reserved as debug options iop_28 - iop_30
 
@@ -346,6 +346,9 @@ c                                 maximum number of aqueous species
       iopt(32) = 20
 c                                 aq_lagged_iterations
       iopt(33) = 0
+c                                 interim_results, 1 - auto, 0 - off, 2 - man
+      iopt(34) = 1
+      valu(34) = 'aut'
 c                                 aq_output output back-calculated solute speciation
       lopt(25) = .true.
 c                                 aq_solvent_composition (true = molar)
@@ -395,8 +398,6 @@ c                                 fancy_cumulative_modes
       lopt(45) = .false.
 c                                 aq_solvent_solvus
       lopt(46) = .false.
-c                                 output_interim_results
-      lopt(47) = .true.
 c                                 sample_on_grid 
       lopt(48) = .true. 
 c                                 initialize mus flag lagged speciation
@@ -561,7 +562,7 @@ c                                 abort if pure solvent is stable
 
             read (strg,*) iopt(25)
 
-            if (iopt(25).lt.0.or.iopt(25).eq.3.or.iopt(25).gt.5) then 
+            if (iopt(25).lt.0.or.iopt(25).gt.7.or.iopt(25).eq.3) then 
                write (*,1180) strg,key
                call errpau
             end if 
@@ -570,7 +571,7 @@ c                                 abort if pure solvent is stable
 
             read (strg,*) iopt(26)
 
-            if (iopt(26).lt.0.or.iopt(26).gt.4) then 
+            if (iopt(26).lt.0.or.(iopt(26).gt.4.and.iopt(26).ne.7)) then 
                write (*,1180) strg,key
                call errpau
             end if
@@ -579,7 +580,7 @@ c                                 abort if pure solvent is stable
 
             read (strg,*) iopt(27)
 
-            if (iopt(27).lt.0.or.iopt(27).gt.1) then 
+            if (iopt(27).lt.0.or.(iopt(27).gt.1.and.iopt(27).ne.7)) then 
                write (*,1180) strg,key
                call errpau
             end if 
@@ -666,9 +667,15 @@ c             obsolete
 c                                  allow for solvent immiscisibiliy
             if (val.eq.'T') lopt(46) = .true.
 
-         else if (key.eq.'output_interim_results') then
+         else if (key.eq.'interim_results') then
 c                                  output interim results (VERTEX/PSSECT/WERAMI)
-            if (val.eq.'F') lopt(47) = .true.
+            if (val.eq.'off') then 
+               iopt(34) = 0
+            else if (val.eq.'man') then 
+               iopt(34) = 2
+            end if
+
+            valu(34) = val 
 
          else if (key.eq.'sample_on_grid') then
 c                                  sample on computational grid (WERAMI)
@@ -1446,14 +1453,15 @@ c                                 generic thermo parameters:
 c                                 for meemum add fd stuff
          if (iam.eq.2) write (n,1017) nopt(31),nopt(26),nopt(27)
 
-         if ((iam.eq.1.or.iam.eq.15).and.icopt.ne.1) then 
+         if (iam.eq.1.or.iam.eq.15) then 
 c                                 vertex output options, dependent potentials
+c                                 pause_on_error
             write (n,1013) valu(11),lopt(19)
-c                                 logarithmic_p, bad_number, auto_exclude
-            if (iam.eq.1) then 
-               write (n,1014) lopt(14),nopt(7)
-               write (n,1234) lopt(5)
-            end if 
+c                                 auto_exclude
+            write (n,1234) lopt(5)
+c                                 logarithmic_p, bad_number, interim_results
+            if (iam.eq.1) write (n,1014) lopt(14),nopt(7),valu(34)
+
          end if 
 
       end if
@@ -1463,13 +1471,13 @@ c                                 WERAMI input/output options
          write (n,1230) lopt(25),iopt(32),l9,valu(26),valu(27),
      *                  lopt(15),lopt(14),nopt(7),lopt(22),valu(2),
      *                  valu(21),valu(3),lopt(41),lopt(42),lopt(45),
-     *                  valu(4),lopt(6),valu(22),
-     *                  lopt(21),lopt(24),valu(14),lopt(19),lopt(20)
+     *                  valu(4),lopt(6),valu(22),lopt(21),lopt(24),
+     *                  valu(14),lopt(19),lopt(20),valu(34),lopt(22)
          write (n,1234) lopt(5)
 c                                 WERAMI info file options
          write (n,1241) lopt(12)       
 c                                 WERAMI thermodynamic options
-         write (n,1016) lopt(8),lopt(4),iopt(24),iopt(25),iopt(26)
+         write (n,1016) lopt(8),lopt(4),iopt(25),iopt(26),iopt(27)
          write (n,1017) nopt(31),nopt(26),nopt(27)
 
       else if (iam.eq.2) then 
@@ -1535,9 +1543,9 @@ c                                 generic thermo options
      *     4x,'speciation_factor      ',f6.0,5x,'>10 [100] speciation ',
      *           'precision = final resolution/speciation_factor',/,
      *        4x,'speciation_max_it      ',i4,7x,'[100]',/,
-     *        4x,'hybrid_EoS_H2O         ',i4,7x,'[4] 0-2, 4-5',/,
-     *        4x,'hybrid_EoS_CO2         ',i4,7x,'[4] 0-4',/,
-     *        4x,'hybrid_EoS_CH4         ',i4,7x,'[1] 0-1',/,
+     *        4x,'hybrid_EoS_H2O         ',i4,7x,'[4] 0-2, 4-7',/,
+     *        4x,'hybrid_EoS_CO2         ',i4,7x,'[4] 0-4, 7',/,
+     *        4x,'hybrid_EoS_CH4         ',i4,7x,'[0] 0-1, 7',/,
      *        4x,'aq_bad_results         ',a3,8x,'[err] 101, 102, 103,',
      *                                           ' ignore',/,
      *        4x,'aq_lagged_speciation   ',l1,10x,'[F] T',/,
@@ -1549,16 +1557,17 @@ c                                 generic thermo options
      *        4x,'dependent_potentials   ',a3,8x,'off [on]',/,
      *        4x,'pause_on_error         ',l1,10x,'[T] F')
 1014  format (4x,'logarithmic_p          ',l1,10x,'[F] T',/,
-     *        4x,'bad_number          ',f7.1,7x,'[NaN]')
+     *        4x,'bad_number          ',f7.1,7x,'[NaN]',/,
+     *        4x,'interim_results        ',a3,8x,'[auto] off manual')
 1015  format (/,2x,'Auto-refine options:',//,
      *        4x,'auto_refine            ',a3,8x,'off manual [auto]')
 c                                 thermo options for frendly
 1016  format (/,2x,'Thermodynamic options:',//,
      *        4x,'approx_alpha           ',l1,10x,'[T] F',/,
      *        4x,'Anderson-Gruneisen     ',l1,10x,'[F] T',/,
-     *        4x,'hybrid_EoS_H2O         ',i4,7x,'[7] 0-2, 4-8',/,
-     *        4x,'hybrid_EoS_CO2         ',i4,7x,'[7] 0-4',/,
-     *        4x,'hybrid_EoS_CH4         ',i4,7x,'[1] 0-1')
+     *        4x,'hybrid_EoS_H2O         ',i4,7x,'[4] 0-2, 4-7',/,
+     *        4x,'hybrid_EoS_CO2         ',i4,7x,'[4] 0-4, 7',/,
+     *        4x,'hybrid_EoS_CH4         ',i4,7x,'[0] 0-1, 7')
 1017  format (4x,'fd_expansion_factor    ',f3.1,8x,'>0 [2.]',/,
      *        4x,'finite_difference_p    ',d7.1,4x,'>0 [1d4]; ',
      *           'fraction = ',d7.1,3x,'[1d-2]')
@@ -1649,7 +1658,9 @@ c                                 thermo options for frendly
      *        4x,'species_Gibbs_energies ',l1,10x,'[F] T',/,
      *        4x,'seismic_output         ',a3,8x,'[some] none all',/,
      *        4x,'pause_on_error         ',l1,10x,'[T] F',/,
-     *        4x,'poisson_test           ',l1,10x,'[F] T')
+     *        4x,'poisson_test           ',l1,10x,'[F] T',/,
+     *        4x,'interim_results        ',a3,8x,'[auto] off manual',/,
+     *        4x,'sample_on_grid         ',l1,10x,'[T] F')
 1231  format (/,2x,'Input/Output options:',//,
      *        4x,'aq_output              ',l1,10x,'[T] F',/
      *        4x,'aq_species             ',i3,8x,'[20] 0-',i3,/,
@@ -2531,7 +2542,7 @@ c---------------------------------------------------------------------
 120   format (/,'**error ver120** file:',/,a,/,
      *        'could not be opened, check that it exists or that it is',
      *        ' not in use by another program.',/) 
-122   format ('**error ver120** plot file: ',a,/,'was not found, ',
+122   format ('**error ver122** plot file: ',a,/,'was not found, ',
      *        'you must generate it with VERTEX.')
 125   format (/,'**error ver125** a site fraction (',g8.2,') is out',
      *          ' of range for : ',a,/,'   The configurational',

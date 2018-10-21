@@ -444,7 +444,7 @@ c----------------------------------------------------------------------
 
       integer i, j, nhyb, icheck, nout
 
-      parameter (nhyb=5)
+      parameter (nhyb=7)
    
       character hyname(0:nhyb)*32
 
@@ -459,13 +459,15 @@ c----------------------------------------------------------------------
 
       save hyname 
 
-      data (hyname(i), i = 0, 5)/
+      data (hyname(i), i = 0, 7)/
      *  'MRK DeSantis et al 1974',
      *  'HSMRK Kerrick & Jacobs 1981',
      *  'CORK Holland & Powell 1998',
      *  'BRMRK Bottinga & Richet 1981',
      *  'PSEoS Pitzer & Sterner 1994',
-     *  'Haar et al 1982'/
+     *  'Haar et al 1982',
+     *  'Zhang & Duan 2005',
+     *  'Zhang & Duan 2009'/
 c----------------------------------------------------------------------
 
       if (icheck.lt.0) then 
@@ -2551,16 +2553,16 @@ c                                 root is positive.
 
       if (p.gt.p0) then
 c                            new tjbh cork, 97:
-          dp = p - p0
-          c = 1.9853d-3*dp
-          d = -8.909d-2*dsqrt(dp)
-          e = 8.0331d-2*dp**0.25d0
+         dp = p - p0
+         c = 1.9853d-3*dp
+         d = -8.909d-2*dsqrt(dp)
+         e = 8.0331d-2*dp**0.25d0
 
-          vol = vol + c + d + e
+         vol = vol + c + d + e
 
-          gam = gam + dp*(c/2d0 + d*r23 + 0.8d0*e)/rt
+         gam = gam + dp*(c/2d0 + d*r23 + 0.8d0*e)/rt
 
-      end if 
+      end if
 c                              add check to keep T > 273
       if (t.lt.695d0.and.p.gt.psat.and.t.gt.273d0) then
 c                              tinkham version, Sept. 12, 2002
@@ -2596,7 +2598,7 @@ c                                 could check that there really are three real r
 
       end if 
 c                                 convert volume from j/bar to cm3/mol 
-      vol = vol*1d1
+      vol = vol * 1d1
 
       fh2o = gam + dlog(pbar)
 
@@ -2613,7 +2615,10 @@ c-----------------------------------------------------------------------
       integer i, iroots, ineg, ipos
 
       double precision x(3),pbar,t,vol,fco2,b,r,p0,p,dp,rt,rtp,t12,a,
-     *                 cc,a1,a2,a3,xmin,xmax
+     *                 cc,a1,a2,a3,xmin,xmax, c, d
+
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 
       save b,r,p0
 
@@ -2666,11 +2671,14 @@ c         d = 5.40776d-3 - 1.59046d-6*t
 c         c = -1.78198d-1 + 2.45317d-5*t
 
 c         fco2 = fco2 + (2d0*c*dp**(1.5d0)/3d0
-c     *               + d/2d0*dp*dp)/rt 
+c     *               + d/2d0*dp*dp)/rt
 
-          fco2 = fco2 
-     *          + dp*((0.1967099672d-2 - 14.28899046d0/t)*dsqrt(dp)
-     *          + (0.3252201107d0/t - 0.9564950686d-4)*dp)
+          c = 1.5d0 * (0.1967099672d-2 - 14.28899046d0/t)
+          d = 2d0 * (0.3252201107d0/t - 0.9564950686d-4)
+
+          vol = vol + c + d
+
+          fco2 = fco2 + dp*(c*r23*dsqrt(dp) + d/2d0*dp)
 
       end if
 c                                 convert volume from j/bar to cm3/mol 
@@ -7863,7 +7871,7 @@ c----------------------------------------------------------------------
 
          vh(j) = -v(j)
          gh(j) = g(j)
-         
+
          if (j.eq.1) then 
 c                                 water
             if (iopt(25).eq.0) then 
@@ -7886,10 +7894,13 @@ c                                 pseos, pitzer & sterner 1994
 c                                 haar, haar et el. 1982
                call haar (v(j),f(j))
 
-            else 
+            else if (iopt(25).eq.6) then 
+c                                 zhang & duan 2005
+               call zhdh2o (v(j),f(j))
 
-               write (*,*) 'invalid eos call in hybeos'
-               call errpau
+            else if (iopt(25).eq.7) then 
+c                                 zhang & duan 2009
+               call zd09pr (v(j),f(j),j)
 
             end if 
 c                                 the fugacity coefficient of the pure gas
@@ -7920,12 +7931,11 @@ c                                 brmrk, bottinga & richet 1981
 c                                 pseos, pitzer & sterner 1994
                call pseos (v(j),f(j),j)
 
-            else 
+            else if (iopt(26).eq.7) then 
+c                                 zhang & duan 2009
+               call zd09pr (v(j),f(j),j)
 
-               write (*,*) 'invalid eos call in hybeos'
-               call errpau
-
-            end if
+            end if 
 c                                 the fugacity coefficient of the pure gas
             g(j) = dexp(f(j))/p
 
@@ -7939,22 +7949,21 @@ c                                 mrk, already called, do nothing
 c                                 methane hsmrk kerrick and jacobs 1981.
                g(j) = dexp(hsmrkf (v(j),j))/p
 
-            else 
-
-               write (*,*) 'invalid eos call in hybeos'
-               call errpau
+            else if (iopt(27).eq.7) then 
+c                                 zhang & duan 2009
+               call zd09pr (v(j),f(j),j)
 
             end if
 
-         end if 
+         end if
+
+         end do
 c                                 the hybrid delta volume (hyb-mrk), it's 
 c                                 doubtful this thing is really used, if it 
 c                                 is it must be in fluids.
          vh(j) = vh(j) + v(j)
 c                                 the hybrid/mrk pure fluid fugacity ratio
          gh(j) = g(j)/gh(j)
-
-      end do 
 
       end
 
@@ -8029,17 +8038,19 @@ c                                 pseos, pitzer & sterner 1994
 c                                 haar, haar et el. 1982
             call haar (v(j),ftemp)
 
-c         else if (iopt(25).eq.6) then 
-c                                 duan 2005, this function needs
-c                                 to be modified to return f, the
-c                                 value now returned is the CORK f.
-c            v(j) =  duah2o (ftemp)
+         else if (iopt(25).eq.6) then 
+c                                 zhang & duan 2005
+            call zhdh2o (v(j),ftemp)
 
-         end if 
+         else if (iopt(25).eq.7) then 
+c                                 zhang & duan 2009
+            call zd09pr (v(j),ftemp,1)
+
+         end if
 
       else if (ins(1).eq.2) then 
 c                                CO2
-         if (iopt(25).eq.1) then 
+         if (iopt(26).eq.1) then
 c                                 hsmrk
             ftemp = hsmrkf (v(j),j)
 
@@ -8055,6 +8066,10 @@ c                                 brmrk, bottinga & richet 1981
 c                                 pseos, pitzer & sterner 1994
             call pseos (v(j),ftemp,j)
 
+         else if (iopt(26).eq.7) then
+c                                 zhang & duan 2009
+            call zd09pr (v(j),ftemp,1)
+
          end if
 
       else if (j.eq.4) then
@@ -8062,6 +8077,10 @@ c                                CH4
          if (iopt(27).eq.1) then 
 c                                 methane hsmrk kerrick and jacobs 191.
             ftemp = hsmrkf (v(j),j)
+
+         else if (iopt(27).eq.7) then 
+c                                 zhang & duan 2009
+            call zd09pr (v(j),ftemp,1)
 
          end if
 
@@ -8077,3 +8096,242 @@ c                                           JADC, march 6 2018
       dvhy(j) = vol - vmrk0(j)
 
       end
+
+
+
+      subroutine zd09pr (vol,lnfug,i)
+c----------------------------------------------------------------------
+c Zhand & Duan 2009 pure fluid EoS for species as below.
+c See: duan2009_CO2_volume_fugacity.mws
+
+c         1 = H2O
+c         2 = CO2
+c         3 = CO
+c         4 = CH4 
+c         5 = H2
+c         7 = O2
+c        16 = C2H6
+c---------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer it, iwarn, ins(1), i
+
+      double precision prt,b,c,d,e,f,ge,expg,gamm,vi,veq,dveq,lnfug,dv
+
+      double precision vol, vmrk, fmrk, eps(16), sig3(16), et, et2
+
+      double precision p,t,xco2,u1,u2,tr,pr,r,ps
+      common/ cst5  /p,t,xco2,u1,u2,tr,pr,r,ps
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      double precision y,g,v
+      common/ cstcoh /y(nsp),g(nsp),v(nsp)
+
+      save iwarn, eps, sig3
+      data iwarn/0/
+
+      data eps /510d0, 235d0, 105.6d0, 154d0, 31.2d0, 0d0, 124.5d0,
+     *          8*0d0, 246.1d0/
+
+      data sig3 / 23.887872d0, 54.439939d0, 49.027896d0, 50.28426837d0,
+     *            25.153757d0, 0d0, 37.933056d0, 8*0d0, 82.312875d0/
+c---------------------------------------------------------------------
+c                                 MRK volume guess and backup fugacity
+      ins(1) = i
+      call mrkpur (ins, 1)
+
+      vmrk = v(i)
+      fmrk = dlog(p*g(i))
+
+      vol = vmrk
+c                                 zd pv units MPa, J/MPa (cm3).
+      prt = p/1d1/r/t
+      it = 0
+
+      gamm = 6.123507682d0*sig3(i)**2
+      et = eps(i)/t
+      et2 = et * et
+
+      b = (.5870171892d0 + (-5.314333643d0 -1.498847241d0*et)*et2) *
+     *    sig3(i)
+      c = (.5106889412d0 + (-2.431331151d0 + 8.294070444d0*et)*et2) * 
+     *    sig3(i)**2
+      d = (.4045789083d0 + (3.437865241d0 - 5.988792021d0*et)*et2) * 
+     *    sig3(i)**4
+      e = (-.7351354702d-1 + (.7017349038d0 - .2308963611d0*et)*et2) *
+     *    sig3(i)**5
+      f = 1.985438372d0*et2*et*sig3(i)**2
+      ge = 16.60301885d0*et2*et*sig3(i)**4 
+c                                 iteration loop for volume
+      do 
+
+         vi = 1d0/vol
+
+         expg = dexp(-gamm*vi*vi)
+c                                 p(v)/rt
+         veq = -vi - b*vi**2 + (-f*expg-c)*vi**3 + (-ge*expg-d)*vi**5 
+     *             - e*vi**6
+c                                 diff(veq,v)
+         dveq = -veq*vi + b*vi**3 + 2d0*(f*expg+c)*vi**4  
+     *           + (-2d0*f*expg*gamm + 4d0*ge*expg + 4d0*d)*vi**6 
+     *           + 5d0*e*vi**7 - 2d0*ge*expg*gamm*vi**8
+
+         dv = -(prt + veq)/dveq
+
+         if (dv.lt.0d0.and.vol+dv.lt.0d0) then 
+
+            vol = vol*0.8d0
+
+         else 
+
+            vol = vol + dv
+
+         end if 
+
+         if (dabs(dv/vol).lt.nopt(5)) then
+
+            exit
+          
+         else if (vol.lt.0d0.or.it.gt.iopt(21)) then
+c                                 use cork fugacities
+            iwarn = iwarn + 1
+
+            if (iwarn.le.50) then 
+               write (*,1000) p,t,vol
+               if (iwarn.eq.50) call warn (49,p,93,'zh09pr')
+            end if 
+
+            exit 
+
+         end if 
+
+         it = it + 1
+
+      end do
+
+      expg = dexp(gamm/vol/vol)
+
+      lnfug = dlog(r*t/vol/pr/1d-1) 
+     *        + 0.5d0*(f+ge/gamm)*(1d0-1d0/expg)/gamm
+     *        + (2d0*b + (1.5d0*c + (f-0.5d0*ge/gamm)/expg 
+     *        + (1.25d0*d + ge/expg + 1.2d0*e/vol)/vol**2)/vol)/vol
+
+c                                 convert volume from j/bar to cm3/mol
+      vol = 1d1 * vol
+
+1000  format (/,'**warning ver093** zd09pr did not converge at:',
+     *        3(1x,g12.6))
+
+      end 
+
+      subroutine zhdh2o (v,lnfug)
+c----------------------------------------------------------------------
+c Zhang & Duan 2005 pure water volume and fugacity of water. 
+c see duan_water_volume_fugacity.mws
+c---------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      double precision prt,b,c,d,e,f,g,expg,gamm,v,vi,veq,dveq,lnfug,dv,
+     *                 fcrk, vcrk
+
+      integer it, iwarn
+
+      double precision p,t,xco2,u1,u2,tr,pr,r,ps
+      common/ cst5  /p,t,xco2,u1,u2,tr,pr,r,ps
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      save iwarn
+      data iwarn/0/
+c---------------------------------------------------------------------
+c                                 CORK volume guess and backup fugacity
+      call crkh2o (p,t,vcrk,lnfug)
+
+      v = vcrk /1d1
+      fcrk = lnfug
+
+      prt = p/r/t
+      it = 0
+
+      gamm = .3317993788d0
+
+      b = 1.957197778 - 6821674.863d0/t**2 + 3047984261d0/t**3
+      c = 3.531471196 + 9821873.173d0/t**2 - 7411448875d0/t**3
+      d = 16.71639581 - 6007496.747d0/t**2 + .1540316803d11/t**3
+      e = -4.611555959 + 11372008.36d0/t**2 - .136192675d11/t**3
+      f = -2033.267066d0 / t
+      g = -0.002765323035d0 * t
+c                                 iteration loop for volume
+      do 
+
+         vi = 1d0/v
+
+         expg = dexp(-gamm/v/v)
+c                                 p(v)/rt
+         veq = -vi - b*vi**2 + (-f*expg-c)*vi**3 + (-g*expg-d)*vi**5 
+     *             - e*vi**6
+c                                 diff(veq,v)
+         dveq = -veq*vi + b*vi**3 + 2d0*(f*expg+c)*vi**4  
+     *           + (-2d0*f*expg*gamm + 4d0*g*expg + 4d0*d)*vi**6 
+     *           + 5d0*e*vi**7 - 2d0*g*expg*gamm*vi**8
+
+         dv = -(prt + veq)/dveq
+
+         if (dv.lt.0d0.and.v+dv.lt.0d0) then 
+
+            v = v*0.8d0
+
+         else 
+
+            v = v + dv
+
+         end if 
+
+         if (dabs(dv/v).lt.nopt(5)) then
+
+            exit
+          
+         else if (v.lt.0d0.or.it.gt.iopt(21)) then
+c                                 use cork fugacities
+            iwarn = iwarn + 1
+
+            if (iwarn.le.50) then 
+               write (*,1000) p,t,v
+               if (iwarn.eq.50) call warn (49,p,93,'ZHDH2O')
+            end if
+
+            v = vcrk
+
+            lnfug = fcrk
+
+            return
+
+         end if 
+
+         it = it + 1
+
+      end do
+
+      expg = dexp(gamm/v/v)
+
+      lnfug = dlog(r*t/v) + 0.5d0*(f+g/gamm)*(1d0-1d0/expg)/gamm
+     *        +(2d0*b + (1.5d0*c + (f-0.5d0*g/gamm)/expg 
+     *        + (1.25d0*d + g/expg + 1.2d0*e/v)/v**2)/v)/v
+c                                 convert volume from j/bar to cm3/mol
+      v = 1d1 * v
+
+1000  format (/,'**warning ver093** ZHDH2O did not converge at:',
+     *        3(1x,g12.6))
+
+      end 

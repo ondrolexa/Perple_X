@@ -115,7 +115,7 @@ c                                load the adaptive refinement cpd g's
             g2(k) = c(k)
          end do 
 
-      end if 
+      end if
 c                                 idead = -1 tells lpnag to save parameters
 c                                 for subsequent warm starts
       idead = -1
@@ -539,10 +539,7 @@ c                                 normal simplex/prism
 
       else 
 c                                 simplex with a prismatic vertex
-c DEBUG DEBUG
          x(ostg(ids),kd-mstot(ids)) = 1d0 
-c       write (*,*) 'groink ',x(ostg(ids),kd-mstot(ids))
-c       pause
 
       end if
 

@@ -170,7 +170,7 @@ begin_model
                     Ordered species:    oCaTs           Al     Ca     Si    Al
                                         fmc             Mg     Fe     Si    Si
 
-Aug(G)
+Augite(G)
 abbreviation Cpx
 full_name    clinopyroxene
 
@@ -297,12 +297,12 @@ dqf(acm)  = -5000
 dqf(cats) =  3800  - 2.8816 * T  + 0.01  * P
 end_dqf_corrections
 
-reach_increment 1
+reach_increment 0
 
 end_of_model
                       --------------------------------------------------------
 begin_model
-                      Green et al (JMG, 2016) Augite model.
+                      Green et al (JMG, 2016) reduced Augite model (no Ca-acmite).
 
                       This model should not be used for Na-rich compositions.
 
@@ -357,7 +357,7 @@ begin_model
 
                     Ordered species:    oCaTs           Al     Ca     Si    Al
                                         fmc             Mg     Fe     Si    Si
-Augite(G)
+Aug(G)
 abbreviation Cpx
 full_name    clinopyroxene
 
@@ -487,7 +487,7 @@ dqf(acm)  = -5000
 dqf(cats) =  3800  - 2.8816 * T  + 0.01  * P
 end_dqf_corrections
 
-reach_increment 1
+reach_increment 0
 
 end_of_model
                       --------------------------------------------------------

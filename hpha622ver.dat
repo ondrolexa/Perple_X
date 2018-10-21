@@ -160,10 +160,10 @@ atgts = 4 clin + 9/17 atg - 24/17 br      | Tshermaks antigorite for Atg(PN) mod
 DQF = -2e3 + 46.1*T_K
 
 | ettore's makes:
-odo = 1/2 mag 1/2 cc 
--1000. 0 0 
-oank = 1/4 sid 1/2 cc 1/4 mag 
--750 0 0 
+| odo = 1/2 mag 1/2 cc 
+| -1000. 0 0 
+| oank = 1/4 sid 1/2 cc 1/4 mag 
+|  -750 0 0 
 
 | odo = 1/2 mag + 1/2 cc          | ordered dolmite species for H&P dolomite model
 | -13.5d3 0 0

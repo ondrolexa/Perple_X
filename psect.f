@@ -57,7 +57,7 @@ c                                 read data for solution phases on n9:
 
       call setau2 (output)
 c                                 read the plot/blk files
-      call redplt
+      call interm (.false.,err)
 c                                 organize variables 
       call getvar
 c                                 initialize the grid parameters

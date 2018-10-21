@@ -93,7 +93,7 @@ c                                 read data for solution phases on n9:
 
       call setau2 (output)
 c                                 read the plt/blk files
-      call redplt
+      call interm (.false.,err)
 c                                 organize variables 
       call getvar
 c                                 initialize the grid parameters
@@ -216,12 +216,7 @@ c----------------------------------------------------------------------
       node = .false. 
       dim = 2
 c                                 select the property
-      call chsprp 
-
-      do i = 1, iprop
-         prmx(i) = -1d99
-         prmn(i) = 1d99
-      end do 
+      call chsprp
 c                                 set up coordinates etc
 c                                 allow restricted plot limits
       write(*,1040)
@@ -2587,7 +2582,7 @@ c                                 ind could be set by getind
 
       jpts = 0 
 c                                 select properties
-      call chsprp 
+      call chsprp
 c                                 write file header
       call tabhed (n5,dxy,dxy,k,dim,n5name,n6name)
 c                                 compute properties
@@ -2702,7 +2697,7 @@ c                                 name and open plot file, write header
 
       do i = 1, ipts
 
-         var(ind) = dfloat(i)
+         var(ind) = vmn(ind) + dfloat(i-1) * dvr(ind)
 
          call polprp (dim)
 

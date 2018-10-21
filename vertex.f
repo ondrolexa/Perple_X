@@ -216,7 +216,11 @@ c                                 disabled stability field calculation
 c                                 output compositions for autorefine
          call outlim 
 
-         if (output) exit
+         if (output) then
+c                                 close n4/n5, delete interim results
+            call interm (output,first)
+            exit
+         end if
 
          output = .true.   
          first = .false.
@@ -1772,7 +1776,7 @@ c                                must be > level 1
 
       end do
 c                                 output graphics data
-      if (output) call outgrd (i,loopy,jinc(1),n4,0,0)
+      if (output) call outgrd (i,loopy,jinc(jlev),n4,0,0)
 
       end 
 

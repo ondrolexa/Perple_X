@@ -243,11 +243,8 @@ c                                 indices to the global indices:
                   exit 
                end do
             end do  
-c                                 read local plot file, gives loopx, loopy
-c                                 jinc1
-            call plinp (err)
-c                                 read local bulk composition data file:   
-            if (.not.err) call bplinp (err)
+c                                 read local plt/blk files => loopx, loopy, jinc1
+            call interm (.false.,err)
 
 10          if (err.or.iasct.eq.0.or.ibulk.eq.0) then
                kbad = kbad + 1
