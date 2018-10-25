@@ -1866,7 +1866,7 @@ c                                 the assemblage is new:
 
       end if 
                                 
-      if (output.or.lopt(47)) call outbl1 (ico,jco)
+      if (output.or.iopt(34).ne.0) call outbl1 (ico,jco)
      
       end 
 
@@ -3413,7 +3413,19 @@ c                                 the indices of which are in solc(isolc)
 
          do j = 1, isolc
 
-            if (cslvt(j).and..not.cslut(j)) then 
+            if (cslvt(j).and..not.cslut(j)) then
+
+               bad = .false.
+c                                 skip if the system is degenerate,
+c                                 necessary only for oxides
+               do i = 1, idegen
+                  if (idg(i).eq.solc(j)) then 
+                     bad = .true.
+                     exit 
+                  end if
+               end do 
+
+               if (bad) cycle 
 c                                 a component is present only in the solvent
 c                                 iteration will become unstable
                abort = .true.

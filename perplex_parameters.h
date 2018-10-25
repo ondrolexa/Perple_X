@@ -31,7 +31,7 @@
 !                                 mst - max number of distinct identisites per solution
 !                                 mdim - hard constraint on max number of dimensions
 !                                        for a solution model composition space.
-      parameter (mst=3,mdim=8,msp=mdim+2,ms1=msp-1)
+      parameter (mst=3,mdim=8,msp=mdim+6,ms1=msp-1)
 !                                 h5 - max number of saturated components
 !                                 h6  - max number of saturated composants in any subcomposition
 !                                 h8  - max number of excluded phases
@@ -85,7 +85,7 @@
 !                                 k23 - max number of phases to be fractionated.
 !                                 k24 - max number of coordinates for the pseudocompounds of a 
 !                                       prismatic solution.
-      parameter (k0=25,k1=1500000,k2=100000,k3=2000,k4=32,k5=12)
+      parameter (k0=25,k1=1250000,k2=100000,k3=2000,k4=32,k5=12)
       parameter (k7=k5+1,k8=k5+2) 
       parameter (k9=30,k10=400,k14=18,k15=6,k16=100)
       parameter (k17=7,k18=29*k1)
@@ -133,8 +133,8 @@
 !                                m16 - max number of parameters in a redkich-kistler L
 !                                m17 - max order of redlich-kistler expansion
 !                                m18 - max number of pairwise terms in a redlich-kistler expansion
-      parameter (m0=8,m1=60,m2=8,m3=3,m4=20,m6=6,m7=15,m8=9,m9=10,m10=6,
-     *           m11=6,m12=4,m13=8,m14=2,m15=12,m16=6,m17=5,m18=6)
+      parameter (m0=8,m1=60,m2=8,m3=3,m4=28,m6=6,m7=15,m8=9,m9=10,m10=6,
+     *           m11=6,m12=4,m13=8,m14=2,m15=17,m16=6,m17=5,m18=6)
 !                                 nx - number of x-grid nodes in a contour data grid
 !                                 ny - number of y-grid modes in a contour data grid
       parameter (nx=500,ny=500)

@@ -361,22 +361,17 @@ Aug(G)
 abbreviation Cpx
 full_name    clinopyroxene
 
-9                            | model type: prism + orphan vertices
+8                            | model type: prism + orphan vertices
 
 2                            | prism: two simplicies with a common vertex
-2 4                          | binary (Fe-Mg) + quaternary (di-en-mats-macm)
-3                            | number of independent orphan vertices
+2 6                          | binary (Fe-Mg) + quaternary (di-en-mats-macm)
 
-                             | endmembers on the prism vertices
 cfsg      cenjh
 fats      mats
 facm      macm
 hed_d     di
-
-                             | independent endmembers on orphan vertices
-jd
-acm
-cats
+acm       cacm
+jd        cats
 
 2                            | number of ordered species and definitions
 
@@ -395,13 +390,14 @@ ocats = -2 + 1 cats                              delta = 2 zAlT1
 
 end_limits
 
-5                            | number of dependent endmembers and definitions
+6                            | number of dependent endmembers and definitions
 
 hed_d = 1 di    + 1 cfsg - 1 fmc 
 mats  = 1 cats  + 1 cenjh - 1 di
 macm  = 1 cats  + 1 cenjh - 1 di   + 1 acm - 1 jd
 fats  = 1 cats - 1 di   + 1 fmc
 facm  = 1 cats - 1 di   + 1 fmc  + 1 acm - 1 jd
+cacm  = 1 acm   + 1 cats - 1 jd 
 
 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | endmember flags
 
@@ -414,12 +410,9 @@ facm  = 1 cats - 1 di   + 1 fmc  + 1 acm - 1 jd
 0. 1. 0.1  0                 | range and resolution of X("en")
 0. 1. 0.1  0                 | range and resolution of X("ts")
 0. 1. 0.1  0                 | range and resolution of X("acm")
+0. 1. 0.1  0                 | range of 
+0. 1. 0.1  0                 | range of 
 
-                             | Independent (4d) simplex of prism + orphans
-
-0. 1. 0.1  0                 | range of jd
-0. 1. 0.1  0                 | range of acm
-0. 1. 0.1  0                 | range of cats
 
 begin_excess_function
 W(di cenjh)               29.8d3   -0.03 * p
@@ -538,7 +531,25 @@ begin_model
                               A             V     Mg     Fe     Fe      Si     OH
                               B             V     Fe     Mg     Fe      Si     OH
 
-           dependent exchange grk           V     M      Fe3    M      SiAl     OH
+           dependent exchange Mgrk          V     M      Fe3    M      SiAl     OH
+           dependent exchange Mts           V     M       Al    M      SiAl     OH
+           dependent exchange Mpg           Na    M      MAl    M      SiAl     OH
+           dependent exchange MKpg          K     M      MAl    M      SiAl     OH
+           dependent exchange MTts          V     M      Ti     M      SiAl     OH
+
+           2 CaMg-1(M4) = (Tr-Cumm)
+           3 FeMg-1(M1) = (grun - a)
+           2 FeMg-1(M2) = (grun - b)
+           2 FeMg-1(M4) = (-grun - cumm + a + b)
+
+| MgTs  = Ts - Tr + Cumm
+| FeTs  = MgTs + (grun - a) + (a + b - grun - cumm) = MgTs - cumm  + b = Ts - Tr + B
+| MgPrg = Parg - Tr + Cumm
+| FePrg = MgPrg + (grun - a) + (grun -b)/2 + (a + b - grun - cumm) = MgPrg + grun/2 + b/2 - cumm = kparg - tr + (grun+b)/2
+| MKPrg = kprg - Tr + Cumm
+| FKPrg = MKPrg + (grun - a) + (grun -b)/2 + (a + b - grun - cumm) = MgPrg + grun/2 + b/2 - cumm = kparg - tr + (grun+b)/2
+| MTts  = Tts  - Tr + Cumm
+| FTts  = MTts + (grun - a) + (-grun - cumm + a + b) = MTts - cumm  + b = Tts  - Tr + b
 
 cAmph(G)
 abbreviation Amph
@@ -546,15 +557,19 @@ full_name    clinoamphibole
 
 8                           | model type: order-disorder, prismatic composition space
 2                           | 2 site reciprocal space
-2 9                         | 1 binary + 1 octary
+2 13                        | 1 binary + 1 thirteen-fold space
 
-ts      fts_d
-parg    fparg_d
+ts      fcts_d
+mts_d   fts_d
+mprg_d  fprg_d
+mkprg_d fkprg_d
+mtts_d  ftts_d
+parg    fcparg_d
 gl      fgl_d
 cumm    grun
 mrbG    frb_d
-kprg    fkprg_d
-tts     ftts_d
+kprg    fckprg_d
+tts     fctts_d
 grk_d   fgrk_d
 tr      ftr_d
 
@@ -579,19 +594,29 @@ b = -7/2 grun - 3/2 a - 2 a -5/2 b                                  delta = 7/2 
 
 end_limits
 
-9                            | 7 dependent endmembers 
+17                           | # of dependent endmembers 
 
-ftr_d   = 1 tr    + 2 grun   - 1 a - 1 b
-fts_d   = 1 ts    + 1 grun   - 1 a
-fparg_d = 1 parg  + 3/2 grun - 1 a - 1/2 b
-fgl_d   = 1 gl    + 1 grun   - 1 a
-frb_d   = 1 mrbG  + 1 grun   - 1 a
-fkprg_d = 1 kprg  + 3/2 grun - 1 a - 1/2 b
-ftts_d  = 1 tts   + 1 grun   - 1 a
-grk_d   = 1 mrbG  + 1 ts    + 1 cumm   - 1 gl - 1 tr
-fgrk_d  = 1 mrbG  + 1 ts    - 1 gl     - 1 tr + 1 b
+ftr_d    = 1 tr    + 2 grun   - 1 a - 1 b
+fcts_d   = 1 ts    + 1 grun   - 1 a
+mts_d    = 1 ts    + 1 cumm   - 1 tr
+fts_d    = 1 ts    + 1 b      - 1 tr
+mprg_d   = 1 parg  + 1 cumm   - 1 tr 
+fprg_d   = 1 parg  + 1/2 grun + 1/2 b   - 1 tr
+mkprg_d  = 1 kprg  + 1 cumm   - 1 tr 
+fkprg_d  = 1 kprg  + 1/2 grun + 1/2 b   - 1 tr
+mtts_d   = 1 tts  + 1 cumm   - 1 tr 
+ftts_d   = 1 tts  + 1 b      - 1 tr
+fcparg_d = 1 parg  + 3/2 grun - 1 a     - 1/2 b
+fgl_d    = 1 gl    + 1 grun   - 1 a
+frb_d    = 1 mrbG  + 1 grun   - 1 a
+fckprg_d = 1 kprg  + 3/2 grun - 1 a     - 1/2 b
+fctts_d  = 1 tts   + 1 grun   - 1 a
+grk_d    = 1 mrbG  + 1 ts    + 1 cumm   - 1 gl - 1 tr
+fgrk_d   = 1 mrbG  + 1 ts    - 1 gl     - 1 tr + 1 b
 
-0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | endmember flags
+0 0 0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 0 0 
+0 0                      | endmember flags
 
                              | imod = 0 -> cartesian subdivision
                              | imod = 1 -> assymetric stretching subdivision
@@ -599,13 +624,17 @@ fgrk_d  = 1 mrbG  + 1 ts    - 1 gl     - 1 tr + 1 b
 0. 1.  .1  0                 | range and resolution for X(Mg) on site 1, imod = 0
 
 0. 1.  .1  0                 | range and resolution for X(ts)   on site 2, imod = 0
+0. .1  .1  0                 | range and resolution for X(Mts)  on site 2, imod = 0
+0. .1  .1  0                 | range and resolution for X(MPg)  on site 2, imod = 0
+0. .1  .1  0                 | range and resolution for X(MKPg) on site 2, imod = 0
+0. .1  .1  0                 | range and resolution for X(MTts) on site 2, imod = 0
 0. 1.  .1  0                 | range and resolution for X(pg)   on site 2, imod = 0
 0. 1.  .1  0                 | range and resolution for X(gl)   on site 2, imod = 1
 0. 1.  .1  0                 | range and resolution for X(cumm) on site 2, imod = 0
 0. 1.  .1  0                 | range and resolution for X(mrb)  on site 2, imod = 1
 0. .1  .1  0                 | range and resolution for X(kprg) on site 2, imod = 1
 0. .2  .1  0                 | range and resolution for X(tts)  on site 2, imod = 1
-0. .4  .1  0                 | range and resolution for X(fug)  on site 2, imod = 1
+0. .1  .1  0                 | range and resolution for X(grk)  on site 2, imod = 1
 
 begin_excess_function   
 
@@ -9951,7 +9980,7 @@ zrg     alm      py     gr   | endmember names
 
 begin_excess_function
 w(py gr)  45000. 0. 0.  
-w(alm py)  2500.  0. 0.              
+w(alm py)  2500.  0. 0. 
 w(alm gr)  10000. 0. 0.
 end_excess_function  
 
@@ -10050,7 +10079,7 @@ H2O
 0 0 0 0 0 0 0              | endmember flags
 
 1e-5   5e-2      .1       1        | subdivision ranges, imod = 1 -> non-linear subdivision
-1e-5   2e-4      .1       1        | subdivision ranges, imod = 1 -> non-linear subdivision
+1e-5   2e-4      1.       1        | subdivision ranges, imod = 1 -> non-linear subdivision
 1e-5   2.5e-5    .1       1        | subdivision ranges, imod = 1 -> non-linear subdivision
 1e-5   2.5e-5    .1       1        | subdivision ranges, imod = 1 -> non-linear subdivision
 1e-5   2e-4      .1       1        | subdivision ranges, imod = 1 -> non-linear subdivision

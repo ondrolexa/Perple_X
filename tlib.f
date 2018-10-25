@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.8.5, source updated Oct 21, 2018.',
+     *      'Perple_X version 6.8.5, source updated Oct 25, 2018.',
 
      *      'Copyright (C) 1986-2018 James A D Connolly '//
      *      '<www.perplex.ethz/copyright.html>.'
@@ -1442,7 +1442,7 @@ c                                 closed or open composition space
 
          end if 
 c                                 generic subdivision parameters:      
-         write (n,1010) nopt(13),bm1,valu(13),valu(16)
+         write (n,1010) nopt(13),bm1,valu(13),valu(16),lopt(39)
 c                                 pc-perturbation
          if (iam.eq.15) write (n,1011) nopt(15)
 c                                 generic thermo parameters:
@@ -1528,7 +1528,8 @@ c                                 resolution blurb
      *           '0->1 [1/16], 0 => off',/,
      *        4x,'stretch_factor         ',f5.3,6x,'>0 [0.0164]',/,
      *        4x,'subdivision_override   ',a3,8x,'[off] lin str',/,
-     *        4x,'hard_limits            ',a3,8x,'[off] on')
+     *        4x,'hard_limits            ',a3,8x,'[off] on',/,
+     *        4x,'refine_endmembers      ',l1,10x,'[F] T')
 1011  format (4x,'pc_perturbation        ',f6.4,5x,'[5d-3]')
 c                                 generic thermo options
 1012  format (/,2x,'Thermodynamic options:',//,
@@ -4746,10 +4747,6 @@ c                                 file does not exist
                if (ierr.ne.0) call error (12,0d0,ierr,tfname)
                read (n8,*,iostat=ierr) jy
                if (ierr.ne.0) call error (12,0d0,ierr,tfname)
-c               read (n8,*,iostat=ierr) lev
-c               if (ierr.ne.0) call error (12,0d0,ierr,tfname)
-c               read (n8,*,iostat=ierr) xn, yn
-c               if (ierr.ne.0) call error (12,0d0,ierr,tfname)
 
             end if
          end if

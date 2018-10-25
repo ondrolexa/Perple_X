@@ -6922,7 +6922,7 @@ c---------------------------------------------------------------------
 
       logical bad
 
-      double precision coeffs(k7), rnums(20), enth(3)
+      double precision coeffs(k7), rnums(m4), enth(3)
 
       integer ijk(mst),inds(k7),ict
 

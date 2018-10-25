@@ -220,7 +220,7 @@ c                                 stage
 
       end if
 
-      if (.not.(iopt(6).eq.2.and.refine).and.lopt(47)) then
+      if (.not.(iopt(6).eq.2.and.refine).and.iopt(34).ne.0) then
 c                                  initialize intermediate results file 
          call mertxt (n11nam,prject,'.irf',0)
          open (1000, file = n11nam, iostat=ier, status = 'old')
@@ -2784,8 +2784,7 @@ c                                 open print/plot files if requested
 
          end if
 
-
-         if (first) then
+         if (first.and.iam.ne.2) then
 c                                 plt output file
             io4 = 0
             call mertxt (name,prject,'.plt',0)
