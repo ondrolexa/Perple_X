@@ -3101,7 +3101,7 @@ c----------------------------------------------------------------------
          close (n4)
          close (n5)
 
-         if (iopt(34).eq.2) then 
+         if (iopt(34).eq.1) then 
 c                                 delete interim results
             call mertxt (tfname,prject,'.irf',0)
             open (1000, file = tfname, status = 'old', iostat = ier)
@@ -3165,38 +3165,58 @@ c                                 try to open final plt and blk files
          end if
 
       end if
+c                                 the only paths here are
+c                                 1) iopt(32) = 2 => man.
+c                                 2) iopt(32) = 1 => auto and no final results.
+
 c                                 only hope is interim results:
       call mertxt (tfname,prject,'.irf',0)
       open (1000, file = tfname, status = 'old', iostat = ier)
 
-      if (ier.ne.0) call error (72,nopt(1),i,'no IRF file: interim '//
-     *                                   'results are not available')
+      if (ier.ne.0) then 
 
-      i = 1
-c                                 make a list of the result files
-      do
+         if (iopt(2).eq.1) then 
+c                                  end of the line
+            call error (72,nopt(1),i,'no IRF file: interim '//
+     *                               'results are not available')
+         else 
+c                                  maybe the user deleted the irf file
+            call warn (99,nopt(1),i,'no IRF file: interim '//
+     *                              'results are not available')
 
-         read (1000,*,iostat=ier) jnd(i,1),jnd(i,2)
-
-         if (ier.ne.0) then
-
-            if (i.eq.1) then
-
-               call error (72,nopt(1),i,'empty IRF file: interim '//
-     *                                  'results are not available')
-
-            else
-
-               i = i - 1
-               exit
-
-            end if
+            i = 0 
 
          end if
 
-         i = i + 1
+      else 
+c                                 make a list of the result files
+         i = 1
+c                                 make a list of the result files
+         do
 
-      end do
+            read (1000,*,iostat=ier) jnd(i,1),jnd(i,2)
+
+            if (ier.ne.0) then
+
+               if (i.eq.1) then
+
+                  call error (72,nopt(1),i,'empty IRF file: interim '//
+     *                                     'results are not available')
+
+               else
+
+                  i = i - 1
+                  exit
+
+               end if
+
+            end if
+
+            i = i + 1
+
+         end do
+
+      end if 
 
       if (iopt(34).eq.1) then 
 c                                 interim_results is auto, and the final results
@@ -3218,49 +3238,57 @@ c                                 are not available, find/use last interim resul
          call mertxt (name,prject,text,0)
 
       else
+c                                 if here must be auto and an irf file exists
+         if (i.gt.0) then 
 
-         write (*,'(a)') 'Do you want to plot/analyze interim '//
-     *                     'results (Y/N)?'
-         read (*,'(a)') yes
+            write (*,'(a)') 'Do you want to plot/analyze interim '//
+     *                        'results (Y/N)?'
+            read (*,'(a)') yes
 
-         if (yes.eq.'y'.or.yes.eq.'Y') then
+            if (yes.eq.'y'.or.yes.eq.'Y') then
 c                                 use intermediate results
-            write (*,'(/,a,/)') 'Choose from the following interim'//
-     *                          ' results [default is the last]:'
+               write (*,'(/,a,/)') 'Choose from the following interim'//
+     *                             ' results [default is the last]:'
 
-            do j = 1, i 
+               do j = 1, i 
 
-               if (jnd(j,1).eq.0) then
+                  if (jnd(j,1).eq.0) then
 
-                  write (*,'(4x,i1,a,i1)') j,
-     *                  ' - exploratory stage, grid level ',jnd(j,2)
-               else
+                     write (*,'(4x,i1,a,i1)') j,
+     *                      ' - exploratory stage, grid level ',jnd(j,2)
+                  else
 
-                  write (*,'(4x,i1,a,i1)') j,
-     *                     ' - auto-refine stage, grid level ',jnd(j,2)
+                     write (*,'(4x,i1,a,i1)') j,
+     *                      ' - auto-refine stage, grid level ',jnd(j,2)
 
-               end if
+                  end if
 
-            end do
+               end do
 
-            call rdnumb (nopt(1),0d0,i,i,.false.)
-            write (*,'(/)')
+               call rdnumb (nopt(1),0d0,i,i,.false.)
+               write (*,'(/)')
 
-            ind1 = jnd(i,1)
-            ind2 = jnd(i,2)
+               ind1 = jnd(i,1)
+               ind2 = jnd(i,2)
 
-            if (refine.and.ind1.eq.0) write (*,'(a,/,a,/)')
+               if (refine.and.ind1.eq.0) write (*,'(a,/,a,/)')
      *            'WARNING: VERTEX is in, or has completed, the '//
      *            'auto-refine stage, interim results ',
      *            'from the exploratory stage may be '//
      *            'inconsistent or unreadable.'
 
-            write (text,'(a,i1,i1)') '_',ind1, ind2
-            call mertxt (name,prject,text,0)
+               write (text,'(a,i1,i1)') '_',ind1, ind2
+               call mertxt (name,prject,text,0)
+
+            else 
+
+               name = prject
+
+            end if
 
          else
 c                                 use final results
-             name = prject
+            name = prject
 
          end if
 
