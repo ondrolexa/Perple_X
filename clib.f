@@ -2733,8 +2733,6 @@ c                                 open thermodynamic data file
 
       if (iam.eq.3.or.iam.eq.7.or.iam.eq.14) then
 c                                 use existing plt/blk files
-c                                 iam -  3 - werami 
-c                                 iam -  7 - pssect 
 c                                 iam - 14 - unsplt (local)
 
 c                                 plt/blk files for werami/pssect opened 
@@ -2745,16 +2743,13 @@ c                                 open the plot file
 
             open (n4, file = name, iostat = ierr, status = 'old')
 
-            if (ierr.ne.0) then
-               err = .true.
-               return
-            end if 
+            if (ierr.ne.0) err = .true.
 c                                 open assemblage file
             call mertxt (name,prject,'.blk',0)
 
             open (n5, file = name, iostat = ierr, status = 'old')
 
-            if (ierr.ne.0) call error (122,0d0,n4,name)
+            if (ierr.ne.0) err = .true.
 
          end if
 
@@ -3052,13 +3047,20 @@ c----------------------------------------------------------------------
 c                                 open the plot file
       call mertxt (tfname,name,'.plt',0)
       open (n4, file = tfname, iostat = ier, status = 'old')
-      if (ier.ne.0) call error (122,0d0,n4,tfname)
+      if (ier.ne.0) then 
+         err = .true.
+         return
+      end if 
 c                                 open assemblage file
       call mertxt (tfname,name,'.blk',0)
       open (n5, file = tfname, iostat = ier, status = 'old')
-      if (ier.ne.0) call error (122,0d0,n4,tfname)
+      if (ier.ne.0) then 
+         err = .true.
+         return
+      end if 
 c                                 read grid data:
       call plinp (err)
+      if (err) return
 c                                 read bulk composition data:
       call bplinp (err)
 
@@ -3224,11 +3226,11 @@ c                                 are not available, find/use last interim resul
          write (*,'(a)') 'VERTEX has not completed the calculation, '//
      *                  'continue with the latest interim result (Y/N)?'
 
-         if (refine.and.jnd(i,1).eq.0) write (*,'(/,a,/,a)')
-     *            'WARNING: VERTEX is currently in the '//
-     *            'auto-refine stage, but the latest interim result ',
-     *            'is from the exploratory stage, the result may be '//
-     *            'inconsistent or unreadable.'
+         if (refine.and.jnd(i,1).eq.0) write (*,'(2(/,a))')
+     *      'WARNING: VERTEX is currently in, or was interrupted '//
+     *      'during, the auto-refine stage, but the','latest interim '//
+     *      'result is from the exploratory stage, the result may be '//
+     *      'inconsistent or unreadable.'
 
          read (*,'(a)') yes
 
@@ -3394,7 +3396,7 @@ c                                an inconsistent blk file in unsplt
          end if 
 c                                phase molar amounts
          read (n5,*,iostat=ier) (bg(i,ibulk),i=1,iavar(3,ias))
-         if (ier.ne.0) exit
+         if (ier.ne.0) goto 99
 
          ico(ibulk) = jxco
 
@@ -3408,7 +3410,7 @@ c                                phase molar amounts
             if (kxco.gt.k18) call error (61,0d0,k18,'BPLINP')
 
             read (n5,*,iostat=ier) (xco(j), j = jxco, kxco)
-            if (ier.ne.0) exit
+            if (ier.ne.0) goto 99
 
             if (lopt(32).and.ksmod(ids).eq.39) then 
 c                                lagged speciation
@@ -3419,15 +3421,13 @@ c                                lagged speciation
                if (kxco.gt.k18) call error (61,0d0,k18,'BPLINP')
 
                read (n5,*,iostat=ier) (xco(j), j = jxco, kxco)
-               if (ier.ne.0) exit
+               if (ier.ne.0) goto 99
 
             end if  
          
             jxco = kxco
 
          end do 
-
-         if (ier.ne.0) exit 
 
          jxco = kxco  
 c                                 read mu's if available
@@ -3513,28 +3513,13 @@ c----------------------------------------------------------------------
       common/ cst38/idsol(k5,k3),nrep(k5,k3),nph(k3)
 c----------------------------------------------------------------------
       err = .false.
-c                                 sep 22, 2017: interpolation should 
-c                                 be turned off for calculations in which
-c                                 the bulk composition changes; however
-c                                 jcont (as read in input1) was not the
-c                                 flag for this condition. this needs to 
-c                                 be corrected. 
-c     if (icont.ne.0) then 
-c                                 turn interpolation off for
-c                                 fractionation calcs or compositional
-c                                 variables, this could be optional.
-c        iopt(4) = 0
-c        write (*,3000) 
-
-c     end if 
 c                                 top of plot file
       read (n4,*,iostat=ier) loopx, loopy, jinc
+      if (ier.ne.0) goto 99
 c                                 prior to 6.8.5 vertex did not write 
 c                                 the final value of jinc to the plot 
 c                                 file, reset it here for back-compatibility
       if (loopx.eq.1.or.loopy.eq.1) jinc = 1
-
-      if (ier.ne.0) goto 99
 c                                 decompress the grid data
       do i = 1, loopx, jinc
          jst = 1
@@ -3559,6 +3544,7 @@ c                                 read assemblages
 
       do i = 1, iasct
          read (n4,*,iostat=ier) iavar(1,i),iavar(2,i),iavar(3,i)
+         if (ier.ne.0) goto 99
          read (n4,*,iostat=ier) (idasls(j,i), j = 1, iavar(3,i))
          if (ier.ne.0) goto 99
 c                                 make a cumulative list of stable phases
@@ -3644,15 +3630,7 @@ c                                 coordinate file.
 
       end if 
 
-99    if (ier.ne.0) then 
-
-         if (iam.ne.14) then
-            call error (71,vip(1,1),i,' plot (*.plt) file')
-         else 
-            err = .true.
-         end if
-
-      end if
+99    if (ier.ne.0) err = .true.
 
 1000  format (/,'**error ver635** Coordinate file ',a,/,
      *       'is inconsistent with plot file, re-run VERTEX.',/)

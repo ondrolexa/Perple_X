@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.8.5, source updated Oct 25, 2018.',
+     *      'Perple_X version 6.8.5, source updated Oct 26, 2018.',
 
      *      'Copyright (C) 1986-2018 James A D Connolly '//
      *      '<www.perplex.ethz/copyright.html>.'
@@ -2218,8 +2218,6 @@ c---------------------------------------------------------------------
          write (*,69) char
       else if (ier.eq.70) then 
          write (*,70) char
-      else if (ier.eq.71) then 
-         write (*,71) char
       else if (ier.eq.72) then 
          write (*,72) char
       else if (ier.eq.73) then 
@@ -2260,8 +2258,6 @@ c---------------------------------------------------------------------
          write (*,118)
       else if (ier.eq.120) then
          write (*,120) char
-      else if (ier.eq.122) then
-         write (*,122) char
       else if (ier.eq.125) then 
          write (*,125) realv, char
       else if (ier.eq.169) then
@@ -2483,9 +2479,6 @@ c---------------------------------------------------------------------
      *          'parameter L5',/)
 70    format (/,'**error ver070** delete file: ',a,/,
      *        'and restart UNSPLT')
-71    format (/,'**error ver071** format error or EOF reading the: ',a,
-     *        /,'probably VERTEX is still running or was terminated by '
-     *         ,'an error.',/)
 72    format (/,'**error ver072** ',a,/)
 73    format (/,'**error ver073** the thermodynamic data file has ', 
      *          'more than one entity named: ',a,/,'delete or rename ',
@@ -2543,8 +2536,6 @@ c---------------------------------------------------------------------
 120   format (/,'**error ver120** file:',/,a,/,
      *        'could not be opened, check that it exists or that it is',
      *        ' not in use by another program.',/) 
-122   format ('**error ver122** plot file: ',a,/,'was not found, ',
-     *        'you must generate it with VERTEX.')
 125   format (/,'**error ver125** a site fraction (',g8.2,') is out',
      *          ' of range for : ',a,/,'   The configurational',
      *          ' entropy model is probably incorrect.',/)
@@ -3228,7 +3219,7 @@ c                                 reject excluded makes
             if (tname.eq.exname(i)) then 
                nreact = nreact - 1
                exit 
-            end if 
+            end if
          end do 
 
       end do 

@@ -6623,6 +6623,12 @@ c---------------------------------------------------------------------
       integer ostot
       common/ junk /ostot
 
+      integer ixct,ifact
+      common/ cst37 /ixct,ifact 
+
+      character*8 exname,afname
+      common/ cst36 /exname(h8),afname(2)
+
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp  
 
@@ -6666,9 +6672,20 @@ c                              is dependent endmember flag it by setting kdsol(i
             do j = 1, mdep
 
                if (jdep(j).eq.i) then
+c                              check against exclude list
+                  do h = 1, ixct
+                     if (mname(i).eq.exname(h)) then
+                        ok = .true.
+                        exit 
+                     end if
+                  end do
+
+                  if (ok) exit
+
                   kdsol(i) = -2
                   ok = .true.
                   exit 
+
                end if 
 
             end do
@@ -6863,6 +6880,8 @@ c                                check for dependent endmembers, necessary?
             do j = 1, ndph(i)
 
                if (idep(i,j).le.ostot) then
+c                                look for excluded dependent endmembers
+                  if (kdsol(jdep(i)).eq.jkill) goto 100
 c                                looking for a dependent endmember component: 
                   if (kdsol(idep(i,j)).eq.jkill.and.
      *                kdsol(jdep(i)).ne.-3) then

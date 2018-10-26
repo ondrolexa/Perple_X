@@ -297,7 +297,7 @@ dqf(acm)  = -5000
 dqf(cats) =  3800  - 2.8816 * T  + 0.01  * P
 end_dqf_corrections
 
-reach_increment 0
+reach_increment 1
 
 end_of_model
                       --------------------------------------------------------
@@ -480,7 +480,7 @@ dqf(acm)  = -5000
 dqf(cats) =  3800  - 2.8816 * T  + 0.01  * P
 end_dqf_corrections
 
-reach_increment 0
+reach_increment 1
 
 end_of_model
                       --------------------------------------------------------
@@ -521,13 +521,14 @@ begin_model
                               Tr            V     Mg     Mg     Ca      Si     OH
                               Ts            V     Mg     Al     Ca     SiAl    OH
                               Parg          Na    Mg    MgAl    Ca     SiAl    OH
-                              Gl            V     Mg     Al     Na      Si     OH
-                              Cumm          V     Mg     Mg     Mg      Si     OH
-                              Grun          V     Fe     Fe     Fe      Si     OH
-                              mrbG          V     Mg     Fe3    Na      Si     OH
                               Kprg          K     Mg    MgAl    Ca     SiAl    OH
                               Tts           V     Mg     Ti     Ca     SiAl    O
 
+                              Gl            V     Mg     Al     Na      Si     OH
+                              mrbG          V     Mg     Fe3    Na      Si     OH
+
+                              Cumm          V     Mg     Mg     Mg      Si     OH
+                              Grun          V     Fe     Fe     Fe      Si     OH
                               A             V     Mg     Fe     Fe      Si     OH
                               B             V     Fe     Mg     Fe      Si     OH
 
