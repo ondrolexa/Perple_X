@@ -772,10 +772,10 @@ ftr_d    = 1 tr    + 2 grun   - 1 a - 1 b
                              | Third (7d) simplex of the prism
 0. 1.  .1  0                 | range and resolution for X(3,1) on Ts-prism, imod = 0
 0. 1.  .1  0                 | range and resolution for X(3,2) on Parg-prism, imod = 0
-0. 1.  .1  0                 | range and resolution for X(3,3) on KParg-prism, imod = 0
+0. .1  .1  0                 | range and resolution for X(3,3) on KParg-prism, imod = 0
 0. 1.  .1  0                 | range and resolution for X(3,4) on Gl-Rb-prism, imod = 0
 0. .2  .1  0                 | range and resolution for X(3,5) on TiTs-prism, imod = 0
-0. .2  .1  0                 | range and resolution for X(3,6) on Grk-prism, imod = 0
+0. .4  .1  0                 | range and resolution for X(3,6) on Grk-prism, imod = 0
 
 begin_excess_function
 

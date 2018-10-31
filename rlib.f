@@ -12922,6 +12922,8 @@ c                                 site 2 compositions.
             l = (i-1) * mcoor(ids) 
             k = (ntot-1) * mcoor(ids)
 
+            if (k+mcoor(ids).gt.k24) call errk24 (resub)
+
             do j = 1, nold
                prism(k+j) = prism(l+j)
             end do 
