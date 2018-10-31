@@ -12706,7 +12706,7 @@ c---------------------------------------------------------------------
 
       logical resub
 
-      integer last,i,j,np1,h,index,ids, k, l, n
+      integer last,i,j,np1,h,index,ids, k, l, n, nold
 
       double precision sum
 
@@ -12767,14 +12767,16 @@ c                                 into as the first k of j prismatic coordinates
 
          do i = 1, last
             prism(j+i) = simp(k+i)
-         end do 
+         end do
 
-      end do 
+      end do
 
       np1 = npairs
       ntot = np1 
 
       if (istg(ids).eq.1) return
+
+      nold = last 
 c                                 do the second site:
       call cartes (2,ids)
  
@@ -12787,14 +12789,14 @@ c                                 into the first np1 compositions:
       do h = 1, np1
 c                                 load the k simplicial coordinates
 c                                 into as the ndim(1) + k of j prismatic coordinates
-         j = (h-1) * mcoor(ids) + ndim(1,ids)
+         j = (h-1) * mcoor(ids) + nold
 
          do i = 1, last
 c                                 this could be an invalid compostion for
 c                                 a 3 site model.
             prism(j+i) = simp(i)
-
          end do
+
       end do
 
       do h = 2, npairs
@@ -12811,11 +12813,11 @@ c                                 compositions.
 
             if (k+mcoor(ids).gt.k24) call errk24 (resub)
 
-            do j = 1, ndim(1,ids)
+            do j = 1, nold
                prism(k+j) = prism(l+j)
             end do 
 c                                 put in the new site 2 compositions:
-            k = k + ndim(1,ids)
+            k = k + nold 
 
             do j = 1, ndim(2,ids)
                prism(k+j) = simp(n+j)
@@ -12887,6 +12889,8 @@ c                                 and the simplicial coordinates
 
       if (istg(ids).eq.2) return
 
+      nold = nold + last 
+
       call cartes (3,ids)
 c                                 the use of "index" is necessary to avoid
 c                                 compiler error if parameter mst < 3
@@ -12897,7 +12901,7 @@ c                                 copy the first site 3 distribution
 c                                 into the first np1*np2 compositions:
       do h = 1, ntot
 
-         j = (h-1) * mcoor(ids) + nsum(ids)
+         j = (h-1) * mcoor(ids) + nold
 
          do i = 1, last
             prism(j+i) = simp(i)
@@ -12909,30 +12913,23 @@ c                                 duplicate the range of site 1 and
 c                                 site 2 compositions.
       do h = 2, npairs
 
-         l = (h-1) * ndim(index,ids)
+         n = (h-1) * ndim(index,ids)
 
          do i = 1, np1
 
             ntot = ntot + 1
 
             l = (i-1) * mcoor(ids) 
-            k = ntot * mcoor(ids)
+            k = (ntot-1) * mcoor(ids)
 
-            do j = 1, ndim(1,ids)
+            do j = 1, nold
                prism(k+j) = prism(l+j)
             end do 
 
-            k = k + ndim(1,ids)
-            l = l + ndim(1,ids)
-
-            do j = 1, ndim(2,ids)
-               prism(k+j) = prism(l+j)
-            end do 
-
-            k = k + ndim(2,ids)
+            k = k + nold
 
             do j = 1, ndim(index,ids)
-               prism(k+j) = simp(l+i)
+               prism(k+j) = simp(n+j)
             end do
  
          end do 
@@ -13001,7 +12998,7 @@ c--------------------------------------------------------------------------
   
       include 'perplex_parameters.h'
 
-      character tname*10, znm(2,2)*2, pnm(3)*2 
+      character tname*10, znm(3,2)*2, pnm(3)*2 
  
       double precision zpr,hpmelt,slvmlt,gmelt,smix,esum,ctotal,omega,x
 

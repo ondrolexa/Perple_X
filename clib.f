@@ -3111,11 +3111,11 @@ c                                 delete interim results
 
             do
 
-               read (1000,*,iostat=ier) jnd(i,1),jnd(i,2)
-c                                 file is in use?
+               read (1000,*,iostat=ier) i,j
+c                                 file is in use or end of irf file
                if (ier.ne.0) exit 
 c                                 make the root
-               write (text,'(a,i1,i1)') '_',jnd(i,1),jnd(i,2)
+               write (text,'(a,i1,i1)') '_',i,j
                call mertxt (name,prject,text,0)
 
                call mertxt (tfname,name,'.plt',0)

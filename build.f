@@ -586,7 +586,7 @@ c                                 print output request:
          write (n1,'(a)') 'no_print | print generates print output'
       end if
 c                                 plot output request  
-      write (n1,'(a)') 'plot     | no_plot suppresses plot output'
+      write (n1,'(a)') 'plot     | obsolete 6.8.4+'
 c                                 solution model file request
       call mertxt (text,n9name,
      *            '| solution model file, blank = none',5)
