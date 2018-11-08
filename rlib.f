@@ -3361,7 +3361,7 @@ c----------------------------------------------------------------------
       idqf = 0 
       reach = 0d0
       stck = .true.
-      norf = .false.
+      norf = .true.
 
       do 
 
@@ -3400,7 +3400,7 @@ c                              read dqf data:
 
          else if (key.eq.'refine_endmembers') then 
 
-            norf = .true.
+            norf = .false.
 
          else 
 
@@ -9292,7 +9292,9 @@ c                                 chemical mixing sites
       istg(im) = isite
 c                                 site check override
       sck(im) = stck
-c                                 don't refine endmembers
+c                                 override norf if refine_endmembers option is set (default is false)
+      if (lopt(39)) norf = .false.
+c                                 refine endmembers if norf is false (default is true)
       nrf(im) = norf
 c                                 number of ordered species
       nord(im) = norder 
@@ -9335,20 +9337,12 @@ c                                 make all stretch (if not already)
             end if 
 c                                 for aqueous solutions always use
 c                                 model specified increments
-            if (jsmod.ne.20.and.nopt(13).gt.0d0) then 
-c                                 otherwise:
-               if (imd(j,i).eq.0) then 
+            if (jsmod.ne.20.and.nopt(13).gt.0d0.and.imd(j,i).eq.0) then 
 c                                 cartesian
                   xnc(i,j) = nopt(13)
 
-               else 
-c                                 conformal
-                  xnc(i,j) = 1d0/nopt(13)
-
-               end if
-
-            else if (jsmod.eq.20) then 
-
+            else if (jsmod.eq.20.or.imd(j,i).eq.1) then 
+c                                 use model resolution and invert if nonlinear
                if (imd(j,i).eq.1) xnc(i,j) = 1d0/xnc(i,j)
 
             end if
@@ -11800,7 +11794,7 @@ c                                 hit the limit, don't set x to
 c                                 the limit to save revaluating x
 c                                 dependent variables.
 
-        write (*,*) 'this should not happen!!'
+        write (*,*) 'this should not happen!!',xt,xmin,xmax
 
         x = xt
         quit = .true.

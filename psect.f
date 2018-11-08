@@ -625,8 +625,8 @@ c                                  in the money this time -- agrees?
                ipoint = iap(igrd(ii,jj))
 
                if (ipoint.ne.lex(k)) then 
-                  write (*,*) '**oops - barycenter at ',x,y,
-     *              ' for ',text(1:nblen(text)),' region ',kk,' missed'
+c                  write (*,*) '**oops - barycenter at ',x,y,
+c     *              ' for ',text(1:nblen(text)),' region ',kk,' missed'
                else 
                   ictr = ictr + 1
                   cctr(1,ictr)  = xmin + dfloat((ii-1)/jinc)*dx

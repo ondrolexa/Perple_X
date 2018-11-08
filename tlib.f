@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.8.5, source updated Oct 31, 2018.',
+     *      'Perple_X version 6.8.5, source updated Nov 8, 2018.',
 
      *      'Copyright (C) 1986-2018 James A D Connolly '//
      *      '<www.perplex.ethz/copyright.html>.'
@@ -2147,16 +2147,20 @@ c---------------------------------------------------------------------
          write (*,40) int, char
       else if (ier.eq.41) then
          write (*,41) char
+
          if (int.eq.0) then 
             write (*,410)
+            write (*,415) k1
          else if (int.eq.1) then 
             write (*,411)
+            write (*,415) k1
          else if (int.eq.2) then 
             write (*,412)
-         end if             
+            write (*,414) k24
+         end if
+
          write (*,413)
-         write (*,415)
-         write (*,414) k24
+
       else if (ier.eq.42) then 
          write (*,42) char
       else if (ier.eq.43) then
@@ -2382,7 +2386,9 @@ c---------------------------------------------------------------------
      *        /,'this error can usually be eliminated by one of the ',
      *        /,'following actions (best listed first):',/)
 410   format (2x,'- increase the initial_resolution keyword in ',
-     *           'perplex_option.dat')
+     *           'perplex_option.dat',/,
+     *        2x,'- restrict the compositional ranges of the solution ',
+     *           'models')
 411   format (2x,'- reduce the auto_refine_factor_I keyword in ',
      *           'perplex_option.dat')
 412   format (2x,'- reduce refinement_points keyword ',
@@ -2397,8 +2403,8 @@ c---------------------------------------------------------------------
      *           'components and/or simplify solution models')
 414   format (2x,'- increase dimension k24 (',i8,') and recompile ',
      *           'Perple_X')
-415   format (2x,'- restrict the compositional ranges of the solution ',
-     *           'models')
+415   format (2x,'- increase dimension k1 (',i8,') and recompile ',
+     *           'Perple_X')
 42    format (/,'**error ver042** cannot open file:',a,/,'check that it'
      *       ,' is not being used by another program',/)
 43    format (/,'**error ver043** you cannot simultaneously treat: ',

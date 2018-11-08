@@ -220,7 +220,8 @@ c                                 stage
 
       end if
 
-      if (.not.(iopt(6).eq.2.and.refine).and.iopt(34).ne.0) then
+      if (.not.(iopt(6).eq.2.and.refine).and.iopt(34).ne.0.and.
+     *    iam.eq.1) then
 c                                  initialize intermediate results file 
          call mertxt (n11nam,prject,'.irf',0)
          open (1000, file = n11nam, iostat=ier, status = 'old')
@@ -897,7 +898,7 @@ c                             io9 is a flag = 0 no solution file
          if (sname.eq.'end soluti') then 
             if (io9.eq.1) isoct = 0 
             exit 
-         else if (name.eq.blank) then 
+         else if (sname.eq.blank) then 
             cycle  
          end if 
 
@@ -2704,7 +2705,7 @@ c-----------------------------------------------------------------------
 
       logical first, err, tic 
 
-      integer ierr
+      integer ier
 
       character n2name*100, prt*3, name*100, n9name*100
 
@@ -2741,15 +2742,15 @@ c                                 later by redplt to allow interim results
 c                                 open the plot file
             call mertxt (name,prject,'.plt',0)
 
-            open (n4, file = name, iostat = ierr, status = 'old')
+            open (n4, file = name, iostat = ier, status = 'old')
 
-            if (ierr.ne.0) err = .true.
+            if (ier.ne.0) err = .true.
 c                                 open assemblage file
             call mertxt (name,prject,'.blk',0)
 
-            open (n5, file = name, iostat = ierr, status = 'old')
+            open (n5, file = name, iostat = ier, status = 'old')
 
-            if (ierr.ne.0) err = .true.
+            if (ier.ne.0) err = .true.
 
          end if
 
@@ -2785,14 +2786,24 @@ c                                 plt output file
             call mertxt (name,prject,'.plt',0)
             if (iam.ne.13) write (*,1180) name
 
-            open (n4, file = name, position = 'rewind')
+            open (n4, file = name, iostat = ier, status = 'new')
+            if (ier.ne.0) then 
+               open (n4, file = name)
+               close (n4, status = 'delete')
+               open (n4, file = name)
+            end if
 
             write (*,1190) name
 
             if (iam.ne.15) then 
 c                                 blk output file
                call mertxt (name,prject,'.blk',0)
-               open (n5, file = name, position = 'rewind')
+               open (n5, file = name, iostat = ier, status = 'new')
+               if (ier.ne.0) then 
+                  open (n5, file = name)
+                  close (n5, status = 'delete')
+                  open (n5, file = name)
+               end if
 
                write (*,1220) name
 
@@ -2814,8 +2825,8 @@ c                                 blk output file
 
          io9 = 0 
 c                                 open solution model file
-         open (n9,file = n9name,iostat = ierr,status = 'old')
-         if (ierr.ne.0) call error (120,0d0,n9,n9name)
+         open (n9,file = n9name,iostat = ier,status = 'old')
+         if (ier.ne.0) call error (120,0d0,n9,n9name)
 
          if (tic) write (*,1210) n9name
 
@@ -2837,7 +2848,7 @@ c                                 open solution model file
 
       end
 
-      subroutine outgrd (loopx,loopy,jinc,lun,ind1,ind2)
+      subroutine outgrd (loopx,loopy,jinc,lun,ind2)
 c----------------------------------------------------------------------
 c output grid data to the plot file
 c----------------------------------------------------------------------
@@ -2865,11 +2876,20 @@ c----------------------------------------------------------------------
 
       character*100 prject,tfname
       common/ cst228 /prject,tfname
+
+      logical refine
+      common/ cxt26 /refine
 c----------------------------------------------------------------------
       if (lun.ne.n4) then 
 c                                 write interim result file list
          call mertxt (name,prject,'.irf',0)
          open (lun, file = name, position = 'append')
+
+         if (refine) then 
+            ind1 = 1
+         else 
+            ind1 = 0
+         end if 
 
          write (lun,*) ind1, ind2
 

@@ -56,7 +56,7 @@
 !                                 j5  - max number of stoichiometric limits on an ordered species
 !                                 j6  - max number of terms in a stoichiometric limit on an ordered species
 !                                 j9  - max number of divariant assemblages
-      parameter (j3=4,j4=6,j5=8,j6=8,j9=160000)
+      parameter (j3=4,j4=7,j5=8,j6=8,j9=160000)
 !                                 k0  - max number of database components
 !                                 k1  - max number of compounds
 !                                 k2  - max number of invariant and univariant compound 
@@ -85,13 +85,13 @@
 !                                 k23 - max number of phases to be fractionated.
 !                                 k24 - max number of coordinates for the pseudocompounds of a 
 !                                       prismatic solution.
-      parameter (k0=25,k1=1250000,k2=100000,k3=2000,k4=32,k5=12)
+      parameter (k0=25,k1=1400000,k2=100000,k3=2000,k4=32,k5=12)
       parameter (k7=k5+1,k8=k5+2) 
       parameter (k9=30,k10=400,k14=18,k15=6,k16=100)
       parameter (k17=7,k18=29*k1)
       parameter (k19=3*k5,k21=2000000,k20=(mdim+3)*k21)
       parameter (k22=mdim*k19,k23=25)
-      parameter (k13=mdim*k21,k24=k13*mst)
+      parameter (k13=mdim*k21,k24=k13*(mst-1))
 !                                 l2 - max number of independent potential variables
 !                                 l3 - max number of variables for gridded min and graphics (l2+2)
 !                                 l5 - max number of coordinates along a univariant curve                

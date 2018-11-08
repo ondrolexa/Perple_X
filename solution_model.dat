@@ -70,42 +70,6 @@ OH-
 end_of_model
 
 
-begin_model
-
-Aq_yuri
-abbreviation Aq
-full_name    electrolytic_fluid
-
-20                          | model type: electrolytic fluid
-
-3                           | = ns = number of solvent species
-CO2
-CH4
-H2O
-1                           | = nn = number of neutral solute species
-SiO2,aq
-6                           | = nq = number of charged solute species
-HCO3-
-HS-
-OH-
-HSiO3-
-H+
-Ca(HCO3)
-
-
-                            | ranges on the first ns-1 = 0 species 
-1e-5   5e-2      .1       1        | subdivision ranges, imod = 1 -> non-linear subdivision
-1e-5   2e-4      .1       1        | subdivision ranges, imod = 1 -> non-linear subdivision
-                            | ranges (mol fraction) on the nn neutral solute species
-1e-3    1e-1   0.2      1   
-                            | ranges (mol fraction) on the first nq-1 charged solute species 
-1e-5    1e-1   0.2      1   
-1e-5    1e-1   0.2      1   
-1e-5    1e-1   0.2      1   
-1e-5    1e-1   0.2      1   
-1e-5    1e-1   0.2      1   
-end_of_model
-
 Aq_solven0
 abbreviation Aq
 full_name    electrolytic_fluid
@@ -205,7 +169,7 @@ begin_model
                     Ordered species:    oCaTs           Al     Ca     Si    Al
                                         fmc             Mg     Fe     Si    Si
 
-            Target 1 => 
+            Target:
 
                                         Prism I      ____________________________________
 
@@ -227,28 +191,6 @@ begin_model
                                         Acmite          Fe3+   Na    Si     Si
 
                                         No Orphans   ___________________________________
-
-            Target 2 => 
-
-                                        Prism I      ____________________________________
-
-                                        Diopside        Mg     Ca    Si     Si
-                                        hed             Fe     Ca    Si     Si  dependent
-                                        cEnstatite      Mg     Mg    Si     Si
-                                        cferrosilite    Fe     Fe    Si     Si
-
-                                        Cats            Al     Ca   AlSi   AlSi
-                                        cacm            Fe3    Ca   AlSi   AlSi dependent
-                                        Jadeite         Al     Na    Si     Si
-                                        Acmite          Fe3+   Na    Si     Si
-
-                                        Mats            Al     Mg   AlSi   AlSi dependent
-                                        fats            Al     Fe   AlSi   AlSi dependent 
-                                        macm            Fe3    Mg   AlSi   AlSi dependent 
-                                        facm            Fe3    Fe   AlSi   AlSi dependent
-
-                                        No Orphans   ___________________________________
-
 
                     Ordered species:    oCaTs           Al     Ca     Si    Al
                                         fmc             Mg     Fe     Si    Si
@@ -385,9 +327,9 @@ reach_increment 0
 end_of_model
                       --------------------------------------------------------
 begin_model
-                      Augite(G)_III => Complete Green et al (JMG, 2016) Augite model.
+                      Aug(G) => Green et al (JMG, 2016) REDUCED Augite model (no Ca-acmite).
 
-                      This model should not be used for "Na-rich" compositions.
+                      This model should not be used for Na-rich compositions.
 
                       NOTE: to use this the following endmembers must be specified with make 
                       definitions in the thermodynamic data file
@@ -411,80 +353,54 @@ begin_model
                       be renamed; its definition placed in the thermodynamic data file;
                       and the un-DQF'd endmember excluded from the calculation.
 
-                      The model composition space is formulated as prism composed of 3 simplexes
-                      the first and second simplexes are 1d (binary) and the third simplex is 
-                      2d (ternary). the third simplex can be thought of as defining all possible
-                      mixtures of the quadrilateral composition spaces defined by the 1st two
-                      simplexes. The endmember order below gives the three quadrilaterals as
-
-                         (1) cats-cacm->jd-acm
-                         (2) mats-fats->macm-facm
-                         (3) di-hed->en-fs
-
-                      The disadvantage of the prismatic model is the prismatic coordinates are not 
-                      uniquely associated with a particular chemical variation, specifically (where 
-                      X(i,j) is the jth independent coordinate on the ith simplex):
-
-                         X(1,1) is Al/(Al+Fe3) on quadrilaterals (1) and (2), and Mg/(Fe+Mg) on (3)
-                         X(2,1) is Ca/(Ca+Na) on quadrilateral (1), and Mg/(Fe+Mg) on (2) and (3)
-                         X(3,1) is the fraction of quadrilateral (1)
-                         X(3,2) is the fraction of quadrilateral (2)
-
-                      this has the consequence that it may be difficult or impossible to restrict the 
-                      range of the compositional coordinates in a physical meaning. of course it is 
-                      possible to arrange the endmembers in such a way as to allow restrictions in specific
-                      cases, for example here di-hed->en-fs is made the final prism, so that the amount of
-                      Na, Al, and Fe3 can be limited by restricting the range of X(3,1) and X(3,2), where 
-                      X(3,1) controls Na, and both X(3,1) and X(3,2) control Al and Fe3. 
-
-                                                                Sites
-                                                        M1     M2    T1    T2
+                                                                Sites 
+                                                       M1     M2    T1    T2
                                                      ____________________________________
 
                                       Mutliplicity      1      1     1      1   
                                                      ____________________________________
-                                        _________
-                                        Cats            Al     Ca   AlSi   AlSi
-                                        cacm            Fe3    Ca   AlSi   AlSi dependent
-                                        ___
-                                        Jadeite         Al     Na    Si     Si
-                                        Acmite          Fe3    Na    Si     Si
-                                        _________
-                                        Mats            Al     Mg   AlSi   AlSi dependent
-                                        fats            Al     Fe   AlSi   AlSi dependent 
-                                        ___
-                                        macm            Fe3    Mg   AlSi   AlSi dependent 
-                                        facm            Fe3    Fe   AlSi   AlSi dependent
-                                        _________
+
+                                        Prism        ____________________________________
+
                                         Diopside        Mg     Ca    Si     Si
-                                        hed             Fe     Ca    Si     Si  dependent
-                                        ___
                                         cEnstatite      Mg     Mg    Si     Si
+                                        Mats            Al     Mg   AlSi   AlSi dependent
+                                        macm            Fe3    Mg   AlSi   AlSi dependent
+                            Species:
+                                        hed             Fe     Ca    Si     Si  dependent
                                         cferrosilite    Fe     Fe    Si     Si
-                                                     ___________________________________
+                                        fats            Al     Fe   AlSi   AlSi dependent
+                                        facm            Fe3    Fe   AlSi   AlSi dependent
+
+                                        Orphans       ___________________________________
+
+                                        Jadeite         Al     Na    Si     Si
+                                        Acmite          Fe3+   Na    Si     Si
+                                        Cats            Al     Ca   AlSi   AlSi
+                                                      ___________________________________
 
                     Ordered species:    oCaTs           Al     Ca     Si    Al
                                         fmc             Mg     Fe     Si    Si
-
-Augite(G)_
+Aug(G)
 abbreviation Cpx
 full_name    clinopyroxene
 
-8                            | model type: prism + orphan vertices
+9                            | model type: prism + orphan vertices
 
-3                            | prism: 3 simplicies with a common vertex
-2 2 3                        | 1d 1d 2d
+2                            | prism: two simplicies with a common vertex
+2 4                          | binary (Fe-Mg) + quaternary (di-en-mats-macm)
+3                            | number of independent orphan vertices
 
                              | endmembers on the prism vertices
+cfsg      cenjh
+fats      mats
+facm      macm
+hed_d     di
 
-cats    cacm_d
-jd      acm
-
-mats_d  fats_d
-macm_d  facm_d
-
-di      hed_d
-cenjh   cfsg
+                             | independent endmembers on orphan vertices
+jd
+acm
+cats
 
 2                            | number of ordered species and definitions
 
@@ -503,24 +419,31 @@ ocats = -2 + 1 cats                              delta = 2 zAlT1
 
 end_limits
 
-6                            | number of dependent endmembers and definitions
+5                            | number of dependent endmembers and definitions
 
-hed_d   = 1 di    + 1 cfsg  - 1 fmc 
-cacm_d  = 1 acm   + 1 cats  - 1 jd 
-mats_d  = 1 cats  + 1 cenjh - 1 di
-macm_d  = 1 cats  + 1 cenjh - 1 di   + 1 acm - 1 jd
-fats_d  = 1 cats  - 1 di    + 1 fmc
-facm_d  = 1 cats  - 1 di    + 1 fmc  + 1 acm - 1 jd
+hed_d = 1 di    + 1 cfsg - 1 fmc 
+mats  = 1 cats  + 1 cenjh - 1 di
+macm  = 1 cats  + 1 cenjh - 1 di   + 1 acm - 1 jd
+fats  = 1 cats - 1 di   + 1 fmc
+facm  = 1 cats - 1 di   + 1 fmc  + 1 acm - 1 jd
 
 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 | endmember flags
 
                              | First (1d) simplex of the prism
-0. 1. 0.1  0                 | range and resolution of X(1,1)
-                             | Second (1d) simplex of the prism
-0. 1. 0.1  0                 | range and resolution of X(2,1)
-                             | third (2d) simplex of the prism
-0. 1. 0.1  0                 | range and resolution of X(3,1)
-0. 1. 0.1  0                 | range and resolution of X(3,2)
+
+0. 1. 0.1  0                 | range and resolution of X(Mg)
+
+                             | Second (3d) simplex of the prism
+
+0. 1. 0.1  0                 | range and resolution of X("en")
+0. 1. 0.1  0                 | range and resolution of X("ts")
+0. 1. 0.1  0                 | range and resolution of X("acm")
+
+                             | Independent (4d) simplex of prism + orphans
+
+0. 1. 0.1  0                 | range of jd
+0. 1. 0.1  0                 | range of acm
+0. 1. 0.1  0                 | range of cats
 
 begin_excess_function
 W(di cenjh)               29.8d3   -0.03 * p
@@ -593,304 +516,6 @@ reach_increment 0
 end_of_model
                       --------------------------------------------------------
 begin_model
-                      cAmph(G)_I => Green, ECR, et al. (JMG, 2016). Triple prism
-
-                      NOTE: to use this the following endmembers must be specified with make 
-                      definitions in the thermodynamic data file
-
-                         mrbG  = 1 gl - 1 gr + 1 andr
-                            DQF = 0
-                         kprg  = 1 mu - 1 pa + 1 parg
-                            DQF = -7060 + 20 * T_K
-                         tts   = -2 dsp + 2 ru + 1 ts
-                            DQF =   95000
-
-                      to avoid cluttering thermodynamic data files with the new plague of TC 
-                      DQF "corrections", the following simple DQF's are specified in the
-                      make_definition section at the end of this model:
-
-                         DQF(gl)   = -3000
-                         DQF(parg) = -10000
-                         DQF(ts)   =  10000
-                         DQF(grun) = -3000
-
-                      For (nonsensical, but common) positive DFQ's this approach may lead to 
-                      interference between the phase relations of the solution model and the 
-                      un-DQF'd endmember. If such interference occurs: the DQF'd endmember must
-                      be renamed; its definition placed in the thermodynamic data file;
-                      and the un-DQF'd endmember excluded from the calculation.
-
-                      The model composition space is formulated as prism composed of 3 simplexes
-                      the first and second simplexes are 1d (binary) and the third simplex is 
-                      6d (septary). the third simplex can be thought of as defining all possible
-                      mixtures of the quadrilateral composition spaces defined by the 1st two
-                      simplexes. See comments for Augite(G) comments for further explanation. 
-
-                                                            Sites
-                                            A    M1      M2      M4     T1     OH
-                                            _______________________________________
-
-                            Multiplicity    1     3      2       2     1(4)    2 
-                                            _______________________________________
-
-                              Ts            V     Mg     Al     Ca     SiAl    OH
-                              fTs_d         V     Fe     Al     Ca     SiAl    OH
-                              ffts_d        V     fe     Al     fe     SiAl    OH
-                              mmts_d        V     mg     Al     mg     SiAl    OH
-
-                              Parg          Na    Mg    MgAl    Ca     SiAl    OH
-                              fParg_d       Na    Fe    FeAl    Ca     SiAl    OH
-                              mpg_d         Na    Mg    mgAl    Mg     SiAl    OH
-                              fpg_d         Na    Fe    feAl    fe     SiAl    OH
-
-                              Kprg          K     Mg    MgAl    Ca     SiAl    OH
-                              fkPrg         K     Fe    FeAl    Ca     SiAl    OH
-                              mkpg_d        K     Mg    mgAl    Mg     SiAl    OH
-                              fkpg_d        k     Fe    feAl    fe     SiAl    OH
-
-                              Gl            V     Mg     Al     Na      Si     OH
-                              fGl_d         V     Fe     Al     Na      Si     OH
-                              mrbG          V     Mg     Fe3    Na      Si     OH
-                              frb_d         V     Fe     Fe3    Na      Si     OH
-
-                              Tts           V     Mg     Ti     Ca     SiAl    O
-                              fcTts_d       V     Fe     Ti     Ca     SiAl    O
-                              mTts_d        V     Mg     Ti     Mg     SiAl    O
-                              fTts_d        V     Fe     Ti     Fe     SiAl    O
-
-                              cmgrk_d       V     Mg     Fe3    Ca     SiAl    OH
-                              cfgrk_d       V     Fe     Fe3    Ca     SiAl    OH
-                              mgrk_d        V     Mg     Fe3    Mg     SiAl    OH
-                              fgrk_d        V     Fe     Fe3    Fe     SiAl    OH
-
-                              Tr            V     Mg     Mg     Ca      Si     OH
-                              fTr_d         V     Fe     Fe     Ca      Si     OH
-                              Cumm          V     Mg     Mg     Mg      Si     OH
-                              Grun          V     Fe     Fe     Fe      Si     OH
-
-                              A             V     Mg     Fe     Fe      Si     OH
-                              B             V     Fe     Mg     Fe      Si     OH
-
-           dependent exchange Mgrk          V     M      Fe3    M      SiAl     OH
-           dependent exchange Mts           V     M       Al    M      SiAl     OH
-           dependent exchange Mpg           Na    M      MAl    M      SiAl     OH
-           dependent exchange MKpg          K     M      MAl    M      SiAl     OH
-           dependent exchange MTts          V     M      Ti     M      SiAl     OH
-
-           2 CaMg-1(M4) = (Tr-Cumm)
-           3 FeMg-1(M1) = (grun - a)
-           2 FeMg-1(M2) = (grun - b)
-           2 FeMg-1(M4) = (-grun - cumm + a + b)
-
-cAmph(G)_I
-abbreviation Amph
-full_name    clinoamphibole
-
-8                           | model type: order-disorder, prismatic composition space
-3                           | 3 simplex prismatic space
-2 2 7                       | 1 binary + 1 binary + septary
-
-ts         fcts_d
-mts_d      fts_d
-
-parg       fcparg_d
-mparg_d    fparg_d
-
-kprg       kfcprg_d
-kmparg_d   kfparg_d
-
-gl         fgl_d
-mrbG       frb_d
-
-tts         fctts_d
-mtts_d      ftts_d
-
-mcgrk_d     fcgrk_d
-mgrk_d      fgrk_d
-
-cumm        grun
-tr          ftr_d
-
-2                            | ordered species definitions:
-
-a     = 3/7 cumm + 4/7 grun  enthalpy_of_ordering  =   -9486  | = DQF(A) -4/7 DQF(Grun)
-b     = 2/7 cumm + 5/7 grun  enthalpy_of_ordering  =  -11657  | = DQF(B) -5/7 DQF(Grun)
-
-begin_limits                                                  
-
-a = -7/4 + 7/4 grun + 1 a + 1/2 b + 5/4 b                           delta = 7/4 z(M1,Fe)
-a = -7/3 grun - 4/3 a + 5/3 b - 5/3 b                               delta = 7/3 z(M2,Fe)
-a = -7/3 + 7/3 tr + 7/6 parg + 7/6 kprg + 7/3 cumm + 1 a + 5/3 b + 2/3 b  delta = 7/3 z(M2,Mg) only 1 m2 equation can be independent 
-a = -7/3 + 7/3 cumm + 1 a - 2/3 b + 2/3 b                           delta = 7/3 z(M4,Mg) only 1 m4 equation can be independent 
-a = -7/3 grun - 4/3 a - 2/3 b - 5/3 b                               delta = 7/3 z(M4,Fe)
-
-b = -7/2 grun + 2 a - 2 a - 5/2 b                                   delta = 7/2 z(M1,Fe)
-b = -7/5 + 7/5 grun + 3/5 a + 4/5 a + 1 b                           delta = 7/5 z(M2,Fe)
-b = -7/5 tr - 7/10 parg - 7/10 kprg - 7/5 cumm + 3/5 a - 3/5 a - 2/5 b  delta = 7/5 z(M2,Mg)
-b = -7/2 + 7/2 cumm - 3/2 a + 3/2 a + 1 b                           delta = 7/2 z(M4,Mg)
-b = -7/2 grun - 3/2 a - 2 a -5/2 b                                  delta = 7/2 z(M4,Fe)
-
-end_limits
-
-19                         | dependent endmember definitions:
-
-fcts_d = 1 ts + 1 grun - 1 a
-fts_d  = 1 ts - 1 tr + 1 b
-mts_d  = 1 ts - 1 tr + 1 cumm
-
-fcparg_d  = 1 parg  + 3/2 grun - 1 a - 1/2 b
-fparg_d   = 1 parg  + 1/2 grun + 1/2 b - 1 tr
-mparg_d   = 1 parg  - 1 tr     + 1 cumm
-
-kfcprg_d  = 1 kprg  + 3/2 grun - 1 a - 1/2 b
-kfparg_d  = 1 kprg  + 1/2 grun + 1/2 b - 1 tr
-kmparg_d  = 1 kprg  - 1 tr + 1 cumm
-
-fgl_d    = 1 gl    + 1 grun   - 1 a
-frb_d    = 1 mrbG  + 1 grun   - 1 a
-
-fctts_d  = 1 tts   + 1 grun   - 1 a
-ftts_d   = 1 tts   - 1 tr     + 1 b
-mtts_d   = 1 tts   - 1 tr     + 1 cumm
-
-fcgrk_d  = 1 mrbG  + 1 ts    - 1 gl     - 1 a  + 1 grun
-mcgrk_d  = 1 mrbG  + 1 ts    - 1 gl 
-fgrk_d   = 1 mrbG  + 1 ts    - 1 gl     - 1 tr + 1 b
-mgrk_d   = 1 mrbG  + 1 ts    + 1 cumm   - 1 gl - 1 tr
-
-ftr_d    = 1 tr    + 2 grun   - 1 a - 1 b
-
-0 0 0 0 0 0 0 0 0 0 0 0 0 0 
-0 0 0 0 0 0 0 0 0 0 0 0 0 0  | endmember flags
-
-                             | imod = 0 -> cartesian subdivision
-                             | imod = 1 -> assymetric stretching subdivision
-                             | First (1d) simplex of the prism
-0. 1.  .1  0                 | range and resolution for X(1,1) is X(Mg) for all quadrilaterals, imod = 0
-                             | Second (1d) simplex of the prism
-0. 1.  .1  0                 | range and resolution for X(2,1) is variably X Ca or Al, imod = 0
-                             | Third (7d) simplex of the prism
-0. 1.  .1  0                 | range and resolution for X(3,1) on Ts-prism, imod = 0
-0. 1.  .1  0                 | range and resolution for X(3,2) on Parg-prism, imod = 0
-0. .1  .1  0                 | range and resolution for X(3,3) on KParg-prism, imod = 0
-0. 1.  .1  0                 | range and resolution for X(3,4) on Gl-Rb-prism, imod = 0
-0. .2  .1  0                 | range and resolution for X(3,5) on TiTs-prism, imod = 0
-0. .4  .1  0                 | range and resolution for X(3,6) on Grk-prism, imod = 0
-
-begin_excess_function
-
-W(tr ts)                  20d3
-W(tr parg)                25d3
-W(tr gl)                  65d3
-W(tr cumm)                45d3
-W(tr grun)                75d3
-W(tr a)                   57d3
-W(tr b)                   63d3
-W(tr mrbG)                52d3
-W(tr kprg)                30d3
-W(tr tts)                 85d3
-W(ts parg)               -40d3
-W(ts gl)                  25d3
-W(ts cumm)                70d3
-W(ts grun)                80d3
-W(ts a)                   70d3
-W(ts b)                 72.5d3
-W(ts mrbG)                20d3
-W(ts kprg)               -40d3
-W(ts tts)                 35d3
-W(parg gl)                50d3
-W(parg cumm)              90d3
-W(parg grun)           106.7d3
-W(parg a)               94.8d3
-W(parg b)               94.8d3
-W(parg mrbG)              40d3
-W(parg kprg)               8d3
-W(parg tts)               15d3
-W(gl cumm)               100d3
-W(gl grun)             113.5d3
-W(gl a)                  100d3
-W(gl b)                111.2d3
-W(gl kprg)                54d3
-W(gl tts)                 75d3
-W(cumm grun)              33d3
-W(cumm a)                 18d3
-W(cumm b)                 23d3
-W(cumm mrbG)              80d3
-W(cumm kprg)              87d3
-W(cumm tts)              100d3
-W(grun a)                 12d3
-W(grun b)                  8d3
-W(grun mrbG)              91d3
-W(grun kprg)              96d3
-W(grun tts)               65d3
-W(a b)                    20d3
-W(a mrbG)                 80d3
-W(a kprg)                 94d3
-W(a tts)                  95d3
-W(b mrbG)                 90d3
-W(b kprg)                 94d3
-W(b tts)                  95d3
-W(mrbG kprg)              50d3
-W(mrbG tts)               50d3
-W(kprg tts)               35d3
-
-end_excess_function
-
-6                                   | 6 site configurational entropy model (A, M1, M2, M4,T1, OH)
-
-3 1                                 | 3 species on A, mult = 1
-z(A,na)    = 1 parg 
-z(A,k)     = 1 kprg 
-
-2 3                                 | 2 species on M1, mult = 3
-z(M1,fe)   = 1 grun + 1 b 
-
-5 2                                 | 5 species on M2, mult = 2
-z(M2,fe)   = 1 grun + 1 a
-z(M2,fe3)  = 1 mrbG
-z(M2,al)   = 1 ts + 1 gl + 1/2 kprg + 1/2 parg
-z(M2,ti)   = 1 tts
-
-4 2                                 | 4 species on M4, mult = 2
-z(M4,mg)   = 1 cumm
-z(M4,na)   = 1 gl + 1 mrbG
-z(M4,fe)   = 1 grun + 1 a + 1 b
-
-2 1                                 | 2 species on T1, fake mutiplicity = 1
-z(T1,Al)   = 1/2 ts + 1/2 parg + 1/2 kprg + 1/2 tts
-
-2 2                                 | 2 species on OH, mutiplicity = 2
-z(OH,O)    = 1 tts
-
-begin_van_laar_sizes
-
-alpha(tr)          1
-alpha(ts)          1.5
-alpha(parg)        1.7
-alpha(gl)          0.8
-alpha(cumm)        1
-alpha(grun)        1
-alpha(a)           1
-alpha(b)           1
-alpha(mrbG)        0.8
-alpha(kprg)        1.7
-alpha(tts)         1.5
-
-end_van_laar_sizes
-
-begin_dqf_corrections
-
-DQF(gl)   = -3000
-DQF(parg) = -10000
-DQF(ts)   =  10000
-DQF(grun) = -3000
-
-end_dqf_corrections
-
-end_of_model
-
-                      --------------------------------------------------------
-begin_model
                       Green, ECR, et al. (JMG, 2016). 
 
                       NOTE: to use this the following endmembers must be specified with make 
@@ -933,52 +558,6 @@ begin_model
                               mrbG          V     Mg     Fe3    Na      Si     OH
                               Kprg          K     Mg    MgAl    Ca     SiAl    OH
                               Tts           V     Mg     Ti     Ca     SiAl    O
-
-                              A             V     Mg     Fe     Fe      Si     OH
-                              B             V     Fe     Mg     Fe      Si     OH
-
-           dependent exchange Mgrk          V     M      Fe3    M      SiAl     OH
-           dependent exchange Mts           V     M       Al    M      SiAl     OH
-           dependent exchange Mpg           Na    M      MAl    M      SiAl     OH
-           dependent exchange MKpg          K     M      MAl    M      SiAl     OH
-           dependent exchange MTts          V     M      Ti     M      SiAl     OH
-
-          target:
-
-                              Tr            V     Mg     Mg     Ca      Si     OH
-                              fTr_d         V     Fe     Fe     Ca      Si     OH
-                              Cumm          V     Mg     Mg     Mg      Si     OH
-                              Grun          V     Fe     Fe     Fe      Si     OH
-
-                              Ts            V     Mg     Al     Ca     SiAl    OH
-                              fTs_d         V     Fe     Al     Ca     SiAl    OH
-                              ffts_d        V     fe     Al     fe     SiAl    OH
-                              mmts_d        V     mg     Al     mg     SiAl    OH
-
-                              Parg          Na    Mg    MgAl    Ca     SiAl    OH
-                              fParg_d       Na    Fe    FeAl    Ca     SiAl    OH
-                              mpg_d         Na    Mg    mgAl    Mg     SiAl    OH
-                              fpg_d         Na    Fe    feAl    fe     SiAl    OH
-
-                              Kprg          K     Mg    MgAl    Ca     SiAl    OH
-                              fkPrg         K     Fe    FeAl    Ca     SiAl    OH
-                              mkpg_d        K     Mg    mgAl    Mg     SiAl    OH
-                              fkpg_d        k     Fe    feAl    fe     SiAl    OH
-
-                              Gl            V     Mg     Al     Na      Si     OH
-                              fGl_d         V     Fe     Al     Na      Si     OH
-                              mrbG          V     Mg     Fe3    Na      Si     OH
-                              frb_d         V     Fe     Fe3    Na      Si     OH
-
-                              Tts           V     Mg     Ti     Ca     SiAl    O
-                              fcTts_d       V     Fe     Ti     Ca     SiAl    O
-                              mTts_d        V     Mg     Ti     Mg     SiAl    O
-                              fTts_d        V     Fe     Ti     Fe     SiAl    O
-
-                              cmgrk_d       V     Mg     Fe3    Ca     SiAl    OH
-                              cfgrk_d       V     Fe     Fe3    Ca     SiAl    OH
-                              mgrk_d        V     Mg     Fe3    Mg     SiAl    OH
-                              fgrk_d        V     Me     Fe3    Fe     SiAl    OH
 
                               A             V     Mg     Fe     Fe      Si     OH
                               B             V     Fe     Mg     Fe      Si     OH

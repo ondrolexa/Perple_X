@@ -588,7 +588,7 @@ c                                 local directory
          end do 
       end do 
 
-      call outgrd (loopx,loopy,jinc1,n4,0,0)
+      call outgrd (loopx,loopy,jinc1,n4,0)
 c                                 and the blk file:
       do i = 1, gbulk
        
