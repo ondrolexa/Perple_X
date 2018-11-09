@@ -2975,10 +2975,10 @@ c----------------------------------------------------------------------
 
       do match = 1, idim
          if (name.eq.mname(match)) exit
-      end do  
+      end do
 
       if (match.gt.idim) ier = 1
-      
+
       end 
 
       subroutine readn (i,idim,tname)
@@ -7526,6 +7526,7 @@ c                                 make y2p array
                end do 
 
             end do
+
          end do
 
       end if
@@ -9294,10 +9295,13 @@ c                                 site check override
       sck(im) = stck
 c                                 override norf if refine_endmembers option is set (default is false)
       if (lopt(39)) norf = .false.
-c                                 refine endmembers if norf is false (default is true)
+c                                 refine endmembers if norf is false (default is true). since this 
+c                                 was running with the wrong default value of norf for more than a 
+c                                 year it seems doubtful that nrf is really useful (lopt(39) IS
+c                                 important at least for WADDAH). 11/18.
       nrf(im) = norf
 c                                 number of ordered species
-      nord(im) = norder 
+      nord(im) = norder
 c                                 number of species and multiplicity and
 c                                 site ranges
       inc = 0
@@ -12534,7 +12538,7 @@ c                                 the site fraction of the jth species on
 c                                 the ith site of the hth pseudocompound.
          if (iam.lt.3.or.iam.eq.15) then  
 c                                 vertex/meemum need static pseudocompounds
-            call subdiv (im,.false.)       
+            call subdiv (im,.false.)
 c                                 subdiv generates ntot compositions,
 c                                 generate the compound data for each solution:
 c                                 save the identities of the endmembers
@@ -12569,7 +12573,7 @@ c                                 write reach_increment
      *            write (*,1030) int(reachg(im)*2d0/nopt(21)-1d0), tname
 c                                 indicate site_check_override and refine endmembers
                if (.not.sck(im)) write (*,1080) tname
-               if (nrf(im)) write (*,1090) tname
+               if (.not.nrf(im)) write (*,1090) tname
 
                if (output.and.lopt(10)) then
 
@@ -20405,8 +20409,9 @@ c----------------------------------------------------------------------
       common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),na1,na2,na3,nat,kd
 c----------------------------------------------------------------------
 
-      bad = .false.
-      zap = bad
+      bad  = .false.
+      zap  = bad
+
       k = 0
 
       if (usex) then
@@ -20417,8 +20422,13 @@ c----------------------------------------------------------------------
                y(l) = y(l)*x(m,kmsol(ids,l,m))
             end do
 
-            if (badend(l,ids).and.y(l).gt.zero) zap = .true.
-            if (y(l).gt.one) k = l
+            if (y(l).gt.zero) then 
+
+               if (badend(l,ids)) zap = .true.
+
+               if (y(l).gt.one) k = l
+
+            end if
 
          end do
 

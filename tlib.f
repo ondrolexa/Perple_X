@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.8.5, source updated Nov 8, 2018.',
+     *      'Perple_X version 6.8.5, source updated Nov 9, 2018.',
 
      *      'Copyright (C) 1986-2018 James A D Connolly '//
      *      '<www.perplex.ethz/copyright.html>.'
@@ -3712,6 +3712,8 @@ c----------------------------------------------------------------------
 c                                 name          
          read (key,'(a)',iostat=ier) name
          if (ier.ne.0) exit
+c                                 on the off chance of a loose end keyword
+         if (key.eq.'end') cycle
 c                                 EoS
          read (nval2,*,iostat=ier) ieos
          if (ier.ne.0) exit    
