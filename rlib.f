@@ -10475,8 +10475,12 @@ c                                 special case because of non-equimolar
 c                                 speciation reaction.
          if (t.lt.nopt(20)) then
             g = 1d6 
-         else  
+         else
+c                                 initialize the ordered species concentration
+            p0a(nstot(id)) = 0d0 
+
             call gpmelt (g,id)
+
          end if 
 
          return
@@ -15240,7 +15244,7 @@ c----------------------------------------------------------------------
       double precision g, dg, d2g, s, ds, d2s, pfac,
      *                 q, ph2o, dph2o, d2ph2o, pfo, pfa, pnorm, pnorm2,
      *                 dp(m4), d2p(m4), lpa(m4), lpfac, dng,
-     *                 dsfo, dsfa, gnorm, dgnorm
+     *                 dsfo, dsfa, gnorm, dgnorm, bagle
 c                                 working arrays
       double precision z, pa, p0a, x, w, y, wl
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),

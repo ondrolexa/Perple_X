@@ -3099,7 +3099,7 @@ c-----------------------------------------------------------------------
 
       integer ier, jnd(12,2), i, j, ind1, ind2
 
-      logical err, finish
+      logical err, finish, inter
 
       character*100 prject,tfname
       common/ cst228 /prject,tfname
@@ -3175,7 +3175,7 @@ c                                 try to open final plt and blk files
             else if (icopt.ne.5.or.iopt(34).eq.0) then 
 
                call error (72,nopt(1),i,'missing/corrupt plt/blk files '
-     *                     //' VERTEX may still be running or the files'
+     *                     //'VERTEX may still be running or the files'
      *                     //' are locked by another program')
 
             end if
@@ -3190,7 +3190,7 @@ c                                 try to open final plt and blk files
 c                                 the only paths here are
 c                                 1) iopt(32) = 2 => man.
 c                                 2) iopt(32) = 1 => auto and no final results.
-
+      inter = .false.
 c                                 only hope is interim results:
       call mertxt (tfname,prject,'.irf',0)
       open (1000, file = tfname, status = 'old', iostat = ier)
@@ -3301,6 +3301,7 @@ c                                 use intermediate results
 
                write (text,'(a,i1,i1)') '_',ind1, ind2
                call mertxt (name,prject,text,0)
+               inter = .true.
 
             else 
 
@@ -3318,8 +3319,16 @@ c                                 use final results
 
       call redplt (name,err)
 
-      if (err) call error (72,nopt(1),i,'corrupt interim results, '//
+      if (err) then
+         if (inter) then 
+            call error (72,nopt(1),i,'corrupt interim results, '//
      *                             'use auto-refine stage results.')
+         else
+            call error (72,nopt(1),i,'missing/corrupt plt/blk files '
+     *                     //'VERTEX may still be running or the files'
+     *                     //' are locked by another program')
+         end if
+      end if
 
       end
 
