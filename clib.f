@@ -2912,6 +2912,7 @@ c                                 handle format 1010 in outbl1
          end do
 
 99       close (lun)
+         backspace (n5)
 c                                 and the interim plt file
          call mertxt (name,prject,text,0)
          call mertxt (name,name,'.plt',0)

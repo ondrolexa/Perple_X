@@ -1582,7 +1582,7 @@ c                                 ouput grid data
 1070  format (7x,'refinement at level ',i1,' involved ',i6,
      *        ' minimizations')
 1080  format (i6,' minimizations required of the ',
-     *        'theoretical limit of ',i6)
+     *        'theoretical limit of ',i7)
 1090  format (7x,'...working (',i6,' minimizations done)')
 
       end 
