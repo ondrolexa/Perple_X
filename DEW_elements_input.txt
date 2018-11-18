@@ -1,0 +1,96 @@
+.true.    => reject species that contain elements not listed here
+.false.   => use HSC convention for G0, otherwise Gf. 
+Na Na2O  2. 1.
+Mg MgO   1. 1.
+Al Al2O3 2. 3.
+Si SiO2  1. 2.
+K  K2O   2. 1.
+Ca CaO   1. 1.
+Fe FeO   1. 1.
+Mn MnO   1. 1.
+Cu CuO   1. 1. 
+Cr Cr2O3 2. 3.
+Ti TiO2  1. 2.
+Zr ZrO2  1. 2.
+H  H2O   2. 1.
+C  CO2   1. 2.
+Cl Cl2   2. 0.
+S  S2    2. 0.
+F  F2    2. 0.
+O  O2    2. 1.
+end end  0. 0.         = list terminator
+
+ADDITIONAL COMMENTS:
+
+The above list instructs DEW_2_ver how to covert the DEW compositions to oxides, the following data for each element is
+             1) the DEW element name (columns 1:2)
+             2) the output oxide name (columns 4:8)
+             3) the stoichiometry of the element in the oxide (columns 10:11)
+             4) the oxygen stoichiometry in the oxide (columns 13:14)
+             5) the oxygen component MUST be the last component in the list!!!
+
+to output elemental compositions the list should be modified as follows (note: the use of dimer gaseous elemental 
+stoichiometries is arbitrary:
+
+Na Na    1. 0.
+Mg Mg    1. 0.
+Al Al    1. 0.
+Si Si    1. 0.
+K  K     1. 0.
+Ca Ca    1. 0.
+Fe Fe    1. 0.
+Mn Mn    1. 0.
+Cu Cu    1. 0. 
+Cr Cr    1. 0.
+Ti Ti    1. 0.
+Zr Zr    1. 0.
+C  C     1. 0.
+H  H2    2. 0.
+Cl Cl2   2. 0.
+S  S2    2. 0.
+F  F2    2. 0.
+O  O2    2. 0.
+
+================================
+
+Na Na2O  2. 1.
+Mg MgO   1. 1.
+Al Al2O3 2. 3.
+Si SiO2  1. 2.
+K  K2O   2. 1.
+Ca CaO   1. 1.
+Fe FeO   1. 1.
+Mn MnO   1. 1.
+Cu CuO   1. 1. 
+Cr Cr2O3 2. 3.
+Ti TiO2  1. 2.
+Zr ZrO2  1. 2.
+H  H2O   2. 1.
+C  CO2   1. 2.
+Cl Cl2   2. 0.
+S  S2    2. 0.
+O  O2    2. 2.
+F  F2    2. 0.
+
+ truncated name from HEXANE,AQ to HEXANE,A
+ probably missing enthalpy for:KCl,aq
+ truncated name from LACTATE,AQ to LACTATE,
+ truncated name from LACTIC-ACID,AQ to LACTIC-A
+ truncated name from METHANE,AQ to METHANE,
+ truncated name from METHANOL,AQ to METHANOL
+ found a repeat group these seem to be useless will ignore, CHECK THIS FORMULA!
+ mugga: Mg(HCO3)(+)
+ truncated name from Mg(HCO3)+ to Mg(HCO3)
+ found a repeat group these seem to be useless will ignore, CHECK THIS FORMULA!
+ mugga: Mg(HSiO3)(+)
+ truncated name from Mg(HSiO3)+ to Mg(HSiO3
+ truncated name from Na(Ac),aq to Na(Ac),a
+ found a repeat group these seem to be useless will ignore, CHECK THIS FORMULA!
+ mugga: Na(CH3COO)2(-1)
+ probably missing enthalpy for:NaCO3-
+ truncated name from NaHCO3,aq to NaHCO3,a
+ truncated name from NaHSiO3,aq to NaHSiO3,
+
+
+Gf        |  Hf       | So            | Vo        | Cpo           | a1 x 10         | a2 x 10-2  | a3                | a4 x 10-4   | c1            | c2 x 10-4   | omega x 10-5  | Z | Comments
+cal mol-1 | cal mol-1 | cal mol-1 K-1 | cm3 mol-1 | cal mol-1 K-1 | cal mol-1 bar-1 | cal mol-1  | cal K mol-1 bar-1 | cal K mol-1 | cal mol-1 K-1 | cal K mol-1 | cal mol-1     |   | 

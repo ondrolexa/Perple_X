@@ -289,8 +289,13 @@ fmc =  0 - 2 di - 2 cenjh - 1 fmc                delta = 2 zm1mg
 fmc =  0 - 2 cfsg - 1 fmc                        delta = 2 zm2fe
 fmc = -2 + 2 cenjh + 1 fmc                       delta = 2 zm2mg
 
-ocats =  0 - 1 cats                              delta = 2 zAlT2 | these assume p0_ocats = 0 as is true for the model as configured
-ocats = -2 + 1 cats                              delta = 2 zAlT1
+ocats =  0 - 1 cats                              delta = 2 zAlT2 | these assume p0_ocats = 0 as will be
+ocats = -2 + 1 cats                              delta = 2 zAlT1 | true for the model as configured in PX
+
+ | for testing against partially ordered initial configurations (e.g., a result from TC) the 
+ | above limit expressions should be replaced with:
+ | ocats =  0 - 1 cats  - 1 ocats               delta = 2 zAlT2
+ | ocats = -2 + 1 cats  + 1 ocats               delta = 2 zAlT1
 
 end_limits
 

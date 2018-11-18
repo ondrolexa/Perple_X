@@ -1750,10 +1750,9 @@ c                                 x coordinate description
      *               xmno(h9,mst,msp),xmxo(h9,mst,msp),reachg(h9)
       common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
 c                                 solution limits and stability
-      logical stable,limit,relax
+      logical stable,limit
       double precision xlo,xhi
-      common/ cxt11 /xlo(m4,mst,h9),xhi(m4,mst,h9),stable(h9),limit(h9),
-     *               relax(h9)
+      common/ cxt11 /xlo(m4,mst,h9),xhi(m4,mst,h9),stable(h9),limit(h9)
 
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
@@ -1807,15 +1806,14 @@ c                                 check if solution is at an unnatural limit
 
          end do
 
-      end do   
+      end do
 
 1000  format (/,'WARNING: composition of solution ',a,' has reached an',
-     *          ' internal limit (',f5.3,')',/,
-     *          'on site ',i1,' for species ',i2,'. If this warning'
-     *         ,' occurs during auto-refinement the problem',/,'can ',
-     *          'be circumvented by increasing auto_refine_slop ',
-     *          'in perplex_option.dat or editing the ',/,
-     *          'auto_refine_XXX file.',/)
+     *          ' internal limit (',f5.3,')',/,'on simplex ',i1,' for ',
+     *          'species ',i2,'. If this warning occurs during the ',
+     *          'exploratory stage and the restriction is unintentional'
+     *       ,/,'then relax the limit in the solution model file and ',
+     *          'restart the calculation.',/)
 
       end 
 

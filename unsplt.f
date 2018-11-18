@@ -326,9 +326,6 @@ c                                 check if the phases are in the same order
 c                                 have to cycle through all ibulk results and
 c                                 reorder the phases as in sorter.
                         reord = .true.
-                        write (*,*) 
-     *'at last! found a case for reordering, delete stop to continue'
-                        stop
                         exit 
                      end do 
                       

@@ -75,6 +75,9 @@ fluids: fluids.o tlib.o flib.o
 ctransf: ctransf.o tlib.o 
 	$(COMP77) $(FFLAGS) $(FLINK) $@.o tlib.o -o $@
 
+DEW_2_ver: DEW_2_ver.o tlib.o 
+	$(COMP77) $(FFLAGS) $(FLINK) $@.o tlib.o -o $@
+
 frendly: frendly.o tlib.o rlib.o flib.o olib.o clib.o dlib.o
 	$(COMP77) $(FFLAGS) $(FLINK) $@.o rlib.o tlib.o flib.o olib.o clib.o dlib.o -o $@
 
@@ -133,6 +136,8 @@ actcor.o: actcor.f
 	$(COMP77) $(FFLAGS) -c actcor.f
 build.o: build.f
 	$(COMP77) $(FFLAGS) -c build.f
+DEW_2_ver.o: DEW_2_ver.f
+	$(COMP77) $(FFLAGS) -c DEW_2_ver.f
 fluids.o: fluids.f
 	$(COMP77) $(FFLAGS) -c fluids.f
 convex.o: convex.f
@@ -164,7 +169,7 @@ pspts.o: pspts.f
 pstable.o: pstable.f
 	$(COMP77) $(FFLAGS) -c pstable.f
 
-# NEXT LINE MODIFIED BY pappel (PA@MIN.UNI-KIEL.DE) 2010SEPT08: CHANGED ptcurv.o TO pt2curv.o	
+# NEXT LINE MODIFIED BY pappel (PA@MIN.UNI-KIEL.DE) 2010SEPT08: CHANGED ptcurv.o TO pt2curv.o
 
 pt2curv.o: pt2curv.f
 	$(COMP77) $(FFLAGS) -c pt2curv.f

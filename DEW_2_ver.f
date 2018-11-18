@@ -1,19 +1,6 @@
 c----------------------------------------------------------------------
 c DEW_2_ver converts aqueous species data from the DEW spreadsheet 
-c to perple_x format/units. the program does not write a formula
-c for the converted data, therefore such a formula must be added
-c before the data is entered into a perple_x 
-
-
-
-c rewrite 2010 is a program to rewrite *ver.dat thermodynami data files
-c from before May 2010 to the current format.
-
-c to run this code you must temporarily modify perplex_parameters such that:
-
-c k5 = max number of components in the data base (<=k0)
-c m7 = number of parameters in a transition (was formerly m7 = 12)
-
+c to perple_x format/units
 c----------------------------------------------------------------------
 
       implicit none
@@ -21,7 +8,7 @@ c----------------------------------------------------------------------
       include 'perplex_parameters.h'
 
       integer i, ibeg, iend, len, ier, iscan, iscnlt, jbeg(3), jend(3),
-     *        nel, iel, ist, j, lun
+     *        nel, iel, ist, j, lun, d2v(13)
 
       logical elchk, good, reject, bad, hsc
 
@@ -38,22 +25,20 @@ c----------------------------------------------------------------------
       common/ cst51 /length,iblank,icom,chars(240)
 
       character*2 strgs*3, mstrg, dstrg, tstrg*3, wstrg*3, e16st*3
-      common/ cst56 /strgs(32),mstrg(6),dstrg(m8),tstrg(11),wstrg(m16),
-     *               e16st(12)
+      common/ cst56 /strgs(32),mstrg(6),dstrg(m8),tstrg(m7),wstrg(m16),
+     *               e16st(13)
 c----------------------------------------------------------------------- 
 c                                 iam is a flag indicating the Perple_X program
 c     iam = 11
 c                                 the DEW data, space delimited
-      open (n9, file='DEW_data.txt', status= 'old')
+      open (n9, file='DEW_input.txt', status= 'old')
 c                                 a case sensitive list of acceptable elements
 c                                 species that contain elements not in this list
 c                                 will be rejected.
-      open (11,file='DEW_elements.txt',status='old')
+      open (11,file='DEW_elements_input.txt',iostat=ier,status='old')
       nel = 0
 
-c      write (*,*) 'reject species that have elements not specified in',
-c     *            'DEW_elements.txt (T/F)?'
-      read (11,*) reject 
+      read (11,*,iostat=ier) reject 
 c                                 use HSC convention for g0, otherwise use gf.
       read (11,*) hsc
 
@@ -61,7 +46,7 @@ c                                 use HSC convention for g0, otherwise use gf.
 c                                 oxygen must be last in list
          read (11,'(a,1x,a5,1x,f2.0,1x,f2.0)',iostat=ier) elname, 
      *                               oxname(50), nums(1), nums(2)
-         if (ier.ne.0) exit
+         if (ier.ne.0.or.elname.eq.'en') exit
          nel = nel + 1
          elem(nel) = elname
          oxname(nel) = oxname(50)
@@ -75,11 +60,39 @@ c                                 oxygen must be last in list
          write (*,*) 'gork'
          stop
       end if 
-c
+
       lun = 10
-      open (lun,file='DEWver.dat')
-c                                 DEW data consists of a name, formula
-c                                 Gf, Hf, S0, v0, cp0, omega, z, a1, a2, a3, a4, c1, c2, comment
+      open (lun,file='DEW_2_ver_output.dat')
+c                                 DEW data consists of a name, formula, thermodata, comment
+c                                 pointers from dew spread sheet columns 
+c                                 Gf, Hf, S0, v0, cp0,    a1, a2, a3, a4, c1, c2, omega, z comment
+c                                  1   2   3   4    5      6   7   8   9  10  11    12  13   
+c                                 to perplex EoS 16 variables (cp & v0 are unused):
+c                                'G0 ','S0 ','V0 ','Cp0','w ','q ','a1 ','a2 ','a3 ','a4 ','c1 ','c2 ','HOH'
+      do i = 1, 13
+         d2v(i) = -1 
+      end do 
+c                                 g 
+      d2v(1) = 1
+c                                 s 
+      d2v(2) = 3
+c                                 omega
+      d2v(5) = 12
+c                                 z
+      d2v(6) = 13
+c                                 a1
+      d2v(7) = 6
+c                                 a2
+      d2v(8) = 7
+c                                 a3
+      d2v(9) = 8
+c                                 a4
+      d2v(10) = 9
+c                                 c1
+      d2v(11) = 10
+c                                 c2
+      d2v(12) = 11
+
       do 
 
          bad = .false. 
@@ -144,7 +157,7 @@ c                                 check if already at the end
                end if 
           
                write(number,'(8a1)') chars(ist+1:i)
-               read (number,'(i)',iostat=ier) i
+               read (number,'(i8)',iostat=ier) j
 
                if (ier.eq.0.or.ist+1.eq.i) then 
 
@@ -224,6 +237,7 @@ c                                 get oxide stoichiometry
          if (.not.bad) then 
 
             do i = 1, nel
+               if (elst(i).eq.0d0) cycle
                ox(i) = sel(i)/elst(i)
                if (i.lt.nel) otot = otot + ox(i)*ost(i)
             end do 
@@ -270,54 +284,63 @@ c                                 load number into chars
          call ftext (1,iend)
 c                                 write the formula
          write (lun,'(240a1)') (chars(i), i = 1, iend)
+c                                 write the DEW spreadsheet options as a comment:
+c         write (lun,'(3(a,i1))') 
+c     *         '   | DEW correlation options => omega: ',int(nums(8)),
+c     *                               ' HKF parameters: ',int(nums(9)),
+c     *                               ' a1 Correlation: ',int(nums(10))
 c                                 =====================================
-c                                 thermo data
-c                                 conversions:
+c                                 thermo data conversions:
          do i = 1, 13
 
             if (i.eq.4) then
-c                                 volume
+c                                 unused parameters v0
                nums(i) = nums(i)/1d1
-            else if (i.eq.7) then 
+            else if (i.eq.13) then
 c                                 charge
             else 
                nums(i) = 4.184d0*nums(i)
             end if
 
          end do 
-c                                 Gf, Hf, S0, v0, cp0, omega, z, a1, a2, a3, a4, c1, c2, comment
-c                                  1   2   3   4    5      6  7   8   9  10  11  12  13
 c                                 scale omega, a1, a2, a4, c2
-         nums(6)  = nums(6)*1d5
-         nums(8)  = nums(8)/1d1
-         nums(9)  = nums(9)*1d2
+         nums(12) = nums(12)*1d5
+         nums(6)  = nums(6)/1d1
+         nums(7)  = nums(7)*1d2
+         nums(9)  = nums(9)*1d4
          nums(11) = nums(11)*1d4
-         nums(13) = nums(13)*1d4
 
          ibeg = 1
  
          do i = 1, 6
 
-            if (i.eq.1) then 
+            j = d2v(i)
+
+            if (d2v(i).lt.0) cycle
+
+            if (j.eq.1) then 
                if (HSC) nums(1) = nums(2) - 298.15*nums(3)
-               j = i
-            else 
-               j = i + 1
             end if 
-c                                 don't write v0, cp0
-            if (j.eq.4.or.j.eq.5) cycle
 
             call outthr (nums(j),e16st(i),3,ibeg)
 
          end do
+
 c                                 write G,S,V,cp,w,q
          if (ibeg.gt.1) write (lun,'(240a1)') (chars(i), i = 1, ibeg)
-c                                 write a1-a4,c1-c2
+c                                 write a1-a4,c1-c2, HOH
          ibeg = 1
  
-         do i = 8, 13
-            call outthr (nums(i),e16st(i-1),3,ibeg)
-         end do       
+         do i = 7, 11
+            j = d2v(i)
+            call outthr (nums(j),e16st(i),3,ibeg)
+         end do    
+
+         if (name8.eq.'H+') then 
+            call outthr (1d0,e16st(13),3,ibeg)
+         else if (name8.eq.'OH-') then 
+            call outthr (2d0,e16st(13),3,ibeg)
+         end if 
 
          if (ibeg.gt.1) write (lun,'(240a1)') (chars(i), i = 1, ibeg)
 

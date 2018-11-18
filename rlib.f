@@ -9154,10 +9154,9 @@ c                                 parameters
       double precision yin
       common/ cst50 /yin(ms1,mst)
 c                                 parameters for autorefine
-      logical stable,limit,relax
+      logical stable,limit
       double precision xlo,xhi
-      common/ cxt11 /xlo(m4,mst,h9),xhi(m4,mst,h9),stable(h9),limit(h9),
-     *               relax(h9)
+      common/ cxt11 /xlo(m4,mst,h9),xhi(m4,mst,h9),stable(h9),limit(h9)
 
       logical refine
       common/ cxt26 /refine
@@ -9240,7 +9239,6 @@ c                                 check for consistent auto-refine data
 c                                 initialize autorefine arrays
       stable(im) = .false.
       limit(im) = .false.
-      relax(im) = .true.
 c                                 initialize compositional distances
       do i = 1, icp
          dcp(i,im) = 0d0
@@ -15244,7 +15242,7 @@ c----------------------------------------------------------------------
       double precision g, dg, d2g, s, ds, d2s, pfac,
      *                 q, ph2o, dph2o, d2ph2o, pfo, pfa, pnorm, pnorm2,
      *                 dp(m4), d2p(m4), lpa(m4), lpfac, dng,
-     *                 dsfo, dsfa, gnorm, dgnorm, bagle
+     *                 dsfo, dsfa, gnorm, dgnorm
 c                                 working arrays
       double precision z, pa, p0a, x, w, y, wl
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
@@ -15430,6 +15428,8 @@ c---------------------------------------------------------------------
       parameter (mres=12000)
 
       logical extra
+
+      character text*15
 
       integer mode, ind(ms1), iy(ms1), jsp, lsite, indx, iexit, 
      *        ieyit, i, j, k, ids, ico, jst, jump
@@ -15656,8 +15656,9 @@ c                                 conformal.
          npairs = npairs + 1
          j = jump + (npairs-1)*ico
 
+         write (text,'(i1,a4,a10)') lsite, ' of ', fname(ids)
          if (j+jsp.gt.k13) call error (180,ycum,k13,
-     *                      'CARTES increase parameter k13')
+     *      'CARTES increase parameter k13, subdividing simplex '//text)
 
          do i = 1, jsp
             simp(j+i) = y(i,ind(i))
@@ -18285,10 +18286,9 @@ c                                 x coordinate description
       integer istg, ispg, imlt, imdg
       common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
 c                                 solution limits and stability
-      logical stable,limit,relax
+      logical stable,limit
       double precision xlo,xhi
-      common/ cxt11 /xlo(m4,mst,h9),xhi(m4,mst,h9),stable(h9),limit(h9),
-     *               relax(h9)
+      common/ cxt11 /xlo(m4,mst,h9),xhi(m4,mst,h9),stable(h9),limit(h9)
 c                                 solution model counter
       integer isoct
       common/ cst79 /isoct
@@ -18366,11 +18366,7 @@ c----------------------------------------------------------------------
  
          if (limit(i)) then 
             bad2 = .true.
-            if (relax(i)) then 
-               ibad2 = ibad2 + 1
-            else 
-               ibad3 = ibad3 + 1
-            end if 
+            ibad2 = ibad2 + 1
          end if 
 
       end do 
@@ -18395,37 +18391,22 @@ c                                 not stable
       if (.not.good) goto 99
 c                                 write solutions that are on an internal
 c                                 limit
-      if (bad2.and.icopt.gt.3) then 
+      if (bad2) then 
+
+         if (icopt.gt.3) then 
 c                                 adaptive minimization
-         if (ibad2.gt.0) then 
 c                                 solutions whose limits could be relaxed
             write (*,1080) 
             if (lopt(11)) write (n11,1080) 
-            do i = 1, isoct
-               if (limit(i).and.relax(i)) then
-                  write (*,'(5x,a)') fname(i) 
-                  if (lopt(11)) write (n11,'(5x,a)') fname(i)
-               end if  
-            end do
-         end if
 
-         if (ibad3.gt.0) then 
-c                                 solutions whose limits could NOT be relaxed
-            write (*,1090) 
-            if (lopt(11)) write (n11,1090) 
-            do i = 1, isoct
-               if (limit(i).and.(.not.relax(i))) then
-                  write (*,'(5x,a)') fname(i) 
-                  if (lopt(11)) write (n11,'(5x,a)') fname(i)
-               end if  
-            end do
-         end if
-
-      else if (bad2) then 
+         else
 c                                 non-adaptive minimization,
 c                                 solutions on internal limits 
-         write (*,1010) 
-         if (lopt(11)) write (n11,1010) 
+            write (*,1010)
+            if (lopt(11)) write (n11,1010)
+
+         end if 
+
          do i = 1, isoct
             if (limit(i)) then
                write (*,'(5x,a)') fname(i) 
@@ -18433,7 +18414,15 @@ c                                 solutions on internal limits
             end if  
          end do
 
-      end if 
+         if (refine) then
+            write (*,1091)
+            if (lopt(11)) write (n11,1091)
+         else
+            write (*,1090)
+            if (lopt(11)) write (n11,1090)
+         end if 
+
+      end if
 
       reach = .false.
 
@@ -18584,12 +18573,8 @@ c                                 prismatic + orphan vertices
 
 1000  format (/,'**warning ver992** The following solutions were input,'
      *         ,' but are not stable:',/)
-1010  format (/,'**warning ver991** The following solutions have ',
-     *          'compositions at',
-     *          ' an internal limit (i.e., 0<x<1)',/,'(see ranges ',
-     *          'below to determine which limits should be relaxed or',
-     *        /,'if executing in auto_refine mode inrease auto_refine',
-     *          '_slop in perplex_option.dat):',/)
+1010  format (/,'**warning ver993** The following solutions have ',
+     *          'compositions at an internal limit (i.e., 0<x<1):',/)
 1020  format (/,'Endmember fractions for model: ',a,//,5x,
      *          'Endmember     Minimum         Maximum')
 1030  format (5x,a8,4x,g12.5,4x,g12.5)
@@ -18601,11 +18586,17 @@ c                                 prismatic + orphan vertices
 1080  format (/,'**warning ver993** The compositions of the following',
      *        ' solutions reached internal',/,
      *        'limits that were automatically relaxed:',/)
-1090  format (/,'**warning ver991** The compositions of the following',
-     *        'solutions reached internal',/,'limits that could not be',
-     *        ' automatically relaxed. To avoid this problem change',/,
-     *        'the subdivision mode for ',
-     *        'the solutions or increase auto_refine_slop.',/)
+1090  format (/,'If the restrictions are unintentional, then relax ',
+     *          'the corresponding limits',/,'in the solution model ',
+     *          'file and restart the calculation',/)
+1091  format (/,'Restriction during the auto-refine stage is usually ',
+     *          'insignificant. If desired, confirm',/,' by ',
+     *          'comparing the ranges ',
+     *          'below to those in the *.arf file.',//,'NOTE: ',
+     *          'unintentional restrictions encountered during the ',
+     *          'exploratory stage may be problematic,',/,'refer to ',
+     *          'the output written at the end of the exploratory ',
+     *          'stage for relevant warnings.',/)
 1100  format (/,'The following solution models have non-zero reach_',
      *          'increment:',//,t30,'reach_increment')
 1110  format (4x,a,t35,i2)
