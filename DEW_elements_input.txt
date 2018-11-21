@@ -1,23 +1,23 @@
 .true.    => reject species that contain elements not listed here
 .false.   => use HSC convention for G0, otherwise Gf. 
-Na Na2O  2. 1.
-Mg MgO   1. 1.
-Al Al2O3 2. 3.
-Si SiO2  1. 2.
-K  K2O   2. 1.
-Ca CaO   1. 1.
-Fe FeO   1. 1.
-Mn MnO   1. 1.
-Cu CuO   1. 1. 
-Cr Cr2O3 2. 3.
-Ti TiO2  1. 2.
-Zr ZrO2  1. 2.
-H  H2O   2. 1.
-C  CO2   1. 2.
+Na Na    1. 0.
+Mg Mg    1. 0.
+Al Al    1. 0.
+Si Si    1. 0.
+K  K     1. 0.
+Ca Ca    1. 0.
+Fe Fe    1. 0.
+Mn Mn    1. 0.
+Cu Cu    1. 0. 
+Cr Cr    1. 0.
+Ti Ti    1. 0.
+Zr Zr    1. 0.
+C  C     1. 0.
+H  H2    2. 0.
 Cl Cl2   2. 0.
 S  S2    2. 0.
 F  F2    2. 0.
-O  O2    2. 1.
+O  O2    2. 0.
 end end  0. 0.         = list terminator
 
 ADDITIONAL COMMENTS:

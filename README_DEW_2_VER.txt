@@ -26,6 +26,12 @@ file (e.g., one containing condensed and solvent phase data).
        as" option to save the data to a space delimited text file, in this case it is probably necessary to
        change the file-type suffix from ".prn" to ".txt", also it is wise to verify that species names are
        left justified).
+    e) BEWARE!!! a few entries in the DEW spreadsheet contain no enthalpy value, DEW_2_VER recognizes this if it
+       reads an alphabetic character for an entry after reading only 12 of the 13 numeric values normally
+       present for each species. This method will fail if no comment is present or the comment begins with 
+       a numeric character (e.g., as in a date). To avoid this problem, scan the "Aqueous Species Table" and 
+       either add a number for any missing enthalpy value or insert a non-numeric character in front of any
+       comment that begins with a number. 
 
 2) To modify/prepare DEW_elements_input.dat see the comments in the example included herewith. 
 

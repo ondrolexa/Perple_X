@@ -331,7 +331,7 @@ c                                 write G,S,V,cp,w,q
 c                                 write a1-a4,c1-c2, HOH
          ibeg = 1
  
-         do i = 7, 11
+         do i = 7, 12
             j = d2v(i)
             call outthr (nums(j),e16st(i),3,ibeg)
          end do    

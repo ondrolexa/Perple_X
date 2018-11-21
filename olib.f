@@ -1280,11 +1280,13 @@ c-----------------------------------------------------------------------
       include 'perplex_parameters.h'
 
       double precision mu, pmu, mut, pmut, mup, pmup, ks, ksp, kst,
-     *                 pks, pksp, pkst
+     *                 pks, pksp, pkst, v, v0(m4), vf, endvol
 
       integer i, ids
 
       logical ok
+
+      external endvol
 c                                 bookkeeping variables
       integer ksmod, ksite, kmsol, knsp
       common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
@@ -1329,29 +1331,40 @@ c-----------------------------------------------------------------------
 
       else 
 
-         if (smod(ids)) then 
+         if (smod(ids)) then
 
             if (lrecip(ids)) then
 c                                 get the p0a coordinates (amounts of 
-c                                 the independent disordered endmembers)     
+c                                 the independent disordered endmembers)
                call getpp (ids) 
+
+               v = 0d0
+c                                 use pure endmembers volumes to approximate
+c                                 partial molar volumes for volume fractions
+               do i = 1, lstot(ids)
+                  v0(i) = endvol(jend(ids,2+i), ok)
+                  if (.not.ok) return
+                  v = v + p0a(i) * v0(i)
+               end do
 
                do i = 1, lstot(ids)
 
                   call shearm (pmu,pmut,pmup,
      *                         pks,pkst,pksp,jend(ids,2+i),ok)
 
-                  if (.not.ok) exit 
+                  if (.not.ok) exit
 
-                  mu = mu + p0a(i) * pmu
-                  mut = mut + p0a(i) * pmut
-                  mup = mup + p0a(i) * pmup
+                  vf = p0a(i) * v0(i) / v
+
+                  mu = mu + vf * pmu
+                  mut = mut + vf * pmut
+                  mup = mup + vf * pmup
 
                   if (.not.pmod(ids)) cycle 
 
-                  ks = ks + p0a(i) * pks
-                  kst = kst + p0a(i) * pkst
-                  ksp = ksp + p0a(i) * pksp
+                  ks = ks + vf * pks
+                  kst = kst + vf * pkst
+                  ksp = ksp + vf * pksp
 
                end do
 
@@ -1366,22 +1379,33 @@ c                                 unspeciated composition (this will not be
 c                                 the case if gsol has been called, as might
 c                                 happen if shearm calls gsol to evaluate a 
 c                                 speciation model using stixrude's EoS).
+               v = 0d0
+c                                 use pure endmembers volumes to approximate
+c                                 partial molar volumes for volume fractions
+               do i = 1, mstot(ids)
+                  v0(i) = endvol(jend(ids,2+i), ok)
+                  if (.not.ok) return
+                  v = v + y(i) * v0(i)
+               end do
+
                do i = 1, mstot(ids)
 
                   call shearm (pmu,pmut,pmup,
      *                         pks,pkst,pksp,jend(ids,2+i),ok)
 
-                  if (.not.ok) exit 
+                  if (.not.ok) exit
 
-                  mu  = mu + y(i) * pmu
-                  mut = mut + y(i) * pmut
-                  mup = mup + y(i) * pmup
+                  vf = p0a(i) * v0(i) / v
+
+                  mu  = mu + vf * pmu
+                  mut = mut + vf * pmut
+                  mup = mup + vf * pmup
 
                   if (.not.pmod(ids)) cycle
 
-                  ks  = ks + y(i) * pks
-                  kst = kst + y(i) * pkst
-                  ksp = ksp + y(i) * pksp
+                  ks  = ks + vf * pks
+                  kst = kst + vf * pkst
+                  ksp = ksp + vf * pksp
 
                end do
  
@@ -2448,6 +2472,36 @@ c                                 shrink increment if invalid alpha
          end if  
 
       end if 
+
+      end 
+
+      double precision function endvol (id,ok)
+c----------------------------------------------------------------------
+c endvol is the molar volume of id, used for computing explicit
+c elastic moduli. 
+c----------------------------------------------------------------------
+      implicit none
+
+      logical ok
+
+      integer id
+
+      double precision ginc
+
+      external ginc
+c----------------------------------------------------------------------
+      endvol = (ginc(0d0,1d1,-id) - ginc(0d0,-1d1,-id))/2d1
+
+      if (endvol.gt.0) then
+
+         ok = .true.
+
+       else 
+
+         ok = .false. 
+
+      end if 
+
 
       end 
 
