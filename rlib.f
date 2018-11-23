@@ -1532,7 +1532,7 @@ c                                 at the i-1 th transition:
              end if 
           else 
              jtran = i 
-          end if 
+          end if
       end do 
 
       g = gtrans(ld,jtran) + vdp 
@@ -14496,7 +14496,7 @@ c-----------------------------------------------------------------
       double precision gqh,gqhr,sqhr,hqhr,cpqhr
       double precision intp,difc,gbrosh
       double precision colcom,harter
-      double precision tc,tc1,t0,beta,pp,ff,gmagn,gmagn0,vv,cst1,cst2
+      double precision tc,tc1,t0,beta,pp,ff,gmagn,vv,cst1,cst2
 c----------------------------------------------------------------------
 c                             allocate polynomial coeffiecients for
 c                             reference Gibbs free energy function
@@ -14514,7 +14514,7 @@ c                             reference Gibbs free energy function
 c                             allocate coefficients for EoS
 c                             and magnetic term
       gam0 = thermo(12,id)
-      nn = thermo(13,id)
+      nn = idint(thermo(13,id))
       tet0 = thermo(14,id)
       b0 = thermo(15,id)
       dd0 = thermo(16,id)
@@ -14629,25 +14629,25 @@ c                     pressure dependence of Tc (as modelled for cementite)
             tc1 = tc*dexp(vv*p)
          end if
 
-          t0 = t/tc1
+         t0 = t/tc1
 
-          if (pp.eq.0.28D0) then
+         ff = 0d0
+
+         if (pp.eq.0.28D0) then
 c                           fcc,hcp metals and cementite
 c                           for fcc-Fe beta is a negative number,
 c                           therefore, gmagn can't be calculated
 c                           dlog(<0)
 
-         if (t0.lt.1D0) then
+            if (t0.lt.1D0) then
                   ff = 1d0 - 0.8603387544D0/t0 - 
      #                0.1744912404D0*t0**3 - 
      #                0.7755166236D-2*t0**9 - 0.1744912404D-2*t0**15
-              else
+            else
                   ff = -0.4269022681D-1/t0**5 - 
      #                  0.1355245296D-2/t0**15 - 
      #                  0.2846015121D-3/t0**25
-              end if
-
-          gmagn0 = r*t*dlog(beta+1D0)*ff
+            end if
 
           else if (pp.eq.0.4D0) then
 c                           bcc metals
@@ -14661,10 +14661,10 @@ c                           bcc metals
      *                 0.2037241930D-2 /t0**15 - 
      *                 0.4278208053D-3/t0**25
              end if
-          gmagn0 = r*t*dlog(beta+1D0)*ff
+
           end if
 
-          gmagn=gmagn0
+          gmagn = r*t*dlog(beta+1D0)*ff
 
       end if
 
@@ -14857,7 +14857,7 @@ c----------------------------------------------------------------------
 c                             allocate coefficients for EoS
 c                             and magnetic term
       gam0 = thermo(12,id)
-      nn = thermo(13,id)
+      nn = idint(thermo(13,id))
       tet0 = thermo(14,id)
       b0 = thermo(15,id)
       dd0 = thermo(16,id)
@@ -18603,8 +18603,6 @@ c                                 prismatic + orphan vertices
 1120  format (/,'The failure rate during speciation (order-disorder) ',
      *        'calculations is ',f7.3,'%',/,'out of a total of ',f12.0,
      *        ' calculations.',/)
-1130  format (/,'Metastability filtering eliminated ',f7.3,'% of the ',
-     *        'trial compositions prior',/,'to optimization.',/)
 1140  format (/,'Average number of iterations per speciation ',
      *          'calculation:',f5.1,/)
 1150  format (/,2x,'Orphans',/,5x,

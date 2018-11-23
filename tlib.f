@@ -1296,12 +1296,6 @@ c                                 proportionality constant for shear modulus
 1090  format (/,'Warning: refinement_points must be ',
      *         ' >1 and <k5+2',/,'refinement_points will be',
      *         ' assigned its default value [',i2,'].',/)
-1100  format (/,'Error: data (',a
-     *       ,') follows the auto_refine keyword value '
-     *       ,'most probably',/,'you are using an obsolete copy of ',
-     *        'perplex_option.dat recopy or edit the file.',/)
-1110  format (/,'Warning: unrecognized option text: ',a,/,
-     *       'If the text is intentional, check spelling and case.',/) 
 1120  format (/,'Warning: the Perple_X option file: ',a,/,
      *       'was not found, default option values will be used.',/) 
 1130  format (/,'Reading Perple_X options from: ',a)
@@ -2300,8 +2294,8 @@ c---------------------------------------------------------------------
      *         'is inconsistent with',/,
      *         'this version of Perple_X. Update the file and/or '
      *         'Perple_X',/)
-4     format (/,'**error ver004** you must use ',a,' to analyze this ',
-     *        'type of calculation.',/)
+4     format (/,'**error ver004** you must use ',a,' to analyze this '
+     *         ,'type of calculation.',/)
 5     format (/,'**error ver005** too many ordered species (',i2,') in',
      *        ' solution model ',a,/,'increase dimension j3 (',i2,')',/)
 6     format (/,'**error ver006** fractionation path coordinate file: '
@@ -2495,7 +2489,7 @@ c---------------------------------------------------------------------
 75    format (/,'**error ver075** more than one solution model is ',
      *          'named ',a,/,'delete or rename the replicate models in',
      *          ' the solution model file.',/)
-76    format (/,'**error ver076** the ',a' solution model was not ',
+76    format (/,'**error ver076** the ',a,' solution model was not ',
      *        'reformulated correctly',/,'this error occurs because ',
      *        a,' has a logically inconsistent ordering scheme.',/,
      *        'To correct this error exclude either more or fewer ',a,
@@ -2793,9 +2787,9 @@ c----------------------------------------------------------------------
      *         'Perple_X',/)
 4     format (/,'**warning ver004** the data includes ',a,' values, '
      *      ,'probably because bad_number',/,'in perplex_option.dat = '
-     *      ,'NaN, these values will be replaced by zeros. To avoid ',/,
-     *       'this behavior set bad_number to a numeric value or use a',
-     *       ' plotting program capable',/,'of handling NaNs, e.g., ',
+     *      ,'NaN, these values will be replaced by zeros. To avoid ',/
+     *      ,'this behavior set bad_number to a numeric value or use a'
+     *      ,' plotting program capable',/,'of handling NaNs, e.g., ',
      *       'MatLab or PYWERAMI',/)
 5     format (/,'**warning ver005** fluid components are specified',
      *        ' as thermodynamic AND as either',/,'saturated phase',   
@@ -3011,7 +3005,7 @@ c----------------------------------------------------------------------
 89    format (//,'**warning ver089** BUILD you did not request',
      *        'plot file output.',/,' You will not be able to process',
      *        ' the results of the requested calculation.',//)
-90    format (/,'**warning ver090** optimization failed. '
+90    format (/,'**warning ver090** optimization failed. ',
      *        'Most probably, the possible ',
      *        'phases do not span',/,'the systems composition.',
      *        'In this case, add phases or modify the bulk ',
@@ -3067,7 +3061,7 @@ c----------------------------------------------------------------------
 177   format (/,'**warning ver177** Invalid fluid speciation. ',
      *          'Reducing speciation tolerance (',g14.6,') in ',
      *          'perplex_option.dat',/,'may resolve this problem',/)
-190   format (/,'**warning ver190** SMPLX failed to converge within ', 
+190   format (/,'**warning ver190** SMPLX failed to converge within ',
      *        i6,' iterations.',/,3x,'Probable cause: the possible ',
      *        'phases do not span the systems composition',/,3x,
      *        'To avoid this problem add phases or modify the bulk ',
@@ -4764,11 +4758,6 @@ c                                 file does not exist
 1080  format (/,'**warning ver191** no problem definition file named: ',
      *       a,/,'Run BUILD to create the file or change project names.'
      *       ,//,'Enter a different project name (y/n)?')
-1090  format (/,'The use_default_file option is set to T',/,
-     *        /,'The default_input_file name is:',a)
-1100  format (/,'**error ver191** no problem definition file named: ',
-     *       a,/,'check spelling and any path information specified by',
-     *           'default_input_file',/)
 
       end 
 

@@ -1,0 +1,35 @@
+99999            number of increments of z0 (column position) in perple_07 this parameter is set by the 1d_path keyword in perplex_option.dat
+500.             zbox, box size (m)
+0.35             gradient of independent variable with z (e.g. bar/m)
+
+0. .219680325e-5  -.2574734314e-10  .1106727779e-15 -.1630805883e-21  a0, a1, a2, a3 | for v2 = a(z0)*dz^2 + b(z0)*dz + c(z0)
+-.578257157e-1  .5757337815e-6  -.2372499384e-11  .3495079912e-17  b0, b1, b2, b3 | where a(z0) = a0 + a1*z0 + a2*z0^2 + a3*z0^3
+ 168.833        .104e-1         -.408942e-7       .574476e-13      c0, c1, c2, c3 |       b(z0) = b0 + b1*z0 + b2*z0^2 + b3*z0^3, etc
+
+25000                                                           thickness of mantle (m) 
+.0, .1e-2, .7075, .74e-1, .9711e-1, .8666, .527e-1, .92e-2, .92e-3, 1.271735000, .2e-2 losimag peridotite + 2 % water.
+
+0                   zero thickness layer indicates end of data.
+
+##################### COMMENTS BELOW HERE #####################################################
+
+1      2.165      0.105      7.421      0.777      1.019      9.095      0.553      0.092      0.010     14.429      0.021
+2      0.817      0.098      8.889      2.756      0.955      2.993      1.910      0.394      0.020     14.200      0.197
+3      1.499      0.687      7.690      3.080      1.407      1.638      2.320      0.677      0.124     14.113      0.196
+4      1.617      0.734     10.368      2.488      0.776      0.659      0.978      0.829      0.468     14.649      0.776
+
+if more than one lithology is entered, the molar compositions must define
+a comparable volume or mass. (the values used in this example are for constant 
+volume at ~600 K/30 kbar).
+
+the data for geothermal condition is a fit to the ruepke et al (2004, EPSL) 
+model for a 40 ma slab age and a subduction rate of 10 cm/y. the fit was
+obtained by fitting three geotherms at constant within-slab depth (dz = 0, 
+8, 25 km), the conditions along these geotherms where used to compute the
+coefficients for a quadratic function for temperature as in the maple worksheet
+t_z_10ma_10cm.mws
+
+t(k) = (-.1630805883e-21*z0m^3+.2196803250e-5-.2574734314e-10*z0m+.1106727779e-15*z0m^2)*dzm^2
++(-.5782571570e-1+.5757337815e-6*z0m+.3495079912e-17*z0m^3-.2372499384e-11*z0m^2)*dzm
++.5744760000e-13*z0m^3+168.8330000+.1040000000e-1*z0m-.4089420000e-7*z0m^2
+

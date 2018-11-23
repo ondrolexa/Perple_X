@@ -3616,7 +3616,7 @@ c                                 calculate hsmrk (log) fugacities:
      *        ') conditions are out of range for HSMRK',/,
      *        'your results may be incorrect.')
  
-99    end
+      end
  
       subroutine newrap (b,c,d,e,yz,t12,r)
 c----------------------------------------------------------------------

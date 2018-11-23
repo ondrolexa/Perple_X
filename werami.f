@@ -574,7 +574,12 @@ c                                 is the cumulative moles of aliquot.
       else if (icopt.eq.9) then 
 c                                 change sign on dz because of downward
 c                                 directed depth coordinate.
-         call fr2dpt (var(1),-var(2))
+         if (lopt(28)) then 
+            call flshpt (-var(2))
+         else 
+            call fr2dpt (var(1),-var(2))
+         end if
+
          var(3) = v(1)
          var(4) = v(2)
 

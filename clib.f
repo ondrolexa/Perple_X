@@ -2608,8 +2608,8 @@ c----------------------------------------------------------------------
       if (fileio) then 
 c                                convert p0-dz coordinate to nodal 
 c                                values
-         i = (p0 - vmin(1))/dv(1) + 1
-         j = ncol - int(dz/zbox)
+         i = idint((p0 - vmin(1))/dv(1)) + 1
+         j = ncol - idint(dz/zbox)
 
          v(1) = vn((i-1)*ncol + j, 1)
          v(2) = vn((i-1)*ncol + j, 2)
@@ -2669,6 +2669,31 @@ c                                 set the dependent variable
      *        +  c0 + c1*z0 + c2*z0**2 + c3*z0**3
       end if 
                        
+      end 
+
+
+      subroutine flshpt (dz)
+c----------------------------------------------------------------------
+c subroutine to set p-t variables from i-j coordinates in flush
+c calculations, called by VERTEX and WERAMI
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      double precision dz
+
+      double precision vmax,vmin,dv
+      common/ cst9  /vmax(l2),vmin(l2),dv(l2)
+
+      double precision v,tr,pr,r,ps
+      common/ cst5  /v(l2),tr,pr,r,ps
+c----------------------------------------------------------------------
+c                                 set the independent variable
+      v(1) = 43d3 + dz * 0.35   
+c                                 set the dependent variable
+      v(2) = 973.15 + dz * 0.002
+
       end 
    
       subroutine getpp (id)
@@ -3664,7 +3689,5 @@ c                                 coordinate file.
 
 1000  format (/,'**error ver635** Coordinate file ',a,/,
      *       'is inconsistent with plot file, re-run VERTEX.',/)
-3000  format (/,'**warning ver636** For this computational mode ',
-     *          'interpolation of physical',/,'properties has been ',
-     *          'turned OFF.',/)
+
       end
