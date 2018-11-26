@@ -2882,9 +2882,11 @@ c----------------------------------------------------------------------
       include 'perplex_parameters.h'
 
       integer loopx,loopy,jinc,i,j,jst,kst,kd,ltic,iend,lun,jgrd(l7),
-     *        ind1, ind2
+     *        ind1, ind2, ier
 
-      character string*(lchar), name*170, text*3
+      logical ext 
+
+      character string*(lchar), name*170, text*3, rec*90
 
       integer igrd
       common/ cst311 /igrd(l7,l7)
@@ -2908,40 +2910,52 @@ c----------------------------------------------------------------------
       if (lun.ne.n4) then 
 c                                 write interim result file list
          call mertxt (name,prject,'.irf',0)
-         open (lun, file = name, position = 'append')
+         inquire (lun, opened = ext)
 
-         if (refine) then 
-            ind1 = 1
-         else 
-            ind1 = 0
-         end if 
+         open (lun, file = name, iostat = ier, position = 'append')
 
-         write (lun,*) ind1, ind2
+         if (ier.eq.0) then 
 
-         close (lun)
+            if (refine) then 
+               ind1 = 1
+            else 
+               ind1 = 0
+            end if 
+
+            write (lun,*) ind1, ind2
+
+            close (lun)
+
 c                                 writing interim blk file
-         write (text,'(a,i1,i1)') '_',ind1, ind2
-         call mertxt (name,prject,text,0)
-         call mertxt (name,name,'.blk',0)
+            write (text,'(a,i1,i1)') '_',ind1, ind2
+            call mertxt (name,prject,text,0)
+            call mertxt (name,name,'.blk',0)
 
-         open (lun, file = name)
+            open (lun, file = name)
 
-         rewind (n5)
+            rewind (n5)
 c                                 the length of text should be able to 
 c                                 handle format 1010 in outbl1
-         do
+            do
 
-            read (n5,'(a)',end=99) name
-            write (lun,'(a)') name
+               read (n5,'(a)',end=99) name
+               write (lun,'(a)') name
 
-         end do
+            end do
 
-99       close (lun)
-         backspace (n5)
+99          close (lun)
+            backspace (n5)
 c                                 and the interim plt file
-         call mertxt (name,prject,text,0)
-         call mertxt (name,name,'.plt',0)
-         open (lun, file = name)
+            call mertxt (name,prject,text,0)
+            call mertxt (name,name,'.plt',0)
+            open (lun, file = name)
+
+         else 
+
+            write (*,1000)
+            return
+
+         end if
 
       end if
 
@@ -3009,6 +3023,10 @@ c                                 write assemblages to print file
          end do
 
       end if
+
+1000  format (/,'**warning ver999** OS fileio error, the irf file is'
+     *        ,' corrupt and interim results',/,'for this calculation'
+     *        ,' will be unreadable unless the irf file is edited',/)
 
       end
 

@@ -1284,7 +1284,7 @@ c-----------------------------------------------------------------------
 
       integer i, ids
 
-      logical ok
+      logical ok, liq
 
       external endvol
 c                                 bookkeeping variables
@@ -1316,6 +1316,7 @@ c                                 bookkeeping variables
 c-----------------------------------------------------------------------
   
       ok = .true.
+      liq = .false. 
 
       mu = 0d0
       mut = 0d0
@@ -1354,17 +1355,19 @@ c                                 partial molar volumes for volume fractions
 
                   if (.not.ok) exit
 
+                  if (pmu.eq.0d0) liq = .true.
+
                   vf = p0a(i) * v0(i) / v
 
-                  mu = mu + vf * pmu
-                  mut = mut + vf * pmut
-                  mup = mup + vf * pmup
+                  mu = mu + vf / pmu
+                  mut = mut + vf / pmut
+                  mup = mup + vf / pmup
 
                   if (.not.pmod(ids)) cycle 
 
-                  ks = ks + vf * pks
-                  kst = kst + vf * pkst
-                  ksp = ksp + vf * pksp
+                  ks = ks + vf / pks
+                  kst = kst + vf / pkst
+                  ksp = ksp + vf / pksp
 
                end do
 
@@ -1395,21 +1398,45 @@ c                                 partial molar volumes for volume fractions
 
                   if (.not.ok) exit
 
+                  if (pmu.eq.0d0) liq = .true.
+
                   vf = p0a(i) * v0(i) / v
 
-                  mu  = mu + vf * pmu
-                  mut = mut + vf * pmut
-                  mup = mup + vf * pmup
+                  mu  = mu + vf / pmu
+                  mut = mut + vf / pmut
+                  mup = mup + vf / pmup
 
                   if (.not.pmod(ids)) cycle
 
-                  ks  = ks + vf * pks
-                  kst = kst + vf * pkst
-                  ksp = ksp + vf * pksp
+                  ks  = ks + vf / pks
+                  kst = kst + vf / pkst
+                  ksp = ksp + vf / pksp
 
                end do
- 
-            end if 
+
+            end if
+
+            if (.not.liq) then
+
+               mu  = 1d0 / mu
+               mut = 1d0 / mut
+               mup = 1d0 / mup
+
+               if (pmod(ids)) then 
+
+                  ks  = 1d0 / ks
+                  kst = 1d0 / kst
+                  ksp = 1d0 / ksp
+
+               end if
+
+            else
+
+               mu  = 0d0
+               mut = 0d0
+               mup = 0d0
+
+            end if
 
             if (mu.lt.0d0) then 
                mu = nopt(7)
@@ -1430,9 +1457,9 @@ c                                 partial molar volumes for volume fractions
 
             ok = .false.
 
-         end if 
+         end if
 
-      end if  
+      end if
 
       end
 
