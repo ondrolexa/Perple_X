@@ -19472,9 +19472,9 @@ c----------------------------------------------------------------------
       integer iam
       common/ cst4 /iam
 
-      logical fileio
+      logical fileio, flsh
       integer ncol, nrow
-      common/ cst226 /ncol,nrow,fileio
+      common/ cst226 /ncol,nrow,fileio,flsh
 c------------------------------------------------------------------------
 c                                 generate a file name and
 c                                 open the file on n5

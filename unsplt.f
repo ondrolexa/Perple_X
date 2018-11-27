@@ -60,9 +60,9 @@ c----------------------------------------------------------------------
       integer iam
       common/ cst4 /iam
 
-      logical fileio
+      logical fileio, flsh
       integer ncol, nrow
-      common/ cst226 /ncol,nrow,fileio
+      common/ cst226 /ncol,nrow,fileio,flsh
 
       character*100 prject,tfname
       common/ cst228 /prject,tfname

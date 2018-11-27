@@ -41,9 +41,9 @@ c----------------------------------------------------------------------
       integer iam
       common/ cst4 /iam
 
-      logical fileio
+      logical fileio, flsh
       integer ncol, nrow
-      common/ cst226 /ncol,nrow,fileio
+      common/ cst226 /ncol,nrow,fileio,flsh
 
       integer icps, jcx, jcx1, kds
       logical stol, savg, spec
@@ -520,6 +520,8 @@ c---------------------------------------------------------------------
 
       integer ind, j
 
+      logical flsh
+
       double precision v,tr,pr,r,ps
       common/ cst5  /v(l2),tr,pr,r,ps
 
@@ -541,9 +543,9 @@ c---------------------------------------------------------------------
       double precision vip
       common/ cst28 /vip(l2,k2)
 
-      logical fileio
+      logical fileio, flsh
       integer ncol, nrow
-      common/ cst226 /ncol,nrow,fileio
+      common/ cst226 /ncol,nrow,fileio,flsh
 
       integer iopt
       logical lopt
@@ -574,11 +576,7 @@ c                                 is the cumulative moles of aliquot.
       else if (icopt.eq.9) then 
 c                                 change sign on dz because of downward
 c                                 directed depth coordinate.
-         if (lopt(28)) then 
-            call flshpt (-var(2))
-         else 
-            call fr2dpt (var(1),-var(2))
-         end if
+         call fr2dpt (var(1),-var(2))
 
          var(3) = v(1)
          var(4) = v(2)

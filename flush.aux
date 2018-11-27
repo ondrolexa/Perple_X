@@ -1,10 +1,7 @@
-99999            number of increments of z0 (column position) in perple_07 this parameter is set by the 1d_path keyword in perplex_option.dat
+.false.          pzfunc - before 6.8.5 this was gloopy 
+.true.           frac2d if false, flush if true, added 6.8.5
 500.             zbox, box size (m)
 0.35             gradient of independent variable with z (e.g. bar/m)
-
-0. .219680325e-5  -.2574734314e-10  .1106727779e-15 -.1630805883e-21  a0, a1, a2, a3 | for v2 = a(z0)*dz^2 + b(z0)*dz + c(z0)
--.578257157e-1  .5757337815e-6  -.2372499384e-11  .3495079912e-17  b0, b1, b2, b3 | where a(z0) = a0 + a1*z0 + a2*z0^2 + a3*z0^3
- 168.833        .104e-1         -.408942e-7       .574476e-13      c0, c1, c2, c3 |       b(z0) = b0 + b1*z0 + b2*z0^2 + b3*z0^3, etc
 
 25000                                                           thickness of mantle (m) 
 .0, .1e-2, .7075, .74e-1, .9711e-1, .8666, .527e-1, .92e-2, .92e-3, 1.271735000, .2e-2 losimag peridotite + 2 % water.
@@ -22,7 +19,14 @@ if more than one lithology is entered, the molar compositions must define
 a comparable volume or mass. (the values used in this example are for constant 
 volume at ~600 K/30 kbar).
 
-the data for geothermal condition is a fit to the ruepke et al (2004, EPSL) 
+this data would be read after the gradients if pzfunc is .true.:
+
+.219680325e-5  -.2574734314e-10  .1106727779e-15 -.1630805883e-21  a0, a1, a2, a3 | for v2 = a(z0)*dz^2 + b(z0)*dz + c(z0)
+-.578257157e-1  .5757337815e-6  -.2372499384e-11  .3495079912e-17  b0, b1, b2, b3 | where a(z0) = a0 + a1*z0 + a2*z0^2 + a3*z0^3
+ 168.833        .104e-1         -.408942e-7       .574476e-13      c0, c1, c2, c3 |       b(z0) = b0 + b1*z0 + b2*z0^2 + b3*z0^3, etc
+
+
+the data above is for geothermal condition is a fit to the ruepke et al (2004, EPSL) 
 model for a 40 ma slab age and a subduction rate of 10 cm/y. the fit was
 obtained by fitting three geotherms at constant within-slab depth (dz = 0, 
 8, 25 km), the conditions along these geotherms where used to compute the

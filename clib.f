@@ -368,9 +368,9 @@ c-----------------------------------------------------------------------
 
       double precision dip
 
-      logical fileio
+      logical fileio, flsh
       integer ncol, nrow
-      common/ cst226 /ncol,nrow,fileio
+      common/ cst226 /ncol,nrow,fileio,flsh
 
       character*100 cfname
       common/ cst227 /cfname
@@ -1908,9 +1908,9 @@ c---------------------------------------------------------------------
       integer isec,icopt,ifull,imsg,io3p
       common/ cst103 /isec,icopt,ifull,imsg,io3p
 
-      logical fileio
+      logical fileio, flsh
       integer ncol, nrow
-      common/ cst226 /ncol,nrow,fileio
+      common/ cst226 /ncol,nrow,fileio,flsh
 
       integer iam
       common/ cst4 /iam
@@ -2424,15 +2424,15 @@ c-----------------------------------------------------------------------
       common/ cst312 /jlow,jlev,loopx,loopy,jinc 
 
       logical pzfunc
-      integer gloopy,ilay,irep
+      integer ilay,irep
       double precision a0,a1,a2,a3,b0,b1,b2,b3,c0,c1,c2,c3,dv1dz,
      *               zbox,iblk
       common/ cst66 /a0,a1,a2,a3,b0,b1,b2,b3,c0,c1,c2,c3,dv1dz,zbox,
-     *               iblk(maxlay,k5),gloopy,ilay,irep(maxlay),pzfunc
+     *               iblk(maxlay,k5),ilay,irep(maxlay),pzfunc
 
-      logical fileio
+      logical fileio, flsh
       integer ncol, nrow
-      common/ cst226 /ncol,nrow,fileio
+      common/ cst226 /ncol,nrow,fileio,flsh
 
       character*100 cfname
       common/ cst227 /cfname
@@ -2442,22 +2442,20 @@ c                                 of type aux
       call mertxt (name,prject,'.aux',0)
       open (n8,file=name,status='old',iostat=ier)
 
+      if (ier.ne.0) call error (51,zbox,ilay,name)
+
       call mertxt (name,prject,'.fld',0)
       open (n12,file=name)
-
-      if (ier.ne.0) call error (51,zbox,gloopy,name) 
 c                                 set the number of independent variables
 c                                 to 1 (the independent path variable must
 c                                 be variable jv(1), and the dependent path
 c                                 variable must be jv(2), the path variables
 c                                 can only be pressure and temperature
       ipot = 1
-c                                 in old versions this was the number of steps 
-c                                 along the path, in 07 loopy is now set via
-c                                 jlow/1dpath (above). gloopy is not used as a 
-c                                 flag if top layer composition is to be refreshed
-c                                 after each step (gloopy=999).
-      read (n8,*) gloopy
+
+      read (n8,*) pzfunc
+
+      read (n8,*) flsh
 c                                 thickness of a box in column
       read (n8,*) zbox 
 c                                 gradient in variable jv(1) with z, jv(1)
@@ -2465,12 +2463,14 @@ c                                 is the independent variable, for subduction
 c                                 this is logically pressure, i.e.,
 c                                 dp(bar)/dz(m)
       read (n8,*) dv1dz 
+
+      if (pzfunc) then 
 c                                 now we need a path function for the dependent
 c                                 variable, here we take a function defined in
 c                                 terms of the absolute depth of the top of the
 c                                 column (z0) and the relative depth (dz) within
 c                                 the column
-c                                 
+
 c                                 v2 = a(z0)*dz^2 + b(z0)*dz + c(z0)
 
 c                                 e.g., T(K) =  a(z0)*dz^2 + b(z0)*dz + c(z0)
@@ -2478,14 +2478,10 @@ c                                 e.g., T(K) =  a(z0)*dz^2 + b(z0)*dz + c(z0)
 c                                 where a(z0) = a0 + a1*z0 + a2*z0^2 + a3*z0^3 + ...
 c                                 b(z0) = b0 + b1*z0 + b2*z0^2 + b3*z0^3 + ...
 c                                 c(z0) = c0 + c1*z0 + c2*z0^2 + c3*z0^3 + ...
-      read (n8,*) a0, a1, a2, a3
-      read (n8,*) b0, b1, b2, b3
-      read (n8,*) c0, c1, c2, c3
-c                                 use a0 value as flag for internal pzfunc
-      if (a0.eq.0d0) then
-         pzfunc = .true.
-      else 
-         pzfunc = .false.
+         read (n8,*) a0, a1, a2, a3
+         read (n8,*) b0, b1, b2, b3
+         read (n8,*) c0, c1, c2, c3
+
       end if 
 c                                 get the initial global composition array
 c                                 consisting of ibox compositions defined 
@@ -2585,19 +2581,19 @@ c----------------------------------------------------------------------
       double precision p0, z0, dz, z2, z3, z4, z5, z6, t0, t1, t2, a, b
 
       logical pzfunc
-      integer gloopy,ilay,irep
+      integer ilay,irep
       double precision a0,a1,a2,a3,b0,b1,b2,b3,c0,c1,c2,c3,dv1dz,
      *               zbox,iblk
       common/ cst66 /a0,a1,a2,a3,b0,b1,b2,b3,c0,c1,c2,c3,dv1dz,zbox,
-     *               iblk(maxlay,k5),gloopy,ilay,irep(maxlay),pzfunc
+     *               iblk(maxlay,k5),ilay,irep(maxlay),pzfunc
 
       integer irct,ird
       double precision vn
       common/ cst31 /vn(k2,k7),irct,ird
 
-      logical fileio
+      logical fileio, flsh
       integer ncol, nrow
-      common/ cst226 /ncol,nrow,fileio 
+      common/ cst226 /ncol,nrow,fileio,flsh
 
       double precision vmax,vmin,dv
       common/ cst9  /vmax(l2),vmin(l2),dv(l2)  
@@ -2658,6 +2654,11 @@ c                                t0, t1 deep
 
          v(2) = a*(dz/1d3)**2 + b*(dz/1d3) + t0
 
+      else if (flsh) then 
+
+         v(1) = 43d3 + dz * 0.35
+         v(2) = 973.15 + dz * 0.002
+
       else 
 c                                 convert to depth at top of column
          z0 = p0/dv1dz
@@ -2669,33 +2670,8 @@ c                                 set the dependent variable
      *        +  c0 + c1*z0 + c2*z0**2 + c3*z0**3
       end if 
                        
-      end 
+      end
 
-
-      subroutine flshpt (dz)
-c----------------------------------------------------------------------
-c subroutine to set p-t variables from i-j coordinates in flush
-c calculations, called by VERTEX and WERAMI
-c----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      double precision dz
-
-      double precision vmax,vmin,dv
-      common/ cst9  /vmax(l2),vmin(l2),dv(l2)
-
-      double precision v,tr,pr,r,ps
-      common/ cst5  /v(l2),tr,pr,r,ps
-c----------------------------------------------------------------------
-c                                 set the independent variable
-      v(1) = 43d3 + dz * 0.35   
-c                                 set the dependent variable
-      v(2) = 973.15 + dz * 0.002
-
-      end 
-   
       subroutine getpp (id)
 c-----------------------------------------------------------------------
 c getpp computes the amounts of the indepdendent edmembers of a reciprocal
@@ -2886,7 +2862,7 @@ c----------------------------------------------------------------------
 
       logical ext 
 
-      character string*(lchar), name*170, text*3, rec*90
+      character string*(lchar), name*170, text*3
 
       integer igrd
       common/ cst311 /igrd(l7,l7)
@@ -3575,9 +3551,9 @@ c----------------------------------------------------------------------
       character*100 cfname
       common/ cst227 /cfname
 
-      logical fileio
+      logical fileio, flsh
       integer ncol, nrow
-      common/ cst226 /ncol,nrow,fileio
+      common/ cst226 /ncol,nrow,fileio,flsh
 
       integer idstab,nstab,istab
       common/ cst34 /idstab(i11),nstab(i11),istab

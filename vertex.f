@@ -198,8 +198,9 @@ c                                 0-d fractionation/titration
 
          else if (icopt.eq.9) then 
 c                                 fractionation on a 2-d path (space-time) 
-c            call frac2d (output)
-            call flsh (output)
+            call frac2d (output)
+
+c            call flsh (output)
 
          else      
 c                                 disabled stability field calculation
@@ -265,9 +266,9 @@ c-----------------------------------------------------------------------
       integer io3,io4,io9
       common / cst41 /io3,io4,io9
 
-      logical fileio
+      logical fileio, flsh
       integer ncol, nrow
-      common/ cst226 /ncol,nrow,fileio
+      common/ cst226 /ncol,nrow,fileio,flsh
 
       double precision dcomp
       common/ frct2 /dcomp(k5)
@@ -508,9 +509,9 @@ c-----------------------------------------------------------------------
       integer io3,io4,io9
       common / cst41 /io3,io4,io9
 
-      logical fileio
+      logical fileio, flsh
       integer ncol, nrow
-      common/ cst226 /ncol,nrow,fileio
+      common/ cst226 /ncol,nrow,fileio,flsh
 
       double precision dcomp
       common/ frct2 /dcomp(k5)
@@ -679,15 +680,15 @@ c-----------------------------------------------------------------------
       common/ cst74 /iap(k2),ibulk
 
       logical pzfunc
-      integer gloopy,ilay,irep
+      integer ilay,irep
       double precision a0,a1,a2,a3,b0,b1,b2,b3,c0,c1,c2,c3,dv1dz,
      *               zbox,iblk
       common/ cst66 /a0,a1,a2,a3,b0,b1,b2,b3,c0,c1,c2,c3,dv1dz,zbox,
-     *               iblk(maxlay,k5),gloopy,ilay,irep(maxlay),pzfunc
+     *               iblk(maxlay,k5),ilay,irep(maxlay),pzfunc
 
-      logical fileio
+      logical fileio, flsh
       integer ncol, nrow
-      common/ cst226 /ncol,nrow,fileio
+      common/ cst226 /ncol,nrow,fileio,flsh
 
       character vnm*8
       common/ cxt18a /vnm(l3)  
@@ -715,6 +716,10 @@ c-----------------------------------------------------------------------
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
+      integer icont
+      double precision dblk,cx
+      common/ cst314 /dblk(3,k5),cx(2),icont
+
       logical first
 
       save first, vox, iox
@@ -724,6 +729,10 @@ c-----------------------------------------------------------------------
 c                                 initialization
       iasct = 0 
       ibulk = 0 
+c                                 flushing model
+      flsh = .true.
+c                                 fraction of the bulk aliquot to be added
+      nopt(36) = 0.001
 c                                 set the number of independent variables
 c                                 to 1 (the independent path variable must
 c                                 be variable jv(1), and the dependent path
@@ -828,14 +837,27 @@ c                                 check resolution dependent dimensions
 c                                 call initlp to initialize arrays 
 c                                 for optimization.
       call initlp 
-c                                 initialize path variables
-      call setvar 
+c                                 initialize path variables, this
+c                                 probably does nothing
+      call setvar
 
-      dv(jv(1)) = (vmax(jv(1)) - vmin(jv(1)))/(nrow-1)
+      if (flsh) then
+
+         vnm(1) = 'aliquot'
+         vnm(2) = 'dz(m)  '
+         vmin(1) = 0d0
+         dv(1) = zbox
+
+      else
+c                                  frac2d calculations read p0 from 
+c                                  the input file, this causes all sorts
+c                                  of messiness also for titrat.
+         dv(jv(1)) = (vmax(jv(1)) - vmin(jv(1)))/(nrow-1)
+         vnm(1) = 'P0'
+      end if 
 c                                 ---------------------------
 c                                 set up stuff for subduction model
       two(1) = nrow
-      vnm(1) = 'P0'
 c                                 number of variables in table
       icp1 = icp+1 
       iprop = 2*icp1
@@ -880,8 +902,10 @@ c                                 number of variables in table
 
       anneal = .true.
 
-      if (anneal) then 
-
+      if (anneal.and..not.flsh) then 
+c                                 annealing removes the fractionated phase at
+c                                 the initial condition and renormalizes to 1000 g
+c                                 of material.
          p0 = vmin(1)
 
          do k = 1, ncol
@@ -955,7 +979,7 @@ c DEBUG
          do i = 1, ilay
             write (*,'(i1,1x,12(f10.3,1x))') i,(lcomp(j,i),j=1,icp)
          end do
-
+c                                 end of annealling section.
       end if
 c                                 nrow is the number of steps along the subduction
 c                                 path:
@@ -984,7 +1008,7 @@ c                                 now put the bulk composition from the global
 c                                 array into the local array and get the total
 c                                 number of moles (ctotal)
             ctotal = 0d0
-c                                 get total moles to compute mole fractions             
+c                                 get total moles to compute mole fractions
             do i = 1, icp+1
                dcomp(i) = 0d0
                cblk(i) = gblk(k,i)
@@ -1070,12 +1094,6 @@ c                                 cumulative change
                end if
 
             end do
-c                                 reset initialize top layer if gloopy = 999
-            if (gloopy.eq.999.and.k.gt.ncol-irep(ilay)) then 
-               do i = 1, icp
-                  gblk(k,i) = iblk(ilay,i)
-               end do 
-            end if 
 c                                 end of the k index loop
          end do 
 
@@ -1088,6 +1106,12 @@ c                                 average layer compositions
          end do
 
          write (*,'(/)')
+c                                 add the aliquot to the base of the column
+         if (flsh) then 
+            do i = 1, icp 
+               gblk(1,i) = gblk(1,i) + nopt(36) * dblk(1,i)
+            end do
+         end if 
 c                                 end of j index loop
       end do 
 
@@ -1104,422 +1128,6 @@ c                                 end of j index loop
      *       ,i3,' column ',i3,/,' p-t-c ',2(g14.7,1x),/,12(g14.7,1x))
 
       end
-
-      subroutine flsh (output)
-c-----------------------------------------------------------------------
-c a subprogram - simulate metasomatism by adding an aliquot of "fluid" 
-c to the base of a 1d column.
-c-----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      integer maxbox,maxlay
-
-      parameter (maxbox=1760,maxlay=6)
-
-      character*100 n6name, n5name
-
-      integer i,j,k,l,m,idead,two(2),lun,iox,itop(maxlay),icp1,
-     *        layer(maxbox)
-
-      double precision gblk(maxbox,k5),cdcomp(k5,maxlay),vox(k5),
-     *                 lcomp(k5,maxlay)
-
-      logical output
-
-      double precision atwt
-      common/ cst45 /atwt(k0)
-
-      double precision p0, dz
-      common/ cxt46 /p0, dz
-
-      integer npt,jdv
-      logical fulrnk
-      double precision cptot,ctotal
-      common/ cst78 /cptot(k19),ctotal,jdv(k19),npt,fulrnk
-
-      integer icomp,istct,iphct,icp
-      common/ cst6  /icomp,istct,iphct,icp
-
-      integer io3,io4,io9
-      common / cst41 /io3,io4,io9
-
-      double precision a,b,c
-      common/ cst313 /a(k5,k1),b(k5),c(k1)
-
-      double precision dcomp
-      common/ frct2 /dcomp(k5)
-
-      integer idasls,iavar,iasct,ias
-      common/ cst75  /idasls(k5,k3),iavar(3,k3),iasct,ias
-
-      integer ipot,jv,iv
-      common/ cst24 /ipot,jv(l2),iv(l2)
-
-      double precision vmax,vmin,dv
-      common/ cst9  /vmax(l2),vmin(l2),dv(l2)  
-
-      integer jbulk
-      double precision cblk
-      common/ cst300 /cblk(k5),jbulk
-
-      integer jlow,jlev,loopx,loopy,jinc
-      common/ cst312 /jlow,jlev,loopx,loopy,jinc 
-
-      integer iap,ibulk
-      common/ cst74 /iap(k2),ibulk
-
-      logical pzfunc
-      integer gloopy,ilay,irep
-      double precision a0,a1,a2,a3,b0,b1,b2,b3,c0,c1,c2,c3,dv1dz,
-     *               zbox,iblk
-      common/ cst66 /a0,a1,a2,a3,b0,b1,b2,b3,c0,c1,c2,c3,dv1dz,zbox,
-     *               iblk(maxlay,k5),gloopy,ilay,irep(maxlay),pzfunc
-
-      logical fileio
-      integer ncol, nrow
-      common/ cst226 /ncol,nrow,fileio
-
-      character vnm*8
-      common/ cxt18a /vnm(l3)  
-
-      integer inv
-      character dname*14, title*162
-      common/ cst76 /inv(i11),dname(i11),title
-
-      character*14 tname
-      integer kop,kcx,k2c,iprop
-      logical kfl, tirst
-      double precision prop,prmx,prmn
-      common/ cst77 /prop(i11),prmx(i11),prmn(i11),
-     *               kop(i11),kcx(i11),k2c(i11),iprop,
-     *               tirst,kfl(i11),tname
-
-      character cname*5
-      common/ csta4  /cname(k5)
-
-      integer icont
-      double precision dblk,cx
-      common/ cst314 /dblk(3,k5),cx(2),icont
-
-      double precision v,tr,pr,r,ps
-      common/ cst5  /v(l2),tr,pr,r,ps
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
-      logical first
-
-      save first, vox, iox
-
-      data first/.true./
-c-----------------------------------------------------------------------
-c                                 initialization
-      iasct = 0 
-      ibulk = 0 
-c                                 set the number of independent variables
-c                                 to 1 (the independent path variable must
-c                                 be variable jv(1), and the dependent path
-c                                 variable must be jv(2), the path variables
-c                                 can only be pressure and temperature
-      ipot = 1
-
-      if (first) then 
-c                                 set first to prevent re-reading of the 
-c                                 input in auto_refine                                
-         first = .false.
-c                                 get the phase to be fractionated
-         call frname 
-c                                 check for consistent input if fileio
-         if (fileio) then 
-
-            if (jlow.ne.nrow) then 
-               write (*,'(2(/,a,i4,a,a))') 
-     *         '** error ** the number of columns (',nrow,
-     *         ') specified in the coordinate file must equal the',
-     *         'number of z increments (',jlow,
-     *        ')specified in the aux file.'
-              
-              stop
-
-            end if
-
-         else 
-c                                 jlow set by 1dpath keyword in perplex_option.dat
-            nrow = jlow
-
-         end if
-c                                 work out the oxide stoichiometries for excess O 
-c                                 computation
-         iox = 0 
-
-         do i = 1, icp
-            if (cname(i).eq.'C') then 
-               vox(i) = 1d0
-            else if (cname(i).eq.'H2') then 
-               vox(i) = 0.5d0
-            else if (cname(i).eq.'Si') then 
-               vox(i) = 1d0
-            else if (cname(i).eq.'Al') then 
-               vox(i) = 0.75d0
-            else if (cname(i).eq.'Fe') then 
-               vox(i) = 1d0
-            else if (cname(i).eq.'Mg') then 
-               vox(i) = 1d0
-            else if (cname(i).eq.'Ca') then 
-               vox(i) = 1d0
-            else if (cname(i).eq.'Na') then 
-               vox(i) = 0.25d0
-            else if (cname(i).eq.'K') then 
-               vox(i) = 0.25d0
-            else if (cname(i).eq.'S2') then 
-               vox(i) = 2d0
-            else if (cname(i).eq.'O2') then 
-               vox(i) = 0d0
-               iox = i
-            else 
-               write (*,*) 'Unidentified component for O deficit ',
-     *                     'computation: ',cname(i)
-            end if 
-         end do 
-      else 
-c                                 NOTE if not fileio, then jlow must not change
-         if (.not.fileio)  nrow = jlow
-
-      end if
-c                                 check resolution dependent dimensions
-      if (nrow*ncol.gt.k2) then
-         write (*,*) ' parameter k2 must be >= ncol*nrow'
-         write (*,*) ' increase parameter k2 for routine DUMMY1'
-         write (*,*) ' or increase box size (zbox) or decrease'
-         write (*,*) ' number of path increments (nrow) or try'
-         write (*,*) ' the large parameter version of VERTEX'
-         write (*,*) ' k2 = ',k2 
-         write (*,*) ' ncol * nrow = ',ncol*nrow
-         stop
-      end if 
-
-      ncol = 0 
-
-      do i = 1, ilay
-
-         do j = 1, irep(i)
-
-            ncol = ncol + 1
-
-            layer(ncol) = i
-
-            do k = 1, icp 
-               gblk(ncol,k) = iblk(i,k)
-            end do
-
-            itop(i) = ncol
-
-         end do
-
-      end do
-c                                 call initlp to initialize arrays 
-c                                 for optimization.
-      call initlp 
-c                                 initialize path variables
-      call setvar 
-
-      dv(jv(1)) = (vmax(jv(1)) - vmin(jv(1)))/(nrow-1)
-c                                 ---------------------------
-c                                 set up stuff for subduction model
-      two(1) = nrow
-      vnm(1) = 'aliquot'
-c                                 number of variables in table
-      icp1 = icp+1 
-      iprop = 2*icp1
-      
-      do j = 1, icp 
-         write (dname(j),'(a14)') cname(j)
-         write (dname(j+icp1),'(a14)') cname(j)//'_{cum}'
-      end do 
-
-      dname(icp1) = 'O2_{def}'
-      dname(2*icp1) = 'O2_{cum-def}'
-
-      lun = n0 + 100
-c                                 initialization for the top of
-c                                 each layer
-      write (*,'(/)')
-
-      do j = 1, ilay
-
-         do i = 1, icp1
-            lcomp(i,j) = 0d0 
-            cdcomp(i,j) = 0d0
-         end do 
-
-         write (*,'(a,i1,a,f9.3)') 'The top of layer ',j,
-     *                 ' is at z(m) = ',(ncol - itop(j)) * zbox
-
-         write (n5name,'(a,i1)') '_cumulative_change_layer_',j
-         call tabhed (lun + j,vmin(1),dv(1),two,1,n5name,n6name)
-
-      end do
-
-c                                 number of variables in table
-      iprop = icp
-
-      do j = 1, ilay
-         write (n5name,'(a,i1)') '_average_comp_layer_',j
-         call tabhed (lun + ilay + j,vmin(1),dv(1),two,1,n5name,n6name)
-      end do
-
-      write (*,'(/)')
-c                                 nrow is the number of aliquots
-      do j = 1, nrow
-c                                 initialize avg layer comp
-         do l = 1, ilay
-            do m = 1, icp
-               lcomp(m,l) = 0d0
-            end do
-         end do
-
-         write (*,*) '##########################################'
-         write (*,'(/,a,i4,a,i4/)') 'Column ',j,' of ',nrow
-         write (*,*) '##########################################'
-c                                 for each box in our column compute phase 
-c                                 relations
-         do k = 1, ncol
-c                                 k-loop varies depth within the column (dz)
-            dz = k * zbox
-c                                 set the p-t conditions
-            call flshpt (dz)
-c                                 now put the bulk composition from the global
-c                                 array into the local array and get the total
-c                                 number of moles (ctotal)
-            ctotal = 0d0
-c                                 get total moles to compute mole fractions             
-            do i = 1, icp+1
-               dcomp(i) = 0d0
-               cblk(i) = gblk(k,i)
-c                                 apply the zero_bulk filter only to the working 
-c                                 composition, this allows near zero components to 
-c                                 accumulate without destabilizing the optimization
-               if (cblk(i).lt.nopt(11)) cblk(i) = 0d0
-
-               ctotal = ctotal + cblk(i)
-
-            end do
-
-            do i = 1, icp 
-               b(i) = cblk(i)/ctotal
-            end do
-c                                 lpopt does the minimization and outputs
-c                                 the results to the print file.
-            if (io3.eq.0) write (n3,*) 'step ',j,' on path, box ',k
-
-            call lpopt (j,k,idead,output)
-
-            if (idead.eq.101) then 
-
-               write (*,*) 'orca pa duddle ',j,k
-
-            else if (idead.ne.0) then 
-c                                 write failure info to fld file:
-               write (n12,2000) p0,dz,layer(k),k,j,v(1),v(2),
-     *                          (cblk(i),i=1,icp)
-               write (n12,2010) (itop(i),i=1,ilay)
-
-               write (*,2000) p0,dz,layer(k),k,j,v(1),v(2),
-     *                        (cblk(i),i=1,icp)
-               write (*,2010) (itop(i),i=1,ilay)
-
-             else 
-
-               write (n12,*) 'good'
-               write (n12,2000) p0,dz,layer(k),k,j,v(1),v(2),
-     *                          (cblk(i),i=1,icp)
-               write (n12,2010) (itop(i),i=1,ilay)
-
-            end if 
-
-            call fractr (idead,output)
-c                                 at this point we've computed the stable
-c                                 assemblage at each point in our column
-c                                 and could do mass transfer, etc etc 
-c                                 here we'll simply fractionate the fluid 
-c                                 phase
-            if (iox.ne.0) dcomp(icp+1) = dcomp(iox)
-
-            do i = 1, icp 
-c                                 subtract the fluid from the current composition
-               gblk(k,i) = gblk(k,i) - dcomp(i)
-c                                 by not applying the zero_bulk threshold to the 
-c                                 global array near zero components may accumulate
-c                                 to become significant
-               if (gblk(k,i).lt.0d0) gblk(k,i) = 0d0
-c                                 and add it to the overlying composition
-               if (k.lt.ncol) gblk(k+1,i) = gblk(k+1,i) + dcomp(i)
-c                                 oxygen deficit and cumulative change
-               if (iox.ne.0d0) dcomp(icp1) = dcomp(icp1) 
-     *                                     - vox(i)*dcomp(i)
-c                                 average layer comp
-               lcomp(i,layer(k)) = lcomp(i,layer(k)) + gblk(k,i)/
-     *                             dfloat(irep(layer(k)))
-c                                 save layer specific results
-               do l = 1, ilay
-c                                 cumulative change
-                  if (k.eq.itop(l)) cdcomp(i,l) = cdcomp(i,l) + dcomp(i)
-               end do
-
-            end do
-
-            do l = 1, ilay
-c                                 cumulative change
-               if (k.eq.itop(l)) then 
-                  cdcomp(icp1,l) = cdcomp(icp1,l) + dcomp(icp1)
-                  write (lun + l,'(200(g13.6,1x))') 
-     *                                   p0,(dcomp(i),i=1,icp1),
-     *                                      (cdcomp(i,l),i=1,icp1)
-               end if
-
-            end do
-c                                 reset initialize top layer if gloopy = 999
-            if (gloopy.eq.999.and.k.gt.ncol-irep(ilay)) then 
-               do i = 1, icp
-                  gblk(k,i) = iblk(ilay,i)
-               end do 
-            end if 
-c                                 end of the k index loop
-         end do 
-
-         do l = 1, ilay
-c                                 average layer compositions
-            write (lun + ilay + l,'(200(g13.6,1x))') 
-     *                                p0,(lcomp(i,l),i=1,icp)
-            write (*,'(i1,1x,12(f10.3,1x))') l,(lcomp(i,l),i=1,icp)
-
-         end do
-
-         write (*,'(/)')
-c                                 add the aliquot to the base of the column
-         do i = 1, icp 
-            gblk(1,i) = gblk(1,i) + nopt(36) * dblk(1,i)
-         end do
-c                                 end of j index loop
-      end do 
-
-      do j = 1, 2*ilay
-         close (lun + j)
-      end do
-
-      if (output) call outgrd (nrow,ncol,1,n4,0)
-
-2000  format (/,' failed at p0-dz = ',2(g14.7,1x),' layer ',i1,' node '
-     *       ,i3,' column ',i3,/,' p-t-c ',2(g14.7,1x),/,12(g14.7,1x))
-2010  format (' layer boundaries are ',5(i3,1x))
-2020  format (/,' did not fail at p0-dz = ',2(g14.7,1x),' l ',i1,' n '
-     *       ,i3,' column ',i3,/,' p-t-c ',2(g14.7,1x),/,12(g14.7,1x))
-
-      end 
 
       subroutine lpopt (i,j,idead,output)
 c-----------------------------------------------------------------------
