@@ -988,9 +988,9 @@ c                                 MEEMUM, molar amount
 c                                 convert x3 to y for calls to gsol
                if (ids.gt.0) call xtoy (ids,i,.false.,bad)
 
-            end if 
+            end if
 
-         else 
+         else
 c                                 a compound:
             if (ifp(-ids).gt.0.or.ifp(-ids).lt.0.and.lopt(6)) then 
                aflu = .true.
@@ -1333,88 +1333,55 @@ c-----------------------------------------------------------------------
       else 
 
          if (smod(ids)) then
-
-            if (lrecip(ids)) then
 c                                 get the p0a coordinates (amounts of 
 c                                 the independent disordered endmembers)
-               call getpp (ids) 
+            if (lrecip(ids)) call getpp (ids)
 
-               v = 0d0
+            v = 0d0
+
+            do i = 1, lstot(ids)
 c                                 use pure endmembers volumes to approximate
 c                                 partial molar volumes for volume fractions
-               do i = 1, lstot(ids)
-                  v0(i) = endvol(jend(ids,2+i), ok)
-                  if (.not.ok) return
+               v0(i) = endvol(jend(ids,2+i), ok)
+               if (.not.ok) return
+
+               if (lrecip(ids)) then 
                   v = v + p0a(i) * v0(i)
-               end do
+               else 
+                  v = v + y(i) * v0(i)
+               end if
 
-               do i = 1, lstot(ids)
+            end do
 
-                  call shearm (pmu,pmut,pmup,
-     *                         pks,pkst,pksp,jend(ids,2+i),ok)
+            do i = 1, lstot(ids)
 
-                  if (.not.ok) exit
+               call shearm (pmu,pmut,pmup,
+     *                      pks,pkst,pksp,jend(ids,2+i),ok)
 
-                  if (pmu.eq.0d0) liq = .true.
+               if (.not.ok) exit
 
+               if (pmu.eq.0d0) liq = .true.
+
+               if (lrecip(ids)) then 
                   vf = p0a(i) * v0(i) / v
-
-                  mu = mu + vf / pmu
-                  mut = mut + vf / pmut
-                  mup = mup + vf / pmup
-
-                  if (.not.pmod(ids)) cycle 
-
-                  ks = ks + vf / pks
-                  kst = kst + vf / pkst
-                  ksp = ksp + vf / pksp
-
-               end do
-
-            else 
-
+               else
 c                                 for solutions with no dependent endmembers
 c                                 the y coordinates can be used to compute 
-c                                 the composition. for speciation models
-c                                 (ksmod = 6) this assumes xtoy has been 
-c                                 called before moduli, so that y is the 
-c                                 unspeciated composition (this will not be 
-c                                 the case if gsol has been called, as might
-c                                 happen if shearm calls gsol to evaluate a 
-c                                 speciation model using stixrude's EoS).
-               v = 0d0
-c                                 use pure endmembers volumes to approximate
-c                                 partial molar volumes for volume fractions
-               do i = 1, mstot(ids)
-                  v0(i) = endvol(jend(ids,2+i), ok)
-                  if (.not.ok) return
-                  v = v + y(i) * v0(i)
-               end do
+c                                 the composition.
+                  vf = y(i) * v0(i) / v
+               end if 
 
-               do i = 1, mstot(ids)
+               mu = mu + vf / pmu
+               mut = mut + vf / pmut
+               mup = mup + vf / pmup
 
-                  call shearm (pmu,pmut,pmup,
-     *                         pks,pkst,pksp,jend(ids,2+i),ok)
+               if (.not.pmod(ids)) cycle 
 
-                  if (.not.ok) exit
+               ks = ks + vf / pks
+               kst = kst + vf / pkst
+               ksp = ksp + vf / pksp
 
-                  if (pmu.eq.0d0) liq = .true.
-
-                  vf = p0a(i) * v0(i) / v
-
-                  mu  = mu + vf / pmu
-                  mut = mut + vf / pmut
-                  mup = mup + vf / pmup
-
-                  if (.not.pmod(ids)) cycle
-
-                  ks  = ks + vf / pks
-                  kst = kst + vf / pkst
-                  ksp = ksp + vf / pksp
-
-               end do
-
-            end if
+            end do
 
             if (.not.liq) then
 
@@ -1717,10 +1684,10 @@ c                                 explicit bulk modulus is allowed and used
       else
 
          props(5,jd)  = 0d0
-         props(19,jd) = 0d0    
+         props(19,jd) = 0d0
          props(21,jd) = 0d0
 
-      end if   
+      end if
             
       g0 = ginc(0d0,0d0,id)
 c                                 get speciation 
