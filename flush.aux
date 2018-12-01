@@ -1,7 +1,11 @@
 .false.          pzfunc - before 6.8.5 this was gloopy 
 .true.           frac2d if false, flush if true, added 6.8.5
+.false.          anneal initial column
 500.             zbox, box size (m)
-0.35             gradient of independent variable with z (e.g. bar/m)
+-0.35            gradient of primary variable (iv(1)) with upward-directed z (e.g. bar/m)
+4.3d4            value of primary variable at top of column (zmax) only used if flush
+0                minimum value of x-coordinate
+0.01           maximum value of x-coordinate
 
 25000                                                           thickness of mantle (m) 
 .0, .1e-2, .7075, .74e-1, .9711e-1, .8666, .527e-1, .92e-2, .92e-3, 1.271735000, .2e-2 losimag peridotite + 2 % water.

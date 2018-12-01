@@ -13,11 +13,11 @@
 
 |----------------------------------------------------------------------
 
-1d_path                   default | [40 150] exploratory and autorefine (grid parameters keyword group)
+1d_path                   10 10 default | [40 150] exploratory and autorefine (grid parameters keyword group)
 absolute                     T    | [F] WERAMI - output absolute component amounts
 Anderson-Gruneisen        default | [F] Anderson-Gruneisen parameter correction for polythermal Murnaghan and Birch-Murnaghan
 approx_alpha              default | [T] use approximation exp(x)~1+x to evaluate expansivity effect on volume
-aq_bad_results            default | [F] continue lagged solute speciation even if the iteration is unstable
+aq_bad_results            103 default | [F] continue lagged solute speciation even if the iteration is unstable
 aq_output                 default | [T] output back-calculated solute chemistry when electrolyte data is available
 aq_oxide_components       default | [F] accomodate oxide components in aqueous speciation calculations
 aq_species                default | [20] maximum number of solute species output (ranked by concentration) for back-calculated results

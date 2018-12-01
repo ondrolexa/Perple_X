@@ -3333,8 +3333,8 @@ c----------------------------------------------------------------------
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 
-      double precision p0, dz
-      common/ cxt46 /p0, dz
+      double precision x, y
+      common/ cxt46 /x, y
 
       integer hcp, idv
       common/ cst52  /hcp,idv(k7) 
@@ -3430,7 +3430,7 @@ c                                 iteration will become unstable
                abort = .true.
 
                write (n13,'(i4,1x,4(g14.6,1x),a)') 1000+solc(j), 
-     *                                             p0, dz, t, p,
+     *                                             x, y, t, p,
      *                                'disolved_non-solvent_component'
                exit
 

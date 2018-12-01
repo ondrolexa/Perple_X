@@ -200,13 +200,11 @@ c                                 0-d fractionation/titration
 c                                 fractionation on a 2-d path (space-time) 
             call frac2d (output)
 
-c            call flsh (output)
-
-         else      
+         else
 c                                 disabled stability field calculation
             call error (32,0d0,k2,'MAIN')
 
-         end if 
+         end if
 c                                 output compositions for autorefine
          call outlim 
 
@@ -266,9 +264,9 @@ c-----------------------------------------------------------------------
       integer io3,io4,io9
       common / cst41 /io3,io4,io9
 
-      logical fileio, flsh
+      logical fileio, flsh, anneal
       integer ncol, nrow
-      common/ cst226 /ncol,nrow,fileio,flsh
+      common/ cst226 /ncol,nrow,fileio,flsh,anneal
 
       double precision dcomp
       common/ frct2 /dcomp(k5)
@@ -509,9 +507,9 @@ c-----------------------------------------------------------------------
       integer io3,io4,io9
       common / cst41 /io3,io4,io9
 
-      logical fileio, flsh
+      logical fileio, flsh, anneal
       integer ncol, nrow
-      common/ cst226 /ncol,nrow,fileio,flsh
+      common/ cst226 /ncol,nrow,fileio,flsh,anneal
 
       double precision dcomp
       common/ frct2 /dcomp(k5)
@@ -635,13 +633,13 @@ c-----------------------------------------------------------------------
       double precision gblk(maxbox,k5),cdcomp(k5,maxlay),vox(k5),
      *                 tot,lcomp(k5,maxlay)
 
-      logical output, anneal
+      logical output
 
       double precision atwt
       common/ cst45 /atwt(k0)
 
-      double precision p0, dz
-      common/ cxt46 /p0, dz
+      double precision x, y
+      common/ cxt46 /x, y
 
       integer npt,jdv
       logical fulrnk
@@ -681,14 +679,13 @@ c-----------------------------------------------------------------------
 
       logical pzfunc
       integer ilay,irep
-      double precision a0,a1,a2,a3,b0,b1,b2,b3,c0,c1,c2,c3,dv1dz,
-     *               zbox,iblk
-      common/ cst66 /a0,a1,a2,a3,b0,b1,b2,b3,c0,c1,c2,c3,dv1dz,zbox,
-     *               iblk(maxlay,k5),ilay,irep(maxlay),pzfunc
+      double precision a0,b0,c0,vz,iblk
+      common/ cst66 /a0(4),b0(4),c0(5),vz(5),iblk(maxlay,k5),
+     *               ilay,irep(maxlay),pzfunc
 
-      logical fileio, flsh
+      logical fileio, flsh, anneal
       integer ncol, nrow
-      common/ cst226 /ncol,nrow,fileio,flsh
+      common/ cst226 /ncol,nrow,fileio,flsh,anneal
 
       character vnm*8
       common/ cxt18a /vnm(l3)  
@@ -729,10 +726,6 @@ c-----------------------------------------------------------------------
 c                                 initialization
       iasct = 0 
       ibulk = 0 
-c                                 flushing model
-      flsh = .true.
-c                                 fraction of the bulk aliquot to be added
-      nopt(36) = 0.001
 c                                 set the number of independent variables
 c                                 to 1 (the independent path variable must
 c                                 be variable jv(1), and the dependent path
@@ -799,6 +792,8 @@ c                                 computation
             end if 
          end do 
       else 
+c                                 get the phase to be fractionated
+         call frname 
 c                                 NOTE if not fileio, then jlow must not change
          if (.not.fileio)  nrow = jlow
 
@@ -807,7 +802,7 @@ c                                 check resolution dependent dimensions
       if (nrow*ncol.gt.k2) then
          write (*,*) ' parameter k2 must be >= ncol*nrow'
          write (*,*) ' increase parameter k2 for routine DUMMY1'
-         write (*,*) ' or increase box size (zbox) or decrease'
+         write (*,*) ' or increase box size (vz(1)) or decrease'
          write (*,*) ' number of path increments (nrow) or try'
          write (*,*) ' the large parameter version of VERTEX'
          write (*,*) ' k2 = ',k2 
@@ -836,25 +831,33 @@ c                                 check resolution dependent dimensions
       end do
 c                                 call initlp to initialize arrays 
 c                                 for optimization.
-      call initlp 
-c                                 initialize path variables, this
-c                                 probably does nothing
-      call setvar
+      call initlp
+c                                 increment in the x direction, nrow
+c                                 specified by 1d_path option
+      dv(1)  = (vz(5)-vz(4))/dfloat(nrow-1)
+      vmin(1) = vz(4)
+      vmax(1) = vz(5)
 
       if (flsh) then
-
+c                                  flush calculations: 
          vnm(1) = 'aliquot'
          vnm(2) = 'dz(m)  '
-         vmin(1) = 0d0
-         dv(1) = zbox
-
+c                                  set y = 0 to be the base
+         vmax(2) = dfloat(ncol-1)*vz(1)
+         vmin(2) = 0d0
+c                                  vz(3) is the value of v(jv(1)) at y = vmin(2)
       else
-c                                  frac2d calculations read p0 from 
-c                                  the input file, this causes all sorts
-c                                  of messiness also for titrat.
-         dv(jv(1)) = (vmax(jv(1)) - vmin(jv(1)))/(nrow-1)
-         vnm(1) = 'P0'
-      end if 
+c                                  frac2d calculations.
+         vnm(1) = 'z0,m'
+         vnm(2) = 'dz,m'
+c                                  set y = 0 ti be the top
+         vmax(2) = 0d0  
+         vmin(2) = -dfloat(ncol-1)*vz(1)
+c                                  vz(3) is read as the value of v(jv(1)) at y = 0,
+c                                  convert it here to v(jv(1)) at y = ymin
+         vz(3) = vz(3) - vmin(2)*vz(2)
+
+      end if
 c                                 ---------------------------
 c                                 set up stuff for subduction model
       two(1) = nrow
@@ -883,7 +886,7 @@ c                                 each layer
          end do 
 
          write (*,'(a,i1,a,f9.3)') 'The top of layer ',j,
-     *                 ' is at z(m) = ',(ncol - itop(j)) * zbox
+     *                 ' is at z(m) = ',(ncol - itop(j)) * vz(1)
 
          write (n5name,'(a,i1)') '_cumulative_change_layer_',j
          call tabhed (lun + j,vmin(1),dv(1),two,1,n5name,n6name)
@@ -900,19 +903,17 @@ c                                 number of variables in table
 
       write (*,'(/)')
 
-      anneal = .true.
+      if (anneal) then
 
-      if (anneal.and..not.flsh) then 
+         x = vmin(1)
 c                                 annealing removes the fractionated phase at
 c                                 the initial condition and renormalizes to 1000 g
 c                                 of material.
-         p0 = vmin(1)
-
          do k = 1, ncol
 c                                 k-loop varies depth within the column (dz)
-            dz = (ncol - k) * zbox  
+            y = vmin(2) + dfloat(k-1) * vz(1)  
 c                                 set the p-t conditions
-            call fr2dpt (p0,dz)
+            call fr2dpt (x,y)
 c                                 now put the bulk composition from the global
 c                                 array into the local array and get the total
 c                                 number of moles (ctotal)
@@ -936,7 +937,7 @@ c                                 get total moles to compute mole fractions
                write (*,*) 'orca pa duddle'
 
             else if (idead.ne.0) then 
-               write (*,2000) p0,dz,layer(k),k,j,v(1),v(2),
+               write (*,2000) x,y,layer(k),k,j,v(1),v(2),
      *                        (cblk(i),i=1,icp)
                write (*,2010) (itop(i),i=1,ilay)
             end if 
@@ -970,7 +971,7 @@ c                                 reset to 1000 g.
      *                           + gblk(k,i)/dfloat(irep(layer(k)))
             end do
 c DEBUG
-            write (*,'(12(f10.3,1x))') dz,(gblk(k,i),i=1,icp)
+            write (*,'(12(f10.3,1x))') y,(gblk(k,i),i=1,icp)
 
          end do
 
@@ -996,14 +997,14 @@ c                                 initialize avg layer comp
          write (*,*) '##########################################'
 c                                 j loop varies the pressure at the top of the 
 c                                 column (p0), set p0:
-         p0 = vmin(1) + (j-1)*dv(1)
+         x = vmin(1) + dfloat(j-1)*dv(1)
 c                                 for each box in our column compute phase 
 c                                 relations
          do k = 1, ncol
 c                                 k-loop varies depth within the column (dz)
-            dz = (ncol - k) * zbox
+            y = vmin(2) + dfloat(k-1) * vz(1)
 c                                 set the p-t conditions
-            call fr2dpt (p0,dz)
+            call fr2dpt (x,y)
 c                                 now put the bulk composition from the global
 c                                 array into the local array and get the total
 c                                 number of moles (ctotal)
@@ -1036,18 +1037,18 @@ c                                 the results to the print file.
 
             else if (idead.ne.0) then 
 c                                 write failure info to fld file:
-               write (n12,2000) p0,dz,layer(k),k,j,v(1),v(2),
+               write (n12,2000) x,y,layer(k),k,j,v(1),v(2),
      *                          (cblk(i),i=1,icp)
                write (n12,2010) (itop(i),i=1,ilay)
 
-               write (*,2000) p0,dz,layer(k),k,j,v(1),v(2),
+               write (*,2000) x,y,layer(k),k,j,v(1),v(2),
      *                        (cblk(i),i=1,icp)
                write (*,2010) (itop(i),i=1,ilay)
 
              else 
 
                write (n12,*) 'good'
-               write (n12,2000) p0,dz,layer(k),k,j,v(1),v(2),
+               write (n12,2000) x,y,layer(k),k,j,v(1),v(2),
      *                          (cblk(i),i=1,icp)
                write (n12,2010) (itop(i),i=1,ilay)
 
@@ -1089,7 +1090,7 @@ c                                 cumulative change
                if (k.eq.itop(l)) then 
                   cdcomp(icp1,l) = cdcomp(icp1,l) + dcomp(icp1)
                   write (lun + l,'(200(g13.6,1x))') 
-     *                                   p0,(dcomp(i),i=1,icp1),
+     *                                       x,(dcomp(i),i=1,icp1),
      *                                      (cdcomp(i,l),i=1,icp1)
                end if
 
@@ -1100,7 +1101,7 @@ c                                 end of the k index loop
          do l = 1, ilay
 c                                 average layer compositions
             write (lun + ilay + l,'(200(g13.6,1x))') 
-     *                                p0,(lcomp(i,l),i=1,icp)
+     *                                       x,(lcomp(i,l),i=1,icp)
             write (*,'(i1,1x,12(f10.3,1x))') l,(lcomp(i,l),i=1,icp)
 
          end do
@@ -1109,7 +1110,7 @@ c                                 average layer compositions
 c                                 add the aliquot to the base of the column
          if (flsh) then 
             do i = 1, icp 
-               gblk(1,i) = gblk(1,i) + nopt(36) * dblk(1,i)
+               gblk(1,i) = gblk(1,i) + dv(1) * dblk(1,i)
             end do
          end if 
 c                                 end of j index loop
@@ -1917,6 +1918,7 @@ c----------------------------------------------------------------------
 
       data first/.true./
 c----------------------------------------------------------------------
+
 
       if (first) then 
 

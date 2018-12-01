@@ -41,9 +41,9 @@ c----------------------------------------------------------------------
       integer iam
       common/ cst4 /iam
 
-      logical fileio, flsh
+      logical fileio, flsh, anneal
       integer ncol, nrow
-      common/ cst226 /ncol,nrow,fileio,flsh
+      common/ cst226 /ncol,nrow,fileio,flsh,anneal
 
       integer icps, jcx, jcx1, kds
       logical stol, savg, spec
@@ -520,8 +520,6 @@ c---------------------------------------------------------------------
 
       integer ind, j
 
-      logical flsh
-
       double precision v,tr,pr,r,ps
       common/ cst5  /v(l2),tr,pr,r,ps
 
@@ -543,9 +541,9 @@ c---------------------------------------------------------------------
       double precision vip
       common/ cst28 /vip(l2,k2)
 
-      logical fileio, flsh
+      logical fileio, flsh, anneal
       integer ncol, nrow
-      common/ cst226 /ncol,nrow,fileio,flsh
+      common/ cst226 /ncol,nrow,fileio,flsh,anneal
 
       integer iopt
       logical lopt

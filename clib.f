@@ -368,9 +368,9 @@ c-----------------------------------------------------------------------
 
       double precision dip
 
-      logical fileio, flsh
+      logical fileio, flsh, anneal
       integer ncol, nrow
-      common/ cst226 /ncol,nrow,fileio,flsh
+      common/ cst226 /ncol,nrow,fileio,flsh,anneal
 
       character*100 cfname
       common/ cst227 /cfname
@@ -1908,9 +1908,9 @@ c---------------------------------------------------------------------
       integer isec,icopt,ifull,imsg,io3p
       common/ cst103 /isec,icopt,ifull,imsg,io3p
 
-      logical fileio, flsh
+      logical fileio, flsh, anneal
       integer ncol, nrow
-      common/ cst226 /ncol,nrow,fileio,flsh
+      common/ cst226 /ncol,nrow,fileio,flsh,anneal
 
       integer iam
       common/ cst4 /iam
@@ -2425,14 +2425,13 @@ c-----------------------------------------------------------------------
 
       logical pzfunc
       integer ilay,irep
-      double precision a0,a1,a2,a3,b0,b1,b2,b3,c0,c1,c2,c3,dv1dz,
-     *               zbox,iblk
-      common/ cst66 /a0,a1,a2,a3,b0,b1,b2,b3,c0,c1,c2,c3,dv1dz,zbox,
-     *               iblk(maxlay,k5),ilay,irep(maxlay),pzfunc
+      double precision a0,b0,c0,vz,iblk
+      common/ cst66 /a0(4),b0(4),c0(5),vz(5),iblk(maxlay,k5),
+     *               ilay,irep(maxlay),pzfunc
 
-      logical fileio, flsh
+      logical fileio, flsh, anneal
       integer ncol, nrow
-      common/ cst226 /ncol,nrow,fileio,flsh
+      common/ cst226 /ncol,nrow,fileio,flsh,anneal
 
       character*100 cfname
       common/ cst227 /cfname
@@ -2442,7 +2441,7 @@ c                                 of type aux
       call mertxt (name,prject,'.aux',0)
       open (n8,file=name,status='old',iostat=ier)
 
-      if (ier.ne.0) call error (51,zbox,ilay,name)
+      if (ier.ne.0) call error (51,vz(1),ilay,name)
 
       call mertxt (name,prject,'.fld',0)
       open (n12,file=name)
@@ -2452,17 +2451,25 @@ c                                 be variable jv(1), and the dependent path
 c                                 variable must be jv(2), the path variables
 c                                 can only be pressure and temperature
       ipot = 1
-
+c                                 true => use internal function for relating x-y to v1-v2
       read (n8,*) pzfunc
-
+c                                 true => flush model, ~true => subducting column
       read (n8,*) flsh
+c                                 true anneal the column
+      read (n8,*) anneal
 c                                 thickness of a box in column
-      read (n8,*) zbox 
+      read (n8,*) vz(1) 
 c                                 gradient in variable jv(1) with z, jv(1)
 c                                 is the independent variable, for subduction
-c                                 this is logically pressure, i.e.,
-c                                 dp(bar)/dz(m)
-      read (n8,*) dv1dz 
+c                                 this is logically pressure, i.e., dp(bar)/dz(m)
+      read (n8,*) vz(2)
+c                                 value of variable jv(1) at zmin if flush
+c                                 or at zmax if not flush
+      read (n8,*) vz(3)
+c                                 value of the x-coordinate at the origin
+      read (n8,*) vz(4)
+c                                 max value of the x-coordinate
+      read (n8,*) vz(5)
 
       if (pzfunc) then 
 c                                 now we need a path function for the dependent
@@ -2478,9 +2485,9 @@ c                                 e.g., T(K) =  a(z0)*dz^2 + b(z0)*dz + c(z0)
 c                                 where a(z0) = a0 + a1*z0 + a2*z0^2 + a3*z0^3 + ...
 c                                 b(z0) = b0 + b1*z0 + b2*z0^2 + b3*z0^3 + ...
 c                                 c(z0) = c0 + c1*z0 + c2*z0^2 + c3*z0^3 + ...
-         read (n8,*) a0, a1, a2, a3
-         read (n8,*) b0, b1, b2, b3
-         read (n8,*) c0, c1, c2, c3
+         read (n8,*) a0(4)
+         read (n8,*) b0(4)
+         read (n8,*) c0(4)
 
       end if 
 c                                 get the initial global composition array
@@ -2510,7 +2517,7 @@ c                                 end of data indicated by zero
 
          read (n8,*) (iblk(ilay,i),i=1,icp)
 
-         irep(ilay) = idint(zlayer/zbox)
+         irep(ilay) = idint(zlayer/vz(1))
 
          ncol = ncol + irep(ilay)
 
@@ -2519,7 +2526,7 @@ c                                 end of data indicated by zero
             stop
          end if 
 c                                 set the y coodinate to depth below top
-         vmin(2) = vmin(2) - irep(ilay)*zbox
+         vmin(2) = vmin(2) - irep(ilay)*vz(1)
 
       end do 
 
@@ -2582,18 +2589,17 @@ c----------------------------------------------------------------------
 
       logical pzfunc
       integer ilay,irep
-      double precision a0,a1,a2,a3,b0,b1,b2,b3,c0,c1,c2,c3,dv1dz,
-     *               zbox,iblk
-      common/ cst66 /a0,a1,a2,a3,b0,b1,b2,b3,c0,c1,c2,c3,dv1dz,zbox,
-     *               iblk(maxlay,k5),ilay,irep(maxlay),pzfunc
+      double precision a0,b0,c0,vz,iblk
+      common/ cst66 /a0(4),b0(4),c0(5),vz(5),iblk(maxlay,k5),
+     *               ilay,irep(maxlay),pzfunc
 
       integer irct,ird
       double precision vn
       common/ cst31 /vn(k2,k7),irct,ird
 
-      logical fileio, flsh
+      logical fileio, flsh, anneal
       integer ncol, nrow
-      common/ cst226 /ncol,nrow,fileio,flsh
+      common/ cst226 /ncol,nrow,fileio,flsh,anneal
 
       double precision vmax,vmin,dv
       common/ cst9  /vmax(l2),vmin(l2),dv(l2)  
@@ -2605,15 +2611,15 @@ c----------------------------------------------------------------------
 c                                convert p0-dz coordinate to nodal 
 c                                values
          i = idint((p0 - vmin(1))/dv(1)) + 1
-         j = ncol - idint(dz/zbox)
+         j = ncol - idint(dz/vz(1))
 
          v(1) = vn((i-1)*ncol + j, 1)
          v(2) = vn((i-1)*ncol + j, 2)
 
-      else if (pzfunc) then 
+      else if (pzfunc) then
 c                                 this could be made a lot more efficient by
 c                                 making the quadratic coeffs once for each column
-         z0 = p0/dv1dz/1d3
+         z0 = p0/vz(2)/1d3
          z2 = z0*z0
          z3 = z2*z0
          z4 = z3*z0
@@ -2650,25 +2656,26 @@ c                                t0, t1 deep
          a = -t1 / 272d0 + t2 / 850d0 + t0 / 400d0
          b = -dsqrt(2d0) * (64d0*t2 - 625d0*t1 + 561d0*t0)/6800d0
 
-         v(1) = p0 + dz * dv1dz
+         v(1) = p0 + dz * vz(2)
 
          v(2) = a*(dz/1d3)**2 + b*(dz/1d3) + t0
 
       else if (flsh) then 
 
-         v(1) = 43d3 + dz * 0.35
+         v(1) = vz(3) + dz * vz(2)
          v(2) = 973.15 + dz * 0.002
 
       else 
 c                                 convert to depth at top of column
-         z0 = p0/dv1dz
+         z0 = p0/vz(2)
 c                                 set the independent variable
-         v(1) = p0 + dz * dv1dz   
+         v(1) = p0 + dz * vz(2)   
 c                                 set the dependent variable
-         v(2) = (a0 + a1*z0 + a2*z0**2 + a3*z0**3)*dz**2 
-     *        + (b0 + b1*z0 + b2*z0**2 + b3*z0**3)*dz 
-     *        +  c0 + c1*z0 + c2*z0**2 + c3*z0**3
-      end if 
+         v(2) = (a0(1) + a0(2)*z0 + a0(3)*z0**2 + a0(4)*z0**3)*dz**2 
+     *        + (b0(1) + b0(2)*z0 + b0(3)*z0**2 + b0(4)*z0**3)*dz 
+     *        +  c0(1) + c0(2)*z0 + c0(3)*z0**2 + c0(4)*z0**3
+
+      end if
                        
       end
 
@@ -3261,6 +3268,14 @@ c                                 make a list of the result files
       end if 
 
       if (iopt(34).eq.1) then 
+
+         if (i.eq.0) then 
+            write (*,'(a)') 'VERTEX has not completed the calculation '
+     *                    //'and no interim results are available.'
+
+            stop
+
+         end if 
 c                                 interim_results is auto, and the final results
 c                                 are not available, find/use last interim result:
          write (*,'(a)') 'VERTEX has not completed the calculation, '//
@@ -3551,9 +3566,9 @@ c----------------------------------------------------------------------
       character*100 cfname
       common/ cst227 /cfname
 
-      logical fileio, flsh
+      logical fileio, flsh, anneal
       integer ncol, nrow
-      common/ cst226 /ncol,nrow,fileio,flsh
+      common/ cst226 /ncol,nrow,fileio,flsh,anneal
 
       integer idstab,nstab,istab
       common/ cst34 /idstab(i11),nstab(i11),istab

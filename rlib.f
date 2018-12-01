@@ -18837,9 +18837,6 @@ c                                 adaptive coordinates
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 
-      double precision p0, dz
-      common/ cxt46 /p0, dz
-
       logical abort
       common/ cstabo /abort
 
@@ -19472,9 +19469,9 @@ c----------------------------------------------------------------------
       integer iam
       common/ cst4 /iam
 
-      logical fileio, flsh
+      logical fileio, flsh, anneal
       integer ncol, nrow
-      common/ cst226 /ncol,nrow,fileio,flsh
+      common/ cst226 /ncol,nrow,fileio,flsh,anneal
 c------------------------------------------------------------------------
 c                                 generate a file name and
 c                                 open the file on n5

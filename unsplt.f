@@ -60,9 +60,9 @@ c----------------------------------------------------------------------
       integer iam
       common/ cst4 /iam
 
-      logical fileio, flsh
+      logical fileio, flsh, anneal
       integer ncol, nrow
-      common/ cst226 /ncol,nrow,fileio,flsh
+      common/ cst226 /ncol,nrow,fileio,flsh,anneal
 
       character*100 prject,tfname
       common/ cst228 /prject,tfname

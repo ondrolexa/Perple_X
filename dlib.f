@@ -53,9 +53,9 @@ c---------------------------------------------------------------------
       logical oned
       common/ cst82 /oned
 
-      logical fileio, flsh
+      logical fileio, flsh, anneal
       integer ncol, nrow
-      common/ cst226 /ncol,nrow,fileio,flsh
+      common/ cst226 /ncol,nrow,fileio,flsh,anneal
 
       integer iind, idep
       double precision c0,c1,c2,c3,c4,c5

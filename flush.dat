@@ -16,7 +16,7 @@ flush_perplex_option.dat
     1 for gridded minimization JLEV, number of grid levels
     0 number component transformations
    15 number of components
-    1 component amounts, 0 - molar, 1 weight
+    0 component amounts, 0 - molar, 1 weight
     1 assemblage data 0 - print, 1 - suppress
     0 variance flag, 0 - calculate all, 1 - only true univariants
     1 IDBASE data base code
