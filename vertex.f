@@ -621,17 +621,17 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer maxbox,maxlay
+      integer maxbox,lay
 
-      parameter (maxbox=1760,maxlay=6)
+      parameter (maxbox=1760,lay=6)
 
       character*100 n6name, n5name
 
-      integer i,j,k,l,m,idead,two(2),lun,iox,itop(maxlay),icp1,
+      integer i,j,k,l,m,idead,two(2),lun,iox,itop(lay),icp1,
      *        layer(maxbox)
 
-      double precision gblk(maxbox,k5),cdcomp(k5,maxlay),vox(k5),
-     *                 tot,lcomp(k5,maxlay)
+      double precision gblk(maxbox,k5),cdcomp(k5,lay),vox(k5),
+     *                 tot,lcomp(k5,lay)
 
       logical output
 
@@ -679,16 +679,12 @@ c-----------------------------------------------------------------------
 
       logical pzfunc
       integer ilay,irep
-      double precision a0,b0,c0,vz,iblk
-      common/ cst66 /a0(4),b0(4),c0(5),vz(5),iblk(maxlay,k5),
-     *               ilay,irep(maxlay),pzfunc
+      double precision abc0,vz,iblk
+      common/ cst66 /abc0(4,3),vz(6),iblk(lay,k5),ilay,irep(lay),pzfunc
 
       logical fileio, flsh, anneal
       integer ncol, nrow
       common/ cst226 /ncol,nrow,fileio,flsh,anneal
-
-      character vnm*8
-      common/ cxt18a /vnm(l3)  
 
       integer inv
       character dname*14, title*162
@@ -704,6 +700,10 @@ c-----------------------------------------------------------------------
 
       character cname*5
       common/ csta4  /cname(k5)
+
+      integer jvar
+      double precision var,dvr,vmn,vmx
+      common/ cxt18 /var(l3),dvr(l3),vmn(l3),vmx(l3),jvar
 
       double precision v,tr,pr,r,ps
       common/ cst5  /v(l2),tr,pr,r,ps
@@ -829,37 +829,15 @@ c                                 check resolution dependent dimensions
          end do
 
       end do
+c                                 organize the coordinate frame and thermodynamic variables
+      call getvar
+c                                 initialize coordinate frame and sectioning variables
+      call setvar 
 c                                 call initlp to initialize arrays 
 c                                 for optimization.
       call initlp
-c                                 increment in the x direction, nrow
-c                                 specified by 1d_path option
-      dv(1)  = (vz(5)-vz(4))/dfloat(nrow-1)
-      vmin(1) = vz(4)
-      vmax(1) = vz(5)
-
-      if (flsh) then
-c                                  flush calculations: 
-         vnm(1) = 'aliquot'
-         vnm(2) = 'dz(m)  '
-c                                  set y = 0 to be the base
-         vmax(2) = dfloat(ncol-1)*vz(1)
-         vmin(2) = 0d0
-c                                  vz(3) is the value of v(jv(1)) at y = vmin(2)
-      else
-c                                  frac2d calculations.
-         vnm(1) = 'z0,m'
-         vnm(2) = 'dz,m'
-c                                  set y = 0 ti be the top
-         vmax(2) = 0d0  
-         vmin(2) = -dfloat(ncol-1)*vz(1)
-c                                  vz(3) is read as the value of v(jv(1)) at y = 0,
-c                                  convert it here to v(jv(1)) at y = ymin
-         vz(3) = vz(3) - vmin(2)*vz(2)
-
-      end if
-c                                 ---------------------------
-c                                 set up stuff for subduction model
+c                                 set up stuff for tab file output, this is the only routine other
+c                                 than WERAMI that writes tab files.
       two(1) = nrow
 c                                 number of variables in table
       icp1 = icp+1 
@@ -889,7 +867,7 @@ c                                 each layer
      *                 ' is at z(m) = ',(ncol - itop(j)) * vz(1)
 
          write (n5name,'(a,i1)') '_cumulative_change_layer_',j
-         call tabhed (lun + j,vmin(1),dv(1),two,1,n5name,n6name)
+         call tabhed (lun + j,vmn(1),dvr(1),two,1,n5name,n6name)
 
       end do
 
@@ -898,20 +876,20 @@ c                                 number of variables in table
 
       do j = 1, ilay
          write (n5name,'(a,i1)') '_average_comp_layer_',j
-         call tabhed (lun + ilay + j,vmin(1),dv(1),two,1,n5name,n6name)
+         call tabhed (lun + ilay + j,vmn(1),dvr(1),two,1,n5name,n6name)
       end do
 
       write (*,'(/)')
 
       if (anneal) then
 
-         x = vmin(1)
+         x = vmn(1)
 c                                 annealing removes the fractionated phase at
 c                                 the initial condition and renormalizes to 1000 g
 c                                 of material.
          do k = 1, ncol
 c                                 k-loop varies depth within the column (dz)
-            y = vmin(2) + dfloat(k-1) * vz(1)  
+            y = vmn(2) + dfloat(k-1) * vz(1)  
 c                                 set the p-t conditions
             call fr2dpt (x,y)
 c                                 now put the bulk composition from the global
@@ -997,12 +975,12 @@ c                                 initialize avg layer comp
          write (*,*) '##########################################'
 c                                 j loop varies the pressure at the top of the 
 c                                 column (p0), set p0:
-         x = vmin(1) + dfloat(j-1)*dv(1)
+         x = vmn(1) + dfloat(j-1)*dvr(1)
 c                                 for each box in our column compute phase 
 c                                 relations
          do k = 1, ncol
 c                                 k-loop varies depth within the column (dz)
-            y = vmin(2) + dfloat(k-1) * vz(1)
+            y = vmn(2) + dfloat(k-1) * vz(1)
 c                                 set the p-t conditions
             call fr2dpt (x,y)
 c                                 now put the bulk composition from the global
@@ -1110,7 +1088,7 @@ c                                 average layer compositions
 c                                 add the aliquot to the base of the column
          if (flsh) then 
             do i = 1, icp 
-               gblk(1,i) = gblk(1,i) + dv(1) * dblk(1,i)
+               gblk(1,i) = gblk(1,i) + dvr(1) * dblk(1,i)
             end do
          end if 
 c                                 end of j index loop

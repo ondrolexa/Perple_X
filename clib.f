@@ -627,11 +627,11 @@ c                                 hardwired fluid EoS endmember names
 c                                 no dependent variable
       iind = 0 
 c                                 dummy variable
-      read (n1,*,err=998) loopx
-c                                 here loopx is just a 1d/2d flag for 
+      read (n1,*,err=998) idum
+c                                 idum is just a 1d/2d flag for 
 c                                 gridded minimization, for backwards 
 c                                 compatibility set the to 2d if > 2 or < 1.
-      if (loopx.eq.1) then 
+      if (idum.eq.1) then 
          oned = .true.
       else
          oned = .false.
@@ -1884,6 +1884,9 @@ c---------------------------------------------------------------------
       double precision v,tr,pr,r,ps
       common/ cst5  /v(l2),tr,pr,r,ps
 
+      character vnm*8
+      common/ cxt18a /vnm(l3)  
+
       integer jlow,jlev,loopx,loopy,jinc
       common/ cst312 /jlow,jlev,loopx,loopy,jinc 
 
@@ -1945,6 +1948,11 @@ c                                 for 1d calculations
       if (icopt.eq.7.and.fileio) then 
 c                                using nodal coordinate system
          dvr(1) = 1d0
+
+      else if (icopt.eq.9) then 
+c                                using non-thermodynamic coordinate frame
+         dvr(1) = (vmx(1) - vmn(1))/rloopx
+         dvr(2) = (vmx(2) - vmn(2))/rloopy
 
       else if (icopt.eq.12) then 
 
@@ -2395,8 +2403,8 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer maxbox,maxlay
-      parameter (maxbox=1760,maxlay=6) 
+      integer maxbox,lay
+      parameter (maxbox=1760,lay=6) 
 
       integer i,j,k,ier
 
@@ -2425,9 +2433,8 @@ c-----------------------------------------------------------------------
 
       logical pzfunc
       integer ilay,irep
-      double precision a0,b0,c0,vz,iblk
-      common/ cst66 /a0(4),b0(4),c0(5),vz(5),iblk(maxlay,k5),
-     *               ilay,irep(maxlay),pzfunc
+      double precision abc0,vz,iblk
+      common/ cst66 /abc0(4,3),vz(6),iblk(lay,k5),ilay,irep(lay),pzfunc
 
       logical fileio, flsh, anneal
       integer ncol, nrow
@@ -2485,9 +2492,7 @@ c                                 e.g., T(K) =  a(z0)*dz^2 + b(z0)*dz + c(z0)
 c                                 where a(z0) = a0 + a1*z0 + a2*z0^2 + a3*z0^3 + ...
 c                                 b(z0) = b0 + b1*z0 + b2*z0^2 + b3*z0^3 + ...
 c                                 c(z0) = c0 + c1*z0 + c2*z0^2 + c3*z0^3 + ...
-         read (n8,*) a0(4)
-         read (n8,*) b0(4)
-         read (n8,*) c0(4)
+         read (n8,*) ((abc0(i,j),j=1,4),i=1,3)
 
       end if 
 c                                 get the initial global composition array
@@ -2498,8 +2503,6 @@ c                                 thermodynamic components) are the 1st and
 c                                 2nd components (if present). 
       ilay = 0
       ncol = 0
-      vmax(2) = 0d0
-      vmin(2) = 0d0
 c                                 number of nodes with appended composition
 c                                 end of data indicated by zero 
       do 
@@ -2510,8 +2513,8 @@ c                                 end of data indicated by zero
 
          ilay = ilay + 1
 
-         if (ilay.eq.maxlay) then 
-            write (*,*) 'increase maxlay in routine FRAC2D'
+         if (ilay.eq.lay) then 
+            write (*,*) 'increase lay in routine FRAC2D'
             stop
          end if 
 
@@ -2524,11 +2527,9 @@ c                                 end of data indicated by zero
          if (ncol.gt.maxbox) then
             write (*,*) 'increase maxbox in routine DUMMY1'
             stop
-         end if 
-c                                 set the y coodinate to depth below top
-         vmin(2) = vmin(2) - irep(ilay)*vz(1)
+         end if
 
-      end do 
+      end do
 
       close (n8)
 c                                 two cases, file input or analytical
@@ -2568,9 +2569,9 @@ c                                 read header info
 
          close (n8)
 
-      end if 
+      end if
 
-      end 
+      end
 
       subroutine fr2dpt (p0,dz)
 c----------------------------------------------------------------------
@@ -2581,17 +2582,16 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer maxlay,i,j
+      integer lay,i,j
 
-      parameter (maxlay=6) 
+      parameter (lay=6) 
 
       double precision p0, z0, dz, z2, z3, z4, z5, z6, t0, t1, t2, a, b
 
       logical pzfunc
       integer ilay,irep
-      double precision a0,b0,c0,vz,iblk
-      common/ cst66 /a0(4),b0(4),c0(5),vz(5),iblk(maxlay,k5),
-     *               ilay,irep(maxlay),pzfunc
+      double precision abc0,vz,iblk
+      common/ cst66 /abc0(4,3),vz(6),iblk(lay,k5),ilay,irep(lay),pzfunc
 
       integer irct,ird
       double precision vn
@@ -2662,7 +2662,7 @@ c                                t0, t1 deep
 
       else if (flsh) then 
 
-         v(1) = vz(3) + dz * vz(2)
+         v(1) = vz(6) + dz * vz(2)
          v(2) = 973.15 + dz * 0.002
 
       else 
@@ -2671,9 +2671,12 @@ c                                 convert to depth at top of column
 c                                 set the independent variable
          v(1) = p0 + dz * vz(2)   
 c                                 set the dependent variable
-         v(2) = (a0(1) + a0(2)*z0 + a0(3)*z0**2 + a0(4)*z0**3)*dz**2 
-     *        + (b0(1) + b0(2)*z0 + b0(3)*z0**2 + b0(4)*z0**3)*dz 
-     *        +  c0(1) + c0(2)*z0 + c0(3)*z0**2 + c0(4)*z0**3
+         v(2) = (abc0(1,1) + abc0(2,1)*z0 + abc0(3,1)*z0**2 
+     *                     + abc0(4,1)*z0**3)*dz**2 
+     *        + (abc0(1,2) + abc0(2,2)*z0 + abc0(3,2)*z0**2 
+     *                     + abc0(4,2)*z0**3)*dz 
+     *        +  abc0(1,3) + abc0(2,3)*z0 + abc0(3,3)*z0**2 
+     *                     + abc0(4,3)*z0**3
 
       end if
                        
@@ -3698,5 +3701,239 @@ c                                 coordinate file.
 
 1000  format (/,'**error ver635** Coordinate file ',a,/,
      *       'is inconsistent with plot file, re-run VERTEX.',/)
+
+      end
+
+
+      subroutine getvar  
+c--------------------------------------------------------------------
+c getvar makes a list of variables to be used for i/o:
+
+c if icopt = 10 -> using nodal coordinates else, 
+
+c if icopt =  9 -> using 2d frac coordinates else:
+
+c one-dimensional diagram (oned = .true.) then 
+
+c the vertical (real) axis is variable iv(2), the horizontal axis
+c is dummy.
+
+c two-dimensional diagram (oned = .false.) and not icopt = 9, then 
+
+c icont = 1 -> independent variables are the 1st and 2nd potentials
+c icont = 2 -> 1st independent variable is a composition variable,  
+c              2nd independent variable is the 1st potential (iv1)
+c icont = 3 -> independent variables are compositional variables
+
+c---------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer i, lay
+
+      parameter (lay=6) 
+
+      integer iam
+      common/ cst4 /iam
+
+      logical pzfunc
+      integer ilay,irep
+      double precision abc0,vz,iblk
+      common/ cst66 /abc0(4,3),vz(6),iblk(lay,k5),ilay,irep(lay),pzfunc
+
+      integer isec,icopt,ifull,imsg,io3p
+      common/ cst103 /isec,icopt,ifull,imsg,io3p
+
+      double precision vmax,vmin,dv
+      common/ cst9  /vmax(l2),vmin(l2),dv(l2)
+
+      integer ipot,jv,iv
+      common / cst24 /ipot,jv(l2),iv(l2)
+
+      integer icont
+      double precision dblk,cx
+      common/ cst314 /dblk(3,k5),cx(2),icont
+
+      integer jvar
+      double precision var,dvr,vmn,vmx
+      common/ cxt18 /var(l3),dvr(l3),vmn(l3),vmx(l3),jvar
+
+      character vnm*8
+      common/ cxt18a /vnm(l3)   
+
+      character vname*8, xname*8
+      common / csta2 /xname(k5),vname(l2)  
+
+      logical oned
+      common/ cst82 /oned
+
+      logical fileio, flsh, anneal
+      integer ncol, nrow
+      common/ cst226 /ncol,nrow,fileio,flsh,anneal
+
+      integer iind, idep
+      double precision c0,c1,c2,c3,c4,c5
+      common/ cst316 /c0,c1,c2,c3,c4,c5,iind,idep
+
+      integer jlow,jlev,loopx,loopy,jinc
+      common/ cst312 /jlow,jlev,loopx,loopy,jinc
+
+      double precision v,tr,pr,r,ps
+      common/ cst5  /v(l2),tr,pr,r,ps
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+c----------------------------------------------------------------------
+
+      if (icopt.eq.7.and.fileio) then 
+c                                 1d-fractionation with file input,
+c                                 use nodal coordinates:
+         vnm(1) = 'node #'
+         vmn(1) = 1
+         vmx(2) = 1d0
+         vmn(2) = 0d0 
+         vmx(1) = loopy 
+         oned = .true.
+         
+         jvar = ipot + 1
+
+         do i = 2, jvar
+            vnm(i) = vname(jv(i-1))
+         end do  
+
+      else if (icopt.lt.9) then 
+
+         jvar = ipot
+
+         if (idep.ne.0) jvar = ipot + 1
+
+         if (icont.eq.1) then 
+
+            do i = 1, jvar
+               vnm(i) = vname(jv(i))
+               vmx(i) = vmax(jv(i))
+               vmn(i) = vmin(jv(i))
+               var(i) = vmin(jv(i))
+            end do   
+
+         else 
+
+            if (icont.eq.2) then 
+
+               jvar = jvar + 1
+
+               vnm(1) = ' X(C1)  '
+               vmx(1) = 1d0
+               vmn(1) = 0d0
+
+               do i = 2, jvar
+                  vnm(i) = vname(jv(i-1))
+                  vmx(i) = vmax(jv(i-1))
+                  vmn(i) = vmin(jv(i-1))
+                  var(i) = vmin(jv(i-1))
+               end do   
+ 
+            else 
+
+               jvar = jvar + 2
+
+               vnm(1) = ' X(C1)  '
+               vmx(1) = 1d0
+               vmn(1) = 0d0
+
+               vnm(2) = ' X(C2)  '
+               vmx(2) = 1d0
+               vmn(2) = 0d0
+
+               do i = 3, jvar
+                  vnm(i) = vname(jv(i-2))
+                  vmx(i) = vmax(jv(i-2))
+                  vmn(i) = vmin(jv(i-2))
+                  var(i) = vmin(jv(i-2))
+               end do   
+
+            end if 
+
+         end if 
+
+         if (oned) then 
+c                                 make a fake y-axis for 1-d plots
+            vmx(2) = 1d0
+            vmn(2) = 0d0
+
+         end if
+
+      else if (icopt.eq.9) then 
+c                                using non-thermodynamic coordinate frame
+         vmn(1) = vz(4)
+         vmx(1) = vz(5)
+
+         if (iam.ne.1) then
+c                                 vertex sets the number of y-nodes in frac2d
+            ncol = loopy
+         else 
+c                                 pssect/werami get the number of nodes from the plt file
+            loopy = ncol
+
+         end if 
+
+         if (flsh) then
+c                                  flush calculations: 
+            vnm(1) = 'n,alqt.'
+            vnm(2) = 'dz,m   '
+c                                  set y = 0 to be the base
+            vmx(2) = dfloat(ncol-1)*vz(1)
+            vmn(2) = 0d0
+
+            vz(6) = vz(3)
+c                                  vz(3) is the value of v(jv(1)) at y = vmin(2)
+         else
+c                                  frac2d calculations.
+            vnm(1) = 'z0,m'
+            vnm(2) = 'dz,m'
+c                                  set y = 0 ti be the top
+            vmx(2) = 0d0  
+            vmn(2) = -dfloat(ncol-1)*vz(1)
+c                                  vz(3) is read as the value of v(jv(1)) at y = 0,
+c                                  convert it here to v(jv(1)) at y = ymin
+            vz(6) = vz(3) - vmin(2)*vz(2)
+
+         end if
+
+         jvar = 4
+
+         do i = 3, 4
+            vnm(i) = vname(jv(i-2))
+         end do
+
+      else if (icopt.eq.12) then 
+
+         vnm(1) = 'n,alqt. '
+         vnm(2) = 'node#      '
+
+         vmn(2) = 1d0
+         vmx(2) = dfloat(iopt(36)) + 1d0
+         var(2) = 1d0
+ 
+         vmn(1) = 0d0
+         vmx(1) = nopt(36)*dfloat(iopt(36))
+         var(1) = 0d0
+
+         v(1) = vmin(1)
+         v(2) = vmin(2)
+
+         jvar = ipot + 2
+
+         do i = 3, jvar
+            vnm(i) = vname(jv(i-2))
+            vmx(i) = vmax(jv(i-2))
+            vmn(i) = vmin(jv(i-2))
+            var(i) = vmin(jv(i-2))
+         end do
+
+      end if 
 
       end

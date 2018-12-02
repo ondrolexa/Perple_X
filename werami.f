@@ -96,7 +96,7 @@ c                                 read the plt/blk files
       call interm (.false.,err)
 c                                 organize variables 
       call getvar
-c                                 initialize the grid parameters
+c                                 initialize variables
       call setvar
 
       do 
@@ -210,6 +210,9 @@ c----------------------------------------------------------------------
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
+      integer isec,icopt,ifull,imsg,io3p
+      common/ cst103 /isec,icopt,ifull,imsg,io3p
+
       character vnm*8
       common/ cxt18a /vnm(l3)
 c----------------------------------------------------------------------
@@ -247,7 +250,7 @@ c                                 allow restricted plot limits
 
       end if
 
-      if (lopt(48)) then
+      if (lopt(48).and.icopt.eq.5) then
 c                                 work out if exploratory or auto-refine grid
 c                                 parameters are to be used:
          i = 0
@@ -295,6 +298,11 @@ c                                 get grid spacing
 
          nxy(1) = (loopx - 1)/ 2**(grid(3,i)-j) + 1
          nxy(2) = (loopy - 1)/ 2**(grid(3,i)-j) + 1
+
+      else if (lopt(48)) then 
+c                                 frac2d calculations
+         nxy(1) = loopx
+         nxy(2) = loopy
 
       else
 c                                 arbitrary number of grid points
@@ -574,7 +582,7 @@ c                                 is the cumulative moles of aliquot.
       else if (icopt.eq.9) then 
 c                                 change sign on dz because of downward
 c                                 directed depth coordinate.
-         call fr2dpt (var(1),-var(2))
+         call fr2dpt (var(1),var(2))
 
          var(3) = v(1)
          var(4) = v(2)
