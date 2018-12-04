@@ -150,7 +150,9 @@ c                                 -------------------------------------
 c                                 at this point the problem is fully 
 c                                 configured, 
 c                                 -------------------------------------
-         if (output) then 
+         if (output) then
+
+            io4 = 0
 c                                 header info for print and graphics files
 c                                 title page for print file:
             if (io3.ne.1) call outtit

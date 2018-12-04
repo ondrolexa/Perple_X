@@ -47,7 +47,12 @@ c                                 and the limits for numerical results.
       call input1 (first,output,err)
 c                                 don't allow users to do anything
 c                                 other than gridded min
-      if (icopt.lt.5) call error (4,0d0,icopt,'PSVDRAW')
+      if (icopt.lt.5) then 
+         call error (4,0d0,icopt,'PSVDRAW')
+      else if (icopt.eq.12) then
+         call error (77,0d0,icopt,'0-d infiltration results can only '
+     *                          //'plotted in tab file format')
+      end if 
 c                                 read thermodynamic data on unit n2:
       call input2 (first)
 c                                 read autorefine lists

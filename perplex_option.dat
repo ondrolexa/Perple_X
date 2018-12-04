@@ -24,7 +24,7 @@
 
 |----------------------------------------------------------------------
 
-1d_path                   default | [40 150] exploratory and autorefine (grid parameters keyword group)
+1d_path                   5 5 default | [40 150] exploratory and autorefine (grid parameters keyword group)
 absolute                  default | [F] WERAMI - output absolute component amounts
 Anderson-Gruneisen        default | [F] Anderson-Gruneisen parameter correction for polythermal Murnaghan and Birch-Murnaghan
 approx_alpha              default | [T] use approximation exp(x) ~ 1+x to evaluate expansivity effect on volume
@@ -70,6 +70,7 @@ increment                 default | [0.1 0.025] >0, < 1, fractional independent 
 initial_resolution        default | [1/15] >0, <1
 interpolation             default | [on 2] value 1: on or off [on]; value 2, 1->99 [2]; only relevant for WERAMI
 iteration                 default | [2] real > 2, improves resolution
+interim_results             off
 linear_model              default | [on] on or off, relevant for 2d gridded minimization
 logarithmic_p             default | [F] replace pressure variable with log(pressure)
 melt_is_fluid             default | [F] identify melt (liquid) as fluid in WERAMI output

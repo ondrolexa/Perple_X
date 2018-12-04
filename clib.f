@@ -1937,7 +1937,7 @@ c                                 2d intermediate grid results
 
       end if 
 c                                 for 1d calculations
-      if (rloopx.eq.0) rloopx = rloopy
+      if (loopx.eq.1.or.loopx.eq.0) rloopx = rloopy
 
       do i = 1, ipot
          v(jv(i)) = vmin(jv(i))
@@ -1957,6 +1957,7 @@ c                                using non-thermodynamic coordinate frame
       else if (icopt.eq.12) then 
 
          dvr(1) = nopt(36)
+         dvr(2) = 1
          loopx = iopt(36)
          rloopx = dfloat(loopx)
 
