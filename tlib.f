@@ -127,9 +127,9 @@ c                                 precision stuff used in lpnag
       integer iam
       common/ cst4 /iam
 
-      logical badend, sck, nrf
+      logical sck, nrf
       integer ldsol
-      common/ cxt36 /ldsol(m4,h9),badend(m4,h9),sck(h9),nrf(h9)
+      common/ cxt36 /ldsol(m4,h9),sck(h9),nrf(h9)
 
       integer length,iblank,icom
       character chars*1
@@ -390,8 +390,6 @@ c                                 absolute (amounts)
       lopt(41) = .false.
 c                                 cumulative (amounts)
       lopt(42) = .false.
-c                                 reject_negative_sites
-      lopt(43) = .true. 
 c                                 aq_ion_H+ 
       lopt(44) = .true.
 c                                 fancy_cumulative_modes
@@ -542,7 +540,7 @@ c                                 abort if pure solvent is stable
 
          else if (key.eq.'reject_negative_sites') then 
 
-            if (val.eq.'F') lopt(43) = .false.
+c           obsolete
 
          else if (key.eq.'aq_solvent_composition') then
 

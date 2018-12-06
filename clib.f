@@ -2433,9 +2433,15 @@ c-----------------------------------------------------------------------
       common/ cst312 /jlow,jlev,loopx,loopy,jinc 
 
       logical pzfunc
-      integer ilay,irep
+      integer ilay,irep,npoly
       double precision abc0,vz,iblk
-      common/ cst66 /abc0(4,3),vz(6),iblk(lay,k5),ilay,irep(lay),pzfunc
+      common/ cst66 /abc0(4,3),vz(6),iblk(lay,k5),ilay,irep(lay),npoly,
+     *               pzfunc
+
+      double precision a,b
+      integer ipvt,idv,iophi,idphi,iiphi,iflg1
+      common/ cst23  /a(k8,k8),b(k8),ipvt(k8),idv(k8),iophi,idphi,
+     *                iiphi,iflg1
 
       logical fileio, flsh, anneal
       integer ncol, nrow
@@ -2459,27 +2465,57 @@ c                                 be variable jv(1), and the dependent path
 c                                 variable must be jv(2), the path variables
 c                                 can only be pressure and temperature
       ipot = 1
-c                                 true => use internal function for relating x-y to v1-v2
-      read (n8,*) pzfunc
 c                                 true => flush model, ~true => subducting column
       read (n8,*) flsh
 c                                 true anneal the column
       read (n8,*) anneal
 c                                 thickness of a box in column
-      read (n8,*) vz(1) 
+      read (n8,*) vz(1)
+c                                 value of primary variable at dzmax if ~flsh, else
+c                                 value of primary variable at z = 0
+      read (n8,*) vz(6)
 c                                 gradient in variable jv(1) with z, jv(1)
 c                                 is the independent variable, for subduction
 c                                 this is logically pressure, i.e., dp(bar)/dz(m)
       read (n8,*) vz(2)
-c                                 value of variable jv(1) at zmin if flush
-c                                 or at zmax if not flush
+c                                 zmin if flush or or dzmax if not flush
       read (n8,*) vz(3)
 c                                 value of the x-coordinate at the origin
       read (n8,*) vz(4)
 c                                 max value of the x-coordinate
       read (n8,*) vz(5)
 
-      if (pzfunc) then 
+      if (flsh) then
+
+         pzfunc = .false.
+c                                 specification n t-z points to fit n-1^th order
+c                                 polynomial 
+         read (n8,*) npoly
+
+         if (npoly.gt.4) call error (77,b(1),i,'too many t-z '/
+     *                      /'increase 2nd dimension of abc0 in FRAC2D')
+
+         do i = 1, npoly
+            read (n8,*) b(i), a(i,1)
+            do j = 2, npoly - 1
+               a(i,j) = a(i,1)**j
+            end do
+            a(i,j) = 1d0
+         end do
+
+         call factor (a,npoly,ipvt,i)
+
+         if (i.eq.0) call subst (a,ipvt,npoly,b,i)
+
+         if (i.ne.0) call error (77,b(1),i,'degenerate t-z'//
+     *                                     ' coordinates, FRAC2D')
+         do i = 1, npoly
+            abc0(1,i) = b(i)
+         end do
+
+      else
+c                                 true => use internal function for relating x-y to v1-v2
+         read (n8,*) pzfunc
 c                                 now we need a path function for the dependent
 c                                 variable, here we take a function defined in
 c                                 terms of the absolute depth of the top of the
@@ -2493,7 +2529,7 @@ c                                 e.g., T(K) =  a(z0)*dz^2 + b(z0)*dz + c(z0)
 c                                 where a(z0) = a0 + a1*z0 + a2*z0^2 + a3*z0^3 + ...
 c                                 b(z0) = b0 + b1*z0 + b2*z0^2 + b3*z0^3 + ...
 c                                 c(z0) = c0 + c1*z0 + c2*z0^2 + c3*z0^3 + ...
-         read (n8,*) ((abc0(i,j),j=1,4),i=1,3)
+         if (.not.pzfunc) read (n8,*) ((abc0(i,j),j=1,4),i=1,3)
 
       end if 
 c                                 get the initial global composition array
@@ -2514,10 +2550,8 @@ c                                 end of data indicated by zero
 
          ilay = ilay + 1
 
-         if (ilay.eq.lay) then 
-            write (*,*) 'increase lay in routine FRAC2D'
-            stop
-         end if 
+         if (ilay.eq.lay) call error (77,b(1),i, 
+     *                               'increase lay in routine FRAC2D')
 
          read (n8,*) (iblk(ilay,i),i=1,icp)
 
@@ -2525,10 +2559,8 @@ c                                 end of data indicated by zero
 
          ncol = ncol + irep(ilay)
 
-         if (ncol.gt.maxbox) then
-            write (*,*) 'increase maxbox in routine DUMMY1'
-            stop
-         end if
+         if (ncol.gt.maxbox) call error (77,b(1),i, 
+     *                            'increase maxbox in routine FRAC2D')
 
       end do
 
@@ -2540,23 +2572,12 @@ c                                 file input of nodal p-t coordinates
 c                                 read header info
          read (n8,*) i, nrow
 
-         if (ncol*nrow.gt.k2) then 
-            write (*,'(/,a,i6,a,i6,a)') 
-     *     '**error ** too many coordinates, nodes*columns>k2',i*nrow,
-     *     'increase k2 (',k2,')'
+         if (ncol*nrow.gt.k2) call error (77,b(1),i,'too many'/
+     *      /' coordinates, increase k2 to ncol*nrow in routine FRAC2D')
 
-            stop 
-
-         else if (i.ne.ncol) then 
-            write (*,'(/,a,i4,a,a,/,a,i4,a)') 
-     *     '** error ** the number of nodes in a column (',i,
-     *     ') specified in: ',cfname,'must equal the',
-     *     'number of lithological nodes (',ncol,
-     *     ')specified in the aux file.'
-
-           stop 
-
-         end if 
+         if (i.ne.ncol) call error (77,b(1),i,'the number of'//
+     *     'nodes in a column specified in: '//cfname//'must equal the'/
+     *    /' number of nodes specified in the aux file.')
 
          do i = 1, nrow
 
@@ -2590,9 +2611,10 @@ c----------------------------------------------------------------------
       double precision p0, z0, dz, z2, z3, z4, z5, z6, t0, t1, t2, a, b
 
       logical pzfunc
-      integer ilay,irep
+      integer ilay,irep,npoly
       double precision abc0,vz,iblk
-      common/ cst66 /abc0(4,3),vz(6),iblk(lay,k5),ilay,irep(lay),pzfunc
+      common/ cst66 /abc0(4,3),vz(6),iblk(lay,k5),ilay,irep(lay),npoly,
+     *               pzfunc
 
       integer irct,ird
       double precision vn
@@ -2664,9 +2686,13 @@ c                                t0, t1 deep
       else if (flsh) then 
 
          v(1) = vz(6) + dz * vz(2)
-         v(2) = 973.15 + dz * 0.002
+         v(2) = abc0(1,npoly)
 
-      else 
+         do i = 1, npoly-1
+            v(2) = v(2) + abc0(1,i) * dz ** i
+         end do
+
+      else
 c                                 convert to depth at top of column
          z0 = p0/vz(2)
 c                                 set the independent variable
@@ -3739,9 +3765,10 @@ c---------------------------------------------------------------------
       common/ cst4 /iam
 
       logical pzfunc
-      integer ilay,irep
+      integer ilay,irep,npoly
       double precision abc0,vz,iblk
-      common/ cst66 /abc0(4,3),vz(6),iblk(lay,k5),ilay,irep(lay),pzfunc
+      common/ cst66 /abc0(4,3),vz(6),iblk(lay,k5),ilay,irep(lay),npoly,
+     *               pzfunc
 
       integer isec,icopt,ifull,imsg,io3p
       common/ cst103 /isec,icopt,ifull,imsg,io3p
@@ -3884,23 +3911,18 @@ c                                 pssect/werami get the number of nodes from the
          if (flsh) then
 c                                  flush calculations: 
             vnm(1) = 'n,alqt.'
-            vnm(2) = 'dz,m   '
-c                                  set y = 0 to be the base
-            vmx(2) = dfloat(ncol-1)*vz(1)
-            vmn(2) = 0d0
+            vnm(2) = 'z,m   '
+c                                  set the base to 
+            vmn(2) = vz(3) 
+            vmx(2) = vmn(2) + dfloat(ncol-1)*vz(1)
 
-            vz(6) = vz(3)
-c                                  vz(3) is the value of v(jv(1)) at y = vmin(2)
          else
 c                                  frac2d calculations.
             vnm(1) = 'z0,m'
             vnm(2) = 'dz,m'
 c                                  set y = 0 ti be the top
-            vmx(2) = 0d0  
-            vmn(2) = -dfloat(ncol-1)*vz(1)
-c                                  vz(3) is read as the value of v(jv(1)) at y = 0,
-c                                  convert it here to v(jv(1)) at y = ymin
-            vz(6) = vz(3) - vmin(2)*vz(2)
+            vmx(2) = vz(3)
+            vmn(2) = vz(3) - dfloat(ncol-1)*vz(1)
 
          end if
 

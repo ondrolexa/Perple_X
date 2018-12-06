@@ -680,9 +680,10 @@ c-----------------------------------------------------------------------
       common/ cst74 /iap(k2),ibulk
 
       logical pzfunc
-      integer ilay,irep
+      integer ilay,irep,npoly
       double precision abc0,vz,iblk
-      common/ cst66 /abc0(4,3),vz(6),iblk(lay,k5),ilay,irep(lay),pzfunc
+      common/ cst66 /abc0(4,3),vz(6),iblk(lay,k5),ilay,irep(lay),npoly,
+     *               pzfunc
 
       logical fileio, flsh, anneal
       integer ncol, nrow

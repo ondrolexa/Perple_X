@@ -9019,9 +9019,9 @@ c---------------------------------------------------------------------
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
      *              wl(m17,m18)
 
-      logical badend, sck, nrf
+      logical sck, nrf
       integer ldsol
-      common/ cxt36 /ldsol(m4,h9),badend(m4,h9),sck(h9),nrf(h9)
+      common/ cxt36 /ldsol(m4,h9),sck(h9),nrf(h9)
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp  
@@ -9523,8 +9523,6 @@ c                                 term may be of order < iord
 
 
       do i = 1, pstot(im)
-c                                 initialize invalid speciation flag
-         badend(i,im) = .false.
 c                                 save global copy of kdsol
          ldsol(i,im) = kdsol(i) 
 c                                 insp points to the original position 
@@ -9643,8 +9641,6 @@ c                                 implemented).
      *            call warn (59,y(1),i,
      *            mname(iorig(knsp(lstot(im)+j,im)))
      *            //' in solution model '//tname)
-
-               badend(knsp(lstot(im)+j,im),im) = .true.
 
             end if
 
@@ -10776,9 +10772,9 @@ c                                 configurational entropy variables:
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 
-      logical badend, sck, nrf
+      logical sck, nrf
       integer ldsol
-      common/ cxt36 /ldsol(m4,h9),badend(m4,h9),sck(h9),nrf(h9)
+      common/ cxt36 /ldsol(m4,h9),sck(h9),nrf(h9)
 c DEBUG
       double precision r,tr,pr,ps,p,t,xco2,u1,u2
       common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -12436,9 +12432,9 @@ c-----------------------------------------------------------------------
       logical laq
       common/ cxt3 /idaq,jdaq,laq
 
-      logical badend, sck, nrf
+      logical sck, nrf
       integer ldsol
-      common/ cxt36 /ldsol(m4,h9),badend(m4,h9),sck(h9),nrf(h9)
+      common/ cxt36 /ldsol(m4,h9),sck(h9),nrf(h9)
 
       double precision xco
       integer ico,jco
@@ -13108,9 +13104,9 @@ c                                 model type
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
 
-      logical badend, sck, nrf
+      logical sck, nrf
       integer ldsol
-      common/ cxt36 /ldsol(m4,h9),badend(m4,h9),sck(h9),nrf(h9)
+      common/ cxt36 /ldsol(m4,h9),sck(h9),nrf(h9)
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
@@ -20359,7 +20355,7 @@ c----------------------------------------------------------------------
 
       integer ids, id, k, l, m
 
-      logical bad, zap, zbad, usex
+      logical bad, zbad, usex
  
       external zbad
 
@@ -20379,9 +20375,9 @@ c----------------------------------------------------------------------
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 
-      logical badend, sck, nrf
+      logical sck, nrf
       integer ldsol
-      common/ cxt36 /ldsol(m4,h9),badend(m4,h9),sck(h9),nrf(h9)
+      common/ cxt36 /ldsol(m4,h9),sck(h9),nrf(h9)
 
       integer pstot,qstot,ostg,odim,nsum
       common/ junk1 /pstot(h9),qstot(h9),ostg(h9),odim(mst,h9),nsum(h9)
@@ -20400,7 +20396,6 @@ c----------------------------------------------------------------------
 c----------------------------------------------------------------------
 
       bad  = .false.
-      zap  = bad
 
       k = 0
 
@@ -20412,9 +20407,7 @@ c----------------------------------------------------------------------
                y(l) = y(l)*x(m,kmsol(ids,l,m))
             end do
 
-            if (y(l).gt.zero) then 
-
-               if (badend(l,ids)) zap = .true.
+            if (y(l).gt.zero) then
 
                if (y(l).gt.one) k = l
 
@@ -20469,14 +20462,6 @@ c                                 reject pure independent endmember compositions
             y(l) = 0d0
 
          end do
-
-      end if
-c                                 invalid dependent endmember
-      if (lopt(43).and.zap) then 
-c                                 convert y's to p's
-         call y2p0 (ids)
-c                                 check for bad z's
-         if (zbad(pa,ids)) bad = .true.
 
       end if
 
