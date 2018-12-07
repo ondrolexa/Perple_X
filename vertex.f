@@ -735,30 +735,29 @@ c                                 be variable jv(1), and the dependent path
 c                                 variable must be jv(2), the path variables
 c                                 can only be pressure and temperature
       ipot = 1
+c                                 jlow set by 1dpath keyword in perplex_option.dat
+c                                 is the number of increments in the x direction.
+      loopx = jlow
 
       if (first) then 
 c                                 set first to prevent re-reading of the 
-c                                 input in auto_refine                                
+c                                 input in auto_refine
          first = .false.
 c                                 get the phase to be fractionated
          call frname 
 c                                 check for consistent input if fileio
          if (fileio) then 
 
-            if (jlow.ne.nrow) then 
+            if (loopx.ne.nrow) then 
                write (*,'(2(/,a,i4,a,a))') 
      *         '** error ** the number of columns (',nrow,
      *         ') specified in the coordinate file must equal the',
-     *         'number of z increments (',jlow,
+     *         'number of z increments (',loopx,
      *        ')specified in the aux file.'
               
               stop
 
             end if
-
-         else 
-c                                 jlow set by 1dpath keyword in perplex_option.dat
-            nrow = jlow
 
          end if
 c                                 work out the oxide stoichiometries for excess O 
@@ -802,14 +801,14 @@ c                                 NOTE if not fileio, then jlow must not change
 
       end if
 c                                 check resolution dependent dimensions
-      if (nrow*ncol.gt.k2) then
-         write (*,*) ' parameter k2 must be >= ncol*nrow'
+      if (loopx*ncol.gt.k2) then
+         write (*,*) ' parameter k2 must be >= ncol*loopx'
          write (*,*) ' increase parameter k2 for routine DUMMY1'
          write (*,*) ' or increase box size (vz(1)) or decrease'
-         write (*,*) ' number of path increments (nrow) or try'
+         write (*,*) ' number of path increments (loopx) or try'
          write (*,*) ' the large parameter version of VERTEX'
          write (*,*) ' k2 = ',k2 
-         write (*,*) ' ncol * nrow = ',ncol*nrow
+         write (*,*) ' ncol * loopx = ',ncol*loopx
          stop
       end if 
 
@@ -841,7 +840,7 @@ c                                 for optimization.
       call initlp
 c                                 set up stuff for tab file output, this is the only routine other
 c                                 than WERAMI that writes tab files.
-      two(1) = nrow
+      two(1) = loopx
 c                                 number of variables in table
       icp1 = icp+1 
       iprop = 2*icp1
@@ -961,11 +960,32 @@ c DEBUG
          do i = 1, ilay
             write (*,'(i1,1x,12(f10.3,1x))') i,(lcomp(j,i),j=1,icp)
          end do
+
+         if (flsh) then 
+c                                 renormalize the aliquot to 1kg
+            tot = 0d0 
+
+            do i = 1, icp 
+c                                 local mass
+               tot = tot + dblk(1,i)*atwt(i)
+            end do
+c                                 the area of the column is (1/rho)^(2/3)
+c                                 and rho(kg/m3) ~ -dpdz * 1d4
+            tot = 1d3/tot*(-vz(2)/1d4)**(2d0/3d0)
+
+            do i = 1, icp 
+               dblk(1,i) = dblk(1,i)*tot
+            end do
+
+            write (*,'(/,a,12(f10.3,1x))') 'kg/m2 aliquot',
+     *                                   (dblk(1,i),i=1,icp)
+
+         end if
 c                                 end of annealling section.
       end if
-c                                 nrow is the number of steps along the subduction
+c                                 loopx is the number of steps along the subduction
 c                                 path:
-      do j = 1, nrow
+      do j = 1, loopx
 c                                 initialize avg layer comp
          do l = 1, ilay
             do m = 1, icp
@@ -974,7 +994,7 @@ c                                 initialize avg layer comp
          end do
 
          write (*,*) '##########################################'
-         write (*,'(/,a,i4,a,i4/)') 'Column ',j,' of ',nrow
+         write (*,'(/,a,i4,a,i4/)') 'Column ',j,' of ',loopx
          write (*,*) '##########################################'
 c                                 j loop varies the pressure at the top of the 
 c                                 column (p0), set p0:
@@ -1101,7 +1121,7 @@ c                                 end of j index loop
          close (lun + j)
       end do
 
-      if (output) call outgrd (nrow,ncol,1,n4,0)
+      if (output) call outgrd (loopx,ncol,1,n4,0)
 
 2000  format (/,' failed at p0-dz = ',2(g14.7,1x),' layer ',i1,' node '
      *       ,i3,' column ',i3,/,' p-t-c ',2(g14.7,1x),/,12(g14.7,1x))

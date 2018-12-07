@@ -4237,12 +4237,10 @@ c----------------------------------------------------------------------
 
       common/ cst5  /pbar,t,xco2,u1,u2,tr,pr,r,ps
 
-c                                 these routines return volume in J/bar
+c                                 these routines return volume cm3/mol
       call crkco2 (pbar,t,v2,fco2) 
       call crkh2o (pbar,t,v1,fh2o)
-c                                 leonya needs cm3/mol
-      v2 = v2*1d1
-      v1 = v1*1d1
+
       rt = r*t
 
       p = pbar/1d3
@@ -4361,9 +4359,6 @@ c                                 return volume in J/bar
        
       if (x1.eq.1d0.or.x2.eq.1d0.or.x3.eq.1d0) return
 
-c                                 leonya needs cm3/mol
-      v2 = v2*1d1
-      v1 = v1*1d1
       rt = r*t
 
       p = pbar/1d3
@@ -4528,9 +4523,6 @@ c                                 CORK volume guess and backup fugacity
          call error (11,xco2,iam,'species (routine pseos)')
 
       end if 
-c                                CORK volumes are J/bar/mol, convert to
-c                                cm3/mol for PSEOS
-      v = 10d0*v
 
       c12 = 12d0*c5
       c20 = 20d0*c6

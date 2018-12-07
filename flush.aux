@@ -2,13 +2,11 @@
 .false.          anneal initial column
 500.             zbox, box size (m)
 
-0d0              value of primary variable at z = 0 if flush
+-0.34            gradient of primary variable (iv(1)) with upward-directed z (e.g. bar/m)
 
--0.2857          gradient of primary variable (iv(1)) with upward-directed z (e.g. bar/m)
+-150d3           max value of y coordinate (zmax),  only used if flush
 
--150d3           depth of column (zmin) only used if flush
-
-0                minimum value of x-coordinate (moles of aliquot)
+0                minimum value of x-coordinate (moles of aliquot), number of increments is set by 1d_path option
 0.04             maximum value of x-coordinate
 
 3                number of T(K)-z(m) coordinates to compute n-1 order polynomial for t(z)

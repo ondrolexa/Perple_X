@@ -12571,7 +12571,7 @@ c                                 write reach_increment
      *            write (*,1030) int(reachg(im)*2d0/nopt(21)-1d0), tname
 c                                 indicate site_check_override and refine endmembers
                if (.not.sck(im)) write (*,1080) tname
-               if (.not.nrf(im)) write (*,1090) tname
+               if (.not.nrf(im).and..not.lopt(39)) write (*,1090) tname
 
                if (output.and.lopt(10)) then
 

@@ -2471,9 +2471,6 @@ c                                 true anneal the column
       read (n8,*) anneal
 c                                 thickness of a box in column
       read (n8,*) vz(1)
-c                                 value of primary variable at dzmax if ~flsh, else
-c                                 value of primary variable at z = 0
-      read (n8,*) vz(6)
 c                                 gradient in variable jv(1) with z, jv(1)
 c                                 is the independent variable, for subduction
 c                                 this is logically pressure, i.e., dp(bar)/dz(m)
@@ -2642,7 +2639,7 @@ c                                values
       else if (pzfunc) then
 c                                 this could be made a lot more efficient by
 c                                 making the quadratic coeffs once for each column
-         z0 = p0/vz(2)/1d3
+         z0 = -dz/1d3
          z2 = z0*z0
          z3 = z2*z0
          z4 = z3*z0
@@ -2679,13 +2676,13 @@ c                                t0, t1 deep
          a = -t1 / 272d0 + t2 / 850d0 + t0 / 400d0
          b = -dsqrt(2d0) * (64d0*t2 - 625d0*t1 + 561d0*t0)/6800d0
 
-         v(1) = p0 + dz * vz(2)
+         v(1) = (dz - p0) * vz(2)
 
-         v(2) = a*(dz/1d3)**2 + b*(dz/1d3) + t0
+         v(2) = a*z2 + b*z0 + t0
 
       else if (flsh) then 
 
-         v(1) = vz(6) + dz * vz(2)
+         v(1) = dz * vz(2)
          v(2) = abc0(1,npoly)
 
          do i = 1, npoly-1
@@ -2694,9 +2691,9 @@ c                                t0, t1 deep
 
       else
 c                                 convert to depth at top of column
-         z0 = p0/vz(2)
+         z0 = -dz/1d3
 c                                 set the independent variable
-         v(1) = p0 + dz * vz(2)   
+         v(1) = (dz - p0) * vz(2)   
 c                                 set the dependent variable
          v(2) = (abc0(1,1) + abc0(2,1)*z0 + abc0(3,1)*z0**2 
      *                     + abc0(4,1)*z0**3)*dz**2 
@@ -3910,7 +3907,7 @@ c                                 pssect/werami get the number of nodes from the
 
          if (flsh) then
 c                                  flush calculations: 
-            vnm(1) = 'n,alqt.'
+            vnm(1) = 'Q,kg/m2'
             vnm(2) = 'z,m   '
 c                                  set the base to 
             vmn(2) = vz(3) 
@@ -3918,11 +3915,11 @@ c                                  set the base to
 
          else
 c                                  frac2d calculations.
-            vnm(1) = 'z0,m'
+            vnm(1) = '-z0,m'
             vnm(2) = 'dz,m'
 c                                  set y = 0 ti be the top
-            vmx(2) = vz(3)
-            vmn(2) = vz(3) - dfloat(ncol-1)*vz(1)
+            vmx(2) = 0d0
+            vmn(2) = -dfloat(ncol-1)*vz(1)
 
          end if
 

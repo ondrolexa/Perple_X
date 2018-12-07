@@ -1,0 +1,178 @@
+dew13hp622ver_elements.dat               thermodynamic data file                                                                                                     
+no_print                  print file name, blank = no output                                                                                                                                                                                      
+plot                      plot file name, blank = no output                                                                                                                                                                                                                        
+solution_model.dat        solution model file, blank = no solutions                                                                                                                                                                                           
+10 cm/y subduction rate, 40 ma plate age, mantle -> 4 wt% H2O 
+frac2d_perplex_option.dat                                                                                                                                                                                 
+    9 calculation type, 0 - no independent potentials, 1 - two independent potentials 3 - one independent potentials, 4 - swash 5 - gridded minimization, 7 - fractionation
+    3 efficiency level, 0 - low, 5 - high
+    1 print potentials, 0 - yes, 1 - no
+    1 JTEST, debug flag
+    0 reaction format, 0 - just names, 1 - sat. phases 2 -  S and V, 3 - stoichiometry, 4 - everything
+    0 console messages, 0 - yes, 1 - suppress most
+    1 short print file, 0 - no, 1 - yes
+    0 for gridded minimization grid refinement, 1 - true boundaries, 0 - all boundaries
+  5 for gridded minimization JLOW, number of Y-nodes at lowest level
+    1 for gridded minimization JLEV, number of grid levels
+    0 number component transformations
+   15 number of components
+    1 component amounts, 0 - molar, 1 weight
+    1 assemblage data 0 - print, 1 - suppress
+    0 variance flag, 0 - calculate all, 1 - only true univariants
+    1 IDBASE data base code
+    5 ifug EoS for saturated phase
+   99 for gridded minimization ILOW, number of X-nodes at lowest level
+    0 special dependencies: 0 - P and T independent, 1 - P(T), 2 - T(P)
+-6.41160E+01 4.86048E-02 -8.37276E-07 7.05864E-12 -2.24183E-17 
+
+begin thermodynamic component list
+H2    1  2.63000      0.00000      0.00000     weight amount
+C     1  2.90000      0.00000      0.00000     weight amount
+Si    1  45.0000      0.00000      0.00000     weight amount
+Al    1  15.2600      0.00000      0.00000     weight amount
+Fe    1  9.84000      0.00000      0.00000     weight amount
+Mg    1  6.54000      0.00000      0.00000     weight amount
+Ca    1  12.6600      0.00000      0.00000     weight amount
+Na    1  2.07000      0.00000      0.00000     weight amoun
+K     1 0.560000      0.00000      0.00000     weight amount
+O2    1 0. 0. 0.
+S2    1 0. 0. 0.
+end thermodynamic component list
+
+
+begin saturated component list
+end saturated component list
+
+
+begin saturated phase component list
+end saturated phase component list
+
+
+begin mobile component list
+end mobile components
+
+
+begin excluded phase list
+h2oL
+S2
+SO2
+CO
+
+f3clin
+naph
+nta
+
+parg_dqf
+ts_dqf
+mrbG
+rieb
+gl
+
+
+kals
+nasGL
+kalGL
+woGL
+foGL
+odo
+                           | low abundance species
+FeC4H6O4   0   
+FeC2H3O2   1   
+NaCO3-    -1   CO3-2     -2   
+Al+3       3   
+AlO2-
+            Ca(HCO3)   1   Ca(OH)+    1   Ca+2       2   CaCO3,aq   0   CaSO4,aq   0   
+CO,aq
+Fe+2       2   
+Fe+3       3   H+         1   
+HAlO2,aq   0   HCO3-     -1   
+HO2-
+            HS-       -1   HSiO3-    -1   HSO3-     -1   HSO4-     -1   
+HSO5-     -1   K+
+            KOH,aq     0   KSO4-     -1   Mg(HCO3)   1   Mg(HSiO3   1   
+Mg+2
+MgCO3,aq
+            MgOH+      1   
+MgSO4,aq   0   Na+        1   NaHCO3,a   0   NaHSiO3,   0   NaOH,aq
+O2,aq      0   OH-       -1   
+S2-2      -2   S2O3-2    -2   
+S2O4-2    -2   
+S2O5-2
+S2O6-2    -2   
+S2O8-2    -2   S3-2      -2   
+S3O6-2    -2   S4-2      -2   
+S4O6-2
+S5-2      -2   
+S5O6-2    -2   Si2O4,aq   0   SiO2,aq    0   SO2,aq     0   
+SO3-2
+               SO4-2     -2
+
+                           |HKF data for ions of amino acids does not extrapolate plausibly
+                           |and may prevent AQRXDO from converging.
+LACTATE,                   
+GLUTARAT
+GLYCOLAT
+FORMATE,
+PROPANOA
+ACETATE
+                           |HKF data for volatile neutral solute species is generally unrealiable
+                           |and should be excluded if accurate bulk compositions are required,
+                           |however, volatile neutral species have no influence on the concentrations
+                           |of ionic and solvent species and do not prevent AQRXDO from converging. 
+CO2,aq
+H2,aq
+ O2,aq
+ CO,aq
+H2S,aq
+ SO2,aq
+METHANE,
+ACETIC-A
+PROPANE,
+HEXANE,A
+ETHANE,A
+ETHANOL,
+ETHYLENE
+FORMIC-A
+BENZENE
+METHANOL
+LACTIC-A     
+LACTATE,      
+GLUTARIC
+GLYCOLIC
+PROPANOL
+PROPANOI
+TOLUENE,
+end excluded phase list
+
+
+begin solution phase list
+COH-Fluid
+Bio(TCC)
+Omph(GHP)
+Opx(W)
+Chl(HP)
+T
+Atg(PN)
+Mica(CF)
+Do(HP)
+M(HP)
+Grt(JH)
+O(HP)
+Sp(JH)
+                          | low P
+ Pu
+ Sp(WPC)
+ cAmph(DP)
+ Stlp
+ Ctd(W)
+ Ep(HP)
+ A-phase                   | at high p, but unimportant. 
+ feldspar
+end solution phase list
+
+5e4      0.     0.00000000  0.0000      0.0000     max p, t, xco2, u1, u2
+2.5e4      -35.78  0.00000000  0.0000      0.0000     min p, t, xco2, u1, u2
+ 1.0000      1.0000     1.00000000  1.0000      1.0000     increment p, t, xco2, u1, u2
+
+ 1 2 3 4 5    iv1, iv2, iv3, iv4, iv5
+
