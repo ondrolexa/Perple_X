@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.8.5, source updated Dec 7, 2018.',
+     *      'Perple_X version 6.8.5, source updated Dec 10, 2018.',
 
      *      'Copyright (C) 1986-2018 James A D Connolly '//
      *      '<www.perplex.ethz/copyright.html>.'
@@ -127,9 +127,9 @@ c                                 precision stuff used in lpnag
       integer iam
       common/ cst4 /iam
 
-      logical sck, nrf
+      logical badend, sck, nrf
       integer ldsol
-      common/ cxt36 /ldsol(m4,h9),sck(h9),nrf(h9)
+      common/ cxt36 /ldsol(m4,h9),badend(m4,h9),sck(h9),nrf(h9)
 
       integer length,iblank,icom
       character chars*1
@@ -390,6 +390,8 @@ c                                 absolute (amounts)
       lopt(41) = .false.
 c                                 cumulative (amounts)
       lopt(42) = .false.
+c                                 reject_negative_sites
+      lopt(43) = .true.
 c                                 aq_ion_H+ 
       lopt(44) = .true.
 c                                 fancy_cumulative_modes

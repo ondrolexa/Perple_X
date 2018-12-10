@@ -2639,7 +2639,7 @@ c                                values
       else if (pzfunc) then
 c                                 this could be made a lot more efficient by
 c                                 making the quadratic coeffs once for each column
-         z0 = -dz/1d3
+         z0 = p0/1d3
          z2 = z0*z0
          z3 = z2*z0
          z4 = z3*z0
@@ -2678,7 +2678,7 @@ c                                t0, t1 deep
 
          v(1) = (dz - p0) * vz(2)
 
-         v(2) = a*z2 + b*z0 + t0
+         v(2) = a*dz**2/1d6 - b*dz/1d3 + t0
 
       else if (flsh) then 
 

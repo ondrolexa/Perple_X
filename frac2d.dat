@@ -68,6 +68,7 @@ mrbG
 rieb
 gl
 
+faTL
 
 kals
 nasGL
@@ -146,7 +147,7 @@ end excluded phase list
 
 
 begin solution phase list
-COH-Fluid
+COH-Fluid+
 Bio(TCC)
 Omph(GHP)
 Opx(W)
