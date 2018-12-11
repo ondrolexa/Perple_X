@@ -146,6 +146,296 @@ Mg(HSiO3
 end_of_model
                       --------------------------------------------------------
 begin_model
+                      Holland et al (JPet, 2018) Clinopyroxene model.
+
+                      Coded for Perple_X by Julien Cornet Sept 2018.
+                      Melting of Peridotites through to Granites
+
+                      Model modified from Green et al (2012) and Jennings and Holland (2015)
+
+                      NOTES:
+
+                      to use this model, the following endmembers must be specified with make 
+                      definitions in the thermodynamic data file
+
+                      cenjh  = 1 en
+                      DQF = 3500 - 2 * T + 0.048 * P 
+                      cfsg  = 1 fs
+                      DQF = 2100 - 2 * T + 0.045 * P
+                      cessh = cats + acm - jd
+                      DQF = -3450 
+                      crdih = cats + kos - jd
+                      DQF = -4900
+                      mcbuf = cats + 1/2 per + 1/2 ru -1/2 cor
+                      DQF = -1750 - 1.2 * T - 0.005 * P
+                      kjdh = jd + san - abh
+                      DQF = -3750 + 1.189 * P     
+
+                      Formulated as a triple simplex prism. JADC, Dec 11, 2018:
+
+                      9 compositionally independent endmembers
+                      1 ordered endmember
+                      15 dependent endmembers
+                      16 fillers of which 4 are utterly superfluous
+
+                      this formulation limits the buf exchange to {MgTi}/2{Fe} - {FeTi}/2{MgFe}/2
+
+                                           M1     M2     T
+                                        ____________________________________
+
+                         Multiplicity      1      1     1/2 <- fake T multiplicity
+                                        ____________________________________
+                           mkbuf_d         MgTi   K     Si    dependent 
+                           mnbuf_d         MgTi   Na    Si    dependent
+                           mcbuf           MgTi   Ca   AlSi 
+                           mcbuf_d1        MgTi   Ca   AlSi   filler
+                           ___
+                           mkbuf_d1        MgTi   K     Si    filler 
+                           mnbuf_d1        MgTi   Na    Si    filler
+                           mbuf_d          MgTi   Mg   AlSi   dependent
+                           mfbuf_d         MgTi   Fe   AlSi   dependent
+                           _________
+                           crkjd_d         Cr     K     Si    dependent
+                           crjd_d          Cr     Na    Si    dependent
+                           crdi            Cr     Ca   AlSi   
+                           crdi_d1         Cr     Ca   AlSi   filler
+                           ___
+                           crkjd_d1        Cr     K     Si    filler
+                           crjd_d1         Cr     Na    Si    filler
+                           cren_d          Cr     Mg   AlSi   dependent
+                           crfs_d          Cr     Fe   AlSi   dependent
+                           _________
+                           kess_d          Fe3+   K     Si    dependent
+                           ness_d          Fe3+   Na    Si    dependent
+                           cess            Fe3    Ca   AlSi
+                           cess_d1         Fe3    Ca   AlSi   filler
+                           ___
+                           kess_d1         Fe3+   K     Si    filler
+                           ness_d1         Fe3+   Na    Si    filler
+                           mess_d          Fe3    Mg   AlSi   dependent 
+                           fess_d          Fe3    Fe   AlSi   dependent
+                           _________
+                           kjdh            Al     K     Si  
+                           jd              Al     Na    Si   
+                           cats            Al     Ca   AlSi   
+                           cats_d1         Al     Ca   AlSi   filler
+                           ___
+                           kjd_d1          Al     K     Si    filler
+                           jd_d1           Al     Na    Si    filler
+                           mats_d          Al     Mg   AlSi   dependent
+                           fats_d          Al     Fe   AlSi   dependent
+                           _________
+                           kjd_d2          Al     K     Si    filler
+                           jd_d2           Al     Na    Si    filler
+                           di              Mg     Ca    Si
+                           hed_d           Fe     Ca    Si    dependent
+                           ___
+                           kjd_d3          Al     K     Si    filler
+                           jd_d3           Al     Na    Si    filler
+                           cenjh           Mg     Mg    Si 
+                           cfsg            Fe     Fe    Si
+                           _______________________________________________
+
+                    Ordered species:
+
+                           cfm             Mg     Fe     Si independent
+
+
+Cpx(HGP)
+abbreviation Cpx
+full_name    clinopyroxene
+
+8                               | model type: prismatic
+
+3                               | number of simplexes comprising the prism
+
+4 2 5                           | 15 true dependent endmembers:
+
+mkbuf_d   mnbuf_d   mcbuf   mcbuf_d1
+mkbuf_d1  mnbuf_d1  mfbuf_d mbuf_d 
+
+crkjd_d   crjd_d    crdih   crdi_d1
+crkjd_d1  crjd_d1   crfs_d  cren_d 
+
+kess_d    ness_d    cessh    cess_d1
+kess_d1   ness_d1   fess_d   mess_d
+
+kjd       jd        cats     cats_d1
+kjd_d1    jd_d1     fats_d   mats_d
+
+kjd_d2    jd_d2     hed_d    di    
+kjd_d3    jd_d3     cfsg     cenjh
+
+1                               | number of ordered species and definitions 
+
+cfm   = 1/2 cenjh + 1/2 cfsg enthalpy_of_ordering  =  -4400 - 0.0008*P | DQF(cfm) - (DQF(ceng) + DQF(cfsg))/2
+
+begin_limits
+
+cfm = -2 + 2 cfsg + 1 cfm                          delta = 2 zm1fe
+cfm =  0 - 2 di - 2 cenjh - 1 cfm                  delta = 2 zm1mg
+cfm =  0 - 2 cfsg - 1 cfm                          delta = 2 zm2fe
+cfm = -2 + 2 cenjh + 1 cfm                         delta = 2 zm2mgd
+
+end_limits
+
+31                              | number of dependent endmembers and definitions   
+                                | 15 true dependent endmembers:
+mkbuf_d   = -1 cats  + 1 mcbuf + 1 kjd
+mnbuf_d   = -1 cats  + 1 mcbuf + 1 jd
+mfbuf_d   = -1 di    + 1 mcbuf + 1 cfm
+mbuf_d    = -1 di    + 1 mcbuf + 1 cenjh
+
+crkjd_d   = -1 cats  + 1 crdih + 1 kjd
+crjd_d    = -1 cats  + 1 crdih + 1 jd
+cren_d    = -1 di    + 1 crdih + 1 cenjh
+crfs_d    = -1 di    + 1 crdih + 1 cfm
+
+kess_d    = -1 cats  + 1 cessh + 1 kjd
+ness_d    = -1 cats  + 1 cessh + 1 jd
+mess_d    = -1 di    + 1 cessh + 1 cenjh
+fess_d    = -1 di    + 1 cessh + 1 cfm 
+
+mats_d    = -1 di    + 1 cats  + 1 cenjh
+fats_d    = -1 di    + 1 cats  + 1 cfm
+
+hed_d     =  1 di    + 1 cfsg  - 1 cfm
+                                | 12 useful dependent filler endmembers
+mcbuf_d1  =  1 mcbuf
+mkbuf_d1  = -1 cats  + 1 mcbuf + 1 kjd
+mnbuf_d1  = -1 cats  + 1 mcbuf + 1 jd
+
+crdi_d1   =  1 crdih
+crkjd_d1  = -1 cats  + 1 crdih + 1 kjd
+crjd_d1   = -1 cats  + 1 crdih + 1 jd
+
+cess_d1   =  1 cessh
+kess_d1   = -1 cats  + 1 cessh + 1 kjd
+ness_d1   = -1 cats  + 1 cessh + 1 jd
+
+cats_d1   =  1 cats
+kjd_d1    =  1 kjd
+jd_d1     =  1 jd
+                                | 4 utterly useless dependent filler endmembers
+                                | these could be sawdust for all they do.
+kjd_d2    =  1 kjd
+jd_d2     =  1 jd
+kjd_d3    =  1 kjd
+jd_d3     =  1 jd
+|                               | endmembers to make the Mg-free Ti exchange, these 
+|                               | could replace utterly useless fillers to increase 
+|                               | compositional converage
+
+|fcbuf_d   = 1/2 cfsg + 1 mcbuf  - 1/2 cfm
+|fbuf_d    = -1 di    + 1/2 cfsg + 1 mcbuf + 1/2 cfm
+|fkbuf_d   = 1/2 cfsg - cats + mcbuf - 1/2 cfm + kjdh
+|fnbuf_d   = 1/2 cfsg - 1 cats  + 1 mcbuf + jd - 1/2 cfm
+
+0 0 0 0 0 0 0 0 0 0             | endmember flags
+0 0 0 0 0 0 0 0 0 0             | endmember flags
+0 0 0 0 0 0 0 0 0 0             | endmember flags
+0 0 0 0 0 0 0 0 0 0             | endmember flags
+
+                                | First (3d) simplex of the prism (Ca/Mg/Fe-Na-K)
+
+0. .2 0.1  0                    | range and resolution of X(1,1) => Na
+0. .2 0.1  0                    | range and resolution of X(1,2) => K
+0. .6 0.1  0                    | range and resolution of X(1,3) => Fe
+
+                                | Second (1d) simplex of the prism 
+
+0. 1. 0.1  0                    | range and resolution of (Fe+Mg)/(Ca+Fe+Mg)
+
+                                | third (4d) simplex of the prism
+
+0. .1 0.1  0                    | range and resolution of X("buf")
+0. .1 0.1  0                    | range and resolution of X("cr")
+0. .1 0.1  0                    | range and resolution of X("ess")
+0. .1 0.1  0                    | range and resolution of X("ts")
+
+begin_excess_function
+
+W(di cfsg)     25.8d3 - 0.03 * p
+W(di cats)       13d3 - 0.06 * p
+W(di crdih)       8d3
+W(di cessh)       8d3
+W(di jd)         26d3
+W(di cenjh)    29.8d3 - 0.03 * p
+W(di cfm)      20.6d3 - 0.03 * p
+W(di kjd)        26d3
+
+W(cfsg cats)     25d3 - 0.1 * p
+W(cfsg crdih)  38.3d3
+W(cfsg cessh)  43.3d3
+W(cfsg jd)       24d3
+W(cfsg cenjh)   2.3d3
+W(cfsg cfm)     3.5d3
+W(cfsg kjd)      24d3
+
+W(cats crdih)     2d3
+W(cats cessh)     2d3
+W(cats jd)        6d3
+W(cats cenjh)    45.2d3 - 0.35 * p
+W(cats cfm)      27d3 - 0.1 * p
+W(cats kjd)       6d3
+
+W(crdih cessh)    2d3
+W(crdih jd)       3d3
+W(crdih cenjh) 52.3d3
+W(crdih cfm)   40.3d3
+W(crdih kjd)      3d3
+
+W(cessh jd)       3d3
+W(cessh cenjh) 57.3d3   
+W(cessh cfm)   45.3d3   
+W(cessh kjd)      3d3
+
+W(jd cenjh)      40d3   
+W(jd cfm)        40d3   
+W(jd kjd)        10d3   
+
+W(cenjh cfm)      4d3  
+W(cenjh kjd)     40d3   
+
+W(cfm kjd)       40d3   
+
+end_excess_function
+
+3                                   | 3 site entropy model (M1, M2, T)
+
+6 1                                 | 6 species on m1, mult = 1
+z(m1,fe)   = 1 cfsg 
+z(m1,mg)   = 1 di + 1 cenjh + 1/2 mcbuf + 1 cfm
+z(m1,fe3+) = 1 cessh 
+z(m1,Ti)   = 1/2 mcbuf
+z(m1,Cr)   = 1 crdih
+
+5 1                                 | 5 species on m2, mult. = 1
+z(m2,na)   = 1 jd
+z(m2,k)    = 1 kjd
+z(m2,mg)   = 1 cenjh
+z(m2,fe)   = 1 cfm  + 1 cfsg
+
+2 0.5                              | 2 species on T, effective mult. = 1/4
+z(Al,T) = 1/2 cats + 1/2 mcbuf + 1/2 crdih + 1/2 cessh 
+
+
+begin_van_laar_sizes
+alpha(di)     1.2
+alpha(cenjh)  1
+alpha(cfsg)   1
+alpha(jd)     1.2
+alpha(kjd)   1.2
+alpha(cats)   1.9
+alpha(mcbuf)  1.9
+alpha(cessh)  1.9
+alpha(crdih)  1.9
+alpha(cfm)    1
+end_van_laar_sizes
+
+end_of_model
+                      --------------------------------------------------------
+begin_model
                       Augite(G) => Green et al (JMG, 2016) Augite model.
 
                       This model should not be used for "Na-rich" compositions.
@@ -207,10 +497,10 @@ begin_model
                                                      ____________________________________
                                         _________
                                         Acmite          Fe3    Na    Si     Si             
-                                        cacm            Fe3    Ca   AlSi   AlSi  filler    dependent
-                                        cacm            Fe3    Ca   AlSi   AlSi  filler    dependent 
+                                        cacm            Fe3    Ca   AlSi   AlSi  filler
+                                        cacm            Fe3    Ca   AlSi   AlSi  filler
                                         ___
-                                        Acmite          Fe3    Na    Si     Si   filler    dependent 
+                                        Acmite          Fe3    Na    Si     Si   filler 
                                         macm            Fe3    Mg   AlSi   AlSi            dependent 
                                         facm            Fe3    Fe   AlSi   AlSi            dependent
                                         _________
@@ -222,11 +512,11 @@ begin_model
                                         Mats            Al     Mg   AlSi   AlSi            dependent
                                         fats            Al     Fe   AlSi   AlSi            dependent 
                                         _________
-                                        Jadeite         Al     Na    Si     Si   filler
+                                        Jadeite         Al     Na    Si     Si   utterly useless filler
                                         Diopside        Mg     Ca    Si     Si
                                         hed             Fe     Ca    Si     Si             dependent
                                         ___
-                                        Jadeite         Al     Na    Si     Si   filler 
+                                        Jadeite         Al     Na    Si     Si   utterly useless filler
                                         cEnstatite      Mg     Mg    Si     Si
                                         cferrosilite    Fe     Fe    Si     Si
                                         _________
@@ -263,7 +553,7 @@ full_name    clinopyroxene
 8                            | model type: prism + orphan vertices
 
 3                            | prism: 3 simplicies with a common vertex
-3 2 3                        | 1d 1d 3d
+3 2 3                        | 2d 1d 2d
 
                              | endmembers on the prism vertices
 
@@ -12701,3 +12991,66 @@ z(al,T2) = 1 ames + 1/2 clin + 1/2 daph + 1/2 sud_dqf
 site_check_override
 
 end_of_model  
+
+                                   9 compositionally independent endmembers
+                                   1 ordered endmember
+                                   the mbuf exchange is limited to {MgTi}/2{Fe} - {FeTi}/2{MgFe}/2
+                                   15 dependent endmembers
+                                   16 fillers of which 4 are utterly superfluous
+
+
+                                                        M1     M2     T
+                                                     ____________________________________
+
+                                      Multiplicity      1      1     1/2 <- fake T multiplicity
+                                                     ____________________________________
+                                        mkbuf_d         MgTi   K     Si    dependent 
+                                        mnbuf_d         MgTi   Na    Si    dependent
+                                        mcbuf           MgTi   Ca   AlSi 
+                                        mcbuf_d1        MgTi   Ca   AlSi   filler
+                                        ___
+                                        mkbuf_d1        MgTi   K     Si    filler 
+                                        mnbuf_d1        MgTi   Na    Si    filler
+                                        mbuf_d          MgTi   Mg   AlSi   dependent
+                                        mfbuf_d         MgTi   Fe   AlSi   dependent
+                                        _________
+                                        crkjd_d         Cr     K     Si    dependent
+                                        crjd_d          Cr     Na    Si    dependent
+                                        crdi            Cr     Ca   AlSi   
+                                        crdi_d1         Cr     Ca   AlSi   filler
+                                        ___
+                                        crkjd_d1        Cr     K     Si    filler
+                                        crjd_d1         Cr     Na    Si    filler
+                                        cren_d          Cr     Mg   AlSi   dependent
+                                        crfs_d          Cr     Fe   AlSi   dependent
+                                        _________
+                                        kess_d          Fe3+   K     Si    dependent
+                                        ness_d          Fe3+   Na    Si    dependent
+                                        cess            Fe3    Ca   AlSi
+                                        cess_d1         Fe3    Ca   AlSi   filler
+                                        ___
+                                        kess_d1         Fe3+   K     Si    filler
+                                        ness_d1         Fe3+   Na    Si    filler
+                                        mess_d          Fe3    Mg   AlSi   dependent 
+                                        fess_d          Fe3    Fe   AlSi   dependent
+                                        _________
+                                        kjdh            Al     K     Si  
+                                        jd              Al     Na    Si   
+                                        cats            Al     Ca   AlSi   
+                                        cats_d1         Al     Ca   AlSi   filler
+                                        ___
+                                        kjd_d1          Al     K     Si    filler
+                                        jd_d1           Al     Na    Si    filler
+                                        mats_d          Al     Mg   AlSi   dependent
+                                        fats_d          Al     Fe   AlSi   dependent
+                                        _________
+                                        kjd_d2          Al     K     Si    filler
+                                        jd_d2           Al     Na    Si    filler
+                                        di              Mg     Ca    Si
+                                        hed_d           Fe     Ca    Si    dependent
+                                        ___
+                                        kjd_d3          Al     K     Si    filler
+                                        jd_d3           Al     Na    Si    filler
+                                        cenjh           Mg     Mg    Si 
+                                        cfsg            Fe     Fe    Si
+                                        _______________________________________________
