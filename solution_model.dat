@@ -2301,6 +2301,118 @@ begin_model
 
                                       JADC 4/14
 
+                                      reformulated as a temkin + ordinary water site model.
+
+                                      JADC 12/18
+
+                                      This model requires the following make definitions in the
+                                      thermodynamic data file make_definitions section:
+
+                                      sil8L = 8/5 silL
+                                      -23d3 0 0 
+
+                                      fo8L = 2 foL
+                                      -10d3 0 0 
+
+                                      fa8L = 2 faL
+                                      -9d3 0 -1.3
+
+                                      q8L = 4 qL
+                                      0 0 0
+
+                                      WARNING 3: the (stabilizing) dqf corrections made
+                                      to the fo8L, fa8L, and sil8L enedmembers make the 
+                                      haplogranite melt model inapplicable to melts where
+                                      these endmembers are present in high concentrations,
+                                      to model such situations or to reproduce the published
+                                      fo-fa-q or sil-q melting phase relations, the dqf corrections
+                                      (below) should be set to zero. 
+
+                                      WARNING 5: The melt model incorrectly predicts a high 
+                                      pressure-low temperature stability field for water-silica
+                                      rich melts. at 10 kb this field extends to ca 750 K and 
+                                      at 3 kb to ca 550 K. To eliminate this artifact set T_melt 
+                                      in perplex_option.dat.
+
+melt(WT)
+abbreviation Melt
+full_name    liquid
+
+2                                     model type: simplicial composition space.
+
+8                                     number of endmembers
+
+h2oL     fo8L     fa8L
+abL      sil8L    anL
+kspL     q8L
+
+ 0 0 0 0 0 0 0 0 0                  | endmember flags.  
+
+0.0 1.0  0.1 0                      | range and resolution of X(h2o), 0 => cartesian subdivision  
+0.0 0.1  0.1 0                      | range and resolution of X(fo),  1 => asymmetric subdivision   
+0.0 0.1  0.1 0                      | range and resolution of X(fa),  1 => asymmetric subdivision   
+0.0 0.4  0.1 0                      | range and resolution of X(ab),  0 => cartesian subdivision   
+0.0 0.2  0.1 0                      | range and resolution of X(sil), 1 => asymmetric subdivision  
+0.0 1.0  0.1 0                      | range and resolution of X(an),  1 => asymmetric subdivision   
+0.0 0.4  0.1 0                      | range and resolution of X(ksp), 0 => cartesian subdivision
+
+begin_excess_function 
+
+W(q8L abL)                 12d3           0      -0.4
+W(q8L kspL)                -2d3           0      -0.5
+W(q8L anL)                  5d3           0         0
+W(q8L sil8L)               12d3           0         0
+W(q8L fo8L)                12d3           0      -0.4
+W(q8L fa8L)                14d3           0         0
+W(q8L h2oL)                17d3           0      -0.5
+W(abL kspL)                -6d3           0         3
+W(abL sil8L)               12d3           0         0
+W(abL fo8L)                10d3           0         0
+W(abL fa8L)                 2d3           0         0
+W(abL h2oL)              -1.5d3           0      -0.3
+W(kspL anL)                 0d3           0        -1
+W(kspL sil8L)              12d3           0         0
+W(kspL fo8L)               12d3           0         0
+W(kspL fa8L)               12d3           0         0
+W(kspL h2oL)              9.5d3           0      -0.3
+W(anL h2oL)               7.5d3           0      -0.5
+W(sil8L fo8L)              12d3           0         0
+W(sil8L fa8L)              12d3           0         0
+W(sil8L h2oL)              11d3           0         0
+W(fo8L fa8L)               18d3           0         0
+W(fo8L h2oL)               11d3           0      -0.5
+W(fa8L h2oL)               12d3           0         0
+
+end_excess_function 
+
+3                           | Configurational entropy: a non-temkin sites (Water) 
+                            | and two temkin sites olvine and silicate species
+
+2 2.                        | water-vacancy site 
+z(H) = 1 h2oL
+
+2 0.                        | olivine site
+n(Mg) = 4 fo8L
+n(Fe) = 4 fa8L
+
+7 0.                        | silicate species site, fo+fa should count as one species
+                            | but h&p count them separately:
+n(q)     = 1 q8L
+n(ksp)   = 1 kspL
+n(ab)    = 1 abL
+n(sil)   = 1 sil8L
+n(an)    = 1 anL
+n(fo)    = 1 fo8L
+n(fa)    = 1 fa8L
+
+end_of_model
+                      --------------------------------------------------------
+                              --------------------------------------------------------
+begin_model
+                                      Melt, White et al., JMG 32:261-286, 2014. 
+
+                                      JADC 4/14
+
                                       This model requires the following make definitions in the
                                       thermodynamic data file make_definitions section:
 

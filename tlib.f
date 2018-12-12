@@ -762,7 +762,7 @@ c                                 stretch_factor key = b - 1
             read (strg,*) bm1
 
          else if (key.eq.'subdivision_override') then 
-c                                 subdivision overide key
+c                                 subdivision override key
             valu(13) = val
 
             if (val.eq.'lin') then

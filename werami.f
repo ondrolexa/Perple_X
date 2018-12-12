@@ -1090,7 +1090,7 @@ c                                 1d iterpolation coefficients
 
 1000  format (/,'**warning ver637** Immiscibility occurs in one or ',
      *          'more phases ',/,'interpolation will be turned off ',
-     *          'at all affected nodes.',/,'To overide this feature ',
+     *          'at all affected nodes.',/,'To override this feature ',
      *          'at the risk of computing inconsistent properties',/,
      *          'set solvus_tolerance = 1 and rerun VERTEX',/)
 
