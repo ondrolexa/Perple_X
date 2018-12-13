@@ -9327,6 +9327,9 @@ c                                 site ranges
          mcoor(im) = mcoor(im) + ndim(i,im)
 
          do j = 1, ndim(i,im)
+c                                 allow inc to be either the number of points
+c                                 or the resolution 
+            if (xnc(i,j).gt.1d0) xnc(i,j) = 1d0/xnc(i,j)
 c                                 subdivision override (iopt(13))
             if (iopt(13).eq.1) then
 c                                 make linear
@@ -13006,7 +13009,7 @@ c--------------------------------------------------------------------------
 
       logical zbad
 
-      integer id,im,h,i,j,l,icpct,isoct,icky,index,icoct,icoct0,i228
+      integer id,im,h,i,j,l,icpct,isoct,icky,index,icoct,icoct0,i228,oim
 
       external zbad
 
@@ -13132,8 +13135,8 @@ c                                 model type
       integer pstot,qstot,ostg,odim,nsum
       common/ junk1 /pstot(h9),qstot(h9),ostg(h9),odim(mst,h9),nsum(h9)
 
-      save i228
-      data i228/0/
+      save i228,oim
+      data i228,oim/0,0/
 c----------------------------------------------------------------------
 c                                 reject special case:
 c                                 ternary coh fluids above the CH4-CO join
@@ -13369,10 +13372,12 @@ c                                 only allowed for unconstrained minimization
          if (icopt.ge.5.or.
      *       jmct.gt.0.and.jmuct.lt.jmct) then 
 
-            call warn (55,cp(l-1,iphct),l-1,tname)
+            if (im.ne.oim) call warn (55,cp(l-1,iphct),l-1,tname)
 
             iphct = iphct - 1
+            icpct = icpct - 1
             icoct = icoct0
+            oim = im 
 
             return
             
@@ -19653,7 +19658,7 @@ c----------------------------------------------------------------------
       subroutine dumper (iclos,id,hkp,jkp,amt,lambda) 
 c----------------------------------------------------------------------
 c dump phase data from yclos routines:
-c     iclos = 0 => yclos0 etc
+c     iclos = 1 - static, 2 - dynamic 
 c     hkp refinement point
 c     jkp solution model
 c     amt - amount

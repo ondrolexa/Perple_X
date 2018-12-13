@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.8.5, source updated Dec 10, 2018.',
+     *      'Perple_X version 6.8.5, source updated Dec 13, 2018.',
 
      *      'Copyright (C) 1986-2018 James A D Connolly '//
      *      '<www.perplex.ethz/copyright.html>.'
@@ -51,7 +51,8 @@ c----------------------------------------------------------------------
       if (new.eq.'008'.or.new.eq.'011'.or.new.eq.'670'.or.
      *    new.eq.'672'.or.new.eq.'673'.or.new.eq.'674'.or.
      *    new.eq.'675'.or.new.eq.'676'.or.new.eq.'678'.or.
-     *    new.eq.'679'.or.new.eq.'682'.or.new.eq.'683') then 
+     *    new.eq.'679'.or.new.eq.'682'.or.new.eq.'683'.or.
+     *    new.eq.'685') then 
 
          chksol = .true.
 
@@ -2959,12 +2960,11 @@ c----------------------------------------------------------------------
 54    format (/,'**warning ver054** property choices 25, 36, and 38 are'
      *         ,' not allowed in combination',/,'with other property '
      *         ,'choices',/)
-55    format (/,'**warning ver055** a possible composition of solution '
-     *         ,a,' lies within the',/,'saturated component composition'
-     *         ,' space. the composition will not be considered.',/,
-     *         'to eliminate this problem relax the component ',
-     *         'saturation constraints',/,'or use unconstrained free ',
-     *         'energy minimization.',/)
+55    format (/,'**warning ver055** possible compositions of ',a,'lie ',
+     *         'entirely within the saturated',/,'component composition'
+     *         ,' space. the compositions will not be considered.',/,
+     *         'If this is problematic, then eliminate the component ',
+     *         'saturation constraints',/,'or use convex.',/)
 58    format (/,'**warning ver058** wway, the equilibrium of the '
      *         ,'following reaction',/,'is inconsistent with the ',
      *          'invariant equilibrium.',/)

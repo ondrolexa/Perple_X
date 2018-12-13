@@ -2068,7 +2068,7 @@ c                                 new point, add to list
 
                if (npt.eq.1) write (*,'(/,a,i2)') 'iteration ',0
                if (ikp(id).ne.0) then 
-                  call dumper (1,i,0,ikp(i),x(i),clamda(i))
+                  call dumper (1,i,0,ikp(id),x(i),clamda(i))
                else 
                   call dumper (1,i,0,-id,x(i),clamda(i))
                end if 
@@ -2161,9 +2161,9 @@ c                                 find the most stable iopt(31) points
             id = kdv(i)
 
             if (ikp(id).ne.0) then 
-               call dumper (1,id,0,ikp(id),x(id),clamda(id))
+               call dumper (1,id,0,ikp(id+inc),x(id),clamda(id))
             else 
-               call dumper (1,id,0,-id,x(id),clamda(id))
+               call dumper (1,id,0,-(id+inc),x(id),clamda(id))
             end if 
 
          end if
@@ -3117,6 +3117,9 @@ c                                 adaptive x(i,j) coordinates
       double precision cptot,ctotal
       common/ cst78 /cptot(k19),ctotal,jdv(k19),npt
 
+      character*5 cname
+      common/ csta4 /cname(k5)
+
       integer iam,jam,tloop,ploop
       common/ cst55 /iam(k1),jam(k1),tloop,ploop
 c                                 hcp is different from icp only if usv
@@ -3223,8 +3226,10 @@ c                                  amount of the staurated phase
             amt(npt) = c(i-icp)/cp(i,id)
 c                                  warn on undersaturation
             if (amt(npt).lt.nopt(9)) then 
-               if (amt(npt).lt.-nopt(9).and.tictoc.lt.5) 
-     *                             call warn (2,amt(npt),i,'REBULK')
+               if (amt(npt).lt.-nopt(9).and.tictoc.lt.1) call warn (99,
+     *             c(1),i,'the specified amount of saturated compon'//
+     *                    'ent '//cname(i)//'is inadequate to saturat'//
+     *                    'e the system at all conditions of interest')
                npt = npt - 1
                tictoc = tictoc + 1
                exit
