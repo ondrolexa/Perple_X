@@ -14980,17 +14980,14 @@ c                    quasi-harmonic model values
      *                + (t-tr/2D0)*(cpr-cpqhr)
       end if      
 
-c -----------
 c                             assemble G
       gmet2 = gc + gqh + gsgte - gqhp0 + difc*(1d0 - ifunc) + gmagn 
  
       end function gmet2
-c----------------------------------------------------------------------
 
-c----------------------------------------------------------------------    
       double precision function gamN (n,xt,Bpo)
 c----------------------------------------------------------------
-c     Used in the Brosh et al (2007) equation of state.      
+c     Used in the Brosh et al (2007) equation of state.
 
       implicit none
       integer n,k,bin(n+1)
@@ -15026,9 +15023,7 @@ c                             binomial coeffts for n=2->n=5
       gamN = 3d0 / (an**(n-1) * real(n)) * sum(kk)
           
       end function gamN
-c----------------------------------------------------------------------
 
-c----------------------------------------------------------------------    
       double precision function xn (n,Bo,Bpo,p)
 c----------------------------------------------------------------
 c     Used in the Brosh et al (2007) equation of state.      
@@ -15040,8 +15035,6 @@ c -----------
       an = (n-1d0)/(3d0*Bpo-1d0)
       xn = 1d0/(1d0 - an + an*(1d0 + n/(3*an) * p/Bo)**(1d0/real(n)))
       end function xn
-c----------------------------------------------------------------------
-      
 
       subroutine gpmelt (g,id)
 c----------------------------------------------------------------------
@@ -20893,4 +20886,329 @@ c-----------------------------------------------------------------------
      
       gfes0 = gmech - tdscnf + gex
 
-      end         
+      end 
+
+      subroutine gpmlt1 (g,id)
+c----------------------------------------------------------------------
+c subroutine to speciation of the green et al (JMG, 2016) melt model. this
+c model is a special case (ksmod(id)=27) because of the peculiar configurational
+c entropy expression and because the model has a single ordering parameter, which 
+c green et al take as the fraction of the ordered species (an). this formulation is 
+c unfortunate because p(an) is not orthogonal to the disordered speciation
+c (p0, because the moles of the species is not constant with changing speciation). 
+c here the model is recast as g(p0,q) where q is the number of moles of an that can be 
+c formed given p0. 
+
+c    id identifies the solution.
+c    g  is the change in G for the stable speciation relative to a mechanical
+c       mixture of the endmembers.
+c    pc is the mass normalization factor, sum(p0*ctot)
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer i, id, jd, itic
+
+      logical error, done 
+
+      double precision g, qmax, qmin, q, dq, rqmax, d0
+
+      double precision hpmelt, gex
+      external hpmelt, gex
+
+      double precision z, pa, p0a, x, w, y, wl
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
+     *              wl(m17,m18)
+
+      double precision r,tr,pr,ps,p,t,xco2,u1,u2
+      common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
+
+      integer ideps,icase,nrct
+      common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
+
+      integer lstot,mstot,nstot,ndep,nord
+      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
+
+      double precision dvnu,deph,dydy
+      common/ cxt3r /dvnu(m4,j3,h9),deph(3,j3,h9),dydy(m4,j3,h9)
+
+      logical pin
+      common/ cyt2 /pin(j3)
+
+      double precision enth
+      common/ cxt35 /enth(j3)
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      logical lorder, lexces, llaar, lrecip
+      common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
+
+      double precision goodc, badc
+      common/ cst20 /goodc(3),badc(3)
+c----------------------------------------------------------------------
+      error = .false.
+c                                 rqmax the maximum amount of the 
+c                                 ordered species that can be formed
+c                                 from the fully disordered species
+c                                 fractions 
+      rqmax = 1d0
+
+      do i = 1, nrct(1,id)
+         if (-p0a(ideps(i,1,id))/dy(i).lt.dpmax) dpmax = 
+     *                      -p0a(ideps(i,1,id))/dydy(ideps(i,1,id),1,id)
+      end do
+c                                 to avoid singularity set the initial 
+c                                 composition to the max - nopt(5), at this
+c                                 condition the first derivative < 0, 
+c                                 and the second derivative > 0 (otherwise
+c                                 the root must lie at p > pmax - nopt(5).
+      if (rqmax.gt.nopt(5)) then
+
+         pin(1) = .true.
+         qmax = rqmax - nopt(5)
+         qmin = nopt(5)
+c                                 the p's are computed in gpderi
+         call gpder1 (id,qmax,dq,g)
+
+         if (dq.lt.0d0) then 
+c                                 at the maximum concentration, the 
+c                                 first derivative is positive, if 
+c                                 the second is also > 0 then we're 
+c                                 business
+            q = qmax
+
+         else
+c                                 try the min
+            call gpder1 (id,qmin,dq,g)
+
+            if (dq.gt.0d0) then 
+c                                 ok
+               q = qmin
+
+            else
+c                                 no search from either limit possible
+c                                 set error .true. to compare g at the 
+c                                 limits.
+               error = .true.
+               goto 90
+
+            end if 
+         end if 
+c                                 increment and check p
+         call pcheck (q,qmin,qmax,dq,done)   
+c                                 iteration counter to escape
+c                                 infinite loops
+         itic = 0
+c                                 newton raphson iteration
+         do 
+
+            call gpder1 (id,q,dq,g)
+
+            call pcheck (q,qmin,qmax,dq,done)
+c                                 done is just a flag to quit
+            if (done) then
+
+               goodc(1) = goodc(1) + 1d0
+               goodc(2) = goodc(2) + dfloat(itic)
+c                                 in principle the p's could be incremented
+c                                 here and g evaluated for the last update.
+               return
+
+            end if
+
+            itic = itic + 1
+
+            if (itic.gt.iopt(21)) then
+c                                 fails to converge.
+               error = .true.
+               badc(1) = badc(1) + 1d0
+               goodc(2) = goodc(2) + dfloat(itic)
+               exit
+
+            end if 
+
+         end do
+
+      else
+c                                 speciation is not stoichiometrically possible
+         g = -t*hpmelt(id,p0a) + gex(id,p0a)
+         return
+
+      end if
+
+90    if (error) then 
+c                                 didn't converge or couldn't find a good 
+c                                 starting point compare the fully ordered 
+c                                 and disordered g's and choose the lowest
+c                                 full disorder:
+         dq = -t*hpmelt(id,p0a) + gex(id,p0a)
+c                                 full order:
+         do i = 1, jd
+
+            if (i.eq.i1.or.i.eq.i2) then
+               d0 = (p0a(i) - rqmax)
+            else if (i.lt.jd) then 
+               d0 = p0a(i)
+            else
+               d0 = rqmax
+            end if 
+
+            pa(i)  = d0/(1d0 - rqmax)
+
+         end do 
+
+         g = (pa(jd)*enth(1) - t*hpmelt(id,pa) + gex(id,pa)) * 
+     *       (1d0 - rqmax)
+c                                 compare
+         if (g.gt.dq) then 
+            g = dq
+            do i = 1, jd 
+               pa(i)  = p0a(i)
+            end do 
+         end if 
+
+      end if
+
+      end
+
+      subroutine gpder1 (id,q,dg,g)
+c----------------------------------------------------------------------
+c subroutine to compute the newton-raphson increment (dg) in the ordering
+c parameter from the 1st and 2nd derivatives of the g of a temkin model
+c with one ordering parameter. id is the index of the solution model.
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer i, kd, ld, i1, i2, id, jd
+
+      double precision g, dg, d2g, s, ds, d2s, pfac,
+     *                 q, ph2o, dph2o, d2ph2o, pfo, pfa, pnorm, pnorm2,
+     *                 dp(m4), d2p(m4), lpa(m4), lpfac, dng,
+     *                 dsfo, dsfa, gnorm, dgnorm
+c                                 working arrays
+      double precision z, pa, p0a, x, w, y, wl
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
+     *              wl(m17,m18)
+c                                 excess energy variables
+      integer jterm, jord, extyp, rko, jsub
+      common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m18,h9),
+     *               jsub(m2,m1,h9)
+
+      integer lstot,mstot,nstot,ndep,nord
+      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
+
+      double precision enth
+      common/ cxt35 /enth(j3)
+
+      integer jspec
+      common/ cxt8 /jspec(h9,m4)
+
+      double precision v,tr,pr,r,ps
+      common / cst5 /v(l2),tr,pr,r,ps
+c----------------------------------------------------------------------
+c                                 initialize
+      g   = 0d0 
+      dg  = 0d0
+      d2g = 0d0
+c                                 the difficulty in this model is the
+c                                 non-equimolar speciation reaction, this 
+c                                 causes the number of moles of the components
+c                                 in a mole of solution to change as a function
+c                                 of the order parameter even if composition is
+c                                 held constant. 
+
+c                                 to keep the number of moles of the components
+c                                 in the solution constant the gibbs energy
+c                                 is multiplied by gnorm = 1 + q*sum(nu(i)), where
+c                                 the nu(i) are the stoichiometric coefficients of
+c                                 the endmembers in the ordering reaction (it being
+c                                 assumed that nu(jd) = 1 and p0(jd) = 0). this gives 
+c                                 the solutions g when it has the same amounts of the 
+c                                 components as in the disordered limit (p = p0). the
+c                                 amounts of the species (p) for a partially or completely
+c                                 disordered state are p(i) = (p0(i) + nu(i))*q/gnorm.
+c                                 q is the molar amount of the ordered species formed
+c                                 by the ordering reaction from the amounts of the 
+c                                 reactant species in the disordered limit. 
+
+c                                 for the green et al melt model sum(nu(i)) for the
+c                                 reaction wo + als = an is -1, therefore 
+c                                 gnorm = (1 - q) and pnorm = 1/(gnorm)
+      gnorm  = 1d0 + dnu * q
+      dgnorm = dnu
+      pnorm  = 1d0/gnorm
+      pnorm2 = 2d0*pnorm
+
+      do i = 1, nstot(id)
+c                                 calculate pa, dp(i)/dq, d2p(i)/dq.
+         nu = dydy(i,1,id)
+         pa(i) = (p0a(i) + nu*q) * pnorm
+         dp(i) = nu * pnorm - pa(i) * dnu * pnorm**2
+         d2p(i) = dp(i) * pnorm2
+
+      end do
+
+      do i = 1, jterm(id)
+c                                 assuming regular terms
+        i1 = jsub(1,i,id)
+        i2 = jsub(2,i,id)
+
+        g = g + w(i) * pa(i1) * pa(i2)
+        dg = dg + w(i) * (pa(i1)*dp(i2) + pa(i2)*dp(i1))
+        d2g = d2g + w(i) * (      d2p(i1)* pa(i2) 
+     *                      + 2d0*dp(i2) * dp(i1)
+     *                      +     d2p(i2)* pa(i1) )
+
+      end do  
+c                                 get the configurational entropy derivatives
+      if (jspec(id,1).eq.1.and.pa(1).gt.0d0) then
+c                                 quadratic water term:
+         ph2o = pa(1)
+         dph2o = dp(1)
+         d2ph2o = d2p(1)
+c                                 pfac renormalizes the non-volatile
+c                                 fractions (i.e., the multiplicity of
+c                                 the non-volatike site is pfac):
+         pfac = 1d0 - ph2o
+         lpfac = dlog(pfac)  
+c                                 entropy expression rewritten
+c                                 to collect the pfac term
+         s   =  -2d0 * ph2o * dlog(ph2o) - pfac*lpfac
+         ds  =  (-2d0 * lpa(1) + (lpfac + 1d0)) * dph2o
+         d2s =  (-2d0*lpa(1) + lpfac + 1d0) * d2p(1)
+     *        - (2d0/ph2o + 1d0/pfac)*dph2o*dph2o
+
+      else 
+
+         s = 0d0 
+         ds = 0d0 
+         d2s = 0d0 
+
+      end if
+c                                 the configurational entropy
+
+
+
+
+
+
+      g   = g   + enth(1)*pa(jd)  - r*v(2)*s
+      dg  = dg  + enth(1)*dp(jd)  - r*v(2)*ds
+c                                 the normalized g derivative
+      dng  = g * dgnorm + gnorm * dg
+c                                 and second derivative
+      d2g = gnorm * (d2g + enth(1)*d2p(jd) - r*v(2)*d2s) 
+     *       + 2d0 * dg * dgnorm
+c                                 dg becomes the newton-raphson increment:
+      dg = -dng/d2g
+c                                 and g the normalized g:
+
+      g   = g * gnorm
+
+      end
