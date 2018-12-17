@@ -64,7 +64,7 @@ end excluded phase list
 begin solution phase list
 cAmph(G)
 Augite(G)
-melt(GT)   
+melt(G)   
 Ep(HP11)  
 Gt(W)     
 Opx(W)    

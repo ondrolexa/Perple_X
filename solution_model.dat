@@ -1139,8 +1139,12 @@ z(H) = 1 h2oL
 n(Mg) = 4 foTL
 n(Fe) = 4 faTL
 
-8 0.                        | silicate species site, fo+fa should count as one species
-                            | but h&p do in fact count them separately:
+8 0.                        | silicate species site, green assume a fsp = ab + or "molecule""
+                            | with mixing on the M site, but the math works out the same as 
+                            | the endmembers are treated as separate endmembers and the M site
+                            | dropped. this seems contradictory to what's done with olivine, where
+                            | here fo and fa are separate molecules despite fe-mg mixing, mine is 
+                            | not to reason why...
 n(q)     = 1 q8L
 n(ksp)   = 1 kspL
 n(ab)    = 1 abL
@@ -4079,7 +4083,7 @@ end_excess_function
                                     | which does make some sense
 
 8 1.                                | silicate site, 9 species multiplicity 1
-z(h2o) = 1 H2O
+z(h2o) = 1 h2oGM
 z(fo)  = 1 foGM
 z(fa)  = 1 faGM
 z(wo)  = 1 woGM
@@ -4088,7 +4092,7 @@ z(nas) = 1 nasGM
 z(co)  = 1 coGM
 
 2 1                                  | water vacancy site
-z(h2o) = 1 H2O
+z(h2o) = 1 h2oGM
 
 
 end_of_model                         

@@ -3242,8 +3242,8 @@ c                                 try to open final plt and blk files
 
       end if
 c                                 the only paths here are
-c                                 1) iopt(32) = 2 => man.
-c                                 2) iopt(32) = 1 => auto and no final results.
+c                                 1) iopt(34) = 2 => man.
+c                                 2) iopt(34) = 1 => auto and no final results.
       inter = .false.
 c                                 only hope is interim results:
       call mertxt (tfname,prject,'.irf',0)
@@ -3355,11 +3355,13 @@ c                                 use intermediate results
                ind1 = jnd(i,1)
                ind2 = jnd(i,2)
 
-               if (refine.and.ind1.eq.0) write (*,'(a,/,a,/)')
+               if (refine.and.ind1.eq.0) write (*,'(3(a,/))')
      *            'WARNING: VERTEX is in, or has completed, the '//
      *            'auto-refine stage, interim results ',
      *            'from the exploratory stage may be '//
-     *            'inconsistent or unreadable.'
+     *            'inconsistent or unreadable.','if VERTEX has been '//
+     *            'terminated and the next message is **error ver072'//
+                  '**, then edit T to F in the TOF file'
 
                write (text,'(a,i1,i1)') '_',ind1, ind2
                call mertxt (name,prject,text,0)
