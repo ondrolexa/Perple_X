@@ -2001,6 +2001,12 @@ c----------------------------------------------------------------------
       double precision mu
       common/ cst330 /mu(k8),mus
 
+      character fname*10, aname*6, lname*22
+      common/ csta7 /fname(h9),aname(h9),lname(h9)
+
+      double precision p,t,xco2,u1,u2,tr,pr,r,ps
+      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
+
       double precision a,b,c
       common/ cst313 /a(k5,k1),b(k5),c(k1)
 
@@ -2017,10 +2023,6 @@ c                                 solvus_tolerance_II, 0.25
       do i = 1, jphct
 
          if (is(i).ne.1) then
-
-c            if (x(i).lt.zero) cycle
-c                                 degeneracy test
-c            if (degen(i,1)) cycle 
 c                                 make a list of found phases:
             id = i + inc
 c                                 currently endmember compositions are not 
@@ -2100,6 +2102,8 @@ c being allowed, see ldsol code); restored again april 2017. removed sep 2018.
 
          id = i + inc 
          iam = ikp(id)
+
+         if (lname(iam).eq.'liquid'.and.t.lt.nopt(20)) cycle 
 
          if (clamda(i).lt.slam(iam)) then
 c                                the composition is more stable
@@ -2799,6 +2803,9 @@ c----------------------------------------------------------------------
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
 
+      character fname*10, aname*6, lname*22
+      common/ csta7 /fname(h9),aname(h9),lname(h9)
+
       integer npt,jdv
       double precision cptot,ctotal
       common/ cst78 /cptot(k19),ctotal,jdv(k19),npt
@@ -2958,16 +2965,14 @@ c                                 make a list of the solutions
          do i = 1, opt
 
             if (jmin(i).eq.0) then
-               cycle
-            else if (stable(hkp(jmin(i)))) then
-c                                 contrary to what you might expect, this
-c                                 definitely improves quality, presumably because
-c                                 the metastable point will always be the closest
-c                                 composition to the stable point and the resulting
-c                                 overlap fogs the lp.
 
-c                                 sep 18, nah it stops the list from being clogged
-c                                 up with one phase
+               cycle
+
+            else if (stable(hkp(jmin(i))).or.t.lt.nopt(20).and.
+     *               lname(jkp(jmin(i))).eq.'liquid') then
+c                                 contrary to what you might expect, the 1st condition
+c                                 improves quality, because it stops the list 
+c                                 from being clogged up with one phase
                cycle
 
             else

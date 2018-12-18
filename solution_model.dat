@@ -1,4 +1,4 @@
-685 DO NOT DELETE THIS LINE
+686 DO NOT DELETE THIS LINE
 
                              FOR MODEL DEFINITIONS AND REFERENCES READ THE MODEL COMMENTARY OR REFER TO 
                              THE GLOSSARY AT:
@@ -21,11 +21,7 @@
 
                              0     - internal (fluid) EoS
                              20    - Electrolyte (charge balance) model
-                             24    - Holland & Powell Haplogranite melt model 
-                             25    - Ghirso pMELTS/MELTS model
                              26    - Haefner H2O-CO2-NaCl
-                             27    - Green et al. 2016 tonalitic melt model
-                             28    - High T silicate melt
                              29    - BCC Fe-Si alloy, Lacaze & Sundman 1990.
                              30-33 - FeSiC alloys (BCC/FCC/CBCC/HCP), Lacaze & Sundman 1990.
                              39    - generic hybrid fluid EoS
@@ -1030,6 +1026,8 @@ begin_model
 
                       JADC 9/16
 
+                      reformulated as standard O/D model, 12/18, JADC
+
                       This model requires the following make definitions in the
                       thermodynamic data file make_definitions section:
 
@@ -1059,53 +1057,32 @@ begin_model
                       melt models (e.g., melt(W), melt(JH)) should be excluded (or deleted from the 
                       thermodynamic data file) from calculations with this model. 
 
-                      WARNING 1: This model can only be used for hydrous systems  
-                      if H2O is specified as a thermodynamic component or as a
-                      staurated component, it CANNOT be used if water is specified
-                      as a saturated phase component (i.e., if H2O is specified as a saturated 
-                      phase component, VERTEX will reject the H2OL endmember
-                      and the model will be applicable only to dry melts).
-
-                      WARNING 2: DO NOT CHANGE THE ORDER OF THE FIRST 3 ENDMEMBERS
-                      this model uses an internal routine to compute the
-                      entropy of the melt that assumes the order entered
-                      here, see comments with endmember names below.
-
 melt(G)
 abbreviation Melt
 full_name    liquid
 
-27                                  | model type: speciation, internal entropy routine
+6                                   | model type: simplicial composition space with speciation
 
 8                                   | number of endmembers
 
-                                    | ENDMEMBERS:
-
-h2oL                                | Because this model uses an internal routine to compute the
-                                    | entropy of the melt h2oL must be the specified as the first
-                                    | endmember.
-
-                                    | foTL and faTL must be the 2nd and 3rd endmembers, but their
-foTL     faTL                       | relative order is arbitrary.
-
-abL      silL                       | The relative order of the remaining endmembers is arbitrary.
-kspL     woL     
-q8L
+h2oL     foTL     faTL
+abL      silL     kspL
+woL      q8L
 
 1                                   | ordered species definition
                                     | H(oanL) = -46.5d3 - 0.25 * P - dqf(woL) 1300 - dqf(silL) -7800
 
 oanL = 1 woL + 1 silL        Delta(enthalpy)   = -40000  - 0.25 * P
 
-1 1 1 1 1 1 1 1                     | endmember flags.  
+1 1 1 1 1 1 1 1                     | endmember flags
 
-0.0 0.8  0.1  0                      | range and resolution of X(h2o), 0 => cartesian subdivision  
-0.0 0.2  0.1  0                      | range and resolution of X(fo),  1 => asymmetric subdivision   
-0.0 0.3  0.1  0                      | range and resolution of X(fa),  1 => asymmetric subdivision   
-0.0 0.8  0.1  0                      | range and resolution of X(ab),  0 => cartesian subdivision   
-0.0 0.4  0.1  0                      | range and resolution of X(sil), 1 => asymmetric subdivision  
-0.0 0.6  0.1  0                      | range and resolution of X(ksp), 1 => asymmetric subdivision   
-0.0 0.4  0.1  0                      | range and resolution of X(wo),  1 => asymmetric subdivision
+0.0 0.8  0.1  0                     | range and resolution of X(h2o), 0 => cartesian subdivision  
+0.0 0.2  0.1  0                     | range and resolution of X(fo),  1 => asymmetric subdivision   
+0.0 0.3  0.1  0                     | range and resolution of X(fa),  1 => asymmetric subdivision   
+0.0 0.8  0.1  0                     | range and resolution of X(ab),  0 => cartesian subdivision   
+0.0 0.4  0.1  0                     | range and resolution of X(sil), 1 => asymmetric subdivision  
+0.0 0.6  0.1  0                     | range and resolution of X(ksp), 1 => asymmetric subdivision   
+0.0 0.4  0.1  0                     | range and resolution of X(wo),  1 => asymmetric subdivision
 
 begin_excess_function 
 
@@ -1152,7 +1129,32 @@ W(h2oL oanL)  =    9.75d3 - 0.5 * P
 
 end_excess_function 
 
-  0                                  | no configurational entropy model (internal routine hpmelt).
+3                           | Configurational entropy: two non-temkin sites (Water, Melt) 
+                            | and one temkin site (olvine). green assume a fsp = ab + or "molecule""
+                            | with mixing on a temkin M site, but the math works out the same as 
+                            | the endmembers are treated as separate endmembers and the M site
+                            | dropped. 
+
+
+2 1.                        | water-vacancy site 
+z(H) = 1 h2oL
+
+2 0.                        | temkin olivine site
+n(Mg) = 4 foTL
+n(Fe) = 4 faTL
+
+8 1.                        | melt site, green assume a fsp = ab + or "molecule"
+                            | with mixing on the M site, but the math works out the same as 
+                            | the endmembers are treated as separate endmembers and the M site
+                            | dropped. 
+z(w)     = 1 h2oL
+z(q)     = 1 q8L
+z(ksp)   = 1 kspL
+z(ab)    = 1 abL
+z(sil)   = 1 silL
+z(an)    = 1 oanL
+z(wo)    = 1 woL
+| z(ol)    = 1 faTL + 1 foTL
 
 begin_dqf_corrections
 dqf(silL) = -7800
@@ -1368,8 +1370,7 @@ z(al,m3) = 1 cz
 end_of_model               
                       --------------------------------------------------------
 begin_model
-                      Cpx(JH) => Jennings and Holland, J Pet, 56:869-892, 2015
-                      Mantle Melt Model, intended for pressures of 0-60 GPa
+                      Cpx(JH) => Jennings and Holland, J Pet, 56:869-892, 2015, intended for pressures of 0-60 GPa
 
                       NOTES:
 
@@ -1638,185 +1639,6 @@ reach_increment 0
 end_of_model
                       --------------------------------------------------------
 begin_model
-                      Cpx(JH)8 => Jennings and Holland, J Pet, 56:869-892, 2015
-                      Mantle Melt Model, intended for pressures of 0-60 GPa
-
-                      NOTES:
-
-                      The Cr/Fe3+-free version of this model is from Holland et al., 2013 or 
-                      Green et al., 2012?
- 
-                      Pierre Bouilhol & JADC, 12/16/15 
-
-                      Changed to true T site multiplicity, Oliver Shorttle, 3/16
-
-                      Changed to fake T site multiplicity (1/4) with true Al site fraction, JADC 6/16
-
-                      Changed to fake T site multiplicity (1/2) with true Al site fraction, Bob Myhill, 2/18
-
-                      Formatted as prismatic model w/o Cr & Fe3+. Bob Myhill, 2/18
-
-                      Reformatted as a prismatic + orphan vertex model, the scheme is less than desirable because
-                      it explicitly includes ordered states that are computed implicitly by speciation and because 
-                      it does not include acm (ncess) or crjd. JADC, 5/18
-
-                      Corrected cess composition assumed in the model (mess was assumed previously). JADC, 6/18
-
-                      reformatted as a 3-simplex prism that represents the entire space. JADC, 11/18.
-
-                      to use this the following endmembers must be specified with make 
-                      definitions in the thermodynamic data file
-
-                      odi  = 1 di
-                            DQF = -100 + 0.211 * T + 0.005 * P | NOTE entropy term incorrect in some perplex files?
-                      cenjh  = 1 en
-                            DQF = 3500 - 2 * T + 0.048 * P 
-                      cfs  = 1 fs
-                            DQF = 3800 - 3 * T + 0.03 * P
-
-                                                        M1     M2     T
-                                                     ____________________________________
-
-                                      Multiplicity      1      1     1/2 <- fake T multiplicity
-                                                     ____________________________________
-                                        _________
-                                        Cats            Al     Ca   AlSi   
-                                        Jadeite         Al     Na    Si    
-                                        ___
-                                        Mats            Al     Mg   AlSi   dependent
-                                        fats            Al     Fe   AlSi   dependent
-                                        _________
-                                        cacm (cess)     Fe3    Ca   AlSi
-                                        ncess           Fe3+   Na    Si    dependent
-                                        ___
-                                        macm (mess)     Fe3    Mg   AlSi   dependent 
-                                        facm (fess)     Fe3    Fe   AlSi   dependent
-                                        _________
-                                        crdi            Cr     Ca   AlSi   independent
-                                        crjd            Cr     Na    Si    dependent
-                                        ___
-                                        cren_d          Cr     Mg   AlSi   dependent
-                                        crfs_d          Cr     Fe   AlSi   dependent
-                                        _________
-                                        di              Mg     Ca    Si    independent
-                                        hed_d           Fe     Ca    Si    dependent
-                                        ___
-                                        cenjh           Mg     Mg    Si    independent
-                                        cfs             Fe     Fe    Si    independent
-                                                      ___________________________________
-
-                    Ordered species:    cfm             Mg     Fe     Si
-
-Cpx(JH)8
-abbreviation Cpx
-full_name    clinopyroxene
-  
-9                               | model type: prismatic + orphan vertex, O/D
-                                                                       
-2                               | number of simplexes comprising the prism
-2 2                           | number of vertexes on each simplex
-4                                | :
-
-cenjh   cfs
-di      hed_d
-
-jd 
-cess
-crdi
-cats
-
-1                               | number of ordered species and definitions 
-
-cfm   = 1/2 cenjh + 1/2 cfs enthalpy_of_ordering  =  -6.65d3  2.5 - 0.039 | DQF(cfm) - (DQF(ceng) + DQF(cfs))/2
-                                                           | -3.0 - (3.5 - 2T + 0.048P + 3.8 - 3T + 0.03)/2
-                                                           | = -6.65 + 2.5T - 0.039P 
-
-begin_limits
-
-cfm = -2 + 2 cfs + 1 cfm                           delta = 2 zm1fe
-cfm =  0 - 2 di - 2 cenjh - 1 cfm                  delta = 2 zm1mg
-cfm =  0 - 2 cfs - 1 cfm                           delta = 2 zm2fe
-cfm = -2 + 2 cenjh + 1 cfm                         delta = 2 zm2mg
-
-end_limits
-
-1                           | dependent endmember definitions
-
-hed_d  = 1 di    + 1 cfs - 1 cfm
-
-0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0    | endmember flags
-
-0. 1. 0.1  0                  | range and resolution of X(1,1)
-0. 1. 0.1  0                  | range and resolution of X(2,1)
-0. 1. 0.1  0                  | range and resolution of X(3,1) => Tschermak's prism
-0. 1. 0.1  0                  | range and resolution of X(3,2) => Fe3+ prism
-0. 1. 0.1  0                  | range and resolution of X(3,3) => Cr prism
-0. 1. 0.1  0                  | range and resolution of X(3,3) => Cr prism
-
-begin_excess_function
-W(di cfs)       20d3  0   0  
-W(di cats)     12.3d3  0  -0.1
-W(di jd)         26d3  0   0    
-W(di cenjh)     29.8d3  0  -0.03
-W(di cfm)        18d3  0   0  
-W(cfs cats)     25d3  0  -0.1
-W(cfs jd)       36d3  0   0 
-W(cfs cenjh)      7d3  0   0  
-W(cfs cfm)       4d3  0   0  
-W(cats jd)        6d3  0   0  
-W(cats cenjh)   45.7d3  0  -0.29
-W(cats cfm)      27d3  0  -0.1
-W(jd cenjh)       40d3  0   0
-W(jd cfm)        40d3  0   0
-W(cenjh cfm)       4d3  0   0
-
-W(di crdi)     8d3  
-W(di cess)     8d3
-W(cfs crdi)    34d3  
-W(cfs cess)    34d3
-W(cats crdi)   2d3 
-W(cats cess)   2d3
-W(crdi cess)   2d3  
-W(crdi jd)     3d3  
-W(crdi cenjh)  48d3  
-W(crdi cfm)    36d3  
-W(cess jd)     3d3  
-W(cess cenjh)  58d3  
-W(cess cfm)    36d3  
-end_excess_function
-
-3                                   | 3 site entropy model (M1, M2, T)
-
-5 1                                 | 3 species on m1, mult = 1
-z(m1,fe)   = 1 cfs
-z(m1,al)   = 1 cats + 1 jd
-z(m1,fe3)  = 1 cess
-z(m1,cr)   = 1 crdi
-
-4 1                                 | 4 species on m2, mult. = 1
-z(m2,na)   = 1 jd
-z(m2,mg)   = 1 cenjh
-z(m2,fe)   = 1 cfs  + 1 cfm
-
-2 0.5                               | 2 species on T, effective mult. = 1/2
-z(t1,al) = 1/2 cats + 1/2 cess + 1/2 crdi
-
-begin_van_laar_sizes
-alpha(di)    =  1.2  
-alpha(cfs)   =  1.0  
-alpha(cats)  =  1.9  
-alpha(crdi)  =  1.9  
-alpha(cess)  =  1.9  
-alpha(jd)    =  1.2  
-alpha(cenjh) =  1.0 
-alpha(cfm)   =  1.0 
-end_van_laar_sizes
-
-reach_increment 0
-
-end_of_model
-                      --------------------------------------------------------
-begin_model
                              Jennings and Holland, J Pet, 56:869-892, 2015
                              Mantle Melt Model, intended for pressures of 0-60 GPa
 
@@ -1861,7 +1683,7 @@ n(Ca) = 1 dijL
 n(Mg) = 1 dijL + 2 fojL
 n(Fe) = 2 fajL
 
-7 1.            bogus F site
+7 1.            F site
 z(jd) = 1 jdjL
 z(di) = 1 dijL
 z(ct) = 1 ctjL
@@ -2298,9 +2120,7 @@ begin_model
 
                                       JADC 4/14
 
-                                      reformulated as a temkin + ordinary water site model.
-
-                                      JADC 12/18
+                                      reformulated as ordinary configurational entropy model. JADC 12/18.
 
                                       This model requires the following make definitions in the
                                       thermodynamic data file make_definitions section:
@@ -2346,11 +2166,11 @@ kspL     q8L
 0 0 0 0 0 0 0 0 0                   | endmember flags.  
 
 0.0 1.0  0.1 0                      | range and resolution of X(h2o), 0 => cartesian subdivision  
-0.0 0.1  0.125   1                      | range and resolution of X(fo),  1 => asymmetric subdivision   
-0.0 0.1  0.125    1                      | range and resolution of X(fa),  1 => asymmetric subdivision   
+0.0 0.1  8   1                      | range and resolution of X(fo),  1 => asymmetric subdivision   
+0.0 0.1  8   1                      | range and resolution of X(fa),  1 => asymmetric subdivision   
 0.0 0.4  0.1 0                      | range and resolution of X(ab),  0 => cartesian subdivision   
-0.0 0.1  0.125    1                      | range and resolution of X(sil), 1 => asymmetric subdivision  
-0.0 0.2  0.125    1                      | range and resolution of X(an),  1 => asymmetric subdivision   
+0.0 0.1  8   1                      | range and resolution of X(sil), 1 => asymmetric subdivision  
+0.0 0.2  8   1                      | range and resolution of X(an),  1 => asymmetric subdivision   
 0.0 0.4  0.1 0                      | range and resolution of X(ksp), 0 => cartesian subdivision
 
 begin_excess_function 
@@ -2382,25 +2202,23 @@ W(fa8L h2oL)               12d3           0         0
 
 end_excess_function 
 
-3                           | Configurational entropy: a non-temkin sites (Water) 
-                            | and two temkin sites olvine and silicate species
+3                           | Configurational entropy: two non-temkin sites (Water, Melt) 
+                            | and one temkin site (olvine).
 
-2 2.                        | water-vacancy site 
-z(H) = 1 h2oL
+2 1.                        | water-vacancy site 
+z(H)     = 1 h2oL
 
-2 0.                        | olivine site
-n(Mg) = 4 fo8L
-n(Fe) = 4 fa8L
+2 0.                        | temkin olivine site
+n(Mg)    = 4 fo8L
+n(Fe)    = 4 fa8L
 
-7 0.                        | silicate species site, fo+fa should count as one species
-                            | but h&p do in fact count them separately:
-n(q)     = 1 q8L
-n(ksp)   = 1 kspL
+7 1.                        | melt species site, treating ksp and abl as separate species
+n(w)     = 1 h2oL
+n(q)     = 1 q8L            | accomplishes the same thing as adding them to form fsp and then
+n(ksp)   = 1 kspL           | adding a fsp temkin site.
 n(ab)    = 1 abL
 n(sil)   = 1 sil8L
 n(an)    = 1 anL
-n(fo)    = 1 fo8L
-n(fa)    = 1 fa8L
 
 end_of_model
                       --------------------------------------------------------
@@ -3762,10 +3580,7 @@ begin_model
 
                                       Zr8L added. Jeff Marsh, Jan 10, 2012.
 
-                                      WARNING 1: DO NOT CHANGE THE ORDER OF THE FIRST 3 ENDMEMBERS
-                                      this model uses an internal routine to compute the
-                                      entropy of the melt that assumes the order entered
-                                      here, see comments with endmember names below.
+                                      reformulated as ordinary configurational entropy model. JADC 12/18.
 
                                       WARNING 2: the endmembers q8L, fa8L, fo8L, and
                                       sil8L must be "made" in the thermodynamic data
@@ -3793,21 +3608,13 @@ melt(HP)
 abbreviation Melt
 full_name    liquid
 
-24                                    model type: internal entropy routine
+2                                     model type: simplicial composition space
 
 9                                     number of endmembers
 
-                                    | ENDMEMBER NAMES:                               
-
-h2oL                                | Because this model uses an internal routine to compute the
-                                    | entropy of the melt h2oL must be the specified as the first
-                                    | endmember (See WARNING 2 in the header of this model).
-
-                                    | fo8 and fa8 must be the 2nd and 3rd endmembers, but their
-fo8L     fa8L                       | relative order is arbitrary.
-
-abL      sil8L    anL               | The relative order of these endmembers is arbitrary.
-kspL     zr8L     q8L                         
+h2oL     fo8L     fa8L
+abL      sil8L    anL
+kspL     zr8L     q8L
 
  0 0 0 0 0 0 0 0 0                  | endmember flags.
 
@@ -3872,7 +3679,30 @@ w(zr8L  h2oL) 25d3  0.  0.
 
 end_excess_function 
 
-  0                                  | no configurational entropy model (internal routine hpmelt).
+3                           | Configurational entropy: two non-temkin sites (Water, Melt) 
+                            | and one temkin site (olvine). hp assume a fsp = ab + or "molecule""
+                            | with mixing on a temkin M site, but the math works out the same as 
+                            | the endmembers are treated as separate endmembers and the M site
+                            | dropped. 
+
+2 1.                        | water-vacancy site 
+z(H) = 1 h2oL
+
+2 0.                        | temkin olivine site
+n(Mg) = 4 fo8L
+n(Fe) = 4 fa8L
+
+8 1.                        | silicate species site, green assume a fsp = ab + or "molecule""
+                            | with mixing on the M site, but the math works out the same as 
+                            | the endmembers are treated as separate endmembers and the M site
+                            | dropped. 
+z(w)     = 1 h2oL
+z(q)     = 1 q8L
+z(ksp)   = 1 kspL
+z(ab)    = 1 abL
+z(sil)   = 1 sil8L
+z(an)    = 1 anL
+z(zr)    = 1 zr8L
 
 begin_dqf_corrections
 dqf(fo8L)  -10d3 0 0 
@@ -3909,17 +3739,6 @@ begin_model
 
                                       JADC 7/03
 
-
-                                      WARNING 1: This model can only be used for hydrous systems  
-                                      if H2O is specified as a thermodynamic component
-                                      (i.e., if H2O is specified as a saturated 
-                                      component, VERTEX will reject the h2oG(L) endmember
-                                      and the model will be applicable only to dry melts).
-
-                                      WARNING 2: this model uses an internal routine to 
-                                      compute the entropy of the melt that assumes 
-                                      h2oG(l) is the first endmember.
-
                                       WARNING 3: the subdivision ranges below may not
                                       span the entire range of validity for the pMELT
                                       model. Check these ranges, and adjust them as 
@@ -3936,22 +3755,22 @@ begin_model
                                       BUILD. To be strictly consistent with Ghiorso et al
                                       the Sterner and Pitzer EoS for water should be used 
                                       for this purpose, but it is not presently included
-                                      in perplex. Instead of the Sterner-Pitzer EoS i would
-                                      recommend using the CORK EoS, which differs negligibly
-                                      from the Sterner-Pitzer EoS.
+                                      in perplex. 
 
                                       JADC May 23, 2004.
                                       
                                       Added TiO2 endmember. JADC Feb 7, 2012. 
+
+                                      converted to an ordinary temkin model. JADC, 12/18.
 pMELTS(G)
 abbreviation Melt
 full_name    liquid
 
-25                                    model type: internal entropy routine
+2                                    model type: ordinary simplicial
 
-9                                     number of endmembers
+9                                    number of endmembers
 
-H2O                                 | h2o MUST be the first endmember, see WARNING 1 above.
+H2O
 foGL
 faGL
 woGL
@@ -4012,7 +3831,25 @@ w(nasGL tiGL) 22194.2    0. 0.
 w(kalGL tiGL) 3744.0     0. 0.
 
 end_excess_function 
-  0                                  | no configurational entropy model (internal routine gmelt).
+                                    | the configurational entropy for this model is unclear
+                                    | eq 1 of ghiorso et al. (2002) is almost certainly wrong
+                                    | the model below follows ghioro and sack 1995 & Nicholls 1980 CMP 74:211
+
+2                                   | 2 sites
+
+9 1.                                | melt site, 9 species
+z(h2o) = 1 H2O
+z(foGL) = 1 foGL
+z(faGL) = 1 faGL
+z(woGL) = 1 woGL
+z(kalGL) = 1 kalGL
+z(nasGL) = 1 nasGL
+z(coGL) = 1 coGL
+z(tiGL) = 1 tiGL
+
+2 1                                  | water vacancy site
+z(h2o) = 1 H2O
+
 end_of_model
                                       --------------------------------------------------------
 begin_model
@@ -4068,31 +3905,30 @@ begin_model
                                       specify an equation of state for H2O when running
                                       BUILD. To be strictly consistent with Ghiorso et al
                                       the Sterner and Pitzer EoS for water should be used 
-                                      for this purpose, but it is not presently included
-                                      in perplex. Instead of the Sterner-Pitzer EoS i would
-                                      recommend using the CORK EoS, which differs negligibly
-                                      from the Sterner-Pitzer EoS.
+                                      for this purpose.
 
                                       JADC May 23, 2004.
                                       
                                       Added TiO2 endmember. JADC Feb 7, 2012
 
+                                      reformulated as ordinary solutiub model. JADC 12/18.
+
 mMELTS(G)
 abbreviation Melt
 full_name    liquid
 
-25                                    model type: internal entropy routine
+2                                    model type: internal entropy routine
 
 8                                     number of endmembers
 
-H2O                                 | h2o MUST be the first endmember, see WARNING 1 above.
+H2O
 foGL
 faGL
 woGL
 crGL
 coGL
 tiGL
-qGL            
+qGL
 
 1 0 0 0 0 0 0 0 0                   | endmember flags  
 
@@ -4136,7 +3972,26 @@ w(woGL  crGL)  48337.5     0. 0.
 w(tiGL  crGL) -22455.8    0. 0.
 
 end_excess_function 
-  0                                  | no configurational entropy model (internal routine gmelt).
+
+                                    | the configurational entropy for this model is unclear
+                                    | eq 1 of ghiorso et al. (2002) is almost certainly wrong
+                                    | the model below follows ghioro and sack 1995 & Nicholls 1980 CMP 74:211
+
+2                                   | 2 sites
+
+8 1.                                | melt site, 8 species multiplicity 1
+z(h2o) = 1 H2O
+z(foGL) = 1 foGL
+z(faGL) = 1 faGL
+z(crGL) = 1 crGL
+z(woGL) = 1 woGL
+z(coGL) = 1 coGL
+z(tiGL) = 1 tiGL
+
+2 1.                                 | water vacancy site
+z(h2o) = 1 H2O
+
+
 end_of_model
                                       --------------------------------------------------------
 begin_model
@@ -4161,16 +4016,6 @@ begin_model
 
                                       JADC 7/03
 
-                                      WARNING 1: This model can only be used for hydrous systems  
-                                      if H2O is specified as a thermodynamic component
-                                      (i.e., if H2O is specified as a saturated 
-                                      component, VERTEX will reject the h2oGM endmember
-                                      and the model will be applicable only to dry melts).
-
-                                      WARNING 2: this model uses an internal routine to 
-                                      compute the entropy of the melt that assumes 
-                                      h2oGM is the first endmember.
-
                                       WARNING 3: the subdivision ranges below may not
                                       span the entire range of validity for the MELT
                                       model. Check these ranges, and adjust them as 
@@ -4179,7 +4024,7 @@ MELTS(GS)
 abbreviation Melt
 full_name    liquid
 
-25                                    model type: internal entropy routine
+2                                     model type: simplicial
 
 8                                     number of endmembers
 
@@ -4190,7 +4035,7 @@ woGM
 kalGM
 nasGM
 coGM
-qGM            
+qGM
 
 0 0 0 0 0 0 0 0                  | endmember flags                  
 
@@ -4234,9 +4079,24 @@ w( h2oGM nasGM) -96938.   0. 0.
 w( h2oGM kalGM) 10374.    0. 0.
 end_excess_function 
 
-  0                                  | no configurational entropy model (internal routine gmelt).
 
-end_of_model                         
+2                                   | 2 sites, a water site, and a silicate site, by counting 
+                                    | water twice they effectively get a quadratic dependence for water
+                                    | which does make some sense
+
+8 1.                                | melt site, 9 species multiplicity 1
+z(h2o) = 1 h2oGM
+z(fo)  = 1 foGM
+z(fa)  = 1 faGM
+z(wo)  = 1 woGM
+z(kal) = 1 kalGM
+z(nas) = 1 nasGM
+z(co)  = 1 coGM
+
+2 1.                                 | water vacancy site
+z(h2o) = 1 h2oGM
+
+end_of_model
                   --------------------------------------------------------
 begin_model                         
                                       holland and powell '98 non-ideal cz-fep solution

@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.8.5, source updated Dec 17, 2018.',
+     *      'Perple_X version 6.8.6, source updated Dec 16, 2018.',
 
      *      'Copyright (C) 1986-2018 James A D Connolly '//
      *      '<www.perplex.ethz/copyright.html>.'
@@ -52,7 +52,7 @@ c----------------------------------------------------------------------
      *    new.eq.'672'.or.new.eq.'673'.or.new.eq.'674'.or.
      *    new.eq.'675'.or.new.eq.'676'.or.new.eq.'678'.or.
      *    new.eq.'679'.or.new.eq.'682'.or.new.eq.'683'.or.
-     *    new.eq.'685') then 
+     *    new.eq.'685'.or.new.eq.'686') then 
 
          chksol = .true.
 
@@ -162,7 +162,7 @@ c                                 for nag)
          r1 = r1/2d0
       end do 
 
-      r2 = 1d2 * r2
+      r2 = 1d3 * r2
 
       wmach(3) = r2
       wmach(5) = 1d0 + r2
