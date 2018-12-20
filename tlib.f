@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.8.6, source updated Dec 16, 2018.',
+     *      'Perple_X version 6.8.6, source updated Dec 19, 2018.',
 
      *      'Copyright (C) 1986-2018 James A D Connolly '//
      *      '<www.perplex.ethz/copyright.html>.'
@@ -2496,7 +2496,7 @@ c---------------------------------------------------------------------
      *        'To correct this error exclude either more or fewer ',a,
      *        'endmembers.',/)
 77    format (/,'**error ver077** ',a,/)
-78    format (/,'**error ver078** ',a,' has dependent endmebers with ',
+78    format (/,'**error ver078** ',a,' has dependent endmembers with ',
      *        'invalid site populations',/,'it cannot be used unless ',
      *        'it is corrected or the site_check_override keyword is',/,
      *        'specified at the end of the ',a,' model.',/)

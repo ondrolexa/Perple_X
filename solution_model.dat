@@ -1,4 +1,4 @@
-686 DO NOT DELETE THIS LINE
+685 DO NOT DELETE THIS LINE
 
                              FOR MODEL DEFINITIONS AND REFERENCES READ THE MODEL COMMENTARY OR REFER TO 
                              THE GLOSSARY AT:
@@ -1143,18 +1143,19 @@ z(H) = 1 h2oL
 n(Mg) = 4 foTL
 n(Fe) = 4 faTL
 
-8 1.                        | melt site, green assume a fsp = ab + or "molecule"
+8 0.                        | melt site, green assume a fsp = ab + or "molecule"
                             | with mixing on the M site, but the math works out the same as 
                             | the endmembers are treated as separate endmembers and the M site
                             | dropped. 
-z(w)     = 1 h2oL
 z(q)     = 1 q8L
 z(ksp)   = 1 kspL
 z(ab)    = 1 abL
 z(sil)   = 1 silL
 z(an)    = 1 oanL
 z(wo)    = 1 woL
-| z(ol)    = 1 faTL + 1 foTL
+z(ol)    = 1 faTL + 1 foTL  | this term was not counted prior to dec 12, 2018.
+z(H)     = 1 h2oL
+
 
 begin_dqf_corrections
 dqf(silL) = -7800
@@ -2212,13 +2213,14 @@ z(H)     = 1 h2oL
 n(Mg)    = 4 fo8L
 n(Fe)    = 4 fa8L
 
-7 1.                        | melt species site, treating ksp and abl as separate species
-n(w)     = 1 h2oL
+7 0.                        | melt species site, treating ksp and abl as separate species
 n(q)     = 1 q8L            | accomplishes the same thing as adding them to form fsp and then
 n(ksp)   = 1 kspL           | adding a fsp temkin site.
 n(ab)    = 1 abL
 n(sil)   = 1 sil8L
 n(an)    = 1 anL
+n(ol)    = 1 fo8L + 1 fa8L  | this term was not counted prior to dec 2018.
+n(w)     = 1 h2oL
 
 end_of_model
                       --------------------------------------------------------
@@ -3692,7 +3694,7 @@ z(H) = 1 h2oL
 n(Mg) = 4 fo8L
 n(Fe) = 4 fa8L
 
-8 1.                        | silicate species site, green assume a fsp = ab + or "molecule""
+8 0.                        | silicate species site, green assume a fsp = ab + or "molecule""
                             | with mixing on the M site, but the math works out the same as 
                             | the endmembers are treated as separate endmembers and the M site
                             | dropped. 
@@ -3703,6 +3705,7 @@ z(ab)    = 1 abL
 z(sil)   = 1 sil8L
 z(an)    = 1 anL
 z(zr)    = 1 zr8L
+z(ol)    = 1 fo8L + 1 fa8L   | there's a case to be made that zr8l should be incorporated in "olivine"
 
 begin_dqf_corrections
 dqf(fo8L)  -10d3 0 0 
@@ -3837,15 +3840,16 @@ end_excess_function
 
 2                                   | 2 sites
 
-9 1.                                | melt site, 9 species
-z(h2o) = 1 H2O
-z(foGL) = 1 foGL
-z(faGL) = 1 faGL
-z(woGL) = 1 woGL
+9 0                                 | melt site, 9 species
+z(h2o)   = 1 H2O
+z(foGL)  = 1 foGL
+z(faGL)  = 1 faGL
+z(woGL)  = 1 woGL
 z(kalGL) = 1 kalGL
 z(nasGL) = 1 nasGL
-z(coGL) = 1 coGL
-z(tiGL) = 1 tiGL
+z(coGL)  = 1 coGL
+z(tiGL)  = 1 tiGL
+z(qGL)   = 1 qGL
 
 2 1                                  | water vacancy site
 z(h2o) = 1 H2O
@@ -3979,16 +3983,17 @@ end_excess_function
 
 2                                   | 2 sites
 
-8 1.                                | melt site, 8 species multiplicity 1
-z(h2o) = 1 H2O
+8 0                                 | melt site, 8 species multiplicity 1
+z(h2o)  = 1 H2O
 z(foGL) = 1 foGL
 z(faGL) = 1 faGL
 z(crGL) = 1 crGL
 z(woGL) = 1 woGL
 z(coGL) = 1 coGL
 z(tiGL) = 1 tiGL
+z(qGL)  = 1 qGL
 
-2 1.                                 | water vacancy site
+2 1                                  | water vacancy site
 z(h2o) = 1 H2O
 
 
@@ -4080,11 +4085,9 @@ w( h2oGM kalGM) 10374.    0. 0.
 end_excess_function 
 
 
-2                                   | 2 sites, a water site, and a silicate site, by counting 
-                                    | water twice they effectively get a quadratic dependence for water
-                                    | which does make some sense
+2
 
-8 1.                                | melt site, 9 species multiplicity 1
+8 0.                                | melt site, 8 species, temkin multiplicity 1
 z(h2o) = 1 h2oGM
 z(fo)  = 1 foGM
 z(fa)  = 1 faGM
@@ -4092,6 +4095,7 @@ z(wo)  = 1 woGM
 z(kal) = 1 kalGM
 z(nas) = 1 nasGM
 z(co)  = 1 coGM
+z(q)   = 1 qGM
 
 2 1.                                 | water vacancy site
 z(h2o) = 1 h2oGM
@@ -9099,6 +9103,7 @@ begin_model
 
                         (AlMg-1,M2)  = ged - anth
                         (CaNa-1,M4)  = tr + (ged - anth) - gl
+                        (CaMg-1,M4)  = tr - anth
                         (MgNa-1,M4)  = ged - ogl
                         (Fe3Al-1,M2) = mrb - ogl
                         FeMg-1(M4) = (-fanth - anth + ammo1 + ammo2)
@@ -9156,12 +9161,12 @@ end_limits
 
 ftr_d   = 1 tr + 2 fanth_dq - 1 ammo1 - 1 ammo2
 
-fpa_d   = 1 mpa  + 1/2 fanth_dq + 1/2 ammo2 - 1 anth
-cfpa_d  = 1 mpa  + 1/2 fanth_dq + 1/2 ammo2 - 2 anth + 1 tr
+fpa_d   = 1 mpa  + 1/2 fanth_dq + 1/2 ammo2 - 1   anth
+cfpa_d  = 1 mpa  + 1 tr         + 3/2 fanth_dq -   1 ammo1 - 1/2 ammo2 - 1 anth
 cmpa_d  = 1 mpa  + 1 tr         - 1 anth 
 
 cmged_d = 1 ged_dqf  - 1 anth + 1 tr
-cfged_d = 1 ged_dqf  + 1 tr   - 1 ammo1 - 1 ammo2
+cfged_d = 1 ged_dqf  - 1 anth + 1 tr + 1 fanth_dq - 1 ammo1
 
 mgrk_d   = 1 omrb_dqf  + 1 ged_dqf  - 1 ogl_dqf
 mcgrk_d  = 1 omrb_dqf  + 1 ged_dqf  - 1 anth     - 1 ogl_dqf   + 1 tr

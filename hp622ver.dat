@@ -285,7 +285,7 @@ crdih = 1 cats + 1 kos - 1 jd
        DQF = -4900
 mcbuf = 1 cats + 1/2 per + 1/2 ru -1/2 cor
        DQF = -1750 - 1.2 * T - 0.005 * P
-kjd  = 1 jd + 1 san - 1 abh
+kjdh  = 1 jd + 1 san - 1 abh
        DQF = -3750 + 1.189 * P 
                                   | Make definitions for Jennings and Holland, J Pet, 56:869-892, 2015 Opx
 cren  = 1 mgts + 1 kos - 1 jd
