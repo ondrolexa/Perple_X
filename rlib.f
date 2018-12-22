@@ -10265,29 +10265,33 @@ c----------------------------------------------------------------------
 
          call gpmlt1 (g,id,error)
 
-      else if (.not.lrecip(id)) then
-c                                 non-reciprocal, initialize p0/pa
-         do i = lstot(id)+1, nstot(id)
-            p0a(i) = 0d0
-            pa(i) = p0a(i)
-         end do
+      else
 
-      end if
+         if (.not.lrecip(id)) then
+c                                 non-reciprocal, initialize p0/pa
+            do i = lstot(id)+1, nstot(id)
+               p0a(i) = 0d0
+               pa(i) = p0a(i)
+            end do
+
+         end if
 c                                 initialize limit expressions
-      call p0limt (id)
+         call p0limt (id)
 c                                 as most models are single species and
 c                                 there is so much overhead in computing
 c                                 multiple speciation, use a special routine
 c                                 for single species models:
-      if (nord(id).gt.1) then
+         if (nord(id).gt.1) then
  
-         call speci2 (g,id,error)
+            call speci2 (g,id,error)
 
-      else 
+         else 
 
-         call speci1 (g,id,1,error)
+            call speci1 (g,id,1,error)
 
-      end if 
+         end if
+
+      end if
 
       if (error.or.iopt(17).ne.0) then 
 c                                 if speciation returns error, or order_check is on,
@@ -20329,7 +20333,7 @@ c----------------------------------------------------------------------
       common/ cst20 /goodc(3),badc(3)
 c----------------------------------------------------------------------
       error = .false.
-      p0a(nstot(id)) = 0d0 
+      p0a(nstot(id)) = 0d0
 c                                 rqmax the maximum amount of the 
 c                                 ordered species that can be formed
 c                                 from the fully disordered species
