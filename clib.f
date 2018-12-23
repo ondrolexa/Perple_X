@@ -2404,8 +2404,8 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer maxbox,lay
-      parameter (maxbox=1760,lay=6) 
+      integer maxbox,lay, mpol, mord
+      parameter (maxbox=1760,lay=6,mpol=3,mord=4) 
 
       integer i,j,k,ier
 
@@ -2433,10 +2433,10 @@ c-----------------------------------------------------------------------
       common/ cst312 /jlow,jlev,loopx,loopy,jinc 
 
       logical pzfunc
-      integer ilay,irep,npoly
+      integer ilay,irep,npoly,nord
       double precision abc0,vz,iblk
-      common/ cst66 /abc0(4,3),vz(6),iblk(lay,k5),ilay,irep(lay),npoly,
-     *               pzfunc
+      common/ cst66 /abc0(0:mord,mpol),vz(6),iblk(lay,k5),ilay,
+     *               irep(lay),npoly,nord,pzfunc
 
       double precision a,b
       integer ipvt,idv,iophi,idphi,iiphi,iflg1
@@ -2489,8 +2489,8 @@ c                                 specification n t-z points to fit n-1^th order
 c                                 polynomial 
          read (n8,*) npoly
 
-         if (npoly.gt.4) call error (77,b(1),i,'too many t-z '/
-     *                      /'increase 2nd dimension of abc0 in FRAC2D')
+         if (npoly.gt.mpol) call error (77,b(1),i,'too many t-z '/
+     *                     /'coordinates increase mpol in common cst66')
 
          do i = 1, npoly
             read (n8,*) b(i), a(i,1)
@@ -2518,15 +2518,29 @@ c                                 variable, here we take a function defined in
 c                                 terms of the absolute depth of the top of the
 c                                 column (z0) and the relative depth (dz) within
 c                                 the column
+         if (.not.pzfunc) then
+c                                 slab dip (degree)
+            read (n8,*) vz(6)
+c                                 number of geothermal polynomials
+            read (n8,*) npoly
+            if (npoly.gt.mpol) call error (77,b(1),i,'too many '/
+     *                       /'geotherms increase mpol in common cst66')
+c                                 order of geothermal polynomials
+            read (n8,*) nord
+            if (nord.gt.mord) call error (77,b(1),i,'geothermal '/
+     *      /'polynomial order too high, increase mord in common cst66')
 
-c                                 v2 = a(z0)*dz^2 + b(z0)*dz + c(z0)
+            do i = 1, npoly
+c                                 depth in column for the i'th geotherm
+              read (n8,*) abc0(nord+1,i) 
+c                                 convert orthogonal depth to vertical depth
+              abc0(nord+1,i) = abc0(nord+1,i) / dcosd(vz(6))
+c                                 polynomial coefficients for the geotherm
+              read (n8,*) (abc0(j,i), j = 0, nord)
 
-c                                 e.g., T(K) =  a(z0)*dz^2 + b(z0)*dz + c(z0)
+            end do
 
-c                                 where a(z0) = a0 + a1*z0 + a2*z0^2 + a3*z0^3 + ...
-c                                 b(z0) = b0 + b1*z0 + b2*z0^2 + b3*z0^3 + ...
-c                                 c(z0) = c0 + c1*z0 + c2*z0^2 + c3*z0^3 + ...
-         if (.not.pzfunc) read (n8,*) ((abc0(i,j),j=1,4),i=1,3)
+         end if
 
       end if 
 c                                 get the initial global composition array
@@ -2548,7 +2562,7 @@ c                                 end of data indicated by zero
          ilay = ilay + 1
 
          if (ilay.eq.lay) call error (77,b(1),i, 
-     *                               'increase lay in routine FRAC2D')
+     *                               'increase lay in common cst66')
 
          read (n8,*) (iblk(ilay,i),i=1,icp)
 
@@ -2557,7 +2571,7 @@ c                                 end of data indicated by zero
          ncol = ncol + irep(ilay)
 
          if (ncol.gt.maxbox) call error (77,b(1),i, 
-     *                            'increase maxbox in routine FRAC2D')
+     *                            'increase maxbox in common cst66')
 
       end do
 
@@ -2601,17 +2615,17 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer lay,i,j
+      integer lay,i,j,mpol,mord
 
-      parameter (lay=6) 
+      parameter (lay=6,mpol=3,mord=4) 
 
-      double precision p0, z0, dz, z2, z3, z4, z5, z6, t0, t1, t2, a, b
+      double precision p0, z0, dz, z2, z3, z4, z5, z6, t0, t1, t2,aa,bb
 
       logical pzfunc
-      integer ilay,irep,npoly
+      integer ilay,irep,npoly,nord
       double precision abc0,vz,iblk
-      common/ cst66 /abc0(4,3),vz(6),iblk(lay,k5),ilay,irep(lay),npoly,
-     *               pzfunc
+      common/ cst66 /abc0(0:mord,mpol),vz(6),iblk(lay,k5),ilay,
+     *               irep(lay),npoly,nord,pzfunc
 
       integer irct,ird
       double precision vn
@@ -2622,7 +2636,13 @@ c----------------------------------------------------------------------
       common/ cst226 /ncol,nrow,fileio,flsh,anneal
 
       double precision vmax,vmin,dv
-      common/ cst9  /vmax(l2),vmin(l2),dv(l2)  
+      common/ cst9  /vmax(l2),vmin(l2),dv(l2)
+
+      double precision a,b
+      integer ipvt,idv,iophi,idphi,iiphi,iflg1
+      common/ cst23  /a(k8,k8),b(k8),ipvt(k8),idv(k8),iophi,idphi,
+     *                iiphi,iflg1
+
 
       double precision v,tr,pr,r,ps
       common/ cst5  /v(l2),tr,pr,r,ps
@@ -2673,12 +2693,12 @@ c                                t0, t1 deep
      *            +0.2181334D2 *z0 -0.5161647D3
           end if
 
-         a = -t1 / 272d0 + t2 / 850d0 + t0 / 400d0
-         b = -dsqrt(2d0) * (64d0*t2 - 625d0*t1 + 561d0*t0)/6800d0
+         aa = -t1 / 272d0 + t2 / 850d0 + t0 / 400d0
+         bb = -dsqrt(2d0) * (64d0*t2 - 625d0*t1 + 561d0*t0)/6800d0
 
          v(1) = (dz - p0) * vz(2)
 
-         v(2) = a*dz**2/1d6 - b*dz/1d3 + t0
+         v(2) = aa*dz**2/1d6 - bb*dz/1d3 + t0
 
       else if (flsh) then 
 
@@ -2690,20 +2710,44 @@ c                                t0, t1 deep
          end do
 
       else
-c                                 convert to depth at top of column
-         z0 = -dz/1d3
-c                                 set the independent variable
-         v(1) = (dz - p0) * vz(2)   
-c                                 set the dependent variable
-         v(2) = (abc0(1,1) + abc0(2,1)*z0 + abc0(3,1)*z0**2 
-     *                     + abc0(4,1)*z0**3)*dz**2 
-     *        + (abc0(1,2) + abc0(2,2)*z0 + abc0(3,2)*z0**2 
-     *                     + abc0(4,2)*z0**3)*dz 
-     *        +  abc0(1,3) + abc0(2,3)*z0 + abc0(3,3)*z0**2 
-     *                     + abc0(4,3)*z0**3
+c                                 compute the npoly t-corrdinates
+         do i = 1, npoly 
+c                                 b - geotherm t
+            b(i) = abc0(0,i)
+c                                 depth for geotherm
+            z0 = abc0(nord+1,i) - p0
+
+            do j = 1, nord
+               b(i) = b(i) + abc0(j,i) * z0**j
+            end do
+
+            do j = 1, npoly-1
+               a(i,j) = z0**j
+            end do 
+
+            a(i,j) = 1d0
+
+         end do
+
+         call factor (a,npoly,ipvt,i)
+
+         if (i.eq.0) call subst (a,ipvt,npoly,b,i)
+
+         if (i.ne.0) call error (77,b(1),i,'degenerate t-z'//
+     *                                     ' coordinates, FRAC2D')
+c                                  true depth is 
+         z0 = dz - p0
+c                                  pressure is
+         v(1) = z0 * vz(2)
+c                                  temperature is
+         v(2) = b(npoly)
+
+         do i = 1, npoly-1
+            v(2) = v(2) + b(i) * z0** i
+         end do
 
       end if
-                       
+
       end
 
       subroutine getpp (id)
@@ -3756,18 +3800,18 @@ c---------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i, lay
+      integer i,lay,mpol,mord
 
-      parameter (lay=6) 
+      parameter (lay=6,mpol=3,mord=4) 
 
       integer iam
       common/ cst4 /iam
 
       logical pzfunc
-      integer ilay,irep,npoly
+      integer ilay,irep,npoly,nord
       double precision abc0,vz,iblk
-      common/ cst66 /abc0(4,3),vz(6),iblk(lay,k5),ilay,irep(lay),npoly,
-     *               pzfunc
+      common/ cst66 /abc0(0:mord,mpol),vz(6),iblk(lay,k5),ilay,
+     *               irep(lay),npoly,nord,pzfunc
 
       integer isec,icopt,ifull,imsg,io3p
       common/ cst103 /isec,icopt,ifull,imsg,io3p

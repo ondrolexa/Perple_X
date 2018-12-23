@@ -623,9 +623,9 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer maxbox,lay
+      integer maxbox,lay,mpol,mord
 
-      parameter (maxbox=1760,lay=6)
+      parameter (maxbox=1760,lay=6,mpol=3,mord=4) 
 
       character*100 n6name, n5name
 
@@ -680,10 +680,10 @@ c-----------------------------------------------------------------------
       common/ cst74 /iap(k2),ibulk
 
       logical pzfunc
-      integer ilay,irep,npoly
+      integer ilay,irep,npoly,nord
       double precision abc0,vz,iblk
-      common/ cst66 /abc0(4,3),vz(6),iblk(lay,k5),ilay,irep(lay),npoly,
-     *               pzfunc
+      common/ cst66 /abc0(0:mord,mpol),vz(6),iblk(lay,k5),ilay,
+     *               irep(lay),npoly,nord,pzfunc
 
       logical fileio, flsh, anneal
       integer ncol, nrow

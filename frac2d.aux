@@ -9,45 +9,42 @@
  80d3            minimum value of x-coordinate (-z0,m depth of slab interface), number of increments is set by 1d_path option
 200d3            maximum value of x-coordinate
 
-.true.           pzfunc if true, then do x-y => p-t conversion with internal function 
+.false.          pzfunc if true, then do x-y => p-t conversion with internal function, otherwise use a fit to geotherms input below
 
-26163            thickness of mantle (m), molar composition =>
+45               slab dip (degrees)
+
+3                npoly => the number of geotherms to be used to compute t-z coordinates
+
+3                order of the geotherm polynomials, i.e., n in T(K) = c_0 + sum(c_i*z(m)^i, i = 1..n)
+
+0                othogonal depth (m) of the 1st geotherm relative to the top of the column, i.e., this is the geotherm at the top of the slab 
+168.833  -.104e-1    -.408942e-7 -.574476e-13    c_0-c_n for the 1st geotherm, note this example is a fit for slab depths at -80->-150 km and should not be used at shallower depth
+
+-8000            orthogonal depth of the 2nd geotherm, i.e., here the geotherm 8 km below the slab surface
+-365.237 -.148594e-1 -.561533e-7 -.761156e-13    c_0-c_n for the 2nd geotherm
+
+-25000           orthogonal depth of the 3rd geotherm, i.e., here the geotherm 25 km below the slab zurface
+938.876   .247382e-2  .159881e-7  .228334e-13    c_0-c_n for the 3rd geotherm
+
+
+26163            vertical thickness of mantle (m), molar composition =>
 .21090, .1e-2, .7075, .74e-1, .9711e-1, .8666, .527e-1, .92e-2, .92e-3, 1.377185000, .2e-2 losimag peridotite + 2 % water.
 
-5657             thickness of oceanic inrtusives (m), molar composition =>
+5657             vertical thickness of oceanic inrtusives (m), molar composition =>
 .83e-1, .1e-1, .903, .280, .97e-1, .304, .194, .40e-1, .2e-2, 1.442500000, .2e-1        behn & kelemen (must be molar units) + 1.5 wt % water
 
-2828             thickness of oceanic volcanics (m), molar composition =>
+2828             vertical thickness of oceanic volcanics (m), molar composition =>
 .1528, .70e-1, .7839, .314, .1434, .167, .2365, .690e-1, .126e-1, 1.438650000, .2e-1  staudigel (must be molar units)
 
-1131             thickness of sediment (m), molar composition =>
-.405, .69e-1, .975, .234, .73e-1, .62e-1, .106, .78e-1, .44e-1, 1.532000000, .8e-1  gloss 
-0                   zero thickness layer indicates end of data.
+1131             vertical thickness of sediment (m), molar composition =>
+.405, .69e-1, .975, .234, .73e-1, .62e-1, .106, .78e-1, .44e-1, 1.532000000, .8e-1  gloss
+
+0                zero thickness layer indicates end of data.
 
 ##################### COMMENTS BELOW HERE #####################################################
 
-1      2.165      0.105      7.421      0.777      1.019      9.095      0.553      0.092      0.010     14.429      0.021
-2      0.817      0.098      8.889      2.756      0.955      2.993      1.910      0.394      0.020     14.200      0.197
-3      1.499      0.687      7.690      3.080      1.407      1.638      2.320      0.677      0.124     14.113      0.196
-4      1.617      0.734     10.368      2.488      0.776      0.659      0.978      0.829      0.468     14.649      0.776
+the lithologies and their thickness in the column are entered from the bottom of the column upwards. the compositions 
+are assumed to be in molar units and the order of the components must be identical to the order specified in the 
+computational option file. the compositional data is automatically renormalized so that the representative mass is 1 kg
 
-if more than one lithology is entered, the molar compositions must define
-a comparable volume or mass. (the values used in this example are for constant 
-volume at ~600 K/30 kbar).
-
-the data for geothermal condition is a fit to the ruepke et al (2004, EPSL) 
-model for a 40 ma slab age and a subduction rate of 10 cm/y. the fit was
-obtained by fitting three geotherms at constant within-slab depth (dz = 0, 
-8, 25 km), the conditions along these geotherms where used to compute the
-coefficients for a quadratic function for temperature as in the maple worksheet
-t_z_10ma_10cm.mws
-
-.219680325e-5  -.2574734314e-10  .1106727779e-15 -.1630805883e-21  a0, a1, a2, a3 | for v2 = a(z0)*dz^2 + b(z0)*dz + c(z0)
--.578257157e-1  .5757337815e-6  -.2372499384e-11  .3495079912e-17  b0, b1, b2, b3 | where a(z0) = a0 + a1*z0 + a2*z0^2 + a3*z0^3
- 168.833        .104e-1         -.408942e-7       .574476e-13      c0, c1, c2, c3 |       b(z0) = b0 + b1*z0 + b2*z0^2 + b3*z0^3, etc
-
-
-t(k) = (-.1630805883e-21*z0m^3+.2196803250e-5-.2574734314e-10*z0m+.1106727779e-15*z0m^2)*dzm^2
-+(-.5782571570e-1+.5757337815e-6*z0m+.3495079912e-17*z0m^3-.2372499384e-11*z0m^2)*dzm
-+.5744760000e-13*z0m^3+168.8330000+.1040000000e-1*z0m-.4089420000e-7*z0m^2
-
+model the instantaeneous flux of a component is ~mass/rho*zbox
