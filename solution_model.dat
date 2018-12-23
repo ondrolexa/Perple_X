@@ -1022,6 +1022,184 @@ end_dqf_corrections
 end_of_model
                            --------------------------------------------------------
 begin_model
+                      Universal melt, Holland et al., JPet, 2018. 
+
+                      JADC 12/18
+
+                      This model requires the following make definitions in the
+                      thermodynamic data file make_definitions section:
+
+                      foHL = 2 foL
+                         dqf = 8.75d3  -0.133*Pbar
+
+                      faHL = 2 faL
+                         dqf = 13.9d3  - 0.056*Pbar
+
+                      qHL = 4 qL
+                         dqf =  0.07d3    -0.062*Pbar
+
+                      jdL = 1 abL - 1 qL
+                         dqf =  11.85d3 - 0.096*Pbar
+
+                      hmL = 1/2 hemL
+                         dqf =  4.05d3 - 0.077*Pbar
+
+                      ekL = 1/2 eskL
+                         dqf =  24.75d3   + 0.245*Pbar
+
+                      tiL = 1 ruL
+                         dqf =  5.6d3  0    -0.489*Pbar
+
+                      kjL = 1 kspL - 1 qL
+                         dqf =  12.35d3  0  -0.210*Pbar
+
+                      to avoid cluttering thermodynamic data files with the new plague of TC 
+                      DQF "corrections", the following simple DQF's are specified in the
+                      make_definition section at the end of this model:
+
+                      dqf(silL) = 6.35d3  -0.320*Pbar
+                      dqf(woL)  = -0.18d3  -0.118*Pbar
+                      dqf(h2oL) = 3.24d3  -3.9*TK  0.00085*Pbar
+
+                      For (nonsensical, but common) positive DFQ's this approach may lead to 
+                      interference between the phase relations of the solution model and the 
+                      un-DQF'd endmember. If such interference occurs: the DQF'd endmember must
+                      be renamed; its definition placed in the thermodynamic data file;
+                      and the un-DQF'd endmember excluded from the calculation.
+
+                      WARNING 0: DQF'd endmembers (e.g., sil8L, ctjL) created for other thermocalc 
+                      melt models (e.g., melt(W), melt(JH)) should be excluded (or deleted from the 
+                      thermodynamic data file) from calculations with this model. 
+
+melt(H)
+abbreviation Melt
+full_name    liquid
+
+6                                   | model type: simplicial composition space with speciation
+
+11                                  | number of endmembers
+
+h2oL     foHL     faHL
+jdL      silL     kjL
+woL      ekL      hmL
+tiL      qHL
+
+1                                   | ordered species definition
+
+                                    | H(ctL) = -108.3d3  +55*TK  +0.053*Pbar - dqfwol - dqfsil + dqfq/4
+
+ctL = 1 woL + 1 silL - 1/4 qHL        Delta(enthalpy)   = -114452.5 + 55*TK + .4755*Pbar
+
+1 1 1 1 1 1 1 1 1 1 1               | endmember flags
+
+0.0 0.8  0.1  0                     | range and resolution of X(h2o), 0 => cartesian subdivision  
+0.0 0.2  0.1  0                     | range and resolution of X(fo),  1 => asymmetric subdivision   
+0.0 0.3  0.1  0                     | range and resolution of X(fa),  1 => asymmetric subdivision   
+0.0 0.8  0.1  0                     | range and resolution of X(jd),  0 => cartesian subdivision   
+0.0 0.4  0.1  0                     | range and resolution of X(sil), 1 => asymmetric subdivision  
+0.0 0.6  0.1  0                     | range and resolution of X(kj), 1 => asymmetric subdivision   
+0.0 0.4  0.1  0                     | range and resolution of X(wo),  1 => asymmetric subdivision
+0.0 0.1  0.1  0                     | range and resolution of X(ek),  1 => asymmetric subdivision
+0.0 0.1  0.1  0                     | range and resolution of X(hm),  1 => asymmetric subdivision
+0.0 0.1  0.1  0                     | range and resolution of X(ti),  1 => asymmetric subdivision
+
+begin_excess_function 
+
+W(qHL  silL)    9.5d3   -0.1 * Pbar 
+W(qHL  woL)   -10.3d3     
+W(qHL  foHL)  -26.5d3   -3.12 * Pbar  
+W(qHL  faHL)    -12d3   -0.55 * Pbar  
+W(qHL  jdL)   -15.1d3   -0.13 * Pbar  
+W(qHL  hmL)      20d3
+W(qHL  tiL)    24.6d3
+W(qHL  kjL)   -17.8d3   -0.05 * Pbar  
+W(qHL  ctL)   -14.6d3   
+W(qHL  h2oL)   17.9d3   -0.61 * Pbar   
+
+W(silL  woL)  -26.5d3    0.85 * Pbar     
+W(silL  foHL)   2.2d3    
+W(silL  faHL)   2.5d3    
+W(silL  jdL)   16.8d3    
+W(silL  hmL)     -5d3   
+W(silL  tiL)   15.2d3   -0.04 * Pbar        
+W(silL  kjL)      7d3
+W(silL  ctL)      4d3   
+W(silL  h2oL)  23.7d3   -0.94 * Pbar  
+
+W(woL  foHL)   25.5d3    0.11 * Pbar
+W(woL  faHL)     14d3
+W(woL  jdL)    -1.2d3
+W(woL  tiL)      18d3
+W(woL  kjL)    -1.1d3           
+W(woL  ctL)     9.5d3           
+W(woL  h2oL)   40.3d3   -0.86 * Pbar    
+
+W(foHL  faHL)    18d3
+W(foHL  jdL)    1.5d3
+W(foHL  tiL)    7.5d3   
+W(foHL  kjL)      3d3    
+W(foHL  ctL)   -5.6d3   
+W(foHL  h2oL)   9.4d3   -1.58 * Pbar
+ 
+W(faHL  jdL)    7.5d3   -0.05 * Pbar
+W(faHL  hmL)    -30d3    
+W(faHL  tiL)    6.7d3    
+W(faHL  kjL)     10d3    
+W(faHL  ctL)   -6.5d3    
+W(faHL  h2oL)   9.2d3   -1.58 * Pbar
+
+W(jdL  hmL)      10d3    
+W(jdL  tiL)    16.5d3    0.14 * Pbar
+W(jdL  kjL)    -5.9d3   
+W(jdL  ctL)     7.6d3   
+W(jdL  h2oL)   -8.2d3   -0.06 * Pbar
+
+W(hmL  kjL)      10d3   
+W(hmL  h2oL)   60.2d3   -0.66  * Pbar
+
+W(ekL  h2oL)   60.2d3   -0.66 * Pbar
+
+W(tiL  kjL)       9d3
+W(tiL  h2oL)   60.2d3   -0.6 * Pbar
+
+W(kjL  ctL)    -5.6d3    
+W(kjL  h2oL)   -0.2d3    0.22 * Pbar
+
+W(ctL  h2oL)   17.3d3    0.05 * Pbar
+
+end_excess_function 
+
+3
+
+2 2.                        | water-vacancy site 
+z(H) = 1 h2oL
+
+4 0.                        | M-site
+n(Mg) = 4 foHL
+n(Fe) = 4 faHL
+n(Ca) = 1 woL
+n(Al) = 1 silL
+
+9 0.                        | F-site, decompositing "alsi2" here eliminates the necessity of the A-site
+n(jdL)   = 1 jdL 
+n(kjL)   = 1 kjL
+n(alsi)  = 1 silL
+n(si0)   = 1 woL
+n(ol)    = 1 faHL + 1 foHL
+n(q)     = 1 qHL
+n(eq)    = 1 ekL
+n(ctL)   = 1 ctL
+n(hem)   = 1 hmL
+
+begin_dqf_corrections
+dqf(silL)  =  6.35d3          - 0.32   *Pbar
+dqf(woL)   = -0.18d3          - 0.118  *Pbar
+dqf(h2oL)  =  3.24d3  -3.9*TK + 0.00085*Pbar
+end_dqf_corrections
+
+end_of_model
+                           --------------------------------------------------------
+begin_model
                       Tonalitic melt, Green et al., JMG, 2016. 
 
                       JADC 9/16

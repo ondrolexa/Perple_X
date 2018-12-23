@@ -99,8 +99,7 @@ begin_makes
                                 | sign in a make definition are not effected by the excluded phase list.
                                 | for example, if qL (liquid silica) is excluded, the make definition
                                 | q8L = 4 qL 
-                                | will function, but qL will not be considered as a possible phase in 
-                                | the vertex calculation. 
+                                | will function, but qL will not be considered as a possible phase.
  
  |                                kyco silica buffer
  | kyco = 1 ky - 1 cor
@@ -347,6 +346,41 @@ fcor = 1 mcor + 1 fak - 1 mak   | FeSi corundum
        DQF(J/mol) = -15d3 
 hmgts  = 1 mgts + 1 hen - 1 en
        DQF(J/mol) = -1d3 
+|--------------------------------------------------------------------------------
+                                  | Make definitions for Holland et al., JPet, 2018 
+      |---------------------------  Cpx
+cessh = 1 cats + 1 acm - 1 jd
+       DQF = -3450 
+crdih = 1 cats + 1 kos - 1 jd
+       DQF = -4900
+mcbuf = 1 cats + 1/2 per + 1/2 ru -1/2 cor
+       DQF = -1750 - 1.2 * T - 0.005 * P
+kjdh  = 1 jd + 1 san - 1 abh
+       DQF = -3750 + 1.189 * P
+      |---------------------------  Melt
+foHL = 2 foL
+   dqf = 8.75d3  - 0.133*Pbar
+
+faHL = 2 faL
+   dqf = 13.9d3  - 0.056*Pbar
+
+qHL = 4 qL
+   dqf =  0.07d3 - 0.062*Pbar
+
+jdL = 1 abL - 1 qL
+   dqf = 11.85d3 - 0.096*Pbar
+
+hmL = 1/2 hemL
+   dqf =  4.05d3 - 0.077*Pbar
+
+ekL = 1/2 eskL
+   dqf = 24.75d3 + 0.245*Pbar
+
+tiL = 1 ruL
+   dqf =  5.6d3  - 0.489*Pbar
+
+kjL = 1 kspL - 1 qL
+   dqf = 12.35d3 - 0.210*Pbar
 
 end_makes
  
