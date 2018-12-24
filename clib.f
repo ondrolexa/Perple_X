@@ -2534,7 +2534,8 @@ c                                 order of geothermal polynomials
 c                                 depth in column for the i'th geotherm
               read (n8,*) abc0(nord+1,i) 
 c                                 convert orthogonal depth to vertical depth
-              abc0(nord+1,i) = abc0(nord+1,i) / dcosd(vz(6))
+              abc0(nord+1,i) = abc0(nord+1,i) / 
+     *                         dcos(vz(6)*.1745329252d-1)
 c                                 polynomial coefficients for the geotherm
               read (n8,*) (abc0(j,i), j = 0, nord)
 
