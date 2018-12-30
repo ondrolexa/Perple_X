@@ -1,30 +1,30 @@
-.false.          frac2d if false, flush if true
-.true.           anneal initial column and renormalize all masses to 1kg (including aliquot)
-250.             zbox, box size (m)
+.false.          FRAC2D if false, flush if true
+.true.           ANNEAL initial column and renormalize all masses to 1kg (including aliquot)
+250.             ZBOX, box size (m)
 
--0.35            gradient of primary variable (p) with upward-directed z (e.g. bar/m)
+0.35            DPDZ, gradient of primary variable (p) with upward-directed z (e.g. bar/m)
 
-0d0              max value of y coordinate (zmin), not used if ~flush
+0d0              ZSURF, max value of y coordinate (m), not used if ~flush
 
- 80d3            minimum value of x-coordinate (-z0,m depth of slab interface), number of increments is set by 1d_path option
-200d3            maximum value of x-coordinate
+ 80d3            Z0MIN, minimum value of x-coordinate (-z0,m depth of slab interface), number of increments is set by 1d_path option
+200d3            Z0MAX, value of x-coordinate
 
-.false.          pzfunc if true, then do x-y => p-t conversion with internal function, otherwise use a fit to geotherms input below
+.false.          PZFUNC, if true, then do x-y => p-t conversion with internal function, otherwise use a fit to geotherms input below
 
-45               slab dip (degrees)
+45               DIP, slab dip (degrees)
 
-3                npoly => the number of geotherms to be used to compute t-z coordinates
+3                NPOLY, the number of geotherms to be used to compute t-z coordinates
 
-3                order of the geotherm polynomials, i.e., n in T(K) = c_0 + sum(c_i*z(m)^i, i = 1..n)
+3                NORD, order of the geotherm polynomials, i.e., n in T(K) = c_0 + sum(c_i*z(m)^i, i = 1..n)
 
-0                othogonal depth (m) of the 1st geotherm relative to the top of the column, i.e., this is the geotherm at the top of the slab 
-168.833  -.104e-1    -.408942e-7 -.574476e-13    c_0-c_n for the 1st geotherm, note this example is a fit for slab depths at -80->-150 km and should not be used at shallower depth
+0                DZGEO_1, othogonal depth (m) of the 1st geotherm relative to the top of the column, i.e., this is the geotherm at the top of the slab 
+168.833  -.104e-1    -.408942e-7 -.574476e-13    C1_0-C1_NORD, for the 1st geotherm, note this example is a fit for slab depths at -80->-150 km and should not be used at shallower depth
 
--8000            orthogonal depth of the 2nd geotherm, i.e., here the geotherm 8 km below the slab surface
--365.237 -.148594e-1 -.561533e-7 -.761156e-13    c_0-c_n for the 2nd geotherm
+8000            DZGEO_2, orthogonal depth of the 2nd geotherm, i.e., here the geotherm 8 km below the slab surface
+-365.237 -.148594e-1 -.561533e-7 -.761156e-13    C2_0-C2_NORD, for the 2nd geotherm
 
--25000           orthogonal depth of the 3rd geotherm, i.e., here the geotherm 25 km below the slab zurface
-938.876   .247382e-2  .159881e-7  .228334e-13    c_0-c_n for the 3rd geotherm
+25000           DZGEO_3, orthogonal depth of the 3rd geotherm, i.e., here the geotherm 25 km below the slab zurface
+938.876   .247382e-2  .159881e-7  .228334e-13    C3_0-C3_NORD, for the 3rd geotherm
 
 
 26163            vertical thickness of mantle (m), molar composition =>

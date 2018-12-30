@@ -1,0 +1,77 @@
+Variables used to describe the FRAC2D calculation, unless otherwise indicated these
+are specified in the frac2d.aux file or computed on output:
+
+ANNEAL  - if .true., then at the initial condition of the calculation:
+          a) if fluid is stable at any node in the column, it is removed 
+             and the composition of the node adjusted accordingly.
+          b) the representative mass of all nodes are renormalized to 1 kg.
+
+C_1_0    ... C_1_NORD
+...      ... ...
+C_NPOLY_0... C_NPOLY_NORD - the coefficients of the NPOLY NORD'th order polynomials
+          that define the within slab geotherms, such that T(K) on the N'th geotherm
+          is T_N = C_N_0 + sum(C_N_I*Z**I, I = 1,...,NORD).
+
+DIP     - slab dip in degrees
+
+DPDZ    - the pressure gradient with depth (bar/m). DPDZ = RHO_AVG(kg/m^3)
+          *g(m^2/s)*(1 bar/10^5 Pascal), where RHO_AVG is the average density of 
+          the column and any overlying rock. If desired Perple_X can be modified 
+          to compute a thermodynamically consistent pressure for a loaded 
+          self-gravitating column; however such complications seem unwarranted in 
+          light of other sources of uncertainty. 
+
+DZ      - height above the base of the column; as DZ = 0 at Z0, DZ is negative 
+          within the column. 
+
+DZGEO_1...DZGEO_NPOLY - the within slab (orthogonal) depths of the NPOLY geotherms
+          that define the within slab P-T field.
+
+FRAC2D  - specifies the type of 2D fractionation calculation. If .true., then
+          the model is of a column of rock moved through a P-T field, as in
+          subduction. If .false., then metasomatism is induced by the incremental
+          addition of mass (an aliquot) to the base of the column, the P-T field 
+          within the column may be static or dynamic. The latter "FLUSH" mode
+          can be used to simulate metasomatism of the mantle wedge.
+
+NINT    - the number of depth increments as the column is subducted from Z0MIN to 
+          Z0MAX. NINT is the second value of the 1d_path_nodes option in 
+          frac2d_perplex_option.dat minus one.
+
+NORD    - the order of the polynomials used to describe the within slab P-T field.
+
+NPOLY   - the number of geotherms used to describe the within slab P-T field, typically
+          3. The within column temperature is computed by fitting an (NPOLY-1)'th order
+          polynomial to the geotherms (see Connolly 2005). 
+
+P       - pressure (bar) at any point within the column, P = Z*DPDZ.
+
+PZFUNC  - if true, internal functions are used to compute the P-T field of the column,
+          this option requires that the user program the functions.
+
+V_SUB   - the subduction rate (m/s).
+V_HOR   - the horizontal component of the slab velocity, V_HOR = V_SUB*cos(DIP) 
+
+Z       - the absolute depth (m) of any point within the column, as DZ is negative within
+          the column Z =  Z0 - DZ.
+
+ZBOX    - the vertical unit of discretization for the column in meters, i.e., the 
+          rock column is composed of boxes with a vertical dimension of ZBOX. 
+
+ZSURF   - value of the depth coordinate at the surface (m), used for the computation
+          of pressure at depth, i.e., p = (DZ - Z0)*DPDZ,
+
+Z0      - depth (m) at the top of the column (m), i.e., the depth of the slab/
+          wedge interface.
+
+Z0MIN  - the initial depth (m) of the slab/mantle interface
+Z0MAX  - the final depth (m) of the slab/mantle interface
+ 
+
+
+
+Computing fluid/elemental fluxes:
+Perple_X has no true time or spatial coordinates, thus the representative mass (1 kg) that Perple_X uses  is arbitrary and the time scale for mass transfer is determined by the assumed subduction rate, the following notes explain how Perple_X results may be converted to true fluxes.
+1) The time step: the depth of the subduction interface increases incrementally from Z0MIN to Z0MAX (frac2d.aux) in NINT steps. The horizontal velocity of the slab is  
+
+sslvpn.ethz.ch/erdw-imp
