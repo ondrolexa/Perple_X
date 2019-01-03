@@ -1,42 +1,42 @@
-dew13hp622ver_elements.dat               thermodynamic data file                                                                                                     
-no_print                  print file name, blank = no output                                                                                                                                                                                      
-plot                      plot file name, blank = no output                                                                                                                                                                                                                        
-solution_model.dat        solution model file, blank = no solutions                                                                                                                                                                                           
-10 cm/y subduction rate, 40 ma plate age, mantle -> 4 wt% H2O 
-frac2d_perplex_option.dat                                                                                                                                                                                 
-    9 calculation type, 0 - no independent potentials, 1 - two independent potentials 3 - one independent potentials, 4 - swash 5 - gridded minimization, 7 - fractionation
-    3 efficiency level, 0 - low, 5 - high
-    1 print potentials, 0 - yes, 1 - no
-    1 JTEST, debug flag
-    0 reaction format, 0 - just names, 1 - sat. phases 2 -  S and V, 3 - stoichiometry, 4 - everything
-    0 console messages, 0 - yes, 1 - suppress most
-    1 short print file, 0 - no, 1 - yes
-    0 for gridded minimization grid refinement, 1 - true boundaries, 0 - all boundaries
-  5 for gridded minimization JLOW, number of Y-nodes at lowest level
-    1 for gridded minimization JLEV, number of grid levels
+dew13hp622ver_elements.dat     thermodynamic data file                                                                                      
+no_print | print generates print output
+plot     | obsolete 6.8.4+
+solution_model.dat     | solution model file, blank = none                                                                                                                                                                                                      
+10 cm/y subduction rate, 40 ma plate age, mantle -> 2 wt% H2O                                                                                                                                                                                                   
+frac2d_perplex_option.dat     | Perple_X option file                                                                                                                                                                                                            
+    9 calculation type: 0- composition, 1- Schreinemakers, 3- Mixed, 4- swash, 5- gridded min, 7- 1d fract, 8- gwash, 9- 2d fract, 10- 7 w/file input 11- 9 w/file input, 12- 0d infiltration
+    0 unused place holder, post 06
+    0 unused place holder, post 06
+    0 unused place holder, post 06
+    0 unused place holder, post 06
+    0 unused place holder, post 06
+    0 unused place holder, post 06
+    0 unused place holder, post 06
+    0 unused place holder, post 06
+    0 unused place holder, post 06
     0 number component transformations
-   15 number of components
-    1 component amounts, 0 - molar, 1 weight
-    1 assemblage data 0 - print, 1 - suppress
-    0 variance flag, 0 - calculate all, 1 - only true univariants
-    1 IDBASE data base code
-    5 ifug EoS for saturated phase
-   99 for gridded minimization ILOW, number of X-nodes at lowest level
+   19 number of components in the data base
+    0 component amounts, 0 - molar, 1 weight
+    0 unused place holder, post 06
+    0 unused place holder, post 06
+    0 unused place holder, post 05
+    0 ifug EoS for saturated phase
+    2 gridded minimization dimension (1 or 2)
     0 special dependencies: 0 - P and T independent, 1 - P(T), 2 - T(P)
--6.41160E+01 4.86048E-02 -8.37276E-07 7.05864E-12 -2.24183E-17 
+ 0.00000      0.00000      0.00000      0.00000      0.00000     Geothermal gradient polynomial coeffs.
 
 begin thermodynamic component list
-H2    1  2.63000      0.00000      0.00000     weight amount
-C     1  2.90000      0.00000      0.00000     weight amount
-Si    1  45.0000      0.00000      0.00000     weight amount
-Al    1  15.2600      0.00000      0.00000     weight amount
-Fe    1  9.84000      0.00000      0.00000     weight amount
-Mg    1  6.54000      0.00000      0.00000     weight amount
-Ca    1  12.6600      0.00000      0.00000     weight amount
-Na    1  2.07000      0.00000      0.00000     weight amoun
-K     1 0.560000      0.00000      0.00000     weight amount
-O2    1 0. 0. 0.
-S2    1 0. 0. 0.
+H2    0  0.00000      0.00000      0.00000     molar amount
+C     0  0.00000      0.00000      0.00000     molar amount
+Si    0  0.00000      0.00000      0.00000     molar amount
+Al    0  0.00000      0.00000      0.00000     molar amount
+Fe    0  0.00000      0.00000      0.00000     molar amount
+Mg    0  0.00000      0.00000      0.00000     molar amount
+Ca    0  0.00000      0.00000      0.00000     molar amount
+Na    0  0.00000      0.00000      0.00000     molar amount
+K     0  0.00000      0.00000      0.00000     molar amount
+O2    0  0.00000      0.00000      0.00000     molar amount
+S2    0  0.00000      0.00000      0.00000     molar amount
 end thermodynamic component list
 
 
@@ -48,36 +48,25 @@ begin saturated phase component list
 end saturated phase component list
 
 
-begin mobile component list
-end mobile components
+begin independent potential/fugacity/activity list
+end independent potential list
 
 
 begin excluded phase list
-h2oL
-S2
-SO2
-CO
-
-f3clin
-naph
-nta
-
+h2oL    
+SO2     
+CO      
+f3clin  
+naph    
+nta     
 parg_dqf
-ts_dqf
-mrbG
-rieb
-gl
+ts_dqf  
+mrbG    
+rieb    
+gl      
+wa       wtf?
+                           | aqueous species exclusions in case aq_lagged_speciation or aq_output is set to true:
 
-wa         ?
-faTL
-fa8L
-
-kals
-nasGL
-kalGL
-woGL
-foGL
-odo
                            | low abundance species
 FeC4H6O4   0   
 FeC2H3O2   1   
@@ -150,32 +139,25 @@ end excluded phase list
 
 begin solution phase list
 COH-Fluid+
-Bio(TCC)
-Omph(GHP)
-Opx(W)
-Chl(HP)
-T
-Atg(PN)
-Mica(CF)
-Do(HP)
-M(HP)
-Grt(JH)
-O(HP)
-Sp(JH)
-                          | low P
- Pu
- Sp(WPC)
- cAmph(DP)
- Stlp
- Ctd(W)
- Ep(HP)
- A-phase                   | at high p, but unimportant. 
- feldspar
+melt(H)
+Bio(TCC)  
+Cpx(H)
+Omph(GHP) 
+Opx(W)    
+Chl(HP)   
+T         
+Atg(PN)   
+Mica(CF)  
+Do(HP)    
+M(HP)     
+Grt(JH)   
+O(HP)     
+Sp(JH)    
 end solution phase list
 
-5e4      0.     0.00000000  0.0000      0.0000     max p, t, xco2, u1, u2
-2.5e4      -35.78  0.00000000  0.0000      0.0000     min p, t, xco2, u1, u2
- 1.0000      1.0000     1.00000000  1.0000      1.0000     increment p, t, xco2, u1, u2
+   0.00000        0.00000        0.00000        0.00000        0.00000     max p, t, xco2, u1, u2
+   0.00000        0.00000        0.00000        0.00000        0.00000     min p, t, xco2, u1, u2
+   0.00000        0.00000        0.00000        0.00000        0.00000     unused place holder post 06
 
- 1 2 3 4 5    iv1, iv2, iv3, iv4, iv5
+ 1  2  3  4  3   indices of 1st & 2nd independent & sectioning variables
 

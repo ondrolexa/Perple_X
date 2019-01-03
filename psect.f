@@ -66,7 +66,7 @@ c                                 read the plot/blk files
 c                                 organize variables 
       call getvar
 c                                 initialize the grid parameters
-      call setvar  
+      call setvar
 c                                 read plot option file, set
 c                                 default transformation
       call rdopt 
@@ -624,8 +624,8 @@ c                                  extent for label.
 c                                 george had ii = max(1,nint(x/i)) for 
 c                                 grid spacing 1, changed 10/13/2018
 c                                 for grid spacing jinc. JADC
-               ii = 1 + nint(x/i) * jinc
-               jj = 1 + nint(y/i) * jinc
+               ii = max(1, nint(x/i) * jinc)
+               jj = max(1, nint(y/i) * jinc)
 c                                  in the money this time -- agrees?
                ipoint = iap(igrd(ii,jj))
 

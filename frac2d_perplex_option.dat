@@ -39,7 +39,7 @@ aq_solvent_composition    default | [y] y => mole fractions, m => molality
 aq_solvent_solvus         default | [F] allow solvent phase separation without aq_bad_results error trigger
 aq_vapor_epsilon          default | [1.] dielectric constant threshold used to identify vapor
 auto_exclude              default | [T] exclude phases or species with no associated P-V EoS
-auto_refine               default | [auto] auto, manual, or off (auto_refine keyword group)
+auto_refine               off default | [auto] auto, manual, or off (auto_refine keyword group)
 auto_refine_factor_I      default | [3.] refine factor for gridded minimization and phase fractionation (auto_refine keyword group)
 auto_refine_factor_II     default | [10.] refine factor for composition and mixed variable diagrams (auto_refine keyword group)
 auto_refine_factor_III    default | [3.] refine factor for Schreinemakers diagrams (auto_refine keyword group)

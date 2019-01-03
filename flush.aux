@@ -1,51 +1,34 @@
-.true.           frac2d if false, flush if true, added 6.8.5
-.false.          anneal initial column
-500.             zbox, box size (m)
+.true.           FRAC2D, if .false., TITRATE if .true.
+.true.           ANNEAL, in true remove excess mobile phase from theinitial column and renormalize all masses to 1kg (including aliquot)
+.true.           VERBOS if true composition and amount of fractionated phase are output to user console
+1000.            ZBOX, box size (m)
 
--0.34            gradient of primary variable (iv(1)) with upward-directed z (e.g. bar/m)
+0.35             DPDZ, pressure-depth gradient (bar/m)
 
--150d3           max value of y coordinate (zmax),  only used if flush
+150d3            Z0MAX, depth of the base of the rock column,  only used if flush
 
-0                minimum value of x-coordinate (moles of aliquot), number of increments is set by 1d_path option
-0.04             maximum value of x-coordinate
+0                QMIN, mass of aliquot per unit area of the column (kg/m2), number of increments is set by 1d_path option
+0.04             QMAX, mass of aliquot per unit area of the column (kg/m2).
 
-3                number of T(K)-z(m) coordinates to compute n-1 order polynomial for t(z)
+3                NPTS, number of T(K)-z(m) coordinates to compute NPTS-1 order polynomial for t(z)
 
-298.15 0         1st T-z coordinate
-1573   -80d3     2nd
-973    -150d3    3rd
+298.15 0         T_1, Z_1 - first  T(K)-z(m) coordinate
+1573   80d3      T_2, Z_2 - second T(K)-z(m) coordinate
+973    150d3     T_3, Z_3 - third  T(K)-z(m) coordinate
 
-25d3             thickness of layer (m) and composition (molar), layers are listed from bottom up. 
-.0, .1e-2, .7075, .74e-1, .9711e-1, .8666, .527e-1, .92e-2, .92e-3, 1.271735000, .2e-2 losimag peridotite + 2 % water.
+10d3             ZLAY_1, vertical thickness of layer (m) and composition (molar), layers are listed from bottom up. 
 
-0                   zero thickness layer indicates end of data.
+.0, .1e-2, .7075, .74e-1, .9711e-1, .8666, .527e-1, .92e-2, .92e-3, 1.271735000, .2e-2     CLAY_1_1-CLAY_1_C, losimag peridotite + 2 % water.
+
+0                ZLAY_2, a zero thickness layer indicates end of lithological data and is followed by the molar aliquot composition:
+
+55.0836  2.81404   3.73998   0.283118E-02   0.138939E-05   0.283572E-02   1.33010   0.673508   1.10967  35.2284   0.150012E-01
 
 ##################### COMMENTS BELOW HERE #####################################################
 
-1      2.165      0.105      7.421      0.777      1.019      9.095      0.553      0.092      0.010     14.429      0.021
-2      0.817      0.098      8.889      2.756      0.955      2.993      1.910      0.394      0.020     14.200      0.197
-3      1.499      0.687      7.690      3.080      1.407      1.638      2.320      0.677      0.124     14.113      0.196
-4      1.617      0.734     10.368      2.488      0.776      0.659      0.978      0.829      0.468     14.649      0.776
+the lithologies and their thickness in the column are entered from the bottom of the column upwards. the compositions 
+are assumed to be in molar units and the order of the components must be identical to the order specified in the 
+computational option file. If ANNEAL is .true., then the compositional data is automatically renormalized so that the 
+representative mass is 1 kg. Otherwise care should be taken that the molar mass of each lithology is the same.
 
-if more than one lithology is entered, the molar compositions must define
-a comparable volume or mass. (the values used in this example are for constant 
-volume at ~600 K/30 kbar).
-
-this data would be read after the gradients if pzfunc is .true.:
-
-.219680325e-5  -.2574734314e-10  .1106727779e-15 -.1630805883e-21  a0, a1, a2, a3 | for v2 = a(z0)*dz^2 + b(z0)*dz + c(z0)
--.578257157e-1  .5757337815e-6  -.2372499384e-11  .3495079912e-17  b0, b1, b2, b3 | where a(z0) = a0 + a1*z0 + a2*z0^2 + a3*z0^3
- 168.833        .104e-1         -.408942e-7       .574476e-13      c0, c1, c2, c3 |       b(z0) = b0 + b1*z0 + b2*z0^2 + b3*z0^3, etc
-
-
-the data above is for geothermal condition is a fit to the ruepke et al (2004, EPSL) 
-model for a 40 ma slab age and a subduction rate of 10 cm/y. the fit was
-obtained by fitting three geotherms at constant within-slab depth (dz = 0, 
-8, 25 km), the conditions along these geotherms where used to compute the
-coefficients for a quadratic function for temperature as in the maple worksheet
-t_z_10ma_10cm.mws
-
-t(k) = (-.1630805883e-21*z0m^3+.2196803250e-5-.2574734314e-10*z0m+.1106727779e-15*z0m^2)*dzm^2
-+(-.5782571570e-1+.5757337815e-6*z0m+.3495079912e-17*z0m^3-.2372499384e-11*z0m^2)*dzm
-+.5744760000e-13*z0m^3+168.8330000+.1040000000e-1*z0m-.4089420000e-7*z0m^2
-
+See: www.perplex.ethz.ch/perplex/faq/README_TITRATE.txt for additional explanation.

@@ -31,9 +31,9 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.8.5, source updated Dec 23, 2018.',
+     *      'Perple_X version 6.8.6, source updated Jan 3, 2019.',
 
-     *      'Copyright (C) 1986-2018 James A D Connolly '//
+     *      'Copyright (C) 1986-2019 James A D Connolly '//
      *      '<www.perplex.ethz/copyright.html>.'
 
       end

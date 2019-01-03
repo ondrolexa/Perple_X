@@ -368,9 +368,9 @@ c-----------------------------------------------------------------------
 
       double precision dip
 
-      logical fileio, flsh, anneal
+      logical fileio, flsh, anneal, short
       integer ncol, nrow
-      common/ cst226 /ncol,nrow,fileio,flsh,anneal
+      common/ cst226 /ncol,nrow,fileio,flsh,anneal,short
 
       character*100 cfname
       common/ cst227 /cfname
@@ -653,8 +653,8 @@ c                                 read to the beginning of the component list
       end do 
 c                                 count (icp) and save names (cname)
       icp = 0
-      jbulk = 0 
-  
+      jbulk = 0
+
       do 
 
          read (n1,'(a,a)') rname,strg
@@ -1911,9 +1911,9 @@ c---------------------------------------------------------------------
       integer isec,icopt,ifull,imsg,io3p
       common/ cst103 /isec,icopt,ifull,imsg,io3p
 
-      logical fileio, flsh, anneal
+      logical fileio, flsh, anneal, short
       integer ncol, nrow
-      common/ cst226 /ncol,nrow,fileio,flsh,anneal
+      common/ cst226 /ncol,nrow,fileio,flsh,anneal,short
 
       integer iam
       common/ cst4 /iam
@@ -1949,7 +1949,7 @@ c                                 for 1d calculations
 c                                using nodal coordinate system
          dvr(1) = 1d0
 
-      else if (icopt.eq.9) then 
+      else if (icopt.eq.9.or.icopt.eq.11) then 
 c                                using non-thermodynamic coordinate frame
          dvr(1) = (vmx(1) - vmn(1))/rloopx
          dvr(2) = (vmx(2) - vmn(2))/rloopy
@@ -1986,7 +1986,11 @@ c                                compositions on both axes
       end if 
 c                                set the bulk composition:
       do j = 1, jbulk
-         cblk(j) = dblk(1,j)
+         if (icont.ne.0) then 
+            cblk(j) = dblk(1,j)
+         else 
+            cblk(j) = 1d0
+         end if 
       end do 
 
       end 
@@ -2443,12 +2447,16 @@ c-----------------------------------------------------------------------
       common/ cst23  /a(k8,k8),b(k8),ipvt(k8),idv(k8),iophi,idphi,
      *                iiphi,iflg1
 
-      logical fileio, flsh, anneal
+      logical fileio, flsh, anneal, short
       integer ncol, nrow
-      common/ cst226 /ncol,nrow,fileio,flsh,anneal
+      common/ cst226 /ncol,nrow,fileio,flsh,anneal,short
 
       character*100 cfname
       common/ cst227 /cfname
+
+      integer jbulk
+      double precision cblk
+      common/ cst300 /cblk(k5),jbulk
 c-----------------------------------------------------------------------
 c                                 look for input data from a file 
 c                                 of type aux
@@ -2465,10 +2473,18 @@ c                                 be variable jv(1), and the dependent path
 c                                 variable must be jv(2), the path variables
 c                                 can only be pressure and temperature
       ipot = 1
+
+      jbulk = icp
 c                                 true => flush model, ~true => subducting column
       read (n8,*) flsh
 c                                 true anneal the column
       read (n8,*) anneal
+c                                 true => don't output console info on the fractionated phase
+      read (n8,*) short
+c                                 Perple_X assumes upward directed depth, but to 
+c                                 make the input intuitive, the input is specified
+c                                 in downward coordinates, hence the sign changes 
+c                                 below:
 c                                 thickness of a box in column
       read (n8,*) vz(1)
 c                                 gradient in variable jv(1) with z, jv(1)
@@ -2481,6 +2497,12 @@ c                                 value of the x-coordinate at the origin
       read (n8,*) vz(4)
 c                                 max value of the x-coordinate
       read (n8,*) vz(5)
+c                                 Perple_X assumes an upward directed column coordinate
+c                                 but in frac2d 
+c                                 make the input intuitive, the input is specified
+c                                 in downward coordinates, hence the sign changes 
+c                                 below:
+
 
       if (flsh) then
 
@@ -2494,10 +2516,15 @@ c                                 polynomial
 
          do i = 1, npoly
             read (n8,*) b(i), a(i,1)
+c                                  the true y coordinate will be negative z, swap sign
+            a(i,1) = -a(i,1)
+
             do j = 2, npoly - 1
                a(i,j) = a(i,1)**j
             end do
+
             a(i,j) = 1d0
+
          end do
 
          call factor (a,npoly,ipvt,i)
@@ -2567,7 +2594,7 @@ c                                 end of data indicated by zero
 
          read (n8,*) (iblk(ilay,i),i=1,icp)
 
-         irep(ilay) = idint(zlayer/vz(1))
+         irep(ilay) = idint(zlayer/vz(1)) 
 
          ncol = ncol + irep(ilay)
 
@@ -2632,9 +2659,9 @@ c----------------------------------------------------------------------
       double precision vn
       common/ cst31 /vn(k2,k7),irct,ird
 
-      logical fileio, flsh, anneal
+      logical fileio, flsh, anneal, short
       integer ncol, nrow
-      common/ cst226 /ncol,nrow,fileio,flsh,anneal
+      common/ cst226 /ncol,nrow,fileio,flsh,anneal,short
 
       double precision vmax,vmin,dv
       common/ cst9  /vmax(l2),vmin(l2),dv(l2)
@@ -2697,13 +2724,13 @@ c                                t0, t1 deep
          aa = -t1 / 272d0 + t2 / 850d0 + t0 / 400d0
          bb = -dsqrt(2d0) * (64d0*t2 - 625d0*t1 + 561d0*t0)/6800d0
 
-         v(1) = (dz - p0) * vz(2)
+         v(1) = (p0 - dz) * vz(2)
 
          v(2) = aa*dz**2/1d6 - bb*dz/1d3 + t0
 
       else if (flsh) then 
 
-         v(1) = dz * vz(2)
+         v(1) = -dz * vz(2)
          v(2) = abc0(1,npoly)
 
          do i = 1, npoly-1
@@ -2716,7 +2743,7 @@ c                                 compute the npoly t-corrdinates
 c                                 b - geotherm t
             b(i) = abc0(0,i)
 c                                 depth for geotherm
-            z0 = abc0(nord+1,i) - p0
+            z0 = p0 + abc0(nord+1,i)
 
             do j = 1, nord
                b(i) = b(i) + abc0(j,i) * z0**j
@@ -2737,7 +2764,7 @@ c                                 depth for geotherm
          if (i.ne.0) call error (77,b(1),i,'degenerate t-z'//
      *                                     ' coordinates, FRAC2D')
 c                                  true depth is 
-         z0 = dz - p0
+         z0 = p0 - dz
 c                                  pressure is
          v(1) = z0 * vz(2)
 c                                  temperature is
@@ -3640,9 +3667,9 @@ c----------------------------------------------------------------------
       character*100 cfname
       common/ cst227 /cfname
 
-      logical fileio, flsh, anneal
+      logical fileio, flsh, anneal, short
       integer ncol, nrow
-      common/ cst226 /ncol,nrow,fileio,flsh,anneal
+      common/ cst226 /ncol,nrow,fileio,flsh,anneal,short
 
       integer idstab,nstab,istab
       common/ cst34 /idstab(i11),nstab(i11),istab
@@ -3782,7 +3809,7 @@ c getvar makes a list of variables to be used for i/o:
 
 c if icopt = 10 -> using nodal coordinates else, 
 
-c if icopt =  9 -> using 2d frac coordinates else:
+c if icopt =  9/11 -> using 2d frac coordinates else:
 
 c one-dimensional diagram (oned = .true.) then 
 
@@ -3840,9 +3867,9 @@ c---------------------------------------------------------------------
       logical oned
       common/ cst82 /oned
 
-      logical fileio, flsh, anneal
+      logical fileio, flsh, anneal, short
       integer ncol, nrow
-      common/ cst226 /ncol,nrow,fileio,flsh,anneal
+      common/ cst226 /ncol,nrow,fileio,flsh,anneal,short
 
       integer iind, idep
       double precision c0,c1,c2,c3,c4,c5
@@ -3954,19 +3981,19 @@ c                                 pssect/werami get the number of nodes from the
 
          if (flsh) then
 c                                  flush calculations: 
-            vnm(1) = 'Q,kg/m2'
-            vnm(2) = 'z,m   '
+            vnm(1) = 'Q,kg/m^2'
+            vnm(2) = '-z,m   '
 c                                  set the base to 
-            vmn(2) = vz(3) 
+            vmn(2) = -vz(3) + vz(1)/2d0
             vmx(2) = vmn(2) + dfloat(ncol-1)*vz(1)
 
          else
 c                                  frac2d calculations.
-            vnm(1) = '-z0,m'
+            vnm(1) = 'z0,m'
             vnm(2) = 'dz,m'
 c                                  set y = 0 ti be the top
-            vmx(2) = 0d0
-            vmn(2) = -dfloat(ncol-1)*vz(1)
+            vmx(2) = -vz(1)/2d0
+            vmn(2) = vmx(2) - dfloat(ncol-1)*vz(1)
 
          end if
 

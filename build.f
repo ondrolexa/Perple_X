@@ -29,7 +29,7 @@ c-----------------------------------------------------------------------
       double precision c(0:4)
 
       character mnames(k16*k17)*8, n9name*100, dsol*100, opname*100,
-     *          mname(k5)*5, oname(k5)*5, pname(k5)*5,
+     *          mname(k5)*5, oname(k5)*5, pname(k5)*5, cfname*100,
      *          uname(k0)*5, group*28, aname(i9)*6, amount*5, new*3, 
      *          text*256, dtext*200, title*162, y*1, lname(i9)*22,
      *          blah*10, sname(i9)*10, tn1*6, tn2*22, fname(i9)*10
@@ -176,6 +176,7 @@ c                                 version info
 c                                 initialize strings (necessary for some OS). 
       opname = ' '
       n9name = ' '
+      cfname = ' '
       title = ' '
 
       write (*,7020)
@@ -218,18 +219,27 @@ c                                 initialization:
       end do 
 c                                 Read THERMODYNAMIC DATA file header
       call topn2 (3)
-
-      call compch (ivct,feos,mname,pname,oname,uname)
 c                                 ====================================
-c                                 next problem class and variable choice
-c                                 and ranges
+c                                 choose problem class
       write (*,1490)
-c                                 get choice
+
       call rdnumb (c(0),0d0,icopt,2,.false.)
-c                                 get physical variable choces and ranges
+
+      if (icopt.eq.7) then
+c                                 warn for frac2d calculations about the
+c                                 aux file and set icopt, icopt may be 
+c                                 changed to 10 in varich if fileio.
+         icopt = 9
+         call mertxt (tfname,prject,'.aux',0)
+         write (*,1500) tfname
+
+      end if
+c                                 choose chemical components
+      call compch (ivct,icopt,feos,mname,pname,oname,uname)
+c                                 physical variable choces and ranges
 c                                 set icopt to its internal value:
       call varich (c,icopt,ivct,iind,oned,idep,iord,jcth,iwt,
-     *             amount,dtext,opname,pname)
+     *             amount,dtext,opname,pname,cfname)
 c                                 warn about the use of chemical potentials
 c                                 in different types of calculations
       if (jmct.gt.0) then 
@@ -608,15 +618,14 @@ c                                 option file name
       call mertxt (text,opname,'| Perple_X option file',5)
       write (n1,'(a)') text 
 c                                 computational mode:
-      write (n1,1010) icopt,'calculation type: 0 - composition,'//
-     *                ' 1 - Schreinemakers,'// 
-     *                ' 3 - Mixed, 4 - swash,'//
-     *                ' 5 - gridded min, 7 - 1d fract, 8 - gwash,'//
-     *                ' 9 - 2d fract, 10 - 7 w/file input'//
-     *                ' 12 - 0d infiltration'
+      write (n1,1010) icopt,'calculation type: 0- composition,'//
+     *                ' 1- Schreinemakers, 3- Mixed, 4- swash,'//
+     *                ' 5- gridded min, 7- 1d fract, 8- gwash,'//
+     *                ' 9- 2d fract, 10- 7 w/file input'//
+     *                ' 11- 9 w/file input, 12- 0d infiltration'
 c                                 coordinate file name if necessary
-      if (icopt.eq.10) then 
-         call mertxt (text,tfname,'| coordinate file',5)
+      if (icopt.eq.10.or.icopt.eq.11) then 
+         call mertxt (text,cfname,'| coordinate file',5)
          write (n1,'(a)') text
       end if 
 
@@ -782,7 +791,7 @@ c                                 diagrams:
 1170  format (/,'Enter the computational option file name ',
      *       '[default = perplex_option.dat]:',/,
      *       'See: www.perplex.ethz.ch/perplex_options.html')
-1180  format (/,'For details on these models see:',
+1180  format (/,'For details on these models see: ',
      *        'www.perplex.ethz.ch/perplex_solution_model_glossary.html'
      *      /,'or read the commentary in the solution model file.',/)
 1310  format (/,5(i2,1x),2x,a,/)
@@ -793,14 +802,20 @@ c                                 diagrams:
      *    5x,'2 - Constrained minimization on a 2d grid [default]',/,
      *    5x,'3 - Constrained minimization on a 1d grid',/,
      *    5x,'4 - Output pseudocompound data',/,
-     *    5x,'5 - 1-d Phase fractionation calculations',/,
-     *    5x,'6 - 0-d water infiltration calculations',//,
+     *    5x,'5 - 1-d Phase fractionation',/,
+     *    5x,'6 - 0-d Infiltration-reactionation-fractionation',/,
+     *    5x,'7 - 2-d Phase fractionation (FRAC2D and TITRATE ',
+     *               'reactive transport models)',//,
      *        'Use Convex-Hull minimization for Schreinemakers ',
      *        'projections or phase diagrams',/,
      *        'with > 2 independent variables. ',
      *        'Use constrained minimization for phase diagrams',/,
      *        'or phase diagram sections ',
      *        'with < 3 independent variables.')
+1500  format (/,'Reactive transport models require an auxilliary input '
+     *       ,'file ',a30,/,'that you must create yourself after ',
+     *        'running BUILD. See:',//,5X,
+     *        'www.perplex.ethz.ch/README_FRAC2D.txt')
 1560  format (5(g12.6,1x),'Geothermal gradient polynomial coeffs.')
 2000  format (/,'Output a print file (Y/N)?')
 2021  format ('Enter names, 1 per line, press <enter> to finish:')
@@ -1156,7 +1171,7 @@ c                                 find index in uname array
      *        ', and do not use leading blanks. Try again:',/)
       end
 
-      subroutine compch (ivct,feos,mname,pname,oname,uname)
+      subroutine compch (ivct,icopt,feos,mname,pname,oname,uname)
 c---------------------------------------------------------------------------
 c interactively choose components for build.
 c---------------------------------------------------------------------------
@@ -1164,7 +1179,8 @@ c---------------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i, j, jcmpn, ivct, igood, ier, jsat(h5), ima, jspec, jc(2)
+      integer i, j, jcmpn, ivct, igood, ier, jsat(h5), ima, jspec, 
+     *        jc(2), icopt
 
       logical satflu, mobflu, good, findph, eof, quit, feos
 
@@ -1241,7 +1257,7 @@ c                                 Component stuff first:
          pname(i) = cmpnt(i)
       end do
 
-      if (lopt(7)) then 
+      if (lopt(7).and.icopt.ne.9) then 
 c                                 components of saturated phase:
          write (*,2030) 
          read (*,'(a)') y
@@ -1291,24 +1307,89 @@ c                                 blank input
       end if
 c                                 number of used special components
       jspec = ifct 
+
+      if (icopt.ne.9) then 
 c                                 saturated components
-      write (*,2110)
-      read (*,'(a)') y
+         write (*,2110)
+         read (*,'(a)') y
  
-      if (y.eq.'Y'.or.y.eq.'y') then
+         if (y.eq.'Y'.or.y.eq.'y') then
 
-         call warn (15,nopt(1),i,'BUILD')
+            call warn (15,nopt(1),i,'BUILD')
  
-         write (*,2032) h5+1
-         write (*,'(12(1x,a))') (qname(i),i=1,jcmpn)
-         write (*,2021)
+            write (*,2032) h5+1
+            write (*,'(12(1x,a))') (qname(i),i=1,jcmpn)
+            write (*,2021)
 
-         do
+            do
 
-            read (*,3000) char5 
+               read (*,3000) char5 
 
-            if (char5.ne.' ') then
+               if (char5.ne.' ') then
 c                                 check if it's a saturated phase component:
+                  good = .false.
+
+                  do i = 1, ispec
+                     if (char5.ne.uname(idspe(i))) cycle
+                     good = .true.
+                  end do 
+
+                  if (good) then 
+
+                     if (ifct.gt.0) then 
+                        call warn (7,nopt(1),i,'BUILD')
+                        write (*,1000) 
+                        read (*,'(a)') y
+                        if (y.eq.'y'.or.y.eq.'Y') then
+                           satflu = .true.
+                           write (*,1070)
+                        else 
+                           write (*,1080) 
+                           cycle
+                        end if
+                     else 
+                        satflu = .true.
+                     end if  
+
+                  end if 
+
+                  call chknam (igood,jcmpn,1,good,char5,qname,uname)
+
+                  if (.not.good) cycle
+c                                 count component
+                  isat = isat + 1    
+                  jsat(isat) = igood
+                  nname(isat) = char5
+
+                  if (satflu) then
+                     jspec = jspec + 1
+                     mname(jspec) = char5
+                  end if 
+
+               else 
+c                                 blank input
+                  exit   
+             
+               end if 
+
+            end do 
+ 
+         end if
+c                                 mobile components:
+         write (*,2040)
+         read (*,'(a)') y
+ 
+         if (y.eq.'y'.or.y.eq.'Y') then
+         
+            do 
+c                                 write prompt
+               write (*,2050) 
+               if (jmct.eq.1) write (*,2055)
+               write (*,'(12(1x,a))') (qname(i),i=1,jcmpn)
+               read (*,3000) char5 
+               if (char5.eq.' ') exit 
+c                                 check if it's a saturated phase component,
+c                                 or a saturated component:
                good = .false.
 
                do i = 1, ispec
@@ -1316,22 +1397,22 @@ c                                 check if it's a saturated phase component:
                   good = .true.
                end do 
 
-               if (good) then 
+               if (good) then
 
-                  if (ifct.gt.0) then 
-                     call warn (7,nopt(1),i,'BUILD')
+                  if (ifct.gt.0.or.satflu) then  
+                     call warn (5,nopt(1),i,'BUILD')
                      write (*,1000) 
                      read (*,'(a)') y
                      if (y.eq.'y'.or.y.eq.'Y') then
-                        satflu = .true.
+                        mobflu = .true.
                         write (*,1070)
                      else 
                         write (*,1080) 
                         cycle
                      end if
-                  else 
-                     satflu = .true.
-                  end if  
+                  else
+                     mobflu = .true.
+                  end if 
 
                end if 
 
@@ -1339,195 +1420,133 @@ c                                 check if it's a saturated phase component:
 
                if (.not.good) cycle
 c                                 count component
-               isat = isat + 1    
-               jsat(isat) = igood
-               nname(isat) = char5
-
-               if (satflu) then
-                  jspec = jspec + 1
-                  mname(jspec) = char5
-               end if 
-
-            else 
-c                                 blank input
-               exit   
-             
-            end if 
-
-         end do 
- 
-      end if
-c                                 mobile components:
-      write (*,2040)
-      read (*,'(a)') y
- 
-      if (y.eq.'y'.or.y.eq.'Y') then
-         
-         do 
-c                                 write prompt
-            write (*,2050) 
-            if (jmct.eq.1) write (*,2055)
-            write (*,'(12(1x,a))') (qname(i),i=1,jcmpn)
-            read (*,3000) char5 
-            if (char5.eq.' ') exit 
-c                                 check if it's a saturated phase component,
-c                                 or a saturated component:
-            good = .false.
-
-            do i = 1, ispec
-               if (char5.ne.uname(idspe(i))) cycle
-               good = .true.
-            end do 
-
-            if (good) then
-
-               if (ifct.gt.0.or.satflu) then  
-                  call warn (5,nopt(1),i,'BUILD')
-                  write (*,1000) 
-                  read (*,'(a)') y
-                  if (y.eq.'y'.or.y.eq.'Y') then
-                     mobflu = .true.
-                     write (*,1070)
-                  else 
-                     write (*,1080) 
-                     cycle
-                  end if
-               else
-                  mobflu = .true.
-               end if 
-
-            end if 
-
-            call chknam (igood,jcmpn,1,good,char5,qname,uname)
-
-            if (.not.good) cycle
-c                                 count component
-            jmct = jmct + 1    
-            ivct = ivct + 1
-            oname(jmct) = char5
+               jmct = jmct + 1    
+               ivct = ivct + 1
+               oname(jmct) = char5
 c                                 ask if chemical potential, activity
 c                                 or fugacity
-            write (*,2060) char5
-            do 
-               read (*,*,iostat=ier) ima
-               if (ier.eq.0) exit
-            end do 
+               write (*,2060) char5
+               do 
+                  read (*,*,iostat=ier) ima
+                  if (ier.eq.0) exit
+               end do 
 c                                 if fugacity/activity get the reference
 c                                 phase
-            if (ima.eq.2.or.ima.eq.3) then
+               if (ima.eq.2.or.ima.eq.3) then
                      
-               call topn2 (2)
+                  call topn2 (2)
 
-               do 
- 
-                  call getphi (name,.false.,eof)
-
-                  if (eof) exit
-
-                  if (findph(igood)) then
-                     iphct = iphct + 1
-                     names(iphct) = name
-                  end if 
-
-               end do 
-c                                 names contains the list of candidates
-               if (iphct.eq.0) then
-
-                  write (*,2061) fugact(ima),char5
-                  ima = 1
-                  imaf(jmct) = ima
-                  jmuct = jmuct + 1
-
-               else if (iphct.eq.1) then 
-
-                  write (*,2062) names(1),char5,fugact(ima)
-                  afname(jmct) = names(1)
-                  icp = 1
-
-               else 
-
-                  write (*,2063) char5,fugact(ima)
-                  write (*,2064) (names(i),i=1,iphct)
-                  good = .false.
                   do 
-                     read (*,'(a)') name
-                     do i = 1, iphct
-                        if (name.eq.names(i)) then
-                           good = .true.
-                           icp = i  
-                           afname(jmct) = name
-                           exit 
-                        end if
-                     end do 
-                     if (good) exit
-                     write (*,2310) name
-                  end do
+ 
+                     call getphi (name,.false.,eof)
 
-                  write (*,1190) 
+                     if (eof) exit
+
+                     if (findph(igood)) then
+                        iphct = iphct + 1
+                        names(iphct) = name
+                     end if 
+
+                  end do 
+c                                 names contains the list of candidates
+                  if (iphct.eq.0) then
+
+                     write (*,2061) fugact(ima),char5
+                     ima = 1
+                     imaf(jmct) = ima
+                     jmuct = jmuct + 1
+
+                  else if (iphct.eq.1) then 
+
+                     write (*,2062) names(1),char5,fugact(ima)
+                     afname(jmct) = names(1)
+                     icp = 1
+
+                  else 
+
+                     write (*,2063) char5,fugact(ima)
+                     write (*,2064) (names(i),i=1,iphct)
+                     good = .false.
+                     do 
+                        read (*,'(a)') name
+                        do i = 1, iphct
+                           if (name.eq.names(i)) then
+                              good = .true.
+                              icp = i  
+                              afname(jmct) = name
+                              exit 
+                           end if
+                        end do 
+                        if (good) exit
+                        write (*,2310) name
+                     end do
+
+                     write (*,1190) 
+
+                  end if
+
+               else
+
+                  ima = 1
+                  afname(jmct) = ' '
 
                end if
-
-            else
-
-               ima = 1
-               afname(jmct) = ' '
-
-            end if
 c                                 now make the variable name
-            if (ima.eq.2.or.ima.eq.3) then
+               if (ima.eq.2.or.ima.eq.3) then
 
-               read (names(icp),*) char6
-               if (ima.eq.2) then 
-                  write (vname(3+jmct),'(a,a)') 'f_',char6
-               else 
-                  write (vname(3+jmct),'(a,a)') 'a_',char6
-               end if
+                  read (names(icp),*) char6
+                  if (ima.eq.2) then 
+                     write (vname(3+jmct),'(a,a)') 'f_',char6
+                  else 
+                     write (vname(3+jmct),'(a,a)') 'a_',char6
+                  end if
 
-               write (*,2065) char5,fugact(ima),vname(3+jmct)
+                  write (*,2065) char5,fugact(ima),vname(3+jmct)
 c                                 if name is a special phase component 
 c                                 set flag for eos request
-               do i = 1, ispec
-                  if (names(icp).ne.uname(idspe(i))) cycle
-                  jspec = jspec + 1
-                  mname(jspec) = uname(idspe(i))
-               end do 
+                  do i = 1, ispec
+                     if (names(icp).ne.uname(idspe(i))) cycle
+                     jspec = jspec + 1
+                     mname(jspec) = uname(idspe(i))
+                  end do 
 
-            else 
+               else 
 
-               write (vname(3+jmct),'(a,a)') 'mu_',char5
-               write (*,2066) char5,vname(3+jmct)
+                  write (vname(3+jmct),'(a,a)') 'mu_',char5
+                  write (*,2066) char5,vname(3+jmct)
 c                                 if component is a special phase component 
 c                                 set flag for eos request
-               do i = 1, ispec
-                  if (char5.ne.uname(idspe(i))) cycle
-                  jspec = jspec + 1
-                  mname(jspec) = uname(idspe(i))
-               end do 
+                  do i = 1, ispec
+                     if (char5.ne.uname(idspe(i))) cycle
+                     jspec = jspec + 1
+                     mname(jspec) = uname(idspe(i))
+                  end do 
 
-            end if 
+               end if 
                 
-            imaf(jmct) = ima
-            iphct = 0 
-            if (jmct.eq.i6) exit  
+               imaf(jmct) = ima
+               iphct = 0 
+               if (jmct.eq.i6) exit  
 
-         end do 
+            end do 
 c                                 reset n2 
-         call topn2 (2)
+            call topn2 (2)
 c                                 end of mobile component loop
-      end if
+         end if
  
-      if (ifct.eq.0) then 
+         if (ifct.eq.0) then 
 c                                 no saturated fluid phase 
-         iv(3)=4
-         iv(4)=5
+            iv(3)=4
+            iv(4)=5
 
-      else 
+         else 
 c                                 a saturated phase is present
 c                                 but may have only one component
-         iv(4)=4
-         iv(5)=5
+            iv(4)=4
+            iv(5)=5
 
-      end if
+         end if
+      end if 
 c                                 Thermodynamic components:
       write (*,2070) 
       write (*,'(12(1x,a))') (qname(i),i=1,jcmpn)
@@ -1590,7 +1609,6 @@ c                                 blank input, check counter
          end if 
 
       end do
-
 c                                 check for fluid components 
 c                                 in thermodynamic composition space.
       do i = 1, icp
@@ -1612,7 +1630,6 @@ c                                 write explanation
          feos = .true.
          call rfluid (1,ifug)
          write (*,'(/)')
-
 c                                 eliminate composition variable
 c                                 for saturated fluid if constrained
 c                                 fugacity EoS is used:
@@ -1713,7 +1730,7 @@ c                                 component pointers for chkphi
       end 
 
       subroutine varich (c,icopt,ivct,iind,oned,idep,iord,jcth,iwt,
-     *                   amount,dtext,opname,pname)
+     *                   amount,dtext,opname,pname,cfname)
 c---------------------------------------------------------------------------
 c interatctively choose physical variables for build.
 c---------------------------------------------------------------------------
@@ -1727,7 +1744,7 @@ c---------------------------------------------------------------------------
       logical oned
 
       character y*1, dtext*(*), amount*5, stext*11, nc(3)*2, 
-     *          opname*(*), pname(*)*5
+     *          opname*(*), pname(*)*5, cfname*100
 
       double precision c(0:4)
 
@@ -1772,85 +1789,103 @@ c-----------------------------------------------------------------------
       jcth = 0
       amount = 'molar '
       dtext = ' '
-      tfname = ' '
+      cfname = ' '
  
-      if (icopt.lt.1.or.icopt.gt.6) icopt = 2
+      if (icopt.lt.1.or.(icopt.gt.6.and.icopt.ne.9)) icopt = 2
 c                                 reorder for oned flag
-      if (icopt.eq.3.or.icopt.eq.5) then
+      if (icopt.eq.3.or.icopt.eq.5.eq.icopt.eq.9) then
  
-         oned = .true.
+         if (icopt.ne.9) oned = .true.
 
-         if (icopt.eq.5.and.icp.eq.1) call error (53,0d0,i,'BUILD')
+         if (icopt.ne.3.and.icp.eq.1) call error (53,0d0,i,'BUILD')
 c                                 fractionation from a file
-         write (*,1090) 
+         if (icopt.eq.9) then
+            write (*,1080)
+         else 
+            write (*,1090)
+         end if 
+
          read (*,'(a)') y
 
          if (y.eq.'y'.or.y.eq.'Y') then 
             write (*,1100) (vname(iv(i)),i=1,ivct)
             write (*,'(/)')
             write (*,2010) 'coordinate','coor.dat'
-            read (*,'(a)') tfname
-            if (tfname.eq.' ') tfname = 'coor.dat'
+            read (*,'(a)') cfname
+            if (cfname.eq.' ') cfname = 'coor.dat'
 
-            open (n8,file=tfname,iostat=ier,status='old')
-            if (ier.ne.0) write (*,1140) tfname
+            open (n8,file=cfname,iostat=ier,status='old')
+            if (ier.ne.0) write (*,1140) cfname
 
             close (n8)
 
-            icopt = 10
+            if (icopt.eq.9) then
+               icopt = 11
+            else 
+               icopt = 10
+            end if 
 
             oned = .false.
             icont = 1
 
          end if 
 
-      else 
+      else
          oned = .false.
       end if 
 
-      if (icopt.gt.2.and.icopt.lt.10.and.icopt.ne.6) icopt = icopt - 1
+      if (icopt.gt.2.and.icopt.lt.10.and.icopt.ne.6.and.icopt.ne.9) 
+     *                                               icopt = icopt - 1
+
+      if (icopt.ne.9) then 
 c                                 ====================================
 c                                 ask if p = f(T) or vice versa for all
 c                                 phase diagram calculations:
-      do
+         do
 
-         idep = 0
+            idep = 0
 
-         if (icopt.ne.3.and.icopt.ne.10.and.icopt.ne.6) then 
+            if (icopt.ne.3.and.icopt.ne.10.and.icopt.ne.6) then 
 
-            write (*,1050) vname(1),vname(2)
-            if (icopt.eq.4) write (*,1160) 
+               write (*,1050) vname(1),vname(2)
+               if (icopt.eq.4) write (*,1160) 
 
-            read (*,'(a)') y
+               read (*,'(a)') y
 
-            if (y.eq.'Y'.or.y.eq.'y') then
+               if (y.eq.'Y'.or.y.eq.'y') then
 
-               do 
-                  write (*,1060) vname(1),vname(2),vname(2),vname(1)
-                  read (*,*,iostat=ier) idep
-                  if (ier.eq.0) exit
-                  call rerr
-               end do
+                  do 
+                     write (*,1060) vname(1),vname(2),vname(2),vname(1)
+                     read (*,*,iostat=ier) idep
+                     if (ier.eq.0) exit
+                     call rerr
+                  end do
 c                                 cycle on bad choice
-               if (idep.lt.1.or.idep.gt.2) cycle
+                  if (idep.lt.1.or.idep.gt.2) cycle
 c                                 reset the variable counters and flags:
 c                                 depend changes the dependent variable
 c                                 pointer to iv(ivct), iind points to the
 c                                 position of the independent variable in 
 c                                 the array v, idep to the dependent v.  
-               call depend (ivct,idep,iind,iord,c,dtext)
+                  call depend (ivct,idep,iind,iord,c,dtext)
 c                                 kvct is the number of independent potentials
-               kvct = ivct - 1
+                  kvct = ivct - 1
 
-               if (icp.eq.1.and.kvct.eq.1) oned = .true.
+                  if (icp.eq.1.and.kvct.eq.1) oned = .true.
 
-            end if
+               end if
 
-         end if 
+            end if 
 
-         exit 
+            exit 
 
-      end do
+         end do
+
+      else 
+
+         idep = 0
+
+      end if 
 
       if (oned) then 
 
@@ -1901,9 +1936,38 @@ c                                  fractionation, also write the grid blurb
 
          end if 
 
+      else if (icopt.eq.9.or.icopt.eq.10) then
+c                                  2-d fractionation, only allow p and t
+         ivct = 2
+         icont = 0 
+c                                  choose the primary variable (IV(1)):
+         do
+
+            write (*,'(/,a)') 'Select the primary therodynamic variable'
+     *                      //' (usually pressure):'
+ 
+            do 
+               write (*,2140) (j,vname(iv(j)), j = 1, ivct)
+               read (*,*,iostat=ier) jc
+                  if (ier.eq.0) exit
+                  call rerr
+            end do
+ 
+            if (jc.gt.ivct.or.jc.lt.1) then
+               write (*,1150)
+               cycle
+            end if
+
+            exit 
+
+         end do 
+ 
+         ix = iv(1)
+         iv(1) = iv(jc)
+         iv(jc) = ix
 
       else if (icopt.eq.6) then 
-
+c                                  0-d infiltration/reaction/fractionation
          icopt = 12
 
          icont = 1
@@ -2210,100 +2274,105 @@ c                                 for constrained minimization
             end do 
 
          end if 
+
+         if (icopt.ne.9.and.icopt.ne.11) then 
 c                                ask if weight amounts, otherwise
 c                                use molar amounts.
-         if (icopt.ne.12) then
-            write (*,1420) 
-            read (*,'(a)') y
-            if (y.eq.'Y'.or.y.eq.'y') then 
-               iwt = 1
-               amount = 'mass '
-            end if
-         end if 
-
-         write (*,1380)
-c                                get the bulk composition:
-         if (icopt.eq.12) then
-c                                0-d infiltration special case
-            do i = 1, 2
-
-               do 
-c                                initial bulk, then infiltrant:
-                  if (i.eq.1) then 
-                     write (*,1370) amount
-                  else 
-                     write (*,1360) amount
-                  end if 
-
-                  write (*,'(12(1x,a))') (pname(j), j = 1, jcth)
-                  write (*,1410) 
-                  read (*,*,iostat=ier) (dblk(i,j), j = 1, jcth)
-                  if (ier.eq.0) exit
-                  call rerr
-
-               end do
-
-            end do 
-
-         else if (icont.eq.1) then 
-c                                fixed bulk composition
-            do 
-               write (*,1390) amount
-               write (*,'(12(1x,a))') (pname(j), j = 1, jcth)
-               write (*,1410) 
-               read (*,*,iostat=ier) (dblk(1,j), j = 1, jcth)
-               if (ier.eq.0) exit
-               call rerr
-            end do
-
-         else 
-c                                user must define compositional variables
-            if (lopt(1)) then
-c                                closed c-space
-               if (icont.eq.2) then
-                  write (*,1520) '   C = C0*(1 - X_C1) + C1*X_C1'
-                  write (*,1510) '   C = C0 + C1*X_C1'
-               else 
-                  write (*,1540) 
-     *         '   C = C0*(1 - X_C1 - X_C2) + C1*X_C1 + C2*X_C2'
-                  write (*,1510) '   C = C0 + C1*X_C1 + C2*X_C2'
+            if (icopt.ne.12) then
+               write (*,1420) 
+               read (*,'(a)') y
+               if (y.eq.'Y'.or.y.eq.'y') then 
+                  iwt = 1
+                  amount = 'mass '
                end if
- 
-            else 
-c                                 open c-space
-               if (icont.eq.2) then
-                  write (*,1520) '   C = C0 + C1*X_C1'
-                  write (*,1510) '   C = C0*(1 - X_C1) + C1*X_C1'
-               else 
-                  write (*,1540) '   C = C0 + C1*X_C1 + C2*X_C2'
-                  write (*,1510) 
-     *         '   C = C0*(1 - X_C1 - X_C2) + C1*X_C1 + C2*X_C2'
-               end if
-
             end if 
- 
-            do i = 1, icont
 
+            write (*,1380)
+c                                get the bulk composition:
+            if (icopt.eq.12) then
+c                                0-d infiltration special case
+               do i = 1, 2
+
+                  do 
+c                                initial bulk, then infiltrant:
+                     if (i.eq.1) then 
+                        write (*,1370) amount
+                     else 
+                        write (*,1360) amount
+                     end if 
+
+                     write (*,'(12(1x,a))') (pname(j), j = 1, jcth)
+                     write (*,1410) 
+                     read (*,*,iostat=ier) (dblk(i,j), j = 1, jcth)
+                     if (ier.eq.0) exit
+                     call rerr
+
+                  end do
+
+               end do 
+
+            else if (icont.eq.1) then 
+c                                fixed bulk composition
                do 
                   write (*,1390) amount
                   write (*,'(12(1x,a))') (pname(j), j = 1, jcth)
-                  write (*,1530) nc(i)
-                  read (*,*,iostat=ier) (dblk(i,j), j = 1, jcth)
+                  write (*,1410) 
+                  read (*,*,iostat=ier) (dblk(1,j), j = 1, jcth)
                   if (ier.eq.0) exit
                   call rerr
                end do
 
-            end do
+            else 
+c                                user must define compositional variables
+               if (lopt(1)) then
+c                                closed c-space
+                  if (icont.eq.2) then
+                     write (*,1520) '   C = C0*(1 - X_C1) + C1*X_C1'
+                     write (*,1510) '   C = C0 + C1*X_C1'
+                  else 
+                     write (*,1540) 
+     *            '   C = C0*(1 - X_C1 - X_C2) + C1*X_C1 + C2*X_C2'
+                     write (*,1510) '   C = C0 + C1*X_C1 + C2*X_C2'
+                  end if
  
+               else 
+c                                 open c-space
+                  if (icont.eq.2) then
+                     write (*,1520) '   C = C0 + C1*X_C1'
+                     write (*,1510) '   C = C0*(1 - X_C1) + C1*X_C1'
+                  else 
+                     write (*,1540) '   C = C0 + C1*X_C1 + C2*X_C2'
+                     write (*,1510) 
+     *            '   C = C0*(1 - X_C1 - X_C2) + C1*X_C1 + C2*X_C2'
+                  end if
+
+               end if 
+ 
+               do i = 1, icont
+
+                  do 
+                     write (*,1390) amount
+                     write (*,'(12(1x,a))') (pname(j), j = 1, jcth)
+                     write (*,1530) nc(i)
+                     read (*,*,iostat=ier) (dblk(i,j), j = 1, jcth)
+                     if (ier.eq.0) exit
+                     call rerr
+                  end do
+
+               end do
+ 
+            end if
+
          end if
 
-      end if
+      end if 
 
 1050  format (/,'The data base has ',a,' and ',a,' as default ',
      *       'independent potentials.',/,'Make one dependent on the ',
      *       'other, e.g., as along a geothermal gradient (y/n)? ')
 1060  format (/,'Select dependent variable:',//,'  1 - ',a,' = f(',a,')'
      *       ,/,'  2 - ',a,' = f(',a,')',/)
+1080  format (/,'Enter P(Z0,DZ), T(Z0,DZ) from a file (Y/N)?')
 1090  format (/,'Enter path coordinates from a file (Y/N)?')
 1100  format (/,'In this mode VERTEX/WERAMI read path coordinates',
      *        'from a file',/,'the file must be formatted so that',

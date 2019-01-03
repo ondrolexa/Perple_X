@@ -1,77 +1,142 @@
-Variables used to describe the FRAC2D calculation, unless otherwise indicated these
-are specified in the frac2d.aux file or computed on output:
+CONTENTS:
 
-ANNEAL  - if .true., then at the initial condition of the calculation:
-          a) if fluid is stable at any node in the column, it is removed 
-             and the composition of the node adjusted accordingly.
-          b) the representative mass of all nodes are renormalized to 1 kg.
+    1) INTRODUCTION
+    2) EXPLANATION/DEFINITION OF THE VARIABLES
+    3) COMPUTATION/PLOTTING OF MASS FLUXES
+
+1) INTRODUCTION 
+
+Perple_X is configured to do two general types of equilibrium reactive transport models, which are referred to as 2d-phase fractionation models (Connolly 2005, see also Gorman et al. 2006). In these calculations a 1d column of rock is subjected to perturbations that lead to the formation of one or more mobile phases (e.g., melt and low-density electrolytic or molecular fluids). The rate at which the perturbations are applied adds a second effective dimension, time, to the calculation. The mobile phase(s), i.e., fractionated phase(s), moves upward through the column until it is consumed or passes through the top of the column. The two types of calculations are distinguished by the mechanism for perturbing the initial equilibrium condition: in FRAC2D calculations, the peturbation is caused by changing pressure-temperature conditions, as occurs within a subducted slab or regional metamorphism; in TITRATE calculations the perturbation is the addition of an aliquot of mass with prescribed chemistry (e.g., the presumed composition of a mobile phase) to the base of the column as occurs in the mantle wedge during subduction and other metasomatic processes. This README file documents the former type of calculation, refer to README_TITRATE.txt for an outine of the latter problem.
+
+The input files for the FRAC2D example outined here are at www.perplex.ethz.ch/perplex/examples/frac2d are designated by the project name "frac2d". The fractionated, or mobile phase, is represented by the solution model COH-Fluid+, a model for low-density C-O-H-S fluids. Depending on the aq_lagged_speciation option specified in the Perple_X option file, COH-Fluid+ may represent either molecular or electrolytic fluids (Connolly and Galvez, 2018). The example here uses the molecular version of the model and thus corresponds to an up-date of the subduction model used by Connolly (2005). It is adviseable to work with the molecular model before attempting the electrolytic model which introduces additional complexity and uncertainty. As in all Perple_X calculations, the project name has no special signficance,  the name "frac2d" used here is chosen solely for purpose of the example. In this example, equilibrium phase relations are computed for a column of rock representing the lithologies of the upper 24.5 km of an oceanic slab as it is subducted incrementally from 80 to 200 km depth, the column is oriented vertically because it is assumed this is the direction of fluid flow. Consequently, the height of the column is 24.5 km / Cos (45 degree) ~34.6 km (see Fig 6 of Connolly 2005), where 45 degrees is the model slab dip. For purposes of the calculation, the column is discretized as a set of representative nodes with user-specified spacing. After each depth increment, beginning from the lowest representative node, equilibrium phase relations are computed. If the mobile phase is stable, its mass is removed (fractionated) from the node and added to the overlying node. The procedure is then repeated for the overlying node until the top of the column has been reached. This model carries strong assumptions about the nature of fluid generation and flow. Specifically these assumptions are that fluid generation proceeds from the base of the column upwards and that the flow is pervasive and vertical. There is little basis for the first assumption, although the case can be made that any fluid accumulation at depth will induce hydromechanical instability that causes the the fluid at depth to catch-up fluid at shallower depts (Connolly 1997). Experiments with alternative assumptions, e.g., that fluid generation proceeds from the top downward, show that this assumption does not have profound consequences for mass transport. Pervasive flow maximizes the efficacy of mass transport through the slab and is therefore a useful extremal scenario. The alternative extremal scenario, that fluid flow is perfectly channelized by fractures or tube-like porosity waves (Connolly & Podladchikov 1998, 2007, 2013; Connolly 2010) corresponds to simple Rayliegh fractionation (e.g., Section 4.4 of Connolly & Galvez 2018) and is not considered further here. The independent variables for the calculation the depth of the slab/mantle interface (Z0) and the vertical height above the base of the slab column (DZ, see Fig 7 of Connolly 2005). 
+
+The primary input file for the calculation, frac2d.dat, is generated using BUILD, by choosing computational mode 7 (2-d Phase fractionation). In contrast to most Perple_X calculations in the case of FRAC2D calculations, this input file specifies only the data sources, the thermodynamic components, and the solution models to be considered during the calculation. A second auxilliary file, frac2d.aux, specifies the column lithologies, the model geometry, and the data necessary to define the pressure-temperature field during subduction. The auxilliary input file is generated manually, the primary purpose of this document is to explain the data in the frac2d.aux example so that it can be used as a template for new calculations.
+
+The files at www.perplex.ethz.ch/perplex/examples/frac2d:
+
+frac2d.dat                 - the primary input file.
+frac2d.aux                 - the auxilliary input file.
+frac2d_perplex_option.dat  - the run time option file (input).
+solution_model.dat         - the solution model file (input).
+DEW13HP622ver_elements.dat - the thermodynamic data file (input). 
+frac2d.pdf                 - the computed phase relations as a function of slab depth (Z0) and column height (DZ), output generated with PSSECT.
+frac2d_1.tab               - the mass of the mobile phase that passes through the top of the column into the mantle wedge, output generated with WERAMI (see section 3, below).
+
+NOTE: because the format of the auxilliary file was revised in the 6.8.5 version of Perple_X on Dec 23, 2018. The frac2d.aux file can only be read by versions of Perple_X with a time-stamp later than Dec 22, 2018. 
+
+The steps in a FRAC2D calculation are:
+
+A) Run BUILD to create the primary input file, frac2d.dat.
+B) Create the auxilliary input file, frac2d.aux.
+C) Run VERTEX, answer yes to the fractionate phases prompt and fractionate the mobile phases of interest (e.g., COH-Fluid+).
+D) Plot and/or analyze phase relations using PSSECT and WERAMI (see section 3 below). Note that in fractionation calculations, the data reported by VERTEX include the amount and composition of the mobile phase prior to fractionation. In FRAC2D calculations, the amount of the mobile present at a given height within the column is the product of the mobile phase generated at that height plus the mass gained by fractionation of the mobile phase at greater depths.  
+
+Some thoughts on configuring/running a FRAC2D calculation:
+
+E) If you are unfamiliar with Perple_X, first familiarize yourself with Perple_X by following a tutorial such as www.perplex.ethz.ch/perplex_66_seismic_velocity.html.
+F) Before configuring your own calculation, begin at step C, above, using the input files at www.perplex.ethz.ch/perplex/examples/frac2d. Verify that you are able to obtain, understand, and analyze the output included with the example.
+G) Then construct phase diagram sections for each lithology within your model rock column over the entire pressure-temperature range of interest. If the phase relations in these sections do not make sense, then the phase relations in FRAC2D calculation certainly will not make sense.  
+
+References:
+
+Connolly JAD (2005) Computation of phase equilibria by linear programming: a tool for geodynamic modeling and its application to subduction zone decarbonation. Earth and Planetary Science Letters 236:524-541 (http://www.perplex.ethz.ch/papers/connolly_epsl_05.pdf)
+
+Connolly JAD (2010) The mechanics of metamorphic fluid expulsion. Elements 6:165-172  doi:10.2113/gselements.6.3.165 (http://www.perplex.ethz.ch/papers/Connolly_Elements_10.pdf)
+
+Connolly JAD, Galvez ME (2018) Electrolytic fluid speciation by Gibbs energy minimization and implications for subduction zone mass transfer. Earth and Planetary Science Letters 501:90-102 doi:10.1016/j.epsl.2018.08.024 (http://www.perplex.ethz.ch/papers/connolly_epsl_2018.pdf)
+
+Connolly JAD, Podladchikov YY (2007) Decompaction Weakening and Channeling Instability in Ductile Porous Media: Implications for Asthenospheric Melt Segregation. Journal of Geophysical Research 112:B10205, doi:10.1029/2005JB004213 (http://www.perplex.ethz.ch/papers/connolly_jgr_07.pdf)
+
+Gorman PJ, Kerrick DM, Connolly JAD (2006) Modeling open system metamorphic decarbonation of subducting slabs. Geochemistry Geophysics Geosystems 7:Q04007 doi:10.1029/2005GC001125 (http://www.perplex.ethz.ch/papers/gorman_G3_06.pdf)
+
+
+2) EXPLANATION/DEFINITION OF THE FRAC2D VARIABLES
+
+Variables used to describe the FRAC2D calculation, unless otherwise indicated these are specified in the frac2d.aux file or computed on output:
+
+AREA    - the area of the subducted rock column, AREA = MASS/ZBOX/RHO.
+
+ANNEAL  - if .true., then at the initial condition of the calculation: a) if fluid is stable at any node in the column, it is removed and the composition of the node adjusted accordingly; b) the representative masses (MASS) of all nodes are renormalized to 1 kg.
+
+C       - the number of thermodynamic chemponents specified in frac2d.dat
+
+CLAY_1_1 ... CLAY_1_C
+...      ... ...
+CLAY_N_1 ... CLAY_N_C - the molar compositions of the N column lithologies, from the base of the column upward. The components in the composition must be entered in the same order as the components are entered in frac2d.dat. For calculations in which the fluid is electrolytic it is advisable to use elemental components. See www.perplex.ethz.ch/perplex/faq/oxide_to_elemental_component conversion.pdf for an illustration of the oxide-to-elemental conversion used for the frac2d example. Note that these compositions are extensive. If ANNEAL is set to true, the mass of the composition will be automatically adjusted to 1 kg. If ANNEAL is not set to true, the molar mass of each layer composition should be comparable. 
 
 C_1_0    ... C_1_NORD
 ...      ... ...
-C_NPOLY_0... C_NPOLY_NORD - the coefficients of the NPOLY NORD'th order polynomials
-          that define the within slab geotherms, such that T(K) on the N'th geotherm
-          is T_N = C_N_0 + sum(C_N_I*Z**I, I = 1,...,NORD).
+C_NPOLY_0... C_NPOLY_NORD - the coefficients of the NPOLY NORD'th order polynomials that define the within slab geotherms, such that T(K) on the N'th geotherm is T_N = C_N_0 + sum(C_N_I*Z**I, I = 1,...,NORD). NOTE: Perple_X does (cannot) not test that the polynomials are valid, therefore it is adviseable to plot the geotherms over the entire depth range relevant to a calculation. In some cases it may be impossible to represent a geotherm with a single polynomial, when this is the case use the PZFUNC option to specify the geotherm.
 
 DIP     - slab dip in degrees
 
-DPDZ    - the pressure gradient with depth (bar/m). DPDZ = RHO_AVG(kg/m^3)
-          *g(m^2/s)*(1 bar/10^5 Pascal), where RHO_AVG is the average density of 
-          the column and any overlying rock. If desired Perple_X can be modified 
-          to compute a thermodynamically consistent pressure for a loaded 
-          self-gravitating column; however such complications seem unwarranted in 
-          light of other sources of uncertainty. 
+DPDZ    - the pressure gradient with depth (bar/m). DPDZ = RHO(kg/m^3)*g(m^2/s)*(1 bar/10^5 Pascal), where g is gravitational acceleration (~10 m/s^2) and RHO     - the average density of the column and any overlying rock. If desired Perple_X can be modified to compute a thermodynamically consistent pressure for a loaded self-gravitating column; however such complications seem unwarranted in light of other sources of uncertainty. 
 
-DZ      - height above the base of the column; as DZ = 0 at Z0, DZ is negative 
-          within the column. 
+DT0     - the time interval (s) corresponding to one depth increment of the column, DT0 = DZ0/Cos(DIP)/V_SUB
 
-DZGEO_1...DZGEO_NPOLY - the within slab (orthogonal) depths of the NPOLY geotherms
-          that define the within slab P-T field.
+DZ      - height above the base of the column; as DZ = 0 at Z0, DZ is negative within the column (see ZBOX). 
 
-FRAC2D  - specifies the type of 2D fractionation calculation. If .true., then
-          the model is of a column of rock moved through a P-T field, as in
-          subduction. If .false., then metasomatism is induced by the incremental
-          addition of mass (an aliquot) to the base of the column, the P-T field 
-          within the column may be static or dynamic. The latter "FLUSH" mode
-          can be used to simulate metasomatism of the mantle wedge.
+DZ0     - the incremental change in depth of the column during subduction, DZ0 = (Z0MIN-Z0MAX)/NINT
 
-NINT    - the number of depth increments as the column is subducted from Z0MIN to 
-          Z0MAX. NINT is the second value of the 1d_path_nodes option in 
-          frac2d_perplex_option.dat minus one.
+DZGEO_1...DZGEO_NPOLY - the within slab (orthogonal) depths of the NPOLY geotherms that define the within slab P-T field.
+
+FRAC2D  - specifies the type of 2D fractionation calculation. If .true., then the model is of a column of rock moved through a P-T field, as in subduction. If .false., then metasomatism is induced by the incremental addition of mass (an aliquot) to the base of the column, the P-T field within the column may be static or dynamic. The latter "FLUSH" mode can be used to simulate metasomatism of the mantle wedge.
+
+MASS    - the mass (g) associated with a representative node within the column. If ANNEAL is true, MASS is automatically adjusted to 1 kg; otherwise MASS is the mass corresponding to the extensive molar composition of the layer composition (CLAY_I_J, J=1..C).  
+
+MASS_I  - the mass (g) of a component transported by mobile phase I (e.g., fluid and/or melt). 
+
+NINT    - the number of depth increments as the column is subducted from Z0MIN to Z0MAX. NINT is the second value of the 1d_path_nodes option in frac2d_perplex_option.dat minus one.
 
 NORD    - the order of the polynomials used to describe the within slab P-T field.
 
-NPOLY   - the number of geotherms used to describe the within slab P-T field, typically
-          3. The within column temperature is computed by fitting an (NPOLY-1)'th order
-          polynomial to the geotherms (see Connolly 2005). 
+NPOLY   - the number of geotherms used to describe the within slab P-T field, three should be adequate for most purposes. The within column temperature is computed by fitting an (NPOLY-1)'th order polynomial to the geotherms (see Connolly 2005). 
+
+RHO     - the average density (kg/m^3) of the column and overlying rock (see DPDZ), RHO = DPDZ/g*(10^5 Pa/bar)
 
 P       - pressure (bar) at any point within the column, P = Z*DPDZ.
 
-PZFUNC  - if true, internal functions are used to compute the P-T field of the column,
-          this option requires that the user program the functions.
+Q       - the flux (g/m^2-s) of a component transported by mobile phase I through the column over time interval DT0 (e.g., fluid or melt) Q = MASS_I/AREA/DT0 (see section 3, step D below).
+
+QINT    - the time-integrated flux (g/m^2) transported through the column by mobile phase I (see section 3, step D below).
+
+PZFUNC  - if .true., internal functions are used to compute the P-T field of the column, this option requires that the user program the functions.
+
+VERBOS  - if .true., VERTEX prints the amount and composition of the mobile phase at each node to the user console. Additionally, if ANNEAL is also .true., then VERTEX prints the initial composition at each node and the average composition of each layer after annealing. 
 
 V_SUB   - the subduction rate (m/s).
-V_HOR   - the horizontal component of the slab velocity, V_HOR = V_SUB*cos(DIP) 
+V_HOR   - the horizontal component of the slab velocity (m/s), V_HOR = V_SUB*cos(DIP).
 
-Z       - the absolute depth (m) of any point within the column, as DZ is negative within
-          the column Z =  Z0 - DZ.
+Z       - the absolute depth (m) of any point within the column, as DZ is negative within the column Z =  Z0 - DZ.
 
-ZBOX    - the vertical unit of discretization for the column in meters, i.e., the 
-          rock column is composed of boxes with a vertical dimension of ZBOX. 
+ZBOX    - the vertical unit of discretization for the column in meters, i.e., the rock column is composed of boxes with a vertical dimension of ZBOX. The representative nodes of the column are located at DZ_I = -ZTOT + ZBOX*(1/2 + (I-1)); thus the representative nodes at the top and bottom of the column are at DZ_TOP = -ZBOX/2 and DZ_BOT = -ZTOT + ZBOX/2 ,respectively. NOTE: the nodal coordinates of a layer should be entered in WERAMI or PSSECT to compute fluxes, e.g., to compute the flux across the top of the column, compute properties at column depth -ZBOX/2.
 
-ZSURF   - value of the depth coordinate at the surface (m), used for the computation
-          of pressure at depth, i.e., p = (DZ - Z0)*DPDZ,
+ZLAY_1...ZLAY_N - the vertical thicknesses (m) of the N lithological layers within the column, numbered from the base of the column upward. The vertical thickness is equal to the thickness of the layer orthogonal to the slab interface divided by the Cosine of the slab dip (DIP). NOTE that the layers are disretized with a resolution ZBOX, thus the layer thicknesses should be an integer multiple of ZBOX. If this is not true, then the model layer thickness will be (ZLAY_I\ZBOX)*ZBOX, where \ denotes the integer quotient. When a computation is run in VERTEX, the actual layer thicknesses and the nodal coordinates of the top and bottom of each layer are output to the user console. 
 
-Z0      - depth (m) at the top of the column (m), i.e., the depth of the slab/
-          wedge interface.
+ZSURF   - value of the depth coordinate at the surface (m), used for the computation of pressure at depth, i.e., P (bar) = (Z0 - DZ)*DPDZ.
 
-Z0MIN  - the initial depth (m) of the slab/mantle interface
-Z0MAX  - the final depth (m) of the slab/mantle interface
+ZTOT    - the total vertical thickness of column (m), ZTOT = sum(ZLAY_I, I = 1...N).
+
+Z0      - depth (m) at the top of the column (m), i.e., the depth of the slab/wedge interface.
+
+Z0MIN   - the initial depth (m) of the slab/mantle interface
+Z0MAX   - the final depth (m) of the slab/mantle interface
  
 
+3) COMPUTATION AND PLOTTING OF MASS FLUXES
 
+A) Set the "absolute" option to "T" in frac2d_perplex_option.dat.
+B) Set the "cumulative" option to "T" in frac2d_perplex_option.dat if cumulative fluxes are desired, otherwise the fluxes are instantaneous, i.e., the average flux over the time interval DT0.
+C) After setting the above options, start WERAMI: 
+     i) Select operation mode 3 (properties a long a 1d path).
+    ii) Construct a linear profile, from (Z0 = Z0MIN, DZ = -ZBOX/2) to (Z0 = Z0MAX, DZ = -ZBOX/2).
+   iii) For optimal resolution specify NINT + 1 points for the profile.
+    iv) Select property 36 (all phase and/or system properties).
+     v) Specify option 2 (properties of a phase).
+    vi) Specify the name of the fractionated phase, e.g., COH-Fluid+.
+   vii) Answer y or n to the "Include fluid in ... properties", the answer is for present purposes.
+   iix) The output is in the indicated tab file, e.g., frac2d_1.tab.
+    ix) Exit. 
+D) Plot the amount of the component of interest (e.g., S2_g) using perple_X_simple_plot (MATLAB), PSTABLE, or PYWERAMI. If the cumulative option is F or default, the plotted quantity corresponds to the MASS_I (g) of the component that is transported by the fluid across the slab/mantle interface (at DZ + ZBOX/2 = 0) as the top of the column is subducted from depth Z0 to Z0 + DZ0. The instantaneous flux, i.e., the flux averaged over the time interval DT0, Q (g/m^2-s) = MASS_I/AREA/DT0. If the cumulative option is T, then the plotted quantity is the cumulative mass CUM_MASS_I of the component transported by the mobile phase, the time integrated mass flux QINT (g/m^2) is CUM_MASS_I/AREA. The data in the tab file can be edited in a spreadsheet program so that Q and/or QINT are output directly. Alternatively the axes of the plot may be rescaled to indicate the appropriate flux.
+E) If a calculation is done with more than one mobile phase (e.g., melt and low-density fluid), step C must be repeated for each phase and the results summed to obtain the total mass flux transported by the mobile phases.
 
-Computing fluid/elemental fluxes:
-Perple_X has no true time or spatial coordinates, thus the representative mass (1 kg) that Perple_X uses  is arbitrary and the time scale for mass transfer is determined by the assumed subduction rate, the following notes explain how Perple_X results may be converted to true fluxes.
-1) The time step: the depth of the subduction interface increases incrementally from Z0MIN to Z0MAX (frac2d.aux) in NINT steps. The horizontal velocity of the slab is  
-
-sslvpn.ethz.ch/erdw-imp

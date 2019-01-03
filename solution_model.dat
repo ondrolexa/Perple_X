@@ -9878,8 +9878,8 @@ end_of_model
 begin_model                
                                                                         
 WADDAH 
-abbreviation Aq
-full_name aqueous_electrolyte
+abbreviation F
+full_name fluid
 
 39                          | model type: Generic Hybrid EoS
 1

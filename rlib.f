@@ -12964,7 +12964,7 @@ c                                during debugging.
          do i = 1, istg(im)
             do j = 1, 2 
                h = idint(1d2*z(j,1))
-               if (h.eq.100) then 
+               if (h.eq.100.or.h.lt.0) then 
                   znm(i,j) = '**'
                else 
                   write (znm(i,j),'(i2)') h 
@@ -12977,7 +12977,7 @@ c                                during debugging.
 
          h = idint(1d2*pa(j))
 
-         if (h.eq.100) then 
+         if (h.eq.100.or.h.lt.0d0) then 
             pnm(j) = '**'
          else 
             write (pnm(j),'(i2)') h 
@@ -18882,9 +18882,9 @@ c----------------------------------------------------------------------
       integer iam
       common/ cst4 /iam
 
-      logical fileio, flsh, anneal
+      logical fileio, flsh, anneal, short
       integer ncol, nrow
-      common/ cst226 /ncol,nrow,fileio,flsh,anneal
+      common/ cst226 /ncol,nrow,fileio,flsh,anneal,short
 c------------------------------------------------------------------------
 c                                 generate a file name and
 c                                 open the file on n5

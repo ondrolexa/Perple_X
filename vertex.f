@@ -266,9 +266,9 @@ c-----------------------------------------------------------------------
       integer io3,io4,io9
       common / cst41 /io3,io4,io9
 
-      logical fileio, flsh, anneal
+      logical fileio, flsh, anneal, short
       integer ncol, nrow
-      common/ cst226 /ncol,nrow,fileio,flsh,anneal
+      common/ cst226 /ncol,nrow,fileio,flsh,anneal,short
 
       double precision dcomp
       common/ frct2 /dcomp(k5)
@@ -343,7 +343,7 @@ c                                 lpopt does the minimization and outputs
 c                                 the results to the print file.
             call lpopt (1,j,idead,output)
 c                                 fractionate the composition:
-            call fractr (idead,output)
+            call fractr (idead,output,.true.)
 
             if (it.gt.99) then 
                write (*,'(i5,a)') j,' optimizations completed...'
@@ -426,7 +426,7 @@ c                                 lpopt does the minimization and outputs
 c                                 the results to the print file.
                call lpopt (1,j,idead,output)
 c                                 fractionate the composition:
-               call fractr (idead,output)
+               call fractr (idead,output,.true.)
 
                it = it + 1
 
@@ -509,9 +509,9 @@ c-----------------------------------------------------------------------
       integer io3,io4,io9
       common / cst41 /io3,io4,io9
 
-      logical fileio, flsh, anneal
+      logical fileio, flsh, anneal, verbos
       integer ncol, nrow
-      common/ cst226 /ncol,nrow,fileio,flsh,anneal
+      common/ cst226 /ncol,nrow,fileio,flsh,anneal,verbos
 
       double precision dcomp
       common/ frct2 /dcomp(k5)
@@ -574,7 +574,7 @@ c                                 lpopt does the minimization and outputs
 c                                 the results to the print file.
          call lpopt (1,j,idead,output)
 c                                 fractionate the composition:
-         call fractr (idead,output)
+         call fractr (idead,output,verbos)
 c                                  add the infiltrant
          do i = 1, icp 
             cblk(i) = cblk(i) + nopt(36) * iblk(i)
@@ -630,7 +630,7 @@ c-----------------------------------------------------------------------
       character*100 n6name, n5name
 
       integer i,j,k,l,m,idead,two(2),lun,iox,itop(lay),icp1,
-     *        layer(maxbox)
+     *        layer(maxbox),ibot,minus
 
       double precision gblk(maxbox,k5),cdcomp(k5,lay),vox(k5),
      *                 tot,lcomp(k5,lay)
@@ -685,9 +685,9 @@ c-----------------------------------------------------------------------
       common/ cst66 /abc0(0:mord,mpol),vz(6),iblk(lay,k5),ilay,
      *               irep(lay),npoly,nord,pzfunc
 
-      logical fileio, flsh, anneal
+      logical fileio, flsh, anneal, verbos
       integer ncol, nrow
-      common/ cst226 /ncol,nrow,fileio,flsh,anneal
+      common/ cst226 /ncol,nrow,fileio,flsh,anneal,verbos
 
       integer inv
       character dname*14, title*162
@@ -727,14 +727,16 @@ c-----------------------------------------------------------------------
       data first/.true./
 c-----------------------------------------------------------------------
 c                                 initialization
-      iasct = 0 
-      ibulk = 0 
-c                                 set the number of independent variables
-c                                 to 1 (the independent path variable must
-c                                 be variable jv(1), and the dependent path
-c                                 variable must be jv(2), the path variables
-c                                 can only be pressure and temperature
-      ipot = 1
+      iasct = 0
+      ibulk = 0
+
+      if (flsh) then 
+c                                 the y coordinate increases downward in frac2d
+c                                 and increases upward in flush.
+         minus = -1
+      else
+         minus = 1
+      end if 
 c                                 jlow set by 1dpath keyword in perplex_option.dat
 c                                 is the number of increments in the x direction.
       loopx = jlow
@@ -835,9 +837,6 @@ c                                 organize the coordinate frame and thermodynami
       call getvar
 c                                 initialize coordinate frame and sectioning variables
       call setvar 
-c                                 call initlp to initialize arrays 
-c                                 for optimization.
-      call initlp
 c                                 set up stuff for tab file output, this is the only routine other
 c                                 than WERAMI that writes tab files.
       two(1) = loopx
@@ -845,7 +844,7 @@ c                                 number of variables in table
       icp1 = icp+1 
       iprop = 2*icp1
       
-      do j = 1, icp 
+      do j = 1, icp
          write (dname(j),'(a14)') cname(j)
          write (dname(j+icp1),'(a14)') cname(j)//'_{cum}'
       end do 
@@ -856,7 +855,10 @@ c                                 number of variables in table
       lun = n0 + 100
 c                                 initialization for the top of
 c                                 each layer
-      write (*,'(/)')
+      write (*,'(a)') 'Layer  bot_node_dz,m   top_node_dz,m  '//
+     *                '  bot_dz,m  top_dz,m   thickness,m'
+
+      ibot = 0
 
       do j = 1, ilay
 
@@ -865,8 +867,14 @@ c                                 each layer
             cdcomp(i,j) = 0d0
          end do 
 
-         write (*,'(a,i1,a,f9.3)') 'The top of layer ',j,
-     *                 ' is at z(m) = ',(ncol - itop(j)) * vz(1)
+         write (*,'(2x,i1,2(6x,f9.1),5x,2(2x,f8.0),5x,f7.1)') j,
+     *            vmn(2) + ibot * vz(1),
+     *            vmn(2) + itop(j) * vz(1),
+     *            vmn(2) + (ibot-0.5d0) * vz(1),
+     *            vmn(2) + (itop(j)+0.5d0) * vz(1),
+     *            (itop(j) - ibot) * vz(1)
+
+         ibot = itop(j)
 
          write (n5name,'(a,i1)') '_cumulative_change_layer_',j
          call tabhed (lun + j,vmn(1),dvr(1),two,1,n5name,n6name)
@@ -880,6 +888,9 @@ c                                 number of variables in table
          write (n5name,'(a,i1)') '_average_comp_layer_',j
          call tabhed (lun + ilay + j,vmn(1),dvr(1),two,1,n5name,n6name)
       end do
+c                                 call initlp to initialize arrays 
+c                                 for optimization.
+      call initlp
 
       write (*,'(/)')
 
@@ -916,13 +927,13 @@ c                                 get total moles to compute mole fractions
 
                write (*,*) 'orca pa duddle'
 
-            else if (idead.ne.0) then 
+            else if (idead.ne.0.and.verbos) then 
                write (*,2000) x,y,layer(k),k,j,v(1),v(2),
      *                        (cblk(i),i=1,icp)
                write (*,2010) (itop(i),i=1,ilay)
             end if 
 
-            call fractr (idead,.false.)
+            call fractr (idead,.false.,verbos)
 
             do i = 1, icp 
 c                                 subtract the fluid from the current composition
@@ -934,7 +945,7 @@ c                                 to become significant
 
             end do
 c                                 reset carbon
-            gblk(k,2) = iblk(layer(k),2)
+c           gblk(k,2) = iblk(layer(k),2)
 c                                 get the mass of the intial composition and
 c                                 renormalize
             tot = 0d0 
@@ -950,16 +961,20 @@ c                                 reset to 1000 g.
                lcomp(i,layer(k)) = lcomp(i,layer(k))
      *                           + gblk(k,i)/dfloat(irep(layer(k)))
             end do
-c DEBUG
-            write (*,'(12(f10.3,1x))') y,(gblk(k,i),i=1,icp)
+
+            if (verbos) write (*,'(12(f10.3,1x))') y,(gblk(k,i),i=1,icp)
 
          end do
 
-         write (*,'(/)')
+         if (verbos) then 
 
-         do i = 1, ilay
-            write (*,'(i1,1x,12(f10.3,1x))') i,(lcomp(j,i),j=1,icp)
-         end do
+            write (*,'(/)')
+
+            do i = 1, ilay
+               write (*,'(i1,1x,12(f10.3,1x))') i,(lcomp(j,i),j=1,icp)
+            end do
+
+          end if 
 
          if (flsh) then 
 c                                 renormalize the aliquot to 1kg
@@ -967,18 +982,20 @@ c                                 renormalize the aliquot to 1kg
 
             do i = 1, icp 
 c                                 local mass
-               tot = tot + dblk(1,i)*atwt(i)
+               tot = tot + iblk(ilay+1,i)*atwt(i)
             end do
 c                                 the area of the column is (1/rho)^(2/3)
 c                                 and rho(kg/m3) ~ -dpdz * 1d4
             tot = 1d3/tot*(-vz(2)/1d4)**(2d0/3d0)
 
             do i = 1, icp 
-               dblk(1,i) = dblk(1,i)*tot
+               dblk(1,i) = iblk(ilay+1,i)*tot
             end do
 
-            write (*,'(/,a,12(f10.3,1x))') 'kg/m2 aliquot',
-     *                                   (dblk(1,i),i=1,icp)
+            if (verbos) then 
+               write (*,'(/,a,12(f10.3,1x))') 'kg/m2 aliquot ',
+     *                                      (dblk(1,i),i=1,icp)
+            end if
 
          end if
 c                                 end of annealling section.
@@ -993,9 +1010,11 @@ c                                 initialize avg layer comp
             end do
          end do
 
-         write (*,*) '##########################################'
-         write (*,'(/,a,i4,a,i4/)') 'Column ',j,' of ',loopx
-         write (*,*) '##########################################'
+         if (verbos) then 
+            write (*,*) '##########################################'
+            write (*,'(/,a,i4,a,i4/)') 'Column ',j,' of ',loopx
+            write (*,*) '##########################################'
+         end if 
 c                                 j loop varies the pressure at the top of the 
 c                                 column (p0), set p0:
          x = vmn(1) + dfloat(j-1)*dvr(1)
@@ -1046,7 +1065,7 @@ c                                 write failure info to fld file:
      *                        (cblk(i),i=1,icp)
                write (*,2010) (itop(i),i=1,ilay)
 
-             else 
+             else
 
                write (n12,*) 'good'
                write (n12,2000) x,y,layer(k),k,j,v(1),v(2),
@@ -1055,7 +1074,7 @@ c                                 write failure info to fld file:
 
             end if 
 
-            call fractr (idead,output)
+            call fractr (idead,output,verbos)
 c                                 at this point we've computed the stable
 c                                 assemblage at each point in our column
 c                                 and could do mass transfer, etc etc 
@@ -1097,9 +1116,13 @@ c                                 cumulative change
 
             end do
 c                                 end of the k index loop
-         end do 
+         end do
 
-         do l = 1, ilay
+         write (*,'(/,a,f9.0)') 'Average Layer Compositions at z0,m = '
+     *                          ,x
+         write (*,'(5x,12(3x,a,3x))') (cname(i),i=1,icp)
+
+         do l = ilay, 1, -1
 c                                 average layer compositions
             write (lun + ilay + l,'(200(g13.6,1x))') 
      *                                       x,(lcomp(i,l),i=1,icp)
@@ -1123,10 +1146,30 @@ c                                 end of j index loop
 
       if (output) call outgrd (loopx,ncol,1,n4,0)
 
-2000  format (/,' failed at p0-dz = ',2(g14.7,1x),' layer ',i1,' node '
+      write (*,'(/,a)') 'NOTE: use nodal coordinates for layer'//
+     *                    ' boundaries in PSSECT and WERAMI.'
+      write (*,'(/,a)') 'Layer  bot_node_dz,m   top_node_dz,m  '//
+     *                  '  bot_dz,m   top_dz,m  thickness,m'
+
+      ibot = 0
+
+      do j = 1, ilay
+
+         write (*,'(2x,i1,2(7x,f8.1),5x,2(3x,f7.0),5x,f7.1)') j,
+     *            vmn(2) + ibot * vz(1),
+     *            vmn(2) + itop(j) * vz(1),
+     *            vmn(2) + (ibot-0.5d0) * vz(1),
+     *            vmn(2) + (itop(j)+0.5d0) * vz(1),
+     *            (itop(j) - ibot + 1) * vz(1)
+
+         ibot = itop(j)
+
+      end do
+
+2000  format (/,' failed at z0-dz = ',2(g14.7,1x),' layer ',i1,' node '
      *       ,i3,' column ',i3,/,' p-t-c ',2(g14.7,1x),/,12(g14.7,1x))
 2010  format (' layer boundaries are ',5(i3,1x))
-2020  format (/,' did not fail at p0-dz = ',2(g14.7,1x),' l ',i1,' n '
+2020  format (/,' did not fail at z0-dz = ',2(g14.7,1x),' l ',i1,' n '
      *       ,i3,' column ',i3,/,' p-t-c ',2(g14.7,1x),/,12(g14.7,1x))
 
       end
@@ -2045,7 +2088,7 @@ c-----------------------------------------------------------------------
 
       end
 
-      subroutine fractr (idead,output)  
+      subroutine fractr (idead,output,verbos)
 c-----------------------------------------------------------------------
       implicit none
 
@@ -2057,7 +2100,7 @@ c-----------------------------------------------------------------------
 
       integer i,j,k,idead,ier
 
-      logical there(k23), warn, output, quit, liquid
+      logical there(k23), warn, output, quit, liquid, verbos
 
       double precision mass(k23), tmass, x
 
@@ -2218,12 +2261,14 @@ c                                 mass fraction exceeds upper threshold
                         do k = 1, jbulk 
                            dcomp(k) = dcomp(k) + x*amt(j)*cp3(k,j)
                         end do
+                        
+                        if (verbos) then 
 c                                 write to console
-                        write (*,1185) (vname(iv(k)),v(iv(k)),k=1,ipot)
-
-
-                        write (*,1190) amt(j),gname(ifr(i)),
-     *                                (amt(j)*cp3(k,j),k=1,jbulk)
+                           write (*,1185) (vname(iv(k)),v(iv(k)),
+     *                                                       k=1,ipot)
+                           write (*,1190) amt(j),gname(ifr(i)),
+     *                                   (amt(j)*cp3(k,j),k=1,jbulk)
+                        end if 
 c                                 write to file
                         if (output) write (n0+i,1200) 
      *                                       (v(jv(k)),k=1,ipot),amt(j),
@@ -2250,7 +2295,7 @@ c                                 that are NOT stable
             if (.not.there(i)) then 
 c                                 console output:
 c                                 write to console
-               if (fmode.eq.1) then 
+               if (fmode.eq.1.and.verbos) then 
 
                   write (*,1185) (vname(iv(k)),v(iv(k)),k=1,ipot)
                   write (*,1210) gname(ifr(i))
