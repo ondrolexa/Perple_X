@@ -55,14 +55,9 @@ end independent potential list
 begin excluded phase list
 h2oL    
 SO2     
-CO      
-f3clin  
+CO       
 naph    
 nta     
-parg_dqf
-ts_dqf  
-mrbG    
-rieb    
 gl      
 wa       wtf?
                            | aqueous species exclusions in case aq_lagged_speciation or aq_output is set to true:

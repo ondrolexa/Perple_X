@@ -1,14 +1,14 @@
 .true.           FRAC2D, if .false., TITRATE if .true.
 .true.           ANNEAL, in true remove excess mobile phase from theinitial column and renormalize all masses to 1kg (including aliquot)
-.true.           VERBOS if true composition and amount of fractionated phase are output to user console
-1000.            ZBOX, box size (m)
+.false.          VERBOS if true composition and amount of fractionated phase are output to user console
+100.             ZBOX, box size (m)
 
 0.35             DPDZ, pressure-depth gradient (bar/m)
 
 150d3            Z0MAX, depth of the base of the rock column,  only used if flush
 
 0                QMIN, mass of aliquot per unit area of the column (kg/m2), number of increments is set by 1d_path option
-0.04             QMAX, mass of aliquot per unit area of the column (kg/m2).
+200              QMAX, mass of aliquot per unit area of the column (kg/m2).
 
 3                NPTS, number of T(K)-z(m) coordinates to compute NPTS-1 order polynomial for t(z)
 

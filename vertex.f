@@ -867,11 +867,11 @@ c                                 each layer
             cdcomp(i,j) = 0d0
          end do 
 
-         write (*,'(2x,i1,2(6x,f9.1),5x,2(2x,f8.0),5x,f7.1)') j,
+         write (*,'(2x,i1,2(7x,f8.0),5x,2(2x,f8.0),5x,f7.1)') j,
      *            vmn(2) + ibot * vz(1),
-     *            vmn(2) + itop(j) * vz(1),
+     *            vmn(2) + (itop(j)-1) * vz(1),
      *            vmn(2) + (ibot-0.5d0) * vz(1),
-     *            vmn(2) + (itop(j)+0.5d0) * vz(1),
+     *            vmn(2) + (itop(j)-0.5d0) * vz(1),
      *            (itop(j) - ibot) * vz(1)
 
          ibot = itop(j)
@@ -962,7 +962,8 @@ c                                 reset to 1000 g.
      *                           + gblk(k,i)/dfloat(irep(layer(k)))
             end do
 
-            if (verbos) write (*,'(12(f10.3,1x))') y,(gblk(k,i),i=1,icp)
+            if (verbos) write (*,'(f8.0,12(f6.3,1x))') y,
+     *                                           (gblk(k,i),i=1,icp)
 
          end do
 
@@ -971,7 +972,7 @@ c                                 reset to 1000 g.
             write (*,'(/)')
 
             do i = 1, ilay
-               write (*,'(i1,1x,12(f10.3,1x))') i,(lcomp(j,i),j=1,icp)
+               write (*,'(i1,1x,12(f6.3,1x))') i,(lcomp(j,i),j=1,icp)
             end do
 
           end if 
@@ -986,7 +987,7 @@ c                                 local mass
             end do
 c                                 the area of the column is (1/rho)^(2/3)
 c                                 and rho(kg/m3) ~ -dpdz * 1d4
-            tot = 1d3/tot*(-vz(2)/1d4)**(2d0/3d0)
+            tot = 1d3/tot*(vz(2)/1d4)**(2d0/3d0)
 
             do i = 1, icp 
                dblk(1,i) = iblk(ilay+1,i)*tot
@@ -1118,8 +1119,14 @@ c                                 cumulative change
 c                                 end of the k index loop
          end do
 
-         write (*,'(/,a,f9.0)') 'Average Layer Compositions at z0,m = '
-     *                          ,x
+         if (flsh) then 
+            write (*,'(/,a,f9.0)') 'Average Layer Compositions at '
+     *                             //'QINT,kg/m^2 = ',x
+         else
+            write (*,'(/,a,f9.0)') 'Average Layer Compositions at '
+     *                             //'z0,m = ',x
+         end if 
+
          write (*,'(5x,12(3x,a,3x))') (cname(i),i=1,icp)
 
          do l = ilay, 1, -1
@@ -1155,13 +1162,12 @@ c                                 end of j index loop
 
       do j = 1, ilay
 
-         write (*,'(2x,i1,2(7x,f8.1),5x,2(3x,f7.0),5x,f7.1)') j,
+         write (*,'(2x,i1,2(7x,f8.0),5x,2(2x,f8.0),5x,f7.1)') j,
      *            vmn(2) + ibot * vz(1),
-     *            vmn(2) + itop(j) * vz(1),
+     *            vmn(2) + (itop(j)-1) * vz(1),
      *            vmn(2) + (ibot-0.5d0) * vz(1),
-     *            vmn(2) + (itop(j)+0.5d0) * vz(1),
-     *            (itop(j) - ibot + 1) * vz(1)
-
+     *            vmn(2) + (itop(j)-0.5d0) * vz(1),
+     *            (itop(j) - ibot) * vz(1)
          ibot = itop(j)
 
       end do

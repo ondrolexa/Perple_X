@@ -28,7 +28,7 @@
 absolute                  default | [F] WERAMI - output absolute component amounts
 Anderson-Gruneisen        default | [F] Anderson-Gruneisen parameter correction for polythermal Murnaghan and Birch-Murnaghan
 approx_alpha              default | [T] use approximation exp(x) ~ 1+x to evaluate expansivity effect on volume
-aq_bad_results            default | [error] 101 102 103 or ignore => response to suspect lagged speciation results 
+aq_bad_results               103  | [error] 101 102 103 or ignore => response to suspect lagged speciation results 
 aq_output                 default | [T] output back-calculated solute chemistry when electrolyte data is available
 aq_oxide_components       default | [F] accomodate oxide components in aqueous speciation calculations
 aq_species                default | [20] maximum number of solute species output (ranked by concentration) for back-calculated results
@@ -36,10 +36,10 @@ aq_lagged_iterations      default | [0] number of internal iterations for lagged
 aq_lagged_speciation      default | [F] do lagged solute chemistry when electrolyte data is available
 aq_solute_composition     default | [m] y => mole fractions, m => molality
 aq_solvent_composition    default | [y] y => mole fractions, m => molality
-aq_solvent_solvus         default | [F] allow solvent phase separation without aq_bad_results error trigger
+aq_solvent_solvus            T    | [F] allow solvent phase separation without aq_bad_results error trigger
 aq_vapor_epsilon          default | [1.] dielectric constant threshold used to identify vapor
 auto_exclude              default | [T] exclude phases or species with no associated P-V EoS
-auto_refine               off default | [auto] auto, manual, or off (auto_refine keyword group)
+auto_refine                 off   | [auto] auto, manual, or off (auto_refine keyword group)
 auto_refine_factor_I      default | [3.] refine factor for gridded minimization and phase fractionation (auto_refine keyword group)
 auto_refine_factor_II     default | [10.] refine factor for composition and mixed variable diagrams (auto_refine keyword group)
 auto_refine_factor_III    default | [3.] refine factor for Schreinemakers diagrams (auto_refine keyword group)
@@ -70,7 +70,7 @@ increment                 default | [0.1 0.025] >0, < 1, fractional independent 
 initial_resolution        default | [1/15] >0, <1
 interpolation             default | [on 2] value 1: on or off [on]; value 2, 1->99 [2]; only relevant for WERAMI
 iteration                 default | [2] real > 2, improves resolution
-   | interim_results             off
+interim_results           default
 linear_model              default | [on] on or off, relevant for 2d gridded minimization
 logarithmic_p             default | [F] replace pressure variable with log(pressure)
 melt_is_fluid             default | [F] identify melt (liquid) as fluid in WERAMI output
@@ -89,7 +89,7 @@ reach_increment_switch    default | [on] all, on, off; VERTEX => on activates re
 reaction_format           default | [minimum] minimum, full, stoich, S+V, or everything
 reaction_list             default | [off] on or off
 refinement_points         default | [auto] or an integer > 0, max number of metastable refinement points retained during adaptive minimization
-refine_endmembers         default | [F] accept endmember compositions as refinement points
+refine_endmembers            T    | [F] accept endmember compositions as refinement points
 reject_negative_sites     default | [T] reject compositions with negative site populations
 seismic_output            default | [some] all, some, none
 short_print               default | [on] suppress output of equilibrium coordinates to the print file, only relevant for CONVEX

@@ -1793,7 +1793,7 @@ c-----------------------------------------------------------------------
  
       if (icopt.lt.1.or.(icopt.gt.6.and.icopt.ne.9)) icopt = 2
 c                                 reorder for oned flag
-      if (icopt.eq.3.or.icopt.eq.5.eq.icopt.eq.9) then
+      if (icopt.eq.3.or.icopt.eq.5.or.icopt.eq.9) then
  
          if (icopt.ne.9) oned = .true.
 

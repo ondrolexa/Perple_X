@@ -1,0 +1,1793 @@
+<html xmlns:v="urn:schemas-microsoft-com:vml"
+xmlns:o="urn:schemas-microsoft-com:office:office"
+xmlns:w="urn:schemas-microsoft-com:office:word"
+xmlns:m="http://schemas.microsoft.com/office/2004/12/omml"
+xmlns="http://www.w3.org/TR/REC-html40">
+
+<head>
+<meta http-equiv=Content-Type content="text/html; charset=windows-1252">
+<meta name=ProgId content=Word.Document>
+<meta name=Generator content="Microsoft Word 15">
+<meta name=Originator content="Microsoft Word 15">
+<link rel=File-List href="Perple_X_FRAC2D_files/filelist.xml">
+<link rel=Edit-Time-Data href="Perple_X_FRAC2D_files/editdata.mso">
+<!--[if !mso]>
+<style>
+v\:* {behavior:url(#default#VML);}
+o\:* {behavior:url(#default#VML);}
+w\:* {behavior:url(#default#VML);}
+.shape {behavior:url(#default#VML);}
+</style>
+<![endif]-->
+<title>Perple_X Equilibrium Reactive Transport Models: The FRAC2D Configuration</title>
+<!--[if gte mso 9]><xml>
+ <o:DocumentProperties>
+  <o:Author>jamie</o:Author>
+  <o:LastAuthor>jamie</o:LastAuthor>
+  <o:Revision>3</o:Revision>
+  <o:TotalTime>139</o:TotalTime>
+  <o:Created>2019-01-05T21:40:00Z</o:Created>
+  <o:LastSaved>2019-01-05T21:42:00Z</o:LastSaved>
+  <o:Pages>1</o:Pages>
+  <o:Words>2747</o:Words>
+  <o:Characters>15661</o:Characters>
+  <o:Company>eth</o:Company>
+  <o:Lines>130</o:Lines>
+  <o:Paragraphs>36</o:Paragraphs>
+  <o:CharactersWithSpaces>18372</o:CharactersWithSpaces>
+  <o:Version>16.00</o:Version>
+ </o:DocumentProperties>
+ <o:OfficeDocumentSettings>
+  <o:AllowPNG/>
+ </o:OfficeDocumentSettings>
+</xml><![endif]-->
+<link rel=themeData href="Perple_X_FRAC2D_files/themedata.thmx">
+<link rel=colorSchemeMapping href="Perple_X_FRAC2D_files/colorschememapping.xml">
+<!--[if gte mso 9]><xml>
+ <w:WordDocument>
+  <w:SpellingState>Clean</w:SpellingState>
+  <w:GrammarState>Clean</w:GrammarState>
+  <w:TrackMoves>false</w:TrackMoves>
+  <w:TrackFormatting/>
+  <w:PunctuationKerning/>
+  <w:ValidateAgainstSchemas/>
+  <w:SaveIfXMLInvalid>false</w:SaveIfXMLInvalid>
+  <w:IgnoreMixedContent>false</w:IgnoreMixedContent>
+  <w:AlwaysShowPlaceholderText>false</w:AlwaysShowPlaceholderText>
+  <w:DoNotPromoteQF/>
+  <w:LidThemeOther>EN-US</w:LidThemeOther>
+  <w:LidThemeAsian>X-NONE</w:LidThemeAsian>
+  <w:LidThemeComplexScript>X-NONE</w:LidThemeComplexScript>
+  <w:Compatibility>
+   <w:BreakWrappedTables/>
+   <w:SnapToGridInCell/>
+   <w:WrapTextWithPunct/>
+   <w:UseAsianBreakRules/>
+   <w:DontGrowAutofit/>
+   <w:SplitPgBreakAndParaMark/>
+   <w:EnableOpenTypeKerning/>
+   <w:DontFlipMirrorIndents/>
+   <w:OverrideTableStyleHps/>
+  </w:Compatibility>
+  <m:mathPr>
+   <m:mathFont m:val="Cambria Math"/>
+   <m:brkBin m:val="before"/>
+   <m:brkBinSub m:val="&#45;-"/>
+   <m:smallFrac m:val="off"/>
+   <m:dispDef/>
+   <m:lMargin m:val="0"/>
+   <m:rMargin m:val="0"/>
+   <m:defJc m:val="centerGroup"/>
+   <m:wrapIndent m:val="1440"/>
+   <m:intLim m:val="subSup"/>
+   <m:naryLim m:val="undOvr"/>
+  </m:mathPr></w:WordDocument>
+</xml><![endif]--><!--[if gte mso 9]><xml>
+ <w:LatentStyles DefLockedState="false" DefUnhideWhenUsed="false"
+  DefSemiHidden="false" DefQFormat="false" DefPriority="99"
+  LatentStyleCount="371">
+  <w:LsdException Locked="false" Priority="0" QFormat="true" Name="Normal"/>
+  <w:LsdException Locked="false" Priority="9" QFormat="true" Name="heading 1"/>
+  <w:LsdException Locked="false" Priority="9" SemiHidden="true"
+   UnhideWhenUsed="true" QFormat="true" Name="heading 2"/>
+  <w:LsdException Locked="false" Priority="9" SemiHidden="true"
+   UnhideWhenUsed="true" QFormat="true" Name="heading 3"/>
+  <w:LsdException Locked="false" Priority="9" SemiHidden="true"
+   UnhideWhenUsed="true" QFormat="true" Name="heading 4"/>
+  <w:LsdException Locked="false" Priority="9" SemiHidden="true"
+   UnhideWhenUsed="true" QFormat="true" Name="heading 5"/>
+  <w:LsdException Locked="false" Priority="9" SemiHidden="true"
+   UnhideWhenUsed="true" QFormat="true" Name="heading 6"/>
+  <w:LsdException Locked="false" Priority="9" SemiHidden="true"
+   UnhideWhenUsed="true" QFormat="true" Name="heading 7"/>
+  <w:LsdException Locked="false" Priority="9" SemiHidden="true"
+   UnhideWhenUsed="true" QFormat="true" Name="heading 8"/>
+  <w:LsdException Locked="false" Priority="9" SemiHidden="true"
+   UnhideWhenUsed="true" QFormat="true" Name="heading 9"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="index 1"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="index 2"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="index 3"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="index 4"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="index 5"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="index 6"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="index 7"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="index 8"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="index 9"/>
+  <w:LsdException Locked="false" Priority="39" SemiHidden="true"
+   UnhideWhenUsed="true" Name="toc 1"/>
+  <w:LsdException Locked="false" Priority="39" SemiHidden="true"
+   UnhideWhenUsed="true" Name="toc 2"/>
+  <w:LsdException Locked="false" Priority="39" SemiHidden="true"
+   UnhideWhenUsed="true" Name="toc 3"/>
+  <w:LsdException Locked="false" Priority="39" SemiHidden="true"
+   UnhideWhenUsed="true" Name="toc 4"/>
+  <w:LsdException Locked="false" Priority="39" SemiHidden="true"
+   UnhideWhenUsed="true" Name="toc 5"/>
+  <w:LsdException Locked="false" Priority="39" SemiHidden="true"
+   UnhideWhenUsed="true" Name="toc 6"/>
+  <w:LsdException Locked="false" Priority="39" SemiHidden="true"
+   UnhideWhenUsed="true" Name="toc 7"/>
+  <w:LsdException Locked="false" Priority="39" SemiHidden="true"
+   UnhideWhenUsed="true" Name="toc 8"/>
+  <w:LsdException Locked="false" Priority="39" SemiHidden="true"
+   UnhideWhenUsed="true" Name="toc 9"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Normal Indent"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="footnote text"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="annotation text"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="header"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="footer"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="index heading"/>
+  <w:LsdException Locked="false" Priority="35" SemiHidden="true"
+   UnhideWhenUsed="true" QFormat="true" Name="caption"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="table of figures"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="envelope address"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="envelope return"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="footnote reference"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="annotation reference"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="line number"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="page number"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="endnote reference"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="endnote text"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="table of authorities"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="macro"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="toa heading"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List Bullet"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List Number"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List 2"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List 3"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List 4"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List 5"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List Bullet 2"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List Bullet 3"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List Bullet 4"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List Bullet 5"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List Number 2"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List Number 3"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List Number 4"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List Number 5"/>
+  <w:LsdException Locked="false" Priority="10" QFormat="true" Name="Title"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Closing"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Signature"/>
+  <w:LsdException Locked="false" Priority="1" SemiHidden="true"
+   UnhideWhenUsed="true" Name="Default Paragraph Font"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Body Text"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Body Text Indent"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List Continue"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List Continue 2"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List Continue 3"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List Continue 4"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List Continue 5"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Message Header"/>
+  <w:LsdException Locked="false" Priority="11" QFormat="true" Name="Subtitle"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Salutation"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Date"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Body Text First Indent"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Body Text First Indent 2"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Note Heading"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Body Text 2"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Body Text 3"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Body Text Indent 2"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Body Text Indent 3"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Block Text"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Hyperlink"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="FollowedHyperlink"/>
+  <w:LsdException Locked="false" Priority="22" QFormat="true" Name="Strong"/>
+  <w:LsdException Locked="false" Priority="20" QFormat="true" Name="Emphasis"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Document Map"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Plain Text"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="E-mail Signature"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="HTML Top of Form"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="HTML Bottom of Form"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Normal (Web)"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="HTML Acronym"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="HTML Address"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="HTML Cite"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="HTML Code"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="HTML Definition"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="HTML Keyboard"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="HTML Preformatted"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="HTML Sample"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="HTML Typewriter"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="HTML Variable"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Normal Table"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="annotation subject"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="No List"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Outline List 1"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Outline List 2"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Outline List 3"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Simple 1"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Simple 2"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Simple 3"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Classic 1"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Classic 2"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Classic 3"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Classic 4"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Colorful 1"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Colorful 2"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Colorful 3"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Columns 1"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Columns 2"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Columns 3"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Columns 4"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Columns 5"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Grid 1"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Grid 2"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Grid 3"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Grid 4"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Grid 5"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Grid 6"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Grid 7"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Grid 8"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table List 1"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table List 2"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table List 3"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table List 4"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table List 5"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table List 6"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table List 7"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table List 8"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table 3D effects 1"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table 3D effects 2"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table 3D effects 3"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Contemporary"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Elegant"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Professional"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Subtle 1"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Subtle 2"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Web 1"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Web 2"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Web 3"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Balloon Text"/>
+  <w:LsdException Locked="false" Priority="39" Name="Table Grid"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Theme"/>
+  <w:LsdException Locked="false" SemiHidden="true" Name="Placeholder Text"/>
+  <w:LsdException Locked="false" Priority="1" QFormat="true" Name="No Spacing"/>
+  <w:LsdException Locked="false" Priority="60" Name="Light Shading"/>
+  <w:LsdException Locked="false" Priority="61" Name="Light List"/>
+  <w:LsdException Locked="false" Priority="62" Name="Light Grid"/>
+  <w:LsdException Locked="false" Priority="63" Name="Medium Shading 1"/>
+  <w:LsdException Locked="false" Priority="64" Name="Medium Shading 2"/>
+  <w:LsdException Locked="false" Priority="65" Name="Medium List 1"/>
+  <w:LsdException Locked="false" Priority="66" Name="Medium List 2"/>
+  <w:LsdException Locked="false" Priority="67" Name="Medium Grid 1"/>
+  <w:LsdException Locked="false" Priority="68" Name="Medium Grid 2"/>
+  <w:LsdException Locked="false" Priority="69" Name="Medium Grid 3"/>
+  <w:LsdException Locked="false" Priority="70" Name="Dark List"/>
+  <w:LsdException Locked="false" Priority="71" Name="Colorful Shading"/>
+  <w:LsdException Locked="false" Priority="72" Name="Colorful List"/>
+  <w:LsdException Locked="false" Priority="73" Name="Colorful Grid"/>
+  <w:LsdException Locked="false" Priority="60" Name="Light Shading Accent 1"/>
+  <w:LsdException Locked="false" Priority="61" Name="Light List Accent 1"/>
+  <w:LsdException Locked="false" Priority="62" Name="Light Grid Accent 1"/>
+  <w:LsdException Locked="false" Priority="63" Name="Medium Shading 1 Accent 1"/>
+  <w:LsdException Locked="false" Priority="64" Name="Medium Shading 2 Accent 1"/>
+  <w:LsdException Locked="false" Priority="65" Name="Medium List 1 Accent 1"/>
+  <w:LsdException Locked="false" SemiHidden="true" Name="Revision"/>
+  <w:LsdException Locked="false" Priority="34" QFormat="true"
+   Name="List Paragraph"/>
+  <w:LsdException Locked="false" Priority="29" QFormat="true" Name="Quote"/>
+  <w:LsdException Locked="false" Priority="30" QFormat="true"
+   Name="Intense Quote"/>
+  <w:LsdException Locked="false" Priority="66" Name="Medium List 2 Accent 1"/>
+  <w:LsdException Locked="false" Priority="67" Name="Medium Grid 1 Accent 1"/>
+  <w:LsdException Locked="false" Priority="68" Name="Medium Grid 2 Accent 1"/>
+  <w:LsdException Locked="false" Priority="69" Name="Medium Grid 3 Accent 1"/>
+  <w:LsdException Locked="false" Priority="70" Name="Dark List Accent 1"/>
+  <w:LsdException Locked="false" Priority="71" Name="Colorful Shading Accent 1"/>
+  <w:LsdException Locked="false" Priority="72" Name="Colorful List Accent 1"/>
+  <w:LsdException Locked="false" Priority="73" Name="Colorful Grid Accent 1"/>
+  <w:LsdException Locked="false" Priority="60" Name="Light Shading Accent 2"/>
+  <w:LsdException Locked="false" Priority="61" Name="Light List Accent 2"/>
+  <w:LsdException Locked="false" Priority="62" Name="Light Grid Accent 2"/>
+  <w:LsdException Locked="false" Priority="63" Name="Medium Shading 1 Accent 2"/>
+  <w:LsdException Locked="false" Priority="64" Name="Medium Shading 2 Accent 2"/>
+  <w:LsdException Locked="false" Priority="65" Name="Medium List 1 Accent 2"/>
+  <w:LsdException Locked="false" Priority="66" Name="Medium List 2 Accent 2"/>
+  <w:LsdException Locked="false" Priority="67" Name="Medium Grid 1 Accent 2"/>
+  <w:LsdException Locked="false" Priority="68" Name="Medium Grid 2 Accent 2"/>
+  <w:LsdException Locked="false" Priority="69" Name="Medium Grid 3 Accent 2"/>
+  <w:LsdException Locked="false" Priority="70" Name="Dark List Accent 2"/>
+  <w:LsdException Locked="false" Priority="71" Name="Colorful Shading Accent 2"/>
+  <w:LsdException Locked="false" Priority="72" Name="Colorful List Accent 2"/>
+  <w:LsdException Locked="false" Priority="73" Name="Colorful Grid Accent 2"/>
+  <w:LsdException Locked="false" Priority="60" Name="Light Shading Accent 3"/>
+  <w:LsdException Locked="false" Priority="61" Name="Light List Accent 3"/>
+  <w:LsdException Locked="false" Priority="62" Name="Light Grid Accent 3"/>
+  <w:LsdException Locked="false" Priority="63" Name="Medium Shading 1 Accent 3"/>
+  <w:LsdException Locked="false" Priority="64" Name="Medium Shading 2 Accent 3"/>
+  <w:LsdException Locked="false" Priority="65" Name="Medium List 1 Accent 3"/>
+  <w:LsdException Locked="false" Priority="66" Name="Medium List 2 Accent 3"/>
+  <w:LsdException Locked="false" Priority="67" Name="Medium Grid 1 Accent 3"/>
+  <w:LsdException Locked="false" Priority="68" Name="Medium Grid 2 Accent 3"/>
+  <w:LsdException Locked="false" Priority="69" Name="Medium Grid 3 Accent 3"/>
+  <w:LsdException Locked="false" Priority="70" Name="Dark List Accent 3"/>
+  <w:LsdException Locked="false" Priority="71" Name="Colorful Shading Accent 3"/>
+  <w:LsdException Locked="false" Priority="72" Name="Colorful List Accent 3"/>
+  <w:LsdException Locked="false" Priority="73" Name="Colorful Grid Accent 3"/>
+  <w:LsdException Locked="false" Priority="60" Name="Light Shading Accent 4"/>
+  <w:LsdException Locked="false" Priority="61" Name="Light List Accent 4"/>
+  <w:LsdException Locked="false" Priority="62" Name="Light Grid Accent 4"/>
+  <w:LsdException Locked="false" Priority="63" Name="Medium Shading 1 Accent 4"/>
+  <w:LsdException Locked="false" Priority="64" Name="Medium Shading 2 Accent 4"/>
+  <w:LsdException Locked="false" Priority="65" Name="Medium List 1 Accent 4"/>
+  <w:LsdException Locked="false" Priority="66" Name="Medium List 2 Accent 4"/>
+  <w:LsdException Locked="false" Priority="67" Name="Medium Grid 1 Accent 4"/>
+  <w:LsdException Locked="false" Priority="68" Name="Medium Grid 2 Accent 4"/>
+  <w:LsdException Locked="false" Priority="69" Name="Medium Grid 3 Accent 4"/>
+  <w:LsdException Locked="false" Priority="70" Name="Dark List Accent 4"/>
+  <w:LsdException Locked="false" Priority="71" Name="Colorful Shading Accent 4"/>
+  <w:LsdException Locked="false" Priority="72" Name="Colorful List Accent 4"/>
+  <w:LsdException Locked="false" Priority="73" Name="Colorful Grid Accent 4"/>
+  <w:LsdException Locked="false" Priority="60" Name="Light Shading Accent 5"/>
+  <w:LsdException Locked="false" Priority="61" Name="Light List Accent 5"/>
+  <w:LsdException Locked="false" Priority="62" Name="Light Grid Accent 5"/>
+  <w:LsdException Locked="false" Priority="63" Name="Medium Shading 1 Accent 5"/>
+  <w:LsdException Locked="false" Priority="64" Name="Medium Shading 2 Accent 5"/>
+  <w:LsdException Locked="false" Priority="65" Name="Medium List 1 Accent 5"/>
+  <w:LsdException Locked="false" Priority="66" Name="Medium List 2 Accent 5"/>
+  <w:LsdException Locked="false" Priority="67" Name="Medium Grid 1 Accent 5"/>
+  <w:LsdException Locked="false" Priority="68" Name="Medium Grid 2 Accent 5"/>
+  <w:LsdException Locked="false" Priority="69" Name="Medium Grid 3 Accent 5"/>
+  <w:LsdException Locked="false" Priority="70" Name="Dark List Accent 5"/>
+  <w:LsdException Locked="false" Priority="71" Name="Colorful Shading Accent 5"/>
+  <w:LsdException Locked="false" Priority="72" Name="Colorful List Accent 5"/>
+  <w:LsdException Locked="false" Priority="73" Name="Colorful Grid Accent 5"/>
+  <w:LsdException Locked="false" Priority="60" Name="Light Shading Accent 6"/>
+  <w:LsdException Locked="false" Priority="61" Name="Light List Accent 6"/>
+  <w:LsdException Locked="false" Priority="62" Name="Light Grid Accent 6"/>
+  <w:LsdException Locked="false" Priority="63" Name="Medium Shading 1 Accent 6"/>
+  <w:LsdException Locked="false" Priority="64" Name="Medium Shading 2 Accent 6"/>
+  <w:LsdException Locked="false" Priority="65" Name="Medium List 1 Accent 6"/>
+  <w:LsdException Locked="false" Priority="66" Name="Medium List 2 Accent 6"/>
+  <w:LsdException Locked="false" Priority="67" Name="Medium Grid 1 Accent 6"/>
+  <w:LsdException Locked="false" Priority="68" Name="Medium Grid 2 Accent 6"/>
+  <w:LsdException Locked="false" Priority="69" Name="Medium Grid 3 Accent 6"/>
+  <w:LsdException Locked="false" Priority="70" Name="Dark List Accent 6"/>
+  <w:LsdException Locked="false" Priority="71" Name="Colorful Shading Accent 6"/>
+  <w:LsdException Locked="false" Priority="72" Name="Colorful List Accent 6"/>
+  <w:LsdException Locked="false" Priority="73" Name="Colorful Grid Accent 6"/>
+  <w:LsdException Locked="false" Priority="19" QFormat="true"
+   Name="Subtle Emphasis"/>
+  <w:LsdException Locked="false" Priority="21" QFormat="true"
+   Name="Intense Emphasis"/>
+  <w:LsdException Locked="false" Priority="31" QFormat="true"
+   Name="Subtle Reference"/>
+  <w:LsdException Locked="false" Priority="32" QFormat="true"
+   Name="Intense Reference"/>
+  <w:LsdException Locked="false" Priority="33" QFormat="true" Name="Book Title"/>
+  <w:LsdException Locked="false" Priority="37" SemiHidden="true"
+   UnhideWhenUsed="true" Name="Bibliography"/>
+  <w:LsdException Locked="false" Priority="39" SemiHidden="true"
+   UnhideWhenUsed="true" QFormat="true" Name="TOC Heading"/>
+  <w:LsdException Locked="false" Priority="41" Name="Plain Table 1"/>
+  <w:LsdException Locked="false" Priority="42" Name="Plain Table 2"/>
+  <w:LsdException Locked="false" Priority="43" Name="Plain Table 3"/>
+  <w:LsdException Locked="false" Priority="44" Name="Plain Table 4"/>
+  <w:LsdException Locked="false" Priority="45" Name="Plain Table 5"/>
+  <w:LsdException Locked="false" Priority="40" Name="Grid Table Light"/>
+  <w:LsdException Locked="false" Priority="46" Name="Grid Table 1 Light"/>
+  <w:LsdException Locked="false" Priority="47" Name="Grid Table 2"/>
+  <w:LsdException Locked="false" Priority="48" Name="Grid Table 3"/>
+  <w:LsdException Locked="false" Priority="49" Name="Grid Table 4"/>
+  <w:LsdException Locked="false" Priority="50" Name="Grid Table 5 Dark"/>
+  <w:LsdException Locked="false" Priority="51" Name="Grid Table 6 Colorful"/>
+  <w:LsdException Locked="false" Priority="52" Name="Grid Table 7 Colorful"/>
+  <w:LsdException Locked="false" Priority="46"
+   Name="Grid Table 1 Light Accent 1"/>
+  <w:LsdException Locked="false" Priority="47" Name="Grid Table 2 Accent 1"/>
+  <w:LsdException Locked="false" Priority="48" Name="Grid Table 3 Accent 1"/>
+  <w:LsdException Locked="false" Priority="49" Name="Grid Table 4 Accent 1"/>
+  <w:LsdException Locked="false" Priority="50" Name="Grid Table 5 Dark Accent 1"/>
+  <w:LsdException Locked="false" Priority="51"
+   Name="Grid Table 6 Colorful Accent 1"/>
+  <w:LsdException Locked="false" Priority="52"
+   Name="Grid Table 7 Colorful Accent 1"/>
+  <w:LsdException Locked="false" Priority="46"
+   Name="Grid Table 1 Light Accent 2"/>
+  <w:LsdException Locked="false" Priority="47" Name="Grid Table 2 Accent 2"/>
+  <w:LsdException Locked="false" Priority="48" Name="Grid Table 3 Accent 2"/>
+  <w:LsdException Locked="false" Priority="49" Name="Grid Table 4 Accent 2"/>
+  <w:LsdException Locked="false" Priority="50" Name="Grid Table 5 Dark Accent 2"/>
+  <w:LsdException Locked="false" Priority="51"
+   Name="Grid Table 6 Colorful Accent 2"/>
+  <w:LsdException Locked="false" Priority="52"
+   Name="Grid Table 7 Colorful Accent 2"/>
+  <w:LsdException Locked="false" Priority="46"
+   Name="Grid Table 1 Light Accent 3"/>
+  <w:LsdException Locked="false" Priority="47" Name="Grid Table 2 Accent 3"/>
+  <w:LsdException Locked="false" Priority="48" Name="Grid Table 3 Accent 3"/>
+  <w:LsdException Locked="false" Priority="49" Name="Grid Table 4 Accent 3"/>
+  <w:LsdException Locked="false" Priority="50" Name="Grid Table 5 Dark Accent 3"/>
+  <w:LsdException Locked="false" Priority="51"
+   Name="Grid Table 6 Colorful Accent 3"/>
+  <w:LsdException Locked="false" Priority="52"
+   Name="Grid Table 7 Colorful Accent 3"/>
+  <w:LsdException Locked="false" Priority="46"
+   Name="Grid Table 1 Light Accent 4"/>
+  <w:LsdException Locked="false" Priority="47" Name="Grid Table 2 Accent 4"/>
+  <w:LsdException Locked="false" Priority="48" Name="Grid Table 3 Accent 4"/>
+  <w:LsdException Locked="false" Priority="49" Name="Grid Table 4 Accent 4"/>
+  <w:LsdException Locked="false" Priority="50" Name="Grid Table 5 Dark Accent 4"/>
+  <w:LsdException Locked="false" Priority="51"
+   Name="Grid Table 6 Colorful Accent 4"/>
+  <w:LsdException Locked="false" Priority="52"
+   Name="Grid Table 7 Colorful Accent 4"/>
+  <w:LsdException Locked="false" Priority="46"
+   Name="Grid Table 1 Light Accent 5"/>
+  <w:LsdException Locked="false" Priority="47" Name="Grid Table 2 Accent 5"/>
+  <w:LsdException Locked="false" Priority="48" Name="Grid Table 3 Accent 5"/>
+  <w:LsdException Locked="false" Priority="49" Name="Grid Table 4 Accent 5"/>
+  <w:LsdException Locked="false" Priority="50" Name="Grid Table 5 Dark Accent 5"/>
+  <w:LsdException Locked="false" Priority="51"
+   Name="Grid Table 6 Colorful Accent 5"/>
+  <w:LsdException Locked="false" Priority="52"
+   Name="Grid Table 7 Colorful Accent 5"/>
+  <w:LsdException Locked="false" Priority="46"
+   Name="Grid Table 1 Light Accent 6"/>
+  <w:LsdException Locked="false" Priority="47" Name="Grid Table 2 Accent 6"/>
+  <w:LsdException Locked="false" Priority="48" Name="Grid Table 3 Accent 6"/>
+  <w:LsdException Locked="false" Priority="49" Name="Grid Table 4 Accent 6"/>
+  <w:LsdException Locked="false" Priority="50" Name="Grid Table 5 Dark Accent 6"/>
+  <w:LsdException Locked="false" Priority="51"
+   Name="Grid Table 6 Colorful Accent 6"/>
+  <w:LsdException Locked="false" Priority="52"
+   Name="Grid Table 7 Colorful Accent 6"/>
+  <w:LsdException Locked="false" Priority="46" Name="List Table 1 Light"/>
+  <w:LsdException Locked="false" Priority="47" Name="List Table 2"/>
+  <w:LsdException Locked="false" Priority="48" Name="List Table 3"/>
+  <w:LsdException Locked="false" Priority="49" Name="List Table 4"/>
+  <w:LsdException Locked="false" Priority="50" Name="List Table 5 Dark"/>
+  <w:LsdException Locked="false" Priority="51" Name="List Table 6 Colorful"/>
+  <w:LsdException Locked="false" Priority="52" Name="List Table 7 Colorful"/>
+  <w:LsdException Locked="false" Priority="46"
+   Name="List Table 1 Light Accent 1"/>
+  <w:LsdException Locked="false" Priority="47" Name="List Table 2 Accent 1"/>
+  <w:LsdException Locked="false" Priority="48" Name="List Table 3 Accent 1"/>
+  <w:LsdException Locked="false" Priority="49" Name="List Table 4 Accent 1"/>
+  <w:LsdException Locked="false" Priority="50" Name="List Table 5 Dark Accent 1"/>
+  <w:LsdException Locked="false" Priority="51"
+   Name="List Table 6 Colorful Accent 1"/>
+  <w:LsdException Locked="false" Priority="52"
+   Name="List Table 7 Colorful Accent 1"/>
+  <w:LsdException Locked="false" Priority="46"
+   Name="List Table 1 Light Accent 2"/>
+  <w:LsdException Locked="false" Priority="47" Name="List Table 2 Accent 2"/>
+  <w:LsdException Locked="false" Priority="48" Name="List Table 3 Accent 2"/>
+  <w:LsdException Locked="false" Priority="49" Name="List Table 4 Accent 2"/>
+  <w:LsdException Locked="false" Priority="50" Name="List Table 5 Dark Accent 2"/>
+  <w:LsdException Locked="false" Priority="51"
+   Name="List Table 6 Colorful Accent 2"/>
+  <w:LsdException Locked="false" Priority="52"
+   Name="List Table 7 Colorful Accent 2"/>
+  <w:LsdException Locked="false" Priority="46"
+   Name="List Table 1 Light Accent 3"/>
+  <w:LsdException Locked="false" Priority="47" Name="List Table 2 Accent 3"/>
+  <w:LsdException Locked="false" Priority="48" Name="List Table 3 Accent 3"/>
+  <w:LsdException Locked="false" Priority="49" Name="List Table 4 Accent 3"/>
+  <w:LsdException Locked="false" Priority="50" Name="List Table 5 Dark Accent 3"/>
+  <w:LsdException Locked="false" Priority="51"
+   Name="List Table 6 Colorful Accent 3"/>
+  <w:LsdException Locked="false" Priority="52"
+   Name="List Table 7 Colorful Accent 3"/>
+  <w:LsdException Locked="false" Priority="46"
+   Name="List Table 1 Light Accent 4"/>
+  <w:LsdException Locked="false" Priority="47" Name="List Table 2 Accent 4"/>
+  <w:LsdException Locked="false" Priority="48" Name="List Table 3 Accent 4"/>
+  <w:LsdException Locked="false" Priority="49" Name="List Table 4 Accent 4"/>
+  <w:LsdException Locked="false" Priority="50" Name="List Table 5 Dark Accent 4"/>
+  <w:LsdException Locked="false" Priority="51"
+   Name="List Table 6 Colorful Accent 4"/>
+  <w:LsdException Locked="false" Priority="52"
+   Name="List Table 7 Colorful Accent 4"/>
+  <w:LsdException Locked="false" Priority="46"
+   Name="List Table 1 Light Accent 5"/>
+  <w:LsdException Locked="false" Priority="47" Name="List Table 2 Accent 5"/>
+  <w:LsdException Locked="false" Priority="48" Name="List Table 3 Accent 5"/>
+  <w:LsdException Locked="false" Priority="49" Name="List Table 4 Accent 5"/>
+  <w:LsdException Locked="false" Priority="50" Name="List Table 5 Dark Accent 5"/>
+  <w:LsdException Locked="false" Priority="51"
+   Name="List Table 6 Colorful Accent 5"/>
+  <w:LsdException Locked="false" Priority="52"
+   Name="List Table 7 Colorful Accent 5"/>
+  <w:LsdException Locked="false" Priority="46"
+   Name="List Table 1 Light Accent 6"/>
+  <w:LsdException Locked="false" Priority="47" Name="List Table 2 Accent 6"/>
+  <w:LsdException Locked="false" Priority="48" Name="List Table 3 Accent 6"/>
+  <w:LsdException Locked="false" Priority="49" Name="List Table 4 Accent 6"/>
+  <w:LsdException Locked="false" Priority="50" Name="List Table 5 Dark Accent 6"/>
+  <w:LsdException Locked="false" Priority="51"
+   Name="List Table 6 Colorful Accent 6"/>
+  <w:LsdException Locked="false" Priority="52"
+   Name="List Table 7 Colorful Accent 6"/>
+ </w:LatentStyles>
+</xml><![endif]-->
+<style>
+<!--
+ /* Font Definitions */
+ @font-face
+	{font-family:"Cambria Math";
+	panose-1:2 4 5 3 5 4 6 3 2 4;
+	mso-font-charset:0;
+	mso-generic-font-family:roman;
+	mso-font-pitch:variable;
+	mso-font-signature:-536869121 1107305727 33554432 0 415 0;}
+@font-face
+	{font-family:Calibri;
+	panose-1:2 15 5 2 2 2 4 3 2 4;
+	mso-font-charset:0;
+	mso-generic-font-family:swiss;
+	mso-font-pitch:variable;
+	mso-font-signature:-536859905 -1073732485 9 0 511 0;}
+@font-face
+	{font-family:Consolas;
+	panose-1:2 11 6 9 2 2 4 3 2 4;
+	mso-font-charset:0;
+	mso-generic-font-family:modern;
+	mso-font-pitch:fixed;
+	mso-font-signature:-536869121 64767 1 0 415 0;}
+ /* Style Definitions */
+ p.MsoNormal, li.MsoNormal, div.MsoNormal
+	{mso-style-unhide:no;
+	mso-style-qformat:yes;
+	mso-style-parent:"";
+	margin-top:0in;
+	margin-right:0in;
+	margin-bottom:8.0pt;
+	margin-left:0in;
+	line-height:107%;
+	mso-pagination:widow-orphan;
+	font-size:11.0pt;
+	font-family:"Calibri",sans-serif;
+	mso-ascii-font-family:Calibri;
+	mso-ascii-theme-font:minor-latin;
+	mso-fareast-font-family:Calibri;
+	mso-fareast-theme-font:minor-latin;
+	mso-hansi-font-family:Calibri;
+	mso-hansi-theme-font:minor-latin;
+	mso-bidi-font-family:"Times New Roman";
+	mso-bidi-theme-font:minor-bidi;}
+h1
+	{mso-style-priority:9;
+	mso-style-unhide:no;
+	mso-style-qformat:yes;
+	mso-style-link:"Heading 1 Char";
+	mso-margin-top-alt:auto;
+	margin-right:0in;
+	mso-margin-bottom-alt:auto;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	mso-outline-level:1;
+	font-size:24.0pt;
+	font-family:"Times New Roman",serif;
+	mso-fareast-font-family:"Times New Roman";
+	font-weight:bold;}
+h2
+	{mso-style-priority:9;
+	mso-style-unhide:no;
+	mso-style-qformat:yes;
+	mso-style-link:"Heading 2 Char";
+	mso-margin-top-alt:auto;
+	margin-right:0in;
+	mso-margin-bottom-alt:auto;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	mso-outline-level:2;
+	font-size:18.0pt;
+	font-family:"Times New Roman",serif;
+	mso-fareast-font-family:"Times New Roman";
+	font-weight:bold;}
+a:link, span.MsoHyperlink
+	{mso-style-priority:99;
+	color:#0563C1;
+	mso-themecolor:hyperlink;
+	text-decoration:underline;
+	text-underline:single;}
+a:visited, span.MsoHyperlinkFollowed
+	{mso-style-noshow:yes;
+	mso-style-priority:99;
+	color:#954F72;
+	mso-themecolor:followedhyperlink;
+	text-decoration:underline;
+	text-underline:single;}
+p.MsoPlainText, li.MsoPlainText, div.MsoPlainText
+	{mso-style-priority:99;
+	mso-style-link:"Plain Text Char";
+	margin:0in;
+	margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	font-size:10.5pt;
+	font-family:Consolas;
+	mso-fareast-font-family:Calibri;
+	mso-fareast-theme-font:minor-latin;
+	mso-bidi-font-family:"Times New Roman";
+	mso-bidi-theme-font:minor-bidi;}
+p
+	{mso-style-noshow:yes;
+	mso-style-priority:99;
+	mso-margin-top-alt:auto;
+	margin-right:0in;
+	mso-margin-bottom-alt:auto;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	font-size:12.0pt;
+	font-family:"Times New Roman",serif;
+	mso-fareast-font-family:"Times New Roman";}
+span.PlainTextChar
+	{mso-style-name:"Plain Text Char";
+	mso-style-priority:99;
+	mso-style-unhide:no;
+	mso-style-locked:yes;
+	mso-style-link:"Plain Text";
+	mso-ansi-font-size:10.5pt;
+	mso-bidi-font-size:10.5pt;
+	font-family:Consolas;
+	mso-ascii-font-family:Consolas;
+	mso-hansi-font-family:Consolas;}
+span.Heading1Char
+	{mso-style-name:"Heading 1 Char";
+	mso-style-priority:9;
+	mso-style-unhide:no;
+	mso-style-locked:yes;
+	mso-style-link:"Heading 1";
+	mso-ansi-font-size:24.0pt;
+	mso-bidi-font-size:24.0pt;
+	font-family:"Times New Roman",serif;
+	mso-ascii-font-family:"Times New Roman";
+	mso-fareast-font-family:"Times New Roman";
+	mso-hansi-font-family:"Times New Roman";
+	mso-bidi-font-family:"Times New Roman";
+	mso-font-kerning:18.0pt;
+	font-weight:bold;}
+span.Heading2Char
+	{mso-style-name:"Heading 2 Char";
+	mso-style-priority:9;
+	mso-style-unhide:no;
+	mso-style-locked:yes;
+	mso-style-link:"Heading 2";
+	mso-ansi-font-size:18.0pt;
+	mso-bidi-font-size:18.0pt;
+	font-family:"Times New Roman",serif;
+	mso-ascii-font-family:"Times New Roman";
+	mso-fareast-font-family:"Times New Roman";
+	mso-hansi-font-family:"Times New Roman";
+	mso-bidi-font-family:"Times New Roman";
+	font-weight:bold;}
+span.SpellE
+	{mso-style-name:"";
+	mso-spl-e:yes;}
+span.GramE
+	{mso-style-name:"";
+	mso-gram-e:yes;}
+.MsoChpDefault
+	{mso-style-type:export-only;
+	mso-default-props:yes;
+	font-family:"Calibri",sans-serif;
+	mso-ascii-font-family:Calibri;
+	mso-ascii-theme-font:minor-latin;
+	mso-fareast-font-family:Calibri;
+	mso-fareast-theme-font:minor-latin;
+	mso-hansi-font-family:Calibri;
+	mso-hansi-theme-font:minor-latin;
+	mso-bidi-font-family:"Times New Roman";
+	mso-bidi-theme-font:minor-bidi;}
+.MsoPapDefault
+	{mso-style-type:export-only;
+	margin-bottom:8.0pt;
+	line-height:107%;}
+@page WordSection1
+	{size:8.5in 11.0in;
+	margin:1.0in 75.1pt 1.0in 75.05pt;
+	mso-header-margin:35.4pt;
+	mso-footer-margin:35.4pt;
+	mso-paper-source:0;}
+div.WordSection1
+	{page:WordSection1;}
+-->
+</style>
+<!--[if gte mso 10]>
+<style>
+ /* Style Definitions */
+ table.MsoNormalTable
+	{mso-style-name:"Table Normal";
+	mso-tstyle-rowband-size:0;
+	mso-tstyle-colband-size:0;
+	mso-style-noshow:yes;
+	mso-style-priority:99;
+	mso-style-parent:"";
+	mso-padding-alt:0in 5.4pt 0in 5.4pt;
+	mso-para-margin-top:0in;
+	mso-para-margin-right:0in;
+	mso-para-margin-bottom:8.0pt;
+	mso-para-margin-left:0in;
+	line-height:107%;
+	mso-pagination:widow-orphan;
+	font-size:11.0pt;
+	font-family:"Calibri",sans-serif;
+	mso-ascii-font-family:Calibri;
+	mso-ascii-theme-font:minor-latin;
+	mso-hansi-font-family:Calibri;
+	mso-hansi-theme-font:minor-latin;
+	mso-bidi-font-family:"Times New Roman";
+	mso-bidi-theme-font:minor-bidi;}
+</style>
+<![endif]--><!--[if gte mso 9]><xml>
+ <o:shapedefaults v:ext="edit" spidmax="1026"/>
+</xml><![endif]--><!--[if gte mso 9]><xml>
+ <o:shapelayout v:ext="edit">
+  <o:idmap v:ext="edit" data="1"/>
+ </o:shapelayout></xml><![endif]-->
+</head>
+
+<body lang=EN-US link="#0563C1" vlink="#954F72" style='tab-interval:.5in'>
+
+<div class=WordSection1>
+
+<p class=MsoNormal align=center style='margin-bottom:0in;margin-bottom:.0001pt;
+text-align:center;line-height:36.0pt;mso-outline-level:1'><span class=SpellE><b><span
+style='font-size:36.0pt;font-family:"Courier New";mso-fareast-font-family:"Times New Roman";
+color:black;mso-font-kerning:18.0pt'>Perple_</span></b><b><span
+style='font-size:36.0pt;font-family:"Courier New";mso-fareast-font-family:"Times New Roman";
+color:purple;mso-font-kerning:18.0pt'>X</span></b></span><b><span
+style='font-size:36.0pt;font-family:"Courier New";mso-fareast-font-family:"Times New Roman";
+color:purple;mso-font-kerning:18.0pt'> </span></b><b><span style='font-size:
+36.0pt;font-family:"Courier New";mso-fareast-font-family:"Times New Roman";
+color:black;mso-font-kerning:18.0pt'>Equilibrium Reactive Transport
+Calculations: The FRAC2D Model Configuration</span></b><b><span
+style='font-size:24.0pt;font-family:"Courier New";mso-fareast-font-family:"Times New Roman";
+color:black;mso-font-kerning:18.0pt'><o:p></o:p></span></b></p>
+
+<p class=MsoNormal align=center style='margin-bottom:0in;margin-bottom:.0001pt;
+text-align:center;line-height:normal'><span style='font-size:13.5pt;font-family:
+"Courier New";mso-fareast-font-family:"Times New Roman";color:black'>&nbsp;<o:p></o:p></span></p>
+
+<p class=MsoNormal align=center style='margin-bottom:0in;margin-bottom:.0001pt;
+text-align:center;line-height:normal'><span style='font-size:13.5pt;font-family:
+"Courier New";mso-fareast-font-family:"Times New Roman";color:black'>&nbsp;<o:p></o:p></span></p>
+
+<div class=MsoNormal align=center style='margin-bottom:0in;margin-bottom:.0001pt;
+text-align:center;line-height:normal'><span style='font-size:12.0pt;font-family:
+"Times New Roman",serif;mso-fareast-font-family:"Times New Roman"'>
+
+<hr size=2 width="100%" noshade style='color:black' align=center>
+
+</span></div>
+
+<p class=MsoNormal align=center style='margin-bottom:0in;margin-bottom:.0001pt;
+text-align:center;line-height:normal;mso-outline-level:2'><a name=contents><b><span
+style='font-size:18.0pt;font-family:"Courier New";mso-fareast-font-family:"Times New Roman";
+color:black'>Contents</span></b></a><b><span style='font-size:18.0pt;
+font-family:"Courier New";mso-fareast-font-family:"Times New Roman";color:black'><o:p></o:p></span></b></p>
+
+<p class=MsoPlainText><span style='font-size:13.5pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoPlainText><span style='font-size:13.5pt;font-family:"Courier New"'><a
+href="#introduction">Introduction<o:p></o:p></a></span></p>
+
+<p class=MsoPlainText><span style='font-size:13.5pt;font-family:"Courier New"'><span
+style='mso-tab-count:1'>    </span><a href="#frac2d_files">The files in the
+FRAC2D example</a><o:p></o:p></span></p>
+
+<p class=MsoPlainText><span style='font-size:13.5pt;font-family:"Courier New"'><span
+style='mso-tab-count:1'>    </span><a href="#steps_in_a_frac2d_calc">The steps
+in a FRAC2d calculation</a><o:p></o:p></span></p>
+
+<p class=MsoPlainText><span style='font-size:13.5pt;font-family:"Courier New"'><span
+style='mso-tab-count:1'>    </span><a href="#frac2d_thoughtd">Some thoughts in
+configuring/running a FRAC2D calculation</a><o:p></o:p></span></p>
+
+<p class=MsoPlainText><span style='font-size:13.5pt;font-family:"Courier New"'><a
+href="#frac2d_variables">Explanation/Definition of the Variables<o:p></o:p></a></span></p>
+
+<p class=MsoPlainText><span style='font-size:13.5pt;font-family:"Courier New"'><a
+href="#mass_fluxes">Computation/Plotting of Mass Fluxes<o:p></o:p></a></span></p>
+
+<p class=MsoPlainText><span style='font-size:13.5pt;font-family:"Courier New"'><span
+style='mso-spacerun:yes'> </span><o:p></o:p></span></p>
+
+<div class=MsoPlainText align=center style='text-align:center'><span
+style='font-size:12.0pt;font-family:"Times New Roman",serif;mso-fareast-font-family:
+"Times New Roman"'>
+
+<hr size=2 width="100%" noshade style='color:black' align=center>
+
+</span></div>
+
+<p class=MsoPlainText><span style='font-size:13.5pt;font-family:"Courier New"'><o:p></o:p></span></p>
+
+<p class=MsoNormal align=center style='margin-bottom:0in;margin-bottom:.0001pt;
+text-align:center;line-height:normal;mso-outline-level:2'><a name=introduction><b><span
+style='font-size:18.0pt;font-family:"Courier New";mso-fareast-font-family:"Times New Roman";
+color:black'>Introduction</span></b></a><b><span style='font-size:18.0pt;
+font-family:"Courier New";mso-fareast-font-family:"Times New Roman";color:black'>
+<o:p></o:p></span></b></p>
+
+<p class=MsoPlainText><span style='font-size:13.5pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoPlainText><span class=SpellE><span style='font-size:13.5pt;
+font-family:"Courier New"'>Perple_<b style='mso-bidi-font-weight:normal'><span
+style='color:#7030A0'>X</span></b></span></span><span style='font-size:13.5pt;
+font-family:"Courier New"'> is configured to do two general types of
+equilibrium reactive transport models, <b style='mso-bidi-font-weight:normal'>FRAC2D</b>
+and <b style='mso-bidi-font-weight:normal'>TITRATE</b>. Both configurations are
+referred to within <span class=SpellE>Perple_<b style='mso-bidi-font-weight:
+normal'><span style='color:#7030A0'>X</span></b></span> as 2d-phase
+fractionation models (<a
+href="http://www.perplex.ethz.ch/papers/connolly_epsl_05.pdf">Connolly 2005</a>,
+see also <a href="http://www.perplex.ethz.ch/papers/Connolly_Elements_10.pdf">Gorman
+et al. 2006</a>). In these calculations a 1-dimensional column of rock is
+subjected to perturbations that lead to the formation of one or more mobile
+phases (e.g., melt and low-density electrolytic or molecular fluids). The rate
+at which the perturbations are applied adds a second effective dimension, time,
+to the calculation. The mobile phase(s), i.e., fractionated phase(s), moves
+upward through the column until it is consumed or passes through the top of the
+column. The two types of calculations are distinguished by the mechanism for
+perturbing the initial equilibrium condition: in <b style='mso-bidi-font-weight:
+normal'>FRAC2D</b> calculations, the perturbation is caused by changing
+pressure-temperature conditions, as occurs within a subducted slab or regional
+metamorphism; in <b style='mso-bidi-font-weight:normal'>TITRATE</b>
+calculations the perturbation is the addition of an aliquot of mass with
+prescribed chemistry (e.g., the presumed composition of a mobile phase) to the
+base of the column as occurs in the mantle wedge during subduction and other
+metasomatic processes. This page documents the <b style='mso-bidi-font-weight:
+normal'>FRAC2D</b> configuration, refer to the TITRATE page for an outline of <b
+style='mso-bidi-font-weight:normal'>TITRATE</b> configuration.<o:p></o:p></span></p>
+
+<p class=MsoPlainText><span style='font-size:13.5pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoPlainText><span style='font-size:13.5pt;font-family:"Courier New"'>The
+input files for the FRAC2D example outlined here are at
+www.perplex.ethz.ch/perplex/examples/frac2d are designated by the project name <b
+style='mso-bidi-font-weight:normal'>frac2d</b>. The fractionated, or mobile
+phase, is represented by the solution model COH-Fluid+, a model for low-density
+C-O-H-S fluids. Depending on the <span class=SpellE>aq_lagged_speciation</span>
+option specified in the <span class=SpellE>Perple_<b style='mso-bidi-font-weight:
+normal'><span style='color:#7030A0'>X</span></b></span> option file, COH-Fluid+
+may represent either molecular or electrolytic fluids (<a
+href="http://www.perplex.ethz.ch/papers/connolly_epsl_2018.pdf">Connolly and
+Galvez, 2018</a>). The example here uses the molecular version of the model and
+thus corresponds to an up-date of the subduction model used by Connolly (<a
+href="http://www.perplex.ethz.ch/papers/connolly_epsl_05.pdf">2005</a>). It is advisable
+to work with the molecular model before attempting the electrolytic model which
+introduces additional complexity and uncertainty. As in all <span class=SpellE>Perple_<b
+style='mso-bidi-font-weight:normal'><span style='color:#7030A0'>X</span></b></span>
+calculations, the project name has no special significance, the name <b
+style='mso-bidi-font-weight:normal'>frac2d</b> used here is chosen solely for
+purpose of the example. In this example, equilibrium phase relations are
+computed for a column of rock representing the lithologies of the upper 24.5 km
+of an oceanic slab as it is subducted incrementally from 80 to 200 km depth,
+the column is oriented vertically because it is assumed this is the direction
+of fluid flow. Consequently, the height of the column is 24.5 km / cosine (45
+degree) ~ 34.6 km (see Fig 6 of <a
+href="http://www.perplex.ethz.ch/papers/connolly_epsl_05.pdf">Connolly 2005</a>),
+where 45 degrees is the model slab dip. For purposes of the calculation, the column
+is discretized as a set of representative nodes with user-specified spacing.
+After each depth increment, beginning from the lowest representative node,
+equilibrium phase relations are computed. If the mobile phase is stable, its
+mass is removed (fractionated) from the node and added to the overlying node.
+The procedure is then repeated for the overlying node until, ultimately, the
+top of the column has been reached. This model carries strong assumptions about
+the nature of fluid generation and flow. Specifically, these assumptions are
+that fluid generation proceeds from the base of the column upwards and that the
+flow is pervasive and vertical. There is little basis for the first assumption,
+although the case can be made that any fluid accumulation at depth will induce
+hydromechanical instability that causes the fluid at depth to catch-up fluid at
+shallower depths (Connolly 1997). Experiments with alternative assumptions,
+e.g., that fluid generation proceeds from the top downward, show that this
+assumption does not have profound consequences for mass transport. Pervasive
+flow maximizes the efficacy of mass transport through the slab and is therefore
+a useful extremal scenario. The alternative extremal scenario, that fluid flow
+is perfectly channelized by fractures or tube-like porosity waves (Connolly
+&amp; <span class=SpellE>Podladchikov</span> 1998, <a
+href="http://www.perplex.ethz.ch/papers/connolly_jgr_07.pdf">2007</a>, 2013; <a
+href="http://www.perplex.ethz.ch/papers/Connolly_Elements_10.pdf">Connolly 2010</a>)
+corresponds to simple Rayleigh fractionation (e.g., Section 4.4 of <a
+href="http://www.perplex.ethz.ch/papers/connolly_epsl_2018.pdf">Connolly &amp;
+Galvez 2018</a>) and is not considered further here. The independent variables
+for the calculation the depth of the slab/mantle interface (Z0) and the
+vertical height above the base of the slab column (<b style='mso-bidi-font-weight:
+normal'>DZ</b>, see Fig 7 of <a
+href="http://www.perplex.ethz.ch/papers/connolly_epsl_05.pdf">Connolly 2005</a>).
+<o:p></o:p></span></p>
+
+<p class=MsoPlainText><span style='font-size:13.5pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoPlainText><span style='font-size:13.5pt;font-family:"Courier New"'>The
+primary input file for the calculation, <b style='mso-bidi-font-weight:normal'>frac2d.dat</b>,
+is generated using BUILD, by choosing computational mode 7 (2-d Phase
+fractionation). In contrast to most <span class=SpellE>Perple_<b
+style='mso-bidi-font-weight:normal'><span style='color:#7030A0'>X</span></b></span>
+calculations in the case of FRAC2D calculations, this input file specifies only
+the data sources, the thermodynamic components, and the solution models to be
+considered during the calculation. A second auxiliary file, <b
+style='mso-bidi-font-weight:normal'>frac2d.aux</b>, specifies the column
+lithologies, the model geometry, and the data necessary to define the
+pressure-temperature field during subduction. The auxiliary input file is
+generated manually, the primary purpose of this document is to explain the data
+in the <b style='mso-bidi-font-weight:normal'>frac2d.aux</b> example so that it
+can be used as a template for new calculations.<o:p></o:p></span></p>
+
+<p class=MsoPlainText><span style='font-size:13.5pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoPlainText><b style='mso-bidi-font-weight:normal'><span
+style='font-size:16.0pt;font-family:"Courier New"'>The <a name="frac2d_files">files
+at www.perplex.ethz.ch/perplex/examples/frac2d</a>:<o:p></o:p></span></b></p>
+
+<p class=MsoPlainText><span style='font-size:13.5pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoPlainText><b style='mso-bidi-font-weight:normal'><span
+style='font-size:13.5pt;font-family:"Courier New"'>frac2d.dat</span></b><span
+style='font-size:13.5pt;font-family:"Courier New"'><span
+style='mso-spacerun:yes'>                 </span>- the primary input file.<o:p></o:p></span></p>
+
+<p class=MsoPlainText><b style='mso-bidi-font-weight:normal'><span
+style='font-size:13.5pt;font-family:"Courier New"'>frac2d.aux</span></b><span
+style='font-size:13.5pt;font-family:"Courier New"'><span
+style='mso-spacerun:yes'>                 </span>- the auxiliary input file.<o:p></o:p></span></p>
+
+<p class=MsoPlainText><span class=GramE><b style='mso-bidi-font-weight:normal'><span
+style='font-size:13.5pt;font-family:"Courier New"'>frac2d_perplex_option.dat</span></b><span
+style='font-size:13.5pt;font-family:"Courier New"'><span
+style='mso-spacerun:yes'>  </span>-</span></span><span style='font-size:13.5pt;
+font-family:"Courier New"'> the run time option file (input).<o:p></o:p></span></p>
+
+<p class=MsoPlainText><b style='mso-bidi-font-weight:normal'><span
+style='font-size:13.5pt;font-family:"Courier New"'>solution_model.dat</span></b><span
+style='font-size:13.5pt;font-family:"Courier New"'><span
+style='mso-spacerun:yes'>         </span>- the solution model file (input).<o:p></o:p></span></p>
+
+<p class=MsoPlainText><b style='mso-bidi-font-weight:normal'><span
+style='font-size:13.5pt;font-family:"Courier New"'>DEW13HP622ver_elements.dat</span></b><span
+style='font-size:13.5pt;font-family:"Courier New"'> - the thermodynamic data
+file (input). <o:p></o:p></span></p>
+
+<p class=MsoPlainText><b style='mso-bidi-font-weight:normal'><span
+style='font-size:13.5pt;font-family:"Courier New"'>frac2d.pdf</span></b><span
+style='font-size:13.5pt;font-family:"Courier New"'><span
+style='mso-spacerun:yes'>                 </span>- the computed phase relations
+as a function of slab depth (<b style='mso-bidi-font-weight:normal'>Z0</b>) and
+column height (<b style='mso-bidi-font-weight:normal'>DZ</b>), output generated
+with PSSECT.<o:p></o:p></span></p>
+
+<p class=MsoPlainText><b style='mso-bidi-font-weight:normal'><span
+style='font-size:13.5pt;font-family:"Courier New"'>frac2d_1.tab</span></b><span
+style='font-size:13.5pt;font-family:"Courier New"'><span
+style='mso-spacerun:yes'>               </span>- the mass of the mobile phase
+that passes through the top of the column into the mantle wedge, output
+generated with WERAMI (see section 3, below).<o:p></o:p></span></p>
+
+<p class=MsoPlainText><span style='font-size:13.5pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoPlainText><b style='mso-bidi-font-weight:normal'><span
+style='font-size:13.5pt;font-family:"Courier New";color:red'>NOTE:</span></b><span
+style='font-size:13.5pt;font-family:"Courier New";color:red'> </span><span
+style='font-size:13.5pt;font-family:"Courier New"'>because the format of the auxiliary
+file was revised in the 6.8.5 version of <span class=SpellE>Perple_<b
+style='mso-bidi-font-weight:normal'><span style='color:#7030A0'>X</span></b></span>
+on Dec 23, 2018. The <b style='mso-bidi-font-weight:normal'>frac2d.aux</b> file
+can only be read by versions of <span class=SpellE>Perple_<b style='mso-bidi-font-weight:
+normal'><span style='color:#7030A0'>X</span></b></span> with a time-stamp later
+than Dec 22, 2018. <o:p></o:p></span></p>
+
+<p class=MsoPlainText><span style='font-size:13.5pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoPlainText><b style='mso-bidi-font-weight:normal'><span
+style='font-size:16.0pt;font-family:"Courier New"'>The <a
+name="steps_in_a_frac2d_calc">steps in a FRAC2D calculation </a>are:<o:p></o:p></span></b></p>
+
+<p class=MsoPlainText><span style='font-size:13.5pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:.3in;text-indent:-.3in'><b
+style='mso-bidi-font-weight:normal'><span style='font-size:13.5pt;font-family:
+"Courier New"'>A)</span></b><span style='font-size:13.5pt;font-family:"Courier New"'>
+Run BUILD to create the primary input file, e.g., <b style='mso-bidi-font-weight:
+normal'>frac2d.dat</b>.<o:p></o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:.3in;text-indent:-.3in'><b
+style='mso-bidi-font-weight:normal'><span style='font-size:13.5pt;font-family:
+"Courier New"'>B)</span></b><span style='font-size:13.5pt;font-family:"Courier New"'>
+Create the auxiliary input file, e.g., <b style='mso-bidi-font-weight:normal'>frac2d.aux</b>.<o:p></o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:.3in;text-indent:-.3in'><b
+style='mso-bidi-font-weight:normal'><span style='font-size:13.5pt;font-family:
+"Courier New"'>C)</span></b><span style='font-size:13.5pt;font-family:"Courier New"'>
+Run VERTEX, answer yes to the fractionate phases prompt and fractionate the
+mobile phases of interest (e.g., COH-Fluid+).<o:p></o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:.3in;text-indent:-.3in'><b
+style='mso-bidi-font-weight:normal'><span style='font-size:13.5pt;font-family:
+"Courier New"'>D)</span></b><span style='font-size:13.5pt;font-family:"Courier New"'>
+Plot and/or analyze phase relations using PSSECT and WERAMI (<a
+href="#mass_fluxes">see section 3</a>). Note that in fractionation
+calculations, the data reported by VERTEX include the amount and composition of
+the mobile phase prior to fractionation. In FRAC2D calculations, the amount of
+the mobile present at a given height within the column is the product of the
+mobile phase generated at that height plus any mass gained by fractionation of
+the mobile phase at greater depths.<span style='mso-spacerun:yes'>  </span><o:p></o:p></span></p>
+
+<p class=MsoPlainText><span style='font-size:13.5pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoPlainText><a name="frac2d_thoughtd"><b style='mso-bidi-font-weight:
+normal'><span style='font-size:16.0pt;font-family:"Courier New"'>Some thoughts
+on configuring/running a FRAC2D calculation:</span></b></a><b style='mso-bidi-font-weight:
+normal'><span style='font-size:16.0pt;font-family:"Courier New"'><o:p></o:p></span></b></p>
+
+<p class=MsoPlainText><span style='font-size:13.5pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:.3in;text-indent:-.3in'><b
+style='mso-bidi-font-weight:normal'><span style='font-size:13.5pt;font-family:
+"Courier New"'>E)</span></b><span style='font-size:13.5pt;font-family:"Courier New"'>
+If you are unfamiliar with <span class=SpellE>Perple_<b style='mso-bidi-font-weight:
+normal'><span style='color:#7030A0'>X</span></b></span>, familiarize yourself
+with <span class=SpellE>Perple_<b style='mso-bidi-font-weight:normal'><span
+style='color:#7030A0'>X</span></b></span> by following a tutorial such as
+www.perplex.ethz.ch/perplex_66_seismic_velocity.html.<o:p></o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:.3in;text-indent:-.3in'><b
+style='mso-bidi-font-weight:normal'><span style='font-size:13.5pt;font-family:
+"Courier New"'>F)</span></b><span style='font-size:13.5pt;font-family:"Courier New"'>
+Before configuring your own calculation, begin at step C, above, using the
+input files at www.perplex.ethz.ch/perplex/examples/frac2d. Verify that you are
+able to obtain, understand, and analyze the output generated by the example.<o:p></o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:.3in;text-indent:-.3in'><b
+style='mso-bidi-font-weight:normal'><span style='font-size:13.5pt;font-family:
+"Courier New"'>G)</span></b><span style='font-size:13.5pt;font-family:"Courier New"'>
+Increase complexity gradually: Do not begin with an electrolytic
+multi-component fluid, rather begin with water, add molecular volatiles, and
+lastly add solutes. Do not begin with complex chemistry, rather begin with
+elements in a single oxidation state and exclude minor and/or poorly
+constrained elements. Construct phase diagram sections for each lithology
+within your model rock column over the entire pressure-temperature range of
+interest. If the phase relations in these sections do not make sense, then the
+phase relations in FRAC2D calculation certainly will not make sense.<span
+style='mso-spacerun:yes'>  </span><o:p></o:p></span></p>
+
+<p class=MsoPlainText><span style='font-size:13.5pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<div class=MsoPlainText align=center style='text-align:center'><span
+style='font-size:12.0pt;font-family:"Times New Roman",serif;mso-fareast-font-family:
+"Times New Roman"'>
+
+<hr size=2 width="100%" noshade style='color:black' align=center>
+
+</span></div>
+
+<p class=MsoPlainText><span style='font-size:13.5pt;font-family:"Courier New"'><o:p></o:p></span></p>
+
+<p class=MsoNormal align=center style='margin-bottom:0in;margin-bottom:.0001pt;
+text-align:center;line-height:normal;mso-outline-level:2'><b><span
+style='font-size:18.0pt;font-family:"Courier New";mso-fareast-font-family:"Times New Roman";
+color:black'>Explanation/Definition of the <a name="frac2d_variables">FRAC2D
+Variables<o:p></o:p></a></span></b></p>
+
+<p class=MsoPlainText><span style='mso-bookmark:frac2d_variables'><span
+style='font-size:13.5pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></span></p>
+
+<span style='mso-bookmark:frac2d_variables'></span>
+
+<p class=MsoPlainText><span style='font-size:13.5pt;font-family:"Courier New"'>Variables
+used to describe the FRAC2D calculation, unless otherwise indicated these are
+specified in the <b style='mso-bidi-font-weight:normal'>frac2d.aux</b> file or
+computed on output:<o:p></o:p></span></p>
+
+<p class=MsoPlainText><span style='font-size:13.5pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:78.5pt;text-indent:-78.5pt'><a
+name=area><b style='mso-bidi-font-weight:normal'><span style='font-size:13.5pt;
+font-family:"Courier New"'>AREA</span></b></a><b style='mso-bidi-font-weight:
+normal'><span style='font-size:13.5pt;font-family:"Courier New"'> </span></b><span
+style='font-size:13.5pt;font-family:"Courier New"'><span
+style='mso-spacerun:yes'>   </span>- the area of the subducted rock column, <b
+style='mso-bidi-font-weight:normal'>AREA</b> = <b style='mso-bidi-font-weight:
+normal'>MASS </b>/ <b style='mso-bidi-font-weight:normal'>ZBOX </b>/ <b
+style='mso-bidi-font-weight:normal'>RHO</b>.<o:p></o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:78.5pt;text-indent:-78.5pt'><span
+style='font-size:13.5pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:78.5pt;text-indent:-78.5pt'><a
+name=anneal></a><span class=GramE><span style='mso-bookmark:anneal'><b
+style='mso-bidi-font-weight:normal'><span style='font-size:13.5pt;font-family:
+"Courier New"'>ANNEAL</span></b></span><span style='mso-bookmark:anneal'></span><span
+style='font-size:13.5pt;font-family:"Courier New"'><span
+style='mso-spacerun:yes'>  </span>-</span></span><span style='font-size:13.5pt;
+font-family:"Courier New"'> if .true., then at the initial condition of the
+calculation: a) if fluid is stable at any node in the column, it is removed and
+the composition of the node adjusted accordingly; b) the representative masses
+(<b style='mso-bidi-font-weight:normal'>MASS</b>) of all nodes are renormalized
+to 1 kg.<o:p></o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:78.5pt;text-indent:-78.5pt'><span
+style='font-size:13.5pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:78.5pt;text-indent:-78.5pt'><b
+style='mso-bidi-font-weight:normal'><span style='font-size:13.5pt;font-family:
+"Courier New"'>C</span></b><span style='font-size:13.5pt;font-family:"Courier New"'><span
+style='mso-spacerun:yes'>       </span>- the number of thermodynamic components
+specified in frac2d.dat<o:p></o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:78.5pt;text-indent:-78.5pt'><span
+style='font-size:13.5pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:78.5pt;text-indent:-78.5pt'><b
+style='mso-bidi-font-weight:normal'><span style='font-size:13.5pt;font-family:
+"Courier New"'>CLAY_1_1</span></b><span style='font-size:13.5pt;font-family:
+"Courier New"'> ... <b style='mso-bidi-font-weight:normal'>CLAY_1_C</b><o:p></o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:78.5pt;text-indent:-78.5pt'><span
+style='font-size:13.5pt;font-family:"Courier New"'>...<span
+style='mso-spacerun:yes'>      </span>... ...<o:p></o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:78.5pt;text-indent:-78.5pt'><b
+style='mso-bidi-font-weight:normal'><span style='font-size:13.5pt;font-family:
+"Courier New"'>CLAY_N_1</span></b><span style='font-size:13.5pt;font-family:
+"Courier New"'> ... <a name="clay_n_c"><b style='mso-bidi-font-weight:normal'>CLAY_N_C</b></a>
+- the molar compositions of the <b style='mso-bidi-font-weight:normal'>N</b>
+column lithologies, from the base of the column upward. The components in the
+composition must be entered in the same order as the components are entered in <b
+style='mso-bidi-font-weight:normal'>frac2d.dat</b>. For calculations in which
+the fluid is electrolytic it is advisable to use elemental components. See
+www.perplex.ethz.ch/perplex/faq/oxide_to_elemental_component conversion.pdf for
+an illustration of the oxide-to-elemental conversion used for the frac2d
+example. Note that these compositions are extensive. If <b style='mso-bidi-font-weight:
+normal'>ANNEAL</b> <span class=GramE>is .true</span>., the mass of the
+composition will be automatically adjusted to 1 kg. If <b style='mso-bidi-font-weight:
+normal'>ANNEAL</b> <span class=GramE>is .false</span>., the molar mass of each
+layer composition should be comparable. <o:p></o:p></span></p>
+
+<p class=MsoPlainText><span style='font-size:13.5pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:78.5pt;text-indent:-78.5pt'><b
+style='mso-bidi-font-weight:normal'><span style='font-size:13.5pt;font-family:
+"Courier New"'>C_1_0</span></b><span style='font-size:13.5pt;font-family:"Courier New"'><span
+style='mso-spacerun:yes'>    </span>... <b style='mso-bidi-font-weight:normal'>C_1_NORD</b><o:p></o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:78.5pt;text-indent:-78.5pt'><span
+style='font-size:13.5pt;font-family:"Courier New"'>...<span
+style='mso-spacerun:yes'>      </span>... ...<o:p></o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:78.5pt;text-indent:-78.5pt'><b
+style='mso-bidi-font-weight:normal'><span style='font-size:13.5pt;font-family:
+"Courier New"'>C_NPOLY_0</span></b><span style='font-size:13.5pt;font-family:
+"Courier New"'>... <a name="c_npoly_nord"><b style='mso-bidi-font-weight:normal'>C_NPOLY_NORD</b></a>
+- the coefficients of the <b style='mso-bidi-font-weight:normal'>NPOLY</b> <span
+class=SpellE><b style='mso-bidi-font-weight:normal'>NORD</b>'th</span> order
+polynomials that define the within slab geotherms, such that T(K) on the <span
+class=SpellE><b style='mso-bidi-font-weight:normal'>N</b>'th</span> geotherm is
+<b style='mso-bidi-font-weight:normal'>T_N</b> = <span class=GramE>sum(</span><b
+style='mso-bidi-font-weight:normal'>C_N_I </b>* <b style='mso-bidi-font-weight:
+normal'>Z<sup>I</sup></b>, <b style='mso-bidi-font-weight:normal'>I</b> = 0,...,<b
+style='mso-bidi-font-weight:normal'>NORD</b>). <b style='mso-bidi-font-weight:
+normal'><span style='color:red'>NOTE:</span></b> <span class=SpellE>Perple_<b
+style='mso-bidi-font-weight:normal'><span style='color:#7030A0'>X</span></b></span>
+does (cannot) not test that the polynomials are valid, therefore it is advisable
+to plot the geotherms over the entire depth range relevant to a calculation. In
+some <span class=GramE>cases</span> it may be impossible to represent a
+geotherm with a single polynomial, when this is the case use the <b
+style='mso-bidi-font-weight:normal'>PZFUNC</b> option to specify the geotherm.<o:p></o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:78.5pt;text-indent:-78.5pt'><span
+style='font-size:13.5pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:78.5pt;text-indent:-78.5pt'><a
+name=dip><b style='mso-bidi-font-weight:normal'><span style='font-size:13.5pt;
+font-family:"Courier New"'>DIP</span></b></a><span style='mso-bookmark:dip'></span><span
+style='font-size:13.5pt;font-family:"Courier New"'><span
+style='mso-spacerun:yes'>     </span>- slab dip in degrees<o:p></o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:78.5pt;text-indent:-78.5pt'><span
+style='font-size:13.5pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:78.5pt;text-indent:-78.5pt'><a
+name=dpdz><b style='mso-bidi-font-weight:normal'><span style='font-size:13.5pt;
+font-family:"Courier New"'>DPDZ</span></b></a><span style='mso-bookmark:dpdz'></span><span
+style='font-size:13.5pt;font-family:"Courier New"'><span
+style='mso-spacerun:yes'>    </span>- the pressure gradient with depth (bar/m).
+<b style='mso-bidi-font-weight:normal'>DPDZ</b> = <b style='mso-bidi-font-weight:
+normal'>RHO</b>(kg/m<sup>3</sup>) * <b style='mso-bidi-font-weight:normal'>g</b>(m<sup>2</sup>/s)
+* (1 bar/10<sup>5</sup> Pascal), where <b style='mso-bidi-font-weight:normal'>g</b>
+is gravitational acceleration (~10 m/s<sup>2</sup>) and <b style='mso-bidi-font-weight:
+normal'>RHO</b> is the average density of the column and any overlying rock. If
+desired <span class=SpellE>Perple_<b style='mso-bidi-font-weight:normal'><span
+style='color:#7030A0'>X</span></b></span> can be modified to compute a
+thermodynamically consistent pressure for a loaded self-gravitating column; such
+complications seem unwarranted in light of other sources of uncertainty. <o:p></o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:78.5pt;text-indent:-78.5pt'><span
+style='font-size:13.5pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:78.5pt;text-indent:-78.5pt'><b
+style='mso-bidi-font-weight:normal'><span style='font-size:13.5pt;font-family:
+"Courier New"'>DT0</span></b><span style='font-size:13.5pt;font-family:"Courier New"'><span
+style='mso-spacerun:yes'>     </span>- the time interval (s) corresponding to
+one depth increment of the column, <b style='mso-bidi-font-weight:normal'>DT0</b>
+= <b style='mso-bidi-font-weight:normal'>DZ0 </b>/ <b style='mso-bidi-font-weight:
+normal'>cosine(DIP) </b>/ <b style='mso-bidi-font-weight:normal'>V_SUB</b><o:p></o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:78.5pt;text-indent:-78.5pt'><span
+style='font-size:13.5pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:78.5pt;text-indent:-78.5pt'><b
+style='mso-bidi-font-weight:normal'><span style='font-size:13.5pt;font-family:
+"Courier New"'>DZ</span></b><span style='font-size:13.5pt;font-family:"Courier New"'><span
+style='mso-spacerun:yes'>      </span>- height above the base of the column; as
+<b style='mso-bidi-font-weight:normal'>DZ</b> = 0 at <b style='mso-bidi-font-weight:
+normal'>Z0</b>, <b style='mso-bidi-font-weight:normal'>DZ</b> is negative
+within the column (see <b style='mso-bidi-font-weight:normal'>ZBOX</b>). <o:p></o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:78.5pt;text-indent:-78.5pt'><span
+style='font-size:13.5pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:78.5pt;text-indent:-78.5pt'><b
+style='mso-bidi-font-weight:normal'><span style='font-size:13.5pt;font-family:
+"Courier New"'>DZ0</span></b><span style='font-size:13.5pt;font-family:"Courier New"'><span
+style='mso-spacerun:yes'>     </span>- the incremental change in depth of the
+column during subduction, <b style='mso-bidi-font-weight:normal'>DZ0</b> = (<b
+style='mso-bidi-font-weight:normal'>Z0MIN </b>- <b style='mso-bidi-font-weight:
+normal'>Z0MAX</b>) / <b style='mso-bidi-font-weight:normal'>NINT</b><o:p></o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:78.5pt;text-indent:-78.5pt'><span
+style='font-size:13.5pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:78.5pt;text-indent:-78.5pt'><b
+style='mso-bidi-font-weight:normal'><span style='font-size:13.5pt;font-family:
+"Courier New"'>DZGEO_1</span></b><span style='font-size:13.5pt;font-family:
+"Courier New"'>...<b style='mso-bidi-font-weight:normal'>DZGEO_NPOLY</b> - the
+within slab (orthogonal) depths of the <b style='mso-bidi-font-weight:normal'>NPOLY</b>
+geotherms that define the within slab <b style='mso-bidi-font-weight:normal'>P-T</b>
+field.<o:p></o:p></span></p>
+
+<p class=MsoPlainText><span style='font-size:13.5pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:78.5pt;text-indent:-78.5pt'><b
+style='mso-bidi-font-weight:normal'><span style='font-size:13.5pt;font-family:
+"Courier New"'>MASS</span></b><span style='font-size:13.5pt;font-family:"Courier New"'><span
+style='mso-spacerun:yes'>    </span>- the mass (g) associated with a
+representative node within the column. If <b style='mso-bidi-font-weight:normal'>ANNEAL</b>
+is true, <b style='mso-bidi-font-weight:normal'>MASS</b> is automatically
+adjusted to 1 kg; otherwise <b style='mso-bidi-font-weight:normal'>MASS</b> is
+the mass corresponding to the extensive molar composition of the layer
+composition (<b style='mso-bidi-font-weight:normal'>CLAY_I_J</b>, <b
+style='mso-bidi-font-weight:normal'>J </b>= 1...<b style='mso-bidi-font-weight:
+normal'>C</b>).<span style='mso-spacerun:yes'>  </span><o:p></o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:78.5pt;text-indent:-78.5pt'><span
+style='font-size:13.5pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:78.5pt;text-indent:-78.5pt'><b
+style='mso-bidi-font-weight:normal'><span style='font-size:13.5pt;font-family:
+"Courier New"'>MASS_<span class=GramE>I<span style='font-weight:normal'><span
+style='mso-spacerun:yes'>  </span>-</span></span></span></b><span
+style='font-size:13.5pt;font-family:"Courier New"'> the mass (g) of a component
+transported by mobile phase <b style='mso-bidi-font-weight:normal'>I</b> (e.g.,
+fluid and/or melt). <o:p></o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:78.5pt;text-indent:-78.5pt'><span
+style='font-size:13.5pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:78.5pt;text-indent:-78.5pt'><b
+style='mso-bidi-font-weight:normal'><span style='font-size:13.5pt;font-family:
+"Courier New"'>NINT</span></b><span style='font-size:13.5pt;font-family:"Courier New"'><span
+style='mso-spacerun:yes'>    </span>- the number of depth increments as the
+column is subducted from <b style='mso-bidi-font-weight:normal'>Z0MIN</b> to <b
+style='mso-bidi-font-weight:normal'>Z0MAX</b>. <b style='mso-bidi-font-weight:
+normal'>NINT</b> is the second value of the <b style='mso-bidi-font-weight:
+normal'>1d_path_nodes</b> option in <b style='mso-bidi-font-weight:normal'>frac2d_perplex_option.dat</b>
+minus one.<o:p></o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:78.5pt;text-indent:-78.5pt'><span
+style='font-size:13.5pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:78.5pt;text-indent:-78.5pt'><b
+style='mso-bidi-font-weight:normal'><span style='font-size:13.5pt;font-family:
+"Courier New"'>NORD</span></b><span style='font-size:13.5pt;font-family:"Courier New"'><span
+style='mso-spacerun:yes'>    </span>- the order of the polynomials used to
+describe the within slab P-T field.<o:p></o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:78.5pt;text-indent:-78.5pt'><span
+style='font-size:13.5pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:78.5pt;text-indent:-78.5pt'><b
+style='mso-bidi-font-weight:normal'><span style='font-size:13.5pt;font-family:
+"Courier New"'>NPOLY</span></b><span style='font-size:13.5pt;font-family:"Courier New"'><span
+style='mso-spacerun:yes'>   </span>- the number of geotherms used to describe
+the within slab P-T field, three should be adequate for most purposes. The
+within column temperature is computed by fitting an (<b style='mso-bidi-font-weight:
+normal'>NPOLY</b>-1)'<span class=SpellE>th</span> order polynomial to the
+geotherms (see <a href="http://www.perplex.ethz.ch/papers/connolly_epsl_05.pdf">Connolly
+2005</a>). <o:p></o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:78.5pt;text-indent:-78.5pt'><span
+style='font-size:13.5pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:78.5pt;text-indent:-78.5pt'><b
+style='mso-bidi-font-weight:normal'><span style='font-size:13.5pt;font-family:
+"Courier New"'>RHO</span></b><span style='font-size:13.5pt;font-family:"Courier New"'><span
+style='mso-spacerun:yes'>     </span>- the average density (kg/m<sup>3</sup>)
+of the column and overlying rock (see <b style='mso-bidi-font-weight:normal'>DPDZ</b>),
+<b style='mso-bidi-font-weight:normal'>RHO</b> = <b style='mso-bidi-font-weight:
+normal'>DPDZ </b>/ <b style='mso-bidi-font-weight:normal'>g </b>* (10<sup>5</sup>
+Pa/bar)<o:p></o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:78.5pt;text-indent:-78.5pt'><span
+style='font-size:13.5pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:78.5pt;text-indent:-78.5pt'><b
+style='mso-bidi-font-weight:normal'><span style='font-size:13.5pt;font-family:
+"Courier New"'>P </span></b><span style='font-size:13.5pt;font-family:"Courier New"'><span
+style='mso-spacerun:yes'>      </span>- pressure (bar) at any point within the
+column, <b style='mso-bidi-font-weight:normal'>P</b> = <b style='mso-bidi-font-weight:
+normal'>Z </b>* <b style='mso-bidi-font-weight:normal'>DPDZ</b>.<o:p></o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:78.5pt;text-indent:-78.5pt'><span
+style='font-size:13.5pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:78.5pt;text-indent:-78.5pt'><b
+style='mso-bidi-font-weight:normal'><span style='font-size:13.5pt;font-family:
+"Courier New"'>Q</span></b><span style='font-size:13.5pt;font-family:"Courier New"'><span
+style='mso-spacerun:yes'>       </span>- the flux (g/m<sup>2</sup>-s) of a
+component transported by mobile phase <b style='mso-bidi-font-weight:normal'>I</b>
+through the column over time interval <b style='mso-bidi-font-weight:normal'>DT0</b>
+(e.g., fluid or melt) <b style='mso-bidi-font-weight:normal'>Q</b> = <b
+style='mso-bidi-font-weight:normal'>MASS_I </b>/ <b style='mso-bidi-font-weight:
+normal'>AREA</b> / <b style='mso-bidi-font-weight:normal'>DT0</b> (see <a
+href="#step_D">step D</a> below).<o:p></o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:78.5pt;text-indent:-78.5pt'><span
+style='font-size:13.5pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:78.5pt;text-indent:-78.5pt'><b
+style='mso-bidi-font-weight:normal'><span style='font-size:13.5pt;font-family:
+"Courier New"'>QINT</span></b><span style='font-size:13.5pt;font-family:"Courier New"'><span
+style='mso-spacerun:yes'>    </span>- the time-integrated flux (g/m<sup>2</sup>)
+transported through the column by mobile phase <b style='mso-bidi-font-weight:
+normal'>I</b> (see <a href="#step_D">step D</a> below).<o:p></o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:78.5pt;text-indent:-78.5pt'><span
+style='font-size:13.5pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:78.5pt;text-indent:-78.5pt'><span
+class=GramE><b style='mso-bidi-font-weight:normal'><span style='font-size:13.5pt;
+font-family:"Courier New"'>PZFUNC</span></b><span style='font-size:13.5pt;
+font-family:"Courier New"'><span style='mso-spacerun:yes'>  </span>-</span></span><span
+style='font-size:13.5pt;font-family:"Courier New"'> if .true., internal
+functions are used to compute the P-T field of the column, this option requires
+that the user program the functions.<o:p></o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:78.5pt;text-indent:-78.5pt'><span
+style='font-size:13.5pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:78.5pt;text-indent:-78.5pt'><b
+style='mso-bidi-font-weight:normal'><span style='font-size:13.5pt;font-family:
+"Courier New"'>T</span></b><span style='font-size:13.5pt;font-family:"Courier New"'><span
+style='mso-spacerun:yes'>       </span>- temperature (K). <o:p></o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:78.5pt;text-indent:-78.5pt'><span
+style='font-size:13.5pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:78.5pt;text-indent:-78.5pt'><b
+style='mso-bidi-font-weight:normal'><span style='font-size:13.5pt;font-family:
+"Courier New"'>TITRATE</span></b><span style='font-size:13.5pt;font-family:
+"Courier New"'> - specifies the type of 2D fractionation calculation. <span
+class=GramE>If .false</span>., then the model is of a column of rock moved
+through a P-T field, as in subduction (<b style='mso-bidi-font-weight:normal'>FRAC2D</b>
+mode). <span class=GramE>If .false</span>., then metasomatism is induced by the
+incremental addition of mass (an aliquot) to the base of the column, the P-T
+field within the column may be static or dynamic. <b style='mso-bidi-font-weight:
+normal'>TITRATE</b> mode can be used to simulate metasomatism of the mantle
+wedge.<o:p></o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:78.5pt;text-indent:-78.5pt'><span
+style='font-size:13.5pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:78.5pt;text-indent:-78.5pt'><span
+class=GramE><b style='mso-bidi-font-weight:normal'><span style='font-size:13.5pt;
+font-family:"Courier New"'>VERBOS</span></b><span style='font-size:13.5pt;
+font-family:"Courier New"'><span style='mso-spacerun:yes'>  </span>-</span></span><span
+style='font-size:13.5pt;font-family:"Courier New"'> if .true., VERTEX prints
+the amount and composition of the mobile phase at each node to the user
+console. Additionally, if ANNEAL is <span class=GramE>also .true</span>., then
+VERTEX prints the initial composition at each node and the average composition
+of each layer after annealing. <o:p></o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:78.5pt;text-indent:-78.5pt'><span
+style='font-size:13.5pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:78.5pt;text-indent:-78.5pt'><b
+style='mso-bidi-font-weight:normal'><span style='font-size:13.5pt;font-family:
+"Courier New"'>V_SUB</span></b><span style='font-size:13.5pt;font-family:"Courier New"'><span
+style='mso-spacerun:yes'>   </span>- the subduction rate (m/s).<o:p></o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:78.5pt;text-indent:-78.5pt'><b
+style='mso-bidi-font-weight:normal'><span style='font-size:13.5pt;font-family:
+"Courier New"'>V_HOR</span></b><span style='font-size:13.5pt;font-family:"Courier New"'><span
+style='mso-spacerun:yes'>   </span>- the horizontal component of the slab
+velocity (m/s), <b style='mso-bidi-font-weight:normal'>V_HOR</b> = <b
+style='mso-bidi-font-weight:normal'>V_SUB</b> * <b style='mso-bidi-font-weight:
+normal'>cosine(DIP)</b>.<o:p></o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:78.5pt;text-indent:-78.5pt'><span
+style='font-size:13.5pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:78.5pt;text-indent:-78.5pt'><b
+style='mso-bidi-font-weight:normal'><span style='font-size:13.5pt;font-family:
+"Courier New"'>Z</span></b><span style='font-size:13.5pt;font-family:"Courier New"'><span
+style='mso-spacerun:yes'>       </span>- the absolute depth (m) of any point
+within the column, as DZ is negative within the column <b style='mso-bidi-font-weight:
+normal'>Z</b> = <b style='mso-bidi-font-weight:normal'>Z0</b> - <b
+style='mso-bidi-font-weight:normal'>DZ</b>.<o:p></o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:78.5pt;text-indent:-78.5pt'><span
+style='font-size:13.5pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:78.5pt;text-indent:-78.5pt'><b
+style='mso-bidi-font-weight:normal'><span style='font-size:13.5pt;font-family:
+"Courier New"'>ZBOX</span></b><span style='font-size:13.5pt;font-family:"Courier New"'><span
+style='mso-spacerun:yes'>    </span>- the vertical unit of discretization for
+the column in meters, i.e., the rock column is composed of boxes with a
+vertical dimension of <b style='mso-bidi-font-weight:normal'>ZBOX</b>. The
+representative nodes of the column are located at <b style='mso-bidi-font-weight:
+normal'>DZ_I</b> = -<b style='mso-bidi-font-weight:normal'>ZTOT</b> + <b
+style='mso-bidi-font-weight:normal'>ZBOX</b> * (1/2 + (<b style='mso-bidi-font-weight:
+normal'>I</b>-1)); thus the representative nodes at the top and bottom of the
+column are at <b style='mso-bidi-font-weight:normal'>DZ_TOP</b> = -<b
+style='mso-bidi-font-weight:normal'>ZBOX</b>/2 and <b style='mso-bidi-font-weight:
+normal'>DZ_BOT</b> = -<b style='mso-bidi-font-weight:normal'>ZTOT</b> + <b
+style='mso-bidi-font-weight:normal'>ZBOX</b>/2, respectively. <b
+style='mso-bidi-font-weight:normal'><span style='color:red'>NOTE:</span></b>
+the nodal coordinates of a layer should be entered in WERAMI or PSSECT to
+compute fluxes, e.g., to compute the flux across the top of the column, compute
+properties at column depth -<b style='mso-bidi-font-weight:normal'>ZBOX</b>/2.<o:p></o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:78.5pt;text-indent:-78.5pt'><span
+style='font-size:13.5pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:78.5pt;text-indent:-78.5pt'><b
+style='mso-bidi-font-weight:normal'><span style='font-size:13.5pt;font-family:
+"Courier New"'>ZLAY_1</span></b><span style='font-size:13.5pt;font-family:"Courier New"'>...<b
+style='mso-bidi-font-weight:normal'>ZLAY_N</b> - the vertical thicknesses (m)
+of the <b style='mso-bidi-font-weight:normal'>N</b> lithological layers within
+the column, numbered from the base of the column upward. The vertical thickness
+is equal to the thickness of the layer orthogonal to the slab interface divided
+by the Cosine of the slab dip (<b style='mso-bidi-font-weight:normal'>DIP</b>).
+NOTE that the layers are discretized with a resolution ZBOX, thus the layer
+thicknesses should be an integer multiple of <b style='mso-bidi-font-weight:
+normal'>ZBOX</b>. If this is not true, then the model layer thickness will be (<b
+style='mso-bidi-font-weight:normal'>ZLAY_I</b> \ <b style='mso-bidi-font-weight:
+normal'>ZBOX</b>) * <b style='mso-bidi-font-weight:normal'>ZBOX</b>, where \
+denotes the integer quotient. When a computation is run in VERTEX, the actual
+layer thicknesses and the nodal coordinates of the top and bottom of each layer
+are output to the user console. <o:p></o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:78.5pt;text-indent:-78.5pt'><span
+style='font-size:13.5pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:78.5pt;text-indent:-78.5pt'><b
+style='mso-bidi-font-weight:normal'><span style='font-size:13.5pt;font-family:
+"Courier New"'>ZSURF</span></b><span style='font-size:13.5pt;font-family:"Courier New"'><span
+style='mso-spacerun:yes'>   </span>- value of the depth coordinate at the
+surface (m), used for the computation of pressure at depth, i.e., <b
+style='mso-bidi-font-weight:normal'>P</b> (bar) = (<b style='mso-bidi-font-weight:
+normal'>Z0</b> - <b style='mso-bidi-font-weight:normal'>DZ</b>) * <b
+style='mso-bidi-font-weight:normal'>DPDZ</b>.<o:p></o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:78.5pt;text-indent:-78.5pt'><span
+style='font-size:13.5pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:78.5pt;text-indent:-78.5pt'><b
+style='mso-bidi-font-weight:normal'><span style='font-size:13.5pt;font-family:
+"Courier New"'>ZTOT</span></b><span style='font-size:13.5pt;font-family:"Courier New"'><span
+style='mso-spacerun:yes'>    </span>- the total vertical thickness of column
+(m), <b style='mso-bidi-font-weight:normal'>ZTOT</b> = <span class=GramE>sum(</span><b
+style='mso-bidi-font-weight:normal'>ZLAY_I</b>, <b style='mso-bidi-font-weight:
+normal'>I</b> = 1...<b style='mso-bidi-font-weight:normal'>N</b>).<o:p></o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:78.5pt;text-indent:-78.5pt'><span
+style='font-size:13.5pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:78.5pt;text-indent:-78.5pt'><b
+style='mso-bidi-font-weight:normal'><span style='font-size:13.5pt;font-family:
+"Courier New"'>Z0</span></b><span style='font-size:13.5pt;font-family:"Courier New"'><span
+style='mso-spacerun:yes'>      </span>- depth (m) at the top of the column (m),
+i.e., the depth of the slab/wedge interface.<o:p></o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:78.5pt;text-indent:-78.5pt'><span
+style='font-size:13.5pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:78.5pt;text-indent:-78.5pt'><b
+style='mso-bidi-font-weight:normal'><span style='font-size:13.5pt;font-family:
+"Courier New"'>Z0MIN</span></b><span style='font-size:13.5pt;font-family:"Courier New"'><span
+style='mso-spacerun:yes'>   </span>- the initial depth (m) of the slab/mantle
+interface<o:p></o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:78.5pt;text-indent:-78.5pt'><b
+style='mso-bidi-font-weight:normal'><span style='font-size:13.5pt;font-family:
+"Courier New"'>Z0MAX</span></b><span style='font-size:13.5pt;font-family:"Courier New"'><span
+style='mso-spacerun:yes'>   </span>- the final depth (m) of the slab/mantle
+interface<o:p></o:p></span></p>
+
+<div class=MsoPlainText align=center style='text-align:center'><span
+style='font-size:12.0pt;font-family:"Times New Roman",serif;mso-fareast-font-family:
+"Times New Roman"'>
+
+<hr size=2 width="100%" noshade style='color:black' align=center>
+
+</span></div>
+
+<p class=MsoPlainText><span style='font-size:13.5pt;font-family:"Courier New"'><o:p></o:p></span></p>
+
+<p class=MsoNormal align=center style='margin-bottom:0in;margin-bottom:.0001pt;
+text-align:center;line-height:normal;mso-outline-level:2'><b><span
+style='font-size:18.0pt;font-family:"Courier New";mso-fareast-font-family:"Times New Roman";
+color:black'>Computation and Plotting of <a name="mass_fluxes">Mass Fluxes</a></span></b><span
+style='mso-bookmark:mass_fluxes'></span><span style='font-size:13.5pt;
+font-family:"Courier New"'><o:p></o:p></span></p>
+
+<p class=MsoPlainText><span style='font-size:13.5pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:.3in;text-indent:-.3in'><b
+style='mso-bidi-font-weight:normal'><span style='font-size:13.5pt;font-family:
+"Courier New"'>A)</span></b><span style='font-size:13.5pt;font-family:"Courier New"'>
+Set the <b style='mso-bidi-font-weight:normal'>absolute</b> option to <b
+style='mso-bidi-font-weight:normal'>T</b> in <b style='mso-bidi-font-weight:
+normal'>frac2d_perplex_option.dat</b>.<o:p></o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:.3in;text-indent:-.3in'><b
+style='mso-bidi-font-weight:normal'><span style='font-size:13.5pt;font-family:
+"Courier New"'>B)</span></b><span style='font-size:13.5pt;font-family:"Courier New"'>
+Set the <b style='mso-bidi-font-weight:normal'>cumulative</b> option to <b
+style='mso-bidi-font-weight:normal'>T</b> in <b style='mso-bidi-font-weight:
+normal'>frac2d_perplex_option.dat</b> if cumulative fluxes are desired,
+otherwise the fluxes are instantaneous, i.e., the average flux over the time
+interval <b style='mso-bidi-font-weight:normal'>DT0</b>.<o:p></o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:.3in;text-indent:-.3in'><b
+style='mso-bidi-font-weight:normal'><span style='font-size:13.5pt;font-family:
+"Courier New"'>C)</span></b><span style='font-size:13.5pt;font-family:"Courier New"'>
+After setting the above options, start WERAMI: <o:p></o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:.3in;text-indent:-.3in'><span
+style='font-size:13.5pt;font-family:"Courier New"'><span
+style='mso-spacerun:yes'>     </span><span class=SpellE>i</span>) Select
+operation mode <b style='mso-bidi-font-weight:normal'>3</b> (<b
+style='mso-bidi-font-weight:normal'>properties a long a 1d path</b>).<o:p></o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:.3in;text-indent:-.3in'><span
+style='font-size:13.5pt;font-family:"Courier New"'><span
+style='mso-spacerun:yes'>    </span>ii) Construct a <b style='mso-bidi-font-weight:
+normal'>linear</b> profile, from (<b style='mso-bidi-font-weight:normal'>Z0</b>
+= <b style='mso-bidi-font-weight:normal'>Z0MIN</b>, <b style='mso-bidi-font-weight:
+normal'>DZ</b> = -<b style='mso-bidi-font-weight:normal'>ZBOX</b>/2) to (<b
+style='mso-bidi-font-weight:normal'>Z0</b> = <b style='mso-bidi-font-weight:
+normal'>Z0MAX</b>, <b style='mso-bidi-font-weight:normal'>DZ</b> = -<b
+style='mso-bidi-font-weight:normal'>ZBOX</b>/2).<o:p></o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:.3in;text-indent:-.3in'><span
+style='font-size:13.5pt;font-family:"Courier New"'><span
+style='mso-spacerun:yes'>   </span>iii) For optimal resolution specify <b
+style='mso-bidi-font-weight:normal'>NINT</b> + 1 points for the profile.<o:p></o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:.3in;text-indent:-.3in'><span
+style='font-size:13.5pt;font-family:"Courier New"'><span
+style='mso-spacerun:yes'>    </span>iv) Select property <b style='mso-bidi-font-weight:
+normal'>36</b> (<b style='mso-bidi-font-weight:normal'>all phase and/or system
+properties</b>).<o:p></o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:.3in;text-indent:-.3in'><span
+style='font-size:13.5pt;font-family:"Courier New"'><span
+style='mso-spacerun:yes'>     </span>v) Specify option <b style='mso-bidi-font-weight:
+normal'>2</b> (<b style='mso-bidi-font-weight:normal'>properties of a phase</b>).<o:p></o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:.3in;text-indent:-.3in'><span
+style='font-size:13.5pt;font-family:"Courier New"'><span
+style='mso-spacerun:yes'>    </span>vi) Specify the name of the fractionated
+phase, e.g., <b style='mso-bidi-font-weight:normal'>COH-Fluid+</b>.<o:p></o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:.3in;text-indent:-.3in'><span
+style='font-size:13.5pt;font-family:"Courier New"'><span
+style='mso-spacerun:yes'>   </span>vii) Answer <b style='mso-bidi-font-weight:
+normal'>y</b> or <b style='mso-bidi-font-weight:normal'>n</b> to the <b
+style='mso-bidi-font-weight:normal'>Include fluid in ... properties</b>, the
+answer is irrelevant for present purposes.<o:p></o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:.3in;text-indent:-.3in'><span
+style='font-size:13.5pt;font-family:"Courier New"'><span
+style='mso-spacerun:yes'>   </span><span class=SpellE>iix</span>) The output is
+in the indicated tab file, e.g., <b style='mso-bidi-font-weight:normal'>frac2d_1.tab</b>.<o:p></o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:.3in;text-indent:-.3in'><span
+style='font-size:13.5pt;font-family:"Courier New"'><span
+style='mso-spacerun:yes'>    </span>ix) Exit. <o:p></o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:.3in;text-indent:-.3in'><a
+name="step_D"><b style='mso-bidi-font-weight:normal'><span style='font-size:
+13.5pt;font-family:"Courier New"'>D)</span></b></a><span style='mso-bookmark:
+step_D'><span style='font-size:13.5pt;font-family:"Courier New"'> </span></span><span
+style='font-size:13.5pt;font-family:"Courier New"'>Plot the amount of the
+component of interest (e.g., S2_g) using <span class=SpellE>perple_X_simple_plot</span>
+(MATLAB), PSTABLE, or PYWERAMI. If the cumulative option is <b
+style='mso-bidi-font-weight:normal'>F</b> or default, the plotted quantity
+corresponds to the MASS_I (g) of the component that is transported by the fluid
+across the slab/mantle interface (at <b style='mso-bidi-font-weight:normal'>DZ</b>
++ <b style='mso-bidi-font-weight:normal'>ZBOX</b>/2 = 0) as the top of the
+column is subducted from depth Z0 to <b style='mso-bidi-font-weight:normal'>Z0</b>
++ <b style='mso-bidi-font-weight:normal'>DZ0</b>. The instantaneous flux, i.e.,
+the flux averaged over the time interval <b style='mso-bidi-font-weight:normal'>DT0</b>,
+<b style='mso-bidi-font-weight:normal'>Q</b> (g/m<sup>2</sup>-s) = <b
+style='mso-bidi-font-weight:normal'>MASS_I </b>/ <b style='mso-bidi-font-weight:
+normal'>AREA </b>/ <b style='mso-bidi-font-weight:normal'>DT0</b>. If the
+cumulative option is <b style='mso-bidi-font-weight:normal'>T</b>, then the
+plotted quantity is the cumulative mass <b style='mso-bidi-font-weight:normal'>CUM_MASS_I</b>
+of the component transported by the mobile phase, the time integrated mass flux
+<b style='mso-bidi-font-weight:normal'>QINT</b> (g/m<sup>2</sup>) is <b
+style='mso-bidi-font-weight:normal'>CUM_MASS_I </b>/ <b style='mso-bidi-font-weight:
+normal'>AREA</b>. The data in the tab file can be edited in a spreadsheet
+program so that <b style='mso-bidi-font-weight:normal'>Q</b> and/or <b
+style='mso-bidi-font-weight:normal'>QINT</b> are output directly. Alternatively,
+the axes of the plot may be rescaled to indicate the appropriate flux.<o:p></o:p></span></p>
+
+<p class=MsoPlainText style='margin-left:.3in;text-indent:-.3in'><b
+style='mso-bidi-font-weight:normal'><span style='font-size:13.5pt;font-family:
+"Courier New"'>E)</span></b><span style='font-size:13.5pt;font-family:"Courier New"'>
+If a calculation is done with more than one mobile phase (e.g., melt and
+low-density fluid), step C must be repeated for each phase and the results
+summed to obtain the total mass flux transported by the mobile phases.<o:p></o:p></span></p>
+
+<p class=MsoPlainText><span style='font-size:13.5pt;font-family:"Courier New"'><o:p>&nbsp;</o:p></span></p>
+
+</div>
+
+</body>
+
+</html>

@@ -2515,9 +2515,8 @@ c                                 polynomial
      *                     /'coordinates increase mpol in common cst66')
 
          do i = 1, npoly
+
             read (n8,*) b(i), a(i,1)
-c                                  the true y coordinate will be negative z, swap sign
-            a(i,1) = -a(i,1)
 
             do j = 2, npoly - 1
                a(i,j) = a(i,1)**j
@@ -2602,6 +2601,12 @@ c                                 end of data indicated by zero
      *                            'increase maxbox in common cst66')
 
       end do
+c                                 read aliquot composition
+      if (flsh) then 
+         if (ilay+1.eq.lay) call error (77,b(1),i, 
+     *                               'increase lay in common cst66')
+         read (n8,*) (iblk(ilay+1,i),i=1,icp)
+      end if 
 
       close (n8)
 c                                 two cases, file input or analytical
@@ -2730,11 +2735,12 @@ c                                t0, t1 deep
 
       else if (flsh) then 
 
-         v(1) = -dz * vz(2)
+         z0 = (vz(3) -dz)
+         v(1) = z0 * vz(2)
          v(2) = abc0(1,npoly)
 
          do i = 1, npoly-1
-            v(2) = v(2) + abc0(1,i) * dz ** i
+            v(2) = v(2) + abc0(1,i) * z0 ** i
          end do
 
       else
@@ -3982,9 +3988,9 @@ c                                 pssect/werami get the number of nodes from the
          if (flsh) then
 c                                  flush calculations: 
             vnm(1) = 'Q,kg/m^2'
-            vnm(2) = '-z,m   '
+            vnm(2) = 'dz,m   '
 c                                  set the base to 
-            vmn(2) = -vz(3) + vz(1)/2d0
+            vmn(2) = vz(1)/2d0
             vmx(2) = vmn(2) + dfloat(ncol-1)*vz(1)
 
          else
