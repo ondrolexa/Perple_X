@@ -8300,6 +8300,10 @@ c                                 negative site?
       return
 
 90    zbad = .true.
+c DEBUG DEBUG DEBUG 
+      write (*,*) 'in zbad, badz true',z,zt,ids,i,j,k
+      write (*,*) ksp(i,ids),msite(ids),ksp(i,ids)
+      write (*,*) y
 
       end
 
@@ -8430,6 +8434,12 @@ c                                 working arrays
       double precision qmult, d0, dcoef, scoef      
       common/ cxt1r /qmult(m10,h9),d0(m11,m10,h9),dcoef(m0,m11,m10,h9),
      *               scoef(m4,h9)
+
+      integer pstot,qstot,ostg,odim,nsum
+      common/ junk1 /pstot(h9),qstot(h9),ostg(h9),odim(mst,h9),nsum(h9)
+
+      integer iam
+      common/ cst4 /iam
 c----------------------------------------------------------------------
 c                                 get normalization constants
 c                                 for each endmember
@@ -8441,7 +8451,14 @@ c                                 zero y-array
 
          y(h) = 1d0        
 c                                 check for valid site fractions
-         if (zbad(y,id)) call error (125,z(1),1,tname)
+         if (zbad(y,id)) then 
+
+c DEBUG DEBUG DEB
+            write (*,*) 'iam = ',iam,id
+            write (*,*) 'write nstot, pstot:',nstot(id),pstot(id)
+            write (*,*) y
+            call error (125,z(1),1,tname)
+         end if 
 c                                 evaluate S
          scoef(h,id) = omega(id,y)
 

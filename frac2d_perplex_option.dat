@@ -25,7 +25,7 @@
 |----------------------------------------------------------------------
 
 1d_path                   20 100 default | [40 150] exploratory and autorefine (grid parameters keyword group)
-absolute                  default | [F] WERAMI - output absolute component amounts
+absolute                     T    | [F] WERAMI - output absolute component amounts
 Anderson-Gruneisen        default | [F] Anderson-Gruneisen parameter correction for polythermal Murnaghan and Birch-Murnaghan
 approx_alpha              default | [T] use approximation exp(x) ~ 1+x to evaluate expansivity effect on volume
 aq_bad_results               103  | [error] 101 102 103 or ignore => response to suspect lagged speciation results 
@@ -63,9 +63,9 @@ fractionation_lo_limit    default | [0.] 0-1, lower fractionation threshold, mas
 global_reach_increment    default | [0] >= 0, overridden by reach_factor specified in solution model file
 grid_levels               default | [1 4] exploratory and autorefine (grid parameters keyword group)
 hard_limits               default | [off] on or off; on => strictly impose compositional limits specified in solution model
-hybrid_EoS_H2O            default | [4] 0-2, 4-5 => 0 - MRK, 1 HSMRK, 2 - CORK, 4 - PSEoS, 5 - Haar
-hybrid_EoS_CO2            default | [4] 0-4 => 0 - MRK, 1 HSMRK, 2 - CORK, 3- Bottinga, 4 - PSEoS
-hybrid_EoS_CH4            default | [1] 0-1  => 0 - MRK, 1 HSMRK
+hybrid_EoS_H2O               5    | [4] 0-2, 4-5 => 0 - MRK, 1 HSMRK, 2 - CORK, 4 - PSEoS, 5 - Haar
+hybrid_EoS_CO2               4    | [4] 0-4 => 0 - MRK, 1 HSMRK, 2 - CORK, 3- Bottinga, 4 - PSEoS
+hybrid_EoS_CH4               0    | [1] 0-1  => 0 - MRK, 1 HSMRK
 increment                 default | [0.1 0.025] >0, < 1, fractional independent variable increments [exploratory and autorefine], only relevant for CONVEX
 initial_resolution        default | [1/15] >0, <1
 interpolation             default | [on 2] value 1: on or off [on]; value 2, 1->99 [2]; only relevant for WERAMI
