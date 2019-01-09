@@ -156,7 +156,21 @@ c                                 the initial resolution of the exploratory stag
 c                                 speciation tolerance
             nopt(5) = rid(5,i)
 
-         else 
+         else if (iam.eq.13) then
+c                                 the global level of unsplt, which should generate 
+c                                 neither arf or tof files; at this point if ier is
+c                                 zero, the arf file has been successfully opened:
+c                                 kill and close it:
+            if (ier.ne.0) close (n10, status = 'delete')
+c                                 open and kill the tof file
+            open (n8, file = n8nam, status = 'unknown')
+            close (n8, status = 'delete')
+c                                 open and kill the irf file
+            call mertxt (n8nam,prject,'.irf',0)
+            open (n8, file = n11nam, iostat=ier, status = 'unknown')
+            close (n8,status = 'delete')
+
+         else
 c                                 werami/pssect if refine, get the 
 c                                 solution models to be rejected
             open (n8, file = n8nam, iostat=ier, status = 'old')
@@ -222,12 +236,11 @@ c                                 stage
 
       if (.not.(iopt(6).eq.2.and.refine).and.iopt(34).ne.0.and.
      *    iam.eq.1) then
-c                                  initialize intermediate results file 
+c                                  initialize (i.e., delete prior) intermediate 
+c                                  results file 
          call mertxt (n11nam,prject,'.irf',0)
-         open (1000, file = n11nam, iostat=ier, status = 'old')
-         if (ier.eq.0) close (1000,status = 'delete')
-         open (1000, file = n11nam, status = 'new')
-         close (1000)
+         open (1000, file = n11nam, iostat=ier, status = 'unknown')
+         close (1000,status = 'delete')
 
       end if
 
@@ -1049,7 +1062,7 @@ c                                 err only set for unsplt (iam.eq.14)
 c                                 read auxilliary input for 2d fractionation
       if (icopt.eq.9) call rdain
 c                                 get runtime parameters
-      if (first.or.(.not.first).and.(.not.output)) 
+      if (first.or.(.not.first).and.(.not.output).or.iam.eq.13) 
      *   call redop1 (first,tfname)
 
       goto 999
@@ -2492,7 +2505,7 @@ c                                 is the independent variable, for subduction
 c                                 this is logically pressure, i.e., dp(bar)/dz(m)
       read (n8,*) vz(2)
 c                                 zmin if flush or or dzmax if not flush
-      read (n8,*) vz(3)
+      if (flsh) read (n8,*) vz(3)
 c                                 value of the x-coordinate at the origin
       read (n8,*) vz(4)
 c                                 max value of the x-coordinate
@@ -2844,6 +2857,7 @@ c                                 open thermodynamic data file
       call fopen2 (0,n2name)
 
       tic = .false.
+      err = .false.
 
       if (iam.eq.3.or.iam.eq.7.or.iam.eq.14) then
 c                                 use existing plt/blk files
@@ -2870,7 +2884,7 @@ c                                 open assemblage file
       else if (iam.eq.1.or.iam.eq.2.or.iam.eq.13.or.iam.eq.15) then 
 c                                 iam -  1 - vertex
 c                                 iam -  2 - meemum
-c                                 iam - 13 - unsplt (local)
+c                                 iam - 13 - unsplt (global)
 c                                 iam - 15 - convex
 
          if (first) then

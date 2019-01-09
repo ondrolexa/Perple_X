@@ -24,7 +24,7 @@
 
 |----------------------------------------------------------------------
 
-1d_path                   20 100 default | [40 150] exploratory and autorefine (grid parameters keyword group)
+1d_path                   40 200  | [40 150] exploratory and autorefine (grid parameters keyword group)
 absolute                     T    | [F] WERAMI - output absolute component amounts
 Anderson-Gruneisen        default | [F] Anderson-Gruneisen parameter correction for polythermal Murnaghan and Birch-Murnaghan
 approx_alpha              default | [T] use approximation exp(x) ~ 1+x to evaluate expansivity effect on volume
@@ -39,7 +39,7 @@ aq_solvent_composition    default | [y] y => mole fractions, m => molality
 aq_solvent_solvus            T    | [F] allow solvent phase separation without aq_bad_results error trigger
 aq_vapor_epsilon          default | [1.] dielectric constant threshold used to identify vapor
 auto_exclude              default | [T] exclude phases or species with no associated P-V EoS
-auto_refine                 off   | [auto] auto, manual, or off (auto_refine keyword group)
+auto_refine                 man   | [auto] auto, manual, or off (auto_refine keyword group)
 auto_refine_factor_I      default | [3.] refine factor for gridded minimization and phase fractionation (auto_refine keyword group)
 auto_refine_factor_II     default | [10.] refine factor for composition and mixed variable diagrams (auto_refine keyword group)
 auto_refine_factor_III    default | [3.] refine factor for Schreinemakers diagrams (auto_refine keyword group)
@@ -51,7 +51,7 @@ composition_constant      default | [F] allow constants in composition expressio
 composition_phase         default | [mol] mol or wt (mass) phase compositions in WERAMI output
 composition_system        default | [wt] mol or wt; system composition in WERAMI mode 2-4 output
 console_messages          default | [on] off => suppresses most console messages (warnings, errors, etc)
-cumulative                default | [F] WERAMI, computational mode 3, property choice #36 only!- cumulative component amounts (for fractionation problems)
+cumulative                T default | [F] WERAMI, computational mode 3, property choice #36 only!- cumulative component amounts (for fractionation problems)
 dependent_potentials      default | [off] on => compute dependent thermodynamic potentials (usually chemical potentials)
 efficiency                default | [3] 1->5, only relevant for CONVEX
 explicit_bulk_modulus     default | [T] T => use explicit function for bulk modulii if available

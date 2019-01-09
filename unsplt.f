@@ -15,7 +15,7 @@ c----------------------------------------------------------------------
       logical first, output, fake, match, nomtch, reord, used(k5), err,
      *        ok
 
-      integer ierr, h, i, j, k, l, m, n, o, p, gasct, ggrd(l7,l7), gi,
+      integer h, i, j, k, l, m, n, o, p, gasct, ggrd(l7,l7), gi,
      *        gsoct, loc2gs(h9), loc2ga(k3), gdasls(k5,k3), gavar(3,k3),
      *        gap(k2), gbulk, gico(k2), gjco(k2), gicoor(k1), inct, gj,
      *        ioct, ids, jxco, kxco, gjxco, gkxco, gas, kbad,kb(1200,2),
@@ -23,7 +23,7 @@ c----------------------------------------------------------------------
 
       character gprjct*100, dir*100, gname(h9)*10
 
-      double precision gbg(k5,k2), gmus(k5,k2), gxcoor(k1),
+      double precision gbg(k5,k2), gmus(k5,k2), gxcoor(k18),
      *                 xt(k5,mst*msp), bt(k5)
 
       logical oned
@@ -145,33 +145,7 @@ c                                 initialize, set global lists and project name
          do j = 1, l7
             ggrd(i,j) = 0
          end do 
-      end do 
-c                                 dummy opens, these are too check
-c                                 if the arf and tof files exist in 
-c                                 the cwd (they should not as they 
-c                                 could cause conflict in werami/pssect).
-
-c                                 previously this was done for the plt
-c                                 and blk files as well, but i don't think
-c                                 that is necessary for any OS. 
-
-c                                 the close statement appears to be necessary
-c                                 for gfortran
-
-c                                 make sure my_project.arf
-c                                 and my_project.tof do not
-c                                 exist, if either exists write 
-c                                 an error message that instructs
-c                                 the user to delete them.
-      call mertxt (tfname,gprjct,'.arf',0)
-      open (n8,file=tfname,status="old",iostat=ierr)
-      if (ierr.eq.0) call error (70,bt(1),i,tfname)
-      close (n8)
-
-      call mertxt (tfname,gprjct,'.tof',0)
-      open (n8,file=tfname,status="old",iostat=ierr)
-      if (ierr.eq.0) call error (70,bt(1),i,tfname)
-      close (n8)
+      end do
 
       write (*,'(/)')
 c                                 at this point we have a complete list
@@ -368,7 +342,8 @@ c                                  load solution compositions into xt
      *                               idasls(o,ias).ne.gdasls(n,gas)) 
      *                                                             cycle
                                  gbg(n,gas) = bt(o)
-                                 if (o.gt.iavar(o,ias)) cycle
+c                                 THIS NEEDS TO BE CHECKED, it was iavar(o,ias). 1/9/2019
+                                 if (o.gt.iavar(1,ias)) cycle
                                  
                                  do p = 1, gcoor(idasls(o,ias))
                                     xcoor(jxco+p) = xt(o,p)
@@ -459,7 +434,7 @@ c                                 solution compositions
                   jxco = jxco + 1
                   kxco = jxco + gcoor(ids) - 1
 
-                  if (kxco.gt.k1) call error (61,0d0,k1,'UNSPLT')
+                  if (gkxco.gt.k18) call error (61,0d0,k18,'UNSPLT')
 
                   o = 0 
 

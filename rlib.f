@@ -8300,10 +8300,6 @@ c                                 negative site?
       return
 
 90    zbad = .true.
-c DEBUG DEBUG DEBUG 
-      write (*,*) 'in zbad, badz true',z,zt,ids,i,j,k
-      write (*,*) ksp(i,ids),msite(ids),ksp(i,ids)
-      write (*,*) y
 
       end
 
@@ -8451,14 +8447,7 @@ c                                 zero y-array
 
          y(h) = 1d0        
 c                                 check for valid site fractions
-         if (zbad(y,id)) then 
-
-c DEBUG DEBUG DEB
-            write (*,*) 'iam = ',iam,id
-            write (*,*) 'write nstot, pstot:',nstot(id),pstot(id)
-            write (*,*) y
-            call error (125,z(1),1,tname)
-         end if 
+         if (zbad(y,id)) call error (125,z(1),h,tname)
 c                                 evaluate S
          scoef(h,id) = omega(id,y)
 
@@ -8818,7 +8807,7 @@ c---------------------------------------------------------------------
 
       character tname*10, sname*10
 
-      logical add, bad, wham, zbad
+      logical add, wham, zbad
 
       integer im, nloc, i, j, ind, id, jd, k, l,itic,ii,imatch, killct,
      *        killid(20), inc
@@ -9050,7 +9039,7 @@ c                                 check for consistent auto-refine data
          read (n10,'(a)') sname
          if (tname.ne.sname) call error (63,r,i,'GMODEL')
 
-      end if 
+      end if
 c                                 initialize autorefine arrays
       stable(im) = .false.
       limit(im) = .false.
@@ -9435,9 +9424,6 @@ c                                 save y -> p array
                y2pg(j,i,im) = y2p(i,j)
             end do
          end do
-c                                 check for invalid dependent endmembers, these
-c                                 are occasionally used as place holders:
-         bad = .false.
 
          if (ksmod(im).eq.9.or.ksmod(im).eq.10) then 
 
@@ -9455,7 +9441,7 @@ c                                 are occasionally used as place holders:
                y(i) = 0d0
             end do 
 
-            y(knsp(lstot(im)+j,im)) = 1d0 
+            y(knsp(lstot(im)+j,im)) = 1d0
 
             call y2p0 (im)
 c                                 check for invalid site fractions, this is only necessary
@@ -9463,20 +9449,18 @@ c                                 for H&P models that assume equipartition (whic
 c                                 implemented). 
             if (zbad(pa,im)) then
 
-               bad = .true.
-
                if (iam.lt.3.or.iam.eq.4.or.iam.eq.15) 
      *            call warn (59,y(1),i,
      *            mname(iorig(knsp(lstot(im)+j,im)))
      *            //' in solution model '//tname)
+
+               if (stck) call error (78,y(1),i,tname)
 
                badend(knsp(lstot(im)+j,im),im) = .true.
 
             end if
 
          end do
-
-         if (bad.and.stck) call error (78,y(1),i,tname)
 
       else 
 
@@ -20409,10 +20393,6 @@ c                                 newton raphson iteration
             call gpder1 (id,q,dq,g)
 
             call pcheck (q,qmin,qmax,dq,done)
-
-            if (q.lt.0d0) then 
-               write (*,*), q, qmin, qmax, dq
-            end if
 c                                 done is just a flag to quit
             if (done) then
 

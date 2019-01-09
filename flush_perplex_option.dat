@@ -13,7 +13,7 @@
 
 |----------------------------------------------------------------------
 
-1d_path                   20  100 | [40 150] exploratory and autorefine (grid parameters keyword group)
+1d_path                   40  200 | [40 150] exploratory and autorefine (grid parameters keyword group)
 absolute                     T    | [F] WERAMI - output absolute component amounts
 Anderson-Gruneisen        default | [F] Anderson-Gruneisen parameter correction for polythermal Murnaghan and Birch-Murnaghan
 approx_alpha              default | [T] use approximation exp(x)~1+x to evaluate expansivity effect on volume

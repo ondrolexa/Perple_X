@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.8.6, source updated Jan 3, 2019.',
+     *      'Perple_X version 6.8.5, source updated Jan 9, 2019.',
 
      *      'Copyright (C) 1986-2019 James A D Connolly '//
      *      '<www.perplex.ethz/copyright.html>.'
@@ -155,6 +155,7 @@ c                                 -------------------------------------
 c                                 loop to find machine precision (mainly
 c                                 for nag)
       r1 = 1d-12
+      r2 = 0d0
 
       do
          if (1d0+r1.eq.1d0) exit
@@ -162,7 +163,12 @@ c                                 for nag)
          r1 = r1/2d0
       end do 
 
-      r2 = 1d3 * r2
+      if (r2.eq.0) then 
+         write (*,*) 'starting precision for r1 < zero'
+         call errpau
+      end if
+
+      r2 = 1d2 * r2
 
       wmach(3) = r2
       wmach(5) = 1d0 + r2
@@ -2215,8 +2221,6 @@ c---------------------------------------------------------------------
          write (*,68) char
       else if (ier.eq.69) then 
          write (*,69) char
-      else if (ier.eq.70) then 
-         write (*,70) char
       else if (ier.eq.72) then 
          write (*,72) char
       else if (ier.eq.73) then 
@@ -2258,7 +2262,7 @@ c---------------------------------------------------------------------
       else if (ier.eq.120) then
          write (*,120) char
       else if (ier.eq.125) then 
-         write (*,125) realv, char
+         write (*,125) char, int
       else if (ier.eq.169) then
          write (*,169) int
       else if (ier.eq.180) then
@@ -2478,8 +2482,6 @@ c---------------------------------------------------------------------
      *          'www.perplex.ethz.ch/datafiles/solution_model.dat',/)
 69    format (/,'**error ver069** too many points (',a,'), increase ',
      *          'parameter L5',/)
-70    format (/,'**error ver070** delete file: ',a,/,
-     *        'and restart UNSPLT')
 72    format (/,'**error ver072** ',a,/)
 73    format (/,'**error ver073** the thermodynamic data file has ', 
      *          'more than one entity named: ',a,/,'delete or rename ',
@@ -2537,8 +2539,8 @@ c---------------------------------------------------------------------
 120   format (/,'**error ver120** file:',/,a,/,
      *        'could not be opened, check that it exists or that it is',
      *        ' not in use by another program.',/) 
-125   format (/,'**error ver125** a site fraction (',g8.2,') is out',
-     *          ' of range for : ',a,/,'   The configurational',
+125   format (/,'**error ver125** a site fraction is out of range for ',
+     *          'solution: ',a,' endmember ',i2,/,'The configurational',
      *          ' entropy model is probably incorrect.',/)
 169   format (/,'**error ver169** cart, imod=',i2,' is an invalid ',
      *          'request')
