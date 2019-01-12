@@ -1079,10 +1079,10 @@ full_name    liquid
 
 11                                  | number of endmembers
 
-h2oL     foHL     faHL
+foHL     faHL
 jdL      silL     kjL
 woL      ekL      hmL
-tiL      qHL
+tiL      qHL      h2oL
 
 1                                   | ordered species definition
 
@@ -1092,7 +1092,6 @@ ctL = 1 woL + 1 silL - 1/4 qHL        Delta(enthalpy)   = -114452.5 + 55*TK + .4
 
 1 1 1 1 1 1 1 1 1 1 1               | endmember flags
 
-0.0 0.8  0.1  0                     | range and resolution of X(h2o), 0 => cartesian subdivision  
 0.0 0.3  0.1  0                     | range and resolution of X(fo),  1 => asymmetric subdivision   
 0.0 0.3  0.1  0                     | range and resolution of X(fa),  1 => asymmetric subdivision   
 0.0 0.8  0.1  0                     | range and resolution of X(jd),  0 => cartesian subdivision   
@@ -1102,6 +1101,7 @@ ctL = 1 woL + 1 silL - 1/4 qHL        Delta(enthalpy)   = -114452.5 + 55*TK + .4
 0.0 0.1  0.1  0                     | range and resolution of X(ek),  1 => asymmetric subdivision
 0.0 0.1  0.1  0                     | range and resolution of X(hm),  1 => asymmetric subdivision
 0.0 0.1  0.1  0                     | range and resolution of X(ti),  1 => asymmetric subdivision
+0.0 0.6  0.1  0                     | range and resolution of X(q), 0 => cartesian subdivision  
 
 begin_excess_function 
 
@@ -1243,9 +1243,9 @@ full_name    liquid
 
 8                                   | number of endmembers
 
-h2oL     foTL     faTL
+foTL     faTL
 abL      silL     kspL
-woL      q8L
+woL      q8L      h2oL
 
 1                                   | ordered species definition
                                     | H(oanL) = -46.5d3 - 0.25 * P - dqf(woL) 1300 - dqf(silL) -7800
@@ -1254,13 +1254,13 @@ oanL = 1 woL + 1 silL        Delta(enthalpy)   = -40000  - 0.25 * P
 
 1 1 1 1 1 1 1 1                     | endmember flags
 
-0.0 0.8  0.1  0                     | range and resolution of X(h2o), 0 => cartesian subdivision  
 0.0 0.2  0.1  0                     | range and resolution of X(fo),  1 => asymmetric subdivision   
 0.0 0.3  0.1  0                     | range and resolution of X(fa),  1 => asymmetric subdivision   
 0.0 0.8  0.1  0                     | range and resolution of X(ab),  0 => cartesian subdivision   
 0.0 0.4  0.1  0                     | range and resolution of X(sil), 1 => asymmetric subdivision  
 0.0 0.6  0.1  0                     | range and resolution of X(ksp), 1 => asymmetric subdivision   
 0.0 0.4  0.1  0                     | range and resolution of X(wo),  1 => asymmetric subdivision
+0.0 0.6  0.1  0                     | range and resolution of X(q), 0 => cartesian subdivision  
 
 begin_excess_function 
 
@@ -2338,19 +2338,19 @@ full_name    liquid
 
 8                                     number of endmembers
 
-h2oL     fo8L     fa8L
+fo8L     fa8L
 abL      sil8L    anL
-kspL     q8L
+kspL     q8L      h2oL
 
 0 0 0 0 0 0 0 0 0                   | endmember flags.  
 
-0.0 1.0  0.1 0                      | range and resolution of X(h2o), 0 => cartesian subdivision  
-0.0 0.1  8   1                      | range and resolution of X(fo),  1 => asymmetric subdivision   
-0.0 0.1  8   1                      | range and resolution of X(fa),  1 => asymmetric subdivision   
-0.0 0.4  0.1 0                      | range and resolution of X(ab),  0 => cartesian subdivision   
-0.0 0.1  8   1                      | range and resolution of X(sil), 1 => asymmetric subdivision  
-0.0 0.2  8   1                      | range and resolution of X(an),  1 => asymmetric subdivision   
-0.0 0.4  0.1 0                      | range and resolution of X(ksp), 0 => cartesian subdivision
+2e-1 0.1  4   1                      | range and resolution of X(fo),  1 => asymmetric subdivision   
+2e-1 0.1  4   1                      | range and resolution of X(fa),  1 => asymmetric subdivision   
+0.0  0.4  0.1 0                      | range and resolution of X(ab),  0 => cartesian subdivision   
+2e-1 0.1  4   1                      | range and resolution of X(sil), 1 => asymmetric subdivision  
+2e-1 0.2  4   1                      | range and resolution of X(an),  1 => asymmetric subdivision   
+0.0  0.5  0.1 0                      | range and resolution of X(ksp), 0 => cartesian subdivision
+0.0  0.6  0.1 0                      | range and resolution of X(q),   0 => cartesian subdivision  
 
 begin_excess_function 
 
@@ -2719,7 +2719,7 @@ fdi    = 1 di    + 1 fs  - 1 opx                        | corrected march 17, 20
                            | subdivision model for prism simplex 2 
 0. .2 .1   0               | range and resolution of X(Fe3+),  subdivision scheme: imod = 1 -> assymetric transform   
 0. .2 .1   0               | range and resolution of X(un-Ts), subdivision scheme: imod = 1 -> assymetric transform     
-0. .2 .1   0               | range and resolution of X(Ts),    subdivision scheme: imod = 1 -> assymetric transform     
+0. .3 .1   0               | range and resolution of X(Ts),    subdivision scheme: imod = 1 -> assymetric transform     
 
                            | independent (1d) simplex
 0. .1  .1 0                | range of mn on independent simplex
@@ -3792,9 +3792,10 @@ full_name    liquid
 
 9                                     number of endmembers
 
-h2oL     fo8L     fa8L
+fo8L     fa8L
 abL      sil8L    anL
 kspL     zr8L     q8L
+h2oL     
 
  0 0 0 0 0 0 0 0 0                  | endmember flags.
 
@@ -3804,7 +3805,6 @@ kspL     zr8L     q8L
                                     | Ab-H2O etc etc; these numbers seem about right
                                     | for pelite melting.
 
-0.0   0.8   0.1 0                   | range and resolution of X(h2o), 0 => cartesian subdivision
 0.0   0.1   0.1 0                   | range and resolution of X(fo),  0 => cartesian subdivision
 0.0   0.1   0.1 0                   | range and resolution of X(fa),  0 => cartesian subdivision
 0.0   0.4   0.1 0                   | range and resolution of X(ab),  0 => cartesian subdivision
@@ -3812,6 +3812,7 @@ kspL     zr8L     q8L
 0.0   0.1   0.1 0                   | range and resolution of X(an),  0 => cartesian subdivision
 0.0   0.4   0.1 0                   | range and resolution of X(ksp), 0 => cartesian subdivision
 1e-5 1e-4   0.4 1                   | max resolution, max concentration, 1/(no of points), X(zr),  1 => asymmetric subdivision
+0.0   0.7   0.1 0                   | range and resolution of X(q), 0 => cartesian subdivision
 
 begin_excess_function 
                                     | the excess parameters used for the haplo-
@@ -6673,21 +6674,9 @@ begin_model
                                extensive ternary solution; and a model with X(Ab) > 0.33
                                with very limited ternary solution. Assuming these relationships
                                are valid the ternary feldspar phase relations are well 
-                               represented by three solutions models
+                               represented by three solutions models. When these conditions are
+                               not met, the HP feldpsar models should not be used. 
 
-                               AbFsp(C1) and OrFsp(C1) - represent Ab-rich ternary feldspar
-                               and Or-rich essentially binary (Ab-Or) feldspar, all with the
-                               C1 structural state
-
-                               Pl(I1) - represents essentially binary (Ab-An) anorthite
-                               rich I1 structural state feldspar. 
-
-                               A negative consequence of using AbFsp(C1) and OrFsp(C1) to
-                               represent supercritical feldspar is the models produce 
-                               a mock "solvus" where the compositional ranges abut. 
-
-                             | This model should be used in conjunction with
-                             | AbFsp(C1) and OrFsp(C1)
 
 Pl(I1,HP)                    | solution name.
 abbreviation Pl
@@ -6698,9 +6687,9 @@ full_name    ternary-feldspar
 
 san    
 abh     
-an 
-      
- 1  1  0                     | endmember flags
+an
+
+ 0  0  0                     | endmember flags
 
  0. 1.  0.1  0              | compositional range and resolution of san
  0. 1.  0.1  0              | compositional range and resolution of abh
@@ -6732,7 +6721,7 @@ end_of_model
 begin_model                  
                              | See WARNING above for HP ASF Ternary Feldspar
 
-Fsp(C1)                      | solution name. To be used with Pl(I1,HP)
+Fsp(C1)
 abbreviation Fsp
 full_name    ternary-feldspar
 
@@ -6743,7 +6732,7 @@ an
 san
 abh
 
- 0  1  1                     | endmember flags
+ 0  0  0                     | endmember flags
 
 0.    1.0  0.1   0           | compositional range and resolution of an
 0.    1.0  0.1   0           | compositional range and resolution of san 

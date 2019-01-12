@@ -17,20 +17,17 @@
 absolute                     T    | [F] WERAMI - output absolute component amounts
 Anderson-Gruneisen        default | [F] Anderson-Gruneisen parameter correction for polythermal Murnaghan and Birch-Murnaghan
 approx_alpha              default | [T] use approximation exp(x)~1+x to evaluate expansivity effect on volume
-aq_bad_results              103   | [F] continue lagged solute speciation even if the iteration is unstable
+aq_bad_results              ign   | [F] continue lagged solute speciation even if the iteration is unstable
 aq_output                 default | [T] output back-calculated solute chemistry when electrolyte data is available
 aq_oxide_components       default | [F] accomodate oxide components in aqueous speciation calculations
 aq_species                default | [20] maximum number of solute species output (ranked by concentration) for back-calculated results
 aq_lagged_iterations      default | [0] number of internal iterations for lagged speciation.
 aq_lagged_speciation         T    | [F] do lagged solute chemistry when electrolyte data is available
 aq_solvent_composition    default | [y] y => mole fractions, m => molality
-aq_solvent_solvus            T    |
+aq_solvent_solvus         default | [T] T => allow solute-free fluid to coexist with solute-bearing fluid.
 aq_solute_composition     default | [m] y => mole fractions, m => molality
 aq_vapor_epsilon          default | [1.] dielectric constant threshold used to identify vapor
 auto_refine              man  default | [auto] auto, manual, or off (auto_refine keyword group)
-auto_refine_factor_I      default | [3.] refine factor for gridded minimization and phase fractionation (auto_refine keyword group)
-auto_refine_factor_II     default | [10.] refine factor for composition and mixed variable diagrams (auto_refine keyword group)
-auto_refine_factor_III    default | [3.] refine factor for Schreinemakers diagrams (auto_refine keyword group)
 auto_refine_file          default | [F] echo auto-refine data to my_project_auto_refine.txt
 bad_number                default | [NaN] any number or NaN (not-a-number)
 bounds                    default | [VRH] VRH or HS; Voigt-Reuss-Hill or Hashin-Shtrikman, see vrh/hs_averaging
@@ -56,9 +53,9 @@ hybrid_EoS_H2O               5    | [4] 0-2, 4-5 => 0 - MRK, 1 HSMRK, 2 - CORK, 
 hybrid_EoS_CO2               4    | [4] 0-4 => 0 - MRK, 1 HSMRK, 2 - CORK, 3- Bottinga, 4 - PSEoS
 hybrid_EoS_CH4               0    | [1] 0-1  => 0 - MRK, 1 HSMRK
 increment                 default | [0.1 0.025] >0, < 1, fractional independent variable increments [exploratory and autorefine], only relevant for CONVEX
-initial_resolution        default | [1/15] >0, <1
+initial_resolution        1/16 1/48 default | [1/16] >0, <1
 interpolation             default | [on 2] value 1: on or off [on]; value 2, 1->99 [2]; only relevant for WERAMI
-iteration                 default | [2 4] value 1: 2->99 [3]; value 2: 1->7 [4]
+iteration                 default | [2] real > 2, improves resolution
 interim_results           default | 
 linear_model              default | [on] on or off, relevant for 2d gridded minimization
 logarithmic_p             default | [F] replace pressure variable with log(pressure)
@@ -77,7 +74,7 @@ pseudocompound_file       default | [F] echo static pseudocompound compositions 
 reach_increment_switch    default | [on] all, on, off; VERTEX => on activates reach_increments only during auto_refine; MEEMUM default is [all]
 reaction_format           default | [minimum] minimum, full, stoich, S+V, or everything
 reaction_list             default | [off] on or off
-refinement_points_II      default | [auto] or an integer > 0, the number of metastable refinement points retained during 2nd phase of adaptive minimization
+refinement_points         default | [auto] or an integer > 0, the number of metastable refinement points retained during 2nd phase of adaptive minimization
 refine_endmembers            T    | [F] accept endmember compositions as refinement points
 seismic_output            default | [some] all, some, none
 short_print               default | [on] suppress output of equilibrium coordinates to the print file, only relevant for CONVEX

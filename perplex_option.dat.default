@@ -1,6 +1,6 @@
 |----------------------------------------------------------------------
 
-        | Run-time Perple_X 6.8.4 options:
+        | Run-time Perple_X 6.8.6 options:
 
         | Comments must be preceeded by the "|" character.
 
@@ -40,9 +40,6 @@ aq_solvent_solvus         default | [F] allow solvent phase separation without a
 aq_vapor_epsilon          default | [1.] dielectric constant threshold used to identify vapor
 auto_exclude              default | [T] exclude phases or species with no associated P-V EoS
 auto_refine               default | [auto] auto, manual, or off (auto_refine keyword group)
-auto_refine_factor_I      default | [3.] refine factor for gridded minimization and phase fractionation (auto_refine keyword group)
-auto_refine_factor_II     default | [10.] refine factor for composition and mixed variable diagrams (auto_refine keyword group)
-auto_refine_factor_III    default | [3.] refine factor for Schreinemakers diagrams (auto_refine keyword group)
 auto_refine_file          default | [F] echo auto-refine data to my_project_auto_refine.txt
 bad_number                default | [NaN] any number or NaN (not-a-number)
 bounds                    default | [VRH] VRH or HS; Voigt-Reuss-Hill or Hashin-Shtrikman, see vrh/hs_averaging
@@ -57,18 +54,18 @@ efficiency                default | [3] 1->5, only relevant for CONVEX
 explicit_bulk_modulus     default | [T] T => use explicit function for bulk modulii if available
 fancy_cumulative_modes    default | [F] T => order cumulative modes to account for univariant reactions (WERAMI, mode 3, property 25)
 fd_expansion_factor       default | [2] nth order finite difference increment is increased by fd_expansion_factor^(n-1)
-final_resolution          default | [1d-2 1d-3] >0, <1, exploratory and autorefine target resolution
+final_resolution          default | [1d-2 1d-3] >0, <1, exploratory and auto-refine target resolution
 finite_difference_p       default | [1d4 1d-2] threshold and fraction for 1st order finite difference increment on pressure
 fractionation_hi_limit    default | [0.] 0-1, upper fractionation threshold, mass fraction
 fractionation_lo_limit    default | [0.] 0-1, lower fractionation threshold, mass fraction
 global_reach_increment    default | [0] >= 0, overridden by reach_factor specified in solution model file
-grid_levels               default | [1 4] exploratory and autorefine (grid parameters keyword group)
+grid_levels               default | [1 4] exploratory and auto-refine (grid parameters keyword group)
 hard_limits               default | [off] on or off; on => strictly impose compositional limits specified in solution model
 hybrid_EoS_H2O            default | [4] 0-2, 4-5 => 0 - MRK, 1 HSMRK, 2 - CORK, 4 - PSEoS, 5 - Haar, 6 - Zhang & Duan 05, 7 - Zhang & Duan 09
 hybrid_EoS_CO2            default | [4] 0-4 => 0 - MRK, 1 HSMRK, 2 - CORK, 3- Bottinga, 4 - PSEoS, 6 - Zhang & Duan 05, 7 - Zhang & Duan 09
 hybrid_EoS_CH4            default | [1] 0-1  => 0 - MRK, 1 HSMRK, 7 - Zhang & Duan 09
-increment                 default | [0.1 0.025] >0, < 1, fractional independent variable increments [exploratory and autorefine], only relevant for CONVEX
-initial_resolution        default | [1/15] >0, <1
+increment                 default | [0.1 0.025] >0, < 1, fractional independent variable increments [exploratory and auto-refine], only relevant for CONVEX
+initial_resolution        default | [1/16 1/48]* >0, <1, exploratory and auto-refine initial resolution. *for composition and mixed variable diagrams the default auto-refine value is 1/160.
 interim_results           default | [auto] auto, off or on
 interpolation             default | [on 2] value 1: on or off [on]; value 2, 1->99 [2]; only relevant for WERAMI
 iteration                 default | [2] real > 2, improves resolution
@@ -106,9 +103,8 @@ stretch_factor            default | [0.016] >0, <1; controls degree of assymmetr
 subdivision_override      default | [off] off, linear, or stretch; overrides subdivision mode specified in solution models
 T_melt                    default | [873.] melt solution model endmember temperature (K) cut off
 T_stop                    default | [0.] equilibration temperature (K) cut off
-variance                  default | [1 99] exploratory and autorefine; maximum variance of traced equilibria; only relevant for CONVEX
+variance                  default | [1 99] exploratory and auto-refine; maximum variance of traced equilibria; only relevant for CONVEX
 vrh/hs_weighting          default | [0.5] 0->1, weighting factor for the stiff average in VRH/HS averaging (see bounds)
-x_nodes                   default | [40 40] exploratory and autorefine (grid parameters keyword group), lowest-level x grid resolution 
-y_nodes                   default | [40 40] exploratory and autorefine (grid parameters keyword group), lowest-level y grid resolution
+x_nodes                   default | [40 40] exploratory and auto-refine (grid parameters keyword group), lowest-level x grid resolution 
+y_nodes                   default | [40 40] exploratory and auto-refine (grid parameters keyword group), lowest-level y grid resolution
 zero_mode                 default | [1e-6] 0->1, threshold below which the molar mode of a phase is set to 0; defaults to zero for fractionation calculations
-zero_bulk                 default | [1e-6] 0->1, threshold below which the molar amount of a component in a system is set to zero

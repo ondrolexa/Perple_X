@@ -132,7 +132,7 @@ end excluded phase list
 
 begin solution phase list
 COH-Fluid
-melt(H)
+ melt(H)
 Bio(TCC)  
 Cpx(H)
 Omph(GHP) 

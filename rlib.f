@@ -8812,9 +8812,9 @@ c---------------------------------------------------------------------
       integer im, nloc, i, j, ind, id, jd, k, l,itic,ii,imatch, killct,
      *        killid(20), inc
 
-      double precision dinc,dzt,dx,gcpd
+      double precision dinc, dzt, dx, gcpd, unstch, strtch
 
-      external gcpd, zbad
+      external gcpd, zbad, unstch, strtch
 
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
@@ -9139,6 +9139,8 @@ c                                 site ranges
          mcoor(im) = mcoor(im) + ndim(i,im)
 
          do j = 1, ndim(i,im)
+c                                 check for old subdivision schemes
+            if (imd(j,i).gt.1) call error (62,nopt(13),imd(j,i),tname)
 c                                 allow inc to be either the number of points
 c                                 or the resolution 
             if (xnc(i,j).gt.1d0) xnc(i,j) = 1d0/xnc(i,j)
@@ -9151,18 +9153,10 @@ c                                 make linear
 c                                 make all stretch (if not already)
                if (imd(j,i).eq.0) imd(j,i) = 1
 
-            end if 
+            end if
 c                                 for aqueous solutions always use
 c                                 model specified increments
-            if (jsmod.ne.20.and.nopt(13).gt.0d0.and.imd(j,i).eq.0) then 
-c                                 cartesian
-                  xnc(i,j) = nopt(13)
-
-            else if (jsmod.eq.20.or.imd(j,i).eq.1) then 
-c                                 use model resolution and invert if nonlinear
-               if (imd(j,i).eq.1) xnc(i,j) = 1d0/xnc(i,j)
-
-            end if
+            if (jsmod.ne.20.and.nopt(13).gt.0d0) xnc(i,j) = nopt(13)
 c                                 perturb xmn by a per-mil scale increment to 
 c                                 reduce compositional degeneracies. 
             if (icopt.le.3.and.nopt(13).gt.0d0) 
@@ -9185,7 +9179,7 @@ c                                 in the solution model:
 c                                 this makes smallest increment comparable, but less 
 c                                 than, xmn. they become equal in the limit xmn->0.
                   stch(im,i,j,1) = xmn(i,j)
-                  stch(im,i,j,2) = xmn(i,j) + 2
+                  stch(im,i,j,2) = xmn(i,j) + 2d0
                   stch(im,i,j,3) = stch(im,i,j,2)/stch(im,i,j,1)
                   stch(im,i,j,4) = dlog(stch(im,i,j,3))
                   xmn(i,j) = 0d0
@@ -9193,24 +9187,14 @@ c                                 than, xmn. they become equal in the limit xmn-
                end if
 
             end if 
-c                                 set initial resolution
-c                                 ------------------------------------
-c                                 auto_refine segment
+
             if (refine) then 
 c                                 new values from autorefine file
                read (n10,*) xmn(i,j),xmx(i,j)
 
                if (icopt.lt.4) then 
 c                                 set slop to the initial spacing
-                  if (imd(j,i).eq.0) then
-
-                     dinc = xnc(i,j)
-
-                  else
-
-                     dinc = 1d0/xnc(i,j)
-
-                  end if
+                   dinc = xnc(i,j)
 
                else
 c                                 adaptive minimization:
@@ -9218,31 +9202,26 @@ c                                 set slop to the final compositional
 c                                 resolution of the exploratory stage
                   dinc = rid(4,1)
 
-               end if 
-
-               if (imd(j,i).eq.0) then
-
-                  xnc(i,j) = xnc(i,j)/nopt(17)
-
-               else
-
-                  xnc(i,j) = xnc(i,j)*nopt(17)
-
                end if
 c                                 widen the range by the exploratory resolution
-               xmx(i,j) = xmx(i,j) + dinc
-               xmn(i,j) = xmn(i,j) - dinc
+               if (imd(j,i).eq.0) then
+
+                  xmx(i,j) = xmx(i,j) + dinc
+                  xmn(i,j) = xmn(i,j) - dinc
+
+               else
+c                                compute the unstretched x
+                  xmx(i,j) = unstch(xmx(i,j)) + dinc
+                  if (xmx(i,j).lt.1d0) xmx(i,j) = strtch(xmx(i,j))
+
+                  xmn(i,j) = unstch(xmn(i,j)) - dinc
+                  if (xmn(i,j).gt.0d0) xmn(i,j) = strtch(xmn(i,j))
+
+               end if 
 
                if (xmx(i,j).gt.1d0) xmx(i,j) = 1d0
                if (xmn(i,j).lt.0d0) xmn(i,j) = 0d0
- 
-            end if
-c                                 -------------------------------------
-c                                 stretching stuff
-            if (imd(j,i).gt.0) then
-c                                 check for old subdivision schemes
-               if (imd(j,i).gt.1.or.xnc(i,j).lt.1d0) 
-     *            call error (62,nopt(13),imd(j,i),tname)
+               xnc(i,j) = xnc(i,j)/nopt(17)
 
             end if
 
@@ -14833,7 +14812,7 @@ c---------------------------------------------------------------------
      *        ieyit, i, j, k, ids, ico, jst, jump
 
       double precision y(ms1,mres), ycum, ymax, dy, ync, 
-     *                 x, unstch, strtch, delt, dx, fac
+     *                 x, unstch, strtch, delt, fac
 
       external unstch, strtch
 
@@ -14952,14 +14931,13 @@ c                                 x is the linear conformal coordinate.
             if (delt.gt.nopt(5)) delt = nopt(5)
 
             x = unstch (xmn(lsite,k))
-            dx = 1d0/ync
 
             do
 
                iy(i) = iy(i) + 1
                if (iy(i).gt.mres) call error (50,ync,mres,fname(ids))
 
-               x = x + dx 
+               x = x + ync
                y(i,iy(i)) = strtch (x)
 
                if (dabs(y(i,iy(i))-ymax).le.delt.or.
@@ -15044,7 +15022,7 @@ c                                 grow in the direction of the nodal index).
 
             else
 c                                 must have just hit on the last increment or
-c                                 conformal. 
+c                                 conformal.
                cycle 
 
             end if 

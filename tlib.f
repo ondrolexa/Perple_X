@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.8.5, source updated Jan 9, 2019.',
+     *      'Perple_X version 6.8.6, source updated Jan 11, 2019.',
 
      *      'Copyright (C) 1986-2019 James A D Connolly '//
      *      '<www.perplex.ethz/copyright.html>.'
@@ -163,10 +163,8 @@ c                                 for nag)
          r1 = r1/2d0
       end do 
 
-      if (r2.eq.0) then 
-         write (*,*) 'starting precision for r1 < zero'
-         call errpau
-      end if
+      if (r2.eq.0d0) call error (77,r1,i,
+     *                         'starting precision for r1 < zero')
 
       r2 = 1d2 * r2
 
@@ -248,7 +246,7 @@ c                                 bad_number keyword
 c                                 zero_mode (<0 off)
       nopt(9) = 1d-6
 c                                 set zero threshold for fractionation calculations
-      if (icopt.eq.7.or.icopt.eq.9.or.icopt.eq.12) nopt(9) = 0d0
+      if (icopt.eq.7.or.icopt.eq.9.or.icopt.eq.12) nopt(9) = zero
 c                                 tolerance below which a component is considered to 
 c                                 be zero during fractionation
       nopt(11) = 1d-6
@@ -404,7 +402,7 @@ c                                 aq_ion_H+
 c                                 fancy_cumulative_modes
       lopt(45) = .false.
 c                                 aq_solvent_solvus
-      lopt(46) = .false.
+      lopt(46) = .true.
 c                                 sample_on_grid 
       lopt(48) = .true. 
 c                                 initialize mus flag lagged speciation
@@ -672,7 +670,7 @@ c             obsolete
 
          else if (key.eq.'aq_solvent_solvus') then
 c                                  allow for solvent immiscisibiliy
-            if (val.eq.'T') lopt(46) = .true.
+            if (val.eq.'F') lopt(46) = .false.
 
          else if (key.eq.'interim_results') then
 c                                  output interim results (VERTEX/PSSECT/WERAMI)
@@ -698,12 +696,25 @@ c                                 how fast resolution improves with iteration
             read (val,*) nopt(21)
 
          else if (key.eq.'initial_resolution') then
-c                                 initial_resolution key 
-            read (strg,'(40a)') chars(1:40)
+c                                 initial_resolution key
+            read (strg1,'(40a)') chars(1:40)
             ibeg = 1
             call readfr (nopt(13),ibeg,iend,40,ier)
             if (ier.ne.0) call error (77,nopt(1),iopt(1),key//
      *                                 'has an invalid value.')
+c                                  686 read second value as arf value
+            ibeg = iend + 1
+            call readfr (nopt(17),ibeg,iend,40,ier)
+            if (ier.ne.0) then
+c                                  special backward compatibility msg
+               write (*,1010) opname
+               call errpau
+c               call error (77,nopt(1),iopt(1),key//
+c     *                               'has an invalid or missing value.')
+            end if 
+            nopt(17) = nopt(13)/nopt(17)
+            nopt(18) = nopt(17)
+            nopt(19) = nopt(17)
 
          else if (key.eq.'final_resolution') then
 c                                 final_resolution keys 
@@ -1289,10 +1300,15 @@ c                                 proportionality constant for shear modulus
       nopt(16) = 1.5d0*(1d0-2d0*nopt(16))/(1d0+nopt(16))
 
 1000  format ('Context specific options are echoed in: ',a,/)
+1010  format (/,'ERROR: reading option file: ',a50,/,
+     *          'most likely you are using a pre-6.8.6 option',
+     *          ' file with only one',/,'initial_resolution value. Corr'
+     *         ,'ect the error by adding a second value,',/,'typically',
+     *          ' 1/3 the first (exploratory stage) value.')
 1040  format (/,'Warning: iteration keyword value must be ',
      *         ' > 1',/,'iteration will be',
      *         ' assigned its default value [2].',/)
-1050  format (/,'Warning: initial_resolution keyword must be ',
+1050  format (/,'Warning: initial_resolution values must be ',
      *         '< 1',/,'the keyword will be',
      *         ' assigned its default value.',/)
 1060  format (/,'Warning: the stretch_factor cannot be less than zero',
@@ -1326,7 +1342,7 @@ c----------------------------------------------------------------------
 
       integer i, len, n
 
-      character*3 valu(i10), nval1*12, text(14)*1
+      character valu(i10)*3, nval1*12, text(14)*1, numb*5
 
       integer iopt
       logical lopt
@@ -1387,34 +1403,15 @@ c                                 solvus tolerance text
 c                                 context specific parameters:
          if (icopt.le.3.and.(iam.eq.1.or.iam.eq.15)) then 
 c                                 non-adaptive calculations
-            if (iopt(6).ne.0) then
-c                                 auto refine
-               if (icopt.eq.1) then 
-c                                 schreinemakers
-                  write (n,1140) nopt(17)
-               else
-c                                 composition and mixed variable
-                  write (n,1150) nopt(17)
-
-               end if
-
-            end if   
 c                                 reaction format and lists
-            if (icopt.gt.0) then
-
-               write (n,1160) grid(5,1),grid(5,2),rid(1,1),rid(1,2), 
-     *                        isec,valu(7),valu(9),valu(8),valu(10)
-
-            end if
+            if (icopt.gt.0) write (n,1160) grid(5,1),grid(5,2),rid(1,1),
+     *                    rid(1,2),isec,valu(7),valu(9),valu(8),valu(10)
 
          else 
-c                                 iopt(6) is automatically off
-c                                 for meemum             
-            if (iopt(6).ne.0) write (n,1170) nopt(17)
 c                                 adaptive optimization
             write (n,1180) rid(2,1),rid(2,2),int(nopt(21)),
      *                     iopt(31),k5,nopt(25),int(nopt(23)),valu(20),
-     *                     nopt(9),nopt(11)
+     *                     nopt(9)
 c                                 gridding parameters
             if (iam.eq.1.and.icopt.eq.5.and.oned) then
 c                                 1d multilevel grid
@@ -1442,10 +1439,17 @@ c                                 closed or open composition space
             if (iam.eq.1.and.icont.gt.1) write (n,1220) lopt(1)
 
          end if 
-c                                 generic subdivision parameters:      
-         write (n,1010) nopt(13),bm1,valu(13),valu(16),lopt(39)
-c                                 pc-perturbation
-         if (iam.eq.15) write (n,1011) nopt(15)
+c                                 generic subdivision parameters:
+         if (icopt.eq.0) then
+            numb = '1/160'
+         else
+            numb = '1/48'
+         end if 
+
+         write (n,1010) nopt(13),nopt(13)/nopt(17),numb,bm1,valu(13),
+     *                  valu(16),lopt(39)
+
+         if (iam.eq.15)  write (n,1011) nopt(15)
 c                                 generic thermo parameters:
          write (n,1012) nval1,nopt(12),nopt(20),valu(17),
      *                  lopt(8),lopt(4),nopt(5),iopt(21),
@@ -1524,9 +1528,13 @@ c                                 resolution blurb
 1000  format (/,'Perple_X computational option settings for ',a,':',//,
      *      '    Keyword:               Value:     Permitted values ',
      *          '[default]:')
+
 1010  format (/,2x,'Solution subdivision options:',//,
-     *        4x,'initial_resolution     ',f5.3,6x,
+     *        4x,'initial_resolution:    ',/,
+     *        4x,'  exploratory stage    ',f6.4,5x,
      *           '0->1 [1/16], 0 => off',/,
+     *        4x,'  auto-refine stage    ',f6.4,5x,
+     *           '0->1 [',a,'], 0 => off',/,
      *        4x,'stretch_factor         ',f5.3,6x,'>0 [0.0164]',/,
      *        4x,'subdivision_override   ',a3,8x,'[off] lin str',/,
      *        4x,'hard_limits            ',a3,8x,'[off] on',/,
@@ -1553,7 +1561,7 @@ c                                 generic thermo options
      *        4x,'aq_lagged_speciation   ',l1,10x,'[F] T',/,
      *        4x,'aq_ion_H+              ',l1,10x,'[T] F => use OH-',/,
      *        4x,'aq_oxide_components    ',l1,10x,'[F] T',/,
-     *        4x,'aq_solvent_solvus      ',l1,10x,'[F] T',/,
+     *        4x,'aq_solvent_solvus      ',l1,10x,'[T] F',/,
      *        4x,'aq_vapor_epsilon       ',f3.1,8x,'[1.]')
 1013  format (/,2x,'Input/Output options:',//,
      *        4x,'dependent_potentials   ',a3,8x,'off [on]',/,
@@ -1570,7 +1578,7 @@ c                                 thermo options for frendly
      *        4x,'hybrid_EoS_H2O         ',i4,7x,'[4] 0-2, 4-7',/,
      *        4x,'hybrid_EoS_CO2         ',i4,7x,'[4] 0-4, 7',/,
      *        4x,'hybrid_EoS_CH4         ',i4,7x,'[0] 0-1, 7')
-1017  format (4x,'fd_expansion_factor    ',f3.1,8x,'>0 [2.]',/,
+1017  format (4x,'fd_expansion_factor    ',f3.1,8x,'>0 [2]',/,
      *        4x,'finite_difference_p    ',d7.1,4x,'>0 [1d4]; ',
      *           'fraction = ',d7.1,3x,'[1d-2]')
 1020  format (/,'To change these options see: ',
@@ -1581,9 +1589,7 @@ c                                 thermo options for frendly
      *                4x,'Auto-refine stage: ',g11.3E1)
 1100  format (/,2x,'Adapative minimization will be done with: ',
      *        //,3x,i2,' iterations in the exploratory stage',/,
-     *           3x,i2,' iterations in the auto-refine stage')
-1140  format (4x,'auto_refine_factor_III ',f4.1,7x,'>=1 [3]')
-1150  format (4x,'auto_refine_factor_II  ',f4.1,8x,'>=1 [10]')
+     *           3x,i2,' iterations in the autorefine stage')
 1160  format (/,2x,'Schreinemakers and Mixed-variable diagram ',
      *           'options:',//,
      *        4x,'variance               ',i2,' /',i2,5x,
@@ -1597,22 +1603,19 @@ c                                 thermo options for frendly
      *        4x,'reaction_list          ',a3,8x,'[off] on',/,
      *        4x,'console_messages       ',a3,8x,'[on] off',/,
      *        4x,'short_print_file       ',a3,8x,'[on] off')
-1170  format (4x,'auto_refine_factor_I   ',f4.1,7x,'>=1 [3]')
 1180  format (/,2x,'Free energy minimization options:',//,
      *        4x,'final_resolution:      ',/,
      *        4x,'  exploratory stage    ',g7.1E1,4x,
      *           '[1e-2], target value, see actual values below',/,
      *        4x,'  auto-refine stage    ',g7.1E1,4x,
      *           '[1e-3], target value, see actual values below',/,
-     *        4x,'resolution_factor      ',i2,9x,'[2]',/,
+     *        4x,'resolution_factor      ',i2,9x,'>= 2 [2]',/,
      *        4x,'refinement_points       ',i2,8x,'[aut] or 1->',i2,
      *           '; aut = automatic',/,
      *        4x,'solvus_tolerance_II     ',f4.2,6x,'0->1 [0.2]',/,
      *        4x,'global_reach_increment ',i2,9x,'>= 0 [0]',/,
      *        4x,'reach_increment_switch  ',a3,7x,'[on] off all',/,
-     *        4x,'zero_mode              ',e7.1E1,4x,
-     *           '0->1 [1e-6]; < 0 => off',/,
-     *        4x,'zero_bulk              ',e7.1e1,4x,
+     *        4x,'zero_mode               ',e7.1E2,3x,
      *           '0->1 [1e-6]; < 0 => off')
 1190  format (/,2x,'1D grid options:',//,
      *        4x,'y_nodes               ',i3,' /',i3,4x,'[20/40], >0, '
@@ -2384,12 +2387,12 @@ c---------------------------------------------------------------------
 41    format (/,'**error ver041** too many pseudocompounds, routine: ',a
      *        /,'this error can usually be eliminated by one of the ',
      *        /,'following actions (best listed first):',/)
-410   format (2x,'- increase the initial_resolution keyword in ',
+410   format (2x,'- increase the exploratory stage initial_resolution',
      *           'perplex_option.dat',/,
      *        2x,'- restrict the compositional ranges of the solution ',
      *           'models')
-411   format (2x,'- reduce the auto_refine_factor_I keyword in ',
-     *           'perplex_option.dat')
+411   format (2x,'- increase the auto-refine stage initial_resolution ',
+     *           'in perplex_option.dat')
 412   format (2x,'- reduce refinement_points keyword ',
      *           'in perplex_option.dat',/,
      *        2x,'- reduce the 1st value of the iteration keyword ',

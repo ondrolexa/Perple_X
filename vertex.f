@@ -716,6 +716,9 @@ c-----------------------------------------------------------------------
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+
       integer icont
       double precision dblk,cx
       common/ cst314 /dblk(3,k5),cx(2),icont
@@ -913,7 +916,7 @@ c                                 get total moles to compute mole fractions
             do i = 1, icp+1
                dcomp(i) = 0d0
                cblk(i) = gblk(k,i)
-               if (cblk(i).lt.nopt(11)) cblk(i) = 0d0
+               if (cblk(i).lt.zero) cblk(i) = 0d0
                ctotal = ctotal + cblk(i)
             end do
 
@@ -1037,7 +1040,7 @@ c                                 get total moles to compute mole fractions
 c                                 apply the zero_bulk filter only to the working 
 c                                 composition, this allows near zero components to 
 c                                 accumulate without destabilizing the optimization
-               if (cblk(i).lt.nopt(11)) cblk(i) = 0d0
+               if (cblk(i).lt.zero) cblk(i) = 0d0
 
                ctotal = ctotal + cblk(i)
 
@@ -1204,12 +1207,10 @@ c-----------------------------------------------------------------------
       common/ cst74  /iap(k2),ibulk
 
       integer hcp,idv
-      common/ cst52  /hcp,idv(k7)  
+      common/ cst52  /hcp,idv(k7)
 
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 c-----------------------------------------------------------------------
 c                                 check for positive bulk
       idead = 0 
@@ -1217,7 +1218,7 @@ c                                 check for positive bulk
       do k = 1, hcp
          if (b(k).gt.0d0) then 
             cycle
-         else if (dabs(b(k)).lt.nopt(11)) then
+         else if (dabs(b(k)).lt.zero) then
             b(k) = 0d0
          else 
             idead = 2
@@ -2144,6 +2145,9 @@ c-----------------------------------------------------------------------
       logical lopt
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 c----------------------------------------------------------------------- 
 c                                 fractionation effects:
       do i = 1, jbulk
@@ -2342,7 +2346,7 @@ c                                 warn on complete depletion of a component
 
          cblk(i) = cblk(i) - dcomp(i)
 
-         if (cblk(i).le.nopt(11)) then 
+         if (cblk(i).le.zero) then 
 
             if (.not.gone(i)) then
                warn = .true.
@@ -2350,7 +2354,7 @@ c                                 warn on complete depletion of a component
                write (*,1000) cname(i)
             end if 
 
-            if (cblk(i).lt.nopt(11)) cblk(i) = 0d0
+            if (cblk(i).lt.zero) cblk(i) = 0d0
 
          end if 
 
