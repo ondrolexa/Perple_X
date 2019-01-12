@@ -8812,9 +8812,9 @@ c---------------------------------------------------------------------
       integer im, nloc, i, j, ind, id, jd, k, l,itic,ii,imatch, killct,
      *        killid(20), inc
 
-      double precision dinc, dzt, dx, gcpd, unstch, strtch
+      double precision dinc, dzt, dx, gcpd, unstch, strtch, getstr
 
-      external gcpd, zbad, unstch, strtch
+      external gcpd, zbad, unstch, strtch, getstr
 
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
@@ -9154,13 +9154,19 @@ c                                 make all stretch (if not already)
                if (imd(j,i).eq.0) imd(j,i) = 1
 
             end if
-c                                 for aqueous solutions always use
-c                                 model specified increments
-            if (jsmod.ne.20.and.nopt(13).gt.0d0) xnc(i,j) = nopt(13)
-c                                 perturb xmn by a per-mil scale increment to 
+
+            if (imd(j,i).eq.1.and.jsmod.eq.20) then
+c                                 non-linear, use the input xnc as the conformal increment,
+c                                 so do nothing here.
+            else if (nopt(13).gt.0d0) then 
+
+               xnc(i,j) = nopt(13)
+c                                 and for convexhull: perturb xmn by a per-mil scale increment to 
 c                                 reduce compositional degeneracies. 
-            if (icopt.le.3.and.nopt(13).gt.0d0) 
-     *         xmn(i,j) = (1d0 + nopt(15)*float(im-5)) * xmn(i,j)
+               if (icopt.le.3) xmn(i,j) = xmn(i,j) *
+     *                                    (1d0 + nopt(15)*float(im-5))
+
+            end if
 c                                 save solution model values as hard limits for 
             xmno(im,i,j) = xmn(i,j)
             xmxo(im,i,j) = xmx(i,j)
@@ -9176,6 +9182,8 @@ c                                 in the solution model:
                   stch(im,i,j,4) = lbpm
 
                else 
+
+                  stch(im,i,j,1) = getstr (xnc(i,j),xmn(i,j))
 c                                 this makes smallest increment comparable, but less 
 c                                 than, xmn. they become equal in the limit xmn->0.
                   stch(im,i,j,1) = xmn(i,j)
@@ -9204,23 +9212,12 @@ c                                 resolution of the exploratory stage
 
                end if
 c                                 widen the range by the exploratory resolution
-               if (imd(j,i).eq.0) then
-
-                  xmx(i,j) = xmx(i,j) + dinc
-                  xmn(i,j) = xmn(i,j) - dinc
-
-               else
-c                                compute the unstretched x
-                  xmx(i,j) = unstch(xmx(i,j)) + dinc
-                  if (xmx(i,j).lt.1d0) xmx(i,j) = strtch(xmx(i,j))
-
-                  xmn(i,j) = unstch(xmn(i,j)) - dinc
-                  if (xmn(i,j).gt.0d0) xmn(i,j) = strtch(xmn(i,j))
-
-               end if 
+               xmx(i,j) = xmx(i,j) + dinc
+               xmn(i,j) = xmn(i,j) - dinc
 
                if (xmx(i,j).gt.1d0) xmx(i,j) = 1d0
                if (xmn(i,j).lt.0d0) xmn(i,j) = 0d0
+
                xnc(i,j) = xnc(i,j)/nopt(17)
 
             end if
@@ -14811,7 +14808,7 @@ c---------------------------------------------------------------------
       integer mode, ind(ms1), iy(ms1), jsp, lsite, indx, iexit, 
      *        ieyit, i, j, k, ids, ico, jst, jump
 
-      double precision y(ms1,mres), ycum, ymax, dy, ync, 
+      double precision y(ms1,mres), ycum, ymax, dy, ync, dx, 
      *                 x, unstch, strtch, delt, fac
 
       external unstch, strtch
@@ -14931,13 +14928,14 @@ c                                 x is the linear conformal coordinate.
             if (delt.gt.nopt(5)) delt = nopt(5)
 
             x = unstch (xmn(lsite,k))
+            dx = ync * (unstch (xmx(lsite,k) - x))
 
             do
 
                iy(i) = iy(i) + 1
                if (iy(i).gt.mres) call error (50,ync,mres,fname(ids))
 
-               x = x + ync
+               x = x + ync 
                y(i,iy(i)) = strtch (x)
 
                if (dabs(y(i,iy(i))-ymax).le.delt.or.
@@ -19537,6 +19535,41 @@ c                                 unstretch x and decrement/increment it
 c                                 by +/- one conformal increament, then 
 c                                 restretch.
       stinc = strtch ( unstch (x) + dy )
+
+      end
+
+      double precision function getstr (x,y) 
+c----------------------------------------------------------------------
+c compute the stretching paramter value that will give resolution dy
+c for cartesian increment dx
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      double precision x, y, stx, st, f, df, dst
+c----------------------------------------------------------------------
+      st = x
+
+      do 
+
+         stx =  ((st + 2) / st) ** x
+
+         f = (st * (-st + y - 2) * stx + (st + 2) * (st +
+     #        y)) / (st * stx  + st + 2)
+
+         df = (-(stx ** 2) * st ** 2 + 4 * (1 + st) * (x 
+     #      - 1) * stx + (st + 2) ** 2) / (st * stx + st + 2) ** 2
+
+         dst = -f/df
+
+         st = st + dst 
+
+         if (dst.lt.1d-3*y) exit
+
+      end do
+
+      getstr = st 
 
       end
 
