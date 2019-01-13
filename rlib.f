@@ -9183,11 +9183,10 @@ c                                 in the solution model:
 
                else 
 
-                  stch(im,i,j,1) = getstr (xnc(i,j),xmn(i,j))
-c                                 this makes smallest increment comparable, but less 
-c                                 than, xmn. they become equal in the limit xmn->0.
-                  stch(im,i,j,1) = xmn(i,j)
-                  stch(im,i,j,2) = xmn(i,j) + 2d0
+                  dx = xnc(i,j)
+                  if (refine) dx = dx/nopt(17) 
+                  stch(im,i,j,1) = getstr (dx,xmn(i,j))
+                  stch(im,i,j,2) = stch(im,i,j,1) + 2d0
                   stch(im,i,j,3) = stch(im,i,j,2)/stch(im,i,j,1)
                   stch(im,i,j,4) = dlog(stch(im,i,j,3))
                   xmn(i,j) = 0d0
@@ -19549,7 +19548,7 @@ c----------------------------------------------------------------------
 
       double precision x, y, stx, st, f, df, dst
 c----------------------------------------------------------------------
-      st = x
+      st = y
 
       do 
 
@@ -19565,7 +19564,7 @@ c----------------------------------------------------------------------
 
          st = st + dst 
 
-         if (dst.lt.1d-3*y) exit
+         if (dabs(dst).lt.1d-3*y) exit
 
       end do
 
