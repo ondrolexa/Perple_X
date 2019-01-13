@@ -40,8 +40,9 @@ c                                 solution model names
       double precision dcp,soltol
       common/ cst57 /dcp(k5,k19),soltol
 
-      logical refine
-      common/ cxt26 /refine
+      character tname*10
+      logical refine, resub
+      common/ cxt26 /refine,resub,tname
 
       integer grid
       double precision rid 
@@ -292,8 +293,9 @@ c                                 solution model counter
       logical oned
       common/ cst82 /oned
 
-      logical refine
-      common/ cxt26 /refine
+      character tname*10
+      logical refine, resub
+      common/ cxt26 /refine,resub,tname
 c-----------------------------------------------------------------------
       if (isoct.eq.0) then 
      
@@ -3006,8 +3008,9 @@ c----------------------------------------------------------------------
       character*100 prject,tfname
       common/ cst228 /prject,tfname
 
-      logical refine
-      common/ cxt26 /refine
+      character tname*10
+      logical refine, resub
+      common/ cxt26 /refine,resub,tname
 c----------------------------------------------------------------------
       if (lun.ne.n4) then 
 c                                 write interim result file list
@@ -3258,8 +3261,9 @@ c-----------------------------------------------------------------------
       integer isec,icopt,ifull,imsg,io3p
       common/ cst103 /isec,icopt,ifull,imsg,io3p
 
-      logical refine
-      common/ cxt26 /refine
+      character tname*10
+      logical refine, resub
+      common/ cxt26 /refine,resub,tname
 
       integer iam
       common/ cst4 /iam

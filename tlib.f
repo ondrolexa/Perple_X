@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.8.6, source updated Jan 11, 2019.',
+     *      'Perple_X version 6.8.6, source updated Jan 13, 2019.',
 
      *      'Copyright (C) 1986-2019 James A D Connolly '//
      *      '<www.perplex.ethz/copyright.html>.'
@@ -2064,14 +2064,24 @@ c---------------------------------------------------------------------
 
       integer ier, int
  
-      character char*(*)
+      character char*(*), tag*3
 
       double precision realv
+
+      character tname*10
+      logical refine, resub
+      common/ cxt26 /refine,resub,tname
 
       integer iopt
       logical lopt
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      if (refine) then
+         tag = '2nd'
+      else 
+         tag = '1st'
+      end if
 
       if (ier.eq.1.or.ier.eq.2) then 
          write (*,1) char,int
@@ -2269,7 +2279,20 @@ c---------------------------------------------------------------------
       else if (ier.eq.169) then
          write (*,169) int
       else if (ier.eq.180) then
-         write (*,180) char,int
+
+         if (resub) then
+c                                 dynamic 
+            write (*,180) k13,int,char,tag
+            write (*,1804)
+
+         else
+c                                 static
+            write (*,180) k13,int,tname,tag
+            write (*,1803)
+            write (*,1804)
+
+         end if 
+
       else if (ier.eq.181) then
          write (*,181) int
       else if (ier.eq.182) then
@@ -2385,10 +2408,10 @@ c---------------------------------------------------------------------
 40    format (/,'**error ver040** too many compositional coordinates, ',
      *        'increase dimension k13 (',i7,')  Routine: ',a)
 41    format (/,'**error ver041** too many pseudocompounds, routine: ',a
-     *        /,'this error can usually be eliminated by one of the ',
+     *        /,'this error can be eliminated by one of the ',
      *        /,'following actions (best listed first):',/)
 410   format (2x,'- increase the exploratory stage initial_resolution',
-     *           'perplex_option.dat',/,
+     *           ' in perplex_option.dat',/,
      *        2x,'- restrict the compositional ranges of the solution ',
      *           'models')
 411   format (2x,'- increase the auto-refine stage initial_resolution ',
@@ -2547,8 +2570,17 @@ c---------------------------------------------------------------------
      *          ' entropy model is probably incorrect.',/)
 169   format (/,'**error ver169** cart, imod=',i2,' is an invalid ',
      *          'request')
-180   format (/,'**error ver180** too many (pseudo-)compounds, ',
-     *          'routine: ',a,' currently: ',i7)
+180   format (/,'**error ver180** too many pseudocompounds ',i8,' gener'
+     *       ,'ated subdividing site ',i1,' of solution: ',a,/,
+     *        'this error can usually be eliminated by one of the ',
+     *        'following actions (best listed first):',//,
+     *        2x,'- increase the ',a,' value of the initial_resolution '
+     *          ,'keyword in in perplex_option.dat')
+1803  format (2x,'- restrict the subdivision range for the solution')
+1804  format (2x,'- if non-linear subdivision is specified for the solu'
+     *          ,'tion then increase the',/,4x,'resolution parameters '
+     *          ,'or change to linear subdivision',/,
+     *        2x,'- increase parameter k13 and recompile')
 181   format (/,'**error ver181** too many reactions,',
      *          ' increase dimension k2 (',i6,')')
 182   format (/,'**error ver182** too many invariant points,',

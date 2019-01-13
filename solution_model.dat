@@ -2344,11 +2344,11 @@ kspL     q8L      h2oL
 
 0 0 0 0 0 0 0 0 0                   | endmember flags.  
 
-1d-2 0.1  0.1 1                      | range and resolution of X(fo),  1 => asymmetric subdivision   
-1d-2 0.1  0.1 1                      | range and resolution of X(fa),  1 => asymmetric subdivision   
+2d-2 0.1  0.1 1                      | range and resolution of X(fo),  1 => asymmetric subdivision   
+2d-2 0.1  0.1 1                      | range and resolution of X(fa),  1 => asymmetric subdivision   
 0.0  0.4  0.1 0                      | range and resolution of X(ab),  0 => cartesian subdivision   
-1d-2 0.1  0.1 1                      | range and resolution of X(sil), 1 => asymmetric subdivision  
-1d-2 0.2  0.1 1                      | range and resolution of X(an),  1 => asymmetric subdivision   
+2d-2 0.1  0.1 1                      | range and resolution of X(sil), 1 => asymmetric subdivision  
+2d-2 0.2  0.1 1                      | range and resolution of X(an),  1 => asymmetric subdivision   
 0.0  0.5  0.1 0                      | range and resolution of X(ksp), 0 => cartesian subdivision
 0.0  0.6  0.1 0                      | range and resolution of X(q),   0 => cartesian subdivision  
 

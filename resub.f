@@ -1614,7 +1614,7 @@ c                                 cartesian
                   else 
 c                                 assymmetric stretching towards xmin
                      xmng(ids,i,j) = 
-     *                   stinc (x(i,j),-1d0/xncg(ids,i,j),ids,i,j)
+     *                   stinc (x(i,j),-xncg(ids,i,j),ids,i,j)
 
                   end if
 
@@ -1640,7 +1640,7 @@ c                                 cartesian
                   else 
 c                                 assymmetric stretching 
                      xmxg(ids,i,j) = 
-     *                   stinc (x(i,j),1d0/xncg(ids,i,j),ids,i,j)
+     *                   stinc (x(i,j),xncg(ids,i,j),ids,i,j)
 
                   end if 
 
@@ -3800,20 +3800,18 @@ c                                normal models
 
                sum = sum + x(i,j)
 
+               xnc(i,j) = xncg(ids,i,j)*res0
+               xxnc = xnc(i,j)*reachg(ids)
+
                if (imdg(j,i,ids).eq.0) then 
 c                                 cartesian
-                  xnc(i,j) = xncg(ids,i,j)*res0
-                  xxnc = xnc(i,j)*reachg(ids)
+
                   xmn(i,j) = x(i,j) - xxnc
                   xmx(i,j) = x(i,j) + xxnc
 
                else
 c                                 conformal, xnc is the number 
 c                                 of intervals for 0->1 resolution
-                  xnc(i,j) = xncg(ids,i,j)/res0
-
-                  xxnc = reachg(ids)/xnc(i,j)
-
                   xmn(i,j) = stinc (x(i,j),-xxnc,ids,i,j)
                   xmx(i,j) = stinc (x(i,j),xxnc,ids,i,j)
 
@@ -3836,19 +3834,16 @@ c                                 charge balance model
 
             if (i.eq.ns) cycle
 
+            xnc(1,i) = xncg(ids,1,i)*res0
+            xxnc = xnc(1,i)*reachg(ids)
+
             if (imdg(i,1,ids).eq.0) then 
 c                                 cartesian
-               xnc(1,i) = xncg(ids,1,i)*res0
-               xxnc = xnc(1,i)*reachg(ids)
                xmn(1,i) = x(1,i) - xxnc
                xmx(1,i) = x(1,i) + xxnc
 
             else
 c                                 conformal
-               xnc(1,i) = xncg(ids,1,i)/res0
-
-               xxnc = reachg(ids)/xnc(1,i)
-
                xmn(1,i) = stinc (x(1,i),-xxnc,ids,1,i)
                xmx(1,i) = stinc (x(1,i), xxnc,ids,1,i)
 

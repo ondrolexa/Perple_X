@@ -5267,7 +5267,7 @@ c                               the saturated component idc:
                isct(j) = isct(j) + 1 
                if (isct(j).gt.h6) call error (17,1d0,h6,'SATTST')
                iphct = iphct + 1
-               if (iphct.gt.k1) call error (180,1d0,k1,
+               if (iphct.gt.k1) call error (77,1d0,k1,
      *                            'SATTST increase parameter k1')
                ids(j,isct(j)) = iphct
                call loadit (iphct,.false.,.true.)
@@ -8805,16 +8805,16 @@ c---------------------------------------------------------------------
   
       include 'perplex_parameters.h'
 
-      character tname*10, sname*10
+      character sname*10, tname*10
 
       logical add, wham, zbad
 
       integer im, nloc, i, j, ind, id, jd, k, l,itic,ii,imatch, killct,
      *        killid(20), inc
 
-      double precision dinc, dzt, dx, gcpd, unstch, strtch, getstr
+      double precision dinc, dzt, dx, gcpd, stinc, getstr
 
-      external gcpd, zbad, unstch, strtch, getstr
+      external gcpd, zbad, stinc, getstr
 
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
@@ -8962,8 +8962,9 @@ c                                 parameters for autorefine
       double precision xlo,xhi
       common/ cxt11 /xlo(m4,mst,h9),xhi(m4,mst,h9),stable(h9),limit(h9)
 
-      logical refine
-      common/ cxt26 /refine
+      character qname*10
+      logical refine, resub
+      common/ cxt26 /refine,resub,qname
 c                                 model type
       logical lorder, lexces, llaar, lrecip
       common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
@@ -9040,6 +9041,8 @@ c                                 check for consistent auto-refine data
          if (tname.ne.sname) call error (63,r,i,'GMODEL')
 
       end if
+
+      qname = tname
 c                                 initialize autorefine arrays
       stable(im) = .false.
       limit(im) = .false.
@@ -9211,8 +9214,13 @@ c                                 resolution of the exploratory stage
 
                end if
 c                                 widen the range by the exploratory resolution
-               xmx(i,j) = xmx(i,j) + dinc
-               xmn(i,j) = xmn(i,j) - dinc
+               if (imd(j,i).eq.0) then 
+                  xmx(i,j) = xmx(i,j) + dinc
+                  xmn(i,j) = xmn(i,j) - dinc
+               else 
+                  xmn(i,j) = stinc (xmn(i,j),-dinc,im,i,j)
+                  xmx(i,j) = stinc (xmx(i,j),dinc,im,i,j)
+               end if 
 
                if (xmx(i,j).gt.1d0) xmx(i,j) = 1d0
                if (xmn(i,j).lt.0d0) xmn(i,j) = 0d0
@@ -12323,7 +12331,7 @@ c                                 the simple prismatic arrays x,y:
 
                if (bad) cycle
 c                                 generate the pseudocompound:
-               call soload (im,icoct,icpct,tname,icky,im)
+               call soload (im,icoct,icpct,icky,im)
 
             end do
 
@@ -12434,17 +12442,16 @@ c                              close solution model file
      *          'initial proportions.',/)
       end 
 
-      subroutine errk24 (resub)
+      subroutine errk24 
 c---------------------------------------------------------------------
 c if an entry will exceed dimension k24 and write apporpriate 
 c diagnostic on error.
 c---------------------------------------------------------------------
       implicit none
 
-      logical resub
-
-      logical refine
-      common/ cxt26 /refine
+      character tname*10
+      logical refine, resub
+      common/ cxt26 /refine,resub,tname
 c---------------------------------------------------------------------
 c                                 error diagnostic
          if (resub) then
@@ -12470,8 +12477,9 @@ c---------------------------------------------------------------------
 
       double precision sum
 
-      logical refine
-      common/ cxt26 /refine
+      character tname*10
+      logical refine, dynam
+      common/ cxt26 /refine,dynam,tname
 
       integer ntot,npairs
       common/ cst86 /ntot,npairs
@@ -12499,15 +12507,18 @@ c---------------------------------------------------------------------
       integer ksmod, ksite, kmsol, knsp
       common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
 c---------------------------------------------------------------------
+
+      dynam = resub
+
       if (ksmod(ids).eq.20) then
 c                                subdivision with charge balance
-         call cartaq (ids,resub)
+         call cartaq (ids)
 c                                assign to y()?
          return
 
       else if (ksmod(ids).eq.9.or.ksmod(ids).eq.10) then 
 
-         call oddprs (ids,resub)
+         call oddprs (ids)
 
          return
 
@@ -12571,7 +12582,7 @@ c                                 compositions.
             l = (i-1) * mcoor(ids) 
             k = (ntot-1) * mcoor(ids)
 
-            if (k+mcoor(ids).gt.k24) call errk24 (resub)
+            if (k+mcoor(ids).gt.k24) call errk24
 
             do j = 1, nold
                prism(k+j) = prism(l+j)
@@ -12629,7 +12640,7 @@ c                                 the starting position of the pure prism is
 c                                 the starting position in the final array is
                k = (ntot -1) * mcoor(ids) 
 
-               if (k+mcoor(ids).gt.k24) call errk24 (resub)
+               if (k+mcoor(ids).gt.k24) call errk24 
 c                                 load the diluted prism coordinates
                do j =  1, nsum(ids)
                   prism(k+j) = prism(l+j)*sum
@@ -12682,7 +12693,7 @@ c                                 site 2 compositions.
             l = (i-1) * mcoor(ids) 
             k = (ntot-1) * mcoor(ids)
 
-            if (k+mcoor(ids).gt.k24) call errk24 (resub)
+            if (k+mcoor(ids).gt.k24) call errk24 
 
             do j = 1, nold
                prism(k+j) = prism(l+j)
@@ -12724,7 +12735,7 @@ c---------------------------------------------------------------------
          if (cp(idc,iphct).ne.0d0) then
             isct(j) = isct(j) + 1
             if (isct(j).gt.h6) call error (17,cp(1,1),h6,'SATSRT')
-            if (iphct.gt.k1) call error (180,cp(1,1),k1,
+            if (iphct.gt.k1) call error (77,cp(1,1),k1,
      *                                  'SATSRT increase parameter k1')
             ids(j,isct(j)) = iphct
             exit
@@ -12733,7 +12744,7 @@ c---------------------------------------------------------------------
 
       end
 
-      subroutine soload (isoct,icoct,icpct,tname,icky,im)
+      subroutine soload (isoct,icoct,icpct,icky,im)
 c--------------------------------------------------------------------------
 c soload - loads/requires solution properties: 
 
@@ -12760,7 +12771,7 @@ c--------------------------------------------------------------------------
   
       include 'perplex_parameters.h'
 
-      character tname*10, znm(3,2)*2, pnm(3)*2 
+      character znm(3,2)*2, pnm(3)*2 
  
       double precision zpr,smix,esum,ctotal,omega,x
 
@@ -12773,8 +12784,9 @@ c--------------------------------------------------------------------------
       double precision ctot
       common/ cst3 /ctot(k1)
 
-      logical refine
-      common/ cxt26 /refine
+      character tname*10
+      logical refine, resub
+      common/ cxt26 /refine,resub,tname
 
       integer jmsol,kdsol
       common/ cst142 /jmsol(m4,mst),kdsol(m4)
@@ -14802,12 +14814,10 @@ c---------------------------------------------------------------------
 
       logical extra
 
-      character text*15
-
       integer mode, ind(ms1), iy(ms1), jsp, lsite, indx, iexit, 
      *        ieyit, i, j, k, ids, ico, jst, jump
 
-      double precision y(ms1,mres), ycum, ymax, dy, ync, dx, 
+      double precision y(ms1,mres), ycum, ymax, dy, ync,
      *                 x, unstch, strtch, delt, fac
 
       external unstch, strtch
@@ -14927,7 +14937,6 @@ c                                 x is the linear conformal coordinate.
             if (delt.gt.nopt(5)) delt = nopt(5)
 
             x = unstch (xmn(lsite,k))
-            dx = ync * (unstch (xmx(lsite,k) - x))
 
             do
 
@@ -15029,9 +15038,7 @@ c                                 conformal.
          npairs = npairs + 1
          j = jump + (npairs-1)*ico
 
-         write (text,'(i1,a4,a10)') lsite, ' of ', fname(ids)
-         if (j+jsp.gt.k13) call error (180,ycum,k13,
-     *      'CARTES increase parameter k13, subdividing simplex '//text)
+         if (j+jsp.gt.k13) call error (180,ycum,lsite,fname(ids))
 
          do i = 1, jsp
             simp(j+i) = y(i,ind(i))
@@ -15043,7 +15050,7 @@ c                                 conformal.
 
       end 
 
-      subroutine cartaq (ids,resub)
+      subroutine cartaq (ids)
 c---------------------------------------------------------------------
 c subroutine to cartesian or transform subdivision on a single site
 c solution with charge balance. called by subdiv. 
@@ -15051,8 +15058,6 @@ c---------------------------------------------------------------------
       implicit none
 
       include 'perplex_parameters.h'
-
-      logical resub
 
       integer i, j, k, l, m, n, ids, qpairs, np0
 
@@ -15186,7 +15191,7 @@ c                                 test for closure
                if (prism(l+nqs1)+sum.ge.1d0) cycle
 c                                 acceptable composition
                m = ntot * nqs1 
-               if (m+nqs1.gt.k24) call errk24 (resub) 
+               if (m+nqs1.gt.k24) call errk24 
 
                ntot = ntot + 1
 c                                 load neutral part
@@ -17691,8 +17696,9 @@ c                                 endmember names
       character names*8
       common/ cst8  /names(k1)
 
-      logical refine
-      common/ cxt26 /refine
+      character tname*10
+      logical refine, resub
+      common/ cxt26 /refine,resub,tname
 
       integer isec,icopt,ifull,imsg,io3p
       common/ cst103 /isec,icopt,ifull,imsg,io3p
@@ -19518,7 +19524,7 @@ c----------------------------------------------------------------------
 
       integer ids,i,j
 
-      double precision x, dy, strtch, unstch
+      double precision x, y, dy, strtch, unstch
 
       external strtch, unstch
 
@@ -19533,7 +19539,15 @@ c                                 set stretching parameters
 c                                 unstretch x and decrement/increment it
 c                                 by +/- one conformal increament, then 
 c                                 restretch.
-      stinc = strtch ( unstch (x) + dy )
+      y =  unstch (x) + dy
+
+      if (y.gt.1d0) then 
+         y = 1d0 
+      else if (y.lt.0d0) then 
+         y = 0d0
+      end if
+
+      stinc = strtch ( y )
 
       end
 
@@ -19546,23 +19560,36 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      double precision x, y, stx, st, f, df, dst
+      integer it
+
+      double precision x, y, stx, st, f, df, dst, st2
 c----------------------------------------------------------------------
       st = y
 
-      do 
+      it = 0
 
-         stx =  ((st + 2) / st) ** x
+      do
 
-         f = (st * (-st + y - 2) * stx + (st + 2) * (st +
-     #        y)) / (st * stx  + st + 2)
+         st2 = st + 2d0
+         stx =  (st2 / st) ** x
 
-         df = (-(stx ** 2) * st ** 2 + 4 * (1 + st) * (x 
-     #      - 1) * stx + (st + 2) ** 2) / (st * stx + st + 2) ** 2
+         f = (st * (-st2 + y) * stx + st2 * (st +
+     *        y)) / (st * stx  + st2)
+
+         df = (-(stx ** 2) * st ** 2 + 4d0 * (1d0 + st) * (x
+     *        - 1d0) * stx + st2 ** 2) / (st * stx + st2) ** 2
 
          dst = -f/df
 
-         st = st + dst 
+         st = st + dst
+
+         it = it + 1
+
+         if (it.gt.12) then 
+
+            write (*,*) 'uh oj'
+
+         end if 
 
          if (dabs(dst).lt.1d-3*y) exit
 
@@ -19874,15 +19901,13 @@ c                                 check for bad z's
 
       end 
 
-      subroutine oddprs (ids,resub)
+      subroutine oddprs (ids)
 c---------------------------------------------------------------------
 c subdivision for a regular prism + orphan vertices
 c---------------------------------------------------------------------
       implicit none
  
       include 'perplex_parameters.h'
-
-      logical resub
 
       integer i, j, h, ids, k, l, m, n, np0, np1, np2, nst1, nst2, i1,
      *        nco
@@ -19969,7 +19994,7 @@ c                                  count the coordinate
 c                                 starting point of the coordinate
                   h = (ntot-1)*mcoor(ids)
 
-                  if (h+mcoor(ids).gt.k24) call errk24 (resub)
+                  if (h+mcoor(ids).gt.k24) call errk24
 c                                 load the coordinate
                   do i1 = 1, ndim(1,ids)
                      prism(h+i1) = simp(m+i1)
