@@ -54,10 +54,6 @@ end independent potential list
 begin excluded phase list
 mic
 geik
- mts_d
- fts_d
- mprg_d
- fprg_d
 end excluded phase list
 
 

@@ -1,14 +1,14 @@
 .true.           FRAC2D, if .false., TITRATE if .true.
 .true.           ANNEAL, in true remove excess mobile phase from theinitial column and renormalize all masses to 1kg (including aliquot)
 .false.          VERBOS if true composition and amount of fractionated phase are output to user console
-100.             ZBOX, box size (m)
+10.              ZBOX, box size (m)
 
 0.35             DPDZ, pressure-depth gradient (bar/m)
 
-150d3            ZMAX, depth (m) to the base of the rock column
+150d3            Z0, depth (m) to the base of the rock column
 
 0                QMIN, mass of aliquot per unit area of the column (kg/m2), number of increments is set by 1d_path option
-100              QMAX, mass of aliquot per unit area of the column (kg/m2).
+1000             QMAX, mass of aliquot per unit area of the column (kg/m2).
 
 3                NPTS, number of T(K)-z(m) coordinates to compute NPTS-1 order polynomial for t(z)
 
@@ -16,7 +16,7 @@
 1573   80d3      T_2, Z_2 - second T(K)-z(m) coordinate
 973    150d3     T_3, Z_3 - third  T(K)-z(m) coordinate
 
-1d3              ZLAY_1, vertical thickness of layer (m) and composition (molar), layers are listed from bottom up. 
+2d3              ZLAY_1, vertical thickness of layer (m) and composition (molar), layers are listed from bottom up. 
 
 .0, .1e-2, .7075, .74e-1, .9711e-1, .8666, .527e-1, .92e-2, .92e-3, 1.271735000, .2e-2     CLAY_1_1-CLAY_1_C, losimag peridotite + 2 % water.
 

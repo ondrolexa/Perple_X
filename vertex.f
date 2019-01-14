@@ -2374,7 +2374,7 @@ c                                 warn on complete depletion of a component
      *        'composition.',//,
      *        'This may destabilize the minimization algorithm. ',
      *        'If excessive',/,'minimization errors occur, restart the',
-     *        'fractionation calculation at the',/,'current point on ',
+     *        ' fractionation calculation at the',/,'current point on ',
      *        'the fractionation path with the current molar bulk ', 
      *        'composition:',/)
 1010  format (4x,a,2x,g12.6)  

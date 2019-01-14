@@ -8830,8 +8830,8 @@ c---------------------------------------------------------------------
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp  
 
-      double precision dcp,soltol
-      common/ cst57 /dcp(k5,k19),soltol
+      double precision dcp
+      common/ cst57 /dcp(k5,k19)
                              
       integer jmsol,kdsol
       common/ cst142 /jmsol(m4,mst),kdsol(m4)
@@ -9799,7 +9799,7 @@ c
                 
                dx = dabs(cp(k,id) - cp(k,jd))
                
-               if (dx.lt.nopt(5)) then 
+               if (dx.lt.nopt(5)) then
                   cycle
                else if (dcp(k,im).lt.dx) then 
                   dcp(k,im) = dx
@@ -18096,8 +18096,8 @@ c-----------------------------------------------------------------------
       double precision cp
       common/ cst12 /cp(k5,k1)
 
-      double precision dcp,soltol
-      common/ cst57 /dcp(k5,k19),soltol
+      double precision dcp
+      common/ cst57 /dcp(k5,k19)
 
       integer iopt
       logical lopt
@@ -18110,7 +18110,7 @@ c-----------------------------------------------------------------------
 
          if (dcp(i,ids).eq.0d0) cycle 
 
-         if (dabs(cp(i,id1)-cp(i,id2))/dcp(i,ids).gt.soltol) then 
+         if (dabs(cp(i,id1)-cp(i,id2))/dcp(i,ids).gt.nopt(8)) then 
             solvus = .true.
             exit
          end if 

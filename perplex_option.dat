@@ -65,7 +65,7 @@ hybrid_EoS_H2O            default | [4] 0-2, 4-5 => 0 - MRK, 1 HSMRK, 2 - CORK, 
 hybrid_EoS_CO2            default | [4] 0-4 => 0 - MRK, 1 HSMRK, 2 - CORK, 3- Bottinga, 4 - PSEoS, 6 - Zhang & Duan 05, 7 - Zhang & Duan 09
 hybrid_EoS_CH4            default | [1] 0-1  => 0 - MRK, 1 HSMRK, 7 - Zhang & Duan 09
 increment                 default | [0.1 0.025] >0, < 1, fractional independent variable increments [exploratory and autorefine], only relevant for CONVEX
-initial_resolution        1/10 1/20 | [1/15] >0, <1
+initial_resolution        1/10 1/40 default | [1/15] >0, <1
 interim_results           default | [auto] auto, off or on
 interpolation             default | [on 2] value 1: on or off [on]; value 2, 1->99 [2]; only relevant for WERAMI
 iteration                 default | [2] real > 2, improves resolution
@@ -92,7 +92,7 @@ reject_negative_sites     default | [T] reject compositions with negative site p
 seismic_output            default | [some] all, some, none
 short_print               default | [on] suppress output of equilibrium coordinates to the print file, only relevant for CONVEX
 solution_names            default | [mod] mod, abb or ful; use the model, abbreviation, or full name for solution models for output
-solvus_tolerance          default | [auto] auto or 0->1, should be > initial_resolution/auto_refine_factor
+solvus_tolerance          default | [auto] auto or 0->1, should be > initial_resolution
 solvus_tolerance_II       default | [0.2] 0->1 
 speciation_factor         default | [100] >1, speciation precision = final resolution/speciation factor
 speciation_max_it         default | [100] maximum number of iterations permitted in iterative calculations

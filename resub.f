@@ -947,8 +947,13 @@ c-----------------------------------------------------------------------
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
 
-      double precision dcp,soltol
-      common/ cst57 /dcp(k5,k19),soltol
+      double precision dcp
+      common/ cst57 /dcp(k5,k19)
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 c                                 composition and model flags
 c                                 for final adaptive solution
       integer kkp,np,ncpd,ntot
@@ -961,7 +966,7 @@ c-----------------------------------------------------------------------
 
          if (dcp(i,ids).eq.0d0) cycle 
 
-         if (dabs(cp3(i,id1) - cp3(i,id2))/dcp(i,ids).gt.soltol) then 
+         if (dabs(cp3(i,id1) - cp3(i,id2))/dcp(i,ids).gt.nopt(8)) then 
             solvs1 = .true.
             exit 
          end if 
@@ -970,7 +975,7 @@ c-----------------------------------------------------------------------
 
       end 
 
-      logical function solvs2 (id1,id2)
+      logical function solvs2 (id1,id2,ids)
 c-----------------------------------------------------------------------
 c function to test if a solvus separates two pseudocompounds of solution
 c ids, intermediate solution values. 
@@ -979,13 +984,18 @@ c-----------------------------------------------------------------------
  
       include 'perplex_parameters.h'
 
-      integer id1,id2,i
+      integer id1,id2,ids,i
 
       integer icomp,iphct,icp,istct
       common/ cst6 /icomp,istct,iphct,icp
 
-      double precision dcp,soltol
-      common/ cst57 /dcp(k5,k19),soltol
+      double precision dcp
+      common/ cst57 /dcp(k5,k19)
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       integer jphct, jpt
       double precision g2, cp2, c2tot
@@ -995,7 +1005,8 @@ c-----------------------------------------------------------------------
 
       do i = 1, icp
 
-         if (dabs(cp2(i,id1) - cp2(i,id2)).gt.soltol) then
+         if (dabs(cp2(i,id1)*c2tot(id1) 
+     *          - cp2(i,id2)*c2tot(id2))/dcp(i,ids).gt.nopt(8)) then
             solvs2 = .true.
             exit
          end if
@@ -1009,7 +1020,7 @@ c-----------------------------------------------------------------------
 c function to test if a solvus separates two pseudocompounds of a lagged
 c aqueous solution based 
 
-c ids, called only for final solution vales by avrger.
+c ids, called only for final solution values by avrger.
 c-----------------------------------------------------------------------
       implicit none
  
@@ -1032,14 +1043,14 @@ c-----------------------------------------------------------------------
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
-      double precision dcp,soltol
-      common/ cst57 /dcp(k5,k19),soltol
+      double precision dcp
+      common/ cst57 /dcp(k5,k19)
 c-----------------------------------------------------------------------
       solvs4 = .false.
 
       do i = 1, ns
 
-         if (dabs(x3(id1,1,i) - x3(id2,1,i)).gt.soltol) then 
+         if (dabs(x3(id1,1,i) - x3(id2,1,i)).gt.nopt(8)) then 
             solvs4 = .true.
             exit 
          end if 
@@ -1086,8 +1097,8 @@ c                                 x coordinate description
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
 
-      double precision dcp,soltol
-      common/ cst57 /dcp(k5,k19),soltol
+      double precision dcp
+      common/ cst57 /dcp(k5,k19)
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
@@ -1190,8 +1201,6 @@ c                                figure out how many solutions
 c                                are present:
 10    np = 0
       ncpd = 0
-c                                solvus_tolerance
-      soltol = nopt(8)
 
       do i = 1, ntot
           
@@ -1976,8 +1985,8 @@ c----------------------------------------------------------------------
       integer isoct
       common/ cst79 /isoct
 
-      double precision dcp,soltol
-      common/ cst57 /dcp(k5,k19),soltol
+      double precision dcp
+      common/ cst57 /dcp(k5,k19)
 
       integer ikp
       common/ cst61 /ikp(k1)
@@ -2017,8 +2026,6 @@ c----------------------------------------------------------------------
       nsol = 0
       inc = istct - 1
       quit = .true.
-c                                 solvus_tolerance_II, 0.25
-      soltol = nopt(25)
 
       do i = 1, jphct
 

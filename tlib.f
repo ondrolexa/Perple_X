@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.8.6, source updated Jan 13, 2019.',
+     *      'Perple_X version 6.8.6, source updated Jan 14, 2019.',
 
      *      'Copyright (C) 1986-2019 James A D Connolly '//
      *      '<www.perplex.ethz/copyright.html>.'
@@ -261,7 +261,7 @@ c                                 if meemum set auto-refine vale
 c                                 global reach factor
       nopt(23) = 0d0
 c                                 solvus_tolerance_II
-      nopt(25) = 0.2d0       
+      nopt(25) = 0.2d0
 c                                 finite_difference_p threshold for finite difference estimates
       nopt(26) = 1d4
 c                                 finite_difference_p fraction for first order difference estimates

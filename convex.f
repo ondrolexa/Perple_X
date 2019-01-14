@@ -5493,18 +5493,12 @@ c                                 local variables
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
-      double precision dcp,soltol
-      common/ cst57 /dcp(k5,k19),soltol
+      double precision dcp
+      common/ cst57 /dcp(k5,k19)
 c-----------------------------------------------------------------------
       np = 0   
       ncpd = 0 
       solvs1 = .false.
-c                                 solvus tolerance, miscib 1.2
-      if (lopt(9)) then 
-         soltol = 1.8d0*nopt(8)
-      else 
-         soltol = nopt(8)
-      end if 
 
       do 10 i = 1, ntot
 

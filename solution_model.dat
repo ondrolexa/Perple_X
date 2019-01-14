@@ -2450,11 +2450,11 @@ mu pa ma1_dqf cel fmu fcel
 0 0 0 0 0 0 0 0              | endmember flags
 
                              | subdivision model
-0. 1.   .1 0                 | range and resolution of X(mu),      imod = 0 -> cartesian subdivision
-0. 1.   .1 0                 | range and resolution of X(pa),      imod = 0 -> cartesian subdivision
-0. 1.   .1 0                 | range and resolution of X(ma1_dqf), imod = 0 -> cartesian subdivision
-0. 1.   .1 0                 | range and resolution of X(cel),     imod = 0 -> cartesian subdivision
-0. .3   .1 0                 | range and resolution of X(fmu), 
+0. 1.    .1 0                | range and resolution of X(mu),      imod = 0 -> cartesian subdivision
+0. 1.    .1 0                | range and resolution of X(pa),      imod = 0 -> cartesian subdivision
+2e-2 0.2 .1 1                | range and resolution of X(ma1_dqf), imod = 0 -> cartesian subdivision
+0. 1.    .1 0                | range and resolution of X(cel),     imod = 0 -> cartesian subdivision
+0. .3    .1 0                | range and resolution of X(fmu), 
 begin_excess_function
 
 W(mu cel)                  0d3           0       0.2
@@ -6757,6 +6757,8 @@ end_van_laar_sizes
 begin_dqf_corrections
 dqf(an) = 7030 - 4.66 * T_K
 end_dqf_corrections
+
+reach_increment 6
 
 end_of_model
                       --------------------------------------------------------

@@ -37,8 +37,8 @@ c                                 solution model names
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
-      double precision dcp,soltol
-      common/ cst57 /dcp(k5,k19),soltol
+      double precision dcp
+      common/ cst57 /dcp(k5,k19)
 
       character tname*10
       logical refine, resub
