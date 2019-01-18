@@ -4431,11 +4431,11 @@ c                                 mass fraction (%)
 c                                 
             if (lopt(41)) then
 
-               temp = cname(icx)//',mol_abs '
+               temp = cname(icx)//',mol,abs '
 
             else
 
-               temp = cname(icx)//',mol_pfu '
+               temp = cname(icx)//',mol,pfu '
 
             end if 
 
@@ -4741,11 +4741,11 @@ c                                 mass fraction (%)
 
             if (lopt(41)) then
 
-               dname(i) = cname(i)//',mol_abs '
+               dname(i) = cname(i)//',mol,abs '
 
             else 
 
-               dname(i) = cname(i)//',mol_pfu '
+               dname(i) = cname(i)//',mol,pfu '
 
             end if
 

@@ -8830,8 +8830,8 @@ c---------------------------------------------------------------------
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp  
 
-      double precision dcp
-      common/ cst57 /dcp(k5,k19)
+      double precision dcp,soltol
+      common/ cst57 /dcp(k5,k19),soltol
                              
       integer jmsol,kdsol
       common/ cst142 /jmsol(m4,mst),kdsol(m4)
@@ -9028,9 +9028,6 @@ c                                 model type
       double precision stch
       common/ cst47 /stch(h9,mst,msp,4)
 
-      double precision bp1,bm1,bpm,lbpm
-      common/ cst46 /bp1,bm1,bpm,lbpm
-
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
 c----------------------------------------------------------------------
@@ -9177,26 +9174,16 @@ c                                 set stretch parameters according to xmn specif
 c                                 in the solution model:
             if (imd(j,i).ne.0) then
 
-               if (xmn(i,j).eq.0) then
+               dx = xnc(i,j)
+               if (xmn(i,j).eq.0d0) xmn(i,j) = nopt(14)
+               if (refine) dx = dx/nopt(17)
+               stch(im,i,j,1) = getstr (dx,xmn(i,j))
+               stch(im,i,j,2) = stch(im,i,j,1) + 2d0
+               stch(im,i,j,3) = stch(im,i,j,2)/stch(im,i,j,1)
+               stch(im,i,j,4) = dlog(stch(im,i,j,3))
+               xmn(i,j) = 0d0
 
-                  stch(im,i,j,1) = bm1
-                  stch(im,i,j,2) = bp1
-                  stch(im,i,j,3) = bpm
-                  stch(im,i,j,4) = lbpm
-
-               else 
-
-                  dx = xnc(i,j)
-                  if (refine) dx = dx/nopt(17) 
-                  stch(im,i,j,1) = getstr (dx,xmn(i,j))
-                  stch(im,i,j,2) = stch(im,i,j,1) + 2d0
-                  stch(im,i,j,3) = stch(im,i,j,2)/stch(im,i,j,1)
-                  stch(im,i,j,4) = dlog(stch(im,i,j,3))
-                  xmn(i,j) = 0d0
-
-               end if
-
-            end if 
+            end if
 
             if (refine) then 
 c                                 new values from autorefine file
@@ -9799,7 +9786,7 @@ c
                 
                dx = dabs(cp(k,id) - cp(k,jd))
                
-               if (dx.lt.nopt(5)) then
+               if (dx.lt.nopt(5)) then 
                   cycle
                else if (dcp(k,im).lt.dx) then 
                   dcp(k,im) = dx
@@ -18096,8 +18083,8 @@ c-----------------------------------------------------------------------
       double precision cp
       common/ cst12 /cp(k5,k1)
 
-      double precision dcp
-      common/ cst57 /dcp(k5,k19)
+      double precision dcp,soltol
+      common/ cst57 /dcp(k5,k19),soltol
 
       integer iopt
       logical lopt
@@ -18110,7 +18097,7 @@ c-----------------------------------------------------------------------
 
          if (dcp(i,ids).eq.0d0) cycle 
 
-         if (dabs(cp(i,id1)-cp(i,id2))/dcp(i,ids).gt.nopt(8)) then 
+         if (dabs(cp(i,id1)-cp(i,id2))/dcp(i,ids).gt.soltol) then 
             solvus = .true.
             exit
          end if 
@@ -19514,9 +19501,9 @@ c----------------------------------------------------------------------
 
       double precision function stinc (x,dy,ids,i,j) 
 c----------------------------------------------------------------------
-c stinc increments cartesian x by the conformal increment dy for solution 
+c stinc increments stretched x by the conformal increment dy for solution 
 c ids, site i, species j. this is used to set limits for the conformal
-c y in terms of the cartesian x.
+c y in terms of the stretched x.
 c----------------------------------------------------------------------
       implicit none
 
@@ -19530,9 +19517,6 @@ c----------------------------------------------------------------------
 
       double precision stch
       common/ cst47 /stch(h9,mst,msp,4)
-
-      double precision bp1,bm1,bpm,lbpm
-      common/ cst46 /bp1,bm1,bpm,lbpm
 c----------------------------------------------------------------------
 c                                 set stretching parameters
       call setstc (ids,i,j) 
@@ -19553,8 +19537,8 @@ c                                 restretch.
 
       double precision function getstr (x,y) 
 c----------------------------------------------------------------------
-c compute the stretching paramter value that will give resolution dy
-c for cartesian increment dx
+c compute the conformal stretching paramter value that will give resolution y
+c for conformal coordinate x
 c----------------------------------------------------------------------
       implicit none
 
@@ -19585,11 +19569,8 @@ c----------------------------------------------------------------------
 
          it = it + 1
 
-         if (it.gt.12) then 
-
-            write (*,*) 'uh oj'
-
-         end if 
+         if (it.gt.1000) call error (77,x,it,'GETSTR not converging on'
+     *      //'specified resolution, check stretch_factor')
 
          if (dabs(dst).lt.1d-3*y) exit
 

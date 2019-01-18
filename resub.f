@@ -345,6 +345,9 @@ c----------------------------------------------------------------------
       integer ntot,npairs
       common/ cst86 /ntot,npairs
 
+      double precision dcp,soltol
+      common/ cst57 /dcp(k5,k19),soltol
+
       integer npt,jdv
       double precision cptot,ctotal
       common/ cst78 /cptot(k19),ctotal,jdv(k19),npt
@@ -372,6 +375,8 @@ c----------------------------------------------------------------------
 c----------------------------------------------------------------------
 c                                 iteration dependent resolution
       res0 = nopt(24)/nopt(21)**iter
+
+c      if (lopt(13)) soltol = soltol * res0
 c                                 set dynamic array counters:
       jphct = jpt
       jcoct = 1
@@ -947,13 +952,8 @@ c-----------------------------------------------------------------------
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
 
-      double precision dcp
-      common/ cst57 /dcp(k5,k19)
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+      double precision dcp,soltol
+      common/ cst57 /dcp(k5,k19),soltol
 c                                 composition and model flags
 c                                 for final adaptive solution
       integer kkp,np,ncpd,ntot
@@ -966,54 +966,14 @@ c-----------------------------------------------------------------------
 
          if (dcp(i,ids).eq.0d0) cycle 
 
-         if (dabs(cp3(i,id1) - cp3(i,id2))/dcp(i,ids).gt.nopt(8)) then 
+         if (dabs(cp3(i,id1) - cp3(i,id2))/dcp(i,ids).gt.soltol) then 
             solvs1 = .true.
             exit 
          end if 
          
       end do 
 
-      end 
-
-      logical function solvs2 (id1,id2,ids)
-c-----------------------------------------------------------------------
-c function to test if a solvus separates two pseudocompounds of solution
-c ids, intermediate solution values. 
-c-----------------------------------------------------------------------
-      implicit none
- 
-      include 'perplex_parameters.h'
-
-      integer id1,id2,ids,i
-
-      integer icomp,iphct,icp,istct
-      common/ cst6 /icomp,istct,iphct,icp
-
-      double precision dcp
-      common/ cst57 /dcp(k5,k19)
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
-      integer jphct, jpt
-      double precision g2, cp2, c2tot
-      common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),jphct,jpt
-c-----------------------------------------------------------------------
-      solvs2 = .false.
-
-      do i = 1, icp
-
-         if (dabs(cp2(i,id1)*c2tot(id1) 
-     *          - cp2(i,id2)*c2tot(id2))/dcp(i,ids).gt.nopt(8)) then
-            solvs2 = .true.
-            exit
-         end if
-
-      end do 
-
-      end 
+      end
 
       logical function solvs4 (id1,id2)
 c-----------------------------------------------------------------------
@@ -1038,19 +998,14 @@ c-----------------------------------------------------------------------
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
 
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
-      double precision dcp
-      common/ cst57 /dcp(k5,k19)
+      double precision dcp,soltol
+      common/ cst57 /dcp(k5,k19),soltol
 c-----------------------------------------------------------------------
       solvs4 = .false.
 
       do i = 1, ns
 
-         if (dabs(x3(id1,1,i) - x3(id2,1,i)).gt.nopt(8)) then 
+         if (dabs(x3(id1,1,i) - x3(id2,1,i)).gt.soltol) then 
             solvs4 = .true.
             exit 
          end if 
@@ -1097,8 +1052,8 @@ c                                 x coordinate description
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
 
-      double precision dcp
-      common/ cst57 /dcp(k5,k19)
+      double precision dcp,soltol
+      common/ cst57 /dcp(k5,k19),soltol
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
@@ -1201,6 +1156,7 @@ c                                figure out how many solutions
 c                                are present:
 10    np = 0
       ncpd = 0
+      soltol = nopt(8)
 
       do i = 1, ntot
           
@@ -1985,8 +1941,8 @@ c----------------------------------------------------------------------
       integer isoct
       common/ cst79 /isoct
 
-      double precision dcp
-      common/ cst57 /dcp(k5,k19)
+      double precision dcp,soltol
+      common/ cst57 /dcp(k5,k19),soltol
 
       integer ikp
       common/ cst61 /ikp(k1)
@@ -2026,6 +1982,9 @@ c----------------------------------------------------------------------
       nsol = 0
       inc = istct - 1
       quit = .true.
+      soltol = 2d1*nopt(8)
+
+      soltol = 1d0
 
       do i = 1, jphct
 
@@ -2127,6 +2086,9 @@ c                                compositions.
                   do k = 1, kdsol(j)
                      if (.not.solvus(jdsol(k,j),id,iam)) goto 20
                   end do
+
+c                 write (*,*) 'got 1, yclos1'
+
                end if
             end do
 c                                the composition is acceptable
@@ -2775,7 +2737,9 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      external ffirst
+      logical solvus
+
+      external ffirst, solvus
 
       integer i, id, is(*), jmin(k19), opt, kpt, mpt, iter, tic, 
      *        idead, j, k
@@ -2971,7 +2935,11 @@ c                                 if not done iterating:
 c                                 make a list of the solutions
          do i = 1, opt
 
-            if (jmin(i).eq.0) then
+            if (jmin(i).eq.0) then 
+
+               cycle
+
+            else if (jkp(jmin(i)).lt.0) then
 
                cycle
 
@@ -2991,6 +2959,11 @@ c                                 delete compositionally degenerate refinement p
                   if (jkp(jdv(j)).ne.jkp(jmin(i))) cycle
 
                   good = .false.
+c                                 metastable point matches a refinement point, 
+c                                 check composition
+c                                 only accept if more distant than soltol
+c                 if (solvus(jdv(j),jmin(i),jkp(jdv(j)))) good = .true.
+
 c                                 metastable point matches a refinement point, 
 c                                 check composition
                   do k = 1, icp

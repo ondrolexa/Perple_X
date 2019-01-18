@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.8.6, source updated Jan 14, 2019.',
+     *      'Perple_X version 6.8.6, source updated Jan 18, 2019.',
 
      *      'Copyright (C) 1986-2019 James A D Connolly '//
      *      '<www.perplex.ethz/copyright.html>.'
@@ -105,9 +105,6 @@ c----------------------------------------------------------------------
       logical lopt
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
-      double precision bp1,bm1,bpm,lbpm
-      common/ cst46 /bp1,bm1,bpm,lbpm
 
       integer grid
       double precision rid 
@@ -201,6 +198,8 @@ c                                 approx_alpha
       lopt(8) = .true.
 c                                 automatic solvus tolerance
       lopt(9) = .true.
+c                                 automatic solvus_tolerance_II
+      lopt(13) = .true.
 c                                 pseudocompound_file
       lopt(10) = .false.
 c                                 auto_refine_file
@@ -257,11 +256,9 @@ c                                 final resolution, auto-refine stage
 c                                 final resolution, exploratory stage
       rid(2,1) = 1d-2
 c                                 if meemum set auto-refine vale
-      if (iam.eq.2) rid(2,2) = rid(2,1)
+      if (iam.eq.2) rid(2,1) = rid(2,2)
 c                                 global reach factor
       nopt(23) = 0d0
-c                                 solvus_tolerance_II
-      nopt(25) = 0.2d0
 c                                 finite_difference_p threshold for finite difference estimates
       nopt(26) = 1d4
 c                                 finite_difference_p fraction for first order difference estimates
@@ -274,6 +271,10 @@ c                                 quench temperature (K)
 c                                 initial resolution for adaptive 
 c                                 refinement
       nopt(13) = 1d0/16d0
+c                                 solvus_tolerance
+      nopt(8) = 1.5*nopt(8)
+c                                 solvus_tolerance_II
+      nopt(25) = 3d0*nopt(13)
 c                                 perturbation to eliminate pseudocompound
 c                                 degeneracies
       nopt(15) = 5d-3
@@ -282,9 +283,9 @@ c                                 missing shear moduli
       valu(15) = 'on '
       nopt(16) = 0.35d0
       iopt(16) = 1
-c                                 stretch factor (b-1) for conformal
+c                                 compositional resolution for conformal
 c                                 subdivision
-      bm1 = 0.0164d0
+      nopt(14) = 2d-3
 c                                 subdivision model, 0 - solution model
 c                                 1 - cartesian, 2 - stretch
       iopt(13) = 0 
@@ -649,7 +650,10 @@ c                                 bad number key
 
          else if (key.eq.'solvus_tolerance_II') then 
 
-            read (strg,*) nopt(25)
+            if (val.ne.'aut') then 
+               lopt(13) = .false.
+               read (strg,*) nopt(25)
+            end if 
 
          else if (key.eq.'speciation_factor') then 
 
@@ -777,7 +781,7 @@ c                                 reach_increment_switch
 
          else if (key.eq.'stretch_factor') then
 c                                 stretch_factor key = b - 1       
-            read (strg,*) bm1
+            read (strg,*) nopt(14)
 
          else if (key.eq.'subdivision_override') then 
 c                                 subdivision override key
@@ -1146,9 +1150,9 @@ c                                 initial resolution
          nopt(13) = 0.1d0
       end if 
 c                                 stretching parameters
-      if (bm1.lt.0d0) then 
+      if (nopt(14).le.0d0) then 
          write (*,1060)
-         bm1 = 0.0164
+         nopt(14) = 2d-3
       end if 
 c                                 auto-refine factor II
       if (icopt.eq.1.and.nopt(19).lt.1d0) then 
@@ -1200,10 +1204,6 @@ c                                 grid parameters
          end if 
 
       end do
-c                                 stretching
-      bp1 = 2d0 + bm1
-      bpm = bp1/bm1
-      lbpm = dlog(bpm)
 c                                 --------------------------------------
 c                                 program/computation specific settings
 c                                 meemum, turn autorefine off. it can
@@ -1310,9 +1310,9 @@ c                                 proportionality constant for shear modulus
      *         ' assigned its default value [2].',/)
 1050  format (/,'Warning: initial_resolution values must be ',
      *         '< 1',/,'the keyword will be',
-     *         ' assigned its default value.',/)
-1060  format (/,'Warning: the stretch_factor cannot be less than zero',
-     *        /,' the keyword will be  assigned its default value',/)
+     *         ' assigned its default values.',/)
+1060  format (/,'Warning: stretch_factor cannot be < 0 ',
+     *          'the keyword will be assigned its default value',/)
 1070  format (/,'Warning: auto_refine_factors must be ',
      *         '> 1',/,'the keyword will be',
      *         ' assigned its default value (',i2,').',/)
@@ -1342,15 +1342,12 @@ c----------------------------------------------------------------------
 
       integer i, len, n
 
-      character valu(i10)*3, nval1*12, text(14)*1, numb*5
+      character valu(i10)*3, nval1*12, text(14)*1, numb*5, nval2*12
 
       integer iopt
       logical lopt
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
-      double precision bp1,bm1,bpm,lbpm
-      common/ cst46 /bp1,bm1,bpm,lbpm
 
       integer grid
       double precision rid 
@@ -1397,6 +1394,18 @@ c                                 solvus tolerance text
            if (len.gt.14) len = 14
            write (nval1,'(14a)') (text(i),i=1,len)
 
+         end if
+
+         if (lopt(13)) then 
+
+           nval2 = 'aut    '
+
+         else 
+
+           call numtxt (nopt(25),text,len)
+           if (len.gt.14) len = 14
+           write (nval2,'(14a)') (text(i),i=1,len)
+
          end if 
 
          if (iam.eq.1.or.iam.eq.15) write (n,1015) valu(6)
@@ -1410,7 +1419,7 @@ c                                 reaction format and lists
          else 
 c                                 adaptive optimization
             write (n,1180) rid(2,1),rid(2,2),int(nopt(21)),
-     *                     iopt(31),k5,nopt(25),int(nopt(23)),valu(20),
+     *                     iopt(31),k5,nval2,int(nopt(23)),valu(20),
      *                     nopt(9)
 c                                 gridding parameters
             if (iam.eq.1.and.icopt.eq.5.and.oned) then
@@ -1446,8 +1455,8 @@ c                                 generic subdivision parameters:
             numb = '1/48'
          end if 
 
-         write (n,1010) nopt(13),nopt(13)/nopt(17),numb,bm1,valu(13),
-     *                  valu(16),lopt(39)
+         write (n,1010) nopt(13),nopt(13)/nopt(17),numb,nopt(14),
+     *                  valu(13),valu(16),lopt(39)
 
          if (iam.eq.15)  write (n,1011) nopt(15)
 c                                 generic thermo parameters:
@@ -1535,7 +1544,7 @@ c                                 resolution blurb
      *           '0->1 [1/16], 0 => off',/,
      *        4x,'  auto-refine stage    ',f6.4,5x,
      *           '0->1 [',a,'], 0 => off',/,
-     *        4x,'stretch_factor         ',f5.3,6x,'>0 [0.0164]',/,
+     *        4x,'stretch_factor         ',f6.4,5x,'>0 [2d-3]',/,
      *        4x,'subdivision_override   ',a3,8x,'[off] lin str',/,
      *        4x,'hard_limits            ',a3,8x,'[off] on',/,
      *        4x,'refine_endmembers      ',l1,10x,'[F] T')
@@ -1612,7 +1621,7 @@ c                                 thermo options for frendly
      *        4x,'resolution_factor      ',i2,9x,'>= 2 [2]',/,
      *        4x,'refinement_points       ',i2,8x,'[aut] or 1->',i2,
      *           '; aut = automatic',/,
-     *        4x,'solvus_tolerance_II     ',f4.2,6x,'0->1 [0.2]',/,
+     *        4x,'solvus_tolerance_II     ',a7,4x,'0->1 [0.2]',/,
      *        4x,'global_reach_increment ',i2,9x,'>= 0 [0]',/,
      *        4x,'reach_increment_switch  ',a3,7x,'[on] off all',/,
      *        4x,'zero_mode               ',e7.1E2,3x,

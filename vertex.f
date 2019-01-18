@@ -240,6 +240,8 @@ c-----------------------------------------------------------------------
 
       character y*1
 
+      double precision errr(k5)
+
       integer npt,jdv
       logical fulrnk
       double precision cptot,ctotal
@@ -343,7 +345,7 @@ c                                 lpopt does the minimization and outputs
 c                                 the results to the print file.
             call lpopt (1,j,idead,output)
 c                                 fractionate the composition:
-            call fractr (idead,output,.true.)
+            call fractr (idead,output,.true.,errr)
 
             if (it.gt.99) then 
                write (*,'(i5,a)') j,' optimizations completed...'
@@ -426,7 +428,7 @@ c                                 lpopt does the minimization and outputs
 c                                 the results to the print file.
                call lpopt (1,j,idead,output)
 c                                 fractionate the composition:
-               call fractr (idead,output,.true.)
+               call fractr (idead,output,.true.,errr)
 
                it = it + 1
 
@@ -472,7 +474,7 @@ c-----------------------------------------------------------------------
 
       integer i, j, idead, it
 
-      double precision iblk(k5)
+      double precision iblk(k5), errr(k5)
 
       integer npt,jdv
       logical fulrnk
@@ -574,7 +576,7 @@ c                                 lpopt does the minimization and outputs
 c                                 the results to the print file.
          call lpopt (1,j,idead,output)
 c                                 fractionate the composition:
-         call fractr (idead,output,verbos)
+         call fractr (idead,output,verbos,errr)
 c                                  add the infiltrant
          do i = 1, icp 
             cblk(i) = cblk(i) + nopt(36) * iblk(i)
@@ -633,7 +635,8 @@ c-----------------------------------------------------------------------
      *        layer(maxbox),ibot,minus
 
       double precision gblk(maxbox,k5),cdcomp(k5,lay),vox(k5),
-     *                 tot,lcomp(k5,lay)
+     *                 tot,lcomp(k5,lay),cmass(k5),cfmass(k5),
+     *                 imass(k5),errr(k5),icerr(k5),ccerr(k5)
 
       logical output
 
@@ -850,6 +853,13 @@ c                                 number of variables in table
       do j = 1, icp
          write (dname(j),'(a14)') cname(j)
          write (dname(j+icp1),'(a14)') cname(j)//'_{cum}'
+      end do
+
+      do j = 1, icp
+         cmass(j) = 0d0
+         cfmass(j) = 0d0 
+         imass(j) = 0d0
+         ccerr(j) = 0d0 
       end do 
 
       dname(icp1) = 'O2_{def}'
@@ -936,7 +946,7 @@ c                                 get total moles to compute mole fractions
                write (*,2010) (itop(i),i=1,ilay)
             end if 
 
-            call fractr (idead,.false.,verbos)
+            call fractr (idead,.false.,verbos,errr)
 
             do i = 1, icp 
 c                                 subtract the fluid from the current composition
@@ -1004,9 +1014,20 @@ c                                 and rho(kg/m3) ~ -dpdz * 1d4
          end if
 c                                 end of annealling section.
       end if
+c                                 get total mass for conservation test
+      do k = 1, ncol
+         do i = 1, icp1
+            imass(i) = imass(i) + gblk(k,i)
+         end do 
+      end do
 c                                 loopx is the number of steps along the subduction
 c                                 path:
       do j = 1, loopx
+c                                 initialize column mass for conservation test
+         do i = 1, icp
+            cmass(i) = 0d0
+            icerr(i) = 0d0
+         end do 
 c                                 initialize avg layer comp
          do l = 1, ilay
             do m = 1, icp
@@ -1069,16 +1090,9 @@ c                                 write failure info to fld file:
      *                        (cblk(i),i=1,icp)
                write (*,2010) (itop(i),i=1,ilay)
 
-             else
-
-               write (n12,*) 'good'
-               write (n12,2000) x,y,layer(k),k,j,v(1),v(2),
-     *                          (cblk(i),i=1,icp)
-               write (n12,2010) (itop(i),i=1,ilay)
-
             end if 
 
-            call fractr (idead,output,verbos)
+            call fractr (idead,output,verbos,errr)
 c                                 at this point we've computed the stable
 c                                 assemblage at each point in our column
 c                                 and could do mass transfer, etc etc 
@@ -1119,8 +1133,28 @@ c                                 cumulative change
                end if
 
             end do
+
+            do i = 1, icp
+c                                 mass being lost from the column
+               if (k.eq.ncol) cfmass(i) = cfmass(i) + dcomp(i)
+
+               if (errr(i).gt.zero) then 
+c                                 instantaneous fractionated column mass error
+                  icerr(i) = icerr(i) + errr(i)
+               end if 
+c                                 instantaneous column mass
+               cmass(i) = cmass(i) + gblk(k,i)
+            end do 
 c                                 end of the k index loop
          end do
+
+
+
+            do i = 1, icp
+               ccerr(i) = ccerr(i) + icerr(i)
+               if (k.eq.ncol) cfmass(i) = cfmass(i) + dcomp(i)
+            end do 
+
 
          if (flsh) then 
             write (*,'(/,a,f9.0)') 'Average Layer Compositions at '
@@ -1134,11 +1168,47 @@ c                                 end of the k index loop
 
          do l = ilay, 1, -1
 c                                 average layer compositions
-            write (lun + ilay + l,'(200(g13.6,1x))') 
+            write (lun + ilay + l,'(20(g13.6,1x))') 
      *                                       x,(lcomp(i,l),i=1,icp)
-            write (*,'(i1,1x,12(f10.3,1x))') l,(lcomp(i,l),i=1,icp)
+            write (*,'(i1,1x,12(f10.5,1x))') l,(lcomp(i,l),i=1,icp)
 
          end do
+c                                 conservation tests:
+         write (*,'(/,a)') 'Instantaneous and cumulative erro'
+     *   //'r in column molar mass'
+         write (*,'(2x,12(f10.5,1x))') (icerr(i),i=1,icp)
+         write (*,'(2x,12(f10.5,1x))') (ccerr(i),i=1,icp)
+
+         write (*,'(/,a)') 'Cumulative molar mass-loss by fractionation'
+         write (*,'(2x,12(f10.5,1x))') (cfmass(i),i=1,icp)
+
+         if (flsh) then 
+            write (*,'(/,a)') 'Cumulative molar mass-gain by titration'
+            write (*,'(2x,12(f10.5,1x))') (x*dblk(1,i),i=1,icp)
+
+            write (*,'(/,a)') 'Within-column net gain in molar mass'
+            write (*,'(2x,12(f10.5,1x))') (x*dblk(1,i)-cfmass(i),
+     *                i=1,icp)
+         end if 
+
+         write (*,'(/,a)') 'Instantaneous column molar '
+     *   //'mass '
+         write (*,'(2x,12(f10.5,1x))') (cmass(i),i=1,icp)
+
+         do i = 1, icp 
+            errr(i) = cmass(i)+cfmass(i)
+            if (flsh) errr(i) = errr(i) - x*dblk(1,i)
+         end do 
+
+         write (*,'(/,a)') 'Instantaneous column molar '
+     *                   //'mass + mass-loss - mass-gain'
+         write (*,'(2x,12(f10.5,1x))') (errr(i),i=1,icp)
+
+         write (*,'(/,a)') 'Initial column molar mass'
+         write (*,'(2x,12(f10.5,1x))') (imass(i),i=1,icp)
+
+         write (*,'(/,a)') 'Molar mass imbalance'
+         write (*,'(2x,12(f10.0,1x))') (imass(i)-errr(i),i=1,icp)
 
          write (*,'(/)')
 c                                 add the aliquot to the base of the column
@@ -2095,7 +2165,7 @@ c-----------------------------------------------------------------------
 
       end
 
-      subroutine fractr (idead,output,verbos)
+      subroutine fractr (idead,output,verbos,errr)
 c-----------------------------------------------------------------------
       implicit none
 
@@ -2109,7 +2179,7 @@ c-----------------------------------------------------------------------
 
       logical there(k23), warn, output, quit, liquid, verbos
 
-      double precision mass(k23), tmass, x
+      double precision mass(k23), tmass, x, errr(k5)
 
       double precision atwt
       common/ cst45 /atwt(k0)
@@ -2152,13 +2222,18 @@ c-----------------------------------------------------------------------
 c                                 fractionation effects:
       do i = 1, jbulk
          dcomp(i) = 0d0
+         errr(i) = 0d0
       end do 
 
       do i = 1, ifrct
          there(i) = .false.
       end do 
 
-      if (idead.eq.0.or.idead.eq.101) then 
+      if (idead.eq.0.or.idead.eq.101) then
+c                                 error can only be non-zero for lagged speciation
+         do i = 1, jbulk
+            errr(i) = -cblk(i)
+         end do 
 c                                 optimization suceeded
 c                                 compute mass fractions in case
 c                                 threshold based fractionation:
@@ -2168,7 +2243,9 @@ c                                 get mass fractions:
 
             mass(j) = 0d0
 
-            do k = 1, jbulk 
+            do k = 1, jbulk
+c                                 error is the back-calculated bulk - input bulk
+               errr(k) = errr(k) + amt(j)*cp3(k,j)
                mass(j) = mass(j) + amt(j)*cp3(k,j)*atwt(k)
             end do
 
@@ -2339,7 +2416,7 @@ c                                 write bad_number to fractionation file
 
       end if 
 
-      warn = .false.     
+      warn = .false.
 c                                 remove fractionated mass from bulk,
 c                                 warn on complete depletion of a component
       do i = 1, jbulk

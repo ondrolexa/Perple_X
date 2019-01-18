@@ -37,8 +37,8 @@ c                                 solution model names
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
-      double precision dcp
-      common/ cst57 /dcp(k5,k19)
+      double precision dcp,soltol
+      common/ cst57 /dcp(k5,k19),soltol
 
       character tname*10
       logical refine, resub
@@ -138,7 +138,7 @@ c                                 to use the data
 
             end if 
 c                                 set cycle dependent parameters
-            if (refine) then 
+            if (refine.or.iam.eq.2) then 
 
                i = 2 
 
@@ -2506,10 +2506,11 @@ c                                 gradient in variable jv(1) with z, jv(1)
 c                                 is the independent variable, for subduction
 c                                 this is logically pressure, i.e., dp(bar)/dz(m)
       read (n8,*) vz(2)
-c                                 zmin if flush or or dzmax if not flush
+c                                 z if flush or or dzmax if not flush
       if (flsh) read (n8,*) vz(3)
 c                                 value of the x-coordinate at the origin
-      read (n8,*) vz(4)
+      vz(4) = 0d0
+      if (.not.flsh) read (n8,*) vz(4)
 c                                 max value of the x-coordinate
       read (n8,*) vz(5)
 c                                 Perple_X assumes an upward directed column coordinate

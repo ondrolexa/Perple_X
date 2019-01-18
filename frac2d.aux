@@ -1,14 +1,14 @@
 .false.          FRAC2D, if .false., TITRATE if .true.
-.true.           ANNEAL, in true remove excess mobile phase from theinitial column and renormalize all masses to 1kg (including aliquot)
-.false.          VERBOS if true composition and amount of fractionated phase are output to user console
-175.             ZBOX, box size (m)
+.true.           ANNEAL, if true remove excess mobile phase from theinitial column and renormalize all masses to 1kg (including aliquot)
+.false.          VERBOS, if true composition and amount of fractionated phase are output to user console
+150.             ZBOX, box size (m)
 
 0.35             DPDZ, pressure-depth gradient (bar/m)
 
  80d3            Z0MIN, minimum value of the Z0-coordinate (depth of slab interface, m), number of increments is set by 1d_path option
-200d3            Z0MAX, value of Z0-coordinate
+180d3            Z0MAX, value of Z0-coordinate
 
-.false.          PZFUNC, if true, then do Z0-DZ => p-t conversion with internal function, otherwise use a fit to geotherms input below
+.false.          PZFUNC, if true do Z0-DZ => p-t conversion with internal function, otherwise use a fit to geotherms input below
 
 45               DIP, slab dip (degrees), not used for calculations that read P-T coordinates from a file.
 
@@ -28,7 +28,7 @@
 26163            ZLAY_1, vertical thickness of mantle (m), molar composition =>
 .21090, .1e-2, .7075, .74e-1, .9711e-1, .8666, .527e-1, .92e-2, .92e-3, 1.377185, .2e-2 CLAY_1_1-CLAY_1_C, losimag peridotite + 2 % water.
 
-5657             ZLAY_2, vertical thickness of oceanic inrtusives (m), molar composition =>
+5657             ZLAY_2, vertical thickness of oceanic intrusives (m), molar composition =>
 .83e-1, .1e-1, .903,   .280,  .97e-1,   .304,  .194,    .40e-1, .2e-2,  1.4425,   .2e-1 CLAY_2_1-CLAY_2_C, behn & kelemen (must be molar units) + 1.5 wt % water
 
 2828             ZLAY_3, vertical thickness of oceanic volcanics (m), molar composition =>
@@ -46,4 +46,4 @@ are assumed to be in molar units and the order of the components must be identic
 computational option file. If ANNEAL is .true., then the compositional data is automatically renormalized so that the 
 representative mass is 1 kg. Otherwise care should be taken that the molar mass of each lithology is the same.
 
-See: www.perplex.ethz.ch/perplex/faq/README_FRAC2D.txt for additional explanation.
+See: www.perplex.ethz.ch/perplex/Perple_X_FRAC2D.html for additional explanation.

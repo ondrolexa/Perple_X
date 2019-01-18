@@ -1308,7 +1308,7 @@ W(h2oL oanL)  =    9.75d3 - 0.5 * P
 end_excess_function 
 
 3                           | Configurational entropy: two non-temkin sites (Water, Melt) 
-                            | and one temkin site (olvine). green assume a fsp = ab + or "molecule""
+                            | and one temkin site (olvine). HP assume a fsp = ab + or "molecule""
                             | with mixing on a temkin M site, but the math works out the same as 
                             | the endmembers are treated as separate endmembers and the M site
                             | dropped. 
@@ -1321,7 +1321,7 @@ z(H) = 1 h2oL
 n(Mg) = 4 foTL
 n(Fe) = 4 faTL
 
-8 0.                        | melt site, green assume a fsp = ab + or "molecule"
+8 0.                        | melt site, HP assume a fsp = ab + or "molecule"
                             | with mixing on the M site, but the math works out the same as 
                             | the endmembers are treated as separate endmembers and the M site
                             | dropped. 
@@ -2344,11 +2344,11 @@ kspL     q8L      h2oL
 
 0 0 0 0 0 0 0 0 0                   | endmember flags.  
 
-2d-2 0.1  0.1 1                      | range and resolution of X(fo),  1 => asymmetric subdivision   
-2d-2 0.1  0.1 1                      | range and resolution of X(fa),  1 => asymmetric subdivision   
+2d-3 0.1  0.1 1                      | range and resolution of X(fo),  1 => asymmetric subdivision   
+2d-3 0.1  0.1 1                      | range and resolution of X(fa),  1 => asymmetric subdivision   
 0.0  0.4  0.1 0                      | range and resolution of X(ab),  0 => cartesian subdivision   
-2d-2 0.1  0.1 1                      | range and resolution of X(sil), 1 => asymmetric subdivision  
-2d-2 0.2  0.1 1                      | range and resolution of X(an),  1 => asymmetric subdivision   
+2d-3 0.1  0.1 1                      | range and resolution of X(sil), 1 => asymmetric subdivision  
+2d-3 0.2  0.1 1                      | range and resolution of X(an),  1 => asymmetric subdivision   
 0.0  0.5  0.1 0                      | range and resolution of X(ksp), 0 => cartesian subdivision
 0.0  0.6  0.1 0                      | range and resolution of X(q),   0 => cartesian subdivision  
 
@@ -2452,7 +2452,7 @@ mu pa ma1_dqf cel fmu fcel
                              | subdivision model
 0. 1.    .1 0                | range and resolution of X(mu),      imod = 0 -> cartesian subdivision
 0. 1.    .1 0                | range and resolution of X(pa),      imod = 0 -> cartesian subdivision
-2e-2 0.2 .1 1                | range and resolution of X(ma1_dqf), imod = 0 -> cartesian subdivision
+0. 1.    .1 1                | range and resolution of X(ma1_dqf), imod = 0 -> cartesian subdivision
 0. 1.    .1 0                | range and resolution of X(cel),     imod = 0 -> cartesian subdivision
 0. .3    .1 0                | range and resolution of X(fmu), 
 begin_excess_function
@@ -3873,7 +3873,7 @@ z(H) = 1 h2oL
 n(Mg) = 4 fo8L
 n(Fe) = 4 fa8L
 
-8 0.                        | silicate species site, green assume a fsp = ab + or "molecule""
+8 0.                        | silicate species site, HP assume a fsp = ab + or "molecule""
                             | with mixing on the M site, but the math works out the same as 
                             | the endmembers are treated as separate endmembers and the M site
                             | dropped. 
@@ -6758,7 +6758,7 @@ begin_dqf_corrections
 dqf(an) = 7030 - 4.66 * T_K
 end_dqf_corrections
 
-reach_increment 6
+reach_increment 0
 
 end_of_model
                       --------------------------------------------------------
@@ -9852,7 +9852,7 @@ H2O
 0 0 0 0 0 0 0              | endmember flags
 
 1e-5   5e-2      .1       1        | subdivision ranges, imod = 1 -> non-linear subdivision
-1e-5   2e-4      .1       1        | subdivision ranges, imod = 1 -> non-linear subdivision
+0       1      .1       0          | subdivision ranges, imod = 1 -> non-linear subdivision
 1e-5   2.5e-5    .1       1        | subdivision ranges, imod = 1 -> non-linear subdivision
 1e-5   2.5e-5    .1       1        | subdivision ranges, imod = 1 -> non-linear subdivision
 1e-5   2e-4      .1       1        | subdivision ranges, imod = 1 -> non-linear subdivision

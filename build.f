@@ -621,7 +621,7 @@ c                                 computational mode:
       write (n1,1010) icopt,'calculation type: 0- composition,'//
      *                ' 1- Schreinemakers, 3- Mixed, 4- swash,'//
      *                ' 5- gridded min, 7- 1d fract, 8- gwash,'//
-     *                ' 9- 2d fract, 10- 7 w/file input'//
+     *                ' 9- 2d fract, 10- 7 w/file input,'//
      *                ' 11- 9 w/file input, 12- 0d infiltration'
 c                                 coordinate file name if necessary
       if (icopt.eq.10.or.icopt.eq.11) then 
@@ -815,7 +815,7 @@ c                                 diagrams:
 1500  format (/,'Reactive transport models require an auxilliary input '
      *       ,'file ',a30,/,'that you must create yourself after ',
      *        'running BUILD. See:',//,5X,
-     *        'www.perplex.ethz.ch/README_FRAC2D.txt')
+     *        'www.perplex.ethz.ch/perplex/Perple_X_FRAC2D.html')
 1560  format (5(g12.6,1x),'Geothermal gradient polynomial coeffs.')
 2000  format (/,'Output a print file (Y/N)?')
 2021  format ('Enter names, 1 per line, press <enter> to finish:')
