@@ -9356,7 +9356,7 @@ c                                 term coefficient amd species index:
 
                   call error (77,r,k,'dependent endmember '
      *              //mname(iorig(nsub(i,j,k,1)))//' in solution '
-     *              //tname//'appears in a site fraction expression.')
+     *              //tname//' appears in a site fraction expression.')
 
                end if 
 

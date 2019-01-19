@@ -12206,7 +12206,7 @@ end_excess_function
 z(A,Na) = 1 parg  
               
 2 2.                       | 2 species on T1, fake site multiplicity of 2.
-z(T1,Al) = 1/2 ts + 1/2 fts_i + 1/2 parg + 1/2 mfets 
+z(T1,Al) = 1/2 ts + 1/2 parg + 1/2 mfets 
 
 2 3.                       | 2 species on M1, 3 sites per formula unit
 z(m1,mg) = 1 tr + 1 ts + 1 parg + 1 mfets
