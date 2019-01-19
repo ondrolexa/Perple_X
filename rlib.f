@@ -1135,11 +1135,11 @@ c                               reject phases with negative/zero compositions
       do j = 1, icmpn
          if (comp(j).lt.0d0.and.comp(j).gt.-nopt(5)) then
             comp(j) = 0d0
-         else if (comp(j).lt.0d0.and.(ieos.ne.15.and.ieos.ne.16)) then
+c         else if (comp(j).lt.0d0.and.(ieos.ne.15.and.ieos.ne.16)) then
 c                               use ichk to avoid multiple messages
-            if (ichk.eq.1.and.iam.eq.1.or.iam.eq.2.or.iam.eq.4.or.
-     *          iam.eq.5.or.iam.eq.6.or.iam.eq.15) 
-     *                                       call warn (13,tot,j,name)
+c            if (ichk.eq.1.and.iam.eq.1.or.iam.eq.2.or.iam.eq.4.or.
+c     *          iam.eq.5.or.iam.eq.6.or.iam.eq.15) 
+c     *                                       call warn (13,tot,j,name)
 
          end if
 
@@ -5162,9 +5162,6 @@ c                                get list of used components
       end do 
 
       nmak = ict
-
-      if (nmak.gt.0.and.first) 
-     *               write (*,1010) (cmpnt(incomp(j)),j=1,jct)
 c                                remake list of phases required for 
 c                                makes:
       inames = 0 
@@ -5181,18 +5178,21 @@ c                                makes:
 
             inames = inames + 1
             mnames(inames) = mknam(i,j) 
-   
+
          end do
-c                                write list of valid makes:
-         if (first) write (*,1000) mknam(i,mknum(i)+1),
-     *                            (mcomp(i,incomp(j)),j=1,jct)
 
       end do 
 
-      if (nmak.gt.0.and.first) write (*,'(/)')
+      if (nmak.gt.0.and.first.and.(iam.lt.3.or.iam.eq.15)) then
+c                                write list of valid makes:
+         write (*,1010) 
+         write (*,1000) (mknam(i,mknum(i)+1),i=1,nmak)
+         write (*,'(/)')
 
-1000  format (a,1x,15(f5.2,1x))
-1010  format (/,'Summary of valid make definitions:',//,10x,15(a,1x)) 
+      end if 
+
+1000  format (6(a,2x))
+1010  format (/,'Summary of make-definition entities:')
 
       end
 
@@ -5508,7 +5508,7 @@ c                                get list of used components
 
       nmak = ict
 
-      if (nmak.gt.0) write (*,1010) (cmpnt(incomp(j)),j=1,jct)
+c     if (nmak.gt.0) write (*,1010) (cmpnt(incomp(j)),j=1,jct)
 c                                remake list of phases required for 
 c                                makes:
       inames = 0 
@@ -5528,15 +5528,15 @@ c                                makes:
    
          end do
 c                                write list of valid makes:
-         write (*,1000) mknam(i,mknum(i)+1),(mcomp(i,incomp(j)),j=1,jct)
+c        write (*,1000) mknam(i,mknum(i)+1),(mcomp(i,incomp(j)),j=1,jct)
 
       end do 
 
-      write (*,1020)
+c     write (*,1020)
 
-1000  format (a,1x,15(f5.2,1x))
-1010  format (/,'Summary of valid make definitions:',//,10x,15(a,1x)) 
-1020  format (/)
+c1000  format (a,1x,15(f5.2,1x))
+c1010  format (/,'Summary of valid make definitions:',//,10x,15(a,1x)) 
+c1020  format (/)
 
       end
 

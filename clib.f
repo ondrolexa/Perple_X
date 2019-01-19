@@ -1207,6 +1207,9 @@ c----------------------------------------------------------------------
       double precision vnumu
       common/ cst44 /vnumu(i6,k10)
 
+      integer iam
+      common/ cst4 /iam
+
       integer ihy, ioh
       double precision gf, epsln, epsln0, adh, msol
       common/ cxt37 /gf, epsln, epsln0, adh, msol, ihy, ioh
@@ -1383,7 +1386,7 @@ c                                 rewind and read 'til end of header
 
                write (*,1000) (afname(i),i=1,jmct)
                write (*,1010)
-               stop
+               call errpau
 
             end if 
 c                                 now look for a match with the 
@@ -1424,7 +1427,7 @@ c                                 replicated in the data file, and flags
 c                                 tagged entries 
                   afname(i) = ' '
 
-                  if (ict.eq.jmct) good = .true.
+                  if (ict.eq.ifact) good = .true.
 
                   exit 
 
@@ -1491,6 +1494,25 @@ c                                 for each saturation constraint
 40    do i = 1, isat
          if (isct(i).lt.1) call error (15,r,i,cname(icp+i))
       end do
+
+      if (isat.gt.1.and.first.and.(iam.lt.4.or.iam.eq.15)) then
+
+         write (*,'(a)') 'Summary of saturated-component entities:'
+
+         do i = 1, isat
+
+            write (*,1040) (cname(icp+j),j=1, i)
+            write (*,1050) (names(ids(i,j)), j = 1, isct(i))
+
+         end do
+
+         if (iam.eq.15) write (*,'(a)') 
+     *         '* solutions may also have composition'
+     *       //'s consisting entirely of saturated components'
+
+         write (*,'(/)')
+
+      end if 
 c                                 save endmembers that consist entirely 
 c                                 of saturated phase or mobile components:
       kphct = iphct 
@@ -1695,7 +1717,7 @@ c                                write summary and checks
 
          end do 
 
-         if (first) then 
+         if (first.and.iam.lt.3) then 
             write (*,1020)
             do i = 1, aqct, 6
                k = i + 5
@@ -1707,8 +1729,9 @@ c                                write summary and checks
 
       else if (lopt(32).or.lopt(25)) then 
 
-         if (first) call warn (99,0d0,0,' no data for aqueous species, '
-     *    //'aq_output and aq_lagged_speciation disabled.')
+         if (first.and.iam.lt.4) 
+     *       call warn (99,0d0,0,' no data for aqueous species, '
+     *                 //'aq_output and aq_lagged_speciation disabled.')
 
          lopt(32) = .false.
          lopt(25) = .false.
@@ -1736,12 +1759,16 @@ c                                endmembers:
       end do 
 
 1000  format ('**error ver007** at least one of the reference ',
-     *        'phases:',/,5(a,1x))
+     *        'endmembers:',/,5(a,1x))
 1010  format ('needed to define an independent fugacity/activity ',
-     *    'variable is missing from the',/,'thermodynamic data file',/)
+     *    'variable is missing',/,'most likely the endmember has ',
+     *    'been rejected, if so then set',/,'the auto_exclude ',
+     *    'option to FALSE.',/)
 1020  format (/,'Summary of aqueous solute species:',//,
      *        6('name     chg   ')) 
-1030  format (6(a8,2x,i2,3x))
+1030  format (6(a,2x,i2,3x))
+1040  format ('for ',15(a,1x))
+1050  format (6(a,2x))
 1230  format ('**error ver013** ',a,' is an incorrect component'
      *       ,' name, valid names are:',/,12(1x,a))
 1240  format ('check for upper/lower case matches or extra blanks',/)
