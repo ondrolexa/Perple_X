@@ -1718,7 +1718,7 @@ c                                 thermo options for frendly
 1241  format (/,2x,'Information file output options:',//,
      *        4x,'option_list_files      ',l1,10x,'[F] T; ',
      *           'echo computational options')
-1250  format (4x,'auto_refine_file       ',l1,10x,'[F] T; ',
+1250  format (4x,'auto_refine_file       ',l1,10x,'[T] F; ',
      *           'echo auto-refine compositions')
 
       end

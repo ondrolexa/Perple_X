@@ -17952,7 +17952,7 @@ c                                 prismatic + orphan vertices
       close (n10)
       if (lopt(11)) close (n11)
 
-1000  format (/,'**warning ver992** The following solutions were input,'
+1000  format (/,'The following solutions were input,'
      *         ,' but are not stable:',/)
 1010  format (/,'**warning ver993** The following solutions have ',
      *          'compositions at an internal limit (i.e., 0<x<1):',/)
