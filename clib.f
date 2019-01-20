@@ -190,6 +190,23 @@ c                                 read phases to be rejected if in auto-refine
 
             end if 
 
+         end if
+c                                 only want *_auto_refine.txt for the exploratory
+c                                 stage. VERTEX or CONVEX:
+         if (refine) then
+
+            lopt(11) = .false.
+
+         else if (.not.refine.and.(iam.eq.1.or.iam.eq.15)) then
+c                                 user friendly text version of the exploratory stage
+c                                 auto_refine file:
+            if (lopt(11)) then 
+               call mertxt (n11nam,prject,'_auto_refine.txt',0)
+               open (n11, file = n11nam, status = 'unknown')
+            end if
+c                                 write blurb
+            write (n11,1000)
+
          end if 
 
       end if 
@@ -245,6 +262,18 @@ c                                  results file
 
       end if
 
+1000  format (//,'NOTE: this file echoes the auto-refine data after ',
+     *       'the exploratory stage. If',/,'the composition of a phase',
+     *       ' has been relaxed (**warning ver993**) during this stage,'
+     *    /,'then the appropriate subdivision scheme* should be modifi'
+     *      ,'ed and the exploratory',/,'stage calculation repeated un'
+     *      ,'til the warning has been eliminated. This process can be',
+     *     /,'expedited by setting the auto_refine option = man or off',
+     *    //,'For the less critical compositional ranges at the end of',
+     *       ' the auto-refine stage refer',/,'to the console output w',
+     *       'written to the console at the end of the calculation.',//,
+     *       'see the header of the solution model file for a brief ex',
+     *       'planation of subdivision schemes',//)
 1030  format (/,'Reading data for auto-refinement from file: ',a,/)
 1060  format ('Suppress or reinitialize auto-refinement (y/n)?')
 1070  format ('Eliminating solution model: ',a,' in auto-refinement.')

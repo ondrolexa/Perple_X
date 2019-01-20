@@ -203,7 +203,7 @@ c                                 automatic solvus_tolerance_II
 c                                 pseudocompound_file
       lopt(10) = .false.
 c                                 auto_refine_file
-      lopt(11) = .false.
+      lopt(11) = .true.
 c                                 option_list_files
       lopt(12) = .false.
 c                                 logarithimic P

@@ -17991,6 +17991,108 @@ c                                 prismatic + orphan vertices
 
       end
 
+
+      subroutine meelim (x,i,j,k)
+c----------------------------------------------------------------------
+c subroutine to write unnatural limit warnings for meemum
+c----------------------------------------------------------------------
+      implicit none 
+
+      include 'perplex_parameters.h'
+c                                 -------------------------------------
+c                                 local variables:
+      integer i, j, k
+
+      double precision x
+
+      character char8*8
+c                                 global variables:
+c                                 working arrays
+c                                 x coordinate description
+      integer istg, ispg, imlt, imdg
+      common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
+c                                 solution model names
+      character fname*10, aname*6, lname*22
+      common/ csta7 /fname(h9),aname(h9),lname(h9)
+c                                 endmember pointers
+      integer jend
+      common/ cxt23 /jend(h9,m4)
+c                                 endmember names
+      character names*8
+      common/ cst8  /names(k1)
+
+      character tname*10
+      logical refine, resub
+      common/ cxt26 /refine,resub,tname
+      
+      integer ksmod, ksite, kmsol, knsp
+      common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
+
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+
+      integer lstot,mstot,nstot,ndep,nord
+      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
+
+      integer jnd
+      double precision aqg,q2,rt
+      common/ cxt2 /aqg(m4),q2(m4),rt,jnd(m4)
+
+      integer ncoor,mcoor,ndim
+      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
+
+      double precision xmng, xmxg, xncg, xmno, xmxo, reachg
+      common/ cxt6r /xmng(h9,mst,msp),xmxg(h9,mst,msp),xncg(h9,mst,msp),
+     *               xmno(h9,mst,msp),xmxo(h9,mst,msp),reachg(h9)
+
+      integer iaq, aqst, aqct
+      character aqnam*8
+      double precision aqcp, aqtot
+      common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
+c----------------------------------------------------------------------
+         if (istg(i).eq.1.or.j.gt.istg(i)) then 
+c                                 single site solution or orphan
+            if (ksmod(i).eq.20) then 
+
+               if (j.lt.ns) then
+                  char8 = names(jnd(j)) 
+               else 
+                  char8 = aqnam(jnd(j)  - aqst)
+               end if 
+
+            else if (j.gt.istg(i)) then
+
+               char8 = names(jend(i, 2 + lstot(i) - ndim(j,i) + j))
+      
+            else
+               char8 = names(jend(i,2+j))
+            end if
+
+            write (*,1010) char8,x,fname(i),xmng(i,j,k),xmxg(i,j,k)
+
+         else
+
+            write (*,1010) j,k,x,fname(i),xmng(i,j,k),xmxg(i,j,k)
+
+         end if
+
+         if (refine) then
+            write (*,1000) 'the *.arf file and restart MEEMUM.'
+         else 
+            write (*,1000) 'the solution model file and restart MEEMUM.'
+         end if 
+
+1000  format ('then relax the limit in ',a,/)
+1010  format (/,'**warning ver993** X(',a,') = ',f6.4' of'
+     *       ,' solution ',a,' exceeds its current',/,'limits (XMIN = ',
+     *  f6.4,', XMAX = ',f6.4,') if this restriction is unintentional,')
+1020  format (/,'**warning ver993** X(',i1,i1,') = ',f6.4,' of ',
+     *       'solution ',a,' exceeds its',/,'current limits (XMIN = ',
+     *  f6.4,', XMAX = ',f6.4,') if this restriction is unintentional,')
+
+      end
+
+
       subroutine subst (a,ipvt,n,b,ier)
 c-----------------------------------------------------------------------
 c subst uses the lu decomposition of the matrix 'a' contained
@@ -20468,8 +20570,6 @@ c----------------------------------------------------------------------
       include 'perplex_parameters.h'
 
       integer i, j, k, i1, i2, id
-
-      logical inf 
 
       double precision g, dg, d2g, s, ds, d2s, q, pnorm, pnorm2, 
      *                 d2p(m11), dng, gnorm, dgnorm, nt, dnt, d2nt, dz,

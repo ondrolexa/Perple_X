@@ -1518,7 +1518,10 @@ c----------------------------------------------------------------------
 
       double precision stinc
 
-      external stinc 
+      external stinc
+
+      integer iam
+      common/ cst4 /iam
 
       double precision z, pa, p0a, x, w, y, wl
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
@@ -1569,15 +1572,21 @@ c                                 low limit:
 
                xlo(j,i,ids) = x(i,j)
 c                                 check if solution is at an unnatural limit
-               if (x(i,j).gt.xmno(ids,i,j).and.
-     *            (x(i,j).le.xmng(ids,i,j).and..not.lopt(3))) then
+               if (x(i,j).ge.xmno(ids,i,j).and.
+     *            (x(i,j).lt.xmng(ids,i,j).and..not.lopt(3))) then
 c                                 relax limits according to subdivsion model
+c                                 warn if MEEMUM
+                  if (iam.eq.2) 
+     *               call meelim (x(i,j),ids,i,j)
+
                   if (imdg(j,i,ids).eq.0) then 
 c                                 cartesian
+
                      xmng(ids,i,j) = xmng(ids,i,j) - xncg(ids,i,j)
 
                   else 
 c                                 assymmetric stretching towards xmin
+
                      xmng(ids,i,j) = 
      *                   stinc (x(i,j),-xncg(ids,i,j),ids,i,j)
 
@@ -1595,9 +1604,13 @@ c                                 high limit:
 
                xhi(j,i,ids) = x(i,j)
 c                                 check if solution is at an unnatural limit
-               if (x(i,j).lt.xmxo(ids,i,j).and.
-     *            (x(i,j).ge.xmxg(ids,i,j).and..not.lopt(3))) then
+               if (x(i,j).le.xmxo(ids,i,j).and.
+     *            (x(i,j).gt.xmxg(ids,i,j).and..not.lopt(3))) then
 c                                 relax limits according to subdivsion model
+c                                 warn if MEEMUM
+                  if (iam.eq.2) 
+     *                      call meelim (x(i,j),ids,i,j)
+
                   if (imdg(j,i,ids).eq.0) then 
 c                                 cartesian
                      xmxg(ids,i,j) = xmxg(ids,i,j) + xncg(ids,i,j)
@@ -3650,9 +3663,6 @@ c----------------------------------------------------------------------
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
-
-      integer iam
-      common/ cst4 /iam
 c----------------------------------------------------------------------- 
 c                                 initialization
       rxn = .false.
