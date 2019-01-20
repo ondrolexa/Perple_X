@@ -356,11 +356,11 @@ c                                 HP Tait EoS, einstein thermal pressure
 c                                 destabilize the phase
             vdp = 1d12*p
 
-            if (iwarn.le.50.and.oldid.ne.id) then 
+            if (iwarn.le.5.and.oldid.ne.id) then 
                call warn (46,t,id,names(id)) 
                iwarn = iwarn + 1
                oldid = id
-               if (iwarn.eq.50) call warn (49,t,46,'GCPD_HP_Tait')
+               if (iwarn.eq.5) call warn (49,t,46,'GCPD_HP_Tait')
             end if 
 
           else 
@@ -440,12 +440,11 @@ c                                 a ****wit has entered a ridiculous
 c                                 temperature
             if (kt.lt.0d0) then 
 
-               if (iwarn.lt.50.and.id.ne.oldid) then 
+               if (iwarn.lt.5.and.id.ne.oldid) then 
                   call warn (46,t,id,names(id)) 
                   iwarn = iwarn + 1
                   oldid = id
-                  if (iwarn.eq.50) 
-     *               call warn (49,t,46,'GCPD_Murnaghan')
+                  if (iwarn.eq.5) call warn (49,t,46,'GCPD_Murnaghan')
                end if 
 c                                 destabalize the phase
                gcpd = 1d12*p
@@ -498,11 +497,11 @@ c                                 a ****wit has entered a ridiculous
 c                                 temperature
          if (kt.lt.0d0.or.vt.lt.0d0) then 
 
-            if (iwarn.lt.50.and.oldid.ne.id) then 
+            if (iwarn.lt.5.and.oldid.ne.id) then 
                call warn (46,t,id,names(id)) 
                iwarn = iwarn + 1
                oldid = id
-               if (iwarn.eq.50) call warn (49,t,46,'GCPD_BM3')
+               if (iwarn.eq.5) call warn (49,t,46,'GCPD_BM3')
             end if 
 c                                 destabilize the phase
             vdp = 1d12*p
@@ -17972,7 +17971,7 @@ c                                 prismatic + orphan vertices
      *          'the corresponding limits',/,'in the solution model ',
      *          'file and restart the calculation',/)
 1091  format (/,'Restriction during the auto-refine stage is usually ',
-     *          'insignificant. If desired, confirm',/,' by ',
+     *          'insignificant. If desired, confirm',/,'by ',
      *          'comparing the ranges ',
      *          'below to those in the *.arf file.',//,'NOTE: ',
      *          'unintentional restrictions encountered during the ',
@@ -17990,7 +17989,7 @@ c                                 prismatic + orphan vertices
 1150  format (/,2x,'Orphans',/,5x,
      *          'Endmember     Minimum         Maximum')
 
-      end 
+      end
 
       subroutine subst (a,ipvt,n,b,ier)
 c-----------------------------------------------------------------------

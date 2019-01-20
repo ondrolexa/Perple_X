@@ -78,7 +78,6 @@ c                                 user friendly text version
 
             if (ier.ne.0.and.(iam.eq.1.or.iam.eq.15)) then 
 c                                 no auto_refine data
-               write (*,1020) n10nam
                open (n10, file = n10nam, status = 'unknown')
 
             else if (ier.eq.0.and.(iam.eq.1.or.iam.eq.15)) then 
@@ -132,6 +131,7 @@ c                                 to use the data
                   read (n10,*,iostat=ier) ibad1, ibad2, igood
                   if (ibad1.gt.0) read (n10,'(a)') (badnam(i),i=1,ibad1)
                   iopt(6) = 1
+
                   write (*,1030) n10nam
 
                end if
@@ -245,7 +245,6 @@ c                                  results file
 
       end if
 
-1020  format (/,'Writing data for auto-refinement to file: ',a,/)
 1030  format (/,'Reading data for auto-refinement from file: ',a,/)
 1060  format ('Suppress or reinitialize auto-refinement (y/n)?')
 1070  format ('Eliminating solution model: ',a,' in auto-refinement.')
