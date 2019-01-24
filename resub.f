@@ -282,7 +282,15 @@ c                                 warn if severe error
          if (idead.gt.0) then
 
             call lpwarn (idead,'REOPT')
-            exit
+            if (idead.ne.3) exit
+c                                  i guess the logic here, is that the composition
+c                                  can't really be bad since we got through the 
+c                                  initial minimization.
+            write (*,'(/,a,/)') '**warning ver333** '//
+     *                'You''ve got to ask yourself one '//
+     *                'question: Do I feel lucky? Well, do ya, punk?'
+
+            idead = 0
 
          end if
 

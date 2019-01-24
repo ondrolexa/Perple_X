@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.8.6, source updated Jan 19, 2019.',
+     *      'Perple_X version 6.8.6, source updated Jan 24, 2019.',
 
      *      'Copyright (C) 1986-2019 James A D Connolly '//
      *      '<www.perplex.ethz/copyright.html>.'
@@ -383,8 +383,8 @@ c                                       3 - 103
 c                                      99 - ign - ignore 102/103 conditions and cease as in 101.
       iopt(22) = 0
       valu(5) = 'err'
-c                                 for infiltration calculations set default to 101
-      if (icopt.eq.12) then 
+c                                 for infiltration/fractionation calculations set default to 101
+      if (icopt.gt.6) then 
          iopt(22) = 1
          valu(5) = '101'
       end if 
@@ -3851,6 +3851,9 @@ c----------------------------------------------------------------------
       integer icomp,istct,iphct,icp
       common/ cst6 /icomp,istct,iphct,icp
 
+      integer iam
+      common/ cst4 /iam
+
       save ic2p
       data ic2p/31,32,22,1,2,3,4,5,6,7,12,13,14,15,16,17,18,19,20,21,8,
      *          9,10,11,23,24,25,26,27,28,29,30/
@@ -3984,12 +3987,20 @@ c                                 generic thermo data
                      if (ier.ne.0) call error (23,tot,ier,strg)
                      hsc(k10) = .true.
 
-                     if (hscon) then 
+                     if (hscon.and.iam.ne.5) then 
 c                                 convert HSC G0 to SUP G0
                         do j = 1, icomp
                            thermo(1,k10) = thermo(1,k10) 
      *                                   + tr*comp(ic(j))*sel(j)
                         end do
+
+                     else if (hscon) then 
+
+                        do j = 1, icmpn
+                           thermo(1,k10) = thermo(1,k10) 
+     *                                   + tr*comp(j)*sel(j)
+                        end do
+
                      end if 
  
                      ok = .true.
@@ -5283,6 +5294,15 @@ c----------------------------------------------------------------------
 
       integer idspe,ispec
       common/ cst19 /idspe(2),ispec
+
+      integer ipot,jv,iv1,iv2,iv3,iv4,iv5
+      common/ cst24 /ipot,jv(l2),iv1,iv2,iv3,iv4,iv5
+
+      integer imaf,idaf
+      common/ cst33 /imaf(i6),idaf(i6)
+
+      integer jfct,jmct,jprct,jmuct
+      common/ cst307 /jfct,jmct,jprct,jmuct
 c-----------------------------------------------------------------------
       rewind n2
 c                                 frendly or actcor is reading
@@ -5310,6 +5330,13 @@ c                                 allow build to use fugacities or activities.
          read (values,*) v(i), delt(i)
 
       end do
+c                                 reset the chemical potential tolerances if the
+c                                 potential is to be replaced by activity/fugacity
+      do i = 1, ipot
+         if (jv(i).gt.3.and.imaf(jv(i)-jmct).ne.1) then
+            delt(jv(i)) = delt(jv(i))/1e4
+         end if
+      end do 
 c                                 set log p variable name.
       if (icopt.gt.4.and.lopt(14)) vname(1) = 'log[P,b]'
 c                                 read end key

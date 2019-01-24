@@ -412,7 +412,7 @@ jd_d3     =  1 jd
 
                                 | Second (1d) simplex of the prism 
 
-0. 1. 0.1  0                    | range and resolution of (Fe+Mg)/(Ca+Fe+Mg)
+0.9 1. 0.1  0                    | range and resolution of (Fe+Mg)/(Ca+Fe+Mg)
 
                                 | third (4d) simplex of the prism
 
@@ -9899,15 +9899,14 @@ reach_increment 0
 end_of_model
                       --------------------------------------------------------
 begin_model
-                      COH-Fluid+ Generic Hybrid Fluid EoS with non-linear Subdivision,
+                      COH-Fluid+ Generic Hybrid Fluid EoS with non-linear Subdivision.
+
                       see COH-Fluid for the linear subdivision version of this model. 
 
-                      in the subdivision ranges (1st value corresponds to 
-                      1st species, etc): the 1st value is the order
-                      of magnitude of the desired resolution, the 2nd
-                      value is the maximum concentration xmax, 1/(the 3rd value)
-                      is the default number of compositions generated between 0 and
-                      xmax. If the 1st value is zero
+                      See the header of this file for an explanation of non-linear
+                      subdivision parameters.
+
+
                       --------------------------------------------------------
 COH-Fluid+
 abbreviation F
@@ -9927,11 +9926,11 @@ H2O
 0 0 0 0 0 0 0              | endmember flags
 
 1e-5   5e-2      .1       1        | subdivision ranges, imod = 1 -> non-linear subdivision
-0       1      .1       0          | subdivision ranges, imod = 1 -> non-linear subdivision
+1e-5   5e-2      .1       1        | subdivision ranges, imod = 1 -> non-linear subdivision
+1e-5   1e-3      .1       1        | subdivision ranges, imod = 1 -> non-linear subdivision
 1e-5   2.5e-5    .1       1        | subdivision ranges, imod = 1 -> non-linear subdivision
-1e-5   2.5e-5    .1       1        | subdivision ranges, imod = 1 -> non-linear subdivision
-1e-5   2e-4      .1       1        | subdivision ranges, imod = 1 -> non-linear subdivision
-1e-5   2e-4      .1       1        | subdivision ranges, imod = 1 -> non-linear subdivision
+1e-5   1e-4      .1       1        | subdivision ranges, imod = 1 -> non-linear subdivision
+1e-5   1e-4      .1       1        | subdivision ranges, imod = 1 -> non-linear subdivision
 
 ideal
 

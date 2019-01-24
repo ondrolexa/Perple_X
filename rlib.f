@@ -18072,7 +18072,7 @@ c                                 single site solution or orphan
 
          else
 
-            write (*,1010) j,k,x,fname(i),xmng(i,j,k),xmxg(i,j,k)
+            write (*,1020) j,k,x,fname(i),xmng(i,j,k),xmxg(i,j,k)
 
          end if
 

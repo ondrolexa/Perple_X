@@ -270,9 +270,9 @@ c                                  results file
      *      ,'til the warning has been eliminated. This process can be',
      *     /,'expedited by setting the auto_refine option = man or off',
      *    //,'For the less critical compositional ranges at the end of',
-     *       ' the auto-refine stage refer',/,'to the console output w',
+     *       ' the auto-refine stage refer',/,'to the console output ',
      *       'written to the console at the end of the calculation.',//,
-     *       'see the header of the solution model file for a brief ex',
+     *      '*see the header of the solution model file for a brief ex',
      *       'planation of subdivision schemes',//)
 1030  format (/,'Reading data for auto-refinement from file: ',a,/)
 1060  format ('Suppress or reinitialize auto-refinement (y/n)?')
@@ -2481,6 +2481,8 @@ c-----------------------------------------------------------------------
       integer maxbox,lay, mpol, mord
       parameter (maxbox=1760,lay=6,mpol=3,mord=4) 
 
+      logical dynam, titrat, qfile 
+
       integer i,j,k,ier
 
       double precision zlayer
@@ -2546,11 +2548,18 @@ c                                 can only be pressure and temperature
 
       jbulk = icp
 c                                 true => flush model, ~true => subducting column
-      read (n8,*) flsh
-c                                 true anneal the column
+      read (n8,*) dynam
+c                                 this is just a trick to avoid changing the variable 
+c                                 names, the i/o needs to be rewired for dynam + titrat
+      flsh = .not.dynam
+c                                 true => basal mass flux
+      read (n8,*) titrat
+c                                 true => anneal the column
       read (n8,*) anneal
 c                                 true => don't output console info on the fractionated phase
       read (n8,*) short
+c                                 true => p-t field from file/internal function
+      read (n8,*) pzfunc
 c                                 Perple_X assumes upward directed depth, but to 
 c                                 make the input intuitive, the input is specified
 c                                 in downward coordinates, hence the sign changes 
@@ -2574,10 +2583,7 @@ c                                 make the input intuitive, the input is specifi
 c                                 in downward coordinates, hence the sign changes 
 c                                 below:
 
-
       if (flsh) then
-
-         pzfunc = .false.
 c                                 specification n t-z points to fit n-1^th order
 c                                 polynomial 
          read (n8,*) npoly
@@ -2608,8 +2614,6 @@ c                                 polynomial
          end do
 
       else
-c                                 true => use internal function for relating x-y to v1-v2
-         read (n8,*) pzfunc
 c                                 now we need a path function for the dependent
 c                                 variable, here we take a function defined in
 c                                 terms of the absolute depth of the top of the
@@ -2673,10 +2677,19 @@ c                                 end of data indicated by zero
 
       end do
 c                                 read aliquot composition
-      if (flsh) then 
+      if (titrat) then 
+
          if (ilay+1.eq.lay) call error (77,b(1),i, 
      *                               'increase lay in common cst66')
-         read (n8,*) (iblk(ilay+1,i),i=1,icp)
+
+         read (n8,*) qfile
+
+         if (qfile) then
+            write (*,*) 'oink'
+            call errpau
+         else 
+            read (n8,*) (iblk(ilay+1,i),i=1,icp)
+         end if 
       end if 
 
       close (n8)

@@ -4323,7 +4323,7 @@ c                                 it in array dname
      *       ,'inconsistent curves for coarsely sampled profiles.',/)
 1180  format (/,'**warning ver210** the fancy_cumulative_modes option '
      *       ,'(perplex_option.dat) is F.',/,'Set this option to obtain'
-     *       ,'more easily read plots of modal abundance.',/)
+     *       ,' more easily read plots of modal abundance.',/)
   
       end
 

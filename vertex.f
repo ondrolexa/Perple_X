@@ -634,8 +634,8 @@ c-----------------------------------------------------------------------
       integer i,j,k,l,m,idead,two(2),lun,iox,itop(lay),icp1,
      *        layer(maxbox),ibot,minus
 
-      double precision gblk(maxbox,k5),cdcomp(k5,lay),vox(k5),
-     *                 tot,lcomp(k5,lay),cmass(k5),cfmass(k5),
+      double precision gblk(maxbox,k5),cdcomp(k5,lay),vox(k5),rho,zbox,
+     *                 tot,lcomp(k5,lay),cmass(k5),cfmass(k5),area,
      *                 imass(k5),errr(k5),icerr(k5),ccerr(k5)
 
       logical output
@@ -901,6 +901,10 @@ c                                 number of variables in table
          write (n5name,'(a,i1)') '_average_comp_layer_',j
          call tabhed (lun + ilay + j,vmn(1),dvr(1),two,1,n5name,n6name)
       end do
+
+      n5name = '_cumulative_change_column'
+      call tabhed (lun + 2*ilay + 1,vmn(1),dvr(1),two,1,n5name,n6name)
+
 c                                 call initlp to initialize arrays 
 c                                 for optimization.
       call initlp
@@ -998,9 +1002,12 @@ c                                 renormalize the aliquot to 1kg
 c                                 local mass
                tot = tot + iblk(ilay+1,i)*atwt(i)
             end do
-c                                 the area of the column is (1/rho)^(2/3)
-c                                 and rho(kg/m3) ~ -dpdz * 1d4
-            tot = 1d3/tot*(vz(2)/1d4)**(2d0/3d0)
+
+            tot  = 1d3/tot
+            rho  = 1d4*vz(2)
+            zbox = vz(1)
+            area = 1d0/rho/zbox
+            tot  = tot*area
 
             do i = 1, icp 
                dblk(1,i) = iblk(ilay+1,i)*tot
@@ -1081,6 +1088,8 @@ c                                 the results to the print file.
                write (*,*) 'orca pa duddle ',j,k
 
             else if (idead.ne.0) then 
+
+               write (*,*) idead
 c                                 write failure info to fld file:
                write (n12,2000) x,y,layer(k),k,j,v(1),v(2),
      *                          (cblk(i),i=1,icp)
@@ -1173,6 +1182,7 @@ c                                 average layer compositions
             write (*,'(i1,1x,12(f10.5,1x))') l,(lcomp(i,l),i=1,icp)
 
          end do
+
 c                                 conservation tests:
          write (*,'(/,a)') 'Instantaneous and cumulative erro'
      *   //'r in column molar mass'
@@ -1183,12 +1193,22 @@ c                                 conservation tests:
          write (*,'(2x,12(f10.5,1x))') (cfmass(i),i=1,icp)
 
          if (flsh) then 
+
             write (*,'(/,a)') 'Cumulative molar mass-gain by titration'
             write (*,'(2x,12(f10.5,1x))') (x*dblk(1,i),i=1,icp)
 
             write (*,'(/,a)') 'Within-column net gain in molar mass'
             write (*,'(2x,12(f10.5,1x))') (x*dblk(1,i)-cfmass(i),
      *                i=1,icp)
+
+            write (lun + 2*ilay + 1,'(20(g13.6,1x))') 
+     *                                       x,(x*dblk(1,i)-cfmass(i),
+     *                i=1,icp)
+         else
+
+            write (lun + 2*ilay + 1,'(20(g13.6,1x))') 
+     *                                       x,(-cfmass(i),i=1,icp)
+
          end if 
 
          write (*,'(/,a)') 'Instantaneous column molar '
@@ -1220,7 +1240,7 @@ c                                 add the aliquot to the base of the column
 c                                 end of j index loop
       end do 
 
-      do j = 1, 2*ilay
+      do j = 1, 2*ilay + 1
          close (lun + j)
       end do
 
