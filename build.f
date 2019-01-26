@@ -803,7 +803,7 @@ c                                 diagrams:
      *    5x,'3 - Constrained minimization on a 1d grid',/,
      *    5x,'4 - Output pseudocompound data',/,
      *    5x,'5 - 1-d Phase fractionation',/,
-     *    5x,'6 - 0-d Infiltration-reactionation-fractionation',/,
+     *    5x,'6 - 0-d Infiltration-reaction-fractionation',/,
      *    5x,'7 - 2-d Phase fractionation (FRAC2D and TITRATE ',
      *               'reactive transport models)',//,
      *        'Use Convex-Hull minimization for Schreinemakers ',
