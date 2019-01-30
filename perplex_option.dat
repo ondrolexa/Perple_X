@@ -29,7 +29,7 @@ absolute                  default | [F] WERAMI - output absolute component amoun
 Anderson-Gruneisen        default | [F] Anderson-Gruneisen parameter correction for polythermal Murnaghan and Birch-Murnaghan
 approx_alpha              default | [T] use approximation exp(x) ~ 1+x to evaluate expansivity effect on volume
 aq_bad_results            default | [error]* 101 102 103 or ignore => response to suspect lagged speciation results. *defaults to 101 for fractionation problems
-aq_output                 default | [T] output back-calculated solute chemistry when electrolyte data is available
+aq_output                 F default | [T] output back-calculated solute chemistry when electrolyte data is available
 aq_oxide_components       default | [F] accomodate oxide components in aqueous speciation calculations
 aq_species                default | [20] maximum number of solute species output (ranked by concentration) for back-calculated results
 aq_lagged_iterations      default | [0] number of internal iterations for lagged speciation.
@@ -65,7 +65,7 @@ hybrid_EoS_H2O            default | [4] 0-2, 4-5 => 0 - MRK, 1 HSMRK, 2 - CORK, 
 hybrid_EoS_CO2            default | [4] 0-4 => 0 - MRK, 1 HSMRK, 2 - CORK, 3- Bottinga, 4 - PSEoS, 6 - Zhang & Duan 05, 7 - Zhang & Duan 09
 hybrid_EoS_CH4            default | [1] 0-1  => 0 - MRK, 1 HSMRK, 7 - Zhang & Duan 09
 increment                 default | [0.1 0.025] >0, < 1, fractional independent variable increments [exploratory and auto-refine], only relevant for CONVEX
-initial_resolution        default | [1/16 1/48]* >0, <1, resolution for static compositions. *for composition and mixed variable diagrams the default auto-refine value is 1/160.
+initial_resolution        1/8 1/16 default | [1/16 1/48]* >0, <1, resolution for static compositions. *for composition and mixed variable diagrams the default auto-refine value is 1/160.
 interim_results           default | [auto] auto, off or on
 interpolation             default | [on 2] value 1: on or off [on]; value 2, 1->99 [2]; only relevant for WERAMI
 linear_model              default | [on] on or off, relevant for 2d gridded minimization

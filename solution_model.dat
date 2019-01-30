@@ -9871,17 +9871,19 @@ abbreviation F
 full_name    fluid
 
 39                          | model type: Generic Hybrid EoS
-7
+9
 CO2
 CH4
 H2S
 SO2
 H2
 CO
+N2
+NH3
 H2O
 
 
-0 0 0 0 0 0 0              | endmember flags
+0 0 0 0 0 0 0 0 0          | endmember flags
 
 0. 1.  .1  0               | subdivision ranges, imod = 0 -> cartesian subdivision
 0. 1.  .1  0               | subdivision ranges, imod = 0 -> cartesian subdivision
@@ -9889,8 +9891,10 @@ H2O
 0. 1.  .1  0               | subdivision ranges, imod = 0 -> cartesian subdivision
 0. 1.  .1  0               | subdivision ranges, imod = 0 -> cartesian subdivision
 0. 1.  .1  0               | subdivision ranges, imod = 0 -> cartesian subdivision
+0. 1.  .1  0               | subdivision ranges, imod = 0 -> cartesian subdivision
+0. 1.  .1  0               | subdivision ranges, imod = 0 -> cartesian subdivision
 
-ideal
+ideal                      | the fluid is non-ideal, this tag means only no excess function
 
 0
 

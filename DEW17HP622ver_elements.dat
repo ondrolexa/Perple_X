@@ -44,6 +44,7 @@ Cu       63.5455     33.1500     2
 Cr       51.9958     25.5430     3
 S2       64.1300     64.1       -1 | Corrected 9/21/2018, Jilei Li. These values are twice the properties of monatomic sulfur. Formerly the monatomic molar wt was used with the diatomic formula.
 F2       37.9968    202.7900    -2
+N2        28.013    191.610     -1  | HSC S
 end_components
 
 begin_makes             
@@ -2401,7 +2402,6 @@ H2S       EoS = 106
 H2(1)S2(.5)
 GH = -81650.32  S0 = 205.77  
 c1 = 47.4  c2 = .1024E-1  c3 = 615900  c5 = -397.8  
-b5 = 141.7566  
 end
 
 
@@ -2411,6 +2411,21 @@ G0 = -300194. S0 = 248.237
 c1 = 46.1914 c2 = .786592E-2 c3 = -769856  
 end
 
+
+N2       EoS = 110 | HSC to 1500 K
+N2(1)
+GH = -57.128599d3 S0 = 191.610
+c1 = 27.75318 c2 = 0.60476d-3 c3 = 0.72831d5 c4 = 4.95984d-6  
+transition = 1 type = 2 t1 = 700  t4 = 23.52868  t5 = 12.11645d-3  t6 = 1.21039d5   t7 = -3.0762d-6
+end
+
+
+NH3      EoS = 111 | HSC
+N2(0.5)H2(1.5)
+GH = -103.416906d3  S0 = 192.777591247135
+c1 = 24.90389 c2 = 36.32064d-3 c3 = 0.48713d5 c4 = -4.60882d-6 
+transition = 1 type = 2 t1 = 1000  t4 = 65.06398  t5 = 7.64413d-3  t6 = -165.83662d5   t7 = -0.85095d-6
+end
 
  
 syvL      EoS = 9  

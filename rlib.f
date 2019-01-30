@@ -9693,10 +9693,15 @@ c                                 flag to fluid species indices
          do i = 1, j
             k = eos(kdsol(insp(i)))
             if (k.gt.200) then
-               k = k - 200
-               call warn (99,0d0,0,'using special components '//
-     *               'with solution model '//tname//' may lead '//
-     *               'to incorrect results')
+               write (*,1000) tname, mname(insp(i))
+
+1000  format (/,'**error ver888** a special component endmember cannot',
+     *' be used in solution model ',a,/,'delete ',a,' from the special',
+     *' component section in the header of the thermodynamic data file',
+     */,'or choose a different solution model.',/)
+
+               call errpau
+
             else if (k.gt.100) then
                k = k - 100
             else
