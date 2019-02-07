@@ -706,8 +706,8 @@ c            bad = .true.
          end if 
 
       else 
-c                 DANGER DEBUG 
-         write (*,*) 'ctot2?', ctot2
+c                                  a solution composition may move entirely 
+c                                  into the mobile/saturated component space
          bad = .true.
 
       end if

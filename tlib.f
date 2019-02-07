@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.8.6, source updated Jan 30, 2019.',
+     *      'Perple_X version 6.8.6, source updated Feb 3, 2019.',
 
      *      'Copyright (C) 1986-2019 James A D Connolly '//
      *      '<www.perplex.ethz/copyright.html>.'
@@ -363,6 +363,8 @@ c                                 aq_solvent_composition (true = molar)
 c                                 aq_solute_composition (true = molal)
       lopt(27) = .true.
       valu(27) = 'm'
+c                                 warning_ver637, werami interpolation
+      lopt(31) = .true.
 c                                 aq_lagged_speciation
       lopt(32) = .false.
 c                                 output_iteration_g
@@ -671,6 +673,13 @@ c                                 "vapor" threshold
          else if (key.eq.'aq_max_molality') then
 
 c             obsolete
+         else if (key.eq.'Tisza_test') then
+
+c             to be implemented
+
+         else if (key.eq.'warning_ver637') then
+c                                  allow for solvent immiscisibiliy
+            if (val.eq.'F') lopt(31) = .false.
 
          else if (key.eq.'aq_solvent_solvus') then
 c                                  allow for solvent immiscisibiliy
@@ -724,9 +733,8 @@ c     *                               'has an invalid or missing value.')
 c                                 final_resolution keys 
             read (strg,*) rid(2,1)
             read (nval1,*,iostat=ier) rid(2,2)
-c                                 ier check for the 666/667 transition
-            if (ier.ne.0.or.rid(2,2).eq.0d0) rid(2,2) = rid(2,1)
-            ier = 0
+            if (ier.ne.0) call error (77,r1,i,'the final_resolution '//
+     *                               'option requires two values')
 
          else if (key.eq.'fd_expansion_factor') then 
 
@@ -823,37 +831,55 @@ c
 c                                 number of x nodes at level 1 before autorefine
             read (strg,*) grid(1,1)
 c                                 number of x nodes for autorefine
-            read (nval1,*) grid(1,2)
+            read (nval1,*,iostat=ier) grid(1,2)
+
+            if (ier.ne.0) call error (77,r1,i,'the x_nodes option '//
+     *                               'requires two values')
 
          else if (key.eq.'y_nodes') then
 c                                 number of y nodes at level 1
             read (strg,*) grid(2,1)
 c                                 number of y nodes for autorefine
-            read (nval1,*) grid(2,2)
+            read (nval1,*,iostat=ier) grid(2,2)
+
+            if (ier.ne.0) call error (77,r1,i,'the y_nodes option '//
+     *                               'requires two values')
 
          else if (key.eq.'grid_levels') then 
 c                                 number of grid levels before autorefine
             read (strg,*) grid(3,1)
 c                                 number of grid levels for autorefine
-            read (nval1,*) grid(3,2)
+            read (nval1,*,iostat=ier) grid(3,2)
+
+            if (ier.ne.0) call error (77,r1,i,'the grid_levels option'//
+     *                               ' requires two values')
 
          else if (key.eq.'1d_path') then 
 c                                 number of grid points for 1d path before autorefine
             read (strg,*) grid(4,1)
 c                                 number of grid points for 1d path for autorefine
-            read (nval1,*) grid(4,2)
+            read (nval1,*,iostat=ier) grid(4,2)
+
+            if (ier.ne.0) call error (77,r1,i,'the 1d_path option '//
+     *                               'requires two values')
 
          else if (key.eq.'variance') then 
 c                                 max variance of traced equilibria before autorefine
             read (strg,*) grid(5,1)
 c                                 max variance of traced equilibria for autorefine
-            read (nval1,*) grid(5,2)      
+            read (nval1,*,iostat=ier) grid(5,2)
+
+            if (ier.ne.0) call error (77,r1,i,'the variance option '//
+     *                               'requires two values')
 
          else if (key.eq.'increment') then 
 c                                 default exploratory relative increment    
             read (strg,*) rid(1,1)  
 c                                 default autorefine relative increment
-            read (nval1,*) rid(1,2)
+            read (nval1,*,iostat=ier) rid(1,2)
+
+            if (ier.ne.0) call error (77,r1,i,'the increment option '//
+     *                               'requires two values')
 
          else if (key.eq.'reaction_format') then 
 
@@ -5333,8 +5359,8 @@ c                                 allow build to use fugacities or activities.
 c                                 reset the chemical potential tolerances if the
 c                                 potential is to be replaced by activity/fugacity
       do i = 1, ipot
-         if (jv(i).gt.3.and.imaf(jv(i)-jmct).ne.1) then
-            delt(jv(i)) = delt(jv(i))/1e4
+         if (jv(i).gt.3) then
+            if (imaf(jv(i)-3).ne.1) delt(jv(i)) = delt(jv(i))/1e4
          end if
       end do 
 c                                 set log p variable name.

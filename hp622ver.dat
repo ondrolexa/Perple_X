@@ -9,6 +9,10 @@
 
 Holland & Powell, JMG 2011 (TC-DS622)           |<= data base title
 
+| This data may include thermodynamic data for Cu-Fe sulfides, Cu-silicates and
+| some molecular fluids from the SUPCRT data base. Molecular fluid data may from
+| the HSC data base may also be included. Cite accordingly.
+
 | WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING!!!
 | WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING!!!
 | WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING!!!
@@ -2440,7 +2444,7 @@ end
  
 O2       EoS = 107 | H=  0.000000 
 O2(1)
-GH = -61180.38 S0 = 205.2  
+G0 = 0 S0 = 205.2  
 c1 = 48.3 c2 = -.691E-3 c3 = 499200 c5 = -420.7  
 b5 = 97.54219  
 end
@@ -2448,7 +2452,7 @@ end
  
 H2       EoS = 105 | H=  0.000000 
 O2(-.5)H2O(1)
-GH = -38968.2 S0 = 130.7  
+G0 = 0 S0 = 130.7
 c1 = 23.3 c2 = .4627E-2 c5 = 76.3  
 b5 = 148.1543  
 end
@@ -2469,16 +2473,63 @@ c1 = 47.4 c2 = .1024E-1 c3 = 615900 c5 = -397.8
 end
 
 
+SO2      EoS = 108 | SO2,g    SUPCRT DATA       SULFUR-DIOXIDE            ref:6,8       
+O2(1)S2(.5)
+G0 = -300194. S0 = 248.237  
+c1 = 46.1914 c2 = .786592E-2 c3 = -769856  
+end
+
+
 N2       EoS = 110 | HSC to 1500 K
 N2(1)
-GH = -57.128599d3 S0 = 191.610
+G0 = 0 S0 = 191.610
 c1 = 27.75318 c2 = 0.60476d-3 c3 = 0.72831d5 c4 = 4.95984d-6  
 transition = 1 type = 2 t1 = 700  t4 = 23.52868  t5 = 12.11645d-3  t6 = 1.21039d5   t7 = -3.0762d-6
 end
 
+Cv       EoS = 1 | COVELLITE       CuS                       ref:1         
+O2(-.5)S2(.5)CuO(1)
+G0 = -52768.6 S0 = 66.5256 V0 = 2.042  
+c1 = 44.3504 c2 = .110458E-1  
+end
+
+Bn       EoS = 1 | BORNITE         Cu5FeS4                   ref:1,16      
+FeO(1)O2(-3)S2(2)CuO(5)
+G0 = -362770. S0 = 415.429 V0 = 9.86  
+c1 = 208.196 c2 = .146775 c3 = -564840  
+transition = 1 type = 2  t1 = 485  t3 = 12.3363  t4 = -143.553  t5 = 1.03345  
+end
+
+
+Cc       EoS = 1 | CHALCOCITE      Cu2S                      ref:1         
+O2(-1)S2(.5)CuO(2)
+G0 = -86299.2 S0 = 120.918 V0 = 2.748  
+c1 = 52.8439 c2 = .787429E-1  
+transition = 1 type = 2  t1 = 376  t3 = 10.2375  t4 = 112.047  t5 = -.307524E-1  
+end
+
+Ccp      EoS = 1 | CHALCOPYRITE    CuFeS2                    ref:1,16      
+FeO(1)O2(-1)S2(1)CuO(1)
+G0 = -187862. S0 = 130.332 V0 = 4.283  
+c1 = 86.9854 c2 = .535552E-1 c3 = -560656  
+transition = 1 type = 2  t1 = 830  t3 = 12.1235  t4 = -591.618  t5 = .87864  
+end
+
+ 
+Azr      EoS = 1 | AZURITE         Cu3(OH)2(CO3)2            ref:1         
+H2O(1)CO2(2)CuO(3)
+G0 = -1399201 S0 = 280.202 V0 = 9.101  
+c1 = 154.306 c2 = .324009 c3 = -384928  
+end
+
+Mal      EoS = 1 | MALACHITE       Cu2(OH)2(CO3)             ref:1         
+H2O(1)CO2(1)CuO(2)
+G0 = -896230. S0 = 186.188 V0 = 5.486  
+c1 = 116.148 c2 = .183175 c3 = -560656  
+end
 
 NH3      EoS = 111 | HSC
-N2(0.5)H2(1.5)
+N2(0.5)O2(-.75)H2O(1.5)
 GH = -103.416906d3  S0 = 192.777591247135
 c1 = 24.90389 c2 = 36.32064d-3 c3 = 0.48713d5 c4 = -4.60882d-6 
 transition = 1 type = 2 t1 = 1000  t4 = 65.06398  t5 = 7.64413d-3  t6 = -165.83662d5   t7 = -0.85095d-6

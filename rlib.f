@@ -17327,7 +17327,12 @@ c                                 compute the chemical potential
 c                                 of the projected components.
       call uproj
 c                                 first do the endmembers:
-      do id = kphct+1, ipoint
+c                                 changed start index to 1 from kphct + 1, to 
+c                                 allow projection through endmembers in constrained
+c                                 component space... feb 3, 2019 this seems to be 
+c                                 necessary for mobile components, but if so, why did
+c                                 ah2o calculations work before??
+      do id = 1, ipoint
 
          g(id) = gproj (id) 
 
