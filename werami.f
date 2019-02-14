@@ -1110,9 +1110,9 @@ c                                 1d iterpolation coefficients
      *          'more phases. Interpolation will ',/,
      *          'be turned off at all affected nodes. ',
      *          'override this feature at the risk of ',
-     *          'computing inconsistent properties',/,
+     *          'computing',/,'inconsistent properties ',
      *          'by setting the option warning_ver637 to F',
-     *          'and restarting WERAMI.',/)
+     *          ' and restarting WERAMI.',/)
 
       end 
 
@@ -2635,7 +2635,7 @@ c                                 compute properties
             if (var(ivd).le.vmx(ivd).and.var(ivd).ge.vmn(ivd)) then 
                jpts = jpts + 1
             else 
-               exit  
+               cycle
             end if
  
          end if 
@@ -2644,9 +2644,10 @@ c                                 compute properties
 
       end do 
 
-      call finprp (dim,n5name,n6name,node) 
+      if (jpts.eq.0) call error (77,s,i,'your polynomial yields no cond'
+     *//'itions with the coordinate frame of the calculation')
 
-      if (jpts.eq.0) write (*,1330) 
+      call finprp (dim,n5name,n6name,node) 
 
 1010  format (/,'The plot file range for ',a,' is ',g12.4,' - ',g12.4,
      *        /,'Try again:',/)
@@ -2659,7 +2660,7 @@ c                                 compute properties
 1220  format (/,'Enter c(',i2,')')
 1320  format (/,'Change the profile (Y/N)?')
 1330  format (/,'Your polynomial does not yield conditions within',
-     *          'computational coordinate frame.',/)
+     *          ' the computational coordinate frame.',/)
 1340  format (/,'Your polynomial is:',/,a)
 1350  format (a,'=',11('+(',g12.6,')*',a,'^',i1))
 
@@ -3023,7 +3024,7 @@ c----------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i, j, k, id, jk, ind(i11), jnd(i11), nsol, msol, ksol
+      integer i, j, k, id, jk, ind(i11), jnd(i11), nsol, knd(i11), ksol
 
       logical stable(i11), quit
 
@@ -3059,7 +3060,6 @@ c----------------------------------------------------------------------
       end do 
 
       id = 0
-      msol = 0
 
       do i = 1, nph(ias)
 
@@ -3068,8 +3068,6 @@ c----------------------------------------------------------------------
          do j = 1, istab
 
             if (idstab(j).eq.idsol(i,ias)) then
-
-               msol = msol + 1
 c                               jnd points to the column before 
 c                               the j'th solution
                jnd(j) = jk
@@ -3082,7 +3080,7 @@ c                               the j'th solution
                   prop(jk+k) = mode(iopt(3)+1)
                   smode(j) = smode(j) + prop(jk+k)
 
-               end do 
+               end do
 
             end if
 c                                mode column pointer
@@ -3096,13 +3094,17 @@ c                                mode column pointer
 
          if (first) then
 
+            knd(1) = 0
+
             do i = 1, istab
                ind(i) = i
+               if (i.eq.1) cycle 
+               knd(i) = knd(i-1) + nstab(i-1)
             end do 
 
-            call rankem (smode,ind,istab,msol)
+            call rankem (smode,ind,istab,istab)
 
-            nsol = msol
+            nsol = nph(ias)
 
             first = .false.
 
@@ -3126,7 +3128,7 @@ c                                 check if it's already in ind:
                     cycle 
                  end if 
 
-                 if (msol.eq.ksol.and.lopt(45)) then
+                 if (nph(ias).eq.ksol.and.lopt(45)) then
 c                                 probably univariant, find the phase that
 c                                 was stable, but isn't anymore
                     do j = 1, nsol
@@ -3179,7 +3181,7 @@ c                                 to real zeros (not nopt(7)).
             end if
          end do
 
-         ksol = msol
+         ksol = nph(ias)
 c                                 convert to cumulative modes if
 c                                 requested
          dinc = 0d0
@@ -3191,11 +3193,11 @@ c                                 in case of multiple occurences run
 c                                 over all the occurrences of ind(j):
             do k = 1, nstab(i)
 
-               if (isnan(prop(jnd(i)+k))) exit
+               if (isnan(prop(knd(i)+k))) exit
 
-               dinc = prop(jnd(i)+k) + dinc
+               dinc = prop(knd(i)+k) + dinc
 
-               prop(jnd(i)+k) = dinc
+               prop(knd(i)+k) = dinc
 
             end do 
 

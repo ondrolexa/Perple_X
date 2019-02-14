@@ -73,9 +73,9 @@ c                                set units for composition
 c                                get the composition to be contoured
 10    if (lopt(22)) then
 c                                with moronic constant 
-         write (*,1100) sym, sym, units, what, what
+         write (*,1100) sym, sym, sym, units, what, what
       else 
-         write (*,1110) sym, sym, units, what, what
+         write (*,1110) sym, sym, sym, units, what, what
 c                                zero the constant
          a0(jcomp,1) = 0d0
          a0(jcomp,2) = a0(jcomp,1)
@@ -306,13 +306,14 @@ c                                show the user the composition:
 1080  format (/,'The compositional variable is: ',a,/)
 1090  format ('Change it (y/n)?')
 1100  format (/,'Compositions are defined as a ratio of the form:',/,
-     *        4x,'[a1 + Sum {w(i)*n(i), i = 1, c1}] / [a2 + Sum {w(i)*',
+     *        4x,'[a1 + Sum {w(i)*',a,'(i), i = 1, c1}] / ',
+     *           '[a2 + Sum {w(i)*',
      *        a,'(i), i = c2, c3}]',/,15x,
      *        a,'(j)   = ',a,' of ',a,' j',/,15x,
      *        'w(j)   = weighting factor of ',a,' j (usually 1)',/,
      *    15x,'a1, a2 = optional constants (usually 0)')
 1110  format (/,'Compositions are defined as a ratio of the form:',/,
-     *        4x,' Sum {w(i)*n(i), i = 1, c1} / Sum {w(i)*',
+     *        4x,' Sum {w(i)*',a,'(i), i = 1, c1} / Sum {w(i)*',
      *        a,'(i), i = c2, c3}',/,15x,
      *        a,'(j)   = ',a,' of ',a,' j',/,15x,
      *        'w(j)   = weighting factor of ',a,' j (usually 1)')
