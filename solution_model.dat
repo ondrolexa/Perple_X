@@ -4552,11 +4552,17 @@ end_of_model
                     --------------------------------------------------------  
 begin_model
                                   | Fluid, Connolly & Trommsdorff CMP 1991.
-F                                 
+
+                                  | The EoS used for this model is chosen by the user
+                                  | when BUILD is run (the value of IFUG in the problem definition file).
+                                  | If this choice is identified as a hybrid EoS, then the EoS used
+                                  | for the individual species are controlled by the hybrid_EoS_XXX option.
+F 
 abbreviation F
 full_name    fluid
 
-0                                 | solution model type: internal EoS. See explanation in the header of this file for a list of model types
+0                                 | solution model type: internal EoS. See explanation in the header of 
+                                  | this file for a list of model types
 
 2                                 | number of endmembers
 
@@ -5151,6 +5157,12 @@ end_of_model
 begin_model
                                       Connolly and Cesare C-O-H Fluid
                                       this model is for X(O) = 0-1
+
+                                  | The EoS used for this model is chosen by the user
+                                  | when BUILD is run (the value of IFUG in the problem definition file).
+                                  | If this choice is identified as a hybrid EoS, then the EoS used
+                                  | for the individual species are controlled by the hybrid_EoS_XXX option.
+
 GCOHF
 abbreviation F
 full_name    fluid
@@ -5160,7 +5172,7 @@ full_name    fluid
 O2       H2     
   0  0                                endmember flags
 1d-5 0.999999 0.1       0        | subdivision ranges, imod = 0 -> cartesian subdivision
-   | 0.666666666           | second symmetry axis, required for imod = 3
+
 
 ideal
 0
@@ -5170,18 +5182,19 @@ reach_increment 3
 end_of_model
                       --------------------------------------------------------
 begin_model
-                                      Ternary C-O-H Fluid 
-
+                           | Ternary C-O-H Fluid 
+                           | see: perplex.ethz.ch/perplex/faq/calculations_with_unbuffered_COH_fluids.txt
 COHF   
 abbreviation F
 full_name    fluid
 
 41                         | model type: Internal EoS
 3                                  
-gph      O2       H2     
+gph      O2       H2 
  1  0  0                   | endmember flags
-1d-5 0.67      0.1       0
-1d-5 0.999999  0.1       0       | subdivision ranges, imod = 0 -> cartesian subdivision
+
+1d-5 0.67      0.1    0    | subdivision ranges, imod = 0 -> cartesian subdivision
+1d-5 0.999999  0.1    0    | subdivision ranges, imod = 0 -> cartesian subdivision
 
 ideal
 0
@@ -5245,17 +5258,22 @@ abbreviation Mica
 full_name    white-mica
 
 2                          | model type: simplicial composition space
+
 4                          | endmembers
-cel      
-fcel     
-mu        
-pa                     
+
+cel
+fcel
+mu
+pa
 
 0 0 0 0                    | endmember flags
 
-0. 1. 0.1 0                | cel  subdivision range, imod = 0 -> cartesian subdivision
-0. 1. 0.1 0                | fcel subdivision range, imod = 0 -> cartesian subdivision
-0. 1. 0.1 0                | mu   subdivision range, imod = 0 -> cartesian subdivision
+                           | subdivision schemes for cel, fcel, and pa, 
+                           | see commentary in the header of this file for further explanation
+
+0. 1 0.1 0               | cel  subdivision range
+0. 1 0.1 0               | fcel subdivision range
+0. 1.0 0.1 0               | pa   subdivision range
 
 begin_excess_function 
 W(mu pa pa) 19456.0      1.65440     -.456100 
@@ -9849,7 +9867,12 @@ z(Zr) = 1 zrg
 end_of_model     
                       --------------------------------------------------------
 begin_model                
-                                      Silica Fluid                                  
+                                      Silica Fluid
+
+                                      this is a hybrid EoS, the EoS used for the
+                                      individual species are controlled by the 
+                                      hybrid_EoS_XXX option.
+
 Si-Fluid 
 abbreviation F
 full_name    fluid
@@ -9869,7 +9892,10 @@ end_of_model
                       --------------------------------------------------------
 begin_model                
                       COH-Fluid Generic Hybrid Fluid EoS with linear Subdivision,
-                      see COH-Fluid+ for the non-linear subdivision version of this model. 
+                      see COH-Fluid+ for the non-linear subdivision version of this model.
+
+                      See perplex.ethz.ch/Perple_X_generic_hyrbid_fluid_EoS.html
+                      for explanation of this type of fluid model.
                       --------------------------------------------------------
 
 COH-Fluid
@@ -9916,7 +9942,8 @@ begin_model
                       See the header of this file for an explanation of non-linear
                       subdivision parameters.
 
-
+                      See perplex.ethz.ch/Perple_X_generic_hyrbid_fluid_EoS.html
+                      for explanation of this type of fluid model.
                       --------------------------------------------------------
 COH-Fluid+
 abbreviation F
@@ -9935,12 +9962,12 @@ H2O
 
 0 0 0 0 0 0 0 0             | endmember flags
 
-1e-5   5e-2      .1       1        | subdivision ranges, imod = 1 -> non-linear subdivision
-1e-5   5e-2      .1       1        | subdivision ranges, imod = 1 -> non-linear subdivision
+1e-5   3e-1      .1       1        | subdivision ranges, imod = 1 -> non-linear subdivision
+1e-5   1.        .1       1        | subdivision ranges, imod = 1 -> non-linear subdivision
 1e-5   1e-3      .1       1        | subdivision ranges, imod = 1 -> non-linear subdivision
 1e-5   2.5e-5    .1       1        | subdivision ranges, imod = 1 -> non-linear subdivision
-1e-5   1e-4      .1       1        | subdivision ranges, imod = 1 -> non-linear subdivision
-1e-5   1e-4      .1       1        | subdivision ranges, imod = 1 -> non-linear subdivision
+1e-5   1e-2      .1       1        | subdivision ranges, imod = 1 -> non-linear subdivision
+1e-5   1e-2      .1       1        | subdivision ranges, imod = 1 -> non-linear subdivision
 
 ideal
 
@@ -9951,7 +9978,8 @@ reach_increment 0
 end_of_model           
                       --------------------------------------------------------
 begin_model                
-                                                                        
+                      See perplex.ethz.ch/Perple_X_generic_hyrbid_fluid_EoS.html
+                      for explanation of this type of fluid model.
 WADDAH 
 abbreviation F
 full_name fluid
@@ -9969,7 +9997,8 @@ ideal
 end_of_model                 
                       --------------------------------------------------------
 begin_model                
-                                                                        
+                      See perplex.ethz.ch/Perple_X_generic_hyrbid_fluid_EoS.html
+                      for explanation of this type of fluid model.
 C-H-Fluid 
 abbreviation F
 full_name    fluid
@@ -9995,7 +10024,8 @@ end_of_model
 
                       --------------------------------------------------------
 begin_model                
-                                                                        
+                      See perplex.ethz.ch/Perple_X_generic_hyrbid_fluid_EoS.html
+                      for explanation of this type of fluid model.
 HOS-Fluid 
 abbreviation F
 full_name    fluid

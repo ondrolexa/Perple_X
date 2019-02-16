@@ -2720,7 +2720,7 @@ c                                 get the independent output variable
          ipts = iopt(36) + 1
       else 
          ind = 1
-         ipts = int(vmx(ind))
+         ipts = int( (vmx(ind)-vmn(ind))/dvr(ind) + 1)
       end if 
 c                                 name and open plot file, write header 
       call tabhed (n5,xy,xy,k,dim,n5name,n6name)
