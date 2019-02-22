@@ -618,7 +618,7 @@ c                                       sectioning constraints
             y = y - 0.06d0*nscale
          end do 
  
-         if (ifct.eq.0) then 
+         if (ifct.ne.0) then 
             call pstext (0.75d0,y,'(fluid saturated)',17)
             y = y - 0.06d0*nscale
          end if 
