@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.8.6, source updated Feb 22, 2019.',
+     *      'Perple_X version 6.8.6, source updated Feb 25, 2019.',
 
      *      'Copyright (C) 1986-2019 James A D Connolly '//
      *      '<www.perplex.ethz.ch/copyright.html>.'
@@ -2701,7 +2701,7 @@ c----------------------------------------------------------------------
       else if (ier.eq.12) then
          write (*,12) char
       else if (ier.eq.13) then
-         write (*,13) char
+         write (*,13) char, char
       else if (ier.eq.14) then
          write (*,14) char
       else if (ier.eq.15) then
@@ -2890,8 +2890,14 @@ c----------------------------------------------------------------------
 12    format (/,'**warning ver012** ',a,' has a transition ',
      *          ' with dp/dT < 0 and may not be treated ',/,
      *          ' correctly')
-13    format (/,'**warning ver013** ',a,' has null or negative ',
-     *          'composition')
+13    format (/,'**warning ver013** the total amount of the thermodynam'
+     *         ,'ic components in: ',a,'is < 0,',/,'it will be rejected'
+     *         ,' from the thermodynamic composition space. If non-elem'
+     *         ,'ental (e.g., ',/,'oxide) ',
+     *          'components are in use this rejection criterion may be '
+     *         ,'incorrect. When this is',/,'the case redefine the ',
+     *          'data base components so that the total amount of the'/,
+     *          'thermodynamic components in ',a,' is > 0.')
 14    format (/,'**warning ver014** You can not redefine the ',
      *          'saturated phase component:',a,/,'To circumvent this ',
      *          'restriction use CTRANSF to make a data base with the',/

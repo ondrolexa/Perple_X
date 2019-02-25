@@ -1204,7 +1204,15 @@ c                               otherwise rejected.
          tot = tot + comp(ic(j))
       end do 
 
-      if (tot.eq.0d0.and.ichk.ne.4) then
+      if (tot.lt.0d0.and.ichk.eq.1) then
+c                               reject phases such as H2 = O2/2 - H2O
+         if (iam.eq.1.or.iam.eq.2.or.iam.eq.15) 
+     *                                call warn (13,tot,j,name)
+
+         goto 90
+
+
+      else if (tot.eq.0d0.and.ichk.ne.4) then
      
          goto 90
 
