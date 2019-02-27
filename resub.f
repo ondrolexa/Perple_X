@@ -206,7 +206,7 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer liw, lw, iter, idead, jstart, opt, kter, kitmax 
+      integer liw, lw, iter, idead, jstart, opt, kter, kitmax
 
       logical quit, kterat
 
@@ -246,7 +246,6 @@ c                                 are identified in jdv(1..npt)
 c                                 --------------------------------------
 c                                 first iteration
       call resub (1,kterat)
-
 
       if (jphct.eq.jpt) then
 c                                 if nothing to refine, set idead 
@@ -638,12 +637,12 @@ c                                 solutions with dependent endmembers, p0a
 c                                 contains the p's. for ksmod=8 these are a 
 c                                 reformulation of the p's to eliminate the ordered 
 c                                 endmembers. p0a is constructed in function gsol.
-         do i = 1, lstot(id) 
+         do i = 1, lstot(id)
             do j = 1, icp 
                cp2(j,jphct) = cp2(j,jphct) + p0a(i) * cp(j,jend(id,2+i))
             end do 
             ctot2 = ctot2 + p0a(i)*ctot(jend(id,2+i))
-         end do 
+         end do
 
       else if (ksmod(id).eq.20) then 
 
@@ -680,7 +679,7 @@ c                                 general case (y coordinates)
             ctot2 = ctot2 + y(i)*ctot(jend(id,2+i)) 
 
          end do 
-         
+
       end if
 c                                  a phase with a null composition may appear
 c                                  as an endmember of a solution in a calculation
@@ -699,11 +698,6 @@ c                                  normalize the composition and free energy
          do j = 1, icp
             cp2(j,jphct) = cp2(j,jphct)/ctot2
          end do
-c                                  degeneracy test
-         if (degen(jphct,2)) then 
-c            bad = .true.
-            return
-         end if 
 
       else 
 c                                  a solution composition may move entirely 
@@ -2108,8 +2102,6 @@ c                                compositions.
                      if (.not.solvus(jdsol(k,j),id,iam)) goto 20
                   end do
 
-c                 write (*,*) 'got 1, yclos1'
-
                end if
             end do
 c                                the composition is acceptable
@@ -2857,12 +2849,6 @@ c                                 point.
          id = hkp(i)
 
          if (is(i).ne.1) then
-c                                 these tests destabilize chemical potential
-c                                 back-calculation.
-c                                 degeneracy test
-c           if (degen(i,2)) cycle
-c                                 mode test
-c           if (x(i).lt.zero) cycle
 c                                 a stable point, add to list
             npt = npt + 1
             jdv(npt) = i
@@ -3915,7 +3901,12 @@ c----------------------------------------------------------------------
 
       call prs2xy (i,ids,.true.,bad)
 
-      if (bad) return
+      if (bad) then
+
+         jphct = jphct - 1
+         return
+
+      end if 
 c                                June 8, 2018
       kcoct = jcoct + mcoor(ids)
 

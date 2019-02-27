@@ -12594,6 +12594,7 @@ c                                 put in the new site 2 compositions:
             end do
 
          end do
+
       end do
 
       np1 = ntot
@@ -12915,15 +12916,6 @@ c                                 done even for models without disorder so the p
 c                                 array can be used for all solutions. 
 
       call y2p0 (im)
-
-c DEBUG DEBUG
-      x = 0d0
-      do i = 1, nstot(im)
-         x = x + pa(i)
-      end do 
-      if (dabs(x-1d0).gt.zero) then 
-         write (*,*) 'soload 2',dabs(x-1d0)
-      end if 
 
       iphct = iphct + 1
       icpct = icpct + 1 
@@ -14847,6 +14839,9 @@ c                                 x coordinate description
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+
       double precision xmng, xmxg, xncg, xmno, xmxo, reachg
       common/ cxt6r /xmng(h9,mst,msp),xmxg(h9,mst,msp),xncg(h9,mst,msp),
      *               xmno(h9,mst,msp),xmxo(h9,mst,msp),reachg(h9)
@@ -14921,7 +14916,7 @@ c                                 cartesian
                if (dabs(y(i,iy(i))-ymax).lt.delt.or.
      *             y(i,iy(i)).gt.ymax) then
                   y(i,iy(i)) = ymax
-                  exit 
+                  exit
                end if
 
             end do
@@ -15002,7 +14997,7 @@ c                                 the composition
             ycum = ycum + y(i,ind(i))  
          end do 
 
-         if (ycum.gt.1d0) then
+         if (ycum.gt.r1) then
 c                                 no matter what this is the last point
 c                                 to be generated for ind(indx), set ieyit
 c                                 to change indx

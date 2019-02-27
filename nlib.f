@@ -2374,8 +2374,11 @@ c           add the infeasibility.
 
       subroutine f06baf( a, b, c, s )
 
-      double precision   a, b, c, s, one, zero
-      parameter        ( one = 1.0d+0, zero = 1d-99)
+      double precision   a, b, c, s
+
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+
       double precision   t
       logical            fail
       double precision   f06blf
@@ -2419,9 +2422,12 @@ c           add the infeasibility.
       implicit none 
       integer  k1, k2, lda, n, i, j
       character*1 side
-      double precision a(lda,*), c(*), s(*),one, zero
+      double precision a(lda,*), c(*), s(*)
       double precision   aij, ctemp, stemp, subh, temp
-      parameter ( one = 1.0d+0, zero = 1d-99)
+
+
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 
 
       if((min( n, k1 ).lt.1 ).or.( k2.le.k1 ).or.( k2.gt.n ) )return
@@ -2471,8 +2477,11 @@ c           add the infeasibility.
 
       integer            k1, k2, lda, n
       character*1        side
-      double precision   a( lda, * ), c(*), s(*), one, zero
-      parameter          ( one = 1d0, zero = 1d-99)
+      double precision   a( lda, * ), c(*), s(*)
+
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+
       double precision   aij, ctemp, stemp, temp
       integer            i, j
 
@@ -2526,8 +2535,11 @@ c                                 added following line 11/06
       implicit none 
       integer            k1, k2, lda, m, n
       character*1        direct, side
-      double precision   a( lda, * ), c(*), s(*), one, zero
-      parameter          ( one = 1.0d+0, zero = 1d-99)
+      double precision   a( lda, * ), c(*), s(*)      
+
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+
       double precision   aij, ctemp, stemp, temp
       integer            i, j
       logical            left, right
@@ -2626,8 +2638,11 @@ c debug                                   11/06
       implicit none
       double precision   alpha, zeta, beta, eps, scale, ssq
       integer            n
-      double precision   x(*), one, zero
-      parameter        ( one = 1.0d+0, zero = 1d-99)
+      double precision   x(*)
+
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+
       logical            first
       save               eps, first
       data               first/ .true. /
@@ -2736,9 +2751,11 @@ c           note that  scale = max( abs( x( i ) ) ).
 
       subroutine f06flf( n, x, incx, xmax, xmin )
       implicit none
-      double precision   xmax, xmin, x(*), zero
+      double precision   xmax, xmin, x(*)
       integer            incx, n, ix
-      parameter        ( zero = 1d-99)
+
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 
       if( n.lt.1 )then
          xmax = zero
@@ -2756,9 +2773,11 @@ c           note that  scale = max( abs( x( i ) ) ).
 
       subroutine f06fbf( n, const, x, incx )
       implicit none
-      double precision   const, zero, x(*)
+      double precision   const, x(*)
       integer            incx, n, ix
-      parameter        ( zero = 1d-99)
+
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 
 
       if( n.gt.0 )then
