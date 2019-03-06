@@ -14879,7 +14879,7 @@ c                                 avoid impossible compositions 'cause a min > 0
 
             ycum = ycum + xmn(lsite,k-1)
 c                                 1-ycum is the smallest fraction possible
-            if (ycum.gt.1d0) then 
+            if (ycum.gt.r1) then 
 c                                 inconsistent limits
                write (*,'(/,a,/)') '#########BOOM WACKA BOOM###########'
                write (*,*) ycum,ids,ksmod(ids),lsite,k,i,mode
@@ -14996,7 +14996,7 @@ c                                 the composition
          do i = 1, jsp 
             ycum = ycum + y(i,ind(i))  
          end do 
-
+c                                 until 2/17/19 this was > 1.
          if (ycum.gt.r1) then
 c                                 no matter what this is the last point
 c                                 to be generated for ind(indx), set ieyit

@@ -342,14 +342,14 @@ c                                 round off tests:
          end if 
 
          do i = 1, nxy(1) 
+
+            var(1) = tmin(1) + dx(1)*dfloat(i-1)
 c                                 round off tests:
             if (var(1).gt.tmax(1)) then
                var(1) = tmax(1)
             else if (var(1).lt.tmin(1)) then 
                var(1) = tmin(1)
-            end if 
-
-            var(1) = tmin(1) + dx(1)*dfloat(i-1)
+            end if
 
             call polprp (dim)
  
