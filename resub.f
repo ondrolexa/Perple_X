@@ -1948,6 +1948,12 @@ c----------------------------------------------------------------------
       double precision wmach(9)
       common /ax02za/wmach
 
+      character*8 vname,xname
+      common/ csta2  /xname(k5),vname(l2)
+
+      integer ipot,jv,iv
+      common/ cst24 /ipot,jv(l2),iv(l2)
+
       integer iopt
       logical lopt
       double precision nopt
@@ -1984,8 +1990,8 @@ c----------------------------------------------------------------------
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
 
-      double precision p,t,xco2,u1,u2,tr,pr,r,ps
-      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
+      double precision v,tr,pr,r,ps
+      common/ cst5  /v(l2),tr,pr,r,ps
 
       double precision a,b,c
       common/ cst313 /a(k5,k1),b(k5),c(k1)
@@ -2049,7 +2055,12 @@ c                                 new point, add to list
 
             if (lopt(34)) then
 
-               if (npt.eq.1) write (*,'(/,a,i2)') 'iteration ',0
+               if (npt.eq.1) then
+                  write (*,'(/,a)') 'Iteration dump at: '
+                  write (*,'(a,'' = '',g12.6)') 
+     *                  (vname(jv(j)), v(jv(j)), j = 1, ipot)
+                  write (*,'(/,a,i2)') 'iteration ',0
+               end if 
                if (ikp(id).ne.0) then 
                   call dumper (1,i,0,ikp(id),x(i),clamda(i))
                else 
@@ -2084,7 +2095,7 @@ c being allowed, see ldsol code); restored again april 2017. removed sep 2018.
          id = i + inc 
          iam = ikp(id)
 
-         if (lname(iam).eq.'liquid'.and.t.lt.nopt(20)) cycle 
+         if (lname(iam).eq.'liquid'.and.v(2).lt.nopt(20)) cycle 
 
          if (clamda(i).lt.slam(iam)) then
 c                                the composition is more stable
