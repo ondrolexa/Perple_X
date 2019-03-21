@@ -267,6 +267,9 @@ c---------------------------------------------------------------------
       double precision f
       common/ cst11 /f(3)
 
+      integer iam
+      common/ cst4 /iam
+
       integer iopt
       logical lopt
       double precision nopt
@@ -535,19 +538,19 @@ c                                 are not used for mixture props.
          if (eos(id).eq.201.or.eos(id).eq.202) then
 c                                 species has been identified as a special composant
 c                                 and eos is set by ifug
-            if (eos(id).eq.201) then 
-         
-               xco2 = 0d0 
+            if (eos(id).eq.201) then
+
+               if (iam.ne.5) xco2 = 0d0
                call cfluid (fo2,fs2)
                gval = gval + r*t*f(1)
             
             else
           
-               xco2 = 1d0
+               if (iam.ne.5) xco2 = 1d0
                call cfluid (fo2,fs2)
                gval = gval + r*t*f(2)
 
-            end if 
+            end if
 
          else if (eos(id).lt.117) then  
 c                                 call appropriate pure fluid EoS
@@ -2013,7 +2016,7 @@ c                                        = 2, shear and bulk
 
             if (name.ne.cmpnt(idspe(k)).and.name.ne.eoscmp(k)) cycle 
 
-            if (ifct.eq.0) then 
+            if (ifct.eq.0.or.iam.eq.5) then 
 c                                 there is no saturated phase
 c                                 assign it the default molecular fluid eos
                eos(id) = 200 + k 

@@ -1201,16 +1201,10 @@ c--------------------------------------------------------------------
 c---------------------------------------------------------------------
 c                                 compute free energy change of the rxn
       gval = 0d0
-      fh2o = 0d0
-      fco2 = 0d0
- 
-      if (ifct.gt.0) call cfluid (fo2,fs2)
  
       do j = 1, iphct
          gval = gval + vnu(j) * (gphase(j) + r * t * dlog(act(j)))
-      end do 
- 
-      gval = gval + vuf(1) * fh2o*r*t + vuf(2)*fco2*r*t
+      end do
 
       if (idf(3).ne.0.and.ifct.gt.0) gval = gval + vnu(idf(3))*r*t*fo2
  
@@ -1652,7 +1646,11 @@ c                                end of phase loop
       read (*,1050) y
       if (y.ne.'y'.and.y.ne.'Y') return 
 
-      call rfluid (1,ifug) 
+      call rfluid (1,ifug)
+c                                 for multispecies fluids set
+c                                 up species indices and name
+c                                 of independent variable
+      call setins (ifug)
 
       return 
 
@@ -1965,7 +1963,7 @@ c-----------------------------------------------------------------------
             iv(i) = i
          end do
 
-         if (icmpn.gt.k5) write (*,3020) k5
+c         if (icmpn.gt.k5) write (*,3020) k5
 
       end if 
 c                              this check is here to avoid

@@ -7948,14 +7948,14 @@ c                                 zhang & duan 2009
             end if
 
          end if
-
-         end do
 c                                 the hybrid delta volume (hyb-mrk), it's 
 c                                 doubtful this thing is really used, if it 
 c                                 is it must be in fluids.
          vh(j) = vh(j) + v(j)
 c                                 the hybrid/mrk pure fluid fugacity ratio
          gh(j) = g(j)/gh(j)
+
+       end do
 
       end
 

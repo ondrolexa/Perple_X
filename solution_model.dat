@@ -3719,7 +3719,7 @@ full_name    garnet
 
 alm    py     gr                  | endmember names 
 skiag  kho    andr
-uv_d   fuv_d  knor 
+fuv_d  knor   uv_d
 
 4                                 | number of dependent endmembers 
 
@@ -3748,7 +3748,7 @@ end_excess_function
 
 3 3.                              |3 species, site multiplicity 3
 z(x,fe) = 1 alm + 1 skiag
-z(x,Mg) = 1 py 
+z(x,Mg) = 1 py  + 1 knor 
 
 3 2.                              |2 species, site multiplicity 2
 z(y,al) = 1 alm + 1 py + 1 gr
@@ -5718,14 +5718,17 @@ full_name    olivine
                                                           
 2                                     model type: simplicial composition space
 
-3                                     3 endmembers
-teph     fo       fa        
-0  0   0                            | endmember flags
+4                                     endmembers
+teph     fran
+fo       fa
+
+0  0   0  9                          | endmember flags
 
                                     | NOTE restricted compositional range for Mn 
 
-0.0 1.0  0.1   0                    | range and resolution for X(Mn), imod = 1 -> asymmetric transform subdivision
-0.0 1.0  0.1   0                    | range and resolution for X(Mg), imod = 0 -> cartesian subdivision
+0.0  1.0  0.1   0                    | range and resolution for X(Mn), imod = 1 -> asymmetric transform subdivision
+1d-5 1d-1 0.1   1                    | range and resolution for X(Ni), imod = 0 -> cartesian subdivision
+0.0  1.0  0.1   0                    | range and resolution for X(Mg), imod = 0 -> cartesian subdivision
 
 begin_excess_function
 W(fo fa) 8400. 0. 0.                | corrected from 4.2 kJ Nov 15, 2004.          
@@ -5733,9 +5736,10 @@ end_excess_function
 
 1                                     1 site entropy model
 
-3 2.                                  3 species, site multiplicity = 2.
+4 2.                                  3 species, site multiplicity = 2.
 
 z(mg) = 1 fo
+z(ni) = 1 fran
 z(fe) = 1 fa 
 
 end_of_model              
@@ -8021,15 +8025,17 @@ end_of_model
 
 begin_model                
                       --------------------------------------------------------
+                        HP model with millerite endmember hack
 Po(HP)                    
 abbreviation Po
 full_name    pyrrhotite 
 
 2                                     model type: simplicial composition space
 
-2                                     2 endmembers
-trov trot          
-  0  0                     | endmember flags
+3                                     endmembers
+trov trot  mil
+  0  0  0                  | endmember flags
+0. 1. .1   0               | subdivision range, imod = 0 -> cartesian subdivision
 0. 1. .1   0               | subdivision range, imod = 0 -> cartesian subdivision
 
 begin_excess_function
@@ -8038,8 +8044,9 @@ end_excess_function
 
 1                                     1 site configurational entropy model
 
-2 1.                                  2 species (Fe, V), site multiplicity = 1.
+3 1.                                  2 species (Fe, V), site multiplicity = 1.
 z(M2,V) = 1/8 trov
+z(M2,Ni) = 1 mil
 
 end_of_model        
                       --------------------------------------------------------
