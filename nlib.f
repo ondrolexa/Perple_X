@@ -214,13 +214,15 @@ c     e04mfk   creates the expanded lagrange multiplier vector clamda.
       integer           kactiv(n), kx(n)
       double precision  rlam
       integer           j, k, nfixed, nz
+      double precision zero, one
+      common/ lpz /zero, one
 
       nz = nfree - nactiv
 
 c     expand multipliers for bounds, linear and nonlinear constraints
 c     into the  clamda  array.
 
-      call f06fbf(nctotl,0d0,clamda,1)
+      call f06fbf(nctotl,zero,clamda,1)
 
       nfixed = n - nfree
 
@@ -276,8 +278,6 @@ c     constraint j may be violated by as much as featol(j).
 
       implicit none 
 
-      double precision  zero, one
-      parameter         (zero=0.0d+0,one=1.0d+0)
       character*6       empty
       parameter         (empty='      ')
       double precision  obj, xnorm
@@ -315,6 +315,9 @@ c     constraint j may be violated by as much as featol(j).
       common            /ax02za/wmach
       common            /be04nb/ldt,ldq
       common            /de04nb/asize, dtmax, dtmin
+
+      double precision zero, one
+      common/ lpz /zero, one
 
       save              firstv, alfa, jdel, jadd
 
@@ -654,8 +657,7 @@ c     is set.
 c     original version derived from lssetx january-1987.
 c     this version of  e04mfj  dated   5-jul-1989.
 c     ******************************************************************
-      double precision  zero, one
-      parameter         (zero=0.0d+0,one=1.0d+0)
+
       integer           ntry
       parameter         (ntry=5)
 
@@ -679,7 +681,8 @@ c     .. external functions ..
       double precision  ddot, dnrm2
       integer           idamax
 c     .. common blocks ..
-
+      double precision zero, one
+      common/ lpz /zero, one
 
 
 c     ------------------------------------------------------------------
@@ -749,14 +752,13 @@ c     ---------------------------------------------------------------
 
       subroutine e04nbw(mode,n,nz,nfree,nq,unitq,kx,v,zy,wrk)
 
-      double precision  zero, one
-      parameter         (zero=0.0d+0,one=1.0d+0)
       integer           mode, n, nfree, nq, nz
       logical           unitq
       double precision  v(n), wrk(n), zy(nq,*)
       integer           kx(n)
       integer           j, j1, j2, k, l, lenv, nfixed
-
+      double precision zero, one
+      common/ lpz /zero, one
 
       nfixed = n - nfree
       j1 = 1
@@ -861,10 +863,7 @@ c     original version written by peg,  october-31-1984.
 c     this version of  e04nfq  dated  7-jul-1989.
 c     ******************************************************************
 
-      implicit none 
-
-      double precision  zero, one
-      parameter         (zero=0d0,one=1d0)
+      implicit none
 
       double precision  condmx
       integer           it, k1, k2, lda, ldq, ldt, n, nactiv,
@@ -884,6 +883,8 @@ c     ******************************************************************
       double precision  dnrm2, f06blf
       common            /ax02za/wmach
       common            /de04nb/asize, dtmax, dtmin
+      double precision zero, one
+      common/ lpz /zero, one
 
       rtmax = wmach(8)
 
@@ -1065,12 +1066,21 @@ c           the top of the array  t.
       integer           istate(nctotl), kactiv(n), kx(n)
       integer           is, j, jfix, jfree
 
+      double precision zero, one
+      common/ lpz /zero, one
+
+      double precision units, r13, r23, r43, r59, nzero, none, r1
+      common/ cst59 /units, r13, r23, r43, r59, nzero, none, r1
+
 c     initialize variables 
 
       do j = 1, n
          x(j) = 0d0
          wx(j) = 0d0
       end do 
+
+      zero = 0d0
+      one = 1d0 
 
       nfree = n
       nactiv = 0
@@ -1231,9 +1241,6 @@ c     e04mfq  checks the residuals of the constraints that are believed
 c     to be feasible.  the number of constraints violated by more than
 c     featol is computed, along with the maximum constraint violation.
 
-      double precision  zero
-      parameter         (zero=0.0d+0)
-
       double precision  errmax
       integer           jmax, n, nclin, nviol
 
@@ -1242,6 +1249,8 @@ c     featol is computed, along with the maximum constraint violation.
 
       double precision  con, feasj, res
       integer           is, j
+      double precision zero, one
+      common/ lpz /zero, one
 
 c     compute the number of constraints (nviol) violated by more than
 c     featol and  the maximum constraint violation (errmax).
@@ -1438,8 +1447,8 @@ c     freedom in pass 2.
 c     gamma = 0.1 and 0.01 seemed to inhibit phase 1 somewhat.
 c     gamma = 0.001 seems to be safe.
 
-      double precision  zero, one, gamma
-      parameter         (zero=0d0,one=1d0,gamma=1d-3)
+      double precision  gamma
+      parameter         (gamma=1d-3)
 
       double precision  alfa, alfap, bigalf, pnorm
       integer           jhit, n, nclin
@@ -1459,6 +1468,8 @@ c     gamma = 0.001 seems to be safe.
       logical           blockf, blocki
 
       common            /ce04mf/tolx0, ndegen, itnfix, nfix
+      double precision zero, one
+      common/ lpz /zero, one
 
       double precision wmach(9)
       common/ax02za/wmach
@@ -1843,9 +1854,8 @@ c     matrix  q = (z y)  is the identity and will not be touched.
 c     if  ngq .gt. 0,  the column transformations are applied to the
 c     columns of the  (ngq x n)  matrix  gqm'.
 
-      double precision  zero, one
-c changed 0 from 0 to 1d-99 11/06
-      parameter         (zero=1d-99,one=1.0d+0)
+c changed 0 from 0 to 1d-99 11/06 zero!
+
       double precision  condmx
       integer           iadd, ifix, inform, it, jadd, lda, ldq,
      *                  ldt, n, nactiv, nfree, ngq, nz
@@ -1860,6 +1870,8 @@ c changed 0 from 0 to 1d-99 11/06
       double precision  dnrm2, f06blf
 
       common            /de04nb/asize, dtmax, dtmin
+      double precision zero, one
+      common/ lpz /zero, one
 
       overfl = .false.
       bound = jadd .le. n
@@ -2043,8 +2055,7 @@ c           the proposed working set appears to be linearly dependent.
       subroutine e04nfp(unitq,it,n,nactiv,nfree,ngq,nz,nrz,lda,ldq,ldt,
      *                  jdel,kdel,kactiv,kx,a,t,gqm,q,c,s,fail)
       implicit none 
-      double precision  zero, one
-      parameter         (zero=0.0d+0,one=1.0d+0)
+
       integer           it, jdel, kdel, lda, ldq, ldt, n, nactiv, nfree,
      *                  ngq, nrz, nz, kactiv(n), kx(n)
       logical           unitq,fail
@@ -2053,6 +2064,8 @@ c           the proposed working set appears to be linearly dependent.
       integer           i, ir, itdel, j, jart, jt, k, l, npiv, nrz1,
      *                  nsup, idamax
       common            /de04nb/asize, dtmax, dtmin
+      double precision zero, one
+      common/ lpz /zero, one
 
       jt = nz + 1
       fail = .false.
@@ -2213,8 +2226,6 @@ c           t  becomes lower hessenberg.
 
       implicit none 
 
-      double precision  one
-      parameter         (one=1.0d+0)
       double precision  biggst, smllst, tinyst, trubig, trusml, zerolm
       integer           jbigst, jinf, jsmlst, jtiny, kbigst, ksmlst,
      *                  lda, ldt, n, nactiv, nfree, notopt,
@@ -2224,6 +2235,8 @@ c           t  becomes lower hessenberg.
       integer           istate(*), kactiv(n), kx(n)
       double precision  anormj, blam, rlam, scdlam
       integer           i, is, j, k, l, nfixed
+      double precision zero, one
+      common/ lpz /zero, one
 
       nfixed = n - nfree
       jtiny = 0
@@ -2300,9 +2313,8 @@ c        the working set at its upper bound.
      *                  featol,cvec,x,wtinf)
 
       implicit none
-
-      double precision  zero
-      parameter         (zero=0.0d+0)
+      double precision zero, one
+      common/ lpz /zero, one
 
       double precision  suminf
       integer           lda, n, nclin, numinf
@@ -2375,9 +2387,8 @@ c           add the infeasibility.
       subroutine f06baf( a, b, c, s )
 
       double precision   a, b, c, s
-
-      double precision units, r13, r23, r43, r59, zero, one, r1
-      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+      double precision zero, one
+      common/ lpz /zero, one
 
       double precision   t
       logical            fail
@@ -2424,10 +2435,8 @@ c           add the infeasibility.
       character*1 side
       double precision a(lda,*), c(*), s(*)
       double precision   aij, ctemp, stemp, subh, temp
-
-
-      double precision units, r13, r23, r43, r59, zero, one, r1
-      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+      double precision zero, one
+      common/ lpz /zero, one
 
 
       if((min( n, k1 ).lt.1 ).or.( k2.le.k1 ).or.( k2.gt.n ) )return
@@ -2478,9 +2487,8 @@ c           add the infeasibility.
       integer            k1, k2, lda, n
       character*1        side
       double precision   a( lda, * ), c(*), s(*)
-
-      double precision units, r13, r23, r43, r59, zero, one, r1
-      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+      double precision zero, one
+      common/ lpz /zero, one
 
       double precision   aij, ctemp, stemp, temp
       integer            i, j
@@ -2536,9 +2544,8 @@ c                                 added following line 11/06
       integer            k1, k2, lda, m, n
       character*1        direct, side
       double precision   a( lda, * ), c(*), s(*)      
-
-      double precision units, r13, r23, r43, r59, zero, one, r1
-      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+      double precision zero, one
+      common/ lpz /zero, one
 
       double precision   aij, ctemp, stemp, temp
       integer            i, j
@@ -2639,9 +2646,11 @@ c debug                                   11/06
       double precision   alpha, zeta, beta, eps, scale, ssq
       integer            n
       double precision   x(*)
+      double precision zero, one
+      common/ lpz /zero, one
 
-      double precision units, r13, r23, r43, r59, zero, one, r1
-      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+      double precision wmach(9)
+      common /ax02za/wmach
 
       logical            first
       save               eps, first
@@ -2655,7 +2664,8 @@ c debug                                   11/06
 
          if( first )then
             first = .false.
-            eps   =  1.11022302462516d-16
+c                           changed to machine dependent zero, 3/2019
+            eps = wmach(3)
          end if
 
 c        treat case where p is a 2 by 2 matrix specially.
@@ -2720,8 +2730,13 @@ c           note that  scale = max( abs( x( i ) ) ).
 
       subroutine f06bcf( t, c, s )
       implicit none
-      double precision   c, s, t, one 
-      parameter        ( one = 1d0 )
+      double precision   c, s, t
+      double precision zero, one
+      common/ lpz /zero, one
+
+      double precision wmach(9)
+      common /ax02za/wmach
+
       double precision   abst, eps, rrteps, rteps
       logical            first
       save               first, eps, rteps, rrteps
@@ -2729,7 +2744,8 @@ c           note that  scale = max( abs( x( i ) ) ).
 
       if( first )then
          first  = .false.
-         eps    =  1.11022302462516d-16
+c                           changed to machine dependent zero, 3/2019
+         eps = wmach(3)
          rteps  =  dsqrt( eps )
          rrteps =  1d0/rteps
       end if
@@ -2753,9 +2769,8 @@ c           note that  scale = max( abs( x( i ) ) ).
       implicit none
       double precision   xmax, xmin, x(*)
       integer            incx, n, ix
-
-      double precision units, r13, r23, r43, r59, zero, one, r1
-      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+      double precision zero, one
+      common/ lpz /zero, one
 
       if( n.lt.1 )then
          xmax = zero
@@ -2775,9 +2790,8 @@ c           note that  scale = max( abs( x( i ) ) ).
       implicit none
       double precision   const, x(*)
       integer            incx, n, ix
-
-      double precision units, r13, r23, r43, r59, zero, one, r1
-      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+      double precision zero, one
+      common/ lpz /zero, one
 
 
       if( n.gt.0 )then
@@ -2798,8 +2812,10 @@ c           note that  scale = max( abs( x( i ) ) ).
       implicit none
       double precision   scale, sumsq
       integer            incx, n
-      double precision   x(*),   zero
-      parameter        ( zero = 1d-99)
+      double precision   x(*)
+      double precision zero, one
+      common/ lpz /zero, one
+
       double precision   absxi
       integer            ix
 
@@ -2808,7 +2824,7 @@ c           note that  scale = max( abs( x( i ) ) ).
             if( x( ix ).ne.zero )then
                absxi = dabs( x( ix ) )
                if( scale.lt.absxi )then
-                  sumsq = 1     + sumsq*( scale/absxi )**2
+                  sumsq = 1d0   + sumsq*( scale/absxi )**2
                   scale = absxi
                else
                   sumsq = sumsq +       ( absxi/scale )**2
@@ -2821,8 +2837,9 @@ c           note that  scale = max( abs( x( i ) ) ).
 
       double precision function f06blf( a, b, fail )
       implicit none
-      double precision    one, zero, a, b
-      parameter           ( one = 1d0, zero = 1d-99)
+      double precision   a, b
+      double precision zero, one
+      common/ lpz /zero, one
 
       double precision      absb, div, flmax, flmin
 
@@ -2902,8 +2919,8 @@ c debug 11/06
       implicit none
       integer                           incx, n
       double precision                  x(*)
-      double precision      one         , zero
-      parameter           (one = 1d0, zero = 1d-99)
+      double precision zero, one
+      common/ lpz /zero, one
       double precision      norm, scale, ssq
       double precision      f06bmf
 
@@ -2929,9 +2946,8 @@ c debug 11/06
       double precision   x(*)
 
 c     x := alpha*x
-
-      double precision   one         , zero
-      parameter        ( one = 1.0d+0, zero = 1d-99)
+      double precision zero, one
+      common/ lpz /zero, one
       integer            ix
 
       if( n.gt.0 )then
@@ -2959,10 +2975,8 @@ c     x := alpha*x
       double precision                  x(*), y(*)
 
 c      x'y
-
-
-      double precision      zero
-      parameter           ( zero = 1d-99)
+      double precision zero, one
+      common/ lpz /zero, one
       double precision      sum
       integer               i, ix, iy
 
@@ -3024,8 +3038,9 @@ c      x'y
       implicit none
       integer lda, m, n, i, info, j, jx, kx, leny, m4, n4
       character*1 trans
-      double precision a( lda, * ), x(*), y(*), one, zero, beta
-      parameter ( one = 1d0, zero = 1d-99)
+      double precision a( lda, * ), x(*), y(*), beta
+      double precision zero, one
+      common/ lpz /zero, one
       double precision  temp, temp1, temp2, temp3, temp4      
 
       info = 0
@@ -3167,8 +3182,9 @@ c**** clean-up loop ****************************************************
       implicit none
       double precision alpha
       integer incx, n, i, ix, iy
-      double precision x(*), y(*), zero
-      parameter        ( zero = 1d-99)     
+      double precision x(*), y(*)
+      double precision zero, one
+      common/ lpz /zero, one
 
       if( n.gt.0 )then
          if( alpha.ne.zero )then
@@ -3203,8 +3219,10 @@ c**** clean-up loop ****************************************************
       implicit none 
       integer lda, n,  i, j
       character*1 trans
-      double precision  a(lda,*), x(*), zero, temp
-      parameter ( zero = 1d-99)   
+      double precision  a(lda,*), x(*), temp
+
+      double precision zero, one
+      common/ lpz /zero, one
 
       if( n.eq.0 ) return
 
@@ -3237,8 +3255,10 @@ c**** clean-up loop ****************************************************
       subroutine dger ( m, n, x, y, a, lda )
       implicit none 
       integer lda, m, n, i, j, jy
-      double precision a(lda,*), x(*), y(*), alpha, zero, temp
-      parameter (zero = 1d-99)
+      double precision a(lda,*), x(*), y(*), alpha, temp
+
+      double precision zero, one
+      common/ lpz /zero, one
           
 c     quick return if possible.
 

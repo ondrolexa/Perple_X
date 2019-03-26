@@ -212,7 +212,7 @@ c-----------------------------------------------------------------------
 
       parameter (liw=2*k21+3,lw=2*(k5+1)**2+7*k21+5*k5)
 
-      double precision  ax(k5), x(k21), clamda(k21+k5), w(lw)
+      double precision ax(k5), x(k21), clamda(k21+k5), w(lw)
 
       integer is(k21+k5), iw(liw)
 
@@ -3911,14 +3911,10 @@ c----------------------------------------------------------------------
       hkp(jphct) = kd
 
       call prs2xy (i,ids,.true.,bad)
+c                                prs2xy resets jphct on a bad result,
+c                                ergo it must not be done here!!
+      if (bad) return
 
-      if (bad) then
-
-         jphct = jphct - 1
-         return
-
-      end if 
-c                                June 8, 2018
       kcoct = jcoct + mcoor(ids)
 
       if (lopt(32).and.ksmod(ids).eq.39) then

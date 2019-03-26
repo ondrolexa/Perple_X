@@ -422,7 +422,7 @@ c                                 int(alpha,T=Tr..T)
      *            thermo(15,id)*dsqrt(t) + thermo(23,id)
 
          if (lopt(8)) then 
-c                                 use hollad & powell's approximate form
+c                                 use holland & powell's approximate form
             vt = thermo(3,id)*(1d0 + ialpha)
 
          else        

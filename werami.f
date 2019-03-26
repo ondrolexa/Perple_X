@@ -5036,7 +5036,7 @@ c                                 solute molality
 
          end do
 
-         if (ximp.lt.one.and.ximp.gt.0d0) then
+         if (ximp.lt.1d0.and.ximp.gt.0d0) then
 c                                renomalize err_log_kw, pH, Delta_pH, epsilon
             prop(k+1) = prop(k+1)/ximp
             prop(k+2) = prop(k+2)/ximp
