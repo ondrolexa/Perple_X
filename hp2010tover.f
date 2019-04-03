@@ -205,15 +205,20 @@ c   fortran way
          backspace(9)
          read(9,*) newa, k298, kp, kpp, lam, 
      *             l1, l2, l3
-         if (l3.lt.1d0) then 
+         if (lam.eq.1) then 
 c                             distinguish type by landau entropy 
             write (*,*) 'landau ',name
-            lam = 1
-         else 
+
+         else if (lam.eq.2) then 
+
             backspace (9)
             read(9,*) newa, k298, kp, kpp, lam, l1, l2, l3,l4,l5,l6
             write (*,*) 'bragg ',name
-            lam = 2
+
+         else 
+
+            write (*,*) 'unknown transition code lam = ',lam,name
+
          end if 
 
       else if (lam.eq.-1) then 

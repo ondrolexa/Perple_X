@@ -1233,11 +1233,7 @@ c         if (.not.lopt(37)) goto 90
 
          tot = 0d0
 
-         do j = icp + 1, icp + ifct
-            tot = tot + comp(ic(j))
-         end do 
-
-         do j = icp + ifct + isat + 1, icp + ifct + isat + jmct
+         do j = icp + 1, icp + isat + ifct + jmct
             tot = tot + comp(ic(j))
          end do
 
@@ -2015,7 +2011,9 @@ c                                        = 2, shear and bulk
          do k = 1, ispec
 
             if (name.ne.cmpnt(idspe(k)).and.name.ne.eoscmp(k)) cycle 
-
+c                                 this is an awful mess, if there is a saturated
+c                                 phase (ifct > 0) then ufluid will call the eos 
+c                                 identified by ifug irrespective of the eos value. 
             if (ifct.eq.0.or.iam.eq.5) then 
 c                                 there is no saturated phase
 c                                 assign it the default molecular fluid eos
@@ -2820,33 +2818,6 @@ c    *                           var*(c3 + var*(c4 + c5*var))))
       end if 
 
       if (jmct.gt.0) call subinc 
-
-      end 
-
-      subroutine incdp1 
-c-----------------------------------------------------------------------
-c automatically update variables if P(T) or T(P)
-c-----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-       
-      double precision var
-
-      double precision v,tr,pr,r,ps
-      common/ cst5  /v(l2),tr,pr,r,ps
-
-      integer iind, idep
-      double precision c0,c1,c2,c3,c4,c5
-      common/ cst316 /c0,c1,c2,c3,c4,c5,iind,idep
-c----------------------------------------------------------------------
-      if (iind.ne.0) then 
-
-         var = v(iind)
-         v(idep) = c0 + var*(c1 + var*(c2 
-     *                          + var*(c3 + var*c4))) 
-c    *                           var*(c3 + var*(c4 + c5*var)))) 
-      end if 
 
       end
 

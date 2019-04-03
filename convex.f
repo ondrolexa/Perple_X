@@ -275,6 +275,10 @@ c-----------------------------------------------------------------------
 
       integer io3,io4,io9
       common / cst41 /io3,io4,io9
+
+      integer iind, idep
+      double precision c0,c1,c2,c3,c4,c5
+      common/ cst316 /c0,c1,c2,c3,c4,c5,iind,idep
 c-----------------------------------------------------------------------
       jpoly = 0 
  
@@ -282,7 +286,7 @@ c-----------------------------------------------------------------------
 
          read (n1,*,iostat=ier) v
 
-         call incdp1 
+         call incdep (iind)
 c                                 for old file formats:
          if (ier.ne.0.or.v(1).lt.0d0) exit
 

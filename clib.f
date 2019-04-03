@@ -18,9 +18,9 @@ c----------------------------------------------------------------------
 
       integer ibad2, ibad1, igood, i, j, ier
 
-      character*100 n10nam,n11nam,n8nam
+      character n10nam*100,n11nam*100,n8nam*100
 
-      character*100 prject,tfname
+      character prject*100,tfname*100
       common/ cst228 /prject,tfname
 c                                 solution model counter
       integer isoct
@@ -529,7 +529,7 @@ c-----------------------------------------------------------------------
       integer hcp,idv
       common/ cst52  /hcp,idv(k7) 
 
-      character*8 eoscmp
+      character eoscmp*8
       common/ cst98 /eoscmp(2)
 
       integer iam
@@ -1112,7 +1112,7 @@ c----------------------------------------------------------------------
  
       include 'perplex_parameters.h'
  
-      character*5 mnames(k16*k17)*8
+      character mnames(k16*k17)*8
 
       double precision twt(k5),tsel(k5),tcox(k5),cst
  
@@ -1132,16 +1132,16 @@ c----------------------------------------------------------------------
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp  
      
-      character*5 zname
+      character zname*5
       common/ cst209a /zname
 
-      character*5 cname
+      character cname*5
       common/ csta4 /cname(k5)
 
-      character*8 names
+      character names*8
       common/ cst8 /names(k1)
 
-      character*8 name
+      character name*8
       common/ csta6 /name
 
       integer icont
@@ -1507,6 +1507,8 @@ c                                 set eos flag
 
          call sattst (ifer,good)
 
+         if (.not.good) call error (57,comp(1),iphct,name)
+
          if (good) then 
             make(iphct) = i
 c                                 pointer used for iemod.
@@ -1523,7 +1525,7 @@ c                                 for each saturation constraint
          if (isct(i).lt.1) call error (15,r,i,cname(icp+i))
       end do
 
-      if (isat.gt.1.and.first.and.(iam.lt.4.or.iam.eq.15)) then
+      if (isat.gt.0.and.first.and.(iam.lt.4.or.iam.eq.15)) then
 
          write (*,'(a)') 'Summary of saturated-component entities:'
 

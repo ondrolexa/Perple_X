@@ -1171,7 +1171,7 @@ c--------------------------------------------------------------------
 
       integer j
 
-      double precision fo2, fs2, gval, gphase
+      double precision gval, gphase
 
       external gphase
 
@@ -1206,8 +1206,6 @@ c                                 compute free energy change of the rxn
          gval = gval + vnu(j) * (gphase(j) + r * t * dlog(act(j)))
       end do
 
-      if (idf(3).ne.0.and.ifct.gt.0) gval = gval + vnu(idf(3))*r*t*fo2
- 
       end
 
       subroutine change 

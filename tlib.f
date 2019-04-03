@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.8.6, source updated Mar 26, 2019.',
+     *      'Perple_X version 6.8.6, source updated April 3, 2019.',
 
      *      'Copyright (C) 1986-2019 James A D Connolly '//
      *      '<www.perplex.ethz.ch/copyright.html>.'
@@ -2241,7 +2241,7 @@ c---------------------------------------------------------------------
       else if (ier.eq.56) then 
          write (*,56) k17
       else if (ier.eq.57) then 
-         write (*,57) char
+         write (*,57) char, char, char
       else if (ier.eq.58) then 
          write (*,58) char
          write (*,412)
@@ -2507,7 +2507,9 @@ c                                 static
 56    format (/,'**error ver056** too many phases in a make definition'
      *         ,', increase parameter K17 (',i2,') and recompile.',/)
 57    format (/,'**error ver057** failed on an accepted make definition'
-     *         ,' for ',a,/,'routine INPUT2'/)
+     *         ,' for ',a,/,'routine INPUT2. Exclude ',a,' and restart',
+     *          ' the calculation.',/,'If ',a,/,' is legitimate. please'
+     *         ,' report this error.',/)
 58    format (/,'**error ver058** exhausted memory ',
      *          'in adaptive minimization, routine: ',a,/
      *        /,'this error can usually be eliminated by one of the ',

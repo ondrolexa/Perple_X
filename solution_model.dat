@@ -8025,17 +8025,16 @@ end_of_model
 
 begin_model                
                       --------------------------------------------------------
-                        HP model with millerite endmember hack
+                        HP model 
 Po(HP)                    
 abbreviation Po
 full_name    pyrrhotite 
 
 2                                     model type: simplicial composition space
 
-3                                     endmembers
-trov trot  mil
-  0  0  0                  | endmember flags
-0. 1. .1   0               | subdivision range, imod = 0 -> cartesian subdivision
+2                                     endmembers
+trov trot
+  0  0                     | endmember flags
 0. 1. .1   0               | subdivision range, imod = 0 -> cartesian subdivision
 
 begin_excess_function
@@ -8044,9 +8043,8 @@ end_excess_function
 
 1                                     1 site configurational entropy model
 
-3 1.                                  2 species (Fe, V), site multiplicity = 1.
+2 1.                                  2 species (Fe, V), site multiplicity = 1.
 z(M2,V) = 1/8 trov
-z(M2,Ni) = 1 mil
 
 end_of_model        
                       --------------------------------------------------------
