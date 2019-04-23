@@ -2503,7 +2503,7 @@ c                                 static
 55    format (/,'**error ver055** too many make definitions, delete '
      *         ,'unused definitions from the',/
      *         ,'thermodynamic data file or '
-     *         ,'increase parameter K16 (',i2,') and recompile.',/)
+     *         ,'increase parameter K16 (',i3,') and recompile.',/)
 56    format (/,'**error ver056** too many phases in a make definition'
      *         ,', increase parameter K17 (',i2,') and recompile.',/)
 57    format (/,'**error ver057** failed on an accepted make definition'

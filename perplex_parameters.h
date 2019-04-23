@@ -87,7 +87,7 @@
 !                                       prismatic solution.
       parameter (k0=25,k1=1400000,k2=100000,k3=2000,k4=32,k5=12)
       parameter (k7=k5+1,k8=k5+2) 
-      parameter (k9=35,k10=400,k14=18,k15=6,k16=100)
+      parameter (k9=35,k10=400,k14=18,k15=6,k16=120)
       parameter (k17=7,k18=29*k1)
       parameter (k19=3*k5,k21=2000000,k20=(mdim+3)*k21)
       parameter (k22=mdim*k19,k23=25)

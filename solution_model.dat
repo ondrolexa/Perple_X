@@ -13,7 +13,47 @@
 
                             ---------------------------------------------------------------------------
 
-                             SUBDIVISION SCHEMES define the discreitization and range of compositions for a solution 
+                             Character data is format free.
+
+                            ---------------------------------------------------------------------------
+
+                             comments can be placed between models provided, nothing is written in the first 10 columns. Comments 
+                             may be placed after data if it is separated from the data by a '|' marker.
+
+                            ---------------------------------------------------------------------------
+
+                             VARIOUS DOCUMENTATION SECTIONS BELOW:
+
+                             I)  Solution model types
+                             II) Subdivision schemes
+                             III) Species limits for order-disorder models
+                             IV) Templates for solution model types 2 and 39
+
+                            --------------------------------------------------------------------------- 
+                           
+                             I) Solution model types are:
+
+                             2  - simplicial composition space
+                             6  - order-disorder, simplicial composition space
+                             7  - prismatic composition space (reciprocal when correct)
+                             8  - order-disorder, prismatic composition space
+                             9  - order-disorder, simplicial composition space with a prismatic vertex
+                             10 - simplicial composition space with a prismatic vertex
+
+                             Special model types:
+
+                             0     - internal (fluid) EoS
+                             20    - Electrolyte (charge balance) model
+                             26    - Haefner H2O-CO2-NaCl
+                             29    - BCC Fe-Si alloy, Lacaze & Sundman 1990.
+                             30-33 - FeSiC alloys (BCC/FCC/CBCC/HCP), Lacaze & Sundman 1990.
+                             39    - generic hybrid fluid EoS
+                             40    - Silicate fluid (MRK)
+                             41    - COH fluid (hybrid MRK)
+                             42    - FeS liquid, Saxena & Eriksson 2015 with ECRG corrections
+                            ---------------------------------------------------------------------------
+
+                             II) SUBDIVISION SCHEMES define the discreitization and range of compositions for a solution 
                              during a calculation. he discreitization and range of compositions for a solution 
                              during a calculation. In many cases, particularly for chemically complex solutions, 
                              this range is restricted to reduce the time and memory required for calculations. 
@@ -77,36 +117,22 @@
                              the consequence that the value of XMIN or stretch_factor should be viewed as the order of 
                              magnitude the poorest acceptable resolution. 
 
-                            --------------------------------------------------------------------------- 
-                           
-                             Solution model types are:
-
-                             2  - simplicial composition space
-                             6  - order-disorder, simplicial composition space
-                             7  - prismatic composition space (reciprocal when correct)
-                             8  - order-disorder, prismatic composition space
-                             9  - order-disorder, simplicial composition space with a prismatic vertex
-                             10 - simplicial composition space with a prismatic vertex
-
-                             Special model types:
-
-                             0     - internal (fluid) EoS
-                             20    - Electrolyte (charge balance) model
-                             26    - Haefner H2O-CO2-NaCl
-                             29    - BCC Fe-Si alloy, Lacaze & Sundman 1990.
-                             30-33 - FeSiC alloys (BCC/FCC/CBCC/HCP), Lacaze & Sundman 1990.
-                             39    - generic hybrid fluid EoS
-                             40    - Silicate fluid (MRK)
-                             41    - COH fluid (hybrid MRK)
-                             42    - FeS liquid, Saxena & Eriksson 2015 with ECRG corrections
                             ---------------------------------------------------------------------------
 
-                             Character data is format free.
+                             III) Species limits for order-disorder models, refer to:
+
+                             www.perplex.ethz.ch/perplex/faq/species_limit_expressions_for_type_6_and_8_solution_models.txt
 
                             ---------------------------------------------------------------------------
 
-                             comments can be placed between models provided, nothing is written in the first 10 columns. Comments 
-                             may be placed after data if it is separated from the data by a '|' marker.
+                             IV) Templates for solution model types 2 and 39, refer to:
+
+                             www.perplex.ethz.ch/perplex/faq/solution_model_type_2_(simple)_template.dat
+                             www.perplex.ethz.ch/perplex/faq/solution_model_type_39_(GFSM)_template.dat
+
+                             For additional information on generic fluid solution models (GFSM) refer to
+
+                             perplex.ethz.ch/Perple_X_generic_hyrbid_fluid_EoS.html
 
                       --------------------------------------------------------
 begin_model
@@ -1100,44 +1126,150 @@ end_dqf_corrections
 end_of_model
                            --------------------------------------------------------
 begin_model
+                      Aqueous low density silicate fluid/melt - Holland, Green, & Powell; J Pet, 2018, 59:881–900.
+
+                      Intended to account for the solubility of silicates in water 
+                      at P > 1 GPa. Use with caution. 
+
+                      JADC 4/19
+
+                      This model requires the following make definitions in the
+                      thermodynamic data file make_definitions section:
+
+                      foWL = 2 foL
+                         dqf = 8.59d3  -0.136*Pbar
+                      faWL = 2 faL
+                         dqf = 13.56d3  - 0.052*Pbar
+                      qWL = 4 qL
+                         dqf =  2.1d3    -0.051*Pbar
+                      jdWL = 1 abL - 1 qL
+                         dqf =  12.32d3 - 0.099*Pbar
+                      hmL = 1/2 hemL
+                         dqf =  4.05d3 - 0.077*Pbar
+                      ekL = 1/2 eskL
+                         dqf =  24.75d3   + 0.245*Pbar
+                      tiL = 1 ruL
+                         dqf =  5.6d3  0    -0.489*Pbar
+                      kWL = 1 kspL - 1 qL
+                         dqf =  12.88d3  0  -0.227*Pbar
+
+                      to avoid cluttering thermodynamic data files with the new plague of TC 
+                      DQF "corrections", the following simple DQF's are specified in the
+                      make_definition section at the end of this model:
+
+                      dqf(silL) = 6.72d3  -0.313*Pbar
+                      dqf(woL)  = -0.22d3  -0.12*Pbar
+
+                      For (nonsensical, but common) positive DFQ's this approach may lead to 
+                      interference between the phase relations of the solution model and the 
+                      un-DQF'd endmember. If such interference occurs: the DQF'd endmember must
+                      be renamed; its definition placed in the thermodynamic data file;
+                      and the un-DQF'd endmember excluded from the calculation.
+
+                      WARNING 0: DQF'd endmembers (e.g., sil8L, ctjL) created for other thermocalc 
+                      melt models (e.g., melt(W), melt(JH)) should be excluded (or deleted from the 
+                      thermodynamic data file) from calculations with this model. 
+
+Aqfl(HGP)
+abbreviation Melt
+full_name    liquid
+
+2                                   | model type: simplicial composition space 
+
+11                                  | number of endmembers
+
+foWL     faWL
+jdWL     silL     kWL
+woL      ekL      hmL
+tiL      qWL      H2O
+
+1 1 1 1 1 1 1 1 1 1 1               | endmember flags
+
+                                    | non-linear subdivision is likely to be
+                                    | preferable to cartesian for this model
+
+0.0 0.2  0.1  0                     | range and resolution of X(fo) 
+0.0 0.2  0.1  0                     | range and resolution of X(fa) 
+0.0 0.2  0.1  0                     | range and resolution of X(jd) 
+0.0 0.2  0.1  0                     | range and resolution of X(sil) 
+0.0 0.2  0.1  0                     | range and resolution of X(kj)
+0.0 0.2  0.1  0                     | range and resolution of X(wo)
+0.0 0.2  0.1  0                     | range and resolution of X(ek)
+0.0 0.2  0.1  0                     | range and resolution of X(hm)
+0.0 0.2  0.1  0                     | range and resolution of X(ti)
+0.0 0.2  0.1  0                     | range and resolution of X(q)
+
+begin_excess_function
+W(qWL  H2O)   59d3     0  -0.82   
+W(silL H2O)   57.6d3   0  -0.80   
+W(woL  H2O)   72.2d3   0  -0.67     
+W(foWL H2O)   71.7d3   0  -1.10   
+W(faWL H2O)   71.7d3   0  -1.10  
+W(jdWL H2O)   57d3     0  -0.79
+W(hmL  H2O)   73d3     0  -0.66 
+W(ekL  H2O)   73d3     0  -0.66 
+W(tiL  H2O)   75d3     0  -0.67
+W(kWL  H2O)   44.9d3   0  -1.19
+end_excess_function
+
+1                                   | molecular entropy model
+11 1
+z(foWL) = 1 foWL
+z(faWL) = 1 faWL
+z(jdWL) = 1 jdWL
+z(silL) = 1 silL
+z(kWL)  = 1 kWL
+z(woL)  = 1 woL
+z(ekL)  = 1 ekL
+z(hmL)  = 1 hmL
+z(tiL)  = 1 tiL
+z(qWL)  = 1 qWL
+
+begin_dqf_corrections
+dqf(silL) =  6.72d3  -0.313*Pbar
+dqf(woL)  = -0.22d3  -0.12 *Pbar
+end_dqf_corrections   
+
+end_of_model
+                           --------------------------------------------------------
+begin_model
                       Generic Melt - Holland, Green, and Powell; Journal of Petrology, 2018, Vol. 59, 881–900.
                       Intended for pressure to 7 GPa, 923 K < T < peridotite liquidus
 
                       JADC 12/18
 
+                      DQF's changed from published values to the values in the TC files. 
+
+                      JADC 4/23/19
+
                       This model requires the following make definitions in the
                       thermodynamic data file make_definitions section:
 
                       foHL = 2 foL
-                         dqf = 8.75d3  -0.133*Pbar
-
+                         dqf = 8.67d3  -0.131*Pbar
                       faHL = 2 faL
-                         dqf = 13.9d3  - 0.056*Pbar
-
+                         dqf = 13.7d3  - 0.055*Pbar
                       qHL = 4 qL
-                         dqf =  0.07d3    -0.062*Pbar
-
+                         dqf =  0.22d3    -0.059*Pbar
                       jdL = 1 abL - 1 qL
-                         dqf =  11.85d3 - 0.096*Pbar
-
+                         dqf =  12.19d3 - 0.089*Pbar
                       hmL = 1/2 hemL
-                         dqf =  4.05d3 - 0.077*Pbar
-
+                         dqf =  3.3d3 - 0.032*Pbar
                       ekL = 1/2 eskL
-                         dqf =  24.75d3   + 0.245*Pbar
-
+                         dqf =  24.85d3   + 0.245*Pbar
                       tiL = 1 ruL
-                         dqf =  5.6d3  0    -0.489*Pbar
-
+                         dqf =  5.58d3  0    -0.489*Pbar
                       kjL = 1 kspL - 1 qL
-                         dqf =  12.35d3  0  -0.210*Pbar
+                         dqf =  11.98d3  0  -0.210*Pbar
 
                       to avoid cluttering thermodynamic data files with the new plague of TC 
                       DQF "corrections", the following simple DQF's are specified in the
                       make_definition section at the end of this model:
 
                       dqf(silL) = 6.35d3  -0.320*Pbar
+                          updated to DQF   6.20  0  -0.318
                       dqf(woL)  = -0.18d3  -0.118*Pbar
+                          updated to DQF  -0.45  0   -0.114
                       dqf(h2oL) = 3.24d3  -3.9*TK  0.00085*Pbar
 
                       For (nonsensical, but common) positive DFQ's this approach may lead to 
@@ -1274,9 +1406,9 @@ n(ctL)   = 1 ctL
 n(hem)   = 1 hmL
 
 begin_dqf_corrections
-dqf(silL)  =  6.35d3          - 0.32   *Pbar
-dqf(woL)   = -0.18d3          - 0.118  *Pbar
-dqf(h2oL)  =  3.24d3  -3.9*TK + 0.00085*Pbar
+dqf(silL)  =  6.2d3          - 0.318   *Pbar
+dqf(woL)   = -0.45d3          - 0.114  *Pbar
+dqf(h2oL)  =  3.2d3  -3.9*TK + 0.00087*Pbar
 end_dqf_corrections
 
 end_of_model
@@ -13306,7 +13438,7 @@ full_name    orthopyroxene
                             | endmembers on the prism vertices 
 
 crjd_d   crdi_d  crdi_d1             | Cr-M
-crjd_d1  crfs_d  crenh   crfs_d
+crjd_d1  crfs_d  crenh
 
 ness_d   cess_d  cess_d1             | Fe3-M
 ness_d1  facm_d  macm    
@@ -13317,7 +13449,7 @@ ojd_d    fts_d   mgts
 ojd_d1   cfbuf_d cbuf_d              | Ti-M
 ojd_d2   fbuf_d  obuf    
 
-ojd_d3   hed_d   odi                    | M-M
+ojd_d3   hed_d   odi                 | M-M
 ojd_d4   fs      en      
 
 1                           | number of independent ordered species and definitions
