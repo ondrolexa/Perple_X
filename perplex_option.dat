@@ -1,20 +1,29 @@
 |----------------------------------------------------------------------
+
         | Run-time Perple_X 6.8.6 options:
+
         | Comments must be preceeded by the "|" character.
+
         | 0) All keywords accept the default value, in which case the keyword is assigned its default attributes.
         | 1) Keywords and values are case sensitive.
         | 2) Keywords that take the value T (true) or F (false) are always binary.
         | 3) Keywords that take the value on, always may take the value off, but may accept other values as indicated below.
         | 4) Default keyword values are indicated in square brackets in the comment following each keyword.
         | 5) For keyword documentation refer to: www.perplex.ethz.ch/perplex_options.html
+
         | To change the value of an option from "default" the word "default" 
         | must be replaced with the desired value. For example, to change the 
         | x-grid resolution from its default values [40 and 40] to 20 and 60, the 
         | keyword must be changed from 
-x_nodes               5 10 | exploratory and autorefine (grid parameters keyword group)
+
+        |  x_nodes default ...
+
         |   to 
-x_nodes               5 10 | exploratory and autorefine (grid parameters keyword group)
+
+        | x_nodes 20 60 ...
+
 |----------------------------------------------------------------------
+
 1d_path                   default | [40 150] exploratory and autorefine (grid parameters keyword group)
 absolute                  default | [F] WERAMI - output absolute component amounts
 Anderson-Gruneisen        default | [F] Anderson-Gruneisen parameter correction for polythermal Murnaghan and Birch-Murnaghan
@@ -30,7 +39,7 @@ aq_solvent_composition    default | [y] y => mole fractions, m => molality
 aq_solvent_solvus         default | [T] allow solvent phase separation without aq_bad_results error trigger
 aq_vapor_epsilon          default | [1.] dielectric constant threshold used to identify vapor
 auto_exclude              default | [T] exclude phases or species with no associated P-V EoS
-auto_refine               off default | [auto] auto, manual, or off (auto_refine keyword group)
+auto_refine               default | [auto] auto, manual, or off (auto_refine keyword group)
 auto_refine_file          default | [T] echo exploratory stage auto-refine data to my_project_auto_refine.txt
 bad_number                default | [NaN] any number or NaN (not-a-number)
 bounds                    default | [VRH] VRH or HS; Voigt-Reuss-Hill or Hashin-Shtrikman, see vrh/hs_averaging
@@ -65,8 +74,8 @@ melt_is_fluid             default | [F] identify melt (liquid) as fluid in WERAM
 null_phase                default | [F] include null phases in convexhull optimization with mobile components
 option_list_files         default | [F] T => echo run-time options to my_project_PROGRAM_options.txt
 order_check               default | [on] on => compare order-disorder solutions with fully ordered and disordered states
-output_iteration_details  T default | [F] T => output intermediate adaptive optimization information
-output_iteration_G        T default | [F] T => print iteration G to monitor convergence during optimization
+output_iteration_details  default | [F] T => output intermediate adaptive optimization information
+output_iteration_G        default | [F] T => print iteration G to monitor convergence during optimization
 pause_on_error            default | [T] T => wait for user response after errors
 pc_perturbation           default | [5d-3] pseudo-compound composition perturbation; only relevant for CONVEX
 poisson_ratio             default | [on 0.35] value 1: on, off or all; value 2: 0->0.5; controls use of poisson ratio estimates for shear moduli
@@ -99,6 +108,6 @@ T_stop                    default | [0.] equilibration temperature (K) cut off
 variance                  default | [1 99] exploratory and auto-refine; maximum variance of traced equilibria; only relevant for CONVEX
 vrh/hs_weighting          default | [0.5] 0->1, weighting factor for the stiff average in VRH/HS averaging (see bounds)
 warning_ver637            default | [T] F -> warn and cease interpolation in WERAMI when immiscible solutions are present
-x_nodes                   default | exploratory and autorefine (grid parameters keyword group)
-y_nodes                   default | exploratory and autorefine (grid parameters keyword group)
+x_nodes                   default | [40 40] exploratory and auto-refine (grid parameters keyword group), lowest-level x grid resolution 
+y_nodes                   default | [40 40] exploratory and auto-refine (grid parameters keyword group), lowest-level y grid resolution
 zero_mode                 default | [1e-6] 0->1, threshold below which the molar mode of a phase is set to 0; defaults to zero for fractionation calculations

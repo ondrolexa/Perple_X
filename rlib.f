@@ -5992,8 +5992,6 @@ c                                figure out which dependent endmembers have
 c                                been killed:
       if (depend) then 
 
-         if (kdep.ne.mdep) call error (54,dqf(1,1),mdep,'KILLSP')
-
          mdep = 0
 
          do i = 1, kdep
@@ -6002,9 +6000,11 @@ c                                been killed:
 c                                 iwas is now the original index of the 
 c                                 dependent endmember, and mdep is the reset
 c                                 value of the dependent endmember counter
-               iwas(mdep) = i                
+               iwas(mdep) = i
             end if
-         end do 
+         end do
+
+c        if (kdep.ne.mdep) call error (54,dqf(1,1),mdep,'KILLSP')
 
       end if 
  
@@ -10239,7 +10239,7 @@ c                                 there is so much overhead in computing
 c                                 multiple speciation, use a special routine
 c                                 for single species models:
          if (nord(id).gt.1) then
- 
+
             call speci2 (g,id,error)
 
          else 
@@ -10484,7 +10484,7 @@ c----------------------------------------------------------------------
       logical inf
 
       double precision zt,dzdy,s,dsy(j3),dsyy(j3,j3),q,zl,
-     *                 z(m11,m10),s0,ztemp,zlnz,
+     *                 z(m11,m10),s0,ztemp,zlnz, pat, p0t,
      *                 dsinf(j3),d2sinf(j3,j3)
 c                                 working arrays
       double precision zz, pa, p0a, x, w, y, wl
@@ -10600,7 +10600,18 @@ c                                 and the jacobians are
 
                else 
 
-                   if (zl.lt.-nopt(5)) then 
+                   if (zl.lt.-nopt(5)) then
+
+                      pat = 0d0 
+                      p0t = 0d0 
+
+                      do l = 1, nstot(id) 
+                         pat = pat + pa(l)
+                         p0t = p0t + p0a(l)
+                      end do 
+
+                      write (*,*) 'pat, p0t ',pat, p0t
+
                       write (*,*) 'wacka boom',zl,j,i
                       write (*,*) (p0a(l),l=1,nstot(id))
                       write (*,*) (pa(l),l=1,nstot(id))

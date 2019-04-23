@@ -217,7 +217,8 @@ Mg(HSiO3
 end_of_model
                       --------------------------------------------------------
 begin_model
-                      Cpx(H) - Holland et al (JPet, 2018) Clinopyroxene model.
+                      Clinopyroxene - Holland, Green, and Powell; Journal of Petrology, 2018.
+                      Intended for pressure to 7 GPa, 923 K < T < peridotite liquidus
 
                       Coded for Perple_X by Julien Cornet Sept 2018.
 
@@ -251,7 +252,7 @@ begin_model
                                            M1     M2     T
                                         ____________________________________
 
-                         Multiplicity      1      1     1/2 <- fake T multiplicity
+                         Multiplicity      1      1     2 -> fake T multiplicity = 1/2
                                         ____________________________________
                            mkbuf_d         MgTi   K     Si    dependent 
                            mnbuf_d         MgTi   Na    Si    dependent
@@ -308,8 +309,7 @@ begin_model
 
                            cfm             Mg     Fe     Si independent
 
-
-Cpx(H)
+Cpx(HGP)
 abbreviation Cpx
 full_name    clinopyroxene
 
@@ -399,6 +399,9 @@ jd_d3     =  1 jd
 |fkbuf_d   = 1/2 cfsg - cats + mcbuf - 1/2 cfm + kjdh
 |fnbuf_d   = 1/2 cfsg - 1 cats  + 1 mcbuf + jd - 1/2 cfm
 
+                                | see commentary in the header of this file for explanation of
+                                | endmember flags and subdivision schemes.
+
 0 0 0 0 0 0 0 0 0 0             | endmember flags
 0 0 0 0 0 0 0 0 0 0             | endmember flags
 0 0 0 0 0 0 0 0 0 0             | endmember flags
@@ -406,20 +409,20 @@ jd_d3     =  1 jd
 
                                 | First (3d) simplex of the prism (Ca/Mg/Fe-Na-K)
 
-0. .2 0.1  0                    | range and resolution of X(1,1) => Na
-0. .3 0.1  0                    | range and resolution of X(1,2) => K
-0. .6 0.1  0                    | range and resolution of X(1,3) => Fe
+0. .2 0.1  0                    | subdvision scheme for X(1,1) => Na
+0. .2 0.1  0                    | subdvision scheme for X(1,2) => K
+0. .5 0.1  0                    | subdvision scheme for X(1,3) => Fe
 
                                 | Second (1d) simplex of the prism 
 
-0.9 1. 0.1  0                    | range and resolution of (Fe+Mg)/(Ca+Fe+Mg)
+0.8 1. 0.1  0                   | subdvision scheme for (Fe+Mg)/(Ca+Fe+Mg)
 
                                 | third (4d) simplex of the prism
 
-0. .1 0.1  0                    | range and resolution of X("buf")
-0. .1 0.1  0                    | range and resolution of X("cr")
-0. .1 0.1  0                    | range and resolution of X("ess")
-0. .1 0.1  0                    | range and resolution of X("ts")
+0. .1 0.1  0                    | subdvision scheme for X("buf")
+0. .1 0.1  0                    | subdvision scheme for X("cr")
+0. .1 0.1  0                    | subdvision scheme for X("ess")
+0. .2 0.1  0                    | subdvision scheme for X("ts")
 
 begin_excess_function
 
@@ -1097,7 +1100,8 @@ end_dqf_corrections
 end_of_model
                            --------------------------------------------------------
 begin_model
-                      Universal melt, Holland et al., JPet, 2018. 
+                      Generic Melt - Holland, Green, and Powell; Journal of Petrology, 2018, Vol. 59, 881–900.
+                      Intended for pressure to 7 GPa, 923 K < T < peridotite liquidus
 
                       JADC 12/18
 
@@ -1146,7 +1150,7 @@ begin_model
                       melt models (e.g., melt(W), melt(JH)) should be excluded (or deleted from the 
                       thermodynamic data file) from calculations with this model. 
 
-melt(H)
+melt(HGP)
 abbreviation Melt
 full_name    liquid
 
@@ -1165,18 +1169,21 @@ tiL      qHL      h2oL
 
 ctL = 1 woL + 1 silL - 1/4 qHL        Delta(enthalpy)   = -114452.5 + 55*TK + .4755*Pbar
 
+                                    | see commentary in the header of this file for explanation of
+                                    | endmember flags and subdivision schemes.
+
 1 1 1 1 1 1 1 1 1 1 1               | endmember flags
 
-0.0 0.3  0.1  0                     | range and resolution of X(fo),  1 => asymmetric subdivision   
-0.0 0.3  0.1  0                     | range and resolution of X(fa),  1 => asymmetric subdivision   
-0.0 0.8  0.1  0                     | range and resolution of X(jd),  0 => cartesian subdivision   
-0.0 0.4  0.1  0                     | range and resolution of X(sil), 1 => asymmetric subdivision  
-0.0 0.6  0.1  0                     | range and resolution of X(kj), 1 => asymmetric subdivision   
-0.0 0.4  0.1  0                     | range and resolution of X(wo),  1 => asymmetric subdivision
-0.0 0.1  0.1  0                     | range and resolution of X(ek),  1 => asymmetric subdivision
-0.0 0.1  0.1  0                     | range and resolution of X(hm),  1 => asymmetric subdivision
-0.0 0.1  0.1  0                     | range and resolution of X(ti),  1 => asymmetric subdivision
-0.0 0.6  0.1  0                     | range and resolution of X(q), 0 => cartesian subdivision  
+0.0 0.4  0.1  0                     | range and resolution of X(fo) 
+0.0 0.1  0.1  0                     | range and resolution of X(fa) 
+0.0 0.6  0.1  0                     | range and resolution of X(jd) 
+0.0 0.3  0.1  0                     | range and resolution of X(sil) 
+0.0 0.4  0.1  0                     | range and resolution of X(kj)
+0.0 0.5  0.1  0                     | range and resolution of X(wo)
+0.0 0.1  0.1  0                     | range and resolution of X(ek)
+0.0 0.1  0.1  0                     | range and resolution of X(hm)
+0.0 0.1  0.1  0                     | range and resolution of X(ti)
+0.0 0.6  0.1  0                     | range and resolution of X(q)
 
 begin_excess_function 
 
@@ -2157,7 +2164,7 @@ begin_model
                                                       M1      M2     T 
                                                      _____________________
 
-                                      Mutliplicity    1       1      1/4
+                                      Mutliplicity    1       1      1/2
                                                      ______________________
 
                                         en            Mg      Mg     SiSi
@@ -2182,25 +2189,30 @@ Opx(JH)
 abbreviation Opx
 full_name    orthopyroxene 
 
-8                          | model type: Reciprocal with speciation
+8                          | prismatic composition space, order-disorder
 
 2                          | 2 independent composition spaces
-3 4                        | 3 dimensions on first space, 4 on second
+3 4                        | 3 vertices on first space, 4 on second
 
                            | endmembers: 
-odif    oen     ofs     
-odicr   cren    crfs   
-tsdi    mgts    tsfs    
-odi     en      fs     
+odif    oen     ofs
+odicr   cren    crfs
+tsdi    mgts    tsfs
+odi     en      fs
 
 1                          | ordered species definition
 
 opx = 1/2 en + 1/2  fs  Delta(enthalpy) = -6d3          
 
+
 begin_limits
-opx =     - 2 fs - 1 opx                delta = 2 z(M2,Fe)
-opx =  -2 + 2 fs + 1 opx                delta = 2 z(M1,Fe)
-opx =     - 2 en - 1 opx                delta = 2 z(M1,Mg)
+                           | limits corrected Apr 2019, JADC
+opx =  - 2 odi - 2 en - 1 opx                                     delta = 2 (limits for Mg on M1)
+opx =  -2 + 2 fs + 1 opx                                          delta = 2 (limits for Fe on M1)
+
+opx = -2 + 2 cren + 2 oen + 2 mgts + 2 en + 1 opx                 delta = 2 (limits for Mg on M2)
+opx = - 2 fs - 1 opx                                              delta = 2 (limits for Fe on M2)
+
 end_limits   
 
 6                          | 6 dependent endmembers
@@ -3200,9 +3212,9 @@ begin_model
                                       1 en            Mg      Mg       
                             Species:  2 fs            Fe2+    Fe2+     
                                       3 mgts          Al      Mg         
-                                      4 fets          Al      Fe2+  
+                                      4 fets          Al      Fe2+  dependent
                                       5 mots          Fe3+    Mg
-                                      6 feots         Fe3+    Fe2+  
+                                      6 feots         Fe3+    Fe2+  dependent
                                                       _____________
 
                            Internal:  7 opx           Mg      Fe2+    
@@ -3556,11 +3568,8 @@ begin_model
                                       1 en            Mg      Mg       
                             Species:  2 fs            Fe2+    Fe2+     
                                       3 mgts          Al      Mg         
-                                      4 fets          Al      Fe2+  
                                       5 mots          Fe3+    Mg
-                                      6 feots         Fe3+    Fe2+  
                                       7 crts          Cr      Mg
-                                      8 fcrts         Cr      Fe
                                                       _____________
 
                            Internal:  9 opx           Mg      Fe2+    
@@ -4568,10 +4577,12 @@ full_name    fluid
 
 CO2
 H2O
+                                  | see commentary in the header of this file for explanation of
+                                  | endmember flags and subdivision schemes.
 
 0 0                               | endmember flags, 1 -> the endmember composition is not considered part of the solution, otherwise 0 
 
-0.0 1.0 0.1 0                     | subdivision scheme for CO2, see commentary in the header of this file
+0.0 1.0 0.1 0                     | subdivision scheme for CO2
 
 ideal                             | the ideal tag indicates excess properties are computed internally
 
@@ -13143,66 +13154,570 @@ z(al,T2) = 1 ames + 1/2 clin + 1/2 daph + 1/2 sud_dqf
 site_check_override
 
 end_of_model  
+                      --------------------------------------------------------
+begin_model
+                             Olivine - Holland, Green, and Powell; Journal of Petrology, 2018, Vol. 59, 881–900.
+                             Intended for pressure to 7 GPa, 923 K < T < peridotite liquidus
 
-                                   9 compositionally independent endmembers
-                                   1 ordered endmember
-                                   the mbuf exchange is limited to {MgTi}/2{Fe} - {FeTi}/2{MgFe}/2
-                                   15 dependent endmembers
-                                   16 fillers of which 4 are utterly superfluous
+                             JADC, April 2019.
 
+                                                      M1      M2 
+                                                     _____________
+
+                                      Mutliplicity    1       1     
+                                                     _____________
+   
+                                       fa            Fe      Fe
+                                       fmont         Fe      Ca   dependent
+                                       fo            Mg      Mg
+                                       mont          Mg      Ca
+                                                     _____________
+                                       mf            Mg      Fe   ordered
+
+O(HGP)
+abbreviation Ol
+full_name    olivine 
+
+8                           | model type: o/d + reciprocal quadrilateral
+
+2                           | two simplicies 2x2
+2 2
+                            | endmembers on the prism vertices 
+fmont   mont
+fa      fo
+
+1                           | ordered species:
+
+mf    = 1/2 fo + 1/2 fa       enthalpy_of_ordering  =   0
+
+begin_limits
+mf = -2 + 2 fa + 1 mf                                             delta = 2 (limits for Fe on M1)
+mf = -2 + 2 fo + 1 mf                                             delta = 2 (limits for Mg on M2)
+mf =    - 2 fa - 1 mf                                             delta = 2 (limits for Fe on M2)
+end_limits
+
+1                           | dependent endmember
+
+fmont  = 1 mont + 1 fa   - 1 mf
+
+                            | see commentary in the header of this file for explanation of
+                            | endmember flags and subdivision schemes.
+
+0  0  0  0                  | endmember flags
+
+0  1    0.1   0            | subdivision scheme for Fe/(Fe+Mg)
+0  0.1  0.1   0            | subdivision scheme for Ca/(Fe+Mg+Ca)
+
+begin_excess_function
+W(mont fa)     24d3
+W(mont fo)     38d3
+W(mont mf)     24d3
+W(fa fo)        9d3
+W(fa mf)      4.5d3
+W(fo mf)      4.5d3
+end_excess_function 
+
+2                           | 1 site entropy model
+
+2 1                         | M1 2 species, site multiplicity = 1
+z(M1,fe) = 1 fa
+
+3 1                         | M2 3 species, site multiplicity = 1
+z(M2,mg) = 1 fo
+z(M2,ca) = 1 mont
+
+end_of_model
+                      --------------------------------------------------------      
+begin_model
+                      Orthopyroxene - Holland, Green, and Powell; Journal of Petrology, 2018, Vol. 59, 881–900.
+                      Intended for pressure to 7 GPa, 923 K < T < peridotite liquidus
+
+                      Coded for Perple_X by ECR Green and JRDC Aug 2018.
+                      Rearranged Apr 2019, JADC.
+
+                      NOTE: to use this the following endmembers must be specified with make 
+                      definitions in the thermodynamic data file
+
+                      odi  = 1 di
+                            DQF = -100 + 0.211 * T + 0.005 * P 
+                      crenh = 1 mgts + 1 kos - 1 jd
+                            DQF = -25900 + 15.5 * T + 0.05 * P
+                      obuf = 1 mgts + 1/2 per + 1/2 ru - 1/2 cor
+                            DQF = 3350 - 5.1 * T - 0.0061 * P    
+                      macm = 1 mgts + 1 acm - 1 jd
+                            DQF = 4800 - 0.089 * P
+                      ojd  = 1 jd
+                            DQF = 18800
 
                                                         M1     M2     T
                                                      ____________________________________
 
                                       Multiplicity      1      1     1/2 <- fake T multiplicity
                                                      ____________________________________
-                                        mkbuf_d         MgTi   K     Si    dependent 
-                                        mnbuf_d         MgTi   Na    Si    dependent
-                                        mcbuf           MgTi   Ca   AlSi 
-                                        mcbuf_d1        MgTi   Ca   AlSi   filler
-                                        ___
-                                        mkbuf_d1        MgTi   K     Si    filler 
-                                        mnbuf_d1        MgTi   Na    Si    filler
-                                        mbuf_d          MgTi   Mg   AlSi   dependent
-                                        mfbuf_d         MgTi   Fe   AlSi   dependent
-                                        _________
-                                        crkjd_d         Cr     K     Si    dependent
                                         crjd_d          Cr     Na    Si    dependent
-                                        crdi            Cr     Ca   AlSi   
+                                        crdi_d          Cr     Ca   AlSi   dependent
                                         crdi_d1         Cr     Ca   AlSi   filler
                                         ___
-                                        crkjd_d1        Cr     K     Si    filler
                                         crjd_d1         Cr     Na    Si    filler
-                                        cren_d          Cr     Mg   AlSi   dependent
+                                        crenh           Cr     Mg   AlSi
                                         crfs_d          Cr     Fe   AlSi   dependent
                                         _________
-                                        kess_d          Fe3+   K     Si    dependent
-                                        ness_d          Fe3+   Na    Si    dependent
-                                        cess            Fe3    Ca   AlSi
+                                        ness_d          Fe3    Na    Si    dependent
+                                        cess_d (acm)    Fe3    Ca   AlSi   dependent
                                         cess_d1         Fe3    Ca   AlSi   filler
                                         ___
-                                        kess_d1         Fe3+   K     Si    filler
-                                        ness_d1         Fe3+   Na    Si    filler
-                                        mess_d          Fe3    Mg   AlSi   dependent 
-                                        fess_d          Fe3    Fe   AlSi   dependent
+                                        ness_d1         Fe3    Na    Si    filler
+                                        macm (mess)     Fe3    Mg   AlSi
+                                        facm_d (fess)   Fe3    Fe   AlSi   dependent
                                         _________
-                                        kjdh            Al     K     Si  
-                                        jd              Al     Na    Si   
-                                        cats            Al     Ca   AlSi   
-                                        cats_d1         Al     Ca   AlSi   filler
+                                        ojd             Al     Na    Si   
+                                        ocats_d         Al     Ca   AlSi   dependent 
+                                        ocats_d1        Al     Ca   AlSi   filler
                                         ___
-                                        kjd_d1          Al     K     Si    filler
-                                        jd_d1           Al     Na    Si    filler
-                                        mats_d          Al     Mg   AlSi   dependent
-                                        fats_d          Al     Fe   AlSi   dependent
+                                        ojd_d           Al     Na    Si    filler
+                                        mgts            Al     Mg   AlSi
+                                        fts_d           Al     Fe   AlSi   dependent
                                         _________
-                                        kjd_d2          Al     K     Si    filler
-                                        jd_d2           Al     Na    Si    filler
-                                        di              Mg     Ca    Si
+                                        ojd_d1          Al     Na    Si    utterly useless filler
+                                        cbuf_d          MgTi   Ca   AlSi   dependent
+                                        cfbuf_d         FeTi   Ca   AlSi   dependent
+                                        ___
+                                        ojd_d2          Al     Na    Si    utterly useless filler
+                                        obuf            MgTi   Mg   AlSi
+                                        fbuf_d          FeTi   Fe   AlSi   dependent
+                                        _________
+                                        ojd_d3          Al     Na    Si    utterly useless filler
+                                        odi             Mg     Ca    Si
                                         hed_d           Fe     Ca    Si    dependent
                                         ___
-                                        kjd_d3          Al     K     Si    filler
-                                        jd_d3           Al     Na    Si    filler
-                                        cenjh           Mg     Mg    Si 
-                                        cfsg            Fe     Fe    Si
-                                        _______________________________________________
+                                        ojd_d4          Al     Na    Si    utterly useless filler 
+                                        en              Mg     Mg    Si
+                                        fs              Fe     Fe    Si
+                                                      ___________________________________
+                           Internal:    fm              Mg     Fe    Si
+
+Opx(HGP)
+abbreviation Opx
+full_name    orthopyroxene
+  
+8                           | prismatic composition space, order-disorder 
+3                           | 3 simplices
+3 2 5
+                            | endmembers on the prism vertices 
+
+crjd_d   crdi_d  crdi_d1             | Cr-M
+crjd_d1  crfs_d  crenh   crfs_d
+
+ness_d   cess_d  cess_d1             | Fe3-M
+ness_d1  facm_d  macm    
+
+ojd      ocats_d ocats_d1            | Al-M
+ojd_d    fts_d   mgts    
+
+ojd_d1   cfbuf_d cbuf_d              | Ti-M
+ojd_d2   fbuf_d  obuf    
+
+ojd_d3   hed_d   odi                    | M-M
+ojd_d4   fs      en      
+
+1                           | number of independent ordered species and definitions
+
+fm = 1/2 en + 1/2 fs     enthalpy_of_ordering = -6600
+
+begin_limits
+fm = - 1 obuf - 2 odi - 2 en - 1 fm                          delta = 2 (limits for Mg on M1)
+fm = -2 + 2 fs + 1 fm                                        delta = 2 (limits for Fe on M1)
+
+fm = -2 + 2 crenh + 2 macm + 2 mgts + 2 obuf + 2 en + 1 fm   delta = 2 (limits for Mg on M2)
+fm = - 2 fs - 1 fm                                           delta = 2 (limits for Fe on M2)
+end_limits
+
+
+22                          | number of dependent endmembers and definitions
+
+crdi_d1  = 1 crenh - 1 en   + 1 odi
+crjd_d1  = 1 crenh - 1 mgts + 1 ojd
+cess_d1  = 1 macm  - 1 en   + 1 odi
+ocats_d1 = 1 mgts  - 1 en   + 1 odi
+ness_d1  = 1 macm  - 1 mgts + 1 ojd
+ojd_d    = 1 ojd
+ojd_d1   = 1 ojd
+ojd_d2   = 1 ojd
+ojd_d3   = 1 ojd
+ojd_d4   = 1 ojd
+
+fts_d   = 1 mgts - 1 en + 1 fm
+ocats_d = 1 mgts - 1 en + 1 odi
+
+crjd_d  = 1 crenh - 1 mgts + 1 ojd
+crfs_d  = 1 crenh - 1 en   + 1 fm 
+crdi_d  = 1 crenh - 1 en   + 1 odi
+
+facm_d  = 1 macm - 1 en   + 1 fm 
+cess_d  = 1 macm - 1 en   + 1 odi
+ness_d  = 1 macm - 1 mgts + 1 ojd
+
+cbuf_d  = 1 obuf + 1 odi  - 1 en
+cfbuf_d = 1 obuf + 1/2 fs - 1/2 fm + 1 odi - 1 en
+fbuf_d  = 1 obuf - 1 en   + 1/2 fs + 1/2 fm 
+
+hed_d   = -1 fm + 1 fs + 1 odi
+
+                            | see commentary in the header of this file for explanation of
+                            | endmember flags and subdivision schemes.
+
+0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0         | endmember flags
+
+                            | First (1d) simplex of the prism
+0. .1 0.1  0                | subdivision scheme for X(1,1) => Na
+0. .5 0.1  0                | subdivision scheme for X(1,2) => Fe
+
+                            | Second (1d) simplex of the prism
+0. 1. 0.1  0                | subdivision scheme for X(2,1) => (Fe+Mg)/Ca
+
+                            | third (3d) simplex of the prisms
+0. .2 0.1  0                | subdivision scheme for X(3,1) - Cr-M
+0. .2 0.1  0                | subdivision scheme for X(3,2) - Fe3-M
+0. .2 0.1  0                | subdivision scheme for X(3,2) - Al-M
+0. .1 0.1  0                | subdivision scheme for X(3,2) - Ti-M
+
+begin_excess_function
+W(en fs)                 7d3      
+W(en fm)                 4d3      
+W(en odi)                32.2d3    + 0.12 * p
+W(en mgts)               12.5d3    - 0.04 * p
+W(en crenh)              8d3      
+W(en macm)               8d3      
+W(en ojd)                35d3     
+W(fs fm)                 4d3      
+W(fs odi)                25.54d3   + 0.084 * p
+W(fs mgts)               11d3      - 0.15 * p
+W(fs crenh)              10d3     
+W(fs macm)               10d3     
+W(fs ojd)                35d3     
+W(fm odi)                22.54d3   + 0.084 * p
+W(fm mgts)               15d3      - 0.15 * p
+W(fm crenh)              12d3     
+W(fm macm)               12d3     
+W(fm ojd)                35d3     
+W(odi mgts)              75.5d3    - 0.84 * p
+W(odi crenh)             20d3     
+W(odi macm)              20d3     
+W(odi ojd)               35d3     
+W(mgts crenh)            2d3      
+W(mgts macm)             2d3      
+W(mgts ojd)              7d3      
+W(crenh macm)            2d3      
+W(crenh ojd)            -11d3    
+W(obuf ojd)              4d3      
+W(macm ojd)             -11d3 
+end_excess_function
+
+3                                   | 3 site entropy model (M1, M2, T)
+
+6 1                                 | 6 species on m1, mult = 1
+z(m1,fe)   = 1 fs
+z(m1,al)   = 1 mgts + 1 ojd
+z(m1,fe3+) = 1 macm
+z(m1,cr)   = 1 crenh
+z(m1,ti)   = 1/2 obuf
+
+4 1                                 | 4 species on m2, mult. = 1
+z(m2,fe)   = 1 fs + 1 fm
+z(m2,ca)   = 1 odi
+z(m2,na)   = 1 ojd
+
+2 0.5                               | 2 species on T, effective mult. = 1/2
+z(Al,T)    = 1/2 mgts + 1/2 crenh + 1/2 obuf + 1/2 macm
+
+begin_van_laar_sizes
+alpha(en)        1.0
+alpha(fs)        1.0
+alpha(fm)        1.0
+alpha(odi)       1.2
+alpha(mgts)      1.0
+alpha(crenh)     1.0
+alpha(obuf)      1.0
+alpha(macm)      1.0
+alpha(ojd)       1.2
+end_van_laar_sizes
+
+end_of_model
+                      -------------------------------------------------------- 
+begin_model
+                      Spinel - Holland, Green, and Powell; Journal of Petrology, 2018, Vol. 59, 881–900.
+                      Intended for pressure to 7 GPa, 923 K < T < peridotite liquidus
+
+                      Initially coded for Perple_X by JRDC Oct 2018; reworked JADC Apr 2019.
+
+                      NOTE: to use this model:
+
+                      1) the endmembers nsp, nherc must be created in the
+                         thermodynamic data file from sp and herc by stripping 
+                         off the bragg o/d model. the picr endmember here is assumed 
+                         to be ordered as is the case in ds6.33, but was NOT the case
+                         in earlier versions of ds6, therefore if this model is to be
+                         used with earlier versions of ds6, the o/d model must also
+                         be stripped from picr. in fact, it seems that in ds6.33 the 
+                         "fac" parameter has been made < 0 for both sp & herc, which 
+                         has the consequence that both endmembers are fully ordered at
+                         all conditions and technically obviates the use of nsp and nherc
+                         here. the endmembers are used nonetheless because their absence
+                         in earlier version of ds6 will flag the issue. 
+
+                      2) the following endmembers must be specified with make 
+                         definitions in the thermodynamic data file
+
+                         isp   = 1 no_sp
+                                DQF(J/mol) = 23.6d3  - 5.76303 * T
+                         iherc = 1 no_herc
+                                DQF(J/mol) = 23.6d3  - 5.76303 * T
+                         imt   = 1 mt 
+                                DQF(J/mol) = 30d3
+
+                      3) the qnd endmember DQF is added in the dqf_correction section
+                         at the end of this model.
+
+                                                      M     T
+                                                     _________
+                                      Multiplicity    1     2  -> fake T-site multiplicity of 1
+                                                     _________
+
+                                        isp          Al    MgAl
+                                        imgmt        Fe3   MgFe3   dependent
+                                        picr         Mg    Cr
+                                        qnd          Mg    MgTi
+
+                                        iherc        Al    FeAl
+                                        imt          Fe3   FeFe3
+                                        fpcr         Fe    2Cr     dependent    
+                                        fqnd         Fe    FeTi    dependent
+
+                                Ordered species      _________
+
+                                        nsp          Mg     Al
+                                        nherc        Fe     Al
+                                        nmt          Fe     Fe3+
+
+Sp(HGP)
+abbreviation Sp
+full_name    spinel
+
+8                           | model type: prism , order-disorder
+
+2                           | prism: two simplicies with a common vertex
+2 4                         | number of cations on independent sites forming simplices:
+                            | fold prism (Al - Fe3+ - Cr - Ti) + binary simplices (Mg Fe on T)
+
+                            | endmembers on the prism vertices 
+
+picr  fpcr
+qnd   fqnd
+imgmt imt
+isp   iherc
+
+3                            | ordered species:
+
+nmt   =    1 imt           enthalpy_of_ordering  =    0     + 5.76303 * T
+nsp   =    1 isp           enthalpy_of_ordering  = -23.6d3  + 5.76303 * T
+nherc =    1 iherc         enthalpy_of_ordering  = -23.6d3  + 5.76303 * T
+
+begin_limits
+nsp   =    - 1 qnd - 1 picr                                       delta = 1 (limits for Mg on M)
+nsp   = -1 + 1 isp + 1 iherc + 1 nsp - 1 nherc + 1 nherc          delta = 1 (limits for Al on M)
+nsp   = -2 + 1 isp + 1 qnd + 1 nsp                                delta = 2 (limits for Mg on T)
+nsp   =    - 1 isp - 1 iherc - 1 nsp - 1 nherc - 1 nherc          delta = 2 (limits for Al on T)
+
+nherc = - 1 nmt                                                   delta = 1 (limits for Fe on M)
+nherc = -1 + 1 isp + 1 iherc - 1 nsp + 1 nsp + 1 nherc            delta = 1 (limits for Al on M)
+nherc = -2 + 1 iherc + 1 imt + 1 nherc - 1 nmt + 1 nmt            delta = 2 (limits for Fe on T)
+nherc =  - 1 isp - 1 iherc - 1 nsp - 1 nsp - 1 nherc              delta = 2 (limits for Al on T)
+
+nmt   =    - 1 nherc                                              delta = 1 (limits for Fe on M)
+nmt   = -1 + 1 imt + 1 nmt                                        delta = 1 (limits for Fe3 on M)
+nmt   = -2 + 1 iherc + 1 imt - 1 nherc + 1 nherc + 1 nmt          delta = 2 (limits for Fe on T)
+nmt   =    - 1 imt - 1 nmt                                        delta = 2 (limits for Fe3 on T)
+end_limits
+
+3                           | number of dependent endmembers and definitions
+
+imgmt =  1 isp - 1 iherc  + 1 imt
+fpcr  = -1 nsp + 1 nherc  + 1 picr 
+fqnd  = -1 nsp - 1 isp    + 1 nherc + 1 iherc + 1 qnd
+
+                            | see commentary in the header of this file for explanation of
+                            | endmember flags and subdivision schemes.
+
+0 0 0 0 0 0 0 0             | endmember flags
+
+0. 1. 0.1  0                | subdivision scheme for Fe2/(Fe2+Mg)
+
+0. 1. 0.1  0                | subdivision scheme for X(Cr)
+0. 1. 0.1  0                | subdivision scheme for X(Ti)
+0. 1. 0.1  0                | subdivision scheme for X(Fe3+)
+
+begin_excess_function
+W(nsp   isp)          -8.2d3
+W(nsp   nherc)         3.5d3
+W(nsp   iherc)        -13d3
+W(nsp   nmt)           43.2d3
+W(nsp   imt)           49.1d3
+W(nsp   picr)         -5d3
+W(nsp   qnd)           22.5d3
+W(isp   nherc)         4.4d3
+W(isp   iherc)        -6d3
+W(isp   nmt)           36.8d3
+W(isp   imt)           20d3
+W(isp   picr)          14d3
+W(isp   qnd)           21.5d3
+W(nherc iherc)        -8.2d3
+W(nherc nmt)           18.1d3
+W(nherc imt)           49d3
+W(nherc picr)         -19d3
+W(nherc qnd)           35.1d3
+W(iherc nmt)          -4d3
+W(iherc imt)           7.6d3
+W(iherc picr)         -11d3
+W(iherc qnd)           9d3
+W(nmt   imt)           18.1d3
+W(nmt   picr)          11.9d3
+W(nmt   qnd)           62.2d3
+W(imt   picr)         -6.4d3
+W(imt   qnd)           24.3d3
+W(picr  qnd)           60d3
+end_excess_function
+
+2                                   | 2 site entropy model (M , T)
+
+4 1                                 | 4 species on M, mult. = 1
+|z(m,mg)  = 1 nsp   + 1 picr + 1 qnd
+z(m,fe)   = 1 nherc + 1 nmt
+z(m,fe3)  = 1 imt
+z(m,al)   = 1 isp + 1 iherc
+
+6 1                                 | 6 species on T, effective mult. = 1
+z(mg,T)   = 1/2 isp + 1/2 qnd 
+z(fe,T)   = 1/2 iherc + 1/2 imt
+| z(al,T) = 1 nsp + 1/2 isp + 1 nherc + 1/2 iherc
+z(ti,T)   = 1/2 qnd
+z(fe3,T)  = 1 nmt + 1/2 imt 
+z(Cr,T)   = 1 picr
+
+begin_dqf_corrections
+dqf(qnd)  = -30000
+end_dqf_corrections
+
+end_of_model
+                      -------------------------------------------------------- 
+begin_model
+                      Garnet - Holland, Green, and Powell; Journal of Petrology, 2018, Vol. 59, 881–900.
+                      Intended for pressure to 7 GPa, 923 K < T < peridotite liquidus
+
+                      JADC, April 2019
+
+                      This model requires the following make definition in
+                      the thermodynamic data file
+
+                         tig   = 1 py + 1/2 per + 1/2 ru - 1/2 cor
+                                DQF(J/mol) = 46.7d3  - 17.3 * T
+
+                      Additionally, a knor endmember DQF is added in the dqf_correction section
+                      at the end of this model.
+
+                                                      X       Y 
+                                                     _____________
+
+                                      Mutliplicity    3       2     
+                                                     _____________
+
+                          Dependent:   fkho_d        Fe      Fe3+      
+                          Dependent:   kho_d         Mg      Fe3+
+                                       andr          Ca      Fe3+
+
+                          Dependent:   fkno_d        Fe      Cr     
+                                       knor          Mg      Cr
+                          Dependent:   ckno_d        Ca      Cr
+
+                          Dependent:   ftig_d        Fe      Al(MgTi)_0.5
+                                       tig           Mg      Al(MgTi)_0.5
+                          Dependent:   ctig_d        Ca      Al(MgTi)_0.5
+
+                                       alm           Fe      Al     
+                                       py            Mg      Al     
+                                       gr            Ca      Al          
+
+Gt(HGP)
+abbreviation Gt
+full_name    garnet
+
+7
+2
+3 4 
+ftig_d  tig    ctig_d
+fkno_d  knor   ckno_d
+fkho_d  kho_d  andr
+alm     py     gr 
+
+6
+fkno_d = 1 alm + 1 knor - 1 py  
+ckno_d = 1 gr  + 1 knor - 1 py 
+fkho_d = 1 alm + 1 andr - 1 gr
+kho_d  = 1 py  + 1 andr - 1 gr
+ftig_d = 1 alm + 1 tig  - 1 py
+ctig_d = 1 gr  + 1 tig  - 1 py 
+
+                            | see commentary in the header of this file for explanation of
+                            | endmember flags and subdivision schemes.
+
+0 0 0 0 0 0 0 0 0 0 0 0     | endmember flags
+
+0   1   .1   0              | subdivision scheme for Fe on A
+0   1   .1   0              | subdivision scheme for Mg on A
+
+0   1   .1   0              | subdivision scheme for Al(MgTi)_0.5   on B
+0   1   .1   0              | subdivision scheme for Cr     on B
+0   1   .1   0              | subdivision scheme for Fe3+   on B
+              
+begin_excess_function                 
+W(py   alm)      4d3              + 0.1 * P
+W(py   gr)       45.4d3 - 10 * T  + 0.04 * P
+W(py   andr)     107d3  - 10 * T  - 0.036 * P
+W(py   knor)     2d3
+W(alm  gr)       17d3   - 10 * T  + 0.1 * P
+W(alm  andr)     65d3   - 10 * T  + 0.039 * P
+W(alm  knor)     6d3              + 0.01 * P
+W(gr   andr)     2d3
+W(gr   knor)     1d3    - 10 * T  + 0.180 * P
+W(andr knor)     63d3   - 10 * T  + 0.10 * P
+end_excess_function 
+
+2
+3 3.
+z(m1,fe) = 1 alm
+z(m1,mg) = 1 py + 1 knor + 1 tig
+
+5 2.
+z(m2,cr)  = 1 knor
+z(m2,fe3) = 1 andr
+z(m2,ti)  = 1/4 tig
+z(m2,mg)  = 1/4 tig
+
+
+begin_van_laar_sizes
+alpha(py)        1
+alpha(alm)       1
+alpha(gr)        2.5
+alpha(andr)      2.5
+alpha(knor)      1
+alpha(tig)       1
+end_van_laar_sizes
+
+begin_dqf_corrections
+dqf(knor)  = 18200
+end_dqf_corrections
+
+end_of_model 
+                      -------------------------------------------------------- 
+

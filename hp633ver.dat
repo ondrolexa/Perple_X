@@ -296,7 +296,7 @@ cren  = 1 mgts + 1 kos - 1 jd
 oen   = 1 mgts + 1 acm - 1 jd
        DQF(J/mol) = -15d3 + 0.15 * p_bar
 odi   = 1 di
-       DQF(J/mol) = -0.1d3 0.211 0.005 | dqf_T corrected from 2.11, ECRG 9/18
+       DQF(J/mol) = -100 + 0.211 * T + 0.005 * P | dqf_T corrected from 2.11, ECRG 9/18
                                   | Make definitions for Jennings and Holland, J Pet, 56:869-892, 2015 melt
 qjL = 2 qL
        DQF(J/mol) = 4d3     - 0.43 * p_bar 
@@ -353,6 +353,16 @@ hmgts  = 1 mgts + 1 hen - 1 en
        DQF(J/mol) = -1d3 
 |--------------------------------------------------------------------------------
                                   | Make definitions for Holland et al., JPet, 2018 
+      |---------------------------  Gt
+tig   = 1 py + 1/2 per + 1/2 ru - 1/2 cor
+       DQF(J/mol) = 46.7d3  - 17.3 * T
+      |---------------------------  Sp
+isp   = 1 nsp
+       DQF(J/mol) = 23.6d3  - 5.76303 * T
+iherc = 1 nherc
+       DQF(J/mol) = 23.6d3  - 5.76303 * T
+imt   = 1 mt 
+       DQF(J/mol) = 300 
       |---------------------------  Cpx
 cessh = 1 cats + 1 acm - 1 jd
        DQF = -3450 
@@ -362,6 +372,15 @@ mcbuf = 1 cats + 1/2 per + 1/2 ru -1/2 cor
        DQF = -1750 - 1.2 * T - 0.005 * P
 kjdh  = 1 jd + 1 san - 1 abh
        DQF = -3750 + 1.189 * P
+      |---------------------------  Opx, odi as in JH
+crenh = 1 mgts + 1 kos - 1 jd
+      DQF = -25900 + 15.5 * T + 0.05 * P
+obuf = 1 mgts + 1/2 per + 1/2 ru - 1/2 cor
+      DQF = 3350 - 5.1 * T - 0.0061 * P    
+macm = 1 mgts + 1 acm - 1 jd
+      DQF = 4800 - 0.089 * P
+ojd  = 1 jd
+      DQF = 18800
       |---------------------------  Melt
 foHL = 2 foL
    dqf = 8.75d3  - 0.133*Pbar
@@ -2237,7 +2256,30 @@ b1 = .206E-4  b5 = 468.3105  b6 = 1922000  b7 = -.21E-5  b8 = 4.04
 transition = 1 type = 5 t1 = 13930  t3 = -3600 t5 = 2  t6 = -.5
 end
 
- 
+| nsp and nherc should be the sp/herc endmembers stripped of 
+| the bragg o/d transition. Here i have just removed the transition 
+| but not corrected the GH/S0 for the o/d model. presumably the 
+| correction is small but this needs to be checked. JADC Apr 15, 2019
+
+| in fact the negative value of t6 in the above versions of sp/herc has
+| the effect that both endmembers are always fully ordered at geologically
+| plausible conditions. 
+
+nsp       EoS = 8 | H=  -2300180.
+MgO(1)Al2O3(1)
+GH = -2324220  S0 = 80.63  V0 = 3.978  
+c1 = 200.5  c2 = .6252E-2  c3 = -2996400  c5 = -888.4  
+b1 = .193E-4  b5 = 592.252  b6 = 1922000  b7 = -.21E-5  b8 = 4.04  
+end
+
+nherc     EoS = 8 | H=  -1949470.
+Al2O3(1)FeO(1)
+GH = -1983429  S0 = 113.9  V0 = 4.075  
+c1 = 184.9  c2 = .1417E-1  c3 = -3674800  c5 = -404  
+b1 = .206E-4  b5 = 468.3105  b6 = 1922000  b7 = -.21E-5  b8 = 4.04  
+end
+
+
 mt        EoS = 8 | H=  -1114200.
 FeO(3)O2(.5)
 GH = -1157998  S0 = 146.9  V0 = 4.452  
@@ -2269,7 +2311,7 @@ TiO2(1)FeO(2)
 GH = -1545164  S0 = 171  V0 = 4.682  
 c1 = 129.5  c2 = .48696E-1  c3 = -3739000  c5 = 690.2  
 b1 = .386E-4  b5 = 344.5576  b6 = 1470000  b7 = -.272E-5  b8 = 4  
-transition = 1  type = 4  t1 = 1  t3 = .9  
+transition = 1 type = 5 t1 = 1000  t3 = 900 t5 = 1  t6 = .5
 end
 
  
