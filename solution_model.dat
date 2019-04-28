@@ -441,7 +441,7 @@ jd_d3     =  1 jd
 
                                 | Second (1d) simplex of the prism 
 
-0.8 1. 0.1  0                   | subdvision scheme for (Fe+Mg)/(Ca+Fe+Mg)
+.3  1. .1  0                    | subdvision scheme for (Fe+Mg)/(Ca+Fe+Mg)
 
                                 | third (4d) simplex of the prism
 
@@ -1258,9 +1258,9 @@ begin_model
                       ekL = 1/2 eskL
                          dqf =  24.85d3   + 0.245*Pbar
                       tiL = 1 ruL
-                         dqf =  5.58d3  0    -0.489*Pbar
+                         dqf =  5.58d3   -0.489*Pbar
                       kjL = 1 kspL - 1 qL
-                         dqf =  11.98d3  0  -0.210*Pbar
+                         dqf =  11.98d3 -0.210*Pbar
 
                       to avoid cluttering thermodynamic data files with the new plague of TC 
                       DQF "corrections", the following simple DQF's are specified in the
@@ -1299,7 +1299,7 @@ tiL      qHL      h2oL
 
                                     | H(ctL) = -108.3d3  +55*TK  +0.053*Pbar - dqfwol - dqfsil + dqfq/4
 
-ctL = 1 woL + 1 silL - 1/4 qHL        Delta(enthalpy)   = -114452.5 + 55*TK + .4755*Pbar
+ctL = 1 woL + 1 silL - 1/4 qHL        Delta(enthalpy)   = -113995 + 55*TK+ .47025*P
 
                                     | see commentary in the header of this file for explanation of
                                     | endmember flags and subdivision schemes.
@@ -1307,8 +1307,8 @@ ctL = 1 woL + 1 silL - 1/4 qHL        Delta(enthalpy)   = -114452.5 + 55*TK + .4
 1 1 1 1 1 1 1 1 1 1 1               | endmember flags
 
 0.0 0.4  0.1  0                     | range and resolution of X(fo) 
-0.0 0.1  0.1  0                     | range and resolution of X(fa) 
-0.0 0.6  0.1  0                     | range and resolution of X(jd) 
+0.0 0.3  0.1  0                     | range and resolution of X(fa) 
+0.0 0.8  0.1  0                     | range and resolution of X(jd) 
 0.0 0.3  0.1  0                     | range and resolution of X(sil) 
 0.0 0.4  0.1  0                     | range and resolution of X(kj)
 0.0 0.5  0.1  0                     | range and resolution of X(wo)
@@ -1407,8 +1407,8 @@ n(hem)   = 1 hmL
 
 begin_dqf_corrections
 dqf(silL)  =  6.2d3          - 0.318   *Pbar
-dqf(woL)   = -0.45d3          - 0.114  *Pbar
-dqf(h2oL)  =  3.2d3  -3.9*TK + 0.00087*Pbar
+dqf(woL)   = -0.45d3         - 0.114   *Pbar
+dqf(h2oL)  =  3.2d3  -3.9*TK + 0.00087 *Pbar
 end_dqf_corrections
 
 end_of_model

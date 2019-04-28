@@ -356,29 +356,21 @@ kjdh  = 1 jd + 1 san - 1 abh
        DQF = -3750 + 1.189 * P
       |---------------------------  Melt
 foHL = 2 foL
-   dqf = 8.75d3  - 0.133*Pbar
-
+   dqf = 8.67d3  -0.131*Pbar
 faHL = 2 faL
-   dqf = 13.9d3  - 0.056*Pbar
-
+   dqf = 13.7d3  - 0.055*Pbar
 qHL = 4 qL
-   dqf =  0.07d3 - 0.062*Pbar
-
+   dqf =  0.22d3    -0.059*Pbar
 jdL = 1 abL - 1 qL
-   dqf = 11.85d3 - 0.096*Pbar
-
+   dqf =  12.19d3 - 0.089*Pbar
 hmL = 1/2 hemL
-   dqf =  4.05d3 - 0.077*Pbar
-
+   dqf =  3.3d3 - 0.032*Pbar
 ekL = 1/2 eskL
-   dqf = 24.75d3 + 0.245*Pbar
-
+   dqf =  24.85d3   + 0.245*Pbar
 tiL = 1 ruL
-   dqf =  5.6d3  - 0.489*Pbar
-
+   dqf =  5.58d3   -0.489*Pbar
 kjL = 1 kspL - 1 qL
-   dqf = 12.35d3 - 0.210*Pbar
-
+   dqf =  11.98d3  -0.210*Pbar
 end_makes
 
 Notation (incomplete and NOT alphabetical!)

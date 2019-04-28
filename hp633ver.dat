@@ -396,9 +396,9 @@ hmL = 1/2 hemL
 ekL = 1/2 eskL
    dqf =  24.85d3   + 0.245*Pbar
 tiL = 1 ruL
-   dqf =  5.58d3  0    -0.489*Pbar
+   dqf =  5.58d3   -0.489*Pbar
 kjL = 1 kspL - 1 qL
-   dqf =  11.98d3  0  -0.210*Pbar
+   dqf =  11.98d3  -0.210*Pbar
       |---------------------------  low-density silicate-rich fluid/melt, updated from the published
       |                             values to the values given in the TC files. JADC April 23, 2019.
 foWL = 2 foL
