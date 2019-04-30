@@ -17,17 +17,18 @@
 
                             ---------------------------------------------------------------------------
 
-                             comments can be placed between models provided, nothing is written in the first 10 columns. Comments 
-                             may be placed after data if it is separated from the data by a '|' marker.
+                             Comments can be placed between models provided, nothing is written in the 
+                             first 10 columns. Comments may be placed after data if it is separated from 
+                             the data by a '|' marker.
 
                             ---------------------------------------------------------------------------
 
                              VARIOUS DOCUMENTATION SECTIONS BELOW:
 
-                             I)  Solution model types
-                             II) Subdivision schemes
+                             I)   Solution model types
+                             II)  Subdivision schemes
                              III) Species limits for order-disorder models
-                             IV) Templates for solution model types 2 and 39
+                             IV)  Templates for solution model types 2 and 39
 
                             --------------------------------------------------------------------------- 
                            
@@ -92,11 +93,12 @@
                             XINC - in most cases the value of XINC is equated to the first (exploratory stage) or
                                    second value of the initial_resolution keyword, which defaults to [1/16 1/48],
                                    i.e., the value of XINC specified within the solution model text here is irrelevant.
+
                                    The exceptions are if initial_resolution = [0 0] or if the solution model type = 20 
                                    (electrolytic_fluid). For these exceptions, the value of XINC is read from the model
                                    text here. XINC controls the resolution of the compositional discretization, i.e., 
                                    the number of compositions generated over the interval of interest is 1/XINC + 1 if 
-                                   XINC < 0 and is XINC+1 if XINC > 0.
+                                   XINC < 1 and is XINC+1 if XINC > 1.
 
                             XMAX - is the maximum value of the compositional variable permitted by the scheme. This 
                                    value may be relaxed if the hard_limits option is TRUE (default).
@@ -250,6 +252,8 @@ begin_model
 
                       Re-formulated as a triple simplex prism. JADC, Dec 11, 2018.
 
+                      Corrected cfm enthalpy and site limit expression for z(Mg,M1). JADC, April 29, 2019.
+
                       NOTES:
 
                       to use this model, the following endmembers must be specified with make 
@@ -354,7 +358,7 @@ crkjd_d1  crjd_d1   crfs_d  cren_d
 kess_d    ness_d    cessh    cess_d1
 kess_d1   ness_d1   fess_d   mess_d
 
-kjd       jd        cats     cats_d1
+kjdh      jd        cats     cats_d1
 kjd_d1    jd_d1     fats_d   mats_d
 
 kjd_d2    jd_d2     hed_d    di    
@@ -362,30 +366,28 @@ kjd_d3    jd_d3     cfsg     cenjh
 
 1                               | number of ordered species and definitions 
 
-cfm   = 1/2 cenjh + 1/2 cfsg enthalpy_of_ordering  =  -4400 - 0.0008*P | DQF(cfm) - (DQF(ceng) + DQF(cfsg))/2
+cfm   = 1/2 cenjh + 1/2 cfsg enthalpy_of_ordering  =  -4400 | DQF(cfm) - (DQF(ceng) + DQF(cfsg))/2
 
 begin_limits
-
-cfm = -2 + 2 cfsg + 1 cfm                          delta = 2 zm1fe
-cfm =  0 - 2 di - 2 cenjh - 1 cfm                  delta = 2 zm1mg
-cfm =  0 - 2 cfsg - 1 cfm                          delta = 2 zm2fe
-cfm = -2 + 2 cenjh + 1 cfm                         delta = 2 zm2mgd
-
+cfm =    - 1 mcbuf - 2 di - 2 cenjh - 1 cfm        delta = 2 (limits for Mg on M1)
+cfm = -2 + 2 cfsg  + 1 cfm                         delta = 2 (limits for Fe on M1)
+cfm = -2 + 2 cenjh + 1 cfm                         delta = 2 (limits for Mg on M2)
+cfm =    - 2 cfsg  - 1 cfm                         delta = 2 (limits for Fe on M2)
 end_limits
 
 31                              | number of dependent endmembers and definitions   
                                 | 15 true dependent endmembers:
-mkbuf_d   = -1 cats  + 1 mcbuf + 1 kjd
+mkbuf_d   = -1 cats  + 1 mcbuf + 1 kjdh
 mnbuf_d   = -1 cats  + 1 mcbuf + 1 jd
 mfbuf_d   = -1 di    + 1 mcbuf + 1 cfm
 mbuf_d    = -1 di    + 1 mcbuf + 1 cenjh
 
-crkjd_d   = -1 cats  + 1 crdih + 1 kjd
+crkjd_d   = -1 cats  + 1 crdih + 1 kjdh
 crjd_d    = -1 cats  + 1 crdih + 1 jd
 cren_d    = -1 di    + 1 crdih + 1 cenjh
 crfs_d    = -1 di    + 1 crdih + 1 cfm
 
-kess_d    = -1 cats  + 1 cessh + 1 kjd
+kess_d    = -1 cats  + 1 cessh + 1 kjdh
 ness_d    = -1 cats  + 1 cessh + 1 jd
 mess_d    = -1 di    + 1 cessh + 1 cenjh
 fess_d    = -1 di    + 1 cessh + 1 cfm 
@@ -396,25 +398,25 @@ fats_d    = -1 di    + 1 cats  + 1 cfm
 hed_d     =  1 di    + 1 cfsg  - 1 cfm
                                 | 12 useful dependent filler endmembers
 mcbuf_d1  =  1 mcbuf
-mkbuf_d1  = -1 cats  + 1 mcbuf + 1 kjd
+mkbuf_d1  = -1 cats  + 1 mcbuf + 1 kjdh
 mnbuf_d1  = -1 cats  + 1 mcbuf + 1 jd
 
 crdi_d1   =  1 crdih
-crkjd_d1  = -1 cats  + 1 crdih + 1 kjd
+crkjd_d1  = -1 cats  + 1 crdih + 1 kjdh
 crjd_d1   = -1 cats  + 1 crdih + 1 jd
 
 cess_d1   =  1 cessh
-kess_d1   = -1 cats  + 1 cessh + 1 kjd
+kess_d1   = -1 cats  + 1 cessh + 1 kjdh
 ness_d1   = -1 cats  + 1 cessh + 1 jd
 
 cats_d1   =  1 cats
-kjd_d1    =  1 kjd
+kjd_d1    =  1 kjdh
 jd_d1     =  1 jd
                                 | 4 utterly useless dependent filler endmembers,
                                 | these could be sawdust for all they do.
-kjd_d2    =  1 kjd
+kjd_d2    =  1 kjdh
 jd_d2     =  1 jd
-kjd_d3    =  1 kjd
+kjd_d3    =  1 kjdh
 jd_d3     =  1 jd
 |                               | endmembers to make the Mg-free Ti exchange, these 
 |                               | could replace utterly useless fillers to increase 
@@ -434,21 +436,20 @@ jd_d3     =  1 jd
 0 0 0 0 0 0 0 0 0 0             | endmember flags
 
                                 | First (3d) simplex of the prism (Ca/Mg/Fe-Na-K)
-
-0. .2 0.1  0                    | subdvision scheme for X(1,1) => Na
-0. .2 0.1  0                    | subdvision scheme for X(1,2) => K
-0. .5 0.1  0                    | subdvision scheme for X(1,3) => Fe
+0    .1  .1  0                  | subdvision scheme for X(1,2) => K
+0.   .2  .1  0                  | subdvision scheme for X(1,1) => Na
+0.   .4  .1  0                  | subdvision scheme for X(1,3) => Fe
 
                                 | Second (1d) simplex of the prism 
 
-.3  1. .1  0                    | subdvision scheme for (Fe+Mg)/(Ca+Fe+Mg)
+.0    1 .1  0                    | subdvision scheme for (Fe+Mg)/(Ca+Fe+Mg)
 
                                 | third (4d) simplex of the prism
 
-0. .1 0.1  0                    | subdvision scheme for X("buf")
-0. .1 0.1  0                    | subdvision scheme for X("cr")
-0. .1 0.1  0                    | subdvision scheme for X("ess")
-0. .2 0.1  0                    | subdvision scheme for X("ts")
+0    .2  .1  0                  | subdvision scheme for X("buf")
+0    .1  .1  0                  | subdvision scheme for X("cr")
+0    .1  .1  0                  | subdvision scheme for X("ess")
+0    .2  .1  0                  | subdvision scheme for X("ts")
 
 begin_excess_function
 
@@ -459,7 +460,7 @@ W(di cessh)       8d3
 W(di jd)         26d3
 W(di cenjh)    29.8d3 - 0.03 * p
 W(di cfm)      20.6d3 - 0.03 * p
-W(di kjd)        26d3
+W(di kjdh)       26d3
 
 W(cfsg cats)     25d3 - 0.1 * p
 W(cfsg crdih)  38.3d3
@@ -467,34 +468,34 @@ W(cfsg cessh)  43.3d3
 W(cfsg jd)       24d3
 W(cfsg cenjh)   2.3d3
 W(cfsg cfm)     3.5d3
-W(cfsg kjd)      24d3
+W(cfsg kjdh)     24d3
 
 W(cats crdih)     2d3
 W(cats cessh)     2d3
 W(cats jd)        6d3
 W(cats cenjh)    45.2d3 - 0.35 * p
 W(cats cfm)      27d3 - 0.1 * p
-W(cats kjd)       6d3
+W(cats kjdh)      6d3
 
 W(crdih cessh)    2d3
 W(crdih jd)       3d3
 W(crdih cenjh) 52.3d3
 W(crdih cfm)   40.3d3
-W(crdih kjd)      3d3
+W(crdih kjdh)     3d3
 
 W(cessh jd)       3d3
 W(cessh cenjh) 57.3d3   
 W(cessh cfm)   45.3d3   
-W(cessh kjd)      3d3
+W(cessh kjdh)     3d3
 
 W(jd cenjh)      40d3   
 W(jd cfm)        40d3   
-W(jd kjd)        10d3   
+W(jd kjdh)       10d3   
 
 W(cenjh cfm)      4d3  
-W(cenjh kjd)     40d3   
+W(cenjh kjdh)    40d3   
 
-W(cfm kjd)       40d3   
+W(cfm kjdh)      40d3   
 
 end_excess_function
 
@@ -509,11 +510,11 @@ z(m1,Cr)   = 1 crdih
 
 5 1                                 | 5 species on m2, mult. = 1
 z(m2,na)   = 1 jd
-z(m2,k)    = 1 kjd
+z(m2,k)    = 1 kjdh
 z(m2,mg)   = 1 cenjh
 z(m2,fe)   = 1 cfm  + 1 cfsg
 
-2 0.5                              | 2 species on T, effective mult. = 1/4
+2 0.5                              | 2 species on T, effective mult. = 1/2
 z(Al,T) = 1/2 cats + 1/2 mcbuf + 1/2 crdih + 1/2 cessh 
 
 
@@ -522,7 +523,7 @@ alpha(di)     1.2
 alpha(cenjh)  1
 alpha(cfsg)   1
 alpha(jd)     1.2
-alpha(kjd)   1.2
+alpha(kjdh)   1.2
 alpha(cats)   1.9
 alpha(mcbuf)  1.9
 alpha(cessh)  1.9
@@ -581,7 +582,7 @@ begin_model
                          X(1,1) - Na/(Na+M) on M2
                          X(1,2) - Mg/(Na+M) on M2
 
-                         X(2,1) - Ca/M on M2
+                         X(2,1) - Ca/(Ca+M) on M2
 
                          X(3,1) - Fe(3+)/(Al+Fe+M) on M1 (i.e., Ferric-Tschermaks)
                          X(3,2) - Al/(Al+Fe+M) on M1 (i.e., Al-Tschermaks)
@@ -1137,21 +1138,21 @@ begin_model
                       thermodynamic data file make_definitions section:
 
                       foWL = 2 foL
-                         dqf = 8.59d3  -0.136*Pbar
+                         dqf = 8.59d3    - 0.136*Pbar
                       faWL = 2 faL
-                         dqf = 13.56d3  - 0.052*Pbar
+                         dqf = 13.56d3   - 0.052*Pbar
                       qWL = 4 qL
-                         dqf =  2.1d3    -0.051*Pbar
+                         dqf =  2.1d3    - 0.051*Pbar
                       jdWL = 1 abL - 1 qL
-                         dqf =  12.32d3 - 0.099*Pbar
-                      hmL = 1/2 hemL
-                         dqf =  4.05d3 - 0.077*Pbar
-                      ekL = 1/2 eskL
+                         dqf =  12.32d3   - 0.099*Pbar
+                      hmWL = 1/2 hemL
+                         dqf =  4.05d3    - 0.077*Pbar
+                      ekWL = 1/2 eskL
                          dqf =  24.75d3   + 0.245*Pbar
-                      tiL = 1 ruL
-                         dqf =  5.6d3  0    -0.489*Pbar
+                      tiWL = 1 ruL
+                         dqf =  5.6d3     - 0.489*Pbar
                       kWL = 1 kspL - 1 qL
-                         dqf =  12.88d3  0  -0.227*Pbar
+                         dqf =  12.88d3   - 0.227*Pbar
 
                       to avoid cluttering thermodynamic data files with the new plague of TC 
                       DQF "corrections", the following simple DQF's are specified in the
@@ -1180,23 +1181,23 @@ full_name    liquid
 
 foWL     faWL
 jdWL     silL     kWL
-woL      ekL      hmL
-tiL      qWL      H2O
+woL      ekWL     hmWL
+tiWL     qWL      H2O
 
 1 1 1 1 1 1 1 1 1 1 1               | endmember flags
 
                                     | non-linear subdivision is likely to be
                                     | preferable to cartesian for this model
 
-0.0 0.2  0.1  0                     | range and resolution of X(fo) 
-0.0 0.2  0.1  0                     | range and resolution of X(fa) 
+0.0 0.1  0.1  0                     | range and resolution of X(fo) 
+0.0 0.1  0.1  0                     | range and resolution of X(fa) 
 0.0 0.2  0.1  0                     | range and resolution of X(jd) 
-0.0 0.2  0.1  0                     | range and resolution of X(sil) 
+0.0 0.1  0.1  0                     | range and resolution of X(sil) 
 0.0 0.2  0.1  0                     | range and resolution of X(kj)
 0.0 0.2  0.1  0                     | range and resolution of X(wo)
-0.0 0.2  0.1  0                     | range and resolution of X(ek)
-0.0 0.2  0.1  0                     | range and resolution of X(hm)
-0.0 0.2  0.1  0                     | range and resolution of X(ti)
+0.0 0.1  0.1  0                     | range and resolution of X(ek)
+0.0 0.1  0.1  0                     | range and resolution of X(hm)
+0.0 0.1  0.1  0                     | range and resolution of X(ti)
 0.0 0.2  0.1  0                     | range and resolution of X(q)
 
 begin_excess_function
@@ -1206,9 +1207,9 @@ W(woL  H2O)   72.2d3   0  -0.67
 W(foWL H2O)   71.7d3   0  -1.10   
 W(faWL H2O)   71.7d3   0  -1.10  
 W(jdWL H2O)   57d3     0  -0.79
-W(hmL  H2O)   73d3     0  -0.66 
-W(ekL  H2O)   73d3     0  -0.66 
-W(tiL  H2O)   75d3     0  -0.67
+W(hmWL H2O)   73d3     0  -0.66 
+W(ekWL H2O)   73d3     0  -0.66 
+W(tiWL H2O)   75d3     0  -0.67
 W(kWL  H2O)   44.9d3   0  -1.19
 end_excess_function
 
@@ -1220,9 +1221,9 @@ z(jdWL) = 1 jdWL
 z(silL) = 1 silL
 z(kWL)  = 1 kWL
 z(woL)  = 1 woL
-z(ekL)  = 1 ekL
-z(hmL)  = 1 hmL
-z(tiL)  = 1 tiL
+z(ekL)  = 1 ekWL
+z(hmL)  = 1 hmWL
+z(tiL)  = 1 tiWL
 z(qWL)  = 1 qWL
 
 begin_dqf_corrections
@@ -1306,16 +1307,16 @@ ctL = 1 woL + 1 silL - 1/4 qHL        Delta(enthalpy)   = -113995 + 55*TK+ .4702
 
 1 1 1 1 1 1 1 1 1 1 1               | endmember flags
 
-0.0 0.4  0.1  0                     | range and resolution of X(fo) 
-0.0 0.3  0.1  0                     | range and resolution of X(fa) 
-0.0 0.8  0.1  0                     | range and resolution of X(jd) 
-0.0 0.3  0.1  0                     | range and resolution of X(sil) 
-0.0 0.4  0.1  0                     | range and resolution of X(kj)
-0.0 0.5  0.1  0                     | range and resolution of X(wo)
-0.0 0.1  0.1  0                     | range and resolution of X(ek)
-0.0 0.1  0.1  0                     | range and resolution of X(hm)
-0.0 0.1  0.1  0                     | range and resolution of X(ti)
-0.0 0.6  0.1  0                     | range and resolution of X(q)
+0     .7   .1  0                     | range and resolution of X(fo) 
+0     .3   .1  0                     | range and resolution of X(fa) 
+0     .8   .1  0                     | range and resolution of X(jd) 
+0     .3   .1  0                     | range and resolution of X(sil) 
+0     .4   .1  0                     | range and resolution of X(kj)
+0     .5   .1  0                     | range and resolution of X(wo)
+0     .1   .1  0                     | range and resolution of X(ek)
+0     .1   .1  0                     | range and resolution of X(hm)
+0     .1   .1  0                     | range and resolution of X(ti)
+0     .6   .1  0                     | range and resolution of X(q)
 
 begin_excess_function 
 
@@ -1394,14 +1395,15 @@ n(Fe) = 4 faHL
 n(Ca) = 1 woL
 n(Al) = 1 silL
 
-9 0.                        | F-site, decompositing "alsi2" here eliminates the necessity of the A-site
+10 0.                       | F-site, decomposing "AlSi2" into k/na-jd here eliminates the necessity of the A-site
 n(jdL)   = 1 jdL 
 n(kjL)   = 1 kjL
 n(alsi)  = 1 silL
 n(si0)   = 1 woL
 n(ol)    = 1 faHL + 1 foHL
 n(q)     = 1 qHL
-n(eq)    = 1 ekL
+n(ek)    = 1 ekL
+n(tiL)   = 1 tiL
 n(ctL)   = 1 ctL
 n(hem)   = 1 hmL
 
@@ -13457,11 +13459,10 @@ ojd_d4   fs      en
 fm = 1/2 en + 1/2 fs     enthalpy_of_ordering = -6600
 
 begin_limits
-fm = - 1 obuf - 2 odi - 2 en - 1 fm                          delta = 2 (limits for Mg on M1)
+fm =    - 1 obuf - 2 odi - 2 en - 1 fm                       delta = 2 (limits for Mg on M1)
 fm = -2 + 2 fs + 1 fm                                        delta = 2 (limits for Fe on M1)
-
 fm = -2 + 2 crenh + 2 macm + 2 mgts + 2 obuf + 2 en + 1 fm   delta = 2 (limits for Mg on M2)
-fm = - 2 fs - 1 fm                                           delta = 2 (limits for Fe on M2)
+fm =    - 2 fs - 1 fm                                        delta = 2 (limits for Fe on M2)
 end_limits
 
 
@@ -13504,7 +13505,7 @@ hed_d   = -1 fm + 1 fs + 1 odi
 
                             | First (1d) simplex of the prism
 0. .1 0.1  0                | subdivision scheme for X(1,1) => Na
-0. .5 0.1  0                | subdivision scheme for X(1,2) => Fe
+0. .2 0.1  0                | subdivision scheme for X(1,2) => Fe
 
                             | Second (1d) simplex of the prism
 0. 1. 0.1  0                | subdivision scheme for X(2,1) => (Fe+Mg)/Ca
@@ -13513,7 +13514,7 @@ hed_d   = -1 fm + 1 fs + 1 odi
 0. .2 0.1  0                | subdivision scheme for X(3,1) - Cr-M
 0. .2 0.1  0                | subdivision scheme for X(3,2) - Fe3-M
 0. .2 0.1  0                | subdivision scheme for X(3,2) - Al-M
-0. .1 0.1  0                | subdivision scheme for X(3,2) - Ti-M
+0. .3 0.1  0                | subdivision scheme for X(3,2) - Ti-M
 
 begin_excess_function
 W(en fs)                 7d3      

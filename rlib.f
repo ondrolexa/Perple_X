@@ -355,16 +355,29 @@ c                                 HP Tait EoS, einstein thermal pressure
          v1 = 1d0 + (p -pth)*thermo(17,id)
          v2 = 1d0 + (pr-pth)*thermo(17,id)
 
-         if (v1.lt.0d0.or.v2.lt.0d0) then
+         if (v1.lt.0d0) then
 c                                 destabilize the phase
-            vdp = 1d12*p
+            vdp = thermo(3,id)**2*p
 
             if (iwarn.le.5.and.oldid.ne.id) then 
-               call warn (46,t,id,names(id)) 
+               call warn (60,t,1,names(id)) 
                iwarn = iwarn + 1
                oldid = id
-               if (iwarn.eq.5) call warn (49,t,46,'GCPD_HP_Tait')
-            end if 
+               if (iwarn.eq.5) call warn (49,t,60,'GCPD_HP_Tait_I')
+            end if
+
+          else if (v2.lt.0d0) then 
+c                                 continue on the assumption that
+c                                 v2 is small zero it and continue
+             vdp = (thermo(16,id)*(v1**thermo(18,id)
+     *             /thermo(20,id)-p+pr)+p-pr)*thermo(3,id)
+
+            if (iwarn.le.5.and.oldid.ne.id) then 
+               call warn (60,t,2,names(id)) 
+               iwarn = iwarn + 1
+               oldid = id
+               if (iwarn.eq.5) call warn (49,t,60,'GCPD_HP_Tait_II')
+            end if
 
           else 
 c                                 int(vdp,p=Pr..Pf)
@@ -450,7 +463,7 @@ c                                 temperature
                   if (iwarn.eq.5) call warn (49,t,46,'GCPD_Murnaghan')
                end if 
 c                                 destabalize the phase
-               gcpd = 1d12*p
+               gcpd = thermo(3,id)**2*p
 
                return 
 
@@ -507,7 +520,7 @@ c                                 temperature
                if (iwarn.eq.5) call warn (49,t,46,'GCPD_BM3')
             end if 
 c                                 destabilize the phase
-            vdp = 1d12*p
+            vdp = thermo(3,id)**2*p
 
          else
 
@@ -4098,7 +4111,7 @@ c                                 if we get here, failed to converge
          if (izap.eq.10) call warn (49,r,369,'GETLOC')
       end if 
 c                                 destabilize the phase:
-      gsixtr = 1d12*p
+      gsixtr = 1d2*p
 
       return 
          
@@ -4478,7 +4491,7 @@ c                                 if we get here, failed to converge
             if (izap.eq.10) call warn (49,r,369,'GSTXLQ')
          end if 
 c                                 destabilize the phase.
-         gstxlq  = 1d12*p
+         gstxlq  = 1d2*p
 
       else 
 c                                 everything ok, final f:
@@ -4697,7 +4710,7 @@ c                                 if we get here, failed to converge
             if (izap.eq.10) call warn (49,r,369,'GSTX')
          end if 
 c                                 destabilize the phase.
-         gstxgi  = 1d12*p
+         gstxgi  = 1d2*p
 
       else 
 
@@ -9592,6 +9605,8 @@ c                                 y's and dependent species y:
 c                                 for each species, read
 c                                 function to define the
 c                                 site fraction of the species:
+            if (ksp(i,im)+1.gt.m11) call error (1,dx,ksp(i,im)+1,'m11')
+
             do k = 1, norder
                sdzdp(k,ksp(i,im)+1,i,im) = 0d0 
             end do 
@@ -17967,7 +17982,7 @@ c                                 prismatic + orphan vertices
      *        'limits that were automatically relaxed:',/)
 1090  format (/,'If the restrictions are unintentional, then relax ',
      *          'the corresponding limits',/,'in the solution model ',
-     *          'file and restart the calculation',/)
+     *          'file and restart the calculation.',/)
 1091  format (/,'Restriction during the auto-refine stage is usually ',
      *          'insignificant. If desired, confirm',/,'by ',
      *          'comparing the ranges ',

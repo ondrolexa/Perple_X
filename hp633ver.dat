@@ -384,33 +384,39 @@ ojd  = 1 jd
       |---------------------------  high-density silicate melt, updated from the published
       |                             values to the values given in the TC files. JADC April 23, 2019.
 foHL = 2 foL
-   dqf = 8.67d3  -0.131*Pbar
+   dqf = 8.67d3    - 0.131*Pbar
 faHL = 2 faL
-   dqf = 13.7d3  - 0.055*Pbar
+   dqf = 13.7d3    - 0.055*Pbar
 qHL = 4 qL
-   dqf =  0.22d3    -0.059*Pbar
+   dqf =  0.22d3   - 0.059*Pbar
 jdL = 1 abL - 1 qL
-   dqf =  12.19d3 - 0.089*Pbar
+   dqf =  12.19d3  - 0.089*Pbar
 hmL = 1/2 hemL
-   dqf =  3.3d3 - 0.032*Pbar
+   dqf =  3.3d3    - 0.032*Pbar
 ekL = 1/2 eskL
-   dqf =  24.85d3   + 0.245*Pbar
+   dqf =  24.85d3  + 0.245*Pbar
 tiL = 1 ruL
-   dqf =  5.58d3   -0.489*Pbar
+   dqf =  5.58d3   - 0.489*Pbar
 kjL = 1 kspL - 1 qL
-   dqf =  11.98d3  -0.210*Pbar
+   dqf =  11.98d3  - 0.210*Pbar
       |---------------------------  low-density silicate-rich fluid/melt, updated from the published
       |                             values to the values given in the TC files. JADC April 23, 2019.
 foWL = 2 foL
-   dqf = 8.59d3  -0.136*Pbar
+   dqf = 8.59d3     - 0.136*Pbar
 faWL = 2 faL
-   dqf = 13.56d3  - 0.052*Pbar
+   dqf = 13.56d3    - 0.052*Pbar
 qWL = 4 qL
-   dqf =  2.1d3    -0.051*Pbar
+   dqf =  2.1d3     - 0.051*Pbar
 jdWL = 1 abL - 1 qL
-   dqf =  12.32d3 - 0.099*Pbar
+   dqf =  12.32d3   - 0.099*Pbar
 kWL = 1 kspL - 1 qL
-   dqf =  12.88d3  0  -0.227*Pbar
+   dqf =  12.88d3   - 0.227*Pbar
+hmWL = 1/2 hemL
+   dqf =  4.05d3    - 0.077*Pbar
+ekWL = 1/2 eskL
+   dqf =  24.75d3   + 0.245*Pbar
+tiWL = 1 ruL
+   dqf =  5.6d3     - 0.489*Pbar
 
 end_makes
  

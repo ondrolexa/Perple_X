@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.8.6, source updated April 22, 2019.',
+     *      'Perple_X version 6.8.6, source updated April 30, 2019.',
 
      *      'Copyright (C) 1986-2019 James A D Connolly '//
      *      '<www.perplex.ethz.ch/copyright.html>.'
@@ -2790,6 +2790,13 @@ c----------------------------------------------------------------------
          write (*,58)
       else if (ier.eq.59) then
          write (*,59) char
+      else if (ier.eq.60) then
+         write (*,60) char
+         if (int.eq.1) then 
+            write (*,601) char
+         else 
+            write (*,602)
+         end if
       else if (ier.eq.61) then
          write (*,61) char
       else if (ier.eq.63) then
@@ -3050,6 +3057,12 @@ c----------------------------------------------------------------------
      *          'invariant equilibrium.',/)
 59    format (/,'**warning ver059** endmember ',a,
      *        ' has invalid site populations.',/)
+60    format (/,'**warning ver060** Tait EoS conditions out of range ',
+     *          'for endmember/phase: ',a,'(at T=',g12.6,' K)')
+601   format ('base v1 is negative, endmember/phase ',a,' will be ',
+     *        'destabilized.',/)
+602   format ('base v2 will be zeroed on the assumption that it is ',
+     *        'insignificant.',/)
 61    format (/,'**warning ver061** the data includes NaN values, '
      *      ,'probably because bad_number',/,'in perplex_option.dat = '
      *      ,'NaN, these values will be replaced by zeros. To avoid ',/,
