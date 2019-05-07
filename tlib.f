@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.8.6, source updated April 30, 2019.',
+     *      'Perple_X version 6.8.6, source updated May 7, 2019.',
 
      *      'Copyright (C) 1986-2019 James A D Connolly '//
      *      '<www.perplex.ethz.ch/copyright.html>.'
@@ -272,7 +272,7 @@ c                                 initial resolution for adaptive
 c                                 refinement
       nopt(13) = 1d0/16d0
 c                                 solvus_tolerance
-      nopt(8) = 1.5*nopt(8)
+      nopt(8) = 1.5*nopt(13)
 c                                 solvus_tolerance_II
       nopt(25) = 3d0*nopt(13)
 c                                 perturbation to eliminate pseudocompound

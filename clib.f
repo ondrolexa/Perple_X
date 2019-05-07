@@ -138,9 +138,9 @@ c                                 to use the data
 
             end if 
 c                                 set cycle dependent parameters
-            if (refine.or.iam.eq.2) then 
+            if (refine) then 
 
-               i = 2 
+               i = 2
 
             else 
 
@@ -3738,6 +3738,10 @@ c----------------------------------------------------------------------
 
       logical count, err 
 
+      logical plopt
+      integer piopt
+      common/ cst213 /piopt(5),plopt(5)
+
       integer iopt
       logical lopt
       double precision nopt
@@ -3824,12 +3828,19 @@ c                                 decompress the grid data
 c                                 read assemblages
       read (n4,*,iostat=ier) iasct
       if (ier.ne.0) goto 99
-
+c                                 global stable phase counter
       istab = 0 
+c                                 min/max number of phases in an assemblage
+      piopt(1) = 100
+      piopt(2) = 0
 
       do i = 1, iasct
          read (n4,*,iostat=ier) iavar(1,i),iavar(2,i),iavar(3,i)
          if (ier.ne.0) goto 99
+
+         if (iavar(3,i).lt.piopt(1)) piopt(1) = iavar(3,i)
+         if (iavar(3,i).gt.piopt(2)) piopt(2) = iavar(3,i)
+
          read (n4,*,iostat=ier) (idasls(j,i), j = 1, iavar(3,i))
          if (ier.ne.0) goto 99
 c                                 make a cumulative list of stable phases

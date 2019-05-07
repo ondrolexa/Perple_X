@@ -531,6 +531,8 @@ alpha(crdih)  1.9
 alpha(cfm)    1
 end_van_laar_sizes
 
+reach_increment 0
+
 end_of_model
                       --------------------------------------------------------
 begin_model
@@ -1127,12 +1129,14 @@ end_dqf_corrections
 end_of_model
                            --------------------------------------------------------
 begin_model
-                      Aqueous low density silicate fluid/melt - Holland, Green, & Powell; J Pet, 2018, 59:881–900.
+                      Aqueous low density silicate fluid/melt - Holland, Green, & Powell; 
+                      J Pet, 2018, 59:881–900.
 
                       Intended to account for the solubility of silicates in water 
-                      at P > 1 GPa. Use with caution. 
+                      at P > 1 GPa. Use with caution. JADC 4/19
 
-                      JADC 4/19
+                      WoL DQF corrected from -22d3 ... to 22d3 ...
+                      Debaditya Bandyopadhyay, May 7, 2019. 
 
                       This model requires the following make definitions in the
                       thermodynamic data file make_definitions section:
@@ -1159,7 +1163,7 @@ begin_model
                       make_definition section at the end of this model:
 
                       dqf(silL) = 6.72d3  -0.313*Pbar
-                      dqf(woL)  = -0.22d3  -0.12*Pbar
+                      dqf(woL)  = 0.22d3  -0.12*Pbar
 
                       For (nonsensical, but common) positive DFQ's this approach may lead to 
                       interference between the phase relations of the solution model and the 
@@ -1172,8 +1176,8 @@ begin_model
                       thermodynamic data file) from calculations with this model. 
 
 Aqfl(HGP)
-abbreviation Melt
-full_name    liquid
+abbreviation F
+full_name    fluid
 
 2                                   | model type: simplicial composition space 
 
@@ -1189,16 +1193,16 @@ tiWL     qWL      H2O
                                     | non-linear subdivision is likely to be
                                     | preferable to cartesian for this model
 
-0.0 0.1  0.1  0                     | range and resolution of X(fo) 
-0.0 0.1  0.1  0                     | range and resolution of X(fa) 
-0.0 0.2  0.1  0                     | range and resolution of X(jd) 
-0.0 0.1  0.1  0                     | range and resolution of X(sil) 
-0.0 0.2  0.1  0                     | range and resolution of X(kj)
-0.0 0.2  0.1  0                     | range and resolution of X(wo)
-0.0 0.1  0.1  0                     | range and resolution of X(ek)
-0.0 0.1  0.1  0                     | range and resolution of X(hm)
-0.0 0.1  0.1  0                     | range and resolution of X(ti)
-0.0 0.2  0.1  0                     | range and resolution of X(q)
+1d-3 .1   .1  1                     | range and resolution of X(fo) 
+1d-3 .1   .1  1                     | range and resolution of X(fa) 
+1d-3 .2   .1  1                     | range and resolution of X(jd) 
+1d-3 .1   .1  1                     | range and resolution of X(sil) 
+1d-3 .2   .1  1                     | range and resolution of X(kj)
+1d-3 .2   .1  1                     | range and resolution of X(wo)
+1d-3 .1   .1  1                     | range and resolution of X(ek)
+1d-3 .1   .1  1                     | range and resolution of X(hm)
+1d-3 .1   .1  1                     | range and resolution of X(ti)
+1d-3 .2   .1  1                     | range and resolution of X(q)
 
 begin_excess_function
 W(qWL  H2O)   59d3     0  -0.82   
@@ -1228,7 +1232,7 @@ z(qWL)  = 1 qWL
 
 begin_dqf_corrections
 dqf(silL) =  6.72d3  -0.313*Pbar
-dqf(woL)  = -0.22d3  -0.12 *Pbar
+dqf(woL)  =  0.22d3  -0.12 *Pbar
 end_dqf_corrections   
 
 end_of_model
@@ -1329,7 +1333,7 @@ W(qHL  hmL)      20d3
 W(qHL  tiL)    24.6d3
 W(qHL  kjL)   -17.8d3   -0.05 * Pbar  
 W(qHL  ctL)   -14.6d3   
-W(qHL  h2oL)   17.9d3   -0.61 * Pbar   
+W(qHL  h2oL)   17.8d3   -0.61 * Pbar   
 
 W(silL  woL)  -26.5d3    0.85 * Pbar     
 W(silL  foHL)   2.2d3    
@@ -1367,18 +1371,18 @@ W(jdL  hmL)      10d3
 W(jdL  tiL)    16.5d3    0.14 * Pbar
 W(jdL  kjL)    -5.9d3   
 W(jdL  ctL)     7.6d3   
-W(jdL  h2oL)   -8.2d3   -0.06 * Pbar
+W(jdL  h2oL)   -8.3d3   -0.06 * Pbar
 
 W(hmL  kjL)      10d3   
-W(hmL  h2oL)   60.2d3   -0.66  * Pbar
+W(hmL  h2oL)     60d3   -0.66  * Pbar
 
-W(ekL  h2oL)   60.2d3   -0.66 * Pbar
+W(ekL  h2oL)     30d3   -0.66 * Pbar
 
 W(tiL  kjL)       9d3
-W(tiL  h2oL)   60.2d3   -0.6 * Pbar
+W(tiL  h2oL)     30d3   -0.6 * Pbar
 
 W(kjL  ctL)    -5.6d3    
-W(kjL  h2oL)   -0.2d3    0.22 * Pbar
+W(kjL  h2oL)   -0.1d3    0.22 * Pbar
 
 W(ctL  h2oL)   17.3d3    0.05 * Pbar
 
@@ -1971,21 +1975,21 @@ fats_d = 1 cats  - 1 di   + 1 cfm
 0. .1 0.1  0                 | range and resolution of X(3,3) - M-Ts
 
 begin_excess_function
-W(di cfs)       20d3  0   0  
-W(di cats)     12.3d3  0  -0.1
-W(di jd)         26d3  0   0    
+W(di cfs)       20d3
+W(di cats)      12.3d3  0  -0.1
+W(di jd)        26d3
 W(di cenjh)     29.8d3  0  -0.03
-W(di cfm)        18d3  0   0  
+W(di cfm)       18d3
 W(cfs cats)     25d3  0  -0.1
-W(cfs jd)       36d3  0   0 
-W(cfs cenjh)      7d3  0   0  
-W(cfs cfm)       4d3  0   0  
-W(cats jd)        6d3  0   0  
+W(cfs jd)       36d3
+W(cfs cenjh)    7d3
+W(cfs cfm)      4d3
+W(cats jd)      6d3
 W(cats cenjh)   45.7d3  0  -0.29
-W(cats cfm)      27d3  0  -0.1
-W(jd cenjh)       40d3  0   0
-W(jd cfm)        40d3  0   0
-W(cenjh cfm)       4d3  0   0
+W(cats cfm)     27d3  0  -0.1
+W(jd cenjh)     40d3
+W(jd cfm)       40d3
+W(cenjh cfm)    4d3
 
 W(di crdi)     8d3  
 W(di cess)     8d3
@@ -2681,16 +2685,14 @@ begin_excess_function
 W(mu cel)                  0d3           0       0.2
 W(mu fcel)                 0d3           0       0.2
 W(mu pa)               10.12d3         3.4       0.353
-W(mu ma1_dqf)             34d3           0         0
-W(mu fmu)                  0d3           0         0
-W(cel fcel)                0d3           0         0
+W(mu ma1_dqf)             34d3 
 W(cel pa)                 45d3           0       0.25
-W(cel ma1_dqf)            50d3           0         0
+W(cel ma1_dqf)            50d3
 W(fcel pa)                45d3           0       0.25
-W(fcel ma1_dqf)           50d3           0         0
-W(pa ma1_dqf)             18d3           0         0
-W(pa fmu)                 30d3           0         0
-W(ma1_dqf fmu)            35d3           0         0
+W(fcel ma1_dqf)           50d3
+W(pa ma1_dqf)             18d3 
+W(pa fmu)                 30d3
+W(ma1_dqf fmu)            35d3
 
 end_excess function
 
@@ -2713,15 +2715,113 @@ z(m2b,fe) = 1 fmu
 z(t,al) = 1/2 mu + 1/2 pa + 1/2 fmu + 1 ma1_dqf 
 
 begin_van_laar_sizes                        
-alpha(mu)      0.63 0. 0.                        
-alpha(pa)      0.37 0. 0.                     
-alpha(ma1_dqf) 0.63 0. 0.    
-alpha(cel)     0.63 0. 0.
-alpha(fmu)     0.63 0. 0.
-alpha(fcel)    0.63 0. 0.
+alpha(mu)      0.63 
+alpha(pa)      0.37 
+alpha(ma1_dqf) 0.63
+alpha(cel)     0.63
+alpha(fmu)     0.63
+alpha(fcel)    0.63
 end_van_laar_sizes
 
-end_of_model                  
+end_of_model
+                      --------------------------------------------------------
+begin_model
+                             Mica(HGP), HGP version of White et al., JMG 32:261-286, 2014.
+
+                             This model requires the make definitions:
+
+                                fmu = 1 mu + 1/2 andr - 1/2 gr
+                                25d3 0 0 
+
+                                ma1_dqf = 1 ma
+                                6.5d3 0 0 
+
+                             in the thermodynamic data file (e.g., hp11ver.dat), additionally the 
+                             endmember "ma" must be exlcuded from any calculations that employ this
+                             model.
+
+                             In thermocalc, different dqf's are used for "muscovite", "margarite"
+                             and "paragonite" described by this model. this treatment is clearly 
+                             inconsistent and not followed here. The dqf's given above are for the
+                             thermocalc "muscovite" phase. 
+
+                             JADC, 4/14                                                           
+                                                      A       M2a    M2b    T1     M1
+                                                     ___________________________________
+
+                                      Mutliplicity    1       1       1      2      1
+                                                     ___________________________________
+
+                                      1 mu            K       Al      Al    AlSi    _
+                                      2 pa            Na      Al      Al    AlSi    _
+                                      3 ma1_dqf       Ca      Al      Al    AlAl    _
+                                      4 cel           K       Mg      Al    SiSi    _
+                                      5 fcel          K       Fe      Al    SiSi    _
+                                      6 fmu           K       Al      Fe3+  AlSi    _
+
+
+Mica(HGP)
+abbreviation Mica
+full_name    white-mica
+
+2                            | model type: simplex
+
+6                            | 6 endmembers
+
+mu pa ma1_dqf cel fmu fcel
+
+0 0 0 0 0 0 0 0              | endmember flags
+
+                             | subdivision model
+0. 1.    .1 0                | range and resolution of X(mu),      imod = 0 -> cartesian subdivision
+0. 1.    .1 0                | range and resolution of X(pa),      imod = 0 -> cartesian subdivision
+0. 1.    .1 1                | range and resolution of X(ma1_dqf), imod = 0 -> cartesian subdivision
+0. 1.    .1 0                | range and resolution of X(cel),     imod = 0 -> cartesian subdivision
+0. .3    .1 0                | range and resolution of X(fmu), 
+begin_excess_function
+
+W(mu cel)                  0d3           0       0.2
+W(mu fcel)                 0d3           0       0.2
+W(mu pa)               10.12d3         3.4       0.353
+W(mu ma1_dqf)    35d3        | changed from 34d3 by Holland et al 2018. Debaditya Bandyopadhyay, May 1, 2019.
+W(cel pa)                 45d3           0       0.25
+W(cel ma1_dqf)   50d3
+W(fcel pa)                45d3           0       0.25
+W(fcel ma1_dqf)           50d3
+W(pa ma1_dqf)    15d3         | changed from 18d3 by Holland et al 2018. Debaditya Bandyopadhyay, May 1, 2019.
+W(pa fmu)                 30d3
+W(ma1_dqf fmu)            35d3
+
+end_excess function
+
+4                           | Configurational entropy: 4 sites, A, M2a, M2b, T1.
+
+3 1.                        | 3 species on A, 1 site per formula unit.
+
+z(a,k) = 1 mu  + 1 cel + 1 fcel + 1 fmu  
+z(a,na) = 1 pa 
+
+3 1.                        | 3 species on M2a, 1 site per formula unit.
+
+z(m2a,al) = 1 mu + 1 pa + 1 ma1_dqf + 1 fmu
+z(m2a,mg) = 1 cel
+
+2 1.                        | 2 species on M2b, 1 site per formula unit.
+z(m2b,fe) = 1 fmu
+
+2 2.                        | 2 species on T1, 2 sites per formula unit.
+z(t,al) = 1/2 mu + 1/2 pa + 1/2 fmu + 1 ma1_dqf 
+
+begin_van_laar_sizes                        
+alpha(mu)      0.63
+alpha(pa)      0.37
+alpha(ma1_dqf) 0.63
+alpha(cel)     0.63
+alpha(fmu)     0.63
+alpha(fcel)    0.63
+end_van_laar_sizes
+
+end_of_model 
                       --------------------------------------------------------
 begin_model       
                              Fe3-Fe-Mg Ctd, White et al., JMG 32:261-286, 2014.
@@ -3003,7 +3103,7 @@ end_dqf_corrections
 end_of_model 
                       --------------------------------------------------------
 begin_model
-                             BIOTITE model after White et al., JMG 32:261-286, 2014.
+                             BIOTITE, White et al., JMG 32:261-286, 2014.
 
                              NOTE: this model requires make definitions for fbi and tbi
                              in the thermodynamic data file:
@@ -3068,8 +3168,8 @@ ann      phl
 mnbi
 
 1                            | ordered species:
-
-obi = 2/3 phl + 1/3 ann   enthalpy_of_ordering = -2d3
+                             | enthalpy corrected from -2d3, May 1, 2019. JADC
+obi = 2/3 phl + 1/3 ann   enthalpy_of_ordering = -1d3
 
 begin_limits
 obi = -3   + 3   ann  + 1 obi                       delta = 3 z(M2,Fe) 
@@ -3099,14 +3199,14 @@ ftbi_i = 1 tbi   + 1 ann - 1 obi
 
 begin_excess_function
 
-W(phl ann)   12d3 0. 0.     
-W(phl obi)    4d3 0. 0.
-W(phl east)  10d3 0. 0.  
-W(phl tbi)   30d3 0. 0.  
-W(phl fbi)    8d3 0. 0.
-W(phl mnbi)   9d3 0. 0.    
-W(ann obi)    8d3 0. 0.
-W(ann east)  15d3 0. 0.  
+W(phl ann)   12d3
+W(phl obi)    4d3
+W(phl east)  10d3
+W(phl tbi)   30d3
+W(phl fbi)    8d3
+W(phl mnbi)   9d3
+W(ann obi)    8d3
+W(ann east)  15e3  
 W(ann tbi)   32d3 0. 0.
 W(ann fbi)  136d2 0. 0.
 W(ann mnbi)  63d2 0. 0.  
@@ -3152,9 +3252,160 @@ dqf(mnbi) -7890  0 0
 end_dqf_corrections
 
 end_of_model
+                      --------------------------------------------------------
+begin_model
+                             BIOTITE, HGP version of model after White et al., JMG 32:261-286, 2014.
+
+                             NOTE: this model requires make definitions for fbi and tbi
+                             in the thermodynamic data file:
+
+                             tbi = 1 phl - 1 br + 1 ru           
+                             55e3 0 0 
+                             fbi = 1 east - 1/2 gr + 1/2 andr   
+                             -3e3 0 0
+
+
+                             Modified model entered by Tim Johnson, Apr 7, 2014.
+
+                             enthalpy of ordering for obi corrected, Mark Caddick, JADC 1/26/2015.
+
+                             Mn added and Ti occupancy corrected by Felix Gervais, 1/28/2015.
+
+                             This model is as implemented in THERMOCALC. The implementation is 
+                             irrational because Mn is assumed to remain disordered across M1 and 
+                             M2, while Al, Fe, Fe3+ and Ti order. The model should only be used 
+                             with the site_check set to true in perplex_option.dat
+
+                             JADC, 1/28/2015
+
+                                                      M1      M2    T1     H
+                                                     ____________________________
+
+                                      Mutliplicity    1       2      2      2 
+                                                     ____________________________
+
+                          Dependent:    ffbi          Fe3+    Fe     AlAl   OH   
+                                        fbi           Fe3+    Mg     AlAl   OH
+                          
+                          Dependent:    ftbi          Ti      Fe     AlSi   O
+                                        tbi           Ti      Mg     AlSi   O
+   
+                          Dependent:    Sdph          Al      Fe     AlAl   OH
+                                        East          Al      Mg     AlAl   OH
+
+                            Species:    Ann           Fe      Fe     AlSi   OH
+                                        Phl           Mg      Mg     AlSi   OH
+                                        mnbi          Mn      Mn     AlSi   OH independent orphan
+                                                      __________________________
+
+                            Ordered:    Obi           Fe      Mg     AlSi   OH
+
+Bi(HGP)                      | solution name.
+abbreviation Bio
+full_name    biotite
+
+9                            | model type: O/D, prismatic + orphan vertexes
+
+2                            | prismatic vertex consists of two simplicies with a common vertex
+2  4                         | 2 components {Fe2+, Mg} on simplex 1, 4 components {Al, Si, Fe3+, Ti} on simplex 2
+1                            | number of orphan vertices
+
+                             | endmembers on the prismatic vertex
+ffbi_i   fbi
+ftbi_i   tbi
+sdph_i   east
+ann      phl
+                             | endmembers on orphan vertices
+mnbi
+
+1                            | ordered species:
+
+obi = 2/3 phl + 1/3 ann   enthalpy_of_ordering = -4d3
+
+begin_limits
+obi = -3   + 3   ann  + 1 obi                       delta = 3 z(M2,Fe) 
+obi =      - 3   phl  - 3 tbi - 3 east - 2 obi      delta = 3 z(M2,Mg)
+obi =      - 3/2 ann  - 1/2 obi                     delta = 3/2 z(M1,Fe)
+obi = -3/2 + 3/2 phl  + 1 obi                       delta = 3/2 z(M1,Mg)
+end_limits   
+
+3                            | number of dependent endmembers
+
+sdph_i = 1 east  + 1 ann - 1 obi 
+ffbi_i = 1 fbi   + 1 ann - 1 obi
+ftbi_i = 1 tbi   + 1 ann - 1 obi
+
+0 0 0 0 0 0 0 0 0            | endmember flags: 0 -> endmember is considered to be part of the solution.
+
+                             | subdivision model for first simplex of the prismatic vertex
+0. 1.  .1  0                 | range and resolution of X(Fe)
+
+                             | subdivision model for the second simplex of the prismatic vertex
+0. .2  .1  0                 | range and resolution of X(Fe3+)
+0. .3  .1  0                 | range and resolution of X(Ti)
+0. 1.  .1  0                 | range and resolution of X(Al)
+
+                             | independent (1d) simplex
+0. .1  .1 0                  | range of mn on independent simplex
+
+begin_excess_function
+
+W(phl ann)   12d3
+W(phl obi)    4d3
+W(phl east)  10d3
+W(phl tbi)   30d3
+W(phl fbi)    8d3
+W(phl mnbi)   9d3
+W(ann obi)    8d3
+W(ann east)   5e3           | changed from 15d3 by Holland et al 2018. Debaditya Bandyopadhyay, May 1, 2019. 
+W(ann tbi)   32d3 0. 0.
+W(ann fbi)  136d2 0. 0.
+W(ann mnbi)  63d2 0. 0.  
+W(obi east)   7d3 0. 0.
+W(obi tbi)   24d3 0. 0. 
+W(obi fbi)  5.6d3 0. 0.
+W(obi mnbi) 8.1d3 0. 0. 
+W(east tbi)  40d3 0. 0.
+W(east fbi)   1d3 0. 0.
+W(east mnbi) 13d3 0. 0.
+W(tbi fbi)   40d3 0. 0.
+W(tbi mnbi)  30d3 0. 0.  
+W(fbi mnbi) 116d2 0. 0.    
+                
+end_excess_function 
+
+4                           | Configurational entropy: 4 sites, M1, M2, T1 H.
+
+6 1.                        | 5 species on M1, 1 site per formula unit.
+
+z(m1,fe)   = 1 ann  + 1 obi   
+z(m1,mg)   = 1 phl           
+z(m1,Fe3+) = 1 fbi 
+z(m1,mn)   = 1 mnbi
+z(m1,Ti)   = 1 tbi  
+
+3 2.                        | 2 species on M2, 2 sites per formula unit.
+
+z(m2,fe)   = 1 ann                                                                                
+z(m2,mn)   = 1 mnbi 
+   
+2 2.                        | 2 species on T1, 2 site per formula unit.
+
+z(t1,al) = 1/2  + 1/2 east + 1/2 fbi 
+
+2 2.                        | 2 species on H, 2 site per formula unit.
+
+z(h,o) = 1 tbi 
+
+begin_dqf_corrections
+dqf(ann)  -6000  0 0
+dqf(mnbi) -7890  0 0
+end_dqf_corrections
+
+end_of_model
                      --------------------------------------------------------
 begin_model
-                             non-ideal CORDIERITE model after White et al., JMG 32:261-286, 2014
+                             non-ideal CORDIERITE White et al., JMG 32:261-286, 2014
                              with Mn added
    
                                                       M       H
@@ -3225,6 +3476,78 @@ dqf(mncrd)   -4210 0. 0.
 end_dqf_corrections  
 
 end_of_model                       
+                     --------------------------------------------------------
+begin_model
+                             non-ideal CORDIERITE model, HGP version of White et al., JMG 32:261-286, 2014
+                             with Mn added
+   
+                                                      M       H
+                                                     ________________          
+
+                                      Mutliplicity    2       1          
+                                                     ________________         
+
+                                      1 mncrd         Mn      Vac           
+                            Species:  2 fcrd          Fe      Vac  
+                                      3 crd           Mg      Vac         
+                                      4 hmncrd        Mn      H2O    dependent       
+                                      5 hfcrd         Fe      H2O    dependent
+                                      6 hcrd          Mg      H2O         
+                                                      _______________        
+
+                            Dependent: hfcrd = hcrd + (fcrd - crd)
+
+                            Modified model entered by Tim Johnson, Apr 7 2014.
+
+                            w(fcrd hcrd) changed from w(crd hcrd), May 16, 2014. Felix Gervais.
+
+                            w(mncrd ...)'s and mncrd DQF added. Felix Gervais, Jan 28, 2015.
+                           
+Crd(HGP) 
+abbreviation Crd
+full_name    cordierite
+
+7                                 model type: reciprocal 
+2                                 2 reciprocal sites
+3  2                              3 species on site 1, 2 on site 2 
+mncrd    fcrd     crd 
+hmncrd_i hfcrd_i  hcrd
+
+2                                 2 dependent endmembers 
+
+hfcrd_i = 1 hcrd +  1 fcrd - 1 crd
+hmncrd_i = 1 hcrd + 1 mncrd - 1 crd
+
+1 0 0 1 0 0                | endmember flags
+
+                           | Note restricted range on X(Mn)
+ 
+0. .2 .1  0                | range and resolution for X(Mn) on M site, imod = 1 -> asymmetric transform subdivision
+0. 1. .1  0                | range and resolution for X(Fe) on M site, imod = 0 -> cartesian subdivision
+
+0. 1.  .1 0                | range and resolution for 1-X(H2O) on H site, imod = 0 -> cartesian subdivision  
+
+begin_excess_function
+W(crd fcrd)        6d3
+W(crd mncrd)       6d3
+W(fcrd mncrd)      4d3
+W(hcrd mncrd)      6d3
+end_excess_function
+
+2                                       2 site entropy model.
+
+3 2.                                    3 species on M, 2 sites per formula unit.
+z(m,mg) = 1 crd + 1 hcrd
+z(m,fe) = 1 fcrd 
+
+2 1.                                    2 species on H, 1 sites per formula unit.
+z(H,H2O) = 1 hcrd 
+
+begin_dqf_corrections
+dqf(mncrd)   -4210 0. 0.
+end_dqf_corrections  
+
+end_of_model
                       --------------------------------------------------------
 begin_model                
                             Sapphirine, O/D non-ideal, Wheller & Powell (JMG, 32, 287–299, 2014)
@@ -6943,9 +7266,9 @@ an
  0. 1.  0.1  0              | compositional range and resolution of abh
 
 begin_excess_function 
-w(san abh)         25100.  -10.8  0.343
-w(san an)          40000.    0.   0. 
-w(abh an)          15000.    0.   0. 
+w(san abh)         25100   -10.8  0.338 | pressure coefficient changed from 0.343 to match current TC value, JADC, May 2, 2019.
+w(san an)          40000
+w(abh an)          15000
 end_excess_function  
 
 1                            | 1 site entropy model 
@@ -6955,13 +7278,13 @@ z(K)  = 1 san            | van laar volumes follow:
 
                              
 begin_van_laar_sizes                        
-alpha(san)     1.0    0.0    0.0                      
-alpha(abh)     0.643  0.0    0.0                      
-alpha(an)      1.0    0.0    0.0
+alpha(san)     1
+alpha(abh)     0.643
+alpha(an)      1
 end_van_laar_sizes
 
 begin_dqf_corrections
-dqf(abh) 570 -4.12 0
+dqf(abh) 570 -4.12*T
 end_dqf_corrections
 
 end_of_model                
@@ -6980,26 +7303,26 @@ an
 san
 abh
 
- 0  0  0                     | endmember flags
+0  0  0                      | endmember flags
 
-0.    1.0  0.1   0           | compositional range and resolution of an
-0.    1.0  0.1   0           | compositional range and resolution of san 
+0     1     .1   0           | compositional range and resolution of an
+0     1     .1   0           | compositional range and resolution of san 
 
 begin_excess_function 
-w(san abh)  =   25100.  -10.8 * TK +  0.343 * Pb
-w(san an)   =   40000.   
-w(abh an)   =    3100.    
+w(san abh)  =   25100   -10.8 * TK +  0.338 * Pb | pressure coefficient changed from 0.343 to match current TC value, JADC, May 2, 2019.
+w(san an)   =   40000
+w(abh an)   =    3100
 end_excess_function  
 
 1                            | 1 site entropy model 
 3 1.                         | 3 species, site multiplicity of 1
 z(Ca) = 1 an
-z(K)  = 1 san            
+z(K)  = 1 san
                            
-begin_van_laar_sizes                        
-alpha(san)  =   1.0                        
-alpha(abh)  =   0.643                      
-alpha(an)   =   1.0   
+begin_van_laar_sizes
+alpha(san)  =   1
+alpha(abh)  =   0.643
+alpha(an)   =   1
 end_van_laar_sizes
 
 begin_dqf_corrections
@@ -7022,13 +7345,13 @@ full_name    carbonate
 3                                     number of endmembers
 cc       mag      odo
   0  0  0                             endmember flags
-0. 1. 0.1  0                        | range and increments on X(cc)
-0. 1. 0.1  0                        | range and increments on X(mag)
+0  1   .1  0                        | range and increments on X(cc)
+0  1   .1  0                        | range and increments on X(mag)
 
 begin_excess_function             
-w(cc mag) 35000. 0. 0. 
-w(cc odo) 10250. 0. 0. 
-w(mag odo) 14950. 0. 0.
+w(cc mag) 35000
+w(cc odo) 10250
+w(mag odo) 14950
 end_excess_function  
 
 2                                     2 site (m1  m2) entropy model 
@@ -10011,8 +10334,10 @@ end_excess_function
 z(Fe) = 1 alm
 z(Mg) = 1 py
 
-2 2.                                  |2 species, site multiplicity 2
-z(Zr) = 1 zrg
+2 3.                                |2 species, site multiplicity 3
+                                    | was 2 2, zr = 1 zrg 
+                                    | corrected(?) May 5, 2019, JADC. 
+z(Zr) = 1/3 zrg
 
 end_of_model     
                       --------------------------------------------------------

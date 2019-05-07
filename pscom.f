@@ -997,6 +997,10 @@ c----------------------------------------------------------------------
       double precision xfac, cscale, nscale, ascale, rlabel, width      
       common/ ops /xfac,cscale,nscale,ascale,rlabel,width,bbox(4),ifont,
      *             spline,half,tenth,grid,fill,label
+
+      logical plopt
+      integer piopt
+      common/ cst213 /piopt(5),plopt(5)
 c----------------------------------------------------------------------
 c                                 default option values:
 c                                 -------------------------------------
@@ -1025,8 +1029,12 @@ c                                 tenth interval axis tick marks
       tenth = .false.
 c                                 superpose grid
       grid = .false. 
-c                                 field fills
+c                                 field_fill
       fill = .true.
+c                                 field_fill_scale => adjust gray scale increments
+      plopt(1) = .true.
+c                                 field_fill_zero
+      plopt(2) = .true.
 c                                 field labels
       label = .true. 
 c                                 font - default font, the ifont choice
@@ -1090,6 +1098,15 @@ c                                 gridding
          else if (key.eq.'field_fill') then 
 c                                 fill phase fields (gridded minimization).   
             read (strg,*) fill
+
+         else if (key.eq.'field_fill_scale') then 
+c                                 scale fills according to variance range.   
+            read (strg,*) plopt(1)
+
+         else if (key.eq.'field_fill_zero') then 
+c                                 scale from minimum variance rather than 
+c                                 divariant.   
+            read (strg,*) plopt(2)
 
          else if (key.eq.'field_label') then 
 c                                 label phase fields (gridded minimization).   

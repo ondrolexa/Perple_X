@@ -206,13 +206,13 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer liw, lw, iter, idead, jstart, opt, kter, kitmax
+      integer liw, lw, iter, idead, jstart, opt, kter, kitmax, i, j
 
       logical quit, kterat
 
       parameter (liw=2*k21+3,lw=2*(k5+1)**2+7*k21+5*k5)
 
-      double precision ax(k5), x(k21), clamda(k21+k5), w(lw)
+      double precision ax(k5), x(k21), clamda(k21+k5), w(lw), tot(k5)
 
       integer is(k21+k5), iw(liw)
 
@@ -230,6 +230,9 @@ c-----------------------------------------------------------------------
       logical lopt
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 
       integer npt,jdv
       double precision cptot,ctotal
@@ -281,15 +284,40 @@ c                                 warn if severe error
          if (idead.gt.0) then
 
             call lpwarn (idead,'REOPT')
+
             if (idead.ne.3) exit
-c                                  i guess the logic here, is that the composition
+c                                  the logic here, is that the composition
 c                                  can't really be bad since we got through the 
-c                                  initial minimization.
-            write (*,'(/,a,/)') '**warning ver333** '//
-     *                'You''ve got to ask yourself one '//
-     *                'question: Do I feel lucky? Well, do ya, punk?'
+c                                  initial minimization. do a mass balance check
+c                                  just in case:
+            do i = 1, icp 
+               tot(i) = b(i)
+            end do 
+
+            do i = 1, jphct
+
+               if (is(i).eq.1) cycle
+
+               do j = 1, icp 
+                  tot(i) = tot(i) - x(i)*cp2(j,i)
+               end do
+
+            end do
 
             idead = 0
+
+            do i = 1, icp
+               if (dabs(tot(i)).gt.1d2*zero) then 
+                  write (*,*) 'yowsa yowsa ', i, tot(i), 1d2*zero
+
+                  write (*,'(/,a,/)') '**warning ver333** '//
+     *                   'You''ve got to ask yourself one '//
+     *                   'question: Do I feel lucky? Well, do ya, punk?'
+
+                  idead = 3
+
+               end if
+            end do 
 
          end if
 
@@ -1575,26 +1603,29 @@ c                                 low limit:
                xlo(j,i,ids) = x(i,j)
 c                                 check if solution is at an unnatural limit
                if (x(i,j).ge.xmno(ids,i,j).and.
-     *            (x(i,j).lt.xmng(ids,i,j).and..not.lopt(3))) then
+     *             x(i,j).lt.xmng(ids,i,j)) then
+
+                  if (.not.lopt(3)) then
 c                                 relax limits according to subdivsion model
 c                                 warn if MEEMUM
-                  if (iam.eq.2) 
-     *               call meelim (x(i,j),ids,i,j)
+                     if (iam.eq.2) call meelim (x(i,j),ids,i,j)
 
-                  if (imdg(j,i,ids).eq.0) then 
+                     if (imdg(j,i,ids).eq.0) then 
 c                                 cartesian
 
-                     xmng(ids,i,j) = xmng(ids,i,j) - xncg(ids,i,j)
+                        xmng(ids,i,j) = xmng(ids,i,j) - xncg(ids,i,j)
 
-                  else 
+                     else 
 c                                 assymmetric stretching towards xmin
 
-                     xmng(ids,i,j) = 
-     *                   stinc (x(i,j),-xncg(ids,i,j),ids,i,j)
+                        xmng(ids,i,j) = 
+     *                      stinc (x(i,j),-xncg(ids,i,j),ids,i,j)
+
+                     end if
+
+                     if (xmng(ids,i,j).lt.0d0) xmng(ids,i,j) = 0d0
 
                   end if
-
-                  if (xmng(ids,i,j).lt.0d0) xmng(ids,i,j) = 0d0
 
                   limit(ids) = .true.
 
@@ -1607,24 +1638,28 @@ c                                 high limit:
                xhi(j,i,ids) = x(i,j)
 c                                 check if solution is at an unnatural limit
                if (x(i,j).le.xmxo(ids,i,j).and.
-     *            (x(i,j).gt.xmxg(ids,i,j).and..not.lopt(3))) then
+     *             x(i,j).gt.xmxg(ids,i,j)) then
+
+                  if (.not.lopt(3)) then
 c                                 relax limits according to subdivsion model
 c                                 warn if MEEMUM
-                  if (iam.eq.2) 
-     *                      call meelim (x(i,j),ids,i,j)
+                     if (iam.eq.2) call meelim (x(i,j),ids,i,j)
 
-                  if (imdg(j,i,ids).eq.0) then 
+                     if (imdg(j,i,ids).eq.0) then 
 c                                 cartesian
-                     xmxg(ids,i,j) = xmxg(ids,i,j) + xncg(ids,i,j)
+                        xmxg(ids,i,j) = xmxg(ids,i,j) + xncg(ids,i,j)
 
-                  else 
+                     else 
 c                                 assymmetric stretching 
-                     xmxg(ids,i,j) = 
-     *                   stinc (x(i,j),xncg(ids,i,j),ids,i,j)
+                        xmxg(ids,i,j) = 
+     *                    stinc (x(i,j),xncg(ids,i,j),ids,i,j)
 
-                  end if 
+                     end if 
 
-                  if (xmxg(ids,i,j).gt.1d0) xmxg(ids,i,j) = 1d0
+                     if (xmxg(ids,i,j).gt.1d0) xmxg(ids,i,j) = 1d0
+
+                  end if
+
                   limit(ids) = .true.
 
                end if

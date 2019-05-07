@@ -284,13 +284,13 @@ c----------------------------------------------------------------------
 
       logical bad
 
-      integer k, iran(2,k3), jran(2,k3), i, hfill, nblen,
-     *        j, ipoly, idr(k5), iop5, iop6, jop0, nctr(k3),
+      integer k, iran(2,k3), jran(2,k3), i, hfill, nblen, maxvar,
+     *        j, ipoly, idr(k5), iop5, iop6, jop0, nctr(k3), minvar,
      *        iop7, imatch, iend, ivar, ipoint, jj, ii, lex(k3), ntot,
      *        iax(l7,2), nax(2), ibeg, jbeg, jend, kk, ictr
 
       double precision rline, x, y, x1, y1, x2, y2, x10, cctr(2,k3), 
-     *                 y10, rfill, dy, dx, bctr(2,k3), cwidth
+     *                 y10, rfill, dy, dx, bctr(2,k3), cwidth, dfill
 
       integer jlow,jlev,loopx,loopy,jinc
       common/ cst312 /jlow,jlev,loopx,loopy,jinc
@@ -319,6 +319,10 @@ c----------------------------------------------------------------------
       common/ ops /xfac,cscale,nscale,ascale,rlabel,width,bbox(4),ifont,
      *             spline,half,tenth,grid,fill,label
 
+      logical plopt
+      integer piopt
+      common/ cst213 /piopt(5),plopt(5)
+
       integer jvar
       double precision var,dvr,vmn,vmx
       common/ cxt18 /var(l3),dvr(l3),vmn(l3),vmx(l3),jvar
@@ -330,6 +334,27 @@ c----------------------------------------------------------------------
       common/ cst40 /ids(h5,h6),isct(h5),icp1,isat,io2
 c----------------------------------------------------------------------
       hfill = 0 
+c                                 set up variance based fills:
+      maxvar = icp + isat + 2 - piopt(1)
+      minvar = icp + isat + 2 - piopt(2)
+c                                 scale from divariant
+
+
+      if (plopt(1).and.maxvar.gt.6) then 
+c                                 scale, + 1 so highest variance isn't black
+         dfill = maxvar - minvar + 1d0
+c                                 scale, +1, so lowest variance isn't white unless
+c                                 it's divariant.
+         if (minvar.ne.2) dfill = dfill + 1d0
+
+         if (.not.plopt(2).and.plopt(1)) minvar = 2
+
+      else 
+c                                 use 20% increments
+         dfill = 5d0
+         minvar = 3
+
+      end if
 c                                 true phase assemblage counter
       do i = 1, 3
          ict(i) = 0
@@ -421,9 +446,9 @@ c                                 divariant, no fill
 c                                  failed minimization
                   call psrecb (x1,x2,y1,y2,rline,cwidth) 
 
-               else if (ivar.le.7) then 
-c                                 for di-septa-variant use gray-scale
-                  rfill = 1d0- dfloat (ivar-2) * 2d-1
+               else if (plopt(1).or.ivar.le.7) then 
+c                                   scale fills according to max variance
+                  rfill = 1d0 - dfloat(ivar - minvar + 1)/dfill
                   call psrecr (x1,x2,y1,y2,rline,cwidth,rfill)
 
                else 

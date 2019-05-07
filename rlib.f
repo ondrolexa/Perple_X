@@ -9152,6 +9152,9 @@ c                                 make all stretch (if not already)
             if (imd(j,i).eq.1.and.jsmod.eq.20) then
 c                                 non-linear, use the input xnc as the conformal increment,
 c                                 so do nothing here.
+c           else if (imd(j,i).eq.1) then 
+c                                 uncomment to use solution model parameter to specify
+c                                 number of conformal increments.
             else if (nopt(13).gt.0d0) then 
 
                xnc(i,j) = nopt(13)
@@ -9161,9 +9164,6 @@ c                                 reduce compositional degeneracies.
      *                                    (1d0 + nopt(15)*float(im-5))
 
             end if
-c                                 save solution model values as hard limits for 
-            xmno(im,i,j) = xmn(i,j)
-            xmxo(im,i,j) = xmx(i,j)
 c                                 set stretch parameters according to xmn specified 
 c                                 in the solution model:
             if (imd(j,i).ne.0) then
@@ -9178,6 +9178,9 @@ c                                 in the solution model:
                xmn(i,j) = 0d0
 
             end if
+c                                 save solution model values as hard limits
+            xmno(im,i,j) = xmn(i,j)
+            xmxo(im,i,j) = xmx(i,j)
 
             if (refine) then 
 c                                 new values from autorefine file
@@ -9195,7 +9198,7 @@ c                                 resolution of the exploratory stage
 
                end if
 c                                 widen the range by the exploratory resolution
-               if (imd(j,i).eq.0) then 
+               if (imd(j,i).eq.0) then
                   xmx(i,j) = xmx(i,j) + dinc
                   xmn(i,j) = xmn(i,j) - dinc
                else 
@@ -9205,6 +9208,12 @@ c                                 widen the range by the exploratory resolution
 
                if (xmx(i,j).gt.1d0) xmx(i,j) = 1d0
                if (xmn(i,j).lt.0d0) xmn(i,j) = 0d0
+
+               if (lopt(3)) then 
+c                                 hard_limit test
+                  if (xmx(i,j).gt.xmxo(im,i,j)) xmx(i,j) = xmxo(im,i,j)
+                  if (xmn(i,j).lt.xmno(im,i,j)) xmn(i,j) = xmno(im,i,j)
+               end if 
 
                xnc(i,j) = xnc(i,j)/nopt(17)
 
@@ -19678,6 +19687,8 @@ c----------------------------------------------------------------------
      *        - 1d0) * stx + st2 ** 2) / (st * stx + st2) ** 2
 
          dst = -f/df
+
+         if (st + dst.lt.0d0) dst = -st / 2d0 
 
          st = st + dst
 

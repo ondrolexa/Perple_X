@@ -13,6 +13,17 @@
 
 Holland & Powell, JMG 2011 (TC-DS62, 20:08 Feb 6, 2012)    |<= data base title
 
+| WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING!!!
+| WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING!!!
+| WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING!!!
+
+| Data for the following endmembers in this file has been eliminated by 
+| commenting, to make the data accessible remove the comment characters:
+
+| tap - talc-pyrophyllite
+| mic - microcline
+
+
 begin_standard_variables |<= name (<9 characters), reference value, tolerance
 P(bar)      1.00   0.1E-3
 T(K)      298.15   0.1E-4
@@ -1531,12 +1542,12 @@ b1 = .18E-4  b5 = 566.5483  b6 = 430000  b7 = -.144E-4  b8 = 6.17
 end
 
  
-tap       EoS = 8 | H=  -5649780.  
-Al2O3(1)SiO2(4)H2O(1)
-GH = -5719845  S0 = 235  V0 = 13.45  
-c1 = 784.5  c2 = -.42948E-1  c3 = 1251000  c5 = -8495.9  
-b1 = .45E-4  b5 = 584.7169  b6 = 370000  b7 = -.271E-4  b8 = 10  
-end
+|tap       EoS = 8 | H=  -5649780.  
+|Al2O3(1)SiO2(4)H2O(1)
+|GH = -5719845  S0 = 235  V0 = 13.45  
+|c1 = 784.5  c2 = -.42948E-1  c3 = 1251000  c5 = -8495.9  
+|b1 = .45E-4  b5 = 584.7169  b6 = 370000  b7 = -.271E-4  b8 = 10  
+|end
 
  
 minn      EoS = 8 | H=  -4819310.  
@@ -1644,12 +1655,12 @@ b1 = .241E-4  b5 = 448.8929  b6 = 541000  b7 = -.109E-4  b8 = 5.91
 end
 
  
-mic       EoS = 8 | H=  -3975350.  
-Al2O3(.5)SiO2(3)K2O(.5)
-GH = -4039244  S0 = 214.3  V0 = 10.871  
-c1 = 448.8  c2 = -.10075E-1  c3 = -1007300  c5 = -3973.1  
-b1 = .166E-4  b5 = 463.9554  b6 = 583000  b7 = -.69E-5  b8 = 4.02  
-end
+|mic       EoS = 8 | H=  -3975350.  
+|Al2O3(.5)SiO2(3)K2O(.5)
+|GH = -4039244  S0 = 214.3  V0 = 10.871  
+|c1 = 448.8  c2 = -.10075E-1  c3 = -1007300  c5 = -3973.1  
+|b1 = .166E-4  b5 = 463.9554  b6 = 583000  b7 = -.69E-5  b8 = 4.02  
+|end
 
  
 san       EoS = 8 | H=  -3966700.  
