@@ -206,7 +206,8 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer liw, lw, iter, idead, jstart, opt, kter, kitmax, i, j
+      integer liw, lw, iter, idead, jstart, opt, kter, kitmax, i, j,
+     *        idead1
 
       logical quit, kterat
 
@@ -244,7 +245,8 @@ c                                 are identified in jdv(1..npt)
       opt = npt
       kterat = .false.
       kitmax = 0
-      kter = 0 
+      kter = 0
+      idead1 = 0 
 
 c                                 --------------------------------------
 c                                 first iteration
@@ -283,13 +285,20 @@ c                                 do the optimization
 c                                 warn if severe error
          if (idead.gt.0) then
 
-            call lpwarn (idead,'REOPT')
+            if (idead.ne.3.or.quit) then 
 
-            if (idead.ne.3) exit
+               call lpwarn (idead,'REOPT')
+               exit 
+
+            end if 
 c                                  the logic here, is that the composition
 c                                  can't really be bad since we got through the 
 c                                  initial minimization. do a mass balance check
 c                                  just in case:
+            if (idead1.eq.3.and.idead.eq.3) then 
+               write (*,*) 'idead1 = idead = 3, this is a waste of time'
+            end if 
+
             do i = 1, icp 
                tot(i) = b(i)
             end do 
@@ -307,17 +316,24 @@ c                                  just in case:
             idead = 0
 
             do i = 1, icp
+
                if (dabs(tot(i)).gt.1d2*zero) then 
-                  write (*,*) 'yowsa yowsa ', i, tot(i), 1d2*zero
 
-                  write (*,'(/,a,/)') '**warning ver333** '//
-     *                   'You''ve got to ask yourself one '//
-     *                   'question: Do I feel lucky? Well, do ya, punk?'
+c                  write (*,'(/,a,/)') '**warning ver333** '//
+c     *                   'You''ve got to ask yourself one '//
+c     *                   'question: Do I feel lucky? Well, do ya, punk?'
 
-                  idead = 3
+                  idead1 = 3
+
+                  exit
 
                end if
-            end do 
+
+            end do
+
+            if (idead1.eq.0) then
+               write (*,*) 'got a good result on idead = 3'
+            end if
 
          end if
 

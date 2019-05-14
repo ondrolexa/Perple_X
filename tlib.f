@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.8.6, source updated May 7, 2019.',
+     *      'Perple_X version 6.8.6, source updated May 14, 2019.',
 
      *      'Copyright (C) 1986-2019 James A D Connolly '//
      *      '<www.perplex.ethz.ch/copyright.html>.'
@@ -377,6 +377,8 @@ c                                 aq_oxide_components
       lopt(36) = .false.
 c                                 allow null phases
       lopt(37) = .false.
+c                                 non_linear_switch
+      lopt(38) = .false.
 c                                 aq_bad_results 
 c                                       0 - err - treat as bad result (optimization error)
 c                                       1 - 101 - cease iteration at solute component saturation
@@ -507,6 +509,10 @@ c                                 phase composition key
          else if (key.eq.'null_phase') then 
 
             if (val.eq.'T') lopt(37) = .true.
+
+         else if (key.eq.'non_linear_switch') then 
+
+            if (val.eq.'T') lopt(38) = .true.
 
          else if (key.eq.'output_iteration_G') then 
 
@@ -1482,7 +1488,7 @@ c                                 generic subdivision parameters:
          end if 
 
          write (n,1010) nopt(13),nopt(13)/nopt(17),numb,nopt(14),
-     *                  valu(13),valu(16),lopt(39)
+     *                  lopt(38),valu(13),valu(16),lopt(39)
 
          if (iam.eq.15)  write (n,1011) nopt(15)
 c                                 generic thermo parameters:
@@ -1571,6 +1577,7 @@ c                                 resolution blurb
      *        4x,'  auto-refine stage    ',f6.4,5x,
      *           '0->1 [',a,'], 0 => off',/,
      *        4x,'stretch_factor         ',f6.4,5x,'>0 [2d-3]',/,
+     *        4x,'non_linear_switch      ',l1,10x,'[F] T',/,
      *        4x,'subdivision_override   ',a3,8x,'[off] lin str',/,
      *        4x,'hard_limits            ',a3,8x,'[off] on',/,
      *        4x,'refine_endmembers      ',l1,10x,'[F] T')

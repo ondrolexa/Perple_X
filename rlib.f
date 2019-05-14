@@ -9149,18 +9149,20 @@ c                                 make all stretch (if not already)
 
             end if
 
-            if (imd(j,i).eq.1.and.jsmod.eq.20) then
-c                                 non-linear, use the input xnc as the conformal increment,
-c                                 so do nothing here.
-c           else if (imd(j,i).eq.1) then 
-c                                 uncomment to use solution model parameter to specify
-c                                 number of conformal increments.
-            else if (nopt(13).gt.0d0) then 
+            if (nopt(13).gt.0d0) then 
 
-               xnc(i,j) = nopt(13)
+               if (imd(j,i).ne.0) then
+c                                  set XINC for non-linear subdivision:
+c                                  non_linear_switch toggles from default
+c                                  i.e., adaptive optimization uses initial_resolution
+c                                  and convex uses solution model value
+                  if (lopt(38).and.iam.ne.15.or.
+     *                .not.lopt(38).and.iam.eq.15) xnc(i,j) = nopt(13)
+
+               end if
 c                                 and for convexhull: perturb xmn by a per-mil scale increment to 
 c                                 reduce compositional degeneracies. 
-               if (icopt.le.3) xmn(i,j) = xmn(i,j) *
+               if (iam.eq.15) xmn(i,j) = xmn(i,j) *
      *                                    (1d0 + nopt(15)*float(im-5))
 
             end if
