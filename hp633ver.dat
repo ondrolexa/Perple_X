@@ -2244,32 +2244,26 @@ c1 = 110.3  c5 = -674.8
 b1 = .333E-4  b5 = 285.6069  b6 = 1310000  b7 = -.43E-5  b8 = 5.7  
 end
 
- 
+| sp, herc t6 changed from -1/2 to 2/3 to be consistent with the
+| ds6.33 implementation for fac < 0. 
+
 sp        EoS = 8 | H=  -2300180.
 MgO(1)Al2O3(1)
 GH = -2324220  S0 = 80.63  V0 = 3.978  
 c1 = 200.5  c2 = .6252E-2  c3 = -2996400  c5 = -888.4  
 b1 = .193E-4  b5 = 592.252  b6 = 1922000  b7 = -.21E-5  b8 = 4.04  
-transition = 1 type = 5 t1 = 13930  t3 = -3600 t5 = 2  t6 = -.5
+transition = 1 type = 5 t1 = 13930  t3 = -3600 t5 = 2  t6 = 0.66666666667
 end
 
- 
+
 herc      EoS = 8 | H=  -1949470.
 Al2O3(1)FeO(1)
 GH = -1983429  S0 = 113.9  V0 = 4.075  
 c1 = 184.9  c2 = .1417E-1  c3 = -3674800  c5 = -404  
 b1 = .206E-4  b5 = 468.3105  b6 = 1922000  b7 = -.21E-5  b8 = 4.04  
-transition = 1 type = 5 t1 = 13930  t3 = -3600 t5 = 2  t6 = -.5
+transition = 1 type = 5 t1 = 13930  t3 = -3600 t5 = 2  t6 = 0.66666666667
 end
 
-| nsp and nherc should be the sp/herc endmembers stripped of 
-| the bragg o/d transition. Here i have just removed the transition 
-| but not corrected the GH/S0 for the o/d model. presumably the 
-| correction is small but this needs to be checked. JADC Apr 15, 2019
-
-| in fact the negative value of t6 in the above versions of sp/herc has
-| the effect that both endmembers are always fully ordered at geologically
-| plausible conditions. 
 
 nsp       EoS = 8 | H=  -2300180.
 MgO(1)Al2O3(1)

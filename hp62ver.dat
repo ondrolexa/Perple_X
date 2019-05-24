@@ -47,16 +47,17 @@ TiO2    79.8660    235.87
 MnO     70.9370    134.795
 FeO     71.8440    129.855
 NiO     74.6930    132.375
-ZrO2   123.2200    244.33
+ZrO2     123.22    244.33
 Cl2     70.9060    223.08 
 O2      31.9990    205.15
 H2O     18.0150    233.255
 CO2     44.0100    210.89
 CuO     79.5450    135.725
-Cr2O3  151.9900    358.811
+Cr2O3   151.99     358.811
 S2      64.1300     64.1    | Corrected 9/21/2018, Jilei Li. These values are twice the properties of monatomic sulfur. Formerly the monatomic molar mass was used with the diatomic 
 F2      37.9968    202.79
 N2      28.013     191.610
+ZnO     81.379     145.735
 end_components
 
 begin_special_components
@@ -234,13 +235,15 @@ mots = 1 mgts - 1/2 cor + 1/2 hem | ferric opx endmember MgFe3+AlSiO6 for Opx(HP
        22d3 0 0 
                                  | Make definitions for White et al. (JMG 32:261-286, 2014) models
 f3clin = 1 clin - 1/2 gr + 1/2 andr
-       DQF(J/mol) = 2d3 0 0  
+       DQF(J/mol) = 2d3 
 kho1 = 1 py - 1 gr + 1 andr
        DQF(J/mol) = 27d3  
 sil8L = 8/5 silL               
        DQF(J/mol) = -23d3  
 fo8L = 2 foL                    
        DQF(J/mol) = -10d3 
+wi8L = 2 wiL                    
+       DQF(J/mol) = -20 
 fa8L = 2 faL                              
        DQF(J/mol) = -9d3 0 -1.3 
 q8L = 4 qL    
@@ -2522,4 +2525,43 @@ c1 = 45.99998 c2 = 17.10001d-3 c3 = -3.51d5
 b1 = .573E-4 b5 = 254.2065 b6 = 658000 b7 = -.63E-5 b8 = 4.17
 transition = 1 type = 2 t1 = 652  t3 = 9.883 t4 = 34.60001  t5 = 28.49999d-3    
 end
+
+gah1     EoS = 2 | gahnite caloric properties HSC, cp left from lucie
+                 | expansivity and dK/dT from sp
+ZnO(1)Al2O3(1)
+GH = -2097234      S0 = 87.027      V0 = 3.988000     
+c1 =  203.2604     c2 = 0.6794816E-02   c3 = -3861363.   c5 = -919.9344 c7 =  0.3053153E+09
+b1 = .431E-4 b5 = -.431E-3 b6 = 2017000.   b7 = -291.75  b9 = 7.620000
+end
+
+gah       EoS = 8 | H=  -2301190.  
+ZnO(1)Al2O3(1)
+GH = -2097234      S0 = 87.027      V0 = 3.988000   
+c1 = 222.9  c2 = .6127E-2  c3 = -1686000  c5 = -1551  
+b1 = .193E-4  b5 = 585.8672  b6 = 1922000  b7 = -.21E-5  b8 = 4.04  
+transition = 1  type = 5  t1 = 8000  t3 = 1200  t5 = 2  t6 = .5  
+end
+
+
+
+wiL      EoS = 2 | willemite liquid 
+                 | S0, cp, GH properties from HSC liq
+                 | volumetric properties from foL
+ZnO(2)SiO2(1)
+GH = -1641858 S0 = 94. V0 = 4.243  
+c1 = 213.384
+b1 = .145E-3 b5 = -.145E-2 b6 = 730000 b7 = -109.5 b8 = 4  
+m0 = .1E-15  
+end
+
+zngt     EoS = 8 | zn-garnet 
+                 | estimated from px zn-mn octahedral exchange
+                 | using HSC data for px's, see zn_analog_estimates.mws
+ZnO(3)Al2O3(1)SiO2(3)
+GH = -5618867  S0 = 321.7895 V0 = 11.792  
+c1 = 646.9  c3 = -4525800  c5 = -4452.8  
+b1 = .227E-4  b5 = 458.3495  b6 = 1740000  b7 = -.38E-5  b8 = 6.68  
+end
+
+
 

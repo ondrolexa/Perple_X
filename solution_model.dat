@@ -4698,7 +4698,7 @@ w( foGL  qGL  ) -33833.5
 w( woGL  qGL  ) -34232.9 
 w( H2O   qGL  ) -45181.6 
 w( faGL  coGL ) -200788.1
-w( foGL  coGL ) -192709.0
+w( foGL  coGL ) -192709
 w( woGL  coGL ) -270700.8
 w( H2O   coGL ) -161944.4
 w( foGL  faGL ) -28736.4 
@@ -4709,16 +4709,17 @@ w( woGL  foGL ) 574.1
 w( H2O   foGL ) 24630.1  
 w( H2O   woGL ) -1583.7  
 
-w(coGL  tiGL) 144804.9  
+w(coGL  tiGL) 144804.9  
 w(faGL  tiGL) 9324.2    
 w(foGL  tiGL) 16355.6   
-w(woGL  tiGL) 9471.5    
+w(woGL  tiGL) 9471.5    
 
-w(coGL  crGL) -269339.7  
-w(faGL  crGL) -74759   
-w(foGL  crGL) -3638.5   
-w(woGL  crGL)  48337.5    
-w(tiGL  crGL) -22455.8   
+w(coGL  crGL) -269339.7
+w(faGL  crGL) -74759
+w(foGL  crGL) -3638.5
+w(woGL  crGL)  48337.5
+w(tiGL  crGL) -22455.8
+
 
 end_excess_function 
 
@@ -5013,7 +5014,7 @@ begin_model
                                       with gahnite end-member. Interaction
                                       parameters after Nichols et al.(1992), CMP
                                       111, 362-377. Jiri Konopasek
-GaHcSp
+ZnSp
 abbreviation Sp
 full_name    spinel
 
@@ -11434,9 +11435,9 @@ end_limits
 
 0 0 0  0                   | endmember flags
 
-0  .2  .1 0                | subdivision range, X(pnt), imod = 1 -> assymetric
-0  .2  .1 0                | subdivision range, X(geik), imod = 1 -> assymetric
-0  1   .1 0                | subdivision range, X(hem), imod = 0 -> cartesian subdivision
+1d-3 .2  .1 1              | subdivision range, X(pnt)
+1d-3 .2  .1 1              | subdivision range, X(geik)
+0     1  .1 0              | subdivision range, X(hem)
 
 
 begin_excess_function
@@ -12128,7 +12129,7 @@ end_excess_function
 
 1                                     1 site entropy model
 
-2 2.                                  2 species, site multiplicity = 2.
+2 2                                   2 species, site multiplicity = 2
 z(fe) = 1 fwd 
 
 end_of_model
@@ -12161,7 +12162,7 @@ end_excess_function
 1                                     1 site entropy model
 
 2 2.                                  2 species, site multiplicity = 2.
-z(fe) = 1 frw 
+z(fe) = 1 frw
 
 end_of_model
                       --------------------------------------------------------
@@ -12324,265 +12325,6 @@ FeLiq SLiq                   | endmember names
 ideal
 
 0                            | entropy function is hard-wired
-
-end_of_model
-                      --------------------------------------------------------
-begin_model
-                      Green, ECR, et al. (JMG, 2016). 
-
-                      NOTE: to use this the following endmembers must be specified with make 
-                      definitions in the thermodynamic data file
-
-                         mrbG  = 1 gl - 1 gr + 1 andr
-                            DQF = 0
-                         kprg  = 1 mu - 1 pa + 1 parg  
-                            DQF = -7060 + 20 * T_K
-                         tts   = -2 dsp + 2 ru + 1 ts    
-                            DQF =   95000
-
-                      to avoid cluttering thermodynamic data files with the new plague of TC 
-                      DQF "corrections", the following simple DQF's are specified in the
-                      make_definition section at the end of this model:
-
-                         DQF(gl)   = -3000
-                         DQF(parg) = -10000
-                         DQF(ts)   =  10000
-                         DQF(grun) = -3000
-
-                      For (nonsensical, but common) positive DFQ's this approach may lead to 
-                      interference between the phase relations of the solution model and the 
-                      un-DQF'd endmember. If such interference occurs: the DQF'd endmember must
-                      be renamed; its definition placed in the thermodynamic data file;
-                      and the un-DQF'd endmember excluded from the calculation.
-
-                                                            Sites
-                                            A    M1      M2      M4     T1     OH
-                                            _______________________________________
-
-                            Multiplicity    1     3      2       2     1(4)    2 
-                                            _______________________________________
-                              Tr            V     Mg     Mg     Ca      Si     OH
-                              Ts            V     Mg     Al     Ca     SiAl    OH
-                              Parg          Na    Mg    MgAl    Ca     SiAl    OH
-                              Gl            V     Mg     Al     Na      Si     OH
-                              Cumm          V     Mg     Mg     Mg      Si     OH
-                              Grun          V     Fe     Fe     Fe      Si     OH
-                              mrbG          V     Mg     Fe3    Na      Si     OH
-                              Kprg          K     Mg    MgAl    Ca     SiAl    OH
-                              Tts           V     Mg     Ti     Ca     SiAl    O
-
-                              A             V     Mg     Fe     Fe      Si     OH
-                              B             V     Fe     Mg     Fe      Si     OH
-
-           dependent exchange Mgrk          V     M      Fe3    M      SiAl     OH
-           dependent exchange Mts           V     M       Al    M      SiAl     OH
-           dependent exchange Mpg           Na    M      MAl    M      SiAl     OH
-           dependent exchange MKpg          K     M      MAl    M      SiAl     OH
-           dependent exchange MTts          V     M      Ti     M      SiAl     OH
-
-           2 CaMg-1(M4) = (Tr-Cumm)
-           3 FeMg-1(M1) = (grun - a)
-           2 FeMg-1(M2) = (grun - b)
-           2 FeMg-1(M4) = (-grun - cumm + a + b)
-
-cAmph(G)_I
-abbreviation Amph
-full_name    clinoamphibole
-
-8                           | model type: order-disorder, prismatic composition space
-2                           | 2 site reciprocal space
-2 9 |13                     | 1 binary + 1 nonary
-
-ts      fcts_d
-
-|mts_d   fts_d
-|mprg_d  fprg_d
-|mkprg_d fkprg_d
-|mtts_d  ftts_d
-
-parg    fcparg_d
-gl      fgl_d
-cumm    grun
-mrbG    frb_d
-kprg    fckprg_d
-tts     fctts_d
-grk_d   fgrk_d
-tr      ftr_d
-
-2                            | ordered species definitions:
-
-a     = 3/7 cumm + 4/7 grun  enthalpy_of_ordering  =   -9486  | = DQF(A) -4/7 DQF(Grun)
-b     = 2/7 cumm + 5/7 grun  enthalpy_of_ordering  =  -11657  | = DQF(B) -5/7 DQF(Grun)
-
-begin_limits                                                  
-
-a = -7/4 + 7/4 grun + 1 a + 1/2 b + 5/4 b                           delta = 7/4 z(M1,Fe)
-a = -7/3 grun - 4/3 a + 5/3 b - 5/3 b                               delta = 7/3 z(M2,Fe)
-a = -7/3 + 7/3 tr + 7/6 parg + 7/6 kprg + 7/3 cumm + 1 a + 5/3 b + 2/3 b  delta = 7/3 z(M2,Mg) only 1 m2 equation can be independent 
-a = -7/3 + 7/3 cumm + 1 a - 2/3 b + 2/3 b                           delta = 7/3 z(M4,Mg) only 1 m4 equation can be independent 
-a = -7/3 grun - 4/3 a - 2/3 b - 5/3 b                               delta = 7/3 z(M4,Fe)
-
-b = -7/2 grun + 2 a - 2 a - 5/2 b                                   delta = 7/2 z(M1,Fe)
-b = -7/5 + 7/5 grun + 3/5 a + 4/5 a + 1 b                           delta = 7/5 z(M2,Fe)
-b = -7/5 tr - 7/10 parg - 7/10 kprg - 7/5 cumm + 3/5 a - 3/5 a - 2/5 b  delta = 7/5 z(M2,Mg)
-b = -7/2 + 7/2 cumm - 3/2 a + 3/2 a + 1 b                           delta = 7/2 z(M4,Mg)
-b = -7/2 grun - 3/2 a - 2 a -5/2 b                                  delta = 7/2 z(M4,Fe)
-
-end_limits
-
-9 |17                         | dependent endmember definitions:
-
-ftr_d    = 1 tr    + 2 grun   - 1 a - 1 b
-fcts_d   = 1 ts    + 1 grun   - 1 a
-fcparg_d = 1 parg  + 3/2 grun - 1 a - 1/2 b
-fgl_d    = 1 gl    + 1 grun   - 1 a
-frb_d    = 1 mrbG  + 1 grun   - 1 a
-fckprg_d = 1 kprg  + 3/2 grun - 1 a - 1/2 b
-fctts_d  = 1 tts   + 1 grun   - 1 a
-grk_d    = 1 mrbG  + 1 ts    + 1 cumm   - 1 gl - 1 tr
-fgrk_d   = 1 mrbG  + 1 ts    - 1 gl     - 1 tr + 1 b
-
-|mts_d    = 1 ts    + 1 cumm   - 1 tr
-|fts_d    = 1 ts    + 1 b      - 1 tr
-|mprg_d   = 1 parg  + 1 cumm   - 1 tr 
-|fprg_d   = 1 parg  + 1/2 grun + 1/2 b   - 1 tr
-|mkprg_d  = 1 kprg  + 1 cumm   - 1 tr 
-|fkprg_d  = 1 kprg  + 1/2 grun + 1/2 b   - 1 tr
-|mtts_d   = 1 tts  + 1 cumm   - 1 tr 
-|ftts_d   = 1 tts  + 1 b      - 1 tr
-
-0 0 0 0 0 0 0 0 0 0 0 0 
-0 0 0 0 0 0 0 0 0 0 0 0 0 0  | endmember flags
-
-                             | imod = 0 -> cartesian subdivision
-                             | imod = 1 -> assymetric stretching subdivision
-
-0  1   .1  0                 | range and resolution for X(Mg) on site 1, imod = 0
-
-0  1   .1  0                 | range and resolution for X(ts)   on site 2, imod = 0
-
-|0  .1  .1  0                 | range and resolution for X(Mts)  on site 2, imod = 0
-|0  .1  .1  0                 | range and resolution for X(MPg)  on site 2, imod = 0
-|0  .1  .1  0                 | range and resolution for X(MKPg) on site 2, imod = 0
-|0  .1  .1  0                 | range and resolution for X(MTts) on site 2, imod = 0
-
-0  1   .1  0                | range and resolution for X(pg)   on site 2, imod = 0
-0  1   .1  0                | range and resolution for X(gl)   on site 2, imod = 1
-0  1   .1  0                | range and resolution for X(cumm) on site 2, imod = 0
-0  1   .1  0                | range and resolution for X(mrb)  on site 2, imod = 1
-0  .1  .1  0                | range and resolution for X(kprg) on site 2, imod = 1
-0  .2  .1  0                | range and resolution for X(tts)  on site 2, imod = 1
-0  .4  .1  0                | range and resolution for X(grk)  on site 2, imod = 1
-
-begin_excess_function   
-
-W(tr ts)                  20d3
-W(tr parg)                25d3
-W(tr gl)                  65d3
-W(tr cumm)                45d3
-W(tr grun)                75d3
-W(tr a)                   57d3
-W(tr b)                   63d3
-W(tr mrbG)                52d3
-W(tr kprg)                30d3
-W(tr tts)                 85d3
-W(ts parg)               -40d3
-W(ts gl)                  25d3
-W(ts cumm)                70d3
-W(ts grun)                80d3
-W(ts a)                   70d3
-W(ts b)                 72.5d3
-W(ts mrbG)                20d3
-W(ts kprg)               -40d3
-W(ts tts)                 35d3
-W(parg gl)                50d3
-W(parg cumm)              90d3
-W(parg grun)           106.7d3
-W(parg a)               94.8d3
-W(parg b)               94.8d3
-W(parg mrbG)              40d3
-W(parg kprg)               8d3
-W(parg tts)               15d3
-W(gl cumm)               100d3
-W(gl grun)             113.5d3
-W(gl a)                  100d3
-W(gl b)                111.2d3
-W(gl kprg)                54d3
-W(gl tts)                 75d3
-W(cumm grun)              33d3
-W(cumm a)                 18d3
-W(cumm b)                 23d3
-W(cumm mrbG)              80d3
-W(cumm kprg)              87d3
-W(cumm tts)              100d3
-W(grun a)                 12d3
-W(grun b)                  8d3
-W(grun mrbG)              91d3
-W(grun kprg)              96d3
-W(grun tts)               65d3
-W(a b)                    20d3
-W(a mrbG)                 80d3
-W(a kprg)                 94d3
-W(a tts)                  95d3
-W(b mrbG)                 90d3
-W(b kprg)                 94d3
-W(b tts)                  95d3
-W(mrbG kprg)              50d3
-W(mrbG tts)               50d3
-W(kprg tts)               35d3
-
-end_excess_function
-
-6                                   | 6 site configurational entropy model (A, M1, M2, M4,T1, OH)
-
-3 1                                 | 3 species on A, mult = 1
-z(A,na)    = 1 parg 
-z(A,k)     = 1 kprg 
-
-2 3                                 | 2 species on M1, mult = 3
-z(M1,fe)   = 1 grun + 1 b 
-
-5 2                                 | 5 species on M2, mult = 2
-z(M2,fe)   = 1 grun + 1 a
-z(M2,fe3)  = 1 mrbG
-z(M2,al)   = 1 ts + 1 gl + 1/2 kprg + 1/2 parg
-z(M2,ti)   = 1 tts
-
-4 2                                 | 4 species on M4, mult = 2
-z(M4,mg)   = 1 cumm
-z(M4,na)   = 1 gl + 1 mrbG
-z(M4,fe)   = 1 grun + 1 a + 1 b
-
-2 1                                 | 2 species on T1, fake mutiplicity = 1
-z(T1,Al)   = 1/2 ts + 1/2 parg + 1/2 kprg + 1/2 tts
-
-2 2                                 | 2 species on OH, mutiplicity = 2
-z(OH,O)    = 1 tts
-
-begin_van_laar_sizes
-
-alpha(tr)          1
-alpha(ts)          1.5
-alpha(parg)        1.7
-alpha(gl)          .8
-alpha(cumm)        1
-alpha(grun)        1
-alpha(a)           1
-alpha(b)           1
-alpha(mrbG)        .8
-alpha(kprg)        1.7
-alpha(tts)         1.5
-
-end_van_laar_sizes
-
-begin_dqf_corrections
-
-DQF(gl)   = -3000
-DQF(parg) = -10000
-DQF(ts)   =  10000
-DQF(grun) = -3000
-
-end_dqf_corrections
 
 end_of_model
                       --------------------------------------------------------
@@ -14204,3 +13946,210 @@ end_dqf_corrections
 end_of_model 
                       -------------------------------------------------------- 
 
+
+                              --------------------------------------------------------             
+begin_model
+                                      Holland and Powell (2001) J.Petrol 426, 673-683 (KNCASH)
+                                      White et al (2001) JMG 19: 139-153 (FM+KNCASH). Calculations
+                                      with this model can be sped up significantly by restricting
+                                      the subdivsion ranges specified below.
+
+                                      JADC 3/03
+
+                                      Changed DQF terms to account for modifications of faL and foL 
+                                      (White et al 2007). Mark Caddick, Nov, 07.
+
+                                      Zr8L added. Jeff Marsh, Jan 10, 2012.
+
+                                      reformulated as ordinary configurational entropy model. JADC 12/18.
+
+                                      WARNING 2: the endmembers q8L, fa8L, fo8L, and
+                                      sil8L must be "made" in the thermodynamic data
+                                      file. See the header section of hp02ver.dat for
+                                      details on the "make" structure.
+
+                                      WARNING 3: the (stabilizing) dqf corrections made
+                                      to the fo8L, fa8L, and sil8L enedmembers make the 
+                                      haplogranite melt model inapplicable to melts where
+                                      these endmembers are present in high concentrations,
+                                      to model such situations or to reproduce the published
+                                      fo-fa-q or sil-q melting phase relations, the dqf corrections
+                                      (below) should be set to zero. 
+
+                                      WARNING 4: different versions of the HP data base
+                                      may result in significant variations in the predicted
+                                      position of the wet-solidus (Powell, pers comm.).
+
+                                      WARNING 5: The melt model incorrectly predicts a high 
+                                      pressure-low temperature stability field for water-silica
+                                      rich melts. at 10 kb this field extends to ca 750 K and 
+                                      at 3 kb to ca 550 K. To eliminate this artifact set T_melt 
+                                      in perplex_option.dat.
+Zn_melt
+abbreviation Melt
+full_name    liquid
+
+2                                     model type: simplicial composition space
+
+10                                    number of endmembers
+
+fo8L     fa8L     zr8L
+abL      sil8L    anL
+kspL     wi8L     q8L
+h2oL     
+
+0 0 0 0 0 0 0 0 0 0                 | endmember flags.
+
+                                    | RESTRICTED(!) subdivision ranges and model
+                                    | the ranges must be extended if calculations
+                                    | are to be done in subsystems like fo-fa-h2o,
+                                    | Ab-H2O etc etc; these numbers seem about right
+                                    | for pelite melting.
+
+0      .1    .1 0                   | range and resolution of X(fo),  0 => cartesian subdivision
+0      .1    .1 0                   | range and resolution of X(fa),  0 => cartesian subdivision
+1e-4  1e-3   .1 1
+0     0.4    .1 0                   | range and resolution of X(ab),  0 => cartesian subdivision
+0      .2    .1 0                   | range and resolution of X(sil), 0 => cartesian subdivision
+0      .1    .1 0                   | range and resolution of X(an),  0 => cartesian subdivision
+0     0.4    .1 0                   | range and resolution of X(ksp), 0 => cartesian subdivision
+1e-4  0.2    .1 1                   | max resolution, max concentration, 1/(no of points), X(zr),  1 => asymmetric subdivision
+0     0.7    .1 0                   | range and resolution of X(q), 0 => cartesian subdivision
+
+begin_excess_function 
+                                    | the excess parameters used for the haplo-
+                                    | granite melt model vary between papers (notably w(an-sil)),
+                                    | the values here are from the thermocalc
+                                    | model file 'thdmloss.txt' and appear largely
+                                    | consistent with the white et al paper.
+w(q8L    anL) -10d3
+w(q8L  sil8L) 12d3
+w(q8L    abL) 12d3  0  -0.4
+w(q8L   kspL) -2d3  0  -0.5
+w(q8L   h2oL) 15d3
+w(q8L   fo8L) 12d3  0  -0.4  
+w(q8L   fa8L) 14d3
+w(abL  sil8L) 12d3
+w(abL   kspL) -6d3  0   3.
+w(abL   fo8L) 10d3
+w(abL   fa8L)  2d3
+w(abL   h2oL)  1d3  0  -0.2
+w(kspL   anL)   0   0  -1.    
+w(kspL sil8L) 12d3
+w(kspL  h2oL) 11d3  0  -0.45     
+w(kspL  fo8L) 12d3
+w(kspL  fa8L) 12d3
+                                    | w(anL sil8) is 12 kJ in the Holland & Powell J Pet paper
+                                    | but appears to have accidentally been set to zero
+                                    | for the calculations published in the White et al. JMG
+                                    | paper. To restore this parameter delete the comment 
+                                    | marker "|" on the following line:
+                                    | w(anL sil8) 12d3             
+w(anL   h2oL)  9d3 0  -0.85
+w(sil8L fo8L) 12d3
+w(sil8L fa8L) 12d3
+w(sil8L h2oL) 16d3
+w(fo8L  fa8L) 18d3
+w(fo8L  h2oL) 11d3 0  -0.5
+w(fa8L  h2oL) 12d3
+
+w(q8L   wi8L) 14d3
+w(abL   wi8L) 10d3
+w(kspL  wi8L) 12d3
+w(wi8L  fo8L) 18d3
+w(wi8L  fa8L) 18d3
+w(wi8L  h2oL) 11d3 0  -0.5
+
+w(q8L   zr8L) 14d3
+w(abL   zr8L) 12d3
+w(kspL  zr8L) 12d3
+w(zr8L  fo8L) 12d3
+w(zr8L  fa8L) 12d3
+w(zr8L  h2oL) 25d3
+
+end_excess_function 
+
+3                           | Configurational entropy: two non-temkin sites (Water, Melt) 
+                            | and one temkin site (olvine). hp assume a fsp = ab + or "molecule""
+                            | with mixing on a temkin M site, but the math works out the same as 
+                            | the endmembers are treated as separate endmembers and the M site
+                            | dropped. 
+
+2 1                         | water-vacancy site 
+z(H) = 1 h2oL
+
+3 0                         | temkin olivine site
+n(Mg) = 4 fo8L
+n(Fe) = 4 fa8L
+n(Zn) = 4 wi8L
+
+8 0                         | silicate species site, HP assume a fsp = ab + or "molecule""
+                            | with mixing on the M site, but the math works out the same as 
+                            | the endmembers are treated as separate endmembers and the M site
+                            | dropped. 
+z(w)     = 1 h2oL
+z(q)     = 1 q8L
+z(ksp)   = 1 kspL
+z(ab)    = 1 abL
+z(sil)   = 1 sil8L
+z(an)    = 1 anL
+z(zr)    = 1 zr8L
+z(ol)    = 1 fo8L + 1 fa8L + 1 wi8L  | there's a case to be made that zr8l should be incorporated in "olivine"
+
+begin_dqf_corrections
+dqf(fo8L)  -10d3
+dqf(fa8L)  -9d3 0 -1.3
+dqf(sil8L) -10d3
+                                     | pre-white et al '07 value: dqf(fo8L)  -15d3 0 0 
+                                     | pre-white et al '07 value: dqf(fa8L)  -15d3 0 0
+                                     | pre-white et al '07 value: dqf(sil8L) -10d3 0 0
+end_dqf_corrections
+
+end_of_model    
+
+                      --------------------------------------------------------
+begin_model                
+                                      hp '98 quaternary garnet model
+ZnGt(HP) 
+abbreviation Gt
+full_name    garnet
+
+2                                     model type: simplicial composition space
+6                                     number of endmembers 
+zrg    zngt   spss           
+py     gr     alm                     endmember names 
+
+1  1  1  0  0  0                        | endmember flags
+
+1e-5  1e-4  .1 1           | imod = 1 -> non-linear subdivision
+1d-4 0.2 .1 1              | zngt
+0   .2   .1 0              | 
+0  1     .1 0              | imod = 0 -> cartesian subdivision
+0  1     .1 0              | imod = 0 -> cartesian subdivision
+                           | NOTE restricted subdivision range on Mn (Species 1)!
+
+begin_excess_function
+w(py gr) 33000         
+w(alm py)  2500                | hp '98 give 2.4 kJ
+w(py spss) 4500   
+w(alm spss)  240   
+w(py  zngt) 4500   
+w(alm zngt)  240   
+end_excess_function  
+
+2                                   | 1 site entropy model
+
+5 3                                 | 5 species, site multiplicity 3
+z(Fe) = 1 alm
+z(Mg) = 1 py
+z(Zn) = 1 zngt
+z(Zr) = 1 zrg
+
+2 3                                 | 2 species, site multiplicity 3
+                                    | was 2 2, zr = 1 zrg, Zr goes on the
+                                    | the Si site as Si2Zr
+                                    | corrected(?) May 5, 2019, JADC. 
+z(Zr) = 1/3 zrg
+
+end_of_model               
+                      --------------------------------------------------------

@@ -214,6 +214,8 @@ c                             distinguish type by landau entropy
             backspace (9)
             read(9,*) newa, k298, kp, kpp, lam, l1, l2, l3,l4,l5,l6
             write (*,*) 'bragg ',name
+c                             correction for -fac
+            if (l6.lt.0d0) l6 = (-l6*l5 + 1d0)/(l5 + 1d0)
 
          else 
 
