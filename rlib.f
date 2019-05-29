@@ -8804,9 +8804,10 @@ c---------------------------------------------------------------------
       logical add, wham, zbad
 
       integer im, nloc, i, j, ind, id, jd, k, l,itic,ii,imatch, killct,
-     *        killid(20), inc
+     *        killid(20), inc, il, ik
 
-      double precision dinc, dzt, dx, gcpd, stinc, getstr
+      double precision dinc, dzt, dx, gcpd, stinc, getstr, cil, 
+     *                 c0(0:20), c1(1:20)
 
       external gcpd, zbad, stinc, getstr
 
@@ -9677,6 +9678,61 @@ c                                 count in evaluating derivatives.
          end do 
 
       end if
+                     
+c                                 ----------------------------------------------
+c                                 derive limit expressions for O/D models
+      if (order) then
+
+         do i = 1, msite(im)
+            do j = 1, ksp(i,im)
+               do k = 1, nord(im)
+c                                 the stoichiometric factor cil on p(k):
+                  cil = 0d0
+
+                  do l = 1, lterm(j,i,im)
+                     il = ksub(l,j,i,im)
+                     cil = cil - dydy(il,k,im) * dcoef(l,j,i,im)
+                  end do
+c                                 cil = 0 => z(j) is not a function of p(k)
+                  if (cil.eq.0d0) cycle
+c
+                  c0(:) = 0d0 
+                  c1(:) = 0d0 
+c                                 the constant
+                  c0(0) = d0(j,i,im)
+
+                  do l = 1, lterm(j,i,im)
+
+                     il = ksub(l,j,i,im)
+
+                     c0(il) = dcoef(l,j,i,im)
+
+                     if (il.le.lstot(im)) cycle
+c                                 il points to an ordered species
+c                                 collect the coeffs for all ordered species
+c                                 for the p0 terms
+
+                     do ik = 1, nord(im)
+c                                  coefficient on p0
+                        c0(il) = c0(il) - dydy(il,ik,im) 
+     *                                  * dcoef(l,j,i,im)/cil
+
+                        if (ik.eq.k) cycle
+c                                  coefficient on p
+                        c1(il) = c1(il) + dydy(il,ik,im) 
+     *                                  * dcoef(l,j,i,im)/cil
+
+                     end do
+
+
+                  end do
+
+                  write (*,*) c0(1:nstot(im))
+                  write (*,*) c1(1:nstot(im))
+               end do
+            end do
+         end do 
+      end if 
 c                                 ----------------------------------------------
 c                                 models with special endmember indexing:  
       if (jsmod.eq.0) then

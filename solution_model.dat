@@ -1652,7 +1652,6 @@ end_excess_function
                             | the endmembers are treated as separate endmembers and the M site
                             | dropped. 
 
-
 2 1                         | water-vacancy site 
 z(H) = 1 h2oL
 
@@ -1660,10 +1659,7 @@ z(H) = 1 h2oL
 n(Mg) = 4 foTL
 n(Fe) = 4 faTL
 
-8 0                         | melt site, HP assume a fsp = ab + or "molecule"
-                            | with mixing on the M site, but the math works out the same as 
-                            | the endmembers are treated as separate endmembers and the M site
-                            | dropped. 
+8 0                         | melt site
 z(q)     = 1 q8L
 z(ksp)   = 1 kspL
 z(ab)    = 1 abL
@@ -2095,17 +2091,17 @@ fats_d = 1 cats  - 1 di   + 1 cfm
 
 begin_excess_function
 W(di cfs)       20d3
-W(di cats)      12.3d3  0  -0.1
+W(di cats)      12.3d3  -0.1 * P
 W(di jd)        26d3
-W(di cenjh)     29.8d3  0  -0.03
+W(di cenjh)     29.8d3  -0.03 * P
 W(di cfm)       18d3
-W(cfs cats)     25d3  0  -0.1
+W(cfs cats)     25d3    -0.1 * P
 W(cfs jd)       36d3
 W(cfs cenjh)    7d3
 W(cfs cfm)      4d3
 W(cats jd)      6d3
-W(cats cenjh)   45.7d3  0  -0.29
-W(cats cfm)     27d3  0  -0.1
+W(cats cenjh)   45.7d3  -0.29 * P
+W(cats cfm)     27d3    -0.1 * P
 W(jd cenjh)     40d3
 W(jd cfm)       40d3
 W(cenjh cfm)    4d3
@@ -2182,15 +2178,15 @@ jdjL ctjL fojL fajL dijL hmjL ekjL qjL
 0   .1 .1 0                 
 
 begin_excess_function
-W(qjL dijL)     26d3   0  -0.4
+W(qjL dijL)     26d3   - .4 * P
 W(qjL jdjL)    -10d3
 W(qjL ctjL)    -10d3  
-W(qjL fojL)    -25d3   0  -0.1  
+W(qjL fojL)    -25d3   - .1 * P
 W(qjL fajL)     -7d3 
 W(dijL ctjL)    -2d3     
-W(dijL fojL)    24d3   0    .2  
+W(dijL fojL)    24d3   + .2 * P
 W(dijL fajL)    17d3
-W(ctjL fojL)    -1d3   0   0.1
+W(ctjL fojL)    -1d3   + .1 * P
 W(fojL fajL)     9d3 
 end_excess_function
 
@@ -2371,17 +2367,17 @@ kho_d  = 1 py  + 1 andr - 1 gr
 0  1  .1   0
 0  1  .1   0
               
-begin_excess_function                 
-W(py alm)       4d3        0   0.1
-W(py gr)       35d3        0    .1    
-W(py andr)     91d3      1.7   0.032 
+begin_excess_function
+W(py alm)       4d3              .1 * P
+W(py gr)       35d3              .1 * P
+W(py andr)     91d3    1.7 * T   .032 * P
 W(py knor)      2d3      
-W(alm gr)       4d3        0   0.1
-W(alm andr)    60d3      1.7   0.032
-W(alm knor)     6d3        0   0.01
+W(alm gr)       4d3              .1 * P
+W(alm andr)    60d3    1.7 * T   .032 * P
+W(alm knor)     6d3              .01 * P
 W(gr andr)      2d3
-W(gr knor)     47d3    -33.8   0.221   
-W(andr knor)  101d3    -32.1   0.153
+W(gr knor)     47d3  -33.8 * T   .221 * P
+W(andr knor)  101d3  -32.1 * T   .153 * P
 end_excess_function 
 
 2
@@ -2493,29 +2489,29 @@ odicr = 1 odi    + 1 cren - 1 en
 0  .2 .1   0                
 0  1  .1   0
                            | subdivision model for (quaternary) site 2 (M2):
-0  1  .1   0                
+0  1  .1   0
 0  1  .1   0
 0  1  .1   0
 
-begin_excess_function                
+begin_excess_function
 W(en fs)        5.2d3
 W(en opx)         4d3
-W(en odi)    32.2d3  0   0.12 
-W(en mgts)       13d3  0  -0.15
+W(en odi)      32.2d3    0.12 * P_bar
+W(en mgts)       13d3   -0.15 * P_bar
 W(en cren)        8d3
 W(en oen)         8d3
 W(fs opx)         4d3
-W(fs odi)      24d3
-W(fs mgts)        7d3  0  -0.15
+W(fs odi)        24d3
+W(fs mgts)        7d3   -0.15 * P_bar
 W(fs cren)       10d3 
 W(fs oen)        10d3
-W(opx odi)     18d3
-W(opx mgts)       2d3  0  -0.15
+W(opx odi)       18d3
+W(opx mgts)       2d3   -0.15 * P_bar
 W(opx cren)      12d3
 W(opx oen)       12d3
-W(odi mgts)  75.4d3  0  -0.94
-W(odi cren)    30d3
-W(odi oen)     30d3  
+W(odi mgts)    75.4d3   -0.94 * P_bar
+W(odi cren)      30d3
+W(odi oen)       30d3
 W(mgts cren)      2d3
 W(mgts oen)       2d3
 W(cren oen)       2d3
@@ -2538,13 +2534,13 @@ z(t,al) = 1/2 mgts + 1/2 cren + 1/2 oen
 
 
 begin_van_laar_sizes
-alpha(en)     1 0  0
-alpha(fs)     1 0  0
-alpha(opx)    1 0  0
-alpha(odi)  1.2
-alpha(mgts)   1 0  0
-alpha(cren)   1 0  0
-alpha(oen)    1 0  0
+alpha(en)     1 
+alpha(fs)     1 
+alpha(opx)    1
+alpha(odi)    1.2
+alpha(mgts)   1
+alpha(cren)   1
+alpha(oen)    1
 end_van_laar_sizes
 
 end_of_model      
@@ -2612,14 +2608,14 @@ fmn_i  = 1 kho1  + 1 spss -1 py
 
 begin_excess_function
 W(py  alm)               2.5d3         | as given by Green et al 2016.
-W(py  gr)                30.1d3          0         0.164
+W(py  gr)                30.1d3          0.164 * P_bar
 W(py  kho1)              5.4d3
 W(py  spss)                2d3
 W(alm gr)                  5d3
-W(alm kho1)            21.63d3           0         0.168
+W(alm kho1)            21.63d3           0.168 * P_bar
 W(alm spss)                2d3
-W(gr  kho1)           -16.15d3           0         0.164
-w(spss kho1)           28.43d3           0         0.168 
+W(gr  kho1)           -16.15d3           0.164 * P_bar
+w(spss kho1)           28.43d3           0.168 * P_bar
 end_excess_function  
 
 2                                     |2 site entropy model
@@ -2706,29 +2702,29 @@ kspL     q8L      h2oL
 
 begin_excess_function 
 
-W(q8L abL)                 12d3           0      -0.4
-W(q8L kspL)                -2d3           0      -0.5
+W(q8L abL)                 12d3           -0.4 * P_bar
+W(q8L kspL)                -2d3           -0.5 * P_bar
 W(q8L anL)                  5d3
 W(q8L sil8L)               12d3
-W(q8L fo8L)                12d3           0      -0.4
+W(q8L fo8L)                12d3           -0.4 * P_bar
 W(q8L fa8L)                14d3
-W(q8L h2oL)                17d3           0      -0.5
-W(abL kspL)                -6d3           0         3
+W(q8L h2oL)                17d3           -0.5 * P_bar
+W(abL kspL)                -6d3            3   * P_bar
 W(abL sil8L)               12d3
 W(abL fo8L)                10d3
 W(abL fa8L)                 2d3
-W(abL h2oL)              -1.5d3           0      -0.3
-W(kspL anL)                 0d3           0        -1
+W(abL h2oL)              -1.5d3           -0.3 * P_bar
+W(kspL anL)                 0d3           -1   * P_bar
 W(kspL sil8L)              12d3
 W(kspL fo8L)               12d3
 W(kspL fa8L)               12d3
-W(kspL h2oL)              9.5d3           0      -0.3
-W(anL h2oL)               7.5d3           0      -0.5
+W(kspL h2oL)              9.5d3           -0.3 * P_bar
+W(anL h2oL)               7.5d3           -0.5 * P_bar
 W(sil8L fo8L)              12d3
 W(sil8L fa8L)              12d3
 W(sil8L h2oL)              11d3
 W(fo8L fa8L)               18d3
-W(fo8L h2oL)               11d3           0      -0.5
+W(fo8L h2oL)               11d3           -0.5 * P_bar
 W(fa8L h2oL)               12d3
 
 end_excess_function 
@@ -2884,7 +2880,7 @@ ctdo    fctd     mctd
 begin_excess_function 
 W(mctd fctd)               4d3
 W(mctd ctdo)               1d3
-W(fctd ctdo)               5d3 
+W(fctd ctdo)               5d3
 end_excess_function 
 
 2                                     1 site entropy model
@@ -3082,25 +3078,25 @@ fdi    = 1 di    + 1 fs  - 1 opx                        | corrected march 17, 20
 begin_excess_function                
 W(en fs)                   7d3
 W(en opx)                  4d3
-W(en mgts)                13d3         0     -0.15
-W(en mots1)               11d3         0     -0.15
+W(en mgts)                13d3          -0.15 * P_bar
+W(en mots1)               11d3          -0.15 * P_bar
 W(en mnopx)                5d3 
-W(en di)                32.2d3         0      0.12
+W(en di)                32.2d3           0.12 * P_bar
 W(fs opx)                  4d3
-W(fs mgts)                13d3         0     -0.15
-W(fs mots1)             11.6d3         0     -0.15
+W(fs mgts)                13d3          -0.15 * P_bar
+W(fs mots1)             11.6d3          -0.15 * P_bar
 W(fs mnopx)              4.2d3
-W(fs di)               25.54d3         0     0.084
-W(opx mgts)               17d3         0     -0.15
-W(opx mots1)              15d3         0     -0.15
+W(fs di)               25.54d3          0.084 * P_bar
+W(opx mgts)               17d3          -0.15 * P_bar
+W(opx mots1)              15d3          -0.15 * P_bar
 W(opx mnopx)             5.1d3
-W(opx di)              22.54d3         0     0.084
+W(opx di)              22.54d3          0.084 * P_bar
 W(mgts mots1)              1d3
-W(mgts mnopx)             12d3         0     -0.15
-W(mgts di)              75.4d3         0     -0.94
-W(mots1 mnopx)          10.6d3         0     -0.15
-W(mots1 di)             73.4d3         0     -0.94
-W(di mnopx)             24.54d3        0     0.084
+W(mgts mnopx)             12d3          -0.15 * P_bar
+W(mgts di)              75.4d3          -0.94 * P_bar
+W(mots1 mnopx)          10.6d3          -0.15 * P_bar
+W(mots1 di)             73.4d3          -0.94 * P_bar
+W(di mnopx)             24.54d3         0.084 * P_bar
 end_excess_function 
 
 3                          | 3 site (M1, M2, T) configurational entropy model
@@ -3126,7 +3122,7 @@ alpha(fs)       1
 alpha(opx)      1
 alpha(mgts)     1
 alpha(mots1)    1
-alpha(di)       1.2 
+alpha(di)       1.2
 alpha(mnopx)    1
 end_van_laar_sizes
 
@@ -3642,16 +3638,16 @@ fospr_d  = 1 spr5 +  1 fspr - 1 spro
 0  1  .1   0               | range and resolution of X(un-Ts), subdivision scheme for site 3, species 2: imod = 0 -> cartesian   
 
 begin_excess_function 
-W(spr4 spr5)              10d3       0      -0.02
+W(spr4 spr5)              10d3         -0.02 * P_bar
 W(spr4 fspr)              16d3
 W(spr4 spro)              12d3
-W(spr4 ospr)               8d3       0      -0.02
-W(spr5 fspr)              19d3       0      -0.02
-W(spr5 spro)              22d3       0      -0.02
+W(spr4 ospr)               8d3         -0.02 * P_bar
+W(spr5 fspr)              19d3         -0.02 * P_bar
+W(spr5 spro)              22d3         -0.02 * P_bar
 W(spr5 ospr)               1d3
 W(fspr spro)               4d3
-W(fspr ospr)             17600       0      -0.02
-W(spro ospr)              20d3       0      -0.02
+W(fspr ospr)             17600         -0.02 * P_bar
+W(spro ospr)              20d3         -0.02 * P_bar
 end_excess_function 
 
 3                          | 3 site (M3, M456, T) configurational entropy model
@@ -4312,156 +4308,6 @@ end_excess_function
 z(m,mg) = 1 fo
 
 end_of_model
-                              --------------------------------------------------------             
-begin_model
-                                      Holland and Powell (2001) J.Petrol 426, 673-683 (KNCASH)
-                                      White et al (2001) JMG 19: 139-153 (FM+KNCASH). Calculations
-                                      with this model can be sped up significantly by restricting
-                                      the subdivsion ranges specified below.
-
-                                      JADC 3/03
-
-                                      Changed DQF terms to account for modifications of faL and foL 
-                                      (White et al 2007). Mark Caddick, Nov, 07.
-
-                                      Zr8L added. Jeff Marsh, Jan 10, 2012.
-
-                                      reformulated as ordinary configurational entropy model. JADC 12/18.
-
-                                      WARNING 2: the endmembers q8L, fa8L, fo8L, and
-                                      sil8L must be "made" in the thermodynamic data
-                                      file. See the header section of hp02ver.dat for
-                                      details on the "make" structure.
-
-                                      WARNING 3: the (stabilizing) dqf corrections made
-                                      to the fo8L, fa8L, and sil8L enedmembers make the 
-                                      haplogranite melt model inapplicable to melts where
-                                      these endmembers are present in high concentrations,
-                                      to model such situations or to reproduce the published
-                                      fo-fa-q or sil-q melting phase relations, the dqf corrections
-                                      (below) should be set to zero. 
-
-                                      WARNING 4: different versions of the HP data base
-                                      may result in significant variations in the predicted
-                                      position of the wet-solidus (Powell, pers comm.).
-
-                                      WARNING 5: The melt model incorrectly predicts a high 
-                                      pressure-low temperature stability field for water-silica
-                                      rich melts. at 10 kb this field extends to ca 750 K and 
-                                      at 3 kb to ca 550 K. To eliminate this artifact set T_melt 
-                                      in perplex_option.dat.
-melt(HP)
-abbreviation Melt
-full_name    liquid
-
-2                                     model type: simplicial composition space
-
-9                                     number of endmembers
-
-fo8L     fa8L
-abL      sil8L    anL
-kspL     zr8L     q8L
-h2oL     
-
- 0 0 0 0 0 0 0 0 0                  | endmember flags.
-
-                                    | RESTRICTED(!) subdivision ranges and model
-                                    | the ranges must be extended if calculations
-                                    | are to be done in subsystems like fo-fa-h2o,
-                                    | Ab-H2O etc etc; these numbers seem about right
-                                    | for pelite melting.
-
-0      .1    .1 0                   | range and resolution of X(fo),  0 => cartesian subdivision
-0      .1    .1 0                   | range and resolution of X(fa),  0 => cartesian subdivision
-0     0.4    .1 0                   | range and resolution of X(ab),  0 => cartesian subdivision
-0      .2    .1 0                   | range and resolution of X(sil), 0 => cartesian subdivision
-0      .1    .1 0                   | range and resolution of X(an),  0 => cartesian subdivision
-0     0.4    .1 0                   | range and resolution of X(ksp), 0 => cartesian subdivision
-1e-5 1e-4   0.4 1                   | max resolution, max concentration, 1/(no of points), X(zr),  1 => asymmetric subdivision
-0     0.7    .1 0                   | range and resolution of X(q), 0 => cartesian subdivision
-
-begin_excess_function 
-                                    | the excess parameters used for the haplo-
-                                    | granite melt model vary between papers (notably w(an-sil)),
-                                    | the values here are from the thermocalc
-                                    | model file 'thdmloss.txt' and appear largely
-                                    | consistent with the white et al paper.
-w(q8L    anL) -10d3
-w(q8L  sil8L) 12d3
-w(q8L    abL) 12d3  0  -0.4
-w(q8L   kspL) -2d3  0  -0.5
-w(q8L   h2oL) 15d3
-w(q8L   fo8L) 12d3  0  -0.4  
-w(q8L   fa8L) 14d3
-w(abL  sil8L) 12d3
-w(abL   kspL) -6d3  0   3.
-w(abL   fo8L) 10d3
-w(abL   fa8L)  2d3
-w(abL   h2oL)  1d3  0  -0.2
-w(kspL   anL)   0   0  -1.    
-w(kspL sil8L) 12d3
-w(kspL  h2oL) 11d3  0  -0.45     
-w(kspL  fo8L) 12d3
-w(kspL  fa8L) 12d3
-                                    | w(anL sil8) is 12 kJ in the Holland & Powell J Pet paper
-                                    | but appears to have accidentally been set to zero
-                                    | for the calculations published in the White et al. JMG
-                                    | paper. To restore this parameter delete the comment 
-                                    | marker "|" on the following line:
-                                    | w(anL sil8) 12d3             
-w(anL   h2oL)  9d3 0  -0.85
-w(sil8L fo8L) 12d3
-w(sil8L fa8L) 12d3
-w(sil8L h2oL) 16d3    
-w(fo8L  fa8L) 18d3
-w(fo8L  h2oL) 11d3 0  -0.5
-w(fa8L  h2oL) 12d3
-
-w(q8L   zr8L) 14d3
-w(abL   zr8L) 12d3
-w(kspL  zr8L) 12d3
-w(zr8L  fo8L) 12d3
-w(zr8L  fa8L) 12d3
-w(zr8L  h2oL) 25d3
-
-end_excess_function 
-
-3                           | Configurational entropy: two non-temkin sites (Water, Melt) 
-                            | and one temkin site (olvine). hp assume a fsp = ab + or "molecule""
-                            | with mixing on a temkin M site, but the math works out the same as 
-                            | the endmembers are treated as separate endmembers and the M site
-                            | dropped. 
-
-2 1                         | water-vacancy site 
-z(H) = 1 h2oL
-
-2 0                         | temkin olivine site
-n(Mg) = 4 fo8L
-n(Fe) = 4 fa8L
-
-8 0                         | silicate species site, HP assume a fsp = ab + or "molecule""
-                            | with mixing on the M site, but the math works out the same as 
-                            | the endmembers are treated as separate endmembers and the M site
-                            | dropped. 
-z(w)     = 1 h2oL
-z(q)     = 1 q8L
-z(ksp)   = 1 kspL
-z(ab)    = 1 abL
-z(sil)   = 1 sil8L
-z(an)    = 1 anL
-z(zr)    = 1 zr8L
-z(ol)    = 1 fo8L + 1 fa8L   | there's a case to be made that zr8l should be incorporated in "olivine"
-
-begin_dqf_corrections
-dqf(fo8L)  -10d3
-dqf(fa8L)  -9d3 0 -1.3
-dqf(sil8L) -10d3
-                                     | pre-white et al '07 value: dqf(fo8L)  -15d3 0 0 
-                                     | pre-white et al '07 value: dqf(fa8L)  -15d3 0 0
-                                     | pre-white et al '07 value: dqf(sil8L) -10d3 0 0
-end_dqf_corrections
-
-end_of_model    
                                       --------------------------------------------------------
 begin_model          
 
@@ -4938,9 +4784,9 @@ cel      fcel        mu               | endmember names
 0   1  .1 0                           | range and resolution for x(fcel), imod = 0 -> cartesian subdivision  
 
 begin_excess_function 
-w(mu pa)   12d3  0    0.4
-w(cel pa)  14d3  0    0.2
-w(fcel pa) 14d3  0    0.2
+w(mu pa)   12d3       0.4 * P_bar
+w(cel pa)  14d3       0.2 * P_bar
+w(fcel pa) 14d3       0.2 * P_bar
 end_excess_function 
 
 3                          | 3 sites (A, M2, T1) configurational entrpoy model
@@ -4963,7 +4809,7 @@ begin_dqf_corrections
                            | where the dqf correction to the endmembers 
                            | Gibbs energy is computed as 
                            | Gdqf(J/mol) = num1 + T[K]*num2 + P[bar]*num3
-dqf(pa) 1420 0 0.4 
+dqf(pa) 1420   0.4  * P_bar
 end_dqf_corrections
 
 end_of_model
@@ -5014,7 +4860,12 @@ begin_model
                                       with gahnite end-member. Interaction
                                       parameters after Nichols et al.(1992), CMP
                                       111, 362-377. Jiri Konopasek
-ZnSp
+
+                                      If this model is used with Holland & Powell
+                                      data it automatically has T-tempendent 
+                                      disorder that is independent of composition. 
+                                      JADC, 5/19.
+GaHcSp
 abbreviation Sp
 full_name    spinel
 
@@ -5311,7 +5162,7 @@ ideal
 z(Mg) = 1/2 sud
 z(Fe) = 1/2 fsud
 
-end_of_model               
+end_of_model
                       --------------------------------------------------------
 begin_model                
                            | ideal model for mg-fe sudoite assuming
@@ -5350,7 +5201,7 @@ cumm     grun
 0   1  .1 0                 | imod = 0 -> cartesian subdivision
 
 begin_excess_function 
-W(cumm grun)  17500. 
+W(cumm grun)  17500
 end_excess_function
 
 1                                     1 site entropy model
@@ -5444,7 +5295,7 @@ ideal
 
 1                                     1 site entropy model
 
-2 5.                                  2 species, site multiplicity = 5.
+2 5                                   2 species, site multiplicity = 5.
 z(mg) = 1 tr
                            
 end_of_model
@@ -5471,13 +5322,13 @@ san
 0. 1   .1   0              | range and resolution for anorthite, imod = 0 -> cartesian subdivision
 
 begin_excess_function 
-w(abh abh san) 27320   -10.3  .394 
-w(abh san san) 18810   -10.3  .394 
+w(abh abh san) 27320   -10.3  .394 * P_bar
+w(abh san san) 18810   -10.3  .394 * P_bar
 w(an  an  san) 52468          
-w(an  san san) 47396      0  -.12  
+w(an  san san) 47396          -.12 * P_bar
 w(an  an  abh) 28226
 w(an  abh abh) 8471
-w(an  abh san) 100045.5 -10.3 -0.76 
+w(an  abh san) 100045.5 -10.3 -0.76 * P_bar
 end_excess_function 
 
 2                          | 2 site (O-site and T-site) entropy model
@@ -5516,13 +5367,13 @@ san
  
 
 begin_excess_function 
-w(abh abh san) 17711.  -10.3   .461 
-w(abh san san) 22945.  -10.3   .327 
-w(an an san) 90600.      0    -.257  
-w(an san san) 60300.     0    -.21   
-w(an an abh) 40000.    -16.4   .069  
-w(an abh abh) 14000.    -4.7  -.049  
-w(an abh san) 210078. -114.75 -.2965 
+w(abh abh san) 17711.  -10.3   .461 * P_bar
+w(abh san san) 22945.  -10.3   .327 * P_bar
+w(an an san) 90600.           -.257 * P_bar
+w(an san san) 60300.          -.21 * P_bar 
+w(an an abh) 40000.    -16.4   .069 * P_bar 
+w(an abh abh) 14000.    -4.7  -.049 * P_bar 
+w(an abh san) 210078. -114.75 -.2965 * P_bar 
 end_excess_function 
 
 2                          | 2 site (O-site and T-site) entropy model
@@ -5550,8 +5401,8 @@ abh      an
   1  0                     | endmember flags
 0   1  .1 0                | imod = 0 -> cartesian subdivision
 begin_excess_function 
-w(abh abh an) 8477.00
-w(an an abh) 28246.0
+w(abh abh an) 8477
+w(an an abh) 28246
 end_excess_function 
 
 2                          | 2 sites (O, T) kerrick and darkens Al-avoidance model:
@@ -5582,8 +5433,8 @@ mic      ab
 0   1  .1 0                | subdivision range, imod = 0 -> cartesian subdivision
 
 begin_excess_function 
-w(mic ab ab)  32098        -16.1356     0.469020
-w(mic mic ab)  26470       -19.3810     0.387020 
+w(mic ab ab)  32098        -16.1356     0.469020 * P_bar
+w(mic mic ab)  26470       -19.3810     0.387020 * P_bar
 end_excess_function
 
   1                        | 1 site mixing model
@@ -5609,8 +5460,8 @@ san      abh
 0   1  .1 0                | subdivision range, imod = 0 -> cartesian subdivision
 
 begin_excess_function 
-w(san abh abh)  32098       -16.1356     0.469020
-w(san san abh)  26470       -19.3810     0.387020 
+w(san abh abh)  32098       -16.1356     0.469020 * P_bar
+w(san san abh)  26470       -19.3810     0.387020 * P_bar
 end_excess_function
 
   1                        | 1 site mixing model
@@ -5636,8 +5487,8 @@ san      abh
 0   1  .1 0                | subdivision range, imod = 0 -> cartesian subdivision
 
 begin_excess_function 
-w(san abh abh)  17062.4       0          0.360661
-w(san san abh)  30978.3     -21.7568     0.360661
+w(san abh abh)  17062.4                  0.360661 * P_bar
+w(san san abh)  30978.3     -21.7568     0.360661 * P_bar
 end_excess_function
 
   1                        | 1 site mixing model
@@ -5716,8 +5567,8 @@ pa       ma
 0   1  .1 0                           subdivision ranges and model
 
 begin_excess_function 
-w(pa pa ma) 18201.
-w(ma ma pa) 9101. 
+w(pa pa ma) 18201
+w(ma ma pa)  9101
 end_excess_function
 
   1                        | 1 site mixing model
@@ -5770,8 +5621,8 @@ pa
 0. 1  .1 0               | pa   subdivision range
 
 begin_excess_function 
-W(mu pa pa) 19456       1.65440     -.456100 
-W(mu mu pa) 12230       0.710440     0.665300     
+W(mu pa pa) 19456       1.65440     -.4561 * P_bar
+W(mu mu pa) 12230       0.710440     0.6653 * P_bar
 end_excess_function
 
 3                          | 3 site (M2a, T2, A) entropy model
@@ -5900,15 +5751,15 @@ cftip = 1 tip + 1 fcel - 1 cel + 1 ma - 1 mu
 
 begin_excess_function
 
-W(mu pa)    10120. 3.4 0.353  
+W(mu pa)    10120. 3.4 0.353 * P_bar
 W(mu ma)    30000.
-W(mu cel)   0  0  0.2
-W(mu fcel)  0  0  0.2
+W(mu cel)   0    0.2 * P_bar
+W(mu fcel)  0    0.2 * P_bar
 W(pa ma)    14500.
 W(pa cel)   52000.
 W(pa fcel)  52000.
-W(ma cel)   30000. 0  0.2
-W(ma fcel)  30000. 0  0.2
+W(ma cel)   30000.  0.2 * P_bar
+W(ma fcel)  30000.  0.2 * P_bar
 W(tip cel)  10000.
 W(tip fcel) 10000.
 W(tip pa)   80000.
@@ -6022,15 +5873,15 @@ mu pa ma cel tip fcel        | prl phl
 
 begin_excess_function
 
-W(mu pa)    10120. 3.4 0.353  
-W(mu ma)    30000.
-W(mu cel)   0  0  0.2
-W(mu fcel)  0  0  0.2
+W(mu pa)    10120. 3.4 0.353 * P_bar
+W(mu ma)    30000
+W(mu cel)   0     0.2 * P_bar
+W(mu fcel)  0     0.2 * P_bar
 W(pa ma)    14500.
 W(pa cel)   52000.
 W(pa fcel)  52000.
-W(ma cel)   30000. 0  0.2
-W(ma fcel)  30000. 0   .2
+W(ma cel)   30000  0.2 * P_bar
+W(ma fcel)  30000.  .2 * P_bar
 W(tip cel)  10000.
 W(tip fcel) 10000.
 W(tip pa)   80000.
@@ -6150,23 +6001,23 @@ mu pa ma cel tip prl fcel    | phl
 
 begin_excess_function
 
-W(mu pa)    10120  3.4  .353  
+W(mu pa)    10120  3.4  .353 * P_bar
 W(mu ma)    30000.
-W(mu cel)   0  0   .2
-W(mu fcel)  0  0   .2
+W(mu cel)   0      .2 * P_bar
+W(mu fcel)  0      .2 * P_bar
 W(pa ma)    14500.
 W(pa cel)   52000.
 W(pa fcel)  52000.
-W(ma cel)   30000  0   .2
-W(ma fcel)  30000  0   .2
+W(ma cel)   30000      .2 * P_bar
+W(ma fcel)  30000      .2 * P_bar
 W(tip cel)  10000.
 W(tip fcel) 10000.
 W(tip pa)   80000.
-W(prl mu)   20000  0   .2
-W(prl pa)   20000  0   .2
-W(prl ma)   30000  0   .2
-W(prl cel)  25000  0   .2
-W(prl fcel) 25000  0   .2
+W(prl mu)   20000      .2 * P_bar
+W(prl pa)   20000      .2 * P_bar
+W(prl ma)   30000      .2 * P_bar
+W(prl cel)  25000      .2 * P_bar
+W(prl fcel) 25000      .2 * P_bar
 W(prl tip)  40000.
 
 end_excess function
@@ -6346,11 +6197,11 @@ jd
 
 begin_excess_function 
 w(cats jd) 14810       -7.15        0           
-w(cats cats jd) -5070        0 0             
-w(cats jd jd)   5070        0 0            
-w(cats cats cats jd)  -3350        0 0      
-w(cats cats jd jd)   6700        0  0                
-w(cats jd jd jd)   -3350        0  0               
+w(cats cats jd) -5070 
+w(cats jd jd)   5070 
+w(cats cats cats jd)  -3350 
+w(cats cats jd jd)   6700  
+w(cats jd jd jd)   -3350 
 w(di jd jd)    12600   -7.6 0                    
 w(di di jd)   -12600    7.6 0            
 w(di jd jd jd)  -21400       16.2   0     
@@ -6358,7 +6209,7 @@ w(di di jd jd)    42800      -32.4   0
 w(di di di jd)   21400      -16.2   0            
 w(di jd)   12600       -9.45  0.
          
-w(di hed)    2500        0     0          
+w(di hed)    2500
 w(hed hed jd)    -12600        7.6   0            
 w(hed jd jd jd)  -21400       16.2   0  
           
@@ -6416,18 +6267,18 @@ jd
 
 begin_excess_function 
 w(cats jd) 14810       -7.15        0           
-w(cats cats jd) -5070        0  0             
-w(cats jd jd)   5070        0  0            
-w(cats cats cats jd)  -3350        0  0      
-w(cats cats jd jd)   6700        0  0                
-w(cats jd jd jd)   -3350        0  0               
+w(cats cats jd) -5070  
+w(cats jd jd)   5070 
+w(cats cats cats jd)  -3350  
+w(cats cats jd jd)   6700 
+w(cats jd jd jd)   -3350 
 w(di jd jd)   12430       -6.21  0                
 w(di di jd)  -12430        6.21  0          
 w(di jd jd jd)  -22290       23.19   0   
 w(di di jd jd)   44580      -46.38   0         
 w(di di di jd)  -22290       23.19   0          
 w(di jd)   12540       12.63  0          
-w(di hed)    2500        0     0          
+w(di hed)    2500  
 w(hed hed jd)  -12430        6.21  0        
 w(hed jd jd jd) -22290       23.19   0             
 w(hed jd)  12540       12.63  0            
@@ -10331,42 +10182,6 @@ end_excess_function
 z(Ti) = 1 ru
 
 end_of_model
-                      --------------------------------------------------------  
-begin_model
-                             | Entered by Jeff Marsh, Jan 10, 2012. 
-ZrGt(KP)                     | addition of Ca3Al2[Si2Zr]O12 end-mem after Kelsey & Powell '10
-abbreviation Gt
-full_name    garnet
-
-2                            | model type: simplicial composition space
-                                                                            
-4                            | number of endmembers 
-
-zrg     alm      py     gr   | endmember names 
-
-  0  0  0  0                 | endmember flags 
-
-1e-5  1e-4  .1 1                | imod = 1 -> non-linear subdivision
-0     1     .1 0                | imod = 0 -> cartesian subdivision
-0     1     .1 0                | imod = 0 -> cartesian subdivision
-
-begin_excess_function
-w(py gr)   45000  
-w(alm py)   2500  
-w(alm gr)  10000  
-end_excess_function  
-
-2                                     2 site entropy model
-3 3.                                  3 species, site multiplicity 3
-z(Fe) = 1 alm
-z(Mg) = 1 py
-
-2 3.                                |2 species, site multiplicity 3
-                                    | was 2 2, zr = 1 zrg 
-                                    | corrected(?) May 5, 2019, JADC. 
-z(Zr) = 1/3 zrg
-
-end_of_model     
                       --------------------------------------------------------
 begin_model                
                                       Silica Fluid
@@ -13945,28 +13760,26 @@ end_dqf_corrections
 
 end_of_model 
                       -------------------------------------------------------- 
-
-
-                              --------------------------------------------------------             
 begin_model
-                                      Holland and Powell (2001) J.Petrol 426, 673-683 (KNCASH)
-                                      White et al (2001) JMG 19: 139-153 (FM+KNCASH). Calculations
-                                      with this model can be sped up significantly by restricting
-                                      the subdivsion ranges specified below.
+                                      Holland and Powell (2001) J.Petrol 426, 673-683 (KNCASH) + 
+                                      White et al (2001) JMG 19: 139-153 (FM+KNCASH).
 
                                       JADC 3/03
 
-                                      Changed DQF terms to account for modifications of faL and foL 
-                                      (White et al 2007). Mark Caddick, Nov, 07.
+                                      * Changed DQF terms to account for modifications of faL and foL 
+                                        (White et al 2007). Mark Caddick, Nov, 07.
 
-                                      Zr8L added. Jeff Marsh, Jan 10, 2012.
+                                      * Zr8L added after Kelsey & Powell (2010). Jeff Marsh, Jan 10, 2012.
 
-                                      reformulated as ordinary configurational entropy model. JADC 12/18.
+                                      * reformulated as ordinary configurational entropy model. JADC 12/18.
 
-                                      WARNING 2: the endmembers q8L, fa8L, fo8L, and
+                                      * Zn - Wi8L (= 2 WiL [ZnSi2O4]) endmember estimated using HSC caloric data
+                                        and foL volumetric properties, Wi8L interaction terms replicate fo8L. Zn
+                                        is assumed to mix on the Temkin "Olivine" site. JADC, May 26, 2019. 
+
+                                      WARNING 2: the endmembers Wi8L, q8L, fa8L, fo8L, and
                                       sil8L must be "made" in the thermodynamic data
-                                      file. See the header section of hp02ver.dat for
-                                      details on the "make" structure.
+                                      file.
 
                                       WARNING 3: the (stabilizing) dqf corrections made
                                       to the fo8L, fa8L, and sil8L enedmembers make the 
@@ -13984,8 +13797,7 @@ begin_model
                                       pressure-low temperature stability field for water-silica
                                       rich melts. at 10 kb this field extends to ca 750 K and 
                                       at 3 kb to ca 550 K. To eliminate this artifact set T_melt 
-                                      in perplex_option.dat.
-Zn_melt
+melt(HP)
 abbreviation Melt
 full_name    liquid
 
@@ -14024,19 +13836,19 @@ begin_excess_function
                                     | consistent with the white et al paper.
 w(q8L    anL) -10d3
 w(q8L  sil8L) 12d3
-w(q8L    abL) 12d3  0  -0.4
-w(q8L   kspL) -2d3  0  -0.5
+w(q8L    abL) 12d3    -0.4 * P_bar
+w(q8L   kspL) -2d3    -0.5 * P_bar
 w(q8L   h2oL) 15d3
-w(q8L   fo8L) 12d3  0  -0.4  
+w(q8L   fo8L) 12d3    -0.4 * P_bar
 w(q8L   fa8L) 14d3
 w(abL  sil8L) 12d3
-w(abL   kspL) -6d3  0   3.
+w(abL   kspL) -6d3     3. * P_bar
 w(abL   fo8L) 10d3
 w(abL   fa8L)  2d3
-w(abL   h2oL)  1d3  0  -0.2
-w(kspL   anL)   0   0  -1.    
+w(abL   h2oL)  1d3    -0.2 * P_bar
+w(kspL   anL)   0     -1. * P_bar
 w(kspL sil8L) 12d3
-w(kspL  h2oL) 11d3  0  -0.45     
+w(kspL  h2oL) 11d3    -0.45 * P_bar
 w(kspL  fo8L) 12d3
 w(kspL  fa8L) 12d3
                                     | w(anL sil8) is 12 kJ in the Holland & Powell J Pet paper
@@ -14045,12 +13857,12 @@ w(kspL  fa8L) 12d3
                                     | paper. To restore this parameter delete the comment 
                                     | marker "|" on the following line:
                                     | w(anL sil8) 12d3             
-w(anL   h2oL)  9d3 0  -0.85
+w(anL   h2oL)  9d3   -0.85 * P_bar
 w(sil8L fo8L) 12d3
 w(sil8L fa8L) 12d3
 w(sil8L h2oL) 16d3
 w(fo8L  fa8L) 18d3
-w(fo8L  h2oL) 11d3 0  -0.5
+w(fo8L  h2oL) 11d3   -0.5 * P_bar
 w(fa8L  h2oL) 12d3
 
 w(q8L   wi8L) 14d3
@@ -14058,7 +13870,7 @@ w(abL   wi8L) 10d3
 w(kspL  wi8L) 12d3
 w(wi8L  fo8L) 18d3
 w(wi8L  fa8L) 18d3
-w(wi8L  h2oL) 11d3 0  -0.5
+w(wi8L  h2oL) 11d3   -0.5 * P_bar
 
 w(q8L   zr8L) 14d3
 w(abL   zr8L) 12d3
@@ -14083,10 +13895,7 @@ n(Mg) = 4 fo8L
 n(Fe) = 4 fa8L
 n(Zn) = 4 wi8L
 
-8 0                         | silicate species site, HP assume a fsp = ab + or "molecule""
-                            | with mixing on the M site, but the math works out the same as 
-                            | the endmembers are treated as separate endmembers and the M site
-                            | dropped. 
+8 0                         | silicate species site
 z(w)     = 1 h2oL
 z(q)     = 1 q8L
 z(ksp)   = 1 kspL
@@ -14094,7 +13903,7 @@ z(ab)    = 1 abL
 z(sil)   = 1 sil8L
 z(an)    = 1 anL
 z(zr)    = 1 zr8L
-z(ol)    = 1 fo8L + 1 fa8L + 1 wi8L  | there's a case to be made that zr8l should be incorporated in "olivine"
+z(ol)    = 1 fo8L + 1 fa8L + 1 wi8L
 
 begin_dqf_corrections
 dqf(fo8L)  -10d3
@@ -14109,8 +13918,17 @@ end_of_model
 
                       --------------------------------------------------------
 begin_model                
-                                      hp '98 quaternary garnet model
-ZnGt(HP) 
+                                      HP '98 quaternary garnet model
+
+                                      Zr-endmember (zrg, Ca3Al2[Si2Zr]O12) after Kelsey & Powell '10
+                                      - Jeff Marsh, Jan 10, 2012.
+
+                                      Zn-endmember (zngt,Zn3Al3Si3O12) estimated by octahedral 
+                                      metasilicate (HSC) Zn-Mn exchange from spss, Zn excess terms
+                                      replicate Mn. 
+                                      - JADC, 5/26/2019.
+
+ZrGt(KP)
 abbreviation Gt
 full_name    garnet
 
