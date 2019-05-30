@@ -1,4 +1,4 @@
-685 DO NOT DELETE THIS LINE
+687 DO NOT DELETE THIS LINE
 
                             ---------------------------------------------------------------------------
                              FOR MODEL DEFINITIONS AND REFERENCES READ THE MODEL COMMENTARY OR REFER TO 
@@ -479,13 +479,6 @@ kjd_d3    jd_d3     cfsg     cenjh
 
 cfm   = 1/2 cenjh + 1/2 cfsg enthalpy_of_ordering  =  -4400 | DQF(cfm) - (DQF(ceng) + DQF(cfsg))/2
 
-begin_limits
-cfm =    - 1 mcbuf - 2 di - 2 cenjh - 1 cfm        delta = 2 (limits for Mg on M1)
-cfm = -2 + 2 cfsg  + 1 cfm                         delta = 2 (limits for Fe on M1)
-cfm = -2 + 2 cenjh + 1 cfm                         delta = 2 (limits for Mg on M2)
-cfm =    - 2 cfsg  - 1 cfm                         delta = 2 (limits for Fe on M2)
-end_limits
-
 31                              | number of dependent endmembers and definitions   
                                 | 15 true dependent endmembers:
 mkbuf_d   = -1 cats  + 1 mcbuf + 1 kjdh
@@ -761,7 +754,7 @@ Augite(G)
 abbreviation Cpx
 full_name    clinopyroxene
 
-8                            | model type: prism + orphan vertices
+8                            | model type: prismatic o/d
 
 3                            | prism: 3 simplicies with a common vertex
 3 2 3                        | 2d 1d 2d
@@ -782,23 +775,6 @@ jd_d3   cenjh   cfsg
 
 ocats = 1 cats               enthalpy_of_ordering  =  -3800  + 2.8816 * T  -0.01  * P | this undoes the DQF on cats
 fmc   = 1/2 cenjh + 1/2 cfsg enthalpy_of_ordering  =  -4400 | DQF(fmc) - (DQF(cenjh) + DQF(cfs))/2
-
-begin_limits
-
-fmc = -2 + 2 cfsg + 1 fmc                        delta = 2 zm1fe
-fmc =  0 - 2 di - 2 cenjh - 1 fmc                delta = 2 zm1mg
-fmc =  0 - 2 cfsg - 1 fmc                        delta = 2 zm2fe
-fmc = -2 + 2 cenjh + 1 fmc                       delta = 2 zm2mg
-
-ocats =  0 - 1 cats                              delta = 2 zAlT2 | these assume p0_ocats = 0 as will be
-ocats = -2 + 1 cats                              delta = 2 zAlT1 | true for the model as configured in PX
-
- | for testing against partially ordered initial configurations (e.g., a result from TC) the 
- | above limit expressions should be replaced with:
- | ocats =  0 - 1 cats  - 1 ocats               delta = 2 zAlT2
- | ocats = -2 + 1 cats  + 1 ocats               delta = 2 zAlT1
-
-end_limits
 
 12                            | number of dependent endmembers and definitions
 
@@ -1060,23 +1036,7 @@ tr         ftr_d
 a     = 3/7 cumm + 4/7 grun  enthalpy_of_ordering  =   -9486  | = DQF(A) -4/7 DQF(Grun)
 b     = 2/7 cumm + 5/7 grun  enthalpy_of_ordering  =  -11657  | = DQF(B) -5/7 DQF(Grun)
 
-begin_limits                                                  
-
-a = -7/4 + 7/4 grun + 1 a + 1/2 b + 5/4 b                           delta = 7/4 z(M1,Fe)
-a = -7/3 grun - 4/3 a + 5/3 b - 5/3 b                               delta = 7/3 z(M2,Fe)
-a = -7/3 + 7/3 tr + 7/6 parg + 7/6 kprg + 7/3 cumm + 1 a + 5/3 b + 2/3 b  delta = 7/3 z(M2,Mg) only 1 m2 equation can be independent 
-a = -7/3 + 7/3 cumm + 1 a - 2/3 b + 2/3 b                           delta = 7/3 z(M4,Mg) only 1 m4 equation can be independent 
-a = -7/3 grun - 4/3 a - 2/3 b - 5/3 b                               delta = 7/3 z(M4,Fe)
-
-b = -7/2 grun + 2 a - 2 a - 5/2 b                                   delta = 7/2 z(M1,Fe)
-b = -7/5 + 7/5 grun + 3/5 a + 4/5 a + 1 b                           delta = 7/5 z(M2,Fe)
-b = -7/5 tr - 7/10 parg - 7/10 kprg - 7/5 cumm + 3/5 a - 3/5 a - 2/5 b  delta = 7/5 z(M2,Mg)
-b = -7/2 + 7/2 cumm - 3/2 a + 3/2 a + 1 b                           delta = 7/2 z(M4,Mg)
-b = -7/2 grun - 3/2 a - 2 a -5/2 b                                  delta = 7/2 z(M4,Fe)
-
-end_limits
-
-23                         | dependent endmember definitions:
+23                           | dependent endmember definitions:
 
 fcts_d = 1 ts + 1 grun - 1 a
 fts_d  = 1 ts - 1 tr + 1 b
@@ -1741,21 +1701,6 @@ mnchl
 och1 = 1 afchl  - 1 clin   + 1 daph      enthalpy_of_ordering = 3d3
 och2 = 1 afchl  - 1/5 clin + 1/5 daph    enthalpy_of_ordering = 2.4d3 
 
-begin_limits
-
-och1 =  0                                                                             delta = 1   zFeM4 
-och1 = -1   + 1 afchl + 1 och1   + 0 och2 + 1 och2                           delta = 1   zMgM4 
-och1 = -1   + 1 daph  + 1 och1 + 4/5 och2 + 1/5 och2                                  delta = 1   zFeM1 
-| this limit may never be active??
-och1 =     - 1 afchl  - 1 clin - 1 f3clin + 4/5 och2 - 4/5 och2                       delta = 1   zMgM1 
-
-och2 =      - 5/4 daph   + 5/4 och1   - 5/4 och1 - 1/4 och2                delta = 5/4 zFeM1 
-och2 = -5/4 + 5/4 afchl  + 5/4 f3clin + 5/4 clin + 5/4 och1 + 1 och2         delta = 5/4 zMgM1 
-och2 = -5   + 5 daph                  + 0   och1 + 5   och1 + 1 och2         delta = 5   zFeM2 
-och2 =      - 5 ames - 5 f3clin - 5 clin -5 afchl - 4 och2                   delta = 5   zMgM2.
-
-end_limits
-
 3                               | 6 dependent endmembers 
 
 fames  = 1 ames   + 1 daph - 1 och2 + 1 afchl - 1 clin
@@ -2019,7 +1964,7 @@ Cpx(JH)
 abbreviation Cpx
 full_name    clinopyroxene
   
-8                               | model type: prismatic + orphan vertex, O/D
+8                               | model type: prismatic O/D
                                                                        
 3                               | number of simplexes comprising the prism
 3 2 4                           | number of vertexes on each simplex
@@ -2042,15 +1987,6 @@ jd_d3     cenjh   cfs
 cfm   = 1/2 cenjh + 1/2 cfs enthalpy_of_ordering  =  -6.65d3  2.5 - 0.039 | DQF(cfm) - (DQF(ceng) + DQF(cfs))/2
                                                            | -3   - (3.5 - 2T + 0.048P + 3.8 - 3T + 0.03)/2
                                                            | = -6.65 + 2.5T - 0.039P 
-
-begin_limits
-
-cfm = -2 + 2 cfs + 1 cfm                           delta = 2 zm1fe
-cfm =  0 - 2 di - 2 cenjh - 1 cfm                  delta = 2 zm1mg
-cfm =  0 - 2 cfs - 1 cfm                           delta = 2 zm2fe
-cfm = -2 + 2 cenjh + 1 cfm                         delta = 2 zm2mg
-
-end_limits
 
 17                           | dependent endmember definitions
 
@@ -2460,17 +2396,6 @@ odi     en      fs
 1                          | ordered species definition
 
 opx = 1/2 en + 1/2  fs  Delta(enthalpy) = -6d3          
-
-
-begin_limits
-                           | limits corrected Apr 2019, JADC
-opx =  - 2 odi - 2 en - 1 opx                                     delta = 2 (limits for Mg on M1)
-opx =  -2 + 2 fs + 1 opx                                          delta = 2 (limits for Fe on M1)
-
-opx = -2 + 2 cren + 2 oen + 2 mgts + 2 en + 1 opx                 delta = 2 (limits for Mg on M2)
-opx = - 2 fs - 1 opx                                              delta = 2 (limits for Fe on M2)
-
-end_limits   
 
 6                          | 6 dependent endmembers
 
@@ -3048,13 +2973,7 @@ mnopx
 
 1                            | ordered species definition
 
-opx = 1/2 en + 1/2  fs  Delta(enthalpy) = -6.95d3   
-
-begin_limits
-opx =     - 2 fs - 1 opx                delta = 2 z(M2,Fe)       
-opx =  -2 + 2 fs + 1 opx                delta = 2 z(M1,Fe)
-opx =     - 2 en - 2 di  - 1 opx        delta = 2 z(M1,Mg)
-end_limits                
+opx = 1/2 en + 1/2  fs  Delta(enthalpy) = -6.95d3
 
 3                            | dependent endmembers
 
@@ -3198,13 +3117,6 @@ mnbi
                              | enthalpy corrected from -2d3, May 1, 2019. JADC
 obi = 2/3 phl + 1/3 ann   enthalpy_of_ordering = -1d3
 
-begin_limits
-obi = -3   + 3   ann  + 1 obi                       delta = 3 z(M2,Fe) 
-obi =      - 3   phl  - 3 tbi - 3 east - 2 obi      delta = 3 z(M2,Mg)
-obi =      - 3/2 ann  - 1/2 obi                     delta = 3/2 z(M1,Fe)
-obi = -3/2 + 3/2 phl  + 1 obi                       delta = 3/2 z(M1,Mg)
-end_limits   
-
 3                            | number of dependent endmembers
 
 sdph_i = 1 east  + 1 ann - 1 obi 
@@ -3344,13 +3256,6 @@ mnbi
 1                            | ordered species:
 
 obi = 2/3 phl + 1/3 ann   enthalpy_of_ordering = -4d3
-
-begin_limits
-obi = -3   + 3   ann  + 1 obi                       delta = 3 z(M2,Fe) 
-obi =      - 3   phl  - 3 tbi - 3 east - 2 obi      delta = 3 z(M2,Mg)
-obi =      - 3/2 ann  - 1/2 obi                     delta = 3/2 z(M1,Fe)
-obi = -3/2 + 3/2 phl  + 1 obi                       delta = 3/2 z(M1,Mg)
-end_limits   
 
 3                            | number of dependent endmembers
 
@@ -3617,12 +3522,6 @@ ospr     fospr_d
 
 spro = 3/4 spr4 + 1/4 fspr   enthalpy_of_ordering = -3.5d3
 
-begin_limits
-spro =    - 4/3 fspr - 4/3 ospr - 1/3 spro                 delta = 4/3 z(M3,Mg) 
-spro =    - 4/3 fspr            - 1/3 spro                 delta = 4/3 z(M3,Fe) 
-spro = -4 - 4   fspr +   1 ospr - 4 spr5     + 1 spro      delta = 4   z(M456,Mg)   
-end_limits                
-
 2                            | 2 dependent endmembers
 
 fsp5_d   = 1 spr5 +  1 fspr - 1 spro
@@ -3718,13 +3617,7 @@ mots     feots
 
 1                          | ordered species definition
 
-opx = 1/2 en + 1/2  fs  Delta(enthalpy) = -6.95d3   
-
-begin_limits
-opx =     - 2 fs - 1 opx                delta = 2 z(M2,Fe)       
-opx =  -2 + 2 fs + 1 opx                delta = 2 z(M1,Fe)
-opx =     - 2 en - 1 opx                delta = 2 z(M1,Mg)
-end_limits                
+opx = 1/2 en + 1/2  fs  Delta(enthalpy) = -6.95d3
 
 2                          | 2 dependent endmembers
 
@@ -3831,13 +3724,6 @@ mnbi
 
 obi = 2/3 phl + 1/3 ann   enthalpy_of_ordering = -6.8d3 
 
-begin_limits
-obi = -3   + 3   ann  + 1   obi                     delta = 3 z(M2,Fe) 
-obi =      - 3   phl  - 3/2 tbit - 3 east - 2 obi   delta = 3 z(M2,Mg)
-obi =      - 3/2 ann  - 1/2 obi                     delta = 3/2 z(M1,Fe)
-obi = -3/2 + 3/2 tbit + 3/2 phl  + 1 obi            delta = 3/2 z(M1,Mg)
-end_limits     
-
 3                            | number of dependent endmembers 
                             
 sdph    = 1 east + 1 ann    - 1 obi
@@ -3940,13 +3826,6 @@ ann      phl
 1                            | ordered species:
 
 obi = 2/3 phl + 1/3 ann   enthalpy_of_ordering = -10.73d3  
-
-begin_limits
-obi = -3   + 3   ann  + 1 obi                       delta = 3 z(M2,Fe) 
-obi =      - 3   phl  - 3 tbi1 - 3 east - 2 obi     delta = 3 z(M2,Mg)
-obi =      - 3/2 ann  - 1/2 obi                     delta = 3/2 z(M1,Fe)
-obi = -3/2 + 3/2 phl  + 1 obi                       delta = 3/2 z(M1,Mg)
-end_limits
 
 3                            | 3 dependent endmembers 
 
@@ -4073,12 +3952,6 @@ mots     feots
 1                          | ordered species definition
 
 opx = 1/2 en + 1/2  fs  Delta(enthalpy) = -6.95d3   
-
-begin_limits
-opx =     - 2 fs - 1 opx                delta = 2 z(M2,Fe)       
-opx =  -2 + 2 fs + 1 opx                delta = 2 z(M1,Fe)
-opx =     - 2 en - 1 opx                delta = 2 z(M1,Mg)
-end_limits                
 
 3                          | 3 dependent endmembers
 
@@ -8936,13 +8809,6 @@ mnbi
 
 obi = 2/3 phl + 1/3 ann   enthalpy_of_ordering = -10.73d3  
 
-begin_limits
-obi = -3   + 3 ann    + 1 obi                     delta = 3   z(M2,Fe) 
-obi =      - 3 phl    - 3/2 tbi  -3 east -2 obi   delta = 3   z(M2,Mg)
-obi =      - 3/2 ann  - 1/2 obi                   delta = 3/2 z(M1,Fe)
-obi = -3/2 + 3/2 tbi  + 3/2 phl  +1 obi           delta = 3/2 z(M1,Mg)
-end_limits 
-
 2                            | number of dependent endmembers 
 
                              | model types 7 and 8 (reciprocal solutions) use
@@ -9505,22 +9371,6 @@ cammo2 = 2/7 cumm_dqf + 5/7 grun_dqf   enthalpy_of_ordering = -11.7d3    | these
                                                                          | endmember without "DQF" corrections, while in Perple_X
                                                                          | endmember include any DQF corrections. 
 
-begin_limits
-
-cammo1 = -7/3 grun_dqf - 4/3 cammo1 + 5/3 cammo2 - 5/3 cammo2                               delta = 7/3 z(M2,Fe)       
-cammo1 = -7/4 + 7/4 grun_dqf + 1  cammo1 + 1/2 cammo2 + 5/4 cammo2                          delta = 7/4 z(M1,Fe)
-cammo1 = -7/3 + 7/3 tr + 7/6 parg_dqf + 7/3 cumm_dqf + 1 cammo1 + 5/3 cammo2 + 2/3 cammo2   delta = 7/3 z(M2,Mg)
-cammo1 = -7/3 + 7/3 cumm_dqf + 1 cammo1 - 2/3 cammo2 + 2/3 cammo2                           delta = 7/3 z(M4,Mg)
-cammo1 = -7/3 grun_dqf - 4/3 cammo1 - 2/3 cammo2 - 5/3 cammo2                               delta = 7/3 z(M4,Fe)
-
-cammo2 = -7/5 + 7/5 grun_dqf + 3/5 cammo1 + 4/5 cammo1 + 1 cammo2                           delta = 7/5 z(M2,Fe)
-cammo2 = -7/2 grun_dqf + 2 cammo1 - 2 cammo1 - 5/2 cammo2                                   delta = 7/2 z(M1,Fe)
-cammo2 = -7/5 tr - 7/10 parg_dqf - 7/5 cumm_dqf + 3/5 cammo1 - 3/5 cammo1 - 2/5 cammo2      delta = 7/5
-cammo2 = -7/2 + 7/2 cumm_dqf - 3/2 cammo1 + 3/2 cammo1 + 1 cammo2                           delta = 7/2
-cammo2 = -7/2 grun_dqf - 3/2 cammo1  - 2 cammo1 - 5/2 cammo2                                delta = 7/2
-
-end_limits
-
 17                           | # of dependent endmembers 
 
 ftr_d    = 1 tr       + 2 grun_dqf    - 1 cammo1 - 1 cammo2
@@ -9762,20 +9612,6 @@ ammo2 = 2/7 anth + 5/7 fanth_dq   enthalpy_of_ordering = -11.7d3 | these enthalp
                                                                  | endmember without "DQF" corrections, while in Perple_X
                                                                  | endmember include any DQF corrections. 
 
-begin_limits
-ammo1 = -7/4 + 7/4 fanth_dq + 1 ammo1 + 1/2 ammo2 + 5/4 ammo2                               delta = 7/4
-ammo1 = -7/3 + 7/3 tr + 7/6 mpa  + 7/3 anth + 1 ammo1 + 5/3 ammo2 + 2/3 ammo2               delta = 7/3
-ammo1 = -7/3 + 7/3 mpa  + 7/3 anth + 7/3 ged_dqf  + 1 ammo1  - 2/3 ammo2 + 2/3 ammo2        delta = 7/3
-ammo1 =      - 7/3 fanth_dq - 4/3 ammo1 - 2/3 ammo2 - 5/3 ammo2                             delta = 7/3
-ammo1 =      - 7/3 fanth_dq - 4/3 ammo1 + 5/3 ammo2 - 5/3 ammo2                             delta = 7/3
-
-ammo2 = -7/2 fanth_dq + 2 ammo1 - 2 ammo1 - 5/2 ammo2                                       delta = 7/2
-ammo2 = -7/5 tr - 7/10 mpa  - 7/5 anth + 3/5 ammo1 - 3/5 ammo1 - 2/5 ammo2                  delta = 7/5
-ammo2 = -7/2 + 7/2 anth + 7/2 mpa  + 7/2 ged_dqf  - 3/2 ammo1 + 3/2 ammo1 + 1 ammo2         delta = 7/2
-ammo2 =      - 7/2 fanth_dq - 3/2 ammo1 - 2 ammo1 - 5/2 ammo2                               delta = 7/2
-ammo2 = -7/5 + 7/5 fanth_dq + 3/5 ammo1 + 4/5 ammo1 + 1 ammo2                               delta = 7/5
-end_limits
-
 17                          | number of dependent endmembers 
 
 ftr_d   = 1 tr + 2 fanth_dq - 1 ammo1 - 1 ammo2
@@ -9962,27 +9798,6 @@ jac  = 1/2 jd + 1/2 acm_dqf  enthalpy_of_ordering  =  -1d3      | this differs f
                                                             | because Thermocalc reactions are specified in terms of the 
                                                             | endmember without "DQF" corrections, while in Perple_X
                                                             | endmember include any DQF corrections. 
-
-begin_limits
-om = -2 + 2 di + 2 hed   delta = 2
-om = -2 + 2 jd + 2 acm_dqf   delta = 2 
-om = -2 + 2 di + 1 cfm   delta = 2 
-om = -2 + 2 jd + 1 jac   delta = 2 
-om = -2 + 2 acm_dqf + 2 jd + 2 hed + 1 cfm delta = 2
-om = -2 + 2 acm_dqf + 2 di + 2 hed + 1 jac delta = 2
-
-
-cfm = -2 di + 1 om       delta = 2
-cfm = -2 + 2 hed         delta = 2
-cfm = -2 hed             delta = 2
-cfm = -2 jd - 2 hed - 2 acm_dqf + 1 om      delta = 2
-
-jac = -2 acm_dqf             delta = 2
-jac = -2 jd + 1 om       delta = 2
-jac = -2 + 2 acm_dqf         delta = 2
-jac = -2 acm_dqf - 2 di - 2 hed + 1 om      delta = 2
-end_limits
- 
 
 0  0  0  0                   | endmember flags
 
@@ -10637,12 +10452,6 @@ ospr     fospr_d
 
 spro = 3/4 spr4 + 1/4 fspr   enthalpy_of_ordering = -10d3
 
-begin_limits
-spro =    - 4/3 fspr - 4/3 ospr - 1/3 spro                 delta = 4/3 z(M3,Mg) 
-spro =    - 4/3 fspr            - 1/3 spro                 delta = 4/3 z(M3,Fe) 
-spro = -4 - 4   fspr +   1 ospr - 4 spr5     + 1 spro      delta = 4   z(M456,Mg)   
-end_limits                
-
 2                            | 2 dependent endmembers
 
 fsp5_d   = 1 spr5 +  1 fspr - 1 spro
@@ -11244,10 +11053,6 @@ dilm
 
 oilm = 1 dilm   enthalpy_of_ordering = -15600 + 11.52565132 T_K
 
-begin_limits
-oilm =    -2 + 1 dilm                   delta = 2 z(A,Ti) 
-end_limits
-
 0 0 0  0                   | endmember flags
 
 1d-3 .2  .1 1              | subdivision range, X(pnt)
@@ -11350,12 +11155,6 @@ maj                             | the orphan
 1                               | ordered species definition
 
 gfm = 1 maj - 1/3 py + 1/3 alm  enthalpy_of_ordering = -10d3
-
-begin_limits
-gfm = - 3 py - 2 nagt - 3 maj - 2 gfm                             delta = 3 (limits for Mg on X)
-gfm = -3 + 3 alm + 1 gfm                                          delta = 3 (limits for Fe on X)
-gfm = -2 + 1 maj + 1 gfm                                          delta = 2 (limits for Mg on Y)
-end_limits
 
 5                               | number of dependent endmembers
 
@@ -11688,13 +11487,6 @@ cacf
 
 oscf = 1/2 mscf + 1/2 fscf enthalpy_of_ordering = -3.5d3
 
-begin_limits
-oscf = -2 + 2 macf + 2 mscf + 1 oscf                              delta = 2 (limits for Mg on M3)
-oscf = -2 fscf - 1 oscf                                           delta = 2 (limits for Fe on M3)
-oscf = -2 mscf - 1 oscf                                           delta = 4 (limits for Mg on M2)
-oscf = -4 + 2 fscf + 1 oscf                                       delta = 4 (limits for Fe on M2)
-end_limits
-
 3                               | number of dependent endmembers
 
 facf_d  = 1 macf + 1 oscf - 1 mscf
@@ -11797,20 +11589,6 @@ msnal    fsnal
 
 o1nal = 5/6 msnal + 1/6 fsnal  enthalpy_of_ordering = 2d3
 o2nal = 1/2 msnal + 1/2 fsnal  enthalpy_of_ordering = 6.5d3
-
-begin_limits
-o1nal = -6/5 + 6/5 manal + 6/5 msnal + 1 o1nal - 3/5 o2nal + 3/5 o2nal delta = 6/5 (limits for Mg on M3)
-o1nal = - 6/5 fsnal - 1/5 o1nal - 3/5 o2nal - 3/5 o2nal                delta = 6/5 (limits for Fe on M3)
-o1nal = -6 + 6 fsnal + 1 o1nal + 3 o2nal + 3 o2nal                     delta = 6 (limits for Fe on M2)
-o1nal = - 6 msnal - 5 o1nal - 3 o2nal - 3 o2nal                        delta = 12 (limits for Mg on M1)
-o1nal = -12 + 6 fsnal + 1 o1nal - 3 o2nal + 3 o2nal                    delta = 12 (limits for Fe on M1)
-
-o2nal = -2 + 2 manal + 2 msnal - 5/3 o1nal + 5/3 o1nal + 1 o2nal       delta = 2 (limits for Mg on M3)
-o2nal = - 2 fsnal - 5/3 o1nal - 1/3 o1nal - 1 o2nal                    delta = 2 (limits for Fe on M3)
-o2nal = - 2 fsnal + 1/3 o1nal - 1/3 o1nal - 1 o2nal                    delta = 2 (limits for Fe on M2)
-o2nal = - 2 msnal - 1/3 o1nal - 5/3 o1nal - 1 o2nal                    delta = 4 (limits for Mg on M1)
-o2nal = -4 + 2 fsnal - 1/3 o1nal + 1/3 o1nal + 1 o2nal                 delta = 4 (limits for Fe on M1)
-end_limits
 
 3                            | number of dependent endmembers
 
@@ -12031,13 +11809,7 @@ hfs    tsfs_d   ofdi_d
 
 1                          | ordered species definition
 
-hfm = 1/2 hen + 1/2  hfs  Delta(enthalpy) = -6d3          
-
-begin_limits
-hfm =     - 2 hfs - 1 hfm                delta = 2 z(M2,Fe)
-hfm =  -2 + 2 hfs + 1 hfm                delta = 2 z(M1,Fe)
-hfm =     - 2 hen - 1 hfm                delta = 2 z(M1,Mg)
-end_limits   
+hfm = 1/2 hen + 1/2  hfs  Delta(enthalpy) = -6d3
 
 2                          | dependent endmember definitions
 
@@ -13231,12 +13003,6 @@ fa      fo
 
 mf    = 1/2 fo + 1/2 fa       enthalpy_of_ordering  =   0
 
-begin_limits
-mf = -2 + 2 fa + 1 mf                                             delta = 2 (limits for Fe on M1)
-mf = -2 + 2 fo + 1 mf                                             delta = 2 (limits for Mg on M2)
-mf =    - 2 fa - 1 mf                                             delta = 2 (limits for Fe on M2)
-end_limits
-
 1                           | dependent endmember
 
 fmont  = 1 mont + 1 fa   - 1 mf
@@ -13364,14 +13130,6 @@ ojd_d4   fs      en
 1                           | number of independent ordered species and definitions
 
 fm = 1/2 en + 1/2 fs     enthalpy_of_ordering = -6600
-
-begin_limits
-fm =    - 1 obuf - 2 odi - 2 en - 1 fm                       delta = 2 (limits for Mg on M1)
-fm = -2 + 2 fs + 1 fm                                        delta = 2 (limits for Fe on M1)
-fm = -2 + 2 crenh + 2 macm + 2 mgts + 2 obuf + 2 en + 1 fm   delta = 2 (limits for Mg on M2)
-fm =    - 2 fs - 1 fm                                        delta = 2 (limits for Fe on M2)
-end_limits
-
 
 22                          | number of dependent endmembers and definitions
 
@@ -13563,23 +13321,6 @@ isp   iherc
 nmt   =    1 imt           enthalpy_of_ordering  =    0     + 5.76303 * T
 nsp   =    1 isp           enthalpy_of_ordering  = -23.6d3  + 5.76303 * T
 nherc =    1 iherc         enthalpy_of_ordering  = -23.6d3  + 5.76303 * T
-
-begin_limits
-nsp   =    - 1 qnd - 1 picr                                       delta = 1 (limits for Mg on M)
-nsp   = -1 + 1 isp + 1 iherc + 1 nsp - 1 nherc + 1 nherc          delta = 1 (limits for Al on M)
-nsp   = -2 + 1 isp + 1 qnd + 1 nsp                                delta = 2 (limits for Mg on T)
-nsp   =    - 1 isp - 1 iherc - 1 nsp - 1 nherc - 1 nherc          delta = 2 (limits for Al on T)
-
-nherc = - 1 nmt                                                   delta = 1 (limits for Fe on M)
-nherc = -1 + 1 isp + 1 iherc - 1 nsp + 1 nsp + 1 nherc            delta = 1 (limits for Al on M)
-nherc = -2 + 1 iherc + 1 imt + 1 nherc - 1 nmt + 1 nmt            delta = 2 (limits for Fe on T)
-nherc =  - 1 isp - 1 iherc - 1 nsp - 1 nsp - 1 nherc              delta = 2 (limits for Al on T)
-
-nmt   =    - 1 nherc                                              delta = 1 (limits for Fe on M)
-nmt   = -1 + 1 imt + 1 nmt                                        delta = 1 (limits for Fe3 on M)
-nmt   = -2 + 1 iherc + 1 imt - 1 nherc + 1 nherc + 1 nmt          delta = 2 (limits for Fe on T)
-nmt   =    - 1 imt - 1 nmt                                        delta = 2 (limits for Fe3 on T)
-end_limits
 
 3                           | number of dependent endmembers and definitions
 
