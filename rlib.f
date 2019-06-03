@@ -8120,7 +8120,7 @@ c                                 evaluate enthalpies of ordering
 
       logical function zbad (y,ids)
 c----------------------------------------------------------------------
-c subroutine to site fractions computed from equations entered by 
+c subroutine to computw site fractions computed from equations entered by 
 c user for configurational entropy (macroscopic form).
 c----------------------------------------------------------------------
       implicit none
@@ -8131,7 +8131,7 @@ c----------------------------------------------------------------------
 
       external badz
 
-      double precision y(m4),z,zt,n(m11)
+      double precision y(m4),zt,n(m11),z
 
       integer i,j,k,ids
 
@@ -8190,7 +8190,7 @@ c                                 if site exists, check fractions
                do j = 1, ksp(i,ids)
 
                   if (badz(n(j)/zt)) goto 90
-            
+
                end do
 
             else if (zt.lt.-zero) then 
@@ -8707,7 +8707,7 @@ c                                 orphan endmember
 
       subroutine gmodel (im,tname,wham)
 c---------------------------------------------------------------------
-c qmodel - stores ALL solution model parameters in global arrays
+c gmodel - stores ALL solution model parameters in global arrays
 c---------------------------------------------------------------------
       implicit none
   
@@ -8718,10 +8718,10 @@ c---------------------------------------------------------------------
       logical add, wham, zbad
 
       integer im, nloc, i, j, ind, id, jd, k, l,itic,ii,imatch, killct,
-     *        killid(20), inc, il, ik, kk
+     *        killid(20), inc, il, ik, kk, jp1
 
       double precision dinc, dzt, dx, gcpd, stinc, getstr, delta, 
-     *                 c0(0:20), c1(0:20)
+     *                 c0(0:20), c1(0:20), zij
 
       external gcpd, zbad, stinc, getstr
 
@@ -9542,15 +9542,50 @@ c                                 derive limit expressions for O/D models
 c                                 number of limits for ordered species k
             ln(k,im) = 0
          end do
+c                                 all z expressions may be necessary to 
+c                                 formulate limits, make the ksp'th + 1 
+c                                 species expression by differnce
+         do i = 1, msite(im)
+c                                 qmult = 0, temkin, all expressions are 
+c                                 available
+            if (qmult(i,im).eq.0) cycle
+
+            jp1 = ksp(i,im) + 1
+c                                 initialize the term counter
+            lterm(jp1,i,im) = 0
+c                                 cycle through the endmembers to work out
+c                                 if it has a non zero fraction
+            do l = 1, nstot(im)
+
+               call zmake (zij,i,l,im)
+
+               if (dabs(zij).lt.zero) cycle
+
+               lterm(jp1,i,im) = lterm(jp1,i,im) + 1
+               dcoef(lterm(jp1,i,im),jp1,i,im) = zij
+               ksub(lterm(jp1,i,im),jp1,i,im) = l
+
+            end do 
+         end do
 
          do i = 1, msite(im)
-            do j = 1, ksp(i,im)
+
+            if (qmult(i,im).eq.0) then 
+               jp1 = 0
+            else 
+               jp1 = 1
+            end if 
+
+            do j = 1, ksp(i,im) + jp1
                do k = 1, nord(im)
 
                   c0 = 0d0
                   c1 = 0d0 
-c                                 the constant for z = 0 expression
-                  c0(0) = d0(j,i,im)
+
+                  if (d0(j,i,im).ne.0d0) call error (77,c0(0),i,
+     *           'solution '//tname//': constants not allowed in '//
+     *           'O/D model configurational entropy site fraction '//
+     *           'expressions')
 
                   do l = 1, lterm(j,i,im)
 
@@ -9622,6 +9657,9 @@ c                                 save the coefficient and index:
                            lc(lt(ln(k,im),k,im),ln(k,im),k,im) = c0(ik)
                            lid(lt(ln(k,im),k,im),ln(k,im),k,im) = ik
 
+c                          write (*,*) i,j,ln(k,im),lt(ln(k,im),k,im)
+c                          write (*,*) c0(ik),ik
+
                         end do 
 c                                 initialize p term counter for limit
                         jt(ln(k,im),k,im) = 0
@@ -9635,10 +9673,17 @@ c                                 save the coefficient and index:
                            jc(jt(ln(k,im),k,im),ln(k,im),k,im) = c1(ik)
                            jid(jt(ln(k,im),k,im),ln(k,im),k,im) = ik
 
+c                          write (*,*) i,j,jt(ln(k,im),k,im)
+c                          write (*,*) c0(ik),ik
+
+
                         end do 
 c                                load the constant and delta:
                        l0c(1,ln(k,im),k,im) = c0(0)
                        l0c(2,ln(k,im),k,im) = delta
+
+c                      write (*,*) 'cst delta ', c0(0),delta
+c                      write (*,*) ' '
 
                      end if 
 
@@ -10049,9 +10094,6 @@ c-----------------------------------------------------------------------
       include 'perplex_parameters.h'
 
       integer id,k,l
-c DEBUG DEBUG
-      logical zbad
-      external zbad
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
@@ -10111,20 +10153,12 @@ c                                 renormalize the prismatic endmembers
             pa(k) = p0a(k)
          end do 
 
-         if (zbad(pa,id)) then 
-         write (*,*) 'z2 wonka wonaa',zbad(pa,id)
-         end if
-
          do k = 1, ndim(ostg(id),id)
 c                                 add the orphan fractions
             l = lstot(id) - ndim(ostg(id),id) + k 
             p0a(l) = p0a(l) + x(ostg(id),k)
             pa(l) = p0a(l)
          end do
-
-         if (zbad(pa,id)) then 
-         write (*,*) 'z3 wonka wonaa',zbad(pa,id)
-         end if 
 
       end if 
 
@@ -19735,7 +19769,7 @@ c----------------------------------------------------------------------
       integer ids, id, k, l, m
 
       logical bad, zbad, usex, zap
- 
+
       external zbad
 
       integer lstot,mstot,nstot,ndep,nord
@@ -20681,3 +20715,51 @@ c                                 and g the normalized g:
       g   = g * gnorm
 
       end
+
+      subroutine zmake (z,i,l,ids)
+c----------------------------------------------------------------------
+c subroutine to the site fraction of ksp+1 th species on site i of
+c endmember l
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      double precision y(m4),zt,z
+
+      integer i,j,k,l,ids
+
+      integer lstot,mstot,nstot,ndep,nord
+      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
+
+      integer msite, ksp, lterm, ksub
+      common/ cxt1i /msite(h9),ksp(m10,h9),lterm(m11,m10,h9),
+     *               ksub(m0,m11,m10,h9)
+
+      double precision qmult, d0, dcoef, scoef      
+      common/ cxt1r /qmult(m10,h9),d0(m11,m10,h9),dcoef(m0,m11,m10,h9),
+     *               scoef(m4,h9)
+c----------------------------------------------------------------------
+         do j = 1, nstot(ids)
+            y(j) = 0d0 
+         end do
+
+         y(l) = 1d0
+
+         zt = 0d0
+c                                 get site fractions
+         do j = 1, ksp(i,ids)
+
+            z = d0(j,i,ids)
+c                                 for each term:
+            do k = 1, lterm(j,i,ids)
+               z = z + dcoef(k,j,i,ids) * y(ksub(k,j,i,ids))
+            end do
+
+            zt = zt + z
+
+         end do
+ 
+         z = 1d0 - zt
+
+         end

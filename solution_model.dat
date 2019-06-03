@@ -1081,11 +1081,11 @@ ftr_d    = 1 tr    + 2 grun   - 1 a - 1 b
                              | Third (7d) simplex of the prism
 0  .5   .1  0                | range and resolution for X(3,1) on Ts-prism, imod = 0
 0  .75  .1  0                | range and resolution for X(3,2) on Parg-prism, imod = 0
-0  .5   .1  0                | range and resolution for X(3,3) on KParg-prism, imod = 0
+0  .15   .1  0                | range and resolution for X(3,3) on KParg-prism, imod = 0
 0  .5   .1  0                | range and resolution for X(3,4) on Rb-prism, imod = 0
-0  .5   .1  0                | range and resolution for X(3,5) on Gl-prism, imod = 0
-0  .5   .1  0                | range and resolution for X(3,6) on TiTs-prism, imod = 0
-0  .5   .1  0                | range and resolution for X(3,7) on Grk-prism, imod = 0
+0  .15   .1  0                | range and resolution for X(3,5) on Gl-prism, imod = 0
+0  .15   .1  0                | range and resolution for X(3,6) on TiTs-prism, imod = 0
+0  .15   .1  0                | range and resolution for X(3,7) on Grk-prism, imod = 0
 
 begin_excess_function
 
@@ -1157,6 +1157,7 @@ z(M1,fe)   = 1 grun + 1 b
 
 5 2                                 | 5 species on M2, mult = 2
 z(M2,fe)   = 1 grun + 1 a
+| z(M2,mg)   = 1/2 kprg + 1/2 parg + 1 tr + 1 cumm + 1 b
 z(M2,fe3)  = 1 mrbG
 z(M2,al)   = 1 ts + 1 gl + 1/2 kprg + 1/2 parg
 z(M2,ti)   = 1 tts
@@ -1165,6 +1166,7 @@ z(M2,ti)   = 1 tts
 z(M4,mg)   = 1 cumm
 z(M4,na)   = 1 gl + 1 mrbG
 z(M4,fe)   = 1 grun + 1 a + 1 b
+| z(M4,ca)   = 1 ts + 1 parg + 1 kprg + 1 tts + 1 tr 
 
 2 1                                 | 2 species on T1, fake mutiplicity = 1
 z(T1,Al)   = 1/2 ts + 1/2 parg + 1/2 kprg + 1/2 tts
