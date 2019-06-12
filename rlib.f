@@ -2027,7 +2027,7 @@ c                                        = 2, shear and bulk
 c                                 this is an awful mess, if there is a saturated
 c                                 phase (ifct > 0) then ufluid will call the eos 
 c                                 identified by ifug irrespective of the eos value. 
-            if (ifct.eq.0.or.iam.eq.5) then 
+            if ((ifct.eq.0.and.ieos.lt.100).or.iam.eq.5) then 
 c                                 there is no saturated phase
 c                                 assign it the default molecular fluid eos
                eos(id) = 200 + k 
@@ -5866,6 +5866,11 @@ c                                 local input variables
 
       double precision yin
       common/ cst50 /yin(ms1,mst)
+
+      integer limn,limt,limid,jimid,jimt
+      double precision limc,jimc
+      common/ cxt30 /limc(j6+2,j5,j3),limid(m0,j5,j3),jimid(j3,j5,j3),
+     *               limn(j3),limt(j5,j3),jimc(j3,j5,j3),jimt(j5,j3)
 c----------------------------------------------------------------------
       if ((jsmod.eq.9.or.jsmod.eq.10).and.ikill.gt.isite) then
          jst = ikill
@@ -6271,6 +6276,88 @@ c                                 species.
                   iddeps(i,j) = i2ni(iddeps(i,jold))
                   depnu(i,j) = depnu(i,jold)
                end do
+
+               itic = 1 
+
+               do i = 1, limn(jold)
+c                                 eliminate absent species from 
+c                                 stoichiometric p0 limits
+                  ktic = 0 
+
+                  if (limt(i,jold).gt.0) then 
+   
+                     do k = 1, limt(i,jold)
+
+                        skip = .false.
+
+                        do l = 1, kill
+c                                 check if limid points to a killed 
+c                                 endmember
+                           if (limid(k,i,jold).eq.ijkill(l)) then
+                              skip = .true.
+                              exit 
+                           end if
+  
+                        end do  
+
+                        if (skip) cycle
+
+                        ktic = ktic + 1
+
+                        limid(ktic,itic,j) = i2ni(limid(k,i,jold))
+                        limc(ktic,itic,j) = limc(k,i,jold)
+
+                     end do 
+
+                     if (ktic.eq.0) cycle
+
+                     limt(itic,j) = ktic
+
+                  else 
+c                                 constant bounds
+                     limt(itic,j) = -1
+                     k = 1
+
+                  end if   
+
+                  limc(ktic+1,itic,j) = limc(k,i,jold)
+                  limc(ktic+2,itic,j) = limc(k+1,i,jold)
+ 
+c                                 now check the p terms, this assumes
+c                                 there are no p terms if there are no
+c                                 p0 terms, which maynot be true?
+                  ktic = 0 
+
+                  do k = 1, jimt(i,jold)
+
+                     skip = .false.
+
+                     do l = 1, kill
+c                                 check if limid points to a killed 
+c                                 endmember
+                        if (jimid(k,i,jold).eq.ijkill(l)) then
+                           skip = .true.
+                           exit 
+                        end if
+  
+                     end do  
+
+                     if (skip) cycle
+
+                     ktic = ktic + 1
+
+                     jimid(ktic,itic,j) = i2ni(jimid(k,i,jold))
+                     jimc(ktic,itic,j) = jimc(k,i,jold)
+
+                  end do 
+
+                  jimt(itic,j) = ktic
+
+                  itic = itic + 1
+
+               end do 
+
+               limn(j) = itic - 1
 
             end do 
 
@@ -7043,11 +7130,10 @@ c                               of ordered species:
                iddeps(j,i) = inds(j+1)
             end do
 
-         end do
-c                               dummy routine for backward compatability:
+         end do  
 c                               read the limit equations for the 
 c                               amount of the ordered endmembers
-         call readlm (idim,tname)
+         call readlm (idim,tname,bad)
 
       end if 
 c                               read dependent endmembers
@@ -7538,8 +7624,8 @@ c                                 excess energy variables
       common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m18,h9),
      *               jsub(m2,m1,h9)
 
-      double precision deph,dydy,dnu
-      common/ cxt3r /deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
+      double precision dvnu,deph,dydy,dnu
+      common/ cxt3r /dvnu(m4,j3,h9),deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
 c                                 model type
       logical lorder, lexces, llaar, lrecip
       common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
@@ -8120,7 +8206,7 @@ c                                 evaluate enthalpies of ordering
 
       logical function zbad (y,ids)
 c----------------------------------------------------------------------
-c subroutine to computw site fractions computed from equations entered by 
+c subroutine to site fractions computed from equations entered by 
 c user for configurational entropy (macroscopic form).
 c----------------------------------------------------------------------
       implicit none
@@ -8131,7 +8217,7 @@ c----------------------------------------------------------------------
 
       external badz
 
-      double precision y(m4),zt,n(m11),z
+      double precision y(m4),z,zt,n(m11)
 
       integer i,j,k,ids
 
@@ -8190,7 +8276,7 @@ c                                 if site exists, check fractions
                do j = 1, ksp(i,ids)
 
                   if (badz(n(j)/zt)) goto 90
-
+            
                end do
 
             else if (zt.lt.-zero) then 
@@ -8448,8 +8534,8 @@ c                                 local alpha
       double precision alpha,dt
       common/ cyt0  /alpha(m4),dt(j3)
 
-      double precision deph,dydy,dnu
-      common/ cxt3r /deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
+      double precision dvnu,deph,dydy,dnu
+      common/ cxt3r /dvnu(m4,j3,h9),deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
 c                                 model type
       logical lorder, lexces, llaar, lrecip
       common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
@@ -8707,7 +8793,7 @@ c                                 orphan endmember
 
       subroutine gmodel (im,tname,wham)
 c---------------------------------------------------------------------
-c gmodel - stores ALL solution model parameters in global arrays
+c qmodel - stores ALL solution model parameters in global arrays
 c---------------------------------------------------------------------
       implicit none
   
@@ -8718,10 +8804,9 @@ c---------------------------------------------------------------------
       logical add, wham, zbad
 
       integer im, nloc, i, j, ind, id, jd, k, l,itic,ii,imatch, killct,
-     *        killid(20), inc, il, ik, kk, jp1
+     *        killid(20), inc
 
-      double precision dinc, dzt, dx, gcpd, stinc, getstr, delta, 
-     *                 c0(0:20), c1(0:20), zij
+      double precision dinc, dzt, dx, gcpd, stinc, getstr
 
       external gcpd, zbad, stinc, getstr
 
@@ -8812,8 +8897,8 @@ c                                 excess energy variables
       integer ideps,icase,nrct
       common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
 
-      double precision deph,dydy,dnu
-      common/ cxt3r /deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
+      double precision dvnu,deph,dydy,dnu
+      common/ cxt3r /dvnu(m4,j3,h9),deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
 
       double precision y2pg
       common/ cxt4  /y2pg(m15,m4,h9)
@@ -8877,6 +8962,11 @@ c                                 parameters for autorefine
 c                                 model type
       logical lorder, lexces, llaar, lrecip
       common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
+
+      integer limn,limt,limid,jimid,jimt
+      double precision limc,jimc
+      common/ cxt30 /limc(j6+2,j5,j3),limid(m0,j5,j3),jimid(j3,j5,j3),
+     *               limn(j3),limt(j5,j3),jimc(j3,j5,j3),jimt(j5,j3)
 
       integer ln,lt,lid,jt,jid
       double precision lc, l0c, jc
@@ -9381,6 +9471,39 @@ c                                 models with speciation:
             do i = 1, nr(j)
                ideps(i,j,im) = iy2p(iddeps(i,j))
             end do 
+c                                 stoichiometric limits on ordered species
+            if (limn(j).gt.0) then
+
+               ln(j,im) = limn(j)
+ 
+               do k = 1, limn(j)
+c                                 for each limit, number of p0 terms
+                  lt(k,j,im) = limt(k,j)
+
+                  do i = 1, limt(k,j)
+c                                 for each p0 term
+                     lc(i,k,j,im) = limc(i,k,j)
+c                                 convert index from y to p pointer and save
+                     lid(i,k,j,im) = iy2p(limid(i,k,j))
+
+                  end do 
+c                                 the constant and delta
+                  l0c(1,k,j,im) = limc(i,k,j)
+                  l0c(2,k,j,im) = limc(i+1,k,j)
+c                                 and the number of p terms...
+                  jt(k,j,im) = jimt(k,j)
+
+                  do i = 1, jimt(k,j)
+c                                 for each p0 term
+                     jc(i,k,j,im) = jimc(i,k,j)
+c                                 convert index from y to p pointer and save
+                     jid(i,k,j,im) = iy2p(jimid(i,k,j))
+
+                  end do 
+
+               end do 
+
+            end if 
 
          end do 
 c                                 classify multiple species models according
@@ -9466,6 +9589,27 @@ c                                respect to kth species
                end do                     
             end do 
          end do 
+
+         if (depend) then 
+c                                make an array to get the the fractions
+c                                of the disordered species in the ordered
+c                                species. this is essentially identical to 
+c                                the dydy array formed above.                                 
+            do i = 1, kstot
+
+               do k = 1, norder
+
+                  dvnu(i,k,im) = 0d0
+
+                  do j = 1, nr(k)
+                     if (i.ne.ideps(j,k,im)) cycle
+                     dvnu(i,k,im) = dvnu(i,k,im) + depnu(j,k)
+                  end do
+
+               end do  
+            end do  
+
+         end if
 c                                 site fractions as a function of bulk
 c                                 y's and dependent species y:
          do i = 1, msite(im)
@@ -9533,166 +9677,6 @@ c                                 count in evaluating derivatives.
          end do 
 
       end if
-                     
-c                                 ----------------------------------------------
-c                                 derive limit expressions for O/D models
-      if (order) then
-
-         do k = 1, nord(im)
-c                                 number of limits for ordered species k
-            ln(k,im) = 0
-         end do
-c                                 all z expressions may be necessary to 
-c                                 formulate limits, make the ksp'th + 1 
-c                                 species expression by differnce
-         do i = 1, msite(im)
-c                                 qmult = 0, temkin, all expressions are 
-c                                 available
-            if (qmult(i,im).eq.0) cycle
-
-            jp1 = ksp(i,im) + 1
-c                                 initialize the term counter
-            lterm(jp1,i,im) = 0
-c                                 cycle through the endmembers to work out
-c                                 if it has a non zero fraction
-            do l = 1, nstot(im)
-
-               call zmake (zij,i,l,im)
-
-               if (dabs(zij).lt.zero) cycle
-
-               lterm(jp1,i,im) = lterm(jp1,i,im) + 1
-               dcoef(lterm(jp1,i,im),jp1,i,im) = zij
-               ksub(lterm(jp1,i,im),jp1,i,im) = l
-
-            end do 
-         end do
-
-         do i = 1, msite(im)
-
-            if (qmult(i,im).eq.0) then 
-               jp1 = 0
-            else 
-               jp1 = 1
-            end if 
-
-            do j = 1, ksp(i,im) + jp1
-               do k = 1, nord(im)
-
-                  c0 = 0d0
-                  c1 = 0d0 
-
-                  if (d0(j,i,im).ne.0d0) call error (77,c0(0),i,
-     *           'solution '//tname//': constants not allowed in '//
-     *           'O/D model configurational entropy site fraction '//
-     *           'expressions')
-
-                  do l = 1, lterm(j,i,im)
-
-                     il = ksub(l,j,i,im)
-
-                     if (il.le.lstot(im)) then
-
-                        c0(il) = c0(il) + dcoef(l,j,i,im)
-
-                        do ik = 1, nord(im)
-
-                           kk = lstot(im) + ik 
-c                                  coefficient on p0
-                           c0(kk) = c0(kk) - dydy(il,ik,im) 
-     *                                     * dcoef(l,j,i,im)
-c                                  coefficient on p
-                           c1(kk) = c1(kk) + dydy(il,ik,im) 
-     *                                     * dcoef(l,j,i,im)
-
-                        end do
-
-                     else
-
-                        c1(il) = c1(il) + dcoef(l,j,i,im)
-
-                     end if
-c                                 at this point the c's are the coefficients for a 
-c                                 z(p,p0), below they are rearranged to get p(kk) = f(p0,p[~kk],z[0,1])
-c                                 in other words the loop on mord(im) is superfluous, but what the heck...
-                     kk = lstot(im)+k
-
-                     if (l.eq.lterm(j,i,im).and.c1(kk).ne.0d0) then
-
-                        do ik = 0, nstot(im)
-                           c0(ik) = -c0(ik)/c1(kk)
-                        end do 
-c                                the constant for the p(k) limit when z(j) = 1
-                        c1(0) = c0(0) + 1d0/c1(kk)
-
-                        do ik = lstot(im) + 1, nstot(im)
-                           if (ik.eq.kk) cycle
-                           c1(ik) = -c1(ik)/c1(kk)
-                        end do
-
-                        c1(kk) = 0d0
-
-                        if  (c1(0).gt.c0(0)) then
-c                                 z = 1 is the upper limit, the constant is c0(0) and 
-                           delta = c1(0)-c0(0)
-
-                        else 
-c                                 z = 0 is the upper limit, the constant is c1(0) and 
-                           delta = c0(0)-c1(0)
-                           c0(0) = c1(0)
-
-                        end if
-c                                 increment limit counter
-                        ln(k,im) = ln(k,im) + 1
-c                                 initialize p0 term counter for limit
-                        lt(ln(k,im),k,im) = 0
-c                                 load the p0 coefficients, if simplicial p0 > lstot(im) = 0
-                        do ik = 1, nstot(im)
-
-                           if (jsmod.eq.6.and.ik.gt.lstot(im)) exit
-                           if (c0(ik).eq.0d0) cycle
-c                                 increment term counter:
-                           lt(ln(k,im),k,im) = lt(ln(k,im),k,im) + 1
-c                                 save the coefficient and index:
-                           lc(lt(ln(k,im),k,im),ln(k,im),k,im) = c0(ik)
-                           lid(lt(ln(k,im),k,im),ln(k,im),k,im) = ik
-
-c                          write (*,*) i,j,ln(k,im),lt(ln(k,im),k,im)
-c                          write (*,*) c0(ik),ik
-
-                        end do 
-c                                 initialize p term counter for limit
-                        jt(ln(k,im),k,im) = 0
-c                                 load the p coefficients
-                        do ik = lstot(im) + 1, nstot(im)
-
-                           if (c0(ik).eq.0d0) cycle
-c                                 increment term counter:
-                           jt(ln(k,im),k,im) = jt(ln(k,im),k,im) + 1
-c                                 save the coefficient and index:
-                           jc(jt(ln(k,im),k,im),ln(k,im),k,im) = c1(ik)
-                           jid(jt(ln(k,im),k,im),ln(k,im),k,im) = ik
-
-c                          write (*,*) i,j,jt(ln(k,im),k,im)
-c                          write (*,*) c0(ik),ik
-
-
-                        end do 
-c                                load the constant and delta:
-                       l0c(1,ln(k,im),k,im) = c0(0)
-                       l0c(2,ln(k,im),k,im) = delta
-
-c                      write (*,*) 'cst delta ', c0(0),delta
-c                      write (*,*) ' '
-
-                     end if 
-
-                  end do
-
-               end do
-            end do
-         end do 
-      end if 
 c                                 ----------------------------------------------
 c                                 models with special endmember indexing:  
       if (jsmod.eq.0) then
@@ -10094,6 +10078,9 @@ c-----------------------------------------------------------------------
       include 'perplex_parameters.h'
 
       integer id,k,l
+c DEBUG DEBUG
+      logical zbad
+      external zbad
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
@@ -10153,12 +10140,20 @@ c                                 renormalize the prismatic endmembers
             pa(k) = p0a(k)
          end do 
 
+         if (zbad(pa,id)) then 
+         write (*,*) 'z2 wonka wonaa',zbad(pa,id)
+         end if
+
          do k = 1, ndim(ostg(id),id)
 c                                 add the orphan fractions
             l = lstot(id) - ndim(ostg(id),id) + k 
             p0a(l) = p0a(l) + x(ostg(id),k)
             pa(l) = p0a(l)
          end do
+
+         if (zbad(pa,id)) then 
+         write (*,*) 'z3 wonka wonaa',zbad(pa,id)
+         end if 
 
       end if 
 
@@ -10176,8 +10171,8 @@ c-----------------------------------------------------------------------
 
       integer id,k,l,ind 
 
-      double precision deph,dydy,dnu
-      common/ cxt3r /deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
+      double precision dvnu,deph,dydy,dnu
+      common/ cxt3r /dvnu(m4,j3,h9),deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
 
       integer ideps,icase,nrct
       common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
@@ -10193,7 +10188,7 @@ c-----------------------------------------------------------------------
       do k = 1, nord(id)
          do l = 1, nrct(k,id)
             ind = ideps(l,k,id)
-            p0a(ind) = p0a(ind) - dydy(ind,k,id) * p0a(lstot(id)+k)
+            p0a(ind) = p0a(ind) + dvnu(ind,k,id) * p0a(lstot(id)+k)
          end do 
       end do 
 
@@ -10235,8 +10230,8 @@ c----------------------------------------------------------------------
       double precision r,tr,pr,ps,p,t,xco2,u1,u2
       common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
 
-      double precision deph,dydy,dnu
-      common/ cxt3r /deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
+      double precision dvnu,deph,dydy,dnu
+      common/ cxt3r /dvnu(m4,j3,h9),deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
 
       integer iopt
       logical lopt
@@ -10317,8 +10312,8 @@ c----------------------------------------------------------------------
       double precision r,tr,pr,ps,p,t,xco2,u1,u2
       common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
 
-      double precision deph,dydy,dnu
-      common/ cxt3r /deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
+      double precision dvnu,deph,dydy,dnu
+      common/ cxt3r /dvnu(m4,j3,h9),deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
 
       integer lstot,mstot,nstot,ndep,nord
       common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
@@ -10358,8 +10353,8 @@ c                                 excess energy variables
       common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m18,h9),
      *               jsub(m2,m1,h9)
 
-      double precision deph,dydy,dnu
-      common/ cxt3r /deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
+      double precision dvnu,deph,dydy,dnu
+      common/ cxt3r /dvnu(m4,j3,h9),deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
 c                                 model type
       logical lorder, lexces, llaar, lrecip
       common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
@@ -10539,8 +10534,8 @@ c                                 configurational entropy variables:
       logical pin
       common/ cyt2 /pin(j3)
 
-      double precision deph,dydy,dnu
-      common/ cxt3r /deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
+      double precision dvnu,deph,dydy,dnu
+      common/ cxt3r /dvnu(m4,j3,h9),deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
 
       integer iopt
       logical lopt
@@ -11025,8 +11020,8 @@ c----------------------------------------------------------------------
       integer lstot,mstot,nstot,ndep,nord
       common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
 
-      double precision deph,dydy,dnu
-      common/ cxt3r /deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
+      double precision dvnu,deph,dydy,dnu
+      common/ cxt3r /dvnu(m4,j3,h9),deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
 
       logical pin
       common/ cyt2 /pin(j3)
@@ -11373,8 +11368,8 @@ c----------------------------------------------------------------------
       integer ideps,icase,nrct
       common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
 
-      double precision deph,dydy,dnu
-      common/ cxt3r /deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
+      double precision dvnu,deph,dydy,dnu
+      common/ cxt3r /dvnu(m4,j3,h9),deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
 c----------------------------------------------------------------------
 c                                 adjust the composition by the increment
       do i = 1, nrct(k,id)
@@ -11656,8 +11651,8 @@ c                                 excess energy variables
       common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m18,h9),
      *               jsub(m2,m1,h9)
 
-      double precision deph,dydy,dnu
-      common/ cxt3r /deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
+      double precision dvnu,deph,dydy,dnu
+      common/ cxt3r /dvnu(m4,j3,h9),deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
 c                                 model type
       logical lorder, lexces, llaar, lrecip
       common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
@@ -11763,8 +11758,8 @@ c                                 configurational entropy variables:
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 
-      double precision deph,dydy,dnu
-      common/ cxt3r /deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
+      double precision dvnu,deph,dydy,dnu
+      common/ cxt3r /dvnu(m4,j3,h9),deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
 c----------------------------------------------------------------------
 
       inf = .false.
@@ -11955,25 +11950,60 @@ c----------------------------------------------------------------------
 
       end  
 
-      subroutine readlm (idim,tname)
+      subroutine readlm (idim,tname,bad)
 c---------------------------------------------------------------------
 c readlm - reads stoichiometric limits on ordered species concentrations
-c as of 6.8.7 this is a dummy to read old (6.8.6-) solution model files. 
 c---------------------------------------------------------------------
       implicit none
   
       include 'perplex_parameters.h'
 
-      integer j,len,inds(k7),ict,idim,ier
+      integer j,k,l,jd,len,inds(k7),ier,ict, idim
 
       double precision coeffs(k7)
 
+      logical bad
+
       character begin*5, tag*3, tname*10
+
+      integer limn,limt,limid,jimid,jimt
+      double precision limc,jimc
+      common/ cxt30 /limc(j6+2,j5,j3),limid(m0,j5,j3),jimid(j3,j5,j3),
+     *               limn(j3),limt(j5,j3),jimc(j3,j5,j3),jimt(j5,j3)
+
+      logical stck, norf
+      integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
+     *        kstot,rkord,xtyp
+      double precision wg,wk,reach
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),reach,iend(m4),
+     *      isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),isp(mst),
+     *      rkord(m18),isite,iterm,iord,istot,jstot,kstot,xtyp,stck,norf
+
+      integer iddeps,norder,nr 
+      double precision depnu,denth
+      common/ cst141 /depnu(j4,j3),denth(j3,3),iddeps(j4,j3),norder,
+     *                nr(j3)
 
       integer length,iblank,icom
       character chars*1
       common/ cst51 /length,iblank,icom,chars(lchar)
+
+      integer jsmod
+      double precision vlaar
+      common/ cst221 /vlaar(m3,m4),jsmod
+
+      integer ostot
+      common/ junk /ostot
+
+      integer iam
+      common/ cst4 /iam
 c----------------------------------------------------------------------
+c                               initialize limit counter
+      do j = 1, norder
+         limn(j) = 0
+      end do 
+
+      if (jsmod.eq.27) return
 
       call readcd (n9,len,ier,.true.)
 
@@ -11986,15 +12016,102 @@ c                                 read the limit equations for the
 c                                 amounts of the ordered endmembers
             call readz (coeffs,inds,ict,idim,tname,tag)
 
-            if (tag.eq.'end') exit 
+            if (tag.eq.'end') then 
+               exit 
+c                                 commented to allow fixed bounds
+c           else if (ict.eq.1) then
+c               bad = .true.
+c               exit
+            end if 
+c                                 convert the endmember index to the 
+c                                 ordered species index
+            jd = inds(1) - ostot
+            limn(jd) = limn(jd) + 1
+            k = limn(jd) 
+            if (k.gt.j5) call error (999,coeffs(1),k,tname)
+                   
+            limt(k,jd) = 0
+            jimt(k,jd) = 0 
+c DEBUG DEBUG just patched in ostot
+            do l = 2, ict
+c                                 four cases
+               if (    (inds(l).le.ostot) 
+     *             .or.(inds(l) - ostot.eq.jd.and.
+     *                  inds(l+1).ne.inds(l))
+     *             .or.(inds(l).eq.inds(l-1).and.
+     *                  inds(l).gt.ostot.and.
+     *                  inds(l) - ostot.ne.jd)) then
+c                                 1) disordered species go in p0 array
+c                                 2) the species is limit species, the 
+c                                    species must be in the p0 array.
+c                                 3) the species is an ordered species, 
+c                                    but not the limit species,
+c                                    and it's the second occurence
+                  limt(k,jd) = limt(k,jd) + 1
+                  j = limt(k,jd)
+                  if (j.gt.j6) call error (33,coeffs(1),j,tname)
+                  limid(j,k,jd) = inds(l)
+                  limc(j,k,jd) = coeffs(l)
+
+               else if (inds(l).gt.ostot.and.
+     *                  inds(l) - ostot.ne.jd) then
+c                                 4) is an ordered species p-term
+c                                    if the coefficient is zero it's just
+c                                    a place holder and can be skipped.
+                  if (coeffs(l).eq.0d0) cycle
+                  jimt(k,jd) = jimt(k,jd) + 1
+                  j = jimt(k,jd)
+                  if (j.gt.j3) call error (33,coeffs(1),j,tname)
+                  jimid(j,k,jd) = inds(l)
+                  jimc(j,k,jd) = coeffs(l)
+
+               else 
+
+                  bad = .true.
+
+               end if 
+
+            end do 
+c                                 the constant and delta (max-min) are:
+            j = limt(k,jd) + 1
+c                                 set number of terms to negative if constant bounds
+            if (limt(k,jd).eq.0) then
+               limt(k,jd) = -1 
+               jimt(k,jd) = -1
+            end if 
+
+            limc(j  ,k,jd) = coeffs(1)
+            limc(j+1,k,jd) = coeffs(ict+1)
 
          end do 
 
-      else 
+      else if (jsmod.eq.6.and.norder.eq.1) then 
 
          backspace (n9)
 
-      end if
+      else 
+
+         bad = .true.
+
+      end if 
+
+      if (bad) then 
+         if (iam.lt.3.or.iam.eq.15) then 
+            write (*,1000) tname,(chars(j),j=1,len)
+            write (*,1010)
+         end if  
+         backspace (n9)
+      end if 
+
+1000  format ('**warning ver203** READLM missing or invalid format for '
+     *       ,'stoichiometric limit of ordered species',/,'currently ',
+     *        'reading (and rejecting) solution model: ',a,
+     *      /,'last record was:',/,400a)
+1010  format (/,'This error may be due to an out-of-date '
+     *         ,'solution model file.',/
+     *         ,'The current version is: '
+     *         ,'www.perplex.ethz.ch/perplex/datafiles/solution_model'
+     *         ,'.dat',/)
 
       end 
 
@@ -19769,7 +19886,7 @@ c----------------------------------------------------------------------
       integer ids, id, k, l, m
 
       logical bad, zbad, usex, zap
-
+ 
       external zbad
 
       integer lstot,mstot,nstot,ndep,nord
@@ -19947,6 +20064,10 @@ c                                 on the prismatic site is changed, i.e.,
 c                                 inc = inc0/sum [sum is the fraction of the
 c                                 prism vertex]
          sum = 1d0
+c DEBUG DEBUG
+         if (simp(n+ndim(ostg(ids),ids)).lt.0d0) then 
+            write (*,*) 'bears coming? '
+         end if 
 
          do j = 1, ndim(ostg(ids),ids)
             sum = sum - simp(n+j)
@@ -20335,8 +20456,8 @@ c----------------------------------------------------------------------
       integer lstot,mstot,nstot,ndep,nord
       common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
 
-      double precision deph,dydy,dnu
-      common/ cxt3r /deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
+      double precision dvnu,deph,dydy,dnu
+      common/ cxt3r /dvnu(m4,j3,h9),deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
 
       logical lorder, lexces, llaar, lrecip
       common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
@@ -20497,8 +20618,8 @@ c                                 configurational entropy variables:
       common/ cxt1r /qmult(m10,h9),d0(m11,m10,h9),dcoef(m0,m11,m10,h9),
      *               scoef(m4,h9)
 
-      double precision deph,dydy,dnu
-      common/ cxt3r /deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
+      double precision dvnu,deph,dydy,dnu
+      common/ cxt3r /dvnu(m4,j3,h9),deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
 
       double precision dppp,d2gx,sdzdp
       common/ cxt28 /dppp(j3,j3,m1,h9),d2gx(j3,j3),sdzdp(j3,m11,m10,h9)
@@ -20715,51 +20836,3 @@ c                                 and g the normalized g:
       g   = g * gnorm
 
       end
-
-      subroutine zmake (z,i,l,ids)
-c----------------------------------------------------------------------
-c subroutine to the site fraction of ksp+1 th species on site i of
-c endmember l
-c----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      double precision y(m4),zt,z
-
-      integer i,j,k,l,ids
-
-      integer lstot,mstot,nstot,ndep,nord
-      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
-
-      integer msite, ksp, lterm, ksub
-      common/ cxt1i /msite(h9),ksp(m10,h9),lterm(m11,m10,h9),
-     *               ksub(m0,m11,m10,h9)
-
-      double precision qmult, d0, dcoef, scoef      
-      common/ cxt1r /qmult(m10,h9),d0(m11,m10,h9),dcoef(m0,m11,m10,h9),
-     *               scoef(m4,h9)
-c----------------------------------------------------------------------
-         do j = 1, nstot(ids)
-            y(j) = 0d0 
-         end do
-
-         y(l) = 1d0
-
-         zt = 0d0
-c                                 get site fractions
-         do j = 1, ksp(i,ids)
-
-            z = d0(j,i,ids)
-c                                 for each term:
-            do k = 1, lterm(j,i,ids)
-               z = z + dcoef(k,j,i,ids) * y(ksub(k,j,i,ids))
-            end do
-
-            zt = zt + z
-
-         end do
- 
-         z = 1d0 - zt
-
-         end

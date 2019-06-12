@@ -308,7 +308,7 @@ c                                  just in case:
                if (is(i).eq.1) cycle
 
                do j = 1, icp 
-                  tot(j) = tot(j) - x(i)*cp2(j,i)
+                  tot(j) = tot(j) - x(i)*cp2(i,j)
                end do
 
             end do
