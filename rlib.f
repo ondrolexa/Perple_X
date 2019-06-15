@@ -9159,11 +9159,15 @@ c                                  and convex uses solution model value
                   if (lopt(38).and.iam.ne.15.or.
      *                .not.lopt(38).and.iam.eq.15) xnc(i,j) = nopt(13)
 
-               end if
+               else 
+
+                  xnc(i,j) = nopt(13)
 c                                 and for convexhull: perturb xmn by a per-mil scale increment to 
 c                                 reduce compositional degeneracies. 
-               if (iam.eq.15) xmn(i,j) = xmn(i,j) *
-     *                                    (1d0 + nopt(15)*float(im-5))
+                  if (iam.eq.15) xmn(i,j) = xmn(i,j) *
+     *                                      (1d0 + nopt(15)*float(im-5))
+
+               end if
 
             end if
 c                                 set stretch parameters according to xmn specified 
