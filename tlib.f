@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.8.6, source updated June 15, 2019.',
+     *      'Perple_X version 6.8.7, source updated June 18, 2019.',
 
      *      'Copyright (C) 1986-2019 James A D Connolly '//
      *      '<www.perplex.ethz.ch/copyright.html>.'
@@ -52,7 +52,7 @@ c----------------------------------------------------------------------
      *    new.eq.'672'.or.new.eq.'673'.or.new.eq.'674'.or.
      *    new.eq.'675'.or.new.eq.'676'.or.new.eq.'678'.or.
      *    new.eq.'679'.or.new.eq.'682'.or.new.eq.'683'.or.
-     *    new.eq.'685') then 
+     *    new.eq.'685'.or.new.eq.'687') then 
 
          chksol = .true.
 
@@ -2458,11 +2458,9 @@ c                                 static
      *           'models')
 411   format (2x,'- increase the auto-refine stage initial_resolution ',
      *           'in perplex_option.dat')
-412   format (2x,'- reduce refinement_points keyword ',
+412   format (2x,'- reduce refinement_points value ',
      *           'in perplex_option.dat',/,
-     *        2x,'- reduce the 1st value of the iteration keyword ',
-     *           'in perplex_option.dat',/,
-     *        2x,'- reduce the 2nd value of the iteration keyword ',
+     *        2x,'- reduce the the resolution_factor value ',
      *           'in perplex_option.dat',/,
      *        2x,'- reduce the reach_increment (if any) specified ',
      *           'for solutions in solution_model.dat')

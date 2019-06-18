@@ -9,7 +9,7 @@
         | 2) Keywords that take the value T (true) or F (false) are always binary.
         | 3) Keywords that take the value on, always may take the value off, but may accept other values as indicated below.
         | 4) Default keyword values are indicated in square brackets in the comment following each keyword.
-        | 5) For keyword documentation refer to: www.perplex.ethz.ch/perplex_op                                              tions.html
+        | 5) For keyword documentation refer to: www.perplex.ethz.ch/perplex_options.html
 
         | To change the value of an option from "default" the word "default" 
         | must be replaced with the desired value. For example, to change the 
@@ -59,13 +59,13 @@ finite_difference_p       default | [1d4 1d-2] threshold and fraction for 1st or
 fractionation_hi_limit    default | [0.] 0-1, upper fractionation threshold, mass fraction
 fractionation_lo_limit    default | [0.] 0-1, lower fractionation threshold, mass fraction
 global_reach_increment    default | [0] >= 0, overridden by reach_factor specified in solution model file
-grid_levels               1 3 default | [1 4] exploratory and auto-refine (grid parameters keyword group)
+grid_levels               default | [1 4] exploratory and auto-refine (grid parameters keyword group)
 hard_limits               default | [off] on or off; on => strictly impose compositional limits specified in solution model
 hybrid_EoS_H2O            default | [4] 0-2, 4-5 => 0 - MRK, 1 HSMRK, 2 - CORK, 4 - PSEoS, 5 - Haar, 6 - Zhang & Duan 05, 7 - Zhang & Duan 09
 hybrid_EoS_CO2            default | [4] 0-4 => 0 - MRK, 1 HSMRK, 2 - CORK, 3- Bottinga, 4 - PSEoS, 6 - Zhang & Duan 05, 7 - Zhang & Duan 09
 hybrid_EoS_CH4            default | [1] 0-1  => 0 - MRK, 1 HSMRK, 7 - Zhang & Duan 09
 increment                 default | [0.1 0.025] >0, < 1, fractional independent variable increments [exploratory and auto-refine], only relevant for CONVEX
-initial_resolution      1/16 1/48 | [1/16 1/48]* >0, <1, resolution for static compositions. *for composition and mixed variable diagrams the default auto-refine value is 1/160.
+initial_resolution        1/8 1/20 default | [1/16 1/48]* >0, <1, resolution for static compositions. *for composition and mixed variable diagrams the default auto-refine value is 1/160.
 interim_results           default | [auto] auto, off or on
 interpolation             default | [on 2] value 1: on or off [on]; value 2, 1->99 [2]; only relevant for WERAMI
 linear_model              default | [on] on or off, relevant for 2d gridded minimization
@@ -92,7 +92,7 @@ resolution_factor         default | [2] >2, controls the change in resolution be
 sample_on_grid            default | [T] F => WERAMI (mode 2) samples on the computational grid used by VERTEX
 seismic_output            default | [some] all, some, none
 short_print               default | [on] suppress output of equilibrium coordinates to the print file, only relevant for CONVEX
-solution_names            default | [mod] mod, abb or ful; use the model, abbreviation, or full name for solution models for output
+solution_names            abb default | [mod] mod, abb or ful; use the model, abbreviation, or full name for solution models for output
 solvus_tolerance          default | [auto] auto or 0->1, should be > initial_resolution/auto_refine_factor
 solvus_tolerance_II       default | [0.2] 0->1 
 speciation_factor         default | [100] >1, speciation precision = final resolution/speciation factor
@@ -108,6 +108,6 @@ T_stop                    default | [0.] equilibration temperature (K) cut off
 variance                  default | [1 99] exploratory and auto-refine; maximum variance of traced equilibria; only relevant for CONVEX
 vrh/hs_weighting          default | [0.5] 0->1, weighting factor for the stiff average in VRH/HS averaging (see bounds)
 warning_ver637            default | [T] F -> warn and cease interpolation in WERAMI when immiscible solutions are present
-x_nodes                   40 40 | [40 40] exploratory and auto-refine (grid parameters keyword group), lowest-level x grid resolution 
-y_nodes                   40 40 | [40 40] exploratory and auto-refine (grid parameters keyword group), lowest-level y grid resolution
+x_nodes                   default | [40 40] exploratory and auto-refine (grid parameters keyword group), lowest-level x grid resolution 
+y_nodes                   default | [40 40] exploratory and auto-refine (grid parameters keyword group), lowest-level y grid resolution
 zero_mode                 default | [1e-6] 0->1, threshold below which the molar mode of a phase is set to 0; defaults to zero for fractionation calculations

@@ -295,9 +295,8 @@ c                                  the logic here, is that the composition
 c                                  can't really be bad since we got through the 
 c                                  initial minimization. do a mass balance check
 c                                  just in case:
-            if (idead1.eq.3.and.idead.eq.3) then 
-               write (*,*) 'idead1 = idead = 3, this is a waste of time'
-            end if 
+            if (idead1.eq.3.and.idead.eq.3) write (*,'(/,a,/)') 
+     *           'idead1 = idead = 3, this is a waste of time'
 
             do i = 1, icp 
                tot(i) = b(i)
@@ -332,7 +331,9 @@ c     *                   'question: Do I feel lucky? Well, do ya, punk?'
             end do
 
             if (idead1.eq.0) then
-               write (*,*) 'got a good result on idead = 3'
+               write (*,'(/,a,/)') 'good result on idead = 3'
+            else 
+               write (*,'(/,a,/)') 'bad result on idead = 3'
             end if
 
          end if
