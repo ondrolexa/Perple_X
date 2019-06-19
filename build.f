@@ -1625,7 +1625,9 @@ c                                 in thermodynamic composition space.
 c                                 get fluid equation of state
 c                                 write explanation
          write (*,1010) (mname(i), i = 1, jspec)
-         write (*,1020) 
+         write (*,1020)
+
+         if (ifct.ne.0) write (*,1025) 
 
          feos = .true.
          call rfluid (1,ifug)
@@ -1681,7 +1683,11 @@ c                                 component pointers for chkphi
      *        'corresponding composants and mixtures thereof. To over',
      *        'ride this behavior, ',/,'e.g., to use a generic hybrid ',
      *        'fluid EoS, delete the special_component section ',/,
-     *        'from the thermodynamic data file header.')
+     *        'from the thermodynamic data file header.',/)
+1025  format ('NOTE: the EoS choice specified here will override the ',
+     *        'EoS choice specified by',/,'the hybrid_EoS option, to',
+     *        'override this behavior delete the special_component',/,
+     *        'section from the the thermodynamic data file header.',/)
 1030  format (/,'For C-O-H fluids it is only necessary to select ',
      *       'volatile species present in',/,'the solids of interest. ',
      *       'If the species listed here are H2O and CO2, then to',/,
@@ -1790,8 +1796,16 @@ c-----------------------------------------------------------------------
       amount = 'molar '
       dtext = ' '
       cfname = ' '
- 
-      if (icopt.lt.1.or.(icopt.gt.6.and.icopt.ne.9)) icopt = 2
+c                                 coming in icopt has the following values
+
+c                                 1 - convex
+c                                 2 - 2d grid
+c                                 3 - 1d grid
+c                                 4 - swash
+c                                 5 - 1d frac
+c                                 6 - 0d frac
+c                                 9 - frac2d
+
 c                                 reorder for oned flag
       if (icopt.eq.3.or.icopt.eq.5.or.icopt.eq.9) then
  
@@ -1807,7 +1821,8 @@ c                                 fractionation from a file
 
          read (*,'(a)') y
 
-         if (y.eq.'y'.or.y.eq.'Y') then 
+         if (y.eq.'y'.or.y.eq.'Y') then
+
             write (*,1100) (vname(iv(i)),i=1,ivct)
             write (*,'(/)')
             write (*,2010) 'coordinate','coor.dat'
@@ -1821,21 +1836,47 @@ c                                 fractionation from a file
 
             if (icopt.eq.9) then
                icopt = 11
-            else 
+            else
                icopt = 10
             end if 
 
             oned = .false.
             icont = 1
 
-         end if 
+         end if
 
       else
+
          oned = .false.
-      end if 
+
+      end if
+
+c                                 icopt now has the following values
+
+c                                 1 - convex
+c                                 2 - 2d grid
+c                                 3 - 1d grid - no fileio (oned true)
+c                                 4 - swash
+c                                 5 - 1d frac - no fileio (oned true)
+c                                 6 - 0d frac
+c                                 9 - frac2d - no fileo
+c                                10 - 1d - with fileio (oned false)
+c                                11 - frac2d - with fileio (oned false)
 
       if (icopt.gt.2.and.icopt.lt.10.and.icopt.ne.6.and.icopt.ne.9) 
      *                                               icopt = icopt - 1
+
+c                                 icopt now has the following values
+
+c                                 1 - convex
+c                                 2 - 2d grid
+c                                 2 - 1d grid - no fileio (oned true)
+c                                 3 - swash
+c                                 4 - 1d frac - no fileio (oned true)
+c                                 6 - 0d frac
+c                                 9 - frac2d - no fileo
+c                                10 - 1d - with fileio (oned false)
+c                                11 - frac2d - with fileio (oned false)
 
       if (icopt.ne.9) then 
 c                                 ====================================
@@ -1934,9 +1975,33 @@ c                                  fractionation, also write the grid blurb
             icopt = 7
             write (*,3100) grid(4,1),grid(4,2)
 
+         end if
+
+      else if (icopt.eq.10) then
+c                                  1-d "gridded min" from a file, only allow p-t
+         icont = 1
+
+         if (ivct.gt.1) then
+
+            do
+
+               write (*,1210)
+               write (*,2140) (j,vname(iv(j)), j = 1, ivct) 
+               if (ifct.eq.1) write (*,7150) vname(3) 
+               read (*,*,iostat=ier) jc
+               if (ier.eq.0) exit
+               call rerr
+
+            end do
+c                                  put the independent variable in the 
+c                                  "x" position (pointer iv(1)).
+            ix = iv(1)
+            iv(1) = iv(jc)
+            iv(jc) = ix
+
          end if 
 
-      else if (icopt.eq.9.or.icopt.eq.10) then
+      else if (icopt.eq.9.or.icopt.eq.11) then
 c                                  2-d fractionation, only allow p and t
          ivct = 2
          icont = 0 
@@ -2036,7 +2101,7 @@ c                                  Select the x variable
 
             end do 
 
-         end if 
+         end if
 
          if (ivct.eq.2.and.icont.eq.1) then 
 c                                 there is no C variable and there 
@@ -2239,7 +2304,23 @@ c                                 specify sectioning variable (iv(2)):
                vmax(iv(j)) = vmin(iv(j))
             end do 
          end if
-      end if 
+      else if (icopt.eq.11) then 
+         icont = 1
+      end if
+
+c                                 icopt now has the following final values for output
+
+c                                 0 - convex composition
+c                                 1 - convex spd
+c                                 3 - convex mixed
+c                                 5 - 2d grid
+c                                 5 - 1d grid - no fileio (oned true)
+c                                 4 - swash
+c                                 7 - 1d frac - no fileio (oned true)
+c                                12 - 0d frac (oned true)
+c                                 9 - frac2d - no fileo
+c                                10 - 1d - with fileio (oned false)
+c                                11 - frac2d - with fileio (oned false)
 
       icth = icp + isat
       

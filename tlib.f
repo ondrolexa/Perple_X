@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.8.7, source updated June 18, 2019.',
+     *      'Perple_X version 6.8.7, source updated June 19, 2019.',
 
      *      'Copyright (C) 1986-2019 James A D Connolly '//
      *      '<www.perplex.ethz.ch/copyright.html>.'
@@ -2791,6 +2791,8 @@ c----------------------------------------------------------------------
          write (*,54)
       else if (ier.eq.55) then 
          write (*,55) char
+      else if (ier.eq.56) then 
+         write (*,56) char
       else if (ier.eq.58) then
          write (*,58)
       else if (ier.eq.59) then
@@ -3057,6 +3059,11 @@ c----------------------------------------------------------------------
      *         ,' space. the compositions will not be considered.',/,
      *         'If this is problematic, then eliminate the component ',
      *         'saturation constraints',/,'or use convex.',/)
+56    format (/,'**warning ver056** the EoS specified for ',a,' by the',
+     *        ' hybrid_EoS option will be',/,'overridden by the EoS sp',
+     *        'ecified in the problem definition file. To prevent this',
+     *      /,'behavior delete the special_component section from the ',
+     *        'header section of the',/,'thermodynamic data file.',/)
 58    format (/,'**warning ver058** wway, the equilibrium of the '
      *         ,'following reaction',/,'is inconsistent with the ',
      *          'invariant equilibrium.',/)

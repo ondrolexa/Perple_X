@@ -2027,7 +2027,9 @@ c                                        = 2, shear and bulk
 c                                 this is an awful mess, if there is a saturated
 c                                 phase (ifct > 0) then ufluid will call the eos
 c                                 identified by ifug irrespective of the eos value.
-            if ((ifct.eq.0.and.ieos.lt.100).or.iam.eq.5) then
+            if (ifct.eq.0.or.iam.eq.5) then
+
+               if (ieos.gt.100) call warn (56,r,k,name)
 c                                 there is no saturated phase
 c                                 assign it the default molecular fluid eos
                eos(id) = 200 + k
