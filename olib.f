@@ -951,11 +951,9 @@ c                                 renormalize the composition
                      x3(i,l,m) = x3(i,l,m)/cst
 
                      if (x3(i,l,m).gt.1d0) then 
-c                        write (*,*) 'oink 1',x3(i,l,m)
                         x3(i,l,m) = 1d0
                      else if (x3(i,l,m).lt.0d0) then 
-c                        write (*,*) 'oink 2',x3(i,l,m)
-                        x3(i,l,m) = 1d0
+                        x3(i,l,m) = 0d0
                      end if 
 
                      xt = xt + x3(i,l,m)

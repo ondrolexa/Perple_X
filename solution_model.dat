@@ -2580,10 +2580,6 @@ begin_model
 
                                       reformulated as ordinary configurational entropy model. JADC 12/18.
 
-                                      the excess parameters for this model changed slightly some time between
-                                      its original publication and Holland et al. (2018). The Holland et al (2018)
-                                      version is present here as Mica(HGP). JADC 5/19.
-
                                       This model requires the following make definitions in the
                                       thermodynamic data file make_definitions section:
 
@@ -10579,10 +10575,18 @@ begin_model
                                       |Calcite-Magnesite with Dolomite/Ankerite compound formation.
                                       |Franzolin, Schmidt and Poli (2011) CMP 161:213-227, DOI: 10.1007/s00410-010-0527-x
 
-                                      | WARNINGS:
+                                       NOTES/WARNINGS:
 
-                                      | This model requires make definitions in the thermodynamic data file for the
-                                      | odo_ef and oank endmembers.  JADC, 3/26/2012.
+                                       This model requires the following make definitions in the thermodynamic data file for the
+                                       odo and oank endmembers.
+
+                                       odo = 1/2 mag + 1/2 cc 
+                                         DQF(J/mol) = -1000
+
+                                       oank = 1/4 sid + 1/2 cc + 1/4 mag 
+                                         DQF(J/mol) = -750
+
+                                       JADC, 3/26/2012.
 oCcM(EF)
 abbreviation Do
 full_name    carbonate
@@ -13344,9 +13348,9 @@ begin_model
                       2) the following endmembers must be specified with make
                          definitions in the thermodynamic data file
 
-                         isp   = 1 no_sp
+                         isp   = 1 nsp
                                 DQF(J/mol) = 23.6d3  - 5.76303 * T
-                         iherc = 1 no_herc
+                         iherc = 1 nherc
                                 DQF(J/mol) = 23.6d3  - 5.76303 * T
                          imt   = 1 mt
                                 DQF(J/mol) = 30d3

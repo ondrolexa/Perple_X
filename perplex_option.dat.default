@@ -1,6 +1,6 @@
 |----------------------------------------------------------------------
 
-        | Run-time Perple_X 6.8.6 options:
+        | Run-time Perple_X 6.8.7 options:
 
         | Comments must be preceeded by the "|" character.
 
@@ -71,6 +71,7 @@ interpolation             default | [on 2] value 1: on or off [on]; value 2, 1->
 linear_model              default | [on] on or off, relevant for 2d gridded minimization
 logarithmic_p             default | [F] replace pressure variable with log(pressure)
 melt_is_fluid             default | [F] identify melt (liquid) as fluid in WERAMI output
+non_linear_switch         default | VERTEX/MEEMUM [F], CONVEX [T], toggles whether nonlinear subdivision uses initial_resolution
 null_phase                default | [F] include null phases in convexhull optimization with mobile components
 option_list_files         default | [F] T => echo run-time options to my_project_PROGRAM_options.txt
 order_check               default | [on] on => compare order-disorder solutions with fully ordered and disordered states
