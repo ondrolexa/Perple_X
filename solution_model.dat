@@ -7186,7 +7186,7 @@ z(m2,Ca) = 1 cc + 1 odo
 z(m1,Ca) = 1 cc
 
 begin_van_laar_sizes
-alpha(cc)     .5 0.000546 0
+alpha(cc)     .5 + 0.000546 *T 
 alpha(mag)    1
 alpha(odo)    .7
 end_van_laar_sizes
@@ -7417,7 +7417,7 @@ fo       fa
 0  1     .1  0             | subdivision range, imod = 0 -> cartesian subdivision
 
 begin_excess_function
-W(fo fa) 14400      | was 7200.
+W(fo fa) 14400      | was 7200
 end_excess_function
 
 1                                     1 site entropy model
@@ -7464,7 +7464,7 @@ ring       fring
 0  1  .1   0               | subdivision range, imod = 0 -> cartesian subdivision
 
 begin_excess_function
-W(ring fring) 7800           | was 3900.
+W(ring fring) 7800           | was 3900
 end_excess_function
 
 1                                     1 site entropy model
@@ -7488,7 +7488,7 @@ sp       herc
 0  1  .1   0               | subdivision range, imod = 0 -> cartesian subdivision
 
 begin_excess_function
-W(sp herc) 28800             | was 7200.
+W(sp herc) 28800             | was 7200
 end_excess_function
 
 2                                     2 site entropy model
@@ -8165,10 +8165,10 @@ mt
 0  1  .1 0                        | X(usp) subdivision range,  imod = 1 -> assymmetric stretching
 
 begin_excess_function
-W(herc mt)    18.5d3 0  0
-W(herc usp)   27d3   0  0
-W(sp mt)      40d3   0  0
-W(sp usp)     30d3   0  0
+W(herc mt)    18.5d3
+W(herc usp)   27d3
+W(sp mt)      40d3
+W(sp usp)     30d3
 end_excess_function
 
 2                                     2 site entropy model, see comments above
@@ -8233,7 +8233,7 @@ z(m1,al) = 1 cats
 z(m2,mg) = 1 en
 
 begin_dqf_corrections
-dqf(en) 8100 -4.5 0
+dqf(en) 8100 -4.5*T
 end_dqf_corrections
 
 end_of_model
@@ -8499,7 +8499,7 @@ cor   aki   faki
 0    1   .1  0             | subdivision range, imod = 0 -> cartesian subdivision
 
 begin_excess_function
-W(aki cor)  42000
+W(aki cor)   42000
 W(faki cor)  52000
 end_excess_function
 
@@ -8707,8 +8707,8 @@ ma    mu    pa
 begin_excess_function
 w(ma ma pa)   18200
 w(pa pa ma)   10000
-W(mu pa pa) 19456        1.65440     -.456100
-W(mu mu pa) 12230       0.710440     0.665300
+W(mu pa pa) 19456        1.6544*T     -.456100*P
+W(mu mu pa) 12230         .71044*T     .665300*P
 w(ma mu)      35000
 end_excess_function
 
@@ -9007,9 +9007,9 @@ begin_model
                              This model requires the make definition:
 
                                 fmu = 1 mu + 1/2 hem - 1/2 cor
-                                  -30d3 0 0
+                                  -30d3
                                 ma_dqf = 1 ma
-                                    3d3 0 0
+                                    3d3
 
                              in the thermodynamic data file (e.g., hp02ver.dat), additionally the
                              endmember "ma" must be exlcuded from any calculations that employ this
@@ -9055,15 +9055,15 @@ mu pa ma_dqf cel fmu fcel
 
 begin_excess_function
 
-W(mu pa)         10120  3.4 0.353
+W(mu pa)         10120  3.4*T 0.353*P
 W(mu ma_dqf)     35000
-W(mu cel)        0  0  0.2
-W(mu fcel)       0  0  0.2
+W(mu cel)        0  0.2*P
+W(mu fcel)       0  0.2*P
 
-W(pa cel)        45000  0  0.25
+W(pa cel)        45000  0.25*P
 W(ma_dqf cel)    40000
 
-W(pa fcel)       45000  0  0.25
+W(pa fcel)       45000  0.25*P
 W(ma_dqf fcel)   40000
 
 W(pa ma_dqf)     15000
@@ -9549,14 +9549,14 @@ z(m4,fe) =   1 grun_dqf + 1 cammo1 + 1 cammo2
 z(T1,Al) =   1/2 ts_dqf  + 1/2 parg_dqf
 
 begin_van_laar_sizes
-alpha(tr)       1.0
+alpha(tr)       1
 alpha(parg_dqf) 1.7
 alpha(ts_dqf)   1.5
 alpha(gl_dqf)   0.8
-alpha(cumm_dqf) 1.0
-alpha(grun_dqf) 1.0
-alpha(cammo1)   1.0
-alpha(cammo2)   1.0
+alpha(cumm_dqf) 1
+alpha(grun_dqf) 1
+alpha(cammo1)   1
+alpha(cammo2)   1
 alpha(mrb)      0.8
 end_van_laar_sizes
 
@@ -9920,7 +9920,7 @@ z(m1a,mg)   = 1 di + 1 cfm
 z(m1a,fe2+) = 1 hed
 z(m1a,fe3+) = 1 acm_dqf + 1 jac
 
-reach_increment 0 3
+reach_increment 0
 
 end_of_model
                       --------------------------------------------------------
@@ -10417,7 +10417,7 @@ z(fe) = 1 fpv
 z(al) = 1 apv
 
 begin_van_laar_sizes
-alpha(mpv)     1
+alpha(mpv)    1
 alpha(apv)    0.39
 alpha(fpv)    1
 end_van_laar_sizes
@@ -10605,10 +10605,10 @@ w(mag cc)  28000
 w(cc odo) 11200
 w(mag odo)  14000
 W(cc sid)  20503
-w(oank sid) 73650 -50 0
-w(oank cc) 12730 -10 0
+w(oank sid) 73650 -50*T
+w(oank cc) 12730  -10*T
 w(mag sid) 10000
-w(sid odo) 51190 -30 0
+w(sid odo) 51190  -30*T
 w(oank odo) -5000
 w(oank mag) 30000
 end_excess_function
@@ -10628,10 +10628,10 @@ z(m2b,ca) =  1 cc
 z(m2b,mg) =  1 mag + 1 odo + 1 oank
 
 begin_van_laar_sizes
-alpha(cc)     0.25 0.000929 0
+alpha(cc)     0.25 0.000929*T
 alpha(mag)    1
 alpha(odo)    0.95
-alpha(sid)    0.01 0.000666 0
+alpha(sid)    0.01 0.000666*T
 alpha(oank)   0.929
 end_van_laar_sizes
 
@@ -10675,9 +10675,9 @@ CACO3L MGCO3L FECO3L
 
 begin_excess_function
 W(CACO3L CACO3L FECO3L)  -65000
-W(CACO3L FECO3L FECO3L)  2000
-W(MGCO3L MGCO3L CACO3L)  491900 -300  0.
-W(MGCO3L CACO3L CACO3L)  -142000  0  1.2
+W(CACO3L FECO3L FECO3L)   2000
+W(MGCO3L MGCO3L CACO3L)   491900 - 300*T
+W(MGCO3L CACO3L CACO3L)  -142000         + 1.2*P
 W(MGCO3L MGCO3L FECO3L)  -5594.2
 W(MGCO3L FECO3L FECO3L)  -5594.2
 end_excess_function
@@ -10718,9 +10718,9 @@ z(mg) = 1 mag
 
 
 begin_van_laar_sizes
-alpha(cc)     0.25 0.000929 0
+alpha(cc)     0.25 0.000929*T
 alpha(mag)    1
-alpha(sid)    0.01 0.000666 0
+alpha(sid)    0.01 0.000666*T
 end_van_laar_sizes
 
 end_of_model
