@@ -413,7 +413,7 @@ c                                 komabayashi/omori polynomials, murnaghan EoS
          kt = 1d0 / (thermo(15,id) + t*(thermo(16,id) + t*(thermo(17,id)
      *                             + thermo(18,id)*t)))
 c                                 k'(T)
-         kp = thermo(19,id) + thermo(20,id)*t*dlog(t)
+         kp = thermo(19,id) + thermo(20,id)*(t-tr)*dlog(t/tr)
 
          km = kp - 1d0
          kmk = km/kp
@@ -1037,9 +1037,7 @@ c                                    int(alpha,T=Tr..Tf) = b13 + b1*T + b2*T^2 +
          b2 = b2/2d0
          b4 = -b4
          b13 = -(b1*tr + b2*tr*tr + b3*dlog(tr) + b4/tr)
-c                                 2)  K' is a f(T)
-         b9 = b9 - b10*tr*dlog(tr)
-
+c                                 2)  K' is a f(T,Tr)
       else if (b8.ne.0d0) then
 c                                 All remaining forms (ieos = 2, 4, >100) assume:
 c                                 1) alpha = b1 + b2*T + b3/T + b4/T^2 + b5/sqrt(T)
@@ -2466,8 +2464,6 @@ c                                 HKF electrolyte model.
       e  = e / 4d0
       d  = 6d0 * d
       c  = 2d0 * c
-
-
 
       if (b8.eq.0d0) then
 c                                normal vdp term:
