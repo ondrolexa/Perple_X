@@ -93,7 +93,7 @@ c------------------------------------------------------------------------
       integer iemod,kmod
       logical smod,pmod
       double precision emod
-      common/ cst319 /emod(k15,k10),smod(h9),pmod(k10),iemod(k10),kmod
+      common/ cst319 /emod(k15,k10),smod(h9),pmod(h9),iemod(k10),kmod
 
       integer length,iblank,icom
       character chars*1
@@ -164,7 +164,7 @@ c-----------------------------------------------------------------------
       integer iemod,kmod
       logical smod,pmod
       double precision emod
-      common/ cst319 /emod(k15,k10),smod(h9),pmod(k10),iemod(k10),kmod
+      common/ cst319 /emod(k15,k10),smod(h9),pmod(h9),iemod(k10),kmod
 
       integer ltyp,lct,lmda,idis
       common/ cst204 /ltyp(k10),lct(k10),lmda(k10),idis(k10)

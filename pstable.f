@@ -480,6 +480,6 @@ c                                 write a title
      *          'answering yes will plot its log-log value.')
 1050  format (/,'Plot base 10 logarithm of ',a,'  (y/n)?')
 1060  format (/,'Reset plot limits (y/n)?')
-1070  format (/,'Enter ',a,' for ',a,' [default='g14.7,']:')
+1070  format (/,'Enter ',a,' for ',a,' [default=',g14.7,']:')
 
       end

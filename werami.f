@@ -2412,10 +2412,10 @@ c                                 min/max
      *        ' compositional variable(s).')
 1015  format (/,'In this mode you will be prompted to specify: ',//,3x,
      *        '- a compositional variable C[1] that is used to define a'
-     *        ' range criterion',/,3x,
+     *       ,' range criterion',/,3x,
      *        '- a compositional variable C[2] that is used to define a'
-     *        'minimum/maximum criterion',//,
-     *        'The range criterion is applied first to retrict the '
+     *       ,'minimum/maximum criterion',//,
+     *        'The range criterion is applied first to retrict the ',
      *        'identity of the phase of interest.',//,'The minimum/',
      *        'maxumum criterion is then used to select the phase of',
      *        'interest from',/,'those phases that satisfy the range ',

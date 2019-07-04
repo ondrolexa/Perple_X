@@ -834,7 +834,7 @@ c                                 diagrams:
 3050  format ('end ',a,/)
 3060  format (/,'begin ',a)
 3110  format (/,'**warning ver110** in this mode Perple_X  will not che'
-     *        'ck whether conditions are',/,'supersaturated with resp',
+     *       ,'ck whether conditions are',/,'supersaturated with resp',
      *        'ect to mobile components.',//,
      *        'To explicitly compute saturation surfaces:',/,
      *        '  1) use convex hull optimization and do not use ',
@@ -2529,7 +2529,7 @@ c                                 open c-space
 3120  format (/,'For zero-dimensional infiltration calculations:',/,
      *        3x,' - the fluid must be described by a hybrid EoS ',
      *           'solution model',/,
-     *        3x,' - the fluid components must be specified as '
+     *        3x,' - the fluid components must be specified as ',
      *           'thermodynamic components',/,
      *          'Additionally, to account for solute ',
      *           'chemistry:',/,

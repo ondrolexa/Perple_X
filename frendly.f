@@ -763,7 +763,7 @@ c                                 write version flag
 
       end if 
 
-1000  format ('Enter minimum, maximum, and increment for 'a,':')
+1000  format ('Enter minimum, maximum, and increment for ',a,':')
 1010  format (/,'Make the table also a function of ',a,' (y/n)?',//,
      *       'WARNING: if you answer yes, then the resulting 3d table ',
      *       'cannot be plotted ',/,

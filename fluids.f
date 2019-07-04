@@ -1275,7 +1275,7 @@ c                                  output bulk properties and V:
 1120  format (/,10x,'log[f(O) ] = ',g12.5,
      *        /,10x,'log[f(Si)] = ',g12.5,/)
 1130  format (/,10x,'f(H2O) = ',g12.5,/,10x,'f(CO2) = ',g12.5,/)
-1140  format (/,10x,'f('a') = ',g12.5,/)
+1140  format (/,10x,'f(',a,') = ',g12.5,/)
 1150  format (/,10x,'f(H2O)     = ',g12.5,/
      *         ,10x,'f(CO2)     = ',g12.5,/
      *         ,10x,'log[f(O2)] = ',g12.5,/)

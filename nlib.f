@@ -2408,20 +2408,45 @@ c           add the infeasibility.
 
       subroutine f06baf(a, b, c, s)
 c----------------------------------------------------------------------
-      double precision   a, b, c, s
+      double precision   a, b, c, s, t, abst
 
-      double precision   t
       logical            fail
       double precision   adivb
+
+      double precision wmach(9)
+      common /ax02za/wmach
 c----------------------------------------------------------------------
       if (b.eq.0d0) then
+
          c  = 1d0
          s  = 0d0
+
       else
+
          t  = adivb (b,a,fail)
-         call f06bcf(t, c, s)
+
+         abst = dabs(t)
+
+         if (abst.lt.wmach(4)) then
+c                                 wmach(4) = sqrt(epsmch)
+            c = 1d0
+            s = t
+
+         else if (abst*wmach(4).gt.1d0) then
+
+            c = 1d0/abst
+            s = sign (1d0,t)
+
+         else
+
+            c = 1d0 / dsqrt(1d0 + abst**2)
+            s = c*t
+
+         end if
+
          a  = c*a + s*b
          b  = t
+
       end if
 
       end
@@ -2807,36 +2832,6 @@ c           note that  scale = max(abs(x(i))).
 
       end
 
-      subroutine f06bcf (t, c, s)
-c----------------------------------------------------------------------
-      implicit none
-
-      double precision   c, s, t, abst
-
-      double precision wmach(9)
-      common /ax02za/wmach
-c----------------------------------------------------------------------
-      abst = dabs(t)
-
-      if (abst.lt.wmach(4)) then
-
-         c = 1d0
-         s = t
-
-      else if (abst*wmach(4).gt.1d0) then
-
-         c = 1d0/abst
-         s = sign (1d0,t)
-
-      else
-
-         c = 1d0 / dsqrt(1d0 + abst**2)
-         s = c*t
-
-      end if
-
-      end
-
 
       subroutine f06flf(n, x, incx, xmax, xmin)
 c----------------------------------------------------------------------
@@ -2925,11 +2920,18 @@ c----------------------------------------------------------------------
 
       double precision function adivb (a,b,fail)
 c----------------------------------------------------------------------
+c former f06blf
+c
+c orginal code was using 
+
+c flmin = 1/flmax ~= wmach(3) = epsmch
+c flmax = wmach(7) = huge()
+c----------------------------------------------------------------------
       implicit none
 
       logical fail
 
-      double precision   a, b, absb, absa, div
+      double precision a, b, absb, absa, div
 
       double precision wmach(9)
       common /ax02za/wmach
@@ -2953,6 +2955,8 @@ c                                 a is > eps
          if (absb.le.wmach(3)) then
 c                                 b is < eps, div = sign(a)*huge
             div  =  dsign(wmach(7),a)
+c                                 this doesn't make sense, but it's the
+c                                 original code. JADC, Jul 4, 2019.
             fail = .true.
 
          else
@@ -3125,6 +3129,10 @@ c----------------------------------------------------------------------
 
       double precision function f06bmf (scale, ssq)
 c----------------------------------------------------------------------
+c original code was using
+
+c flmax = wmach(7) = huge
+c flmin = 1/flmax ~= wmach(3) = epsmch
       implicit none
 
       double precision scale, ssq, sqt, norm

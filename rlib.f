@@ -1922,7 +1922,7 @@ c---------------------------------------------------------------------
       integer iemod,kmod
       logical smod,pmod
       double precision emod
-      common/ cst319 /emod(k15,k10),smod(h9),pmod(k10),iemod(k10),kmod
+      common/ cst319 /emod(k15,k10),smod(h9),pmod(h9),iemod(k10),kmod
 
       integer ifp
       logical fp
@@ -1998,17 +1998,11 @@ c                               load name and phase flag
       names(id) = name
 c                               moduli flags, indicate availability of
 c                               bulk and shear modulus
-      if (ieos.eq.5.or.ieos.eq.6) then
-c                               stixrude formulations, both available
-         iemod(id) = 2
 
-      else
 c                               if ikind = 0, no explicit moduli
 c                                        = 1, just shear
 c                                        = 2, shear and bulk
-         iemod(id) = ikind
-
-      end if
+      iemod(id) = ikind
 
       ikp(id) = 0
       ifp(id) = 0
@@ -3988,7 +3982,7 @@ c-----------------------------------------------------------------------
       integer iemod,kmod
       logical smod,pmod
       double precision emod
-      common/ cst319 /emod(k15,k10),smod(h9),pmod(k10),iemod(k10),kmod
+      common/ cst319 /emod(k15,k10),smod(h9),pmod(h9),iemod(k10),kmod
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
@@ -4559,7 +4553,7 @@ c-----------------------------------------------------------------------
       integer iemod,kmod
       logical smod,pmod
       double precision emod
-      common/ cst319 /emod(k15,k10),smod(h9),pmod(k10),iemod(k10),kmod
+      common/ cst319 /emod(k15,k10),smod(h9),pmod(h9),iemod(k10),kmod
 
       integer iopt
       logical lopt
@@ -8564,7 +8558,7 @@ c------------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i,j,ids
+      integer i,j,k,ids
 
       double precision y(m4), tphi, xpr, lex(m17,m18)
 
@@ -8590,6 +8584,12 @@ c----------------------------------------------------------------------
       if (extyp(ids).eq.1) then
 c                                 redlich kistler; expand polynomial
          do i = 1, jterm(ids)
+c                                 on gfortran with -Wstrict-overflow(??) 
+c                                 jonas haldeman (7/1/19) found that using rko(i,ids)
+c                                 causes f951: Warning: ‘__builtin_memset’
+c                                 with O2/O3 optimization.
+            k = rko(i,ids)
+ 
             do j = 1, rko(i,ids)
                lex(j,i) = 0d0
             end do
@@ -8853,7 +8853,7 @@ c                                 dqf parameters
       integer iemod,kmod
       logical smod,pmod
       double precision emod
-      common/ cst319 /emod(k15,k10),smod(h9),pmod(k10),iemod(k10),kmod
+      common/ cst319 /emod(k15,k10),smod(h9),pmod(h9),iemod(k10),kmod
 
       integer iopt
       logical lopt
@@ -9796,9 +9796,16 @@ c DEBUG DEBUG just patched in ostot.
       end if
 
       if (ostot+norder.gt.m4) call error (39,0d0,m4,'INPUT9')
-
+c                                 smod is used for all shear modulus calculations, it is
+c                                 set to false if a) the EoS for an endmembers doesn't 
+c                                 provide for its shear modulus or b) the endmember lacks
+c                                 an explicit shear modulus function.
       smod(im) = .true.
+c                                 pmod is used only for the explicit_bulk_modulus option
+c                                 it is set to true if explicit functions for the bulk
+c                                 modulus are present for all endmembers 
       pmod(im) = .true.
+
       killct = 0
 c                                 set fluid flag from the full name of the
 c                                 phase:
@@ -9867,6 +9874,8 @@ c                                 look for endmembers to be killed
          end if
 
       end do
+c                                 set pmod to false if explicit_bulk_modulus is not T
+      if (.not.lopt(17)) pmod(im) = .false.
 c                                 this looks like bad news, for laar/recip
 c                                 or laar/order, but appears to be overridden
 c                                 by use of logical classification variables,
@@ -18008,7 +18017,7 @@ c                                 single site solution or orphan
          end if
 
 1000  format ('then relax the limit in ',a,/)
-1010  format (/,'**warning ver993** X(',a,') = ',f6.4' of'
+1010  format (/,'**warning ver993** X(',a,') = ',f6.4,' of'
      *       ,' solution ',a,' exceeds its current',/,'limits (XMIN = ',
      *  f6.4,', XMAX = ',f6.4,') if this restriction is unintentional,')
 1020  format (/,'**warning ver993** X(',i1,i1,') = ',f6.4,' of ',

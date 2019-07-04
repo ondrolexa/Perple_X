@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.8.7, source updated June 28, 2019.',
+     *      'Perple_X version 6.8.7, source updated July 4, 2019.',
 
      *      'Copyright (C) 1986-2019 James A D Connolly '//
      *      '<www.perplex.ethz.ch/copyright.html>.'
@@ -163,7 +163,6 @@ c                                 for nag)
       if (r2.eq.0d0) call error (77,r1,i,
      *                         'starting precision for r1 < zero')
 
-      r2 = 1d2 * r2
 
       wmach(3) = r2
       wmach(5) = 1d0 + r2
@@ -174,10 +173,11 @@ c                                 for nag)
 c                                 largest number
       wmach(7) = huge(0d0)
       wmach(8) = dsqrt(wmach(7))
-
-      r1 = 1d0 + r2
 c                                 solution composition zero and one
+      r2 = 1d2 * r2
+
       zero = r2
+      r1 = 1d0 + r2
       one = 1d0 - r2
 c                                 -------------------------------------
 c                                 default option values:
@@ -2379,7 +2379,7 @@ c                                 accordingly:
      *       ,' perplex_parameters.h and recompile Perple_X',/)
 3     format (/,'**error ver003** the solution model file format ',
      *         'is inconsistent with',/,
-     *         'this version of Perple_X. Update the file and/or '
+     *         'this version of Perple_X. Update the file and/or ',
      *         'Perple_X',/)
 4     format (/,'**error ver004** you must use ',a,' to analyze this '
      *         ,'type of calculation.',/)
@@ -2894,7 +2894,7 @@ c----------------------------------------------------------------------
      *        'instability',/)
 3     format (/,'**warning ver003** the solution model file is ',
      *         ' inconsistent with this',/,
-     *         'this version of Perple_X. Update the file and/or '
+     *         'this version of Perple_X. Update the file and/or ',
      *         'Perple_X',/)
 4     format (/,'**warning ver004** the data includes ',a,' values, '
      *      ,'probably because bad_number',/,'in perplex_option.dat = '
@@ -3182,7 +3182,7 @@ c----------------------------------------------------------------------
      *        'problem increase speciation_max_it (',i4,') in ',
      *        'perplex_option.dat or choose',/,
      *        'a different equation of state.',//,
-     *        'NOTE: at compositional extremes fluid speciation ' 
+     *        'NOTE: at compositional extremes fluid speciation ',
      *        'calculations may require ',/,
      *        'thousands of iterations',/)
 177   format (/,'**warning ver177** Invalid fluid speciation. ',
@@ -4372,7 +4372,7 @@ c----------------------------------------------------------------------
       integer iemod,kmod
       logical smod,pmod
       double precision emod
-      common/ cst319 /emod(k15,k10),smod(h9),pmod(k10),iemod(k10),kmod
+      common/ cst319 /emod(k15,k10),smod(h9),pmod(h9),iemod(k10),kmod
 
       integer cl
       character cmpnt*5, dname*80

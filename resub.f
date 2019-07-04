@@ -3772,7 +3772,7 @@ c----------------------------------------------------------------------
       integer iemod,kmod
       logical smod,pmod
       double precision emod
-      common/ cst319 /emod(k15,k10),smod(h9),pmod(k10),iemod(k10),kmod
+      common/ cst319 /emod(k15,k10),smod(h9),pmod(h9),iemod(k10),kmod
 c----------------------------------------------------------------------- 
       first = .true.
       output = .false.

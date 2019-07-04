@@ -1147,7 +1147,7 @@ c-----------------------------------------------------------------------
       integer iemod,kmod
       logical smod,pmod
       double precision emod
-      common/ cst319 /emod(k15,k10),smod(h9),pmod(k10),iemod(k10),kmod
+      common/ cst319 /emod(k15,k10),smod(h9),pmod(h9),iemod(k10),kmod
 
       integer eos
       common/ cst303 /eos(k10)
@@ -1301,7 +1301,7 @@ c                                 bookkeeping variables
       integer iemod,kmod
       logical smod,pmod
       double precision emod
-      common/ cst319 /emod(k15,k10),smod(h9),pmod(k10),iemod(k10),kmod
+      common/ cst319 /emod(k15,k10),smod(h9),pmod(h9),iemod(k10),kmod
 
       double precision z, pa, p0a, x, w, y, wl
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
