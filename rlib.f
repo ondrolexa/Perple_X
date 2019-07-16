@@ -2490,7 +2490,12 @@ c                                normal vdp term:
      *        - f * dlog(tr) + gg / tr / tr / 2d0 + f
      *        - c8 * tr**4 / 4d0)
 
-         if (b8.gt.0d0.or.(b8.le.-3d0.and.b6.ne.0d0)) then
+         if (ieos.eq.13) then 
+c                                 komabayashi 2006
+            b4 = -b4
+            b2 = 2d0*b2
+
+         else if (b8.gt.0d0.or.(b8.le.-3d0.and.b6.ne.0d0)) then
 c                                 murnaghan or bm3:
             b2 = 2d0 * b2
             b4 = -b4

@@ -1887,6 +1887,7 @@ c     columns of the  (ngq x n)  matrix  gqm'.
       jt = nz + 1
 
       if (bound) then
+
 c        ===============================================================
 c        a simple bound has entered the working set.  iadd is not used.
 c        ===============================================================
@@ -1923,7 +1924,9 @@ c           move the  (nfree)-th  row of  q  to position ifix.
             end if
          end if
          kx(nfree) = jadd
+
       else
+
 c        ===============================================================
 c        a general constraint has entered the working set.
 c        ifix is not used.
@@ -1931,19 +1934,14 @@ c        ===============================================================
 
          nanew = nactiv + 1
 
-c        transform the incoming row of a by q'.
-
+c                                 transform the incoming row of a by q'.
          call dcopy(n,a(iadd,1),lda,w,1)
          call e04nbw(8,n,nz,nfree,ldq,unitq,kx,w,q,c)
-
-c        check that the incoming row is not dependent upon those
-c        already in the working set.
-
+c                                 check that the incoming row is not dependent upon those
+c                                 already in the working set.
          dtnew = dnrm2(nz,w,1)
          if (nactiv.eq.0) then
-
-c           this is the only general constraint in the working set.
-
+c                                 this is the only general constraint in the working set.
             cond = adivb(asize,dtnew,overfl)
             tdtmax = dtnew
             tdtmin = dtnew
@@ -2066,7 +2064,8 @@ c           the proposed working set appears to be linearly dependent.
 
       subroutine e04nfp(unitq,it,n,nactiv,nfree,ngq,nz,nrz,lda,ldq,ldt,
      *                  jdel,kdel,kactiv,kx,a,t,gqm,q,c,s,fail)
-      implicit none 
+
+      implicit none
 
       integer           it, jdel, kdel, lda, ldq, ldt, n, nactiv, nfree,
      *                  ngq, nrz, nz, kactiv(n), kx(n)
@@ -2134,17 +2133,18 @@ c           delete row  itdel  of  t  and move up the ones below it.
 c           t  becomes lower hessenberg.
 
             itdel = kdel
-            do 60 k = itdel, nactiv
+
+            do k = itdel, nactiv
                j = jt + k - 1
-               do 40 l = itdel, k - 1
+               do l = itdel, k - 1
                   i = it + l - 1
                   t(i,j) = t(i+1,j)
-   40          continue
-   60       continue
+               end do
+            end do 
 
-            do 80 i = nactiv - itdel + 1, nactiv - 1
+            do i = nactiv - itdel + 1, nactiv - 1
                kactiv(i) = kactiv(i+1)
-   80       continue
+            end do
 
             nactiv = nactiv - 1
 
@@ -2219,15 +2219,20 @@ c           t  becomes lower hessenberg.
 
       subroutine e04mfl(n,nrz,nz,zerolm,notopt,numinf,trusml,
      *                  smllst,jsmlst,tinyst,jtiny,gq)
+c----------------------------------------------------------------------
       implicit none
-      double precision  smllst, tinyst, trusml, zerolm
-      integer jsmlst, jtiny, n, notopt, nrz, numinf, nz, j
-      double precision  gq(n), rlam
 
-      do 20 j = nrz + 1, nz
+      integer jsmlst, jtiny, n, notopt, nrz, numinf, nz, j
+
+      double precision  smllst, tinyst, trusml, zerolm, gq(n), rlam
+c----------------------------------------------------------------------
+
+      do j = nrz + 1, nz
+
          rlam = -abs(gq(j))
 
          if (rlam.lt.zerolm) then
+
             if (numinf.eq.0) notopt = notopt + 1
 
             if (rlam.lt.smllst) then
@@ -2237,10 +2242,13 @@ c           t  becomes lower hessenberg.
             end if
 
          else if (rlam.lt.tinyst) then
+
             tinyst = rlam
             jtiny = -j
+
          end if
-   20 continue
+
+      end do 
 
       end
 
@@ -2251,15 +2259,13 @@ c           t  becomes lower hessenberg.
 c----------------------------------------------------------------------
       implicit none 
 
-      double precision  biggst, smllst, tinyst, trubig, trusml, zerolm
-      integer           jbigst, jinf, jsmlst, jtiny, kbigst, ksmlst,
-     *                  lda, ldt, n, nactiv, nfree, notopt,
-     *                  numinf, nz
-      double precision  a(lda,*), anorms(*), gq(n), rlamda(n), t(ldt,*),
-     *                  wtinf(*)
-      integer           istate(*), kactiv(n), kx(n)
-      double precision  anormj, blam, rlam, scdlam
-      integer           i, is, j, k, l, nfixed
+      integer jbigst, jinf, jsmlst, jtiny, kbigst, ksmlst, i, is, j, k,
+     *        lda, ldt, n, nactiv, nfree, notopt, numinf, nz, l, nfixed,
+     *        istate(*), kactiv(n), kx(n)
+
+      double precision a(lda,*), anorms(*), gq(n), rlamda(n), t(ldt,*),
+     *                 wtinf(*), biggst, smllst, tinyst, trubig, 
+     *                 trusml, zerolm, anormj, blam, rlam, scdlam
 c----------------------------------------------------------------------
       nfixed = n - nfree
       jtiny = 0
@@ -2322,12 +2328,14 @@ c        the working set at its upper bound.
          end if
 
          scdlam = rlam/wtinf(j)
+
          if (scdlam.gt.biggst .and.j.gt.jinf) then
             biggst = scdlam
             trubig = rlamda(k)
             jbigst = j
             kbigst = k
          end if
+
    60 continue
 
       end
@@ -2337,15 +2345,10 @@ c        the working set at its upper bound.
 c----------------------------------------------------------------------
       implicit none
 
-      double precision  suminf
-      integer           lda, n, nclin, numinf
+      integer lda, n, nclin, numinf, j, k, istate(*)
 
-      double precision  a(lda,*), bl(*), cvec(n), featol(*),
-     *                  wtinf(*), x(n)
-      integer           istate(*)
-      double precision  ctx, feasj, s, weight
-      integer           j, k
-      double precision  ddot
+      double precision  a(lda,*), bl(*), cvec(n), featol(*), suminf,
+     *                  wtinf(*), x(n), ctx, feasj, s, weight,  ddot
 c----------------------------------------------------------------------
       numinf = 0
       suminf = 0d0
@@ -2355,30 +2358,37 @@ c----------------------------------------------------------------------
       do 40 j = 1, n + nclin
 
          if (istate(j).le.0) then
+
             feasj = featol(j)
+
             if (j.le.n) then
                ctx = x(j)
             else
                k = j - n
                ctx = ddot(n,a(k,1),lda,x)
             end if
+
             istate(j) = 0
 
-c           see if the lower bound is violated.
-            if (j.le.n) then      
+c                                 see if the lower bound is violated.
+            if (j.le.n) then
+
                s = 0d0 - ctx
+
                if (s.gt.feasj) then
                   istate(j) = -2
                   weight = -wtinf(j)
                   go to 20
                end if
-c           see if the upper bound is violated.
+c                                 see if the upper bound is violated.
 
                s = ctx - 1d0
                if (s.le.feasj) go to 40
                istate(j) = -1
                weight = wtinf(j)
+
             else
+
                s = bl(j-n) - ctx
                if (s.gt.feasj) then
                   istate(j) = -2
@@ -2391,17 +2401,18 @@ c           see if the upper bound is violated.
                weight = wtinf(j)
 
             end if 
-
-c           add the infeasibility.
-
+c                                 add the infeasibility.
    20       numinf = numinf + 1
             suminf = suminf + dabs(weight)*s
+
             if (j.le.n) then
                cvec(j) = weight
             else
                call daxpy(n,weight,a(k,1),lda,cvec)
             end if
+
          end if
+
    40 continue
 
       end

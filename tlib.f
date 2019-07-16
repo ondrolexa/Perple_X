@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.8.7, source updated July 4, 2019.',
+     *      'Perple_X version 6.8.7, source updated July 9, 2019.',
 
      *      'Copyright (C) 1986-2019 James A D Connolly '//
      *      '<www.perplex.ethz.ch/copyright.html>.'
@@ -2789,8 +2789,6 @@ c----------------------------------------------------------------------
          write (*,42)     
       else if (ier.eq.43) then
          write (*,43) int
-      else if (ier.eq.44) then
-         write (*,44) char
       else if (ier.eq.45) then
          write (*,45) char
       else if (ier.eq.46) then 
@@ -3038,12 +3036,8 @@ c----------------------------------------------------------------------
 43    format (/,'**warning ver043** ',i2,' solutions referenced ',
      *          'in your input were not found in the solution ',
      *          'model file.',/)
-44    format ('**warning ver044** a solution model has destabilized',
-     *        ' the endmember: ',a,' (iend=2).')
-45    format (/,'**warning ver045** the entity involves ',
-     *        ' phases (',a,' )',/,'described by a nonlinear EoS (see',
-     *        ' program documentation Eq 2.2)',/,
-     *        ' NO OUTPUT WILL BE GENERATED FOR THIS ENTITY.',/)
+45    format (/,'**warning ver045** ',a,' involves a nonlinear EoS.',/,
+     *          ' Output properties are stoichiometric averages.',/)
 46    format (/,'**warning ver046** temperature (',g12.6,' K) is out',
      *        ' of range for endmember/phase: ',a,/,a,
      *        ' will be destabilized at this condition. In some cases',
@@ -4508,6 +4502,11 @@ c                                 HKF aqueous electrolyte data (13 values)
 
          if (ibeg.gt.1) write (lun,'(400a)') (chars(i), i = 1, ibeg)
 
+      else if (eos(id).eq.12.or.eos(id).eq.14.or.eos(id).eq.17) then 
+
+         call error (77,r,id,'routine OUTDAT is not programmed to ',
+     *              'output CALPHAD data tags.')
+
       else 
 
          ibeg = 1
@@ -4539,13 +4538,13 @@ c                                 c1->c7 of thermo data
          end do
 c                                 write c1->c7
          if (ibeg.gt.1) write (lun,'(400a)') (chars(i), i = 1, ibeg)
-c                                 b1->b8 of thermo data
+c                                 b1->b10 of thermo data
          ibeg = 1
 
-         do i = 11, 18
+         do i = 11, 20
             call outthr (thermo(i,id),strgs(i),2,ibeg)
          end do
-c                                 write b1->b8
+c                                 write b1->b8, c8
          if (ibeg.gt.1) write (lun,'(400a)') (chars(i), i = 1, ibeg)
 
       end if 
@@ -4619,7 +4618,7 @@ c----------------------------------------------------------------------
       common/ cst51 /length,iblank,icom,chars(lchar)
 
       if (num.ne.0d0) then 
-c                                 pad with a left blank, if not at line begining
+c                                 pad with 2 blanks, if not at line begining
          if (ibeg.gt.1) then
             chars(ibeg) = ' '
             ibeg = ibeg + 1

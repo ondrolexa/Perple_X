@@ -1215,10 +1215,10 @@ c---------------------------------------------------------------------
       include 'perplex_parameters.h'
 
       integer i,j,ier,id,jdis,imurg,kv,ichk,h,k,kd,jd
-
-      double precision cmurg8,cmurg7,cmurg6
  
       character y*1
+
+      double precision vsum
 
       integer ilam,jlam,idiso,lamin,idsin
       double precision tm,td
@@ -1332,7 +1332,8 @@ c                                 reset data
             id = k5
             idis(id) = 0
             ltyp(id) = 0
-            lct(id)  = 0 
+            lct(id)  = 0
+            eos(id)  = eos(1)
             jdis = 0
 
             write (*,1130)
@@ -1343,41 +1344,44 @@ c                                 reset data
             end do 
 
             do i = 1, k0
-               cp0(i,id) = 0d0     
+               cp0(i,id) = 0d0
             end do 
  
             imurg = 0
+            vsum = 0d0
 
             do j = 1, iphct
 
-               cmurg8 = thermo(18,j)
+               if (thermo(18,j).ne.0d0.and.iphct.gt.1) 
+     *            call warn (45,r,iphct,names(id))
+               if (eos(j).ne.eos(id)) call warn (99,r,j,'combining di'//
+     *            'fferent EoS may not function correctly')
 
-               if (cmurg8.ne.0d0.and.iphct.gt.1) then
-c                                    test for Gottschalk
-                  call warn (45,cmurg8,iphct,names(id)) 
-                  return
+               if (eos(j).ne.13) then
 
-               else if (cmurg8.ne.0d0) then
-c                                    test for Murghnahan EoS
-                  imurg = 1
-                  cmurg6 = thermo(16,j)
-                  cmurg7 = thermo(17,j)
+                  do i = 1, k4
+                     thermo(i,id) = thermo(i,id) + vnu(j) * thermo(i,j)
+                  end do
 
-               end if             
+               else
+c                                 komabayashi, caloric molar weighted
+                  do i = 1, 10
+                     thermo(i,id) = thermo(i,id) + vnu(j) * thermo(i,j)
+                  end do
 
-               do i = 1, k4
-                  thermo(i,id) = thermo(i,id) + vnu(j) * thermo(i,j)
-               end do 
+                  vsum = vsum + vnu(j) * thermo(3,j)
+c                                 compressibility and expansivity volume weighted
+c                                 and k'(T) for lack of a better choice. 
+                  do i = 11, 20
+                     thermo(i,id) = thermo(i,id) 
+     *                            + vnu(j) * thermo(i,j) * thermo(3,j) 
+                  end do
+
+               end if
 
                do i = 1, k0
                   cp0(i,id) = cp0(i,id) + vnu(j) * cp0(i,j)
                end do 
-
-               if (imurg.eq.1) then 
-                  thermo(16,id) = cmurg6
-                  thermo(17,id) = cmurg7
-                  thermo(18,id) = cmurg8
-               end if 
 
                if (idis(j).ne.0) then
 
@@ -1404,7 +1408,6 @@ c                                    test for Murghnahan EoS
                   lmda(id) = kd
                   jd = lmda(j)
                   lct(id) = lct(j) 
-                   
 
                   if (ltyp(j).eq.4) then
 
@@ -1443,6 +1446,14 @@ c                                    test for Murghnahan EoS
                end if
 
             end do
+c                                renormalize volumetric averages:
+            if (eos(id).eq.13) then
+c                                renormalize volumetric averages:
+               do i = 11, 20
+                  thermo(i,id) = thermo(i,id)/vsum
+               end do
+
+            end if
 
             call unlam (tm,id)
 
@@ -1490,12 +1501,12 @@ c                                 reset data
 c                                 phase loop
             if (iphct.gt.1) then
 
-            do 
-               write (*,1000) (i,names(i),i=1,iphct)
-               read (*,*,iostat=ier) id
-               if (ier.eq.0) exit 
-               call rerr
-            end do 
+               do 
+                  write (*,1000) (i,names(i),i=1,iphct)
+                  read (*,*,iostat=ier) id
+                  if (ier.eq.0) exit 
+                  call rerr
+               end do 
 
             else
 
