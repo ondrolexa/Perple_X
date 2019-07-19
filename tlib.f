@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.8.7, source updated July 9, 2019.',
+     *      'Perple_X version 6.8.8, source updated July 19, 2019.',
 
      *      'Copyright (C) 1986-2019 James A D Connolly '//
      *      '<www.perplex.ethz.ch/copyright.html>.'
@@ -52,7 +52,7 @@ c----------------------------------------------------------------------
      *    new.eq.'672'.or.new.eq.'673'.or.new.eq.'674'.or.
      *    new.eq.'675'.or.new.eq.'676'.or.new.eq.'678'.or.
      *    new.eq.'679'.or.new.eq.'682'.or.new.eq.'683'.or.
-     *    new.eq.'685'.or.new.eq.'687') then 
+     *    new.eq.'685'.or.new.eq.'687'.or.new.eq.'688') then 
 
          chksol = .true.
 
@@ -3409,7 +3409,7 @@ c                                 anyway in case it's a tag
 
       end 
 
-      subroutine readcd (nloc,len,ier,strip)
+      subroutine readcd (nloc,lenth,ier,strip)
 c----------------------------------------------------------------------
 c readcd - read 240 column card image from unit 9, strip out unwanted
 c characters if strip. ier = 1 no card found.
@@ -3420,7 +3420,7 @@ c----------------------------------------------------------------------
 
       logical strip
 
-      integer len, ier, iscan, ict, i, iscnlt, ibeg, nloc
+      integer lenth, ier, iscan, ict, i, iscnlt, ibeg, nloc
 
       character card*(lchar)
 
@@ -3433,11 +3433,11 @@ c----------------------------------------------------------------------
 
       ibeg = 0
   
-      len = 0 
+      lenth = 0 
 
       card = ' '
 
-      do while (ibeg.ge.len) 
+      do while (ibeg.ge.lenth) 
 
          read (nloc,'(a)',end=90) card
 
@@ -3445,11 +3445,11 @@ c----------------------------------------------------------------------
 
             read (card,'(400a)') chars
 c                                 find end of data marker '|'
-            len = iscan (1,lchar,'|') - 1
+            lenth = iscan (1,lchar,'|') - 1
 c                                 '|' in first column
-            if (len.eq.0) cycle
+            if (lenth.eq.0) cycle
 c                                 find a non blank character
-            ibeg = iscnlt (1,len,' ')
+            ibeg = iscnlt (1,lenth,' ')
 
          end if 
 
@@ -3459,7 +3459,7 @@ c                                 there is a non-blank data character
 
          ict = 1
 
-         do i = 2, len 
+         do i = 2, lenth
 c                                 strip out '+' and '*' chars
             if (chars(i).eq.'+'.or.chars(i).eq.'*') chars(i) = ' '
 c                                 eliminate blanks after '/' and '-'
@@ -3475,11 +3475,11 @@ c                                 and double blanks
 
          end do 
 
-         len = ict
+         lenth = ict
 
       else
 c                                 scan backwards to the last non-blank
-         len = iscnlt (len,1,' ')
+         lenth = iscnlt (lenth,1,' ')
 
       end if
 

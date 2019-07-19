@@ -3012,7 +3012,7 @@ c                                 find the name
          ict = ict + 1
          mname(ict) = name
 
-         if (ibeg.ge.len.and.ict.lt.idim) then
+         if (ibeg.ge.len.and.ict-i.lt.idim) then
             call readcd (n9,len,ier,.false.)
             ibeg = 1
             if (ier.ne.0) goto 90
@@ -3312,19 +3312,23 @@ c                                 assign data
       subroutine readop (idim,jlaar,kstot,reach,stck,norf,tname)
 c----------------------------------------------------------------------
 c readop - tail of solution model to find optional dqf,
-c          van laar size parameters, or reach_increment
+c          van laar size parameters, flagged endmembers, or 
+c          reach_increment
 
 c readop - reads data until it finds an     "end_of_model" record
 
 c          van laar data is identified by a "begin_van_la" record
 c          dqf data is identified by a      "begin_dqf_co" record
+c          endmember flags by a             "begin_flagge" record
 c          or the reach factor is           "reach_increm" record
+
 
 c readop returns:
 
 c          jlaar = 1 if van laar data found (else 0).
 c          idqf  > 0 if dqf data found (else 0).
 c          reach, set = 0 if no reach factor found.
+c          and sets endmember flags of indicated endmembers
 c----------------------------------------------------------------------
       implicit none
 
@@ -3380,10 +3384,10 @@ c                              read dqf data:
             call readdq (idim,tname)
             cycle
 
-         else if (key.eq.'reach_increment') then
+         else if (key.eq.'begin_flagged_endmembe') then
 
-            read (val,*) i
-            reach = dfloat(i)
+            call readef (idim,tname)
+            cycle 
 
          else if (key.eq.'site_check_override') then
 
@@ -3591,7 +3595,7 @@ c                                 data found
 
       end
 
-      subroutine readr (coeffs,enth,inds,idim,nreact,tname)
+      subroutine readr (coeffs,enth,inds,idim,nreact,tname,eor)
 c----------------------------------------------------------------------
 c readr - read stoichiometric reaction data for a solution model, assumes
 c data on one line of less than 240 characters, the expected format
@@ -3603,6 +3607,8 @@ c nreact = -1 on input for ordered/disorder reactions
 c enthalpy_value is only read if on input nreact = -1
 
 c end_of_data is either a "|" or the end of the record.
+
+c eor - indicates end of data for 688 format solution models
 c----------------------------------------------------------------------
       implicit none
 
@@ -3611,9 +3617,11 @@ c----------------------------------------------------------------------
       integer ibeg, iend, len, ier, iscan, i, nreact, inds(k7),
      *        idim, match, iscnlt
 
+      logical eor
+
       double precision coeffs(k7), enth(3), rnum
 
-      character name*8, tname*10
+      character name*8, tname*10, tag*3
 
       external iscan, iscnlt
 
@@ -3630,6 +3638,15 @@ c----------------------------------------------------------------------
       if (ier.ne.0) goto 90
 
       ibeg = 1
+
+      write (tag,'(a3)') chars(1:3)
+
+      if (tag.eq.'end') then 
+         eor = .true.
+         return
+      else 
+         eor = .false.
+      end if 
 c                                 first name
       call readnm (ibeg,iend,len,ier,name)
 
@@ -6829,7 +6846,7 @@ c                                dependent endmember is ok
 
       end
 
-      subroutine rmodel (tname,tn1,tn2,bad)
+      subroutine rmodel (tname,tn1,tn2)
 c---------------------------------------------------------------------
 c rmodel - reads solution models from LUN n9.
 c---------------------------------------------------------------------
@@ -6843,7 +6860,7 @@ c---------------------------------------------------------------------
 
       integer nreact,i,j,k,l,m,jlaar,idim
 
-      logical bad
+      logical bad, eor
 
       double precision coeffs(k7), rnums(m4), enth(3)
 
@@ -6963,6 +6980,10 @@ c                                 arrays
 
          return
 
+       else if (jsmod.eq.688) then 
+
+         call rmoden (tname)
+
        end if
 c                                 check for disabled model types
       if (jsmod.eq.1.or.jsmod.eq.3.or.jsmod.eq.5)
@@ -6983,14 +7004,12 @@ c                                 read number of independent sites:
       else
          isite = 1
       end if
+c                               total number of endmembers:
+      istot = 1
 c                               read number of species on each site:
       call readda (rnums,isite,tname)
       do i = 1, isite
          isp(i) = idint(rnums(i))
-      end do
-c                               total number of endmembers:
-      istot = 1
-      do i = 1, isite
          istot = istot*isp(i)
       end do
 
@@ -7022,7 +7041,7 @@ c                               get the number of ordered species
          call readda (rnums,1,tname)
          norder = idint(rnums(1))
 
-         if (ostot+norder.gt.m4) call error (1,rnums(1),istot+norder,
+         if (ostot+norder.gt.m4) call error (1,rnums(1),ostot+norder,
      *                           'm4 (maximum number of endmembers)')
 
          if (norder.gt.j3) call error (5,rnums(1),norder,tname)
@@ -7032,7 +7051,7 @@ c                               of ordered species:
 
             nreact = -1
 
-            call readr (coeffs,enth,inds,idim,nreact,tname)
+            call readr (coeffs,enth,inds,idim,nreact,tname,eor)
 
             do j = 1, 3
                denth(i,j) = enth(j)
@@ -7063,7 +7082,7 @@ c                               number of dependent endmembers
 c                               nreact is returned by readr
             nreact = 0
 
-            call readr (coeffs,enth,inds,idim,nreact,tname)
+            call readr (coeffs,enth,inds,idim,nreact,tname,eor)
 
             jdep(i) = inds(1)
             ndph(i) = nreact - 1
@@ -12169,9 +12188,7 @@ c                                 check version compatability
       do while (im.lt.isoct)
 c                                 -------------------------------------
 c                                 read the solution name
-         call rmodel (tname,tn1,tn2,bad)
-
-         if (bad) cycle
+         call rmodel (tname,tn1,tn2)
 c                                 ostot is zero, if eof:
          if (ostot.eq.0.and.isoct-im.gt.0) then
 c                                 then at least one solution phase referenced
@@ -20806,3 +20823,433 @@ c                                 for each term:
          z = 1d0 - zt
 
          end
+
+
+      subroutine rmoden (tname)
+c---------------------------------------------------------------------
+c rmodel - reads 688 solution models from LUN n9.
+c---------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      character*10 tname, tag*3, key*22, val*3,
+     *          nval1*12, nval2*12, nval3*12, strg*40, strg1*40
+
+      integer nreact,i,j,k,l,m,jlaar,ier
+
+      double precision coeffs(k7), rnums(m4), enth(3)
+
+      integer ijk(mst),inds(k7),ict
+
+      integer jmsol,kdsol
+      common/ cst142 /jmsol(m4,mst),kdsol(m4)
+
+      integer ostot
+      common/ junk /ostot
+
+      integer jsmod
+      double precision vlaar
+      common/ cst221 /vlaar(m3,m4),jsmod
+
+      integer nsub,nttyp,nterm,nspm1,nsite
+      double precision acoef,smult,a0
+      common/ cst107 /a0(m10,m11),acoef(m10,m11,m0),smult(m10),
+     *      nsite,nspm1(m10),nterm(m10,m11),nsub(m10,m11,m0,m12),
+     *      nttyp(m10,m11,m0)
+
+      logical stck, norf
+      integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
+     *        kstot,rkord,xtyp
+      double precision wg,wk,reach
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),reach,iend(m4),
+     *      isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),isp(mst),
+     *      rkord(m18),isite,iterm,iord,istot,jstot,kstot,xtyp,stck,norf
+
+      double precision xmn,xmx,xnc
+      common/ cxt108 /xmn(mst,msp),xmx(mst,msp),xnc(mst,msp)
+
+      logical depend,laar,order,fluid,macro,recip
+      common/ cst160 /depend,laar,order,fluid,macro,recip
+
+      integer iorig,jnsp,iy2p
+      common / cst159 /iorig(m4),jnsp(m4),iy2p(m4)
+
+      integer iddeps,norder,nr
+      double precision depnu,denth
+      common/ cst141 /depnu(j4,j3),denth(j3,3),iddeps(j4,j3),norder,
+     *                nr(j3)
+
+      integer mdep,idep,jdep,ndph
+      double precision nu,y2p
+      common/ cst146 /nu(m15,j4),y2p(m4,m15),mdep,jdep(m15),
+     *                idep(m15,j4),ndph(m15)
+
+      double precision yin
+      common/ cst50 /yin(ms1,mst)
+
+      integer nq,nn,ns
+      common/ cxt337 /nq,nn,ns
+
+c       ipoly - number of sub-polytopes in a c-space
+c       isimp(ipoly) - number of simplices in each sub-polytope
+c       ivert(ipoly,isimp(ipoly) - number of vertices in each simplex
+c       ipvert(ipoly) - number of vertices in each sub-polytope
+c       istot - total number of vertices
+
+      character pname(h4)*10
+
+      logical eor
+
+      integer ipoly, pimd(h4), isimp(h4), ipvert(h4), ivert(h4,mst),
+     *        spimd(h4,mst,msp)
+
+      double precision pxmn(h4), pxmx(h4), pxnc(h4)
+      double precision spxmn(h4,mst,msp), spxmx(h4,mst,msp), 
+     *                 spxnc(h4,mst,msp)
+
+c----------------------------------------------------------------------
+c                                read number of sub-polytopes
+      call readda (rnums,1,tname)
+      ipoly = idint(rnums(1))
+
+      if (ipoly.gt.h4) call error (1,rnums(1),ipoly,
+     *    'h4 (maximum number of sub-polytopes for solution model: '
+     *     //tname//')')
+c                                read subdivision data for the polytope
+      do i = 1, ipoly - 1
+
+         call readda (rnums,4,tname)
+
+         pxmn(i) = rnums(1)
+         pxmx(i) = rnums(2)
+         pxnc(i) = rnums(3)
+         pimd(i) = idint(rnums(4))
+
+      end do
+c                                total number of vertices
+      istot = 0 
+c                                read data for each sub-polytope
+      do i = 1, ipoly
+c                                sub-polytope name
+         call redcd1 (n9,ier,key,val,nval1,nval2,nval3,strg,strg1)
+
+         pname(i) = key
+c                                number of simplices
+         call readda (rnums,1,tname)
+
+         isimp(i) = idint(rnums(1))
+
+         if (isimp(i).gt.mst) call error (1,rnums(1),istot,
+     *      'mst (maximum number of simplices in a polytope for '//
+     *      'solution model: '//tname//')')
+
+c                                number of vertices on each simplex:
+         call readda (rnums,isimp(i),tname)
+
+         ipvert(i) = 1
+
+         do j = 1, isimp(i)
+            ivert(i,j) = idint(rnums(i))
+c                                number of vertices in the sub-polytope
+            ipvert(i) = ipvert(i)*ivert(i,j)
+         end do
+
+         if (istot.gt.m4) call error (1,rnums(1),istot,
+     *                    'm4 (maximum number of endmembers)')
+
+c                                read vertex names into mname
+         call readn (istot,ipvert(i),tname)
+
+         istot = istot + ipvert(i)
+c                               read subdivision data for each sub-polytope
+         do j = 1, isimp(i)
+            do k = 1, ivert(i,j) - 1
+               call readda (rnums,4,tname)
+
+               spxmn(i,j,k) = rnums(1)
+               spxmx(i,j,k) = rnums(2)
+               spxnc(i,j,k) = rnums(3)
+               spimd(i,j,k) = idint(rnums(4))
+
+            end do
+         end do
+      end do
+c                               look for and read optional data this may be, 
+c                               sequentially:
+
+c                               1) begin_ordered_endmembers
+c                               2) begin_dependent_endmembers
+c                               3) begin_excess_function
+c                               4) ideal
+
+      norder = 0
+      mdep = 0
+
+      do
+
+         call redcd1 (n9,ier,key,val,nval1,nval2,nval3,strg,strg1)
+
+         if (key.eq.'begin_ordered_endmembe') then
+
+            do
+c                               on input nreact = -1 signals ordering reaction
+               nreact = -1
+
+               call readr (coeffs,enth,inds,istot,nreact,tname,eor)
+
+               if (eor) then
+
+                  exit
+
+               else
+
+                  order = .true.
+                  norder = norder + 1
+
+                  if (istot+norder.gt.m4) call error (1,rnums(1),
+     *                istot+norder,'m4 (maximum number of endmembers)')
+
+                  if (norder.gt.j3) call error (5,rnums(1),norder,tname)
+
+               end if
+
+               do j = 1, 3
+                  denth(norder,j) = enth(j)
+               end do
+
+               nr(norder) = nreact
+
+               do j = 1, nreact
+                  depnu(j,norder) = coeffs(j+1)
+                  iddeps(j,norder) = inds(j+1)
+               end do
+
+            end do
+
+         else if (key.eq.'begin_dependent_endmem') then
+
+            do 
+c                               nreact is returned by readr
+               nreact = 0
+
+               call readr (coeffs,enth,inds,istot,nreact,tname,eor)
+
+               if (eor) then
+
+                  exit
+
+               else
+
+                  depend = .true.
+                  recip = .true.
+                  mdep = mdep + 1
+                  if (mdep.gt.m15) call error (1,enth(1),mdep,'m15')
+
+               end if
+
+               jdep(mdep) = inds(1)
+               ndph(mdep) = nreact - 1
+
+               if (ndph(mdep).gt.j4) 
+     *            call error (1,enth(1),ndph(mdep),'j4')
+
+               do j = 1, ndph(mdep)
+                  nu(mdep,j) = coeffs(j+1)
+                  idep(mdep,j) = inds(j+1)
+               end do
+
+            end do
+
+         else if (key.eq.'ideal'.or.key.eq.'begin_excess_funtion') then
+
+         else 
+c                               done, must be at configurational entropy model
+            backspace (n9)
+            exit
+
+         end if
+
+      end do
+c                                create bragg-williams indexes
+      do i = 2, isite
+         ijk(i) = 1
+      end do
+
+      ijk(1) = 0
+
+      do 20 l = 1, istot
+
+         do m = 1, isite
+
+            if (ijk(m).lt.isp(m)) then
+
+               ijk(m) = ijk(m) + 1
+c                                increment only one index per endmember
+               do i = 1, isite
+                  jmsol(l,i) = ijk(i)
+               end do
+
+               if (ijk(m).eq.isp(m).and.l.lt.istot-isp(1)+1) then
+c                                saturated counter, increment first
+c                                unsaturated counter and reset all
+c                                lower site counters to first index,
+                  do j = 2, isite
+                     if (ijk(j).lt.isp(j)) then
+                        ijk(j) = ijk(j) + 1
+                        do k = 2, j-1
+                           ijk(k) = 1
+                        end do
+                        ijk(1) = 0
+                        goto 20
+                     end if
+                  end do
+               end if
+
+               goto 20
+
+            end if
+         end do
+20    continue
+c                              read excess function
+      call readx (istot,tname)
+c                              expansion for S(configurational)
+      call readda (rnums,1,tname)
+
+      nsite = idint(rnums(1))
+
+      if (nsite.gt.m10) call error (1,a0(1,1),nsite,'m10')
+c                                 for each site
+      do i = 1, nsite
+c                                 read # of species, and site
+c                                 multiplicty.
+         call readda (rnums,2,tname)
+
+         smult(i) = rnums(2)
+c                                 if multiplicity is 0, the model
+c                                 site has variable multiplicity
+c                                 and molar site population expressions
+c                                 are read rather than site fractions
+c                                 in which case we need as many expressions
+c                                 as species. nspm1 is the counter for the
+c                                 number of expressions
+         if (smult(i).gt.0) then
+            nspm1(i) = idint(rnums(1)) - 1
+         else
+            nspm1(i) = idint(rnums(1))
+         end if
+
+         if (nspm1(i).gt.m11) call error (1,a0(1,1),nspm1(i),'m11')
+c                                 for each species, read
+c                                 function to define the
+c                                 site fraction of the species:
+c
+         do j = 1, nspm1(i)
+c                                 read expression for site
+c                                 fraction of species j on
+c                                 site i.
+            call readz (coeffs,inds,ict,istot,tname,tag)
+
+            a0(i,j) = coeffs(1)
+            nterm(i,j) = ict - 1
+            if (nterm(i,j).gt.m0) call error (33,a0(1,1),m0,tname)
+c                                 for each term:
+            do k = 2, ict
+c                                 all terms 1 order type, this
+c                                 saved for compatability with
+c                                 old versions:
+               nttyp(i,j,k-1)   = 1
+               acoef(i,j,k-1)   = coeffs(k)
+               nsub(i,j,k-1,1) = inds(k)
+            end do
+         end do
+      end do
+c                              initialize endmember flags
+      do i = 1, istot
+         iend(i) = 0
+      end do 
+c                              look for van laar and/or dqf parameters
+c                              reach_increment, endmember flags
+c                              or the end of model marker
+      call readop (istot,jlaar,istot-mdep,reach,stck,norf,tname)
+
+      if (jlaar.ne.0) then
+
+         laar = .true.
+c                                 high order terms not allowed for
+c                                 van laar.
+         if (iord.gt.2.and.laar) call error (999,coeffs(1),800,'RMODEL')
+
+      end if
+c                                 save original indices, need this for
+c                                 melt models etc that have species specific
+c                                 equations of state.
+      do i = 1, istot + norder
+         iorig(i) = i
+      end do
+
+      end
+
+      subroutine readef (idim,tname)
+c----------------------------------------------------------------------
+c readef - read solution models endmembers to be flagged so that they 
+c are not identified by the solution model on output, assumes
+c data on one line of less than 240 characters, the expected format is
+
+c        name
+
+c end_of_data is either a "|" or the end of the record.
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer i, len, ier, match, idim, index
+
+      character name*8, eod*3, tname*10
+
+      integer length,iblank,icom
+      character chars*1
+      common/ cst51 /length,iblank,icom,chars(lchar)
+
+      logical stck, norf
+      integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
+     *        kstot,rkord,xtyp
+      double precision wg,wk,reach
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),reach,iend(m4),
+     *      isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),isp(mst),
+     *      rkord(m18),isite,iterm,iord,istot,jstot,kstot,xtyp,stck,norf
+c----------------------------------------------------------------------
+
+      eod = ' '
+
+      do while (eod.ne.'end')
+
+         call readcd (n9,len,ier,.true.)
+         if (ier.ne.0) goto 90
+
+         write (eod,'(3a)') chars(1:3)
+
+         call readnm (1,len,len,ier,name)
+         if (ier.ne.0) goto 90
+
+         index = match (idim,ier,name)
+         if (ier.ne.0) goto 90
+
+         iend(index) = 1
+
+      end do
+
+      return
+
+90    write (*,1000) tname,(chars(i),i=1,len)
+      write (*,1001)
+
+      call errpau
+
+1000  format ('**error ver200** READEF bad data, currently ',
+     *        'reading solution model: ',a,' data was:',/,400a,/)
+1001  format (/,'usually this error is caused by a mispelled ',
+     *          'endmember name.',/)
+
+      end

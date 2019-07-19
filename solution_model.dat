@@ -993,7 +993,9 @@ begin_model
            dependent exchange MKpg          K     M      MAl    M      SiAl     OH
            dependent exchange MTts          V     M      Ti     M      SiAl     OH
 
+           2 NaCa-1(M4) = (Gl-Ts)
            2 CaMg-1(M4) = (Tr-Cumm)
+
            3 FeMg-1(M1) = (grun - a)
            2 FeMg-1(M2) = (grun - b)
            2 FeMg-1(M4) = (-grun - cumm + a + b)
