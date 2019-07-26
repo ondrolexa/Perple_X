@@ -1,6 +1,177 @@
 688
                       --------------------------------------------------------
 begin_model
+
+                             Ti-Fe3+ Biotite from Tajcmanova et al., JMG 2009;
+                             extended for Mn solution after Tinkham et al. 2001.
+
+                             Model entered by Lucie Tajcmanova, December, 2008.
+
+                             NOTE this model requires the following make definitions 
+                             in the thermodynamic data file:
+
+                             tbit = 1 phl - 1 br + 1 ru           84e3 -11.5 0 
+                             fbit = 1 east - 1/2 cor + 1/2 hem    6e3 0 0  
+
+                             site population limits added Feb 20, 2011, JADC.
+
+                             reformulated as a prismatic + orphan vertex model.
+
+                             JADC, 10/5/2018
+
+
+                                      Site:           M1      M2       T1     H
+                                                     ____________________________
+
+                                      Mutliplicity    1       2        2      2       
+
+                                    endmember        ____________________________   type
+                                    _________                                       _________
+
+
+                                        ffbit         Fe3+   FeFe     AlAl    OH    dependent 
+                                        fbit          Fe3+   MgMg     AlAl    OH
+                          
+                                        ftbit         Fe     TiFe     AlSi    O     dependent
+                                        tbit          Mg     TiMg     AlSi    O
+   
+                                        sdph          Al     FeFe     AlAl    OH    dependent
+                                        east          Al     MgMg     AlAl    OH
+
+                                        mnbi          Mn     MnMn     AlSi    OH    independent orphan
+                                        ann           Fe     FeFe     AlSi    OH
+                                        phl           Mg     MgMg     AlSi    OH
+
+                                        obi           Fe     MgMg     AlSi    OH    ordered
+
+Bio(TCC)                     | model name
+abbreviation Bio
+full_name    biotite
+
+688                                | model type: 688 format standard model
+ 
+3                                  | number of polytopes
+0   .5   .1   0                    | X(1) is [Mn][Mn]
+0   .5   .1   0                    | x(2) is [M][MTi]
+                                   | ----------------------------
+                                   | Polytope 1 - 0d simplex
+[Mn][Mn]                           | polytope name
+1                                  | number of simplices, [Mn][Mn]
+1                                  | number of vertices on each simplex
+mnbi                               | endmembers on the vertices
+                                   | ----------------------------
+                                   | Polytope 2 - 1-d simplex
+[M][MTi]                           | polytope name
+1                                  | number of simplices
+2                                  | number of vertices on each simplex
+ftbit     tbit
+0   .5   .1   0                    | x(1) is Fe/M, M = Fe + Mg
+                                   | ----------------------------
+                                   | Polytope 3 - 1d x 2d simplices
+[M,T][M]                           | polytope name
+2                                  | number of simplices
+2  3                               | number of vertices on each simplex
+ffbit     fbit
+sdph      east
+ann       phl
+                                   | First (1d) simplex
+0    1   .1  0                     | X(1,1) is bulk Fe/M
+                                   | Second (3d) simplex
+0    1   .1  0                     | X(2,1) is Fe3/[T+M] on M1
+0    1   .1  0                     | X(2,1) is Al/[T+M] on M1
+
+begin_ordered_endmembers
+obi = 2/3 phl + 1/3 ann   enthalpy_of_ordering = -6.8d3 
+end_ordered_endmembers
+
+begin_dependent_endmembers
+sdph    = 1 east + 1 ann    - 1 obi
+ffbit   = 1 fbit + 1 ann    - 1 obi
+ftbit   = 1 tbit + 1/2 ann  + 1/2 obi - 1 phl
+end_dependent_endmembers
+
+begin_excess_function
+W(phl ann)   12000   | excess parameters from Holland & Powell, JMG, 2006
+W(phl east)  10000 
+W(phl obi)    4000
+W(ann east)   3000 
+W(ann obi)    8000
+W(obi east)   7000
+end_excess_function 
+
+4                                  | Configurational entropy: 4 sites, M1, M2, T1 H.
+
+5 1                                | 5 species on M1, 1 site per formula unit.
+
+z(m1,fe)   = 1 ann + 1 obi 
+z(m1,mg)   = 1 phl + 1 tbit     
+z(m1,mn)   = 1 mnbi 
+z(m1,Fe3+) = 1 fbit
+
+4 2.                               | 4 species on M2, 2 sites per formula unit.
+
+z(m2,fe)   = 1 ann
+z(m2,Ti)   = 1/2 tbit
+z(m2,mn)   = 1 mnbi
+    
+2 2.                               | 2 species on T1, 2 site per formula unit.
+
+z(t1,al)   = 1/2 + 1/2 east + 1/2 fbit 
+
+2 2.                               | 2 species on H, 2 site per formula unit.
+
+z(h,o)     = 1 tbit
+
+end_of_model
+                      --------------------------------------------------------
+begin_model                
+                           ternary feldsar (fuhrman & lindsley, am min, 1988)
+                           for binary plagioclse this model is identical
+                           to that of Newton et al. 1980, and for binary
+                           alkali feldspar it is identical to Haselton et al. (1983).
+
+                           CORRECTED FOR TYPO IN ORIGINAL PAPER.
+
+feldspar                   
+abbreviation Fsp
+full_name    ternary-feldspar
+
+688                                | model type: 688 format standard model
+ 
+1                                  | number of polytopes
+1                                  | number of simplices
+3                                  | number of vertices on each simplex
+abh                                | endmembers on the vertices
+an
+san
+
+0. 1   .1   0                      | range and resolution for albite, imod = 0 -> cartesian subdivision
+0. 1   .1   0                      | range and resolution for anorthite, imod = 0 -> cartesian subdivision
+
+begin_excess_function 
+w(abh abh san) 27320   -10.3  .394 * P_bar
+w(abh san san) 18810   -10.3  .394 * P_bar
+w(an  an  san) 52468          
+w(an  san san) 47396          -.12 * P_bar
+w(an  an  abh) 28226
+w(an  abh abh) 8471
+w(an  abh san) 100045.5 -10.3 -0.76 * P_bar
+end_excess_function 
+
+2                                  | 2 site (O-site and T-site) entropy model
+
+3 1                                | 3 species on O-site, 1 site per formula unit.
+z(Na) = 1 abh
+z(Ca) = 1 an
+
+2 2.                               | 2 species on T-site, 2. sites per formula (al-avoidance model)
+z(Al) = 1/2 + 1/2 an 
+
+reach_increment 3
+
+end_of_model
+                      --------------------------------------------------------
+begin_model
                       cAmph(G) => Green et al. (JMG, 2016) clinoamphibole.
                       
                                                                                   Sites
@@ -402,6 +573,10 @@ DQF(ts)   =  10000
 DQF(grun) = -3000
 
 end_dqf_corrections
+
+begin_flagged_endmembers
+grun
+end_flagged_endmembers
 
 end_of_model
 

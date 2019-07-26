@@ -3,7 +3,7 @@ no_print | print generates print output
 plot     | no_plot suppresses plot output
 new_solution_model.dat     | solution model file, blank = none                                                                                                                                                                                                      
 Fig 4a Green et al 2016 BL478                                                                                                                                                                
-bl478_perplex_option.dat     | Perple_X option file                                                                                                                                                                                                                   
+perplex_option_688.dat     | Perple_X option file                                                                                                                                                                                                                   
     5 calculation type: 0 - composition, 1 - Schreinemakers, 3 - Mixed, 4 - swash, 5 - gridded min, 7 - 1d fract, 8 - gwash, 9 - 2d fract, 10 - 7 w/file input
     0 unused place holder, post 06
     0 unused place holder, post 06
@@ -35,7 +35,8 @@ TiO2  1   1.346      0.00000      0.00000     molar  amount
 FeO   1  10.1382      0.00000      0.00000     molar  amount
 O2    1  0.488     0.00000      0.00000     molar  amount
 H2O   1  3.4162    
-SiO2    1 53.9559 
+SiO2    1 53.9559
+MnO   1 0.01  
 end thermodynamic component list
 
 begin saturated component list
@@ -54,22 +55,12 @@ end independent potential list
 begin excluded phase list
 mic
 geik
+east
 end excluded phase list
 
 
 begin solution phase list
-cAmph(G)
-Augite(G)
-melt(G)   
-Ep(HP11)  
-Gt(W)     
-Opx(W)    
-Mica(W)   
-Bi(W)     
-Ilm(WPH)
-Sp(WPC)
-Fsp(C1)
-Chl(W)
+Bio(TCC)
 end solution phase list
 
  10000.     1323.0     0.00000000  0.0000      0.0000     max p, t, xco2, u1, u2

@@ -3377,17 +3377,19 @@ c                              model does not of end_of_model keyword
 c                              read van laar data:
             jlaar = 1
             call readvl (idim,kstot,tname)
-            cycle
 
          else if (key.eq.'begin_dqf_corrections') then
 c                              read dqf data:
             call readdq (idim,tname)
-            cycle
+
+         else if (key.eq.'reach_increment') then 
+
+            read (val,*) i
+            reach = dfloat(i)
 
          else if (key.eq.'begin_flagged_endmembe') then
 
             call readef (idim,tname)
-            cycle 
 
          else if (key.eq.'site_check_override') then
 
@@ -3639,7 +3641,7 @@ c----------------------------------------------------------------------
 
       ibeg = 1
 
-      write (tag,'(a3)') chars(1:3)
+      write (tag,'(3a1)') chars(1:3)
 
       if (tag.eq.'end') then 
          eor = .true.
@@ -5618,8 +5620,16 @@ c----------------------------------------------------------------------
       if (jsmod.eq.20) then
 
          call reaqus (sname)
+
          kstot = jstot
          istot = jstot
+
+         return
+
+      else if (jsmod.eq.688) then 
+
+         call reforn (sname,im,first)
+
          return
 
       end if
@@ -5754,9 +5764,6 @@ c                                 local input variables
       double precision xmn,xmx,xnc
       common/ cxt108 /xmn(mst,msp),xmx(mst,msp),xnc(mst,msp)
 
-      double precision yin
-      common/ cst50 /yin(ms1,mst)
-
       integer jsmod
       double precision vlaar
       common/ cst221 /vlaar(m3,m4),jsmod
@@ -5786,7 +5793,6 @@ c                                 shift subdivision ranges
             xmx(i,j) = xmx(iwas(i),j)
             xnc(i,j) = xnc(iwas(i),j)
             imd(j,i) = imd(j,iwas(i))
-            if (imd(j,i).gt.0) yin(j,i) = yin(j,iwas(i))
          end do
 
       end do
@@ -5830,9 +5836,9 @@ c---------------------------------------------------------------------
 
       logical skip, bad, dead
 
-      integer jsp,jtic,morder,jst,jend,jnc,kst,ldep,ltic,
+      integer jsp,jtic,morder,jst,jend,jnc,kst,ltic,
      *        i,j,ikill,jkill,kill,kdep,jdqf,ktic,jold,
-     *        iwas(m4),i2ni(m4),kwas(m4),
+     *        i2ni(m4),kwas(m4),
      *        k,l,itic,ijkill(m4),
      *        j2oj(msp),j2nj(msp),i2oi(m4),maxord,mord
 c                                 dqf variables
@@ -5882,23 +5888,18 @@ c                                 local input variables
       double precision nu,y2p
       common/ cst146 /nu(m15,j4),y2p(m4,m15),mdep,jdep(m15),
      *                idep(m15,j4),ndph(m15)
-
-      double precision yin
-      common/ cst50 /yin(ms1,mst)
 c----------------------------------------------------------------------
       if ((jsmod.eq.9.or.jsmod.eq.10).and.ikill.gt.isite) then
          jst = ikill
          jend = ikill
          jnc = 1
          kst = istot + 1
-         ldep = ostot
          ltic = 0
       else
          jst = 1
          jend = isite
          jnc = 0
          kst = 1
-         ldep = istot
          ltic = ostot - istot
       end if
 c                                 was 1,.site
@@ -5943,8 +5944,6 @@ c                              now shift subdivision ranges
                   xnc(i,j) = xnc(i,j2oj(j))
                   imd(j,i) = imd(j2oj(j),i)
 
-                  if (imd(j,i).gt.0) yin(j,i) = yin(j2oj(j),i)
-
                end do
 
             else
@@ -5965,10 +5964,7 @@ c                                original locations of the dependent
 c                                endmembers, need this to be able to
 c                                reorder the y2p array:
          do i = 1, istot
-            if (kdsol(i).eq.-2) then
-               kdep = kdep + 1
-               iwas(kdep) = i
-            end if
+            if (kdsol(i).eq.-2) kdep = kdep + 1
          end do
 
       end if
@@ -6013,25 +6009,6 @@ c                                 add species to the kill list
             end if
 
          end do
-
-      end if
-c                                figure out which dependent endmembers have
-c                                been killed:
-      if (depend) then
-
-         mdep = 0
-
-         do i = 1, kdep
-            if (kdsol(iwas(i)).ne.-3) then
-               mdep = mdep + 1
-c                                 iwas is now the original index of the
-c                                 dependent endmember, and mdep is the reset
-c                                 value of the dependent endmember counter
-               iwas(mdep) = i
-            end if
-         end do
-
-c        if (kdep.ne.mdep) call error (54,dqf(1,1),mdep,'KILLSP')
 
       end if
 
@@ -6553,6 +6530,9 @@ c---------------------------------------------------------------------
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
 
+      logical depend,laar,order,fluid,macro,recip
+      common/ cst160 /depend,laar,order,fluid,macro,recip
+
       integer nq,nn,ns
       common/ cxt337 /nq,nn,ns
 c----------------------------------------------------------------------
@@ -6586,34 +6566,30 @@ c                                 didn't find a match, read a new name:
 
          kdsol(i) = 0
          ok = .false.
-
-         if (jsmod.ge.7.and.jsmod.le.10) then
 c                              solution with dependent endmembers, if endmember i
-c                              is dependent endmember flag it by setting kdsol(i) = -2
-            do j = 1, mdep
+c                              is a dependent endmember and not excluded, flag it by setting kdsol(i) = -2
+         do j = 1, mdep
 
-               if (jdep(j).eq.i) then
+            if (jdep(j).eq.i) then
 c                              check against exclude list
-                  do h = 1, ixct
-                     if (mname(i).eq.exname(h)) then
-                        ok = .true.
-                        exit
-                     end if
-                  end do
+               do h = 1, ixct
+                  if (mname(i).eq.exname(h)) then
+                     ok = .true.
+                     exit
+                  end if
+               end do
 
-                  if (ok) exit
+               if (ok) exit
 
-                  kdsol(i) = -2
-                  ok = .true.
-                  exit
+               kdsol(i) = -2
+               ok = .true.
+               exit
 
-               end if
+            end if
 
-            end do
+         end do
 
-            if (ok) cycle
-
-         end if
+         if (ok) cycle
 
          if (jsmod.eq.20.and.i.gt.ns) then
 c                                 aqueous solute, test against aqnam
@@ -6909,9 +6885,6 @@ c---------------------------------------------------------------------
       common/ cst146 /nu(m15,j4),y2p(m4,m15),mdep,jdep(m15),
      *                idep(m15,j4),ndph(m15)
 
-      double precision yin
-      common/ cst50 /yin(ms1,mst)
-
       integer nq,nn,ns
       common/ cxt337 /nq,nn,ns
 c----------------------------------------------------------------------
@@ -6983,6 +6956,8 @@ c                                 arrays
        else if (jsmod.eq.688) then 
 
          call rmoden (tname)
+         ostot = istot
+         return
 
        end if
 c                                 check for disabled model types
@@ -8889,10 +8864,6 @@ c                                 dqf parameters
 
       integer isec,icopt,ifull,imsg,io3p
       common/ cst103 /isec,icopt,ifull,imsg,io3p
-c                                 temporary stretching coordinate
-c                                 parameters
-      double precision yin
-      common/ cst50 /yin(ms1,mst)
 c                                 parameters for autorefine
       logical stable,limit
       double precision xlo,xhi
@@ -12211,8 +12182,6 @@ c                                  normal solution.
 c                                 -------------------------------------
 c                                 reformulate the model so that it has
 c                                 no missing endmembers:
-            if (jsmod.eq.9.or.jsmod.eq.10) call kill01 (isite+1)
-
             if (jstot.lt.ostot) call reform (tname,im,first)
 
             if (ostot.lt.2) cycle
@@ -20827,16 +20796,18 @@ c                                 for each term:
 
       subroutine rmoden (tname)
 c---------------------------------------------------------------------
-c rmodel - reads 688 solution models from LUN n9.
+c rmoden - reads 688 solution models from LUN n9.
 c---------------------------------------------------------------------
       implicit none
 
       include 'perplex_parameters.h'
 
+      logical eor
+
       character*10 tname, tag*3, key*22, val*3,
      *          nval1*12, nval2*12, nval3*12, strg*40, strg1*40
 
-      integer nreact,i,j,k,l,m,jlaar,ier
+      integer nreact, i, j, k, l, m, jlaar, ier, idim
 
       double precision coeffs(k7), rnums(m4), enth(3)
 
@@ -20844,9 +20815,6 @@ c---------------------------------------------------------------------
 
       integer jmsol,kdsol
       common/ cst142 /jmsol(m4,mst),kdsol(m4)
-
-      integer ostot
-      common/ junk /ostot
 
       integer jsmod
       double precision vlaar
@@ -20885,9 +20853,6 @@ c---------------------------------------------------------------------
       common/ cst146 /nu(m15,j4),y2p(m4,m15),mdep,jdep(m15),
      *                idep(m15,j4),ndph(m15)
 
-      double precision yin
-      common/ cst50 /yin(ms1,mst)
-
       integer nq,nn,ns
       common/ cxt337 /nq,nn,ns
 
@@ -20896,18 +20861,18 @@ c       isimp(ipoly) - number of simplices in each sub-polytope
 c       ivert(ipoly,isimp(ipoly) - number of vertices in each simplex
 c       ipvert(ipoly) - number of vertices in each sub-polytope
 c       istot - total number of vertices
+c       jmsol(m4,1:isimp(ipoly) - pointer from the endmember m4
+c               to its polytope vertex
 
-      character pname(h4)*10
-
-      logical eor
-
-      integer ipoly, pimd(h4), isimp(h4), ipvert(h4), ivert(h4,mst),
-     *        spimd(h4,mst,msp)
-
-      double precision pxmn(h4), pxmx(h4), pxnc(h4)
-      double precision spxmn(h4,mst,msp), spxmx(h4,mst,msp), 
-     *                 spxnc(h4,mst,msp)
-
+      character pname*10
+      integer ipoly, pimd, isimp, ipvert, ivert, spimd
+      double precision pxmn, pxmx, pxnc, spxmn, spxmx, spxnc
+      common/ cst688 /pxmn(h4), pxmx(h4), pxnc(h4),
+     *                spxmn(h4,mst,msp), spxmx(h4,mst,msp),
+     *                spxnc(h4,mst,msp),
+     *                ipoly, pimd(h4), isimp(h4), ipvert(h4), 
+     *                ivert(h4,mst), spimd(h4,mst,msp),
+     *                pname(h4)
 c----------------------------------------------------------------------
 c                                read number of sub-polytopes
       call readda (rnums,1,tname)
@@ -20931,10 +20896,18 @@ c                                total number of vertices
       istot = 0 
 c                                read data for each sub-polytope
       do i = 1, ipoly
-c                                sub-polytope name
-         call redcd1 (n9,ier,key,val,nval1,nval2,nval3,strg,strg1)
 
-         pname(i) = key
+         if (ipoly.gt.1) then 
+c                                sub-polytope name
+            call redcd1 (n9,ier,key,val,nval1,nval2,nval3,strg,strg1)
+
+            pname(i) = key
+
+         else 
+
+            pname(i) = tname
+
+         end if 
 c                                number of simplices
          call readda (rnums,1,tname)
 
@@ -20950,7 +20923,7 @@ c                                number of vertices on each simplex:
          ipvert(i) = 1
 
          do j = 1, isimp(i)
-            ivert(i,j) = idint(rnums(i))
+            ivert(i,j) = idint(rnums(j))
 c                                number of vertices in the sub-polytope
             ipvert(i) = ipvert(i)*ivert(i,j)
          end do
@@ -20960,8 +20933,6 @@ c                                number of vertices in the sub-polytope
 
 c                                read vertex names into mname
          call readn (istot,ipvert(i),tname)
-
-         istot = istot + ipvert(i)
 c                               read subdivision data for each sub-polytope
          do j = 1, isimp(i)
             do k = 1, ivert(i,j) - 1
@@ -20974,17 +20945,70 @@ c                               read subdivision data for each sub-polytope
 
             end do
          end do
+c                               create pointer from the endmember l to its
+c                               polytope vertex
+         do j = 2, isimp(i)
+            ijk(j) = 1
+         end do
+
+         ijk(1) = 0
+
+         do l = istot+1, istot + ipvert(i)
+
+            do m = 1, isimp(i)
+
+               if (ijk(m).lt.ivert(i,m)) then
+
+                  ijk(m) = ijk(m) + 1
+c                                increment only one index per endmember
+                  do j = 1, isimp(i)
+                     jmsol(l,j) = ijk(j)
+                  end do
+
+                  if (ijk(m).eq.ivert(i,m).and.
+     *                                     l.lt.istot+ipvert(i)) then
+c                                saturated counter, increment first
+c                                unsaturated counter and reset all
+c                                lower site counters to first index,
+                     do j = 2, isimp(i)
+
+                        if (ijk(j).lt.ivert(i,j)) then
+
+                           ijk(j) = ijk(j) + 1
+
+                           do k = 2, j-1
+                              ijk(k) = 1
+                           end do
+
+                           ijk(1) = 0
+
+                           exit 
+
+                        end if
+
+                     end do
+
+                  end if
+
+                  exit
+
+               end if
+
+            end do
+
+         end do
+
+         istot = istot + ipvert(i)
+
       end do
 c                               look for and read optional data this may be, 
 c                               sequentially:
-
-c                               1) begin_ordered_endmembers
-c                               2) begin_dependent_endmembers
-c                               3) begin_excess_function
-c                               4) ideal
+c                                  1) begin_ordered_endmembers
+c                                  2) begin_dependent_endmembers
 
       norder = 0
       mdep = 0
+      idim = istot
 
       do
 
@@ -20996,7 +21020,7 @@ c                               4) ideal
 c                               on input nreact = -1 signals ordering reaction
                nreact = -1
 
-               call readr (coeffs,enth,inds,istot,nreact,tname,eor)
+               call readr (coeffs,enth,inds,idim,nreact,tname,eor)
 
                if (eor) then
 
@@ -21033,7 +21057,7 @@ c                               on input nreact = -1 signals ordering reaction
 c                               nreact is returned by readr
                nreact = 0
 
-               call readr (coeffs,enth,inds,istot,nreact,tname,eor)
+               call readr (coeffs,enth,inds,idim,nreact,tname,eor)
 
                if (eor) then
 
@@ -21061,59 +21085,17 @@ c                               nreact is returned by readr
 
             end do
 
-         else if (key.eq.'ideal'.or.key.eq.'begin_excess_funtion') then
-
          else 
-c                               done, must be at configurational entropy model
+c                                 done, must be at excess function
             backspace (n9)
             exit
 
          end if
 
       end do
-c                                create bragg-williams indexes
-      do i = 2, isite
-         ijk(i) = 1
-      end do
-
-      ijk(1) = 0
-
-      do 20 l = 1, istot
-
-         do m = 1, isite
-
-            if (ijk(m).lt.isp(m)) then
-
-               ijk(m) = ijk(m) + 1
-c                                increment only one index per endmember
-               do i = 1, isite
-                  jmsol(l,i) = ijk(i)
-               end do
-
-               if (ijk(m).eq.isp(m).and.l.lt.istot-isp(1)+1) then
-c                                saturated counter, increment first
-c                                unsaturated counter and reset all
-c                                lower site counters to first index,
-                  do j = 2, isite
-                     if (ijk(j).lt.isp(j)) then
-                        ijk(j) = ijk(j) + 1
-                        do k = 2, j-1
-                           ijk(k) = 1
-                        end do
-                        ijk(1) = 0
-                        goto 20
-                     end if
-                  end do
-               end if
-
-               goto 20
-
-            end if
-         end do
-20    continue
-c                              read excess function
-      call readx (istot,tname)
-c                              expansion for S(configurational)
+c                                 read excess function
+      call readx (idim,tname)
+c                                 expansion for S(configurational)
       call readda (rnums,1,tname)
 
       nsite = idint(rnums(1))
@@ -21148,7 +21130,7 @@ c
 c                                 read expression for site
 c                                 fraction of species j on
 c                                 site i.
-            call readz (coeffs,inds,ict,istot,tname,tag)
+            call readz (coeffs,inds,ict,idim,tname,tag)
 
             a0(i,j) = coeffs(1)
             nterm(i,j) = ict - 1
@@ -21171,7 +21153,7 @@ c                              initialize endmember flags
 c                              look for van laar and/or dqf parameters
 c                              reach_increment, endmember flags
 c                              or the end of model marker
-      call readop (istot,jlaar,istot-mdep,reach,stck,norf,tname)
+      call readop (idim,jlaar,istot-mdep,reach,stck,norf,tname)
 
       if (jlaar.ne.0) then
 
@@ -21221,16 +21203,18 @@ c----------------------------------------------------------------------
      *      rkord(m18),isite,iterm,iord,istot,jstot,kstot,xtyp,stck,norf
 c----------------------------------------------------------------------
 
-      eod = ' '
-
-      do while (eod.ne.'end')
+      do
 
          call readcd (n9,len,ier,.true.)
          if (ier.ne.0) goto 90
 
          write (eod,'(3a)') chars(1:3)
 
-         call readnm (1,len,len,ier,name)
+         if (eod.eq.'end') exit
+
+         i = 1
+
+         call readnm (i,index,len,ier,name)
          if (ier.ne.0) goto 90
 
          index = match (idim,ier,name)
@@ -21251,5 +21235,684 @@ c----------------------------------------------------------------------
      *        'reading solution model: ',a,' data was:',/,400a,/)
 1001  format (/,'usually this error is caused by a mispelled ',
      *          'endmember name.',/)
+
+      end
+
+      subroutine reforn (sname,im,first)
+c---------------------------------------------------------------------
+c reforn - counts the number of species that can be respresented for a
+c solution given the present endmembers.
+c---------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      character*10 sname
+
+      logical first, nokill
+
+      integer kill, ikill, jkill, kill1, i, j, kosp(mst,msp), kill2,
+     *        k, l, im, idsp, ivct, ii, jj, jpoly, jsimp
+
+      integer jmsol,kdsol
+      common/ cst142 /jmsol(m4,mst),kdsol(m4)
+
+      integer jsmod
+      double precision vlaar
+      common/ cst221 /vlaar(m3,m4),jsmod
+
+      logical stck, norf
+      integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
+     *        kstot,rkord,xtyp
+      double precision wg,wk,reach
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),reach,iend(m4),
+     *      isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),isp(mst),
+     *      rkord(m18),isite,iterm,iord,istot,jstot,kstot,xtyp,stck,norf
+
+      character pname*10
+      integer ipoly, pimd, isimp, ipvert, ivert, spimd
+      double precision pxmn, pxmx, pxnc, spxmn, spxmx, spxnc
+      common/ cst688 /pxmn(h4), pxmx(h4), pxnc(h4),
+     *                spxmn(h4,mst,msp), spxmx(h4,mst,msp),
+     *                spxnc(h4,mst,msp),
+     *                ipoly, pimd(h4), isimp(h4), ipvert(h4), 
+     *                ivert(h4,mst), spimd(h4,mst,msp),
+     *                pname(h4)
+c----------------------------------------------------------------------
+c                                the increment from the polytope vertex
+c                                to the endmember index
+      ivct = 0
+
+      do ii = 1, ipoly
+
+         if (first.and.isimp(ii).gt.1) 
+     *      call warn (50,wg(1,1),isimp(ii),sname//'('//pname(ii)//')')
+
+         do
+
+            do i = 1, isimp(ii)
+
+               do j = 1, ivert(ii,i)
+                  kosp(i,j) = 0
+               end do
+
+            end do
+
+           nokill = .true.
+c                                 count the number of endmembers
+c                                 missing on each simplex
+            do i = 1, ipvert(ii)
+
+               k = ivct + i
+
+               if (kdsol(k).ne.0) cycle
+
+               nokill = .false.
+
+               do j = 1, isimp(ii)
+                  kosp(j,jmsol(k,j)) = kosp(j,jmsol(k,j)) + 1
+               end do
+
+            end do
+c                                 no endmembers to kill on polytope ii
+            if (nokill) exit 
+c                                 find the species that is missing
+c                                 the most from the model
+            kill = 99
+            kill1 = 0
+
+            do i = 1, isimp(ii)
+
+               do j = 1, ivert(ii,i)
+c                                 idsp is the the number of species
+c                                 possible - the number of missing
+c                                 endmembers
+                  idsp = ipvert(ii) -kosp(i,j)
+
+                  if (idsp.lt.kill) then
+c                                 initialize for i = j = 1
+                     ikill = i
+                     jkill = j
+                     kill = idsp
+
+                  else if (idsp.eq.kill.and.kosp(i,j).gt.0) then
+
+c                                 kill the species that will kill the
+c                                 most dependent endmembers
+                     kill2 = 0
+
+                     do l = 1, ipvert(ii)
+
+                        k = ivct + l
+c                                 count the number that will be killed
+                        if (jmsol(k,ikill).eq.jkill.and.kdsol(k).eq.-2)
+     *                     kill2 = kill2 + 1
+
+                     end do
+
+                     if (kill2.gt.kill1) then
+c                                 this is more than before (kill1)
+                        kill1 = kill2
+                        ikill = i
+                        jkill = j
+                        kill = idsp
+
+                     end if
+
+                  end if
+
+               end do
+
+            end do
+c                                 kill the species jkill on site ikill
+c                                 and reformulate the model (this is
+c                                 inefficient, but who cares). kill02
+c                                 does not clean the composition space,
+c                                 this is done afterwards by repoly 
+c                                 after the final set of endmembers 
+c                                 has been identified.
+            call kill02 (ii,ikill,jkill)
+
+         end do
+
+         ivct = ivct + ipvert(ii)
+
+      end do
+
+      if (istot.lt.2) then
+c                                 failed, rejected too many endmembers
+         im = im - 1
+         if (first) call warn (25,wg(1,1),jstot,sname)
+         jstot = 0
+
+      else 
+c                                 check if the composition space includes
+c                                 redundant polytopes and/or simplices:
+         jpoly = 0
+c                                 first the polytopes
+         do ii = 1, ipoly
+
+            if (ipvert(ii).eq.0) cycle
+
+            jpoly = jpoly + 1
+c                                 shift the subdivision ranges
+c                                 for the composition space down
+            pxmn(jpoly) = pxmn(ii)
+            pxmx(jpoly) = pxmx(ii)
+            pxnc(jpoly) = pxnc(ii)
+            pimd(jpoly) = pimd(ii)
+c                                 shift all polytopes down
+            pname(jpoly) = pname(ii)
+            ipvert(jpoly) = ipvert(ii)
+            isimp(jpoly) = isimp(ii)
+
+            do j = 1, isimp(ii)
+
+               ivert(jpoly,j) = ivert(ii,j)
+
+               do k = 1, ivert(ii,j) - 1
+                  spxmn(jpoly,j,k) = spxmn(ii,j,k)
+                  spxmx(jpoly,j,k) = spxmx(ii,j,k)
+                  spxnc(jpoly,j,k) = spxnc(ii,j,k)
+                  spimd(jpoly,k,j) = spimd(ii,k,j)
+               end do
+
+            end do
+
+         end do
+
+         ipoly = jpoly
+c                                 eliminate redundant simplicies from 
+c                                 polytopes
+         ivct = 0
+
+         do ii = 1, ipoly
+
+            if (isimp(ii).gt.1) then
+
+               jsimp = 0
+
+               do j = 1, isimp(ii)
+
+                  if (ivert(ii,j).gt.1) cycle
+
+                  jsimp = jsimp + 1
+
+                  do i = ivct + 2, ivct + ipvert(ii)
+
+                     jmsol(i,jsimp) = jmsol(i,j)
+
+                  end do
+
+                  ivert(ii,jsimp) = ivert(ii,j)
+
+                  do k = 1, ivert(ii,j) - 1
+                     spxmn(ii,jsimp,k) = spxmn(ii,j,k)
+                     spxmx(ii,jsimp,k) = spxmx(ii,j,k)
+                     spxnc(ii,jsimp,k) = spxnc(ii,j,k)
+                     spimd(ii,k,jsimp) = spimd(ii,k,j)
+                  end do
+               end do
+
+            end if
+
+            ivct = ivct + ipvert(ii)
+
+         end do
+
+      end if
+c                                 check if polytope model can be 
+c                                 reduced to a simplex?
+
+      end
+
+      subroutine kill02 (pkill,ikill,jkill)
+c---------------------------------------------------------------------
+c killsp - eliminates species jkill from simplex ikill of polytope pkill
+c in a solution model and reformulates the model accordingly
+c---------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      logical skip, bad, dead
+
+      integer jsp,jtic,morder,pkill,ii,ivct,
+     *        i,j,ikill,jkill,kill,kdep,jdqf,ktic,jold,
+     *        i2ni(m4),kwas(m4),
+     *        k,l,itic,ijkill(m4),
+     *        j2oj(msp),j2nj(msp),i2oi(m4),maxord,mord
+c                                 dqf variables
+      integer indq,idqf
+      double precision dqf
+      common/ cst222 /dqf(m3,m4),indq(m4),idqf
+
+      logical depend,laar,order,fluid,macro,recip
+      common/ cst160 /depend,laar,order,fluid,macro,recip
+c                                 local input variables
+      integer iddeps,norder,nr
+      double precision depnu,denth
+      common/ cst141 /depnu(j4,j3),denth(j3,3),iddeps(j4,j3),norder,
+     *                nr(j3)
+
+      integer jsmod
+      double precision vlaar
+      common/ cst221 /vlaar(m3,m4),jsmod
+
+      integer jmsol,kdsol
+      common/ cst142 /jmsol(m4,mst),kdsol(m4)
+
+      integer nsub,nttyp,nterm,nspm1,nsite
+      double precision acoef,smult,a0
+      common/ cst107 /a0(m10,m11),acoef(m10,m11,m0),smult(m10),
+     *      nsite,nspm1(m10),nterm(m10,m11),nsub(m10,m11,m0,m12),
+     *      nttyp(m10,m11,m0)
+
+      logical stck, norf
+      integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
+     *        kstot,rkord,xtyp
+      double precision wg,wk,reach
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),reach,iend(m4),
+     *      isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),isp(mst),
+     *      rkord(m18),isite,iterm,iord,istot,jstot,kstot,xtyp,stck,norf
+
+      integer iorig,jnsp,iy2p
+      common / cst159 /iorig(m4),jnsp(m4),iy2p(m4)
+
+      integer mdep,idep,jdep,ndph
+      double precision nu,y2p
+      common/ cst146 /nu(m15,j4),y2p(m4,m15),mdep,jdep(m15),
+     *                idep(m15,j4),ndph(m15)
+
+      character pname*10
+      integer ipoly, pimd, isimp, ipvert, ivert, spimd
+      double precision pxmn, pxmx, pxnc, spxmn, spxmx, spxnc
+      common/ cst688 /pxmn(h4), pxmx(h4), pxnc(h4),
+     *                spxmn(h4,mst,msp), spxmx(h4,mst,msp),
+     *                spxnc(h4,mst,msp),
+     *                ipoly, pimd(h4), isimp(h4), ipvert(h4), 
+     *                ivert(h4,mst), spimd(h4,mst,msp),
+     *                pname(h4)
+c----------------------------------------------------------------------
+c                                the increment from the polytope vertex
+c                                to the endmember index
+      ivct = 0
+
+      do ii = 1, ipoly
+
+         if (ii.ne.pkill) then
+            ivct = ivct + ipvert(ii)
+            cycle 
+         end if 
+
+         do i = 1, isimp(ii)
+
+            if (i.ne.ikill) then
+c                                 nothing happens
+               cycle
+
+            else
+c                                 on a simplex where a vertex will be eliminated
+               jsp = ivert(ii,i) - 1
+c                                 make old-to-new and new-to-old pointers for the
+c                                 vertices
+               jtic = 0
+
+               do j = 1, ivert(ii,i)
+
+                  if (j.ne.jkill) then
+                     jtic = jtic + 1
+c                              pointer from new j to old j
+                     j2oj(jtic) = j
+c                              pointer from old j to new j
+                     j2nj(j) = jtic
+                  end if
+               end do
+c                              reload
+               ivert(ii,i) = jsp
+
+               if (jsp.gt.1) then
+c                              shift subdivision ranges
+                  do j = 1, jsp - 1
+                     spxmn(ii,i,j) = spxmn(ii,i,j2oj(j))
+                     spxmx(ii,i,j) = spxmx(ii,i,j2oj(j))
+                     spxnc(ii,i,j) = spxnc(ii,i,j2oj(j))
+                     spimd(ii,j,i) = spimd(ii,j2oj(j),i)
+                  end do
+               end if
+            end if
+
+            exit
+
+         end do
+
+      end do
+c                                the endmembers to be eliminated are in the range
+c                                ivct+1...ivct + ipvert(pkill)
+      kdep = 0
+
+      if (depend) then
+c                                create an array which gives the
+c                                original locations of the dependent
+c                                endmembers, need this to be able to
+c                                reorder the y2p array:
+         do i = 1, istot
+            if (kdsol(i).eq.-2) then
+               kdep = kdep + 1
+            end if
+         end do
+
+      end if
+
+      do i = ivct + 1, ivct + ipvert(pkill)
+c                                 kill endmembers with the species
+c                                 to be deleted:
+         if (jmsol(i,ikill).eq.jkill) kdsol(i) = -3
+      end do
+c                                 eliminate the dependent endmembers, redep
+c                                 resets kdsol to zero for the eliminated endmembers
+      call redep (-3)
+c                                 check the ordered species
+      morder = 0
+c                                 first check if the ordered endmember
+c                                 may be stable
+      do k = 1, norder
+c                                 check if a missing constituent
+         bad = .false.
+
+         do j = 1, nr(k)
+            if (kdsol(iddeps(j,k)).eq.-3) then
+               bad = .true.
+               exit
+            end if
+         end do
+
+         if (bad) then
+c                                 add species to the kill list
+            kdsol(istot+k) = -3
+
+         else
+
+            morder = morder + 1
+            kdsol(istot+k) = -1
+            kwas(morder) = k
+
+         end if
+
+      end do
+
+      itic = 0
+      jtic = 0
+      ktic = 0
+      kill = 0
+
+      do i = 1, istot + norder
+
+         if (kdsol(i).ge.-2) then
+c                                 replacement for istot (itic)
+            itic = itic + 1
+c                                 total vertex count
+            if (i.le.istot) ktic = ktic + 1
+c                                 pointers from new to old endmember index (i2oi)
+            i2oi(itic) = i
+c                                 pointers from new to old endmember index (i2ni)
+            i2ni(i) = itic
+c                                 pointer to original species index
+            iorig(itic) = iorig(i)
+c                                 number of missing endmembers (jtic)
+            if (kdsol(i).eq.0) jtic = jtic + 1
+c                                 reset the kdsol array
+            kdsol(itic) = kdsol(i)
+
+         else
+c                                 kill records the killed endmembers
+            kill = kill + 1
+            ijkill(kill) = i
+
+         end if
+
+      end do
+c                                 reset total and present counters
+      istot = ktic
+
+      jstot = ktic - jtic
+
+      do i = 1, itic
+
+         if (i2oi(i).lt.ivct+1.or.
+     *       i2oi(i).gt.ivct+ipvert(pkill) ) cycle
+c                                 reset the species pointers (jmsol)
+         do j = 1, isimp(pkill)
+            if (j.eq.ikill) then
+               jmsol(i,j) = j2nj(jmsol(i2oi(i),j))
+            else
+               jmsol(i,j) = jmsol(i2oi(i),j)
+            end if
+         end do
+
+      end do
+c                                --------------------------------------
+c                                excess terms:
+      itic = 0
+      maxord = 0
+
+      do i = 1, iterm
+c                                check for forbidden terms (i.e., terms
+c                                with a missing endmember
+         skip = .false.
+c                                 macroscopic formulation
+         do j = 1, kill
+c                                 check if subscript points to a killed
+c                                 endmember
+            do k = 1, iord
+               if (isub(i,k,1).eq.0) then
+                  cycle
+               else if (isub(i,k,1).eq.ijkill(j)) then
+                  skip = .true.
+                  exit
+               end if
+            end do
+
+            if (skip) exit
+
+         end do
+
+         if (skip) cycle
+c                               the term is acceptable
+         itic = itic + 1
+
+         mord = iord
+
+         do j = 1, iord
+            if (isub(i,j,1).eq.0) then
+               isub(itic,j,1) = 0
+            else
+               isub(itic,j,1) = i2ni(isub(i,j,1))
+            end if
+         end do
+
+         if (xtyp.eq.0) then
+c                                save the coefficient
+            do j = 1, m3
+               wg(itic,j) = wg(i,j)
+            end do
+c                                find highest order term
+            if (mord.gt.maxord) maxord = mord
+
+         else
+c                                 redlich kistler
+            rkord(itic) = rkord(i)
+
+            do j = 1, rkord(itic)
+               do k = 1, m16
+                  wk(k,j,itic) = wk(k,j,i)
+               end do
+            end do
+
+            maxord = 2
+
+         end if
+
+      end do
+c                                reset counters, iord is not reset
+      iterm = itic
+      iord = maxord
+c                                --------------------------------------
+c                                van laar volume functions
+      if (laar) then
+         do i = 1, istot + morder
+            do j = 1, m3
+               vlaar(j,i) = vlaar(j,i2oi(i))
+            end do
+         end do
+      end if
+c                                 --------------------------------------
+c                                 dqf corrections, this is sloppy since
+c                                 uses istot instead of kstot
+      if (idqf.gt.0) then
+
+         jdqf = 0
+c                                 check if a retained species has a dqf
+c                                 correction
+         do j = 1, idqf
+c                                 the itoi index must be in the inner loop
+c                                 in case the values of indq are not sequential
+            do i = 1, istot
+               if (indq(j).eq.i2oi(i)) then
+c                                 found a dqf'd endmember
+                  jdqf = jdqf + 1
+                  indq(jdqf) = i
+                  do k = 1, m3
+                     dqf(k,jdqf) = dqf(k,j)
+                  end do
+                  exit
+               end if
+            end do
+
+            if (jdqf.eq.idqf) exit
+
+         end do
+
+         idqf = jdqf
+
+      end if
+c                                 --------------------------------------
+c                                 configurational entropy model
+
+c                                 site fractions as a function of bulk
+c                                 y's and dependent species y:
+      do i = 1, nsite
+c                                 for each species, read function to define
+c                                 the site fraction of the species and eliminate
+c                                 killed species
+
+c                                 species counter is incremented in advance
+c                                 and must be decremented before saving the
+c                                 final value:
+         jtic = 1
+
+         do j = 1, nspm1(i)
+
+            ktic = 0
+c                                 for each term:
+            do k = 1, nterm(i,j)
+c                                 macroscopic formulation:
+c                                 note: 4th index (nttyp) is only used
+c                                 for bragg-williams models.
+               dead = .false.
+               do l = 1, kill
+                  if (nsub(i,j,k,1).eq.ijkill(l)) then
+                     dead = .true.
+                     exit
+                  end if
+               end do
+
+               if (.not.dead) then
+c                                 the term has survived (and therefore
+c                                 also the species):
+c                                 don't save nttyp since this is always
+c                                 1 for the macroscopic formulation
+                  ktic = ktic + 1
+c                                 but my dear peanut brained friend, do
+c                                 not forget to move the pointer:
+                  nsub(i,jtic,ktic,1) = i2ni(nsub(i,j,k,1))
+                  acoef(i,jtic,ktic) = acoef(i,j,k)
+               end if
+            end do
+c                                 ktic is the number of terms representing
+c                                 the jth species, we won't count species
+c                                 with no terms because the endmember configurational
+c                                 entropy is assumed to be implicit.
+         if (ktic.gt.0) then
+c                                 increment the species counter
+            nterm(i,jtic) = ktic
+            a0(i,jtic) = a0(i,j)
+            jtic = jtic + 1
+         end if
+
+      end do
+
+      nspm1(i) = jtic - 1
+
+      end do
+c                                 ---------------------------------------
+c                                 ordered species:
+      if (order) then
+
+         norder = morder
+
+         if (morder.eq.0) then
+c                                 there are no ordered species left
+            order = .false.
+
+            if (depend) then
+
+               jsmod = 7
+
+            else
+c                                 why jsmod = 2?
+               jsmod = 2
+
+            end if
+
+         else
+c                                 shift the ordered species pointers
+c                                 and data to eliminate kill ordered
+c                                 species.
+            do j = 1, morder
+
+               jold = kwas(j)
+
+               do i = 1, 3
+                  denth(j,i) = denth(jold,i)
+               end do
+
+               nr(j) = nr(jold)
+
+               do i = 1, nr(j)
+                  iddeps(i,j) = i2ni(iddeps(i,jold))
+                  depnu(i,j) = depnu(i,jold)
+               end do
+
+            end do
+
+         end if
+
+      end if
+c                                 --------------------------------------
+c                                 dependent endmember properties, the
+      if (depend) then
+c                                 dependent endmembers have been reordered
+c                                 in redep, but are still expressed in
+c                                 terms of the old indices, so reset the
+c                                 indices:
+         do i = 1, mdep
+            jdep(i) = i2ni(jdep(i))
+            do j = 1, ndph(i)
+               idep(i,j) = i2ni(idep(i,j))
+            end do
+         end do
+
+      end if
 
       end
