@@ -1750,15 +1750,22 @@ c                                 working arrays
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
      *              wl(m17,m18)
 c                                 x coordinate description
-      integer istg, ispg, imlt, imdg
       double precision xmng, xmxg, xncg, xmno, xmxo, reachg
-      common/ cxt6r /xmng(h9,mst,msp),xmxg(h9,mst,msp),xncg(h9,mst,msp),
-     *               xmno(h9,mst,msp),xmxo(h9,mst,msp),reachg(h9)
-      common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
+      common/ cxt6r /
+     *      xmng(h9,h4,mst,msp),xmxg(h9,h4,mst,msp),xncg(h9,h4,mst,msp),
+     *      xmno(h9,h4,mst,msp),xmxo(h9,h4,mst,msp),reachg(h9)
+
+      integer istg, ispg, imdg, poly
+      common/ cxt6i /istg(h9,h4),ispg(h9,h4,mst),
+     *      imdg(ms1,mst,h4,h9),poly(h9)
 c                                 solution limits and stability
       logical stable,limit
       double precision xlo,xhi
-      common/ cxt11 /xlo(m4,mst,h9),xhi(m4,mst,h9),stable(h9),limit(h9)
+      common/ cxt11 /xlo(m4,mst,h4,h9),xhi(m4,mst,h4,h9),
+     *               stable(h9),limit(h9)
+
+      integer ncoor,mcoor,ndim
+      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h4,h9)
 
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
@@ -1782,26 +1789,26 @@ c                                 set stable flag
 c                                 get composition
          call getolx (ids,jd)
 c                                 check x-ranges
-         do i = 1, istg(ids)
+         do i = 1, istg(ids,1)
 
-            do j = 1, ispg(ids,i)-1
+            do j = 1, ndim(i,1,ids)
 c                                 low limit:
-               if (x(i,j).lt.xlo(j,i,ids)) then
-                  xlo(j,i,ids) = x(i,j)
+               if (x(i,j).lt.xlo(j,i,1,ids)) then
+                  xlo(j,i,1,ids) = x(i,j)
 c                                 check if solution is at an unnatural limit
-                  if (x(i,j).gt.xmno(ids,i,j).and.
-     *                x(i,j).le.xmng(ids,i,j)
+                  if (x(i,j).gt.xmno(ids,1,i,j).and.
+     *                x(i,j).le.xmng(ids,1,i,j)
      *               .and..not.limit(ids)) then
                      write (*,1000) fname(ids),x(i,j),i,j
                      limit(ids) = .true.
                   end if 
                end if 
 c                                 high limit:
-               if (x(i,j).gt.xhi(j,i,ids)) then
-                  xhi(j,i,ids) = x(i,j)
+               if (x(i,j).gt.xhi(j,i,1,ids)) then
+                  xhi(j,i,1,ids) = x(i,j)
 c                                 check if solution is at an unnatural limit
-                  if (x(i,j).lt.xmxg(ids,i,j).and.
-     *                x(i,j).ge.xmxg(ids,i,j)
+                  if (x(i,j).lt.xmxg(ids,1,i,j).and.
+     *                x(i,j).ge.xmxg(ids,1,i,j)
      *               .and..not.limit(ids)) then
                      write (*,1000) fname(ids),x(i,j),i,j
                      limit(ids) = .true.

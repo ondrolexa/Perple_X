@@ -4902,13 +4902,13 @@ c---------------------------------------------------------------------
       common/ cxt86 /simp(k13),prism(k24)
 
       integer ncoor,mcoor,ndim
-      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
+      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h4,h9)
 
       double precision xmn,xmx,xnc
       common/ cxt108 /xmn(mst,msp),xmx(mst,msp),xnc(mst,msp)
 c----------------------------------------------------------------------
       ycum = 0d0
-      jsp = ndim(ksite,ids)
+      jsp = ndim(ksite,1,ids)
 
       if (jsp.eq.0) then
 c                                 a relict site with only one species
@@ -6836,7 +6836,7 @@ c---------------------------------------------------------------------
 
       integer nreact,i,j,k,l,m,jlaar,idim
 
-      logical bad, eor
+      logical eor
 
       double precision coeffs(k7), rnums(m4), enth(3)
 
@@ -6904,7 +6904,6 @@ c                               set logical variables
       depend = .false.
       fluid = .false.
       recip = .false.
-      bad = .false.
 
       do
           read (n9, '(3(a,1x))', iostat = i) tname
@@ -7758,20 +7757,21 @@ c                                 working arrays
      *              wl(m17,m18)
 
 c                                 x coordinate description
-      integer istg, ispg, imlt, imdg
-      common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
+      integer istg, ispg, imdg, poly
+      common/ cxt6i /istg(h9,h4),ispg(h9,h4,mst),
+     *      imdg(ms1,mst,h4,h9),poly(h9)
 c----------------------------------------------------------------------
-      do i = 1, istg(ids)
+      do i = 1, istg(ids,1)
 c                                 this conditional is necessary
 c                                 because reform can generate a
 c                                 one species site.
-         if (ispg(ids,i).gt.1) then
+         if (ispg(ids,1,i).gt.1) then
 c                                 initialize
-            do j = 1, ispg(ids,i)
+            do j = 1, ispg(ids,1,i)
                x(i,j) = 0d0
             end do
 
-            do j = 1, ispg(ids,i)
+            do j = 1, ispg(ids,1,i)
                x(i,j) = x(i,j) + y(indx(ids,i,j))
             end do
          else
@@ -7799,18 +7799,19 @@ c                                 working arrays
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
      *              wl(m17,m18)
 c                                 x coordinate description
-      integer istg, ispg, imlt, imdg
-      common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
+      integer istg, ispg, imdg, poly
+      common/ cxt6i /istg(h9,h4),ispg(h9,h4,mst),
+     *      imdg(ms1,mst,h4,h9),poly(h9)
 c                                 stored x coordinate
       double precision xco
       integer ico,jco
       common/ cxt10 /xco(k18),ico(k1),jco(k1)
 
-      integer pstot,qstot,ostg,odim,nsum
-      common/ junk1 /pstot(h9),qstot(h9),ostg(h9),odim(mst,h9),nsum(h9)
+      integer nsum
+      common/ junk1 /nsum(h9)
 
       integer ncoor,mcoor,ndim
-      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
+      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h4,h9)
 
       integer lstot,mstot,nstot,ndep,nord
       common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
@@ -7822,11 +7823,11 @@ c----------------------------------------------------------------------
 
          kcoor = ico(id)
 
-         do i = 1, ostg(ids)
+         do i = 1, istg(ids,1)
 
             xt = 0d0
 
-            do j = 1, ndim(i,ids)
+            do j = 1, ndim(i,1,ids)
                kcoor = kcoor + 1
                x(i,j) = xco(kcoor)
                xt = xt + xco(kcoor)
@@ -7837,7 +7838,7 @@ c----------------------------------------------------------------------
          end do
 
       else
-c                                 the use if istg(ids) as the site
+c                                 the use if istg(ids,1) as the site
 c                                 index is a hack for reformulated
 c                                 reciprocal solutions
 
@@ -7846,7 +7847,7 @@ c                                 for 1-species models cause it will
 c                                 never look at the array for composition
 c                                 in any case???
 c         if (ispg(ids,1).gt.1.or.ksmod(ids).eq.39) then
-         if (ispg(ids,1).gt.1) then
+         if (ispg(ids,1,1).gt.1) then
             i = 1
          else
             i = 2
@@ -8335,8 +8336,8 @@ c                                 working arrays
       common/ cxt1r /qmult(m10,h9),d0(m11,m10,h9),dcoef(m0,m11,m10,h9),
      *               scoef(m4,h9)
 
-      integer pstot,qstot,ostg,odim,nsum
-      common/ junk1 /pstot(h9),qstot(h9),ostg(h9),odim(mst,h9),nsum(h9)
+      integer nsum
+      common/ junk1 /nsum(h9)
 
       integer iam
       common/ cst4 /iam
@@ -8666,8 +8667,9 @@ c                                 bookkeeping variables
       integer lstot,mstot,nstot,ndep,nord
       common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
 c                                 x coordinate description
-      integer istg, ispg, imlt, imdg
-      common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
+      integer istg, ispg, imdg, poly
+      common/ cxt6i /istg(h9,h4),ispg(h9,h4,mst),
+     *      imdg(ms1,mst,h4,h9),poly(h9)
 
       integer jend
       common/ cxt23 /jend(h9,m4)
@@ -8679,8 +8681,8 @@ c                                 x coordinate description
       integer ksmod, ksite, kmsol, knsp
       common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
 
-      integer pstot,qstot,ostg,odim,nsum
-      common/ junk1 /pstot(h9),qstot(h9),ostg(h9),odim(mst,h9),nsum(h9)
+      integer nsum
+      common/ junk1 /nsum(h9)
 
 
 c----------------------------------------------------------------------
@@ -8690,13 +8692,13 @@ c                                 are looking at:
          if (id.eq.jend(ids,2+h)) exit
       end do
 c                                 zero x-array
-      do i = 1, ostg(ids)
+      do i = 1, istg(ids,1)
 
-         do j = 1, ispg(ids,i)
+         do j = 1, ispg(ids,1,i)
             x3(jd,i,j) = 0d0
          end do
 c                                 now assign endmember fractions
-         if (i.le.istg(ids)) then
+         if (i.le.istg(ids,1)) then
             x3(jd,i,kmsol(ids,knsp(h,ids),i)) = 1d0
          else
 c                                 orphan endmember
@@ -8720,7 +8722,7 @@ c---------------------------------------------------------------------
       logical add, wham, zbad, bad
 
       integer im, nloc, i, j, ind, id, jd, k, l,itic,ii,imatch, killct,
-     *        killid(20), inc, il, ik, kk, jp1
+     *        killid(20), il, ik, kk, jp1
 
       double precision dinc, dzt, dx, gcpd, stinc, getstr, delta,
      *                 c0(0:20), c1(0:20), zij
@@ -8826,11 +8828,13 @@ c                                 endmember pointers
       integer jend
       common/ cxt23 /jend(h9,m4)
 c                                 x coordinate description
-      integer istg, ispg, imlt, imdg
+      integer istg, ispg, imdg, poly
       double precision xmng, xmxg, xncg, xmno, xmxo, reachg
-      common/ cxt6r /xmng(h9,mst,msp),xmxg(h9,mst,msp),xncg(h9,mst,msp),
-     *           xmno(h9,mst,msp),xmxo(h9,mst,msp),reachg(h9)
-      common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
+      common/ cxt6r /
+     *      xmng(h9,h4,mst,msp),xmxg(h9,h4,mst,msp),xncg(h9,h4,mst,msp),
+     *      xmno(h9,h4,mst,msp),xmxo(h9,h4,mst,msp),reachg(h9)
+      common/ cxt6i /istg(h9,h4),ispg(h9,h4,mst),
+     *      imdg(ms1,mst,h4,h9),poly(h9)
 
       double precision xmn,xmx,xnc
       common/ cxt108 /xmn(mst,msp),xmx(mst,msp),xnc(mst,msp)
@@ -8860,14 +8864,15 @@ c                                 dqf parameters
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       integer ncoor,mcoor,ndim
-      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
+      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h4,h9)
 
       integer isec,icopt,ifull,imsg,io3p
       common/ cst103 /isec,icopt,ifull,imsg,io3p
 c                                 parameters for autorefine
       logical stable,limit
       double precision xlo,xhi
-      common/ cxt11 /xlo(m4,mst,h9),xhi(m4,mst,h9),stable(h9),limit(h9)
+      common/ cxt11 /xlo(m4,mst,h4,h9),xhi(m4,mst,h4,h9),
+     *               stable(h9),limit(h9)
 
       character qname*10
       logical refine, resub
@@ -8889,8 +8894,8 @@ c                                 model type
       integer ostot
       common/ junk /ostot
 
-      integer pstot,qstot,ostg,odim,nsum
-      common/ junk1 /pstot(h9),qstot(h9),ostg(h9),odim(mst,h9),nsum(h9)
+      integer nsum
+      common/ junk1 /nsum(h9)
 
       integer grid
       double precision rid
@@ -8990,9 +8995,6 @@ c                                 number of dependent + independent - ordered en
 c                                 prismatic space
       mstot(im) = istot
 c                                 number of dependent + independent - ordered endmembers
-c                                 prismatic space + orphans
-      pstot(im) = ostot
-c                                 number of dependent + independent - ordered endmembers
 c                                 prismatic space - orphans
 c
 c                                 number of independent + ordered endmembers
@@ -9000,7 +9002,7 @@ c                                 number of independent + ordered endmembers
 c                                 number of independent disordered endmembers
       lstot(im) = kstot
 c                                 chemical mixing sites
-      istg(im) = isite
+      istg(im,1) = isite
 c                                 site check override
       sck(im) = stck
 c                                 non-equimolar speciation reaction
@@ -9016,31 +9018,19 @@ c                                 number of ordered species
       nord(im) = norder
 c                                 number of species and multiplicity and
 c                                 site ranges
-      inc = 0
-      if (jsmod.eq.9.or.jsmod.eq.10) inc = 1
-
-      ostg(im) = isite + inc
       mcoor(im) = 0
       ncoor(im) = 0
       nsum(im) = 0
 
-      do i = 1, ostg(im)
+      do i = 1, istg(im,1)
 
-         imlt(im,i) = ist(i)
+         ispg(im,1,i) = isp(i)
+         ndim(i,1,im) = isp(i) - 1
+         nsum(im) = nsum(im) + ndim(i,1,im)
+         ncoor(im) = ncoor(im) + ispg(im,1,i)
+         mcoor(im) = mcoor(im) + ndim(i,1,im)
 
-         if (i.le.isite) then
-            ndim(i,im) = isp(i) - 1
-            ispg(im,i) = isp(i)
-            nsum(im) = nsum(im) + ndim(i,im)
-         else
-            ndim(i,im) = isp(i)
-            ispg(im,i) = isp(i) + 1
-         end if
-
-         ncoor(im) = ncoor(im) + ispg(im,i)
-         mcoor(im) = mcoor(im) + ndim(i,im)
-
-         do j = 1, ndim(i,im)
+         do j = 1, ndim(i,1,im)
 c                                 check for old subdivision schemes
             if (imd(j,i).gt.1) call error (62,nopt(13),imd(j,i),tname)
 c                                 allow inc to be either the number of points
@@ -9100,8 +9090,8 @@ c                                 in the solution model:
 
             end if
 c                                 save solution model values as hard limits
-            xmno(im,i,j) = xmn(i,j)
-            xmxo(im,i,j) = xmx(i,j)
+            xmno(im,1,i,j) = xmn(i,j)
+            xmxo(im,1,i,j) = xmx(i,j)
 
             if (refine) then
 c                                 new values from autorefine file
@@ -9132,28 +9122,30 @@ c                                 widen the range by the exploratory resolution
 
                if (lopt(3)) then
 c                                 hard_limit test
-                  if (xmx(i,j).gt.xmxo(im,i,j)) xmx(i,j) = xmxo(im,i,j)
-                  if (xmn(i,j).lt.xmno(im,i,j)) xmn(i,j) = xmno(im,i,j)
+                  if (xmx(i,j).gt.xmxo(im,1,i,j)) 
+     *                                  xmx(i,j) = xmxo(im,1,i,j)
+                  if (xmn(i,j).lt.xmno(im,1,i,j)) 
+     *                                  xmn(i,j) = xmno(im,1,i,j)
                end if
 
                xnc(i,j) = xnc(i,j)/nopt(17)
 
             end if
 
-            imdg(j,i,im) = imd(j,i)
-            xmng(im,i,j) = xmn(i,j)
-            xmxg(im,i,j) = xmx(i,j)
-            xncg(im,i,j) = xnc(i,j)
+            imdg(j,i,1,im) = imd(j,i)
+            xmng(im,1,i,j) = xmn(i,j)
+            xmxg(im,1,i,j) = xmx(i,j)
+            xncg(im,1,i,j) = xnc(i,j)
 
          end do
 
       end do
 c                                 initialize high/low ranges
       do i = 1, isite
-         do j = 1, ndim(i,im)
+         do j = 1, ndim(i,1,im)
 
-            xlo(j,i,im) = 1d0
-            xhi(j,i,im) = 0d0
+            xlo(j,i,1,im) = 1d0
+            xhi(j,i,1,im) = 0d0
 
          end do
       end do
@@ -9231,7 +9223,7 @@ c                                 term may be of order < iord
       end do
 
 
-      do i = 1, pstot(im)
+      do i = 1, mstot(im)
 c                                 initialize invalid speciation flag
          badend(i,im) = .false.
 c                                 save global copy of kdsol
@@ -9319,19 +9311,9 @@ c                                 save y -> p array
             end do
          end do
 
-         if (ksmod(im).eq.9.or.ksmod(im).eq.10) then
-
-            do j = 1, ndim(3,im)
-               x(3,j) = 0d0
-            end do
-
-            x(3,j) = 1d0
-
-         end if
-
          do j = 1, mdep
 
-            do i = 1, pstot(im)
+            do i = 1, mstot(im)
                y(i) = 0d0
             end do
 
@@ -9920,8 +9902,8 @@ c                                 hard limits are off, set limits to 0/1
          do i = 1, isite
             do j = 1, isp(i) - 1
 
-               xmxo(im,i,j) = 1d0
-               xmno(im,i,j) = 0d0
+               xmxo(im,1,i,j) = 1d0
+               xmno(im,1,i,j) = 0d0
 
             end do
          end do
@@ -10130,13 +10112,14 @@ c-----------------------------------------------------------------------
       common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
 
       integer ncoor,mcoor,ndim
-      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
+      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h4,h9)
 
-      integer istg, ispg, imlt, imdg
-      common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
+      integer istg, ispg, imdg, poly
+      common/ cxt6i /istg(h9,h4),ispg(h9,h4,mst),
+     *      imdg(ms1,mst,h4,h9),poly(h9)
 
-      integer pstot,qstot,ostg,odim,nsum
-      common/ junk1 /pstot(h9),qstot(h9),ostg(h9),odim(mst,h9),nsum(h9)
+      integer nsum
+      common/ junk1 /nsum(h9)
 c-----------------------------------------------------------------------
 c                                 for orphan vertex models could check
 c                                 that the prismatic fraction is > 0
@@ -10165,18 +10148,6 @@ c                                 idependent species
 
       if (ksmod(id).eq.9.or.ksmod(id).eq.10) then
 c                                 orphan vertex model
-         do k = 1, nstot(id)
-c                                 renormalize the prismatic endmembers
-            p0a(k) = p0a(k)*x(ostg(id),ispg(id,ostg(id)))
-            pa(k) = p0a(k)
-         end do
-
-         do k = 1, ndim(ostg(id),id)
-c                                 add the orphan fractions
-            l = lstot(id) - ndim(ostg(id),id) + k
-            p0a(l) = p0a(l) + x(ostg(id),k)
-            pa(l) = p0a(l)
-         end do
 
       end if
 
@@ -12094,8 +12065,9 @@ c-----------------------------------------------------------------------
       common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
 
       double precision xmng, xmxg, xncg, xmno, xmxo, reachg
-      common/ cxt6r /xmng(h9,mst,msp),xmxg(h9,mst,msp),xncg(h9,mst,msp),
-     *               xmno(h9,mst,msp),xmxo(h9,mst,msp),reachg(h9)
+      common/ cxt6r /
+     *      xmng(h9,h4,mst,msp),xmxg(h9,h4,mst,msp),xncg(h9,h4,mst,msp),
+     *      xmno(h9,h4,mst,msp),xmxo(h9,h4,mst,msp),reachg(h9)
 
       integer iopt
       logical lopt
@@ -12109,7 +12081,7 @@ c-----------------------------------------------------------------------
       common/ junk /ostot
 
       integer ncoor,mcoor,ndim
-      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
+      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h4,h9)
 
       integer idaq, jdaq
       logical laq
@@ -12382,8 +12354,6 @@ c---------------------------------------------------------------------
 
       integer last,i,j,np1,h,index,ids, k, l, n, nold
 
-      double precision sum
-
       character tname*10
       logical refine, dynam
       common/ cxt26 /refine,dynam,tname
@@ -12402,14 +12372,15 @@ c---------------------------------------------------------------------
      *      isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),isp(mst),
      *      rkord(m18),isite,iterm,iord,istot,jstot,kstot,xtyp,stck,norf
 
-      integer istg, ispg, imlt, imdg
-      common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
+      integer istg, ispg, imdg, poly
+      common/ cxt6i /istg(h9,h4),ispg(h9,h4,mst),
+     *      imdg(ms1,mst,h4,h9),poly(h9)
 
       integer ncoor,mcoor,ndim
-      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
+      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h4,h9)
 
-      integer pstot,qstot,ostg,odim,nsum
-      common/ junk1 /pstot(h9),qstot(h9),ostg(h9),odim(mst,h9),nsum(h9)
+      integer nsum
+      common/ junk1 /nsum(h9)
 
       integer ksmod, ksite, kmsol, knsp
       common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
@@ -12434,14 +12405,14 @@ c                                 do the first site:
 
       call cartes (1,ids)
 
-      last = ndim(1,ids)
+      last =  ndim(1,1,ids)
       if (last.eq.0) last = 1
 
       do h = 1, npairs
 c                                 load the k simplicial coordinates
 c                                 into as the first k of j prismatic coordinates
          j = (h-1) * mcoor(ids)
-         k = (h-1) * ndim(1,ids)
+         k = (h-1) *  ndim(1,1,ids) 
 
          do i = 1, last
             prism(j+i) = simp(k+i)
@@ -12452,13 +12423,13 @@ c                                 into as the first k of j prismatic coordinates
       np1 = npairs
       ntot = np1
 
-      if (istg(ids).eq.1) return
+      if (istg(ids,1).eq.1) return
 
       nold = last
 c                                 do the second site:
       call cartes (2,ids)
 
-      last = ndim(2,ids)
+      last = ndim(2,1,ids)
       if (last.eq.0) last = 1
 c                                 there will be a total of
 c                                 (npairs-1)*np1 compositions,
@@ -12481,7 +12452,7 @@ c                                 a 3 site model.
 c                                 for each site 2 composition,
 c                                 duplicate the range of site 1
 c                                 compositions.
-         n = (h-1) * ndim(2,ids)
+         n = (h-1) * ndim(2,1,ids)
 
          do i = 1, np1
 
@@ -12497,7 +12468,7 @@ c                                 compositions.
 c                                 put in the new site 2 compositions:
             k = k + nold
 
-            do j = 1, ndim(2,ids)
+            do j = 1, ndim(2,1,ids)
                prism(k+j) = simp(n+j)
             end do
 
@@ -12506,67 +12477,8 @@ c                                 put in the new site 2 compositions:
       end do
 
       np1 = ntot
-c                                 do the third site:
-      if (ksmod(ids).eq.9.or.ksmod(ids).eq.10) then
-c                                 prism + orphan vertices (the prism is treated
-c                                 as a vertex of the simplex including the orphans)
-c                                 do the orphan site:
 
-c                                 zero the orphan concentrations in the
-c                                 ntot prismatic coordinates generated so far:
-         do i = 1, ntot
-
-            k = (i-1)*mcoor(ids) + nsum(ids) + 1
-            l = i*mcoor(ids)
-
-            do j = k, l
-               prism(j) = 0d0
-            end do
-
-         end do
-c                                 get the npair simplicial coordinates for the
-c                                 orphan site
-         call cartes (3,ids)
-c                                 for each simplicial coordinate (skipping the
-c                                 origin) make ntot prismatic compositions, for
-c                                 a grand total of ntot*(npair-1) compositions
-         do i = 2, npairs
-
-            sum = 1d0
-c                                 starting point in simp
-            n = (i-1)*ndim(3,ids)
-
-            do j = 1, ndim(3,ids)
-               sum = sum - simp(n+j)
-            end do
-
-            do h = 1, np1
-
-               ntot = ntot + 1
-c                                 the starting position of the pure prism is
-               l = (h-1) * mcoor(ids)
-c                                 the starting position in the final array is
-               k = (ntot -1) * mcoor(ids)
-
-               if (k+mcoor(ids).gt.k24) call errk24
-c                                 load the diluted prism coordinates
-               do j =  1, nsum(ids)
-                  prism(k+j) = prism(l+j)*sum
-               end do
-c                                 and the simplicial coordinates
-               do j = 1, ndim(3,ids)
-                  prism(k+nsum(ids)+j) = simp(n+j)
-               end do
-
-            end do
-
-         end do
-
-         return
-
-      end if
-
-      if (istg(ids).eq.2) return
+      if (istg(ids,1).eq.2) return
 
       nold = nold + last
 
@@ -12574,7 +12486,7 @@ c                                 and the simplicial coordinates
 c                                 the use of "index" is necessary to avoid
 c                                 compiler error if parameter mst < 3
       index = 3
-      last = ndim(index,ids)
+      last = ndim(3,1,ids)
       if (last.eq.0) last = 1
 c                                 copy the first site 3 distribution
 c                                 into the first np1*np2 compositions:
@@ -12592,7 +12504,7 @@ c                                 duplicate the range of site 1 and
 c                                 site 2 compositions.
       do h = 2, npairs
 
-         n = (h-1) * ndim(index,ids)
+         n = (h-1) * ndim(3,1,ids)
 
          do i = 1, np1
 
@@ -12609,7 +12521,7 @@ c                                 site 2 compositions.
 
             k = k + nold
 
-            do j = 1, ndim(index,ids)
+            do j = 1,  ndim(3,1,ids)
                prism(k+j) = simp(n+j)
             end do
 
@@ -12782,8 +12694,9 @@ c                                 model type
       common/ cxt1i /msite(h9),ksp(m10,h9),lterm(m11,m10,h9),
      *               ksub(m0,m11,m10,h9)
 
-      integer istg, ispg, imlt, imdg
-      common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
+      integer istg, ispg, imdg, poly
+      common/ cxt6i /istg(h9,h4),ispg(h9,h4,mst),
+     *      imdg(ms1,mst,h4,h9),poly(h9)
 
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
@@ -12804,13 +12717,13 @@ c                                 model type
       common/ cst103 /isec,icopt,ifull,imsg,io3p
 
       integer ncoor,mcoor,ndim
-      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
+      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h4,h9)
 
       double precision exces
       common/ cst304 /exces(m3,k1)
 
-      integer pstot,qstot,ostg,odim,nsum
-      common/ junk1 /pstot(h9),qstot(h9),ostg(h9),odim(mst,h9),nsum(h9)
+      integer nsum
+      common/ junk1 /nsum(h9)
 
       save i228,oim
       data i228,oim/0,0/
@@ -12844,11 +12757,11 @@ c                                 array can be used for all solutions.
          exces(i,iphct) = 0d0
       end do
 c                                encode a name
-      if (istg(im).gt.1) then
+      if (istg(im,1).gt.1) then
 c                                make character nums for standard cases
 c                                this is only to avoid run-time errors
 c                                during debugging.
-         do i = 1, istg(im)
+         do i = 1, istg(im,1)
             do j = 1, 2
                h = idint(1d2*z(j,1))
                if (h.eq.100.or.h.lt.0) then
@@ -12874,21 +12787,21 @@ c use mname array to flag retained absent endmembers
 
       end do
 
-      if (istg(im).eq.2.and.mstot(im).eq.4) then
+      if (istg(im,1).eq.2.and.mstot(im).eq.4) then
 c                                special case 1, bin-bin reciprocal solution
          write (names(iphct),1020) tname, znm(1,1),znm(2,1)
 
-      else if (istg(im).eq.2.and.mstot(im).eq.6.and.ispg(im,1).eq.3)
+      else if (istg(im,1).eq.2.and.mstot(im).eq.6.and.ispg(im,1,1).eq.3)
      *        then
 c                                special case 2, tern-bin reciprocal solution
          write (names(iphct),1060) tname, znm(1,1),znm(1,2),znm(2,1)
 
-      else if (istg(im).eq.2.and.mstot(im).eq.6.and.ispg(im,1).eq.2)
+      else if (istg(im,1).eq.2.and.mstot(im).eq.6.and.ispg(im,1,1).eq.2)
      *        then
 c                                special case 3, bin-tern reciprocal solution
          write (names(iphct),1060) tname, znm(1,1),znm(2,1),znm(2,2)
 
-      else if (istg(im).eq.2.and.mstot(im).eq.9) then
+      else if (istg(im,1).eq.2.and.mstot(im).eq.9) then
 c                                special case 4, tern-tern reciprocal solution
          write (names(iphct),1060) znm(1,1),znm(1,2),znm(2,1),znm(2,2)
 
@@ -12950,8 +12863,8 @@ c                                 load xcoors if reciprocal
 
          ico(iphct) = icoct
 
-         do i = 1, ostg(im)
-            do j = 1, ndim(i,im)
+         do i = 1, istg(im,1)
+            do j = 1, ndim(i,1,im)
                icoct = icoct + 1
                xco(icoct) = z(i,j)
             end do
@@ -14727,8 +14640,9 @@ c---------------------------------------------------------------------
       double precision simp,prism
       common/ cxt86 /simp(k13),prism(k24)
 c                                 x coordinate description
-      integer istg, ispg, imlt, imdg
-      common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
+      integer istg, ispg, imdg, poly
+      common/ cxt6i /istg(h9,h4),ispg(h9,h4,mst),
+     *      imdg(ms1,mst,h4,h9),poly(h9)
 
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
@@ -14751,8 +14665,9 @@ c                                 x coordinate description
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 
       double precision xmng, xmxg, xncg, xmno, xmxo, reachg
-      common/ cxt6r /xmng(h9,mst,msp),xmxg(h9,mst,msp),xncg(h9,mst,msp),
-     *               xmno(h9,mst,msp),xmxo(h9,mst,msp),reachg(h9)
+      common/ cxt6r /
+     *      xmng(h9,h4,mst,msp),xmxg(h9,h4,mst,msp),xncg(h9,h4,mst,msp),
+     *      xmno(h9,h4,mst,msp),xmxo(h9,h4,mst,msp),reachg(h9)
 c----------------------------------------------------------------------
       if (.not.extra) then
 c                                 chopit always generates jsp coordinates
@@ -14783,7 +14698,7 @@ c                                 generate coordinates for i'th component
 
          if (ync.eq.0d0) cycle
 
-         mode = imdg(k,lsite,ids)
+         mode = imdg(k,lsite,1,ids)
 c                                 avoid impossible compositions 'cause a min > 0
          if (i.gt.1) then
 
@@ -14839,7 +14754,7 @@ c                                 x is the linear conformal coordinate.
 
             call setstc (ids,lsite,k)
 
-            delt = xmno(ids,lsite,k)
+            delt = xmno(ids,1,lsite,k)
             if (delt.gt.nopt(5)) delt = nopt(5)
 
             x = unstch (xmn(lsite,k))
@@ -14983,8 +14898,9 @@ c---------------------------------------------------------------------
      *      isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),isp(mst),
      *      rkord(m18),isite,iterm,iord,istot,jstot,kstot,xtyp,stck,norf
 
-      integer istg, ispg, imlt, imdg
-      common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
+      integer istg, ispg, imdg, poly
+      common/ cxt6i /istg(h9,h4),ispg(h9,h4,mst),
+     *      imdg(ms1,mst,h4,h9),poly(h9)
 
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
@@ -17575,7 +17491,7 @@ c----------------------------------------------------------------------
       include 'perplex_parameters.h'
 c                                 -------------------------------------
 c                                 local variables:
-      integer i, j, k, l, ibad1, ibad2, ibad3, igood
+      integer i, j, k, ibad1, ibad2, ibad3, igood
 
       logical bad1, bad2, good, reach
 
@@ -17588,12 +17504,14 @@ c                                 -------------------------------------
 c                                 global variables:
 c                                 working arrays
 c                                 x coordinate description
-      integer istg, ispg, imlt, imdg
-      common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
+      integer istg, ispg, imdg, poly
+      common/ cxt6i /istg(h9,h4),ispg(h9,h4,mst),
+     *      imdg(ms1,mst,h4,h9),poly(h9)
 c                                 solution limits and stability
       logical stable,limit
       double precision xlo,xhi
-      common/ cxt11 /xlo(m4,mst,h9),xhi(m4,mst,h9),stable(h9),limit(h9)
+      common/ cxt11 /xlo(m4,mst,h4,h9),xhi(m4,mst,h4,h9),
+     *               stable(h9),limit(h9)
 c                                 solution model counter
       integer isoct
       common/ cst79 /isoct
@@ -17614,8 +17532,8 @@ c                                 endmember names
       integer isec,icopt,ifull,imsg,io3p
       common/ cst103 /isec,icopt,ifull,imsg,io3p
 
-      integer pstot,qstot,ostg,odim,nsum
-      common/ junk1 /pstot(h9),qstot(h9),ostg(h9),odim(mst,h9),nsum(h9)
+      integer nsum
+      common/ junk1 /nsum(h9)
 
       integer iopt
       logical lopt
@@ -17626,14 +17544,15 @@ c                                 endmember names
       common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
 
       double precision xmng, xmxg, xncg, xmno, xmxo, reachg
-      common/ cxt6r /xmng(h9,mst,msp),xmxg(h9,mst,msp),xncg(h9,mst,msp),
-     *               xmno(h9,mst,msp),xmxo(h9,mst,msp),reachg(h9)
+      common/ cxt6r /
+     *      xmng(h9,h4,mst,msp),xmxg(h9,h4,mst,msp),xncg(h9,h4,mst,msp),
+     *      xmno(h9,h4,mst,msp),xmxo(h9,h4,mst,msp),reachg(h9)
 
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
 
       integer ncoor,mcoor,ndim
-      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
+      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h4,h9)
 
       integer lstot,mstot,nstot,ndep,nord
       common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
@@ -17742,24 +17661,24 @@ c                                 solutions on internal limits
 
             write (n10,'(a)') fname(i)
 
-            do j = 1, ostg(i)
-               do k = 1, ndim(j,i)
-                  write (n10,*) xlo(k,j,i),xhi(k,j,i)
+            do j = 1, istg(i,1)
+               do k = 1, ndim(j,1,i)
+                  write (n10,*) xlo(k,j,1,i),xhi(k,j,1,i)
                end do
             end do
 
          end if
 c                                 special case (1 component solution).
-         if (ksmod(i).eq.39.and.ndim(1,i).eq.0) cycle
+         if (ksmod(i).eq.39.and.ndim(1,1,i).eq.0) cycle
 
-         if (istg(i).eq.1) then
+         if (istg(i,1).eq.1) then
 c                                 single site solution
             write (*,1020) fname(i)
             if (lopt(11)) write (n11,1020) fname(i)
 
             if (ksmod(i).eq.20) then
 c                                 charge balance model:
-               do j = 1, ndim(1,i)
+               do j = 1, ndim(1,1,i)
 
                   if (j.lt.ns) then
                      char8 = names(jnd(j))
@@ -17769,23 +17688,23 @@ c                                 charge balance model:
                      char8 = aqnam(jnd(j)  - aqst)
                   end if
 
-                  write (*,1030) char8, xlo(j,1,i), xhi(j,1,i)
+                  write (*,1030) char8, xlo(j,1,1,i), xhi(j,1,1,i)
 
-                  if (lopt(11)) write (n11,1030) char8, xlo(j,1,i),
-     *                                                  xhi(j,1,i)
+                  if (lopt(11)) write (n11,1030) char8, xlo(j,1,1,i),
+     *                                                  xhi(j,1,1,i)
 
                end do
 
             else
 
-               do j = 1, ndim(1,i)
+               do j = 1, ndim(1,1,i)
 
                   write (*,1030) names(jend(i,2+j)),
-     *                              xlo(j,1,i),xhi(j,1,i)
+     *                              xlo(j,1,1,i),xhi(j,1,1,i)
 
 
-                  if (lopt(11)) write (n11,1030)
-     *                          names(jend(i,2+j)),xlo(j,1,i),xhi(j,1,i)
+                  if (lopt(11)) write (n11,1030) names(jend(i,2+j)),
+     *                          xlo(j,1,1,i),xhi(j,1,1,i)
 
                end do
 
@@ -17793,7 +17712,7 @@ c                                 charge balance model:
 
          else
 
-            if (ostg(i).eq.istg(i)) then
+            if (poly(i).eq.1) then
 c                                 prismatic
                write (*,1040) 'prismatic model: '//fname(i)
                if (lopt(11)) write (n11,1040)
@@ -17807,48 +17726,29 @@ c                                 prismatic + orphan vertices
 
             end if
 
-            do j = 1, istg(i)
+            do j = 1, istg(i,1)
 
                write (*,1050) j
                if (lopt(11)) write (n11,1050) j
 
-               if (ispg(i,j).eq.1) then
+               if (ispg(i,1,j).eq.1) then
 
                   write (*,1060)
                   if (lopt(11)) write (n11,1060)
 
                else
 
-                  do k = 1, ispg(i,j) - 1
+                  do k = 1, ndim(j,1,i)
 
-                     write (*,1070) k,xlo(k,j,i),xhi(k,j,i)
+                     write (*,1070) k,xlo(k,j,1,i),xhi(k,j,1,i)
                      if (lopt(11)) write (n11,1070)
-     *                              k,xlo(k,j,i),xhi(k,j,i)
+     *                              k,xlo(k,j,1,i),xhi(k,j,1,i)
 
                   end do
 
                end if
 
             end do
-
-            if (ostg(i).gt.istg(i)) then
-c                                 prismatic + orphan vertices
-               l = ostg(i)
-
-               write (*,1150)
-               if (lopt(11)) write (n11,1150)
-
-               do j = 1, ndim(l,i)
-
-                  k = 2 + lstot(i) - ndim(l,i) + j
-
-                  write (*,1030) names(jend(i,k)),xlo(j,l,i),xhi(j,l,i)
-                  if (lopt(11)) write (n11,1030)
-     *                           names(jend(i,k)),xlo(j,l,i),xhi(j,l,i)
-
-               end do
-
-            end if
 
          end if
 
@@ -17934,8 +17834,9 @@ c                                 local variables:
 c                                 global variables:
 c                                 working arrays
 c                                 x coordinate description
-      integer istg, ispg, imlt, imdg
-      common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
+      integer istg, ispg, imdg, poly
+      common/ cxt6i /istg(h9,h4),ispg(h9,h4,mst),
+     *      imdg(ms1,mst,h4,h9),poly(h9)
 c                                 solution model names
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
@@ -17964,18 +17865,19 @@ c                                 endmember names
       common/ cxt2 /aqg(m4),q2(m4),rt,jnd(m4)
 
       integer ncoor,mcoor,ndim
-      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
+      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h4,h9)
 
       double precision xmng, xmxg, xncg, xmno, xmxo, reachg
-      common/ cxt6r /xmng(h9,mst,msp),xmxg(h9,mst,msp),xncg(h9,mst,msp),
-     *               xmno(h9,mst,msp),xmxo(h9,mst,msp),reachg(h9)
+      common/ cxt6r /
+     *      xmng(h9,h4,mst,msp),xmxg(h9,h4,mst,msp),xncg(h9,h4,mst,msp),
+     *      xmno(h9,h4,mst,msp),xmxo(h9,h4,mst,msp),reachg(h9)
 
       integer iaq, aqst, aqct
       character aqnam*8
       double precision aqcp, aqtot
       common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
 c----------------------------------------------------------------------
-         if (istg(i).eq.1.or.j.gt.istg(i)) then
+         if (istg(i,1).eq.1) then
 c                                 single site solution or orphan
             if (ksmod(i).eq.20) then
 
@@ -17985,19 +17887,15 @@ c                                 single site solution or orphan
                   char8 = aqnam(jnd(j)  - aqst)
                end if
 
-            else if (j.gt.istg(i)) then
-
-               char8 = names(jend(i, 2 + lstot(i) - ndim(j,i) + j))
-
             else
                char8 = names(jend(i,2+j))
             end if
 
-            write (*,1010) char8,x,fname(i),xmng(i,j,k),xmxg(i,j,k)
+            write (*,1010) char8,x,fname(i),xmng(i,1,j,k),xmxg(i,1,j,k)
 
          else
 
-            write (*,1020) j,k,x,fname(i),xmng(i,j,k),xmxg(i,j,k)
+            write (*,1020) j,k,x,fname(i),xmng(i,1,j,k),xmxg(i,1,j,k)
 
          end if
 
@@ -19656,7 +19554,7 @@ c----------------------------------------------------------------------
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
 
       integer ncoor,mcoor,ndim
-      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
+      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h4,h9)
 
       integer ksmod, ksite, kmsol, knsp
       common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
@@ -19665,17 +19563,20 @@ c----------------------------------------------------------------------
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
      *              wl(m17,m18)
 
-      integer istg, ispg, imlt, imdg
       double precision xmng, xmxg, xncg, xmno, xmxo, reachg
-      common/ cxt6r /xmng(h9,mst,msp),xmxg(h9,mst,msp),xncg(h9,mst,msp),
-     *               xmno(h9,mst,msp),xmxo(h9,mst,msp),reachg(h9)
-      common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
+      common/ cxt6r /
+     *      xmng(h9,h4,mst,msp),xmxg(h9,h4,mst,msp),xncg(h9,h4,mst,msp),
+     *      xmno(h9,h4,mst,msp),xmxo(h9,h4,mst,msp),reachg(h9)
+
+      integer istg, ispg, imdg, poly
+      common/ cxt6i /istg(h9,h4),ispg(h9,h4,mst),
+     *      imdg(ms1,mst,h4,h9),poly(h9)
 
       integer lstot,mstot,nstot,ndep,nord
       common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
 
-      integer pstot,qstot,ostg,odim,nsum
-      common/ junk1 /pstot(h9),qstot(h9),ostg(h9),odim(mst,h9),nsum(h9)
+      integer nsum
+      common/ junk1 /nsum(h9)
 c----------------------------------------------------------------------
       bad = .false.
 
@@ -19693,11 +19594,11 @@ c                                 counter for number of non 0 or 1 compositions
 
       if (ksmod(ids).ne.20) then
 
-         do j = 1, ostg(ids)
+         do j = 1, istg(ids,1)
 
             ysum = 0d0
 
-            do k = 1, ndim(j,ids)
+            do k = 1, ndim(j,1,ids)
 
                m = m + 1
 
@@ -19708,8 +19609,8 @@ c                                 counter for number of non 0 or 1 compositions
 
                   zcoor(jcoct) = x(j,k)
 
-                  if (x(j,k).lt.xmno(ids,j,k).and.
-     *                x(j,k).gt.xmxo(ids,j,k)) then
+                  if (x(j,k).lt.xmno(ids,1,j,k).and.
+     *                x(j,k).gt.xmxo(ids,1,j,k)) then
 c                                 the composition is out of range
                      jphct = jphct - 1
                      jcoct = kcoct - mcoor(ids)
@@ -19748,8 +19649,8 @@ c                                 the first nqs - 1 species in zcoor
 
                zcoor(kcoct-nqs+k) = x(1,k)
 
-               if (x(1,k).lt.xmno(ids,1,k).and.
-     *             x(1,k).gt.xmxo(ids,1,k)) then
+               if (x(1,k).lt.xmno(ids,1,1,k).and.
+     *             x(1,k).gt.xmxo(ids,1,1,k)) then
 c                                 the composition is out of range
                   jphct = jphct - 1
                   jcoct = kcoct - mcoor(ids)
@@ -19808,8 +19709,9 @@ c----------------------------------------------------------------------
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
      *              wl(m17,m18)
 
-      integer istg, ispg, imlt, imdg
-      common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
+      integer istg, ispg, imdg, poly
+      common/ cxt6i /istg(h9,h4),ispg(h9,h4,mst),
+     *      imdg(ms1,mst,h4,h9),poly(h9)
 
       integer ksmod, ksite, kmsol, knsp
       common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
@@ -19821,8 +19723,8 @@ c----------------------------------------------------------------------
       integer ldsol
       common/ cxt36 /ldsol(m4,h9),badend(m4,h9),sck(h9),nrf(h9)
 
-      integer pstot,qstot,ostg,odim,nsum
-      common/ junk1 /pstot(h9),qstot(h9),ostg(h9),odim(mst,h9),nsum(h9)
+      integer nsum
+      common/ junk1 /nsum(h9)
 
       integer iopt
       logical lopt
@@ -19830,7 +19732,7 @@ c----------------------------------------------------------------------
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       integer ncoor,mcoor,ndim
-      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
+      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h4,h9)
 
       integer kd, na1, na2, na3, nat
       double precision x3, caq
@@ -19847,7 +19749,7 @@ c----------------------------------------------------------------------
 
          do l = 1, mstot(ids)
             y(l) = 1d0
-            do m = 1, istg(ids)
+            do m = 1, istg(ids,1)
                y(l) = y(l)*x(m,kmsol(ids,l,m))
             end do
 
@@ -19865,27 +19767,10 @@ c----------------------------------------------------------------------
 
          do l = 1, mstot(ids)
             y(l) = 1d0
-            do m = 1, istg(ids)
+            do m = 1, istg(ids,1)
                y(l) = y(l)*x3(id,m,kmsol(ids,l,m))
             end do
          end do
-
-      end if
-
-      if (ksmod(ids).eq.9.or.ksmod(ids).eq.10) then
-c                                 necessary? probably none of this is.
-         do l = mstot(ids) + 1, pstot(ids)
-            y(l) = 0d0
-         end do
-
-         if (.not.usex) then
-c                                 load the orphan fractions into local x
-c                                 for y2p0
-            do l = 1, ispg(ids,ostg(ids))
-               x(ostg(ids),l) = x3(id,ostg(ids),l)
-            end do
-
-         end if
 
       end if
 c                                 checks for x array compositions:
@@ -19944,24 +19829,25 @@ c---------------------------------------------------------------------
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 
       integer ncoor,mcoor,ndim
-      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
+      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h4,h9)
 
-      integer pstot,qstot,ostg,odim,nsum
-      common/ junk1 /pstot(h9),qstot(h9),ostg(h9),odim(mst,h9),nsum(h9)
+      integer nsum
+      common/ junk1 /nsum(h9)
 
-      integer istg, ispg, imlt, imdg
-      common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
+      integer istg, ispg, imdg, poly
+      common/ cxt6i /istg(h9,h4),ispg(h9,h4,mst),
+     *      imdg(ms1,mst,h4,h9),poly(h9)
 c---------------------------------------------------------------------
 c                                 get the npair simplicial coordinates for the
 c                                 orphan site:
       ycum = 0d0
 
-      call chopit (ycum,1d0,0,ndim(ostg(ids),ids),ostg(ids),ids,0,
+      call chopit (ycum,1d0,0,ndim(istg(ids,1),1,ids),istg(ids,1),ids,0,
      *             .true.)
 
       np0 = npairs
 c                                 save an extra coordinate for prismatic vertex (sum)
-      nco = ispg(ids,ostg(ids))
+      nco = ispg(ids,1,istg(ids,1))
       nst1 = nco * np0
       ntot = 0
 c                                 for each simplicial coordinate (skipping the
@@ -19977,7 +19863,7 @@ c                                 inc = inc0/sum [sum is the fraction of the
 c                                 prism vertex]
          sum = 1d0
 
-         do j = 1, ndim(ostg(ids),ids)
+         do j = 1, ndim(istg(ids,1),1,ids)
             sum = sum - simp(n+j)
          end do
 
@@ -19987,24 +19873,24 @@ c                                 prism vertex]
 c                                 the prism vertex fraction is > 0
             ycum = 0d0
 c                                 first simplex of prism
-            call chopit (ycum,sum,0,ndim(1,ids),1,ids,nst1,.false.)
+            call chopit (ycum,sum,0,ndim(1,1,ids),1,ids,nst1,.false.)
 
             np1 = npairs
-            nst2 = nst1 + np1*ndim(1,ids)
+            nst2 = nst1 + np1*ndim(1,1,ids)
 
             ycum = 0d0
 c                                 second simplex of prism
-            call chopit (ycum,sum,0,ndim(2,ids),2,ids,nst2,.false.)
+            call chopit (ycum,sum,0,ndim(2,1,ids),2,ids,nst2,.false.)
 
             np2 = npairs
 c                                 ready to rock
             do j = 1, np1
 c                                 site 1 coordinate starting point in simp
-               m = nst1 + (j-1)*ndim(1,ids)
+               m = nst1 + (j-1)*ndim(1,1,ids)
 c                                  for each population on site 1
                do k = 1, np2
 c                                 site 2 coordinate starting point in simp
-                  l = nst2 + (k-1)*ndim(2,ids)
+                  l = nst2 + (k-1)*ndim(2,1,ids)
 c                                  count the coordinate
                   ntot = ntot + 1
 c                                 starting point of the coordinate
@@ -20012,15 +19898,15 @@ c                                 starting point of the coordinate
 
                   if (h+mcoor(ids).gt.k24) call errk24
 c                                 load the coordinate
-                  do i1 = 1, ndim(1,ids)
+                  do i1 = 1, ndim(1,1,ids)
                      prism(h+i1) = simp(m+i1)
                   end do
 
-                  do i1 = 1, ndim(2,ids)
-                     prism(h+ndim(1,ids)+i1) = simp(l+i1)
+                  do i1 = 1, ndim(2,1,ids)
+                     prism(h+ndim(1,1,ids)+i1) = simp(l+i1)
                   end do
 
-                  do i1 = 1, ndim(3,ids)
+                  do i1 = 1, ndim(3,1,ids)
                      prism(h+nsum(ids)+i1) = simp(n+i1)
                   end do
 
@@ -20042,7 +19928,7 @@ c                                 irrelevant through closure, this implies
 c                                 that a composition with the prismatic
 c                                 vertex = 0 cannot be refined to include
 c                                 a non-zero prismatic vertex.
-            do i1 = 1, ndim(3,ids)
+            do i1 = 1, ndim(3,1,ids)
                prism(h+nsum(ids)+i1) = simp(n+i1)
             end do
 
@@ -21252,7 +21138,7 @@ c---------------------------------------------------------------------
       logical first, nokill
 
       integer kill, ikill, jkill, kill1, i, j, kosp(mst,msp), kill2,
-     *        k, l, im, idsp, ivct, ii, jj, jpoly, jsimp
+     *        k, l, im, idsp, ivct, ii, jpoly, jsimp
 
       integer jmsol,kdsol
       common/ cst142 /jmsol(m4,mst),kdsol(m4)

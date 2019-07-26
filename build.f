@@ -458,9 +458,9 @@ c                                 check version compatability
 
          do 
 c                                 read candidates:
-            call rmodel (blah,tn1,tn2,bad)
+            call rmodel (blah,tn1,tn2)
 c                                 istot = 0 = eof
-            if (bad.or.istot.eq.0) exit 
+            if (istot.eq.0) exit 
 c                                 don't allow fluid models if 
 c                                 the system is fluid saturated:
             if (jsmod.eq.0.and.ifct.gt.0) cycle
