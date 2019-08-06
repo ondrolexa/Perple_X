@@ -2184,8 +2184,6 @@ c---------------------------------------------------------------------
          write (*,28) int, char
       else if (ier.eq.29) then 
          write (*,29) int, char
-      else if (ier.eq.30) then
-         write (*,30) int,char
       else if (ier.eq.32) then 
          write (*,32)
       else if (ier.eq.33) then 
@@ -2439,9 +2437,6 @@ c                                 accordingly:
 28    format (/,'**error ver028** invalid buffer choice (',i3,') in',
      *          ' routine: ',a,/)
 29    format (/,'**error ver029** unknown term type ',i6,' for',
-     *          ' solution model: ',a,/)
-30    format (/,'**error ver030** the number of mixing sites ',i2,
-     *          ' is < the number of independent sites',/,' for',
      *          ' solution model: ',a,/)
 32    format (/,'**error ver032** stability field calculations (',
      *          'option 2) are disabled in this version of PERPLEX',/)

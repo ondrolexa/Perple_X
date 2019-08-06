@@ -54,20 +54,20 @@ full_name    biotite
 0   .5   .1   0                    | X(1) is [Mn][Mn]
 0   .5   .1   0                    | x(2) is [M][MTi]
                                    | ----------------------------
-                                   | Polytope 1 - 0d simplex
+                                   | Polytope 1 - 1 simplex
 [Mn][Mn]                           | polytope name
 1                                  | number of simplices, [Mn][Mn]
 1                                  | number of vertices on each simplex
 mnbi                               | endmembers on the vertices
                                    | ----------------------------
-                                   | Polytope 2 - 1-d simplex
+                                   | Polytope 2 - 2 simplex
 [M][MTi]                           | polytope name
 1                                  | number of simplices
 2                                  | number of vertices on each simplex
 ftbit     tbit
 0   .5   .1   0                    | x(1) is Fe/M, M = Fe + Mg
                                    | ----------------------------
-                                   | Polytope 3 - 1d x 2d simplices
+                                   | Polytope 3 - 2x3 simplices
 [M,T][M]                           | polytope name
 2                                  | number of simplices
 2  3                               | number of vertices on each simplex
@@ -116,7 +116,7 @@ z(m2,mn)   = 1 mnbi
     
 2 2.                               | 2 species on T1, 2 site per formula unit.
 
-z(t1,al)   = 1/2 + 1/2 east + 1/2 fbit 
+z(t1,si)   = 1/2 phl + 1/2 ann + 1/2 tbit + 1/2 obi + 1/2 mnbi 
 
 2 2.                               | 2 species on H, 2 site per formula unit.
 

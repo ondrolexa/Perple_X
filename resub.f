@@ -1645,7 +1645,7 @@ c                                 cartesian
 c                                 assymmetric stretching towards xmin
 
                         xmng(ids,1,i,j) = 
-     *                      stinc (x(i,j),-xncg(ids,1,i,j),ids,i,j)
+     *                      stinc (x(i,j),-xncg(ids,1,i,j),ids,1,i,j)
 
                      end if
 
@@ -1679,7 +1679,7 @@ c                                 cartesian
                      else 
 c                                 assymmetric stretching 
                         xmxg(ids,1,i,j) = 
-     *                    stinc (x(i,j),xncg(ids,1,i,j),ids,i,j)
+     *                    stinc (x(i,j),xncg(ids,1,i,j),ids,1,i,j)
 
                      end if 
 
@@ -3840,8 +3840,8 @@ c                                 x coordinate description
       common/ cxt6i /istg(h9,h4),ispg(h9,h4,mst),
      *      imdg(ms1,mst,h4,h9),poly(h9)
 c                                 temporary subdivision limits:
-      double precision xmn,xmx,xnc
-      common/ cxt108 /xmn(mst,msp),xmx(mst,msp),xnc(mst,msp)
+      double precision pxmn, pxmx, pxnc
+      common/ cxt108 /pxmn(h4,mst,msp),pxmx(h4,mst,msp),pxnc(h4,mst,msp)
 
       integer nsum
       common/ junk1 /nsum(h9)
@@ -3863,32 +3863,32 @@ c                                normal models
 
                sum = sum + x(i,j)
 
-               xnc(i,j) = xncg(ids,1,i,j)*res0
-               xxnc = xnc(i,j)*reachg(ids)
+               pxnc(1,i,j) = xncg(ids,1,i,j)*res0
+               xxnc = pxnc(1,i,j)*reachg(ids)
 
                if (imdg(j,i,1,ids).eq.0) then 
 c                                 cartesian
 
-                  xmn(i,j) = x(i,j) - xxnc
-                  xmx(i,j) = x(i,j) + xxnc
+                  pxmn(1,i,j) = x(i,j) - xxnc
+                  pxmx(1,i,j) = x(i,j) + xxnc
 
                else
 c                                 conformal, xnc is the number 
 c                                 of intervals for 0->1 resolution
-                  xmn(i,j) = stinc (x(i,j),-xxnc,ids,i,j)
-                  xmx(i,j) = stinc (x(i,j),xxnc,ids,i,j)
+                  pxmn(1,i,j) = stinc (x(i,j),-xxnc,ids,1,i,j)
+                  pxmx(1,i,j) = stinc (x(i,j),xxnc,ids,1,i,j)
 
                end if
 
-               if (xmx(3,1).lt.0d0) then 
+               if (pxmx(1,3,1).lt.0d0) then 
                write (*,*) 'bad news bears knocking on the door ',sum,i
                end if 
 c                                 changed feb 6, 2012 from xmng/xmxg
 c                                 to allow hardlimits. JADC
-               if (xmn(i,j).lt.xmno(ids,1,i,j)) 
-     *                                       xmn(i,j) = xmno(ids,1,i,j)
-               if (xmx(i,j).gt.xmxo(ids,1,i,j)) 
-     *                                       xmx(i,j) = xmxo(ids,1,i,j)
+               if (pxmn(1,i,j).lt.xmno(ids,1,i,j)) 
+     *                                    pxmn(1,i,j) = xmno(ids,1,i,j)
+               if (pxmx(1,i,j).gt.xmxo(ids,1,i,j)) 
+     *                                    pxmx(1,i,j) = xmxo(ids,1,i,j)
 
             end do 
          end do
@@ -3899,25 +3899,25 @@ c                                 charge balance model
 
             if (i.eq.ns) cycle
 
-            xnc(1,i) = xncg(ids,1,1,i)*res0
-            xxnc = xnc(1,i)*reachg(ids)
+            pxnc(1,1,i) = xncg(ids,1,1,i)*res0
+            xxnc = pxnc(1,1,i)*reachg(ids)
 
             if (imdg(i,1,1,ids).eq.0) then 
 c                                 cartesian
-               xmn(1,i) = x(1,i) - xxnc
-               xmx(1,i) = x(1,i) + xxnc
+               pxmn(1,1,i) = x(1,i) - xxnc
+               pxmx(1,1,i) = x(1,i) + xxnc
 
             else
 c                                 conformal
-               xmn(1,i) = stinc (x(1,i),-xxnc,ids,1,i)
-               xmx(1,i) = stinc (x(1,i), xxnc,ids,1,i)
+               pxmn(1,1,i) = stinc (x(1,i),-xxnc,ids,1,1,i)
+               pxmx(1,1,i) = stinc (x(1,i), xxnc,ids,1,1,i)
 
             end if 
 
-            if (xmn(1,i).lt.xmno(ids,1,1,i)) then
-               xmn(1,i) = xmno(ids,1,1,i)
-            else if (xmx(1,i).gt.xmxo(ids,1,1,i)) then 
-               xmx(1,i) = xmxo(ids,1,1,i)
+            if (pxmn(1,1,i).lt.xmno(ids,1,1,i)) then
+               pxmn(1,1,i) = xmno(ids,1,1,i)
+            else if (pxmx(1,1,i).gt.xmxo(ids,1,1,i)) then 
+               pxmx(1,1,i) = xmxo(ids,1,1,i)
             end if 
 
          end do
