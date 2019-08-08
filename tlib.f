@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.8.8, source updated July 19, 2019.',
+     *      'Perple_X version 6.8.7, source updated Aug 8, 2019.',
 
      *      'Copyright (C) 1986-2019 James A D Connolly '//
      *      '<www.perplex.ethz.ch/copyright.html>.'
@@ -52,7 +52,7 @@ c----------------------------------------------------------------------
      *    new.eq.'672'.or.new.eq.'673'.or.new.eq.'674'.or.
      *    new.eq.'675'.or.new.eq.'676'.or.new.eq.'678'.or.
      *    new.eq.'679'.or.new.eq.'682'.or.new.eq.'683'.or.
-     *    new.eq.'685'.or.new.eq.'687'.or.new.eq.'688') then 
+     *    new.eq.'685'.or.new.eq.'687') then 
 
          chksol = .true.
 
@@ -449,8 +449,8 @@ c                                 short print
       io3p = 1
       valu(10) = 'on '
 c                                 print dependent potentials
-      jpot = 1
-      valu(11) = 'off'
+      jpot = 0
+      valu(11) = 'on '
 c                                 -------------------------------------
 c                                 look for file
       open (n8, file = opname, iostat = jer, status = 'old')
@@ -925,21 +925,21 @@ c                                 default autorefine relative increment
 
             if (val.eq.'off') then 
                io3p = 0
-               valu(10) = 'off'
+               valu(10) = val
             end if 
 
          else if (key.eq.'dependent_potentials') then 
 
-            if (val.eq.'on ') then 
-               jpot = 0
-               valu(11) = 'on '
+            if (val.eq.'off') then 
+               jpot = 1
+               valu(11) = val
             end if
 
          else if (key.eq.'hard_limits') then 
 
             if (val.eq.'on ') then 
                lopt(3) = .true.
-               valu(16) = 'on'
+               valu(16) = val
             end if
 
          else if (key.eq.'T_stop') then 
@@ -2184,6 +2184,8 @@ c---------------------------------------------------------------------
          write (*,28) int, char
       else if (ier.eq.29) then 
          write (*,29) int, char
+      else if (ier.eq.30) then
+         write (*,30) int,char
       else if (ier.eq.32) then 
          write (*,32)
       else if (ier.eq.33) then 
@@ -2437,6 +2439,9 @@ c                                 accordingly:
 28    format (/,'**error ver028** invalid buffer choice (',i3,') in',
      *          ' routine: ',a,/)
 29    format (/,'**error ver029** unknown term type ',i6,' for',
+     *          ' solution model: ',a,/)
+30    format (/,'**error ver030** the number of mixing sites ',i2,
+     *          ' is < the number of independent sites',/,' for',
      *          ' solution model: ',a,/)
 32    format (/,'**error ver032** stability field calculations (',
      *          'option 2) are disabled in this version of PERPLEX',/)
@@ -3404,7 +3409,7 @@ c                                 anyway in case it's a tag
 
       end 
 
-      subroutine readcd (nloc,lenth,ier,strip)
+      subroutine readcd (nloc,len,ier,strip)
 c----------------------------------------------------------------------
 c readcd - read 240 column card image from unit 9, strip out unwanted
 c characters if strip. ier = 1 no card found.
@@ -3415,7 +3420,7 @@ c----------------------------------------------------------------------
 
       logical strip
 
-      integer lenth, ier, iscan, ict, i, iscnlt, ibeg, nloc
+      integer len, ier, iscan, ict, i, iscnlt, ibeg, nloc
 
       character card*(lchar)
 
@@ -3428,11 +3433,11 @@ c----------------------------------------------------------------------
 
       ibeg = 0
   
-      lenth = 0 
+      len = 0 
 
       card = ' '
 
-      do while (ibeg.ge.lenth) 
+      do while (ibeg.ge.len) 
 
          read (nloc,'(a)',end=90) card
 
@@ -3440,11 +3445,11 @@ c----------------------------------------------------------------------
 
             read (card,'(400a)') chars
 c                                 find end of data marker '|'
-            lenth = iscan (1,lchar,'|') - 1
+            len = iscan (1,lchar,'|') - 1
 c                                 '|' in first column
-            if (lenth.eq.0) cycle
+            if (len.eq.0) cycle
 c                                 find a non blank character
-            ibeg = iscnlt (1,lenth,' ')
+            ibeg = iscnlt (1,len,' ')
 
          end if 
 
@@ -3454,7 +3459,7 @@ c                                 there is a non-blank data character
 
          ict = 1
 
-         do i = 2, lenth
+         do i = 2, len 
 c                                 strip out '+' and '*' chars
             if (chars(i).eq.'+'.or.chars(i).eq.'*') chars(i) = ' '
 c                                 eliminate blanks after '/' and '-'
@@ -3470,11 +3475,11 @@ c                                 and double blanks
 
          end do 
 
-         lenth = ict
+         len = ict
 
       else
 c                                 scan backwards to the last non-blank
-         lenth = iscnlt (lenth,1,' ')
+         len = iscnlt (len,1,' ')
 
       end if
 

@@ -711,9 +711,8 @@ c                                 for final adaptive solution
       double precision cp3,amt
       common/ cxt15 /cp3(k0,k19),amt(k19),kkp(k19),np,ncpd,ntot
 c                                 x coordinate description
-      integer istg, ispg, imdg, poly
-      common/ cxt6i /istg(h9,h4),ispg(h9,h4,mst),
-     *      imdg(ms1,mst,h4,h9),poly(h9)
+      integer istg, ispg, imlt, imdg
+      common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
 c                                 global assemblage data
       integer idasls,iavar,iasct,ias
       common/ cst75  /idasls(k5,k3),iavar(3,k3),iasct,ias
@@ -725,7 +724,7 @@ c                                 global assemblage data
       common/ cst311/igrd(l7,l7)
 
       integer ncoor,mcoor,ndim
-      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h4,h9)
+      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
 
       double precision xco
       integer ico,jco
@@ -790,8 +789,8 @@ c                                 bookkeeping variables
       double precision hsb
       common/ cst84 /hsb(i8,4),hs2p(6)
 
-      integer nsum
-      common/ junk1 /nsum(h9)
+      integer pstot,qstot,ostg,odim,nsum
+      common/ junk1 /pstot(h9),qstot(h9),ostg(h9),odim(mst,h9),nsum(h9)
 
       integer idaq, jdaq
       logical laq
@@ -894,8 +893,8 @@ c                                 solvent
 c                                 WERAMI, initialize
                props(16,i) = 0d0
 
-               do j = 1, istg(ids,1)
-                  do k = 1, ispg(ids,1,j)
+               do j = 1, ostg(ids)
+                  do k = 1, ispg(ids,j)
                      x3(i,j,k) = 0d0
                   end do 
                end do 
@@ -923,8 +922,8 @@ c                                 weighted molar amount
                      props(16,i) = props(16,i) + cst
                   end if 
 
-                  do j = 1, istg(ids,1)
-                     do k = 1, ispg(ids,1,j)
+                  do j = 1, ostg(ids)
+                     do k = 1, ispg(ids,j)
                         lco(l) = lco(l) + 1
                         x3(i,j,k) = x3(i,j,k) + cst*xco(lco(l))
                      end do 
@@ -944,11 +943,11 @@ c                                 renormalize the composition
                cst = props(16,i)
                if (cst.eq.0d0) cst = 1d0
 
-               do l = 1, istg(ids,1)
+               do l = 1, ostg(ids)
                   
                   xt = 0d0
 
-                  do m = 1, ispg(ids,1,l)
+                  do m = 1, ispg(ids,l)
                      x3(i,l,m) = x3(i,l,m)/cst
 
                      if (x3(i,l,m).gt.1d0) then 
@@ -962,7 +961,7 @@ c                                 renormalize the composition
                   end do
 
                   if (xt.ne.1d0.and.xt.ne.0d0) then 
-                     do m = 1, ispg(ids,1,l)
+                     do m = 1, ispg(ids,l)
                         x3(i,l,m) = x3(i,l,m)/xt
                      end do
                   end if

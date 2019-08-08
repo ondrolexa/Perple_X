@@ -18,9 +18,8 @@ c                                 working arrays
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
      *              wl(m17,m18)
 c                                 x coordinate description
-      integer istg, ispg, imdg, poly
-      common/ cxt6i /istg(h9,h4),ispg(h9,h4,mst),
-     *      imdg(ms1,mst,h4,h9),poly(h9)
+      integer istg, ispg, imlt, imdg
+      common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
 c                                 adaptive x(i,j) coordinates
       integer jcoct, jcoor, jkp
       double precision zcoor
@@ -31,18 +30,18 @@ c                                  xcoordinates for the final solution
       common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),na1,na2,na3,nat,kd
 
       integer ncoor,mcoor,ndim
-      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h4,h9)
+      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
 
-      integer nsum
-      common/ junk1 /nsum(h9)
+      integer pstot,qstot,ostg,odim,nsum
+      common/ junk1 /pstot(h9),qstot(h9),ostg(h9),odim(mst,h9),nsum(h9)
 c----------------------------------------------------------------------
       icoor = jcoor(id)
 
-      do i = 1, istg(ids,1)
+      do i = 1, ostg(ids)
 
          xt = 0d0 
 
-         do j = 1, ispg(ids,1,i) - 1
+         do j = 1, ndim(i,ids)
             icoor = icoor + 1
             x(i,j) = zcoor(icoor)
             x3(jd,i,j) = zcoor(icoor)

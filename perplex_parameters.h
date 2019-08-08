@@ -1,6 +1,6 @@
 
 
-      integer h4,h5,h6,h8,h9
+      integer h5,h6,h8,h9
       integer i6,i7,i8,i9,i10,i11
       integer j3,j4,j5,j6,j9
       integer k0,k1,k2,k3,k4,k5,k7,k8,k9,k10,k13,k14,k15
@@ -32,12 +32,11 @@
 !                                 mdim - hard constraint on max number of dimensions
 !                                        for a solution model composition space.
       parameter (mst=3,mdim=8,msp=mdim+6,ms1=msp-1)
-!                                 h4  - max-number of subpolytopes in a composition space
-!                                 h5  - max number of saturated components
+!                                 h5 - max number of saturated components
 !                                 h6  - max number of saturated composants in any subcomposition
 !                                 h8  - max number of excluded phases
 !                                 h9  - max number of solutions
-      parameter (h4=5,h5=5,h6=500,h8=200,h9=30)
+      parameter (h5=5,h6=500,h8=200,h9=30)
 !                                 i6  - maximum number of independent chemical potentials (or 
 !                                       fugacity/activities).
 !                                 i7  - number of system props used in werami

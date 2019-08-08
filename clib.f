@@ -3586,9 +3586,8 @@ c----------------------------------------------------------------------
 c                                 -------------------------------------
 c                                 global variables
 c                                 x coordinate description
-      integer istg, ispg, imdg, poly
-      common/ cxt6i /istg(h9,h4),ispg(h9,h4,mst),
-     *      imdg(ms1,mst,h4,h9),poly(h9)
+      integer istg, ispg, imlt, imdg
+      common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
 c                                 global assemblage data
       integer icog,jcog
       common/ cxt17 /icog(k2),jcog(k2)
@@ -3620,7 +3619,7 @@ c                                 global assemblage data
       common/ cst300 /cblk(k5),jbulk
 
       integer ncoor,mcoor,ndim
-      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h4,h9)
+      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
 
       integer iam
       common/ cst4 /iam
