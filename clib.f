@@ -2133,7 +2133,7 @@ c                                 bookkeeping variables
       common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
 c                                 working arrays
       double precision z, pa, p0a, x, w, y, wl
-      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18)
 c                                 single site solution coordinates:
       integer jend
@@ -3585,9 +3585,6 @@ c----------------------------------------------------------------------
       integer jxco, kxco, i, j, ids, ier
 c                                 -------------------------------------
 c                                 global variables
-c                                 x coordinate description
-      integer istg, ispg, imlt, imdg
-      common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
 c                                 global assemblage data
       integer icog,jcog
       common/ cxt17 /icog(k2),jcog(k2)
@@ -3596,8 +3593,8 @@ c                                 global assemblage data
       common/ cst74  /iap(k2),ibulk
 
       double precision xco
-      integer ico,jco
-      common/ cxt10 /xco(k18),ico(k1),jco(k1)
+      integer ico, scos
+      common/ cxt10 /xco(k18),scos(k25),ico(k1)
 
       double precision bg
       common/ cxt19 /bg(k5,k2)
@@ -3619,7 +3616,7 @@ c                                 global assemblage data
       common/ cst300 /cblk(k5),jbulk
 
       integer ncoor,mcoor,ndim
-      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
+      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h4,h9)
 
       integer iam
       common/ cst4 /iam

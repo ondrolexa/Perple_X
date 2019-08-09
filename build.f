@@ -125,13 +125,12 @@ c-----------------------------------------------------------------------
       character cmpnt*5, dname*80
       common/ csta5 /cl(k0),cmpnt(k0),dname
 
-      logical stck
-      integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
-     *        kstot,rkord,xtyp
+      logical stck, norf
+      integer iend,isub,insp,iterm,iord,istot,jstot,kstot,rkord,xtyp
       double precision wg,wk,reach
       common/ cst108 /wg(m1,m3),wk(m16,m17,m18),reach,iend(m4),
-     *      isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),isp(mst),
-     *      rkord(m18),isite,iterm,iord,istot,jstot,kstot,xtyp,stck
+     *      isub(m1,m2),insp(m4),
+     *      rkord(m18),iterm,iord,istot,jstot,kstot,xtyp,stck,norf
 
       integer jsmod
       double precision vlaar
@@ -458,9 +457,9 @@ c                                 check version compatability
 
          do 
 c                                 read candidates:
-            call rmodel (blah,tn1,tn2,bad)
+            call rmodel (blah,tn1,tn2)
 c                                 istot = 0 = eof
-            if (bad.or.istot.eq.0) exit 
+            if (istot.eq.0) exit 
 c                                 don't allow fluid models if 
 c                                 the system is fluid saturated:
             if (jsmod.eq.0.and.ifct.gt.0) cycle
