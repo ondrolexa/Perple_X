@@ -79,10 +79,6 @@ c                                 solution model names
       integer iap,ibulk
       common/ cst74 /iap(k2),ibulk
 
-      double precision xco
-      integer ico, scos
-      common/ cxt10 /xco(k18),scos(k25),ico(k1)
-
       double precision bg
       common/ cxt19 /bg(k5,k2)
 

@@ -2184,7 +2184,7 @@ c                                 pointer
 
       integer kd, na1, na2, na3, nat
       double precision x3, caq
-      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),na1,na2,na3,nat,kd
+      common/ cxt16 /x3(k5,h4,mst,msp),caq(k5,l10),na1,na2,na3,nat,kd
 c----------------------------------------------------------------------
       kkp(jd) = ids
       cptot(jd) = 0d0
@@ -2212,6 +2212,7 @@ c                                 solutions, initialize
          do i = 1, icomp
             cp3(i,jd) = 0d0
          end do
+
 c                                 if getcmp is being called by WERAMI:
 c                                 GETXZ (dlib.f) gets the x(i,j) coordinates for the
 c                                 composition from the x3(jd,i,j) array and
@@ -2220,7 +2221,19 @@ c                                 if getcmp is being called by MEEMUM/VERTEX:
 c                                 GETXZ (getxz1.f) gets both the x(i,j) and 
 c                                 x3(jd,i,j) compositional coordinates from the
 c                                 zcoor array.
-         call getxz (jd,id,ids)
+         if (iam.ne.3) then
+c                                 if getcmp is called by MEEMUM/VERTEX:
+c                                 recover x(h,i,j) from the dynamic zco array
+            call setexs (ids,id,.true.) 
+c                                 copy into the x3 array
+            call setex3 (jd,ids)
+
+         else
+
+            call getxz (jd,id,ids)
+
+         end if
+
 c                                 convert the x(i,j) coordinates to the
 c                                 geometric y coordinates
          call xtoy (ids,jd,.true.,bad)
@@ -3592,10 +3605,6 @@ c                                 global assemblage data
       integer iap,ibulk
       common/ cst74  /iap(k2),ibulk
 
-      double precision xco
-      integer ico, scos
-      common/ cxt10 /xco(k18),scos(k25),ico(k1)
-
       double precision bg
       common/ cxt19 /bg(k5,k2)
 
@@ -3626,7 +3635,7 @@ c                                 global assemblage data
 
       integer kd, na1, na2, na3, nat
       double precision x3, caq
-      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),na1,na2,na3,nat,kd
+      common/ cxt16 /x3(k5,h4,mst,msp),caq(k5,l10),na1,na2,na3,nat,kd
 
       integer ksmod, ksite, kmsol, knsp
       common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
@@ -3663,7 +3672,7 @@ c                                phase molar amounts
          read (n5,*,iostat=ier) (bg(i,ibulk),i=1,iavar(3,ias))
          if (ier.ne.0) goto 99
 
-         ico(ibulk) = jxco
+         icox(ibulk) = jxco
 
          do i = 1, iavar(1,ias)
 

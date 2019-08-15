@@ -95,6 +95,10 @@ c-----------------------------------------------------------------------
       integer jfct,jmct,jprct,jmuct
       common/ cst307 /jfct,jmct,jprct,jmuct
 
+      character tname*10
+      logical refine, resub
+      common/ cxt26 /refine,resub,tname
+
       save err,first,output,pots
       data err,output,first/.false.,.false.,.true./
 
@@ -120,7 +124,7 @@ c                                    iam = 15 - convex
 c                                 version info
       call vrsion (6)
 c                                 elastic modulii flag
-      kmod = 0 
+      kmod = 0
 c                                 this do loop is a cheap strategy to automate
 c                                 "auto_refine"
       do
@@ -1778,7 +1782,7 @@ c                                 the program
 c                                 set stable flag
          stable(ids) = .true.
 c                                 get composition
-         call getstx (ids,jd)
+         call setexs (ids,jd,.false.)
 c                                 check x-ranges
          do i = 1, istg(ids,1)
 

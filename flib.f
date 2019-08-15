@@ -768,14 +768,14 @@ c                                 solve for xh2, xco
 
 99    end
 
-      subroutine evlxh1 (ek1,ek2,ek3,ek4,ek5,ek6,ek7,xo,xh2,xco,ier)
+      subroutine evlxh1 (ek1,ek2,ek3,ek4,ek5,ek6,ek7,xo,xh2,yco,ier)
 c----------------------------------------------------------------------
       implicit none
 
       include 'perplex_parameters.h'
 
       integer ier,it
-      double precision ek1,ek2,ek3,ek4,ek5,ek6,ek7,xo,xh2,xco,f0,e1,e2,
+      double precision ek1,ek2,ek3,ek4,ek5,ek6,ek7,xo,xh2,yco,f0,e1,e2,
      *                 e3,e4,e5,e6,e7,e8,e9,e0,r0,t2,t10,t11,t15,c1,g,dg
 
       integer iopt
@@ -816,8 +816,8 @@ c                                 for xh2, find roots:
       t10 = dsqrt (t10)
 
       t11 = t10 - 1d0 - ek2*xh2 - ek5
-      xco = e1*t11
-      g = e5*xh2 + e6*t2 + (e7 + e8*xco + e9*xh2)*xco
+      yco = e1*t11
+      g = e5*xh2 + e6*t2 + (e7 + e8*yco + e9*xh2)*yco
       t15 = (e3+2d0*e4*xh2)/2d0/t10 - ek2
       dg = e5 + 2d0*e6*xh2 + e1*t15*(e9*xh2 + e7)
      *        + t11*(2d0*e8*e1**2*t15 + e9*e1)
@@ -839,12 +839,12 @@ c                                 converged:
 
       goto 10 
 
-999   xco = e1*(dsqrt(e2 + (e3 + e4*xh2)*xh2) - 1d0 - ek2*xh2 - ek5)
+999   yco = e1*(dsqrt(e2 + (e3 + e4*xh2)*xh2) - 1d0 - ek2*xh2 - ek5)
 
 99    end
 
 
-      subroutine evlxh2 (c1,c2,c3,c5,c6,xo,xs,xh2,xco,xh2o,ier)
+      subroutine evlxh2 (c1,c2,c3,c5,c6,xo,xs,xh2,yco,xh2o,ier)
 c----------------------------------------------------------------------
       implicit none
 
@@ -852,7 +852,7 @@ c----------------------------------------------------------------------
 
       integer ier,jt,it
 
-      double precision c1,c2,c3,c5,c6,c7,xo,xs,xh2,xco,xh2o,d1,d2,d3,
+      double precision c1,c2,c3,c5,c6,c7,xo,xs,xh2,yco,xh2o,d1,d2,d3,
      *                 d4,d5,d6,d7,d8,d9,d10,d11,d12,d13,d14,d15,d16,
      *                 d17,d18,d19,d20,d21,d22,d23,d24,d25,f10,r1,g1,
      *                 g2,r0,e1,e2,e3,e4,t14,t31,t37,t39,t43,t45,g,
@@ -1022,7 +1022,7 @@ c                                 converged:
 
 99    t4 = xh2o**2
 
-      xco = -(d2*t4*xh2o + d3*xh2o*t11)/
+      yco = -(d2*t4*xh2o + d3*xh2o*t11)/
      *       (d4*t10*xh2o - d7*xh2*t4 - d8*t25)
 c                                 is new xh2o same as guess?:
       if (dabs((xh2o-r1)/xh2o).lt.nopt(5)) goto 9999
@@ -1041,7 +1041,7 @@ c                                 is new xh2o same as guess?:
 
 9999  end
 
-      subroutine evlxh3 (c1,c2,c3,c5,c6,xo,xc,xh2,xco,xh2o,ier)
+      subroutine evlxh3 (c1,c2,c3,c5,c6,xo,xc,xh2,yco,xh2o,ier)
 c----------------------------------------------------------------------
       implicit none
 
@@ -1049,7 +1049,7 @@ c----------------------------------------------------------------------
 
       integer ier,jt,it
 
-      double precision c1,c2,c3,c5,c6,c7,xo,xh2,xco,xh2o,r1,g1,
+      double precision c1,c2,c3,c5,c6,c7,xo,xh2,yco,xh2o,r1,g1,
      *                 g2,r0,t39,t43,t45,t27,t49,t61,t65,t71,
      *                 t10,t11,f2,f3,f4,f7,f8,t4,
      *                 f1,t32,f5,f6,f,t47,df,g0,g3,g4,g5,g6,g7,
@@ -1240,7 +1240,7 @@ c                                 converged:
 
       goto 30 
 
-99    xco = -((g1-g2)*xh2o**2+((1d0-g3)*xh2o-(g4+g5)*xh2)*xh2**2)*xh2o/
+99    yco = -((g1-g2)*xh2o**2+((1d0-g3)*xh2o-(g4+g5)*xh2)*xh2**2)*xh2o/
      *       ((((g6-g7)*xh2o+(1d0+c1-xo-g8)*xh2)*xh2o-g9*xh2**4)*xh2)
 c                                 is new xh2o same as guess?:
       if (dabs((xh2o-r1)/xh2o).lt.nopt(5)) goto 9999
@@ -1523,7 +1523,7 @@ c                                outer iteration loop:
       ek3 = c3 * g(5)/g(6)     
       ek5 = c5 * g(2)**4 * g(5)**2/g(3)**4/g(8)/g(1)/g(1)
       ek6 = c6 * g(5)**3 * g(3)/g(1)/g(4)
-c                                 solve for xh2, xco
+c                                 solve for xh2, yco
       if (ifug.eq.19) then
          call evlxh2 (ek1,ek2,ek3,ek5,ek6,xo,xs,y(5),y(3),y(1),ier)
       else 

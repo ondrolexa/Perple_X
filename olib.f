@@ -90,7 +90,7 @@ c----------------------------------------------------------------------
 
       integer ld, na1, na2, na3, nat
       double precision x3, caq
-      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),na1,na2,na3,nat,ld
+      common/ cxt16 /x3(k5,h4,mst,msp),caq(k5,l10),na1,na2,na3,nat,ld
 
       integer lstot,mstot,nstot,ndep,nord
       common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
@@ -697,7 +697,7 @@ c----------------------------------------------------------------------
 c                                 x-coordinates for the assemblage solutions
       integer ld, na1, na2, na3, nat
       double precision x3, caq
-      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),na1,na2,na3,nat,ld
+      common/ cxt16 /x3(k5,h4,mst,msp),caq(k5,l10),na1,na2,na3,nat,ld
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -722,10 +722,6 @@ c                                 global assemblage data
 
       integer ncoor,mcoor,ndim
       common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h4,h9)
-
-      double precision xco
-      integer ico, scos
-      common/ cxt10 /xco(k18),scos(k25),ico(k1)
 c                                 bookkeeping variables
       integer ksmod, ksite, kmsol, knsp
       common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
@@ -786,9 +782,6 @@ c                                 bookkeeping variables
       double precision hsb
       common/ cst84 /hsb(i8,4),hs2p(6)
 
-      integer nsum
-      common/ junk1 /nsum(h9)
-
       integer idaq, jdaq
       logical laq
       common/ cxt3 /idaq,jdaq,laq
@@ -804,7 +797,7 @@ c                                 WERAMI:
 c                                 load the assemblage phase composition
 c                                 starting coordinates
          do i = 1, ijpt
-            lco(i) = ico(igrd(itri(i),jtri(i)))
+            lco(i) = icox(igrd(itri(i),jtri(i)))
          end do 
 c                                 no data test
          if (ias.eq.k3) then 
@@ -892,7 +885,7 @@ c                                 WERAMI, initialize
 
                do j = 1, istg(ids,1)
                   do k = 1, ispg(ids,1,j)
-                     x3(i,j,k) = 0d0
+                     x3(i,1,j,k) = 0d0
                   end do 
                end do 
 
@@ -922,7 +915,7 @@ c                                 weighted molar amount
                   do j = 1, istg(ids,1)
                      do k = 1, ispg(ids,1,j)
                         lco(l) = lco(l) + 1
-                        x3(i,j,k) = x3(i,j,k) + cst*xco(lco(l))
+                        x3(i,1,j,k) = x3(i,1,j,k) + cst*xco(lco(l))
                      end do 
                   end do
 
@@ -945,21 +938,21 @@ c                                 renormalize the composition
                   xt = 0d0
 
                   do m = 1, ispg(ids,1,l)
-                     x3(i,l,m) = x3(i,l,m)/cst
+                     x3(i,1,l,m) = x3(i,1,l,m)/cst
 
-                     if (x3(i,l,m).gt.1d0) then 
-                        x3(i,l,m) = 1d0
-                     else if (x3(i,l,m).lt.0d0) then 
-                        x3(i,l,m) = 0d0
+                     if (x3(i,1,l,m).gt.1d0) then 
+                        x3(i,1,l,m) = 1d0
+                     else if (x3(i,1,l,m).lt.0d0) then 
+                        x3(i,1,l,m) = 0d0
                      end if 
 
-                     xt = xt + x3(i,l,m)
+                     xt = xt + x3(i,1,l,m)
 
                   end do
 
                   if (xt.ne.1d0.and.xt.ne.0d0) then 
                      do m = 1, ispg(ids,1,l)
-                        x3(i,l,m) = x3(i,l,m)/xt
+                        x3(i,1,l,m) = x3(i,1,l,m)/xt
                      end do
                   end if
 
@@ -1597,7 +1590,7 @@ c----------------------------------------------------------------------
 
       integer kd, na1, na2, na3, nat
       double precision x3, caq
-      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),na1,na2,na3,nat,kd
+      common/ cxt16 /x3(k5,h4,mst,msp),caq(k5,l10),na1,na2,na3,nat,kd
 
       save dt
       data dt /.5d0/
