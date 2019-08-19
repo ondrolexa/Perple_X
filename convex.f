@@ -15,7 +15,7 @@ c      include 'rlib.f'
 c      include 'tlib.f'
 c      include 'flib.f'
 
-      program convex        
+      program convex
 c----------------------------------------------------------------------
 c                       ************************
 c                       *                      *

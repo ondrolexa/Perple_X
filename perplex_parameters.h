@@ -173,18 +173,26 @@ c                                 x coordinate description
 
       integer scox, spx, icox
       double precision xco
-      common/ cxt10 /xco(k18),scox(k25),spx(h9,h4,mst),icox(k1)
+      common/ cxt10 /xco(k18),scox(k25),spx(h9,h4,1000,mst),icox(k1)
 
       double precision zco
       integer scoz, spz, icoz, jkp
-      common/ cxt13 /zco(k20),scoz(k26),spz(h9,h4,mst),icoz(k21),
-     *               jkp(k21)
+      common/ cxt13 /zco(k20),scoz(k26),spz(h9,h4,1000,mst),
+     *               icoz(k21),jkp(k21)
 
       double precision simp
       common/ cxt86 /simp(k13)
 
-      integer scoct, snp, sco, icoct
-      common/ junk0 /scoct, snp(mst), sco(k13), icoct
+      integer scoct, snp, sco, icoct, pcoct, npol, pco
+      common/ junk0 /scoct, snp(mst), sco(k13), icoct,
+     *               pcoct, npol(h4), pco(k13)
 
       integer hkp,mkp
       common/ cst72 /hkp(k21),mkp(k19)
+
+c icox(phct) - points to the simplicial indices for polytope ii of composition phct
+
+c csubx(ids)   - number of subdivisions for static compositions of soludtion ids
+c jcox(ids)    - starting index - 1 of the polytope weights in the xco array
+c stind(ii)    - starting index - 1 of the simplex indices of polytope ii in the sco array
+c npoly(ii)    - number of compositions in polytope ii

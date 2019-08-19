@@ -368,9 +368,9 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical bad, kterat
+      logical kterat
 
-      integer i, ids, lds, id, kd, iter, igood, gcind
+      integer i, ids, lds, id, kd, iter, gcind, ophct
 
       double precision res0
 
@@ -473,35 +473,23 @@ c                                 solution refinement point:
             end if 
 
          end if
-c                                  get the subdivision limits:
-         call sublim (ids,res0)
-c                                  do the subdivision
-         call subdi0 (ids,kd,.true.)
 c                                  set solution model parameters for
 c                                  gsol1, don't call if the previous
 c                                  refinement point was the same solution.
          if (ids.ne.lds) call ingsol (ids)
 
          lds = ids
+c                                  get the subdivision limits:
+         call sublim (ids,res0)
 
-         igood = 0 
-
-         do i = 1, ntot
-c                                   increment jphct, 
-c                                   load jkp[ids], hkp[i], local
-c                                   and global composition arrays
-            call loadgx (kd,gcind,i,ids,bad)
-
-            if (bad) cycle
-
-            igood = igood + 1
-
-         end do
+         ophct = jphct 
+c                                  do the subdivision and load the data
+         call subdi0 (ids,kd,gcind,jphct,.true.)
 c                                    special call to make H2O for
 c                                    lagged speciation, this is necessary
 c                                    because non-linear stretching can prevent
 c                                    fluid composition from reaching pure water.
-         if (igood.ne.0.and.ksmod(ids).eq.39) then 
+         if (ophct.eq.jphct.and.ksmod(ids).eq.39) then 
 
             write (*,'(3(a,/))') ' 688 version error: resub failed to ',
      *           'gnerate pure water solvent, use 687 to avoid this ',
@@ -3807,13 +3795,13 @@ c                                 conformal
 
       end 
 
-      subroutine loadgx (kd,gcind,cind,ids,bad) 
+      subroutine loadgx (kd,ids,gcind) 
 c----------------------------------------------------------------------
       implicit none 
 
       include 'perplex_parameters.h'
 
-      integer kd, ids, gcind, cind
+      integer kd, ids, gcind
 
       logical bad, recalc
 
@@ -3847,10 +3835,6 @@ c----------------------------------------------------------------------
       data recalc/.false./
 c----------------------------------------------------------------------
       recalc = .false.
-c                                 load simplicial compoisition indices
-      call setind (ids,kd,gcind,cind,jphct,bad)
-
-      if (bad) return
 
       if (lopt(32).and.ksmod(ids).eq.39) then
 

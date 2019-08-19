@@ -4878,7 +4878,7 @@ c                                 checked in BM3_integration.mws
 
       end
 
-      subroutine cartes (ksite,lpoly,ids)
+      subroutine cartes (wt,ksite,lpoly,ids)
 c---------------------------------------------------------------------
 c subroutine to cartesian or transform subdivision on site ksite of
 c solution ids (or sname). called by subdiv.
@@ -4889,7 +4889,7 @@ c---------------------------------------------------------------------
 
       integer jsp, ksite, lpoly, ids
 
-      double precision ycum
+      double precision ycum, wt
 
       integer ntot,npairs
       common/ cst86 /ntot,npairs
@@ -4901,7 +4901,7 @@ c---------------------------------------------------------------------
       common/ cxt108 /pxmn(h4,mst,msp),pxmx(h4,mst,msp),pxnc(h4,mst,msp)
 c----------------------------------------------------------------------
       ycum = 0d0
-      jsp = ndim(ksite,1,ids)
+      jsp = ndim(ksite,lpoly,ids)
 
       if (jsp.eq.0) then
 c                                 a relict site with only one species
@@ -4910,13 +4910,13 @@ c                                 if this works. i doubt it does, until
 c                                 jan 8, 2016 it was setting an array (y)
 c                                 that was not returned to the calling
 c                                 program.
-         simp(1) = pxmn(1,ksite,1)
+         simp(1) = pxmn(lpoly,ksite,1)
          npairs = 1
          return
 
       end if
 
-      call chopit (ycum,1d0,0,jsp,ksite,lpoly,ids,0,.false.)
+      call chopit (ycum,wt,0,jsp,ksite,lpoly,ids,0,.false.)
 
       end
 
@@ -11762,7 +11762,7 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer h,i,j,im,icky,id,icpct,idsol,ixct, gcind
+      integer i, j, im, id, idsol, ixct, gcind, ophct
 
       logical output, first, chksol, wham
 
@@ -11943,14 +11943,6 @@ c                                 the site fraction of the jth species on
 c                                 the ith site of the hth pseudocompound.
          if (iam.lt.3.or.iam.eq.15) then
 c                                 vertex/meemum need static pseudocompounds
-            call subdi0 (im,im,.false.)
-c                                 subdiv generates ntot compositions,
-c                                 generate the compound data for each solution:
-c                                 save the identities of the endmembers
-
-c                                 global pseudo-cpd counter
-            icpct = 0
-
             do i = 1, kstot
 
                id = kdsol(knsp(i,im))
@@ -11958,15 +11950,14 @@ c                                 global pseudo-cpd counter
 
             end do
 
-            do h = 1, ntot
-c                                 generate the pseudocompound:
-               call soload (im,gcind,h,icpct,icky,im)
+            ophct = iphct
+c                                 subdiv discretizes the composition of the 
+c                                 solution and stores the data (soload/loadgx)
+            call subdi0 (im,im,gcind,iphct,.false.)
 
-            end do
-
-            if (icpct.gt.0) then
+            if (iphct-ophct.gt.0) then
 c                                 write pseudocompound count
-               write (*,1100) icpct, tname
+               write (*,1100) iphct-ophct, tname
 c                                 write reach_increment
                if (int(reachg(im)*2d0/nopt(21)-1d0).gt.0)
      *            write (*,1030) int(reachg(im)*2d0/nopt(21)-1d0), tname
@@ -11989,7 +11980,7 @@ c                                 indicate site_check_override and refine endmem
      *                         i = 1, lstot(im)),'* see footnotes 1 & 2'
                   end if
 
-                  do i = iphct-icpct+1, iphct
+                  do i = ophct+1, iphct
                      write (n8,1070) names(i),(pa(j), j = 1, lstot(im))
                   end do
 
@@ -12003,7 +11994,7 @@ c                                 indicate site_check_override and refine endmem
 
             end if
 
-            jend(im,2) = icpct
+            jend(im,2) = iphct - ophct
 
          end if
 c                               read next solution
@@ -12127,7 +12118,7 @@ c---------------------------------------------------------------------
 
       end
 
-      subroutine soload (isoct,gcind,cind,icpct,icky,im)
+      subroutine soload (im)
 c--------------------------------------------------------------------------
 c soload - loads/requires solution properties:
 
@@ -12160,7 +12151,7 @@ c--------------------------------------------------------------------------
 
       logical bad, zbad
 
-      integer id,im,h,i,j,l,icpct,isoct,icky,index,cind,gcind,i228,oim
+      integer id,im,h,i,j,l, index,cind,gcind,i228,oim
 
       external zbad
 
@@ -12279,15 +12270,8 @@ c----------------------------------------------------------------------
 c                                 reject special case:
 c                                 ternary coh fluids above the CH4-CO join
       if (ksmod(im).eq.41.and.y(1).ge.r13+y(2)) return
-c                                 recover the composition
-      call setind (im,im,gcind,cind,iphct,bad)
 
-      if (bad) return
-
-      icpct = icpct + 1
-      ikp(iphct) = isoct
-
-      icky = 0
+      ikp(iphct) = im
 
       do i = 1, m3
          exces(i,iphct) = 0d0
@@ -12369,8 +12353,6 @@ c                                quaternary solutions
 
       else
 c                                all the rest:
-         icky = 1
-
          if (iphct.lt.1000000) then
             write (names(iphct),1080) tname, iphct
          else if (iphct.lt.10000000) then
@@ -12462,7 +12444,6 @@ c                                 only allowed for unconstrained minimization
             if (im.ne.oim) call warn (55,cp(l-1,iphct),l-1,tname)
 
             iphct = iphct - 1
-            icpct = icpct - 1
             gcind = gcind - istg(im,1)
             oim = im
 
@@ -14111,7 +14092,7 @@ c -----------
       xn = 1d0/(1d0 - an + an*(1d0 + n/(3*an) * p/Bo)**(1d0/real(n)))
       end function xn
 
-      subroutine chopit (ycum,fac,jst,jsp,lsite,lpoly,ids,jump,extra)
+      subroutine chopit (ycum,wt,jst,jsp,lsite,lpoly,ids,jump,extra)
 c---------------------------------------------------------------------
 c subroutine to do cartesian or transform subdivision of species
 c jst+1 through jsp on site k of solution ids. ycum is the smallest
@@ -14119,7 +14100,7 @@ c fraction possible (i.e., if the minimum bound for some species
 c is > 0). the fractions are loaded into simp.
 
 c extra - save space for an extra coordinate in simp (ksmod 20 or 9)
-c fac   - factor to modify default resolution (1, except ksmod 9)
+c wt   - factor to modify default resolution (1, except ksmod 9)
 c jump  - offset for storing coordinates in simp (ksmod 9)
 c---------------------------------------------------------------------
       implicit none
@@ -14136,7 +14117,7 @@ c---------------------------------------------------------------------
      *        ieyit, i, j, k, ids, ic, jst, jump, lpoly
 
       double precision y(ms1,mres), ycum, ymax, dy, ync,
-     *                 x, unstch, strtch, delt, fac, nlin
+     *                 x, unstch, strtch, delt, wt, nlin
 
       external unstch, strtch
 
@@ -14189,9 +14170,13 @@ c                                 generate coordinates for i'th component
          iy(i) = 1
          y(i,1) = pxmn(lpoly,lsite,k)
 
-         ync = pxnc(lpoly,lsite,k)/fac
+         ync = pxnc(lpoly,lsite,k)/wt
 
-         if (ync.eq.0d0) cycle
+         if (ync.eq.0d0) then 
+            cycle
+         else if (ync.gt.0.5d0) then
+            ync = 0.5d0
+         end if
 
          mode = imdg(k,lsite,lpoly,ids)
 c                                 avoid impossible compositions 'cause a min > 0
@@ -19696,21 +19681,21 @@ c---------------------------------------------------------------------
       integer nq,nn,ns
       common/ cxt337 /nq,nn,ns
 
-c       ipoly - number of sub-polytopes in a c-space
-c       isimp(ipoly) - number of simplices in each sub-polytope
+c       ipoly - number of polytopes in a c-space
+c       isimp(ipoly) - number of simplices in each polytope
 c       ivert(ipoly,isimp(ipoly) - number of vertices in each simplex
-c       ipvert(ipoly) - number of vertices in each sub-polytope
+c       ipvert(ipoly) - number of vertices in each polytope
 c       istot - total number of vertices
 c       jmsol(m4,1:isimp(ipoly) - pointer from the endmember m4
 c               to its polytope vertex
 
       character pname*10
       integer ipoly, isimp, ipvert, ivert, pimd
+      common/ cst688 /ipoly,isimp(h4),ipvert(h4),ivert(h4,mst),
+     *                pimd(msp,mst,h4),pname(h4)
+c                                 temporary subdivision limits:
       double precision pxmn, pxmx, pxnc
-      common/ cst688 /
-     *    pxmn(h4,mst,msp), pxmx(h4,mst,msp), pxnc(h4,mst,msp),
-     *    ipoly, isimp(h4), ipvert(h4),ivert(h4,mst), pimd(msp,mst,h4),
-     *    pname(h4)
+      common/ cxt108 /pxmn(h4,mst,msp),pxmx(h4,mst,msp),pxnc(h4,mst,msp)
 c----------------------------------------------------------------------
 c                                read number of sub-polytopes
       call readda (rnums,1,tname)
@@ -20764,7 +20749,283 @@ c                                 indices:
 
       end
 
-      subroutine subdi0 (ids,kds,resub)
+      subroutine subdip (ids,kds,gcind,phct)
+c---------------------------------------------------------------------
+c subdip does subdivision for multi-polytopic composition spaces, it 
+c is called exclusively by subdi0.
+
+c ids   - points to the solution/subdivision for the static case
+c kds   - points to the refinement point for the dynamic case, for
+c         indivual compositions hkp(i) gives kds on recovery.
+
+c both ids and kds are necessary for dynamic, kds is not used for the
+c static case.
+c---------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      logical simple
+
+      integer i, j, ii, ids, kds, ncomp, nind(h4), pos, nc, gcind,
+     *        stind(n4), ipop1, phct 
+
+      double precision wt(msp), twt
+
+      character tname*10
+      logical refine, dynam
+      common/ cxt26 /refine,dynam,tname
+
+      integer ncoor,mcoor,ndim
+      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h4,h9)
+
+      integer ntot,npairs
+      common/ cst86 /ntot,npairs
+c---------------------------------------------------------------------
+c                                 if pop1(ids) = 1, then the solution has a simple 
+c                                 polytopic composition space.
+
+c                                 the starting position - 1 of the simplicial
+c                                 coordinates in xco/zco
+      stind(pop1(ids)) = icoct
+
+      wt(pop1(ids)) = 1d0
+
+      if (pop1(ids).gt.1) then
+c                                 composite polytopic composition space,
+c                                 do the simplical composition space to
+c                                 generates npair of coordinates used to 
+c                                 weight each polytope. subpol loads the 
+c                                 coordinates in xco/zco and the simplex
+c                                 indices (unnecessarily) in the local 
+c                                 sco array.
+         call subpol (1d0,ids,kds,pop1(ids),1)
+c                                 the number of subdivisions will be:
+         ipop1 = npairs
+
+         simple = .false.
+
+      else
+
+         ipop1 = 1
+
+         simple = .true.
+
+      end if
+
+      if (ipop1.eq.333) then
+
+
+      else
+
+         pos = stind(pop1(ids))
+
+         do i = 1, ipop1
+
+            if (simple) then 
+
+               scoct = 0
+
+            else
+c                                 reset the simplicial coordinate counter so as 
+c                                 not to over-write the pop1 coordinates
+               scoct = ipop1
+c                                 get the polytope weights
+               twt = 0d0
+
+               nind(pop1(ids)) = i
+
+               do j = 1, ndim(1,pop1(ids),ids)
+
+                  pos = pos + 1
+
+                  if (dynam) then
+                     wt(j) = zco(pos)
+                  else 
+                     wt(j) = xco(pos)
+                  end if
+
+                  twt = twt + wt(j)
+
+               end do
+
+               wt(j) = 1d0 - twt
+
+            end if
+c                                 initialize the total number of polytopic
+c                                 compositions
+            nc = 1
+c                                 do the subdivisions for each polytope
+            do ii = 1, poly(ids)
+
+               if (wt(ii).le.0d0) then
+                  npol(ii) = 0
+                  cycle
+               end if
+c                                 the starting position of the simplicial
+c                                 compositions for polytope ii
+               stind(ii) = scoct
+
+               call subpol (wt(ii),ids,kds,ii,i)
+c                                  the number of simplicial compositions
+c                                  generated for polytope ii
+               npol(ii) = ntot
+               nc = nc * ntot
+
+            end do
+c                                  generate all permutations of the polytopic
+c                                  compositions at constant wt, initialization:
+            ncomp = 1
+
+            do ii = 1, poly(ids)
+               nind(ii) = 1
+            end do
+
+            call setind (wt,ids,kds,stind,nind,gcind,phct)
+c                                  now generate all permutations of the polytopic 
+c                                  compositions:
+            do 
+
+               ncomp = ncomp + 1
+
+               if (ncomp.gt.nc) exit 
+c                                  figure out the index to be incremented
+               do j = 1, poly(ids)
+
+                  if (nind(j).lt.npol(j)) then
+
+                     nind(j) = nind(j) + 1
+
+                     exit
+
+                  else 
+
+                     nind(j) = 1
+
+                  end if
+
+               end do
+c                                 save the indexes
+               call setind (wt,ids,kds,stind,nind,gcind,phct)
+
+            end do 
+
+         end do
+
+      end if
+
+      end
+
+      subroutine subpol (wt,ids,kds,ii,j)
+c---------------------------------------------------------------------
+c subpol does jth subdivision of polytope ii of solution ids.
+
+c ids   - points to the solution/subdivision for the static case
+c kds   - points to the refinement point for the dynamic case, for
+c         indivual compositions hkp(i) gives kds on recovery.
+c wt    - the effective resolution will be res/wt.
+
+c both ids and kds are necessary for dynamic, kds is not used for the
+c static case.
+c---------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer i, j, h, ids, kds
+
+      double precision wt
+
+      character tname*10
+      logical refine, dynam
+      common/ cxt26 /refine,dynam,tname
+
+      integer ntot,npairs
+      common/ cst86 /ntot,npairs
+
+      integer ncoor,mcoor,ndim
+      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h4,h9)
+
+      integer nt, isite, nind(mst), ii
+c---------------------------------------------------------------------
+      ntot = 1
+
+      isite = istg(ids,ii)
+c                                 subdivide each simplex of the polytope
+      do i = 1, isite
+c                                 starting position of the compositional coordinates
+c                                 for simplex i
+         if (dynam) then
+            spz(kds,ii,j,i) = icoct
+         else
+            spx(ids,ii,j,i) = icoct
+         end if 
+c                                 cartes loads the simplicial coordinates into
+c                                 array simp
+         call cartes (wt,i,ii,ids)
+c                                 copy these into the static or dynamic array
+         do h = 1, npairs*ndim(i,ii,ids)
+
+            icoct = icoct + 1
+c
+            if (dynam) then 
+               zco(icoct) = simp(h)
+            else 
+               xco(icoct) = simp(h)
+            end if
+
+         end do
+c                                 the number of compositions in the simplex
+         snp(i) = npairs
+c                                 number of compositions in the polytope
+         ntot = ntot * npairs
+
+      end do
+
+      nt = 1
+
+      do i = 1, isite
+c                                 initialize the indices
+         nind(i) = 1
+         scoct = scoct + 1
+         sco(scoct) = 1
+
+      end do
+c                                 generate all compositons in the polytope
+      do
+
+         nt = nt + 1
+
+         if (nt.gt.ntot) exit 
+c                                 figure out which index to increment
+         do i = 1, isite
+
+            if (nind(i).lt.snp(i)) then
+
+               nind(i) = nind(i) + 1
+
+               exit
+
+            else 
+
+               nind(i) = 1
+
+            end if
+
+         end do
+
+         do i = 1, isite
+
+            scoct = scoct + 1
+            sco(scoct) = nind(i)
+
+         end do 
+
+      end do
+
+      end
+
+      subroutine subdi0 (ids,kds,gcind,phct,resub)
 c---------------------------------------------------------------------
 c resub - true indicates dynamic composition, else static
 c ids   - points to the solution/subdivision for the static case
@@ -20778,9 +21039,9 @@ c---------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical resub
+      logical resub, bad
 
-      integer i, h, ids, kds
+      integer i, ids, kds, gcind, phct
 
       character tname*10
       logical refine, dynam
@@ -20789,20 +21050,8 @@ c---------------------------------------------------------------------
       integer ntot,npairs
       common/ cst86 /ntot,npairs
 
-      logical stck, norf
-      integer iend,isub,insp,iterm,iord,istot,jstot,kstot,rkord,xtyp
-      double precision wg,wk,reach
-      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),reach,iend(m4),
-     *      isub(m1,m2),insp(m4),
-     *      rkord(m18),iterm,iord,istot,jstot,kstot,xtyp,stck,norf
-
-      integer ncoor,mcoor,ndim
-      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h4,h9)
-
       integer ksmod, ksite, kmsol, knsp
       common/ cxt0 /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
-
-      integer nt, isite, nind(mst), ii
 c---------------------------------------------------------------------
 
       dynam = resub
@@ -20815,86 +21064,9 @@ c                                 assign to y()?
 
       end if
 c                                 
-      scoct = 0 
-c                                 for each polytope 
-      do ii = 1, poly(ids)
+      scoct = 0
 
-         ntot = 1
-
-         isite = istg(ids,ii)
-c                                 subdivide each simplex of the polytope
-         do i = 1, isite
-c                                 starting position of the compositional coordinates
-c                                 for simplex i
-            if (dynam) then
-               spz(kds,ii,i) = icoct
-            else
-               spx(ids,ii,i) = icoct
-            end if 
-c                                 cartes loads the simplicial coordinates into
-c                                 array simp
-            call cartes (i,ii,ids)
-c                                 copy these into the static or dynamic array
-            do h = 1, npairs*ndim(i,ii,ids)
-
-               icoct = icoct + 1
-c
-               if (dynam) then 
-                  zco(icoct) = simp(h)
-               else 
-                  xco(icoct) = simp(h)
-               end if
-
-            end do
-c                                 the number of compositions in the simplex
-            snp(i) = npairs
-c                                 number of compositions in the polytope
-            ntot = ntot * npairs
-
-         end do
-
-         nt = 1
-
-         do i = 1, isite
-c                                 initialize the indices
-            nind(i) = 1
-            scoct = scoct + 1
-            sco(scoct) = 1
-
-         end do
-c                                 generate all compositons in the polytope
-         do
-
-            nt = nt + 1
-
-            if (nt.gt.ntot) exit 
-c                                 figure out which index to increment
-            do i = 1, isite
-
-               if (nind(i).lt.snp(i)) then
-
-                  nind(i) = nind(i) + 1
-
-                  exit
-
-               else 
-
-                  nind(i) = 1
-
-               end if
-
-            end do
-
-            do i = 1, isite
-
-               scoct = scoct + 1
-               sco(scoct) = nind(i)
-
-            end do 
-
-         end do
-
-      end do
+      call subdip (ids,kds,gcind,phct)
 
       end
 
@@ -20930,7 +21102,7 @@ c                                 recover the polytope composition
 
                sum = 0d0
 c                                 locate the position of the simplex
-               pos = spz(hkp(id),ii,i) + 
+               pos = spz(hkp(id),ii,1,i) + 
      *               (scoz(icoz(id)+j) - 1) * ndim(i,ii,ids)
 
                j = j + 1
@@ -20956,7 +21128,7 @@ c                                 recover the polytope composition
 
                sum = 0d0
 c                                 locate the position of the simplex
-               pos = spx(ids,ii,i) + 
+               pos = spx(ids,ii,1,i) + 
      *               (scox(icox(id)+j) - 1) * ndim(i,ii,ids)
 
                j = j + 1
@@ -21013,12 +21185,17 @@ c                                 recover the polytope composition
 
       end
 
-      subroutine setind (ids,kds,gcind,cind,phct,bad)
+      subroutine setind (wt,ids,kds,stind,nind,gcind,phct)
 c-----------------------------------------------------------------------
-c after a call to subdiv, setind loads the local simplicial indices into
+c after a call to subpol, setind loads the local simplicial indices into
 c the static/dynamic global index arrays and sets the local composition
 c arrays. 
-c  cind - is the starting local composition index - 1
+c  ii    - is the polytope index
+c  stind(ii) - locates the starting position of the simplicial indices
+c              for polytope ii in sco
+c  nind(ii) - indicates the polytopic composition to be used to 
+c             generate the bulk composition.
+c  cind  - is the starting local composition index - 1
 c  gcind - is the starting global composition index - 1 
 c-----------------------------------------------------------------------
       implicit none
@@ -21027,7 +21204,10 @@ c-----------------------------------------------------------------------
 
       logical bad
 
-      integer ii, i, ids, kds, phct, gcind, cind
+      integer ii, i, ids, kds, phct, gcind, cind, stind(h4), nind(h4),
+     *        pos
+
+      double precision wt(h4)
 
       character tname*10
       logical refine, resub
@@ -21043,12 +21223,32 @@ c                                 dynamic arrays:
          hkp(phct) = kds
          icoz(phct) = gcind
 
-         do ii = 1, poly(ids)
+         do ii = 1, pop1(ids)
+
+            if (wt(ii).le.0d0) cycle
+
+            pos = stind(ii) + (nind(ii)-1)*istg(ids,ii)
+
             do i = 1, istg(ids,ii)
                gcind = gcind + 1
-               scoz(gcind) = sco((cind-1)*istg(ids,ii)+i)
+               scoz(gcind) = sco(pos+i)
             end do
+
          end do
+
+         call setxyp (ids,phct,resub,bad)
+
+         if (bad) then
+
+            gcind = icoz(phct)
+            phct = phct - 1
+
+         else
+
+            call loadgx (kds,ids,gcind)
+
+         end if
+
 
       else
 c                                 static arrays:
@@ -21062,37 +21262,57 @@ c                                 static arrays:
 
          icox(phct) = gcind
 
-         do ii = 1, poly(ids)
+         do ii = 1, pop1(ids)
+
+            if (wt(ii).le.0d0) cycle
+
+            pos = stind(ii) + (nind(ii)-1)*istg(ids,ii)
+
             do i = 1, istg(ids,ii)
+
                gcind = gcind + 1
-               scox(gcind) = sco((cind-1)*istg(ids,ii)+i)
+               scox(gcind) = sco(pos+i)
+
             end do
+
          end do
 
-      end if
-c                                 set local compositions
-      call setxyp (ids,phct,resub,bad)
+         call setxyp (ids,phct,resub,bad)
 
-      if (bad) then
-c                                 reset counters:
-         if (resub) then
-            gcind = icoz(phct)
-         else
+         if (bad) then
+
             gcind = icox(phct)
-         end if 
+            phct = phct - 1
 
-         phct = phct - 1
+         else
+
+            call soload (ids)
+
+         end if
 
       end if
-
 
       end
 
 
+      subroutine acqxyp (ids,ii,id,dynam,bad)
+c-----------------------------------------------------------------------
+c load compositional coordinates from the static xco or dynamic zco
+c for polytope ii, convert these to the 1d y coordinates and accumulate
+c them in the pa/p0a arrays.
+c-----------------------------------------------------------------------
+      logical dynam, bad
+
+      integer ids, ii, id
+
+      end 
+
+
       subroutine setxyp (ids,id,dynam,bad)
 c-----------------------------------------------------------------------
-c for load compositional coordinates from the static xco or dynamic zco
-c arrays into simple compositional arrays for compound id of solution ids.
+c load compositional coordinates from the static xco or dynamic zco
+c arrays into simple compositional arrays for the of compound 
+c id of solution ids.
 c-----------------------------------------------------------------------
       implicit none
 

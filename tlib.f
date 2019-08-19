@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.8.8, source updated Aug 15, 2019.',
+     *      'Perple_X version 6.8.8, source updated Aug 19, 2019.',
 
      *      'Copyright (C) 1986-2019 James A D Connolly '//
      *      '<www.perplex.ethz.ch/copyright.html>.'
@@ -2774,8 +2774,6 @@ c----------------------------------------------------------------------
          write (*,39) 
       else if (ier.eq.40) then
          write (*,40) 
-      else if (ier.eq.41) then
-         write (*,41) char
       else if (ier.eq.42) then
          write (*,42)     
       else if (ier.eq.43) then
@@ -3007,9 +3005,6 @@ c----------------------------------------------------------------------
      *       'composition use',/, 'gridded minimization.',/)
 40    format (/,'**warning ver040** you have configured a ',
      *       'problem with only one independent variable.',/)
-41    format (/,'**warning ver041** icky pseudocompound names'
-     *       ,' for solution model: ',a,/,'refer to pseudocompound_'
-     *       ,'glossary.dat file for pseudocompound definitions.',/)
 42    format (/,'**warning ver042** an optimization failed due ',
      *          'to numerical instability',/,
      *          'or because the phases of the system do not span ',
