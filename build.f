@@ -37,7 +37,7 @@ c-----------------------------------------------------------------------
       integer i, k, l, iind, im, idum, ivct, iwt, jcth, j, ier, idep, 
      *        gct(i9), gid(i9,i9), ict, idsol, isoct, inames
 
-      logical eof, good, oned, findph, bad, first, feos, chksol
+      logical eof, good, oned, findph, first, feos, chksol
 
       external chksol, findph
 

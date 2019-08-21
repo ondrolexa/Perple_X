@@ -3896,7 +3896,7 @@ c-----------------------------------------------------------------
 
       character*10 tname
 
-      integer i,j,knsp,k,l
+      integer i,j,lnsp,k,l
 
       integer jsmod
       double precision vlaar
@@ -3921,8 +3921,8 @@ c                                 for each site
       do i = 1, nsite
 c                                 read # of species, and site
 c                                 multiplicty.
-         read (n9,*,err=90) knsp,smult(i)
-         nspm1(i) = knsp - 1
+         read (n9,*,err=90) lnsp,smult(i)
+         nspm1(i) = lnsp - 1
 c                                 for each species, read
 c                                 function to define the
 c                                 site fraction of the species:
@@ -4896,9 +4896,6 @@ c---------------------------------------------------------------------
 
       integer ncoor,mcoor,ndim
       common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h4,h9)
-
-      double precision pxmn, pxmx, pxnc
-      common/ cxt108 /pxmn(h4,mst,msp),pxmx(h4,mst,msp),pxnc(h4,mst,msp)
 c----------------------------------------------------------------------
       ycum = 0d0
       jsp = ndim(ksite,lpoly,ids)
@@ -5762,9 +5759,6 @@ c                                 local input variables
       integer ipoly, isimp, ipvert, ivert, pimd
       common/ cst688 /ipoly,isimp(h4),ipvert(h4),ivert(h4,mst),
      *                pimd(msp,mst,h4),pname(h4)
-c                                 temporary subdivision limits:
-      double precision pxmn, pxmx, pxnc
-      common/ cxt108 /pxmn(h4,mst,msp),pxmx(h4,mst,msp),pxnc(h4,mst,msp)
 c----------------------------------------------------------------------
 
       itic = 0
@@ -5876,9 +5870,6 @@ c                                 local input variables
       integer ipoly, isimp, ipvert, ivert, pimd
       common/ cst688 /ipoly,isimp(h4),ipvert(h4),ivert(h4,mst),
      *                pimd(msp,mst,h4),pname(h4)
-c                                 temporary subdivision limits:
-      double precision pxmn, pxmx, pxnc
-      common/ cxt108 /pxmn(h4,mst,msp),pxmx(h4,mst,msp),pxnc(h4,mst,msp)
 
       integer iorig,jnsp,iy2p
       common / cst159 /iorig(m4),jnsp(m4),iy2p(m4)
@@ -6349,9 +6340,6 @@ c---------------------------------------------------------------------
       integer ipoly, isimp, ipvert, ivert, pimd
       common/ cst688 /ipoly,isimp(h4),ipvert(h4),ivert(h4,mst),
      *                pimd(msp,mst,h4),pname(h4)
-c                                 temporary subdivision limits:
-      double precision pxmn, pxmx, pxnc
-      common/ cxt108 /pxmn(h4,mst,msp),pxmx(h4,mst,msp),pxnc(h4,mst,msp)
 
       integer iorig,jnsp,iy2p
       common / cst159 /iorig(m4),jnsp(m4),iy2p(m4)
@@ -6862,9 +6850,6 @@ c---------------------------------------------------------------------
       integer ipoly, isimp, ipvert, ivert, pimd
       common/ cst688 /ipoly,isimp(h4),ipvert(h4),ivert(h4,mst),
      *                pimd(msp,mst,h4),pname(h4)
-c                                 temporary subdivision limits:
-      double precision pxmn, pxmx, pxnc
-      common/ cxt108 /pxmn(h4,mst,msp),pxmx(h4,mst,msp),pxnc(h4,mst,msp)
 c----------------------------------------------------------------------
       mdep = 0
       norder = 0
@@ -7192,9 +7177,6 @@ c---------------------------------------------------------------------
       integer ipoly, isimp, ipvert, ivert, pimd
       common/ cst688 /ipoly,isimp(h4),ipvert(h4),ivert(h4,mst),
      *                pimd(msp,mst,h4),pname(h4)
-c                                 temporary subdivision limits:
-      double precision pxmn, pxmx, pxnc
-      common/ cxt108 /pxmn(h4,mst,msp),pxmx(h4,mst,msp),pxnc(h4,mst,msp)
 
       logical stck, norf
       integer iend,isub,insp,iterm,iord,istot,jstot,kstot,rkord,xtyp
@@ -7692,9 +7674,6 @@ c-----------------------------------------------------------------------
       double precision r,tr,pr,ps,p,t,xco2,u1,u2
       common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
 c                                 bookkeeping variables
-      integer ksmod, ksite, kmsol, knsp
-      common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
-
       integer lstot,mstot,nstot,ndep,nord
       common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
 c                                 working arrays
@@ -8455,9 +8434,6 @@ c                                 bookkeeping variables
       integer kd, na1, na2, na3, nat
       double precision x3, caq
       common/ cxt16 /x3(k5,h4,mst,msp),caq(k5,l10),na1,na2,na3,nat,kd
-
-      integer ksmod, ksite, kmsol, knsp
-      common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
 c----------------------------------------------------------------------
 c                                 figure out which endmember we
 c                                 are looking at:
@@ -8557,9 +8533,6 @@ c---------------------------------------------------------------------
       logical depend,laar,order,fluid,macro,recip
       common/ cst160 /depend,laar,order,fluid,macro,recip
 c                                 GLOBAL SOLUTION PARAMETERS:
-      integer ksmod, ksite, kmsol, knsp
-      common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
-
       integer lstot,mstot,nstot,ndep,nord
       common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
 c                                 configurational entropy variables:
@@ -8691,9 +8664,6 @@ c                                 model type
       integer ipoly, isimp, ipvert, ivert, pimd
       common/ cst688 /ipoly,isimp(h4),ipvert(h4),ivert(h4,mst),
      *                pimd(msp,mst,h4),pname(h4)
-c                                 temporary subdivision limits:
-      double precision pxmn, pxmx, pxnc
-      common/ cxt108 /pxmn(h4,mst,msp),pxmx(h4,mst,msp),pxnc(h4,mst,msp)
 
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
@@ -9889,9 +9859,6 @@ c-----------------------------------------------------------------------
       integer lstot,mstot,nstot,ndep,nord
       common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
 
-      integer ksmod, ksite, kmsol, knsp
-      common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
-
       integer ncoor,mcoor,ndim
       common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h4,h9)
 c-----------------------------------------------------------------------
@@ -10000,9 +9967,6 @@ c----------------------------------------------------------------------
       logical lopt
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
-      integer ksmod, ksite, kmsol, knsp
-      common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
 c----------------------------------------------------------------------
 
       g = 0d0
@@ -11830,9 +11794,6 @@ c-----------------------------------------------------------------------
       integer ikp
       common/ cst61 /ikp(k1)
 
-      integer ksmod, ksite, kmsol, knsp
-      common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
-
       integer lstot,mstot,nstot,ndep,nord
       common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
 
@@ -11953,7 +11914,7 @@ c                                 vertex/meemum need static pseudocompounds
             ophct = iphct
 c                                 subdiv discretizes the composition of the 
 c                                 solution and stores the data (soload/loadgx)
-            call subdi0 (im,im,gcind,iphct,.false.)
+            call subdiv (im,im,gcind,iphct,.false.)
 
             if (iphct-ophct.gt.0) then
 c                                 write pseudocompound count
@@ -12149,9 +12110,9 @@ c--------------------------------------------------------------------------
 
       double precision zpr,smix,esum,ctotal,omega,x
 
-      logical bad, zbad
+      logical zbad
 
-      integer id,im,h,i,j,l, index,cind,gcind,i228,oim
+      integer id,im,h,i,j,l, index, gcind,i228,oim
 
       external zbad
 
@@ -12216,9 +12177,6 @@ c--------------------------------------------------------------------------
       double precision pa, p0a, zp, w, y, z, wl
       common/ cxt7 /y(m4),zp(m4),pa(m4),p0a(m4),z(h4,mst,msp),w(m1),
      *              wl(m17,m18)
-
-      integer ksmod, ksite, kmsol, knsp
-      common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
 
       integer ideps,icase,nrct
       common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
@@ -14124,15 +14082,8 @@ c---------------------------------------------------------------------
       integer ntot,npairs
       common/ cst86 /ntot,npairs
 
-
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
-
-      double precision pxmn, pxmx, pxnc
-      common/ cxt108 /pxmn(h4,mst,msp),pxmx(h4,mst,msp),pxnc(h4,mst,msp)
-
-      integer ksmod, ksite, kmsol, knsp
-      common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
 
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
@@ -14380,9 +14331,6 @@ c---------------------------------------------------------------------
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
 
-      integer ksmod, ksite, kmsol, knsp
-      common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
-
       double precision thermo, uf, us
       common/ cst1 /thermo(k4,k10),uf(2),us(h5)
 
@@ -14563,9 +14511,6 @@ c-----------------------------------------------------------------------
 
       integer lstot,mstot,nstot,ndep,nord
       common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
-
-      integer ksmod, ksite, kmsol, knsp
-      common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
 c----------------------------------------------------------------------
       if (wham) then
 c                                 an internal molecular eos has already
@@ -15130,9 +15075,6 @@ c-----------------------------------------------------------------------
       double precision mu
       common/ cst330 /mu(k8),mus
 
-      integer ksmod, ksite, kmsol, knsp
-      common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
-
       integer iopt
       logical lopt
       double precision nopt
@@ -15685,9 +15627,6 @@ c-----------------------------------------------------------------------
       character prject*100, tfname*100
       common/ cst228 /prject,tfname
 
-      integer ksmod, ksite, kmsol, knsp
-      common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
-
       integer iaq, aqst, aqct
       character aqnam*8
       double precision aqcp, aqtot
@@ -16122,9 +16061,6 @@ c                                 model type
 
       integer ideps,icase,nrct
       common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
-
-      integer ksmod, ksite, kmsol, knsp
-      common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
 c----------------------------------------------------------------------
       ids = ikp(id)
 
@@ -16521,9 +16457,6 @@ c                                 model type
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
-
-      integer ksmod, ksite, kmsol, knsp
-      common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
 
       integer ideps,icase,nrct
       common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
@@ -16923,9 +16856,6 @@ c                                 endmember names
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
-      integer ksmod, ksite, kmsol, knsp
-      common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
-
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
 
@@ -17225,9 +17155,6 @@ c                                 endmember names
       logical refine, resub
       common/ cxt26 /refine,resub,tname
 
-      integer ksmod, ksite, kmsol, knsp
-      common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
-
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
 
@@ -17467,9 +17394,6 @@ c                                 adaptive coordinates
       logical mus
       double precision mu
       common/ cst330 /mu(k8),mus
-
-      integer ksmod, ksite, kmsol, knsp
-      common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
 
       integer iopt
       logical lopt
@@ -18461,9 +18385,6 @@ c-----------------------------------------------------------------------
       double precision r,tr,pr,ps,p,t,xco2,u1,u2
       common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
 c                                 bookkeeping variables
-      integer ksmod, ksite, kmsol, knsp
-      common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
-
       integer lstot,mstot,nstot,ndep,nord
       common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
 c                                 working arrays
@@ -19693,9 +19614,6 @@ c               to its polytope vertex
       integer ipoly, isimp, ipvert, ivert, pimd
       common/ cst688 /ipoly,isimp(h4),ipvert(h4),ivert(h4,mst),
      *                pimd(msp,mst,h4),pname(h4)
-c                                 temporary subdivision limits:
-      double precision pxmn, pxmx, pxnc
-      common/ cxt108 /pxmn(h4,mst,msp),pxmx(h4,mst,msp),pxnc(h4,mst,msp)
 c----------------------------------------------------------------------
 c                                read number of sub-polytopes
       call readda (rnums,1,tname)
@@ -20097,9 +20015,6 @@ c---------------------------------------------------------------------
       integer ipoly, isimp, ipvert, ivert, pimd
       common/ cst688 /ipoly,isimp(h4),ipvert(h4),ivert(h4,mst),
      *                pimd(msp,mst,h4),pname(h4)
-c                                 temporary subdivision limits:
-      double precision pxmn, pxmx, pxnc
-      common/ cxt108 /pxmn(h4,mst,msp),pxmx(h4,mst,msp),pxnc(h4,mst,msp)
 c----------------------------------------------------------------------
 c                                the increment from the polytope vertex
 c                                to the endmember index
@@ -20314,8 +20229,7 @@ c---------------------------------------------------------------------
 
       integer jsp,jtic,morder,pkill,ii,ivct,
      *        i,j,ikill,jkill,kill,kdep,jdqf,ktic,jold,
-     *        i2ni(m4),kwas(m4),
-     *        k,l,itic,ijkill(m4),
+     *        i2ni(m4),kwas(m4),k,l,itic,ijkill(m4),
      *        j2oj(msp),j2nj(msp),i2oi(m4),maxord,mord
 c                                 dqf variables
       integer indq,idqf
@@ -20362,9 +20276,6 @@ c                                 local input variables
       integer ipoly, isimp, ipvert, ivert, pimd
       common/ cst688 /ipoly,isimp(h4),ipvert(h4),ivert(h4,mst),
      *                pimd(msp,mst,h4),pname(h4)
-c                                 temporary subdivision limits:
-      double precision pxmn, pxmx, pxnc
-      common/ cxt108 /pxmn(h4,mst,msp),pxmx(h4,mst,msp),pxnc(h4,mst,msp)
 c----------------------------------------------------------------------
 c                                the increment from the polytope vertex
 c                                to the endmember index
@@ -20749,14 +20660,16 @@ c                                 indices:
 
       end
 
-      subroutine subdip (ids,kds,gcind,phct)
+      subroutine subdiv (ids,kds,gcind,phct,resub)
 c---------------------------------------------------------------------
-c subdip does subdivision for multi-polytopic composition spaces, it 
-c is called exclusively by subdi0.
+c stattic/dynamic subdivision and data storage
 
+c resub - true indicates dynamic composition, else static
 c ids   - points to the solution/subdivision for the static case
 c kds   - points to the refinement point for the dynamic case, for
 c         indivual compositions hkp(i) gives kds on recovery.
+c phct  - global static/dynamic pseuocompount counter
+c gcind - global simplicial composition counter
 
 c both ids and kds are necessary for dynamic, kds is not used for the
 c static case.
@@ -20765,10 +20678,10 @@ c---------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical simple
+      logical resub, simple
 
       integer i, j, ii, ids, kds, ncomp, nind(h4), pos, nc, gcind,
-     *        stind(n4), ipop1, phct 
+     *        stind(n4), ipop1, phct
 
       double precision wt(msp), twt
 
@@ -20782,6 +20695,18 @@ c---------------------------------------------------------------------
       integer ntot,npairs
       common/ cst86 /ntot,npairs
 c---------------------------------------------------------------------
+
+      dynam = resub
+
+      if (ksmod(ids).eq.20) then
+c                                 subdivision with charge balance
+         call cartaq (ids)
+c                                 assign to y()?
+         return
+
+      end if
+
+      scoct = 0
 c                                 if pop1(ids) = 1, then the solution has a simple 
 c                                 polytopic composition space.
 
@@ -20812,11 +20737,6 @@ c                                 the number of subdivisions will be:
          simple = .true.
 
       end if
-
-      if (ipop1.eq.333) then
-
-
-      else
 
          pos = stind(pop1(ids))
 
@@ -20912,8 +20832,6 @@ c                                 save the indexes
 
          end do
 
-      end if
-
       end
 
       subroutine subpol (wt,ids,kds,ii,j)
@@ -20932,7 +20850,7 @@ c---------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i, j, h, ids, kds
+      integer i, j, h, ids, kds, nt, isite, nind(mst), ii
 
       double precision wt
 
@@ -20945,8 +20863,6 @@ c---------------------------------------------------------------------
 
       integer ncoor,mcoor,ndim
       common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h4,h9)
-
-      integer nt, isite, nind(mst), ii
 c---------------------------------------------------------------------
       ntot = 1
 
@@ -21025,51 +20941,6 @@ c                                 figure out which index to increment
 
       end
 
-      subroutine subdi0 (ids,kds,gcind,phct,resub)
-c---------------------------------------------------------------------
-c resub - true indicates dynamic composition, else static
-c ids   - points to the solution/subdivision for the static case
-c kds   - points to the refinement point for the dynamic case, for
-c         indivual compositions hkp(i) gives kds on recovery.
-
-c both ids and kds are necessary for dynamic, kds is not used for the
-c static case.
-c---------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      logical resub, bad
-
-      integer i, ids, kds, gcind, phct
-
-      character tname*10
-      logical refine, dynam
-      common/ cxt26 /refine,dynam,tname
-
-      integer ntot,npairs
-      common/ cst86 /ntot,npairs
-
-      integer ksmod, ksite, kmsol, knsp
-      common/ cxt0 /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
-c---------------------------------------------------------------------
-
-      dynam = resub
-
-      if (ksmod(ids).eq.20) then
-c                                 subdivision with charge balance
-         call cartaq (ids)
-c                                 assign to y()?
-         return
-
-      end if
-c                                 
-      scoct = 0
-
-      call subdip (ids,kds,gcind,phct)
-
-      end
-
       subroutine setexs (ids,id,dynam)
 c-----------------------------------------------------------------------
 c recover the dynamic/static polytopic composition id of solution ids.
@@ -21080,9 +20951,9 @@ c-----------------------------------------------------------------------
 
       logical dynam
 
-      integer ids, id, ii, i, j, k, pos
+      integer ids, id, ii, i, j, k, pos, ipop
 
-      double precision sum
+      double precision sum, wt(h4)
 
       integer ncoor,mcoor,ndim
       common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h4,h9)
@@ -21093,6 +20964,7 @@ c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
 c                                 get the simplicial composition indices:
       j = 1
+      ipop = pop1(ids)
 
       if (dynam) then
 c                                 dynamic:
@@ -21122,21 +20994,43 @@ c                                 locate the position of the simplex
 
       else
 c                                 static:
-         do ii = 1, pop1(ids)
-c                                 recover the polytope composition
+         pos = 0
+
+         if (pop1(ids).gt.1) then 
+c                                 composite composition space, load 
+c                                 weights
+           sum = 0d0
+           pos = pos + 1
+
+           do ii = 1, ndim(1,ipop,ids)
+
+              wt(ii) = xco(jcox(id)+i)
+              sum = sum + wt(ii)
+
+           end do 
+
+           wt(ii) = 1d0 - sum
+
+         end if
+
+         pos = jcox(id) + pos
+
+         do ii = 1, poly(ids)
+
+            if (wt(ii).eq.0d0) cycle 
+c                                 recover the polytope compositions
             do i = 1, istg(ids,ii)
+c                                 skip 0-d simplices
+               if (ndim(i,ii,ids).eq.0) cycle
 
                sum = 0d0
-c                                 locate the position of the simplex
-               pos = spx(ids,ii,1,i) + 
-     *               (scox(icox(id)+j) - 1) * ndim(i,ii,ids)
 
-               j = j + 1
+               pos = pos + 1
 
                do k = 1, ndim(i,ii,ids)
 
-                  sum = sum + xco(pos+k)
                   x(ii,i,k) = xco(pos+k)
+                  sum = sum + xco(pos+k)
 
                end do 
 
@@ -21204,10 +21098,13 @@ c-----------------------------------------------------------------------
 
       logical bad
 
-      integer ii, i, ids, kds, phct, gcind, cind, stind(h4), nind(h4),
-     *        pos
+      integer ii, i, ids, kds, phct, gcind, stind(h4), nind(h4), pos, 
+     *        ipop
 
       double precision wt(h4)
+
+      integer ncoor,mcoor,ndim
+      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h4,h9)
 
       character tname*10
       logical refine, resub
@@ -21260,17 +21157,33 @@ c                                 static arrays:
             end if
          end if
 
-         icox(phct) = gcind
+        ipop = pop1(ids)
+        icox(phct) = gcind
 
-         do ii = 1, pop1(ids)
+        if (ipop.gt.1) then 
+c                                 composite space, save location of 
+c                                 polytopic wts
+           gcind = gcind + 1
+           jcox(gcind) = spx(ids,ipop,1,1) 
+     *                   + (nind(ipop)-1)*ndim(1,ipop,ids)
+
+        end if
+c                                 save location of each set of simplicial
+c                                 coordinates in each polytope
+         do ii = 1, poly(ids)
 
             if (wt(ii).le.0d0) cycle
 
             pos = stind(ii) + (nind(ii)-1)*istg(ids,ii)
 
             do i = 1, istg(ids,ii)
+c                                 skip 0-d simplices
+               if (ndim(i,ii,ids).eq.0) cycle
 
                gcind = gcind + 1
+               jcox(gcind) = spx(ids,ii,1,i) 
+     *                       +  sco(pos+i) * ndim(i,ii,ids)
+
                scox(gcind) = sco(pos+i)
 
             end do
@@ -21362,9 +21275,6 @@ c----------------------------------------------------------------------
       double precision z, pa, p0a, x, w, y, wl
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18)
-
-      integer ksmod, ksite, kmsol, knsp
-      common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1

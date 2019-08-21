@@ -190,6 +190,12 @@ c                                 x coordinate description
       integer hkp,mkp
       common/ cst72 /hkp(k21),mkp(k19)
 
+      integer ksmod, kmsol, knsp
+      common/ cxt0  /ksmod(h9),kmsol(h9,m4,mst),knsp(m4,h9)
+c                                 temporary subdivision limits:
+      double precision pxmn, pxmx, pxnc
+      common/ cxt108 /pxmn(h4,mst,msp),pxmx(h4,mst,msp),pxnc(h4,mst,msp)
+
 c icox(phct) - points to the simplicial indices for polytope ii of composition phct
 
 c csubx(ids)   - number of subdivisions for static compositions of soludtion ids
