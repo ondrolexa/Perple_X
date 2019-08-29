@@ -45,8 +45,8 @@ c----------------------------------------------------------------------
       integer jtest,jpot
       common/ debug /jtest,jpot
 
-      integer ivar,ind,ichem
-      common/ cst83 /ivar,ind,ichem
+      integer ivar,ind
+      common/ cst83 /ivar,ind
 
       integer isec,icopt,ifull,imsg,io3p
       common/ cst103 /isec,icopt,ifull,imsg,io3p

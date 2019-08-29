@@ -29,8 +29,8 @@ c----------------------------------------------------------------------
       logical oned
       common/ cst82 /oned
 
-      integer ivar,ind,ichem
-      common/ cst83 /ivar,ind,ichem
+      integer ivar,ind
+      common/ cst83 /ivar,ind
 
       integer isec,icopt,ifull,imsg,io3p
       common/ cst103 /isec,icopt,ifull,imsg,io3p
@@ -202,8 +202,8 @@ c----------------------------------------------------------------------
       character dname*14, title*162
       common/ cst76 /inv(i11),dname(i11),title
 
-      integer ivar,ind,ichem
-      common/ cst83 /ivar,ind,ichem
+      integer ivar,ind
+      common/ cst83 /ivar,ind
 
       integer iopt
       logical lopt
@@ -1421,8 +1421,8 @@ c----------------------------------------------------------------------
       double precision var,dvr,vmn,vmx
       common/ cxt18 /var(l3),dvr(l3),vmn(l3),vmx(l3),jvar
 
-      integer ivar,ind,ichem
-      common/ cst83 /ivar,ind,ichem
+      integer ivar,ind
+      common/ cst83 /ivar,ind
 
       integer kkp,np,ncpd,ntot
       double precision cp3,amt
@@ -2472,8 +2472,8 @@ c----------------------------------------------------------------------
       character vnm*8
       common/ cxt18a /vnm(l3)  
 
-      integer ivar,ind,ichem
-      common/ cst83 /ivar,ind,ichem
+      integer ivar,ind
+      common/ cst83 /ivar,ind
 c----------------------------------------------------------------------
       node = .false.
       dim = 1
@@ -2691,8 +2691,8 @@ c----------------------------------------------------------------------
      *               kop(i11),kcx(i11),k2c(i11),iprop,
      *               first,kfl(i11),tname
 
-      integer ivar,ind,ichem
-      common/ cst83 /ivar,ind,ichem
+      integer ivar,ind
+      common/ cst83 /ivar,ind
 
       integer iopt
       logical lopt
@@ -3273,8 +3273,8 @@ c----------------------------------------------------------------
       character*162 title
       common/ csta8 /title(4)
 
-      integer ivar,ind,ichem
-      common/ cst83 /ivar,ind,ichem
+      integer ivar,ind
+      common/ cst83 /ivar,ind
 
       integer inv
       character dname*14, titl1*162
@@ -3460,8 +3460,8 @@ c----------------------------------------------------------------
       double precision cp3,amt
       common/ cxt15 /cp3(k0,k19),amt(k19),kkp(k19),np,ncpd,ntot
 
-      integer ivar,ind,ichem
-      common/ cst83 /ivar,ind,ichem
+      integer ivar,ind
+      common/ cst83 /ivar,ind
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
@@ -3746,8 +3746,8 @@ c----------------------------------------------------------------
       character vnm*8
       common/ cxt18a /vnm(l3) 
 
-      integer ivar,ind,ichem
-      common/ cst83 /ivar,ind,ichem
+      integer ivar,ind
+      common/ cst83 /ivar,ind
 c----------------------------------------------------------------------
 c                                 choose plotting variable
       write (*,1000) vnm(1)
@@ -3843,8 +3843,8 @@ c----------------------------------------------------------------
       integer jtest,jpot
       common/ debug /jtest,jpot
 
-      integer ivar,ind,ichem
-      common/ cst83 /ivar,ind,ichem
+      integer ivar,ind
+      common/ cst83 /ivar,ind
 
       character cname*5
       common/ csta4  /cname(k5)
@@ -3936,17 +3936,6 @@ c                                 property counter
       iprop = 0
 c                                 phase composition counter
       komp = 0
-c                                 counter for dependent potentials, this
-c                                 this should be someplace else:
-c                                 for usv calculations make names
-c                                 for the extra potentials (p,t)                            
-      if (hcp.gt.icp) then 
-         ichem = hcp 
-         cname(icp+1) = 'T(K)   '
-         cname(icp+2) = '-P(bar)'
-      else 
-         ichem = icp 
-      end if 
 c                                 choose property
       do 
 
@@ -4096,7 +4085,7 @@ c                                 get component to be contoured
 
                if (lop.eq.23) then 
 
-                  write (*,1010) (i, cname(i), i = 1, ichem)
+                  write (*,1010) (i, cname(i), i = 1, icp)
 
                else 
 
@@ -4171,7 +4160,7 @@ c                                 get phase index
 
             if (lop.eq.36) then 
 
-               iprop = i8 + 3 + icomp + ichem + 1
+               iprop = i8 + 3 + icomp + icp + 1
                if (iprop.gt.i11) call error (1,0d0,iprop,'I11')
 
             else 
@@ -4259,7 +4248,7 @@ c                                 bulk compositions, lop = 6
                   call gtname (6,i-mprop,i,komp,pname)
                end do 
 
-               do i = mprop + icomp + 1, i8 + 3 + icomp + ichem
+               do i = mprop + icomp + 1, i8 + 3 + icomp + icp
 c                                 chemical potentials, lop = 23
                   call gtname (23,i-mprop-icomp,i,komp,pname)
                end do 

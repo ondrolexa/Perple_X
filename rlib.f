@@ -7590,48 +7590,6 @@ c                                 the term should goto -Inf
 
       end
 
-      subroutine ytox (ids)
-c----------------------------------------------------------------------
-c subroutine to convert endmember fractions (y) to geometric coordinates
-c (x) for solution model ids.
-c----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      integer ids, i, j
-c                                 convert y -> x array
-      integer indx
-
-      common/ cxt5i /indx(h9,h4,mst,msp)
-c                                 working arrays
-      double precision z, pa, p0a, x, w, y, wl
-      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18)
-c----------------------------------------------------------------------
-      do i = 1, istg(ids,1)
-c                                 this conditional is necessary
-c                                 because reform can generate a
-c                                 one species site.
-         if (ispg(ids,1,i).gt.1) then
-c                                 initialize
-            do j = 1, ispg(ids,1,i)
-               x(1,i,j) = 0d0
-            end do
-
-            do j = 1, ispg(ids,1,i)
-               x(1,i,j) = x(1,i,j) + y(indx(ids,1,i,j))
-            end do
-
-         else
-c                                 one species site.
-            x(1,i,1) = 1d0
-
-         end if
-
-      end do
-
-      end
 
       double precision function gsol1 (id)
 c-----------------------------------------------------------------------
@@ -8423,7 +8381,7 @@ c------------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer jd, h, i, j, id, ids
+      integer jd, ii, h, i, j, id, ids
 c                                 bookkeeping variables
       integer lstot,mstot,nstot,ndep,nord
       common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
@@ -8440,19 +8398,24 @@ c                                 are looking at:
       do h = 1, mstot(ids)
          if (id.eq.jend(ids,2+h)) exit
       end do
-c                                 zero x-array
-      do i = 1, istg(ids,1)
 
-         do j = 1, ispg(ids,1,i)
-            x3(jd,1,i,j) = 0d0
-         end do
-c                                 now assign endmember fractions
-         if (i.le.istg(ids,1)) then
-            x3(jd,1,i,kmsol(ids,knsp(h,ids),i)) = 1d0
-         else
-c                                 orphan endmember
-            x3(jd,1,i,knsp(h,ids)-mstot(ids)) = 1d0
-         end if
+      do ii = 1, poly(ids)
+c                                 initialize wt 
+         x3(jd,pop1(ids),1,ii) = 0d0
+
+         do i = 1, istg(ids,ii)
+c                                 initialize polytope x's
+            do j = 1, ispg(ids,ii,i)
+               x3(jd,ii,i,j) = 0d0
+            end do
+
+            if (h.lt.pvert(ids,ii,1).or.h.gt.pvert(ids,ii,2)) cycle
+c                                 assign endmember fractions
+            x3(jd,ii,i,kmsol(ids,knsp(h,ids),i)) = 1d0
+c                                 assign polytope weight
+            x3(jd,pop1(ids),1,ii) = 1d0
+
+         end do 
 
       end do
 
@@ -8986,14 +8949,18 @@ c                                 save global copy of kdsol
 c                                 insp points to the original position
 c                                 of endmember i in the solution model input:
          knsp(i,im) = insp(i)
+
+      end do
 c                                 kmsol points to the species on the j'th site
 c                                 of the i'th endmember, used for the xtoy
 c                                 conversion
-         do j = 1, isimp(1)
-            kmsol(im,i,j) = jmsol(i,j)
-         end do
-
-      end do
+       do ii = 1, ipoly
+          do i = pvert(im,ii,1), pvert(im,ii,2)
+             do j = 1, istg(im,ii)
+               kmsol(im,i,j) = jmsol(i,j)
+             end do 
+          end do
+       end do
 c                                 ----------------------------------------------
 c                                 configurational entropy models
 
@@ -11730,7 +11697,7 @@ c-----------------------------------------------------------------------
 
       logical output, first, chksol, wham
 
-      character sname(h9), new*3, tn1*6, tn2*22
+      character sname(h9)*10, new*3, tn1*6, tn2*22
 
       double precision zt
 
@@ -12079,7 +12046,7 @@ c---------------------------------------------------------------------
 
       end
 
-      subroutine soload (im)
+      subroutine soload (im,bad)
 c--------------------------------------------------------------------------
 c soload - loads/requires solution properties:
 
@@ -12110,9 +12077,9 @@ c--------------------------------------------------------------------------
 
       double precision zpr,smix,esum,ctotal,omega,x
 
-      logical zbad
+      logical zbad, bad
 
-      integer id,im,h,i,j,l, index, gcind,i228,oim
+      integer id,im,h,i,j,l, index, i228, oim
 
       external zbad
 
@@ -12401,8 +12368,7 @@ c                                 only allowed for unconstrained minimization
 
             if (im.ne.oim) call warn (55,cp(l-1,iphct),l-1,tname)
 
-            iphct = iphct - 1
-            gcind = gcind - istg(im,1)
+            bad = .true.
             oim = im
 
             return
@@ -18250,7 +18216,7 @@ c----------------------------------------------------------------------
 
       end
 
-      subroutine dumper (iclos,id,tkp,lkp,amt,lambda)
+      subroutine dumper (iclos,id,tkp,ukp,amt,lambda)
 c----------------------------------------------------------------------
 c dump phase data from yclos routines:
 c     iclos = 1 - static, 2 - dynamic
@@ -18263,15 +18229,15 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i, iclos, id, tkp, lkp
+      integer i, iclos, id, tkp, ukp
 
       double precision amt, lambda
 
       character name*14
 
-      integer jphct, jpt
+      integer jphct
       double precision g2, cp2, c2tot
-      common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),jphct,jpt
+      common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),jphct
 
       integer iopt
       logical lopt
@@ -18290,15 +18256,15 @@ c----------------------------------------------------------------------
       double precision cptot,ctotal
       common/ cst78 /cptot(k19),ctotal,jdv(k19),npt,fulrnk
 c----------------------------------------------------------------------
-      call getnam (name,lkp)
+      call getnam (name,ukp)
 
       if (iclos.eq.1) then
 c                                 static
-         write (*,1000) id,tkp,lkp,name,amt,lambda,c(id),
+         write (*,1000) id,tkp,ukp,name,amt,lambda,c(id),
      *                  (a(i,id),i=1,jbulk)
       else
 c                                 dynamic
-         write (*,1000) id,tkp,lkp,name,amt,lambda,g2(id),
+         write (*,1000) id,tkp,ukp,name,amt,lambda,g2(id),
      *                  (cp2(i,id),i=1,jbulk)
       end if
 
@@ -20683,7 +20649,7 @@ c---------------------------------------------------------------------
       integer i, j, ii, ids, kds, ncomp, nind(h4), pos, nc, gcind,
      *        stind(n4), ipop1, phct
 
-      double precision wt(msp), twt
+      double precision twt
 
       character tname*10
       logical refine, dynam
@@ -20714,7 +20680,7 @@ c                                 the starting position - 1 of the simplicial
 c                                 coordinates in xco/zco
       stind(pop1(ids)) = icoct
 
-      wt(pop1(ids)) = 1d0
+      pwt(pop1(ids)) = 1d0
 
       if (pop1(ids).gt.1) then
 c                                 composite polytopic composition space,
@@ -20724,7 +20690,7 @@ c                                 weight each polytope. subpol loads the
 c                                 coordinates in xco/zco and the simplex
 c                                 indices (unnecessarily) in the local 
 c                                 sco array.
-         call subpol (1d0,ids,kds,pop1(ids),1)
+         call subpol (1d0,ids,pop1(ids))
 c                                 the number of subdivisions will be:
          ipop1 = npairs
 
@@ -20738,119 +20704,115 @@ c                                 the number of subdivisions will be:
 
       end if
 
-         pos = stind(pop1(ids))
+      pos = stind(pop1(ids))
 
-         do i = 1, ipop1
+      do i = 1, ipop1
 
-            if (simple) then 
+         if (simple) then 
 
-               scoct = 0
+            scoct = 0
 
-            else
+         else
 c                                 reset the simplicial coordinate counter so as 
 c                                 not to over-write the pop1 coordinates
-               scoct = ipop1
+            scoct = ipop1
 c                                 get the polytope weights
-               twt = 0d0
+            twt = 0d0
 
-               nind(pop1(ids)) = i
+            nind(pop1(ids)) = i
 
-               do j = 1, ndim(1,pop1(ids),ids)
+            do j = 1, ndim(1,pop1(ids),ids)
 
-                  pos = pos + 1
+               pos = pos + 1
 
-                  if (dynam) then
-                     wt(j) = zco(pos)
-                  else 
-                     wt(j) = xco(pos)
-                  end if
+               if (dynam) then
+                  pwt(j) = zco(pos)
+               else 
+                  pwt(j) = xco(pos)
+               end if
 
-                  twt = twt + wt(j)
+               twt = twt + pwt(j)
 
-               end do
+            end do
 
-               wt(j) = 1d0 - twt
+            pwt(j) = 1d0 - twt
 
-            end if
+         end if
 c                                 initialize the total number of polytopic
 c                                 compositions
-            nc = 1
+         nc = 1
 c                                 do the subdivisions for each polytope
-            do ii = 1, poly(ids)
+         do ii = 1, poly(ids)
 
-               if (wt(ii).le.0d0) then
-                  npol(ii) = 0
-                  cycle
-               end if
+            if (pwt(ii).le.0d0) then
+               npol(ii) = 0
+               cycle
+            end if
 c                                 the starting position of the simplicial
 c                                 compositions for polytope ii
-               stind(ii) = scoct
+            stind(ii) = scoct
 
-               call subpol (wt(ii),ids,kds,ii,i)
+            call subpol (pwt(ii),ids,ii)
 c                                  the number of simplicial compositions
 c                                  generated for polytope ii
-               npol(ii) = ntot
-               nc = nc * ntot
-
-            end do
-c                                  generate all permutations of the polytopic
-c                                  compositions at constant wt, initialization:
-            ncomp = 1
-
-            do ii = 1, poly(ids)
-               nind(ii) = 1
-            end do
-
-            call setind (wt,ids,kds,stind,nind,gcind,phct)
-c                                  now generate all permutations of the polytopic 
-c                                  compositions:
-            do 
-
-               ncomp = ncomp + 1
-
-               if (ncomp.gt.nc) exit 
-c                                  figure out the index to be incremented
-               do j = 1, poly(ids)
-
-                  if (nind(j).lt.npol(j)) then
-
-                     nind(j) = nind(j) + 1
-
-                     exit
-
-                  else 
-
-                     nind(j) = 1
-
-                  end if
-
-               end do
-c                                 save the indexes
-               call setind (wt,ids,kds,stind,nind,gcind,phct)
-
-            end do 
+            npol(ii) = ntot
+            nc = nc * ntot
 
          end do
+c                                  generate all permutations of the polytopic
+c                                  compositions at constant wt, initialization:
+         ncomp = 1
+
+         do ii = 1, poly(ids)
+            nind(ii) = 1
+         end do
+
+         call setind (ids,kds,stind,nind,gcind,phct)
+c                                  now generate all permutations of the polytopic 
+c                                  compositions:
+         do 
+
+            ncomp = ncomp + 1
+
+            if (ncomp.gt.nc) exit 
+c                                  figure out the index to be incremented
+            do j = 1, poly(ids)
+
+               if (nind(j).lt.npol(j)) then
+
+                  nind(j) = nind(j) + 1
+
+                  exit
+
+               else 
+
+                  nind(j) = 1
+
+               end if
+
+            end do
+c                                 save the indexes
+            call setind (ids,kds,stind,nind,gcind,phct)
+
+         end do 
+
+      end do
 
       end
 
-      subroutine subpol (wt,ids,kds,ii,j)
+      subroutine subpol (wt,ids,ii)
 c---------------------------------------------------------------------
 c subpol does jth subdivision of polytope ii of solution ids.
 
-c ids   - points to the solution/subdivision for the static case
-c kds   - points to the refinement point for the dynamic case, for
-c         indivual compositions hkp(i) gives kds on recovery.
+c ids   - points to the solution/subdivision for, respectively, the 
+c         static and dynamic cases
 c wt    - the effective resolution will be res/wt.
-
-c both ids and kds are necessary for dynamic, kds is not used for the
-c static case.
 c---------------------------------------------------------------------
       implicit none
 
       include 'perplex_parameters.h'
 
-      integer i, j, h, ids, kds, nt, isite, nind(mst), ii
+      integer i, h, ids, nt, isite, nind(mst), ii
 
       double precision wt
 
@@ -20871,11 +20833,7 @@ c                                 subdivide each simplex of the polytope
       do i = 1, isite
 c                                 starting position of the compositional coordinates
 c                                 for simplex i
-         if (dynam) then
-            spz(kds,ii,j,i) = icoct
-         else
-            spx(ids,ii,j,i) = icoct
-         end if 
+         spx(ii,i) = icoct
 c                                 cartes loads the simplicial coordinates into
 c                                 array simp
          call cartes (wt,i,ii,ids)
@@ -20951,9 +20909,9 @@ c-----------------------------------------------------------------------
 
       logical dynam
 
-      integer ids, id, ii, i, j, k, pos, ipop
+      integer ids, id, ii, i, j, k, pos, ipop, jpos
 
-      double precision sum, wt(h4)
+      double precision sum
 
       integer ncoor,mcoor,ndim
       common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h4,h9)
@@ -20968,25 +20926,52 @@ c                                 get the simplicial composition indices:
 
       if (dynam) then
 c                                 dynamic:
-         do ii = 1, pop1(ids)
-c                                 recover the polytope composition
+         if (pop1(ids).gt.1) then 
+c                                 composite composition space, load 
+c                                 weights
+            sum = 0d0
+            pos = jcoz(icoz(id))
+
+            do ii = 1, ndim(1,ipop,ids)
+
+               pwt(ii) = zco(pos+ii)
+               sum = sum + pwt(ii)
+
+            end do 
+
+            jpos = icoz(id) + 1
+            pwt(ii) = 1d0 - sum
+
+         else
+
+            jpos = jcoz(icoz(id))
+            pwt(1) = 1d0 
+
+         end if
+
+         do ii = 1, poly(ids)
+
+            if (pwt(ii).eq.0d0) cycle
+c                                 recover the polytope compositions
             do i = 1, istg(ids,ii)
+c                                 skip 0-d simplices
+               if (ndim(i,ii,ids).eq.0) then 
+                  x(ii,1,1) = 1d0
+                  cycle
+               end if 
 
                sum = 0d0
-c                                 locate the position of the simplex
-               pos = spz(hkp(id),ii,1,i) + 
-     *               (scoz(icoz(id)+j) - 1) * ndim(i,ii,ids)
-
-               j = j + 1
+               pos = jcoz(jpos)
 
                do k = 1, ndim(i,ii,ids)
 
-                  sum = sum + zco(pos+k)
                   x(ii,i,k) = zco(pos+k)
+                  sum = sum + zco(pos+k)
 
-               end do 
+               end do
 
                x(ii,i,k) = 1d0 - sum
+               jpos = jpos + 1
 
             end do
 
@@ -20994,47 +20979,52 @@ c                                 locate the position of the simplex
 
       else
 c                                 static:
-         pos = 0
-
          if (pop1(ids).gt.1) then 
 c                                 composite composition space, load 
 c                                 weights
-           sum = 0d0
-           pos = pos + 1
+            sum = 0d0
+            pos = jcox(icox(id))
 
-           do ii = 1, ndim(1,ipop,ids)
+            do ii = 1, ndim(1,ipop,ids)
 
-              wt(ii) = xco(jcox(id)+i)
-              sum = sum + wt(ii)
+               pwt(ii) = xco(pos+ii)
+               sum = sum + pwt(ii)
 
-           end do 
+            end do 
 
-           wt(ii) = 1d0 - sum
+            jpos = icox(id) + 1
+            pwt(ii) = 1d0 - sum
+
+         else
+
+            jpos = jcox(icox(id))
+            pwt(1) = 1d0 
 
          end if
 
-         pos = jcox(id) + pos
-
          do ii = 1, poly(ids)
 
-            if (wt(ii).eq.0d0) cycle 
+            if (pwt(ii).eq.0d0) cycle
 c                                 recover the polytope compositions
             do i = 1, istg(ids,ii)
 c                                 skip 0-d simplices
-               if (ndim(i,ii,ids).eq.0) cycle
+               if (ndim(i,ii,ids).eq.0) then 
+                  x(ii,1,1) = 1d0
+                  cycle
+               end if 
 
                sum = 0d0
-
-               pos = pos + 1
+               pos = jcox(jpos)
 
                do k = 1, ndim(i,ii,ids)
 
                   x(ii,i,k) = xco(pos+k)
                   sum = sum + xco(pos+k)
 
-               end do 
+               end do
 
                x(ii,i,k) = 1d0 - sum
+               jpos = jpos + 1
 
             end do
 
@@ -21062,8 +21052,10 @@ c-----------------------------------------------------------------------
       double precision x3, caq
       common/ cxt16 /x3(k5,h4,mst,msp),caq(k5,l10),na1,na2,na3,nat,kd
 c-----------------------------------------------------------------------
-c                                 dynamic:
-      do ii = 1, pop1(ids)
+      do ii = 1, poly(ids)
+c                                 save the weights as the pop1'th 
+c                                 polytope
+         x3(jd,pop1(ids),1,ii) = pwt(ii)
 c                                 recover the polytope composition
          do i = 1, istg(ids,ii)
 
@@ -21079,7 +21071,7 @@ c                                 recover the polytope composition
 
       end
 
-      subroutine setind (wt,ids,kds,stind,nind,gcind,phct)
+      subroutine setind (ids,kds,stind,nind,gcind,phct)
 c-----------------------------------------------------------------------
 c after a call to subpol, setind loads the local simplicial indices into
 c the static/dynamic global index arrays and sets the local composition
@@ -21101,8 +21093,6 @@ c-----------------------------------------------------------------------
       integer ii, i, ids, kds, phct, gcind, stind(h4), nind(h4), pos, 
      *        ipop
 
-      double precision wt(h4)
-
       integer ncoor,mcoor,ndim
       common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h4,h9)
 
@@ -21111,6 +21101,7 @@ c-----------------------------------------------------------------------
       common/ cxt26 /refine,resub,tname
 c-----------------------------------------------------------------------
       phct = phct + 1
+      ipop = pop1(ids)
 c                                 load simplicial compoisition indices
       if (resub) then 
 c                                 dynamic arrays:
@@ -21118,17 +21109,31 @@ c                                 dynamic arrays:
 
          jkp(phct) = ids
          hkp(phct) = kds
-         icoz(phct) = gcind
+         icoz(phct) = gcind + 1
 
-         do ii = 1, pop1(ids)
+         if (ipop.gt.1) then 
+c                                 composite space, save location of 
+c                                 polytopic wts
+           gcind = gcind + 1
+           jcoz(gcind) = spx(ipop,1) + (nind(ipop)-1)*ndim(1,ipop,ids)
 
-            if (wt(ii).le.0d0) cycle
+         end if
+c                                 save location of each set of simplicial
+c                                 coordinates in each polytope
+         do ii = 1, poly(ids)
+
+            if (pwt(ii).le.0d0) cycle
 
             pos = stind(ii) + (nind(ii)-1)*istg(ids,ii)
 
             do i = 1, istg(ids,ii)
+c                                 skip 0-d simplices
+               if (ndim(i,ii,ids).eq.0) cycle
+
                gcind = gcind + 1
-               scoz(gcind) = sco(pos+i)
+               jcoz(gcind) = spx(ii,i) 
+     *                       + (sco(pos+i) - 1) * ndim(i,ii,ids)
+
             end do
 
          end do
@@ -21137,15 +21142,14 @@ c                                 dynamic arrays:
 
          if (bad) then
 
-            gcind = icoz(phct)
+            gcind = icoz(phct) - 1
             phct = phct - 1
 
          else
 
-            call loadgx (kds,ids,gcind)
+            call loadgx (kds,ids,phct)
 
          end if
-
 
       else
 c                                 static arrays:
@@ -21157,22 +21161,20 @@ c                                 static arrays:
             end if
          end if
 
-        ipop = pop1(ids)
-        icox(phct) = gcind
+         icox(phct) = gcind + 1
 
-        if (ipop.gt.1) then 
+         if (ipop.gt.1) then 
 c                                 composite space, save location of 
 c                                 polytopic wts
            gcind = gcind + 1
-           jcox(gcind) = spx(ids,ipop,1,1) 
-     *                   + (nind(ipop)-1)*ndim(1,ipop,ids)
+           jcox(gcind) = spx(ipop,1) + (nind(ipop)-1)*ndim(1,ipop,ids)
 
-        end if
+         end if
 c                                 save location of each set of simplicial
 c                                 coordinates in each polytope
          do ii = 1, poly(ids)
 
-            if (wt(ii).le.0d0) cycle
+            if (pwt(ii).le.0d0) cycle
 
             pos = stind(ii) + (nind(ii)-1)*istg(ids,ii)
 
@@ -21181,11 +21183,8 @@ c                                 skip 0-d simplices
                if (ndim(i,ii,ids).eq.0) cycle
 
                gcind = gcind + 1
-               jcox(gcind) = spx(ids,ii,1,i) 
-     *                       +  sco(pos+i) * ndim(i,ii,ids)
-
-               scox(gcind) = sco(pos+i)
-
+               jcox(gcind) = spx(ii,i) 
+     *                       +  (sco(pos+i) - 1) * ndim(i,ii,ids)
             end do
 
          end do
@@ -21194,12 +21193,17 @@ c                                 skip 0-d simplices
 
          if (bad) then
 
-            gcind = icox(phct)
+            gcind = icox(phct) - 1
             phct = phct - 1
 
          else
 
-            call soload (ids)
+            call soload (ids,bad)
+
+            if (bad) then
+               gcind = icox(phct) - 1
+               phct = phct - 1
+            end if 
 
          end if
 
@@ -21207,21 +21211,7 @@ c                                 skip 0-d simplices
 
       end
 
-
-      subroutine acqxyp (ids,ii,id,dynam,bad)
-c-----------------------------------------------------------------------
-c load compositional coordinates from the static xco or dynamic zco
-c for polytope ii, convert these to the 1d y coordinates and accumulate
-c them in the pa/p0a arrays.
-c-----------------------------------------------------------------------
-      logical dynam, bad
-
-      integer ids, ii, id
-
-      end 
-
-
-      subroutine setxyp (ids,id,dynam,bad)
+      subroutine setxyp (ids,phct,dynam,bad)
 c-----------------------------------------------------------------------
 c load compositional coordinates from the static xco or dynamic zco
 c arrays into simple compositional arrays for the of compound 
@@ -21233,10 +21223,10 @@ c-----------------------------------------------------------------------
 
       logical dynam, bad
 
-      integer ids, id
+      integer ids, phct
 c-----------------------------------------------------------------------
 c                                 get the polytopic compositions:
-      call setexs (ids,id,dynam)
+      call setexs (ids,phct,dynam)
 c                                 convert to 1-d polytopic compositions, the bad
 c                                 test is unnecessary for static compositions once
 c                                 they have been loaded by soload. this could be
@@ -21300,12 +21290,24 @@ c----------------------------------------------------------------------
 
          do ii = 1, poly(ids)
 
+            if (pwt(ii).lt.zero) then 
+
+               do l = pvert(ids,ii,1), pvert(ids,ii,2)
+
+                  y(l) = 0d0
+
+               end do
+
+               cycle
+
+            end if 
+
             do l = pvert(ids,ii,1), pvert(ids,ii,2)
 
                y(l) = 1d0
 
-               do m = 1, istg(ids,1)
-                  y(l) = y(l)*x(1,m,kmsol(ids,l,m))
+               do m = 1, istg(ids,ii)
+                  y(l) = y(l)*x(ii,m,kmsol(ids,l,m))
                end do
 
                if (y(l).gt.one) then
@@ -21317,7 +21319,8 @@ c----------------------------------------------------------------------
 
             if (k.ne.0) then
 c                                 reject pure independent endmember compositions.
-               if (ldsol(k,ids).gt.0.and.nrf(ids)) then
+               if (ldsol(k,ids).gt.0.and.nrf(ids)
+     *                              .and.pwt(ii).gt.one) then
 
                   bad = .true.
 
@@ -21337,19 +21340,42 @@ c                                 reject pure independent endmember compositions
 
             end if
 
+            do l = pvert(ids,ii,1), pvert(ids,ii,2)
+
+               y(l) = y(l) * pwt(ii)
+
+            end do
+
          end do
 
       else
 
          do ii = 1, poly(ids)
+c                                 setx3 loads the polytope weights in 
+c                                 the pop1'th polytope composition
+            pwt(ii) = x3(id,pop1(ids),1,ii)
+
+            if (pwt(ii).lt.zero) then 
+
+               do l = pvert(ids,ii,1), pvert(ids,ii,2)
+
+                  y(l) = 0d0
+
+               end do
+
+               cycle
+
+            end if 
 
             do l = pvert(ids,ii,1), pvert(ids,ii,2)
 
                y(l) = 1d0
 
-               do m = 1, istg(ids,1)
-                  y(l) = y(l)*x3(id,1,m,kmsol(ids,l,m))
+               do m = 1, istg(ids,ii)
+                  y(l) = y(l)*x3(id,ii,m,kmsol(ids,l,m))
                end do
+
+               y(l) = y(l) * pwt(ii)
 
             end do
 
@@ -21382,7 +21408,7 @@ c                                 leetle witz.
       common/ cxt16 /x3(k5,h4,mst,msp),caq(k5,l10),na1,na2,na3,nat,kd
 c----------------------------------------------------------------------
 
-      do ii = 1, poly(ids)
+      do ii = 1, pop1(ids)
          do i = 1, istg(ids,ii)
             do j = 1, ispg(ids,ii,i)
                x(ii,i,j) = x3(jd,ii,i,j)

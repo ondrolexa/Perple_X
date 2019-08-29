@@ -686,7 +686,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i,j,k,l,m,ids,kd,lco(3),itri(4),jtri(4),ijpt
+      integer ii, i,j,k,l,m,ids,kd,lco(3),itri(4),jtri(4),ijpt
 
       double precision wt(3), cst, xt 
 
@@ -750,10 +750,6 @@ c                                 bookkeeping variables
       integer jbulk
       double precision cblk
       common/ cst300 /cblk(k5),jbulk
-
-      logical usv
-      integer pindex,tindex
-      common/ cst54 /pindex,tindex,usv
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
@@ -833,24 +829,6 @@ c                                 get the dependent potentials
             end do
 
          end if
-c                                 if s/v independent variables, 
-c                                 then set p and t 
-         if (hcp.gt.icp) then
-
-            if (lopt(14)) then 
-               write (*,*) 'ERROR: logarithmic_p must be false for USV'
-               stop
-            end if 
-
-            p = -mu(pindex)
-            t = mu(tindex)
-
-            if (p.lt.0d0.or.t.lt.1d2) then 
-               nodata = .true.
-               goto 99
-            end if 
-
-         end if 
 
       end if 
 c                                 initialize system props/flags
@@ -877,9 +855,11 @@ c                                 solvent
 c                                 WERAMI, initialize
                props(16,i) = 0d0
 
-               do j = 1, istg(ids,1)
-                  do k = 1, ispg(ids,1,j)
-                     x3(i,1,j,k) = 0d0
+               do ii = 1, pop1(ids)
+                  do j = 1, istg(ids,1)
+                     do k = 1, ispg(ids,1,j)
+                        x3(i,1,j,k) = 0d0
+                     end do 
                   end do 
                end do 
 
@@ -906,10 +886,12 @@ c                                 weighted molar amount
                      props(16,i) = props(16,i) + cst
                   end if 
 
-                  do j = 1, istg(ids,1)
-                     do k = 1, ispg(ids,1,j)
-                        lco(l) = lco(l) + 1
-                        x3(i,1,j,k) = x3(i,1,j,k) + cst*xco(lco(l))
+                  do ii = 1, pop1(ids)
+                     do j = 1, istg(ids,ii)
+                        do k = 1, ispg(ids,ii,j)
+                           lco(l) = lco(l) + 1
+                           x3(i,ii,j,k) = x3(i,ii,j,k) + cst*xco(lco(l))
+                        end do
                      end do 
                   end do
 
@@ -927,28 +909,33 @@ c                                 renormalize the composition
                cst = props(16,i)
                if (cst.eq.0d0) cst = 1d0
 
-               do l = 1, istg(ids,1)
+               do ii = 1, pop1(ids) 
+
+                  do l = 1, istg(ids,ii)
                   
-                  xt = 0d0
+                     xt = 0d0
 
-                  do m = 1, ispg(ids,1,l)
-                     x3(i,1,l,m) = x3(i,1,l,m)/cst
+                     do m = 1, ispg(ids,ii,l)
 
-                     if (x3(i,1,l,m).gt.1d0) then 
-                        x3(i,1,l,m) = 1d0
-                     else if (x3(i,1,l,m).lt.0d0) then 
-                        x3(i,1,l,m) = 0d0
-                     end if 
+                        x3(i,ii,l,m) = x3(i,ii,l,m)/cst
 
-                     xt = xt + x3(i,1,l,m)
+                        if (x3(i,ii,l,m).gt.1d0) then 
+                           x3(i,ii,l,m) = 1d0
+                        else if (x3(i,ii,l,m).lt.0d0) then 
+                           x3(i,ii,l,m) = 0d0
+                        end if 
+
+                        xt = xt + x3(i,ii,l,m)
+
+                     end do
+
+                     if (xt.ne.1d0.and.xt.ne.0d0) then 
+                        do m = 1, ispg(ids,ii,l)
+                           x3(i,ii,l,m) = x3(i,ii,l,m)/xt
+                        end do
+                     end if
 
                   end do
-
-                  if (xt.ne.1d0.and.xt.ne.0d0) then 
-                     do m = 1, ispg(ids,1,l)
-                        x3(i,1,l,m) = x3(i,1,l,m)/xt
-                     end do
-                  end if
 
                end do 
 

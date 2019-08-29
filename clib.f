@@ -522,10 +522,6 @@ c-----------------------------------------------------------------------
       integer io3,io4,io9
       common / cst41 /io3,io4,io9
 
-      logical usv
-      integer pindex,tindex
-      common/ cst54 /pindex,tindex,usv
-
       integer hcp,idv
       common/ cst52  /hcp,idv(k7) 
 
@@ -717,11 +713,7 @@ c                                 finished, check for no components
 
          else if (rname.eq.blank) then 
  
-            cycle 
-
-         else if (rname.eq.'Volume'.or.rname.eq.'Entropy') then
-
-            usv = .true.
+            cycle
 
          else
 
@@ -755,19 +747,7 @@ c                                 check for compositional constraints
       icp1 = icp + 1
       icp2 = icp + 2
 
-      if (usv) then
-
-         hcp = icp2
-         tindex = icp1
-         pindex = icp2
-         cname(tindex) = 'T(K) '
-         cname(pindex) = '-P(b)'
-
-      else
-
-         hcp = icp
-
-      end if 
+      hcp = icp
 c                                 decode saturated components
 c                                 isat is the saturated component counter
       isat = 0
@@ -2170,9 +2150,9 @@ c                                 pointer
       double precision aqg,qq,rt
       common/ cxt2 /aqg(m4),qq(m4),rt,jnd(m4)
 
-      integer jphct, jpt
+      integer jphct
       double precision g2, cp2, c2tot
-      common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),jphct,jpt
+      common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),jphct
 
       integer iopt
       logical lopt

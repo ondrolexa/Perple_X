@@ -171,21 +171,19 @@ c                                 x coordinate description
       integer ldsol
       common/ cxt36 /ldsol(m4,h9),sck(h9),nrf(h9)
 
-      integer scox, spx, icox
+      integer spx, icox, jcox
       double precision xco
-      common/ cxt10 /xco(k18),scox(k25),spx(h9,h4,1000,mst),icox(k1)
+      common/ cxt10 /xco(k18),spx(h4,mst),icox(k1),jcox(k21)
 
       double precision zco
-      integer scoz, spz, icoz, jkp
-      common/ cxt13 /zco(k20),scoz(k26),spz(h9,h4,1000,mst),
-     *               icoz(k21),jkp(k21)
+      integer icoz, jcoz, jkp
+      common/ cxt13 /zco(k20),icoz(k21),jkp(k21),jcoz(k21)
 
       double precision simp
       common/ cxt86 /simp(k13)
 
-      integer scoct, snp, sco, icoct, pcoct, npol, pco
-      common/ junk0 /scoct, snp(mst), sco(k13), icoct,
-     *               pcoct, npol(h4), pco(k13)
+      integer scoct, snp, sco, icoct, npol
+      common/ junk0 /scoct, snp(mst), sco(k13), icoct, npol(h4)
 
       integer hkp,mkp
       common/ cst72 /hkp(k21),mkp(k19)
@@ -196,9 +194,21 @@ c                                 temporary subdivision limits:
       double precision pxmn, pxmx, pxnc
       common/ cxt108 /pxmn(h4,mst,msp),pxmx(h4,mst,msp),pxnc(h4,mst,msp)
 
-c icox(phct) - points to the simplicial indices for polytope ii of composition phct
+       double precision pwt
+       common / cxt44 / pwt(h4)
+c                                 interim storage array
+      integer lcoor,lkp
+      double precision ycoor
+      common/ cxt14 /ycoor(k22),lcoor(k19),lkp(k19)
 
-c csubx(ids)   - number of subdivisions for static compositions of soludtion ids
-c jcox(ids)    - starting index - 1 of the polytope weights in the xco array
+c icox(phct)   - locates static compositional coordinates for composition phct -> gcind
+c jcox(gcind+1:nsimp)
+c              - locates the compositional coordinates for each simplex in xco
+c icoz(phct)   - locates dynamic compositional coordinates for composition phct -> gcind
+c jcoz(gcind+1:nsimp)
+c              - locates the compositional coordinates for each simplex in zco
 c stind(ii)    - starting index - 1 of the simplex indices of polytope ii in the sco array
 c npoly(ii)    - number of compositions in polytope ii
+
+c mstot(ids)   - number of vertices for the composition space of solution ids
+c nstot(ids)
