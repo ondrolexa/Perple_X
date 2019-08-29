@@ -1395,7 +1395,7 @@ c----------------------------------------------------------------------
       common/ cst4 /iam
 c----------------------------------------------------------------------
 c                                 version
-      call vrsion (n)
+      if (n.ne.6) call vrsion (n)
 c                                 generic blurb
       if (iam.eq.1) then 
          write (n,1000) 'VERTEX'
@@ -2409,7 +2409,7 @@ c                                 accordingly:
 20    format (/,'**error ver020** error ',i2,' reading solution model',
      *        ' file.',/,'   Reading model: ',a,' Check format.',/)
 21    format (/,'**error ver021**error reading ',
-     *        'header section of',/,'thermodynamic data ',
+     *        'header section of',/,'the thermodynamic data ',
      *        'file, last data read:',/,a,/,'Check formatting',/)
 22    format (/,'**error ver022** too many divariant assemblages, ',
      *        'increase dimension j9 (',i8,') routine: ',a)
@@ -3065,7 +3065,7 @@ c----------------------------------------------------------------------
      *        ' hybrid_EoS option will be',/,'overridden by the EoS sp',
      *        'ecified in the problem definition file. To prevent this',
      *      /,'behavior delete the special_component section from the ',
-     *        'header section of the',/,'thermodynamic data file.',/)
+     *        'header of the',/,'thermodynamic data file.',/)
 58    format (/,'**warning ver058** wway, the equilibrium of the '
      *         ,'following reaction',/,'is inconsistent with the ',
      *          'invariant equilibrium.',/)
