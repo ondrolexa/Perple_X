@@ -197,9 +197,15 @@ c                                 temporary subdivision limits:
        double precision pwt
        common / cxt44 / pwt(h4)
 c                                 interim storage array
-      integer lcoor,lkp
+      integer lcoor, lkp
       double precision ycoor
       common/ cxt14 /ycoor(k22),lcoor(k19),lkp(k19)
+c
+      integer jpoint, jiinc
+      common/ cxt60 /jpoint,jiinc
+
+c jpoint - index of the last compound endmember in the icp x jphct optimization matrix
+c jiinc  - iphct - jphct, increment between the icp x iphct data matrix index and the optimization matrix
 
 c icox(phct)   - locates static compositional coordinates for composition phct -> gcind
 c jcox(gcind+1:nsimp)

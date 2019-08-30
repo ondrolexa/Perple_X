@@ -46,9 +46,6 @@ c                                 options from perplex_option.dat
       integer jphct,istart
       common/ cst111 /jphct,istart
 
-      integer jpoint, jstct
-      common/ cxt60 /jpoint,jstct
-
       double precision a,b,c
       common/ cst313 /a(k5,k1),b(k5),c(k1)
 
@@ -211,9 +208,6 @@ c-----------------------------------------------------------------------
       integer jphct
       double precision g2, cp2, c2tot
       common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),jphct
-
-      integer jpoint, jstct
-      common/ cxt60 /jpoint,jstct
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
@@ -395,9 +389,6 @@ c----------------------------------------------------------------------
       integer jphct
       double precision g2, cp2, c2tot
       common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),jphct
-
-      integer jpoint, jstct
-      common/ cxt60 /jpoint,jstct
 
       integer ncoor,mcoor,ndim
       common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h4,h9)
@@ -835,9 +826,6 @@ c                                 global variables:
       integer ipoint,kphct,imyn
       common/ cst60 /ipoint,kphct,imyn
 
-      integer jpoint, jstct
-      common/ cxt60 /jpoint,jstct
-
       double precision z, pa, p0a, x, w, y, wl
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18)
@@ -853,7 +841,7 @@ c----------------------------------------------------------------------
          id = jdv(i)
 
          if (id.lt.jpoint) then 
-            lkp(i) = -(id + jstct)
+            lkp(i) = -(id + jiinc)
             cycle
          end if 
 
@@ -1898,9 +1886,6 @@ c----------------------------------------------------------------------
       double precision g2, cp2, c2tot
       common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),tphct
 
-      integer jpoint, jstct
-      common/ cxt60 /jpoint,jstct
-
       integer kkp,np,ncpd,ntot
       double precision cp3,amt
       common/ cxt15 /cp3(k0,k19),amt(k19),kkp(k19),np,ncpd,ntot
@@ -2257,7 +2242,7 @@ c---------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i,j,inc,id
+      integer i,j,id
 
       double precision ctot
       common/ cst3  /ctot(k1)
@@ -2284,8 +2269,8 @@ c---------------------------------------------------------------------
       integer ldt,ldq
       common /be04nb/ldt,ldq
 
-      integer iam,jam,tloop,ploop
-      common/ cst55 /iam(k1),jam(k1),tloop,ploop
+      integer tloop,ploop
+      common/ cst55 /tloop,ploop
 
       integer npt,jdv
       double precision cptot,ctotal
@@ -2294,21 +2279,18 @@ c---------------------------------------------------------------------
       integer ipoint,kphct,imyn
       common/ cst60  /ipoint,kphct,imyn
 
-      integer jpoint, jstct
-      common/ cxt60 /jpoint,jstct
-
       integer tphct
       double precision g2, cp2, c2tot
       common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),tphct
 c-----------------------------------------------------------------------
-      inc = istct - 1
+      jiinc = istct - 1
 
       tloop = 40
       ploop = 40
       dv(1) = (vmax(1)-vmin(1))/(ploop-1)
       dv(2) = (vmax(2)-vmin(2))/(tloop-1)
 c                                 load arrays for lp solution
-      jphct = iphct - inc
+      jphct = iphct - jiinc
 c                                 pressure and temperature are allowed 
 c                                 EoS variables
       ctotal = 0d0
@@ -2322,8 +2304,7 @@ c                                 composition constraint
       end do 
 c                                 static composition array
       do i = 1, jphct
-         id = i + inc
-         iam(i) = id
+         id = i + jiinc
          do j = 1, icp
             a(j,i) = cp(j,id)/ctot(id)
          end do
@@ -2332,7 +2313,7 @@ c                                 load all compounds into the
 c                                 the dynamic composition array
       do id = istct, ipoint
 
-         i = id - inc 
+         i = id - jiinc 
 c                                 jkp indicates which phase a point is associated with
          jkp(i) = -id
          hkp(i) = 0
@@ -2344,8 +2325,7 @@ c                                 jkp indicates which phase a point is associate
       end do
 c                                 locate last point in dynamic arrays and set increment
 c                                 to static array
-      jpoint = ipoint - inc
-      jstct = inc 
+      jpoint = ipoint - jiinc
 
       ldt = icp + 1
       ldq = icp + 1
@@ -2400,58 +2380,6 @@ c                                                  2 active, upper bound
 
       end
 
-      subroutine setx3 (ind,id,ids)
-c----------------------------------------------------------------------
-c subroutine to recover prismatic solution compositions (x(i,j))
-c from the xco array loaded in soload
-c----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      integer ii, i, j, id, ids, ind
-
-      logical bad
-
-      integer ncoor,mcoor,ndim
-      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h4,h9)
-
-      double precision z, pa, p0a, x, w, y, wl
-      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18)
-
-      integer kd, na1, na2, na3, nat
-      double precision x3, caq
-      common/ cxt16 /x3(k5,h4,mst,msp),caq(k5,l10),na1,na2,na3,nat,kd
-
-      integer ipoint,kphct,imyn
-      common/ cst60 /ipoint,kphct,imyn
-
-      integer lstot,mstot,nstot,ndep,nord
-      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
-c----------------------------------------------------------------------
-      if (id.gt.ipoint) then 
-c                                 recover the composition
-         call setxyp (ids,id,.false.,bad)
-c                                 a normal solution
-         do ii = 1, poly(ids)
-
-            x3(ind,pop1(ids),1,ii) = pwt(ii)
-
-            do i = 1, istg(ids,ii)
-               do j = 1, ispg(ids,ii,i)
-                  x3(ind,ii,i,j) = x(ii,i,j)
-               end do 
-            end do 
-         end do 
-
-      else 
-c                                 an endmember 
-         call endcp (ind,id,ids)
-
-      end if
-
-      end 
 
       double precision function ginc0 (dt,dp,id)
 c-----------------------------------------------------------------------
@@ -2803,7 +2731,7 @@ c----------------------------------------------------------------------
 
       integer i, j, k, id, tictoc
 
-      logical static, abort
+      logical static, abort, bad
 
       double precision c(k5)
 
@@ -2839,8 +2767,8 @@ c----------------------------------------------------------------------
       character*5 cname
       common/ csta4 /cname(k5)
 
-      integer iam,jam,tloop,ploop
-      common/ cst55 /iam(k1),jam(k1),tloop,ploop
+      integer tloop,ploop
+      common/ cst55 /tloop,ploop
 c                                 hcp is different from icp only if usv
       integer hcp,idv
       common/ cst52  /hcp,idv(k7)
@@ -2866,27 +2794,36 @@ c                                 hcp is different from icp only if usv
 c----------------------------------------------------------------------
       do i = 1, npt
 
-         if (static) then 
-
-            id = iam(jdv(i))
-c                                 set identifier flag
-            if (id.le.ipoint) then
-               kkp(i) = -id
-            else  
-               kkp(i) = ikp(id)
-            end if 
-
+         if (jdv(i).le.jpoint) then
+c                                 stoichiometric compound or endmember
+            id = jdv(i) + jiinc
+c                                 load compositional data
             cptot(i) = ctot(id)
 
             do j = 1, icomp
                cp3(j,i) = cp(j,id)
             end do
-c                                 set the x3 array
-            if (ikp(id).ne.0) call setx3 (i,id,ikp(id))
+c                                 set identifier flag
+            if (ikp(id).ne.0) then
+c                                 an endmember
+               kkp(i) = ikp(id)
+c                                 load the solution composition in x3
+               call endx3 (i,id,ikp(id))
 
-         else 
-c                                 getcmp assigns cp3, cptot, x3, and kkp
-            call getcmp (i,jdv(i),jkp(jdv(i)))
+            else
+c                                 a compound
+               kkp(i) = -id
+
+            end if
+
+         else
+c                                 static or dynamic solution composition:
+c                                 set endmember compositional coordinates
+           call setxyp (jkp(jdv(i)),jdv(i),.not.static,bad)
+c                                 save in the indexed x3 array
+           call setex3 (i,jkp(jdv(i)))
+c                                 getcmp assigns cp3, cptot, and kkp
+           call getcmp (i,jdv(i),jkp(jdv(i)),.not.static)
 
          end if
 c                                 convert normalized amounts to molar 
@@ -2946,8 +2883,7 @@ c                                  the bulk composition.
 c                                  load the saturated phase composition 
             do j = 1, icomp
                cp3(j,i) = cp(j,id)
-            end do           
-
+            end do
          end do
 
       end if 

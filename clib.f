@@ -2076,28 +2076,26 @@ c                                 set dependent potential, if it exists
 
       end
 
-      subroutine getcmp (jd,id,ids)
+      subroutine getcmp (jd,id,ids,dynam)
 c-----------------------------------------------------------------------
 c getcmp gets the composition of pseudocompund id, where:
 c  if ids < 0, -ids points to the composition of a true compound in array cp
 c  if ids > 0, id points to the composition of a solution defined in terms
-c              on endmember fractions defined and saved by routine resub
-c              in array zcoor.
+c              on endmember fractions
+
 c the composition is saved in arrays cp3 and x3, entry jd
 
-c getcmp is called by both WERAMI and MEEMUM/VERTEX
-
-c this is an attempt to use the compositions stored in cp2....
+c getcmp is called by FRENDLY, WERAMI, MEEMUM and VERTEX
 c-----------------------------------------------------------------------
       implicit none
  
       include 'perplex_parameters.h'
 
-      integer i, j, k, id, jd, ids
+      logical bad, dynam
 
-      logical bad
+      integer i, id, jd, ids
 
-      double precision xx
+      double precision scp(k5), scptot
 c                                 -------------------------------------
 c                                 global variables:
       integer icomp,istct,iphct,icp
@@ -2105,30 +2103,17 @@ c                                 global variables:
 
       double precision cp
       common/ cst12 /cp(k5,k1)
-c                                 bookkeeping variables
-      integer lstot,mstot,nstot,ndep,nord
-      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
-c                                 working arrays
-      double precision z, pa, p0a, x, w, y, wl
-      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18)
-c                                 single site solution coordinates:
-      integer jend
-      common/ cxt23 /jend(h9,m4)
+
+      double precision cp0
+      common/ cst71 /cp0(k0,k5)
 c                                 refined compositions and solution 
 c                                 pointer
       integer kkp,np,ncpd,ntot
       double precision cp3,amt
       common/ cxt15 /cp3(k0,k19),amt(k19),kkp(k19),np,ncpd,ntot
 
-      logical lorder, lexces, llaar, lrecip
-      common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
-
       integer ikp
       common/ cst61 /ikp(k1)
-
-      double precision cp0
-      common/ cst71 /cp0(k0,k5)
 
       integer iam
       common/ cst4 /iam
@@ -2137,45 +2122,20 @@ c                                 pointer
       logical fulrnk
       double precision cptot,ctotal
       common/ cst78 /cptot(k19),ctotal,jdv(k19),npt,fulrnk
-
-      integer iaq, aqst, aqct
-      character aqnam*8
-      double precision aqcp, aqtot
-      common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
-
-      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
-      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
-
-      integer jnd
-      double precision aqg,qq,rt
-      common/ cxt2 /aqg(m4),qq(m4),rt,jnd(m4)
-
-      integer jphct
-      double precision g2, cp2, c2tot
-      common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),jphct
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
-      integer kd, na1, na2, na3, nat
-      double precision x3, caq
-      common/ cxt16 /x3(k5,h4,mst,msp),caq(k5,l10),na1,na2,na3,nat,kd
 c----------------------------------------------------------------------
       kkp(jd) = ids
-      cptot(jd) = 0d0
 
       if (ids.lt.0) then
-c                                 simple compounds
+c                                 simple compounds and endmembers:
          if (iam.ne.5) then
-c                                 all programs except frendly 
+c                                 all programs except frendly
             do i = 1, icomp
                cp3(i,jd) = cp(i,-ids)
-            end do 
-c                                 check if it's a solution endmember
-            if (ikp(-ids).ne.0) call endcp (jd,-ids,ikp(-ids))
-   
+            end do
+c                                 set solution composition 
+c                                 if it's a solution endmember
+            if (ikp(-ids).ne.0) call endx3 (jd,-ids,ikp(-ids))
+
          else 
 c                                 frendly 
             do i = 1, k0
@@ -2184,131 +2144,34 @@ c                                 frendly
 
          end if
 
-      else 
-c                                 solutions, initialize
-         do i = 1, icomp
-            cp3(i,jd) = 0d0
-         end do
-
-c                                 if getcmp is being called by WERAMI:
-c                                 GETXZ (dlib.f) gets the x(i,j) coordinates for the
-c                                 composition from the x3(jd,i,j) array and
-c                                 the id argument is irrelevamt. 
-c                                 if getcmp is being called by MEEMUM/VERTEX:
-c                                 GETXZ (getxz1.f) gets both the x(i,j) and 
-c                                 x3(jd,i,j) compositional coordinates from the
-c                                 zcoor array.
+      else
+c                                 solutions:
          if (iam.ne.3) then
-c                                 if getcmp is called by MEEMUM/VERTEX:
-c                                 recover x(h,i,j) from the dynamic zco array
-            call setexs (ids,id,.true.) 
-c                                 copy into the x3 array
+c                                 getcmp is being called by MEEMUM/VERTEX:
+c                                 solution endmember fractions are recovered by 
+c                                 setxyp.
+            call setxyp (ids,id,dynam,bad)
+
             call setex3 (jd,ids)
 
          else
-
+c                                 getcmp is being called by WERAMI:
+c                                 GETXZ (dlib.f) gets the x(i,j) coordinates for the
+c                                 composition from the x3(jd,i,j) array and
+c                                 the id argument is irrelevant. 
             call getxz (jd,id,ids)
 
          end if
 
-c                                 convert the x(i,j) coordinates to the
-c                                 geometric y coordinates
-         call xtoy (ids,jd,.true.,bad)
+         call getscp (scp,scptot,ids,jd)
 
-         if (lopt(32).and.ksmod(ids).eq.39) then 
+         do i = 1, icomp
+            cp3(i,jd) = scp(i)
+         end do
 
-            if (iam.ne.3) then
-c                                 MEEMUM:
-c                                 cp2 works for meemum/vertex, but not werami
-c                                 the id index on cp2 is intentional.
-               do j = 1, icomp 
-                  cp3(j,jd) = cp2(j,id)*c2tot(id)
-               end do
+         cptot(jd) = scptot
 
-               if (cp2(k5,id).gt.1d1) then
-                  write (*,*) 'BAZORK'
-                  write (*,*) 'BAZORK'
-                  write (*,*) 'hydroxyl solution stable ',cp2(k5,id)
-                  write (*,*) 'BAZORK'
-                  write (*,*) 'BAZORK'
-               end if 
-
-            else
-c                                  WERAMI:
-               if (caq(jd,na1).eq.0d0) then
-c                                  pure solvent, use the y array to be safe
-                  do i = 1, ns
-                     do j = 1, icomp 
-                        cp3(j,jd) = cp3(j,jd) + y(i) * cp(j,jnd(i))
-                     end do 
-                  end do
-
-               else 
-c                                  impure solvent
-                  do i = 1, ns
-                     do j = 1, icomp 
-                        cp3(j,jd) = cp3(j,jd) + caq(jd,i) * cp(j,jnd(i))
-                     end do 
-                  end do
-
-                  do i = sn1, nsa
-
-                     k = i - ns
-c                                 convert molality to mole fraction (xx)
-                     xx = caq(jd,i)/caq(jd,na2)
-
-                     do j = 1, icomp
-                        cp3(j,jd) = cp3(j,jd) + xx * aqcp(j,k)
-                     end do  
-
-                  end do
-
-               end if
-
-            end if
-
-         else if (lrecip(ids)) then
-c                                 get the p' coordinates (amounts of 
-c                                 the independent endmembers)     
-            call getpp (ids) 
-
-            do i = 1, lstot(ids)
-               do j = 1, icomp 
-                  cp3(j,jd) = cp3(j,jd) + p0a(i) * cp(j,jend(ids,2+i))
-               end do 
-            end do          
-
-         else if (ksmod(ids).eq.20) then 
-c                                 electrolyte:
-c                                 solute species  
-            do i = sn1, nqs
-               do j = 1, icomp
-                  cp3(j,jd) = cp3(j,jd) + y(i) * aqcp(j,jnd(i) - aqst)
-               end do
-            end do 
-c                                 solvent species 
-            do i = 1, ns 
-               do j = 1, icomp
-                  cp3(j,jd) = cp3(j,jd) + y(i) * cp(j,jnd(i))
-               end do
-            end do
-
-         else 
-c                                 solutions with no dependent endmembers:
-c                                 y coordinates used to compute the composition
-            do i = 1, mstot(ids)
-               do j = 1, icomp
-                  cp3(j,jd) = cp3(j,jd) + y(i) * cp(j,jend(ids,2+i))
-               end do
-            end do
-
-         end if 
-
-      end if 
-
-      do i = 1, icp
-         cptot(jd) = cptot(jd) + cp3(i,jd)
-      end do 
+      end if
 
       end 
 

@@ -8372,7 +8372,7 @@ c                                 macroscopic margules formulation by default
 
       end
 
-      subroutine endcp (jd,id,ids)
+      subroutine endx3 (jd,id,ids)
 c------------------------------------------------------------------------
 c compute the composition of endmember id, for solution ids and load it
 c into the jd'th position of the x3 array.
@@ -21036,7 +21036,8 @@ c                                 skip 0-d simplices
 
       subroutine setex3 (jd,ids)
 c-----------------------------------------------------------------------
-c copy x array into the assemblage indexed x3 array.
+c set local x-y-p coordinates array and load x into the assemblage indexed 
+c x3 array.
 c-----------------------------------------------------------------------
       implicit none
 
@@ -21414,6 +21415,140 @@ c----------------------------------------------------------------------
                x(ii,i,j) = x3(jd,ii,i,j)
             end do
          end do
+      end do
+
+      end
+
+      subroutine getscp (scp,scptot,ids,jd)
+c-----------------------------------------------------------------------
+c getscp gets the bulk chemical composition of solution ids from the composition
+c of its endmembers. the composition of the solution in terms of its endmembers
+c must be set by a prior call to setxyp.
+c-----------------------------------------------------------------------
+      implicit none
+ 
+      include 'perplex_parameters.h'
+
+      integer i, j, k, jd, ids
+
+      double precision scp(*), scptot, xx
+
+      integer icomp,istct,iphct,icp
+      common/ cst6  /icomp,istct,iphct,icp
+
+      double precision cp
+      common/ cst12 /cp(k5,k1)
+
+      integer jend
+      common/ cxt23 /jend(h9,m4)
+
+      integer lstot,mstot,nstot,ndep,nord
+      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
+
+      double precision z, pa, p0a, x, w, y, wl
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
+     *              wl(m17,m18)
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      integer jnd
+      double precision aqg,qq,rt
+      common/ cxt2 /aqg(m4),qq(m4),rt,jnd(m4)
+
+      integer iaq, aqst, aqct
+      character aqnam*8
+      double precision aqcp, aqtot
+      common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
+
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+
+      logical lorder, lexces, llaar, lrecip
+      common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
+
+      integer kd, na1, na2, na3, nat
+      double precision x3, caq
+      common/ cxt16 /x3(k5,h4,mst,msp),caq(k5,l10),na1,na2,na3,nat,kd
+c-----------------------------------------------------------------------
+
+      do j = 1, icomp
+         scp(j) = 0d0 
+      end do
+
+      if (lopt(32).and.ksmod(ids).eq.39) then 
+
+         if (caq(jd,na1).eq.0d0) then
+c                                  pure solvent, use the y array to be safe
+            do i = 1, ns
+               do j = 1, icomp 
+                  scp(j) = scp(j) + y(i) * cp(j,jnd(i))
+               end do 
+            end do
+
+         else 
+c                                  impure solvent
+            do i = 1, ns
+               do j = 1, icomp 
+                  scp(j) = scp(j) + caq(jd,i) * cp(j,jnd(i))
+               end do 
+            end do
+
+            do i = sn1, nsa
+
+               k = i - ns
+c                                 convert molality to mole fraction (xx)
+               xx = caq(jd,i)/caq(jd,na2)
+
+               do j = 1, icomp
+                  scp(j) = scp(j) + xx * aqcp(j,k)
+               end do  
+
+            end do
+
+         end if
+
+      else if (lrecip(ids)) then
+c                                 get the p' coordinates (amounts of 
+c                                 the independent endmembers)     
+         call getpp (ids) 
+
+         do i = 1, lstot(ids)
+            do j = 1, icomp 
+               scp(j) = scp(j) + p0a(i) * cp(j,jend(ids,2+i))
+            end do 
+         end do
+
+      else if (ksmod(ids).eq.20) then 
+c                                 electrolyte:
+c                                 solute species  
+         do i = sn1, nqs
+            do j = 1, icomp
+               scp(j) = scp(j) + y(i) * aqcp(j,jnd(i) - aqst)
+            end do
+         end do 
+c                                 solvent species 
+         do i = 1, ns 
+            do j = 1, icomp
+               scp(j) = scp(j) + y(i) * cp(j,jnd(i))
+            end do
+         end do
+
+      else
+c                                 solutions with no dependent endmembers:
+c                                 y coordinates used to compute the composition
+         do i = 1, mstot(ids)
+            do j = 1, icomp
+               scp(j) = scp(j) + y(i) * cp(j,jend(ids,2+i))
+            end do
+         end do
+
+      end if
+
+      do i = 1, icp
+         scptot = scptot + scp(i)
       end do
 
       end
