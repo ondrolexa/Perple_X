@@ -139,6 +139,9 @@ c                                 and the limits for numerical results.
          call input1 (first,output,err)
 c                                 read thermodynamic data on unit n2:
          call input2 (first)
+c                                 copy the cst12 cp array into cst313 to 
+c                                 salvage the old static code
+         call copycp
 c                                 read/set autorefine dependent parameters, 
 c                                 it would be logical to output context specific 
 c                                 parameter settings here instead of the generic 
@@ -439,9 +442,6 @@ c-----------------------------------------------------------------------
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp  
- 
-      double precision ctot
-      common/ cst3   /ctot(k1)
 
       integer ipoint,kphct,imyn
       common/ cst60 /ipoint,kphct,imyn
@@ -455,8 +455,8 @@ c-----------------------------------------------------------------------
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
 
-      double precision cp
-      common/ cst12 /cp(k5,k1)
+      double precision cp, bbb, ccc
+      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1)
 
       integer isoct
       common/ cst79 /isoct
@@ -911,8 +911,8 @@ c-----------------------------------------------------------------------
       double precision g
       common/ cst2 /g(k1)
 
-      double precision cp
-      common/ cst12 /cp(k5,k1)
+      double precision cp, bbb, ccc
+      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1)
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -991,9 +991,9 @@ c----------------------------------------------------------------------
       double precision g
       common/ cst2  /g(k1)
 
-      double precision cp
-      common/ cst12 /cp(k5,k1)
- 
+      double precision cp, bbb, ccc
+      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1)
+
       integer hcp,id
       common/ cst52 /hcp,id(k7)
 c-----------------------------------------------------------------------
@@ -1037,12 +1037,12 @@ c-----------------------------------------------------------------------
       double precision g
       common/ cst2 /g(k1)
 
-      double precision cp
-      common/ cst12 /cp(k5,k1)
+      double precision cp, bbb, ccc
+      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1)
 
       integer iflag
       common/ cst7 /iflag
- 
+
       double precision a,b
       integer ipvt,idv,iophi,idphi,iiphi,iflg1
       common/ cst23  /a(k8,k8),b(k8),ipvt(k8),idv(k8),iophi,idphi,
@@ -1112,11 +1112,8 @@ c-----------------------------------------------------------------------
 
       logical bad
 
-      double precision cp
-      common/ cst12 /cp(k5,k1)
-
-      double precision ctot
-      common/ cst3   /ctot(k1)
+      double precision cp, bbb, ccc
+      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1)
 
       integer jfct,jmct,jprct,jmuct
       common/ cst307 /jfct,jmct,jprct,jmuct
@@ -1383,8 +1380,8 @@ c-----------------------------------------------------------------------
       double precision vuf,vus
       common/ cst201 /vuf(2),vus(h5),iffr,isr
 
-      double precision cp
-      common/ cst12 /cp(k5,k1)
+      double precision cp, bbb, ccc
+      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1)
 
       integer iff,idss,ifug
       common/ cst10  /iff(2),idss(h5),ifug
@@ -1496,8 +1493,8 @@ c----------------------------------------------------------------------------
       integer ipoint,kphct,imyn
       common/ cst60 /ipoint,kphct,imyn
 
-      double precision cp
-      common/ cst12 /cp(k5,k1)
+      double precision cp, bbb, ccc
+      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1)
 
       integer idcf,icfct
       common/ cst96 /idcf(k5,j9),icfct
@@ -2446,8 +2443,8 @@ c-----------------------------------------------------------------------
       integer jfct,jmct,jprct,jmuct
       common/ cst307 /jfct,jmct,jprct,jmuct
 
-      double precision cp
-      common/ cst12 /cp(k5,k1)
+      double precision cp, bbb, ccc
+      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1)
 
       integer ifct,idfl
       common/ cst208 /ifct,idfl
@@ -2699,8 +2696,8 @@ c-----------------------------------------------------------------------
       double precision g
       common/ cst2 /g(k1)
 
-      double precision cp
-      common/ cst12 /cp(k5,k1)
+      double precision cp, bbb, ccc
+      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1)
 
       integer ipvt,idv,iophi,idphi,iiphi,iflg1
       double precision a,b
@@ -3470,8 +3467,8 @@ c-----------------------------------------------------------------------
       double precision delt,dtol,utol,ptol
       common/ cst87 /delt(l2),dtol,utol,ptol
 
-      double precision cp
-      common/ cst12 /cp(k5,k1)
+      double precision cp, bbb, ccc
+      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1)
 
       integer ipvt,idv,iophi,idphi,iiphi,iflg1
       double precision a,b
@@ -3534,8 +3531,8 @@ c--------------------------------------------------------------------
 
       integer j,k,ier
 
-      double precision cp
-      common/ cst12 /cp(k5,k1)
+      double precision cp, bbb, ccc
+      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1)
 
       integer ipvt,idv,iophi,idphi,iiphi,iflg1
       double precision a,b
@@ -3582,8 +3579,8 @@ c-----------------------------------------------------------------------
       double precision g
       common/ cst2 /g(k1)
 
-      double precision cp
-      common/ cst12 /cp(k5,k1)
+      double precision cp, bbb, ccc
+      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1)
 
       integer iflag
       common/ cst7 /iflag
@@ -3662,8 +3659,8 @@ c-----------------------------------------------------------------------
       double precision g
       common/ cst2 /g(k1)
 
-      double precision cp
-      common/ cst12 /cp(k5,k1)
+      double precision cp, bbb, ccc
+      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1)
 
       integer iflag
       common/ cst7 /iflag
@@ -5170,8 +5167,8 @@ c----------------------------------------------------------------------
       integer hcp,idv
       common/ cst52  /hcp,idv(k7) 
 
-      double precision cp
-      common/ cst12 /cp(k5,k1)
+      double precision cp, bbb, ccc
+      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1)
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp  
@@ -5249,8 +5246,8 @@ c-----------------------------------------------------------------------
       double precision g
       common/ cst2 /g(k1)
 
-      double precision cp
-      common/ cst12 /cp(k5,k1)
+      double precision cp, bbb, ccc
+      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1)
  
       double precision a,b
       integer ipvt,idv,iophi,idphi,iiphi,iflg1
@@ -5319,14 +5316,14 @@ c----------------------------------------------------------------------
       common/ cst23  /a(k8,k8),u(k8),ipvt(k8),idv(k8),iophi,idphi,
      *                iiphi,iflg1
 
-      double precision cp
-      common/ cst12 /cp(k5,k1)
+      double precision cp, bbb, ccc
+      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1)
 
       character*5 cname
       common/ csta4 /cname(k5)
 
       integer icomp,istct,iphct,icp
-      common/ cst6  /icomp,istct,iphct,icp  
+      common/ cst6  /icomp,istct,iphct,icp
 c----------------------------------------------------------------------
       do i = istct, iphct
 
@@ -5452,8 +5449,8 @@ c-----------------------------------------------------------------------
       double precision g
       common/ cst2 /g(k1)
 
-      double precision cp
-      common/ cst12 /cp(k5,k1)
+      double precision cp, bbb, ccc
+      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1)
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp  
@@ -5560,7 +5557,7 @@ c                                 check for immiscibility
 c                                 how many phases are there of this
 c                                 solution?
                do k = 1, np2
-                  if (.not.solvus(kdsol(k),idsol(j,i),ids)) then
+                  if (.not.solvsc(kdsol(k),idsol(j,i),ids)) then
                      goto 20 
                   else
                      solvs1 = .true.
@@ -5946,17 +5943,14 @@ c----------------------------------------------------------------------------
       integer icomp,istct,iphct,icp
       common/ cst6 /icomp,istct,iphct,icp   
 
-      double precision ctot
-      common/ cst3 /ctot(k1)
-
       character*8 names
       common/ cst8 /names(k1)
 
       double precision g
       common/ cst2 /g(k1)
 
-      double precision cp
-      common/ cst12 /cp(k5,k1)
+      double precision cp, bbb, ccc
+      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1)
 
       integer jbulk
       double precision cblk
@@ -6029,4 +6023,75 @@ c                                 compute free energy change of the rxn
          gval = gval + vnu(j) * gproj (idr(j))
       end do 
 
-      end      
+      end
+
+      subroutine copycp
+c--------------------------------------------------------------------
+c initialize arrays and constants for lp minimization
+c---------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer i,j
+
+      double precision cp
+      common/ cst12 /cp(k5,k10)
+
+      double precision a,b,c
+      common/ cst313 /a(k5,k1),b(k5),c(k1)
+
+      integer icomp,istct,iphct,icp
+      common/ cst6  /icomp,istct,iphct,icp  
+
+      integer ipoint,kphct,imyn
+      common/ cst60  /ipoint,kphct,imyn
+
+      integer tphct
+      double precision g2, cp2, c2tot
+      common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),tphct
+c-----------------------------------------------------------------------
+c                                 static composition array
+      do i = 1, iphct
+         do j = 1, icomp
+            a(j,i) = cp(j,i)
+         end do
+      end do
+
+      end 
+
+      logical function solvsc (id1,id2,ids)
+c-----------------------------------------------------------------------
+c function to test if a solvus separates two static pseudocompounds of
+c solution ids. 
+c-----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer i, id1, id2, ids
+
+      integer icomp,istct,iphct,icp
+      common/ cst6 /icomp,istct,iphct,icp
+
+      double precision cp, bbb, ccc
+      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1)
+
+      double precision dcp,soltol
+      common/ cst57 /dcp(k5,k19),soltol
+c-----------------------------------------------------------------------
+      solvus = .false.
+
+      do i = 1, icp
+
+         if (dcp(i,ids).eq.0d0) cycle
+
+         if (dabs(cp(i,id1)/ctot(id1)-cp(i,id2)/ctot(id2))/dcp(i,ids)
+     *                  .gt.soltol) then
+            solvus = .true.
+            exit
+         end if
+
+      end do
+
+      end

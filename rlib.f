@@ -100,9 +100,6 @@ c-----------------------------------------------------------------------
 
       common/ cst11 /f(3)
 
-      double precision cp
-      common/ cst12 /cp(k5,k1)
-
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 
@@ -111,15 +108,19 @@ c-----------------------------------------------------------------------
 
       double precision exces
       common/ cst304 /exces(m3,k1)
+
+      double precision z, pa, p0a, x, w, y, wl
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
+     *              wl(m17,m18)
 c-----------------------------------------------------------------------
 
       dg = exces(1,id) + t * exces(2,id) + p * exces(3,id)
 
-      xco2 = cp(iff(2),id)
+      xco2 = y(2)
 
       call cfluid (fo2,fs2)
 
-      dg = dg + r*t*(cp(iff(1),id)*f(1) + cp(iff(2),id)*f(2))
+      dg = dg + r*t*(y(1)*f(1) + y(2)*f(2))
 
       end
 
@@ -1885,7 +1886,7 @@ c---------------------------------------------------------------------
       common/ cst1 /thermo(k4,k10),uf(2),us(h5)
 
       double precision cp
-      common/ cst12 /cp(k5,k1)
+      common/ cst12 /cp(k5,k10)
 
       double precision cp0
       common/ cst71 /cp0(k0,k5)
@@ -7389,7 +7390,7 @@ c-----------------------------------------------------------------------
       common/ cst40 /ids(h5,h6),isct(h5),icp1,isat,io2
 
       double precision cp
-      common/ cst12 /cp(k5,k1)
+      common/ cst12 /cp(k5,k10)
 
       integer ipoint,kphct,imyn
       common/ cst60 /ipoint,kphct,imyn
@@ -8537,7 +8538,7 @@ c                                 special model endmember indexing
       common/ cxt8 /jspec(h9,m4)
 
       double precision cp
-      common/ cst12 /cp(k5,k1)
+      common/ cst12 /cp(k5,k10)
 c                                 dqf parameters
       integer idqf,indq
       double precision dqf
@@ -9524,11 +9525,10 @@ c                                 tolerance
          do j = i+1, kstot
 
             jd = kdsol(insp(j))
-c
-
+c                                 switched from molar to mole fraction in 688
             do k = 1, icp
 
-               dx = dabs(cp(k,id) - cp(k,jd))
+               dx = dabs(cp(k,id)/ctot(id) - cp(k,jd)/ctot(jd))
 
                if (dx.lt.nopt(5)) then
                   cycle
@@ -12027,7 +12027,7 @@ c---------------------------------------------------------------------
       common/ cst6  /icomp,istct,iphct,icp
 
       double precision cp
-      common/ cst12 /cp(k5,k1)
+      common/ cst12 /cp(k5,k10)
 
       integer ids,isct,icp1,isat,io2
       common/ cst40 /ids(h5,h6),isct(h5),icp1,isat,io2
@@ -12075,16 +12075,13 @@ c--------------------------------------------------------------------------
 
       character znm(3,2)*2, pnm(3)*2
 
-      double precision zpr,smix,esum,ctotal,omega,x
+      double precision zpr,smix,esum,omega,scp(k5)
 
       logical zbad, bad
 
-      integer id,im,h,i,j,l, index, i228, oim
+      integer im,h,i,j,l, index, i228, oim
 
       external zbad
-
-      double precision ctot
-      common/ cst3 /ctot(k1)
 
       character tname*10
       logical refine, resub
@@ -12115,9 +12112,6 @@ c--------------------------------------------------------------------------
       integer jndq, jdqf, iq
       double precision dqfg, dq
       common/ cxt9 /dqfg(m3,m4,h9),dq(m4),jndq(m4,h9),jdqf(h9),iq(m4)
-
-      double precision cp
-      common/ cst12 /cp(k5,k1)
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -12189,18 +12183,26 @@ c                                 model type
       double precision exces
       common/ cst304 /exces(m3,k1)
 
+      double precision a,b,c
+      common/ cst313 /a(k5,k1),b(k5),c(k1)
+
+      integer iam
+      common/ cst4 /iam
+
       save i228,oim
       data i228,oim/0,0/
 c----------------------------------------------------------------------
 c                                 reject special case:
 c                                 ternary coh fluids above the CH4-CO join
-      if (ksmod(im).eq.41.and.y(1).ge.r13+y(2)) return
+      if (ksmod(im).eq.41.and.y(1).ge.r13+y(2)) then 
+         bad = .true.
+         return
+      end if
+
+      bad = .false.
 
       ikp(iphct) = im
-
-      do i = 1, m3
-         exces(i,iphct) = 0d0
-      end do
+c                                 -------------------------------------
 c                                encode a name, this is archaic and only relevant 
 c                                for CONVEX which is unlikely to be effective for
 c                                multi-polytope composition models. 
@@ -12293,97 +12295,59 @@ c                                get blanks out of name:
       else
          call reblnk (names(iphct))
       end if
-c                                 initialize constants:
+c                                 -------------------------------------
+      do i = 1, m3
+         exces(i,iphct) = 0d0
+      end do
+
       smix = 0d0
       esum = 0d0
-
-      do i = 1, icomp
-         cp(i,iphct) = 0d0
-      end do
-c                                 load constants:
-      ctotal = 0d0
-
+c                                 load static array constants:
       do h = 1, lstot(im)
+c                                 accumulate endmember configurational entropy
+         esum = esum + pa(h) * scoef(h,im)
 
-         id = jend(im,2+h)
+      end do
+c                                 bulk composition stuff
+      call getscp (scp,ctot(iphct),im,1,.true.)
 
-         if (pa(h).ne.0d0) then
-c                              composition vector
-            do l = 1, icomp
+      do l = 1, icomp
 
-               if (ksmod(im).eq.20.and.h.gt.ns) then
-                  zpr = pa(h) * aqcp(l,id-aqst)
-               else
-                  zpr = pa(h) * cp(l,id)
-               end if
-
-               cp(l,iphct) = cp(l,iphct) + zpr
-               if (l.le.icp) ctotal = ctotal + zpr
-
-            end do
-c                              accumulate endmember configurational entropy
-            esum = esum + pa(h) * scoef(h,im)
-
+         if (scp(l).gt.-zero.and.scp(l).lt.zero) then
+            scp(l) = 0d0
+         else if (scp(l).lt.0d0.and.im.ne.i228) then
+            i228 = im
+            call warn (228,scp(l),l,tname)
          end if
 
       end do
+c                                 check if the phase consists
+c                                 entirely of saturated components:
+      if (ctot(iphct).lt.zero) then
 
-      if (order.and.depend) then
+         if (im.ne.oim) call warn (55,scp(1),l,tname)
 
-         do i = 1, norder
+         bad = .true.
+         oim = im
 
-            h = lstot(im) + i
-c                              split these fraction into the fractions of the
-c                              consituent disordered species:
-            do j = 1, nr(i)
+         return
 
-               x = depnu(j,i)*pa(h)
-               id = jend(im,2+ideps(j,i,im))
-c                              composition vector
-               do l = 1, icomp
-                  cp(l,iphct) = cp(l,iphct) + x * cp(l,id)
-                  if (l.le.icp) ctotal = ctotal + x * cp(l,id)
-               end do
+      end if
+c                                 load the static composition matrix
+      if (iam.eq.1.or.iam.eq.2) then 
+c                                 MEEMUM/VERTEX
+         do j = 1, icp
+            a(j,iphct-jiinc) = scp(j)/ctot(iphct)
+         end do
 
-            end do
-
+      else if (iam.eq.15) then 
+c                                 CONVEX
+         do j = 1, icp
+            a(j,iphct) = scp(j)
          end do
 
       end if
 
-      do l = 1, icomp
-         if (cp(l,iphct).gt.-nopt(5).and.cp(l,iphct).lt.0d0) then
-            cp(l,iphct) = 0d0
-         else if (cp(l,iphct).lt.0d0.and.im.ne.i228) then
-            i228 = im
-            call warn (228,cp(l,iphct),l,tname)
-         end if
-      end do
-c                                 check if the phase consists
-c                                 entirely of saturated components:
-      if (ctotal.eq.0d0) then
-c                                 only allowed for unconstrained minimization
-         if (icopt.ge.5.or.
-     *       jmct.gt.0.and.jmuct.lt.jmct) then
-
-            if (im.ne.oim) call warn (55,cp(l-1,iphct),l-1,tname)
-
-            bad = .true.
-            oim = im
-
-            return
-
-         end if
-
-         call satsrt
-c                                 to prevent nan's in the compositional coordinates:
-         ctot(iphct) = 1d0
-
-      else
-
-         ctot(iphct) = ctotal
-
-      end if
 c                                 compute ideal configurational negentropy:
       if (order) then
 c                                 for cpd formation models, configurational entropy
@@ -14939,7 +14903,7 @@ c-----------------------------------------------------------------------
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
 
       double precision cp
-      common/ cst12 /cp(k5,k1)
+      common/ cst12 /cp(k5,k10)
 
       integer jnd
       double precision aqg,qq,rt
@@ -15023,7 +14987,7 @@ c-----------------------------------------------------------------------
       common/ cst300 /cblk(k5),jbulk
 
       double precision cp
-      common/ cst12 /cp(k5,k1)
+      common/ cst12 /cp(k5,k10)
 
       double precision fwt
       common/ cst338 /fwt(k10)
@@ -15638,7 +15602,7 @@ c-----------------------------------------------------------------------
       common/ cst6  /icomp,istct,iphct,icp
 
       double precision cp
-      common/ cst12 /cp(k5,k1)
+      common/ cst12 /cp(k5,k10)
 
       integer iam
       common/ cst4 /iam
@@ -15855,9 +15819,6 @@ c-----------------------------------------------------------------------
       integer iasmbl
       common/ cst27  /iasmbl(j9)
 
-      double precision ctot
-      common/ cst3   /ctot(k1)
-
       character*8 vname,xname
       common/ csta2  /xname(k5),vname(l2)
 
@@ -15878,10 +15839,19 @@ c-----------------------------------------------------------------------
       common/ cst36 /exname(h8),afname(2)
 
       double precision cp
-      common/ cst12 /cp(k5,k1)
+      common/ cst12 /cp(k5,k10)
+
+      double precision a,b,c
+      common/ cst313 /a(k5,k1),b(k5),c(k1)
 
       integer ifct,idfl
       common/ cst208 /ifct,idfl
+
+      integer iam
+      common/ cst4 /iam
+
+      integer ipoint,kphct,imyn
+      common/ cst60 /ipoint,kphct,imyn
 
       integer iff,idss,ifug
       common/ cst10  /iff(2),idss(h5),ifug
@@ -15920,25 +15890,51 @@ c                          saturated components:
 c                          unconstrained components
       write (n3,1080) (cname(i), i = 1, icp)
 c                          phases
-      if (icp.gt.3) then
-         write (n3,1150) (cname(i), i = 1, icp)
-         do i = istct, iphct
-            write (n3,'(3x,a,12(1x,f5.3,1x))')
-     *            names(i), (cp(j,i)/ctot(i), j = 1, icp)
-         end do
-      else if (icp.eq.3) then
-         write (n3,1090) (cname(i), i = 2, 3)
-         write (n3,'(3(1x,a,2x,f5.3,2x,f5.3,5x))')
-     *         (names(i), cp(2,i)/ctot(i), cp(3,i)/ctot(i),
+      if (iam.eq.15) then
+c                          CONVEX
+         if (icp.gt.3) then
+            write (n3,1150) (cname(i), i = 1, icp)
+            do i = istct, iphct
+               write (n3,'(3x,a,12(1x,f5.3,1x))')
+     *            names(i), (a(j,i)/ctot(i), j = 1, icp)
+            end do
+         else if (icp.eq.3) then
+            write (n3,1090) (cname(i), i = 2, 3)
+            write (n3,'(3(1x,a,2x,f5.3,2x,f5.3,5x))')
+     *         (names(i), a(2,i)/ctot(i), a(3,i)/ctot(i),
      *                                             i = istct, iphct)
-      else if (icp.eq.2) then
-         write (n3,1040) cname(2)
-         write (n3,'(4(2x,a,1x,f5.3))')
-     *         (names(i), cp(2,i)/ctot(i), i = istct, iphct)
-      else if (icp.eq.1) then
-         write (n3,1130)
-         write (n3,'(7(1x,a,1x))') (names(i), i = istct, iphct)
-      end if
+         else if (icp.eq.2) then
+            write (n3,1040) cname(2)
+            write (n3,'(4(2x,a,1x,f5.3))')
+     *         (names(i), a(2,i)/ctot(i), i = istct, iphct)
+         else if (icp.eq.1) then
+            write (n3,1130)
+            write (n3,'(7(1x,a,1x))') (names(i), i = istct, iphct)
+         end if
+
+      else 
+c                          MEEMUM/VERTEX
+         if (icp.gt.3) then
+            write (n3,1150) (cname(i), i = 1, icp)
+            do i = istct, iphct
+               write (n3,'(3x,a,12(1x,f5.3,1x))')
+     *            names(i), (cp(j,i)/ctot(i), j = 1, icp)
+            end do
+         else if (icp.eq.3) then
+            write (n3,1090) (cname(i), i = 2, 3)
+            write (n3,'(3(1x,a,2x,f5.3,2x,f5.3,5x))')
+     *         (names(i), cp(2,i)/ctot(i), cp(3,i)/ctot(i),
+     *                                             i = istct, ipoint)
+         else if (icp.eq.2) then
+            write (n3,1040) cname(2)
+            write (n3,'(4(2x,a,1x,f5.3))')
+     *         (names(i), cp(2,i)/ctot(i), i = istct, ipoint)
+         else if (icp.eq.1) then
+            write (n3,1130)
+            write (n3,'(7(1x,a,1x))') (names(i), i = istct, ipoint)
+         end if
+
+      end if 
 c                          saturation composant phases
       if (isat.ne.0) write (n3,'(/,a,/)')
      *          'Phases on saturation and buffering surfaces:'
@@ -16258,7 +16254,7 @@ c----------------------------------------------------------------------
       common/ cst2 /g(k1)
 
       double precision cp
-      common/ cst12 /cp(k5,k1)
+      common/ cst12 /cp(k5,k10)
 
       double precision thermo,uf,us
       common/ cst1 /thermo(k4,k10),uf(2),us(h5)
@@ -17091,7 +17087,7 @@ c                                 prismatic + orphan vertices
       end
 
 
-      subroutine meelim (x,i,j,k)
+      subroutine meelim (x,i,ii,j,k)
 c----------------------------------------------------------------------
 c subroutine to write unnatural limit warnings for meemum
 c----------------------------------------------------------------------
@@ -17100,7 +17096,7 @@ c----------------------------------------------------------------------
       include 'perplex_parameters.h'
 c                                 -------------------------------------
 c                                 local variables:
-      integer i, j, k
+      integer ii, i, j, k
 
       double precision x
 
@@ -17139,7 +17135,7 @@ c                                 endmember names
       double precision aqcp, aqtot
       common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
 c----------------------------------------------------------------------
-         if (istg(i,1).eq.1) then
+         if (istg(i,ii).eq.1) then
 c                                 single site solution or orphan
             if (ksmod(i).eq.20) then
 
@@ -17153,11 +17149,13 @@ c                                 single site solution or orphan
                char8 = names(jend(i,2+j))
             end if
 
-            write (*,1010) char8,x,fname(i),xmng(i,1,j,k),xmxg(i,1,j,k)
+            write (*,1010) char8, x, fname(i), xmng(i,ii,j,k),
+     *                     xmxg(i,ii,j,k)
 
          else
 
-            write (*,1020) j,k,x,fname(i),xmng(i,1,j,k),xmxg(i,1,j,k)
+            write (*,1020) ii, j, k, x, fname(i), xmng(i,ii,j,k),
+     *                     xmxg(i,ii,j,k)
 
          end if
 
@@ -17171,7 +17169,7 @@ c                                 single site solution or orphan
 1010  format (/,'**warning ver993** X(',a,') = ',f6.4,' of'
      *       ,' solution ',a,' exceeds its current',/,'limits (XMIN = ',
      *  f6.4,', XMAX = ',f6.4,') if this restriction is unintentional,')
-1020  format (/,'**warning ver993** X(',i1,i1,') = ',f6.4,' of ',
+1020  format (/,'**warning ver993** X(',i1,i1,i1,') = ',f6.4,' of ',
      *       'solution ',a,' exceeds its',/,'current limits (XMIN = ',
      *  f6.4,', XMAX = ',f6.4,') if this restriction is unintentional,')
 
@@ -17252,45 +17250,6 @@ c                                 as above.
 
 99    end
 
-      logical function solvus (id1,id2,ids)
-c-----------------------------------------------------------------------
-c function to test if a solvus separates two static pseudocompounds of
-c solution ids.
-c-----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      integer i, id1, id2, ids
-
-      integer icomp,istct,iphct,icp
-      common/ cst6 /icomp,istct,iphct,icp
-
-      double precision cp
-      common/ cst12 /cp(k5,k1)
-
-      double precision dcp,soltol
-      common/ cst57 /dcp(k5,k19),soltol
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-c-----------------------------------------------------------------------
-      solvus = .false.
-
-      do i = 1, icp
-
-         if (dcp(i,ids).eq.0d0) cycle
-
-         if (dabs(cp(i,id1)-cp(i,id2))/dcp(i,ids).gt.soltol) then
-            solvus = .true.
-            exit
-         end if
-
-      end do
-
-      end
 
       subroutine aqlagd (id,bad,recalc)
 c-----------------------------------------------------------------------
@@ -17346,7 +17305,7 @@ c                                 adaptive coordinates
       common/ cst300 /cblk(k5),jbulk
 
       double precision cp
-      common/ cst12 /cp(k5,k1)
+      common/ cst12 /cp(k5,k10)
 
       double precision fwt
       common/ cst338 /fwt(k10)
@@ -21419,7 +21378,7 @@ c----------------------------------------------------------------------
 
       end
 
-      subroutine getscp (scp,scptot,ids,jd)
+      subroutine getscp (scp,scptot,ids,jd,pure)
 c-----------------------------------------------------------------------
 c getscp gets the bulk chemical composition of solution ids from the composition
 c of its endmembers. the composition of the solution in terms of its endmembers
@@ -21429,6 +21388,8 @@ c-----------------------------------------------------------------------
  
       include 'perplex_parameters.h'
 
+      logical pure
+
       integer i, j, k, jd, ids
 
       double precision scp(*), scptot, xx
@@ -21437,7 +21398,7 @@ c-----------------------------------------------------------------------
       common/ cst6  /icomp,istct,iphct,icp
 
       double precision cp
-      common/ cst12 /cp(k5,k1)
+      common/ cst12 /cp(k5,k10)
 
       integer jend
       common/ cxt23 /jend(h9,m4)
@@ -21480,7 +21441,7 @@ c-----------------------------------------------------------------------
 
       if (lopt(32).and.ksmod(ids).eq.39) then 
 
-         if (caq(jd,na1).eq.0d0) then
+         if (pure.or.caq(jd,na1).eq.0d0) then
 c                                  pure solvent, use the y array to be safe
             do i = 1, ns
                do j = 1, icomp 

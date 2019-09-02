@@ -1103,9 +1103,6 @@ c----------------------------------------------------------------------
       integer iff,idss,ifug
       common / cst10 /iff(2),idss(h5),ifug
 
-      double precision ctot
-      common/ cst3  /ctot(k1)
-
       integer iwt
       common/ cst209 /iwt
 
@@ -1561,6 +1558,8 @@ c                                 -------------------------------------
 c                                 real entities in the thermodynamic 
 c                                 composition space:
       istct = iphct + 1
+c                                 increment between iphct and jphct counters
+      jiinc = istct - 1
 c                                 read till end of header
       call eohead (n2)
 c                                 loop to load normal thermodynamic data:
@@ -2096,18 +2095,16 @@ c-----------------------------------------------------------------------
       integer i, id, jd, ids
 
       double precision scp(k5), scptot
-c                                 -------------------------------------
-c                                 global variables:
+
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
 
       double precision cp
-      common/ cst12 /cp(k5,k1)
+      common/ cst12 /cp(k5,k10)
 
       double precision cp0
       common/ cst71 /cp0(k0,k5)
-c                                 refined compositions and solution 
-c                                 pointer
+
       integer kkp,np,ncpd,ntot
       double precision cp3,amt
       common/ cxt15 /cp3(k0,k19),amt(k19),kkp(k19),np,ncpd,ntot
@@ -2163,7 +2160,7 @@ c                                 the id argument is irrelevant.
 
          end if
 
-         call getscp (scp,scptot,ids,jd)
+         call getscp (scp,scptot,ids,jd,.false.)
 
          do i = 1, icomp
             cp3(i,jd) = scp(i)

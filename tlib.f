@@ -4330,7 +4330,7 @@ c----------------------------------------------------------------------
       double precision var, dg
 
       double precision cp
-      common/ cst12 /cp(k5,k1)
+      common/ cst12 /cp(k5,k10)
 
       double precision cp0
       common/ cst71 /cp0(k0,k5)

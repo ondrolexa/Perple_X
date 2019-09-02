@@ -204,6 +204,10 @@ c
       integer jpoint, jiinc
       common/ cxt60 /jpoint,jiinc
 
+
+      double precision ctot
+      common/ cst3  /ctot(k1)
+
 c jpoint - index of the last compound endmember in the icp x jphct optimization matrix
 c jiinc  - iphct - jphct, increment between the icp x iphct data matrix index and the optimization matrix
 

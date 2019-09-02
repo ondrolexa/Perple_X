@@ -37,9 +37,6 @@ c                                 options from perplex_option.dat
       integer ipoint,kphct,imyn
       common/ cst60 /ipoint,kphct,imyn
 
-      double precision ctot
-      common/ cst3  /ctot(k1)
-
       double precision g
       common/ cst2 /g(k1)
 
@@ -575,10 +572,7 @@ c-----------------------------------------------------------------------
       common/ cst6  /icomp,istct,iphct,icp
 
       double precision cp
-      common/ cst12 /cp(k5,k1)
-
-      double precision ctot
-      common/ cst3  /ctot(k1)
+      common/ cst12 /cp(k5,k10)
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -1072,7 +1066,7 @@ c                                  x-coordinates for the final solution
       common/ cst61 /ikp(k1)
 
       double precision cp
-      common/ cst12 /cp(k5,k1)
+      common/ cst12 /cp(k5,k10)
 
       integer iopt
       logical lopt
@@ -1305,8 +1299,8 @@ c                                 initialize
          end do 
 
          do ii = 1, pop1(ids)
-            do j = 1, istg(ids,1)
-               do k = 1, ispg(ids,1,j)
+            do j = 1, istg(ids,ii)
+               do k = 1, ispg(ids,ii,j)
                   xnew(i,ii,j,k) = 0d0
                end do 
             end do
@@ -1348,8 +1342,7 @@ c                                save the new compositions
                      xnew(i,ii,k,l) = xnew(i,ii,k,l) + xx*x3(jd,ii,k,l)
                   end do
                end do
-
-            end do 
+            end do
 
             if (lopt(32).and.ksmod(ids).eq.39) then
 
@@ -1442,7 +1435,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer ids, i, j
+      integer ids, ii, i, j
 
       double precision stinc
 
@@ -1477,89 +1470,93 @@ c----------------------------------------------------------------------
 c                                 set stable flag
       stable(ids) = .true.
 c                                 check x-ranges
-      do i = 1, istg(ids,1)
+      do ii = 1, pop1(ids)
 
-         do j = 1, ndim(i,1,ids)
+         do i = 1, istg(ids,ii)
 
-            if (ksmod(ids).eq.20) then 
-               if (j.eq.ns) cycle 
-            end if 
+            do j = 1, ndim(i,ii,ids)
+
+               if (ksmod(ids).eq.20.and.j.eq.ns) cycle 
 c                                 low limit:
-            if (x(1,i,j).lt.xlo(j,i,1,ids)) then
+               if (x(ii,i,j).lt.xlo(j,i,ii,ids)) then
 
-               xlo(j,i,1,ids) = x(1,i,j)
+                  xlo(j,i,ii,ids) = x(ii,i,j)
 c                                 check if solution is at an unnatural limit
-               if (x(1,i,j).ge.xmno(ids,1,i,j).and.
-     *             x(1,i,j).lt.xmng(ids,1,i,j)) then
+                  if (x(ii,i,j).ge.xmno(ids,ii,i,j).and.
+     *                x(ii,i,j).lt.xmng(ids,ii,i,j)) then
 
-                  if (.not.lopt(3)) then
+                     if (.not.lopt(3)) then
 c                                 relax limits according to subdivsion model
 c                                 warn if MEEMUM
-                     if (iam.eq.2) call meelim (x(1,i,j),ids,i,j)
+                        if (iam.eq.2) call meelim (x(ii,i,j),ids,ii,i,j)
 
-                     if (imdg(j,i,1,ids).eq.0) then 
+                        if (imdg(j,i,ii,ids).eq.0) then 
 c                                 cartesian
+ 
+                           xmng(ids,ii,i,j) = xmng(ids,ii,i,j) 
+     *                                             - xncg(ids,ii,i,j)
 
-                        xmng(ids,1,i,j) = xmng(ids,1,i,j) 
-     *                                             - xncg(ids,1,i,j)
-
-                     else 
+                        else 
 c                                 assymmetric stretching towards xmin
 
-                        xmng(ids,1,i,j) = 
-     *                      stinc (x(1,i,j),-xncg(ids,1,i,j),ids,1,i,j)
+                           xmng(ids,ii,i,j) =  stinc (x(ii,i,j),
+     *                                    -xncg(ids,ii,i,j),ids,ii,i,j)
+
+                        end if
+
+                        if (xmng(ids,ii,i,j).lt.0d0) 
+     *                                           xmng(ids,ii,i,j) = 0d0
 
                      end if
 
-                     if (xmng(ids,1,i,j).lt.0d0) xmng(ids,1,i,j) = 0d0
+                     limit(ids) = .true.
 
                   end if
 
-                  limit(ids) = .true.
-
-               end if
-
-            end if 
+               end if 
 c                                 high limit:
-            if (x(1,i,j).gt.xhi(j,i,1,ids)) then
+               if (x(ii,i,j).gt.xhi(j,i,ii,ids)) then
 
-               xhi(j,i,1,ids) = x(1,i,j)
+                  xhi(j,i,ii,ids) = x(ii,i,j)
 c                                 check if solution is at an unnatural limit
-               if (x(1,i,j).le.xmxo(ids,1,i,j).and.
-     *             x(1,i,j).gt.xmxg(ids,1,i,j)) then
+                  if (x(ii,i,j).le.xmxo(ids,ii,i,j).and.
+     *                x(ii,i,j).gt.xmxg(ids,ii,i,j)) then
 
-                  if (.not.lopt(3)) then
+                     if (.not.lopt(3)) then
 c                                 relax limits according to subdivsion model
 c                                 warn if MEEMUM
-                     if (iam.eq.2) call meelim (x(1,i,j),ids,i,j)
+                        if (iam.eq.2) call meelim (x(ii,i,j),ids,ii,i,j)
 
-                     if (imdg(j,i,1,ids).eq.0) then 
+                        if (imdg(j,i,ii,ids).eq.0) then 
 c                                 cartesian
-                        xmxg(ids,1,i,j) = xmxg(ids,1,i,j) 
-     *                                            + xncg(ids,1,i,j)
+                           xmxg(ids,ii,i,j) = xmxg(ids,ii,i,j) 
+     *                                            + xncg(ids,ii,i,j)
 
-                     else 
+                        else 
 c                                 assymmetric stretching 
-                        xmxg(ids,1,i,j) = 
-     *                    stinc (x(1,i,j),xncg(ids,1,i,j),ids,1,i,j)
+                           xmxg(ids,ii,i,j) = stinc (x(ii,i,j),
+     *                                     xncg(ids,ii,i,j),ids,ii,i,j)
 
-                     end if 
+                        end if 
 
-                     if (xmxg(ids,1,i,j).gt.1d0) xmxg(ids,1,i,j) = 1d0
+                        if (xmxg(ids,ii,i,j).gt.1d0) 
+     *                                           xmxg(ids,ii,i,j) = 1d0
+
+                     end if
+
+                     limit(ids) = .true.
 
                   end if
 
-                  limit(ids) = .true.
-
                end if
 
-            end if
+            end do
 
          end do
 
       end do
 
-      end 
+      end
 
       subroutine sorter (kdbulk,ic,jc,output)
 c----------------------------------------------------------------------
@@ -1912,17 +1909,14 @@ c----------------------------------------------------------------------
 c----------------------------------------------------------------------
       npt = 0
       nsol = 0
-      inc = istct - 1
       quit = .true.
-      soltol = 2d1*nopt(8)
-
-      soltol = 1d0
+      soltol = 2d0*nopt(8)
 
       do i = 1, jphct
 
          if (is(i).ne.1) then
 c                                 make a list of found phases:
-            id = i + inc
+            id = i + jiinc
 c                                 currently endmember compositions are not 
 c                                 refined (this is probably a mistake, but 
 c                                 seems to work fine), so use id > ipoint
@@ -2003,7 +1997,7 @@ c being allowed, see ldsol code); restored again april 2017. removed sep 2018.
 
          if (degen(i,1)) cycle
 
-         id = i + inc 
+         id = i + jiinc 
          iam = ikp(id)
 
          if (lname(iam).eq.'liquid'.and.v(2).lt.nopt(20)) cycle 
@@ -2021,7 +2015,7 @@ c                                it if its further than the solvus
 c                                tolerance from any of the stable
 c                                compositions.
                   do k = 1, kdsol(j)
-                     if (.not.solvus(jdsol(k,j),id,iam)) goto 20
+                     if (.not.solvus(jdsol(k,j)-jiinc,i,iam)) goto 20
                   end do
 
                end if
@@ -2101,6 +2095,48 @@ c                                 necessary
       end if 
 
       end 
+
+
+      logical function solvus (id1,id2,ids)
+c-----------------------------------------------------------------------
+c function to test if a solvus separates two static pseudocompounds of
+c solution ids. called only by yclos1, modified in 688 to use the static
+c composition matrix a, rather than cp.
+c-----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer i, id1, id2, ids
+
+      integer icomp,istct,iphct,icp
+      common/ cst6 /icomp,istct,iphct,icp
+
+      double precision a,b,c
+      common/ cst313 /a(k5,k1),b(k5),c(k1)
+
+      double precision dcp,soltol
+      common/ cst57 /dcp(k5,k19),soltol
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+c-----------------------------------------------------------------------
+      solvus = .false.
+
+      do i = 1, icp
+
+         if (dcp(i,ids).eq.0d0) cycle
+
+         if (dabs(a(i,id1)-a(i,id2))/dcp(i,ids).gt.soltol) then
+            solvus = .true.
+            exit
+         end if
+
+      end do
+
+      end
 
       recursive subroutine ffirst (a, ind, left, right, k, n, dumsub)
 c-----------------------------------------------------------------------
@@ -2244,11 +2280,8 @@ c---------------------------------------------------------------------
 
       integer i,j,id
 
-      double precision ctot
-      common/ cst3  /ctot(k1)
-
       double precision cp
-      common/ cst12 /cp(k5,k1)
+      common/ cst12 /cp(k5,k10)
 
       double precision a,b,c
       common/ cst313 /a(k5,k1),b(k5),c(k1)
@@ -2269,9 +2302,6 @@ c---------------------------------------------------------------------
       integer ldt,ldq
       common /be04nb/ldt,ldq
 
-      integer tloop,ploop
-      common/ cst55 /tloop,ploop
-
       integer npt,jdv
       double precision cptot,ctotal
       common/ cst78 /cptot(k19),ctotal,jdv(k19),npt
@@ -2283,13 +2313,10 @@ c---------------------------------------------------------------------
       double precision g2, cp2, c2tot
       common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),tphct
 c-----------------------------------------------------------------------
-      jiinc = istct - 1
-
-      tloop = 40
-      ploop = 40
-      dv(1) = (vmax(1)-vmin(1))/(ploop-1)
-      dv(2) = (vmax(2)-vmin(2))/(tloop-1)
 c                                 load arrays for lp solution
+
+c                                 locate last point in dynamic/static lp arrays
+      jpoint = ipoint - jiinc
       jphct = iphct - jiinc
 c                                 pressure and temperature are allowed 
 c                                 EoS variables
@@ -2302,12 +2329,20 @@ c                                 composition constraint
       do i = 1, icp
          b(i) = cblk(i)/ctotal
       end do 
-c                                 static composition array
-      do i = 1, jphct
+c                                 static/dynamic composition arrays for solutions
+c                                 are loaded in soload/loadgx. stoichiometric
+c                                 compounds/endmembers loaded here:
+      do i = 1, jpoint
          id = i + jiinc
+
+         jkp(i) = -id
+         hkp(i) = 0
+
          do j = 1, icp
             a(j,i) = cp(j,id)/ctot(id)
+            cp2(j,i) = a(j,i)
          end do
+
       end do
 c                                 load all compounds into the 
 c                                 the dynamic composition array
@@ -2315,8 +2350,7 @@ c                                 the dynamic composition array
 
          i = id - jiinc 
 c                                 jkp indicates which phase a point is associated with
-         jkp(i) = -id
-         hkp(i) = 0
+
 
          do j = 1, icp
             cp2(j,i) = a(j,i)
@@ -2742,7 +2776,7 @@ c----------------------------------------------------------------------
       common/ cst6  /icomp,istct,iphct,icp
 
       double precision cp
-      common/ cst12 /cp(k5,k1)
+      common/ cst12 /cp(k5,k10)
 
       integer jbulk
       double precision cblk
@@ -2766,18 +2800,12 @@ c----------------------------------------------------------------------
 
       character*5 cname
       common/ csta4 /cname(k5)
-
-      integer tloop,ploop
-      common/ cst55 /tloop,ploop
 c                                 hcp is different from icp only if usv
       integer hcp,idv
       common/ cst52  /hcp,idv(k7)
 
       integer ids,isct,icp1,isat,io2
       common/ cst40 /ids(h5,h6),isct(h5),icp1,isat,io2
-
-      double precision ctot
-      common/ cst3  /ctot(k1)
 
       integer ipoint,kphct,imyn
       common/ cst60 /ipoint,kphct,imyn
@@ -2884,6 +2912,7 @@ c                                  load the saturated phase composition
             do j = 1, icomp
                cp3(j,i) = cp(j,id)
             end do
+
          end do
 
       end if 
