@@ -4,7 +4,7 @@
       integer i6,i7,i8,i9,i10,i11
       integer j3,j4,j5,j6,j9
       integer k0,k1,k2,k3,k4,k5,k7,k8,k9,k10,k13,k14,k15
-      integer k16,k17,k18,k19,k20,k21,k22,k23,k24,kd2,k25,k26
+      integer k16,k17,k18,k19,k20,k21,k22,k23,k24,kd2,k25
       integer l2,l3,l5,l6,l7,l8,l9,l10,lchar
       integer m0,m1,m2,m3,m4,m6,m7,m8,m9,m10,m11,m12,m13,m14,m15
       integer m16,m17,m18
@@ -37,7 +37,7 @@
 !                                 h6  - max number of saturated composants in any subcomposition
 !                                 h8  - max number of excluded phases
 !                                 h9  - max number of solutions
-      parameter (h4=5,h5=5,h6=500,h8=200,h9=30)
+      parameter (h4=6,h5=5,h6=500,h8=200,h9=30)
 !                                 i6  - maximum number of independent chemical potentials (or 
 !                                       fugacity/activities).
 !                                 i7  - number of system props used in werami
@@ -82,19 +82,15 @@
 !                                       but usually much smaller (see k18).
 !                                 k21 - max number of pseudocompounds for adaptive refinement.
 !                                 k23 - max number of phases to be fractionated.
-!                                 k24 - max number of coordinates for the pseudocompounds of a 
-!                                       prismatic solution.
-!                                 k25 - max number of simplicial indices for static compositions 
-!                                       = h4*mst*k1, usually much less.
-!                                 k26 - max number of simplicial indices for dynamic compositions 
-!                                       = h4*mst*k21, usually much less.
-      parameter (k0=25,k1=1800000,k2=100000,k3=2000,k4=32,k5=12)
+!                                 k24 - max number of static simplicial coordinate sets (jcox).
+!                                 k25 - max number of dynamic simplicial coordinate sets (jcoz).
+      parameter (k0=25,k1=3000000,k2=100000,k3=2000,k4=32,k5=12)
       parameter (k7=k5+1,k8=k5+2) 
       parameter (k9=35,k10=400,k14=18,k15=6,k16=120)
-      parameter (k17=7,k18=k1)
-      parameter (k19=3*k5,k21=2000000,k20=(mdim+3)*k21)
+      parameter (k17=7,k18=k1/100)
+      parameter (k19=3*k5,k21=3000000,k20=k21/100)
       parameter (k22=mdim*k19,k23=25)
-      parameter (k13=mdim*k21,k24=k13*(mst-1),k25=mst*k1,k26=mst*k21)
+      parameter (k13=k21/10,k24=10*k1,k25=10*k21)
 !                                 l2 - max number of independent potential variables
 !                                 l3 - max number of variables for gridded min and graphics (l2+2)
 !                                 l5 - max number of coordinates along a univariant curve                
@@ -173,11 +169,11 @@ c                                 x coordinate description
 
       integer spx, icox, jcox
       double precision xco
-      common/ cxt10 /xco(k18),spx(h4,mst),icox(k1),jcox(k21)
+      common/ cxt10 /xco(k18),spx(h4,mst),icox(k1),jcox(k24)
 
       double precision zco
       integer icoz, jcoz, jkp
-      common/ cxt13 /zco(k20),icoz(k21),jkp(k21),jcoz(k21)
+      common/ cxt13 /zco(k20),icoz(k21),jkp(k21),jcoz(k25)
 
       double precision simp
       common/ cxt86 /simp(k13)
@@ -203,7 +199,6 @@ c                                 interim storage array
 c
       integer jpoint, jiinc
       common/ cxt60 /jpoint,jiinc
-
 
       double precision ctot
       common/ cst3  /ctot(k1)

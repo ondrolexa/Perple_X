@@ -60,6 +60,7 @@ end excluded phase list
 
 
 begin solution phase list
+cAmph(G)
 Bio(TCC)
 end solution phase list
 

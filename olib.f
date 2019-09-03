@@ -946,8 +946,8 @@ c                               lagged speciation
                   end do 
 
                end if 
-c                                 revover x from x3, 2nd arg has no meaning.
-               call getxz (i,i,ids)
+c                                 revover x from x3.
+               call getxz (i,ids)
 c                                 convert x to y for calls to gsol
                call xtoy (ids,ids,.true.,bad)
 
@@ -1581,8 +1581,9 @@ c                                 pointer copy for lagged aq calculations in gso
 c                                 make name and composition, 
 c                                 redundant for frendly
       call getnam (pname(jd),id)
-c                                 composition, don't call if meemum
-      if (iam.ne.2) call getcmp (jd,jd,id)
+c                                 if WERAMI recover composition, logical arg is
+c                                 irrelevant
+      if (iam.eq.3) call getcmp (jd,jd,id,pois)
 c                                 component counter for frendly is different
 c                                 than for all other programs
       if (iam.ne.5) then 
@@ -1637,7 +1638,7 @@ c                                 shear modulus
          call moduli (id,props(5,jd),props(19,jd),props(21,jd),
      *                   props(4,jd),props(18,jd),props(20,jd),ok)
 
-         if (.not.ok.and.iopt(16).eq.0) shear = .false.  
+         if (.not.ok.and.iopt(16).eq.0) shear = .false.
 c                                 explicit bulk modulus is allowed and used
          if (lopt(17).and.props(4,jd).gt.0d0) then
             bulk = .false.

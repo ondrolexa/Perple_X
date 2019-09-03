@@ -65,7 +65,7 @@ mnbi                               | endmembers on the vertices
 1                                  | number of simplices
 2                                  | number of vertices on each simplex
 ftbit     tbit
-0   .5   .1   0                    | x(1) is Fe/M, M = Fe + Mg
+0    1   .1   0                    | x(1) is Fe/M, M = Fe + Mg
                                    | ----------------------------
                                    | Polytope 3 - 2x3 simplices
 [M,T][M]                           | polytope name

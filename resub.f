@@ -542,157 +542,13 @@ c                                 assign fractions
             x(ii,i,kmsol(ids,kd,i)) = 1d0
 c                                 and weight
             pwt(ii) = 1d0
+            if (pop1(ids).gt.1) x(pop1(ids),1,ii) = 1d0
 
          end do
 
       end do
 
       end
-
-      subroutine csol (id,bad)
-c-----------------------------------------------------------------------
-c csol computes chemical composition of solution id from the macroscopic
-c endmember fraction array y or p0a (cxt7), these arrays are prepared by a prior
-c call to function gsol. the composition is loaded into the array cp2 at
-c position jphct.
-c-----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      integer i, j, k, id
-
-      logical bad, degen
-
-      double precision ctot2
-
-      external degen
-
-      integer icomp,istct,iphct,icp
-      common/ cst6  /icomp,istct,iphct,icp
-
-      double precision cp
-      common/ cst12 /cp(k5,k10)
-
-      double precision p,t,xco2,u1,u2,tr,pr,r,ps
-      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
-c                                 adaptive coordinates
-      integer jphct
-      double precision g2, cp2, c2tot
-      common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),jphct
-c                                 working arrays
-      double precision z, pa, p0a, x, w, y, wl
-      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18)
-
-      integer jend
-      common/ cxt23 /jend(h9,m4)
-
-      logical lorder, lexces, llaar, lrecip
-      common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
-
-      integer lstot,mstot,nstot,ndep,nord
-      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
-
-      integer iaq, aqst, aqct
-      character aqnam*8
-      double precision aqcp, aqtot
-      common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
-
-      integer jnd
-      double precision aqg,qq,rt
-      common/ cxt2 /aqg(m4),qq(m4),rt,jnd(m4)
-
-      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
-      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-c----------------------------------------------------------------------
-
-      ctot2 = 0d0
-
-      do i = 1, icp
-         cp2(i,jphct) = 0d0
-      end do  
-
-      if (lrecip(id).or.lorder(id)) then 
-c                                 solutions with dependent endmembers, p0a 
-c                                 contains the p's. for ksmod=8 these are a 
-c                                 reformulation of the p's to eliminate the ordered 
-c                                 endmembers. p0a is constructed in function gsol.
-         do i = 1, lstot(id)
-            do j = 1, icp 
-               cp2(j,jphct) = cp2(j,jphct) + p0a(i) * cp(j,jend(id,2+i))
-            end do 
-            ctot2 = ctot2 + p0a(i)*ctot(jend(id,2+i))
-         end do
-
-      else if (ksmod(id).eq.20) then 
-
-         do i = sn1, nqs
-
-            k = jnd(i) - aqst
-
-            do j = 1, icp 
-               cp2(j,jphct) = cp2(j,jphct) + y(i) * aqcp(j,k)
-            end do 
-
-            ctot2 = ctot2 + y(i)*aqtot(k)
-
-         end do 
-
-         do i = 1, ns 
-
-            do j = 1, icp 
-               cp2(j,jphct) = cp2(j,jphct) + y(i) * cp(j,jnd(i))
-            end do 
-
-            ctot2 = ctot2 + y(i)*ctot(jnd(i))
-
-         end do 
-
-      else 
-c                                 general case (y coordinates)
-         do i = 1, mstot(id)
-
-            do j = 1, icp 
-               cp2(j,jphct) = cp2(j,jphct) + y(i) * cp(j,jend(id,2+i))
-            end do
-
-            ctot2 = ctot2 + y(i)*ctot(jend(id,2+i)) 
-
-         end do 
-
-      end if
-c                                  a phase with a null composition may appear
-c                                  as an endmember of a solution in a calculation
-c                                  with mobile components:
-
-c                                  sept 22 2017: previously null compositions were
-c                                  given unstable properties, bad flag added this 
-c                                  date along with degeneracy check. 
-      bad = .false.
-
-      if (ctot2.ne.0d0) then
-c                                  normalize the composition and free energy
-         g2(jphct) = g2(jphct)/ctot2
-         c2tot(jphct) = ctot2
-
-         do j = 1, icp
-            cp2(j,jphct) = cp2(j,jphct)/ctot2
-         end do
-
-      else 
-c                                  a solution composition may move entirely 
-c                                  into the mobile/saturated component space
-         bad = .true.
-
-      end if
-
-      end 
 
       subroutine sortin 
 c-----------------------------------------------------------------------
@@ -894,7 +750,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer ii, i, j, id, ids, kcoor
+      integer ii, i, j, id, ids, ipop, kcoor
 c                                 working arrays
       double precision z, pa, p0a, x, w, y, wl
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -913,10 +769,13 @@ c----------------------------------------------------------------------
             end do 
          end do
       end do
+
+      ipop = ii 
 c                                 polytope weights
       do ii = 1, poly(ids)
          kcoor = kcoor + 1
          pwt(ii) = ycoor(kcoor)
+         x(ipop,1,ii) = pwt(ii)
       end do 
 
       end 
@@ -1842,7 +1701,7 @@ c----------------------------------------------------------------------
       include 'perplex_parameters.h'
 
       integer jphct, i, j, k, is(*), idsol(k5), kdv(h9), nsol, ids,
-     *        mpt, iam, id, inc, jdsol(k5,k5), kdsol(k5), max
+     *        mpt, iam, id, jdsol(k5,k5), kdsol(k5), max
 
       external ffirst, degen 
 
@@ -1911,6 +1770,7 @@ c----------------------------------------------------------------------
       nsol = 0
       quit = .true.
       soltol = 2d0*nopt(8)
+      soltol = 1d0
 
       do i = 1, jphct
 
@@ -2063,9 +1923,9 @@ c                                 find the most stable iopt(31) points
             id = kdv(i)
 
             if (ikp(id).ne.0) then 
-               call dumper (1,id,0,ikp(id+inc),x(id),clamda(id))
+               call dumper (1,id,0,ikp(id+jiinc),x(id),clamda(id))
             else 
-               call dumper (1,id,0,-(id+inc),x(id),clamda(id))
+               call dumper (1,id,0,-(id+jiinc),x(id),clamda(id))
             end if 
 
          end if
@@ -3510,104 +3370,6 @@ c                                 conformal
 
       end 
 
-      subroutine loadgx (kd,ids,gcind) 
-c----------------------------------------------------------------------
-      implicit none 
-
-      include 'perplex_parameters.h'
-
-      integer kd, ids, gcind
-
-      logical bad, recalc
-
-      double precision gsol1
-
-      external gsol1
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
-      integer jphct
-      double precision g2, cp2, c2tot
-      common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),jphct
-
-      integer ncoor,mcoor,ndim
-      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h4,h9)
-
-      logical quack
-      integer solc, isolc
-      common/ cxt1 /solc(k5),isolc,quack(k21)
-
-      integer icomp,istct,iphct,icp
-      common/ cst6  /icomp,istct,iphct,icp
-
-      save recalc
-      data recalc/.false./
-c----------------------------------------------------------------------
-      recalc = .false.
-
-      if (lopt(32).and.ksmod(ids).eq.39) then
-
-         if (lopt(46)) then
-c                                 set as aq_solvent_solvus:
-c                                 solute free cpd
-            g2(jphct) = gsol1(ids)
-
-            call csol (ids,bad)
-
-            if (bad) then
-
-               gcind = icoz(jphct)
-               jphct = jphct - 1
-               return 
-
-            end if 
-
-            quack(jphct) = .true.
-c                                 now pad out counters for 
-c                                 a solute cpd
-            jphct = jphct + 1
-            if (jphct.gt.k21) call error (58,1d0,k21,'resub')
-
-            jkp(jphct) = ids
-            hkp(jphct) = kd
-            icoz(jphct) = icoz(jphct - 1)
-
-         end if 
-c                                  solute-bearing compound
-         call aqlagd (1,bad,recalc)
-
-         if (bad) then
-
-            gcind = icoz(jphct)
-            jphct = jphct - 1
-
-         else
- 
-            quack(jphct) = .false.
-
-         end if
-
-      else 
-c                                 call gsol to get g of the solution, gsol also
-c                                 computes the p compositional coordinates
-         g2(jphct) = gsol1(ids)
-c                                 use the coordinates to compute the composition 
-c                                 of the solution
-         call csol (ids,bad)
-
-         if (bad) then
-
-            gcind = icoz(jphct)
-            jphct = jphct - 1
-
-         end if 
-
-      end if 
-
-      end
 
       logical function degen (index,array)
 c----------------------------------------------------------------------

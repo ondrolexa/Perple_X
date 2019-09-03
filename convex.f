@@ -5974,55 +5974,6 @@ c----------------------------------------------------------------------------
       close (n8)
       
       stop
-      end 
-
-      subroutine grxn (gval) 
-c-----------------------------------------------------------------------
-c grxn computes the free energy of univariant equilibria
-c defined by the data in commonn block cst21 which is initialized
-c in the subprogram balanc.  grxn is partially redundant with
-c the function gphase but because of the frequency that these
-c these routines are used a significant increase in efficiency is
-c gained by maintaining separate functions.
-c-----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      integer j
-
-      double precision gval, gproj
-
-      external gproj
-
-      integer iffr,isr
-      double precision vuf,vus
-      common/ cst201 /vuf(2),vus(h5),iffr,isr
-
-      integer idr,ivct
-      double precision vnu
-      common/ cst25 /vnu(k7),idr(k7),ivct
-c-----------------------------------------------------------------------
-c                                 compute potentials of saturated phases
-c                                 and components, note that in this
-c                                 version of vertex the stoichiometry of
-c                                 such components may vary.
-
-c                                 no saturated phase components and no
-c                                 saturated components:
-      if (iffr.eq.1.and.isr.eq.1) goto 10
-c                                 note that this call to uproj makes a
-c                                 subsequent call in gall redundant if
-c                                 sfol1 is used to trace a univariant
-c                                 curve.
-      call uproj
-c                                 compute free energy change of the rxn
-10    gval = 0d0
-
-      do j = 1, ivct
-         gval = gval + vnu(j) * gproj (idr(j))
-      end do 
-
       end
 
       subroutine copycp
