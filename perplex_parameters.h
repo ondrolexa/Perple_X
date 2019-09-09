@@ -90,7 +90,7 @@
       parameter (k17=7,k18=k1/100)
       parameter (k19=3*k5,k21=3000000,k20=k21/100)
       parameter (k22=mdim*k19,k23=25)
-      parameter (k13=k21/10,k24=10*k1,k25=10*k21)
+      parameter (k13=k21/5,k24=10*k1,k25=10*k21)
 !                                 l2 - max number of independent potential variables
 !                                 l3 - max number of variables for gridded min and graphics (l2+2)
 !                                 l5 - max number of coordinates along a univariant curve                

@@ -7146,13 +7146,12 @@ c                                lower site counters to first index,
             end if
          end do
 20    continue
-c                              read excess function
+c                                 read excess function
       call readx (idim,tname)
-c                              expansion for S(configurational)
+c                                 expansion for S(configurational)
       call readda (rnums,1,tname)
 
       nsite = idint(rnums(1))
-
       if (nsite.gt.m10) call error (1,a0(1,1),nsite,'m10')
 c                                 for each site
       do i = 1, nsite
@@ -7199,8 +7198,8 @@ c                                 old versions:
             end do
          end do
       end do
-c                              look for van laar and/or dqf parameters
-c                              or the end of model marker
+c                                 look for van laar and/or dqf parameters
+c                                 or the end of model marker
       call readop (idim,jlaar,istot-mdep,reach,stck,norf,tname)
 
       if (jlaar.ne.0) then
@@ -19830,15 +19829,27 @@ c                                 expansion for S(configurational)
       call readda (rnums,1,tname)
 
       nsite = idint(rnums(1))
-
-      if (nsite.gt.m10) call error (1,a0(1,1),nsite,'m10')
+c                                 counter for real sites (688)
+      l = 0
 c                                 for each site
       do i = 1, nsite
-c                                 read # of species, and site
-c                                 multiplicty.
-         call readda (rnums,2,tname)
+c                                 688: read site name
+         call readcd (n9,j,k,.true.)
+c                                 # of species, effective and true site multiplicty.
+         call readda (rnums,3,tname)
+c                                 688: non-mixing site
+         if (rnums(1).eq.1d0) then 
+c                                 read site fraction card
+            call readcd (n9,j,k,.true.)
+            cycle
 
-         smult(i) = rnums(2)
+         end if 
+
+         l = l + 1
+
+         if (l.gt.m10) call error (1,a0(1,1),l,'m10')
+
+         smult(l) = rnums(2)
 c                                 if multiplicity is 0, the model
 c                                 site has variable multiplicity
 c                                 and molar site population expressions
@@ -19846,38 +19857,42 @@ c                                 are read rather than site fractions
 c                                 in which case we need as many expressions
 c                                 as species. nspm1 is the counter for the
 c                                 number of expressions
-         if (smult(i).gt.0) then
-            nspm1(i) = idint(rnums(1)) - 1
+         if (smult(l).gt.0d0) then
+            nspm1(l) = idint(rnums(1)) - 1
          else
-            nspm1(i) = idint(rnums(1))
+            nspm1(l) = idint(rnums(1))
          end if
 
-         if (nspm1(i).gt.m11) call error (1,a0(1,1),nspm1(i),'m11')
+         if (nspm1(l).gt.m11) call error (1,a0(1,1),nspm1(l),'m11')
 c                                 for each species, read
 c                                 function to define the
 c                                 site fraction of the species:
-c
-         do j = 1, nspm1(i)
+         do j = 1, nspm1(l)
 c                                 read expression for site
 c                                 fraction of species j on
 c                                 site i.
             call readz (coeffs,inds,ict,idim,tname,tag)
 
-            a0(i,j) = coeffs(1)
-            nterm(i,j) = ict - 1
-            if (nterm(i,j).gt.m0) call error (33,a0(1,1),m0,tname)
+            a0(l,j) = coeffs(1)
+            nterm(l,j) = ict - 1
+            if (nterm(l,j).gt.m0) call error (33,a0(1,1),m0,tname)
 c                                 for each term:
             do k = 2, ict
 c                                 all terms 1 order type, this
 c                                 saved for compatability with
 c                                 old versions:
-               nttyp(i,j,k-1)   = 1
-               acoef(i,j,k-1)   = coeffs(k)
-               nsub(i,j,k-1,1) = inds(k)
+               nttyp(l,j,k-1)   = 1
+               acoef(l,j,k-1)   = coeffs(k)
+               nsub(l,j,k-1,1) = inds(k)
             end do
          end do
+c                                 read extra site fraction expression
+         if (smult(l).ne.0d0) call readcd (n9,j,k,.true.)
+
       end do
-c                              initialize endmember flags
+c                                 reset the site counter
+      nsite = l
+c                                 initialize endmember flags
       do i = 1, istot
          iend(i) = 0
       end do 
