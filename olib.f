@@ -32,11 +32,6 @@ c----------------------------------------------------------------------
       double precision props,psys,psys1,pgeo,pgeo1
       common/ cxt22 /props(i8,k5),psys(i8),psys1(i8),pgeo(i8),pgeo1(i8)
 
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
       integer kkp,np,ncpd,ntot
       double precision cp3,amt
       common/ cxt15 /cp3(k0,k19),amt(k19),kkp(k19),np,ncpd,ntot
@@ -716,9 +711,6 @@ c                                 global assemblage data
 
       integer igrd
       common/ cst311/igrd(l7,l7)
-
-      integer ncoor,mcoor,ndim
-      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h4,h9)
 c                                 bookkeeping variables
       logical gflu,aflu,fluid,shear,lflu,volume,rxn
       common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume,rxn
@@ -728,11 +720,6 @@ c                                 bookkeeping variables
 
       double precision gtot,fbulk,gtot1,fbulk1
       common/ cxt81 /gtot,fbulk(k0),gtot1,fbulk1(k0)
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       double precision props,psys,psys1,pgeo,pgeo1
       common/ cxt22 /props(i8,k5),psys(i8),psys1(i8),pgeo(i8),pgeo1(i8)
@@ -1073,7 +1060,7 @@ c                                 hybrid MRK ternary COH fluid (41)
 c                                 hardwired binary/pseudo-binary (0)
          do k = 1, spct(id) 
             ysp(k,jd) = yf(ins(k))
-         end do          
+         end do
 
       end if 
 
@@ -1271,11 +1258,6 @@ c                                 bookkeeping variables
       double precision z, pa, p0a, x, w, y, wl
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18)
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 c-----------------------------------------------------------------------
   
       ok = .true.
@@ -1401,11 +1383,6 @@ c                                 the composition.
 
       double precision vp, vs
 
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
       if (isnan(vp).or.isnan(vs)) then 
          poiss = nopt(7)
       else if (vs.eq.0d0) then 
@@ -1498,11 +1475,6 @@ c----------------------------------------------------------------------
 
       double precision gtot,fbulk,gtot1,fbulk1
       common/ cxt81 /gtot,fbulk(k0),gtot1,fbulk1(k0)
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       double precision pcomp
       common/ cst324 /pcomp(k0,k5)
@@ -2250,11 +2222,6 @@ c----------------------------------------------------------------------
 
       external ginc
 
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 
@@ -2483,11 +2450,6 @@ c----------------------------------------------------------------------
 
       external ginc
 
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 c----------------------------------------------------------------------
@@ -2530,11 +2492,6 @@ c----------------------------------------------------------------------
       double precision g0,dt0,dt1,dt2,s,gtt, ginc
 
       external ginc
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -2580,11 +2537,6 @@ c-----------------------------------------------------------------------
       integer hs2p
       double precision hsb
       common/ cst84 /hsb(i8,4),hs2p(6)
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       integer kkp,np,ncpd,ntot
       double precision cp3,amt

@@ -1004,7 +1004,7 @@ full_name    clinoamphibole
  
 2                                  | number of polytopes, subvision range for each polytope:
 
-0    1   .1  0                     | X(1) is X([ ][M][Fe3,Al][N]) is Ti-free glaucophane
+0   .2   .1  0                     | X(1) is X([ ][M][Fe3,Al][N]) is Ti-free glaucophane
 
                                    | endmembers on the vertices, index on the first simplex
                                    | changes fastest, last slowest

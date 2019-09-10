@@ -101,11 +101,6 @@ c----------------------------------------------------------------------
       character*100 prject,tfname
       common/ cst228 /prject,tfname
 
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
       integer grid
       double precision rid 
       common/ cst327 /grid(6,2),rid(5,2)
@@ -1372,11 +1367,6 @@ c----------------------------------------------------------------------
 
       character valu(i10)*3, nval1*12, text(14)*1, numb*5, nval2*12
 
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
       integer grid
       double precision rid 
       common/ cst327 /grid(6,2),rid(5,2)
@@ -2078,11 +2068,6 @@ c---------------------------------------------------------------------
 
       character a*1
       
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-      
       if (lopt(19)) then 
          write (*,'(/,a,/)') 'Press Enter to quit...' 
          read (*,'(a)') a
@@ -2112,11 +2097,6 @@ c---------------------------------------------------------------------
       character tname*10
       logical refine, resub
       common/ cxt26 /refine,resub,tname
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       if (refine) then
          tag = '2nd'
@@ -2690,11 +2670,6 @@ c---------------------------------------------------------------------
       integer grid
       double precision rid 
       common/ cst327 /grid(6,2),rid(5,2)
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 c----------------------------------------------------------------------
       if (ier.eq.1) then 
          write (*,1) 
@@ -3190,7 +3165,7 @@ c----------------------------------------------------------------------
      *         ,' r = ',g12.6,' int = ',i9,/)
       end
 
-      subroutine rmakes (iopt)
+      subroutine rmakes (jopt)
 c----------------------------------------------------------------------
 c rmakes is called by topn2 to read make definitions of thermodynamic
 c entities, these entities are defined as a linear combination of 
@@ -3217,13 +3192,13 @@ c and truncated by the keyword:
 
 c end_makes
 
-c if iopt > 3, data is echoed to LUN n8 (for ctransf/actcor).
+c if jopt > 3, data is echoed to LUN n8 (for ctransf/actcor).
 c----------------------------------------------------------------------
       implicit none
 
       include 'perplex_parameters.h'
 
-      integer ibeg, iend, len, ier, iscan, i, nreact, iopt
+      integer ibeg, iend, len, ier, iscan, i, nreact, jopt
 
       double precision rnum, nums(m3)
 
@@ -3254,7 +3229,7 @@ c----------------------------------------------------------------------
       call readcd (n2,len,ier,.true.)
       if (ier.ne.0) goto 90 
 c                                 echo data for ctransf/actcor
-      if (iopt.gt.3) write (n8,'(400a)') (chars(i),i=1,len)
+      if (jopt.gt.3) write (n8,'(400a)') (chars(i),i=1,len)
 
       nmak = 0 
 
@@ -3305,7 +3280,7 @@ c                                 now the dqf
          call readcd (n2,len,ier,.true.)
          if (ier.ne.0) goto 90
 c                                 echo data for ctransf/actcor 
-         if (iopt.gt.3) write (n8,'(400a)') (chars(i),i=1,len)
+         if (jopt.gt.3) write (n8,'(400a)') (chars(i),i=1,len)
 c                                 read the DQF coefficients
          ibeg = 1
          call redlpt (nums,ibeg,iend,len,ier) 
@@ -3319,7 +3294,7 @@ c                                 start next make definition
          write (rec,'(400a)') chars
          read (rec,'(a3)') tag
 c                                 echo data for ctransf/actcor
-         if (iopt.gt.3) write (n8,'(400a)') (chars(i),i=1,len)
+         if (jopt.gt.3) write (n8,'(400a)') (chars(i),i=1,len)
 
 c                                 reject excluded makes
          do i = 1, ixct
@@ -3610,11 +3585,6 @@ c----------------------------------------------------------------------
 
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 c-----------------------------------------------------------------------
       if (ids.lt.0) then
 c                                 simple compound:
@@ -4774,11 +4744,6 @@ c------------------------------------------------------------------------
       character*100 prject,tfname
       common/ cst228 /prject,tfname
 
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
       integer iam
       common/ cst4 /iam
 
@@ -5119,16 +5084,16 @@ c                                 get pointer to end of string in chars
 
       end
 
-      subroutine gettrn (iopt)
+      subroutine gettrn (jopt)
 c----------------------------------------------------------------------
-c iopt = 3 -> build
-c iopt = 5 -> ctransf
+c jopt = 3 -> build
+c jopt = 5 -> ctransf
 c----------------------------------------------------------------------
       implicit none
  
       include 'perplex_parameters.h'
 
-      integer i,j,iopt,ict,ier,jscan
+      integer i,j,jopt,ict,ier,jscan
  
       character*5 pname, rname, y*1
 
@@ -5183,7 +5148,7 @@ c                                 special component
 
                   if (i.ne.idspe(j)) cycle 
 c                                 matches special component id(j) 
-                  if (iopt.eq.3) then
+                  if (jopt.eq.3) then
 c                                 don't allow build users 
 c                                 to transform saturated
 c                                 phase components
@@ -5311,11 +5276,6 @@ c----------------------------------------------------------------------
       integer option, i, j, ier, iscan
 
       double precision sum, ssum
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       integer isec,icopt,ifull,imsg,io3p
       common/ cst103 /isec,icopt,ifull,imsg,io3p
@@ -6412,11 +6372,6 @@ c----------------------------------------------------------------------
       character*(*) text
 
       double precision x, y
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       save warn1
       data warn1/.true./

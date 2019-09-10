@@ -202,6 +202,19 @@ c
 
       double precision ctot
       common/ cst3  /ctot(k1)
+c                                 solution limits and stability
+      logical stable,limit
+      double precision xlo,xhi
+      common/ cxt11 /xlo(m4,mst,h4,h9),xhi(m4,mst,h4,h9),
+     *               stable(h9),limit(h9)
+
+      integer ncoor,mcoor,ndim
+      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h4,h9)
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
 c jpoint - index of the last compound endmember in the icp x jphct optimization matrix
 c jiinc  - iphct - jphct, increment between the icp x iphct data matrix index and the optimization matrix

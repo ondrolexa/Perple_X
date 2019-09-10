@@ -205,11 +205,6 @@ c----------------------------------------------------------------------
       integer ivar,ind
       common/ cst83 /ivar,ind
 
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
       integer isec,icopt,ifull,imsg,io3p
       common/ cst103 /isec,icopt,ifull,imsg,io3p
 
@@ -571,11 +566,6 @@ c---------------------------------------------------------------------
       integer ncol, nrow
       common/ cst226 /ncol,nrow,fileio,flsh,anneal,short
 
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
       integer isec,icopt,ifull,imsg,io3p
       common/ cst103 /isec,icopt,ifull,imsg,io3p
 c----------------------------------------------------------------------
@@ -777,11 +767,6 @@ c----------------------------------------------------------------------
 
       integer igrd
       common/ cst311/igrd(l7,l7)
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 c                                 global assemblage data
       integer icog,jcog
       common/ cxt17 /icog(k2),jcog(k2)
@@ -1219,11 +1204,6 @@ c-----------------------------------------------------------------------
 
       double precision wt(3), mode
 
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10) 
-
       integer iap,ibulk
       common/ cst74  /iap(k2),ibulk
 
@@ -1361,11 +1341,6 @@ c----------------------------------------------------------------
      *               kop(i11),kcx(i11),k2c(i11),iprop,
      *               first,kfl(i11),tname
 
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
       integer jvar
       double precision var,dvr,vmn,vmx
       common/ cxt18 /var(l3),dvr(l3),vmn(l3),vmx(l3),jvar
@@ -1411,11 +1386,6 @@ c----------------------------------------------------------------------
       common/ cst77 /prop(i11),prmx(i11),prmn(i11),
      *               kop(i11),kcx(i11),k2c(i11),iprop,
      *               first,kfl(i11),tname
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       integer jvar
       double precision var,dvr,vmn,vmx
@@ -1555,11 +1525,6 @@ c----------------------------------------------------------------
 
       double precision gtot,fbulk,gtot1,fbulk1
       common/ cxt81 /gtot,fbulk(k0),gtot1,fbulk1(k0)
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       double precision props,psys,psys1,pgeo,pgeo1
       common/ cxt22 /props(i8,k5),psys(i8),psys1(i8),pgeo(i8),pgeo1(i8)
@@ -1968,11 +1933,6 @@ c ------------------------------------------------------------------
       double precision pcomp
       common/ cst324 /pcomp(k0,k5)
 
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
       integer icps, jcx, jcx1, kds
       logical stol, savg, spec
       double precision rcps, a0
@@ -2053,11 +2013,6 @@ c-------------------------------------------------------------------
 
       integer javg,jdsol
       common/ cxt5 /javg,jdsol(k5)
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       integer idasls,iavar,iasct,ias
       common/ cst75  /idasls(k5,k3),iavar(3,k3),iasct,ias
@@ -2694,11 +2649,6 @@ c----------------------------------------------------------------------
       integer ivar,ind
       common/ cst83 /ivar,ind
 
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
       integer isec,icopt,ifull,imsg,io3p
       common/ cst103 /isec,icopt,ifull,imsg,io3p
 c----------------------------------------------------------------------
@@ -3032,11 +2982,6 @@ c----------------------------------------------------------------
      *               kop(i11),kcx(i11),k2c(i11),iprop,
      *               first,kfl(i11),tname
 
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
       integer idasls,iavar,iasct,ias
       common/ cst75  /idasls(k5,k3),iavar(3,k3),iasct,ias
 
@@ -3287,11 +3232,6 @@ c----------------------------------------------------------------
       common/ cst77 /prop(i11),prmx(i11),prmn(i11),
      *               kop(i11),kcx(i11),k2c(i11),iprop,
      *               first,kfl(i11),tname
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 c----------------------------------------------------------------------
       if (dim.eq.1) then 
 
@@ -3440,11 +3380,6 @@ c----------------------------------------------------------------
 
       double precision gtot,fbulk,gtot1,fbulk1
       common/ cxt81 /gtot,fbulk(k0),gtot1,fbulk1(k0)
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       double precision props,psys,psys1,pgeo,pgeo1
       common/ cxt22 /props(i8,k5),psys(i8),psys1(i8),pgeo(i8),pgeo1(i8)
@@ -3834,11 +3769,6 @@ c----------------------------------------------------------------
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       integer jtest,jpot
       common/ debug /jtest,jpot
@@ -4365,11 +4295,6 @@ c----------------------------------------------------------------
       character cname*5
       common/ csta4  /cname(k5)
 
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
       save warned
       data warned/.false./
 
@@ -4552,11 +4477,6 @@ c----------------------------------------------------------------
       character dname*14, titl1*162
       common/ cst76 /inv(i11),dname(i11),titl1
 
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
       character*14 tname
       integer kop,kcx,k2c,iprop
       logical kfl, first
@@ -4659,11 +4579,6 @@ c-----------------------------------------------------------------------
 
       integer idasls,iavar,iasct,ias
       common/ cst75  /idasls(k5,k3),iavar(3,k3),iasct,ias
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 c-----------------------------------------------------------------------
       solvs3 = .false.
 
@@ -4716,11 +4631,6 @@ c----------------------------------------------------------------
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp  
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       character*14 tname
       integer kop,kcx,k2c,iprop
@@ -4863,11 +4773,6 @@ c-----------------------------------------------------------------------
       integer kd, na1, na2, na3, nat
       double precision x3, caq
       common/ cxt16 /x3(k5,h4,mst,msp),caq(k5,l10),na1,na2,na3,nat,kd
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       double precision pcomp
       common/ cst324 /pcomp(k0,k5)

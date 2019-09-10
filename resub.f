@@ -25,11 +25,6 @@ c-----------------------------------------------------------------------
       integer is(k1+k5),iw(liw)
 
       logical quit, abort
-c                                 options from perplex_option.dat
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       integer hcp,idv
       common/ cst52  /hcp,idv(k7)
@@ -212,11 +207,6 @@ c-----------------------------------------------------------------------
       double precision xa,b,xc
       common/ cst313 /xa(k5,k1),b(k5),xc(k1)
 
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 
@@ -368,11 +358,6 @@ c----------------------------------------------------------------------
       integer ikp
       common/ cst61 /ikp(k1)
 
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
       integer ntot,npairs
       common/ cst86 /ntot,npairs
 
@@ -386,9 +371,6 @@ c----------------------------------------------------------------------
       integer jphct
       double precision g2, cp2, c2tot
       common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),jphct
-
-      integer ncoor,mcoor,ndim
-      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h4,h9)
 
       integer ipoint,kphct,imyn
       common/ cst60 /ipoint,kphct,imyn
@@ -666,10 +648,6 @@ c                                 -------------------------------------
 c                                 local variables
       integer ii, i, j, k, kcoct, id, ids, itic
 c                                 -------------------------------------
-c                                 global variables:
-      integer ncoor,mcoor,ndim
-      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h4,h9)
-
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
 
@@ -755,9 +733,6 @@ c                                 working arrays
       double precision z, pa, p0a, x, w, y, wl
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18)
-
-      integer ncoor,mcoor,ndim
-      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h4,h9)
 c----------------------------------------------------------------------
       kcoor = lcoor(id)
 
@@ -926,11 +901,6 @@ c                                  x-coordinates for the final solution
 
       double precision cp
       common/ cst12 /cp(k5,k10)
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       double precision z, pa, p0a, x, w, y, wl
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -1306,25 +1276,12 @@ c----------------------------------------------------------------------
       double precision z, pa, p0a, x, w, y, wl
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18)
-c                                 solution limits and stability
-      logical stable,limit
-      double precision xlo,xhi
-      common/ cxt11 /xlo(m4,mst,h4,h9),xhi(m4,mst,h4,h9),
-     *               stable(h9),limit(h9)
 
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
 
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
-
-      integer ncoor,mcoor,ndim
-      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h4,h9)
 c----------------------------------------------------------------------
 c                                 set stable flag
       stable(ids) = .true.
@@ -1453,11 +1410,6 @@ c                                 for final adaptive solution
       integer npt,jdv
       double precision cptot,ctotal
       common/ cst78 /cptot(k19),ctotal,jdv(k19),npt
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 c----------------------------------------------------------------------
 c                                 look for a match with known assemblages
       match = .false.
@@ -1650,11 +1602,6 @@ c                                 x-coordinates for the final solution
       double precision x3, caq
       common/ cxt16 /x3(k5,h4,mst,msp),caq(k5,l10),na1,na2,na3,nat,kd
 
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
       logical mus
       double precision mu
       common/ cst330 /mu(k8),mus
@@ -1723,11 +1670,6 @@ c----------------------------------------------------------------------
 
       integer ipot,jv,iv
       common/ cst24 /ipot,jv(l2),iv(l2)
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       integer isoct
       common/ cst79 /isoct
@@ -1977,11 +1919,6 @@ c-----------------------------------------------------------------------
 
       double precision dcp,soltol
       common/ cst57 /dcp(k5,k19),soltol
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 c-----------------------------------------------------------------------
       solvus = .false.
 
@@ -2250,11 +2187,6 @@ c                                 coordinates (and solution ids).
       integer npt,jdv
       double precision cptot,ctotal
       common/ cst78 /cptot(k19),ctotal,jdv(k19),npt
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 c----------------------------------------------------------------------
 
       npt = 0
@@ -2319,7 +2251,7 @@ c----------------------------------------------------------------------
 
       double precision clamda(*), clam(k19), x(*)
 
-      logical stable(k19), solvnt(k19), quit, abort, test, good, bad
+      logical stabl(k19), solvnt(k19), quit, abort, test, good, bad
 
       integer hcp,idv
       common/ cst52  /hcp,idv(k7)
@@ -2334,11 +2266,6 @@ c----------------------------------------------------------------------
 
       double precision wmach(9)
       common /ax02za/wmach
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       integer jphct
       double precision g2, cp2, c2tot
@@ -2388,7 +2315,7 @@ c                                 solution.
       do i = 1, k19
          jmin(i) = 0 
          clam(i) = 1d99
-         stable(i) = .false.
+         stabl(i) = .false.
       end do
 
       abort = .false.
@@ -2406,7 +2333,7 @@ c                                 a stable point, add to list
             npt = npt + 1
             jdv(npt) = i
             amt(npt) = x(i)
-            if (id.gt.0) stable(id) = .true.
+            if (id.gt.0) stabl(id) = .true.
 
             if (lopt(32)) then
 c                                 for lagged aq speciation
@@ -2503,7 +2430,7 @@ c                                 make a list of the solutions
 
                cycle
 
-            else if (stable(hkp(jmin(i))).or.t.lt.nopt(20).and.
+            else if (stabl(hkp(jmin(i))).or.t.lt.nopt(20).and.
      *               lname(jkp(jmin(i))).eq.'liquid') then
 c                                 contrary to what you might expect, the 1st condition
 c                                 improves quality, because it stops the list 
@@ -2645,11 +2572,6 @@ c----------------------------------------------------------------------
       integer kkp,np,ncpd,ntot
       double precision cp3,amt
       common/ cxt15 /cp3(k0,k19),amt(k19),kkp(k19),np,ncpd,ntot
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       integer ikp
       common/ cst61 /ikp(k1)
@@ -2880,11 +2802,6 @@ c----------------------------------------------------------------------
       logical mus
       double precision mu
       common/ cst330 /mu(k8),mus
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       integer jbulk
       double precision cblk
@@ -3238,11 +3155,6 @@ c----------------------------------------------------------------------
 
       logical first, output, err 
 
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
       integer iemod,kmod
       logical smod,pmod
       double precision emod
@@ -3282,9 +3194,6 @@ c----------------------------------------------------------------------
       double precision res0, xxnc, stinc, sum
 
       external stinc
-
-      integer ncoor,mcoor,ndim
-      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h4,h9)
 
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
@@ -3393,11 +3302,6 @@ c----------------------------------------------------------------------
       integer jphct
       double precision g2, cp2, c2tot
       common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),jphct
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 c----------------------------------------------------------------------
 
       degen = .false.

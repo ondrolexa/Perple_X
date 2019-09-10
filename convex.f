@@ -73,11 +73,6 @@ c-----------------------------------------------------------------------
       integer isec,icopt,ifull,imsg,io3p
       common/ cst103 /isec,icopt,ifull,imsg,io3p
 
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
       integer iemod,kmod
       logical smod,pmod
       double precision emod
@@ -1743,21 +1738,13 @@ c----------------------------------------------------------------------
       include 'perplex_parameters.h'
 c                                 -------------------------------------
 c                                 local variables:
-      integer jd,ids,i,j,k,idim,ntot,id(idim)
+      integer jd,ids,i,j,k,idim,ntot,id(idim),ii
 c                                 -------------------------------------
 c                                 global variables:
 c                                 working arrays
       double precision z, pa, p0a, x, w, y, wl
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18)
-c                                 solution limits and stability
-      logical stable,limit
-      double precision xlo,xhi
-      common/ cxt11 /xlo(m4,mst,h4,h9),xhi(m4,mst,h4,h9),
-     *               stable(h9),limit(h9)
-
-      integer ncoor,mcoor,ndim
-      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h4,h9)
 
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
@@ -1781,28 +1768,28 @@ c                                 set stable flag
 c                                 get composition
          call setexs (ids,jd,.false.)
 c                                 check x-ranges
-         do i = 1, istg(ids,1)
+         do i = 1, istg(ids,ii)
 
-            do j = 1, ndim(i,1,ids)
+            do j = 1, ndim(i,ii,ids)
 c                                 low limit:
-               if (x(i,j).lt.xlo(j,i,1,ids)) then
-                  xlo(j,i,1,ids) = x(i,j)
+               if (x(ii,i,j).lt.xlo(j,i,ii,ids)) then
+                  xlo(j,i,1,ids) = x(ii,i,j)
 c                                 check if solution is at an unnatural limit
-                  if (x(i,j).gt.xmno(ids,1,i,j).and.
-     *                x(i,j).le.xmng(ids,1,i,j)
+                  if (x(ii,i,j).gt.xmno(ids,ii,i,j).and.
+     *                x(ii,i,j).le.xmng(ids,ii,i,j)
      *               .and..not.limit(ids)) then
-                     write (*,1000) fname(ids),x(i,j),i,j
+                     write (*,1000) fname(ids),x(ii,i,j),i,j
                      limit(ids) = .true.
                   end if 
                end if 
 c                                 high limit:
-               if (x(i,j).gt.xhi(j,i,1,ids)) then
-                  xhi(j,i,1,ids) = x(i,j)
+               if (x(ii,i,j).gt.xhi(j,i,ii,ids)) then
+                  xhi(j,i,ii,ids) = x(ii,i,j)
 c                                 check if solution is at an unnatural limit
-                  if (x(i,j).lt.xmxg(ids,1,i,j).and.
-     *                x(i,j).ge.xmxg(ids,1,i,j)
+                  if (x(ii,i,j).lt.xmxg(ids,ii,i,j).and.
+     *                x(ii,i,j).ge.xmxg(ids,ii,i,j)
      *               .and..not.limit(ids)) then
-                     write (*,1000) fname(ids),x(i,j),i,j
+                     write (*,1000) fname(ids),x(ii,i,j),i,j
                      limit(ids) = .true.
                   end if 
                end if 
@@ -5480,9 +5467,9 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical solvs1, solvus 
+      logical solvs1, solvsc 
 
-      external solvus
+      external solvsc
 c                                 -------------------------------------
 c                                 local variables
       integer idsol(k8,k8),jdsol(k8),ids,np,np1,np2,ncpd,idim,
@@ -5490,11 +5477,6 @@ c                                 local variables
 
       integer ikp
       common/ cst61 /ikp(k1)
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       double precision dcp,soltol
       common/ cst57 /dcp(k5,k19),soltol
@@ -6031,7 +6013,7 @@ c-----------------------------------------------------------------------
       double precision dcp,soltol
       common/ cst57 /dcp(k5,k19),soltol
 c-----------------------------------------------------------------------
-      solvus = .false.
+      solvsc = .false.
 
       do i = 1, icp
 
@@ -6039,7 +6021,7 @@ c-----------------------------------------------------------------------
 
          if (dabs(cp(i,id1)/ctot(id1)-cp(i,id2)/ctot(id2))/dcp(i,ids)
      *                  .gt.soltol) then
-            solvus = .true.
+            solvsc = .true.
             exit
          end if
 

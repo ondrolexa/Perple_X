@@ -158,11 +158,6 @@ c-----------------------------------------------------------------------
       double precision aqcp, aqtot
       common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
 
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
       integer idspe,ispec
       common/ cst19 /idspe(2),ispec
 
@@ -1236,11 +1231,6 @@ c---------------------------------------------------------------------------
       character*8 exname,afname
       common/ cst36 /exname(h8),afname(2)
 
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
       data fugact/'chem_pot','fugacity','activity'/
 
 c---------------------------------------------------------------------------
@@ -1781,11 +1771,6 @@ c---------------------------------------------------------------------------
       integer grid
       double precision rid 
       common/ cst327 /grid(6,2),rid(5,2)
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 c-----------------------------------------------------------------------
       nc(1) = 'C0'
       nc(2) = 'C1'

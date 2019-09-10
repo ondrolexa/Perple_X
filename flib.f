@@ -452,11 +452,6 @@ c----------------------------------------------------------------------
       integer ins, isp
       common/ cxt33 /isp,ins(nsp),specie(nsp)
 
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
       save hyname 
 
       data (hyname(i), i = 0, 7)/
@@ -657,7 +652,7 @@ c----------------------------------------------------------------------
 
       integer i,ins(9),jns(3),nit,ier
 
-      logical limit
+      logical lmt
 
       double precision fo2,fs2,oh2o,c1,c2,c3,c4,c5,c6,c7,
      *                 ek1,ek2,ek3,ek4,ek5,ek6,ek7
@@ -675,11 +670,6 @@ c----------------------------------------------------------------------
       double precision fh2o,fco2,funk
       common/ cst11 /fh2o,fco2,funk
 
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
       double precision gh,vh,g0
       common/ csthyb /gh(nsp),vh(nsp),g0(nsp) 
 
@@ -695,7 +685,7 @@ c----------------------------------------------------------------------
       nit = 0
       oh2o = 2d0
 c                                check for in bounds composition
-      call xcheck (xo,limit)
+      call xcheck (xo,lmt)
 c                                fs2 = 1/2 ln (fs2)
       call setfs2 (fs2)
 c                                compute equilibrium constants in csteqk
@@ -707,7 +697,7 @@ c                                compute hybrid pure fluid props
 
       call zeroys
 
-      if (limit) return
+      if (lmt) return
 
       y(5) = 0.00001d0
 
@@ -777,11 +767,6 @@ c----------------------------------------------------------------------
       integer ier,it
       double precision ek1,ek2,ek3,ek4,ek5,ek6,ek7,xo,xh2,yco,f0,e1,e2,
      *                 e3,e4,e5,e6,e7,e8,e9,e0,r0,t2,t10,t11,t15,c1,g,dg
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 c----------------------------------------------------------------------
       it = 0 
       ier = 0 
@@ -859,11 +844,6 @@ c----------------------------------------------------------------------
      *                 t27,t49,t55,t61,t65,t67,t71,t73,t74,t80,t88,t98,
      *                 dg,t10,t11,t25,f2,f3,f4,f7,f8,f9,f11,f12,t4,f13,
      *                 f1,t32,f5,f6,f,t13,t38,t47,df
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 c----------------------------------------------------------------------
       jt = 0 
       ier = 0 
@@ -1058,11 +1038,6 @@ c----------------------------------------------------------------------
      *                 c23,t5,t21,c13,t16,t17,t19,t33,c,t12,t42,t101,
      *                 xc,t46,t58,t60,t62,t79,t81,t87,t91,t93,t95,t99,
      *                 t107,t111,t115,dc,t3,t59,t63,t76,t7
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 c----------------------------------------------------------------------
 
       jt = 0 
@@ -1449,7 +1424,7 @@ c----------------------------------------------------------------------
 
       integer ins(8),jns(3),nit,ier,i
 
-      logical limit 
+      logical lmt 
 
       double precision fo2,fs2,oh2o,c1,c2,c3,c5,c6,
      *                 ek1,ek2,ek3,ek5,ek6
@@ -1479,11 +1454,6 @@ c----------------------------------------------------------------------
       integer iff,idss,ifug
       common/ cst10 /iff(2),idss(h5),ifug
 
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
       save ins, jns
       data ins, jns/ 1,2,3,4,5,6,8,9,1,2,4/
 c----------------------------------------------------------------------
@@ -1492,7 +1462,7 @@ c----------------------------------------------------------------------
 c                                this fs2 = 1/2 ln (fs2),
       call setfs2 (fs2)
 c                                 check for in bounds composition
-      call xcheck (xo,limit)
+      call xcheck (xo,lmt)
 c                                 compute equilibrium constants in csteqk
 
 c                                 who knows how this works, i guess if 
@@ -1507,7 +1477,7 @@ c                                 compute hybrid pure fluid props
 
       call zeroys
 
-      if (limit) return
+      if (lmt) return
 
       y(5) = 0.00001d0
       y(1) = 0.1d0
@@ -1583,7 +1553,7 @@ c-----------------------------------------------------------------------
 
       integer ins(5), jns(1), j, i
 
-      logical limit
+      logical lmt
 
       double precision vol
       common/ cst26 /vol
@@ -1606,17 +1576,12 @@ c-----------------------------------------------------------------------
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
       save ins, jns
       data ins, jns/ 1,5,6,7,8,1/
 c----------------------------------------------------------------------
 c                                check if xo is <1, >0,
 c                                reset if necessary
-      call xcheck (xo,limit) 
+      call xcheck (xo,lmt) 
 c                                 compute equilibrium constants in csteqk
       call seteqk (ins,5,-1d0)
 c                                this fs2 = 1/2 ln (fs2),
@@ -1628,7 +1593,7 @@ c                                 compute hybrid pure fluid props
 
       call zeroys
 
-      if (limit) return
+      if (lmt) return
 c                               
       ek3 = dexp(eqk(1))
 c                                 get first guess:
@@ -1725,7 +1690,7 @@ c-----------------------------------------------------------------------
 
       integer ins(3), jns(1), i, j
 
-      logical limit 
+      logical lmt 
 
       double precision eqk
       common / csteqk /eqk(nsp)
@@ -1748,17 +1713,12 @@ c-----------------------------------------------------------------------
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
       save ins,jns
       data ins, jns/1,5,7,1/
 c----------------------------------------------------------------------
 c                                check if xo is <1, >0,
 c                                reset if necessary
-      call xcheck (xo,limit)  
+      call xcheck (xo,lmt)  
 c                                 compute equilibrium constants in csteqk
       call seteqk (ins,1,-1d0)
 c                                 compute pure mrk fluid properties
@@ -1768,7 +1728,7 @@ c                                 compute hybrid pure fluid props
 
       call zeroys
 
-      if (limit) return
+      if (lmt) return
 
       c1 = 1d0/dsqrt(p)/eqk(1)
 
@@ -1864,7 +1824,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical low, limit 
+      logical low, lmt 
 
       integer ins(2), jns(1)
 
@@ -1888,11 +1848,6 @@ c----------------------------------------------------------------------
       double precision y,g,v
       common/ cstcoh /y(nsp),g(nsp),v(nsp)
 
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
       save ins, jns
       data ins, jns/1, 5, 1/
 c----------------------------------------------------------------------
@@ -1901,7 +1856,7 @@ c----------------------------------------------------------------------
       y(5) = xv
 c                                check if xh2 is <1, >0,
 c                                reset if necessary.
-      call xcheck (y(5),limit)
+      call xcheck (y(5),lmt)
 
       y(1) = 1d0 - y(5)
 c                                get pure species fugacities
@@ -1993,11 +1948,6 @@ c----------------------------------------------------------------------
       integer ibuf,hu,hv,hw,hx   
       double precision dlnfo2,elag,gz,gy,gx
       common/ cst100 /dlnfo2,elag,gz,gy,gx,ibuf,hu,hv,hw,hx
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       save ins, jns
       data ins, jns/1,2,3,4,5,1,2,4/
@@ -2177,11 +2127,6 @@ c----------------------------------------------------------------------
 
       double precision p,t,xc,u1,u2,tr,pr,r0,ps
       common/ cst5 /p,t,xc,u1,u2,tr,pr,r0,ps
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       double precision vol
       common/ cst26 /vol
@@ -4048,11 +3993,6 @@ c----------------------------------------------------------------------
       double precision dlnfo2,elag,gz,gy,gx
       common/ cst100 /dlnfo2,elag,gz,gy,gx,ibuf,hu,hv,hw,hx
 
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
       save ins
       data ins/1,2,3,4,5,10,11/
 c----------------------------------------------------------------------
@@ -4472,11 +4412,6 @@ c-----------------------------------------------------------------------
       double precision p,t,xco2,u1,u2,tr,pr,rc,ps
       common/ cst5  /p,t,xco2,u1,u2,tr,pr,rc,ps
 
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
       save r, iwarn
       data r, iwarn/83.14d0, 0/
 c----------------------------------------------------------------------
@@ -4692,11 +4627,6 @@ c----------------------------------------------------------------------
       double precision p,t,xc,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xc,u1,u2,tr,pr,r,ps
 
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
       save ins, isp, i1, i2, i3, i4, iwarn
       data isp, ins, i1, i2, i3, i4, iwarn/4, 14, 13, 12, 7,  
      *                                        14, 13, 12, 7, 0/
@@ -4872,11 +4802,6 @@ c----------------------------------------------------------------------
 
       double precision a0,a1,a2,a3 
       common/ coeffs /a0,a1,a2,a3 
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       integer ipoint,kphct,imyn
       common/ cst60 /ipoint,kphct,imyn
@@ -5181,11 +5106,6 @@ c      external gzero
       double precision p,t,xc,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xc,u1,u2,tr,pr,r,ps
 
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
       integer ipoint,kphct,imyn
       common/ cst60 /ipoint,kphct,imyn
 
@@ -5421,12 +5341,7 @@ c----------------------------------------------------------------------
       common/ cst5 /p,t,xc,u1,u2,tr,pr,r,ps
 
       double precision a0,a1,a2,a3 
-      common/ coeffs /a0,a1,a2,a3 
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+      common/ coeffs /a0,a1,a2,a3
 
       integer ipoint,kphct,imyn
       common/ cst60 /ipoint,kphct,imyn
@@ -5746,12 +5661,7 @@ c----------------------------------------------------------------------
       common/ cst4 /iam
 
       double precision a0,a1,a2,a3 
-      common/ coeffs /a0,a1,a2,a3 
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+      common/ coeffs /a0,a1,a2,a3
 
       save isp, ins, i1, i2, i3, i4, i5, itic, igood, ibad 
       data isp, ins, i1, i2, i3, i4, i5, itic, igood, ibad 
@@ -5914,11 +5824,6 @@ c-----------------------------------------------------------------------
 
       double precision a, b
       common/ rkab /a(nsp),b(nsp)
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       save ark, brk
                              
@@ -6160,11 +6065,6 @@ c----------------------------------------------------------------------
       integer nit 
 
       double precision max,min,dx,oldx,x,tol
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 c----------------------------------------------------------------------
       x = min 
       dx = func(x)
@@ -6262,12 +6162,7 @@ c----------------------------------------------------------------------
       common/ cst4 /iam
 
       double precision a0,a1,a2,a3 
-      common/ coeffs /a0,a1,a2,a3 
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+      common/ coeffs /a0,a1,a2,a3
 
       save ins 
       data ins, i1, i2, i3/14, 12, 15, 14, 12, 15/
@@ -6588,11 +6483,6 @@ c----------------------------------------------------------------------
       double precision p,t,xc,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xc,u1,u2,tr,pr,r,ps
 
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
       save ins
       data ins, i3, i4 /12, 7, 12, 7/
 c----------------------------------------------------------------------
@@ -6668,11 +6558,6 @@ c----------------------------------------------------------------------
 
       double precision a0,a1,a2,a3 
       common/ coeffs /a0,a1,a2,a3 
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       save isp, ins, i1, i2, i3, i4, ibad, igood, imed, itic 
       data isp, ins, i1, i2, i3, i4, ibad, igood, imed, itic/
@@ -7018,7 +6903,7 @@ c----------------------------------------------------------------------
 
       integer ins(6),jns(3),nit,i
 
-      logical bad, limit
+      logical bad, lmt
 
       double precision oy5,fo2,ytot,t4y3,t3y3,t2y5,t4y5,det,x,dy5,dy3,
      *       c1,c2,c3,c4,t1,t2,t3,t4,m,dm3,dm5,c,dc3,dc5,nh,rat,y5,y3
@@ -7045,11 +6930,6 @@ c----------------------------------------------------------------------
       double precision dlnfo2,elag,gz,gy,gx
       common/ cst100 /dlnfo2,elag,gz,gy,gx,ibuf,hu,hv,hw,hx
 
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 
@@ -7063,7 +6943,7 @@ c----------------------------------------------------------------------
       oy5 = 0d0
       bad = .false.
 c                                 check for in bounds composition
-      call xcheck (xo,limit)
+      call xcheck (xo,lmt)
 c                                 compute equilibrium constants, returned
 c                                 in csteqk
       call seteqk (ins,6,elag)
@@ -7074,7 +6954,7 @@ c                                 compute hybrid pure fluid props
 
       call zeroys
 
-      if (limit) then 
+      if (lmt) then 
          call setbad (fo2)
          return
       end if
@@ -7354,7 +7234,7 @@ c---------------------------------------------------------------------
 
       end 
 
-      subroutine xcheck (x,limit)
+      subroutine xcheck (x,lmt)
 c----------------------------------------------------------------------
 c x check for speciation routines that can't handle xo = 0, 1. this
 c causes too many possibilities for error in vertex/meemum so modified
@@ -7366,23 +7246,18 @@ c----------------------------------------------------------------------
 
       double precision x
 
-      logical limit
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+      logical lmt
 c----------------------------------------------------------------------
 c                                check if xo is <1, >0,
 c                                reset if necessary
       if (x.le.0d0) then
          x = 0d0
-         limit = .true.
+         lmt = .true.
       else if (x.ge.1d0) then
          x = 1d0
-         limit = .true.
+         lmt = .true.
       else
-         limit = .false.
+         lmt = .false.
       end if 
 
       end 
@@ -7429,11 +7304,6 @@ c----------------------------------------------------------------------
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common / cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       save t4,t5,ins,jns
       data t4,t5,ins,jns/1d-3,1d-3,1,2,4,3,5,7,1,2,4/
@@ -7851,11 +7721,6 @@ c---------------------------------------------------------------------
 
       double precision vol
       common/ cst26 /vol
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 c----------------------------------------------------------------------
       do i = 1, jsp
 
@@ -7992,11 +7857,6 @@ c---------------------------------------------------------------------
 
       double precision vmrk0, vhyb, vf
       common/ cxt38 /vmrk0(nsp),vhyb(nsp),vf(nsp)
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 c----------------------------------------------------------------------
       j = id - 100
       ins(1) = j
@@ -8117,11 +7977,6 @@ c---------------------------------------------------------------------
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5  /p,t,xco2,u1,u2,tr,pr,r,ps
 
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
       double precision y,g,v
       common/ cstcoh /y(nsp),g(nsp),v(nsp)
 
@@ -8238,11 +8093,6 @@ c---------------------------------------------------------------------
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5  /p,t,xco2,u1,u2,tr,pr,r,ps
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       save iwarn
       data iwarn/0/
