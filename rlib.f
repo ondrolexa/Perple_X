@@ -8591,7 +8591,6 @@ c                                 convert y -> x array
 c                                 endmember pointers
       integer jend
       common/ cxt23 /jend(h9,m4)
-
 c                                 special model endmember indexing
       integer jspec
       common/ cxt8 /jspec(h9,m4)
@@ -12202,9 +12201,6 @@ c--------------------------------------------------------------------------
 
       integer ideps,icase,nrct
       common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
-
-      double precision y2pg
-      common/ cxt4  /y2pg(m15,m4,h9)
 
       integer jend
       common/ cxt23 /jend(h9,m4)
@@ -19997,7 +19993,7 @@ c---------------------------------------------------------------------
       logical first, nokill
 
       integer kill, ikill, jkill, kill1, i, j, kosp(mst,msp), kill2,
-     *        k, l, im, idsp, ivct, ii, jpoly, jsimp
+     *        k, l, im, idsp, ivct, ii, jpoly, jsimp, jvct, killpl
 
       integer jmsol,kdsol
       common/ cst142 /jmsol(m4,mst),kdsol(m4)
@@ -20111,8 +20107,16 @@ c                                 this is done afterwards by repoly
 c                                 after the final set of endmembers 
 c                                 has been identified.
             call kill02 (ii,ikill,jkill)
+            if (idsp.eq.0) exit 
 
          end do
+
+         killpl = 0
+
+         if (idsp.eq.0) then
+            killpl = ii
+            exit
+         end if
 
          ivct = ivct + ipvert(ii)
 
@@ -20128,12 +20132,28 @@ c                                 failed, rejected too many endmembers
 c                                 check if the composition space includes
 c                                 redundant polytopes and/or simplices:
          jpoly = 0
+         ivct  = 0
+         jvct  = 0 
 c                                 first the polytopes
          do ii = 1, ipoly
 
-            if (ipvert(ii).eq.0) cycle
+            if (ii.eq.killpl) then 
+               ivct = ivct + ipvert(ii)
+               cycle
+            end if 
 
             jpoly = jpoly + 1
+c                                  shift the species indices
+            do i = 1, ipvert(ii)
+
+               do j = 1, isimp(ii)
+                  jmsol(jvct+i,j) = jmsol(ivct+i,j)
+               end do 
+
+            end do
+
+            ivct = ivct + ipvert(ii)
+            jvct = jvct + ipvert(ii)
 
             if (ii.lt.ipoly) then 
 c                                 shift the subdivision ranges
@@ -20172,7 +20192,6 @@ c                                shift composition space subdivision ranges left
             pimd(ii,1,jpoly+1) = pimd(ii,1,ipoly+1)
          end do
 
-
          ipoly = jpoly
 c                                 eliminate redundant simplicies from 
 c                                 polytopes
@@ -20190,7 +20209,7 @@ c                                 polytopes
 
                   jsimp = jsimp + 1
 
-                  do i = ivct + 2, ivct + ipvert(ii)
+                  do i = ivct + 1, ivct + ipvert(ii)
 
                      jmsol(i,jsimp) = jmsol(i,j)
 
@@ -20211,6 +20230,8 @@ c                                 polytopes
             ivct = ivct + ipvert(ii)
 
          end do
+
+         istot = ivct
 
       end if
 c                                 check if polytope model can be 
@@ -20316,6 +20337,14 @@ c                              pointer from old j to new j
 c                              reload
                ivert(ii,i) = jsp
 
+               if (jsp.eq.0) then
+
+                  do j = ivct + 1, ivct + ipvert(ii)
+                     kdsol(j) = -3
+                  end do 
+
+               end if 
+
                if (jsp.gt.1) then
 c                              shift subdivision ranges
                   do j = 1, jsp - 1
@@ -20324,12 +20353,16 @@ c                              shift subdivision ranges
                      pxnc(ii,i,j) = pxnc(ii,i,j2oj(j))
                      pimd(ii,j,i) = pimd(ii,j2oj(j),i)
                   end do
+
                end if
+
             end if
 
             exit
 
          end do
+
+         if (jsp.eq.0) exit 
 
       end do
 c                                the endmembers to be eliminated are in the range

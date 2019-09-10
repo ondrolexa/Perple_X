@@ -84,11 +84,11 @@
 !                                 k23 - max number of phases to be fractionated.
 !                                 k24 - max number of static simplicial coordinate sets (jcox).
 !                                 k25 - max number of dynamic simplicial coordinate sets (jcoz).
-      parameter (k0=25,k1=3000000,k2=100000,k3=2000,k4=32,k5=12)
+      parameter (k0=25,k1=2000000,k2=100000,k3=2000,k4=32,k5=12)
       parameter (k7=k5+1,k8=k5+2) 
       parameter (k9=35,k10=400,k14=18,k15=6,k16=120)
-      parameter (k17=7,k18=k1/100)
-      parameter (k19=3*k5,k21=3000000,k20=k21/100)
+      parameter (k17=7,k18=k1)
+      parameter (k19=3*k5,k21=2000000,k20=k21/10)
       parameter (k22=mdim*k19,k23=25)
       parameter (k13=k21/5,k24=10*k1,k25=10*k21)
 !                                 l2 - max number of independent potential variables
