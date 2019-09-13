@@ -1,13 +1,13 @@
-1) 687: redop1/meemum set iopt(6) = 0, prevents setau1 from using arf data?
+1) X 687: redop1/meemum set iopt(6) = 0, prevents setau1 from using arf data?
 
-2) yclos1 has set soltol to 1 in 687? reset to nopt(8) in 688.
+2) X yclos1 has set soltol to 1 in 687? reset to nopt(25) in 688.
 
 3) 688 eliminates clib.f, dlib.f, getxz1.f, dumlib.f files from make.
 
 4) 687 bugs:
-   a) inconsistent commons cxt12, cxt10, cst7
-   b) double output of time stamp
-   c) in gphase gfes called with y(1) rather than y(2)
+   X a) inconsistent commons cxt12, cxt10, cst7 (cxt7? couldn't find it in any case)
+   X b) double output of time stamp
+   X c) in gphase gfes called with y(1) rather than y(2)
    d) call to moduli may reset p0a in getphp prior to call to ginc?
 
 5) csol and getscp are largely redundant, csol assumes p0a has been set to account
