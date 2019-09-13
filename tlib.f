@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.8.7, source updated Aug 8, 2019.',
+     *      'Perple_X version 6.8.7, source updated Sep 13, 2019.',
 
      *      'Copyright (C) 1986-2019 James A D Connolly '//
      *      '<www.perplex.ethz.ch/copyright.html>.'
@@ -1238,9 +1238,7 @@ c                                 grid parameters
       end do
 c                                 --------------------------------------
 c                                 program/computation specific settings
-c                                 meemum, turn autorefine off. it can
-c                                 be turned to manual (1) in setau1.
-      if (iam.eq.2) iopt(6) = 0 
+
 c                                 set autorefine factor
       if (icopt.eq.1) then
          nopt(17) = nopt(19)
@@ -1399,7 +1397,7 @@ c----------------------------------------------------------------------
       common/ cst4 /iam
 c----------------------------------------------------------------------
 c                                 version
-      call vrsion (n)
+      if (n.ne.6) call vrsion (n)
 c                                 generic blurb
       if (iam.eq.1) then 
          write (n,1000) 'VERTEX'

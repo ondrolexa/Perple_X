@@ -8084,8 +8084,7 @@ c                                 MRK silicate vapor
       else if (ksmod(id).eq.42) then
 c                                 ------------------------------------
 c                                 Fe-S fluid (Saxena & Eriksson 2015)
-c         print *, 'gsol1: y: ', y(2)
-         gg =  gfes(y(2),g(jend(id,3)),g(jend(id,4)))
+         gg =  gfes(y(1),g(jend(id,3)),g(jend(id,4)))
 
       else
 
@@ -18169,9 +18168,9 @@ c-----------------------------------------------------------------------
       double precision q, q2, qr
       common/ cstaq /q(l9),q2(l9),qr(l9),jchg(l9),ichg,ion
 c                                 adaptive coordinates
-      integer jphct
+      integer jphct, jpt
       double precision g2, cp2, c2tot
-      common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),jphct
+      common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),jphct,jpt
 
       double precision thermo,uf,us
       common/ cst1 /thermo(k4,k10),uf(2),us(h5)
@@ -19655,9 +19654,9 @@ c----------------------------------------------------------------------
       double precision zcoor
       common/ cxt13 /zcoor(k20),jcoor(k21),jkp(k21),jcoct
 
-      integer jphct
+      integer jphct, jpt
       double precision g2, cp2, c2tot
-      common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),jphct
+      common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),jphct,jpt
 
       double precision xco
       integer ico,jco

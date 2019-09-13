@@ -85,7 +85,7 @@ c                                 no auto_refine data
                read (n10,*,iostat=ier) ibad1, ibad2, igood
                if (ibad1.gt.0) read (n10,'(a)') (badnam(i),i=1,ibad1)
 
-               if (iopt(6).ne.2.or.output) write (*,1030) n10nam
+               if (iopt(6).ne.2.and.output) write (*,1030) n10nam
 
                if (iopt(6).eq.1) then 
 c                                 manual mode, allow reinitialization
@@ -113,7 +113,7 @@ c                                 second cycle of automated mode
 
                write (n8,*) refine
 
-            else if (ier.eq.0.and.iam.eq.2) then 
+            else if (ier.eq.0.and.iam.eq.2.and.iopt(6).ne.0) then 
 c                                 MEEMUM, ask the user if he wants
 c                                 to use the data 
                write (*,'(/,a,a,/,a)') 'Auto-refine data exists from a',

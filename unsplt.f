@@ -83,8 +83,8 @@ c                                 solution model names
       common/ cst74 /iap(k2),ibulk
 
       double precision xcoor
-      integer icoor
-      common/ cxt10 /xcoor(k18),icoor(k1)
+      integer icoor,jcoor
+      common/ cxt10 /xcoor(k18),icoor(k1),jcoor(k1)
 
       double precision bg
       common/ cxt19 /bg(k5,k2)

@@ -2055,9 +2055,7 @@ c----------------------------------------------------------------------
       nsol = 0
       inc = istct - 1
       quit = .true.
-      soltol = 2d1*nopt(8)
-
-      soltol = 1d0
+      soltol = nopt(25)
 
       do i = 1, jphct
 
@@ -3783,8 +3781,6 @@ c                                 -------------------------------------------
 c                                 open statements for units n1-n5 and n9
 c                                 are in subroutine input1
       call input1 (first,output,err)
-c                                 for meemum turn auto_refine OFF
-      iopt(6) = 0 
 c                                 read thermodynamic data on unit n2:
       call input2 (first)
 c                                 allow reading of auto-refine data 
