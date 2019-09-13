@@ -113,7 +113,7 @@ c                                 second cycle of automated mode
 
                write (n8,*) refine
 
-            else if (ier.eq.0.and.iam.eq.2.and.iopt(6).ne.0) then 
+            else if (ier.eq.0.and.iam.eq.2) then 
 c                                 MEEMUM, ask the user if he wants
 c                                 to use the data 
                write (*,'(/,a,a,/,a)') 'Auto-refine data exists from a',
@@ -522,6 +522,10 @@ c-----------------------------------------------------------------------
       integer io3,io4,io9
       common / cst41 /io3,io4,io9
 
+      logical usv
+      integer pindex,tindex
+      common/ cst54 /pindex,tindex,usv
+
       integer hcp,idv
       common/ cst52  /hcp,idv(k7) 
 
@@ -713,7 +717,11 @@ c                                 finished, check for no components
 
          else if (rname.eq.blank) then 
  
-            cycle
+            cycle 
+
+         else if (rname.eq.'Volume'.or.rname.eq.'Entropy') then
+
+            usv = .true.
 
          else
 
@@ -747,7 +755,19 @@ c                                 check for compositional constraints
       icp1 = icp + 1
       icp2 = icp + 2
 
-      hcp = icp
+      if (usv) then
+
+         hcp = icp2
+         tindex = icp1
+         pindex = icp2
+         cname(tindex) = 'T(K) '
+         cname(pindex) = '-P(b)'
+
+      else
+
+         hcp = icp
+
+      end if 
 c                                 decode saturated components
 c                                 isat is the saturated component counter
       isat = 0
@@ -1102,6 +1122,9 @@ c----------------------------------------------------------------------
 
       integer iff,idss,ifug
       common / cst10 /iff(2),idss(h5),ifug
+
+      double precision ctot
+      common/ cst3  /ctot(k1)
 
       integer iwt
       common/ cst209 /iwt
@@ -1558,8 +1581,6 @@ c                                 -------------------------------------
 c                                 real entities in the thermodynamic 
 c                                 composition space:
       istct = iphct + 1
-c                                 increment between iphct and jphct counters
-      jiinc = istct - 1
 c                                 read till end of header
       call eohead (n2)
 c                                 loop to load normal thermodynamic data:
@@ -2075,42 +2096,62 @@ c                                 set dependent potential, if it exists
 
       end
 
-      subroutine getcmp (jd,id,ids,dynam)
+      subroutine getcmp (jd,id,ids)
 c-----------------------------------------------------------------------
 c getcmp gets the composition of pseudocompund id, where:
 c  if ids < 0, -ids points to the composition of a true compound in array cp
 c  if ids > 0, id points to the composition of a solution defined in terms
-c              on endmember fractions
-
+c              on endmember fractions defined and saved by routine resub
+c              in array zcoor.
 c the composition is saved in arrays cp3 and x3, entry jd
 
-c getcmp is called by FRENDLY, WERAMI, MEEMUM and VERTEX
+c getcmp is called by both WERAMI and MEEMUM/VERTEX
+
+c this is an attempt to use the compositions stored in cp2....
 c-----------------------------------------------------------------------
       implicit none
  
       include 'perplex_parameters.h'
 
-      logical bad, dynam
+      integer i, j, k, id, jd, ids
 
-      integer i, id, jd, ids
+      logical bad
 
-      double precision scp(k5), scptot
-
+      double precision xx
+c                                 -------------------------------------
+c                                 global variables:
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
 
       double precision cp
-      common/ cst12 /cp(k5,k10)
+      common/ cst12 /cp(k5,k1)
+c                                 bookkeeping variables
+      integer ksmod, ksite, kmsol, knsp
+      common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
 
-      double precision cp0
-      common/ cst71 /cp0(k0,k5)
-
+      integer lstot,mstot,nstot,ndep,nord
+      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
+c                                 working arrays
+      double precision z, pa, p0a, x, w, y, wl
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
+     *              wl(m17,m18)
+c                                 single site solution coordinates:
+      integer jend
+      common/ cxt23 /jend(h9,m4)
+c                                 refined compositions and solution 
+c                                 pointer
       integer kkp,np,ncpd,ntot
       double precision cp3,amt
       common/ cxt15 /cp3(k0,k19),amt(k19),kkp(k19),np,ncpd,ntot
 
+      logical lorder, lexces, llaar, lrecip
+      common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
+
       integer ikp
       common/ cst61 /ikp(k1)
+
+      double precision cp0
+      common/ cst71 /cp0(k0,k5)
 
       integer iam
       common/ cst4 /iam
@@ -2119,20 +2160,45 @@ c-----------------------------------------------------------------------
       logical fulrnk
       double precision cptot,ctotal
       common/ cst78 /cptot(k19),ctotal,jdv(k19),npt,fulrnk
+
+      integer iaq, aqst, aqct
+      character aqnam*8
+      double precision aqcp, aqtot
+      common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
+
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+
+      integer jnd
+      double precision aqg,qq,rt
+      common/ cxt2 /aqg(m4),qq(m4),rt,jnd(m4)
+
+      integer jphct, jpt
+      double precision g2, cp2, c2tot
+      common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),jphct,jpt
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      integer kd, na1, na2, na3, nat
+      double precision x3, caq
+      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),na1,na2,na3,nat,kd
 c----------------------------------------------------------------------
       kkp(jd) = ids
+      cptot(jd) = 0d0
 
       if (ids.lt.0) then
-c                                 simple compounds and endmembers:
+c                                 simple compounds
          if (iam.ne.5) then
-c                                 all programs except frendly
+c                                 all programs except frendly 
             do i = 1, icomp
                cp3(i,jd) = cp(i,-ids)
-            end do
-c                                 set solution composition 
-c                                 if it's a solution endmember
-            if (ikp(-ids).ne.0) call endx3 (jd,-ids,ikp(-ids))
-
+            end do 
+c                                 check if it's a solution endmember
+            if (ikp(-ids).ne.0) call endcp (jd,-ids,ikp(-ids))
+   
          else 
 c                                 frendly 
             do i = 1, k0
@@ -2141,34 +2207,118 @@ c                                 frendly
 
          end if
 
-      else
-c                                 solutions:
-         if (iam.ne.3) then
-c                                 getcmp is being called by MEEMUM/VERTEX:
-c                                 solution endmember fractions are recovered by 
-c                                 setxyp.
-            call setxyp (ids,id,dynam,bad)
-
-            call setex3 (jd,ids)
-
-         else
-c                                 getcmp is being called by WERAMI:
+      else 
+c                                 solutions, initialize
+         do i = 1, icomp
+            cp3(i,jd) = 0d0
+         end do
+c                                 if getcmp is being called by WERAMI:
 c                                 GETXZ (dlib.f) gets the x(i,j) coordinates for the
 c                                 composition from the x3(jd,i,j) array and
-c                                 the id argument is irrelevant. 
-            call getxz (jd,ids)
+c                                 the id argument is irrelevamt. 
+c                                 if getcmp is being called by MEEMUM/VERTEX:
+c                                 GETXZ (getxz1.f) gets both the x(i,j) and 
+c                                 x3(jd,i,j) compositional coordinates from the
+c                                 zcoor array.
+         call getxz (jd,id,ids)
+c                                 convert the x(i,j) coordinates to the
+c                                 geometric y coordinates
+         call xtoy (ids,jd,.true.,bad)
 
-         end if
+         if (lopt(32).and.ksmod(ids).eq.39) then 
 
-         call getscp (scp,scptot,ids,jd,.false.)
+            if (iam.ne.3) then
+c                                 MEEMUM:
+c                                 cp2 works for meemum/vertex, but not werami
+c                                 the id index on cp2 is intentional.
+               do j = 1, icomp 
+                  cp3(j,jd) = cp2(j,id)*c2tot(id)
+               end do
 
-         do i = 1, icomp
-            cp3(i,jd) = scp(i)
-         end do
+               if (cp2(k5,id).gt.1d1) then
+                  write (*,*) 'BAZORK'
+                  write (*,*) 'BAZORK'
+                  write (*,*) 'hydroxyl solution stable ',cp2(k5,id)
+                  write (*,*) 'BAZORK'
+                  write (*,*) 'BAZORK'
+               end if 
 
-         cptot(jd) = scptot
+            else
+c                                  WERAMI:
+               if (caq(jd,na1).eq.0d0) then
+c                                  pure solvent, use the y array to be safe
+                  do i = 1, ns
+                     do j = 1, icomp 
+                        cp3(j,jd) = cp3(j,jd) + y(i) * cp(j,jnd(i))
+                     end do 
+                  end do
 
-      end if
+               else 
+c                                  impure solvent
+                  do i = 1, ns
+                     do j = 1, icomp 
+                        cp3(j,jd) = cp3(j,jd) + caq(jd,i) * cp(j,jnd(i))
+                     end do 
+                  end do
+
+                  do i = sn1, nsa
+
+                     k = i - ns
+c                                 convert molality to mole fraction (xx)
+                     xx = caq(jd,i)/caq(jd,na2)
+
+                     do j = 1, icomp
+                        cp3(j,jd) = cp3(j,jd) + xx * aqcp(j,k)
+                     end do  
+
+                  end do
+
+               end if
+
+            end if
+
+         else if (lrecip(ids)) then
+c                                 get the p' coordinates (amounts of 
+c                                 the independent endmembers)     
+            call getpp (ids) 
+
+            do i = 1, lstot(ids)
+               do j = 1, icomp 
+                  cp3(j,jd) = cp3(j,jd) + p0a(i) * cp(j,jend(ids,2+i))
+               end do 
+            end do          
+
+         else if (ksmod(ids).eq.20) then 
+c                                 electrolyte:
+c                                 solute species  
+            do i = sn1, nqs
+               do j = 1, icomp
+                  cp3(j,jd) = cp3(j,jd) + y(i) * aqcp(j,jnd(i) - aqst)
+               end do
+            end do 
+c                                 solvent species 
+            do i = 1, ns 
+               do j = 1, icomp
+                  cp3(j,jd) = cp3(j,jd) + y(i) * cp(j,jnd(i))
+               end do
+            end do
+
+         else 
+c                                 solutions with no dependent endmembers:
+c                                 y coordinates used to compute the composition
+            do i = 1, mstot(ids)
+               do j = 1, icomp
+                  cp3(j,jd) = cp3(j,jd) + y(i) * cp(j,jend(ids,2+i))
+               end do
+            end do
+
+         end if 
+
+      end if 
+
+      do i = 1, icp
+         cptot(jd) = cptot(jd) + cp3(i,jd)
+      end do 
 
       end 
 
@@ -3435,12 +3585,19 @@ c----------------------------------------------------------------------
       integer jxco, kxco, i, j, ids, ier
 c                                 -------------------------------------
 c                                 global variables
+c                                 x coordinate description
+      integer istg, ispg, imlt, imdg
+      common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
 c                                 global assemblage data
       integer icog,jcog
       common/ cxt17 /icog(k2),jcog(k2)
 
       integer iap,ibulk
       common/ cst74  /iap(k2),ibulk
+
+      double precision xco
+      integer ico,jco
+      common/ cxt10 /xco(k18),ico(k1),jco(k1)
 
       double precision bg
       common/ cxt19 /bg(k5,k2)
@@ -3462,7 +3619,7 @@ c                                 global assemblage data
       common/ cst300 /cblk(k5),jbulk
 
       integer ncoor,mcoor,ndim
-      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h4,h9)
+      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
 
       integer iam
       common/ cst4 /iam
@@ -3472,7 +3629,10 @@ c                                 global assemblage data
 
       integer kd, na1, na2, na3, nat
       double precision x3, caq
-      common/ cxt16 /x3(k5,h4,mst,msp),caq(k5,l10),na1,na2,na3,nat,kd
+      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),na1,na2,na3,nat,kd
+
+      integer ksmod, ksite, kmsol, knsp
+      common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
 
       integer iopt
       logical lopt
@@ -3506,7 +3666,7 @@ c                                phase molar amounts
          read (n5,*,iostat=ier) (bg(i,ibulk),i=1,iavar(3,ias))
          if (ier.ne.0) goto 99
 
-         icox(ibulk) = jxco
+         ico(ibulk) = jxco
 
          do i = 1, iavar(1,ias)
 
@@ -4000,371 +4160,5 @@ c                                  set y = 0 ti be the top
          end do
 
       end if 
-
-      end
-
-c routines common to psect and werami and NOT called by vertex/meemum
-
-      subroutine  mkcomp (jcomp,ids)
-c----------------------------------------------------------------
-c mkcomp makes the jcomp'th user defined compositional variable
-c the first k5 compositions are reserved for chsprp, the remaining
-c k5 compositions are for solvus testing
-
-c the solution ids is associated with the composition.
-
-c   jcx  - the number of components to define the numerator of
-c          the composition.
-c   jcx1 - the number of components to define the denominator of
-c          the composition.
-c   icps - the indices of the components (1..jcx,jcx+1...jcx1).
-c   rcps - the cofficients on the compenents as indexed by icps.
-c----------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      character*5 y*1, units*13, text*195, what*9, sym*1
-
-      integer jcomp, ier, i, ids, count
-
-      integer icomp,istct,iphct,icp
-      common/ cst6  /icomp,istct,iphct,icp
-
-      character cname*5
-      common/ csta4  /cname(k5)
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
-      character fname*10, aname*6, lname*22
-      common/ csta7 /fname(h9),aname(h9),lname(h9)
-
-      integer icps, jcx, jcx1, kds
-      logical stol, savg, spec
-      double precision rcps, a0
-      common/ comps /rcps(k7,2*k5),a0(k7,2),icps(k7,2*k5),jcx(2*k5),
-     *               jcx1(2*k5),kds(2*k5),stol(i11),savg(i11),spec(2*k5)
-
-      integer spct
-      double precision ysp
-      character*8 spnams
-      common/ cxt34 /ysp(l10,k5),spct(h9),spnams(l10,h9)
-c----------------------------------------------------------------------
-c                                choose components vs species
-      write (*,1000) fname(ids)
-      read (*,'(a)') y
-
-      if (y.eq.'y'.or.y.eq.'Y') then 
-         spec(jcomp) = .true.
-         what = ' species'
-      else
-         spec(jcomp) = .false.
-         what = 'component'
-      end if 
-c                                set units for composition
-      if (spec(jcomp)) then
-         units = 'mole fraction'
-         sym = 'y'
-      else if (iopt(2).eq.0) then
-         units = 'molar amount '
-         sym = 'n'
-      else 
-         units = ' mass amount '
-         sym = 'm'
-      end if 
-c                                get the composition to be contoured
-10    if (lopt(22)) then
-c                                with moronic constant 
-         write (*,1100) sym, sym, sym, units, what, what
-      else 
-         write (*,1110) sym, sym, sym, units, what, what
-c                                zero the constant
-         a0(jcomp,1) = 0d0
-         a0(jcomp,2) = a0(jcomp,1)
-      end if 
-  
-      do 
-
-         if (spec(jcomp)) then 
-            write (*,1030) what,'numerator',k5+1
-         else 
-            write (*,1030) what//'s','numerator',k5+1
-         end if 
-
-         read (*,*,iostat=ier) jcx(jcomp)
-
-         if (ier.ne.0.or.jcx(jcomp).lt.1) then
-            write (*,1020)
-            cycle 
-         end if 
-
-         exit
-
-      end do 
-c                                define the numerator
-      do 
-
-         write (*,1040) what,'numerator'
-
-         if (spec(jcomp)) then
-            write (*,1010) (i,spnams(i,ids), i = 1, spct(ids))
-            count = spct(ids)
-         else 
-            write (*,1010) (i,cname(i), i = 1, icomp)
-            count = icomp
-         end if 
-
-         read (*,*,iostat=ier) (icps(i,jcomp),rcps(i,jcomp), 
-     *                                     i = 1, jcx(jcomp))
-         do i = 1, jcx(jcomp)
-            if (icps(i,jcomp).lt.1.or.icps(i,jcomp).gt.count) then
-               ier = 1
-               exit 
-            end if 
-         end do 
-
-         if (ier.ne.0) then
-            write (*,1020)
-            cycle 
-         end if 
-
-         exit 
-
-      end do  
-
-      if (lopt(22)) then 
-         write (*,1050) 'a1'
-         call rdnumb (a0(jcomp,1),0d0,i,0,.true.)
-      end if 
-c                                define the denominator
-      do 
-
-         if (spec(jcomp)) then 
-            write (*,1030) what,'denominator',k5+1-jcx(jcomp)
-         else 
-            write (*,1030) what//'s','denominator',k5+1-jcx(jcomp)
-         end if 
-
-         write (*,1140)
-         read (*,*,iostat=ier) jcx1(jcomp)
-
-         if (ier.ne.0.or.jcx1(jcomp).lt.0) then
-            write (*,1020)
-            cycle 
-         end if 
- 
-         jcx1(jcomp) = jcx(jcomp) + jcx1(jcomp)
-        
-         exit 
-
-      end do 
-
-      if (jcx1(jcomp).gt.jcx(jcomp)) then 
-
-         do 
-
-            write (*,1040) what,'denominator'
-
-            if (spec(jcomp)) then
-               write (*,1010) (i,spnams(i,ids), i = 1, spct(ids))
-            else 
-               write (*,1010) (i,cname(i), i = 1, icomp)
-            end if 
-
-            read (*,*,iostat=ier) (icps(i,jcomp),rcps(i,jcomp), 
-     *                                 i = jcx(jcomp)+1, jcx1(jcomp))
-
-            do i = jcx(jcomp)+1, jcx1(jcomp)
-               if (icps(i,jcomp).lt.1.or.icps(i,jcomp).gt.icomp) then
-                  ier = 1
-                  exit 
-               end if 
-            end do 
-
-            if (ier.ne.0) then
-               write (*,1020)
-               cycle 
-            end if 
-
-            if (lopt(22)) then 
-
-               write (*,1050) 'a2'
-               call rdnumb (a0(jcomp,2),0d0,i,0,.true.)
-c                                show the user the composition: 
-               write (*,1070)   
-
-               if (spec(jcomp)) then
-                  write (text,1120) a0(jcomp,1),(rcps(i,jcomp),
-     *                               spnams(icps(i,jcomp),ids),
-     *                               i = 1, jcx(jcomp))
-               else           
-                  write (text,1130) a0(jcomp,1),
-     *                         (rcps(i,jcomp),cname(icps(i,jcomp)), 
-     *                                          i = 1, jcx(jcomp))
-               end if 
-
-            else 
-
-               write (*,1070)  
-
-               if (spec(jcomp)) then
-                  write (text,1120) (rcps(i,jcomp),
-     *                               spnams(icps(i,jcomp),ids),
-     *                               i = 1, jcx(jcomp))
-               else          
-                  write (text,1120) (rcps(i,jcomp),cname(icps(i,jcomp)),
-     *                                            i = 1, jcx(jcomp))
-               end if 
-
-            end if  
-
-            call deblnk (text)
-            write (*,1150) text    
-            write (*,*) '   divided by '
-
-            if (lopt(22)) then 
-
-               if (spec(jcomp)) then
-                  write (text,1130) a0(jcomp,1),(rcps(i,jcomp),
-     *                               spnams(icps(i,jcomp),ids),
-     *                               i = jcx(jcomp)+1, jcx1(jcomp))
-               else  
-                  write (text,1130) a0(jcomp,2),
-     *                        (rcps(i,jcomp),cname(icps(i,jcomp)), 
-     *                               i = jcx(jcomp)+1, jcx1(jcomp))
-               end if 
-
-            else
-
-               if (spec(jcomp)) then
-                  write (text,1120) (rcps(i,jcomp),
-     *                               spnams(icps(i,jcomp),ids),
-     *                               i = jcx(jcomp)+1, jcx1(jcomp))
-               else  
-                  write (text,1120) (rcps(i,jcomp),cname(icps(i,jcomp)),
-     *                               i = jcx(jcomp)+1, jcx1(jcomp))
-               end if 
-
-            end if 
-
-            call deblnk (text)
-            write (*,1150) text 
-
-            exit 
-
-         end do 
-
-      else 
-
-         if (lopt(22)) then 
-
-            if (spec(jcomp)) then
-               write (text,1130) a0(jcomp,1),(rcps(i,jcomp),
-     *                           spnams(icps(i,jcomp),ids),
-     *                           i = 1, jcx(jcomp))
-            else  
-               write (text,1130) a0(jcomp,1),
-     *                           (rcps(i,jcomp),cname(icps(i,jcomp)), 
-     *                           i = 1, jcx(jcomp))
-            end if 
-
-         else
-
-            if (spec(jcomp)) then
-               write (text,1120) (rcps(i,jcomp),
-     *                           spnams(icps(i,jcomp),ids),
-     *                           i = 1, jcx(jcomp))
-            else  
-               write (text,1120) (rcps(i,jcomp),cname(icps(i,jcomp)), 
-     *                                       i = 1, jcx(jcomp))
-            end if 
-
-         end if  
-
-         call deblnk (text)
-         write (*,1080) text 
-
-      end if 
- 
-      write (*,1090)
-      read (*,'(a)') y
-      if (y.eq.'y'.or.y.eq.'Y') goto 10
-
-      kds(jcomp) = ids
-
-1000  format (/,'Define the composition in terms of the species/endmem',
-     *          'bers of ',a,' (y/n)?',//,'Answer no to define a ',
-     *          'composition in terms of the systems components.',/,
-     *          'Units (mass or molar) are controlled by the ',
-     *          'composition keyword in',/,'perplex_option.dat.')
-1010  format (2x,i2,' - ',a)
-1020  format (/,'Invalid input, try again:',/)
-1030  format (/,'How many ',a,' in the ',a,' of the',
-     *          ' composition (<',i2,')?')
-1040  format (/,'Enter ',a,' indices and weighting factors for the '
-     *        ,a,':')
-1050  format (/,'Enter the optional constant ',a,' [defaults to 0]:')
-1070  format (/,'The compositional variable is:')
-1080  format (/,'The compositional variable is: ',a,/)
-1090  format ('Change it (y/n)?')
-1100  format (/,'Compositions are defined as a ratio of the form:',/,
-     *        4x,'[a1 + Sum {w(i)*',a,'(i), i = 1, c1}] / ',
-     *           '[a2 + Sum {w(i)*',
-     *        a,'(i), i = c2, c3}]',/,15x,
-     *        a,'(j)   = ',a,' of ',a,' j',/,15x,
-     *        'w(j)   = weighting factor of ',a,' j (usually 1)',/,
-     *    15x,'a1, a2 = optional constants (usually 0)')
-1110  format (/,'Compositions are defined as a ratio of the form:',/,
-     *        4x,' Sum {w(i)*',a,'(i), i = 1, c1} / Sum {w(i)*',
-     *        a,'(i), i = c2, c3}',/,15x,
-     *        a,'(j)   = ',a,' of ',a,' j',/,15x,
-     *        'w(j)   = weighting factor of ',a,' j (usually 1)')
-1120  format (15('+',1x,f4.1,1x,a5,1x))
-1130  format (f4.1,1x,15('+',1x,f4.1,1x,a5,1x))
-1140  format ('Enter zero to use the numerator as a composition.')
-1150  format (/,a,/)  
-
-      end
-
-      subroutine rnam1 (iex,xnam,what)
-c----------------------------------------------------------------------
-c read a solution name (what = 0) compound name (what = 1) or either
-c (what = 2) from console, return
-c iex = -id if a compound
-c iex = ikp if a solution
-c iex = 0 if invalid choice
-c----------------------------------------------------------------------
-      implicit none
-
-      integer iex, what
-
-      character*10 xnam
-c----------------------------------------------------------------------
-      iex = 0
-
-      do 
-
-         if (what.eq.0) then 
-            write (*,1040) 'solution' 
-         else if (what.eq.1) then 
-            write (*,1040) 'compound' 
-         else 
-            write (*,1040) 'solution or compound' 
-         end if  
-
-         read (*,'(a)') xnam
-
-         call matchj (xnam,iex)
-
-         if (iex.ne.0) exit 
-         write (*,1100) xnam
-
-      end do 
-
-1040  format (/,'Enter ',a,' (left justified): ')
-1100  format (/,'No such entity as ',a,', try again: ')
 
       end

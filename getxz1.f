@@ -15,32 +15,42 @@ c----------------------------------------------------------------------
       double precision xt
 c                                 working arrays
       double precision z, pa, p0a, x, w, y, wl
-      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
      *              wl(m17,m18)
+c                                 x coordinate description
+      integer istg, ispg, imlt, imdg
+      common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
+c                                 adaptive x(i,j) coordinates
+      integer jcoct, jcoor, jkp
+      double precision zcoor
+      common/ cxt13 /zcoor(k20),jcoor(k21),jkp(k21),jcoct
 c                                  xcoordinates for the final solution
       integer kd, na1, na2, na3, nat
       double precision x3, caq
-      common/ cxt16 /x3(k5,h4,mst,msp),caq(k5,l10),na1,na2,na3,nat,kd
+      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),na1,na2,na3,nat,kd
 
       integer ncoor,mcoor,ndim
-      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h4,h9)
-c----------------------------------------------------------------------
-c      icoor = jcoor(id)
+      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
 
-      do i = 1, istg(ids,1)
+      integer pstot,qstot,ostg,odim,nsum
+      common/ junk1 /pstot(h9),qstot(h9),ostg(h9),odim(mst,h9),nsum(h9)
+c----------------------------------------------------------------------
+      icoor = jcoor(id)
+
+      do i = 1, ostg(ids)
 
          xt = 0d0 
 
-         do j = 1, ispg(ids,1,i) - 1
+         do j = 1, ndim(i,ids)
             icoor = icoor + 1
-            x(1,i,j) = zco(icoor)
-            x3(jd,1,i,j) = zco(icoor)
-            xt = xt + zco(icoor)
+            x(i,j) = zcoor(icoor)
+            x3(jd,i,j) = zcoor(icoor)
+            xt = xt + zcoor(icoor)
          end do 
 
          xt = 1d0 - xt
-         x(1,i,j) = xt
-         x3(jd,1,i,j) = xt
+         x(i,j) = xt
+         x3(jd,i,j) = xt
 
       end do 
 

@@ -29,6 +29,9 @@ c----------------------------------------------------------------------
       logical oned
       common/ cst82 /oned
 
+      integer ncoor,mcoor,ndim
+      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
+
       integer igrd
       common/ cst311 /igrd(l7,l7)
 
@@ -42,8 +45,11 @@ c----------------------------------------------------------------------
       integer jtest,jpot
       common/ debug /jtest,jpot
 
-      integer ivar,ind
-      common/ cst83 /ivar,ind
+      integer istg, ispg, imlt, imdg
+      common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
+
+      integer ivar,ind,ichem
+      common/ cst83 /ivar,ind,ichem
 
       integer isec,icopt,ifull,imsg,io3p
       common/ cst103 /isec,icopt,ifull,imsg,io3p
@@ -75,6 +81,10 @@ c                                 solution model names
 
       integer iap,ibulk
       common/ cst74 /iap(k2),ibulk
+
+      double precision xcoor
+      integer icoor
+      common/ cxt10 /xcoor(k18),icoor(k1)
 
       double precision bg
       common/ cxt19 /bg(k5,k2)
@@ -119,9 +129,9 @@ c                                 initialize, set global lists and project name
 
       do i = 1, gsoct
          gname(i) = fname(i)
-         gstg(i) = istg(i,1)
+         gstg(i) = istg(i)
          gcoor(i) = ncoor(i)
-         do j = 1, istg(i,1)
+         do j = 1, istg(i)
             gspg(i,j) = gspg(i,j)
          end do 
       end do 
