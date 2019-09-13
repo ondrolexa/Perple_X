@@ -2970,7 +2970,7 @@ c----------------------------------------------------------------
 
       integer i, j, k, id, jk, ind(i11), jnd(i11), nsol, knd(i11), ksol
 
-      logical stable(i11), quit
+      logical stble(i11), quit
 
       double precision mode(3), smode(i11), dinc 
 
@@ -2991,7 +2991,7 @@ c----------------------------------------------------------------
       integer idsol,nrep,nph
       common/ cst38/idsol(k5,k3),nrep(k5,k3),nph(k3)
 
-      save ind, stable, ksol, nsol
+      save ind, stble, ksol, nsol
 c----------------------------------------------------------------------
       do i = 1, iprop
          prop(i) = nopt(7)
@@ -3051,7 +3051,7 @@ c                                mode column pointer
 
             do i = 1, istab
 
-               if (.not.stable(i).and.smode(i).gt.0d0) then
+               if (.not.stble(i).and.smode(i).gt.0d0) then
 c                                 check if it's already in ind:
                  quit = .false.
 
@@ -3063,7 +3063,7 @@ c                                 check if it's already in ind:
                  end do 
 
                  if (quit) then 
-                    stable(i) = .true.
+                    stble(i) = .true.
                     cycle 
                  end if 
 
@@ -3072,7 +3072,7 @@ c                                 probably univariant, find the phase that
 c                                 was stable, but isn't anymore
                     do j = 1, nsol
 
-                       if (stable(ind(j)).and.
+                       if (stble(ind(j)).and.
      *                     smode(ind(j)).gt.0d0) cycle
 c                                 shift all higher indices up
                        do k = nsol, j, -1
@@ -3093,7 +3093,7 @@ c                                 probably low variance
 
                   end if
 
-                  stable(i) = .true.
+                  stble(i) = .true.
 
                end if 
 
@@ -3102,7 +3102,7 @@ c                                 set modes of phase that have dissappeared
 c                                 to real zeros (not nopt(7)).
             do i = 1, nsol
 
-               if (stable(i).and.smode(i).gt.0) cycle
+               if (stble(i).and.smode(i).gt.0) cycle
 
                do j = 1, nstab(i)
                   prop(jnd(i)+j) = 0d0
@@ -3114,9 +3114,9 @@ c                                 to real zeros (not nopt(7)).
 
          do i = 1, istab
             if (smode(i).eq.0d0) then 
-               stable(i) = .false.
+               stble(i) = .false.
             else 
-               stable(i) = .true.
+               stble(i) = .true.
             end if
          end do
 

@@ -184,14 +184,20 @@ c                                 x coordinate description
       integer hkp,mkp
       common/ cst72 /hkp(k21),mkp(k19)
 
+      double precision y2pg
+      common/ cxt4  /y2pg(m15,m4,h9)
+
       integer ksmod, kmsol, knsp
       common/ cxt0  /ksmod(h9),kmsol(h9,m4,mst),knsp(m4,h9)
 c                                 temporary subdivision limits:
       double precision pxmn, pxmx, pxnc
       common/ cxt108 /pxmn(h4,mst,msp),pxmx(h4,mst,msp),pxnc(h4,mst,msp)
 
-       double precision pwt
-       common / cxt44 / pwt(h4)
+      double precision pwt
+      common/ cxt44 / pwt(h4)
+
+      character poname*10
+      common/ cxt47 /poname(h9,h4)
 c                                 interim storage array
       integer lcoor, lkp
       double precision ycoor

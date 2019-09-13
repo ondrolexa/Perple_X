@@ -1290,7 +1290,7 @@ c                                 check x-ranges
 
          do i = 1, istg(ids,ii)
 
-            do j = 1, ndim(i,ii,ids)
+            do j = 1, ispg(ids,ii,i)
 
                if (ksmod(ids).eq.20.and.j.eq.ns) cycle 
 c                                 low limit:
@@ -1587,7 +1587,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer ic,jc,i,j,k,ids
+      integer ic,jc,ii,i,j,k,ids
 c                                 -------------------------------------
 c                                 global variables
       integer iap,ibulk
@@ -1622,9 +1622,13 @@ c                                phase molar amounts
       write (n5,1010) (amt(i),i=1,np+ncpd)
 c                                solution phase compositions
       do i = 1, np
+
          ids = kkp(i)
-         write (n5,1010) ((x3(i,1,j,k),k=1,ispg(ids,1,j)),
-     *                                              j=1,istg(ids,1))
+
+         write (n5,1010) (((x3(i,ii,j,k), k=1,ispg(ids,ii,j)),
+     *                                    j=1,istg(ids,ii)),
+     *                                   ii=1,pop1(ids))
+
 c                                lagged speciation
          if (ksmod(ids).eq.39.and.lopt(32)) write (n5,1010) 
      *                                            (caq(i,j),j=1,nat)
@@ -3169,8 +3173,6 @@ c                                 -------------------------------------------
 c                                 open statements for units n1-n5 and n9
 c                                 are in subroutine input1
       call input1 (first,output,err)
-c                                 for meemum turn auto_refine OFF
-      iopt(6) = 0 
 c                                 read thermodynamic data on unit n2:
       call input2 (first)
 c                                 allow reading of auto-refine data 

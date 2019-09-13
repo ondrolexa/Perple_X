@@ -8549,9 +8549,6 @@ c                                 excess energy variables
 
       double precision deph,dydy,dnu
       common/ cxt3r /deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
-
-      double precision y2pg
-      common/ cxt4  /y2pg(m15,m4,h9)
 c                                 convert y -> x array
       integer indx
       common/ cxt5i /indx(h9,h4,mst,msp)
@@ -8727,8 +8724,11 @@ c                                 composition space:
 c                                 number of polytopes:
       poly(im) = ipoly
 
-      if (ipoly.gt.1) then 
+      if (ipoly.gt.1) then
          pop1(im) = ipoly + 1
+         do i = 1, ipoly
+            poname(im,i) = pname(i)
+         end do
       else
          pop1(im) = ipoly
          ipvert(1) = mstot(im)
@@ -8874,10 +8874,10 @@ c                                 hard_limit test
          end do
 c                                 initialize high/low ranges
          do i = 1, istg(im,ii)
-            do j = 1, ndim(i,1,im)
+            do j = 1, ispg(im,ii,1)
 
-               xlo(j,i,1,im) = 1d0
-               xhi(j,i,1,im) = 0d0
+               xlo(j,i,ii,im) = 1d0
+               xhi(j,i,ii,im) = 0d0
 
             end do
          end do
@@ -9829,9 +9829,6 @@ c-----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-
-      double precision y2pg
-      common/ cxt4  /y2pg(m15,m4,h9)
 
       double precision z, pa, p0a, x, w, y, wl
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -11952,28 +11949,30 @@ c                              close solution model file
      *          'initial proportions.',/)
       end
 
-      subroutine errk24
+      subroutine err41 (tag)
 c---------------------------------------------------------------------
-c if an entry will exceed dimension k24 and write apporpriate
+c if an entry will exceed dimension 'tag' and write apporpriate
 c diagnostic on error.
 c---------------------------------------------------------------------
       implicit none
 
-      character tname*10
+      character tname*10, tag*(*)
+
       logical refine, resub
       common/ cxt26 /refine,resub,tname
 c---------------------------------------------------------------------
 c                                 error diagnostic
          if (resub) then
 c                                 adaptive minimization array
-            call error (41,0d0,2,'SUBDIV')
+            call error (41,0d0,2,tag)
          else if (refine) then
-            call error (41,0d0,1,'SUBDIV')
+            call error (41,0d0,1,tag)
          else
-            call error (41,0d0,0,'SUBDIV')
+            call error (41,0d0,0,tag)
          end if
 
       end
+
 
       subroutine satsrt
 c---------------------------------------------------------------------
@@ -14305,7 +14304,7 @@ c                                 test for closure
 c              if (prism(l+nqs1)+sum.ge.1d0) cycle
 c                                 acceptable composition
                m = ntot * nqs1
-               if (m+nqs1.gt.k24) call errk24
+               if (m+nqs1.gt.k24) call err41 ('K24')
 
                ntot = ntot + 1
 c                                 load neutral part
@@ -16685,7 +16684,6 @@ c                           systems.
 
       end
 
-
       subroutine outlim
 c----------------------------------------------------------------------
 c subroutine to extract compositional range of endmembers in stable phases
@@ -16696,13 +16694,11 @@ c----------------------------------------------------------------------
       include 'perplex_parameters.h'
 c                                 -------------------------------------
 c                                 local variables:
-      integer i, j, k, ibad1, ibad2, ibad3, igood
+      integer ii, i, j, k, ibad1, ibad2, ibad3, igood, ipop
 
       logical bad1, bad2, good, reach
 
       double precision num
-
-      character char8*8
 c                                 -------------------------------------
       double precision goodc, badc
       common/ cst20 /goodc(3),badc(3)
@@ -16832,13 +16828,17 @@ c                                 solutions on internal limits
 
          if (int(reachg(i)*2d0/nopt(21)-1d0).gt.0) reach = .true.
 
+         ipop = pop1(i)
+
          if (.not.refine) then
 
             write (n10,'(a)') fname(i)
 
-            do j = 1, istg(i,1)
-               do k = 1, ndim(j,1,i)
-                  write (n10,*) xlo(k,j,1,i),xhi(k,j,1,i)
+            do ii = 1, ipop
+               do j = 1, istg(i,ii)
+                  do k = 1, ndim(j,ii,i)
+                     write (n10,*) xlo(k,j,ii,i),xhi(k,j,ii,i)
+                  end do
                end do
             end do
 
@@ -16846,86 +16846,8 @@ c                                 solutions on internal limits
 c                                 special case (1 component solution).
          if (ksmod(i).eq.39.and.ndim(1,1,i).eq.0) cycle
 
-         if (istg(i,1).eq.1) then
-c                                 single site solution
-            write (*,1020) fname(i)
-            if (lopt(11)) write (n11,1020) fname(i)
-
-            if (ksmod(i).eq.20) then
-c                                 charge balance model:
-               do j = 1, ndim(1,1,i)
-
-                  if (j.lt.ns) then
-                     char8 = names(jnd(j))
-                  else if (j.eq.ns) then
-                     cycle
-                  else
-                     char8 = aqnam(jnd(j)  - aqst)
-                  end if
-
-                  write (*,1030) char8, xlo(j,1,1,i), xhi(j,1,1,i)
-
-                  if (lopt(11)) write (n11,1030) char8, xlo(j,1,1,i),
-     *                                                  xhi(j,1,1,i)
-
-               end do
-
-            else
-
-               do j = 1, ndim(1,1,i)
-
-                  write (*,1030) names(jend(i,2+j)),
-     *                              xlo(j,1,1,i),xhi(j,1,1,i)
-
-
-                  if (lopt(11)) write (n11,1030) names(jend(i,2+j)),
-     *                          xlo(j,1,1,i),xhi(j,1,1,i)
-
-               end do
-
-            end if
-
-         else
-
-            if (poly(i).eq.1) then
-c                                 prismatic
-               write (*,1040) 'prismatic model: '//fname(i)
-               if (lopt(11)) write (n11,1040)
-     *                        'prismatic model: '//fname(i)
-
-            else
-c                                 prismatic + orphan vertices
-               write (*,1040) 'prism + orphan model: '//fname(i)
-               if (lopt(11)) write (n11,1040)
-     *                        'prism + orphan model: '//fname(i)
-
-            end if
-
-            do j = 1, istg(i,1)
-
-               write (*,1050) j
-               if (lopt(11)) write (n11,1050) j
-
-               if (ispg(i,1,j).eq.1) then
-
-                  write (*,1060)
-                  if (lopt(11)) write (n11,1060)
-
-               else
-
-                  do k = 1, ndim(j,1,i)
-
-                     write (*,1070) k,xlo(k,j,1,i),xhi(k,j,1,i)
-                     if (lopt(11)) write (n11,1070)
-     *                              k,xlo(k,j,1,i),xhi(k,j,1,i)
-
-                  end do
-
-               end if
-
-            end do
-
-         end if
+         call limprt (6,i)
+         if (lopt(11)) call limprt (n11,i)
 
       end do
 
@@ -16956,14 +16878,6 @@ c                                 prismatic + orphan vertices
      *         ,' but are not stable:',/)
 1010  format (/,'**warning ver993** The following solutions have ',
      *          'compositions at an internal limit (i.e., 0<x<1):',/)
-1020  format (/,'Endmember fractions for model: ',a,//,5x,
-     *          'Endmember     Minimum         Maximum')
-1030  format (5x,a8,4x,g12.5,4x,g12.5)
-1040  format (/,'Compositions for ',a)
-1050  format (/,'  Simplex ',i1,/,5x,
-     *               'Composition   Minimum         Maximum')
-1060  format (8x,'Dummy site generated by model reformulation',/)
-1070  format (8x,i1,8x,g12.5,4x,g12.5)
 1080  format (/,'**warning ver993** The compositions of the following',
      *        ' solutions reached internal',/,
      *        'limits that were automatically relaxed:',/)
@@ -16986,11 +16900,175 @@ c                                 prismatic + orphan vertices
      *        ' calculations.',/)
 1140  format (/,'Average number of iterations per speciation ',
      *          'calculation:',f5.1,/)
-1150  format (/,2x,'Orphans',/,5x,
-     *          'Endmember     Minimum         Maximum')
 
       end
 
+
+      subroutine limprt (lun,i)
+c----------------------------------------------------------------------
+c subroutine to print limits to LUN for outlim.
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer ii, i, j, k, ipop, lun
+
+      character char8*8
+c                                 solution model counter
+      integer isoct
+      common/ cst79 /isoct
+c                                 solution model names
+      character fname*10, aname*6, lname*22
+      common/ csta7 /fname(h9),aname(h9),lname(h9)
+c                                 endmember pointers
+      integer jend
+      common/ cxt23 /jend(h9,m4)
+c                                 endmember names
+      character names*8
+      common/ cst8  /names(k1)
+
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+
+      integer lstot,mstot,nstot,ndep,nord
+      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
+
+      integer jnd
+      double precision aqg,q2,rt
+      common/ cxt2 /aqg(m4),q2(m4),rt,jnd(m4)
+
+      integer iaq, aqst, aqct
+      character aqnam*8
+      double precision aqcp, aqtot
+      common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
+c----------------------------------------------------------------------
+      ipop = pop1(i)
+
+      if (istg(i,1).eq.1.and.ipop.eq.1) then
+c                                 single site solution
+         write (lun,1020) fname(i)
+
+         if (ksmod(i).eq.20) then
+c                                 charge balance model:
+            do j = 1, ispg(i,1,1)
+
+               if (j.lt.ns) then
+                  char8 = names(jnd(j))
+               else if (j.eq.ns) then
+                  cycle
+               else
+                  char8 = aqnam(jnd(j)  - aqst)
+               end if
+
+               write (lun,1030) char8, xlo(j,1,1,i), xhi(j,1,1,i)
+
+            end do
+
+         else
+
+            do j = 1, ispg(i,1,1)
+
+               write (lun,1030) names(jend(i,2+j)),
+     *                              xlo(j,1,1,i),xhi(j,1,1,i)
+
+            end do
+
+         end if
+
+      else if (ipop.eq.1) then 
+c                                 single polytope
+         write (lun,1040) 'Single polytope model: '//fname(i)
+
+         do j = 1, istg(i,1)
+
+            write (lun,1050) j,' '
+
+            if (ispg(i,1,j).eq.1) then
+
+               write (lun,1060)
+
+            else
+
+               do k = 1, ispg(i,1,j)
+
+                  write (lun,1070) k,xlo(k,j,1,i),xhi(k,j,1,i)
+
+               end do
+
+            end if
+
+         end do
+
+      else
+c                                 composite polytope
+         write (lun,1160) 'Composite polytope model: '//fname(i)
+c                                  polytope weights:
+         do ii = 1, poly(i)
+
+            write (lun,1170) poname(i,ii), xlo(ii,1,ipop,i), 
+     *                                     xhi(ii,1,ipop,i)
+
+         end do
+c                                  individual polytope compositions
+         do ii = 1, poly(i)
+
+            if (istg(i,ii).gt.1) then
+c                                  polytope
+               write (lun,'(/,a)') ' '//poname(i,ii)//' polytope'
+
+               do j = 1, istg(i,ii)
+
+                  if (ispg(i,ii,j).eq.1) then
+                     write (lun,'(a)') 
+     *               '  Polytope '//poname(i,ii)//' is 0-dimensional'
+                     cycle
+                  end if 
+
+                  write (lun,1050) j,' '
+
+                  do k = 1, ispg(i,ii,j)
+                     write (lun,1070) k,xlo(k,j,ii,i),xhi(k,j,ii,i)
+                  end do
+
+               end do
+
+            else
+c                                  simplex
+               if (ispg(i,ii,1).eq.1) then
+                  write (lun,'(a)') 
+     *               '  Polytope '//poname(i,ii)//' is 0-dimensional'
+                  cycle
+               end if
+
+               write (lun,'(/,a)') ' '//poname(i,ii)//' polytope'
+
+               write (lun,1050) j,' '
+
+               do j = 1, ispg(i,ii,1)
+                  write (lun,1030) names(jend(i,1+pvert(i,ii,1)+j)),
+     *                              xlo(j,1,ii,i),xhi(j,1,ii,i)
+               end do
+
+            end if
+
+         end do
+
+      end if
+
+1020  format (/,'Endmember fractions for model: ',a,//,5x,
+     *          'Endmember     Minimum         Maximum')
+1030  format (5x,a8,4x,g12.5,4x,g12.5)
+1040  format (/,'Compositions for ',a)
+1050  format (/,'  Simplex ',i1,a,/,5x,
+     *               'Composition   Minimum         Maximum')
+1060  format (8x,'Dummy site generated by model reformulation',/)
+1070  format (8x,i1,8x,g12.5,4x,g12.5)
+1160  format (/,a,//,5x,
+     *          'Polytope      Minimum         Maximum')
+1170  format (4x,a,3x,g12.5,4x,g12.5)
+
+      end
 
       subroutine meelim (x,i,ii,j,k)
 c----------------------------------------------------------------------
@@ -20710,9 +20788,11 @@ c                                 copy these into the static or dynamic array
 
             icoct = icoct + 1
 c
-            if (dynam) then 
+            if (dynam) then
+               if (icoct.gt.k20) call error (58,0d0,0,'K20')
                zco(icoct) = simp(h)
-            else 
+            else
+               if (icoct.gt.k18) call err41 ('K18')
                xco(icoct) = simp(h)
             end if
 
@@ -20730,6 +20810,13 @@ c                                 number of compositions in the polytope
 c                                 initialize the indices
          nind(i) = 1
          scoct = scoct + 1
+         if (scoct.gt.k13) then 
+            if (dynam) then
+               call error (58,0d0,0,'K13')
+            else
+               call err41 ('K13')
+            end if
+         end if
          sco(scoct) = 1
 
       end do
@@ -20759,6 +20846,15 @@ c                                 figure out which index to increment
          do i = 1, isite
 
             scoct = scoct + 1
+
+            if (scoct.gt.k13) then 
+               if (dynam) then
+                  call error (58,0d0,0,'K13')
+               else
+                  call err41 ('K13')
+               end if
+            end if
+
             sco(scoct) = nind(i)
 
          end do 
@@ -20982,6 +21078,8 @@ c                                 dynamic arrays:
 c                                 composite space, save location of 
 c                                 polytopic wts
            gcind = gcind + 1
+           if (gcind.gt.k25) call error (58,0d0,0,'K25')
+
            jcoz(gcind) = spx(ipop,1) + (nind(ipop)-1)*ndim(1,ipop,ids)
 
          end if
@@ -20998,6 +21096,8 @@ c                                 skip 0-d simplices
                if (ndim(i,ii,ids).eq.0) cycle
 
                gcind = gcind + 1
+               if (gcind.gt.k25) call error (58,0d0,0,'K25')
+
                jcoz(gcind) = spx(ii,i) 
      *                       + (sco(pos+i) - 1) * ndim(i,ii,ids)
 
@@ -21020,13 +21120,7 @@ c                                 skip 0-d simplices
 
       else
 c                                 static arrays:
-         if (phct.gt.k1) then
-            if (refine) then
-               call error (41,0d0,1,'SOLOAD/SETIND')
-            else
-               call error (41,0d0,0,'SOLOAD/SETIND')
-            end if
-         end if
+         if (phct.gt.k1) call err41 ('K1')
 
          icox(phct) = gcind + 1
 
@@ -21034,6 +21128,7 @@ c                                 static arrays:
 c                                 composite space, save location of 
 c                                 polytopic wts
            gcind = gcind + 1
+           if (gcind.gt.k24) call error (58,0d0,0,'K24')
            jcox(gcind) = spx(ipop,1) + (nind(ipop)-1)*ndim(1,ipop,ids)
 
          end if
@@ -21050,6 +21145,7 @@ c                                 skip 0-d simplices
                if (ndim(i,ii,ids).eq.0) cycle
 
                gcind = gcind + 1
+               if (gcind.gt.k24) call error (58,0d0,0,'K24')
                jcox(gcind) = spx(ii,i) 
      *                       +  (sco(pos+i) - 1) * ndim(i,ii,ids)
             end do
@@ -21776,6 +21872,10 @@ c                                 to use the data
                   write (*,1030) n10nam
 
                end if
+
+            else if (ier.ne.0.and.iam.eq.2) then 
+
+               iopt(6) = 0
 
             end if 
 c                                 set cycle dependent parameters

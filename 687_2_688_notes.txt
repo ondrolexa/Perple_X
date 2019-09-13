@@ -1,4 +1,4 @@
-1) 
+1) 687: redop1/meemum set iopt(6) = 0, prevents setau1 from using arf data?
 
 2) yclos1 has set soltol to 1 in 687? reset to nopt(8) in 688.
 

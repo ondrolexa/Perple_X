@@ -1770,10 +1770,10 @@ c                                 get composition
 c                                 check x-ranges
          do i = 1, istg(ids,ii)
 
-            do j = 1, ndim(i,ii,ids)
+            do j = 1, ispg(ids,ii,i)
 c                                 low limit:
                if (x(ii,i,j).lt.xlo(j,i,ii,ids)) then
-                  xlo(j,i,1,ids) = x(ii,i,j)
+                  xlo(j,i,ii,ids) = x(ii,i,j)
 c                                 check if solution is at an unnatural limit
                   if (x(ii,i,j).gt.xmno(ids,ii,i,j).and.
      *                x(ii,i,j).le.xmng(ids,ii,i,j)
