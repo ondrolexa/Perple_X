@@ -58,11 +58,11 @@ end excluded phase list
 
 
 begin solution phase list
-cAmph(G)
+ cAmph(G)
 Augite(G)
 melt(G)   
 Ep(HP11)  
-Gt(W)     
+Gt(W)      
 Opx(W)    
 Mica(W)   
 Bi(W)     
@@ -79,6 +79,10 @@ end solution phase list
  2  1  4  5  3   indices of 1st & 2nd independent & sectioning variables
 
 
+
+Bio(TCC)           1.57      8.90      0.97    0.211      0.99870  1.63008  0.59508  0.50000  0.00000  0.00130  1.30350  0.01499  0.00000  2.87495  0.00000
+Bio(TCC)          mnbi: 0.00000, tbit: 0.00065, fbit: 0.05993, east: 0.06510, ann: 0.27309, phl: 0.17685, obi: 0.42439
+bio(TCC)          458.42       -5571528   755.58       15.292       505.53      0.48142E-04  0.20843E-05   1.0241       2997.9
 
                       --------------------------------------------------------
 begin_model

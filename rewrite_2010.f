@@ -117,14 +117,6 @@ c                                 need to eliminate hsc conversion.
  
       end
 
-      subroutine grxn (g)
-c--------------------------------------------------------------------
-c a dummy routine to allow rk to be linked with rlib.f
-c--------------------------------------------------------------------
-      implicit none
-      double precision g
-      g = g
-      end
 
 
       subroutine ogtphi (name,eof)

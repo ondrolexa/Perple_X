@@ -1,4 +1,4 @@
-c routines common to psect and reader and NOT called by vertex/meemum
+c routines common to psect and werami and NOT called by vertex/meemum
 
       subroutine  mkcomp (jcomp,ids)
 c----------------------------------------------------------------
@@ -361,42 +361,5 @@ c----------------------------------------------------------------------
 
 1040  format (/,'Enter ',a,' (left justified): ')
 1100  format (/,'No such entity as ',a,', try again: ')
-
-      end
-
-      subroutine getxz (jd,id,ids)
-c----------------------------------------------------------------------
-c subroutine to recover geometric reciprocal solution compositions (x(i,j))
-c from the x3 array (post vertex) or zcoor array (in vertex). 
-
-c getxz is duplicated in resub.f, and consequently requires argument ID
-c----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      integer i, j, id, jd, ids
-c                                 working arrays
-      double precision z, pa, p0a, x, w, y, wl
-      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
-     *              wl(m17,m18)
-c                                 x coordinate description
-      integer istg, ispg, imlt, imdg
-      common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
-c                                 xcoordinates for the final solution, a
-c                                 leetle witz.
-      integer kd, na1, na2, na3, nat
-      double precision x3, caq
-      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),na1,na2,na3,nat,kd
-
-      integer pstot,qstot,ostg,odim,nsum
-      common/ junk1 /pstot(h9),qstot(h9),ostg(h9),odim(mst,h9),nsum(h9)
-c----------------------------------------------------------------------
-
-      do i = 1, ostg(ids)
-         do j = 1, ispg(ids,i)
-            x(i,j) = x3(jd,i,j)
-         end do
-      end do
 
       end
