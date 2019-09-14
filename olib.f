@@ -845,7 +845,7 @@ c                                 WERAMI, initialize
                do ii = 1, pop1(ids)
                   do j = 1, istg(ids,1)
                      do k = 1, ispg(ids,1,j)
-                        x3(i,1,j,k) = 0d0
+                        x3(i,ii,j,k) = 0d0
                      end do 
                   end do 
                end do 
@@ -1005,9 +1005,9 @@ c                                 model type
       character spnams*8
       common/ cxt34 /ysp(l10,k5),spct(h9),spnams(l10,h9)
 
-      double precision z, pa, p0a, x, w, y, wl
+      double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18)
+     *              wl(m17,m18),pp(m4)
 
       character specie*4
       integer isp, ins
@@ -1255,9 +1255,9 @@ c                                 bookkeeping variables
       double precision emod
       common/ cst319 /emod(k15,k10),smod(h9),pmod(h9),iemod(k10),kmod
 
-      double precision z, pa, p0a, x, w, y, wl
+      double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18)
+     *              wl(m17,m18),pp(m4)
 c-----------------------------------------------------------------------
   
       ok = .true.

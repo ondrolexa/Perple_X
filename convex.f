@@ -1742,9 +1742,9 @@ c                                 local variables:
 c                                 -------------------------------------
 c                                 global variables:
 c                                 working arrays
-      double precision z, pa, p0a, x, w, y, wl
+      double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18)
+     *              wl(m17,m18),pp(m4)
 
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)

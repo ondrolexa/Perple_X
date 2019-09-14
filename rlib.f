@@ -109,9 +109,9 @@ c-----------------------------------------------------------------------
       double precision exces
       common/ cst304 /exces(m3,k1)
 
-      double precision z, pa, p0a, x, w, y, wl
+      double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18)
+     *              wl(m17,m18),pp(m4)
 c-----------------------------------------------------------------------
 
       dg = exces(1,id) + t * exces(2,id) + p * exces(3,id)
@@ -7475,9 +7475,9 @@ c----------------------------------------------------------------------
       double precision r,v,tr,pr,ps
       common/ cst5   /v(l2),tr,pr,r,ps
 c                                 working arrays
-      double precision z, pa, p0a, x, w, y, wl
+      double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18)
+     *              wl(m17,m18),pp(m4)
 
       double precision alpha,dt
       common/ cyt0  /alpha(m4),dt(j3)
@@ -7556,9 +7556,9 @@ c----------------------------------------------------------------------
 
       double precision dlnz,dscon,zt,q,dzdy,z,dd
 c                                 working arrays
-      double precision zz, pa, p0a, x, w, y, wl
+      double precision zz, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),zz(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18)
+     *              wl(m17,m18),pp(m4)
 c                                 configurational entropy variables:
       integer msite, ksp, lterm, ksub
       common/ cxt1i /msite(h9),ksp(m10,h9),lterm(m11,m10,h9),
@@ -7667,9 +7667,9 @@ c                                 bookkeeping variables
       integer lstot,mstot,nstot,ndep,nord
       common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
 c                                 working arrays
-      double precision z, pa, p0a, x, w, y, wl
+      double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18)
+     *              wl(m17,m18),pp(m4)
 c                                 model type
       logical lorder, lexces, llaar, lrecip
       common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
@@ -8074,9 +8074,9 @@ c------------------------------------------------------------------------
 
       external omega, zbad
 c                                 working arrays
-      double precision z, pa, p0a, x, w, y, wl
+      double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18)
+     *              wl(m17,m18),pp(m4)
 
       integer lstot,mstot,nstot,ndep,nord
       common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
@@ -8184,9 +8184,9 @@ c                                 excess energy variables
       double precision wgl, wkl, vlar
       common/ cxt2r /wgl(m3,m1,h9),wkl(m16,m17,m18,h9),vlar(m3,m4,h9)
 c                                 working arrays
-      double precision z, pa, p0a, x, w, y, wl
+      double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18)
+     *              wl(m17,m18),pp(m4)
 c                                 local alpha
       double precision alpha,dt
       common/ cyt0  /alpha(m4),dt(j3)
@@ -8308,9 +8308,9 @@ c------------------------------------------------------------------------
 
       double precision y(m4), tphi, xpr, lex(m17,m18)
 
-      double precision z, pa, p0a, x, w, yy, wl
+      double precision z, pa, p0a, x, w, yy, wl, pp
       common/ cxt7 /yy(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18)
+     *              wl(m17,m18),pp(m4)
 c                                 bookkeeping variables
       integer lstot,mstot,nstot,ndep,nord
       common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
@@ -8471,9 +8471,9 @@ c---------------------------------------------------------------------
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
 
-      double precision z, pa, p0a, x, w, y, wl
+      double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18)
+     *              wl(m17,m18),pp(m4)
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
@@ -9830,9 +9830,9 @@ c-----------------------------------------------------------------------
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 
-      double precision z, pa, p0a, x, w, y, wl
+      double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18)
+     *              wl(m17,m18),pp(m4)
 
       integer lstot,mstot,nstot,ndep,nord
       common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
@@ -9882,9 +9882,9 @@ c-----------------------------------------------------------------------
       integer ideps,icase,nrct
       common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
 
-      double precision z, pa, p0a, x, w, y, wl
+      double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18)
+     *              wl(m17,m18),pp(m4)
 
       integer lstot,mstot,nstot,ndep,nord
       common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
@@ -9922,9 +9922,9 @@ c----------------------------------------------------------------------
       double precision enth
       common/ cxt35 /enth(j3)
 
-      double precision z, pa, p0a, x, w, y, wl
+      double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18)
+     *              wl(m17,m18),pp(m4)
 
       integer lstot,mstot,nstot,ndep,nord
       common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
@@ -10039,9 +10039,9 @@ c----------------------------------------------------------------------
 
       double precision g,dp(j3),t,s,ds(j3),d2s(j3,j3),dg(j3),d2g(j3,j3)
 c                                 working arrays
-      double precision z, pa, p0a, x, w, y, wl
+      double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18)
+     *              wl(m17,m18),pp(m4)
 
       double precision alpha,dt
       common/ cyt0  /alpha(m4),dt(j3)
@@ -10210,9 +10210,9 @@ c----------------------------------------------------------------------
      *                 z(m11,m10),s0,ztemp,zlnz, pat, p0t,
      *                 dsinf(j3),d2sinf(j3,j3)
 c                                 working arrays
-      double precision zz, pa, p0a, x, w, y, wl
+      double precision zz, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),zz(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18)
+     *              wl(m17,m18),pp(m4)
 c                                 configurational entropy variables:
       integer msite, ksp, lterm, ksub
       common/ cxt1i /msite(h9),ksp(m10,h9),lterm(m11,m10,h9),
@@ -10690,9 +10690,9 @@ c----------------------------------------------------------------------
 
       external gex, omega
 
-      double precision z, pa, p0a, x, w, y, wl
+      double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18)
+     *              wl(m17,m18),pp(m4)
 
       double precision r,tr,pr,ps,p,t,xco2,u1,u2
       common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -10968,9 +10968,9 @@ c----------------------------------------------------------------------
 
       double precision dp, dy(m4)
 
-      double precision z, pa, p0a, x, w, y, wl
+      double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18)
+     *              wl(m17,m18),pp(m4)
 c----------------------------------------------------------------------
       pa(jd) = p0a(jd) + dp
 
@@ -10993,9 +10993,9 @@ c----------------------------------------------------------------------
 
       double precision dp,pmx,pmn
 
-      double precision z, pa, p0a, x, w, y, wl
+      double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18)
+     *              wl(m17,m18),pp(m4)
 
       integer lstot,mstot,nstot,ndep,nord
       common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
@@ -11029,9 +11029,9 @@ c----------------------------------------------------------------------
 
       double precision dp
 
-      double precision z, pa, p0a, x, w, y, wl
+      double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18)
+     *              wl(m17,m18),pp(m4)
 
       integer ideps,icase,nrct
       common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
@@ -11064,9 +11064,9 @@ c----------------------------------------------------------------------
 
       double precision dp,pmn,pmx,dpp(j3),dinc,tinc
 c                                 working arrays
-      double precision z, pa, p0a, x, w, y, wl
+      double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18)
+     *              wl(m17,m18),pp(m4)
 
       integer lstot,mstot,nstot,ndep,nord
       common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
@@ -11298,9 +11298,9 @@ c----------------------------------------------------------------------
 
       double precision g,dg,d2g,t,ds,d2s,dp
 c                                 working arrays
-      double precision z, pa, p0a, x, w, y, wl
+      double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18)
+     *              wl(m17,m18),pp(m4)
 
       double precision alpha,dt
       common/ cyt0  /alpha(m4),dt(j3)
@@ -11395,9 +11395,9 @@ c----------------------------------------------------------------------
 
       double precision zt,dzdy,dzy,dzyy,zl,ds,d2s,zlnz,dsinf
 c                                 working arrays
-      double precision zz, pa, p0a, x, w, y, wl
+      double precision zz, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),zz(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18)
+     *              wl(m17,m18),pp(m4)
 c                                 configurational entropy variables:
       integer msite, ksp, lterm, ksub
       common/ cxt1i /msite(h9),ksp(m10,h9),lterm(m11,m10,h9),
@@ -11527,9 +11527,9 @@ c----------------------------------------------------------------------
 
       integer i,j,k,id
 c                                 working arrays
-      double precision z, pa, p0a, x, w, y, wl
+      double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18)
+     *              wl(m17,m18),pp(m4)
 
       integer lstot,mstot,nstot,ndep,nord
       common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
@@ -11575,9 +11575,9 @@ c----------------------------------------------------------------------
 
       double precision pmn,pmx,mini
 c                                 working arrays
-      double precision z, pa, p0a, x, w, y, wl
+      double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18)
+     *              wl(m17,m18),pp(m4)
 
       integer ln,lt,lid,jt,jid
       double precision lc, l0c, jc
@@ -11691,9 +11691,9 @@ c-----------------------------------------------------------------------
       logical refine, resub
       common/ cxt26 /refine,resub,tname
 
-      double precision z, pa, p0a, x, w, y, wl
+      double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18)
+     *              wl(m17,m18),pp(m4)
 
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
@@ -12097,9 +12097,9 @@ c--------------------------------------------------------------------------
       logical depend,laar,order,fluid,macro,recip
       common/ cst160 /depend,laar,order,fluid,macro,recip
 
-      double precision pa, p0a, zp, w, y, z, wl
+      double precision pa, p0a, zp, w, y, z, wl, pp
       common/ cxt7 /y(m4),zp(m4),pa(m4),p0a(m4),z(h4,mst,msp),w(m1),
-     *              wl(m17,m18)
+     *              wl(m17,m18),pp(m4)
 
       integer ideps,icase,nrct
       common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
@@ -14475,9 +14475,9 @@ c-----------------------------------------------------------------------
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
 
-      double precision z, pa, p0a, x, w, y, wl
+      double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18)
+     *              wl(m17,m18),pp(m4)
 
       double precision fwt
       common/ cst338 /fwt(k10)
@@ -14589,9 +14589,9 @@ c-----------------------------------------------------------------------
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
 
-      double precision z, pa, p0a, x, w, y, wl
+      double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18)
+     *              wl(m17,m18),pp(m4)
 
       integer jnd
       double precision aqg,q2,rt
@@ -14652,9 +14652,9 @@ c-----------------------------------------------------------------------
       double precision yf,g,v
       common/ cstcoh /yf(nsp),g(nsp),v(nsp)
 
-      double precision z, pa, p0a, x, w, y, wl
+      double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18)
+     *              wl(m17,m18),pp(m4)
 
       double precision fwt
       common/ cst338 /fwt(k10)
@@ -14975,9 +14975,9 @@ c-----------------------------------------------------------------------
      *               kop(i11),kcx(i11),k2c(i11),iprop,
      *               first,kfl(i11),tname
 
-      double precision z, pa, p0a, x, w, y, wl
+      double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18)
+     *              wl(m17,m18),pp(m4)
 
       integer kd, na1, na2, na3, nat
       double precision x3, caq
@@ -15936,9 +15936,9 @@ c-----------------------------------------------------------------------
       double precision aqg,q2,rt
       common/ cxt2 /aqg(m4),q2(m4),rt,jnd(m4)
 c                                 working arrays
-      double precision z, pa, p0a, x, w, y, wl
+      double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18)
+     *              wl(m17,m18),pp(m4)
 c                                 new global arrays, 10/25/05:
 c                                 bookkeeping variables
       integer lstot,mstot,nstot,ndep,nord
@@ -16333,9 +16333,9 @@ c-----------------------------------------------------------------------
       integer jspec
       common/ cxt8 /jspec(h9,m4)
 c                                 working arrays
-      double precision z, pa, p0a, x, w, y, wl
+      double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18)
+     *              wl(m17,m18),pp(m4)
 c                                 model type
       logical lorder, lexces, llaar, lrecip
       common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
@@ -17325,9 +17325,9 @@ c                                 adaptive coordinates
       double precision x3, caq
       common/ cxt16 /x3(k5,h4,mst,msp),caq(k5,l10),na1,na2,na3,nat,kd
 
-      double precision z, pa, p0a, x, w, y, wl
+      double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18)
+     *              wl(m17,m18),pp(m4)
 
       double precision sel, cox
       logical hscon, hsc, oxchg
@@ -17594,9 +17594,9 @@ c-----------------------------------------------------------------------
       logical laq
       common/ cxt3 /idaq,jdaq,laq
 
-      double precision z, pa, p0a, x, w, y, wl
+      double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18)
+     *              wl(m17,m18),pp(m4)
 
       integer spct
       double precision ysp
@@ -18273,9 +18273,9 @@ c                                 bookkeeping variables
       integer lstot,mstot,nstot,ndep,nord
       common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
 c                                 working arrays
-      double precision z, pa, p0a, x, w, y, wl
+      double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18)
+     *              wl(m17,m18),pp(m4)
 c                                 model type
       logical lorder, lexces, llaar, lrecip
       common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
@@ -18971,9 +18971,9 @@ c----------------------------------------------------------------------
       double precision omega, gex
       external omega, gex
 
-      double precision z, pa, p0a, x, w, y, wl
+      double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18)
+     *              wl(m17,m18),pp(m4)
 
       double precision r,tr,pr,ps,p,t,xco2,u1,u2
       common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -19125,9 +19125,9 @@ c----------------------------------------------------------------------
      *                 d2z, lnz, lnz1, zlnz, dzlnz, d2zlnz, nu, dp(m11),
      *                 z, n(m11), dn(m11), d2n(m11), dsinf
 c                                 working arrays
-      double precision zz, pa, p0a, x, w, y, wl
+      double precision zz, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),zz(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18)
+     *              wl(m17,m18),pp(m4)
 c                                 excess energy variables
       integer jterm, jord, extyp, rko, jsub
       common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m18,h9),
@@ -20877,9 +20877,9 @@ c-----------------------------------------------------------------------
 
       double precision sum
 
-      double precision z, pa, p0a, x, w, y, wl
+      double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18)
+     *              wl(m17,m18),pp(m4)
 c-----------------------------------------------------------------------
 c                                 get the simplicial composition indices:
       j = 1
@@ -21010,9 +21010,9 @@ c-----------------------------------------------------------------------
 
       integer ids, jd, ii, i, j
 
-      double precision z, pa, p0a, x, w, y, wl
+      double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18)
+     *              wl(m17,m18),pp(m4)
 
       integer kd, na1, na2, na3, nat
       double precision x3, caq
@@ -21225,9 +21225,9 @@ c----------------------------------------------------------------------
       integer lstot,mstot,nstot,ndep,nord
       common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
 
-      double precision z, pa, p0a, x, w, y, wl
+      double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18)
+     *              wl(m17,m18),pp(m4)
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
@@ -21467,9 +21467,9 @@ c                                 adaptive coordinates
       double precision g2, cp2, c2tot
       common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),jphct
 c                                 working arrays
-      double precision z, pa, p0a, x, w, y, wl
+      double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18)
+     *              wl(m17,m18),pp(m4)
 
       integer jend
       common/ cxt23 /jend(h9,m4)
@@ -21587,9 +21587,9 @@ c----------------------------------------------------------------------
 
       integer ii, i, j, jd, ids
 c                                 working arrays
-      double precision z, pa, p0a, x, w, y, wl
+      double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18)
+     *              wl(m17,m18),pp(m4)
 c                                 xcoordinates for the final solution, a
 c                                 leetle witz.
       integer kd, na1, na2, na3, nat
@@ -21597,13 +21597,19 @@ c                                 leetle witz.
       common/ cxt16 /x3(k5,h4,mst,msp),caq(k5,l10),na1,na2,na3,nat,kd
 c----------------------------------------------------------------------
 
-      do ii = 1, pop1(ids)
+      do ii = 1, poly(ids)
          do i = 1, istg(ids,ii)
             do j = 1, ispg(ids,ii,i)
                x(ii,i,j) = x3(jd,ii,i,j)
             end do
          end do
       end do
+
+      if (ii.eq.2) return
+
+      do i = 1, poly(ids)
+         pwt(i) = x3(jd,ii,1,i)
+      end do 
 
       end
 
@@ -21635,9 +21641,9 @@ c-----------------------------------------------------------------------
       integer lstot,mstot,nstot,ndep,nord
       common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
 
-      double precision z, pa, p0a, x, w, y, wl
+      double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18)
+     *              wl(m17,m18),pp(m4)
 
       integer jnd
       double precision aqg,qq,rt

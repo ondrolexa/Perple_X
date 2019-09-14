@@ -488,9 +488,9 @@ c----------------------------------------------------------------------
       integer jend
       common/ cxt23 /jend(h9,m4)
 
-      double precision z, pa, p0a, x, w, y, wl
+      double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18)
+     *              wl(m17,m18),pp(m4)
 
       integer tphct
       double precision g2, cp2, c2tot
@@ -654,9 +654,9 @@ c                                 -------------------------------------
       integer ipoint,kphct,imyn
       common/ cst60 /ipoint,kphct,imyn
 
-      double precision z, pa, p0a, x, w, y, wl
+      double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18)
+     *              wl(m17,m18),pp(m4)
 
       integer npt,jdv
       double precision cptot,ctotal
@@ -730,9 +730,9 @@ c----------------------------------------------------------------------
 
       integer ii, i, j, id, ids, ipop, kcoor
 c                                 working arrays
-      double precision z, pa, p0a, x, w, y, wl
+      double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18)
+     *              wl(m17,m18),pp(m4)
 c----------------------------------------------------------------------
       kcoor = lcoor(id)
 
@@ -902,9 +902,9 @@ c                                  x-coordinates for the final solution
       double precision cp
       common/ cst12 /cp(k5,k10)
 
-      double precision z, pa, p0a, x, w, y, wl
+      double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18)
+     *              wl(m17,m18),pp(m4)
 
       integer npt,jdv
       double precision cptot,ctotal
@@ -1273,9 +1273,9 @@ c----------------------------------------------------------------------
       integer iam
       common/ cst4 /iam
 
-      double precision z, pa, p0a, x, w, y, wl
+      double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18)
+     *              wl(m17,m18),pp(m4)
 
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
@@ -3200,9 +3200,9 @@ c----------------------------------------------------------------------
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
 
-      double precision z, pa, p0a, x, w, y, wl
+      double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18)
+     *              wl(m17,m18),pp(m4)
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
