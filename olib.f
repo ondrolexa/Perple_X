@@ -932,17 +932,11 @@ c                               lagged speciation
                      caq(i,k) = caq(i,k)/cst
                   end do 
 
-               end if 
-c                                 revover x from x3.
-               call getxz (i,ids)
-c                                 convert x to y for calls to gsol
-               call xtoy (ids,ids,.true.,bad)
+               end if
 
             else 
 c                                 MEEMUM, molar amount
                props(16,i) = amt(i)
-c                                 convert x3 to y for calls to gsol
-               if (ids.gt.0) call xtoy (ids,i,.false.,bad)
 
             end if
 
@@ -1278,9 +1272,6 @@ c-----------------------------------------------------------------------
       else 
 
          if (smod(ids)) then
-c                                 get the p0a coordinates (amounts of 
-c                                 the independent disordered endmembers)
-            if (lrecip(ids)) call getpp (ids)
 
             v = 0d0
 
@@ -1291,7 +1282,7 @@ c                                 partial molar volumes for volume fractions
                if (.not.ok) return
 
                if (lrecip(ids)) then 
-                  v = v + p0a(i) * v0(i)
+                  v = v + pp(i) * v0(i)
                else 
                   v = v + y(i) * v0(i)
                end if
@@ -1308,7 +1299,7 @@ c                                 partial molar volumes for volume fractions
                if (pmu.eq.0d0) liq = .true.
 
                if (lrecip(ids)) then 
-                  vf = p0a(i) * v0(i) / v
+                  vf = pp(i) * v0(i) / v
                else
 c                                 for solutions with no dependent endmembers
 c                                 the y coordinates can be used to compute 
@@ -1553,8 +1544,8 @@ c                                 pointer copy for lagged aq calculations in gso
 c                                 make name and composition, 
 c                                 redundant for frendly
       call getnam (pname(jd),id)
-c                                 if WERAMI recover composition, logical arg is
-c                                 irrelevant
+c                                 if WERAMI recover composition
+c                                 logical arg is irrelevant
       if (iam.eq.3) call getcmp (jd,jd,id,pois)
 c                                 component counter for frendly is different
 c                                 than for all other programs

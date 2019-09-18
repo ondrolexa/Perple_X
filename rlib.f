@@ -7625,7 +7625,7 @@ c                                 the term should goto -Inf
 
       double precision function gsol1 (id)
 c-----------------------------------------------------------------------
-c gsol computes the total (excess+ideal) free energy of solution
+c gsol1 computes the total (excess+ideal) free energy of solution
 c for a solution identified by index ids and composition y(m4) input
 c from cxt7, the composition y is the independent endmember fractions
 c for all model types except reciprocal solutions, in which case it is
@@ -7634,7 +7634,7 @@ c the y's for the full reciprocal model.
 c gsol assumes the endmember g's have not been calculated by gall and is
 c      only called by WERAMI.
 c gsol1 is identical to gsol but can only been called after gall and is
-c      only called by VERTEX and MEEMUM. ingsol must be called prior to
+c      only called by loadgx. ingsol must be called prior to
 c      gsol1 to initialize p-t dependnent model parameters.
 c-----------------------------------------------------------------------
       implicit none
@@ -7643,7 +7643,7 @@ c-----------------------------------------------------------------------
 
       integer k, id
 
-      double precision gg, dg
+      double precision gg
 
       double precision omega, gfluid, gzero,
      *                 gex, gfesi, gfesic, gfecr1, gerk, ghybrid, gfes
@@ -7701,18 +7701,11 @@ c                                 -------------------------------------
 c                                 Nastia's version of BCC/FCC Fe-Si-C Lacaze and Sundman
 c                                 this model has to be called ahead of the standard models
 c                                 because it sets lrecip(id) = true.
-
-c                                 initialize p's
-         call y2p0 (id)
-
          gg =  gfesic (y(1),y(3),y(4),
      *                 g(jend(id,3)),g(jend(id,4)),
      *                 g(jend(id,5)),g(jend(id,6)),ksmod(id))
 
-      else if (lrecip(id).and.lorder(id)) then
-c                                 -------------------------------------
-c                                 prismatic solution, initialize p's
-         call y2p0 (id)
+      else if (lorder(id)) then
 c                                 get the speciation, excess and entropy effects.
          call specis (gg,id)
 c                                 decompose the ordered species into
@@ -7722,34 +7715,15 @@ c                                 abundance of the ordered species is 0.
          do k = 1, lstot(id)
 c                                 compute mechanical g from these z's,
 c                                 specip adds a correction for the ordered species.
-            gg = gg + g(jend(id,2+k)) * p0a(k)
+            gg = gg + g(jend(id,2+k)) * pp(k)
          end do
 c                                 get the dqf, this assumes the independent reactants
 c                                 are not dqf'd. gex not neccessary as computed in specip
-         call gdqf (id,gg,p0a)
-
-      else if (lorder(id)) then
-c                                 -------------------------------------
-c                                 simplicial ordering solutions.
-c                                 get mechanical mixture contribution
-         do k = 1, lstot(id)
-            pa(k) = y(k)
-            p0a(k) = y(k)
-            gg = gg + y(k) * g(jend(id,2+k))
-         end do
-c                                 get the speciation energy effect
-         call specis (dg,id)
-
-         gg = gg + dg
-c                                 get dqf corrections
-         call gdqf (id,gg,p0a)
+         call gdqf (id,gg,pp)
 
       else if (lrecip(id)) then
 c                                 -------------------------------------
 c                                 macroscopic reciprocal solution
-c                                 initialize p's
-         call y2p0 (id)
-
          do k = 1, lstot(id)
             gg = gg + g(jend(id,2+k)) * p0a(k)
          end do
@@ -7758,7 +7732,6 @@ c                                 are not dqf'd
          call gdqf (id,gg,p0a)
 
          gg = gg - t * omega(id,p0a) + gex(id,p0a)
-
 
       else if (ksmod(id).eq.0) then
 c                                 ------------------------------------
@@ -7828,7 +7801,6 @@ c                                 MRK silicate vapor
       else if (ksmod(id).eq.42) then
 c                                 ------------------------------------
 c                                 Fe-S fluid (Saxena & Eriksson 2015)
-c         print *, 'gsol1: y: ', y(2)
          gg =  gfes(y(2),g(jend(id,3)),g(jend(id,4)))
 
       else
@@ -8901,14 +8873,57 @@ c                                 shut off reach increments
 c                                 -------------------------------------
 c                                 classify the model
       ksmod(im) = jsmod
+
+c                                 this looks like bad news, for laar/recip
+c                                 or laar/order, but appears to be overridden
+c                                 by use of logical classification variables,
+c                                 in which case, why is it here????
+      if (laar) then
+
+         if (iterm.eq.0) laar = .false.
+         if (dnu(im).ne.0d0) call error (77,r,i,'laar excess function '/
+     *          /'not anticipated for non-equimolar ordering: '//tname)
+
+      end if
+c                                 set type flags, presently no provision for
+c                                 bw summation
+      llaar(im) = .false.
+      lexces(im) = .false.
+      lorder(im) = .false.
+      lrecip(im) = .false.
+      extyp(im) = xtyp
+
+      if (iterm.gt.0) then
+         lexces(im) = .true.
+         if (laar) then
+            llaar(im) = .true.
+            extyp(im) = 2
+         end if
+      end if
+
+      if (order) lorder(im) = .true.
+c                                 the ksmod(im) test is made because
+c                                 reform may dump the dependent endmembers
+c                                 setting depend = .false., while retaining
+c                                 a dummy site with no mixing. reform should
+c                                 be redone to truly reformulate multiple
+c                                 models to single site models.
+c                                 a non-reciprocal model (ksmod=5) with
+c                                 dependent endmembers is also classified
+c                                 as lrecip.
+      if (recip.or.depend) then
+
+         lrecip(im) = .true.
+         if (dnu(im).ne.0d0) call error (77,r,i,'prismatic composition'/
+     *    /' space not anticipated for non-equimolar ordering: '//tname)
+
+      end if
 c                                 -------------------------------------
 c                                 save the excess terms
       jterm(im) = iterm
       jord(im) = iord
-      extyp(im) = xtyp
 
       do i = 1, iterm
-
 
          if (xtyp.eq.0) then
 c                                 arbitrary expansion
@@ -8954,7 +8969,6 @@ c                                 term may be of order < iord
          end do
 
       end do
-
 
       do i = 1, mstot(im)
 c                                 save global copy of kdsol
@@ -9583,49 +9597,6 @@ c                                 look for endmembers to be killed
       end do
 c                                 set pmod to false if explicit_bulk_modulus is not T
       if (.not.lopt(17)) pmod(im) = .false.
-c                                 this looks like bad news, for laar/recip
-c                                 or laar/order, but appears to be overridden
-c                                 by use of logical classification variables,
-c                                 in which case, why is it here????
-      if (laar) then
-
-         if (iterm.eq.0) laar = .false.
-         if (dnu(im).ne.0d0) call error (77,r,i,'laar excess function '/
-     *          /'not anticipated for non-equimolar ordering: '//tname)
-
-      end if
-c                                 set type flags, presently no provision for
-c                                 bw summation
-      llaar(im) = .false.
-      lexces(im) = .false.
-      lorder(im) = .false.
-      lrecip(im) = .false.
-
-      if (iterm.gt.0) then
-         lexces(im) = .true.
-         if (laar) then
-            llaar(im) = .true.
-            extyp(im) = 2
-         end if
-      end if
-
-      if (order) lorder(im) = .true.
-c                                 the ksmod(im) test is made because
-c                                 reform may dump the dependent endmembers
-c                                 setting depend = .false., while retaining
-c                                 a dummy site with no mixing. reform should
-c                                 be redone to truly reformulate multiple
-c                                 models to single site models.
-c                                 a non-reciprocal model (ksmod=5) with
-c                                 dependent endmembers is also classified
-c                                 as lrecip.
-      if (recip.or.depend) then
-
-         lrecip(im) = .true.
-         if (dnu(im).ne.0d0) call error (77,r,i,'prismatic composition'/
-     *    /' space not anticipated for non-equimolar ordering: '//tname)
-
-      end if
 
       if (.not.lopt(3)) then
 c                                 hard limits are off, set limits to 0/1
@@ -9825,7 +9796,10 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer id,k,l
+      integer id,k,l,ind
+
+      integer ideps,icase,nrct
+      common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
@@ -9834,15 +9808,16 @@ c-----------------------------------------------------------------------
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
 
+      double precision deph,dydy,dnu
+      common/ cxt3r /deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
+
       integer lstot,mstot,nstot,ndep,nord
       common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
+
+      logical lorder, lexces, llaar, lrecip
+      common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
 c-----------------------------------------------------------------------
-c                                 for orphan vertex models could check
-c                                 that the prismatic fraction is > 0
-c                                 first, this would save setting/resetting
-c                                 p0a's as currently done here/
-c                                 --------------------------------------
-c                                 convert y's to p's
+      if (.not.lorder(id).and..not.lrecip(id)) return
 c                                 initialize ordered species
       do k = 1, nord(id)
          p0a(lstot(id)+k) = 0d0
@@ -9850,7 +9825,7 @@ c                                 initialize ordered species
 
       do k = 1, nstot(id)
 c                                 initialize the independent species
-c                                 other then the ordered species
+c                                 other than the ordered species
          if (k.le.lstot(id)) p0a(k) = y(knsp(k,id))
 c                                 convert the dependent species to
 c                                 idependent species
@@ -9859,41 +9834,16 @@ c                                 idependent species
          end do
 
          pa(k) = p0a(k)
+         pp(k) = p0a(k)
 
       end do
-
-      end
-
-      subroutine p0dord (id)
-c-----------------------------------------------------------------------
-c decomposes p0a values that specify the abundances of independent
-c ordered endmembers to their stoichiometric equivalent disordered
-c species.
-c-----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      integer id,k,l,ind
-
-      double precision deph,dydy,dnu
-      common/ cxt3r /deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
-
-      integer ideps,icase,nrct
-      common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
-
-      double precision z, pa, p0a, x, w, y, wl, pp
-      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18),pp(m4)
-
-      integer lstot,mstot,nstot,ndep,nord
-      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
-c-----------------------------------------------------------------------
-
+c                                 convert the ordered species to 
+c                                 the stoichiometric equivalent 
+c                                 amounts of disordered species.
       do k = 1, nord(id)
          do l = 1, nrct(k,id)
             ind = ideps(l,k,id)
-            p0a(ind) = p0a(ind) - dydy(ind,k,id) * p0a(lstot(id)+k)
+            pp(ind) = pp(ind) - dydy(ind,k,id) * pp(lstot(id)+k)
          end do
       end do
 
@@ -9987,9 +9937,6 @@ c                                 i.e., iopt(17).ne.0, compute disordered g.
          if (gdord.lt.g) g = gdord
 
       end if
-c                                 convert the ordered endmember fractions to
-c                                 disordered fractions (stored in the p0a array).
-      if (lrecip(id)) call p0dord (id)
 
       end
 
@@ -12348,12 +12295,6 @@ c                              dqf corrections are also be saved in the
 c                              exces array this implies that speciation
 c                              does not effect the amount of the dqf'd
 c                              endmembers.
-
-c                              p0dord converts the p0 of any ordered species
-c                              to it's disordered equivalents, as necessary
-c                              for the dqf.
-      if (depend.and.order) call p0dord (im)
-
       do i = 1, jdqf(im)
 c                              index points to the endmember in the full
 c                              model:
@@ -12365,7 +12306,7 @@ c                              or a dependent endmember
 
          if (depend) then
             do j = 1, m3
-               exces(j,iphct) = exces(j,iphct) + p0a(index)*dqfg(j,i,im)
+               exces(j,iphct) = exces(j,iphct) + pp(index)*dqfg(j,i,im)
             end do
          else
             do j = 1, m3
@@ -15969,7 +15910,7 @@ c                                 get the speciation energy effect
          call specis (dg,ids)
 c                                 get gmech
          do k = 1, lstot(ids)
-            gph = gph + gproj(jend(ids,2+k)) * p0a(k)
+            gph = gph + gproj(jend(ids,2+k)) * pp(k)
          end do
 
          gph = gph + dg
@@ -16443,7 +16384,7 @@ c                                 must include the g for the disordered equivale
 c                                 of the ordered species
                do k = 1, lstot(i)
 
-                  g(id) = g(id) + g(jend(i,2+k)) * p0a(k)
+                  g(id) = g(id) + g(jend(i,2+k)) * pp(k)
 
                end do
 
@@ -18251,7 +18192,7 @@ c-----------------------------------------------------------------------
 
       integer i, k, id
 
-      double precision dg, g, gso(nsp), gamm0
+      double precision g, gso(nsp), gamm0
 
       double precision omega, gfluid, gzero, aqact,
      *                 gex, gfesi, gcpd, gerk, gfecr1, ghybrid,
@@ -18333,7 +18274,7 @@ c                                 get mechanical mixture contribution
                g = g + y(k) * gcpd (jend(id,2+k),.true.)
             end do
 
-         else if (lrecip(id).and.lorder(id)) then
+         else if (lorder(id)) then
 c                                 -------------------------------------
 c                                 convert y coordinates to independent p coordinates
             call y2p0 (id)
@@ -18343,26 +18284,11 @@ c                                 get the speciation, excess and entropy effects
             do k = 1, lstot(id)
 c                                 compute mechanical g from these z's,
 c                                 specip adds a correction for the ordered species.
-               g = g + gcpd (jend(id,2+k),.true.) * p0a(k)
+               g = g + gcpd (jend(id,2+k),.true.) * pp(k)
             end do
 c                                 get the dqf, this assumes the independent reactants
 c                                 are not dqf'd. gex not neccessary as computed in specip
-            call gdqf (id,g,p0a)
-
-         else if (lorder(id)) then
-c                                 -------------------------------------
-c                                 non-reciprocal speciation.
-            do k = 1, lstot(id)
-               pa(k) = y(k)
-               p0a(k) = y(k)
-               g = g + y(k) * gcpd (jend(id,2+k),.true.)
-            end do
-
-            call specis (dg,id)
-
-            g = g + dg
-c                                 get dqf corrections
-            call gdqf (id,g,p0a)
+            call gdqf (id,g,pp)
 
          else if (lrecip(id)) then
 c                                 -------------------------------------
@@ -21196,23 +21122,28 @@ c                                 they have been loaded by soload. this could be
 c                                 eliminated to save time.
       call xtoy (ids,ids,.true.,bad)
 c                                 xtoy returns bad if the composition is of a 
-c                                 optionally non-refineable endmember
+c                                 optionally non-refineable endmember, otherwise
+c                                 xtoy sets the y's for the composite polytopic
+c                                 composition.
       if (bad) return
-c                                 move site fractions into p0a = pa arrays indexed
-c                                 only by independent disordered endmembers, this is
-c                                 done even for models without disorder so the pa
-c                                 array can, in principal, be used for all solutions.
+c                                 convert the y's into p0a/pp/pa arrays indexed
+c                                 only by independent endmembers, if this were
+c                                 done for models without disorder the p-
+c                                 arrays could be used for all solutions.
       call y2p0 (ids)
 
       end
 
       subroutine xtoy (ids,id,usex,bad)
 c----------------------------------------------------------------------
-c subroutine to convert prismatic solution compositions (x(1,i,j))
-c to geometric endmember fractions (y) for solution model ids.
+c subroutine to convert composite polytopic solution compositions (x/x3)
+c to geometric endmember fractions (y) for solution model ids. 
 
-c usex - use x coordinates, otherwise use x3 coordinates (only done by getloc
-c        when called by meemum).
+c xtoy is only called by getcmp.
+
+
+c usex - use x coordinates, otherwise use x3 coordinates (only done 
+c        when called by werami).
 c----------------------------------------------------------------------
       implicit none
 
@@ -21506,9 +21437,9 @@ c                                 reformulation of the p's to eliminate the orde
 c                                 endmembers. p0a is constructed in function gsol.
          do i = 1, lstot(id)
             do j = 1, icp 
-               cp2(j,jphct) = cp2(j,jphct) + p0a(i) * cp(j,jend(id,2+i))
+               cp2(j,jphct) = cp2(j,jphct) + pp(i) * cp(j,jend(id,2+i))
             end do 
-            ctot2 = ctot2 + p0a(i)*ctot(jend(id,2+i))
+            ctot2 = ctot2 + pp(i)*ctot(jend(id,2+i))
          end do
 
       else if (ksmod(id).eq.20) then 
@@ -21574,44 +21505,6 @@ c                                  into the mobile/saturated component space
       end if
 
       end 
-
-
-      subroutine getxz (jd,ids)
-c----------------------------------------------------------------------
-c subroutine to recover geometric reciprocal solution compositions (x(i,j))
-c from the x3 array (post vertex). 
-c----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      integer ii, i, j, jd, ids
-c                                 working arrays
-      double precision z, pa, p0a, x, w, y, wl, pp
-      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18),pp(m4)
-c                                 xcoordinates for the final solution, a
-c                                 leetle witz.
-      integer kd, na1, na2, na3, nat
-      double precision x3, caq
-      common/ cxt16 /x3(k5,h4,mst,msp),caq(k5,l10),na1,na2,na3,nat,kd
-c----------------------------------------------------------------------
-
-      do ii = 1, poly(ids)
-         do i = 1, istg(ids,ii)
-            do j = 1, ispg(ids,ii,i)
-               x(ii,i,j) = x3(jd,ii,i,j)
-            end do
-         end do
-      end do
-
-      if (ii.eq.2) return
-
-      do i = 1, poly(ids)
-         pwt(i) = x3(jd,ii,1,i)
-      end do 
-
-      end
 
       subroutine getscp (scp,scptot,ids,jd,pure)
 c-----------------------------------------------------------------------
@@ -21702,13 +21595,10 @@ c                                 convert molality to mole fraction (xx)
          end if
 
       else if (lrecip(ids)) then
-c                                 get the p' coordinates (amounts of 
-c                                 the independent endmembers)     
-         call p0dord (ids) 
 
          do i = 1, lstot(ids)
             do j = 1, icomp 
-               scp(j) = scp(j) + p0a(i) * cp(j,jend(ids,2+i))
+               scp(j) = scp(j) + pp(i) * cp(j,jend(ids,2+i))
             end do 
          end do
 
@@ -23880,10 +23770,10 @@ c                                 setxyp.
 
          else
 c                                 getcmp is being called by WERAMI:
-c                                 GETXZ (dlib.f) gets the x(i,j) coordinates for the
-c                                 composition from the x3(jd,i,j) array and
-c                                 the id argument is irrelevant. 
-            call getxz (jd,ids)
+c                                 xtoy recovers y from the x3 array.
+            call xtoy (ids,jd,.false.,bad)
+c                                 set pa/p0a/pp arrays
+            call y2p0 (ids)
 
          end if
 
@@ -24447,29 +24337,6 @@ c                                  temperature is
 
       end
 
-      subroutine getpp (id)
-c-----------------------------------------------------------------------
-c getpp computes the amounts of the indepdendent edmembers of a reciprocal
-c solution in terms of the disordered endmembers (i.e., the p coordinates
-c corrected for the amounts of the ordered species if present [ksmod=8]).
-c-----------------------------------------------------------------------
-      implicit none
- 
-      include 'perplex_parameters.h'
-
-      integer id
-
-      integer lstot,mstot,nstot,ndep,nord
-      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
-c----------------------------------------------------------------------
-c                                  first convert the istot disordered
-c                                  endmember coordinates to the 
-c                                  kstot + nord p0 coordinates
-      call y2p0 (id) 
-c                                  decompose ordered species
-      if (nord(id).gt.0) call p0dord (id)
-
-      end
 
       subroutine fopen (n2name,prt,n9name,err)
 c-----------------------------------------------------------------------
