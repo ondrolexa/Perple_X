@@ -63,11 +63,11 @@ clean:
 	rm -f *.o $(MYOBJ)
 ###################### TARGETS FOR FORTRAN PROGRAMS #########################   
 # 
-actcor: actcor.o tlib.o dumlib.o
-	$(COMP77) $(FFLAGS) $(FLINK) $@.o tlib.o dumlib.o -o $@
+actcor: actcor.o tlib.o
+	$(COMP77) $(FFLAGS) $(FLINK) $@.o tlib.o -o $@
 
-build: build.o tlib.o rlib.o flib.o dumlib.o
-	$(COMP77) $(FFLAGS) $(FLINK) build.o tlib.o rlib.o flib.o dumlib.o -o $@ 
+build: build.o tlib.o rlib.o flib.o 
+	$(COMP77) $(FFLAGS) $(FLINK) build.o tlib.o rlib.o flib.o -o $@ 
 
 fluids: fluids.o tlib.o flib.o 
 	$(COMP77) $(FFLAGS) $(FLINK) $@.o tlib.o flib.o -o $@
@@ -78,8 +78,8 @@ ctransf: ctransf.o tlib.o
 DEW_2_ver: DEW_2_ver.o tlib.o 
 	$(COMP77) $(FFLAGS) $(FLINK) $@.o tlib.o -o $@
 
-frendly: frendly.o tlib.o rlib.o flib.o olib.o clib.o dlib.o
-	$(COMP77) $(FFLAGS) $(FLINK) $@.o rlib.o tlib.o flib.o olib.o clib.o dlib.o -o $@
+frendly: frendly.o tlib.o rlib.o flib.o olib.o 
+	$(COMP77) $(FFLAGS) $(FLINK) $@.o rlib.o tlib.o flib.o olib.o -o $@
 
 #hptover: hptover.o
 #	$(COMP77) $(FFLAGS) $@.o -o $@
@@ -87,8 +87,8 @@ frendly: frendly.o tlib.o rlib.o flib.o olib.o clib.o dlib.o
 htog: htog.o
 	$(COMP77) $(FFLAGS) $@.o -o $@
 
-meemum: meemum.o resub.o nlib.o getxz1.o
-	$(COMP77) $(FFLAGS) $(FLINK) $@.o getxz1.o dumlib.o rlib.o tlib.o flib.o olib.o clib.o resub.o nlib.o -o $@   
+meemum: meemum.o resub.o nlib.o
+	$(COMP77) $(FFLAGS) $(FLINK) $@.o rlib.o tlib.o flib.o olib.o resub.o nlib.o -o $@   
 
 pstable: pstable.o pslib.o pscom.o  tlib.o cont_lib.o 
 	$(COMP77) $(FFLAGS) $(FLINK) $@.o pslib.o pscom.o  tlib.o cont_lib.o -o $@
@@ -99,23 +99,23 @@ pspts: pspts.o pslib.o tlib.o pscom.o
 psvdraw: psvdraw.o pslib.o tlib.o pscom.o
 	$(COMP77) $(FFLAGS) $(FLINK) $@.o pslib.o tlib.o pscom.o -o $@
 
-pssect: psect.o pscom.o pslib.o tlib.o rlib.o flib.o clib.o  dlib.o 
-	$(COMP77) $(FFLAGS) $(FLINK) psect.o pscom.o pslib.o tlib.o rlib.o flib.o clib.o dlib.o -o $@
+pssect: psect.o pscom.o pslib.o tlib.o rlib.o flib.o 
+	$(COMP77) $(FFLAGS) $(FLINK) psect.o pscom.o pslib.o tlib.o rlib.o flib.o -o $@
 
 pt2curv: pt2curv.o tlib.o
 	$(COMP77) $(FFLAGS) $(FLINK) $@.o tlib.o -o $@
 
-vertex: vertex.o getxz1.o rlib.o tlib.o flib.o clib.o resub.o nlib.o olib.o
-	$(COMP77) $(FFLAGS) $(FLINK) $@.o getxz1.o rlib.o tlib.o flib.o clib.o resub.o nlib.o olib.o -o $@
+vertex: vertex.o rlib.o tlib.o flib.o resub.o nlib.o olib.o
+	$(COMP77) $(FFLAGS) $(FLINK) $@.o rlib.o tlib.o flib.o resub.o nlib.o olib.o -o $@
 
-werami: werami.o dumlib.o rlib.o tlib.o flib.o olib.o clib.o dlib.o
-	$(COMP77) $(FFLAGS) $(FLINK) $@.o dumlib.o rlib.o tlib.o flib.o olib.o clib.o dlib.o -o $@
+werami: werami.o rlib.o tlib.o flib.o olib.o 
+	$(COMP77) $(FFLAGS) $(FLINK) $@.o rlib.o tlib.o flib.o olib.o  -o $@
 
-unsplt: unsplt.o rlib.o tlib.o flib.o clib.o dlib.o dumlib.o
-	$(COMP77) $(FFLAGS) $(FLINK) $@.o rlib.o tlib.o flib.o clib.o dlib.o dumlib.o -o $@
+unsplt: unsplt.o rlib.o tlib.o flib.o 
+	$(COMP77) $(FFLAGS) $(FLINK) $@.o rlib.o tlib.o flib.o  -o $@
 
-convex: convex.o getxz1.o rlib.o tlib.o flib.o clib.o
-	$(COMP77) $(FFLAGS) $(FLINK) $@.o getxz1.o rlib.o tlib.o flib.o clib.o -o $@
+convex: convex.o rlib.o tlib.o flib.o 
+	$(COMP77) $(FFLAGS) $(FLINK) $@.o rlib.o tlib.o flib.o  -o $@
 
 # targets missing from '07:
 #rk: rk.o flib.o tlib.o
@@ -142,10 +142,6 @@ fluids.o: fluids.f
 	$(COMP77) $(FFLAGS) -c fluids.f
 convex.o: convex.f
 	$(COMP77) $(FFLAGS) -c convex.f
-dumlib.o: dumlib.f
-	$(COMP77) $(FFLAGS) -c dumlib.f
-getxz1.o: getxz1.f
-	$(COMP77) $(FFLAGS) -c getxz1.f
 cont_lib.o: cont_lib.f
 	$(COMP77) $(FFLAGS) -c cont_lib.f
 ctransf.o: ctransf.f
@@ -183,10 +179,6 @@ vertex.o: vertex.f
 	$(COMP77) $(FFLAGS) -c vertex.f
 werami.o: werami.f
 	$(COMP77) $(FFLAGS) -c werami.f
-clib.o: clib.f
-	$(COMP77) $(FFLAGS) -c clib.f
-dlib.o: dlib.f
-	$(COMP77) $(FFLAGS) -c dlib.f
 flib.o: flib.f
 	$(COMP77) $(FFLAGS) -c flib.f
 pslib.o: pslib.f
