@@ -9,13 +9,15 @@
    X b) double output of time stamp
    X c) in gphase gfes called with y(1) rather than y(2)
    d) call to moduli may reset p0a in getphp prior to call to ginc?
+   X e) 0-trap for iind not included in subinc, corrected but not pushed
 
 5) csol and getscp are largely redundant, csol assumes p0a has been set to account
    for decomposition of ordered species, whereas getscp does the decomposition with
    getpp.
 
-6) getpp is redundant with p0dord? y2p0 should be used if a prior call to getscp/csol
+6) X getpp is redundant with p0dord? y2p0 should be used if a prior call to getscp/csol
    may have changed p0 (as in moduli or getcmp).
+
 
 
 

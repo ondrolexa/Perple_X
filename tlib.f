@@ -4453,7 +4453,7 @@ c                                 HKF aqueous electrolyte data (13 values)
 
       else if (eos(id).eq.12.or.eos(id).eq.14.or.eos(id).eq.17) then 
 
-         call error (77,r,id,'routine OUTDAT is not programmed to '\\
+         call error (77,r,id,'routine OUTDAT is not programmed to '//
      *              'output CALPHAD data tags.')
 
       else 

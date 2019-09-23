@@ -1767,34 +1767,38 @@ c                                 set stable flag
          stable(ids) = .true.
 c                                 get composition
          call setexs (ids,jd,.false.)
+
+         do ii = 1, pop1(ids)
 c                                 check x-ranges
-         do i = 1, istg(ids,ii)
+            do i = 1, istg(ids,ii)
 
-            do j = 1, ispg(ids,ii,i)
+               do j = 1, ispg(ids,ii,i)
 c                                 low limit:
-               if (x(ii,i,j).lt.xlo(j,i,ii,ids)) then
-                  xlo(j,i,ii,ids) = x(ii,i,j)
+                  if (x(ii,i,j).lt.xlo(j,i,ii,ids)) then
+                     xlo(j,i,ii,ids) = x(ii,i,j)
 c                                 check if solution is at an unnatural limit
-                  if (x(ii,i,j).gt.xmno(ids,ii,i,j).and.
-     *                x(ii,i,j).le.xmng(ids,ii,i,j)
-     *               .and..not.limit(ids)) then
-                     write (*,1000) fname(ids),x(ii,i,j),i,j
-                     limit(ids) = .true.
+                     if (x(ii,i,j).gt.xmno(ids,ii,i,j).and.
+     *                                x(ii,i,j).le.xmng(ids,ii,i,j)
+     *                               .and..not.limit(ids)) then
+                        write (*,1000) fname(ids),x(ii,i,j),i,j
+                        limit(ids) = .true.
+                     end if 
                   end if 
-               end if 
 c                                 high limit:
-               if (x(ii,i,j).gt.xhi(j,i,ii,ids)) then
-                  xhi(j,i,ii,ids) = x(ii,i,j)
+                  if (x(ii,i,j).gt.xhi(j,i,ii,ids)) then
+                     xhi(j,i,ii,ids) = x(ii,i,j)
 c                                 check if solution is at an unnatural limit
-                  if (x(ii,i,j).lt.xmxg(ids,ii,i,j).and.
-     *                x(ii,i,j).ge.xmxg(ids,ii,i,j)
-     *               .and..not.limit(ids)) then
-                     write (*,1000) fname(ids),x(ii,i,j),i,j
-                     limit(ids) = .true.
+                     if (x(ii,i,j).lt.xmxg(ids,ii,i,j).and.
+     *                   x(ii,i,j).ge.xmxg(ids,ii,i,j)
+     *                   .and..not.limit(ids)) then
+                        write (*,1000) fname(ids),x(ii,i,j),i,j
+                        limit(ids) = .true.
+                     end if 
                   end if 
-               end if 
 
-            end do 
+               end do
+
+            end do
 
          end do
 

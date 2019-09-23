@@ -2861,7 +2861,7 @@ c-----------------------------------------------------------------------
       integer jfct,jmct,jprct,jmuct
       common/ cst307 /jfct,jmct,jprct,jmuct
 c----------------------------------------------------------------------
-      if (ind.eq.iind) then
+      if (ind.eq.iind.and.idep.ne.0) then
          var = v(iind)
          v(idep) = c0 + var*(c1 + var*(c2
      *                          + var*(c3 + var*c4)))
@@ -2927,9 +2927,6 @@ c                                 activity
              end if
 
       end do
-c                                 this line is here to prevent an optimization
-c                                 bug with compaq visual fortran.
-c     xp = xp * xp
 
       end
 
@@ -9817,7 +9814,9 @@ c-----------------------------------------------------------------------
       logical lorder, lexces, llaar, lrecip
       common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
 c-----------------------------------------------------------------------
-      if (.not.lorder(id).and..not.lrecip(id)) return
+c                                 always set p0a because if laar and 
+c                                 .not.recip or recip p0a is used.
+      if (.not.lorder(id).and..not.lrecip(id).and..not.llaar(id)) return
 c                                 initialize ordered species
       do k = 1, nord(id)
          p0a(lstot(id)+k) = 0d0
