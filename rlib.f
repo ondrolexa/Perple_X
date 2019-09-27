@@ -9816,7 +9816,7 @@ c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
 c                                 always set p0a because if laar and 
 c                                 .not.recip or recip p0a is used.
-      if (.not.lorder(id).and..not.lrecip(id).and..not.llaar(id)) return
+c     if (.not.lorder(id).and..not.lrecip(id).and..not.llaar(id)) return
 c                                 initialize ordered species
       do k = 1, nord(id)
          p0a(lstot(id)+k) = 0d0
@@ -13921,13 +13921,9 @@ c                                 space for the dependent coordinate.
       do i = 1, jsp
 
          k = jst + i
-
-         if (ksmod(ids).eq.20) then
 c                                 electrolyte model skip limit on ns'th
 c                                 species
-            if (k.eq.ns) k = k + 1
-
-         end if
+         if (ksmod(ids).eq.20.and.k.eq.ns) k = k + 1
 c                                 generate coordinates for i'th component
          iy(i) = 1
          y(i,1) = pxmn(lpoly,lsite,k)
@@ -21787,9 +21783,6 @@ c                                 solvus tolerance
             if (lopt(9)) nopt(8) = 1.5d0*rid(3,i)
 c                                 number of iterations
             iopt(10) = grid(6,i)
-c                                 bound relaxation rate
-c                                 the initial resolution of the exploratory stage
-            nopt(10) = rid(3,i) 
 c                                 speciation tolerance
             nopt(5) = rid(5,i)
 

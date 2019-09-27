@@ -1004,7 +1004,7 @@ full_name    clinoamphibole
  
 2                                  | number of polytopes, subvision range for each polytope:
 
-0   .05   .1  0                     | X(1) is X([ ][M][Fe3,Al][N]) is Ti-free glaucophane
+0   .1   .1  0                     | X(1) is X([ ][M][Fe3,Al][N]) is Ti-free glaucophane
 
                                    | endmembers on the vertices, index on the first simplex
                                    | changes fastest, last slowest
@@ -1032,9 +1032,9 @@ mrbG       frb_d                   | M-[Al]Na, redundant X(2,1)
 gl         fgl_d                   | Al-glaucophane
 
                                    | First (1d) simplex
-.9   1   .1  0                     | X(1,1) = bulk Mg/M
+.8   1  .1  0                     | X(1,1) = bulk Mg/M
                                    | Second (3d) simplex
-.6   .7  .1  0                     | X(2,1) = Fe3/[Fe3+Al] on M2
+.0   .2  .1  0                     | X(2,1) = Fe3/[Fe3+Al] on M2
 
                                    | -------------------------------------------
                                    | Polytope 2 [A][M][M,T,MT][M,C]  
@@ -1071,15 +1071,15 @@ tr         ftr_d
 .5   .6  .1  0                     | X(1,1) = bulk Mg/M
 
                                    | Second (1d) simplex
-0    .2  .1  0                     | X(2,1) = M/[Ca + M] on M4
+.0   .2  .1  0                     | X(2,1) = M/[Ca + M] on M4
 
 
                                    | Third simplex 
-0    .2  .1  0                     | X(3,1) = X(Al-Ts)
-0    .2  .1  0                     | X(3,2) = X(Na-Al-Parg), Fe3 and Ti parg missing
+0    .1  .1  0                     | X(3,1) = X(Al-Ts)
+.3   .5  .1  0                     | X(3,2) = X(Na-Al-Parg), Fe3 and Ti parg missing
 0    .1  .1  0                     | X(3,3) = X(K-Al-Parg), Fe3 and Ti parg missing
-0    .1  .1  0                     | X(3,4) = X(Ti-Ts)
-0    .2  .1  0                     | X(3,5) = X(Fe3-Ts)
+0    .2  .1  0                     | X(3,4) = X(Ti-Ts)
+0    .3  .1  0                     | X(3,5) = X(Fe3-Ts)
 
 begin_ordered_endmembers
                                    | ordered species definitions:
@@ -1720,7 +1720,7 @@ full_name    clinopyroxene
 
 2                                 | number of polytopes, subvision range for the composite space
 
-0    1   .1  0                    | subdivision range for X(1) = X([T][N,C])
+0    .1   .1  0                   | subdivision range for X(1) = X([T][N,C])
                                   | X(2) = 1 - X(1) = [M,T][M,C] is by difference
 
                                   | -------------------------------------------
@@ -1731,10 +1731,10 @@ full_name    clinopyroxene
 acm     cacm_d
 jd      cats
                                   | Simplex 1
-0    .2  .1  0                    | X(1,1) = Na/[Na + Ca] on M2
+.5    1  .1  0                    | X(1,1) = Na/[Na + Ca] on M2
 
                                   | Simplex 2
-0    .7  .1  0                    | X(2,1) = X(Fe3) on M1
+0    .4  .1  0                    | X(2,1) = X(Fe3) on M1
 
                                   | -------------------------------------------
                                   | Polytope 2  [M,T][M,C]
@@ -1747,7 +1747,7 @@ mats_d  fats_d
 cenjh   cfsg
 di      hed_d
                                   | Simplex 1
-0  1   .1  0                      | X(1,1) => bulk Mg/M
+.4  .8   .1  0                      | X(1,1) => bulk Mg/M
 
                                   | Simplex 2
 0  .2  .1  0                      | X(2,1) - M-Fe3+

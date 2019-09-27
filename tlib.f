@@ -265,7 +265,7 @@ c                                 refinement
 c                                 solvus_tolerance
       nopt(8) = 1.5*nopt(13)
 c                                 solvus_tolerance_II
-      nopt(25) = 3d0*nopt(13)
+      nopt(25) = nopt(13)
 c                                 perturbation to eliminate pseudocompound
 c                                 degeneracies
       nopt(15) = 5d-3
@@ -3717,6 +3717,8 @@ c                                 fluid eos species
      *      'SO2 ','COS ','N2  ','NH3 ','O   ','SiO ','SiO2',
      *      'Si  ','C2H6','DIL '/
 
+      data times,btime,etime/90*0d0/
+
       end
 
       subroutine getphi (name,aq,eof)
@@ -6378,5 +6380,50 @@ c
 
       if (isnan(x)) x = 0d0
       if (isnan(y)) y = 0d0
+
+      end 
+
+      subroutine begtim (itime)
+c----------------------------------------------------------------------
+c begin timer itime
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer itime
+c----------------------------------------------------------------------
+      call CPU_TIME(btime(itime))
+
+      end 
+
+      subroutine endtim (itime,output,chars)
+c----------------------------------------------------------------------
+c begin timer itime
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      logical output
+
+      character chars*(*)
+
+      integer itime
+c----------------------------------------------------------------------
+
+      call CPU_TIME(etime(itime))
+      times(itime) = times(itime) + (etime(itime)-btime(itime))
+
+      if (output) then 
+
+      write (*,'(/,a,3(2x,g14.7))') chars,
+     *                              times(itime), 
+     *                              etime(itime)-btime(itime)
+      write (666,'(/,a,3(2x,g14.7))') chars,
+     *                              times(itime), 
+     *                              etime(itime)-btime(itime)
+
+      end if 
 
       end 

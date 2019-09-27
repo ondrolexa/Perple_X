@@ -90,7 +90,7 @@
       parameter (k17=7,k18=k1)
       parameter (k19=3*k5,k21=2000000,k20=k21/10)
       parameter (k22=mdim*k19,k23=25)
-      parameter (k13=k21/5,k24=10*k1,k25=10*k21)
+      parameter (k13=2000000,k24=10*k1,k25=10*k21)
 !                                 l2 - max number of independent potential variables
 !                                 l3 - max number of variables for gridded min and graphics (l2+2)
 !                                 l5 - max number of coordinates along a univariant curve                
@@ -221,6 +221,9 @@ c                                 solution limits and stability
       logical lopt
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
+      double precision times, btime, etime
+      common/ time /times(30),btime(30),etime(30)
 
 c jpoint - index of the last compound endmember in the icp x jphct optimization matrix
 c jiinc  - iphct - jphct, increment between the icp x iphct data matrix index and the optimization matrix

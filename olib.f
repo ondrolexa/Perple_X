@@ -937,6 +937,9 @@ c                               lagged speciation
             else 
 c                                 MEEMUM, molar amount
                props(16,i) = amt(i)
+c                                 recover x array from 
+c                                 x3 and convert to y array
+               call xtoy (ids,i,.false.,bad)
 
             end if
 

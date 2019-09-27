@@ -88,7 +88,11 @@ c                                logarithmic_p option
 c                                t_stop option
       if (t.lt.nopt(12)) t = nopt(12)
 
+      if (lopt(28)) call begtim (1)
+
       call gall
+
+      if (lopt(28)) call endtim (1,.true.,'Static GALL ')
 
       do k = 1, jphct
          c(k) = g(k+inc)/ctot(k+inc)
@@ -100,9 +104,14 @@ c                                load the adaptive refinement cpd g's
 c                                 idead = -1 tells lpnag to save parameters
 c                                 for subsequent warm starts
       idead = -1
+
+      if (lopt(28)) call begtim (2)
+
 c                                 optimize by nag
       call lpnag (jphct,hcp,a,k5,b,c,is,x,ax,
      *            clamda,iw,liw,w,lw,idead,l6,istart)
+
+      if (lopt(28)) call endtim (2,.true.,'Static optimization ')
 
       if (idead.gt.0) then
 c                                 look for severe errors                                            
@@ -123,8 +132,12 @@ c                                 no refinement
          lphct = jphct 
 c                                 find discretization points
 c                                 for refinement
+c        if (lopt(28)) call begtim (3)
 
          call yclos1 (clamda,x,is,jphct,quit)
+
+c        if (lopt(28)) call endtim (3,.true.,'Static YCLOS1 ')
+
 c                                 returns quit if nothing to refine
          if (quit) then 
 c                                 final processing, .true. indicates static
@@ -135,8 +148,13 @@ c                                 initialize refinement point pointers
             do i = 1, ipoint
                hkp(i) = 0 
             end do 
+
+c            if (lopt(28)) call begtim (4)
 c                                 reoptimize with refinement
             call reopt (idead)
+
+c            if (lopt(28)) call endtim (4,.true.,'Dynamic optimization ')
+
 c                                 final processing, .false. indicates dynamic
             if (idead.eq.0) then 
 
@@ -225,7 +243,11 @@ c                                 are identified in jdv(1..npt)
 
 c                                 --------------------------------------
 c                                 first iteration
+      if (lopt(28)) call begtim (5)
+
       call resub (1,kterat)
+
+      if (lopt(28)) call endtim (5,.true.,'1st RESUB call ')
 
       if (jphct.eq.jpoint) then
 c                                 if nothing to refine, set idead 
@@ -254,9 +276,16 @@ c                                 cold start
 c                                 set idead = 0 to prevent lpnag from
 c                                 overwriting warm start parameters
          idead = 0 
+
+         if (lopt(28)) call begtim (8)
 c                                 do the optimization
          call lpnag (jphct,icp,cp2,k5,b,g2,is,x,ax,
      *               clamda,iw,liw,w,lw,idead,l6,jstart)
+
+         if (lopt(28)) then 
+            call endtim (8,.true.,'Dynamic optimization N ')
+            write (666,'(a,i6)') 'jphct = ',jphct
+         end if 
 c                                 warn if severe error
          if (idead.gt.0) then
 
@@ -314,8 +343,12 @@ c     *                   'question: Do I feel lucky? Well, do ya, punk?'
          end if
 
          kter = kter + 1
+
+c        if (lopt(28)) call begtim (7)
 c                                 analyze solution, get refinement points
          call yclos2 (clamda,x,is,iter,opt,idead,quit)
+
+c        if (lopt(28)) call endtim (7,.true.,'YCLOS2 ')
 
          if (idead.gt.0) then 
 
@@ -330,8 +363,12 @@ c                                 the xcoor array.
          call saver
 
          if (quit) exit
+
+         if (lopt(28)) call begtim (6)
 c                                 generate new pseudocompounds
          call resub (iter,kterat)
+
+         if (lopt(28)) call endtim (6,.true.,'Nth RESUB call ')
 
       end do
 
@@ -1715,8 +1752,7 @@ c----------------------------------------------------------------------
       npt = 0
       nsol = 0
       quit = .true.
-      soltol = 2d0*nopt(8)
-      soltol = 1d0
+      soltol = nopt(25)
 
       do i = 1, jphct
 
@@ -2345,9 +2381,7 @@ c                                 classify as solvent/solid
                if (jkp(i).lt.0) then
 c                                 setting abort to true signals 
 c                                 test in getmus:
-                  if (quack(-jkp(i))) then 
-                     abort = .true.
-                  end if 
+                  if (quack(-jkp(i))) abort = .true.
 
                   if (ikp(-jkp(i)).eq.idaq) then
                      solvnt(npt) = .true.
@@ -3084,7 +3118,7 @@ c----------------------------------------------------------------------
 
       integer itri(4),jtri(4),ijpt
 
-      double precision wt(3)
+      double precision wt(3), cum
 
       double precision v,tr,pr,r,ps
       common/ cst5  /v(l2),tr,pr,r,ps
@@ -3133,7 +3167,28 @@ c                                 set dependent variables
       call incdp0
 c                                 lpopt does the minimization and outputs
 c                                 the results to the print file.
+      if (lopt(28)) call begtim(30)
+
       call lpopt0 (idead)
+
+      if (lopt(28)) then 
+
+         call endtim (30,.true.,'Total Opt ') 
+
+         cum = 0d0 
+
+         do i = 1, 29
+
+            cum = cum + times(i)
+
+         end do
+
+         write (*,'(/,a,2x,g14.7,//,a)') 'sum of timed intervals ',cum,
+     *                                 '----------------------------'
+         write (666,'(/,a,2x,g14.7,//,a)') 'sum of timed intervals ',cum
+     *                                ,'----------------------------'
+
+      end if 
 
       if (idead.eq.0) then
 c                                 compute derivative properties
