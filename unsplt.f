@@ -304,7 +304,7 @@ c                                 and number of compositions coords for each pha
                               bt(n) = bg(n,ias)
                               if (n.gt.iavar(1,ias)) cycle
 c                                  load solution compositions into xt
-                              jxco = icoor(m)
+                              jxco = icox(m)
 
                               do o = 1, iavar(1,ias)
 
@@ -315,7 +315,7 @@ c                                  load solution compositions into xt
                                  jxco = jxco + 1
 
                                  do h = jxco, kxco
-                                    xt(o,h-jxco+1) = xcoor(h)    
+                                    xt(o,h-jxco+1) = xco(h)    
                                  end do 
 
                                  jxco = kxco
@@ -324,7 +324,7 @@ c                                  load solution compositions into xt
                            end do  
 
                            gas = loc2ga(ias)
-                           jxco = icoor(m)
+                           jxco = icox(m)
 
                            do n = 1, gavar(3,gas)
                               do o = 1, gavar(3,gas)
@@ -336,7 +336,7 @@ c                                 THIS NEEDS TO BE CHECKED, it was iavar(o,ias).
                                  if (o.gt.iavar(1,ias)) cycle
                                  
                                  do p = 1, gcoor(idasls(o,ias))
-                                    xcoor(jxco+p) = xt(o,p)
+                                    xco(jxco+p) = xt(o,p)
                                  end do 
 
                                  jxco = jxco + gcoor(idasls(o,ias))
@@ -413,7 +413,7 @@ c                                 molar amounts
                end do 
 c                                 solution compositions
                gicoor(gbulk) = gjxco
-               jxco = icoor(l)
+               jxco = icox(l)
 
                do m = 1, gavar(1,ias)
 
@@ -429,7 +429,7 @@ c                                 solution compositions
                   o = 0 
 
                   do n = gjxco, gkxco
-                     gxcoor(n) = xcoor(jxco+o)
+                     gxcoor(n) = xco(jxco+o)
                      o = o + 1
                   end do 
 

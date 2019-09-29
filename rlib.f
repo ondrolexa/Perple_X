@@ -2002,7 +2002,8 @@ c                                 phase (ifct > 0) then ufluid will call the eos
 c                                 identified by ifug irrespective of the eos value.
             if (ifct.eq.0.or.iam.eq.5) then
 
-               if (ieos.gt.100) call warn (56,r,k,name)
+               if (ieos.gt.100.and.(iam.lt.5.or.iam.eq.15)) 
+     *            call warn (56,r,k,name)
 c                                 there is no saturated phase
 c                                 assign it the default molecular fluid eos
                eos(id) = 200 + k
@@ -5635,7 +5636,7 @@ c---------------------------------------------------------------------
       character pname*10
       integer ipoly, isimp, ipvert, ivert, pimd
       common/ cst688 /ipoly,isimp(h4),ipvert(h4),ivert(h4,mst),
-     *                pimd(msp,mst,h4),pname(h4)
+     *                pimd(h4,mst,msp),pname(h4)
 c----------------------------------------------------------------------
 
       if (jsmod.eq.20) then
@@ -5788,7 +5789,7 @@ c                                 local input variables
       character pname*10
       integer ipoly, isimp, ipvert, ivert, pimd
       common/ cst688 /ipoly,isimp(h4),ipvert(h4),ivert(h4,mst),
-     *                pimd(msp,mst,h4),pname(h4)
+     *                pimd(h4,mst,msp),pname(h4)
 c----------------------------------------------------------------------
 
       itic = 0
@@ -5814,7 +5815,7 @@ c                                 shift subdivision ranges
             pxmn(1,i,j) = pxmn(1,iwas(i),j)
             pxmx(1,i,j) = pxmx(1,iwas(i),j)
             pxnc(1,i,j) = pxnc(1,iwas(i),j)
-            pimd(j,i,1) = pimd(j,iwas(i),1)
+            pimd(1,i,j) = pimd(1,iwas(i),j)
          end do
 
       end do
@@ -5899,7 +5900,7 @@ c                                 local input variables
       character pname*10
       integer ipoly, isimp, ipvert, ivert, pimd
       common/ cst688 /ipoly,isimp(h4),ipvert(h4),ivert(h4,mst),
-     *                pimd(msp,mst,h4),pname(h4)
+     *                pimd(h4,mst,msp),pname(h4)
 
       integer iorig,jnsp,iy2p
       common / cst159 /iorig(m4),jnsp(m4),iy2p(m4)
@@ -5952,7 +5953,7 @@ c                              now shift subdivision ranges
                   pxmn(1,i,j) = pxmn(1,i,j2oj(j))
                   pxmx(1,i,j) = pxmx(1,i,j2oj(j))
                   pxnc(1,i,j) = pxnc(1,i,j2oj(j))
-                  pimd(j,i,1) = pimd(j2oj(j),i,1)
+                  pimd(1,i,j) = pimd(1,i,j2oj(j))
 
                end do
 
@@ -6318,7 +6319,7 @@ c---------------------------------------------------------------------
       character pname*10
       integer ipoly, isimp, ipvert, ivert, pimd
       common/ cst688 /ipoly,isimp(h4),ipvert(h4),ivert(h4,mst),
-     *                pimd(msp,mst,h4),pname(h4)
+     *                pimd(h4,mst,msp),pname(h4)
 
       integer jmsol,kdsol
       common/ cst142 /jmsol(m4,mst),kdsol(m4)
@@ -6369,7 +6370,7 @@ c---------------------------------------------------------------------
       character pname*10
       integer ipoly, isimp, ipvert, ivert, pimd
       common/ cst688 /ipoly,isimp(h4),ipvert(h4),ivert(h4,mst),
-     *                pimd(msp,mst,h4),pname(h4)
+     *                pimd(h4,mst,msp),pname(h4)
 
       integer iorig,jnsp,iy2p
       common / cst159 /iorig(m4),jnsp(m4),iy2p(m4)
@@ -6393,7 +6394,7 @@ c----------------------------------------------------------------------
             pxmn(1,1,lm) = pxmn(1,1,i)
             pxmx(1,1,lm) = pxmx(1,1,i)
             pxnc(1,1,lm) = pxnc(1,1,i)
-            pimd(lm,1,1) = pimd(i,1,1)
+            pimd(1,1,lm) = pimd(1,1,i)
          end if
 
       end do
@@ -6408,7 +6409,7 @@ c----------------------------------------------------------------------
             pxmn(1,1,lm) = pxmn(1,1,i)
             pxmx(1,1,lm) = pxmx(1,1,i)
             pxnc(1,1,lm) = pxnc(1,1,i)
-            pimd(lm,1,1) = pimd(i,1,1)
+            pimd(1,1,lm) = pimd(1,1,i)
          end if
 
       end do
@@ -6425,7 +6426,7 @@ c----------------------------------------------------------------------
             pxmn(1,1,lm) = pxmn(1,1,i)
             pxmx(1,1,lm) = pxmx(1,1,i)
             pxnc(1,1,lm) = pxnc(1,1,i)
-            pimd(lm,1,1) = pimd(i,1,1)
+            pimd(1,1,lm) = pimd(1,1,i)
 
          end if
 
@@ -6879,7 +6880,7 @@ c---------------------------------------------------------------------
       character pname*10
       integer ipoly, isimp, ipvert, ivert, pimd
       common/ cst688 /ipoly,isimp(h4),ipvert(h4),ivert(h4,mst),
-     *                pimd(msp,mst,h4),pname(h4)
+     *                pimd(h4,mst,msp),pname(h4)
 c----------------------------------------------------------------------
       mdep = 0
       norder = 0
@@ -7069,7 +7070,7 @@ c                               read composition limits, subdivision type:
             pxmn(1,i,j) = rnums(1)
             pxmx(1,i,j) = rnums(2)
             pxnc(1,i,j) = rnums(3)
-            pimd(j,i,1) = idint(rnums(4))
+            pimd(1,i,j) = idint(rnums(4))
 
          end do
 
@@ -7205,7 +7206,7 @@ c---------------------------------------------------------------------
       character pname*10
       integer ipoly, isimp, ipvert, ivert, pimd
       common/ cst688 /ipoly,isimp(h4),ipvert(h4),ivert(h4,mst),
-     *                pimd(msp,mst,h4),pname(h4)
+     *                pimd(h4,mst,msp),pname(h4)
 
       logical stck, norf
       integer iend,isub,insp,iterm,iord,istot,jstot,kstot,rkord,xtyp
@@ -7257,7 +7258,7 @@ c                               dummy for the ns'th species
          pxmn(1,1,j) = rnums(1)
          pxmx(1,1,j) = rnums(2)
          pxnc(1,1,j) = rnums(3)
-         pimd(j,1,1) = idint(rnums(4))
+         pimd(1,1,j) = idint(rnums(4))
 
       end do
 c                              look for van laar and/or dqf parameters
@@ -8605,7 +8606,7 @@ c                                 model type
       character pname*10
       integer ipoly, isimp, ipvert, ivert, pimd
       common/ cst688 /ipoly,isimp(h4),ipvert(h4),ivert(h4,mst),
-     *                pimd(msp,mst,h4),pname(h4)
+     *                pimd(h4,mst,msp),pname(h4)
 
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
@@ -8728,8 +8729,8 @@ c                                 dimension of each simplex
 
             do j = 1, ndim(i,ii,im)
 c                                 check for old subdivision schemes
-               if (pimd(j,i,ii).gt.1) 
-     *            call error (62,nopt(13),pimd(j,i,ii),tname)
+               if (pimd(ii,i,j).gt.1) 
+     *            call error (62,nopt(13),pimd(ii,i,j),tname)
 c                                 allow inc to be either the number of points
 c                                 or the resolution
                if (pxnc(ii,i,j).gt.1d0)
@@ -8737,17 +8738,17 @@ c                                 or the resolution
 c                                 subdivision override (iopt(13))
                if (iopt(13).eq.1) then
 c                                 make linear
-                  pimd(j,i,ii) = 0
+                  pimd(ii,i,j) = 0
 
                else if (iopt(13).eq.2) then
 c                                 make all stretch (if not already)
-                  if (pimd(j,i,ii).eq.0) pimd(j,i,ii) = 1
+                  if (pimd(ii,i,j).eq.0) pimd(ii,i,j) = 1
 
                end if
 
                if (nopt(13).gt.0d0) then
 
-                  if (pimd(j,i,ii).ne.0) then
+                  if (pimd(ii,i,j).ne.0) then
 c                                  set XINC for non-linear subdivision:
 c                                  non_linear_switch toggles from default
 c                                  i.e., adaptive optimization uses initial_resolution
@@ -8767,7 +8768,7 @@ c                                 reduce compositional degeneracies.
                end if
 c                                 set stretch parameters according to xmn specified
 c                                 in the solution model:
-               if (pimd(j,i,ii).ne.0) then
+               if (pimd(ii,i,j).ne.0) then
 
                   dx = pxnc(ii,i,j)
                   if (pxmn(ii,i,j).eq.0d0) pxmn(ii,i,j) = nopt(14)
@@ -8808,7 +8809,7 @@ c                                 resolution of the exploratory stage
 
                   end if
 c                                 widen the range by the exploratory resolution
-                  if (pimd(j,i,ii).eq.0) then
+                  if (pimd(ii,i,j).eq.0) then
                      pxmx(ii,i,j) = pxmx(ii,i,j) + dinc
                      pxmn(ii,i,j) = pxmn(ii,i,j) - dinc
                   else
@@ -8833,7 +8834,7 @@ c                                 hard_limit test
 
                end if
 
-               imdg(j,i,ii,im) = pimd(j,i,ii)
+               imdg(j,i,ii,im) = pimd(ii,i,j)
                xmng(im,ii,i,j) = pxmn(ii,i,j)
                xmxg(im,ii,i,j) = pxmx(ii,i,j)
                xncg(im,ii,i,j) = pxnc(ii,i,j)
@@ -8911,7 +8912,7 @@ c                                 as lrecip.
       if (recip.or.depend) then
 
          lrecip(im) = .true.
-         if (dnu(im).ne.0d0) call error (77,r,i,'prismatic composition'/
+         if (dnu(im).ne.0d0) call error (77,r,i,'polytopic composition'/
      *    /' space not anticipated for non-equimolar ordering: '//tname)
 
       end if
@@ -16246,7 +16247,7 @@ c-----------------------------------------------------------------------
       common/ cxt2 /aqg(m4),q2(m4),rt,jnd(m4)
 
       double precision cp
-      common/ cst12 /cp(k5,k1)
+      common/ cst12 /cp(k5,k10)
 
       double precision thermo,uf,us
       common/ cst1 /thermo(k4,k10),uf(2),us(h5)
@@ -19399,7 +19400,7 @@ c               to its polytope vertex
       character pname*10
       integer ipoly, isimp, ipvert, ivert, pimd
       common/ cst688 /ipoly,isimp(h4),ipvert(h4),ivert(h4,mst),
-     *                pimd(msp,mst,h4),pname(h4)
+     *                pimd(h4,mst,msp),pname(h4)
 c----------------------------------------------------------------------
 c                                read number of sub-polytopes
       call readda (rnums,1,tname)
@@ -19416,7 +19417,7 @@ c                                read subdivision ranges for the polytopes
          pxmn(ipoly+1,1,i) = rnums(1)
          pxmx(ipoly+1,1,i) = rnums(2)
          pxnc(ipoly+1,1,i) = rnums(3)
-         pimd(i,1,ipoly+1) = idint(rnums(4))
+         pimd(ipoly+1,1,i) = idint(rnums(4))
 
       end do
 c                                compositional simplex
@@ -19816,7 +19817,7 @@ c---------------------------------------------------------------------
       character pname*10
       integer ipoly, isimp, ipvert, ivert, pimd
       common/ cst688 /ipoly,isimp(h4),ipvert(h4),ivert(h4,mst),
-     *                pimd(msp,mst,h4),pname(h4)
+     *                pimd(h4,mst,msp),pname(h4)
 c----------------------------------------------------------------------
 c                                the increment from the polytope vertex
 c                                to the endmember index
@@ -19965,7 +19966,7 @@ c                                 for the composition space down
                pxmn(ipoly+1,1,jpoly) = pxmn(ipoly+1,1,ii)
                pxmx(ipoly+1,1,jpoly) = pxmx(ipoly+1,1,ii)
                pxnc(ipoly+1,1,jpoly) = pxnc(ipoly+1,1,ii)
-               pimd(jpoly,1,ipoly+1) = pimd(ii,1,ipoly+1)
+               pimd(ipoly+1,1,jpoly) = pimd(ipoly+1,1,ii)
 
             end if
 c                                 shift all polytopes down
@@ -19981,7 +19982,7 @@ c                                 shift all polytopes down
                   pxmn(jpoly,j,k) = pxmn(ii,j,k)
                   pxmx(jpoly,j,k) = pxmx(ii,j,k)
                   pxnc(jpoly,j,k) = pxnc(ii,j,k)
-                  pimd(jpoly,k,j) = pimd(ii,k,j)
+                  pimd(jpoly,j,k) = pimd(ii,j,k)
                end do
 
             end do
@@ -19993,7 +19994,7 @@ c                                shift composition space subdivision ranges left
             pxmn(jpoly+1,1,ii) = pxmn(ipoly+1,1,ii)
             pxmx(jpoly+1,1,ii) = pxmx(ipoly+1,1,ii)
             pxnc(jpoly+1,1,ii) = pxnc(ipoly+1,1,ii)
-            pimd(ii,1,jpoly+1) = pimd(ii,1,ipoly+1)
+            pimd(jpoly+1,1,ii) = pimd(ipoly+1,1,ii)
          end do
 
          ipoly = jpoly
@@ -20025,7 +20026,7 @@ c                                 polytopes
                      pxmn(ii,jsimp,k) = pxmn(ii,j,k)
                      pxmx(ii,jsimp,k) = pxmx(ii,j,k)
                      pxnc(ii,jsimp,k) = pxnc(ii,j,k)
-                     pimd(ii,k,jsimp) = pimd(ii,k,j)
+                     pimd(ii,jsimp,k) = pimd(ii,j,k)
                   end do
                end do
 
@@ -20102,7 +20103,7 @@ c                                 local input variables
       character pname*10
       integer ipoly, isimp, ipvert, ivert, pimd
       common/ cst688 /ipoly,isimp(h4),ipvert(h4),ivert(h4,mst),
-     *                pimd(msp,mst,h4),pname(h4)
+     *                pimd(h4,mst,msp),pname(h4)
 c----------------------------------------------------------------------
 c                                the increment from the polytope vertex
 c                                to the endmember index
@@ -20155,7 +20156,7 @@ c                              shift subdivision ranges
                      pxmn(ii,i,j) = pxmn(ii,i,j2oj(j))
                      pxmx(ii,i,j) = pxmx(ii,i,j2oj(j))
                      pxnc(ii,i,j) = pxnc(ii,i,j2oj(j))
-                     pimd(ii,j,i) = pimd(ii,j2oj(j),i)
+                     pimd(ii,i,j) = pimd(ii,i,j2oj(j))
                   end do
 
                end if
@@ -20798,6 +20799,9 @@ c-----------------------------------------------------------------------
 
       double precision sum
 
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
@@ -20823,7 +20827,13 @@ c                                 weights
             end do 
 
             jpos = icoz(id) + 1
-            pwt(ii) = 1d0 - sum
+
+            if (sum.lt.one) then
+               pwt(ii) = 1d0 - sum
+            else
+               pwt(ii) = 0d0
+            end if
+
             x(ipop,1,ii) = pwt(ii)
 
          else
@@ -20854,7 +20864,12 @@ c                                 skip 0-d simplices
 
                end do
 
-               x(ii,i,k) = 1d0 - sum
+               if (sum.lt.one) then
+                  x(ii,i,k) = 1d0 - sum
+               else 
+                  x(ii,i,k) = 0d0
+               end if
+
                jpos = jpos + 1
 
             end do
@@ -20878,13 +20893,19 @@ c                                 weights
             end do 
 
             jpos = icox(id) + 1
-            pwt(ii) = 1d0 - sum
+
+            if (sum.lt.one) then
+               pwt(ii) = 1d0 - sum
+            else 
+               pwt(ii) = 0d0
+            end if
+
             x(ipop,1,ii) = pwt(ii)
 
          else
 
             jpos = icox(id)
-            pwt(1) = 1d0 
+            pwt(1) = 1d0
 
          end if
 
@@ -20909,7 +20930,12 @@ c                                 skip 0-d simplices
 
                end do
 
-               x(ii,i,k) = 1d0 - sum
+               if (sum.lt.one) then
+                  x(ii,i,k) = 1d0 - sum
+               else 
+                  x(ii,i,k) = 0d0
+               end if
+
                jpos = jpos + 1
 
             end do
@@ -24901,8 +24927,8 @@ c                                 make a list of the result files
          end if 
 c                                 interim_results is auto, and the final results
 c                                 are not available, find/use last interim result:
-         write (*,'(a)') 'VERTEX has not completed the calculation, '//
-     *                  'continue with the latest interim result (Y/N)?'
+         write (*,'(a,/,a)') 'VERTEX has not completed the calculation'
+     *         //', continue with the','latest interim result (Y/N)?'
 
          if (refine.and.jnd(i,1).eq.0) write (*,'(2(/,a))')
      *      'WARNING: VERTEX is currently in, or was interrupted '//
@@ -24912,7 +24938,17 @@ c                                 are not available, find/use last interim resul
 
          read (*,'(a)') yes
 
-         if (yes.ne.'y'.and.yes.ne.'Y') stop
+         if (yes.ne.'y'.and.yes.ne.'Y') then 
+            stop
+         else if (refine.and.jnd(i,1).eq.0) then 
+c                                 try reading solutions without refine data
+            write (*,'(/,3(a,/))')
+     *            'If an error follows change T to F in the TOF file '//
+     *            'and restart PSSECT.'
+
+         end if
+
+         inter = .true.
 
          write (text,'(a,i1,i1)') '_',jnd(i,1),jnd(i,2)
          call mertxt (name,prject,text,0)
@@ -25081,6 +25117,7 @@ c                                phase molar amounts
             if (kxco.gt.k18) call error (61,0d0,k18,'BPLINP')
 
             read (n5,*,iostat=ier) (xco(j), j = jxco, kxco)
+
             if (ier.ne.0) goto 99
 
             if (lopt(32).and.ksmod(ids).eq.39) then 

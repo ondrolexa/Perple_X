@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.8.8, source updated Sep 9, 2019.',
+     *      'Perple_X version 6.8.8, source updated Sep 29, 2019.',
 
      *      'Copyright (C) 1986-2019 James A D Connolly '//
      *      '<www.perplex.ethz.ch/copyright.html>.'
@@ -2176,7 +2176,8 @@ c---------------------------------------------------------------------
       else if (ier.eq.40) then
          write (*,40) int, char
       else if (ier.eq.41) then
-         write (*,41) char
+
+         write (*,41)
 
          if (int.eq.0) then 
             write (*,410)
@@ -2982,7 +2983,7 @@ c----------------------------------------------------------------------
      *          8x,'increase resolution_factor and/or',/,
      *          8x,'increase reach_increment and/or',/,
      *          8x,'increase speciation_factor and/or',/,
-     *          8x,'increase speciation_max_it and/or',/,
+     *          8x,'increase speciation_max_it.',/,
      *          4x,'see: www.perplex.ch/perplex_options.html for ',
      *          'explanation.',//,
      *          4x,'In the 2nd case: ',
@@ -3006,7 +3007,7 @@ c----------------------------------------------------------------------
 49    format (/,'**warning ver049** warning ',i3,' will not be repeated'
      *         ,' for future instances of this problem.',/,
      *          'currently in routine: ',a,//)
-50    format (/,'**warning ver050** reformulating prismatic ',
+50    format (/,'**warning ver050** reformulating polytopic ',
      *          'solution: ',a,' because of missing endmembers. ',
      *        /,'(reformulation can be controlled explicitly ',
      *          'by excluding additional endmembers).',/)

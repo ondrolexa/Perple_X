@@ -1,6 +1,12 @@
 1) X 687: redop1/meemum set iopt(6) = 0, prevents setau1 from using arf data?
 
-2) X yclos1 has set soltol to 1 in 687? reset to nopt(25) in 688.
+2) X yclos1 has set soltol to 1 in 687? reset to nopt(25) in 688. 
+
+   a) HOWEVER function SOLVUS uses a better distance measure and therefore 
+      the optimal value of nopt(25) needs to be reevaluated.
+   b) YCLOS2 generates too many refinement points with 687 models (possibly because
+      of near degeneracy). experimenting with not accepting metastable points if 
+      the solution is already stable.
 
 3) 688 eliminates clib.f, dlib.f, getxz1.f, dumlib.f files from make.
 

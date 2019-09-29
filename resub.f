@@ -2495,7 +2495,8 @@ c                                 check composition
 
                      if (dabs(cp2(k,jdv(j))-cp2(k,jmin(i))).gt.nopt(5))
      *                                                              then
-                        good = .true.
+c DEBUG DEBUG DEBUG 688
+c                       good = .true.
                         exit
 
                      end if

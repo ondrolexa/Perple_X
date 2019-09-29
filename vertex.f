@@ -168,11 +168,11 @@ c                                 (these flags are reset by input1).
 
             if (jpot.ne.1) then 
                pots = .true.
+               jpot = 0
             else 
                pots = .false.
-            end if 
-
-            jpot = 1
+               jpot = 1
+            end if
 
          end if
 

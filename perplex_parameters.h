@@ -32,12 +32,12 @@
 !                                 mdim - hard constraint on max number of dimensions
 !                                        for a solution model composition space.
       parameter (mst=3,mdim=8,msp=mdim+6,ms1=msp-1)
-!                                 h4  - max-number of subpolytopes in a composition space
+!                                 h4  - max-number of polytopes in a composite composition space
 !                                 h5  - max number of saturated components
 !                                 h6  - max number of saturated composants in any subcomposition
 !                                 h8  - max number of excluded phases
 !                                 h9  - max number of solutions
-      parameter (h4=6,h5=5,h6=500,h8=200,h9=30)
+      parameter (h4=3,h5=5,h6=500,h8=200,h9=30)
 !                                 i6  - maximum number of independent chemical potentials (or 
 !                                       fugacity/activities).
 !                                 i7  - number of system props used in werami
@@ -84,13 +84,13 @@
 !                                 k23 - max number of phases to be fractionated.
 !                                 k24 - max number of static simplicial coordinate sets (jcox).
 !                                 k25 - max number of dynamic simplicial coordinate sets (jcoz).
-      parameter (k0=25,k1=2000000,k2=100000,k3=2000,k4=32,k5=12)
+      parameter (k0=25,k1=3200000,k2=100000,k3=2000,k4=32,k5=12)
       parameter (k7=k5+1,k8=k5+2) 
       parameter (k9=35,k10=400,k14=18,k15=6,k16=120)
-      parameter (k17=7,k18=k1)
-      parameter (k19=3*k5,k21=2000000,k20=k21/10)
-      parameter (k22=mdim*k19,k23=25)
-      parameter (k13=2000000,k24=10*k1,k25=10*k21)
+      parameter (k17=7,k18=k1/2)
+      parameter (k19=3*k5,k21=k1,k20=k21/10)
+      parameter (k22=mdim*mst*h4*k19,k23=25)
+      parameter (k13=k1/2,k24=10*k1,k25=10*k21)
 !                                 l2 - max number of independent potential variables
 !                                 l3 - max number of variables for gridded min and graphics (l2+2)
 !                                 l5 - max number of coordinates along a univariant curve                
