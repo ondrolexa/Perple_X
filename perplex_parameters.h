@@ -132,8 +132,8 @@
 !                                m16 - max number of parameters in a redkich-kistler L
 !                                m17 - max order of redlich-kistler expansion
 !                                m18 - max number of pairwise terms in a redlich-kistler expansion
-      parameter (m0=12,m1=60,m2=8,m3=3,m4=41,m6=6,m7=15,m8=9,m9=10,
-     *           m10=6,m11=11,m12=4,m13=8,m14=2,m15=31,m16=6,m17=5,
+      parameter (m0=12,m1=60,m2=8,m3=3,m4=50,m6=6,m7=15,m8=9,m9=10,
+     *           m10=6,m11=11,m12=4,m13=8,m14=2,m15=35,m16=6,m17=5,
      *           m18=6)
 !                                 nx - number of x-grid nodes in a contour data grid
 !                                 ny - number of y-grid modes in a contour data grid

@@ -16,6 +16,7 @@
    X c) in gphase gfes called with y(1) rather than y(2)
    d) call to moduli may reset p0a in getphp prior to call to ginc?
    X e) 0-trap for iind not included in subinc, corrected but not pushed
+   X f) cAmph(G) incorrect T1 site occupancy (SiAl) rather than (SiSi).
 
 5) csol and getscp are largely redundant, csol assumes p0a has been set to account
    for decomposition of ordered species, whereas getscp does the decomposition with

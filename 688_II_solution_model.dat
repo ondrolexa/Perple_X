@@ -488,16 +488,36 @@ begin_model
                               mkpg_d        K     Mg    mgAl    Mg     SiAl    OH
                               fkpg_d        k     Fe    feAl    fe     SiAl    OH
 
+                              tcmpg_d       Na    Mg    MgTi    Ca    Si3Al   OHO
+                              tcfpg_d       Na    Fe    FeTi    Ca    Si3Al   OHO
+                              tmpg_d        Na    Mg    mgTi    Mg    Si3Al   OHO
+                              tfpg_d        Na    Fe    feTi    fe    Si3Al   OHO
+
+                              tcmkpg_d      K     Mg    MgTi    Ca     SiAl    OH
+                              tcfkpg_d      K     Fe    FeTi    Ca     SiAl    OH
+                              tmkpg_d       K     Mg    mgTi    Mg     SiAl    OH
+                              tfkpg_d       k     Fe    feTi    fe     SiAl    OH
+
+                              ocmpg_d       Na    Mg    MgFe3+  Ca     SiAl    OH
+                              ocfpg_d       Na    Fe    FeFe3+  Ca     SiAl    OH
+                              ompg_d        Na    Mg    mgFe3+  Mg     SiAl    OH
+                              ofpg_d        Na    Fe    feFe3+  fe     SiAl    OH
+
+                              ocmkpg_d      K     Mg    MgFe3+  Ca     SiAl    OH
+                              ocfkpg_d      K     Fe    FeFe3+  Ca     SiAl    OH
+                              omkpg_d       K     Mg    mgFe3+  Mg     SiAl    OH
+                              ofkpg_d       K     Fe    feFe3+  fe     SiAl    OH
+
                               Gl            V     Mg     Al     Na      Si     OH
                               fGl_d         V     Fe     Al     Na      Si     OH
 
                               mrbG          V     Mg     Fe3    Na      Si     OH
                               frb_d         V     Fe     Fe3    Na      Si     OH
 
-                              Tts           V     Mg     Ti     Ca     Si       O
-                              fcTts_d       V     Fe     Ti     Ca     Si       O
-                              mTts_d        V     Mg     Ti     Mg     Si       O
-                              fTts_d        V     Fe     Ti     Fe     Si       O
+                              Tts           V     Mg     Ti     Ca      Si      O
+                              fcTts_d       V     Fe     Ti     Ca      Si      O
+                              mTts_d        V     Mg     Ti     Mg      Si      O
+                              fTts_d        V     Fe     Ti     Fe      Si      O
 
                               cmgrk_d       V     Mg     Fe3    Ca     SiAl    OH
                               cfgrk_d       V     Fe     Fe3    Ca     SiAl    OH
@@ -522,15 +542,15 @@ begin_model
            2 CaMg-1(M4) = (Tr-Cumm)
            
            2 Fe3Al-1(M2) = (Rb-Gl)
-           2 TiAl-1(M2)  = (Tts-Ts)
+           2 TiAl-1(M2)  = (Tts-Ts) => coupled to T1 and OH.
 
            3 FeMg-1(M1) = (grun - a)
            2 FeMg-1(M2) = (grun - b)
            2 FeMg-1(M4) = (-grun - cumm + a + b)
            
-           
            A  = Na, K, V
-           T  = Al, Fe3, Ti, M2
+           T  = Al, Fe3, Ti, on M2 [Polytope 2]
+           T' = Al, Fe3, on M2 [Polytope 1]
            MT = MAl, MFe3, MTi
            C  = Ca, M4
            M  = Mg, Fe
@@ -538,7 +558,7 @@ begin_model
            
            2 polytope model: A, M1, M2, M4 site populations are indicated, remaining are dependent
 
-           Polytope 1 [ ][M][T  ][N]       => 2*3 
+           Polytope 1 [ ][M][T'][N]         => 2*2 
            Polytope 2 [A][M][M,T,MT][M,C]  => 2*2*6
 
           ----------------------------------------------------------------------------------------
@@ -570,18 +590,17 @@ Glaucophane                        | poytope name
                                    
                                    | => endmember 11 is [ ][Mg][Fe3][Na]
                                    | => endmember 21 is [ ][Fe][Fe3][Na]
-                                   | omitted => endmember 1X is [ ][Mg][Ti ][Na]
-                                   | omitted => endmember 2X is [ ][Fe][Ti ][Na]
                                    | => endmember 12 is [ ][Mg][Al ][Na]
                                    | => endmember 22 is [ ][Fe][Al ][Na]
 
-mrbG       frb_d                   | M-[Al]Na, redundant X(2,1)
+mrbG       frb_d                   | Fe3-glaucophane, aka riebeckite
 gl         fgl_d                   | Al-glaucophane
 
                                    | First (1d) simplex
 0    1  .1  0                      | X(1,1) = bulk Mg/M
                                    | Second (3d) simplex
-0    1  .1  0                     | X(2,1) = Fe3/[Fe3+Al] on M2
+0    1  .1  0                      | X(2,1) = Fe3/T' on M2, T' = Al + Fe3+
+
 
                                    | -------------------------------------------
                                    | Polytope 2 [A][M][M,T,MT][M,C]  
@@ -589,7 +608,7 @@ gl         fgl_d                   | Al-glaucophane
 ACMT-Amph                          | poytope name
  
 3                                  | number of simplices, then for each simplex
-2 2 6                              | number of vertices on each simplex
+2 2 10                             | number of vertices on each simplex
  
                                    | Simplex 1 Mg, Fe; determines the identity of M
                                    | Simplex 2 is M/[Ca + M] on M4
@@ -602,8 +621,20 @@ ts         fcts_d
 mparg_d    fparg_d                 | M-Ca-Na-Al_parg
 parg       fcparg_d
 
+ompg_d     ofpg_d                  | M-Ca-Na-Fe3+ parg
+ocmpg_d    ocfpg_d
+
+tmpg_d     tfpg_d                  | M-Ca-Na-Ti parg
+tcmpg_d    tcfpg_d
+
 kmparg_d   kfparg_d                | M-Ca-K-Al_parg
 kprg       kfcprg_d
+
+omkpg_d    ofkpg_d                 | M-Ca-K-Fe3+ parg
+ocmkpg_d   ocfkpg_d
+
+tmkpg_d    tfkpg_d                 | M-Ca-K-Ti parg
+tcmkpg_d   tcfkpg_d
 
 mtts_d     ftts_d                  | M-Ca-Ti_tschermaks
 tts        fctts_d
@@ -615,27 +646,31 @@ cumm       grun                    | M-Ca divalent amphibole
 tr         ftr_d
 
                                    | First (1d) simplex
-.5   .75  .1  0                     | X(1,1) = bulk Mg/M
+.5   .75  .1  0                    | X(1,1) = bulk Mg/M
 
                                    | Second (1d) simplex
 0   .35  .1  0                     | X(2,1) = M/[Ca + M] on M4
 
-
                                    | Third simplex 
 0    .25 .1  0                     | X(3,1) = X(Al-Ts)
-.3   .7  .1  0                     | X(3,2) = X(Na-Al-Parg), Fe3 and Ti parg missing
-0    .1  .1  0                     | X(3,3) = X(K-Al-Parg), Fe3 and Ti parg missing
-0    .2  .1  0                     | X(3,4) = X(Ti-Ts)
-0    .35  .1  0                     | X(3,5) = X(Fe3-Ts)
+.3   .7  .1  0                     | X(3,2) = X(Na-Al-Parg)
+0    .05 .1  0                     | X(3,3) = X(Na-Fe3+-Parg)
+0    .05 .1  0                     | X(3,4) = X(Na-Ti-Parg)
+0    .1  .1  0                     | X(3,5) = X(K-Al-Parg)
+0    .05 .1  0                     | X(3,6) = X(K-Fe3+-Parg)
+0    .05 .1  0                     | X(3,7) = X(K-Ti-Parg)
+0    .2  .1  0                     | X(3,8) = X(Ti-Ts)
+0    .35 .1  0                     | X(3,9) = X(Fe3-Ts)
 
 begin_ordered_endmembers
-                                   | ordered species definitions:
+
 a     = 3/7 cumm + 4/7 grun  enthalpy_of_ordering  =   -9486  | = DQF(A) -4/7 DQF(Grun)
 b     = 2/7 cumm + 5/7 grun  enthalpy_of_ordering  =  -11657  | = DQF(B) -5/7 DQF(Grun)
+
 end_ordered_endmembers 
 
 begin_dependent_endmembers
-                                   | dependent endmember definitions:
+
 fcts_d = 1 ts + 1 grun - 1 a
 fts_d  = 1 ts - 1 tr + 1 b
 mts_d  = 1 ts - 1 tr + 1 cumm
@@ -644,9 +679,29 @@ fcparg_d  = 1 parg  + 3/2 grun - 1 a - 1/2 b
 fparg_d   = 1 parg  + 1/2 grun + 1/2 b - 1 tr
 mparg_d   = 1 parg  - 1 tr     + 1 cumm
 
+tcmpg_d   = 1 parg  + 1/2 tts - 1/2 ts
+tcfpg_d   = 1 parg  + 3/2 grun - 1 a - 1/2 b + 1/2 tts - 1/2 ts
+tmpg_d    = 1 parg  - 1 tr     + 1 cumm + 1/2 tts - 1/2 ts
+tfpg_d    = 1 parg  + 1/2 grun + 1/2 b - 1 tr + 1/2 tts - 1/2 ts
+
+ocmpg_d   = 1 parg  + 1/2 mrbG  - 1/2 gl
+ocfpg_d   = 1 parg  + 3/2 grun - 1 a - 1/2 b  + 1/2 mrbG  - 1/2 gl
+ompg_d    = 1 parg  - 1 tr     + 1 cumm + 1/2 mrbG  - 1/2 gl
+ofpg_d    = 1 parg  + 1/2 grun + 1/2 b - 1 tr + 1/2 mrbG  - 1/2 gl
+
 kfcprg_d  = 1 kprg  + 3/2 grun - 1 a - 1/2 b
 kfparg_d  = 1 kprg  + 1/2 grun + 1/2 b - 1 tr
 kmparg_d  = 1 kprg  - 1 tr + 1 cumm
+
+tcmkpg_d  = 1 kprg  + 1/2 tts - 1/2 ts
+tcfkpg_d  = 1 kprg  + 3/2 grun - 1 a - 1/2 b + 1/2 tts - 1/2 ts
+tmkpg_d   = 1 kprg  - 1 tr     + 1 cumm + 1/2 tts - 1/2 ts
+tfkpg_d   = 1 kprg  + 1/2 grun + 1/2 b - 1 tr + 1/2 tts - 1/2 ts
+
+ocmkpg_d  = 1 kprg  + 1/2 mrbG  - 1/2 gl
+ocfkpg_d  = 1 kprg  + 3/2 grun - 1 a - 1/2 b  + 1/2 mrbG  - 1/2 gl
+omkpg_d   = 1 kprg  - 1 tr     + 1 cumm + 1/2 mrbG  - 1/2 gl
+ofkpg_d   = 1 kprg  + 1/2 grun + 1/2 b - 1 tr + 1/2 mrbG  - 1/2 gl
 
 fgl_d    = 1 gl    + 1 grun   - 1 a
 frb_d    = 1 mrbG  + 1 grun   - 1 a

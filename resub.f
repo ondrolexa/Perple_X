@@ -1806,7 +1806,8 @@ c                                 new point, add to list
                   write (*,'(/,a)') 'Iteration dump at: '
                   write (*,'(a,'' = '',g12.6)') 
      *                  (vname(jv(j)), v(jv(j)), j = 1, ipot)
-                  write (*,'(/,a,i2)') 'iteration ',0
+                  write (*,'(/,a,i2,a,i7)') 'iteration ',0,' jphct = ',
+     *                  jphct
                end if 
                if (ikp(id).ne.0) then 
                   call dumper (1,i,0,ikp(id),x(i),clamda(i))
@@ -2405,7 +2406,8 @@ c                                 test in getmus:
 
             if (lopt(34)) then
 c                                 dump iteration details
-               if (npt.eq.1) write (*,'(/,a,i2)') 'iteration ',iter-1
+               if (npt.eq.1) write (*,'(/,a,i2,a,i7)') 'iteration ',
+     *                      iter-1,' jphct = ',jphct
                call dumper (2,i,hkp(i),jkp(i),x(i),clamda(i))
 
             end if 
@@ -3249,7 +3251,7 @@ c----------------------------------------------------------------------
 
       integer ii, i, j, ids
 
-      double precision res0, xxnc, stinc, sum
+      double precision res0, xxnc, stinc
 
       external stinc
 
@@ -3269,11 +3271,7 @@ c                                normal models
 
             do i = 1, istg(ids,ii)
 
-               sum = 0d0 
-
                do j = 1, ndim(i,ii,ids)
-
-                  sum = sum + x(ii,i,j)
 
                   pxnc(ii,i,j) = xncg(ids,ii,i,j)*res0
                   xxnc = pxnc(ii,i,j)*reachg(ids)

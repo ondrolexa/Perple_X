@@ -18124,7 +18124,7 @@ c                                 dynamic
      *                  (cp2(i,id),i=1,jbulk)
       end if
 
-1000  format (i6,1x,i3,1x,i4,1x,a,20(g14.6,1x))
+1000  format (i7,1x,i3,1x,i4,1x,a,20(g14.6,1x))
 
       end
 
