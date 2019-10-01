@@ -117,14 +117,6 @@ c                                 need to eliminate hsc conversion.
  
       end
 
-      subroutine grxn (g)
-c--------------------------------------------------------------------
-c a dummy routine to allow rk to be linked with rlib.f
-c--------------------------------------------------------------------
-      implicit none
-      double precision g
-      g = g
-      end
 
 
       subroutine ogtphi (name,eof)
@@ -375,9 +367,9 @@ c                              back to k = ktr + b7*(T-Tr)
       end
 
 
-      subroutine otopn2 (iopt)
+      subroutine otopn2 (jopt)
 c----------------------------------------------------------------------
-c topn2 reads the header of the thermodynamic data file, if iopt = 1
+c topn2 reads the header of the thermodynamic data file, if jopt = 1
 c then data base choice is known (idbase), else if 1 asks console for a 
 c choice else if > 3 echos data except components and atwts to n8
 c----------------------------------------------------------------------
@@ -387,7 +379,7 @@ c----------------------------------------------------------------------
  
       character*5 tag*11, n2name*100, string*140
 
-      integer icod, ig(3), iopt, i
+      integer icod, ig(3), jopt, i
 
       double precision delt,dtol,utol,ptol
       common/ cst87 /delt(l2),dtol,utol,ptol
@@ -435,7 +427,7 @@ c                               read the extrinsic variable names:
       read (n2,1000,err=90) (vname(i), i = 1, 3)
       read (n2,1010,err=90) (ig(i), i = 1, 3)
 
-      if (iopt.lt.4) then 
+      if (jopt.lt.4) then 
          if ((ifug.ge.10.and.ifug.le.12).or.
      *       ifug.eq.15.or.ifug.eq.17.or.ifug.eq.18) then 
             vname(3) = ' X(O) ' 
@@ -478,7 +470,7 @@ c                               must be included in the file (ne. 0).
       vname(5) = 'mu(C2)'
 
 
-      if (iopt.gt.3) then 
+      if (jopt.gt.3) then 
          write (n8,1020) 
 1020  format (/,' | comments are indicated by the | character.',/,
      *     ' | check for warnings at the end of the header section.',/) 
@@ -508,11 +500,11 @@ c                                 read and echo unformatted comments and make da
 
          read (n2,'(a)',end=90) string
          read (string,'(a)') tag
-         if (iopt.gt.3) write (n8,'(a)') string
+         if (jopt.gt.3) write (n8,'(a)') string
 
          if (tag.eq.'begin_makes') then
  
-            call rmakes (iopt)
+            call rmakes (jopt)
 
             cycle 
 

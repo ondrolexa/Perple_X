@@ -94,12 +94,3 @@ c                                 output new data
      *          'written to ctransf.dat',//)
 
       end
-
-      subroutine grxn (g)
-c--------------------------------------------------------------------
-c a dummy routine to allow rk to be linked with rlib.f
-c--------------------------------------------------------------------
-      implicit none
-      double precision g
-      g = g
-      end

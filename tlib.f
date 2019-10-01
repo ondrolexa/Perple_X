@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.8.7, source updated Oct 1, 2019.',
+     *      'Perple_X version 6.8.8, source updated Sep 29, 2019.',
 
      *      'Copyright (C) 1986-2019 James A D Connolly '//
      *      '<www.perplex.ethz.ch/copyright.html>.'
@@ -52,7 +52,7 @@ c----------------------------------------------------------------------
      *    new.eq.'672'.or.new.eq.'673'.or.new.eq.'674'.or.
      *    new.eq.'675'.or.new.eq.'676'.or.new.eq.'678'.or.
      *    new.eq.'679'.or.new.eq.'682'.or.new.eq.'683'.or.
-     *    new.eq.'685'.or.new.eq.'687') then 
+     *    new.eq.'685'.or.new.eq.'687'.or.new.eq.'688') then 
 
          chksol = .true.
 
@@ -101,11 +101,6 @@ c----------------------------------------------------------------------
       character*100 prject,tfname
       common/ cst228 /prject,tfname
 
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
       integer grid
       double precision rid 
       common/ cst327 /grid(6,2),rid(5,2)
@@ -124,10 +119,6 @@ c                                 precision stuff used in lpnag
 
       integer iam
       common/ cst4 /iam
-
-      logical badend, sck, nrf
-      integer ldsol
-      common/ cxt36 /ldsol(m4,h9),badend(m4,h9),sck(h9),nrf(h9)
 
       integer length,iblank,icom
       character chars*1
@@ -274,7 +265,7 @@ c                                 refinement
 c                                 solvus_tolerance
       nopt(8) = 1.5*nopt(13)
 c                                 solvus_tolerance_II
-      nopt(25) = 3d0*nopt(13)
+      nopt(25) = nopt(13)
 c                                 perturbation to eliminate pseudocompound
 c                                 degeneracies
       nopt(15) = 5d-3
@@ -1238,7 +1229,6 @@ c                                 grid parameters
       end do
 c                                 --------------------------------------
 c                                 program/computation specific settings
-
 c                                 set autorefine factor
       if (icopt.eq.1) then
          nopt(17) = nopt(19)
@@ -1373,11 +1363,6 @@ c----------------------------------------------------------------------
       integer i, len, n
 
       character valu(i10)*3, nval1*12, text(14)*1, numb*5, nval2*12
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       integer grid
       double precision rid 
@@ -2080,11 +2065,6 @@ c---------------------------------------------------------------------
 
       character a*1
       
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-      
       if (lopt(19)) then 
          write (*,'(/,a,/)') 'Press Enter to quit...' 
          read (*,'(a)') a
@@ -2114,11 +2094,6 @@ c---------------------------------------------------------------------
       character tname*10
       logical refine, resub
       common/ cxt26 /refine,resub,tname
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       if (refine) then
          tag = '2nd'
@@ -2182,8 +2157,6 @@ c---------------------------------------------------------------------
          write (*,28) int, char
       else if (ier.eq.29) then 
          write (*,29) int, char
-      else if (ier.eq.30) then
-         write (*,30) int,char
       else if (ier.eq.32) then 
          write (*,32)
       else if (ier.eq.33) then 
@@ -2203,19 +2176,18 @@ c---------------------------------------------------------------------
       else if (ier.eq.40) then
          write (*,40) int, char
       else if (ier.eq.41) then
-         write (*,41) char
+
+         write (*,41)
 
          if (int.eq.0) then 
             write (*,410)
-            write (*,415) k1
          else if (int.eq.1) then 
             write (*,411)
-            write (*,415) k1
          else if (int.eq.2) then 
             write (*,412)
-            write (*,414) k24
          end if
 
+         write (*,414) char
          write (*,413)
 
       else if (ier.eq.42) then 
@@ -2251,10 +2223,10 @@ c---------------------------------------------------------------------
       else if (ier.eq.57) then 
          write (*,57) char, char, char
       else if (ier.eq.58) then 
-         write (*,58) char
+         write (*,58)
          write (*,412)
          write (*,413)
-         write (*,580) k21
+         write (*,580) char
       else if (ier.eq.59) then 
          write (*,59) k20, char
       else if (ier.eq.60) then 
@@ -2413,7 +2385,7 @@ c                                 accordingly:
 20    format (/,'**error ver020** error ',i2,' reading solution model',
      *        ' file.',/,'   Reading model: ',a,' Check format.',/)
 21    format (/,'**error ver021**error reading ',
-     *        'header section of',/,'thermodynamic data ',
+     *        'header section of',/,'the thermodynamic data ',
      *        'file, last data read:',/,a,/,'Check formatting',/)
 22    format (/,'**error ver022** too many divariant assemblages, ',
      *        'increase dimension j9 (',i8,') routine: ',a)
@@ -2438,9 +2410,6 @@ c                                 accordingly:
      *          ' routine: ',a,/)
 29    format (/,'**error ver029** unknown term type ',i6,' for',
      *          ' solution model: ',a,/)
-30    format (/,'**error ver030** the number of mixing sites ',i2,
-     *          ' is < the number of independent sites',/,' for',
-     *          ' solution model: ',a,/)
 32    format (/,'**error ver032** stability field calculations (',
      *          'option 2) are disabled in this version of PERPLEX',/)
 33    format (/,'**error ver033** expression with too many terms in ',a
@@ -2461,8 +2430,8 @@ c                                 accordingly:
      *        'increase dimension k12 (',i2,') Routine: ',a)
 40    format (/,'**error ver040** too many compositional coordinates, ',
      *        'increase dimension k13 (',i7,')  Routine: ',a)
-41    format (/,'**error ver041** too many pseudocompounds, routine: ',a
-     *        /,'this error can be eliminated by one of the ',
+41    format (/,'**error ver041** too many static compositions this '
+     *          'error can be',/,'eliminated by one of the ',
      *        /,'following actions (best listed first):',/)
 410   format (2x,'- increase the exploratory stage initial_resolution',
      *           ' in perplex_option.dat',/,
@@ -2478,9 +2447,7 @@ c                                 accordingly:
      *           'for solutions in solution_model.dat')
 413   format (2x,'- simplify the calculation, e.g., eliminate ',
      *           'components and/or simplify solution models')
-414   format (2x,'- increase dimension k24 (',i8,') and recompile ',
-     *           'Perple_X')
-415   format (2x,'- increase dimension k1 (',i8,') and recompile ',
+414   format (2x,'- increase parameter ',a,' and recompile ',
      *           'Perple_X')
 42    format (/,'**error ver042** cannot open file:',a,/,'check that it'
      *       ,' is not being used by another program',/)
@@ -2527,11 +2494,11 @@ c                                 accordingly:
      *         ,' for ',a,/,'routine INPUT2. Exclude ',a,' and restart',
      *          ' the calculation.',/,'If ',a,/,' is legitimate. please'
      *         ,' report this error.',/)
-58    format (/,'**error ver058** exhausted memory ',
-     *          'in adaptive minimization, routine: ',a,/
-     *        /,'this error can usually be eliminated by one of the ',
-     *        /,'following actions (best listed first):',/)
-580   format (2x,'- increase dimension k21 (',i7,') and recompile ',
+58    format (/,'**error ver058** exhausted memory during ',
+     *          'adaptive minimization this error can usually',/,
+     *          'be eliminated by one of the ',
+     *          'following actions (best listed first):',/)
+580   format (2x,'- increase parameter ',a,' and recompile ',
      *           'Perple_X')
 59    format (/,'**error ver059** too many coordinates generated by ',
      *        'refinement, increase dimension k20 (',i8,') routine: ',a)
@@ -2697,11 +2664,6 @@ c---------------------------------------------------------------------
       integer grid
       double precision rid 
       common/ cst327 /grid(6,2),rid(5,2)
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 c----------------------------------------------------------------------
       if (ier.eq.1) then 
          write (*,1) 
@@ -2781,8 +2743,6 @@ c----------------------------------------------------------------------
          write (*,39) 
       else if (ier.eq.40) then
          write (*,40) 
-      else if (ier.eq.41) then
-         write (*,41) char
       else if (ier.eq.42) then
          write (*,42)     
       else if (ier.eq.43) then
@@ -3014,9 +2974,6 @@ c----------------------------------------------------------------------
      *       'composition use',/, 'gridded minimization.',/)
 40    format (/,'**warning ver040** you have configured a ',
      *       'problem with only one independent variable.',/)
-41    format (/,'**warning ver041** icky pseudocompound names'
-     *       ,' for solution model: ',a,/,'refer to pseudocompound_'
-     *       ,'glossary.dat file for pseudocompound definitions.',/)
 42    format (/,'**warning ver042** an optimization failed due ',
      *          'to numerical instability',/,
      *          'or because the phases of the system do not span ',
@@ -3026,7 +2983,7 @@ c----------------------------------------------------------------------
      *          8x,'increase resolution_factor and/or',/,
      *          8x,'increase reach_increment and/or',/,
      *          8x,'increase speciation_factor and/or',/,
-     *          8x,'increase speciation_max_it and/or',/,
+     *          8x,'increase speciation_max_it.',/,
      *          4x,'see: www.perplex.ch/perplex_options.html for ',
      *          'explanation.',//,
      *          4x,'In the 2nd case: ',
@@ -3050,7 +3007,7 @@ c----------------------------------------------------------------------
 49    format (/,'**warning ver049** warning ',i3,' will not be repeated'
      *         ,' for future instances of this problem.',/,
      *          'currently in routine: ',a,//)
-50    format (/,'**warning ver050** reformulating prismatic ',
+50    format (/,'**warning ver050** reformulating polytopic ',
      *          'solution: ',a,' because of missing endmembers. ',
      *        /,'(reformulation can be controlled explicitly ',
      *          'by excluding additional endmembers).',/)
@@ -3077,7 +3034,7 @@ c----------------------------------------------------------------------
      *        ' hybrid_EoS option will be',/,'overridden by the EoS sp',
      *        'ecified in the problem definition file. To prevent this',
      *      /,'behavior delete the special_component section from the ',
-     *        'header section of the',/,'thermodynamic data file.',/)
+     *        'header of the',/,'thermodynamic data file.',/)
 58    format (/,'**warning ver058** wway, the equilibrium of the '
      *         ,'following reaction',/,'is inconsistent with the ',
      *          'invariant equilibrium.',/)
@@ -3202,7 +3159,7 @@ c----------------------------------------------------------------------
      *         ,' r = ',g12.6,' int = ',i9,/)
       end
 
-      subroutine rmakes (iopt)
+      subroutine rmakes (jopt)
 c----------------------------------------------------------------------
 c rmakes is called by topn2 to read make definitions of thermodynamic
 c entities, these entities are defined as a linear combination of 
@@ -3229,13 +3186,13 @@ c and truncated by the keyword:
 
 c end_makes
 
-c if iopt > 3, data is echoed to LUN n8 (for ctransf/actcor).
+c if jopt > 3, data is echoed to LUN n8 (for ctransf/actcor).
 c----------------------------------------------------------------------
       implicit none
 
       include 'perplex_parameters.h'
 
-      integer ibeg, iend, len, ier, iscan, i, nreact, iopt
+      integer ibeg, iend, len, ier, iscan, i, nreact, jopt
 
       double precision rnum, nums(m3)
 
@@ -3266,7 +3223,7 @@ c----------------------------------------------------------------------
       call readcd (n2,len,ier,.true.)
       if (ier.ne.0) goto 90 
 c                                 echo data for ctransf/actcor
-      if (iopt.gt.3) write (n8,'(400a)') (chars(i),i=1,len)
+      if (jopt.gt.3) write (n8,'(400a)') (chars(i),i=1,len)
 
       nmak = 0 
 
@@ -3317,7 +3274,7 @@ c                                 now the dqf
          call readcd (n2,len,ier,.true.)
          if (ier.ne.0) goto 90
 c                                 echo data for ctransf/actcor 
-         if (iopt.gt.3) write (n8,'(400a)') (chars(i),i=1,len)
+         if (jopt.gt.3) write (n8,'(400a)') (chars(i),i=1,len)
 c                                 read the DQF coefficients
          ibeg = 1
          call redlpt (nums,ibeg,iend,len,ier) 
@@ -3331,7 +3288,7 @@ c                                 start next make definition
          write (rec,'(400a)') chars
          read (rec,'(a3)') tag
 c                                 echo data for ctransf/actcor
-         if (iopt.gt.3) write (n8,'(400a)') (chars(i),i=1,len)
+         if (jopt.gt.3) write (n8,'(400a)') (chars(i),i=1,len)
 
 c                                 reject excluded makes
          do i = 1, ixct
@@ -3407,7 +3364,7 @@ c                                 anyway in case it's a tag
 
       end 
 
-      subroutine readcd (nloc,len,ier,strip)
+      subroutine readcd (nloc,lenth,ier,strip)
 c----------------------------------------------------------------------
 c readcd - read 240 column card image from unit 9, strip out unwanted
 c characters if strip. ier = 1 no card found.
@@ -3418,7 +3375,7 @@ c----------------------------------------------------------------------
 
       logical strip
 
-      integer len, ier, iscan, ict, i, iscnlt, ibeg, nloc
+      integer lenth, ier, iscan, ict, i, iscnlt, ibeg, nloc
 
       character card*(lchar)
 
@@ -3431,11 +3388,11 @@ c----------------------------------------------------------------------
 
       ibeg = 0
   
-      len = 0 
+      lenth = 0 
 
       card = ' '
 
-      do while (ibeg.ge.len) 
+      do while (ibeg.ge.lenth) 
 
          read (nloc,'(a)',end=90) card
 
@@ -3443,11 +3400,11 @@ c----------------------------------------------------------------------
 
             read (card,'(400a)') chars
 c                                 find end of data marker '|'
-            len = iscan (1,lchar,'|') - 1
+            lenth = iscan (1,lchar,'|') - 1
 c                                 '|' in first column
-            if (len.eq.0) cycle
+            if (lenth.eq.0) cycle
 c                                 find a non blank character
-            ibeg = iscnlt (1,len,' ')
+            ibeg = iscnlt (1,lenth,' ')
 
          end if 
 
@@ -3457,7 +3414,7 @@ c                                 there is a non-blank data character
 
          ict = 1
 
-         do i = 2, len 
+         do i = 2, lenth
 c                                 strip out '+' and '*' chars
             if (chars(i).eq.'+'.or.chars(i).eq.'*') chars(i) = ' '
 c                                 eliminate blanks after '/' and '-'
@@ -3473,11 +3430,11 @@ c                                 and double blanks
 
          end do 
 
-         len = ict
+         lenth = ict
 
       else
 c                                 scan backwards to the last non-blank
-         len = iscnlt (len,1,' ')
+         lenth = iscnlt (lenth,1,' ')
 
       end if
 
@@ -3622,11 +3579,6 @@ c----------------------------------------------------------------------
 
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 c-----------------------------------------------------------------------
       if (ids.lt.0) then
 c                                 simple compound:
@@ -3733,9 +3685,6 @@ c-----------------------------------------------------------------------
       character specie*4
       integer isp, ins
       common/ cxt33 /isp,ins(nsp),specie(nsp)
-
-      double precision times, btime, etime
-      common/ time /times(30),btime(30),etime(30)
 c-----------------------------------------------------------------------
       data hs2p/4, 5, 18, 19, 20, 21/
 
@@ -4347,7 +4296,7 @@ c----------------------------------------------------------------------
       double precision var, dg
 
       double precision cp
-      common/ cst12 /cp(k5,k1)
+      common/ cst12 /cp(k5,k10)
 
       double precision cp0
       common/ cst71 /cp0(k0,k5)
@@ -4791,11 +4740,6 @@ c------------------------------------------------------------------------
       character*100 prject,tfname
       common/ cst228 /prject,tfname
 
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
       integer iam
       common/ cst4 /iam
 
@@ -5136,16 +5080,16 @@ c                                 get pointer to end of string in chars
 
       end
 
-      subroutine gettrn (iopt)
+      subroutine gettrn (jopt)
 c----------------------------------------------------------------------
-c iopt = 3 -> build
-c iopt = 5 -> ctransf
+c jopt = 3 -> build
+c jopt = 5 -> ctransf
 c----------------------------------------------------------------------
       implicit none
  
       include 'perplex_parameters.h'
 
-      integer i,j,iopt,ict,ier,jscan
+      integer i,j,jopt,ict,ier,jscan
  
       character*5 pname, rname, y*1
 
@@ -5200,7 +5144,7 @@ c                                 special component
 
                   if (i.ne.idspe(j)) cycle 
 c                                 matches special component id(j) 
-                  if (iopt.eq.3) then
+                  if (jopt.eq.3) then
 c                                 don't allow build users 
 c                                 to transform saturated
 c                                 phase components
@@ -5328,11 +5272,6 @@ c----------------------------------------------------------------------
       integer option, i, j, ier, iscan
 
       double precision sum, ssum
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       integer isec,icopt,ifull,imsg,io3p
       common/ cst103 /isec,icopt,ifull,imsg,io3p
@@ -6430,11 +6369,6 @@ c----------------------------------------------------------------------
 
       double precision x, y
 
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
       save warn1
       data warn1/.true./
 c----------------------------------------------------------------------
@@ -6459,9 +6393,6 @@ c----------------------------------------------------------------------
       include 'perplex_parameters.h'
 
       integer itime
-
-      double precision times, btime, etime
-      common/ time /times(30),btime(30),etime(30)
 c----------------------------------------------------------------------
       call CPU_TIME(btime(itime))
 
@@ -6480,9 +6411,6 @@ c----------------------------------------------------------------------
       character chars*(*)
 
       integer itime
-
-      double precision times, btime, etime
-      common/ time /times(30),btime(30),etime(30)
 c----------------------------------------------------------------------
 
       call CPU_TIME(etime(itime))
