@@ -146,15 +146,15 @@ fatg = 1 atg - 16 ta + 16 fta
 atgts = 4 clin + 9/17 atg - 24/17 br      | Tshermaks antigorite for Atg(PN) model (Padrón-Navarta et al., 2013, Lithos)
 -2e3 46.1 0
 
-| ettore's makes for oCcM(EF):
-odo = 1/2 mag 1/2 cc 
--1000. 0 0 
-oank = 1/4 sid 1/2 cc 1/4 mag 
--750 0 0 
+| ettore's makes:
+| odo_ef = 1/2 mag 1/2 cc 
+| -1000. 0 0 
+| oank = 1/4 sid 1/2 cc 1/4 mag 
+|  -750 0 0 
 
 
-| odo = 1/2 mag + 1/2 cc        | ordered dolmite species for H&P dolomite model
-| -13.5d3 0 0 
+ | odo = 1/2 mag + 1/2 cc          | ordered dolmite species for H&P dolomite model
+ | -13.5d3 0 0 
                                 | endmembers for the melt(HP) model, the dqf corrections
                                 | made in the solution model could be applied here, but 
                                 | should not be done in both the thermodynamic data file 

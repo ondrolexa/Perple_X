@@ -73,6 +73,11 @@ c-----------------------------------------------------------------------
       integer isec,icopt,ifull,imsg,io3p
       common/ cst103 /isec,icopt,ifull,imsg,io3p
 
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
       integer iemod,kmod
       logical smod,pmod
       double precision emod
@@ -168,11 +173,11 @@ c                                 (these flags are reset by input1).
 
             if (jpot.ne.1) then 
                pots = .true.
-               jpot = 0
             else 
                pots = .false.
-               jpot = 1
-            end if
+            end if 
+
+            jpot = 1
 
          end if
 
@@ -476,6 +481,11 @@ c-----------------------------------------------------------------------
       double precision cptot,ctotal
       common/ cst78 /cptot(k19),ctotal,jdv(k19),npt,fulrnk
 
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
       integer icont
       double precision dblk,cx
       common/ cst314 /dblk(3,k5),cx(2),icont
@@ -703,6 +713,11 @@ c-----------------------------------------------------------------------
 
       double precision v,tr,pr,r,ps
       common/ cst5  /v(l2),tr,pr,r,ps
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
@@ -1335,6 +1350,11 @@ c----------------------------------------------------------------------
 
       integer igrd
       common/ cst311 /igrd(l7,l7)
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 c----------------------------------------------------------------------
       jhot = 1
 
@@ -1360,6 +1380,11 @@ c---------------------------------------------------------------------
 
       integer igrd
       common/ cst311 /igrd(l7,l7)
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 c----------------------------------------------------------------------
       if (kinc.eq.1) return 
 
@@ -1459,6 +1484,11 @@ c---------------------------------------------------------------------
 
       integer idasls,iavar,iasct,ias
       common/ cst75  /idasls(k5,k3),iavar(3,k3),iasct,ias
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       save iind, jind, iiind, jjind, icind, jcind
 
@@ -2201,6 +2231,11 @@ c-----------------------------------------------------------------------
       double precision cp3,amt
       common/ cxt15 /cp3(k0,k19),amt(k19),kkp(k19),np,ncpd,ntot
 
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 c----------------------------------------------------------------------- 
@@ -2484,3 +2519,8 @@ c----------------------------------------------------------------------
       end if 
 
       end 
+
+      subroutine grxn (g)
+      implicit none
+      double precision g
+      end

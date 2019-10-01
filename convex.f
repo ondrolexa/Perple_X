@@ -15,7 +15,7 @@ c      include 'rlib.f'
 c      include 'tlib.f'
 c      include 'flib.f'
 
-      program convex
+      program convex        
 c----------------------------------------------------------------------
 c                       ************************
 c                       *                      *
@@ -73,6 +73,11 @@ c-----------------------------------------------------------------------
       integer isec,icopt,ifull,imsg,io3p
       common/ cst103 /isec,icopt,ifull,imsg,io3p
 
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
       integer iemod,kmod
       logical smod,pmod
       double precision emod
@@ -89,10 +94,6 @@ c-----------------------------------------------------------------------
 
       integer jfct,jmct,jprct,jmuct
       common/ cst307 /jfct,jmct,jprct,jmuct
-
-      character tname*10
-      logical refine, resub
-      common/ cxt26 /refine,resub,tname
 
       save err,first,output,pots
       data err,output,first/.false.,.false.,.true./
@@ -119,7 +120,7 @@ c                                    iam = 15 - convex
 c                                 version info
       call vrsion (6)
 c                                 elastic modulii flag
-      kmod = 0
+      kmod = 0 
 c                                 this do loop is a cheap strategy to automate
 c                                 "auto_refine"
       do
@@ -134,9 +135,6 @@ c                                 and the limits for numerical results.
          call input1 (first,output,err)
 c                                 read thermodynamic data on unit n2:
          call input2 (first)
-c                                 copy the cst12 cp array into cst313 to 
-c                                 salvage the old static code
-         call copycp
 c                                 read/set autorefine dependent parameters, 
 c                                 it would be logical to output context specific 
 c                                 parameter settings here instead of the generic 
@@ -437,6 +435,9 @@ c-----------------------------------------------------------------------
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp  
+ 
+      double precision ctot
+      common/ cst3   /ctot(k1)
 
       integer ipoint,kphct,imyn
       common/ cst60 /ipoint,kphct,imyn
@@ -450,8 +451,8 @@ c-----------------------------------------------------------------------
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
 
-      double precision cp, bbb, ccc
-      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1)
+      double precision cp
+      common/ cst12 /cp(k5,k1)
 
       integer isoct
       common/ cst79 /isoct
@@ -906,8 +907,8 @@ c-----------------------------------------------------------------------
       double precision g
       common/ cst2 /g(k1)
 
-      double precision cp, bbb, ccc
-      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1)
+      double precision cp
+      common/ cst12 /cp(k5,k1)
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -986,9 +987,9 @@ c----------------------------------------------------------------------
       double precision g
       common/ cst2  /g(k1)
 
-      double precision cp, bbb, ccc
-      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1)
-
+      double precision cp
+      common/ cst12 /cp(k5,k1)
+ 
       integer hcp,id
       common/ cst52 /hcp,id(k7)
 c-----------------------------------------------------------------------
@@ -1032,12 +1033,12 @@ c-----------------------------------------------------------------------
       double precision g
       common/ cst2 /g(k1)
 
-      double precision cp, bbb, ccc
-      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1)
+      double precision cp
+      common/ cst12 /cp(k5,k1)
 
       integer iflag
       common/ cst7 /iflag
-
+ 
       double precision a,b
       integer ipvt,idv,iophi,idphi,iiphi,iflg1
       common/ cst23  /a(k8,k8),b(k8),ipvt(k8),idv(k8),iophi,idphi,
@@ -1107,8 +1108,11 @@ c-----------------------------------------------------------------------
 
       logical bad
 
-      double precision cp, bbb, ccc
-      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1)
+      double precision cp
+      common/ cst12 /cp(k5,k1)
+
+      double precision ctot
+      common/ cst3   /ctot(k1)
 
       integer jfct,jmct,jprct,jmuct
       common/ cst307 /jfct,jmct,jprct,jmuct
@@ -1375,8 +1379,8 @@ c-----------------------------------------------------------------------
       double precision vuf,vus
       common/ cst201 /vuf(2),vus(h5),iffr,isr
 
-      double precision cp, bbb, ccc
-      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1)
+      double precision cp
+      common/ cst12 /cp(k5,k1)
 
       integer iff,idss,ifug
       common/ cst10  /iff(2),idss(h5),ifug
@@ -1488,8 +1492,8 @@ c----------------------------------------------------------------------------
       integer ipoint,kphct,imyn
       common/ cst60 /ipoint,kphct,imyn
 
-      double precision cp, bbb, ccc
-      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1)
+      double precision cp
+      common/ cst12 /cp(k5,k1)
 
       integer idcf,icfct
       common/ cst96 /idcf(k5,j9),icfct
@@ -1738,13 +1742,23 @@ c----------------------------------------------------------------------
       include 'perplex_parameters.h'
 c                                 -------------------------------------
 c                                 local variables:
-      integer jd,ids,i,j,k,idim,ntot,id(idim),ii
+      integer jd,ids,i,j,k,idim,ntot,id(idim)
 c                                 -------------------------------------
 c                                 global variables:
 c                                 working arrays
-      double precision z, pa, p0a, x, w, y, wl, pp
-      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18),pp(m4)
+      double precision z, pa, p0a, x, w, y, wl
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
+     *              wl(m17,m18)
+c                                 x coordinate description
+      integer istg, ispg, imlt, imdg
+      double precision xmng, xmxg, xncg, xmno, xmxo, reachg
+      common/ cxt6r /xmng(h9,mst,msp),xmxg(h9,mst,msp),xncg(h9,mst,msp),
+     *               xmno(h9,mst,msp),xmxo(h9,mst,msp),reachg(h9)
+      common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
+c                                 solution limits and stability
+      logical stable,limit
+      double precision xlo,xhi
+      common/ cxt11 /xlo(m4,mst,h9),xhi(m4,mst,h9),stable(h9),limit(h9)
 
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
@@ -1766,39 +1780,35 @@ c                                 the program
 c                                 set stable flag
          stable(ids) = .true.
 c                                 get composition
-         call setexs (ids,jd,.false.)
-
-         do ii = 1, pop1(ids)
+         call getolx (ids,jd)
 c                                 check x-ranges
-            do i = 1, istg(ids,ii)
+         do i = 1, istg(ids)
 
-               do j = 1, ispg(ids,ii,i)
+            do j = 1, ispg(ids,i)-1
 c                                 low limit:
-                  if (x(ii,i,j).lt.xlo(j,i,ii,ids)) then
-                     xlo(j,i,ii,ids) = x(ii,i,j)
+               if (x(i,j).lt.xlo(j,i,ids)) then
+                  xlo(j,i,ids) = x(i,j)
 c                                 check if solution is at an unnatural limit
-                     if (x(ii,i,j).gt.xmno(ids,ii,i,j).and.
-     *                                x(ii,i,j).le.xmng(ids,ii,i,j)
-     *                               .and..not.limit(ids)) then
-                        write (*,1000) fname(ids),x(ii,i,j),i,j
-                        limit(ids) = .true.
-                     end if 
+                  if (x(i,j).gt.xmno(ids,i,j).and.
+     *                x(i,j).le.xmng(ids,i,j)
+     *               .and..not.limit(ids)) then
+                     write (*,1000) fname(ids),x(i,j),i,j
+                     limit(ids) = .true.
                   end if 
+               end if 
 c                                 high limit:
-                  if (x(ii,i,j).gt.xhi(j,i,ii,ids)) then
-                     xhi(j,i,ii,ids) = x(ii,i,j)
+               if (x(i,j).gt.xhi(j,i,ids)) then
+                  xhi(j,i,ids) = x(i,j)
 c                                 check if solution is at an unnatural limit
-                     if (x(ii,i,j).lt.xmxg(ids,ii,i,j).and.
-     *                   x(ii,i,j).ge.xmxg(ids,ii,i,j)
-     *                   .and..not.limit(ids)) then
-                        write (*,1000) fname(ids),x(ii,i,j),i,j
-                        limit(ids) = .true.
-                     end if 
+                  if (x(i,j).lt.xmxg(ids,i,j).and.
+     *                x(i,j).ge.xmxg(ids,i,j)
+     *               .and..not.limit(ids)) then
+                     write (*,1000) fname(ids),x(i,j),i,j
+                     limit(ids) = .true.
                   end if 
+               end if 
 
-               end do
-
-            end do
+            end do 
 
          end do
 
@@ -2434,8 +2444,8 @@ c-----------------------------------------------------------------------
       integer jfct,jmct,jprct,jmuct
       common/ cst307 /jfct,jmct,jprct,jmuct
 
-      double precision cp, bbb, ccc
-      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1)
+      double precision cp
+      common/ cst12 /cp(k5,k1)
 
       integer ifct,idfl
       common/ cst208 /ifct,idfl
@@ -2687,8 +2697,8 @@ c-----------------------------------------------------------------------
       double precision g
       common/ cst2 /g(k1)
 
-      double precision cp, bbb, ccc
-      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1)
+      double precision cp
+      common/ cst12 /cp(k5,k1)
 
       integer ipvt,idv,iophi,idphi,iiphi,iflg1
       double precision a,b
@@ -3458,8 +3468,8 @@ c-----------------------------------------------------------------------
       double precision delt,dtol,utol,ptol
       common/ cst87 /delt(l2),dtol,utol,ptol
 
-      double precision cp, bbb, ccc
-      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1)
+      double precision cp
+      common/ cst12 /cp(k5,k1)
 
       integer ipvt,idv,iophi,idphi,iiphi,iflg1
       double precision a,b
@@ -3522,8 +3532,8 @@ c--------------------------------------------------------------------
 
       integer j,k,ier
 
-      double precision cp, bbb, ccc
-      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1)
+      double precision cp
+      common/ cst12 /cp(k5,k1)
 
       integer ipvt,idv,iophi,idphi,iiphi,iflg1
       double precision a,b
@@ -3570,8 +3580,8 @@ c-----------------------------------------------------------------------
       double precision g
       common/ cst2 /g(k1)
 
-      double precision cp, bbb, ccc
-      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1)
+      double precision cp
+      common/ cst12 /cp(k5,k1)
 
       integer iflag
       common/ cst7 /iflag
@@ -3650,8 +3660,8 @@ c-----------------------------------------------------------------------
       double precision g
       common/ cst2 /g(k1)
 
-      double precision cp, bbb, ccc
-      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1)
+      double precision cp
+      common/ cst12 /cp(k5,k1)
 
       integer iflag
       common/ cst7 /iflag
@@ -5158,8 +5168,8 @@ c----------------------------------------------------------------------
       integer hcp,idv
       common/ cst52  /hcp,idv(k7) 
 
-      double precision cp, bbb, ccc
-      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1)
+      double precision cp
+      common/ cst12 /cp(k5,k1)
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp  
@@ -5237,8 +5247,8 @@ c-----------------------------------------------------------------------
       double precision g
       common/ cst2 /g(k1)
 
-      double precision cp, bbb, ccc
-      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1)
+      double precision cp
+      common/ cst12 /cp(k5,k1)
  
       double precision a,b
       integer ipvt,idv,iophi,idphi,iiphi,iflg1
@@ -5307,14 +5317,14 @@ c----------------------------------------------------------------------
       common/ cst23  /a(k8,k8),u(k8),ipvt(k8),idv(k8),iophi,idphi,
      *                iiphi,iflg1
 
-      double precision cp, bbb, ccc
-      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1)
+      double precision cp
+      common/ cst12 /cp(k5,k1)
 
       character*5 cname
       common/ csta4 /cname(k5)
 
       integer icomp,istct,iphct,icp
-      common/ cst6  /icomp,istct,iphct,icp
+      common/ cst6  /icomp,istct,iphct,icp  
 c----------------------------------------------------------------------
       do i = istct, iphct
 
@@ -5440,8 +5450,8 @@ c-----------------------------------------------------------------------
       double precision g
       common/ cst2 /g(k1)
 
-      double precision cp, bbb, ccc
-      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1)
+      double precision cp
+      common/ cst12 /cp(k5,k1)
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp  
@@ -5471,9 +5481,9 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical solvs1, solvsc 
+      logical solvs1, solvus 
 
-      external solvsc
+      external solvus
 c                                 -------------------------------------
 c                                 local variables
       integer idsol(k8,k8),jdsol(k8),ids,np,np1,np2,ncpd,idim,
@@ -5481,6 +5491,11 @@ c                                 local variables
 
       integer ikp
       common/ cst61 /ikp(k1)
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       double precision dcp,soltol
       common/ cst57 /dcp(k5,k19),soltol
@@ -5543,7 +5558,7 @@ c                                 check for immiscibility
 c                                 how many phases are there of this
 c                                 solution?
                do k = 1, np2
-                  if (.not.solvsc(kdsol(k),idsol(j,i),ids)) then
+                  if (.not.solvus(kdsol(k),idsol(j,i),ids)) then
                      goto 20 
                   else
                      solvs1 = .true.
@@ -5929,14 +5944,17 @@ c----------------------------------------------------------------------------
       integer icomp,istct,iphct,icp
       common/ cst6 /icomp,istct,iphct,icp   
 
+      double precision ctot
+      common/ cst3 /ctot(k1)
+
       character*8 names
       common/ cst8 /names(k1)
 
       double precision g
       common/ cst2 /g(k1)
 
-      double precision cp, bbb, ccc
-      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1)
+      double precision cp
+      common/ cst12 /cp(k5,k1)
 
       integer jbulk
       double precision cblk
@@ -5960,75 +5978,53 @@ c----------------------------------------------------------------------------
       close (n8)
       
       stop
-      end
-
-      subroutine copycp
-c--------------------------------------------------------------------
-c initialize arrays and constants for lp minimization
-c---------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      integer i,j
-
-      double precision cp
-      common/ cst12 /cp(k5,k10)
-
-      double precision a,b,c
-      common/ cst313 /a(k5,k1),b(k5),c(k1)
-
-      integer icomp,istct,iphct,icp
-      common/ cst6  /icomp,istct,iphct,icp  
-
-      integer ipoint,kphct,imyn
-      common/ cst60  /ipoint,kphct,imyn
-
-      integer tphct
-      double precision g2, cp2, c2tot
-      common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),tphct
-c-----------------------------------------------------------------------
-c                                 static composition array
-      do i = 1, iphct
-         do j = 1, icomp
-            a(j,i) = cp(j,i)
-         end do
-      end do
-
       end 
 
-      logical function solvsc (id1,id2,ids)
+      subroutine grxn (gval) 
 c-----------------------------------------------------------------------
-c function to test if a solvus separates two static pseudocompounds of
-c solution ids. 
+c grxn computes the free energy of univariant equilibria
+c defined by the data in commonn block cst21 which is initialized
+c in the subprogram balanc.  grxn is partially redundant with
+c the function gphase but because of the frequency that these
+c these routines are used a significant increase in efficiency is
+c gained by maintaining separate functions.
 c-----------------------------------------------------------------------
       implicit none
 
       include 'perplex_parameters.h'
 
-      integer i, id1, id2, ids
+      integer j
 
-      integer icomp,istct,iphct,icp
-      common/ cst6 /icomp,istct,iphct,icp
+      double precision gval, gproj
 
-      double precision cp, bbb, ccc
-      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1)
+      external gproj
 
-      double precision dcp,soltol
-      common/ cst57 /dcp(k5,k19),soltol
+      integer iffr,isr
+      double precision vuf,vus
+      common/ cst201 /vuf(2),vus(h5),iffr,isr
+
+      integer idr,ivct
+      double precision vnu
+      common/ cst25 /vnu(k7),idr(k7),ivct
 c-----------------------------------------------------------------------
-      solvsc = .false.
+c                                 compute potentials of saturated phases
+c                                 and components, note that in this
+c                                 version of vertex the stoichiometry of
+c                                 such components may vary.
 
-      do i = 1, icp
+c                                 no saturated phase components and no
+c                                 saturated components:
+      if (iffr.eq.1.and.isr.eq.1) goto 10
+c                                 note that this call to uproj makes a
+c                                 subsequent call in gall redundant if
+c                                 sfol1 is used to trace a univariant
+c                                 curve.
+      call uproj
+c                                 compute free energy change of the rxn
+10    gval = 0d0
 
-         if (dcp(i,ids).eq.0d0) cycle
+      do j = 1, ivct
+         gval = gval + vnu(j) * gproj (idr(j))
+      end do 
 
-         if (dabs(cp(i,id1)/ctot(id1)-cp(i,id2)/ctot(id2))/dcp(i,ids)
-     *                  .gt.soltol) then
-            solvsc = .true.
-            exit
-         end if
-
-      end do
-
-      end
+      end      
