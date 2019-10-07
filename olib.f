@@ -1533,6 +1533,11 @@ c----------------------------------------------------------------------
       double precision x3, caq
       common/ cxt16 /x3(k5,h4,mst,msp),caq(k5,l10),na1,na2,na3,nat,kd
 
+      integer iemod,kmod
+      logical smod,pmod
+      double precision emod
+      common/ cst319 /emod(k15,k10),smod(h9),pmod(h9),iemod(k10),kmod
+
       save dt
       data dt /.5d0/
 
@@ -1605,6 +1610,12 @@ c                                 shear modulus
      *                   props(4,jd),props(18,jd),props(20,jd),ok)
 
          if (.not.ok.and.iopt(16).eq.0) shear = .false.
+c                                 for explicit moduli, routine moduli will not
+c                                 flag missing shear modulus, use the solution
+c                                 model flag to set shear
+         if (id.gt.0) then 
+            if (.not.smod(id)) shear = .false.
+         end if
 c                                 explicit bulk modulus is allowed and used
          if (lopt(17).and.props(4,jd).gt.0d0) then
             bulk = .false.

@@ -3175,12 +3175,11 @@ c----------------------------------------------------------------------
 
       external iscnlt, iscan
 
-      logical stck, norf
-      integer iend,isub,insp,iterm,iord,istot,jstot,kstot,rkord,xtyp
-      double precision wg,wk,reach
-      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),reach,iend(m4),
+      integer iend,isub,insp,iterm,iord,istot,jstot,kstot,rkord
+      double precision wg,wk
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),iend(m4),
      *      isub(m1,m2),insp(m4),
-     *      rkord(m18),iterm,iord,istot,jstot,kstot,xtyp,stck,norf
+     *      rkord(m18),iterm,iord,istot,jstot,kstot
 
       integer length,iblank,icom
       character chars*1
@@ -3347,7 +3346,7 @@ c                                 assign data
 
       end
 
-      subroutine readop (idim,jlaar,kstot,reach,stck,norf,tname)
+      subroutine readop (idim,kstot,tname)
 c----------------------------------------------------------------------
 c readop - tail of solution model to find optional dqf,
 c          van laar size parameters, flagged endmembers, or 
@@ -3363,7 +3362,7 @@ c          or the reach factor is           "reach_increm" record
 
 c readop returns:
 
-c          jlaar = 1 if van laar data found (else 0).
+c          laar if van laar data found.
 c          idqf  > 0 if dqf data found (else 0).
 c          reach, set = 0 if no reach factor found.
 c          and sets endmember flags of indicated endmembers
@@ -3372,11 +3371,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical stck, norf
-
-      double precision reach
-
-      integer ier, idim, jlaar, kstot, i
+      integer ier, idim, kstot, i
 
       character tname*(*), key*22, val*3, nval1*12, nval2*12, nval3*12,
      *          strg*40, strg1*40
@@ -3385,14 +3380,18 @@ c----------------------------------------------------------------------
       character chars*1
       common/ cst51 /length,iblank,icom,chars(lchar)
 
+      logical depend,laar,order,fluid,macro,recip
+      common/ cst160 /depend,laar,order,fluid,macro,recip
+
       integer indq,idqf
       double precision dqf
       common/ cst222 /dqf(m3,m4),indq(m4),idqf
 c----------------------------------------------------------------------
 
-      jlaar = 0
       idqf = 0
       reach = 0d0
+      lowrch = .false.
+      laar = .false.
       stck = .true.
       norf = .true.
 
@@ -3413,7 +3412,7 @@ c                              model does not of end_of_model keyword
 
          else if (key.eq.'begin_van_laar_sizes') then
 c                              read van laar data:
-            jlaar = 1
+            laar = .true.
             call readvl (idim,kstot,tname)
 
          else if (key.eq.'begin_dqf_corrections') then
@@ -3424,6 +3423,10 @@ c                              read dqf data:
 
             read (val,*) i
             reach = dfloat(i)
+
+         else if (key.eq.'low_reach') then
+
+            lowrch = .false.
 
          else if (key.eq.'begin_flagged_endmembe') then
 
@@ -3485,9 +3488,7 @@ c----------------------------------------------------------------------
       character chars*1
       common/ cst51 /length,iblank,icom,chars(lchar)
 
-      integer kstot,jend,i,ict,jsmod
-      double precision vlaar
-      common/ cst221 /vlaar(m3,m4),jsmod
+      integer kstot,jend,i,ict
 c----------------------------------------------------------------------
 
       ict = 0
@@ -3937,22 +3938,17 @@ c-----------------------------------------------------------------
 
       integer i,j,lnsp,k,l
 
-      integer jsmod
-      double precision vlaar
-      common/ cst221 /vlaar(m3,m4),jsmod
-
       integer nsub,nttyp,nterm,nspm1,nsite
       double precision acoef,smult,a0
       common/ cst107 /a0(m10,m11),acoef(m10,m11,m0),smult(m10),
      *      nsite,nspm1(m10),nterm(m10,m11),nsub(m10,m11,m0,m12),
      *      nttyp(m10,m11,m0)
 
-      logical stck, norf
-      integer iend,isub,insp,iterm,iord,istot,jstot,kstot,rkord,xtyp
-      double precision wg,wk,reach
-      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),reach,iend(m4),
+      integer iend,isub,insp,iterm,iord,istot,jstot,kstot,rkord
+      double precision wg,wk
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),iend(m4),
      *      isub(m1,m2),insp(m4),
-     *      rkord(m18),iterm,iord,istot,jstot,kstot,xtyp,stck,norf
+     *      rkord(m18),iterm,iord,istot,jstot,kstot
 c-----------------------------------------------------------------
 
       if (nsite.gt.m10) call error (1,a0(1,1),nsite,'m10')
@@ -5303,7 +5299,7 @@ c                               the saturated component idc:
                isct(j) = isct(j) + 1
                if (isct(j).gt.h6) call error (17,1d0,h6,'SATTST')
                iphct = iphct + 1
-               if (iphct.gt.k1) call error (77,1d0,k1,
+               if (iphct.gt.k1) call error (72,1d0,k1,
      *                            'SATTST increase parameter k1')
                ids(j,isct(j)) = iphct
                call loadit (iphct,.false.,.true.)
@@ -5619,19 +5615,11 @@ c---------------------------------------------------------------------
       integer kill,ikill,jkill,kill1,i,j,kosp(mst,msp),kill2,
      *        k,im,idsp,ksp(mst)
 
-      integer jmsol,kdsol
-      common/ cst142 /jmsol(m4,mst),kdsol(m4)
-
-      integer jsmod
-      double precision vlaar
-      common/ cst221 /vlaar(m3,m4),jsmod
-
-      logical stck, norf
-      integer iend,isub,insp,iterm,iord,istot,jstot,kstot,rkord,xtyp
-      double precision wg,wk,reach
-      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),reach,iend(m4),
+      integer iend,isub,insp,iterm,iord,istot,jstot,kstot,rkord
+      double precision wg,wk
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),iend(m4),
      *      isub(m1,m2),insp(m4),
-     *      rkord(m18),iterm,iord,istot,jstot,kstot,xtyp,stck,norf
+     *      rkord(m18),iterm,iord,istot,jstot,kstot
 
       character pname*10
       integer ipoly, isimp, ipvert, ivert, pimd
@@ -5767,24 +5755,16 @@ c---------------------------------------------------------------------
       logical depend,laar,order,fluid,macro,recip
       common/ cst160 /depend,laar,order,fluid,macro,recip
 c                                 local input variables
-      integer jmsol,kdsol
-      common/ cst142 /jmsol(m4,mst),kdsol(m4)
-
       integer iddeps,norder,nr
       double precision depnu,denth
       common/ cst141 /depnu(j4,j3),denth(j3,3),iddeps(j4,j3),norder,
      *      nr(j3)
 
-      logical stck, norf
-      integer iend,isub,insp,iterm,iord,istot,jstot,kstot,rkord,xtyp
-      double precision wg,wk,reach
-      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),reach,iend(m4),
+      integer iend,isub,insp,iterm,iord,istot,jstot,kstot,rkord
+      double precision wg,wk
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),iend(m4),
      *      isub(m1,m2),insp(m4),
-     *      rkord(m18),iterm,iord,istot,jstot,kstot,xtyp,stck,norf
-
-      integer jsmod
-      double precision vlaar
-      common/ cst221 /vlaar(m3,m4),jsmod
+     *      rkord(m18),iterm,iord,istot,jstot,kstot
 
       character pname*10
       integer ipoly, isimp, ipvert, ivert, pimd
@@ -5877,25 +5857,17 @@ c                                 local input variables
       common/ cst141 /depnu(j4,j3),denth(j3,3),iddeps(j4,j3),norder,
      *                nr(j3)
 
-      integer jsmod
-      double precision vlaar
-      common/ cst221 /vlaar(m3,m4),jsmod
-
-      integer jmsol,kdsol
-      common/ cst142 /jmsol(m4,mst),kdsol(m4)
-
       integer nsub,nttyp,nterm,nspm1,nsite
       double precision acoef,smult,a0
       common/ cst107 /a0(m10,m11),acoef(m10,m11,m0),smult(m10),
      *      nsite,nspm1(m10),nterm(m10,m11),nsub(m10,m11,m0,m12),
      *      nttyp(m10,m11,m0)
 
-      logical stck, norf
-      integer iend,isub,insp,iterm,iord,istot,jstot,kstot,rkord,xtyp
-      double precision wg,wk,reach
-      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),reach,iend(m4),
+      integer iend,isub,insp,iterm,iord,istot,jstot,kstot,rkord
+      double precision wg,wk
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),iend(m4),
      *      isub(m1,m2),insp(m4),
-     *      rkord(m18),iterm,iord,istot,jstot,kstot,xtyp,stck,norf
+     *      rkord(m18),iterm,iord,istot,jstot,kstot
 
       character pname*10
       integer ipoly, isimp, ipvert, ivert, pimd
@@ -6309,20 +6281,16 @@ c---------------------------------------------------------------------
 
       integer i, ksp, site
 
-      logical stck, norf
-      integer iend,isub,insp,iterm,iord,istot,jstot,kstot,rkord,xtyp
-      double precision wg,wk,reach
-      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),reach,iend(m4),
+      integer iend,isub,insp,iterm,iord,istot,jstot,kstot,rkord
+      double precision wg,wk
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),iend(m4),
      *      isub(m1,m2),insp(m4),
-     *      rkord(m18),iterm,iord,istot,jstot,kstot,xtyp,stck,norf
+     *      rkord(m18),iterm,iord,istot,jstot,kstot
 
       character pname*10
       integer ipoly, isimp, ipvert, ivert, pimd
       common/ cst688 /ipoly,isimp(h4),ipvert(h4),ivert(h4,mst),
      *                pimd(h4,mst,msp),pname(h4)
-
-      integer jmsol,kdsol
-      common/ cst142 /jmsol(m4,mst),kdsol(m4)
 c----------------------------------------------------------------------
 c                                 count the number of species
 c                                 missing on site
@@ -6357,15 +6325,11 @@ c---------------------------------------------------------------------
 
       integer i, jq, jn, js, lm
 
-      integer jmsol,kdsol
-      common/ cst142 /jmsol(m4,mst),kdsol(m4)
-
-      logical stck, norf
-      integer iend,isub,insp,iterm,iord,istot,jstot,kstot,rkord,xtyp
-      double precision wg,wk,reach
-      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),reach,iend(m4),
+      integer iend,isub,insp,iterm,iord,istot,jstot,kstot,rkord
+      double precision wg,wk
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),iend(m4),
      *      isub(m1,m2),insp(m4),
-     *      rkord(m18),iterm,iord,istot,jstot,kstot,xtyp,stck,norf
+     *      rkord(m18),iterm,iord,istot,jstot,kstot
 
       character pname*10
       integer ipoly, isimp, ipvert, ivert, pimd
@@ -6479,13 +6443,6 @@ c---------------------------------------------------------------------
       integer eos
       common/ cst303 /eos(k10)
 
-      integer jmsol,kdsol
-      common/ cst142 /jmsol(m4,mst),kdsol(m4)
-
-      integer jsmod
-      double precision vlaar
-      common/ cst221 /vlaar(m3,m4),jsmod
-
       integer ipoint,kphct,imyn
       common/ cst60 /ipoint,kphct,imyn
 
@@ -6498,12 +6455,11 @@ c---------------------------------------------------------------------
       character mname*8
       common/ cst18a /mname(m4)
 
-      logical stck, norf
-      integer iend,isub,insp,iterm,iord,istot,jstot,kstot,rkord,xtyp
-      double precision wg,wk,reach
-      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),reach,iend(m4),
+      integer iend,isub,insp,iterm,iord,istot,jstot,kstot,rkord
+      double precision wg,wk
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),iend(m4),
      *      isub(m1,m2),insp(m4),
-     *      rkord(m18),iterm,iord,istot,jstot,kstot,xtyp,stck,norf
+     *      rkord(m18),iterm,iord,istot,jstot,kstot
 
       integer mdep,idep,jdep,ndph
       double precision nu,y2p
@@ -6739,19 +6695,11 @@ c----------------------------------------------------------------------
       logical depend,laar,order,fluid,macro,recip
       common/ cst160 /depend,laar,order,fluid,macro,recip
 
-      integer jmsol,kdsol
-      common/ cst142 /jmsol(m4,mst),kdsol(m4)
-
-      integer jsmod
-      double precision vlaar
-      common/ cst221 /vlaar(m3,m4),jsmod
-
-      logical stck, norf
-      integer iend,isub,insp,iterm,iord,istot,jstot,kstot,rkord,xtyp
-      double precision wg,wk,reach
-      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),reach,iend(m4),
+      integer iend,isub,insp,iterm,iord,istot,jstot,kstot,rkord
+      double precision wg,wk
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),iend(m4),
      *      isub(m1,m2),insp(m4),
-     *      rkord(m18),iterm,iord,istot,jstot,kstot,xtyp,stck,norf
+     *      rkord(m18),iterm,iord,istot,jstot,kstot
 
       integer iddeps,norder,nr
       double precision depnu,denth
@@ -6830,7 +6778,7 @@ c---------------------------------------------------------------------
      *          nval1*12, nval2*12, nval3*12, strg*40, strg1*40,
      *          estrg*80
 
-      integer nreact,i,j,k,l,m,jlaar,idim
+      integer nreact,i,j,k,l,m,idim
 
       logical eor
 
@@ -6838,25 +6786,17 @@ c---------------------------------------------------------------------
 
       integer ijk(mst),inds(k7),ict
 
-      integer jmsol,kdsol
-      common/ cst142 /jmsol(m4,mst),kdsol(m4)
-
-      integer jsmod
-      double precision vlaar
-      common/ cst221 /vlaar(m3,m4),jsmod
-
       integer nsub,nttyp,nterm,nspm1,nsite
       double precision acoef,smult,a0
       common/ cst107 /a0(m10,m11),acoef(m10,m11,m0),smult(m10),
      *      nsite,nspm1(m10),nterm(m10,m11),nsub(m10,m11,m0,m12),
      *      nttyp(m10,m11,m0)
 
-      logical stck, norf
-      integer iend,isub,insp,iterm,iord,istot,jstot,kstot,rkord,xtyp
-      double precision wg,wk,reach
-      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),reach,iend(m4),
+      integer iend,isub,insp,iterm,iord,istot,jstot,kstot,rkord
+      double precision wg,wk
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),iend(m4),
      *      isub(m1,m2),insp(m4),
-     *      rkord(m18),iterm,iord,istot,jstot,kstot,xtyp,stck,norf
+     *      rkord(m18),iterm,iord,istot,jstot,kstot
 
       logical depend,laar,order,fluid,macro,recip
       common/ cst160 /depend,laar,order,fluid,macro,recip
@@ -6892,7 +6832,6 @@ c----------------------------------------------------------------------
 c                               set logical variables
       macro = .false.
       order = .false.
-      laar = .false.
       depend = .false.
       fluid = .false.
       recip = .false.
@@ -7170,16 +7109,9 @@ c                                 old versions:
       end do
 c                                 look for van laar and/or dqf parameters
 c                                 or the end of model marker
-      call readop (idim,jlaar,istot-mdep,reach,stck,norf,tname)
+      call readop (idim,istot-mdep,tname)
 
-      if (jlaar.ne.0) then
-
-         laar = .true.
-c                                 high order terms not allowed for
-c                                 van laar.
-         if (iord.gt.2.and.laar) call error (999,coeffs(1),800,'RMODEL')
-
-      end if
+      if (laar.and.iord.gt.2) call error (999,coeffs(1),800,'RMODEL')
 c                                 save original indices, need this for
 c                                 melt models etc that have species specific
 c                                 equations of state.
@@ -7208,12 +7140,11 @@ c---------------------------------------------------------------------
       common/ cst688 /ipoly,isimp(h4),ipvert(h4),ivert(h4,mst),
      *                pimd(h4,mst,msp),pname(h4)
 
-      logical stck, norf
-      integer iend,isub,insp,iterm,iord,istot,jstot,kstot,rkord,xtyp
-      double precision wg,wk,reach
-      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),reach,iend(m4),
+      integer iend,isub,insp,iterm,iord,istot,jstot,kstot,rkord
+      double precision wg,wk
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),iend(m4),
      *      isub(m1,m2),insp(m4),
-     *      rkord(m18),iterm,iord,istot,jstot,kstot,xtyp,stck,norf
+     *      rkord(m18),iterm,iord,istot,jstot,kstot
 
       integer iorig,jnsp,iy2p
       common / cst159 /iorig(m4),jnsp(m4),iy2p(m4)
@@ -7263,7 +7194,7 @@ c                               dummy for the ns'th species
       end do
 c                              look for van laar and/or dqf parameters
 c                              or the end of model marker
-      call readop (j,j,j,reach,stck,norf,tname)
+      call readop (j,j,tname)
 
       do i = 1, nq+nn+ns
          iorig(i) = i
@@ -7285,15 +7216,11 @@ c---------------------------------------------------------------------
       logical depend,laar,order,fluid,macro,recip
       common/ cst160 /depend,laar,order,fluid,macro,recip
 
-      logical stck, norf
-      integer iend,isub,insp,iterm,iord,istot,jstot,kstot,rkord,xtyp
-      double precision wg,wk,reach
-      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),reach,iend(m4),
+      integer iend,isub,insp,iterm,iord,istot,jstot,kstot,rkord
+      double precision wg,wk
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),iend(m4),
      *      isub(m1,m2),insp(m4),
-     *      rkord(m18),iterm,iord,istot,jstot,kstot,xtyp,stck,norf
-
-      integer jmsol,kdsol
-      common/ cst142 /jmsol(m4,mst),kdsol(m4)
+     *      rkord(m18),iterm,iord,istot,jstot,kstot
 
       integer iorig,jnsp,iy2p
       common / cst159 /iorig(m4),jnsp(m4),iy2p(m4)
@@ -8451,15 +8378,8 @@ c---------------------------------------------------------------------
       double precision dcp,soltol
       common/ cst57 /dcp(k5,k19),soltol
 
-      integer jmsol,kdsol
-      common/ cst142 /jmsol(m4,mst),kdsol(m4)
-
       integer eos
       common/ cst303 /eos(k10)
-
-      integer jsmod
-      double precision vlaar
-      common/ cst221 /vlaar(m3,m4),jsmod
 
       integer nsub,nttyp,nterm,nspm1,nsite
       double precision acoef,smult,a0
@@ -8467,12 +8387,11 @@ c---------------------------------------------------------------------
      *      nsite,nspm1(m10),nterm(m10,m11),nsub(m10,m11,m0,m12),
      *      nttyp(m10,m11,m0)
 
-      logical stck, norf
-      integer iend,isub,insp,iterm,iord,istot,jstot,kstot,rkord,xtyp
-      double precision wg,wk,reach
-      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),reach,iend(m4),
+      integer iend,isub,insp,iterm,iord,istot,jstot,kstot,rkord
+      double precision wg,wk
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),iend(m4),
      *      isub(m1,m2),insp(m4),
-     *      rkord(m18),iterm,iord,istot,jstot,kstot,xtyp,stck,norf
+     *      rkord(m18),iterm,iord,istot,jstot,kstot
 
       integer iddeps,norder,nr
       double precision depnu,denth
@@ -8633,7 +8552,7 @@ c                                 check for inconsistent model reformation
       if (kstot+mdep.gt.istot) call error (76,dq(1),idqf,tname)
 c                                  out-of-date melt model special cases:
       if (jsmod.eq.24.or.jsmod.eq.25.or.jsmod.eq.27.or.jsmod.eq.28) then
-         call error (77,r,i,'the solution model file contains an out-of'
+         call error (72,r,i,'the solution model file contains an out-of'
      *        //'-date version of '//tname//' update the model or file')
 
       end if
@@ -8674,6 +8593,8 @@ c                                 number of independent disordered endmembers
       lstot(im) = kstot
 c                                 site check override
       sck(im) = stck
+c                                 low-reach flag, not actually used.
+      lorch(im) = lowrch
 c                                 non-equimolar speciation reaction
       dnu(im) = 0d0
 c                                 override norf if refine_endmembers option is set (default is false)
@@ -8853,8 +8774,15 @@ c                                 initialize high/low ranges
          end do
       end do
 c                                 set reach factors
-      if (.not.refine.and.(iam.eq.1.or.iam.eq.15).and.iopt(20).ne.2.or.
-     *                                 iopt(20).eq.0) then
+      if (lowrch) then 
+
+         reachg(im) = nopt(21)/4d0
+         if (nopt(21).ne.2d0) call error (72,nopt(1),iopt(1),'the low_'/
+     *   /'reach option set in model '//tname//' can only be with '/
+     *   /'refine_factor = 2')
+
+      else if (.not.refine.and.(iam.eq.1.or.iam.eq.15)
+     *                    .and.iopt(20).ne.2.or.iopt(20).eq.0) then
 c                                 if vertex and not in the refine stage
 c                                 shut off reach increments
          reachg(im) = nopt(21)/2d0
@@ -8879,7 +8807,7 @@ c                                 in which case, why is it here????
       if (laar) then
 
          if (iterm.eq.0) laar = .false.
-         if (dnu(im).ne.0d0) call error (77,r,i,'laar excess function '/
+         if (dnu(im).ne.0d0) call error (72,r,i,'laar excess function '/
      *          /'not anticipated for non-equimolar ordering: '//tname)
 
       end if
@@ -8912,7 +8840,7 @@ c                                 as lrecip.
       if (recip.or.depend) then
 
          lrecip(im) = .true.
-         if (dnu(im).ne.0d0) call error (77,r,i,'polytopic composition'/
+         if (dnu(im).ne.0d0) call error (72,r,i,'polytopic composition'/
      *    /' space not anticipated for non-equimolar ordering: '//tname)
 
       end if
@@ -8956,7 +8884,7 @@ c                                 term may be of order < iord
 
                if (kdsol(isub(i,j)).eq.-2) then
 
-                  call error (77,r,i,'dependent endmember '
+                  call error (72,r,i,'dependent endmember '
      *                 //mname(iorig(isub(i,j)))//' in solution '
      *                 //tname//'appears in an excess term.')
 
@@ -9017,7 +8945,7 @@ c                                 term coefficient amd species index:
 
                if (kdsol(nsub(i,j,k,1)).eq.-2) then
 
-                  call error (77,r,k,'dependent endmember '
+                  call error (72,r,k,'dependent endmember '
      *              //mname(iorig(nsub(i,j,k,1)))//' in solution '
      *              //tname//' appears in a site fraction expression.')
 
@@ -9179,7 +9107,7 @@ c                                with respect to the ordered species
             end do
 c                                dnu ~0 => speciation reaction is not equimolar
             if (dabs(dnu(im)).gt.zero) then
-               if (norder.gt.1) call error (77,r,i,
+               if (norder.gt.1) call error (72,r,i,
      *              'ordering schemes with > 1 non-equi'//
      *              'molar reaction have not been anticipated: '//tname)
             else
@@ -9318,7 +9246,7 @@ c                                 if it has a non zero fraction
                   c0 = 0d0
                   c1 = 0d0
 
-                  if (d0(j,i,im).ne.0d0) call error (77,c0(0),i,
+                  if (d0(j,i,im).ne.0d0) call error (72,c0(0),i,
      *           'solution '//tname//': constants not allowed in '//
      *           'O/D model configurational entropy site fraction '//
      *           'expressions')
@@ -11618,15 +11546,8 @@ c-----------------------------------------------------------------------
 
       external chksol
 
-      integer jsmod
-      double precision vlaar
-      common/ cst221 /vlaar(m3,m4),jsmod
-
       character prject*100,tfname*100
       common/ cst228 /prject,tfname
-
-      integer jmsol,kdsol
-      common/ cst142 /jmsol(m4,mst),kdsol(m4)
 
       integer ipoint,kphct,imyn
       common/ cst60 /ipoint,kphct,imyn
@@ -11645,12 +11566,11 @@ c-----------------------------------------------------------------------
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
 
-      logical stck, norf
-      integer iend,isub,insp,iterm,iord,istot,jstot,kstot,rkord,xtyp
-      double precision wg,wk,reach
-      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),reach,iend(m4),
+      integer iend,isub,insp,iterm,iord,istot,jstot,kstot,rkord
+      double precision wg,wk
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),iend(m4),
      *      isub(m1,m2),insp(m4),
-     *      rkord(m18),iterm,iord,istot,jstot,kstot,xtyp,stck,norf
+     *      rkord(m18),iterm,iord,istot,jstot,kstot
 
       character mname*8
       common/ cst18a /mname(m4)
@@ -11793,6 +11713,8 @@ c                                 solution and stores the data (soload/loadgx)
             if (iphct-ophct.gt.0) then
 c                                 write pseudocompound count
                write (*,1100) iphct-ophct, tname
+c                                 low_reach flag is specified
+               if (lorch(im)) write (*,1140) tname
 c                                 write reach_increment
                if (int(reachg(im)*2d0/nopt(21)-1d0).gt.0)
      *            write (*,1030) int(reachg(im)*2d0/nopt(21)-1d0), tname
@@ -11894,6 +11816,7 @@ c                              close solution model file
 1130  format (/,'2 - Proportions output here may sum to <1 ',
      *          'because the ordered species',/,'may have non-zero ',
      *          'initial proportions.',/)
+1140  format (9x,'low_reach is on for ',a)
       end
 
       subroutine err41 (tag)
@@ -11946,7 +11869,7 @@ c---------------------------------------------------------------------
          if (cp(idc,iphct).ne.0d0) then
             isct(j) = isct(j) + 1
             if (isct(j).gt.h6) call error (17,cp(1,1),h6,'SATSRT')
-            if (iphct.gt.k1) call error (77,cp(1,1),k1,
+            if (iphct.gt.k1) call error (72,cp(1,1),k1,
      *                                  'SATSRT increase parameter k1')
             ids(j,isct(j)) = iphct
             exit
@@ -11995,13 +11918,6 @@ c--------------------------------------------------------------------------
       character tname*10
       logical refine, resub
       common/ cxt26 /refine,resub,tname
-
-      integer jmsol,kdsol
-      common/ cst142 /jmsol(m4,mst),kdsol(m4)
-
-      integer jsmod
-      double precision vlaar
-      common/ cst221 /vlaar(m3,m4),jsmod
 
       character*8 names
       common/ cst8 /names(k1)
@@ -13899,6 +13815,10 @@ c---------------------------------------------------------------------
       integer ntot,npairs
       common/ cst86 /ntot,npairs
 
+      character tname*10
+      logical refine, dynam
+      common/ cxt26 /refine,dynam,tname
+
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
 
@@ -13931,11 +13851,13 @@ c                                 generate coordinates for i'th component
 
          ync = pxnc(lpoly,lsite,k)/wt
 
-         if (ync.eq.0d0) then 
-            cycle
+         if (dynam.and.ync.gt.xncg(ids,lpoly,lsite,k)) then 
+            ync = xncg(ids,lpoly,lsite,k)
          else if (ync.gt.0.5d0) then
             ync = 0.5d0
          end if
+
+         if (ync.eq.0d0) cycle
 
          mode = imdg(k,lsite,lpoly,ids)
 c                                 avoid impossible compositions 'cause a min > 0
@@ -14126,12 +14048,11 @@ c---------------------------------------------------------------------
       integer ntot,npairs
       common/ cst86 /ntot,npairs
 
-      logical stck, norf
-      integer iend,isub,insp,iterm,iord,istot,jstot,kstot,rkord,xtyp
-      double precision wg,wk,reach
-      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),reach,iend(m4),
+      integer iend,isub,insp,iterm,iord,istot,jstot,kstot,rkord
+      double precision wg,wk
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),iend(m4),
      *      isub(m1,m2),insp(m4),
-     *      rkord(m18),iterm,iord,istot,jstot,kstot,xtyp,stck,norf
+     *      rkord(m18),iterm,iord,istot,jstot,kstot
 
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
@@ -14323,7 +14244,7 @@ c----------------------------------------------------------------------
       if (wham) then
 c                                 an internal molecular eos has already
 c                                 been invoked
-         call error (77,rt,i,'only one solution model may invoke an '//
+         call error (72,rt,i,'only one solution model may invoke an '//
      *                       'internal molecular fluid EoS.')
 
       else
@@ -16633,7 +16554,7 @@ c                                 -------------------------------------
 c                                 local variables:
       integer ii, i, j, k, ibad1, ibad2, ibad3, igood, ipop
 
-      logical bad1, bad2, good, reach
+      logical bad1, bad2, good, reech, lrch
 
       double precision num
 c                                 -------------------------------------
@@ -16757,13 +16678,16 @@ c                                 solutions on internal limits
 
       end if
 
-      reach = .false.
+      reech = .false.
+      lrch  = .false.
 
       do i = 1, isoct
 
          if (.not.stable(i)) cycle
 
-         if (int(reachg(i)*2d0/nopt(21)-1d0).gt.0) reach = .true.
+         if (lorch(i)) lrch = .true.
+
+         if (int(reachg(i)*2d0/nopt(21)-1d0).gt.0) reech = .true.
 
          ipop = pop1(i)
 
@@ -16788,13 +16712,23 @@ c                                 special case (1 component solution).
 
       end do
 
-      if (reach) then
+      if (reech) then
 
          write (*,1100)
 
          do i = 1, isoct
             if (int(reachg(i)*2d0/nopt(21)-1d0).eq.0) cycle
             write (*,1110) fname(i), int(reachg(i)*2d0/nopt(21)-1d0)
+         end do
+
+      end if
+
+      if (lrch) then
+
+         write (*,1150)
+
+         do i = 1, isoct
+            if (lorch(i)) write (*,1110) fname(i)
          end do
 
       end if
@@ -16837,7 +16771,8 @@ c                                 special case (1 component solution).
      *        ' calculations.',/)
 1140  format (/,'Average number of iterations per speciation ',
      *          'calculation:',f5.1,/)
-
+1150  format (/,'The low_reach flag is set for the following solution ',
+     *          'models:',/)
       end
 
 
@@ -19344,18 +19279,11 @@ c---------------------------------------------------------------------
       character*10 tname, tag*3, key*22, val*3,
      *          nval1*12, nval2*12, nval3*12, strg*40, strg1*40
 
-      integer nreact, i, j, k, l, m, jlaar, ier, idim
+      integer nreact, i, j, k, l, m, ier, idim
 
       double precision coeffs(k7), rnums(m4), enth(3)
 
       integer ijk(mst),inds(k7),ict
-
-      integer jmsol,kdsol
-      common/ cst142 /jmsol(m4,mst),kdsol(m4)
-
-      integer jsmod
-      double precision vlaar
-      common/ cst221 /vlaar(m3,m4),jsmod
 
       integer nsub,nttyp,nterm,nspm1,nsite
       double precision acoef,smult,a0
@@ -19363,12 +19291,11 @@ c---------------------------------------------------------------------
      *      nsite,nspm1(m10),nterm(m10,m11),nsub(m10,m11,m0,m12),
      *      nttyp(m10,m11,m0)
 
-      logical stck, norf
-      integer iend,isub,insp,iterm,iord,istot,jstot,kstot,rkord,xtyp
-      double precision wg,wk,reach
-      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),reach,iend(m4),
+      integer iend,isub,insp,iterm,iord,istot,jstot,kstot,rkord
+      double precision wg,wk
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),iend(m4),
      *      isub(m1,m2),insp(m4),
-     *      rkord(m18),iterm,iord,istot,jstot,kstot,xtyp,stck,norf
+     *      rkord(m18),iterm,iord,istot,jstot,kstot
 
       logical depend,laar,order,fluid,macro,recip
       common/ cst160 /depend,laar,order,fluid,macro,recip
@@ -19700,16 +19627,9 @@ c                                 initialize endmember flags
 c                              look for van laar and/or dqf parameters
 c                              reach_increment, endmember flags
 c                              or the end of model marker
-      call readop (idim,jlaar,istot-mdep,reach,stck,norf,tname)
+      call readop (idim,istot-mdep,tname)
 
-      if (jlaar.ne.0) then
-
-         laar = .true.
-c                                 high order terms not allowed for
-c                                 van laar.
-         if (iord.gt.2.and.laar) call error (999,coeffs(1),800,'RMODEL')
-
-      end if
+      if (laar.and.iord.gt.2) call error (999,coeffs(1),800,'RMODEL')
 c                                 save original indices, need this for
 c                                 melt models etc that have species specific
 c                                 equations of state.
@@ -19741,12 +19661,11 @@ c----------------------------------------------------------------------
       character chars*1
       common/ cst51 /length,iblank,icom,chars(lchar)
 
-      logical stck, norf
-      integer iend,isub,insp,iterm,iord,istot,jstot,kstot,rkord,xtyp
-      double precision wg,wk,reach
-      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),reach,iend(m4),
+      integer iend,isub,insp,iterm,iord,istot,jstot,kstot,rkord
+      double precision wg,wk
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),iend(m4),
      *      isub(m1,m2),insp(m4),
-     *      rkord(m18),iterm,iord,istot,jstot,kstot,xtyp,stck,norf
+     *      rkord(m18),iterm,iord,istot,jstot,kstot
 c----------------------------------------------------------------------
 
       do
@@ -19800,19 +19719,11 @@ c---------------------------------------------------------------------
       integer kill, ikill, jkill, kill1, i, j, kosp(mst,msp), kill2,
      *        k, l, im, idsp, ivct, ii, jpoly, jsimp, jvct, killpl
 
-      integer jmsol,kdsol
-      common/ cst142 /jmsol(m4,mst),kdsol(m4)
-
-      integer jsmod
-      double precision vlaar
-      common/ cst221 /vlaar(m3,m4),jsmod
-
-      logical stck, norf
-      integer iend,isub,insp,iterm,iord,istot,jstot,kstot,rkord,xtyp
-      double precision wg,wk,reach
-      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),reach,iend(m4),
+      integer iend,isub,insp,iterm,iord,istot,jstot,kstot,rkord
+      double precision wg,wk
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),iend(m4),
      *      isub(m1,m2),insp(m4),
-     *      rkord(m18),iterm,iord,istot,jstot,kstot,xtyp,stck,norf
+     *      rkord(m18),iterm,iord,istot,jstot,kstot
 
       character pname*10
       integer ipoly, isimp, ipvert, ivert, pimd
@@ -20072,25 +19983,17 @@ c                                 local input variables
       common/ cst141 /depnu(j4,j3),denth(j3,3),iddeps(j4,j3),norder,
      *                nr(j3)
 
-      integer jsmod
-      double precision vlaar
-      common/ cst221 /vlaar(m3,m4),jsmod
-
-      integer jmsol,kdsol
-      common/ cst142 /jmsol(m4,mst),kdsol(m4)
-
       integer nsub,nttyp,nterm,nspm1,nsite
       double precision acoef,smult,a0
       common/ cst107 /a0(m10,m11),acoef(m10,m11,m0),smult(m10),
      *      nsite,nspm1(m10),nterm(m10,m11),nsub(m10,m11,m0,m12),
      *      nttyp(m10,m11,m0)
 
-      logical stck, norf
-      integer iend,isub,insp,iterm,iord,istot,jstot,kstot,rkord,xtyp
-      double precision wg,wk,reach
-      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),reach,iend(m4),
+      integer iend,isub,insp,iterm,iord,istot,jstot,kstot,rkord
+      double precision wg,wk
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),iend(m4),
      *      isub(m1,m2),insp(m4),
-     *      rkord(m18),iterm,iord,istot,jstot,kstot,xtyp,stck,norf
+     *      rkord(m18),iterm,iord,istot,jstot,kstot
 
       integer iorig,jnsp,iy2p
       common / cst159 /iorig(m4),jnsp(m4),iy2p(m4)
@@ -21015,7 +20918,7 @@ c-----------------------------------------------------------------------
 c                                 load simplicial compoisition indices
       if (resub) then 
 c                                 dynamic arrays:
-         if (phct.gt.k21) call error (58,1d0,k21,'LOADGX/SETIND')
+         if (phct.gt.k21) call error (58,1d0,k21,'K21 LOADGX/SETIND')
 
          jkp(phct) = ids
          hkp(phct) = kds
@@ -21025,7 +20928,7 @@ c                                 dynamic arrays:
 c                                 composite space, save location of 
 c                                 polytopic wts
            gcind = gcind + 1
-           if (gcind.gt.k25) call error (58,0d0,0,'K25')
+           if (gcind.gt.k25) call error (58,0d0,0,'K25 LOADGX/SETIND')
 
            jcoz(gcind) = spx(ipop,1) + (nind(ipop)-1)*ndim(1,ipop,ids)
 
@@ -21043,7 +20946,8 @@ c                                 skip 0-d simplices
                if (ndim(i,ii,ids).eq.0) cycle
 
                gcind = gcind + 1
-               if (gcind.gt.k25) call error (58,0d0,0,'K25')
+               if (gcind.gt.k25) 
+     *            call error (58,0d0,0,'K25 LOADGX/SETIND')
 
                jcoz(gcind) = spx(ii,i) 
      *                       + (sco(pos+i) - 1) * ndim(i,ii,ids)
@@ -21067,7 +20971,7 @@ c                                 skip 0-d simplices
 
       else
 c                                 static arrays:
-         if (phct.gt.k1) call err41 ('K1')
+         if (phct.gt.k1) call err41 ('K1 LOADGX/SETIND')
 
          icox(phct) = gcind + 1
 
@@ -21075,7 +20979,7 @@ c                                 static arrays:
 c                                 composite space, save location of 
 c                                 polytopic wts
            gcind = gcind + 1
-           if (gcind.gt.k24) call error (58,0d0,0,'K24')
+           if (gcind.gt.k24) call error (58,0d0,0,'K24 LOADGX/SETIND')
            jcox(gcind) = spx(ipop,1) + (nind(ipop)-1)*ndim(1,ipop,ids)
 
          end if
@@ -21092,7 +20996,8 @@ c                                 skip 0-d simplices
                if (ndim(i,ii,ids).eq.0) cycle
 
                gcind = gcind + 1
-               if (gcind.gt.k24) call error (58,0d0,0,'K24')
+               if (gcind.gt.k24) 
+     *            call error (58,0d0,0,'K24 LOADGX/SETIND')
                jcox(gcind) = spx(ii,i) 
      *                       +  (sco(pos+i) - 1) * ndim(i,ii,ids)
             end do
@@ -22295,7 +22200,7 @@ c                                 of state from terminal.
       else if (ifug.eq.6 .or.ifug.eq.7 .or.ifug.eq.11.or.ifug.eq.18.or.
      *         ifug.eq.21.or.ifug.eq.22.or.ifug.eq.23) then
 
-        call error (77,0d0,0,' the input file specifies a disabled '//
+        call error (72,0d0,0,' the input file specifies a disabled '//
      *                       'or ivalid internal fluid EoS')
 
       end if 
@@ -24075,7 +23980,7 @@ c                                 specification n t-z points to fit n-1^th order
 c                                 polynomial 
          read (n8,*) npoly
 
-         if (npoly.gt.mpol) call error (77,b(1),i,'too many t-z '/
+         if (npoly.gt.mpol) call error (72,b(1),i,'too many t-z '/
      *                     /'coordinates increase mpol in common cst66')
 
          do i = 1, npoly
@@ -24094,7 +23999,7 @@ c                                 polynomial
 
          if (i.eq.0) call subst (a,ipvt,npoly,b,i)
 
-         if (i.ne.0) call error (77,b(1),i,'degenerate t-z'//
+         if (i.ne.0) call error (72,b(1),i,'degenerate t-z'//
      *                                     ' coordinates, FRAC2D')
          do i = 1, npoly
             abc0(1,i) = b(i)
@@ -24111,11 +24016,11 @@ c                                 slab dip (degree)
             read (n8,*) vz(6)
 c                                 number of geothermal polynomials
             read (n8,*) npoly
-            if (npoly.gt.mpol) call error (77,b(1),i,'too many '/
+            if (npoly.gt.mpol) call error (72,b(1),i,'too many '/
      *                       /'geotherms increase mpol in common cst66')
 c                                 order of geothermal polynomials
             read (n8,*) nord
-            if (nord.gt.mord) call error (77,b(1),i,'geothermal '/
+            if (nord.gt.mord) call error (72,b(1),i,'geothermal '/
      *      /'polynomial order too high, increase mord in common cst66')
 
             do i = 1, npoly
@@ -24150,7 +24055,7 @@ c                                 end of data indicated by zero
 
          ilay = ilay + 1
 
-         if (ilay.eq.lay) call error (77,b(1),i, 
+         if (ilay.eq.lay) call error (72,b(1),i, 
      *                               'increase lay in common cst66')
 
          read (n8,*) (iblk(ilay,i),i=1,icp)
@@ -24159,14 +24064,14 @@ c                                 end of data indicated by zero
 
          ncol = ncol + irep(ilay)
 
-         if (ncol.gt.maxbox) call error (77,b(1),i, 
+         if (ncol.gt.maxbox) call error (72,b(1),i, 
      *                            'increase maxbox in common cst66')
 
       end do
 c                                 read aliquot composition
       if (titrat) then 
 
-         if (ilay+1.eq.lay) call error (77,b(1),i, 
+         if (ilay+1.eq.lay) call error (72,b(1),i, 
      *                               'increase lay in common cst66')
 
          read (n8,*) qfile
@@ -24187,10 +24092,10 @@ c                                 file input of nodal p-t coordinates
 c                                 read header info
          read (n8,*) i, nrow
 
-         if (ncol*nrow.gt.k2) call error (77,b(1),i,'too many'/
+         if (ncol*nrow.gt.k2) call error (72,b(1),i,'too many'/
      *      /' coordinates, increase k2 to ncol*nrow in routine FRAC2D')
 
-         if (i.ne.ncol) call error (77,b(1),i,'the number of'//
+         if (i.ne.ncol) call error (72,b(1),i,'the number of'//
      *     'nodes in a column specified in: '//cfname//'must equal the'/
      *    /' number of nodes specified in the aux file.')
 
@@ -24338,7 +24243,7 @@ c                                 depth for geotherm
 
          if (i.eq.0) call subst (a,ipvt,npoly,b,i)
 
-         if (i.ne.0) call error (77,b(1),i,'degenerate t-z'//
+         if (i.ne.0) call error (72,b(1),i,'degenerate t-z'//
      *                                     ' coordinates, FRAC2D')
 c                                  true depth is 
          z0 = p0 - dz

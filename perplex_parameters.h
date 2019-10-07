@@ -84,13 +84,13 @@
 !                                 k23 - max number of phases to be fractionated.
 !                                 k24 - max number of static simplicial coordinate sets (jcox).
 !                                 k25 - max number of dynamic simplicial coordinate sets (jcoz).
-      parameter (k0=25,k1=3200000,k2=100000,k3=2000,k4=32,k5=12)
+      parameter (k0=25,k1=5000000,k2=100000,k3=2000,k4=32,k5=12)
       parameter (k7=k5+1,k8=k5+2) 
       parameter (k9=35,k10=400,k14=18,k15=6,k16=120)
       parameter (k17=7,k18=k1/2)
-      parameter (k19=3*k5,k21=k1,k20=k21/10)
+      parameter (k19=3*k5,k21=k1/5,k20=k21)
       parameter (k22=mdim*mst*h4*k19,k23=25)
-      parameter (k13=k1/2,k24=10*k1,k25=10*k21)
+      parameter (k13=k1,k24=10*k1,k25=10*k21)
 !                                 l2 - max number of independent potential variables
 !                                 l3 - max number of variables for gridded min and graphics (l2+2)
 !                                 l5 - max number of coordinates along a univariant curve                
@@ -154,19 +154,6 @@ c                                 lchar - maximum length of character strings
 c------------------------------------------------------------------------------
 c                                 commons with globally consistent, non-conflicting, variable names:
 
-c                                 x coordinate description
-      integer istg, ispg, imdg, poly, pvert, pop1, nsum
-      double precision xmng, xmxg, xncg, xmno, xmxo, reachg
-      common/ cxt6r /
-     *      xmng(h9,h4,mst,msp),xmxg(h9,h4,mst,msp),xncg(h9,h4,mst,msp),
-     *      xmno(h9,h4,mst,msp),xmxo(h9,h4,mst,msp),reachg(h9)
-      common/ cxt6i /istg(h9,h4),ispg(h9,h4,mst),pop1(h9),nsum(h9),
-     *               imdg(ms1,mst,h4,h9),poly(h9),pvert(h9,h4,2)
-
-      logical sck, nrf
-      integer ldsol
-      common/ cxt36 /ldsol(m4,h9),sck(h9),nrf(h9)
-
       integer spx, icox, jcox
       double precision xco
       common/ cxt10 /xco(k18),spx(h4,mst),icox(k1),jcox(k24)
@@ -183,21 +170,12 @@ c                                 x coordinate description
 
       integer hkp,mkp
       common/ cst72 /hkp(k21),mkp(k19)
-
-      double precision y2pg
-      common/ cxt4  /y2pg(m15,m4,h9)
-
-      integer ksmod, kmsol, knsp
-      common/ cxt0  /ksmod(h9),kmsol(h9,m4,mst),knsp(m4,h9)
 c                                 temporary subdivision limits:
       double precision pxmn, pxmx, pxnc
       common/ cxt108 /pxmn(h4,mst,msp),pxmx(h4,mst,msp),pxnc(h4,mst,msp)
 
       double precision pwt
-      common/ cxt44 / pwt(h4)
-
-      character poname*10
-      common/ cxt47 /poname(h9,h4)
+      common/ cxt44 /pwt(h4)
 c                                 interim storage array
       integer lcoor, lkp
       double precision ycoor
@@ -208,20 +186,55 @@ c
 
       double precision ctot
       common/ cst3  /ctot(k1)
-c                                 solution limits and stability
-      logical stable,limit
+c                                 -------------------------------
+c                                 global solution model variables:
+      logical stable,limit,lorch
       double precision xlo,xhi
       common/ cxt11 /xlo(m4,mst,h4,h9),xhi(m4,mst,h4,h9),
-     *               stable(h9),limit(h9)
+     *               stable(h9),limit(h9),lorch(h9)
 
       integer ncoor,mcoor,ndim
       common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h4,h9)
 
+      character poname*10
+      common/ cxt47 /poname(h9,h4)
+
+      double precision y2pg
+      common/ cxt4  /y2pg(m15,m4,h9)
+
+      integer ksmod, kmsol, knsp
+      common/ cxt0  /ksmod(h9),kmsol(h9,m4,mst),knsp(m4,h9)
+      integer istg, ispg, imdg, poly, pvert, pop1, nsum
+      double precision xmng, xmxg, xncg, xmno, xmxo, reachg
+      common/ cxt6r /
+     *      xmng(h9,h4,mst,msp),xmxg(h9,h4,mst,msp),xncg(h9,h4,mst,msp),
+     *      xmno(h9,h4,mst,msp),xmxo(h9,h4,mst,msp),reachg(h9)
+      common/ cxt6i /istg(h9,h4),ispg(h9,h4,mst),pop1(h9),nsum(h9),
+     *               imdg(ms1,mst,h4,h9),poly(h9),pvert(h9,h4,2)
+
+      logical sck, nrf
+      integer ldsol
+      common/ cxt36 /ldsol(m4,h9),sck(h9),nrf(h9)
+c                                 -------------------------------
+c                                  variables set from perplex_option.dat
       integer iopt
       logical lopt
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10)
+c                                 -------------------------------
+c                                 local solution model variables:
+      logical stck, norf, lowrch
+      integer xtyp
+      double precision reach
+      common/ cxt61 /reach,xtyp,stck,norf,lowrch
 
+      integer jsmod
+      double precision vlaar
+      common/ cst221 /vlaar(m3,m4),jsmod
+
+      integer jmsol,kdsol
+      common/ cst142 /jmsol(m4,mst),kdsol(m4)
+c                                 -------------------------------
       double precision times, btime, etime
       common/ time /times(30),btime(30),etime(30)
 

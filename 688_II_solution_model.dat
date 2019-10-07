@@ -569,24 +569,24 @@ full_name    clinoamphibole
 
 688                                | model type: 688 format standard model
  
-2                                  | number of polytopes, subvision range for each polytope:
+2                                  | number of polytopes, subvision ranges for the first N-1 polytopes:
 
-0   .2   .1  0                     | X(1) is X([ ][M][Fe3,Al][N]) is Ti-free glaucophane
-
-                                   | endmembers on the vertices, index on the first simplex
-                                   | changes fastest, last slowest
-                                          
+0   .2   .1  0                     | X(1) = X([ ][M][Fe3,Al][N]), Mg-Fe-Al-Fe3+ "glaucophane"
+                                   | X(2) = 1 - X(1) = X([A][M][M,T,MT][M,C]), K-Na-Mg-Fe-Al-Ti-Fe3+ "pargasite"
 
                                    | -------------------------------------------
-                                   | Polytope 3 [ ][M][T  ][N] (Glaucophane)
+                                   | Polytope 1 [ ][M][T  ][N] (Glaucophane)
 
 Glaucophane                        | poytope name
                                     
 2                                  | number of simplices, then for each simplex
 2 2                                | number of vertices on each simplex
  
-                                   | Simplex 1 Mg, Fe; is the composition of M
-                                   | Simplex 2 Fe3, Ti, Al is M2 site chemistry
+                                   | Simplex 1 Mg, Fe; is Mg/M [M1 site]
+                                   | Simplex 2 Fe3, Al is Fe3+/T' [M2 site]
+
+                                   | endmembers on the vertices, index on the first simplex
+                                   | changes fastest, last slowest
                                    
                                    | => endmember 11 is [ ][Mg][Fe3][Na]
                                    | => endmember 21 is [ ][Fe][Fe3][Na]
@@ -601,7 +601,6 @@ gl         fgl_d                   | Al-glaucophane
                                    | Second (3d) simplex
 0    1  .1  0                      | X(2,1) = Fe3/T' on M2, T' = Al + Fe3+
 
-
                                    | -------------------------------------------
                                    | Polytope 2 [A][M][M,T,MT][M,C]  
 
@@ -610,10 +609,12 @@ ACMT-Amph                          | poytope name
 3                                  | number of simplices, then for each simplex
 2 2 10                             | number of vertices on each simplex
  
-                                   | Simplex 1 Mg, Fe; determines the identity of M
+                                   | Simplex 1 is Mg/M
                                    | Simplex 2 is M/[Ca + M] on M4
                                    | Simplex 3 is parg and M, Fe3, Ti, Al M2 site chemistry
 
+                                   | endmembers on the vertices, index on the first simplex
+                                   | changes fastest, last slowest
 
 mts_d      fts_d                   | M-Ca-Al_tschermaks
 ts         fcts_d
@@ -649,16 +650,16 @@ tr         ftr_d
 .5   .75  .1  0                    | X(1,1) = bulk Mg/M
 
                                    | Second (1d) simplex
-0   .35  .1  0                     | X(2,1) = M/[Ca + M] on M4
+0   .45  .1  0                     | X(2,1) = M/[Ca + M] on M4
 
                                    | Third simplex 
-0    .25 .1  0                     | X(3,1) = X(Al-Ts)
-.3   .7  .1  0                     | X(3,2) = X(Na-Al-Parg)
-0    .05 .1  0                     | X(3,3) = X(Na-Fe3+-Parg)
-0    .05 .1  0                     | X(3,4) = X(Na-Ti-Parg)
+0    .4 .1  0                      | X(3,1) = X(Al-Ts)
+0    .7  .1  0                     | X(3,2) = X(Na-Al-Parg)
+0    .35 .1  0                     | X(3,3) = X(Na-Fe3+-Parg)
+0    .3  .1  0                     | X(3,4) = X(Na-Ti-Parg)
 0    .1  .1  0                     | X(3,5) = X(K-Al-Parg)
-0    .05 .1  0                     | X(3,6) = X(K-Fe3+-Parg)
-0    .05 .1  0                     | X(3,7) = X(K-Ti-Parg)
+0    .1  .1  0                     | X(3,6) = X(K-Fe3+-Parg)
+0    .1  .1  0                     | X(3,7) = X(K-Ti-Parg)
 0    .2  .1  0                     | X(3,8) = X(Ti-Ts)
 0    .35 .1  0                     | X(3,9) = X(Fe3-Ts)
 
@@ -852,6 +853,8 @@ end_dqf_corrections
 begin_flagged_endmembers
 grun
 end_flagged_endmembers
+
+low_reach
 
 end_of_model
 

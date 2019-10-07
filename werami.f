@@ -2000,7 +2000,7 @@ c-------------------------------------------------------------------
 
       logical max
 
-      integer choice, index, kdsol(k5), isol, i, j, icx, 
+      integer choice, index, ksol(k5), isol, i, j, icx, 
      *        jsol, ier, phase, mode
 
       double precision cmin(k5) ,cmax(k5), tcomp, gtcomp
@@ -2241,7 +2241,7 @@ c                                 the composition is out of bounds
             end do
 c                                 the solution past all tests
             jsol = jsol + 1
-            kdsol(jsol) = jdsol(i)
+            ksol(jsol) = jdsol(i)
 
 20       continue 
 
@@ -2251,7 +2251,7 @@ c                                 existing criteria
             write (*,1060) jsol,fname(phase)
             write (*,1040) (cname(i), i = 1, icomp)
             do i = 1, jsol 
-               write (*,1050) (pcomp(j,kdsol(i)), j = 1, icomp)
+               write (*,1050) (pcomp(j,ksol(i)), j = 1, icomp)
             end do 
 
             write (*,1070)
@@ -2264,7 +2264,7 @@ c                                 2 - average within existing criterion
 
             else if (choice.eq.3) then 
 c                                 3 - ignore and hope for the best
-               call avgcmp (jsol,kdsol)
+               call avgcmp (jsol,ksol)
 
             else 
 c                                 not 2 or 3, redefine the criterion
@@ -2276,12 +2276,12 @@ c                                 not 2 or 3, redefine the criterion
          end if 
 c                                 user has elected to average within
 c                                 existing criterion
-         if (jsol.gt.1.and.savg(phase)) call avgcmp (jsol,kdsol) 
+         if (jsol.gt.1.and.savg(phase)) call avgcmp (jsol,ksol) 
 
          if (jsol.eq.0) then 
             index = jdsol(1)
          else 
-            index = kdsol(1)
+            index = ksol(1)
          end if 
 
       else 
@@ -2298,16 +2298,16 @@ c                                 of bounds, cycle
 
 c                                 the phase passed all tests
             jsol = jsol + 1
-            kdsol(jsol) = jdsol(i)
+            ksol(jsol) = jdsol(i)
 
          end do  
 c                                 if no phase passed range criterion
-c                                 load them all in to kdsol and use the
+c                                 load them all in to ksol and use the
 c                                 min/max, could add a 1 time warning.
          if (jsol.eq.0) then 
             jsol = isol
             do i = 1, jsol
-               kdsol(i) = jdsol(i)
+               ksol(i) = jdsol(i)
             end do 
          end if 
 c                                 min/max
@@ -2319,7 +2319,7 @@ c                                 min/max
 
          do i = 1, jsol
 
-            tcomp = gtcomp (kdsol(i),idasls(kdsol(i),ias),k5+2)
+            tcomp = gtcomp (ksol(i),idasls(ksol(i),ias),k5+2)
 
             if (max) then 
                if (tcomp.ge.cmin(2)) then 
@@ -2596,7 +2596,7 @@ c                                 compute properties
 
       end do 
 
-      if (jpts.eq.0) call error (77,s,i,'your polynomial yields no cond'
+      if (jpts.eq.0) call error (72,s,i,'your polynomial yields no cond'
      *//'itions with the coordinate frame of the calculation')
 
       call finprp (dim,n5name,n6name,node) 

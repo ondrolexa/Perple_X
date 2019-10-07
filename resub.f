@@ -473,22 +473,24 @@ c                                 solution refinement point:
             end if 
 
          end if
-c                                  set solution model parameters for
-c                                  gsol1, don't call if the previous
-c                                  refinement point was the same solution.
+c                                 set solution model parameters for
+c                                 gsol1, don't call if the previous
+c                                 refinement point was the same solution.
          if (ids.ne.lds) call ingsol (ids)
 
          lds = ids
-c                                  get the subdivision limits:
+c                                 get the subdivision limits:
          call sublim (ids,res0)
 
          ophct = jphct 
 c                                  do the subdivision and load the data
          call subdiv (ids,kd,gcind,jphct,.true.)
-c                                    special call to make H2O for
-c                                    lagged speciation, this is necessary
-c                                    because non-linear stretching can prevent
-c                                    fluid composition from reaching pure water.
+
+c        write (*,*) ' refining: ',kd, ids, jphct - ophct
+c                                  special call to make H2O for
+c                                  lagged speciation, this is necessary
+c                                  because non-linear stretching can prevent
+c                                  fluid composition from reaching pure water.
          if (ophct.eq.jphct.and.ksmod(ids).eq.39) then 
 
             write (*,'(3(a,/))') ' 688 version error: resub failed to ',
@@ -886,7 +888,7 @@ c----------------------------------------------------------------------
 
       logical check, bad, quit, notaq, abort
 
-      integer idsol(k5),kdsol(k5,k5),ids,xidsol,xkdsol,irep,ii,
+      integer idsol(k5),ksol(k5,k5),ids,xidsol,xksol,irep,ii,
      *        i,j,jdsol(k5,k5),jd,k,l,nkp(k5),xjdsol(k5),kk
 
       double precision bsol(k5,k5),cpnew(k5,k5),xx,xb(k5),msol,
@@ -954,10 +956,10 @@ c-----------------------------------------------------------------------
 c                                first check if solution endmembers are
 c                                among the stable compounds:
       do i = 1, ntot
-c                                initialize kdsol, this was not done 
+c                                initialize ksol, this was not done 
 c                                before nov 17, 2017; god only knows
 c                                how it worked...
-         kdsol(1,i) = 0
+         ksol(1,i) = 0
 c                                locate solution endmembers:
          if (kkp(i).lt.0) then 
             if (ikp(-kkp(i)).ne.0) then 
@@ -992,7 +994,7 @@ c                                 the pseudocompound is a true compound
             ncpd = ncpd + 1 
             idsol(ntot) = ncpd
             bsol(ntot,ncpd) = amt(i)
-            kdsol(ntot,ncpd) = nkp(i)
+            ksol(ntot,ncpd) = nkp(i)
             jdsol(ntot,ncpd) = i
 
          else 
@@ -1048,7 +1050,7 @@ c                                 impure solvent, get speciation
             do j = 1, np
 c                                 compare the compound to the np solutions 
 c                                 identfied so far:        
-               if (kdsol(j,1).eq.nkp(i)) then
+               if (ksol(j,1).eq.nkp(i)) then
 
                   kk = jdsol(j,idsol(j))
 c                                 if match check for a solvus
@@ -1091,7 +1093,7 @@ c                                 the pseudocompound is a new solution
 c                                 phase.
             np = np + 1
             idsol(np) = 1
-            kdsol(np,1) = nkp(i)
+            ksol(np,1) = nkp(i)
             jdsol(np,1) = i
             bsol(np,1) = amt(i)
 
@@ -1110,7 +1112,7 @@ c                                 with a general composition
             irep = 0
 
             do j = i+1, np
-               if (kdsol(j,1).ne.kdsol(i,1)) then
+               if (ksol(j,1).ne.ksol(i,1)) then
                   check = .true.
                else 
                   irep = irep + 1
@@ -1121,28 +1123,28 @@ c                                 with a general composition
 
                l = i + 1
 
-               if (kdsol(l,1).ne.kdsol(i,1)) then 
+               if (ksol(l,1).ne.ksol(i,1)) then 
 c                                 not in sequence, find the next occurence
                   do j = i+2, np 
-                     if (kdsol(i,1).eq.kdsol(j,1)) exit
+                     if (ksol(i,1).eq.ksol(j,1)) exit
                   end do 
 c                                 swap phase at i+1 with the one at j
                   xidsol = idsol(l)
-                  xkdsol = kdsol(l,1)
+                  xksol = ksol(l,1)
                   do k = 1, xidsol
                      xb(k) = bsol(l,k)
                      xjdsol(k) = jdsol(l,k)
                   end do 
 
                   idsol(l) = idsol(j)
-                  kdsol(l,1) = kdsol(j,1)
+                  ksol(l,1) = ksol(j,1)
                   do k = 1, idsol(j)
                      bsol(l,k) = bsol(j,k)
                      jdsol(l,k) = jdsol(j,k)
                   end do 
 
                   idsol(j) = xidsol
-                  kdsol(j,1) = xkdsol
+                  ksol(j,1) = xksol
                   do k = 1, xidsol
                      bsol(j,k) = xb(k)
                      jdsol(j,k) = xjdsol(k)
@@ -1158,7 +1160,7 @@ c                                 the everage composition
       do i = 1, np 
 c                                 initialize
          bnew(i) = 0d0
-         ids = kdsol(i,1)
+         ids = ksol(i,1)
 
          do j = 1, icomp
             cpnew(j,i) = 0d0
@@ -1238,7 +1240,7 @@ c                                 now reform the arrays kdv and b
       do i = 1, np
 
          amt(i) = bnew(i)
-         kkp(i) = kdsol(i,1)
+         kkp(i) = ksol(i,1)
          ids = kkp(i)
 
          do j = 1, icomp
@@ -1277,7 +1279,7 @@ c                                 if auto_refine is on:
       do i = 1, ncpd
 
          k = np + i
-         l = kdsol(ntot,i)
+         l = ksol(ntot,i)
          amt(k) = bsol(ntot,i)
          kkp(k) = l
 c                                for the sake of completeness load
@@ -1689,7 +1691,7 @@ c----------------------------------------------------------------------
       include 'perplex_parameters.h'
 
       integer jphct, i, j, k, is(*), idsol(k5), kdv(h9), nsol, ids,
-     *        mpt, iam, id, jdsol(k5,k5), kdsol(k5), max
+     *        mpt, iam, id, jdsol(k5,k5), ksol(k5), max
 
       external ffirst, degen 
 
@@ -1776,8 +1778,8 @@ c                                 a pseudocompound
                   do j = 1, nsol
 
                      if (ids.ne.idsol(j)) cycle 
-                     kdsol(j) = kdsol(j) + 1
-                     jdsol(kdsol(j),j) = id
+                     ksol(j) = ksol(j) + 1
+                     jdsol(ksol(j),j) = id
                      news = .false.
                      exit 
 
@@ -1788,7 +1790,7 @@ c                                 new phase, add to list
                      nsol = nsol + 1
                      idsol(nsol) = ids
                      jdsol(1,nsol) = id
-                     kdsol(nsol) = 1
+                     ksol(nsol) = 1
 
                   end if
 
@@ -1857,7 +1859,7 @@ c                                it's already stable, only accept
 c                                it if its further than the solvus
 c                                tolerance from any of the stable
 c                                compositions.
-                  do k = 1, kdsol(j)
+                  do k = 1, ksol(j)
                      if (.not.solvus(jdsol(k,j)-jiinc,i,iam)) goto 20
                   end do
 

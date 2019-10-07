@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.8.8, source updated Sep 29, 2019.',
+     *      'Perple_X version 6.8.8, source updated Oct 3, 2019.',
 
      *      'Copyright (C) 1986-2019 James A D Connolly '//
      *      '<www.perplex.ethz.ch/copyright.html>.'
@@ -151,7 +151,7 @@ c                                 for nag)
          r1 = r1/2d0
       end do 
 
-      if (r2.eq.0d0) call error (77,r1,i,
+      if (r2.eq.0d0) call error (72,r1,i,
      *                         'starting precision for r1 < zero')
 
 
@@ -710,7 +710,7 @@ c                                 initial_resolution key
             read (strg1,'(40a)') chars(1:40)
             ibeg = 1
             call readfr (nopt(13),ibeg,iend,40,ier)
-            if (ier.ne.0) call error (77,nopt(1),iopt(1),key//
+            if (ier.ne.0) call error (72,nopt(1),iopt(1),key//
      *                                 'has an invalid value.')
 c                                  686 read second value as arf value
             ibeg = iend + 1
@@ -719,7 +719,7 @@ c                                  686 read second value as arf value
 c                                  special backward compatibility msg
                write (*,1010) opname
                call errpau
-c               call error (77,nopt(1),iopt(1),key//
+c               call error (72,nopt(1),iopt(1),key//
 c     *                               'has an invalid or missing value.')
             end if 
             nopt(17) = nopt(13)/nopt(17)
@@ -730,7 +730,7 @@ c     *                               'has an invalid or missing value.')
 c                                 final_resolution keys 
             read (strg,*) rid(2,1)
             read (nval1,*,iostat=ier) rid(2,2)
-            if (ier.ne.0) call error (77,r1,i,'the final_resolution '//
+            if (ier.ne.0) call error (72,r1,i,'the final_resolution '//
      *                               'option requires two values')
 
          else if (key.eq.'fd_expansion_factor') then 
@@ -830,7 +830,7 @@ c                                 number of x nodes at level 1 before autorefine
 c                                 number of x nodes for autorefine
             read (nval1,*,iostat=ier) grid(1,2)
 
-            if (ier.ne.0) call error (77,r1,i,'the x_nodes option '//
+            if (ier.ne.0) call error (72,r1,i,'the x_nodes option '//
      *                               'requires two values')
 
          else if (key.eq.'y_nodes') then
@@ -839,7 +839,7 @@ c                                 number of y nodes at level 1
 c                                 number of y nodes for autorefine
             read (nval1,*,iostat=ier) grid(2,2)
 
-            if (ier.ne.0) call error (77,r1,i,'the y_nodes option '//
+            if (ier.ne.0) call error (72,r1,i,'the y_nodes option '//
      *                               'requires two values')
 
          else if (key.eq.'grid_levels') then 
@@ -848,7 +848,7 @@ c                                 number of grid levels before autorefine
 c                                 number of grid levels for autorefine
             read (nval1,*,iostat=ier) grid(3,2)
 
-            if (ier.ne.0) call error (77,r1,i,'the grid_levels option'//
+            if (ier.ne.0) call error (72,r1,i,'the grid_levels option'//
      *                               ' requires two values')
 
          else if (key.eq.'1d_path') then 
@@ -857,7 +857,7 @@ c                                 number of grid points for 1d path before autor
 c                                 number of grid points for 1d path for autorefine
             read (nval1,*,iostat=ier) grid(4,2)
 
-            if (ier.ne.0) call error (77,r1,i,'the 1d_path option '//
+            if (ier.ne.0) call error (72,r1,i,'the 1d_path option '//
      *                               'requires two values')
 
          else if (key.eq.'variance') then 
@@ -866,7 +866,7 @@ c                                 max variance of traced equilibria before autor
 c                                 max variance of traced equilibria for autorefine
             read (nval1,*,iostat=ier) grid(5,2)
 
-            if (ier.ne.0) call error (77,r1,i,'the variance option '//
+            if (ier.ne.0) call error (72,r1,i,'the variance option '//
      *                               'requires two values')
 
          else if (key.eq.'increment') then 
@@ -875,7 +875,7 @@ c                                 default exploratory relative increment
 c                                 default autorefine relative increment
             read (nval1,*,iostat=ier) rid(1,2)
 
-            if (ier.ne.0) call error (77,r1,i,'the increment option '//
+            if (ier.ne.0) call error (72,r1,i,'the increment option '//
      *                               'requires two values')
 
          else if (key.eq.'reaction_format') then 
@@ -1068,7 +1068,7 @@ c                                 reserved values for debugging, etc
             read (strg,*) nopt(30) 
          else if (key.ne.'|') then
 
-            call error (77,nopt(1),iopt(1),key//' is not a valid Perpl'
+            call error (72,nopt(1),iopt(1),key//' is not a valid Perpl'
      *                 //'e_X option file keyword and must be deleted '
      *                 //'or corrected.')
 
@@ -2225,10 +2225,9 @@ c---------------------------------------------------------------------
       else if (ier.eq.58) then 
          write (*,58)
          write (*,412)
+         write (*,581)
          write (*,413)
          write (*,580) char
-      else if (ier.eq.59) then 
-         write (*,59) k20, char
       else if (ier.eq.60) then 
          write (*,60) k22, char
       else if (ier.eq.61) then 
@@ -2259,8 +2258,6 @@ c---------------------------------------------------------------------
          write (*,75) char
       else if (ier.eq.76) then 
          write (*,76) char, char, char
-      else if (ier.eq.77) then 
-         write (*,77) char
       else if (ier.eq.78) then 
          write (*,78) char,char
       else if (ier.eq.89) then
@@ -2431,8 +2428,8 @@ c                                 accordingly:
 40    format (/,'**error ver040** too many compositional coordinates, ',
      *        'increase dimension k13 (',i7,')  Routine: ',a)
 41    format (/,'**error ver041** too many static compositions this '
-     *          'error can be',/,'eliminated by one of the ',
-     *        /,'following actions (best listed first):',/)
+     *          'error can be',/,'eliminated by one of the '\\
+     *          'following actions (best listed first):',/)
 410   format (2x,'- increase the exploratory stage initial_resolution',
      *           ' in perplex_option.dat',/,
      *        2x,'- restrict the compositional ranges of the solution ',
@@ -2500,8 +2497,8 @@ c                                 accordingly:
      *          'following actions (best listed first):',/)
 580   format (2x,'- increase parameter ',a,' and recompile ',
      *           'Perple_X')
-59    format (/,'**error ver059** too many coordinates generated by ',
-     *        'refinement, increase dimension k20 (',i8,') routine: ',a)
+581   format (2x,'- set the low_reach flag for high-dimension ',
+     *           'solution models in solution_model.dat')
 60    format (/,'**error ver060** too many coordinates generated by ',
      *        'refinement, increase dimension k22 (',i8,') routine: ',a)
 61    format (/,'**error ver061** too many solution coordinates, ',
@@ -2544,7 +2541,6 @@ c                                 accordingly:
      *        a,' has a logically inconsistent ordering scheme.',/,
      *        'To correct this error exclude either more or fewer ',a,
      *        'endmembers.',/)
-77    format (/,'**error ver077** ',a,/)
 78    format (/,'**error ver078** ',a,' has dependent endmembers with ',
      *        'invalid site populations',/,'it cannot be used unless ',
      *        'it is corrected or the site_check_override keyword is',/,
@@ -3832,7 +3828,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer lun, ier, iscan, iscnlt, i, j, ibeg, iend, ic2p(k4)
+      integer lun, ier, iscan, iscnlt, i, j, ibeg, iend, ic2p(k4), jkind
 
       character key*22, values*80, strg*80
 
@@ -3892,8 +3888,10 @@ c                                 flag for mock-lambda transitions
       ilam = 0 
 c                                 counter of mock-lambda transitions
       jlam = 0 
-c                                 flag for shear moduli
-      ikind = 0 
+c                                 flag for bulk + shear moduli
+      ikind = 0
+c                                 flag for just shear
+      jkind = 0
 c                                 hsc conversion 
       hsc(k10) = .false.
 c                                 standard thermo parameters
@@ -4043,12 +4041,17 @@ c                                 convert HSC G0 to SUP G0
 c                                 =====================================
 c                                 shear mod data 
             do i = 1, 6
+
                if (key.eq.mstrg(i)) then 
 c                                 set shear/bulk mod flag
-                  if (ikind.eq.0.and.i.lt.4) then
+                  if (i.lt.4) then
+c                                 shear
                      ikind = 1
+
                   else if (i.gt.3) then 
-                     ikind = 2
+c                                 bulk
+                     jkind = 1
+
                   end if 
                   
                   read (values,*,iostat=ier) emodu(i)
@@ -4056,7 +4059,13 @@ c                                 set shear/bulk mod flag
                   ok = .true.
                   exit 
                end if 
-            end do 
+            end do
+c                                 ikind = 0, no explicit moduli
+c                                 ikind = 1 and jkind = 0 set ikind = 1 => just shear
+c                                 ikind = 1 and jkind = 1 set ikind = 2 => both
+c                                 ikind = 0 and jkind = 1 set ikind = 3 => just bulk
+            ikind = ikind + jkind
+            if (ikind.eq.1.and.jkind.eq.1) ikind = 3
 
             if (ok) cycle
 c                                 =====================================
@@ -4456,7 +4465,7 @@ c                                 HKF aqueous electrolyte data (13 values)
 
       else if (eos(id).eq.12.or.eos(id).eq.14.or.eos(id).eq.17) then 
 
-         call error (77,r,id,'routine OUTDAT is not programmed to '//
+         call error (72,r,id,'routine OUTDAT is not programmed to '//
      *              'output CALPHAD data tags.')
 
       else 
@@ -5417,7 +5426,7 @@ c                                 look for optional HSC_conversion key
 
          else
 
-            call error (77,utol,i,'invalid thermodynamic data file '//
+            call error (72,utol,i,'invalid thermodynamic data file '//
      *                             'keyword '//key)
 
          end if

@@ -5477,7 +5477,7 @@ c----------------------------------------------------------------------
 c                                 -------------------------------------
 c                                 local variables
       integer idsol(k8,k8),jdsol(k8),ids,np,np1,np2,ncpd,idim,
-     *        i,j,kdsol(k8),k,ntot,id(idim)
+     *        i,j,ksol(k8),k,ntot,id(idim)
 
       integer ikp
       common/ cst61 /ikp(k1)
@@ -5543,7 +5543,7 @@ c                                 check for immiscibility
 c                                 how many phases are there of this
 c                                 solution?
                do k = 1, np2
-                  if (.not.solvsc(kdsol(k),idsol(j,i),ids)) then
+                  if (.not.solvsc(ksol(k),idsol(j,i),ids)) then
                      goto 20 
                   else
                      solvs1 = .true.
@@ -5551,7 +5551,7 @@ c                                 solution?
                end do 
 c                                 if here, it's a new phase
                np2 = np2 + 1
-               kdsol(np2) = idsol(j,i)
+               ksol(np2) = idsol(j,i)
                
 20          continue
              

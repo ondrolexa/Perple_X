@@ -125,16 +125,11 @@ c-----------------------------------------------------------------------
       character cmpnt*5, dname*80
       common/ csta5 /cl(k0),cmpnt(k0),dname
 
-      logical stck, norf
-      integer iend,isub,insp,iterm,iord,istot,jstot,kstot,rkord,xtyp
-      double precision wg,wk,reach
-      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),reach,iend(m4),
+      integer iend,isub,insp,iterm,iord,istot,jstot,kstot,rkord
+      double precision wg,wk
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),iend(m4),
      *      isub(m1,m2),insp(m4),
-     *      rkord(m18),iterm,iord,istot,jstot,kstot,xtyp,stck,norf
-
-      integer jsmod
-      double precision vlaar
-      common/ cst221 /vlaar(m3,m4),jsmod
+     *      rkord(m18),iterm,iord,istot,jstot,kstot
 
       integer ipot,jv,iv
       common/ cst24 /ipot,jv(l2),iv(l2)
