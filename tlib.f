@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.8.8, source updated Oct 3, 2019.',
+     *      'Perple_X version 6.8.8, source updated Oct 8, 2019.',
 
      *      'Copyright (C) 1986-2019 James A D Connolly '//
      *      '<www.perplex.ethz.ch/copyright.html>.'
@@ -48,11 +48,15 @@ c----------------------------------------------------------------------
 
       character*3 new
 
-      if (new.eq.'008'.or.new.eq.'011'.or.new.eq.'670'.or.
-     *    new.eq.'672'.or.new.eq.'673'.or.new.eq.'674'.or.
-     *    new.eq.'675'.or.new.eq.'676'.or.new.eq.'678'.or.
-     *    new.eq.'679'.or.new.eq.'682'.or.new.eq.'683'.or.
-     *    new.eq.'685'.or.new.eq.'687'.or.new.eq.'688') then 
+      if (new.eq.'682'.or.new.eq.'683'.or.
+     *    new.eq.'685'.or.new.eq.'687') then
+
+         call error (2,0d0,0,new)
+
+      else if (new.eq.'008'.or.new.eq.'011'.or.new.eq.'670'.or.
+     *         new.eq.'672'.or.new.eq.'673'.or.new.eq.'674'.or.
+     *         new.eq.'675'.or.new.eq.'676'.or.new.eq.'678'.or.
+     *         new.eq.'679'.or.new.eq.'688') then 
 
          chksol = .true.
 
@@ -172,35 +176,182 @@ c                                 solution composition zero and one
       one = 1d0 - r2
 c                                 -------------------------------------
 c                                 default option values:
+c                                 reserved for temporary use:
       do i = 28, 30
          nopt(i) = 1d0
          lopt(i) = .false.
          iopt(i) = 0
       end do 
+c                                 -------------------------------------
+c                                 minimum replicate label distance
+      nopt(4) = 0.025
+c                                 speciation_factor
+      nopt(5) = 1d2
+c                                 vrh_weighting keyword
+      nopt(6) = 0.5d0
+c                                 bad_number keyword
+      nopt(7) = dnan()
+c                                 zero_mode (<0 off)
+      nopt(9) = 1d-6
+c                                 set zero threshold for fractionation calculations
+      if (icopt.eq.7.or.icopt.eq.9.or.icopt.eq.12) nopt(9) = zero
+c                                 tolerance below which a component is considered to 
+c                                 be zero during fractionation
+      nopt(11) = 1d-6
+c                                 quench temperature (K)
+      nopt(12) = 0d0
+c                                 initial resolution for adaptive 
+c                                 refinement
+      nopt(13) = 1d0/16d0
+c                                 solvus_tolerance
+      nopt(8) = 1.5*nopt(13)
+c                                 solvus_tolerance_II
+      nopt(25) = nopt(13)
+c                                 compositional resolution for conformal
+c                                 subdivision
+      nopt(14) = 2d-3
+c                                 perturbation to eliminate pseudocompound
+c                                 degeneracies
+      nopt(15) = 5d-3
+c                                 poisson ratio to be use for calculating
+c                                 missing shear moduli, see iopt(15)
+      nopt(16) = 0.35d0
+c                                 increase in resolution for adaptive minimization 
+      nopt(17) = 3d0
+c                                 increase in resolution for composition and mixed variable diagram calculations
+      nopt(18) = 1d1
+c                                 increase in resolution for Schreinemakers diagram calculations   
+      nopt(19) = 3d0 
+c                                 T_melt cutoff 
+      nopt(20) = 873d0
+c                                 iteration keyword 1
+      nopt(21) = 2d0
+c                                 global reach factor
+      nopt(23) = 0d0
+c                                 finite_difference_p threshold for finite difference estimates
+      nopt(26) = 1d4
+c                                 finite_difference_p fraction for first order difference estimates
+      nopt(27) = 1d-3
+c                                 fd_expansion_factor is the factor by which finite difference
+c                                 increments increase for higher order derivatives
+      nopt(31) = 2d0
+c                                 fractionation_lower_threshold
+      nopt(32) = 0d0
+c                                 fractionation_upper_threshold
+      nopt(33) = 0d0
+c                                 aq_vapor_epsilon
+      nopt(34) = 1d0
+c                                 -------------------------------------
+c                                 composition_phase
+      iopt(2) = 0 
+      valu(2) = 'mol'
+c                                 porportions
+      iopt(3) = 0 
+      valu(3) = 'vol'
+c                                 interpolation keyword
+      iopt(4) = 2
+      valu(4) = 'on '
+c                                 autorefine, 2 - automatic, 1 - manual, 0 - no
+      iopt(6) = 2
+      valu(6) = 'aut'
+c                                 subdivision model, 0 - solution model
+c                                 1 - cartesian, 2 - stretch
+      iopt(13) = 0 
+      valu(13)  = 'off'
+c                                 poisson ratio switch fpr calculating
+c                                 missing shear moduli
+      iopt(16) = 1
+      valu(15) = 'on '
+c                                 compare local and max disorder state for o-d models
+      iopt(17) = 1
+      valu(17) = 'on '
+c                                 assume linear boundaries within a cell during gridded minimization
+      iopt(18) = 1
+      valu(18) = 'on '
+c                                 seismic data output for WERAMI/MEEMUM, 0 - none, 1 - some, 2 - all
+      iopt(14) = 1
+      valu(14) = 'som'
+c                                 reach_increment_switch 0 - off, 1 - on (for auto-refine), 2 - all
+      iopt(20) = 1 
+      valu(20) = 'on'
+c                                 conditional for MEEMUM
+      if (iam.eq.2) then 
+         valu(20) = 'all'
+         iopt(20) = 2
+      end if 
+c                                 speciation_max_it - for speciation calculations
+      iopt(21) = 100
+c                                 aq_bad_results 
+c                                       0 - err - treat as bad result (optimization error)
+c                                       1 - 101 - cease iteration at solute component saturation
+c                                       2 - 102
+c                                       3 - 103
+c                                      99 - ign - ignore 102/103 conditions and cease as in 101.
+      iopt(22) = 0
+      valu(5) = 'err'
+c                                 for infiltration/fractionation calculations set default to 101
+      if (icopt.gt.6) then 
+         iopt(22) = 1
+         valu(5) = '101'
+      end if 
+c                                 solution_names 0 - model, 1 - abbreviation, 2 - full
+      iopt(24) = 0
+      valu(22) = 'mod'
+c                                 hyb_h2o - eos to be used for pure h2o, 0-2, 4-5, 6-7
+      iopt(25) = 4
+c                                 hyb_co2 - eos to be used for pure co2, 0-4, 6-7
+      iopt(26) = 4
+c                                 hyb_ch4 - eos to be used for pure ch4, 0-1, 6-7
+      iopt(27) = 0
+
+c     iopt(28-30)                 reserved as debug options iop_28 - iop_30
+
+c                                 refinement_points_II renamed refinement_points
+      iopt(31) = 5
+c                                 maximum number of aqueous species
+      iopt(32) = 20
+c                                 aq_lagged_iterations
+      iopt(33) = 0
+c                                 interim_results, 1 - auto, 0 - off, 2 - man
+      iopt(34) = 1
+      valu(34) = 'aut'
+c                                 -------------------------------------
 c                                 closed or open compositional space
       lopt(1) = .true.
+c                                 lopt(2) set by WERAMI
+c     lopt(2)
+c                                 hard_limits for solution model refinement
+      lopt(3) = .false.
+      valu(16) = 'off'
 c                                 Anderson-Gruneisen correction
       lopt(4) = .false.
 c                                 auto_exclude 
       lopt(5) = .true.
 c                                 melt_is_fluid
       lopt(6) = .false.
+c                                 set locally
+c     lopt(7) 
 c                                 approx_alpha
       lopt(8) = .true.
 c                                 automatic solvus tolerance
       lopt(9) = .true.
-c                                 automatic solvus_tolerance_II
-      lopt(13) = .true.
 c                                 pseudocompound_file
       lopt(10) = .false.
 c                                 auto_refine_file
       lopt(11) = .true.
 c                                 option_list_files
       lopt(12) = .false.
+c                                 automatic solvus_tolerance_II
+      lopt(13) = .true.
 c                                 logarithimic P
       lopt(14) = .false.
 c                                 spreadsheet format
       lopt(15) = .true.
+c                                 averaging scheme
+      lopt(16) = .true.
+      valu(19) = 'VRH'
+c                                 use explicit bulk modulus when available
+      lopt(17) = .true.
 c                                 refine_bad_nodes -> not used
       lopt(18) = .true. 
 c                                 pause_on_error
@@ -216,136 +367,6 @@ c                                 composition_system (true = wt)
       valu(21) = 'wt '
 c                                 output endmember gibbs energies (werami/meemum)
       lopt(24) = .false. 
-c                                 minimum replicate label distance
-      nopt(4) = 0.025
-c                                 speciation_factor
-      nopt(5) = 1d2
-c                                 composition_phase
-      iopt(2) = 0 
-      valu(2) = 'mol'
-c                                 porportions
-      iopt(3) = 0 
-      valu(3) = 'vol'
-c                                 interpolation keyword
-      iopt(4) = 2
-      valu(4) = 'on '
-c                                 vrh_weighting keyword
-      nopt(6) = 0.5d0
-c                                 bad_number keyword
-      nopt(7) = dnan()
-c                                 zero_mode (<0 off)
-      nopt(9) = 1d-6
-c                                 set zero threshold for fractionation calculations
-      if (icopt.eq.7.or.icopt.eq.9.or.icopt.eq.12) nopt(9) = zero
-c                                 tolerance below which a component is considered to 
-c                                 be zero during fractionation
-      nopt(11) = 1d-6
-c                                 iteration keyword 1
-      nopt(21) = 2d0
-c                                 final resolution, auto-refine stage
-      rid(2,2) = 1d-3
-c                                 final resolution, exploratory stage
-      rid(2,1) = 1d-2
-c                                 if meemum set auto-refine vale
-      if (iam.eq.2) rid(2,1) = rid(2,2)
-c                                 global reach factor
-      nopt(23) = 0d0
-c                                 finite_difference_p threshold for finite difference estimates
-      nopt(26) = 1d4
-c                                 finite_difference_p fraction for first order difference estimates
-      nopt(27) = 1d-3 
-c                                 fd_expansion_factor is the factor by which finite difference
-c                                 increments increase for higher order derivatives
-      nopt(31) = 2d0
-c                                 quench temperature (K)
-      nopt(12) = 0d0
-c                                 initial resolution for adaptive 
-c                                 refinement
-      nopt(13) = 1d0/16d0
-c                                 solvus_tolerance
-      nopt(8) = 1.5*nopt(13)
-c                                 solvus_tolerance_II
-      nopt(25) = nopt(13)
-c                                 perturbation to eliminate pseudocompound
-c                                 degeneracies
-      nopt(15) = 5d-3
-c                                 poisson ratio to be use for calculating
-c                                 missing shear moduli
-      valu(15) = 'on '
-      nopt(16) = 0.35d0
-      iopt(16) = 1
-c                                 compositional resolution for conformal
-c                                 subdivision
-      nopt(14) = 2d-3
-c                                 subdivision model, 0 - solution model
-c                                 1 - cartesian, 2 - stretch
-      iopt(13) = 0 
-      valu(13)  = 'off'
-c                                 autorefine, 2 - automatic, 1 - manual, 0 - no
-      iopt(6) = 2
-      valu(6) = 'aut'
-c                                 increase in resolution for adaptive minimization 
-      nopt(17) = 3d0 
-c                                 increase in resolution for composition and mixed variable diagram calculations
-      nopt(18) = 1d1
-c                                 increase in resolution for Schreinemakers diagram calculations   
-      nopt(19) = 3d0 
-c                                 T_melt cutoff 
-      nopt(20) = 873d0
-c                                 fractionation_lower_threshold
-      nopt(32) = 0d0
-c                                 fractionation_upper_threshold
-      nopt(33) = 0d0
-c                                 aq_vapor_epsilon
-      nopt(34) = 1d0
-c                                 hard_limits for solution model refinement
-      valu(16) = 'off'
-      lopt(3) = .false.
-c                                 compare local and max disorder state for o-d models
-      valu(17) = 'on '
-      iopt(17) = 1
-c                                 assume linear boundaries within a cell during gridded minimization
-      valu(18) = 'on '
-      iopt(18) = 1
-c                                 averaging scheme
-      valu(19) = 'VRH'
-      lopt(16) = .true.
-c                                 use explicit bulk modulus when available
-      lopt(17) = .true.
-c                                 seismic data output for WERAMI/MEEMUM, 0 - none, 1 - some, 2 - all
-      iopt(14) = 1
-      valu(14) = 'som'
-c                                 reach_increment_switch 0 - off, 1 - on (for auto-refine), 2 - all
-      iopt(20) = 1 
-      valu(20) = 'on'
-c                                 conditional for MEEMUM
-      if (iam.eq.2) then 
-         valu(20) = 'all'
-         iopt(20) = 2
-      end if 
-c                                 speciation_max_it - for speciation calculations
-      iopt(21) = 100
-c                                 solution_names 0 - model, 1 - abbreviation, 2 - full
-      iopt(24) = 0
-      valu(22) = 'mod'
-c                                 hyb_h2o - eos to be used for pure h2o, 0-2, 4-5, 6-7
-      iopt(25) = 4
-c                                 hyb_co2 - eos to be used for pure co2, 0-4, 6-7
-      iopt(26) = 4
-c                                 hyb_ch4 - eos to be used for pure ch4, 0-1, 6-7
-      iopt(27) = 0
-c                                 
-c     iopt(28-30)                 reserved as debug options iop_28 - iop_30
-
-c                                 refinement_points_II renamed refinement_points
-      iopt(31) = 5
-c                                 maximum number of aqueous species
-      iopt(32) = 20
-c                                 aq_lagged_iterations
-      iopt(33) = 0
-c                                 interim_results, 1 - auto, 0 - off, 2 - man
-      iopt(34) = 1
-      valu(34) = 'aut'
 c                                 aq_output output back-calculated solute speciation
       lopt(25) = .true.
 c                                 aq_solvent_composition (true = molar)
@@ -354,6 +375,8 @@ c                                 aq_solvent_composition (true = molar)
 c                                 aq_solute_composition (true = molal)
       lopt(27) = .true.
       valu(27) = 'm'
+c                                 lop_28, lop_29, lop_30 temporary options
+c     lopt(28-30)
 c                                 warning_ver637, werami interpolation
       lopt(31) = .true.
 c                                 aq_lagged_speciation
@@ -370,19 +393,6 @@ c                                 allow null phases
       lopt(37) = .false.
 c                                 non_linear_switch
       lopt(38) = .false.
-c                                 aq_bad_results 
-c                                       0 - err - treat as bad result (optimization error)
-c                                       1 - 101 - cease iteration at solute component saturation
-c                                       2 - 102
-c                                       3 - 103
-c                                      99 - ign - ignore 102/103 conditions and cease as in 101.
-      iopt(22) = 0
-      valu(5) = 'err'
-c                                 for infiltration/fractionation calculations set default to 101
-      if (icopt.gt.6) then 
-         iopt(22) = 1
-         valu(5) = '101'
-      end if 
 c                                 refine_endmembers
       lopt(39) = .false.
 c                                 automatic specification of refinement_points_II
@@ -400,7 +410,15 @@ c                                 fancy_cumulative_modes
 c                                 aq_solvent_solvus
       lopt(46) = .true.
 c                                 sample_on_grid 
-      lopt(48) = .true. 
+      lopt(48) = .true.
+c                                 refinement_switch
+      lopt(49) = .true.
+c                                 final resolution, auto-refine stage
+      rid(2,2) = 1d-3
+c                                 final resolution, exploratory stage
+      rid(2,1) = 1d-2
+c                                 if meemum set auto-refine vale
+      if (iam.eq.2) rid(2,1) = rid(2,2)
 c                                 initialize mus flag lagged speciation
       mus = .false.
 c                                 -------------------------------------
@@ -765,7 +783,11 @@ c                                 refinement points
             if (val.ne.'aut') then 
                read (strg,*) iopt(31)
                lopt(40) = .false.
-            end if 
+            end if
+
+         else if (key.eq.'refinement_switch') then
+ 
+            if (val.ne.'T') lopt(49) = .false. 
 
          else if (key.eq.'max_aq_species_out') then 
 c                                 max number of aq species output for
@@ -1430,12 +1452,11 @@ c                                 non-adaptive calculations
 c                                 reaction format and lists
             if (icopt.gt.0) write (n,1160) grid(5,1),grid(5,2),rid(1,1),
      *                    rid(1,2),isec,valu(7),valu(9),valu(8),valu(10)
-
          else 
 c                                 adaptive optimization
             write (n,1180) rid(2,1),rid(2,2),int(nopt(21)),
-     *                     iopt(31),k5,nval2,int(nopt(23)),valu(20),
-     *                     nopt(9)
+     *                     iopt(31),k5,lopt(49),nval2,
+     *                     int(nopt(23)),valu(20),nopt(9)
 c                                 gridding parameters
             if (iam.eq.1.and.icopt.eq.5.and.oned) then
 c                                 1d multilevel grid
@@ -1637,7 +1658,8 @@ c                                 thermo options for frendly
      *        4x,'resolution_factor      ',i2,9x,'>= 2 [2]',/,
      *        4x,'refinement_points       ',i2,8x,'[aut] or 1->',i2,
      *           '; aut = automatic',/,
-     *        4x,'solvus_tolerance_II     ',a7,4x,'0->1 [0.2]',/,
+     *        4x,'refinement_switch       ',l1,9x,'[T] F',/,
+     *        4x,'solvus_tolerance_II     ',a7,3x,'0->1 [0.2]',/,
      *        4x,'global_reach_increment ',i2,9x,'>= 0 [0]',/,
      *        4x,'reach_increment_switch  ',a3,7x,'[on] off all',/,
      *        4x,'zero_mode               ',e7.1E2,3x,
@@ -2344,6 +2366,10 @@ c                                 accordingly:
 
 1     format (/,'**error ver001** increase parameter ',a,' to ',i7,' in'
      *       ,' perplex_parameters.h and recompile Perple_X',/)
+2     format (/,'**error ver002** solution model file versions ',
+     *         '6.8.2-6.8.7 are inconsistent with',/,
+     *         'this version of Perple_X. Update the solution ',
+     *         'file.',/)
 3     format (/,'**error ver003** the solution model file format ',
      *         'is inconsistent with',/,
      *         'this version of Perple_X. Update the file and/or ',
@@ -4057,15 +4083,12 @@ c                                 bulk
                   read (values,*,iostat=ier) emodu(i)
                   if (ier.ne.0) call error (23,tot,ier,strg) 
                   ok = .true.
-                  exit 
-               end if 
+
+                  exit
+
+               end if
+
             end do
-c                                 ikind = 0, no explicit moduli
-c                                 ikind = 1 and jkind = 0 set ikind = 1 => just shear
-c                                 ikind = 1 and jkind = 1 set ikind = 2 => both
-c                                 ikind = 0 and jkind = 1 set ikind = 3 => just bulk
-            ikind = ikind + jkind
-            if (ikind.eq.1.and.jkind.eq.1) ikind = 3
 
             if (ok) cycle
 c                                 =====================================
@@ -4100,6 +4123,13 @@ c                                 mock-lambda transition data
          end do
 
       end do
+c                                 reset ikind flag:
+c                                 ikind = 0, no explicit moduli
+c                                 ikind = 1 and jkind = 0 set ikind = 1 => just shear
+c                                 ikind = 1 and jkind = 1 set ikind = 2 => both
+c                                 ikind = 0 and jkind = 1 set ikind = 3 => just bulk
+      ikind = ikind + jkind
+      if (ikind.eq.1.and.jkind.eq.1) ikind = 3
 
       end
 

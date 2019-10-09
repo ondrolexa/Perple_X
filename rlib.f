@@ -1983,6 +1983,7 @@ c                               bulk and shear modulus
 c                               if ikind = 0, no explicit moduli
 c                                        = 1, just shear
 c                                        = 2, shear and bulk
+c                                        = 3, both
       iemod(id) = ikind
 
       ikp(id) = 0
@@ -3426,7 +3427,7 @@ c                              read dqf data:
 
          else if (key.eq.'low_reach') then
 
-            lowrch = .false.
+            lowrch = .true.
 
          else if (key.eq.'begin_flagged_endmembe') then
 
@@ -7610,7 +7611,24 @@ c                                 model type
 c----------------------------------------------------------------------
       gg = 0d0
 
-      if (ksmod(id).eq.2) then
+      if (special(id)) then
+c                                 special is reserved for special models 
+c                                 that set standard flags (lorder and/or lrecip)
+         if (ksmod(id).ge.30.and.ksmod(id).le.31) then
+c                                 -------------------------------------
+c                                 Nastia's version of BCC/FCC Fe-Si-C Lacaze and Sundman
+            gg =  gfesic (y(1),y(3),y(4),
+     *                    g(jend(id,3)),g(jend(id,4)),
+     *                    g(jend(id,5)),g(jend(id,6)),ksmod(id))
+
+         else
+
+            write (*,*) 'what the **** am i doing here?'
+            call errpau
+
+         end if 
+
+      else if (simple(id)) then
 c                                 -------------------------------------
 c                                 macroscopic formulation for normal solutions.
          call gdqf (id,gg,y)
@@ -7620,15 +7638,6 @@ c                                 get mechanical mixture contribution
          do k = 1, mstot(id)
             gg = gg + y(k) * g(jend(id,2+k))
          end do
-
-      else if (ksmod(id).ge.30.and.ksmod(id).le.31) then
-c                                 -------------------------------------
-c                                 Nastia's version of BCC/FCC Fe-Si-C Lacaze and Sundman
-c                                 this model has to be called ahead of the standard models
-c                                 because it sets lrecip(id) = true.
-         gg =  gfesic (y(1),y(3),y(4),
-     *                 g(jend(id,3)),g(jend(id,4)),
-     *                 g(jend(id,5)),g(jend(id,6)),ksmod(id))
 
       else if (lorder(id)) then
 c                                 get the speciation, excess and entropy effects.
@@ -7705,7 +7714,6 @@ c                                 sum pure species g's
          end do
 c                                 compute and add in activities
          gg = gg + ghybrid (y)
-
 
       else if (ksmod(id).eq.41) then
 c                                 hybrid MRK ternary COH fluid
@@ -9497,8 +9505,14 @@ c                                 endmember identified as "fluid"
 c
          jend(im,2+i) = id
 c                                 set shear/bulk moduli flags
-         if (iemod(id).eq.0) smod(im) = .false.
-         if (iemod(id).lt.2) pmod(im) = .false.
+         if (iemod(id).eq.0) then 
+            smod(im) = .false.
+            pmod(im) = .false.
+         else if (iemod(id).eq.1) then 
+            pmod(im) = .false.
+         else if (iemod(id).eq.3) then 
+            smod(im) = .false.
+         end if
 c                                 look for endmembers to be killed
          if (iend(insp(i)).ne.2) cycle
 
@@ -16892,8 +16906,8 @@ c                                  polytope
                do j = 1, istg(i,ii)
 
                   if (ispg(i,ii,j).eq.1) then
-                     write (lun,'(a)') 
-     *               '  Polytope '//poname(i,ii)//' is 0-dimensional'
+                     write (lun,'(/,a)') 
+     *               ' Polytope '//poname(i,ii)//' is 0-dimensional'
                      cycle
                   end if 
 
@@ -16908,8 +16922,8 @@ c                                  polytope
             else
 c                                  simplex
                if (ispg(i,ii,1).eq.1) then
-                  write (lun,'(a)') 
-     *               '  Polytope '//poname(i,ii)//' is 0-dimensional'
+                  write (lun,'(/,a)')
+     *               ' Polytope '//poname(i,ii)//' is 0-dimensional'
                   cycle
                end if
 
@@ -23128,7 +23142,9 @@ c                                 for normalized composition:
             ctot(iphct) = tot
 c                                 store thermodynamic parameters:
             call loadit (iphct,.false.,.true.)
-         end if 
+
+         end if
+
       end do 
 c                                 -------------------------------------
 c                                 made entities (as opposed to the required
@@ -23306,16 +23322,35 @@ c                                really? then why was it reset here?
 
       do i = 1, nmak
 c                                make an iemod flag for made
-c                                endmembers:   
+c                                endmembers:
+         pmod(h9) = .true.
+         smod(h9) = .true.
+
          do j = 1, mknum(i)
-            if (iemod(mkind(i,j)).eq.0) exit 
+
+            if (iemod(mkind(i,j)).eq.0) then 
+               pmod(h9) = .false.
+               smod(h9) = .false.
+               exit
+            else if (iemod(mkind(i,j)).eq.1) then
+               pmod(h9) = .false.
+            else if (iemod(mkind(i,j)).eq.3) then
+               smod(h9) = .false.
+            end if 
+
          end do 
 
-         if (j.le.mknum(i)) cycle
+         if (pmod(h9).and.smod(h9)) then 
+            iemod(imak(i)) = 2
+         else if (pmod(h9)) then 
+            iemod(imak(i)) = 3
+         else if (smod(h9)) then 
+            iemod(imak(i)) = 1
+         else 
+            iemod(imak(i)) = 0
+         end if
 
-         iemod(imak(i)) = iemod(mkind(i,1))
-
-      end do 
+      end do
 
 1000  format ('**error ver007** at least one of the reference ',
      *        'endmembers:',/,5(a,1x))

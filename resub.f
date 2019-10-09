@@ -815,6 +815,10 @@ c                                 for final adaptive solution
       integer kkp,np,ncpd,ntot
       double precision cp3,amt
       common/ cxt15 /cp3(k0,k19),amt(k19),kkp(k19),np,ncpd,ntot
+
+      integer npt,jdv
+      double precision cptot,ctotal
+      common/ cst78 /cptot(k19),ctotal,jdv(k19),npt
 c-----------------------------------------------------------------------
       solvs1 = .false.
 
@@ -822,7 +826,8 @@ c-----------------------------------------------------------------------
 
          if (dcp(i,ids).eq.0d0) cycle 
 
-         if (dabs(cp3(i,id1) - cp3(i,id2))/dcp(i,ids).gt.soltol) then 
+         if (dabs(cp3(i,id1)/cptot(id1) - cp3(i,id2)/cptot(id2))
+     *                                    / dcp(i,ids).gt.soltol) then
             solvs1 = .true.
             exit 
          end if 
@@ -2480,8 +2485,8 @@ c                                 from being clogged up with one phase
                cycle
 
             else
-c                                 delete compositionally degenerate refinement points
-               bad = .false. 
+
+               bad = .false.
 
                do j = 1, npt + kpt 
 
@@ -2499,8 +2504,9 @@ c                                 check composition
 
                      if (dabs(cp2(k,jdv(j))-cp2(k,jmin(i))).gt.nopt(5))
      *                                                              then
-c DEBUG DEBUG DEBUG 688
-c                       good = .true.
+c                                 do not allow metastable refinement points of
+c                                 stable solutions (refinement_switch = F)
+                        if (lopt(49)) good = .true.
                         exit
 
                      end if

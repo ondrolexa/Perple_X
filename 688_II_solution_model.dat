@@ -298,6 +298,7 @@ full_name    biotite
  
 2                                  | number of polytopes
 0   .5   .1   0                    | X(1) is [Mn][Mn]
+                                   | X(2) = 1 - X(1) is [M,T][M,MTi]
 
                                    | ----------------------------
                                    | Polytope 1 - 1 simplex
@@ -559,7 +560,7 @@ begin_model
            2 polytope model: A, M1, M2, M4 site populations are indicated, remaining are dependent
 
            Polytope 1 [ ][M][T'][N]         => 2*2 
-           Polytope 2 [A][M][M,T,MT][M,C]  => 2*2*6
+           Polytope 2 [A][M][M,T,MT][M,C]   => 2*2*6
 
           ----------------------------------------------------------------------------------------
 
@@ -647,21 +648,21 @@ cumm       grun                    | M-Ca divalent amphibole
 tr         ftr_d
 
                                    | First (1d) simplex
-.5   .75  .1  0                    | X(1,1) = bulk Mg/M
+.5  .7   .1  0                     | X(1,1) = bulk Mg/M
 
                                    | Second (1d) simplex
-0   .45  .1  0                     | X(2,1) = M/[Ca + M] on M4
+0   .4   .1  0                     | X(2,1) = M/[Ca + M] on M4
 
                                    | Third simplex 
-0    .4 .1  0                      | X(3,1) = X(Al-Ts)
-0    .7  .1  0                     | X(3,2) = X(Na-Al-Parg)
-0    .35 .1  0                     | X(3,3) = X(Na-Fe3+-Parg)
-0    .3  .1  0                     | X(3,4) = X(Na-Ti-Parg)
-0    .1  .1  0                     | X(3,5) = X(K-Al-Parg)
-0    .1  .1  0                     | X(3,6) = X(K-Fe3+-Parg)
-0    .1  .1  0                     | X(3,7) = X(K-Ti-Parg)
-0    .2  .1  0                     | X(3,8) = X(Ti-Ts)
-0    .35 .1  0                     | X(3,9) = X(Fe3-Ts)
+0   .45  .1  0                     | X(3,1) = X(Al-Ts)
+0   .6   .1  0                     | X(3,2) = X(Na-Al-Parg)
+0   .45  .1  0                     | X(3,3) = X(Na-Fe3+-Parg)
+0   .3   .1  0                     | X(3,4) = X(Na-Ti-Parg)
+0   .1   .1  0                     | X(3,5) = X(K-Al-Parg)
+0   .1   .1  0                     | X(3,6) = X(K-Fe3+-Parg)
+0   .1   .1  0                     | X(3,7) = X(K-Ti-Parg)
+0   .15  .1  0                     | X(3,8) = X(Ti-Ts)
+0   .35  .1  0                     | X(3,9) = X(Fe3-Ts)
 
 begin_ordered_endmembers
 
@@ -2120,8 +2121,10 @@ begin_model
                       to use this the following endmembers must be specified with make
                       definitions in the thermodynamic data file
 
-                      odi  = 1 di
-                            DQF = -100 + 0.211 * T + 0.005 * P | NOTE entropy term incorrect in some perplex files?
+                      crdi = 1 cats + 1 kos - 1 jd
+                             DQF(J/mol) = -3d3 
+                      cess = 1 cats + 1 acm - 1 jd
+                            DQF(J/mol) = -6d3 
                       cenjh  = 1 en
                             DQF = 3500 - 2 * T + 0.048 * P
                       cfs  = 1 fs

@@ -1610,12 +1610,6 @@ c                                 shear modulus
      *                   props(4,jd),props(18,jd),props(20,jd),ok)
 
          if (.not.ok.and.iopt(16).eq.0) shear = .false.
-c                                 for explicit moduli, routine moduli will not
-c                                 flag missing shear modulus, use the solution
-c                                 model flag to set shear
-         if (id.gt.0) then 
-            if (.not.smod(id)) shear = .false.
-         end if
 c                                 explicit bulk modulus is allowed and used
          if (lopt(17).and.props(4,jd).gt.0d0) then
             bulk = .false.

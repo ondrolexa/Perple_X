@@ -24,6 +24,7 @@
 
 6) X getpp is redundant with p0dord? y2p0 should be used if a prior call to getscp/csol
    may have changed p0 (as in moduli or getcmp).
+7) 
 
 
 
