@@ -87,9 +87,6 @@ c----------------------------------------------------------------------
       double precision x3, caq
       common/ cxt16 /x3(k5,h4,mst,msp),caq(k5,l10),na1,na2,na3,nat,ld
 
-      integer lstot,mstot,nstot,ndep,nord
-      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
-
       integer jend
       common/ cxt23 /jend(h9,m4)
 
@@ -993,9 +990,6 @@ c-----------------------------------------------------------------------
       include 'perplex_parameters.h'
 
       integer k, id, jd
-c                                 model type
-      logical lorder, lexces, llaar, lrecip
-      common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
 
       integer spct
       double precision ysp
@@ -1014,7 +1008,7 @@ c                                 model type
       common/ cstcoh /yf(nsp),g(nsp),v(nsp)
 c----------------------------------------------------------------------
 
-      if ((lrecip(id).and.lorder(id)).or.lorder(id)) then 
+      if (lorder(id)) then 
 
          do k = 1, spct(id) 
             ysp(k,jd) = pa(k)
@@ -1026,10 +1020,10 @@ c----------------------------------------------------------------------
             ysp(k,jd) = p0a(k)
          end do
 
-      else if (ksmod(id).eq.2.or.ksmod(id).eq.20.or.ksmod(id).ge.24.and.
+      else if (simple(id).or.ksmod(id).eq.20.or.ksmod(id).ge.24.and.
      *         ksmod(id).le.28.or.ksmod(id).eq.39.or.ksmod(id).eq.42) 
      *        then
-c                                 macroscopic formulation for normal solutions (2,3) and
+c                                 macroscopic formulation for normal solutions (2,688) and
 c                                 hp melt model (24)
 c                                 ghiorso melt model (25)
 c                                 andreas salt model (26)
@@ -1095,11 +1089,6 @@ c-----------------------------------------------------------------------
 
       integer make
       common / cst335 /make(k10)
-
-      integer iemod,kmod
-      logical smod,pmod
-      double precision emod
-      common/ cst319 /emod(k15,k10),smod(h9),pmod(h9),iemod(k10),kmod
 
       integer eos
       common/ cst303 /eos(k10)
@@ -1237,20 +1226,9 @@ c-----------------------------------------------------------------------
       logical ok, liq
 
       external endvol
-c                                 bookkeeping variables
-      integer lstot,mstot,nstot,ndep,nord
-      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
 
       integer jend
       common/ cxt23 /jend(h9,m4)
-
-      logical lorder, lexces, llaar, lrecip
-      common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
-
-      integer iemod,kmod
-      logical smod,pmod
-      double precision emod
-      common/ cst319 /emod(k15,k10),smod(h9),pmod(h9),iemod(k10),kmod
 
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -1532,11 +1510,6 @@ c----------------------------------------------------------------------
       integer kd, na1, na2, na3, nat
       double precision x3, caq
       common/ cxt16 /x3(k5,h4,mst,msp),caq(k5,l10),na1,na2,na3,nat,kd
-
-      integer iemod,kmod
-      logical smod,pmod
-      double precision emod
-      common/ cst319 /emod(k15,k10),smod(h9),pmod(h9),iemod(k10),kmod
 
       save dt
       data dt /.5d0/

@@ -534,9 +534,6 @@ c----------------------------------------------------------------------
       integer tphct
       double precision g2, cp2, c2tot
       common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),tphct
-
-      integer lstot,mstot,nstot,ndep,nord
-      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
 c----------------------------------------------------------------------
 c                                 set refinement point index
       hkp(jd) = ld 
@@ -3224,17 +3221,10 @@ c----------------------------------------------------------------------
       include 'perplex_parameters.h'
 
       logical first, output, err 
-
-      integer iemod,kmod
-      logical smod,pmod
-      double precision emod
-      common/ cst319 /emod(k15,k10),smod(h9),pmod(h9),iemod(k10),kmod
 c----------------------------------------------------------------------- 
       first = .true.
       output = .false.
       err = .false.
-c                                 elastic modulii flag
-      kmod = 0 
 c                                 -------------------------------------------
 c                                 open statements for units n1-n5 and n9
 c                                 are in subroutine input1
@@ -3245,6 +3235,8 @@ c                                 allow reading of auto-refine data
       call setau1 (output)
 c                                 read data for solution phases on n9:
       call input9 (first,output)
+c                                 seismic data summary file
+      if (lopt(50)) call outsei
 c                                 call initlp to initialize arrays 
 c                                 for optimization.
       call initlp
@@ -3342,7 +3334,6 @@ c                                 conformal
       end if
 
       end 
-
 
       logical function degen (index,array)
 c----------------------------------------------------------------------

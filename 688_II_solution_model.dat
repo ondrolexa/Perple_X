@@ -559,8 +559,30 @@ begin_model
            
            2 polytope model: A, M1, M2, M4 site populations are indicated, remaining are dependent
 
-           Polytope 1 [ ][M][T'][N]         => 2*2 
-           Polytope 2 [A][M][M,T,MT][M,C]   => 2*2*6
+           Polytope 1 = Glaucophane = [ ][M][T'][N]         => 2*2 
+           Polytope 2 = ACMT-Amph   = [A][M][M,T,MT][M,C]   => 2*2*10
+
+  NOTE: the Ti- and Fe3+ K-Na-paragasite exchanges allowed in the 
+  published cAmph(G) model have been commented out below because they 
+  are costly and do not seem to have any significant effect on computed
+  phase relations, this may also be true of the M-Ca-Fe3+_tschermaks
+  [grk] exchange, although this has not been tested. As a consequence of
+  this the above definitions become:
+
+           A  = Na, K, V
+           T  = Al, Fe3, Ti, on M2 [Polytope 2]
+           T' = Al, Fe3, on M2 [Polytope 1]
+           C  = Ca, M4
+           M  = Mg, Fe
+           N  = Na, M4
+           
+           2 polytope model: A, M1, M2, M4 site populations are indicated, remaining are dependent
+
+           Polytope 1 = Glaucophane = [ ][M][T'][N]         => 2*2 
+           Polytope 2 = ACMT-Amph   = [A][M][M,T,MAl][M,C]  => 2*2*8
+
+  To restore the Ti- and Fe3+ K-Na-paragasite exchanges refer to the comments
+  following the ACMT-Amph polytope definition.
 
           ----------------------------------------------------------------------------------------
 
@@ -608,7 +630,25 @@ gl         fgl_d                   | Al-glaucophane
 ACMT-Amph                          | poytope name
  
 3                                  | number of simplices, then for each simplex
-2 2 10                             | number of vertices on each simplex
+
+    | NOTE WELL: 
+    | the Ti- and Fe3+ K-Na-paragasite exchanges that are allowed in the 
+    | published cAmph(G) model have been commented out here because they 
+    | are costly and do not seem to have any significant effect on computed
+    | phase relations, this may also be true of the M-Ca-Fe3+_tschermaks
+    | [grk] exchange, although this has not been tested. To restore the
+    | the Ti- and Fe3+ K-Na-paragasite exchanges change the following line
+    | to 2 2 10, and delete uncomment the lines below and in the dependent
+    | endmember definition section that specify the relevant endmembers and
+    | uncomment the corresponding subdivision ranges.
+
+    | It is probable that VERTEX/MEEMUM will run out of dynamic memory using 
+    | the full model, if this occurs uncomment the "low_reach" low-resolution
+    | option at the end of this model. This option dramatically reduces the
+    | memory and time required for calculations, but also causes a significant
+    | deterioration in phase diagram quality.
+
+2 2 8                              | number of vertices on each simplex
  
                                    | Simplex 1 is Mg/M
                                    | Simplex 2 is M/[Ca + M] on M4
@@ -623,20 +663,20 @@ ts         fcts_d
 mparg_d    fparg_d                 | M-Ca-Na-Al_parg
 parg       fcparg_d
 
-ompg_d     ofpg_d                  | M-Ca-Na-Fe3+ parg
-ocmpg_d    ocfpg_d
+| ompg_d     ofpg_d                  | M-Ca-Na-Fe3+ parg
+| ocmpg_d    ocfpg_d
 
-tmpg_d     tfpg_d                  | M-Ca-Na-Ti parg
-tcmpg_d    tcfpg_d
+| tmpg_d     tfpg_d                  | M-Ca-Na-Ti parg
+| tcmpg_d    tcfpg_d
 
 kmparg_d   kfparg_d                | M-Ca-K-Al_parg
 kprg       kfcprg_d
 
-omkpg_d    ofkpg_d                 | M-Ca-K-Fe3+ parg
-ocmkpg_d   ocfkpg_d
+| omkpg_d    ofkpg_d                 | M-Ca-K-Fe3+ parg
+| ocmkpg_d   ocfkpg_d
 
-tmkpg_d    tfkpg_d                 | M-Ca-K-Ti parg
-tcmkpg_d   tcfkpg_d
+| tmkpg_d    tfkpg_d                 | M-Ca-K-Ti parg
+| tcmkpg_d   tcfkpg_d
 
 mtts_d     ftts_d                  | M-Ca-Ti_tschermaks
 tts        fctts_d
@@ -656,11 +696,11 @@ tr         ftr_d
                                    | Third simplex 
 0   .45  .1  0                     | X(3,1) = X(Al-Ts)
 0   .6   .1  0                     | X(3,2) = X(Na-Al-Parg)
-0   .45  .1  0                     | X(3,3) = X(Na-Fe3+-Parg)
-0   .3   .1  0                     | X(3,4) = X(Na-Ti-Parg)
+| 0   .45  .1  0                     | X(3,3) = X(Na-Fe3+-Parg)
+| 0   .3   .1  0                     | X(3,4) = X(Na-Ti-Parg)
 0   .1   .1  0                     | X(3,5) = X(K-Al-Parg)
-0   .1   .1  0                     | X(3,6) = X(K-Fe3+-Parg)
-0   .1   .1  0                     | X(3,7) = X(K-Ti-Parg)
+| 0   .1   .1  0                     | X(3,6) = X(K-Fe3+-Parg)
+| 0   .1   .1  0                     | X(3,7) = X(K-Ti-Parg)
 0   .15  .1  0                     | X(3,8) = X(Ti-Ts)
 0   .35  .1  0                     | X(3,9) = X(Fe3-Ts)
 
@@ -681,29 +721,29 @@ fcparg_d  = 1 parg  + 3/2 grun - 1 a - 1/2 b
 fparg_d   = 1 parg  + 1/2 grun + 1/2 b - 1 tr
 mparg_d   = 1 parg  - 1 tr     + 1 cumm
 
-tcmpg_d   = 1 parg  + 1/2 tts - 1/2 ts
-tcfpg_d   = 1 parg  + 3/2 grun - 1 a - 1/2 b + 1/2 tts - 1/2 ts
-tmpg_d    = 1 parg  - 1 tr     + 1 cumm + 1/2 tts - 1/2 ts
-tfpg_d    = 1 parg  + 1/2 grun + 1/2 b - 1 tr + 1/2 tts - 1/2 ts
+|tcmpg_d   = 1 parg  + 1/2 tts - 1/2 ts
+|tcfpg_d   = 1 parg  + 3/2 grun - 1 a - 1/2 b + 1/2 tts - 1/2 ts
+|tmpg_d    = 1 parg  - 1 tr     + 1 cumm + 1/2 tts - 1/2 ts
+|tfpg_d    = 1 parg  + 1/2 grun + 1/2 b - 1 tr + 1/2 tts - 1/2 ts
 
-ocmpg_d   = 1 parg  + 1/2 mrbG  - 1/2 gl
-ocfpg_d   = 1 parg  + 3/2 grun - 1 a - 1/2 b  + 1/2 mrbG  - 1/2 gl
-ompg_d    = 1 parg  - 1 tr     + 1 cumm + 1/2 mrbG  - 1/2 gl
-ofpg_d    = 1 parg  + 1/2 grun + 1/2 b - 1 tr + 1/2 mrbG  - 1/2 gl
+|ocmpg_d   = 1 parg  + 1/2 mrbG  - 1/2 gl
+|ocfpg_d   = 1 parg  + 3/2 grun - 1 a - 1/2 b  + 1/2 mrbG  - 1/2 gl
+|ompg_d    = 1 parg  - 1 tr     + 1 cumm + 1/2 mrbG  - 1/2 gl
+|ofpg_d    = 1 parg  + 1/2 grun + 1/2 b - 1 tr + 1/2 mrbG  - 1/2 gl
 
 kfcprg_d  = 1 kprg  + 3/2 grun - 1 a - 1/2 b
 kfparg_d  = 1 kprg  + 1/2 grun + 1/2 b - 1 tr
 kmparg_d  = 1 kprg  - 1 tr + 1 cumm
 
-tcmkpg_d  = 1 kprg  + 1/2 tts - 1/2 ts
-tcfkpg_d  = 1 kprg  + 3/2 grun - 1 a - 1/2 b + 1/2 tts - 1/2 ts
-tmkpg_d   = 1 kprg  - 1 tr     + 1 cumm + 1/2 tts - 1/2 ts
-tfkpg_d   = 1 kprg  + 1/2 grun + 1/2 b - 1 tr + 1/2 tts - 1/2 ts
+|tcmkpg_d  = 1 kprg  + 1/2 tts - 1/2 ts
+|tcfkpg_d  = 1 kprg  + 3/2 grun - 1 a - 1/2 b + 1/2 tts - 1/2 ts
+|tmkpg_d   = 1 kprg  - 1 tr     + 1 cumm + 1/2 tts - 1/2 ts
+|tfkpg_d   = 1 kprg  + 1/2 grun + 1/2 b - 1 tr + 1/2 tts - 1/2 ts
 
-ocmkpg_d  = 1 kprg  + 1/2 mrbG  - 1/2 gl
-ocfkpg_d  = 1 kprg  + 3/2 grun - 1 a - 1/2 b  + 1/2 mrbG  - 1/2 gl
-omkpg_d   = 1 kprg  - 1 tr     + 1 cumm + 1/2 mrbG  - 1/2 gl
-ofkpg_d   = 1 kprg  + 1/2 grun + 1/2 b - 1 tr + 1/2 mrbG  - 1/2 gl
+|ocmkpg_d  = 1 kprg  + 1/2 mrbG  - 1/2 gl
+|ocfkpg_d  = 1 kprg  + 3/2 grun - 1 a - 1/2 b  + 1/2 mrbG  - 1/2 gl
+|omkpg_d   = 1 kprg  - 1 tr     + 1 cumm + 1/2 mrbG  - 1/2 gl
+|ofkpg_d   = 1 kprg  + 1/2 grun + 1/2 b - 1 tr + 1/2 mrbG  - 1/2 gl
 
 fgl_d    = 1 gl    + 1 grun   - 1 a
 frb_d    = 1 mrbG  + 1 grun   - 1 a
@@ -855,7 +895,7 @@ begin_flagged_endmembers
 grun
 end_flagged_endmembers
 
-low_reach
+| low_reach
 
 end_of_model
 

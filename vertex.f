@@ -73,11 +73,6 @@ c-----------------------------------------------------------------------
       integer isec,icopt,ifull,imsg,io3p
       common/ cst103 /isec,icopt,ifull,imsg,io3p
 
-      integer iemod,kmod
-      logical smod,pmod
-      double precision emod
-      common/ cst319 /emod(k15,k10),smod(h9),pmod(h9),iemod(k10),kmod
-
       integer jtest,jpot
       common/ debug /jtest,jpot
 
@@ -114,8 +109,6 @@ c                                    iam = 15 - convex
       iam = 1
 c                                 version info
       call vrsion (6)
-c                                 elastic modulii flag
-      kmod = 0 
 c                                 this do loop is a cheap strategy to automate
 c                                 "auto_refine"
       do
@@ -673,10 +666,10 @@ c-----------------------------------------------------------------------
       common/ cst74 /iap(k2),ibulk
 
       logical pzfunc
-      integer ilay,irep,npoly,nord
+      integer ilay,irep,npoly,ord
       double precision abc0,vz,iblk
       common/ cst66 /abc0(0:mord,mpol),vz(6),iblk(lay,k5),ilay,
-     *               irep(lay),npoly,nord,pzfunc
+     *               irep(lay),npoly,ord,pzfunc
 
       logical fileio, flsh, anneal, verbos
       integer ncol, nrow

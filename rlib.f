@@ -1905,11 +1905,6 @@ c---------------------------------------------------------------------
       integer ikp
       common/ cst61 /ikp(k1)
 
-      integer iemod,kmod
-      logical smod,pmod
-      double precision emod
-      common/ cst319 /emod(k15,k10),smod(h9),pmod(h9),iemod(k10),kmod
-
       integer ifp
       logical fp
       common/ cxt32 /ifp(k10), fp(h9)
@@ -2036,17 +2031,17 @@ c                                 ABSENT, 1/5/2017).
 c                                 use ieos flag to signal melt endmembers
 c                                 in ifp array, this is only used by gcpd.
       if (eos(id).eq.3.or.eos(id).eq.9.or.eos(id).eq.11) then
-
+c                                 liquid
          ifp(id) = -1
 
-      else if (eos(id).eq.10.or.eos(id).ge.101.and.eos(id).le.116.or.
-     *         eos(id).eq.201.or.eos(id).eq.202) then
-
+      else if (eos(id).eq.10.or.eos(id).gt.101.and.eos(id).le.202.or.
+     *         eos(id).eq.605) then
+c                                 fluid
          gflu = .true.
          ifp(id) = 1
 
       end if
-c                               load stoichiometry of components.
+c                                 load stoichiometry of components.
       fwt(id) = 0
 
       do i = 1, icomp
@@ -2098,8 +2093,7 @@ c                               conver it's in thermo(21)
       end if
 c                               load elastic props if present
       if (iemod(id).ne.0) then
-c                               kmod initialized 0 in main.
-         kmod = 1
+
          do i = 1, k15
             emod(i,id) = emodu(i)
          end do
@@ -4035,11 +4029,6 @@ c-----------------------------------------------------------------------
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 
-      integer iemod,kmod
-      logical smod,pmod
-      double precision emod
-      common/ cst319 /emod(k15,k10),smod(h9),pmod(h9),iemod(k10),kmod
-
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 
@@ -4605,11 +4594,6 @@ c-----------------------------------------------------------------------
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
-
-      integer iemod,kmod
-      logical smod,pmod
-      double precision emod
-      common/ cst319 /emod(k15,k10),smod(h9),pmod(h9),iemod(k10),kmod
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
@@ -6691,7 +6675,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i,j,l,ndep,k,jkill
+      integer i,j,l,ldep,k,jkill
 
       logical depend,laar,order,fluid,macro,recip
       common/ cst160 /depend,laar,order,fluid,macro,recip
@@ -6715,7 +6699,7 @@ c----------------------------------------------------------------------
 c                                check for dependent endmembers, necessary?
       if (depend) then
 
-         ndep = 0
+         ldep = 0
 
          do 100 i = 1, mdep
 
@@ -6746,20 +6730,20 @@ c                                looking for an ordered species
                end if
             end do
 c                                dependent endmember is ok
-            ndep = ndep + 1
-            jdep(ndep) = jdep(i)
-            ndph(ndep) = ndph(i)
+            ldep = ldep + 1
+            jdep(ldep) = jdep(i)
+            ndph(ldep) = ndph(i)
 
             do j = 1, ndph(i)
-               idep(ndep,j) = idep(i,j)
-               nu(ndep,j) = nu(i,j)
+               idep(ldep,j) = idep(i,j)
+               nu(ldep,j) = nu(i,j)
             end do
 
             jstot = jstot + 1
 
 100      continue
 
-         mdep = ndep
+         mdep = ldep
 
          if (mdep.eq.0) depend = .false.
 
@@ -7414,12 +7398,6 @@ c                                 excess energy variables
 
       double precision deph,dydy,dnu
       common/ cxt3r /deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
-c                                 model type
-      logical lorder, lexces, llaar, lrecip
-      common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
-
-      integer lstot,mstot,nstot,ndep,nord
-      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
 c----------------------------------------------------------------------
 c                                 get derivative of excess function
       dgex = 0d0
@@ -7590,15 +7568,10 @@ c-----------------------------------------------------------------------
       double precision r,tr,pr,ps,p,t,xco2,u1,u2
       common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
 c                                 bookkeeping variables
-      integer lstot,mstot,nstot,ndep,nord
-      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
 c                                 working arrays
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
-c                                 model type
-      logical lorder, lexces, llaar, lrecip
-      common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
 
       integer jspec
       common/ cxt8 /jspec(h9,m4)
@@ -7611,32 +7584,23 @@ c                                 model type
 c----------------------------------------------------------------------
       gg = 0d0
 
-      if (special(id)) then
+      if (specil(id)) then
 c                                 special is reserved for special models 
 c                                 that set standard flags (lorder and/or lrecip)
-         if (ksmod(id).ge.30.and.ksmod(id).le.31) then
-c                                 -------------------------------------
-c                                 Nastia's version of BCC/FCC Fe-Si-C Lacaze and Sundman
+c                                 currently only Nastia's version of BCC/FCC Fe-Si-C Lacaze and Sundman
             gg =  gfesic (y(1),y(3),y(4),
      *                    g(jend(id,3)),g(jend(id,4)),
      *                    g(jend(id,5)),g(jend(id,6)),ksmod(id))
 
-         else
-
-            write (*,*) 'what the **** am i doing here?'
-            call errpau
-
-         end if 
-
       else if (simple(id)) then
 c                                 -------------------------------------
 c                                 macroscopic formulation for normal solutions.
-         call gdqf (id,gg,y)
+         call gdqf (id,gg,p0a)
 
-         gg = gg - t * omega(id,y) + gex(id,y)
+         gg = gg - t * omega(id,p0a) + gex(id,p0a)
 c                                 get mechanical mixture contribution
-         do k = 1, mstot(id)
-            gg = gg + y(k) * g(jend(id,2+k))
+         do k = 1, lstot(id)
+            gg = gg + p0a(k) * g(jend(id,2+k))
          end do
 
       else if (lorder(id)) then
@@ -7654,18 +7618,6 @@ c                                 specip adds a correction for the ordered speci
 c                                 get the dqf, this assumes the independent reactants
 c                                 are not dqf'd. gex not neccessary as computed in specip
          call gdqf (id,gg,pp)
-
-      else if (lrecip(id)) then
-c                                 -------------------------------------
-c                                 macroscopic reciprocal solution
-         do k = 1, lstot(id)
-            gg = gg + g(jend(id,2+k)) * p0a(k)
-         end do
-c                                 get the dqf, this assumes the independent reactants
-c                                 are not dqf'd
-         call gdqf (id,gg,p0a)
-
-         gg = gg - t * omega(id,p0a) + gex(id,p0a)
 
       else if (ksmod(id).eq.0) then
 c                                 ------------------------------------
@@ -7756,9 +7708,6 @@ c-----------------------------------------------------------------------
       include 'perplex_parameters.h'
 
       integer id
-c                                 model type
-      logical lorder, lexces, llaar, lrecip
-      common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
 c----------------------------------------------------------------------
 c                                 evaluate margules coefficients
       call setw (id)
@@ -7884,14 +7833,8 @@ c                                 configurational entropy variables:
       common/ cxt1r /qmult(m10,h9),d0(m11,m10,h9),dcoef(m0,m11,m10,h9),
      *               scoef(m4,h9)
 
-      integer lstot,mstot,nstot,ndep,nord
-      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
-
       double precision v,tr,pr,r,ps
       common / cst5 /v(l2),tr,pr,r,ps
-
-      logical lorder, lexces, llaar, lrecip
-      common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
 c----------------------------------------------------------------------
       dlnw = 0d0
 c                                 for each site
@@ -7982,9 +7925,6 @@ c                                 working arrays
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
-
-      integer lstot,mstot,nstot,ndep,nord
-      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
 
       double precision qmult, d0, dcoef, scoef
       common/ cxt1r /qmult(m10,h9),d0(m11,m10,h9),dcoef(m0,m11,m10,h9),
@@ -8098,13 +8038,7 @@ c                                 local alpha
 
       double precision deph,dydy,dnu
       common/ cxt3r /deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
-c                                 model type
-      logical lorder, lexces, llaar, lrecip
-      common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
 c                                 bookkeeping variables
-      integer lstot,mstot,nstot,ndep,nord
-      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
-
       double precision dppp,d2gx,sdzdp
       common/ cxt28 /dppp(j3,j3,m1,h9),d2gx(j3,j3),sdzdp(j3,m11,m10,h9)
 c----------------------------------------------------------------------
@@ -8216,16 +8150,10 @@ c------------------------------------------------------------------------
       double precision z, pa, p0a, x, w, yy, wl, pp
       common/ cxt7 /yy(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
-c                                 bookkeeping variables
-      integer lstot,mstot,nstot,ndep,nord
-      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
 c                                 excess energy variables
       integer jterm, jord, extyp, rko, jsub
       common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m18,h9),
      *               jsub(m2,m1,h9)
-c                                 model type
-      logical lorder, lexces, llaar, lrecip
-      common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
 c                                 local alpha
       double precision alpha,dt
       common/ cyt0  /alpha(m4),dt(j3)
@@ -8314,9 +8242,6 @@ c------------------------------------------------------------------------
       include 'perplex_parameters.h'
 
       integer jd, ii, h, i, j, id, ids
-c                                 bookkeeping variables
-      integer lstot,mstot,nstot,ndep,nord
-      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
 
       integer jend
       common/ cxt23 /jend(h9,m4)
@@ -8420,8 +8345,7 @@ c---------------------------------------------------------------------
       logical depend,laar,order,fluid,macro,recip
       common/ cst160 /depend,laar,order,fluid,macro,recip
 c                                 GLOBAL SOLUTION PARAMETERS:
-      integer lstot,mstot,nstot,ndep,nord
-      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
+
 c                                 configurational entropy variables:
       integer msite, ksp, lterm, ksub
       common/ cxt1i /msite(h9),ksp(m10,h9),lterm(m11,m10,h9),
@@ -8467,20 +8391,12 @@ c                                 dqf parameters
       double precision dqfg, dq
       common/ cxt9 /dqfg(m3,m4,h9),dq(m4),jndq(m4,h9),jdqf(h9),iq(m4)
 
-      integer iemod,kmod
-      logical smod,pmod
-      double precision emod
-      common/ cst319 /emod(k15,k10),smod(h9),pmod(h9),iemod(k10),kmod
-
       integer isec,icopt,ifull,imsg,io3p
       common/ cst103 /isec,icopt,ifull,imsg,io3p
 c                                 parameters for autorefine
       character qname*10
       logical refine, resub
       common/ cxt26 /refine,resub,qname
-c                                 model type
-      logical lorder, lexces, llaar, lrecip
-      common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
 
       integer ln,lt,lid,jt,jid
       double precision lc, l0c, jc
@@ -8592,9 +8508,6 @@ c                                 charge balance models
 c                                 number of dependent + independent - ordered endmembers
 c                                 prismatic space
       mstot(im) = istot
-c                                 number of dependent + independent - ordered endmembers
-c                                 prismatic space - orphans
-c
 c                                 number of independent + ordered endmembers
       nstot(im) = kstot + norder
 c                                 number of independent disordered endmembers
@@ -8807,6 +8720,20 @@ c                                 shut off reach increments
 c                                 -------------------------------------
 c                                 classify the model
       ksmod(im) = jsmod
+c                                 initialize/set type flags, presently no provision for
+c                                 bw summation
+      llaar(im) = .false.
+      lexces(im) = .false.
+      lorder(im) = .false.
+      lrecip(im) = .false.
+      specil(im) = .false.
+      simple(im) = .false.
+      extyp(im) = xtyp
+
+      if (jsmod.eq.2.or.(jsmod.eq.688.or.jsmod.eq.7).and.
+     *                 .not.order) simple(im) = .true.
+
+      if (jsmod.eq.31.or.jsmod.eq.32) specil(im) = .true.
 
 c                                 this looks like bad news, for laar/recip
 c                                 or laar/order, but appears to be overridden
@@ -8819,13 +8746,7 @@ c                                 in which case, why is it here????
      *          /'not anticipated for non-equimolar ordering: '//tname)
 
       end if
-c                                 set type flags, presently no provision for
-c                                 bw summation
-      llaar(im) = .false.
-      lexces(im) = .false.
-      lorder(im) = .false.
-      lrecip(im) = .false.
-      extyp(im) = xtyp
+
 
       if (iterm.gt.0) then
          lexces(im) = .true.
@@ -9750,12 +9671,6 @@ c-----------------------------------------------------------------------
 
       double precision deph,dydy,dnu
       common/ cxt3r /deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
-
-      integer lstot,mstot,nstot,ndep,nord
-      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
-
-      logical lorder, lexces, llaar, lrecip
-      common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
 c-----------------------------------------------------------------------
 c                                 always set p0a because if laar and 
 c                                 .not.recip or recip p0a is used.
@@ -9817,12 +9732,6 @@ c----------------------------------------------------------------------
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
-
-      integer lstot,mstot,nstot,ndep,nord
-      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
-
-      logical lorder, lexces, llaar, lrecip
-      common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
 
       double precision r,tr,pr,ps,p,t,xco2,u1,u2
       common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -9900,9 +9809,6 @@ c----------------------------------------------------------------------
 
       double precision deph,dydy,dnu
       common/ cxt3r /deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
-
-      integer lstot,mstot,nstot,ndep,nord
-      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
 c----------------------------------------------------------------------
       do i = 1, nord(id)
          enth(i) = deph(1,i,id) + t * deph(2,i,id) + p * deph(3,i,id)
@@ -9941,12 +9847,6 @@ c                                 excess energy variables
 
       double precision deph,dydy,dnu
       common/ cxt3r /deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
-c                                 model type
-      logical lorder, lexces, llaar, lrecip
-      common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
-
-      integer lstot,mstot,nstot,ndep,nord
-      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
 
       double precision dppp,d2gx,sdzdp
       common/ cxt28 /dppp(j3,j3,m1,h9),d2gx(j3,j3),sdzdp(j3,m11,m10,h9)
@@ -10113,9 +10013,6 @@ c                                 configurational entropy variables:
 
       double precision dppp,d2gx,sdzdp
       common/ cxt28 /dppp(j3,j3,m1,h9),d2gx(j3,j3),sdzdp(j3,m11,m10,h9)
-
-      integer lstot,mstot,nstot,ndep,nord
-      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
 
       logical pin
       common/ cyt2 /pin(j3)
@@ -10589,9 +10486,6 @@ c----------------------------------------------------------------------
       integer ideps,icase,nrct
       common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
 
-      integer lstot,mstot,nstot,ndep,nord
-      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
-
       double precision deph,dydy,dnu
       common/ cxt3r /deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
 
@@ -10600,9 +10494,6 @@ c----------------------------------------------------------------------
 
       double precision enth
       common/ cxt35 /enth(j3)
-
-      logical lorder, lexces, llaar, lrecip
-      common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
 
       double precision goodc, badc
       common/ cst20 /goodc(3),badc(3)
@@ -10747,9 +10638,6 @@ c----------------------------------------------------------------------
 
       double precision g,dp(j3),tdp,gold,xtdp
 
-      integer lstot,mstot,nstot,ndep,nord
-      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
-
       logical pin
       common/ cyt2 /pin(j3)
 
@@ -10885,9 +10773,6 @@ c----------------------------------------------------------------------
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
-
-      integer lstot,mstot,nstot,ndep,nord
-      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
 c----------------------------------------------------------------------
 c                                 given dp check if it violates
 c                                 stoichiometric constraints
@@ -10956,9 +10841,6 @@ c                                 working arrays
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
-
-      integer lstot,mstot,nstot,ndep,nord
-      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
 
       integer ideps,icase,nrct
       common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
@@ -11200,12 +11082,6 @@ c                                 excess energy variables
 
       double precision deph,dydy,dnu
       common/ cxt3r /deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
-c                                 model type
-      logical lorder, lexces, llaar, lrecip
-      common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
-
-      integer lstot,mstot,nstot,ndep,nord
-      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
 
       double precision dppp,d2gx,sdzdp
       common/ cxt28 /dppp(j3,j3,m1,h9),d2gx(j3,j3),sdzdp(j3,m11,m10,h9)
@@ -11298,9 +11174,6 @@ c                                 configurational entropy variables:
 
       double precision dppp,d2gx,sdzdp
       common/ cxt28 /dppp(j3,j3,m1,h9),d2gx(j3,j3),sdzdp(j3,m11,m10,h9)
-
-      integer lstot,mstot,nstot,ndep,nord
-      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
@@ -11419,9 +11292,6 @@ c                                 working arrays
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
-
-      integer lstot,mstot,nstot,ndep,nord
-      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
 
       integer ln,lt,lid,jt,jid
       double precision lc, l0c, jc
@@ -11609,9 +11479,6 @@ c-----------------------------------------------------------------------
 
       integer ikp
       common/ cst61 /ikp(k1)
-
-      integer lstot,mstot,nstot,ndep,nord
-      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
 
       integer iam
       common/ cst4 /iam
@@ -11936,9 +11803,6 @@ c--------------------------------------------------------------------------
       character*8 names
       common/ cst8 /names(k1)
 
-      integer lstot,mstot,nstot,ndep,nord
-      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
-
       integer iddeps,norder,nr
       double precision depnu,denth
       common/ cst141 /depnu(j4,j3),denth(j3,3),iddeps(j4,j3),norder,
@@ -11986,9 +11850,6 @@ c--------------------------------------------------------------------------
 
       integer jfct,jmct,jprct,jmuct
       common/ cst307 /jfct,jmct,jprct,jmuct
-c                                 model type
-      logical lorder, lexces, llaar, lrecip
-      common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
 
       integer msite, ksp, lterm, ksub
       common/ cxt1i /msite(h9),ksp(m10,h9),lterm(m11,m10,h9),
@@ -14251,9 +14112,6 @@ c-----------------------------------------------------------------------
 
       double precision thermo,uf,us
       common/ cst1 /thermo(k4,k10),uf(2),us(h5)
-
-      integer lstot,mstot,nstot,ndep,nord
-      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
 c----------------------------------------------------------------------
       if (wham) then
 c                                 an internal molecular eos has already
@@ -15811,13 +15669,6 @@ c                                 working arrays
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
-c                                 new global arrays, 10/25/05:
-c                                 bookkeeping variables
-      integer lstot,mstot,nstot,ndep,nord
-      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
-c                                 model type
-      logical lorder, lexces, llaar, lrecip
-      common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
 
       integer ideps,icase,nrct
       common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
@@ -16208,12 +16059,6 @@ c                                 working arrays
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
-c                                 model type
-      logical lorder, lexces, llaar, lrecip
-      common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
-
-      integer lstot,mstot,nstot,ndep,nord
-      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -16257,8 +16102,37 @@ c                                 a liquid below T_melt option threshold
 
             end do
 
-         else if (.not.llaar(i).and.
-     *            (ksmod(i).eq.7.or.ksmod(i).eq.2)) then
+         else if (lorder(i)) then
+c                                 compute margules coefficients
+            call setw (i)
+c                                 compute enthalpy of ordering
+            call oenth (i)
+c                                 now for each compound:
+            do j = 1, jend(i,2)
+c                                 for speciation models gexces
+c                                 evaluates only endmember sconf
+c                                 and internal dqf's
+               call gexces (id,g(id))
+
+               call setxyp (i,id,.false.,bad)
+
+               call specis (dg,i)
+c                                 add in g from real endmembers, this
+c                                 must include the g for the disordered equivalent
+c                                 of the ordered species
+               do k = 1, lstot(i)
+
+                  g(id) = g(id) + g(jend(i,2+k)) * pp(k)
+
+               end do
+
+               g(id) = g(id) + dg
+
+               id = id + 1
+
+            end do
+
+         else if (.not.llaar(i).and.simple(i)) then
 c                                 it's normal margules or ideal:
             do j = 1, jend(i,2)
 c                                 initialize with excess energy, dqf,
@@ -16290,36 +16164,6 @@ c                                 components.
                call setxyp (i,id,.false.,bad)
 
                g(id) = g0(1) * y(1) + g0(2) * y(2) + gval
-
-               id = id + 1
-
-            end do
-
-         else if (lorder(i)) then
-c                                 compute margules coefficients
-            call setw (i)
-c                                 compute enthalpy of ordering
-            call oenth (i)
-c                                 now for each compound:
-            do j = 1, jend(i,2)
-c                                 for speciation models gexces
-c                                 evaluates only endmember sconf
-c                                 and internal dqf's
-               call gexces (id,g(id))
-
-               call setxyp (i,id,.false.,bad)
-
-               call specis (dg,i)
-c                                 add in g from real endmembers, this
-c                                 must include the g for the disordered equivalent
-c                                 of the ordered species
-               do k = 1, lstot(i)
-
-                  g(id) = g(id) + g(jend(i,2+k)) * pp(k)
-
-               end do
-
-               g(id) = g(id) + dg
 
                id = id + 1
 
@@ -16597,9 +16441,6 @@ c                                 endmember names
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
 
-      integer lstot,mstot,nstot,ndep,nord
-      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
-
       integer jnd
       double precision aqg,q2,rt
       common/ cxt2 /aqg(m4),q2(m4),rt,jnd(m4)
@@ -16817,9 +16658,6 @@ c                                 endmember names
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
 
-      integer lstot,mstot,nstot,ndep,nord
-      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
-
       integer jnd
       double precision aqg,q2,rt
       common/ cxt2 /aqg(m4),q2(m4),rt,jnd(m4)
@@ -16988,9 +16826,6 @@ c                                 endmember names
 
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
-
-      integer lstot,mstot,nstot,ndep,nord
-      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
 
       integer jnd
       double precision aqg,q2,rt
@@ -18141,9 +17976,9 @@ c-----------------------------------------------------------------------
 
       double precision omega, gfluid, gzero, aqact,
      *                 gex, gfesi, gcpd, gerk, gfecr1, ghybrid,
-     *                 gfes
+     *                 gfes, gfesic
 
-      external gphase, omega, gfluid, gzero, gex,
+      external gphase, omega, gfluid, gzero, gex, gfesic,
      *         gfesi, gerk, gfecr1, ghybrid, gcpd, aqact, gfes
 
       integer jend
@@ -18155,16 +17990,10 @@ c-----------------------------------------------------------------------
 
       double precision r,tr,pr,ps,p,t,xco2,u1,u2
       common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
-c                                 bookkeeping variables
-      integer lstot,mstot,nstot,ndep,nord
-      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
 c                                 working arrays
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
-c                                 model type
-      logical lorder, lexces, llaar, lrecip
-      common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
 
       integer jspec
       common/ cxt8 /jspec(h9,m4)
@@ -18208,16 +18037,12 @@ c----------------------------------------------------------------------
 c                                 initialize p-t dependent coefficients
          call ingsol (id)
 
-         if (ksmod(id).eq.2) then
-c                                 -------------------------------------
-c                                 macroscopic formulation for normal solutions.
-            call gdqf (id,g,y)
-c                                 add entropy and excess contributions
-            g = g - t * omega (id,y) + gex (id,y)
-c                                 get mechanical mixture contribution
-            do k = 1, mstot(id)
-               g = g + y(k) * gcpd (jend(id,2+k),.true.)
-            end do
+         if (specil(id)) then
+
+            g =  gfesic (y(1),y(3),y(4),
+     *           gcpd(jend(id,3),.true.),gcpd(jend(id,4),.true.),
+     *           gcpd(jend(id,5),.true.),gcpd(jend(id,6),.true.),
+     *           ksmod(id))
 
          else if (lorder(id)) then
 c                                 -------------------------------------
@@ -18249,6 +18074,17 @@ c                                 get the dqf
             call gdqf (id,g,p0a)
 c                                 and excess contributions
             g = g - t * omega (id,p0a) + gex (id,p0a)
+
+         else if (simple(id)) then
+c                                 -------------------------------------
+c                                 macroscopic formulation for normal solutions.
+            call gdqf (id,g,y)
+c                                 add entropy and excess contributions
+            g = g - t * omega (id,y) + gex (id,y)
+c                                 get mechanical mixture contribution
+            do k = 1, mstot(id)
+               g = g + y(k) * gcpd (jend(id,2+k),.true.)
+            end do
 
          else if (ksmod(id).eq.20) then
 c                                 electrolytic solution
@@ -18852,14 +18688,8 @@ c----------------------------------------------------------------------
       integer ideps,icase,nrct
       common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
 
-      integer lstot,mstot,nstot,ndep,nord
-      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
-
       double precision deph,dydy,dnu
       common/ cxt3r /deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
-
-      logical lorder, lexces, llaar, lrecip
-      common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
 
       logical pin
       common/ cyt2 /pin(j3)
@@ -19017,9 +18847,6 @@ c                                 configurational entropy variables:
 
       double precision dppp,d2gx,sdzdp
       common/ cxt28 /dppp(j3,j3,m1,h9),d2gx(j3,j3),sdzdp(j3,m11,m10,h9)
-
-      integer lstot,mstot,nstot,ndep,nord
-      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
@@ -19243,9 +19070,6 @@ c----------------------------------------------------------------------
       double precision y(m4),zt,z
 
       integer i,j,k,l,ids
-
-      integer lstot,mstot,nstot,ndep,nord
-      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
 
       integer msite, ksp, lterm, ksub
       common/ cxt1i /msite(h9),ksp(m10,h9),lterm(m11,m10,h9),
@@ -20435,7 +20259,7 @@ c---------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical resub, simple
+      logical resub, simpl
 
       integer i, j, ii, ids, kds, ncomp, nind(h4), pos, nc, gcind,
      *        stind(n4), ipop1, phct
@@ -20482,13 +20306,13 @@ c                                 sco array.
 c                                 the number of subdivisions will be:
          ipop1 = npairs
 
-         simple = .false.
+         simpl = .false.
 
       else
 
          ipop1 = 1
 
-         simple = .true.
+         simpl = .true.
 
       end if
 
@@ -20496,7 +20320,7 @@ c                                 the number of subdivisions will be:
 
       do i = 1, ipop1
 
-         if (simple) then 
+         if (simpl) then 
 
             scoct = 0
 
@@ -21093,9 +20917,6 @@ c----------------------------------------------------------------------
 
       logical bad, usex
 
-      integer lstot,mstot,nstot,ndep,nord
-      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
-
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
@@ -21345,12 +21166,6 @@ c                                 working arrays
       integer jend
       common/ cxt23 /jend(h9,m4)
 
-      logical lorder, lexces, llaar, lrecip
-      common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
-
-      integer lstot,mstot,nstot,ndep,nord
-      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
-
       integer iaq, aqst, aqct
       character aqnam*8
       double precision aqcp, aqtot
@@ -21471,9 +21286,6 @@ c-----------------------------------------------------------------------
       integer jend
       common/ cxt23 /jend(h9,m4)
 
-      integer lstot,mstot,nstot,ndep,nord
-      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
-
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
@@ -21489,9 +21301,6 @@ c-----------------------------------------------------------------------
 
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
-
-      logical lorder, lexces, llaar, lrecip
-      common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
 
       integer kd, na1, na2, na3, nat
       double precision x3, caq
@@ -22721,11 +22530,6 @@ c----------------------------------------------------------------------
       double precision atwt
       common/ cst45 /atwt(k0) 
 
-      integer iemod,kmod
-      logical smod,pmod
-      double precision emod
-      common/ cst319 /emod(k15,k10),smod(h9),pmod(h9),iemod(k10),kmod
-
       integer jbulk
       double precision cblk
       common/ cst300 /cblk(k5),jbulk
@@ -23936,10 +23740,10 @@ c-----------------------------------------------------------------------
       common/ cst312 /jlow,jlev,loopx,loopy,jinc 
 
       logical pzfunc
-      integer ilay,irep,npoly,nord
+      integer ilay,irep,npoly,ord
       double precision abc0,vz,iblk
       common/ cst66 /abc0(0:mord,mpol),vz(6),iblk(lay,k5),ilay,
-     *               irep(lay),npoly,nord,pzfunc
+     *               irep(lay),npoly,ord,pzfunc
 
       double precision a,b
       integer ipvt,idv,iophi,idphi,iiphi,iflg1
@@ -24054,18 +23858,18 @@ c                                 number of geothermal polynomials
             if (npoly.gt.mpol) call error (72,b(1),i,'too many '/
      *                       /'geotherms increase mpol in common cst66')
 c                                 order of geothermal polynomials
-            read (n8,*) nord
-            if (nord.gt.mord) call error (72,b(1),i,'geothermal '/
+            read (n8,*) ord
+            if (ord.gt.mord) call error (72,b(1),i,'geothermal '/
      *      /'polynomial order too high, increase mord in common cst66')
 
             do i = 1, npoly
 c                                 depth in column for the i'th geotherm
-              read (n8,*) abc0(nord+1,i) 
+              read (n8,*) abc0(ord+1,i) 
 c                                 convert orthogonal depth to vertical depth
-              abc0(nord+1,i) = abc0(nord+1,i) / 
-     *                         dcos(vz(6)*.1745329252d-1)
+              abc0(ord+1,i) = abc0(ord+1,i) / 
+     *                        dcos(vz(6)*.1745329252d-1)
 c                                 polynomial coefficients for the geotherm
-              read (n8,*) (abc0(j,i), j = 0, nord)
+              read (n8,*) (abc0(j,i), j = 0, ord)
 
             end do
 
@@ -24166,10 +23970,10 @@ c----------------------------------------------------------------------
       double precision p0, z0, dz, z2, z3, z4, z5, z6, t0, t1, t2,aa,bb
 
       logical pzfunc
-      integer ilay,irep,npoly,nord
+      integer ilay,irep,npoly,ord
       double precision abc0,vz,iblk
       common/ cst66 /abc0(0:mord,mpol),vz(6),iblk(lay,k5),ilay,
-     *               irep(lay),npoly,nord,pzfunc
+     *               irep(lay),npoly,ord,pzfunc
 
       integer irct,ird
       double precision vn
@@ -24260,9 +24064,9 @@ c                                 compute the npoly t-corrdinates
 c                                 b - geotherm t
             b(i) = abc0(0,i)
 c                                 depth for geotherm
-            z0 = p0 + abc0(nord+1,i)
+            z0 = p0 + abc0(ord+1,i)
 
-            do j = 1, nord
+            do j = 1, ord
                b(i) = b(i) + abc0(j,i) * z0**j
             end do
 
@@ -25342,10 +25146,10 @@ c---------------------------------------------------------------------
       common/ cst4 /iam
 
       logical pzfunc
-      integer ilay,irep,npoly,nord
+      integer ilay,irep,npoly,ord
       double precision abc0,vz,iblk
       common/ cst66 /abc0(0:mord,mpol),vz(6),iblk(lay,k5),ilay,
-     *               irep(lay),npoly,nord,pzfunc
+     *               irep(lay),npoly,ord,pzfunc
 
       integer isec,icopt,ifull,imsg,io3p
       common/ cst103 /isec,icopt,ifull,imsg,io3p

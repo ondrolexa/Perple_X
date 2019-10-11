@@ -24,7 +24,19 @@
 
 6) X getpp is redundant with p0dord? y2p0 should be used if a prior call to getscp/csol
    may have changed p0 (as in moduli or getcmp).
-7) 
+
+7) 688 configurational entropy format expanded to include site names for all fractions of 
+   all species on a site, and non-mixing sites. Site fraction designation format is 
+   z(site,species) (z can be any character, "site" is optional, but if present it 
+   must occur before the "species" designator).
+
+8) refine_switch added, default doesnot allow metastable refinement points for stable solutions
+   opposite to pre-688 behavior.
+
+9) seismic_data_file added, allows output of seismic computational options for endmembers
+   and solutions.
+
+10) low_reach solution model option, halves the reach during adaptive optimization.
 
 
 

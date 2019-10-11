@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.8.8, source updated Oct 8, 2019.',
+     *      'Perple_X version 6.8.8, source updated Oct 11, 2019.',
 
      *      'Copyright (C) 1986-2019 James A D Connolly '//
      *      '<www.perplex.ethz.ch/copyright.html>.'
@@ -51,7 +51,7 @@ c----------------------------------------------------------------------
       if (new.eq.'682'.or.new.eq.'683'.or.
      *    new.eq.'685'.or.new.eq.'687') then
 
-         call error (2,0d0,0,new)
+         call error (3,0d0,0,new)
 
       else if (new.eq.'008'.or.new.eq.'011'.or.new.eq.'670'.or.
      *         new.eq.'672'.or.new.eq.'673'.or.new.eq.'674'.or.
@@ -94,7 +94,7 @@ c----------------------------------------------------------------------
 
       logical output
 
-      character*3 key*22, val, valu(i10), nval1*12, nval2*12,
+      character*3 key*22, val, nval1*12, nval2*12,
      *            nval3*12,opname*100,strg*40,strg1*40
 
       double precision dnan, res0, r2
@@ -412,7 +412,9 @@ c                                 aq_solvent_solvus
 c                                 sample_on_grid 
       lopt(48) = .true.
 c                                 refinement_switch
-      lopt(49) = .true.
+      lopt(49) = .false.
+c                                 seismic_data_file
+      lopt(50) = .false.
 c                                 final resolution, auto-refine stage
       rid(2,2) = 1d-3
 c                                 final resolution, exploratory stage
@@ -786,8 +788,13 @@ c                                 refinement points
             end if
 
          else if (key.eq.'refinement_switch') then
+c                                 during iteration allow metastable 
+c                                 refinement points for stable solutions.
+            if (val.ne.'F') lopt(49) = .true.
+
+         else if (key.eq.'seismic_data_file') then
  
-            if (val.ne.'T') lopt(49) = .false. 
+            if (val.ne.'F') lopt(50) = .true. 
 
          else if (key.eq.'max_aq_species_out') then 
 c                                 max number of aq species output for
@@ -1141,8 +1148,20 @@ c                                 auto refine summary
 
             write (*,1150) tfname
 
+         end if
+
+      end if
+
+      if (iam.lt.3) then
+
+         if (lopt(50)) then 
+            call mertxt (tfname,prject,'_seismic_data.txt',0)
+         else 
+            tfname = 'not requested'
          end if 
- 
+
+         write (*,'(a)') 'Writing seismic data options to: '//tfname
+
       end if 
 c                                 pseudocompound glossary
       if (io9.eq.0.and.(iam.lt.3.or.iam.eq.15)) then
@@ -1307,7 +1326,7 @@ c                                 output
      *                                        .or.iam.eq.3
      *                                        .or.iam.eq.5) then
 c                                 console
-         call outopt (6,valu)
+         call outopt (6)
 
          if (lopt(12).and.iam.ne.5) then 
 c                                 file version, create the file name 
@@ -1322,7 +1341,7 @@ c                                 file version, create the file name
             end if 
 
             open (n8, file = tfname)
-            call outopt (n8,valu)
+            call outopt (n8)
             close (n8) 
 
             write (*,1000) tfname
@@ -1364,16 +1383,16 @@ c                                 proportionality constant for shear modulus
 1120  format (/,'Warning: the Perple_X option file: ',a,/,
      *       'was not found, default option values will be used.',/) 
 1130  format (/,'Reading Perple_X options from: ',a)
-1140  format ('Writing pseudocompound glossary to file: ',a)
-1150  format ('Writing auto refine summary to file: ',a)
-1160  format ('Writing Perple_X option summary to file: ',a)
-1170  format ('Writing complete reaction list to file: ',a)
+1140  format ('Writing pseudocompound glossary to: ',a)
+1150  format ('Writing auto refine summary to: ',a)
+1160  format ('Writing Perple_X option summary to: ',a)
+1170  format ('Writing complete reaction list to: ',a)
 1180  format (/,'Error: value ',a,' is invalid for Perple_X option ',
      *        'keyword ',a,/,'see www.perplex.ch/perplex_options.html ',
      *        'for a list of valid values',/)
       end 
 
-      subroutine outopt (n,valu)
+      subroutine outopt (n)
 c----------------------------------------------------------------------
 c outopt - for program IAM, outputs context specific options to LUN N,
 c called by redop1  
@@ -1384,7 +1403,7 @@ c----------------------------------------------------------------------
 
       integer i, len, n
 
-      character valu(i10)*3, nval1*12, text(14)*1, numb*5, nval2*12
+      character nval1*12, text(14)*1, numb*5, nval2*12
 
       integer grid
       double precision rid 
@@ -1540,25 +1559,28 @@ c                                 MEEMUM input/output options
 
       else if (iam.eq.5) then 
 c                                 FRENDLY input/output options
-         write (n,1232) lopt(15),lopt(14),nopt(7),lopt(6),valu(14),
-     *                  lopt(19),lopt(20)
+         write (n,1232) lopt(15),lopt(14),nopt(7),lopt(6),lopt(19)
 
       end if 
 c                                 seismic property options
-      if (iam.eq.2.or.iam.eq.3.or.iam.eq.5) write (n,1233) valu(19),
-     *                                nopt(6),lopt(17),valu(15),nopt(16)
+      if (iam.eq.2.or.iam.eq.3.or.iam.eq.5) write (n,1233) lopt(50),
+     *         valu(19),
+     *         nopt(6),lopt(17),valu(15),nopt(16),valu(14),lopt(20)
 
       if (iam.eq.5) then 
 c                                 FRENDLY thermo options
          write (n,1016) lopt(8),lopt(4),iopt(25),iopt(26),iopt(27)
          write (n,1017) nopt(31),nopt(26),nopt(27)
+
       end if 
 
       if (iam.le.2) then 
 c                                 info file options
          write (n,1240) lopt(12),lopt(10)
          if (iam.eq.1.or.iam.eq.15) write (n,1250) lopt(11)
-
+         if (iam.eq.1) write (n,'(4x,a,l1,10x,a)') 
+     *                     'seismic_data_file      ',lopt(50),'[F] T'//
+     *                     ' echo seismic wave speed options'
       end if 
 c                                 resolution blurb
       if ((iam.le.2.or.iam.eq.15).and.nopt(13).gt.0d0) then
@@ -1738,15 +1760,18 @@ c                                 thermo options for frendly
      *        4x,'logarithmic_p          ',l1,10x,'[F] T',/,
      *        4x,'bad_number          ',f7.1,7x,'[NaN]',/,
      *        4x,'melt_is_fluid          ',l1,10x,'[F] T',/,
-     *        4x,'seismic_output         ',a3,8x,'[some] none all',/,
      *        4x,'pause_on_error         ',l1,10x,'[T] F',/,
-     *        4x,'poisson_test           ',l1,10x,'[F] T')
-1233  format (/,2x,'Seismic velocity options:',//,
+     *        4x,'Tisza_test             ',l1,10x,'[F] T')
+1233  format (/,2x,'Seismic wavespeed computational options:',//,
+     *        4x,'seismic_data_file      ',l1,10x,'[F] T',/,
      *        4x,'bounds                 ',a3,8x,'[VRH] HS',/,
      *        4x,'vrh/hs_weighting       ',f3.1,8x,'[0.5] 0->1',/,
      *        4x,'explicit_bulk_modulus  ',l1,10x,'[F] T',/,
      *        4x,'poisson_ratio          ',a3,8x,'[on] all off; ',
-     *        'Poisson ratio = ',f4.2)
+     *        'Poisson ratio = ',f4.2,/,
+     *        4x,'seismic_output         ',a3,8x,'[some] none all',/,
+     *        4x,'poisson_test           ',l1,10x,'[F] T, see also ',
+     *        'Tisza_test')
 1234  format (4x,'auto_exclude           ',l1,10x,'[T] F')
 1240  format (/,2x,'Information file output options:',//,
      *        4x,'option_list_files      ',l1,10x,'[F] T; ',
@@ -2126,7 +2151,7 @@ c---------------------------------------------------------------------
       if (ier.eq.1.or.ier.eq.2) then 
          write (*,1) char,int
       else if (ier.eq.3) then 
-         write (*,3)
+         write (*,3) char
       else if (ier.eq.4) then
          write (*,4) char 
       else if (ier.eq.5) then 
@@ -2370,8 +2395,8 @@ c                                 accordingly:
      *         '6.8.2-6.8.7 are inconsistent with',/,
      *         'this version of Perple_X. Update the solution ',
      *         'file.',/)
-3     format (/,'**error ver003** the solution model file format ',
-     *         'is inconsistent with',/,
+3     format (/,'**error ver003** the solution model file format (',a,
+     *         ') is inconsistent with',/,
      *         'this version of Perple_X. Update the file and/or ',
      *         'Perple_X',/)
 4     format (/,'**error ver004** you must use ',a,' to analyze this '
@@ -4353,11 +4378,6 @@ c----------------------------------------------------------------------
       integer ilam,jlam,idiso,lamin,idsin
       double precision tm,td
       common/ cst202 /tm(m7,m6),td(m8),ilam,jlam,idiso,lamin,idsin
-
-      integer iemod,kmod
-      logical smod,pmod
-      double precision emod
-      common/ cst319 /emod(k15,k10),smod(h9),pmod(h9),iemod(k10),kmod
 
       integer cl
       character cmpnt*5, dname*80
@@ -6467,3 +6487,208 @@ c----------------------------------------------------------------------
       end if 
 
       end 
+
+      subroutine outsei
+c-----------------------------------------------------------------------
+c output details of modulus computation for endmembers and solutions
+c if lopt(50).
+c-----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer i
+
+      character stag*9, ptag*8, made*12
+
+      logical stx, notstx, lstx, lmake
+
+      integer icomp,istct,iphct,icp
+      common/ cst6  /icomp,istct,iphct,icp
+
+      integer eos
+      common/ cst303 /eos(k10)
+
+      integer ipoint,kphct,imyn
+      common/ cst60  /ipoint,kphct,imyn
+
+      integer isoct
+      common/ cst79 /isoct
+
+      integer ifp
+      logical fp
+      common/ cxt32 /ifp(k10), fp(h9)
+
+      integer make
+      common / cst335 /make(k10)
+
+      character names*8
+      common/ cst8  /names(k1)
+
+      character fname*10, aname*6, lname*22
+      common/ csta7 /fname(h9),aname(h9),lname(h9)
+
+      character prject*100,tfname*100
+      common/ cst228 /prject,tfname
+c-----------------------------------------------------------------------
+      call mertxt (tfname,prject,'_seismic_data.txt',0)
+      open (n8, file = tfname)
+
+      stx = .false.
+      notstx = .false.
+      lmake = .false.
+
+      write (n8,1233) lopt(50),valu(19),nopt(6),lopt(17),valu(15),
+     *                nopt(16),valu(14),lopt(20)
+
+      write (n8,1030)
+
+      write (n8,'(/,a)') 'Endmembers and stoichiometric compounds:'
+      write (n8,1000)
+
+      do i = istct, ipoint
+
+         if (eos(i).eq.5.or.eos(i).eq.6) then 
+            stx = .true.
+            lstx = .true.
+         else
+            lstx = .false.
+            notstx = .true.
+         end if
+
+         if (iemod(i).eq.3) then
+
+            ptag = 'explicit'
+            stag = 'missing'
+
+         else if (iemod(i).eq.0) then
+
+            ptag = 'implicit'
+            stag = 'missing'
+
+         else if (iemod(i).eq.1) then
+
+            ptag = 'implicit'
+            stag = 'explicit'
+
+         else if (iemod(i).eq.2) then
+
+            ptag = 'explicit'
+            stag = 'explicit'
+
+         end if
+
+         if (.not.lopt(17)) ptag = 'implicit'
+
+         if (iopt(16).eq.1) then
+
+            if (stag.eq.'missing') stag = 'Poisson'
+
+         else if (iopt(16).eq.2) then 
+
+            stag = 'Poisson'
+
+         end if
+
+         if (lstx) then
+            if (iemod(i).ge.1) stag = 'implicit'
+            ptag = 'implicit'
+         end if
+
+         made = ' '
+
+         if (make(i).ne.0) then 
+            made = 'made entity*'
+            lmake = .true.
+         end if 
+
+         if (ifp(i).ne.0) stag = 'fluid'
+
+         write (n8,1050) names(i),ptag,stag,made
+
+      end do
+
+      if (lmake) write (n8,1040)
+
+      if (isoct.gt.0) then
+
+         if (stx.and.notstx) write (n8,1010) 
+
+         write (n8,'(/,a)') 'Solution models:'
+         write (n8,1000)
+
+         do i = 1, isoct
+
+            if (.not.pmod(i).and..not.smod(i)) then
+
+               ptag = 'implicit'
+               stag = 'missing'
+
+            else if (pmod(i).and..not.smod(i)) then
+
+               ptag = 'explicit'
+               stag = 'missing'
+
+            else if (pmod(i)) then
+
+               ptag = 'implicit'
+               stag = 'explicit'
+
+            else if (pmod(i).and.smod(i)) then
+
+               ptag = 'explicit'
+               stag = 'explicit'
+
+            end if
+
+            if (lopt(17).and.pmod(i)) ptag = 'explicit'
+
+            if (iopt(16).gt.0.and.(.not.smod(i).or.iopt(16).eq.2))
+     *                                stag = 'Poisson'
+
+            if (stx) then
+               ptag = 'implicit'
+               if (stag.eq.'explicit') stag = 'implicit*'
+            end if
+
+            if (fp(i)) stag = 'fluid'
+
+            if (lname(i).eq.'liquid') stag = 'liquid'
+
+            write (n8,1050) fname(i),ptag,stag
+
+         end do
+
+         if (stx) write (n8,1020)
+
+      end if 
+
+      close (n8)
+
+1000  format (/,20x,'  Bulk Mod    Shear Mod ',/,
+     *          20x,'  ---------   ---------')
+1010  format (/,'**warning ver119** this computation mixes inconsistent'
+     *         ,' thermodynamic data',/,'the following table may not be'
+     *         ,' reliable',/)
+1020  format (/,'*computed as the Reuss average of the implicit endmemb'
+     *       ,'er shear moduli.')
+1030  format ('In the tables below: implicit moduli are calculated rigo'
+     *       ,'rously from the EoS,',/,'explicit moduli are computed '
+     *       ,'from empirical functions provided in the',/
+     *       ,'thermodynamic data file.',/)
+1040  format (/,'*explicit moduli of made endmembers are computed as a '
+     *       ,'linear combination of ',/,'the real endmembers specified'
+     *       ,' in the make definition',/)
+1050  format (6x,a10,6x,a8,4x,a9,4x,a)
+1233  format (/,'Seismic wavespeed computational options:',//,
+     *        4x,'seismic_data_file      ',l1,10x,'[F] T',/,
+     *        4x,'bounds                 ',a3,8x,'[VRH] HS',/,
+     *        4x,'vrh/hs_weighting       ',f3.1,8x,'[0.5] 0->1',/,
+     *        4x,'explicit_bulk_modulus  ',l1,10x,'[F] T',/,
+     *        4x,'poisson_ratio          ',a3,8x,'[on] all off; ',
+     *        'Poisson ratio = ',f4.2,/,
+     *        4x,'seismic_output         ',a3,8x,'[some] none all',/,
+     *        4x,'poisson_test           ',l1,10x,'[F] T, see also ',
+     *        'Tisza_test',/)
+
+      end

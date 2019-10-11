@@ -188,6 +188,21 @@ c
       common/ cst3  /ctot(k1)
 c                                 -------------------------------
 c                                 global solution model variables:
+c                                 -------------------------------
+c lstot(i)   - number of independent disordered endmembers of solution i (kstot)
+c mstot(i)   - number of vertices for the composition space of solution i (istot)
+c nstot(i)   - number of independent endmembers of solution i
+c ndep(i)    - number of dependent endmembers of solution i = mstot(i) - lstot(i)
+c nord(i)    - number of ordered endmembers of solution i = nstot(i) - lstot(i)
+
+      integer lstot,mstot,nstot,ndep,nord
+      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
+c                                 -------------------------------
+c                                 model type
+      logical lorder, lexces, llaar, lrecip, specil, simple
+      common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9),
+     *               specil(h9),simple(h9)
+
       logical stable,limit,lorch
       double precision xlo,xhi
       common/ cxt11 /xlo(m4,mst,h4,h9),xhi(m4,mst,h4,h9),
@@ -219,8 +234,9 @@ c                                 -------------------------------
 c                                  variables set from perplex_option.dat
       integer iopt
       logical lopt
+      character valu*3
       double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+      common/ opts /nopt(i10),iopt(i10),lopt(i10),valu(i10)
 c                                 -------------------------------
 c                                 local solution model variables:
       logical stck, norf, lowrch
@@ -235,6 +251,11 @@ c                                 local solution model variables:
       integer jmsol,kdsol
       common/ cst142 /jmsol(m4,mst),kdsol(m4)
 c                                 -------------------------------
+      integer iemod
+      logical smod,pmod
+      double precision emod
+      common/ cst319 /emod(k15,k10),smod(h9),pmod(h9),iemod(k10)
+
       double precision times, btime, etime
       common/ time /times(30),btime(30),etime(30)
 
@@ -250,5 +271,3 @@ c              - locates the compositional coordinates for each simplex in zco
 c stind(ii)    - starting index - 1 of the simplex indices of polytope ii in the sco array
 c npoly(ii)    - number of compositions in polytope ii
 
-c mstot(ids)   - number of vertices for the composition space of solution ids
-c nstot(ids)
