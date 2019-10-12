@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.8.8, source updated Oct 11, 2019.',
+     *      'Perple_X version 6.8.8, source updated Oct 12, 2019.',
 
      *      'Copyright (C) 1986-2019 James A D Connolly '//
      *      '<www.perplex.ethz.ch/copyright.html>.'
@@ -1358,6 +1358,7 @@ c                                 or auto-refine stage in setau1.
 c                                 -------------------------------------
 c                                 recalculate parameters:
 c                                 proportionality constant for shear modulus
+      nopt(1) = nopt(16)
       nopt(16) = 1.5d0*(1d0-2d0*nopt(16))/(1d0+nopt(16))
 
 1000  format ('Context specific options are echoed in: ',a,/)
@@ -1770,8 +1771,8 @@ c                                 thermo options for frendly
      *        4x,'poisson_ratio          ',a3,8x,'[on] all off; ',
      *        'Poisson ratio = ',f4.2,/,
      *        4x,'seismic_output         ',a3,8x,'[some] none all',/,
-     *        4x,'poisson_test           ',l1,10x,'[F] T, see also ',
-     *        'Tisza_test')
+     *        4x,'poisson_test           ',l1,10x,'[F] T; see also ',
+     *           'Tisza_test')
 1234  format (4x,'auto_exclude           ',l1,10x,'[T] F')
 1240  format (/,2x,'Information file output options:',//,
      *        4x,'option_list_files      ',l1,10x,'[F] T; ',
@@ -2479,7 +2480,7 @@ c                                 accordingly:
 40    format (/,'**error ver040** too many compositional coordinates, ',
      *        'increase dimension k13 (',i7,')  Routine: ',a)
 41    format (/,'**error ver041** too many static compositions this '
-     *          'error can be',/,'eliminated by one of the '\\
+     *          'error can be',/,'eliminated by one of the '//
      *          'following actions (best listed first):',/)
 410   format (2x,'- increase the exploratory stage initial_resolution',
      *           ' in perplex_option.dat',/,
@@ -6539,7 +6540,7 @@ c-----------------------------------------------------------------------
       lmake = .false.
 
       write (n8,1233) lopt(50),valu(19),nopt(6),lopt(17),valu(15),
-     *                nopt(16),valu(14),lopt(20)
+     *                nopt(1),valu(14),lopt(20)
 
       write (n8,1030)
 
@@ -6669,7 +6670,7 @@ c-----------------------------------------------------------------------
      *          20x,'  ---------   ---------')
 1010  format (/,'**warning ver119** this computation mixes inconsistent'
      *         ,' thermodynamic data',/,'the following table may not be'
-     *         ,' reliable',/)
+     *         ,' reliable.',/)
 1020  format (/,'*computed as the Reuss average of the implicit endmemb'
      *       ,'er shear moduli.')
 1030  format ('In the tables below: implicit moduli are calculated rigo'
@@ -6678,7 +6679,7 @@ c-----------------------------------------------------------------------
      *       ,'thermodynamic data file.',/)
 1040  format (/,'*explicit moduli of made endmembers are computed as a '
      *       ,'linear combination of ',/,'the real endmembers specified'
-     *       ,' in the make definition',/)
+     *       ,' in the corresponding make definition.',/)
 1050  format (6x,a10,6x,a8,4x,a9,4x,a)
 1233  format (/,'Seismic wavespeed computational options:',//,
      *        4x,'seismic_data_file      ',l1,10x,'[F] T',/,
@@ -6688,7 +6689,7 @@ c-----------------------------------------------------------------------
      *        4x,'poisson_ratio          ',a3,8x,'[on] all off; ',
      *        'Poisson ratio = ',f4.2,/,
      *        4x,'seismic_output         ',a3,8x,'[some] none all',/,
-     *        4x,'poisson_test           ',l1,10x,'[F] T, see also ',
-     *        'Tisza_test',/)
+     *        4x,'poisson_test           ',l1,10x,'[F] T; see also ',
+     *           'Tisza_test',/)
 
       end
