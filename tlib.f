@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.8.8, source updated Oct 12, 2019.',
+     *      'Perple_X version 6.8.8, source updated Oct 20, 2019.',
 
      *      'Copyright (C) 1986-2019 James A D Connolly '//
      *      '<www.perplex.ethz.ch/copyright.html>.'
@@ -1580,8 +1580,8 @@ c                                 info file options
          write (n,1240) lopt(12),lopt(10)
          if (iam.eq.1.or.iam.eq.15) write (n,1250) lopt(11)
          if (iam.eq.1) write (n,'(4x,a,l1,10x,a)') 
-     *                     'seismic_data_file      ',lopt(50),'[F] T'//
-     *                     ' echo seismic wave speed options'
+     *                     'seismic_data_file      ',lopt(50),'[F] T;'//
+     *                     ' echo seismic wavespeed options'
       end if 
 c                                 resolution blurb
       if ((iam.le.2.or.iam.eq.15).and.nopt(13).gt.0d0) then
@@ -2479,8 +2479,8 @@ c                                 accordingly:
      *        'increase dimension k12 (',i2,') Routine: ',a)
 40    format (/,'**error ver040** too many compositional coordinates, ',
      *        'increase dimension k13 (',i7,')  Routine: ',a)
-41    format (/,'**error ver041** too many static compositions this '
-     *          'error can be',/,'eliminated by one of the '//
+41    format (/,'**error ver041** too many static compositions this ',
+     *          'error can be eliminated',/,'by one of the ',
      *          'following actions (best listed first):',/)
 410   format (2x,'- increase the exploratory stage initial_resolution',
      *           ' in perplex_option.dat',/,
@@ -3226,7 +3226,7 @@ c Gdqf(J/mol) = dnum_1 + T[K]*dnum_2 + P[bar]*dnum_3
 
 c end_of_data is either a "|" or the end of the record.
 
-c make definitions are preceeded by the keyword:
+c make definitions are preceded by the keyword:
 
 c begin_makes 
 
@@ -4179,7 +4179,7 @@ c----------------------------------------------------------------------
       subroutine redcd0 (lun,ier,key,values,strg)
 c----------------------------------------------------------------------
 c this routine seeks a non-blank card that contains data, i.e., something
-c other than a comment (text preceeded by a "|") character. 
+c other than a comment (text preceded by a "|") character. 
 c the first word of the data is saved as key, the remaining words are
 c are saved in values, and the complete data is saved as strg.
 c the full record (including comments) is saved in chars.

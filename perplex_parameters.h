@@ -248,8 +248,15 @@ c                                 local solution model variables:
       double precision vlaar
       common/ cst221 /vlaar(m3,m4),jsmod
 
-      integer jmsol,kdsol
-      common/ cst142 /jmsol(m4,mst),kdsol(m4)
+c jmsol(i,j)    - species on the simplex j of endmember/vertex i
+c kdsol(i)      - identifier/status flag of endmember/vertex i, 0 if missing, > 0 if independent
+c                 endmember, -1 or 0 if ordered (non-vertex), -2 if dependent?, -3 to be killed.
+c dedpol(ii)    - true if polytope ii has no valid endmembers
+c pvptr(ii,1:2) - beginning and ending indexes of polytope ii
+
+      logical dedpol
+      integer jmsol,kdsol,pvptr
+      common/ cst142 /jmsol(m4,mst),kdsol(m4),pvptr(h4,2),dedpol(h4)
 c                                 -------------------------------
       integer iemod
       logical smod,pmod

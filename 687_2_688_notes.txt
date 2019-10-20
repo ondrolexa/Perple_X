@@ -30,13 +30,42 @@
    z(site,species) (z can be any character, "site" is optional, but if present it 
    must occur before the "species" designator).
 
-8) refine_switch added, default doesnot allow metastable refinement points for stable solutions
+8) refine_switch added, default does not allow metastable refinement points for stable solutions
    opposite to pre-688 behavior.
 
 9) seismic_data_file added, allows output of seismic computational options for endmembers
    and solutions.
 
 10) low_reach solution model option, halves the reach during adaptive optimization.
+
+11) begin_flagged_endmembers solution model option.
+
+12) configurational entropy model now specifies all site fractions and site names,
+currently the nth site fraction is not used and may be left as a comment (e.g., 
+"z(Si,T2)   = needs_to_be_completed"). Site fraction designation also remains optional
+but for future use the format "z(species_name,site_name)" is recommended. Additionally, the 
+line that formerly specified the number of species on a site and the effective multiplicity
+now includes the true site multiplicity. 
+
+Solution model notes:
+
+cAmph(G) - the M-Ca-A-Ti-parg and M-Ca-A-Fe3+-parg exchanges have been commented out
+in the ACMT-Amph polytope definition. refer to the model commentary for instruction
+to restore the exchanges.
+
+Cpx(HGP) - the FeTi exchanges have been commented out in the [T][A,C] polytope definition.
+refer to the model commentary for instruction to restore the exchanges. The MTi exchange
+included in the TM+MC is most likely superfluous.
+
+Opx(HGP) - the MTi exchanges have been commented out in the [T][Na,C] polytope definition.
+refer to the model commentary for instruction to restore the exchanges.
+
+Benchmark notes:
+
+bl478 - updated, use of full amph model does not improve comparison.
+
+kghp - updated, comparison improved, spurious solvi eliminated.
+
 
 
 

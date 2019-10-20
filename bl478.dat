@@ -1,7 +1,7 @@
 hp62ver.dat     thermodynamic data file                                                                                                    
 no_print | print generates print output
 plot     | no_plot suppresses plot output
-solution_model_688.dat     | solution model file, blank = none                                                                                                                                                                                                      
+solution_model.dat     | solution model file, blank = none                                                                                                                                                                                                      
 Fig 4a Green et al 2016 BL478                                                                                                                                                                
 bl478_perplex_option.dat     | Perple_X option file                                                                                                                                                                                                                   
     5 calculation type: 0 - composition, 1 - Schreinemakers, 3 - Mixed, 4 - swash, 5 - gridded min, 7 - 1d fract, 8 - gwash, 9 - 2d fract, 10 - 7 w/file input

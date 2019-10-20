@@ -11559,7 +11559,7 @@ c                                 check that the name has not already been found
 c                                 that the name is duplicated in the solution model file
          if (first) then
             do i = 1, im - 1
-                  if (tname.eq.sname(i)) call error (75,0d0,i,tname)
+               if (tname.eq.sname(i)) call error (75,0d0,i,tname)
             end do
          end if
 c                                 save solution name
@@ -19218,11 +19218,15 @@ c                                number of vertices on each simplex:
 
          ipvert(i) = 1
 
+         pvptr(i,1) = istot + 1
+
          do j = 1, isimp(i)
             ivert(i,j) = idint(rnums(j))
 c                                number of vertices in the sub-polytope
             ipvert(i) = ipvert(i)*ivert(i,j)
          end do
+
+         pvptr(i,2) = istot + ipvert(i)
 
          if (istot.gt.m4) call error (1,rnums(1),istot,
      *                    'm4 (maximum number of endmembers)')
@@ -19555,7 +19559,7 @@ c---------------------------------------------------------------------
       logical first, nokill
 
       integer kill, ikill, jkill, kill1, i, j, kosp(mst,msp), kill2,
-     *        k, l, im, idsp, ivct, ii, jpoly, jsimp, jvct, killpl
+     *        k, l, im, ii, jpoly, jsimp, jvct, killed, ksimp(mst)
 
       integer iend,isub,insp,iterm,iord,istot,jstot,kstot,rkord
       double precision wg,wk
@@ -19568,14 +19572,17 @@ c---------------------------------------------------------------------
       common/ cst688 /ipoly,isimp(h4),ipvert(h4),ivert(h4,mst),
      *                pimd(h4,mst,msp),pname(h4)
 c----------------------------------------------------------------------
-c                                the increment from the polytope vertex
-c                                to the endmember index
-      ivct = 0
 
       do ii = 1, ipoly
 
-         if (first.and.isimp(ii).gt.1) 
-     *      call warn (50,wg(1,1),isimp(ii),sname//'('//pname(ii)//')')
+         dedpol(ii) = .false.
+
+      end do 
+c                                the increment from the polytope vertex
+c                                to the endmember index
+      do ii = 1, ipoly
+
+         killed = .false.
 
          do
 
@@ -19587,52 +19594,56 @@ c                                to the endmember index
 
             end do
 
-           nokill = .true.
-c                                 count the number of endmembers
-c                                 missing on each simplex
-            do i = 1, ipvert(ii)
+            nokill = .true.
+c                                 for the sum(ivert) species compute
+c                                 the difference between the number
+c                                 of endmembers that do not have and
+c                                 do have each species.
 
-               k = ivct + i
+            do k = pvptr(ii,1), pvptr(ii,2)
 
-               if (kdsol(k).ne.0) cycle
+               if (kdsol(k).ne.0) then 
 
-               nokill = .false.
+                  do j = 1, isimp(ii)
+                     kosp(j,jmsol(k,j)) = kosp(j,jmsol(k,j)) - 1
+                  end do
 
-               do j = 1, isimp(ii)
-                  kosp(j,jmsol(k,j)) = kosp(j,jmsol(k,j)) + 1
-               end do
+               else 
+
+                  nokill = .false.
+                  killed = .true.
+
+                  do j = 1, isimp(ii)
+                     kosp(j,jmsol(k,j)) = kosp(j,jmsol(k,j)) + 1
+                  end do
+
+               end if 
 
             end do
 c                                 no endmembers to kill on polytope ii
-            if (nokill) exit 
+            if (nokill) exit
 c                                 find the species that is missing
 c                                 the most from the model
-            kill = 99
+            kill  = -99
             kill1 = 0
 
             do i = 1, isimp(ii)
 
                do j = 1, ivert(ii,i)
-c                                 idsp is the the number of species
-c                                 possible - the number of missing
-c                                 endmembers
-                  idsp = ipvert(ii) -kosp(i,j)
 
-                  if (idsp.lt.kill) then
-c                                 initialize for i = j = 1
+                  if (kosp(i,j).gt.kill) then
+
                      ikill = i
                      jkill = j
-                     kill = idsp
+                     kill = kosp(i,j)
 
-                  else if (idsp.eq.kill.and.kosp(i,j).gt.0) then
-
-c                                 kill the species that will kill the
-c                                 most dependent endmembers
+                  else if (kosp(i,j).eq.kill) then
+c                                 a tie:
+c                                 of the two choices take the one that 
+c                                 will kill the most dependent endmembers
                      kill2 = 0
 
-                     do l = 1, ipvert(ii)
-
-                        k = ivct + l
+                     do k = pvptr(ii,1), pvptr(ii,2)
 c                                 count the number that will be killed
                         if (jmsol(k,ikill).eq.jkill.and.kdsol(k).eq.-2)
      *                     kill2 = kill2 + 1
@@ -19644,14 +19655,27 @@ c                                 this is more than before (kill1)
                         kill1 = kill2
                         ikill = i
                         jkill = j
-                        kill = idsp
+
+                     else if (i.ne.ikill) then
+
+                        do k = 1, isimp(ii)
+
+                           ksimp(k) = 99
+
+                           do l = 1, ivert(ii,k)
+                              if (kosp(k,l).lt.ksimp(k)) 
+     *                                         ksimp(k) = kosp(k,l)
+                           end do
+                        end do
+
+                        if (ksimp(i).lt.ksimp(ikill)) then 
+                           ikill = i
+                           jkill = j
+                        end if
 
                      end if
-
                   end if
-
                end do
-
             end do
 c                                 kill the species jkill on site ikill
 c                                 and reformulate the model (this is
@@ -19661,21 +19685,30 @@ c                                 this is done afterwards by repoly
 c                                 after the final set of endmembers 
 c                                 has been identified.
             call kill02 (ii,ikill,jkill)
-            if (idsp.eq.0) exit 
+
+            if (ipvert(ii).eq.0) then
+
+               dedpol(ii) = .true.
+
+               if (first) call warn (100,0d0,101,
+     *                    'eliminated polytope '//pname(ii)/
+     *                   /'during reformulation of model '//sname//
+     *                    ' due to missing endmembers.')
+               exit
+
+            end if
 
          end do
 
-         killpl = 0
-
-         if (idsp.eq.0) then
-            killpl = ii
-            exit
-         end if
-
-         ivct = ivct + ipvert(ii)
-
+         if (ipvert(ii).gt.0.and.killed.and.first) 
+     *      call warn (100,0d0,102,
+     *                    'reformulated polytope '//pname(ii)/
+     *                   /' of model '//sname//
+     *                    ' due to missing endmembers.')
+c                                 next polytope
       end do
-
+c                                 clean up the model by eliminating empty/
+c                                 redundant polytopes and/or simplices:
       if (istot.lt.2) then
 c                                 failed, rejected too many endmembers
          im = im - 1
@@ -19685,28 +19718,26 @@ c                                 failed, rejected too many endmembers
       else 
 c                                 check if the composition space includes
 c                                 redundant polytopes and/or simplices:
-         jpoly = 0
-         ivct  = 0
          jvct  = 0 
-c                                 first the polytopes
+         jpoly = 0
+c                                 first eliminate dead polytopes
          do ii = 1, ipoly
 
-            if (ii.eq.killpl) then 
-               ivct = ivct + ipvert(ii)
-               cycle
-            end if 
+            if (dedpol(ii)) cycle
 
             jpoly = jpoly + 1
+
+            pvptr(jpoly,1) = pvptr(ii,1)
+            pvptr(jpoly,2) = pvptr(ii,2)
 c                                  shift the species indices
             do i = 1, ipvert(ii)
 
                do j = 1, isimp(ii)
-                  jmsol(jvct+i,j) = jmsol(ivct+i,j)
+                  jmsol(pvptr(jpoly,1)-1+i,j) = jmsol(pvptr(ii,1)-1+i,j)
                end do 
 
             end do
-
-            ivct = ivct + ipvert(ii)
+c                                 composition space vertex counter
             jvct = jvct + ipvert(ii)
 
             if (ii.lt.ipoly) then 
@@ -19738,19 +19769,33 @@ c                                 shift all polytopes down
 
          end do
 
-         do ii = 1, jpoly - 1
+         if (jpoly.eq.0) then 
+
+            im = im - 1
+            if (first) call warn (25,wg(1,1),jstot,sname)
+            jstot = 0
+            return 
+
+         end if
+
+         j = 0
+
+         do ii = 1, ipoly
+
+            if (dedpol(ii)) cycle
+
+            j = j + 1
 c                                shift composition space subdivision ranges left
-            pxmn(jpoly+1,1,ii) = pxmn(ipoly+1,1,ii)
-            pxmx(jpoly+1,1,ii) = pxmx(ipoly+1,1,ii)
-            pxnc(jpoly+1,1,ii) = pxnc(ipoly+1,1,ii)
-            pimd(jpoly+1,1,ii) = pimd(ipoly+1,1,ii)
+            pxmn(jpoly+1,1,j) = pxmn(ipoly+1,1,ii)
+            pxmx(jpoly+1,1,j) = pxmx(ipoly+1,1,ii)
+            pxnc(jpoly+1,1,j) = pxnc(ipoly+1,1,ii)
+            pimd(jpoly+1,1,j) = pimd(ipoly+1,1,ii)
+
          end do
 
-         ipoly = jpoly
-c                                 eliminate redundant simplicies from 
-c                                 polytopes
-         ivct = 0
-
+         ipoly = j
+c                                 ---------------------------------------------
+c                                 eliminate redundant simplicies from polytopes
          do ii = 1, ipoly
 
             if (isimp(ii).gt.1) then
@@ -19763,7 +19808,7 @@ c                                 polytopes
 
                   jsimp = jsimp + 1
 
-                  do i = ivct + 1, ivct + ipvert(ii)
+                  do i = pvptr(ii,1), pvptr(ii,2)
 
                      jmsol(i,jsimp) = jmsol(i,j)
 
@@ -19777,20 +19822,18 @@ c                                 polytopes
                      pxnc(ii,jsimp,k) = pxnc(ii,j,k)
                      pimd(ii,jsimp,k) = pimd(ii,j,k)
                   end do
+
                end do
 
             end if
 
-            ivct = ivct + ipvert(ii)
-
          end do
 
-         istot = ivct
+         istot = jvct
 
       end if
 c                                 check if polytope model can be 
 c                                 reduced to a simplex?
-
       end
 
       subroutine kill02 (pkill,ikill,jkill)
@@ -19846,73 +19889,46 @@ c                                 local input variables
       common/ cst688 /ipoly,isimp(h4),ipvert(h4),ivert(h4,mst),
      *                pimd(h4,mst,msp),pname(h4)
 c----------------------------------------------------------------------
-c                                the increment from the polytope vertex
-c                                to the endmember index
-      ivct = 0
 
-      do ii = 1, ipoly
-
-         if (ii.ne.pkill) then
-            ivct = ivct + ipvert(ii)
-            cycle 
-         end if 
-
-         do i = 1, isimp(ii)
-
-            if (i.ne.ikill) then
+      do i = 1, isimp(pkill)
 c                                 nothing happens
-               cycle
-
-            else
+         if (i.ne.ikill) cycle
 c                                 on a simplex where a vertex will be eliminated
-               jsp = ivert(ii,i) - 1
+         jsp = ivert(pkill,i) - 1
 c                                 make old-to-new and new-to-old pointers for the
 c                                 vertices
-               jtic = 0
+         jtic = 0
 
-               do j = 1, ivert(ii,i)
+         do j = 1, ivert(pkill,i)
 
-                  if (j.ne.jkill) then
-                     jtic = jtic + 1
+            if (j.ne.jkill) then
+               jtic = jtic + 1
 c                              pointer from new j to old j
-                     j2oj(jtic) = j
+               j2oj(jtic) = j
 c                              pointer from old j to new j
-                     j2nj(j) = jtic
-                  end if
-               end do
-c                              reload
-               ivert(ii,i) = jsp
-
-               if (jsp.eq.0) then
-
-                  do j = ivct + 1, ivct + ipvert(ii)
-                     kdsol(j) = -3
-                  end do 
-
-               end if 
-
-               if (jsp.gt.1) then
-c                              shift subdivision ranges
-                  do j = 1, jsp - 1
-                     pxmn(ii,i,j) = pxmn(ii,i,j2oj(j))
-                     pxmx(ii,i,j) = pxmx(ii,i,j2oj(j))
-                     pxnc(ii,i,j) = pxnc(ii,i,j2oj(j))
-                     pimd(ii,i,j) = pimd(ii,i,j2oj(j))
-                  end do
-
-               end if
-
+               j2nj(j) = jtic
             end if
 
-            exit
-
          end do
+c                              reset vertex counter
+         ivert(pkill,i) = jsp
 
-         if (jsp.eq.0) exit 
+         if (ivert(pkill,i).gt.1) then
+c                              shift subdivision ranges
+            do j = 1, ivert(pkill,i) - 1
+               pxmn(pkill,i,j) = pxmn(pkill,i,j2oj(j))
+               pxmx(pkill,i,j) = pxmx(pkill,i,j2oj(j))
+               pxnc(pkill,i,j) = pxnc(pkill,i,j2oj(j))
+               pimd(pkill,i,j) = pimd(pkill,i,j2oj(j))
+            end do
+
+         end if
+
+         exit
 
       end do
 c                                the endmembers to be eliminated are in the range
-c                                ivct+1...ivct + ipvert(pkill)
+c                                pvptr(pkill,1):pvptr(pkill,2)
       kdep = 0
 
       if (depend) then
@@ -19928,14 +19944,31 @@ c                                reorder the y2p array:
 
       end if
 
-      do i = ivct + 1, ivct + ipvert(pkill)
+      do i = pvptr(pkill,1), pvptr(pkill,2)
 c                                 kill endmembers with the species
 c                                 to be deleted:
          if (jmsol(i,ikill).eq.jkill) kdsol(i) = -3
       end do
-c                                 eliminate the dependent endmembers, redep
-c                                 resets kdsol to zero for the eliminated endmembers
-      call redep (-3)
+c                                 kill any endmembers that depend
+c                                 on the killed endmember?
+c     call redep (-3)
+c                                 reset pvptr values
+      ivct = 0
+
+      do ii = 1, ipoly
+
+         ipvert(ii) = 1
+
+         do j = 1, isimp(ii)
+c                                number of vertices in the sub-polytope
+            ipvert(ii) = ipvert(ii)*ivert(ii,j)
+         end do
+
+         pvptr(ii,1) = ivct + 1
+         ivct = ivct + ipvert(ii)
+         pvptr(ii,2) = ivct
+
+      end do
 c                                 check the ordered species
       morder = 0
 c                                 first check if the ordered endmember
@@ -20003,16 +20036,25 @@ c                                 reset total and present counters
 
       do i = 1, itic
 
-         if (i2oi(i).lt.ivct+1.or.
-     *       i2oi(i).gt.ivct+ipvert(pkill) ) cycle
-c                                 reset the species pointers (jmsol)
-         do j = 1, isimp(pkill)
-            if (j.eq.ikill) then
-               jmsol(i,j) = j2nj(jmsol(i2oi(i),j))
-            else
+         if (i.ge.pvptr(pkill,1).and.i.le.pvptr(pkill,2)) then
+c                                 the endmember is on a polytope where something 
+c                                 was killed:
+            do j = 1, isimp(pkill)
+               if (j.eq.ikill) then
+                  jmsol(i,j) = j2nj(jmsol(i2oi(i),j))
+               else
+                  jmsol(i,j) = jmsol(i2oi(i),j)
+               end if
+            end do
+
+         else
+c                                 shift the jmsol indices for endmembers on 
+c                                 polytopes where nothing happened
+            do j = 1, mst
                jmsol(i,j) = jmsol(i2oi(i),j)
-            end if
-         end do
+            end do
+
+         end if
 
       end do
 c                                --------------------------------------
@@ -20188,6 +20230,9 @@ c                                 ordered species:
          if (morder.eq.0) then
 c                                 there are no ordered species left
             order = .false.
+
+            write (*,*) 'yagghg!'
+            call errpau
 
             if (depend) then
 
@@ -20809,7 +20854,7 @@ c                                 skip 0-d simplices
 
       else
 c                                 static arrays:
-         if (phct.gt.k1) call err41 ('K1 LOADGX/SETIND')
+         if (phct.gt.k1) call err41 ('K1 [LOADGX/SETIND]')
 
          icox(phct) = gcind + 1
 
@@ -20817,7 +20862,7 @@ c                                 static arrays:
 c                                 composite space, save location of 
 c                                 polytopic wts
            gcind = gcind + 1
-           if (gcind.gt.k24) call error (58,0d0,0,'K24 LOADGX/SETIND')
+           if (gcind.gt.k24) call error (58,0d0,0,'K24 [LOADGX/SETIND]')
            jcox(gcind) = spx(ipop,1) + (nind(ipop)-1)*ndim(1,ipop,ids)
 
          end if
@@ -20835,7 +20880,7 @@ c                                 skip 0-d simplices
 
                gcind = gcind + 1
                if (gcind.gt.k24) 
-     *            call error (58,0d0,0,'K24 LOADGX/SETIND')
+     *            call error (58,0d0,0,'K24 [LOADGX/SETIND]')
                jcox(gcind) = spx(ii,i) 
      *                       +  (sco(pos+i) - 1) * ndim(i,ii,ids)
             end do

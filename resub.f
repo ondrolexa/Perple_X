@@ -334,11 +334,8 @@ c     *                   'question: Do I feel lucky? Well, do ya, punk?'
 
             end do
 
-            if (idead1.eq.0) then
-               write (*,'(/,a,/)') 'good result on idead = 3'
-            else 
-               write (*,'(/,a,/)') 'bad result on idead = 3'
-            end if
+            if (idead1.ne.0) 
+     *         write (*,'(/,a,/)') 'bad result on idead = 3'
 
          end if
 
