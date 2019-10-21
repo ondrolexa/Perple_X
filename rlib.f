@@ -15572,7 +15572,7 @@ c                          CONVEX
 c                          MEEMUM/VERTEX
          if (icp.gt.3) then
             write (n3,1150) (cname(i), i = 1, icp)
-            do i = istct, iphct
+            do i = istct, ipoint
                write (n3,'(3x,a,12(1x,f5.3,1x))')
      *            names(i), (cp(j,i)/ctot(i), j = 1, icp)
             end do
@@ -19556,16 +19556,19 @@ c---------------------------------------------------------------------
 
       character*10 sname
 
-      logical first, nokill
+      logical first, killed, nokill
 
       integer kill, ikill, jkill, kill1, i, j, kosp(mst,msp), kill2,
-     *        k, l, im, ii, jpoly, jsimp, jvct, killed, ksimp(mst)
+     *        k, l, im, ii, jpoly, jsimp, jvct, ksimp(mst)
 
       integer iend,isub,insp,iterm,iord,istot,jstot,kstot,rkord
       double precision wg,wk
       common/ cst108 /wg(m1,m3),wk(m16,m17,m18),iend(m4),
      *      isub(m1,m2),insp(m4),
      *      rkord(m18),iterm,iord,istot,jstot,kstot
+
+      logical depend,laar,order,fluid,macro,recip
+      common/ cst160 /depend,laar,order,fluid,macro,recip
 
       character pname*10
       integer ipoly, isimp, ipvert, ivert, pimd
@@ -19796,6 +19799,8 @@ c                                shift composition space subdivision ranges left
          ipoly = j
 c                                 ---------------------------------------------
 c                                 eliminate redundant simplicies from polytopes
+         recip = .false.
+
          do ii = 1, ipoly
 
             if (isimp(ii).gt.1) then
@@ -19804,7 +19809,7 @@ c                                 eliminate redundant simplicies from polytopes
 
                do j = 1, isimp(ii)
 
-                  if (ivert(ii,j).gt.1) cycle
+                  if (ivert(ii,j).eq.1) cycle
 
                   jsimp = jsimp + 1
 
@@ -19824,6 +19829,10 @@ c                                 eliminate redundant simplicies from polytopes
                   end do
 
                end do
+
+               isimp(ii) = jsimp
+
+               if (jsimp.gt.1) recip = .true.
 
             end if
 

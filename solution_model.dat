@@ -3298,7 +3298,7 @@ en       fs
                                   | Simplex 2
 0  .2  .1  0                      | X(2,1) - M-Fe3+
 0  .2  .1  0                      | X(2,2) - M-Ca
-0  .3  .1  0                      | X(2,3) - M-Ts
+0  .4  .1  0                      | X(2,3) - M-Ts
 
 begin_ordered_endmembers
 opx = 1/2 en + 1/2  fs  Delta(enthalpy) = -6.95d3
