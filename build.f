@@ -37,7 +37,7 @@ c-----------------------------------------------------------------------
       integer i, k, l, iind, im, idum, ivct, iwt, jcth, j, ier, idep, 
      *        gct(i9), gid(i9,i9), ict, idsol, isoct, inames
 
-      logical eof, good, oned, findph, bad, first, feos, chksol
+      logical eof, good, oned, findph, first, feos, chksol
 
       external chksol, findph
 
@@ -125,17 +125,11 @@ c-----------------------------------------------------------------------
       character cmpnt*5, dname*80
       common/ csta5 /cl(k0),cmpnt(k0),dname
 
-      logical stck
-      integer iend,isub,imd,insp,ist,isp,isite,iterm,iord,istot,jstot,
-     *        kstot,rkord,xtyp
-      double precision wg,wk,reach
-      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),reach,iend(m4),
-     *      isub(m1,m2,2),imd(msp,mst),insp(m4),ist(mst),isp(mst),
-     *      rkord(m18),isite,iterm,iord,istot,jstot,kstot,xtyp,stck
-
-      integer jsmod
-      double precision vlaar
-      common/ cst221 /vlaar(m3,m4),jsmod
+      integer iend,isub,insp,iterm,iord,istot,jstot,kstot,rkord
+      double precision wg,wk
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),iend(m4),
+     *      isub(m1,m2),insp(m4),
+     *      rkord(m18),iterm,iord,istot,jstot,kstot
 
       integer ipot,jv,iv
       common/ cst24 /ipot,jv(l2),iv(l2)
@@ -158,11 +152,6 @@ c-----------------------------------------------------------------------
       character aqnam*8
       double precision aqcp, aqtot
       common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       integer idspe,ispec
       common/ cst19 /idspe(2),ispec
@@ -458,9 +447,9 @@ c                                 check version compatability
 
          do 
 c                                 read candidates:
-            call rmodel (blah,tn1,tn2,bad)
+            call rmodel (blah,tn1,tn2)
 c                                 istot = 0 = eof
-            if (bad.or.istot.eq.0) exit 
+            if (istot.eq.0) exit 
 c                                 don't allow fluid models if 
 c                                 the system is fluid saturated:
             if (jsmod.eq.0.and.ifct.gt.0) cycle
@@ -1237,11 +1226,6 @@ c---------------------------------------------------------------------------
       character*8 exname,afname
       common/ cst36 /exname(h8),afname(2)
 
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
       data fugact/'chem_pot','fugacity','activity'/
 
 c---------------------------------------------------------------------------
@@ -1782,11 +1766,6 @@ c---------------------------------------------------------------------------
       integer grid
       double precision rid 
       common/ cst327 /grid(6,2),rid(5,2)
-
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 c-----------------------------------------------------------------------
       nc(1) = 'C0'
       nc(2) = 'C1'
