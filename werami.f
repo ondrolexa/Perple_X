@@ -3093,7 +3093,7 @@ c                                 probably low variance
 
                   end if
 
-                  stble(i) = .true.
+                  stble(ind(i)) = .true.
 
                end if 
 
@@ -3102,10 +3102,10 @@ c                                 set modes of phase that have dissappeared
 c                                 to real zeros (not nopt(7)).
             do i = 1, nsol
 
-               if (stble(i).and.smode(i).gt.0) cycle
+               if (stble(ind(i)).and.smode(ind(i)).gt.0) cycle
 
                do j = 1, nstab(i)
-                  prop(jnd(i)+j) = 0d0
+                  prop(jnd(ind(i))+j) = 0d0
                end do 
 
             end do 

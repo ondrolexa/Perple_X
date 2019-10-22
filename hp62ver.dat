@@ -1,5 +1,5 @@
 
- | for domcumentation of Perple_X thermodynamic data file structure and content refer to:
+ | for documentation of Perple_X thermodynamic data file structure and content refer to:
 
  | www.perplex.ethz.ch/perplex_thermodynamic_data_file.html
 
@@ -68,9 +68,9 @@ end_special_components
 
 begin_makes             
                                 | the make definitions segment of the thermodynamic
-                                | data file is preceeded by the "begin_makes" keyword,
+                                | data file is preceded by the "begin_makes" keyword,
                                 | and terminated by the "end_makes" keyword. Within 
-                                | this segment comments must be preceeded by a "|" 
+                                | this segment comments must be preceded by a "|" 
                                 | character. 
 
                                 | the make definitions define new thermodynamic entities
@@ -350,7 +350,7 @@ cessh = 1 cats + 1 acm - 1 jd
 crdih = 1 cats + 1 kos - 1 jd
        DQF = -4900
 mcbuf = 1 cats + 1/2 per + 1/2 ru -1/2 cor
-       DQF = -1750 - 1.2 * T - 0.005 * P
+       DQF = 1750 - 1.2 * T - 0.005 * P  | corrected from -1750 ... 10/22/2019, Lisa Rummel, Mainz.
 kjdh  = 1 jd + 1 san - 1 abh
        DQF = -3750 + 1.189 * P
       |---------------------------  Melt
