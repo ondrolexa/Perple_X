@@ -1,4 +1,4 @@
-688 DO NOT DELETE THIS LINE
+687 DO NOT DELETE THIS LINE
 
                             ---------------------------------------------------------------------------
                              FOR MODEL DEFINITIONS AND REFERENCES READ THE MODEL COMMENTARY OR REFER TO
@@ -34,11 +34,12 @@
 
                              I) Solution model types are:
 
-                             2   - simplicial composition space.
-                             6   - order-disorder, simplicial composition space.
-                             7   - polytope composition space (reciprocal when correct).
-                             8   - order-disorder, polytope composition space.
-                             688 - generic format, i.e., encompasses all of the above.
+                             2  - simplicial composition space
+                             6  - order-disorder, simplicial composition space
+                             7  - prismatic composition space (reciprocal when correct)
+                             8  - order-disorder, prismatic composition space
+                             9  - order-disorder, simplicial composition space with a prismatic vertex
+                             10 - simplicial composition space with a prismatic vertex
 
                              Special model types:
 
@@ -245,666 +246,6 @@
                       --------------------------------------------------------
 begin_model
 
-                             Ti-Fe3+ Biotite from Tajcmanova et al., JMG 2009;
-                             extended for Mn solution after Tinkham et al. 2001.
-
-                             Model entered by Lucie Tajcmanova, December, 2008.
-
-                             NOTE this model requires the following make definitions 
-                             in the thermodynamic data file:
-
-                             tbit = 1 phl - 1 br + 1 ru           84e3 -11.5 0 
-                             fbit = 1 east - 1/2 cor + 1/2 hem    6e3 0 0  
-
-                             site population limits added Feb 20, 2011, JADC.
-
-                             reformulated as a prismatic + orphan vertex model.
-
-                             JADC, 10/5/2018
-
-                             688 format, JADC, 9/9/2019.
-
-
-                                      Site:           M1      M2       T1     H
-                                                     ____________________________
-
-                                      Mutliplicity    1       2        2      2       
-
-                                    endmember        ____________________________   type
-                                    _________                                       _________
-
-
-                                        ffbit         Fe3+   FeFe     AlAl    OH    dependent 
-                                        fbit          Fe3+   MgMg     AlAl    OH
-                          
-                                        ftbit         Fe     TiFe     AlSi    O     dependent
-                                        tbit          Mg     TiMg     AlSi    O
-   
-                                        sdph          Al     FeFe     AlAl    OH    dependent
-                                        east          Al     MgMg     AlAl    OH
-
-                                        mnbi          Mn     MnMn     AlSi    OH    independent orphan
-                                        ann           Fe     FeFe     AlSi    OH
-                                        phl           Mg     MgMg     AlSi    OH
-
-                                        obi           Fe     MgMg     AlSi    OH    ordered
-
-Bio(TCC)                           | model name
-abbreviation Bio
-full_name    biotite
-
-688                                | model type: 688 format standard model
- 
-2                                  | number of polytopes
-0   .5   .1   0                    | X(1) is [Mn][Mn]
-                                   | X(2) = 1 - X(1) is [M,T][M,MTi]
-
-                                   | ----------------------------
-                                   | Polytope 1 - 1 simplex
-[Mn][Mn]                           | polytope name
-1                                  | number of simplices, [Mn][Mn]
-1                                  | number of vertices on each simplex
-mnbi                               | endmembers on the vertices
-
-                                   | ----------------------------
-                                   | Polytope 2 - 2x4 simplices
-[M,T][M,MTi]                       | polytope name
-2                                  | number of simplices
-2  4                               | number of vertices on each simplex
-                                   | endmembers on the vertices
-ffbit     fbit
-sdph      east
-ftbit     tbit
-ann       phl
-                                   | First 2-simplex
-0    1   .1  0                     | X(1,1) is bulk Fe/M
-                                   | Second 4-simplex
-0    1   .1  0                     | X(2,1) is Fe3/[T+M] on M1, M on M2
-0    1   .1  0                     | X(2,2) is Al/[T+M]  on M1, M on M2
-0    1   .1  0                     | X(2,3) is MTi/[M+MTi] on M2, M on M1
-
-begin_ordered_endmembers
-obi = 2/3 phl + 1/3 ann   enthalpy_of_ordering = -6.8d3 
-end_ordered_endmembers
-
-begin_dependent_endmembers
-sdph    = 1 east + 1 ann    - 1 obi
-ffbit   = 1 fbit + 1 ann    - 1 obi
-ftbit   = 1 tbit + 1/2 ann  + 1/2 obi - 1 phl
-end_dependent_endmembers
-
-begin_excess_function
-W(phl ann)   12000   | excess parameters from Holland & Powell, JMG, 2006
-W(phl east)  10000 
-W(phl obi)    4000
-W(ann east)   3000 
-W(ann obi)    8000
-W(obi east)   7000
-end_excess_function 
-
-6                                   | number of identisites in configurational entropy model
-
-M1                                  | site name
-5 1 1                               | number of species, effective multiplicity, true multiplicity
-z(Al,M1)   = 1 east
-z(Mg,M1)   = 1 phl + 1 tbit
-z(Mn,M1)   = 1 mnbi 
-z(Fe3+,M1) = 1 fbit
-z(Fe,M1)   = 1 ann + 1 obi 
-
-M2                                  | site name
-4 2 2                               | number of species, effective multiplicity, true multiplicity
-z(Fe,M2)   = 1 ann
-z(Ti,M2)   = 1/2 tbit
-z(Mn,M2)   = 1 mnbi
-z(Mg,M2)   = 1 phl + 1 obi + 1 east + 1/2 tbit + 1 fbit
-
-T1                                  | site name
-2 2 2                               | number of species, effective multiplicity, true multiplicity
-z(Si,T1)   = 1/2 phl + 1/2 ann + 1/2 tbit + 1/2 obi + 1/2 mnbi 
-z(Al,T1)   = needs_to_be_completed
-
-T2                                  | site name
-1 2 2                               | number of species, effective multiplicity, true multiplicity
-z(Si,T2)   = 1
-
-O                                   | site name
-1 10 10                             | number of species, effective multiplicity, true multiplicity
-z(O,O)     = 1
-
-OH                                  | site name
-2 2 2                               | 2 species on H, 2 site per formula unit.
-z(O,OH)     = 1 tbit
-z(OH,OH)    = needs_to_be_completed
-
-end_of_model
-                      --------------------------------------------------------
-begin_model                
-                           ternary feldsar (fuhrman & lindsley, am min, 1988)
-                           for binary plagioclse this model is identical
-                           to that of Newton et al. 1980, and for binary
-                           alkali feldspar it is identical to Haselton et al. (1983).
-
-                           CORRECTED FOR TYPO IN ORIGINAL PAPER.
-
-feldspar                   
-abbreviation Fsp
-full_name    ternary-feldspar
-
-688                                | model type: 688 format standard model
- 
-1                                  | number of polytopes
-1                                  | number of simplices
-3                                  | number of vertices on each simplex
-abh                                | endmembers on the vertices
-an
-san
-
-0. 1   .1   0                      | range and resolution for albite, imod = 0 -> cartesian subdivision
-0. 1   .1   0                      | range and resolution for anorthite, imod = 0 -> cartesian subdivision
-
-begin_excess_function 
-w(abh abh san) 27320   -10.3  .394 * P_bar
-w(abh san san) 18810   -10.3  .394 * P_bar
-w(an  an  san) 52468          
-w(an  san san) 47396          -.12 * P_bar
-w(an  an  abh) 28226
-w(an  abh abh) 8471
-w(an  abh san) 100045.5 -10.3 -0.76 * P_bar
-end_excess_function 
-
-4                                   | number of sites in configurational entropy model
-
-M                                   | site name
-3 1 1                               | number of species, effective multiplicity, true multiplicity
-z(Na,M)  = 1 abh
-z(Ca,M)  = 1 an
-z(K,M)   = 1 san
-
-T1                                  | site name
-2 2 2                               | number of species, effective multiplicity, true multiplicity
-z(Al,T1) = 1/2 + 1/2 an
-z(Si,T1) = 1 - 1/2 - 1/2 an
-
-T2                                  | site name
-1 2 2                               | number of species, effective multiplicity, true multiplicity
-z(Si,T2)   = 1
-
-O                                   | site name
-1 8 8                               | number of species, effective multiplicity, true multiplicity
-z(O,O)     = 1
-
-reach_increment 3
-
-end_of_model
-                      --------------------------------------------------------
-begin_model
-                      cAmph(G) => Green et al. (JMG, 2016) clinoamphibole. Two polytope version. 
-
-                      NOTE: to use this the following endmembers must be specified with make
-                      definitions in the thermodynamic data file
-
-                         mrbG  = 1 gl - 1 gr + 1 andr
-                            DQF = 0
-                         kprg  = 1 mu - 1 pa + 1 parg
-                            DQF = -7060 + 20 * T_K
-                         tts   = -2 dsp + 2 ru + 1 ts
-                            DQF =   95000
-
-                      to avoid cluttering thermodynamic data files with the new plague of TC
-                      DQF "corrections", the following simple DQF's are specified in the
-                      make_definition section at the end of this model:
-
-                         DQF(gl)   = -3000
-                         DQF(parg) = -10000
-                         DQF(ts)   =  10000
-                         DQF(grun) = -3000
-
-                      For (nonsensical, but common) positive DFQ's this approach may lead to
-                      interference between the phase relations of the solution model and the
-                      un-DQF'd endmember. If such interference occurs: the DQF'd endmember must
-                      be renamed; its definition placed in the thermodynamic data file;
-                      and the un-DQF'd endmember excluded from the calculation.
-
-                                                           Sites
-                                            A    M1      M2      M4     T1     OH
-                                            _______________________________________
-
-                            Multiplicity    1     3      2       2     1(4)    2
-                                            _______________________________________
-
-                              Ts            V     Mg     Al     Ca     SiAl    OH
-                              fTs_d         V     Fe     Al     Ca     SiAl    OH
-                              ffts_d        V     fe     Al     fe     SiAl    OH
-                              mmts_d        V     mg     Al     mg     SiAl    OH
-
-                              Parg          Na    Mg    MgAl    Ca     SiAl    OH
-                              fParg_d       Na    Fe    FeAl    Ca     SiAl    OH
-                              mpg_d         Na    Mg    mgAl    Mg     SiAl    OH
-                              fpg_d         Na    Fe    feAl    fe     SiAl    OH
-
-                              Kprg          K     Mg    MgAl    Ca     SiAl    OH
-                              fkPrg_d       K     Fe    FeAl    Ca     SiAl    OH
-                              mkpg_d        K     Mg    mgAl    Mg     SiAl    OH
-                              fkpg_d        k     Fe    feAl    fe     SiAl    OH
-
-                              tcmpg_d       Na    Mg    MgTi    Ca    Si3Al   OHO
-                              tcfpg_d       Na    Fe    FeTi    Ca    Si3Al   OHO
-                              tmpg_d        Na    Mg    mgTi    Mg    Si3Al   OHO
-                              tfpg_d        Na    Fe    feTi    fe    Si3Al   OHO
-
-                              tcmkpg_d      K     Mg    MgTi    Ca     SiAl    OH
-                              tcfkpg_d      K     Fe    FeTi    Ca     SiAl    OH
-                              tmkpg_d       K     Mg    mgTi    Mg     SiAl    OH
-                              tfkpg_d       k     Fe    feTi    fe     SiAl    OH
-
-                              ocmpg_d       Na    Mg    MgFe3+  Ca     SiAl    OH
-                              ocfpg_d       Na    Fe    FeFe3+  Ca     SiAl    OH
-                              ompg_d        Na    Mg    mgFe3+  Mg     SiAl    OH
-                              ofpg_d        Na    Fe    feFe3+  fe     SiAl    OH
-
-                              ocmkpg_d      K     Mg    MgFe3+  Ca     SiAl    OH
-                              ocfkpg_d      K     Fe    FeFe3+  Ca     SiAl    OH
-                              omkpg_d       K     Mg    mgFe3+  Mg     SiAl    OH
-                              ofkpg_d       K     Fe    feFe3+  fe     SiAl    OH
-
-                              Gl            V     Mg     Al     Na      Si     OH
-                              fGl_d         V     Fe     Al     Na      Si     OH
-
-                              mrbG          V     Mg     Fe3    Na      Si     OH
-                              frb_d         V     Fe     Fe3    Na      Si     OH
-
-                              Tts           V     Mg     Ti     Ca      Si      O
-                              fcTts_d       V     Fe     Ti     Ca      Si      O
-                              mTts_d        V     Mg     Ti     Mg      Si      O
-                              fTts_d        V     Fe     Ti     Fe      Si      O
-
-                              cmgrk_d       V     Mg     Fe3    Ca     SiAl    OH
-                              cfgrk_d       V     Fe     Fe3    Ca     SiAl    OH
-                              mgrk_d        V     Mg     Fe3    Mg     SiAl    OH
-                              fgrk_d        V     Fe     Fe3    Fe     SiAl    OH
-
-                              Tr            V     Mg     Mg     Ca      Si     OH
-                              fTr_d         V     Fe     Fe     Ca      Si     OH
-                              Cumm          V     Mg     Mg     Mg      Si     OH
-                              Grun          V     Fe     Fe     Fe      Si     OH
-
-                              A             V     Mg     Fe     Fe      Si     OH
-                              B             V     Fe     Mg     Fe      Si     OH
-
-           dependent exchange Mgrk          V     M      Fe3    M      SiAl    OH
-           dependent exchange Mts           V     M       Al    M      SiAl    OH
-           dependent exchange Mpg           Na    M      MAl    M      SiAl    OH
-           dependent exchange MKpg          K     M      MAl    M      SiAl    OH
-           dependent exchange MTts          V     M      Ti     M      SiAl    OH
-
-           2 NaCa-1(M4) = (Gl-Ts)
-           2 CaMg-1(M4) = (Tr-Cumm)
-           
-           2 Fe3Al-1(M2) = (Rb-Gl)
-           2 TiAl-1(M2)  = (Tts-Ts) => coupled to T1 and OH.
-
-           3 FeMg-1(M1) = (grun - a)
-           2 FeMg-1(M2) = (grun - b)
-           2 FeMg-1(M4) = (-grun - cumm + a + b)
-           
-           A  = Na, K, V
-           T  = Al, Fe3, Ti, on M2 [Polytope 2]
-           T' = Al, Fe3, on M2 [Polytope 1]
-           MT = MAl, MFe3, MTi
-           C  = Ca, M4
-           M  = Mg, Fe
-           N  = Na, M4
-           
-           2 polytope model: A, M1, M2, M4 site populations are indicated, remaining are dependent
-
-           Polytope 1 = Glaucophane = [ ][M][T'][N]         => 2*2 
-           Polytope 2 = ACMT-Amph   = [A][M][M,T,MT][M,C]   => 2*2*10
-          ----------------------------------------------------------------------------------------
-
-  NOTE: the Ti- and Fe3+ K-Na-paragasite exchanges allowed in the 
-  published cAmph(G) model have been commented out below because they 
-  are costly and do not seem to have any significant effect on computed
-  phase relations, this may also be true of the M-Ca-Fe3+_tschermaks
-  [grk] exchange, although this has not been tested. As a consequence of
-  this the above definitions become:
-
-           A  = Na, K, V
-           T  = Al, Fe3, Ti, on M2 [Polytope 2]
-           T' = Al, Fe3, on M2 [Polytope 1]
-           C  = Ca, M4
-           M  = Mg, Fe
-           N  = Na, M4
-           
-           2 polytope model: A, M1, M2, M4 site populations are indicated, remaining are dependent
-
-           Polytope 1 = Glaucophane = [ ][M][T'][N]         => 2*2 
-           Polytope 2 = ACMT-Amph   = [A][M][M,T,MAl][M,C]  => 2*2*6
-
-  To restore the Ti- and Fe3+ K-Na-paragasite exchanges refer to the comments
-  following the ACMT-Amph polytope definition.
-
-          ----------------------------------------------------------------------------------------
-
-cAmph(G)
-abbreviation Amph
-full_name    clinoamphibole
-
-688                                | model type: 688 format standard model
- 
-2                                  | number of polytopes, subvision ranges for the first N-1 polytopes:
-
-0   .2   .1  0                     | X(1) = X([ ][M][Fe3,Al][N]), Mg-Fe-Al-Fe3+ "glaucophane"
-                                   | X(2) = 1 - X(1) = X([A][M][M,T,MT][M,C]), K-Na-Mg-Fe-Al-Ti-Fe3+ "pargasite"
-
-                                   | -------------------------------------------
-                                   | Polytope 1 [ ][M][T  ][N] (Glaucophane)
-
-Glaucophane                        | poytope name
-                                    
-2                                  | number of simplices, then for each simplex
-2 2                                | number of vertices on each simplex
- 
-                                   | Simplex 1 Mg, Fe; is Mg/M [M1 site]
-                                   | Simplex 2 Fe3, Al is Fe3+/T' [M2 site]
-
-                                   | endmembers on the vertices, index on the first simplex
-                                   | changes fastest, last slowest
-                                   
-                                   | => endmember 11 is [ ][Mg][Fe3][Na]
-                                   | => endmember 21 is [ ][Fe][Fe3][Na]
-                                   | => endmember 12 is [ ][Mg][Al ][Na]
-                                   | => endmember 22 is [ ][Fe][Al ][Na]
-
-mrbG       frb_d                   | Fe3-glaucophane, aka riebeckite
-gl         fgl_d                   | Al-glaucophane
-
-                                   | First (1d) simplex
-0    1  .1  0                      | X(1,1) = bulk Mg/M
-                                   | Second (3d) simplex
-0    1  .1  0                      | X(2,1) = Fe3/T' on M2, T' = Al + Fe3+
-
-                                   | -------------------------------------------
-                                   | Polytope 2 [A][M][M,T,MT][M,C]  
-
-ACMT-Amph                          | poytope name
- 
-3                                  | number of simplices, then for each simplex
-
-    | NOTE!!!
-
-    | the Ti- and Fe3+ K-Na-paragasite exchanges that are allowed in the 
-    | published cAmph(G) model have been commented out here because they 
-    | are costly and do not seem to have any significant effect on computed
-    | phase relations, this may also be true of the M-Ca-Fe3+_tschermaks
-    | [grk] exchange, although this has not been tested. 
-
-    | To restore the
-    | the Ti- and Fe3+ K-Na-paragasite exchanges change the following line
-    | to 2 2 10, and uncomment the lines below, and in the dependent
-    | endmember definition section, that specify the relevant endmembers and
-    | uncomment the corresponding subdivision ranges.
-
-    | It is probable that VERTEX/MEEMUM will run out of dynamic memory using 
-    | the full model, if this occurs uncomment the low_reach option keyword
-    | at the end of this model. The low_reach option dramatically reduces the
-    | memory and time required for calculations, but also causes a significant
-    | deterioration in phase diagram quality.
-
-2 2 6                              | number of vertices on each simplex
-
-                                   | Simplex 1 is Mg/M
-                                   | Simplex 2 is M/[Ca + M] on M4
-                                   | Simplex 3 is parg and M, Fe3, Ti, Al M2 site chemistry
-
-                                   | endmembers on the vertices, index on the first simplex
-                                   | changes fastest, last slowest
-
-mts_d      fts_d                   | M-Ca-Al_tschermaks
-ts         fcts_d
-
-mparg_d    fparg_d                 | M-Ca-Na-Al_parg
-parg       fcparg_d
-
-| ompg_d     ofpg_d                  | M-Ca-Na-Fe3+ parg
-| ocmpg_d    ocfpg_d
-
-| tmpg_d     tfpg_d                  | M-Ca-Na-Ti parg
-| tcmpg_d    tcfpg_d
-
-kmparg_d   kfparg_d                | M-Ca-K-Al_parg
-kprg       kfcprg_d
-
-| omkpg_d    ofkpg_d                 | M-Ca-K-Fe3+ parg
-| ocmkpg_d   ocfkpg_d
-
-| tmkpg_d    tfkpg_d                 | M-Ca-K-Ti parg
-| tcmkpg_d   tcfkpg_d
-
-mtts_d     ftts_d                  | M-Ca-Ti_tschermaks
-tts        fctts_d
-
-mgrk_d     fgrk_d                  | M-Ca-Fe3+_tschermaks (Na-free riebeckite)
-mcgrk_d    fcgrk_d
-
-cumm       grun                    | M-Ca divalent amphibole
-tr         ftr_d
-
-                                   | First (1d) simplex
-.5  .7   .1  0                     | X(1,1) = bulk Mg/M
-
-                                   | Second (1d) simplex
-0   .4   .1  0                     | X(2,1) = M/[Ca + M] on M4
-
-                                   | Third simplex 
-0   .45  .1  0                     | X(3,1) = X(Al-Ts)
-0   .7   .1  0                     | X(3,2) = X(Na-Al-Parg)
-                  | 0   .45  .1  0                     | X(3,3) = X(Na-Fe3+-Parg)
-                  | 0   .3   .1  0                     | X(3,4) = X(Na-Ti-Parg)
-0   .1   .1  0                     | X(3,5) = X(K-Al-Parg)
-                  | 0   .1   .1  0                     | X(3,6) = X(K-Fe3+-Parg)
-                  | 0   .1   .1  0                     | X(3,7) = X(K-Ti-Parg)
-0   .2   .1  0                     | X(3,8) = X(Ti-Ts)
-0   .35  .1  0                     | X(3,9) = X(Fe3-Ts)
-
-begin_ordered_endmembers
-
-a     = 3/7 cumm + 4/7 grun  enthalpy_of_ordering  =   -9486  | = DQF(A) -4/7 DQF(Grun)
-b     = 2/7 cumm + 5/7 grun  enthalpy_of_ordering  =  -11657  | = DQF(B) -5/7 DQF(Grun)
-
-end_ordered_endmembers 
-
-begin_dependent_endmembers
-
-fcts_d = 1 ts + 1 grun - 1 a
-fts_d  = 1 ts - 1 tr + 1 b
-mts_d  = 1 ts - 1 tr + 1 cumm
-
-fcparg_d  = 1 parg  + 3/2 grun - 1 a - 1/2 b
-fparg_d   = 1 parg  + 1/2 grun + 1/2 b - 1 tr
-mparg_d   = 1 parg  - 1 tr     + 1 cumm
-
-|tcmpg_d   = 1 parg  + 1/2 tts - 1/2 ts
-|tcfpg_d   = 1 parg  + 3/2 grun - 1 a - 1/2 b + 1/2 tts - 1/2 ts
-|tmpg_d    = 1 parg  - 1 tr     + 1 cumm + 1/2 tts - 1/2 ts
-|tfpg_d    = 1 parg  + 1/2 grun + 1/2 b - 1 tr + 1/2 tts - 1/2 ts
-
-|ocmpg_d   = 1 parg  + 1/2 mrbG  - 1/2 gl
-|ocfpg_d   = 1 parg  + 3/2 grun - 1 a - 1/2 b  + 1/2 mrbG  - 1/2 gl
-|ompg_d    = 1 parg  - 1 tr     + 1 cumm + 1/2 mrbG  - 1/2 gl
-|ofpg_d    = 1 parg  + 1/2 grun + 1/2 b - 1 tr + 1/2 mrbG  - 1/2 gl
-
-kfcprg_d  = 1 kprg  + 3/2 grun - 1 a - 1/2 b
-kfparg_d  = 1 kprg  + 1/2 grun + 1/2 b - 1 tr
-kmparg_d  = 1 kprg  - 1 tr + 1 cumm
-
-|tcmkpg_d  = 1 kprg  + 1/2 tts - 1/2 ts
-|tcfkpg_d  = 1 kprg  + 3/2 grun - 1 a - 1/2 b + 1/2 tts - 1/2 ts
-|tmkpg_d   = 1 kprg  - 1 tr     + 1 cumm + 1/2 tts - 1/2 ts
-|tfkpg_d   = 1 kprg  + 1/2 grun + 1/2 b - 1 tr + 1/2 tts - 1/2 ts
-
-|ocmkpg_d  = 1 kprg  + 1/2 mrbG  - 1/2 gl
-|ocfkpg_d  = 1 kprg  + 3/2 grun - 1 a - 1/2 b  + 1/2 mrbG  - 1/2 gl
-|omkpg_d   = 1 kprg  - 1 tr     + 1 cumm + 1/2 mrbG  - 1/2 gl
-|ofkpg_d   = 1 kprg  + 1/2 grun + 1/2 b - 1 tr + 1/2 mrbG  - 1/2 gl
-
-fgl_d    = 1 gl    + 1 grun   - 1 a
-frb_d    = 1 mrbG  + 1 grun   - 1 a
-
-fctts_d  = 1 tts   + 1 grun   - 1 a
-ftts_d   = 1 tts   - 1 tr     + 1 b
-mtts_d   = 1 tts   - 1 tr     + 1 cumm
-
-mcgrk_d  = 1 mrbG  + 1 ts    - 1 gl
-mgrk_d   = 1 mrbG  + 1 ts    - 1 gl     - 1 tr   + 1 cumm
-fgrk_d   = 1 mrbG  + 1 ts    - 1 gl     - 1 tr   + 1 b
-fcgrk_d  = 1 mrbG  + 1 ts    - 1 gl     - 1 a  + 1 grun
-
-ftr_d    = 1 tr    + 2 grun   - 1 a - 1 b
-
-end_dependent_endmembers
-
-begin_excess_function
-
-W(tr ts)                  20d3
-W(tr parg)                25d3
-W(tr gl)                  65d3
-W(tr cumm)                45d3
-W(tr grun)                75d3
-W(tr a)                   57d3
-W(tr b)                   63d3
-W(tr mrbG)                52d3
-W(tr kprg)                30d3
-W(tr tts)                 85d3
-W(ts parg)               -40d3
-W(ts gl)                  25d3
-W(ts cumm)                70d3
-W(ts grun)                80d3
-W(ts a)                   70d3
-W(ts b)                 72.5d3
-W(ts mrbG)                20d3
-W(ts kprg)               -40d3
-W(ts tts)                 35d3
-W(parg gl)                50d3
-W(parg cumm)              90d3
-W(parg grun)           106.7d3
-W(parg a)               94.8d3
-W(parg b)               94.8d3
-W(parg mrbG)              40d3
-W(parg kprg)               8d3
-W(parg tts)               15d3
-W(gl cumm)               100d3
-W(gl grun)             113.5d3
-W(gl a)                  100d3
-W(gl b)                111.2d3
-W(gl kprg)                54d3
-W(gl tts)                 75d3
-W(cumm grun)              33d3
-W(cumm a)                 18d3
-W(cumm b)                 23d3
-W(cumm mrbG)              80d3
-W(cumm kprg)              87d3
-W(cumm tts)              100d3
-W(grun a)                 12d3
-W(grun b)                  8d3
-W(grun mrbG)              91d3
-W(grun kprg)              96d3
-W(grun tts)               65d3
-W(a b)                    20d3
-W(a mrbG)                 80d3
-W(a kprg)                 94d3
-W(a tts)                  95d3
-W(b mrbG)                 90d3
-W(b kprg)                 94d3
-W(b tts)                  95d3
-W(mrbG kprg)              50d3
-W(mrbG tts)               50d3
-W(kprg tts)               35d3
-
-end_excess_function
-
-8                                   | number of sites in configurational entropy model (A, M1, M2, M4, T1, T2, O, OH)
-
-A                                   | site name
-3 1 1                               | number of species, effective multiplicity, true multiplicity
-z(Na,A)    = 1 parg
-z(K,A)     = 1 kprg
-z(V,A)     = 1 cumm + 1 grun + 1 tr + 1 ts + 1 gl + 1 a + 1 b + 1 tts
-
-M1                                  | site name
-2 3 3                               | number of species, effective multiplicity, true multiplicity
-z(Fe,M1)   = 1 grun + 1 b
-z(Mg,M1)   = 1 cumm + 1 ts + 1 parg + 1 kprg + 1 mrbG + 1 gl + 1 tts + 1 a
-
-M2                                  | site name
-5 2 2                               | number of species, effective multiplicity, true multiplicity
-z(Fe,M2)   = 1 grun + 1 a
-z(Fe3,M2)  = 1 mrbG
-z(Al,M2)   = 1 ts + 1 gl + 1/2 kprg + 1/2 parg
-z(Ti,M2)   = 1 tts
-z(Mg,M2)   = 1/2 kprg + 1/2 parg + 1 tr + 1 cumm + 1 b
-
-M4                                  | site name
-4 2 2                               | number of species, effective multiplicity, true multiplicity
-z(Mg,M4)   = 1 cumm
-z(Na,M4)   = 1 gl + 1 mrbG
-z(Fe,M4)   = 1 grun + 1 a + 1 b
-z(Ca,M4)   = 1 ts + 1 parg + 1 kprg + 1 tts + 1 tr
-
-T1                                  | site name
-2 1 4                               | number of species, effective multiplicity, true multiplicity
-z(Al,T1)   = 1/2 ts + 1/2 parg + 1/2 kprg
-z(Si,T1)   = 1/2 ts + 1/2 parg + 1/2 kprg + 1 tts + 1 gl + 1 mrbG + 1 tr + 1 grun + 1 a + 1 b
-
-T2                                  | site name
-1 4 4                               | number of species, effective multiplicity, true multiplicity
-z(Si,T2)   = 1
-
-O                                   | site name
-1 22 22                             | number of species, effective multiplicity, true multiplicity
-z(O,O)     = 1
-
-OH                                  | site name
-2 2 2                               | number of species, effective multiplicity, true multiplicity
-z(O,OH)    = 1 tts
-z(OH,OH)   = 1 - 1 tts
-
-begin_van_laar_sizes
-
-alpha(tr)          1
-alpha(ts)          1.5
-alpha(parg)        1.7
-alpha(gl)          0.8
-alpha(cumm)        1
-alpha(grun)        1
-alpha(a)           1
-alpha(b)           1
-alpha(mrbG)        0.8
-alpha(kprg)        1.7
-alpha(tts)         1.5
-
-end_van_laar_sizes
-
-begin_dqf_corrections
-
-DQF(gl)   = -3000
-DQF(parg) = -10000
-DQF(ts)   =  10000
-DQF(grun) = -3000
-
-end_dqf_corrections
-
-begin_flagged_endmembers
-grun
-end_flagged_endmembers
-
-| low_reach
-
-end_of_model
-
-                      --------------------------------------------------------
-begin_model
-
 Aq_solvent
 abbreviation Aq
 full_name    electrolytic_fluid
@@ -1038,66 +379,69 @@ begin_model
                       crdih = cats + kos - jd
                         DQF = -4900
                       mcbuf = cats + 1/2 per + 1/2 ru -1/2 cor
-                        DQF = 1750 - 1.2 * T - 0.005 * P | corrected from -1750 ... 10/22/2019, Lisa Rummel, Mainz.
+                        DQF = -1750 - 1.2 * T - 0.005 * P
                       kjdh = jd + san - abh
                         DQF = -3750 + 1.189 * P
 
+                      9 compositionally independent endmembers
+                      1 ordered endmember
+                      15 dependent endmembers
+                      16 fillers, 4 are utterly superfluous
 
-           Reformulated as dual poytope model, JADC, 10/19
-
-           T  = Al, Fe3, MTi; M1
-           C  = Ca, M2
-           M  = Mg, Fe 
-           A  = Na, K, M2
-           
-           2 polytope model: M1, M2 site populations are indicated, remaining are dependent
-
-           Polytope 1 [T,MTi][A,C]      => 3*4
-           Polytope 2 TM+MC             => 2*6 this polytope is the sum of [T][M]+[M][C]
-
-           the reason for not using a single polytope for this model is that it would require
-           using ordered endmembers as vertices of the composition space.
+                      this formulation limits the buf exchange to {MgTi}/2{Fe} - {FeTi}/2{MgFe}/2
 
                                            M1     M2     T
                                         ____________________________________
 
                          Multiplicity      1      1     2 -> fake T multiplicity = 1/2
                                         ____________________________________
-           Polytope 1:     mkbuf_d         MgTi   K     Si    dependent
+                           mkbuf_d         MgTi   K     Si    dependent
                            mnbuf_d         MgTi   Na    Si    dependent
                            mcbuf           MgTi   Ca   AlSi
-                           _________
-                           fkbuf_d         FeTi   K     Si    dependent
-                           fnbuf_d         FeTi   Na    Si    dependent
-                           fcbuf_d         FeTi   Ca   AlSi   dependent
+                           mcbuf_d1        MgTi   Ca   AlSi   filler
+                           ___
+                           mkbuf_d1        MgTi   K     Si    filler
+                           mnbuf_d1        MgTi   Na    Si    filler
+                           mbuf_d          MgTi   Mg   AlSi   dependent
+                           mfbuf_d         MgTi   Fe   AlSi   dependent
                            _________
                            crkjd_d         Cr     K     Si    dependent
                            crjd_d          Cr     Na    Si    dependent
                            crdi            Cr     Ca   AlSi
+                           crdi_d1         Cr     Ca   AlSi   filler
+                           ___
+                           crkjd_d1        Cr     K     Si    filler
+                           crjd_d1         Cr     Na    Si    filler
+                           cren_d          Cr     Mg   AlSi   dependent
+                           crfs_d          Cr     Fe   AlSi   dependent
                            _________
                            kess_d          Fe3+   K     Si    dependent
                            ness_d          Fe3+   Na    Si    dependent
                            cess            Fe3    Ca   AlSi
+                           cess_d1         Fe3    Ca   AlSi   filler
+                           ___
+                           kess_d1         Fe3+   K     Si    filler
+                           ness_d1         Fe3+   Na    Si    filler
+                           mess_d          Fe3    Mg   AlSi   dependent
+                           fess_d          Fe3    Fe   AlSi   dependent
                            _________
                            kjdh            Al     K     Si
                            jd              Al     Na    Si
                            cats            Al     Ca   AlSi
-                                        ____________________________________
-           Polytope 2:     mmbuf_d         MgTi   Mg   AlSi   dependent
-                           ffbuf_d         FeTi   Fe   AlSi   dependent
-
-                           cren_d          Cr     Mg   AlSi   dependent
-                           crfs_d          Cr     Fe   AlSi   dependent
-
-                           mess_d          Fe3    Mg   AlSi   dependent
-                           fess_d          Fe3    Fe   AlSi   dependent
-
+                           cats_d1         Al     Ca   AlSi   filler
+                           ___
+                           kjd_d1          Al     K     Si    filler
+                           jd_d1           Al     Na    Si    filler
                            mats_d          Al     Mg   AlSi   dependent
                            fats_d          Al     Fe   AlSi   dependent
-
+                           _________
+                           kjd_d2          Al     K     Si    filler
+                           jd_d2           Al     Na    Si    filler
                            di              Mg     Ca    Si
                            hed_d           Fe     Ca    Si    dependent
-
+                           ___
+                           kjd_d3          Al     K     Si    filler
+                           jd_d3           Al     Na    Si    filler
                            cenjh           Mg     Mg    Si
                            cfsg            Fe     Fe    Si
                            _______________________________________________
@@ -1106,126 +450,41 @@ begin_model
 
                            cfm             Mg     Fe     Si independent
 
-                   femg-1(M2) = cfm - cenjh
-                   femg-1(M1) = cfsg - cfm
-                   mgca-1(M2) = cenjh - di
-                   feca-1(M2) = cfm - di 
-
-          ----------------------------------------------------------------------------------------
-
-  NOTE: the FeTi- exchanges allowed in polytope 1 have been commented out below 
-  because it has been assumed they are insignificant, this assumption has not been 
-  tested. As a consequence of the simplification the above definitions become:
-
-           T  = Al, Fe3, MTi; M1
-           T' = Al, Fe3, MgTi; M1
-           C  = Ca, M2
-           M  = Mg, Fe
-           A  = Na, K, M2
-           
-           2 polytope model: M1, M2 site populations are indicated, remaining are dependent
-
-           Polytope 1 [T'][A,C]         => 3*3
-           Polytope 2 TM+MC             => 2*6 this polytope is the sum of [T][M]+[M][C]
-
-  To restore the FeTi exchanges in polytope 1 refer to the comments following the [T'][A,C] polytope definition.
-
-  The MTi exchange included in the TM+MC is most likely superfluous.
-          ----------------------------------------------------------------------------------------
-
 Cpx(HGP)
 abbreviation Cpx
 full_name    clinopyroxene
 
-688                               | model type: 688 format standard model
+8                               | model type: prismatic
 
-2                                 | number of polytopes, subvision range for the composite space
+3                               | number of simplexes comprising the prism
 
-0    .2   .1  0                   | subdivision range for X(1) = X([T][N,C])
-                                  | X(2) = 1 - X(1) = TM+MC is by difference
+4 2 5                           | 15 true dependent endmembers:
 
-                                  | -------------------------------------------
-                                  | Polytope 1 [T'][A,C]
-[T'][A,C]                         | polytope name
-2                                 | number of simplices
+mkbuf_d   mnbuf_d   mcbuf   mcbuf_d1
+mkbuf_d1  mnbuf_d1  mfbuf_d mbuf_d
 
-    | NOTE !!!
+crkjd_d   crjd_d    crdih   crdi_d1
+crkjd_d1  crjd_d1   crfs_d  cren_d
 
-    | the FeTi exchangesallowed in this polytope have been commented 
-    | under the (untested) assumption that they are insignificant.
+kess_d    ness_d    cessh    cess_d1
+kess_d1   ness_d1   fess_d   mess_d
 
-    | To restore the FeTi exchanges change the following line
-    | to 3 5 and uncomment the lines below, and in the dependent
-    | endmember definition section, that specify the fkbuf_d, fnbuf_d, and fcbuf_d endmembers;
-    | also uncomment the corresponding subdivision range [X(2,4)].
+kjdh      jd        cats     cats_d1
+kjd_d1    jd_d1     fats_d   mats_d
 
-    | It is possible that VERTEX/MEEMUM will run out of dynamic memory using 
-    | the full model, if this occurs uncomment the "low_reach" option keyword
-    | at the end of this model. The low_reach option dramatically reduces the
-    | memory and time required for calculations, but also causes a significant
-    | deterioration in phase diagram quality.
+kjd_d2    jd_d2     hed_d    di
+kjd_d3    jd_d3     cfsg     cenjh
 
+1                               | number of ordered species and definitions
 
-3 4                               | number of vertices on each simplex
-mkbuf_d   mnbuf_d   mcbuf
-crkjd_d   crjd_d    crdih
-kess_d    ness_d    cessh
-|fkbuf_d   fnbuf_d   fcbuf_d
-kjdh      jd        cats
-                                  | Simplex 1
-0     1  .1  0                    | X(1,1) = Na/[A + Ca] on M2
-0     1  .1  0                    | X(1,2) = K /[A + Ca] on M2
-                                  | X(1,N) = Ca/[A + Ca] on M2 by difference
-
-                                  | Simplex 2
-0     1  .1  0                    | X(2,1) = MgTi/T on M1
-0     1  .1  0                    | X(2,2) = Cr/T on M1
-0     1  .1  0                    | X(2,3)  = Fe3+/T on M1
-|0     1  .1  0                    |X(2,4)  = FeTi/T on M1
-                                  | X(2,N) = Al/T on M1 by difference
-
-                                  | -------------------------------------------
-                                  | Polytope 2  TM+MC
-TM+MC                             | polytope name
-
-2                                 | number of simplices 
-2 6                               | number of vertices on each simplex
-
-ffbuf_d  mmbuf_d
-crfs_d   cren_d
-fess_d   mess_d
-fats_d   mats_d
-cfsg     cenjh
-hed_d    di
-
-                                  | Simplex 1
-0  .8  .1  0                      | X(1,1) => Fe/M
-                                  | X(1,N) = Mg/M by difference
-
-                                  | Simplex 2
-0  .2  .1  0                      | X(2,1) - M-buf(MgTi)
-0  .2  .1  0                      | X(2,2) - M-Cr
-0  .2  .1  0                      | X(2,3) - M-Fe3+
-0  .1  .1  0                      | X(2,4) - M-Ts
-0   1  .1  0                      | X(2,5) - M-M
-                                  | X(2,6) - M-Ca by difference
-
-
-begin_ordered_endmembers
 cfm   = 1/2 cenjh + 1/2 cfsg enthalpy_of_ordering  =  -4400 | DQF(cfm) - (DQF(ceng) + DQF(cfsg))/2
-end_ordered_endmembers 
 
-begin_dependent_endmembers
-
+31                              | number of dependent endmembers and definitions
+                                | 15 true dependent endmembers:
 mkbuf_d   = -1 cats  + 1 mcbuf + 1 kjdh
 mnbuf_d   = -1 cats  + 1 mcbuf + 1 jd
-
-|fcbuf_d   = 1/2 cfsg + 1 mcbuf  - 1/2 cfm
-|fkbuf_d   = 1/2 cfsg - cats + mcbuf - 1/2 cfm + kjdh
-|fnbuf_d   = 1/2 cfsg - 1 cats  + 1 mcbuf + jd - 1/2 cfm
-
-ffbuf_d   = -1 di    + 1/2 cfsg + 1 mcbuf + 1/2 cfm
-mmbuf_d   = -1 di    + 1 mcbuf  + 1 cenjh
+mfbuf_d   = -1 di    + 1 mcbuf + 1 cfm
+mbuf_d    = -1 di    + 1 mcbuf + 1 cenjh
 
 crkjd_d   = -1 cats  + 1 crdih + 1 kjdh
 crjd_d    = -1 cats  + 1 crdih + 1 jd
@@ -1241,9 +500,60 @@ mats_d    = -1 di    + 1 cats  + 1 cenjh
 fats_d    = -1 di    + 1 cats  + 1 cfm
 
 hed_d     =  1 di    + 1 cfsg  - 1 cfm
+                                | 12 useful dependent filler endmembers
+mcbuf_d1  =  1 mcbuf
+mkbuf_d1  = -1 cats  + 1 mcbuf + 1 kjdh
+mnbuf_d1  = -1 cats  + 1 mcbuf + 1 jd
 
-end_dependent_endmembers
+crdi_d1   =  1 crdih
+crkjd_d1  = -1 cats  + 1 crdih + 1 kjdh
+crjd_d1   = -1 cats  + 1 crdih + 1 jd
 
+cess_d1   =  1 cessh
+kess_d1   = -1 cats  + 1 cessh + 1 kjdh
+ness_d1   = -1 cats  + 1 cessh + 1 jd
+
+cats_d1   =  1 cats
+kjd_d1    =  1 kjdh
+jd_d1     =  1 jd
+                                | 4 utterly useless dependent filler endmembers,
+                                | these could be sawdust for all they do.
+kjd_d2    =  1 kjdh
+jd_d2     =  1 jd
+kjd_d3    =  1 kjdh
+jd_d3     =  1 jd
+|                               | endmembers to make the Mg-free Ti exchange, these
+|                               | could replace utterly useless fillers to increase
+|                               | compositional converage
+
+|fcbuf_d   = 1/2 cfsg + 1 mcbuf  - 1/2 cfm
+|fbuf_d    = -1 di    + 1/2 cfsg + 1 mcbuf + 1/2 cfm
+|fkbuf_d   = 1/2 cfsg - cats + mcbuf - 1/2 cfm + kjdh
+|fnbuf_d   = 1/2 cfsg - 1 cats  + 1 mcbuf + jd - 1/2 cfm
+
+                                | see commentary in the header of this file for explanation of
+                                | endmember flags and subdivision schemes.
+
+0 0 0 0 0 0 0 0 0 0             | endmember flags
+0 0 0 0 0 0 0 0 0 0             | endmember flags
+0 0 0 0 0 0 0 0 0 0             | endmember flags
+0 0 0 0 0 0 0 0 0 0             | endmember flags
+
+                                | First (3d) simplex of the prism (Ca/Mg/Fe-Na-K)
+0    .1  .1  0                  | subdvision scheme for X(1,2) => K on M2
+0    .2  .1  0                  | subdvision scheme for X(1,1) => Na on M2
+0    .4  .1  0                  | subdvision scheme for X(1,3) => Fe on M2
+
+                                | Second (1d) simplex of the prism
+
+0     1  .1  0                  | subdvision scheme for (K+Na+Ca)/(K+Na+Ca+Fe2+Mg) on M2
+
+                                | third (4d) simplex of the prism
+
+0    .2  .1  0                  | subdvision scheme for X("buf")
+0    .1  .1  0                  | subdvision scheme for X("cr")
+0    .1  .1  0                  | subdvision scheme for X("ess")
+0    .2  .1  0                  | subdvision scheme for X("ts")
 
 begin_excess_function
 
@@ -1293,33 +603,24 @@ W(cfm kjdh)      40d3
 
 end_excess_function
 
-4                                   | 4 site entropy model (M1, M2, T, O)
+3                                   | 3 site entropy model (M1, M2, T)
 
-M1                                  | site name
-6 1 1                               | number of species, effective multiplicity, true multiplicity
+6 1                                 | 6 species on m1, mult = 1
 z(m1,fe)   = 1 cfsg
 z(m1,mg)   = 1 di + 1 cenjh + 1/2 mcbuf + 1 cfm
 z(m1,fe3+) = 1 cessh
 z(m1,Ti)   = 1/2 mcbuf
 z(m1,Cr)   = 1 crdih
-z(Al,M1)   = 1 cats + 1 jd + 1 kjdh
 
-M2                                  | site name
-5 1 1                               | number of species, effective multiplicity, true multiplicity
+5 1                                 | 5 species on m2, mult. = 1
 z(m2,na)   = 1 jd
 z(m2,k)    = 1 kjdh
 z(m2,mg)   = 1 cenjh
 z(m2,fe)   = 1 cfm  + 1 cfsg
-z(Ca,M2)   = 1 di + 1 cats + 1 cess + 1 crdi + 1 mcbuf
 
-T                                   | site name
-2 .5 2                              | number of species, effective multiplicity, true multiplicity
+2  .5                              | 2 species on T, effective mult. = 1/2
 z(Al,T) = 1/2 cats + 1/2 mcbuf + 1/2 crdih + 1/2 cessh
-z(Si,T) = 1/2 cats + 1/2 mcbuf + 1/2 crdih + 1/2 cessh + 1 cfsg  + 1 cenjh + 1 di + 1 cfm + 1 jd + 1 kjdh
 
-O                                   | site name
-1 6 6                               | number of species, effective multiplicity, true multiplicity
-z(O,O)     = 1
 
 begin_van_laar_sizes
 alpha(di)     1.2
@@ -1334,9 +635,7 @@ alpha(crdih)  1.9
 alpha(cfm)    1
 end_van_laar_sizes
 
-| reach_increment 0
-
-| low_reach
+reach_increment 0
 
 end_of_model
                       --------------------------------------------------------
@@ -1366,14 +665,73 @@ begin_model
                       un-DQF'd endmember. If such interference occurs: the DQF'd endmember must
                       be renamed; its definition placed in the thermodynamic data file;
                       and the un-DQF'd endmember excluded from the calculation.
+
+                      The model composition space is formulated as prism composed of 3 simplexes
+                      the first simplex is 2d (ternary) and represents divalent elements Ca-Mg-Fe (M cations),
+                      the second simplex is 1d (binary) and represents the exchange of the M cations for Na
+                      and the third simplex is 2d (ternary) and represents the exchange of trivalent Al and Fe for Si.
+                      Because some of the exchanges are not possible due to charge balance constraints, the impossible
+                      vertices of the simplex are populated by replicating possible vertices (designated
+                      filler vertices below). Filler vertices must be chosen so that each exchange is dependent
+                      on only one prismatic. The use of filler vertices is undesireable because the same bulk
+                      composition may be replicated by different prismatic coordinates. They are employed here
+                      as interim method of forcing VERTEX/MEEMUM to visit every possible bulk composition of a
+                      solution. This unfortunate situation will be remedied in the future by modifying Perple_X
+                      to allow compositions formed by the mixture of two or more prisms, for example the Augite(G)
+                      compositional 5 dimensional prism with 18 vertices (of which 7 are filler vertices), can
+                      be represented by all possible mixtures of a 4x2 prism [(di-en-mats-macm)-(hed-fs-fats-
+                      facm)] and a 2x2 prism [(cats-cacm)-(jd-acm)].
+
+                      In the present model the independent prismatic variables (used for specifying) the subdivision
+                      of the composition space are:
+
+                         X(1,1) - Na/(Na+M) on M2
+                         X(1,2) - Mg/(Na+M) on M2
+
+                         X(2,1) - Ca/(Ca+M) on M2
+
+                         X(3,1) - Fe(3+)/(Al+Fe+M) on M1 (i.e., Ferric-Tschermaks)
+                         X(3,2) - Al/(Al+Fe+M) on M1 (i.e., Al-Tschermaks)
+
+                                                                Sites
+                                                        M1     M2    T1    T2
+                                                     ____________________________________
+
+                                      Mutliplicity      1      1     1      1
+                                                     ____________________________________
+                                        _________
+                                        Acmite          Fe3    Na    Si     Si
+                                        cacm            Fe3    Ca   AlSi   AlSi  filler
+                                        cacm            Fe3    Ca   AlSi   AlSi  filler
+                                        ___
+                                        Acmite          Fe3    Na    Si     Si   filler
+                                        macm            Fe3    Mg   AlSi   AlSi            dependent
+                                        facm            Fe3    Fe   AlSi   AlSi            dependent
+                                        _________
+                                        Jadeite         Al     Na    Si     Si
+                                        Cats            Al     Ca   AlSi   AlSi
+                                        Cats            Al     Ca   AlSi   AlSi  filler
+                                        ___
+                                        Jadeite         Al     Na    Si     Si   filler
+                                        Mats            Al     Mg   AlSi   AlSi            dependent
+                                        fats            Al     Fe   AlSi   AlSi            dependent
+                                        _________
+                                        Jadeite         Al     Na    Si     Si   utterly useless filler
+                                        Diopside        Mg     Ca    Si     Si
+                                        hed             Fe     Ca    Si     Si             dependent
+                                        ___
+                                        Jadeite         Al     Na    Si     Si   utterly useless filler
+                                        cEnstatite      Mg     Mg    Si     Si
+                                        cferrosilite    Fe     Fe    Si     Si
+                                        _________
+                                                     ___________________________________
+
+                    Ordered species:    oCaTs           Al     Ca     Si    Al
+                                        fmc             Mg     Fe     Si    Si
                       --------------------------------------------------------
+                      The (future) dual prism model is:
 
-                                                        M1     M2     T
-                                                       ____________________________________
-
-                                      Multiplicity      1      1     1/2 <- fake T multiplicity
-         
-                                        poytope II    ____________________________________
+                                        Prism I (4d)   ____________________________________
 
                                         Diopside        Mg     Ca    Si     Si
                                         cEnstatite      Mg     Mg    Si     Si
@@ -1385,82 +743,73 @@ begin_model
                                         fats            Al     Fe   AlSi   AlSi dependent
                                         facm            Fe3    Fe   AlSi   AlSi dependent
 
-                                        polytope I    ____________________________________
+                                        Prism II (2d)  ____________________________________
 
                                         Cats            Al     Ca   AlSi   AlSi
                                         cacm            Fe3    Ca   AlSi   AlSi dependent
                                         Jadeite         Al     Na    Si     Si
                                         Acmite          Fe3+   Na    Si     Si
-
-           T  = Al, Fe3; M1
-           C  = Ca, M2
-           M  = Mg, Fe
-           A  = Na, M2
-
-           2 polytope model: M1, M2 site populations are indicated, remaining are dependent
-
-           Polytope 1 [T][A,C]       => 2*2
-           Polytope 2 TM+MC          => 2*4 this polytope is the sum of [T][M]+[M][C]
-
-           the reason for not using a single polytope for this model is that it would require
-           using ordered endmembers as vertices of the composition space.
-
-           --------------------------------------------------------------------
+                      --------------------------------------------------------
 Augite(G)
 abbreviation Cpx
 full_name    clinopyroxene
 
-688                               | model type: 688 format standard model
+8                            | model type: prismatic o/d
 
-2                                 | number of polytopes, subvision range for the composite space
+3                            | prism: 3 simplicies with a common vertex
+3 2 3                        | 2d 1d 2d
 
-0    .2   .1  0                   | subdivision range for X(1) = X([T][N,C])
-                                  | X(2) = 1 - X(1) = [M,T][M,C] is by difference
+                             | endmembers on the prism vertices
 
-                                  | -------------------------------------------
-                                  | Polytope 1 [T][N,C]
-[T][N,C]                          | polytope name
-2                                 | number of simplices 
-2 2                               | number of vertices on each simplex
-acm     cacm_d
-jd      cats
-                                  | Simplex 1
-0     1  .1  0                    | X(1,1) = Na/[Na + Ca] on M2
 
-                                  | Simplex 2
-0     1  .1  0                    | X(2,1) = X(Fe3) on M1
+acm     cacm_d  cacm_dd              | (Fe3)-M
+acm_d1  macm_d  facm_d
 
-                                  | -------------------------------------------
-                                  | Polytope 2  TM+MC
-TM+MC                             | polytope name
+jd      cats    cats_d               | (Al)-M
+jd_d1   mats_d  fats_d
 
-2                                 | number of simplices 
-2 4                               | number of vertices on each simplex
-macm_d  facm_d
-mats_d  fats_d
-cenjh   cfsg
-di      hed_d
-                                  | Simplex 1
-.3  .8   .1  0                    | X(1,1) => bulk Mg/M
+jd_d2   di      hed_d                | M-M
+jd_d3   cenjh   cfsg
 
-                                  | Simplex 2
-0  .2  .1  0                      | X(2,1) - M-Fe3+
-0  .1  .1  0                      | X(2,2) - M-Ts
-0  .3  .1  0                      | X(2,3) - M-M
+2                            | number of ordered species and definitions
 
-begin_ordered_endmembers
 ocats = 1 cats               enthalpy_of_ordering  =  -3800  + 2.8816 * T  -0.01  * P | this undoes the DQF on cats
 fmc   = 1/2 cenjh + 1/2 cfsg enthalpy_of_ordering  =  -4400 | DQF(fmc) - (DQF(cenjh) + DQF(cfs))/2
-end_ordered_endmembers 
 
-begin_dependent_endmembers
+12                            | number of dependent endmembers and definitions
+
+jd_d1   = 1 jd
+jd_d2   = 1 jd
+jd_d3   = 1 jd
+
+cats_d  = 1 cats
+
+acm_d1  = 1 acm
+
+cacm_dd = 1 acm   + 1 cats  - 1 jd
+
 hed_d   = 1 di    + 1 cfsg  - 1 fmc
 cacm_d  = 1 acm   + 1 cats  - 1 jd
 mats_d  = 1 cats  + 1 cenjh - 1 di
 macm_d  = 1 cats  + 1 cenjh - 1 di   + 1 acm - 1 jd
 fats_d  = 1 cats  - 1 di    + 1 fmc
 facm_d  = 1 cats  - 1 di    + 1 fmc  + 1 acm - 1 jd
-end_dependent_endmembers
+
+                             | see commentary in the header of this file for explanation of
+                             | endmember flags and subdivision schemes
+
+0 0 0 0 0 0 0 0 0 0          | endmember flags
+0 0 0 0 0 0 0 0 0 0
+
+                             | First (1d) simplex of the prism
+0  .1  .1  0                 | range and resolution of X(1,1) => Na
+0  1   .1  0                 | range and resolution of X(1,2) => Mg
+                             | Second (1d) simplex of the prism
+0  1   .1  0                 | range and resolution of X(2,1) => (Fe+Mg)/Ca
+                             | third (3d) simplex of the prisms
+0  .3  .1  0                 | range and resolution of X(3,1) - M-acm
+0  .1  .1  0                 | range and resolution of X(3,2) - M-Ts
+
 
 begin_excess_function
 W(di cenjh)               29.8d3   -0.03 * p
@@ -1493,35 +842,23 @@ W(ocats fmc)              50d3
 W(cats fmc)               50d3
 end_excess_function
 
-5                                   | 5 site entropy model (M1, M2, T1, T2, O)
+4                                   | 4 site entropy model (M1, M2, T1, T2)
 
-M1                                  | site name
-4 1 1                               | 4 species on m1, mult = 1
+4 1                                 | 4 species on m1, mult = 1
 z(m1,fe)   = 1 cfsg
 z(m1,mg)   = 1 di + 1 fmc + 1 cenjh
 z(m1,fe3+) = 1 acm
-z(Al,M1)   = needs_to_be_completed
 
-M2                                  | site name
-4 1 1                               | 4 species on m2, mult. = 1
+4 1                                 | 4 species on m2, mult. = 1
 z(m2,na)   = 1 acm  + 1 jd
 z(m2,mg)   = 1 cenjh
 z(m2,fe)   = 1 fmc  + 1 cfsg
-z(Ca,M2)   = needs_to_be_completed
 
-T1                                  | site name
-2 0.25 1                            | 2 species on T1, effective mult. = 1/4
-z(Al,T1)   = 1/2 cats
-z(Si,T1)   = needs_to_be_completed
+2 0.25                              | 2 species on T1, effective mult. = 1/4
+z(Al,T1) = 1/2 cats
 
-T2                                  | site name
-2 0.25 1                            | 2 species on T2, effective mult. = 1/4
-z(Al,T2)   = 1/2 cats + 1 ocats
-z(Si,T2)   = needs_to_be_completed
-
-O                                   | site name
-1 6 6                               | number of species, effective multiplicity, true multiplicity
-z(O,O)     = 1
+2 0.25                              | 2 species on T2, effective mult. = 1/4
+z(Al,T2) = 1/2 cats + 1 ocats
 
 begin_van_laar_sizes
 alpha(di)          1.2
@@ -1541,6 +878,331 @@ dqf(cats) =  3800  - 2.8816 * T  + 0.01  * P
 end_dqf_corrections
 
 reach_increment 0
+
+end_of_model
+                      --------------------------------------------------------
+begin_model
+                      cAmph(G) => Green et al. (JMG, 2016) clinoamphibole.
+
+                      Perple_X formulation reformulated as a triple-simplex prismatic
+                      composition space and adding M-parg, M-kparg, M-tts, and Ca-grk
+                      exchanges. JADC, November 3, 2018.
+
+                      NOTE: to use this the following endmembers must be specified with make
+                      definitions in the thermodynamic data file
+
+                         mrbG  = 1 gl - 1 gr + 1 andr
+                            DQF = 0
+                         kprg  = 1 mu - 1 pa + 1 parg
+                            DQF = -7060 + 20 * T_K
+                         tts   = -2 dsp + 2 ru + 1 ts
+                            DQF =   95000
+
+                      to avoid cluttering thermodynamic data files with the new plague of TC
+                      DQF "corrections", the following simple DQF's are specified in the
+                      make_definition section at the end of this model:
+
+                         DQF(gl)   = -3000
+                         DQF(parg) = -10000
+                         DQF(ts)   =  10000
+                         DQF(grun) = -3000
+
+                      For (nonsensical, but common) positive DFQ's this approach may lead to
+                      interference between the phase relations of the solution model and the
+                      un-DQF'd endmember. If such interference occurs: the DQF'd endmember must
+                      be renamed; its definition placed in the thermodynamic data file;
+                      and the un-DQF'd endmember excluded from the calculation.
+
+                      The model composition space is formulated as prism composed of 3 simplexes
+                      the first simplex is 1d (binary) and represents divalent Mg/(Fe+Mg),
+                      the second simplex is 1d (binary) and represents the exchange of divalent M (Fe and Mg) for Ca
+                      and the third simplex is 7d (octary) and represents the generalized (M,Ca)-amphibole exchanges:
+                      (M,Ca)-Al_Tschermaks, (M,Ca)-Na_Pargasite, (M,Ca)-K_Pargasite, M-Riebeckite, M-Glaucophane,
+                      (M,Ca)-Ti_Tschermaks, and (M,Ca)-Fe3+_tschermaks (Na-free riebeckite).
+                      Because some of the exchanges are not possible due to charge balance constraints, the impossible
+                      vertices of the simplex (Ca-riebeckite, Ca-glaucophane) are populated by replicating possible
+                      vertices. The current formulation is undesirable both because of these replicated vertices and
+                      and because the dependent (M,Ca)-Fe3+_tschermaks adds a dimension to the composition space.
+                      See comments for the Augite(G) model for further discussion.
+
+                      In the present model the independent prismatic variables (used for specifying) the subdivision
+                      of the composition space are:
+
+                         X(1,1) - Mg/(Fe+Mg)
+
+                         X(2,1) - Ca/M on M1, M = divalent Fe and Mg
+
+                         X(3,1) - (M,Ca)-Al_Tschermak
+                         X(3,2) - (M,Ca)-Na_Pargasite
+                         X(3,3) - (M,Ca)-K_Pargasite
+                         X(3,4) - M-Riebeckite
+                         X(3,5) - M-Glaucophane
+                         X(3,6) - (M,Ca)-Ti_Tschermaks
+                         X(3,7) - (M,Ca)-Fe3+_tschermaks (Na-free riebeckite)
+                      --------------------------------------------------------
+
+                                                            Sites
+                                            A    M1      M2      M4     T1     OH
+                                            _______________________________________
+
+                            Multiplicity    1     3      2       2     1(4)    2
+                                            _______________________________________
+
+                              Ts            V     Mg     Al     Ca     SiAl    OH
+                              fTs_d         V     Fe     Al     Ca     SiAl    OH
+                              ffts_d        V     fe     Al     fe     SiAl    OH
+                              mmts_d        V     mg     Al     mg     SiAl    OH
+
+                              Parg          Na    Mg    MgAl    Ca     SiAl    OH
+                              fParg_d       Na    Fe    FeAl    Ca     SiAl    OH
+                              mpg_d         Na    Mg    mgAl    Mg     SiAl    OH
+                              fpg_d         Na    Fe    feAl    fe     SiAl    OH
+
+                              Kprg          K     Mg    MgAl    Ca     SiAl    OH
+                              fkPrg         K     Fe    FeAl    Ca     SiAl    OH
+                              mkpg_d        K     Mg    mgAl    Mg     SiAl    OH
+                              fkpg_d        k     Fe    feAl    fe     SiAl    OH
+
+                              Gl            V     Mg     Al     Na      Si     OH
+                              fGl_d         V     Fe     Al     Na      Si     OH
+
+                              mrbG          V     Mg     Fe3    Na      Si     OH
+                              frb_d         V     Fe     Fe3    Na      Si     OH
+
+                              Tts           V     Mg     Ti     Ca     SiAl    O
+                              fcTts_d       V     Fe     Ti     Ca     SiAl    O
+                              mTts_d        V     Mg     Ti     Mg     SiAl    O
+                              fTts_d        V     Fe     Ti     Fe     SiAl    O
+
+                              cmgrk_d       V     Mg     Fe3    Ca     SiAl    OH
+                              cfgrk_d       V     Fe     Fe3    Ca     SiAl    OH
+                              mgrk_d        V     Mg     Fe3    Mg     SiAl    OH
+                              fgrk_d        V     Fe     Fe3    Fe     SiAl    OH
+
+                              Tr            V     Mg     Mg     Ca      Si     OH
+                              fTr_d         V     Fe     Fe     Ca      Si     OH
+                              Cumm          V     Mg     Mg     Mg      Si     OH
+                              Grun          V     Fe     Fe     Fe      Si     OH
+
+                              A             V     Mg     Fe     Fe      Si     OH
+                              B             V     Fe     Mg     Fe      Si     OH
+
+           dependent exchange Mgrk          V     M      Fe3    M      SiAl     OH
+           dependent exchange Mts           V     M       Al    M      SiAl     OH
+           dependent exchange Mpg           Na    M      MAl    M      SiAl     OH
+           dependent exchange MKpg          K     M      MAl    M      SiAl     OH
+           dependent exchange MTts          V     M      Ti     M      SiAl     OH
+
+           2 CaMg-1(M4) = (Tr-Cumm)
+           3 FeMg-1(M1) = (grun - a)
+           2 FeMg-1(M2) = (grun - b)
+           2 FeMg-1(M4) = (-grun - cumm + a + b)
+
+cAmph(G)
+abbreviation Amph
+full_name    clinoamphibole
+
+8                           | model type: order-disorder, prismatic composition space
+3                           | 3 simplex prismatic space
+2 2 8                       | 1 binary + 1 binary + septary
+
+                            | the first simplex variable is FeMg-1
+                            | the second simplex second variable is CaM-1, M = Fe or Mg
+                            | the third simplex variables are:
+
+mts_d      fts_d            | M-Ca-Al_tschermaks
+ts         fcts_d
+
+mparg_d    fparg_d          | M-Ca-Na_parg
+parg       fcparg_d
+
+kmparg_d   kfparg_d         | M-Ca-K_parg
+kprg       kfcprg_d
+
+gl         fgl_d            | M-[Fe3]Na, redundant X(2,1)
+gl_d       fgl_d1
+
+mrbG       frb_d            | M-[Al]Na, redundant X(2,1)
+mrbG_d     frb_d1
+
+mtts_d     ftts_d           | M-Ca-Ti_tschermaks
+tts        fctts_d
+
+mgrk_d     fgrk_d           | M-Ca-Fe3+_tschermaks (Na-free riebeckite)
+mcgrk_d    fcgrk_d
+
+cumm       grun             | M-Ca
+tr         ftr_d
+
+
+2                            | ordered species definitions:
+
+a     = 3/7 cumm + 4/7 grun  enthalpy_of_ordering  =   -9486  | = DQF(A) -4/7 DQF(Grun)
+b     = 2/7 cumm + 5/7 grun  enthalpy_of_ordering  =  -11657  | = DQF(B) -5/7 DQF(Grun)
+
+23                           | dependent endmember definitions:
+
+fcts_d = 1 ts + 1 grun - 1 a
+fts_d  = 1 ts - 1 tr + 1 b
+mts_d  = 1 ts - 1 tr + 1 cumm
+
+fcparg_d  = 1 parg  + 3/2 grun - 1 a - 1/2 b
+fparg_d   = 1 parg  + 1/2 grun + 1/2 b - 1 tr
+mparg_d   = 1 parg  - 1 tr     + 1 cumm
+
+kfcprg_d  = 1 kprg  + 3/2 grun - 1 a - 1/2 b
+kfparg_d  = 1 kprg  + 1/2 grun + 1/2 b - 1 tr
+kmparg_d  = 1 kprg  - 1 tr + 1 cumm
+
+mrbG_d   = 1 mrbG
+gl_d     = 1 gl
+fgl_d    = 1 gl    + 1 grun   - 1 a
+fgl_d1   = 1 gl    + 1 grun   - 1 a
+frb_d    = 1 mrbG  + 1 grun   - 1 a
+frb_d1   = 1 mrbG  + 1 grun   - 1 a
+
+fctts_d  = 1 tts   + 1 grun   - 1 a
+ftts_d   = 1 tts   - 1 tr     + 1 b
+mtts_d   = 1 tts   - 1 tr     + 1 cumm
+
+mcgrk_d  = 1 mrbG  + 1 ts    - 1 gl
+mgrk_d   = 1 mrbG  + 1 ts    - 1 gl     - 1 tr   + 1 cumm
+fgrk_d   = 1 mrbG  + 1 ts    - 1 gl     - 1 tr   + 1 b
+fcgrk_d  = 1 mrbG  + 1 ts    - 1 gl     - 1 a  + 1 grun
+
+ftr_d    = 1 tr    + 2 grun   - 1 a - 1 b
+
+0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 | endmember flags
+
+                             | see commentary in the header of this file for explanation of
+                             | endmember flags and subdivision schemes
+
+                             | First (1d) simplex of the prism
+0    1   .1  0               | range and resolution for X(1,1) is X(Mg) for all quadrilaterals, imod = 0
+                             | Second (1d) simplex of the prism
+0    1   .1  0               | range and resolution for X(2,1) is variably X Ca or Al, imod = 0
+                             | Third (7d) simplex of the prism
+0  .5    .1  0               | range and resolution for X(3,1) on Ts-prism, imod = 0
+0  .75   .1  0               | range and resolution for X(3,2) on Parg-prism, imod = 0
+0  .15   .1  0               | range and resolution for X(3,3) on KParg-prism, imod = 0
+0  .5    .1  0               | range and resolution for X(3,4) on Rb-prism, imod = 0
+0  .15   .1  0               | range and resolution for X(3,5) on Gl-prism, imod = 0
+0  .15   .1  0               | range and resolution for X(3,6) on TiTs-prism, imod = 0
+0  .15   .1  0               | range and resolution for X(3,7) on Grk-prism, imod = 0
+
+begin_excess_function
+
+W(tr ts)                  20d3
+W(tr parg)                25d3
+W(tr gl)                  65d3
+W(tr cumm)                45d3
+W(tr grun)                75d3
+W(tr a)                   57d3
+W(tr b)                   63d3
+W(tr mrbG)                52d3
+W(tr kprg)                30d3
+W(tr tts)                 85d3
+W(ts parg)               -40d3
+W(ts gl)                  25d3
+W(ts cumm)                70d3
+W(ts grun)                80d3
+W(ts a)                   70d3
+W(ts b)                 72.5d3
+W(ts mrbG)                20d3
+W(ts kprg)               -40d3
+W(ts tts)                 35d3
+W(parg gl)                50d3
+W(parg cumm)              90d3
+W(parg grun)           106.7d3
+W(parg a)               94.8d3
+W(parg b)               94.8d3
+W(parg mrbG)              40d3
+W(parg kprg)               8d3
+W(parg tts)               15d3
+W(gl cumm)               100d3
+W(gl grun)             113.5d3
+W(gl a)                  100d3
+W(gl b)                111.2d3
+W(gl kprg)                54d3
+W(gl tts)                 75d3
+W(cumm grun)              33d3
+W(cumm a)                 18d3
+W(cumm b)                 23d3
+W(cumm mrbG)              80d3
+W(cumm kprg)              87d3
+W(cumm tts)              100d3
+W(grun a)                 12d3
+W(grun b)                  8d3
+W(grun mrbG)              91d3
+W(grun kprg)              96d3
+W(grun tts)               65d3
+W(a b)                    20d3
+W(a mrbG)                 80d3
+W(a kprg)                 94d3
+W(a tts)                  95d3
+W(b mrbG)                 90d3
+W(b kprg)                 94d3
+W(b tts)                  95d3
+W(mrbG kprg)              50d3
+W(mrbG tts)               50d3
+W(kprg tts)               35d3
+
+end_excess_function
+
+6                                   | 6 site configurational entropy model (A, M1, M2, M4,T1, OH)
+
+3 1                                 | 3 species on A, mult = 1
+z(A,na)    = 1 parg
+z(A,k)     = 1 kprg
+
+2 3                                 | 2 species on M1, mult = 3
+z(M1,fe)   = 1 grun + 1 b
+
+5 2                                 | 5 species on M2, mult = 2
+z(M2,fe)   = 1 grun + 1 a
+| z(M2,mg)   = 1/2 kprg + 1/2 parg + 1 tr + 1 cumm + 1 b
+z(M2,fe3)  = 1 mrbG
+z(M2,al)   = 1 ts + 1 gl + 1/2 kprg + 1/2 parg
+z(M2,ti)   = 1 tts
+
+4 2                                 | 4 species on M4, mult = 2
+z(M4,mg)   = 1 cumm
+z(M4,na)   = 1 gl + 1 mrbG
+z(M4,fe)   = 1 grun + 1 a + 1 b
+| z(M4,ca)   = 1 ts + 1 parg + 1 kprg + 1 tts + 1 tr
+
+2 1                                 | 2 species on T1, fake mutiplicity = 1
+z(T1,Al)   = 1/2 ts + 1/2 parg + 1/2 kprg + 1/2 tts
+
+2 2                                 | 2 species on OH, mutiplicity = 2
+z(OH,O)    = 1 tts
+
+begin_van_laar_sizes
+
+alpha(tr)          1
+alpha(ts)          1.5
+alpha(parg)        1.7
+alpha(gl)          0.8
+alpha(cumm)        1
+alpha(grun)        1
+alpha(a)           1
+alpha(b)           1
+alpha(mrbG)        0.8
+alpha(kprg)        1.7
+alpha(tts)         1.5
+
+end_van_laar_sizes
+
+begin_dqf_corrections
+
+DQF(gl)   = -3000
+DQF(parg) = -10000
+DQF(ts)   =  10000
+DQF(grun) = -3000
+
+end_dqf_corrections
 
 end_of_model
                            --------------------------------------------------------
@@ -1660,6 +1322,9 @@ end_dqf_corrections
 reach_increment 0
 
 end_of_model
+
+
+
                            --------------------------------------------------------
 begin_model
                       Generic Melt - Holland, Green, and Powell; Journal of Petrology, 2018, Vol. 59, 881–900.
@@ -2029,47 +1694,42 @@ Chl(W)
 abbreviation Chl
 full_name    chlorite
 
-688                               | model type: 688 format standard model
+9                               | model type: order-disorder, prismatic vertex + orphan vertices
 
-2                                 | number of polytopes
-0   .5   .1   0                   | X(1) is [Mn][Mn]
+2                               | prismatic vertex:
+4 2                             | quaternary + binary simplexes
+1                               | number of orphan vertices
 
-                                  | ----------------------------
-                                  | Polytope 1 - 1 simplex
-[Mn][Mn][Al]                      | polytope name
-1                                 | number of simplices
-1                                 | number of vertices on each simplex
-mnchl                             | endmembers on the vertices
-
-                                  | ----------------------------
-                                  | Polytope 2 - 2x4 simplices
-[M,Al][M][M,T]                    | polytope name
-2                                 | number of simplices
-4 2                               | number of vertices on each simplex
-                                  | endmembers on the vertices
+                                | endmembers on the prismatic vertex
 fames    fafchl   ff3cli   daph
 ames     afchl    f3clin   clin
+                                | orphan endmembers
+mnchl
 
-                                  | subdivision model for (quaternary) chemical mixing space
-0  1  .1 0                        | range and resolution of X(M-ames),   imod = 0 -> cartesian subdivision
-0  1  .1 0                        | range and resolution of X(M-afchl),  imod = 0 -> cartesian subdivision
-0  1  .1 0                        | range and resolution of X(M-f3clin), imod = 0 -> cartesian subdivision
+2                               | number of ordered species
 
-                                  | subdivision model for (ternary) chemical mixing space
-0  1  .1 0                        | range and resolution of X(Fe), imod = 0 -> cartesian subdivision
-
-begin_ordered_endmembers
 och1 = 1 afchl  - 1 clin   + 1 daph      enthalpy_of_ordering = 3d3
 och2 = 1 afchl  - 1/5 clin + 1/5 daph    enthalpy_of_ordering = 2.4d3
-end_ordered_endmembers
 
-begin_dependent_endmembers
+3                               | 6 dependent endmembers
+
 fames  = 1 ames   + 1 daph - 1 och2 + 1 afchl - 1 clin
 fafchl = 1 och1   + 1 och2 - 1 afchl
 ff3cli = 1 f3clin + 1 daph - 1 clin
-end_dependent_endmembers
+
+0 0 0 0 0 0 0 0 0 0 0 0         |endmember flags
+
+                                | subdivision model for (quaternary) chemical mixing space
+0  1  .1 0                      | range and resolution of X(M-ames),   imod = 0 -> cartesian subdivision
+0  1  .1 0                      | range and resolution of X(M-afchl),  imod = 0 -> cartesian subdivision
+0  1  .1 0                      | range and resolution of X(M-f3clin), imod = 0 -> cartesian subdivision
+
+                                | subdivision model for (ternary) chemical mixing space
+0  1  .1 0                      | range and resolution of X(Fe), imod = 0 -> cartesian subdivision
+0  1  .1 0                      | range and resolution of X(Mg), imod = 0 => cartesian subdivision
 
 begin_excess_function
+
 W(clin afchl)             17d3
 W(clin ames)              17d3
 W(clin daph)              20d3
@@ -2098,34 +1758,31 @@ W(och1 mnchl)             25d3
 W(och2 f3clin)            19d3
 W(och2 mnchl)             31d3
 W(f3clin mnchl)           17d3
+
 end_excess_function
 
-4                                 | 4 site configurational entropy model:
+4                               | 4 site configurational entropy model:
 
-M1
-4 1 1                             | 4 species on 1 M1 site
-z(Al,M1)    = 1 ames
-z(Fe,M1)    = 1 daph + 1 och2
-z(Mn,M1)    = 1 mnchl
-z(Mg,M1)    = 1 f3clin + 1 afchl + 1 clin + 1 och1
+4 1                             | 4 species on 1 M1 site
 
-M23
-3 4 4                             | 3 species on 4 M2+M3 sites
-z(Fe,M23) = 1 daph + 1 och1
-z(Mn,M23) = 1 mnchl
-z(Mg,M23) = 1 f3clin + 1 ames + 1 afchl + 1 clin + 1 och2
+z(al,M1)    = 1 ames
+z(fe,M1)    = 1 daph + 1 och2
+z(mn,M1)    = 1 mnchl
 
-M4
-4 1 1                             | 4 species on 1 M4 site
-z(Fe3,M4)   = 1 f3clin
-z(Fe,M4)    = 1 och1
-z(Mg,M4)    = 1 afchl + 1 och2
-z(Al,M4)    = 1 daph + 1 clin + 1 ames + 1 mnchl
+3 4.                            | 3 species on 4 M2+M3 sites
 
-T2
-2 2 2                             | 2 species on 2 T2 sites
-z(Al,T2)    = 1 ames + 1/2 clin + 1/2 daph + 1/2 f3clin + 1/2 mnchl
-z(Si,T2)    = 1 ames + 1/2 clin + 1/2 daph + 1/2 f3clin + 1/2 mnchl
+z(fe,m2+m3) = 1 daph + 1 och1
+z(mn,m2+m3) = 1 mnchl
+
+4 1                             | 4 species on 1 M4 site
+
+z(fe3,m4)   = 1 f3clin
+z(fe,m4)    = 1 och1
+z(mg,m4)    = 1 afchl + 1 och2
+
+2 2                             | 2 species on 2 T2 sites
+
+z(al,T2)    = 1 ames + 1/2 clin + 1/2 daph + 1/2 f3clin + 1/2 mnchl
 
 begin_dqf_corrections
 dqf(mnchl) -13030
@@ -2154,17 +1811,16 @@ Ep(HP11)
 abbreviation Ep
 full_name    epidote
 
-688                               | model type: 688 format standard model
-1                                 | number of polytopes
-1                                 | number of simplices
-2                                 | number of vertices on each simplex
-cz       fep                      | endmember names
+6                          | model type: speciation
+2                          | 2 endmembers
+cz       fep               | endmember names
 
-0  1   .1  0                      | X(cz)
+1                          | ordered species definition
 
-begin_ordered_endmembers
 ep = 1/2 fep + 1/2 cz   Delta(enthalpy) = -12.5d3
-end_ordered_endmembers
+
+0 0 0                      | endmember flags
+0  1   .1  0               | range and resolution for X(cz), imod = 0 -> cartesian subdivision
 
 begin_excess_function
 w(cz fep) 3d3
@@ -2172,17 +1828,13 @@ w(fep ep) 1d3
 w(cz ep) 1d3
 end_excess_function
 
-2                                 | 2 site (M1, M3) configurational entropy model
+2                          | 2 site (M1, M3) configurational entropy model
 
-M1                                | site name
-2 1 1                             | 2 species on M1, 1 site per formula unit.
-z(Fe,M1) = 1 fep
-z(Al,M1) = 1 cz + 1 ep
+2 1                        | 2 species on M1, 1 site per formula unit.
+z(fe,m1) = 1 fep
 
-M3                                | site name
-2 1 1                             | 2 species on M3, 1 site per formula unit.
-z(Al,M3) = 1 cz
-z(Fe,M3) = 1 fep + 1 ep
+2 1                        | 2 species on M3, 1 site per formula unit.
+z(al,m3) = 1 cz
 
 end_of_model
                       --------------------------------------------------------
@@ -2191,7 +1843,8 @@ begin_model
 
                       NOTES:
 
-                      The Cr/Fe3+-free version of this model is from Holland et al., 2013 or Green et al., 2012?
+                      The Cr/Fe3+-free version of this model is from Holland et al., 2013 or
+                      Green et al., 2012?
 
                       Pierre Bouilhol & JADC, 12/16/15
 
@@ -2203,29 +1856,98 @@ begin_model
 
                       Formatted as prismatic model w/o Cr & Fe3+. Bob Myhill, 2/18
 
+                      Reformatted as a prismatic + orphan vertex model, the scheme is less than desirable because
+                      it explicitly includes ordered states that are computed implicitly by speciation and because
+                      it does not include acm (ncess) or crjd. JADC, 5/18
+
                       Corrected cess composition assumed in the model (mess was assumed previously). JADC, 6/18
 
-                      Dual polytope 688 format, JADC, 9/19.
+                      reformatted as a 3-simplex prism to allow complete M-essenite exchange. JADC, 11/18.
 
                       to use this the following endmembers must be specified with make
                       definitions in the thermodynamic data file
 
-                      crdi = 1 cats + 1 kos - 1 jd
-                             DQF(J/mol) = -3d3 
-                      cess = 1 cats + 1 acm - 1 jd
-                            DQF(J/mol) = -6d3 
+                      odi  = 1 di
+                            DQF = -100 + 0.211 * T + 0.005 * P | NOTE entropy term incorrect in some perplex files?
                       cenjh  = 1 en
                             DQF = 3500 - 2 * T + 0.048 * P
                       cfs  = 1 fs
                             DQF = 3800 - 3 * T + 0.03 * P
 
+                      The model composition space is formulated as prism composed of 3 simplexes
+                      the first simplex is 2d (ternary) and represents divalent elements Ca-Mg-Fe (M cations),
+                      the second simplex is 1d (binary) and represents the exchange of the M cations for Na
+                      and the third simplex is 3d (quaternary) and represents the exchange of trivalent Al, Cr, and Fe
+                      for Si. Because some of the exchanges are not possible due to charge balance constraints, the
+                      impossible vertices of the simplex are populated by replicating possible vertices (designated
+                      filler vertices below). Filler vertices must be chosen so that each exchange is dependent
+                      on only one prismatic. The use of filler vertices is undesireable because the same bulk
+                      composition may be replicated by different prismatic coordinates. They are employed here
+                      as interim method of forcing VERTEX/MEEMUM to visit every possible bulk composition of a
+                      solution. This unfortunate situation will be remedied in the future by modifying Perple_X
+                      to allow compositions formed by the mixture of two or more prisms, for example the Augite(G)
+                      compositional 5 dimensional prism with 18 vertices (of which 7 are filler vertices), can
+                      be represented by all possible mixtures of a 4x2 prism [(di-en-mats-macm)-(hed-fs-fats-
+                      facm)] and a 2x2 prism [(cats-cacm)-(jd-acm)].
+
+                      In the present model the independent prismatic variables (used for specifying) the subdivision
+                      of the composition space are:
+
+                         X(1,1) - Na/(Na+M) on M2
+                         X(1,2) - Mg/(Na+M) on M2
+
+                         X(2,1) - Ca/M on M2
+
+                         X(3,1) - Fe(3+)/(Al+Fe+M) on M1 (i.e., Ferric-Tschermaks)
+                         X(3,2) - Al/(Al+Fe+M) on M1 (i.e., Al-Tschermaks)
 
                                                         M1     M2     T
                                                      ____________________________________
 
                                       Multiplicity      1      1     1/2 <- fake T multiplicity
                                                      ____________________________________
-                    Polytope I species:
+                                        crjd            Cr     Na    Si    dependent
+                                        crdi            Cr     Ca   AlSi   independent
+                                        crdi            Cr     Ca   AlSi   filler, independent
+                                        ___
+                                        crjd            Cr     Na    Si    filler, dependent
+                                        cren_d          Cr     Mg   AlSi   dependent
+                                        crfs_d          Cr     Fe   AlSi   dependent
+                                        _________
+                                        ness            Fe3+   Na    Si    dependent
+                                        cess            Fe3    Ca   AlSi
+                                        cess            Fe3    Ca   AlSi   filler, dependent
+                                        ___
+                                        ness            Fe3+   Na    Si    filler, dependent
+                                        macm (mess)     Fe3    Mg   AlSi   dependent
+                                        facm (fess)     Fe3    Fe   AlSi   dependent
+                                        _________
+                                        Jadeite         Al     Na    Si
+                                        Cats            Al     Ca   AlSi
+                                        Cats            Al     Ca   AlSi   filler, dependent
+                                        ___
+                                        Jadeite         Al     Na    Si    filler, dependent
+                                        Mats            Al     Mg   AlSi   dependent
+                                        fats            Al     Fe   AlSi   dependent
+                                        _________
+                                        Jadeite         Al     Na    Si    filler, dependent
+                                        di              Mg     Ca    Si    independent
+                                        hed_d           Fe     Ca    Si    dependent
+                                        ___
+                                        Jadeite         Al     Na    Si    filler, dependent
+                                        cenjh           Mg     Mg    Si    independent
+                                        cfs             Fe     Fe    Si    independent
+                                                      ___________________________________
+
+                    Ordered species:    cfm             Mg     Fe     Si
+                      --------------------------------------------------------
+                      The (future) dual prism model is:
+                                                        M1     M2     T
+                                                     ____________________________________
+
+                                      Multiplicity      1      1     1/2 <- fake T multiplicity
+                                                     ____________________________________
+                    Prism I species:
                                         di              Mg     Ca    Si    independent
                                         cenjh           Mg     Mg    Si    independent
                                         mats_d          Al     Mg   AlSi   dependent
@@ -2238,92 +1960,81 @@ begin_model
                                         crfs_d          Cr     Fe   AlSi   dependent
                                         fcess_d         Fe3+   Fe   AlSi   dependent
                                                      ____________________________________
-                    Ppolytope II species:
+                    Prism II species:
                                         cats            Al     Ca   AlSi   independent
                                         crdi            Cr     Ca   AlSi   independent
                                         cess            Fe3+   Ca   AlSi   independent
 
                                         jd              Al     Na    Si    independent
                                         crjd            Cr     Na    Si    dependent
-                                        ness            Fe3+   Na    Si    dependent
+                                        ncess           Fe3+   Na    Si    dependent
                                                       ___________________________________
 
-           T  = Cr, Al, Fe3; M1
-           C  = Ca, M2
-           M  = Mg, Fe
-           N  = Na, M2
-           
-           2 polytope model: M1, M2 site populations are indicated, remaining are dependent
-
-           Polytope 1 [T][N,C]       => 2*3 
-           Polytope 2 [M,T][M,C]     => 2*5
-
-           --------------------------------------------------------------------
 Cpx(JH)
 abbreviation Cpx
 full_name    clinopyroxene
 
-688                               | model type: 688 format standard model
+8                               | model type: prismatic O/D
 
-2                                 | number of polytopes, subvision range for the composite space
+3                               | number of simplexes comprising the prism
+3 2 4                           | number of vertexes on each simplex
+                                | quadrilaterals:
 
-0    1   .1  0                    | subdivision range for X(1) = X([T][N,C])
-                                  | X(2) = 1 - X(1) = [M,T][M,C] is by difference
+crjd_d    crdi    crdi_d               | M-Cr
+crjd_d1   cren_d  crfs_d
 
-                                  | -------------------------------------------
-                                  | Polytope 1 [T][N,C]
-[T][N,C]                          | polytope name
-2                                 | number of simplices 
-2 3                               | number of vertices on each simplex
-crjd_d    crdi
-ness_d    cess
-jd        cats
-                                  | Simplex 1
-0    .2  .1  0                    | X(1,1) = Na/[Na + Ca] on M2
+ness_d    cess    cess_d               | (Fe3)-M
+ness_d1   mess_d  fess_d
 
-                                  | Simplex 2
-0    .3  .1  0                    | X(2,1) = X(Cr) on M1
-0    .7  .1  0                    | X(2,2) = X(Fe3) on M1
+jd        cats    cats_d               | (Al)-M
+jd_d1     mats_d  fats_d
 
-                                  | -------------------------------------------
-                                  | Polytope 2  [M,T][M,C]
-[M,T][M,C]                        | polytope name
+jd_d2     di      hed_d                | M-M
+jd_d3     cenjh   cfs
 
-2                                 | number of simplices 
-2 5                               | number of vertices on each simplex
-cren_d    crfs_d
-mess_d    fess_d
-mats_d    fats_d
-cenjh     cfs
-di        hed_d
-                                  | Simplex 1
-0  1   .1  0                      | X(1,1) => bulk Mg/M
+1                               | number of ordered species and definitions
 
-                                  | Simplex 2
-0  .1  .1  0                      | X(2,1) - M-Cr
-0  .2  .1  0                      | X(2,2) - M-Fe3+
-0  .1  .1  0                      | X(2,3) - M-Ts
-0  .1  .1  0                      | X(2,4) - M-M
-
-begin_ordered_endmembers
 cfm   = 1/2 cenjh + 1/2 cfs enthalpy_of_ordering  =  -6.65d3  2.5 - 0.039 | DQF(cfm) - (DQF(ceng) + DQF(cfs))/2
-                                   | -3   - (3.5 - 2T + 0.048P + 3.8 - 3T + 0.03)/2
-                                   | = -6.65 + 2.5T - 0.039P
-end_ordered_endmembers 
+                                                           | -3   - (3.5 - 2T + 0.048P + 3.8 - 3T + 0.03)/2
+                                                           | = -6.65 + 2.5T - 0.039P
 
-begin_dependent_endmembers
+17                           | dependent endmember definitions
+
 crjd_d = 1 crdi  + 1 jd   - 1 cats
+crjd_d1 = 1 crdi  + 1 jd   - 1 cats
+crdi_d = 1 crdi
 cren_d = 1 cenjh + 1 crdi - 1 di
 crfs_d = 1 cfm   + 1 crdi - 1 di
 
 ness_d = 1 cess + 1 jd  - 1 cats
+ness_d1 = 1 cess + 1 jd  - 1 cats
+cess_d = 1 cess
 mess_d = 1 cess - 1 di  + 1 cenjh
 fess_d = 1 cess - 1 di  + 1 cfm
+
+cats_d = 1 cats
+jd_d1   = 1 jd
+jd_d2   = 1 jd
+jd_d3   = 1 jd
 
 hed_d  = 1 di    + 1 cfs - 1 cfm
 mats_d = 1 cats  + 1 cenjh - 1 di
 fats_d = 1 cats  - 1 di   + 1 cfm
-end_dependent_endmembers
+
+0 0 0 0
+0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0    | endmember flags
+
+                             | First (2d) simplex of the prism
+0  .2  .1  0                 | range and resolution of X(1,1) => Na
+0  1   .1  0                 | range and resolution of X(1,2) => Mg
+                             | Second (1d) simplex of the prism
+0  1   .1  0                 | range and resolution of X(2,1) => (Fe+Mg)/Ca
+                             | third (3d) simplex of the prisms
+0  .1  .1  0                 | range and resolution of X(3,1) - M-Cr
+0  .2  .1  0                 | range and resolution of X(3,2) - M-acm
+0  .1  .1  0                 | range and resolution of X(3,3) - M-Ts
+
 
 begin_excess_function
 W(di cfs)       20d3
@@ -2359,25 +2070,19 @@ end_excess_function
 
 3                                   | 3 site entropy model (M1, M2, T)
 
-M1                                  | site name
-5 1 1                               | number of species, effective multiplicity, true multiplicity
+5 1                                 | 3 species on m1, mult = 1
 z(m1,fe)   = 1 cfs
 z(m1,al)   = 1 cats + 1 jd
 z(m1,fe3)  = 1 cess
 z(m1,cr)   = 1 crdi
-z(Mg,M1)   = needs_to_be_completed
 
-M2                                  | site name
-4 1 1                               | number of species, effective multiplicity, true multiplicity
+4 1                                 | 4 species on m2, mult. = 1
 z(m2,na)   = 1 jd
 z(m2,mg)   = 1 cenjh
 z(m2,fe)   = 1 cfs  + 1 cfm
-z(Ca,M2)   = needs_to_be_completed
 
-T                                   | site name
-2 .5 2                              | number of species, effective multiplicity, true multiplicity
-z(T,al)  = 1/2 cats + 1/2 cess + 1/2 crdi
-z(Si,T)   = needs_to_be_completed
+2  .5                               | 2 species on T, effective mult. = 1/2
+z(t1,al) = 1/2 cats + 1/2 cess + 1/2 crdi
 
 begin_van_laar_sizes
 alpha(di)    =  1.2
@@ -3254,61 +2959,47 @@ begin_model
                            Dependent: fets  = mgts  + opx - en
                                       feots = mots1 + opx - en
                                       fdi   = di   + opx - en
-
-           T  = Al, Fe3; M1
-           C  = Ca, M2
-           M  = Mg, Fe
-
-           2 polytope model: M1, M2 site populations are indicated, remaining are dependent
-
-           Polytope 1 [Mn][Mn]       => 1 
-           Polytope 2 [M,T][M,C]     => 2*5
-
                            ----------------------------------------------------
 
 Opx(W)                       | solution name.
 abbreviation Opx
 full_name    orthopyroxene
 
-688                                | model type: 688 format standard model
+9                            | model type: O/D, prismatic + orphan vertexes
+2                            | prismatic vertex consists of two simplicies with a common vertex
+2  4                         | 2 components {Fe2+, Mg} on simplex 1, 4 components {Al, Si, Fe3+, Ti} on simplex 2
+1                            | number of orphan vertices
 
-2                                  | number of polytopes
-0   .5   .1   0                    | X(1) is [Mn][Mn]
-
-                                   | ----------------------------
-                                   | Polytope 1 - 1 simplex
-[Mn][Mn]                           | polytope name
-1                                  | number of simplices, [Mn][Mn]
-1                                  | number of vertices on each simplex
-mnopx                              | endmembers on the vertices
-
-                                   | ----------------------------
-                                   | Polytope 2 - 2x4 simplices
-[M,T][M,C]                         | polytope name
-2                                  | number of simplices
-2  4                               | number of vertices on each simplex
-                                   | endmembers on the vertices
-mots1    feots_d
-di       fdi_d
+                             | endmembers on the prismatic vertex
+mots1    feots
+di       fdi
 mgts     fets_d
 en       fs
-                                  | Simplex 1
-0  1   .1  0                      | X(1,1) => bulk Mg/M
+                             | endmembers on orphan vertices
+mnopx
 
-                                  | Simplex 2
-0  .2  .1  0                      | X(2,1) - M-Fe3+
-0  .2  .1  0                      | X(2,2) - M-Ca
-0  .4  .1  0                      | X(2,3) - M-Ts
+1                            | ordered species definition
 
-begin_ordered_endmembers
 opx = 1/2 en + 1/2  fs  Delta(enthalpy) = -6.95d3
-end_ordered_endmembers 
 
-begin_dependent_endmembers
-fets_d   = 1 mgts  + 1 opx - 1 en
-feots_d  = 1 mots1 + 1 opx - 1 en
-fdi_d    = 1 di    + 1 fs  - 1 opx                        | corrected march 17, 2017, formerly di - opx + fs
-end_dependent_endmembers
+3                            | dependent endmembers
+
+fets_d = 1 mgts  + 1 opx - 1 en
+feots  = 1 mots1 + 1 opx - 1 en
+fdi    = 1 di    + 1 fs  - 1 opx                        | corrected march 17, 2017, formerly di - opx + fs
+
+0 0 0 0 0 0 0 0 0          | endmember flags, indicate if endmember is part of the solution (i.e. iend = 0).
+
+                           | subdivision model for prism simplex 1:
+0  1  .1   0               | range and resolution of X(Mg), subdivision scheme: imod = 0 -> cartesian
+
+                           | subdivision model for prism simplex 2
+0  .2 .1   0               | range and resolution of X(Fe3+),  subdivision scheme: imod = 1 -> assymetric transform
+0  .2 .1   0               | range and resolution of X(un-Ts), subdivision scheme: imod = 1 -> assymetric transform
+0  .3 .1   0               | range and resolution of X(Ts),    subdivision scheme: imod = 1 -> assymetric transform
+
+                           | independent (1d) simplex
+0  .1  .1 0                | range of mn on independent simplex
 
 begin_excess_function
 W(en fs)                   7d3
@@ -3334,27 +3025,22 @@ W(mots1 di)             73.4d3          -0.94 * P_bar
 W(di mnopx)             24.54d3         0.084 * P_bar
 end_excess_function
 
-3                                   | 3 site (M1, M2, T) configurational entropy model
+3                          | 3 site (M1, M2, T) configurational entropy model
 
-M1                                  | site name
-5 1 1                               | number of species, effective multiplicity, true multiplicity
+5 1                        | 5 species on M1, 1 site per formula unit.
+
 z(m1,fe)   = 1 fs
 z(m1,al)   = 1 mgts
 z(m1,fe3+) = 1 mots1
 z(m1,mn)   = 1 mnopx
-z(Mg,M1)   = 1 en + 1 opx
 
-M2                                  | site name
-4 1 1                               | number of species, effective multiplicity, true multiplicity
-z(m2,fe)   = 1 fs + 1 opx
-z(m2,ca)   = 1 di
+4 1                        | 4 species on M2, 1 site per formula unit.
+z(m2,fe) = 1 fs + 1 opx
+z(m2,ca) = 1 di
 z(m2,mn)   = 1 mnopx
-z(Mg,M2)   = 1 en + 1 mgts + 1 mots1
 
-T                                   | site name
-2 .25 2                             | number of species, effective multiplicity, true multiplicity
-z(Al,T)    = 1/2 mgts + 1/2 mots1
-z(Si,T)    = 1/2 mgts + 1/2 mots1 + 1 en + 1 fs + 1 opx + 1 di + 1 mnopx
+2 0.25                     | 2 species on "1/4" T site
+z(T,al) = 1/2 mgts + 1/2 mots1
 
 begin_van_laar_sizes
 alpha(en)       1
@@ -3416,51 +3102,49 @@ begin_model
 
                             Ordered:    Obi           Fe      Mg     AlSi   OH
 
-Bi(W)                              | solution name.
+Bi(W)                        | solution name.
 abbreviation Bio
 full_name    biotite
 
-688                                | model type: 688 format standard model
+9                            | model type: O/D, prismatic + orphan vertexes
 
-2                                  | number of polytopes
-0   .5   .1   0                    | X(1) is [Mn][Mn]
+2                            | prismatic vertex consists of two simplicies with a common vertex
+2  4                         | 2 components {Fe2+, Mg} on simplex 1, 4 components {Al, Si, Fe3+, Ti} on simplex 2
+1                            | number of orphan vertices
 
-                                   | ----------------------------
-                                   | Polytope 1 - 1 simplex
-[Mn][Mn]                           | polytope name
-1                                  | number of simplices, [Mn][Mn]
-1                                  | number of vertices on each simplex
-mnbi                               | endmembers on the vertices
-
-                                   | ----------------------------
-                                   | Polytope 2 - 2x4 simplices
-[M,T][M]                           | polytope name
-2                                  | number of simplices
-2  4                               | number of vertices on each simplex
-                                   | endmembers on the vertices
-ffbi_d   fbi
-sdph_d   east
-ftbi_d   tbi
+                             | endmembers on the prismatic vertex
+ffbi_i   fbi
+ftbi_i   tbi
+sdph_i   east
 ann      phl
-                                   | First 2-simplex
-0    1   .1  0                     | X(1,1) is bulk Fe/M
-                                   | Second 4-simplex
-0    1   .1  0                     | X(2,1) is Fe3/[T+M] on M1, M on M2
-0    1   .1  0                     | X(2,2) is Al/[T+M]  on M1, M on M2
-0    1   .1  0                     | X(2,3) is Ti/[M+T] on M2, M on M1
+                             | endmembers on orphan vertices
+mnbi
 
-begin_ordered_endmembers
+1                            | ordered species:
                              | enthalpy corrected from -2d3, May 1, 2019. JADC
 obi = 2/3 phl + 1/3 ann   enthalpy_of_ordering = -1d3
-end_ordered_endmembers
 
-begin_dependent_endmembers
-sdph_d = 1 east  + 1 ann - 1 obi
-ffbi_d = 1 fbi   + 1 ann - 1 obi
-ftbi_d = 1 tbi   + 1 ann - 1 obi
-end_dependent_endmembers
+3                            | number of dependent endmembers
+
+sdph_i = 1 east  + 1 ann - 1 obi
+ffbi_i = 1 fbi   + 1 ann - 1 obi
+ftbi_i = 1 tbi   + 1 ann - 1 obi
+
+0 0 0 0 0 0 0 0 0            | endmember flags: 0 -> endmember is considered to be part of the solution.
+
+                             | subdivision model for first simplex of the prismatic vertex
+0  1   .1  0                 | range and resolution of X(Fe)
+
+                             | subdivision model for the second simplex of the prismatic vertex
+0  .2  .1  0                 | range and resolution of X(Fe3+)
+0  .5  .1  0                 | range and resolution of X(Ti)
+0  1   .1  0                 | range and resolution of X(Al)
+
+                             | independent (1d) simplex
+0  .1  .1 0                  | range of mn on independent simplex
 
 begin_excess_function
+
 W(phl ann)   12d3
 W(phl obi)    4d3
 W(phl east)  10d3
@@ -3485,41 +3169,28 @@ W(fbi mnbi) 116d2
 
 end_excess_function
 
-6                                   | Configurational entropy: 6 sites, M1, M2, T1, T2, O, OH.
+4                           | Configurational entropy: 4 sites, M1, M2, T1 H.
 
-M1                                  | site name
-6 1 1                               | 5 species on M1, 1 site per formula unit.
+6 1                         | 5 species on M1, 1 site per formula unit.
 
 z(m1,fe)   = 1 ann  + 1 obi
 z(m1,mg)   = 1 phl
 z(m1,Fe3+) = 1 fbi
 z(m1,mn)   = 1 mnbi
 z(m1,Ti)   = 1 tbi
-z(Al,M1)   = needs_to_be_completed
 
-M2                                  | site name
-3 2 2                               | 2 species on M2, 2 sites per formula unit.
+3 2.                        | 2 species on M2, 2 sites per formula unit.
+
 z(m2,fe)   = 1 ann
 z(m2,mn)   = 1 mnbi
-z(Mg,M1)   = needs_to_be_completed
 
-T1                                  | site name
-2 2 2                               | 2 species on T1, 2 site per formula unit.
-z(t1,si)   = 1/2 phl + 1/2 ann + 1/2 tbi + 1/2 obi + 1/2 mnbi
-z(Al,T1)   = needs_to_be_completed
+2 2.                        | 2 species on T1, 2 site per formula unit.
 
-T2                                  | site name
-1 2 2                               | number of species, effective multiplicity, true multiplicity
-z(Si,T2)   = 1
+z(t1,si)   = 1/2 phl + 1/2 ann + 1/2 tbi + 1/2 obi + 1/2 mnbi 
 
-O                                   | site name
-1 10 10                             | number of species, effective multiplicity, true multiplicity
-z(O,O)     = 1
+2 2.                        | 2 species on H, 2 site per formula unit.
 
-OH                                  | site name
-2 2 2                               | 2 species on H, 2 site per formula unit.
-z(O,OH)     = 1 tbi
-z(OH,OH)    = needs to be completed
+z(h,o) = 1 tbi
 
 begin_dqf_corrections
 dqf(ann)  -3000
@@ -3575,45 +3246,42 @@ Bi(HGP)                      | solution name.
 abbreviation Bio
 full_name    biotite
 
-688                                | model type: 688 format standard model
+9                            | model type: O/D, prismatic + orphan vertexes
 
-2                                  | number of polytopes
-0   .5   .1   0                    | X(1) is [Mn][Mn]
+2                            | prismatic vertex consists of two simplicies with a common vertex
+2  4                         | 2 components {Fe2+, Mg} on simplex 1, 4 components {Al, Si, Fe3+, Ti} on simplex 2
+1                            | number of orphan vertices
 
-                                   | ----------------------------
-                                   | Polytope 1 - 1 simplex
-[Mn][Mn]                           | polytope name
-1                                  | number of simplices, [Mn][Mn]
-1                                  | number of vertices on each simplex
-mnbi                               | endmembers on the vertices
-
-                                   | ----------------------------
-                                   | Polytope 2 - 2x4 simplices
-[M,T][M]                           | polytope name
-2                                  | number of simplices
-2  4                               | number of vertices on each simplex
-                                   | endmembers on the vertices
+                             | endmembers on the prismatic vertex
 ffbi_i   fbi
-sdph_i   east
 ftbi_i   tbi
+sdph_i   east
 ann      phl
-                                   | First 2-simplex
-0    1   .1  0                     | X(1,1) is bulk Fe/M
-                                   | Second 4-simplex
-0    1   .1  0                     | X(2,1) is Fe3/[T+M] on M1, M on M2
-0    1   .1  0                     | X(2,2) is Al/[T+M]  on M1, M on M2
-0    1   .1  0                     | X(2,3) is MTi/[M+MTi] on M2, M on M1
+                             | endmembers on orphan vertices
+mnbi
 
-begin_ordered_endmembers
-                             | enthalpy corrected from -2d3, May 1, 2019. JADC
-obi = 2/3 phl + 1/3 ann   enthalpy_of_ordering = -1d3
-end_ordered_endmembers
+1                            | ordered species:
 
-begin_dependent_endmembers
+obi = 2/3 phl + 1/3 ann   enthalpy_of_ordering = -4d3
+
+3                            | number of dependent endmembers
+
 sdph_i = 1 east  + 1 ann - 1 obi
 ffbi_i = 1 fbi   + 1 ann - 1 obi
 ftbi_i = 1 tbi   + 1 ann - 1 obi
-end_dependent_endmembers
+
+0 0 0 0 0 0 0 0 0            | endmember flags: 0 -> endmember is considered to be part of the solution.
+
+                             | subdivision model for first simplex of the prismatic vertex
+0  1   .1  0                 | range and resolution of X(Fe)
+
+                             | subdivision model for the second simplex of the prismatic vertex
+0  .2  .1  0                 | range and resolution of X(Fe3+)
+0  .3  .1  0                 | range and resolution of X(Ti)
+0  1   .1  0                 | range and resolution of X(Al)
+
+                             | independent (1d) simplex
+0  .1  .1 0                  | range of mn on independent simplex
 
 begin_excess_function
 
@@ -3641,42 +3309,28 @@ W(fbi mnbi) 116d2
 
 end_excess_function
 
+4                           | Configurational entropy: 4 sites, M1, M2, T1 H.
 
-6                                   | Configurational entropy: 6 sites, M1, M2, T1, T2, O, OH.
-
-M1                                  | site name
-6 1 1                               | 5 species on M1, 1 site per formula unit.
+6 1                         | 5 species on M1, 1 site per formula unit.
 
 z(m1,fe)   = 1 ann  + 1 obi
 z(m1,mg)   = 1 phl
 z(m1,Fe3+) = 1 fbi
 z(m1,mn)   = 1 mnbi
 z(m1,Ti)   = 1 tbi
-z(Al,M1)   = needs_to_be_completed
 
-M2                                  | site name
-3 2 2                               | 2 species on M2, 2 sites per formula unit.
+3 2.                        | 2 species on M2, 2 sites per formula unit.
+
 z(m2,fe)   = 1 ann
 z(m2,mn)   = 1 mnbi
-z(Mg,M1)   = needs_to_be_completed
 
-T1                                  | site name
-2 2 2                               | 2 species on T1, 2 site per formula unit.
+2 2.                        | 2 species on T1, 2 site per formula unit.
+
 z(t1,si)   = 1/2 phl + 1/2 ann + 1/2 tbi + 1/2 obi + 1/2 mnbi
-z(Al,T1)   = needs_to_be_completed
 
-T2                                  | site name
-1 2 2                               | number of species, effective multiplicity, true multiplicity
-z(Si,T2)   = 1
+2 2.                        | 2 species on H, 2 site per formula unit.
 
-O                                   | site name
-1 10 10                             | number of species, effective multiplicity, true multiplicity
-z(O,O)     = 1
-
-OH                                  | site name
-2 2 2                               | 2 species on H, 2 site per formula unit.
-z(O,OH)     = 1 tbi
-z(OH,OH)    = needs to be completed
+z(h,o) = 1 tbi
 
 begin_dqf_corrections
 dqf(ann)  -6000             | changed from -3d3 in Holland et al. 2018 TC file. Debaditya Bandyopadhyay 5/1/19.
@@ -4008,6 +3662,122 @@ z(m1,fe3+) = 1 mots
 
 2 1                        | 2 species on M2, 1 site per formula unit.
 z(m2,mg) = 1 en + 1 mgts + 1 mots
+
+end_of_model
+                      --------------------------------------------------------
+begin_model
+
+                             Ti-Fe3+ Biotite from Tajcmanova et al., JMG 2009;
+                             extended for Mn solution after Tinkham et al. 2001.
+
+                             Model entered by Lucie Tajcmanova, December, 2008.
+
+                             NOTE this model requires the following make definitions
+                             in the thermodynamic data file:
+
+                             tbit = 1 phl - 1 br + 1 ru           84e3 -11.5 0
+                             fbit = 1 east - 1/2 cor + 1/2 hem    6e3 0 0
+
+                             site population limits added Feb 20, 2011, JADC.
+
+                             reformulated as a prismatic + orphan vertex model.
+
+                             JADC, 10/5/2018
+
+
+                                      Site:           M1      M2       T1     H
+                                                     ____________________________
+
+                                      Mutliplicity    1       2        2      2
+
+                                    endmember        ____________________________   type
+                                    _________                                       _________
+
+
+                                        ffbit         Fe3+   FeFe     AlAl    OH    dependent
+                                        fbit          Fe3+   MgMg     AlAl    OH
+
+                                        ftbit         Fe     TiFe     AlSi    O     dependent
+                                        tbit          Mg     TiMg     AlSi    O
+
+                                        sdph          Al     FeFe     AlAl    OH    dependent
+                                        east          Al     MgMg     AlAl    OH
+
+                                        mnbi          Mn     MnMn     AlSi    OH    independent orphan
+                                        ann           Fe     FeFe     AlSi    OH
+                                        phl           Mg     MgMg     AlSi    OH
+
+                                        obi           Fe     MgMg     AlSi    OH    ordered
+
+Bio(TCC)                     | model name
+abbreviation Bio
+full_name    biotite
+
+9                            | model type: O/D with prism + orphan vertex composition space
+
+2                            | prismatic vertex consists of two simplexes with a common vertex
+2  4                         | 2 components {Fe2+, Mg} on simplex 1, 4 components {Al, Si, Fe3+, Ti} on simplex 2
+1                            | number of orphan vertices
+
+                             | endmembers on the prismatic vertex
+ffbit     fbit
+ftbit     tbit
+sdph      east
+ann       phl
+                             | orphan vertex
+mnbi
+
+1                            | number of ordered species:
+
+obi = 2/3 phl + 1/3 ann   enthalpy_of_ordering = -6.8d3
+
+3                            | number of dependent endmembers
+
+sdph    = 1 east + 1 ann    - 1 obi
+ffbit   = 1 fbit + 1 ann    - 1 obi
+ftbit   = 1 tbit + 1/2 ann  + 1/2 obi - 1 phl
+
+0 0 0 0 0 0 0 0 0            | endmember flags
+
+0   1  .1 0                  | range and resolution of X(Mg, M2), mod = 0 -> cartesian subdivision
+
+0   1  .1 0                  | range and resolution of X(Fe3+,*), mod = 0 -> cartesian subdivision
+0. .5 .1  0                  | range and resolution of X(Ti,  *), mod = 0 -> cartesian subdivision
+0   1  .1 0                  | range and resolution of X(Al,  *), mod = 0 -> cartesian subdivision
+
+0. .5 .1  0                  | range and resolution of mnbi, mod = 0 -> cartesian subdivision
+
+begin_excess_function
+W(phl ann)   12000.   | excess parameters from Holland & Powell, JMG, 2006
+W(phl east)  10000.
+W(phl obi)    4000.
+W(ann east)   3000.
+W(ann obi)    8000.
+W(obi east)   7000.
+end_excess_function
+
+4                           | Configurational entropy: 4 sites, M1, M2, T1 H.
+
+5 1                         | 5 species on M1, 1 site per formula unit.
+
+z(m1,fe)   = 1 ann + 1 obi
+z(m1,mg)   = 1 phl + 1 tbit
+z(m1,mn)   = 1 mnbi
+z(m1,Fe3+) = 1 fbit
+
+4 2.                        | 4 species on M2, 2 sites per formula unit.
+
+z(m2,fe)   = 1 ann
+z(m2,Ti)   = 1/2 tbit
+z(m2,mn)   = 1 mnbi
+
+2 2.                        | 2 species on T1, 2 site per formula unit.
+
+z(t1,si)   = 1/2 phl + 1/2 ann + 1/2 tbit + 1/2 obi + 1/2 mnbi 
+
+2 2.                        | 2 species on H, 2 site per formula unit.
+
+z(h,o)     = 1 tbit
 
 end_of_model
                     --------------------------------------------------------
@@ -5473,6 +5243,50 @@ ideal
 
 2 5                                   2 species, site multiplicity = 5.
 z(mg) = 1 tr
+
+end_of_model
+                      --------------------------------------------------------
+begin_model
+                           | ternary feldsar (fuhrman & lindsley, am min, 1988)
+                           | for binary plagioclse this model is identical
+                           | to that of Newton et al. 1980, and for binary
+                           | alkali feldspar it is identical to Haselton et al. (1983).
+
+                             CORRECTED FOR TYPO IN ORIGINAL PAPER.
+
+feldspar
+abbreviation Fsp
+full_name    ternary-feldspar
+
+2                          | model type: simplicial composition space
+3                          | 3 endmembers
+abh
+an
+san
+0 0 0                      | endmember flags = 0 if the endmember is part of the solution.
+0. 1   .1   0              | range and resolution for albite, imod = 0 -> cartesian subdivision
+0. 1   .1   0              | range and resolution for anorthite, imod = 0 -> cartesian subdivision
+
+begin_excess_function
+w(abh abh san) 27320   -10.3  .394 * P_bar
+w(abh san san) 18810   -10.3  .394 * P_bar
+w(an  an  san) 52468
+w(an  san san) 47396          -.12 * P_bar
+w(an  an  abh) 28226
+w(an  abh abh) 8471
+w(an  abh san) 100045.5 -10.3 -0.76 * P_bar
+end_excess_function
+
+2                          | 2 site (O-site and T-site) entropy model
+
+3 1                        | 3 species on O-site, 1 site per formula unit.
+z(Na) = 1 abh
+z(Ca) = 1 an
+
+2 2.                       | 2 species on T-site, 2. sites per formula (al-avoidance model)
+z(Al) = 1/2 + 1/2 an
+
+reach_increment 3
 
 end_of_model
                       --------------------------------------------------------
@@ -8994,9 +8808,9 @@ begin_model
                              Ti-Fe-Mg-Mn-Biotite with compound formation, Powell and Holland '99
                              Am Min, extended for Mn-solution.
 
-                             reformulated as dual polytope model.
+                             reformulated as a prismatic + orphan vertex model.
 
-                             JADC, 10/9/2019
+                             JADC, 10/5/2018
 
                              NOTES:
 
@@ -9025,43 +8839,31 @@ begin_model
 
                         Ordered Cpd: 10 Obi           Fe      Mg     AlSi
 
+
+
                              | Comments can be placed before character data within a solution
                              | model as long as they are preceded by the comment marker "|",
                              | in general comments should not be placed before numerica data,
                              | but they can be written following numeric data on the same line.
 
-Bio(HP)                            | solution name.
+Bio(HP)                      | solution name.
 abbreviation Bio
 full_name    biotite
 
-688                                | model type: 688 format standard model
+9                            | model type: O/D, prism + orphan vertex composition space
 
-2                                  | number of polytopes
-0   .5   .1   0                    | X(1) is [Mn][Mn]
-
-                                   | ----------------------------
-                                   | Polytope 1 - 1 simplex
-[Mn][Mn]                           | polytope name
-1                                  | number of simplices, [Mn][Mn]
-1                                  | number of vertices on each simplex
-mnbi                               | endmembers on the vertices
-
-                                   | ----------------------------
-                                   | Polytope 2 - 2x3 simplices
-[M,T][M]                           | polytope name
-2                                  | number of simplices
-2  3                               | number of vertices on each simplex
-                                   | endmembers on the vertices
+2                            | prismatic vertex consists of two simplexes with a common vertex
+2  3                         | 2 components {Fe2+, Mg} on simplex 1, 4 components {Al, Si, Fe3+, Ti} on simplex 2
+1                            | number of orphan vertices
+                             | endmembers on the prismatic vertex
 ftbi_i   tbi
 sdph_i   east
 ann      phl
-                                   | First 2-simplex
-0    1   .1  0                     | X(1,1) is bulk Fe/M
-                                   | Second 3-simplex
-0    1   .1  0                     | X(2,1) is Ti/[M+T] on M1
-0    1   .1  0                     | X(2,2) is Al/[T+M] on M1
+                             | orphan vertex endmember
+mnbi
 
-begin_ordered_endmembers
+1                            | ordered species:
+
                              | model types 6 and 8 require data defining the
                              | properties of an ordered "species". this species
                              | is defined as a stoichiometric combination of
@@ -9077,11 +8879,11 @@ begin_ordered_endmembers
                              | numbers separated by a '/') and name_j is the
                              | name of a valid endmember. text is arbitrary and
                              | enthalpy is the enthalpy of formation of the ordered species.
+
 obi = 2/3 phl + 1/3 ann   enthalpy_of_ordering = -10.73d3
 
-end_ordered_endmembers
+2                            | number of dependent endmembers
 
-begin_dependent_endmembers
                              | model types 7 and 8 (reciprocal solutions) use
                              | internal endmembers that are defined as a
                              | stoichiometric combination of the other endmembers.
@@ -9101,12 +8903,58 @@ begin_dependent_endmembers
 
 sdph_i = 1 east + 1 ann - 1 obi
 ftbi_i = 1 tbi  + 1/2 ann - 1/2 obi
-end_dependent_endmembers
+
+0 0 0 0 0 0 0                | endmember flags: if 0 the endmember is considered to be part of the solution.
+
+                             | subdivision model for simplex 1 (M2):
+0  1  .1  0                  | range and resolution of X(Fe)
+
+                             | subdivision model for simplex 2 (M1)
+0  1  .1   0                 | range and resolution of X(Ti,M1)
+0  1  .1   0                 | range and resolution of X(Al,M1)
+
+0  .2 .1   0                  | range and resolution of mnbi, mod = 0 -> cartesian subdivision
+
+                             | the foregoing lines define the pseudocompound compositions generated
+                             | on each "chemical" mixing site of the solution (Sect 4 [READ 6] vdoc.pdf).
+                             | for each site the compositional "range" of c-1 species (c is the number of
+                             | species on the site as defined in READ 3) is specified as well as a scheme
+                             | for interpreting the range. each range is defined by 3 numbers XMIN, XMAX,
+                             | and XINC, and the scheme is specified by an integer (IMD) written after the
+                             | c-1 ranges. The simplest scheme is cartesian, in which case IMD = 0 and the
+                             | the XMIN, XMAX, and XINC indicate the range of compositions (from XMIN to XMAX)
+                             | of the respective c-1 species and the compositional spacing (XINC) of the
+                             | pseudocompounds. As entered above, the subdivision scheme will generate
+                             | pseudocompounds with X(Mn) on site 1 from 0 to 0.20 mol at 0.01 mol increments
+                             | for each X(Mn) isopleth, compounds will be generated with X(Fe) from 0 to 1-X(Mn),
+                             | where "0" and "1" correspond to XMIN and XMAX in the range for the second species
+                             | on site 1, and X(Mg) = 1 - X(Fe) - X(Mn).
+
+                             | Alternative subdivision shemes detailed in vdoc.pdf, may be useful for specialized
+                             | applications, e.g., creating models with variable compositional resolution.
+
+                             | By restricting the ranges specified in a model it is possible to focus pseudocompounds
+                             | over a particular portion of a solutions composition space, such focusing can be
+                             | computationally advantageous when it is known a priori that only a limited range of
+                             | compositions can be stable, but it should be undertaken with caution because the
+                             | results are not always easy to anticipate.
+
+                             | The primary difficulty in restricting compositional ranges is that the user
+                             | can explicitly control the composition of only c-1 compositions since the
+                             | cth composition is determined by difference. Additionally the subdivision ranges
+                             | are applied sequentially, with compositions that violate mass balance (sum of
+                             | compositions > 1) eliminated as they occur. Thus, in general, users have the greatest
+                             | control on the composition of the first species on a site and no direct control
+                             | on the composition of the last species. Since in most cases it is desired to
+                             | restrict the composition of dilute species, endmembers should be specified
+                             | (READ 4) so that the dilute species is not the last species.
 
 begin_excess_function
+
                              | format is W(e1 e1 e2 ...) num1 num2 num3
                              | where the excess parameter = num1 + num2*T + num3*P
                              | and is multiplied by y(e1)*y(e1)*y(e2)...
+
 W(phl ann) 9000
 W(phl east) 10000
 W(phl obi) 3000
@@ -9118,39 +8966,36 @@ W(obi east)  10000
 
 end_excess_function
 
-6                                   | Configurational entropy: 6 sites, M1, M2, T1, T2, O, OH
+3                           | Configurational entropy: 3 sites, M1, M2, T1.
 
-M2                                  | site name
-5 1 1                               | 5 species on M1, 1 site per formula unit.
+5 1                         | 4 species on M1, 1 site per formula unit.
+
+                            | If a mixing site involves n species, VERTEX
+                            | expects to find n-1 site fraction definitions
+                            | in terms of the endmember fractions. These
+                            | definitions have the general format:
+                            | text = num + num1 * name1 + num2 * name2
+                            | where num is a number or fraction (i.e., two
+                            | numbers separated by a '/') and name is the
+                            | name of a valid endmember.
+
+                            | WARNING! fractions can only be used in the site
+                            | fraction definitions, do not use fractions to specify
+                            | site multiplicities in the above line.
+
 z(m1,fe) = 1 ann  + 1 obi
 z(m1,mg) = 1 phl
 z(m1,mn) = 1 mnbi
 z(m1,al) = 1 east
-z(Ti,M1)   = needs_to_be_completed
 
-M2                                  | site name
-4 2 2                               | 4 species on M2, 2 sites per formula unit.
-z(m2,fe)   = 1 ann
-z(m2,mn)   = 1 mnbi
-z(m2,vac)  = 1/2 tbi
-z(Mg,M2)   = needs_to_be_completed
+4 2.                        | 4 species on M2, 2 sites per formula unit.
 
-T1                                  | site name
-2 2 2                               | number of species, effective multiplicity, true multiplicity
-z(t1,al)   = 1/2  + 1/2 east
-z(Si,T1)   = needs_to_be_completed
+z(m2,fe) = 1 ann
+z(m2,mn) = 1 mnbi
+z(m2,vac) = 1/2 tbi
 
-T2                                  | site name
-1 2 2                               | number of species, effective multiplicity, true multiplicity
-z(Si,T2)   = 1
-
-O                                   | site name
-1 10 10                             | number of species, effective multiplicity, true multiplicity
-z(O,O)     = 1
-
-OH                                  | site name
-1 2 2                               | 2 species on H, 2 site per formula unit.
-z(OH,OH)   = 1
+2 2.                        | 2 species on T1, 2 site per formula unit.
+z(t1,al) = 1/2  + 1/2 east
 
 end_of_model
 
@@ -11376,45 +11221,40 @@ Gt(H)
 abbreviation Gt
 full_name    High pressure garnet
 
-688                               | model type: 688 format standard model
+9                               | model type: prism + orphan
+2                               | number of simplexes in prism
+3 3                             | number of vertices on each simplex
+1                               | number of orphan vertices
 
-2                                 | number of polytopes, subvision range for the composite space
+                                | endmembers on the prismatic vertex
+cnagt_d  fnagt_d     nagt       | ternary 1
+fmaj_d   cfmaj_d     cmmaj_d    | ternary 2
+gr       alm         py         | ternary 3
 
-0    1   .1  0                    | subdivision range for X(1) = X(mg-maj)
+maj                             | the orphan
 
-                                  | -------------------------------------------
-                                  | Polytope 1
-[maj]                             | polytope name
-1                                 | number of simplices 
-1                                 | number of vertices on each simplex
-maj
-                                  | -------------------------------------------
-                                  | Polytope 2
-[no-mg-maj]                       | polytope name
+1                               | ordered species definition
 
-2                                 | number of simplices 
-3 3                               | number of vertices on each simplex
-cnagt_d  fnagt_d     nagt         | ternary 1
-fmaj_d   cfmaj_d     cmmaj_d      | ternary 2
-gr       alm         py           | ternary 3
-
-0  1   .1  0                      | range and resolution of X(1,1) => X(Ca) in the ternaries
-0  1   .1  0                      | range and resolution of X(1,2) => X(Fe) in the ternaries
-
-0  1   .1  0                      | range and resolution of X(2,1) => X(M-nagt)
-0  1   .1  0                      | range and resolution of X(2,2) => X(non-Mg-Ts)
-
-begin_ordered_endmembers
 gfm = 1 maj - 1/3 py + 1/3 alm  enthalpy_of_ordering = -10d3
-end_ordered_endmembers 
 
-begin_dependent_endmembers
+5                               | number of dependent endmembers
+
 fnagt_d = 1 nagt + 2/3 alm - 2/3 py
 cnagt_d = 1 nagt + 2/3 gr  - 2/3 py
+
 fmaj_d   = 1 gfm  + 1 alm   - 1 py
 cmmaj_d  = 1 maj  + 1 gr    - 1 py
 cfmaj_d  = 1 gfm  + 1 gr    - 1 py
-end_dependent_endmembers
+
+0  0  0  0 0 0 0 0 0 0 0 0    | endmember flags
+
+0  1   .1  0                  | range and resolution of X(1,1) => X(Ca) in the ternaries
+0  1   .1  0                  | range and resolution of X(1,2) => X(Fe) in the ternaries
+
+0  1   .1  0                  | range and resolution of X(2,1) => X(M-nagt)
+0  1   .1  0                  | range and resolution of X(2,2) => X(non-Mg-Ts)
+
+0  1   .1  0                  | range and resolution of X(3,1) => X(maj), the orphan
 
 begin_excess_function
 w(py alm)      3d3
@@ -11436,19 +11276,15 @@ end_excess_function
 
 2                                     2 site entropy model
 
-X                                   | site name
-4 3 3                               | number of species, effective multiplicity, true multiplicity
+4 3.                                  4 species, X site multiplicity 3
 z(Fe) = 1 alm
 z(Ca) = 1 gr
 z(Na) = 1/3 nagt
-z(Mg) = needs_to_be_completed
 
-Y                                   | site name
-4 2 2                               | number of species, effective multiplicity, true multiplicity
+4 2.                                  4 species, Y site multiplicity 2
 z(Mg) = 1/2 maj
 z(Fe) = 1/2 gfm
 z(Si) = 1/2 maj + 1/2 gfm + 1/2 nagt
-z(Al) = needs_to_be_completed
 
 end_of_model
                       --------------------------------------------------------
@@ -11717,40 +11553,38 @@ CFer(H)
 abbreviation CFer
 full_name    Ca-ferrite type
 
-688                               | model type: 688 format standard model
+9                               | model type: prismatic + orphan vertices, O/D
 
-2                                 | number of polytopes, subvision range for the composite space
-
-0    1   .1  0                    | subdivision range for X(1) = M-free
-
-                                  | -------------------------------------------
-                                  | Polytope 1 [M-free]
-M-free                            | polytope name
-1                                 | number of simplices 
-2                                 | number of vertices on each simplex
-nacfb   cacf
-0  1   .1  0                      | range and resolution of X(nacfb/[nacfb+cacf])
-                                  | -------------------------------------------
-                                  | Polytope 2  [MCF]
-MCF                               | polytope name
-2                                 | number of simplices 
-3 2                               | number of vertices on each simplex
+2                               | number of simplexes comprising the prism
+3 2                             | vertices on each prism
+2                               | number of orphan vertices
+                                | endmembers on the prismatic vertex
 macf    cscf_d   mscf
 facf_d  cfscf_d  fscf
-0  1   .1  0                      | range and resolution of X(AlAl)
-0  1   .1  0                      | range and resolution of X(CaM)
+                                | endmembers on the orphan vertices
+nacfb
+cacf
 
-0  1   .1  0                      | range and resolution of X(Mg)
+1                               | ordered species definition
 
-begin_ordered_endmembers
 oscf = 1/2 mscf + 1/2 fscf enthalpy_of_ordering = -3.5d3
-end_ordered_endmembers 
 
-begin_dependent_endmembers
+3                               | number of dependent endmembers
+
 facf_d  = 1 macf + 1 oscf - 1 mscf
 cscf_d  = 1 cacf + 1 mscf - 1 macf
 cfscf_d = 1 cacf + 1 fscf - 1 macf - 1 oscf + 1 mscf
-end_dependent_endmembers
+
+
+0  0  0  0  0  0  0  0  0  0    | endmember flags
+
+0  1   .1  0                  | range and resolution of X(AlAl)
+0  1   .1  0                  | range and resolution of X(CaM)
+
+0  1   .1  0                  | range and resolution of X(Mg)
+
+0  1   .1  0                  | range and resolution of nacfb
+0  1   .1  0                  | range and resolution of cacf
 
 begin_excess_function
 w(macf cacf)       11d3
@@ -11774,21 +11608,18 @@ w(fscf nacfb)    9.95d3
 w(oscf nacfb)    10.7d3
 end_excess_function
 
+
 2                                   | 2 site entropy model (M1, M2)
 
-M1                                  | site name
-4 1 1                               | 4 species on M1, site multiplicity of 1
+4 1                                 | 4 species on M1, site multiplicity of 1
 z(m1,ca) = 1 cacf
 z(m1,fe) = 1 fscf + 1 oscf
 z(m1,na) = 1 nacfb
-z(Mg,M1)   = needs_to_be_completed
 
-M2                                  | site name
-4 1 2                               | 4 species on M2, (fake) site multiplicity of 1
+4 1                                 | 4 species on M2, (fake) site multiplicity of 1
 z(m2,al) = 1 macf + 1 cacf + 1/2 nacfb
 z(m2,mg) = 1/2 mscf + 1/2 oscf
 z(m2,fe) = 1/2 fscf
-z(Si,M2)   = needs_to_be_completed
 
 end_of_model
                       --------------------------------------------------------
@@ -13307,174 +13138,93 @@ begin_model
                       ojd  = 1 jd
                             DQF = 18800
 
-           Reformulated as dual poytope model, JADC, 10/19
-
-           T  = Al, Fe3, MT; on M1
-           C  = Ca, M2
-           M  = Mg, Fe 
-
-           2 polytope model: M1, M2 site populations are indicated, remaining are dependent
-
-           Polytope 1 [T,MTi][Na,C]      => 3*4
-           Polytope 2 TM+MC              => 2*6 this polytope is the sum of [T][M]+[M][C]
-
                                                         M1     M2     T
                                                      ____________________________________
 
                                       Multiplicity      1      1     1/2 <- fake T multiplicity
                                                      ____________________________________
-           Polytope 1:                  crjd_d          Cr     Na    Si    dependent
+                                        crjd_d          Cr     Na    Si    dependent
                                         crdi_d          Cr     Ca   AlSi   dependent
+                                        crdi_d1         Cr     Ca   AlSi   filler
                                         ___
-                                        ness_d          Fe3    Na    Si    dependent
-                                        cess_d (acm)    Fe3    Ca   AlSi   dependent
-                                        ___
-                                        ojd             Al     Na    Si
-                                        ocats_d         Al     Ca   AlSi   dependent
-                                        ___
-                                        mnbuf_d         MgTi   Na    Si    dependent
-                                        mcbuf_d         MgTi   Ca   AlSi   dependent
-
-                                        fnbuf_d         FeTi   Na    Si    dependent
-                                        fcbuf_d         FeTi   Ca   AlSi   dependent
-                                                     ____________________________________
-
-           Polytope 2:                  crenh           Cr     Mg   AlSi
+                                        crjd_d1         Cr     Na    Si    filler
+                                        crenh           Cr     Mg   AlSi
                                         crfs_d          Cr     Fe   AlSi   dependent
                                         _________
-
+                                        ness_d          Fe3    Na    Si    dependent
+                                        cess_d (acm)    Fe3    Ca   AlSi   dependent
+                                        cess_d1         Fe3    Ca   AlSi   filler
+                                        ___
+                                        ness_d1         Fe3    Na    Si    filler
                                         macm (mess)     Fe3    Mg   AlSi
                                         facm_d (fess)   Fe3    Fe   AlSi   dependent
                                         _________
-
+                                        ojd             Al     Na    Si
+                                        ocats_d         Al     Ca   AlSi   dependent
+                                        ocats_d1        Al     Ca   AlSi   filler
+                                        ___
+                                        ojd_d           Al     Na    Si    filler
                                         mgts            Al     Mg   AlSi
                                         fts_d           Al     Fe   AlSi   dependent
                                         _________
-
+                                        ojd_d1          Al     Na    Si    utterly useless filler
+                                        cbuf_d          MgTi   Ca   AlSi   dependent
+                                        cfbuf_d         FeTi   Ca   AlSi   dependent
+                                        ___
+                                        ojd_d2          Al     Na    Si    utterly useless filler
                                         obuf            MgTi   Mg   AlSi
-                                        ffbuf_d         FeTi   Fe   AlSi   dependent
+                                        fbuf_d          FeTi   Fe   AlSi   dependent
                                         _________
+                                        ojd_d3          Al     Na    Si    utterly useless filler
                                         odi             Mg     Ca    Si
                                         hed_d           Fe     Ca    Si    dependent
                                         ___
+                                        ojd_d4          Al     Na    Si    utterly useless filler
                                         en              Mg     Mg    Si
                                         fs              Fe     Fe    Si
                                                       ___________________________________
-                    Ordered species:
-
-                                        fm              Mg     Fe    Si independent
-
-                   femg-1(M2) = fm - en
-                   femg-1(M1) = fs - fm
-                   mgca-1(M2) = en - odi
-                   feca-1(M2) = fm - odi 
-
-          ----------------------------------------------------------------------------------------
-
-  NOTE: the MTi- exchanges allowed in polytope 1 have been commented out below 
-  because it has been assumed they are insignificant, this assumption has not been 
-  tested. As a consequence of the simplification the above definitions become:
-
-           T  = Cr, Al, Fe3, MTi; M1
-           T' = Cr, Al, Fe3; M1
-           C  = Ca, M2
-           M  = Mg, Fe
-           A  = Na, K, M2
-           
-           2 polytope model: M1, M2 site populations are indicated, remaining are dependent
-
-           Polytope 1 [T'][A,C]         => 3*3
-           Polytope 2 TM+MC             => 2*6 this polytope is the sum of [T][M]+[M][C]
-
-  To restore the MTi exchanges in polytope 1 refer to the comments following the [T'][A,C] 
-  polytope definition.
-
-
+                           Internal:    fm              Mg     Fe    Si
 
 Opx(HGP)
 abbreviation Opx
 full_name    orthopyroxene
 
-688                               | model type: 688 format standard model
+8                           | prismatic composition space, order-disorder
+3                           | 3 simplices
+3 2 5
+                            | endmembers on the prism vertices
 
-2                                 | number of polytopes, subvision range for the composite space
+crjd_d   crdi_d  crdi_d1             | Cr-M
+crjd_d1  crfs_d  crenh
 
-0    .2   .1  0                   | subdivision range for X(1) = X([T][N,C])
-                                  | X(2) = 1 - X(1) = TM+MC is by difference
+ness_d   cess_d  cess_d1             | Fe3-M
+ness_d1  facm_d  macm
 
-                                  | -------------------------------------------
-                                  | Polytope 1 [T'][A,C]
-[T'][Na,C]                        | polytope name
-2                                 | number of simplices
+ojd      ocats_d ocats_d1            | Al-M
+ojd_d    fts_d   mgts
 
-    | NOTE !!!
+ojd_d1   cfbuf_d cbuf_d              | Ti-M
+ojd_d2   fbuf_d  obuf
 
-    | the MTi exchanges allowed in this polytope have been commented 
-    | under the (untested) assumption that they are insignificant.
+ojd_d3   hed_d   odi                 | M-M
+ojd_d4   fs      en
 
-    | To restore the MTi exchanges change the following line
-    | to 2 5 and uncomment the lines below, and in the dependent
-    | endmember definition section, that specify the mnbuf_d, mcbuf_d, 
-    | fnbuf_d, fcbuf_d dependent endmembers; also uncomment the corresponding 
-    | subdivision ranges [X(2,3), X(2,4)].
+1                           | number of independent ordered species and definitions
 
-    | It is possible that VERTEX/MEEMUM will run out of dynamic memory using 
-    | the full model, if this occurs uncomment the "low_reach" option keyword
-    | at the end of this model. The low_reach option dramatically reduces the
-    | memory and time required for calculations, but also causes a significant
-    | deterioration in phase diagram quality.
-
-2 3
-crjd_d   crdi_d
-ness_d   cess_d
-|mnbuf_d  mcbuf_d
-|fnbuf_d  fcbuf_d
-ojd      ocats_d
-
-                                  | Simplex 1
-0     1  .1  0                    | X(1,1) = Na/[Na + Ca] on M2
-                                  | X(1,N) = Ca/[A + Ca] on M2 by difference
-
-                                  | Simplex 2
-0     1  .1  0                    | X(2,1) = Cr/T' on M1
-0     1  .1  0                    | X(2,2) = Fe3+/T on M1
-|0     1  .1  0                    | X(2,3) = MgTi/T on M1
-|0     1  .1  0                    |X(2,4)  = FeTi/T on M1
-                                  | X(2,N) = Al/T on M1 by difference
-
-                                  | -------------------------------------------
-                                  | Polytope 2  TM+MC
-TM+MC                             | polytope name
-
-2                                 | number of simplices 
-2 6                               | number of vertices on each simplex
-
-ffbuf_d  obuf
-crfs_d   crenh
-facm_d   macm
-fts_d    mgts
-hed_d    odi
-fs       en
-
-                                  | Simplex 1
-0  .8  .1  0                      | X(1,1) => Fe/M
-                                  | X(1,N) = Mg/M by difference
-
-                                  | Simplex 2
-0  .2  .1  0                      | X(2,1) - M-MTi
-0  .2  .1  0                      | X(2,2) - M-Cr
-0  .2  .1  0                      | X(2,3) - M-Fe3+
-0  .1  .1  0                      | X(2,4) - M-Ts
-0  .5  .1  0                      | X(2,5) - M-Ca
-                                  | X(2,6) - M-M by difference
-
-
-
-begin_ordered_endmembers
 fm = 1/2 en + 1/2 fs     enthalpy_of_ordering = -6600
-end_ordered_endmembers 
 
-begin_dependent_endmembers
+22                          | number of dependent endmembers and definitions
+
+crdi_d1  = 1 crenh - 1 en   + 1 odi
+crjd_d1  = 1 crenh - 1 mgts + 1 ojd
+cess_d1  = 1 macm  - 1 en   + 1 odi
+ocats_d1 = 1 mgts  - 1 en   + 1 odi
+ness_d1  = 1 macm  - 1 mgts + 1 ojd
+ojd_d    = 1 ojd
+ojd_d1   = 1 ojd
+ojd_d2   = 1 ojd
+ojd_d3   = 1 ojd
+ojd_d4   = 1 ojd
 
 fts_d   = 1 mgts - 1 en + 1 fm
 ocats_d = 1 mgts - 1 en + 1 odi
@@ -13487,14 +13237,31 @@ facm_d  = 1 macm - 1 en   + 1 fm
 cess_d  = 1 macm - 1 en   + 1 odi
 ness_d  = 1 macm - 1 mgts + 1 ojd
 
-|mcbuf_d = 1 obuf + 1 odi  - 1 en
-|fcbuf_d = 1 obuf + 1/2 fs - 1/2 fm + 1 odi - 1 en
-
-ffbuf_d = 1 obuf - 1 en   + 1/2 fs + 1/2 fm
+cbuf_d  = 1 obuf + 1 odi  - 1 en
+cfbuf_d = 1 obuf + 1/2 fs - 1/2 fm + 1 odi - 1 en
+fbuf_d  = 1 obuf - 1 en   + 1/2 fs + 1/2 fm
 
 hed_d   = -1 fm + 1 fs + 1 odi
 
-end_dependent_endmembers
+                            | see commentary in the header of this file for explanation of
+                            | endmember flags and subdivision schemes.
+
+0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0         | endmember flags
+
+                            | First (1d) simplex of the prism
+0  .1  .1  0                | subdivision scheme for X(1,1) => Na
+0  .2  .1  0                | subdivision scheme for X(1,2) => Fe
+
+                            | Second (1d) simplex of the prism
+0  .3  .1  0                | subdivision scheme for X(2,1) [M2] => (Ca+Na)/(Ca+Na+Mg+Fe2)
+
+                            | third (3d) simplex of the prisms
+0  .2  .1  0                | subdivision scheme for X(3,1) - Cr-M
+0  .2  .1  0                | subdivision scheme for X(3,2) - Fe3-M
+0  .2  .1  0                | subdivision scheme for X(3,2) - Al-M
+0  .3  .1  0                | subdivision scheme for X(3,2) - Ti-M
 
 begin_excess_function
 W(en fs)                 7d3
@@ -13528,32 +13295,22 @@ W(obuf ojd)              4d3
 W(macm ojd)             -11d3
 end_excess_function
 
-4                                   | 4 site entropy model (M1, M2, T, O)
+3                                   | 3 site entropy model (M1, M2, T)
 
-M1                                  | site name
-6 1 1                               | number of species, effective multiplicity, true multiplicity
+6 1                                 | 6 species on m1, mult = 1
 z(m1,fe)   = 1 fs
 z(m1,al)   = 1 mgts + 1 ojd
 z(m1,fe3+) = 1 macm
 z(m1,cr)   = 1 crenh
 z(m1,ti)   = 1/2 obuf
-z(Mg,M1)   = 1/2 obuf + 1 odi + 1 en
 
-M2                                  | site name
-4 1 1                               | number of species, effective multiplicity, true multiplicity
+4 1                                 | 4 species on m2, mult. = 1
 z(m2,fe)   = 1 fs + 1 fm
 z(m2,ca)   = 1 odi
 z(m2,na)   = 1 ojd
-z(Mg,M2)   = 1 obuf + 1 en + 1 crenh + 1 macm + 1 mgts 
 
-T                                   | site name
-2 .5 2                              | number of species, effective multiplicity, true multiplicity
+2  .5                               | 2 species on T, effective mult. = 1/2
 z(Al,T)    = 1/2 mgts + 1/2 crenh + 1/2 obuf + 1/2 macm
-z(Si,T)    = 1/2 mgts + 1/2 crenh + 1/2 obuf + 1/2 macm + 1 ojd + 1 odi + 1 en + 1 fs
-
-O                                   | site name
-1 6 6                               | number of species, effective multiplicity, true multiplicity
-z(O,O)     = 1
 
 begin_van_laar_sizes
 alpha(en)        1
@@ -13566,10 +13323,6 @@ alpha(obuf)      1
 alpha(macm)      1
 alpha(ojd)       1.2
 end_van_laar_sizes
-
-| reach_increment 0
-
-| low_reach
 
 end_of_model
                       --------------------------------------------------------

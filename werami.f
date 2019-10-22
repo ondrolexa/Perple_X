@@ -29,8 +29,8 @@ c----------------------------------------------------------------------
       logical oned
       common/ cst82 /oned
 
-      integer ivar,ind
-      common/ cst83 /ivar,ind
+      integer ivar,ind,ichem
+      common/ cst83 /ivar,ind,ichem
 
       integer isec,icopt,ifull,imsg,io3p
       common/ cst103 /isec,icopt,ifull,imsg,io3p
@@ -202,8 +202,13 @@ c----------------------------------------------------------------------
       character dname*14, title*162
       common/ cst76 /inv(i11),dname(i11),title
 
-      integer ivar,ind
-      common/ cst83 /ivar,ind
+      integer ivar,ind,ichem
+      common/ cst83 /ivar,ind,ichem
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       integer isec,icopt,ifull,imsg,io3p
       common/ cst103 /isec,icopt,ifull,imsg,io3p
@@ -566,6 +571,11 @@ c---------------------------------------------------------------------
       integer ncol, nrow
       common/ cst226 /ncol,nrow,fileio,flsh,anneal,short
 
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
       integer isec,icopt,ifull,imsg,io3p
       common/ cst103 /isec,icopt,ifull,imsg,io3p
 c----------------------------------------------------------------------
@@ -767,6 +777,11 @@ c----------------------------------------------------------------------
 
       integer igrd
       common/ cst311/igrd(l7,l7)
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 c                                 global assemblage data
       integer icog,jcog
       common/ cxt17 /icog(k2),jcog(k2)
@@ -1204,6 +1219,11 @@ c-----------------------------------------------------------------------
 
       double precision wt(3), mode
 
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10) 
+
       integer iap,ibulk
       common/ cst74  /iap(k2),ibulk
 
@@ -1220,6 +1240,9 @@ c-----------------------------------------------------------------------
 
       integer igrd
       common/ cst311/igrd(l7,l7)
+
+      integer ksmod, ksite, kmsol, knsp
+      common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
 c----------------------------------------------------------------------
 c                                 set variables to x-y value
       call setval
@@ -1341,6 +1364,11 @@ c----------------------------------------------------------------
      *               kop(i11),kcx(i11),k2c(i11),iprop,
      *               first,kfl(i11),tname
 
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
       integer jvar
       double precision var,dvr,vmn,vmx
       common/ cxt18 /var(l3),dvr(l3),vmn(l3),vmx(l3),jvar
@@ -1387,12 +1415,17 @@ c----------------------------------------------------------------------
      *               kop(i11),kcx(i11),k2c(i11),iprop,
      *               first,kfl(i11),tname
 
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
       integer jvar
       double precision var,dvr,vmn,vmx
       common/ cxt18 /var(l3),dvr(l3),vmn(l3),vmx(l3),jvar
 
-      integer ivar,ind
-      common/ cst83 /ivar,ind
+      integer ivar,ind,ichem
+      common/ cst83 /ivar,ind,ichem
 
       integer kkp,np,ncpd,ntot
       double precision cp3,amt
@@ -1525,6 +1558,11 @@ c----------------------------------------------------------------
 
       double precision gtot,fbulk,gtot1,fbulk1
       common/ cxt81 /gtot,fbulk(k0),gtot1,fbulk1(k0)
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       double precision props,psys,psys1,pgeo,pgeo1
       common/ cxt22 /props(i8,k5),psys(i8),psys1(i8),pgeo(i8),pgeo1(i8)
@@ -1933,6 +1971,11 @@ c ------------------------------------------------------------------
       double precision pcomp
       common/ cst324 /pcomp(k0,k5)
 
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
       integer icps, jcx, jcx1, kds
       logical stol, savg, spec
       double precision rcps, a0
@@ -2000,7 +2043,7 @@ c-------------------------------------------------------------------
 
       logical max
 
-      integer choice, index, ksol(k5), isol, i, j, icx, 
+      integer choice, index, kdsol(k5), isol, i, j, icx, 
      *        jsol, ier, phase, mode
 
       double precision cmin(k5) ,cmax(k5), tcomp, gtcomp
@@ -2013,6 +2056,11 @@ c-------------------------------------------------------------------
 
       integer javg,jdsol
       common/ cxt5 /javg,jdsol(k5)
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       integer idasls,iavar,iasct,ias
       common/ cst75  /idasls(k5,k3),iavar(3,k3),iasct,ias
@@ -2241,7 +2289,7 @@ c                                 the composition is out of bounds
             end do
 c                                 the solution past all tests
             jsol = jsol + 1
-            ksol(jsol) = jdsol(i)
+            kdsol(jsol) = jdsol(i)
 
 20       continue 
 
@@ -2251,7 +2299,7 @@ c                                 existing criteria
             write (*,1060) jsol,fname(phase)
             write (*,1040) (cname(i), i = 1, icomp)
             do i = 1, jsol 
-               write (*,1050) (pcomp(j,ksol(i)), j = 1, icomp)
+               write (*,1050) (pcomp(j,kdsol(i)), j = 1, icomp)
             end do 
 
             write (*,1070)
@@ -2264,7 +2312,7 @@ c                                 2 - average within existing criterion
 
             else if (choice.eq.3) then 
 c                                 3 - ignore and hope for the best
-               call avgcmp (jsol,ksol)
+               call avgcmp (jsol,kdsol)
 
             else 
 c                                 not 2 or 3, redefine the criterion
@@ -2276,12 +2324,12 @@ c                                 not 2 or 3, redefine the criterion
          end if 
 c                                 user has elected to average within
 c                                 existing criterion
-         if (jsol.gt.1.and.savg(phase)) call avgcmp (jsol,ksol) 
+         if (jsol.gt.1.and.savg(phase)) call avgcmp (jsol,kdsol) 
 
          if (jsol.eq.0) then 
             index = jdsol(1)
          else 
-            index = ksol(1)
+            index = kdsol(1)
          end if 
 
       else 
@@ -2298,16 +2346,16 @@ c                                 of bounds, cycle
 
 c                                 the phase passed all tests
             jsol = jsol + 1
-            ksol(jsol) = jdsol(i)
+            kdsol(jsol) = jdsol(i)
 
          end do  
 c                                 if no phase passed range criterion
-c                                 load them all in to ksol and use the
+c                                 load them all in to kdsol and use the
 c                                 min/max, could add a 1 time warning.
          if (jsol.eq.0) then 
             jsol = isol
             do i = 1, jsol
-               ksol(i) = jdsol(i)
+               kdsol(i) = jdsol(i)
             end do 
          end if 
 c                                 min/max
@@ -2319,7 +2367,7 @@ c                                 min/max
 
          do i = 1, jsol
 
-            tcomp = gtcomp (ksol(i),idasls(ksol(i),ias),k5+2)
+            tcomp = gtcomp (kdsol(i),idasls(kdsol(i),ias),k5+2)
 
             if (max) then 
                if (tcomp.ge.cmin(2)) then 
@@ -2427,8 +2475,8 @@ c----------------------------------------------------------------------
       character vnm*8
       common/ cxt18a /vnm(l3)  
 
-      integer ivar,ind
-      common/ cst83 /ivar,ind
+      integer ivar,ind,ichem
+      common/ cst83 /ivar,ind,ichem
 c----------------------------------------------------------------------
       node = .false.
       dim = 1
@@ -2596,7 +2644,7 @@ c                                 compute properties
 
       end do 
 
-      if (jpts.eq.0) call error (72,s,i,'your polynomial yields no cond'
+      if (jpts.eq.0) call error (77,s,i,'your polynomial yields no cond'
      *//'itions with the coordinate frame of the calculation')
 
       call finprp (dim,n5name,n6name,node) 
@@ -2646,8 +2694,13 @@ c----------------------------------------------------------------------
      *               kop(i11),kcx(i11),k2c(i11),iprop,
      *               first,kfl(i11),tname
 
-      integer ivar,ind
-      common/ cst83 /ivar,ind
+      integer ivar,ind,ichem
+      common/ cst83 /ivar,ind,ichem
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       integer isec,icopt,ifull,imsg,io3p
       common/ cst103 /isec,icopt,ifull,imsg,io3p
@@ -2886,6 +2939,9 @@ c-------------------------------------------------------------------
       double precision props,psys,psys1,pgeo,pgeo1
       common/ cxt22 /props(i8,k5),psys(i8),psys1(i8),pgeo(i8),pgeo1(i8)
 
+      integer ksmod, ksite, kmsol, knsp
+      common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
+
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
 c----------------------------------------------------------------------
@@ -2970,7 +3026,7 @@ c----------------------------------------------------------------
 
       integer i, j, k, id, jk, ind(i11), jnd(i11), nsol, knd(i11), ksol
 
-      logical stble(i11), quit
+      logical stable(i11), quit
 
       double precision mode(3), smode(i11), dinc 
 
@@ -2982,6 +3038,11 @@ c----------------------------------------------------------------
      *               kop(i11),kcx(i11),k2c(i11),iprop,
      *               first,kfl(i11),tname
 
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
       integer idasls,iavar,iasct,ias
       common/ cst75  /idasls(k5,k3),iavar(3,k3),iasct,ias
 
@@ -2991,7 +3052,7 @@ c----------------------------------------------------------------
       integer idsol,nrep,nph
       common/ cst38/idsol(k5,k3),nrep(k5,k3),nph(k3)
 
-      save ind, stble, ksol, nsol
+      save ind, stable, ksol, nsol
 c----------------------------------------------------------------------
       do i = 1, iprop
          prop(i) = nopt(7)
@@ -3051,7 +3112,7 @@ c                                mode column pointer
 
             do i = 1, istab
 
-               if (.not.stble(i).and.smode(i).gt.0d0) then
+               if (.not.stable(i).and.smode(i).gt.0d0) then
 c                                 check if it's already in ind:
                  quit = .false.
 
@@ -3063,7 +3124,7 @@ c                                 check if it's already in ind:
                  end do 
 
                  if (quit) then 
-                    stble(i) = .true.
+                    stable(i) = .true.
                     cycle 
                  end if 
 
@@ -3072,7 +3133,7 @@ c                                 probably univariant, find the phase that
 c                                 was stable, but isn't anymore
                     do j = 1, nsol
 
-                       if (stble(ind(j)).and.
+                       if (stable(ind(j)).and.
      *                     smode(ind(j)).gt.0d0) cycle
 c                                 shift all higher indices up
                        do k = nsol, j, -1
@@ -3093,7 +3154,7 @@ c                                 probably low variance
 
                   end if
 
-                  stble(ind(i)) = .true.
+                  stable(i) = .true.
 
                end if 
 
@@ -3102,7 +3163,7 @@ c                                 set modes of phase that have dissappeared
 c                                 to real zeros (not nopt(7)).
             do i = 1, nsol
 
-               if (stble(ind(i)).and.smode(ind(i)).gt.0) cycle
+               if (stable(ind(i)).and.smode(ind(i)).gt.0) cycle
 
                do j = 1, nstab(i)
                   prop(jnd(ind(i))+j) = 0d0
@@ -3114,9 +3175,9 @@ c                                 to real zeros (not nopt(7)).
 
          do i = 1, istab
             if (smode(i).eq.0d0) then 
-               stble(i) = .false.
+               stable(i) = .false.
             else 
-               stble(i) = .true.
+               stable(i) = .true.
             end if
          end do
 
@@ -3218,8 +3279,8 @@ c----------------------------------------------------------------
       character*162 title
       common/ csta8 /title(4)
 
-      integer ivar,ind
-      common/ cst83 /ivar,ind
+      integer ivar,ind,ichem
+      common/ cst83 /ivar,ind,ichem
 
       integer inv
       character dname*14, titl1*162
@@ -3232,6 +3293,11 @@ c----------------------------------------------------------------
       common/ cst77 /prop(i11),prmx(i11),prmn(i11),
      *               kop(i11),kcx(i11),k2c(i11),iprop,
      *               first,kfl(i11),tname
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 c----------------------------------------------------------------------
       if (dim.eq.1) then 
 
@@ -3381,6 +3447,11 @@ c----------------------------------------------------------------
       double precision gtot,fbulk,gtot1,fbulk1
       common/ cxt81 /gtot,fbulk(k0),gtot1,fbulk1(k0)
 
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
       double precision props,psys,psys1,pgeo,pgeo1
       common/ cxt22 /props(i8,k5),psys(i8),psys1(i8),pgeo(i8),pgeo1(i8)
 
@@ -3395,8 +3466,8 @@ c----------------------------------------------------------------
       double precision cp3,amt
       common/ cxt15 /cp3(k0,k19),amt(k19),kkp(k19),np,ncpd,ntot
 
-      integer ivar,ind
-      common/ cst83 /ivar,ind
+      integer ivar,ind,ichem
+      common/ cst83 /ivar,ind,ichem
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
@@ -3681,8 +3752,8 @@ c----------------------------------------------------------------
       character vnm*8
       common/ cxt18a /vnm(l3) 
 
-      integer ivar,ind
-      common/ cst83 /ivar,ind
+      integer ivar,ind,ichem
+      common/ cst83 /ivar,ind,ichem
 c----------------------------------------------------------------------
 c                                 choose plotting variable
       write (*,1000) vnm(1)
@@ -3770,11 +3841,16 @@ c----------------------------------------------------------------
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
 
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
       integer jtest,jpot
       common/ debug /jtest,jpot
 
-      integer ivar,ind
-      common/ cst83 /ivar,ind
+      integer ivar,ind,ichem
+      common/ cst83 /ivar,ind,ichem
 
       character cname*5
       common/ csta4  /cname(k5)
@@ -3866,6 +3942,17 @@ c                                 property counter
       iprop = 0
 c                                 phase composition counter
       komp = 0
+c                                 counter for dependent potentials, this
+c                                 this should be someplace else:
+c                                 for usv calculations make names
+c                                 for the extra potentials (p,t)                            
+      if (hcp.gt.icp) then 
+         ichem = hcp 
+         cname(icp+1) = 'T(K)   '
+         cname(icp+2) = '-P(bar)'
+      else 
+         ichem = icp 
+      end if 
 c                                 choose property
       do 
 
@@ -4015,7 +4102,7 @@ c                                 get component to be contoured
 
                if (lop.eq.23) then 
 
-                  write (*,1010) (i, cname(i), i = 1, icp)
+                  write (*,1010) (i, cname(i), i = 1, ichem)
 
                else 
 
@@ -4090,7 +4177,7 @@ c                                 get phase index
 
             if (lop.eq.36) then 
 
-               iprop = i8 + 3 + icomp + icp + 1
+               iprop = i8 + 3 + icomp + ichem + 1
                if (iprop.gt.i11) call error (1,0d0,iprop,'I11')
 
             else 
@@ -4178,7 +4265,7 @@ c                                 bulk compositions, lop = 6
                   call gtname (6,i-mprop,i,komp,pname)
                end do 
 
-               do i = mprop + icomp + 1, i8 + 3 + icomp + icp
+               do i = mprop + icomp + 1, i8 + 3 + icomp + ichem
 c                                 chemical potentials, lop = 23
                   call gtname (23,i-mprop-icomp,i,komp,pname)
                end do 
@@ -4294,6 +4381,11 @@ c----------------------------------------------------------------
 
       character cname*5
       common/ csta4  /cname(k5)
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       save warned
       data warned/.false./
@@ -4477,6 +4569,11 @@ c----------------------------------------------------------------
       character dname*14, titl1*162
       common/ cst76 /inv(i11),dname(i11),titl1
 
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
       character*14 tname
       integer kop,kcx,k2c,iprop
       logical kfl, first
@@ -4579,6 +4676,11 @@ c-----------------------------------------------------------------------
 
       integer idasls,iavar,iasct,ias
       common/ cst75  /idasls(k5,k3),iavar(3,k3),iasct,ias
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 c-----------------------------------------------------------------------
       solvs3 = .false.
 
@@ -4631,6 +4733,11 @@ c----------------------------------------------------------------
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp  
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       character*14 tname
       integer kop,kcx,k2c,iprop
@@ -4772,7 +4879,12 @@ c-----------------------------------------------------------------------
 
       integer kd, na1, na2, na3, nat
       double precision x3, caq
-      common/ cxt16 /x3(k5,h4,mst,msp),caq(k5,l10),na1,na2,na3,nat,kd
+      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),na1,na2,na3,nat,kd
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       double precision pcomp
       common/ cst324 /pcomp(k0,k5)
