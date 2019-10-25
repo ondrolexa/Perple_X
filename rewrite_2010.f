@@ -90,6 +90,11 @@ c------------------------------------------------------------------------
       double precision comp,tot
       common/ cst43 /comp(k0),tot,icout(k0),ikind,icmpn,ieos
 
+      integer iemod,kmod
+      logical smod,pmod
+      double precision emod
+      common/ cst319 /emod(k15,k10),smod(h9),pmod(h9),iemod(k10),kmod
+
       integer length,iblank,icom
       character chars*1
       common/ cst51 /length,iblank,icom,chars(240)
@@ -112,6 +117,14 @@ c                                 need to eliminate hsc conversion.
  
       end
 
+      subroutine grxn (g)
+c--------------------------------------------------------------------
+c a dummy routine to allow rk to be linked with rlib.f
+c--------------------------------------------------------------------
+      implicit none
+      double precision g
+      g = g
+      end
 
 
       subroutine ogtphi (name,eof)
@@ -147,6 +160,11 @@ c-----------------------------------------------------------------------
       integer ikind,icmpn,icout,ieos
       double precision comp,tot
       common/ cst43 /comp(k0),tot,icout(k0),ikind,icmpn,ieos
+
+      integer iemod,kmod
+      logical smod,pmod
+      double precision emod
+      common/ cst319 /emod(k15,k10),smod(h9),pmod(h9),iemod(k10),kmod
 
       integer ltyp,lct,lmda,idis
       common/ cst204 /ltyp(k10),lct(k10),lmda(k10),idis(k10)
@@ -357,9 +375,9 @@ c                              back to k = ktr + b7*(T-Tr)
       end
 
 
-      subroutine otopn2 (jopt)
+      subroutine otopn2 (iopt)
 c----------------------------------------------------------------------
-c topn2 reads the header of the thermodynamic data file, if jopt = 1
+c topn2 reads the header of the thermodynamic data file, if iopt = 1
 c then data base choice is known (idbase), else if 1 asks console for a 
 c choice else if > 3 echos data except components and atwts to n8
 c----------------------------------------------------------------------
@@ -369,7 +387,7 @@ c----------------------------------------------------------------------
  
       character*5 tag*11, n2name*100, string*140
 
-      integer icod, ig(3), jopt, i
+      integer icod, ig(3), iopt, i
 
       double precision delt,dtol,utol,ptol
       common/ cst87 /delt(l2),dtol,utol,ptol
@@ -417,7 +435,7 @@ c                               read the extrinsic variable names:
       read (n2,1000,err=90) (vname(i), i = 1, 3)
       read (n2,1010,err=90) (ig(i), i = 1, 3)
 
-      if (jopt.lt.4) then 
+      if (iopt.lt.4) then 
          if ((ifug.ge.10.and.ifug.le.12).or.
      *       ifug.eq.15.or.ifug.eq.17.or.ifug.eq.18) then 
             vname(3) = ' X(O) ' 
@@ -460,7 +478,7 @@ c                               must be included in the file (ne. 0).
       vname(5) = 'mu(C2)'
 
 
-      if (jopt.gt.3) then 
+      if (iopt.gt.3) then 
          write (n8,1020) 
 1020  format (/,' | comments are indicated by the | character.',/,
      *     ' | check for warnings at the end of the header section.',/) 
@@ -490,11 +508,11 @@ c                                 read and echo unformatted comments and make da
 
          read (n2,'(a)',end=90) string
          read (string,'(a)') tag
-         if (jopt.gt.3) write (n8,'(a)') string
+         if (iopt.gt.3) write (n8,'(a)') string
 
          if (tag.eq.'begin_makes') then
  
-            call rmakes (jopt)
+            call rmakes (iopt)
 
             cycle 
 

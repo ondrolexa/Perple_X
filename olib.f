@@ -32,6 +32,11 @@ c----------------------------------------------------------------------
       double precision props,psys,psys1,pgeo,pgeo1
       common/ cxt22 /props(i8,k5),psys(i8),psys1(i8),pgeo(i8),pgeo1(i8)
 
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
       integer kkp,np,ncpd,ntot
       double precision cp3,amt
       common/ cxt15 /cp3(k0,k19),amt(k19),kkp(k19),np,ncpd,ntot
@@ -85,7 +90,10 @@ c----------------------------------------------------------------------
 
       integer ld, na1, na2, na3, nat
       double precision x3, caq
-      common/ cxt16 /x3(k5,h4,mst,msp),caq(k5,l10),na1,na2,na3,nat,ld
+      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),na1,na2,na3,nat,ld
+
+      integer lstot,mstot,nstot,ndep,nord
+      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
 
       integer jend
       common/ cxt23 /jend(h9,m4)
@@ -93,6 +101,9 @@ c----------------------------------------------------------------------
       integer length,iblank,icom
       character chars*1
       common/ cst51 /length,iblank,icom,chars(lchar)
+
+      integer ksmod, ksite, kmsol, knsp
+      common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
 
       integer jnd
       double precision aqg,q2,rt
@@ -678,7 +689,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer ii, i,j,k,l,m,ids,kd,lco(3),itri(4),jtri(4),ijpt
+      integer i,j,k,l,m,ids,kd,lco(3),itri(4),jtri(4),ijpt
 
       double precision wt(3), cst, xt 
 
@@ -686,7 +697,7 @@ c----------------------------------------------------------------------
 c                                 x-coordinates for the assemblage solutions
       integer ld, na1, na2, na3, nat
       double precision x3, caq
-      common/ cxt16 /x3(k5,h4,mst,msp),caq(k5,l10),na1,na2,na3,nat,ld
+      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),na1,na2,na3,nat,ld
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -699,6 +710,9 @@ c                                 for final adaptive solution
       integer kkp,np,ncpd,ntot
       double precision cp3,amt
       common/ cxt15 /cp3(k0,k19),amt(k19),kkp(k19),np,ncpd,ntot
+c                                 x coordinate description
+      integer istg, ispg, imlt, imdg
+      common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
 c                                 global assemblage data
       integer idasls,iavar,iasct,ias
       common/ cst75  /idasls(k5,k3),iavar(3,k3),iasct,ias
@@ -708,7 +722,17 @@ c                                 global assemblage data
 
       integer igrd
       common/ cst311/igrd(l7,l7)
+
+      integer ncoor,mcoor,ndim
+      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
+
+      double precision xco
+      integer ico,jco
+      common/ cxt10 /xco(k18),ico(k1),jco(k1)
 c                                 bookkeeping variables
+      integer ksmod, ksite, kmsol, knsp
+      common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
+
       logical gflu,aflu,fluid,shear,lflu,volume,rxn
       common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume,rxn
 
@@ -717,6 +741,11 @@ c                                 bookkeeping variables
 
       double precision gtot,fbulk,gtot1,fbulk1
       common/ cxt81 /gtot,fbulk(k0),gtot1,fbulk1(k0)
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       double precision props,psys,psys1,pgeo,pgeo1
       common/ cxt22 /props(i8,k5),psys(i8),psys1(i8),pgeo(i8),pgeo1(i8)
@@ -734,6 +763,10 @@ c                                 bookkeeping variables
       integer jbulk
       double precision cblk
       common/ cst300 /cblk(k5),jbulk
+
+      logical usv
+      integer pindex,tindex
+      common/ cst54 /pindex,tindex,usv
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
@@ -756,6 +789,9 @@ c                                 bookkeeping variables
       double precision hsb
       common/ cst84 /hsb(i8,4),hs2p(6)
 
+      integer pstot,qstot,ostg,odim,nsum
+      common/ junk1 /pstot(h9),qstot(h9),ostg(h9),odim(mst,h9),nsum(h9)
+
       integer idaq, jdaq
       logical laq
       common/ cxt3 /idaq,jdaq,laq
@@ -771,7 +807,7 @@ c                                 WERAMI:
 c                                 load the assemblage phase composition
 c                                 starting coordinates
          do i = 1, ijpt
-            lco(i) = icox(igrd(itri(i),jtri(i)))
+            lco(i) = ico(igrd(itri(i),jtri(i)))
          end do 
 c                                 no data test
          if (ias.eq.k3) then 
@@ -813,6 +849,24 @@ c                                 get the dependent potentials
             end do
 
          end if
+c                                 if s/v independent variables, 
+c                                 then set p and t 
+         if (hcp.gt.icp) then
+
+            if (lopt(14)) then 
+               write (*,*) 'ERROR: logarithmic_p must be false for USV'
+               stop
+            end if 
+
+            p = -mu(pindex)
+            t = mu(tindex)
+
+            if (p.lt.0d0.or.t.lt.1d2) then 
+               nodata = .true.
+               goto 99
+            end if 
+
+         end if 
 
       end if 
 c                                 initialize system props/flags
@@ -839,11 +893,9 @@ c                                 solvent
 c                                 WERAMI, initialize
                props(16,i) = 0d0
 
-               do ii = 1, pop1(ids)
-                  do j = 1, istg(ids,1)
-                     do k = 1, ispg(ids,1,j)
-                        x3(i,ii,j,k) = 0d0
-                     end do 
+               do j = 1, ostg(ids)
+                  do k = 1, ispg(ids,j)
+                     x3(i,j,k) = 0d0
                   end do 
                end do 
 
@@ -870,12 +922,10 @@ c                                 weighted molar amount
                      props(16,i) = props(16,i) + cst
                   end if 
 
-                  do ii = 1, pop1(ids)
-                     do j = 1, istg(ids,ii)
-                        do k = 1, ispg(ids,ii,j)
-                           lco(l) = lco(l) + 1
-                           x3(i,ii,j,k) = x3(i,ii,j,k) + cst*xco(lco(l))
-                        end do
+                  do j = 1, ostg(ids)
+                     do k = 1, ispg(ids,j)
+                        lco(l) = lco(l) + 1
+                        x3(i,j,k) = x3(i,j,k) + cst*xco(lco(l))
                      end do 
                   end do
 
@@ -893,33 +943,28 @@ c                                 renormalize the composition
                cst = props(16,i)
                if (cst.eq.0d0) cst = 1d0
 
-               do ii = 1, pop1(ids) 
-
-                  do l = 1, istg(ids,ii)
+               do l = 1, ostg(ids)
                   
-                     xt = 0d0
+                  xt = 0d0
 
-                     do m = 1, ispg(ids,ii,l)
+                  do m = 1, ispg(ids,l)
+                     x3(i,l,m) = x3(i,l,m)/cst
 
-                        x3(i,ii,l,m) = x3(i,ii,l,m)/cst
+                     if (x3(i,l,m).gt.1d0) then 
+                        x3(i,l,m) = 1d0
+                     else if (x3(i,l,m).lt.0d0) then 
+                        x3(i,l,m) = 0d0
+                     end if 
 
-                        if (x3(i,ii,l,m).gt.1d0) then 
-                           x3(i,ii,l,m) = 1d0
-                        else if (x3(i,ii,l,m).lt.0d0) then 
-                           x3(i,ii,l,m) = 0d0
-                        end if 
-
-                        xt = xt + x3(i,ii,l,m)
-
-                     end do
-
-                     if (xt.ne.1d0.and.xt.ne.0d0) then 
-                        do m = 1, ispg(ids,ii,l)
-                           x3(i,ii,l,m) = x3(i,ii,l,m)/xt
-                        end do
-                     end if
+                     xt = xt + x3(i,l,m)
 
                   end do
+
+                  if (xt.ne.1d0.and.xt.ne.0d0) then 
+                     do m = 1, ispg(ids,l)
+                        x3(i,l,m) = x3(i,l,m)/xt
+                     end do
+                  end if
 
                end do 
 
@@ -929,14 +974,17 @@ c                               lagged speciation
                      caq(i,k) = caq(i,k)/cst
                   end do 
 
-               end if
+               end if 
+c                                 revover x from x3, 2nd arg has no meaning.
+               call getxz (i,i,ids)
+c                                 convert x to y for calls to gsol
+               call xtoy (ids,ids,.true.,bad)
 
             else 
 c                                 MEEMUM, molar amount
                props(16,i) = amt(i)
-c                                 recover x array from 
-c                                 x3 and convert to y array
-               call xtoy (ids,i,.false.,bad)
+c                                 convert x3 to y for calls to gsol
+               if (ids.gt.0) call xtoy (ids,i,.false.,bad)
 
             end if
 
@@ -990,15 +1038,21 @@ c-----------------------------------------------------------------------
       include 'perplex_parameters.h'
 
       integer k, id, jd
+c                                 bookkeeping variables
+      integer ksmod, ksite, kmsol, knsp
+      common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
+c                                 model type
+      logical lorder, lexces, llaar, lrecip
+      common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
 
       integer spct
       double precision ysp
       character spnams*8
       common/ cxt34 /ysp(l10,k5),spct(h9),spnams(l10,h9)
 
-      double precision z, pa, p0a, x, w, y, wl, pp
-      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18),pp(m4)
+      double precision z, pa, p0a, x, w, y, wl
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
+     *              wl(m17,m18)
 
       character specie*4
       integer isp, ins
@@ -1008,7 +1062,7 @@ c-----------------------------------------------------------------------
       common/ cstcoh /yf(nsp),g(nsp),v(nsp)
 c----------------------------------------------------------------------
 
-      if (lorder(id)) then 
+      if ((lrecip(id).and.lorder(id)).or.lorder(id)) then 
 
          do k = 1, spct(id) 
             ysp(k,jd) = pa(k)
@@ -1020,10 +1074,10 @@ c----------------------------------------------------------------------
             ysp(k,jd) = p0a(k)
          end do
 
-      else if (simple(id).or.ksmod(id).eq.20.or.ksmod(id).ge.24.and.
+      else if (ksmod(id).eq.2.or.ksmod(id).eq.20.or.ksmod(id).ge.24.and.
      *         ksmod(id).le.28.or.ksmod(id).eq.39.or.ksmod(id).eq.42) 
      *        then
-c                                 macroscopic formulation for normal solutions (2,688) and
+c                                 macroscopic formulation for normal solutions (2,3) and
 c                                 hp melt model (24)
 c                                 ghiorso melt model (25)
 c                                 andreas salt model (26)
@@ -1051,7 +1105,7 @@ c                                 hybrid MRK ternary COH fluid (41)
 c                                 hardwired binary/pseudo-binary (0)
          do k = 1, spct(id) 
             ysp(k,jd) = yf(ins(k))
-         end do
+         end do          
 
       end if 
 
@@ -1089,6 +1143,11 @@ c-----------------------------------------------------------------------
 
       integer make
       common / cst335 /make(k10)
+
+      integer iemod,kmod
+      logical smod,pmod
+      double precision emod
+      common/ cst319 /emod(k15,k10),smod(h9),pmod(h9),iemod(k10),kmod
 
       integer eos
       common/ cst303 /eos(k10)
@@ -1226,13 +1285,32 @@ c-----------------------------------------------------------------------
       logical ok, liq
 
       external endvol
+c                                 bookkeeping variables
+      integer ksmod, ksite, kmsol, knsp
+      common/ cxt0  /ksmod(h9),ksite(h9),kmsol(h9,m4,mst),knsp(m4,h9)
+
+      integer lstot,mstot,nstot,ndep,nord
+      common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
 
       integer jend
       common/ cxt23 /jend(h9,m4)
 
-      double precision z, pa, p0a, x, w, y, wl, pp
-      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18),pp(m4)
+      logical lorder, lexces, llaar, lrecip
+      common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9)
+
+      integer iemod,kmod
+      logical smod,pmod
+      double precision emod
+      common/ cst319 /emod(k15,k10),smod(h9),pmod(h9),iemod(k10),kmod
+
+      double precision z, pa, p0a, x, w, y, wl
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(mst,msp),w(m1),
+     *              wl(m17,m18)
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 c-----------------------------------------------------------------------
   
       ok = .true.
@@ -1253,6 +1331,9 @@ c-----------------------------------------------------------------------
       else 
 
          if (smod(ids)) then
+c                                 get the p0a coordinates (amounts of 
+c                                 the independent disordered endmembers)
+c           if (lrecip(ids)) call getpp (ids)
 
             v = 0d0
 
@@ -1263,7 +1344,7 @@ c                                 partial molar volumes for volume fractions
                if (.not.ok) return
 
                if (lrecip(ids)) then 
-                  v = v + pp(i) * v0(i)
+                  v = v + p0a(i) * v0(i)
                else 
                   v = v + y(i) * v0(i)
                end if
@@ -1280,7 +1361,7 @@ c                                 partial molar volumes for volume fractions
                if (pmu.eq.0d0) liq = .true.
 
                if (lrecip(ids)) then 
-                  vf = pp(i) * v0(i) / v
+                  vf = p0a(i) * v0(i) / v
                else
 c                                 for solutions with no dependent endmembers
 c                                 the y coordinates can be used to compute 
@@ -1354,6 +1435,11 @@ c                                 the composition.
       include 'perplex_parameters.h'
 
       double precision vp, vs
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       if (isnan(vp).or.isnan(vs)) then 
          poiss = nopt(7)
@@ -1448,6 +1534,11 @@ c----------------------------------------------------------------------
       double precision gtot,fbulk,gtot1,fbulk1
       common/ cxt81 /gtot,fbulk(k0),gtot1,fbulk1(k0)
 
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
       double precision pcomp
       common/ cst324 /pcomp(k0,k5)
 
@@ -1509,7 +1600,7 @@ c----------------------------------------------------------------------
 
       integer kd, na1, na2, na3, nat
       double precision x3, caq
-      common/ cxt16 /x3(k5,h4,mst,msp),caq(k5,l10),na1,na2,na3,nat,kd
+      common/ cxt16 /x3(k5,mst,msp),caq(k5,l10),na1,na2,na3,nat,kd
 
       save dt
       data dt /.5d0/
@@ -1525,9 +1616,8 @@ c                                 pointer copy for lagged aq calculations in gso
 c                                 make name and composition, 
 c                                 redundant for frendly
       call getnam (pname(jd),id)
-c                                 if WERAMI recover composition
-c                                 logical arg is irrelevant
-      if (iam.eq.3) call getcmp (jd,jd,id,pois)
+c                                 composition, don't call if meemum
+      if (iam.ne.2) call getcmp (jd,jd,id)
 c                                 component counter for frendly is different
 c                                 than for all other programs
       if (iam.ne.5) then 
@@ -1573,7 +1663,12 @@ c                                 mass % composition:
             pcomp(j,jd) = pcomp(j,jd)*atwt(j)*1d2/props(17,jd)
          end do  
 
-      end if 
+      end if
+
+      g0 = ginc(0d0,0d0,id)
+c                                 get/save speciation, this has to be done after
+c                                 the call topn2 ginc for o/d speciation models. 
+      if (id.gt.0) call getspc (id,jd)
 c                                 bulk modulus flag, if false use explicit form
       bulk = .true.
 c                                 shear modulus
@@ -1582,7 +1677,7 @@ c                                 shear modulus
          call moduli (id,props(5,jd),props(19,jd),props(21,jd),
      *                   props(4,jd),props(18,jd),props(20,jd),ok)
 
-         if (.not.ok.and.iopt(16).eq.0) shear = .false.
+         if (.not.ok.and.iopt(16).eq.0) shear = .false.  
 c                                 explicit bulk modulus is allowed and used
          if (lopt(17).and.props(4,jd).gt.0d0) then
             bulk = .false.
@@ -1596,11 +1691,6 @@ c                                 explicit bulk modulus is allowed and used
          props(21,jd) = 0d0
 
       end if
-
-      g0 = ginc(0d0,0d0,id)
-c                                 get/save speciation, this has to be done after
-c                                 the call topn2 ginc for o/d speciation models. 
-      if (id.gt.0) call getspc (id,jd)
 c                                 set flag for multiple root eos's
       sroot = .true.
 c                                 compute g-derivatives for isostatic 
@@ -2194,6 +2284,11 @@ c----------------------------------------------------------------------
 
       external ginc
 
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 
@@ -2422,6 +2517,11 @@ c----------------------------------------------------------------------
 
       external ginc
 
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 c----------------------------------------------------------------------
@@ -2464,6 +2564,11 @@ c----------------------------------------------------------------------
       double precision g0,dt0,dt1,dt2,s,gtt, ginc
 
       external ginc
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -2509,6 +2614,11 @@ c-----------------------------------------------------------------------
       integer hs2p
       double precision hsb
       common/ cst84 /hsb(i8,4),hs2p(6)
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       integer kkp,np,ncpd,ntot
       double precision cp3,amt

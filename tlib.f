@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.8.8, source updated Oct 23, 2019.',
+     *      'Perple_X version 6.8.7, source updated Oct 25, 2019.',
 
      *      'Copyright (C) 1986-2019 James A D Connolly '//
      *      '<www.perplex.ethz.ch/copyright.html>.'
@@ -48,15 +48,11 @@ c----------------------------------------------------------------------
 
       character*3 new
 
-      if (new.eq.'682'.or.new.eq.'683'.or.
-     *    new.eq.'685'.or.new.eq.'687') then
-
-         call error (3,0d0,0,new)
-
-      else if (new.eq.'008'.or.new.eq.'011'.or.new.eq.'670'.or.
-     *         new.eq.'672'.or.new.eq.'673'.or.new.eq.'674'.or.
-     *         new.eq.'675'.or.new.eq.'676'.or.new.eq.'678'.or.
-     *         new.eq.'679'.or.new.eq.'688') then 
+      if (new.eq.'008'.or.new.eq.'011'.or.new.eq.'670'.or.
+     *    new.eq.'672'.or.new.eq.'673'.or.new.eq.'674'.or.
+     *    new.eq.'675'.or.new.eq.'676'.or.new.eq.'678'.or.
+     *    new.eq.'679'.or.new.eq.'682'.or.new.eq.'683'.or.
+     *    new.eq.'685'.or.new.eq.'687') then 
 
          chksol = .true.
 
@@ -94,7 +90,7 @@ c----------------------------------------------------------------------
 
       logical output
 
-      character*3 key*22, val, nval1*12, nval2*12,
+      character*3 key*22, val, valu(i10), nval1*12, nval2*12,
      *            nval3*12,opname*100,strg*40,strg1*40
 
       double precision dnan, res0, r2
@@ -104,6 +100,11 @@ c----------------------------------------------------------------------
 
       character*100 prject,tfname
       common/ cst228 /prject,tfname
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       integer grid
       double precision rid 
@@ -123,6 +124,10 @@ c                                 precision stuff used in lpnag
 
       integer iam
       common/ cst4 /iam
+
+      logical badend, sck, nrf
+      integer ldsol
+      common/ cxt36 /ldsol(m4,h9),badend(m4,h9),sck(h9),nrf(h9)
 
       integer length,iblank,icom
       character chars*1
@@ -155,7 +160,7 @@ c                                 for nag)
          r1 = r1/2d0
       end do 
 
-      if (r2.eq.0d0) call error (72,r1,i,
+      if (r2.eq.0d0) call error (77,r1,i,
      *                         'starting precision for r1 < zero')
 
 
@@ -176,182 +181,35 @@ c                                 solution composition zero and one
       one = 1d0 - r2
 c                                 -------------------------------------
 c                                 default option values:
-c                                 reserved for temporary use:
       do i = 28, 30
          nopt(i) = 1d0
          lopt(i) = .false.
          iopt(i) = 0
       end do 
-c                                 -------------------------------------
-c                                 minimum replicate label distance
-      nopt(4) = 0.025
-c                                 speciation_factor
-      nopt(5) = 1d2
-c                                 vrh_weighting keyword
-      nopt(6) = 0.5d0
-c                                 bad_number keyword
-      nopt(7) = dnan()
-c                                 zero_mode (<0 off)
-      nopt(9) = 1d-6
-c                                 set zero threshold for fractionation calculations
-      if (icopt.eq.7.or.icopt.eq.9.or.icopt.eq.12) nopt(9) = zero
-c                                 tolerance below which a component is considered to 
-c                                 be zero during fractionation
-      nopt(11) = 1d-6
-c                                 quench temperature (K)
-      nopt(12) = 0d0
-c                                 initial resolution for adaptive 
-c                                 refinement
-      nopt(13) = 1d0/16d0
-c                                 solvus_tolerance
-      nopt(8) = 1.5*nopt(13)
-c                                 solvus_tolerance_II
-      nopt(25) = 3d0*nopt(13)
-c                                 compositional resolution for conformal
-c                                 subdivision
-      nopt(14) = 2d-3
-c                                 perturbation to eliminate pseudocompound
-c                                 degeneracies
-      nopt(15) = 5d-3
-c                                 poisson ratio to be use for calculating
-c                                 missing shear moduli, see iopt(15)
-      nopt(16) = 0.35d0
-c                                 increase in resolution for adaptive minimization 
-      nopt(17) = 3d0
-c                                 increase in resolution for composition and mixed variable diagram calculations
-      nopt(18) = 1d1
-c                                 increase in resolution for Schreinemakers diagram calculations   
-      nopt(19) = 3d0 
-c                                 T_melt cutoff 
-      nopt(20) = 873d0
-c                                 iteration keyword 1
-      nopt(21) = 2d0
-c                                 global reach factor
-      nopt(23) = 0d0
-c                                 finite_difference_p threshold for finite difference estimates
-      nopt(26) = 1d4
-c                                 finite_difference_p fraction for first order difference estimates
-      nopt(27) = 1d-3
-c                                 fd_expansion_factor is the factor by which finite difference
-c                                 increments increase for higher order derivatives
-      nopt(31) = 2d0
-c                                 fractionation_lower_threshold
-      nopt(32) = 0d0
-c                                 fractionation_upper_threshold
-      nopt(33) = 0d0
-c                                 aq_vapor_epsilon
-      nopt(34) = 1d0
-c                                 -------------------------------------
-c                                 composition_phase
-      iopt(2) = 0 
-      valu(2) = 'mol'
-c                                 porportions
-      iopt(3) = 0 
-      valu(3) = 'vol'
-c                                 interpolation keyword
-      iopt(4) = 2
-      valu(4) = 'on '
-c                                 autorefine, 2 - automatic, 1 - manual, 0 - no
-      iopt(6) = 2
-      valu(6) = 'aut'
-c                                 subdivision model, 0 - solution model
-c                                 1 - cartesian, 2 - stretch
-      iopt(13) = 0 
-      valu(13)  = 'off'
-c                                 poisson ratio switch fpr calculating
-c                                 missing shear moduli
-      iopt(16) = 1
-      valu(15) = 'on '
-c                                 compare local and max disorder state for o-d models
-      iopt(17) = 1
-      valu(17) = 'on '
-c                                 assume linear boundaries within a cell during gridded minimization
-      iopt(18) = 1
-      valu(18) = 'on '
-c                                 seismic data output for WERAMI/MEEMUM, 0 - none, 1 - some, 2 - all
-      iopt(14) = 1
-      valu(14) = 'som'
-c                                 reach_increment_switch 0 - off, 1 - on (for auto-refine), 2 - all
-      iopt(20) = 1 
-      valu(20) = 'on'
-c                                 conditional for MEEMUM
-      if (iam.eq.2) then 
-         valu(20) = 'all'
-         iopt(20) = 2
-      end if 
-c                                 speciation_max_it - for speciation calculations
-      iopt(21) = 100
-c                                 aq_bad_results 
-c                                       0 - err - treat as bad result (optimization error)
-c                                       1 - 101 - cease iteration at solute component saturation
-c                                       2 - 102
-c                                       3 - 103
-c                                      99 - ign - ignore 102/103 conditions and cease as in 101.
-      iopt(22) = 0
-      valu(5) = 'err'
-c                                 for infiltration/fractionation calculations set default to 101
-      if (icopt.gt.6) then 
-         iopt(22) = 1
-         valu(5) = '101'
-      end if 
-c                                 solution_names 0 - model, 1 - abbreviation, 2 - full
-      iopt(24) = 0
-      valu(22) = 'mod'
-c                                 hyb_h2o - eos to be used for pure h2o, 0-2, 4-5, 6-7
-      iopt(25) = 4
-c                                 hyb_co2 - eos to be used for pure co2, 0-4, 6-7
-      iopt(26) = 4
-c                                 hyb_ch4 - eos to be used for pure ch4, 0-1, 6-7
-      iopt(27) = 0
-
-c     iopt(28-30)                 reserved as debug options iop_28 - iop_30
-
-c                                 refinement_points_II renamed refinement_points
-      iopt(31) = 5
-c                                 maximum number of aqueous species
-      iopt(32) = 20
-c                                 aq_lagged_iterations
-      iopt(33) = 0
-c                                 interim_results, 1 - auto, 0 - off, 2 - man
-      iopt(34) = 1
-      valu(34) = 'aut'
-c                                 -------------------------------------
 c                                 closed or open compositional space
       lopt(1) = .true.
-c                                 lopt(2) set by WERAMI
-c     lopt(2)
-c                                 hard_limits for solution model refinement
-      lopt(3) = .false.
-      valu(16) = 'off'
 c                                 Anderson-Gruneisen correction
       lopt(4) = .false.
 c                                 auto_exclude 
       lopt(5) = .true.
 c                                 melt_is_fluid
       lopt(6) = .false.
-c                                 set locally
-c     lopt(7) 
 c                                 approx_alpha
       lopt(8) = .true.
 c                                 automatic solvus tolerance
       lopt(9) = .true.
+c                                 automatic solvus_tolerance_II
+      lopt(13) = .true.
 c                                 pseudocompound_file
       lopt(10) = .false.
 c                                 auto_refine_file
       lopt(11) = .true.
 c                                 option_list_files
       lopt(12) = .false.
-c                                 automatic solvus_tolerance_II
-      lopt(13) = .true.
 c                                 logarithimic P
       lopt(14) = .false.
 c                                 spreadsheet format
       lopt(15) = .true.
-c                                 averaging scheme
-      lopt(16) = .true.
-      valu(19) = 'VRH'
-c                                 use explicit bulk modulus when available
-      lopt(17) = .true.
 c                                 refine_bad_nodes -> not used
       lopt(18) = .true. 
 c                                 pause_on_error
@@ -367,6 +225,136 @@ c                                 composition_system (true = wt)
       valu(21) = 'wt '
 c                                 output endmember gibbs energies (werami/meemum)
       lopt(24) = .false. 
+c                                 minimum replicate label distance
+      nopt(4) = 0.025
+c                                 speciation_factor
+      nopt(5) = 1d2
+c                                 composition_phase
+      iopt(2) = 0 
+      valu(2) = 'mol'
+c                                 porportions
+      iopt(3) = 0 
+      valu(3) = 'vol'
+c                                 interpolation keyword
+      iopt(4) = 2
+      valu(4) = 'on '
+c                                 vrh_weighting keyword
+      nopt(6) = 0.5d0
+c                                 bad_number keyword
+      nopt(7) = dnan()
+c                                 zero_mode (<0 off)
+      nopt(9) = 1d-6
+c                                 set zero threshold for fractionation calculations
+      if (icopt.eq.7.or.icopt.eq.9.or.icopt.eq.12) nopt(9) = zero
+c                                 tolerance below which a component is considered to 
+c                                 be zero during fractionation
+      nopt(11) = 1d-6
+c                                 iteration keyword 1
+      nopt(21) = 2d0
+c                                 final resolution, auto-refine stage
+      rid(2,2) = 1d-3
+c                                 final resolution, exploratory stage
+      rid(2,1) = 1d-2
+c                                 if meemum set auto-refine vale
+      if (iam.eq.2) rid(2,1) = rid(2,2)
+c                                 global reach factor
+      nopt(23) = 0d0
+c                                 finite_difference_p threshold for finite difference estimates
+      nopt(26) = 1d4
+c                                 finite_difference_p fraction for first order difference estimates
+      nopt(27) = 1d-3 
+c                                 fd_expansion_factor is the factor by which finite difference
+c                                 increments increase for higher order derivatives
+      nopt(31) = 2d0
+c                                 quench temperature (K)
+      nopt(12) = 0d0
+c                                 initial resolution for adaptive 
+c                                 refinement
+      nopt(13) = 1d0/16d0
+c                                 solvus_tolerance
+      nopt(8) = 1.5*nopt(13)
+c                                 solvus_tolerance_II
+      nopt(25) = 3d0*nopt(13)
+c                                 perturbation to eliminate pseudocompound
+c                                 degeneracies
+      nopt(15) = 5d-3
+c                                 poisson ratio to be use for calculating
+c                                 missing shear moduli
+      valu(15) = 'on '
+      nopt(16) = 0.35d0
+      iopt(16) = 1
+c                                 compositional resolution for conformal
+c                                 subdivision
+      nopt(14) = 2d-3
+c                                 subdivision model, 0 - solution model
+c                                 1 - cartesian, 2 - stretch
+      iopt(13) = 0 
+      valu(13)  = 'off'
+c                                 autorefine, 2 - automatic, 1 - manual, 0 - no
+      iopt(6) = 2
+      valu(6) = 'aut'
+c                                 increase in resolution for adaptive minimization 
+      nopt(17) = 3d0 
+c                                 increase in resolution for composition and mixed variable diagram calculations
+      nopt(18) = 1d1
+c                                 increase in resolution for Schreinemakers diagram calculations   
+      nopt(19) = 3d0 
+c                                 T_melt cutoff 
+      nopt(20) = 873d0
+c                                 fractionation_lower_threshold
+      nopt(32) = 0d0
+c                                 fractionation_upper_threshold
+      nopt(33) = 0d0
+c                                 aq_vapor_epsilon
+      nopt(34) = 1d0
+c                                 hard_limits for solution model refinement
+      valu(16) = 'off'
+      lopt(3) = .false.
+c                                 compare local and max disorder state for o-d models
+      valu(17) = 'on '
+      iopt(17) = 1
+c                                 assume linear boundaries within a cell during gridded minimization
+      valu(18) = 'on '
+      iopt(18) = 1
+c                                 averaging scheme
+      valu(19) = 'VRH'
+      lopt(16) = .true.
+c                                 use explicit bulk modulus when available
+      lopt(17) = .true.
+c                                 seismic data output for WERAMI/MEEMUM, 0 - none, 1 - some, 2 - all
+      iopt(14) = 1
+      valu(14) = 'som'
+c                                 reach_increment_switch 0 - off, 1 - on (for auto-refine), 2 - all
+      iopt(20) = 1 
+      valu(20) = 'on'
+c                                 conditional for MEEMUM
+      if (iam.eq.2) then 
+         valu(20) = 'all'
+         iopt(20) = 2
+      end if 
+c                                 speciation_max_it - for speciation calculations
+      iopt(21) = 100
+c                                 solution_names 0 - model, 1 - abbreviation, 2 - full
+      iopt(24) = 0
+      valu(22) = 'mod'
+c                                 hyb_h2o - eos to be used for pure h2o, 0-2, 4-5, 6-7
+      iopt(25) = 4
+c                                 hyb_co2 - eos to be used for pure co2, 0-4, 6-7
+      iopt(26) = 4
+c                                 hyb_ch4 - eos to be used for pure ch4, 0-1, 6-7
+      iopt(27) = 0
+c                                 
+c     iopt(28-30)                 reserved as debug options iop_28 - iop_30
+
+c                                 refinement_points_II renamed refinement_points
+      iopt(31) = 5
+c                                 maximum number of aqueous species
+      iopt(32) = 20
+c                                 aq_lagged_iterations
+      iopt(33) = 0
+c                                 interim_results, 1 - auto, 0 - off, 2 - man
+      iopt(34) = 1
+      valu(34) = 'aut'
 c                                 aq_output output back-calculated solute speciation
       lopt(25) = .true.
 c                                 aq_solvent_composition (true = molar)
@@ -375,8 +363,6 @@ c                                 aq_solvent_composition (true = molar)
 c                                 aq_solute_composition (true = molal)
       lopt(27) = .true.
       valu(27) = 'm'
-c                                 lop_28, lop_29, lop_30 temporary options
-c     lopt(28-30)
 c                                 warning_ver637, werami interpolation
       lopt(31) = .true.
 c                                 aq_lagged_speciation
@@ -393,6 +379,19 @@ c                                 allow null phases
       lopt(37) = .false.
 c                                 non_linear_switch
       lopt(38) = .false.
+c                                 aq_bad_results 
+c                                       0 - err - treat as bad result (optimization error)
+c                                       1 - 101 - cease iteration at solute component saturation
+c                                       2 - 102
+c                                       3 - 103
+c                                      99 - ign - ignore 102/103 conditions and cease as in 101.
+      iopt(22) = 0
+      valu(5) = 'err'
+c                                 for infiltration/fractionation calculations set default to 101
+      if (icopt.gt.6) then 
+         iopt(22) = 1
+         valu(5) = '101'
+      end if 
 c                                 refine_endmembers
       lopt(39) = .false.
 c                                 automatic specification of refinement_points_II
@@ -410,17 +409,7 @@ c                                 fancy_cumulative_modes
 c                                 aq_solvent_solvus
       lopt(46) = .true.
 c                                 sample_on_grid 
-      lopt(48) = .true.
-c                                 refinement_switch
-      lopt(49) = .false.
-c                                 seismic_data_file
-      lopt(50) = .false.
-c                                 final resolution, auto-refine stage
-      rid(2,2) = 1d-3
-c                                 final resolution, exploratory stage
-      rid(2,1) = 1d-2
-c                                 if meemum set auto-refine vale
-      if (iam.eq.2) rid(2,1) = rid(2,2)
+      lopt(48) = .true. 
 c                                 initialize mus flag lagged speciation
       mus = .false.
 c                                 -------------------------------------
@@ -730,7 +719,7 @@ c                                 initial_resolution key
             read (strg1,'(40a)') chars(1:40)
             ibeg = 1
             call readfr (nopt(13),ibeg,iend,40,ier)
-            if (ier.ne.0) call error (72,nopt(1),iopt(1),key//
+            if (ier.ne.0) call error (77,nopt(1),iopt(1),key//
      *                                 'has an invalid value.')
 c                                  686 read second value as arf value
             ibeg = iend + 1
@@ -739,7 +728,7 @@ c                                  686 read second value as arf value
 c                                  special backward compatibility msg
                write (*,1010) opname
                call errpau
-c               call error (72,nopt(1),iopt(1),key//
+c               call error (77,nopt(1),iopt(1),key//
 c     *                               'has an invalid or missing value.')
             end if 
             nopt(17) = nopt(13)/nopt(17)
@@ -750,7 +739,7 @@ c     *                               'has an invalid or missing value.')
 c                                 final_resolution keys 
             read (strg,*) rid(2,1)
             read (nval1,*,iostat=ier) rid(2,2)
-            if (ier.ne.0) call error (72,r1,i,'the final_resolution '//
+            if (ier.ne.0) call error (77,r1,i,'the final_resolution '//
      *                               'option requires two values')
 
          else if (key.eq.'fd_expansion_factor') then 
@@ -785,16 +774,7 @@ c                                 refinement points
             if (val.ne.'aut') then 
                read (strg,*) iopt(31)
                lopt(40) = .false.
-            end if
-
-         else if (key.eq.'refinement_switch') then
-c                                 during iteration allow metastable 
-c                                 refinement points for stable solutions.
-            if (val.ne.'F') lopt(49) = .true.
-
-         else if (key.eq.'seismic_data_file') then
- 
-            if (val.ne.'F') lopt(50) = .true. 
+            end if 
 
          else if (key.eq.'max_aq_species_out') then 
 c                                 max number of aq species output for
@@ -859,7 +839,7 @@ c                                 number of x nodes at level 1 before autorefine
 c                                 number of x nodes for autorefine
             read (nval1,*,iostat=ier) grid(1,2)
 
-            if (ier.ne.0) call error (72,r1,i,'the x_nodes option '//
+            if (ier.ne.0) call error (77,r1,i,'the x_nodes option '//
      *                               'requires two values')
 
          else if (key.eq.'y_nodes') then
@@ -868,7 +848,7 @@ c                                 number of y nodes at level 1
 c                                 number of y nodes for autorefine
             read (nval1,*,iostat=ier) grid(2,2)
 
-            if (ier.ne.0) call error (72,r1,i,'the y_nodes option '//
+            if (ier.ne.0) call error (77,r1,i,'the y_nodes option '//
      *                               'requires two values')
 
          else if (key.eq.'grid_levels') then 
@@ -877,7 +857,7 @@ c                                 number of grid levels before autorefine
 c                                 number of grid levels for autorefine
             read (nval1,*,iostat=ier) grid(3,2)
 
-            if (ier.ne.0) call error (72,r1,i,'the grid_levels option'//
+            if (ier.ne.0) call error (77,r1,i,'the grid_levels option'//
      *                               ' requires two values')
 
          else if (key.eq.'1d_path') then 
@@ -886,7 +866,7 @@ c                                 number of grid points for 1d path before autor
 c                                 number of grid points for 1d path for autorefine
             read (nval1,*,iostat=ier) grid(4,2)
 
-            if (ier.ne.0) call error (72,r1,i,'the 1d_path option '//
+            if (ier.ne.0) call error (77,r1,i,'the 1d_path option '//
      *                               'requires two values')
 
          else if (key.eq.'variance') then 
@@ -895,7 +875,7 @@ c                                 max variance of traced equilibria before autor
 c                                 max variance of traced equilibria for autorefine
             read (nval1,*,iostat=ier) grid(5,2)
 
-            if (ier.ne.0) call error (72,r1,i,'the variance option '//
+            if (ier.ne.0) call error (77,r1,i,'the variance option '//
      *                               'requires two values')
 
          else if (key.eq.'increment') then 
@@ -904,7 +884,7 @@ c                                 default exploratory relative increment
 c                                 default autorefine relative increment
             read (nval1,*,iostat=ier) rid(1,2)
 
-            if (ier.ne.0) call error (72,r1,i,'the increment option '//
+            if (ier.ne.0) call error (77,r1,i,'the increment option '//
      *                               'requires two values')
 
          else if (key.eq.'reaction_format') then 
@@ -1097,7 +1077,7 @@ c                                 reserved values for debugging, etc
             read (strg,*) nopt(30) 
          else if (key.ne.'|') then
 
-            call error (72,nopt(1),iopt(1),key//' is not a valid Perpl'
+            call error (77,nopt(1),iopt(1),key//' is not a valid Perpl'
      *                 //'e_X option file keyword and must be deleted '
      *                 //'or corrected.')
 
@@ -1148,20 +1128,8 @@ c                                 auto refine summary
 
             write (*,1150) tfname
 
-         end if
-
-      end if
-
-      if (iam.lt.3) then
-
-         if (lopt(50)) then 
-            call mertxt (tfname,prject,'_seismic_data.txt',0)
-         else 
-            tfname = 'not requested'
          end if 
-
-         write (*,'(a)') 'Writing seismic data options to: '//tfname
-
+ 
       end if 
 c                                 pseudocompound glossary
       if (io9.eq.0.and.(iam.lt.3.or.iam.eq.15)) then
@@ -1270,6 +1238,7 @@ c                                 grid parameters
       end do
 c                                 --------------------------------------
 c                                 program/computation specific settings
+
 c                                 set autorefine factor
       if (icopt.eq.1) then
          nopt(17) = nopt(19)
@@ -1326,7 +1295,7 @@ c                                 output
      *                                        .or.iam.eq.3
      *                                        .or.iam.eq.5) then
 c                                 console
-         call outopt (6)
+         call outopt (6,valu)
 
          if (lopt(12).and.iam.ne.5) then 
 c                                 file version, create the file name 
@@ -1341,7 +1310,7 @@ c                                 file version, create the file name
             end if 
 
             open (n8, file = tfname)
-            call outopt (n8)
+            call outopt (n8,valu)
             close (n8) 
 
             write (*,1000) tfname
@@ -1358,7 +1327,6 @@ c                                 or auto-refine stage in setau1.
 c                                 -------------------------------------
 c                                 recalculate parameters:
 c                                 proportionality constant for shear modulus
-      nopt(1) = nopt(16)
       nopt(16) = 1.5d0*(1d0-2d0*nopt(16))/(1d0+nopt(16))
 
 1000  format ('Context specific options are echoed in: ',a,/)
@@ -1384,16 +1352,16 @@ c                                 proportionality constant for shear modulus
 1120  format (/,'Warning: the Perple_X option file: ',a,/,
      *       'was not found, default option values will be used.',/) 
 1130  format (/,'Reading Perple_X options from: ',a)
-1140  format ('Writing pseudocompound glossary to: ',a)
-1150  format ('Writing auto refine summary to: ',a)
-1160  format ('Writing Perple_X option summary to: ',a)
-1170  format ('Writing complete reaction list to: ',a)
+1140  format ('Writing pseudocompound glossary to file: ',a)
+1150  format ('Writing auto refine summary to file: ',a)
+1160  format ('Writing Perple_X option summary to file: ',a)
+1170  format ('Writing complete reaction list to file: ',a)
 1180  format (/,'Error: value ',a,' is invalid for Perple_X option ',
      *        'keyword ',a,/,'see www.perplex.ch/perplex_options.html ',
      *        'for a list of valid values',/)
       end 
 
-      subroutine outopt (n)
+      subroutine outopt (n,valu)
 c----------------------------------------------------------------------
 c outopt - for program IAM, outputs context specific options to LUN N,
 c called by redop1  
@@ -1404,7 +1372,12 @@ c----------------------------------------------------------------------
 
       integer i, len, n
 
-      character nval1*12, text(14)*1, numb*5, nval2*12
+      character valu(i10)*3, nval1*12, text(14)*1, numb*5, nval2*12
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       integer grid
       double precision rid 
@@ -1472,11 +1445,12 @@ c                                 non-adaptive calculations
 c                                 reaction format and lists
             if (icopt.gt.0) write (n,1160) grid(5,1),grid(5,2),rid(1,1),
      *                    rid(1,2),isec,valu(7),valu(9),valu(8),valu(10)
+
          else 
 c                                 adaptive optimization
             write (n,1180) rid(2,1),rid(2,2),int(nopt(21)),
-     *                     iopt(31),k5,lopt(49),nval2,
-     *                     int(nopt(23)),valu(20),nopt(9)
+     *                     iopt(31),k5,nval2,int(nopt(23)),valu(20),
+     *                     nopt(9)
 c                                 gridding parameters
             if (iam.eq.1.and.icopt.eq.5.and.oned) then
 c                                 1d multilevel grid
@@ -1560,28 +1534,25 @@ c                                 MEEMUM input/output options
 
       else if (iam.eq.5) then 
 c                                 FRENDLY input/output options
-         write (n,1232) lopt(15),lopt(14),nopt(7),lopt(6),lopt(19)
+         write (n,1232) lopt(15),lopt(14),nopt(7),lopt(6),valu(14),
+     *                  lopt(19),lopt(20)
 
       end if 
 c                                 seismic property options
-      if (iam.eq.2.or.iam.eq.3.or.iam.eq.5) write (n,1233) lopt(50),
-     *         valu(19),
-     *         nopt(6),lopt(17),valu(15),nopt(16),valu(14),lopt(20)
+      if (iam.eq.2.or.iam.eq.3.or.iam.eq.5) write (n,1233) valu(19),
+     *                                nopt(6),lopt(17),valu(15),nopt(16)
 
       if (iam.eq.5) then 
 c                                 FRENDLY thermo options
          write (n,1016) lopt(8),lopt(4),iopt(25),iopt(26),iopt(27)
          write (n,1017) nopt(31),nopt(26),nopt(27)
-
       end if 
 
       if (iam.le.2) then 
 c                                 info file options
          write (n,1240) lopt(12),lopt(10)
          if (iam.eq.1.or.iam.eq.15) write (n,1250) lopt(11)
-         if (iam.eq.1) write (n,'(4x,a,l1,10x,a)') 
-     *                     'seismic_data_file      ',lopt(50),'[F] T;'//
-     *                     ' echo seismic wavespeed options'
+
       end if 
 c                                 resolution blurb
       if ((iam.le.2.or.iam.eq.15).and.nopt(13).gt.0d0) then
@@ -1681,8 +1652,7 @@ c                                 thermo options for frendly
      *        4x,'resolution_factor      ',i2,9x,'>= 2 [2]',/,
      *        4x,'refinement_points       ',i2,8x,'[aut] or 1->',i2,
      *           '; aut = automatic',/,
-     *        4x,'refinement_switch       ',l1,9x,'[T] F',/,
-     *        4x,'solvus_tolerance_II     ',a7,3x,'0->1 [0.2]',/,
+     *        4x,'solvus_tolerance_II     ',a7,4x,'0->1 [0.2]',/,
      *        4x,'global_reach_increment ',i2,9x,'>= 0 [0]',/,
      *        4x,'reach_increment_switch  ',a3,7x,'[on] off all',/,
      *        4x,'zero_mode               ',e7.1E2,3x,
@@ -1761,18 +1731,15 @@ c                                 thermo options for frendly
      *        4x,'logarithmic_p          ',l1,10x,'[F] T',/,
      *        4x,'bad_number          ',f7.1,7x,'[NaN]',/,
      *        4x,'melt_is_fluid          ',l1,10x,'[F] T',/,
+     *        4x,'seismic_output         ',a3,8x,'[some] none all',/,
      *        4x,'pause_on_error         ',l1,10x,'[T] F',/,
-     *        4x,'Tisza_test             ',l1,10x,'[F] T')
-1233  format (/,2x,'Seismic wavespeed computational options:',//,
-     *        4x,'seismic_data_file      ',l1,10x,'[F] T',/,
+     *        4x,'poisson_test           ',l1,10x,'[F] T')
+1233  format (/,2x,'Seismic velocity options:',//,
      *        4x,'bounds                 ',a3,8x,'[VRH] HS',/,
      *        4x,'vrh/hs_weighting       ',f3.1,8x,'[0.5] 0->1',/,
      *        4x,'explicit_bulk_modulus  ',l1,10x,'[F] T',/,
      *        4x,'poisson_ratio          ',a3,8x,'[on] all off; ',
-     *        'Poisson ratio = ',f4.2,/,
-     *        4x,'seismic_output         ',a3,8x,'[some] none all',/,
-     *        4x,'poisson_test           ',l1,10x,'[F] T; see also ',
-     *           'Tisza_test')
+     *        'Poisson ratio = ',f4.2)
 1234  format (4x,'auto_exclude           ',l1,10x,'[T] F')
 1240  format (/,2x,'Information file output options:',//,
      *        4x,'option_list_files      ',l1,10x,'[F] T; ',
@@ -2113,6 +2080,11 @@ c---------------------------------------------------------------------
 
       character a*1
       
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+      
       if (lopt(19)) then 
          write (*,'(/,a,/)') 'Press Enter to quit...' 
          read (*,'(a)') a
@@ -2143,6 +2115,11 @@ c---------------------------------------------------------------------
       logical refine, resub
       common/ cxt26 /refine,resub,tname
 
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
       if (refine) then
          tag = '2nd'
       else 
@@ -2152,7 +2129,7 @@ c---------------------------------------------------------------------
       if (ier.eq.1.or.ier.eq.2) then 
          write (*,1) char,int
       else if (ier.eq.3) then 
-         write (*,3) char
+         write (*,3)
       else if (ier.eq.4) then
          write (*,4) char 
       else if (ier.eq.5) then 
@@ -2205,6 +2182,8 @@ c---------------------------------------------------------------------
          write (*,28) int, char
       else if (ier.eq.29) then 
          write (*,29) int, char
+      else if (ier.eq.30) then
+         write (*,30) int,char
       else if (ier.eq.32) then 
          write (*,32)
       else if (ier.eq.33) then 
@@ -2224,18 +2203,19 @@ c---------------------------------------------------------------------
       else if (ier.eq.40) then
          write (*,40) int, char
       else if (ier.eq.41) then
-
-         write (*,41)
+         write (*,41) char
 
          if (int.eq.0) then 
             write (*,410)
+            write (*,415) k1
          else if (int.eq.1) then 
             write (*,411)
+            write (*,415) k1
          else if (int.eq.2) then 
             write (*,412)
+            write (*,414) k24
          end if
 
-         write (*,414) char
          write (*,413)
 
       else if (ier.eq.42) then 
@@ -2271,11 +2251,12 @@ c---------------------------------------------------------------------
       else if (ier.eq.57) then 
          write (*,57) char, char, char
       else if (ier.eq.58) then 
-         write (*,58)
+         write (*,58) char
          write (*,412)
-         write (*,581)
          write (*,413)
-         write (*,580) char
+         write (*,580) k21
+      else if (ier.eq.59) then 
+         write (*,59) k20, char
       else if (ier.eq.60) then 
          write (*,60) k22, char
       else if (ier.eq.61) then 
@@ -2306,6 +2287,8 @@ c---------------------------------------------------------------------
          write (*,75) char
       else if (ier.eq.76) then 
          write (*,76) char, char, char
+      else if (ier.eq.77) then 
+         write (*,77) char
       else if (ier.eq.78) then 
          write (*,78) char,char
       else if (ier.eq.89) then
@@ -2392,12 +2375,8 @@ c                                 accordingly:
 
 1     format (/,'**error ver001** increase parameter ',a,' to ',i7,' in'
      *       ,' perplex_parameters.h and recompile Perple_X',/)
-2     format (/,'**error ver002** solution model file versions ',
-     *         '6.8.2-6.8.7 are inconsistent with',/,
-     *         'this version of Perple_X. Update the solution ',
-     *         'file.',/)
-3     format (/,'**error ver003** the solution model file format (',a,
-     *         ') is inconsistent with',/,
+3     format (/,'**error ver003** the solution model file format ',
+     *         'is inconsistent with',/,
      *         'this version of Perple_X. Update the file and/or ',
      *         'Perple_X',/)
 4     format (/,'**error ver004** you must use ',a,' to analyze this '
@@ -2434,7 +2413,7 @@ c                                 accordingly:
 20    format (/,'**error ver020** error ',i2,' reading solution model',
      *        ' file.',/,'   Reading model: ',a,' Check format.',/)
 21    format (/,'**error ver021**error reading ',
-     *        'header section of',/,'the thermodynamic data ',
+     *        'header section of',/,'thermodynamic data ',
      *        'file, last data read:',/,a,/,'Check formatting',/)
 22    format (/,'**error ver022** too many divariant assemblages, ',
      *        'increase dimension j9 (',i8,') routine: ',a)
@@ -2459,6 +2438,9 @@ c                                 accordingly:
      *          ' routine: ',a,/)
 29    format (/,'**error ver029** unknown term type ',i6,' for',
      *          ' solution model: ',a,/)
+30    format (/,'**error ver030** the number of mixing sites ',i2,
+     *          ' is < the number of independent sites',/,' for',
+     *          ' solution model: ',a,/)
 32    format (/,'**error ver032** stability field calculations (',
      *          'option 2) are disabled in this version of PERPLEX',/)
 33    format (/,'**error ver033** expression with too many terms in ',a
@@ -2479,9 +2461,9 @@ c                                 accordingly:
      *        'increase dimension k12 (',i2,') Routine: ',a)
 40    format (/,'**error ver040** too many compositional coordinates, ',
      *        'increase dimension k13 (',i7,')  Routine: ',a)
-41    format (/,'**error ver041** too many static compositions this ',
-     *          'error can be eliminated',/,'by one of the ',
-     *          'following actions (best listed first):',/)
+41    format (/,'**error ver041** too many pseudocompounds, routine: ',a
+     *        /,'this error can be eliminated by one of the ',
+     *        /,'following actions (best listed first):',/)
 410   format (2x,'- increase the exploratory stage initial_resolution',
      *           ' in perplex_option.dat',/,
      *        2x,'- restrict the compositional ranges of the solution ',
@@ -2496,7 +2478,9 @@ c                                 accordingly:
      *           'for solutions in solution_model.dat')
 413   format (2x,'- simplify the calculation, e.g., eliminate ',
      *           'components and/or simplify solution models')
-414   format (2x,'- increase parameter ',a,' and recompile ',
+414   format (2x,'- increase dimension k24 (',i8,') and recompile ',
+     *           'Perple_X')
+415   format (2x,'- increase dimension k1 (',i8,') and recompile ',
      *           'Perple_X')
 42    format (/,'**error ver042** cannot open file:',a,/,'check that it'
      *       ,' is not being used by another program',/)
@@ -2543,14 +2527,14 @@ c                                 accordingly:
      *         ,' for ',a,/,'routine INPUT2. Exclude ',a,' and restart',
      *          ' the calculation.',/,'If ',a,/,' is legitimate. please'
      *         ,' report this error.',/)
-58    format (/,'**error ver058** exhausted memory during ',
-     *          'adaptive minimization this error can usually',/,
-     *          'be eliminated by one of the ',
-     *          'following actions (best listed first):',/)
-580   format (2x,'- increase parameter ',a,' and recompile ',
+58    format (/,'**error ver058** exhausted memory ',
+     *          'in adaptive minimization, routine: ',a,/
+     *        /,'this error can usually be eliminated by one of the ',
+     *        /,'following actions (best listed first):',/)
+580   format (2x,'- increase dimension k21 (',i7,') and recompile ',
      *           'Perple_X')
-581   format (2x,'- set the low_reach flag for high-dimension ',
-     *           'solution models in solution_model.dat')
+59    format (/,'**error ver059** too many coordinates generated by ',
+     *        'refinement, increase dimension k20 (',i8,') routine: ',a)
 60    format (/,'**error ver060** too many coordinates generated by ',
      *        'refinement, increase dimension k22 (',i8,') routine: ',a)
 61    format (/,'**error ver061** too many solution coordinates, ',
@@ -2593,6 +2577,7 @@ c                                 accordingly:
      *        a,' has a logically inconsistent ordering scheme.',/,
      *        'To correct this error exclude either more or fewer ',a,
      *        'endmembers.',/)
+77    format (/,'**error ver077** ',a,/)
 78    format (/,'**error ver078** ',a,' has dependent endmembers with ',
      *        'invalid site populations',/,'it cannot be used unless ',
      *        'it is corrected or the site_check_override keyword is',/,
@@ -2712,6 +2697,11 @@ c---------------------------------------------------------------------
       integer grid
       double precision rid 
       common/ cst327 /grid(6,2),rid(5,2)
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 c----------------------------------------------------------------------
       if (ier.eq.1) then 
          write (*,1) 
@@ -2791,6 +2781,8 @@ c----------------------------------------------------------------------
          write (*,39) 
       else if (ier.eq.40) then
          write (*,40) 
+      else if (ier.eq.41) then
+         write (*,41) char
       else if (ier.eq.42) then
          write (*,42)     
       else if (ier.eq.43) then
@@ -3022,6 +3014,9 @@ c----------------------------------------------------------------------
      *       'composition use',/, 'gridded minimization.',/)
 40    format (/,'**warning ver040** you have configured a ',
      *       'problem with only one independent variable.',/)
+41    format (/,'**warning ver041** icky pseudocompound names'
+     *       ,' for solution model: ',a,/,'refer to pseudocompound_'
+     *       ,'glossary.dat file for pseudocompound definitions.',/)
 42    format (/,'**warning ver042** an optimization failed due ',
      *          'to numerical instability',/,
      *          'or because the phases of the system do not span ',
@@ -3031,7 +3026,7 @@ c----------------------------------------------------------------------
      *          8x,'increase resolution_factor and/or',/,
      *          8x,'increase reach_increment and/or',/,
      *          8x,'increase speciation_factor and/or',/,
-     *          8x,'increase speciation_max_it.',/,
+     *          8x,'increase speciation_max_it and/or',/,
      *          4x,'see: www.perplex.ch/perplex_options.html for ',
      *          'explanation.',//,
      *          4x,'In the 2nd case: ',
@@ -3055,7 +3050,7 @@ c----------------------------------------------------------------------
 49    format (/,'**warning ver049** warning ',i3,' will not be repeated'
      *         ,' for future instances of this problem.',/,
      *          'currently in routine: ',a,//)
-50    format (/,'**warning ver050** reformulating polytopic ',
+50    format (/,'**warning ver050** reformulating prismatic ',
      *          'solution: ',a,' because of missing endmembers. ',
      *        /,'(reformulation can be controlled explicitly ',
      *          'by excluding additional endmembers).',/)
@@ -3082,7 +3077,7 @@ c----------------------------------------------------------------------
      *        ' hybrid_EoS option will be',/,'overridden by the EoS sp',
      *        'ecified in the problem definition file. To prevent this',
      *      /,'behavior delete the special_component section from the ',
-     *        'header of the',/,'thermodynamic data file.',/)
+     *        'header section of the',/,'thermodynamic data file.',/)
 58    format (/,'**warning ver058** wway, the equilibrium of the '
      *         ,'following reaction',/,'is inconsistent with the ',
      *          'invariant equilibrium.',/)
@@ -3207,7 +3202,7 @@ c----------------------------------------------------------------------
      *         ,' r = ',g12.6,' int = ',i9,/)
       end
 
-      subroutine rmakes (jopt)
+      subroutine rmakes (iopt)
 c----------------------------------------------------------------------
 c rmakes is called by topn2 to read make definitions of thermodynamic
 c entities, these entities are defined as a linear combination of 
@@ -3226,7 +3221,7 @@ c Gdqf(J/mol) = dnum_1 + T[K]*dnum_2 + P[bar]*dnum_3
 
 c end_of_data is either a "|" or the end of the record.
 
-c make definitions are preceded by the keyword:
+c make definitions are preceeded by the keyword:
 
 c begin_makes 
 
@@ -3234,13 +3229,13 @@ c and truncated by the keyword:
 
 c end_makes
 
-c if jopt > 3, data is echoed to LUN n8 (for ctransf/actcor).
+c if iopt > 3, data is echoed to LUN n8 (for ctransf/actcor).
 c----------------------------------------------------------------------
       implicit none
 
       include 'perplex_parameters.h'
 
-      integer ibeg, iend, len, ier, iscan, i, nreact, jopt
+      integer ibeg, iend, len, ier, iscan, i, nreact, iopt
 
       double precision rnum, nums(m3)
 
@@ -3271,7 +3266,7 @@ c----------------------------------------------------------------------
       call readcd (n2,len,ier,.true.)
       if (ier.ne.0) goto 90 
 c                                 echo data for ctransf/actcor
-      if (jopt.gt.3) write (n8,'(400a)') (chars(i),i=1,len)
+      if (iopt.gt.3) write (n8,'(400a)') (chars(i),i=1,len)
 
       nmak = 0 
 
@@ -3322,7 +3317,7 @@ c                                 now the dqf
          call readcd (n2,len,ier,.true.)
          if (ier.ne.0) goto 90
 c                                 echo data for ctransf/actcor 
-         if (jopt.gt.3) write (n8,'(400a)') (chars(i),i=1,len)
+         if (iopt.gt.3) write (n8,'(400a)') (chars(i),i=1,len)
 c                                 read the DQF coefficients
          ibeg = 1
          call redlpt (nums,ibeg,iend,len,ier) 
@@ -3336,7 +3331,7 @@ c                                 start next make definition
          write (rec,'(400a)') chars
          read (rec,'(a3)') tag
 c                                 echo data for ctransf/actcor
-         if (jopt.gt.3) write (n8,'(400a)') (chars(i),i=1,len)
+         if (iopt.gt.3) write (n8,'(400a)') (chars(i),i=1,len)
 
 c                                 reject excluded makes
          do i = 1, ixct
@@ -3412,7 +3407,7 @@ c                                 anyway in case it's a tag
 
       end 
 
-      subroutine readcd (nloc,lenth,ier,strip)
+      subroutine readcd (nloc,len,ier,strip)
 c----------------------------------------------------------------------
 c readcd - read 240 column card image from unit 9, strip out unwanted
 c characters if strip. ier = 1 no card found.
@@ -3423,7 +3418,7 @@ c----------------------------------------------------------------------
 
       logical strip
 
-      integer lenth, ier, iscan, ict, i, iscnlt, ibeg, nloc
+      integer len, ier, iscan, ict, i, iscnlt, ibeg, nloc
 
       character card*(lchar)
 
@@ -3436,11 +3431,11 @@ c----------------------------------------------------------------------
 
       ibeg = 0
   
-      lenth = 0 
+      len = 0 
 
       card = ' '
 
-      do while (ibeg.ge.lenth) 
+      do while (ibeg.ge.len) 
 
          read (nloc,'(a)',end=90) card
 
@@ -3448,11 +3443,11 @@ c----------------------------------------------------------------------
 
             read (card,'(400a)') chars
 c                                 find end of data marker '|'
-            lenth = iscan (1,lchar,'|') - 1
+            len = iscan (1,lchar,'|') - 1
 c                                 '|' in first column
-            if (lenth.eq.0) cycle
+            if (len.eq.0) cycle
 c                                 find a non blank character
-            ibeg = iscnlt (1,lenth,' ')
+            ibeg = iscnlt (1,len,' ')
 
          end if 
 
@@ -3462,7 +3457,7 @@ c                                 there is a non-blank data character
 
          ict = 1
 
-         do i = 2, lenth
+         do i = 2, len 
 c                                 strip out '+' and '*' chars
             if (chars(i).eq.'+'.or.chars(i).eq.'*') chars(i) = ' '
 c                                 eliminate blanks after '/' and '-'
@@ -3478,11 +3473,11 @@ c                                 and double blanks
 
          end do 
 
-         lenth = ict
+         len = ict
 
       else
 c                                 scan backwards to the last non-blank
-         lenth = iscnlt (lenth,1,' ')
+         len = iscnlt (len,1,' ')
 
       end if
 
@@ -3627,6 +3622,11 @@ c----------------------------------------------------------------------
 
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 c-----------------------------------------------------------------------
       if (ids.lt.0) then
 c                                 simple compound:
@@ -3733,6 +3733,9 @@ c-----------------------------------------------------------------------
       character specie*4
       integer isp, ins
       common/ cxt33 /isp,ins(nsp),specie(nsp)
+
+      double precision times, btime, etime
+      common/ time /times(30),btime(30),etime(30)
 c-----------------------------------------------------------------------
       data hs2p/4, 5, 18, 19, 20, 21/
 
@@ -3880,7 +3883,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer lun, ier, iscan, iscnlt, i, j, ibeg, iend, ic2p(k4), jkind
+      integer lun, ier, iscan, iscnlt, i, j, ibeg, iend, ic2p(k4)
 
       character key*22, values*80, strg*80
 
@@ -3940,10 +3943,8 @@ c                                 flag for mock-lambda transitions
       ilam = 0 
 c                                 counter of mock-lambda transitions
       jlam = 0 
-c                                 flag for bulk + shear moduli
-      ikind = 0
-c                                 flag for just shear
-      jkind = 0
+c                                 flag for shear moduli
+      ikind = 0 
 c                                 hsc conversion 
       hsc(k10) = .false.
 c                                 standard thermo parameters
@@ -4093,28 +4094,20 @@ c                                 convert HSC G0 to SUP G0
 c                                 =====================================
 c                                 shear mod data 
             do i = 1, 6
-
                if (key.eq.mstrg(i)) then 
 c                                 set shear/bulk mod flag
-                  if (i.lt.4) then
-c                                 shear
+                  if (ikind.eq.0.and.i.lt.4) then
                      ikind = 1
-
                   else if (i.gt.3) then 
-c                                 bulk
-                     jkind = 1
-
+                     ikind = 2
                   end if 
                   
                   read (values,*,iostat=ier) emodu(i)
                   if (ier.ne.0) call error (23,tot,ier,strg) 
                   ok = .true.
-
-                  exit
-
-               end if
-
-            end do
+                  exit 
+               end if 
+            end do 
 
             if (ok) cycle
 c                                 =====================================
@@ -4149,13 +4142,6 @@ c                                 mock-lambda transition data
          end do
 
       end do
-c                                 reset ikind flag:
-c                                 ikind = 0, no explicit moduli
-c                                 ikind = 1 and jkind = 0 set ikind = 1 => just shear
-c                                 ikind = 1 and jkind = 1 set ikind = 2 => both
-c                                 ikind = 0 and jkind = 1 set ikind = 3 => just bulk
-      ikind = ikind + jkind
-      if (ikind.eq.1.and.jkind.eq.1) ikind = 3
 
       end
 
@@ -4179,7 +4165,7 @@ c----------------------------------------------------------------------
       subroutine redcd0 (lun,ier,key,values,strg)
 c----------------------------------------------------------------------
 c this routine seeks a non-blank card that contains data, i.e., something
-c other than a comment (text preceded by a "|") character. 
+c other than a comment (text preceeded by a "|") character. 
 c the first word of the data is saved as key, the remaining words are
 c are saved in values, and the complete data is saved as strg.
 c the full record (including comments) is saved in chars.
@@ -4361,7 +4347,7 @@ c----------------------------------------------------------------------
       double precision var, dg
 
       double precision cp
-      common/ cst12 /cp(k5,k10)
+      common/ cst12 /cp(k5,k1)
 
       double precision cp0
       common/ cst71 /cp0(k0,k5)
@@ -4379,6 +4365,11 @@ c----------------------------------------------------------------------
       integer ilam,jlam,idiso,lamin,idsin
       double precision tm,td
       common/ cst202 /tm(m7,m6),td(m8),ilam,jlam,idiso,lamin,idsin
+
+      integer iemod,kmod
+      logical smod,pmod
+      double precision emod
+      common/ cst319 /emod(k15,k10),smod(h9),pmod(h9),iemod(k10),kmod
 
       integer cl
       character cmpnt*5, dname*80
@@ -4516,7 +4507,7 @@ c                                 HKF aqueous electrolyte data (13 values)
 
       else if (eos(id).eq.12.or.eos(id).eq.14.or.eos(id).eq.17) then 
 
-         call error (72,r,id,'routine OUTDAT is not programmed to '//
+         call error (77,r,id,'routine OUTDAT is not programmed to '//
      *              'output CALPHAD data tags.')
 
       else 
@@ -4799,6 +4790,11 @@ c------------------------------------------------------------------------
 
       character*100 prject,tfname
       common/ cst228 /prject,tfname
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       integer iam
       common/ cst4 /iam
@@ -5140,16 +5136,16 @@ c                                 get pointer to end of string in chars
 
       end
 
-      subroutine gettrn (jopt)
+      subroutine gettrn (iopt)
 c----------------------------------------------------------------------
-c jopt = 3 -> build
-c jopt = 5 -> ctransf
+c iopt = 3 -> build
+c iopt = 5 -> ctransf
 c----------------------------------------------------------------------
       implicit none
  
       include 'perplex_parameters.h'
 
-      integer i,j,jopt,ict,ier,jscan
+      integer i,j,iopt,ict,ier,jscan
  
       character*5 pname, rname, y*1
 
@@ -5204,7 +5200,7 @@ c                                 special component
 
                   if (i.ne.idspe(j)) cycle 
 c                                 matches special component id(j) 
-                  if (jopt.eq.3) then
+                  if (iopt.eq.3) then
 c                                 don't allow build users 
 c                                 to transform saturated
 c                                 phase components
@@ -5332,6 +5328,11 @@ c----------------------------------------------------------------------
       integer option, i, j, ier, iscan
 
       double precision sum, ssum
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       integer isec,icopt,ifull,imsg,io3p
       common/ cst103 /isec,icopt,ifull,imsg,io3p
@@ -5477,7 +5478,7 @@ c                                 look for optional HSC_conversion key
 
          else
 
-            call error (72,utol,i,'invalid thermodynamic data file '//
+            call error (77,utol,i,'invalid thermodynamic data file '//
      *                             'keyword '//key)
 
          end if
@@ -6429,6 +6430,11 @@ c----------------------------------------------------------------------
 
       double precision x, y
 
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
       save warn1
       data warn1/.true./
 c----------------------------------------------------------------------
@@ -6453,6 +6459,9 @@ c----------------------------------------------------------------------
       include 'perplex_parameters.h'
 
       integer itime
+
+      double precision times, btime, etime
+      common/ time /times(30),btime(30),etime(30)
 c----------------------------------------------------------------------
       call CPU_TIME(btime(itime))
 
@@ -6471,6 +6480,9 @@ c----------------------------------------------------------------------
       character chars*(*)
 
       integer itime
+
+      double precision times, btime, etime
+      common/ time /times(30),btime(30),etime(30)
 c----------------------------------------------------------------------
 
       call CPU_TIME(etime(itime))
@@ -6488,208 +6500,3 @@ c----------------------------------------------------------------------
       end if 
 
       end 
-
-      subroutine outsei
-c-----------------------------------------------------------------------
-c output details of modulus computation for endmembers and solutions
-c if lopt(50).
-c-----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      integer i
-
-      character stag*9, ptag*8, made*12
-
-      logical stx, notstx, lstx, lmake
-
-      integer icomp,istct,iphct,icp
-      common/ cst6  /icomp,istct,iphct,icp
-
-      integer eos
-      common/ cst303 /eos(k10)
-
-      integer ipoint,kphct,imyn
-      common/ cst60  /ipoint,kphct,imyn
-
-      integer isoct
-      common/ cst79 /isoct
-
-      integer ifp
-      logical fp
-      common/ cxt32 /ifp(k10), fp(h9)
-
-      integer make
-      common / cst335 /make(k10)
-
-      character names*8
-      common/ cst8  /names(k1)
-
-      character fname*10, aname*6, lname*22
-      common/ csta7 /fname(h9),aname(h9),lname(h9)
-
-      character prject*100,tfname*100
-      common/ cst228 /prject,tfname
-c-----------------------------------------------------------------------
-      call mertxt (tfname,prject,'_seismic_data.txt',0)
-      open (n8, file = tfname)
-
-      stx = .false.
-      notstx = .false.
-      lmake = .false.
-
-      write (n8,1233) lopt(50),valu(19),nopt(6),lopt(17),valu(15),
-     *                nopt(1),valu(14),lopt(20)
-
-      write (n8,1030)
-
-      write (n8,'(/,a)') 'Endmembers and stoichiometric compounds:'
-      write (n8,1000)
-
-      do i = istct, ipoint
-
-         if (eos(i).eq.5.or.eos(i).eq.6) then 
-            stx = .true.
-            lstx = .true.
-         else
-            lstx = .false.
-            notstx = .true.
-         end if
-
-         if (iemod(i).eq.3) then
-
-            ptag = 'explicit'
-            stag = 'missing'
-
-         else if (iemod(i).eq.0) then
-
-            ptag = 'implicit'
-            stag = 'missing'
-
-         else if (iemod(i).eq.1) then
-
-            ptag = 'implicit'
-            stag = 'explicit'
-
-         else if (iemod(i).eq.2) then
-
-            ptag = 'explicit'
-            stag = 'explicit'
-
-         end if
-
-         if (.not.lopt(17)) ptag = 'implicit'
-
-         if (iopt(16).eq.1) then
-
-            if (stag.eq.'missing') stag = 'Poisson'
-
-         else if (iopt(16).eq.2) then 
-
-            stag = 'Poisson'
-
-         end if
-
-         if (lstx) then
-            if (iemod(i).ge.1) stag = 'implicit'
-            ptag = 'implicit'
-         end if
-
-         made = ' '
-
-         if (make(i).ne.0) then 
-            made = 'made entity*'
-            lmake = .true.
-         end if 
-
-         if (ifp(i).ne.0) stag = 'fluid'
-
-         write (n8,1050) names(i),ptag,stag,made
-
-      end do
-
-      if (lmake) write (n8,1040)
-
-      if (isoct.gt.0) then
-
-         if (stx.and.notstx) write (n8,1010) 
-
-         write (n8,'(/,a)') 'Solution models:'
-         write (n8,1000)
-
-         do i = 1, isoct
-
-            if (.not.pmod(i).and..not.smod(i)) then
-
-               ptag = 'implicit'
-               stag = 'missing'
-
-            else if (pmod(i).and..not.smod(i)) then
-
-               ptag = 'explicit'
-               stag = 'missing'
-
-            else if (pmod(i)) then
-
-               ptag = 'implicit'
-               stag = 'explicit'
-
-            else if (pmod(i).and.smod(i)) then
-
-               ptag = 'explicit'
-               stag = 'explicit'
-
-            end if
-
-            if (lopt(17).and.pmod(i)) ptag = 'explicit'
-
-            if (iopt(16).gt.0.and.(.not.smod(i).or.iopt(16).eq.2))
-     *                                stag = 'Poisson'
-
-            if (stx) then
-               ptag = 'implicit'
-               if (stag.eq.'explicit') stag = 'implicit*'
-            end if
-
-            if (fp(i)) stag = 'fluid'
-
-            if (lname(i).eq.'liquid') stag = 'liquid'
-
-            write (n8,1050) fname(i),ptag,stag
-
-         end do
-
-         if (stx) write (n8,1020)
-
-      end if 
-
-      close (n8)
-
-1000  format (/,20x,'  Bulk Mod    Shear Mod ',/,
-     *          20x,'  ---------   ---------')
-1010  format (/,'**warning ver119** this computation mixes inconsistent'
-     *         ,' thermodynamic data',/,'the following table may not be'
-     *         ,' reliable.',/)
-1020  format (/,'*computed as the Reuss average of the implicit endmemb'
-     *       ,'er shear moduli.')
-1030  format ('In the tables below: implicit moduli are calculated rigo'
-     *       ,'rously from the EoS,',/,'explicit moduli are computed '
-     *       ,'from empirical functions provided in the',/
-     *       ,'thermodynamic data file.',/)
-1040  format (/,'*explicit moduli of made endmembers are computed as a '
-     *       ,'linear combination of ',/,'the real endmembers specified'
-     *       ,' in the corresponding make definition.',/)
-1050  format (6x,a10,6x,a8,4x,a9,4x,a)
-1233  format (/,'Seismic wavespeed computational options:',//,
-     *        4x,'seismic_data_file      ',l1,10x,'[F] T',/,
-     *        4x,'bounds                 ',a3,8x,'[VRH] HS',/,
-     *        4x,'vrh/hs_weighting       ',f3.1,8x,'[0.5] 0->1',/,
-     *        4x,'explicit_bulk_modulus  ',l1,10x,'[F] T',/,
-     *        4x,'poisson_ratio          ',a3,8x,'[on] all off; ',
-     *        'Poisson ratio = ',f4.2,/,
-     *        4x,'seismic_output         ',a3,8x,'[some] none all',/,
-     *        4x,'poisson_test           ',l1,10x,'[F] T; see also ',
-     *           'Tisza_test',/)
-
-      end

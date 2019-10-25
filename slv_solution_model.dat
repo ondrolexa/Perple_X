@@ -44,7 +44,7 @@ begin_model
                                   Silicate ideal gas 
 Si-vapor
 
-2                                     model type: internal, ideal gas
+27                                    model type: internal, ideal gas
 
 9                                     number of endmembers
                                  
@@ -61,27 +61,18 @@ SiO
 
 0 0 0 0 0 0 0 0 0                   | endmember flags.  
 
-0.0 0.1  0.1 0                      | range and resolution of X(SiO2), 0 => cartesian subdivision/1 => asymmetric subdivision   
-0.0 0.1  0.1 0                      | range and resolution of X(Fe)  
+0.0 0.1  0.1 1                      | range and resolution of X(SiO2), 0 => cartesian subdivision/1 => asymmetric subdivision   
+0.0 0.1  0.1 1                      | range and resolution of X(Fe)  
 0.0 0.2  0.1 0                      | range and resolution of X(Si)   
 0.0 0.3  0.1 0                      | range and resolution of X(O2)  
 0.0 0.6  0.1 0                      | range and resolution of X(O)   
 0.0 0.2  0.2 0                      | range and resolution of X(MgO)
-0.0 0.4  0.1 0                      | range and resolution of X(Mg)
-0.0 0.1  0.1 0                      | range and resolution of X(FeO)
+0.0 0.4  0.1 1                      | range and resolution of X(Mg)
+0.0 0.1  0.1 1                      | range and resolution of X(FeO)
 
 ideal
 
-1                                     1 site entropy model (m)
-9 1                                   2 species on m2, mutiplicity = 2
-z(m,mg) = 1 SiO2
-z(m,mg) = 1 Fe
-z(m,mg) = 1 Si
-z(m,mg) = 1 O2
-z(m,mg) = 1 O
-z(m,mg) = 1 MgO
-z(m,mg) = 1 Mg
-z(m,mg) = 1 FeO
+  0                               | no configurational entropy model (internal routine hpmelt).
 
 end_of_model
                                   --------------------------------------------------------
@@ -89,14 +80,14 @@ begin_model
                                   High T fo-fa-sio2 ideal melt model 
 Si-melt
 
-2                                    model type: internal
+28                                    model type: internal
 
 3                                     number of endmembers
                                  
                                     | ENDMEMBER NAMES:                               
-fo8L
-fa8L
-q8L
+foL
+faL
+qL
 
 0 0 0                               | endmember flags.  
 
@@ -105,21 +96,7 @@ q8L
 
 ideal
 
-2                           | Configurational entropy: two non-temkin sites (Water, Melt)
-                            | and one temkin site (olvine). hp assume a fsp = ab + or "molecule""
-                            | with mixing on a temkin M site, but the math works out the same as
-                            | the endmembers are treated as separate endmembers and the M site
-                            | dropped.
-
-2 0                         | temkin olivine site
-n(Mg) = 4 fo8L
-n(Fe) = 4 fa8L
-
-
-2 0                         | silicate species site
-
-z(q)     = 1 q8L
-z(ol)    = 1 fo8L + 1 fa8L
+  0                                 | no configurational entropy model (internal routine slvmlt).
 
 end_of_model
                                   --------------------------------------------------------
@@ -147,7 +124,7 @@ end_excess_function
 z(mg) = 1 fo
 z(fe) = 1 fa 
 
-end_of_model
+end_of_model              
                               --------------------------------------------------------
 begin_model                
                                       Sack & Ghiorso (1989 CMP 102:41-68) for Fe-Mg olivine. 
