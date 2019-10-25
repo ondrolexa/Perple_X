@@ -708,11 +708,6 @@ c----------------------------------------------------------------------
       double precision z
       common/ dim   /z(nx,ny),ix,iy,mvar
 
-      integer iopt
-      logical lopt
-      double precision nopt
-      common/ opts /nopt(i10),iopt(i10),lopt(i10)
-
       save warn1
       data warn1/.true./
 c----------------------------------------------------------------------

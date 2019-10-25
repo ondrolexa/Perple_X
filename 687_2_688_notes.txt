@@ -1,0 +1,73 @@
+1) X 687: redop1/meemum set iopt(6) = 0, prevents setau1 from using arf data?
+
+2) X yclos1 has set soltol to 1 in 687? reset to nopt(25) in 688. 
+
+   a) HOWEVER function SOLVUS uses a better distance measure and therefore 
+      the optimal value of nopt(25) needs to be reevaluated.
+   b) YCLOS2 generates too many refinement points with 687 models (possibly because
+      of near degeneracy). experimenting with not accepting metastable points if 
+      the solution is already stable.
+
+3) 688 eliminates clib.f, dlib.f, getxz1.f, dumlib.f files from make.
+
+4) 687 bugs:
+   X a) inconsistent commons cxt12, cxt10, cst7 (cxt7? couldn't find it in any case)
+   X b) double output of time stamp
+   X c) in gphase gfes called with y(1) rather than y(2)
+   d) call to moduli may reset p0a in getphp prior to call to ginc?
+   X e) 0-trap for iind not included in subinc, corrected but not pushed
+   X f) cAmph(G) incorrect T1 site occupancy (SiAl) rather than (SiSi).
+
+5) csol and getscp are largely redundant, csol assumes p0a has been set to account
+   for decomposition of ordered species, whereas getscp does the decomposition with
+   getpp.
+
+6) X getpp is redundant with p0dord? y2p0 should be used if a prior call to getscp/csol
+   may have changed p0 (as in moduli or getcmp).
+
+7) 688 configurational entropy format expanded to include site names for all fractions of 
+   all species on a site, and non-mixing sites. Site fraction designation format is 
+   z(site,species) (z can be any character, "site" is optional, but if present it 
+   must occur before the "species" designator).
+
+8) refine_switch added, default does not allow metastable refinement points for stable solutions
+   opposite to pre-688 behavior.
+
+9) seismic_data_file added, allows output of seismic computational options for endmembers
+   and solutions.
+
+10) low_reach solution model option, halves the reach during adaptive optimization.
+
+11) begin_flagged_endmembers solution model option.
+
+12) configurational entropy model now specifies all site fractions and site names,
+currently the nth site fraction is not used and may be left as a comment (e.g., 
+"z(Si,T2)   = needs_to_be_completed"). Site fraction designation also remains optional
+but for future use the format "z(species_name,site_name)" is recommended. Additionally, the 
+line that formerly specified the number of species on a site and the effective multiplicity
+now includes the true site multiplicity. 
+
+Solution model notes:
+
+cAmph(G) - the M-Ca-A-Ti-parg and M-Ca-A-Fe3+-parg exchanges have been commented out
+in the ACMT-Amph polytope definition. refer to the model commentary for instruction
+to restore the exchanges.
+
+Cpx(HGP) - the FeTi exchanges have been commented out in the [T][A,C] polytope definition.
+refer to the model commentary for instruction to restore the exchanges. The MTi exchange
+included in the TM+MC is most likely superfluous.
+
+Opx(HGP) - the MTi exchanges have been commented out in the [T][Na,C] polytope definition.
+refer to the model commentary for instruction to restore the exchanges.
+
+Benchmark notes:
+
+bl478 - updated, use of full amph model does not improve comparison.
+
+kghp - updated, comparison improved, spurious solvi eliminated.
+
+
+
+
+
+
