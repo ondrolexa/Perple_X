@@ -21134,7 +21134,7 @@ c                                 solute free cpd
 
             if (bad) then
 
-               gcind = icoz(jphct)
+               gcind = icoz(jphct) - 1
                jphct = jphct - 1
                return 
 
@@ -21156,7 +21156,6 @@ c                                  solute-bearing compound
 
          if (bad) then
 
-            gcind = icoz(jphct)
             jphct = jphct - 1
 
          else
@@ -21175,7 +21174,7 @@ c                                 of the solution
 
          if (bad) then
 
-            gcind = icoz(jphct)
+            gcind = icoz(jphct) - 1
             jphct = jphct - 1
 
          end if 

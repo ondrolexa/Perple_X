@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.8.8, source updated Oct 23, 2019.',
+     *      'Perple_X version 6.8.8, source updated Oct 25, 2019.',
 
      *      'Copyright (C) 1986-2019 James A D Connolly '//
      *      '<www.perplex.ethz.ch/copyright.html>.'
@@ -206,7 +206,7 @@ c                                 refinement
 c                                 solvus_tolerance
       nopt(8) = 1.5*nopt(13)
 c                                 solvus_tolerance_II
-      nopt(25) = 3d0*nopt(13)
+      nopt(25) = nopt(13)
 c                                 compositional resolution for conformal
 c                                 subdivision
       nopt(14) = 2d-3
@@ -412,7 +412,7 @@ c                                 aq_solvent_solvus
 c                                 sample_on_grid 
       lopt(48) = .true.
 c                                 refinement_switch
-      lopt(49) = .false.
+      lopt(49) = .true.
 c                                 seismic_data_file
       lopt(50) = .false.
 c                                 final resolution, auto-refine stage
@@ -790,7 +790,7 @@ c                                 refinement points
          else if (key.eq.'refinement_switch') then
 c                                 during iteration allow metastable 
 c                                 refinement points for stable solutions.
-            if (val.ne.'F') lopt(49) = .true.
+            if (val.ne.'T') lopt(49) = .false.
 
          else if (key.eq.'seismic_data_file') then
  
@@ -2488,12 +2488,16 @@ c                                 accordingly:
      *           'models')
 411   format (2x,'- increase the auto-refine stage initial_resolution ',
      *           'in perplex_option.dat')
-412   format (2x,'- reduce refinement_points value ',
+412   format (2x,'- reduce reach_increments (if any) specified ',
+     *           'for solutions in solution_model.dat',/,
+     *        2x,'- set refinement_switch to F ',
+     *           'in perplex_option.dat',/,
+     *        2x,'- reduce refinement_points value ',
+     *           'in perplex_option.dat',/,
+     *        2x,'- set aq_solvent_solvus to F ',
      *           'in perplex_option.dat',/,
      *        2x,'- reduce the the resolution_factor value ',
-     *           'in perplex_option.dat',/,
-     *        2x,'- reduce the reach_increment (if any) specified ',
-     *           'for solutions in solution_model.dat')
+     *           'in perplex_option.dat')
 413   format (2x,'- simplify the calculation, e.g., eliminate ',
      *           'components and/or simplify solution models')
 414   format (2x,'- increase parameter ',a,' and recompile ',
