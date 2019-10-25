@@ -14828,12 +14828,12 @@ c                                error in log10(K_w)
 c                                 WERAMI props on a grid
          do i = 1, icp
 c                                 bulk composition
-            if (lopt(23)) then
-
+            if (iopt(2).eq.0) then
+c                                 molar
                prop(i) = blk(i)/totm*1d2
 
             else
-
+c                                 mass
                prop(i) = blk(i)*atwt(i)/tmass*1d2
 
             end if
@@ -17174,6 +17174,10 @@ c                                 molality first
       do i = 1, ns
 c                                 solvent molality:
          slvmo(i) = yf(ins(i))/msol
+c DEBUG DEBUG 
+         if (yf(ins(i)).lt.0d0) then 
+            yf(ins(i)) = 0d0
+         end if 
 c                                 total molality
          smo = smo + slvmo(i)
 c                                 moles/kg-solvent
@@ -17186,7 +17190,7 @@ c                                 moles/kg-solvent
       do i = 1, ns
 c                                 solvent bulk mole fraction:
          caq(id,i) = slvmo(i)/smo
-         if (caq(id,i).eq.0d0) cycle
+         if (caq(id,i).le.0d0) cycle
           gtot = gtot + slvmo(i) * (gso(i) + rt*dlog(caq(id,i)))
 
       end do
@@ -17252,8 +17256,7 @@ c                                 used by resub, g per mole of components
 
          do j = 1, icp
 c                                 bulk composition per mole of components
-            
-cp2(j,jphct) = blk(j)/totm
+            cp2(j,jphct) = blk(j)/totm
          end do
 c                                c2tot is the number of moles of the
 c                                components in a solution with 1 mole of

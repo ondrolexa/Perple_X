@@ -334,9 +334,9 @@ c     *                   'question: Do I feel lucky? Well, do ya, punk?'
 
             end do
 
-            if (idead1.ne.0) 
-     *         write (*,'(/,a,/)') 'bad result on idead = 3'
-
+            if (idead1.ne.0) then
+               write (*,'(/,a,/)') 'bad result on idead = 3'
+            end if 
          end if
 
          kter = kter + 1
@@ -2364,6 +2364,7 @@ c                                 solution.
       test = .false.
 
       npt = 0
+      mpt = 0
 
       do i = 1, jphct
 c                                 id indicates the original refinement
@@ -2386,6 +2387,7 @@ c                                 test in getmus:
                   if (quack(-jkp(i))) abort = .true.
 
                   if (ikp(-jkp(i)).eq.idaq) then
+                     if (.not.quack(-jkp(i))) mpt = mpt + 1
                      solvnt(npt) = .true.
                      test = .true.
                   else 
@@ -2394,6 +2396,7 @@ c                                 test in getmus:
 
                else if (jkp(i).eq.idaq) then
 
+                  if (.not.quack(jkp(i))) mpt = mpt + 1
                   solvnt(npt) = .true.
                   test = .true.
 
@@ -2430,6 +2433,9 @@ c                                 keep the least metastable point
          end if
 
       end do
+c                                 abort is set if pure solvent is stable, if 
+c                                 it is the only solvent then reset abort
+      if (abort.and.mpt.eq.0) abort = .false.
 c                                 get mu's for lagged speciation
       if (abort.and.iopt(22).eq.0) then 
 

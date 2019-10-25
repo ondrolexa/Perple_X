@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.8.8, source updated Oct 22, 2019.',
+     *      'Perple_X version 6.8.8, source updated Oct 23, 2019.',
 
      *      'Copyright (C) 1986-2019 James A D Connolly '//
      *      '<www.perplex.ethz.ch/copyright.html>.'
@@ -206,7 +206,7 @@ c                                 refinement
 c                                 solvus_tolerance
       nopt(8) = 1.5*nopt(13)
 c                                 solvus_tolerance_II
-      nopt(25) = nopt(13)
+      nopt(25) = 3d0*nopt(13)
 c                                 compositional resolution for conformal
 c                                 subdivision
       nopt(14) = 2d-3
