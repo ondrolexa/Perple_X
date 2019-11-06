@@ -87,7 +87,7 @@ reach_increment_switch    default | [on] all, on, off; VERTEX => on activates re
 reaction_format           default | [minimum] minimum, full, stoich, S+V, or everything
 reaction_list             default | [off] on or off
 refinement_points         default | [auto] or an integer > 0, max number of metastable refinement points retained during adaptive minimization
-refinement_switch         default | [F] allow metastable refinement points for stable solutions
+refinement_switch         default | [T] allow metastable refinement points for stable solutions
 refine_endmembers         default | [F] accept endmember compositions as refinement points
 reject_negative_sites     default | [T] reject compositions with negative site populations
 resolution_factor         default | [2] >2, controls the change in resolution between iterations during adaptive optimization.

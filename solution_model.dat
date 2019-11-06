@@ -2831,7 +2831,7 @@ fmn_i  = 1 kho1  + 1 spss -1 py
 
 0  0  0  0  0  0  0  0            | endmember flags
 
-0  .2    .1  0                     | imod = 0 -> cartesian subdivision (xmn) on X
+0  1     .1  0                     | imod = 0 -> cartesian subdivision (xmn) on X
 0  1     .1  0                     | imod = 0 -> cartesian subdivision (xfe) on X
 0  1     .1  0                     | imod = 0 -> cartesian subdivision (xmg) on X
 
@@ -11291,7 +11291,7 @@ oilm = 1 dilm   enthalpy_of_ordering = -15600 + 11.52565132 T_K
 
 0 0 0  0                   | endmember flags
 
-1d-3 .2  .1 1              | subdivision range, X(pnt)
+1d-3 .5  .1 1              | subdivision range, X(pnt)
 1d-3 .2  .1 1              | subdivision range, X(geik)
 0     1  .1 0              | subdivision range, X(hem)
 

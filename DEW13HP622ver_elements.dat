@@ -1,4 +1,8 @@
 
+ | for documentation of Perple_X thermodynamic data file structure and content refer to:
+
+ | www.perplex.ethz.ch/perplex_thermodynamic_data_file.html
+
  | comments are indicated by the | character.
  | check for warnings at the end of the header section.
 
@@ -48,7 +52,7 @@ begin_makes
                                 | the make definitions segment of the thermodynamic
                                 | data file is preceeded by the "begin_makes" keyword,
                                 | and terminated by the "end_makes" keyword. Within 
-                                | this segment comments must be preceeded by a "|" 
+                                | this segment comments must be preceded by a "|" 
                                 | character. 
 
                                 | the make definitions define new thermodynamic entities
@@ -2677,7 +2681,7 @@ end
 
  
 ACETIC-A  EoS = 16  
-O2(1)H2(1.5)C(2)
+O2(1)H2(2)C(2)
 G0 = -396475.8  S0 = 178.6568  w = -31798.4  
 a1 = 4.8116  a2 = 2301.2  a3 = 6.98728  a4 = -120080.8  
 c1 = 187.8616  c2 = -110039.2  
@@ -2817,7 +2821,7 @@ end
 
  
 ETHANOL,  EoS = 16  
-O2(.5)H2(2.5)C(2)
+O2(.5)H2(3)C(2)
 G0 = -181292.7  S0 = 150.2056  w = -85228.08  
 a1 = 3.863213  a2 = 4166.469  a3 = 50.81259  a4 = -133494.7  
 c1 = 251.1132  c2 = 6305.288  
@@ -2876,7 +2880,7 @@ end
 
  
 FORMIC-A  EoS = 16  
-O2(1)H2(.5)C(1)
+O2(1)H2(1)C(1)
 G0 = -372300.7  S0 = 162.7576  w = -144013.3  
 a1 = 3.385902  a2 = 1431.639  a3 = 8.238714  a4 = -122193.7  
 c1 = 92.853  c2 = -130524.1  
@@ -2884,7 +2888,7 @@ end
 
  
 GLUTARAT  EoS = 16  
-O2(.5)H2(3.5)C(5)
+O2(2)H2(3.5)C(5)
 G0 = -714878.2  S0 = 221.3336  w = 346393.4  
 q = -1  a1 = 7.783036901    a2 = 5618.159001    a3 = -26.86511727    a4 = -139498.8293    c1 = 107.0221359    c2 = 44415.74008
 end
@@ -2964,7 +2968,7 @@ end
 
  
 HEXANE,A  EoS = 16  
-H2(.5)C(6)
+H2(7)C(6)
 G0 = 18493.28  S0 = 222.5888  w = -196648  
 a1 = 9.805162  a2 = 7543.417  a3 = -43.00817  a4 = -147456.7  
 c1 = 451.872  c2 = 962320  
@@ -3044,7 +3048,7 @@ end
 
 
 LACTATE,  EoS = 16  
-O2(.5)H2(2.5)C(3)
+O2(1.5)H2(2.5)C(3)
 G0 = -512665.5  S0 = 133.4696  w = 479863  
 q = -1  a1 = 3.555423622    a2 = 8278.580453    a3 = -0.357763885    a4 = -150497.0116    c1 = 135.4796503    c2 = 100587.8601
 end
@@ -3066,7 +3070,7 @@ end
 
  
 METHANOL  EoS = 16  
-O2(.5)H2(1.5)C(1)
+O2(.5)H2(2)C(1)
 G0 = -175937.2  S0 = 132.2144  w = -62760  
 a1 = 3.51456  a2 = 1715.44  a3 = -1.00416  a4 = -59831.2  
 c1 = 143.9296  c2 = 40166.4  
@@ -3243,7 +3247,7 @@ end
 
  
 PROPANOL  EoS = 16  
-O2(.5)H2(3.5)C(3)
+O2(.5)H2(4)C(3)
 G0 = -175351.4  S0 = 169.8704  w = -83680  
 a1 = 6.10864  a2 = 3807.44  a3 = 51.0448  a4 = -230120  
 c1 = 310.8712  c2 = 138072  

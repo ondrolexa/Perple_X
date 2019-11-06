@@ -6655,12 +6655,15 @@ c                                missing endmember warnings:
             end if
          end do
 
-         if (first) write (*,1000) tname,(missin(i), i = 1, imiss)
+         if (first) then 
+            write (*,1000) tname,(missin(i), i = 1, imiss)
+            write (*,'(/)')
+         end if
 
       end if
 
 1000  format (/,'**warning ver114** the following endmembers',
-     *          ' are missing for ',a,/,4(8(2x,a),/),/)
+     *          ' are missing for ',a,/,4(8(2x,a),/))
 
       end
 
