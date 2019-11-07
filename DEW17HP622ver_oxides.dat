@@ -1,5 +1,5 @@
 
- | for domcumentation of Perple_X thermodynamic data file structure and content refer to:
+ | for documentation of Perple_X thermodynamic data file structure and content refer to:
 
  | www.perplex.ethz.ch/perplex_thermodynamic_data_file.html
 
@@ -12,7 +12,7 @@
  | data with all DEW options left as specified in the online-version of the spreadsheet. To create a Perple_X data file 
  | with different DEW options or additional chemistry see the README_DEW_2_VER.zip archive in www.perplex.ethz.ch/perplex/faq.
 
- Harrison & Sverjensky DEW '17, Holland & Powell, JMG 2011 (TC-DS622)    |<= data base title
+Harrison & Sverjensky DEW '17, Holland & Powell, JMG 2011 (TC-DS622)    |<= data base title
 
 begin_standard_variables |<= name (<9 characters), reference value, tolerance
 P(bar)      1.00   0.1E-3
@@ -52,9 +52,9 @@ end_components
 
 begin_makes             
                                 | the make definitions segment of the thermodynamic
-                                | data file is preceeded by the "begin_makes" keyword,
+                                | data file is preceded by the "begin_makes" keyword,
                                 | and terminated by the "end_makes" keyword. Within 
-                                | this segment comments must be preceeded by a "|" 
+                                | this segment comments must be preceded by a "|" 
                                 | character. 
 
                                 | the make definitions define new thermodynamic entities
@@ -2884,6 +2884,13 @@ GLYCOLIC EoS = 16 | Gf =  -528858. C2H4O3  Shock & Helgeson (1990) revised with 
 H2O(2)CO2(2)O2(-1.5) 
 G0 = -528857.6  S0 = 180.3304  w = -126231.3  
 a1 = 4.78068  a2 = 2759.599  a3 = -2.896583  a4 = -127683.1  c1 = 125.7426  c2 = 260822.2  
+end
+
+
+H-SUCCIN EoS = 16 | Gf =  -719899. C4H5O4-  Shock & Helgeson (1990) revised with new predicted a1 for complex species 
+CO2(4)H2O(2.5)O2(-3.25) 
+G0 = -719899  S0 = 189.1168  w = 395220.6  q = -1  
+a1 = 6.51294  a2 = 4408.89  a3 = -16.72554  a4 = -134498.9  c1 = 85.01637  c2 = -47705.97  
 end
 
 

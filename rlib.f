@@ -16843,14 +16843,14 @@ c----------------------------------------------------------------------
 c                                 single site solution or orphan
             if (ksmod(i).eq.20) then
 
-               if (j.lt.ns) then
-                  char8 = names(jnd(j))
+               if (k.lt.ns) then
+                  char8 = names(jnd(k))
                else
-                  char8 = aqnam(jnd(j)  - aqst)
+                  char8 = aqnam(jnd(k)  - aqst)
                end if
 
             else
-               char8 = names(jend(i,2+j))
+               char8 = names(jend(i,2+k))
             end if
 
             write (*,1010) char8, x, fname(i), xmng(i,ii,j,k),
