@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.8.8, source updated Nov 7, 2019.',
+     *      'Perple_X version 6.8.8, source updated Nov 8, 2019.',
 
      *      'Copyright (C) 1986-2019 James A D Connolly '//
      *      '<www.perplex.ethz.ch/copyright.html>.'
@@ -412,7 +412,7 @@ c                                 aq_solvent_solvus
 c                                 sample_on_grid 
       lopt(48) = .true.
 c                                 refinement_switch
-      lopt(49) = .true.
+      lopt(49) = .false.
 c                                 seismic_data_file
       lopt(50) = .false.
 c                                 final resolution, auto-refine stage
@@ -732,16 +732,28 @@ c                                 initial_resolution key
             call readfr (nopt(13),ibeg,iend,40,ier)
             if (ier.ne.0) call error (72,nopt(1),iopt(1),key//
      *                                 'has an invalid value.')
-c                                  686 read second value as arf value
+c                                 initial resolution
+            if (nopt(13).ge.1d0.or.nopt(13).lt.0d0) then
+               nopt(13) = 1d0/16d0
+               write (*,1050)
+            end if
+c                                  686+ read second value as arf value
             ibeg = iend + 1
+
             call readfr (nopt(17),ibeg,iend,40,ier)
+
             if (ier.ne.0) then
 c                                  special backward compatibility msg
                write (*,1010) opname
                call errpau
-c               call error (72,nopt(1),iopt(1),key//
-c     *                               'has an invalid or missing value.')
+
             end if 
+
+            if (nopt(17).ge.1d0.or.nopt(17).lt.0d0) then
+               nopt(17) = 1d0/48d0
+               write (*,1050)
+            end if
+
             nopt(17) = nopt(13)/nopt(17)
             nopt(18) = nopt(17)
             nopt(19) = nopt(17)
@@ -790,7 +802,7 @@ c                                 refinement points
          else if (key.eq.'refinement_switch') then
 c                                 during iteration allow metastable 
 c                                 refinement points for stable solutions.
-            if (val.ne.'T') lopt(49) = .false.
+            if (val.ne.'F') lopt(49) = .true.
 
          else if (key.eq.'seismic_data_file') then
  
@@ -1208,33 +1220,11 @@ c                                 fractionation theshold flag
          write (*,1090) icp + 2
          iopt(31) = icp + 2
       end if 
-c                                 initial resolution
-      if (nopt(13).ge.1d0.or.nopt(13).lt.0d0) then 
-         write (*,1050)
-         nopt(13) = 0.1d0
-      end if 
 c                                 stretching parameters
       if (nopt(14).le.0d0) then 
          write (*,1060)
          nopt(14) = 2d-3
       end if 
-c                                 auto-refine factor II
-      if (icopt.eq.1.and.nopt(19).lt.1d0) then 
-c                                 auto-refine factor III
-         nopt(19) = 3d0
-         write (*,1070) nopt(19)
-
-      else if (icopt.le.3.and.nopt(18).lt.1d0) then 
-
-         nopt(18) = 1d1
-         write (*,1070) nopt(18)
-
-      else if (nopt(17).lt.1d0) then 
-c                                 auto-refine factor I
-         nopt(17) = 2d0
-         write (*,1070) nopt(17)
-
-      end if   
 c                                 grid parameters
       do i = 1, 2
 
@@ -1375,8 +1365,8 @@ c                                 proportionality constant for shear modulus
      *         ' assigned its default values.',/)
 1060  format (/,'Warning: stretch_factor cannot be < 0 ',
      *          'the keyword will be assigned its default value',/)
-1070  format (/,'Warning: auto_refine_factors must be ',
-     *         '> 1',/,'the keyword will be',
+1070  format (/,'Warning: initial_resolution values must be ',
+     *         '< 1',/,'the keyword will be',
      *         ' assigned its default value (',i2,').',/)
 1090  format (/,'Warning: refinement_points must be ',
      *         ' >1 and <k5+2',/,'refinement_points will be',
