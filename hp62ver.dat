@@ -1,5 +1,5 @@
 
- | for domcumentation of Perple_X thermodynamic data file structure and content refer to:
+ | for documentation of Perple_X thermodynamic data file structure and content refer to:
 
  | www.perplex.ethz.ch/perplex_thermodynamic_data_file.html
 
@@ -68,9 +68,9 @@ end_special_components
 
 begin_makes             
                                 | the make definitions segment of the thermodynamic
-                                | data file is preceeded by the "begin_makes" keyword,
+                                | data file is preceded by the "begin_makes" keyword,
                                 | and terminated by the "end_makes" keyword. Within 
-                                | this segment comments must be preceeded by a "|" 
+                                | this segment comments must be preceded by a "|" 
                                 | character. 
 
                                 | the make definitions define new thermodynamic entities
@@ -154,13 +154,13 @@ DQF(J/mol) = 0
 atgts = 4 clin + 9/17 atg - 24/17 br      | Tshermaks antigorite for Atg(PN) model (Padrón-Navarta et al., 2013, Lithos)
 DQF = -2e3 + 46.1*T_K
 
-| ettore's makes:
-| odo = 1/2 mag 1/2 cc 
-| -1000. 0 0 
-| oank = 1/4 sid 1/2 cc 1/4 mag 
-|  -750 0 0 
+| ettore's makes for oCCM(EF)
+odo = 1/2 mag 1/2 cc 
+       DQF(J/mol) = -1000
+oank = 1/4 sid 1/2 cc 1/4 mag 
+       DQF(J/mol) = -750 
 
-| odo = 1/2 mag + 1/2 cc          | ordered dolmite species for H&P dolomite model
+| odo = 1/2 mag + 1/2 cc          | ordered dolmite species for H&P dolomite model Do(HP)
 | -13.5d3 0 0 
 
                                 | Green et al (2007) omphacite model, ds6 
@@ -350,7 +350,7 @@ cessh = 1 cats + 1 acm - 1 jd
 crdih = 1 cats + 1 kos - 1 jd
        DQF = -4900
 mcbuf = 1 cats + 1/2 per + 1/2 ru -1/2 cor
-       DQF = -1750 - 1.2 * T - 0.005 * P
+       DQF = 1750 - 1.2 * T - 0.005 * P  | corrected from -1750 ... 10/22/2019, Lisa Rummel, Mainz.
 kjdh  = 1 jd + 1 san - 1 abh
        DQF = -3750 + 1.189 * P
       |---------------------------  Melt
