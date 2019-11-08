@@ -1,6 +1,6 @@
 |----------------------------------------------------------------------
 
-        | Run-time Perple_X 6.8.8 options:
+        | Run-time Perple_X 6.8.7 options:
 
         | Comments must be preceeded by the "|" character.
 
@@ -54,7 +54,7 @@ efficiency                default | [3] 1->5, only relevant for CONVEX
 explicit_bulk_modulus     default | [T] T => use explicit function for bulk modulii if available
 fancy_cumulative_modes    default | [F] T => order cumulative modes to account for univariant reactions (WERAMI, mode 3, property 25)
 fd_expansion_factor       default | [2] nth order finite difference increment is increased by fd_expansion_factor^(n-1)
-final_resolution          default | [1d-2 1d-3] >0, <1, exploratory and auto-refine target resolution
+final_resolution          1e-3 1e-3 default | [1d-2 1d-3] >0, <1, exploratory and auto-refine target resolution
 finite_difference_p       default | [1d4 1d-2] threshold and fraction for 1st order finite difference increment on pressure
 fractionation_hi_limit    default | [0.] 0-1, upper fractionation threshold, mass fraction
 fractionation_lo_limit    default | [0.] 0-1, lower fractionation threshold, mass fraction
@@ -65,7 +65,7 @@ hybrid_EoS_H2O            default | [4] 0-2, 4-5 => 0 - MRK, 1 HSMRK, 2 - CORK, 
 hybrid_EoS_CO2            default | [4] 0-4 => 0 - MRK, 1 HSMRK, 2 - CORK, 3- Bottinga, 4 - PSEoS, 6 - Zhang & Duan 05, 7 - Zhang & Duan 09
 hybrid_EoS_CH4            default | [1] 0-1  => 0 - MRK, 1 HSMRK, 7 - Zhang & Duan 09
 increment                 default | [0.1 0.025] >0, < 1, fractional independent variable increments [exploratory and auto-refine], only relevant for CONVEX
-initial_resolution        1/10 1/4 default | [1/16 1/48]* >0, <1, resolution for static compositions. *for composition and mixed variable diagrams the default auto-refine value is 1/160.
+initial_resolution        1/8 1/8 default | [1/16 1/48]* >0, <1, resolution for static compositions. *for composition and mixed variable diagrams the default auto-refine value is 1/160.
 interim_results           default | [auto] auto, off or on
 interpolation             default | [on 2] value 1: on or off [on]; value 2, 1->99 [2]; only relevant for WERAMI
 linear_model              default | [on] on or off, relevant for 2d gridded minimization
@@ -87,13 +87,11 @@ reach_increment_switch    default | [on] all, on, off; VERTEX => on activates re
 reaction_format           default | [minimum] minimum, full, stoich, S+V, or everything
 reaction_list             default | [off] on or off
 refinement_points         default | [auto] or an integer > 0, max number of metastable refinement points retained during adaptive minimization
-refinement_switch         default | [T] allow metastable refinement points for stable solutions
 refine_endmembers         default | [F] accept endmember compositions as refinement points
 reject_negative_sites     default | [T] reject compositions with negative site populations
 resolution_factor         default | [2] >2, controls the change in resolution between iterations during adaptive optimization.
 sample_on_grid            default | [T] F => WERAMI (mode 2) samples on the computational grid used by VERTEX
 seismic_output            default | [some] all, some, none
-seismic_data_file         default | [F] summarize options used for endmembers and solutions
 short_print               default | [on] suppress output of equilibrium coordinates to the print file, only relevant for CONVEX
 solution_names            default | [mod] mod, abb or ful; use the model, abbreviation, or full name for solution models for output
 solvus_tolerance          default | [auto] auto or 0->1, should be > initial_resolution/auto_refine_factor

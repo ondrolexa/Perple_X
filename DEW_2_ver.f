@@ -16,7 +16,7 @@ c----------------------------------------------------------------------
      *                 otot
 
       character rec*240, name8*8, elem(50)*2, elname*2, number*8,
-     *          oxname(50)*5, text(14)*1, two*2
+     *          oxname(50)*5, text(14)*1
 
       external iscan, iscnlt, elchk
 
@@ -117,7 +117,6 @@ c                                assume first char is beginning of an element na
             if (chars(ist+1).le.'Z'.and.chars(ist+1).ge.'A'.or.
      *         chars(ist+1).eq.'('.or.
      *         chars(ist+1).eq.')'.or.
-     *         chars(ist+1).eq.' '.or.
      *         chars(ist+1).eq.'+'.or.
      *         chars(ist+1).eq.'-'.or.
      *         chars(ist+1).le.'9'.and.chars(ist+1).ge.'1') then 
@@ -138,26 +137,15 @@ c                                 check the element
 c                                 skip an unused repeat group
             if (chars(ist).eq.')') ist = ist + 1 
 c                                 find its stoichiometry
-            if (chars(ist).le.'9'.and.chars(ist).ge.'1') then
-
+            if (chars(ist).le.'9'.and.chars(ist).ge.'1') then 
+c                                 asssume max <= 9
                read (chars(ist),*) stoich
-
-               if (chars(ist+1).le.'9'.and.chars(ist+1).ge.'1') then
-c                                 two digit numeral, no provision for larger numbers...
-                  write (two,'(a,a)') chars(ist:ist+1)
-                  read (two,*) stoich
-                  ist = ist + 1
-                  write (*,*) chars(1:jend(1)),' wudda been wrong1'
-               end if
-
                ist = ist + 1
                if (chars(ist).eq.')') ist = ist + 1 
 
             else if (chars(ist).le.'Z'.and.chars(ist).ge.'A'.or.
-     *               chars(ist).eq.'('.or.ist.eq.iend) then
-
+     *               chars(ist).eq.'('.or.ist.eq.iend) then 
                stoich = 1d0
-
             end if 
 c                                 check if already at the end
             if (chars(ist).eq.'(') then
@@ -187,17 +175,7 @@ c                                 check if already at the end
 
             else if (chars(ist).eq.'+'.or.chars(ist).eq.'-') then
 
-               if (chars(ist-1).le.'Z'.and.chars(ist-1).ge.'A'.or.
-     *             chars(ist-1).le.'z'.and.chars(ist-1).ge.'a') then
-c                                 the previous character was an element
-c                                 and there is no stoichiometric coeff
-                  stoich = 1d0
-               else 
-                  if (stoich.ne.1d0) then
-                     write (*,*) chars(1:jend(1)),' wudda been wrong3'
-                  end if
-               end if
-
+               stoich = 1d0
                ist = iend 
 
             end if 
@@ -205,14 +183,6 @@ c                                 and there is no stoichiometric coeff
             if (good) sel(iel) = sel(iel) + stoich
 c                                 end of a repeat group
             if (chars(ist).eq.')')  ist = ist + 1
-
-            if (ist.eq.iend.and.
-     *          chars(ist).le.'Z'.and.chars(ist).ge.'A') then
-
-               write (*,*) chars(1:jend(1)),' wudda been wrong2'
-               cycle
-
-            end if
 
             if (ist.ge.iend) exit
 

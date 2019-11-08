@@ -94,8 +94,6 @@ c                                 computations are done solely in molar units.
       amount = 'molar '
 
       if (iwt.eq.1) amount = 'weight'
-
-      if (lopt(28)) open (666,file='times.txt')
 c                                 computational loop
       do 
 c                                 read potential variable values    

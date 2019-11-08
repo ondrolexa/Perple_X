@@ -56,6 +56,11 @@ c      include 'flib.f'
       integer iam
       common/ cst4 /iam
 
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
+
       save idiag
 c----------------------------------------------------------------------- 
 c                                 iam flag indicates the Perple_X program
@@ -1157,6 +1162,51 @@ c-----------------------------------------------------------------------
 1050  format (/,4(1x,g9.3,1x,a))
 1060  format (6x,4(1x,g9.3,1x,a),/,6x,4(1x,g9.3,1x,a))
 99    end
+ 
+      subroutine grxn (gval)
+c--------------------------------------------------------------------
+      implicit none
+ 
+      include 'perplex_parameters.h'
+
+      integer j
+
+      double precision gval, gphase
+
+      external gphase
+
+      integer iffr,isr
+      double precision vuf,vus
+      common/ cst201 /vuf(2),vus(h5),iffr,isr
+
+      integer idf
+      double precision act
+      common/ cst205 /act(k7),idf(3)
+
+      integer ifct,idfl
+      common/ cst208 /ifct,idfl
+
+      double precision fh2o,fco2
+      common/ cst11 /fh2o,fco2
+
+      integer icomp,istct,iphct,icp
+      common/ cst6 /icomp,istct,iphct,icp
+
+      integer idr,ivct
+      double precision vnu
+      common/ cst25 /vnu(k7),idr(k7),ivct
+
+      double precision p,t,xco2,u1,u2,tr,pr,r,ps
+      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
+c---------------------------------------------------------------------
+c                                 compute free energy change of the rxn
+      gval = 0d0
+ 
+      do j = 1, iphct
+         gval = gval + vnu(j) * (gphase(j) + r * t * dlog(act(j)))
+      end do
+
+      end
 
       subroutine change 
 c---------------------------------------------------------------------
@@ -1881,6 +1931,11 @@ c----------------------------------------------------------------------
 
       character tname
       common/ csta10 /tname(2)
+
+      integer iopt
+      logical lopt
+      double precision nopt
+      common/ opts /nopt(i10),iopt(i10),lopt(i10)
 
       double precision props,psys,psys1,pgeo,pgeo1
       common/ cxt22 /props(i8,k5),psys(i8),psys1(i8),pgeo(i8),pgeo1(i8)
