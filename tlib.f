@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.8.8, source updated Nov 8, 2019.',
+     *      'Perple_X version 6.8.8, source updated Nov 13, 2019.',
 
      *      'Copyright (C) 1986-2019 James A D Connolly '//
      *      '<www.perplex.ethz.ch/copyright.html>.'
@@ -414,7 +414,7 @@ c                                 sample_on_grid
 c                                 refinement_switch
       lopt(49) = .false.
 c                                 seismic_data_file
-      lopt(50) = .false.
+      lopt(50) = .true.
 c                                 final resolution, auto-refine stage
       rid(2,2) = 1d-3
 c                                 final resolution, exploratory stage
@@ -806,7 +806,7 @@ c                                 refinement points for stable solutions.
 
          else if (key.eq.'seismic_data_file') then
  
-            if (val.ne.'F') lopt(50) = .true. 
+            if (val.ne.'T') lopt(50) = .false. 
 
          else if (key.eq.'max_aq_species_out') then 
 c                                 max number of aq species output for
@@ -1550,13 +1550,15 @@ c                                 MEEMUM input/output options
 
       else if (iam.eq.5) then 
 c                                 FRENDLY input/output options
-         write (n,1232) lopt(15),lopt(14),nopt(7),lopt(6),lopt(19)
+         write (n,1232) lopt(15),lopt(14),nopt(7),lopt(6),lopt(19),
+     *                  .false.
 
       end if 
 c                                 seismic property options
       if (iam.eq.2.or.iam.eq.3.or.iam.eq.5) write (n,1233) lopt(50),
      *         valu(19),
-     *         nopt(6),lopt(17),valu(15),nopt(16),valu(14),lopt(20)
+     *         nopt(6),lopt(17),valu(15),nopt(16),valu(14),lopt(20),
+     *         .false.
 
       if (iam.eq.5) then 
 c                                 FRENDLY thermo options
@@ -1757,12 +1759,12 @@ c                                 thermo options for frendly
      *        4x,'seismic_data_file      ',l1,10x,'[F] T',/,
      *        4x,'bounds                 ',a3,8x,'[VRH] HS',/,
      *        4x,'vrh/hs_weighting       ',f3.1,8x,'[0.5] 0->1',/,
-     *        4x,'explicit_bulk_modulus  ',l1,10x,'[F] T',/,
+     *        4x,'explicit_bulk_modulus  ',l1,10x,'[T] F',/,
      *        4x,'poisson_ratio          ',a3,8x,'[on] all off; ',
      *        'Poisson ratio = ',f4.2,/,
      *        4x,'seismic_output         ',a3,8x,'[some] none all',/,
-     *        4x,'poisson_test           ',l1,10x,'[F] T; see also ',
-     *           'Tisza_test')
+     *        4x,'poisson_test           ',l1,10x,'[F] T',/,
+     *        4x,'Tisza_test             ',l1,10x,'[F] T')
 1234  format (4x,'auto_exclude           ',l1,10x,'[T] F')
 1240  format (/,2x,'Information file output options:',//,
      *        4x,'option_list_files      ',l1,10x,'[F] T; ',
@@ -6533,8 +6535,8 @@ c-----------------------------------------------------------------------
       notstx = .false.
       lmake = .false.
 
-      write (n8,1233) lopt(50),valu(19),nopt(6),lopt(17),valu(15),
-     *                nopt(1),valu(14),lopt(20)
+      write (n8,1233) valu(19),nopt(6),lopt(17),valu(15),
+     *                nopt(1),valu(14),lopt(20),lopt(4),.false.
 
       write (n8,1030)
 
@@ -6624,7 +6626,7 @@ c-----------------------------------------------------------------------
                ptag = 'explicit'
                stag = 'missing'
 
-            else if (pmod(i)) then
+            else if (.not.pmod(i).and.smod(i)) then
 
                ptag = 'implicit'
                stag = 'explicit'
@@ -6676,14 +6678,14 @@ c-----------------------------------------------------------------------
      *       ,' in the corresponding make definition.',/)
 1050  format (6x,a10,6x,a8,4x,a9,4x,a)
 1233  format (/,'Seismic wavespeed computational options:',//,
-     *        4x,'seismic_data_file      ',l1,10x,'[F] T',/,
      *        4x,'bounds                 ',a3,8x,'[VRH] HS',/,
      *        4x,'vrh/hs_weighting       ',f3.1,8x,'[0.5] 0->1',/,
-     *        4x,'explicit_bulk_modulus  ',l1,10x,'[F] T',/,
+     *        4x,'explicit_bulk_modulus  ',l1,10x,'[T] F',/,
      *        4x,'poisson_ratio          ',a3,8x,'[on] all off; ',
      *        'Poisson ratio = ',f4.2,/,
      *        4x,'seismic_output         ',a3,8x,'[some] none all',/,
-     *        4x,'poisson_test           ',l1,10x,'[F] T; see also ',
-     *           'Tisza_test',/)
+     *        4x,'poisson_test           ',l1,10x,'[F] T',/,
+     *        4x,'Anderson-Gruneisen     ',l1,10x,'[F] T',/,
+     *        4x,'Tisza_test             ',l1,10x,'[F] T',/)
 
       end

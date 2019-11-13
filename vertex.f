@@ -130,6 +130,8 @@ c                                 blurb dumped by redop1
          call setau1 (output)
 c                                 read data for solution phases on n9:
          call input9 (first,output)
+c                                 seismic data summary file
+         if (lopt(50)) call outsei
 
          call setau2 (output)
 c                                 initialize potentials

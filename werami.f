@@ -90,6 +90,8 @@ c                                 read autorefine lists
       call setau1 (output)
 c                                 read data for solution phases on n9:
       call input9 (fake,output)
+c                                 seismic data summary file
+      if (lopt(50)) call outsei
 
       call setau2 (output)
 c                                 read the plt/blk files

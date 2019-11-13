@@ -11903,15 +11903,21 @@ c                                make character nums for standard cases
 c                                this is only to avoid run-time errors
 c                                during debugging.
          do i = 1, istg(im,1)
+
             do j = 1, 2
-               h = idint(1d2*z(1,j,1))
+
+               h = idint(1d2*z(1,i,j))
+
                if (h.eq.100.or.h.lt.0) then
                   znm(i,j) = '**'
                else
                   write (znm(i,j),'(i2)') h
                end if
+
             end do
+
          end do
+
       end if
 
       do j = 1, 3

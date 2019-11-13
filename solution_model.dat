@@ -138,7 +138,11 @@
                                  For IMOD = 1, compositions are always generated at X = 0, X = XMIN, and X = XMAX.
 
                              XINC - controls the discretization (resolution) of the compositional variable its exact
-                                    significance is dependent on the subdivision scheme
+                                    significance is dependent on the subdivision scheme or values of the 
+                                     initial_resolution option
+
+                                 initial_resolution = [0 0] - XINC is read from the relevant solution model, regardless 
+                                            of the value of IMOD.
 
                                  IMOD = 0 - linear scheme - the number of compositions generated over the interval
                                             [XMIN XMAX] is 1/XINC + 1. XINC is equated to the appropriate (exploratory
@@ -164,12 +168,10 @@
                                             is that XINC is read from the text of the relevant solution model.
 
                                             For convexhull optimization (program CONVEX) the default behavior is that
-                                            XINC is read from the text of the relevant solution model.
+                                            XINC is equated to the appropriate (exploratory or auto-refine stage) 
+                                            value of the initial_resolution keyword, provided this value is non-zero.
 
                                             These defaults toggle when the non_linear_switch option is set to T (true).
-
-                                 IMOD = 0 or 1 - If the initial_resolution option is set to [0 0], then XINC is read from
-                                            the text of the relevant solution model, regardless of the above conditions.
 
                              TIPS ON THE USE OF NON-LINEAR SUBDIVISION
 
@@ -894,9 +896,13 @@ DQF(grun) = -3000
 
 end_dqf_corrections
 
-begin_flagged_endmembers
-grun
-end_flagged_endmembers
+| solution model specific options:
+
+| begin_flagged_endmembers
+
+| end_flagged_endmembers
+
+| reach_increment 0
 
 | low_reach
 
@@ -1334,6 +1340,12 @@ alpha(crdih)  1.9
 alpha(cfm)    1
 end_van_laar_sizes
 
+| solution model specific options:
+
+| begin_flagged_endmembers
+
+| end_flagged_endmembers
+
 | reach_increment 0
 
 | low_reach
@@ -1540,7 +1552,15 @@ dqf(acm)  = -5000
 dqf(cats) =  3800  - 2.8816 * T  + 0.01  * P
 end_dqf_corrections
 
-reach_increment 0
+| solution model specific options:
+
+| begin_flagged_endmembers
+
+| end_flagged_endmembers
+
+| reach_increment 0
+
+| low_reach
 
 end_of_model
                            --------------------------------------------------------
