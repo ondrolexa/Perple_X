@@ -56,7 +56,7 @@
                              II) SUBDIVISION SCHEMES define the discretization and range of compositions for a solution
                              during a calculation. In many cases, particularly for chemically complex solutions,
                              this range is restricted to reduce the time and memory required for calculations.
-                             If such a restriction is encountered (**warning ver993**) during the exploratory
+                             If such a restriction is encountered (**warning ver991**) during the exploratory
                              stage of a calculation the restriction may have consequences for the final
                              auto-refine stage result. For this reason it is important for users to correct
                              the scheme (unless the restriction is intentional). A resume of warnings written

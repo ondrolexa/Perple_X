@@ -2095,7 +2095,35 @@ c                               load elastic props if present
       if (iemod(id).ne.0) then
 
          do i = 1, k15
+
+            if (i.eq.3.and.emodu(i).gt.0d0) then
+ 
+               call warn (99,0d0,i,'The T derivative of K for '//name//
+     *                   ' is > 0, this is possible, but anomalous.')
+
+            else if (i.eq.6.and.emodu(i).gt.0d0) then 
+
+               call warn (99,0d0,i,'The T derivative of mu for '//name//
+     *                   ' is > 0, this is possible, but anomalous.')
+
+            else if (i.eq.2.and.emodu(i).lt.0d0) then 
+
+               call warn (99,0d0,i,'The P derivative of mu for '//name//
+     *                   ' is < 0, this is improbable. ')
+
+               emodu(i) = 0d0
+
+            else if (i.eq.5.and.emodu(i).lt.0d0) then
+
+               call warn (99,0d0,i,'The P derivative of K for '//name//
+     *                   ' is < 0, this is improbable.')
+
+               emodu(i) = 0d0
+
+            end if
+
             emod(i,id) = emodu(i)
+
          end do
 
       end if
@@ -16611,9 +16639,9 @@ c                                 special case (1 component solution).
 
 1000  format (/,'The following solutions were input,'
      *         ,' but are not stable:',/)
-1010  format (/,'**warning ver993** The following solutions have ',
+1010  format (/,'**warning ver991** The following solutions have ',
      *          'compositions at an internal limit (i.e., 0<x<1):',/)
-1080  format (/,'**warning ver993** The compositions of the following',
+1080  format (/,'**warning ver991** The compositions of the following',
      *        ' solutions reached internal',/,
      *        'limits that were automatically relaxed:',/)
 1090  format (/,'If the restrictions are unintentional, then relax ',
@@ -16876,10 +16904,10 @@ c                                 single site solution or orphan
          end if
 
 1000  format ('then relax the limit in ',a,/)
-1010  format (/,'**warning ver993** X(',a,') = ',f6.4,' of'
+1010  format (/,'**warning ver991** X(',a,') = ',f6.4,' of'
      *       ,' solution ',a,' exceeds its current',/,'limits (XMIN = ',
      *  f6.4,', XMAX = ',f6.4,') if this restriction is unintentional,')
-1020  format (/,'**warning ver993** X(',i1,i1,i1,') = ',f6.4,' of ',
+1020  format (/,'**warning ver991** X(',i1,i1,i1,') = ',f6.4,' of ',
      *       'solution ',a,' exceeds its',/,'current limits (XMIN = ',
      *  f6.4,', XMAX = ',f6.4,') if this restriction is unintentional,')
 
@@ -21712,7 +21740,7 @@ c                                  results file
 
 1000  format (//,'NOTE: this file echoes the auto-refine data after ',
      *       'the exploratory stage. If',/,'the composition of a phase',
-     *       ' has been relaxed (**warning ver993**) during this stage,'
+     *       ' has been relaxed (**warning ver991**) during this stage,'
      *    /,'then the appropriate subdivision scheme* should be modifi'
      *      ,'ed and the exploratory',/,'stage calculation repeated un'
      *      ,'til the warning has been eliminated. This process can be',

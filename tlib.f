@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.8.8, source updated Nov 13, 2019.',
+     *      'Perple_X version 6.8.8, source updated Nov 15, 2019.',
 
      *      'Copyright (C) 1986-2019 James A D Connolly '//
      *      '<www.perplex.ethz.ch/copyright.html>.'
@@ -1645,7 +1645,7 @@ c                                 thermo options for frendly
 1020  format (/,'To change these options see: ',
      *        'www.perplex.ethz.ch/perplex_options.html',/)
 1090  format (/,2x,
-     *        'Worst case (Cartesian) compositional resolution (mol)',
+     *        'Worst-case Cartesian compositional resolution (mol)',
      *        ': ',//,4x,'Exploratory stage: ',g11.3E1,/,
      *                4x,'Auto-refine stage: ',g11.3E1)
 1100  format (/,2x,'Adapative minimization will be done with: ',

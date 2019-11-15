@@ -1327,15 +1327,15 @@ c                                 the composition.
                ok = .false.
             end if 
 
-            if (mut.gt.0d0) then 
-               mut = nopt(7)
-               ok = .false.
-            end if
+c           if (mut.gt.0d0) then 
+c               mut = nopt(7)
+c               ok = .false.
+c            end if
 
-            if (mup.lt.0d0) then 
-               mup = nopt(7)
-               ok = .false.
-            end if
+c           if (mup.lt.0d0) then 
+c               mup = nopt(7)
+c               ok = .false.
+c            end if
        
          else
 
