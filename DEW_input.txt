@@ -74,7 +74,7 @@ GLUTARIC-ACID,AQ  C5H8O4  -176780  -223440  73.200  99.1  64.1  20.7169  15.4414
 GLYCINE,AQ  C2H5NO2  -90950  -124780  39.300  43.3  9.5  10.8000  1.3000  7.6000  -3.5000  28.0000  -8.2000  0.2000  0  Plyasunov & Shock (2001)
 GLYCOLATE,AQ  C2H3O3-  -121170  -154700  26.200  39.8  6.5  6.7382  13.1933  1.8519  -3.3244  21.3390  -1.7106  1.2334  -1  Shock & Helgeson (1990) revised with new predicted a1 for complex species
 GLYCOLIC-ACID,AQ  C2H4O3  -126400  -154890  43.100  51.8  45.5  11.4261  6.5956  -0.6923  -3.0517  30.0532  6.2338  -0.3017  0  Shock & Helgeson (1990) revised with new predicted a1 for complex species
-H-SUCCINATE,AQ  C4H504-  -172060  -217350  45.200  70.0  9.3  15.5663  10.5375  -3.9975  -3.2146  20.3194  -1.1402  0.9446  -1  Shock & Helgeson (1990) revised with new predicted a1 for complex species
+H-SUCCINATE,AQ  C4H5O4-  -172060  -217350  45.200  70.0  9.3  15.5663  10.5375  -3.9975  -3.2146  20.3194  -1.1402  0.9446  -1  Shock & Helgeson (1990) revised with new predicted a1 for complex species
 H+  H(+)  0  0  0.000  0.0  0.0  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  1  Perfectly known, by convention!
 H2,aq  H2(0)  4236  -1000  13.800  25.2  39.9  5.1427  4.7758  3.8729  -2.9764  27.6251  5.0930  -0.2090  0  Shock et al. (1989)
 H2AsO3-  H2AsO3(-)  -140330  -170840  26.400  26.4  -2.9  7.2377  2.6079  2.6514  -2.8868  15.8033  -3.6254  1.2305  -1  Shock et al. (1997) revised with new predicted a1 for complex species

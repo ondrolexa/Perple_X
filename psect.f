@@ -50,7 +50,7 @@ c                                 other than gridded min
       if (icopt.lt.5) then 
          call error (4,0d0,icopt,'PSVDRAW')
       else if (icopt.eq.12) then
-         call error (77,0d0,icopt,'0-d infiltration results can only '
+         call error (72,0d0,icopt,'0-d infiltration results can only '
      *                          //'plotted in tab file format')
       end if 
 c                                 read thermodynamic data on unit n2:
@@ -1504,13 +1504,4 @@ c----------------------------------------------------------------------
          end if
       end do 
  
-      end
-
-      subroutine grxn (g)
-c--------------------------------------------------------------------
-c a dummy routine to allow rk to be linked with rlib.f
-c--------------------------------------------------------------------
-      implicit none
-      double precision g
-      g = g
       end

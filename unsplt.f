@@ -6,7 +6,7 @@ c       n4 - local plot
 c       n5 - local bulk
 c       n6 - global plot
 c       n7 - global bulk
-c       n8 - 
+c       n8 - test
 c----------------------------------------------------------------------
       implicit none
 
@@ -29,9 +29,6 @@ c----------------------------------------------------------------------
       logical oned
       common/ cst82 /oned
 
-      integer ncoor,mcoor,ndim
-      common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h9)
-
       integer igrd
       common/ cst311 /igrd(l7,l7)
 
@@ -45,11 +42,8 @@ c----------------------------------------------------------------------
       integer jtest,jpot
       common/ debug /jtest,jpot
 
-      integer istg, ispg, imlt, imdg
-      common/ cxt6i /istg(h9),ispg(h9,mst),imlt(h9,mst),imdg(ms1,mst,h9)
-
-      integer ivar,ind,ichem
-      common/ cst83 /ivar,ind,ichem
+      integer ivar,ind
+      common/ cst83 /ivar,ind
 
       integer isec,icopt,ifull,imsg,io3p
       common/ cst103 /isec,icopt,ifull,imsg,io3p
@@ -81,10 +75,6 @@ c                                 solution model names
 
       integer iap,ibulk
       common/ cst74 /iap(k2),ibulk
-
-      double precision xcoor
-      integer icoor,jcoor
-      common/ cxt10 /xcoor(k18),icoor(k1),jcoor(k1)
 
       double precision bg
       common/ cxt19 /bg(k5,k2)
@@ -129,9 +119,9 @@ c                                 initialize, set global lists and project name
 
       do i = 1, gsoct
          gname(i) = fname(i)
-         gstg(i) = istg(i)
+         gstg(i) = istg(i,1)
          gcoor(i) = ncoor(i)
-         do j = 1, istg(i)
+         do j = 1, istg(i,1)
             gspg(i,j) = gspg(i,j)
          end do 
       end do 
@@ -314,7 +304,7 @@ c                                 and number of compositions coords for each pha
                               bt(n) = bg(n,ias)
                               if (n.gt.iavar(1,ias)) cycle
 c                                  load solution compositions into xt
-                              jxco = icoor(m)
+                              jxco = icox(m)
 
                               do o = 1, iavar(1,ias)
 
@@ -325,7 +315,7 @@ c                                  load solution compositions into xt
                                  jxco = jxco + 1
 
                                  do h = jxco, kxco
-                                    xt(o,h-jxco+1) = xcoor(h)    
+                                    xt(o,h-jxco+1) = xco(h)    
                                  end do 
 
                                  jxco = kxco
@@ -334,7 +324,7 @@ c                                  load solution compositions into xt
                            end do  
 
                            gas = loc2ga(ias)
-                           jxco = icoor(m)
+                           jxco = icox(m)
 
                            do n = 1, gavar(3,gas)
                               do o = 1, gavar(3,gas)
@@ -346,7 +336,7 @@ c                                 THIS NEEDS TO BE CHECKED, it was iavar(o,ias).
                                  if (o.gt.iavar(1,ias)) cycle
                                  
                                  do p = 1, gcoor(idasls(o,ias))
-                                    xcoor(jxco+p) = xt(o,p)
+                                    xco(jxco+p) = xt(o,p)
                                  end do 
 
                                  jxco = jxco + gcoor(idasls(o,ias))
@@ -423,7 +413,7 @@ c                                 molar amounts
                end do 
 c                                 solution compositions
                gicoor(gbulk) = gjxco
-               jxco = icoor(l)
+               jxco = icox(l)
 
                do m = 1, gavar(1,ias)
 
@@ -439,7 +429,7 @@ c                                 solution compositions
                   o = 0 
 
                   do n = gjxco, gkxco
-                     gxcoor(n) = xcoor(jxco+o)
+                     gxcoor(n) = xco(jxco+o)
                      o = o + 1
                   end do 
 

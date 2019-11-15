@@ -1,0 +1,952 @@
+688
+                      --------------------------------------------------------
+begin_model
+
+                             Ti-Fe3+ Biotite from Tajcmanova et al., JMG 2009;
+                             extended for Mn solution after Tinkham et al. 2001.
+
+                             Model entered by Lucie Tajcmanova, December, 2008.
+
+                             NOTE this model requires the following make definitions 
+                             in the thermodynamic data file:
+
+                             tbit = 1 phl - 1 br + 1 ru           84e3 -11.5 0 
+                             fbit = 1 east - 1/2 cor + 1/2 hem    6e3 0 0  
+
+                             site population limits added Feb 20, 2011, JADC.
+
+                             reformulated as a prismatic + orphan vertex model.
+
+                             JADC, 10/5/2018
+
+                             688 format, JADC, 9/9/2019.
+
+
+                                      Site:           M1      M2       T1     H
+                                                     ____________________________
+
+                                      Mutliplicity    1       2        2      2       
+
+                                    endmember        ____________________________   type
+                                    _________                                       _________
+
+
+                                        ffbit         Fe3+   FeFe     AlAl    OH    dependent 
+                                        fbit          Fe3+   MgMg     AlAl    OH
+                          
+                                        ftbit         Fe     TiFe     AlSi    O     dependent
+                                        tbit          Mg     TiMg     AlSi    O
+   
+                                        sdph          Al     FeFe     AlAl    OH    dependent
+                                        east          Al     MgMg     AlAl    OH
+
+                                        mnbi          Mn     MnMn     AlSi    OH    independent orphan
+                                        ann           Fe     FeFe     AlSi    OH
+                                        phl           Mg     MgMg     AlSi    OH
+
+                                        obi           Fe     MgMg     AlSi    OH    ordered
+
+Bio(TCC)                     | model name
+abbreviation Bio
+full_name    biotite
+
+688                                | model type: 688 format standard model
+ 
+2                                  | number of polytopes
+0   .5   .1   0                    | X(1) is [Mn][Mn]
+
+                                   | ----------------------------
+                                   | Polytope 1 - 1 simplex
+[Mn][Mn]                           | polytope name
+1                                  | number of simplices, [Mn][Mn]
+1                                  | number of vertices on each simplex
+mnbi                               | endmembers on the vertices
+                                   | ----------------------------
+                                   | Polytope 2 - 2x4 simplices
+[M,T][M,MTi]                       | polytope name
+2                                  | number of simplices
+2  3                               | number of vertices on each simplex
+ffbit     fbit
+sdph      east
+ann       phl
+                                   | First (1d) simplex
+0    1   .1  0                     | X(1,1) is bulk Fe/M
+                                   | Second (4d) simplex
+0    1   .1  0                     | X(2,1) is Fe3/[T+M] on M1, M on M2
+0    1   .1  0                     | X(2,2) is Al/[T+M]  on M1, M on M2
+0    1   .1  0                     | X(2,3) is MTi/[M+MTi] on M2, M on M1
+
+begin_ordered_endmembers
+obi = 2/3 phl + 1/3 ann   enthalpy_of_ordering = -6.8d3 
+end_ordered_endmembers
+
+begin_dependent_endmembers
+sdph    = 1 east + 1 ann    - 1 obi
+ffbit   = 1 fbit + 1 ann    - 1 obi
+ftbit   = 1 tbit + 1/2 ann  + 1/2 obi - 1 phl
+end_dependent_endmembers
+
+begin_excess_function
+W(phl ann)   12000   | excess parameters from Holland & Powell, JMG, 2006
+W(phl east)  10000 
+W(phl obi)    4000
+W(ann east)   3000 
+W(ann obi)    8000
+W(obi east)   7000
+end_excess_function 
+
+6                                  | number of identisites in configurational entropy model
+
+M1                                 | site name
+5 1 1                              | number of species, effective multiplicity, true multiplicity
+z(Al,M1)   = 1 east
+z(Mg,M1)   = 1 phl + 1 tbit
+z(Mn,M1)   = 1 mnbi 
+z(Fe3+,M1) = 1 fbit
+z(Fe,M1)   = 1 ann + 1 obi 
+
+M2                                  | site name
+4 2 2                               | number of species, effective multiplicity, true multiplicity
+z(Fe,M2)   = 1 ann
+z(Ti,M2)   = 1/2 tbit
+z(Mn,M2)   = 1 mnbi
+z(Mg,M2)   = 1 phl + 1 obi + 1 east + 1/2 tbit + 1 fbit
+
+T1                                  | site name
+2 2 2                               | number of species, effective multiplicity, true multiplicity
+z(Si,T1)   = 1/2 phl + 1/2 ann + 1/2 tbit + 1/2 obi + 1/2 mnbi 
+z(Al,T1)   = 1 - 1/2 phl - 1/2 ann - 1/2 tbit - 1/2 obi - 1/2 mnbi 
+
+T2                                  | site name
+1 2 2                               | number of species, effective multiplicity, true multiplicity
+z(Si,T2)   = 1
+
+O                                   | site name
+1 10 10                             | number of species, effective multiplicity, true multiplicity
+z(O,O)     = 1
+
+OH                                  | site name
+2 2 2                               | 2 species on H, 2 site per formula unit.
+z(O,OH)     = 1 tbit
+z(OH,OH)    = 1 - 1 tbit
+
+end_of_model
+                      --------------------------------------------------------
+begin_model                
+                           ternary feldsar (fuhrman & lindsley, am min, 1988)
+                           for binary plagioclse this model is identical
+                           to that of Newton et al. 1980, and for binary
+                           alkali feldspar it is identical to Haselton et al. (1983).
+
+                           CORRECTED FOR TYPO IN ORIGINAL PAPER.
+
+feldspar                   
+abbreviation Fsp
+full_name    ternary-feldspar
+
+688                                | model type: 688 format standard model
+ 
+1                                  | number of polytopes
+1                                  | number of simplices
+3                                  | number of vertices on each simplex
+abh                                | endmembers on the vertices
+an
+san
+
+0. 1   .1   0                      | range and resolution for albite, imod = 0 -> cartesian subdivision
+0. 1   .1   0                      | range and resolution for anorthite, imod = 0 -> cartesian subdivision
+
+begin_excess_function 
+w(abh abh san) 27320   -10.3  .394 * P_bar
+w(abh san san) 18810   -10.3  .394 * P_bar
+w(an  an  san) 52468          
+w(an  san san) 47396          -.12 * P_bar
+w(an  an  abh) 28226
+w(an  abh abh) 8471
+w(an  abh san) 100045.5 -10.3 -0.76 * P_bar
+end_excess_function 
+
+4                                   | number of sites in configurational entropy model
+
+M                                   | site name
+3 1 1                               | number of species, effective multiplicity, true multiplicity
+z(Na,M)  = 1 abh
+z(Ca,M)  = 1 an
+z(K,M)   = 1 san
+
+T1                                  | site name
+2 2 2                               | number of species, effective multiplicity, true multiplicity
+z(Al,T1) = 1/2 + 1/2 an
+z(Si,T1) = 1 - 1/2 - 1/2 an
+
+T2                                  | site name
+1 2 2                               | number of species, effective multiplicity, true multiplicity
+z(Si,T2)   = 1
+
+O                                   | site name
+1 8 8                               | number of species, effective multiplicity, true multiplicity
+z(O,O)     = 1
+
+reach_increment 3
+
+end_of_model
+                      --------------------------------------------------------
+begin_model
+                      cAmph(G) => Green et al. (JMG, 2016) clinoamphibole.
+                      
+                                                           Sites
+                                            A    M1      M2      M4     T1     OH
+                                            _______________________________________
+
+                            Multiplicity    1     3      2       2     1(4)    2
+                                            _______________________________________
+
+                              Ts            V     Mg     Al     Ca     SiAl    OH
+                              fTs_d         V     Fe     Al     Ca     SiAl    OH
+                              ffts_d        V     fe     Al     fe     SiAl    OH
+                              mmts_d        V     mg     Al     mg     SiAl    OH
+
+                              Parg          Na    Mg    MgAl    Ca     SiAl    OH
+                              fParg_d       Na    Fe    FeAl    Ca     SiAl    OH
+                              mpg_d         Na    Mg    mgAl    Mg     SiAl    OH
+                              fpg_d         Na    Fe    feAl    fe     SiAl    OH
+
+                              Kprg          K     Mg    MgAl    Ca     SiAl    OH
+                              fkPrg_d       K     Fe    FeAl    Ca     SiAl    OH
+                              mkpg_d        K     Mg    mgAl    Mg     SiAl    OH
+                              fkpg_d        k     Fe    feAl    fe     SiAl    OH
+
+                              Gl            V     Mg     Al     Na      Si     OH
+                              fGl_d         V     Fe     Al     Na      Si     OH
+
+                              mrbG          V     Mg     Fe3    Na      Si     OH
+                              frb_d         V     Fe     Fe3    Na      Si     OH
+
+                              Tts           V     Mg     Ti     Ca     SiAl    O
+                              fcTts_d       V     Fe     Ti     Ca     SiAl    O
+                              mTts_d        V     Mg     Ti     Mg     SiAl    O
+                              fTts_d        V     Fe     Ti     Fe     SiAl    O
+
+                              cmgrk_d       V     Mg     Fe3    Ca     SiAl    OH
+                              cfgrk_d       V     Fe     Fe3    Ca     SiAl    OH
+                              mgrk_d        V     Mg     Fe3    Mg     SiAl    OH
+                              fgrk_d        V     Fe     Fe3    Fe     SiAl    OH
+
+                              Tr            V     Mg     Mg     Ca      Si     OH
+                              fTr_d         V     Fe     Fe     Ca      Si     OH
+                              Cumm          V     Mg     Mg     Mg      Si     OH
+                              Grun          V     Fe     Fe     Fe      Si     OH
+
+                              A             V     Mg     Fe     Fe      Si     OH
+                              B             V     Fe     Mg     Fe      Si     OH
+
+           dependent exchange Mgrk          V     M      Fe3    M      SiAl     OH
+           dependent exchange Mts           V     M       Al    M      SiAl     OH
+           dependent exchange Mpg           Na    M      MAl    M      SiAl     OH
+           dependent exchange MKpg          K     M      MAl    M      SiAl     OH
+           dependent exchange MTts          V     M      Ti     M      SiAl     OH
+
+           2 NaCa-1(M4) = (Gl-Ts)
+           2 CaMg-1(M4) = (Tr-Cumm)
+           
+           2 Fe3Al-1(M2) = (Rb-Gl)
+           2 TiAl-1(M2)  = (Tts-Ts)
+
+           3 FeMg-1(M1) = (grun - a)
+           2 FeMg-1(M2) = (grun - b)
+           2 FeMg-1(M4) = (-grun - cumm + a + b)
+           
+           
+           K  = Na, K, A
+           T  = Al, Fe3, Ti, M2
+           MT = MAl, MFe3, MTi, MT
+           C  = Ca, M4
+           M  = Mg, Fe
+           N  = Na, M4
+           
+           5 polytope model: A, M1, M2, M4 sites populations are indicated, remaining are dependent
+
+           Normal (divalent M-site populations, no charge balance constraint):
+
+           Polytope 1 [ ][M][M,T][M]    => 2*4     => 8 => 4d
+           Polytope 2 [ ][M][M,T][C]    => 2*4     => 8 => 4d 
+           
+           Monovalent A-site cation (pargasite), MT charge balance constraint for M2:
+           
+           Polytope 3 [K][M][MT ][M]    => 2*2*3   => 8 => 4d
+           Polytope 4 [K][M][MT ][C]    => 2*2*3   => 8 => 4d
+           
+           Monovalent M4-site cation (Na, glaucophane), T charge balance constraint for M2:
+           
+           Polytope 5 [ ][M][T  ][N]    => 2*3     => 6 => 3d
+           
+           38 vertices.
+           
+           if pargasite is reduced to MAl and Ti-glaucophane omitted as below, then: 
+
+           Polytope 1 [K][M][MAl][M]    => 2*2     => 4 => 2d
+           Polytope 2 [K][M][MAl][C]    => 2*2     => 4 => 2d
+           Polytope 3 [ ][M][Fe3,Al][N] => 2*2     => 4 => 2d
+           Polytope 4 [ ][M][M,T][M]    => 2*4     => 8 => 4d
+           Polytope 5 [ ][M][M,T][C]    => 2*4     => 8 => 4d 
+           
+           28 vertices
+          ----------------------------------------------------------------------------------------
+
+cAmph(G)_V
+abbreviation Amph
+full_name    clinoamphibole
+
+688                                | model type: 688 format standard model
+ 
+5                                  | number of polytopes, subvision range for each polytope:
+
+0    1   .1  0                     | X(1) is X([K][M][MAl][M])
+0    1   .1  0                     | X(2) is X([K][M][MAl][C])
+0    1   .1  0                     | X(3) is X([ ][M][Fe3,Al][N])
+0    1   .1  0                     | X(4) is X([ ][M][M,T][M])
+                                   | X(5) is by difference. i.e., 1 - X(1) - X(2)...
+
+                                   | endmembers on the vertices, index on the first simplex
+                                   | changes fastest, last slowest
+                                          
+                                   | -------------------------------------------
+                                   | Polytope 1 [K][M][MAl][M] (M-Pargasite)
+
+M-Pargasite                        | poytope name  
+                                  
+2                                  | number of simplices, then for each simplex
+2 2                                | number of vertices on each simplex
+ 
+                                   | Simplex 1 Mg, Fe; is the composition of M
+                                   | Simplex 2 M, Fe3, Ti, Al is M2 site chemistry
+                                   
+                                   | => endmember 11 is [K][Mg][MgAl][Mg]
+                                   | => endmember 21 is [K][Fe][FeAl][Fe]
+                                   | => endmember 12 is [Na][Mg][MgAl][Mg]
+                                   | => endmember 22 is [Na][Fe][FeAl][Fe]
+
+kmparg_d   kfparg_d                | Ca-free K-parg
+mparg_d    fparg_d                 | Ca-free Na-parg
+
+                                   | First (1d) simplex
+0    1   .1  0                     | X(1,1) = bulk Mg/M
+                                   | Second (3d) simplex
+0    1   .1  0                     | X(2,1) = K/[K+Na] on A
+
+                                   | -------------------------------------------
+                                   | Polytope 2 [K][M][MAl][Ca] (Ca-Pargasite)
+
+C-Pargasite                        | poytope name 
+                                   
+2                                  | number of simplices, then for each simplex
+2 2                                | number of vertices on each simplex
+ 
+                                   | Simplex 1 Mg, Fe; is the composition of M
+                                   | Simplex 2 M, Fe3, Ti, Al is M2 site chemistry
+                                   
+                                   | => endmember 11 is [K][Mg][MgAl][Ca]
+                                   | => endmember 21 is [K][Fe][FeAl][Ca]
+                                   | => endmember 12 is [Na][Mg][MgAl][Ca]
+                                   | => endmember 22 is [Na][Fe][FeAl][Ca]
+                                                                   
+kprg       kfcprg_d                | Ca K-parg
+parg       fcparg_d                | Ca Na-parg
+
+                                   | First (1d) simplex
+0    1   .1  0                     | X(1,1) = bulk Mg/M
+                                   | Second (3d) simplex
+0    1   .1  0                     | X(2,1) = K/[K+Na] on A
+
+                                   | -------------------------------------------
+                                   | Polytope 3 [ ][M][T  ][N] (Glaucophane)
+
+Glaucophane                        | poytope name
+                                    
+2                                  | number of simplices, then for each simplex
+2 2                                | number of vertices on each simplex
+ 
+                                   | Simplex 1 Mg, Fe; is the composition of M
+                                   | Simplex 2 Fe3, Ti, Al is M2 site chemistry
+                                   
+                                   | => endmember 11 is [ ][Mg][Fe3][Na]
+                                   | => endmember 21 is [ ][Fe][Fe3][Na]
+                                   | omitted => endmember 1X is [ ][Mg][Ti ][Na]
+                                   | omitted => endmember 2X is [ ][Fe][Ti ][Na]
+                                   | => endmember 12 is [ ][Mg][Al ][Na]
+                                   | => endmember 22 is [ ][Fe][Al ][Na]
+
+mrbG       frb_d                   | M-[Al]Na, redundant X(2,1)
+gl         fgl_d                   | Al-glaucophane
+
+                                   | First (1d) simplex
+0    1   .1  0                     | X(1,1) = bulk Mg/M
+                                   | Second (3d) simplex
+0    1   .1  0                     | X(2,1) = Fe3/[Fe3+Al] on M2
+
+                                   | -------------------------------------------
+                                   | Polytope 4 [ ][M][M,T][M] 
+            
+MT-Amph                            | poytope name 
+                                   
+2                                  | number of simplices, then for each simplex
+2 4                                | number of vertices on each simplex
+ 
+                                   | Simplex 1 Mg, Fe; determines the identity of M
+                                   | Simplex 2 M, Fe3, Ti, Al is M2 site chemistry
+                                    
+                                   | => endmember 11 is [][Mg][Fe3][Mg]
+                                   | => endmember 21 is [][Fe][Fe3][Fe]
+                                   | => endmember 12 is [][Mg][Ti][Mg]
+                                   | => endmember 22 is [][Fe][Ti][Fe]
+                                   | ...
+                                   | => endmember 24 is [ ][Fe][Fe][Fe]
+                                    
+                                   
+mgrk_d     fgrk_d                  | Na,Ca-free Mg-Fe riebeckite (Fe3-tschermaks)
+mtts_d     ftts_d                  | Na,Ca-free Mg-Fe Ti-tschermaks
+mts_d      fts_d                   | Na,Ca-free Mg-Fe Al-tschermaks
+cumm       grun                    | cummingtonite-grunerite
+
+                                   | First (1d) simplex
+0    1   .1  0                     | X(1,1) = bulk Mg/M
+                                   | Second (3d) simplex
+0    1   .1  0                     | X(2,1) = Fe3/[Fe3+Ti+Al+M] on M2
+0    1   .1  0                     | X(2,2) = Ti/[Fe3+Ti+Al+M]
+0    1   .1  0                     | X(2,3) = Al/[Fe3+Ti+Al+M]
+
+                                   | -------------------------------------------
+                                   | Polytope 5 [ ][M][M,T][C] 
+
+CMT-Amph                           | poytope name
+ 
+2                                  | number of simplices, then for each simplex
+2 4                                | number of vertices on each simplex
+ 
+                                   | Simplex 1 Mg, Fe; determines the identity of M
+                                   | Simplex 2 M, Fe3, Ti, Al is M2 site chemistry
+                                   
+                                   | => endmember 11 is [ ][Mg][Fe3][Ca]
+                                   | => endmember 21 is [ ][Fe][Fe3][Ca]
+                                   | => endmember 12 is [ ][Mg][Ti][Ca]
+                                   | => endmember 22 is [ ][Fe][Ti][Ca]
+                                   | ...
+                                   | => endmember 24 is [ ][Fe][Fe][Ca]
+                                   
+mcgrk_d    fcgrk_d                 | Ca riebeckite
+tts        fctts_d                 | Ca Ti-tschermaks
+ts         fcts_d                  | Ca Al-tschermaks
+tr         ftr_d                   | tremolite-actinolite
+
+                                   | First (1d) simplex
+0    1   .1  0                     | X(1,1) = bulk Mg/M
+                                   | Second (3d) simplex
+0    1   .1  0                     | X(2,1) = Fe3/[Fe3+Ti+Al+M] on M2
+0    1   .1  0                     | X(2,2) = Ti/[Fe3+Ti+Al+M]
+0    1   .1  0                     | X(2,3) = Al/[Fe3+Ti+Al+M]
+
+
+begin_ordered_endmembers
+                                   | ordered species definitions:
+a     = 3/7 cumm + 4/7 grun  enthalpy_of_ordering  =   -9486  | = DQF(A) -4/7 DQF(Grun)
+b     = 2/7 cumm + 5/7 grun  enthalpy_of_ordering  =  -11657  | = DQF(B) -5/7 DQF(Grun)
+end_ordered_endmembers 
+
+begin_dependent_endmembers
+                                   | dependent endmember definitions:
+fcts_d = 1 ts + 1 grun - 1 a
+fts_d  = 1 ts - 1 tr + 1 b
+mts_d  = 1 ts - 1 tr + 1 cumm
+
+fcparg_d  = 1 parg  + 3/2 grun - 1 a - 1/2 b
+fparg_d   = 1 parg  + 1/2 grun + 1/2 b - 1 tr
+mparg_d   = 1 parg  - 1 tr     + 1 cumm
+
+kfcprg_d  = 1 kprg  + 3/2 grun - 1 a - 1/2 b
+kfparg_d  = 1 kprg  + 1/2 grun + 1/2 b - 1 tr
+kmparg_d  = 1 kprg  - 1 tr + 1 cumm
+
+fgl_d    = 1 gl    + 1 grun   - 1 a
+frb_d    = 1 mrbG  + 1 grun   - 1 a
+
+fctts_d  = 1 tts   + 1 grun   - 1 a
+ftts_d   = 1 tts   - 1 tr     + 1 b
+mtts_d   = 1 tts   - 1 tr     + 1 cumm
+
+mcgrk_d  = 1 mrbG  + 1 ts    - 1 gl
+mgrk_d   = 1 mrbG  + 1 ts    - 1 gl     - 1 tr   + 1 cumm
+fgrk_d   = 1 mrbG  + 1 ts    - 1 gl     - 1 tr   + 1 b
+fcgrk_d  = 1 mrbG  + 1 ts    - 1 gl     - 1 a  + 1 grun
+
+ftr_d    = 1 tr    + 2 grun   - 1 a - 1 b
+
+end_dependent_endmembers
+
+begin_excess_function
+
+W(tr ts)                  20d3
+W(tr parg)                25d3
+W(tr gl)                  65d3
+W(tr cumm)                45d3
+W(tr grun)                75d3
+W(tr a)                   57d3
+W(tr b)                   63d3
+W(tr mrbG)                52d3
+W(tr kprg)                30d3
+W(tr tts)                 85d3
+W(ts parg)               -40d3
+W(ts gl)                  25d3
+W(ts cumm)                70d3
+W(ts grun)                80d3
+W(ts a)                   70d3
+W(ts b)                 72.5d3
+W(ts mrbG)                20d3
+W(ts kprg)               -40d3
+W(ts tts)                 35d3
+W(parg gl)                50d3
+W(parg cumm)              90d3
+W(parg grun)           106.7d3
+W(parg a)               94.8d3
+W(parg b)               94.8d3
+W(parg mrbG)              40d3
+W(parg kprg)               8d3
+W(parg tts)               15d3
+W(gl cumm)               100d3
+W(gl grun)             113.5d3
+W(gl a)                  100d3
+W(gl b)                111.2d3
+W(gl kprg)                54d3
+W(gl tts)                 75d3
+W(cumm grun)              33d3
+W(cumm a)                 18d3
+W(cumm b)                 23d3
+W(cumm mrbG)              80d3
+W(cumm kprg)              87d3
+W(cumm tts)              100d3
+W(grun a)                 12d3
+W(grun b)                  8d3
+W(grun mrbG)              91d3
+W(grun kprg)              96d3
+W(grun tts)               65d3
+W(a b)                    20d3
+W(a mrbG)                 80d3
+W(a kprg)                 94d3
+W(a tts)                  95d3
+W(b mrbG)                 90d3
+W(b kprg)                 94d3
+W(b tts)                  95d3
+W(mrbG kprg)              50d3
+W(mrbG tts)               50d3
+W(kprg tts)               35d3
+
+end_excess_function
+
+8                                   | number of sites in configurational entropy model (A, M1, M2, M4, T1, T2, O, OH)
+
+A                                   | site name
+3 1 1                               | number of species, effective multiplicity, true multiplicity
+z(Na,A)    = 1 parg
+z(K,A)     = 1 kprg
+z(V,A)     = 1 cumm + 1 grun + 1 tr + 1 ts + 1 gl + 1 a + 1 b + 1 tts
+
+M1                                  | site name
+2 3 3                               | number of species, effective multiplicity, true multiplicity
+z(Fe,M1)   = 1 grun + 1 b
+z(Mg,M1)   = 1 cumm + 1 ts + 1 parg + 1 kprg + 1 mrbG + 1 gl + 1 tts + 1 a
+
+M2                                  | site name
+5 2 2                               | number of species, effective multiplicity, true multiplicity
+z(Fe,M2)   = 1 grun + 1 a
+z(Fe3,M2)  = 1 mrbG
+z(Al,M2)   = 1 ts + 1 gl + 1/2 kprg + 1/2 parg
+z(Ti,M2)   = 1 tts
+z(Mg,M2)   = 1/2 kprg + 1/2 parg + 1 tr + 1 cumm + 1 b
+
+M4                                  | site name
+4 2 2                               | number of species, effective multiplicity, true multiplicity
+z(Mg,M4)   = 1 cumm
+z(Na,M4)   = 1 gl + 1 mrbG
+z(Fe,M4)   = 1 grun + 1 a + 1 b
+z(Ca,M4)   = 1 ts + 1 parg + 1 kprg + 1 tts + 1 tr
+
+T1                                  | site name
+2 1 4                               | number of species, effective multiplicity, true multiplicity
+z(Al,T1)   = 1/2 ts + 1/2 parg + 1/2 kprg + 1/2 tts
+z(Si,T1)   = 1/2 ts + 1/2 parg + 1/2 kprg + 1/2 tts + 1 gl + 1 mrbG + 1 tr + 1 grun + 1 a + 1 b
+
+T2                                  | site name
+1 4 4                               | number of species, effective multiplicity, true multiplicity
+z(Si,T2)   = 1
+
+O                                   | site name
+1 22 22                             | number of species, effective multiplicity, true multiplicity
+z(O,O)     = 1
+
+OH                                  | site name
+2 2 2                               | number of species, effective multiplicity, true multiplicity
+z(O,OH)    = 1 tts
+z(OH,OH)   = 1 - 1 tts
+
+begin_van_laar_sizes
+
+alpha(tr)          1
+alpha(ts)          1.5
+alpha(parg)        1.7
+alpha(gl)          0.8
+alpha(cumm)        1
+alpha(grun)        1
+alpha(a)           1
+alpha(b)           1
+alpha(mrbG)        0.8
+alpha(kprg)        1.7
+alpha(tts)         1.5
+
+end_van_laar_sizes
+
+begin_dqf_corrections
+
+DQF(gl)   = -3000
+DQF(parg) = -10000
+DQF(ts)   =  10000
+DQF(grun) = -3000
+
+end_dqf_corrections
+
+begin_flagged_endmembers
+grun
+end_flagged_endmembers
+
+end_of_model
+                      --------------------------------------------------------
+begin_model
+                      cAmph(G) => Green et al. (JMG, 2016) clinoamphibole.
+                      
+                                                           Sites
+                                            A    M1      M2      M4     T1     OH
+                                            _______________________________________
+
+                            Multiplicity    1     3      2       2     1(4)    2
+                                            _______________________________________
+
+                              Ts            V     Mg     Al     Ca     SiAl    OH
+                              fTs_d         V     Fe     Al     Ca     SiAl    OH
+                              ffts_d        V     fe     Al     fe     SiAl    OH
+                              mmts_d        V     mg     Al     mg     SiAl    OH
+
+                              Parg          Na    Mg    MgAl    Ca     SiAl    OH
+                              fParg_d       Na    Fe    FeAl    Ca     SiAl    OH
+                              mpg_d         Na    Mg    mgAl    Mg     SiAl    OH
+                              fpg_d         Na    Fe    feAl    fe     SiAl    OH
+
+                              Kprg          K     Mg    MgAl    Ca     SiAl    OH
+                              fkPrg_d       K     Fe    FeAl    Ca     SiAl    OH
+                              mkpg_d        K     Mg    mgAl    Mg     SiAl    OH
+                              fkpg_d        k     Fe    feAl    fe     SiAl    OH
+
+                              Gl            V     Mg     Al     Na      Si     OH
+                              fGl_d         V     Fe     Al     Na      Si     OH
+
+                              mrbG          V     Mg     Fe3    Na      Si     OH
+                              frb_d         V     Fe     Fe3    Na      Si     OH
+
+                              Tts           V     Mg     Ti     Ca     SiAl    O
+                              fcTts_d       V     Fe     Ti     Ca     SiAl    O
+                              mTts_d        V     Mg     Ti     Mg     SiAl    O
+                              fTts_d        V     Fe     Ti     Fe     SiAl    O
+
+                              cmgrk_d       V     Mg     Fe3    Ca     SiAl    OH
+                              cfgrk_d       V     Fe     Fe3    Ca     SiAl    OH
+                              mgrk_d        V     Mg     Fe3    Mg     SiAl    OH
+                              fgrk_d        V     Fe     Fe3    Fe     SiAl    OH
+
+                              Tr            V     Mg     Mg     Ca      Si     OH
+                              fTr_d         V     Fe     Fe     Ca      Si     OH
+                              Cumm          V     Mg     Mg     Mg      Si     OH
+                              Grun          V     Fe     Fe     Fe      Si     OH
+
+                              A             V     Mg     Fe     Fe      Si     OH
+                              B             V     Fe     Mg     Fe      Si     OH
+
+           dependent exchange Mgrk          V     M      Fe3    M      SiAl    OH
+           dependent exchange Mts           V     M       Al    M      SiAl    OH
+           dependent exchange Mpg           Na    M      MAl    M      SiAl    OH
+           dependent exchange MKpg          K     M      MAl    M      SiAl    OH
+           dependent exchange MTts          V     M      Ti     M      SiAl    OH
+
+           2 NaCa-1(M4) = (Gl-Ts)
+           2 CaMg-1(M4) = (Tr-Cumm)
+           
+           2 Fe3Al-1(M2) = (Rb-Gl)
+           2 TiAl-1(M2)  = (Tts-Ts)
+
+           3 FeMg-1(M1) = (grun - a)
+           2 FeMg-1(M2) = (grun - b)
+           2 FeMg-1(M4) = (-grun - cumm + a + b)
+           
+           
+           A  = Na, K, V
+           T  = Al, Fe3, Ti, M2
+           MT = MAl, MFe3, MTi
+           C  = Ca, M4
+           M  = Mg, Fe
+           N  = Na, M4
+           
+           2 polytope model: A, M1, M2, M4 site populations are indicated, remaining are dependent
+
+           Polytope 1 [ ][M][T  ][N]       => 2*3 
+           Polytope 2 [A][M][M,T,MT][M,C]  => 2*2*6
+
+          ----------------------------------------------------------------------------------------
+
+cAmph(G)
+abbreviation Amph
+full_name    clinoamphibole
+
+688                                | model type: 688 format standard model
+ 
+2                                  | number of polytopes, subvision range for the composite space
+
+0    1   .1  0                     | X(1) is X([ ][M][Fe3,Al][N]) is Ti-free glaucophane
+
+                                   | -------------------------------------------
+                                   | Polytope 1 [ ][M][T  ][N] (Glaucophane)
+
+Glaucophane                        | polytope name
+
+2                                  | number of simplices, then for each simplex
+2 2                                | number of vertices on each simplex
+ 
+                                   | Simplex 1 Mg, Fe; is the composition of M
+                                   | Simplex 2 Fe3, Ti, Al is M2 site chemistry
+                                   
+                                   | => endmember 11 is [ ][Mg][Fe3][Na]
+                                   | => endmember 21 is [ ][Fe][Fe3][Na]
+                                   | omitted => endmember 1X is [ ][Mg][Ti ][Na]
+                                   | omitted => endmember 2X is [ ][Fe][Ti ][Na]
+                                   | => endmember 12 is [ ][Mg][Al ][Na]
+                                   | => endmember 22 is [ ][Fe][Al ][Na]
+
+mrbG       frb_d                   | M-[Al]Na, redundant X(2,1)
+gl         fgl_d                   | Al-glaucophane
+
+                                   | First (1d) simplex
+.5   .7  .1  0                     | X(1,1) = bulk Mg/M
+                                   | Second (3d) simplex
+0    .4   .1  0                    | X(2,1) = Fe3/[Fe3+Al] on M2
+
+                                   | -------------------------------------------
+                                   | Polytope 2 [A][M][M,T,MT][M,C]  
+
+ACMT-Amph                          | poytope name
+ 
+3                                  | number of simplices, then for each simplex
+2 2 6                              | number of vertices on each simplex
+ 
+                                   | Simplex 1 Mg, Fe; determines the identity of M
+                                   | Simplex 2 is M/[Ca + M] on M4
+                                   | Simplex 3 is parg and M, Fe3, Ti, Al M2 site chemistry
+
+
+mts_d      fts_d                   | M-Ca-Al_tschermaks
+ts         fcts_d
+
+mparg_d    fparg_d                 | M-Ca-Na-Al_parg
+parg       fcparg_d
+
+kmparg_d   kfparg_d                | M-Ca-K-Al_parg
+kprg       kfcprg_d
+
+mtts_d     ftts_d                  | M-Ca-Ti_tschermaks
+tts        fctts_d
+
+mgrk_d     fgrk_d                  | M-Ca-Fe3+_tschermaks (Na-free riebeckite)
+mcgrk_d    fcgrk_d
+
+cumm       grun                    | M-Ca divalent amphibole
+tr         ftr_d
+
+                                   | First (1d) simplex
+.5   .7  .1  0                     | X(1,1) = bulk Mg/M
+
+                                   | Second (1d) simplex
+0    .4  .1  0                     | X(2,1) = M/[Ca + M] on M4
+
+
+                                   | Third simplex 
+0    .3  .1  0                     | X(3,1) = X(Al-Ts)
+0    .7  .1  0                     | X(3,2) = X(Na-Al-Parg), Fe3 and Ti parg missing
+0    .1  .1  0                     | X(3,3) = X(K-Al-Parg), Fe3 and Ti parg missing
+0    .2  .1  0                     | X(3,4) = X(Ti-Ts)
+0    .2  .1  0                     | X(3,5) = X(Fe3-Ts)
+
+begin_ordered_endmembers
+                                   | ordered species definitions:
+a     = 3/7 cumm + 4/7 grun  enthalpy_of_ordering  =   -9486  | = DQF(A) -4/7 DQF(Grun)
+b     = 2/7 cumm + 5/7 grun  enthalpy_of_ordering  =  -11657  | = DQF(B) -5/7 DQF(Grun)
+end_ordered_endmembers 
+
+begin_dependent_endmembers
+                                   | dependent endmember definitions:
+fcts_d = 1 ts + 1 grun - 1 a
+fts_d  = 1 ts - 1 tr + 1 b
+mts_d  = 1 ts - 1 tr + 1 cumm
+
+fcparg_d  = 1 parg  + 3/2 grun - 1 a - 1/2 b
+fparg_d   = 1 parg  + 1/2 grun + 1/2 b - 1 tr
+mparg_d   = 1 parg  - 1 tr     + 1 cumm
+
+kfcprg_d  = 1 kprg  + 3/2 grun - 1 a - 1/2 b
+kfparg_d  = 1 kprg  + 1/2 grun + 1/2 b - 1 tr
+kmparg_d  = 1 kprg  - 1 tr + 1 cumm
+
+fgl_d    = 1 gl    + 1 grun   - 1 a
+frb_d    = 1 mrbG  + 1 grun   - 1 a
+
+fctts_d  = 1 tts   + 1 grun   - 1 a
+ftts_d   = 1 tts   - 1 tr     + 1 b
+mtts_d   = 1 tts   - 1 tr     + 1 cumm
+
+mcgrk_d  = 1 mrbG  + 1 ts    - 1 gl
+mgrk_d   = 1 mrbG  + 1 ts    - 1 gl     - 1 tr   + 1 cumm
+fgrk_d   = 1 mrbG  + 1 ts    - 1 gl     - 1 tr   + 1 b
+fcgrk_d  = 1 mrbG  + 1 ts    - 1 gl     - 1 a  + 1 grun
+
+ftr_d    = 1 tr    + 2 grun   - 1 a - 1 b
+
+end_dependent_endmembers
+
+begin_excess_function
+
+W(tr ts)                  20d3
+W(tr parg)                25d3
+W(tr gl)                  65d3
+W(tr cumm)                45d3
+W(tr grun)                75d3
+W(tr a)                   57d3
+W(tr b)                   63d3
+W(tr mrbG)                52d3
+W(tr kprg)                30d3
+W(tr tts)                 85d3
+W(ts parg)               -40d3
+W(ts gl)                  25d3
+W(ts cumm)                70d3
+W(ts grun)                80d3
+W(ts a)                   70d3
+W(ts b)                 72.5d3
+W(ts mrbG)                20d3
+W(ts kprg)               -40d3
+W(ts tts)                 35d3
+W(parg gl)                50d3
+W(parg cumm)              90d3
+W(parg grun)           106.7d3
+W(parg a)               94.8d3
+W(parg b)               94.8d3
+W(parg mrbG)              40d3
+W(parg kprg)               8d3
+W(parg tts)               15d3
+W(gl cumm)               100d3
+W(gl grun)             113.5d3
+W(gl a)                  100d3
+W(gl b)                111.2d3
+W(gl kprg)                54d3
+W(gl tts)                 75d3
+W(cumm grun)              33d3
+W(cumm a)                 18d3
+W(cumm b)                 23d3
+W(cumm mrbG)              80d3
+W(cumm kprg)              87d3
+W(cumm tts)              100d3
+W(grun a)                 12d3
+W(grun b)                  8d3
+W(grun mrbG)              91d3
+W(grun kprg)              96d3
+W(grun tts)               65d3
+W(a b)                    20d3
+W(a mrbG)                 80d3
+W(a kprg)                 94d3
+W(a tts)                  95d3
+W(b mrbG)                 90d3
+W(b kprg)                 94d3
+W(b tts)                  95d3
+W(mrbG kprg)              50d3
+W(mrbG tts)               50d3
+W(kprg tts)               35d3
+
+end_excess_function
+
+8                                   | number of sites in configurational entropy model (A, M1, M2, M4, T1, T2, O, OH)
+
+A                                   | site name
+3 1 1                               | number of species, effective multiplicity, true multiplicity
+z(Na,A)    = 1 parg
+z(K,A)     = 1 kprg
+z(V,A)     = 1 cumm + 1 grun + 1 tr + 1 ts + 1 gl + 1 a + 1 b + 1 tts
+
+M1                                  | site name
+2 3 3                               | number of species, effective multiplicity, true multiplicity
+z(Fe,M1)   = 1 grun + 1 b
+z(Mg,M1)   = 1 cumm + 1 ts + 1 parg + 1 kprg + 1 mrbG + 1 gl + 1 tts + 1 a
+
+M2                                  | site name
+5 2 2                               | number of species, effective multiplicity, true multiplicity
+z(Fe,M2)   = 1 grun + 1 a
+z(Fe3,M2)  = 1 mrbG
+z(Al,M2)   = 1 ts + 1 gl + 1/2 kprg + 1/2 parg
+z(Ti,M2)   = 1 tts
+z(Mg,M2)   = 1/2 kprg + 1/2 parg + 1 tr + 1 cumm + 1 b
+
+M4                                  | site name
+4 2 2                               | number of species, effective multiplicity, true multiplicity
+z(Mg,M4)   = 1 cumm
+z(Na,M4)   = 1 gl + 1 mrbG
+z(Fe,M4)   = 1 grun + 1 a + 1 b
+z(Ca,M4)   = 1 ts + 1 parg + 1 kprg + 1 tts + 1 tr
+
+T1                                  | site name
+2 1 4                               | number of species, effective multiplicity, true multiplicity
+z(Al,T1)   = 1/2 ts + 1/2 parg + 1/2 kprg + 1/2 tts
+z(Si,T1)   = 1/2 ts + 1/2 parg + 1/2 kprg + 1/2 tts + 1 gl + 1 mrbG + 1 tr + 1 grun + 1 a + 1 b
+
+T2                                  | site name
+1 4 4                               | number of species, effective multiplicity, true multiplicity
+z(Si,T2)   = 1
+
+O                                   | site name
+1 22 22                             | number of species, effective multiplicity, true multiplicity
+z(O,O)     = 1
+
+OH                                  | site name
+2 2 2                               | number of species, effective multiplicity, true multiplicity
+z(O,OH)    = 1 tts
+z(OH,OH)   = 1 - 1 tts
+
+begin_van_laar_sizes
+
+alpha(tr)          1
+alpha(ts)          1.5
+alpha(parg)        1.7
+alpha(gl)          0.8
+alpha(cumm)        1
+alpha(grun)        1
+alpha(a)           1
+alpha(b)           1
+alpha(mrbG)        0.8
+alpha(kprg)        1.7
+alpha(tts)         1.5
+
+end_van_laar_sizes
+
+begin_dqf_corrections
+
+DQF(gl)   = -3000
+DQF(parg) = -10000
+DQF(ts)   =  10000
+DQF(grun) = -3000
+
+end_dqf_corrections
+
+begin_flagged_endmembers
+grun
+end_flagged_endmembers
+
+end_of_model
